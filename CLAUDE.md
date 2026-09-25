@@ -30,7 +30,7 @@ A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The pl
 data/          items, essences, alloys, relics, heroes, enemies, synergies (JSON)
 docs/          design.md and other design notes
 src/sim/       combat simulation: pure logic, NO nodes, NO rendering
-src/run/       map, nodes, shop, forge, economy
+src/run/       run state, days and stops, shop, forge, economy, save
 src/meta/      Guildhall, unlocks, codex, save data
 src/ui/        scenes and UI scripts (reads sim state, never changes it)
 tests/         GUT tests, mirroring src/
@@ -81,7 +81,9 @@ tools/         headless sim runner, data validators
 
 - Items are per hero; the relic board is shared by the team. Items can move between heroes freely between fights (never during combat).
 - Fallen heroes always come back after a fight, with no downside.
-- Roster cap 6, fielded heroes 3–5. Which heroes sit in backup is the player's choice; backup heroes' Backup effects and their items' backup modes apply. In a fight, backup heroes are off the field (never targeted, no collapse damage, don't count for victory); only `"backup"` blocks act from the bench. Common items can't have a backup mode (until Oathbinding); Legendary items must.
+- A run allows one lost fight; the second loss ends it. Every fight starts at full HP (unless an item or relic says otherwise). Unequipped items wait in a shared stash with 6 spaces.
+- There is no branching map: each act is a set number of days, each offering stops to pick from and then a fight. Offers come from the run seed and don't depend on earlier picks (for now). The run layer is deterministic from its seed, like the sim.
+- A run starts with one hero; roster cap 6, at most 5 fielded. Which heroes sit in backup is the player's choice; backup heroes' Backup effects and their items' backup modes apply. In a fight, backup heroes are off the field (never targeted, no collapse damage, don't count for victory); only `"backup"` blocks act from the bench. Common items can't have a backup mode (until Oathbinding); Legendary items must.
 - "Lowest HP" (heals and targeting) means lowest HP **percentage**.
 - Rift Collapse starts at 45s of combat and deals **flat** damage (never % of max HP) that grows every second, hitting **Shield before HP**. From 90s the growth itself accelerates. The numbers are set per act (Act 2 = double Act 1) in `data/`. Early fights end around 60s; later ones can run much longer. There is no hard time limit, but a fight still running at **180s is a tie**, as is both sides dying on the same tick, and **a tie counts as a guild victory**.
 - Formation for now: each side has fixed **front and back rows**, ordered left to right. The hex arena comes later, so don't build hex code until asked.
