@@ -4,7 +4,7 @@
 
 A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The player leads a guild of heroes through branching rift maps. Each hero has a row of items that fire on cooldowns, and items are infused with essences harvested from enemies. Hidden, discoverable synergies drive build variety.
 
-**The full design lives in `docs/design.md`**, with item tiers, backup mode, and hero–item specialization detailed in `docs/tiers-backup-specialization.md`. Before building or changing a game system, read the matching section there. If the code and the design doc disagree, stop and ask. Don't silently pick one.
+**The full design lives in `docs/design.md`**, with item tiers, backup mode, and Oathbinding detailed in `docs/tiers-backup-specialization.md`. Before building or changing a game system, read the matching section there. If the code and the design doc disagree, stop and ask. Don't silently pick one.
 
 ## Tech stack
 
@@ -68,7 +68,10 @@ tools/         headless sim runner, data validators
 - **Two** copies of the same item at the same tier combine into the next tier (never three). If the new copy has an infusion, it replaces the old one (and the old XP is lost); if not, the old infusion and its XP stay. The player chooses whether to combine. Copies at *different* tiers can be held together.
 - Tier and rarity are separate. Rarity decides how often an item appears; any item can be tiered up. Tiers are **C → B → A → S** (same as hero ranks). Items and heroes can be found above C; normal shops and the Tavern unlock higher tiers as the run progresses (a schedule in `data/`). Earlier, higher tiers come only from events (such as tier-specific shops), enemy drops, and loot.
 - Rarities: **Common, Uncommon, Rare, Epic, Legendary**. S is the top tier (S items can't combine). **Legendaries never combine**; they upgrade through their own paths and appear at most once per run.
-- **Hero–item specialization:** an S hero + an S item can be permanently specialized (one per hero; the item then can't be removed, moved, or sold, but can be repositioned and infused).
+- **Oathbinding:** an S hero + an S item can be permanently oathbound (one per hero; the item then can't be removed, moved, or sold, but can be repositioned and infused). "Specialization" means only the hero's rank-B choice; don't mix the two terms.
+- **Reforging** = removing an item's infusion.
+- **Item numbers in data are base values.** Tier and hero stats apply **percentage boosts** on top; keep base and boosted values both available (the UI shows both). Basic auto-attacks get hero boosts but no tier.
+- Items carry **multiple tags** (item tags and class-fit tags).
 - **Size never affects rarity.** Each item of a given rarity has the same appearance odds whatever its size; there are just more Small items in the pool.
 - Every item has its own crit chance (default 0). Crit damage multiplier is a tuning value (150%).
 - Enemies use hand-made, fixed item layouts with set tiers, built from the same item system; some items are enemy-only. Some enemy teams carry relics (enemy-only relics exist too). Every fight guarantees one drop from the enemy team's items and relics, enemy-only ones included.
@@ -76,6 +79,7 @@ tools/         headless sim runner, data validators
 ## Other core rules
 
 - Items are per hero; the relic board is shared by the team. Items can move between heroes freely between fights (never during combat).
+- Fallen heroes always come back after a fight, with no downside.
 - Roster cap 6, fielded heroes 3–5. Which heroes sit in backup is the player's choice; backup heroes' Backup effects and their items' backup modes apply.
 - "Lowest HP" (heals and targeting) means lowest HP **percentage**.
 - Rift Collapse starts at 45s of combat and deals **flat** damage (never % of max HP) that grows every second, hitting **Shield before HP**. From 90s the growth itself accelerates. The numbers are set per act (Act 2 = double Act 1) in `data/`. Early fights end around 60s; later ones can run much longer. There is no hard time limit, but a fight still running at **180s is a tie**, as is both sides dying on the same tick, and **a tie counts as a guild victory**.

@@ -1,8 +1,10 @@
-# Item Tiers, Backup & Specialization
+# Item Tiers, Backup & Oathbinding
 
 Sep 25, 2026 · @Noah
 
-An add-on to the Roguelite Game Plan. Items now have both a rarity and a tier, heroes can go into backup by choice, and an S-rank hero can permanently specialize with an S-rank item.
+An add-on to the Roguelite Game Plan. Items now have both a rarity and a tier, heroes can go into backup by choice, and an S-rank hero can be permanently **oathbound** to an S-rank item.
+
+> **Naming (decided):** the S hero + S item mechanic is called **Oathbinding**. "Specialization" means only the hero's rank-B pick of one of three specializations.
 
 ## Item tiers and combining
 
@@ -10,8 +12,8 @@ Every item has two separate properties. **Rarity** is what kind of item it is. *
 
 | Property | Values | What it controls |
 | --- | --- | --- |
-| Rarity | Common, Uncommon, Rare, Epic, Legendary | Complexity, whether it has a backup mode, how tailored its specialization is |
-| Tier | C, B, A, S | Power level; S is required for specialization |
+| Rarity | Common, Uncommon, Rare, Epic, Legendary | Complexity, whether it has a backup mode, how tailored its Oathbinding is |
+| Tier | C, B, A, S | Power level; S is required for Oathbinding |
 
 **Combining**
 
@@ -58,7 +60,7 @@ Which heroes fight and which sit in backup is the player's choice. With a full r
 
 | Rarity | Active mode | Backup mode |
 | --- | --- | --- |
-| Common | Always | None, unless specialized (see Specialization) |
+| Common | Always | None, unless oathbound (see Oathbinding) |
 | Uncommon | Usually | Sometimes; some items are backup-only |
 | Rare | Usually | Often; some items are backup-only |
 | Epic | Always | Often; if present, the item always has both |
@@ -66,20 +68,20 @@ Which heroes fight and which sit in backup is the player's choice. With a full r
 
 **Backup-only items** need a clear icon in shops and on the item, so no one buys one by mistake. What they do on a fielded hero (nothing, or a small passive) is still open.
 
-## Hero–item specialization
+## Oathbinding (hero–item)
 
-When a hero and an item are both S tier, you can **specialize** the hero with that item. It changes both in a meaningful way, and it is permanent.
+When a hero and an item are both S tier, you can **oathbind** the hero to that item. It changes both in a meaningful way, and it is permanent.
 
 **Rules**
 
-- One specialization per hero.
+- One Oathbinding per hero.
 - The item can't be removed from that hero, moved to another hero, or sold. It can still be repositioned within the hero's row.
-- The item can still be infused and reforged.
-- If the hero is dismissed, the specialized item goes with them.
-- The specialization also changes the item's backup mode when the hero is in backup.
+- The item can still be infused and reforged (reforging = removing its infusion).
+- If the hero is dismissed, the oathbound item goes with them.
+- The Oathbinding also changes the item's backup mode when the hero is in backup.
 - Show a preview of the result before the player confirms, since it can't be undone.
 
-**Specialization by rarity**
+**Oathbinding by rarity**
 
 | Rarity | How specific | Notes |
 | --- | --- | --- |
@@ -87,11 +89,11 @@ When a hero and an item are both S tier, you can **specialize** the hero with th
 | Uncommon | Generic, slightly stronger than Common |  |
 | Rare | Class-specific, never hero-specific or unique | Stronger with the matching class, weaker with similar classes, generic with unrelated ones |
 | Epic | Fairly unique with specific heroes | Otherwise works like Rare (class-based) |
-| Legendary | Always unique and specialized | Suggested: one unique specialization per item with a variant per class; fully hero-specific versions only for signature pairings |
+| Legendary | Always unique | Suggested: one unique Oathbinding per item with a variant per class; fully hero-specific versions only for signature pairings |
 
 **Class tags and fit**
 
-Heroes and items both carry tags (such as Melee, Ranged, Magic, Healing, Defense), and classes are grouped by similarity. A fit check decides which version of a specialization applies. For example, a magic weapon specializes poorly with a melee hero and falls back to a generic version.
+Heroes and items both carry tags (such as Melee, Ranged, Magic, Healing, Defense), and classes are grouped by similarity. A fit check decides which version of an Oathbinding applies. For example, a magic weapon specializes poorly with a melee hero and falls back to a generic version.
 
 | Fit | Result |
 | --- | --- |
@@ -103,7 +105,7 @@ Proposed similarity groups: Warden + Striker (melee), Arcanist + Mender (casters
 
 ## Legendaries
 
-Legendaries are the rarest and most powerful items. Each one always has both an active and a backup mode, a unique specialization, and **its own upgrade path** instead of combining copies.
+Legendaries are the rarest and most powerful items. Each one always has both an active and a backup mode, a unique Oathbinding, and **its own upgrade path** instead of combining copies.
 
 - **One per run:** a Legendary can appear only once per run, so you'll almost never see a duplicate (barring extremely lucky events).
 - **Starting tier depends on the path.** Most Legendaries start at B or A. Some start at C and must be raised all the way to S through their path.
@@ -121,9 +123,9 @@ Legendaries are the rarest and most powerful items. Each one always has both an 
 
 ## Open questions
 
-- [ ] Rare specializations: hand-written per class, or one tag-based effect that scales by fit?
+- [ ] Rare Oathbindings: hand-written per class, or one tag-based effect that scales by fit?
 - [ ] What do backup-only items do on a fielded hero: nothing, or a small passive?
 - [ ] Starting tier for each Legendary path (C, B, or A).
-- [ ] Backup specialization effects above Common: derived by a rule from the active effect, or hand-written?
-- [ ] An early S hero + S item could allow an Act 1 specialization. Track how often it happens in the headless sim.
+- [ ] Backup Oathbinding effects above Common: derived by a rule from the active effect, or hand-written?
+- [ ] An early S hero + S item could allow an Act 1 Oathbinding. Track how often it happens in the headless sim.
 - [ ] Final class similarity groups.

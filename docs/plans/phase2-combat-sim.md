@@ -1,6 +1,6 @@
 # Plan: Phase 2 combat sim
 
-Status: **approved; in progress.** Steps 1–4 are done. Targeting, same-tick deaths, HP-only stats, crits, and the tie rules are confirmed. The collapse ramp was revised in round 3.
+Status: **approved; in progress.** Steps 1–4 are done. Step 4's essences are being reworked before step 5; see `docs/plans/essence-rework.md`. Targeting, same-tick deaths, HP-only stats, crits, and the tie rules are confirmed. The collapse ramp was revised in round 3.
 
 Goal (from the roadmap in `docs/design.md`): a deterministic auto-battle on fixed front/back rows, with no art. It must include essences, alloys, attunement, and spill. Done when a fight can be explained from its log, and the headless runner shows whether alloys feel worth fusing.
 

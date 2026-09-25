@@ -148,14 +148,14 @@ The trade-off: an alloy is the strongest effect on its own item, but its spill i
 - *Hourglass* (relic) + Storm: instead of slowing enemies at 20 seconds, it resets every ally's cooldowns once.
 - *Iron Bulwark* + Ember: the shield no longer blocks damage; it explodes when broken, burning nearby enemies.
 
-**Why this is different from The Bazaar:** enchantments come from what you fight, not a random roll; they combine; and an early item keeps getting better instead of being sold. The trade-off is commitment: removing an infusion at a Forge costs gold and resets its level.
+**Why this is different from The Bazaar:** enchantments come from what you fight, not a random roll; they combine; and an early item keeps getting better instead of being sold. The trade-off is commitment: **reforging** (removing an infusion) at a Forge costs gold and resets its level.
 
 **Other item rules**
 
-- Rarity: **Common, Uncommon, Rare, Epic, Legendary** (Epic sits between Rare and Legendary). Rarity decides how often an item shows up, and also how complex it is, whether it has a backup mode, and how tailored its hero–item specialization is. It is **separate from tier** (see Item tiers below): an item of any rarity can show up at any tier the run allows, and can be tiered up.
+- Rarity: **Common, Uncommon, Rare, Epic, Legendary** (Epic sits between Rare and Legendary). Rarity decides how often an item shows up, and also how complex it is, whether it has a backup mode, and how tailored its Oathbinding is. It is **separate from tier** (see Item tiers below): an item of any rarity can show up at any tier the run allows, and can be tiered up.
 - **Size doesn't affect rarity.** Any Small item shows up exactly as often as any Large item of the same rarity. The game has more Small items than Medium, and more Medium than Large, so Small items turn up more overall simply because there are more of them.
 - Every item has its own **crit chance, starting at 0%**. Umbral and some items raise it. A crit deals 150% damage (a tuning value).
-- Tags on every item (Weapon, Tome, Charm, Tool, Food) drive synergies and hero bonuses.
+- Items carry **multiple tags**: item tags (Weapon, Tome, Charm, Tool, Food) and class-fit tags (Melee, Ranged, Magic, Healing, Defense). Tags drive synergies, Oathbinding fit, and (later) boosts from other items and heroes.
 
 **Item tiers (combining duplicates)**
 
@@ -174,7 +174,7 @@ Items use the **same tiers as hero ranks: C → B → A → S**. Items don't hav
 - **Legendaries never combine.** Each has its own upgrade path (grows by use, essence-hungry, boss-forged, and so on), and a Legendary can appear only once per run.
 - Shop tier odds by act (C/B/A/S, starting values): Act 1 80/20/0/0, Act 2 45/40/15/0, Act 3 20/40/30/10. The same table applies to Tavern heroes, so it lives in one data file.
 
-**Hero–item specialization:** when a hero and an item are both S tier, the player can permanently specialize the hero with that item. One per hero; the item can't be removed, moved, or sold after that (but can be repositioned in the row and still infused); it leaves with the hero if the hero is dismissed; and a preview is shown before confirming. How specific the result is depends on rarity (Common: basic and generic, plus a basic backup ability; Legendary: unique). Full rules, the class-fit table, and Legendary upgrade paths: `docs/tiers-backup-specialization.md`.
+**Oathbinding (hero–item):** when a hero and an item are both S tier, the player can permanently oathbind the hero to that item. One per hero; the item can't be removed, moved, or sold after that (but can be repositioned in the row and still infused); it leaves with the hero if the hero is dismissed; and a preview is shown before confirming. How specific the result is depends on rarity (Common: basic and generic, plus a basic backup ability; Legendary: unique). Full rules, the class-fit table, and Legendary upgrade paths: `docs/tiers-backup-specialization.md`.
 
 **Relic board (shared by the whole guild)**
 
@@ -290,7 +290,12 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - Heals and "lowest HP" targeting use the lowest HP **percentage**, not the lowest raw HP.
 - Items have five rarities (Epic added) and four tiers (C/B/A/S). S items can't combine; Legendaries never combine and appear at most once per run.
 - Backup is the player's choice; backup heroes' Backup effects and their items' backup modes apply.
-- An S-tier hero can be permanently specialized with an S-tier item (see `docs/tiers-backup-specialization.md`).
+- An S-tier hero can be permanently **oathbound** to an S-tier item (**Oathbinding**; see `docs/tiers-backup-specialization.md`). "Specialization" is reserved for the rank-B choice.
+- **Reforging** means removing an item's infusion (at a Forge; costs gold and resets its XP).
+- **Item numbers are base values.** Tier and hero stats add **percentage boosts** on top (so do other bonuses later). The game shows both the base and the boosted value. This also applies to heroes' basic auto-attacks (hero stats only, since they have no tier).
+- **Fallen heroes always come back** after a fight, with no downside.
+- Items carry **multiple tags**, from both the item tags (Weapon, Tome, Charm, Tool, Food) and the class-fit tags (Melee, Ranged, Magic, Healing, Defense). Later, items and heroes can boost based on other items' tags.
+- **Backup in the combat sim** is added after Phase 2's build steps.
 - Every hero has their own built-in basic auto-attack, which can't be upgraded. An auto-attack item (Small, Medium, or Large) replaces it and takes up slots, and a hero can equip only one. Take the item out and the hero uses the basic auto-attack again.
 - Two copies of the same item combine into the next tier (two, not three). A new copy's infusion replaces the old one.
 - Alloy spill per side equals a single essence's spill for now.
@@ -303,4 +308,5 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - **Doubled spill:** does any pure double keep it? Overgrowth (Verdant + Verdant) is the first one to test.
 - **Act 3 collapse numbers:** to be decided later.
 - **Tier schedule:** at what point in a run do normal shops and the Tavern start offering B, A, and S? (A tuning table; it can be set once the run structure is being built.)
-- More open questions on tiers, backup, specialization, and Legendaries are listed at the end of `docs/tiers-backup-specialization.md`.
+- **Essence rework (in progress):** two new essences (poison and attack damage), essences that scale from the item's own output, Slow landing on a random item, and Freeze changes. The proposal and its open questions are in `docs/plans/essence-rework.md`.
+- More open questions on tiers, backup, Oathbinding, and Legendaries are listed at the end of `docs/tiers-backup-specialization.md`.
