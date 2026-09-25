@@ -365,6 +365,7 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 
 - **Doubled spill:** does any pure double keep it? Overgrowth (Verdant + Verdant) is the first one to test.
 - **Act 3 collapse numbers:** to be decided later.
+- **Signature gear strength:** should signature items be rarer, or their bonuses smaller? The balance parties always hold them, which flips close matchups (`docs/plans/synergies-in-sim.md`). To be decided after playtesting.
 - **Tier schedule:** at what point in a run does the Caravan start offering B, A, and S? (A tuning table; it can be set once the run structure is being built.)
 - **Stats and essence rework (in progress):** decisions, placeholders, and the build order are in `docs/plans/essence-rework.md`. Damage essences on items that don't hit need real per-item designs later; for now they hit the enemy directly across.
 - More open questions on tiers, backup, Oathbinding, and Legendaries are listed at the end of `docs/tiers-backup-specialization.md`.
