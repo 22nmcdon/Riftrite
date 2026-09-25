@@ -1,6 +1,6 @@
 # Plan: Phase 2 combat sim
 
-Status: **approved; in progress.** Steps 1–2 are done. Targeting, same-tick deaths, HP-only stats, crits, and the tie rules are confirmed. The collapse ramp was revised in round 3.
+Status: **approved; in progress.** Steps 1–3 are done. Targeting, same-tick deaths, HP-only stats, crits, and the tie rules are confirmed. The collapse ramp was revised in round 3.
 
 Goal (from the roadmap in `docs/design.md`): a deterministic auto-battle on fixed front/back rows, with no art. It must include essences, alloys, attunement, and spill. Done when a fight can be explained from its log, and the headless runner shows whether alloys feel worth fusing.
 
@@ -165,6 +165,17 @@ Every effect, status tick, level-up, spill, and death writes one entry. The dama
 7. Rush/Stall, adjacency buffs, and Linked.
 8. Headless runner and damage-meter report (win rate, average fight length, damage share per item, items that barely contribute, fights that end in a tie).
 9. Content: 4 heroes, about 20 items, 3 enemies with fixed layouts.
+
+## Built so far: decisions made in code
+
+- **First fire:** an item fires one full cooldown after the fight starts (a 3s item fires at 3.00s, 6.00s, ...).
+- **Basic auto-attack** resolves before the unit's row items on the same tick.
+- **Downed vs. dead:** a unit at 0 HP stops being a target immediately, but still fires what it had ready that tick; deaths are processed at the end of the tick.
+- **Triggers:** on_fire effects run when an item fires; each hit then runs the item's on_hit effects (and on_crit on a crit). Damage from an on_hit/on_crit effect doesn't trigger more on_hit effects, so triggers can't loop.
+- **Crits** roll per hit, only when the item has crit chance.
+- **Collapse** hits before items fire each second, in resolution order; a unit killed by collapse can still fire that tick.
+- **RNG:** xoshiro128**, implemented in GDScript and pinned by tests, so seeds replay across Godot versions.
+- **Speed:** about 9 ms per 20-second fight; 1,000 fights in about 10 s.
 
 ## Needs your call before coding
 

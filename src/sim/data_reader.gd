@@ -119,6 +119,14 @@ func req_choice(key: String, allowed: Array[String]) -> String:
 	return value
 
 
+## Like req_choice, but returns `default` when the key is missing.
+func opt_string_choice(key: String, default: String, allowed: Array[String]) -> String:
+	_read_keys[key] = true
+	if not _data.has(key):
+		return default
+	return req_choice(key, allowed)
+
+
 func req_object(key: String) -> DataReader:
 	if not _require(key):
 		return null
@@ -142,6 +150,29 @@ func opt_object_array(key: String) -> Array[DataReader]:
 		if reader != null:
 			readers.append(reader)
 	return readers
+
+
+## Reads an optional list of strings, each of which must be in `allowed`.
+func opt_choice_array(key: String, allowed: Array[String]) -> Array[String]:
+	_read_keys[key] = true
+	var result: Array[String] = []
+	if not _data.has(key):
+		return result
+	var value: Variant = _data[key]
+	if typeof(value) != TYPE_ARRAY:
+		_errors.append("%s: expected a list, got %s" % [key_path(key), _describe(value)])
+		return result
+	var items: Array = value
+	for i: int in items.size():
+		var element: Variant = items[i]
+		var element_path: String = "%s[%d]" % [key_path(key), i]
+		if typeof(element) != TYPE_STRING or not allowed.has(element):
+			_errors.append("%s: unknown value %s (expected one of: %s)" % [element_path, _describe(element), ", ".join(allowed)])
+		elif result.has(element):
+			_errors.append("%s: \"%s\" is listed twice" % [element_path, element])
+		else:
+			result.append(element)
+	return result
 
 
 ## Returns the object's keys, sorted, for objects used as maps (like

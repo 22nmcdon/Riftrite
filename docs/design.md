@@ -292,5 +292,6 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 
 - **Doubled spill:** does any pure double keep it? Overgrowth (Verdant + Verdant) is the first one to test.
 - **Act 3 collapse numbers:** to be decided later.
+- **"Lowest-HP ally":** lowest current HP, or lowest HP *percentage*? (A 900/1000 tank vs. a 150/200 mender.) The sim currently uses lowest current HP, as literally written.
 - **Tier schedule:** at what point in a run do normal shops and the Tavern start offering B, A, and S? (A tuning table; it can be set once the run structure is being built.)
 - **Retraining:** where does a hero get retrained to a different specialization (Tavern, a Guildhall station, an event?), and what does it cost?
