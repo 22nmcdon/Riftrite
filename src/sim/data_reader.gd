@@ -99,6 +99,18 @@ func req_string(key: String) -> String:
 	return value
 
 
+## Reads an optional string (empty allowed).
+func opt_string(key: String, default: String) -> String:
+	_read_keys[key] = true
+	if not _data.has(key):
+		return default
+	var value: Variant = _data[key]
+	if typeof(value) != TYPE_STRING:
+		_errors.append("%s: expected a string, got %s" % [key_path(key), _describe(value)])
+		return default
+	return value
+
+
 func opt_bool(key: String, default: bool) -> bool:
 	_read_keys[key] = true
 	if not _data.has(key):
@@ -167,6 +179,21 @@ func req_string_array(key: String) -> Array[String]:
 			_errors.append("%s[%d]: expected a non-empty string, got %s" % [key_path(key), i, _describe(items[i])])
 		else:
 			result.append(items[i])
+	return result
+
+
+## Reads a required list of whole numbers.
+func req_int_array(key: String) -> Array[int]:
+	var result: Array[int] = []
+	if not _require(key):
+		return result
+	var value: Variant = _data[key]
+	if typeof(value) != TYPE_ARRAY:
+		_errors.append("%s: expected a list, got %s" % [key_path(key), _describe(value)])
+		return result
+	var items: Array = value
+	for i: int in items.size():
+		result.append(to_int(items[i], "%s[%d]" % [key_path(key), i], _errors))
 	return result
 
 

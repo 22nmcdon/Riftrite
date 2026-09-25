@@ -37,6 +37,12 @@ var last_hit_by: String = ""
 ## The specialization's aura, grant, and replace_status parts that apply now
 ## (by rank and fielded/benched); CombatSim.rederive_all applies them.
 var spec_parts: Array[SpecializationDef.Part] = []
+## Phases (see PhaseDef) and how many have begun.
+var phases: Array[PhaseDef] = []
+var phases_entered: int = 0
+## Ability items added by phases, by part key (so a later phase's part with
+## the same key replaces it). Looked up by key only.
+var phase_abilities: Dictionary[String, ItemState] = {}
 
 
 static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column: int, content: ContentDb, in_backup: bool = false) -> UnitState:
@@ -52,6 +58,7 @@ static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column:
 	state.max_hp = state.stats.get_stat(UnitStats.Stat.HP)
 	state.hp = state.max_hp
 	state.benched = in_backup
+	state.phases = setup.phases
 	var parts: Array[SpecializationDef.Part] = []
 	if setup.specialization != null:
 		for part: SpecializationDef.Part in setup.specialization.parts_at(setup.rank):

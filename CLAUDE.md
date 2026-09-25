@@ -16,18 +16,20 @@ A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The pl
 ## Commands
 
 <!-- Update these once the project is set up -->
-- Run the game: `godot --path .` (no main scene yet)
+- Run the game: `godot --path .` (main scene `src/ui/main.tscn`; the run saves to `user://run.json`)
+- Screenshots of each screen (needs a display): `xvfb-run godot --path . -s tools/ui_screenshots.gd -- --out=/tmp/shots`
 - Run all tests: `godot --headless -s addons/gut/gut_cmdln.gd -gexit` (settings in `.gutconfig.json`)
 - Run one test file: add `-gselect=test_project_setup.gd`
 - Fresh checkout: run `godot --headless --import` once first, so class names are registered. The session-start hook does this in cloud sessions.
 - Validate game data: `godot --headless --path . -s tools/validate_data.gd` (also covered by the test run)
 - Headless balance sim: `godot --headless --path . -s tools/sim_runner.gd -- --fights=200 --seed=1` (optional `--party=id`, `--encounter=id`). Parties live in `tools/sim_parties.json`; encounters in `data/encounters.json`.
+- Run-level balance (the run bot): `godot --headless --path . -s tools/run_runner.gd -- --runs=200 --seed=1`. Run data lives in `data/economy.json`, `data/acts.json`, `data/events.json`.
 - Cloud sessions: `.claude/hooks/session-start.sh` installs the pinned Godot as `godot` in `~/.local/bin`.
 
 ## Folder layout
 
 ```
-data/          items, essences, alloys, relics, heroes, enemies, synergies (JSON)
+data/          items, essences, alloys, relics, heroes, enemies, synergies, specializations; economy, acts, events (JSON)
 docs/          design.md and other design notes
 src/sim/       combat simulation: pure logic, NO nodes, NO rendering
 src/run/       run state, days and stops, shop, forge, economy, save
@@ -78,6 +80,11 @@ tools/         headless sim runner, data validators
 - Each part applies when `fielded`, `benched`, or `always`.
 - A part that replaces the basic attack must come with an `auto_attack` part, so equipping an auto-attack item never blanks the specialization.
 
+## Boss rules
+
+- Bosses (and any enemy) can have **HP-threshold phases** (`PhaseDef`, `docs/plans/act1-boss.md`). A phase is entered once, the first time the enemy drops below its threshold while still standing, and is made of specialization-style parts; a same-key part replaces an earlier one. Summons (units joining mid-fight) come later.
+- **Legendary relics are boss relics:** only the boss's relic choice and rare events give them.
+
 ## Item rules
 
 - Every unit has a built-in **basic auto-attack** (no slot). Each hero's basic auto-attack is their own and **can't be upgraded** (no sockets, no tier). **Auto-attack items** replace it, take up slots, and can be Small, Medium, or Large. **Max one auto-attack item per hero.** Remove the item and the unit falls back to its basic auto-attack.
@@ -90,6 +97,7 @@ tools/         headless sim runner, data validators
 - Items carry **multiple tags** (item tags and class-fit tags).
 - **Size never affects rarity.** Each item of a given rarity has the same appearance odds whatever its size; there are just more Small items in the pool.
 - Every item has its own crit chance (default 0). Crit damage multiplier is a tuning value (150%).
+- Enemy-only items can end up with the guild through drops, but the Caravan never sells them: they upgrade only through a second copy from random loot or an upgrade stop.
 - Enemies use hand-made, fixed item layouts with set tiers, built from the same item system; some items are enemy-only. Some enemy teams carry relics (enemy-only relics exist too). Every fight guarantees one drop from the enemy team's items and relics, enemy-only ones included.
 
 ## Other core rules
@@ -99,6 +107,8 @@ tools/         headless sim runner, data validators
 - **The Caravan never offers an item or hero at a different tier than a copy the player already holds.** Different-tier copies of the same item can still be held when they come from elsewhere (Vault, loot, fights, events). Items can move between heroes freely between fights (never during combat).
 - Fallen heroes always come back after a fight, with no downside.
 - A lost fight restarts the day (everything kept, plus bonus gold); the second loss ends the run. Every fight starts at full HP (unless an item or relic says otherwise). Unequipped items wait in a shared stash of 6 slots that works like a hero row; relics can't go there.
+- **The run layer** (`src/run/`, `docs/plans/run-state.md`): change a run only through `RunActions` (each refuses cleanly and changes nothing when it fails); `RunState.check()` lists every run rule, and loading a save checks them all. `RunFight` builds fights from a run and writes XP, discoveries, and results back.
+- **The day structure** (`RunFlow`, `docs/plans/day-structure.md`): a run moves through phases (start, Caravan, stop choice, stop, fight, rewards, act end or run over); each RunFlow action checks the phase. Offers use `RunRandom` streams seeded by where they happen, never by earlier picks.
 - There is no branching map: each act is a set number of days, each going Caravan (shop) → a stop the player picks → one fight. A lost fight replays the day against the same enemies. Offers come from the run seed and don't depend on earlier picks (for now). The run layer is deterministic from its seed, like the sim.
 - A run starts with one hero; roster cap 6, 1–5 fielded. Which heroes sit in backup is the player's choice; backup heroes' Backup effects and their items' backup modes apply. In a fight, backup heroes are off the field (never targeted, no collapse damage, don't count for victory); only `"backup"` blocks act from the bench. Common items can't have a backup mode (until Oathbinding); Legendary items must.
 - "Lowest HP" (heals and targeting) means lowest HP **percentage**.

@@ -754,5 +754,59 @@
         }
       }
     ]
+  },
+  {
+    "id": "pack_bond",
+    "name": "Pack Bond",
+    "_note": "Carried by Old Mother Ash's hounds: the pack stands firmer while its holder stands.",
+    "size": 1,
+    "tags": [
+      "charm",
+      "defense"
+    ],
+    "rarity": "uncommon",
+    "enemy_only": true,
+    "xp_per_fire": 0,
+    "auras": [
+      {
+        "target": "all_allies",
+        "stat": "def_bp",
+        "value": 12500,
+        "label": "Pack Bond"
+      }
+    ]
+  },
+  {
+    "id": "ember_maw",
+    "name": "Ember Maw",
+    "_note": "Old Mother Ash's bite: an auto-attack that leaves the wound bleeding.",
+    "size": 2,
+    "tags": [
+      "weapon",
+      "melee"
+    ],
+    "rarity": "rare",
+    "enemy_only": true,
+    "auto_attack": true,
+    "xp_per_fire": 1,
+    "cooldown_ms": 1400,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "damage",
+        "amount": 6,
+        "target": "enemy_front",
+        "scaling": {
+          "atk": 6000
+        }
+      },
+      {
+        "trigger": "on_hit",
+        "type": "apply_status",
+        "status": "bleed",
+        "stacks": 1,
+        "target": "hit_target"
+      }
+    ]
   }
 ]

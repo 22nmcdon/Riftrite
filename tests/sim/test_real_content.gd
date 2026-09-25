@@ -19,7 +19,7 @@ func _has(errors: Array[String], expected: String) -> bool:
 
 func test_draft_content_counts() -> void:
 	var db: ContentDb = K.content()
-	assert_eq([db.hero_ids.size(), db.enemy_ids.size(), db.encounter_ids.size()], [4, 3, 3])
+	assert_eq([db.hero_ids.size(), db.enemy_ids.size(), db.encounter_ids.size()], [4, 6, 7])
 	assert_gt(db.item_ids.size(), 20)
 
 

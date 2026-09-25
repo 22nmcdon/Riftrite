@@ -38,5 +38,7 @@ static func encounter_units(content: ContentDb, encounter_id: String) -> Array[U
 		var slot: EncounterDef.Slot = encounter.units[i]
 		var def: EnemyDef = content.enemies[slot.enemy_id]
 		var unit_id: String = "%s_%d" % [def.id, i + 1]
-		result.append(UnitSetup.make(unit_id, def.name, def.stats, slot.row, def.slots, def.basic_attack, item_setups(content, def.items), def.rank))
+		var unit: UnitSetup = UnitSetup.make(unit_id, def.name, def.stats, slot.row, def.slots, def.basic_attack, item_setups(content, def.items), def.rank)
+		unit.phases = def.phases
+		result.append(unit)
 	return result

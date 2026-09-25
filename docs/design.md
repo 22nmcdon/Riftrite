@@ -365,6 +365,19 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 
 - **Doubled spill:** does any pure double keep it? Overgrowth (Verdant + Verdant) is the first one to test.
 - **Act 3 collapse numbers:** to be decided later.
+- **Bosses** have HP-threshold phases (built from the same parts as specializations). Summons (units joining mid-fight) come later. The Act 1 boss is Old Mother Ash and her pack (`docs/plans/act1-boss.md`).
+- **Enemy-only items** can end up with the guild (fight drops include them). The Caravan never sells them, so the only ways to upgrade one are a second copy from random loot (not the Caravan) or an upgrade stop.
+- **Day structure (decided):**
+  - **Stops:** the Upgrade stop (free, one item up one tier) is always the stop right before the boss and appears nowhere else. A Retrain stop switches a hero's specialization.
+  - **Relics:** you pick 1 of 3 after every elite and after the boss. A relic merchant event sells one; the Caravan never sells relics.
+  - **Legendary relics are boss relics:** game-altering, and obtainable only by winning a boss fight (its relic choice is all Legendary) or from rare events at an event stop.
+  - **Keys:** elites drop one half the time, and some events give one.
+  - **Essences:**
+    - a normal win gives 1 shard of the enemy team's essence, and 3 shards make an essence
+    - an elite or boss win gives a whole essence
+    - Loot and Events give essences too
+  - Details: `docs/plans/day-structure.md`.
+- **Run rules (decided):** reforging destroys the essences. You can always pass on a new item or essence; to take one without room, throw something away first (discarding works any time, selling only at the Caravan), and you can't buy without room. The roster's first slot is always a field slot; the other five can each be field or backup. New heroes join fielded if fewer than 5 are.
 - **Signature gear strength:** should signature items be rarer, or their bonuses smaller? The balance parties always hold them, which flips close matchups (`docs/plans/synergies-in-sim.md`). To be decided after playtesting.
 - **Tier schedule:** at what point in a run does the Caravan start offering B, A, and S? (A tuning table; it can be set once the run structure is being built.)
 - **Stats and essence rework (in progress):** decisions, placeholders, and the build order are in `docs/plans/essence-rework.md`. Damage essences on items that don't hit need real per-item designs later; for now they hit the enemy directly across.

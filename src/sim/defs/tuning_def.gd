@@ -47,6 +47,11 @@ var heal_cleanse_window_ticks: int
 var heal_cleanse_falloff_bp: int
 ## Keyed by act number. Look up with collapse_for_act(); don't iterate.
 var collapse_by_act: Dictionary[int, CollapseDef] = {}
+## Run layer: stash size (slots, like a hero row), essence pouch cap, and the
+## gold a reforge costs.
+var stash_slots: int = 6
+var pouch_cap: int = 8
+var reforge_gold: int = 0
 
 
 ## Sockets an item has: 2 for the two-socket rarities, else 1.
@@ -99,6 +104,13 @@ static func read(reader: DataReader) -> TuningDef:
 		if not def.collapse_by_act.has(1):
 			acts.error("must define act \"1\"")
 		acts.finish()
+
+	var run: DataReader = reader.req_object("run")
+	if run != null:
+		def.stash_slots = run.req_int("stash_slots", 0)
+		def.pouch_cap = run.req_int("pouch_cap", 0)
+		def.reforge_gold = run.req_int("reforge_gold", 0)
+		run.finish()
 
 	if def.xp_to_resonant <= def.xp_to_attuned:
 		reader.error("xp_to_resonant (%d) must be greater than xp_to_attuned (%d)" % [def.xp_to_resonant, def.xp_to_attuned])

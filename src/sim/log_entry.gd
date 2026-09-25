@@ -23,6 +23,7 @@ enum Kind {
 	AURA,
 	CHARGE,
 	SYNERGY,
+	PHASE,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -114,6 +115,8 @@ func to_text() -> String:
 			return line + "%s charges %s by %s" % [source_text(), note, _format_time(amount)]
 		Kind.SYNERGY:
 			return line + note
+		Kind.PHASE:
+			return line + "%s enters %s" % [target, note]
 		Kind.STATUS_JUMPED:
 			return line + "%s jumps from %s to %s (%d stacks)" % [status_name, note, target, stacks]
 		Kind.INFUSION_LEVEL:

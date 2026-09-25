@@ -1,0 +1,59 @@
+[
+  {
+    "id": "lost_purse",
+    "name": "A Lost Purse",
+    "text": "A purse lies in the ash, heavier than it looks.",
+    "kind": "gold",
+    "amount": 8,
+    "weight": 5
+  },
+  {
+    "id": "wanderers_pack",
+    "name": "A Wanderer's Pack",
+    "text": "Someone left in a hurry. Their pack is still here.",
+    "kind": "item_by_rarity",
+    "weight": 5
+  },
+  {
+    "id": "forgotten_forge",
+    "name": "A Forgotten Forge",
+    "text": "The anvil is still warm. Something was left on it.",
+    "kind": "item_by_tier",
+    "weight": 5
+  },
+  {
+    "id": "shrine_offering",
+    "name": "A Shrine Offering",
+    "text": "A small shrine holds something old and humming.",
+    "kind": "relic_by_rarity",
+    "weight": 5
+  },
+  {
+    "id": "relic_peddler",
+    "name": "The Relic Peddler",
+    "text": "A cloaked peddler unrolls a cloth of curios. For a price.",
+    "kind": "relic_merchant",
+    "weight": 5
+  },
+  {
+    "id": "essence_well",
+    "name": "An Essence Well",
+    "text": "Rift light pools here, thick enough to bottle.",
+    "kind": "essence",
+    "weight": 5
+  },
+  {
+    "id": "rusted_key",
+    "name": "A Rusted Key",
+    "text": "Half-buried: a key to one of the rift's old vaults.",
+    "kind": "key",
+    "weight": 5
+  },
+  {
+    "id": "ancient_reliquary",
+    "name": "The Ancient Reliquary",
+    "text": "Behind a sealed door, something old and terrible waits on a plinth.",
+    "kind": "legendary_relic",
+    "weight": 1
+  }
+]
