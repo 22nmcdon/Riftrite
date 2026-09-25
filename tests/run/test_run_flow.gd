@@ -161,6 +161,26 @@ func test_buying_needs_gold_and_room() -> void:
 	assert_eq(JSON.stringify(state.to_dict()), before, "a refused purchase changes nothing")
 
 
+func test_buying_an_upgrade_combines_into_the_held_copy() -> void:
+	var state: RunState = _started()
+	var index: int = 0
+	while state.offers[index]["type"] != "item":
+		index += 1
+	var offer: Dictionary = state.offers[index]
+	assert_eq(RunFlow.upgrade_target(state, _content(), index), -1, "nothing held yet")
+	var held: RunItem = RunItem.make(state.take_uid(), offer["item"], offer["tier"])
+	held.essence_ids = ["ember"] as Array[String]
+	state.stash.append(held)
+	for i: int in _content().tuning.stash_slots:
+		state.stash.append(RunItem.make(state.take_uid(), "hearth_knife", 2))
+	assert_eq(RunFlow.upgrade_target(state, _content(), index), held.uid, "it lights up")
+	state.gold = 50
+	assert_true(RunFlow.buy(state, _content(), index).ok, "an upgrade needs no stash room")
+	assert_eq([held.tier, held.essence_ids, state.gold], [offer["tier"] + 1, ["ember"] as Array[String], 50 - offer["price"]])
+	assert_true(state.offers[index]["taken"])
+	assert_eq(RunFlow.upgrade_target(state, _content(), index), -1)
+
+
 func test_full_roster_only_offers_copies() -> void:
 	var state: RunState = _started()
 	for hero_id: String in _content().hero_ids:

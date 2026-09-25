@@ -1,6 +1,6 @@
 # Plan: the first UI (Phase 3, step 7)
 
-Status: **proposed, awaiting approval and answers (end of file).** Nothing here is built yet.
+Status: **built** (Phase 3, step 7). Answers and built notes are at the end.
 
 **Goal:** a playable Act 1 with placeholder art, where readability comes first. The design calls these readability tools required:
 - fight playback at 0.5×/1×/2×/4×, with pause
@@ -66,9 +66,39 @@ UI tests stay headless, with no pixel checks:
 - **Smoke test:** a whole run clicked through by a scripted "player" (the run bot's choices, pressed through the UI).
 - **Screenshots:** I'll also render each screen headless under Xvfb to check the layout myself.
 
-## Questions
+## Answers
 
-1. **Platform:** is desktop landscape (mouse and keyboard, 1920×1080) the right first target? Or should it also work on phones or tablets from the start?
-2. **Moving items:** drag and drop (with click-to-select as a fallback) OK?
-3. **Fight view:** heroes on the left, enemies on the right, back rows on the outside and front rows facing each other, each unit a card with its row of item tiles under it. OK, or do you picture it differently?
-4. **Art:** placeholder panels and text for now, with real art later? Or should I use a specific free asset pack or style now?
+1. **Desktop** (landscape, mouse and keyboard) first.
+2. **Moving items:** drag and drop.
+   - **In the Caravan, clicking an item buys it** into the stash.
+   - **Upgrades light up:** if a ware would combine with a copy you hold (same item and tier), its tile lights up, and clicking it buys and **combines it straight into your copy**, even with a full stash.
+3. **Fight view:** heroes in the foreground (the bottom of the screen) and enemies in the background (the top), with both front rows facing each other in the middle.
+4. **Placeholder art** for now.
+
+## Built notes
+
+- **The bridge:**
+  - `RunSession` (`src/ui/run_session.gd`) wraps every RunFlow/RunActions action. Each one saves the run (`user://run.json`) when it succeeds and emits `changed` with its Result; `Main` toasts a refused action's error.
+  - `RunFlow.buy` combines a lit ware straight into the held copy (`RunFlow.upgrade_target`), needing no stash room. `RunFlow.fight` returns `[Result, FightResult, FightSetup]`.
+  - `RunSession.fixed_seed` makes "New run" repeatable (tests, screenshots); otherwise each run gets a fresh seed.
+- **Main** (`src/ui/main.tscn`, `main.gd`, the project's main scene) picks the screen from the run's phase and rebuilds it after every change. While a fight plays back, its screen stays until Continue.
+- **Screens** (`src/ui/screens/`): title, run start (heroes, then packages), Caravan, stop choice, stop (Loot, the Vault, events, Forge, Retrain, Upgrade), fight, rewards (the "after the fight" screen), and run end.
+- **Widgets** (`src/ui/widgets/`):
+  - `ItemTile`: sized by slots, rarity border, a dot per socketed essence, a tooltip with the full breakdown. Owned tiles drag; dropping a copy onto a tile at the same tier combines, dropping an essence infuses, and anything else moves to that spot.
+  - `GuildPanel` holds the hero rows (row, fielded/backup, order, specialization pick), the stash, the pouch and shards, relics, and a throw-away zone.
+  - `DropZone` (stash, free slots, sell, throw away), `EssenceChip`, `OfferView`, `DayBar`, `UnitCard` (HP/shield bars, status tags, item cooldown fill and flash), `DamageMeterView`, `Toast`.
+  - The hero rows and the stash are built into `GuildPanel` rather than separate `hero_row`/`stash_panel` widgets, and tooltips are Godot's own.
+- **Fight playback:** `FightPlayer` steps a fresh `CombatSim` from the fight's setup at 0.5×/1×/2×/4×, with pause and skip. The fight screen shows enemies at the top (back row furthest) and heroes at the bottom (the bench below them), with the log beside it, then the result, the damage meter, and Continue.
+- **The look:** one theme from `UiStyle` (placeholder panels and text, cozy-grim palette), at 1920×1080 with `canvas_items` stretch.
+- **Tests** (`tests/ui/`, headless):
+  - `RunSession` saves, emits, passes errors through, continues, and abandons.
+  - `FightPlayer` replays the recorded fight at every speed; ticks per second, pause, and skip are checked.
+  - Screens follow the phase; clicks, button presses, and drops (buy, the lit upgrade, reroll, sell, move, combine, infuse, throw away, formation) change the run through the session.
+  - A whole run is clicked through by a scripted player until the run ends and the title returns.
+- **Screenshots:** `tools/ui_screenshots.gd` renders each screen of a scripted day to PNGs under Xvfb.
+
+### Left for later
+
+- Log lines name units by id (`rift_pup_1`); friendlier names and colored log lines can come with real art.
+- Dropping an item onto a later tile in the same row puts it after that tile (it's removed first). This is fine for now.
+- There's no in-run menu yet (abandoning a run, settings). The title's Continue resumes the saved run.

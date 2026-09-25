@@ -171,11 +171,43 @@ static func _random_specialization(content: ContentDb, hero_id: String, rng: Sim
 	return "" if options.is_empty() else options[rng.range_int(options.size())]
 
 
+## Buys a Caravan offer. An item that would combine with a copy the guild
+## holds (see upgrade_target) combines straight into that copy, so buying
+## an upgrade needs no stash room.
 static func buy(state: RunState, content: ContentDb, index: int) -> RunActions.Result:
 	var problem: String = _phase_problem(state, "caravan")
 	if not problem.is_empty():
 		return _fail(problem)
-	return _take_offer(state, content, index)
+	var target: int = upgrade_target(state, content, index)
+	if target < 0:
+		return _take_offer(state, content, index)
+	var offer: Dictionary = state.offers[index]
+	if offer["price"] > state.gold:
+		return _fail("not enough gold (%d of %d)" % [state.gold, offer["price"]])
+	var held: RunItem = state.find_item(target)
+	held.tier += 1
+	state.gold -= offer["price"]
+	offer["taken"] = true
+	return _ok("%s upgraded to %s" % [content.items[held.item_id].name, TuningDef.TIER_LABELS[held.tier]])
+
+
+## The uid of the held item a Caravan item offer would upgrade (same item
+## and tier, below S, not Legendary), or -1. The UI lights these up.
+static func upgrade_target(state: RunState, content: ContentDb, index: int) -> int:
+	if index < 0 or index >= state.offers.size():
+		return -1
+	var offer: Dictionary = state.offers[index]
+	if offer["type"] != "item" or offer["taken"] or offer["tier"] >= 3 or content.items[offer["item"]].rarity == "legendary":
+		return -1
+	var lists: Array = []
+	for hero: RunHero in state.heroes:
+		lists.append(hero.items)
+	lists.append(state.stash)
+	for list: Array in lists:
+		for item: RunItem in list:
+			if item.item_id == offer["item"] and item.tier == offer["tier"]:
+				return item.uid
+	return -1
 
 
 static func sell(state: RunState, content: ContentDb, run: RunContent, uid: int) -> RunActions.Result:
@@ -433,30 +465,32 @@ static func _take_offer(state: RunState, content: ContentDb, index: int) -> RunA
 
 # --- fights and rewards ---------------------------------------------------------
 
-## Runs today's fight. Returns [Result, FightResult] (the FightResult is null
-## if the fight couldn't start).
+## Runs today's fight. Returns [Result, FightResult, FightSetup] (the last two
+## are null if the fight couldn't start). The UI replays the fight from the
+## setup (same setup, same fight).
 static func fight(state: RunState, content: ContentDb, run: RunContent) -> Array:
 	var problem: String = _phase_problem(state, "fight")
 	if not problem.is_empty():
-		return [_fail(problem), null]
+		return [_fail(problem), null, null]
 	for hero: RunHero in state.heroes:
 		if hero.needs_specialization:
-			return [_fail("%s needs a specialization first" % hero.hero_id), null]
-	var result: FightResult = CombatSim.run(RunFight.setup_for(state, content, state.encounter_id), content)
+			return [_fail("%s needs a specialization first" % hero.hero_id), null, null]
+	var setup: FightSetup = RunFight.setup_for(state, content, state.encounter_id)
+	var result: FightResult = CombatSim.run(setup, content)
 	if not result.errors.is_empty():
-		return [_fail("the fight couldn't start: %s" % result.errors[0]), result]
+		return [_fail("the fight couldn't start: %s" % result.errors[0]), result, setup]
 	RunFight.apply_result(state, content, result)
 	if result.guild_won():
 		_give_rewards(state, content, run)
-		return [_ok("won"), result]
+		return [_ok("won"), result, setup]
 	if state.losses >= LOSSES_TO_END:
 		state.phase = "run_over"
 		state.offers.clear()
-		return [_ok("the guild falls; the run is over"), result]
+		return [_ok("the guild falls; the run is over"), result, setup]
 	state.gold += run.economy.loss_gold_base + run.economy.loss_gold_per_win * state.wins
 	state.attempt += 1
 	_start_day(state, content, run)
-	return [_ok("lost; the day starts over"), result]
+	return [_ok("lost; the day starts over"), result, setup]
 
 
 static func _give_rewards(state: RunState, content: ContentDb, run: RunContent) -> void:
