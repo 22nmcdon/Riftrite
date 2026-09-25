@@ -52,7 +52,7 @@ tools/         headless sim runner, data validators
 - Only **Resonant** infusions spill to neighbors:
   - Single essence: partial effect (~30%) to **both** sides
   - Alloy: first essence's partial effect to the **left**, second's to the **right**, each at the single-essence strength (its own tuning value, currently equal to the single's); the alloy effect itself never spills
-  - Pure double: the base essence's partial effect (~30%) to both sides. Its bonus effect never spills and never strengthens the spill. The one exception is a pure double whose alloy effect *is* "doubled spill."
+  - Pure double: the base essence's partial effect (~30%) to both sides. Its bonus effect never spills and never strengthens the spill. The one exception is a pure double whose alloy effect *is* "doubled spill" (optional idea, first tried on Overgrowth, Verdant + Verdant).
   - Essence transformation: **never** spills
 - Item spills stay inside that hero's row. Relic spills stay on the relic board, never reaching hero items.
 - Spill percentages and XP thresholds are tuning values in `data/`, never hard-coded.
@@ -61,14 +61,16 @@ tools/         headless sim runner, data validators
 ## Item rules
 
 - The auto-attack is an item in the row and **takes up a slot**.
-- **Two** copies of the same item at the same tier combine into the next tier (never three). If the new copy has an infusion, it replaces the old one (and the old XP is lost); if not, the old infusion and its XP stay. The player chooses whether to combine.
-- Enemies use hand-made, fixed item layouts built from the same item system; some items are enemy-only.
+- **Two** copies of the same item at the same tier combine into the next tier (never three). If the new copy has an infusion, it replaces the old one (and the old XP is lost); if not, the old infusion and its XP stay. The player chooses whether to combine. Copies at *different* tiers can be held together.
+- Tier and rarity are separate. Rarity decides how often an item appears; any item can be tiered up. Shops sell only the lowest tier (except tier-specific shops).
+- Every item has its own crit chance (default 0). Crit damage multiplier is a tuning value (150%).
+- Enemies use hand-made, fixed item layouts with set tiers, built from the same item system; some items are enemy-only. Some enemy teams carry relics (enemy-only relics exist too). Every fight guarantees one drop from the enemy team's items and relics, enemy-only ones included.
 
 ## Other core rules
 
 - Items are per hero; the relic board is shared by the team. Items can move between heroes freely between fights (never during combat).
 - Roster cap 6, fielded heroes 3–5. Benched heroes' Backup effects still apply.
-- Rift Collapse starts at 45s of combat; fights should end by ~60s.
+- Rift Collapse starts at 45s of combat and deals **flat** damage (never % of max HP) that grows every second; fights should end by ~60s. There is no hard time limit, but a fight still running at **180s is a tie, and a tie counts as a guild victory**.
 - Formation for now: each side has fixed **front and back rows**, ordered left to right. The hex arena comes later, so don't build hex code until asked.
 - PvE only. Don't add networking or PvP code.
 

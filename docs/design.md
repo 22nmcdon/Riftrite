@@ -73,13 +73,15 @@ You field 3 heroes at the start and up to 5 by Act 3, with a roster cap of 6. Th
 - A small hex grid. Heroes move and target on their own, but you set starting hexes.
 - Some items care about position: *Linked* effects reach an adjacent ally's row, so two heroes standing together can share buffs.
 - **Rush** items are strong for the first 8 seconds; **Stall** items wake up after 15 seconds. That gives fast and slow builds real identities.
-- **Rift Collapse:** at 45 seconds the arena starts shrinking and dealing rising damage to both sides, so fights end by about 60 seconds.
+- **Rift Collapse:** at 45 seconds the rift starts dealing damage to both sides every second, and the damage keeps growing, so most fights end by about 60 seconds. It's a **flat amount, not a percentage of max HP**, so high-HP builds get to use their HP. There's no separate time limit; the growing damage finishes fights on its own. If both sides somehow survive to **3 minutes**, the fight is a **tie, and a tie counts as a victory**. (In the hex arena the arena also shrinks.)
 
 **Enemies**
 
 - Enemies are hand-made units with **fixed item layouts**. They use the same item rows as heroes, but a designer sets each layout; enemies don't draft. That keeps fights readable and balanceable while enemies still play by the same rules as the guild.
 - Some items are **enemy-only**, especially on bosses, which gives bosses their unique mechanics.
-- After a fight, the enemies can drop one of their items: either always or as a chance (to be tuned). See Open questions for whether enemy-only items can drop.
+- Some enemy teams also carry **relics**, including **enemy-only relics**.
+- Enemy items have **set tiers**, so you know what tier a given enemy's gear is.
+- **Every fight guarantees one drop** (for now), picked from the enemy team's items and relics. Enemy-only items and relics can drop too, which is how players get a boss's gear. A dropped item keeps the tier the enemy had it at.
 
 **Readability tools** (required, not polish): a combat log, a per-item damage meter after each fight, 0.5×/1×/2×/4× speed, and pause.
 
@@ -111,7 +113,7 @@ In The Bazaar an item gets one fixed enchantment. Here, enchantments are **Infus
 | Blight | Umbral + Verdant | Bleed damage heals your team |
 | Inferno | Ember + Ember | Burn stacks never fall off |
 
-**Pure doubles** (two of the same essence) are alloys too, each with its own effect, and what that effect is depends on the essence. Most pure doubles add a bonus effect like Inferno's. At least one pure double instead has **doubled spill** as its effect (which one is still to be decided). A pure double's bonus effect never makes its spill stronger. See the spill table below.
+**Pure doubles** (two of the same essence) are alloys too, each with its own effect, and what that effect is depends on the essence. Most pure doubles add a bonus effect like Inferno's. **Doubled spill** is an optional idea: a pure double whose effect is doubled spill instead of a bonus effect. Maybe no pure double gets it. The first one to try is **Overgrowth (Verdant + Verdant)**, since spreading growth fits the idea, and the sim will show whether it earns its place. A pure double's bonus effect never makes its spill stronger. See the spill table below.
 
 **4. Attune.** Each infusion gains experience (XP) and levels up at thresholds: base → Attuned (stronger) → Resonant.
 
@@ -124,8 +126,8 @@ A **Resonant** infusion spills a partial copy of its effect onto its neighbors (
 | Infusion | Spill to neighbors when Resonant |
 | --- | --- |
 | Single essence | Partial effect (about 30%) to **both** sides |
-| Alloy (fused) | Split: one essence's partial effect to the left, the other's to the right, each at the same strength as a single essence's spill (about 30%) for now. The alloy effect itself never spills |
-| Pure double | The base essence's partial effect (about 30%, same as a single) to **both** sides. Its bonus effect never spills and never makes the spill stronger. Exception: the pure double(s) whose effect *is* doubled spill spread about 60% instead |
+| Alloy (fused) | Split: one essence's partial effect to the left, the other's to the right, each at the same strength as a single essence's spill (about 30%) for now. For example, Steam (Ember + Frost) spills Ember only to its left neighbor and Frost only to its right. The alloy effect itself never spills |
+| Pure double | The base essence's partial effect (about 30%, same as a single) to **both** sides. Its bonus effect never spills and never makes the spill stronger. Exception: a pure double whose effect *is* doubled spill (an optional idea, first tried on Overgrowth) spills about 60% instead |
 | Essence transformation | **Never** spills |
 
 The trade-off: an alloy is the strongest effect on its own item, but its spill is split, so each neighbor only gets one essence. Singles and pure doubles give both neighbors the same essence, which matters when stacking one essence across a row. Percentages are starting points for tuning, and the alloy spill strength may change after testing.
@@ -140,25 +142,28 @@ The trade-off: an alloy is the strongest effect on its own item, but its spill i
 
 **Other item rules**
 
-- Rarity: Common, Uncommon, Rare, Legendary. Tags on every item (Weapon, Tome, Charm, Tool, Food) drive synergies and hero bonuses.
+- Rarity: Common, Uncommon, Rare, Legendary. Rarity decides how often an item shows up. It is **separate from tier** (see Item tiers below): a Rare item still starts at the lowest tier and can be tiered up.
+- Every item has its own **crit chance, starting at 0%**. Umbral and some items raise it. A crit deals 150% damage (a tuning value).
+- Tags on every item (Weapon, Tome, Charm, Tool, Food) drive synergies and hero bonuses.
 
 **Item tiers (combining duplicates)**
 
 Items move up tiers the way heroes move up ranks, except that an item needs a second copy of itself instead of a Tavern visit.
 
 - **Two copies of the same item at the same tier combine** into one item of the next tier. (Only two copies, not three.)
-- Because copies combine, you never have two of the same item on the board. Duplicates are meant to be uncommon, so an upgrade you chased across a run feels earned.
+- You **can** hold two copies of the same item at *different* tiers; only same-tier copies combine. Duplicates are meant to be uncommon, so an upgrade you chased across a run feels earned.
+- **Where higher tiers come from:** shops sell items only at the lowest tier, except for special tier-specific shops. Otherwise a higher-tier copy comes from an enemy drop (at that enemy's set tier) or from a loot drop (Vault chests, events, and the like), where the tier is random.
 - **What happens to infusions when copies combine:**
   - If the new copy has no infusion, the upgraded item keeps yours, along with its XP.
   - If the new copy has its own essence or alloy, **the new infusion replaces yours**, and your infusion's XP is lost. So you choose: take the tier upgrade with the new infusion, or keep your item as it is and pass on the copy.
-- See Open questions for how tiers relate to rarity.
+- Tier and rarity are separate. See Open questions for what the top tier is.
 
 **Relic board (shared by the whole guild)**
 
 - One team-wide board, separate from the hero rows. It starts with 3 slots and grows to 6 through boss kills and some events.
 - Relics are team-wide passives or triggers, such as "the first ally to drop below 30% HP gains a Shield." They have sizes and adjacency like items do.
 - Each relic has 1 socket and can be infused. A Resonant relic infusion spills to neighboring relics, never to hero items.
-- Relics come from elites, bosses, Vaults, and events, about 2–3 per act.
+- Relics come from elites, bosses, Vaults, and events, about 2–3 per act, plus drops from enemy teams that carry relics (including enemy-only relics).
 
 ## Synergies
 
@@ -187,7 +192,7 @@ Each act is a branching map of about 10 nodes, like a Gungeon floor laid out as 
 
 | Node | What happens | Rough frequency per act |
 | --- | --- | --- |
-| Fight | Standard encounter; drops gold, 1–2 essences, and possibly one of the enemies' items | 4–5 |
+| Fight | Standard encounter; drops gold, 1–2 essences, and one guaranteed item or relic from the enemy team | 4–5 |
 | Elite | Harder fight; guaranteed Rare item or rank-up | 1–2 |
 | Merchant | Buy/sell items; reroll for gold | 1–2 |
 | Forge | Infuse, fuse, or remove infusions | 1 |
@@ -257,18 +262,20 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - Engine: Godot 4 + GDScript. Sim math is integer-only, with time counted in ticks.
 - The spreadsheet prototype is skipped; the headless combat sim tests the infusion math instead.
 - The first combat sim uses fixed front/back rows; the hex arena comes later.
-- Enemies have hand-made, fixed item layouts, and some items are enemy-only (especially boss items). Fights can drop one of the enemies' items.
+- Enemies have hand-made, fixed item layouts with set tiers, and some items are enemy-only (especially boss items). Some enemy teams carry relics, including enemy-only ones. Every fight guarantees one drop from the enemy team's items and relics, and enemy-only ones can drop.
+- Tier and rarity are separate. Same-tier copies combine. Copies at different tiers can be held together. Shops sell only the lowest tier (except tier-specific shops); higher tiers come from enemies (set tier) and loot drops (random tier).
+- Every item has a crit chance, starting at 0%. Crits deal 150% damage.
+- Rift Collapse deals flat damage that grows every second, never a percentage of HP. There's no time limit, but a fight still going at 3 minutes is a tie, and a tie counts as a victory.
+- Combat sim targeting: attacks hit the enemy front row; the back row only once the front row is empty, unless an item says it reaches the back row. Units killed during a tick still fire what they had ready that tick (for now). Heroes have HP only for now.
 - The auto-attack takes up a slot. A Large item plus the auto-attack filling a 4-slot hero is an intended trade-off.
 - Two copies of the same item combine into the next tier (two, not three). A new copy's infusion replaces the old one.
 - Alloy spill per side equals a single essence's spill for now.
-- Pure doubles each have their own effect. Their bonus effect never strengthens spill; one specific pure double has doubled spill as its effect.
+- Pure doubles each have their own effect. Their bonus effect never strengthens spill. Doubled spill as a pure double's effect is an optional idea, tried first on Overgrowth (Verdant + Verdant).
 - Infusion XP comes from item fires (amount set per item, by type and size) plus battles fought. XP resets when an infusion becomes an alloy or pure double.
 - Essence resonance counts essences: a single = 1, an alloy = 1 of each half, a pure double = 2, and a transformation counts its socketed essence(s).
 
 **Open questions**
 
-- **Tiers vs. rarity:** is an item's tier the same thing as its rarity (two Commons make an Uncommon), or a separate ladder (each item has a fixed rarity for drop odds, plus its own tiers)? And what is the top tier?
-- **Copies at different tiers:** can a guild hold the same item at two different tiers (say, tier 1 and tier 2), or must the lower one be combined or discarded?
-- **Enemy item drops:** can enemy-only items drop to the player, or only the shared-pool items an enemy carries? Is a drop guaranteed after every fight, or only a chance?
-- **Doubled spill:** which pure double (or doubles) gets the doubled-spill effect?
+- **Top tier:** how many tiers does an item have?
+- **Doubled spill:** does any pure double keep it? Overgrowth (Verdant + Verdant) is the first one to test.
 - **Auto-attack:** can it be removed or swapped for another item to free its slot, or is it locked in? What size is it (assumed Small)?

@@ -1,14 +1,14 @@
 # Plan: Phase 2 combat sim
 
-Status: **proposed, awaiting approval.** Nothing here is built yet.
+Status: **proposed, awaiting approval.** Nothing here is built yet. Targeting, same-tick deaths, and HP-only stats were confirmed in round 2; the collapse and tie rules were revised then too.
 
 Goal (from the roadmap in `docs/design.md`): a deterministic auto-battle on fixed front/back rows, with no art. It must include essences, alloys, attunement, and spill. Done when a fight can be explained from its log, and the headless runner shows whether alloys feel worth fusing.
 
 ## Scope
 
-**In:** front/back rows, items firing on cooldowns, the auto-attack as an item, in-row adjacency, Linked effects (neighbor in the same row), the 6 essences and their statuses, the 6 alloys already named in the design doc (Steam, Plasma, Glacier, Bloom, Blight, Inferno), infusion XP and the Attuned/Resonant levels, spill, Rush/Stall timing, Rift Collapse, the combat log, damage-meter data, the headless runner, and the data validator.
+**In:** front/back rows, items firing on cooldowns, the auto-attack as an item, in-row adjacency, Linked effects (neighbor in the same row), the 6 essences and their statuses, the 6 alloys already named in the design doc (Steam, Plasma, Glacier, Bloom, Blight, Inferno) plus **Overgrowth** (Verdant + Verdant, doubled spill) as a test of the doubled-spill idea, infusion XP and the Attuned/Resonant levels, spill, Rush/Stall timing, Rift Collapse, the combat log, damage-meter data, the headless runner, and the data validator.
 
-**Out (later phases):** hex arena, relics and the relic board, named synergies, signature gear, essence resonance counters, class traits, Backup effects, hero ranks and specializations, item tiers and combining, essence transformations, and all UI. The data format leaves room for each of these, but no code gets written for them yet.
+**Out (later phases):** hex arena, relics and the relic board (hero or enemy), drops and loot, named synergies, signature gear, essence resonance counters, class traits, Backup effects, hero ranks and specializations, item tiers and combining, essence transformations, and all UI. The data format leaves room for each of these, but no code gets written for them yet.
 
 ## Files
 
@@ -16,8 +16,8 @@ Goal (from the roadmap in `docs/design.md`): a deterministic auto-battle on fixe
 project.godot
 addons/gut/                  GUT, pinned version (committed so tests run offline)
 data/
-  tuning.json                tick rate, spill basis points, XP thresholds and per-battle XP,
-                             Rush/Stall windows, collapse timing and damage ramp, fight time cap
+  tuning.json                tick rate, spill basis points, XP thresholds and per-battle XP, crit multiplier,
+                             Rush/Stall windows, collapse start/base damage/growth, tie time
   essences.json              6 essences: on-hit effects and the spill effect
   alloys.json                recipes (cross-pairs and pure doubles) and effects
   statuses.json              burn, slow, freeze, bleed, blind: tick rate, stacking, duration
@@ -47,14 +47,16 @@ tests/sim/                   one test file per src file, plus test_determinism.g
 
 ## How a fight runs
 
-- **Fixed timestep:** 20 ticks per second. The fight hard-caps at 90s (a tuning value) and ends as a draw if the cap is hit. The runner flags those fights.
+- **Fixed timestep:** 20 ticks per second.
+- **Rift Collapse:** starting at 45s, once per second, every living unit on both sides takes flat collapse damage. It starts at **10** and grows by **10** each second (10, 20, 30, ...), so by 60s it is 160 per second and has dealt 1,360 in total. With Phase 2 heroes at roughly **300–800 HP**, a fight nobody is winning ends around 52–57s. All three numbers are tuning values.
+- **Tie:** if both sides still have someone standing at **180s**, the fight ends as a tie, and a tie is a guild victory. The runner reports how many fights end this way, since a build that reaches 3 minutes is surviving about 93,000 collapse damage and is probably broken.
 - **Deterministic order:** heroes, then enemies; front row before back row; left to right; and within a unit, items left to right. The order never comes from Dictionary iteration.
 - **Each tick:**
   1. Apply the time-based rules: Rush ends at 8s, Stall wakes at 15s, and Collapse damage starts at 45s.
   2. Tick statuses (burn and bleed deal damage; slow, freeze and blind count down).
   3. Count down each item's cooldown and collect every item that fires this tick.
   4. Resolve all of those firings in the order above. **Deaths wait until the end of the tick**, so a unit killed this tick still gets the attacks it had ready. That way hero-first ordering doesn't give the heroes an edge.
-  5. Remove dead units; then check for a win, a loss, or a draw (both sides wiped out).
+  5. Remove dead units; then check for a win, a loss, or a tie (both sides wiped out on the same tick, or 180s reached).
 - **Firing an item:** run its effects, then its infusion's on-hit effects, then any spill it receives from its neighbors. Then add XP and check for a level-up. Every step writes a log entry.
 
 ## Data shape (examples)
@@ -69,6 +71,7 @@ Durations are in milliseconds and percentages in basis points. Every number is a
   "size": 1,
   "tags": ["weapon"],
   "cooldown_ms": 3000,
+  "crit_chance_bp": 0,
   "xp_per_fire": 4,
   "timing": "normal",
   "effects": [
@@ -95,7 +98,11 @@ Durations are in milliseconds and percentages in basis points. Every number is a
   "spill_pure_double_bp": 3000,
   "xp_thresholds": [100, 300],
   "xp_per_battle": 10,
-  "collapse_start_ms": 45000
+  "crit_damage_bp": 15000,
+  "collapse_start_ms": 45000,
+  "collapse_base_damage": 10,
+  "collapse_growth_per_second": 10,
+  "tie_at_ms": 180000
 }
 ```
 
@@ -121,7 +128,8 @@ Every effect, status tick, level-up, spill, and death writes one entry. The dama
 - **Infusion XP:** XP from fires plus the per-battle amount; the level-up thresholds; XP resets when a second essence is added.
 - **Spill:** a single spills to both sides, an alloy splits left/right, a pure double spills to both sides, a transformation-flagged infusion never spills, spill never leaves the hero's row, and spill only happens at Resonant.
 - **Alloys:** each of the 6 alloys resolves its effect and logs its source.
-- **Timing and collapse:** Rush items stop after 8s, Stall items start at 15s, collapse damage ramps up from 45s, and hitting the cap gives a draw.
+- **Timing and collapse:** Rush items stop after 8s, Stall items start at 15s, collapse damage is flat and grows by the set amount each second from 45s, collapse hits both sides equally, and reaching 180s or a mutual wipe gives a tie that counts as a win.
+- **Crit:** an item with 0 crit chance never crits; an item at 10000 always crits for 150% damage; Umbral adds crit chance.
 - **Log sources:** every damage/heal/shield entry has a unit and an item, plus an infusion or alloy when one is involved.
 - **Content:** every file in `data/` passes the validator (all ids resolve, all numbers are integers, alloy recipes are valid).
 
@@ -134,15 +142,15 @@ Every effect, status tick, level-up, spill, and death writes one entry. The dama
 5. Infusion XP, the Attuned/Resonant levels, and spill.
 6. Alloys and pure doubles.
 7. Rush/Stall, adjacency buffs, and Linked.
-8. Headless runner and damage-meter report (win rate, average fight length, damage share per item, items that barely contribute, fights that hit the time cap).
+8. Headless runner and damage-meter report (win rate, average fight length, damage share per item, items that barely contribute, fights that end in a tie).
 9. Content: 4 heroes, about 20 items, 3 enemies with fixed layouts.
 
 ## Needs your call before coding
 
-These are proposed defaults. Confirm them or change them.
+Confirmed: targeting (front row first), same-tick deaths still fire, HP-only heroes, per-item crit chance starting at 0 with 150% crits, no time limit, 180s tie = victory, and flat, growing collapse damage.
 
-1. **Targeting:** attacks hit the enemy front row; the back row can only be hit once the front row is empty, unless an item says it reaches the back row. Within a row, attacks hit the unit directly across, otherwise the nearest one.
-2. **Simultaneous deaths:** units killed during a tick still fire whatever they had ready that tick (see step 4 above).
-3. **Hero stats for now:** HP only. No armor, no dodge, and a base crit chance of 0 (crit only comes from Umbral and items), with crits dealing 150% damage.
-4. **Time cap:** a draw at 90s, counted as a loss for the guild.
-5. **Rift Collapse:** both sides take damage every second starting at 45s, beginning at 2% of max HP and rising by 2% each second.
+Still open (proposed defaults):
+
+1. **Collapse vs. shields:** collapse damage **goes straight to HP, ignoring shields**. Otherwise a Stone/Glacier shield-refresh build could stall to 180s and win by a tie.
+2. **Mutual wipe:** if both sides die on the same tick, that's a **tie, which counts as a victory**, the same as reaching 180s.
+3. **Collapse numbers:** 10 damage per second at 45s, growing by 10 each second, with Phase 2 heroes at about 300–800 HP. These are easy to change in `tuning.json`.
