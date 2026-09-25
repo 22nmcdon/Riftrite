@@ -356,7 +356,7 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - **A run starts with one hero** (pick 1 of 3 random), then 1 of 3 starting packages (extra gold, a Common relic, or a Common item), plus base gold. Fielding is 1–5 heroes.
 - **Losing a fight restarts the day** with everything kept, plus bonus gold (10, +5 per fight won so far). **The second loss ends the run.** Every fight starts at full HP unless an item or relic changes that.
 - **Shared stash:** 6 slots that work like a hero row (sizes count). Relics can't go in the stash.
-- **Rank-B specializations** (3 per class) are in the vertical slice.
+- **Rank-B specializations** are in the vertical slice. Each **hero** has three of their own (not shared with the class), each unique to the hero and unlike the other two: an ability, an aura, an effect on their items, much like relics. Some work only when fielded, some also from backup, some only from backup. A specialization that changes the basic attack must also say what happens when an auto-attack item replaces it. Proposed: **locked potential**, where each specialization unlocks more at ranks A and S (`docs/plans/specializations-in-sim.md`).
 - **Prices** are placeholders tuned with the balance runner: higher tiers and ranks cost more, rarer relics cost more, item rarity barely affects price.
 - **All five synergy layers** are in the vertical slice.
 - **Save and resume** between stops is in the vertical slice.

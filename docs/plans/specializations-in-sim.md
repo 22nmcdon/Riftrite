@@ -1,78 +1,114 @@
 # Plan: rank-B specializations (Phase 3, step 3)
 
-Status: **proposed, awaiting approval and answers (end of file).** Nothing here is built yet.
+Status: **proposed, second draft. Awaiting approval and answers (end of file).** Nothing here is built yet.
 
-Design (`docs/design.md`, `docs/tiers-backup-specialization.md`):
-- **The pick:** each class has three specializations, and a hero picks one on reaching rank B.
-- **Recruits:** a hero recruited at B or above comes with a preset one.
-- **Changing it:** only through an event that offers retraining.
-- **What this step covers:** what a specialization does *in a fight*. Picking one, presets, and retraining are run-layer work (steps 4 and 5).
+## The idea
 
-## What a specialization can do
+- **Each hero has three specializations of their own,** not shared with their class, and picks one at rank B.
+- **Each one is unique to the hero and unlike the other two.** Sometimes it's an ability, sometimes an aura or an effect on their items, much like relics.
+- **Locked potential:** each specialization has more power that opens as the hero ranks up. A part unlocks at **A**, and a capstone at **S**. This replaces class-wide rank-up picks.
+- **Recruits and retraining:**
+  - A hero recruited at B or above comes with a preset specialization and everything it has unlocked by that rank.
+  - Retraining (an event) switches to another of the hero's specializations at the same rank.
 
-A specialization is data in `data/specializations.json`, applied at fight start to the hero who has it. It adds to the hero; it never replaces their class or signature passive. It can have any of these:
+**What this step covers:** what a specialization does *in a fight*. Picking, presets, and retraining are run-layer work (steps 4 and 5).
 
-1. **Auras** from the hero, using the existing aura vocabulary. That means stat boosts on the hero (`holder`), boosts to linked or all allies, and a new `holder_items` target: every item the hero holds, optionally with a filter (tag, size, applies, essence).
+## Making them unique: design rules for content
 
-   ```json
-   "auras": [ {"target": "holder", "stat": "def_bp", "value": 12500},
-              {"target": "holder_items", "filter": {"tag": "defense"}, "stat": "shield_bp", "value": 12000} ]
-   ```
-2. **An ability:** a slotless effect that fires on its own cooldown, like a Backup effect but while fielded. It's numbered like an item: base + the hero's stats, no tier. It can't be infused.
+These guide the drafts below:
+1. **Three levers per hero.** A hero's three specializations pull different levers. For example: one reshapes their item row (auras, grants), one gives them an ability, and one changes their auto-attack or what they do from backup. Two specializations that both say "+X% to your items" are one too many.
+2. **Built from the hero.** Each one leans on the hero's own identity: their stats, basic attack, Backup effect, and signature item.
+3. **Unlocks deepen, they don't wander.** The A unlock strengthens or extends the same idea. The S capstone bends a rule (not just "+more").
+4. **Readable.** Every effect is logged with the specialization's name, and the UI can show all three ranks with the locked parts greyed out.
 
-   ```json
-   "ability": { "name": "Stand Fast", "cooldown_ms": 6000,
-                "effects": [ {"trigger": "on_fire", "type": "shield", "amount": 10, "scaling": {"def": 6000}, "target": "self"} ] }
-   ```
-3. **A new basic attack,** replacing the hero's own (still unupgradable, and still replaced by an auto-attack item).
+## What a specialization can be made of
 
-**Why not relic-style flat numbers:** a specialization belongs to one hero, so its numbers scale from that hero's stats like the hero's items do. Relic and synergy numbers stay flat.
+A specialization is a set of **parts**, each unlocked at a rank. A later rank's part with the same key replaces the earlier one (that's how an ability "gets stronger"); a new key adds. The part kinds:
 
-**The log names it:** `brannoc · Stand Fast (Bulwark) gives brannoc 28 shield`, and `brannoc · Bulwark aura starts: ...`.
+| Part | What it is |
+| --- | --- |
+| `aura` | The existing aura vocabulary from the hero: `holder`, `linked_*`, `row_allies`, `all_allies`, `all_items`, and new **`holder_items`** (every item the hero holds, filtered by tag, size, applies, essence, or new **`auto_attack`**) |
+| `grant` | An extra effect on the hero's matching items (like a relic grant, but numbered from the hero's stats) |
+| `ability` | A slotless effect: on a cooldown, or on a trigger (`on_fight_start`, `at_time`, `on_ally_below_hp`), scaled from the hero's stats |
+| `basic_attack` | A new basic attack. **It must come with an `auto_attack` part** (an aura or grant filtered to `auto_attack`) that says what changes when an auto-attack item replaces it, so the specialization never goes blank |
+| `backup` | A change to the hero's Backup effect (adds effects or auras to it) |
+
+Every part has **`when`**: `fielded` (default), `benched`, or `always`. That covers specializations that only work on the field, that also work from the bench, or that only work from the bench.
+
+Stat changes are `aura` parts on `holder` (e.g. ×1.2 DEF).
+
+```json
+{ "id": "brannoc_hearthwall", "hero": "brannoc", "name": "Hearthwall",
+  "parts": {
+    "b": [ {"key": "wall", "kind": "aura", "target": "linked_allies", "stat": "def_bp", "value": 11500} ],
+    "a": [ {"key": "catch", "kind": "ability", "trigger": "on_ally_below_hp", "threshold_bp": 4000, "once": false,
+            "effects": [ {"type": "shield", "amount": 10, "scaling": {"def": 8000}, "target": "trigger_ally"} ]} ],
+    "s": [ {"key": "wall", "kind": "aura", "target": "all_allies", "stat": "def_bp", "value": 11500} ]
+  } }
+```
+(Here the S part replaces the B part: the wall now covers every ally, not just the linked ones.)
+
+## Draft content: the four current heroes (placeholders)
+
+| Hero | Specialization | B | A unlock | S capstone |
+| --- | --- | --- | --- | --- |
+| Brannoc (Warden) | **Hearthwall** (protector) | Linked allies ×1.15 DEF | When an ally drops below 40% HP, he shields them (once each) | The wall covers every ally |
+| | **Ironbrand** (auto-attack) | New basic attack: a heavy blow that also shields himself; an auto-attack item gains that self-shield | His auto-attack applies 1 Bleed | Each auto-attack hit charges his other items by 0.2s |
+| | **Last Watch** (backup) | Benched: his Backup effect also shields the lowest-HP ally every 6s | Benched: all allies ×1.1 DEF | Benched: from 45s (Rift Collapse), all allies' shields ×1.3 |
+| Wren (Striker) | **Duelist** (item row) | Her weapons +10% crit chance | Her weapon crits apply 1 Bleed | Her crits deal ×1.2 damage on weapons |
+| | **Windrunner** (auto-attack) | New basic attack: two quick cuts; ×1.2 ATSP; an auto-attack item also gets the ATSP | Her auto-attack charges her Small items by 0.1s | Her auto-attack hits the back row too |
+| | **Nightstalker** (ability) | Every 6s, strikes the lowest-HP enemy | The strike applies 2 Bleed | From 20s, the strike's cooldown halves |
+| Vell (Mender) | **Lanternbearer** (item row) | Her healing items heal ×1.2 | Her heals also give a small shield | Her Old Lantern-style heals hit two allies (a grant on healing items) |
+| | **Wardweaver** (ability) | Every 5s, shields the lowest-HP ally | The ward also cleanses damage over time (needs a cleanse effect; otherwise a bigger shield) | The first ally to drop below 30% gets a big ward |
+| | **Vigil Keeper** (backup) | Benched: her Backup heal is ×1.5 | Benched: heals also shield | Always: while she's benched *or* fielded, all allies' healing ×1.15 |
+| Odo (Arcanist) | **Pyromancer** (item row) | His Burn items: ×1.25 damage over time | His magic items apply +1 Burn on hit | His Burn never loses more than 1 stack per tick (needs its own status type, like Golden Flame) |
+| | **Hexweaver** (auto-attack) | New basic attack: hits every enemy for less; an auto-attack item also applies 1 Poison | His auto-attack applies 1 more Poison | His auto-attack also Blinds (once per 5s) |
+| | **Stormcaller** (ability) | Every 6s, damage to every enemy | His magic items fire 10% faster | The storm also charges his items by 0.3s |
+
+The rest of the slice's heroes get theirs in the content step: 8 heroes, so 24 specializations.
 
 ## Code shape
 
-- **Definition:** `src/sim/defs/specialization_def.gd`, holding its id, name, class, auras, an optional ability (read like a `BackupDef` and turned into a slotless item), and an optional basic attack.
-- **Setup:** `UnitSetup.specialization` (or null). `SetupBuilder.hero()` takes a specialization id. Balance parties can name one with `"specialization": "bulwark"`.
+- **Definition:** `src/sim/defs/specialization_def.gd`, holding the id, hero, name, and parts by rank. Each part is an `AuraDef`, a `GrantDef`, an ability (read like a `BackupDef`, with triggers allowed), a basic attack (`ItemDef`), or a backup addition, plus `key` and `when`.
+- **Setup:**
+  - `UnitSetup.specialization` (or null). The sim works out which parts are unlocked from the hero's rank.
+  - `SetupBuilder.hero()` takes a specialization id.
+  - Balance parties can name one.
 - **Checks:**
-  - **Content (`ContentDb`):** a specialization's class exists, its ability's targets are valid, and its statuses exist.
-  - **Fight setup (`FightSetup.validate`):** the specialization's class matches the hero's class, and a rank-C hero has none. (The sim allows a B+ hero with no specialization, so tests stay small; the run layer will require the pick.)
+  - The specialization's hero matches the unit's hero, and rank C has none.
+  - A `basic_attack` part needs an `auto_attack` part at the same or an earlier rank.
+  - Keys are unique within a rank.
 - **In the fight:**
-  - The ability becomes an item in the unit's `items` (after the basic attack, before the row), firing on its cooldown.
-  - Its auras run through the same aura code as items, with the hero as holder.
-  - `holder_items` joins the aura targets.
+  - **Abilities** become slotless items that fire from the hero (on a cooldown or a trigger).
+  - **Auras and grants** go through the existing aura and grant code, with the hero as holder.
+  - **`when`** picks which parts apply, depending on whether the hero is fielded or benched.
+  - **Backup additions** join the hero's Backup effect.
+  - **The log** names the specialization: `brannoc · Hearthwall (A) shields wren for 32`.
+- **New vocabulary** (flagged per CLAUDE.md):
+  - the `holder_items` aura target and the `auto_attack` filter key
+  - ability triggers for heroes (reusing the relic triggers)
+  - a hero-side `trigger_ally` target
 
-## Draft content (placeholders)
-
-There are 3 per class for the four current classes, so 12 in all. The other classes come with the content step.
-
-| Class | Specialization | Does |
-| --- | --- | --- |
-| Warden | Bulwark | ×1.25 DEF; every 6s shields self |
-| Warden | Oathwall | Linked allies ×1.15 DEF; Defense items' shields ×1.2 |
-| Warden | Emberguard | New basic attack that also applies 1 Burn |
-| Striker | Duelist | Weapons +10% crit chance |
-| Striker | Skirmisher | ×1.2 ATSP; Small items fire 10% faster |
-| Striker | Reaver | Every 5s, strikes the lowest-HP enemy |
-| Mender | Hearthkeeper | Healing items heal ×1.2 |
-| Mender | Wardweaver | Every 5s, shields the lowest-HP ally |
-| Mender | Plaguedoctor | Items that apply Poison: ×1.25 damage over time |
-| Arcanist | Pyromancer | Items that apply Burn: ×1.25 damage over time |
-| Arcanist | Hexer | New basic attack that hits every enemy for less |
-| Arcanist | Stormcaller | Magic items fire 15% faster |
+  Some capstones in the table need more (a cleanse effect, a Burn variant, auto-attacks that reach the back row); those are listed as open, not built here.
 
 ## Tests
 
-- **Data:** reading, and rejecting a bad class, a bad ability, unknown keys, and a `holder_items` aura anywhere but a specialization.
-- **Setup checks:** a class mismatch and a rank-C specialization are rejected.
-- **Auras:** they reach the holder, the holder's (filtered) items, and allies, and stop when the hero falls.
-- **Ability:** it fires on its cooldown, scales from the hero's stats, takes no slot, and is logged with the specialization's name.
-- **Basic attack:** a new basic attack replaces the hero's, and an auto-attack item still replaces that.
-- **Backup:** covered by question 2.
-- **Determinism and balance:** the determinism fight includes a specialization, and balance parties can name one.
+- **Data:**
+  - reading parts and ranks
+  - rejecting bad kinds, a `basic_attack` without an `auto_attack` part, duplicate keys, and unknown keys
+  - `holder_items` outside a specialization
+- **Unlocking:**
+  - at B only B parts apply
+  - at A the A parts join and same-key parts replace
+  - at S the capstone applies
+- **`when`:** fielded, benched, and always parts apply at the right times.
+- **Auto-attack:** a replaced basic attack works, and an auto-attack item gets the `auto_attack` part instead.
+- **Abilities:** they fire on cooldown and on triggers, scale from the hero's stats, and are logged with the specialization's name and rank.
+- **Setup checks:** a wrong hero and a rank-C specialization are rejected.
+- **Determinism and balance:** the determinism fight includes a specialization with A and S parts, and balance parties can name one.
 
 ## Questions
 
-1. **What a specialization changes:** are auras, an ability, and/or a new basic attack the right toolbox? Or should specializations also be able to change the hero's **Backup** effect, or their base stats directly?
-2. **In backup:** does a benched hero's specialization do anything? I'd say its **ally-wide auras apply from the bench** (like a Backup aura), and the rest (self auras, the ability, the basic attack) doesn't.
-3. **Ranks above B:** does a specialization stay the same at A and S, or should it grow (for example, stronger numbers per rank, or a second perk at S)? I'd keep it the same for now; rank already boosts the hero's stats by 25% each.
+1. **Locked potential instead of class additions:** go with it? (My recommendation: yes; see the reply that came with this draft.)
+2. **Draft content:** are the kinds of specializations in the table the right direction for how unique you want them? I'd rather adjust the direction now than after building 24 of them.
+3. **Capstones that need new mechanics:** build the few new effects they need in this step (a cleanse effect, Odo's slow-fading Burn as its own status, auto-attacks that reach the back row), or draft capstones from existing blocks first and add those when the content step comes?
