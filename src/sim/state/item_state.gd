@@ -70,7 +70,7 @@ static func make(item_def: ItemDef, item_slot: int, holder_stats: UnitStats, con
 	state.infusion_level = Infusions.level_for(xp, content.tuning)
 	state.start_xp = xp
 	state.start_level = state.infusion_level
-	state.derive(content, [])
+	state.derive(content, [], null)
 	return state
 
 
@@ -133,9 +133,9 @@ func heal_echo_bp() -> int:
 	return alloy.heal_echo_bp if alloy != null else 0
 
 
-## Rebuilds everything infusion-dependent from the item's own infusion and
-## the spills it receives.
-func derive(content: ContentDb, spills: Array[EssenceApplication]) -> void:
+## Rebuilds everything infusion- and aura-dependent from the item's own
+## infusion, the spills it receives, and the auras on it (may be null).
+func derive(content: ContentDb, spills: Array[EssenceApplication], aura: ItemAura) -> void:
 	var tuning: TuningDef = content.tuning
 	spills_received = spills
 	var apps: Array[EssenceApplication] = own_applications(tuning)
@@ -164,16 +164,20 @@ func derive(content: ContentDb, spills: Array[EssenceApplication]) -> void:
 				ModifierDef.Stat.EXTRA_TRIGGER_CHANCE_BP:
 					extra_trigger_chance_bp += value
 					extra_trigger_source = app.label
+	if aura != null:
+		cooldown_bp += aura.cooldown_add_bp
+		crit_chance_bp += aura.crit_add_bp
 	cooldown_ticks = maxi(FixedMath.apply_bp(def.cooldown_ticks, FixedMath.BP_ONE + cooldown_bp), 1)
 	crit_chance_bp = clampi(crit_chance_bp, 0, FixedMath.BP_ONE)
-	_compute_values(content, apps)
+	_compute_values(content, apps, aura)
 
 
 ## Works out every effect's number: base + stat scaling, times multipliers.
-## The item's own effects get the tier multiplier, plus a same-kind bonus from
+## The item's own effects get the tier multiplier, a same-kind bonus from
 ## each essence application that adds the same output kind (+50% at full
-## strength). Essence effects get their application's strength.
-func _compute_values(content: ContentDb, apps: Array[EssenceApplication]) -> void:
+## strength), and aura multipliers for their output kind. Essence effects get
+## their application's strength.
+func _compute_values(content: ContentDb, apps: Array[EssenceApplication], aura: ItemAura) -> void:
 	var tuning: TuningDef = content.tuning
 	for sourced: SourcedEffect in effects:
 		var boosts: Array[ValueBreakdown.Multiplier] = []
@@ -184,6 +188,8 @@ func _compute_values(content: ContentDb, apps: Array[EssenceApplication]) -> voi
 			for app: EssenceApplication in apps:
 				if not kind.is_empty() and app.essence.adds == kind and not app.essence.adds_on_crit_only:
 					boosts.append(ValueBreakdown.multiplier(app.label, FixedMath.BP_ONE + FixedMath.apply_bp(tuning.convert_same_kind_bp, app.strength_bp)))
+			if aura != null:
+				boosts.append_array(aura.multipliers_for(kind))
 		else:
 			for app: EssenceApplication in apps:
 				if app.label == sourced.infusion_name:

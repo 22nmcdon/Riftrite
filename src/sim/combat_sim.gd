@@ -27,6 +27,11 @@ var enemies: Array[UnitState] = []
 ## Every unit, in resolution order.
 var units: Array[UnitState] = []
 var finished: bool = false
+## Ticks where some aura's window opens or closes (lookup only).
+var _aura_boundaries: Dictionary[int, bool] = {}
+## Auras active after the last rederive_all, as "unit:item:aura" keys, for
+## logging when they start and end.
+var _active_auras: Array[String] = []
 var outcome: FightResult.Outcome = FightResult.Outcome.TIE
 
 
@@ -81,12 +86,23 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 	start.note = "seed %d, act %d" % [setup.seed_value, setup.act]
 	combat_log.add(start)
 
+	for unit: UnitState in units:
+		for item: ItemState in unit.items:
+			for aura: AuraDef in item.def.auras:
+				if aura.window_from_ticks > 0:
+					_aura_boundaries[aura.window_from_ticks] = true
+				if aura.window_until_ticks > 0:
+					_aura_boundaries[aura.window_until_ticks] = true
+	rederive_all()
+
 
 ## Advances one tick. Does nothing once the fight is over.
 func step() -> void:
 	if finished:
 		return
 	tick += 1
+	if _aura_boundaries.has(tick):
+		rederive_all()
 	_apply_collapse()
 	Statuses.tick_all(self)
 
@@ -107,6 +123,125 @@ func step() -> void:
 
 	_process_deaths()
 	_check_end()
+
+
+## Recomputes every unit's stats and every item's derived values from the
+## auras active right now (standing holders, open windows), plus infusions
+## and spills. Runs at fight start, when an aura window opens or closes,
+## after deaths, and after an infusion levels up.
+func rederive_all() -> void:
+	var item_auras: Array[Array] = []
+	var unit_boosts: Array[Array] = []
+	for unit: UnitState in units:
+		var per_item: Array[ItemAura] = []
+		for item: ItemState in unit.items:
+			per_item.append(ItemAura.new())
+		item_auras.append(per_item)
+		unit_boosts.append([FixedMath.BP_ONE, FixedMath.BP_ONE, FixedMath.BP_ONE, FixedMath.BP_ONE, FixedMath.BP_ONE, FixedMath.BP_ONE])
+
+	var now_active: Array[String] = []
+	for u: int in units.size():
+		var holder: UnitState = units[u]
+		if not holder.is_standing():
+			continue
+		for i: int in holder.items.size():
+			var item: ItemState = holder.items[i]
+			for a: int in item.def.auras.size():
+				var aura: AuraDef = item.def.auras[a]
+				if not aura.active_at(tick):
+					continue
+				now_active.append("%d:%d:%d" % [u, i, a])
+				var label: String = item.def.name if aura.label.is_empty() else "%s (%s)" % [aura.label, item.def.name]
+				if aura.targets_items():
+					for target_item: ItemState in _aura_item_targets(holder, item, aura.target):
+						(item_auras[u][holder.items.find(target_item)] as ItemAura).add(aura, label)
+					continue
+				for target_unit: UnitState in _aura_unit_targets(holder, aura.target):
+					var t: int = units.find(target_unit)
+					if aura.is_unit_stat():
+						var stat: int = AuraDef.UNIT_STAT_FOR[aura.stat]
+						unit_boosts[t][stat] = FixedMath.apply_bp(unit_boosts[t][stat], aura.value)
+					else:
+						for per_item: ItemAura in item_auras[t]:
+							per_item.add(aura, label)
+	_log_aura_changes(now_active)
+
+	for u: int in units.size():
+		var unit: UnitState = units[u]
+		var stats := UnitStats.new()
+		for stat: int in stats.values.size():
+			stats.values[stat] = FixedMath.apply_bp(unit.base_stats.values[stat], unit_boosts[u][stat])
+		unit.stats = stats
+		var per_item: Array[ItemAura] = []
+		per_item.assign(item_auras[u])
+		unit.rederive_items(content, per_item)
+
+
+func _aura_item_targets(holder: UnitState, item: ItemState, target: AuraDef.Target) -> Array[ItemState]:
+	var row: Array[ItemState] = holder.row_items()
+	var index: int = row.find(item)
+	var result: Array[ItemState] = []
+	match target:
+		AuraDef.Target.SELF_ITEM:
+			result.append(item)
+		AuraDef.Target.LEFT_ITEM:
+			if index > 0:
+				result.append(row[index - 1])
+		AuraDef.Target.RIGHT_ITEM:
+			if index >= 0 and index < row.size() - 1:
+				result.append(row[index + 1])
+		AuraDef.Target.ADJACENT_ITEMS:
+			if index > 0:
+				result.append(row[index - 1])
+			if index >= 0 and index < row.size() - 1:
+				result.append(row[index + 1])
+		AuraDef.Target.ROW_ITEMS:
+			for other: ItemState in row:
+				if other != item:
+					result.append(other)
+	return result
+
+
+func _aura_unit_targets(holder: UnitState, target: AuraDef.Target) -> Array[UnitState]:
+	match target:
+		AuraDef.Target.HOLDER:
+			var only: Array[UnitState] = [holder]
+			return only
+		AuraDef.Target.ALL_ALLIES:
+			return Targeting.pick(EffectDef.Target.ALL_ALLIES, holder, null, self)
+		AuraDef.Target.LINKED_ALLY:
+			return Targeting.linked(EffectDef.Target.LINKED_ALLY, holder, allies_of(holder))
+		AuraDef.Target.LINKED_LEFT_ALLY:
+			return Targeting.linked(EffectDef.Target.LINKED_LEFT_ALLY, holder, allies_of(holder))
+		AuraDef.Target.LINKED_RIGHT_ALLY:
+			return Targeting.linked(EffectDef.Target.LINKED_RIGHT_ALLY, holder, allies_of(holder))
+		AuraDef.Target.LINKED_ALLIES:
+			return Targeting.linked(EffectDef.Target.LINKED_ALLIES, holder, allies_of(holder))
+		AuraDef.Target.ROW_ALLIES:
+			return Targeting.linked(EffectDef.Target.ROW_ALLIES, holder, allies_of(holder))
+	var none: Array[UnitState] = []
+	return none
+
+
+## Logs each aura that started or ended since the last rederive_all.
+func _log_aura_changes(now_active: Array[String]) -> void:
+	for key: String in now_active:
+		if not _active_auras.has(key):
+			_log_aura(key, "starts")
+	for key: String in _active_auras:
+		if not now_active.has(key):
+			_log_aura(key, "ends")
+	_active_auras = now_active
+
+
+func _log_aura(key: String, change: String) -> void:
+	var parts: PackedStringArray = key.split(":")
+	var holder: UnitState = units[parts[0].to_int()]
+	var item: ItemState = holder.items[parts[1].to_int()]
+	var aura: AuraDef = item.def.auras[parts[2].to_int()]
+	var entry: LogEntry = new_entry(LogEntry.Kind.AURA, EffectSource.make(holder.id, item.def.id, item.def.name))
+	entry.note = "%s: %s" % [change, aura.describe()]
+	combat_log.add(entry)
 
 
 ## A log entry for the current tick, credited to `source`.
@@ -204,15 +339,19 @@ func _apply_collapse() -> void:
 
 
 func _process_deaths() -> void:
+	var anyone_fell: bool = false
 	for unit: UnitState in units:
 		if unit.alive and unit.hp <= 0:
 			unit.alive = false
+			anyone_fell = true
 			var entry := LogEntry.new()
 			entry.tick = tick
 			entry.kind = LogEntry.Kind.DEATH
 			entry.target = unit.id
 			entry.note = "last hit: %s" % unit.last_hit_by
 			combat_log.add(entry)
+	if anyone_fell and not _active_auras.is_empty():
+		rederive_all()
 
 
 func _check_end() -> void:

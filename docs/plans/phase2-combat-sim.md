@@ -1,6 +1,6 @@
 # Plan: Phase 2 combat sim
 
-Status: **approved; in progress.** Steps 1–6 are done (step 4's essences were reworked along the way; see `docs/plans/essence-rework.md`). Next is step 7 (Rush/Stall, adjacency buffs, Linked).
+Status: **approved; in progress.** Steps 1–7 are done (step 4's essences were reworked along the way; see `docs/plans/essence-rework.md`). Next is step 8 (headless balance runner).
 
 Goal (from the roadmap in `docs/design.md`): a deterministic auto-battle on fixed front/back rows, with no art. It must include essences, alloys, attunement, and spill. Done when a fight can be explained from its log, and the headless runner shows whether alloys feel worth fusing.
 
@@ -203,7 +203,7 @@ Every effect, status tick, level-up, spill, and death writes one entry. The dama
 - **Bloom's echo** goes to a random other living ally (seeded RNG); echoes don't echo. Alloy specials don't scale with infusion level (the essences' parts do).
 - **Alloy spill:** first socket's essence left, second's right (30% of Resonant); pure doubles spill their essence once to each side. The special never spills, so Plasma's spilled Ember is plain Burn.
 
-### Step 7 proposal (awaiting approval): time windows, auras, area targets, Linked
+### Step 7: time windows, auras, area targets, Linked (approved and built)
 
 Rush/Stall behavior is per item, so step 7 adds building blocks instead of one fixed rule.
 
@@ -223,6 +223,8 @@ Rush/Stall behavior is per item, so step 7 adds building blocks instead of one f
 **4. Linked:** `linked_allies` means the units directly left and right of the holder in the same row. Effects can target them, and auras can boost them (and their items).
 
 **5. Rush/Stall stay labels.** The item's `timing` field stays, for the shop and synergies; windows and auras do the work.
+
+**As built:** aura multipliers multiply and crit/cooldown add (confirmed). Linked comes in variants per item (confirmed): `linked_ally` (left, else right), `linked_left_ally`, `linked_right_ally`, `linked_allies`, `row_allies`. Auras stop when their holder falls. Everything re-derives at fight start, when an aura window opens or closes, after a death, and after an infusion level-up. The log records each aura starting and ending.
 
 ## Needs your call before coding
 

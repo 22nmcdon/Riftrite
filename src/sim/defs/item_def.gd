@@ -29,6 +29,8 @@ var crit_chance_bp: int = 0
 var xp_per_fire: int = 0
 var timing: Timing = Timing.NORMAL
 var effects: Array[EffectDef] = []
+## Continuous boosts while their windows are open (not on basic attacks).
+var auras: Array[AuraDef] = []
 
 
 static func read(reader: DataReader) -> ItemDef:
@@ -43,6 +45,8 @@ static func read(reader: DataReader) -> ItemDef:
 	def.xp_per_fire = reader.req_int("xp_per_fire", 0)
 	var timing_name: String = reader.opt_string_choice("timing", "normal", TIMING_NAMES)
 	def.timing = maxi(TIMING_NAMES.find(timing_name), 0) as Timing
+	for aura_reader: DataReader in reader.opt_object_array("auras"):
+		def.auras.append(AuraDef.read(aura_reader))
 	_read_common(def, reader)
 	return def
 

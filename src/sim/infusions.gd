@@ -35,4 +35,4 @@ static func gain_xp(sim: CombatSim, item: ItemState, amount: int, when: String =
 	entry.amount = item.infusion_xp
 	entry.note = "%s (%d XP%s)" % [LEVEL_NAMES[level], item.infusion_xp, "" if when.is_empty() else ", " + when]
 	sim.combat_log.add(entry)
-	holder.rederive_items(sim.content)
+	sim.rederive_all()

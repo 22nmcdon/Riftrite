@@ -13,6 +13,8 @@ var row: UnitSetup.Row
 ## Position within the row, 0 = leftmost.
 var column: int
 ## Stats after the rank boost.
+var base_stats: UnitStats
+## Stats in effect right now: base_stats with unit-stat auras applied.
 var stats: UnitStats
 var max_hp: int
 var hp: int
@@ -36,7 +38,8 @@ static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column:
 	state.side = unit_side
 	state.row = setup.row
 	state.column = unit_column
-	state.stats = setup.stats.boosted(content.tuning.rank_multiplier_bp[setup.rank])
+	state.base_stats = setup.stats.boosted(content.tuning.rank_multiplier_bp[setup.rank])
+	state.stats = state.base_stats
 	state.max_hp = state.stats.get_stat(UnitStats.Stat.HP)
 	state.hp = state.max_hp
 
@@ -59,7 +62,9 @@ static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column:
 ## Re-derives every item, handing each Resonant item's spill to its row
 ## neighbors (the items just left and right of it; the basic auto-attack has
 ## no slot, so it never gives or gets spill). Spill stays inside this row.
-func rederive_items(content: ContentDb) -> void:
+## `auras` lines up with `items` (empty = no auras); CombatSim.rederive_all
+## gathers them.
+func rederive_items(content: ContentDb, auras: Array[ItemAura] = []) -> void:
 	var row: Array[ItemState] = []
 	for item: ItemState in items:
 		if item.slot >= 0:
@@ -72,12 +77,23 @@ func rederive_items(content: ContentDb) -> void:
 			incoming[i - 1].append_array(row[i].spill_to(-1, content.tuning))
 		if i < row.size() - 1:
 			incoming[i + 1].append_array(row[i].spill_to(1, content.tuning))
-	for item: ItemState in items:
+	for i: int in items.size():
+		var item: ItemState = items[i]
 		var received: Array[EssenceApplication] = []
 		var index: int = row.find(item)
 		if index >= 0:
 			received.assign(incoming[index])
-		item.derive(content, received)
+		item.stats = stats
+		item.derive(content, received, auras[i] if i < auras.size() else null)
+
+
+## Items in the row (everything but the basic auto-attack), left to right.
+func row_items() -> Array[ItemState]:
+	var row: Array[ItemState] = []
+	for item: ItemState in items:
+		if item.slot >= 0:
+			row.append(item)
+	return row
 
 
 ## DEF used against incoming hits, after shred (Bleed), never below 0.

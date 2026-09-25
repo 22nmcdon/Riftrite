@@ -313,6 +313,7 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - **Healing weakens damage over time:** a heal removes 10% of the target's Burn, Poison, and Bleed stacks; each further heal on the same unit within one second removes half as much as the previous one (10%, 5%, 2.5%, ...). Placeholders.
 - **Slow caps at 50%** per item.
 - **Infusion levels:** Attuned makes an infusion ×1.5 as strong, Resonant ×2 (placeholders).
+- **Rush/Stall and adjacency are built from per-item building blocks:** effect windows (active only for part of the fight), auras (continuous boosts to items or units, optionally windowed), area targets (all enemies/allies), and Linked variants (one neighbor, left, right, both, or the whole row). Aura output and stat boosts multiply; crit chance and cooldown boosts add.
 - **Alloys keep both essences' effects** plus their special. Specials that alter a status get their own status type (Inferno → Golden Flame, Plasma → Plasma, Blight → Blight) so they don't leak into other items' statuses. First alloys built: Inferno, Plasma, Blight, Bloom.
 - Every hero has their own built-in basic auto-attack, which can't be upgraded. An auto-attack item (Small, Medium, or Large) replaces it and takes up slots, and a hero can equip only one. Take the item out and the hero uses the basic auto-attack again.
 - Two copies of the same item combine into the next tier (two, not three). A new copy's infusion replaces the old one.
