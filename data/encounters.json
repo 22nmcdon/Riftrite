@@ -54,6 +54,9 @@
         "enemy": "gloam_witch",
         "row": "back"
       }
+    ],
+    "relics": [
+      "gloam_totem"
     ]
   }
 ]

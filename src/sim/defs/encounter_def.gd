@@ -15,6 +15,8 @@ var name: String
 var act: int = 1
 ## In order: units in the same row stand left to right in this order.
 var units: Array[Slot] = []
+## Relic ids the enemy team carries.
+var relics: Array[String] = []
 
 
 static func read(reader: DataReader) -> EncounterDef:
@@ -28,6 +30,8 @@ static func read(reader: DataReader) -> EncounterDef:
 		slot.row = maxi(ROW_NAMES.find(unit_reader.opt_string_choice("row", "front", ROW_NAMES)), 0) as UnitSetup.Row
 		unit_reader.finish()
 		def.units.append(slot)
+	if reader.has("relics"):
+		def.relics = reader.req_string_array("relics")
 	if def.units.is_empty():
 		reader.error("an encounter needs at least one unit")
 	reader.finish()

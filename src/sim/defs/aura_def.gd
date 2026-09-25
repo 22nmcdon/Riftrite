@@ -9,15 +9,22 @@ extends RefCounted
 ## Targets:
 ##   items in the holder's row: self_item, left_item, right_item,
 ##       adjacent_items, row_items (every other item in the row)
+##   all_items: every item of every hero on the holder's side, backup
+##       heroes' included. With no filter it boosts *everything* on the
+##       side, so it also boosts relic effects and grants (relic numbers
+##       are flat; only side-wide boosts change them).
 ##   units: holder, linked_ally, linked_left_ally, linked_right_ally,
 ##       linked_allies, row_allies, all_allies (see Targeting.linked)
+## An optional "filter" narrows the targets (see AuraFilter):
+##   {"target": "all_items", "filter": {"tag": "weapon"}, ...}
 ## Stats:
 ##   item stats (any target; on a unit target they boost all its items):
 ##       damage_bp, heal_bp, shield_bp, over_time_bp  multiply (20000 = x2)
 ##       crit_chance_bp, cooldown_bp                  add (-1500 = 15% faster)
 ##   unit stats (unit targets only), multiply:
 ##       atk_bp, mgk_bp, def_bp, atsp_bp, crit_bp
-## An aura stops when its holder falls. Adding a target or stat is a code
+## An item's aura stops when its holder falls; a relic's lasts all fight.
+## Adding a target or stat is a code
 ## change; say so when you make one.
 
 enum Target {
@@ -33,16 +40,17 @@ enum Target {
 	LINKED_ALLIES,
 	ROW_ALLIES,
 	ALL_ALLIES,
+	ALL_ITEMS,
 }
 enum Stat { DAMAGE_BP, HEAL_BP, SHIELD_BP, OVER_TIME_BP, CRIT_CHANCE_BP, COOLDOWN_BP, ATK_BP, MGK_BP, DEF_BP, ATSP_BP, CRIT_BP }
 
 const TARGET_NAMES: Array[String] = [
 	"self_item", "left_item", "right_item", "adjacent_items", "row_items",
-	"holder", "linked_ally", "linked_left_ally", "linked_right_ally", "linked_allies", "row_allies", "all_allies",
+	"holder", "linked_ally", "linked_left_ally", "linked_right_ally", "linked_allies", "row_allies", "all_allies", "all_items",
 ]
 const TARGET_LABELS: Array[String] = [
 	"itself", "the item to its left", "the item to its right", "adjacent items", "the rest of the row",
-	"its holder", "a linked ally", "the linked ally on the left", "the linked ally on the right", "linked allies", "row allies", "all allies",
+	"its holder", "a linked ally", "the linked ally on the left", "the linked ally on the right", "linked allies", "row allies", "all allies", "all items",
 ]
 const STAT_NAMES: Array[String] = [
 	"damage_bp", "heal_bp", "shield_bp", "over_time_bp", "crit_chance_bp", "cooldown_bp",
@@ -66,6 +74,8 @@ var stat: Stat
 var value: int
 ## Optional name shown with the source, e.g. "Rush" -> "Rush (Dagger)".
 var label: String = ""
+## Narrows the targets, or null for no filter.
+var filter: AuraFilter = null
 var window_from_ticks: int = 0
 var window_until_ticks: int = -1
 
@@ -82,6 +92,10 @@ static func read(reader: DataReader) -> AuraDef:
 		def.value = reader.req_int("value", 0)
 	if reader.has("label"):
 		def.label = reader.req_string("label")
+	if reader.has("filter"):
+		var filter_reader: DataReader = reader.req_object("filter")
+		if filter_reader != null:
+			def.filter = AuraFilter.read(filter_reader, def.targets_items())
 	EffectDef.read_window(reader, def)
 	if not target_name.is_empty() and not stat_name.is_empty() and def.is_unit_stat() and def.targets_items():
 		reader.error("\"%s\" boosts a unit, so its target must be a unit, not \"%s\"" % [stat_name, target_name])
@@ -94,7 +108,13 @@ func active_at(tick: int) -> bool:
 
 
 func targets_items() -> bool:
-	return target <= Target.ROW_ITEMS
+	return target <= Target.ROW_ITEMS or target == Target.ALL_ITEMS
+
+
+## True for an unfiltered all_items aura: it boosts everything on the side,
+## relic effects and grants included.
+func covers_everything() -> bool:
+	return target == Target.ALL_ITEMS and filter == null
 
 
 func is_unit_stat() -> bool:
@@ -112,4 +132,4 @@ func describe() -> String:
 		amount = "%s%s %s" % ["+" if value >= 0 else "", ValueBreakdown._percent(value), STAT_LABELS[stat]]
 	else:
 		amount = "x%s %s" % [ValueBreakdown._ratio(value), STAT_LABELS[stat]]
-	return "%s for %s" % [amount, TARGET_LABELS[target]]
+	return "%s for %s%s" % [amount, TARGET_LABELS[target], "" if filter == null else filter.describe()]

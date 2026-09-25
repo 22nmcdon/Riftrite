@@ -23,6 +23,8 @@ class Party:
 	var heroes: Array[PartyHero] = []
 	## Heroes in backup.
 	var bench: Array[PartyHero] = []
+	## Relic ids the guild holds.
+	var relics: Array[String] = []
 
 
 class Parties:
@@ -90,13 +92,17 @@ static func parse_parties(content: ContentDb, data: Variant, label: String) -> P
 		ids.append(party.id)
 		party.heroes = _read_heroes(content, reader, "heroes")
 		party.bench = _read_heroes(content, reader, "bench")
+		if reader.has("relics"):
+			party.relics = reader.req_string_array("relics")
 		reader.finish()
 		# Reuse the content checks for item references (heroes can't carry enemy-only items).
 		var checker := ContentDb.new()
 		checker.items = content.items
 		checker.essences = content.essences
+		checker.relics = content.relics
 		for hero: PartyHero in party.heroes + party.bench:
 			checker.check_loadout(hero.items, "%s (%s).%s" % [label, party.id, hero.hero_id], false)
+		checker.check_relics(party.relics, "%s (%s)" % [label, party.id], false)
 		parties.errors.append_array(checker.errors)
 		parties.list.append(party)
 	return parties
@@ -137,7 +143,8 @@ static func run(content: ContentDb, party: Party, encounter_id: String, fights: 
 		hero_ids.append(hero.hero_id)
 	for i: int in fights:
 		var seed_value: int = first_seed + i
-		var setup: FightSetup = FightSetup.make(party_units(content, party), SetupBuilder.encounter_units(content, encounter_id), seed_value, act, party_units(content, party, true))
+		var setup: FightSetup = FightSetup.make(party_units(content, party), SetupBuilder.encounter_units(content, encounter_id), seed_value, act,
+			party_units(content, party, true), party.relics.duplicate(), SetupBuilder.encounter_relics(content, encounter_id))
 		var result: FightResult = CombatSim.run(setup, content)
 		if not result.errors.is_empty():
 			stats.errors = result.errors
@@ -165,7 +172,7 @@ static func _add_fight(stats: Stats, result: FightResult, hero_ids: Array[String
 			stats.biggest_hit_text = "%s, seed %d" % [entry.source_text(), seed_value]
 	var meter: DamageMeter = DamageMeter.from_log(result.combat_log, hero_ids)
 	for row: DamageMeter.Row in meter.rows:
-		var key: String = "%s/%s" % [row.unit_id, row.item_id]
+		var key: String = "%s/%s/%s/%d" % [row.unit_id, row.item_id, row.item_name, row.side]
 		if not stats._index.has(key):
 			var totals := ItemTotals.new()
 			totals.unit_id = row.unit_id
@@ -207,7 +214,7 @@ static func report(stats: Stats) -> PackedStringArray:
 			continue
 		var output: int = item.damage + item.healing + item.shielding
 		var share: float = 100.0 * output / maxf(hero_output, 1.0)
-		var label: String = "%s · %s" % [item.unit_id, item.item_name]
+		var label: String = "%s · %s" % ["relic" if item.unit_id.is_empty() else item.unit_id, item.item_name]
 		lines.append("  %-42s %7.1f  %7.1f  %6.1f  %4.1f%%" % [label, item.damage / per_fight, item.healing / per_fight, item.shielding / per_fight, share])
 		if share < LOW_SHARE_PERCENT:
 			flagged.append("  ! %s barely contributes (%.1f%% of hero output)" % [label, share])

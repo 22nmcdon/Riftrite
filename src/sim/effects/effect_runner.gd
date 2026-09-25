@@ -43,8 +43,9 @@ static func _run(sim: CombatSim, item: ItemState, sourced: SourcedEffect, hit: H
 		return
 	var source: EffectSource = _source(sim, item, sourced)
 	var hit_target: UnitState = hit.target if hit != null else null
-	# Only the item's own effects produce output that essences convert.
-	var own: bool = sourced.infusion_id.is_empty()
+	# Only the item's own effects produce output that essences convert
+	# (not its infusion's, and not relic grants).
+	var own: bool = sourced.infusion_id.is_empty() and sourced.granted_by.is_empty()
 	for target: UnitState in Targeting.pick(effect.target, sim.owner_of(item), hit_target, sim):
 		var amount: int = sourced.take_amount()
 		match effect.type:
@@ -125,6 +126,7 @@ static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectS
 	if others.is_empty() or echo <= 0:
 		return
 	var echo_source := EffectSource.make(source.unit_id, source.item_id, source.item_name, source.infusion_id, "%s echo" % item.infusion_name())
+	echo_source.granted_by = source.granted_by
 	_heal_one(sim, others[sim.rng.range_int(others.size())], echo, echo_source)
 
 
@@ -158,4 +160,7 @@ static func give_shield(sim: CombatSim, target: UnitState, amount: int, source: 
 static func _source(sim: CombatSim, item: ItemState, sourced: SourcedEffect) -> EffectSource:
 	var infusion: String = sourced.infusion_id if sourced != null else ""
 	var infusion_name: String = sourced.infusion_name if sourced != null else ""
-	return EffectSource.make(sim.owner_of(item).id, item.def.id, item.def.name, infusion, infusion_name)
+	var source: EffectSource = EffectSource.make(sim.owner_of(item).id, item.def.id, item.def.name, infusion, infusion_name)
+	if sourced != null:
+		source.granted_by = sourced.granted_by
+	return source

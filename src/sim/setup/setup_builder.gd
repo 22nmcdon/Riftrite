@@ -17,7 +17,13 @@ static func hero(content: ContentDb, hero_id: String, rank: int, row: UnitSetup.
 	var def: HeroDef = content.heroes[hero_id]
 	var setup: UnitSetup = UnitSetup.make(def.id, def.name, def.stats, row, HeroDef.slots_at_rank(rank), def.basic_attack, item_setups(content, entries), rank)
 	setup.backup = def.backup
+	setup.unit_class = def.hero_class
 	return setup
+
+
+## The relics an encounter's enemy team carries.
+static func encounter_relics(content: ContentDb, encounter_id: String) -> Array[String]:
+	return content.encounters[encounter_id].relics.duplicate()
 
 
 ## An encounter's enemy team. Unit ids get a position number so twins can be

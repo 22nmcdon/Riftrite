@@ -128,6 +128,24 @@ func replaced_status(status_id: String) -> String:
 	return alloy.replaces.get(status_id, status_id)
 
 
+## True if the item applies `status_id` through its own effects, its
+## infusion, or a neighbor's spill (not through relic grants). A replaced
+## status counts as both: an Inferno item applies Burn and Golden Flame.
+func applies_status(status_id: String) -> bool:
+	var essence_list: Array[EssenceDef] = essences.duplicate()
+	for spill: EssenceApplication in spills_received:
+		essence_list.append(spill.essence)
+	var effect_list: Array[EffectDef] = def.effects.duplicate()
+	for essence: EssenceDef in essence_list:
+		effect_list.append_array(essence.effects)
+		if essence.adds == status_id or replaced_status(essence.adds) == status_id:
+			return true
+	for effect: EffectDef in effect_list:
+		if effect.type == EffectDef.Type.APPLY_STATUS and (effect.status_id == status_id or replaced_status(effect.status_id) == status_id):
+			return true
+	return false
+
+
 ## Share of each heal this item echoes onto a random other ally (Bloom).
 func heal_echo_bp() -> int:
 	return alloy.heal_echo_bp if alloy != null else 0
@@ -145,6 +163,11 @@ func derive(content: ContentDb, spills: Array[EssenceApplication], aura: ItemAur
 	conversions.clear()
 	for effect: EffectDef in def.effects:
 		effects.append(SourcedEffect.make(effect))
+	if aura != null:
+		for grant: ItemAura.Grant in aura.grants:
+			var granted: SourcedEffect = SourcedEffect.make(grant.def.effect)
+			granted.granted_by = grant.relic_name
+			effects.append(granted)
 	var cooldown_bp: int = 0
 	crit_chance_bp = def.crit_chance_bp + stats.get_stat(UnitStats.Stat.CRIT) * tuning.crit_bp_per_point
 	extra_trigger_chance_bp = 0
@@ -173,6 +196,7 @@ func derive(content: ContentDb, spills: Array[EssenceApplication], aura: ItemAur
 
 
 ## Works out every effect's number: base + stat scaling, times multipliers.
+## A relic grant's number is flat: only side-wide aura multipliers.
 ## The item's own effects get the tier multiplier, a same-kind bonus from
 ## each essence application that adds the same output kind (+50% at full
 ## strength), and aura multipliers for their output kind. Essence effects get
@@ -181,7 +205,10 @@ func _compute_values(content: ContentDb, apps: Array[EssenceApplication], aura: 
 	var tuning: TuningDef = content.tuning
 	for sourced: SourcedEffect in effects:
 		var boosts: Array[ValueBreakdown.Multiplier] = []
-		if sourced.infusion_id.is_empty():
+		if not sourced.granted_by.is_empty():
+			if aura != null:
+				boosts.append_array(aura.multipliers_for(Conversions.output_kind(sourced.effect, content), true))
+		elif sourced.infusion_id.is_empty():
 			if not def.is_basic_attack:
 				boosts.append(ValueBreakdown.multiplier("%s tier" % TuningDef.TIER_LABELS[tier], tuning.tier_multiplier_bp[tier]))
 			var kind: String = Conversions.output_kind(sourced.effect, content)
@@ -225,5 +252,7 @@ func describe_values() -> PackedStringArray:
 		if sourced.effect.type == EffectDef.Type.APPLY_STATUS:
 			label = "%s stacks" % sourced.effect.status_id
 		var origin: String = "" if sourced.infusion_name.is_empty() else " [%s]" % sourced.infusion_name
+		if not sourced.granted_by.is_empty():
+			origin = " (%s)" % sourced.granted_by
 		lines.append("%s%s: %s" % [label, origin, sourced.value.to_text()])
 	return lines

@@ -1,0 +1,94 @@
+[
+  {
+    "id": "warding_knot",
+    "name": "Warding Knot",
+    "rarity": "common",
+    "_note": "The first ally to drop below 30% HP gains a shield.",
+    "effects": [
+      {"trigger": "on_ally_below_hp", "threshold_bp": 3000, "once": true, "type": "shield", "amount": 80, "target": "trigger_ally"}
+    ]
+  },
+  {
+    "id": "tinkers_loupe",
+    "name": "Tinker's Loupe",
+    "rarity": "common",
+    "_note": "Small items fire 10% sooner.",
+    "auras": [
+      {"target": "all_items", "filter": {"size": 1}, "stat": "cooldown_bp", "value": -1000}
+    ]
+  },
+  {
+    "id": "kindled_seal",
+    "name": "Kindled Seal",
+    "rarity": "uncommon",
+    "_note": "All shields x1.1: an unfiltered all_items aura, so it boosts relic shields too.",
+    "auras": [
+      {"target": "all_items", "stat": "shield_bp", "value": 11000}
+    ]
+  },
+  {
+    "id": "emberglass",
+    "name": "Emberglass",
+    "rarity": "uncommon",
+    "_note": "Items that apply Burn deal x1.25 damage over time.",
+    "auras": [
+      {"target": "all_items", "filter": {"applies": "burn"}, "stat": "over_time_bp", "value": 12500}
+    ]
+  },
+  {
+    "id": "vanguard_banner",
+    "name": "Vanguard Banner",
+    "rarity": "uncommon",
+    "_note": "Front-row allies: x1.2 DEF.",
+    "auras": [
+      {"target": "all_allies", "filter": {"row": "front"}, "stat": "def_bp", "value": 12000}
+    ]
+  },
+  {
+    "id": "hourglass",
+    "name": "Hourglass",
+    "rarity": "rare",
+    "_note": "At 20s, every enemy gets 2 Slow.",
+    "effects": [
+      {"trigger": "at_time", "at_ms": 20000, "type": "apply_status", "status": "slow", "stacks": 2, "target": "all_enemies"}
+    ]
+  },
+  {
+    "id": "frostbound_sigil",
+    "name": "Frostbound Sigil",
+    "rarity": "rare",
+    "_note": "Items infused with Frost: x1.2 damage.",
+    "auras": [
+      {"target": "all_items", "filter": {"essence": "frost"}, "stat": "damage_bp", "value": 12000}
+    ]
+  },
+  {
+    "id": "pilgrims_flask",
+    "name": "Pilgrim's Flask",
+    "rarity": "rare",
+    "_note": "Every 8s, heals the ally with the lowest HP%.",
+    "cooldown_ms": 8000,
+    "effects": [
+      {"trigger": "on_fire", "type": "heal", "amount": 30, "target": "ally_lowest_hp"}
+    ]
+  },
+  {
+    "id": "cinder_crown",
+    "name": "Cinder Crown",
+    "rarity": "epic",
+    "_note": "Every Weapon also applies 1 Burn on hit.",
+    "grants": [
+      {"filter": {"tag": "weapon"}, "effect": {"trigger": "on_hit", "type": "apply_status", "status": "burn", "stacks": 1, "target": "hit_target"}}
+    ]
+  },
+  {
+    "id": "gloam_totem",
+    "name": "Gloam Totem",
+    "rarity": "rare",
+    "enemy_only": true,
+    "_note": "Carried by the Witch Coven: back-row allies x1.2 MGK.",
+    "auras": [
+      {"target": "all_allies", "filter": {"row": "back"}, "stat": "mgk_bp", "value": 12000}
+    ]
+  }
+]

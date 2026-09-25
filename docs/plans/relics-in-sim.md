@@ -1,6 +1,6 @@
 # Plan: relics in the combat sim (Phase 3, step 1)
 
-Status: **approved; being built.** Answers are recorded at the end.
+Status: **built** (Phase 3, step 1). Answers and balance findings are at the end.
 
 Design (docs/design.md, "Relics"):
 - The guild holds any number of relics: no board, no slots, no adjacency, no sockets.
@@ -105,14 +105,18 @@ This is how an Epic relic can reshape a build:
 
 | Relic | Rarity | Does |
 | --- | --- | --- |
-| Warding Knot | Common | The first ally to drop below 30% HP gains a Shield |
+| Warding Knot | Common | The first ally to drop below 30% HP gains an 80 Shield |
 | Tinker's Loupe | Common | Small items get −10% cooldown |
+| Kindled Seal | Uncommon | All shields ×1.1 (side-wide, so it boosts relic shields too) |
 | Emberglass | Uncommon | Items that apply Burn: ×1.25 damage over time |
 | Vanguard Banner | Uncommon | Front-row allies: ×1.2 DEF |
 | Hourglass | Rare | At 20s, every enemy gets 2 Slow |
 | Frostbound Sigil | Rare | Items infused with Frost: ×1.2 damage |
+| Pilgrim's Flask | Rare | Every 8s, heals the ally with the lowest HP% for 30 |
 | Cinder Crown | Epic | Every Weapon also applies 1 Burn on hit |
-| Gloam Totem | Enemy-only | Back-row units: ×1.2 MGK (carried by the witch coven) |
+| Gloam Totem | Enemy-only | Back-row units: ×1.2 MGK (carried by the Witch Coven) |
+
+The balance runner has a `hearth_relics` party (the starter party plus Warding Knot, Tinker's Loupe, and Cinder Crown).
 
 ## Tests
 
@@ -133,3 +137,24 @@ This is how an Epic relic can reshape a build:
 
 1. **Relic numbers are flat.** Only percentage boosts that apply to everything of that kind change them (a relic's "all shields +10%", a hero's "shields on this hero +50%").
 2. **Grants: yes.** They may later be narrowed to specific combos, such as an enemy team's own item + relic pair that changes an interaction. The `item` filter already allows "only this item".
+
+## Balance findings (placeholders; first run)
+
+Each relic alone on the `hearth_starter` party, 100 fights per encounter (guild win %):
+
+| Relic | Hound Pack | Sentinel's Vigil | Witch Coven |
+| --- | --- | --- | --- |
+| (none) | 1% | 100% | 0% |
+| Warding Knot | 100% | 100% | 0% |
+| Tinker's Loupe | 100% | 100% | 0% |
+| Kindled Seal | 1% | 100% | 0% |
+| Emberglass | 7% | 100% | 0% |
+| Vanguard Banner | 18% | 100% | 0% |
+| Hourglass | 1% | 100% | 0% |
+| Frostbound Sigil | 1% | 100% | 0% (the party has no Frost) |
+| Pilgrim's Flask | 86% | 100% | 0% |
+| Cinder Crown (Epic) | 100% | 100% | 100% |
+
+- **The Hound Pack is a knife-edge matchup:** almost any edge flips it, as a log comparison shows (Warding Knot's 80 shield keeps Wren alive at 5s, and that decides the fight). The same all-or-nothing matchups were already noted in `docs/plans/phase2-combat-sim.md`; they're an encounter-tuning problem more than a relic one.
+- **Cinder Crown** flips the Witch Coven from 0% to 100%. An Epic is meant to reshape a build, but this is probably too strong for one relic; worth revisiting with the Act 1 content pass.
+- **Kindled Seal, Hourglass, and Frostbound Sigil** do little for this party, which has few shields, fights ending before 20s matter, and no Frost. That's expected: they're build-shaping.

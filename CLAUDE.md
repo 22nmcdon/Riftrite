@@ -79,7 +79,7 @@ tools/         headless sim runner, data validators
 
 ## Other core rules
 
-- Items are per hero; relics are shared by the team. The guild can hold any number of relics (no board, no slots, no sockets); a relic can be turned down, but once taken it can't be removed. Relics are rare and change how a build works rather than adding flat stats. Relic numbers are flat (no stat scaling); only percentage boosts that apply to everything of that kind ("all shields +10%", "shields on this hero +50%") change them.
+- Items are per hero; relics are shared by the team. The guild can hold any number of relics (no board, no slots, no sockets); a relic can be turned down, but once taken it can't be removed. Relics are rare and change how a build works rather than adding flat stats. Relic numbers are flat (no stat scaling); only percentage boosts that apply to everything of that kind ("all shields +10%", "shields on this hero +50%") change them. In the sim, such a boost is an `all_items` aura with no filter. Relic details: `docs/plans/relics-in-sim.md`.
 - Heroes rank up like items: two copies at the same rank combine into the next rank, and the hero already owned keeps their specialization and items. Heroes in the Caravan come with no items.
 - **The Caravan never offers an item or hero at a different tier than a copy the player already holds.** Different-tier copies of the same item can still be held when they come from elsewhere (Vault, loot, fights, events). Items can move between heroes freely between fights (never during combat).
 - Fallen heroes always come back after a fight, with no downside.

@@ -18,7 +18,8 @@ const ITEMS_FILE: String = "items.json"
 const HEROES_FILE: String = "heroes.json"
 const ENEMIES_FILE: String = "enemies.json"
 const ENCOUNTERS_FILE: String = "encounters.json"
-const FILES: Array[String] = [TUNING_FILE, STATUSES_FILE, ESSENCES_FILE, ALLOYS_FILE, ITEMS_FILE, HEROES_FILE, ENEMIES_FILE, ENCOUNTERS_FILE]
+const RELICS_FILE: String = "relics.json"
+const FILES: Array[String] = [TUNING_FILE, STATUSES_FILE, ESSENCES_FILE, ALLOYS_FILE, ITEMS_FILE, HEROES_FILE, ENEMIES_FILE, ENCOUNTERS_FILE, RELICS_FILE]
 
 var errors: Array[String] = []
 var tuning: TuningDef
@@ -36,6 +37,8 @@ var enemies: Dictionary[String, EnemyDef] = {}
 var enemy_ids: Array[String] = []
 var encounters: Dictionary[String, EncounterDef] = {}
 var encounter_ids: Array[String] = []
+var relics: Dictionary[String, RelicDef] = {}
+var relic_ids: Array[String] = []
 ## Recipe key (AlloyDef.recipe_key) -> alloy. Two essences with no entry
 ## here still work as an alloy, just without a named special.
 var _alloys_by_recipe: Dictionary[String, AlloyDef] = {}
@@ -83,6 +86,10 @@ static func load_texts(texts: Dictionary[String, String]) -> ContentDb:
 		var encounter: EncounterDef = EncounterDef.read(reader)
 		if db._claim_id(encounter.id, reader, db.encounter_ids):
 			db.encounters[encounter.id] = encounter
+	for reader: DataReader in db._entries(db._parse(texts, RELICS_FILE), RELICS_FILE):
+		var relic: RelicDef = RelicDef.read(reader)
+		if db._claim_id(relic.id, reader, db.relic_ids):
+			db.relics[relic.id] = relic
 	db._check_references()
 	return db
 
@@ -201,6 +208,7 @@ func _check_references() -> void:
 
 	for id: String in item_ids:
 		_check_effects(items[id].effects, "%s (%s)" % [ITEMS_FILE, id])
+		_check_auras(items[id].auras, "%s (%s)" % [ITEMS_FILE, id])
 	for id: String in hero_ids:
 		if heroes[id].basic_attack != null:
 			_check_effects(heroes[id].basic_attack.effects, "%s (%s).basic_attack" % [HEROES_FILE, id])
@@ -217,6 +225,31 @@ func _check_references() -> void:
 				errors.append("%s (%s): unknown enemy \"%s\"" % [ENCOUNTERS_FILE, id, slot.enemy_id])
 		if tuning != null and tuning.collapse_for_act(encounter.act) == null:
 			errors.append("%s (%s): act %d has no Rift Collapse numbers in tuning" % [ENCOUNTERS_FILE, id, encounter.act])
+		check_relics(encounter.relics, "%s (%s)" % [ENCOUNTERS_FILE, id], true)
+	for id: String in relic_ids:
+		var relic: RelicDef = relics[id]
+		var where: String = "%s (%s)" % [RELICS_FILE, id]
+		_check_effects(relic.effects, where)
+		_check_auras(relic.auras, where)
+		for i: int in relic.grants.size():
+			var grant: GrantDef = relic.grants[i]
+			var effect_list: Array[EffectDef] = [grant.effect]
+			_check_effects(effect_list, "%s.grants[%d]" % [where, i])
+			_check_filter(grant.filter, "%s.grants[%d]" % [where, i])
+
+
+## Checks a list of relic ids: each exists, none twice. Enemy-only relics are
+## allowed only when `enemy` is true.
+func check_relics(relic_list: Array[String], where: String, enemy: bool) -> void:
+	for i: int in relic_list.size():
+		var relic_id: String = relic_list[i]
+		var at: String = "%s.relics[%d]" % [where, i]
+		if not relics.has(relic_id):
+			errors.append("%s: unknown relic \"%s\"" % [at, relic_id])
+		elif relics[relic_id].enemy_only and not enemy:
+			errors.append("%s: \"%s\" is enemy-only" % [at, relic_id])
+		if relic_list.find(relic_id) < i:
+			errors.append("%s: \"%s\" is listed twice" % [at, relic_id])
 
 
 ## Checks a fixed item layout's references: items, essences, and sockets.
@@ -246,6 +279,23 @@ func is_output_kind(kind: String) -> bool:
 	if EssenceDef.DIRECT_KINDS.has(kind):
 		return true
 	return statuses.has(kind) and statuses[kind].kind == StatusDef.Kind.DAMAGE_OVER_TIME
+
+
+func _check_auras(auras: Array[AuraDef], where: String) -> void:
+	for i: int in auras.size():
+		_check_filter(auras[i].filter, "%s.auras[%d]" % [where, i])
+
+
+## Checks the ids a filter names (item, status, essence).
+func _check_filter(filter: AuraFilter, where: String) -> void:
+	if filter == null:
+		return
+	if not filter.item_id.is_empty() and not items.has(filter.item_id):
+		errors.append("%s.filter: unknown item \"%s\"" % [where, filter.item_id])
+	if not filter.applies.is_empty() and not statuses.has(filter.applies):
+		errors.append("%s.filter: unknown status \"%s\"" % [where, filter.applies])
+	if not filter.essence.is_empty() and not essences.has(filter.essence):
+		errors.append("%s.filter: unknown essence \"%s\"" % [where, filter.essence])
 
 
 func _check_effects(effects: Array[EffectDef], where: String) -> void:
