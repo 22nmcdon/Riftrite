@@ -187,6 +187,7 @@ Items use the **same tiers as hero ranks: C → B → A → S**. Items don't hav
 
 - The guild can hold **any number of relics**. There's no board, no slots, and no adjacency.
 - **Relics can't be infused.** Essences go only on hero items.
+- **Relic numbers are flat.** They don't scale from hero stats. Only percentage boosts that apply to everything of that kind change them, such as a relic's "all shields +10%" or a hero's "shields on this hero +50%".
 - **Taking one is permanent:** you can always turn a relic down, but once taken it can't be removed or sold. Relics also can't go in the stash.
 - **Relics change how a build works** rather than adding flat stats. Examples: "the first ally to drop below 30% HP gains a Shield", "Burn ticks faster", "Small items gain crit chance". Higher rarities change it more; an Epic relic can reshape a whole build.
 - **Relics are much harder to get than items, essences, or heroes.** They come from elites, bosses, Vaults, events, and enemy teams that carry relics (including enemy-only relics). Bosses carry items too, so a boss drops an item or a relic. The rarity makes them special, and it adds variety between runs.
@@ -233,7 +234,7 @@ A possible later change: two rounds per day (Caravan, stop, fight, then Caravan,
 
 | Step | What happens |
 | --- | --- |
-| Caravan | Buy/sell items, recruit heroes (a second copy ranks one up), reroll for gold |
+| Caravan | Buy/sell items, recruit heroes (a second copy ranks one up), reroll for gold. Never offers an item or hero at a different tier than a copy you hold |
 | Fight | Encounter; drops gold, 1–2 essences, and one guaranteed item (or, rarely, relic) from the enemy team |
 | Elite | Harder fight; guaranteed Rare item or rank-up |
 | Forge (stop) | Reforge (remove infusions); only offered when something is infused |
@@ -344,7 +345,8 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - Infusion XP comes from item fires (amount set per item, by type and size) plus battles fought. XP resets when an infusion becomes an alloy or pure double.
 - Essence resonance counts essences: a single = 1, an alloy = 1 of each half, a pure double = 2, and a transformation counts its socketed essence(s).
 - **No branching map.** Each act is a set number of days. A day is a guaranteed shop, one fight shown ahead, and a stop you pick (Forge only if something is infused, Vault only with a key, loot, events). Offers are random per run from the seed and don't depend on earlier picks for now.
-- **The Caravan** is the shop: it sells items and heroes (Merchant and Tavern are one). Heroes rank up like items: buy a second copy at the same rank and combine. The hero you already have keeps their specialization and items; heroes in the Caravan come with no items; and the Caravan never offers a hero you already have at a different rank.
+- **The Caravan** is the shop: it sells items and heroes (Merchant and Tavern are one). Heroes rank up like items: buy a second copy at the same rank and combine. The hero you already have keeps their specialization and items; heroes in the Caravan come with no items.
+- **The Caravan never offers an item or hero at a different tier than a copy you already hold.** Holding the same item at different tiers is still allowed when the copies come from elsewhere (Vault, loot, fight drops, events), just not from the Caravan.
 - **Day order:** Caravan → stop → fight. Two rounds per day (Caravan, stop, fight, Caravan, stop, elite or boss) is a possible later change.
 - **Infusing** can happen any time between fights for now; the Forge is for reforging.
 - **A lost fight is replayed against the same enemies.**

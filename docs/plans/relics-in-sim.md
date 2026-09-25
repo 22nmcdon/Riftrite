@@ -1,6 +1,6 @@
 # Plan: relics in the combat sim (Phase 3, step 1)
 
-Status: **proposed, awaiting approval and two answers (end of file).**
+Status: **approved; being built.** Answers are recorded at the end.
 
 Design (docs/design.md, "Relics"):
 - The guild holds any number of relics: no board, no slots, no adjacency, no sockets.
@@ -28,7 +28,7 @@ Relic auras reach **every item or every hero on the relic holder's side**, optio
 
 - **New target `all_items`:** every item on every hero of that side. `all_allies` already exists.
 - **New `filter` field**, with one key per filter:
-  - items: `tag`, `size`, `applies` (the item applies that status, including through its infusion), `essence` (infused with it)
+  - items: `item` (a specific item id), `tag`, `size`, `applies` (the item applies that status, from its own effects, its infusion, or spill), `essence` (infused with it)
   - heroes: `row`, `class`
 - Filters are allowed on item auras too, so later items can say "adjacent Weapons get +10% crit".
 - **Backup heroes:** relic auras reach them too, so their backup effects get the boost. Item auras keep today's rule.
@@ -41,17 +41,17 @@ This is how an Epic relic can reshape a build:
 "grants": [ { "filter": {"tag": "weapon"}, "effect": {"trigger": "on_hit", "type": "apply_status", "status": "burn", "stacks": 1} } ]
 ```
 
-- Every matching item gains that effect for the fight, fired and scaled like the item's own effects.
+- Every matching item gains that effect for the fight, fired by the item's own triggers (on_fire, on_hit, on_crit). Its number is flat (see below), and essences don't convert it.
 - The log names the relic: `wren · Rust Hook (Cinder Crown) applies 1 Burn`.
 - **Grants never spill** and don't count as essences.
 
 ### 3. Relic effects, with new triggers
 
 ```json
-{ "trigger": "on_fight_start",  "type": "shield", "amount": 10, "scaling": {"def": 5000}, "target": "all_allies" }
+{ "trigger": "on_fight_start",  "type": "shield", "amount": 30, "target": "all_allies" }
 { "trigger": "at_time", "at_ms": 20000, "type": "apply_status", "status": "slow", "stacks": 2, "target": "all_enemies" }
-{ "trigger": "on_ally_below_hp", "threshold_bp": 3000, "once": true, "type": "shield", "amount": 20, "scaling": {"def": 10000}, "target": "trigger_ally" }
-{ "trigger": "on_fire", "cooldown_ms": 8000, "type": "heal", "amount": 6, "scaling": {"mgk": 2000}, "target": "ally_lowest_hp" }
+{ "trigger": "on_ally_below_hp", "threshold_bp": 3000, "once": true, "type": "shield", "amount": 80, "target": "trigger_ally" }
+{ "trigger": "on_fire", "type": "heal", "amount": 25, "target": "ally_lowest_hp" }
 ```
 
 - **New triggers:**
@@ -62,9 +62,12 @@ This is how an Epic relic can reshape a build:
 - **New target `trigger_ally`:** the ally that set off `on_ally_below_hp`.
 - **Targets relics can't use:** targets that need a spot on the field (`self`, `hit_target`, the `linked_*` variants, `row_allies`). The checker rejects them.
 
-### Where relic numbers come from (question 1)
+### Relic numbers are flat
 
-A relic has no holder, so `scaling` needs a unit whose stats it reads. My proposal: **it reads the stats of the ally the effect lands on or the ally that triggered it.** For example, a relic shield on each ally is 10 + 50% of *that ally's* DEF. Relic damage, and statuses on enemies, use flat amounts. Stacks are flat anyway, and relic damage should be rare.
+- **No `scaling`** on relic effects or grants; the checker rejects it.
+- **What can boost them:** only percentage boosts that apply to *everything* of that kind on the side. In the sim that means an aura with target `all_items` and **no filter** (e.g. a relic's "all shields ×1.1"): it boosts every item's output *and* the side's relic effects and grants.
+- **Filtered auras don't:** "Weapons deal ×1.2 damage" doesn't boost a Weapon's granted Burn, and neither does the item's tier or its neighbors' auras.
+- **Receiver-side boosts** ("shields on this hero +50%") don't exist in the sim yet. When they're added, they'll apply to relic numbers too.
 
 ## Order in a tick
 
@@ -83,7 +86,7 @@ A relic has no holder, so `scaling` needs a unit whose stats it reads. My propos
   "enemy_only": false,
   "auras": [],
   "grants": [],
-  "effects": [ { "trigger": "on_ally_below_hp", "threshold_bp": 3000, "once": true, "type": "shield", "amount": 20, "scaling": {"def": 10000}, "target": "trigger_ally" } ],
+  "effects": [ { "trigger": "on_ally_below_hp", "threshold_bp": 3000, "once": true, "type": "shield", "amount": 80, "target": "trigger_ally" } ],
   "cooldown_ms": 0
 }
 ```
@@ -121,12 +124,12 @@ A relic has no holder, so `scaling` needs a unit whose stats it reads. My propos
   - `at_time` fires once, at the right tick.
   - `on_ally_below_hp`: `once` versus once per ally; it doesn't trigger for an ally killed outright.
   - A cooldown relic fires on schedule.
-- **Scaling:** relic numbers read from the target or the triggering ally (per question 1).
+- **Flat numbers:** relic numbers ignore stats, tier, and filtered auras; an unfiltered `all_items` aura boosts them.
 - **Enemies:** enemy relics work on the enemy side; the encounter's `relics` list loads.
 - **Determinism:** the determinism fight includes relics on both sides.
 - **Real content:** the draft relics pass the data checker, and the balance runner has a relic party.
 
-## Questions
+## Answers
 
-1. **Relic numbers:** scale from the ally they land on or that triggered them (my proposal), or something else, such as flat amounts that grow by act?
-2. **Grants:** is "Epic relics can give matching items a new effect" the kind of build change you want? It's the most powerful new piece here.
+1. **Relic numbers are flat.** Only percentage boosts that apply to everything of that kind change them (a relic's "all shields +10%", a hero's "shields on this hero +50%").
+2. **Grants: yes.** They may later be narrowed to specific combos, such as an enemy team's own item + relic pair that changes an interaction. The `item` filter already allows "only this item".

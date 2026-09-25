@@ -198,4 +198,4 @@ Placeholder art, readable first:
 - **Events:** gold, item by rarity, relic by rarity, and item by tier to start.
 - **Save/resume:** yes.
 
-- **Combining heroes:** the hero you already have keeps their specialization (and items). Heroes in the Caravan come with no items. The Caravan never offers a hero you already have at a different rank, so every copy it offers can combine.
+- **Combining heroes:** the hero you already have keeps their specialization (and items). Heroes in the Caravan come with no items. The Caravan never offers an item or hero at a different tier than a copy you already hold, so every copy it offers can combine. Different-tier copies of an item can still be held when they come from elsewhere (Vault, loot, fights, events).
