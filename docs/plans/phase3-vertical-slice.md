@@ -172,7 +172,7 @@ Placeholder art, readable first:
 4. RunState and actions: roster, loadouts, stash, gold, pouch, combining, infusing and reforging. Save/load from the start, so every later step is tested for round-trips. (built; `docs/plans/run-state.md`)
 5. The day structure (Caravan, stop, fight, losses and replays) and the economy data; the run bot and run-level balance reports. (built; `docs/plans/day-structure.md`)
 6. Boss mechanic(s) (built; `docs/plans/act1-boss.md`).
-7. UI: prep screen and fight playback first (the core loop), then run start, the day screen, the Caravan, and the stop screens.
+7. UI: prep screen and fight playback first (the core loop), then run start, the day screen, the Caravan, and the stop screens. (plan: `docs/plans/first-ui.md`)
 8. Content to the slice targets, then playtesting.
 
 ## Answers so far
