@@ -77,7 +77,7 @@ You field 3 heroes at the start and up to 5 by Act 3, with a roster cap of 6. Th
 
 - A small hex grid. Heroes move and target on their own, but you set starting hexes.
 - Some items care about position: *Linked* effects reach an adjacent ally's row, so two heroes standing together can share buffs.
-- **Rush** items are strong for the first 8 seconds; **Stall** items wake up after 15 seconds. That gives fast and slow builds real identities.
+- **Rush** items are strong for the first 8 seconds; **Stall** items wake up after 15 seconds. That gives fast and slow builds real identities. **What "strong" or "asleep" means is per item** (decided): a Rush item might deal 2x damage, hit every enemy, boost its neighbors, or double its holder's defense for 8 seconds; a Stall item might do nothing, or something weaker, before 15 seconds. Rush and Stall are labels (for the shop and synergies); each item's data says what actually changes.
 - **Rift Collapse:** at 45 seconds the rift starts dealing damage to every unit on both sides every second, and the damage keeps growing. Early fights end around 60 seconds; strong mid- and late-game teams can last much longer.
   - It's a **flat amount, not a percentage of max HP**, so high-HP builds get to use their HP.
   - It hits **Shield before HP**, like any damage. Shield is effectively extra HP that healing can't restore, so a perfect shielding setup can stall out a fight on purpose.

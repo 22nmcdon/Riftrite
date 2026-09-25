@@ -203,6 +203,27 @@ Every effect, status tick, level-up, spill, and death writes one entry. The dama
 - **Bloom's echo** goes to a random other living ally (seeded RNG); echoes don't echo. Alloy specials don't scale with infusion level (the essences' parts do).
 - **Alloy spill:** first socket's essence left, second's right (30% of Resonant); pure doubles spill their essence once to each side. The special never spills, so Plasma's spilled Ember is plain Burn.
 
+### Step 7 proposal (awaiting approval): time windows, auras, area targets, Linked
+
+Rush/Stall behavior is per item, so step 7 adds building blocks instead of one fixed rule.
+
+**1. Time windows on any effect.** `"window": {"from_ms": 0, "until_ms": 8000}` means the effect only happens during that part of the fight (either end optional).
+- Rush dagger, 2x damage for 8s: `{"amount": 20, "window": {"until_ms": 8000}}` plus `{"amount": 10, "window": {"from_ms": 8000}}`.
+- Stall tome that sleeps until 15s: its effects get `"window": {"from_ms": 15000}`.
+
+**2. Auras: continuous boosts while their window is open.** A new item field, `"auras": [...]`, each entry `{target, stat, value, window?}`:
+- Targets: `self_item`, `left_item`, `right_item`, `adjacent_items`, `row_items`, `holder`, `linked_allies`, `all_allies`.
+- Item stats: `damage_bp`, `heal_bp`, `shield_bp`, `over_time_bp` (multipliers, like tier), `crit_chance_bp`, `cooldown_bp` (added, like essence modifiers).
+- Unit stats: `atk_bp`, `mgk_bp`, `def_bp`, `atsp_bp`, `crit_bp` (multipliers on the holder's or allies' stats).
+- Examples: "adjacent items get +20% crit": `{"target": "adjacent_items", "stat": "crit_chance_bp", "value": 2000}`. "Defense x2 for 8s": `{"target": "holder", "stat": "def_bp", "value": 20000, "window": {"until_ms": 8000}}`.
+- Auras show in the base/final breakdown (for example "x2 Rush (Dagger)"), and items re-derive when a window opens or closes.
+
+**3. Area targets:** `all_enemies` and `all_allies`, for effects. Each target is a separate hit or heal.
+
+**4. Linked:** `linked_allies` means the units directly left and right of the holder in the same row. Effects can target them, and auras can boost them (and their items).
+
+**5. Rush/Stall stay labels.** The item's `timing` field stays, for the shop and synergies; windows and auras do the work.
+
 ## Needs your call before coding
 
 Confirmed: targeting (front row first), same-tick deaths still fire, HP-only heroes, per-item crit chance starting at 0 with 150% crits, no time limit, a tie at 180s or on a mutual wipe counts as a victory, collapse hits Shield before HP, and the collapse ramp above (numbers still to be tuned).
