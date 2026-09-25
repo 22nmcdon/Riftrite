@@ -8,17 +8,20 @@ A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The pl
 
 ## Tech stack
 
-- Engine: Godot 4.x, GDScript (static typing everywhere: `var hp: int`, typed function signatures)
+- Engine: Godot 4.7, GDScript (static typing everywhere: `var hp: int`, typed function signatures). `project.godot` makes untyped declarations a compile error, and the test run fails if any script in `src/`, `tests/`, or `tools/` doesn't compile.
 - Tests: GUT (Godot Unit Test)
 - Game data: JSON files in `data/`, loaded at startup and validated
-- **Pinned versions:** Godot `TBD`, GUT `TBD`. Set the exact versions when the project is created. Upgrade either one only on purpose, in its own change, and rerun the determinism tests afterward.
+- **Pinned versions:** Godot `4.7.2-stable`, GUT `9.7.1` (vendored in `addons/gut/`). Upgrade either one only on purpose, in its own change, and rerun the determinism tests afterward. The Godot version also appears in `.claude/hooks/session-start.sh` and `tests/test_project_setup.gd`; keep all three in sync.
 
 ## Commands
 
 <!-- Update these once the project is set up -->
-- Run the game: `godot --path .`
-- Run all tests: `godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit`
-- Headless balance sim: `godot --headless --path . -- --sim --fights=1000 --seed=1`
+- Run the game: `godot --path .` (no main scene yet)
+- Run all tests: `godot --headless -s addons/gut/gut_cmdln.gd -gexit` (settings in `.gutconfig.json`)
+- Run one test file: add `-gselect=test_project_setup.gd`
+- Fresh checkout: run `godot --headless --import` once first, so class names are registered. The session-start hook does this in cloud sessions.
+- Headless balance sim: `godot --headless --path . -- --sim --fights=1000 --seed=1` (not built yet)
+- Cloud sessions: `.claude/hooks/session-start.sh` installs the pinned Godot as `godot` in `~/.local/bin`.
 
 ## Folder layout
 

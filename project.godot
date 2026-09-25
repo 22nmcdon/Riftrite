@@ -1,0 +1,17 @@
+; Engine configuration file.
+; Pinned engine version: see "Pinned versions" in CLAUDE.md.
+
+config_version=5
+
+[application]
+
+config/name="Riftrite"
+config/features=PackedStringArray("4.7")
+
+[debug]
+
+gdscript/warnings/untyped_declaration=2
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gut/plugin.cfg")
