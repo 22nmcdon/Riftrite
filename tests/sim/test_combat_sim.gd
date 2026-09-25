@@ -114,6 +114,23 @@ func test_a_downed_unit_is_not_targeted_in_the_same_tick() -> void:
 	assert_eq(hits[0].target, "strong")
 
 
+func _unit_state(unit_id: String, hp: int, max_hp: int) -> UnitState:
+	var state := UnitState.new()
+	state.id = unit_id
+	state.hp = hp
+	state.max_hp = max_hp
+	return state
+
+
+func test_lowest_hp_means_lowest_percentage() -> void:
+	var tank: UnitState = _unit_state("tank", 300, 1000)
+	var mender: UnitState = _unit_state("mender", 150, 200)
+	assert_eq(Targeting._lowest_hp([mender, tank] as Array[UnitState]).id, "tank", "30% beats 75%, even with more raw HP")
+	var even: UnitState = _unit_state("even", 100, 200)
+	var half: UnitState = _unit_state("half", 500, 1000)
+	assert_eq(Targeting._lowest_hp([even, half] as Array[UnitState]).id, "even", "ties go to the first in order")
+
+
 # --- damage, shields, crits, heals ------------------------------------------------
 
 func test_shield_absorbs_before_hp() -> void:

@@ -8,7 +8,7 @@ extends RefCounted
 enum Timing { NORMAL, RUSH, STALL }
 
 const TAGS: Array[String] = ["weapon", "tome", "charm", "tool", "food"]
-const RARITIES: Array[String] = ["common", "uncommon", "rare", "legendary"]
+const RARITIES: Array[String] = ["common", "uncommon", "rare", "epic", "legendary"]
 const TIMING_NAMES: Array[String] = ["normal", "rush", "stall"]
 const MAX_SIZE: int = 3
 

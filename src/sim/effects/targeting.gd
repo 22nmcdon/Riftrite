@@ -63,11 +63,11 @@ static func _nearest_in_row(units: Array[UnitState], row: UnitSetup.Row, column:
 	return best
 
 
-## Lowest current HP; ties go to the first in resolution order.
-## (Design says "lowest-HP ally"; see Open questions on HP vs. HP percentage.)
+## Lowest HP *percentage* (design decision); ties go to the first in
+## resolution order. Compares hp/max_hp by cross-multiplying, so no division.
 static func _lowest_hp(units: Array[UnitState]) -> UnitState:
 	var best: UnitState = null
 	for unit: UnitState in units:
-		if unit.is_standing() and (best == null or unit.hp < best.hp):
+		if unit.is_standing() and (best == null or unit.hp * best.max_hp < best.hp * unit.max_hp):
 			best = unit
 	return best

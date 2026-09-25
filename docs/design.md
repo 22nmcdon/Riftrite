@@ -51,6 +51,8 @@ The inner loop (node to node) is where builds form. The outer loop (run to run) 
 
 You field 3 heroes at the start and up to 5 by Act 3, with a roster cap of 6. The benched hero is never dead weight: each hero has a **Backup** effect that works from the bench, like Guildrun's.
 
+**Backup is a choice.** The player decides who fights and who sits in backup (at most 5 fielded, so with 6 heroes at least one is always in backup). A backup hero's Backup effect applies, and so do the backup modes of the items in their row, which allows builds like 3 fielded + 3 backup. Full rules: `docs/tiers-backup-specialization.md`.
+
 **Heroes**
 
 - Each hero has a class (Warden, Striker, Arcanist, Mender, Trickster, Ranger) and one signature passive.
@@ -105,7 +107,7 @@ In The Bazaar an item gets one fixed enchantment. Here, enchantments are **Infus
 | Frost | Wraiths, ice beasts | Hits Slow; 3 stacks Freeze for 1s |
 | Storm | Harpies, constructs | Item cooldown −15%; chance to trigger twice |
 | Stone | Golems, knights | Grants Shield equal to part of the item's damage |
-| Verdant | Treants, fungi | Heals the lowest-HP ally |
+| Verdant | Treants, fungi | Heals the ally with the lowest HP percentage |
 | Umbral | Shades, assassins | +Crit; crits apply Bleed |
 
 **2. Socket.** Small items have 1 socket; Medium and Large have 2. Infusing happens at a Forge node or from certain events.
@@ -150,7 +152,7 @@ The trade-off: an alloy is the strongest effect on its own item, but its spill i
 
 **Other item rules**
 
-- Rarity: Common, Uncommon, Rare, Legendary. Rarity decides how often an item shows up. It is **separate from tier** (see Item tiers below): an item of any rarity can show up at any tier the run allows, and can be tiered up.
+- Rarity: **Common, Uncommon, Rare, Epic, Legendary** (Epic sits between Rare and Legendary). Rarity decides how often an item shows up, and also how complex it is, whether it has a backup mode, and how tailored its hero–item specialization is. It is **separate from tier** (see Item tiers below): an item of any rarity can show up at any tier the run allows, and can be tiered up.
 - **Size doesn't affect rarity.** Any Small item shows up exactly as often as any Large item of the same rarity. The game has more Small items than Medium, and more Medium than Large, so Small items turn up more overall simply because there are more of them.
 - Every item has its own **crit chance, starting at 0%**. Umbral and some items raise it. A crit deals 150% damage (a tuning value).
 - Tags on every item (Weapon, Tome, Charm, Tool, Food) drive synergies and hero bonuses.
@@ -168,7 +170,11 @@ Items use the **same tiers as hero ranks: C → B → A → S**. Items don't hav
 - **What happens to infusions when copies combine:**
   - If the new copy has no infusion, the upgraded item keeps yours, along with its XP.
   - If the new copy has its own essence or alloy, **the new infusion replaces yours**, and your infusion's XP is lost. So you choose: take the tier upgrade with the new infusion, or keep your item as it is and pass on the copy.
-- Tier and rarity are separate. S is the top tier.
+- Tier and rarity are separate. **S is the top tier**: an S item is maxed out and can't combine further.
+- **Legendaries never combine.** Each has its own upgrade path (grows by use, essence-hungry, boss-forged, and so on), and a Legendary can appear only once per run.
+- Shop tier odds by act (C/B/A/S, starting values): Act 1 80/20/0/0, Act 2 45/40/15/0, Act 3 20/40/30/10. The same table applies to Tavern heroes, so it lives in one data file.
+
+**Hero–item specialization:** when a hero and an item are both S tier, the player can permanently specialize the hero with that item. One per hero; the item can't be removed, moved, or sold after that (but can be repositioned in the row and still infused); it leaves with the hero if the hero is dismissed; and a preview is shown before confirming. How specific the result is depends on rarity (Common: basic and generic, plus a basic backup ability; Legendary: unique). Full rules, the class-fit table, and Legendary upgrade paths: `docs/tiers-backup-specialization.md`.
 
 **Relic board (shared by the whole guild)**
 
@@ -280,7 +286,11 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - Every item has a crit chance, starting at 0%. Crits deal 150% damage.
 - Rift Collapse deals flat damage that grows every second (never a percentage of HP) and hits Shield before HP. The ramp gets much steeper after 90s, and Act 2 doubles the numbers. There's no time limit; reaching 3 minutes, or both sides dying on the same tick, is a tie, and a tie counts as a victory. Surviving to 3 minutes is meant to be possible, especially for strong mid- and late-game teams.
 - Combat sim targeting: attacks hit the enemy front row; the back row only once the front row is empty, unless an item says it reaches the back row. Units killed during a tick still fire what they had ready that tick (for now). Heroes have HP only for now.
-- A hero recruited at B or above has a preset specialization; changing it requires retraining.
+- A hero recruited at B or above has a preset specialization; changing it requires an event that offers retraining.
+- Heals and "lowest HP" targeting use the lowest HP **percentage**, not the lowest raw HP.
+- Items have five rarities (Epic added) and four tiers (C/B/A/S). S items can't combine; Legendaries never combine and appear at most once per run.
+- Backup is the player's choice; backup heroes' Backup effects and their items' backup modes apply.
+- An S-tier hero can be permanently specialized with an S-tier item (see `docs/tiers-backup-specialization.md`).
 - Every hero has their own built-in basic auto-attack, which can't be upgraded. An auto-attack item (Small, Medium, or Large) replaces it and takes up slots, and a hero can equip only one. Take the item out and the hero uses the basic auto-attack again.
 - Two copies of the same item combine into the next tier (two, not three). A new copy's infusion replaces the old one.
 - Alloy spill per side equals a single essence's spill for now.
@@ -292,6 +302,5 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 
 - **Doubled spill:** does any pure double keep it? Overgrowth (Verdant + Verdant) is the first one to test.
 - **Act 3 collapse numbers:** to be decided later.
-- **"Lowest-HP ally":** lowest current HP, or lowest HP *percentage*? (A 900/1000 tank vs. a 150/200 mender.) The sim currently uses lowest current HP, as literally written.
 - **Tier schedule:** at what point in a run do normal shops and the Tavern start offering B, A, and S? (A tuning table; it can be set once the run structure is being built.)
-- **Retraining:** where does a hero get retrained to a different specialization (Tavern, a Guildhall station, an event?), and what does it cost?
+- More open questions on tiers, backup, specialization, and Legendaries are listed at the end of `docs/tiers-backup-specialization.md`.
