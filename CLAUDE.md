@@ -60,9 +60,10 @@ tools/         headless sim runner, data validators
 
 ## Item rules
 
-- Every unit has a built-in **basic auto-attack** (no slot). **Auto-attack items** replace it, take up slots, and can be Small, Medium, or Large. Remove the item and the unit falls back to its basic auto-attack.
+- Every unit has a built-in **basic auto-attack** (no slot). Each hero's basic auto-attack is their own and **can't be upgraded** (no sockets, no tier). **Auto-attack items** replace it, take up slots, and can be Small, Medium, or Large. **Max one auto-attack item per hero.** Remove the item and the unit falls back to its basic auto-attack.
 - **Two** copies of the same item at the same tier combine into the next tier (never three). If the new copy has an infusion, it replaces the old one (and the old XP is lost); if not, the old infusion and its XP stay. The player chooses whether to combine. Copies at *different* tiers can be held together.
-- Tier and rarity are separate. Rarity decides how often an item appears; any item can be tiered up. Tiers are **C → B → A → S** (same as hero ranks); every item starts at C. Shops sell only tier C (except tier-specific shops).
+- Tier and rarity are separate. Rarity decides how often an item appears; any item can be tiered up. Tiers are **C → B → A → S** (same as hero ranks). Items and heroes can be found above C; normal shops and the Tavern unlock higher tiers as the run progresses (a schedule in `data/`). Earlier, higher tiers come only from events (such as tier-specific shops), enemy drops, and loot.
+- **Size never affects rarity.** Each item of a given rarity has the same appearance odds whatever its size; there are just more Small items in the pool.
 - Every item has its own crit chance (default 0). Crit damage multiplier is a tuning value (150%).
 - Enemies use hand-made, fixed item layouts with set tiers, built from the same item system; some items are enemy-only. Some enemy teams carry relics (enemy-only relics exist too). Every fight guarantees one drop from the enemy team's items and relics, enemy-only ones included.
 

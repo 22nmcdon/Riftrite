@@ -55,13 +55,15 @@ You field 3 heroes at the start and up to 5 by Act 3, with a roster cap of 6. Th
 
 - Each hero has a class (Warden, Striker, Arcanist, Mender, Trickster, Ranger) and one signature passive.
 - Ranks go C → B → A → S. At B you pick one of three specializations. Each rank-up also **adds one item slot**, so leveling a hero grows their board.
-- A hero starts with 4 slots and ends at 7 at rank S.
+- A C-rank hero has 4 slots and an S-rank hero has 7.
+- Heroes don't have to start at C. The Tavern can offer higher-rank recruits, following the same run-progress rules as item tiers (see Item tiers).
 
 **Item rows (the Bazaar part)**
 
 - Every hero has their own row of slots. Items are Small (1 slot), Medium (2), or Large (3).
 - Items fire on their own cooldown during the fight, so gear decides most of what a hero does.
-- **Auto-attacks:** every hero has a **basic auto-attack** built in. **Auto-attack items** are items that replace it. They take up slots like any other item and come in all three sizes: Small ones are the most common, then Medium, and Large ones are the rarest. Take the auto-attack item out and the hero falls back to their basic auto-attack.
+- **Auto-attacks:** every hero has a **basic auto-attack** built in. **Auto-attack items** are items that replace it. They take up slots like any other item and can be Small, Medium, or Large. A hero can equip **only one** auto-attack item at a time. Take it out and the hero falls back to their basic auto-attack.
+- Each hero's **basic auto-attack is their own** (a Ranger's differs from a Warden's). It **can't be upgraded**: it has no sockets and no tiers.
 - Slot space is a real trade-off. Bigger items are stronger than smaller ones, so a Large item that fills most of a 4-slot hero's row is a valid build. A player can even drop the auto-attack item for another item and rely on the basic auto-attack. Synergies are what make a row of small items worth it instead.
 - Adjacency matters inside a row: "the item to the left gets +20% crit" style effects.
 - Items move freely between heroes at any time between fights, so reshuffling gear is part of every prep phase.
@@ -148,17 +150,21 @@ The trade-off: an alloy is the strongest effect on its own item, but its spill i
 
 **Other item rules**
 
-- Rarity: Common, Uncommon, Rare, Legendary. Rarity decides how often an item shows up. It is **separate from tier** (see Item tiers below): a Rare item still starts at the lowest tier and can be tiered up.
+- Rarity: Common, Uncommon, Rare, Legendary. Rarity decides how often an item shows up. It is **separate from tier** (see Item tiers below): an item of any rarity can show up at any tier the run allows, and can be tiered up.
+- **Size doesn't affect rarity.** Any Small item shows up exactly as often as any Large item of the same rarity. The game has more Small items than Medium, and more Medium than Large, so Small items turn up more overall simply because there are more of them.
 - Every item has its own **crit chance, starting at 0%**. Umbral and some items raise it. A crit deals 150% damage (a tuning value).
 - Tags on every item (Weapon, Tome, Charm, Tool, Food) drive synergies and hero bonuses.
 
 **Item tiers (combining duplicates)**
 
-Items use the **same tiers as hero ranks: C → B → A → S**, and every item starts at C. An item moves up a tier by combining with a second copy of itself, instead of a Tavern visit.
+Items use the **same tiers as hero ranks: C → B → A → S**. Items don't have to start at C; one can be found at any tier the run allows. An item moves up a tier by combining with a second copy of itself, instead of a Tavern visit.
 
 - **Two copies of the same item at the same tier combine** into one item of the next tier. (Only two copies, not three.)
 - You **can** hold two copies of the same item at *different* tiers; only same-tier copies combine. Duplicates are meant to be uncommon, so an upgrade you chased across a run feels earned.
-- **Where higher tiers come from:** shops sell items only at tier C, except for special tier-specific shops. Otherwise a higher-tier copy comes from an enemy drop (at that enemy's set tier) or from a loot drop (Vault chests, events, and the like), where the tier is random.
+- **Where higher tiers come from:** normal shops (and the Tavern, for heroes) unlock higher tiers as the run goes on. The first shop never offers A or S, and probably nothing above B shows up in all of Act 1. The exact schedule is a tuning table in `data/`. Before then, higher tiers only come from:
+  - **Events** that open a tier-specific shop (say, an A-tier-only shop in Act 1) or hand out a single high-tier item.
+  - **Enemy drops**, at that enemy's set tier.
+  - **Loot drops** (Vault chests and the like), where the tier is random.
 - **What happens to infusions when copies combine:**
   - If the new copy has no infusion, the upgraded item keeps yours, along with its XP.
   - If the new copy has its own essence or alloy, **the new infusion replaces yours**, and your infusion's XP is lost. So you choose: take the tier upgrade with the new infusion, or keep your item as it is and pass on the copy.
@@ -269,11 +275,12 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - The spreadsheet prototype is skipped; the headless combat sim tests the infusion math instead.
 - The first combat sim uses fixed front/back rows; the hex arena comes later.
 - Enemies have hand-made, fixed item layouts with set tiers, and some items are enemy-only (especially boss items). Some enemy teams carry relics, including enemy-only ones. Every fight guarantees one drop from the enemy team's items and relics, and enemy-only ones can drop.
-- Tier and rarity are separate. Same-tier copies combine. Copies at different tiers can be held together. Tiers are C → B → A → S, the same as hero ranks. Shops sell only tier C (except tier-specific shops); higher tiers come from enemies (set tier) and loot drops (random tier).
+- Tier and rarity are separate. Same-tier copies combine. Copies at different tiers can be held together. Tiers are C → B → A → S, the same as hero ranks. Items and heroes can be found above C. Normal shops and the Tavern unlock higher tiers as the run goes on (no A/S early); before then, higher tiers come from events (such as tier-specific shops), enemy drops (set tier), and loot drops (random tier).
+- Item size doesn't affect rarity. Each item of a given rarity shows up equally often; there are just more Small items than Large ones.
 - Every item has a crit chance, starting at 0%. Crits deal 150% damage.
 - Rift Collapse deals flat damage that grows every second (never a percentage of HP) and hits Shield before HP. The ramp gets much steeper after 90s, and Act 2 doubles the numbers. There's no time limit; reaching 3 minutes, or both sides dying on the same tick, is a tie, and a tie counts as a victory. Surviving to 3 minutes is meant to be possible, especially for strong mid- and late-game teams.
 - Combat sim targeting: attacks hit the enemy front row; the back row only once the front row is empty, unless an item says it reaches the back row. Units killed during a tick still fire what they had ready that tick (for now). Heroes have HP only for now.
-- Every hero has a built-in basic auto-attack. Auto-attack items (Small most common, then Medium, then Large) replace it and take up slots; take the item out and the hero uses the basic auto-attack again.
+- Every hero has their own built-in basic auto-attack, which can't be upgraded. An auto-attack item (Small, Medium, or Large) replaces it and takes up slots, and a hero can equip only one. Take the item out and the hero uses the basic auto-attack again.
 - Two copies of the same item combine into the next tier (two, not three). A new copy's infusion replaces the old one.
 - Alloy spill per side equals a single essence's spill for now.
 - Pure doubles each have their own effect. Their bonus effect never strengthens spill. Doubled spill as a pure double's effect is an optional idea, tried first on Overgrowth (Verdant + Verdant).
@@ -283,6 +290,6 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 **Open questions**
 
 - **Doubled spill:** does any pure double keep it? Overgrowth (Verdant + Verdant) is the first one to test.
-- **More than one auto-attack item:** can a hero equip two auto-attack items at once, and if so, do both fire?
-- **Basic auto-attack:** is it the same for every hero, or set per hero (for example, a Ranger's differs from a Warden's)? Can it be infused? (It has no slot, so presumably not.)
-- **Act 3 collapse numbers:** triple the Act 1 numbers (30), or something else?
+- **Act 3 collapse numbers:** to be decided later.
+- **Tier schedule:** at what point in a run do normal shops and the Tavern start offering B, A, and S? (A tuning table; it can be set once the run structure is being built.)
+- **Higher-rank recruits:** when a hero is recruited at B or above, who picks their specialization (normally chosen at B): the player on recruiting, or is it preset?

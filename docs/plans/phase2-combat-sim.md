@@ -23,7 +23,7 @@ data/
   statuses.json              burn, slow, freeze, bleed, blind: tick rate, stacking, duration
   items.json                 player-pool items (about 20 for this phase)
   enemy_items.json           enemy-only items
-  heroes.json                4 heroes: class, HP, slot count, basic auto-attack, starting items
+  heroes.json                4 heroes: class, HP, slot count, own basic auto-attack (no sockets), starting items
   enemies.json               3 enemies: HP, basic auto-attack, fixed item layout (with infusions)
 src/sim/
   sim_rng.gd                 the only RNG; seeded; also rolls in basis points
@@ -146,7 +146,7 @@ Every effect, status tick, level-up, spill, and death writes one entry. The dama
 - **Spill:** a single spills to both sides, an alloy splits left/right, a pure double spills to both sides, a transformation-flagged infusion never spills, spill never leaves the hero's row, and spill only happens at Resonant.
 - **Alloys:** each of the 6 alloys resolves its effect and logs its source.
 - **Timing and collapse:** Rush items stop after 8s, Stall items start at 15s, collapse damage matches the table above for Acts 1 and 2, hits Shield before HP, and hits both sides equally, and reaching 180s or a mutual wipe gives a tie that counts as a win.
-- **Auto-attacks:** a hero with no auto-attack item uses their basic auto-attack; equipping an auto-attack item replaces it.
+- **Auto-attacks:** a hero with no auto-attack item uses their own basic auto-attack; equipping an auto-attack item replaces it; the validator and sim setup reject a loadout with two auto-attack items; the basic auto-attack can't take an infusion.
 - **Crit:** an item with 0 crit chance never crits; an item at 10000 always crits for 150% damage; Umbral adds crit chance.
 - **Log sources:** every damage/heal/shield entry has a unit and an item, plus an infusion or alloy when one is involved.
 - **Content:** every file in `data/` passes the validator (all ids resolve, all numbers are integers, alloy recipes are valid).
@@ -167,8 +167,6 @@ Every effect, status tick, level-up, spill, and death writes one entry. The dama
 
 Confirmed: targeting (front row first), same-tick deaths still fire, HP-only heroes, per-item crit chance starting at 0 with 150% crits, no time limit, a tie at 180s or on a mutual wipe counts as a victory, collapse hits Shield before HP, and the collapse ramp above (numbers still to be tuned).
 
-Still open (see Open questions in `docs/design.md`). None of these blocks build steps 1–2:
+Also confirmed: each hero has their own basic auto-attack, which can't be upgraded, and a hero can equip at most one auto-attack item.
 
-1. **More than one auto-attack item** on a hero: allowed? If so, do both fire? (Needed by step 3.)
-2. **Basic auto-attack:** the same for every hero, or set per hero? (Proposed: set per hero in `heroes.json`, with no sockets.)
-3. **Act 3 collapse numbers.** (Only needed once Act 3 content exists.)
+Nothing blocks coding. Act 3 collapse numbers are only needed once Act 3 content exists.
