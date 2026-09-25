@@ -14,6 +14,12 @@ static func pick(target: EffectDef.Target, source: UnitState, hit_target: UnitSt
 	var foes: Array[UnitState] = sim.enemies_of(source)
 	var picked: UnitState = null
 	match target:
+		EffectDef.Target.ALL_ENEMIES:
+			return _standing(foes)
+		EffectDef.Target.ALL_ALLIES:
+			return _standing(allies)
+		EffectDef.Target.LINKED_ALLY, EffectDef.Target.LINKED_LEFT_ALLY, EffectDef.Target.LINKED_RIGHT_ALLY, EffectDef.Target.LINKED_ALLIES, EffectDef.Target.ROW_ALLIES:
+			return linked(target, source, allies)
 		EffectDef.Target.HIT_TARGET:
 			picked = hit_target
 		EffectDef.Target.SELF:
@@ -34,11 +40,46 @@ static func pick(target: EffectDef.Target, source: UnitState, hit_target: UnitSt
 			picked = _lowest_hp(foes)
 		EffectDef.Target.ALLY_LOWEST_HP:
 			picked = _lowest_hp(allies)
-		EffectDef.Target.LINKED_ALLY:
-			assert(false, "linked_ally is rejected by UnitSetup.validate until build step 7")
 	var result: Array[UnitState] = []
 	if picked != null and picked.is_standing():
 		result.append(picked)
+	return result
+
+
+## Linked targets: allies standing next to `source` in its row (columns are
+## fixed at fight start, so a fallen neighbor leaves a gap, not a new link).
+static func linked(target: EffectDef.Target, source: UnitState, allies: Array[UnitState]) -> Array[UnitState]:
+	var left: UnitState = null
+	var right: UnitState = null
+	var row_mates: Array[UnitState] = []
+	for ally: UnitState in allies:
+		if ally == source or ally.row != source.row or not ally.is_standing():
+			continue
+		row_mates.append(ally)
+		if ally.column == source.column - 1:
+			left = ally
+		elif ally.column == source.column + 1:
+			right = ally
+	var result: Array[UnitState] = []
+	match target:
+		EffectDef.Target.LINKED_ALLY:
+			if left != null:
+				result.append(left)
+			elif right != null:
+				result.append(right)
+		EffectDef.Target.LINKED_LEFT_ALLY:
+			if left != null:
+				result.append(left)
+		EffectDef.Target.LINKED_RIGHT_ALLY:
+			if right != null:
+				result.append(right)
+		EffectDef.Target.LINKED_ALLIES:
+			if left != null:
+				result.append(left)
+			if right != null:
+				result.append(right)
+		EffectDef.Target.ROW_ALLIES:
+			result = row_mates
 	return result
 
 

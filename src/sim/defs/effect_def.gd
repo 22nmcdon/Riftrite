@@ -14,6 +14,15 @@ extends RefCounted
 ## a share of the holder's stats, in basis points of each stat:
 ##   "scaling": {"atk": 6000, "atsp": 2000}  ->  base + 60% ATK + 20% ATSP
 ## (Not allowed with amount_bp_of_damage, which scales from the hit instead.)
+## An optional "window" limits the effect to part of the fight:
+##   "window": {"from_ms": 0, "until_ms": 8000}   (either end optional)
+## Rush and Stall items use windows; outside its window the effect does nothing.
+##
+## Targets that reach several units (each gets its own hit/heal/...):
+##   all_enemies, all_allies (standing units, in resolution order)
+##   linked_ally (the ally just left of the holder in its row, else just
+##   right), linked_left_ally, linked_right_ally, linked_allies (both),
+##   row_allies (every other ally in the holder's row)
 
 enum Trigger { ON_FIRE, ON_HIT, ON_CRIT }
 enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS }
@@ -26,6 +35,12 @@ enum Target {
 	ENEMY_RANDOM,
 	ENEMY_LOWEST_HP,
 	LINKED_ALLY,
+	ALL_ENEMIES,
+	ALL_ALLIES,
+	LINKED_LEFT_ALLY,
+	LINKED_RIGHT_ALLY,
+	LINKED_ALLIES,
+	ROW_ALLIES,
 }
 
 const TRIGGER_NAMES: Array[String] = ["on_fire", "on_hit", "on_crit"]
@@ -39,6 +54,12 @@ const TARGET_NAMES: Array[String] = [
 	"enemy_random",
 	"enemy_lowest_hp",
 	"linked_ally",
+	"all_enemies",
+	"all_allies",
+	"linked_left_ally",
+	"linked_right_ally",
+	"linked_allies",
+	"row_allies",
 ]
 
 var trigger: Trigger
@@ -50,6 +71,9 @@ var status_id: String = ""
 var stacks: int = 0
 ## Basis points of each stat added to the base value, indexed by UnitStats.Stat.
 var scaling: Array[int] = [0, 0, 0, 0, 0, 0]
+## Fight ticks the effect is active in: [from, until). until = -1: no end.
+var window_from_ticks: int = 0
+var window_until_ticks: int = -1
 
 
 static func read(reader: DataReader) -> EffectDef:
@@ -78,12 +102,38 @@ static func read(reader: DataReader) -> EffectDef:
 				reader.error("\"scaling\" can't be combined with amount_bp_of_damage")
 			_read_scaling(def, reader.req_object("scaling"))
 
+	read_window(reader, def)
+
 	# "hit_target" and damage-based shields need a hit to refer to.
 	var needs_hit: bool = def.target == Target.HIT_TARGET or def.amount_bp_of_damage > 0
 	if needs_hit and not trigger_name.is_empty() and def.trigger == Trigger.ON_FIRE:
 		reader.error("\"%s\" needs a hit, so its trigger must be on_hit or on_crit, not on_fire" % (target_name if def.target == Target.HIT_TARGET else "amount_bp_of_damage"))
 	reader.finish()
 	return def
+
+
+## Reads an optional "window" object into `holder` (an EffectDef or AuraDef,
+## anything with window_from_ticks / window_until_ticks).
+static func read_window(reader: DataReader, holder: Object) -> void:
+	if not reader.has("window"):
+		return
+	var window: DataReader = reader.req_object("window")
+	if window == null:
+		return
+	var from_ticks: int = window.opt_ticks("from_ms", 0)
+	var until_ticks: int = -1
+	if window.has("until_ms"):
+		until_ticks = window.req_ticks("until_ms", FixedMath.MS_PER_TICK)
+		if until_ticks <= from_ticks:
+			window.error("until_ms must be later than from_ms")
+	window.finish()
+	holder.set("window_from_ticks", from_ticks)
+	holder.set("window_until_ticks", until_ticks)
+
+
+## True if the effect is active at this tick of the fight.
+func active_at(tick: int) -> bool:
+	return tick >= window_from_ticks and (window_until_ticks < 0 or tick < window_until_ticks)
 
 
 static func _read_scaling(def: EffectDef, reader: DataReader) -> void:

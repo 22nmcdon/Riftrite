@@ -55,9 +55,9 @@ func test_rejects_duplicate_unit_ids() -> void:
 	_assert_setup_error([K.dummy("same", 100)], [K.dummy("same", 100)], "unit id \"same\" is used twice")
 
 
-func test_rejects_effects_not_built_yet() -> void:
-	var link: ItemDef = K.item("link", {"effects": [{"trigger": "on_fire", "type": "heal", "amount": 1, "target": "linked_ally"}]})
-	_assert_setup_error([K.unit("hero", 100, FRONT, [link])], [K.dummy("foe", 100)], "targets linked_ally, which the sim doesn't support yet")
+func test_rejects_unknown_status_on_an_item() -> void:
+	var hex: ItemDef = K.item("hex", {"effects": [{"trigger": "on_fire", "type": "apply_status", "status": "doom", "stacks": 1, "target": "enemy_front"}]})
+	_assert_setup_error([K.unit("hero", 100, FRONT, [hex])], [K.dummy("foe", 100)], "applies unknown status \"doom\"")
 
 
 func test_rejects_empty_side() -> void:

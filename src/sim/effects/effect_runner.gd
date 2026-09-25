@@ -39,6 +39,8 @@ static func _fire_once(sim: CombatSim, item: ItemState, note: String) -> void:
 
 static func _run(sim: CombatSim, item: ItemState, sourced: SourcedEffect, hit: Hit) -> void:
 	var effect: EffectDef = sourced.effect
+	if not effect.active_at(sim.tick):
+		return
 	var source: EffectSource = _source(sim, item, sourced)
 	var hit_target: UnitState = hit.target if hit != null else null
 	# Only the item's own effects produce output that essences convert.

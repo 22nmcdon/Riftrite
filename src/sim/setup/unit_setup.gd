@@ -67,14 +67,11 @@ func validate(content: ContentDb, errors: Array[String]) -> void:
 		errors.append("%s: has %d auto-attack items; the limit is one" % [id, auto_attacks])
 
 
-## Rejects anything the sim can't run yet, so nothing is silently skipped.
-## (Linked arrives in build step 7.)
+## Rejects effects that point at content that doesn't exist.
 func _validate_effects(item: ItemDef, content: ContentDb, errors: Array[String]) -> void:
 	for effect: EffectDef in item.effects:
 		if effect.type == EffectDef.Type.APPLY_STATUS and not content.statuses.has(effect.status_id):
 			errors.append("%s: item \"%s\" applies unknown status \"%s\"" % [id, item.id, effect.status_id])
-		if effect.target == EffectDef.Target.LINKED_ALLY:
-			errors.append("%s: item \"%s\" targets linked_ally, which the sim doesn't support yet" % [id, item.id])
 
 
 func _validate_essences(item: ItemSetup, content: ContentDb, errors: Array[String]) -> void:
