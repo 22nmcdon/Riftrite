@@ -1,6 +1,6 @@
 # Plan: Phase 2 combat sim
 
-Status: **approved; in progress.** Steps 1–4 are done. Step 4's essences are being reworked before step 5; see `docs/plans/essence-rework.md`. Targeting, same-tick deaths, HP-only stats, crits, and the tie rules are confirmed. The collapse ramp was revised in round 3.
+Status: **approved; in progress.** Steps 1–4 are done. Step 4's essences were then reworked (stats, scaling, conversion rule, Venom/Wrath, new Burn/Poison/Bleed, per-item Slow); see `docs/plans/essence-rework.md`. Next is step 5. Targeting, same-tick deaths, HP-only stats, crits, and the tie rules are confirmed. The collapse ramp was revised in round 3.
 
 Goal (from the roadmap in `docs/design.md`): a deterministic auto-battle on fixed front/back rows, with no art. It must include essences, alloys, attunement, and spill. Done when a fight can be explained from its log, and the headless runner shows whether alloys feel worth fusing.
 
@@ -180,8 +180,7 @@ Every effect, status tick, level-up, spill, and death writes one entry. The dama
 - **Essences** fold into the item at fight start: their effects join the item's list (tagged with the essence for the log), and their modifiers change the item's stats. Basic auto-attacks can't hold essences.
 - **Status stacks are credited per source:** damage over time is split by who applied each stack, and stacks fall off (or get capped) oldest first.
 - **Status damage** hits shield first, like all damage.
-- **Slow** stretches cooldowns (progress is tracked in basis points of a tick, so partial slows are exact); **Freeze** pauses them. Slow caps at 100%.
-- **Frost → Freeze:** the Freeze is credited to whoever applied the stack that reached 3.
+- **Slow** sits on items: each application picks one random non-auto-attack item of the target (seeded RNG) plus its auto-attack, and stretches those cooldowns (progress is tracked in basis points of a tick, so partial slows are exact). **Freeze** pauses all of a unit's cooldowns; nothing applies it yet. Slow caps at 100% per item.
 - **Blind** makes the blinded unit's next hit of any kind miss (no damage, no on_hit effects).
 - **Storm's extra fire** happens immediately after the normal fire, doesn't reset the cooldown, and can't chain.
 - **Tick order is now:** collapse, statuses, cooldowns, firing, deaths, end check.

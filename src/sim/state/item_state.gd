@@ -30,6 +30,8 @@ var extra_trigger_source: String = ""
 ## progress reaches cooldown_ticks * 10000 (so it first fires one full
 ## cooldown in).
 var progress_bp: int = 0
+## Slow on this item (from Frost), or null.
+var slow: StatusState = null
 
 
 static func make(item_def: ItemDef, item_slot: int, stats: UnitStats, content: ContentDb, essences: Array[EssenceDef] = [], item_tier: int = 0) -> ItemState:
@@ -91,6 +93,13 @@ func advance(rate_bp: int) -> bool:
 		return false
 	progress_bp -= needed
 	return true
+
+
+## How much slower this item's cooldown runs, in basis points (max 100%).
+func slow_bp() -> int:
+	if slow == null:
+		return 0
+	return mini(slow.total_stacks() * slow.def.slow_bp_per_stack, FixedMath.BP_ONE)
 
 
 ## One line per effect showing base and final values, for the UI.

@@ -7,11 +7,11 @@ extends RefCounted
 ##                     rounded up), vs_shield_bp (how hard it hits shields:
 ##                     10000 normal, 5000 half, 0 = skips shields entirely),
 ##                     defense_shred_per_stack (lowers the target's DEF)
-##   slow:             slow_bp_per_stack, duration_ms, optional "threshold"
+##   slow:             slow_bp_per_stack, duration_ms. Slow sits on items, not
+##                     units: each application lands on one random item of
+##                     the target plus its auto-attack (see Statuses).
 ##   freeze:           duration_ms
 ##   blind:            (none; each stack makes one attack miss)
-## A threshold turns stacks into another status: at `stacks` stacks, apply
-## `apply_stacks` of `apply_status` and (if `consume`) clear this status.
 
 enum Kind { DAMAGE_OVER_TIME, SLOW, FREEZE, BLIND }
 
@@ -34,11 +34,6 @@ var defense_shred_per_stack: int = 0
 var slow_bp_per_stack: int
 ## 0 means the status has no timer.
 var duration_ticks: int
-var has_threshold: bool = false
-var threshold_stacks: int
-var threshold_status_id: String
-var threshold_apply_stacks: int
-var threshold_consume: bool
 
 
 static func read(reader: DataReader) -> StatusDef:
@@ -60,22 +55,9 @@ static func read(reader: DataReader) -> StatusDef:
 		Kind.SLOW:
 			def.slow_bp_per_stack = reader.req_int("slow_bp_per_stack", 0, FixedMath.BP_ONE)
 			def.duration_ticks = reader.req_ticks("duration_ms", FixedMath.MS_PER_TICK)
-			if reader.has("threshold"):
-				_read_threshold(def, reader.req_object("threshold"))
 		Kind.FREEZE:
 			def.duration_ticks = reader.req_ticks("duration_ms", FixedMath.MS_PER_TICK)
 		Kind.BLIND:
 			pass
 	reader.finish()
 	return def
-
-
-static func _read_threshold(def: StatusDef, reader: DataReader) -> void:
-	if reader == null:
-		return
-	def.has_threshold = true
-	def.threshold_stacks = reader.req_int("stacks", 1)
-	def.threshold_status_id = reader.req_string("apply_status")
-	def.threshold_apply_stacks = reader.opt_int("apply_stacks", 1, 1)
-	def.threshold_consume = reader.opt_bool("consume", true)
-	reader.finish()

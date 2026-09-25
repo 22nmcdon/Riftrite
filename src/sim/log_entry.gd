@@ -83,7 +83,7 @@ func to_text() -> String:
 		Kind.STATUS_DAMAGE:
 			return line + "%s (%s) hits %s for %d%s" % [status_name, source_text(), target, amount, _damage_detail()]
 		Kind.STATUS_ENDED:
-			return line + "%s on %s ends" % [status_name, target]
+			return line + "%s on %s%s ends" % [status_name, target, "" if note.is_empty() else " (%s)" % note]
 		Kind.STATUS_REDUCED:
 			return line + "%s on %s loses %d stacks (%s)" % [status_name, target, amount, note]
 		Kind.MISS:

@@ -54,9 +54,7 @@ func test_real_data_contents() -> void:
 	var frost: EssenceDef = db.essences["frost"]
 	assert_eq(frost.effects[0].type, EffectDef.Type.APPLY_STATUS)
 	assert_eq(frost.effects[0].status_id, "slow")
-	var slow: StatusDef = db.statuses["slow"]
-	assert_true(slow.has_threshold)
-	assert_eq(slow.threshold_stacks, 3, "design: 3 Frost stacks Freeze")
+	assert_eq(db.statuses["slow"].slow_bp_per_stack, 1000)
 	assert_eq(db.statuses["freeze"].duration_ticks, 20, "design: Freeze lasts 1s")
 
 	var storm: EssenceDef = db.essences["storm"]
@@ -168,14 +166,6 @@ func test_rejects_unknown_status_reference() -> void:
 		"effects": [{"trigger": "on_hit", "type": "apply_status", "status": "scorch", "stacks": 1, "target": "hit_target"}],
 	}))
 	_assert_error(db, "essences.json (ember).effects[0]: unknown status \"scorch\"")
-
-
-func test_rejects_unknown_threshold_status() -> void:
-	var statuses: Array = _real_json(ContentDb.STATUSES_FILE)
-	for status: Dictionary in statuses:
-		if status["id"] == "slow":
-			status["threshold"]["apply_status"] = "petrify"
-	_assert_error(_load_with(ContentDb.STATUSES_FILE, statuses), "threshold applies unknown status \"petrify\"")
 
 
 func test_rejects_unknown_vocabulary() -> void:

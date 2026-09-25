@@ -109,28 +109,52 @@ func test_status_damage_hits_shield_first() -> void:
 
 # --- slow, freeze, blind -----------------------------------------------------------------
 
-func test_slow_then_freeze_changes_when_items_fire() -> void:
+func test_slow_lands_on_a_random_item_and_the_auto_attack() -> void:
+	var claw: ItemDef = K.item("claw", {"name": "Claw", "effects": K.damage(1)})
+	var fang: ItemDef = K.item("fang", {"name": "Fang", "effects": K.damage(1)})
+	var foe: UnitSetup = K.unit("foe", BIG_HP, FRONT, [claw, fang], K.basic("idle", {"name": "Bite", "cooldown_ms": 60000, "effects": K.damage(1)}))
+	var result: FightResult = K.run([_idle_hero([_applier("chill", "slow")])], [foe])
+	var at_20: Array[String] = []
+	var picked: Dictionary[String, bool] = {}
+	for entry: LogEntry in _status_entries(result, LogEntry.Kind.STATUS_APPLIED, "slow"):
+		if entry.tick == 20:
+			at_20.append(entry.note)
+		if entry.note != "on auto-attack (Bite)":
+			picked[entry.note] = true
+	assert_eq(at_20.size(), 2)
+	assert_true(at_20[0] in ["on Claw", "on Fang"], at_20[0])
+	assert_eq(at_20[1], "on auto-attack (Bite)")
+	assert_eq(picked.size(), 2, "over many hits, both items get picked")
+
+
+func test_slow_stretches_only_the_slowed_item() -> void:
 	var claw: ItemDef = K.item("claw", {"effects": K.damage(1)})
 	var foe: UnitSetup = K.unit("foe", BIG_HP, FRONT, [claw], K.basic("idle", {"cooldown_ms": 60000, "effects": K.damage(1)}))
 	var result: FightResult = K.run([_idle_hero([_applier("chill", "slow")])], [foe])
-	# Slow lands at 20, 40, 60 (10% per stack); the 3rd stack turns into a 1s Freeze.
-	# claw: fires at 20; 20 ticks at 90% + 3 at 80% -> 43; then 17 at 80%, frozen
-	# for ticks 61-79, full speed at 80, 90% after -> 86.
+	# Slow lands on the claw at 20, 40, 60 (10% per stack), with no Freeze now.
+	# claw: fires at 20; 20 ticks at 90% + 3 at 80% -> 43; 17 more at 80% and
+	# 9 at 70% -> 69.
 	var fires: Array[int] = K.ticks_of(K.entries(result, LogEntry.Kind.FIRE, "claw"))
-	assert_eq(fires.slice(0, 3), [20, 43, 86] as Array[int])
+	assert_eq(fires.slice(0, 3), [20, 43, 69] as Array[int])
+	assert_eq(_status_entries(result, LogEntry.Kind.STATUS_APPLIED, "freeze").size(), 0, "slow never turns into freeze")
 
-	var freeze: LogEntry = _status_entries(result, LogEntry.Kind.STATUS_APPLIED, "freeze")[0]
-	assert_eq(freeze.tick, 60)
-	assert_eq(freeze.note, "(from 3 Slow)")
-	assert_eq(freeze.source_item, "chill", "the stack that triggered it gets the credit")
-	assert_eq(_status_entries(result, LogEntry.Kind.STATUS_ENDED, "slow")[0].tick, 60, "slow is used up")
-	assert_eq(_status_entries(result, LogEntry.Kind.STATUS_ENDED, "freeze")[0].tick, 80)
+
+func test_frost_slows_the_auto_attack() -> void:
+	var swing: ItemDef = K.basic("swing", {"name": "Swing", "effects": K.damage(1)})
+	var foe: UnitSetup = K.unit("foe", BIG_HP, FRONT, [], swing)
+	var hero: UnitSetup = K.unit("hero", BIG_HP, FRONT, [K.equip(K.item("icicle", {"cooldown_ms": 5000, "effects": K.damage(1)}), ["frost"] as Array[String])], K.basic("idle", {"cooldown_ms": 60000, "effects": K.damage(1)}))
+	var result: FightResult = K.run([hero], [foe])
+	# The icicle hits at 5s (tick 100); the foe's swing (every 20 ticks) slows to 90%.
+	var swings: Array[int] = K.ticks_of(K.entries(result, LogEntry.Kind.FIRE, "swing"))
+	assert_eq(swings.slice(4, 7), [100, 123, 145] as Array[int])
 
 
 func test_slow_wears_off_after_its_duration() -> void:
 	var result: FightResult = K.run([_idle_hero([_applier("chill", "slow", 5000)])], [K.dummy("foe", BIG_HP)])
 	assert_eq(_status_entries(result, LogEntry.Kind.STATUS_APPLIED, "slow")[0].tick, 100)
-	assert_eq(_status_entries(result, LogEntry.Kind.STATUS_ENDED, "slow")[0].tick, 160, "3s later")
+	var ended: LogEntry = _status_entries(result, LogEntry.Kind.STATUS_ENDED, "slow")[0]
+	assert_eq(ended.tick, 160, "3s later")
+	assert_eq(ended.to_text(), "[8.00s] Slow on foe (auto-attack (Basic Attack)) ends")
 
 
 func test_max_stacks_caps_a_status() -> void:
@@ -170,18 +194,3 @@ func test_death_by_status_names_the_status() -> void:
 	var result: FightResult = K.run([_idle_hero([torch])], [K.dummy("foe", 40)])
 	var death: LogEntry = result.combat_log.of_kind(LogEntry.Kind.DEATH)[0]
 	assert_true(death.note.begins_with("last hit: Burn from hero · Test Item"), death.note)
-
-
-# --- content checks ---------------------------------------------------------------
-
-func test_threshold_loops_are_rejected() -> void:
-	var statuses: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/statuses.json"))
-	for status: Dictionary in statuses:
-		if status["id"] == "freeze":
-			status.merge({"kind": "slow", "slow_bp_per_stack": 1000, "threshold": {"stacks": 2, "apply_status": "slow"}}, true)
-	var texts: Dictionary[String, String] = {}
-	for file_name: String in ContentDb.FILES:
-		texts[file_name] = FileAccess.get_file_as_string("res://data".path_join(file_name))
-	texts[ContentDb.STATUSES_FILE] = JSON.stringify(statuses)
-	var errors: Array[String] = ContentDb.load_texts(texts).errors
-	assert_true(errors.any(func(message: String) -> bool: return message.contains("threshold chain loops")), str(errors))

@@ -125,12 +125,6 @@ func _claim_id(id: String, reader: DataReader, ids: Array[String]) -> bool:
 
 
 func _check_references() -> void:
-	for id: String in status_ids:
-		var status: StatusDef = statuses[id]
-		if status.has_threshold and not statuses.has(status.threshold_status_id):
-			errors.append("%s (%s): threshold applies unknown status \"%s\"" % [STATUSES_FILE, id, status.threshold_status_id])
-		elif status.has_threshold and _threshold_loops(id):
-			errors.append("%s (%s): threshold chain loops back to \"%s\"" % [STATUSES_FILE, id, id])
 	for id: String in essence_ids:
 		_check_effects(essences[id].effects, "%s (%s)" % [ESSENCES_FILE, id])
 		var adds: String = essences[id].adds
@@ -143,18 +137,6 @@ func is_output_kind(kind: String) -> bool:
 	if EssenceDef.DIRECT_KINDS.has(kind):
 		return true
 	return statuses.has(kind) and statuses[kind].kind == StatusDef.Kind.DAMAGE_OVER_TIME
-
-
-## True if following thresholds from `start_id` ever comes back to it.
-func _threshold_loops(start_id: String) -> bool:
-	var current: StatusDef = statuses[start_id]
-	for i: int in status_ids.size():
-		if not current.has_threshold or not statuses.has(current.threshold_status_id):
-			return false
-		if current.threshold_status_id == start_id:
-			return true
-		current = statuses[current.threshold_status_id]
-	return false
 
 
 func _check_effects(effects: Array[EffectDef], where: String) -> void:

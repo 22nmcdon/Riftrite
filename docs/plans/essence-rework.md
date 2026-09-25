@@ -1,6 +1,6 @@
 # Plan: unit stats, item scaling, and the essence rework
 
-Status: **round 3 — approved; building.** This replaces how essences work in build step 4 and comes before step 5 (XP and spill), because spill copies whatever an essence does.
+Status: **built** (all three build steps below). Numbers are placeholders for the balance sim to tune. This replaces how essences work in build step 4 and comes before step 5 (XP and spill), because spill copies whatever an essence does.
 
 ## Decided
 

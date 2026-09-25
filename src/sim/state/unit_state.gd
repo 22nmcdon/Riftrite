@@ -79,17 +79,7 @@ func has_status_kind(kind: StatusDef.Kind) -> bool:
 	return false
 
 
-## How much slower this unit's cooldowns run, in basis points (max 100%).
-func slow_bp() -> int:
-	var total: int = 0
-	for status: StatusState in statuses:
-		if status.def.kind == StatusDef.Kind.SLOW:
-			total += status.total_stacks() * status.def.slow_bp_per_stack
-	return mini(total, FixedMath.BP_ONE)
-
-
-## Cooldown progress this unit's items make per tick (10000 = normal speed).
+## Cooldown progress this unit's items make per tick before per-item slows
+## and ATSP (10000 = normal speed, 0 = frozen).
 func cooldown_rate_bp() -> int:
-	if has_status_kind(StatusDef.Kind.FREEZE):
-		return 0
-	return FixedMath.BP_ONE - slow_bp()
+	return 0 if has_status_kind(StatusDef.Kind.FREEZE) else FixedMath.BP_ONE

@@ -6,8 +6,9 @@ extends RefCounted
 ## Each tick:
 ##   1. Rift Collapse damage, once per second from collapse start.
 ##   2. Statuses tick (damage over time, timers running out).
-##   3. Every living unit's items advance their cooldowns (slower when Slowed,
-##      not at all when Frozen); collect the ones that fire.
+##   3. Every living unit's items advance their cooldowns (a Slowed item runs
+##      slower, a Frozen unit's items stop, ATSP speeds the auto-attack);
+##      collect the ones that fire.
 ##   4. Resolve those firings in resolution order: heroes then enemies, front
 ##      row then back, left to right, and each unit's items in row order.
 ##   5. Units at 0 HP die. They still fired whatever was ready this tick,
@@ -80,10 +81,13 @@ func step() -> void:
 	for unit: UnitState in units:
 		if not unit.alive:
 			continue
-		var rate_bp: int = unit.cooldown_rate_bp()
-		var auto_attack_rate_bp: int = FixedMath.apply_bp(rate_bp, FixedMath.BP_ONE + unit.stats.get_stat(UnitStats.Stat.ATSP) * tuning.atsp_bp_per_point)
+		var unit_rate_bp: int = unit.cooldown_rate_bp()
+		var atsp_bp: int = FixedMath.BP_ONE + unit.stats.get_stat(UnitStats.Stat.ATSP) * tuning.atsp_bp_per_point
 		for item: ItemState in unit.items:
-			if item.advance(auto_attack_rate_bp if item.is_auto_attack else rate_bp):
+			var rate_bp: int = FixedMath.apply_bp(unit_rate_bp, FixedMath.BP_ONE - item.slow_bp())
+			if item.is_auto_attack:
+				rate_bp = FixedMath.apply_bp(rate_bp, atsp_bp)
+			if item.advance(rate_bp):
 				ready.append(item)
 	for item: ItemState in ready:
 		EffectRunner.fire(self, item)

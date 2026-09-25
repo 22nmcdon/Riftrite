@@ -10,9 +10,11 @@ extends RefCounted
 ##       status first lands; later stacks join the running interval.
 ##       defense_shred_per_stack lowers the unit's DEF while it lasts.
 ##       Heals remove a share of these stacks (see cleanse_over_time).
-##   slow:   each stack slows the unit's cooldowns by slow_bp_per_stack. Each
-##       application refreshes the timer; when it runs out, all stacks drop.
-##       At `threshold` stacks it turns into another status (Frost -> Freeze).
+##   slow:   sits on items, not units. Each application lands on one random
+##       item of the target (chosen by the sim's RNG, from items that aren't
+##       the auto-attack) plus the target's auto-attack. Each stack slows that
+##       item's cooldown by slow_bp_per_stack. Each application refreshes the
+##       item's timer; when it runs out, all its stacks drop.
 ##   freeze: the unit's cooldowns stop until the timer runs out.
 ##   blind:  each stack makes one of the unit's hits miss.
 ## Stacks over max_stacks drop the oldest stacks.
@@ -22,6 +24,9 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, count: i
 	if count <= 0 or not target.is_standing():
 		return
 	var def: StatusDef = sim.content.statuses[status_id]
+	if def.kind == StatusDef.Kind.SLOW:
+		_apply_slow(sim, target, def, count, source)
+		return
 	var state: StatusState = target.find_status(status_id)
 	if state == null:
 		state = StatusState.new()
@@ -44,11 +49,38 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, count: i
 	entry.note = note
 	sim.combat_log.add(entry)
 
-	if def.has_threshold and state.total_stacks() >= def.threshold_stacks:
-		if def.threshold_consume:
-			_end(sim, target, state)
-		var threshold_def: StatusDef = sim.content.statuses[def.threshold_status_id]
-		apply(sim, target, threshold_def.id, def.threshold_apply_stacks, source, "(from %d %s)" % [def.threshold_stacks, def.name])
+
+## Slow: one random non-auto-attack item, plus the auto-attack.
+static func _apply_slow(sim: CombatSim, target: UnitState, def: StatusDef, count: int, source: EffectSource) -> void:
+	var others: Array[ItemState] = []
+	var chosen: Array[ItemState] = []
+	for item: ItemState in target.items:
+		if item.is_auto_attack:
+			chosen.append(item)
+		else:
+			others.append(item)
+	if not others.is_empty():
+		chosen.insert(0, others[sim.rng.range_int(others.size())])
+	for item: ItemState in chosen:
+		if item.slow == null:
+			item.slow = StatusState.new()
+			item.slow.def = def
+		item.slow.add_stacks(source, count)
+		if def.max_stacks > 0 and item.slow.total_stacks() > def.max_stacks:
+			item.slow.remove_oldest(item.slow.total_stacks() - def.max_stacks)
+		item.slow.timer_ticks = def.duration_ticks
+		var entry: LogEntry = sim.new_entry(LogEntry.Kind.STATUS_APPLIED, source)
+		entry.target = target.id
+		entry.status = def.id
+		entry.status_name = def.name
+		entry.amount = count
+		entry.stacks = item.slow.total_stacks()
+		entry.note = "on %s" % _item_label(item)
+		sim.combat_log.add(entry)
+
+
+static func _item_label(item: ItemState) -> String:
+	return "auto-attack (%s)" % item.def.name if item.is_auto_attack else item.def.name
 
 
 ## Runs one tick of every status on every living unit, in resolution order.
@@ -70,6 +102,20 @@ static func tick_all(sim: CombatSim) -> void:
 							_end(sim, unit, state)
 				StatusDef.Kind.BLIND:
 					pass
+		for item: ItemState in unit.items:
+			if item.slow != null:
+				item.slow.timer_ticks -= 1
+				if item.slow.timer_ticks <= 0:
+					var def: StatusDef = item.slow.def
+					item.slow = null
+					var entry := LogEntry.new()
+					entry.tick = sim.tick
+					entry.kind = LogEntry.Kind.STATUS_ENDED
+					entry.target = unit.id
+					entry.status = def.id
+					entry.status_name = def.name
+					entry.note = _item_label(item)
+					sim.combat_log.add(entry)
 
 
 ## If the unit is blinded, uses up one stack and returns true (the hit misses).
