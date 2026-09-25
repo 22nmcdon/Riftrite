@@ -1,6 +1,6 @@
 # Plan: Phase 3, the vertical slice
 
-Status: **proposed; most answers are in, a few questions remain (end of file).** Nothing here is built yet.
+Status: **proposed; all design answers are in except hero combining (end of file). Ready for approval to start step 1.** Nothing here is built yet.
 
 Goal (roadmap in `docs/design.md`): **one full act, playable start to boss.** Content target: 8 heroes, 60 items, 6+ essences, 10 alloys, 20 synergies. Done when playtesters want a second run.
 
@@ -8,14 +8,13 @@ The combat sim (Phase 2) is done. The slice needs three more things: the **sim f
 
 ## Part A: sim features the slice needs
 
-1. **Relics.** This depends on the relic change you proposed (see "Relics: the proposed change" below).
-   - **As designed now:** a shared board of 3–6 slots, with sizes, adjacency, and 1 socket that spills only to neighboring relics.
-   - **As proposed:** no board limit, no sockets, and no adjacency.
-   - **Either way:**
-     - Relics are mostly auras and triggers, so they reuse the existing auras and effects.
-     - Relic-style rules need a few new triggers, for example `on_ally_below_hp` ("the first ally to drop below 30% HP gains a Shield"), `on_fight_start`, and `at_time`.
-     - Enemy teams can carry relics, including enemy-only ones.
-     - Rarities set a relic's price and drop odds.
+1. **Relics** (the new model):
+   - The guild holds any number of relics. There's no board, no slots, no adjacency, and no sockets.
+   - A relic can be turned down when offered, but once taken it can't be removed.
+   - Relics are auras and triggers, so they reuse the existing auras and effects, applied team-wide.
+   - Relic-style rules need a few new triggers, for example `on_ally_below_hp` ("the first ally to drop below 30% HP gains a Shield"), `on_fight_start`, and `at_time`. Build-shaping relics ("Burn ticks faster", "Small items gain crit chance") also need aura targets by tag, size, or status. I'll list each new type in the PR.
+   - Enemy teams can carry relics, including enemy-only ones.
+   - Rarities set a relic's drop odds and price. Relics are much rarer than items, essences, and heroes, and Epic ones change a build the most.
 2. **Synergies, all five layers** (design doc, "Synergies"):
    - named pairs: two specific items on the same hero
    - essence transformations: a specific item + essence changes how the item works, and never spills
@@ -34,34 +33,34 @@ The combat sim (Phase 2) is done. The slice needs three more things: the **sim f
 No branching map. An act is a list of **days**, and the game only ever shows what's next:
 
 ```
-Day 1:  shop  →  fight  →  stop (pick 1 of 3)
-Day 2:  shop  →  fight  →  stop
+Day 1:  Caravan  →  stop (pick 1 of 3)  →  fight
+Day 2:  Caravan  →  stop  →  fight
 ...
-Day 6:  shop  →  BOSS
+Day 6:  Caravan  →  stop  →  BOSS
 ```
 
-- **Shop (every day):** buy and sell items, recruit heroes, reroll. It's the old Merchant and Tavern in one. Tier odds by act come from the table in `docs/tiers-backup-specialization.md`, for items and heroes alike.
-- **Fight (every day):** one encounter from the act's pool, shown ahead of time with its enemy team (so you know which essences it drops). Elites show up as some days' fight; the last day's fight is the boss.
+- **Caravan (every day):** buy and sell items, recruit heroes, reroll. It's the shop and tavern in one. Buying a second copy of a hero you have (same rank) ranks them up, the same as items. Tier odds by act come from the table in `docs/tiers-backup-specialization.md`, for items and heroes alike.
 - **Stop:** pick 1 of 3, drawn by weight from the stops that apply right now:
   - **Forge:** reforging; only offered when something is infused
   - **Vault:** only offered when you hold a key
   - **Loot**
   - **Events**
-- **Placeholders (in `data/acts.json`):** 6 days per act, so 6 fights with the boss.
+- **Fight (every day):** one encounter from the act's pool, shown ahead of time with its enemy team (so you know which essences it drops). Elites show up as some days' fight; the last day's fight is the boss.
+- **The day's steps are data** (`data/acts.json`): 6 days per act as a placeholder, so 6 fights with the boss. Your "two rounds a day" idea (Caravan, stop, fight, Caravan, stop, elite or boss) would then be a data change, not a code change. I'd start with one round: more days make the loss replay cheaper to tune, and the run bot can compare both later.
 - **Offers don't depend on earlier picks.** Each offer comes from the run's RNG, seeded per day, step, and attempt. What you pick today never changes tomorrow, and a saved run stays reproducible.
 
 ### RunState
 
 RunState holds the whole run:
 - the roster (up to 6), each hero's rank and specialization, and who is fielded and in backup
-- item loadouts, the **stash (6 spaces)**, the relic board, gold, keys, and the essence pouch (cap 8)
+- item loadouts, the **stash (6 slots, like a hero row)**, the relics, gold, keys, and the essence pouch (cap 8)
 - the act, day, step, and attempt; the current offer; losses and wins so far
 - the codex discoveries made this run
 - the run seed and the RNG state
 
 ### Actions
 
-The UI changes the run only through **actions**: pick an offer, buy, sell, reroll, equip, unequip to the stash, move, combine, infuse, reforge, recruit, rank up, pick a specialization, set rows and backup, start the fight. Each action validates, applies, and returns what changed. The UI never edits state directly, the same rule as for the sim.
+The UI changes the run only through **actions**: pick an offer, take or decline a relic, buy, sell, reroll, equip, unequip to the stash, move, combine items, combine heroes, infuse (any time between fights), reforge, recruit, pick a specialization, set rows and backup, start the fight. Each action validates, applies, and returns what changed. The UI never edits state directly, the same rule as for the sim.
 
 ### Starting a run
 
@@ -69,11 +68,11 @@ The UI changes the run only through **actions**: pick an offer, buy, sell, rerol
 2. Pick 1 of 3 starting packages. Placeholders: extra gold, a random Common relic, or a random Common item.
 3. You also get a base amount of gold.
 
-Fielding is 1–5 heroes, so a one-hero start is legal. Early encounters are tuned for a small guild, and the shop is where the second hero comes from.
+Fielding is 1–5 heroes, so a one-hero start is legal. Early encounters are tuned for a small guild, and the Caravan is where the second hero comes from.
 
 ### Stops
 
-- **Forge:** reforging, which costs gold and resets XP. Only offered when something is infused. (Where infusing itself happens is a question below.)
+- **Forge:** reforging, which costs gold and resets XP. Only offered when something is infused. Infusing itself can happen any time between fights.
 - **Loot:** a free random reward.
 - **Vault:** spend a key on a chest. Only offered when you hold a key.
 - **Events:** the first four, as you described:
@@ -91,12 +90,13 @@ Fielding is 1–5 heroes, so a one-hero start is legal. Early encounters are tun
   - 1–2 essences
   - one guaranteed drop from the enemy team's items or relics
   - infusion XP is kept
-- **Elite win:** a guaranteed Rare item or a rank-up, on top of that.
+- **Elite win:** on top of that, a guaranteed Rare item, or a free copy of one of your heroes (a rank-up).
+- **Boss win:** an item or a relic from the boss team.
 - **Loss:** the day restarts.
   - You keep everything you have.
   - You get bonus gold: 10, +5 per fight won so far.
-  - You go through the shop and a new stop again, then rematch the fight.
-  - The replayed day draws fresh offers (the attempt number is part of the seed).
+  - You go through the Caravan and a new stop again, then rematch the same fight.
+  - The replayed day draws fresh Caravan and stop offers (the attempt number is part of the seed), but the fight stays the same.
   - **The second loss ends the run.**
 - **HP:** every fight starts at full HP, with no carry-over.
 
@@ -110,10 +110,10 @@ Tuned with the run bot, not fixed yet:
 | Hero recruit | 6 | 14 | 30 | 60 |
 
 - **Items:** rarity adds nothing to the price for now (the field exists). B costs a bit more than two Cs, since two Cs combine into a B.
-- **Rank-up:** how heroes rank up is a question below. If it's paid in gold, the price is the difference between the hero's rank and the next one.
+- **Rank-up:** buy a second copy at the same rank (the recruit price), then combine.
 - **Relics by rarity:** Common 6, Uncommon 9, Rare 13, Epic 18, Legendary 25.
 - **Selling** returns half the price, rounded down.
-- **Rerolling** costs 1 the first time, then 1 more each time in the same shop.
+- **Rerolling** costs 1 the first time, then 1 more each time in the same Caravan visit.
 - **Forge:** infusing is free (the essence is the cost); reforging costs 3.
 - **Gold:** the base is 10 and each package adds +8. A fight win pays 5 + the day number, an Elite pays 1.5× that, and the boss pays 20. A loss pays 10 + 5 per win (your answer).
 
@@ -141,9 +141,9 @@ Tuned with the run bot, not fixed yet:
 
 Placeholder art, readable first:
 - **Run start:** pick a hero, then a package.
-- **Day screen:** the day, where you are in it (shop, fight, stop), the losses left, and the upcoming fight's enemy team.
+- **Day screen:** the day, where you are in it (Caravan, stop, fight), the losses left, and the upcoming fight's enemy team.
 - **Stop choice:** the 3 options.
-- **Prep screen:** drag items between heroes, slots, and the stash; set front/back rows and who's in backup; manage the relic board and essence pouch.
+- **Prep screen:** drag items between heroes, slots, and the stash; set front/back rows and who's in backup; see the relics and manage the essence pouch; infuse items.
 - **Fight playback:**
   - plays back the sim's log at 0.5×/1×/2×/4×, with pause
   - HP and shield bars, status icons, items lighting up as they fire
@@ -151,7 +151,7 @@ Placeholder art, readable first:
   - the per-item damage meter after the fight
 
   (The readability tools the design calls required.)
-- **Screens:** shop (items and heroes), forge, loot/vault, event, reward, and the rank-B specialization pick.
+- **Screens:** the Caravan (items and heroes), forge, loot/vault, event, reward (including taking or declining a relic), and the rank-B specialization pick.
 - **Run summary:** shown when a run ends.
 - **Continue:** a saved run can be resumed from the main menu.
 
@@ -162,59 +162,45 @@ Placeholder art, readable first:
 - **Items:** 60, plus 10 alloys and 20 synergies across the five layers.
 - **Act 1 (placeholders I'll draft):** a biome name, its two essences, a pool of regular encounters, 2–3 elites, and the boss.
 - **Events:** the first four above.
-- **Relics:** a starter set across the rarities.
-- **Name for the shop:** some drafts in the questions.
+- **Relics:** a starter set across the rarities, mostly build-shaping.
 
 ## Build order (each step reviewed as its own pull request)
 
-1. Relics in the sim (after the relic question is settled).
+1. Relics in the sim.
 2. The synergy engine and all five layers, with a few of each.
 3. Rank-B specializations in the sim.
 4. RunState and actions: roster, loadouts, stash, gold, pouch, combining, infusing and reforging. Save/load from the start, so every later step is tested for round-trips.
-5. The day structure (shop, fight, stop, losses and replays) and the economy data; the run bot and run-level balance reports.
+5. The day structure (Caravan, stop, fight, losses and replays) and the economy data; the run bot and run-level balance reports.
 6. Boss mechanic(s).
-7. UI: prep screen and fight playback first (the core loop), then run start, the day screen, and the shop and stop screens.
+7. UI: prep screen and fight playback first (the core loop), then run start, the day screen, the Caravan, and the stop screens.
 8. Content to the slice targets, then playtesting.
-
-## Relics: the proposed change
-
-The proposal: no relic board limit (hold as many as you find), and no essences on relics.
-
-**What it simplifies:**
-- No relic board, relic adjacency, or relic spill to build. That's a good part of Part A step 1.
-- Essences stay on hero items, where positioning and spill matter.
-- Relics read as run-long rules ("Burn ticks faster", "the first ally below 30% gets a Shield"), which fits them not being items.
-- It matches relics not going in the stash.
-
-**What it costs, and how to handle it:**
-- **It moves toward Guildrun's relic pile,** which `docs/design.md` lists under what we leave behind. The risk is relics becoming the main source of power, with items and infusions mattering less. The fix is to keep relics **scarce** (the design's 2–3 per act, plus enemy drops) and **build-shaping rather than flat stats**: conditional triggers and boosts to a tag, essence, or status, not "+10% ATK".
-- **It removes a decision:** there's no longer a choice about which relics to keep. That's fine if relics are scarce.
-- **Boss kills and events lose a reward** (growing the board). Bosses can give a relic choice instead.
-- **Relics drop out of essence rules:** essence resonance counts only items, and essence transformations are "item + essence" only.
-
-**My recommendation:** do it, with relics kept scarce and build-shaping. If it's approved, I'll update the design doc and CLAUDE.md (the relic board, relic sockets, relic spill, and resonance rules).
 
 ## Answers so far
 
-- **Days:** no branching map. Each day is a shop, one fight shown ahead, and a stop picked from 1 of 3 (the Forge only if something is infused, the Vault only with a key, Loot, Events). Offers are random per run and don't depend on earlier picks.
-- **Shop:** sells items and heroes (Merchant and Tavern are one).
+- **Days:** no branching map. Each day is the Caravan, then a stop picked from 1 of 3 (the Forge only if something is infused, the Vault only with a key, Loot, Events), then one fight shown ahead. Offers are random per run and don't depend on earlier picks. Two rounds per day is a possible later change.
+- **Caravan:** the shop and tavern in one; sells items and heroes. Heroes rank up by combining two copies, like items.
 - **Run start:** 1 of 3 random heroes (one hero only), then 1 of 3 packages, plus base gold.
 - **Fielding:** 1–5 heroes.
+- **Infusing:** any time between fights, for now. The Forge is for reforging.
 - **Economy:** placeholders, tuned with the runner. Higher tiers and ranks cost more, and rarer relics cost more; item rarity barely affects price.
 - **Stash:** shared, 6 slots that work like a hero row. No relics.
 - **HP:** full every fight, unless an item or relic changes it.
-- **Losing:** a loss restarts the day with everything kept, plus bonus gold (10, +5 per win). The second loss ends the run.
+- **Losing:** a loss restarts the day with everything kept, plus bonus gold (10, +5 per win), and a rematch against the same fight. The second loss ends the run.
+- **Relics:**
+  - hold any number; no board and no sockets
+  - can be declined, but never removed once taken
+  - change how a build works, and Epic ones change it the most
+  - much rarer than items, essences, or heroes
+  - bosses drop an item or a relic
 - **Synergies:** all five layers.
 - **Specializations:** 3 per class, in the slice.
 - **Act 1 identity:** I'll draft placeholders.
 - **Events:** gold, item by rarity, relic by rarity, and item by tier to start.
 - **Save/resume:** yes.
 
-## Questions (still open)
+## Question (still open)
 
-1. **Order within a day:** shop → fight → stop, as written? Or shop → stop → fight, so a replayed day gets its new stop before the rematch?
-2. **Infusing:** can you socket essences from the pouch anytime between fights, with the Forge (only offered when something is infused) just for reforging? Or does infusing also need a Forge, and if so, should the Forge also show up when you have an essence in the pouch?
-3. **Ranking heroes up:** now that the Tavern is gone, how does a hero rank up? Pay gold at the shop, buy a second copy of the same hero (like items), or something else?
-4. **A replayed day:** same fight, or a new one?
-5. **Relics:** go with the change above?
-6. **Name for the shop** (optional; placeholder "Shop" is fine): Waystation, Caravan, Crossroads, Hiring Hall, or Lantern Market.
+**Combining heroes:**
+- **Which specialization stays?** When two copies at B or above carry different specializations, which one does the combined hero keep? My draft: the player picks, as with an item's infusion.
+- **What happens to the new copy's items?** My draft: the new copy arrives with no items, so nothing is lost.
+- **A copy at a different rank:** my draft is that it can be held as a separate hero and takes a roster spot, like items at different tiers. Or should the Caravan only offer copies you can combine?

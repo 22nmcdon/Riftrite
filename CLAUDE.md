@@ -48,7 +48,7 @@ tools/         headless sim runner, data validators
 
 ## Infusion rules (easy to get wrong)
 
-- Small items: 1 socket. Medium/Large items: 2 sockets. Relics: 1 socket.
+- Small items: 1 socket. Medium/Large items: 2 sockets. Relics have no sockets. Infusing can happen any time between fights (for now).
 - Two different essences in one item = an **Alloy** with its own effect. Two of the same = a **pure double**.
 - Pure doubles are alloys too, and each has its own effect.
 - An alloy **keeps both essences' normal effects** and adds its special. A special that changes how a status behaves must use **its own status type** (Inferno → Golden Flame), never modify the shared one, so it can't leak into other items' statuses.
@@ -59,15 +59,15 @@ tools/         headless sim runner, data validators
   - Alloy: first essence's partial effect to the **left**, second's to the **right**, each at the single-essence strength (its own tuning value, currently equal to the single's); the alloy effect itself never spills
   - Pure double: the base essence's partial effect (~30%) to both sides. Its bonus effect never spills and never strengthens the spill. The one exception is a pure double whose alloy effect *is* "doubled spill" (optional idea, first tried on Overgrowth, Verdant + Verdant).
   - Essence transformation: **never** spills
-- Item spills stay inside that hero's row. Relic spills stay on the relic board, never reaching hero items.
+- Item spills stay inside that hero's row.
 - Spill percentages and XP thresholds are tuning values in `data/`, never hard-coded.
-- Essence resonance counts **essences**, not items: a single = 1, an alloy = 1 of each half, a pure double = 2, and a transformation counts its socketed essence(s). Relics count too.
+- Essence resonance counts **essences**, not items: a single = 1, an alloy = 1 of each half, a pure double = 2, and a transformation counts its socketed essence(s).
 
 ## Item rules
 
 - Every unit has a built-in **basic auto-attack** (no slot). Each hero's basic auto-attack is their own and **can't be upgraded** (no sockets, no tier). **Auto-attack items** replace it, take up slots, and can be Small, Medium, or Large. **Max one auto-attack item per hero.** Remove the item and the unit falls back to its basic auto-attack.
 - **Two** copies of the same item at the same tier combine into the next tier (never three). If the new copy has an infusion, it replaces the old one (and the old XP is lost); if not, the old infusion and its XP stay. The player chooses whether to combine. Copies at *different* tiers can be held together.
-- Tier and rarity are separate. Rarity decides how often an item appears; any item can be tiered up. Tiers are **C → B → A → S** (same as hero ranks). Items and heroes can be found above C; normal shops and the Tavern unlock higher tiers as the run progresses (a schedule in `data/`). Earlier, higher tiers come only from events (such as tier-specific shops), enemy drops, and loot.
+- Tier and rarity are separate. Rarity decides how often an item appears; any item can be tiered up. Tiers are **C → B → A → S** (same as hero ranks). Items and heroes can be found above C; the Caravan (the shop, selling items and heroes) unlocks higher tiers as the run progresses (a schedule in `data/`). Earlier, higher tiers come only from events (such as tier-specific shops), enemy drops, and loot.
 - Rarities: **Common, Uncommon, Rare, Epic, Legendary**. S is the top tier (S items can't combine). **Legendaries never combine**; they upgrade through their own paths and appear at most once per run.
 - **Oathbinding:** an S hero + an S item can be permanently oathbound (one per hero; the item then can't be removed, moved, or sold, but can be repositioned and infused). "Specialization" means only the hero's rank-B choice; don't mix the two terms.
 - **Reforging** = removing an item's infusion.
@@ -79,10 +79,11 @@ tools/         headless sim runner, data validators
 
 ## Other core rules
 
-- Items are per hero; the relic board is shared by the team. Items can move between heroes freely between fights (never during combat).
+- Items are per hero; relics are shared by the team. The guild can hold any number of relics (no board, no slots, no sockets); a relic can be turned down, but once taken it can't be removed. Relics are rare and change how a build works rather than adding flat stats.
+- Heroes rank up like items: two copies at the same rank combine into the next rank. Items can move between heroes freely between fights (never during combat).
 - Fallen heroes always come back after a fight, with no downside.
 - A lost fight restarts the day (everything kept, plus bonus gold); the second loss ends the run. Every fight starts at full HP (unless an item or relic says otherwise). Unequipped items wait in a shared stash of 6 slots that works like a hero row; relics can't go there.
-- There is no branching map: each act is a set number of days, each with a shop, one fight, and a stop the player picks. Offers come from the run seed and don't depend on earlier picks (for now). The run layer is deterministic from its seed, like the sim.
+- There is no branching map: each act is a set number of days, each going Caravan (shop) → a stop the player picks → one fight. A lost fight replays the day against the same enemies. Offers come from the run seed and don't depend on earlier picks (for now). The run layer is deterministic from its seed, like the sim.
 - A run starts with one hero; roster cap 6, 1–5 fielded. Which heroes sit in backup is the player's choice; backup heroes' Backup effects and their items' backup modes apply. In a fight, backup heroes are off the field (never targeted, no collapse damage, don't count for victory); only `"backup"` blocks act from the bench. Common items can't have a backup mode (until Oathbinding); Legendary items must.
 - "Lowest HP" (heals and targeting) means lowest HP **percentage**.
 - Rift Collapse starts at 45s of combat and deals **flat** damage (never % of max HP) that grows every second, hitting **Shield before HP**. From 90s the growth itself accelerates. The numbers are set per act (Act 2 = double Act 1) in `data/`. Early fights end around 60s; later ones can run much longer. There is no hard time limit, but a fight still running at **180s is a tie**, as is both sides dying on the same tick, and **a tie counts as a guild victory**.
