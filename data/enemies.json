@@ -1,0 +1,106 @@
+[
+  {
+    "id": "rift_hound",
+    "name": "Rift Hound",
+    "_note": "Placeholder stats.",
+    "stats": {
+      "hp": 650,
+      "atk": 16,
+      "def": 10,
+      "atsp": 10
+    },
+    "tier": "c",
+    "basic_attack": {
+      "id": "snap",
+      "name": "Snap",
+      "cooldown_ms": 1000,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 4,
+          "target": "enemy_front",
+          "scaling": {
+            "atk": 5000
+          }
+        }
+      ]
+    },
+    "items": [
+      {
+        "item": "rift_claw"
+      }
+    ]
+  },
+  {
+    "id": "rift_sentinel",
+    "name": "Rift-Worn Sentinel",
+    "stats": {
+      "hp": 1300,
+      "atk": 16,
+      "def": 30
+    },
+    "tier": "c",
+    "basic_attack": {
+      "id": "rusted_swing",
+      "name": "Rusted Swing",
+      "cooldown_ms": 1600,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 6,
+          "target": "enemy_front",
+          "scaling": {
+            "atk": 6000
+          }
+        }
+      ]
+    },
+    "items": [
+      {
+        "item": "hollow_maw",
+        "essences": [
+          "stone"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "gloam_witch",
+    "name": "Gloam Witch",
+    "stats": {
+      "hp": 750,
+      "mgk": 18,
+      "def": 5
+    },
+    "tier": "c",
+    "basic_attack": {
+      "id": "gloom_bolt",
+      "name": "Gloom Bolt",
+      "cooldown_ms": 1300,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 4,
+          "target": "enemy_front",
+          "scaling": {
+            "mgk": 5000
+          }
+        }
+      ]
+    },
+    "items": [
+      {
+        "item": "gloom_spit"
+      },
+      {
+        "item": "tallow_torch",
+        "essences": [
+          "ember"
+        ]
+      }
+    ]
+  }
+]

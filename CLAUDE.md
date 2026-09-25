@@ -21,7 +21,7 @@ A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The pl
 - Run one test file: add `-gselect=test_project_setup.gd`
 - Fresh checkout: run `godot --headless --import` once first, so class names are registered. The session-start hook does this in cloud sessions.
 - Validate game data: `godot --headless --path . -s tools/validate_data.gd` (also covered by the test run)
-- Headless balance sim: `godot --headless --path . -- --sim --fights=1000 --seed=1` (not built yet)
+- Headless balance sim: `godot --headless --path . -s tools/sim_runner.gd -- --fights=200 --seed=1` (optional `--party=id`, `--encounter=id`). Parties live in `tools/sim_parties.json`; encounters in `data/encounters.json`.
 - Cloud sessions: `.claude/hooks/session-start.sh` installs the pinned Godot as `godot` in `~/.local/bin`.
 
 ## Folder layout
@@ -92,7 +92,8 @@ tools/         headless sim runner, data validators
 - For any new system, propose a plan first (files, data shape, tests) and wait for approval before writing code.
 - Write or update tests for sim logic in the same change. Determinism tests (run a seeded fight twice, compare logs) must keep passing.
 - Keep changes small and focused. Don't refactor unrelated code.
-- When adding content, validate the JSON with `tools/` before finishing.
+- When adding content, validate the JSON with `tools/` before finishing, and run the balance sim on anything that changes numbers.
+- Damage-over-time scale: one Burn stack is worth about 20 damage over its life, and one Poison or Bleed stack deals 1 damage per second for the rest of the fight. Items that apply these directly should apply few stacks (the conversion rule's 5% already assumes this).
 - If a design question isn't answered in `docs/design.md`, ask instead of inventing an answer. Then note the answer in the design doc. Unanswered questions live under **Open questions** in `docs/design.md`.
 
 ## Tone and naming

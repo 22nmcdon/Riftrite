@@ -1,0 +1,626 @@
+[
+  {
+    "id": "rusted_cleaver",
+    "name": "Rusted Cleaver",
+    "size": 2,
+    "tags": [
+      "weapon",
+      "melee"
+    ],
+    "rarity": "common",
+    "auto_attack": true,
+    "xp_per_fire": 2,
+    "cooldown_ms": 2000,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "damage",
+        "amount": 8,
+        "target": "enemy_front",
+        "scaling": {
+          "atk": 9000
+        }
+      }
+    ]
+  },
+  {
+    "id": "hearth_knife",
+    "name": "Hearth Knife",
+    "size": 1,
+    "tags": [
+      "weapon",
+      "melee"
+    ],
+    "rarity": "common",
+    "xp_per_fire": 2,
+    "cooldown_ms": 800,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "damage",
+        "amount": 3,
+        "target": "enemy_front",
+        "scaling": {
+          "atk": 5000
+        }
+      }
+    ]
+  },
+  {
+    "id": "bone_sling",
+    "name": "Bone Sling",
+    "size": 1,
+    "tags": [
+      "weapon",
+      "ranged"
+    ],
+    "rarity": "common",
+    "xp_per_fire": 2,
+    "cooldown_ms": 1200,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "damage",
+        "amount": 4,
+        "target": "enemy_back",
+        "scaling": {
+          "atk": 4000
+        }
+      }
+    ]
+  },
+  {
+    "id": "blackthorn_bow",
+    "name": "Blackthorn Bow",
+    "size": 2,
+    "tags": [
+      "weapon",
+      "ranged"
+    ],
+    "rarity": "common",
+    "auto_attack": true,
+    "xp_per_fire": 1,
+    "cooldown_ms": 1600,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "damage",
+        "amount": 6,
+        "target": "enemy_random",
+        "scaling": {
+          "atk": 7000
+        }
+      }
+    ]
+  },
+  {
+    "id": "oak_buckler",
+    "name": "Oak Buckler",
+    "size": 1,
+    "tags": [
+      "tool",
+      "defense"
+    ],
+    "rarity": "common",
+    "xp_per_fire": 3,
+    "cooldown_ms": 2500,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "shield",
+        "amount": 10,
+        "target": "self",
+        "scaling": {
+          "def": 4000
+        }
+      }
+    ]
+  },
+  {
+    "id": "tallow_torch",
+    "name": "Tallow Torch",
+    "size": 1,
+    "tags": [
+      "tool",
+      "magic"
+    ],
+    "rarity": "common",
+    "xp_per_fire": 3,
+    "cooldown_ms": 1500,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "apply_status",
+        "status": "burn",
+        "stacks": 1,
+        "target": "enemy_front",
+        "scaling": {
+          "mgk": 500
+        }
+      }
+    ],
+    "_note": "One Burn stack is worth about 20 damage over its life, so damage-over-time items apply few stacks."
+  },
+  {
+    "id": "rime_charm",
+    "name": "Rime Charm",
+    "size": 1,
+    "tags": [
+      "charm",
+      "magic"
+    ],
+    "rarity": "common",
+    "xp_per_fire": 3,
+    "cooldown_ms": 3000,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "apply_status",
+        "status": "slow",
+        "stacks": 1,
+        "target": "enemy_front"
+      }
+    ]
+  },
+  {
+    "id": "old_lantern",
+    "name": "Old Lantern",
+    "size": 1,
+    "tags": [
+      "tool",
+      "healing"
+    ],
+    "rarity": "uncommon",
+    "xp_per_fire": 3,
+    "cooldown_ms": 2000,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "heal",
+        "amount": 6,
+        "target": "ally_lowest_hp",
+        "scaling": {
+          "mgk": 6000
+        }
+      }
+    ]
+  },
+  {
+    "id": "hearth_stew",
+    "name": "Hearth Stew",
+    "size": 1,
+    "tags": [
+      "food",
+      "healing"
+    ],
+    "rarity": "uncommon",
+    "xp_per_fire": 4,
+    "cooldown_ms": 4000,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "heal",
+        "amount": 3,
+        "target": "all_allies",
+        "scaling": {
+          "mgk": 2000
+        }
+      }
+    ]
+  },
+  {
+    "id": "grave_hook",
+    "name": "Grave Hook",
+    "size": 2,
+    "tags": [
+      "weapon",
+      "melee"
+    ],
+    "rarity": "uncommon",
+    "xp_per_fire": 3,
+    "cooldown_ms": 2400,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "damage",
+        "amount": 10,
+        "target": "enemy_front",
+        "scaling": {
+          "atk": 6000
+        }
+      },
+      {
+        "trigger": "on_hit",
+        "type": "apply_status",
+        "status": "bleed",
+        "stacks": 1,
+        "target": "hit_target"
+      }
+    ]
+  },
+  {
+    "id": "nettle_vial",
+    "name": "Nettle Vial",
+    "size": 1,
+    "tags": [
+      "tool",
+      "magic"
+    ],
+    "rarity": "uncommon",
+    "xp_per_fire": 3,
+    "cooldown_ms": 1800,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "apply_status",
+        "status": "poison",
+        "stacks": 1,
+        "target": "enemy_front",
+        "scaling": {
+          "mgk": 500
+        }
+      }
+    ]
+  },
+  {
+    "id": "salt_ward",
+    "name": "Salt Ward",
+    "size": 1,
+    "tags": [
+      "charm",
+      "defense"
+    ],
+    "rarity": "uncommon",
+    "xp_per_fire": 3,
+    "cooldown_ms": 5000,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "apply_status",
+        "status": "blind",
+        "stacks": 1,
+        "target": "enemy_front"
+      }
+    ]
+  },
+  {
+    "id": "war_drum",
+    "_note": "Its neighbors crit more.",
+    "name": "War Drum",
+    "size": 1,
+    "tags": [
+      "tool"
+    ],
+    "rarity": "uncommon",
+    "xp_per_fire": 3,
+    "cooldown_ms": 3000,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "shield",
+        "amount": 3,
+        "target": "self",
+        "scaling": {
+          "def": 2000
+        }
+      }
+    ],
+    "auras": [
+      {
+        "target": "adjacent_items",
+        "stat": "crit_chance_bp",
+        "value": 1500
+      }
+    ]
+  },
+  {
+    "id": "bell_of_vigil",
+    "_note": "Linked: the heroes beside the holder stand firmer.",
+    "name": "Bell of Vigil",
+    "size": 2,
+    "tags": [
+      "charm",
+      "defense"
+    ],
+    "rarity": "uncommon",
+    "xp_per_fire": 3,
+    "cooldown_ms": 4000,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "shield",
+        "amount": 5,
+        "target": "linked_allies",
+        "scaling": {
+          "def": 2000
+        }
+      }
+    ],
+    "auras": [
+      {
+        "target": "linked_allies",
+        "stat": "def_bp",
+        "value": 13000
+      }
+    ]
+  },
+  {
+    "id": "hearth_banner",
+    "_note": "Rush: the whole row hits harder for the first 8 seconds.",
+    "name": "Hearth Banner",
+    "size": 2,
+    "tags": [
+      "charm"
+    ],
+    "rarity": "rare",
+    "timing": "rush",
+    "xp_per_fire": 3,
+    "cooldown_ms": 3000,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "heal",
+        "amount": 4,
+        "target": "self"
+      }
+    ],
+    "auras": [
+      {
+        "target": "row_allies",
+        "stat": "damage_bp",
+        "value": 13000,
+        "label": "Rush",
+        "window": {
+          "until_ms": 8000
+        }
+      },
+      {
+        "target": "holder",
+        "stat": "damage_bp",
+        "value": 13000,
+        "label": "Rush",
+        "window": {
+          "until_ms": 8000
+        }
+      }
+    ]
+  },
+  {
+    "id": "first_light_dagger",
+    "_note": "Rush: fierce for 8 seconds, then a plain knife.",
+    "name": "First-Light Dagger",
+    "size": 1,
+    "tags": [
+      "weapon",
+      "melee"
+    ],
+    "rarity": "rare",
+    "timing": "rush",
+    "xp_per_fire": 2,
+    "cooldown_ms": 700,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "damage",
+        "amount": 8,
+        "target": "enemy_front",
+        "scaling": {
+          "atk": 6000
+        },
+        "window": {
+          "until_ms": 8000
+        }
+      },
+      {
+        "trigger": "on_fire",
+        "type": "damage",
+        "amount": 3,
+        "target": "enemy_front",
+        "scaling": {
+          "atk": 3000
+        },
+        "window": {
+          "from_ms": 8000
+        }
+      }
+    ]
+  },
+  {
+    "id": "dusk_tome",
+    "_note": "Stall: silent until 15 seconds, then scours every enemy.",
+    "name": "Dusk Tome",
+    "size": 2,
+    "tags": [
+      "tome",
+      "magic"
+    ],
+    "rarity": "rare",
+    "timing": "stall",
+    "xp_per_fire": 4,
+    "cooldown_ms": 2500,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "damage",
+        "amount": 6,
+        "target": "all_enemies",
+        "scaling": {
+          "mgk": 6000
+        },
+        "window": {
+          "from_ms": 15000
+        }
+      }
+    ]
+  },
+  {
+    "id": "hearthstone_ward",
+    "name": "Hearthstone Ward",
+    "size": 3,
+    "tags": [
+      "tool",
+      "defense"
+    ],
+    "rarity": "rare",
+    "xp_per_fire": 4,
+    "cooldown_ms": 5000,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "shield",
+        "amount": 12,
+        "target": "all_allies",
+        "scaling": {
+          "def": 5000
+        }
+      }
+    ],
+    "auras": [
+      {
+        "target": "holder",
+        "stat": "def_bp",
+        "value": 12000
+      }
+    ]
+  },
+  {
+    "id": "ember_brazier",
+    "name": "Ember Brazier",
+    "size": 3,
+    "tags": [
+      "tool",
+      "magic"
+    ],
+    "rarity": "rare",
+    "xp_per_fire": 4,
+    "cooldown_ms": 3500,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "apply_status",
+        "status": "burn",
+        "stacks": 1,
+        "target": "all_enemies",
+        "scaling": {
+          "mgk": 800
+        }
+      }
+    ]
+  },
+  {
+    "id": "night_lantern",
+    "_note": "Epic: may scale from ATSP. Rush: faster for the first 8 seconds.",
+    "name": "Night Lantern",
+    "size": 2,
+    "tags": [
+      "tool",
+      "healing",
+      "magic"
+    ],
+    "rarity": "epic",
+    "timing": "rush",
+    "xp_per_fire": 3,
+    "cooldown_ms": 2200,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "heal",
+        "amount": 10,
+        "target": "ally_lowest_hp",
+        "scaling": {
+          "mgk": 5000,
+          "atsp": 1000
+        }
+      }
+    ],
+    "auras": [
+      {
+        "target": "self_item",
+        "stat": "cooldown_bp",
+        "value": -2500,
+        "label": "Rush",
+        "window": {
+          "until_ms": 8000
+        }
+      }
+    ]
+  },
+  {
+    "id": "rift_claw",
+    "name": "Rift Claw",
+    "size": 1,
+    "tags": [
+      "weapon",
+      "melee"
+    ],
+    "rarity": "common",
+    "enemy_only": true,
+    "xp_per_fire": 0,
+    "cooldown_ms": 1000,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "damage",
+        "amount": 5,
+        "target": "enemy_front",
+        "scaling": {
+          "atk": 6000
+        }
+      }
+    ]
+  },
+  {
+    "id": "hollow_maw",
+    "name": "Hollow Maw",
+    "size": 2,
+    "tags": [
+      "weapon",
+      "melee"
+    ],
+    "rarity": "uncommon",
+    "enemy_only": true,
+    "xp_per_fire": 0,
+    "cooldown_ms": 2200,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "damage",
+        "amount": 12,
+        "target": "enemy_front",
+        "scaling": {
+          "atk": 8000
+        }
+      },
+      {
+        "trigger": "on_hit",
+        "type": "heal",
+        "amount": 4,
+        "target": "self"
+      }
+    ]
+  },
+  {
+    "id": "gloom_spit",
+    "name": "Gloom Spit",
+    "size": 1,
+    "tags": [
+      "magic"
+    ],
+    "rarity": "common",
+    "enemy_only": true,
+    "xp_per_fire": 0,
+    "cooldown_ms": 1600,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "apply_status",
+        "status": "poison",
+        "stacks": 1,
+        "target": "enemy_front",
+        "scaling": {
+          "mgk": 500
+        }
+      }
+    ]
+  }
+]

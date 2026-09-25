@@ -1,0 +1,111 @@
+[
+  {
+    "id": "brannoc",
+    "name": "Brannoc of the Hearthwatch",
+    "class": "warden",
+    "_note": "Placeholder stats.",
+    "stats": {
+      "hp": 420,
+      "atk": 14,
+      "def": 30
+    },
+    "basic_attack": {
+      "id": "shield_bash",
+      "name": "Shield Bash",
+      "cooldown_ms": 1500,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 6,
+          "target": "enemy_front",
+          "scaling": {
+            "atk": 5000
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "wren",
+    "name": "Wren Ashfoot",
+    "class": "striker",
+    "stats": {
+      "hp": 280,
+      "atk": 22,
+      "def": 8,
+      "crit": 5,
+      "atsp": 15
+    },
+    "basic_attack": {
+      "id": "quick_cut",
+      "name": "Quick Cut",
+      "cooldown_ms": 900,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 4,
+          "target": "enemy_front",
+          "scaling": {
+            "atk": 6000
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "vell",
+    "name": "Sister Vell",
+    "class": "mender",
+    "stats": {
+      "hp": 260,
+      "atk": 6,
+      "mgk": 20,
+      "def": 10
+    },
+    "basic_attack": {
+      "id": "lantern_swing",
+      "name": "Lantern Swing",
+      "cooldown_ms": 1400,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 3,
+          "target": "enemy_front",
+          "scaling": {
+            "mgk": 4000
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "odo",
+    "name": "Odo Quillmire",
+    "class": "arcanist",
+    "stats": {
+      "hp": 240,
+      "mgk": 26,
+      "def": 5,
+      "crit": 5
+    },
+    "basic_attack": {
+      "id": "hexbolt",
+      "name": "Hexbolt",
+      "cooldown_ms": 1300,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 5,
+          "target": "enemy_front",
+          "scaling": {
+            "mgk": 6000
+          }
+        }
+      ]
+    }
+  }
+]

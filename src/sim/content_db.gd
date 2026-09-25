@@ -14,7 +14,11 @@ const TUNING_FILE: String = "tuning.json"
 const STATUSES_FILE: String = "statuses.json"
 const ESSENCES_FILE: String = "essences.json"
 const ALLOYS_FILE: String = "alloys.json"
-const FILES: Array[String] = [TUNING_FILE, STATUSES_FILE, ESSENCES_FILE, ALLOYS_FILE]
+const ITEMS_FILE: String = "items.json"
+const HEROES_FILE: String = "heroes.json"
+const ENEMIES_FILE: String = "enemies.json"
+const ENCOUNTERS_FILE: String = "encounters.json"
+const FILES: Array[String] = [TUNING_FILE, STATUSES_FILE, ESSENCES_FILE, ALLOYS_FILE, ITEMS_FILE, HEROES_FILE, ENEMIES_FILE, ENCOUNTERS_FILE]
 
 var errors: Array[String] = []
 var tuning: TuningDef
@@ -24,6 +28,14 @@ var essences: Dictionary[String, EssenceDef] = {}
 var essence_ids: Array[String] = []
 var alloys: Dictionary[String, AlloyDef] = {}
 var alloy_ids: Array[String] = []
+var items: Dictionary[String, ItemDef] = {}
+var item_ids: Array[String] = []
+var heroes: Dictionary[String, HeroDef] = {}
+var hero_ids: Array[String] = []
+var enemies: Dictionary[String, EnemyDef] = {}
+var enemy_ids: Array[String] = []
+var encounters: Dictionary[String, EncounterDef] = {}
+var encounter_ids: Array[String] = []
 ## Recipe key (AlloyDef.recipe_key) -> alloy. Two essences with no entry
 ## here still work as an alloy, just without a named special.
 var _alloys_by_recipe: Dictionary[String, AlloyDef] = {}
@@ -55,6 +67,22 @@ static func load_texts(texts: Dictionary[String, String]) -> ContentDb:
 	db._load_statuses(db._parse(texts, STATUSES_FILE))
 	db._load_essences(db._parse(texts, ESSENCES_FILE))
 	db._load_alloys(db._parse(texts, ALLOYS_FILE))
+	for reader: DataReader in db._entries(db._parse(texts, ITEMS_FILE), ITEMS_FILE):
+		var item: ItemDef = ItemDef.read(reader)
+		if db._claim_id(item.id, reader, db.item_ids):
+			db.items[item.id] = item
+	for reader: DataReader in db._entries(db._parse(texts, HEROES_FILE), HEROES_FILE):
+		var hero: HeroDef = HeroDef.read(reader)
+		if db._claim_id(hero.id, reader, db.hero_ids):
+			db.heroes[hero.id] = hero
+	for reader: DataReader in db._entries(db._parse(texts, ENEMIES_FILE), ENEMIES_FILE):
+		var enemy: EnemyDef = EnemyDef.read(reader)
+		if db._claim_id(enemy.id, reader, db.enemy_ids):
+			db.enemies[enemy.id] = enemy
+	for reader: DataReader in db._entries(db._parse(texts, ENCOUNTERS_FILE), ENCOUNTERS_FILE):
+		var encounter: EncounterDef = EncounterDef.read(reader)
+		if db._claim_id(encounter.id, reader, db.encounter_ids):
+			db.encounters[encounter.id] = encounter
 	db._check_references()
 	return db
 
@@ -169,6 +197,48 @@ func _check_references() -> void:
 			for status_id: String in [from_status, to_status]:
 				if not statuses.has(status_id):
 					errors.append("%s: replaces uses unknown status \"%s\"" % [where, status_id])
+
+
+	for id: String in item_ids:
+		_check_effects(items[id].effects, "%s (%s)" % [ITEMS_FILE, id])
+	for id: String in hero_ids:
+		if heroes[id].basic_attack != null:
+			_check_effects(heroes[id].basic_attack.effects, "%s (%s).basic_attack" % [HEROES_FILE, id])
+	for id: String in enemy_ids:
+		var enemy: EnemyDef = enemies[id]
+		var where: String = "%s (%s)" % [ENEMIES_FILE, id]
+		if enemy.basic_attack != null:
+			_check_effects(enemy.basic_attack.effects, where + ".basic_attack")
+		check_loadout(enemy.items, where, true)
+	for id: String in encounter_ids:
+		var encounter: EncounterDef = encounters[id]
+		for slot: EncounterDef.Slot in encounter.units:
+			if not enemies.has(slot.enemy_id):
+				errors.append("%s (%s): unknown enemy \"%s\"" % [ENCOUNTERS_FILE, id, slot.enemy_id])
+		if tuning != null and tuning.collapse_for_act(encounter.act) == null:
+			errors.append("%s (%s): act %d has no Rift Collapse numbers in tuning" % [ENCOUNTERS_FILE, id, encounter.act])
+
+
+## Checks a fixed item layout's references: items, essences, and sockets.
+## Enemy-only items are allowed only when `enemy` is true.
+func check_loadout(entries: Array[LoadoutEntry], where: String, enemy: bool) -> void:
+	for i: int in entries.size():
+		var entry: LoadoutEntry = entries[i]
+		var at: String = "%s.items[%d]" % [where, i]
+		if not items.has(entry.item_id):
+			errors.append("%s: unknown item \"%s\"" % [at, entry.item_id])
+			continue
+		var item: ItemDef = items[entry.item_id]
+		if item.enemy_only and not enemy:
+			errors.append("%s: \"%s\" is enemy-only" % [at, entry.item_id])
+		var sockets: int = 1 if item.size <= 1 else 2
+		if entry.essence_ids.size() > sockets:
+			errors.append("%s: \"%s\" has %d essences but only %d socket(s)" % [at, entry.item_id, entry.essence_ids.size(), sockets])
+		for essence_id: String in entry.essence_ids:
+			if not essences.has(essence_id):
+				errors.append("%s: unknown essence \"%s\"" % [at, essence_id])
+		if entry.xp > 0 and entry.essence_ids.is_empty():
+			errors.append("%s: has %d infusion XP but no infusion" % [at, entry.xp])
 
 
 ## Output kinds are "damage", "shield", "heal", and damage-over-time statuses.

@@ -1,6 +1,6 @@
 # Plan: Phase 2 combat sim
 
-Status: **approved; in progress.** Steps 1–7 are done (step 4's essences were reworked along the way; see `docs/plans/essence-rework.md`). Next is step 8 (headless balance runner).
+Status: **approved; in progress.** **All 9 steps are done** (step 4's essences were reworked along the way; see `docs/plans/essence-rework.md`). Phase 2 is complete apart from balancing; backup in the sim comes next (decided: after Phase 2).
 
 Goal (from the roadmap in `docs/design.md`): a deterministic auto-battle on fixed front/back rows, with no art. It must include essences, alloys, attunement, and spill. Done when a fight can be explained from its log, and the headless runner shows whether alloys feel worth fusing.
 
@@ -225,6 +225,20 @@ Rush/Stall behavior is per item, so step 7 adds building blocks instead of one f
 **5. Rush/Stall stay labels.** The item's `timing` field stays, for the shop and synergies; windows and auras do the work.
 
 **As built:** aura multipliers multiply and crit/cooldown add (confirmed). Linked comes in variants per item (confirmed): `linked_ally` (left, else right), `linked_left_ally`, `linked_right_ally`, `linked_allies`, `row_allies`. Auras stop when their holder falls. Everything re-derives at fight start, when an aura window opens or closes, after a death, and after an infusion level-up. The log records each aura starting and ending.
+
+### Steps 8–9: balance runner and draft content
+
+- **Draft content** (placeholders for the designer to replace): 4 heroes (Brannoc the Warden, Wren Ashfoot the Striker, Sister Vell the Mender, Odo Quillmire the Arcanist), 20 hero items plus 3 enemy-only items, 3 enemies (Rift Hound, Rift-Worn Sentinel, Gloam Witch), and 3 Act 1 encounters. Files: `data/items.json`, `heroes.json`, `enemies.json`, `encounters.json`.
+- **Heroes** get item slots from rank (4 at C, +1 per rank). **Enemies** have fixed layouts with infusions; encounter units are numbered in the log (`rift_hound_1`).
+- **Runner:** `tools/sim_runner.gd` runs the parties in `tools/sim_parties.json` against each encounter and reports win rate (ties count as wins), fight length, biggest hit, infusion level-ups, per-item damage/healing/shielding per fight with share of the party's output, and flags items under 3% of output.
+- `DamageMeter` builds per-item totals from the combat log.
+
+**Findings from the first runs** (these shaped the draft numbers):
+- **Damage-over-time scale:** one Burn stack is worth about 20 damage, so the first draft's torch (4+ stacks per fire) did a third of all damage. Items that apply damage over time now apply 1 stack plus a small share of MGK.
+- **Stall needs long fights:** with the first draft, fights ended before 15 s and the Stall tome never fired. Tuned fights now last 12–50 s.
+- **Outcomes are nearly all-or-nothing** for a given matchup (little randomness: only crits, random targets, Storm, and Slow's item choice). Worth deciding whether fights should be swingier.
+- **Infusions and rank are big:** the infused party and the rank-B party win matchups the plain starter loses.
+- **Aura items look weak in the meter** because their boosts show up in other items' numbers, not their own. A future meter could credit aura contributions to the aura's item.
 
 ## Needs your call before coding
 

@@ -1,0 +1,59 @@
+[
+  {
+    "id": "hound_pack",
+    "name": "Hound Pack",
+    "act": 1,
+    "units": [
+      {
+        "enemy": "rift_hound",
+        "row": "front"
+      },
+      {
+        "enemy": "rift_hound",
+        "row": "front"
+      },
+      {
+        "enemy": "rift_hound",
+        "row": "front"
+      }
+    ]
+  },
+  {
+    "id": "sentinel_vigil",
+    "name": "Sentinel's Vigil",
+    "act": 1,
+    "units": [
+      {
+        "enemy": "rift_sentinel",
+        "row": "front"
+      },
+      {
+        "enemy": "rift_hound",
+        "row": "front"
+      },
+      {
+        "enemy": "gloam_witch",
+        "row": "back"
+      }
+    ]
+  },
+  {
+    "id": "witch_coven",
+    "name": "Witch Coven",
+    "act": 1,
+    "units": [
+      {
+        "enemy": "rift_sentinel",
+        "row": "front"
+      },
+      {
+        "enemy": "gloam_witch",
+        "row": "back"
+      },
+      {
+        "enemy": "gloam_witch",
+        "row": "back"
+      }
+    ]
+  }
+]
