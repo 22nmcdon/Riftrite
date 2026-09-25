@@ -1,21 +1,31 @@
 [
   {
-    "_note": "Placeholder numbers. Each stack deals damage every interval, then stacks_lost_per_interval stacks fall off.",
+    "_note": "Strongest per stack, fades fast, half as effective against shields. Ticks twice a second; loses 5% of its stacks (rounded up) each tick. Numbers are placeholders.",
     "id": "burn",
     "name": "Burn",
     "kind": "damage_over_time",
-    "interval_ms": 1000,
-    "damage_per_stack": 3,
-    "stacks_lost_per_interval": 1
+    "interval_ms": 500,
+    "damage_per_stack": 1,
+    "stacks_lost_bp": 500,
+    "vs_shield_bp": 5000
   },
   {
-    "_note": "Placeholder numbers. Applied by Umbral crits.",
+    "_note": "Never fades; ignores shields.",
+    "id": "poison",
+    "name": "Poison",
+    "kind": "damage_over_time",
+    "interval_ms": 1000,
+    "damage_per_stack": 1,
+    "vs_shield_bp": 0
+  },
+  {
+    "_note": "Never fades; hits shields; each stack lowers the target's DEF by 1.",
     "id": "bleed",
     "name": "Bleed",
     "kind": "damage_over_time",
     "interval_ms": 1000,
-    "damage_per_stack": 4,
-    "stacks_lost_per_interval": 1
+    "damage_per_stack": 1,
+    "defense_shred_per_stack": 1
   },
   {
     "_note": "Design: 3 stacks Freeze for 1s. slow_bp_per_stack and duration are placeholders.",

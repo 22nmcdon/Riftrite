@@ -118,11 +118,25 @@ func mitigate_hit(target: UnitState, amount: int) -> int:
 	return FixedMath.mul_div(amount, tuning.defense_constant, tuning.defense_constant + target.defense())
 
 
-## Shield takes damage first, then HP (HP stops at 0). Returns how much the
-## shield absorbed.
+## Shield takes damage first, then HP (HP stops at 0). Returns how much of
+## the damage the shield absorbed.
 func apply_damage(target: UnitState, amount: int) -> int:
-	var absorbed: int = mini(target.shield, amount)
-	target.shield -= absorbed
+	return apply_damage_vs_shield(target, amount, FixedMath.BP_ONE)
+
+
+## Like apply_damage, but the damage is only `vs_shield_bp` effective against
+## shields (5000: each point of shield soaks 2 damage; 0: skips shields).
+## Whatever the shield doesn't soak hits HP at full strength.
+func apply_damage_vs_shield(target: UnitState, amount: int, vs_shield_bp: int) -> int:
+	if vs_shield_bp <= 0 or target.shield <= 0:
+		target.hp = maxi(target.hp - amount, 0)
+		return 0
+	var shield_cost: int = FixedMath.apply_bp(amount, vs_shield_bp)
+	if target.shield >= shield_cost:
+		target.shield -= shield_cost
+		return amount
+	var absorbed: int = mini(FixedMath.mul_div(target.shield, FixedMath.BP_ONE, vs_shield_bp), amount)
+	target.shield = 0
 	target.hp = maxi(target.hp - (amount - absorbed), 0)
 	return absorbed
 

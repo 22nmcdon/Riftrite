@@ -29,6 +29,14 @@ var crit_bp_per_point: int
 var atsp_bp_per_point: int
 ## Hit damage taken is multiplied by C / (C + DEF).
 var defense_constant: int
+## Essence conversion rule (docs/plans/essence-rework.md): how much of an
+## item's output an essence adds as its own kind.
+var convert_same_kind_bp: int
+var convert_same_family_bp: int
+var convert_direct_to_over_time_bp: int
+var convert_over_time_to_direct_bp: int
+## Share of each damage-over-time status a heal removes from its target.
+var heal_cleanse_bp: int
 ## Keyed by act number. Look up with collapse_for_act(); don't iterate.
 var collapse_by_act: Dictionary[int, CollapseDef] = {}
 
@@ -47,6 +55,11 @@ static func read(reader: DataReader) -> TuningDef:
 	def.crit_bp_per_point = reader.req_int("crit_bp_per_point", 0)
 	def.atsp_bp_per_point = reader.req_int("atsp_bp_per_point", 0)
 	def.defense_constant = reader.req_int("defense_constant", 1)
+	def.convert_same_kind_bp = reader.req_int("convert_same_kind_bp", 0)
+	def.convert_same_family_bp = reader.req_int("convert_same_family_bp", 0)
+	def.convert_direct_to_over_time_bp = reader.req_int("convert_direct_to_over_time_bp", 0)
+	def.convert_over_time_to_direct_bp = reader.req_int("convert_over_time_to_direct_bp", 0)
+	def.heal_cleanse_bp = reader.req_int("heal_cleanse_bp", 0, FixedMath.BP_ONE)
 	def.rush_end_ticks = reader.req_ticks("rush_end_ms")
 	def.stall_start_ticks = reader.req_ticks("stall_start_ms")
 	def.collapse_start_ticks = reader.req_ticks("collapse_start_ms")

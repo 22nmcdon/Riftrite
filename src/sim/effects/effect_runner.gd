@@ -39,31 +39,30 @@ static func _run(sim: CombatSim, item: ItemState, sourced: SourcedEffect, hit: H
 	var effect: EffectDef = sourced.effect
 	var source: EffectSource = _source(sim, item, sourced)
 	var hit_target: UnitState = hit.target if hit != null else null
+	# Only the item's own effects produce output that essences convert.
+	var own: bool = sourced.infusion_id.is_empty()
 	for target: UnitState in Targeting.pick(effect.target, sim.owner_of(item), hit_target, sim):
 		match effect.type:
 			EffectDef.Type.DAMAGE:
-				_hit(sim, item, source, target, sourced.final_amount(), hit == null)
+				_hit(sim, item, source, target, sourced.final_amount(), hit == null, own)
 			EffectDef.Type.HEAL:
-				var healed: int = mini(sourced.final_amount(), target.max_hp - target.hp)
-				target.hp += healed
-				var heal_entry: LogEntry = sim.new_entry(LogEntry.Kind.HEAL, source)
-				heal_entry.target = target.id
-				heal_entry.amount = healed
-				sim.combat_log.add(heal_entry)
+				heal(sim, target, sourced.final_amount(), source)
+				if own:
+					Conversions.on_output(sim, item, "heal", sourced.final_amount(), target, false)
 			EffectDef.Type.SHIELD:
 				var amount: int = sourced.final_amount()
 				if effect.amount_bp_of_damage > 0:
 					amount = FixedMath.apply_bp(hit.damage, effect.amount_bp_of_damage)
-				target.shield += amount
-				var shield_entry: LogEntry = sim.new_entry(LogEntry.Kind.SHIELD, source)
-				shield_entry.target = target.id
-				shield_entry.amount = amount
-				sim.combat_log.add(shield_entry)
+				give_shield(sim, target, amount, source)
+				if own:
+					Conversions.on_output(sim, item, "shield", amount, target, false)
 			EffectDef.Type.APPLY_STATUS:
 				Statuses.apply(sim, target, effect.status_id, sourced.final_amount(), source)
+				if own and sim.content.is_output_kind(effect.status_id):
+					Conversions.on_output(sim, item, effect.status_id, sourced.final_amount(), target, false)
 
 
-static func _hit(sim: CombatSim, item: ItemState, source: EffectSource, target: UnitState, base_amount: int, can_trigger: bool) -> void:
+static func _hit(sim: CombatSim, item: ItemState, source: EffectSource, target: UnitState, base_amount: int, can_trigger: bool, own: bool) -> void:
 	var attacker: UnitState = sim.owner_of(item)
 	if Statuses.consume_blind(sim, attacker):
 		var miss: LogEntry = sim.new_entry(LogEntry.Kind.MISS, source)
@@ -76,16 +75,9 @@ static func _hit(sim: CombatSim, item: ItemState, source: EffectSource, target: 
 	hit.target = target
 	hit.crit = sim.rng.roll_bp(item.crit_chance_bp)
 	hit.damage = FixedMath.apply_bp(base_amount, sim.tuning.crit_damage_bp) if hit.crit else base_amount
-
-	var entry: LogEntry = sim.new_entry(LogEntry.Kind.DAMAGE, source)
-	var dealt: int = sim.mitigate_hit(target, hit.damage)
-	entry.target = target.id
-	entry.amount = dealt
-	entry.mitigated = hit.damage - dealt
-	entry.crit = hit.crit
-	entry.absorbed = sim.apply_damage(target, dealt)
-	target.last_hit_by = source.describe()
-	sim.combat_log.add(entry)
+	deal_hit(sim, source, target, hit.damage, hit.crit)
+	if own:
+		Conversions.on_output(sim, item, "damage", hit.damage, target, hit.crit)
 
 	if not can_trigger:
 		return
@@ -93,6 +85,42 @@ static func _hit(sim: CombatSim, item: ItemState, source: EffectSource, target: 
 		var trigger: EffectDef.Trigger = sourced.effect.trigger
 		if trigger == EffectDef.Trigger.ON_HIT or (trigger == EffectDef.Trigger.ON_CRIT and hit.crit):
 			_run(sim, item, sourced, hit)
+
+
+## Lands `amount` of hit damage (after crits) on `target`: DEF, then shield,
+## then HP. Logs it and returns what got through DEF.
+static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, amount: int, crit: bool) -> int:
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.DAMAGE, source)
+	var dealt: int = sim.mitigate_hit(target, amount)
+	entry.target = target.id
+	entry.amount = dealt
+	entry.mitigated = amount - dealt
+	entry.crit = crit
+	entry.absorbed = sim.apply_damage(target, dealt)
+	target.last_hit_by = source.describe()
+	sim.combat_log.add(entry)
+	return dealt
+
+
+## Heals `target` (capped at max HP), logs it, and if any HP came back,
+## weakens the target's damage over time (tuning: heal_cleanse_bp).
+static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectSource) -> void:
+	var healed: int = mini(amount, target.max_hp - target.hp)
+	target.hp += healed
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.HEAL, source)
+	entry.target = target.id
+	entry.amount = healed
+	sim.combat_log.add(entry)
+	if healed > 0:
+		Statuses.cleanse_over_time(sim, target, sim.tuning.heal_cleanse_bp)
+
+
+static func give_shield(sim: CombatSim, target: UnitState, amount: int, source: EffectSource) -> void:
+	target.shield += amount
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.SHIELD, source)
+	entry.target = target.id
+	entry.amount = amount
+	sim.combat_log.add(entry)
 
 
 static func _source(sim: CombatSim, item: ItemState, sourced: SourcedEffect) -> EffectSource:

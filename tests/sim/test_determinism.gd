@@ -8,7 +8,7 @@ const BACK := UnitSetup.Row.BACK
 
 
 ## A fight that leans on randomness: random targets, frequent crits, and
-## every essence (statuses, Storm's extra fires, Umbral crits).
+## all eight essences (conversions, statuses, Storm's extra fires, Umbral crits).
 func _chaotic_fight(seed_value: int) -> FightSetup:
 	var scatter: ItemDef = K.item("scatter", {"cooldown_ms": 700, "crit_chance_bp": 3000, "effects": K.damage(9, "enemy_random")})
 	var cleave: ItemDef = K.item("cleave", {"size": 2, "cooldown_ms": 2150, "crit_chance_bp": 2000, "effects": K.damage(25)})
@@ -16,7 +16,7 @@ func _chaotic_fight(seed_value: int) -> FightSetup:
 	var claw: ItemDef = K.item("claw", {"cooldown_ms": 900, "crit_chance_bp": 2500, "effects": K.damage(7, "enemy_random")})
 	return K.fight(
 		[K.unit("warden", 420, FRONT, [K.equip(cleave, ["ember"] as Array[String])]), K.unit("striker", 300, FRONT, [K.equip(scatter, ["umbral"] as Array[String])]), K.unit("mender", 260, BACK, [K.equip(mend, ["verdant"] as Array[String]), K.equip(scatter, ["stone"] as Array[String])])],
-		[K.unit("ghoul_a", 380, FRONT, [K.equip(claw, ["frost"] as Array[String])]), K.unit("ghoul_b", 380, FRONT, [claw]), K.unit("shade", 300, BACK, [claw, K.equip(scatter, ["storm"] as Array[String])])],
+		[K.unit("ghoul_a", 380, FRONT, [K.equip(claw, ["frost"] as Array[String])]), K.unit("ghoul_b", 380, FRONT, [K.equip(claw, ["venom"] as Array[String])]), K.unit("shade", 300, BACK, [K.equip(claw, ["wrath"] as Array[String]), K.equip(scatter, ["storm"] as Array[String])])],
 		seed_value)
 
 

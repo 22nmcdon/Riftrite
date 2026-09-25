@@ -18,6 +18,8 @@ var tier: int = 0
 var is_auto_attack: bool = false
 ## The item's own effects first, then each socketed essence's.
 var effects: Array[SourcedEffect] = []
+## Essences that add an output kind, converting this item's output.
+var conversions: Array[Conversions.Conversion] = []
 var cooldown_ticks: int
 var crit_chance_bp: int
 var extra_trigger_chance_bp: int = 0
@@ -30,7 +32,8 @@ var extra_trigger_source: String = ""
 var progress_bp: int = 0
 
 
-static func make(item_def: ItemDef, item_slot: int, stats: UnitStats, tuning: TuningDef, essences: Array[EssenceDef] = [], item_tier: int = 0) -> ItemState:
+static func make(item_def: ItemDef, item_slot: int, stats: UnitStats, content: ContentDb, essences: Array[EssenceDef] = [], item_tier: int = 0) -> ItemState:
+	var tuning: TuningDef = content.tuning
 	var state := ItemState.new()
 	state.def = item_def
 	state.slot = item_slot
@@ -42,6 +45,8 @@ static func make(item_def: ItemDef, item_slot: int, stats: UnitStats, tuning: Tu
 	var cooldown_bp: int = 0
 	state.crit_chance_bp = item_def.crit_chance_bp + stats.get_stat(UnitStats.Stat.CRIT) * tuning.crit_bp_per_point
 	for essence: EssenceDef in essences:
+		if not essence.adds.is_empty():
+			state.conversions.append(Conversions.make(essence))
 		for effect: EffectDef in essence.effects:
 			state.effects.append(SourcedEffect.make(effect, essence.id, essence.name))
 		for modifier: ModifierDef in essence.modifiers:
@@ -55,21 +60,25 @@ static func make(item_def: ItemDef, item_slot: int, stats: UnitStats, tuning: Tu
 					state.extra_trigger_source = essence.name
 	state.cooldown_ticks = maxi(FixedMath.apply_bp(item_def.cooldown_ticks, FixedMath.BP_ONE + cooldown_bp), 1)
 	state.crit_chance_bp = clampi(state.crit_chance_bp, 0, FixedMath.BP_ONE)
-	state._compute_values(stats, tuning)
+	state._compute_values(stats, content, essences)
 	return state
 
 
 ## Works out every effect's number: base + stat scaling, times the item's
-## multipliers. The item's own effects get the tier multiplier; essence
+## multipliers. The item's own effects get the tier multiplier, plus x1.5 (by
+## default) from each essence that adds the same output kind. Essence
 ## effects are flat.
-func _compute_values(stats: UnitStats, tuning: TuningDef) -> void:
-	var tier_boost: Array[ValueBreakdown.Multiplier] = []
-	if not def.is_basic_attack:
-		tier_boost.append(ValueBreakdown.multiplier("%s tier" % TuningDef.TIER_LABELS[tier], tuning.tier_multiplier_bp[tier]))
+func _compute_values(stats: UnitStats, content: ContentDb, essences: Array[EssenceDef]) -> void:
+	var tuning: TuningDef = content.tuning
 	for sourced: SourcedEffect in effects:
 		var boosts: Array[ValueBreakdown.Multiplier] = []
 		if sourced.infusion_id.is_empty():
-			boosts = tier_boost
+			if not def.is_basic_attack:
+				boosts.append(ValueBreakdown.multiplier("%s tier" % TuningDef.TIER_LABELS[tier], tuning.tier_multiplier_bp[tier]))
+			var kind: String = Conversions.output_kind(sourced.effect, content)
+			for essence: EssenceDef in essences:
+				if not kind.is_empty() and essence.adds == kind and not essence.adds_on_crit_only:
+					boosts.append(ValueBreakdown.multiplier(essence.name, FixedMath.BP_ONE + tuning.convert_same_kind_bp))
 		sourced.value = ValueBreakdown.compute(sourced.effect.base_value(), sourced.effect.scaling, stats, boosts)
 
 

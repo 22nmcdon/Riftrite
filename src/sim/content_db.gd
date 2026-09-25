@@ -133,6 +133,16 @@ func _check_references() -> void:
 			errors.append("%s (%s): threshold chain loops back to \"%s\"" % [STATUSES_FILE, id, id])
 	for id: String in essence_ids:
 		_check_effects(essences[id].effects, "%s (%s)" % [ESSENCES_FILE, id])
+		var adds: String = essences[id].adds
+		if not adds.is_empty() and not is_output_kind(adds):
+			errors.append("%s (%s): adds \"%s\", which is not damage, shield, heal, or a damage-over-time status" % [ESSENCES_FILE, id, adds])
+
+
+## Output kinds are "damage", "shield", "heal", and damage-over-time statuses.
+func is_output_kind(kind: String) -> bool:
+	if EssenceDef.DIRECT_KINDS.has(kind):
+		return true
+	return statuses.has(kind) and statuses[kind].kind == StatusDef.Kind.DAMAGE_OVER_TIME
 
 
 ## True if following thresholds from `start_id` ever comes back to it.

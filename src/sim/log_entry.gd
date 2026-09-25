@@ -17,6 +17,7 @@ enum Kind {
 	STATUS_DAMAGE,
 	STATUS_ENDED,
 	MISS,
+	STATUS_REDUCED,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -83,6 +84,8 @@ func to_text() -> String:
 			return line + "%s (%s) hits %s for %d%s" % [status_name, source_text(), target, amount, _damage_detail()]
 		Kind.STATUS_ENDED:
 			return line + "%s on %s ends" % [status_name, target]
+		Kind.STATUS_REDUCED:
+			return line + "%s on %s loses %d stacks (%s)" % [status_name, target, amount, note]
 		Kind.MISS:
 			return line + "%s misses %s (%s)" % [source_text(), target, note]
 	return line + "?"

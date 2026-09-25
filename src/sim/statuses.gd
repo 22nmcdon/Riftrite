@@ -4,9 +4,12 @@ extends RefCounted
 ## data/statuses.json):
 ##   damage_over_time: every interval, each stack group deals
 ##       stacks * damage_per_stack (credited to whoever applied those stacks;
-##       shield first, like all damage), then the oldest
-##       stacks_lost_per_interval stacks fall off. The interval starts when
-##       the status first lands; later stacks join the running interval.
+##       vs_shield_bp sets how hard it hits shields, and 0 skips them), then
+##       the oldest stacks fall off (stacks_lost_per_interval, plus
+##       stacks_lost_bp of the total, rounded up). The interval starts when the
+##       status first lands; later stacks join the running interval.
+##       defense_shred_per_stack lowers the unit's DEF while it lasts.
+##       Heals remove a share of these stacks (see cleanse_over_time).
 ##   slow:   each stack slows the unit's cooldowns by slow_bp_per_stack. Each
 ##       application refreshes the timer; when it runs out, all stacks drop.
 ##       At `threshold` stacks it turns into another status (Frost -> Freeze).
@@ -90,12 +93,39 @@ static func _deal_damage_over_time(sim: CombatSim, unit: UnitState, state: Statu
 		entry.status = state.def.id
 		entry.status_name = state.def.name
 		entry.amount = damage
-		entry.absorbed = sim.apply_damage(unit, damage)
+		entry.absorbed = sim.apply_damage_vs_shield(unit, damage, state.def.vs_shield_bp)
 		unit.last_hit_by = "%s from %s" % [state.def.name, group.source.describe()]
 		sim.combat_log.add(entry)
-	state.remove_oldest(state.def.stacks_lost_per_interval)
+	var lost: int = state.def.stacks_lost_per_interval
+	if state.def.stacks_lost_bp > 0:
+		@warning_ignore("integer_division")
+		lost += (state.total_stacks() * state.def.stacks_lost_bp + FixedMath.BP_ONE - 1) / FixedMath.BP_ONE
+	state.remove_oldest(lost)
 	if state.total_stacks() == 0:
 		_end(sim, unit, state)
+
+
+## A heal weakens damage over time: each damage-over-time status on `unit`
+## loses `share_bp` of its stacks (rounded, oldest first).
+static func cleanse_over_time(sim: CombatSim, unit: UnitState, share_bp: int) -> void:
+	for state: StatusState in unit.statuses.duplicate():
+		if state.def.kind != StatusDef.Kind.DAMAGE_OVER_TIME:
+			continue
+		var removed: int = FixedMath.apply_bp(state.total_stacks(), share_bp)
+		if removed <= 0:
+			continue
+		state.remove_oldest(removed)
+		var entry := LogEntry.new()
+		entry.tick = sim.tick
+		entry.kind = LogEntry.Kind.STATUS_REDUCED
+		entry.target = unit.id
+		entry.status = state.def.id
+		entry.status_name = state.def.name
+		entry.amount = removed
+		entry.note = "healed"
+		sim.combat_log.add(entry)
+		if state.total_stacks() == 0:
+			_end(sim, unit, state)
 
 
 static func _end(sim: CombatSim, unit: UnitState, state: StatusState) -> void:

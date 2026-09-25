@@ -1,10 +1,29 @@
 [
   {
+    "_note": "Adds Burn, sized from the item's output by the conversion rule (tuning.json convert_*).",
     "id": "ember",
     "name": "Ember",
-    "effects": [
-      { "trigger": "on_hit", "type": "apply_status", "status": "burn", "stacks": 1, "target": "hit_target" }
-    ]
+    "adds": "burn"
+  },
+  {
+    "id": "venom",
+    "name": "Venom",
+    "adds": "poison"
+  },
+  {
+    "id": "wrath",
+    "name": "Wrath",
+    "adds": "damage"
+  },
+  {
+    "id": "stone",
+    "name": "Stone",
+    "adds": "shield"
+  },
+  {
+    "id": "verdant",
+    "name": "Verdant",
+    "adds": "heal"
   },
   {
     "id": "frost",
@@ -23,30 +42,13 @@
     ]
   },
   {
-    "_note": "Shield = 30% of the damage the hit dealt (placeholder), given to the item's owner.",
-    "id": "stone",
-    "name": "Stone",
-    "effects": [
-      { "trigger": "on_hit", "type": "shield", "amount_bp_of_damage": 3000, "target": "self" }
-    ]
-  },
-  {
-    "_note": "Heal amount is a placeholder.",
-    "id": "verdant",
-    "name": "Verdant",
-    "effects": [
-      { "trigger": "on_fire", "type": "heal", "amount": 8, "target": "ally_lowest_hp" }
-    ]
-  },
-  {
-    "_note": "Crit bonus is a placeholder.",
+    "_note": "Crit bonus is a placeholder. Crits add Bleed, sized from the crit's damage.",
     "id": "umbral",
     "name": "Umbral",
     "modifiers": [
       { "stat": "crit_chance_bp", "value": 1500 }
     ],
-    "effects": [
-      { "trigger": "on_crit", "type": "apply_status", "status": "bleed", "stacks": 1, "target": "hit_target" }
-    ]
+    "adds": "bleed",
+    "adds_on": "crit"
   }
 ]

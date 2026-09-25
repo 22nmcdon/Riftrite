@@ -46,8 +46,10 @@ func test_real_data_is_valid() -> void:
 
 func test_real_data_contents() -> void:
 	var db: ContentDb = ContentDb.load_dir("res://data")
-	assert_eq(db.essence_ids, ["ember", "frost", "storm", "stone", "verdant", "umbral"] as Array[String])
-	assert_eq(db.status_ids, ["burn", "bleed", "slow", "freeze", "blind"] as Array[String])
+	assert_eq(db.essence_ids, ["ember", "venom", "wrath", "stone", "verdant", "frost", "storm", "umbral"] as Array[String])
+	assert_eq(db.status_ids, ["burn", "poison", "bleed", "slow", "freeze", "blind"] as Array[String])
+	assert_eq([db.essences["ember"].adds, db.essences["venom"].adds, db.essences["wrath"].adds], ["burn", "poison", "damage"])
+	assert_true(db.essences["umbral"].adds_on_crit_only)
 
 	var frost: EssenceDef = db.essences["frost"]
 	assert_eq(frost.effects[0].type, EffectDef.Type.APPLY_STATUS)
@@ -58,6 +60,8 @@ func test_real_data_contents() -> void:
 	assert_eq(db.statuses["freeze"].duration_ticks, 20, "design: Freeze lasts 1s")
 
 	var storm: EssenceDef = db.essences["storm"]
+	assert_eq(db.statuses["poison"].vs_shield_bp, 0, "poison skips shields")
+	assert_eq(db.statuses["bleed"].defense_shred_per_stack, 1)
 	assert_eq(storm.modifiers[0].stat, ModifierDef.Stat.COOLDOWN_BP)
 	assert_eq(storm.modifiers[0].value, -1500, "design: Storm cooldown -15%")
 
@@ -200,7 +204,12 @@ func test_shield_needs_exactly_one_amount() -> void:
 
 func test_rejects_empty_essence() -> void:
 	var db: ContentDb = _load_with(ContentDb.ESSENCES_FILE, _essences_with(0, {"id": "ember", "name": "Ember"}))
-	_assert_error(db, "an essence needs at least one effect or modifier")
+	_assert_error(db, "an essence needs \"adds\", an effect, or a modifier")
+
+
+func test_rejects_essence_adding_a_non_output() -> void:
+	var db: ContentDb = _load_with(ContentDb.ESSENCES_FILE, _essences_with(0, {"id": "ember", "name": "Ember", "adds": "slow"}))
+	_assert_error(db, "adds \"slow\", which is not damage, shield, heal, or a damage-over-time status")
 
 
 func test_tuning_cross_checks() -> void:

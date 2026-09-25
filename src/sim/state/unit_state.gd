@@ -42,20 +42,23 @@ static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column:
 	for item: ItemSetup in setup.items:
 		has_auto_attack_item = has_auto_attack_item or item.def.auto_attack
 	if not has_auto_attack_item:
-		state.items.append(ItemState.make(setup.basic_attack, -1, state.stats, content.tuning))
+		state.items.append(ItemState.make(setup.basic_attack, -1, state.stats, content))
 	var slot: int = 0
 	for item: ItemSetup in setup.items:
 		var essences: Array[EssenceDef] = []
 		for essence_id: String in item.essence_ids:
 			essences.append(content.essences[essence_id])
-		state.items.append(ItemState.make(item.def, slot, state.stats, content.tuning, essences, item.tier))
+		state.items.append(ItemState.make(item.def, slot, state.stats, content, essences, item.tier))
 		slot += item.def.size
 	return state
 
 
-## DEF used against incoming hits.
+## DEF used against incoming hits, after shred (Bleed), never below 0.
 func defense() -> int:
-	return maxi(stats.get_stat(UnitStats.Stat.DEF), 0)
+	var shred: int = 0
+	for status: StatusState in statuses:
+		shred += status.total_stacks() * status.def.defense_shred_per_stack
+	return maxi(stats.get_stat(UnitStats.Stat.DEF) - shred, 0)
 
 
 func is_standing() -> bool:

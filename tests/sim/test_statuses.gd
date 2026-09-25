@@ -26,31 +26,77 @@ func _status_entries(result: FightResult, kind: LogEntry.Kind, status: String) -
 
 # --- damage over time -----------------------------------------------------------------
 
-func test_burn_ticks_a_second_after_landing_then_decays() -> void:
+func test_burn_ticks_twice_a_second_and_fades() -> void:
 	var result: FightResult = K.run([_idle_hero([_applier("torch", "burn", 60000)])], [K.dummy("foe", BIG_HP)])
-	# The torch fires once, at 60s (tick 1200). Burn: 3 per stack each second, loses 1 stack per second.
+	# The torch fires once, at 60s (tick 1200): 1 stack, 1 damage per stack every 0.5s,
+	# then it loses 5% of its stacks, rounded up, so the single stack is gone.
 	var damage: Array[LogEntry] = _status_entries(result, LogEntry.Kind.STATUS_DAMAGE, "burn")
-	assert_eq(damage[0].tick, 1220)
-	assert_eq(damage[0].amount, 3)
-	assert_eq(_status_entries(result, LogEntry.Kind.STATUS_ENDED, "burn")[0].tick, 1220, "1 stack, gone after one tick of damage")
+	assert_eq([damage[0].tick, damage[0].amount], [1210, 1])
+	assert_eq(_status_entries(result, LogEntry.Kind.STATUS_ENDED, "burn")[0].tick, 1210)
 
 
-func test_burn_stacks_build_up() -> void:
-	var result: FightResult = K.run([_idle_hero([_applier("torch", "burn", 250)])], [K.dummy("foe", BIG_HP)])
-	# Stacks land at ticks 5, 10, 15, 20; the first damage tick is 20 ticks after the first stack.
-	var first: LogEntry = _status_entries(result, LogEntry.Kind.STATUS_DAMAGE, "burn")[0]
-	assert_eq([first.tick, first.amount], [25, 12], "4 stacks x 3")
+func test_burn_stacks_build_up_and_lose_five_percent() -> void:
+	var result: FightResult = K.run([_idle_hero([_applier("torch", "burn", 250, 20)])], [K.dummy("foe", BIG_HP)])
+	# 20 stacks land at ticks 5, 10, 15, 20. Damage at 15: 40 stacks, then -2 (5%).
+	# At 25: 38 + 20 + 20 = 78.
+	var damage: Array[LogEntry] = _status_entries(result, LogEntry.Kind.STATUS_DAMAGE, "burn")
+	assert_eq([[damage[0].tick, damage[0].amount], [damage[1].tick, damage[1].amount]], [[15, 40], [25, 78]])
 
 
 func test_damage_over_time_is_credited_to_each_source() -> void:
 	var a: UnitSetup = K.unit("a", BIG_HP, FRONT, [_applier("torch", "burn")], K.basic("idle", {"cooldown_ms": 60000, "effects": K.damage(1)}))
 	var b: UnitSetup = K.unit("b", BIG_HP, FRONT, [_applier("brand", "burn")], K.basic("idle", {"cooldown_ms": 60000, "effects": K.damage(1)}))
 	var result: FightResult = K.run([a, b], [K.dummy("foe", BIG_HP)])
-	var at_40: Array[String] = []
+	var at_30: Array[String] = []
 	for entry: LogEntry in _status_entries(result, LogEntry.Kind.STATUS_DAMAGE, "burn"):
-		if entry.tick == 40:
-			at_40.append("%s/%s/%d" % [entry.source_unit, entry.source_item, entry.amount])
-	assert_eq(at_40, ["a/torch/3", "b/brand/3"] as Array[String])
+		if entry.tick == 30:
+			at_30.append("%s/%s/%d" % [entry.source_unit, entry.source_item, entry.amount])
+	assert_eq(at_30, ["a/torch/1", "b/brand/1"] as Array[String])
+
+
+func _shielded_foe(amount: int) -> UnitSetup:
+	var ward: ItemDef = K.item("ward", {"cooldown_ms": 500, "effects": [{"trigger": "on_fire", "type": "shield", "amount": amount, "target": "self"}]})
+	return K.unit("foe", BIG_HP, FRONT, [ward], K.basic("idle", {"cooldown_ms": 60000, "effects": K.damage(1)}))
+
+
+func test_poison_ignores_shields_and_never_fades() -> void:
+	var result: FightResult = K.run([_idle_hero([_applier("vial", "poison", 60000, 5)])], [_shielded_foe(1000)])
+	var damage: Array[LogEntry] = _status_entries(result, LogEntry.Kind.STATUS_DAMAGE, "poison")
+	assert_eq([damage[0].tick, damage[0].amount, damage[0].absorbed], [1220, 5, 0], "straight to HP despite the shield")
+	assert_eq([damage[1].tick, damage[1].amount], [1240, 5], "still 5 stacks")
+	assert_eq(_status_entries(result, LogEntry.Kind.STATUS_ENDED, "poison").size(), 0)
+
+
+func test_burn_is_half_as_effective_against_shields() -> void:
+	var sim := CombatSim.new(K.fight([K.dummy("hero", 100)], [K.dummy("foe", 100)]), K.content())
+	var unit: UnitState = sim.units[1]
+	unit.shield = 10
+	var absorbed: int = sim.apply_damage_vs_shield(unit, 30, 5000)
+	assert_eq([absorbed, unit.shield, unit.hp], [20, 0, 90], "10 shield soaks 20 burn; the other 10 hits HP")
+	unit.shield = 100
+	assert_eq([sim.apply_damage_vs_shield(unit, 30, 5000), unit.shield, unit.hp], [30, 85, 90])
+
+
+func test_bleed_lowers_defense() -> void:
+	var gash: ItemDef = _applier("gash", "bleed", 1000, 50)
+	var club: ItemDef = K.item("club", {"effects": K.damage(100)})
+	var foe: UnitSetup = K.unit_with("foe", UnitStats.make(BIG_HP, 0, 0, 100), FRONT, [], K.basic("idle", {"cooldown_ms": 60000, "effects": K.damage(1)}))
+	var result: FightResult = K.run([_idle_hero([gash, club])], [foe])
+	var hit: LogEntry = K.entries(result, LogEntry.Kind.DAMAGE, "club")[0]
+	assert_eq(hit.amount, 67, "50 Bleed takes DEF 100 down to 50: 100 x 100/150")
+	assert_eq(_status_entries(result, LogEntry.Kind.STATUS_ENDED, "bleed").size(), 0, "bleed never fades")
+
+
+func test_heals_weaken_damage_over_time() -> void:
+	var salve: ItemDef = K.item("salve", {"effects": [{"trigger": "on_fire", "type": "heal", "amount": 10, "target": "self"}]})
+	var foe: UnitSetup = K.unit("foe", BIG_HP, FRONT, [salve], K.basic("idle", {"cooldown_ms": 60000, "effects": K.damage(1)}))
+	var hero: UnitSetup = K.unit("hero", BIG_HP, FRONT, [_applier("vial", "poison", 1000, 50)])
+	var result: FightResult = K.run([hero], [foe])
+	# Tick 20: the hero's basic attack hits (5), the vial adds 50 poison, then the
+	# foe's salve heals 5 HP back, which strips 10% of the poison.
+	var reduced: LogEntry = _status_entries(result, LogEntry.Kind.STATUS_REDUCED, "poison")[0]
+	assert_eq([reduced.tick, reduced.amount], [20, 5])
+	assert_eq(reduced.to_text(), "[1.00s] Poison on foe loses 5 stacks (healed)")
 
 
 func test_status_damage_hits_shield_first() -> void:
@@ -116,7 +162,7 @@ func test_status_log_lines_name_their_source() -> void:
 	var applied: LogEntry = _status_entries(result, LogEntry.Kind.STATUS_APPLIED, "burn")[0]
 	assert_eq(applied.to_text(), "[60.00s] hero · Test Item applies 1 Burn to foe (1 total)")
 	var damage: LogEntry = _status_entries(result, LogEntry.Kind.STATUS_DAMAGE, "burn")[0]
-	assert_eq(damage.to_text(), "[61.00s] Burn (hero · Test Item) hits foe for 3")
+	assert_eq(damage.to_text(), "[60.50s] Burn (hero · Test Item) hits foe for 1")
 
 
 func test_death_by_status_names_the_status() -> void:
