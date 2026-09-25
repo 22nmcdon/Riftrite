@@ -1,5 +1,57 @@
 [
   {
+    "id": "pup_litter",
+    "name": "A Litter of Pups",
+    "act": 1,
+    "kind": "normal",
+    "units": [
+      {
+        "enemy": "rift_pup",
+        "row": "front"
+      },
+      {
+        "enemy": "rift_pup",
+        "row": "front"
+      }
+    ]
+  },
+  {
+    "id": "hound_scout",
+    "name": "A Hound and Its Pup",
+    "act": 1,
+    "kind": "normal",
+    "units": [
+      {
+        "enemy": "rift_hound",
+        "row": "front"
+      },
+      {
+        "enemy": "rift_pup",
+        "row": "front"
+      }
+    ]
+  },
+  {
+    "id": "hound_alpha",
+    "name": "The Hound Alpha",
+    "act": 1,
+    "kind": "elite",
+    "units": [
+      {
+        "enemy": "rift_hound",
+        "row": "front"
+      },
+      {
+        "enemy": "rift_hound",
+        "row": "front"
+      },
+      {
+        "enemy": "rift_pup",
+        "row": "back"
+      }
+    ]
+  },
+  {
     "id": "hound_pack",
     "name": "Hound Pack",
     "act": 1,
@@ -16,7 +68,8 @@
         "enemy": "rift_hound",
         "row": "front"
       }
-    ]
+    ],
+    "kind": "normal"
   },
   {
     "id": "sentinel_vigil",
@@ -35,7 +88,8 @@
         "enemy": "gloam_witch",
         "row": "back"
       }
-    ]
+    ],
+    "kind": "normal"
   },
   {
     "id": "witch_coven",
@@ -57,6 +111,39 @@
     ],
     "relics": [
       "gloam_totem"
+    ],
+    "kind": "elite"
+  },
+  {
+    "id": "rift_throne",
+    "name": "The Rift Throne",
+    "act": 1,
+    "kind": "boss",
+    "_note": "Placeholder boss until the boss step: the act's strongest team.",
+    "relics": [
+      "gloam_totem"
+    ],
+    "units": [
+      {
+        "enemy": "rift_sentinel",
+        "row": "front"
+      },
+      {
+        "enemy": "rift_hound",
+        "row": "front"
+      },
+      {
+        "enemy": "rift_sentinel",
+        "row": "front"
+      },
+      {
+        "enemy": "gloam_witch",
+        "row": "back"
+      },
+      {
+        "enemy": "gloam_witch",
+        "row": "back"
+      }
     ]
   }
 ]

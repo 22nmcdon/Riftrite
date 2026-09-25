@@ -12,6 +12,9 @@ var rank: int = 0
 var slots: int = DEFAULT_SLOTS
 var basic_attack: ItemDef
 var items: Array[LoadoutEntry] = []
+## The essence this enemy type yields when harvested (run layer: shards and
+## essence rewards), or "".
+var essence: String = ""
 
 
 static func read(reader: DataReader) -> EnemyDef:
@@ -26,5 +29,7 @@ static func read(reader: DataReader) -> EnemyDef:
 	if attack_reader != null:
 		def.basic_attack = ItemDef.read_basic_attack(attack_reader)
 	def.items = LoadoutEntry.read_list(reader, "items")
+	if reader.has("essence"):
+		def.essence = reader.req_string("essence")
 	reader.finish()
 	return def

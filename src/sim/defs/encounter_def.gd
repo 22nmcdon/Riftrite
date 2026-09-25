@@ -3,6 +3,9 @@ extends RefCounted
 ## An enemy team from data/encounters.json: which enemies stand where.
 
 const ROW_NAMES: Array[String] = ["front", "back"]
+## What kind of fight it is in a run: a normal day, an elite day, or the
+## act's boss.
+const KIND_NAMES: Array[String] = ["normal", "elite", "boss"]
 
 
 class Slot:
@@ -13,6 +16,7 @@ class Slot:
 var id: String
 var name: String
 var act: int = 1
+var kind: String = "normal"
 ## In order: units in the same row stand left to right in this order.
 var units: Array[Slot] = []
 ## Relic ids the enemy team carries.
@@ -24,6 +28,7 @@ static func read(reader: DataReader) -> EncounterDef:
 	def.id = reader.req_string("id")
 	def.name = reader.req_string("name")
 	def.act = reader.req_int("act", 1)
+	def.kind = reader.opt_string_choice("kind", "normal", KIND_NAMES)
 	for unit_reader: DataReader in reader.opt_object_array("units"):
 		var slot := Slot.new()
 		slot.enemy_id = unit_reader.req_string("enemy")

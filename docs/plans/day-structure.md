@@ -1,6 +1,6 @@
 # Plan: the day structure, economy, and run bot (Phase 3, step 5)
 
-Status: **proposed, second draft.** One open question (essences) is at the end. Nothing here is built yet.
+Status: **built** (Phase 3, step 5). Answers, notes, and first balance findings are at the end.
 
 This step turns the run state (step 4) into a playable run:
 - the run start
@@ -89,7 +89,7 @@ Pick 1 of 3, drawn by weight from the stops that apply right now:
 
 - **A win (a tie counts):**
   - gold: 5 + the day number
-  - essences: **open**, see the question below
+  - essences: 1 shard of the team's essence (3 shards make an essence)
   - **one guaranteed drop** from the enemy team's items and relics (enemy-only included), at the enemy's tier
 - **An elite:** also a **relic choice**: pick 1 of 3 relics (or none), with elite rarity odds.
 - **The boss:** the drop is an item or a relic from the boss team, **plus a relic choice** from a stronger, game-altering pool (Epic-leaning, and boss-only relics later).
@@ -155,15 +155,29 @@ Pick 1 of 3, drawn by weight from the stops that apply right now:
 4. **Keys:** elites 50%, plus some events.
 5. **New stop, Retrain:** switch a hero to another of their specializations.
 
-## Question (still open)
+6. **Essences: shards, plus whole essences from big fights** (A + D):
+   - a **normal win** gives 1 **shard** of the enemy team's essence, and 3 shards of one kind become an essence in the pouch (they wait if the pouch is full)
+   - an **elite or boss win** gives one whole essence of the team's kind (take or pass)
+   - **Loot and Events** give essences too
+   - each enemy type has an `essence`; a team's essence is its most common one (ties go to the first in the encounter)
 
-**How essences are earned.** The design's pillar is that essences come *from what you fight*, and they should feel scarce enough to matter. Some options:
+## Built notes
 
-- **A. Essence shards.** Each win gives 1 shard of the enemy team's essence; 3 shards of one kind make an essence. It keeps "harvested from what you fight", and the rate is easy to tune (shards per win, shards per essence).
-- **B. One reward, your choice.** A fight's guaranteed drop becomes a pick: an item, a relic, *or* an essence from the team. You get one, not all.
-- **C. A chance.** Each win has about a 30% chance to drop one essence of the team's kind.
-- **D. Only from bigger fights.** Normal fights give none; elites and bosses give one each; Loot and Events give the rest.
+- **Code:** `src/run/`: `RunFlow` (phases and actions), `RunRandom` (seeded streams), `RunContent` with `defs/` (economy, acts, events), `RunBot`, `RunReport`. The runner is `tools/run_runner.gd`.
+- **Data:** `data/economy.json`, `data/acts.json`, `data/events.json`. Enemies gained `essence` and encounters gained `kind`.
+- **Encounter pools have day ranges.** A run starts with one hero, so Act 1's first days needed weaker fights. There's a new placeholder enemy, the **Rift Pup**, and new encounters: A Litter of Pups (days 1–2), A Hound and Its Pup (days 2–4), and the elite Hound Alpha (day 3). The Witch Coven is day 5's elite, and **The Rift Throne** is a placeholder boss until step 6.
+- **Offers are saved with the run** (as plain dictionaries), so loading mid-Caravan shows the same wares.
+- **The fight seed** still comes from the run's RNG (step 4). Only the fight's *encounter* is fixed per day, so a rematch plays out differently.
+- **The Vault** spends its key when you enter; the chest is a relic or an item of Rare rarity or better.
+- **An offered Legendary counts as seen,** so it won't be offered again that run.
 
-My recommendation: **A**, maybe with D's rule that elites and bosses give a whole essence. That keeps essences tied to what you fight and makes choosing *which* fights to take matter, without flooding the pouch.
+## Balance findings (placeholders; the first run-bot pass)
 
-Also open: which enemies give which essence. I'd give each enemy type an essence (a new `essence` field on enemies) and use the team's most common one.
+`tools/run_runner.gd -- --runs=200 --seed=1` (the bot's simple strategy):
+- **The act is cleared in 8% of runs,** with 1.9 losses per run.
+- **Where runs end:** day 2: 6, **day 3: 80**, day 4: 19, day 5: 41, day 6: 39.
+- **Day 3's elite (the Hound Alpha) is a wall** for one or two heroes, and so is the day-5 Witch Coven.
+- **Gold is tight early:** about 8 at days 2–3, after the start's 18.
+- **Rift Claws are the most taken item** (3 per run): the pups and hounds drop them, and they're enemy-only.
+
+These numbers are all placeholders. The content step tunes encounters, prices, and the bot's strategy together.

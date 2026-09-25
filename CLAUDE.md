@@ -22,12 +22,13 @@ A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The pl
 - Fresh checkout: run `godot --headless --import` once first, so class names are registered. The session-start hook does this in cloud sessions.
 - Validate game data: `godot --headless --path . -s tools/validate_data.gd` (also covered by the test run)
 - Headless balance sim: `godot --headless --path . -s tools/sim_runner.gd -- --fights=200 --seed=1` (optional `--party=id`, `--encounter=id`). Parties live in `tools/sim_parties.json`; encounters in `data/encounters.json`.
+- Run-level balance (the run bot): `godot --headless --path . -s tools/run_runner.gd -- --runs=200 --seed=1`. Run data lives in `data/economy.json`, `data/acts.json`, `data/events.json`.
 - Cloud sessions: `.claude/hooks/session-start.sh` installs the pinned Godot as `godot` in `~/.local/bin`.
 
 ## Folder layout
 
 ```
-data/          items, essences, alloys, relics, heroes, enemies, synergies (JSON)
+data/          items, essences, alloys, relics, heroes, enemies, synergies, specializations; economy, acts, events (JSON)
 docs/          design.md and other design notes
 src/sim/       combat simulation: pure logic, NO nodes, NO rendering
 src/run/       run state, days and stops, shop, forge, economy, save
@@ -101,6 +102,7 @@ tools/         headless sim runner, data validators
 - Fallen heroes always come back after a fight, with no downside.
 - A lost fight restarts the day (everything kept, plus bonus gold); the second loss ends the run. Every fight starts at full HP (unless an item or relic says otherwise). Unequipped items wait in a shared stash of 6 slots that works like a hero row; relics can't go there.
 - **The run layer** (`src/run/`, `docs/plans/run-state.md`): change a run only through `RunActions` (each refuses cleanly and changes nothing when it fails); `RunState.check()` lists every run rule, and loading a save checks them all. `RunFight` builds fights from a run and writes XP, discoveries, and results back.
+- **The day structure** (`RunFlow`, `docs/plans/day-structure.md`): a run moves through phases (start, Caravan, stop choice, stop, fight, rewards, act end or run over); each RunFlow action checks the phase. Offers use `RunRandom` streams seeded by where they happen, never by earlier picks.
 - There is no branching map: each act is a set number of days, each going Caravan (shop) → a stop the player picks → one fight. A lost fight replays the day against the same enemies. Offers come from the run seed and don't depend on earlier picks (for now). The run layer is deterministic from its seed, like the sim.
 - A run starts with one hero; roster cap 6, 1–5 fielded. Which heroes sit in backup is the player's choice; backup heroes' Backup effects and their items' backup modes apply. In a fight, backup heroes are off the field (never targeted, no collapse damage, don't count for victory); only `"backup"` blocks act from the bench. Common items can't have a backup mode (until Oathbinding); Legendary items must.
 - "Lowest HP" (heals and targeting) means lowest HP **percentage**.

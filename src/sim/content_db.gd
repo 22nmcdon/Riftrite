@@ -239,6 +239,8 @@ func _check_references() -> void:
 		if enemy.basic_attack != null:
 			_check_effects(enemy.basic_attack.effects, where + ".basic_attack")
 		check_loadout(enemy.items, where, true)
+		if not enemy.essence.is_empty() and not essences.has(enemy.essence):
+			errors.append("%s: unknown essence \"%s\"" % [where, enemy.essence])
 	for id: String in encounter_ids:
 		var encounter: EncounterDef = encounters[id]
 		for slot: EncounterDef.Slot in encounter.units:

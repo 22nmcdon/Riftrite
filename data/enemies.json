@@ -1,5 +1,38 @@
 [
   {
+    "id": "rift_pup",
+    "name": "Rift Pup",
+    "_note": "Placeholder: the first days' weak enemy, for a one-hero start.",
+    "stats": {
+      "hp": 200,
+      "atk": 8,
+      "def": 0
+    },
+    "tier": "c",
+    "basic_attack": {
+      "id": "nip",
+      "name": "Nip",
+      "cooldown_ms": 1200,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 3,
+          "target": "enemy_front",
+          "scaling": {
+            "atk": 5000
+          }
+        }
+      ]
+    },
+    "items": [
+      {
+        "item": "rift_claw"
+      }
+    ],
+    "essence": "wrath"
+  },
+  {
     "id": "rift_hound",
     "name": "Rift Hound",
     "_note": "Placeholder stats.",
@@ -30,7 +63,8 @@
       {
         "item": "rift_claw"
       }
-    ]
+    ],
+    "essence": "wrath"
   },
   {
     "id": "rift_sentinel",
@@ -64,7 +98,8 @@
           "stone"
         ]
       }
-    ]
+    ],
+    "essence": "stone"
   },
   {
     "id": "gloam_witch",
@@ -101,6 +136,7 @@
           "ember"
         ]
       }
-    ]
+    ],
+    "essence": "venom"
   }
 ]

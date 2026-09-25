@@ -35,6 +35,23 @@ var discovered: Array[String] = []
 var legendaries_seen: Array[String] = []
 var next_uid: int = 1
 
+# --- where the run is (RunFlow) -------------------------------------------------
+## One of RunFlow's phases ("start_hero", "caravan", ...).
+var phase: String = ""
+## What the player is being offered right now (heroes, packages, Caravan
+## wares, stops, loot, rewards), as plain dictionaries (see RunFlow).
+var offers: Array[Dictionary] = []
+## The stop being visited ("loot", "upgrade", ...), or "".
+var stop_kind: String = ""
+## Whether this stop's one-time action (retrain, upgrade) is spent.
+var stop_used: bool = false
+## Today's fight.
+var encounter_id: String = ""
+## Rerolls in this Caravan visit.
+var reroll_count: int = 0
+## Essence shards by essence id (shards_per_essence make an essence).
+var shards: Dictionary[String, int] = {}
+
 
 static func make(run_seed: int) -> RunState:
 	var state := RunState.new()
@@ -219,7 +236,23 @@ func to_dict() -> Dictionary:
 		"discovered": discovered.duplicate(),
 		"legendaries_seen": legendaries_seen.duplicate(),
 		"next_uid": next_uid,
+		"phase": phase,
+		"offers": offers.duplicate(true),
+		"stop_kind": stop_kind,
+		"stop_used": stop_used,
+		"encounter": encounter_id,
+		"reroll_count": reroll_count,
+		"shards": _sorted_shards(),
 	}
+
+
+func _sorted_shards() -> Dictionary:
+	var result: Dictionary = {}
+	var ids: Array = shards.keys()
+	ids.sort()
+	for essence_id: String in ids:
+		result[essence_id] = shards[essence_id]
+	return result
 
 
 ## Rebuilds a run from to_dict()'s output. Returns [state, errors]; the state
@@ -257,6 +290,25 @@ static func from_dict(data: Variant, content: ContentDb) -> Array:
 	state.discovered = reader.req_string_array("discovered")
 	state.legendaries_seen = reader.req_string_array("legendaries_seen")
 	state.next_uid = reader.req_int("next_uid", 1)
+	state.phase = reader.opt_string("phase", "")
+	if not state.phase.is_empty() and not RunFlow.PHASES.has(state.phase):
+		reader.error("unknown phase \"%s\"" % state.phase)
+	for offer_reader: DataReader in reader.opt_object_array("offers"):
+		state.offers.append(RunFlow.read_offer(offer_reader))
+	state.stop_kind = reader.opt_string("stop_kind", "")
+	if not state.stop_kind.is_empty() and not RunFlow.STOP_KINDS.has(state.stop_kind):
+		reader.error("unknown stop \"%s\"" % state.stop_kind)
+	state.stop_used = reader.opt_bool("stop_used", false)
+	state.encounter_id = reader.opt_string("encounter", "")
+	if not state.encounter_id.is_empty() and not content.encounters.has(state.encounter_id):
+		reader.error("unknown encounter \"%s\"" % state.encounter_id)
+	state.reroll_count = reader.opt_int("reroll_count", 0, 0)
+	if reader.has("shards"):
+		var shard_reader: DataReader = reader.req_object("shards")
+		if shard_reader != null:
+			for essence_id: String in shard_reader.map_keys():
+				state.shards[essence_id] = shard_reader.req_int(essence_id, 0)
+			shard_reader.finish()
 	reader.finish()
 	if errors.is_empty():
 		errors.append_array(state.check(content))

@@ -99,6 +99,18 @@ func req_string(key: String) -> String:
 	return value
 
 
+## Reads an optional string (empty allowed).
+func opt_string(key: String, default: String) -> String:
+	_read_keys[key] = true
+	if not _data.has(key):
+		return default
+	var value: Variant = _data[key]
+	if typeof(value) != TYPE_STRING:
+		_errors.append("%s: expected a string, got %s" % [key_path(key), _describe(value)])
+		return default
+	return value
+
+
 func opt_bool(key: String, default: bool) -> bool:
 	_read_keys[key] = true
 	if not _data.has(key):

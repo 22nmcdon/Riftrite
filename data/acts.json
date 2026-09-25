@@ -1,0 +1,65 @@
+[
+  {
+    "act": 1,
+    "name": "The Ashen Hollow",
+    "_note": "Placeholder act: 6 days, elites on days 3 and 5, the boss on day 6. Early days use weaker encounters for a one-hero start.",
+    "days": 6,
+    "normal": [
+      {
+        "encounter": "pup_litter",
+        "days": [
+          1,
+          2
+        ]
+      },
+      {
+        "encounter": "hound_scout",
+        "days": [
+          2,
+          4
+        ]
+      },
+      {
+        "encounter": "hound_pack",
+        "days": [
+          4,
+          5
+        ]
+      },
+      {
+        "encounter": "sentinel_vigil",
+        "days": [
+          4,
+          5
+        ]
+      }
+    ],
+    "elites": [
+      {
+        "encounter": "hound_alpha",
+        "days": [
+          3,
+          3
+        ]
+      },
+      {
+        "encounter": "witch_coven",
+        "days": [
+          5,
+          5
+        ]
+      }
+    ],
+    "elite_days": [
+      3,
+      5
+    ],
+    "boss": "rift_throne",
+    "caravan_tier_weights": {
+      "c": 80,
+      "b": 20,
+      "a": 0,
+      "s": 0
+    }
+  }
+]
