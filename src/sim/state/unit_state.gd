@@ -23,6 +23,8 @@ var alive: bool = true
 var items: Array[ItemState] = []
 ## Active statuses, kept in content order (StatusState.order).
 var statuses: Array[StatusState] = []
+## Ticks of recent heals that weakened damage over time (see EffectRunner.heal).
+var recent_heal_ticks: Array[int] = []
 ## What dealt the last damage, for the death log line.
 var last_hit_by: String = ""
 

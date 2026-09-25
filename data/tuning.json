@@ -29,6 +29,8 @@
   "convert_direct_to_over_time_bp": 500,
   "convert_over_time_to_direct_bp": 50000,
   "heal_cleanse_bp": 1000,
+  "heal_cleanse_window_ms": 1000,
+  "heal_cleanse_falloff_bp": 5000,
   "rush_end_ms": 8000,
   "stall_start_ms": 15000,
   "collapse_start_ms": 45000,

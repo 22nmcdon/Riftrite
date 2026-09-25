@@ -308,7 +308,9 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - **Units have six stats:** HP, ATK, MGK, DEF, CRIT, ATSP. Item numbers are a small base plus multipliers on those stats; boosts multiply on top.
 - **Hero ranks (and enemy tiers) boost stats by 25% per rank**, compounding (placeholder).
 - Common, Uncommon, and Rare items scale only from HP/ATK/MGK/DEF; Epic and Legendary items may also scale from ATSP and CRIT.
-- **Healing weakens damage over time:** a heal removes 10% of the target's Burn, Poison, and Bleed stacks (placeholder).
+- **Healing weakens damage over time:** a heal removes 10% of the target's Burn, Poison, and Bleed stacks; each further heal on the same unit within one second removes half as much as the previous one (10%, 5%, 2.5%, ...). Placeholders.
+- **Slow caps at 50%** per item.
+- **Infusion levels:** Attuned makes an infusion ×1.5 as strong, Resonant ×2 (placeholders).
 - Every hero has their own built-in basic auto-attack, which can't be upgraded. An auto-attack item (Small, Medium, or Large) replaces it and takes up slots, and a hero can equip only one. Take the item out and the hero uses the basic auto-attack again.
 - Two copies of the same item combine into the next tier (two, not three). A new copy's infusion replaces the old one.
 - Alloy spill per side equals a single essence's spill for now.

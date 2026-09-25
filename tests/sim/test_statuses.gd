@@ -194,3 +194,29 @@ func test_death_by_status_names_the_status() -> void:
 	var result: FightResult = K.run([_idle_hero([torch])], [K.dummy("foe", 40)])
 	var death: LogEntry = result.combat_log.of_kind(LogEntry.Kind.DEATH)[0]
 	assert_true(death.note.begins_with("last hit: Burn from hero · Test Item"), death.note)
+
+
+func test_rapid_heals_strip_less_each_time() -> void:
+	var sim := CombatSim.new(K.fight([K.dummy("hero", 100)], [K.dummy("foe", 1000)]), K.content())
+	var foe: UnitState = sim.units[1]
+	var source := EffectSource.make("hero", "vial", "Vial")
+	Statuses.apply(sim, foe, "poison", 1000, source)
+	foe.hp = 500
+	for at_tick: int in [4, 8, 12, 16, 20, 40]:
+		sim.tick = at_tick
+		EffectRunner.heal(sim, foe, 1, source)
+	var removed: Array[int] = []
+	for entry: LogEntry in sim.combat_log.of_kind(LogEntry.Kind.STATUS_REDUCED):
+		removed.append(entry.amount)
+	# 10% of 1000, 5% of 900, 2.5% of 855, 1.25% of 834, 0.625% of 824. At tick
+	# 40 the last heal was a full second ago, so it's back to 10% (of 819).
+	assert_eq(removed, [100, 45, 21, 10, 5, 82] as Array[int])
+
+
+func test_slow_caps_at_half_speed() -> void:
+	var claw: ItemDef = K.item("claw", {"effects": K.damage(1)})
+	var foe: UnitSetup = K.unit("foe", BIG_HP, FRONT, [claw], K.basic("idle", {"cooldown_ms": 60000, "effects": K.damage(1)}))
+	var sim := CombatSim.new(K.fight([_idle_hero([_applier("chill", "slow", 1000, 9)])], [foe]), K.content())
+	while sim.tick < 20:
+		sim.step()
+	assert_eq(sim.units[1].items[1].slow_bp(), 5000, "9 stacks would be 90%, capped at 50%")

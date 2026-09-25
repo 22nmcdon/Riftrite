@@ -95,11 +95,12 @@ func advance(rate_bp: int) -> bool:
 	return true
 
 
-## How much slower this item's cooldown runs, in basis points (max 100%).
+## How much slower this item's cooldown runs, in basis points (capped by the
+## status's max_slow_bp).
 func slow_bp() -> int:
 	if slow == null:
 		return 0
-	return mini(slow.total_stacks() * slow.def.slow_bp_per_stack, FixedMath.BP_ONE)
+	return mini(slow.total_stacks() * slow.def.slow_bp_per_stack, slow.def.max_slow_bp)
 
 
 ## One line per effect showing base and final values, for the UI.

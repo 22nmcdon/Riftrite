@@ -7,7 +7,8 @@ extends RefCounted
 ##                     rounded up), vs_shield_bp (how hard it hits shields:
 ##                     10000 normal, 5000 half, 0 = skips shields entirely),
 ##                     defense_shred_per_stack (lowers the target's DEF)
-##   slow:             slow_bp_per_stack, duration_ms. Slow sits on items, not
+##   slow:             slow_bp_per_stack, duration_ms, optional max_slow_bp (cap
+##                     on the total slow per item). Slow sits on items, not
 ##                     units: each application lands on one random item of
 ##                     the target plus its auto-attack (see Statuses).
 ##   freeze:           duration_ms
@@ -32,6 +33,8 @@ var vs_shield_bp: int = FixedMath.BP_ONE
 ## DEF removed from the target per stack.
 var defense_shred_per_stack: int = 0
 var slow_bp_per_stack: int
+## The most a Slow can slow one item, however many stacks it has.
+var max_slow_bp: int = FixedMath.BP_ONE
 ## 0 means the status has no timer.
 var duration_ticks: int
 
@@ -54,6 +57,7 @@ static func read(reader: DataReader) -> StatusDef:
 			def.defense_shred_per_stack = reader.opt_int("defense_shred_per_stack", 0, 0)
 		Kind.SLOW:
 			def.slow_bp_per_stack = reader.req_int("slow_bp_per_stack", 0, FixedMath.BP_ONE)
+			def.max_slow_bp = reader.opt_int("max_slow_bp", FixedMath.BP_ONE, 0, FixedMath.BP_ONE)
 			def.duration_ticks = reader.req_ticks("duration_ms", FixedMath.MS_PER_TICK)
 		Kind.FREEZE:
 			def.duration_ticks = reader.req_ticks("duration_ms", FixedMath.MS_PER_TICK)

@@ -103,7 +103,10 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 
 
 ## Heals `target` (capped at max HP), logs it, and if any HP came back,
-## weakens the target's damage over time (tuning: heal_cleanse_bp).
+## weakens the target's damage over time. The first heal in a window strips
+## heal_cleanse_bp of each damage-over-time status; each further heal within
+## heal_cleanse_window strips that share times heal_cleanse_falloff_bp again
+## (by default: 10%, 5%, 2.5%, ...), so rapid small heals can't wipe it out.
 static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectSource) -> void:
 	var healed: int = mini(amount, target.max_hp - target.hp)
 	target.hp += healed
@@ -111,8 +114,16 @@ static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectS
 	entry.target = target.id
 	entry.amount = healed
 	sim.combat_log.add(entry)
-	if healed > 0:
-		Statuses.cleanse_over_time(sim, target, sim.tuning.heal_cleanse_bp)
+	if healed <= 0:
+		return
+	var window_start: int = sim.tick - sim.tuning.heal_cleanse_window_ticks
+	while not target.recent_heal_ticks.is_empty() and target.recent_heal_ticks[0] <= window_start:
+		target.recent_heal_ticks.remove_at(0)
+	var share_bp: int = sim.tuning.heal_cleanse_bp
+	for i: int in target.recent_heal_ticks.size():
+		share_bp = FixedMath.apply_bp(share_bp, sim.tuning.heal_cleanse_falloff_bp)
+	target.recent_heal_ticks.append(sim.tick)
+	Statuses.cleanse_over_time(sim, target, share_bp)
 
 
 static func give_shield(sim: CombatSim, target: UnitState, amount: int, source: EffectSource) -> void:

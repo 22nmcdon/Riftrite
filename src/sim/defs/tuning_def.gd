@@ -37,6 +37,10 @@ var convert_direct_to_over_time_bp: int
 var convert_over_time_to_direct_bp: int
 ## Share of each damage-over-time status a heal removes from its target.
 var heal_cleanse_bp: int
+## Heals within this window of each other strip less (see EffectRunner.heal).
+var heal_cleanse_window_ticks: int
+## Each further heal in the window strips this share of the previous heal's.
+var heal_cleanse_falloff_bp: int
 ## Keyed by act number. Look up with collapse_for_act(); don't iterate.
 var collapse_by_act: Dictionary[int, CollapseDef] = {}
 
@@ -60,6 +64,8 @@ static func read(reader: DataReader) -> TuningDef:
 	def.convert_direct_to_over_time_bp = reader.req_int("convert_direct_to_over_time_bp", 0)
 	def.convert_over_time_to_direct_bp = reader.req_int("convert_over_time_to_direct_bp", 0)
 	def.heal_cleanse_bp = reader.req_int("heal_cleanse_bp", 0, FixedMath.BP_ONE)
+	def.heal_cleanse_window_ticks = reader.req_ticks("heal_cleanse_window_ms")
+	def.heal_cleanse_falloff_bp = reader.req_int("heal_cleanse_falloff_bp", 0, FixedMath.BP_ONE)
 	def.rush_end_ticks = reader.req_ticks("rush_end_ms")
 	def.stall_start_ticks = reader.req_ticks("stall_start_ms")
 	def.collapse_start_ticks = reader.req_ticks("collapse_start_ms")

@@ -28,12 +28,13 @@
     "defense_shred_per_stack": 1
   },
   {
-    "_note": "Lands on one random item of the target plus its auto-attack; each stack slows that item's cooldown by slow_bp_per_stack. Each new Slow refreshes the timer. Numbers are placeholders.",
+    "_note": "Lands on one random item of the target plus its auto-attack; each stack slows that item's cooldown by slow_bp_per_stack. Each new Slow refreshes the timer. Caps at 50% per item. Numbers are placeholders.",
     "id": "slow",
     "name": "Slow",
     "kind": "slow",
     "slow_bp_per_stack": 1000,
-    "duration_ms": 3000
+    "duration_ms": 3000,
+    "max_slow_bp": 5000
   },
   {
     "id": "freeze",
