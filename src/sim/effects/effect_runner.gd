@@ -28,6 +28,17 @@ static func fire(sim: CombatSim, item: ItemState) -> void:
 		Infusions.gain_xp(sim, item, item.def.xp_per_fire)
 
 
+## Runs one triggered effect of an ability (on_fight_start, at_time,
+## on_ally_below_hp). `trigger_ally` is who set it off (for trigger_ally),
+## or null.
+static func run_triggered(sim: CombatSim, item: ItemState, sourced: SourcedEffect, trigger_ally: UnitState) -> void:
+	var hit: Hit = null
+	if trigger_ally != null:
+		hit = Hit.new()
+		hit.target = trigger_ally
+	_run(sim, item, sourced, hit)
+
+
 static func _fire_once(sim: CombatSim, item: ItemState, note: String) -> void:
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.FIRE, _source(sim, item, null))
 	entry.note = note
@@ -64,6 +75,8 @@ static func _run(sim: CombatSim, item: ItemState, sourced: SourcedEffect, hit: H
 				give_shield(sim, target, amount, source)
 				if own:
 					Conversions.on_output(sim, item, "shield", amount, target, false)
+			EffectDef.Type.CLEANSE:
+				Statuses.cleanse_over_time(sim, target, mini(amount, FixedMath.BP_ONE), source)
 			EffectDef.Type.APPLY_STATUS:
 				Statuses.apply(sim, target, item.replaced_status(effect.status_id), amount, source)
 				if own and sim.content.is_output_kind(effect.status_id):

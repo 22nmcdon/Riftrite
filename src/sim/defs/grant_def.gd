@@ -14,7 +14,9 @@ var filter: AuraFilter = null
 var effect: EffectDef
 
 
-static func read(reader: DataReader) -> GrantDef:
+## `scaled`: a specialization's grant, whose numbers may scale from the
+## holder's stats (a relic's or synergy's are flat).
+static func read(reader: DataReader, scaled: bool = false) -> GrantDef:
 	var def := GrantDef.new()
 	if reader.has("filter"):
 		var filter_reader: DataReader = reader.req_object("filter")
@@ -23,7 +25,7 @@ static func read(reader: DataReader) -> GrantDef:
 	var effect_reader: DataReader = reader.req_object("effect")
 	if effect_reader != null:
 		def.effect = EffectDef.read(effect_reader)
-		if def.effect.scaling.any(func(ratio: int) -> bool: return ratio != 0):
+		if not scaled and def.effect.scaling.any(func(ratio: int) -> bool: return ratio != 0):
 			effect_reader.error("relic numbers are flat, so a grant can't have \"scaling\"")
 	else:
 		def.effect = EffectDef.new()

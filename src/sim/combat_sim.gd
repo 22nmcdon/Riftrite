@@ -122,6 +122,10 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 			all_auras.append_array(item.def.auras)
 	for bonus: RelicState in bonuses():
 		all_auras.append_array(bonus.def.auras)
+	for unit: UnitState in units:
+		for part: SpecializationDef.Part in unit.spec_parts:
+			if part.aura != null:
+				all_auras.append(part.aura)
 	for aura: AuraDef in all_auras:
 		if aura.window_from_ticks > 0:
 			_aura_boundaries[aura.window_from_ticks] = true
@@ -148,7 +152,7 @@ func step() -> void:
 		var unit_rate_bp: int = unit.cooldown_rate_bp()
 		var atsp_bp: int = FixedMath.BP_ONE + unit.stats.get_stat(UnitStats.Stat.ATSP) * tuning.atsp_bp_per_point
 		for item: ItemState in unit.items:
-			if item.def.effects.is_empty():
+			if item.def.effects.is_empty() or item.def.triggered_only:
 				continue
 			var rate_bp: int = FixedMath.apply_bp(unit_rate_bp, FixedMath.BP_ONE - item.slow_bp())
 			if item.is_auto_attack:
@@ -201,6 +205,30 @@ func rederive_all() -> void:
 				elif aura.targets_items():
 					item_targets = _aura_item_targets(holder, item, aura.target)
 				_apply_aura(aura, label, holder.side, item_targets, _aura_unit_targets(holder, aura.target), item_auras, unit_boosts)
+	for u: int in units.size():
+		var holder: UnitState = units[u]
+		if not holder.is_standing():
+			continue
+		for p: int in holder.spec_parts.size():
+			var part: SpecializationDef.Part = holder.spec_parts[p]
+			match part.kind:
+				SpecializationDef.Kind.AURA:
+					if not part.aura.active_at(tick):
+						continue
+					now_active.append("p:%d:%d" % [u, p])
+					var item_targets: Array[ItemState] = []
+					if part.aura.target == AuraDef.Target.HOLDER_ITEMS:
+						item_targets = holder.items
+					elif part.aura.target == AuraDef.Target.ALL_ITEMS:
+						item_targets = _side_items(holder.side)
+					_apply_aura(part.aura, part.label, holder.side, item_targets, _aura_unit_targets(holder, part.aura.target), item_auras, unit_boosts)
+				SpecializationDef.Kind.GRANT:
+					for i: int in holder.items.size():
+						if part.grant.matches(holder.items[i]):
+							(item_auras[u][i] as ItemAura).add_grant(part.grant, part.label, [], true)
+				SpecializationDef.Kind.REPLACE_STATUS:
+					for per_item: ItemAura in item_auras[u]:
+						per_item.status_replacements[part.replace_from] = part.replace_to
 	var all_bonuses: Array[RelicState] = bonuses()
 	for r: int in all_bonuses.size():
 		var relic: RelicState = all_bonuses[r]
@@ -381,7 +409,12 @@ func _log_aura(key: String, change: String) -> void:
 	var parts: PackedStringArray = key.split(":")
 	var aura: AuraDef
 	var source: EffectSource
-	if parts[0] == "r":
+	if parts[0] == "p":
+		var hero: UnitState = units[parts[1].to_int()]
+		var part: SpecializationDef.Part = hero.spec_parts[parts[2].to_int()]
+		aura = part.aura
+		source = EffectSource.make(hero.id, part.label, part.label)
+	elif parts[0] == "r":
 		var relic: RelicState = bonuses()[parts[1].to_int()]
 		aura = relic.def.auras[parts[2].to_int()]
 		source = relic.source()

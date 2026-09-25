@@ -10,6 +10,8 @@ var infusion_id: String = ""
 var infusion_name: String = ""
 ## The relic that granted this effect (see GrantDef), or "".
 var granted_by: String = ""
+## A specialization's grant: numbered from the holder's stats (not flat).
+var grant_scaled: bool = false
 ## The transformation this effect comes from (the item's own effects, as
 ## transformed), or "". Only for the log; it's numbered like the item's own.
 var transformed_by: String = ""

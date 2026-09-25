@@ -13,7 +13,8 @@ const BACK := UnitSetup.Row.BACK
 ## Plasma's jumping burn), auras with windows, and relics on both sides
 ## (a grant, filtered and side-wide auras, and every relic trigger), and
 ## real synergies (Paper Cuts' charge, the Wildfire Torch transformation,
-## and Ember Resonance).
+## and Ember Resonance), and specializations at rank S: a fielded one with a
+## new basic attack and auto-attack grants, and a benched one.
 func _chaotic_fight(seed_value: int) -> FightSetup:
 	var scatter: ItemDef = K.item("scatter", {"cooldown_ms": 700, "crit_chance_bp": 3000, "effects": K.damage(9, "enemy_random")})
 	var cleave: ItemDef = K.item("cleave", {"size": 2, "rarity": "epic", "tags": ["weapon"], "cooldown_ms": 2150, "crit_chance_bp": 2000, "effects": K.damage(25)})
@@ -29,7 +30,23 @@ func _chaotic_fight(seed_value: int) -> FightSetup:
 		seed_value, 1, [_benched_vell(mend)])
 	setup.relics = ["warding_knot", "pilgrims_flask", "cinder_crown", "hourglass", "emberglass"] as Array[String]
 	setup.enemy_relics = ["gloam_totem", "kindled_seal"] as Array[String]
+	setup.heroes[0].rank = 3
+	setup.heroes[0].specialization = _real_spec_for("brannoc_ironbrand", "warden")
+	setup.bench[0].rank = 3
+	setup.bench[0].specialization = K.content().specializations["vell_vigil_keeper"]
 	return setup
+
+
+## A real specialization, handed to a test unit with a different id.
+func _real_spec_for(spec_id: String, unit_id: String) -> SpecializationDef:
+	for entry: Dictionary in JSON.parse_string(FileAccess.get_file_as_string("res://data/specializations.json")):
+		if entry["id"] == spec_id:
+			entry["hero"] = unit_id
+			var errors: Array[String] = []
+			var def: SpecializationDef = SpecializationDef.read(DataReader.new(entry, spec_id, errors))
+			assert(errors.is_empty(), str(errors))
+			return def
+	return null
 
 
 func _benched_vell(mend: ItemDef) -> UnitSetup:
@@ -49,7 +66,7 @@ func test_same_seed_same_log() -> void:
 	assert_eq(first.combat_log.of_kind(LogEntry.Kind.AURA).size() >= 2, true, "auras start and end")
 	assert_string_contains(first.combat_log.to_text(), "(Cinder Crown) applies", "a relic grant fires")
 	assert_string_contains(first.combat_log.to_text(), "relic · Pilgrim's Flask heals", "a cooldown relic fires")
-	for expected: String in ["Paper Cuts: striker", "Wildfire Torch: striker", "Ember Resonance (3): 3 Ember", "(Paper Cuts) charges Whetstone"]:
+	for expected: String in ["warden · Brand Blow", "(Ironbrand S) charges", "vell · Shelter (backup)", "Paper Cuts: striker", "Wildfire Torch: striker", "Ember Resonance (3): 3 Ember", "(Paper Cuts) charges Whetstone"]:
 		assert_string_contains(first.combat_log.to_text(), expected)
 	assert_eq(first.combat_log.to_text(), second.combat_log.to_text())
 	assert_eq(first.outcome, second.outcome)

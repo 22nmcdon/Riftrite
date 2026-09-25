@@ -75,6 +75,8 @@ static func make(item_def: ItemDef, item_slot: int, holder_stats: UnitStats, con
 	state.infusion_level = Infusions.level_for(xp, content.tuning)
 	state.start_xp = xp
 	state.start_level = state.infusion_level
+	for i: int in item_def.effects.size():
+		state.ability_triggered.append(PackedStringArray())
 	state.derive(content, [], null)
 	return state
 
@@ -151,9 +153,13 @@ func spill_to(side: int, tuning: TuningDef) -> Array[EssenceApplication]:
 ## The status this item actually applies in place of `status_id` (an alloy
 ## like Inferno turns Burn into Golden Flame).
 func replaced_status(status_id: String) -> String:
-	if alloy == null:
-		return status_id
-	return alloy.replaces.get(status_id, status_id)
+	var result: String = status_id
+	if alloy != null:
+		result = alloy.replaces.get(status_id, status_id)
+	# A specialization's replacement applies to whatever the alloy left alone.
+	if result == status_id:
+		result = status_replacements.get(status_id, status_id)
+	return result
 
 
 ## True if the item applies `status_id` through its own effects, its
@@ -199,6 +205,7 @@ func derive(content: ContentDb, spills: Array[EssenceApplication], aura: ItemAur
 			var granted: SourcedEffect = SourcedEffect.make(grant.def.effect)
 			granted.granted_by = grant.relic_name
 			granted.partner_slots = grant.partner_slots
+			granted.grant_scaled = grant.scaled
 			effects.append(granted)
 	var cooldown_bp: int = 0
 	crit_chance_bp = def.crit_chance_bp + stats.get_stat(UnitStats.Stat.CRIT) * tuning.crit_bp_per_point
@@ -224,6 +231,9 @@ func derive(content: ContentDb, spills: Array[EssenceApplication], aura: ItemAur
 		crit_chance_bp += aura.crit_add_bp
 	cooldown_ticks = maxi(FixedMath.apply_bp(def.cooldown_ticks, FixedMath.BP_ONE + cooldown_bp), 1)
 	crit_chance_bp = clampi(crit_chance_bp, 0, FixedMath.BP_ONE)
+	status_replacements.clear()
+	if aura != null:
+		status_replacements.merge(aura.status_replacements)
 	_compute_values(content, apps, aura)
 
 
@@ -239,7 +249,7 @@ func _compute_values(content: ContentDb, apps: Array[EssenceApplication], aura: 
 		var boosts: Array[ValueBreakdown.Multiplier] = []
 		if not sourced.granted_by.is_empty():
 			if aura != null:
-				boosts.append_array(aura.multipliers_for(Conversions.output_kind(sourced.effect, content), true))
+				boosts.append_array(aura.multipliers_for(Conversions.output_kind(sourced.effect, content), not sourced.grant_scaled))
 		elif sourced.infusion_id.is_empty():
 			if transformation != null:
 				boosts.append(ValueBreakdown.multiplier("%s, %s" % [transformation.name, Infusions.LEVEL_NAMES[infusion_level]], tuning.infusion_level_bp[infusion_level]))
@@ -268,6 +278,13 @@ func advance(rate_bp: int) -> bool:
 		return false
 	progress_bp -= needed
 	return true
+
+
+## For a specialization ability: per effect (index into def.effects), ids of
+## allies that have set off its on_ally_below_hp trigger.
+var ability_triggered: Array[PackedStringArray] = []
+## Status replacements from the holder's specialization (see ItemAura).
+var status_replacements: Dictionary[String, String] = {}
 
 
 ## Moves the cooldown forward by `ticks`, but never past ready: the item

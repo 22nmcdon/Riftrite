@@ -10,6 +10,9 @@ extends RefCounted
 ##   heal:         amount
 ##   shield:       exactly one of amount, amount_bp_of_damage
 ##   apply_status: status, stacks
+##   cleanse:      amount_bp; strips that share of the target's
+##                 damage-over-time stacks (times each status's
+##                 cleanse_effectiveness_bp, like heals do)
 ##   charge:       amount_ms; advances *items'* cooldowns, so its target is
 ##                 an item target (see ITEM_TARGET_NAMES):
 ##                 self_item, left_item, right_item, adjacent_items,
@@ -40,9 +43,12 @@ extends RefCounted
 ##   trigger_ally       target: the ally that set off on_ally_below_hp
 ## Relic numbers are flat: no "scaling" (see AuraDef.covers_everything for
 ## what can boost them). Targets that need a spot on the field are rejected.
+## A specialization's ability (read with ability = true) takes the relic
+## triggers too, but it belongs to a hero: its numbers scale from the hero's
+## stats, and hero-relative targets work.
 
 enum Trigger { ON_FIRE, ON_HIT, ON_CRIT, ON_FIGHT_START, AT_TIME, ON_ALLY_BELOW_HP }
-enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CHARGE }
+enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CHARGE, CLEANSE }
 enum ItemTarget { SELF_ITEM, LEFT_ITEM, RIGHT_ITEM, ADJACENT_ITEMS, ROW_ITEMS, PARTNER_ITEMS }
 enum Target {
 	HIT_TARGET,
@@ -70,7 +76,7 @@ const FIELD_ONLY_TARGETS: Array[Target] = [
 	Target.HIT_TARGET, Target.SELF, Target.LINKED_ALLY, Target.LINKED_LEFT_ALLY,
 	Target.LINKED_RIGHT_ALLY, Target.LINKED_ALLIES, Target.ROW_ALLIES,
 ]
-const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "charge"]
+const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "charge", "cleanse"]
 const ITEM_TARGET_NAMES: Array[String] = ["self_item", "left_item", "right_item", "adjacent_items", "row_items", "partner_items"]
 const TARGET_NAMES: Array[String] = [
 	"hit_target",
@@ -114,7 +120,9 @@ var once: bool = false
 
 
 ## `relic`: read a relic's effect (relic triggers and targets, flat numbers).
-static func read(reader: DataReader, relic: bool = false) -> EffectDef:
+## `ability`: read a specialization ability's effect (relic triggers, hero
+## targets, scaled numbers).
+static func read(reader: DataReader, relic: bool = false, ability: bool = false) -> EffectDef:
 	var def := EffectDef.new()
 	var trigger_name: String = reader.req_choice("trigger", TRIGGER_NAMES)
 	var type_name: String = reader.req_choice("type", TYPE_NAMES)
@@ -145,6 +153,8 @@ static func read(reader: DataReader, relic: bool = false) -> EffectDef:
 				def.stacks = reader.req_int("stacks", 1)
 			Type.CHARGE:
 				def.amount = reader.req_ticks("amount_ms", FixedMath.MS_PER_TICK)
+			Type.CLEANSE:
+				def.amount = reader.req_int("amount_bp", 1, FixedMath.BP_ONE)
 		if reader.has("scaling"):
 			if def.amount_bp_of_damage > 0:
 				reader.error("\"scaling\" can't be combined with amount_bp_of_damage")
@@ -152,21 +162,21 @@ static func read(reader: DataReader, relic: bool = false) -> EffectDef:
 
 	read_window(reader, def)
 	if not trigger_name.is_empty():
-		_read_trigger_fields(def, reader, relic)
+		_read_trigger_fields(def, reader, relic, ability)
 
 	# "hit_target" and damage-based shields need a hit to refer to.
 	var needs_hit: bool = def.target == Target.HIT_TARGET or def.amount_bp_of_damage > 0
-	if needs_hit and not trigger_name.is_empty() and not relic and def.trigger == Trigger.ON_FIRE:
+	if needs_hit and not trigger_name.is_empty() and not relic and not ability and def.trigger == Trigger.ON_FIRE:
 		reader.error("\"%s\" needs a hit, so its trigger must be on_hit or on_crit, not on_fire" % (target_name if def.target == Target.HIT_TARGET else "amount_bp_of_damage"))
 	reader.finish()
 	return def
 
 
 ## Checks the trigger is allowed here and reads its extra fields.
-static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool) -> void:
-	var allowed: Array[Trigger] = RELIC_TRIGGERS if relic else ITEM_TRIGGERS
+static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool, ability: bool) -> void:
+	var allowed: Array[Trigger] = RELIC_TRIGGERS if relic or ability else ITEM_TRIGGERS
 	if not allowed.has(def.trigger):
-		reader.error("%s effects can't use the trigger \"%s\"" % ["relic" if relic else "item", TRIGGER_NAMES[def.trigger]])
+		reader.error("%s effects can't use the trigger \"%s\"" % ["relic" if relic else ("ability" if ability else "item"), TRIGGER_NAMES[def.trigger]])
 	match def.trigger:
 		Trigger.AT_TIME:
 			def.at_ticks = reader.req_ticks("at_ms", FixedMath.MS_PER_TICK)
@@ -175,6 +185,8 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 			def.once = reader.opt_bool("once", false)
 	if def.target == Target.TRIGGER_ALLY and def.trigger != Trigger.ON_ALLY_BELOW_HP:
 		reader.error("\"trigger_ally\" only works with the on_ally_below_hp trigger")
+	if ability and def.target == Target.HIT_TARGET:
+		reader.error("an ability has no hit, so it can't use hit_target")
 	if not relic:
 		return
 	if FIELD_ONLY_TARGETS.has(def.target):

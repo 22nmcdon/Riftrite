@@ -23,7 +23,7 @@ The combat sim (Phase 2) is done. The slice needs three more things: the **sim f
    - class traits: 2+ heroes of a class fielded
 
    The engine checks these at fight start and applies them as data (auras, effects, or item changes). It logs "Paper Cuts discovered!" the first time each fires, and the log names the synergy as the source (CLAUDE.md rule 4).
-3. **Rank-B specializations:** each class has 3; a hero picks one on reaching B (a recruit at B or above comes with one preset). A specialization is data applied at fight start, like a synergy: stat changes, auras, or effects on the hero, and possibly changes to their basic attack. It shows in the log as the source. Retraining (changing it) is an event for later.
+3. **Rank-B specializations:** each hero has 3 of their own, with locked potential at A and S; a hero picks one on reaching B (a recruit at B or above comes with one preset). A specialization is data applied at fight start, like a synergy: stat changes, auras, or effects on the hero, and possibly changes to their basic attack. It shows in the log as the source. Retraining (changing it) is an event for later.
 4. **Bosses:** an Act 1 boss with a unique mechanic. It should be built from existing blocks where possible (windows, auras, phases at HP thresholds). An HP-threshold trigger is probably the one new piece.
 
 ## Part B: the run layer (`src/run/`)
@@ -168,7 +168,7 @@ Placeholder art, readable first:
 
 1. Relics in the sim (built; `docs/plans/relics-in-sim.md`).
 2. The synergy engine and all five layers, with a few of each (built; `docs/plans/synergies-in-sim.md`).
-3. Rank-B specializations in the sim (plan: `docs/plans/specializations-in-sim.md`).
+3. Rank-B specializations in the sim (built; `docs/plans/specializations-in-sim.md`).
 4. RunState and actions: roster, loadouts, stash, gold, pouch, combining, infusing and reforging. Save/load from the start, so every later step is tested for round-trips.
 5. The day structure (Caravan, stop, fight, losses and replays) and the economy data; the run bot and run-level balance reports.
 6. Boss mechanic(s).

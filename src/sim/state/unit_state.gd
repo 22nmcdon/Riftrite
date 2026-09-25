@@ -34,6 +34,9 @@ var statuses: Array[StatusState] = []
 var recent_heal_ticks: Array[int] = []
 ## What dealt the last damage, for the death log line.
 var last_hit_by: String = ""
+## The specialization's aura, grant, and replace_status parts that apply now
+## (by rank and fielded/benched); CombatSim.rederive_all applies them.
+var spec_parts: Array[SpecializationDef.Part] = []
 
 
 static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column: int, content: ContentDb, in_backup: bool = false) -> UnitState:
@@ -49,8 +52,29 @@ static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column:
 	state.max_hp = state.stats.get_stat(UnitStats.Stat.HP)
 	state.hp = state.max_hp
 	state.benched = in_backup
+	var parts: Array[SpecializationDef.Part] = []
+	if setup.specialization != null:
+		for part: SpecializationDef.Part in setup.specialization.parts_at(setup.rank):
+			if part.applies(in_backup):
+				parts.append(part)
+	var basic_attack: ItemDef = setup.basic_attack
+	var abilities: Array[ItemDef] = []
+	for part: SpecializationDef.Part in parts:
+		match part.kind:
+			SpecializationDef.Kind.AURA, SpecializationDef.Kind.GRANT, SpecializationDef.Kind.REPLACE_STATUS:
+				state.spec_parts.append(part)
+			SpecializationDef.Kind.ABILITY:
+				abilities.append(part.item)
+			SpecializationDef.Kind.BASIC_ATTACK:
+				basic_attack = part.item
+			SpecializationDef.Kind.BACKUP:
+				var backup_item: ItemDef = part.backup.as_item_def(null, setup.id)
+				backup_item.id = "%s_%s" % [setup.specialization.id, part.key]
+				abilities.append(backup_item)
 	if in_backup:
 		state._add_backup_items(setup, content)
+		for ability: ItemDef in abilities:
+			state.items.append(ItemState.make(ability, -1, state.stats, content))
 		state.rederive_items(content)
 		return state
 
@@ -58,7 +82,10 @@ static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column:
 	for item: ItemSetup in setup.items:
 		has_auto_attack_item = has_auto_attack_item or item.def.auto_attack
 	if not has_auto_attack_item:
-		state.items.append(ItemState.make(setup.basic_attack, -1, state.stats, content))
+		state.items.append(ItemState.make(basic_attack, -1, state.stats, content))
+	# Abilities: slotless, after the auto-attack and before the row.
+	for ability: ItemDef in abilities:
+		state.items.append(ItemState.make(ability, -1, state.stats, content))
 	var slot: int = 0
 	for item: ItemSetup in setup.items:
 		var essences: Array[EssenceDef] = []

@@ -70,6 +70,14 @@ tools/         headless sim runner, data validators
 - Resonance counts fielded **and backup** heroes' essences; class traits count fielded heroes only.
 - A transformation replaces the item's own effects, uses one copy of its essence (other essences work as plain singles, no alloy special), never spills, and still counts for resonance.
 
+## Specialization rules
+
+- Each **hero** has three specializations of their own (`data/specializations.json`, `docs/plans/specializations-in-sim.md`), each unique to the hero and unlike the other two. A hero picks one at rank B.
+- **Locked potential:** parts unlock at B, A, and S. A later part with the same key replaces the earlier one.
+- Part kinds: aura, grant (numbered from the hero's stats), ability (slotless, on a cooldown or relic trigger), basic_attack, backup, replace_status.
+- Each part applies when `fielded`, `benched`, or `always`.
+- A part that replaces the basic attack must come with an `auto_attack` part, so equipping an auto-attack item never blanks the specialization.
+
 ## Item rules
 
 - Every unit has a built-in **basic auto-attack** (no slot). Each hero's basic auto-attack is their own and **can't be upgraded** (no sockets, no tier). **Auto-attack items** replace it, take up slots, and can be Small, Medium, or Large. **Max one auto-attack item per hero.** Remove the item and the unit falls back to its basic auto-attack.

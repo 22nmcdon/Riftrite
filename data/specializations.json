@@ -1,0 +1,749 @@
+[
+  {
+    "id": "brannoc_hearthwall",
+    "hero": "brannoc",
+    "name": "Hearthwall",
+    "_note": "Protector: his wall grows from his neighbors to the whole guild.",
+    "ranks": {
+      "b": [
+        {
+          "key": "wall",
+          "kind": "aura",
+          "target": "linked_allies",
+          "stat": "def_bp",
+          "value": 11500
+        }
+      ],
+      "a": [
+        {
+          "key": "catch",
+          "kind": "ability",
+          "name": "Catch",
+          "effects": [
+            {
+              "trigger": "on_ally_below_hp",
+              "threshold_bp": 4000,
+              "type": "shield",
+              "amount": 10,
+              "scaling": {
+                "def": 8000
+              },
+              "target": "trigger_ally"
+            }
+          ]
+        }
+      ],
+      "s": [
+        {
+          "key": "wall",
+          "kind": "aura",
+          "target": "all_allies",
+          "stat": "def_bp",
+          "value": 11500
+        }
+      ]
+    }
+  },
+  {
+    "id": "brannoc_ironbrand",
+    "hero": "brannoc",
+    "name": "Ironbrand",
+    "_note": "His auto-attack becomes a branding blow that guards him; an auto-attack item gets the same guard.",
+    "ranks": {
+      "b": [
+        {
+          "key": "brand",
+          "kind": "basic_attack",
+          "basic_attack": {
+            "id": "brand_blow",
+            "name": "Brand Blow",
+            "cooldown_ms": 1800,
+            "effects": [
+              {
+                "trigger": "on_fire",
+                "type": "damage",
+                "amount": 8,
+                "scaling": {
+                  "atk": 7000
+                },
+                "target": "enemy_front"
+              }
+            ]
+          }
+        },
+        {
+          "key": "guard",
+          "kind": "grant",
+          "filter": {
+            "auto_attack": true
+          },
+          "effect": {
+            "trigger": "on_hit",
+            "type": "shield",
+            "amount": 4,
+            "scaling": {
+              "def": 2500
+            },
+            "target": "self"
+          }
+        }
+      ],
+      "a": [
+        {
+          "key": "sear",
+          "kind": "grant",
+          "filter": {
+            "auto_attack": true
+          },
+          "effect": {
+            "trigger": "on_hit",
+            "type": "apply_status",
+            "status": "bleed",
+            "stacks": 1,
+            "target": "hit_target"
+          }
+        }
+      ],
+      "s": [
+        {
+          "key": "temper",
+          "kind": "grant",
+          "filter": {
+            "auto_attack": true
+          },
+          "effect": {
+            "trigger": "on_hit",
+            "type": "charge",
+            "amount_ms": 200,
+            "target": "row_items"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "brannoc_last_watch",
+    "hero": "brannoc",
+    "name": "Last Watch",
+    "_note": "Works only from backup: he watches over the guild from the rear.",
+    "ranks": {
+      "b": [
+        {
+          "key": "watch",
+          "kind": "backup",
+          "backup": {
+            "name": "Last Watch",
+            "cooldown_ms": 6000,
+            "effects": [
+              {
+                "trigger": "on_fire",
+                "type": "shield",
+                "amount": 8,
+                "scaling": {
+                  "def": 4000
+                },
+                "target": "ally_lowest_hp"
+              }
+            ]
+          }
+        }
+      ],
+      "a": [
+        {
+          "key": "stand",
+          "kind": "aura",
+          "when": "benched",
+          "target": "all_allies",
+          "stat": "def_bp",
+          "value": 11000
+        }
+      ],
+      "s": [
+        {
+          "key": "hold",
+          "kind": "aura",
+          "when": "benched",
+          "target": "all_allies",
+          "stat": "shield_bp",
+          "value": 13000,
+          "window": {
+            "from_ms": 45000
+          },
+          "label": "Hold the Line"
+        }
+      ]
+    }
+  },
+  {
+    "id": "wren_duelist",
+    "hero": "wren",
+    "name": "Duelist",
+    "_note": "Her weapons: sharper, then bleeding crits, then heavier blows.",
+    "ranks": {
+      "b": [
+        {
+          "key": "edge",
+          "kind": "aura",
+          "target": "holder_items",
+          "filter": {
+            "tag": "weapon"
+          },
+          "stat": "crit_chance_bp",
+          "value": 1000
+        }
+      ],
+      "a": [
+        {
+          "key": "riposte",
+          "kind": "grant",
+          "filter": {
+            "tag": "weapon"
+          },
+          "effect": {
+            "trigger": "on_crit",
+            "type": "apply_status",
+            "status": "bleed",
+            "stacks": 1,
+            "target": "hit_target"
+          }
+        }
+      ],
+      "s": [
+        {
+          "key": "flourish",
+          "kind": "aura",
+          "target": "holder_items",
+          "filter": {
+            "tag": "weapon"
+          },
+          "stat": "damage_bp",
+          "value": 12000
+        }
+      ]
+    }
+  },
+  {
+    "id": "wren_windrunner",
+    "hero": "wren",
+    "name": "Windrunner",
+    "_note": "Her auto-attack: two quick gusts, then it speeds her row, then it reaches the back row.",
+    "ranks": {
+      "b": [
+        {
+          "key": "gusts",
+          "kind": "basic_attack",
+          "basic_attack": {
+            "id": "twin_gust",
+            "name": "Twin Gust",
+            "cooldown_ms": 1000,
+            "effects": [
+              {
+                "trigger": "on_fire",
+                "type": "damage",
+                "amount": 2,
+                "scaling": {
+                  "atk": 3500
+                },
+                "target": "enemy_front"
+              },
+              {
+                "trigger": "on_fire",
+                "type": "damage",
+                "amount": 2,
+                "scaling": {
+                  "atk": 3500
+                },
+                "target": "enemy_front"
+              }
+            ]
+          }
+        },
+        {
+          "key": "stride",
+          "kind": "aura",
+          "target": "holder",
+          "stat": "atsp_bp",
+          "value": 12000
+        },
+        {
+          "key": "tailwind",
+          "kind": "aura",
+          "target": "holder_items",
+          "filter": {
+            "auto_attack": true
+          },
+          "stat": "damage_bp",
+          "value": 11000
+        }
+      ],
+      "a": [
+        {
+          "key": "slipstream",
+          "kind": "grant",
+          "filter": {
+            "auto_attack": true
+          },
+          "effect": {
+            "trigger": "on_hit",
+            "type": "charge",
+            "amount_ms": 100,
+            "target": "row_items"
+          }
+        }
+      ],
+      "s": [
+        {
+          "key": "sweep",
+          "kind": "grant",
+          "filter": {
+            "auto_attack": true
+          },
+          "effect": {
+            "trigger": "on_hit",
+            "type": "damage",
+            "amount": 2,
+            "scaling": {
+              "atk": 2000
+            },
+            "target": "enemy_back"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "wren_nightstalker",
+    "hero": "wren",
+    "name": "Nightstalker",
+    "_note": "An ability: she hunts the weakest enemy, makes it bleed, and hunts twice as often from 20s.",
+    "ranks": {
+      "b": [
+        {
+          "key": "hunt",
+          "kind": "ability",
+          "name": "Nightfall Strike",
+          "cooldown_ms": 6000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "damage",
+              "amount": 8,
+              "scaling": {
+                "atk": 8000
+              },
+              "target": "enemy_lowest_hp"
+            }
+          ]
+        }
+      ],
+      "a": [
+        {
+          "key": "hunt",
+          "kind": "ability",
+          "name": "Nightfall Strike",
+          "cooldown_ms": 6000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "damage",
+              "amount": 8,
+              "scaling": {
+                "atk": 8000
+              },
+              "target": "enemy_lowest_hp"
+            },
+            {
+              "trigger": "on_fire",
+              "type": "apply_status",
+              "status": "bleed",
+              "stacks": 2,
+              "target": "enemy_lowest_hp"
+            }
+          ]
+        }
+      ],
+      "s": [
+        {
+          "key": "frenzy",
+          "kind": "ability",
+          "name": "Frenzy",
+          "cooldown_ms": 6000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "damage",
+              "amount": 8,
+              "scaling": {
+                "atk": 8000
+              },
+              "target": "enemy_lowest_hp",
+              "window": {
+                "from_ms": 20000
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "vell_lanternbearer",
+    "hero": "vell",
+    "name": "Lanternbearer",
+    "_note": "Her healing items: stronger, then warding, then warming the whole guild.",
+    "ranks": {
+      "b": [
+        {
+          "key": "glow",
+          "kind": "aura",
+          "target": "holder_items",
+          "filter": {
+            "tag": "healing"
+          },
+          "stat": "heal_bp",
+          "value": 12000
+        }
+      ],
+      "a": [
+        {
+          "key": "warmth",
+          "kind": "grant",
+          "filter": {
+            "tag": "healing"
+          },
+          "effect": {
+            "trigger": "on_fire",
+            "type": "shield",
+            "amount": 4,
+            "scaling": {
+              "mgk": 2000
+            },
+            "target": "ally_lowest_hp"
+          }
+        }
+      ],
+      "s": [
+        {
+          "key": "kindle",
+          "kind": "grant",
+          "filter": {
+            "tag": "healing"
+          },
+          "effect": {
+            "trigger": "on_fire",
+            "type": "heal",
+            "amount": 2,
+            "scaling": {
+              "mgk": 1000
+            },
+            "target": "all_allies"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "vell_wardweaver",
+    "hero": "vell",
+    "name": "Wardweaver",
+    "_note": "An ability: wards on the weakest ally, then wards that cleanse, then one great ward in a crisis.",
+    "ranks": {
+      "b": [
+        {
+          "key": "ward",
+          "kind": "ability",
+          "name": "Woven Ward",
+          "cooldown_ms": 5000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "shield",
+              "amount": 6,
+              "scaling": {
+                "mgk": 5000
+              },
+              "target": "ally_lowest_hp"
+            }
+          ]
+        }
+      ],
+      "a": [
+        {
+          "key": "ward",
+          "kind": "ability",
+          "name": "Woven Ward",
+          "cooldown_ms": 5000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "shield",
+              "amount": 6,
+              "scaling": {
+                "mgk": 5000
+              },
+              "target": "ally_lowest_hp"
+            },
+            {
+              "trigger": "on_fire",
+              "type": "cleanse",
+              "amount_bp": 2000,
+              "target": "ally_lowest_hp"
+            }
+          ]
+        }
+      ],
+      "s": [
+        {
+          "key": "aegis",
+          "kind": "ability",
+          "name": "Great Ward",
+          "effects": [
+            {
+              "trigger": "on_ally_below_hp",
+              "threshold_bp": 3000,
+              "once": true,
+              "type": "shield",
+              "amount": 20,
+              "scaling": {
+                "mgk": 15000
+              },
+              "target": "trigger_ally"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "vell_vigil_keeper",
+    "hero": "vell",
+    "name": "Vigil Keeper",
+    "_note": "Her strength is backup: stronger backup heals, then backup shields, then a guild-wide blessing from anywhere.",
+    "ranks": {
+      "b": [
+        {
+          "key": "vigil",
+          "kind": "aura",
+          "when": "benched",
+          "target": "holder_items",
+          "stat": "heal_bp",
+          "value": 15000
+        }
+      ],
+      "a": [
+        {
+          "key": "shelter",
+          "kind": "backup",
+          "backup": {
+            "name": "Shelter",
+            "cooldown_ms": 5000,
+            "effects": [
+              {
+                "trigger": "on_fire",
+                "type": "shield",
+                "amount": 5,
+                "scaling": {
+                  "mgk": 3000
+                },
+                "target": "ally_lowest_hp"
+              }
+            ]
+          }
+        }
+      ],
+      "s": [
+        {
+          "key": "blessing",
+          "kind": "aura",
+          "when": "always",
+          "target": "all_allies",
+          "stat": "heal_bp",
+          "value": 11500
+        }
+      ]
+    }
+  },
+  {
+    "id": "odo_pyromancer",
+    "hero": "odo",
+    "name": "Pyromancer",
+    "_note": "His Burn: hotter, then spread by his magic, then Golden Flame.",
+    "ranks": {
+      "b": [
+        {
+          "key": "stoke",
+          "kind": "aura",
+          "target": "holder_items",
+          "filter": {
+            "applies": "burn"
+          },
+          "stat": "over_time_bp",
+          "value": 12500
+        }
+      ],
+      "a": [
+        {
+          "key": "kindle",
+          "kind": "grant",
+          "filter": {
+            "tag": "magic"
+          },
+          "effect": {
+            "trigger": "on_hit",
+            "type": "apply_status",
+            "status": "burn",
+            "stacks": 1,
+            "target": "hit_target"
+          }
+        }
+      ],
+      "s": [
+        {
+          "key": "gild",
+          "kind": "replace_status",
+          "from": "burn",
+          "to": "golden_flame"
+        }
+      ]
+    }
+  },
+  {
+    "id": "odo_hexweaver",
+    "hero": "odo",
+    "name": "Hexweaver",
+    "_note": "His auto-attack becomes a hex cloud over every enemy; an auto-attack item carries the hex instead.",
+    "ranks": {
+      "b": [
+        {
+          "key": "cloud",
+          "kind": "basic_attack",
+          "basic_attack": {
+            "id": "hex_cloud",
+            "name": "Hex Cloud",
+            "cooldown_ms": 1600,
+            "effects": [
+              {
+                "trigger": "on_fire",
+                "type": "damage",
+                "amount": 2,
+                "scaling": {
+                  "mgk": 3000
+                },
+                "target": "all_enemies"
+              }
+            ]
+          }
+        },
+        {
+          "key": "venom",
+          "kind": "grant",
+          "filter": {
+            "auto_attack": true
+          },
+          "effect": {
+            "trigger": "on_hit",
+            "type": "apply_status",
+            "status": "poison",
+            "stacks": 1,
+            "target": "hit_target"
+          }
+        }
+      ],
+      "a": [
+        {
+          "key": "venom",
+          "kind": "grant",
+          "filter": {
+            "auto_attack": true
+          },
+          "effect": {
+            "trigger": "on_hit",
+            "type": "apply_status",
+            "status": "poison",
+            "stacks": 2,
+            "target": "hit_target"
+          }
+        }
+      ],
+      "s": [
+        {
+          "key": "pulse",
+          "kind": "grant",
+          "filter": {
+            "auto_attack": true
+          },
+          "effect": {
+            "trigger": "on_hit",
+            "type": "charge",
+            "amount_ms": 100,
+            "target": "row_items"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "odo_stormcaller",
+    "hero": "odo",
+    "name": "Stormcaller",
+    "_note": "An ability: a storm over every enemy, then faster magic, then the storm speeds his whole row.",
+    "ranks": {
+      "b": [
+        {
+          "key": "storm",
+          "kind": "ability",
+          "name": "Rift Storm",
+          "cooldown_ms": 6000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "damage",
+              "amount": 4,
+              "scaling": {
+                "mgk": 5000
+              },
+              "target": "all_enemies"
+            }
+          ]
+        }
+      ],
+      "a": [
+        {
+          "key": "static",
+          "kind": "aura",
+          "target": "holder_items",
+          "filter": {
+            "tag": "magic"
+          },
+          "stat": "cooldown_bp",
+          "value": -1000
+        }
+      ],
+      "s": [
+        {
+          "key": "storm",
+          "kind": "ability",
+          "name": "Rift Storm",
+          "cooldown_ms": 6000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "damage",
+              "amount": 4,
+              "scaling": {
+                "mgk": 5000
+              },
+              "target": "all_enemies"
+            },
+            {
+              "trigger": "on_fire",
+              "type": "charge",
+              "amount_ms": 300,
+              "target": "row_items"
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

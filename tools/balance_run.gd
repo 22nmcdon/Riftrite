@@ -12,6 +12,7 @@ const LOW_SHARE_PERCENT: float = 3.0
 class PartyHero:
 	var hero_id: String
 	var rank: int = 0
+	var specialization_id: String = ""
 	var row: UnitSetup.Row = UnitSetup.Row.FRONT
 	var items: Array[LoadoutEntry] = []
 
@@ -120,9 +121,13 @@ static func _read_heroes(content: ContentDb, reader: DataReader, key: String) ->
 		hero.rank = maxi(TuningDef.TIER_NAMES.find(hero_reader.opt_string_choice("rank", "c", TuningDef.TIER_NAMES)), 0)
 		hero.row = maxi(EncounterDef.ROW_NAMES.find(hero_reader.opt_string_choice("row", "front", EncounterDef.ROW_NAMES)), 0) as UnitSetup.Row
 		hero.items = LoadoutEntry.read_list(hero_reader, "items")
+		if hero_reader.has("specialization"):
+			hero.specialization_id = hero_reader.req_string("specialization")
 		hero_reader.finish()
 		if not content.heroes.has(hero.hero_id):
 			hero_reader.error("unknown hero \"%s\"" % hero.hero_id)
+		if not hero.specialization_id.is_empty() and not content.specializations.has(hero.specialization_id):
+			hero_reader.error("unknown specialization \"%s\"" % hero.specialization_id)
 		heroes.append(hero)
 	return heroes
 
@@ -131,7 +136,7 @@ static func _read_heroes(content: ContentDb, reader: DataReader, key: String) ->
 static func party_units(content: ContentDb, party: Party, benched: bool = false) -> Array[UnitSetup]:
 	var units: Array[UnitSetup] = []
 	for hero: PartyHero in (party.bench if benched else party.heroes):
-		units.append(SetupBuilder.hero(content, hero.hero_id, hero.rank, hero.row, hero.items))
+		units.append(SetupBuilder.hero(content, hero.hero_id, hero.rank, hero.row, hero.items, hero.specialization_id))
 	return units
 
 

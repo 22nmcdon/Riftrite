@@ -1,6 +1,6 @@
 # Plan: rank-B specializations (Phase 3, step 3)
 
-Status: **proposed, second draft. Awaiting approval and answers (end of file).** Nothing here is built yet.
+Status: **built** (Phase 3, step 3). Answers and notes are at the end.
 
 ## The idea
 
@@ -32,6 +32,7 @@ A specialization is a set of **parts**, each unlocked at a rank. A later rank's 
 | `ability` | A slotless effect: on a cooldown, or on a trigger (`on_fight_start`, `at_time`, `on_ally_below_hp`), scaled from the hero's stats |
 | `basic_attack` | A new basic attack. **It must come with an `auto_attack` part** (an aura or grant filtered to `auto_attack`) that says what changes when an auto-attack item replaces it, so the specialization never goes blank |
 | `backup` | A change to the hero's Backup effect (adds effects or auras to it) |
+| `replace_status` | The hero's items apply one status as another (e.g. Burn as Golden Flame), like an alloy special |
 
 Every part has **`when`**: `fielded` (default), `benched`, or `always`. That covers specializations that only work on the field, that also work from the bench, or that only work from the bench.
 
@@ -56,12 +57,12 @@ Stat changes are `aura` parts on `holder` (e.g. ×1.2 DEF).
 | | **Ironbrand** (auto-attack) | New basic attack: a heavy blow that also shields himself; an auto-attack item gains that self-shield | His auto-attack applies 1 Bleed | Each auto-attack hit charges his other items by 0.2s |
 | | **Last Watch** (backup) | Benched: his Backup effect also shields the lowest-HP ally every 6s | Benched: all allies ×1.1 DEF | Benched: from 45s (Rift Collapse), all allies' shields ×1.3 |
 | Wren (Striker) | **Duelist** (item row) | Her weapons +10% crit chance | Her weapon crits apply 1 Bleed | Her crits deal ×1.2 damage on weapons |
-| | **Windrunner** (auto-attack) | New basic attack: two quick cuts; ×1.2 ATSP; an auto-attack item also gets the ATSP | Her auto-attack charges her Small items by 0.1s | Her auto-attack hits the back row too |
+| | **Windrunner** (auto-attack) | New basic attack: two quick cuts; ×1.2 ATSP; an auto-attack item also gets the ATSP | Her auto-attack charges her Small items by 0.1s | Her auto-attack also strikes the back row (a grant on her auto-attack) |
 | | **Nightstalker** (ability) | Every 6s, strikes the lowest-HP enemy | The strike applies 2 Bleed | From 20s, the strike's cooldown halves |
 | Vell (Mender) | **Lanternbearer** (item row) | Her healing items heal ×1.2 | Her heals also give a small shield | Her Old Lantern-style heals hit two allies (a grant on healing items) |
-| | **Wardweaver** (ability) | Every 5s, shields the lowest-HP ally | The ward also cleanses damage over time (needs a cleanse effect; otherwise a bigger shield) | The first ally to drop below 30% gets a big ward |
+| | **Wardweaver** (ability) | Every 5s, shields the lowest-HP ally | The ward also cleanses damage over time (the new `cleanse` effect) | The first ally to drop below 30% gets a big ward |
 | | **Vigil Keeper** (backup) | Benched: her Backup heal is ×1.5 | Benched: heals also shield | Always: while she's benched *or* fielded, all allies' healing ×1.15 |
-| Odo (Arcanist) | **Pyromancer** (item row) | His Burn items: ×1.25 damage over time | His magic items apply +1 Burn on hit | His Burn never loses more than 1 stack per tick (needs its own status type, like Golden Flame) |
+| Odo (Arcanist) | **Pyromancer** (item row) | His Burn items: ×1.25 damage over time | His magic items apply +1 Burn on hit | His Burn lands as Golden Flame (a `replace_status` part) |
 | | **Hexweaver** (auto-attack) | New basic attack: hits every enemy for less; an auto-attack item also applies 1 Poison | His auto-attack applies 1 more Poison | His auto-attack also Blinds (once per 5s) |
 | | **Stormcaller** (ability) | Every 6s, damage to every enemy | His magic items fire 10% faster | The storm also charges his items by 0.3s |
 
@@ -83,13 +84,14 @@ The rest of the slice's heroes get theirs in the content step: 8 heroes, so 24 s
   - **Auras and grants** go through the existing aura and grant code, with the hero as holder.
   - **`when`** picks which parts apply, depending on whether the hero is fielded or benched.
   - **Backup additions** join the hero's Backup effect.
-  - **The log** names the specialization: `brannoc · Hearthwall (A) shields wren for 32`.
+  - **The log** names the specialization: `brannoc · Catch (Hearthwall A) ...`.
 - **New vocabulary** (flagged per CLAUDE.md):
   - the `holder_items` aura target and the `auto_attack` filter key
   - ability triggers for heroes (reusing the relic triggers)
   - a hero-side `trigger_ally` target
 
-  Some capstones in the table need more (a cleanse effect, a Burn variant, auto-attacks that reach the back row); those are listed as open, not built here.
+  - the `cleanse` effect type (strips a share of the target's damage-over-time stacks)
+  - the `replace_status` part
 
 ## Tests
 
@@ -107,8 +109,15 @@ The rest of the slice's heroes get theirs in the content step: 8 heroes, so 24 s
 - **Setup checks:** a wrong hero and a rank-C specialization are rejected.
 - **Determinism and balance:** the determinism fight includes a specialization with A and S parts, and balance parties can name one.
 
-## Questions
+## Answers
 
-1. **Locked potential instead of class additions:** go with it? (My recommendation: yes; see the reply that came with this draft.)
-2. **Draft content:** are the kinds of specializations in the table the right direction for how unique you want them? I'd rather adjust the direction now than after building 24 of them.
-3. **Capstones that need new mechanics:** build the few new effects they need in this step (a cleanse effect, Odo's slow-fading Burn as its own status, auto-attacks that reach the back row), or draft capstones from existing blocks first and add those when the content step comes?
+1. **Locked potential replaces class-based additions,** for now.
+2. **The drafts are a good start.**
+3. **Mechanics:** add a `cleanse` effect. Odo's capstone turns his Burn into Golden Flame instead of a new Burn that ignores cleansing (that would be unbalanced). Wren's back-row capstone is a grant on her auto-attack (existing blocks).
+
+## Built notes
+
+- **Log labels:** parts are credited as "Hearthwall A" (the specialization plus the rank that unlocked the part), e.g. `warden · Brand Blow (Ironbrand B) gives warden 4 shield`. Named abilities read "Catch (Hearthwall A)".
+- **Grants:** a specialization's grants are numbered from the hero's stats and every aura on the item, but not the item's tier. Relic and synergy grants stay flat.
+- **Abilities:** an ability with only triggered effects never fires on a cooldown.
+- **Balance:** a new `hearth_specialized` party (rank A, one specialization each) wins every Act 1 matchup in 13–19s. That's expected, since Act 1 enemies are tuned for rank C; judging specializations against each other needs later-act encounters.

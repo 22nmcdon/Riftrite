@@ -10,11 +10,13 @@ extends RefCounted
 ##                                  infusion, or spill; Inferno's Golden Flame
 ##                                  counts as both)
 ##          {"essence": "frost"}    items infused with that essence
+##          {"auto_attack": true}   the unit's auto-attack (basic attack or
+##                                  auto-attack item)
 ##   units: {"row": "front"}        units in that row
 ##          {"class": "warden"}     heroes of that class
 ## Adding a key is a code change; say so when you make one.
 
-const ITEM_KEYS: Array[String] = ["item", "tag", "size", "applies", "essence"]
+const ITEM_KEYS: Array[String] = ["item", "tag", "size", "applies", "essence", "auto_attack"]
 const UNIT_KEYS: Array[String] = ["row", "class"]
 const ROW_NAMES: Array[String] = ["front", "back"]
 
@@ -24,6 +26,7 @@ var tag: String = ""
 var size: int = 0
 var applies: String = ""
 var essence: String = ""
+var auto_attack: bool = false
 ## -1 = any row.
 var row: int = -1
 var unit_class: String = ""
@@ -54,6 +57,10 @@ static func read(reader: DataReader, for_items: bool) -> AuraFilter:
 			filter.applies = reader.req_string("applies")
 		if reader.has("essence"):
 			filter.essence = reader.req_string("essence")
+		if reader.has("auto_attack"):
+			filter.auto_attack = reader.opt_bool("auto_attack", false)
+			if not filter.auto_attack:
+				reader.error("auto_attack can only be true")
 	else:
 		if reader.has("row"):
 			filter.row = maxi(ROW_NAMES.find(reader.req_choice("row", ROW_NAMES)), 0)
@@ -74,6 +81,8 @@ func matches_item(item: ItemState) -> bool:
 		return false
 	if not essence.is_empty() and not item.essences.any(func(e: EssenceDef) -> bool: return e.id == essence):
 		return false
+	if auto_attack and not item.is_auto_attack:
+		return false
 	return true
 
 
@@ -93,6 +102,8 @@ func describe() -> String:
 			parts.append(part)
 	if size > 0:
 		parts.append("size %d" % size)
+	if auto_attack:
+		parts.append("auto-attack")
 	if row >= 0:
 		parts.append("%s row" % ROW_NAMES[row])
 	return " (%s)" % ", ".join(parts)
