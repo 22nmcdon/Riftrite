@@ -1,6 +1,6 @@
 # Plan: the day structure, economy, and run bot (Phase 3, step 5)
 
-Status: **proposed, awaiting approval and answers (end of file).** Nothing here is built yet.
+Status: **proposed, second draft.** One open question (essences) is at the end. Nothing here is built yet.
 
 This step turns the run state (step 4) into a playable run:
 - the run start
@@ -54,12 +54,12 @@ START_HERO ─► START_PACKAGE ─► [ CARAVAN ─► STOP_CHOICE ─► STOP 
   - **Tiers** follow the act's odds from `docs/tiers-backup-specialization.md` (Act 1: C 80%, B 20%).
   - **Rarity** follows rarity weights; every item of a rarity is equally likely, whatever its size.
 - **Never offered:**
+  - relics (they come from elite and boss choices, the relic merchant event, Loot, the Vault, and drops)
   - enemy-only items
   - Legendaries already seen
   - an item or hero at a different tier than a copy you hold
   - a hero already at S
   - a new hero when the roster is full (a copy of one you have is fine: it combines)
-  - a relic (see question 2)
 - **Buying** needs gold and room. Heroes combine or join (step 4's `add_hero`). A hero offered at B or above comes with a preset specialization, picked at random from their three.
 - **Selling:** half the price, rounded down.
 - **Rerolling:** 1 gold, then +1 each time in the same visit.
@@ -73,23 +73,27 @@ Pick 1 of 3, drawn by weight from the stops that apply right now:
 | **Forge** | Reforge items (step 4's `reforge`, gold per item) | Something is infused |
 | **Loot** | A free random reward: an item (random rarity *and* tier, **enemy-only items included**), an essence, or gold. Take or pass | Always |
 | **Vault** | Spend a key on a chest: a better item or a relic | You hold a key |
-| **Upgrade** | See question 1 | ? |
+| **Retrain** | Switch one hero to another of their three specializations, keeping their rank (free) | A hero has a specialization |
 | **Event** | One of the events | Always |
+
+**The Upgrade stop** isn't in the pick: it's **always the stop right before the boss**, and nowhere else. It's free: one item goes up one tier, enemy-only items included (not S, not Legendaries). It's the other way to raise enemy-only items, besides a second copy from random loot.
 
 **Events** (`data/events.json`, outcome types: gold, item by rarity, item by tier, relic by rarity, essence, key):
 - **Gold.**
 - **A random item by rarity:** Common 50%, Uncommon 28%, Rare 14%, Epic 6%, Legendary 2% (a Legendary already seen is rerolled).
 - **A random relic by rarity,** with the same odds.
 - **A random item by tier:** C 55%, B 30%, A 12%, S 3%.
+- **Relic merchant:** pick one of 3 relics and pay its price (by rarity), or leave. This is the only way to buy a relic; the Caravan never sells them.
 
 ## Rewards and losing
 
 - **A win (a tie counts):**
   - gold: 5 + the day number
-  - 1–2 essences from the enemy team (see question 3)
+  - essences: **open**, see the question below
   - **one guaranteed drop** from the enemy team's items and relics (enemy-only included), at the enemy's tier
-- **An elite:** also a guaranteed Rare item, or a free copy of one of your heroes (a rank-up).
-- **The boss:** an item or a relic from the boss team.
+- **An elite:** also a **relic choice**: pick 1 of 3 relics (or none), with elite rarity odds.
+- **The boss:** the drop is an item or a relic from the boss team, **plus a relic choice** from a stronger, game-altering pool (Epic-leaning, and boss-only relics later).
+- **Keys:** an elite has a 50% chance to drop one; some events give one.
 - **Every reward can be taken or passed on.** Taking one without room means throwing something away first.
 - **A loss:** the day restarts at the Caravan with everything kept, plus bonus gold (10 + 5 per fight won). Then comes a fresh Caravan and stop (the attempt number changes their seeds) and a rematch against the same fight. **The second loss ends the run.**
 - **The act's end:** after the boss, the run reports its result. Acts 2 and 3 come later.
@@ -102,7 +106,7 @@ Pick 1 of 3, drawn by weight from the stops that apply right now:
 | Base gold / packages | 10 / +8 gold, a random Common relic, or a random Common item |
 | Item price by tier | C 4, B 9, A 20, S 42 (rarity adds nothing for now) |
 | Hero price by rank | C 6, B 14, A 30, S 60 |
-| Relic price by rarity | 6, 9, 13, 18, 25 (if the Caravan sells relics) |
+| Relic price by rarity | 6, 9, 13, 18, 25 (the relic merchant event) |
 | Sell | half, rounded down |
 | Reroll | 1, +1 per reroll in a visit |
 | Reforge | 3 per item (moves here from tuning) |
@@ -143,14 +147,23 @@ Pick 1 of 3, drawn by weight from the stops that apply right now:
   - save/load at any step continues the same run
 - **The bot:** it finishes runs without errors, and the runner's report lines.
 
-## Questions
+## Answers
 
-1. **Upgrade stops:** what exactly does one do? My draft:
-   - you pick one item and it goes up one tier, enemy-only items included (not S, not Legendaries)
-   - it costs gold by the item's current tier (placeholder: the next tier's buy price minus this one's)
-   - it appears in the stop choice like the others, always available
+1. **Upgrade stop:** always the stop right before the boss, never anywhere else, and free (one item, one tier).
+2. **Relics:** a relic choice after every elite and boss (the boss's is more powerful and game-altering), plus an event that sells one. The Caravan doesn't sell relics.
+3. **Essences:** 1–2 per win is too many. See the question below.
+4. **Keys:** elites 50%, plus some events.
+5. **New stop, Retrain:** switch a hero to another of their specializations.
 
-   Should it be free instead, or limited to one item?
-2. **Relics in the Caravan:** you gave relic prices by rarity, so should the Caravan sometimes offer a relic (say one slot, 1 visit in 5)? Or do relics only come from Loot, the Vault, events, elites, bosses, and drops?
-3. **Essence drops:** I'd give each enemy type the essence it drops (a new `essence` field; for example, hounds drop Wrath and witches drop Venom). A win then gives 1–2 essences picked from the team's enemies. OK?
-4. **Keys:** where do they come from? My draft: an elite has a 50% chance to drop one, and some events give one.
+## Question (still open)
+
+**How essences are earned.** The design's pillar is that essences come *from what you fight*, and they should feel scarce enough to matter. Some options:
+
+- **A. Essence shards.** Each win gives 1 shard of the enemy team's essence; 3 shards of one kind make an essence. It keeps "harvested from what you fight", and the rate is easy to tune (shards per win, shards per essence).
+- **B. One reward, your choice.** A fight's guaranteed drop becomes a pick: an item, a relic, *or* an essence from the team. You get one, not all.
+- **C. A chance.** Each win has about a 30% chance to drop one essence of the team's kind.
+- **D. Only from bigger fights.** Normal fights give none; elites and bosses give one each; Loot and Events give the rest.
+
+My recommendation: **A**, maybe with D's rule that elites and bosses give a whole essence. That keeps essences tied to what you fight and makes choosing *which* fights to take matter, without flooding the pouch.
+
+Also open: which enemies give which essence. I'd give each enemy type an essence (a new `essence` field on enemies) and use the team's most common one.
