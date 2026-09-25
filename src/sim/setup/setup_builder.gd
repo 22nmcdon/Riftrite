@@ -15,7 +15,9 @@ static func item_setups(content: ContentDb, entries: Array[LoadoutEntry]) -> Arr
 ## A hero at a rank, standing in a row, carrying a loadout.
 static func hero(content: ContentDb, hero_id: String, rank: int, row: UnitSetup.Row, entries: Array[LoadoutEntry]) -> UnitSetup:
 	var def: HeroDef = content.heroes[hero_id]
-	return UnitSetup.make(def.id, def.name, def.stats, row, HeroDef.slots_at_rank(rank), def.basic_attack, item_setups(content, entries), rank)
+	var setup: UnitSetup = UnitSetup.make(def.id, def.name, def.stats, row, HeroDef.slots_at_rank(rank), def.basic_attack, item_setups(content, entries), rank)
+	setup.backup = def.backup
+	return setup
 
 
 ## An encounter's enemy team. Unit ids get a position number so twins can be

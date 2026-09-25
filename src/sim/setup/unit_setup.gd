@@ -21,6 +21,8 @@ var slots: int
 var basic_attack: ItemDef
 ## In row order, left to right.
 var items: Array[ItemSetup] = []
+## The hero's own Backup effect (used when benched), or null.
+var backup: BackupDef = null
 
 
 static func make(unit_id: String, unit_name: String, unit_stats: UnitStats, unit_row: Row, unit_slots: int, basic: ItemDef, row_items: Array[ItemSetup] = [], unit_rank: int = 0) -> UnitSetup:

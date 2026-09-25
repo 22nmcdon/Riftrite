@@ -60,6 +60,14 @@ static func basic(attack_id: String = "basic", overrides: Dictionary = {}) -> It
 	return def
 
 
+## A backup block (hero Backup effect or item backup mode). Fails loudly on errors.
+static func backup(data: Dictionary) -> BackupDef:
+	var errors: Array[String] = []
+	var def: BackupDef = BackupDef.read(DataReader.new(data, "backup", errors), false)
+	assert(errors.is_empty(), "test backup is invalid: %s" % [errors])
+	return def
+
+
 ## A damage-only effect list, for overrides.
 static func damage(amount: int, target: String = "enemy_front") -> Array:
 	return [{"trigger": "on_fire", "type": "damage", "amount": amount, "target": target}]
@@ -91,8 +99,8 @@ static func fight(heroes: Array[UnitSetup], enemies: Array[UnitSetup], seed_valu
 	return FightSetup.make(heroes, enemies, seed_value, act)
 
 
-static func run(heroes: Array[UnitSetup], enemies: Array[UnitSetup], seed_value: int = 1, act: int = 1) -> FightResult:
-	return CombatSim.run(fight(heroes, enemies, seed_value, act), content())
+static func run(heroes: Array[UnitSetup], enemies: Array[UnitSetup], seed_value: int = 1, act: int = 1, bench: Array[UnitSetup] = []) -> FightResult:
+	return CombatSim.run(FightSetup.make(heroes, enemies, seed_value, act, bench), content())
 
 
 ## Log entries of one kind whose source item is `item_id`.

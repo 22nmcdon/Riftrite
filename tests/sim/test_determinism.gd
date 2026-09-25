@@ -20,10 +20,17 @@ func _chaotic_fight(seed_value: int) -> FightSetup:
 		{"target": "linked_allies", "stat": "damage_bp", "value": 15000, "window": {"until_ms": 10000}},
 		{"target": "adjacent_items", "stat": "crit_chance_bp", "value": 2000}]})
 	var claw: ItemDef = K.item("claw", {"cooldown_ms": 900, "crit_chance_bp": 2500, "effects": K.damage(7, "enemy_random")})
-	return K.fight(
+	return FightSetup.make(
 		[K.unit("warden", 420, FRONT, [K.equip(cleave, ["ember", "ember"] as Array[String]), drum]), K.unit("striker", 300, FRONT, [K.equip(scatter, ["umbral"] as Array[String])]), K.unit("mender", 260, BACK, [K.equip(mend, ["verdant"] as Array[String], 0, 280), K.equip(scatter, ["stone"] as Array[String])])],
 		[K.unit("ghoul_a", 380, FRONT, [K.equip(claw, ["frost"] as Array[String])]), K.unit("ghoul_b", 380, FRONT, [K.equip(claw, ["venom"] as Array[String])]), K.unit("shade", 300, BACK, [K.equip(claw, ["wrath"] as Array[String]), K.equip(hex, ["ember", "storm"] as Array[String])])],
-		seed_value)
+		seed_value, 1, [_benched_vell(mend)])
+
+
+func _benched_vell(mend: ItemDef) -> UnitSetup:
+	var vell: UnitSetup = K.unit("vell", 260, BACK, [K.item("chime", {"rarity": "uncommon", "effects": [],
+		"backup": {"cooldown_ms": 2500, "effects": [{"trigger": "on_fire", "type": "heal", "amount": 9, "target": "ally_lowest_hp"}]}})])
+	vell.backup = K.backup({"cooldown_ms": 3000, "effects": [{"trigger": "on_fire", "type": "damage", "amount": 6, "target": "enemy_random"}]})
+	return vell
 
 
 func test_same_seed_same_log() -> void:

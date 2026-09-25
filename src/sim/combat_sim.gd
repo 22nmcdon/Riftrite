@@ -22,7 +22,10 @@ var collapse: CollapseDef
 var rng: SimRng
 var combat_log: CombatLog = CombatLog.new()
 var tick: int = 0
+## Fielded heroes.
 var heroes: Array[UnitState] = []
+## Heroes in backup (never targeted; see UnitState.benched).
+var bench: Array[UnitState] = []
 var enemies: Array[UnitState] = []
 ## Every unit, in resolution order.
 var units: Array[UnitState] = []
@@ -75,7 +78,11 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 	rng = SimRng.new(setup.seed_value)
 	heroes = _build_side(setup.heroes, UnitSetup.Side.HEROES, content)
 	enemies = _build_side(setup.enemies, UnitSetup.Side.ENEMIES, content)
+	for unit_setup: UnitSetup in setup.bench:
+		bench.append(UnitState.from_setup(unit_setup, UnitSetup.Side.HEROES, 0, content, true))
+	# Resolution order: fielded heroes, then the bench, then enemies.
 	units.append_array(heroes)
+	units.append_array(bench)
 	units.append_array(enemies)
 	for i: int in units.size():
 		for item: ItemState in units[i].items:
@@ -113,6 +120,8 @@ func step() -> void:
 		var unit_rate_bp: int = unit.cooldown_rate_bp()
 		var atsp_bp: int = FixedMath.BP_ONE + unit.stats.get_stat(UnitStats.Stat.ATSP) * tuning.atsp_bp_per_point
 		for item: ItemState in unit.items:
+			if item.def.effects.is_empty():
+				continue
 			var rate_bp: int = FixedMath.apply_bp(unit_rate_bp, FixedMath.BP_ONE - item.slow_bp())
 			if item.is_auto_attack:
 				rate_bp = FixedMath.apply_bp(rate_bp, atsp_bp)
@@ -324,7 +333,7 @@ func _apply_collapse() -> void:
 	if damage <= 0:
 		return
 	for unit: UnitState in units:
-		if not unit.alive:
+		if not unit.alive or unit.benched:
 			continue
 		var entry := LogEntry.new()
 		entry.tick = tick
@@ -341,7 +350,7 @@ func _apply_collapse() -> void:
 func _process_deaths() -> void:
 	var anyone_fell: bool = false
 	for unit: UnitState in units:
-		if unit.alive and unit.hp <= 0:
+		if unit.alive and unit.hp <= 0 and not unit.benched:
 			unit.alive = false
 			anyone_fell = true
 			var entry := LogEntry.new()
