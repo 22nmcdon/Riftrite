@@ -10,8 +10,20 @@ extends RefCounted
 
 
 static func pick(target: EffectDef.Target, source: UnitState, hit_target: UnitState, sim: CombatSim) -> Array[UnitState]:
-	var allies: Array[UnitState] = sim.allies_of(source)
-	var foes: Array[UnitState] = sim.enemies_of(source)
+	return _pick(target, sim.allies_of(source), sim.enemies_of(source), source.column, source, hit_target, sim)
+
+
+## Targets for a relic's effect. A relic stands nowhere, so enemy_front and
+## enemy_back aim from column 0 (like a backup hero). `trigger_ally` is the
+## ally that set off on_ally_below_hp, or null.
+static func for_relic(target: EffectDef.Target, side: UnitSetup.Side, trigger_ally: UnitState, sim: CombatSim) -> Array[UnitState]:
+	var foe_side: UnitSetup.Side = UnitSetup.Side.ENEMIES if side == UnitSetup.Side.HEROES else UnitSetup.Side.HEROES
+	return _pick(target, sim.side_units(side), sim.side_units(foe_side), 0, null, trigger_ally, sim)
+
+
+## `source` is null for relics (which can't use self or linked targets);
+## `hit_target` is the hit's target, or the trigger ally for trigger_ally.
+static func _pick(target: EffectDef.Target, allies: Array[UnitState], foes: Array[UnitState], column: int, source: UnitState, hit_target: UnitState, sim: CombatSim) -> Array[UnitState]:
 	var picked: UnitState = null
 	match target:
 		EffectDef.Target.ALL_ENEMIES:
@@ -20,18 +32,18 @@ static func pick(target: EffectDef.Target, source: UnitState, hit_target: UnitSt
 			return _standing(allies)
 		EffectDef.Target.LINKED_ALLY, EffectDef.Target.LINKED_LEFT_ALLY, EffectDef.Target.LINKED_RIGHT_ALLY, EffectDef.Target.LINKED_ALLIES, EffectDef.Target.ROW_ALLIES:
 			return linked(target, source, allies)
-		EffectDef.Target.HIT_TARGET:
+		EffectDef.Target.HIT_TARGET, EffectDef.Target.TRIGGER_ALLY:
 			picked = hit_target
 		EffectDef.Target.SELF:
 			picked = source
 		EffectDef.Target.ENEMY_FRONT:
-			picked = _nearest_in_row(foes, UnitSetup.Row.FRONT, source.column)
+			picked = _nearest_in_row(foes, UnitSetup.Row.FRONT, column)
 			if picked == null:
-				picked = _nearest_in_row(foes, UnitSetup.Row.BACK, source.column)
+				picked = _nearest_in_row(foes, UnitSetup.Row.BACK, column)
 		EffectDef.Target.ENEMY_BACK:
-			picked = _nearest_in_row(foes, UnitSetup.Row.BACK, source.column)
+			picked = _nearest_in_row(foes, UnitSetup.Row.BACK, column)
 			if picked == null:
-				picked = _nearest_in_row(foes, UnitSetup.Row.FRONT, source.column)
+				picked = _nearest_in_row(foes, UnitSetup.Row.FRONT, column)
 		EffectDef.Target.ENEMY_RANDOM:
 			var standing: Array[UnitState] = _standing(foes)
 			if not standing.is_empty():

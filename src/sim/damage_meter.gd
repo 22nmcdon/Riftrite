@@ -3,7 +3,8 @@ extends RefCounted
 ## Per-item totals for one fight, built from the combat log (never counted
 ## separately, so the meter and the log can't disagree). Damage includes
 ## damage over time credited to the item; Rift Collapse isn't credited to
-## anyone.
+## anyone. A relic gets its own row (unit_id ""), and so does each relic
+## grant on an item ("Rust Hook (Cinder Crown)"), so relics can be judged.
 
 
 class Row:
@@ -38,14 +39,19 @@ static func from_log(combat_log: CombatLog, heroes: Array[String]) -> DamageMete
 
 
 func _row(entry: LogEntry, heroes: Array[String]) -> Row:
-	var key: String = "%s/%s" % [entry.source_unit, entry.source_item]
+	var key: String = "%s/%s/%s/%d" % [entry.source_unit, entry.source_item, entry.source_granted_by, entry.source_relic_side]
 	if _index.has(key):
 		return rows[_index[key]]
 	var row := Row.new()
-	row.side = UnitSetup.Side.HEROES if heroes.has(entry.source_unit) else UnitSetup.Side.ENEMIES
+	if entry.source_relic_side >= 0:
+		row.side = entry.source_relic_side as UnitSetup.Side
+	else:
+		row.side = UnitSetup.Side.HEROES if heroes.has(entry.source_unit) else UnitSetup.Side.ENEMIES
 	row.unit_id = entry.source_unit
 	row.item_id = entry.source_item
 	row.item_name = entry.source_item_name
+	if not entry.source_granted_by.is_empty():
+		row.item_name += " (%s)" % entry.source_granted_by
 	_index[key] = rows.size()
 	rows.append(row)
 	return row

@@ -8,6 +8,8 @@ extends RefCounted
 var effect: EffectDef
 var infusion_id: String = ""
 var infusion_name: String = ""
+## The relic that granted this effect (see GrantDef), or "".
+var granted_by: String = ""
 ## The effect's amount (or stacks) after stat scaling and multipliers.
 ## Effects without an amount (like amount_bp_of_damage shields) have 0.
 var value: ValueBreakdown

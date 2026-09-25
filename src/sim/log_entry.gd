@@ -33,6 +33,11 @@ var source_item_name: String = ""
 ## Essence id if the effect came from an infusion, else "".
 var source_infusion: String = ""
 var source_infusion_name: String = ""
+## The relic that granted the source item this effect, or "".
+var source_granted_by: String = ""
+## Relic effects: the side holding the relic (source_item is the relic);
+## -1 when the source is a unit.
+var source_relic_side: int = -1
 var target: String = ""
 ## DAMAGE/COLLAPSE/STATUS_DAMAGE: the hit's full damage. HEAL: HP restored.
 ## SHIELD: shield given. STATUS_APPLIED: stacks added.
@@ -56,10 +61,19 @@ func set_source(source: EffectSource) -> void:
 	source_item_name = source.item_name
 	source_infusion = source.infusion_id
 	source_infusion_name = source.infusion_name
+	source_granted_by = source.granted_by
+	source_relic_side = source.relic_side
+
+
+func source() -> EffectSource:
+	var result: EffectSource = EffectSource.make(source_unit, source_item, source_item_name, source_infusion, source_infusion_name)
+	result.granted_by = source_granted_by
+	result.relic_side = source_relic_side
+	return result
 
 
 func source_text() -> String:
-	return EffectSource.make(source_unit, source_item, source_item_name, source_infusion, source_infusion_name).describe()
+	return source().describe()
 
 
 func to_text() -> String:

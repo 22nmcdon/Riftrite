@@ -38,7 +38,7 @@ Items and heroes don't have to start at C. Shops can sell B, A, or even S tier, 
 
 **Lucky sources skip the table.** An event that opens an A-tier-only shop, an enemy drop, or a Vault chest can hand out a high-tier item or hero early. These are rare jackpots that can define a run.
 
-The same odds table applies to heroes in Taverns and to items in Merchants, so the values should live in one data file.
+The same odds table applies to heroes and items in the Caravan (the shop, which sells both), so the values should live in one data file.
 
 ## Heroes recruited above C
 

@@ -8,6 +8,8 @@ extends RefCounted
 
 var id: String
 var name: String
+## A hero's class, or "" (see UnitSetup.unit_class).
+var unit_class: String = ""
 var side: UnitSetup.Side
 var row: UnitSetup.Row
 ## Position within the row, 0 = leftmost.
@@ -38,6 +40,7 @@ static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column:
 	var state := UnitState.new()
 	state.id = setup.id
 	state.name = setup.name
+	state.unit_class = setup.unit_class
 	state.side = unit_side
 	state.row = setup.row
 	state.column = unit_column

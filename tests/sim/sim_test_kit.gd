@@ -20,6 +20,8 @@ const DEFAULT_BASIC: Dictionary = {
 
 
 static var _content: ContentDb
+## The real content plus the test relics registered by relic().
+static var _relic_content: ContentDb
 
 
 ## The real content from data/, loaded once.
@@ -66,6 +68,46 @@ static func backup(data: Dictionary) -> BackupDef:
 	var def: BackupDef = BackupDef.read(DataReader.new(data, "backup", errors), false)
 	assert(errors.is_empty(), "test backup is invalid: %s" % [errors])
 	return def
+
+
+## A relic from `data` (an "id" and "name" are filled in), registered in
+## relic_content() so fights can hold it. Fails loudly on errors.
+static func relic(relic_id: String, data: Dictionary) -> RelicDef:
+	var full: Dictionary = {"id": relic_id, "name": relic_id.capitalize(), "rarity": "rare"}
+	full.merge(data, true)
+	var errors: Array[String] = []
+	var def: RelicDef = RelicDef.read(DataReader.new(full, relic_id, errors))
+	assert(errors.is_empty(), "test relic %s is invalid: %s" % [relic_id, errors])
+	relic_content().relics[relic_id] = def
+	return def
+
+
+## Real content plus test relics (see relic()).
+static func relic_content() -> ContentDb:
+	if _relic_content == null:
+		_relic_content = ContentDb.load_dir("res://data")
+	return _relic_content
+
+
+static func relic_ids(defs: Array[RelicDef]) -> Array[String]:
+	var ids: Array[String] = []
+	for def: RelicDef in defs:
+		ids.append(def.id)
+	return ids
+
+
+## A fight where the guild holds `relics` and the enemies `enemy_relics`.
+static func relic_fight(heroes: Array[UnitSetup], enemies: Array[UnitSetup], relics: Array[RelicDef], enemy_relics: Array[RelicDef] = [], seed_value: int = 1, bench: Array[UnitSetup] = []) -> FightSetup:
+	return FightSetup.make(heroes, enemies, seed_value, 1, bench, relic_ids(relics), relic_ids(enemy_relics))
+
+
+static func run_relics(heroes: Array[UnitSetup], enemies: Array[UnitSetup], relics: Array[RelicDef], enemy_relics: Array[RelicDef] = [], seed_value: int = 1, bench: Array[UnitSetup] = []) -> FightResult:
+	return CombatSim.run(relic_fight(heroes, enemies, relics, enemy_relics, seed_value, bench), relic_content())
+
+
+## A fight built but not stepped, for checking derived values at the start.
+static func relic_sim(heroes: Array[UnitSetup], enemies: Array[UnitSetup], relics: Array[RelicDef], enemy_relics: Array[RelicDef] = [], bench: Array[UnitSetup] = []) -> CombatSim:
+	return CombatSim.new(relic_fight(heroes, enemies, relics, enemy_relics, 1, bench), relic_content())
 
 
 ## A damage-only effect list, for overrides.

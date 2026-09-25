@@ -23,8 +23,20 @@ extends RefCounted
 ##   linked_ally (the ally just left of the holder in its row, else just
 ##   right), linked_left_ally, linked_right_ally, linked_allies (both),
 ##   row_allies (every other ally in the holder's row)
+##
+## Relic effects (read with relic = true) have no holder, so their triggers
+## and targets differ:
+##   on_fire            on the relic's own cooldown_ms
+##   on_fight_start     once, at tick 0, before anything fires
+##   at_time            once, at "at_ms"
+##   on_ally_below_hp   when an ally first drops below "threshold_bp" of max
+##                      HP while still standing; "once": true means only the
+##                      first ally in the fight, otherwise once per ally
+##   trigger_ally       target: the ally that set off on_ally_below_hp
+## Relic numbers are flat: no "scaling" (see AuraDef.covers_everything for
+## what can boost them). Targets that need a spot on the field are rejected.
 
-enum Trigger { ON_FIRE, ON_HIT, ON_CRIT }
+enum Trigger { ON_FIRE, ON_HIT, ON_CRIT, ON_FIGHT_START, AT_TIME, ON_ALLY_BELOW_HP }
 enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS }
 enum Target {
 	HIT_TARGET,
@@ -41,9 +53,17 @@ enum Target {
 	LINKED_RIGHT_ALLY,
 	LINKED_ALLIES,
 	ROW_ALLIES,
+	TRIGGER_ALLY,
 }
 
-const TRIGGER_NAMES: Array[String] = ["on_fire", "on_hit", "on_crit"]
+const TRIGGER_NAMES: Array[String] = ["on_fire", "on_hit", "on_crit", "on_fight_start", "at_time", "on_ally_below_hp"]
+const ITEM_TRIGGERS: Array[Trigger] = [Trigger.ON_FIRE, Trigger.ON_HIT, Trigger.ON_CRIT]
+const RELIC_TRIGGERS: Array[Trigger] = [Trigger.ON_FIRE, Trigger.ON_FIGHT_START, Trigger.AT_TIME, Trigger.ON_ALLY_BELOW_HP]
+## Targets that need the effect's holder to stand on the field.
+const FIELD_ONLY_TARGETS: Array[Target] = [
+	Target.HIT_TARGET, Target.SELF, Target.LINKED_ALLY, Target.LINKED_LEFT_ALLY,
+	Target.LINKED_RIGHT_ALLY, Target.LINKED_ALLIES, Target.ROW_ALLIES,
+]
 const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status"]
 const TARGET_NAMES: Array[String] = [
 	"hit_target",
@@ -60,6 +80,7 @@ const TARGET_NAMES: Array[String] = [
 	"linked_right_ally",
 	"linked_allies",
 	"row_allies",
+	"trigger_ally",
 ]
 
 var trigger: Trigger
@@ -74,9 +95,16 @@ var scaling: Array[int] = [0, 0, 0, 0, 0, 0]
 ## Fight ticks the effect is active in: [from, until). until = -1: no end.
 var window_from_ticks: int = 0
 var window_until_ticks: int = -1
+## at_time: the tick it fires on.
+var at_ticks: int = 0
+## on_ally_below_hp: the HP share (basis points of max HP) to drop below.
+var threshold_bp: int = 0
+## on_ally_below_hp: only the first ally in the fight sets it off.
+var once: bool = false
 
 
-static func read(reader: DataReader) -> EffectDef:
+## `relic`: read a relic's effect (relic triggers and targets, flat numbers).
+static func read(reader: DataReader, relic: bool = false) -> EffectDef:
 	var def := EffectDef.new()
 	var trigger_name: String = reader.req_choice("trigger", TRIGGER_NAMES)
 	var type_name: String = reader.req_choice("type", TYPE_NAMES)
@@ -103,13 +131,38 @@ static func read(reader: DataReader) -> EffectDef:
 			_read_scaling(def, reader.req_object("scaling"))
 
 	read_window(reader, def)
+	if not trigger_name.is_empty():
+		_read_trigger_fields(def, reader, relic)
 
 	# "hit_target" and damage-based shields need a hit to refer to.
 	var needs_hit: bool = def.target == Target.HIT_TARGET or def.amount_bp_of_damage > 0
-	if needs_hit and not trigger_name.is_empty() and def.trigger == Trigger.ON_FIRE:
+	if needs_hit and not trigger_name.is_empty() and not relic and def.trigger == Trigger.ON_FIRE:
 		reader.error("\"%s\" needs a hit, so its trigger must be on_hit or on_crit, not on_fire" % (target_name if def.target == Target.HIT_TARGET else "amount_bp_of_damage"))
 	reader.finish()
 	return def
+
+
+## Checks the trigger is allowed here and reads its extra fields.
+static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool) -> void:
+	var allowed: Array[Trigger] = RELIC_TRIGGERS if relic else ITEM_TRIGGERS
+	if not allowed.has(def.trigger):
+		reader.error("%s effects can't use the trigger \"%s\"" % ["relic" if relic else "item", TRIGGER_NAMES[def.trigger]])
+	match def.trigger:
+		Trigger.AT_TIME:
+			def.at_ticks = reader.req_ticks("at_ms", FixedMath.MS_PER_TICK)
+		Trigger.ON_ALLY_BELOW_HP:
+			def.threshold_bp = reader.req_int("threshold_bp", 1, FixedMath.BP_ONE - 1)
+			def.once = reader.opt_bool("once", false)
+	if def.target == Target.TRIGGER_ALLY and def.trigger != Trigger.ON_ALLY_BELOW_HP:
+		reader.error("\"trigger_ally\" only works with the on_ally_below_hp trigger")
+	if not relic:
+		return
+	if FIELD_ONLY_TARGETS.has(def.target):
+		reader.error("\"%s\" needs a spot on the field, so a relic can't use it" % TARGET_NAMES[def.target])
+	if def.amount_bp_of_damage > 0:
+		reader.error("a relic has no hit, so it can't use amount_bp_of_damage")
+	if def.scaling.any(func(ratio: int) -> bool: return ratio != 0):
+		reader.error("relic numbers are flat, so relic effects can't have \"scaling\"")
 
 
 ## Reads an optional "window" object into `holder` (an EffectDef or AuraDef,

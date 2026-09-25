@@ -11,9 +11,12 @@ extends RefCounted
 ##      collect the ones that fire.
 ##   4. Resolve those firings in resolution order: heroes then enemies, front
 ##      row then back, left to right, and each unit's items in row order.
-##   5. Units at 0 HP die. They still fired whatever was ready this tick,
+##      Each side's relics act right after its units (RelicRunner).
+##   5. Relics' on_ally_below_hp checks.
+##   6. Units at 0 HP die. They still fired whatever was ready this tick,
 ##      so resolution order gives neither side an edge.
-##   6. Check for victory, defeat, or a tie.
+##   7. Check for victory, defeat, or a tie.
+## Relics' on_fight_start effects run at tick 0, before the first step.
 
 var content: ContentDb
 var tuning: TuningDef
@@ -29,6 +32,11 @@ var bench: Array[UnitState] = []
 var enemies: Array[UnitState] = []
 ## Every unit, in resolution order.
 var units: Array[UnitState] = []
+## Every relic: the guild's, then the enemy team's, each in setup order.
+var relics: Array[RelicState] = []
+## Per side (indexed by UnitSetup.Side): the side-wide aura boosts, which
+## are the only boosts a relic's own flat numbers get.
+var side_boosts: Array[ItemAura] = [ItemAura.new(), ItemAura.new()]
 var finished: bool = false
 ## Ticks where some aura's window opens or closes (lookup only).
 var _aura_boundaries: Dictionary[int, bool] = {}
@@ -87,20 +95,29 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 	for i: int in units.size():
 		for item: ItemState in units[i].items:
 			item.owner_index = i
+	for relic_id: String in setup.relics:
+		relics.append(RelicState.make(content.relics[relic_id], UnitSetup.Side.HEROES))
+	for relic_id: String in setup.enemy_relics:
+		relics.append(RelicState.make(content.relics[relic_id], UnitSetup.Side.ENEMIES))
 
 	var start := LogEntry.new()
 	start.kind = LogEntry.Kind.FIGHT_START
 	start.note = "seed %d, act %d" % [setup.seed_value, setup.act]
 	combat_log.add(start)
 
+	var all_auras: Array[AuraDef] = []
 	for unit: UnitState in units:
 		for item: ItemState in unit.items:
-			for aura: AuraDef in item.def.auras:
-				if aura.window_from_ticks > 0:
-					_aura_boundaries[aura.window_from_ticks] = true
-				if aura.window_until_ticks > 0:
-					_aura_boundaries[aura.window_until_ticks] = true
+			all_auras.append_array(item.def.auras)
+	for relic: RelicState in relics:
+		all_auras.append_array(relic.def.auras)
+	for aura: AuraDef in all_auras:
+		if aura.window_from_ticks > 0:
+			_aura_boundaries[aura.window_from_ticks] = true
+		if aura.window_until_ticks > 0:
+			_aura_boundaries[aura.window_until_ticks] = true
 	rederive_all()
+	RelicRunner.fight_start(self)
 
 
 ## Advances one tick. Does nothing once the fight is over.
@@ -127,17 +144,22 @@ func step() -> void:
 				rate_bp = FixedMath.apply_bp(rate_bp, atsp_bp)
 			if item.advance(rate_bp):
 				ready.append(item)
-	for item: ItemState in ready:
-		EffectRunner.fire(self, item)
+	for side: UnitSetup.Side in [UnitSetup.Side.HEROES, UnitSetup.Side.ENEMIES]:
+		for item: ItemState in ready:
+			if owner_of(item).side == side:
+				EffectRunner.fire(self, item)
+		RelicRunner.fire_due(self, side)
+	RelicRunner.check_below_hp(self)
 
 	_process_deaths()
 	_check_end()
 
 
 ## Recomputes every unit's stats and every item's derived values from the
-## auras active right now (standing holders, open windows), plus infusions
-## and spills. Runs at fight start, when an aura window opens or closes,
-## after deaths, and after an infusion levels up.
+## auras active right now (standing holders, open windows; relic auras last
+## all fight), relic grants, infusions, and spills. Runs at fight start,
+## when an aura window opens or closes, after deaths, and after an infusion
+## levels up.
 func rederive_all() -> void:
 	var item_auras: Array[Array] = []
 	var unit_boosts: Array[Array] = []
@@ -147,6 +169,7 @@ func rederive_all() -> void:
 			per_item.append(ItemAura.new())
 		item_auras.append(per_item)
 		unit_boosts.append([FixedMath.BP_ONE, FixedMath.BP_ONE, FixedMath.BP_ONE, FixedMath.BP_ONE, FixedMath.BP_ONE, FixedMath.BP_ONE])
+	side_boosts = [ItemAura.new(), ItemAura.new()]
 
 	var now_active: Array[String] = []
 	for u: int in units.size():
@@ -161,18 +184,31 @@ func rederive_all() -> void:
 					continue
 				now_active.append("%d:%d:%d" % [u, i, a])
 				var label: String = item.def.name if aura.label.is_empty() else "%s (%s)" % [aura.label, item.def.name]
-				if aura.targets_items():
-					for target_item: ItemState in _aura_item_targets(holder, item, aura.target):
-						(item_auras[u][holder.items.find(target_item)] as ItemAura).add(aura, label)
-					continue
-				for target_unit: UnitState in _aura_unit_targets(holder, aura.target):
-					var t: int = units.find(target_unit)
-					if aura.is_unit_stat():
-						var stat: int = AuraDef.UNIT_STAT_FOR[aura.stat]
-						unit_boosts[t][stat] = FixedMath.apply_bp(unit_boosts[t][stat], aura.value)
-					else:
-						for per_item: ItemAura in item_auras[t]:
-							per_item.add(aura, label)
+				var item_targets: Array[ItemState] = []
+				if aura.target == AuraDef.Target.ALL_ITEMS:
+					item_targets = _side_items(holder.side)
+				elif aura.targets_items():
+					item_targets = _aura_item_targets(holder, item, aura.target)
+				_apply_aura(aura, label, holder.side, item_targets, _aura_unit_targets(holder, aura.target), item_auras, unit_boosts)
+	for r: int in relics.size():
+		var relic: RelicState = relics[r]
+		for a: int in relic.def.auras.size():
+			var aura: AuraDef = relic.def.auras[a]
+			if not aura.active_at(tick):
+				continue
+			now_active.append("r:%d:%d" % [r, a])
+			var label: String = relic.def.name if aura.label.is_empty() else "%s (%s)" % [aura.label, relic.def.name]
+			var item_targets: Array[ItemState] = []
+			var unit_targets: Array[UnitState] = []
+			if aura.targets_items():
+				item_targets = _side_items(relic.side)
+			else:
+				unit_targets = _side_all(relic.side)
+			_apply_aura(aura, label, relic.side, item_targets, unit_targets, item_auras, unit_boosts)
+		for grant: GrantDef in relic.def.grants:
+			for item: ItemState in _side_items(relic.side):
+				if grant.matches(item):
+					(item_auras[item.owner_index][units[item.owner_index].items.find(item)] as ItemAura).add_grant(grant, relic.def.name)
 	_log_aura_changes(now_active)
 
 	for u: int in units.size():
@@ -184,6 +220,45 @@ func rederive_all() -> void:
 		var per_item: Array[ItemAura] = []
 		per_item.assign(item_auras[u])
 		unit.rederive_items(content, per_item)
+
+
+## Adds one aura's boost to the items or units it reaches, after its filter.
+## Side-wide boosts (AuraDef.covers_everything) also go to the side's relics.
+func _apply_aura(aura: AuraDef, label: String, side: UnitSetup.Side, item_targets: Array[ItemState], unit_targets: Array[UnitState], item_auras: Array[Array], unit_boosts: Array[Array]) -> void:
+	if aura.covers_everything():
+		side_boosts[side].add(aura, label)
+	if aura.targets_items():
+		for target_item: ItemState in item_targets:
+			if aura.filter == null or aura.filter.matches_item(target_item):
+				(item_auras[target_item.owner_index][units[target_item.owner_index].items.find(target_item)] as ItemAura).add(aura, label)
+		return
+	for target_unit: UnitState in unit_targets:
+		if aura.filter != null and not aura.filter.matches_unit(target_unit):
+			continue
+		var t: int = units.find(target_unit)
+		if aura.is_unit_stat():
+			var stat: int = AuraDef.UNIT_STAT_FOR[aura.stat]
+			unit_boosts[t][stat] = FixedMath.apply_bp(unit_boosts[t][stat], aura.value)
+		else:
+			for per_item: ItemAura in item_auras[t]:
+				per_item.add(aura, label)
+
+
+## Every unit on a side, backup heroes included, in resolution order.
+func _side_all(side: UnitSetup.Side) -> Array[UnitState]:
+	var result: Array[UnitState] = []
+	for unit: UnitState in units:
+		if unit.side == side:
+			result.append(unit)
+	return result
+
+
+## Every item of every unit on a side (backup heroes' too), in resolution order.
+func _side_items(side: UnitSetup.Side) -> Array[ItemState]:
+	var result: Array[ItemState] = []
+	for unit: UnitState in _side_all(side):
+		result.append_array(unit.items)
+	return result
 
 
 func _aura_item_targets(holder: UnitState, item: ItemState, target: AuraDef.Target) -> Array[ItemState]:
@@ -245,10 +320,18 @@ func _log_aura_changes(now_active: Array[String]) -> void:
 
 func _log_aura(key: String, change: String) -> void:
 	var parts: PackedStringArray = key.split(":")
-	var holder: UnitState = units[parts[0].to_int()]
-	var item: ItemState = holder.items[parts[1].to_int()]
-	var aura: AuraDef = item.def.auras[parts[2].to_int()]
-	var entry: LogEntry = new_entry(LogEntry.Kind.AURA, EffectSource.make(holder.id, item.def.id, item.def.name))
+	var aura: AuraDef
+	var source: EffectSource
+	if parts[0] == "r":
+		var relic: RelicState = relics[parts[1].to_int()]
+		aura = relic.def.auras[parts[2].to_int()]
+		source = EffectSource.relic(relic.def, relic.side)
+	else:
+		var holder: UnitState = units[parts[0].to_int()]
+		var item: ItemState = holder.items[parts[1].to_int()]
+		aura = item.def.auras[parts[2].to_int()]
+		source = EffectSource.make(holder.id, item.def.id, item.def.name)
+	var entry: LogEntry = new_entry(LogEntry.Kind.AURA, source)
 	entry.note = "%s: %s" % [change, aura.describe()]
 	combat_log.add(entry)
 
@@ -279,6 +362,11 @@ func allies_of(unit: UnitState) -> Array[UnitState]:
 
 func enemies_of(unit: UnitState) -> Array[UnitState]:
 	return enemies if unit.side == UnitSetup.Side.HEROES else heroes
+
+
+## A side's fielded units (heroes or enemies).
+func side_units(side: UnitSetup.Side) -> Array[UnitState]:
+	return heroes if side == UnitSetup.Side.HEROES else enemies
 
 
 ## Hit damage after the target's DEF: amount x C / (C + DEF).

@@ -9,6 +9,8 @@ enum Side { HEROES, ENEMIES }
 ## Unique within the fight; used in the combat log.
 var id: String
 var name: String
+## A hero's class (HeroDef.CLASSES), for class filters; "" for enemies.
+var unit_class: String = ""
 ## Stats before the rank boost.
 var stats: UnitStats
 ## 0 = C, 1 = B, 2 = A, 3 = S. Each rank boosts every stat (tuning).

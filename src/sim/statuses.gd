@@ -155,14 +155,22 @@ static func _deal_damage_over_time(sim: CombatSim, unit: UnitState, state: Statu
 		_jump(sim, unit, state)
 
 
-## Blight: `amount` heals the applier's living team, split evenly (the first
-## allies in resolution order get the remainder).
+## Blight: `amount` heals the applier's living team (a relic's side, for a
+## relic), split evenly (the first allies in resolution order get the
+## remainder).
 static func _heal_team(sim: CombatSim, source: EffectSource, amount: int) -> void:
-	var applier: UnitState = sim.unit_by_id(source.unit_id)
-	if applier == null or amount <= 0:
+	if amount <= 0:
 		return
+	var side_units: Array[UnitState] = []
+	if source.relic_side >= 0:
+		side_units = sim.side_units(source.relic_side as UnitSetup.Side)
+	else:
+		var applier: UnitState = sim.unit_by_id(source.unit_id)
+		if applier == null:
+			return
+		side_units = sim.allies_of(applier)
 	var team: Array[UnitState] = []
-	for ally: UnitState in sim.allies_of(applier):
+	for ally: UnitState in side_units:
 		if ally.is_standing():
 			team.append(ally)
 	if team.is_empty():

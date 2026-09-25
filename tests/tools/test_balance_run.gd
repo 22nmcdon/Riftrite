@@ -7,7 +7,7 @@ const K = preload("res://tests/sim/sim_test_kit.gd")
 func test_sim_parties_file_is_valid() -> void:
 	var parties: BalanceRun.Parties = BalanceRun.load_parties(K.content())
 	assert_eq(parties.errors, [] as Array[String])
-	assert_eq(parties.list.size(), 5)
+	assert_eq(parties.list.size(), 6)
 
 
 func test_every_party_runs_against_every_encounter() -> void:
@@ -38,3 +38,23 @@ func test_party_errors() -> void:
 	var errors: Array[String] = BalanceRun.parse_parties(K.content(), data, "parties").errors
 	for expected: String in ["unknown hero \"nobody\"", "\"rift_claw\" is enemy-only", "tier: unknown value \"z\""]:
 		assert_true(errors.any(func(e: String) -> bool: return e.contains(expected)), "%s in %s" % [expected, errors])
+
+
+func test_party_relics() -> void:
+	var data: Array = [
+		{"id": "relicky", "name": "Relicky", "relics": ["gloam_totem", "nope"], "heroes": [{"hero": "wren"}]},
+	]
+	var errors: Array[String] = BalanceRun.parse_parties(K.content(), data, "parties").errors
+	for expected: String in ["\"gloam_totem\" is enemy-only", "unknown relic \"nope\""]:
+		assert_true(errors.any(func(e: String) -> bool: return e.contains(expected)), "%s in %s" % [expected, errors])
+
+
+func test_report_credits_relics_and_grants() -> void:
+	var db: ContentDb = K.content()
+	var party: BalanceRun.Party = null
+	for candidate: BalanceRun.Party in BalanceRun.load_parties(db).list:
+		if candidate.id == "hearth_relics":
+			party = candidate
+	assert_not_null(party)
+	var lines: PackedStringArray = BalanceRun.report(BalanceRun.run(db, party, "hound_pack", 3, 1))
+	assert_true(Array(lines).any(func(line: String) -> bool: return line.contains("brannoc · Rusted Cleaver (Cinder Crown)")), "\n".join(lines))

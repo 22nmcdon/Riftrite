@@ -368,5 +368,67 @@
         ]
       }
     ]
+  },
+  {
+    "id": "hearth_relics",
+    "name": "Hearth starter + relics (Warding Knot, Tinker's Loupe, Cinder Crown)",
+    "heroes": [
+      {
+        "hero": "brannoc",
+        "row": "front",
+        "items": [
+          {
+            "item": "rusted_cleaver"
+          },
+          {
+            "item": "oak_buckler"
+          }
+        ]
+      },
+      {
+        "hero": "wren",
+        "row": "front",
+        "items": [
+          {
+            "item": "hearth_knife"
+          },
+          {
+            "item": "first_light_dagger"
+          },
+          {
+            "item": "bone_sling"
+          }
+        ]
+      },
+      {
+        "hero": "vell",
+        "row": "back",
+        "items": [
+          {
+            "item": "old_lantern"
+          },
+          {
+            "item": "hearth_stew"
+          }
+        ]
+      },
+      {
+        "hero": "odo",
+        "row": "back",
+        "items": [
+          {
+            "item": "dusk_tome"
+          },
+          {
+            "item": "tallow_torch"
+          }
+        ]
+      }
+    ],
+    "relics": [
+      "warding_knot",
+      "tinkers_loupe",
+      "cinder_crown"
+    ]
   }
 ]

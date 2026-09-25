@@ -23,33 +23,34 @@ We borrow structure from Guildrun, the item board from The Bazaar, and the disco
 
 | Source | What we take | How we change it | What we leave behind |
 | --- | --- | --- | --- |
-| [Guildrun](https://store.steampowered.com/app/3669200/Guildrun/) | A guild of heroes with a reserve bench; bench heroes still give backup effects; ranks C→B→A→S with a specialization choice at B; hex positioning; Rush/Stall timing; a late-fight damage timer | Heroes fight with item rows instead of mostly stats and relics. Rank-ups also add item slots. | Its large relic pile (our relics sit on one shared team board with limited slots) |
-| The Bazaar | Items of different sizes in a row, each firing on its own cooldown; adjacency effects; merchants and events between fights; enchantments | Enchantments are **harvested, fused, and leveled** instead of a fixed one per item (see Items and infusions) | Async PvP against other players' boards; the day/hour structure |
+| [Guildrun](https://store.steampowered.com/app/3669200/Guildrun/) | A guild of heroes with a reserve bench; bench heroes still give backup effects; ranks C→B→A→S with a specialization choice at B; hex positioning; Rush/Stall timing; a late-fight damage timer | Heroes fight with item rows instead of mostly stats and relics. Rank-ups also add item slots. | Relics as a steady stream of stat boosts (ours are rare, change how a build works, and can't be removed once taken) |
+| The Bazaar | Items of different sizes in a row, each firing on its own cooldown; adjacency effects; merchants and events between fights; the day structure (a few choices, then a fight); enchantments | Enchantments are **harvested, fused, and leveled** instead of a fixed one per item (see Items and infusions) | Async PvP against other players' boards; the hour-by-hour timing inside a day |
 | Enter the Gungeon | Named item-pair synergies you discover; a hub that grows as you rescue NPCs; keys and locked chests; unlocking items into the run pool | Synergies extend to hero–item pairs and essence combos, and the game hints at them when both halves are for sale | Bullet-hell dodging, aiming, and all real-time input |
 
 Sources for Guildrun details: [Steam page](https://store.steampowered.com/app/3669200/Guildrun/), [beginner's guide](https://games.gg/guildrun/guides/guildrun-beginners-guide/), [Rogueliker preview](https://rogueliker.com/guildrun-demo-steam-page/).
 
 ## Core loop
 
-A run is about 45–60 minutes: three acts of roughly 10 nodes each, ending in a boss. Between fights you shop, recruit, and infuse; in fights you watch.
+A run is about 45–60 minutes: three acts, each a set number of **days** and ending in a boss. Each day has a shop, a fight, and a stop you pick (loot, an event, and so on). Between fights you shop, recruit, and infuse; in fights you watch.
 
 ```mermaid
 flowchart LR
-  A[Pick a map node] --> B[Prep: position heroes<br/>and arrange item rows]
+  A[A day: shop,<br/>a fight, a stop] --> B[Prep: position heroes<br/>and arrange item rows]
   B --> C[Auto-battle]
   C --> D[Loot: gold, items,<br/>enemy essences]
   D --> E[Spend: shop, recruit,<br/>infuse, fuse]
   E --> A
-  C -->|Guild wiped| F[Run ends:<br/>shards + codex entries]
+  C -->|Lost: replay the day<br/>with bonus gold| A
+  C -->|Second lost fight| F[Run ends:<br/>shards + codex entries]
   F --> G[Guildhall hub:<br/>unlocks, rescued NPCs]
   G --> A
 ```
 
-The inner loop (node to node) is where builds form. The outer loop (run to run) feeds unlocks and codex discoveries back into the pool.
+The inner loop (day to day) is where builds form. The outer loop (run to run) feeds unlocks and codex discoveries back into the pool.
 
 ## Guild, heroes, and combat
 
-You field 3 heroes at the start and up to 5 by Act 3, with a roster cap of 6. The benched hero is never dead weight: each hero has a **Backup** effect that works from the bench, like Guildrun's.
+You start a run with one hero (pick 1 of 3) and recruit more at shops, up to a roster of 6, with 1 to 5 fielded. The benched hero is never dead weight: each hero has a **Backup** effect that works from the bench, like Guildrun's.
 
 **Backup is a choice.** The player decides who fights and who sits in backup (at most 5 fielded, so with 6 heroes at least one is always in backup). A backup hero's Backup effect applies, and so do the backup modes of the items in their row, which allows builds like 3 fielded + 3 backup. Full rules: `docs/tiers-backup-specialization.md`.
 
@@ -58,7 +59,8 @@ You field 3 heroes at the start and up to 5 by Act 3, with a roster cap of 6. Th
 - Each hero has a class (Warden, Striker, Arcanist, Mender, Trickster, Ranger) and one signature passive.
 - Ranks go C → B → A → S. At B you pick one of three specializations. Each rank-up also **adds one item slot**, so leveling a hero grows their board.
 - A C-rank hero has 4 slots and an S-rank hero has 7.
-- Heroes don't have to start at C. The Tavern can offer higher-rank recruits, following the same run-progress rules as item tiers (see Item tiers). A recruit at B or above comes with a **preset specialization**; changing it means **retraining** the hero.
+- **A hero ranks up like an item tiers up:** buy a second copy of the same hero at the same rank from the Caravan and combine them.
+- Heroes don't have to start at C. The Caravan can offer higher-rank recruits, following the same run-progress rules as item tiers (see Item tiers). A recruit at B or above comes with a **preset specialization**; changing it means **retraining** the hero.
 
 **Item rows (the Bazaar part)**
 
@@ -69,7 +71,7 @@ You field 3 heroes at the start and up to 5 by Act 3, with a roster cap of 6. Th
 - Slot space is a real trade-off. Bigger items are stronger than smaller ones, so a Large item that fills most of a 4-slot hero's row is a valid build. A player can even drop the auto-attack item for another item and rely on the basic auto-attack. Synergies are what make a row of small items worth it instead.
 - Adjacency matters inside a row: "the item to the left gets +20% crit" style effects.
 - Items move freely between heroes at any time between fights, so reshuffling gear is part of every prep phase.
-- The guild also shares one **relic board** (see Items and infusions).
+- The guild also shares its **relics** (see Items and infusions).
 
 **The arena (the Guildrun part)**
 
@@ -99,7 +101,7 @@ You field 3 heroes at the start and up to 5 by Act 3, with a roster cap of 6. Th
 
 In The Bazaar an item gets one fixed enchantment. Here, enchantments are **Infusions**: essences you harvest from enemies, socket into gear, fuse into new types, and level up by using them.
 
-**1. Harvest.** Each enemy family drops one of six base essences. The biome you route through decides which essences you can get, so map choices are also build choices.
+**1. Harvest.** Each enemy family drops one of six base essences. The act's biome decides which essences can drop, and each day's fight shows its enemy team ahead of time.
 
 | Essence | Dropped by | Effect when infused |
 | --- | --- | --- |
@@ -114,7 +116,7 @@ In The Bazaar an item gets one fixed enchantment. Here, enchantments are **Infus
 
 "Sized from the item's output" follows one conversion rule (same kind +50%; same family 50%; direct → over time 5%; over time → direct 500%). Details: `docs/plans/essence-rework.md`.
 
-**2. Socket.** Small items have 1 socket; Medium and Large have 2. Infusing happens at a Forge node or from certain events.
+**2. Socket.** Small items have 1 socket; Medium and Large have 2. For now, infusing can happen any time between fights, straight from the essence pouch.
 
 **3. Fuse.** Two essences in one item's sockets fuse into an **Alloy** with its own effect, not just both effects added. Six essences give 15 cross-pairs plus 6 "pure" doubles, so 21 alloys in total. Examples:
 
@@ -137,7 +139,7 @@ In The Bazaar an item gets one fixed enchantment. Here, enchantments are **Infus
 - **XP per fire is set per item**, based on its type and size. Items that fire often (like auto-attacks, which don't have the same kind of cooldown as other items) earn less per fire, so they don't level faster just by firing more.
 - **XP resets** when a second essence is added to an item (turning a single into an alloy or pure double), and when an infusion is removed at a Forge.
 
-A **Resonant** infusion spills a partial copy of its effect onto its neighbors (items in the row, or relics on the relic board). How it spills depends on what is socketed:
+A **Resonant** infusion spills a partial copy of its effect onto its neighbors (items in the row). How it spills depends on what is socketed:
 
 | Infusion | Spill to neighbors when Resonant |
 | --- | --- |
@@ -148,10 +150,9 @@ A **Resonant** infusion spills a partial copy of its effect onto its neighbors (
 
 The trade-off: an alloy is the strongest effect on its own item, but its spill is split, so each neighbor only gets one essence. Singles and pure doubles give both neighbors the same essence, which matters when stacking one essence across a row. Percentages are starting points for tuning, and the alloy spill strength may change after testing.
 
-**5. Transform.** Some specific item + essence and relic + essence pairs are **Essence Transformations**. Instead of adding an effect, the essence changes how the item or relic works. The drawback: a transformation never spills to its neighbors, even when Resonant.
+**5. Transform.** Some specific item + essence pairs are **Essence Transformations**. Instead of adding an effect, the essence changes how the item works. The drawback: a transformation never spills to its neighbors, even when Resonant.
 
 - *Twin Daggers* + Frost: the daggers become thrown icicles that pierce through the first target.
-- *Hourglass* (relic) + Storm: instead of slowing enemies at 20 seconds, it resets every ally's cooldowns once.
 - *Iron Bulwark* + Ember: the shield no longer blocks damage; it explodes when broken, burning nearby enemies.
 
 **Why this is different from The Bazaar:** enchantments come from what you fight, not a random roll; they combine; and an early item keeps getting better instead of being sold. The trade-off is commitment: **reforging** (removing an infusion) at a Forge costs gold and resets its level.
@@ -165,11 +166,11 @@ The trade-off: an alloy is the strongest effect on its own item, but its spill i
 
 **Item tiers (combining duplicates)**
 
-Items use the **same tiers as hero ranks: C → B → A → S**. Items don't have to start at C; one can be found at any tier the run allows. An item moves up a tier by combining with a second copy of itself, instead of a Tavern visit.
+Items use the **same tiers as hero ranks: C → B → A → S**. Items don't have to start at C; one can be found at any tier the run allows. An item moves up a tier by combining with a second copy of itself, the same way heroes rank up.
 
 - **Two copies of the same item at the same tier combine** into one item of the next tier. (Only two copies, not three.)
 - You **can** hold two copies of the same item at *different* tiers; only same-tier copies combine. Duplicates are meant to be uncommon, so an upgrade you chased across a run feels earned.
-- **Where higher tiers come from:** normal shops (and the Tavern, for heroes) unlock higher tiers as the run goes on. The first shop never offers A or S, and probably nothing above B shows up in all of Act 1. The exact schedule is a tuning table in `data/`. Before then, higher tiers only come from:
+- **Where higher tiers come from:** the Caravan unlocks higher tiers (for items and heroes) as the run goes on. The first shop never offers A or S, and probably nothing above B shows up in all of Act 1. The exact schedule is a tuning table in `data/`. Before then, higher tiers only come from:
   - **Events** that open a tier-specific shop (say, an A-tier-only shop in Act 1) or hand out a single high-tier item.
   - **Enemy drops**, at that enemy's set tier.
   - **Loot drops** (Vault chests and the like), where the tier is random.
@@ -178,16 +179,18 @@ Items use the **same tiers as hero ranks: C → B → A → S**. Items don't hav
   - If the new copy has its own essence or alloy, **the new infusion replaces yours**, and your infusion's XP is lost. So you choose: take the tier upgrade with the new infusion, or keep your item as it is and pass on the copy.
 - Tier and rarity are separate. **S is the top tier**: an S item is maxed out and can't combine further.
 - **Legendaries never combine.** Each has its own upgrade path (grows by use, essence-hungry, boss-forged, and so on), and a Legendary can appear only once per run.
-- Shop tier odds by act (C/B/A/S, starting values): Act 1 80/20/0/0, Act 2 45/40/15/0, Act 3 20/40/30/10. The same table applies to Tavern heroes, so it lives in one data file.
+- Shop tier odds by act (C/B/A/S, starting values): Act 1 80/20/0/0, Act 2 45/40/15/0, Act 3 20/40/30/10. The same table applies to heroes in the Caravan, so it lives in one data file.
 
 **Oathbinding (hero–item):** when a hero and an item are both S tier, the player can permanently oathbind the hero to that item. One per hero; the item can't be removed, moved, or sold after that (but can be repositioned in the row and still infused); it leaves with the hero if the hero is dismissed; and a preview is shown before confirming. How specific the result is depends on rarity (Common: basic and generic, plus a basic backup ability; Legendary: unique). Full rules, the class-fit table, and Legendary upgrade paths: `docs/tiers-backup-specialization.md`.
 
-**Relic board (shared by the whole guild)**
+**Relics (shared by the whole guild)**
 
-- One team-wide board, separate from the hero rows. It starts with 3 slots and grows to 6 through boss kills and some events.
-- Relics are team-wide passives or triggers, such as "the first ally to drop below 30% HP gains a Shield." They have sizes and adjacency like items do.
-- Each relic has 1 socket and can be infused. A Resonant relic infusion spills to neighboring relics, never to hero items.
-- Relics come from elites, bosses, Vaults, and events, about 2–3 per act, plus drops from enemy teams that carry relics (including enemy-only relics).
+- The guild can hold **any number of relics**. There's no board, no slots, and no adjacency.
+- **Relics can't be infused.** Essences go only on hero items.
+- **Relic numbers are flat.** They don't scale from hero stats. Only percentage boosts that apply to everything of that kind change them, such as a relic's "all shields +10%" or a hero's "shields on this hero +50%".
+- **Taking one is permanent:** you can always turn a relic down, but once taken it can't be removed or sold. Relics also can't go in the stash.
+- **Relics change how a build works** rather than adding flat stats. Examples: "the first ally to drop below 30% HP gains a Shield", "Burn ticks faster", "Small items gain crit chance". Higher rarities change it more; an Epic relic can reshape a whole build.
+- **Relics are much harder to get than items, essences, or heroes.** They come from elites, bosses, Vaults, events, and enemy teams that carry relics (including enemy-only relics). Bosses carry items too, so a boss drops an item or a relic. The rarity makes them special, and it adds variety between runs.
 
 ## Synergies
 
@@ -196,9 +199,9 @@ Synergies work in five layers, from specific and secret (Gungeon-style) to broad
 | Layer | Trigger | Example | Visibility |
 | --- | --- | --- | --- |
 | Named pairs | Two specific items on the **same hero** | *Whetstone* + *Twin Daggers* = **"Paper Cuts"**: each dagger hit reduces the other's cooldown by 0.2s | Hidden until found, then saved in the Codex |
-| Essence transformations | A specific item or relic + a specific essence | *Twin Daggers* + Frost: daggers become piercing icicles. Never spills to neighbors | Hidden until found, then saved in the Codex |
+| Essence transformations | A specific item + a specific essence | *Twin Daggers* + Frost: daggers become piercing icicles. Never spills to neighbors | Hidden until found, then saved in the Codex |
 | Signature gear | A specific item on a specific hero | Mender *Sister Vell* + *Old Lantern*: lantern heals also cleanse | Hinted in the hero's profile as "???" |
-| Essence resonance | 3 / 5 / 7 of one essence socketed team-wide, across items and relics. It counts essences, not items: a single counts 1, an alloy counts 1 for each half, a pure double counts 2 of its essence, and an essence transformation counts as whatever essence(s) are socketed | 5 Frost: frozen enemies take +30% damage | Always shown, like trait counters |
+| Essence resonance | 3 / 5 / 7 of one essence socketed team-wide, across all heroes' items. It counts essences, not items: a single counts 1, an alloy counts 1 for each half, a pure double counts 2 of its essence, and an essence transformation counts as whatever essence(s) are socketed | 5 Frost: frozen enemies take +30% damage | Always shown, like trait counters |
 | Class traits | 2 or more heroes of a class fielded | 2 Wardens: front-row heroes get +15% Shield | Always shown |
 
 **How discovery works**
@@ -210,28 +213,47 @@ Synergies work in five layers, from specific and secret (Gungeon-style) to broad
 
 **Targets for launch:** about 80 named pairs, about 30 essence transformations, 1–2 signature items per hero, 6 essence resonances, 6 class traits.
 
-## Run structure, map, and economy
+## Run structure and economy
 
-Each act is a branching map of about 10 nodes, like a Gungeon floor laid out as a Slay the Spire-style path. Act 1 ends in a challenge fight, Act 3 in the final boss, then optional Endless mode.
+There's no branching map. Like Guildrun and The Bazaar, each act is a set number of **days**, and the game only ever shows what's next. The last fight of an act is its boss. Act 1 ends in a challenge fight, Act 3 in the final boss, then optional Endless mode.
 
-| Node | What happens | Rough frequency per act |
-| --- | --- | --- |
-| Fight | Standard encounter; drops gold, 1–2 essences, and one guaranteed item or relic from the enemy team | 4–5 |
-| Elite | Harder fight; guaranteed Rare item or rank-up | 1–2 |
-| Merchant | Buy/sell items; reroll for gold | 1–2 |
-| Forge | Infuse, fuse, or remove infusions | 1 |
-| Tavern | Recruit a hero (pick 1 of 3) or rank one up | 1 |
-| Vault | Spend a key on a locked chest (Gungeon-style) | 0–1 |
-| Event | A choice with trade-offs, sometimes a rescued NPC | 1–2 |
-| Boss | Act boss with a unique mechanic | 1 |
+**A day** is always:
+1. **Caravan:** buy items and recruit heroes (buying a second copy of a hero ranks them up). It's the shop and tavern in one.
+2. **Stop:** pick one of a few offered stops. Some stops only show up when they'd be useful: the Forge (reforging) only if something is infused, and the Vault only if you hold a key.
+3. **Fight:** one fight, shown ahead of time. It shows the enemy team, so you know which essences it drops.
+
+A possible later change: two rounds per day (Caravan, stop, fight, then Caravan, stop, and an elite or the boss). The day's steps live in data, so trying it is a data change.
+
+- **Offers don't depend on earlier picks (for now).** They're random per run, from the run seed.
+- **Starting a run:** pick 1 of 3 random heroes (you start with just one), then 1 of 3 starting packages (such as extra gold, a Common relic, or a Common item), on top of a base amount of gold.
+- **Fielding:** 1 to 5 heroes, so a one-hero start is legal.
+- **Losing a fight** restarts the day: you keep everything you have and get bonus gold (10, +5 per fight won so far), so you can visit the Caravan and another stop before a rematch against the same enemies. **The second loss ends the run.** (A tie still counts as a victory.)
+- **HP:** every fight starts everyone at full HP, unless an item or relic says otherwise.
+- **Stash:** a shared stash for unequipped items, with **6 slots that work like a hero row** (a Large item takes 3). Relics can't go in the stash.
+- **Save and resume:** a run can be saved and resumed between steps. Fights have no player input, so there's nothing to save mid-fight.
+
+| Step | What happens |
+| --- | --- |
+| Caravan | Buy/sell items, recruit heroes (a second copy ranks one up), reroll for gold. Never offers an item or hero at a different tier than a copy you hold |
+| Fight | Encounter; drops gold, 1–2 essences, and one guaranteed item (or, rarely, relic) from the enemy team |
+| Elite | Harder fight; guaranteed Rare item or rank-up |
+| Forge (stop) | Reforge (remove infusions); only offered when something is infused |
+| Loot (stop) | A free random reward |
+| Vault (stop) | Spend a key on a locked chest (Gungeon-style); only offered when you hold a key |
+| Event (stop) | A choice, sometimes with trade-offs, sometimes a rescued NPC |
+| Boss | Act boss with a unique mechanic; the act's last fight; drops an item or a relic |
+
+**First events:** gold; a random item by rarity (Common most likely, Legendary least); a random relic by rarity; a random item by tier (C most likely, S least). More, including one that offers retraining, come later.
+
+**Prices (placeholders, tuned with the balance runner):** higher-tier items and higher-rank heroes cost more, and rarer relics cost more. An item's rarity mostly makes it harder to find, not pricier.
 
 **Currencies in a run**
 
-- **Gold:** shops, rerolls, removing infusions.
+- **Gold:** the Caravan, rerolls, removing infusions.
 - **Essences:** stored in a pouch (cap of 8) until socketed, so you can't hoard every one.
-- **Keys:** rare; open Vault chests and some shortcut paths.
+- **Keys:** rare; open Vault chests.
 
-**Biomes** each favor two essences (for example, the Ashen Mines drop Ember and Stone). A player chasing a Frost build will route toward frozen biomes, which gives map choices real weight.
+**Biomes** each favor two essences (for example, the Ashen Mines drop Ember and Stone). Each day's fight shows its enemy team ahead of time, so a player chasing a Frost build knows when frost essences are coming.
 
 ## Meta progression
 
@@ -278,7 +300,7 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 
 **Decisions made**
 
-- Items are per hero, plus one relic board shared by the whole team.
+- Items are per hero; relics are shared by the whole team.
 - Items move freely between heroes between fights.
 - PvE only at launch.
 - Art direction mixes cozy and grim.
@@ -287,7 +309,7 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - The spreadsheet prototype is skipped; the headless combat sim tests the infusion math instead.
 - The first combat sim uses fixed front/back rows; the hex arena comes later.
 - Enemies have hand-made, fixed item layouts with set tiers, and some items are enemy-only (especially boss items). Some enemy teams carry relics, including enemy-only ones. Every fight guarantees one drop from the enemy team's items and relics, and enemy-only ones can drop.
-- Tier and rarity are separate. Same-tier copies combine. Copies at different tiers can be held together. Tiers are C → B → A → S, the same as hero ranks. Items and heroes can be found above C. Normal shops and the Tavern unlock higher tiers as the run goes on (no A/S early); before then, higher tiers come from events (such as tier-specific shops), enemy drops (set tier), and loot drops (random tier).
+- Tier and rarity are separate. Same-tier copies combine. Copies at different tiers can be held together. Tiers are C → B → A → S, the same as hero ranks. Items and heroes can be found above C. The Caravan unlocks higher tiers as the run goes on (no A/S early); before then, higher tiers come from events (such as tier-specific shops), enemy drops (set tier), and loot drops (random tier).
 - Item size doesn't affect rarity. Each item of a given rarity shows up equally often; there are just more Small items than Large ones.
 - Every item has a crit chance, starting at 0%. Crits deal 150% damage.
 - Rift Collapse deals flat damage that grows every second (never a percentage of HP) and hits Shield before HP. The ramp gets much steeper after 90s, and Act 2 doubles the numbers. There's no time limit; reaching 3 minutes, or both sides dying on the same tick, is a tie, and a tie counts as a victory. Surviving to 3 minutes is meant to be possible, especially for strong mid- and late-game teams.
@@ -322,11 +344,25 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - Pure doubles each have their own effect. Their bonus effect never strengthens spill. Doubled spill as a pure double's effect is an optional idea, tried first on Overgrowth (Verdant + Verdant).
 - Infusion XP comes from item fires (amount set per item, by type and size) plus battles fought. XP resets when an infusion becomes an alloy or pure double.
 - Essence resonance counts essences: a single = 1, an alloy = 1 of each half, a pure double = 2, and a transformation counts its socketed essence(s).
+- **No branching map.** Each act is a set number of days. A day is a guaranteed shop, one fight shown ahead, and a stop you pick (Forge only if something is infused, Vault only with a key, loot, events). Offers are random per run from the seed and don't depend on earlier picks for now.
+- **The Caravan** is the shop: it sells items and heroes (Merchant and Tavern are one). Heroes rank up like items: buy a second copy at the same rank and combine. The hero you already have keeps their specialization and items; heroes in the Caravan come with no items.
+- **The Caravan never offers an item or hero at a different tier than a copy you already hold.** Holding the same item at different tiers is still allowed when the copies come from elsewhere (Vault, loot, fight drops, events), just not from the Caravan.
+- **Day order:** Caravan → stop → fight. Two rounds per day (Caravan, stop, fight, Caravan, stop, elite or boss) is a possible later change.
+- **Infusing** can happen any time between fights for now; the Forge is for reforging.
+- **A lost fight is replayed against the same enemies.**
+- **Relics:** hold any number, no board and no sockets. They can be turned down but never removed once taken, change how a build works (Epic ones a lot), and are much rarer than items, essences, or heroes. Bosses drop an item or a relic.
+- **A run starts with one hero** (pick 1 of 3 random), then 1 of 3 starting packages (extra gold, a Common relic, or a Common item), plus base gold. Fielding is 1–5 heroes.
+- **Losing a fight restarts the day** with everything kept, plus bonus gold (10, +5 per fight won so far). **The second loss ends the run.** Every fight starts at full HP unless an item or relic changes that.
+- **Shared stash:** 6 slots that work like a hero row (sizes count). Relics can't go in the stash.
+- **Rank-B specializations** (3 per class) are in the vertical slice.
+- **Prices** are placeholders tuned with the balance runner: higher tiers and ranks cost more, rarer relics cost more, item rarity barely affects price.
+- **All five synergy layers** are in the vertical slice.
+- **Save and resume** between stops is in the vertical slice.
 
 **Open questions**
 
 - **Doubled spill:** does any pure double keep it? Overgrowth (Verdant + Verdant) is the first one to test.
 - **Act 3 collapse numbers:** to be decided later.
-- **Tier schedule:** at what point in a run do normal shops and the Tavern start offering B, A, and S? (A tuning table; it can be set once the run structure is being built.)
+- **Tier schedule:** at what point in a run does the Caravan start offering B, A, and S? (A tuning table; it can be set once the run structure is being built.)
 - **Stats and essence rework (in progress):** decisions, placeholders, and the build order are in `docs/plans/essence-rework.md`. Damage essences on items that don't hit need real per-item designs later; for now they hit the enemy directly across.
 - More open questions on tiers, backup, Oathbinding, and Legendaries are listed at the end of `docs/tiers-backup-specialization.md`.
