@@ -56,7 +56,7 @@ You field 3 heroes at the start and up to 5 by Act 3, with a roster cap of 6. Th
 - Each hero has a class (Warden, Striker, Arcanist, Mender, Trickster, Ranger) and one signature passive.
 - Ranks go C → B → A → S. At B you pick one of three specializations. Each rank-up also **adds one item slot**, so leveling a hero grows their board.
 - A C-rank hero has 4 slots and an S-rank hero has 7.
-- Heroes don't have to start at C. The Tavern can offer higher-rank recruits, following the same run-progress rules as item tiers (see Item tiers).
+- Heroes don't have to start at C. The Tavern can offer higher-rank recruits, following the same run-progress rules as item tiers (see Item tiers). A recruit at B or above comes with a **preset specialization**; changing it means **retraining** the hero.
 
 **Item rows (the Bazaar part)**
 
@@ -280,6 +280,7 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - Every item has a crit chance, starting at 0%. Crits deal 150% damage.
 - Rift Collapse deals flat damage that grows every second (never a percentage of HP) and hits Shield before HP. The ramp gets much steeper after 90s, and Act 2 doubles the numbers. There's no time limit; reaching 3 minutes, or both sides dying on the same tick, is a tie, and a tie counts as a victory. Surviving to 3 minutes is meant to be possible, especially for strong mid- and late-game teams.
 - Combat sim targeting: attacks hit the enemy front row; the back row only once the front row is empty, unless an item says it reaches the back row. Units killed during a tick still fire what they had ready that tick (for now). Heroes have HP only for now.
+- A hero recruited at B or above has a preset specialization; changing it requires retraining.
 - Every hero has their own built-in basic auto-attack, which can't be upgraded. An auto-attack item (Small, Medium, or Large) replaces it and takes up slots, and a hero can equip only one. Take the item out and the hero uses the basic auto-attack again.
 - Two copies of the same item combine into the next tier (two, not three). A new copy's infusion replaces the old one.
 - Alloy spill per side equals a single essence's spill for now.
@@ -292,4 +293,4 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - **Doubled spill:** does any pure double keep it? Overgrowth (Verdant + Verdant) is the first one to test.
 - **Act 3 collapse numbers:** to be decided later.
 - **Tier schedule:** at what point in a run do normal shops and the Tavern start offering B, A, and S? (A tuning table; it can be set once the run structure is being built.)
-- **Higher-rank recruits:** when a hero is recruited at B or above, who picks their specialization (normally chosen at B): the player on recruiting, or is it preset?
+- **Retraining:** where does a hero get retrained to a different specialization (Tavern, a Guildhall station, an event?), and what does it cost?
