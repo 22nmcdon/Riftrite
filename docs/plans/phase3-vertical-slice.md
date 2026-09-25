@@ -166,8 +166,8 @@ Placeholder art, readable first:
 
 ## Build order (each step reviewed as its own pull request)
 
-1. Relics in the sim.
-2. The synergy engine and all five layers, with a few of each.
+1. Relics in the sim (built; `docs/plans/relics-in-sim.md`).
+2. The synergy engine and all five layers, with a few of each (plan: `docs/plans/synergies-in-sim.md`).
 3. Rank-B specializations in the sim.
 4. RunState and actions: roster, loadouts, stash, gold, pouch, combining, infusing and reforging. Save/load from the start, so every later step is tested for round-trips.
 5. The day structure (Caravan, stop, fight, losses and replays) and the economy data; the run bot and run-level balance reports.
