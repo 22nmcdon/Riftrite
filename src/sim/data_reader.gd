@@ -170,6 +170,21 @@ func req_string_array(key: String) -> Array[String]:
 	return result
 
 
+## Reads a required list of whole numbers.
+func req_int_array(key: String) -> Array[int]:
+	var result: Array[int] = []
+	if not _require(key):
+		return result
+	var value: Variant = _data[key]
+	if typeof(value) != TYPE_ARRAY:
+		_errors.append("%s: expected a list, got %s" % [key_path(key), _describe(value)])
+		return result
+	var items: Array = value
+	for i: int in items.size():
+		result.append(to_int(items[i], "%s[%d]" % [key_path(key), i], _errors))
+	return result
+
+
 ## Reads an optional list of strings, each of which must be in `allowed`.
 func opt_choice_array(key: String, allowed: Array[String]) -> Array[String]:
 	_read_keys[key] = true

@@ -169,7 +169,7 @@ Placeholder art, readable first:
 1. Relics in the sim (built; `docs/plans/relics-in-sim.md`).
 2. The synergy engine and all five layers, with a few of each (built; `docs/plans/synergies-in-sim.md`).
 3. Rank-B specializations in the sim (built; `docs/plans/specializations-in-sim.md`).
-4. RunState and actions: roster, loadouts, stash, gold, pouch, combining, infusing and reforging. Save/load from the start, so every later step is tested for round-trips. (plan: `docs/plans/run-state.md`)
+4. RunState and actions: roster, loadouts, stash, gold, pouch, combining, infusing and reforging. Save/load from the start, so every later step is tested for round-trips. (built; `docs/plans/run-state.md`)
 5. The day structure (Caravan, stop, fight, losses and replays) and the economy data; the run bot and run-level balance reports.
 6. Boss mechanic(s).
 7. UI: prep screen and fight playback first (the core loop), then run start, the day screen, the Caravan, and the stop screens.

@@ -1,6 +1,6 @@
 # Plan: the run state and actions (Phase 3, step 4)
 
-Status: **proposed, awaiting approval and answers (end of file).** Nothing here is built yet.
+Status: **built** (Phase 3, step 4). Answers and notes are at the end.
 
 This step builds everything a run *holds* between fights, the **actions** that change it, the bridge to and from the combat sim, and save/load. The day structure (Caravan, stops, fights, losses), prices, and offers are step 5. The UI (step 7) will only ever call these actions.
 
@@ -45,14 +45,15 @@ Same rules as the sim (CLAUDE.md rule 1):
 | --- | --- |
 | `move_item(uid, to, index)` | Between any hero's row and the stash, or within one. The destination needs the space, and a hero can hold only **one auto-attack item**. |
 | `set_formation(hero, row, index)` | Moves a hero to a row and position |
-| `set_benched(hero, benched)` | Keeps **1–5 fielded** |
+| `set_benched(hero, benched)` | Keeps **1–5 fielded**. The roster's **first slot is always a field slot**; any of the other five can be a backup slot. |
 | `infuse(uid, pouch_index)` | Takes an essence from the pouch into the item's next socket. Sockets come from rarity (2 for Epic/Legendary, else 1). A second essence **resets XP** (single → alloy or pure double). |
 | `reforge(uid)` | Removes the item's infusion and resets its XP; costs gold (the price is step 5's economy data; step 5 also limits it to the Forge stop) |
 | `combine_items(keep_uid, new_uid)` | Same item, same tier, below S, not Legendary. The result sits where `keep` was, one tier up. If `new` has an infusion, it replaces `keep`'s (XP and all); if not, `keep`'s stays. |
 | `add_hero(hero_id, rank)` | For the Caravan and the run start. If the same hero is already held **at the same rank**, they combine: rank +1, and the one you have keeps their specialization and items. A different rank is refused (the Caravan never offers one). Otherwise it's a new hero, up to 6, fielded if fewer than 5 are fielded. Reaching B sets `needs_specialization`. |
 | `choose_specialization(hero, spec_id)` | Only when `needs_specialization`, and only one of that hero's three |
-| `add_item(item_id, tier)` | Into the stash (see question 2 when it's full). Records Legendaries seen. |
-| `add_essence(essence_id)` | Into the pouch (see question 2 when it's full) |
+| `add_item(item_id, tier)` | Into the stash; refused without room (make room first, or pass on it). Records Legendaries seen. |
+| `add_essence(essence_id)` | Into the pouch; refused when it's full (make room first, or pass on it) |
+| `discard_item(uid)`, `discard_essence(index)` | Throws it away, at any time. (Selling is only at the Caravan, step 5.) |
 | `add_relic(relic_id)` | Taken for good (turning one down just means not calling this) |
 
 Gold is added and spent through two helpers, which refuse to go below 0.
@@ -101,10 +102,16 @@ Gold is added and spent through two helpers, which refuse to go below 0.
   - save/load/continue matches continue
 - **Determinism:** the same seed and the same actions give the same fight seeds.
 
-## Questions
+## Answers
 
-1. **Reforging:** does removing an infusion **destroy** the essences, or return them to the pouch? I'd say destroyed. That's "the trade-off is commitment", and returning them would make reforging a free swap except for the gold.
-2. **Full stash or pouch:** when an item or essence arrives (a drop, a reward, a purchase) and there's no room, what happens? My draft:
-   - you choose what to discard: the new one or something you hold
-   - buying at the Caravan simply isn't allowed without room
-3. **New heroes:** a newly recruited hero joins **fielded** if fewer than 5 are fielded (back row, rightmost), otherwise **benched**. OK as a default the player then rearranges?
+1. **Reforging destroys the essences.**
+2. **No room:** you can always pass on a new item or essence (like a relic). To take it, throw something away first; discarding works any time, selling only at the Caravan. You can't buy without room.
+3. **New heroes** join fielded (back row, rightmost) if fewer than 5 are fielded, else benched. The roster's first slot is always a field slot; any of the others can be a backup slot.
+
+## Built notes
+
+- **Code:** `src/run/`: `RunState`, `RunHero`, `RunItem`, `RunActions`, `RunFight`, `RunSave`.
+- **Where an item is:** each item has an owner: a hero id, `RunState.STASH`, or `NOWHERE`.
+- **Run rules live in tuning:** stash slots, pouch cap, and the reforge price are under `"run"` in `data/tuning.json`. The full economy is step 5.
+- **Enemy-only items and relics can be held by the guild,** since fight drops include them. (Balance parties still can't list enemy-only items.)
+- **A run's first hero** stands in the front row; later ones join the back row.

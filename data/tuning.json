@@ -44,6 +44,12 @@
   "collapse_start_ms": 45000,
   "collapse_surge_ms": 90000,
   "tie_ms": 180000,
+  "run": {
+    "_note": "Run-layer rules and placeholder costs (the full economy comes with the day structure).",
+    "stash_slots": 6,
+    "pouch_cap": 8,
+    "reforge_gold": 3
+  },
   "collapse_by_act": {
     "_note": "Damage per second starts at base and grows by growth each second; from collapse_surge_ms the growth itself rises by accel each second. Act 3 is not decided yet.",
     "1": {
