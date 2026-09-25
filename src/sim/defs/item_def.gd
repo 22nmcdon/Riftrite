@@ -25,6 +25,12 @@ var rarity: String = ""
 var auto_attack: bool = false
 var enemy_only: bool = false
 var is_basic_attack: bool = false
+## A specialization's ability: slotless, fires from the hero (see
+## SpecializationDef).
+var is_ability: bool = false
+## An ability with only triggered effects (no on_fire): it never fires on a
+## cooldown.
+var triggered_only: bool = false
 var cooldown_ticks: int
 var crit_chance_bp: int = 0
 var xp_per_fire: int = 0

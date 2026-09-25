@@ -222,7 +222,8 @@ static func _jump(sim: CombatSim, host: UnitState, state: StatusState) -> void:
 
 ## A heal weakens damage over time: each damage-over-time status on `unit`
 ## loses `share_bp` of its stacks (rounded, oldest first).
-static func cleanse_over_time(sim: CombatSim, unit: UnitState, share_bp: int) -> void:
+## `source` is the cleanse effect's source, or null for a heal's cleanse.
+static func cleanse_over_time(sim: CombatSim, unit: UnitState, share_bp: int, source: EffectSource = null) -> void:
 	for state: StatusState in unit.statuses.duplicate():
 		if state.def.kind != StatusDef.Kind.DAMAGE_OVER_TIME:
 			continue
@@ -238,6 +239,9 @@ static func cleanse_over_time(sim: CombatSim, unit: UnitState, share_bp: int) ->
 		entry.status_name = state.def.name
 		entry.amount = removed
 		entry.note = "healed"
+		if source != null:
+			entry.set_source(source)
+			entry.note = "cleansed by %s" % source.describe()
 		sim.combat_log.add(entry)
 		if state.total_stacks() == 0:
 			_end(sim, unit, state)

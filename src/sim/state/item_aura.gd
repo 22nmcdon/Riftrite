@@ -10,6 +10,11 @@ extends RefCounted
 class Grant:
 	var def: GrantDef
 	var relic_name: String
+	## Row slots of a pair synergy's other items (see SourcedEffect).
+	var partner_slots: Array[int] = []
+	## A specialization's grant: numbered from the holder's stats and every
+	## aura on the item, like its own effects but without the tier.
+	var scaled: bool = false
 
 
 ## Output-kind multipliers, indexed by the output stats of AuraDef.Stat
@@ -19,6 +24,8 @@ var outputs: Array[Array] = [[], [], [], []]
 ## (AuraDef.covers_everything): the only boosts flat relic numbers get.
 var everything_outputs: Array[Array] = [[], [], [], []]
 var grants: Array[Grant] = []
+## Status replacements from a specialization (from -> to), like an alloy's.
+var status_replacements: Dictionary[String, String] = {}
 var crit_add_bp: int = 0
 var cooldown_add_bp: int = 0
 
@@ -36,10 +43,12 @@ func add(aura: AuraDef, label: String) -> void:
 				everything_outputs[aura.stat].append(multiplier)
 
 
-func add_grant(grant: GrantDef, relic_name: String) -> void:
+func add_grant(grant: GrantDef, relic_name: String, partner_slots: Array[int] = [], scaled: bool = false) -> void:
 	var entry := Grant.new()
 	entry.def = grant
 	entry.relic_name = relic_name
+	entry.partner_slots = partner_slots
+	entry.scaled = scaled
 	grants.append(entry)
 
 

@@ -29,10 +29,22 @@ static func read(reader: DataReader) -> RelicDef:
 	def.name = reader.req_string("name")
 	def.rarity = reader.req_choice("rarity", ItemDef.RARITIES)
 	def.enemy_only = reader.opt_bool("enemy_only", false)
+	read_bonus(reader, def, AURA_TARGETS, "a relic")
+	reader.finish()
+	return def
+
+
+## Reads "auras", "grants", "effects", and "cooldown_ms" into `def`. Shared
+## with synergies, whose bonuses work like relics. `what` names the owner
+## in errors ("a relic"); `required`: at least one of the three is needed.
+static func read_bonus(reader: DataReader, def: RelicDef, aura_targets: Array[AuraDef.Target], what: String, required: bool = true) -> void:
 	for aura_reader: DataReader in reader.opt_object_array("auras"):
 		var aura: AuraDef = AuraDef.read(aura_reader)
-		if not AURA_TARGETS.has(aura.target):
-			aura_reader.error("a relic aura can only target all_items or all_allies")
+		if not aura_targets.has(aura.target):
+			var names: Array[String] = []
+			for target: AuraDef.Target in aura_targets:
+				names.append(AuraDef.TARGET_NAMES[target])
+			aura_reader.error("%s aura can only target %s" % [what, " or ".join(names)])
 		def.auras.append(aura)
 	for grant_reader: DataReader in reader.opt_object_array("grants"):
 		def.grants.append(GrantDef.read(grant_reader))
@@ -46,7 +58,5 @@ static func read(reader: DataReader) -> RelicDef:
 	elif reader.has("cooldown_ms"):
 		reader.error("cooldown_ms only matters for on_fire effects")
 		reader.req_ticks("cooldown_ms")
-	if def.auras.is_empty() and def.grants.is_empty() and def.effects.is_empty():
-		reader.error("a relic needs auras, grants, or effects")
-	reader.finish()
-	return def
+	if required and def.auras.is_empty() and def.grants.is_empty() and def.effects.is_empty():
+		reader.error("%s needs auras, grants, or effects" % what)

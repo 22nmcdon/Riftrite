@@ -12,8 +12,9 @@ func _idle() -> ItemDef:
 	return K.basic("idle", {"cooldown_ms": 60000, "effects": K.damage(1)})
 
 
+## An Epic item, so it has two sockets for an alloy or pure double.
 func _big(item_id: String, overrides: Dictionary = {}) -> ItemDef:
-	var data: Dictionary = {"name": item_id.capitalize(), "size": 2, "effects": K.damage(100)}
+	var data: Dictionary = {"name": item_id.capitalize(), "size": 2, "rarity": "epic", "effects": K.damage(100)}
 	data.merge(overrides, true)
 	return K.item(item_id, data)
 

@@ -16,6 +16,8 @@ var xp_per_battle: int
 ## How strong an infusion is at each level (Base, Attuned, Resonant).
 var infusion_level_bp: Array[int] = []
 var crit_damage_bp: int
+## Item rarities with 2 sockets; every other item has 1, whatever its size.
+var two_socket_rarities: Array[String] = []
 var rush_end_ticks: int
 var stall_start_ticks: int
 var collapse_start_ticks: int
@@ -47,6 +49,11 @@ var heal_cleanse_falloff_bp: int
 var collapse_by_act: Dictionary[int, CollapseDef] = {}
 
 
+## Sockets an item has: 2 for the two-socket rarities, else 1.
+func socket_count(item: ItemDef) -> int:
+	return 2 if two_socket_rarities.has(item.rarity) else 1
+
+
 static func read(reader: DataReader) -> TuningDef:
 	var def := TuningDef.new()
 	def.spill_single_bp = reader.req_int("spill_single_bp", 0, FixedMath.BP_ONE)
@@ -61,6 +68,7 @@ static func read(reader: DataReader) -> TuningDef:
 		def.infusion_level_bp = [levels.req_int("base", 0), levels.req_int("attuned", 0), levels.req_int("resonant", 0)]
 		levels.finish()
 	def.crit_damage_bp = reader.req_int("crit_damage_bp", FixedMath.BP_ONE)
+	def.two_socket_rarities = reader.opt_choice_array("two_socket_rarities", ItemDef.RARITIES)
 	def.tier_multiplier_bp = _read_tier_table(reader, "tier_multiplier_bp")
 	def.rank_multiplier_bp = _read_tier_table(reader, "rank_multiplier_bp")
 	def.crit_bp_per_point = reader.req_int("crit_bp_per_point", 0)

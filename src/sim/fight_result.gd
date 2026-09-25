@@ -18,6 +18,15 @@ class InfusionResult:
 	var level_after: int
 
 
+## A synergy that was active, for the run layer to record discoveries.
+class SynergyResult:
+	var synergy_id: String
+	## The hero holding a pair, signature, or transformation; "" otherwise.
+	var unit_id: String
+	## Resonance and class traits: the count reached; 0 otherwise.
+	var count: int
+
+
 var outcome: Outcome = Outcome.TIE
 var end_tick: int = 0
 var combat_log: CombatLog = CombatLog.new()
@@ -25,6 +34,8 @@ var combat_log: CombatLog = CombatLog.new()
 var errors: Array[String] = []
 ## Every infused item's XP, in resolution order.
 var infusions: Array[InfusionResult] = []
+## The guild's active synergies, in data order.
+var synergies: Array[SynergyResult] = []
 
 
 func guild_won() -> bool:

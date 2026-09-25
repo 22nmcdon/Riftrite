@@ -22,6 +22,8 @@ const DEFAULT_BASIC: Dictionary = {
 static var _content: ContentDb
 ## The real content plus the test relics registered by relic().
 static var _relic_content: ContentDb
+## Real content with only test synergies (see synergy()).
+static var _synergy_content: ContentDb
 
 
 ## The real content from data/, loaded once.
@@ -108,6 +110,44 @@ static func run_relics(heroes: Array[UnitSetup], enemies: Array[UnitSetup], reli
 ## A fight built but not stepped, for checking derived values at the start.
 static func relic_sim(heroes: Array[UnitSetup], enemies: Array[UnitSetup], relics: Array[RelicDef], enemy_relics: Array[RelicDef] = [], bench: Array[UnitSetup] = []) -> CombatSim:
 	return CombatSim.new(relic_fight(heroes, enemies, relics, enemy_relics, 1, bench), relic_content())
+
+
+## A synergy from `data` (an "id" and "name" are filled in), registered in
+## synergy_content(), which holds only test synergies. Fails loudly on errors.
+static func synergy(synergy_id: String, data: Dictionary) -> SynergyDef:
+	var full: Dictionary = {"id": synergy_id, "name": synergy_id.capitalize()}
+	full.merge(data, true)
+	var errors: Array[String] = []
+	var def: SynergyDef = SynergyDef.read(DataReader.new(full, synergy_id, errors))
+	assert(errors.is_empty(), "test synergy %s is invalid: %s" % [synergy_id, errors])
+	var db: ContentDb = synergy_content()
+	db.synergies[synergy_id] = def
+	if not db.synergy_ids.has(synergy_id):
+		db.synergy_ids.append(synergy_id)
+	return def
+
+
+## Real content with no synergies but the ones registered by synergy(). Call
+## clear_synergies() first so earlier tests' synergies don't match.
+static func synergy_content() -> ContentDb:
+	if _synergy_content == null:
+		_synergy_content = ContentDb.load_dir("res://data")
+		clear_synergies()
+	return _synergy_content
+
+
+static func clear_synergies() -> void:
+	var db: ContentDb = synergy_content()
+	db.synergies.clear()
+	db.synergy_ids.clear()
+
+
+static func synergy_sim(heroes: Array[UnitSetup], enemies: Array[UnitSetup], bench: Array[UnitSetup] = []) -> CombatSim:
+	return CombatSim.new(FightSetup.make(heroes, enemies, 1, 1, bench), synergy_content())
+
+
+static func synergy_run(heroes: Array[UnitSetup], enemies: Array[UnitSetup], bench: Array[UnitSetup] = []) -> FightResult:
+	return CombatSim.run(FightSetup.make(heroes, enemies, 1, 1, bench), synergy_content())
 
 
 ## A damage-only effect list, for overrides.

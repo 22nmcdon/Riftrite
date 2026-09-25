@@ -1,0 +1,688 @@
+[
+  {
+    "id": "paper_cuts",
+    "name": "Paper Cuts",
+    "layer": "pair",
+    "items": [
+      "whetstone",
+      "twin_daggers"
+    ],
+    "_note": "Each dagger hit charges the Whetstone by 0.2s.",
+    "grants": [
+      {
+        "filter": {
+          "item": "twin_daggers"
+        },
+        "effect": {
+          "trigger": "on_hit",
+          "type": "charge",
+          "amount_ms": 200,
+          "target": "partner_items"
+        }
+      }
+    ]
+  },
+  {
+    "id": "hearth_and_home",
+    "name": "Hearth and Home",
+    "layer": "pair",
+    "items": [
+      "hearth_banner",
+      "hearth_stew"
+    ],
+    "_note": "The stew heals x1.5.",
+    "auras": [
+      {
+        "target": "matched_items",
+        "filter": {
+          "item": "hearth_stew"
+        },
+        "stat": "heal_bp",
+        "value": 15000
+      }
+    ]
+  },
+  {
+    "id": "tolling_ward",
+    "name": "Tolling Ward",
+    "layer": "pair",
+    "items": [
+      "bell_of_vigil",
+      "oak_buckler"
+    ],
+    "_note": "Both items' shields x1.3.",
+    "auras": [
+      {
+        "target": "matched_items",
+        "stat": "shield_bp",
+        "value": 13000
+      }
+    ]
+  },
+  {
+    "id": "wildfire_torch",
+    "name": "Wildfire Torch",
+    "layer": "transformation",
+    "item": "tallow_torch",
+    "essence": "ember",
+    "_note": "The torch's Burn lands on every enemy instead of one.",
+    "item_effects": [
+      {
+        "trigger": "on_fire",
+        "type": "apply_status",
+        "status": "burn",
+        "stacks": 1,
+        "target": "all_enemies",
+        "scaling": {
+          "mgk": 500
+        }
+      }
+    ]
+  },
+  {
+    "id": "bulwark_of_stone",
+    "name": "Bulwark of Stone",
+    "layer": "transformation",
+    "item": "oak_buckler",
+    "essence": "stone",
+    "_note": "The buckler shields the whole guild instead of its holder.",
+    "item_effects": [
+      {
+        "trigger": "on_fire",
+        "type": "shield",
+        "amount": 6,
+        "target": "all_allies",
+        "scaling": {
+          "def": 2000
+        }
+      }
+    ]
+  },
+  {
+    "id": "lantern_of_mercy",
+    "name": "Lantern of Mercy",
+    "layer": "signature",
+    "hero": "vell",
+    "item": "old_lantern",
+    "_note": "Sister Vell's lantern also gives a small shield.",
+    "grants": [
+      {
+        "effect": {
+          "trigger": "on_fire",
+          "type": "shield",
+          "amount": 8,
+          "target": "ally_lowest_hp"
+        }
+      }
+    ]
+  },
+  {
+    "id": "wardens_oath",
+    "name": "Warden's Oath",
+    "layer": "signature",
+    "hero": "brannoc",
+    "item": "oak_buckler",
+    "_note": "Brannoc with his buckler: x1.15 DEF.",
+    "auras": [
+      {
+        "target": "holder",
+        "stat": "def_bp",
+        "value": 11500
+      }
+    ]
+  },
+  {
+    "id": "dawnstrike",
+    "name": "Dawnstrike",
+    "layer": "signature",
+    "hero": "wren",
+    "item": "first_light_dagger",
+    "_note": "Wren's dagger: +15% crit chance.",
+    "auras": [
+      {
+        "target": "matched_items",
+        "stat": "crit_chance_bp",
+        "value": 1500
+      }
+    ]
+  },
+  {
+    "id": "dusk_recitation",
+    "name": "Dusk Recitation",
+    "layer": "signature",
+    "hero": "odo",
+    "item": "dusk_tome",
+    "_note": "Odo reads the tome 15% faster.",
+    "auras": [
+      {
+        "target": "matched_items",
+        "stat": "cooldown_bp",
+        "value": -1500
+      }
+    ]
+  },
+  {
+    "id": "ember_resonance",
+    "name": "Ember Resonance",
+    "layer": "resonance",
+    "essence": "ember",
+    "_note": "Ember items: more damage over time.",
+    "tiers": [
+      {
+        "count": 3,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "ember"
+            },
+            "stat": "over_time_bp",
+            "value": 11500
+          }
+        ]
+      },
+      {
+        "count": 5,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "ember"
+            },
+            "stat": "over_time_bp",
+            "value": 13000
+          }
+        ]
+      },
+      {
+        "count": 7,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "ember"
+            },
+            "stat": "over_time_bp",
+            "value": 15000
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "venom_resonance",
+    "name": "Venom Resonance",
+    "layer": "resonance",
+    "essence": "venom",
+    "_note": "Venom items: more damage over time.",
+    "tiers": [
+      {
+        "count": 3,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "venom"
+            },
+            "stat": "over_time_bp",
+            "value": 11500
+          }
+        ]
+      },
+      {
+        "count": 5,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "venom"
+            },
+            "stat": "over_time_bp",
+            "value": 13000
+          }
+        ]
+      },
+      {
+        "count": 7,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "venom"
+            },
+            "stat": "over_time_bp",
+            "value": 15000
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "wrath_resonance",
+    "name": "Wrath Resonance",
+    "layer": "resonance",
+    "essence": "wrath",
+    "_note": "Wrath items hit harder.",
+    "tiers": [
+      {
+        "count": 3,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "wrath"
+            },
+            "stat": "damage_bp",
+            "value": 11000
+          }
+        ]
+      },
+      {
+        "count": 5,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "wrath"
+            },
+            "stat": "damage_bp",
+            "value": 12000
+          }
+        ]
+      },
+      {
+        "count": 7,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "wrath"
+            },
+            "stat": "damage_bp",
+            "value": 13500
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "stone_resonance",
+    "name": "Stone Resonance",
+    "layer": "resonance",
+    "essence": "stone",
+    "_note": "Stone items: bigger shields.",
+    "tiers": [
+      {
+        "count": 3,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "stone"
+            },
+            "stat": "shield_bp",
+            "value": 11500
+          }
+        ]
+      },
+      {
+        "count": 5,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "stone"
+            },
+            "stat": "shield_bp",
+            "value": 13000
+          }
+        ]
+      },
+      {
+        "count": 7,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "stone"
+            },
+            "stat": "shield_bp",
+            "value": 15000
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "verdant_resonance",
+    "name": "Verdant Resonance",
+    "layer": "resonance",
+    "essence": "verdant",
+    "_note": "Verdant items heal more.",
+    "tiers": [
+      {
+        "count": 3,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "verdant"
+            },
+            "stat": "heal_bp",
+            "value": 11500
+          }
+        ]
+      },
+      {
+        "count": 5,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "verdant"
+            },
+            "stat": "heal_bp",
+            "value": 13000
+          }
+        ]
+      },
+      {
+        "count": 7,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "verdant"
+            },
+            "stat": "heal_bp",
+            "value": 15000
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "frost_resonance",
+    "name": "Frost Resonance",
+    "layer": "resonance",
+    "essence": "frost",
+    "_note": "Frost items hit harder (the design's 'frozen enemies take more damage' needs Freeze from items first).",
+    "tiers": [
+      {
+        "count": 3,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "frost"
+            },
+            "stat": "damage_bp",
+            "value": 11000
+          }
+        ]
+      },
+      {
+        "count": 5,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "frost"
+            },
+            "stat": "damage_bp",
+            "value": 12000
+          }
+        ]
+      },
+      {
+        "count": 7,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "frost"
+            },
+            "stat": "damage_bp",
+            "value": 13500
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "storm_resonance",
+    "name": "Storm Resonance",
+    "layer": "resonance",
+    "essence": "storm",
+    "_note": "Storm items fire faster.",
+    "tiers": [
+      {
+        "count": 3,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "storm"
+            },
+            "stat": "cooldown_bp",
+            "value": -500
+          }
+        ]
+      },
+      {
+        "count": 5,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "storm"
+            },
+            "stat": "cooldown_bp",
+            "value": -1000
+          }
+        ]
+      },
+      {
+        "count": 7,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "storm"
+            },
+            "stat": "cooldown_bp",
+            "value": -1500
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "umbral_resonance",
+    "name": "Umbral Resonance",
+    "layer": "resonance",
+    "essence": "umbral",
+    "_note": "Umbral items crit more.",
+    "tiers": [
+      {
+        "count": 3,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "umbral"
+            },
+            "stat": "crit_chance_bp",
+            "value": 500
+          }
+        ]
+      },
+      {
+        "count": 5,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "umbral"
+            },
+            "stat": "crit_chance_bp",
+            "value": 1000
+          }
+        ]
+      },
+      {
+        "count": 7,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "essence": "umbral"
+            },
+            "stat": "crit_chance_bp",
+            "value": 1500
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "warden_trait",
+    "name": "Wardens",
+    "layer": "class_trait",
+    "class": "warden",
+    "_note": "Front-row heroes' shields are x1.15 (x1.25 with 3 Wardens).",
+    "tiers": [
+      {
+        "count": 2,
+        "auras": [
+          {
+            "target": "all_allies",
+            "stat": "shield_bp",
+            "value": 11500,
+            "filter": {
+              "row": "front"
+            }
+          }
+        ]
+      },
+      {
+        "count": 3,
+        "auras": [
+          {
+            "target": "all_allies",
+            "stat": "shield_bp",
+            "value": 12500,
+            "filter": {
+              "row": "front"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "striker_trait",
+    "name": "Strikers",
+    "layer": "class_trait",
+    "class": "striker",
+    "_note": "Weapons crit more.",
+    "tiers": [
+      {
+        "count": 2,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "tag": "weapon"
+            },
+            "stat": "crit_chance_bp",
+            "value": 500
+          }
+        ]
+      },
+      {
+        "count": 3,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "tag": "weapon"
+            },
+            "stat": "crit_chance_bp",
+            "value": 1000
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "mender_trait",
+    "name": "Menders",
+    "layer": "class_trait",
+    "class": "mender",
+    "_note": "Healing items heal more.",
+    "tiers": [
+      {
+        "count": 2,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "tag": "healing"
+            },
+            "stat": "heal_bp",
+            "value": 11500
+          }
+        ]
+      },
+      {
+        "count": 3,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "tag": "healing"
+            },
+            "stat": "heal_bp",
+            "value": 12500
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "arcanist_trait",
+    "name": "Arcanists",
+    "layer": "class_trait",
+    "class": "arcanist",
+    "_note": "Magic items hit harder.",
+    "tiers": [
+      {
+        "count": 2,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "tag": "magic"
+            },
+            "stat": "damage_bp",
+            "value": 11500
+          }
+        ]
+      },
+      {
+        "count": 3,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "tag": "magic"
+            },
+            "stat": "damage_bp",
+            "value": 12500
+          }
+        ]
+      }
+    ]
+  }
+]

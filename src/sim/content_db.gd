@@ -19,7 +19,9 @@ const HEROES_FILE: String = "heroes.json"
 const ENEMIES_FILE: String = "enemies.json"
 const ENCOUNTERS_FILE: String = "encounters.json"
 const RELICS_FILE: String = "relics.json"
-const FILES: Array[String] = [TUNING_FILE, STATUSES_FILE, ESSENCES_FILE, ALLOYS_FILE, ITEMS_FILE, HEROES_FILE, ENEMIES_FILE, ENCOUNTERS_FILE, RELICS_FILE]
+const SYNERGIES_FILE: String = "synergies.json"
+const SPECIALIZATIONS_FILE: String = "specializations.json"
+const FILES: Array[String] = [TUNING_FILE, STATUSES_FILE, ESSENCES_FILE, ALLOYS_FILE, ITEMS_FILE, HEROES_FILE, ENEMIES_FILE, ENCOUNTERS_FILE, RELICS_FILE, SYNERGIES_FILE, SPECIALIZATIONS_FILE]
 
 var errors: Array[String] = []
 var tuning: TuningDef
@@ -39,6 +41,10 @@ var encounters: Dictionary[String, EncounterDef] = {}
 var encounter_ids: Array[String] = []
 var relics: Dictionary[String, RelicDef] = {}
 var relic_ids: Array[String] = []
+var synergies: Dictionary[String, SynergyDef] = {}
+var synergy_ids: Array[String] = []
+var specializations: Dictionary[String, SpecializationDef] = {}
+var specialization_ids: Array[String] = []
 ## Recipe key (AlloyDef.recipe_key) -> alloy. Two essences with no entry
 ## here still work as an alloy, just without a named special.
 var _alloys_by_recipe: Dictionary[String, AlloyDef] = {}
@@ -90,6 +96,14 @@ static func load_texts(texts: Dictionary[String, String]) -> ContentDb:
 		var relic: RelicDef = RelicDef.read(reader)
 		if db._claim_id(relic.id, reader, db.relic_ids):
 			db.relics[relic.id] = relic
+	for reader: DataReader in db._entries(db._parse(texts, SYNERGIES_FILE), SYNERGIES_FILE):
+		var synergy: SynergyDef = SynergyDef.read(reader)
+		if db._claim_id(synergy.id, reader, db.synergy_ids):
+			db.synergies[synergy.id] = synergy
+	for reader: DataReader in db._entries(db._parse(texts, SPECIALIZATIONS_FILE), SPECIALIZATIONS_FILE):
+		var specialization: SpecializationDef = SpecializationDef.read(reader)
+		if db._claim_id(specialization.id, reader, db.specialization_ids):
+			db.specializations[specialization.id] = specialization
 	db._check_references()
 	return db
 
@@ -207,8 +221,15 @@ func _check_references() -> void:
 
 
 	for id: String in item_ids:
-		_check_effects(items[id].effects, "%s (%s)" % [ITEMS_FILE, id])
-		_check_auras(items[id].auras, "%s (%s)" % [ITEMS_FILE, id])
+		var item_where: String = "%s (%s)" % [ITEMS_FILE, id]
+		_check_effects(items[id].effects, item_where)
+		_check_auras(items[id].auras, item_where)
+		_check_no_partners(items[id].effects, item_where)
+		for i: int in items[id].auras.size():
+			if items[id].auras[i].target == AuraDef.Target.MATCHED_ITEMS:
+				errors.append("%s.auras[%d]: matched_items only works in a synergy" % [item_where, i])
+			if items[id].auras[i].target == AuraDef.Target.HOLDER_ITEMS:
+				errors.append("%s.auras[%d]: holder_items only works in a specialization" % [item_where, i])
 	for id: String in hero_ids:
 		if heroes[id].basic_attack != null:
 			_check_effects(heroes[id].basic_attack.effects, "%s (%s).basic_attack" % [HEROES_FILE, id])
@@ -236,6 +257,68 @@ func _check_references() -> void:
 			var effect_list: Array[EffectDef] = [grant.effect]
 			_check_effects(effect_list, "%s.grants[%d]" % [where, i])
 			_check_filter(grant.filter, "%s.grants[%d]" % [where, i])
+			_check_no_partners(effect_list, "%s.grants[%d]" % [where, i])
+	for id: String in synergy_ids:
+		_check_synergy(synergies[id], "%s (%s)" % [SYNERGIES_FILE, id])
+	var per_hero: Dictionary[String, int] = {}
+	for id: String in specialization_ids:
+		var specialization: SpecializationDef = specializations[id]
+		_check_specialization(specialization, "%s (%s)" % [SPECIALIZATIONS_FILE, id])
+		per_hero[specialization.hero] = per_hero.get(specialization.hero, 0) + 1
+	for hero_id: String in hero_ids:
+		if per_hero.get(hero_id, 0) > 3:
+			errors.append("%s: %s has %d specializations; the limit is 3" % [SPECIALIZATIONS_FILE, hero_id, per_hero[hero_id]])
+
+
+func _check_specialization(specialization: SpecializationDef, where: String) -> void:
+	if not heroes.has(specialization.hero):
+		errors.append("%s: unknown hero \"%s\"" % [where, specialization.hero])
+	for part: SpecializationDef.Part in specialization.all_parts():
+		var at: String = "%s.%s" % [where, part.key]
+		if part.aura != null:
+			var auras_list: Array[AuraDef] = [part.aura]
+			_check_auras(auras_list, at)
+		if part.grant != null:
+			var grant_effects: Array[EffectDef] = [part.grant.effect]
+			_check_effects(grant_effects, at)
+			_check_filter(part.grant.filter, at)
+			_check_no_partners(grant_effects, at)
+		if part.item != null:
+			_check_effects(part.item.effects, at)
+			_check_no_partners(part.item.effects, at)
+		if part.backup != null:
+			_check_effects(part.backup.effects, at)
+		for status_id: String in [part.replace_from, part.replace_to]:
+			if part.kind == SpecializationDef.Kind.REPLACE_STATUS and not statuses.has(status_id):
+				errors.append("%s: unknown status \"%s\"" % [at, status_id])
+
+
+func _check_synergy(synergy: SynergyDef, where: String) -> void:
+	for item_id: String in synergy.items:
+		if not items.has(item_id):
+			errors.append("%s: unknown item \"%s\"" % [where, item_id])
+	if not synergy.hero.is_empty() and not heroes.has(synergy.hero):
+		errors.append("%s: unknown hero \"%s\"" % [where, synergy.hero])
+	if not synergy.essence.is_empty() and not essences.has(synergy.essence):
+		errors.append("%s: unknown essence \"%s\"" % [where, synergy.essence])
+	_check_effects(synergy.item_effects, where + ".item_effects")
+	_check_no_partners(synergy.item_effects, where + ".item_effects")
+	for bonus: RelicDef in synergy.all_bonuses():
+		_check_effects(bonus.effects, where)
+		_check_auras(bonus.auras, where)
+		for i: int in bonus.grants.size():
+			var grant_effects: Array[EffectDef] = [bonus.grants[i].effect]
+			_check_effects(grant_effects, "%s.grants[%d]" % [where, i])
+			_check_filter(bonus.grants[i].filter, "%s.grants[%d]" % [where, i])
+			if synergy.layer != SynergyDef.Layer.PAIR:
+				_check_no_partners(grant_effects, "%s.grants[%d]" % [where, i])
+
+
+## partner_items (charge) only means something in a pair synergy's grants.
+func _check_no_partners(effects: Array[EffectDef], where: String) -> void:
+	for i: int in effects.size():
+		if effects[i].type == EffectDef.Type.CHARGE and effects[i].item_target == EffectDef.ItemTarget.PARTNER_ITEMS:
+			errors.append("%s.effects[%d]: partner_items only works in a pair synergy's grants" % [where, i])
 
 
 ## Checks a list of relic ids: each exists, none twice. Enemy-only relics are
@@ -264,7 +347,7 @@ func check_loadout(entries: Array[LoadoutEntry], where: String, enemy: bool) -> 
 		var item: ItemDef = items[entry.item_id]
 		if item.enemy_only and not enemy:
 			errors.append("%s: \"%s\" is enemy-only" % [at, entry.item_id])
-		var sockets: int = 1 if item.size <= 1 else 2
+		var sockets: int = tuning.socket_count(item) if tuning != null else 1
 		if entry.essence_ids.size() > sockets:
 			errors.append("%s: \"%s\" has %d essences but only %d socket(s)" % [at, entry.item_id, entry.essence_ids.size(), sockets])
 		for essence_id: String in entry.essence_ids:

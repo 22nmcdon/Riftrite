@@ -25,6 +25,9 @@ var basic_attack: ItemDef
 var items: Array[ItemSetup] = []
 ## The hero's own Backup effect (used when benched), or null.
 var backup: BackupDef = null
+## The hero's rank-B specialization, or null. Which parts apply depends on
+## the rank (locked potential) and on fielded vs benched.
+var specialization: SpecializationDef = null
 
 
 static func make(unit_id: String, unit_name: String, unit_stats: UnitStats, unit_row: Row, unit_slots: int, basic: ItemDef, row_items: Array[ItemSetup] = [], unit_rank: int = 0) -> UnitSetup:
@@ -47,6 +50,11 @@ func validate(content: ContentDb, errors: Array[String]) -> void:
 		errors.append("%s: stats can't be negative" % id)
 	if rank < 0 or rank >= TuningDef.TIER_NAMES.size():
 		errors.append("%s: rank must be 0-3 (C-S)" % id)
+	if specialization != null:
+		if rank < 1:
+			errors.append("%s: a rank-C hero has no specialization (\"%s\")" % [id, specialization.id])
+		if specialization.hero != id:
+			errors.append("%s: specialization \"%s\" belongs to %s" % [id, specialization.id, specialization.hero])
 	if basic_attack == null or not basic_attack.is_basic_attack:
 		errors.append("%s: needs a basic auto-attack" % id)
 	else:
@@ -79,8 +87,9 @@ func _validate_effects(item: ItemDef, content: ContentDb, errors: Array[String])
 
 
 func _validate_essences(item: ItemSetup, content: ContentDb, errors: Array[String]) -> void:
-	if item.essence_ids.size() > item.socket_count():
-		errors.append("%s: item \"%s\" has %d essences but only %d socket(s)" % [id, item.def.id, item.essence_ids.size(), item.socket_count()])
+	var sockets: int = item.socket_count(content.tuning)
+	if item.essence_ids.size() > sockets:
+		errors.append("%s: item \"%s\" has %d essences but only %d socket(s)" % [id, item.def.id, item.essence_ids.size(), sockets])
 	for essence_id: String in item.essence_ids:
 		if not content.essences.has(essence_id):
 			errors.append("%s: item \"%s\" has unknown essence \"%s\"" % [id, item.def.id, essence_id])

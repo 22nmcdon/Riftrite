@@ -701,5 +701,58 @@
         }
       }
     ]
+  },
+  {
+    "id": "whetstone",
+    "name": "Whetstone",
+    "_note": "Keeps the blades beside it sharp: charges its neighbors.",
+    "size": 1,
+    "tags": [
+      "tool",
+      "melee"
+    ],
+    "rarity": "common",
+    "xp_per_fire": 2,
+    "cooldown_ms": 3000,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "charge",
+        "amount_ms": 250,
+        "target": "adjacent_items"
+      }
+    ]
+  },
+  {
+    "id": "twin_daggers",
+    "name": "Twin Daggers",
+    "size": 2,
+    "tags": [
+      "weapon",
+      "melee"
+    ],
+    "rarity": "uncommon",
+    "xp_per_fire": 3,
+    "cooldown_ms": 1200,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "damage",
+        "amount": 3,
+        "target": "enemy_front",
+        "scaling": {
+          "atk": 4000
+        }
+      },
+      {
+        "trigger": "on_fire",
+        "type": "damage",
+        "amount": 3,
+        "target": "enemy_front",
+        "scaling": {
+          "atk": 4000
+        }
+      }
+    ]
   }
 ]

@@ -2,7 +2,7 @@
 
 ## Project
 
-A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The player leads a guild of heroes through branching rift maps. Each hero has a row of items that fire on cooldowns, and items are infused with essences harvested from enemies. Hidden, discoverable synergies drive build variety.
+A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The player leads a guild of heroes through the rifts, one day at a time. Each hero has a row of items that fire on cooldowns, and items are infused with essences harvested from enemies. Hidden, discoverable synergies drive build variety.
 
 **The full design lives in `docs/design.md`**, with item tiers, backup mode, and Oathbinding detailed in `docs/tiers-backup-specialization.md`. Before building or changing a game system, read the matching section there. If the code and the design doc disagree, stop and ask. Don't silently pick one.
 
@@ -48,7 +48,7 @@ tools/         headless sim runner, data validators
 
 ## Infusion rules (easy to get wrong)
 
-- Small items: 1 socket. Medium/Large items: 2 sockets. Relics have no sockets. Infusing can happen any time between fights (for now).
+- **Sockets depend on rarity, not size:** Epic and Legendary items have 2 sockets (Epic is a placeholder to try; the list is `two_socket_rarities` in `data/tuning.json`); every other item has 1. Relics have no sockets. Infusing can happen any time between fights (for now).
 - Two different essences in one item = an **Alloy** with its own effect. Two of the same = a **pure double**.
 - Pure doubles are alloys too, and each has its own effect.
 - An alloy **keeps both essences' normal effects** and adds its special. A special that changes how a status behaves must use **its own status type** (Inferno → Golden Flame), never modify the shared one, so it can't leak into other items' statuses.
@@ -62,6 +62,21 @@ tools/         headless sim runner, data validators
 - Item spills stay inside that hero's row.
 - Spill percentages and XP thresholds are tuning values in `data/`, never hard-coded.
 - Essence resonance counts **essences**, not items: a single = 1, an alloy = 1 of each half, a pure double = 2, and a transformation counts its socketed essence(s).
+
+## Synergy rules
+
+- Five layers (`data/synergies.json`, `docs/plans/synergies-in-sim.md`): pairs (two items on one fielded hero), transformations (item + essence), signatures (item on a specific fielded hero), essence resonance (3/5/7), class traits (2/3 fielded heroes). Tiered layers apply only their highest tier reached.
+- Synergies are checked once at fight start, for the guild only (enemies get none for now). Their bonuses run through the relic code (auras, grants, relic triggers), and the log credits the synergy.
+- Resonance counts fielded **and backup** heroes' essences; class traits count fielded heroes only.
+- A transformation replaces the item's own effects, uses one copy of its essence (other essences work as plain singles, no alloy special), never spills, and still counts for resonance.
+
+## Specialization rules
+
+- Each **hero** has three specializations of their own (`data/specializations.json`, `docs/plans/specializations-in-sim.md`), each unique to the hero and unlike the other two. A hero picks one at rank B.
+- **Locked potential:** parts unlock at B, A, and S. A later part with the same key replaces the earlier one.
+- Part kinds: aura, grant (numbered from the hero's stats), ability (slotless, on a cooldown or relic trigger), basic_attack, backup, replace_status.
+- Each part applies when `fielded`, `benched`, or `always`.
+- A part that replaces the basic attack must come with an `auto_attack` part, so equipping an auto-attack item never blanks the specialization.
 
 ## Item rules
 

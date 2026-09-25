@@ -21,6 +21,8 @@ enum Kind {
 	INFUSION_LEVEL,
 	STATUS_JUMPED,
 	AURA,
+	CHARGE,
+	SYNERGY,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -38,9 +40,12 @@ var source_granted_by: String = ""
 ## Relic effects: the side holding the relic (source_item is the relic);
 ## -1 when the source is a unit.
 var source_relic_side: int = -1
+## The source is a synergy's own effect (see EffectSource.synergy).
+var source_synergy: bool = false
 var target: String = ""
 ## DAMAGE/COLLAPSE/STATUS_DAMAGE: the hit's full damage. HEAL: HP restored.
-## SHIELD: shield given. STATUS_APPLIED: stacks added.
+## SHIELD: shield given. STATUS_APPLIED: stacks added. CHARGE: ticks of
+## cooldown advanced (the charged item's name is in `note`).
 var amount: int = 0
 ## Damage kinds: how much of `amount` the target's shield absorbed.
 var absorbed: int = 0
@@ -63,12 +68,14 @@ func set_source(source: EffectSource) -> void:
 	source_infusion_name = source.infusion_name
 	source_granted_by = source.granted_by
 	source_relic_side = source.relic_side
+	source_synergy = source.synergy
 
 
 func source() -> EffectSource:
 	var result: EffectSource = EffectSource.make(source_unit, source_item, source_item_name, source_infusion, source_infusion_name)
 	result.granted_by = source_granted_by
 	result.relic_side = source_relic_side
+	result.synergy = source_synergy
 	return result
 
 
@@ -103,6 +110,10 @@ func to_text() -> String:
 			return line + "%s on %s%s ends" % [status_name, target, "" if note.is_empty() else " (%s)" % note]
 		Kind.AURA:
 			return line + "%s aura %s" % [source_text(), note]
+		Kind.CHARGE:
+			return line + "%s charges %s by %s" % [source_text(), note, _format_time(amount)]
+		Kind.SYNERGY:
+			return line + note
 		Kind.STATUS_JUMPED:
 			return line + "%s jumps from %s to %s (%d stacks)" % [status_name, note, target, stacks]
 		Kind.INFUSION_LEVEL:

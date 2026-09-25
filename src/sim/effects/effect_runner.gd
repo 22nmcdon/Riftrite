@@ -28,6 +28,17 @@ static func fire(sim: CombatSim, item: ItemState) -> void:
 		Infusions.gain_xp(sim, item, item.def.xp_per_fire)
 
 
+## Runs one triggered effect of an ability (on_fight_start, at_time,
+## on_ally_below_hp). `trigger_ally` is who set it off (for trigger_ally),
+## or null.
+static func run_triggered(sim: CombatSim, item: ItemState, sourced: SourcedEffect, trigger_ally: UnitState) -> void:
+	var hit: Hit = null
+	if trigger_ally != null:
+		hit = Hit.new()
+		hit.target = trigger_ally
+	_run(sim, item, sourced, hit)
+
+
 static func _fire_once(sim: CombatSim, item: ItemState, note: String) -> void:
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.FIRE, _source(sim, item, null))
 	entry.note = note
@@ -42,6 +53,9 @@ static func _run(sim: CombatSim, item: ItemState, sourced: SourcedEffect, hit: H
 	if not effect.active_at(sim.tick):
 		return
 	var source: EffectSource = _source(sim, item, sourced)
+	if effect.type == EffectDef.Type.CHARGE:
+		_charge(sim, item, sourced, source)
+		return
 	var hit_target: UnitState = hit.target if hit != null else null
 	# Only the item's own effects produce output that essences convert
 	# (not its infusion's, and not relic grants).
@@ -61,10 +75,33 @@ static func _run(sim: CombatSim, item: ItemState, sourced: SourcedEffect, hit: H
 				give_shield(sim, target, amount, source)
 				if own:
 					Conversions.on_output(sim, item, "shield", amount, target, false)
+			EffectDef.Type.CLEANSE:
+				Statuses.cleanse_over_time(sim, target, mini(amount, FixedMath.BP_ONE), source)
 			EffectDef.Type.APPLY_STATUS:
 				Statuses.apply(sim, target, item.replaced_status(effect.status_id), amount, source)
 				if own and sim.content.is_output_kind(effect.status_id):
 					Conversions.on_output(sim, item, effect.status_id, amount, target, false)
+
+
+## Advances the target items' cooldowns by the effect's ticks, up to "ready"
+## (a charge never banks a second fire). Logged per item.
+static func _charge(sim: CombatSim, item: ItemState, sourced: SourcedEffect, source: EffectSource) -> void:
+	var holder: UnitState = sim.owner_of(item)
+	var targets: Array[ItemState] = []
+	if sourced.effect.item_target == EffectDef.ItemTarget.PARTNER_ITEMS:
+		for other: ItemState in holder.row_items():
+			if sourced.partner_slots.has(other.slot):
+				targets.append(other)
+	else:
+		targets = sim.row_item_targets(holder, item, sourced.effect.item_target)
+	var ticks: int = sourced.take_amount()
+	for target: ItemState in targets:
+		target.charge(ticks)
+		var entry: LogEntry = sim.new_entry(LogEntry.Kind.CHARGE, source)
+		entry.target = holder.id
+		entry.amount = ticks
+		entry.note = target.def.name
+		sim.combat_log.add(entry)
 
 
 static func _hit(sim: CombatSim, item: ItemState, source: EffectSource, target: UnitState, base_amount: int, can_trigger: bool, own: bool) -> void:
@@ -162,5 +199,5 @@ static func _source(sim: CombatSim, item: ItemState, sourced: SourcedEffect) -> 
 	var infusion_name: String = sourced.infusion_name if sourced != null else ""
 	var source: EffectSource = EffectSource.make(sim.owner_of(item).id, item.def.id, item.def.name, infusion, infusion_name)
 	if sourced != null:
-		source.granted_by = sourced.granted_by
+		source.granted_by = sourced.granted_by if not sourced.granted_by.is_empty() else sourced.transformed_by
 	return source

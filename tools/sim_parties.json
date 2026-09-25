@@ -124,8 +124,7 @@
           {
             "item": "dusk_tome",
             "essences": [
-              "ember",
-              "storm"
+              "ember"
             ]
           },
           {
@@ -169,8 +168,7 @@
           {
             "item": "grave_hook",
             "essences": [
-              "umbral",
-              "verdant"
+              "umbral"
             ]
           },
           {
@@ -206,7 +204,6 @@
           {
             "item": "ember_brazier",
             "essences": [
-              "ember",
               "ember"
             ]
           },
@@ -338,8 +335,7 @@
           {
             "item": "dusk_tome",
             "essences": [
-              "ember",
-              "storm"
+              "ember"
             ]
           },
           {
@@ -429,6 +425,71 @@
       "warding_knot",
       "tinkers_loupe",
       "cinder_crown"
+    ]
+  },
+  {
+    "id": "hearth_specialized",
+    "name": "Hearth starter at rank A with specializations (Hearthwall, Duelist, Wardweaver, Pyromancer)",
+    "heroes": [
+      {
+        "hero": "brannoc",
+        "row": "front",
+        "items": [
+          {
+            "item": "rusted_cleaver"
+          },
+          {
+            "item": "oak_buckler"
+          }
+        ],
+        "rank": "a",
+        "specialization": "brannoc_hearthwall"
+      },
+      {
+        "hero": "wren",
+        "row": "front",
+        "items": [
+          {
+            "item": "hearth_knife"
+          },
+          {
+            "item": "first_light_dagger"
+          },
+          {
+            "item": "bone_sling"
+          }
+        ],
+        "rank": "a",
+        "specialization": "wren_duelist"
+      },
+      {
+        "hero": "vell",
+        "row": "back",
+        "items": [
+          {
+            "item": "old_lantern"
+          },
+          {
+            "item": "hearth_stew"
+          }
+        ],
+        "rank": "a",
+        "specialization": "vell_wardweaver"
+      },
+      {
+        "hero": "odo",
+        "row": "back",
+        "items": [
+          {
+            "item": "dusk_tome"
+          },
+          {
+            "item": "tallow_torch"
+          }
+        ],
+        "rank": "a",
+        "specialization": "odo_pyromancer"
+      }
     ]
   }
 ]

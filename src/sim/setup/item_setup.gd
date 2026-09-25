@@ -22,6 +22,6 @@ static func make(item_def: ItemDef, essences: Array[String] = [], item_tier: int
 	return setup
 
 
-## Small items have 1 socket; Medium and Large have 2 (design doc).
-func socket_count() -> int:
-	return 1 if def.size <= 1 else 2
+## Sockets depend on rarity, not size (see TuningDef.socket_count).
+func socket_count(tuning: TuningDef) -> int:
+	return tuning.socket_count(def)

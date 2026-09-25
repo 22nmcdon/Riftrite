@@ -116,9 +116,9 @@ In The Bazaar an item gets one fixed enchantment. Here, enchantments are **Infus
 
 "Sized from the item's output" follows one conversion rule (same kind +50%; same family 50%; direct → over time 5%; over time → direct 500%). Details: `docs/plans/essence-rework.md`.
 
-**2. Socket.** Small items have 1 socket; Medium and Large have 2. For now, infusing can happen any time between fights, straight from the essence pouch.
+**2. Socket.** Most items have 1 socket. Only **Legendary** items (and, as a placeholder to try, **Epic**) have 2, whatever their size. That makes alloys and pure doubles a high-rarity payoff. For now, infusing can happen any time between fights, straight from the essence pouch.
 
-**3. Fuse.** Two essences in one item's sockets fuse into an **Alloy** with its own effect, not just both effects added. Six essences give 15 cross-pairs plus 6 "pure" doubles, so 21 alloys in total. Examples:
+**3. Fuse.** Two essences in one two-socket item fuse into an **Alloy** with its own effect, not just both effects added. Six essences give 15 cross-pairs plus 6 "pure" doubles, so 21 alloys in total. Examples:
 
 | Alloy | Recipe | Effect |
 | --- | --- | --- |
@@ -295,7 +295,7 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 | Fights are hard to read | Post-fight damage meter, combat log, slow-mo, and a cap of 7 slots per hero |
 | Too many combinations to balance | Headless sim runner; ship fewer alloys (10) first and add more later |
 | Feels like a mash-up of its sources | Lean hardest on the infusion system; it's the part none of the three games has |
-| Fusion feels mandatory | Alloys split their spill (one essence per side) while singles and pure doubles give both neighbors the same essence; fusing resets XP; Small items have only 1 socket; essence transformations give single essences a unique payoff, at the cost of never spilling. The headless sim will show whether this is enough, and alloy spill strength is the first thing to tune if it isn't |
+| Fusion feels mandatory | Alloys split their spill (one essence per side) while singles and pure doubles give both neighbors the same essence; fusing resets XP; only Epic and Legendary items have 2 sockets; essence transformations give single essences a unique payoff, at the cost of never spilling. The headless sim will show whether this is enough, and alloy spill strength is the first thing to tune if it isn't |
 | Scope creep | Hold the vertical slice to one act until playtesters ask for a second run |
 
 **Decisions made**
@@ -350,11 +350,13 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - **Day order:** Caravan → stop → fight. Two rounds per day (Caravan, stop, fight, Caravan, stop, elite or boss) is a possible later change.
 - **Infusing** can happen any time between fights for now; the Forge is for reforging.
 - **A lost fight is replayed against the same enemies.**
+- **Synergies (built):** resonance counts fielded and backup heroes' essences; class traits count fielded heroes, at 2 and 3; enemies get no synergies for now (maybe bosses in later acts). A transformation uses one copy of its essence; any other essence works as a plain single. Pairs can use a new `charge` effect (advance another item's cooldown). Details: `docs/plans/synergies-in-sim.md`.
+- **Sockets by rarity, not size:** only Legendary (and, as a placeholder, Epic) items have 2 sockets; every other item has 1. The rarity list is a tuning value.
 - **Relics:** hold any number, no board and no sockets. They can be turned down but never removed once taken, change how a build works (Epic ones a lot), and are much rarer than items, essences, or heroes. Bosses drop an item or a relic.
 - **A run starts with one hero** (pick 1 of 3 random), then 1 of 3 starting packages (extra gold, a Common relic, or a Common item), plus base gold. Fielding is 1–5 heroes.
 - **Losing a fight restarts the day** with everything kept, plus bonus gold (10, +5 per fight won so far). **The second loss ends the run.** Every fight starts at full HP unless an item or relic changes that.
 - **Shared stash:** 6 slots that work like a hero row (sizes count). Relics can't go in the stash.
-- **Rank-B specializations** (3 per class) are in the vertical slice.
+- **Rank-B specializations** are in the vertical slice. Each **hero** has three of their own (not shared with the class), each unique to the hero and unlike the other two: an ability, an aura, an effect on their items, much like relics. Some work only when fielded, some also from backup, some only from backup. A specialization that changes the basic attack must also say what happens when an auto-attack item replaces it. **Locked potential** (decided, replacing class-based rank-up picks): each specialization unlocks more at ranks A and S (`docs/plans/specializations-in-sim.md`). There is a `cleanse` effect (strips damage over time); Odo's Pyromancer capstone turns his Burn into Golden Flame rather than a Burn that ignores cleansing.
 - **Prices** are placeholders tuned with the balance runner: higher tiers and ranks cost more, rarer relics cost more, item rarity barely affects price.
 - **All five synergy layers** are in the vertical slice.
 - **Save and resume** between stops is in the vertical slice.
@@ -363,6 +365,7 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 
 - **Doubled spill:** does any pure double keep it? Overgrowth (Verdant + Verdant) is the first one to test.
 - **Act 3 collapse numbers:** to be decided later.
+- **Signature gear strength:** should signature items be rarer, or their bonuses smaller? The balance parties always hold them, which flips close matchups (`docs/plans/synergies-in-sim.md`). To be decided after playtesting.
 - **Tier schedule:** at what point in a run does the Caravan start offering B, A, and S? (A tuning table; it can be set once the run structure is being built.)
 - **Stats and essence rework (in progress):** decisions, placeholders, and the build order are in `docs/plans/essence-rework.md`. Damage essences on items that don't hit need real per-item designs later; for now they hit the enemy directly across.
 - More open questions on tiers, backup, Oathbinding, and Legendaries are listed at the end of `docs/tiers-backup-specialization.md`.

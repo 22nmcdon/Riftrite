@@ -12,6 +12,7 @@ const LOW_SHARE_PERCENT: float = 3.0
 class PartyHero:
 	var hero_id: String
 	var rank: int = 0
+	var specialization_id: String = ""
 	var row: UnitSetup.Row = UnitSetup.Row.FRONT
 	var items: Array[LoadoutEntry] = []
 
@@ -57,6 +58,9 @@ class Stats:
 	var biggest_hit: int = 0
 	var biggest_hit_text: String = ""
 	var items: Array[ItemTotals] = []
+	## Active synergies (by name), with how many fights each was active in.
+	var synergy_names: Array[String] = []
+	var synergy_fights: Array[int] = []
 	var errors: Array[String] = []
 	var _index: Dictionary[String, int] = {}
 
@@ -97,6 +101,7 @@ static func parse_parties(content: ContentDb, data: Variant, label: String) -> P
 		reader.finish()
 		# Reuse the content checks for item references (heroes can't carry enemy-only items).
 		var checker := ContentDb.new()
+		checker.tuning = content.tuning
 		checker.items = content.items
 		checker.essences = content.essences
 		checker.relics = content.relics
@@ -116,9 +121,13 @@ static func _read_heroes(content: ContentDb, reader: DataReader, key: String) ->
 		hero.rank = maxi(TuningDef.TIER_NAMES.find(hero_reader.opt_string_choice("rank", "c", TuningDef.TIER_NAMES)), 0)
 		hero.row = maxi(EncounterDef.ROW_NAMES.find(hero_reader.opt_string_choice("row", "front", EncounterDef.ROW_NAMES)), 0) as UnitSetup.Row
 		hero.items = LoadoutEntry.read_list(hero_reader, "items")
+		if hero_reader.has("specialization"):
+			hero.specialization_id = hero_reader.req_string("specialization")
 		hero_reader.finish()
 		if not content.heroes.has(hero.hero_id):
 			hero_reader.error("unknown hero \"%s\"" % hero.hero_id)
+		if not hero.specialization_id.is_empty() and not content.specializations.has(hero.specialization_id):
+			hero_reader.error("unknown specialization \"%s\"" % hero.specialization_id)
 		heroes.append(hero)
 	return heroes
 
@@ -127,7 +136,7 @@ static func _read_heroes(content: ContentDb, reader: DataReader, key: String) ->
 static func party_units(content: ContentDb, party: Party, benched: bool = false) -> Array[UnitSetup]:
 	var units: Array[UnitSetup] = []
 	for hero: PartyHero in (party.bench if benched else party.heroes):
-		units.append(SetupBuilder.hero(content, hero.hero_id, hero.rank, hero.row, hero.items))
+		units.append(SetupBuilder.hero(content, hero.hero_id, hero.rank, hero.row, hero.items, hero.specialization_id))
 	return units
 
 
@@ -166,6 +175,13 @@ static func _add_fight(stats: Stats, result: FightResult, hero_ids: Array[String
 	stats.ticks_min = result.end_tick if stats.ticks_min < 0 else mini(stats.ticks_min, result.end_tick)
 	stats.ticks_max = maxi(stats.ticks_max, result.end_tick)
 	stats.level_ups += result.combat_log.of_kind(LogEntry.Kind.INFUSION_LEVEL).size()
+	for entry: LogEntry in result.combat_log.of_kind(LogEntry.Kind.SYNERGY):
+		var index: int = stats.synergy_names.find(entry.note)
+		if index < 0:
+			stats.synergy_names.append(entry.note)
+			stats.synergy_fights.append(0)
+			index = stats.synergy_names.size() - 1
+		stats.synergy_fights[index] += 1
 	for entry: LogEntry in result.combat_log.of_kind(LogEntry.Kind.DAMAGE):
 		if entry.amount > stats.biggest_hit:
 			stats.biggest_hit = entry.amount
@@ -200,6 +216,8 @@ static func report(stats: Stats) -> PackedStringArray:
 	lines.append("Fight length: avg %.1fs, min %.1fs, max %.1fs" % [stats.ticks_total / per_fight / FixedMath.TICKS_PER_SECOND, stats.ticks_min / float(FixedMath.TICKS_PER_SECOND), stats.ticks_max / float(FixedMath.TICKS_PER_SECOND)])
 	lines.append("Biggest hit: %d (%s)" % [stats.biggest_hit, stats.biggest_hit_text])
 	lines.append("Infusion level-ups: %d" % stats.level_ups)
+	for i: int in stats.synergy_names.size():
+		lines.append("Synergy: %s (%d%% of fights)" % [stats.synergy_names[i], roundi(100.0 * stats.synergy_fights[i] / per_fight)])
 	var hero_output: int = 0
 	var enemy_damage: int = 0
 	for item: ItemTotals in stats.items:

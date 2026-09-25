@@ -12,12 +12,15 @@ static func item_setups(content: ContentDb, entries: Array[LoadoutEntry]) -> Arr
 	return result
 
 
-## A hero at a rank, standing in a row, carrying a loadout.
-static func hero(content: ContentDb, hero_id: String, rank: int, row: UnitSetup.Row, entries: Array[LoadoutEntry]) -> UnitSetup:
+## A hero at a rank, standing in a row, carrying a loadout, with an optional
+## specialization id.
+static func hero(content: ContentDb, hero_id: String, rank: int, row: UnitSetup.Row, entries: Array[LoadoutEntry], specialization_id: String = "") -> UnitSetup:
 	var def: HeroDef = content.heroes[hero_id]
 	var setup: UnitSetup = UnitSetup.make(def.id, def.name, def.stats, row, HeroDef.slots_at_rank(rank), def.basic_attack, item_setups(content, entries), rank)
 	setup.backup = def.backup
 	setup.unit_class = def.hero_class
+	if not specialization_id.is_empty():
+		setup.specialization = content.specializations.get(specialization_id, null)
 	return setup
 
 
