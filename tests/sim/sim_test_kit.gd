@@ -7,7 +7,7 @@ const DEFAULT_ITEM: Dictionary = {
 	"name": "Test Item",
 	"size": 1,
 	"rarity": "common",
-	"xp_per_fire": 1,
+	"xp_per_fire": 0,
 	"cooldown_ms": 1000,
 	"effects": [{"trigger": "on_fire", "type": "damage", "amount": 10, "target": "enemy_front"}],
 }
@@ -35,8 +35,8 @@ static func tuning() -> TuningDef:
 
 
 ## An item with essences socketed, for a unit's row.
-static func equip(def: ItemDef, essences: Array[String] = [], tier: int = 0) -> ItemSetup:
-	return ItemSetup.make(def, essences, tier)
+static func equip(def: ItemDef, essences: Array[String] = [], tier: int = 0, xp: int = 0) -> ItemSetup:
+	return ItemSetup.make(def, essences, tier, xp)
 
 
 ## An item from DEFAULT_ITEM with `overrides` applied. Fails loudly on errors.

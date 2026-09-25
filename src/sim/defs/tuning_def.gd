@@ -13,6 +13,8 @@ var spill_pure_double_bp: int
 var xp_to_attuned: int
 var xp_to_resonant: int
 var xp_per_battle: int
+## How strong an infusion is at each level (Base, Attuned, Resonant).
+var infusion_level_bp: Array[int] = []
 var crit_damage_bp: int
 var rush_end_ticks: int
 var stall_start_ticks: int
@@ -53,6 +55,11 @@ static func read(reader: DataReader) -> TuningDef:
 	def.xp_to_attuned = reader.req_int("xp_to_attuned", 1)
 	def.xp_to_resonant = reader.req_int("xp_to_resonant", 1)
 	def.xp_per_battle = reader.req_int("xp_per_battle", 0)
+	var levels: DataReader = reader.req_object("infusion_level_bp")
+	def.infusion_level_bp = [FixedMath.BP_ONE, FixedMath.BP_ONE, FixedMath.BP_ONE]
+	if levels != null:
+		def.infusion_level_bp = [levels.req_int("base", 0), levels.req_int("attuned", 0), levels.req_int("resonant", 0)]
+		levels.finish()
 	def.crit_damage_bp = reader.req_int("crit_damage_bp", FixedMath.BP_ONE)
 	def.tier_multiplier_bp = _read_tier_table(reader, "tier_multiplier_bp")
 	def.rank_multiplier_bp = _read_tier_table(reader, "rank_multiplier_bp")

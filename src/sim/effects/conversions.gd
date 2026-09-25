@@ -25,19 +25,23 @@ extends RefCounted
 ## One essence's running conversion on one item.
 class Conversion:
 	var essence_id: String
+	## Label for the log, e.g. "Ember, Attuned" or "Ember spill from Sword".
 	var essence_name: String
 	var adds: String
 	var crit_only: bool
+	## Scales the conversion rate (infusion level, or spill share).
+	var strength_bp: int = FixedMath.BP_ONE
 	## Leftover fraction, in basis points of one unit.
 	var carry_bp: int = 0
 
 
-static func make(essence: EssenceDef) -> Conversion:
+static func make(app: EssenceApplication) -> Conversion:
 	var conversion := Conversion.new()
-	conversion.essence_id = essence.id
-	conversion.essence_name = essence.name
-	conversion.adds = essence.adds
-	conversion.crit_only = essence.adds_on_crit_only
+	conversion.essence_id = app.essence.id
+	conversion.essence_name = app.label
+	conversion.adds = app.essence.adds
+	conversion.crit_only = app.essence.adds_on_crit_only
+	conversion.strength_bp = app.strength_bp
 	return conversion
 
 
@@ -77,7 +81,7 @@ static func on_output(sim: CombatSim, item: ItemState, kind: String, amount: int
 	for conversion: Conversion in item.conversions:
 		if conversion.adds == kind or (conversion.crit_only and not crit):
 			continue
-		conversion.carry_bp += amount * rate_bp(kind, conversion.adds, sim.tuning)
+		conversion.carry_bp += amount * FixedMath.apply_bp(rate_bp(kind, conversion.adds, sim.tuning), conversion.strength_bp)
 		@warning_ignore("integer_division")
 		var added: int = conversion.carry_bp / FixedMath.BP_ONE
 		conversion.carry_bp -= added * FixedMath.BP_ONE

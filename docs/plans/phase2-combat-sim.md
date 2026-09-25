@@ -1,6 +1,6 @@
 # Plan: Phase 2 combat sim
 
-Status: **approved; in progress.** Steps 1–4 are done. Step 4's essences were then reworked (stats, scaling, conversion rule, Venom/Wrath, new Burn/Poison/Bleed, per-item Slow); see `docs/plans/essence-rework.md`. Next is step 5. Targeting, same-tick deaths, HP-only stats, crits, and the tie rules are confirmed. The collapse ramp was revised in round 3.
+Status: **approved; in progress.** Steps 1–5 are done (step 4's essences were reworked along the way; see `docs/plans/essence-rework.md`). Next is step 6 (alloys and pure doubles).
 
 Goal (from the roadmap in `docs/design.md`): a deterministic auto-battle on fixed front/back rows, with no art. It must include essences, alloys, attunement, and spill. Done when a fight can be explained from its log, and the headless runner shows whether alloys feel worth fusing.
 
@@ -184,6 +184,15 @@ Every effect, status tick, level-up, spill, and death writes one entry. The dama
 - **Blind** makes the blinded unit's next hit of any kind miss (no damage, no on_hit effects).
 - **Storm's extra fire** happens immediately after the normal fire, doesn't reset the cooldown, and can't chain.
 - **Tick order is now:** collapse, statuses, cooldowns, firing, deaths, end check.
+
+### Step 5 (XP, levels, spill)
+
+- **Levels scale everything an essence does:** its conversion rate, its same-kind bonus, its modifiers, and its effects (Attuned x1.5, Resonant x2 as placeholders). So Attuned Wrath on a sword is x1.75 instead of x1.5, and Attuned Storm cuts cooldowns by 22.5%.
+- **Level-ups happen mid-fight.** Fire XP is added right after each fire (extra Storm fires count too); crossing a threshold levels the infusion up at once and re-derives the holder's row. The per-battle XP is added after the fight ends and can level an infusion up "after the fight".
+- **The fight reports each infused item's XP and level before and after**; the run layer keeps it.
+- **Spill = 30% of the Resonant-strength effect** (so 0.6x the base essence), to both row neighbors. The basic auto-attack is not in the row, so it never gives or gets spill. Spill never crosses to another unit.
+- **Small numbers don't round away:** essence effects (like Frost's 1 Slow) and conversions carry fractions between uses, so a 1.5-stack Slow lands 1, 2, 1, 2.
+- A re-derive (level-up) keeps cooldown progress and Slow, but restarts fractional carries.
 
 ## Needs your call before coding
 

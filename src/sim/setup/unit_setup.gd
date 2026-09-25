@@ -57,6 +57,8 @@ func validate(content: ContentDb, errors: Array[String]) -> void:
 			auto_attacks += 1
 		_validate_effects(item.def, content, errors)
 		_validate_essences(item, content, errors)
+		if item.infusion_xp < 0 or (item.infusion_xp > 0 and item.essence_ids.is_empty()):
+			errors.append("%s: item \"%s\" has %d infusion XP but no infusion" % [id, item.def.id, item.infusion_xp])
 		if item.tier < 0 or item.tier >= TuningDef.TIER_NAMES.size():
 			errors.append("%s: item \"%s\" tier must be 0-3 (C-S)" % [id, item.def.id])
 	if used_slots > slots:

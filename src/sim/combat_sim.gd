@@ -44,6 +44,19 @@ static func run(fight_setup: FightSetup, fight_content: ContentDb) -> FightResul
 	result.outcome = sim.outcome
 	result.end_tick = sim.tick
 	result.combat_log = sim.combat_log
+	for unit: UnitState in sim.units:
+		for item: ItemState in unit.items:
+			if item.essences.is_empty():
+				continue
+			var infusion := FightResult.InfusionResult.new()
+			infusion.unit_id = unit.id
+			infusion.item_id = item.def.id
+			infusion.slot = item.slot
+			infusion.xp_before = item.start_xp
+			infusion.xp_after = item.infusion_xp
+			infusion.level_before = item.start_level
+			infusion.level_after = item.infusion_level
+			result.infusions.append(infusion)
 	return result
 
 
@@ -219,6 +232,10 @@ func _check_end() -> void:
 	entry.kind = LogEntry.Kind.FIGHT_END
 	entry.note = note
 	combat_log.add(entry)
+	# Every infused item that took part earns the per-battle XP, fallen or not.
+	for unit: UnitState in units:
+		for item: ItemState in unit.items:
+			Infusions.gain_xp(self, item, tuning.xp_per_battle, "after the fight")
 
 
 static func _any_alive(side_units: Array[UnitState]) -> bool:

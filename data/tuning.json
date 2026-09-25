@@ -6,6 +6,12 @@
   "xp_to_attuned": 100,
   "xp_to_resonant": 300,
   "xp_per_battle": 10,
+  "infusion_level_bp": {
+    "_note": "How strong an infusion is at each level (placeholders).",
+    "base": 10000,
+    "attuned": 15000,
+    "resonant": 20000
+  },
   "crit_damage_bp": 15000,
   "tier_multiplier_bp": {
     "_note": "Item numbers are multiplied by this per tier (placeholders).",

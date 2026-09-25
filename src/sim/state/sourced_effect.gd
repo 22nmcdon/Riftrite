@@ -1,7 +1,9 @@
 class_name SourcedEffect
 extends RefCounted
 ## An effect on an item together with where it came from (the item itself,
-## infusion "", or a socketed essence) and its computed value for this fight.
+## infusion "", or an essence) and its computed value for this fight.
+## Essence effects keep their exact value and carry fractions between uses,
+## so a 1.5-stack Slow lands 1, then 2, then 1, ...
 
 var effect: EffectDef
 var infusion_id: String = ""
@@ -9,6 +11,7 @@ var infusion_name: String = ""
 ## The effect's amount (or stacks) after stat scaling and multipliers.
 ## Effects without an amount (like amount_bp_of_damage shields) have 0.
 var value: ValueBreakdown
+var _carry_bp: int = 0
 
 
 static func make(effect_def: EffectDef, infusion: String = "", infusion_label: String = "") -> SourcedEffect:
@@ -21,3 +24,14 @@ static func make(effect_def: EffectDef, infusion: String = "", infusion_label: S
 
 func final_amount() -> int:
 	return value.final if value != null else effect.base_value()
+
+
+## The amount to use for one application of this effect.
+func take_amount() -> int:
+	if infusion_id.is_empty() or value == null:
+		return final_amount()
+	_carry_bp += value.final_bp
+	@warning_ignore("integer_division")
+	var amount: int = _carry_bp / FixedMath.BP_ONE
+	_carry_bp -= amount * FixedMath.BP_ONE
+	return amount

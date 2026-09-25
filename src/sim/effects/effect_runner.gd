@@ -22,8 +22,10 @@ class Hit:
 
 static func fire(sim: CombatSim, item: ItemState) -> void:
 	_fire_once(sim, item, "")
+	Infusions.gain_xp(sim, item, item.def.xp_per_fire)
 	if sim.rng.roll_bp(item.extra_trigger_chance_bp):
 		_fire_once(sim, item, "again (%s)" % item.extra_trigger_source)
+		Infusions.gain_xp(sim, item, item.def.xp_per_fire)
 
 
 static func _fire_once(sim: CombatSim, item: ItemState, note: String) -> void:
@@ -42,24 +44,24 @@ static func _run(sim: CombatSim, item: ItemState, sourced: SourcedEffect, hit: H
 	# Only the item's own effects produce output that essences convert.
 	var own: bool = sourced.infusion_id.is_empty()
 	for target: UnitState in Targeting.pick(effect.target, sim.owner_of(item), hit_target, sim):
+		var amount: int = sourced.take_amount()
 		match effect.type:
 			EffectDef.Type.DAMAGE:
-				_hit(sim, item, source, target, sourced.final_amount(), hit == null, own)
+				_hit(sim, item, source, target, amount, hit == null, own)
 			EffectDef.Type.HEAL:
-				heal(sim, target, sourced.final_amount(), source)
+				heal(sim, target, amount, source)
 				if own:
-					Conversions.on_output(sim, item, "heal", sourced.final_amount(), target, false)
+					Conversions.on_output(sim, item, "heal", amount, target, false)
 			EffectDef.Type.SHIELD:
-				var amount: int = sourced.final_amount()
 				if effect.amount_bp_of_damage > 0:
 					amount = FixedMath.apply_bp(hit.damage, effect.amount_bp_of_damage)
 				give_shield(sim, target, amount, source)
 				if own:
 					Conversions.on_output(sim, item, "shield", amount, target, false)
 			EffectDef.Type.APPLY_STATUS:
-				Statuses.apply(sim, target, effect.status_id, sourced.final_amount(), source)
+				Statuses.apply(sim, target, effect.status_id, amount, source)
 				if own and sim.content.is_output_kind(effect.status_id):
-					Conversions.on_output(sim, item, effect.status_id, sourced.final_amount(), target, false)
+					Conversions.on_output(sim, item, effect.status_id, amount, target, false)
 
 
 static func _hit(sim: CombatSim, item: ItemState, source: EffectSource, target: UnitState, base_amount: int, can_trigger: bool, own: bool) -> void:

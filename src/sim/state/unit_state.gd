@@ -50,9 +50,35 @@ static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column:
 		var essences: Array[EssenceDef] = []
 		for essence_id: String in item.essence_ids:
 			essences.append(content.essences[essence_id])
-		state.items.append(ItemState.make(item.def, slot, state.stats, content, essences, item.tier))
+		state.items.append(ItemState.make(item.def, slot, state.stats, content, essences, item.tier, item.infusion_xp))
 		slot += item.def.size
+	state.rederive_items(content)
 	return state
+
+
+## Re-derives every item, handing each Resonant item's spill to its row
+## neighbors (the items just left and right of it; the basic auto-attack has
+## no slot, so it never gives or gets spill). Spill stays inside this row.
+func rederive_items(content: ContentDb) -> void:
+	var row: Array[ItemState] = []
+	for item: ItemState in items:
+		if item.slot >= 0:
+			row.append(item)
+	var incoming: Array[Array] = []
+	for i: int in row.size():
+		incoming.append([])
+	for i: int in row.size():
+		var spills: Array[EssenceApplication] = row[i].spill_applications(content.tuning)
+		if i > 0:
+			incoming[i - 1].append_array(spills)
+		if i < row.size() - 1:
+			incoming[i + 1].append_array(spills)
+	for item: ItemState in items:
+		var received: Array[EssenceApplication] = []
+		var index: int = row.find(item)
+		if index >= 0:
+			received.assign(incoming[index])
+		item.derive(content, received)
 
 
 ## DEF used against incoming hits, after shred (Bleed), never below 0.

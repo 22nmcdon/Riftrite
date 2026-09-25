@@ -9,13 +9,16 @@ var tier: int = 0
 ## Socketed essences, in socket order. The first one spills left and the
 ## second right when an alloy is Resonant, so the order matters.
 var essence_ids: Array[String] = []
+## The infusion's XP going into the fight (decides Base/Attuned/Resonant).
+var infusion_xp: int = 0
 
 
-static func make(item_def: ItemDef, essences: Array[String] = [], item_tier: int = 0) -> ItemSetup:
+static func make(item_def: ItemDef, essences: Array[String] = [], item_tier: int = 0, xp: int = 0) -> ItemSetup:
 	var setup := ItemSetup.new()
 	setup.def = item_def
 	setup.essence_ids = essences
 	setup.tier = item_tier
+	setup.infusion_xp = xp
 	return setup
 
 

@@ -1,9 +1,13 @@
 class_name ItemState
 extends RefCounted
-## An item (or basic auto-attack) during a fight, with its infusions already
-## folded in: essence effects are added to its effect list, essence
-## modifiers are applied to its stats, and every effect's number is computed
-## from the holder's stats and the item's multipliers (see ValueBreakdown).
+## An item (or basic auto-attack) during a fight.
+##
+## Everything that depends on infusions is *derived* (see derive()): the
+## item's own essences at their level's strength, plus spills from Resonant
+## neighbors, fold into its effect list, conversions, stats, and numbers.
+## derive() runs at fight start and again whenever an infusion in the
+## holder's row levels up. Cooldown progress and Slow survive a re-derive;
+## fractional carries restart.
 
 var def: ItemDef
 ## Index of the owning unit in CombatSim.units (see CombatSim.owner_of).
@@ -16,15 +20,31 @@ var slot: int
 var tier: int = 0
 ## The basic auto-attack or an auto-attack item (ATSP speeds these up).
 var is_auto_attack: bool = false
-## The item's own effects first, then each socketed essence's.
+## The holder's stats, which the item's numbers scale from.
+var stats: UnitStats
+
+## The socketed essences, in socket order.
+var essences: Array[EssenceDef] = []
+var infusion_xp: int = 0
+var infusion_level: int = Infusions.Level.BASE
+## XP and level going into the fight, for the fight result.
+var start_xp: int = 0
+var start_level: int = Infusions.Level.BASE
+
+# --- derived -------------------------------------------------------------------
+## The item's own effects first, then each essence application's.
 var effects: Array[SourcedEffect] = []
-## Essences that add an output kind, converting this item's output.
+## Essence applications that add an output kind, converting this item's output.
 var conversions: Array[Conversions.Conversion] = []
+## Spills this item currently receives from neighbors.
+var spills_received: Array[EssenceApplication] = []
 var cooldown_ticks: int
 var crit_chance_bp: int
 var extra_trigger_chance_bp: int = 0
 ## Which infusion grants the extra-trigger chance, for the log.
 var extra_trigger_source: String = ""
+
+# --- fight state -----------------------------------------------------------------
 ## Cooldown progress in basis points of a tick: a normal tick adds 10000, a
 ## slowed tick adds less, a frozen tick adds nothing. The item fires when
 ## progress reaches cooldown_ticks * 10000 (so it first fires one full
@@ -34,43 +54,87 @@ var progress_bp: int = 0
 var slow: StatusState = null
 
 
-static func make(item_def: ItemDef, item_slot: int, stats: UnitStats, content: ContentDb, essences: Array[EssenceDef] = [], item_tier: int = 0) -> ItemState:
-	var tuning: TuningDef = content.tuning
+static func make(item_def: ItemDef, item_slot: int, holder_stats: UnitStats, content: ContentDb, item_essences: Array[EssenceDef] = [], item_tier: int = 0, xp: int = 0) -> ItemState:
 	var state := ItemState.new()
 	state.def = item_def
 	state.slot = item_slot
 	state.tier = item_tier
+	state.stats = holder_stats
 	state.is_auto_attack = item_def.is_basic_attack or item_def.auto_attack
-	for effect: EffectDef in item_def.effects:
-		state.effects.append(SourcedEffect.make(effect))
-
-	var cooldown_bp: int = 0
-	state.crit_chance_bp = item_def.crit_chance_bp + stats.get_stat(UnitStats.Stat.CRIT) * tuning.crit_bp_per_point
-	for essence: EssenceDef in essences:
-		if not essence.adds.is_empty():
-			state.conversions.append(Conversions.make(essence))
-		for effect: EffectDef in essence.effects:
-			state.effects.append(SourcedEffect.make(effect, essence.id, essence.name))
-		for modifier: ModifierDef in essence.modifiers:
-			match modifier.stat:
-				ModifierDef.Stat.COOLDOWN_BP:
-					cooldown_bp += modifier.value
-				ModifierDef.Stat.CRIT_CHANCE_BP:
-					state.crit_chance_bp += modifier.value
-				ModifierDef.Stat.EXTRA_TRIGGER_CHANCE_BP:
-					state.extra_trigger_chance_bp += modifier.value
-					state.extra_trigger_source = essence.name
-	state.cooldown_ticks = maxi(FixedMath.apply_bp(item_def.cooldown_ticks, FixedMath.BP_ONE + cooldown_bp), 1)
-	state.crit_chance_bp = clampi(state.crit_chance_bp, 0, FixedMath.BP_ONE)
-	state._compute_values(stats, content, essences)
+	state.essences = item_essences
+	state.infusion_xp = xp
+	state.infusion_level = Infusions.level_for(xp, content.tuning)
+	state.start_xp = xp
+	state.start_level = state.infusion_level
+	state.derive(content, [])
 	return state
 
 
-## Works out every effect's number: base + stat scaling, times the item's
-## multipliers. The item's own effects get the tier multiplier, plus x1.5 (by
-## default) from each essence that adds the same output kind. Essence
-## effects are flat.
-func _compute_values(stats: UnitStats, content: ContentDb, essences: Array[EssenceDef]) -> void:
+## This item's own infusion, at its level's strength.
+func own_applications(tuning: TuningDef) -> Array[EssenceApplication]:
+	var apps: Array[EssenceApplication] = []
+	var strength: int = tuning.infusion_level_bp[infusion_level]
+	for essence: EssenceDef in essences:
+		var label: String = essence.name
+		if infusion_level != Infusions.Level.BASE:
+			label = "%s, %s" % [essence.name, Infusions.LEVEL_NAMES[infusion_level]]
+		apps.append(EssenceApplication.make(essence, strength, label))
+	return apps
+
+
+## What this item spills to each neighbor, if it's Resonant (else empty).
+## Single essence: both sides, at spill_single_bp of its Resonant strength.
+## (Alloys and pure doubles arrive with build step 6.)
+func spill_applications(tuning: TuningDef) -> Array[EssenceApplication]:
+	var apps: Array[EssenceApplication] = []
+	if infusion_level != Infusions.Level.RESONANT or essences.size() != 1:
+		return apps
+	var strength: int = FixedMath.apply_bp(tuning.infusion_level_bp[infusion_level], tuning.spill_single_bp)
+	apps.append(EssenceApplication.make(essences[0], strength, "%s spill from %s" % [essences[0].name, def.name]))
+	return apps
+
+
+## Rebuilds everything infusion-dependent from the item's own infusion and
+## the spills it receives.
+func derive(content: ContentDb, spills: Array[EssenceApplication]) -> void:
+	var tuning: TuningDef = content.tuning
+	spills_received = spills
+	var apps: Array[EssenceApplication] = own_applications(tuning)
+	apps.append_array(spills)
+
+	effects.clear()
+	conversions.clear()
+	for effect: EffectDef in def.effects:
+		effects.append(SourcedEffect.make(effect))
+	var cooldown_bp: int = 0
+	crit_chance_bp = def.crit_chance_bp + stats.get_stat(UnitStats.Stat.CRIT) * tuning.crit_bp_per_point
+	extra_trigger_chance_bp = 0
+	extra_trigger_source = ""
+	for app: EssenceApplication in apps:
+		if not app.essence.adds.is_empty():
+			conversions.append(Conversions.make(app))
+		for effect: EffectDef in app.essence.effects:
+			effects.append(SourcedEffect.make(effect, app.essence.id, app.label))
+		for modifier: ModifierDef in app.essence.modifiers:
+			var value: int = FixedMath.apply_bp(modifier.value, app.strength_bp)
+			match modifier.stat:
+				ModifierDef.Stat.COOLDOWN_BP:
+					cooldown_bp += value
+				ModifierDef.Stat.CRIT_CHANCE_BP:
+					crit_chance_bp += value
+				ModifierDef.Stat.EXTRA_TRIGGER_CHANCE_BP:
+					extra_trigger_chance_bp += value
+					extra_trigger_source = app.label
+	cooldown_ticks = maxi(FixedMath.apply_bp(def.cooldown_ticks, FixedMath.BP_ONE + cooldown_bp), 1)
+	crit_chance_bp = clampi(crit_chance_bp, 0, FixedMath.BP_ONE)
+	_compute_values(content, apps)
+
+
+## Works out every effect's number: base + stat scaling, times multipliers.
+## The item's own effects get the tier multiplier, plus a same-kind bonus from
+## each essence application that adds the same output kind (+50% at full
+## strength). Essence effects get their application's strength.
+func _compute_values(content: ContentDb, apps: Array[EssenceApplication]) -> void:
 	var tuning: TuningDef = content.tuning
 	for sourced: SourcedEffect in effects:
 		var boosts: Array[ValueBreakdown.Multiplier] = []
@@ -78,9 +142,14 @@ func _compute_values(stats: UnitStats, content: ContentDb, essences: Array[Essen
 			if not def.is_basic_attack:
 				boosts.append(ValueBreakdown.multiplier("%s tier" % TuningDef.TIER_LABELS[tier], tuning.tier_multiplier_bp[tier]))
 			var kind: String = Conversions.output_kind(sourced.effect, content)
-			for essence: EssenceDef in essences:
-				if not kind.is_empty() and essence.adds == kind and not essence.adds_on_crit_only:
-					boosts.append(ValueBreakdown.multiplier(essence.name, FixedMath.BP_ONE + tuning.convert_same_kind_bp))
+			for app: EssenceApplication in apps:
+				if not kind.is_empty() and app.essence.adds == kind and not app.essence.adds_on_crit_only:
+					boosts.append(ValueBreakdown.multiplier(app.label, FixedMath.BP_ONE + FixedMath.apply_bp(tuning.convert_same_kind_bp, app.strength_bp)))
+		else:
+			for app: EssenceApplication in apps:
+				if app.label == sourced.infusion_name:
+					boosts.append(ValueBreakdown.multiplier(app.label, app.strength_bp))
+					break
 		sourced.value = ValueBreakdown.compute(sourced.effect.base_value(), sourced.effect.scaling, stats, boosts)
 
 

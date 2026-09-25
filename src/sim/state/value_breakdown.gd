@@ -17,6 +17,9 @@ var stat_parts: Array[Array] = []
 var scaled: int = 0
 var multipliers: Array[Multiplier] = []
 var final: int = 0
+## The exact final value in basis points of one unit (final is this rounded).
+## Used where small numbers must not round away, like a 0.6x spill of 1 stack.
+var final_bp: int = 0
 
 
 static func compute(base_amount: int, scaling: Array[int], stats: UnitStats, boosts: Array[Multiplier]) -> ValueBreakdown:
@@ -36,6 +39,7 @@ static func compute(base_amount: int, scaling: Array[int], stats: UnitStats, boo
 		value.multipliers.append(boost)
 		combined_bp = FixedMath.apply_bp(combined_bp, boost.bp)
 	value.final = FixedMath.apply_bp(value.scaled, combined_bp)
+	value.final_bp = value.scaled * combined_bp
 	return value
 
 
