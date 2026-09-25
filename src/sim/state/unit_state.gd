@@ -19,12 +19,13 @@ var alive: bool = true
 ## Items that fire, in resolution order: the basic auto-attack first (if the
 ## unit has no auto-attack item), then row items left to right.
 var items: Array[ItemState] = []
-## Who dealt the last damage, for the death log line.
-var last_hit_by_unit: String = ""
-var last_hit_by_item: String = ""
+## Active statuses, kept in content order (StatusState.order).
+var statuses: Array[StatusState] = []
+## What dealt the last damage, for the death log line.
+var last_hit_by: String = ""
 
 
-static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column: int) -> UnitState:
+static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column: int, content: ContentDb) -> UnitState:
 	var state := UnitState.new()
 	state.id = setup.id
 	state.name = setup.name
@@ -35,16 +36,49 @@ static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column:
 	state.hp = setup.max_hp
 
 	var has_auto_attack_item: bool = false
-	for item: ItemDef in setup.items:
-		has_auto_attack_item = has_auto_attack_item or item.auto_attack
+	for item: ItemSetup in setup.items:
+		has_auto_attack_item = has_auto_attack_item or item.def.auto_attack
 	if not has_auto_attack_item:
 		state.items.append(ItemState.make(setup.basic_attack, -1))
 	var slot: int = 0
-	for item: ItemDef in setup.items:
-		state.items.append(ItemState.make(item, slot))
-		slot += item.size
+	for item: ItemSetup in setup.items:
+		var essences: Array[EssenceDef] = []
+		for essence_id: String in item.essence_ids:
+			essences.append(content.essences[essence_id])
+		state.items.append(ItemState.make(item.def, slot, essences))
+		slot += item.def.size
 	return state
 
 
 func is_standing() -> bool:
 	return alive and hp > 0
+
+
+func find_status(status_id: String) -> StatusState:
+	for status: StatusState in statuses:
+		if status.def.id == status_id:
+			return status
+	return null
+
+
+func has_status_kind(kind: StatusDef.Kind) -> bool:
+	for status: StatusState in statuses:
+		if status.def.kind == kind:
+			return true
+	return false
+
+
+## How much slower this unit's cooldowns run, in basis points (max 100%).
+func slow_bp() -> int:
+	var total: int = 0
+	for status: StatusState in statuses:
+		if status.def.kind == StatusDef.Kind.SLOW:
+			total += status.total_stacks() * status.def.slow_bp_per_stack
+	return mini(total, FixedMath.BP_ONE)
+
+
+## Cooldown progress this unit's items make per tick (10000 = normal speed).
+func cooldown_rate_bp() -> int:
+	if has_status_kind(StatusDef.Kind.FREEZE):
+		return 0
+	return FixedMath.BP_ONE - slow_bp()

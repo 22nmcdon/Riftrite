@@ -1,17 +1,20 @@
 class_name CombatSim
 extends RefCounted
 ## Runs one fight, tick by tick (20 ticks per second). Pure logic: no nodes,
-## no rendering (CLAUDE.md rule 2). Same FightSetup + same tuning = same log.
+## no rendering (CLAUDE.md rule 2). Same FightSetup + same content = same log.
 ##
 ## Each tick:
 ##   1. Rift Collapse damage, once per second from collapse start.
-##   2. Every living unit's items count down; collect the ones that fire.
-##   3. Resolve those firings in resolution order: heroes then enemies, front
+##   2. Statuses tick (damage over time, timers running out).
+##   3. Every living unit's items advance their cooldowns (slower when Slowed,
+##      not at all when Frozen); collect the ones that fire.
+##   4. Resolve those firings in resolution order: heroes then enemies, front
 ##      row then back, left to right, and each unit's items in row order.
-##   4. Units at 0 HP die. They still fired whatever was ready this tick,
+##   5. Units at 0 HP die. They still fired whatever was ready this tick,
 ##      so resolution order gives neither side an edge.
-##   5. Check for victory, defeat, or a tie.
+##   6. Check for victory, defeat, or a tie.
 
+var content: ContentDb
 var tuning: TuningDef
 var setup: FightSetup
 var collapse: CollapseDef
@@ -27,14 +30,14 @@ var outcome: FightResult.Outcome = FightResult.Outcome.TIE
 
 
 ## Validates the setup and runs the whole fight.
-static func run(fight_setup: FightSetup, fight_tuning: TuningDef) -> FightResult:
+static func run(fight_setup: FightSetup, fight_content: ContentDb) -> FightResult:
 	var result := FightResult.new()
-	result.errors = fight_setup.validate()
-	if fight_tuning.collapse_for_act(fight_setup.act) == null:
+	result.errors = fight_setup.validate(fight_content)
+	if fight_content.tuning.collapse_for_act(fight_setup.act) == null:
 		result.errors.append("tuning has no Rift Collapse numbers for act %d" % fight_setup.act)
 	if not result.errors.is_empty():
 		return result
-	var sim := CombatSim.new(fight_setup, fight_tuning)
+	var sim := CombatSim.new(fight_setup, fight_content)
 	while not sim.finished:
 		sim.step()
 	result.outcome = sim.outcome
@@ -45,13 +48,14 @@ static func run(fight_setup: FightSetup, fight_tuning: TuningDef) -> FightResult
 
 ## Builds a fight ready to step. Call run() instead unless you need to step
 ## tick by tick (for example, to play a fight back). The setup must be valid.
-func _init(fight_setup: FightSetup, fight_tuning: TuningDef) -> void:
+func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 	setup = fight_setup
-	tuning = fight_tuning
+	content = fight_content
+	tuning = content.tuning
 	collapse = tuning.collapse_for_act(setup.act)
 	rng = SimRng.new(setup.seed_value)
-	heroes = _build_side(setup.heroes, UnitSetup.Side.HEROES)
-	enemies = _build_side(setup.enemies, UnitSetup.Side.ENEMIES)
+	heroes = _build_side(setup.heroes, UnitSetup.Side.HEROES, content)
+	enemies = _build_side(setup.enemies, UnitSetup.Side.ENEMIES, content)
 	units.append_array(heroes)
 	units.append_array(enemies)
 	for i: int in units.size():
@@ -70,21 +74,30 @@ func step() -> void:
 		return
 	tick += 1
 	_apply_collapse()
+	Statuses.tick_all(self)
 
 	var ready: Array[ItemState] = []
 	for unit: UnitState in units:
 		if not unit.alive:
 			continue
+		var rate_bp: int = unit.cooldown_rate_bp()
 		for item: ItemState in unit.items:
-			item.remaining_ticks -= 1
-			if item.remaining_ticks <= 0:
+			if item.advance(rate_bp):
 				ready.append(item)
-				item.remaining_ticks = item.cooldown_ticks
 	for item: ItemState in ready:
 		EffectRunner.fire(self, item)
 
 	_process_deaths()
 	_check_end()
+
+
+## A log entry for the current tick, credited to `source`.
+func new_entry(kind: LogEntry.Kind, source: EffectSource) -> LogEntry:
+	var entry := LogEntry.new()
+	entry.tick = tick
+	entry.kind = kind
+	entry.set_source(source)
+	return entry
 
 
 func owner_of(item: ItemState) -> UnitState:
@@ -142,8 +155,7 @@ func _apply_collapse() -> void:
 		entry.target = unit.id
 		entry.amount = damage
 		entry.absorbed = apply_damage(unit, damage)
-		unit.last_hit_by_unit = ""
-		unit.last_hit_by_item = "Rift Collapse"
+		unit.last_hit_by = "Rift Collapse"
 		combat_log.add(entry)
 
 
@@ -155,12 +167,7 @@ func _process_deaths() -> void:
 			entry.tick = tick
 			entry.kind = LogEntry.Kind.DEATH
 			entry.target = unit.id
-			entry.source_unit = unit.last_hit_by_unit
-			entry.source_item_name = unit.last_hit_by_item
-			if unit.last_hit_by_unit.is_empty():
-				entry.note = "last hit: %s" % unit.last_hit_by_item
-			else:
-				entry.note = "last hit: %s · %s" % [unit.last_hit_by_unit, unit.last_hit_by_item]
+			entry.note = "last hit: %s" % unit.last_hit_by
 			combat_log.add(entry)
 
 
@@ -197,13 +204,13 @@ static func _any_alive(side_units: Array[UnitState]) -> bool:
 	return false
 
 
-static func _build_side(setups: Array[UnitSetup], side: UnitSetup.Side) -> Array[UnitState]:
+static func _build_side(setups: Array[UnitSetup], side: UnitSetup.Side, fight_content: ContentDb) -> Array[UnitState]:
 	# Resolution order: front row left to right, then back row.
 	var result: Array[UnitState] = []
 	for row: UnitSetup.Row in [UnitSetup.Row.FRONT, UnitSetup.Row.BACK]:
 		var column: int = 0
 		for unit_setup: UnitSetup in setups:
 			if unit_setup.row == row:
-				result.append(UnitState.from_setup(unit_setup, side, column))
+				result.append(UnitState.from_setup(unit_setup, side, column, fight_content))
 				column += 1
 	return result

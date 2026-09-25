@@ -1,6 +1,6 @@
 # Plan: Phase 2 combat sim
 
-Status: **approved; in progress.** Steps 1–3 are done. Targeting, same-tick deaths, HP-only stats, crits, and the tie rules are confirmed. The collapse ramp was revised in round 3.
+Status: **approved; in progress.** Steps 1–4 are done. Targeting, same-tick deaths, HP-only stats, crits, and the tie rules are confirmed. The collapse ramp was revised in round 3.
 
 Goal (from the roadmap in `docs/design.md`): a deterministic auto-battle on fixed front/back rows, with no art. It must include essences, alloys, attunement, and spill. Done when a fight can be explained from its log, and the headless runner shows whether alloys feel worth fusing.
 
@@ -176,6 +176,15 @@ Every effect, status tick, level-up, spill, and death writes one entry. The dama
 - **Collapse** hits before items fire each second, in resolution order; a unit killed by collapse can still fire that tick.
 - **RNG:** xoshiro128**, implemented in GDScript and pinned by tests, so seeds replay across Godot versions.
 - **Speed:** about 9 ms per 20-second fight; 1,000 fights in about 10 s.
+- **Lowest HP** (heals, `ally_lowest_hp`, `enemy_lowest_hp`) means lowest HP percentage.
+- **Essences** fold into the item at fight start: their effects join the item's list (tagged with the essence for the log), and their modifiers change the item's stats. Basic auto-attacks can't hold essences.
+- **Status stacks are credited per source:** damage over time is split by who applied each stack, and stacks fall off (or get capped) oldest first.
+- **Status damage** hits shield first, like all damage.
+- **Slow** stretches cooldowns (progress is tracked in basis points of a tick, so partial slows are exact); **Freeze** pauses them. Slow caps at 100%.
+- **Frost → Freeze:** the Freeze is credited to whoever applied the stack that reached 3.
+- **Blind** makes the blinded unit's next hit of any kind miss (no damage, no on_hit effects).
+- **Storm's extra fire** happens immediately after the normal fire, doesn't reset the cooldown, and can't chain.
+- **Tick order is now:** collapse, statuses, cooldowns, firing, deaths, end check.
 
 ## Needs your call before coding
 

@@ -19,7 +19,7 @@ static func make(fight_heroes: Array[UnitSetup], fight_enemies: Array[UnitSetup]
 	return setup
 
 
-func validate() -> Array[String]:
+func validate(content: ContentDb) -> Array[String]:
 	var errors: Array[String] = []
 	if heroes.is_empty():
 		errors.append("fight has no heroes")
@@ -30,5 +30,5 @@ func validate() -> Array[String]:
 		if ids.has(unit.id):
 			errors.append("unit id \"%s\" is used twice" % unit.id)
 		ids.append(unit.id)
-		unit.validate(errors)
+		unit.validate(content, errors)
 	return errors

@@ -56,8 +56,8 @@ func test_rejects_duplicate_unit_ids() -> void:
 
 
 func test_rejects_effects_not_built_yet() -> void:
-	var burn: ItemDef = K.item("burner", {"effects": [{"trigger": "on_hit", "type": "apply_status", "status": "burn", "stacks": 1, "target": "hit_target"}]})
-	_assert_setup_error([K.unit("hero", 100, FRONT, [burn])], [K.dummy("foe", 100)], "applies a status, which the sim doesn't support yet")
+	var link: ItemDef = K.item("link", {"effects": [{"trigger": "on_fire", "type": "heal", "amount": 1, "target": "linked_ally"}]})
+	_assert_setup_error([K.unit("hero", 100, FRONT, [link])], [K.dummy("foe", 100)], "targets linked_ally, which the sim doesn't support yet")
 
 
 func test_rejects_empty_side() -> void:
@@ -220,7 +220,7 @@ func test_death_names_the_last_hit() -> void:
 # --- Rift Collapse and the tie time --------------------------------------------------
 
 func _collapse_sim(act: int) -> CombatSim:
-	return CombatSim.new(K.fight([K.dummy("hero", BIG_HP)], [K.dummy("foe", BIG_HP)], 1, act), K.tuning())
+	return CombatSim.new(K.fight([K.dummy("hero", BIG_HP)], [K.dummy("foe", BIG_HP)], 1, act), K.content())
 
 
 func test_collapse_damage_matches_the_plan_table() -> void:

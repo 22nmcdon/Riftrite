@@ -19,10 +19,24 @@ const DEFAULT_BASIC: Dictionary = {
 }
 
 
+static var _content: ContentDb
+
+
+## The real content from data/, loaded once.
+static func content() -> ContentDb:
+	if _content == null:
+		_content = ContentDb.load_dir("res://data")
+		assert(_content.is_valid(), "real data must be valid: %s" % [_content.errors])
+	return _content
+
+
 static func tuning() -> TuningDef:
-	var db: ContentDb = ContentDb.load_dir("res://data")
-	assert(db.is_valid(), "real data must be valid: %s" % [db.errors])
-	return db.tuning
+	return content().tuning
+
+
+## An item with essences socketed, for a unit's row.
+static func equip(def: ItemDef, essences: Array[String] = []) -> ItemSetup:
+	return ItemSetup.make(def, essences)
 
 
 ## An item from DEFAULT_ITEM with `overrides` applied. Fails loudly on errors.
@@ -51,9 +65,13 @@ static func damage(amount: int, target: String = "enemy_front") -> Array:
 	return [{"trigger": "on_fire", "type": "damage", "amount": amount, "target": target}]
 
 
-static func unit(unit_id: String, hp: int, row: UnitSetup.Row = UnitSetup.Row.FRONT, items: Array[ItemDef] = [], basic_attack: ItemDef = null) -> UnitSetup:
+## `items` may mix ItemDefs (no essences) and ItemSetups (from equip()).
+static func unit(unit_id: String, hp: int, row: UnitSetup.Row = UnitSetup.Row.FRONT, items: Array = [], basic_attack: ItemDef = null) -> UnitSetup:
 	var attack: ItemDef = basic_attack if basic_attack != null else basic()
-	return UnitSetup.make(unit_id, unit_id, hp, row, 7, attack, items)
+	var row_items: Array[ItemSetup] = []
+	for entry: Variant in items:
+		row_items.append(entry if entry is ItemSetup else ItemSetup.make(entry))
+	return UnitSetup.make(unit_id, unit_id, hp, row, 7, attack, row_items)
 
 
 ## A unit whose basic attack never matters: 1 damage every 60s.
@@ -66,7 +84,7 @@ static func fight(heroes: Array[UnitSetup], enemies: Array[UnitSetup], seed_valu
 
 
 static func run(heroes: Array[UnitSetup], enemies: Array[UnitSetup], seed_value: int = 1, act: int = 1) -> FightResult:
-	return CombatSim.run(fight(heroes, enemies, seed_value, act), tuning())
+	return CombatSim.run(fight(heroes, enemies, seed_value, act), content())
 
 
 ## Log entries of one kind whose source item is `item_id`.

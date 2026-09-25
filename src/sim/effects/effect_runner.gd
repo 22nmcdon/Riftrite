@@ -1,11 +1,16 @@
 class_name EffectRunner
 extends RefCounted
-## Runs an item's effects and writes each result to the combat log.
+## Runs an item's effects (its own and its infusions') and writes each result
+## to the combat log.
 ##
 ## Trigger flow: when an item fires, its on_fire effects run. Every hit a
 ## damage effect lands then runs the item's on_hit effects, plus on_crit if the
 ## hit crit. Damage dealt by an on_hit/on_crit effect does not trigger further
-## on_hit effects, so triggers can't loop.
+## on_hit effects, so triggers can't loop. A blinded attacker's hit misses:
+## no damage and no on_hit effects.
+##
+## Extra trigger (Storm): after an item fires, it may fire once more at once.
+## The extra fire can't chain into another.
 
 
 ## What an on_hit/on_crit effect needs to know about the hit that caused it.
@@ -16,23 +21,32 @@ class Hit:
 
 
 static func fire(sim: CombatSim, item: ItemState) -> void:
-	var entry: LogEntry = _entry(sim, LogEntry.Kind.FIRE, item)
+	_fire_once(sim, item, "")
+	if sim.rng.roll_bp(item.extra_trigger_chance_bp):
+		_fire_once(sim, item, "again (%s)" % item.extra_trigger_source)
+
+
+static func _fire_once(sim: CombatSim, item: ItemState, note: String) -> void:
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.FIRE, _source(sim, item, null))
+	entry.note = note
 	sim.combat_log.add(entry)
-	for effect: EffectDef in item.def.effects:
-		if effect.trigger == EffectDef.Trigger.ON_FIRE:
-			_run(sim, item, effect, null)
+	for sourced: SourcedEffect in item.effects:
+		if sourced.effect.trigger == EffectDef.Trigger.ON_FIRE:
+			_run(sim, item, sourced, null)
 
 
-static func _run(sim: CombatSim, item: ItemState, effect: EffectDef, hit: Hit) -> void:
+static func _run(sim: CombatSim, item: ItemState, sourced: SourcedEffect, hit: Hit) -> void:
+	var effect: EffectDef = sourced.effect
+	var source: EffectSource = _source(sim, item, sourced)
 	var hit_target: UnitState = hit.target if hit != null else null
 	for target: UnitState in Targeting.pick(effect.target, sim.owner_of(item), hit_target, sim):
 		match effect.type:
 			EffectDef.Type.DAMAGE:
-				_hit(sim, item, target, effect.amount, hit == null)
+				_hit(sim, item, source, target, effect.amount, hit == null)
 			EffectDef.Type.HEAL:
 				var healed: int = mini(effect.amount, target.max_hp - target.hp)
 				target.hp += healed
-				var heal_entry: LogEntry = _entry(sim, LogEntry.Kind.HEAL, item)
+				var heal_entry: LogEntry = sim.new_entry(LogEntry.Kind.HEAL, source)
 				heal_entry.target = target.id
 				heal_entry.amount = healed
 				sim.combat_log.add(heal_entry)
@@ -41,41 +55,45 @@ static func _run(sim: CombatSim, item: ItemState, effect: EffectDef, hit: Hit) -
 				if effect.amount_bp_of_damage > 0:
 					amount = FixedMath.apply_bp(hit.damage, effect.amount_bp_of_damage)
 				target.shield += amount
-				var shield_entry: LogEntry = _entry(sim, LogEntry.Kind.SHIELD, item)
+				var shield_entry: LogEntry = sim.new_entry(LogEntry.Kind.SHIELD, source)
 				shield_entry.target = target.id
 				shield_entry.amount = amount
 				sim.combat_log.add(shield_entry)
 			EffectDef.Type.APPLY_STATUS:
-				assert(false, "apply_status is rejected by UnitSetup.validate until build step 4")
+				Statuses.apply(sim, target, effect.status_id, effect.stacks, source)
 
 
-static func _hit(sim: CombatSim, item: ItemState, target: UnitState, base_amount: int, can_trigger: bool) -> void:
+static func _hit(sim: CombatSim, item: ItemState, source: EffectSource, target: UnitState, base_amount: int, can_trigger: bool) -> void:
+	var attacker: UnitState = sim.owner_of(item)
+	if Statuses.consume_blind(sim, attacker):
+		var miss: LogEntry = sim.new_entry(LogEntry.Kind.MISS, source)
+		miss.target = target.id
+		miss.note = "Blind"
+		sim.combat_log.add(miss)
+		return
+
 	var hit := Hit.new()
 	hit.target = target
-	hit.crit = sim.rng.roll_bp(item.def.crit_chance_bp)
+	hit.crit = sim.rng.roll_bp(item.crit_chance_bp)
 	hit.damage = FixedMath.apply_bp(base_amount, sim.tuning.crit_damage_bp) if hit.crit else base_amount
 
-	var entry: LogEntry = _entry(sim, LogEntry.Kind.DAMAGE, item)
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.DAMAGE, source)
 	entry.target = target.id
 	entry.amount = hit.damage
 	entry.crit = hit.crit
 	entry.absorbed = sim.apply_damage(target, hit.damage)
-	target.last_hit_by_unit = sim.owner_of(item).id
-	target.last_hit_by_item = item.def.name
+	target.last_hit_by = source.describe()
 	sim.combat_log.add(entry)
 
 	if not can_trigger:
 		return
-	for effect: EffectDef in item.def.effects:
-		if effect.trigger == EffectDef.Trigger.ON_HIT or (effect.trigger == EffectDef.Trigger.ON_CRIT and hit.crit):
-			_run(sim, item, effect, hit)
+	for sourced: SourcedEffect in item.effects:
+		var trigger: EffectDef.Trigger = sourced.effect.trigger
+		if trigger == EffectDef.Trigger.ON_HIT or (trigger == EffectDef.Trigger.ON_CRIT and hit.crit):
+			_run(sim, item, sourced, hit)
 
 
-static func _entry(sim: CombatSim, kind: LogEntry.Kind, item: ItemState) -> LogEntry:
-	var entry := LogEntry.new()
-	entry.tick = sim.tick
-	entry.kind = kind
-	entry.source_unit = sim.owner_of(item).id
-	entry.source_item = item.def.id
-	entry.source_item_name = item.def.name
-	return entry
+static func _source(sim: CombatSim, item: ItemState, sourced: SourcedEffect) -> EffectSource:
+	var infusion: String = sourced.infusion_id if sourced != null else ""
+	var infusion_name: String = sourced.infusion_name if sourced != null else ""
+	return EffectSource.make(sim.owner_of(item).id, item.def.id, item.def.name, infusion, infusion_name)
