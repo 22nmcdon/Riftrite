@@ -13,7 +13,7 @@ extends RefCounted
 
 
 static func fight_start(sim: CombatSim) -> void:
-	for relic: RelicState in sim.relics:
+	for relic: RelicState in sim.bonuses():
 		for effect: EffectDef in relic.def.effects:
 			if effect.trigger == EffectDef.Trigger.ON_FIGHT_START:
 				_run(sim, relic, effect, null)
@@ -21,11 +21,11 @@ static func fight_start(sim: CombatSim) -> void:
 
 ## on_fire (every cooldown) and at_time effects of one side's relics.
 static func fire_due(sim: CombatSim, side: UnitSetup.Side) -> void:
-	for relic: RelicState in sim.relics:
+	for relic: RelicState in sim.bonuses():
 		if relic.side != side:
 			continue
 		if relic.def.cooldown_ticks > 0 and sim.tick % relic.def.cooldown_ticks == 0:
-			sim.combat_log.add(sim.new_entry(LogEntry.Kind.FIRE, EffectSource.relic(relic.def, relic.side)))
+			sim.combat_log.add(sim.new_entry(LogEntry.Kind.FIRE, relic.source()))
 			for effect: EffectDef in relic.def.effects:
 				if effect.trigger == EffectDef.Trigger.ON_FIRE:
 					_run(sim, relic, effect, null)
@@ -38,7 +38,7 @@ static func fire_due(sim: CombatSim, side: UnitSetup.Side) -> void:
 ## effect off once (with "once", only the first ally in the fight does).
 ## Allies are checked in resolution order; fielded heroes only.
 static func check_below_hp(sim: CombatSim) -> void:
-	for relic: RelicState in sim.relics:
+	for relic: RelicState in sim.bonuses():
 		for e: int in relic.def.effects.size():
 			var effect: EffectDef = relic.def.effects[e]
 			if effect.trigger != EffectDef.Trigger.ON_ALLY_BELOW_HP:
@@ -56,7 +56,7 @@ static func check_below_hp(sim: CombatSim) -> void:
 static func _run(sim: CombatSim, relic: RelicState, effect: EffectDef, trigger_ally: UnitState) -> void:
 	if not effect.active_at(sim.tick):
 		return
-	var source: EffectSource = EffectSource.relic(relic.def, relic.side)
+	var source: EffectSource = relic.source()
 	var boosts: Array[ValueBreakdown.Multiplier] = sim.side_boosts[relic.side].multipliers_for(Conversions.output_kind(effect, sim.content), true)
 	var amount: int = ValueBreakdown.compute(effect.base_value(), effect.scaling, UnitStats.new(), boosts).final
 	for target: UnitState in Targeting.for_relic(effect.target, relic.side, trigger_ally, sim):

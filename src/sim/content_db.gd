@@ -19,7 +19,8 @@ const HEROES_FILE: String = "heroes.json"
 const ENEMIES_FILE: String = "enemies.json"
 const ENCOUNTERS_FILE: String = "encounters.json"
 const RELICS_FILE: String = "relics.json"
-const FILES: Array[String] = [TUNING_FILE, STATUSES_FILE, ESSENCES_FILE, ALLOYS_FILE, ITEMS_FILE, HEROES_FILE, ENEMIES_FILE, ENCOUNTERS_FILE, RELICS_FILE]
+const SYNERGIES_FILE: String = "synergies.json"
+const FILES: Array[String] = [TUNING_FILE, STATUSES_FILE, ESSENCES_FILE, ALLOYS_FILE, ITEMS_FILE, HEROES_FILE, ENEMIES_FILE, ENCOUNTERS_FILE, RELICS_FILE, SYNERGIES_FILE]
 
 var errors: Array[String] = []
 var tuning: TuningDef
@@ -39,6 +40,8 @@ var encounters: Dictionary[String, EncounterDef] = {}
 var encounter_ids: Array[String] = []
 var relics: Dictionary[String, RelicDef] = {}
 var relic_ids: Array[String] = []
+var synergies: Dictionary[String, SynergyDef] = {}
+var synergy_ids: Array[String] = []
 ## Recipe key (AlloyDef.recipe_key) -> alloy. Two essences with no entry
 ## here still work as an alloy, just without a named special.
 var _alloys_by_recipe: Dictionary[String, AlloyDef] = {}
@@ -90,6 +93,10 @@ static func load_texts(texts: Dictionary[String, String]) -> ContentDb:
 		var relic: RelicDef = RelicDef.read(reader)
 		if db._claim_id(relic.id, reader, db.relic_ids):
 			db.relics[relic.id] = relic
+	for reader: DataReader in db._entries(db._parse(texts, SYNERGIES_FILE), SYNERGIES_FILE):
+		var synergy: SynergyDef = SynergyDef.read(reader)
+		if db._claim_id(synergy.id, reader, db.synergy_ids):
+			db.synergies[synergy.id] = synergy
 	db._check_references()
 	return db
 
@@ -207,8 +214,13 @@ func _check_references() -> void:
 
 
 	for id: String in item_ids:
-		_check_effects(items[id].effects, "%s (%s)" % [ITEMS_FILE, id])
-		_check_auras(items[id].auras, "%s (%s)" % [ITEMS_FILE, id])
+		var item_where: String = "%s (%s)" % [ITEMS_FILE, id]
+		_check_effects(items[id].effects, item_where)
+		_check_auras(items[id].auras, item_where)
+		_check_no_partners(items[id].effects, item_where)
+		for i: int in items[id].auras.size():
+			if items[id].auras[i].target == AuraDef.Target.MATCHED_ITEMS:
+				errors.append("%s.auras[%d]: matched_items only works in a synergy" % [item_where, i])
 	for id: String in hero_ids:
 		if heroes[id].basic_attack != null:
 			_check_effects(heroes[id].basic_attack.effects, "%s (%s).basic_attack" % [HEROES_FILE, id])
@@ -236,6 +248,37 @@ func _check_references() -> void:
 			var effect_list: Array[EffectDef] = [grant.effect]
 			_check_effects(effect_list, "%s.grants[%d]" % [where, i])
 			_check_filter(grant.filter, "%s.grants[%d]" % [where, i])
+			_check_no_partners(effect_list, "%s.grants[%d]" % [where, i])
+	for id: String in synergy_ids:
+		_check_synergy(synergies[id], "%s (%s)" % [SYNERGIES_FILE, id])
+
+
+func _check_synergy(synergy: SynergyDef, where: String) -> void:
+	for item_id: String in synergy.items:
+		if not items.has(item_id):
+			errors.append("%s: unknown item \"%s\"" % [where, item_id])
+	if not synergy.hero.is_empty() and not heroes.has(synergy.hero):
+		errors.append("%s: unknown hero \"%s\"" % [where, synergy.hero])
+	if not synergy.essence.is_empty() and not essences.has(synergy.essence):
+		errors.append("%s: unknown essence \"%s\"" % [where, synergy.essence])
+	_check_effects(synergy.item_effects, where + ".item_effects")
+	_check_no_partners(synergy.item_effects, where + ".item_effects")
+	for bonus: RelicDef in synergy.all_bonuses():
+		_check_effects(bonus.effects, where)
+		_check_auras(bonus.auras, where)
+		for i: int in bonus.grants.size():
+			var grant_effects: Array[EffectDef] = [bonus.grants[i].effect]
+			_check_effects(grant_effects, "%s.grants[%d]" % [where, i])
+			_check_filter(bonus.grants[i].filter, "%s.grants[%d]" % [where, i])
+			if synergy.layer != SynergyDef.Layer.PAIR:
+				_check_no_partners(grant_effects, "%s.grants[%d]" % [where, i])
+
+
+## partner_items (charge) only means something in a pair synergy's grants.
+func _check_no_partners(effects: Array[EffectDef], where: String) -> void:
+	for i: int in effects.size():
+		if effects[i].type == EffectDef.Type.CHARGE and effects[i].item_target == EffectDef.ItemTarget.PARTNER_ITEMS:
+			errors.append("%s.effects[%d]: partner_items only works in a pair synergy's grants" % [where, i])
 
 
 ## Checks a list of relic ids: each exists, none twice. Enemy-only relics are

@@ -29,6 +29,11 @@ var essences: Array[EssenceDef] = []
 var alloy: AlloyDef = null
 var infusion_xp: int = 0
 var infusion_level: int = Infusions.Level.BASE
+## An essence transformation active on this item (set at fight start by
+## Synergies), or null. It replaces the item's own effects, uses one copy of
+## its essence (the rest work as plain singles, with no alloy special), and
+## stops all spill.
+var transformation: SynergyDef = null
 ## XP and level going into the fight, for the fight result.
 var start_xp: int = 0
 var start_level: int = Infusions.Level.BASE
@@ -74,6 +79,24 @@ static func make(item_def: ItemDef, item_slot: int, holder_stats: UnitStats, con
 	return state
 
 
+## Applies an essence transformation (see `transformation`).
+func transform(synergy: SynergyDef) -> void:
+	transformation = synergy
+	alloy = null
+
+
+func has_essence(essence_id: String) -> bool:
+	for essence: EssenceDef in essences:
+		if essence.id == essence_id:
+			return true
+	return false
+
+
+## The item's own effects: its def's, or its transformation's.
+func own_effects() -> Array[EffectDef]:
+	return transformation.item_effects if transformation != null else def.effects
+
+
 ## The infusion's name for the log: "Ember", "Plasma", or "Ember + Frost"
 ## for two essences with no named alloy yet.
 func infusion_name() -> String:
@@ -93,7 +116,12 @@ func own_applications(tuning: TuningDef) -> Array[EssenceApplication]:
 	var label: String = infusion_name()
 	if infusion_level != Infusions.Level.BASE:
 		label = "%s, %s" % [label, Infusions.LEVEL_NAMES[infusion_level]]
+	var skipped: bool = false
 	for essence: EssenceDef in essences:
+		# The transformation uses one copy of its essence.
+		if transformation != null and not skipped and essence.id == transformation.essence:
+			skipped = true
+			continue
 		apps.append(EssenceApplication.make(essence, strength, label))
 	return apps
 
@@ -106,7 +134,7 @@ func own_applications(tuning: TuningDef) -> Array[EssenceApplication]:
 ## An alloy's special never spills.
 func spill_to(side: int, tuning: TuningDef) -> Array[EssenceApplication]:
 	var apps: Array[EssenceApplication] = []
-	if infusion_level != Infusions.Level.RESONANT or essences.is_empty():
+	if infusion_level != Infusions.Level.RESONANT or essences.is_empty() or transformation != null:
 		return apps
 	var essence: EssenceDef = essences[0]
 	var share_bp: int = tuning.spill_single_bp
@@ -135,7 +163,7 @@ func applies_status(status_id: String) -> bool:
 	var essence_list: Array[EssenceDef] = essences.duplicate()
 	for spill: EssenceApplication in spills_received:
 		essence_list.append(spill.essence)
-	var effect_list: Array[EffectDef] = def.effects.duplicate()
+	var effect_list: Array[EffectDef] = own_effects().duplicate()
 	for essence: EssenceDef in essence_list:
 		effect_list.append_array(essence.effects)
 		if essence.adds == status_id or replaced_status(essence.adds) == status_id:
@@ -161,12 +189,16 @@ func derive(content: ContentDb, spills: Array[EssenceApplication], aura: ItemAur
 
 	effects.clear()
 	conversions.clear()
-	for effect: EffectDef in def.effects:
-		effects.append(SourcedEffect.make(effect))
+	for effect: EffectDef in own_effects():
+		var own: SourcedEffect = SourcedEffect.make(effect)
+		if transformation != null:
+			own.transformed_by = transformation.name
+		effects.append(own)
 	if aura != null:
 		for grant: ItemAura.Grant in aura.grants:
 			var granted: SourcedEffect = SourcedEffect.make(grant.def.effect)
 			granted.granted_by = grant.relic_name
+			granted.partner_slots = grant.partner_slots
 			effects.append(granted)
 	var cooldown_bp: int = 0
 	crit_chance_bp = def.crit_chance_bp + stats.get_stat(UnitStats.Stat.CRIT) * tuning.crit_bp_per_point
@@ -209,6 +241,8 @@ func _compute_values(content: ContentDb, apps: Array[EssenceApplication], aura: 
 			if aura != null:
 				boosts.append_array(aura.multipliers_for(Conversions.output_kind(sourced.effect, content), true))
 		elif sourced.infusion_id.is_empty():
+			if transformation != null:
+				boosts.append(ValueBreakdown.multiplier("%s, %s" % [transformation.name, Infusions.LEVEL_NAMES[infusion_level]], tuning.infusion_level_bp[infusion_level]))
 			if not def.is_basic_attack:
 				boosts.append(ValueBreakdown.multiplier("%s tier" % TuningDef.TIER_LABELS[tier], tuning.tier_multiplier_bp[tier]))
 			var kind: String = Conversions.output_kind(sourced.effect, content)
@@ -236,6 +270,12 @@ func advance(rate_bp: int) -> bool:
 	return true
 
 
+## Moves the cooldown forward by `ticks`, but never past ready: the item
+## fires at its next cooldown step, and a charge can't bank a second fire.
+func charge(ticks: int) -> void:
+	progress_bp = mini(progress_bp + ticks * FixedMath.BP_ONE, cooldown_ticks * FixedMath.BP_ONE)
+
+
 ## How much slower this item's cooldown runs, in basis points (capped by the
 ## status's max_slow_bp).
 func slow_bp() -> int:
@@ -254,5 +294,7 @@ func describe_values() -> PackedStringArray:
 		var origin: String = "" if sourced.infusion_name.is_empty() else " [%s]" % sourced.infusion_name
 		if not sourced.granted_by.is_empty():
 			origin = " (%s)" % sourced.granted_by
+		elif not sourced.transformed_by.is_empty():
+			origin = " (%s)" % sourced.transformed_by
 		lines.append("%s%s: %s" % [label, origin, sourced.value.to_text()])
 	return lines

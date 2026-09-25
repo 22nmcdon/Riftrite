@@ -26,6 +26,7 @@ func test_report_lines() -> void:
 	assert_eq(lines[0], "== hearth_starter vs hound_pack (3 fights, seeds 5-7) ==")
 	assert_true(lines[1].begins_with("Guild wins: "), lines[1])
 	assert_true(Array(lines).any(func(line: String) -> bool: return line.contains("wren · First-Light Dagger")))
+	assert_true(Array(lines).has("Synergy: Warden's Oath: brannoc · Oak Buckler (100% of fights)"), "\n".join(lines))
 
 
 func test_party_errors() -> void:

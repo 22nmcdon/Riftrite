@@ -63,6 +63,13 @@ tools/         headless sim runner, data validators
 - Spill percentages and XP thresholds are tuning values in `data/`, never hard-coded.
 - Essence resonance counts **essences**, not items: a single = 1, an alloy = 1 of each half, a pure double = 2, and a transformation counts its socketed essence(s).
 
+## Synergy rules
+
+- Five layers (`data/synergies.json`, `docs/plans/synergies-in-sim.md`): pairs (two items on one fielded hero), transformations (item + essence), signatures (item on a specific fielded hero), essence resonance (3/5/7), class traits (2/3 fielded heroes). Tiered layers apply only their highest tier reached.
+- Synergies are checked once at fight start, for the guild only (enemies get none for now). Their bonuses run through the relic code (auras, grants, relic triggers), and the log credits the synergy.
+- Resonance counts fielded **and backup** heroes' essences; class traits count fielded heroes only.
+- A transformation replaces the item's own effects, uses one copy of its essence (other essences work as plain singles, no alloy special), never spills, and still counts for resonance.
+
 ## Item rules
 
 - Every unit has a built-in **basic auto-attack** (no slot). Each hero's basic auto-attack is their own and **can't be upgraded** (no sockets, no tier). **Auto-attack items** replace it, take up slots, and can be Small, Medium, or Large. **Max one auto-attack item per hero.** Remove the item and the unit falls back to its basic auto-attack.

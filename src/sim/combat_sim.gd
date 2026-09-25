@@ -16,7 +16,9 @@ extends RefCounted
 ##   6. Units at 0 HP die. They still fired whatever was ready this tick,
 ##      so resolution order gives neither side an edge.
 ##   7. Check for victory, defeat, or a tie.
-## Relics' on_fight_start effects run at tick 0, before the first step.
+## At tick 0, before the first step: the guild's synergies are found
+## (Synergies.find_active) and relics' and synergies' on_fight_start effects
+## run.
 
 var content: ContentDb
 var tuning: TuningDef
@@ -34,6 +36,8 @@ var enemies: Array[UnitState] = []
 var units: Array[UnitState] = []
 ## Every relic: the guild's, then the enemy team's, each in setup order.
 var relics: Array[RelicState] = []
+## The guild's active synergies, whose bonuses run like relics.
+var synergies: Array[RelicState] = []
 ## Per side (indexed by UnitSetup.Side): the side-wide aura boosts, which
 ## are the only boosts a relic's own flat numbers get.
 var side_boosts: Array[ItemAura] = [ItemAura.new(), ItemAura.new()]
@@ -60,6 +64,12 @@ static func run(fight_setup: FightSetup, fight_content: ContentDb) -> FightResul
 	result.outcome = sim.outcome
 	result.end_tick = sim.tick
 	result.combat_log = sim.combat_log
+	for synergy: RelicState in sim.synergies:
+		var found := FightResult.SynergyResult.new()
+		found.synergy_id = synergy.synergy.id
+		found.unit_id = sim.units[synergy.holder_index].id if synergy.holder_index >= 0 else ""
+		found.count = synergy.count
+		result.synergies.append(found)
 	for unit: UnitState in sim.units:
 		for item: ItemState in unit.items:
 			if item.essences.is_empty():
@@ -105,12 +115,13 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 	start.note = "seed %d, act %d" % [setup.seed_value, setup.act]
 	combat_log.add(start)
 
+	synergies = Synergies.find_active(self)
 	var all_auras: Array[AuraDef] = []
 	for unit: UnitState in units:
 		for item: ItemState in unit.items:
 			all_auras.append_array(item.def.auras)
-	for relic: RelicState in relics:
-		all_auras.append_array(relic.def.auras)
+	for bonus: RelicState in bonuses():
+		all_auras.append_array(bonus.def.auras)
 	for aura: AuraDef in all_auras:
 		if aura.window_from_ticks > 0:
 			_aura_boundaries[aura.window_from_ticks] = true
@@ -190,8 +201,13 @@ func rederive_all() -> void:
 				elif aura.targets_items():
 					item_targets = _aura_item_targets(holder, item, aura.target)
 				_apply_aura(aura, label, holder.side, item_targets, _aura_unit_targets(holder, aura.target), item_auras, unit_boosts)
-	for r: int in relics.size():
-		var relic: RelicState = relics[r]
+	var all_bonuses: Array[RelicState] = bonuses()
+	for r: int in all_bonuses.size():
+		var relic: RelicState = all_bonuses[r]
+		# Item-layer synergies reach only their matched items and holder.
+		var scope: Array[ItemState] = _matched_items(relic)
+		if relic.holder_index < 0:
+			scope = _side_items(relic.side)
 		for a: int in relic.def.auras.size():
 			var aura: AuraDef = relic.def.auras[a]
 			if not aura.active_at(tick):
@@ -200,15 +216,23 @@ func rederive_all() -> void:
 			var label: String = relic.def.name if aura.label.is_empty() else "%s (%s)" % [aura.label, relic.def.name]
 			var item_targets: Array[ItemState] = []
 			var unit_targets: Array[UnitState] = []
-			if aura.targets_items():
-				item_targets = _side_items(relic.side)
-			else:
-				unit_targets = _side_all(relic.side)
+			match aura.target:
+				AuraDef.Target.MATCHED_ITEMS:
+					item_targets = _matched_items(relic)
+				AuraDef.Target.ALL_ITEMS:
+					item_targets = _side_items(relic.side)
+				AuraDef.Target.HOLDER:
+					if relic.holder_index >= 0:
+						unit_targets.append(units[relic.holder_index])
+				_:
+					unit_targets = _side_all(relic.side)
 			_apply_aura(aura, label, relic.side, item_targets, unit_targets, item_auras, unit_boosts)
 		for grant: GrantDef in relic.def.grants:
-			for item: ItemState in _side_items(relic.side):
+			for item: ItemState in scope:
 				if grant.matches(item):
-					(item_auras[item.owner_index][units[item.owner_index].items.find(item)] as ItemAura).add_grant(grant, relic.def.name)
+					var partners: Array[int] = relic.matched_slots.duplicate()
+					partners.erase(item.slot)
+					(item_auras[item.owner_index][units[item.owner_index].items.find(item)] as ItemAura).add_grant(grant, relic.def.name, partners)
 	_log_aura_changes(now_active)
 
 	for u: int in units.size():
@@ -244,6 +268,25 @@ func _apply_aura(aura: AuraDef, label: String, side: UnitSetup.Side, item_target
 				per_item.add(aura, label)
 
 
+## Relics, then the guild's active synergies: everything that runs through
+## the relic code.
+func bonuses() -> Array[RelicState]:
+	var result: Array[RelicState] = relics.duplicate()
+	result.append_array(synergies)
+	return result
+
+
+## The row items an item-layer synergy matched on its holder.
+func _matched_items(relic: RelicState) -> Array[ItemState]:
+	var result: Array[ItemState] = []
+	if relic.holder_index < 0:
+		return result
+	for item: ItemState in units[relic.holder_index].row_items():
+		if relic.matched_slots.has(item.slot):
+			result.append(item)
+	return result
+
+
 ## Every unit on a side, backup heroes included, in resolution order.
 func _side_all(side: UnitSetup.Side) -> Array[UnitState]:
 	var result: Array[UnitState] = []
@@ -259,6 +302,22 @@ func _side_items(side: UnitSetup.Side) -> Array[ItemState]:
 	for unit: UnitState in _side_all(side):
 		result.append_array(unit.items)
 	return result
+
+
+## Items in `item`'s row that a charge effect reaches (partner_items is
+## handled by EffectRunner).
+func row_item_targets(holder: UnitState, item: ItemState, target: EffectDef.ItemTarget) -> Array[ItemState]:
+	var aura_target: AuraDef.Target = AuraDef.Target.SELF_ITEM
+	match target:
+		EffectDef.ItemTarget.LEFT_ITEM:
+			aura_target = AuraDef.Target.LEFT_ITEM
+		EffectDef.ItemTarget.RIGHT_ITEM:
+			aura_target = AuraDef.Target.RIGHT_ITEM
+		EffectDef.ItemTarget.ADJACENT_ITEMS:
+			aura_target = AuraDef.Target.ADJACENT_ITEMS
+		EffectDef.ItemTarget.ROW_ITEMS:
+			aura_target = AuraDef.Target.ROW_ITEMS
+	return _aura_item_targets(holder, item, aura_target)
 
 
 func _aura_item_targets(holder: UnitState, item: ItemState, target: AuraDef.Target) -> Array[ItemState]:
@@ -323,9 +382,9 @@ func _log_aura(key: String, change: String) -> void:
 	var aura: AuraDef
 	var source: EffectSource
 	if parts[0] == "r":
-		var relic: RelicState = relics[parts[1].to_int()]
+		var relic: RelicState = bonuses()[parts[1].to_int()]
 		aura = relic.def.auras[parts[2].to_int()]
-		source = EffectSource.relic(relic.def, relic.side)
+		source = relic.source()
 	else:
 		var holder: UnitState = units[parts[0].to_int()]
 		var item: ItemState = holder.items[parts[1].to_int()]

@@ -1,6 +1,6 @@
 # Plan: the synergy engine (Phase 3, step 2)
 
-Status: **proposed, awaiting approval and answers (end of file).** Nothing here is built yet.
+Status: **built** (Phase 3, step 2). Answers and balance findings are at the end.
 
 Design (docs/design.md, "Synergies"): five layers, from secret to visible.
 
@@ -34,7 +34,7 @@ Design (docs/design.md, "Synergies"): five layers, from secret to visible.
                 "effect": {"trigger": "on_hit", "type": "charge", "amount_ms": 200, "target": "partner_items"} } ] }
 ```
 
-- **Matching:** both items in the same hero's row, at any tier.
+- **Matching:** both items in the same **fielded** hero's row, at any tier. (Pairs, signatures, and transformations need the hero on the field; resonance also counts backup heroes.)
   - A hero holding two copies of one half still makes only one pair; it matches the leftmost copy of each half.
   - Two heroes can each have the pair.
 - **New effect type, `charge`** (the design's Paper Cuts needs it; nothing existing can move another item's cooldown). It advances target items' cooldowns by `amount_ms`. Item targets:
@@ -47,13 +47,14 @@ Design (docs/design.md, "Synergies"): five layers, from secret to visible.
 
 ```json
 { "id": "wildfire_torch", "name": "Wildfire Torch", "layer": "transformation", "item": "tallow_torch", "essence": "ember",
-  "effects": [ {"trigger": "on_fire", "type": "apply_status", "status": "burn", "stacks": 1, "target": "all_enemies"} ] }
+  "item_effects": [ {"trigger": "on_fire", "type": "apply_status", "status": "burn", "stacks": 1, "target": "all_enemies"} ] }
 ```
 
 - **Matching:** the item has the essence socketed.
-- **The transformation replaces the item's own effects** with its `effects` list. Those effects are numbered like the item's own: base + stat scaling, tier, and auras.
+- **The transformation replaces the item's own effects** with its `item_effects` list (a synergy's `effects` are relic-style triggers, as for every layer). Those effects are numbered like the item's own: base + stat scaling, tier, and auras.
 - **The essence's normal effect and conversion don't apply** on that item. The essence *is* the transformation.
-- **It never spills,** even at Resonant.
+- **The transformation uses one socketed copy of its essence.** Any other essence in the item (a two-socket Epic or Legendary) works as a plain single: no alloy special, no pure-double bonus.
+- **A transformed item never spills,** even at Resonant.
 - **It still counts** as its essence for resonance.
 - **XP and levels:** the infusion still gains XP and levels up. Attuned and Resonant make the transformation ×1.5 and ×2, like any infusion.
 
@@ -77,7 +78,7 @@ Design (docs/design.md, "Synergies"): five layers, from secret to visible.
     {"count": 7, "auras": [ ... ]} ] }
 ```
 
-- **Counting essences:** a single counts 1, an alloy 1 of each half, a pure double 2, and a transformation counts its socketed essence(s).
+- **Counting essences:** across fielded **and backup** heroes' items. A single counts 1, an alloy 1 of each half, a pure double 2, and a transformation counts its socketed essence(s).
 - **Tiers:** only the highest tier reached applies, so each tier's entry is the whole bonus.
 
 ### Class traits
@@ -87,7 +88,7 @@ Design (docs/design.md, "Synergies"): five layers, from secret to visible.
   "tiers": [ {"count": 2, "auras": [ {"target": "all_allies", "filter": {"row": "front"}, "stat": "shield_bp", "value": 11500} ]} ] }
 ```
 
-- **Matching:** fielded heroes of that class. Only the highest tier reached applies.
+- **Matching:** fielded heroes of that class, at 2 and 3 heroes. Only the highest tier reached applies.
 
 ## Code shape
 
@@ -118,14 +119,38 @@ About 20, a few of each (the full slice set comes with the content step):
 - **Determinism:** the determinism fight includes a pair, a transformation, a resonance, and a class trait.
 - **Balance:** the balance runner reports which synergies were active.
 
-## Questions
+## Answers
 
-1. **Who counts for resonance:** only fielded heroes' items, or backup heroes' too? (I'd count both, since they're all the guild's essences.)
-2. **Enemies and synergies:** do enemy teams get resonances and class traits too? I'd say **heroes only** for now, with enemy combos done through their relics and enemy-only items, like your Witch Coven idea.
-3. **Class trait tiers:** with 1–5 fielded and six classes, are **2 and 3** heroes the right tiers? (Resonance stays 3 / 5 / 7.)
-4. **Transformations on 2-socket items:** say an item has Frost + Ember and a Frost transformation.
-   - My draft: the transformation takes the Frost, Ember works as a plain single, and there's no alloy special.
-   - For a pure double (Frost + Frost), the transformation applies once, the double still counts 2 for resonance, and there's no pure-double bonus.
+1. **Resonance counts backup heroes' essences too** (backup weapons can have essences and backup effects).
+2. **Heroes only for now.** Enemy synergies may come in later acts (bosses especially); not a priority.
+3. **Class traits at 2 and 3 heroes,** for now.
+4. **Two sockets come from rarity, not size:** only Legendary (and, as a placeholder, Epic) items have 2 (`two_socket_rarities` in `data/tuning.json`). The transformation draft stands.
+5. **`charge` is approved.**
+6. **Drafts use existing effects;** a cleanse effect waits until something needs it.
 
-   Does that sound right?
-5. **The new `charge` effect** (advance another item's cooldown): OK to add? Paper Cuts needs it, and it'll be handy for items later.
+## Built notes
+
+- **Code:**
+  - `SynergyDef` (a synergy's bonus is a `RelicDef`)
+  - `Synergies.find_active`
+  - `RelicState` now also carries an active synergy's holder and matched slots
+  - `ItemState.transformation`
+  - the `charge` effect
+  - the `matched_items` aura target
+- **Pairs and signatures from backup don't count:** item-layer synergies match only fielded heroes, because a benched hero's items act only through their backup modes.
+- **The balance report** lists each active synergy and the share of fights it was active in.
+
+## Balance findings (placeholders; first run)
+
+Every balance party holds its heroes' signature items, so the four signatures are always active for them. Guild win %, 100 fights each, before → after synergies:
+
+| Party vs encounter | Before | After |
+| --- | --- | --- |
+| hearth_starter vs Hound Pack | 1% | 100% |
+| hearth_starter vs Witch Coven | 0% | 1% |
+| bench_support vs Hound Pack | 14% | 30% |
+| bench_support vs Witch Coven | 0% | 10% |
+| everything else | unchanged (100% or 0%) | |
+
+- **The Hound Pack is still a knife-edge matchup** that any small edge flips; see `docs/plans/relics-in-sim.md`. The Act 1 content pass needs encounters with real margins.
+- **Signatures are cheap to get** when a hero's signature item is common. Worth deciding whether signature items should be rarer, or their bonuses smaller.

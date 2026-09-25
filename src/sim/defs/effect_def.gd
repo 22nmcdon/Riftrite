@@ -10,6 +10,11 @@ extends RefCounted
 ##   heal:         amount
 ##   shield:       exactly one of amount, amount_bp_of_damage
 ##   apply_status: status, stacks
+##   charge:       amount_ms; advances *items'* cooldowns, so its target is
+##                 an item target (see ITEM_TARGET_NAMES):
+##                 self_item, left_item, right_item, adjacent_items,
+##                 row_items (in the holder's row), or partner_items (the
+##                 other items of the pair synergy that granted it)
 ## `amount` (or `stacks`) is the base value. An optional "scaling" object adds
 ## a share of the holder's stats, in basis points of each stat:
 ##   "scaling": {"atk": 6000, "atsp": 2000}  ->  base + 60% ATK + 20% ATSP
@@ -37,7 +42,8 @@ extends RefCounted
 ## what can boost them). Targets that need a spot on the field are rejected.
 
 enum Trigger { ON_FIRE, ON_HIT, ON_CRIT, ON_FIGHT_START, AT_TIME, ON_ALLY_BELOW_HP }
-enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS }
+enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CHARGE }
+enum ItemTarget { SELF_ITEM, LEFT_ITEM, RIGHT_ITEM, ADJACENT_ITEMS, ROW_ITEMS, PARTNER_ITEMS }
 enum Target {
 	HIT_TARGET,
 	SELF,
@@ -64,7 +70,8 @@ const FIELD_ONLY_TARGETS: Array[Target] = [
 	Target.HIT_TARGET, Target.SELF, Target.LINKED_ALLY, Target.LINKED_LEFT_ALLY,
 	Target.LINKED_RIGHT_ALLY, Target.LINKED_ALLIES, Target.ROW_ALLIES,
 ]
-const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status"]
+const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "charge"]
+const ITEM_TARGET_NAMES: Array[String] = ["self_item", "left_item", "right_item", "adjacent_items", "row_items", "partner_items"]
 const TARGET_NAMES: Array[String] = [
 	"hit_target",
 	"self",
@@ -86,6 +93,9 @@ const TARGET_NAMES: Array[String] = [
 var trigger: Trigger
 var type: Type
 var target: Target
+## charge: which items it charges.
+var item_target: ItemTarget = ItemTarget.SELF_ITEM
+## damage/heal/shield: the amount; charge: ticks of cooldown it advances.
 var amount: int = 0
 var amount_bp_of_damage: int = 0
 var status_id: String = ""
@@ -108,10 +118,18 @@ static func read(reader: DataReader, relic: bool = false) -> EffectDef:
 	var def := EffectDef.new()
 	var trigger_name: String = reader.req_choice("trigger", TRIGGER_NAMES)
 	var type_name: String = reader.req_choice("type", TYPE_NAMES)
-	var target_name: String = reader.req_choice("target", TARGET_NAMES)
 	def.trigger = maxi(TRIGGER_NAMES.find(trigger_name), 0) as Trigger
 	def.type = maxi(TYPE_NAMES.find(type_name), 0) as Type
-	def.target = maxi(TARGET_NAMES.find(target_name), 0) as Target
+	var target_name: String = ""
+	if type_name == "charge":
+		def.item_target = maxi(ITEM_TARGET_NAMES.find(reader.req_choice("target", ITEM_TARGET_NAMES)), 0) as ItemTarget
+		# The unit target is unused; SELF keeps the hit checks below quiet.
+		def.target = Target.SELF
+		if relic:
+			reader.error("a relic holds no item, so its effects can't charge")
+	else:
+		target_name = reader.req_choice("target", TARGET_NAMES)
+		def.target = maxi(TARGET_NAMES.find(target_name), 0) as Target
 
 	if not type_name.is_empty():
 		match def.type:
@@ -125,6 +143,8 @@ static func read(reader: DataReader, relic: bool = false) -> EffectDef:
 			Type.APPLY_STATUS:
 				def.status_id = reader.req_string("status")
 				def.stacks = reader.req_int("stacks", 1)
+			Type.CHARGE:
+				def.amount = reader.req_ticks("amount_ms", FixedMath.MS_PER_TICK)
 		if reader.has("scaling"):
 			if def.amount_bp_of_damage > 0:
 				reader.error("\"scaling\" can't be combined with amount_bp_of_damage")

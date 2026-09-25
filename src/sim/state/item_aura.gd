@@ -10,6 +10,8 @@ extends RefCounted
 class Grant:
 	var def: GrantDef
 	var relic_name: String
+	## Row slots of a pair synergy's other items (see SourcedEffect).
+	var partner_slots: Array[int] = []
 
 
 ## Output-kind multipliers, indexed by the output stats of AuraDef.Stat
@@ -36,10 +38,11 @@ func add(aura: AuraDef, label: String) -> void:
 				everything_outputs[aura.stat].append(multiplier)
 
 
-func add_grant(grant: GrantDef, relic_name: String) -> void:
+func add_grant(grant: GrantDef, relic_name: String, partner_slots: Array[int] = []) -> void:
 	var entry := Grant.new()
 	entry.def = grant
 	entry.relic_name = relic_name
+	entry.partner_slots = partner_slots
 	grants.append(entry)
 
 

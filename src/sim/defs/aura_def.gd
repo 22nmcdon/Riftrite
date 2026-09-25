@@ -13,6 +13,8 @@ extends RefCounted
 ##       heroes' included. With no filter it boosts *everything* on the
 ##       side, so it also boosts relic effects and grants (relic numbers
 ##       are flat; only side-wide boosts change them).
+##   matched_items: the items that matched a pair, signature, or
+##       transformation synergy (synergies only)
 ##   units: holder, linked_ally, linked_left_ally, linked_right_ally,
 ##       linked_allies, row_allies, all_allies (see Targeting.linked)
 ## An optional "filter" narrows the targets (see AuraFilter):
@@ -41,16 +43,17 @@ enum Target {
 	ROW_ALLIES,
 	ALL_ALLIES,
 	ALL_ITEMS,
+	MATCHED_ITEMS,
 }
 enum Stat { DAMAGE_BP, HEAL_BP, SHIELD_BP, OVER_TIME_BP, CRIT_CHANCE_BP, COOLDOWN_BP, ATK_BP, MGK_BP, DEF_BP, ATSP_BP, CRIT_BP }
 
 const TARGET_NAMES: Array[String] = [
 	"self_item", "left_item", "right_item", "adjacent_items", "row_items",
-	"holder", "linked_ally", "linked_left_ally", "linked_right_ally", "linked_allies", "row_allies", "all_allies", "all_items",
+	"holder", "linked_ally", "linked_left_ally", "linked_right_ally", "linked_allies", "row_allies", "all_allies", "all_items", "matched_items",
 ]
 const TARGET_LABELS: Array[String] = [
 	"itself", "the item to its left", "the item to its right", "adjacent items", "the rest of the row",
-	"its holder", "a linked ally", "the linked ally on the left", "the linked ally on the right", "linked allies", "row allies", "all allies", "all items",
+	"its holder", "a linked ally", "the linked ally on the left", "the linked ally on the right", "linked allies", "row allies", "all allies", "all items", "matched items",
 ]
 const STAT_NAMES: Array[String] = [
 	"damage_bp", "heal_bp", "shield_bp", "over_time_bp", "crit_chance_bp", "cooldown_bp",
@@ -108,7 +111,7 @@ func active_at(tick: int) -> bool:
 
 
 func targets_items() -> bool:
-	return target <= Target.ROW_ITEMS or target == Target.ALL_ITEMS
+	return target <= Target.ROW_ITEMS or target == Target.ALL_ITEMS or target == Target.MATCHED_ITEMS
 
 
 ## True for an unfiltered all_items aura: it boosts everything on the side,

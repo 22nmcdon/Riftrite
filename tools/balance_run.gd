@@ -57,6 +57,9 @@ class Stats:
 	var biggest_hit: int = 0
 	var biggest_hit_text: String = ""
 	var items: Array[ItemTotals] = []
+	## Active synergies (by name), with how many fights each was active in.
+	var synergy_names: Array[String] = []
+	var synergy_fights: Array[int] = []
 	var errors: Array[String] = []
 	var _index: Dictionary[String, int] = {}
 
@@ -167,6 +170,13 @@ static func _add_fight(stats: Stats, result: FightResult, hero_ids: Array[String
 	stats.ticks_min = result.end_tick if stats.ticks_min < 0 else mini(stats.ticks_min, result.end_tick)
 	stats.ticks_max = maxi(stats.ticks_max, result.end_tick)
 	stats.level_ups += result.combat_log.of_kind(LogEntry.Kind.INFUSION_LEVEL).size()
+	for entry: LogEntry in result.combat_log.of_kind(LogEntry.Kind.SYNERGY):
+		var index: int = stats.synergy_names.find(entry.note)
+		if index < 0:
+			stats.synergy_names.append(entry.note)
+			stats.synergy_fights.append(0)
+			index = stats.synergy_names.size() - 1
+		stats.synergy_fights[index] += 1
 	for entry: LogEntry in result.combat_log.of_kind(LogEntry.Kind.DAMAGE):
 		if entry.amount > stats.biggest_hit:
 			stats.biggest_hit = entry.amount
@@ -201,6 +211,8 @@ static func report(stats: Stats) -> PackedStringArray:
 	lines.append("Fight length: avg %.1fs, min %.1fs, max %.1fs" % [stats.ticks_total / per_fight / FixedMath.TICKS_PER_SECOND, stats.ticks_min / float(FixedMath.TICKS_PER_SECOND), stats.ticks_max / float(FixedMath.TICKS_PER_SECOND)])
 	lines.append("Biggest hit: %d (%s)" % [stats.biggest_hit, stats.biggest_hit_text])
 	lines.append("Infusion level-ups: %d" % stats.level_ups)
+	for i: int in stats.synergy_names.size():
+		lines.append("Synergy: %s (%d%% of fights)" % [stats.synergy_names[i], roundi(100.0 * stats.synergy_fights[i] / per_fight)])
 	var hero_output: int = 0
 	var enemy_damage: int = 0
 	for item: ItemTotals in stats.items:

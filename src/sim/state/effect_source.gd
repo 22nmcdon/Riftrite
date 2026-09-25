@@ -16,6 +16,8 @@ var granted_by: String = ""
 ## For a relic's own effects: the side holding it (UnitSetup.Side); -1 if
 ## the source is a unit. item_id / item_name are then the relic's.
 var relic_side: int = -1
+## A synergy's own effect (credited like a relic, as "synergy · Name").
+var synergy: bool = false
 
 
 static func make(unit: String, item: String, item_label: String, infusion: String = "", infusion_label: String = "") -> EffectSource:
@@ -38,16 +40,19 @@ static func relic(relic_def: RelicDef, side: UnitSetup.Side) -> EffectSource:
 
 func same_as(other: EffectSource) -> bool:
 	return unit_id == other.unit_id and item_id == other.item_id and infusion_id == other.infusion_id \
-		and granted_by == other.granted_by and relic_side == other.relic_side
+		and granted_by == other.granted_by and relic_side == other.relic_side and synergy == other.synergy
 
 
 ## "warden · Rust Cleaver", "warden · Rust Cleaver [Ember]",
 ## "warden · Rust Cleaver (Cinder Crown)", "relic · Warding Knot", or
-## "enemy relic · Gloam Totem".
+## "enemy relic · Gloam Totem", or "synergy · Frost Resonance (5)".
 func describe() -> String:
 	var text: String = "%s · %s" % [unit_id, item_name] if not unit_id.is_empty() else item_name
 	if relic_side >= 0:
-		text = "%s · %s" % ["relic" if relic_side == UnitSetup.Side.HEROES else "enemy relic", item_name]
+		var kind: String = "relic" if relic_side == UnitSetup.Side.HEROES else "enemy relic"
+		if synergy:
+			kind = "synergy"
+		text = "%s · %s" % [kind, item_name]
 	if not granted_by.is_empty():
 		text += " (%s)" % granted_by
 	if not infusion_name.is_empty():

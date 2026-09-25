@@ -10,6 +10,13 @@ var infusion_id: String = ""
 var infusion_name: String = ""
 ## The relic that granted this effect (see GrantDef), or "".
 var granted_by: String = ""
+## The transformation this effect comes from (the item's own effects, as
+## transformed), or "". Only for the log; it's numbered like the item's own.
+var transformed_by: String = ""
+## For a pair synergy's grant: the row slots of the pair's other items
+## (charge's partner_items). Slots, not ItemStates, to avoid a reference
+## cycle (see ItemState.owner_index).
+var partner_slots: Array[int] = []
 ## The effect's amount (or stacks) after stat scaling and multipliers.
 ## Effects without an amount (like amount_bp_of_damage shields) have 0.
 var value: ValueBreakdown
