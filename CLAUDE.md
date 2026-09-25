@@ -80,7 +80,7 @@ tools/         headless sim runner, data validators
 ## Other core rules
 
 - Items are per hero; relics are shared by the team. The guild can hold any number of relics (no board, no slots, no sockets); a relic can be turned down, but once taken it can't be removed. Relics are rare and change how a build works rather than adding flat stats.
-- Heroes rank up like items: two copies at the same rank combine into the next rank. Items can move between heroes freely between fights (never during combat).
+- Heroes rank up like items: two copies at the same rank combine into the next rank, and the hero already owned keeps their specialization and items. Heroes in the Caravan come with no items, and it never offers a hero the player already has at a different rank. Items can move between heroes freely between fights (never during combat).
 - Fallen heroes always come back after a fight, with no downside.
 - A lost fight restarts the day (everything kept, plus bonus gold); the second loss ends the run. Every fight starts at full HP (unless an item or relic says otherwise). Unequipped items wait in a shared stash of 6 slots that works like a hero row; relics can't go there.
 - There is no branching map: each act is a set number of days, each going Caravan (shop) → a stop the player picks → one fight. A lost fight replays the day against the same enemies. Offers come from the run seed and don't depend on earlier picks (for now). The run layer is deterministic from its seed, like the sim.

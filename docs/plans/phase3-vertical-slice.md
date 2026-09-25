@@ -1,6 +1,6 @@
 # Plan: Phase 3, the vertical slice
 
-Status: **proposed; all design answers are in except hero combining (end of file). Ready for approval to start step 1.** Nothing here is built yet.
+Status: **all design answers are in. Step 1 (relics) has its own plan in `docs/plans/relics-in-sim.md`.** Nothing here is built yet.
 
 Goal (roadmap in `docs/design.md`): **one full act, playable start to boss.** Content target: 8 heroes, 60 items, 6+ essences, 10 alloys, 20 synergies. Done when playtesters want a second run.
 
@@ -198,9 +198,4 @@ Placeholder art, readable first:
 - **Events:** gold, item by rarity, relic by rarity, and item by tier to start.
 - **Save/resume:** yes.
 
-## Question (still open)
-
-**Combining heroes:**
-- **Which specialization stays?** When two copies at B or above carry different specializations, which one does the combined hero keep? My draft: the player picks, as with an item's infusion.
-- **What happens to the new copy's items?** My draft: the new copy arrives with no items, so nothing is lost.
-- **A copy at a different rank:** my draft is that it can be held as a separate hero and takes a roster spot, like items at different tiers. Or should the Caravan only offer copies you can combine?
+- **Combining heroes:** the hero you already have keeps their specialization (and items). Heroes in the Caravan come with no items. The Caravan never offers a hero you already have at a different rank, so every copy it offers can combine.

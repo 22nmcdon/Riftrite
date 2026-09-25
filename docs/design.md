@@ -344,7 +344,7 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - Infusion XP comes from item fires (amount set per item, by type and size) plus battles fought. XP resets when an infusion becomes an alloy or pure double.
 - Essence resonance counts essences: a single = 1, an alloy = 1 of each half, a pure double = 2, and a transformation counts its socketed essence(s).
 - **No branching map.** Each act is a set number of days. A day is a guaranteed shop, one fight shown ahead, and a stop you pick (Forge only if something is infused, Vault only with a key, loot, events). Offers are random per run from the seed and don't depend on earlier picks for now.
-- **The Caravan** is the shop: it sells items and heroes (Merchant and Tavern are one). Heroes rank up like items: buy a second copy at the same rank and combine.
+- **The Caravan** is the shop: it sells items and heroes (Merchant and Tavern are one). Heroes rank up like items: buy a second copy at the same rank and combine. The hero you already have keeps their specialization and items; heroes in the Caravan come with no items; and the Caravan never offers a hero you already have at a different rank.
 - **Day order:** Caravan → stop → fight. Two rounds per day (Caravan, stop, fight, Caravan, stop, elite or boss) is a possible later change.
 - **Infusing** can happen any time between fights for now; the Forge is for reforging.
 - **A lost fight is replayed against the same enemies.**
@@ -362,6 +362,5 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - **Doubled spill:** does any pure double keep it? Overgrowth (Verdant + Verdant) is the first one to test.
 - **Act 3 collapse numbers:** to be decided later.
 - **Tier schedule:** at what point in a run does the Caravan start offering B, A, and S? (A tuning table; it can be set once the run structure is being built.)
-- **Combining heroes:** when two copies with different specializations combine, which one stays? What happens to the second copy's items? (See `docs/plans/phase3-vertical-slice.md`.)
 - **Stats and essence rework (in progress):** decisions, placeholders, and the build order are in `docs/plans/essence-rework.md`. Damage essences on items that don't hit need real per-item designs later; for now they hit the enemy directly across.
 - More open questions on tiers, backup, Oathbinding, and Legendaries are listed at the end of `docs/tiers-backup-specialization.md`.
