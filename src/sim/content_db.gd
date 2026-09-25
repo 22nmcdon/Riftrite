@@ -264,7 +264,7 @@ func check_loadout(entries: Array[LoadoutEntry], where: String, enemy: bool) -> 
 		var item: ItemDef = items[entry.item_id]
 		if item.enemy_only and not enemy:
 			errors.append("%s: \"%s\" is enemy-only" % [at, entry.item_id])
-		var sockets: int = 1 if item.size <= 1 else 2
+		var sockets: int = tuning.socket_count(item) if tuning != null else 1
 		if entry.essence_ids.size() > sockets:
 			errors.append("%s: \"%s\" has %d essences but only %d socket(s)" % [at, entry.item_id, entry.essence_ids.size(), sockets])
 		for essence_id: String in entry.essence_ids:

@@ -14,9 +14,9 @@ const BACK := UnitSetup.Row.BACK
 ## (a grant, filtered and side-wide auras, and every relic trigger).
 func _chaotic_fight(seed_value: int) -> FightSetup:
 	var scatter: ItemDef = K.item("scatter", {"cooldown_ms": 700, "crit_chance_bp": 3000, "effects": K.damage(9, "enemy_random")})
-	var cleave: ItemDef = K.item("cleave", {"size": 2, "tags": ["weapon"], "cooldown_ms": 2150, "crit_chance_bp": 2000, "effects": K.damage(25)})
+	var cleave: ItemDef = K.item("cleave", {"size": 2, "rarity": "epic", "tags": ["weapon"], "cooldown_ms": 2150, "crit_chance_bp": 2000, "effects": K.damage(25)})
 	var mend: ItemDef = K.item("mend", {"cooldown_ms": 1650, "xp_per_fire": 5, "effects": [{"trigger": "on_fire", "type": "heal", "amount": 12, "target": "ally_lowest_hp"}]})
-	var hex: ItemDef = K.item("hex", {"size": 2, "cooldown_ms": 1300, "effects": K.damage(12, "enemy_random")})
+	var hex: ItemDef = K.item("hex", {"size": 2, "rarity": "epic", "cooldown_ms": 1300, "effects": K.damage(12, "enemy_random")})
 	var drum: ItemDef = K.item("drum", {"cooldown_ms": 2000, "effects": K.damage(3, "all_enemies"), "auras": [
 		{"target": "linked_allies", "stat": "damage_bp", "value": 15000, "window": {"until_ms": 10000}},
 		{"target": "adjacent_items", "stat": "crit_chance_bp", "value": 2000}]})

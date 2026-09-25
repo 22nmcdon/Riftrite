@@ -13,6 +13,8 @@
     "resonant": 20000
   },
   "crit_damage_bp": 15000,
+  "two_socket_rarities": ["epic", "legendary"],
+  "_two_socket_note": "Rarities whose items have 2 sockets; every other item has 1, whatever its size. Legendary for sure; Epic is a placeholder to try.",
   "tier_multiplier_bp": {
     "_note": "Item numbers are multiplied by this per tier (placeholders).",
     "c": 10000,

@@ -97,6 +97,7 @@ static func parse_parties(content: ContentDb, data: Variant, label: String) -> P
 		reader.finish()
 		# Reuse the content checks for item references (heroes can't carry enemy-only items).
 		var checker := ContentDb.new()
+		checker.tuning = content.tuning
 		checker.items = content.items
 		checker.essences = content.essences
 		checker.relics = content.relics

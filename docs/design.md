@@ -116,9 +116,9 @@ In The Bazaar an item gets one fixed enchantment. Here, enchantments are **Infus
 
 "Sized from the item's output" follows one conversion rule (same kind +50%; same family 50%; direct → over time 5%; over time → direct 500%). Details: `docs/plans/essence-rework.md`.
 
-**2. Socket.** Small items have 1 socket; Medium and Large have 2. For now, infusing can happen any time between fights, straight from the essence pouch.
+**2. Socket.** Most items have 1 socket. Only **Legendary** items (and, as a placeholder to try, **Epic**) have 2, whatever their size. That makes alloys and pure doubles a high-rarity payoff. For now, infusing can happen any time between fights, straight from the essence pouch.
 
-**3. Fuse.** Two essences in one item's sockets fuse into an **Alloy** with its own effect, not just both effects added. Six essences give 15 cross-pairs plus 6 "pure" doubles, so 21 alloys in total. Examples:
+**3. Fuse.** Two essences in one two-socket item fuse into an **Alloy** with its own effect, not just both effects added. Six essences give 15 cross-pairs plus 6 "pure" doubles, so 21 alloys in total. Examples:
 
 | Alloy | Recipe | Effect |
 | --- | --- | --- |
@@ -295,7 +295,7 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 | Fights are hard to read | Post-fight damage meter, combat log, slow-mo, and a cap of 7 slots per hero |
 | Too many combinations to balance | Headless sim runner; ship fewer alloys (10) first and add more later |
 | Feels like a mash-up of its sources | Lean hardest on the infusion system; it's the part none of the three games has |
-| Fusion feels mandatory | Alloys split their spill (one essence per side) while singles and pure doubles give both neighbors the same essence; fusing resets XP; Small items have only 1 socket; essence transformations give single essences a unique payoff, at the cost of never spilling. The headless sim will show whether this is enough, and alloy spill strength is the first thing to tune if it isn't |
+| Fusion feels mandatory | Alloys split their spill (one essence per side) while singles and pure doubles give both neighbors the same essence; fusing resets XP; only Epic and Legendary items have 2 sockets; essence transformations give single essences a unique payoff, at the cost of never spilling. The headless sim will show whether this is enough, and alloy spill strength is the first thing to tune if it isn't |
 | Scope creep | Hold the vertical slice to one act until playtesters ask for a second run |
 
 **Decisions made**
@@ -350,6 +350,7 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - **Day order:** Caravan → stop → fight. Two rounds per day (Caravan, stop, fight, Caravan, stop, elite or boss) is a possible later change.
 - **Infusing** can happen any time between fights for now; the Forge is for reforging.
 - **A lost fight is replayed against the same enemies.**
+- **Sockets by rarity, not size:** only Legendary (and, as a placeholder, Epic) items have 2 sockets; every other item has 1. The rarity list is a tuning value.
 - **Relics:** hold any number, no board and no sockets. They can be turned down but never removed once taken, change how a build works (Epic ones a lot), and are much rarer than items, essences, or heroes. Bosses drop an item or a relic.
 - **A run starts with one hero** (pick 1 of 3 random), then 1 of 3 starting packages (extra gold, a Common relic, or a Common item), plus base gold. Fielding is 1–5 heroes.
 - **Losing a fight restarts the day** with everything kept, plus bonus gold (10, +5 per fight won so far). **The second loss ends the run.** Every fight starts at full HP unless an item or relic changes that.

@@ -124,8 +124,7 @@
           {
             "item": "dusk_tome",
             "essences": [
-              "ember",
-              "storm"
+              "ember"
             ]
           },
           {
@@ -169,8 +168,7 @@
           {
             "item": "grave_hook",
             "essences": [
-              "umbral",
-              "verdant"
+              "umbral"
             ]
           },
           {
@@ -206,7 +204,6 @@
           {
             "item": "ember_brazier",
             "essences": [
-              "ember",
               "ember"
             ]
           },
@@ -338,8 +335,7 @@
           {
             "item": "dusk_tome",
             "essences": [
-              "ember",
-              "storm"
+              "ember"
             ]
           },
           {

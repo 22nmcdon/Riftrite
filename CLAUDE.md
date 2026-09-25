@@ -48,7 +48,7 @@ tools/         headless sim runner, data validators
 
 ## Infusion rules (easy to get wrong)
 
-- Small items: 1 socket. Medium/Large items: 2 sockets. Relics have no sockets. Infusing can happen any time between fights (for now).
+- **Sockets depend on rarity, not size:** Epic and Legendary items have 2 sockets (Epic is a placeholder to try; the list is `two_socket_rarities` in `data/tuning.json`); every other item has 1. Relics have no sockets. Infusing can happen any time between fights (for now).
 - Two different essences in one item = an **Alloy** with its own effect. Two of the same = a **pure double**.
 - Pure doubles are alloys too, and each has its own effect.
 - An alloy **keeps both essences' normal effects** and adds its special. A special that changes how a status behaves must use **its own status type** (Inferno → Golden Flame), never modify the shared one, so it can't leak into other items' statuses.
