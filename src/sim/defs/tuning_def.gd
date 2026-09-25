@@ -3,6 +3,10 @@ extends RefCounted
 ## Global tuning values from data/tuning.json. Durations are stored in ticks
 ## (the file gives milliseconds). Percentages are basis points.
 
+## Item tiers and hero ranks share one ladder: C, B, A, S (index 0-3).
+const TIER_NAMES: Array[String] = ["c", "b", "a", "s"]
+const TIER_LABELS: Array[String] = ["C", "B", "A", "S"]
+
 var spill_single_bp: int
 var spill_alloy_bp: int
 var spill_pure_double_bp: int
@@ -15,6 +19,16 @@ var stall_start_ticks: int
 var collapse_start_ticks: int
 var collapse_surge_ticks: int
 var tie_ticks: int
+## Multiplier on an item's numbers per tier, indexed by tier (0 = C).
+var tier_multiplier_bp: Array[int] = []
+## Multiplier on a unit's stats per rank, indexed by rank (0 = C).
+var rank_multiplier_bp: Array[int] = []
+## Crit chance (bp) each CRIT point adds to every item the unit holds.
+var crit_bp_per_point: int
+## Auto-attack speed (bp) each ATSP point adds.
+var atsp_bp_per_point: int
+## Hit damage taken is multiplied by C / (C + DEF).
+var defense_constant: int
 ## Keyed by act number. Look up with collapse_for_act(); don't iterate.
 var collapse_by_act: Dictionary[int, CollapseDef] = {}
 
@@ -28,6 +42,11 @@ static func read(reader: DataReader) -> TuningDef:
 	def.xp_to_resonant = reader.req_int("xp_to_resonant", 1)
 	def.xp_per_battle = reader.req_int("xp_per_battle", 0)
 	def.crit_damage_bp = reader.req_int("crit_damage_bp", FixedMath.BP_ONE)
+	def.tier_multiplier_bp = _read_tier_table(reader, "tier_multiplier_bp")
+	def.rank_multiplier_bp = _read_tier_table(reader, "rank_multiplier_bp")
+	def.crit_bp_per_point = reader.req_int("crit_bp_per_point", 0)
+	def.atsp_bp_per_point = reader.req_int("atsp_bp_per_point", 0)
+	def.defense_constant = reader.req_int("defense_constant", 1)
 	def.rush_end_ticks = reader.req_ticks("rush_end_ms")
 	def.stall_start_ticks = reader.req_ticks("stall_start_ms")
 	def.collapse_start_ticks = reader.req_ticks("collapse_start_ms")
@@ -55,6 +74,18 @@ static func read(reader: DataReader) -> TuningDef:
 		reader.error("tie_ms must be later than collapse_start_ms")
 	reader.finish()
 	return def
+
+
+## Reads {"c": .., "b": .., "a": .., "s": ..} into an array indexed by tier.
+static func _read_tier_table(reader: DataReader, key: String) -> Array[int]:
+	var table: Array[int] = [FixedMath.BP_ONE, FixedMath.BP_ONE, FixedMath.BP_ONE, FixedMath.BP_ONE]
+	var tiers: DataReader = reader.req_object(key)
+	if tiers == null:
+		return table
+	for i: int in TIER_NAMES.size():
+		table[i] = tiers.req_int(TIER_NAMES[i], 1)
+	tiers.finish()
+	return table
 
 
 ## Returns the collapse numbers for an act, or null if that act has none.

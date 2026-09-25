@@ -35,8 +35,8 @@ static func tuning() -> TuningDef:
 
 
 ## An item with essences socketed, for a unit's row.
-static func equip(def: ItemDef, essences: Array[String] = []) -> ItemSetup:
-	return ItemSetup.make(def, essences)
+static func equip(def: ItemDef, essences: Array[String] = [], tier: int = 0) -> ItemSetup:
+	return ItemSetup.make(def, essences, tier)
 
 
 ## An item from DEFAULT_ITEM with `overrides` applied. Fails loudly on errors.
@@ -71,7 +71,15 @@ static func unit(unit_id: String, hp: int, row: UnitSetup.Row = UnitSetup.Row.FR
 	var row_items: Array[ItemSetup] = []
 	for entry: Variant in items:
 		row_items.append(entry if entry is ItemSetup else ItemSetup.make(entry))
-	return UnitSetup.make(unit_id, unit_id, hp, row, 7, attack, row_items)
+	return UnitSetup.make(unit_id, unit_id, UnitStats.make(hp), row, 7, attack, row_items)
+
+
+## A unit with a full stat block and rank.
+static func unit_with(unit_id: String, stats: UnitStats, row: UnitSetup.Row = UnitSetup.Row.FRONT, items: Array = [], basic_attack: ItemDef = null, rank: int = 0) -> UnitSetup:
+	var setup: UnitSetup = unit(unit_id, 1, row, items, basic_attack)
+	setup.stats = stats
+	setup.rank = rank
+	return setup
 
 
 ## A unit whose basic attack never matters: 1 damage every 60s.

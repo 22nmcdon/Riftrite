@@ -22,6 +22,18 @@ static func apply_bp(value: int, bp: int) -> int:
 	return -((-product + half) / BP_ONE)
 
 
+## Returns value * numerator / denominator, rounded to the nearest integer
+## (halves away from zero). For ratios that aren't basis points, like defense.
+static func mul_div(value: int, numerator: int, denominator: int) -> int:
+	assert(denominator > 0, "FixedMath.mul_div: denominator must be positive")
+	var product: int = value * numerator
+	if product >= 0:
+		@warning_ignore("integer_division")
+		return (2 * product + denominator) / (2 * denominator)
+	@warning_ignore("integer_division")
+	return -((2 * -product + denominator) / (2 * denominator))
+
+
 ## True if a duration in milliseconds lands exactly on a tick boundary.
 static func is_whole_ticks(ms: int) -> bool:
 	return ms % MS_PER_TICK == 0

@@ -11,6 +11,8 @@ const TAGS: Array[String] = ["weapon", "tome", "charm", "tool", "food"]
 const RARITIES: Array[String] = ["common", "uncommon", "rare", "epic", "legendary"]
 const TIMING_NAMES: Array[String] = ["normal", "rush", "stall"]
 const MAX_SIZE: int = 3
+## Rarities whose items may scale their numbers from CRIT and ATSP.
+const RATE_SCALING_RARITIES: Array[String] = ["epic", "legendary"]
 
 var id: String
 var name: String
@@ -63,4 +65,11 @@ static func _read_common(def: ItemDef, reader: DataReader) -> void:
 		def.effects.append(EffectDef.read(effect_reader))
 	if effect_readers.is_empty():
 		reader.error("an item needs at least one effect")
+	# Common/Uncommon/Rare items and basic auto-attacks treat CRIT and ATSP as
+	# rates only (design decision); Epic and Legendary may scale from them.
+	if not RATE_SCALING_RARITIES.has(def.rarity):
+		for effect: EffectDef in def.effects:
+			if effect.scales_from_rate_stats():
+				reader.error("only Epic and Legendary items can scale from crit or atsp")
+				break
 	reader.finish()

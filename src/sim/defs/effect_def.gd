@@ -10,6 +10,10 @@ extends RefCounted
 ##   heal:         amount
 ##   shield:       exactly one of amount, amount_bp_of_damage
 ##   apply_status: status, stacks
+## `amount` (or `stacks`) is the base value. An optional "scaling" object adds
+## a share of the holder's stats, in basis points of each stat:
+##   "scaling": {"atk": 6000, "atsp": 2000}  ->  base + 60% ATK + 20% ATSP
+## (Not allowed with amount_bp_of_damage, which scales from the hit instead.)
 
 enum Trigger { ON_FIRE, ON_HIT, ON_CRIT }
 enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS }
@@ -44,6 +48,8 @@ var amount: int = 0
 var amount_bp_of_damage: int = 0
 var status_id: String = ""
 var stacks: int = 0
+## Basis points of each stat added to the base value, indexed by UnitStats.Stat.
+var scaling: Array[int] = [0, 0, 0, 0, 0, 0]
 
 
 static func read(reader: DataReader) -> EffectDef:
@@ -67,6 +73,10 @@ static func read(reader: DataReader) -> EffectDef:
 			Type.APPLY_STATUS:
 				def.status_id = reader.req_string("status")
 				def.stacks = reader.req_int("stacks", 1)
+		if reader.has("scaling"):
+			if def.amount_bp_of_damage > 0:
+				reader.error("\"scaling\" can't be combined with amount_bp_of_damage")
+			_read_scaling(def, reader.req_object("scaling"))
 
 	# "hit_target" and damage-based shields need a hit to refer to.
 	var needs_hit: bool = def.target == Target.HIT_TARGET or def.amount_bp_of_damage > 0
@@ -74,3 +84,27 @@ static func read(reader: DataReader) -> EffectDef:
 		reader.error("\"%s\" needs a hit, so its trigger must be on_hit or on_crit, not on_fire" % (target_name if def.target == Target.HIT_TARGET else "amount_bp_of_damage"))
 	reader.finish()
 	return def
+
+
+static func _read_scaling(def: EffectDef, reader: DataReader) -> void:
+	if reader == null:
+		return
+	for key: String in reader.map_keys():
+		var stat: int = UnitStats.STAT_NAMES.find(key)
+		if stat < 0:
+			reader.error("unknown stat \"%s\" (expected one of: %s)" % [key, ", ".join(UnitStats.STAT_NAMES)])
+			continue
+		def.scaling[stat] = reader.req_int(key, 0)
+	reader.finish()
+
+
+## The base value this effect scales (amount, or stacks for apply_status).
+func base_value() -> int:
+	return stacks if type == Type.APPLY_STATUS else amount
+
+
+func scales_from_rate_stats() -> bool:
+	for stat: UnitStats.Stat in UnitStats.RATE_STATS:
+		if scaling[stat] != 0:
+			return true
+	return false

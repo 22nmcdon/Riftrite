@@ -9,7 +9,10 @@ enum Side { HEROES, ENEMIES }
 ## Unique within the fight; used in the combat log.
 var id: String
 var name: String
-var max_hp: int
+## Stats before the rank boost.
+var stats: UnitStats
+## 0 = C, 1 = B, 2 = A, 3 = S. Each rank boosts every stat (tuning).
+var rank: int = 0
 var row: Row = Row.FRONT
 ## Item slots available. Item sizes must fit.
 var slots: int
@@ -20,11 +23,12 @@ var basic_attack: ItemDef
 var items: Array[ItemSetup] = []
 
 
-static func make(unit_id: String, unit_name: String, hp: int, unit_row: Row, unit_slots: int, basic: ItemDef, row_items: Array[ItemSetup] = []) -> UnitSetup:
+static func make(unit_id: String, unit_name: String, unit_stats: UnitStats, unit_row: Row, unit_slots: int, basic: ItemDef, row_items: Array[ItemSetup] = [], unit_rank: int = 0) -> UnitSetup:
 	var setup := UnitSetup.new()
 	setup.id = unit_id
 	setup.name = unit_name
-	setup.max_hp = hp
+	setup.stats = unit_stats
+	setup.rank = unit_rank
 	setup.row = unit_row
 	setup.slots = unit_slots
 	setup.basic_attack = basic
@@ -33,8 +37,12 @@ static func make(unit_id: String, unit_name: String, hp: int, unit_row: Row, uni
 
 
 func validate(content: ContentDb, errors: Array[String]) -> void:
-	if max_hp < 1:
-		errors.append("%s: max_hp must be at least 1" % id)
+	if stats == null or stats.get_stat(UnitStats.Stat.HP) < 1:
+		errors.append("%s: HP must be at least 1" % id)
+	elif stats.values.any(func(value: int) -> bool: return value < 0):
+		errors.append("%s: stats can't be negative" % id)
+	if rank < 0 or rank >= TuningDef.TIER_NAMES.size():
+		errors.append("%s: rank must be 0-3 (C-S)" % id)
 	if basic_attack == null or not basic_attack.is_basic_attack:
 		errors.append("%s: needs a basic auto-attack" % id)
 	else:
@@ -49,6 +57,8 @@ func validate(content: ContentDb, errors: Array[String]) -> void:
 			auto_attacks += 1
 		_validate_effects(item.def, content, errors)
 		_validate_essences(item, content, errors)
+		if item.tier < 0 or item.tier >= TuningDef.TIER_NAMES.size():
+			errors.append("%s: item \"%s\" tier must be 0-3 (C-S)" % [id, item.def.id])
 	if used_slots > slots:
 		errors.append("%s: items take %d slots but the unit has %d" % [id, used_slots, slots])
 	if auto_attacks > 1:

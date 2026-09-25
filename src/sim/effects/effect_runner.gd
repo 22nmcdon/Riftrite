@@ -42,16 +42,16 @@ static func _run(sim: CombatSim, item: ItemState, sourced: SourcedEffect, hit: H
 	for target: UnitState in Targeting.pick(effect.target, sim.owner_of(item), hit_target, sim):
 		match effect.type:
 			EffectDef.Type.DAMAGE:
-				_hit(sim, item, source, target, effect.amount, hit == null)
+				_hit(sim, item, source, target, sourced.final_amount(), hit == null)
 			EffectDef.Type.HEAL:
-				var healed: int = mini(effect.amount, target.max_hp - target.hp)
+				var healed: int = mini(sourced.final_amount(), target.max_hp - target.hp)
 				target.hp += healed
 				var heal_entry: LogEntry = sim.new_entry(LogEntry.Kind.HEAL, source)
 				heal_entry.target = target.id
 				heal_entry.amount = healed
 				sim.combat_log.add(heal_entry)
 			EffectDef.Type.SHIELD:
-				var amount: int = effect.amount
+				var amount: int = sourced.final_amount()
 				if effect.amount_bp_of_damage > 0:
 					amount = FixedMath.apply_bp(hit.damage, effect.amount_bp_of_damage)
 				target.shield += amount
@@ -60,7 +60,7 @@ static func _run(sim: CombatSim, item: ItemState, sourced: SourcedEffect, hit: H
 				shield_entry.amount = amount
 				sim.combat_log.add(shield_entry)
 			EffectDef.Type.APPLY_STATUS:
-				Statuses.apply(sim, target, effect.status_id, effect.stacks, source)
+				Statuses.apply(sim, target, effect.status_id, sourced.final_amount(), source)
 
 
 static func _hit(sim: CombatSim, item: ItemState, source: EffectSource, target: UnitState, base_amount: int, can_trigger: bool) -> void:
@@ -78,10 +78,12 @@ static func _hit(sim: CombatSim, item: ItemState, source: EffectSource, target: 
 	hit.damage = FixedMath.apply_bp(base_amount, sim.tuning.crit_damage_bp) if hit.crit else base_amount
 
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.DAMAGE, source)
+	var dealt: int = sim.mitigate_hit(target, hit.damage)
 	entry.target = target.id
-	entry.amount = hit.damage
+	entry.amount = dealt
+	entry.mitigated = hit.damage - dealt
 	entry.crit = hit.crit
-	entry.absorbed = sim.apply_damage(target, hit.damage)
+	entry.absorbed = sim.apply_damage(target, dealt)
 	target.last_hit_by = source.describe()
 	sim.combat_log.add(entry)
 

@@ -12,6 +12,8 @@ var side: UnitSetup.Side
 var row: UnitSetup.Row
 ## Position within the row, 0 = leftmost.
 var column: int
+## Stats after the rank boost.
+var stats: UnitStats
 var max_hp: int
 var hp: int
 var shield: int = 0
@@ -32,22 +34,28 @@ static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column:
 	state.side = unit_side
 	state.row = setup.row
 	state.column = unit_column
-	state.max_hp = setup.max_hp
-	state.hp = setup.max_hp
+	state.stats = setup.stats.boosted(content.tuning.rank_multiplier_bp[setup.rank])
+	state.max_hp = state.stats.get_stat(UnitStats.Stat.HP)
+	state.hp = state.max_hp
 
 	var has_auto_attack_item: bool = false
 	for item: ItemSetup in setup.items:
 		has_auto_attack_item = has_auto_attack_item or item.def.auto_attack
 	if not has_auto_attack_item:
-		state.items.append(ItemState.make(setup.basic_attack, -1))
+		state.items.append(ItemState.make(setup.basic_attack, -1, state.stats, content.tuning))
 	var slot: int = 0
 	for item: ItemSetup in setup.items:
 		var essences: Array[EssenceDef] = []
 		for essence_id: String in item.essence_ids:
 			essences.append(content.essences[essence_id])
-		state.items.append(ItemState.make(item.def, slot, essences))
+		state.items.append(ItemState.make(item.def, slot, state.stats, content.tuning, essences, item.tier))
 		slot += item.def.size
 	return state
+
+
+## DEF used against incoming hits.
+func defense() -> int:
+	return maxi(stats.get_stat(UnitStats.Stat.DEF), 0)
 
 
 func is_standing() -> bool:

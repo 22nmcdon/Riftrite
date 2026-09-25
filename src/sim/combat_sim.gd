@@ -81,8 +81,9 @@ func step() -> void:
 		if not unit.alive:
 			continue
 		var rate_bp: int = unit.cooldown_rate_bp()
+		var auto_attack_rate_bp: int = FixedMath.apply_bp(rate_bp, FixedMath.BP_ONE + unit.stats.get_stat(UnitStats.Stat.ATSP) * tuning.atsp_bp_per_point)
 		for item: ItemState in unit.items:
-			if item.advance(rate_bp):
+			if item.advance(auto_attack_rate_bp if item.is_auto_attack else rate_bp):
 				ready.append(item)
 	for item: ItemState in ready:
 		EffectRunner.fire(self, item)
@@ -110,6 +111,11 @@ func allies_of(unit: UnitState) -> Array[UnitState]:
 
 func enemies_of(unit: UnitState) -> Array[UnitState]:
 	return enemies if unit.side == UnitSetup.Side.HEROES else heroes
+
+
+## Hit damage after the target's DEF: amount x C / (C + DEF).
+func mitigate_hit(target: UnitState, amount: int) -> int:
+	return FixedMath.mul_div(amount, tuning.defense_constant, tuning.defense_constant + target.defense())
 
 
 ## Shield takes damage first, then HP (HP stops at 0). Returns how much the

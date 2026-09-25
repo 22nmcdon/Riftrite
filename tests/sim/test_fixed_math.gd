@@ -28,3 +28,10 @@ func test_ticks() -> void:
 	assert_eq(FixedMath.ms_to_ticks(45000), 900)
 	assert_true(FixedMath.is_whole_ticks(1250))
 	assert_false(FixedMath.is_whole_ticks(1225))
+
+
+func test_mul_div_rounds_to_nearest() -> void:
+	assert_eq(FixedMath.mul_div(100, 100, 200), 50)
+	assert_eq(FixedMath.mul_div(10, 100, 130), 8, "7.69 rounds to 8")
+	assert_eq(FixedMath.mul_div(3, 1, 2), 2, "1.5 rounds up")
+	assert_eq(FixedMath.mul_div(-3, 1, 2), -2, "-1.5 rounds away from zero")

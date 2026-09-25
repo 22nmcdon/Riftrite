@@ -35,6 +35,8 @@ var target: String = ""
 var amount: int = 0
 ## Damage kinds: how much of `amount` the target's shield absorbed.
 var absorbed: int = 0
+## DAMAGE: how much DEF blocked before `amount` (amount is what got through).
+var mitigated: int = 0
 var crit: bool = false
 ## Status kinds: which status.
 var status: String = ""
@@ -90,6 +92,8 @@ func _damage_detail() -> String:
 	var parts: Array[String] = []
 	if crit:
 		parts.append("crit")
+	if mitigated > 0:
+		parts.append("%d blocked by defense" % mitigated)
 	if absorbed > 0:
 		parts.append("%d absorbed by shield" % absorbed)
 	return "" if parts.is_empty() else " (%s)" % ", ".join(parts)

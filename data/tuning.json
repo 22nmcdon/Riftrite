@@ -7,6 +7,23 @@
   "xp_to_resonant": 300,
   "xp_per_battle": 10,
   "crit_damage_bp": 15000,
+  "tier_multiplier_bp": {
+    "_note": "Item numbers are multiplied by this per tier (placeholders).",
+    "c": 10000,
+    "b": 15000,
+    "a": 20000,
+    "s": 30000
+  },
+  "rank_multiplier_bp": {
+    "_note": "Unit stats are multiplied by this per rank: +25% per rank, compounding (placeholders).",
+    "c": 10000,
+    "b": 12500,
+    "a": 15625,
+    "s": 19531
+  },
+  "crit_bp_per_point": 100,
+  "atsp_bp_per_point": 100,
+  "defense_constant": 100,
   "rush_end_ms": 8000,
   "stall_start_ms": 15000,
   "collapse_start_ms": 45000,
@@ -14,7 +31,15 @@
   "tie_ms": 180000,
   "collapse_by_act": {
     "_note": "Damage per second starts at base and grows by growth each second; from collapse_surge_ms the growth itself rises by accel each second. Act 3 is not decided yet.",
-    "1": { "base": 10, "growth": 10, "accel": 2 },
-    "2": { "base": 20, "growth": 20, "accel": 4 }
+    "1": {
+      "base": 10,
+      "growth": 10,
+      "accel": 2
+    },
+    "2": {
+      "base": 20,
+      "growth": 20,
+      "accel": 4
+    }
   }
 }
