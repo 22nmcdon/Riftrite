@@ -15,13 +15,13 @@ The Ashen Hollow's first days are pups and hounds, so the boss is their mother: 
 
 | When | What she does |
 | --- | --- |
-| **Start** | She stands in the **back row** behind two Rift Hounds. **Pack Bond** (her enemy-only item): while any hound stands, she takes a big DEF boost. Kill the pack first, or bring back-row reach and burn through it. |
-| **Below 60% HP: Molt** | She sheds her ash hide: the Pack Bond boost ends, and she gets ×1.3 ATSP. Her bite now applies **Bleed**. |
+| **Start** | She stands in the **back row** behind two Rift Hounds. Each hound carries **Pack Bond** (an enemy-only charm): the whole pack, her included, gets ×1.5 DEF while that hound stands. Kill the hounds first, or bring back-row reach and push through the bond. |
+| **Below 60% HP: Molt** | She sheds her ash hide and gets ×1.3 ATSP, and her bite now applies **Bleed**. |
 | **Below 25% HP: Last Ember** | Every 3s she breathes embers on **every hero** (Burn), and gains a one-time shield. |
 
 - **What it tests:** reach (back-row and all-enemy damage), sustained damage against her shield, and **cleansing** Burn and Bleed (Vell's Wardweaver, heals).
 - **Length:** about 60–90s for a typical day-6 guild (2–4 heroes around rank B). She's tuned with the run bot.
-- **Her drop:** one of her enemy-only items: **Pack Bond** (a Charm, an ally-shielding aura while its holder stands) or **Ember Maw** (her bite as an auto-attack item that applies Bleed).
+- **Her drop:** one of the team's enemy-only items: **Pack Bond** (from a hound: a charm with an ally DEF aura while its holder stands) or **Ember Maw** (her bite as an auto-attack item that applies Bleed).
 
 ## What the sim needs
 
@@ -30,7 +30,6 @@ One new piece: **enemy phases.** An enemy can list phases, each entered once whe
 ```json
 "phases": [
   { "name": "Molt", "below_hp_bp": 6000, "parts": [
-      {"key": "bond", "kind": "aura", "target": "holder", "stat": "def_bp", "value": 10000},
       {"key": "fury", "kind": "aura", "target": "holder", "stat": "atsp_bp", "value": 13000},
       {"key": "bleed", "kind": "grant", "filter": {"auto_attack": true}, "effect": {"trigger": "on_hit", "type": "apply_status", "status": "bleed", "stacks": 1, "target": "hit_target"}} ] },
   { "name": "Last Ember", "below_hp_bp": 2500, "parts": [
@@ -42,7 +41,7 @@ One new piece: **enemy phases.** An enemy can list phases, each entered once whe
 ```
 
 - **How phases stack:** a phase's parts add to what the enemy already has. A part with the same key as an earlier phase's replaces it (as with locked potential).
-- **Ending the Pack Bond:** Pack Bond is an aura from the hounds' side, so it ends on its own when they fall. Molt "sheds the hide" by ending a boss-held part, too.
+- **Pack Bond ends on its own:** it's an ordinary item aura on the hounds, which stops when its holder falls.
 - **Abilities that start with the phase:** an ability's `on_fight_start` effects run when its phase begins.
 - **The log:** `[52.30s] mother_ash_1 enters Molt`, then everything the phase does is credited to it, e.g. `mother_ash_1 · Ember Breath (Last Ember)`.
 - **Code:**
@@ -59,7 +58,7 @@ One new piece: **enemy phases.** An enemy can list phases, each entered once whe
 
 ## Content and balance
 
-- **Data:** `mother_ash` goes in `data/enemies.json`, with her two enemy-only items in `data/items.json`, and the encounter `the_ash_mother` becomes `acts.json`'s boss (replacing The Rift Throne).
+- **Data:** `mother_ash` goes in `data/enemies.json`, the two enemy-only items (Pack Bond, Ember Maw) in `data/items.json`, the boss's hounds carry Pack Bond, and the encounter `the_ash_mother` becomes `acts.json`'s boss (replacing The Rift Throne).
 - **Balance:**
   - the balance runner gets a boss matchup
   - the run bot reports how often runs that reach day 6 win
