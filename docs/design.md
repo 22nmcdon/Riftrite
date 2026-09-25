@@ -31,15 +31,16 @@ Sources for Guildrun details: [Steam page](https://store.steampowered.com/app/36
 
 ## Core loop
 
-A run is about 45–60 minutes: three acts, each a set number of **days** and ending in a boss. Each day you pick from a few offered stops (a shop, loot, an event, and so on), then pick a fight. Between fights you shop, recruit, and infuse; in fights you watch.
+A run is about 45–60 minutes: three acts, each a set number of **days** and ending in a boss. Each day has a shop, a fight, and a stop you pick (loot, an event, and so on). Between fights you shop, recruit, and infuse; in fights you watch.
 
 ```mermaid
 flowchart LR
-  A[Pick the day's stops<br/>and its fight] --> B[Prep: position heroes<br/>and arrange item rows]
+  A[A day: shop,<br/>a fight, a stop] --> B[Prep: position heroes<br/>and arrange item rows]
   B --> C[Auto-battle]
   C --> D[Loot: gold, items,<br/>enemy essences]
   D --> E[Spend: shop, recruit,<br/>infuse, fuse]
   E --> A
+  C -->|Lost: replay the day<br/>with bonus gold| A
   C -->|Second lost fight| F[Run ends:<br/>shards + codex entries]
   F --> G[Guildhall hub:<br/>unlocks, rescued NPCs]
   G --> A
@@ -49,7 +50,7 @@ The inner loop (day to day) is where builds form. The outer loop (run to run) fe
 
 ## Guild, heroes, and combat
 
-You start a run with one hero (pick 1 of 3) and recruit more along the way, up to a roster of 6 with at most 5 fielded. The benched hero is never dead weight: each hero has a **Backup** effect that works from the bench, like Guildrun's.
+You start a run with one hero (pick 1 of 3) and recruit more at shops, up to a roster of 6, with 1 to 5 fielded. The benched hero is never dead weight: each hero has a **Backup** effect that works from the bench, like Guildrun's.
 
 **Backup is a choice.** The player decides who fights and who sits in backup (at most 5 fielded, so with 6 heroes at least one is always in backup). A backup hero's Backup effect applies, and so do the backup modes of the items in their row, which allows builds like 3 fielded + 3 backup. Full rules: `docs/tiers-backup-specialization.md`.
 
@@ -99,7 +100,7 @@ You start a run with one hero (pick 1 of 3) and recruit more along the way, up t
 
 In The Bazaar an item gets one fixed enchantment. Here, enchantments are **Infusions**: essences you harvest from enemies, socket into gear, fuse into new types, and level up by using them.
 
-**1. Harvest.** Each enemy family drops one of six base essences. The act's biome decides which essences can drop, and each fight on offer shows its enemy team, so picking a fight is also picking essences.
+**1. Harvest.** Each enemy family drops one of six base essences. The act's biome decides which essences can drop, and each day's fight shows its enemy team ahead of time.
 
 | Essence | Dropped by | Effect when infused |
 | --- | --- | --- |
@@ -212,25 +213,32 @@ Synergies work in five layers, from specific and secret (Gungeon-style) to broad
 
 ## Run structure and economy
 
-There's no branching map. Like Guildrun and The Bazaar, each act is a set number of **days**. Each day offers a few **stops** to choose from (a shop, loot, an event, and so on), then a **fight**. Every act has a fixed number of fights and stop choices, and the last fight of an act is its boss. Act 1 ends in a challenge fight, Act 3 in the final boss, then optional Endless mode.
+There's no branching map. Like Guildrun and The Bazaar, each act is a set number of **days**, and the game only ever shows what's next. The last fight of an act is its boss. Act 1 ends in a challenge fight, Act 3 in the final boss, then optional Endless mode.
 
-- **Choices come one at a time.** The game shows the next set of options; you pick one, and then the next set appears. There's no map to plan a route on.
-- **Choices don't shape the future (for now).** What you pick today doesn't change what's offered later. Offers are random per run, from the run seed.
+**A day** is always:
+1. **Shop:** buy items and recruit heroes. It merges the old Merchant and Tavern, and still needs a better name.
+2. **Fight:** one fight, shown ahead of time. It shows the enemy team, so you know which essences it drops.
+3. **Stop:** pick one of a few offered stops. Some stops only show up when they'd be useful: the Forge (reforging) only if something is infused, and the Vault only if you hold a key.
+
+(The exact order of the stop and the fight is still being confirmed; see Open questions.)
+
+- **Offers don't depend on earlier picks (for now).** They're random per run, from the run seed.
 - **Starting a run:** pick 1 of 3 random heroes (you start with just one), then 1 of 3 starting packages (such as extra gold, a Common relic, or a Common item), on top of a base amount of gold.
-- **Losing:** a run allows **one lost fight**. The second loss ends it. (A tie still counts as a victory.)
+- **Fielding:** 1 to 5 heroes, so a one-hero start is legal.
+- **Losing a fight** restarts the day: you keep everything you have and get bonus gold (10, +5 per fight won so far), so you can shop again and visit another stop before the rematch. **The second loss ends the run.** (A tie still counts as a victory.)
 - **HP:** every fight starts everyone at full HP, unless an item or relic says otherwise.
-- **Stash:** a shared stash holds items that aren't equipped, with **6 spaces**.
-- **Save and resume:** a run can be saved and resumed between stops. Fights have no player input, so there's nothing to save mid-fight.
+- **Stash:** a shared stash for unequipped items, with **6 slots that work like a hero row** (a Large item takes 3). Relics can't go in the stash.
+- **Save and resume:** a run can be saved and resumed between steps. Fights have no player input, so there's nothing to save mid-fight.
 
-| Stop or fight | What happens |
+| Step | What happens |
 | --- | --- |
-| Fight | Standard encounter; drops gold, 1–2 essences, and one guaranteed item or relic from the enemy team |
+| Shop | Buy/sell items, recruit heroes, reroll for gold |
+| Fight | Encounter; drops gold, 1–2 essences, and one guaranteed item or relic from the enemy team |
 | Elite | Harder fight; guaranteed Rare item or rank-up |
-| Merchant | Buy/sell items; reroll for gold |
-| Forge | Infuse, fuse, or remove infusions |
-| Tavern | Recruit a hero (pick 1 of 3) or rank one up |
-| Loot / Vault | A free random reward, or a locked chest that needs a key (Gungeon-style) |
-| Event | A choice, sometimes with trade-offs, sometimes a rescued NPC |
+| Forge (stop) | Reforge (remove infusions); only offered when something is infused |
+| Loot (stop) | A free random reward |
+| Vault (stop) | Spend a key on a locked chest (Gungeon-style); only offered when you hold a key |
+| Event (stop) | A choice, sometimes with trade-offs, sometimes a rescued NPC |
 | Boss | Act boss with a unique mechanic; the act's last fight |
 
 **First events:** gold; a random item by rarity (Common most likely, Legendary least); a random relic by rarity; a random item by tier (C most likely, S least). More, including one that offers retraining, come later.
@@ -243,7 +251,7 @@ There's no branching map. Like Guildrun and The Bazaar, each act is a set number
 - **Essences:** stored in a pouch (cap of 8) until socketed, so you can't hoard every one.
 - **Keys:** rare; open Vault chests.
 
-**Biomes** each favor two essences (for example, the Ashen Mines drop Ember and Stone). Each fight on offer shows its enemy team, so a player chasing a Frost build picks fights against frost enemies, which gives the fight choice real weight.
+**Biomes** each favor two essences (for example, the Ashen Mines drop Ember and Stone). Each day's fight shows its enemy team ahead of time, so a player chasing a Frost build knows when frost essences are coming.
 
 ## Meta progression
 
@@ -334,10 +342,12 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - Pure doubles each have their own effect. Their bonus effect never strengthens spill. Doubled spill as a pure double's effect is an optional idea, tried first on Overgrowth (Verdant + Verdant).
 - Infusion XP comes from item fires (amount set per item, by type and size) plus battles fought. XP resets when an infusion becomes an alloy or pure double.
 - Essence resonance counts essences: a single = 1, an alloy = 1 of each half, a pure double = 2, and a transformation counts its socketed essence(s).
-- **No branching map.** Each act is a set number of days; each day offers stops to pick from, then a fight (Guildrun/Bazaar style). Choices don't change later offers for now, and offers are random per run from the seed.
-- **A run starts with one hero** (pick 1 of 3 random), then 1 of 3 starting packages (extra gold, a Common relic, or a Common item), plus base gold.
-- **Two losses end a run.** Every fight starts at full HP unless an item or relic changes that.
-- **Shared stash:** 6 spaces.
+- **No branching map.** Each act is a set number of days. A day is a guaranteed shop, one fight shown ahead, and a stop you pick (Forge only if something is infused, Vault only with a key, loot, events). Offers are random per run from the seed and don't depend on earlier picks for now.
+- **The shop sells items and heroes** (Merchant and Tavern are one stop; it needs a better name).
+- **A run starts with one hero** (pick 1 of 3 random), then 1 of 3 starting packages (extra gold, a Common relic, or a Common item), plus base gold. Fielding is 1–5 heroes.
+- **Losing a fight restarts the day** with everything kept, plus bonus gold (10, +5 per fight won so far). **The second loss ends the run.** Every fight starts at full HP unless an item or relic changes that.
+- **Shared stash:** 6 slots that work like a hero row (sizes count). Relics can't go in the stash.
+- **Rank-B specializations** (3 per class) are in the vertical slice.
 - **Prices** are placeholders tuned with the balance runner: higher tiers and ranks cost more, rarer relics cost more, item rarity barely affects price.
 - **All five synergy layers** are in the vertical slice.
 - **Save and resume** between stops is in the vertical slice.
@@ -347,6 +357,6 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - **Doubled spill:** does any pure double keep it? Overgrowth (Verdant + Verdant) is the first one to test.
 - **Act 3 collapse numbers:** to be decided later.
 - **Tier schedule:** at what point in a run do normal shops and the Tavern start offering B, A, and S? (A tuning table; it can be set once the run structure is being built.)
-- **Run layer details** (days per act, fight choice, losing, the minimum fielded heroes, stash spaces, rank-B specializations): proposed in `docs/plans/phase3-vertical-slice.md`, awaiting answers.
+- **Run layer details** (the order of the stop and the fight, where infusing happens, how heroes rank up, a name for the shop, and a proposed relic change): open in `docs/plans/phase3-vertical-slice.md`.
 - **Stats and essence rework (in progress):** decisions, placeholders, and the build order are in `docs/plans/essence-rework.md`. Damage essences on items that don't hit need real per-item designs later; for now they hit the enemy directly across.
 - More open questions on tiers, backup, Oathbinding, and Legendaries are listed at the end of `docs/tiers-backup-specialization.md`.
