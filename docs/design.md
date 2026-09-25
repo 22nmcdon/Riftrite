@@ -60,8 +60,9 @@ You field 3 heroes at the start and up to 5 by Act 3, with a roster cap of 6. Th
 **Item rows (the Bazaar part)**
 
 - Every hero has their own row of slots. Items are Small (1 slot), Medium (2), or Large (3).
-- Items fire on their own cooldown during the fight. A hero's auto-attack is just one more "item" in the row and **takes up a slot like any other item**, so gear decides most of what a hero does.
-- Slot space is a real trade-off. Bigger items are stronger than smaller ones, so a 4-slot hero carrying a Large item plus their auto-attack is a valid build, even with no room left for anything else. Synergies are what make a row of small items worth it instead.
+- Items fire on their own cooldown during the fight, so gear decides most of what a hero does.
+- **Auto-attacks:** every hero has a **basic auto-attack** built in. **Auto-attack items** are items that replace it. They take up slots like any other item and come in all three sizes: Small ones are the most common, then Medium, and Large ones are the rarest. Take the auto-attack item out and the hero falls back to their basic auto-attack.
+- Slot space is a real trade-off. Bigger items are stronger than smaller ones, so a Large item that fills most of a 4-slot hero's row is a valid build. A player can even drop the auto-attack item for another item and rely on the basic auto-attack. Synergies are what make a row of small items worth it instead.
 - Adjacency matters inside a row: "the item to the left gets +20% crit" style effects.
 - Items move freely between heroes at any time between fights, so reshuffling gear is part of every prep phase.
 - The guild also shares one **relic board** (see Items and infusions).
@@ -73,7 +74,12 @@ You field 3 heroes at the start and up to 5 by Act 3, with a roster cap of 6. Th
 - A small hex grid. Heroes move and target on their own, but you set starting hexes.
 - Some items care about position: *Linked* effects reach an adjacent ally's row, so two heroes standing together can share buffs.
 - **Rush** items are strong for the first 8 seconds; **Stall** items wake up after 15 seconds. That gives fast and slow builds real identities.
-- **Rift Collapse:** at 45 seconds the rift starts dealing damage to both sides every second, and the damage keeps growing, so most fights end by about 60 seconds. It's a **flat amount, not a percentage of max HP**, so high-HP builds get to use their HP. There's no separate time limit; the growing damage finishes fights on its own. If both sides somehow survive to **3 minutes**, the fight is a **tie, and a tie counts as a victory**. (In the hex arena the arena also shrinks.)
+- **Rift Collapse:** at 45 seconds the rift starts dealing damage to every unit on both sides every second, and the damage keeps growing. Early fights end around 60 seconds; strong mid- and late-game teams can last much longer.
+  - It's a **flat amount, not a percentage of max HP**, so high-HP builds get to use their HP.
+  - It hits **Shield before HP**, like any damage. Shield is effectively extra HP that healing can't restore, so a perfect shielding setup can stall out a fight on purpose.
+  - **Ramp:** from 45s the damage grows by a fixed amount each second. From **90s it scales much harder**: the amount it grows by also increases every second.
+  - **Per act:** Act 2 doubles the Act 1 numbers (10 → 20). Act 3 is still to be decided.
+  - There's no separate time limit. If both sides survive to **3 minutes**, or both sides die on the same tick, the fight is a **tie, and a tie counts as a victory**. (In the hex arena the arena also shrinks.)
 
 **Enemies**
 
@@ -148,15 +154,15 @@ The trade-off: an alloy is the strongest effect on its own item, but its spill i
 
 **Item tiers (combining duplicates)**
 
-Items move up tiers the way heroes move up ranks, except that an item needs a second copy of itself instead of a Tavern visit.
+Items use the **same tiers as hero ranks: C → B → A → S**, and every item starts at C. An item moves up a tier by combining with a second copy of itself, instead of a Tavern visit.
 
 - **Two copies of the same item at the same tier combine** into one item of the next tier. (Only two copies, not three.)
 - You **can** hold two copies of the same item at *different* tiers; only same-tier copies combine. Duplicates are meant to be uncommon, so an upgrade you chased across a run feels earned.
-- **Where higher tiers come from:** shops sell items only at the lowest tier, except for special tier-specific shops. Otherwise a higher-tier copy comes from an enemy drop (at that enemy's set tier) or from a loot drop (Vault chests, events, and the like), where the tier is random.
+- **Where higher tiers come from:** shops sell items only at tier C, except for special tier-specific shops. Otherwise a higher-tier copy comes from an enemy drop (at that enemy's set tier) or from a loot drop (Vault chests, events, and the like), where the tier is random.
 - **What happens to infusions when copies combine:**
   - If the new copy has no infusion, the upgraded item keeps yours, along with its XP.
   - If the new copy has its own essence or alloy, **the new infusion replaces yours**, and your infusion's XP is lost. So you choose: take the tier upgrade with the new infusion, or keep your item as it is and pass on the copy.
-- Tier and rarity are separate. See Open questions for what the top tier is.
+- Tier and rarity are separate. S is the top tier.
 
 **Relic board (shared by the whole guild)**
 
@@ -263,11 +269,11 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - The spreadsheet prototype is skipped; the headless combat sim tests the infusion math instead.
 - The first combat sim uses fixed front/back rows; the hex arena comes later.
 - Enemies have hand-made, fixed item layouts with set tiers, and some items are enemy-only (especially boss items). Some enemy teams carry relics, including enemy-only ones. Every fight guarantees one drop from the enemy team's items and relics, and enemy-only ones can drop.
-- Tier and rarity are separate. Same-tier copies combine. Copies at different tiers can be held together. Shops sell only the lowest tier (except tier-specific shops); higher tiers come from enemies (set tier) and loot drops (random tier).
+- Tier and rarity are separate. Same-tier copies combine. Copies at different tiers can be held together. Tiers are C → B → A → S, the same as hero ranks. Shops sell only tier C (except tier-specific shops); higher tiers come from enemies (set tier) and loot drops (random tier).
 - Every item has a crit chance, starting at 0%. Crits deal 150% damage.
-- Rift Collapse deals flat damage that grows every second, never a percentage of HP. There's no time limit, but a fight still going at 3 minutes is a tie, and a tie counts as a victory.
+- Rift Collapse deals flat damage that grows every second (never a percentage of HP) and hits Shield before HP. The ramp gets much steeper after 90s, and Act 2 doubles the numbers. There's no time limit; reaching 3 minutes, or both sides dying on the same tick, is a tie, and a tie counts as a victory. Surviving to 3 minutes is meant to be possible, especially for strong mid- and late-game teams.
 - Combat sim targeting: attacks hit the enemy front row; the back row only once the front row is empty, unless an item says it reaches the back row. Units killed during a tick still fire what they had ready that tick (for now). Heroes have HP only for now.
-- The auto-attack takes up a slot. A Large item plus the auto-attack filling a 4-slot hero is an intended trade-off.
+- Every hero has a built-in basic auto-attack. Auto-attack items (Small most common, then Medium, then Large) replace it and take up slots; take the item out and the hero uses the basic auto-attack again.
 - Two copies of the same item combine into the next tier (two, not three). A new copy's infusion replaces the old one.
 - Alloy spill per side equals a single essence's spill for now.
 - Pure doubles each have their own effect. Their bonus effect never strengthens spill. Doubled spill as a pure double's effect is an optional idea, tried first on Overgrowth (Verdant + Verdant).
@@ -276,6 +282,7 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 
 **Open questions**
 
-- **Top tier:** how many tiers does an item have?
 - **Doubled spill:** does any pure double keep it? Overgrowth (Verdant + Verdant) is the first one to test.
-- **Auto-attack:** can it be removed or swapped for another item to free its slot, or is it locked in? What size is it (assumed Small)?
+- **More than one auto-attack item:** can a hero equip two auto-attack items at once, and if so, do both fire?
+- **Basic auto-attack:** is it the same for every hero, or set per hero (for example, a Ranger's differs from a Warden's)? Can it be infused? (It has no slot, so presumably not.)
+- **Act 3 collapse numbers:** triple the Act 1 numbers (30), or something else?

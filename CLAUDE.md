@@ -60,9 +60,9 @@ tools/         headless sim runner, data validators
 
 ## Item rules
 
-- The auto-attack is an item in the row and **takes up a slot**.
+- Every unit has a built-in **basic auto-attack** (no slot). **Auto-attack items** replace it, take up slots, and can be Small, Medium, or Large. Remove the item and the unit falls back to its basic auto-attack.
 - **Two** copies of the same item at the same tier combine into the next tier (never three). If the new copy has an infusion, it replaces the old one (and the old XP is lost); if not, the old infusion and its XP stay. The player chooses whether to combine. Copies at *different* tiers can be held together.
-- Tier and rarity are separate. Rarity decides how often an item appears; any item can be tiered up. Shops sell only the lowest tier (except tier-specific shops).
+- Tier and rarity are separate. Rarity decides how often an item appears; any item can be tiered up. Tiers are **C → B → A → S** (same as hero ranks); every item starts at C. Shops sell only tier C (except tier-specific shops).
 - Every item has its own crit chance (default 0). Crit damage multiplier is a tuning value (150%).
 - Enemies use hand-made, fixed item layouts with set tiers, built from the same item system; some items are enemy-only. Some enemy teams carry relics (enemy-only relics exist too). Every fight guarantees one drop from the enemy team's items and relics, enemy-only ones included.
 
@@ -70,7 +70,7 @@ tools/         headless sim runner, data validators
 
 - Items are per hero; the relic board is shared by the team. Items can move between heroes freely between fights (never during combat).
 - Roster cap 6, fielded heroes 3–5. Benched heroes' Backup effects still apply.
-- Rift Collapse starts at 45s of combat and deals **flat** damage (never % of max HP) that grows every second; fights should end by ~60s. There is no hard time limit, but a fight still running at **180s is a tie, and a tie counts as a guild victory**.
+- Rift Collapse starts at 45s of combat and deals **flat** damage (never % of max HP) that grows every second, hitting **Shield before HP**. From 90s the growth itself accelerates. The numbers are set per act (Act 2 = double Act 1) in `data/`. Early fights end around 60s; later ones can run much longer. There is no hard time limit, but a fight still running at **180s is a tie**, as is both sides dying on the same tick, and **a tie counts as a guild victory**.
 - Formation for now: each side has fixed **front and back rows**, ordered left to right. The hex arena comes later, so don't build hex code until asked.
 - PvE only. Don't add networking or PvP code.
 
