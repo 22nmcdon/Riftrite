@@ -115,33 +115,22 @@
     "kind": "elite"
   },
   {
-    "id": "rift_throne",
-    "name": "The Rift Throne",
+    "id": "the_ash_mother",
+    "name": "The Ash Mother",
     "act": 1,
     "kind": "boss",
-    "_note": "Placeholder boss until the boss step: the act's strongest team.",
-    "relics": [
-      "gloam_totem"
-    ],
+    "_note": "Act 1 boss: Old Mother Ash behind two Ash Hounds (docs/plans/act1-boss.md).",
     "units": [
       {
-        "enemy": "rift_sentinel",
+        "enemy": "ash_hound",
         "row": "front"
       },
       {
-        "enemy": "rift_hound",
+        "enemy": "ash_hound",
         "row": "front"
       },
       {
-        "enemy": "rift_sentinel",
-        "row": "front"
-      },
-      {
-        "enemy": "gloam_witch",
-        "row": "back"
-      },
-      {
-        "enemy": "gloam_witch",
+        "enemy": "mother_ash",
         "row": "back"
       }
     ]

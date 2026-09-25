@@ -138,5 +138,141 @@
       }
     ],
     "essence": "venom"
+  },
+  {
+    "id": "ash_hound",
+    "name": "Ash Hound",
+    "_note": "A Rift Hound of Old Mother Ash's pack, carrying Pack Bond.",
+    "stats": {
+      "hp": 650,
+      "atk": 16,
+      "def": 10,
+      "atsp": 10
+    },
+    "tier": "c",
+    "basic_attack": {
+      "id": "snap",
+      "name": "Snap",
+      "cooldown_ms": 1000,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 4,
+          "target": "enemy_front",
+          "scaling": {
+            "atk": 5000
+          }
+        }
+      ]
+    },
+    "items": [
+      {
+        "item": "rift_claw"
+      },
+      {
+        "item": "pack_bond"
+      }
+    ],
+    "essence": "wrath"
+  },
+  {
+    "id": "mother_ash",
+    "name": "Old Mother Ash",
+    "_note": "Act 1 boss (placeholder name): fights behind her pack and grows worse as she's hurt.",
+    "stats": {
+      "hp": 11000,
+      "atk": 50,
+      "def": 15
+    },
+    "tier": "c",
+    "basic_attack": {
+      "id": "ash_bite",
+      "name": "Ash Bite",
+      "cooldown_ms": 1400,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 5,
+          "target": "enemy_front",
+          "scaling": {
+            "atk": 5000
+          }
+        }
+      ]
+    },
+    "items": [
+      {
+        "item": "ember_maw"
+      }
+    ],
+    "essence": "ember",
+    "phases": [
+      {
+        "name": "Molt",
+        "below_hp_bp": 6000,
+        "parts": [
+          {
+            "key": "fury",
+            "kind": "aura",
+            "target": "holder",
+            "stat": "atsp_bp",
+            "value": 13000
+          },
+          {
+            "key": "rend",
+            "kind": "grant",
+            "filter": {
+              "auto_attack": true
+            },
+            "effect": {
+              "trigger": "on_hit",
+              "type": "apply_status",
+              "status": "bleed",
+              "stacks": 1,
+              "target": "hit_target"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Last Ember",
+        "below_hp_bp": 2500,
+        "parts": [
+          {
+            "key": "breath",
+            "kind": "ability",
+            "name": "Ember Breath",
+            "cooldown_ms": 3000,
+            "effects": [
+              {
+                "trigger": "on_fire",
+                "type": "apply_status",
+                "status": "burn",
+                "stacks": 8,
+                "target": "all_enemies"
+              }
+            ]
+          },
+          {
+            "key": "hide",
+            "kind": "ability",
+            "name": "Last Hide",
+            "effects": [
+              {
+                "trigger": "on_fight_start",
+                "type": "shield",
+                "amount": 300,
+                "scaling": {
+                  "def": 10000
+                },
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 ]

@@ -79,6 +79,11 @@ tools/         headless sim runner, data validators
 - Each part applies when `fielded`, `benched`, or `always`.
 - A part that replaces the basic attack must come with an `auto_attack` part, so equipping an auto-attack item never blanks the specialization.
 
+## Boss rules
+
+- Bosses (and any enemy) can have **HP-threshold phases** (`PhaseDef`, `docs/plans/act1-boss.md`). A phase is entered once, the first time the enemy drops below its threshold while still standing, and is made of specialization-style parts; a same-key part replaces an earlier one. Summons (units joining mid-fight) come later.
+- **Legendary relics are boss relics:** only the boss's relic choice and rare events give them.
+
 ## Item rules
 
 - Every unit has a built-in **basic auto-attack** (no slot). Each hero's basic auto-attack is their own and **can't be upgraded** (no sockets, no tier). **Auto-attack items** replace it, take up slots, and can be Small, Medium, or Large. **Max one auto-attack item per hero.** Remove the item and the unit falls back to its basic auto-attack.

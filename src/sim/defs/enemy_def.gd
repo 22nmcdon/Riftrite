@@ -15,6 +15,8 @@ var items: Array[LoadoutEntry] = []
 ## The essence this enemy type yields when harvested (run layer: shards and
 ## essence rewards), or "".
 var essence: String = ""
+## HP-threshold phases (usually a boss's), highest threshold first.
+var phases: Array[PhaseDef] = []
 
 
 static func read(reader: DataReader) -> EnemyDef:
@@ -31,5 +33,10 @@ static func read(reader: DataReader) -> EnemyDef:
 	def.items = LoadoutEntry.read_list(reader, "items")
 	if reader.has("essence"):
 		def.essence = reader.req_string("essence")
+	for phase_reader: DataReader in reader.opt_object_array("phases"):
+		var phase: PhaseDef = PhaseDef.read(phase_reader, def.id)
+		if not def.phases.is_empty() and phase.below_hp_bp >= def.phases[-1].below_hp_bp:
+			phase_reader.error("phases go from the highest HP threshold to the lowest")
+		def.phases.append(phase)
 	reader.finish()
 	return def

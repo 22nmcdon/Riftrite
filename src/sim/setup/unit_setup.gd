@@ -28,6 +28,8 @@ var backup: BackupDef = null
 ## The hero's rank-B specialization, or null. Which parts apply depends on
 ## the rank (locked potential) and on fielded vs benched.
 var specialization: SpecializationDef = null
+## HP-threshold phases (enemies; see PhaseDef).
+var phases: Array[PhaseDef] = []
 
 
 static func make(unit_id: String, unit_name: String, unit_stats: UnitStats, unit_row: Row, unit_slots: int, basic: ItemDef, row_items: Array[ItemSetup] = [], unit_rank: int = 0) -> UnitSetup:

@@ -365,10 +365,12 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 
 - **Doubled spill:** does any pure double keep it? Overgrowth (Verdant + Verdant) is the first one to test.
 - **Act 3 collapse numbers:** to be decided later.
+- **Bosses** have HP-threshold phases (built from the same parts as specializations). Summons (units joining mid-fight) come later. The Act 1 boss is Old Mother Ash and her pack (`docs/plans/act1-boss.md`).
 - **Enemy-only items** can end up with the guild (fight drops include them). The Caravan never sells them, so the only ways to upgrade one are a second copy from random loot (not the Caravan) or an upgrade stop.
 - **Day structure (decided):**
   - **Stops:** the Upgrade stop (free, one item up one tier) is always the stop right before the boss and appears nowhere else. A Retrain stop switches a hero's specialization.
-  - **Relics:** you pick 1 of 3 after every elite and after the boss (the boss's are more powerful, game-altering). A relic merchant event sells one; the Caravan never sells relics.
+  - **Relics:** you pick 1 of 3 after every elite and after the boss. A relic merchant event sells one; the Caravan never sells relics.
+  - **Legendary relics are boss relics:** game-altering, and obtainable only by winning a boss fight (its relic choice is all Legendary) or from rare events at an event stop.
   - **Keys:** elites drop one half the time, and some events give one.
   - **Essences:**
     - a normal win gives 1 shard of the enemy team's essence, and 3 shards make an essence

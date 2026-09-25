@@ -321,6 +321,8 @@ static func _add_event(state: RunState, content: ContentDb, run: RunContent, rng
 			_add_relic_offers(state, content, rng, run.economy.relic_weights, 1, "", 0)
 		"relic_merchant":
 			_add_relic_offers(state, content, rng, run.economy.relic_weights, run.economy.relic_choices, "merchant", -1, run.economy)
+		"legendary_relic":
+			_add_relic_offers(state, content, rng, _rarity_only("legendary"), 1, "", 0)
 		"essence":
 			state.offers.append({"type": "essence", "essence": content.essence_ids[rng.range_int(content.essence_ids.size())], "price": 0, "taken": false})
 		"key":

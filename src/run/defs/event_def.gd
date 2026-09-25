@@ -7,10 +7,11 @@ extends RefCounted
 ##   item_by_tier     a random item, tier by the loot tier weights
 ##   relic_by_rarity  a random relic, by the relic rarity weights
 ##   relic_merchant   buy 1 of the economy's relic_choices relics, or leave
+##   legendary_relic  a Legendary relic (a boss relic; rare events only)
 ##   essence          a random essence
 ##   key              a key
 
-const KINDS: Array[String] = ["gold", "item_by_rarity", "item_by_tier", "relic_by_rarity", "relic_merchant", "essence", "key"]
+const KINDS: Array[String] = ["gold", "item_by_rarity", "item_by_tier", "relic_by_rarity", "relic_merchant", "legendary_relic", "essence", "key"]
 
 var id: String
 var name: String

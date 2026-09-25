@@ -14,7 +14,8 @@ const BACK := UnitSetup.Row.BACK
 ## (a grant, filtered and side-wide auras, and every relic trigger), and
 ## real synergies (Paper Cuts' charge, the Wildfire Torch transformation,
 ## and Ember Resonance), and specializations at rank S: a fielded one with a
-## new basic attack and auto-attack grants, and a benched one.
+## new basic attack and auto-attack grants, and a benched one; and an enemy
+## with the Act 1 boss's phases.
 func _chaotic_fight(seed_value: int) -> FightSetup:
 	var scatter: ItemDef = K.item("scatter", {"cooldown_ms": 700, "crit_chance_bp": 3000, "effects": K.damage(9, "enemy_random")})
 	var cleave: ItemDef = K.item("cleave", {"size": 2, "rarity": "epic", "tags": ["weapon"], "cooldown_ms": 2150, "crit_chance_bp": 2000, "effects": K.damage(25)})
@@ -34,6 +35,7 @@ func _chaotic_fight(seed_value: int) -> FightSetup:
 	setup.heroes[0].specialization = _real_spec_for("brannoc_ironbrand", "warden")
 	setup.bench[0].rank = 3
 	setup.bench[0].specialization = K.content().specializations["vell_vigil_keeper"]
+	setup.enemies[0].phases = K.content().enemies["mother_ash"].phases
 	return setup
 
 
@@ -66,7 +68,7 @@ func test_same_seed_same_log() -> void:
 	assert_eq(first.combat_log.of_kind(LogEntry.Kind.AURA).size() >= 2, true, "auras start and end")
 	assert_string_contains(first.combat_log.to_text(), "(Cinder Crown) applies", "a relic grant fires")
 	assert_string_contains(first.combat_log.to_text(), "relic · Pilgrim's Flask heals", "a cooldown relic fires")
-	for expected: String in ["warden · Brand Blow", "(Ironbrand S) charges", "vell · Shelter (backup)", "Paper Cuts: striker", "Wildfire Torch: striker", "Ember Resonance (3): 3 Ember", "(Paper Cuts) charges Whetstone"]:
+	for expected: String in ["ghoul_a enters Molt", "warden · Brand Blow", "(Ironbrand S) charges", "vell · Shelter (backup)", "Paper Cuts: striker", "Wildfire Torch: striker", "Ember Resonance (3): 3 Ember", "(Paper Cuts) charges Whetstone"]:
 		assert_string_contains(first.combat_log.to_text(), expected)
 	assert_eq(first.combat_log.to_text(), second.combat_log.to_text())
 	assert_eq(first.outcome, second.outcome)

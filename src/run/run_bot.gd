@@ -26,6 +26,9 @@ class Report:
 	var gold_by_day: Array[int] = []
 	var bought: Array[String] = []
 	var discovered: Array[String] = []
+	## Reached the act's last day (the boss), and how many boss fights it took.
+	var reached_boss: bool = false
+	var boss_fights: int = 0
 	var errors: Array[String] = []
 
 
@@ -44,6 +47,7 @@ static func play(run_seed: int, content: ContentDb, run: RunContent) -> Report:
 	report.losses = state.losses
 	report.wins = state.wins
 	report.discovered = state.discovered.duplicate()
+	report.reached_boss = state.day >= run.act(state.act).days
 	var problems: Array[String] = state.check(content)
 	report.errors.append_array(problems)
 	return report
@@ -72,6 +76,8 @@ static func _act(state: RunState, content: ContentDb, run: RunContent, report: R
 			_must(RunFlow.leave_stop(state), report)
 		"fight":
 			_organize(state, content)
+			if run.act(state.act).is_boss_day(state.day):
+				report.boss_fights += 1
 			var fought: Array = RunFlow.fight(state, content, run)
 			_must(fought[0], report)
 		"rewards":

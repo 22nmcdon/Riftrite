@@ -18,7 +18,12 @@ static func lines(reports: Array[RunBot.Report], first_seed: int) -> PackedStrin
 	var gold_counts: Array[int] = []
 	var bought: Dictionary[String, int] = {}
 	var found: Dictionary[String, int] = {}
+	var reached_boss: int = 0
+	var boss_fights: int = 0
 	for report: RunBot.Report in reports:
+		if report.reached_boss:
+			reached_boss += 1
+			boss_fights += report.boss_fights
 		if report.ending == "act_end":
 			cleared += 1
 		elif report.ending == "stuck" or not report.errors.is_empty():
@@ -41,6 +46,8 @@ static func lines(reports: Array[RunBot.Report], first_seed: int) -> PackedStrin
 			found[id] = found.get(id, 0) + 1
 	out.append("Act cleared: %d%% (%d of %d)" % [roundi(100.0 * cleared / count), cleared, count])
 	out.append("Losses per run: %.2f" % (float(losses) / count))
+	if reached_boss > 0:
+		out.append("Boss: reached in %d runs, beaten in %d (%d%%), %.2f fights each" % [reached_boss, cleared, roundi(100.0 * cleared / reached_boss), float(boss_fights) / reached_boss])
 	var endings: PackedStringArray = PackedStringArray()
 	for i: int in ended_on.size():
 		if ended_on[i] > 0:

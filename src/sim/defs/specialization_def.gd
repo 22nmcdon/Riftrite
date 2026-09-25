@@ -93,7 +93,7 @@ static func read(reader: DataReader) -> SpecializationDef:
 				continue
 			var keys: Array[String] = []
 			for part_reader: DataReader in ranks_reader.opt_object_array(RANK_KEYS[r]):
-				var part: Part = _read_part(def, part_reader, r)
+				var part: Part = read_part(part_reader, "%s %s" % [def.name, RANK_KEYS[r].to_upper()], def.id, RANK_KEYS[r].to_upper())
 				if keys.has(part.key):
 					part_reader.error("key \"%s\" is used twice in rank %s" % [part.key, RANK_KEYS[r]])
 				keys.append(part.key)
@@ -106,14 +106,17 @@ static func read(reader: DataReader) -> SpecializationDef:
 	return def
 
 
-static func _read_part(def: SpecializationDef, reader: DataReader, rank: int) -> Part:
+## Reads one part. `label` credits it in the log ("Hearthwall A", or an
+## enemy phase's name); `id_prefix` makes its ability item's id unique.
+## Enemy phases use this too (EnemyDef).
+static func read_part(reader: DataReader, label: String, id_prefix: String, rank_label: String = "") -> Part:
 	var part := Part.new()
 	part.key = reader.req_string("key")
 	var kind_name: String = reader.req_choice("kind", KIND_NAMES)
 	part.kind = maxi(KIND_NAMES.find(kind_name), 0) as Kind
 	part.when = maxi(WHEN_NAMES.find(reader.opt_string_choice("when", "fielded", WHEN_NAMES)), 0) as When
-	part.rank_label = RANK_KEYS[rank].to_upper()
-	part.label = "%s %s" % [def.name, part.rank_label]
+	part.rank_label = rank_label
+	part.label = label
 	if kind_name.is_empty():
 		reader.finish()
 		return part
@@ -129,7 +132,7 @@ static func _read_part(def: SpecializationDef, reader: DataReader, rank: int) ->
 			part.grant = GrantDef.read(reader, true)
 			return part
 		Kind.ABILITY:
-			part.item = _read_ability(def, part, reader)
+			part.item = _read_ability(id_prefix, part, reader)
 		Kind.BASIC_ATTACK:
 			var attack_reader: DataReader = reader.req_object("basic_attack")
 			if attack_reader != null:
@@ -151,9 +154,9 @@ static func _read_part(def: SpecializationDef, reader: DataReader, rank: int) ->
 
 
 ## An ability as a slotless item that fires from the hero.
-static func _read_ability(def: SpecializationDef, part: Part, reader: DataReader) -> ItemDef:
+static func _read_ability(id_prefix: String, part: Part, reader: DataReader) -> ItemDef:
 	var item := ItemDef.new()
-	item.id = "%s_%s" % [def.id, part.key]
+	item.id = "%s_%s" % [id_prefix, part.key]
 	# The log names the specialization: "Catch (Hearthwall A)", or just
 	# "Hearthwall A" for an unnamed ability.
 	item.name = "%s (%s)" % [reader.req_string("name"), part.label] if reader.has("name") else part.label

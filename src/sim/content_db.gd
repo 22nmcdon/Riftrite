@@ -239,6 +239,9 @@ func _check_references() -> void:
 		if enemy.basic_attack != null:
 			_check_effects(enemy.basic_attack.effects, where + ".basic_attack")
 		check_loadout(enemy.items, where, true)
+		for phase: PhaseDef in enemy.phases:
+			for part: SpecializationDef.Part in phase.parts:
+				_check_part(part, "%s.phases (%s).%s" % [where, phase.name, part.key])
 		if not enemy.essence.is_empty() and not essences.has(enemy.essence):
 			errors.append("%s: unknown essence \"%s\"" % [where, enemy.essence])
 	for id: String in encounter_ids:
@@ -276,23 +279,28 @@ func _check_specialization(specialization: SpecializationDef, where: String) -> 
 	if not heroes.has(specialization.hero):
 		errors.append("%s: unknown hero \"%s\"" % [where, specialization.hero])
 	for part: SpecializationDef.Part in specialization.all_parts():
-		var at: String = "%s.%s" % [where, part.key]
-		if part.aura != null:
-			var auras_list: Array[AuraDef] = [part.aura]
-			_check_auras(auras_list, at)
-		if part.grant != null:
-			var grant_effects: Array[EffectDef] = [part.grant.effect]
-			_check_effects(grant_effects, at)
-			_check_filter(part.grant.filter, at)
-			_check_no_partners(grant_effects, at)
-		if part.item != null:
-			_check_effects(part.item.effects, at)
-			_check_no_partners(part.item.effects, at)
-		if part.backup != null:
-			_check_effects(part.backup.effects, at)
-		for status_id: String in [part.replace_from, part.replace_to]:
-			if part.kind == SpecializationDef.Kind.REPLACE_STATUS and not statuses.has(status_id):
-				errors.append("%s: unknown status \"%s\"" % [at, status_id])
+		_check_part(part, "%s.%s" % [where, part.key])
+
+
+## Checks what a specialization or phase part names: statuses, filters, and
+## that no charge uses partner_items.
+func _check_part(part: SpecializationDef.Part, at: String) -> void:
+	if part.aura != null:
+		var auras_list: Array[AuraDef] = [part.aura]
+		_check_auras(auras_list, at)
+	if part.grant != null:
+		var grant_effects: Array[EffectDef] = [part.grant.effect]
+		_check_effects(grant_effects, at)
+		_check_filter(part.grant.filter, at)
+		_check_no_partners(grant_effects, at)
+	if part.item != null:
+		_check_effects(part.item.effects, at)
+		_check_no_partners(part.item.effects, at)
+	if part.backup != null:
+		_check_effects(part.backup.effects, at)
+	for status_id: String in [part.replace_from, part.replace_to]:
+		if part.kind == SpecializationDef.Kind.REPLACE_STATUS and not statuses.has(status_id):
+			errors.append("%s: unknown status \"%s\"" % [at, status_id])
 
 
 func _check_synergy(synergy: SynergyDef, where: String) -> void:

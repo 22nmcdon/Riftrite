@@ -259,7 +259,7 @@ func test_the_upgrade_stop_comes_before_the_boss() -> void:
 	var state: RunState = _started()
 	state.day = 6
 	RunFlow._start_day(state, _content(), _run())
-	assert_eq(state.encounter_id, "rift_throne")
+	assert_eq(state.encounter_id, "the_ash_mother")
 	assert_true(RunFlow.leave_caravan(state, _content(), _run()).ok)
 	assert_eq([state.phase, state.stop_kind], ["stop", "upgrade"])
 	var claw: RunItem = RunItem.make(state.take_uid(), "rift_claw", 0)
@@ -335,7 +335,7 @@ func test_the_first_loss_replays_the_day_and_the_second_ends_the_run() -> void:
 	var gold: int = state.gold
 	var fought: Array = RunFlow.fight(state, _content(), _run())
 	assert_false((fought[1] as FightResult).guild_won(), "one C hero against the boss")
-	assert_eq([state.phase, state.day, state.attempt, state.losses, state.encounter_id], ["caravan", 6, 1, 1, "rift_throne"])
+	assert_eq([state.phase, state.day, state.attempt, state.losses, state.encounter_id], ["caravan", 6, 1, 1, "the_ash_mother"])
 	assert_eq(state.gold, gold + 10, "bonus gold: 10 + 5 per win (none yet)")
 	assert_ne(JSON.stringify(state.offers), caravan_before, "a fresh Caravan")
 	_to_fight(state)
@@ -371,7 +371,7 @@ func test_beating_the_boss_ends_the_act() -> void:
 	for offer: Dictionary in state.offers:
 		if offer.get("group", "") == "relic_choice":
 			relic_choices += 1
-			assert_ne(_content().relics[offer["relic"]].rarity, "common", "the boss's relics are stronger")
+			assert_eq(_content().relics[offer["relic"]].rarity, "legendary", "boss relics are Legendary")
 	assert_eq(relic_choices, 3)
 	assert_true(RunFlow.done(state, _content(), _run()).ok)
 	assert_eq(state.phase, "act_end")

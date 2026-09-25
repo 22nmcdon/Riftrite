@@ -25,7 +25,7 @@ func test_real_run_data_loads() -> void:
 	var run: RunContent = RunContent.load_dir("res://data", K.content())
 	assert_eq(run.errors, [] as Array[String])
 	var act: ActDef = run.act(1)
-	assert_eq([act.days, act.elite_days, act.boss], [6, [3, 5] as Array[int], "rift_throne"])
+	assert_eq([act.days, act.elite_days, act.boss], [6, [3, 5] as Array[int], "the_ash_mother"])
 	assert_eq(act.encounters_for(act.normal, 1), ["pup_litter"] as Array[String])
 	assert_true(act.is_boss_day(6))
 	assert_eq(run.economy.sell_price(9), 4, "half, rounded down")

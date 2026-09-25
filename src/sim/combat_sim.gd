@@ -12,7 +12,8 @@ extends RefCounted
 ##   4. Resolve those firings in resolution order: heroes then enemies, front
 ##      row then back, left to right, and each unit's items in row order.
 ##      Each side's relics act right after its units (RelicRunner).
-##   5. Relics' on_ally_below_hp checks.
+##   5. Relics' on_ally_below_hp checks, then enemy phases (PhaseDef) for
+##      anyone who just dropped below a threshold.
 ##   6. Units at 0 HP die. They still fired whatever was ready this tick,
 ##      so resolution order gives neither side an edge.
 ##   7. Check for victory, defeat, or a tie.
@@ -47,6 +48,9 @@ var _aura_boundaries: Dictionary[int, bool] = {}
 ## Auras active after the last rederive_all, as "unit:item:aura" keys, for
 ## logging when they start and end.
 var _active_auras: Array[String] = []
+## Per aura key: [EffectSource, AuraDef], for the start and end log lines.
+## Looked up by key only (never iterated).
+var _aura_info: Dictionary[String, Array] = {}
 var outcome: FightResult.Outcome = FightResult.Outcome.TIE
 
 
@@ -126,6 +130,10 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 		for part: SpecializationDef.Part in unit.spec_parts:
 			if part.aura != null:
 				all_auras.append(part.aura)
+		for phase: PhaseDef in unit.phases:
+			for part: SpecializationDef.Part in phase.parts:
+				if part.aura != null:
+					all_auras.append(part.aura)
 	for aura: AuraDef in all_auras:
 		if aura.window_from_ticks > 0:
 			_aura_boundaries[aura.window_from_ticks] = true
@@ -165,6 +173,7 @@ func step() -> void:
 				EffectRunner.fire(self, item)
 		RelicRunner.fire_due(self, side)
 	RelicRunner.check_below_hp(self)
+	_check_phases()
 
 	_process_deaths()
 	_check_end()
@@ -197,7 +206,7 @@ func rederive_all() -> void:
 				var aura: AuraDef = item.def.auras[a]
 				if not aura.active_at(tick):
 					continue
-				now_active.append("%d:%d:%d" % [u, i, a])
+				_note_aura(now_active, "%d:%s:%d:%d" % [u, item.def.id, item.slot, a], EffectSource.make(holder.id, item.def.id, item.def.name), aura)
 				var label: String = item.def.name if aura.label.is_empty() else "%s (%s)" % [aura.label, item.def.name]
 				var item_targets: Array[ItemState] = []
 				if aura.target == AuraDef.Target.ALL_ITEMS:
@@ -215,7 +224,7 @@ func rederive_all() -> void:
 				SpecializationDef.Kind.AURA:
 					if not part.aura.active_at(tick):
 						continue
-					now_active.append("p:%d:%d" % [u, p])
+					_note_aura(now_active, "p:%d:%s:%s" % [u, part.label, part.key], EffectSource.make(holder.id, part.label, part.label), part.aura)
 					var item_targets: Array[ItemState] = []
 					if part.aura.target == AuraDef.Target.HOLDER_ITEMS:
 						item_targets = holder.items
@@ -240,7 +249,7 @@ func rederive_all() -> void:
 			var aura: AuraDef = relic.def.auras[a]
 			if not aura.active_at(tick):
 				continue
-			now_active.append("r:%d:%d" % [r, a])
+			_note_aura(now_active, "r:%d:%d" % [r, a], relic.source(), aura)
 			var label: String = relic.def.name if aura.label.is_empty() else "%s (%s)" % [aura.label, relic.def.name]
 			var item_targets: Array[ItemState] = []
 			var unit_targets: Array[UnitState] = []
@@ -405,26 +414,17 @@ func _log_aura_changes(now_active: Array[String]) -> void:
 	_active_auras = now_active
 
 
+## Records an active aura under a stable key, with what the log needs to
+## say when it starts or ends.
+func _note_aura(now_active: Array[String], key: String, source: EffectSource, aura: AuraDef) -> void:
+	now_active.append(key)
+	_aura_info[key] = [source, aura]
+
+
 func _log_aura(key: String, change: String) -> void:
-	var parts: PackedStringArray = key.split(":")
-	var aura: AuraDef
-	var source: EffectSource
-	if parts[0] == "p":
-		var hero: UnitState = units[parts[1].to_int()]
-		var part: SpecializationDef.Part = hero.spec_parts[parts[2].to_int()]
-		aura = part.aura
-		source = EffectSource.make(hero.id, part.label, part.label)
-	elif parts[0] == "r":
-		var relic: RelicState = bonuses()[parts[1].to_int()]
-		aura = relic.def.auras[parts[2].to_int()]
-		source = relic.source()
-	else:
-		var holder: UnitState = units[parts[0].to_int()]
-		var item: ItemState = holder.items[parts[1].to_int()]
-		aura = item.def.auras[parts[2].to_int()]
-		source = EffectSource.make(holder.id, item.def.id, item.def.name)
-	var entry: LogEntry = new_entry(LogEntry.Kind.AURA, source)
-	entry.note = "%s: %s" % [change, aura.describe()]
+	var info: Array = _aura_info[key]
+	var entry: LogEntry = new_entry(LogEntry.Kind.AURA, info[0])
+	entry.note = "%s: %s" % [change, (info[1] as AuraDef).describe()]
 	combat_log.add(entry)
 
 
@@ -525,6 +525,64 @@ func _apply_collapse() -> void:
 		entry.absorbed = apply_damage(unit, damage)
 		unit.last_hit_by = "Rift Collapse"
 		combat_log.add(entry)
+
+
+## Units that just dropped below their next phase's threshold (while still
+## standing) begin it; several phases crossed at once begin in order.
+func _check_phases() -> void:
+	var new_abilities: Array[ItemState] = []
+	var any_entered: bool = false
+	for unit: UnitState in units:
+		while unit.phases_entered < unit.phases.size() and unit.is_standing() \
+				and unit.hp * FixedMath.BP_ONE < unit.max_hp * unit.phases[unit.phases_entered].below_hp_bp:
+			var phase: PhaseDef = unit.phases[unit.phases_entered]
+			unit.phases_entered += 1
+			new_abilities.append_array(_enter_phase(unit, phase))
+			any_entered = true
+	if not any_entered:
+		return
+	rederive_all()
+	for item: ItemState in new_abilities:
+		for i: int in item.def.effects.size():
+			if item.def.effects[i].trigger == EffectDef.Trigger.ON_FIGHT_START:
+				EffectRunner.run_triggered(self, item, item.effects[i], null)
+
+
+## Applies a phase's parts to `unit` (same key replaces) and logs it.
+## Returns the ability items it added.
+func _enter_phase(unit: UnitState, phase: PhaseDef) -> Array[ItemState]:
+	var entry := LogEntry.new()
+	entry.tick = tick
+	entry.kind = LogEntry.Kind.PHASE
+	entry.target = unit.id
+	entry.note = phase.name
+	combat_log.add(entry)
+	var added: Array[ItemState] = []
+	for part: SpecializationDef.Part in phase.parts:
+		match part.kind:
+			SpecializationDef.Kind.ABILITY:
+				if unit.phase_abilities.has(part.key):
+					unit.items.erase(unit.phase_abilities[part.key])
+				var ability: ItemState = ItemState.make(part.item, -1, unit.stats, content)
+				ability.owner_index = units.find(unit)
+				unit.items.append(ability)
+				unit.phase_abilities[part.key] = ability
+				added.append(ability)
+			SpecializationDef.Kind.BASIC_ATTACK:
+				for i: int in unit.items.size():
+					if unit.items[i].def.is_basic_attack:
+						var attack: ItemState = ItemState.make(part.item, -1, unit.stats, content)
+						attack.owner_index = units.find(unit)
+						unit.items[i] = attack
+			_:
+				var replaced: bool = false
+				for i: int in unit.spec_parts.size():
+					if unit.spec_parts[i].key == part.key:
+						unit.spec_parts[i] = part
+						replaced = true
+				if not replaced:
+					unit.spec_parts.append(part)
+	return added
 
 
 func _process_deaths() -> void:

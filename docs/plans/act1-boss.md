@@ -1,6 +1,6 @@
 # Plan: the Act 1 boss (Phase 3, step 6)
 
-Status: **proposed, awaiting approval and answers (end of file).** Nothing here is built yet.
+Status: **built** (Phase 3, step 6). Answers, notes, and balance findings are at the end.
 
 **What the design asks for:**
 - An act ends in a boss "with a unique mechanic".
@@ -64,9 +64,36 @@ One new piece: **enemy phases.** An enemy can list phases, each entered once whe
   - the run bot reports how often runs that reach day 6 win
   - target: a guild that reaches the boss wins about half the time
 
-## Questions
+## Answers
 
-1. **The concept:** is Old Mother Ash and her pack the right kind of first boss? Or would you rather have something else, such as a lone colossus with no adds?
-2. **Phases:** are HP-threshold phases the right shape for bosses in general?
-3. **Summons:** should a boss be able to call **new** units mid-fight (say, a pup at each phase)? That's a bigger sim change (units joining a fight). I'd leave it for a later act unless you want it now.
-4. **Boss relics:** the boss's relic choice currently draws from the general pool, weighted to Rare, Epic, and Legendary. Should I draft a few **boss-only** relics now (game-altering, only from boss choices), or leave that for the content step?
+1. **Old Mother Ash is fine for now;** we'll see how she feels.
+2. **HP-threshold phases** are the shape for bosses.
+3. **Summons wait** for a later fight or a later update to this one.
+4. **Boss relics are Legendary relics.** They come only from winning a boss fight or from rare events at an event stop. So:
+   - the boss's relic choice draws from Legendary relics only
+   - Legendary relics never come from elites, Loot, the Vault, other events, or the relic merchant
+   - a rare event, the Ancient Reliquary, offers one
+   - drafting a few Legendary relics is part of this step
+
+## Built notes
+
+- **Code:**
+  - `PhaseDef` (parts read with `SpecializationDef.read_part`)
+  - `EnemyDef.phases` and `UnitSetup.phases`
+  - `CombatSim._check_phases`, which runs after relics' HP triggers and before deaths
+  - a new `LogEntry.Kind.PHASE`
+- **Aura log lines** now remember each aura's source when it starts, so parts that change mid-fight (phases) still log their start and end correctly.
+- **Data:**
+  - the enemies `ash_hound` (a Rift Hound carrying Pack Bond) and `mother_ash`
+  - the items `pack_bond` and `ember_maw` (both enemy-only)
+  - the encounter `the_ash_mother` (Act 1's boss; the placeholder Rift Throne is gone)
+  - 4 Legendary relics: The Ashen Crown, The Undying Lantern, The Everflame Hourglass, and The Rift-Eater's Fang
+  - the rare Ancient Reliquary event (weight 1, against 5 for each other event)
+  - Legendary weights set to 0 everywhere but the boss's relic choice
+- **Her numbers:** 11000 HP, 50 ATK, 15 DEF. Ember Breath applies 8 Burn to every hero every 3s, and Last Hide is a 300 + DEF shield.
+
+## Balance findings (placeholders)
+
+- **The run bot** (`tools/run_runner.gd -- --runs=200 --seed=1`): 59 of 200 runs reach her, and **58% of those beat her** (1.15 boss fights each, counting a replay after a loss). 17% of runs clear the act.
+- **The fixed balance parties** (four heroes at C or A, no relics) all lose to her now, in about 55s. By day 6, a bot run's guild is much stronger than those parties (more heroes, higher tiers, relics, infusions).
+- **Tuning steps tried** (bot win rate against the boss): 2400 HP → 100%, 5000 → 97%, 7500 → 88%, 11000 → 58%.
