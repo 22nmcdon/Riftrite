@@ -12,6 +12,8 @@ var name: String
 var hero_class: String
 var stats: UnitStats
 var basic_attack: ItemDef
+## The hero's own Backup effect, or null.
+var backup: BackupDef = null
 
 
 static func read(reader: DataReader) -> HeroDef:
@@ -24,6 +26,10 @@ static func read(reader: DataReader) -> HeroDef:
 	var attack_reader: DataReader = reader.req_object("basic_attack")
 	if attack_reader != null:
 		def.basic_attack = ItemDef.read_basic_attack(attack_reader)
+	if reader.has("backup"):
+		var backup_reader: DataReader = reader.req_object("backup")
+		if backup_reader != null:
+			def.backup = BackupDef.read(backup_reader, false)
 	reader.finish()
 	return def
 

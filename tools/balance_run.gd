@@ -19,7 +19,10 @@ class PartyHero:
 class Party:
 	var id: String
 	var name: String
+	## Fielded heroes.
 	var heroes: Array[PartyHero] = []
+	## Heroes in backup.
+	var bench: Array[PartyHero] = []
 
 
 class Parties:
@@ -85,31 +88,39 @@ static func parse_parties(content: ContentDb, data: Variant, label: String) -> P
 		if ids.has(party.id):
 			reader.error("duplicate party id \"%s\"" % party.id)
 		ids.append(party.id)
-		for hero_reader: DataReader in reader.opt_object_array("heroes"):
-			var hero := PartyHero.new()
-			hero.hero_id = hero_reader.req_string("hero")
-			hero.rank = maxi(TuningDef.TIER_NAMES.find(hero_reader.opt_string_choice("rank", "c", TuningDef.TIER_NAMES)), 0)
-			hero.row = maxi(EncounterDef.ROW_NAMES.find(hero_reader.opt_string_choice("row", "front", EncounterDef.ROW_NAMES)), 0) as UnitSetup.Row
-			hero.items = LoadoutEntry.read_list(hero_reader, "items")
-			hero_reader.finish()
-			if not content.heroes.has(hero.hero_id):
-				hero_reader.error("unknown hero \"%s\"" % hero.hero_id)
-			party.heroes.append(hero)
+		party.heroes = _read_heroes(content, reader, "heroes")
+		party.bench = _read_heroes(content, reader, "bench")
 		reader.finish()
 		# Reuse the content checks for item references (heroes can't carry enemy-only items).
 		var checker := ContentDb.new()
 		checker.items = content.items
 		checker.essences = content.essences
-		for hero: PartyHero in party.heroes:
+		for hero: PartyHero in party.heroes + party.bench:
 			checker.check_loadout(hero.items, "%s (%s).%s" % [label, party.id, hero.hero_id], false)
 		parties.errors.append_array(checker.errors)
 		parties.list.append(party)
 	return parties
 
 
-static func party_units(content: ContentDb, party: Party) -> Array[UnitSetup]:
+static func _read_heroes(content: ContentDb, reader: DataReader, key: String) -> Array[PartyHero]:
+	var heroes: Array[PartyHero] = []
+	for hero_reader: DataReader in reader.opt_object_array(key):
+		var hero := PartyHero.new()
+		hero.hero_id = hero_reader.req_string("hero")
+		hero.rank = maxi(TuningDef.TIER_NAMES.find(hero_reader.opt_string_choice("rank", "c", TuningDef.TIER_NAMES)), 0)
+		hero.row = maxi(EncounterDef.ROW_NAMES.find(hero_reader.opt_string_choice("row", "front", EncounterDef.ROW_NAMES)), 0) as UnitSetup.Row
+		hero.items = LoadoutEntry.read_list(hero_reader, "items")
+		hero_reader.finish()
+		if not content.heroes.has(hero.hero_id):
+			hero_reader.error("unknown hero \"%s\"" % hero.hero_id)
+		heroes.append(hero)
+	return heroes
+
+
+## The party's fielded heroes (or its bench, with `benched`).
+static func party_units(content: ContentDb, party: Party, benched: bool = false) -> Array[UnitSetup]:
 	var units: Array[UnitSetup] = []
-	for hero: PartyHero in party.heroes:
+	for hero: PartyHero in (party.bench if benched else party.heroes):
 		units.append(SetupBuilder.hero(content, hero.hero_id, hero.rank, hero.row, hero.items))
 	return units
 
@@ -122,11 +133,11 @@ static func run(content: ContentDb, party: Party, encounter_id: String, fights: 
 	stats.first_seed = first_seed
 	var act: int = content.encounters[encounter_id].act
 	var hero_ids: Array[String] = []
-	for hero: PartyHero in party.heroes:
+	for hero: PartyHero in party.heroes + party.bench:
 		hero_ids.append(hero.hero_id)
 	for i: int in fights:
 		var seed_value: int = first_seed + i
-		var setup: FightSetup = FightSetup.make(party_units(content, party), SetupBuilder.encounter_units(content, encounter_id), seed_value, act)
+		var setup: FightSetup = FightSetup.make(party_units(content, party), SetupBuilder.encounter_units(content, encounter_id), seed_value, act, party_units(content, party, true))
 		var result: FightResult = CombatSim.run(setup, content)
 		if not result.errors.is_empty():
 			stats.errors = result.errors

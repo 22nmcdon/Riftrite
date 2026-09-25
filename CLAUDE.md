@@ -81,7 +81,7 @@ tools/         headless sim runner, data validators
 
 - Items are per hero; the relic board is shared by the team. Items can move between heroes freely between fights (never during combat).
 - Fallen heroes always come back after a fight, with no downside.
-- Roster cap 6, fielded heroes 3–5. Which heroes sit in backup is the player's choice; backup heroes' Backup effects and their items' backup modes apply.
+- Roster cap 6, fielded heroes 3–5. Which heroes sit in backup is the player's choice; backup heroes' Backup effects and their items' backup modes apply. In a fight, backup heroes are off the field (never targeted, no collapse damage, don't count for victory); only `"backup"` blocks act from the bench. Common items can't have a backup mode (until Oathbinding); Legendary items must.
 - "Lowest HP" (heals and targeting) means lowest HP **percentage**.
 - Rift Collapse starts at 45s of combat and deals **flat** damage (never % of max HP) that grows every second, hitting **Shield before HP**. From 90s the growth itself accelerates. The numbers are set per act (Act 2 = double Act 1) in `data/`. Early fights end around 60s; later ones can run much longer. There is no hard time limit, but a fight still running at **180s is a tie**, as is both sides dying on the same tick, and **a tie counts as a guild victory**.
 - Formation for now: each side has fixed **front and back rows**, ordered left to right. The hex arena comes later, so don't build hex code until asked.

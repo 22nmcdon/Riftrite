@@ -24,6 +24,17 @@
           }
         }
       ]
+    },
+    "backup": {
+      "name": "Hearthwatch",
+      "_note": "All fielded allies +10% DEF while Brannoc is in backup.",
+      "auras": [
+        {
+          "target": "all_allies",
+          "stat": "def_bp",
+          "value": 11000
+        }
+      ]
     }
   },
   {
@@ -50,6 +61,21 @@
           "scaling": {
             "atk": 6000
           }
+        }
+      ]
+    },
+    "backup": {
+      "name": "Harrying Cuts",
+      "cooldown_ms": 4000,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 3,
+          "scaling": {
+            "atk": 4000
+          },
+          "target": "enemy_random"
         }
       ]
     }
@@ -79,6 +105,21 @@
           }
         }
       ]
+    },
+    "backup": {
+      "name": "Lantern Vigil",
+      "cooldown_ms": 5000,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "heal",
+          "amount": 4,
+          "scaling": {
+            "mgk": 3000
+          },
+          "target": "ally_lowest_hp"
+        }
+      ]
     }
   },
   {
@@ -104,6 +145,19 @@
           "scaling": {
             "mgk": 6000
           }
+        }
+      ]
+    },
+    "backup": {
+      "name": "Smoldering Hex",
+      "cooldown_ms": 6000,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "apply_status",
+          "status": "burn",
+          "stacks": 1,
+          "target": "all_enemies"
         }
       ]
     }

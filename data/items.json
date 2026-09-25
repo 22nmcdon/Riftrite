@@ -183,7 +183,21 @@
           "mgk": 6000
         }
       }
-    ]
+    ],
+    "backup": {
+      "cooldown_ms": 3000,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "heal",
+          "amount": 3,
+          "scaling": {
+            "mgk": 3000
+          },
+          "target": "ally_lowest_hp"
+        }
+      ]
+    }
   },
   {
     "id": "hearth_stew",
@@ -206,7 +220,18 @@
           "mgk": 2000
         }
       }
-    ]
+    ],
+    "backup": {
+      "cooldown_ms": 5000,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "heal",
+          "amount": 2,
+          "target": "all_allies"
+        }
+      ]
+    }
   },
   {
     "id": "grave_hook",
@@ -311,7 +336,16 @@
         "stat": "crit_chance_bp",
         "value": 1500
       }
-    ]
+    ],
+    "backup": {
+      "auras": [
+        {
+          "target": "all_allies",
+          "stat": "crit_chance_bp",
+          "value": 500
+        }
+      ]
+    }
   },
   {
     "id": "bell_of_vigil",
@@ -342,7 +376,16 @@
         "stat": "def_bp",
         "value": 13000
       }
-    ]
+    ],
+    "backup": {
+      "auras": [
+        {
+          "target": "all_allies",
+          "stat": "def_bp",
+          "value": 10500
+        }
+      ]
+    }
   },
   {
     "id": "hearth_banner",
@@ -543,7 +586,43 @@
           "until_ms": 8000
         }
       }
-    ]
+    ],
+    "backup": {
+      "cooldown_ms": 3000,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "heal",
+          "amount": 5,
+          "scaling": {
+            "mgk": 4000
+          },
+          "target": "ally_lowest_hp"
+        }
+      ]
+    }
+  },
+  {
+    "id": "vesper_chime",
+    "name": "Vesper Chime",
+    "_note": "Backup-only: does nothing when fielded; from backup, all allies heal 20% more.",
+    "size": 1,
+    "tags": [
+      "charm",
+      "healing"
+    ],
+    "rarity": "uncommon",
+    "backup_only": true,
+    "xp_per_fire": 0,
+    "backup": {
+      "auras": [
+        {
+          "target": "all_allies",
+          "stat": "heal_bp",
+          "value": 12000
+        }
+      ]
+    }
   },
   {
     "id": "rift_claw",

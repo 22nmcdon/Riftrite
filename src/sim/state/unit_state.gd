@@ -20,6 +20,9 @@ var max_hp: int
 var hp: int
 var shield: int = 0
 var alive: bool = true
+## In backup: not on the field (can't be targeted, takes no collapse damage,
+## can't fall). Its items are its Backup effect and its items' backup modes.
+var benched: bool = false
 ## Items that fire, in resolution order: the basic auto-attack first (if the
 ## unit has no auto-attack item), then row items left to right.
 var items: Array[ItemState] = []
@@ -31,7 +34,7 @@ var recent_heal_ticks: Array[int] = []
 var last_hit_by: String = ""
 
 
-static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column: int, content: ContentDb) -> UnitState:
+static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column: int, content: ContentDb, in_backup: bool = false) -> UnitState:
 	var state := UnitState.new()
 	state.id = setup.id
 	state.name = setup.name
@@ -42,6 +45,11 @@ static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column:
 	state.stats = state.base_stats
 	state.max_hp = state.stats.get_stat(UnitStats.Stat.HP)
 	state.hp = state.max_hp
+	state.benched = in_backup
+	if in_backup:
+		state._add_backup_items(setup, content)
+		state.rederive_items(content)
+		return state
 
 	var has_auto_attack_item: bool = false
 	for item: ItemSetup in setup.items:
@@ -57,6 +65,22 @@ static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column:
 		slot += item.def.size
 	state.rederive_items(content)
 	return state
+
+
+## A benched hero fires its own Backup effect and its items' backup modes
+## (items without one do nothing from backup). Backup modes keep the item's
+## slot, tier, and infusion, so essences and XP work as usual.
+func _add_backup_items(setup: UnitSetup, content: ContentDb) -> void:
+	if setup.backup != null:
+		items.append(ItemState.make(setup.backup.as_item_def(null, setup.id), -1, stats, content))
+	var slot: int = 0
+	for item: ItemSetup in setup.items:
+		if item.def.backup != null:
+			var essences: Array[EssenceDef] = []
+			for essence_id: String in item.essence_ids:
+				essences.append(content.essences[essence_id])
+			items.append(ItemState.make(item.def.backup.as_item_def(item.def, setup.id), slot, stats, content, essences, item.tier, item.infusion_xp))
+		slot += item.def.size
 
 
 ## Re-derives every item, handing each Resonant item's spill to its row

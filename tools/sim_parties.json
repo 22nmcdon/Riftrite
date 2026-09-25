@@ -3,40 +3,370 @@
     "id": "hearth_starter",
     "name": "Hearth starter (all rank C, no infusions)",
     "heroes": [
-      { "hero": "brannoc", "row": "front", "items": [{ "item": "rusted_cleaver" }, { "item": "oak_buckler" }] },
-      { "hero": "wren", "row": "front", "items": [{ "item": "hearth_knife" }, { "item": "first_light_dagger" }, { "item": "bone_sling" }] },
-      { "hero": "vell", "row": "back", "items": [{ "item": "old_lantern" }, { "item": "hearth_stew" }] },
-      { "hero": "odo", "row": "back", "items": [{ "item": "dusk_tome" }, { "item": "tallow_torch" }] }
+      {
+        "hero": "brannoc",
+        "row": "front",
+        "items": [
+          {
+            "item": "rusted_cleaver"
+          },
+          {
+            "item": "oak_buckler"
+          }
+        ]
+      },
+      {
+        "hero": "wren",
+        "row": "front",
+        "items": [
+          {
+            "item": "hearth_knife"
+          },
+          {
+            "item": "first_light_dagger"
+          },
+          {
+            "item": "bone_sling"
+          }
+        ]
+      },
+      {
+        "hero": "vell",
+        "row": "back",
+        "items": [
+          {
+            "item": "old_lantern"
+          },
+          {
+            "item": "hearth_stew"
+          }
+        ]
+      },
+      {
+        "hero": "odo",
+        "row": "back",
+        "items": [
+          {
+            "item": "dusk_tome"
+          },
+          {
+            "item": "tallow_torch"
+          }
+        ]
+      }
     ]
   },
   {
     "id": "hearth_infused",
     "name": "Hearth starter with infusions (some Attuned, one Resonant)",
     "heroes": [
-      { "hero": "brannoc", "row": "front", "items": [{ "item": "rusted_cleaver", "essences": ["wrath"], "xp": 120 }, { "item": "oak_buckler", "essences": ["stone"] }] },
-      { "hero": "wren", "row": "front", "items": [{ "item": "hearth_knife", "essences": ["ember"] }, { "item": "first_light_dagger", "essences": ["umbral"], "xp": 300 }, { "item": "bone_sling" }] },
-      { "hero": "vell", "row": "back", "items": [{ "item": "old_lantern", "essences": ["verdant"], "xp": 100 }, { "item": "hearth_stew" }] },
-      { "hero": "odo", "row": "back", "items": [{ "item": "dusk_tome", "essences": ["ember", "storm"] }, { "item": "tallow_torch", "essences": ["ember"] }] }
+      {
+        "hero": "brannoc",
+        "row": "front",
+        "items": [
+          {
+            "item": "rusted_cleaver",
+            "essences": [
+              "wrath"
+            ],
+            "xp": 120
+          },
+          {
+            "item": "oak_buckler",
+            "essences": [
+              "stone"
+            ]
+          }
+        ]
+      },
+      {
+        "hero": "wren",
+        "row": "front",
+        "items": [
+          {
+            "item": "hearth_knife",
+            "essences": [
+              "ember"
+            ]
+          },
+          {
+            "item": "first_light_dagger",
+            "essences": [
+              "umbral"
+            ],
+            "xp": 300
+          },
+          {
+            "item": "bone_sling"
+          }
+        ]
+      },
+      {
+        "hero": "vell",
+        "row": "back",
+        "items": [
+          {
+            "item": "old_lantern",
+            "essences": [
+              "verdant"
+            ],
+            "xp": 100
+          },
+          {
+            "item": "hearth_stew"
+          }
+        ]
+      },
+      {
+        "hero": "odo",
+        "row": "back",
+        "items": [
+          {
+            "item": "dusk_tome",
+            "essences": [
+              "ember",
+              "storm"
+            ]
+          },
+          {
+            "item": "tallow_torch",
+            "essences": [
+              "ember"
+            ]
+          }
+        ]
+      }
     ]
   },
   {
     "id": "vigil_wall",
     "name": "Rank B defensive wall with Linked and aura items",
     "heroes": [
-      { "hero": "brannoc", "rank": "b", "row": "front", "items": [{ "item": "bell_of_vigil" }, { "item": "oak_buckler", "essences": ["stone"] }, { "item": "war_drum" }] },
-      { "hero": "wren", "rank": "b", "row": "front", "items": [{ "item": "grave_hook", "essences": ["umbral", "verdant"] }, { "item": "hearth_knife" }, { "item": "first_light_dagger" }] },
-      { "hero": "vell", "rank": "b", "row": "back", "items": [{ "item": "night_lantern", "essences": ["verdant", "storm"] }, { "item": "hearth_stew" }] },
-      { "hero": "odo", "rank": "b", "row": "back", "items": [{ "item": "ember_brazier", "essences": ["ember", "ember"] }, { "item": "nettle_vial", "essences": ["venom"] }] }
+      {
+        "hero": "brannoc",
+        "rank": "b",
+        "row": "front",
+        "items": [
+          {
+            "item": "bell_of_vigil"
+          },
+          {
+            "item": "oak_buckler",
+            "essences": [
+              "stone"
+            ]
+          },
+          {
+            "item": "war_drum"
+          }
+        ]
+      },
+      {
+        "hero": "wren",
+        "rank": "b",
+        "row": "front",
+        "items": [
+          {
+            "item": "grave_hook",
+            "essences": [
+              "umbral",
+              "verdant"
+            ]
+          },
+          {
+            "item": "hearth_knife"
+          },
+          {
+            "item": "first_light_dagger"
+          }
+        ]
+      },
+      {
+        "hero": "vell",
+        "rank": "b",
+        "row": "back",
+        "items": [
+          {
+            "item": "night_lantern",
+            "essences": [
+              "verdant",
+              "storm"
+            ]
+          },
+          {
+            "item": "hearth_stew"
+          }
+        ]
+      },
+      {
+        "hero": "odo",
+        "rank": "b",
+        "row": "back",
+        "items": [
+          {
+            "item": "ember_brazier",
+            "essences": [
+              "ember",
+              "ember"
+            ]
+          },
+          {
+            "item": "nettle_vial",
+            "essences": [
+              "venom"
+            ]
+          }
+        ]
+      }
     ]
   },
   {
     "id": "rush_row",
     "name": "Rush row: banner, dagger, and bow for a fast start",
     "heroes": [
-      { "hero": "brannoc", "row": "front", "items": [{ "item": "hearth_banner" }, { "item": "oak_buckler" }] },
-      { "hero": "wren", "row": "front", "items": [{ "item": "first_light_dagger", "essences": ["wrath"] }, { "item": "hearth_knife" }, { "item": "rime_charm", "essences": ["frost"] }] },
-      { "hero": "odo", "row": "front", "items": [{ "item": "blackthorn_bow" }, { "item": "salt_ward" }, { "item": "tallow_torch" }] },
-      { "hero": "vell", "row": "back", "items": [{ "item": "old_lantern" }, { "item": "hearth_stew" }] }
+      {
+        "hero": "brannoc",
+        "row": "front",
+        "items": [
+          {
+            "item": "hearth_banner"
+          },
+          {
+            "item": "oak_buckler"
+          }
+        ]
+      },
+      {
+        "hero": "wren",
+        "row": "front",
+        "items": [
+          {
+            "item": "first_light_dagger",
+            "essences": [
+              "wrath"
+            ]
+          },
+          {
+            "item": "hearth_knife"
+          },
+          {
+            "item": "rime_charm",
+            "essences": [
+              "frost"
+            ]
+          }
+        ]
+      },
+      {
+        "hero": "odo",
+        "row": "front",
+        "items": [
+          {
+            "item": "blackthorn_bow"
+          },
+          {
+            "item": "salt_ward"
+          },
+          {
+            "item": "tallow_torch"
+          }
+        ]
+      },
+      {
+        "hero": "vell",
+        "row": "back",
+        "items": [
+          {
+            "item": "old_lantern"
+          },
+          {
+            "item": "hearth_stew"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bench_support",
+    "name": "Three fielded, Vell in backup with a Vesper Chime and Old Lantern",
+    "heroes": [
+      {
+        "hero": "brannoc",
+        "row": "front",
+        "items": [
+          {
+            "item": "rusted_cleaver",
+            "essences": [
+              "wrath"
+            ],
+            "xp": 120
+          },
+          {
+            "item": "oak_buckler",
+            "essences": [
+              "stone"
+            ]
+          }
+        ]
+      },
+      {
+        "hero": "wren",
+        "row": "front",
+        "items": [
+          {
+            "item": "hearth_knife",
+            "essences": [
+              "ember"
+            ]
+          },
+          {
+            "item": "first_light_dagger",
+            "essences": [
+              "umbral"
+            ],
+            "xp": 300
+          },
+          {
+            "item": "bone_sling"
+          }
+        ]
+      },
+      {
+        "hero": "odo",
+        "row": "back",
+        "items": [
+          {
+            "item": "dusk_tome",
+            "essences": [
+              "ember",
+              "storm"
+            ]
+          },
+          {
+            "item": "tallow_torch",
+            "essences": [
+              "ember"
+            ]
+          }
+        ]
+      }
+    ],
+    "bench": [
+      {
+        "hero": "vell",
+        "items": [
+          {
+            "item": "old_lantern",
+            "essences": [
+              "verdant"
+            ],
+            "xp": 100
+          },
+          {
+            "item": "vesper_chime"
+          }
+        ]
+      }
     ]
   }
 ]

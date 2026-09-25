@@ -67,4 +67,4 @@ func test_rejects_item_without_effects() -> void:
 	var data: Dictionary = SimTestKit.DEFAULT_ITEM.duplicate(true)
 	data["id"] = "empty"
 	data.erase("effects")
-	_assert_error(_read(data)[1], "an item needs at least one effect")
+	_assert_error(_read(data)[1], "an item needs effects, auras, or a backup mode")

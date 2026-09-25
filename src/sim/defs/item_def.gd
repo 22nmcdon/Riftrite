@@ -32,6 +32,11 @@ var timing: Timing = Timing.NORMAL
 var effects: Array[EffectDef] = []
 ## Continuous boosts while their windows are open (not on basic attacks).
 var auras: Array[AuraDef] = []
+## What the item does while its hero is in backup, or null (does nothing).
+var backup: BackupDef = null
+## Marked for the shop: the item is meant for backup. When fielded it does
+## only what its own effects/auras say (often nothing).
+var backup_only: bool = false
 
 
 static func read(reader: DataReader) -> ItemDef:
@@ -48,7 +53,21 @@ static func read(reader: DataReader) -> ItemDef:
 	def.timing = maxi(TIMING_NAMES.find(timing_name), 0) as Timing
 	for aura_reader: DataReader in reader.opt_object_array("auras"):
 		def.auras.append(AuraDef.read(aura_reader))
-	_read_common(def, reader)
+	def.backup_only = reader.opt_bool("backup_only", false)
+	if reader.has("backup"):
+		var backup_reader: DataReader = reader.req_object("backup")
+		if backup_reader != null:
+			def.backup = BackupDef.read(backup_reader, RATE_SCALING_RARITIES.has(def.rarity))
+	_read_common(def, reader, true)
+	if def.effects.is_empty() and def.auras.is_empty() and def.backup == null:
+		reader.error("an item needs effects, auras, or a backup mode")
+	if def.backup_only and def.backup == null:
+		reader.error("a backup-only item needs a backup mode")
+	# Backup modes by rarity (docs/tiers-backup-specialization.md).
+	if def.rarity == "common" and def.backup != null:
+		reader.error("Common items can't have a backup mode (they only get one through Oathbinding)")
+	if def.rarity == "legendary" and def.backup == null:
+		reader.error("Legendary items must have a backup mode")
 	return def
 
 
@@ -58,18 +77,24 @@ static func read_basic_attack(reader: DataReader) -> ItemDef:
 	def.id = reader.req_string("id")
 	def.name = reader.req_string("name")
 	def.is_basic_attack = true
-	_read_common(def, reader)
+	_read_common(def, reader, false)
 	return def
 
 
-static func _read_common(def: ItemDef, reader: DataReader) -> void:
-	def.cooldown_ticks = reader.req_ticks("cooldown_ms", FixedMath.MS_PER_TICK)
+## `effects_optional`: items may have no effects of their own (auras or a
+## backup mode only); basic attacks must have some.
+static func _read_common(def: ItemDef, reader: DataReader, effects_optional: bool) -> void:
 	def.crit_chance_bp = reader.opt_int("crit_chance_bp", 0, 0, FixedMath.BP_ONE)
 	var effect_readers: Array[DataReader] = reader.opt_object_array("effects")
 	for effect_reader: DataReader in effect_readers:
 		def.effects.append(EffectDef.read(effect_reader))
-	if effect_readers.is_empty():
+	if effect_readers.is_empty() and not effects_optional:
 		reader.error("an item needs at least one effect")
+	# Cooldown only matters for items that fire.
+	if def.effects.is_empty():
+		def.cooldown_ticks = maxi(reader.opt_ticks("cooldown_ms", 0), 1)
+	else:
+		def.cooldown_ticks = reader.req_ticks("cooldown_ms", FixedMath.MS_PER_TICK)
 	# Common/Uncommon/Rare items and basic auto-attacks treat CRIT and ATSP as
 	# rates only (design decision); Epic and Legendary may scale from them.
 	if not RATE_SCALING_RARITIES.has(def.rarity):
