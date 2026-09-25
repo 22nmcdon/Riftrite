@@ -19,6 +19,7 @@ enum Kind {
 	MISS,
 	STATUS_REDUCED,
 	INFUSION_LEVEL,
+	STATUS_JUMPED,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -85,6 +86,8 @@ func to_text() -> String:
 			return line + "%s (%s) hits %s for %d%s" % [status_name, source_text(), target, amount, _damage_detail()]
 		Kind.STATUS_ENDED:
 			return line + "%s on %s%s ends" % [status_name, target, "" if note.is_empty() else " (%s)" % note]
+		Kind.STATUS_JUMPED:
+			return line + "%s jumps from %s to %s (%d stacks)" % [status_name, note, target, stacks]
 		Kind.INFUSION_LEVEL:
 			return line + "%s becomes %s" % [source_text(), note]
 		Kind.STATUS_REDUCED:

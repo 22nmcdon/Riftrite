@@ -28,6 +28,37 @@
     "defense_shred_per_stack": 1
   },
   {
+    "_note": "Inferno's flame (placeholder name): burns like Burn but never fades; heals strip it only 75% as well.",
+    "id": "golden_flame",
+    "name": "Golden Flame",
+    "kind": "damage_over_time",
+    "interval_ms": 500,
+    "damage_per_stack": 1,
+    "vs_shield_bp": 5000,
+    "cleanse_effectiveness_bp": 7500
+  },
+  {
+    "_note": "Plasma's burn: like Burn, but after each tick its stacks jump to the nearest other enemy.",
+    "id": "plasma",
+    "name": "Plasma",
+    "kind": "damage_over_time",
+    "interval_ms": 500,
+    "damage_per_stack": 1,
+    "stacks_lost_bp": 500,
+    "vs_shield_bp": 5000,
+    "jumps": true
+  },
+  {
+    "_note": "Blight's bleed: like Bleed, and its damage heals the applier's team (split evenly).",
+    "id": "blight",
+    "name": "Blight",
+    "kind": "damage_over_time",
+    "interval_ms": 1000,
+    "damage_per_stack": 1,
+    "defense_shred_per_stack": 1,
+    "heal_team_bp": 10000
+  },
+  {
     "_note": "Lands on one random item of the target plus its auto-attack; each stack slows that item's cooldown by slow_bp_per_stack. Each new Slow refreshes the timer. Caps at 50% per item. Numbers are placeholders.",
     "id": "slow",
     "name": "Slow",

@@ -13,7 +13,8 @@ extends RefCounted
 const TUNING_FILE: String = "tuning.json"
 const STATUSES_FILE: String = "statuses.json"
 const ESSENCES_FILE: String = "essences.json"
-const FILES: Array[String] = [TUNING_FILE, STATUSES_FILE, ESSENCES_FILE]
+const ALLOYS_FILE: String = "alloys.json"
+const FILES: Array[String] = [TUNING_FILE, STATUSES_FILE, ESSENCES_FILE, ALLOYS_FILE]
 
 var errors: Array[String] = []
 var tuning: TuningDef
@@ -21,6 +22,11 @@ var statuses: Dictionary[String, StatusDef] = {}
 var status_ids: Array[String] = []
 var essences: Dictionary[String, EssenceDef] = {}
 var essence_ids: Array[String] = []
+var alloys: Dictionary[String, AlloyDef] = {}
+var alloy_ids: Array[String] = []
+## Recipe key (AlloyDef.recipe_key) -> alloy. Two essences with no entry
+## here still work as an alloy, just without a named special.
+var _alloys_by_recipe: Dictionary[String, AlloyDef] = {}
 
 var _id_pattern: RegEx = RegEx.create_from_string("^[a-z][a-z0-9_]*$")
 
@@ -48,6 +54,7 @@ static func load_texts(texts: Dictionary[String, String]) -> ContentDb:
 	db._load_tuning(db._parse(texts, TUNING_FILE))
 	db._load_statuses(db._parse(texts, STATUSES_FILE))
 	db._load_essences(db._parse(texts, ESSENCES_FILE))
+	db._load_alloys(db._parse(texts, ALLOYS_FILE))
 	db._check_references()
 	return db
 
@@ -87,6 +94,18 @@ func _load_essences(data: Variant) -> void:
 		var def: EssenceDef = EssenceDef.read(reader)
 		if _claim_id(def.id, reader, essence_ids):
 			essences[def.id] = def
+
+
+func _load_alloys(data: Variant) -> void:
+	for reader: DataReader in _entries(data, ALLOYS_FILE):
+		var def: AlloyDef = AlloyDef.read(reader)
+		if _claim_id(def.id, reader, alloy_ids):
+			alloys[def.id] = def
+
+
+## The named alloy for two essences (either order), or null.
+func alloy_for(first: String, second: String) -> AlloyDef:
+	return _alloys_by_recipe.get(AlloyDef.recipe_key(first, second), null)
 
 
 ## Wraps each element of a top-level list. Paths look like
@@ -130,6 +149,26 @@ func _check_references() -> void:
 		var adds: String = essences[id].adds
 		if not adds.is_empty() and not is_output_kind(adds):
 			errors.append("%s (%s): adds \"%s\", which is not damage, shield, heal, or a damage-over-time status" % [ESSENCES_FILE, id, adds])
+	for id: String in alloy_ids:
+		var alloy: AlloyDef = alloys[id]
+		var where: String = "%s (%s)" % [ALLOYS_FILE, id]
+		if alloy.recipe.size() != 2:
+			continue
+		for essence_id: String in alloy.recipe:
+			if not essences.has(essence_id):
+				errors.append("%s: recipe uses unknown essence \"%s\"" % [where, essence_id])
+		var key: String = AlloyDef.recipe_key(alloy.recipe[0], alloy.recipe[1])
+		if _alloys_by_recipe.has(key):
+			errors.append("%s: recipe %s is already used by \"%s\"" % [where, key, _alloys_by_recipe[key].id])
+		else:
+			_alloys_by_recipe[key] = alloy
+		var replaced: Array = alloy.replaces.keys()
+		replaced.sort()
+		for from_status: String in replaced:
+			var to_status: String = alloy.replaces[from_status]
+			for status_id: String in [from_status, to_status]:
+				if not statuses.has(status_id):
+					errors.append("%s: replaces uses unknown status \"%s\"" % [where, status_id])
 
 
 ## Output kinds are "damage", "shield", "heal", and damage-over-time statuses.

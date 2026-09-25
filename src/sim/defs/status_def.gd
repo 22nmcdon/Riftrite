@@ -6,7 +6,12 @@ extends RefCounted
 ##                     stacks_lost_per_interval (flat), stacks_lost_bp (a share,
 ##                     rounded up), vs_shield_bp (how hard it hits shields:
 ##                     10000 normal, 5000 half, 0 = skips shields entirely),
-##                     defense_shred_per_stack (lowers the target's DEF)
+##                     defense_shred_per_stack (lowers the target's DEF),
+##                     cleanse_effectiveness_bp (how much heals strip it;
+##                     10000 normal), jumps (after each damage tick the stacks
+##                     move to the nearest other enemy), heal_team_bp (this
+##                     share of its damage heals the applier's team, split
+##                     evenly across living allies)
 ##   slow:             slow_bp_per_stack, duration_ms, optional max_slow_bp (cap
 ##                     on the total slow per item). Slow sits on items, not
 ##                     units: each application lands on one random item of
@@ -32,6 +37,12 @@ var stacks_lost_bp: int = 0
 var vs_shield_bp: int = FixedMath.BP_ONE
 ## DEF removed from the target per stack.
 var defense_shred_per_stack: int = 0
+## How effective heals are at stripping this status (see Statuses).
+var cleanse_effectiveness_bp: int = FixedMath.BP_ONE
+## After each damage tick, the stacks move to the nearest other enemy.
+var jumps: bool = false
+## Share of this status's damage that heals the applier's team.
+var heal_team_bp: int = 0
 var slow_bp_per_stack: int
 ## The most a Slow can slow one item, however many stacks it has.
 var max_slow_bp: int = FixedMath.BP_ONE
@@ -55,6 +66,9 @@ static func read(reader: DataReader) -> StatusDef:
 			def.stacks_lost_bp = reader.opt_int("stacks_lost_bp", 0, 0, FixedMath.BP_ONE)
 			def.vs_shield_bp = reader.opt_int("vs_shield_bp", FixedMath.BP_ONE, 0, FixedMath.BP_ONE)
 			def.defense_shred_per_stack = reader.opt_int("defense_shred_per_stack", 0, 0)
+			def.cleanse_effectiveness_bp = reader.opt_int("cleanse_effectiveness_bp", FixedMath.BP_ONE, 0, FixedMath.BP_ONE)
+			def.jumps = reader.opt_bool("jumps", false)
+			def.heal_team_bp = reader.opt_int("heal_team_bp", 0, 0)
 		Kind.SLOW:
 			def.slow_bp_per_stack = reader.req_int("slow_bp_per_stack", 0, FixedMath.BP_ONE)
 			def.max_slow_bp = reader.opt_int("max_slow_bp", FixedMath.BP_ONE, 0, FixedMath.BP_ONE)

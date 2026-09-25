@@ -47,7 +47,8 @@ func test_real_data_is_valid() -> void:
 func test_real_data_contents() -> void:
 	var db: ContentDb = ContentDb.load_dir("res://data")
 	assert_eq(db.essence_ids, ["ember", "venom", "wrath", "stone", "verdant", "frost", "storm", "umbral"] as Array[String])
-	assert_eq(db.status_ids, ["burn", "poison", "bleed", "slow", "freeze", "blind"] as Array[String])
+	assert_eq(db.status_ids, ["burn", "poison", "bleed", "golden_flame", "plasma", "blight", "slow", "freeze", "blind"] as Array[String])
+	assert_eq(db.alloy_ids, ["inferno", "plasma", "blight", "bloom"] as Array[String])
 	assert_eq([db.essences["ember"].adds, db.essences["venom"].adds, db.essences["wrath"].adds], ["burn", "poison", "damage"])
 	assert_true(db.essences["umbral"].adds_on_crit_only)
 

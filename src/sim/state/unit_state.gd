@@ -68,11 +68,10 @@ func rederive_items(content: ContentDb) -> void:
 	for i: int in row.size():
 		incoming.append([])
 	for i: int in row.size():
-		var spills: Array[EssenceApplication] = row[i].spill_applications(content.tuning)
 		if i > 0:
-			incoming[i - 1].append_array(spills)
+			incoming[i - 1].append_array(row[i].spill_to(-1, content.tuning))
 		if i < row.size() - 1:
-			incoming[i + 1].append_array(spills)
+			incoming[i + 1].append_array(row[i].spill_to(1, content.tuning))
 	for item: ItemState in items:
 		var received: Array[EssenceApplication] = []
 		var index: int = row.find(item)

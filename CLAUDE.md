@@ -51,6 +51,7 @@ tools/         headless sim runner, data validators
 - Small items: 1 socket. Medium/Large items: 2 sockets. Relics: 1 socket.
 - Two different essences in one item = an **Alloy** with its own effect. Two of the same = a **pure double**.
 - Pure doubles are alloys too, and each has its own effect.
+- An alloy **keeps both essences' normal effects** and adds its special. A special that changes how a status behaves must use **its own status type** (Inferno → Golden Flame), never modify the shared one, so it can't leak into other items' statuses.
 - Infusions level up: base → Attuned → Resonant. XP comes from **item fires** (XP per fire is set per item in data, based on type and size; auto-attacks get less) **plus each battle fought**.
 - XP **resets** when a second essence is added (single → alloy or pure double) and when an infusion is removed.
 - Only **Resonant** infusions spill to neighbors:

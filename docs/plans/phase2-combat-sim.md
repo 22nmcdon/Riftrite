@@ -1,6 +1,6 @@
 # Plan: Phase 2 combat sim
 
-Status: **approved; in progress.** Steps 1–5 are done (step 4's essences were reworked along the way; see `docs/plans/essence-rework.md`). Next is step 6 (alloys and pure doubles).
+Status: **approved; in progress.** Steps 1–6 are done (step 4's essences were reworked along the way; see `docs/plans/essence-rework.md`). Next is step 7 (Rush/Stall, adjacency buffs, Linked).
 
 Goal (from the roadmap in `docs/design.md`): a deterministic auto-battle on fixed front/back rows, with no art. It must include essences, alloys, attunement, and spill. Done when a fight can be explained from its log, and the headless runner shows whether alloys feel worth fusing.
 
@@ -193,6 +193,15 @@ Every effect, status tick, level-up, spill, and death writes one entry. The dama
 - **Spill = 30% of the Resonant-strength effect** (so 0.6x the base essence), to both row neighbors. The basic auto-attack is not in the row, so it never gives or gets spill. Spill never crosses to another unit.
 - **Small numbers don't round away:** essence effects (like Frost's 1 Slow) and conversions carry fractions between uses, so a 1.5-stack Slow lands 1, 2, 1, 2.
 - A re-derive (level-up) keeps cooldown progress and Slow, but restarts fractional carries.
+
+### Step 6 (alloys)
+
+- `data/alloys.json` lists named alloys by unordered recipe. Built: Inferno, Plasma, Blight, Bloom.
+- New data-driven mechanics (code changes, per CLAUDE.md rule 3): alloy `replaces` (swap a status for its alloy version) and `heal_echo_bp`; status `cleanse_effectiveness_bp`, `jumps`, and `heal_team_bp`.
+- **Plasma jumps** to the nearest other standing enemy (column distance, +1 for the other row), moving all its stacks; it stays put if there's nobody else.
+- **Blight's heal** splits the damage evenly across the applier's living team.
+- **Bloom's echo** goes to a random other living ally (seeded RNG); echoes don't echo. Alloy specials don't scale with infusion level (the essences' parts do).
+- **Alloy spill:** first socket's essence left, second's right (30% of Resonant); pure doubles spill their essence once to each side. The special never spills, so Plasma's spilled Ember is plain Burn.
 
 ## Needs your call before coding
 

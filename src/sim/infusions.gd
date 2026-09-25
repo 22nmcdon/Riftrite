@@ -31,7 +31,7 @@ static func gain_xp(sim: CombatSim, item: ItemState, amount: int, when: String =
 		return
 	item.infusion_level = level
 	var holder: UnitState = sim.owner_of(item)
-	var entry: LogEntry = sim.new_entry(LogEntry.Kind.INFUSION_LEVEL, EffectSource.make(holder.id, item.def.id, item.def.name, item.essences[0].id, item.essences[0].name))
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.INFUSION_LEVEL, EffectSource.make(holder.id, item.def.id, item.def.name, item.essences[0].id, item.infusion_name()))
 	entry.amount = item.infusion_xp
 	entry.note = "%s (%d XP%s)" % [LEVEL_NAMES[level], item.infusion_xp, "" if when.is_empty() else ", " + when]
 	sim.combat_log.add(entry)

@@ -1,0 +1,48 @@
+[
+  {
+    "_note": "Pure double (Ember + Ember). Everything the item would Burn lands as Golden Flame instead.",
+    "id": "inferno",
+    "name": "Inferno",
+    "recipe": [
+      "ember",
+      "ember"
+    ],
+    "replaces": {
+      "burn": "golden_flame"
+    }
+  },
+  {
+    "_note": "Everything the item would Burn lands as Plasma, which jumps between enemies.",
+    "id": "plasma",
+    "name": "Plasma",
+    "recipe": [
+      "ember",
+      "storm"
+    ],
+    "replaces": {
+      "burn": "plasma"
+    }
+  },
+  {
+    "_note": "Everything the item would Bleed lands as Blight, whose damage heals your team.",
+    "id": "blight",
+    "name": "Blight",
+    "recipe": [
+      "umbral",
+      "verdant"
+    ],
+    "replaces": {
+      "bleed": "blight"
+    }
+  },
+  {
+    "_note": "Every heal from the item echoes 50% onto a random other ally.",
+    "id": "bloom",
+    "name": "Bloom",
+    "recipe": [
+      "verdant",
+      "storm"
+    ],
+    "heal_echo_bp": 5000
+  }
+]

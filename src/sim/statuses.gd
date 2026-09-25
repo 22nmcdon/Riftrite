@@ -142,6 +142,8 @@ static func _deal_damage_over_time(sim: CombatSim, unit: UnitState, state: Statu
 		entry.absorbed = sim.apply_damage_vs_shield(unit, damage, state.def.vs_shield_bp)
 		unit.last_hit_by = "%s from %s" % [state.def.name, group.source.describe()]
 		sim.combat_log.add(entry)
+		if state.def.heal_team_bp > 0:
+			_heal_team(sim, group.source, FixedMath.apply_bp(damage, state.def.heal_team_bp))
 	var lost: int = state.def.stacks_lost_per_interval
 	if state.def.stacks_lost_bp > 0:
 		@warning_ignore("integer_division")
@@ -149,6 +151,65 @@ static func _deal_damage_over_time(sim: CombatSim, unit: UnitState, state: Statu
 	state.remove_oldest(lost)
 	if state.total_stacks() == 0:
 		_end(sim, unit, state)
+	elif state.def.jumps:
+		_jump(sim, unit, state)
+
+
+## Blight: `amount` heals the applier's living team, split evenly (the first
+## allies in resolution order get the remainder).
+static func _heal_team(sim: CombatSim, source: EffectSource, amount: int) -> void:
+	var applier: UnitState = sim.unit_by_id(source.unit_id)
+	if applier == null or amount <= 0:
+		return
+	var team: Array[UnitState] = []
+	for ally: UnitState in sim.allies_of(applier):
+		if ally.is_standing():
+			team.append(ally)
+	if team.is_empty():
+		return
+	@warning_ignore("integer_division")
+	var each: int = amount / team.size()
+	var remainder: int = amount % team.size()
+	for i: int in team.size():
+		var share: int = each + (1 if i < remainder else 0)
+		if share > 0:
+			EffectRunner.heal(sim, team[i], share, source)
+
+
+## Plasma: moves the stacks to the nearest other standing unit on the host's
+## side (column distance, +1 for a different row; ties go to resolution
+## order). Stays put if there's nobody else.
+static func _jump(sim: CombatSim, host: UnitState, state: StatusState) -> void:
+	var best: UnitState = null
+	var best_distance: int = 0
+	for other: UnitState in sim.allies_of(host):
+		if other == host or not other.is_standing():
+			continue
+		var distance: int = absi(other.column - host.column) + (0 if other.row == host.row else 1)
+		if best == null or distance < best_distance:
+			best = other
+			best_distance = distance
+	if best == null:
+		return
+	host.statuses.erase(state)
+	var landing: StatusState = best.find_status(state.def.id)
+	if landing == null:
+		landing = StatusState.new()
+		landing.def = state.def
+		landing.order = state.order
+		landing.interval_left = state.def.interval_ticks
+		_insert_in_order(best, landing)
+	for group: StatusState.StackGroup in state.groups:
+		landing.add_stacks(group.source, group.stacks)
+	var entry := LogEntry.new()
+	entry.tick = sim.tick
+	entry.kind = LogEntry.Kind.STATUS_JUMPED
+	entry.target = best.id
+	entry.note = host.id
+	entry.status = state.def.id
+	entry.status_name = state.def.name
+	entry.stacks = landing.total_stacks()
+	sim.combat_log.add(entry)
 
 
 ## A heal weakens damage over time: each damage-over-time status on `unit`
@@ -157,7 +218,7 @@ static func cleanse_over_time(sim: CombatSim, unit: UnitState, share_bp: int) ->
 	for state: StatusState in unit.statuses.duplicate():
 		if state.def.kind != StatusDef.Kind.DAMAGE_OVER_TIME:
 			continue
-		var removed: int = FixedMath.apply_bp(state.total_stacks(), share_bp)
+		var removed: int = FixedMath.apply_bp(state.total_stacks(), FixedMath.apply_bp(share_bp, state.def.cleanse_effectiveness_bp))
 		if removed <= 0:
 			continue
 		state.remove_oldest(removed)

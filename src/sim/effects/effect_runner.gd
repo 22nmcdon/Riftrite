@@ -49,7 +49,7 @@ static func _run(sim: CombatSim, item: ItemState, sourced: SourcedEffect, hit: H
 			EffectDef.Type.DAMAGE:
 				_hit(sim, item, source, target, amount, hit == null, own)
 			EffectDef.Type.HEAL:
-				heal(sim, target, amount, source)
+				heal(sim, target, amount, source, item)
 				if own:
 					Conversions.on_output(sim, item, "heal", amount, target, false)
 			EffectDef.Type.SHIELD:
@@ -59,7 +59,7 @@ static func _run(sim: CombatSim, item: ItemState, sourced: SourcedEffect, hit: H
 				if own:
 					Conversions.on_output(sim, item, "shield", amount, target, false)
 			EffectDef.Type.APPLY_STATUS:
-				Statuses.apply(sim, target, effect.status_id, amount, source)
+				Statuses.apply(sim, target, item.replaced_status(effect.status_id), amount, source)
 				if own and sim.content.is_output_kind(effect.status_id):
 					Conversions.on_output(sim, item, effect.status_id, amount, target, false)
 
@@ -109,7 +109,24 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 ## heal_cleanse_bp of each damage-over-time status; each further heal within
 ## heal_cleanse_window strips that share times heal_cleanse_falloff_bp again
 ## (by default: 10%, 5%, 2.5%, ...), so rapid small heals can't wipe it out.
-static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectSource) -> void:
+## A heal from an item with a heal echo (Bloom) then echoes a share onto a
+## random other ally; echoes don't echo.
+static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectSource, item: ItemState = null) -> void:
+	_heal_one(sim, target, amount, source)
+	if item == null or item.heal_echo_bp() <= 0:
+		return
+	var others: Array[UnitState] = []
+	for ally: UnitState in sim.allies_of(sim.owner_of(item)):
+		if ally != target and ally.is_standing():
+			others.append(ally)
+	var echo: int = FixedMath.apply_bp(amount, item.heal_echo_bp())
+	if others.is_empty() or echo <= 0:
+		return
+	var echo_source := EffectSource.make(source.unit_id, source.item_id, source.item_name, source.infusion_id, "%s echo" % item.infusion_name())
+	_heal_one(sim, others[sim.rng.range_int(others.size())], echo, echo_source)
+
+
+static func _heal_one(sim: CombatSim, target: UnitState, amount: int, source: EffectSource) -> void:
 	var healed: int = mini(amount, target.max_hp - target.hp)
 	target.hp += healed
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.HEAL, source)

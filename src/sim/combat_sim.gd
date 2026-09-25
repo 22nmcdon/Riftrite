@@ -118,6 +118,13 @@ func new_entry(kind: LogEntry.Kind, source: EffectSource) -> LogEntry:
 	return entry
 
 
+func unit_by_id(unit_id: String) -> UnitState:
+	for unit: UnitState in units:
+		if unit.id == unit_id:
+			return unit
+	return null
+
+
 func owner_of(item: ItemState) -> UnitState:
 	return units[item.owner_index]
 

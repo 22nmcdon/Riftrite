@@ -25,6 +25,8 @@ var stats: UnitStats
 
 ## The socketed essences, in socket order.
 var essences: Array[EssenceDef] = []
+## The named alloy for two different or matching essences, or null.
+var alloy: AlloyDef = null
 var infusion_xp: int = 0
 var infusion_level: int = Infusions.Level.BASE
 ## XP and level going into the fight, for the fight result.
@@ -62,6 +64,8 @@ static func make(item_def: ItemDef, item_slot: int, holder_stats: UnitStats, con
 	state.stats = holder_stats
 	state.is_auto_attack = item_def.is_basic_attack or item_def.auto_attack
 	state.essences = item_essences
+	if item_essences.size() == 2:
+		state.alloy = content.alloy_for(item_essences[0].id, item_essences[1].id)
 	state.infusion_xp = xp
 	state.infusion_level = Infusions.level_for(xp, content.tuning)
 	state.start_xp = xp
@@ -70,28 +74,63 @@ static func make(item_def: ItemDef, item_slot: int, holder_stats: UnitStats, con
 	return state
 
 
-## This item's own infusion, at its level's strength.
+## The infusion's name for the log: "Ember", "Plasma", or "Ember + Frost"
+## for two essences with no named alloy yet.
+func infusion_name() -> String:
+	if alloy != null:
+		return alloy.name
+	var names: Array[String] = []
+	for essence: EssenceDef in essences:
+		names.append(essence.name)
+	return " + ".join(names)
+
+
+## This item's own infusion, at its level's strength. An alloy keeps both
+## essences' normal effects (its special is applied separately).
 func own_applications(tuning: TuningDef) -> Array[EssenceApplication]:
 	var apps: Array[EssenceApplication] = []
 	var strength: int = tuning.infusion_level_bp[infusion_level]
+	var label: String = infusion_name()
+	if infusion_level != Infusions.Level.BASE:
+		label = "%s, %s" % [label, Infusions.LEVEL_NAMES[infusion_level]]
 	for essence: EssenceDef in essences:
-		var label: String = essence.name
-		if infusion_level != Infusions.Level.BASE:
-			label = "%s, %s" % [essence.name, Infusions.LEVEL_NAMES[infusion_level]]
 		apps.append(EssenceApplication.make(essence, strength, label))
 	return apps
 
 
-## What this item spills to each neighbor, if it's Resonant (else empty).
-## Single essence: both sides, at spill_single_bp of its Resonant strength.
-## (Alloys and pure doubles arrive with build step 6.)
-func spill_applications(tuning: TuningDef) -> Array[EssenceApplication]:
+## What this item spills to its neighbor on one side (-1 left, +1 right), if
+## it's Resonant. Every spill is a share of the essence's Resonant strength:
+##   single essence: that essence, both sides (spill_single_bp)
+##   pure double:    the base essence, both sides (spill_pure_double_bp)
+##   alloy:          first socket's essence left, second's right (spill_alloy_bp)
+## An alloy's special never spills.
+func spill_to(side: int, tuning: TuningDef) -> Array[EssenceApplication]:
 	var apps: Array[EssenceApplication] = []
-	if infusion_level != Infusions.Level.RESONANT or essences.size() != 1:
+	if infusion_level != Infusions.Level.RESONANT or essences.is_empty():
 		return apps
-	var strength: int = FixedMath.apply_bp(tuning.infusion_level_bp[infusion_level], tuning.spill_single_bp)
-	apps.append(EssenceApplication.make(essences[0], strength, "%s spill from %s" % [essences[0].name, def.name]))
+	var essence: EssenceDef = essences[0]
+	var share_bp: int = tuning.spill_single_bp
+	if essences.size() == 2 and essences[0].id == essences[1].id:
+		share_bp = tuning.spill_pure_double_bp
+	elif essences.size() == 2:
+		share_bp = tuning.spill_alloy_bp
+		essence = essences[0] if side < 0 else essences[1]
+	var strength: int = FixedMath.apply_bp(tuning.infusion_level_bp[infusion_level], share_bp)
+	apps.append(EssenceApplication.make(essence, strength, "%s spill from %s" % [essence.name, def.name]))
 	return apps
+
+
+## The status this item actually applies in place of `status_id` (an alloy
+## like Inferno turns Burn into Golden Flame).
+func replaced_status(status_id: String) -> String:
+	if alloy == null:
+		return status_id
+	return alloy.replaces.get(status_id, status_id)
+
+
+## Share of each heal this item echoes onto a random other ally (Bloom).
+func heal_echo_bp() -> int:
+	return alloy.heal_echo_bp if alloy != null else 0
 
 
 ## Rebuilds everything infusion-dependent from the item's own infusion and

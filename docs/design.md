@@ -120,12 +120,14 @@ In The Bazaar an item gets one fixed enchantment. Here, enchantments are **Infus
 
 | Alloy | Recipe | Effect |
 | --- | --- | --- |
-| Steam | Ember + Frost | Hits Blind enemies (their next attack misses) |
-| Plasma | Ember + Storm | Burn jumps to a nearby enemy each tick |
-| Glacier | Frost + Stone | Shield also Slows whoever breaks it |
-| Bloom | Verdant + Storm | Heals trigger again on a random ally at 50% |
-| Blight | Umbral + Verdant | Bleed damage heals your team |
-| Inferno | Ember + Ember | Burn stacks never fall off |
+| Steam | Ember + Frost | Hits Blind enemies (their next attack misses) *(not built yet)* |
+| Plasma | Ember + Storm | The item's Burn lands as **Plasma**, which jumps to the nearest other enemy after each tick |
+| Glacier | Frost + Stone | Shield also Slows whoever breaks it *(not built yet)* |
+| Bloom | Verdant + Storm | Every heal from the item echoes 50% onto a random other ally |
+| Blight | Umbral + Verdant | The item's Bleed lands as **Blight**, whose damage heals your team (split evenly) |
+| Inferno | Ember + Ember | The item's Burn lands as **Golden Flame** (placeholder name): same amount, never fades, heals strip it only 75% as well |
+
+**How alloys work:** an alloy keeps both essences' normal effects and adds its special on top. A special that changes how a status behaves uses **its own status type** (Golden Flame, Plasma, Blight), so it never changes other items' or heroes' plain Burn or Bleed. Two essences with no named alloy yet still work, with both essences' effects and no special.
 
 **Pure doubles** (two of the same essence) are alloys too, each with its own effect, and what that effect is depends on the essence. Most pure doubles add a bonus effect like Inferno's. **Doubled spill** is an optional idea: a pure double whose effect is doubled spill instead of a bonus effect. Maybe no pure double gets it. The first one to try is **Overgrowth (Verdant + Verdant)**, since spreading growth fits the idea, and the sim will show whether it earns its place. A pure double's bonus effect never makes its spill stronger. See the spill table below.
 
@@ -311,6 +313,7 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - **Healing weakens damage over time:** a heal removes 10% of the target's Burn, Poison, and Bleed stacks; each further heal on the same unit within one second removes half as much as the previous one (10%, 5%, 2.5%, ...). Placeholders.
 - **Slow caps at 50%** per item.
 - **Infusion levels:** Attuned makes an infusion ×1.5 as strong, Resonant ×2 (placeholders).
+- **Alloys keep both essences' effects** plus their special. Specials that alter a status get their own status type (Inferno → Golden Flame, Plasma → Plasma, Blight → Blight) so they don't leak into other items' statuses. First alloys built: Inferno, Plasma, Blight, Bloom.
 - Every hero has their own built-in basic auto-attack, which can't be upgraded. An auto-attack item (Small, Medium, or Large) replaces it and takes up slots, and a hero can equip only one. Take the item out and the hero uses the basic auto-attack again.
 - Two copies of the same item combine into the next tier (two, not three). A new copy's infusion replaces the old one.
 - Alloy spill per side equals a single essence's spill for now.

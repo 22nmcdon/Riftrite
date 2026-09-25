@@ -152,6 +152,24 @@ func opt_object_array(key: String) -> Array[DataReader]:
 	return readers
 
 
+## Reads a required list of non-empty strings.
+func req_string_array(key: String) -> Array[String]:
+	var result: Array[String] = []
+	if not _require(key):
+		return result
+	var value: Variant = _data[key]
+	if typeof(value) != TYPE_ARRAY:
+		_errors.append("%s: expected a list, got %s" % [key_path(key), _describe(value)])
+		return result
+	var items: Array = value
+	for i: int in items.size():
+		if typeof(items[i]) != TYPE_STRING or (items[i] as String).is_empty():
+			_errors.append("%s[%d]: expected a non-empty string, got %s" % [key_path(key), i, _describe(items[i])])
+		else:
+			result.append(items[i])
+	return result
+
+
 ## Reads an optional list of strings, each of which must be in `allowed`.
 func opt_choice_array(key: String, allowed: Array[String]) -> Array[String]:
 	_read_keys[key] = true

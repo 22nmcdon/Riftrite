@@ -59,11 +59,6 @@ func test_small_items_have_one_socket() -> void:
 	assert_true(errors.any(func(e: String) -> bool: return e.contains("has 2 essences but only 1 socket(s)")), str(errors))
 
 
-func test_two_essences_wait_for_alloys() -> void:
-	var errors: Array[String] = _setup_errors([K.equip(_sword(100, {"size": 2}), ["ember", "frost"] as Array[String])])
-	assert_true(errors.any(func(e: String) -> bool: return e.contains("which the sim doesn't support yet")), str(errors))
-
-
 func test_unknown_essence_is_rejected() -> void:
 	var errors: Array[String] = _setup_errors([K.equip(_sword(), ["glitter"] as Array[String])])
 	assert_true(errors.any(func(e: String) -> bool: return e.contains("unknown essence \"glitter\"")), str(errors))

@@ -96,7 +96,7 @@ static func _deliver(sim: CombatSim, item: ItemState, conversion: Conversion, am
 		"shield":
 			EffectRunner.give_shield(sim, holder, amount, source)
 		"heal":
-			EffectRunner.heal(sim, holder, amount, source)
+			EffectRunner.heal(sim, holder, amount, source, item)
 		_:
 			var enemy: UnitState = output_target
 			if enemy == null or enemy.side == holder.side or not enemy.is_standing():
@@ -107,4 +107,4 @@ static func _deliver(sim: CombatSim, item: ItemState, conversion: Conversion, am
 			if conversion.adds == "damage":
 				EffectRunner.deal_hit(sim, source, enemy, amount, false)
 			else:
-				Statuses.apply(sim, enemy, conversion.adds, amount, source)
+				Statuses.apply(sim, enemy, item.replaced_status(conversion.adds), amount, source)

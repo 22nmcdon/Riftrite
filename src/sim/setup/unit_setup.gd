@@ -80,8 +80,6 @@ func _validate_effects(item: ItemDef, content: ContentDb, errors: Array[String])
 func _validate_essences(item: ItemSetup, content: ContentDb, errors: Array[String]) -> void:
 	if item.essence_ids.size() > item.socket_count():
 		errors.append("%s: item \"%s\" has %d essences but only %d socket(s)" % [id, item.def.id, item.essence_ids.size(), item.socket_count()])
-	elif item.essence_ids.size() > 1:
-		errors.append("%s: item \"%s\" has two essences (an alloy), which the sim doesn't support yet" % [id, item.def.id])
 	for essence_id: String in item.essence_ids:
 		if not content.essences.has(essence_id):
 			errors.append("%s: item \"%s\" has unknown essence \"%s\"" % [id, item.def.id, essence_id])
