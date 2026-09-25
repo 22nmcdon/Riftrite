@@ -70,7 +70,7 @@ tools/         headless sim runner, data validators
 - Rarities: **Common, Uncommon, Rare, Epic, Legendary**. S is the top tier (S items can't combine). **Legendaries never combine**; they upgrade through their own paths and appear at most once per run.
 - **Oathbinding:** an S hero + an S item can be permanently oathbound (one per hero; the item then can't be removed, moved, or sold, but can be repositioned and infused). "Specialization" means only the hero's rank-B choice; don't mix the two terms.
 - **Reforging** = removing an item's infusion.
-- **Item numbers in data are base values.** Tier and hero stats apply **percentage boosts** on top; keep base and boosted values both available (the UI shows both). Basic auto-attacks get hero boosts but no tier.
+- **Item numbers** are a small base plus multipliers on the holder's stats (HP, ATK, MGK, DEF, CRIT, ATSP). **Percentage boosts** (tier, and later others) then **multiply** on top. Keep base, stat-scaled, and final values all available (the UI shows the breakdown). Basic auto-attacks scale from stats but have no tier.
 - Items carry **multiple tags** (item tags and class-fit tags).
 - **Size never affects rarity.** Each item of a given rarity has the same appearance odds whatever its size; there are just more Small items in the pool.
 - Every item has its own crit chance (default 0). Crit damage multiplier is a tuning value (150%).

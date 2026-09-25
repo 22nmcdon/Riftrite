@@ -103,12 +103,16 @@ In The Bazaar an item gets one fixed enchantment. Here, enchantments are **Infus
 
 | Essence | Dropped by | Effect when infused |
 | --- | --- | --- |
-| Ember | Fire elementals, cultists | Hits apply Burn |
-| Frost | Wraiths, ice beasts | Hits Slow; 3 stacks Freeze for 1s |
+| Ember | Fire elementals, cultists | Adds Burn, sized from the item's output |
+| Venom | Spiders, serpents, bog things (proposed) | Adds Poison, sized from the item's output |
+| Wrath | Berserkers, war-beasts (proposed) | Adds attack damage, sized from the item's output |
+| Stone | Golems, knights | Adds Shield, sized from the item's output |
+| Verdant | Treants, fungi | Adds healing, sized from the item's output |
+| Frost | Wraiths, ice beasts | Hits Slow one random item of the target, and its auto-attack |
 | Storm | Harpies, constructs | Item cooldown −15%; chance to trigger twice |
-| Stone | Golems, knights | Grants Shield equal to part of the item's damage |
-| Verdant | Treants, fungi | Heals the ally with the lowest HP percentage |
 | Umbral | Shades, assassins | +Crit; crits apply Bleed |
+
+"Sized from the item's output" follows one conversion rule (same kind +50%; same family 50%; direct → over time 5%; over time → direct 500%). Details: `docs/plans/essence-rework.md`.
 
 **2. Socket.** Small items have 1 socket; Medium and Large have 2. Infusing happens at a Forge node or from certain events.
 
@@ -296,6 +300,12 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - **Fallen heroes always come back** after a fight, with no downside.
 - Items carry **multiple tags**, from both the item tags (Weapon, Tome, Charm, Tool, Food) and the class-fit tags (Melee, Ranged, Magic, Healing, Defense). Later, items and heroes can boost based on other items' tags.
 - **Backup in the combat sim** is added after Phase 2's build steps.
+- **Eight essences:** Venom (poison) and Wrath (attack damage) join the six. Alloys grow to 36 (28 cross-pairs + 8 pure doubles); essence resonances to 8.
+- **Essences scale from the item's output** by one conversion rule (see `docs/plans/essence-rework.md`). Added damage and damage over time go to the enemy the item hit; added shield and heal go to whoever the item shields or heals, otherwise its holder.
+- **Burn** is strongest, fades fast, and is weaker against shields. **Poison** never fades and ignores shields. **Bleed** never fades, hits shields, and lowers the target's defense by its stacks.
+- **Frost's Slow** lands on one random item of the target and also slows its auto-attack. It no longer turns into Freeze. Freeze and Stun come later, from items and heroes, not essences.
+- **Percentage boosts multiply** (tier C ×1, B ×1.5, A ×2, S ×3 as placeholders).
+- **Units have six stats:** HP, ATK, MGK, DEF, CRIT, ATSP. Item numbers are a small base plus multipliers on those stats; boosts multiply on top.
 - Every hero has their own built-in basic auto-attack, which can't be upgraded. An auto-attack item (Small, Medium, or Large) replaces it and takes up slots, and a hero can equip only one. Take the item out and the hero uses the basic auto-attack again.
 - Two copies of the same item combine into the next tier (two, not three). A new copy's infusion replaces the old one.
 - Alloy spill per side equals a single essence's spill for now.
@@ -308,5 +318,5 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - **Doubled spill:** does any pure double keep it? Overgrowth (Verdant + Verdant) is the first one to test.
 - **Act 3 collapse numbers:** to be decided later.
 - **Tier schedule:** at what point in a run do normal shops and the Tavern start offering B, A, and S? (A tuning table; it can be set once the run structure is being built.)
-- **Essence rework (in progress):** two new essences (poison and attack damage), essences that scale from the item's own output, Slow landing on a random item, and Freeze changes. The proposal and its open questions are in `docs/plans/essence-rework.md`.
+- **Stats and essence rework (in progress):** remaining questions (what damage essences do on items that don't hit, stat semantics for DEF/CRIT/ATSP, and hero rank growth) are in `docs/plans/essence-rework.md`.
 - More open questions on tiers, backup, Oathbinding, and Legendaries are listed at the end of `docs/tiers-backup-specialization.md`.
