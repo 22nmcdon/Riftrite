@@ -5,6 +5,7 @@ extends UiScreen
 
 func build() -> void:
 	heading("Spoils")
+	hint("Take what you want; anything left behind is lost when you continue.")
 	var singles: Array[int] = []
 	var relic_choice: Array[int] = []
 	for i: int in session.state.offers.size():

@@ -97,8 +97,42 @@ UI tests stay headless, with no pixel checks:
   - A whole run is clicked through by a scripted player until the run ends and the title returns.
 - **Screenshots:** `tools/ui_screenshots.gd` renders each screen of a scripted day to PNGs under Xvfb.
 
+## Readability pass (for testing without playtests)
+
+Asked for after the first build: make the UI easier to use and read, with basic assets if it makes sense.
+
+- **Art stays placeholder, drawn in code.** Outside art packs wait until the art direction is chosen (licensing, one consistent style, and they'd be replaced anyway). `Glyph` (`src/ui/widgets/glyph.gd`) draws the placeholders with no image files, so each is easy to swap for real art:
+  - unit portraits (a disc in the hero's class color, or enemy red, with an initial)
+  - essence gems
+  - empty-socket dots
+  - item icons picked from the item's tags (sword, bow, shield, cross, book, charm, hammer)
+- **The inspector** (`src/ui/widgets/inspector.gd`), a side panel beside every guild screen:
+  - Click an item you hold to select it (`RunSession.selected_uid`: UI state, never saved). The panel shows what it does and a button for each thing you can do with it right now: combine with a copy, infuse (one button per kind of essence), give to a hero, move left or right in the row, stash, sell (Caravan), reforge (Forge), upgrade (the anvil), and throw away. Dragging still works too.
+  - Hovering a ware, hero, relic, essence, or enemy item shows it in the panel instead of a tooltip.
+- **Plain-language item text** (`ItemInfo`): "When it fires: deal 9 damage to the front enemy (base 3 + 40% ATK 6 = 9)". Relics and heroes read the same way. Hero text includes stats at rank, slots, the basic attack, and the Backup effect.
+- **The fight view:**
+  - portraits, a red or green HP bar with the shield over it, and colored status chips ("Burn 3")
+  - item cooldown bars that flash on firing
+  - damage, heal, and shield numbers that float up (shorter at higher speeds), and a red tint on hit
+  - row labels and a line between the sides
+  - the fight clock, and the current speed lit
+  - keys: Space pauses, 1–4 set the speed, S skips, Enter continues
+- **The log** (`FightNames`) uses names instead of ids ("Rift Pup 1", "Brannoc"), with hero lines warm, enemy lines blue, deaths red, and phases and the result highlighted. Item "fires" lines are hidden unless switched on.
+- **The damage meter** gets a bar per item. The end of a lost fight says what the loss means.
+- **Everywhere else:**
+  - bigger text and tiles
+  - a hint under each screen's heading
+  - hero rows with a portrait, stats, specialization, and "Front row / Back row" and "Fielded / In backup" buttons
+  - hero offers with stats, basic attack, and Backup
+  - enemy previews with stats, items, and phases
+  - success notes toasted in green, with hero names instead of ids
+- **The day bar** shows the run's seed (to report a run) and an "Abandon run" button with a confirm.
+- **Tests:**
+  - `tests/ui/test_inspector.gd`: selecting and clearing; every inspector button; step-only buttons; hover previews; the selection isn't saved; plain-language text; fight names
+  - more in `test_ui_screens.gd`: the log uses names and hides fires; keyboard shortcuts; abandoning from the day bar
+  - mutation checks: selling anywhere, fires always shown, no deselect, duplicate infuse buttons, and selecting on press all fail a test
+
 ### Left for later
 
-- Log lines name units by id (`rift_pup_1`); friendlier names and colored log lines can come with real art.
-- Dropping an item onto a later tile in the same row puts it after that tile (it's removed first). This is fine for now.
-- There's no in-run menu yet (abandoning a run, settings). The title's Continue resumes the saved run.
+- Dropping an item onto a later tile in the same row puts it after that tile (it's removed first). The inspector's "Move left/right" buttons move exactly one step.
+- Real art, sound, and animation wait for the art direction.

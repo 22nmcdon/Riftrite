@@ -14,7 +14,7 @@ static func make(text: String, action: Callable, essences: bool = false, width: 
 	zone.accepts_essences = essences
 	zone.custom_minimum_size = Vector2(width, UiStyle.TILE_HEIGHT)
 	zone.add_theme_stylebox_override("panel", UiStyle.box(UiStyle.BACKGROUND, UiStyle.BORDER))
-	var label: Label = UiStyle.label(text, 12, UiStyle.TEXT_DIM)
+	var label: Label = UiStyle.label(text, 14, UiStyle.TEXT_DIM)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	zone.add_child(label)

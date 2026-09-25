@@ -110,7 +110,7 @@ func test_reroll_leave_and_refusals() -> void:
 	state.gold = 0
 	_offer_tiles(main)[0].clicked.emit()
 	assert_true(main._toast.visible, "a refused buy shows why")
-	assert_string_contains(main._toast.text, "not enough gold")
+	assert_string_contains(main._toast.text, "Not enough gold")
 	assert_true(U.press(main.screen, "Leave the Caravan"))
 	assert_true(main.screen is StopChoiceScreen)
 
@@ -207,11 +207,59 @@ func test_the_fight_plays_back_then_moves_on() -> void:
 	assert_null(U.button(fight, "Continue"))
 	assert_true(U.press(fight, "Skip"))
 	assert_true(fight.player.finished())
-	assert_eq(fight._log.get_parsed_text().strip_edges(), session.last_fight.combat_log.to_text().strip_edges())
+	var lines: PackedStringArray = PackedStringArray()
+	for entry: LogEntry in fight.shown:
+		lines.append(entry.to_text())
+	assert_eq("\n".join(lines), session.last_fight.combat_log.to_text(), "every entry reaches the screen, in order")
+	var log_text: String = fight._log.get_parsed_text()
+	for unit: UnitState in fight.player.sim.enemies:
+		assert_false(log_text.contains(unit.id), "the log names %s instead of its id" % unit.id)
+		assert_string_contains(log_text, fight.names.name_of(unit.id))
+	assert_false(log_text.contains(" fires"), "item fires are hidden by default")
+	fight._set_show_fires(true)
+	assert_string_contains(fight._log.get_parsed_text(), " fires")
 	assert_string_contains(U.text_of(fight), "Victory!" if session.last_fight.guild_won() else "Defeat")
 	assert_true(U.press(fight, "Continue"))
 	assert_false(main.screen is FightScreen)
 	assert_eq(main.screen.get_script(), main.screen_script())
+
+
+func _key(fight: FightScreen, keycode: Key) -> void:
+	var event := InputEventKey.new()
+	event.keycode = keycode
+	event.pressed = true
+	fight._unhandled_input(event)
+
+
+func test_fight_keyboard_shortcuts() -> void:
+	var main: Main = _main(U.at_fight())
+	var fight: FightScreen = main.screen
+	fight.start_fight()
+	assert_false(main.inspector.visible, "the inspector hides during playback")
+	_key(fight, KEY_3)
+	assert_eq(fight.player.speed, 2.0)
+	assert_true(fight._speed_buttons[2].button_pressed)
+	assert_false(fight._speed_buttons[1].button_pressed)
+	_key(fight, KEY_SPACE)
+	assert_true(fight.player.paused)
+	assert_eq(fight._pause_button.text, "Resume")
+	_key(fight, KEY_SPACE)
+	assert_false(fight.player.paused)
+	_key(fight, KEY_S)
+	assert_true(fight.player.finished())
+	_key(fight, KEY_ENTER)
+	assert_false(main.screen is FightScreen, "Enter continues")
+
+
+func test_the_day_bar_abandons_the_run() -> void:
+	var main: Main = _main(U.at_caravan())
+	var bar: Node = main._day_slot.get_child(0)
+	assert_string_contains(U.text_of(bar), "Seed 5")
+	var dialog: ConfirmationDialog = U.find_all(bar, ConfirmationDialog)[0]
+	dialog.confirmed.emit()
+	assert_null(main.session.state)
+	assert_true(main.screen is TitleScreen)
+	assert_false(main.inspector.visible)
 
 
 func test_rewards_and_the_run_end() -> void:

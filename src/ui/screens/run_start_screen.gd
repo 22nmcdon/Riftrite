@@ -10,6 +10,7 @@ func build() -> void:
 		all.append(i)
 	if state.phase == "start_hero":
 		heading("Choose your first hero")
+		hint("A run starts with one hero. You can recruit more at the Caravan (up to 6).")
 		add_child(offer_row(all, _pick_hero))
 	else:
 		heading("Choose a starting package")

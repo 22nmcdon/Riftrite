@@ -37,6 +37,7 @@ func _run() -> void:
 		session.buy(i)
 	for item: RunItem in session.state.stash.duplicate():
 		session.move_item(item.uid, session.state.heroes[0].hero_id, 99)
+	session.select(session.state.heroes[0].items[0].uid)
 	await _snap("caravan_bought")
 	session.leave_caravan()
 	await _snap("stop_choice")
@@ -47,7 +48,7 @@ func _run() -> void:
 	(_main.screen as FightScreen).start_fight()
 	var fight: FightScreen = _main.screen
 	fight.player.speed = 4.0
-	for frame: int in 30:
+	for frame: int in 90:
 		await process_frame
 	await _snap("fight_playing")
 	fight._on_entries(fight.player.skip_to_end())

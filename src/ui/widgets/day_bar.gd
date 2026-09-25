@@ -28,4 +28,14 @@ static func make(session: RunSession) -> DayBar:
 		var kind: String = "" if encounter.kind == "normal" else " (%s)" % encounter.kind
 		var yields: String = "" if essence.is_empty() else " · yields %s" % session.content.essences[essence].name
 		line.add_child(UiStyle.label("Today's fight: %s%s%s" % [encounter.name, kind, yields], 16, UiStyle.TEXT_DIM))
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	line.add_child(spacer)
+	line.add_child(UiStyle.label("Seed %d" % state.seed_value, 14, UiStyle.TEXT_DIM))
+	var confirm := ConfirmationDialog.new()
+	confirm.dialog_text = "Abandon this run? Its save is deleted."
+	confirm.ok_button_text = "Abandon"
+	confirm.confirmed.connect(session.abandon)
+	bar.add_child(confirm)
+	line.add_child(UiStyle.button("Abandon run", confirm.popup_centered))
 	return bar

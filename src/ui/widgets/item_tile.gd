@@ -18,6 +18,8 @@ var item_id: String
 var tier: int = 0
 var essence_ids: Array[String] = []
 var lit: bool = false
+## What the item does (shown in the inspector on hover).
+var info: String = ""
 
 
 static func owned(run_session: RunSession, item: RunItem, holder: String, at: int, holder_stats: UnitStats) -> ItemTile:
@@ -44,38 +46,52 @@ func _fill(item: String, item_tier: int, essences: Array[String], xp: int, holde
 	essence_ids = essences
 	var def: ItemDef = session.content.items[item]
 	custom_minimum_size = Vector2(maxi(def.size, 1) * UiStyle.SLOT_WIDTH, UiStyle.TILE_HEIGHT)
-	var border: Color = UiStyle.HIGHLIGHT if lit else UiStyle.rarity_color(def.rarity)
-	add_theme_stylebox_override("panel", UiStyle.box(UiStyle.PANEL, border, 4 if lit else 2))
-	tooltip_text = ItemInfo.item_text(session.content, item, item_tier, essences, xp, holder_stats)
+	var selected: bool = uid >= 0 and session.selected_uid == uid
+	var border: Color = UiStyle.HIGHLIGHT if lit or selected else UiStyle.rarity_color(def.rarity)
+	add_theme_stylebox_override("panel", UiStyle.box(UiStyle.PANEL_WARM if selected else UiStyle.PANEL, border, 4 if lit or selected else 2))
+	info = ItemInfo.item_text(session.content, item, item_tier, essences, xp, holder_stats)
+	Inspector.hover_text(self, info)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 0)
+	box.add_theme_constant_override("separation", 2)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(box)
-	var name_label: Label = UiStyle.label(def.name, 12)
+	var top := HBoxContainer.new()
+	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(top)
+	top.add_child(Glyph.item(def, UiStyle.rarity_color(def.rarity).lightened(0.2), 20))
+	var tier_label: Label = UiStyle.label(TuningDef.TIER_LABELS[item_tier], 16, UiStyle.EMBER)
+	tier_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top.add_child(tier_label)
+	for essence_id: String in essences:
+		top.add_child(Glyph.gem(essence_id, 16))
+	for i: int in session.content.tuning.socket_count(def) - essences.size():
+		top.add_child(Glyph.dot(UiStyle.BORDER, 8))
+	var name_label: Label = UiStyle.label(def.name, 14)
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(name_label)
-	var line := HBoxContainer.new()
-	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(line)
-	var tier_label: Label = UiStyle.label(TuningDef.TIER_LABELS[item_tier], 13, UiStyle.EMBER)
-	tier_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	line.add_child(tier_label)
-	for essence_id: String in essences:
-		var dot: Label = UiStyle.label("●", 13, UiStyle.ESSENCE.get(essence_id, UiStyle.TEXT))
-		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		line.add_child(dot)
 	if not footer.is_empty():
-		var price: Label = UiStyle.label(footer, 12, UiStyle.HIGHLIGHT)
+		var price: Label = UiStyle.label(footer, 14, UiStyle.HIGHLIGHT)
 		price.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		line.add_child(price)
+		box.add_child(price)
 
 
+## Offers are bought or taken on press. Owned items are selected on release
+## (a drag never releases here, so dragging doesn't select).
 func _gui_input(event: InputEvent) -> void:
 	var click: InputEventMouseButton = event as InputEventMouseButton
-	if click != null and click.pressed and click.button_index == MOUSE_BUTTON_LEFT and uid < 0:
+	if click == null or click.button_index != MOUSE_BUTTON_LEFT:
+		return
+	if uid < 0 and click.pressed:
 		clicked.emit()
+	elif uid >= 0 and not click.pressed:
+		select()
+
+
+## Selects this item in the inspector (or clears it if already selected).
+func select() -> void:
+	session.select(uid)
 
 
 func _get_drag_data(_at_position: Vector2) -> Variant:

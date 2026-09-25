@@ -14,6 +14,8 @@ const GOOD := Color("7fc97a")
 const BAD := Color("e05a4f")
 const SHIELD := Color("8fb8e8")
 const HIGHLIGHT := Color("ffd35c")
+## Enemy lines in the fight log.
+const ENEMY_TEXT := Color("b9c4e6")
 
 ## Border colors by rarity (ItemDef.RARITIES order).
 const RARITY: Array[Color] = [Color("9a9a9a"), Color("5fb85f"), Color("4f8fe0"), Color("a65fe0"), Color("f0a93a")]
@@ -27,14 +29,19 @@ const STATUS_TAGS: Dictionary[String, String] = {
 	"burn": "BRN", "poison": "PSN", "bleed": "BLD", "golden_flame": "GLD", "plasma": "PLS",
 	"blight": "BLT", "slow": "SLW", "freeze": "FRZ", "blind": "BLN",
 }
+## Status colors for the fight view.
+const STATUS_COLORS: Dictionary[String, Color] = {
+	"burn": Color("f0703a"), "poison": Color("7ed14f"), "bleed": Color("d64545"), "golden_flame": Color("ffd35c"),
+	"plasma": Color("c37bff"), "blight": Color("5f8f3a"), "slow": Color("8fb8e8"), "freeze": Color("8fe8f0"), "blind": Color("9a9a9a"),
+}
 ## Pixels per item slot.
-const SLOT_WIDTH: int = 74
-const TILE_HEIGHT: int = 64
+const SLOT_WIDTH: int = 100
+const TILE_HEIGHT: int = 96
 
 
 static func make_theme() -> Theme:
 	var theme := Theme.new()
-	theme.default_font_size = 16
+	theme.default_font_size = 18
 	theme.set_color("font_color", "Label", TEXT)
 	theme.set_color("font_color", "Button", TEXT)
 	theme.set_color("font_hover_color", "Button", HIGHLIGHT)
@@ -46,6 +53,13 @@ static func make_theme() -> Theme:
 	theme.set_stylebox("pressed", "Button", box(PANEL_WARM.darkened(0.2), EMBER))
 	theme.set_stylebox("disabled", "Button", box(PANEL.darkened(0.2), BORDER.darkened(0.3)))
 	theme.set_stylebox("focus", "Button", StyleBoxEmpty.new())
+	theme.set_stylebox("normal", "MenuButton", box(PANEL_WARM, HIGHLIGHT))
+	theme.set_stylebox("hover", "MenuButton", box(PANEL_WARM.lightened(0.1), EMBER))
+	theme.set_stylebox("hover_pressed", "Button", box(PANEL_WARM.darkened(0.2), HIGHLIGHT))
+	theme.set_color("font_pressed_color", "Button", HIGHLIGHT)
+	theme.set_stylebox("panel", "TooltipPanel", box(PANEL, EMBER))
+	theme.set_color("font_color", "TooltipLabel", TEXT)
+	theme.set_font_size("font_size", "TooltipLabel", 16)
 	return theme
 
 

@@ -7,6 +7,7 @@ extends UiScreen
 
 func build() -> void:
 	heading("The Caravan")
+	hint("Click a ware to buy it (it goes to your stash). A gold-bordered ware upgrades an item you hold: buying it combines it straight in. Hover anything to read it in the panel on the right.")
 	var items: Array[int] = []
 	var heroes: Array[int] = []
 	for i: int in session.state.offers.size():
