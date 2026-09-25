@@ -1,0 +1,52 @@
+[
+  {
+    "id": "ember",
+    "name": "Ember",
+    "effects": [
+      { "trigger": "on_hit", "type": "apply_status", "status": "burn", "stacks": 1, "target": "hit_target" }
+    ]
+  },
+  {
+    "id": "frost",
+    "name": "Frost",
+    "effects": [
+      { "trigger": "on_hit", "type": "apply_status", "status": "slow", "stacks": 1, "target": "hit_target" }
+    ]
+  },
+  {
+    "_note": "Design: cooldown -15%. The 20% chance to fire twice is a placeholder.",
+    "id": "storm",
+    "name": "Storm",
+    "modifiers": [
+      { "stat": "cooldown_bp", "value": -1500 },
+      { "stat": "extra_trigger_chance_bp", "value": 2000 }
+    ]
+  },
+  {
+    "_note": "Shield = 30% of the damage the hit dealt (placeholder), given to the item's owner.",
+    "id": "stone",
+    "name": "Stone",
+    "effects": [
+      { "trigger": "on_hit", "type": "shield", "amount_bp_of_damage": 3000, "target": "self" }
+    ]
+  },
+  {
+    "_note": "Heal amount is a placeholder.",
+    "id": "verdant",
+    "name": "Verdant",
+    "effects": [
+      { "trigger": "on_fire", "type": "heal", "amount": 8, "target": "ally_lowest_hp" }
+    ]
+  },
+  {
+    "_note": "Crit bonus is a placeholder.",
+    "id": "umbral",
+    "name": "Umbral",
+    "modifiers": [
+      { "stat": "crit_chance_bp", "value": 1500 }
+    ],
+    "effects": [
+      { "trigger": "on_crit", "type": "apply_status", "status": "bleed", "stacks": 1, "target": "hit_target" }
+    ]
+  }
+]

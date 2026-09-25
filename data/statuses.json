@@ -1,0 +1,43 @@
+[
+  {
+    "_note": "Placeholder numbers. Each stack deals damage every interval, then stacks_lost_per_interval stacks fall off.",
+    "id": "burn",
+    "name": "Burn",
+    "kind": "damage_over_time",
+    "interval_ms": 1000,
+    "damage_per_stack": 3,
+    "stacks_lost_per_interval": 1
+  },
+  {
+    "_note": "Placeholder numbers. Applied by Umbral crits.",
+    "id": "bleed",
+    "name": "Bleed",
+    "kind": "damage_over_time",
+    "interval_ms": 1000,
+    "damage_per_stack": 4,
+    "stacks_lost_per_interval": 1
+  },
+  {
+    "_note": "Design: 3 stacks Freeze for 1s. slow_bp_per_stack and duration are placeholders.",
+    "id": "slow",
+    "name": "Slow",
+    "kind": "slow",
+    "slow_bp_per_stack": 1000,
+    "duration_ms": 3000,
+    "threshold": { "stacks": 3, "apply_status": "freeze", "apply_stacks": 1, "consume": true }
+  },
+  {
+    "id": "freeze",
+    "name": "Freeze",
+    "kind": "freeze",
+    "max_stacks": 1,
+    "duration_ms": 1000
+  },
+  {
+    "_note": "Design: the blinded unit's next attack misses. Capped at 1 stack as a starting point.",
+    "id": "blind",
+    "name": "Blind",
+    "kind": "blind",
+    "max_stacks": 1
+  }
+]

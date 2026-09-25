@@ -20,6 +20,7 @@ A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The pl
 - Run all tests: `godot --headless -s addons/gut/gut_cmdln.gd -gexit` (settings in `.gutconfig.json`)
 - Run one test file: add `-gselect=test_project_setup.gd`
 - Fresh checkout: run `godot --headless --import` once first, so class names are registered. The session-start hook does this in cloud sessions.
+- Validate game data: `godot --headless --path . -s tools/validate_data.gd` (also covered by the test run)
 - Headless balance sim: `godot --headless --path . -- --sim --fights=1000 --seed=1` (not built yet)
 - Cloud sessions: `.claude/hooks/session-start.sh` installs the pinned Godot as `godot` in `~/.local/bin`.
 

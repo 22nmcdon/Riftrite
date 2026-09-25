@@ -1,0 +1,20 @@
+{
+  "_note": "Starting values for tuning. Durations are in milliseconds and must be multiples of 50 (one tick). Percentages are basis points: 10000 = 100%.",
+  "spill_single_bp": 3000,
+  "spill_alloy_bp": 3000,
+  "spill_pure_double_bp": 3000,
+  "xp_to_attuned": 100,
+  "xp_to_resonant": 300,
+  "xp_per_battle": 10,
+  "crit_damage_bp": 15000,
+  "rush_end_ms": 8000,
+  "stall_start_ms": 15000,
+  "collapse_start_ms": 45000,
+  "collapse_surge_ms": 90000,
+  "tie_ms": 180000,
+  "collapse_by_act": {
+    "_note": "Damage per second starts at base and grows by growth each second; from collapse_surge_ms the growth itself rises by accel each second. Act 3 is not decided yet.",
+    "1": { "base": 10, "growth": 10, "accel": 2 },
+    "2": { "base": 20, "growth": 20, "accel": 4 }
+  }
+}

@@ -1,6 +1,6 @@
 # Plan: Phase 2 combat sim
 
-Status: **proposed, awaiting approval.** Nothing here is built yet. Targeting, same-tick deaths, HP-only stats, crits, and the tie rules are confirmed. The collapse ramp was revised in round 3.
+Status: **approved; in progress.** Steps 1–2 are done. Targeting, same-tick deaths, HP-only stats, crits, and the tie rules are confirmed. The collapse ramp was revised in round 3.
 
 Goal (from the roadmap in `docs/design.md`): a deterministic auto-battle on fixed front/back rows, with no art. It must include essences, alloys, attunement, and spill. Done when a fight can be explained from its log, and the headless runner shows whether alloys feel worth fusing.
 
@@ -16,7 +16,7 @@ Goal (from the roadmap in `docs/design.md`): a deterministic auto-battle on fixe
 project.godot
 addons/gut/                  GUT, pinned version (committed so tests run offline)
 data/
-  tuning.json                tick rate, spill basis points, XP thresholds and per-battle XP, crit multiplier,
+  tuning.json                spill basis points, XP thresholds and per-battle XP, crit multiplier,
                              Rush/Stall windows, collapse ramp per act, tie time
   essences.json              6 essences: on-hit effects and the spill effect
   alloys.json                recipes (cross-pairs and pure doubles) and effects
@@ -27,7 +27,8 @@ data/
   enemies.json               3 enemies: HP, basic auto-attack, fixed item layout (with infusions)
 src/sim/
   sim_rng.gd                 the only RNG; seeded; also rolls in basis points
-  fixed_math.gd              basis-point math, ms → ticks, and the one rounding rule
+  fixed_math.gd              basis-point math, ms → ticks, the tick rate (a constant, 20/s), and the one rounding rule
+  data_reader.gd             typed JSON accessors with path-prefixed errors; flags unknown keys
   content_db.gd              loads and validates JSON into typed definitions (no nodes)
   defs/*.gd                  typed definition classes (ItemDef, EssenceDef, ...)
   state/unit_state.gd        runtime unit: HP, shield, statuses, side, row, index
@@ -106,7 +107,6 @@ Durations are in milliseconds and percentages in basis points. Every number is a
 
 // tuning.json (excerpt)
 {
-  "ticks_per_second": 20,
   "spill_single_bp": 3000,
   "spill_alloy_bp": 3000,
   "spill_pure_double_bp": 3000,
@@ -123,9 +123,12 @@ Durations are in milliseconds and percentages in basis points. Every number is a
 }
 ```
 
-Starting vocabulary. Every new item should be expressible with these; adding a new one means changing code and saying so.
-- **Effect types:** `damage`, `heal`, `shield`, `apply_status`, `modify_status`, `modify_cooldown`, `buff_adjacent`, `extra_trigger_chance`
-- **Targets:** `enemy_front`, `enemy_back`, `enemy_random`, `enemy_lowest_hp`, `ally_lowest_hp`, `self`, `linked_ally`
+Vocabulary as built in step 2 (`src/sim/defs/effect_def.gd`, `modifier_def.gd`). Every new item should be expressible with these; adding a new one means changing code and saying so. Later steps add what they need (for example `modify_status` for Inferno, `buff_adjacent` for adjacency).
+- **Effect triggers:** `on_fire`, `on_hit`, `on_crit`
+- **Effect types:** `damage`, `heal`, `shield` (flat `amount` or `amount_bp_of_damage`), `apply_status`
+- **Targets:** `hit_target` (on_hit/on_crit only), `self`, `ally_lowest_hp`, `enemy_front`, `enemy_back`, `enemy_random`, `enemy_lowest_hp`, `linked_ally`
+- **Modifiers** (passive item stats, basis points): `cooldown_bp`, `crit_chance_bp`, `extra_trigger_chance_bp`
+- **Status kinds:** `damage_over_time`, `slow` (with optional stack threshold, used for Frost → Freeze), `freeze`, `blind`
 - **Timing:** `normal`, `rush`, `stall`
 
 ## Combat log entry
