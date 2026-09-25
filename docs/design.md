@@ -365,6 +365,7 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 
 - **Doubled spill:** does any pure double keep it? Overgrowth (Verdant + Verdant) is the first one to test.
 - **Act 3 collapse numbers:** to be decided later.
+- **Enemy-only items** can end up with the guild (fight drops include them). The Caravan never sells them, so the only ways to upgrade one are a second copy from random loot (not the Caravan) or an upgrade stop.
 - **Run rules (decided):** reforging destroys the essences. You can always pass on a new item or essence; to take one without room, throw something away first (discarding works any time, selling only at the Caravan), and you can't buy without room. The roster's first slot is always a field slot; the other five can each be field or backup. New heroes join fielded if fewer than 5 are.
 - **Signature gear strength:** should signature items be rarer, or their bonuses smaller? The balance parties always hold them, which flips close matchups (`docs/plans/synergies-in-sim.md`). To be decided after playtesting.
 - **Tier schedule:** at what point in a run does the Caravan start offering B, A, and S? (A tuning table; it can be set once the run structure is being built.)

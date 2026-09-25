@@ -90,6 +90,7 @@ tools/         headless sim runner, data validators
 - Items carry **multiple tags** (item tags and class-fit tags).
 - **Size never affects rarity.** Each item of a given rarity has the same appearance odds whatever its size; there are just more Small items in the pool.
 - Every item has its own crit chance (default 0). Crit damage multiplier is a tuning value (150%).
+- Enemy-only items can end up with the guild through drops, but the Caravan never sells them: they upgrade only through a second copy from random loot or an upgrade stop.
 - Enemies use hand-made, fixed item layouts with set tiers, built from the same item system; some items are enemy-only. Some enemy teams carry relics (enemy-only relics exist too). Every fight guarantees one drop from the enemy team's items and relics, enemy-only ones included.
 
 ## Other core rules

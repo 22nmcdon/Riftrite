@@ -1,0 +1,156 @@
+# Plan: the day structure, economy, and run bot (Phase 3, step 5)
+
+Status: **proposed, awaiting approval and answers (end of file).** Nothing here is built yet.
+
+This step turns the run state (step 4) into a playable run:
+- the run start
+- days of **Caravan → stop → fight**
+- rewards
+- losing and replaying a day
+- the end of an act
+- the economy data
+- a headless **run bot** that plays whole runs for run-level balance reports
+
+The boss's unique mechanic is step 6; until then, day 6's fight is the act's strongest encounter.
+
+Everything stays deterministic from the run seed and saved after every action (step 4's `RunSave`).
+
+## The flow
+
+`src/run/run_flow.gd`, with `RunFlow`, drives the run. The run is always at one **step**, and each step has its own actions:
+
+```
+START_HERO ─► START_PACKAGE ─► [ CARAVAN ─► STOP_CHOICE ─► STOP ─► FIGHT ─► REWARDS ] x days ─► ACT_END
+                                                                       │
+                                                  lost (first time) ───┴─► back to CARAVAN, same day
+                                                  lost (second time) ──► RUN_OVER
+```
+
+| Step | What the player does | Actions |
+| --- | --- | --- |
+| `START_HERO` | Picks 1 of 3 random heroes (rank C) | `pick_start_hero(i)` |
+| `START_PACKAGE` | Picks 1 of 3 packages (extra gold, a random Common relic, a random Common item), plus base gold | `pick_package(i)` |
+| `CARAVAN` | Buys, sells, rerolls, then leaves | `buy(i)`, `sell(uid)`, `reroll()`, `leave()` |
+| `STOP_CHOICE` | Picks 1 of 3 stops | `pick_stop(i)` |
+| `STOP` | Does the stop (see Stops), then leaves | per stop, then `leave()` |
+| `FIGHT` | Sees the enemy team, arranges the guild, fights | `fight()` (runs the sim, returns the `FightResult` for playback) |
+| `REWARDS` | Takes or passes on each reward | `take(i)`, `pass(i)`, `done()` |
+
+- **Between fights:** step 4's actions (moving items, infusing, formation, discarding) work at every step except `RUN_OVER`.
+- **Reforging** works only at a Forge stop.
+
+## Days and fights
+
+- **Acts are data:** `data/acts.json`. Placeholders:
+  - 6 days
+  - a pool of normal encounters, elite encounters on days 3 and 5, and a boss encounter on day 6
+- **Encounters get a `kind`:** normal, elite, or boss.
+- **Each day's fight is fixed:** it's picked from the pool when the day starts, and shown during the Caravan and the stop, so the player knows which essences it drops. A replayed day keeps the same fight.
+- **Offers don't depend on earlier picks:** each offer's randomness comes from its own stream, seeded by run seed, act, day, step, attempt, and reroll count. Skipping a shop never changes tomorrow. The filters below (tiers you hold, Legendaries seen, room) still apply.
+
+## The Caravan
+
+- **Offers:** 5 items and 2 heroes (placeholders).
+  - **Tiers** follow the act's odds from `docs/tiers-backup-specialization.md` (Act 1: C 80%, B 20%).
+  - **Rarity** follows rarity weights; every item of a rarity is equally likely, whatever its size.
+- **Never offered:**
+  - enemy-only items
+  - Legendaries already seen
+  - an item or hero at a different tier than a copy you hold
+  - a hero already at S
+  - a new hero when the roster is full (a copy of one you have is fine: it combines)
+  - a relic (see question 2)
+- **Buying** needs gold and room. Heroes combine or join (step 4's `add_hero`). A hero offered at B or above comes with a preset specialization, picked at random from their three.
+- **Selling:** half the price, rounded down.
+- **Rerolling:** 1 gold, then +1 each time in the same visit.
+
+## Stops
+
+Pick 1 of 3, drawn by weight from the stops that apply right now:
+
+| Stop | What happens | Offered when |
+| --- | --- | --- |
+| **Forge** | Reforge items (step 4's `reforge`, gold per item) | Something is infused |
+| **Loot** | A free random reward: an item (random rarity *and* tier, **enemy-only items included**), an essence, or gold. Take or pass | Always |
+| **Vault** | Spend a key on a chest: a better item or a relic | You hold a key |
+| **Upgrade** | See question 1 | ? |
+| **Event** | One of the events | Always |
+
+**Events** (`data/events.json`, outcome types: gold, item by rarity, item by tier, relic by rarity, essence, key):
+- **Gold.**
+- **A random item by rarity:** Common 50%, Uncommon 28%, Rare 14%, Epic 6%, Legendary 2% (a Legendary already seen is rerolled).
+- **A random relic by rarity,** with the same odds.
+- **A random item by tier:** C 55%, B 30%, A 12%, S 3%.
+
+## Rewards and losing
+
+- **A win (a tie counts):**
+  - gold: 5 + the day number
+  - 1–2 essences from the enemy team (see question 3)
+  - **one guaranteed drop** from the enemy team's items and relics (enemy-only included), at the enemy's tier
+- **An elite:** also a guaranteed Rare item, or a free copy of one of your heroes (a rank-up).
+- **The boss:** an item or a relic from the boss team.
+- **Every reward can be taken or passed on.** Taking one without room means throwing something away first.
+- **A loss:** the day restarts at the Caravan with everything kept, plus bonus gold (10 + 5 per fight won). Then comes a fresh Caravan and stop (the attempt number changes their seeds) and a rematch against the same fight. **The second loss ends the run.**
+- **The act's end:** after the boss, the run reports its result. Acts 2 and 3 come later.
+- **Infusion XP and discoveries** come from step 4's `apply_result`.
+
+## Economy data (`data/economy.json`, placeholders to tune with the bot)
+
+| | |
+| --- | --- |
+| Base gold / packages | 10 / +8 gold, a random Common relic, or a random Common item |
+| Item price by tier | C 4, B 9, A 20, S 42 (rarity adds nothing for now) |
+| Hero price by rank | C 6, B 14, A 30, S 60 |
+| Relic price by rarity | 6, 9, 13, 18, 25 (if the Caravan sells relics) |
+| Sell | half, rounded down |
+| Reroll | 1, +1 per reroll in a visit |
+| Reforge | 3 per item (moves here from tuning) |
+| Fight gold | win: 5 + day; elite ×1.5; boss 20; loss bonus 10 + 5 per win |
+| Odds | Caravan tier odds by act, and rarity weights for the Caravan, loot, and events |
+
+## The run bot and run-level reports
+
+- **The bot:** `src/run/run_bot.gd` plays whole runs through `RunFlow`, with a simple, seeded strategy:
+  - buy what fits and what combines
+  - infuse into free sockets
+  - field the strongest five
+  - prefer Loot, then Events, then the Forge
+  - take rewards when there's room
+- **The runner:** `tools/run_runner.gd -- --runs=200 --seed=1` reports:
+  - the share of runs that beat the act
+  - the day runs end on
+  - losses per run
+  - average gold by day
+  - the most bought and taken items
+  - the synergies found
+
+## Tests (`tests/run/`)
+
+- **Flow:** the run start (1 of 3 heroes, 1 of 3 packages); the step order; actions refused at the wrong step.
+- **Caravan:**
+  - offers follow the filters: tiers you hold, no enemy-only items, Legendaries once, a full roster
+  - buying needs gold and room
+  - selling for half
+  - reroll costs rising
+  - preset specializations for B+ heroes
+- **Stops:** each stop is offered only when it applies, and each one works (Forge, Loot, Vault, Events, Upgrade).
+- **Rewards:** gold, essences, the guaranteed drop, elite and boss extras, and take or pass.
+- **Losing:** the first loss restarts the day (everything kept, bonus gold, same fight, new offers); the second loss ends the run.
+- **Determinism:**
+  - the same seed and choices give the same run
+  - offers don't change when an earlier stop is skipped
+  - save/load at any step continues the same run
+- **The bot:** it finishes runs without errors, and the runner's report lines.
+
+## Questions
+
+1. **Upgrade stops:** what exactly does one do? My draft:
+   - you pick one item and it goes up one tier, enemy-only items included (not S, not Legendaries)
+   - it costs gold by the item's current tier (placeholder: the next tier's buy price minus this one's)
+   - it appears in the stop choice like the others, always available
+
+   Should it be free instead, or limited to one item?
+2. **Relics in the Caravan:** you gave relic prices by rarity, so should the Caravan sometimes offer a relic (say one slot, 1 visit in 5)? Or do relics only come from Loot, the Vault, events, elites, bosses, and drops?
+3. **Essence drops:** I'd give each enemy type the essence it drops (a new `essence` field; for example, hounds drop Wrath and witches drop Venom). A win then gives 1–2 essences picked from the team's enemies. OK?
+4. **Keys:** where do they come from? My draft: an elite has a 50% chance to drop one, and some events give one.
