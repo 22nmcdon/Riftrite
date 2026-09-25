@@ -1,6 +1,6 @@
 # Plan: unit stats, item scaling, and the essence rework
 
-Status: **round 2 — decisions recorded, a few questions left.** Nothing here is built yet. This replaces how essences work in build step 4 and comes before step 5 (XP and spill), because spill copies whatever an essence does.
+Status: **round 3 — approved; building.** This replaces how essences work in build step 4 and comes before step 5 (XP and spill), because spill copies whatever an essence does.
 
 ## Decided
 
@@ -66,7 +66,16 @@ An item's numbers are a small base amount plus multipliers on those stats. For e
 
 Every item in a fight keeps its base values, its stat-scaled values, and its final values, so the UI can show the breakdown.
 
-## Proposed defaults (confirm or change)
+## Decided in round 3
+
+- **Damage essences on items that don't hit** (Ember, Venom, Wrath, and Umbral's Bleed on a heal or shield item): designer's call per item later; items might boost stats, buff neighbors or the team, or deal damage in new ways. **For now:** the added damage or damage over time lands on the enemy directly across from the holder. Easy to change once real items exist.
+- **Hero ranks boost stats by 25% per rank**, compounding like all boosts: C ×1, B ×1.25, A ×1.5625, S ×1.953. Enemies use the same table for their tiers.
+- **Burn** ticks twice a second and loses 5% of its stacks each tick (rounded up, so at least 1). It does half damage to shields.
+- **Scaling by rarity:** Common, Uncommon, and Rare items (and basic auto-attacks) scale only from HP, ATK, MGK, and DEF. ATSP and CRIT act only as rates for them. Epic and Legendary items may also scale from ATSP and CRIT, and can scale more steeply.
+- **Healing weakens damage over time:** each heal that restores HP removes 10% of the healed unit's Burn, Poison, and Bleed stacks (tuning value). This is a first attempt at taming the runaway numbers.
+- The stat-rule defaults below were not objected to, so they're built as placeholders.
+
+## Defaults being built (placeholders)
 
 These fill gaps so building can start. Each is a tuning value or an easy switch.
 
