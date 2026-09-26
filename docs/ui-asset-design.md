@@ -9,6 +9,8 @@
 > - The spill rules are the game's (section 8.3).
 >
 > What's built from this doc so far: `docs/plans/first-ui.md`, "Asset design pass".
+>
+> **Item art (September 2026):** the first item icons are smooth SVGs in `art/ui/items/item_<id>.svg`, written by `tools/art/item_icons.py` (64x64 canvas, imported at 2x with mipmaps). An item with an art file shows it; every other item keeps its code-drawn kind icon. Item icons are shown at 38 px on item tiles and 30 px in fight cards.
 
 ---
 

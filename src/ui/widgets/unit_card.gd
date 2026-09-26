@@ -99,7 +99,7 @@ func _build_items() -> void:
 		var line := HBoxContainer.new()
 		line.add_theme_constant_override("separation", 4)
 		inner.add_child(line)
-		var sweep: Glyph = Glyph.item(item.def, UiStyle.rarity_color(item.def.rarity).lightened(0.3), 26)
+		var sweep: Glyph = Glyph.item(item.def, UiStyle.rarity_color(item.def.rarity).lightened(0.3), 30)
 		sweep.progress = 0.0
 		line.add_child(sweep)
 		var name_label: Label = UiStyle.label(item.def.name, 12)

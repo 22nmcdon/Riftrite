@@ -4,7 +4,9 @@ extends Control
 ## language in docs/ui-asset-design.md: round gems with a glyph per essence,
 ## the four infusion gem forms, status shapes, hex relic tokens, unit
 ## portraits, and item-kind icons (with an optional cooldown sweep). Easy
-## to replace with real art later.
+## to replace with real art later: an item with an art file
+## (`art/ui/items/item_<id>.svg`, docs/ui-asset-design.md, 15) shows that
+## instead of its kind icon, and every other item keeps the drawn one.
 
 enum Shape { PORTRAIT, GEM, DOT, ITEM, INFUSION, STATUS, HEX }
 ## Infusion gem forms (docs/ui-asset-design.md, 8.3).
@@ -17,6 +19,8 @@ const CLASS_COLORS: Dictionary[String, Color] = {
 }
 const ENEMY := Color("7a3b4a")
 ## The first of an item's tags found here picks its icon.
+## Where item art lives; `%s` is the item's id.
+const ITEM_ART: String = "res://art/ui/items/item_%s.svg"
 const ITEM_ICONS: Array[String] = ["ranged", "defense", "healing", "food", "tome", "magic", "charm", "tool", "melee", "weapon"]
 ## Each essence's glyph (drawn in ink on its gem).
 const ESSENCE_GLYPHS: Dictionary[String, String] = {
@@ -42,6 +46,11 @@ var infusion: Infusion = Infusion.SINGLE
 var progress: float = -1.0
 ## HEX: draw the rift bleed (cracks).
 var cracked: bool = false
+## ITEM: the item's art, drawn instead of its kind icon (null: none).
+var art: Texture2D = null
+
+## Item art already looked up: item id -> texture, or null when there's none.
+static var _art_cache: Dictionary[String, Texture2D] = {}
 
 
 static func portrait(letter: String, fill: Color, size: int = 40) -> Glyph:
@@ -87,7 +96,20 @@ static func item(def: ItemDef, fill: Color, size: int = 22) -> Glyph:
 		if def.tags.has(tag):
 			kind = tag
 			break
-	return _make(Shape.ITEM, fill, kind, size)
+	var glyph: Glyph = _make(Shape.ITEM, fill, kind, size)
+	glyph.art = item_art(def.id)
+	if glyph.art != null:
+		# The art is imported larger (with mipmaps) and drawn scaled down.
+		glyph.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	return glyph
+
+
+## An item's art file as a texture, or null when it has none yet.
+static func item_art(item_id: String) -> Texture2D:
+	if not _art_cache.has(item_id):
+		var art_path: String = ITEM_ART % item_id
+		_art_cache[item_id] = load(art_path) as Texture2D if ResourceLoader.exists(art_path) else null
+	return _art_cache[item_id]
 
 
 static func _make(glyph_shape: Shape, fill: Color, glyph_text: String, size: int) -> Glyph:
@@ -124,7 +146,11 @@ func _draw() -> void:
 			if progress >= 0.0:
 				draw_circle(c, r, UiStyle.INK_900)
 				_pie(c, r, progress, Color(UiStyle.EMBER_500, 0.55))
-			_draw_item(c, r * (0.8 if progress >= 0.0 else 1.0))
+			var icon_r: float = r * (0.8 if progress >= 0.0 else 1.0)
+			if art != null:
+				draw_texture_rect(art, Rect2(c - Vector2(icon_r, icon_r), Vector2(icon_r, icon_r) * 2.0), false)
+			else:
+				_draw_item(c, icon_r)
 		Shape.INFUSION:
 			_draw_infusion(c, r)
 		Shape.STATUS:

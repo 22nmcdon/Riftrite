@@ -76,7 +76,7 @@ func _fill(item: String, item_tier: int, essences: Array[String], xp: int, holde
 	var top := HBoxContainer.new()
 	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(top)
-	top.add_child(Glyph.item(def, UiStyle.rarity_color(def.rarity).lightened(0.25), 26))
+	top.add_child(Glyph.item(def, UiStyle.rarity_color(def.rarity).lightened(0.25), 38))
 	var tier_label: Label = UiStyle.label(TuningDef.TIER_LABELS[item_tier], 16, UiStyle.EMBER)
 	tier_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top.add_child(tier_label)
