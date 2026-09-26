@@ -1,0 +1,27 @@
+Riftrite - vertical slice playtest build
+========================================
+
+WINDOWS
+  1. Unzip, then double-click Riftrite.exe.
+  2. The build isn't code-signed, so Windows SmartScreen may warn you the
+     first time: click "More info", then "Run anyway".
+
+MACOS
+  1. Unzip, then move Riftrite.app somewhere (Applications is fine).
+  2. The build isn't signed by a paid Apple developer account, so the first
+     time macOS will block it. Right-click (or Control-click) Riftrite.app and
+     choose Open, then Open again. On newer macOS, if there's no Open button:
+     try to open it once, then go to System Settings > Privacy & Security
+     and click "Open Anyway" near the bottom.
+
+PLAYING
+  - Hover anything to read it in the panel on the right; click an item you
+    hold to see what you can do with it.
+  - In fights: Space pauses, 1-4 set the speed, S skips to the end.
+  - The seed is in the top bar: note it if you report a bug.
+
+PLAYTEST JOURNALS (please send these after you play)
+  Every run saves a journal file, run_<seed>.json, in a "playtests" folder:
+    Windows: %APPDATA%\Godot\app_userdata\Riftrite\playtests
+    macOS:   ~/Library/Application Support/Godot/app_userdata/Riftrite/playtests
+  (On macOS, in Finder use Go > Go to Folder... and paste the path.)

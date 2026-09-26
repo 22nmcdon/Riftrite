@@ -11,7 +11,7 @@ A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The pl
 - Engine: Godot 4.7, GDScript (static typing everywhere: `var hp: int`, typed function signatures). `project.godot` makes untyped declarations a compile error, and the test run fails if any script in `src/`, `tests/`, or `tools/` doesn't compile.
 - Tests: GUT (Godot Unit Test)
 - Game data: JSON files in `data/`, loaded at startup and validated
-- **Pinned versions:** Godot `4.7.2-stable`, GUT `9.7.1` (vendored in `addons/gut/`). Upgrade either one only on purpose, in its own change, and rerun the determinism tests afterward. The Godot version also appears in `.claude/hooks/session-start.sh` and `tests/test_project_setup.gd`; keep all three in sync.
+- **Pinned versions:** Godot `4.7.2-stable`, GUT `9.7.1` (vendored in `addons/gut/`). Upgrade either one only on purpose, in its own change, and rerun the determinism tests afterward. The Godot version also appears in `.claude/hooks/session-start.sh`, `.github/workflows/*.yml`, and `tests/test_project_setup.gd` (which checks the others); keep them all in sync.
 
 ## Commands
 
@@ -25,6 +25,8 @@ A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The pl
 - Headless balance sim: `godot --headless --path . -s tools/sim_runner.gd -- --fights=200 --seed=1` (optional `--party=id`, `--encounter=id`). Parties live in `tools/sim_parties.json`; encounters in `data/encounters.json`.
 - Run-level balance (the run bot): `godot --headless --path . -s tools/run_runner.gd -- --runs=200 --seed=1`. Run data lives in `data/economy.json`, `data/acts.json`, `data/events.json`.
 - Cloud sessions: `.claude/hooks/session-start.sh` installs the pinned Godot as `godot` in `~/.local/bin`.
+- CI: `.github/workflows/tests.yml` runs the tests and the data validator on every PR and push to main.
+- Playtest builds (Windows and macOS, from `export_presets.cfg`): run the "Playtest build" workflow from the Actions tab (or push a `playtest-*` tag). It publishes the zips on a GitHub pre-release. Locally: `tools/ci/install_godot.sh --templates` (with `GODOT_VERSION` set), then `tools/ci/export_builds.sh` (zips land in `build/dist/`). Builds aren't code-signed; `tools/ci/HOW-TO-PLAY.txt` (shipped in each zip) covers the first-launch warnings.
 
 ## Folder layout
 
