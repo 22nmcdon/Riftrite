@@ -3,16 +3,16 @@
   "base_gold": 10,
   "package_gold": 8,
   "item_price": {
-    "c": 4,
-    "b": 9,
-    "a": 20,
-    "s": 42
+    "c": 2,
+    "b": 4,
+    "a": 8,
+    "s": 16
   },
   "hero_price": {
-    "c": 6,
-    "b": 14,
-    "a": 30,
-    "s": 60
+    "c": 3,
+    "b": 5,
+    "a": 16,
+    "s": 32
   },
   "relic_price": {
     "common": 6,
@@ -35,7 +35,22 @@
   "shards_per_essence": 3,
   "elite_key_chance_bp": 5000,
   "relic_choices": 3,
+  "_rarity_note": "rarity_weights: the Caravan, Loot, and tier shops. Legendary must be 0: Legendary items come only from the Vault and rare events (docs/plans/legendary-items.md).",
   "rarity_weights": {
+    "common": 50,
+    "uncommon": 28,
+    "rare": 14,
+    "epic": 6,
+    "legendary": 0
+  },
+  "vault_rarity_weights": {
+    "common": 0,
+    "uncommon": 0,
+    "rare": 14,
+    "epic": 6,
+    "legendary": 6
+  },
+  "event_rarity_weights": {
     "common": 50,
     "uncommon": 28,
     "rare": 14,
@@ -69,18 +84,8 @@
     "epic": 6,
     "legendary": 0
   },
-  "stop_weights": {
-    "forge": 2,
-    "loot": 3,
-    "vault": 2,
-    "retrain": 1,
-    "event": 3
-  },
-  "loot_weights": {
-    "item": 6,
-    "essence": 3,
-    "gold": 1
-  },
+  "node_choices": 2,
+  "_node_note": "The day's stop choice: this many different nodes, drawn by weight from data/nodes.json and data/events.json (docs/plans/stop-nodes.md).",
   "loot_gold": 6,
   "_legendary_note": "Legendary relics are boss relics: only the boss's relic choice and the rare Ancient Reliquary event give them."
 }

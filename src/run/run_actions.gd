@@ -12,6 +12,8 @@ class Result:
 	var error: String = ""
 	## What happened, for a run log.
 	var note: String = ""
+	## Anything else it set off, like a Legendary growing a tier.
+	var notes: Array[String] = []
 
 
 static func _ok(note: String) -> Result:
@@ -80,13 +82,16 @@ static func discard_item(state: RunState, content: ContentDb, uid: int) -> Resul
 
 
 ## A new item into the stash. Refused without room: make room first, or pass.
+## A Legendary always joins at its path's start tier, and only once.
 static func add_item(state: RunState, content: ContentDb, item_id: String, tier: int = 0) -> Result:
 	if not content.items.has(item_id):
 		return _fail("unknown item \"%s\"" % item_id)
 	var def: ItemDef = content.items[item_id]
+	if def.legendary != null and _holds(state, item_id):
+		return _fail("the guild already holds %s" % def.name)
 	if state.stash_used(content) + def.size > content.tuning.stash_slots:
 		return _fail("the stash has no room for %s" % def.name)
-	var item: RunItem = RunItem.make(state.take_uid(), item_id, clampi(tier, 0, 3))
+	var item: RunItem = RunItem.make(state.take_uid(), item_id, def.legendary.start_tier if def.legendary != null else clampi(tier, 0, 3))
 	state.stash.append(item)
 	if def.rarity == "legendary" and not state.legendaries_seen.has(item_id):
 		state.legendaries_seen.append(item_id)
@@ -174,6 +179,63 @@ static func reforge(state: RunState, content: ContentDb, uid: int) -> Result:
 	return _ok("reforged %s" % _name(content, item))
 
 
+# --- Legendary paths ------------------------------------------------------------
+
+## Feeds an Essence-hungry Legendary the essence its step wants, from the
+## pouch (any time between fights).
+static func feed_essence(state: RunState, content: ContentDb, uid: int, pouch_index: int) -> Result:
+	var item: RunItem = state.find_item(uid)
+	if item == null:
+		return _fail("that item isn't in the guild")
+	var path: LegendaryDef = RunLegendary.path_of(content, item)
+	if path == null or path.path != "essence":
+		return _fail("only an Essence-hungry Legendary can be fed essences")
+	if item.tier >= 3:
+		return _fail("%s is fully grown" % _name(content, item))
+	if pouch_index < 0 or pouch_index >= state.pouch.size():
+		return _fail("no essence there")
+	var wanted: String = path.wanted_at(item.tier)
+	if state.pouch[pouch_index] != wanted:
+		return _fail("%s wants %s" % [_name(content, item), content.essences[wanted].name])
+	state.pouch.remove_at(pouch_index)
+	var result: Result = _ok("fed %s to %s" % [content.essences[wanted].name, _name(content, item)])
+	result.notes = RunLegendary.advance(content, item, 1)
+	return result
+
+
+## Feeds another item to a Devourer (any time between fights). The meal is
+## worth its tier + 1, and leaves a trace by its rarity. Never a Legendary.
+static func devour_item(state: RunState, content: ContentDb, uid: int, food_uid: int) -> Result:
+	var item: RunItem = state.find_item(uid)
+	var food: RunItem = state.find_item(food_uid)
+	if item == null or food == null:
+		return _fail("that item isn't in the guild")
+	var path: LegendaryDef = RunLegendary.path_of(content, item)
+	if path == null or path.path != "devour":
+		return _fail("only a Devourer can eat items")
+	if uid == food_uid:
+		return _fail("%s can't eat itself" % _name(content, item))
+	if not LegendaryDef.EDIBLE_RARITIES.has(content.items[food.item_id].rarity):
+		return _fail("a Legendary can't be eaten")
+	state.list_for(state.owner_of(food_uid)).erase(food)
+	item.eaten.append(food.item_id)
+	var result: Result = _ok("%s devours %s" % [_name(content, item), _name(content, food)])
+	result.notes = RunLegendary.advance(content, item, RunLegendary.meal_value(food))
+	return result
+
+
+## Whether the guild holds a copy of an item.
+static func _holds(state: RunState, item_id: String) -> bool:
+	for item: RunItem in state.stash:
+		if item.item_id == item_id:
+			return true
+	for hero: RunHero in state.heroes:
+		for item: RunItem in hero.items:
+			if item.item_id == item_id:
+				return true
+	return false
+
+
 # --- heroes -------------------------------------------------------------------
 
 ## A hero joins: from the Caravan, the run start, or a reward. The same hero
@@ -195,7 +257,9 @@ static func add_hero(state: RunState, content: ContentDb, hero_id: String, rank:
 		existing.rank += 1
 		if existing.rank == 1 and existing.specialization_id.is_empty():
 			existing.needs_specialization = true
-		return _ok("%s ranks up to %s" % [name, TuningDef.TIER_LABELS[existing.rank]])
+		var ranked: Result = _ok("%s ranks up to %s" % [name, TuningDef.TIER_LABELS[existing.rank]])
+		ranked.notes = RunLegendary.on_rank_up(state, content, existing)
+		return ranked
 	if state.heroes.size() >= FightSetup.ROSTER_CAP:
 		return _fail("the roster is full (%d)" % FightSetup.ROSTER_CAP)
 	if not specialization_id.is_empty():

@@ -219,7 +219,7 @@ There's no branching map. Like Guildrun and The Bazaar, each act is a set number
 
 **A day** is always:
 1. **Caravan:** buy items and recruit heroes (buying a second copy of a hero ranks them up). It's the shop and tavern in one.
-2. **Stop:** pick one of a few offered stops. Some stops only show up when they'd be useful: the Forge (reforging) only if something is infused, and the Vault only if you hold a key.
+2. **Stop:** pick one of **2 nodes**, drawn each day from one pool. Every event is its own node, next to the Forge, three kinds of Loot, the Vault, Retrain, and an extra fight (a skirmish). Each node shows its name and what it offers before you pick. Some only show up when they'd be useful: the Forge only if something is infused, the Vault only with a key, and Retrain only when a hero has a specialization. Details: `docs/plans/stop-nodes.md`.
 3. **Fight:** one fight, shown ahead of time. It shows the enemy team, so you know which essences it drops.
 
 A possible later change: two rounds per day (Caravan, stop, fight, then Caravan, stop, and an elite or the boss). The day's steps live in data, so trying it is a data change.
@@ -238,9 +238,10 @@ A possible later change: two rounds per day (Caravan, stop, fight, then Caravan,
 | Fight | Encounter; drops gold, 1–2 essences, and one guaranteed item (or, rarely, relic) from the enemy team |
 | Elite | Harder fight; guaranteed Rare item or rank-up |
 | Forge (stop) | Reforge (remove infusions); only offered when something is infused |
-| Loot (stop) | A free random reward |
+| Loot (stops) | A free reward. Three nodes, each with its own appearance rate: an item, an essence, or gold |
+| Skirmish (stop) | An extra fight against another of the day's normal encounters. A win gives a normal win's rewards; a loss gives nothing and isn't counted as a loss. It counts for infusion XP, discoveries, and Legendary paths |
 | Vault (stop) | Spend a key on a locked chest (Gungeon-style); only offered when you hold a key |
-| Event (stop) | A choice, sometimes with trade-offs, sometimes a rescued NPC |
+| Event (stops) | Each event is its own node with its own appearance rate: a choice, sometimes with trade-offs, sometimes a rescued NPC |
 | Boss | Act boss with a unique mechanic; the act's last fight; drops an item or a relic |
 
 **First events:** gold; a random item by rarity (Common most likely, Legendary least); a random relic by rarity; a random item by tier (C most likely, S least). More, including one that offers retraining, come later.
@@ -344,7 +345,7 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - Pure doubles each have their own effect. Their bonus effect never strengthens spill. Doubled spill as a pure double's effect is an optional idea, tried first on Overgrowth (Verdant + Verdant).
 - Infusion XP comes from item fires (amount set per item, by type and size) plus battles fought. XP resets when an infusion becomes an alloy or pure double.
 - Essence resonance counts essences: a single = 1, an alloy = 1 of each half, a pure double = 2, and a transformation counts its socketed essence(s).
-- **No branching map.** Each act is a set number of days. A day is a guaranteed shop, one fight shown ahead, and a stop you pick (Forge only if something is infused, Vault only with a key, loot, events). Offers are random per run from the seed and don't depend on earlier picks for now.
+- **No branching map.** Each act is a set number of days. A day is a guaranteed shop, one fight shown ahead, and a stop you pick from 2 nodes drawn from one pool (every event, three loot kinds, the Forge only if something is infused, the Vault only with a key, Retrain, and an extra fight). Offers are random per run from the seed and don't depend on earlier picks for now.
 - **The Caravan** is the shop: it sells items and heroes (Merchant and Tavern are one). Heroes rank up like items: buy a second copy at the same rank and combine. The hero you already have keeps their specialization and items; heroes in the Caravan come with no items.
 - **The Caravan never offers an item or hero at a different tier than a copy you already hold.** Holding the same item at different tiers is still allowed when the copies come from elsewhere (Vault, loot, fight drops, events), just not from the Caravan.
 - **Day order:** Caravan → stop → fight. Two rounds per day (Caravan, stop, fight, Caravan, stop, elite or boss) is a possible later change.
@@ -380,7 +381,7 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - **Run rules (decided):** reforging destroys the essences. You can always pass on a new item or essence; to take one without room, throw something away first (discarding works any time, selling only at the Caravan), and you can't buy without room. The roster's first slot is always a field slot; the other five can each be field or backup. New heroes join fielded if fewer than 5 are.
 - **Signature gear strength:** should signature items be rarer, or their bonuses smaller? The balance parties always hold them, which flips close matchups (`docs/plans/synergies-in-sim.md`). To be decided after playtesting.
 - **Act 1's essences:** the design says each biome favors two essences, but Act 1 drops four for now (Wrath, Stone, Venom, Ember). Undecided; revisit after playtesting (`docs/plans/slice-content.md`).
-- **Legendary items** and their upgrade paths come right after the slice content (`docs/plans/slice-content.md`); the slice has none until then.
+- **Legendary items (decided, built):** six, one per upgrade path: grows by use (counts the item's hits; starts at C), essence-hungry (fed essences from the pouch; B), devourer (fed other items, keeps a trace of each; C), bonded (its holder ranking up; B), martyr (its holder falling in a won fight; B), and boss-forged (a boss beaten while equipped; A). They come from the Vault and rare events (including the Barrow Hoard, a Legendary item event), never the Caravan, Loot, or tier shops. A kills-counting grows-by-use Legendary comes later. Details: `docs/plans/legendary-items.md`.
 - **Tier schedule:** at what point in a run does the Caravan start offering B, A, and S? (A tuning table; it can be set once the run structure is being built.)
 - **Stats and essence rework (in progress):** decisions, placeholders, and the build order are in `docs/plans/essence-rework.md`. Damage essences on items that don't hit need real per-item designs later; for now they hit the enemy directly across.
 - More open questions on tiers, backup, Oathbinding, and Legendaries are listed at the end of `docs/tiers-backup-specialization.md`.

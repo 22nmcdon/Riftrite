@@ -29,19 +29,31 @@ var _rift: bool = false
 
 
 func build() -> void:
-	_rift = session.content.encounters[session.state.encounter_id].kind != "normal"
-	heading("Today's fight: " + session.content.encounters[session.state.encounter_id].name)
-	hint("Last chance to arrange your guild. Hover an enemy's item to read it. During the fight: Space pauses, 1-4 set the speed, S skips to the end.")
+	var encounter_id: String = _encounter_id()
+	_rift = session.content.encounters[encounter_id].kind != "normal"
+	if session.skirmish_pending():
+		heading("%s: %s" % [session.run.node_name(session.state.stop_node), session.content.encounters[encounter_id].name])
+		hint("An extra fight before today's. Win for a normal win's spoils; losing costs nothing (it isn't a loss). Hover an enemy's item to read it.")
+	else:
+		heading("Today's fight: " + session.content.encounters[encounter_id].name)
+		hint("Last chance to arrange your guild. Hover an enemy's item to read it. During the fight: Space pauses, 1-4 set the speed, S skips to the end.")
 	var enemies := HFlowContainer.new()
 	enemies.add_theme_constant_override("h_separation", 10)
-	for unit: UnitSetup in SetupBuilder.encounter_units(session.content, session.state.encounter_id):
+	for unit: UnitSetup in SetupBuilder.encounter_units(session.content, encounter_id):
 		enemies.add_child(_enemy_preview(unit))
 	add_child(enemies)
 	var fight_button: Button = UiStyle.primary(UiStyle.button("  Fight!  ", start_fight))
 	fight_button.add_theme_font_size_override("font_size", 24)
 	fight_button.custom_minimum_size = Vector2(200, 56)
 	add_child(fight_button)
+	if session.skirmish_pending():
+		add_child(UiStyle.button("Skip the skirmish, on to today's fight", func() -> void: session.leave_stop()))
 	add_child(GuildPanel.make(session))
+
+
+## Who this screen fights: a pending skirmish's enemies, or the day's.
+func _encounter_id() -> String:
+	return session.state.stop_encounter if session.skirmish_pending() else session.state.encounter_id
 
 
 func _enemy_preview(unit: UnitSetup) -> Control:
@@ -77,7 +89,7 @@ func _enemy_preview(unit: UnitSetup) -> Control:
 
 func start_fight() -> void:
 	playing = true
-	var result: RunActions.Result = session.fight()
+	var result: RunActions.Result = session.skirmish() if session.skirmish_pending() else session.fight()
 	if not result.ok:
 		playing = false
 		return
@@ -100,7 +112,7 @@ func _build_playback() -> void:
 	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	field.add_theme_constant_override("separation", 8)
 	main.add_child(field)
-	if not session.last_discoveries.is_empty():
+	if not session.last_discoveries.is_empty() or not session.last_growth.is_empty():
 		field.add_child(_discovery_banner())
 	var sim: CombatSim = player.sim
 	var rows: Array[Array] = [
@@ -160,7 +172,8 @@ func _build_playback() -> void:
 	side.add_child(_end_box)
 
 
-## "Synergy discovered!" for each synergy this fight found for the first time.
+## "Synergy discovered!" for each synergy this fight found for the first
+## time, and a line for each Legendary that grew a tier.
 func _discovery_banner() -> Control:
 	var banner := PanelContainer.new()
 	banner.add_theme_stylebox_override("panel", UiStyle.box(UiStyle.OAK_600, UiStyle.BRASS_300, 3))
@@ -171,6 +184,8 @@ func _discovery_banner() -> Control:
 		line.mouse_filter = Control.MOUSE_FILTER_STOP
 		line.tooltip_text = ItemInfo.synergy_text(session.content, synergy_id)
 		box.add_child(line)
+	for note: String in session.last_growth:
+		box.add_child(UiStyle.label("✦ %s" % note, 20, UiStyle.rarity_color("legendary").lightened(0.3)))
 	return banner
 
 
@@ -287,7 +302,11 @@ func _show_end() -> void:
 	var outcome: String = "Victory!" if result.outcome == FightResult.Outcome.VICTORY else ("A tie (counts as a victory)" if result.outcome == FightResult.Outcome.TIE else "Defeat")
 	_end_box.add_child(UiStyle.label(outcome, 28, UiStyle.GOOD if result.guild_won() else UiStyle.BAD))
 	if not result.guild_won():
-		var losses: String = "The run is over." if session.state.phase == "run_over" else "The day starts over (with bonus gold). One more loss ends the run."
+		var losses: String = "The day starts over (with bonus gold). One more loss ends the run."
+		if session.state.phase == "run_over":
+			losses = "The run is over."
+		elif session.state.phase == "stop":
+			losses = "A lost skirmish costs nothing: no spoils, and it doesn't count as a loss."
 		_end_box.add_child(UiStyle.label(losses, 16, UiStyle.TEXT_DIM))
 	_end_box.add_child(DamageMeterView.make(result, names))
 	var button: Button = UiStyle.button("Continue (Enter)", _continue)

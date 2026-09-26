@@ -7,13 +7,17 @@ extends RefCounted
 ##   - at the Caravan: buy heroes while the guild is small (or to rank one up),
 ##     then items: upgrades for held copies first, then the rarest (Epics for
 ##     alloys), cheapest first within a rarity
-##   - combine copies, equip what fits, infuse free sockets, field up to 5,
-##     sturdy classes in the front row and the rest in the back
-##   - stops: Loot, then Events, the Vault, Retrain, the Forge; take what fits;
-##     upgrade the best item before the boss
+##   - combine copies, equip what fits, feed Legendaries (the essences an
+##     Essence-hungry one wants; stash leftovers to a Devourer), infuse free
+##     sockets, field up to 5, sturdy classes in the front row and the rest
+##     in the back
+##   - stops: a skirmish (an extra fight: losing costs nothing), then Loot,
+##     Events, the Vault, Retrain, the Forge; take what fits; upgrade the best
+##     item before the boss
 ##   - rewards: take everything that fits (the first relic of a choice)
 
-const STOP_PREFERENCE: Array[String] = ["loot", "event", "vault", "retrain", "forge"]
+## Node kinds, best first.
+const STOP_PREFERENCE: Array[String] = ["fight", "loot", "event", "vault", "retrain", "forge"]
 ## Classes that stand in the front row; the rest stand in the back.
 const FRONT_CLASSES: Array[String] = ["warden", "striker", "trickster"]
 ## Heroes to recruit before only buying copies (to rank up).
@@ -35,6 +39,11 @@ class Report:
 	## Reached the act's last day (the boss), and how many boss fights it took.
 	var reached_boss: bool = false
 	var boss_fights: int = 0
+	## Skirmishes (extra fights) fought and won.
+	var skirmishes: int = 0
+	var skirmish_wins: int = 0
+	## Legendaries held at the end, with their tier: "tallymans_bow:B".
+	var legendaries: Array[String] = []
 	var errors: Array[String] = []
 
 
@@ -54,6 +63,12 @@ static func play(run_seed: int, content: ContentDb, run: RunContent) -> Report:
 	report.wins = state.wins
 	report.discovered = state.discovered.duplicate()
 	report.reached_boss = state.day >= run.act(state.act).days
+	var held: Array[RunItem] = state.stash.duplicate()
+	for hero: RunHero in state.heroes:
+		held.append_array(hero.items)
+	for item: RunItem in held:
+		if content.items[item.item_id].legendary != null:
+			report.legendaries.append("%s:%s" % [item.item_id, TuningDef.TIER_LABELS[item.tier]])
 	var problems: Array[String] = state.check(content)
 	report.errors.append_array(problems)
 	return report
@@ -72,11 +87,18 @@ static func _act(state: RunState, content: ContentDb, run: RunContent, report: R
 			_organize(state, content)
 			_must(RunFlow.leave_caravan(state, content, run), report)
 		"stop_choice":
-			_must(RunFlow.pick_stop(state, content, run, _preferred_stop(state)), report)
+			_must(RunFlow.pick_stop(state, content, run, _preferred_stop(state, run)), report)
 		"stop":
 			if state.stop_kind == "upgrade":
 				_upgrade_best(state, content)
 			else:
+				if state.stop_kind == "fight":
+					_organize(state, content)
+					var fought: Array = RunFlow.skirmish(state, content, run)
+					_must(fought[0], report)
+					report.skirmishes += 1
+					if fought[1] != null and (fought[1] as FightResult).guild_won():
+						report.skirmish_wins += 1
 				_take_all(state, content, report)
 			_organize(state, content)
 			_must(RunFlow.leave_stop(state), report)
@@ -119,10 +141,10 @@ static func _shop(state: RunState, content: ContentDb, report: Report) -> void:
 			_organize(state, content)
 
 
-static func _preferred_stop(state: RunState) -> int:
-	for stop: String in STOP_PREFERENCE:
+static func _preferred_stop(state: RunState, run: RunContent) -> int:
+	for kind: String in STOP_PREFERENCE:
 		for i: int in state.offers.size():
-			if state.offers[i]["stop"] == stop:
+			if run.node_kind(state.offers[i]["stop"]) == kind:
 				return i
 	return 0
 
@@ -167,6 +189,7 @@ static func _organize(state: RunState, content: ContentDb) -> void:
 		for hero: RunHero in state.heroes:
 			if RunActions.move_item(state, content, item.uid, hero.hero_id, hero.items.size()).ok:
 				break
+	_feed_legendaries(state, content)
 	var holders: Array[RunItem] = state.stash.duplicate()
 	for hero: RunHero in state.heroes:
 		holders.append_array(hero.items)
@@ -177,6 +200,26 @@ static func _organize(state: RunState, content: ContentDb) -> void:
 		if hero.benched:
 			RunActions.set_benched(state, hero.hero_id, false)
 	_arrange_rows(state, content)
+
+
+## Essence-hungry Legendaries eat the essences they want before anything is
+## infused; a Devourer eats whatever is left in the stash after equipping.
+static func _feed_legendaries(state: RunState, content: ContentDb) -> void:
+	var all_items: Array[RunItem] = state.stash.duplicate()
+	for hero: RunHero in state.heroes:
+		all_items.append_array(hero.items)
+	for item: RunItem in all_items:
+		var path: LegendaryDef = RunLegendary.path_of(content, item)
+		if path == null or path.path != "essence":
+			continue
+		while item.tier < 3 and state.pouch.has(path.wanted_at(item.tier)):
+			RunActions.feed_essence(state, content, item.uid, state.pouch.find(path.wanted_at(item.tier)))
+	var devourers: Array[RunItem] = RunLegendary.devourers(state, content)
+	if devourers.is_empty():
+		return
+	# Refused for the Devourer itself and other Legendaries.
+	for food: RunItem in state.stash.duplicate():
+		RunActions.devour_item(state, content, devourers[0].uid, food.uid)
 
 
 ## Sturdy classes in front, the rest behind; someone always stands in front.

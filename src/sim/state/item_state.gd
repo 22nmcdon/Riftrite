@@ -18,6 +18,9 @@ var owner_index: int = -1
 var slot: int
 ## 0 = C ... 3 = S. Always 0 for a basic auto-attack.
 var tier: int = 0
+## A Devourer's trace (see LegendaryDef): its own effects get +this share,
+## multiplied on top like the tier.
+var trace_bp: int = 0
 ## The basic auto-attack or an auto-attack item (ATSP speeds these up).
 var is_auto_attack: bool = false
 ## The holder's stats, which the item's numbers scale from.
@@ -61,11 +64,12 @@ var progress_bp: int = 0
 var slow: StatusState = null
 
 
-static func make(item_def: ItemDef, item_slot: int, holder_stats: UnitStats, content: ContentDb, item_essences: Array[EssenceDef] = [], item_tier: int = 0, xp: int = 0) -> ItemState:
+static func make(item_def: ItemDef, item_slot: int, holder_stats: UnitStats, content: ContentDb, item_essences: Array[EssenceDef] = [], item_tier: int = 0, xp: int = 0, trace: int = 0) -> ItemState:
 	var state := ItemState.new()
 	state.def = item_def
 	state.slot = item_slot
 	state.tier = item_tier
+	state.trace_bp = trace
 	state.stats = holder_stats
 	state.is_auto_attack = item_def.is_basic_attack or item_def.auto_attack
 	state.essences = item_essences
@@ -255,6 +259,8 @@ func _compute_values(content: ContentDb, apps: Array[EssenceApplication], aura: 
 				boosts.append(ValueBreakdown.multiplier("%s, %s" % [transformation.name, Infusions.LEVEL_NAMES[infusion_level]], tuning.infusion_level_bp[infusion_level]))
 			if not def.is_basic_attack:
 				boosts.append(ValueBreakdown.multiplier("%s tier" % TuningDef.TIER_LABELS[tier], tuning.tier_multiplier_bp[tier]))
+				if trace_bp > 0:
+					boosts.append(ValueBreakdown.multiplier("devoured", FixedMath.BP_ONE + trace_bp))
 			var kind: String = Conversions.output_kind(sourced.effect, content)
 			for app: EssenceApplication in apps:
 				if not kind.is_empty() and app.essence.adds == kind and not app.essence.adds_on_crit_only:

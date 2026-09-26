@@ -41,8 +41,13 @@ var phase: String = ""
 ## What the player is being offered right now (heroes, packages, Caravan
 ## wares, stops, loot, rewards), as plain dictionaries (see RunFlow).
 var offers: Array[Dictionary] = []
-## The stop being visited ("loot", "upgrade", ...), or "".
+## The stop being visited: what it does ("loot", "event", "fight",
+## "upgrade", ...; RunFlow.STOP_KINDS), and which node it is (a node or event
+## id, or "upgrade"), or "".
 var stop_kind: String = ""
+var stop_node: String = ""
+## A skirmish stop's enemies (an encounter id), or "".
+var stop_encounter: String = ""
 ## Whether this stop's one-time action (retrain, upgrade) is spent.
 var stop_used: bool = false
 ## Today's fight.
@@ -153,6 +158,7 @@ func check(content: ContentDb) -> Array[String]:
 			_check_item(item, content, candidate.hero_id, errors, seen_uids)
 	for item: RunItem in stash:
 		_check_item(item, content, "the stash", errors, seen_uids)
+	_check_legendaries_once(content, errors)
 	if stash_used(content) > content.tuning.stash_slots:
 		errors.append("the stash holds %d slots of items; it has %d" % [stash_used(content), content.tuning.stash_slots])
 	if pouch.size() > content.tuning.pouch_cap:
@@ -211,6 +217,37 @@ func _check_item(item: RunItem, content: ContentDb, where: String, errors: Array
 			errors.append("%s: %s has an unknown essence \"%s\"" % [where, def.name, essence_id])
 	if item.xp < 0 or (item.xp > 0 and item.essence_ids.is_empty()):
 		errors.append("%s: %s has %d XP but no infusion" % [where, def.name, item.xp])
+	var path: LegendaryDef = def.legendary
+	if path == null:
+		if item.progress != 0 or not item.eaten.is_empty():
+			errors.append("%s: %s has no upgrade path, so no path progress" % [where, def.name])
+		return
+	if item.tier < path.start_tier:
+		errors.append("%s: %s starts at %s, so it can't be below it" % [where, def.name, TuningDef.TIER_LABELS[path.start_tier]])
+	if item.progress < 0 or (item.tier >= 3 and item.progress != 0):
+		errors.append("%s: %s has %d path progress (never negative, 0 at S)" % [where, def.name, item.progress])
+	if not item.eaten.is_empty() and path.path != "devour":
+		errors.append("%s: only a Devourer eats items" % where)
+	for eaten_id: String in item.eaten:
+		if not content.items.has(eaten_id):
+			errors.append("%s: %s ate an unknown item \"%s\"" % [where, def.name, eaten_id])
+
+
+## A Legendary is held at most once, and counts as seen.
+func _check_legendaries_once(content: ContentDb, errors: Array[String]) -> void:
+	var held: Array[String] = []
+	var lists: Array = [stash]
+	for candidate: RunHero in heroes:
+		lists.append(candidate.items)
+	for list: Array in lists:
+		for item: RunItem in list:
+			if not content.items.has(item.item_id) or content.items[item.item_id].legendary == null:
+				continue
+			if held.has(item.item_id):
+				errors.append("%s is held twice (a Legendary appears once per run)" % content.items[item.item_id].name)
+			held.append(item.item_id)
+			if not legendaries_seen.has(item.item_id):
+				errors.append("%s is held but not marked as seen" % content.items[item.item_id].name)
 
 
 # --- save and load --------------------------------------------------------------
@@ -239,6 +276,8 @@ func to_dict() -> Dictionary:
 		"phase": phase,
 		"offers": offers.duplicate(true),
 		"stop_kind": stop_kind,
+		"stop_node": stop_node,
+		"stop_encounter": stop_encounter,
 		"stop_used": stop_used,
 		"encounter": encounter_id,
 		"reroll_count": reroll_count,
@@ -298,6 +337,10 @@ static func from_dict(data: Variant, content: ContentDb) -> Array:
 	state.stop_kind = reader.opt_string("stop_kind", "")
 	if not state.stop_kind.is_empty() and not RunFlow.STOP_KINDS.has(state.stop_kind):
 		reader.error("unknown stop \"%s\"" % state.stop_kind)
+	state.stop_node = reader.opt_string("stop_node", "")
+	state.stop_encounter = reader.opt_string("stop_encounter", "")
+	if not state.stop_encounter.is_empty() and not content.encounters.has(state.stop_encounter):
+		reader.error("unknown encounter \"%s\"" % state.stop_encounter)
 	state.stop_used = reader.opt_bool("stop_used", false)
 	state.encounter_id = reader.opt_string("encounter", "")
 	if not state.encounter_id.is_empty() and not content.encounters.has(state.encounter_id):

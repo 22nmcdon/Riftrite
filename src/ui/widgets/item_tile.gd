@@ -29,6 +29,8 @@ var lit: bool = false
 var info: String = ""
 ## The frame when not hovered or a drop target.
 var _style: StyleBoxFlat
+## The token's column (icon row, name, footer, path bar).
+var _box: VBoxContainer
 ## Drop checks already made this drag: payload key -> would it work.
 var _drop_checks: Dictionary[String, bool] = {}
 
@@ -39,7 +41,8 @@ static func owned(run_session: RunSession, item: RunItem, holder: String, at: in
 	tile.uid = item.uid
 	tile.owner_id = holder
 	tile.index = at
-	tile._fill(item.item_id, item.tier, item.essence_ids, item.xp, holder_stats, "")
+	tile._fill(item.item_id, item.tier, item.essence_ids, item.xp, holder_stats, "", item.trace_bp(run_session.content))
+	tile._add_path_bar(item)
 	return tile
 
 
@@ -51,7 +54,7 @@ static func offer(run_session: RunSession, item: String, item_tier: int, footer:
 	return tile
 
 
-func _fill(item: String, item_tier: int, essences: Array[String], xp: int, holder_stats: UnitStats, footer: String) -> void:
+func _fill(item: String, item_tier: int, essences: Array[String], xp: int, holder_stats: UnitStats, footer: String, trace_bp: int = 0) -> void:
 	item_id = item
 	tier = item_tier
 	essence_ids = essences
@@ -64,12 +67,13 @@ func _fill(item: String, item_tier: int, essences: Array[String], xp: int, holde
 	_style = UiStyle.box(fill, border, 4 if lit or selected else 3)
 	add_theme_stylebox_override("panel", _style)
 	pivot_offset = custom_minimum_size / 2.0
-	info = ItemInfo.item_text(content, item, item_tier, essences, xp, holder_stats)
+	info = ItemInfo.item_text(content, item, item_tier, essences, xp, holder_stats, trace_bp)
 	Inspector.hover_text(self, info)
 	mouse_entered.connect(_lift.bind(true))
 	mouse_exited.connect(_lift.bind(false))
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var box := VBoxContainer.new()
+	_box = box
 	box.add_theme_constant_override("separation", 2)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(box)
@@ -99,6 +103,24 @@ func _fill(item: String, item_tier: int, essences: Array[String], xp: int, holde
 		box.add_child(price)
 	var level: int = InfusionLook.level(content, essences, xp)
 	add_child(FrameDecor.make(ItemDef.RARITIES.find(def.rarity), def.enemy_only, InfusionLook.spill_colors(form, essences, level), InfusionLook.shows_no_spill(form, level)))
+
+
+## A Legendary's path progress: a thin bar along the bottom (full at S).
+func _add_path_bar(item: RunItem) -> void:
+	var path: LegendaryDef = RunLegendary.path_of(session.content, item)
+	if path == null:
+		return
+	var bar := ProgressBar.new()
+	bar.name = "PathBar"
+	bar.show_percentage = false
+	bar.custom_minimum_size = Vector2(0, 6)
+	bar.max_value = maxi(path.goal_at(item.tier), 1)
+	bar.value = bar.max_value if item.tier >= 3 else item.progress
+	bar.tooltip_text = RunLegendary.describe(session.content, item)
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bar.add_theme_stylebox_override("background", UiStyle.box(UiStyle.INK_900, UiStyle.INK_900, 0))
+	bar.add_theme_stylebox_override("fill", UiStyle.box(UiStyle.rarity_color("legendary"), UiStyle.rarity_color("legendary"), 0))
+	_box.add_child(bar)
 
 
 ## Hover: lift the token a little with a brass rim (docs/ui-asset-design.md, 9).

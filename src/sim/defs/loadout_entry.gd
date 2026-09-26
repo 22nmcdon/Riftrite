@@ -10,6 +10,9 @@ var item_id: String
 var tier: int = 0
 var essence_ids: Array[String] = []
 var xp: int = 0
+## A Devourer's trace: a lasting boost to the item's own numbers, in basis
+## points (see LegendaryDef). Set by the run layer.
+var trace_bp: int = 0
 
 
 static func read(reader: DataReader) -> LoadoutEntry:
@@ -19,6 +22,7 @@ static func read(reader: DataReader) -> LoadoutEntry:
 	if reader.has("essences"):
 		entry.essence_ids = reader.req_string_array("essences")
 	entry.xp = reader.opt_int("xp", 0, 0)
+	entry.trace_bp = reader.opt_int("trace_bp", 0, 0)
 	reader.finish()
 	return entry
 

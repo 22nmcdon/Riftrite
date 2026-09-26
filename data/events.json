@@ -57,6 +57,13 @@
     "weight": 1
   },
   {
+    "id": "barrow_hoard",
+    "name": "A Barrow Hoard",
+    "text": "Deep in an old barrow, a hero's last treasure waits under the dust, still warm with purpose.",
+    "kind": "legendary_item",
+    "weight": 3
+  },
+  {
     "id": "smiths_cart",
     "name": "A Smith's Cart",
     "text": "A travelling smith's cart, every blade already honed. Everything here is B tier.",

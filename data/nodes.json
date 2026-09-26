@@ -1,0 +1,54 @@
+[
+  {
+    "id": "forge",
+    "name": "The Forge",
+    "text": "A soot-black anvil and a patient smith. Strip an item's infusion, for gold.",
+    "kind": "forge",
+    "weight": 6
+  },
+  {
+    "id": "loot_item",
+    "name": "A Fallen Cache",
+    "text": "Someone's gear, left where they fell. An item, free to take.",
+    "kind": "loot",
+    "loot": "item",
+    "weight": 7
+  },
+  {
+    "id": "loot_essence",
+    "name": "A Rift Seep",
+    "text": "Essence beads on the rocks like dew. An essence, free to take.",
+    "kind": "loot",
+    "loot": "essence",
+    "weight": 5
+  },
+  {
+    "id": "loot_gold",
+    "name": "Scattered Coin",
+    "text": "Coins glint in the ash. Gold, free to take.",
+    "kind": "loot",
+    "loot": "gold",
+    "weight": 3
+  },
+  {
+    "id": "vault",
+    "name": "A Sealed Vault",
+    "text": "Spend a key on a sealed chest: a better item or a relic.",
+    "kind": "vault",
+    "weight": 5
+  },
+  {
+    "id": "retrain",
+    "name": "The Old Drill Yard",
+    "text": "Straw targets and a stern old sergeant. Switch a hero to another specialization.",
+    "kind": "retrain",
+    "weight": 3
+  },
+  {
+    "id": "skirmish",
+    "name": "A Rift Skirmish",
+    "text": "Rift-spawn block the road. Fight them for a second helping of spoils; losing costs nothing.",
+    "kind": "fight",
+    "weight": 5
+  }
+]

@@ -12,6 +12,7 @@ const CARAVAN: int = 4
 const STOPS: int = 5
 const STOP: int = 6
 const REWARDS: int = 7
+const SKIRMISH: int = 8
 
 const MIX: int = 0x2545F4914F6CDD1D
 

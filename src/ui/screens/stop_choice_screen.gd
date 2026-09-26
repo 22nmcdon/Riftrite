@@ -1,13 +1,10 @@
 class_name StopChoiceScreen
 extends UiScreen
-## Pick one of the day's stops.
+## Pick one of the day's stop nodes (docs/plans/stop-nodes.md): each shows its
+## name, what kind of stop it is, and its blurb.
 
-const BLURBS: Dictionary[String, String] = {
-	"forge": "Reforge: strip an infusion from an item (costs gold).",
-	"loot": "Something left behind. Take it or leave it.",
-	"vault": "Spend a key on a sealed chest.",
-	"retrain": "Switch a hero to another of their specializations.",
-	"event": "Something stirs off the road.",
+const KIND_LABELS: Dictionary[String, String] = {
+	"forge": "Forge", "loot": "Loot", "vault": "Vault", "retrain": "Retrain", "event": "Event", "fight": "Extra fight",
 }
 
 
@@ -17,9 +14,11 @@ func build() -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 	for i: int in session.state.offers.size():
-		var stop: String = session.state.offers[i]["stop"]
-		var button: Button = UiStyle.button("%s\n%s" % [stop.capitalize(), BLURBS.get(stop, "")], _pick.bind(i))
-		button.custom_minimum_size = Vector2(300, 90)
+		var node_id: String = session.state.offers[i]["stop"]
+		var text: String = "%s  (%s)\n%s" % [session.run.node_name(node_id), KIND_LABELS.get(session.run.node_kind(node_id), ""), session.run.node_text(node_id)]
+		var button: Button = UiStyle.button(text, _pick.bind(i))
+		button.custom_minimum_size = Vector2(420, 110)
+		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		row.add_child(button)
 	add_child(row)
 	add_child(GuildPanel.make(session))

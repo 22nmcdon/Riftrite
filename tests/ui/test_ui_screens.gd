@@ -180,12 +180,56 @@ func test_stop_choice_and_stop() -> void:
 	var session: RunSession = U.at_caravan()
 	session.leave_caravan()
 	var main: Main = _main(session)
+	assert_eq(session.state.offers.size(), 2, "two nodes")
 	var stop: String = session.state.offers[0]["stop"]
-	assert_true(U.press(main.screen, stop.capitalize()))
-	assert_eq([session.state.phase, session.state.stop_kind], ["stop", stop])
+	if session.run.node_kind(stop) == "fight":
+		stop = session.state.offers[1]["stop"]
+	for offer: Dictionary in session.state.offers:
+		var card: Button = U.button(main.screen, session.run.node_name(offer["stop"]))
+		assert_not_null(card, "each node shows its name")
+		assert_true(card.text.contains(session.run.node_text(offer["stop"])), "and its blurb")
+	assert_true(U.press(main.screen, session.run.node_name(stop)))
+	assert_eq([session.state.phase, session.state.stop_node], ["stop", stop])
 	assert_true(main.screen is StopScreen)
+	assert_string_contains(U.text_of(main.screen), session.run.node_name(stop))
 	assert_true(U.press(main.screen, "Leave, on to the fight"))
 	assert_true(main.screen is FightScreen)
+
+
+func test_a_skirmish_plays_back_then_offers_its_spoils() -> void:
+	var session: RunSession = U.at_caravan()
+	session.leave_caravan()
+	var state: RunState = session.state
+	state.offers = [{"type": "stop", "stop": "skirmish", "price": 0, "taken": false}] as Array[Dictionary]
+	var main: Main = _main(session)
+	assert_true(U.press(main.screen, "A Rift Skirmish"))
+	assert_true(main.screen is FightScreen, "a skirmish to fight shows the fight screen")
+	var text: String = U.text_of(main.screen)
+	assert_true(text.contains("A Rift Skirmish: " + session.content.encounters[state.stop_encounter].name), text)
+	assert_not_null(U.button(main.screen, "Skip the skirmish"))
+	var fight: FightScreen = main.screen
+	var losses: int = state.losses
+	assert_true(U.press(fight, "Fight!"))
+	assert_true(fight.playing)
+	assert_eq([state.phase, state.stop_used, state.losses], ["stop", true, losses], "never counted as a loss")
+	fight._on_entries(fight.player.skip_to_end())
+	fight._continue()
+	assert_true(main.screen is StopScreen, "then the stop, with any spoils")
+	assert_string_contains(U.text_of(main.screen), "The skirmish is over")
+	assert_true(U.press(main.screen, "Leave, on to the fight"))
+	assert_true(main.screen is FightScreen)
+	assert_string_contains(U.text_of(main.screen), "Today's fight")
+
+
+func test_a_skirmish_can_be_skipped() -> void:
+	var session: RunSession = U.at_caravan()
+	session.leave_caravan()
+	session.state.offers = [{"type": "stop", "stop": "skirmish", "price": 0, "taken": false}] as Array[Dictionary]
+	session.pick_stop(0)
+	var main: Main = _main(session)
+	assert_true(U.press(main.screen, "Skip the skirmish"))
+	assert_eq(session.state.phase, "fight")
+	assert_string_contains(U.text_of(main.screen), "Today's fight")
 
 
 func test_the_fight_plays_back_then_moves_on() -> void:
@@ -307,7 +351,12 @@ func test_a_whole_run_clicked_through() -> void:
 				_equip(main)
 				assert_true(U.press(main.screen, "Leave the Caravan"))
 			"stop_choice":
-				assert_true(U.press(main.screen, main.session.state.offers[0]["stop"].capitalize()))
+				assert_true(U.press(main.screen, main.session.run.node_name(main.session.state.offers[0]["stop"])))
+			"stop" when main.session.skirmish_pending():
+				fights += 1
+				assert_true(U.press(main.screen, "Fight!"))
+				assert_true(U.press(main.screen, "Skip"))
+				assert_true(U.press(main.screen, "Continue"))
 			"stop":
 				taken += _take_everything(main)
 				assert_true(U.press(main.screen, "Leave, on to the fight"))

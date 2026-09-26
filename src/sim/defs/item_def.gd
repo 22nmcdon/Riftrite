@@ -43,6 +43,8 @@ var backup: BackupDef = null
 ## Marked for the shop: the item is meant for backup. When fielded it does
 ## only what its own effects/auras say (often nothing).
 var backup_only: bool = false
+## A Legendary's upgrade path (every Legendary has one; nothing else does).
+var legendary: LegendaryDef = null
 
 
 static func read(reader: DataReader) -> ItemDef:
@@ -64,6 +66,10 @@ static func read(reader: DataReader) -> ItemDef:
 		var backup_reader: DataReader = reader.req_object("backup")
 		if backup_reader != null:
 			def.backup = BackupDef.read(backup_reader, RATE_SCALING_RARITIES.has(def.rarity))
+	if reader.has("legendary"):
+		var path_reader: DataReader = reader.req_object("legendary")
+		if path_reader != null:
+			def.legendary = LegendaryDef.read(path_reader)
 	_read_common(def, reader, true)
 	if def.effects.is_empty() and def.auras.is_empty() and def.backup == null:
 		reader.error("an item needs effects, auras, or a backup mode")
@@ -74,6 +80,10 @@ static func read(reader: DataReader) -> ItemDef:
 		reader.error("Common items can't have a backup mode (they only get one through Oathbinding)")
 	if def.rarity == "legendary" and def.backup == null:
 		reader.error("Legendary items must have a backup mode")
+	if def.rarity == "legendary" and def.legendary == null and not reader.has("legendary"):
+		reader.error("Legendary items need an upgrade path (\"legendary\")")
+	if def.rarity != "legendary" and reader.has("legendary"):
+		reader.error("only Legendary items have an upgrade path")
 	return def
 
 

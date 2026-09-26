@@ -129,7 +129,8 @@ func test_backup_modes_by_rarity() -> void:
 	var backup: Dictionary = {"auras": [{"target": "all_allies", "stat": "def_bp", "value": 11000}]}
 	assert_true(_has(_item_errors({"rarity": "common", "backup": backup}), "Common items can't have a backup mode"))
 	assert_true(_has(_item_errors({"rarity": "legendary"}), "Legendary items must have a backup mode"))
-	assert_eq(_item_errors({"rarity": "legendary", "backup": backup}), [] as Array[String])
+	var path: Dictionary = {"path": "bonded", "start_tier": "b", "goals": [1, 1]}
+	assert_eq(_item_errors({"rarity": "legendary", "backup": backup, "legendary": path}), [] as Array[String])
 	assert_true(_has(_item_errors({"rarity": "rare", "backup_only": true}), "a backup-only item needs a backup mode"))
 
 

@@ -225,6 +225,12 @@ func _check_references() -> void:
 		_check_effects(items[id].effects, item_where)
 		_check_auras(items[id].auras, item_where)
 		_check_no_partners(items[id].effects, item_where)
+		if items[id].legendary != null:
+			for essence_id: String in items[id].legendary.wants:
+				if not essences.has(essence_id):
+					errors.append("%s.legendary.wants: unknown essence \"%s\"" % [item_where, essence_id])
+			if items[id].enemy_only:
+				errors.append("%s: a Legendary can't be enemy-only" % item_where)
 		for i: int in items[id].auras.size():
 			if items[id].auras[i].target == AuraDef.Target.MATCHED_ITEMS:
 				errors.append("%s.auras[%d]: matched_items only works in a synergy" % [item_where, i])

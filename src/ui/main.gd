@@ -63,6 +63,8 @@ func _ready() -> void:
 ## The screen for the run's phase (the title when there's no run).
 func screen_script() -> GDScript:
 	var screen_name: String = "title" if session.state == null else SCREENS[session.state.phase]
+	if session.skirmish_pending():
+		screen_name = "fight"
 	return load(SCREEN_DIR % screen_name)
 
 
@@ -115,7 +117,10 @@ func _on_changed(result: RunActions.Result) -> void:
 		_toast.show_message(friendly(result.error))
 		return
 	if not result.note.is_empty() and result.note != "selected":
-		_toast.show_message(friendly(result.note), UiStyle.GOOD)
+		var message: String = friendly(result.note)
+		for note: String in result.notes:
+			message += " · " + note
+		_toast.show_message(message, UiStyle.GOOD)
 	# A fight being played back keeps its screen until Continue.
 	if screen is FightScreen and (screen as FightScreen).playing:
 		return

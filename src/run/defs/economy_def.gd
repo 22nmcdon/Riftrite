@@ -4,10 +4,6 @@ extends RefCounted
 ## here is a placeholder to tune with the run bot (tools/run_runner.gd).
 ## Weights are relative (they don't need to add up to anything).
 
-## Stops the day's stop choice draws from (the Upgrade stop isn't drawn: it's
-## always the stop before the boss).
-const STOPS: Array[String] = ["forge", "loot", "vault", "retrain", "event"]
-const LOOT_KINDS: Array[String] = ["item", "essence", "gold"]
 
 var base_gold: int
 var package_gold: int
@@ -30,18 +26,23 @@ var loss_gold_per_win: int
 var shards_per_essence: int
 var elite_key_chance_bp: int
 var relic_choices: int
-## Item rarity weights for the Caravan, Loot, and events (by ItemDef.RARITIES).
+## Item rarity weights for the Caravan, Loot, and tier shops (by
+## ItemDef.RARITIES). Legendary must be 0: those never come from there.
 var rarity_weights: Array[int] = []
+## Item rarity weights for the Vault's items and the item-by-rarity event:
+## where Legendaries can turn up (docs/plans/legendary-items.md).
+var vault_rarity_weights: Array[int] = []
+var event_rarity_weights: Array[int] = []
 ## Tier weights for Loot and the item-by-tier event (C..S).
 var loot_tier_weights: Array[int] = []
 ## Relic rarity weights: after elites, after the boss, and elsewhere.
 var elite_relic_weights: Array[int] = []
 var boss_relic_weights: Array[int] = []
 var relic_weights: Array[int] = []
-## By STOPS.
-var stop_weights: Array[int] = []
-## By LOOT_KINDS, plus how much gold a gold loot gives.
-var loot_weights: Array[int] = []
+## How many different nodes the day's stop choice offers (weights are in
+## data/nodes.json and data/events.json).
+var node_choices: int
+## How much gold a gold loot gives.
 var loot_gold: int
 
 
@@ -67,12 +68,15 @@ static func read(reader: DataReader) -> EconomyDef:
 	def.elite_key_chance_bp = reader.req_int("elite_key_chance_bp", 0, FixedMath.BP_ONE)
 	def.relic_choices = reader.req_int("relic_choices", 1)
 	def.rarity_weights = _table(reader, "rarity_weights", ItemDef.RARITIES, 0)
+	if def.rarity_weights.size() == ItemDef.RARITIES.size() and def.rarity_weights[ItemDef.RARITIES.find("legendary")] != 0:
+		reader.error("rarity_weights: legendary must be 0 (the Caravan, Loot, and tier shops never offer Legendaries)")
+	def.vault_rarity_weights = _table(reader, "vault_rarity_weights", ItemDef.RARITIES, 0)
+	def.event_rarity_weights = _table(reader, "event_rarity_weights", ItemDef.RARITIES, 0)
 	def.loot_tier_weights = _table(reader, "loot_tier_weights", TuningDef.TIER_NAMES, 0)
 	def.elite_relic_weights = _table(reader, "elite_relic_weights", ItemDef.RARITIES, 0)
 	def.boss_relic_weights = _table(reader, "boss_relic_weights", ItemDef.RARITIES, 0)
 	def.relic_weights = _table(reader, "relic_weights", ItemDef.RARITIES, 0)
-	def.stop_weights = _table(reader, "stop_weights", STOPS, 0)
-	def.loot_weights = _table(reader, "loot_weights", LOOT_KINDS, 0)
+	def.node_choices = reader.req_int("node_choices", 1)
 	def.loot_gold = reader.req_int("loot_gold", 0)
 	reader.finish()
 	return def
