@@ -14,14 +14,16 @@ extends RefCounted
 ## Offers are plain dictionaries (so they save as JSON):
 ##   type: "hero" (hero, rank, specialization), "item" (item, tier),
 ##         "relic" (relic), "essence" (essence), "gold" (amount), "key",
-##         "stop" (stop), "package" (package: "gold" | "relic" | "item", plus
-##         that package's fields)
+##         "stop" (stop: a node or event id, see RunContent.node_pool),
+##         "package" (package: "gold" | "relic" | "item", plus that package's
+##         fields)
 ##   price: gold to pay (0 = free); group: taking one takes the whole group
 ##   (a relic choice); taken: already taken or bought.
 ## Randomness comes from RunRandom streams, never from earlier picks.
 
 const PHASES: Array[String] = ["start_hero", "start_package", "caravan", "stop_choice", "stop", "fight", "rewards", "act_end", "run_over"]
-const STOP_KINDS: Array[String] = ["forge", "loot", "vault", "retrain", "event", "upgrade"]
+## What a stop does (a node's kind, "event", or the fixed "upgrade").
+const STOP_KINDS: Array[String] = ["forge", "loot", "vault", "retrain", "event", "fight", "upgrade"]
 const INT_KEYS: Array[String] = ["rank", "tier", "amount", "price"]
 const LOSSES_TO_END: int = 2
 
@@ -252,13 +254,12 @@ static func leave_caravan(state: RunState, content: ContentDb, run: RunContent) 
 	state.phase = "stop_choice"
 	var available: Array[String] = []
 	var weights: Array[int] = []
-	for i: int in EconomyDef.STOPS.size():
-		var stop: String = EconomyDef.STOPS[i]
-		if _stop_applies(state, stop):
-			available.append(stop)
-			weights.append(run.economy.stop_weights[i])
+	for node_id: String in run.node_pool():
+		if _stop_applies(state, run.node_kind(node_id)):
+			available.append(node_id)
+			weights.append(run.node_weight(node_id))
 	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.STOPS, state.act, state.day, state.attempt] as Array[int])
-	for i: int in mini(3, available.size()):
+	for i: int in mini(run.economy.node_choices, available.size()):
 		var picked: int = RunRandom.pick_weighted(rng, weights)
 		if picked < 0:
 			break
@@ -268,8 +269,9 @@ static func leave_caravan(state: RunState, content: ContentDb, run: RunContent) 
 	return _ok("left the Caravan")
 
 
-static func _stop_applies(state: RunState, stop: String) -> bool:
-	match stop:
+## Whether a node of this kind can do anything right now.
+static func _stop_applies(state: RunState, kind: String) -> bool:
+	match kind:
 		"forge":
 			return _anything_infused(state)
 		"vault":
@@ -299,19 +301,25 @@ static func pick_stop(state: RunState, content: ContentDb, run: RunContent, inde
 	if index < 0 or index >= state.offers.size():
 		return _fail("no offer there")
 	var stop: String = state.offers[index]["stop"]
+	if not run.node_pool().has(stop):
+		return _fail("unknown stop \"%s\"" % stop)
 	_enter_stop(state, content, run, stop)
-	return _ok("stopped at the %s" % stop)
+	return _ok("stopped at %s" % run.node_name(stop))
 
 
+## Enters a stop: a node or event id from the pool, or "upgrade".
 static func _enter_stop(state: RunState, content: ContentDb, run: RunContent, stop: String) -> void:
+	var kind: String = "upgrade" if stop == "upgrade" else run.node_kind(stop)
 	state.phase = "stop"
-	state.stop_kind = stop
+	state.stop_kind = kind
+	state.stop_node = stop
+	state.stop_encounter = ""
 	state.stop_used = false
 	state.offers.clear()
 	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.STOP, state.act, state.day, state.attempt] as Array[int])
-	match stop:
+	match kind:
 		"loot":
-			_add_loot(state, content, run, rng)
+			_add_loot(state, content, run, rng, run.nodes[stop].loot)
 		"vault":
 			state.keys -= 1
 			if rng.range_int(2) == 0:
@@ -319,11 +327,13 @@ static func _enter_stop(state: RunState, content: ContentDb, run: RunContent, st
 			else:
 				_add_item_offer(state, content, rng, run.economy.vault_rarity_weights, run.economy.loot_tier_weights, true)
 		"event":
-			_add_event(state, content, run, rng)
+			_add_event(state, content, run, rng, run.events[stop])
+		"fight":
+			state.stop_encounter = _pick_skirmish(state, run, rng)
 
 
-static func _add_loot(state: RunState, content: ContentDb, run: RunContent, rng: SimRng) -> void:
-	match EconomyDef.LOOT_KINDS[maxi(RunRandom.pick_weighted(rng, run.economy.loot_weights), 0)]:
+static func _add_loot(state: RunState, content: ContentDb, run: RunContent, rng: SimRng, loot: String) -> void:
+	match loot:
 		"item":
 			_add_item_offer(state, content, rng, run.economy.rarity_weights, run.economy.loot_tier_weights, true)
 		"essence":
@@ -332,11 +342,7 @@ static func _add_loot(state: RunState, content: ContentDb, run: RunContent, rng:
 			state.offers.append({"type": "gold", "amount": run.economy.loot_gold, "price": 0, "taken": false})
 
 
-static func _add_event(state: RunState, content: ContentDb, run: RunContent, rng: SimRng) -> void:
-	var weights: Array[int] = []
-	for event_id: String in run.event_ids:
-		weights.append(run.events[event_id].weight)
-	var event: EventDef = run.events[run.event_ids[RunRandom.pick_weighted(rng, weights)]]
+static func _add_event(state: RunState, content: ContentDb, run: RunContent, rng: SimRng, event: EventDef) -> void:
 	var flat_tiers: Array[int] = [1, 0, 0, 0]
 	match event.kind:
 		"gold":
@@ -428,8 +434,51 @@ static func leave_stop(state: RunState) -> RunActions.Result:
 		return _fail(problem)
 	state.phase = "fight"
 	state.stop_kind = ""
+	state.stop_node = ""
+	state.stop_encounter = ""
 	state.offers.clear()
 	return _ok("on to the fight")
+
+
+# --- the extra fight (a skirmish node) --------------------------------------------
+
+## The skirmish's enemies: another of the day's normal encounters (the day's
+## own fight only if it's the only one), or "".
+static func _pick_skirmish(state: RunState, run: RunContent, rng: SimRng) -> String:
+	var act: ActDef = run.act(state.act)
+	var pool: Array[String] = act.encounters_for(act.normal, state.day)
+	if pool.size() > 1:
+		pool.erase(state.encounter_id)
+	return pool[rng.range_int(pool.size())] if not pool.is_empty() else ""
+
+
+## Fights the skirmish (once, at a skirmish node). Like fight(), returns
+## [Result, FightResult, FightSetup]. It counts for infusion XP, discoveries,
+## and Legendary paths, but not as a win or a loss: a win adds a normal win's
+## rewards to the stop's offers; a loss just gives nothing.
+static func skirmish(state: RunState, content: ContentDb, run: RunContent) -> Array:
+	if state.phase != "stop" or state.stop_kind != "fight":
+		return [_fail("a skirmish needs a skirmish stop"), null, null]
+	if state.stop_used:
+		return [_fail("this skirmish is already fought"), null, null]
+	for hero: RunHero in state.heroes:
+		if hero.needs_specialization:
+			return [_fail("%s needs a specialization first" % hero.hero_id), null, null]
+	var setup: FightSetup = RunFight.setup_for(state, content, state.stop_encounter)
+	var result: FightResult = CombatSim.run(setup, content)
+	if not result.errors.is_empty():
+		return [_fail("the fight couldn't start: %s" % result.errors[0]), result, setup]
+	var grown: Array[String] = RunFight.apply_result(state, content, result, state.stop_encounter, false)
+	state.stop_used = true
+	var outcome: RunActions.Result
+	if result.guild_won():
+		var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.SKIRMISH, state.act, state.day, state.attempt] as Array[int])
+		_grant_rewards(state, content, run, content.encounters[state.stop_encounter], rng)
+		outcome = _ok("won the skirmish")
+	else:
+		outcome = _ok("lost the skirmish; no spoils, and no harm done")
+	outcome.notes = grown
+	return [outcome, result, setup]
 
 
 ## Takes an offer at a stop or among rewards (or a relic-merchant purchase).
@@ -511,11 +560,16 @@ static func fight(state: RunState, content: ContentDb, run: RunContent) -> Array
 
 
 static func _give_rewards(state: RunState, content: ContentDb, run: RunContent) -> void:
-	var economy: EconomyDef = run.economy
-	var encounter: EncounterDef = content.encounters[state.encounter_id]
 	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.REWARDS, state.act, state.day] as Array[int])
 	state.phase = "rewards"
 	state.offers.clear()
+	_grant_rewards(state, content, run, content.encounters[state.encounter_id], rng)
+
+
+## A win's rewards against `encounter`: gold (and shards) now, and offers for
+## the rest (an essence after an elite or boss, the drop, a relic choice).
+static func _grant_rewards(state: RunState, content: ContentDb, run: RunContent, encounter: EncounterDef, rng: SimRng) -> void:
+	var economy: EconomyDef = run.economy
 	var essence: String = team_essence(content, encounter)
 	var gold: int = economy.win_gold_base + economy.win_gold_per_day * state.day
 	match encounter.kind:

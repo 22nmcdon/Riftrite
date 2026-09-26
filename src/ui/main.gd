@@ -63,6 +63,8 @@ func _ready() -> void:
 ## The screen for the run's phase (the title when there's no run).
 func screen_script() -> GDScript:
 	var screen_name: String = "title" if session.state == null else SCREENS[session.state.phase]
+	if session.skirmish_pending():
+		screen_name = "fight"
 	return load(SCREEN_DIR % screen_name)
 
 

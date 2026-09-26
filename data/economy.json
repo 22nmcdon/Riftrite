@@ -84,18 +84,8 @@
     "epic": 6,
     "legendary": 0
   },
-  "stop_weights": {
-    "forge": 2,
-    "loot": 3,
-    "vault": 2,
-    "retrain": 1,
-    "event": 3
-  },
-  "loot_weights": {
-    "item": 6,
-    "essence": 3,
-    "gold": 1
-  },
+  "node_choices": 2,
+  "_node_note": "The day's stop choice: this many different nodes, drawn by weight from data/nodes.json and data/events.json (docs/plans/stop-nodes.md).",
   "loot_gold": 6,
   "_legendary_note": "Legendary relics are boss relics: only the boss's relic choice and the rare Ancient Reliquary event give them."
 }

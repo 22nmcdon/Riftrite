@@ -33,13 +33,13 @@ static func advance(content: ContentDb, item: RunItem, amount: int) -> Array[Str
 ## What a finished fight does for the guild's Legendaries: hits (in any
 ## fight), a holder who fell (in a win), and a boss beaten (every Legendary on
 ## a hero's row). Returns tier-up notes.
-static func after_fight(state: RunState, content: ContentDb, result: FightResult) -> Array[String]:
+static func after_fight(state: RunState, content: ContentDb, result: FightResult, encounter_id: String) -> Array[String]:
 	var notes: Array[String] = []
 	var hero_ids: Array[String] = []
 	for hero: RunHero in state.heroes:
 		hero_ids.append(hero.hero_id)
 	var won: bool = result.guild_won()
-	var encounter: EncounterDef = content.encounters.get(state.encounter_id, null)
+	var encounter: EncounterDef = content.encounters.get(encounter_id, null)
 	var boss: bool = won and encounter != null and encounter.kind == "boss"
 	for hero: RunHero in state.heroes:
 		for item: RunItem in hero.items:

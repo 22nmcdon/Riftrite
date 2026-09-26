@@ -190,6 +190,18 @@ func leave_stop() -> RunActions.Result:
 	return _after(RunFlow.leave_stop(state))
 
 
+## Keeps a finished fight for playback: its result and setup, the synergies
+## it found for the first time, and Legendaries that grew.
+func _keep_fight(out: Array, known: Array[String], result: RunActions.Result) -> void:
+	last_fight = out[1]
+	last_setup = out[2]
+	last_discoveries.clear()
+	for synergy_id: String in state.discovered:
+		if not known.has(synergy_id):
+			last_discoveries.append(synergy_id)
+	last_growth = result.notes.duplicate()
+
+
 ## Runs today's fight and keeps it for playback.
 func fight() -> RunActions.Result:
 	var known: Array[String] = state.discovered.duplicate()
@@ -198,16 +210,29 @@ func fight() -> RunActions.Result:
 	var out: Array = RunFlow.fight(state, content, run)
 	var result: RunActions.Result = out[0]
 	if result.ok:
-		last_fight = out[1]
-		last_setup = out[2]
-		last_discoveries.clear()
-		for synergy_id: String in state.discovered:
-			if not known.has(synergy_id):
-				last_discoveries.append(synergy_id)
-		last_growth = result.notes.duplicate()
+		_keep_fight(out, known, result)
 		if journal != null:
 			journal.fight(state, encounter_id, day, last_fight)
 	return _after(result)
+
+
+## Fights a skirmish stop's extra fight and keeps it for playback.
+func skirmish() -> RunActions.Result:
+	var known: Array[String] = state.discovered.duplicate()
+	var encounter_id: String = state.stop_encounter
+	var day: int = state.day
+	var out: Array = RunFlow.skirmish(state, content, run)
+	var result: RunActions.Result = out[0]
+	if result.ok:
+		_keep_fight(out, known, result)
+		if journal != null:
+			journal.fight(state, encounter_id, day, last_fight)
+	return _after(result)
+
+
+## Whether the screen's fight is a skirmish still to fight (not the day's).
+func skirmish_pending() -> bool:
+	return state != null and state.phase == "stop" and state.stop_kind == "fight" and not state.stop_used
 
 
 func done() -> RunActions.Result:

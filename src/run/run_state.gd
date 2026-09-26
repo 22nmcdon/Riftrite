@@ -41,8 +41,13 @@ var phase: String = ""
 ## What the player is being offered right now (heroes, packages, Caravan
 ## wares, stops, loot, rewards), as plain dictionaries (see RunFlow).
 var offers: Array[Dictionary] = []
-## The stop being visited ("loot", "upgrade", ...), or "".
+## The stop being visited: what it does ("loot", "event", "fight",
+## "upgrade", ...; RunFlow.STOP_KINDS), and which node it is (a node or event
+## id, or "upgrade"), or "".
 var stop_kind: String = ""
+var stop_node: String = ""
+## A skirmish stop's enemies (an encounter id), or "".
+var stop_encounter: String = ""
 ## Whether this stop's one-time action (retrain, upgrade) is spent.
 var stop_used: bool = false
 ## Today's fight.
@@ -271,6 +276,8 @@ func to_dict() -> Dictionary:
 		"phase": phase,
 		"offers": offers.duplicate(true),
 		"stop_kind": stop_kind,
+		"stop_node": stop_node,
+		"stop_encounter": stop_encounter,
 		"stop_used": stop_used,
 		"encounter": encounter_id,
 		"reroll_count": reroll_count,
@@ -330,6 +337,10 @@ static func from_dict(data: Variant, content: ContentDb) -> Array:
 	state.stop_kind = reader.opt_string("stop_kind", "")
 	if not state.stop_kind.is_empty() and not RunFlow.STOP_KINDS.has(state.stop_kind):
 		reader.error("unknown stop \"%s\"" % state.stop_kind)
+	state.stop_node = reader.opt_string("stop_node", "")
+	state.stop_encounter = reader.opt_string("stop_encounter", "")
+	if not state.stop_encounter.is_empty() and not content.encounters.has(state.stop_encounter):
+		reader.error("unknown encounter \"%s\"" % state.stop_encounter)
 	state.stop_used = reader.opt_bool("stop_used", false)
 	state.encounter_id = reader.opt_string("encounter", "")
 	if not state.encounter_id.is_empty() and not content.encounters.has(state.encounter_id):

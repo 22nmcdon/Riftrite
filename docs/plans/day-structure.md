@@ -66,6 +66,8 @@ START_HERO ─► START_PACKAGE ─► [ CARAVAN ─► STOP_CHOICE ─► STOP 
 
 ## Stops
 
+> **Changed** (`docs/plans/stop-nodes.md`): the day now offers **2 nodes** from one pool, where every event is its own node, Loot is split into item, essence, and gold nodes, and a Skirmish node (an extra fight) is added. The table below is the original design.
+
 Pick 1 of 3, drawn by weight from the stops that apply right now:
 
 | Stop | What happens | Offered when |

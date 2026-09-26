@@ -1,7 +1,8 @@
 class_name StopScreen
 extends UiScreen
 ## The stop being visited: take or pass what's offered (Loot, the Vault,
-## events), reforge (Forge), retrain, or upgrade an item (before the boss).
+## events, a won skirmish's spoils), reforge (Forge), retrain, or upgrade an
+## item (before the boss). A skirmish still to fight shows the FightScreen.
 
 
 func build() -> void:
@@ -20,12 +21,11 @@ func build() -> void:
 			if not state.stop_used:
 				add_child(_item_buttons(func(item: RunItem) -> bool: return item.tier < 3 and session.content.items[item.item_id].rarity != "legendary", "Upgrade", func(uid: int) -> void: session.upgrade(uid)))
 		_:
-			var event_id: String = state.offers[0].get("event", "") if not state.offers.is_empty() else ""
-			if not event_id.is_empty():
-				heading(session.run.events[event_id].name)
-				add_child(UiStyle.label(session.run.events[event_id].text, 16, UiStyle.TEXT_DIM))
+			heading(session.run.node_name(state.stop_node))
+			if state.stop_kind == "fight":
+				add_child(UiStyle.label("The skirmish is over. A win's spoils wait below; a loss leaves none, and no harm done.", 16, UiStyle.TEXT_DIM))
 			else:
-				heading(state.stop_kind.capitalize())
+				add_child(UiStyle.label(session.run.node_text(state.stop_node), 16, UiStyle.TEXT_DIM))
 			var all: Array[int] = []
 			for i: int in state.offers.size():
 				all.append(i)

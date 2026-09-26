@@ -20,10 +20,14 @@ static func lines(reports: Array[RunBot.Report], first_seed: int) -> PackedStrin
 	var found: Dictionary[String, int] = {}
 	var reached_boss: int = 0
 	var boss_fights: int = 0
+	var skirmishes: int = 0
+	var skirmish_wins: int = 0
 	var legendary_runs: int = 0
 	var legendary_clears: int = 0
 	var legendaries: Dictionary[String, int] = {}
 	for report: RunBot.Report in reports:
+		skirmishes += report.skirmishes
+		skirmish_wins += report.skirmish_wins
 		if not report.legendaries.is_empty():
 			legendary_runs += 1
 			if report.ending == "act_end":
@@ -68,6 +72,8 @@ static func lines(reports: Array[RunBot.Report], first_seed: int) -> PackedStrin
 	out.append("Gold at the Caravan: %s" % ", ".join(gold))
 	out.append("Most taken items and heroes: %s" % ", ".join(_top(bought, 8, count)))
 	out.append("Synergies found: %s" % ", ".join(_top(found, 12, count)))
+	if skirmishes > 0:
+		out.append("Skirmishes: %.2f per run, %d%% won" % [float(skirmishes) / count, roundi(100.0 * skirmish_wins / skirmishes)])
 	if legendary_runs > 0:
 		out.append("Legendaries: held at the end of %d runs (%d%% of those cleared the act); by item:tier: %s" % [
 			legendary_runs, roundi(100.0 * legendary_clears / legendary_runs), ", ".join(_counts(legendaries))])

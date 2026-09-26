@@ -11,11 +11,13 @@ extends RefCounted
 ##     Essence-hungry one wants; stash leftovers to a Devourer), infuse free
 ##     sockets, field up to 5, sturdy classes in the front row and the rest
 ##     in the back
-##   - stops: Loot, then Events, the Vault, Retrain, the Forge; take what fits;
-##     upgrade the best item before the boss
+##   - stops: a skirmish (an extra fight: losing costs nothing), then Loot,
+##     Events, the Vault, Retrain, the Forge; take what fits; upgrade the best
+##     item before the boss
 ##   - rewards: take everything that fits (the first relic of a choice)
 
-const STOP_PREFERENCE: Array[String] = ["loot", "event", "vault", "retrain", "forge"]
+## Node kinds, best first.
+const STOP_PREFERENCE: Array[String] = ["fight", "loot", "event", "vault", "retrain", "forge"]
 ## Classes that stand in the front row; the rest stand in the back.
 const FRONT_CLASSES: Array[String] = ["warden", "striker", "trickster"]
 ## Heroes to recruit before only buying copies (to rank up).
@@ -37,6 +39,9 @@ class Report:
 	## Reached the act's last day (the boss), and how many boss fights it took.
 	var reached_boss: bool = false
 	var boss_fights: int = 0
+	## Skirmishes (extra fights) fought and won.
+	var skirmishes: int = 0
+	var skirmish_wins: int = 0
 	## Legendaries held at the end, with their tier: "tallymans_bow:B".
 	var legendaries: Array[String] = []
 	var errors: Array[String] = []
@@ -82,11 +87,18 @@ static func _act(state: RunState, content: ContentDb, run: RunContent, report: R
 			_organize(state, content)
 			_must(RunFlow.leave_caravan(state, content, run), report)
 		"stop_choice":
-			_must(RunFlow.pick_stop(state, content, run, _preferred_stop(state)), report)
+			_must(RunFlow.pick_stop(state, content, run, _preferred_stop(state, run)), report)
 		"stop":
 			if state.stop_kind == "upgrade":
 				_upgrade_best(state, content)
 			else:
+				if state.stop_kind == "fight":
+					_organize(state, content)
+					var fought: Array = RunFlow.skirmish(state, content, run)
+					_must(fought[0], report)
+					report.skirmishes += 1
+					if fought[1] != null and (fought[1] as FightResult).guild_won():
+						report.skirmish_wins += 1
 				_take_all(state, content, report)
 			_organize(state, content)
 			_must(RunFlow.leave_stop(state), report)
@@ -129,10 +141,10 @@ static func _shop(state: RunState, content: ContentDb, report: Report) -> void:
 			_organize(state, content)
 
 
-static func _preferred_stop(state: RunState) -> int:
-	for stop: String in STOP_PREFERENCE:
+static func _preferred_stop(state: RunState, run: RunContent) -> int:
+	for kind: String in STOP_PREFERENCE:
 		for i: int in state.offers.size():
-			if state.offers[i]["stop"] == stop:
+			if run.node_kind(state.offers[i]["stop"]) == kind:
 				return i
 	return 0
 

@@ -406,7 +406,7 @@ func test_the_caravan_loot_and_tier_shops_never_offer_legendaries() -> void:
 		for offer: Dictionary in state.offers:
 			if offer["type"] == "item":
 				assert_ne(_content().items[offer["item"]].rarity, "legendary", "the Caravan")
-		RunFlow._enter_stop(state, _content(), _run(), "loot")
+		RunFlow._enter_stop(state, _content(), _run(), "loot_item")
 		for offer: Dictionary in state.offers:
 			if offer["type"] == "item":
 				assert_ne(_content().items[offer["item"]].rarity, "legendary", "Loot")
@@ -446,7 +446,7 @@ func test_the_barrow_hoard_offers_an_unseen_legendary() -> void:
 	var seen: Array[String] = []
 	for day: int in range(1, 7):
 		state.day = day
-		RunFlow._enter_stop(state, _content(), hoard_only, "event")
+		RunFlow._enter_stop(state, _content(), hoard_only, "barrow_hoard")
 		assert_eq(state.offers.size(), 1)
 		var offer: Dictionary = state.offers[0]
 		assert_eq(offer["event"], "barrow_hoard")
@@ -456,7 +456,7 @@ func test_the_barrow_hoard_offers_an_unseen_legendary() -> void:
 		assert_false(seen.has(def.id), "never the same Legendary twice")
 		seen.append(def.id)
 	state.day = 7
-	RunFlow._enter_stop(state, _content(), hoard_only, "event")
+	RunFlow._enter_stop(state, _content(), hoard_only, "barrow_hoard")
 	assert_eq(state.offers, [] as Array[Dictionary], "all six seen: the hoard is empty")
 
 
