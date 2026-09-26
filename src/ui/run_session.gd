@@ -18,6 +18,9 @@ var last_setup: FightSetup = null
 ## Tests set this so "New run" is repeatable; otherwise each run gets a
 ## fresh seed.
 var fixed_seed: int = -1
+## UI only (not part of the run or its save): the item selected in the
+## inspector, or -1.
+var selected_uid: int = -1
 
 
 static func make(fight_content: ContentDb, run_content: RunContent, path: String = RunSave.DEFAULT_PATH) -> RunSession:
@@ -45,6 +48,7 @@ func next_seed() -> int:
 
 func new_run(run_seed: int) -> void:
 	state = RunFlow.new_run(run_seed, content)
+	selected_uid = -1
 	last_fight = null
 	last_setup = null
 	_after(RunActions._ok("a new run begins"))
@@ -57,6 +61,7 @@ func continue_run() -> String:
 	if not errors.is_empty():
 		return errors[0]
 	state = loaded[0]
+	selected_uid = -1
 	changed.emit(RunActions._ok("the run continues"))
 	return ""
 
@@ -67,6 +72,23 @@ func abandon() -> void:
 	if has_save():
 		DirAccess.remove_absolute(save_path)
 	changed.emit(RunActions._ok("back to the title"))
+
+
+## Selects an item for the inspector (again to clear it). Not a run change:
+## nothing is saved, but screens redraw to show the selection.
+func select(uid: int) -> void:
+	selected_uid = -1 if uid == selected_uid else uid
+	changed.emit(RunActions._ok("selected"))
+
+
+## Would this action succeed right now? `action` takes a RunState and
+## returns a Result; it runs on a throwaway copy of the run, so the real run
+## never changes (drag feedback uses this to outline drop targets).
+func would_succeed(action: Callable) -> bool:
+	if state == null:
+		return false
+	var copy: RunState = RunState.from_dict(state.to_dict(), content)[0]
+	return copy != null and (action.call(copy) as RunActions.Result).ok
 
 
 func _after(result: RunActions.Result) -> RunActions.Result:

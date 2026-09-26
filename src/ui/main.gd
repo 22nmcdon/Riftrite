@@ -16,6 +16,7 @@ var session: RunSession
 var screen: UiScreen = null
 var _day_slot: MarginContainer
 var _screen_slot: ScrollContainer
+var inspector: Inspector
 var _toast: Toast
 
 
@@ -38,10 +39,16 @@ func _ready() -> void:
 	margin.add_child(column)
 	_day_slot = MarginContainer.new()
 	column.add_child(_day_slot)
+	var body := HBoxContainer.new()
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_theme_constant_override("separation", 16)
+	column.add_child(body)
 	_screen_slot = ScrollContainer.new()
-	_screen_slot.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_screen_slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_screen_slot.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	column.add_child(_screen_slot)
+	body.add_child(_screen_slot)
+	inspector = Inspector.make(session)
+	body.add_child(inspector)
 	_toast = Toast.new()
 	_toast.visible = false
 	_toast.add_theme_font_size_override("font_size", 20)
@@ -66,6 +73,8 @@ func refresh() -> void:
 		child.queue_free()
 	if session.state != null and not session.state.phase.begins_with("start"):
 		_day_slot.add_child(DayBar.make(session))
+	var scroll: int = _screen_slot.scroll_vertical
+	var same_screen: bool = screen != null and screen.get_script() == screen_script()
 	if screen != null:
 		_screen_slot.remove_child(screen)
 		screen.queue_free()
@@ -74,14 +83,39 @@ func refresh() -> void:
 	screen.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_screen_slot.add_child(screen)
 	screen.setup(session)
+	if same_screen:
+		# Keep the scroll position when the same screen is rebuilt.
+		_screen_slot.set_deferred("scroll_vertical", scroll)
 	if screen is FightScreen:
 		(screen as FightScreen).finished.connect(refresh)
+		(screen as FightScreen).started.connect(_update_inspector)
+	_update_inspector()
+
+
+## The inspector shows beside screens with the guild on them.
+func _update_inspector() -> void:
+	var phase: String = session.state.phase if session.state != null else ""
+	var playing: bool = screen is FightScreen and (screen as FightScreen).playing
+	inspector.visible = not (phase.is_empty() or phase.begins_with("start") or phase == "act_end" or phase == "run_over" or playing)
+	inspector.refresh()
+
+
+## A run note for the toast: capitalized, with hero ids as names.
+func friendly(note: String) -> String:
+	var text: String = note
+	for hero_id: String in session.content.heroes:
+		var pattern := RegEx.new()
+		pattern.compile("\\b%s\\b" % hero_id)
+		text = pattern.sub(text, session.content.heroes[hero_id].name.split(" of ")[0], true)
+	return text[0].to_upper() + text.substr(1)
 
 
 func _on_changed(result: RunActions.Result) -> void:
 	if not result.ok:
-		_toast.show_message(result.error)
+		_toast.show_message(friendly(result.error))
 		return
+	if not result.note.is_empty() and result.note != "selected":
+		_toast.show_message(friendly(result.note), UiStyle.GOOD)
 	# A fight being played back keeps its screen until Continue.
 	if screen is FightScreen and (screen as FightScreen).playing:
 		return

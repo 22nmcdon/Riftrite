@@ -13,6 +13,7 @@ const BLURBS: Dictionary[String, String] = {
 
 func build() -> void:
 	heading("Where to, before the fight?")
+	hint("Pick one stop. Then comes today's fight.")
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 	for i: int in session.state.offers.size():

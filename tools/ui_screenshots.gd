@@ -37,7 +37,9 @@ func _run() -> void:
 		session.buy(i)
 	for item: RunItem in session.state.stash.duplicate():
 		session.move_item(item.uid, session.state.heroes[0].hero_id, 99)
+	session.select(session.state.heroes[0].items[0].uid)
 	await _snap("caravan_bought")
+	await _showcase(session)
 	session.leave_caravan()
 	await _snap("stop_choice")
 	session.pick_stop(0)
@@ -47,7 +49,7 @@ func _run() -> void:
 	(_main.screen as FightScreen).start_fight()
 	var fight: FightScreen = _main.screen
 	fight.player.speed = 4.0
-	for frame: int in 30:
+	for frame: int in 90:
 		await process_frame
 	await _snap("fight_playing")
 	fight._on_entries(fight.player.skip_to_end())
@@ -56,6 +58,42 @@ func _run() -> void:
 	await _snap("after_fight")
 	session.abandon()
 	quit()
+
+
+## A screenshot of the asset-design look: every rarity, each infusion gem
+## form, spill arrows at Resonant, an enemy-only item, and relics. It edits
+## a throwaway copy of the run for the picture only, then puts it back.
+func _showcase(session: RunSession) -> void:
+	var saved: Dictionary = session.state.to_dict()
+	var state: RunState = session.state
+	var content: ContentDb = session.content
+	var resonant: int = content.tuning.xp_to_resonant
+	state.stash.clear()
+	var picks: Array[Array] = [
+		["hearth_knife", [] as Array[String], 0], ["twin_daggers", ["ember"] as Array[String], resonant],
+		["dusk_tome", ["frost"] as Array[String], 0], ["pack_bond", [] as Array[String], 0],
+		["tallow_torch", ["ember"] as Array[String], resonant],
+	]
+	for pick: Array in picks:
+		var item := RunItem.make(state.take_uid(), pick[0], 1)
+		item.essence_ids = pick[1]
+		item.xp = pick[2]
+		state.stash.append(item)
+	state.discovered.append("wildfire_torch")
+	# The Epic item twice: an alloy and a pure double, both Resonant.
+	state.heroes[0].items.clear()
+	for essences: Array[String] in [["frost", "storm"] as Array[String], ["venom", "venom"] as Array[String]]:
+		var fancy := RunItem.make(state.take_uid(), "night_lantern", 2)
+		fancy.essence_ids = essences
+		fancy.xp = resonant
+		state.heroes[0].items.append(fancy)
+	state.pouch.append_array(["ember", "venom", "wrath", "stone", "verdant", "frost", "storm", "umbral"] as Array[String])
+	for relic_id: String in content.relic_ids.slice(0, 3) + [content.relic_ids[-1]]:
+		state.relics.append(relic_id)
+	session.select(-1)
+	await _snap("showcase")
+	session.state = RunState.from_dict(saved, content)[0]
+	session.select(-1)
 
 
 func _snap(name: String) -> void:
