@@ -26,7 +26,7 @@ func test_real_run_data_loads() -> void:
 	assert_eq(run.errors, [] as Array[String])
 	var act: ActDef = run.act(1)
 	assert_eq([act.days, act.elite_days, act.boss], [6, [3, 5] as Array[int], "the_ash_mother"])
-	assert_eq(act.encounters_for(act.normal, 1), ["pup_litter"] as Array[String])
+	assert_eq(act.encounters_for(act.normal, 1), ["pup_litter", "ash_swarm"] as Array[String])
 	assert_true(act.is_boss_day(6))
 	assert_eq(run.economy.sell_price(9), 4, "half, rounded down")
 
@@ -58,3 +58,8 @@ func test_economy_and_events_are_checked() -> void:
 	_assert_error(errors, "missing required key \"base_gold\"")
 	_assert_error(errors, "item_price: missing required key \"s\"")
 	_assert_error(_errors_with(RunContent.EVENTS_FILE, [{"id": "x", "name": "X", "text": "?", "kind": "wish"}]), "kind: unknown value \"wish\"")
+	var shops: Array = [{"id": "s", "name": "S", "text": "?", "kind": "tier_shop", "count": 3}, {"id": "t", "name": "T", "text": "?", "kind": "tier_shop", "tier": "z", "count": 9}]
+	var shop_errors: Array[String] = _errors_with(RunContent.EVENTS_FILE, shops)
+	_assert_error(shop_errors, "missing required key \"tier\"")
+	_assert_error(shop_errors, "tier: unknown value \"z\"")
+	_assert_error(shop_errors, "count: 9 is out of range")

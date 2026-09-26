@@ -5,13 +5,19 @@ extends RefCounted
 ## run-level balance (tools/run_runner.gd). The strategy:
 ##   - pick the first starting hero and the gold package
 ##   - at the Caravan: buy heroes while the guild is small (or to rank one up),
-##     then items that combine or fit, cheapest first
-##   - combine copies, equip what fits, infuse free sockets, field up to 5
+##     then items: upgrades for held copies first, then the rarest (Epics for
+##     alloys), cheapest first within a rarity
+##   - combine copies, equip what fits, infuse free sockets, field up to 5,
+##     sturdy classes in the front row and the rest in the back
 ##   - stops: Loot, then Events, the Vault, Retrain, the Forge; take what fits;
 ##     upgrade the best item before the boss
 ##   - rewards: take everything that fits (the first relic of a choice)
 
 const STOP_PREFERENCE: Array[String] = ["loot", "event", "vault", "retrain", "forge"]
+## Classes that stand in the front row; the rest stand in the back.
+const FRONT_CLASSES: Array[String] = ["warden", "striker", "trickster"]
+## Heroes to recruit before only buying copies (to rank up).
+const RECRUIT_UP_TO: int = 4
 const MAX_ACTIONS: int = 2000
 
 
@@ -94,14 +100,18 @@ static func _must(result: RunActions.Result, report: Report) -> void:
 static func _shop(state: RunState, content: ContentDb, report: Report) -> void:
 	for i: int in state.offers.size():
 		var offer: Dictionary = state.offers[i]
-		if offer["type"] == "hero" and (state.heroes.size() < 3 or state.hero(offer["hero"]) != null) and offer["price"] <= state.gold:
+		if offer["type"] == "hero" and (state.heroes.size() < RECRUIT_UP_TO or state.hero(offer["hero"]) != null) and offer["price"] <= state.gold:
 			if RunFlow.buy(state, content, i).ok:
 				report.bought.append(offer["hero"])
 	var order: Array[int] = []
 	for i: int in state.offers.size():
 		if state.offers[i]["type"] == "item":
 			order.append(i)
-	order.sort_custom(func(a: int, b: int) -> bool: return state.offers[a]["price"] < state.offers[b]["price"] or (state.offers[a]["price"] == state.offers[b]["price"] and a < b))
+	var rank: Callable = func(i: int) -> Array:
+		var upgrade: int = 0 if RunFlow.upgrade_target(state, content, i) >= 0 else 1
+		var rarity: int = -ItemDef.RARITIES.find(content.items[state.offers[i]["item"]].rarity)
+		return [upgrade, rarity, state.offers[i]["price"], i]
+	order.sort_custom(func(a: int, b: int) -> bool: return rank.call(a) < rank.call(b))
 	for i: int in order:
 		var offer: Dictionary = state.offers[i]
 		if offer["price"] <= state.gold and RunFlow.buy(state, content, i).ok:
@@ -166,3 +176,15 @@ static func _organize(state: RunState, content: ContentDb) -> void:
 	for hero: RunHero in state.heroes:
 		if hero.benched:
 			RunActions.set_benched(state, hero.hero_id, false)
+	_arrange_rows(state, content)
+
+
+## Sturdy classes in front, the rest behind; someone always stands in front.
+static func _arrange_rows(state: RunState, content: ContentDb) -> void:
+	var any_front: bool = false
+	for hero: RunHero in state.heroes:
+		var front: bool = FRONT_CLASSES.has(content.heroes[hero.hero_id].hero_class)
+		RunActions.set_row(state, hero.hero_id, UnitSetup.Row.FRONT if front else UnitSetup.Row.BACK)
+		any_front = any_front or front
+	if not any_front and not state.heroes.is_empty():
+		RunActions.set_row(state, state.heroes[0].hero_id, UnitSetup.Row.FRONT)

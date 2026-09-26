@@ -491,5 +491,304 @@
         "specialization": "odo_pyromancer"
       }
     ]
+  },
+  {
+    "id": "newcomers_specialized",
+    "name": "The four new heroes at rank A with specializations (Bulwark, Smoke and Mirrors, Deadeye, Ashcaller)",
+    "heroes": [
+      {
+        "hero": "hesk",
+        "row": "front",
+        "items": [
+          {
+            "item": "rusted_cleaver"
+          },
+          {
+            "item": "oak_buckler"
+          }
+        ],
+        "rank": "a",
+        "specialization": "hesk_bulwark"
+      },
+      {
+        "hero": "pell",
+        "row": "front",
+        "items": [
+          {
+            "item": "hearth_knife"
+          },
+          {
+            "item": "whetstone"
+          },
+          {
+            "item": "salt_ward"
+          }
+        ],
+        "rank": "a",
+        "specialization": "pell_smoke_and_mirrors"
+      },
+      {
+        "hero": "maren",
+        "row": "back",
+        "items": [
+          {
+            "item": "blackthorn_bow"
+          },
+          {
+            "item": "bone_sling"
+          }
+        ],
+        "rank": "a",
+        "specialization": "maren_deadeye"
+      },
+      {
+        "hero": "ysolde",
+        "row": "back",
+        "items": [
+          {
+            "item": "dusk_tome"
+          },
+          {
+            "item": "tallow_torch"
+          }
+        ],
+        "rank": "a",
+        "specialization": "ysolde_ashcaller"
+      }
+    ]
+  },
+  {
+    "id": "twin_classes",
+    "name": "Two Wardens and two Arcanists at rank C (both class traits at 2)",
+    "heroes": [
+      {
+        "hero": "brannoc",
+        "row": "front",
+        "items": [
+          {
+            "item": "rusted_cleaver"
+          },
+          {
+            "item": "oak_buckler"
+          }
+        ]
+      },
+      {
+        "hero": "hesk",
+        "row": "front",
+        "items": [
+          {
+            "item": "hearth_knife"
+          },
+          {
+            "item": "bell_of_vigil"
+          }
+        ]
+      },
+      {
+        "hero": "odo",
+        "row": "back",
+        "items": [
+          {
+            "item": "dusk_tome"
+          }
+        ]
+      },
+      {
+        "hero": "ysolde",
+        "row": "back",
+        "items": [
+          {
+            "item": "tallow_torch"
+          },
+          {
+            "item": "rime_charm"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "newcomers_with_vell",
+    "name": "Hesk, Pell, Maren, and Ysolde's kind of guild with Vell healing (rank C)",
+    "heroes": [
+      {
+        "hero": "hesk",
+        "row": "front",
+        "items": [
+          {
+            "item": "rusted_cleaver"
+          },
+          {
+            "item": "oak_buckler"
+          }
+        ]
+      },
+      {
+        "hero": "pell",
+        "row": "front",
+        "items": [
+          {
+            "item": "hearth_knife"
+          },
+          {
+            "item": "whetstone"
+          },
+          {
+            "item": "salt_ward"
+          }
+        ]
+      },
+      {
+        "hero": "maren",
+        "row": "back",
+        "items": [
+          {
+            "item": "blackthorn_bow"
+          },
+          {
+            "item": "bone_sling"
+          }
+        ]
+      },
+      {
+        "hero": "vell",
+        "row": "back",
+        "items": [
+          {
+            "item": "old_lantern"
+          },
+          {
+            "item": "hearth_stew"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "slice_commons",
+    "name": "Hearth starter's heroes with only the slice's new Common items (rank C)",
+    "heroes": [
+      {
+        "hero": "brannoc",
+        "row": "front",
+        "items": [
+          {
+            "item": "mudbrick_wall"
+          },
+          {
+            "item": "hatchet"
+          }
+        ]
+      },
+      {
+        "hero": "wren",
+        "row": "front",
+        "items": [
+          {
+            "item": "hatchet"
+          },
+          {
+            "item": "longspear"
+          },
+          {
+            "item": "iron_pot_lid"
+          }
+        ]
+      },
+      {
+        "hero": "vell",
+        "row": "back",
+        "items": [
+          {
+            "item": "peat_poultice"
+          },
+          {
+            "item": "chalk_circle"
+          },
+          {
+            "item": "hobnail_boots"
+          }
+        ]
+      },
+      {
+        "hero": "odo",
+        "row": "back",
+        "items": [
+          {
+            "item": "slate_tablet"
+          },
+          {
+            "item": "thorn_darts"
+          },
+          {
+            "item": "soot_bomb"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "slice_kit",
+    "name": "The new heroes with the slice's new items, Epics included (rank C)",
+    "heroes": [
+      {
+        "hero": "hesk",
+        "row": "front",
+        "items": [
+          {
+            "item": "tower_shield"
+          },
+          {
+            "item": "hatchet"
+          }
+        ]
+      },
+      {
+        "hero": "pell",
+        "row": "front",
+        "items": [
+          {
+            "item": "soot_bomb"
+          },
+          {
+            "item": "trick_coin"
+          },
+          {
+            "item": "twinfang_stilettos"
+          },
+          {
+            "item": "iron_pot_lid"
+          }
+        ]
+      },
+      {
+        "hero": "maren",
+        "row": "back",
+        "items": [
+          {
+            "item": "rimewood_longbow"
+          },
+          {
+            "item": "flint_arrows"
+          },
+          {
+            "item": "stormglass_arrowheads"
+          }
+        ]
+      },
+      {
+        "hero": "vell",
+        "row": "back",
+        "items": [
+          {
+            "item": "hearthkeepers_kettle"
+          },
+          {
+            "item": "menders_satchel"
+          }
+        ]
+      }
+    ]
   }
 ]

@@ -144,6 +144,50 @@ static func relic_text(content: ContentDb, relic_id: String) -> String:
 	return "\n".join(lines)
 
 
+## A synergy: what sets it off, and what it does.
+static func synergy_text(content: ContentDb, synergy_id: String) -> String:
+	var def: SynergyDef = content.synergies[synergy_id]
+	var lines: PackedStringArray = PackedStringArray(["%s  (%s)" % [def.name, SynergyDef.LAYER_NAMES[def.layer].replace("_", " ")]])
+	var item_names: PackedStringArray = PackedStringArray()
+	for item_id: String in def.items:
+		item_names.append(content.items[item_id].name)
+	match def.layer:
+		SynergyDef.Layer.PAIR:
+			lines.append("When one fielded hero holds %s." % " and ".join(item_names))
+		SynergyDef.Layer.TRANSFORMATION:
+			lines.append("%s infused with %s: the item works differently (and never spills)." % [item_names[0], content.essences[def.essence].name])
+		SynergyDef.Layer.SIGNATURE:
+			lines.append("When %s, fielded, holds %s." % [content.heroes[def.hero].name, item_names[0]])
+		SynergyDef.Layer.RESONANCE:
+			lines.append("Counting %s essences in the guild's items (fielded and backup):" % content.essences[def.essence].name)
+		SynergyDef.Layer.CLASS_TRAIT:
+			lines.append("Counting fielded %ss:" % def.unit_class.capitalize())
+	lines.append("")
+	if def.is_tiered():
+		for tier: SynergyDef.Tier in def.tiers:
+			lines.append("%d+:" % tier.count)
+			lines.append_array(_bonus_lines(content, tier.bonus))
+	elif def.layer == SynergyDef.Layer.TRANSFORMATION:
+		for effect: EffectDef in def.item_effects:
+			lines.append("• " + effect_words(content, effect, _flat(effect)))
+	else:
+		lines.append_array(_bonus_lines(content, def.bonus))
+	return "\n".join(lines)
+
+
+static func _bonus_lines(content: ContentDb, bonus: RelicDef) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	if bonus == null:
+		return lines
+	for aura: AuraDef in bonus.auras:
+		lines.append("• Aura: " + aura.describe())
+	for grant: GrantDef in bonus.grants:
+		lines.append("• Gives %s: %s" % ["matching items" if grant.filter != null else "the items", effect_words(content, grant.effect, _flat(grant.effect))])
+	for effect: EffectDef in bonus.effects:
+		lines.append("• " + effect_words(content, effect, _flat(effect)))
+	return lines
+
+
 ## An effect's flat number (stacks for a status).
 static func _flat(effect: EffectDef) -> int:
 	return effect.stacks if effect.type == EffectDef.Type.APPLY_STATUS else effect.amount

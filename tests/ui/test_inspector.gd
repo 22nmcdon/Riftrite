@@ -164,6 +164,7 @@ func test_item_text_is_plain_words() -> void:
 
 func test_fight_names_number_duplicates_and_replace_ids() -> void:
 	var session: RunSession = U.at_fight()
+	session.state.encounter_id = "pup_litter"
 	session.fight()
 	var player: FightPlayer = FightPlayer.make(session.last_setup, session.content)
 	var names: FightNames = FightNames.make(player.sim)
@@ -184,3 +185,43 @@ func test_fight_names_number_duplicates_and_replace_ids() -> void:
 func after_each() -> void:
 	if FileAccess.file_exists(U.SAVE_PATH):
 		DirAccess.remove_absolute(U.SAVE_PATH)
+
+
+# --- synergies in the UI -----------------------------------------------------------
+
+func test_discovered_synergies_show_in_the_guild_panel() -> void:
+	var session: RunSession = U.at_caravan()
+	var state: RunState = session.state
+	state.heroes[0] = RunHero.make("brannoc")
+	state.heroes[0].items.append(RunItem.make(state.take_uid(), "oak_buckler"))
+	var main: Main = _main(session)
+	assert_string_contains(U.text_of(main.screen), "none yet")
+	assert_eq(session.active_synergies(), ["wardens_oath"] as Array[String], "Brannoc with his buckler")
+	state.discovered.append_array(["wardens_oath", "paper_cuts"] as Array[String])
+	main.refresh()
+	var text: String = U.text_of(main.screen)
+	assert_string_contains(text, "★ Warden's Oath", "active, so lit")
+	assert_string_contains(text, "Paper Cuts")
+	assert_false(text.contains("★ Paper Cuts"), "found but not active")
+	assert_false(text.contains("Dawnstrike"), "undiscovered synergies stay hidden")
+
+
+func test_a_fight_announces_new_synergies() -> void:
+	var session: RunSession = U.at_fight()
+	var state: RunState = session.state
+	state.heroes[0] = RunHero.make("brannoc")
+	state.heroes[0].items.append(RunItem.make(state.take_uid(), "oak_buckler"))
+	var main: Main = _main(session)
+	(main.screen as FightScreen).start_fight()
+	assert_eq(session.last_discoveries, ["wardens_oath"] as Array[String])
+	assert_string_contains(U.text_of(main.screen), "Synergy discovered: Warden's Oath")
+	session.state.phase = "fight"
+	session.fight()
+	assert_eq(session.last_discoveries, [] as Array[String], "only the first time")
+
+
+func test_synergy_text_says_what_sets_it_off() -> void:
+	var content: ContentDb = U.K.content()
+	assert_string_contains(ItemInfo.synergy_text(content, "paper_cuts"), "When one fielded hero holds Whetstone and Twin Daggers.")
+	assert_string_contains(ItemInfo.synergy_text(content, "warden_trait"), "2+:")
+	assert_string_contains(ItemInfo.synergy_text(content, "wildfire_torch"), "Tallow Torch infused with Ember")

@@ -223,5 +223,104 @@
         }
       }
     ]
+  },
+  {
+    "id": "fletchers_quiver",
+    "name": "Fletcher's Quiver",
+    "rarity": "common",
+    "_note": "Ranged items: +10% crit chance.",
+    "auras": [
+      {
+        "target": "all_items",
+        "filter": {
+          "tag": "ranged"
+        },
+        "stat": "crit_chance_bp",
+        "value": 1000
+      }
+    ]
+  },
+  {
+    "id": "rootbound_charm",
+    "name": "Rootbound Charm",
+    "rarity": "common",
+    "_note": "Back-row allies: x1.15 DEF.",
+    "auras": [
+      {
+        "target": "all_allies",
+        "filter": {
+          "row": "back"
+        },
+        "stat": "def_bp",
+        "value": 11500
+      }
+    ]
+  },
+  {
+    "id": "tinkers_mainspring",
+    "name": "Tinker's Mainspring",
+    "rarity": "uncommon",
+    "_note": "Tools fire 10% sooner.",
+    "auras": [
+      {
+        "target": "all_items",
+        "filter": {
+          "tag": "tool"
+        },
+        "stat": "cooldown_bp",
+        "value": -1000
+      }
+    ]
+  },
+  {
+    "id": "adders_vial",
+    "name": "Adder's Vial",
+    "rarity": "uncommon",
+    "_note": "Items that apply Poison deal x1.25 damage over time.",
+    "auras": [
+      {
+        "target": "all_items",
+        "filter": {
+          "applies": "poison"
+        },
+        "stat": "over_time_bp",
+        "value": 12500
+      }
+    ]
+  },
+  {
+    "id": "mourning_bell",
+    "name": "Mourning Bell",
+    "rarity": "rare",
+    "_note": "At 30s, every ally gains a shield.",
+    "effects": [
+      {
+        "trigger": "at_time",
+        "at_ms": 30000,
+        "type": "shield",
+        "amount": 40,
+        "target": "all_allies"
+      }
+    ]
+  },
+  {
+    "id": "thiefs_glove",
+    "name": "Thief's Glove",
+    "rarity": "rare",
+    "_note": "Every Weapon: crits blind the target.",
+    "grants": [
+      {
+        "filter": {
+          "tag": "weapon"
+        },
+        "effect": {
+          "trigger": "on_crit",
+          "type": "apply_status",
+          "status": "blind",
+          "stacks": 1,
+          "target": "hit_target"
+        }
+      }
+    ]
   }
 ]

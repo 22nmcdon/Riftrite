@@ -16,7 +16,7 @@ A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The pl
 ## Commands
 
 <!-- Update these once the project is set up -->
-- Run the game: `godot --path .` (main scene `src/ui/main.tscn`; the run saves to `user://run.json`)
+- Run the game: `godot --path .` (main scene `src/ui/main.tscn`; the run saves to `user://run.json`, and each run writes a playtest journal to `user://playtests/run_<seed>.json`)
 - Screenshots of each screen (needs a display): `xvfb-run godot --path . -s tools/ui_screenshots.gd -- --out=/tmp/shots`
 - Run all tests: `godot --headless -s addons/gut/gut_cmdln.gd -gexit` (settings in `.gutconfig.json`)
 - Run one test file: add `-gselect=test_project_setup.gd`

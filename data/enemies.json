@@ -181,7 +181,7 @@
     "name": "Old Mother Ash",
     "_note": "Act 1 boss (placeholder name): fights behind her pack and grows worse as she's hurt.",
     "stats": {
-      "hp": 11000,
+      "hp": 10000,
       "atk": 50,
       "def": 15
     },
@@ -274,5 +274,172 @@
         ]
       }
     ]
+  },
+  {
+    "id": "ashling",
+    "name": "Ashling",
+    "_note": "Early fodder: a small thing of ash and spite.",
+    "stats": {
+      "hp": 260,
+      "atk": 10,
+      "def": 0
+    },
+    "tier": "c",
+    "basic_attack": {
+      "id": "scratch",
+      "name": "Scratch",
+      "cooldown_ms": 1200,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 3,
+          "target": "enemy_front",
+          "scaling": {
+            "atk": 5000
+          }
+        }
+      ]
+    },
+    "items": [
+      {
+        "item": "hatchet"
+      }
+    ],
+    "essence": "ember"
+  },
+  {
+    "id": "cinder_moth",
+    "name": "Cinder Moth",
+    "_note": "Fragile, from the back row, but it sets things alight.",
+    "stats": {
+      "hp": 220,
+      "mgk": 10,
+      "def": 0
+    },
+    "tier": "c",
+    "basic_attack": {
+      "id": "flutter",
+      "name": "Flutter",
+      "cooldown_ms": 1500,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 2,
+          "target": "enemy_random",
+          "scaling": {
+            "mgk": 4000
+          }
+        }
+      ]
+    },
+    "items": [
+      {
+        "item": "cinder_dust"
+      }
+    ],
+    "essence": "ember"
+  },
+  {
+    "id": "bog_lurker",
+    "name": "Bog Lurker",
+    "_note": "A mid-act bruiser whose bites poison.",
+    "stats": {
+      "hp": 1100,
+      "atk": 20,
+      "def": 12,
+      "atsp": 10
+    },
+    "tier": "c",
+    "basic_attack": {
+      "id": "maul",
+      "name": "Maul",
+      "cooldown_ms": 1400,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 4,
+          "target": "enemy_front",
+          "scaling": {
+            "atk": 5000
+          }
+        }
+      ]
+    },
+    "items": [
+      {
+        "item": "lurker_fang"
+      }
+    ],
+    "essence": "venom"
+  },
+  {
+    "id": "hollow_archer",
+    "name": "Hollow Archer",
+    "_note": "Shoots at the guild's back row.",
+    "stats": {
+      "hp": 600,
+      "atk": 22,
+      "def": 4,
+      "atsp": 5
+    },
+    "tier": "c",
+    "basic_attack": {
+      "id": "hollow_shot",
+      "name": "Hollow Shot",
+      "cooldown_ms": 1500,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 4,
+          "target": "enemy_back",
+          "scaling": {
+            "atk": 5500
+          }
+        }
+      ]
+    },
+    "items": [
+      {
+        "item": "flint_arrows"
+      }
+    ],
+    "essence": "wrath"
+  },
+  {
+    "id": "cairn_guardian",
+    "name": "Cairn Guardian",
+    "_note": "An elite wall: heavy, slow, and it shields its allies.",
+    "stats": {
+      "hp": 1500,
+      "atk": 14,
+      "def": 25
+    },
+    "tier": "c",
+    "basic_attack": {
+      "id": "stone_fist",
+      "name": "Stone Fist",
+      "cooldown_ms": 1800,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 6,
+          "target": "enemy_front",
+          "scaling": {
+            "atk": 6000
+          }
+        }
+      ]
+    },
+    "items": [
+      {
+        "item": "cairn_stone"
+      }
+    ],
+    "essence": "stone"
   }
 ]

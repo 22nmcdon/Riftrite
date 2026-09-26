@@ -100,6 +100,8 @@ func _build_playback() -> void:
 	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	field.add_theme_constant_override("separation", 8)
 	main.add_child(field)
+	if not session.last_discoveries.is_empty():
+		field.add_child(_discovery_banner())
 	var sim: CombatSim = player.sim
 	var rows: Array[Array] = [
 		[sim.enemies, UnitSetup.Row.BACK, "Enemy back row"], [sim.enemies, UnitSetup.Row.FRONT, "Enemy front row"],
@@ -156,6 +158,20 @@ func _build_playback() -> void:
 	side.add_child(_log)
 	_end_box = VBoxContainer.new()
 	side.add_child(_end_box)
+
+
+## "Synergy discovered!" for each synergy this fight found for the first time.
+func _discovery_banner() -> Control:
+	var banner := PanelContainer.new()
+	banner.add_theme_stylebox_override("panel", UiStyle.box(UiStyle.OAK_600, UiStyle.BRASS_300, 3))
+	var box := VBoxContainer.new()
+	banner.add_child(box)
+	for synergy_id: String in session.last_discoveries:
+		var line: Label = UiStyle.label("✦ Synergy discovered: %s" % session.content.synergies[synergy_id].name, 20, UiStyle.BRASS_300)
+		line.mouse_filter = Control.MOUSE_FILTER_STOP
+		line.tooltip_text = ItemInfo.synergy_text(session.content, synergy_id)
+		box.add_child(line)
+	return banner
 
 
 func _card_row(units: Array[UnitState]) -> HBoxContainer:

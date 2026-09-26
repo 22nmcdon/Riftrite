@@ -745,5 +745,701 @@
         }
       ]
     }
+  },
+  {
+    "id": "maren_deadeye",
+    "hero": "maren",
+    "name": "Deadeye",
+    "_note": "Her ranged items: sharper, then a follow-up shot on each crit, then heavier arrows.",
+    "ranks": {
+      "b": [
+        {
+          "key": "aim",
+          "kind": "aura",
+          "target": "holder_items",
+          "stat": "crit_chance_bp",
+          "value": 1000,
+          "filter": {
+            "tag": "ranged"
+          }
+        }
+      ],
+      "a": [
+        {
+          "key": "follow",
+          "kind": "grant",
+          "filter": {
+            "tag": "ranged"
+          },
+          "effect": {
+            "trigger": "on_crit",
+            "type": "damage",
+            "amount": 4,
+            "scaling": {
+              "atk": 3000
+            },
+            "target": "enemy_lowest_hp"
+          }
+        }
+      ],
+      "s": [
+        {
+          "key": "draw",
+          "kind": "aura",
+          "target": "holder_items",
+          "stat": "damage_bp",
+          "value": 12500,
+          "filter": {
+            "tag": "ranged"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "maren_trapper",
+    "hero": "maren",
+    "name": "Trapper",
+    "_note": "An ability: a snare that slows the front, then bleeds it, then a field of snares over every enemy.",
+    "ranks": {
+      "b": [
+        {
+          "key": "snare",
+          "kind": "ability",
+          "name": "Snare",
+          "cooldown_ms": 5000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "apply_status",
+              "status": "slow",
+              "stacks": 2,
+              "target": "enemy_front"
+            }
+          ]
+        }
+      ],
+      "a": [
+        {
+          "key": "snare",
+          "kind": "ability",
+          "name": "Snare",
+          "cooldown_ms": 5000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "apply_status",
+              "status": "slow",
+              "stacks": 2,
+              "target": "enemy_front"
+            },
+            {
+              "trigger": "on_fire",
+              "type": "apply_status",
+              "status": "bleed",
+              "stacks": 2,
+              "target": "enemy_front"
+            }
+          ]
+        }
+      ],
+      "s": [
+        {
+          "key": "snare",
+          "kind": "ability",
+          "name": "Thornfield",
+          "cooldown_ms": 5000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "apply_status",
+              "status": "slow",
+              "stacks": 1,
+              "target": "all_enemies"
+            },
+            {
+              "trigger": "on_fire",
+              "type": "apply_status",
+              "status": "bleed",
+              "stacks": 1,
+              "target": "all_enemies"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "maren_volley",
+    "hero": "maren",
+    "name": "Volley",
+    "_note": "Her auto-attack becomes a volley over every enemy; an auto-attack item fires an arcing shot at the back row instead.",
+    "ranks": {
+      "b": [
+        {
+          "key": "volley",
+          "kind": "basic_attack",
+          "basic_attack": {
+            "id": "volley",
+            "name": "Volley",
+            "cooldown_ms": 2000,
+            "effects": [
+              {
+                "trigger": "on_fire",
+                "type": "damage",
+                "amount": 2,
+                "target": "all_enemies",
+                "scaling": {
+                  "atk": 2500
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "arc",
+          "kind": "grant",
+          "filter": {
+            "auto_attack": true
+          },
+          "effect": {
+            "trigger": "on_hit",
+            "type": "damage",
+            "amount": 2,
+            "scaling": {
+              "atk": 2000
+            },
+            "target": "enemy_back"
+          }
+        }
+      ],
+      "a": [
+        {
+          "key": "quiver",
+          "kind": "aura",
+          "target": "holder",
+          "stat": "atsp_bp",
+          "value": 11500
+        }
+      ],
+      "s": [
+        {
+          "key": "rhythm",
+          "kind": "grant",
+          "filter": {
+            "auto_attack": true
+          },
+          "effect": {
+            "trigger": "on_hit",
+            "type": "charge",
+            "amount_ms": 150,
+            "target": "row_items"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "pell_smoke_and_mirrors",
+    "hero": "pell",
+    "name": "Smoke and Mirrors",
+    "_note": "An ability: smoke that blinds every enemy, then slows them too, then a vanishing trick that saves an ally once.",
+    "ranks": {
+      "b": [
+        {
+          "key": "smoke",
+          "kind": "ability",
+          "name": "Smoke Bomb",
+          "cooldown_ms": 7000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "apply_status",
+              "status": "blind",
+              "stacks": 1,
+              "target": "all_enemies"
+            }
+          ]
+        }
+      ],
+      "a": [
+        {
+          "key": "smoke",
+          "kind": "ability",
+          "name": "Smoke Bomb",
+          "cooldown_ms": 7000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "apply_status",
+              "status": "blind",
+              "stacks": 1,
+              "target": "all_enemies"
+            },
+            {
+              "trigger": "on_fire",
+              "type": "apply_status",
+              "status": "slow",
+              "stacks": 1,
+              "target": "all_enemies"
+            }
+          ]
+        }
+      ],
+      "s": [
+        {
+          "key": "vanish",
+          "kind": "ability",
+          "name": "Vanishing Act",
+          "effects": [
+            {
+              "trigger": "on_ally_below_hp",
+              "threshold_bp": 3000,
+              "once": true,
+              "type": "shield",
+              "amount": 15,
+              "scaling": {
+                "atk": 10000
+              },
+              "target": "trigger_ally"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "pell_clockwork",
+    "hero": "pell",
+    "name": "Clockwork Tricks",
+    "_note": "His tools: faster, then winding their neighbors, then a trick that freezes every enemy's cooldowns for a moment.",
+    "ranks": {
+      "b": [
+        {
+          "key": "wind",
+          "kind": "aura",
+          "target": "holder_items",
+          "stat": "cooldown_bp",
+          "value": -1000,
+          "filter": {
+            "tag": "tool"
+          }
+        }
+      ],
+      "a": [
+        {
+          "key": "spring",
+          "kind": "grant",
+          "filter": {
+            "tag": "tool"
+          },
+          "effect": {
+            "trigger": "on_fire",
+            "type": "charge",
+            "amount_ms": 200,
+            "target": "adjacent_items"
+          }
+        }
+      ],
+      "s": [
+        {
+          "key": "jam",
+          "kind": "ability",
+          "name": "Spanner in the Works",
+          "cooldown_ms": 8000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "apply_status",
+              "status": "freeze",
+              "stacks": 1,
+              "target": "all_enemies"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "pell_cutpurse",
+    "hero": "pell",
+    "name": "Cutpurse",
+    "_note": "His auto-attack becomes a quick pick at the weakest enemy that slows it; then more crits; then crits that blind.",
+    "ranks": {
+      "b": [
+        {
+          "key": "pick",
+          "kind": "basic_attack",
+          "basic_attack": {
+            "id": "pickpocket",
+            "name": "Pickpocket",
+            "cooldown_ms": 800,
+            "effects": [
+              {
+                "trigger": "on_fire",
+                "type": "damage",
+                "amount": 2,
+                "target": "enemy_lowest_hp",
+                "scaling": {
+                  "atk": 3500
+                }
+              }
+            ]
+          }
+        },
+        {
+          "key": "trip",
+          "kind": "grant",
+          "filter": {
+            "auto_attack": true
+          },
+          "effect": {
+            "trigger": "on_hit",
+            "type": "apply_status",
+            "status": "slow",
+            "stacks": 1,
+            "target": "hit_target"
+          }
+        }
+      ],
+      "a": [
+        {
+          "key": "quick",
+          "kind": "aura",
+          "target": "holder_items",
+          "stat": "crit_chance_bp",
+          "value": 1500,
+          "filter": {
+            "auto_attack": true
+          }
+        }
+      ],
+      "s": [
+        {
+          "key": "dust",
+          "kind": "grant",
+          "filter": {
+            "auto_attack": true
+          },
+          "effect": {
+            "trigger": "on_crit",
+            "type": "apply_status",
+            "status": "blind",
+            "stacks": 1,
+            "target": "hit_target"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "hesk_bulwark",
+    "hero": "hesk",
+    "name": "Bulwark",
+    "_note": "An ability: he braces behind a big shield, then his neighbors' shields grow, then the brace covers his whole row.",
+    "ranks": {
+      "b": [
+        {
+          "key": "brace",
+          "kind": "ability",
+          "name": "Brace",
+          "cooldown_ms": 7000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "shield",
+              "amount": 10,
+              "scaling": {
+                "def": 10000
+              },
+              "target": "self"
+            }
+          ]
+        }
+      ],
+      "a": [
+        {
+          "key": "shelter",
+          "kind": "aura",
+          "target": "linked_allies",
+          "stat": "shield_bp",
+          "value": 12000
+        }
+      ],
+      "s": [
+        {
+          "key": "brace",
+          "kind": "ability",
+          "name": "Brace the Gate",
+          "cooldown_ms": 7000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "shield",
+              "amount": 8,
+              "scaling": {
+                "def": 7000
+              },
+              "target": "row_allies"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "hesk_thornhide",
+    "hero": "hesk",
+    "name": "Thornhide",
+    "_note": "His defense items bite: each one strikes back, then shields more, then leaves Bleed.",
+    "ranks": {
+      "b": [
+        {
+          "key": "spikes",
+          "kind": "grant",
+          "filter": {
+            "tag": "defense"
+          },
+          "effect": {
+            "trigger": "on_fire",
+            "type": "damage",
+            "amount": 3,
+            "target": "enemy_front",
+            "scaling": {
+              "def": 3000
+            }
+          }
+        }
+      ],
+      "a": [
+        {
+          "key": "thick",
+          "kind": "aura",
+          "target": "holder_items",
+          "stat": "shield_bp",
+          "value": 12500,
+          "filter": {
+            "tag": "defense"
+          }
+        }
+      ],
+      "s": [
+        {
+          "key": "barbs",
+          "kind": "grant",
+          "filter": {
+            "tag": "defense"
+          },
+          "effect": {
+            "trigger": "on_fire",
+            "type": "apply_status",
+            "status": "bleed",
+            "stacks": 1,
+            "target": "enemy_front"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "hesk_old_guard",
+    "hero": "hesk",
+    "name": "Old Guard",
+    "_note": "Works best from backup: he shields the weakest ally, then hardens the front row, then every shield in the guild.",
+    "ranks": {
+      "b": [
+        {
+          "key": "watch",
+          "kind": "backup",
+          "backup": {
+            "name": "Gate Watch",
+            "cooldown_ms": 5000,
+            "effects": [
+              {
+                "trigger": "on_fire",
+                "type": "shield",
+                "amount": 6,
+                "scaling": {
+                  "def": 5000
+                },
+                "target": "ally_lowest_hp"
+              }
+            ]
+          }
+        }
+      ],
+      "a": [
+        {
+          "key": "line",
+          "kind": "aura",
+          "target": "all_allies",
+          "stat": "def_bp",
+          "value": 11500,
+          "when": "benched",
+          "filter": {
+            "row": "front"
+          }
+        }
+      ],
+      "s": [
+        {
+          "key": "aegis",
+          "kind": "aura",
+          "target": "all_allies",
+          "stat": "shield_bp",
+          "value": 11500,
+          "when": "always"
+        }
+      ]
+    }
+  },
+  {
+    "id": "ysolde_ashcaller",
+    "hero": "ysolde",
+    "name": "Ashcaller",
+    "_note": "An ability: ash rain that burns every enemy, then hotter burns, then the rain hits as well.",
+    "ranks": {
+      "b": [
+        {
+          "key": "rain",
+          "kind": "ability",
+          "name": "Ash Rain",
+          "cooldown_ms": 7000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 2,
+              "target": "all_enemies"
+            }
+          ]
+        }
+      ],
+      "a": [
+        {
+          "key": "heat",
+          "kind": "aura",
+          "target": "holder_items",
+          "stat": "over_time_bp",
+          "value": 12500,
+          "filter": {
+            "applies": "burn"
+          }
+        }
+      ],
+      "s": [
+        {
+          "key": "rain",
+          "kind": "ability",
+          "name": "Ash Rain",
+          "cooldown_ms": 7000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 2,
+              "target": "all_enemies"
+            },
+            {
+              "trigger": "on_fire",
+              "type": "damage",
+              "amount": 3,
+              "target": "all_enemies",
+              "scaling": {
+                "mgk": 4000
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "ysolde_emberheart",
+    "hero": "ysolde",
+    "name": "Emberheart",
+    "_note": "Her own magic: stronger, then crits that burn, then more crits.",
+    "ranks": {
+      "b": [
+        {
+          "key": "heart",
+          "kind": "aura",
+          "target": "holder",
+          "stat": "mgk_bp",
+          "value": 11500
+        }
+      ],
+      "a": [
+        {
+          "key": "flare",
+          "kind": "grant",
+          "filter": {
+            "tag": "magic"
+          },
+          "effect": {
+            "trigger": "on_crit",
+            "type": "apply_status",
+            "status": "burn",
+            "stacks": 2,
+            "target": "hit_target"
+          }
+        }
+      ],
+      "s": [
+        {
+          "key": "focus",
+          "kind": "aura",
+          "target": "holder_items",
+          "stat": "crit_chance_bp",
+          "value": 1500,
+          "filter": {
+            "tag": "magic"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "ysolde_kindler",
+    "hero": "ysolde",
+    "name": "Kindler",
+    "_note": "Support: she quickens her neighbors, then her magic winds the items beside it, then the whole guild's magic grows.",
+    "ranks": {
+      "b": [
+        {
+          "key": "quicken",
+          "kind": "aura",
+          "target": "linked_allies",
+          "stat": "atsp_bp",
+          "value": 11000
+        }
+      ],
+      "a": [
+        {
+          "key": "tinder",
+          "kind": "grant",
+          "filter": {
+            "tag": "magic"
+          },
+          "effect": {
+            "trigger": "on_fire",
+            "type": "charge",
+            "amount_ms": 150,
+            "target": "adjacent_items"
+          }
+        }
+      ],
+      "s": [
+        {
+          "key": "hearthfire",
+          "kind": "aura",
+          "target": "all_allies",
+          "stat": "mgk_bp",
+          "value": 11200
+        }
+      ]
+    }
   }
 ]
