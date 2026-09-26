@@ -283,3 +283,59 @@ All data. The six new alloys each bring a status type built from the existing st
   - It's the same effect as the new heroes: with 60 items, the Caravan offers a copy of an item you hold far less often, so fewer items combine to a higher tier.
   - 97 of 200 runs end on day 3's elite.
   - Steps 3 (encounters) and 4 (the balance pass) retune for this against the targets.
+
+## Built: step 3, Act 1's enemies, encounters, and events
+
+**New code:** one event kind, `tier_shop` (`EventDef`, `RunFlow._add_tier_shop`).
+- It offers `count` different items (never enemy-only), all at the event's `tier`, each priced like the Caravan's wares of that tier.
+- The player buys any they can afford, or leaves.
+- This is the design's "event that opens a tier-specific shop", the way higher tiers appear before the Caravan sells them.
+
+**Enemies:** 5 new ones, across the four current essences (question 2 is still open).
+
+| Enemy | Essence | Role | Carries |
+| --- | --- | --- | --- |
+| Ashling | Ember | Early fodder | Hatchet |
+| Cinder Moth | Ember | Fragile back-row burner | Cinder Dust (enemy-only: Burn on a random foe) |
+| Bog Lurker | Venom | Mid-act bruiser | Lurker Fang (enemy-only: poisons on hit) |
+| Hollow Archer | Wrath | Shoots the guild's **back row** | Flint Arrows |
+| Cairn Guardian | Stone | Elite wall | Cairn Stone (enemy-only: shields every ally) |
+
+**Encounters:**
+- **Normal pool** (4 → 8):
+  - days 1–2: A Litter of Pups or **An Ash Swarm**
+  - days 2–4: A Hound and Its Pup or **A Cloud of Moths**
+  - days 4–5: Hound Pack, Sentinel's Vigil, **A Bog Ambush**, or **An Archers' Nest**
+- **Elites** (2 → 3): **The Cairn Watch** (a Cairn Guardian shielding two archers) can come on day 3 or day 5, so both elite days now vary.
+
+**Events** (8 → 10):
+- **A Smith's Cart** (weight 4): 3 B-tier items at B prices.
+- **The Ashen Market** (weight 1, rare): 2 A-tier items at A prices.
+
+**Tests:**
+- The tier shop offers different items (checked across 59 seeds), at its tier and price, never enemy-only; any can be bought until the gold runs out.
+- Bad tier-shop data is refused (no tier, unknown tier, too many items).
+- Updated for the new pools: day 1 now draws from two encounters, and the tests that needed the pup litter now set it.
+- Mutation checks (free wares, the wrong tier, repeated items) all fail a test. The repeated-items check needed the many-seeds version.
+
+**Balance findings:** the bot's losses per encounter (300 runs), after tuning the new enemies up from "never loses":
+
+| Encounter | Days | Losses |
+| --- | --- | --- |
+| A Litter of Pups | 1–2 | 0% |
+| An Ash Swarm | 1–2 | 1% |
+| A Cloud of Moths | 2–4 | 3% |
+| A Hound and Its Pup | 2–4 | 15% |
+| An Archers' Nest | 4–5 | 0% |
+| A Bog Ambush | 4–5 | 12% |
+| Hound Pack | 4–5 | 33% |
+| Sentinel's Vigil | 4–5 | 65% |
+| The Cairn Watch (elite) | 3 or 5 | 62% |
+| Witch Coven (elite) | 5 | 61% |
+| The Hound Alpha (elite) | 3 | 72% |
+| The Ash Mother (boss) | 6 | 90% |
+
+- The new normal fights sit at the gentler end.
+- The legacy Hound Pack is harder than the Hound Alpha elite (in the sim too); step 4 evens this out.
+- **The run bot:** 2% of runs clear the act, but 50 of 200 reach the boss, up from 26, because the new day-4–5 fights are gentler. 110 of 200 runs still end on day 3's elite.
+- **Step 4 targets:** 25–35% of runs clearing the act, day 3 no longer the wall, and a boss that about half the guilds that reach her can beat.

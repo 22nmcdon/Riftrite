@@ -1870,5 +1870,93 @@
         }
       ]
     }
+  },
+  {
+    "id": "cinder_dust",
+    "name": "Cinder Dust",
+    "_note": "Enemy-only: a Cinder Moth's wings shed Burn on a random foe.",
+    "size": 1,
+    "tags": [
+      "magic"
+    ],
+    "rarity": "common",
+    "enemy_only": true,
+    "xp_per_fire": 2,
+    "cooldown_ms": 2000,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "apply_status",
+        "status": "burn",
+        "stacks": 1,
+        "target": "enemy_random"
+      }
+    ]
+  },
+  {
+    "id": "lurker_fang",
+    "name": "Lurker Fang",
+    "_note": "Enemy-only: a bog-soaked fang whose bite poisons.",
+    "size": 1,
+    "tags": [
+      "weapon",
+      "melee"
+    ],
+    "rarity": "uncommon",
+    "enemy_only": true,
+    "xp_per_fire": 2,
+    "cooldown_ms": 1400,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "damage",
+        "amount": 4,
+        "target": "enemy_front",
+        "scaling": {
+          "atk": 5000
+        }
+      },
+      {
+        "trigger": "on_hit",
+        "type": "apply_status",
+        "status": "poison",
+        "stacks": 1,
+        "target": "hit_target"
+      }
+    ]
+  },
+  {
+    "id": "cairn_stone",
+    "name": "Cairn Stone",
+    "_note": "Enemy-only: a standing stone that shields every ally of its holder.",
+    "size": 2,
+    "tags": [
+      "charm",
+      "defense"
+    ],
+    "rarity": "rare",
+    "enemy_only": true,
+    "xp_per_fire": 3,
+    "cooldown_ms": 5000,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "shield",
+        "amount": 10,
+        "target": "all_allies",
+        "scaling": {
+          "def": 3000
+        }
+      }
+    ],
+    "backup": {
+      "auras": [
+        {
+          "target": "all_allies",
+          "stat": "shield_bp",
+          "value": 11000
+        }
+      ]
+    }
   }
 ]

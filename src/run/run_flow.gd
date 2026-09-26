@@ -359,8 +359,22 @@ static func _add_event(state: RunState, content: ContentDb, run: RunContent, rng
 			state.offers.append({"type": "essence", "essence": content.essence_ids[rng.range_int(content.essence_ids.size())], "price": 0, "taken": false})
 		"key":
 			state.offers.append({"type": "key", "price": 0, "taken": false})
+		"tier_shop":
+			_add_tier_shop(state, content, run, rng, event)
 	for offer: Dictionary in state.offers:
 		offer["event"] = event.id
+
+
+## A tier-specific shop: different items (never enemy-only), all at the
+## event's tier and priced like the Caravan's wares of that tier.
+static func _add_tier_shop(state: RunState, content: ContentDb, run: RunContent, rng: SimRng, event: EventDef) -> void:
+	var picked: Array[String] = []
+	for i: int in event.count:
+		var item_id: String = _pick_item(state, content, rng, run.economy.rarity_weights, false, picked)
+		if item_id.is_empty():
+			return
+		picked.append(item_id)
+		state.offers.append({"type": "item", "item": item_id, "tier": event.tier, "price": run.economy.item_price[event.tier], "taken": false})
 
 
 ## Reforges at the Forge.

@@ -134,5 +134,102 @@
         "row": "back"
       }
     ]
+  },
+  {
+    "id": "ash_swarm",
+    "name": "An Ash Swarm",
+    "act": 1,
+    "kind": "normal",
+    "units": [
+      {
+        "enemy": "ashling",
+        "row": "front"
+      },
+      {
+        "enemy": "cinder_moth",
+        "row": "back"
+      }
+    ]
+  },
+  {
+    "id": "moth_cloud",
+    "name": "A Cloud of Moths",
+    "act": 1,
+    "kind": "normal",
+    "units": [
+      {
+        "enemy": "ashling",
+        "row": "front"
+      },
+      {
+        "enemy": "ashling",
+        "row": "front"
+      },
+      {
+        "enemy": "cinder_moth",
+        "row": "back"
+      },
+      {
+        "enemy": "cinder_moth",
+        "row": "back"
+      }
+    ]
+  },
+  {
+    "id": "bog_ambush",
+    "name": "A Bog Ambush",
+    "act": 1,
+    "kind": "normal",
+    "units": [
+      {
+        "enemy": "bog_lurker",
+        "row": "front"
+      },
+      {
+        "enemy": "bog_lurker",
+        "row": "front"
+      }
+    ]
+  },
+  {
+    "id": "archer_nest",
+    "name": "An Archers' Nest",
+    "act": 1,
+    "kind": "normal",
+    "units": [
+      {
+        "enemy": "rift_hound",
+        "row": "front"
+      },
+      {
+        "enemy": "hollow_archer",
+        "row": "back"
+      },
+      {
+        "enemy": "hollow_archer",
+        "row": "back"
+      }
+    ]
+  },
+  {
+    "id": "cairn_watch",
+    "name": "The Cairn Watch",
+    "act": 1,
+    "kind": "elite",
+    "_note": "Elite: a Cairn Guardian shields two archers who shoot at the guild's back row.",
+    "units": [
+      {
+        "enemy": "cairn_guardian",
+        "row": "front"
+      },
+      {
+        "enemy": "hollow_archer",
+        "row": "back"
+      },
+      {
+        "enemy": "hollow_archer",
+        "row": "back"
+      }
+    ]
   }
 ]

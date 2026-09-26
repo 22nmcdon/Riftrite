@@ -164,6 +164,7 @@ func test_item_text_is_plain_words() -> void:
 
 func test_fight_names_number_duplicates_and_replace_ids() -> void:
 	var session: RunSession = U.at_fight()
+	session.state.encounter_id = "pup_litter"
 	session.fight()
 	var player: FightPlayer = FightPlayer.make(session.last_setup, session.content)
 	var names: FightNames = FightNames.make(player.sim)

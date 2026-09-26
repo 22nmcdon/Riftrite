@@ -72,7 +72,8 @@ func test_a_run_starts_with_one_of_three_heroes_and_a_package() -> void:
 	assert_eq(_content().items[state.offers[2]["item"]].rarity, "common")
 	assert_true(RunFlow.pick_package(state, _content(), _run(), 0).ok)
 	assert_eq(state.gold, 18, "base 10 + the gold package's 8")
-	assert_eq([state.phase, state.day, state.encounter_id], ["caravan", 1, "pup_litter"])
+	assert_eq([state.phase, state.day], ["caravan", 1])
+	assert_true(_run().act(1).encounters_for(_run().act(1).normal, 1).has(state.encounter_id), "a day-1 fight")
 
 
 func test_the_same_seed_gives_the_same_start() -> void:
@@ -274,6 +275,35 @@ func test_relic_merchant_sells_one() -> void:
 	_refused(RunFlow.take(state, _content(), 0), "already taken")
 
 
+func test_tier_shop_sells_different_items_at_its_tier() -> void:
+	var state: RunState = _started()
+	state.gold = 100
+	state.offers.clear()
+	var cart: EventDef = _run().events["smiths_cart"]
+	RunFlow._add_tier_shop(state, _content(), _run(), SimRng.new(4), cart)
+	state.phase = "stop"
+	assert_eq(state.offers.size(), 3)
+	var seen: Array[String] = []
+	for offer: Dictionary in state.offers:
+		assert_eq([offer["type"], offer["tier"], offer["price"]], ["item", 1, _run().economy.item_price[1]], "B tier at the Caravan's B price")
+		assert_false(_content().items[offer["item"]].enemy_only)
+		assert_false(seen.has(offer["item"]), "different items")
+		seen.append(offer["item"])
+	assert_true(RunFlow.take(state, _content(), 0).ok)
+	assert_true(RunFlow.take(state, _content(), 2).ok, "buy as many as you can afford")
+	assert_eq(state.gold, 100 - 2 * _run().economy.item_price[1])
+	assert_eq([state.stash[0].item_id, state.stash[0].tier], [state.offers[0]["item"], 1])
+	state.gold = 0
+	_refused(RunFlow.take(state, _content(), 1), "not enough gold")
+	for seed_value: int in range(1, 60):
+		state.offers.clear()
+		RunFlow._add_tier_shop(state, _content(), _run(), SimRng.new(seed_value), cart)
+		var ids: Array[String] = []
+		for offer: Dictionary in state.offers:
+			assert_false(ids.has(offer["item"]), "no repeats (seed %d)" % seed_value)
+			ids.append(offer["item"])
+
+
 func test_the_upgrade_stop_comes_before_the_boss() -> void:
 	var state: RunState = _started()
 	state.day = 6
@@ -296,6 +326,7 @@ func test_the_upgrade_stop_comes_before_the_boss() -> void:
 func test_a_normal_win_gives_gold_a_shard_and_a_drop() -> void:
 	var state: RunState = _started()
 	_make_strong(state)
+	state.encounter_id = "pup_litter"
 	_to_fight(state)
 	var gold: int = state.gold
 	var fought: Array = RunFlow.fight(state, _content(), _run())
