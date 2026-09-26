@@ -91,11 +91,30 @@ static func status(status_id: String, size: int = 14) -> Glyph:
 	return _make(Shape.STATUS, UiStyle.STATUS_COLORS.get(status_id, UiStyle.EMBER), STATUS_SHAPES.get(status_id, "circle"), size)
 
 
-## A relic as a hex token: rim in its rarity color, its initial inside.
-static func hex(name: String, rim: Color, size: int = 44, rift: bool = false) -> Glyph:
+## Where relic art lives; `%s` is the relic's id.
+const RELIC_ART: String = "res://art/ui/relics/relic_%s.svg"
+
+
+## A relic as a hex token: rim in its rarity color, and its art inside (or
+## its initial, without art).
+static func hex(name: String, rim: Color, size: int = 44, rift: bool = false, relic_id: String = "") -> Glyph:
 	var glyph: Glyph = _make(Shape.HEX, rim, name.substr(0, 1).to_upper(), size)
 	glyph.cracked = rift
+	glyph.art = relic_art(relic_id)
+	if glyph.art != null:
+		glyph.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	return glyph
+
+
+## A relic's art as a texture, or null when it has none.
+static func relic_art(relic_id: String) -> Texture2D:
+	if relic_id.is_empty():
+		return null
+	var key: String = "relic:" + relic_id
+	if not _art_cache.has(key):
+		var art_path: String = RELIC_ART % relic_id
+		_art_cache[key] = load(art_path) as Texture2D if ResourceLoader.exists(art_path) else null
+	return _art_cache[key]
 
 
 ## An icon for an item, from its tags (a plain dot when none match).
@@ -243,7 +262,11 @@ func _draw_hex(c: Vector2, r: float) -> void:
 	draw_colored_polygon(inner, UiStyle.OAK_600 if not cracked else UiStyle.INK_700)
 	if cracked:
 		draw_polyline(PackedVector2Array([c + Vector2(-r * 0.7, -r * 0.2), c + Vector2(-r * 0.3, -r * 0.05), c + Vector2(-r * 0.2, r * 0.35)]), UiStyle.RIFT_300, 1.5)
-	_letter(c, r * 0.95, UiStyle.PARCHMENT_100)
+	if art != null:
+		var inner_r: float = r * 0.78
+		draw_texture_rect(art, Rect2(c - Vector2(inner_r, inner_r), Vector2(inner_r, inner_r) * 2.0), false)
+	else:
+		_letter(c, r * 0.95, UiStyle.PARCHMENT_100)
 
 
 ## The shared small shapes: essence glyphs and status shapes.

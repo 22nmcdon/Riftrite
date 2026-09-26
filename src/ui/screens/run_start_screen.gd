@@ -79,7 +79,7 @@ func _package_card(offer: Dictionary, index: int) -> Control:
 			picture = UiStyle.icon("gold", 112)
 		"relic":
 			var def: RelicDef = session.content.relics[offer["relic"]]
-			picture = Glyph.hex(def.name, UiStyle.rarity_color(def.rarity), 112)
+			picture = Glyph.hex(def.name, UiStyle.rarity_color(def.rarity), 112, def.rarity == "legendary", offer["relic"])
 			Inspector.hover_text(panel, ItemInfo.relic_text(session.content, offer["relic"]))
 		_:
 			picture = Glyph.item(session.content.items[offer["item"]], UiStyle.TEXT, 112)

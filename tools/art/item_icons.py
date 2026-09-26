@@ -7,6 +7,9 @@ and no text. They must still read at the item tile's small size (about 26 px),
 so details stay few and chunky. Rarity lives on the tile's frame, not here.
 Enemy-only items take the rift look (violet-black with glowing cracks).
 
+Also writes the rest of the items and the relic icons (art/ui/relics/),
+drawn in item_icons_more.py.
+
 Run from the repo root:  python3 tools/art/item_icons.py
 Then `godot --headless --import` so Godot picks up new files, and run this
 script once more: it sets each icon's import settings (drawn at 2x, with
@@ -297,10 +300,10 @@ ICONS = {
 IMPORT_PARAMS = {"mipmaps/generate": "true", "svg/scale": "2.0"}
 
 
-def fix_imports() -> int:
+def fix_imports(folder: Path = OUT) -> int:
     """Sets IMPORT_PARAMS in every icon's .import file Godot has written."""
     fixed = 0
-    for imp in sorted(OUT.glob("*.svg.import")):
+    for imp in sorted(folder.glob("*.svg.import")):
         lines = imp.read_text(encoding="utf-8").splitlines()
         out = []
         for ln in lines:
@@ -312,12 +315,20 @@ def fix_imports() -> int:
     return fixed
 
 
+RELIC_OUT = OUT.parent / "relics"
+
+
 def main() -> None:
+    # The rest of the items and the relics live in item_icons_more.py.
+    from item_icons_more import MORE_ITEMS, RELICS
     OUT.mkdir(parents=True, exist_ok=True)
-    for item_id, draw in ICONS.items():
+    RELIC_OUT.mkdir(parents=True, exist_ok=True)
+    for item_id, draw in (ICONS | MORE_ITEMS).items():
         (OUT / f"item_{item_id}.svg").write_text(draw(), encoding="utf-8")
-    print(f"wrote {len(ICONS)} icons to {OUT}")
-    fixed = fix_imports()
+    for relic_id, draw in RELICS.items():
+        (RELIC_OUT / f"relic_{relic_id}.svg").write_text(draw(), encoding="utf-8")
+    print(f"wrote {len(ICONS) + len(MORE_ITEMS)} item icons and {len(RELICS)} relic icons")
+    fixed = fix_imports(OUT) + fix_imports(RELIC_OUT)
     if fixed:
         print(f"set import settings on {fixed} icons: run `godot --headless --import` to apply them")
 

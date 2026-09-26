@@ -35,6 +35,8 @@ func test_every_art_file_names_a_real_item() -> void:
 
 func test_art_is_imported_large_with_mipmaps() -> void:
 	for file: String in _art_files():
+		if file.begins_with("relic_"):
+			continue
 		var settings := ConfigFile.new()
 		assert_eq(settings.load(ART_DIR + file + ".import"), OK, file + " has no .import (run godot --headless --import)")
 		assert_eq(settings.get_value("params", "mipmaps/generate", false), true, file + ": run tools/art/item_icons.py")
@@ -47,9 +49,30 @@ func test_items_with_art_show_it_and_others_keep_the_drawn_icon() -> void:
 	var with_art: Glyph = autofree(Glyph.item(_content.items["oak_buckler"], Color.WHITE))
 	assert_not_null(with_art.art)
 	assert_eq(with_art.texture_filter, CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS)
-	var without: Glyph = autofree(Glyph.item(_content.items["night_lantern"], Color.WHITE))
-	assert_null(without.art, "night_lantern has no art yet: it keeps its kind icon")
+	var made_up := ItemDef.new()
+	made_up.id = "not_a_real_item"
+	made_up.tags = ["tool", "healing"] as Array[String]
+	var without: Glyph = autofree(Glyph.item(made_up, Color.WHITE))
+	assert_null(without.art, "an item without art keeps its kind icon")
 	assert_eq(without.text, "healing")
+
+
+func test_every_item_and_relic_has_art() -> void:
+	for item_id: String in _content.items:
+		assert_true(ResourceLoader.exists(ART_DIR + "item_%s.svg" % item_id), item_id)
+	for relic_id: String in _content.relics:
+		assert_not_null(Glyph.relic_art(relic_id), relic_id)
+	var hex: Glyph = autofree(Glyph.hex("Warding Knot", Color.WHITE, 44, false, "warding_knot"))
+	assert_not_null(hex.art, "relic tokens show their art")
+
+
+func test_every_character_has_art() -> void:
+	for hero_id: String in _content.heroes:
+		assert_true(CharacterArt.has_art(hero_id), hero_id)
+		assert_not_null(CharacterArt.body(hero_id), hero_id)
+		assert_not_null(CharacterArt.portrait(hero_id), hero_id)
+	for enemy_id: String in _content.enemies:
+		assert_true(CharacterArt.has_art(enemy_id), enemy_id)
 
 
 # --- UI art: chrome, icons, fonts (tools/art/ui_art.py) ----------------------------

@@ -26,6 +26,10 @@ static func make(session: RunSession, offer: Dictionary, action: Callable, lit: 
 			button.custom_minimum_size = Vector2(0, 56)
 			if offer["type"] == "relic":
 				Inspector.hover_text(button, ItemInfo.relic_text(content, offer["relic"]))
+				button.icon = Glyph.relic_art(offer["relic"])
+				button.expand_icon = true
+				button.add_theme_constant_override("icon_max_width", 40)
+				button.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 				button.add_theme_color_override("font_color", UiStyle.rarity_color(content.relics[offer["relic"]].rarity))
 			elif offer["type"] == "essence":
 				button.add_theme_color_override("font_color", UiStyle.ESSENCE.get(offer["essence"], UiStyle.TEXT))

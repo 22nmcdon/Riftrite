@@ -86,7 +86,7 @@ func _relics() -> Control:
 	row.custom_minimum_size = Vector2(0, ItemTile.COMPACT_HEIGHT)
 	for relic_id: String in session.state.relics:
 		var def: RelicDef = session.content.relics[relic_id]
-		var hex: Glyph = Glyph.hex(def.name, UiStyle.rarity_color(def.rarity), 46, def.rarity == "legendary")
+		var hex: Glyph = Glyph.hex(def.name, UiStyle.rarity_color(def.rarity), 50, def.rarity == "legendary", relic_id)
 		hex.mouse_filter = Control.MOUSE_FILTER_STOP
 		Inspector.hover_text(hex, ItemInfo.relic_text(session.content, relic_id))
 		row.add_child(hex)

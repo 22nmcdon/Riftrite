@@ -1,6 +1,6 @@
 # UI Overhaul: layout, screen art, and animated fights
 
-> Status: **approved (September 2026)**, being built in the order in section 7. Decisions are under **Decided**, at the end.
+> Status: **approved (September 2026)**. Steps 1 to 6 of section 7 are built; step 7 (the hex arena) waits for its own plan. Decisions are under **Decided**, at the end.
 > Builds on `docs/ui-asset-design.md` (art direction, palette, shape language) and `docs/plans/first-ui.md` (what exists now). Where this plan changes a decision in `ui-asset-design.md`, it says so under **Changes to earlier decisions**, and that doc gets updated once this plan is approved.
 
 ---
@@ -145,7 +145,7 @@ The combat sim doesn't change (CLAUDE.md rules 1 and 2). The fight screen alread
 3. **Character figures** (8 heroes and 11 enemies) and portraits. **Done:** `tools/art/characters.py` writes each character's body, held layer (it swings around the hand; beasts have none), and round portrait, plus `rig.json`. `CharacterArt` loads them; `Figure` draws a figure (flip, lunge offset, swing, squash, hit flash, fallen); portraits show in the guild bar, recruits, enemy previews, and fight cards; the hero sheet shows the full figure.
 4. **Fight Level 1** (animated rows). **Done:** each fight card stands the unit's figure up beside its bars (enemies face left) on a slate arena. `FightFx` plays the log: melee lunges and swings, ranged shoots an arrow, magic throws an orb (in its infusion's color), hits flash white and shake (harder on crits), heals sparkle, shields ring, the fallen slump and grey out. The attack style comes from the item's tags. The sim is untouched.
 5. **Other screens:** title, run start, stop choice, events, rewards. **Done:** a title backdrop (`tools/art/backdrops.py`: the lamplit Guildhall and the rift over the Hollow) behind the title, run start, and run end; the run start stands heroes on pedestals and shows packages as cards; Forge, Retrain, and the anvil are oak cards with their icon; events, Loot, the Vault, and the spoils are parchment cards; the run end is a ledger.
-6. Remaining item icons and relic icons.
+6. Remaining item icons and relic icons. **Done:** all 68 items and all 20 relics have art (`tools/art/item_icons.py` with `item_icons_more.py`); relic hex tokens and relic offers show it. Tests check every item, relic, hero, and enemy has art.
 7. (Later, own plan) Fight Level 2: hex arena in the sim.
 
 Each step lands as its own PR, with screenshots, and all tests passing.
