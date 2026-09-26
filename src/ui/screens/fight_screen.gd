@@ -8,7 +8,7 @@ extends UiScreen
 ## end). At the end: the result and the damage meter, then Continue.
 
 signal finished
-## Playback began (Main hides the inspector).
+## Playback began (Main hides the guild bar, hero sheet, and item panel).
 signal started
 
 ## True from pressing Fight until Continue (Main leaves the screen alone).
@@ -26,6 +26,8 @@ var _clock: Label
 var _end_box: VBoxContainer
 var _shown_end: bool = false
 var _rift: bool = false
+## Projectiles and bursts fly over the field here.
+var _fx_layer: Control
 
 
 func build() -> void:
@@ -48,7 +50,6 @@ func build() -> void:
 	add_child(fight_button)
 	if session.skirmish_pending():
 		add_child(UiStyle.button("Skip the skirmish, on to today's fight", func() -> void: session.leave_stop()))
-	add_child(GuildPanel.make(session))
 
 
 ## Who this screen fights: a pending skirmish's enemies, or the day's.
@@ -66,7 +67,7 @@ func _enemy_preview(unit: UnitSetup) -> Control:
 		card.add_child(FrameDecor.make(0, true))
 	var top := HBoxContainer.new()
 	box.add_child(top)
-	top.add_child(Glyph.portrait(unit.name, Glyph.ENEMY.lightened(0.25), 44))
+	top.add_child(Glyph.portrait(unit.name, Glyph.ENEMY.lightened(0.25), 56, unit.id))
 	var names_box := VBoxContainer.new()
 	top.add_child(names_box)
 	names_box.add_child(UiStyle.label(unit.name, 17))
@@ -108,10 +109,17 @@ func _build_playback() -> void:
 	main.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	main.add_theme_constant_override("separation", 16)
 	add_child(main)
+	# The arena: the rift's slate floor, enemies above, the guild below.
+	var arena := PanelContainer.new()
+	arena.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	arena.add_theme_stylebox_override("panel", UiStyle.chrome("panel_slate", 24, 18))
+	main.add_child(arena)
 	var field := VBoxContainer.new()
-	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	field.add_theme_constant_override("separation", 8)
-	main.add_child(field)
+	arena.add_child(field)
+	_fx_layer = Control.new()
+	_fx_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	arena.add_child(_fx_layer)
 	if not session.last_discoveries.is_empty() or not session.last_growth.is_empty():
 		field.add_child(_discovery_banner())
 	var sim: CombatSim = player.sim
@@ -137,7 +145,7 @@ func _build_playback() -> void:
 		field.add_child(UiStyle.label("In backup", 14, UiStyle.TEXT_DIM))
 		field.add_child(_card_row(sim.bench))
 	var side := VBoxContainer.new()
-	side.custom_minimum_size = Vector2(600, 0)
+	side.custom_minimum_size = Vector2(520, 0)
 	main.add_child(side)
 	var controls := HBoxContainer.new()
 	side.add_child(controls)
@@ -164,7 +172,7 @@ func _build_playback() -> void:
 	_log.bbcode_enabled = true
 	_log.scroll_following = true
 	_log.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_log.custom_minimum_size = Vector2(580, 520)
+	_log.custom_minimum_size = Vector2(500, 420)
 	_log.add_theme_font_size_override("normal_font_size", 15)
 	_log.add_theme_font_size_override("bold_font_size", 15)
 	side.add_child(_log)
@@ -274,7 +282,8 @@ func _write(entry: LogEntry) -> void:
 	_log.append_text(names.bbcode(entry) + "\n")
 
 
-## Card effects for an entry: item flashes and floating numbers.
+## Effects for an entry: item flashes, the fighters' animations (FightFx),
+## and floating numbers.
 func _animate(entry: LogEntry) -> void:
 	# Numbers float for less time at higher speeds, so they don't pile up.
 	var seconds: float = 0.9 / maxf(player.speed, 1.0)
@@ -282,16 +291,56 @@ func _animate(entry: LogEntry) -> void:
 		LogEntry.Kind.FIRE:
 			if _cards.has(entry.source_unit):
 				_cards[entry.source_unit].flash(entry.source_item)
-		LogEntry.Kind.DAMAGE, LogEntry.Kind.STATUS_DAMAGE, LogEntry.Kind.COLLAPSE:
+		LogEntry.Kind.DAMAGE:
+			var attacker: UnitCard = _cards.get(entry.source_unit)
+			var target: UnitCard = _cards.get(entry.target)
+			if target == null:
+				return
+			var show_hit: Callable = func() -> void:
+				if is_instance_valid(target):
+					target.float_number(("-%d!" if entry.crit else "-%d") % entry.amount, UiStyle.BAD.lightened(0.2), seconds, entry.crit)
+					target.hit()
+					FightFx.hit(target.figure, player.speed, entry.crit)
+			if attacker != null and attacker != target and attacker.figure != null:
+				FightFx.attack(attacker.figure, target.figure, FightFx.style_for(_item_tags(entry.source_unit, entry.source_item)), _fx_layer, player.speed, _shot_color(entry), show_hit)
+			else:
+				show_hit.call()
+		LogEntry.Kind.STATUS_DAMAGE, LogEntry.Kind.COLLAPSE:
 			if _cards.has(entry.target):
 				_cards[entry.target].float_number(("-%d!" if entry.crit else "-%d") % entry.amount, UiStyle.BAD.lightened(0.2), seconds, entry.crit)
 				_cards[entry.target].hit()
+				FightFx.hit(_cards[entry.target].figure, player.speed)
 		LogEntry.Kind.HEAL:
 			if _cards.has(entry.target):
 				_cards[entry.target].float_number("+%d" % entry.amount, UiStyle.GOOD, seconds)
+				FightFx.heal(_cards[entry.target].figure, _fx_layer, player.speed)
 		LogEntry.Kind.SHIELD:
 			if _cards.has(entry.target):
 				_cards[entry.target].float_number("+%d shield" % entry.amount, UiStyle.SHIELD, seconds)
+				FightFx.shield(_cards[entry.target].figure, _fx_layer, player.speed)
+		LogEntry.Kind.DEATH:
+			if _cards.has(entry.target):
+				FightFx.fall(_cards[entry.target].figure)
+
+
+## The tags of the item a unit used (its basic attack included), for how the
+## attack looks.
+func _item_tags(unit_id: String, item_id: String) -> Array[String]:
+	var unit: UnitState = player.sim.unit_by_id(unit_id)
+	if unit != null:
+		for item: ItemState in unit.items:
+			if item.def.id == item_id:
+				return item.def.tags
+	if session.content.items.has(item_id):
+		return session.content.items[item_id].tags
+	return [] as Array[String]
+
+
+## A shot takes its infusion's essence color, else rift violet (magic).
+func _shot_color(entry: LogEntry) -> Color:
+	if not entry.source_infusion.is_empty():
+		return UiStyle.ESSENCE.get(entry.source_infusion, UiStyle.RIFT_300)
+	return UiStyle.RIFT_300
 
 
 func _show_end() -> void:

@@ -5,3 +5,6 @@ logs/
 # Exports (export_presets.cfg is tracked: it holds no secrets, and CI builds from it)
 export.cfg
 build/
+
+# Python bytecode from tools/art
+__pycache__/

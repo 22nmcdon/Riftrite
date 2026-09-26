@@ -1,21 +1,20 @@
 class_name Inspector
 extends PanelContainer
-## The side panel. Click an item you hold to select it: the panel shows what
-## it does and buttons for everything you can do with it right now (give it
-## to a hero, stash it, combine, infuse, sell, reforge, upgrade, throw away).
-## Hovering an offer, relic, or hero shows it here until the mouse leaves.
-## Every button goes through the RunSession, like the rest of the UI; the
-## selection itself is RunSession.selected_uid.
+## The item panel. Click an item you hold to select it: this panel pops up
+## beside the screen with what it does and buttons for everything you can do
+## with it right now (give it to a hero, stash it, combine, infuse, sell,
+## reforge, upgrade, throw away). It's hidden while nothing is selected.
+## Hovering anything shows a HoverCard instead (hover() and hover_text()
+## below). Every button goes through the RunSession, like the rest of the
+## UI; the selection itself is RunSession.selected_uid.
 
 const GROUP: String = "inspector"
-const WIDTH: int = 440
+const WIDTH: int = 420
 
 var session: RunSession
 var _title: Label
 var _body: Label
 var _actions: VBoxContainer
-## True while a hover preview is shown instead of the selection.
-var _previewing: bool = false
 
 
 static func make(run_session: RunSession) -> Inspector:
@@ -27,9 +26,15 @@ static func make(run_session: RunSession) -> Inspector:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 10)
 	panel.add_child(box)
-	panel._title = UiStyle.label("", 21, UiStyle.OAK_600)
+	var top := HBoxContainer.new()
+	box.add_child(top)
+	panel._title = UiStyle.heading("", 21, UiStyle.OAK_600)
+	panel._title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel._title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	box.add_child(panel._title)
+	top.add_child(panel._title)
+	var close: Button = UiStyle.button("✕", func() -> void: run_session.select(-1))
+	close.tooltip_text = "Close (deselect the item)"
+	top.add_child(close)
 	panel._body = UiStyle.label("", 16, UiStyle.INK_TEXT)
 	panel._body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(panel._body)
@@ -47,16 +52,17 @@ static func find(node: Node) -> Inspector:
 	return node.get_tree().get_first_node_in_group(GROUP) as Inspector
 
 
-## Makes `node` show `title` and `body` here while the mouse is over it.
+## Makes `node` show `title` and `body` in the hover card while the mouse
+## is over it.
 static func hover(node: Control, title: String, body: String) -> void:
 	node.mouse_entered.connect(func() -> void:
-		var inspector: Inspector = find(node)
-		if inspector != null:
-			inspector.preview(title, body))
+		var card: HoverCard = HoverCard.find(node)
+		if card != null:
+			card.show_for(node, title, body))
 	node.mouse_exited.connect(func() -> void:
-		var inspector: Inspector = find(node)
-		if inspector != null:
-			inspector.end_preview())
+		var card: HoverCard = HoverCard.find(node)
+		if card != null:
+			card.hide_for(node))
 
 
 ## Hover for a block of info text whose first line is its title.
@@ -65,22 +71,13 @@ static func hover_text(node: Control, text: String) -> void:
 	hover(node, lines[0], lines[1] if lines.size() > 1 else "")
 
 
-## Shows something under the mouse (not selectable), until end_preview().
-func preview(title: String, body: String) -> void:
-	_previewing = true
-	_show(title, body)
-	_clear_actions()
-
-
-func end_preview() -> void:
-	if _previewing:
-		_previewing = false
-		refresh()
+## Whether an item is selected (the panel only shows then).
+func has_selection() -> bool:
+	return session.state != null and session.selected_uid >= 0 and session.state.find_item(session.selected_uid) != null
 
 
 ## Shows the selected item and what can be done with it, or a hint.
 func refresh() -> void:
-	_previewing = false
 	_clear_actions()
 	var state: RunState = session.state
 	var item: RunItem = state.find_item(session.selected_uid) if state != null and session.selected_uid >= 0 else null

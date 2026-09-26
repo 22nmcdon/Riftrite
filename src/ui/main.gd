@@ -1,8 +1,12 @@
 class_name Main
 extends Control
-## The game's root: a background, the day bar, the current screen, and a
-## toast. It picks the screen from the run's phase and rebuilds it after
-## every change (screens never keep state of their own between changes).
+## The game's root (docs/plans/ui-overhaul.md, 3): the day bar on top, the
+## current screen in the middle, and on run screens the guild bar along the
+## bottom, with the open hero's sheet just above it. The item panel
+## (Inspector) pops up at the right while an item is selected; the hover
+## card and a toast float over everything. It picks the screen from the
+## run's phase and rebuilds everything after every change (screens never
+## keep state of their own between changes).
 
 ## Screens by run phase.
 const SCREENS: Dictionary[String, String] = {
@@ -11,12 +15,22 @@ const SCREENS: Dictionary[String, String] = {
 	"fight": "fight", "rewards": "rewards", "act_end": "run_end", "run_over": "run_end",
 }
 const SCREEN_DIR: String = "res://src/ui/screens/%s_screen.gd"
+## Phases whose screens show the guild bar.
+const GUILD_PHASES: Array[String] = ["caravan", "stop_choice", "stop", "fight", "rewards"]
+## The title backdrop (tools/art/backdrops.py), shown behind the title, the
+## run start, and the run's end.
+const BACKDROP: String = "res://art/ui/backgrounds/title.svg"
 
 var session: RunSession
 var screen: UiScreen = null
 var _day_slot: MarginContainer
 var _screen_slot: ScrollContainer
+## The open hero's sheet, then the guild bar (empty off run screens).
+var _sheet_slot: MarginContainer
+var _guild_slot: MarginContainer
 var inspector: Inspector
+var hover_card: HoverCard
+var _backdrop: TextureRect
 var _toast: Toast
 
 
@@ -29,6 +43,13 @@ func _ready() -> void:
 	background.color = UiStyle.BACKGROUND
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(background)
+	_backdrop = TextureRect.new()
+	_backdrop.texture = load(BACKDROP) as Texture2D
+	_backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_backdrop)
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side: String in ["left", "right", "top", "bottom"]:
@@ -39,21 +60,33 @@ func _ready() -> void:
 	margin.add_child(column)
 	_day_slot = MarginContainer.new()
 	column.add_child(_day_slot)
-	var body := HBoxContainer.new()
-	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.add_theme_constant_override("separation", 16)
-	column.add_child(body)
 	_screen_slot = ScrollContainer.new()
 	_screen_slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_screen_slot.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_screen_slot.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	body.add_child(_screen_slot)
+	column.add_child(_screen_slot)
+	_sheet_slot = MarginContainer.new()
+	column.add_child(_sheet_slot)
+	_guild_slot = MarginContainer.new()
+	column.add_child(_guild_slot)
 	inspector = Inspector.make(session)
-	body.add_child(inspector)
+	inspector.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	inspector.offset_left = -Inspector.WIDTH - 16
+	inspector.offset_right = -16
+	inspector.offset_top = 76
+	inspector.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	add_child(inspector)
+	hover_card = HoverCard.make()
+	add_child(hover_card)
 	_toast = Toast.new()
 	_toast.visible = false
 	_toast.add_theme_font_size_override("font_size", 20)
-	_toast.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	_toast.position.y -= 80
+	# Just under the day bar, clear of the guild bar.
+	_toast.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_toast.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_toast.position.y += 64
+	_toast.add_theme_color_override("font_outline_color", UiStyle.INK_900)
+	_toast.add_theme_constant_override("outline_size", 8)
 	_toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_toast)
 	session.changed.connect(_on_changed)
@@ -90,16 +123,45 @@ func refresh() -> void:
 		_screen_slot.set_deferred("scroll_vertical", scroll)
 	if screen is FightScreen:
 		(screen as FightScreen).finished.connect(refresh)
-		(screen as FightScreen).started.connect(_update_inspector)
-	_update_inspector()
+		(screen as FightScreen).started.connect(_update_guild)
+	_update_guild()
 
 
-## The inspector shows beside screens with the guild on them.
-func _update_inspector() -> void:
+## Whether this screen shows the guild (bar, sheet, and item panel): run
+## screens between fights, and a fight before it starts.
+func shows_guild() -> bool:
 	var phase: String = session.state.phase if session.state != null else ""
 	var playing: bool = screen is FightScreen and (screen as FightScreen).playing
-	inspector.visible = not (phase.is_empty() or phase.begins_with("start") or phase == "act_end" or phase == "run_over" or playing)
+	return GUILD_PHASES.has(phase) and not playing
+
+
+## Rebuilds the guild bar and the open hero's sheet, and shows the item
+## panel while an item is selected.
+func _update_guild() -> void:
+	for slot: MarginContainer in [_sheet_slot, _guild_slot]:
+		for child: Node in slot.get_children():
+			slot.remove_child(child)
+			child.queue_free()
+	var phase: String = session.state.phase if session.state != null else ""
+	_backdrop.visible = phase.is_empty() or phase.begins_with("start") or phase == "act_end" or phase == "run_over"
+	var guild: bool = shows_guild()
+	if guild:
+		_guild_slot.add_child(GuildBar.make(session))
+		var hero: RunHero = session.open_hero_or_null()
+		if hero != null:
+			_sheet_slot.add_child(HeroSheet.make(session, hero))
 	inspector.refresh()
+	inspector.visible = guild and inspector.has_selection()
+
+
+## The guild bar in the scene, or null (off run screens).
+func guild_bar() -> GuildBar:
+	return _guild_slot.get_child(0) as GuildBar if _guild_slot.get_child_count() > 0 else null
+
+
+## The open hero's sheet, or null.
+func hero_sheet() -> HeroSheet:
+	return _sheet_slot.get_child(0) as HeroSheet if _sheet_slot.get_child_count() > 0 else null
 
 
 ## A run note for the toast: capitalized, with hero ids as names.
