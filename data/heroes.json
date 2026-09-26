@@ -85,7 +85,7 @@
     "name": "Sister Vell",
     "class": "mender",
     "stats": {
-      "hp": 260,
+      "hp": 300,
       "atk": 6,
       "mgk": 20,
       "def": 10
@@ -127,7 +127,7 @@
     "name": "Odo Quillmire",
     "class": "arcanist",
     "stats": {
-      "hp": 240,
+      "hp": 280,
       "mgk": 26,
       "def": 5,
       "crit": 5
@@ -298,7 +298,7 @@
     "class": "arcanist",
     "_note": "Placeholder stats. A second Arcanist who burns rather than hexes.",
     "stats": {
-      "hp": 230,
+      "hp": 270,
       "mgk": 24,
       "def": 6,
       "crit": 5,

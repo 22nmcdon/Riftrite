@@ -339,3 +339,54 @@ All data. The six new alloys each bring a status type built from the existing st
 - The legacy Hound Pack is harder than the Hound Alpha elite (in the sim too); step 4 evens this out.
 - **The run bot:** 2% of runs clear the act, but 50 of 200 reach the boss, up from 26, because the new day-4–5 fights are gentler. 110 of 200 runs still end on day 3's elite.
 - **Step 4 targets:** 25–35% of runs clearing the act, day 3 no longer the wall, and a boss that about half the guilds that reach her can beat.
+
+## Built: step 4, the playtest pass
+
+**The run bot** (`RunBot`) now plays more like a person would:
+- Sturdy classes (Warden, Striker, Trickster) stand in the front row and the rest in the back. Before, only the first hero stood in front, and new heroes joined the back row, so a second Warden sat behind the casters.
+- It recruits up to 4 heroes, not 3.
+- At the Caravan it buys upgrades for held copies first, then the rarest wares (so Epics get bought for alloys), cheapest first within a rarity.
+
+That alone took act clears from 3% to 22%. Much of the earlier drop was the bot standing its casters in front, not only the bigger pool.
+
+**Balance** (placeholders, tuned with the bot):
+- The Cairn Guardian: 1800 → 1500 HP, 30 → 25 DEF. The Cairn Watch had become the new wall.
+- Old Mother Ash: 11000 → 10000 HP.
+- Vell, Odo, and Ysolde: +40 HP each. A fragile first hero has to stand in front alone early on.
+
+| Target | Result |
+| --- | --- |
+| 25–35% of bot runs clear the act | 33% (seeds 1–200), 29% (seeds 1001–1200) |
+| About 90% of day-1 fights won | about 99% (Pups and the Ash Swarm lose 0–1%) |
+| Day 3's elite no longer the wall | Runs now end most often at the boss (84 of 200) rather than on day 3 (36 of 200) |
+| The boss about 50% for guilds that reach her | 40–44% |
+
+- **By starting hero:**
+  - Wren, Brannoc, Hesk, and Maren clear 42–50% of runs.
+  - Pell clears about 30%.
+  - Ysolde, Odo, and Vell clear 18–25%. Fragile casters still start harder.
+
+**Synergies in the UI:**
+- **In the guild panel:** a "Synergies found" line shows the synergies this run has discovered.
+  - Undiscovered ones stay hidden, as the design wants.
+  - The ones active for today's fight, with the guild as it stands, are lit and starred.
+  - Hovering one shows what sets it off and what it does (`ItemInfo.synergy_text`).
+  - "Active" comes from a throwaway fight setup (`RunSession.active_synergies`); the run never changes.
+- **In the fight:** a fight that discovers a synergy for the first time opens with a "Synergy discovered: …" banner.
+
+**The playtest journal** (`PlaytestJournal`): every run writes `user://playtests/run_<seed>.json`.
+- **What it holds:**
+  - the seed
+  - each play session
+  - every action the player took, with the day, step, and gold
+  - each fight: the encounter, the result, its length, and the whole guild (heroes, ranks, specializations, rows, items with tiers, essences, and XP)
+  - how the run ended
+- **When it's saved:** after every change, so a crash loses nothing.
+- **Continuing:** a continued run picks up its journal.
+- **Where to find `user://`:** on Windows it's `%APPDATA%\Godot\app_userdata\Riftrite\`, on macOS `~/Library/Application Support/Godot/app_userdata/Riftrite/`, and on Linux `~/.local/share/godot/app_userdata/Riftrite/`.
+
+**Tests:**
+- the journal: a run writes it, fights record the guild, continuing picks it up and records the end, and sessions without a journal write nothing
+- the guild panel's discovered and active synergies (undiscovered stay hidden)
+- the discovery banner, only the first time
+- the synergy text

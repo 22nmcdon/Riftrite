@@ -17,7 +17,7 @@ func _initialize() -> void:
 			_out = arg.trim_prefix("--out=")
 	DirAccess.make_dir_recursive_absolute(_out)
 	root.size = Vector2i(1920, 1080)
-	var session: RunSession = RunSession.open(SAVE_PATH)
+	var session: RunSession = RunSession.open(SAVE_PATH, "")
 	session.fixed_seed = 1
 	_main = (load("res://src/ui/main.gd") as GDScript).new()
 	_main.session = session
@@ -79,7 +79,7 @@ func _showcase(session: RunSession) -> void:
 		item.essence_ids = pick[1]
 		item.xp = pick[2]
 		state.stash.append(item)
-	state.discovered.append("wildfire_torch")
+	state.discovered.append_array(["wildfire_torch", "arcanist_trait", "paper_cuts"] as Array[String])
 	# The Epic item twice: an alloy and a pure double, both Resonant.
 	state.heroes[0].items.clear()
 	for essences: Array[String] in [["frost", "storm"] as Array[String], ["venom", "venom"] as Array[String]]:

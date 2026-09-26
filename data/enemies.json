@@ -181,7 +181,7 @@
     "name": "Old Mother Ash",
     "_note": "Act 1 boss (placeholder name): fights behind her pack and grows worse as she's hurt.",
     "stats": {
-      "hp": 11000,
+      "hp": 10000,
       "atk": 50,
       "def": 15
     },
@@ -414,9 +414,9 @@
     "name": "Cairn Guardian",
     "_note": "An elite wall: heavy, slow, and it shields its allies.",
     "stats": {
-      "hp": 1800,
+      "hp": 1500,
       "atk": 14,
-      "def": 30
+      "def": 25
     },
     "tier": "c",
     "basic_attack": {

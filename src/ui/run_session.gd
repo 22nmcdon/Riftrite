@@ -15,6 +15,10 @@ var save_path: String
 ## The last fight, for playback and the damage meter.
 var last_fight: FightResult = null
 var last_setup: FightSetup = null
+## The playtest journal for the current run (null to keep none).
+var journal: PlaytestJournal = null
+## Synergies the last fight discovered for the first time (ids).
+var last_discoveries: Array[String] = []
 ## Tests set this so "New run" is repeatable; otherwise each run gets a
 ## fresh seed.
 var fixed_seed: int = -1
@@ -23,18 +27,20 @@ var fixed_seed: int = -1
 var selected_uid: int = -1
 
 
-static func make(fight_content: ContentDb, run_content: RunContent, path: String = RunSave.DEFAULT_PATH) -> RunSession:
+static func make(fight_content: ContentDb, run_content: RunContent, path: String = RunSave.DEFAULT_PATH, journal_dir: String = "") -> RunSession:
 	var session := RunSession.new()
 	session.content = fight_content
 	session.run = run_content
 	session.save_path = path
+	if not journal_dir.is_empty():
+		session.journal = PlaytestJournal.make(journal_dir)
 	return session
 
 
 ## Loads the game data from res://data.
-static func open(path: String = RunSave.DEFAULT_PATH) -> RunSession:
+static func open(path: String = RunSave.DEFAULT_PATH, journal_dir: String = PlaytestJournal.DEFAULT_DIR) -> RunSession:
 	var fight_content: ContentDb = ContentDb.load_dir("res://data")
-	return make(fight_content, RunContent.load_dir("res://data", fight_content), path)
+	return make(fight_content, RunContent.load_dir("res://data", fight_content), path, journal_dir)
 
 
 func has_save() -> bool:
@@ -49,6 +55,8 @@ func next_seed() -> int:
 func new_run(run_seed: int) -> void:
 	state = RunFlow.new_run(run_seed, content)
 	selected_uid = -1
+	if journal != null:
+		journal.open(state)
 	last_fight = null
 	last_setup = null
 	_after(RunActions._ok("a new run begins"))
@@ -62,6 +70,8 @@ func continue_run() -> String:
 		return errors[0]
 	state = loaded[0]
 	selected_uid = -1
+	if journal != null:
+		journal.open(state)
 	changed.emit(RunActions._ok("the run continues"))
 	return ""
 
@@ -81,6 +91,19 @@ func select(uid: int) -> void:
 	changed.emit(RunActions._ok("selected"))
 
 
+## The synergies the guild would have in today's fight as it stands (ids,
+## in data order). Read from a throwaway fight setup; the run never changes.
+func active_synergies() -> Array[String]:
+	var ids: Array[String] = []
+	if state == null or state.encounter_id.is_empty() or state.heroes.is_empty():
+		return ids
+	var sim := CombatSim.new(RunFight.setup_for(state, content, state.encounter_id), content)
+	for synergy: RelicState in sim.synergies:
+		if not ids.has(synergy.synergy.id):
+			ids.append(synergy.synergy.id)
+	return ids
+
+
 ## Would this action succeed right now? `action` takes a RunState and
 ## returns a Result; it runs on a throwaway copy of the run, so the real run
 ## never changes (drag feedback uses this to outline drop targets).
@@ -96,6 +119,8 @@ func _after(result: RunActions.Result) -> RunActions.Result:
 		var problem: String = RunSave.save(state, save_path)
 		if not problem.is_empty():
 			result.note += " (not saved: %s)" % problem
+		if journal != null:
+			journal.action(state, result.note)
 	changed.emit(result)
 	return result
 
@@ -165,11 +190,20 @@ func leave_stop() -> RunActions.Result:
 
 ## Runs today's fight and keeps it for playback.
 func fight() -> RunActions.Result:
+	var known: Array[String] = state.discovered.duplicate()
+	var encounter_id: String = state.encounter_id
+	var day: int = state.day
 	var out: Array = RunFlow.fight(state, content, run)
 	var result: RunActions.Result = out[0]
 	if result.ok:
 		last_fight = out[1]
 		last_setup = out[2]
+		last_discoveries.clear()
+		for synergy_id: String in state.discovered:
+			if not known.has(synergy_id):
+				last_discoveries.append(synergy_id)
+		if journal != null:
+			journal.fight(state, encounter_id, day, last_fight)
 	return _after(result)
 
 

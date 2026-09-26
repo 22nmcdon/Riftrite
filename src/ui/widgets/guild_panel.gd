@@ -49,6 +49,27 @@ func _build() -> void:
 	if state.relics.is_empty():
 		relic_line.add_child(UiStyle.label("none yet", 16, UiStyle.TEXT_DIM))
 	add_child(relic_line)
+	add_child(_synergy_line())
+
+
+## Discovered synergies (hidden until found); the ones active for today's
+## fight as the guild stands are lit.
+func _synergy_line() -> Control:
+	var line := HFlowContainer.new()
+	line.add_theme_constant_override("h_separation", 12)
+	line.add_child(UiStyle.label("Synergies found:", 16))
+	var active: Array[String] = session.active_synergies()
+	for synergy_id: String in session.content.synergy_ids:
+		if not session.state.discovered.has(synergy_id):
+			continue
+		var on: bool = active.has(synergy_id)
+		var name_label: Label = UiStyle.label(("★ " if on else "") + session.content.synergies[synergy_id].name, 16, UiStyle.HIGHLIGHT if on else UiStyle.TEXT_DIM)
+		name_label.mouse_filter = Control.MOUSE_FILTER_STOP
+		Inspector.hover_text(name_label, ItemInfo.synergy_text(session.content, synergy_id) + ("\n\nActive for today's fight." if on else "\n\nNot active with the guild as it stands."))
+		line.add_child(name_label)
+	if session.state.discovered.is_empty():
+		line.add_child(UiStyle.label("none yet (they're hidden until a fight sets one off)", 16, UiStyle.TEXT_DIM))
+	return line
 
 
 ## A relic as a hex token with its name (docs/ui-asset-design.md, 8.2):

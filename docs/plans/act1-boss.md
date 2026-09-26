@@ -90,7 +90,7 @@ One new piece: **enemy phases.** An enemy can list phases, each entered once whe
   - 4 Legendary relics: The Ashen Crown, The Undying Lantern, The Everflame Hourglass, and The Rift-Eater's Fang
   - the rare Ancient Reliquary event (weight 1, against 5 for each other event)
   - Legendary weights set to 0 everywhere but the boss's relic choice
-- **Her numbers:** 11000 HP, 50 ATK, 15 DEF. Ember Breath applies 8 Burn to every hero every 3s, and Last Hide is a 300 + DEF shield.
+- **Her numbers:** 11000 HP at first, then 10000 HP after the slice's balance pass (`docs/plans/slice-content.md`, step 4). 50 ATK, 15 DEF. Ember Breath applies 8 Burn to every hero every 3s, and Last Hide is a 300 + DEF shield.
 
 ## Balance findings (placeholders)
 
