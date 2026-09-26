@@ -142,7 +142,7 @@ The combat sim doesn't change (CLAUDE.md rules 1 and 2). The fight screen alread
 
 1. **Frame and guild bar, hero sheet, item popups** (removes the Inspector and frees the screen). **Done:** `GuildBar`, `HeroToken`, `HeroSheet`, `HoverCard`; the Inspector is now the item panel that pops up while an item is selected. The sheet docks above the bar rather than floating over the stage.
 2. **Caravan rebuilt full width** plus chrome assets (panels, buttons, fonts, icons). **Done:** fonts (Young Serif headings, Work Sans text; OFL, in `art/fonts/`), chrome (`art/ui/chrome/`: oak, parchment, slate, stall, and bar panels; button plaques) and 20 UI icons (`art/ui/icons/`: stats, gold, keys, losses, day, stops, fight kinds), all from `tools/art/ui_art.py`. The Caravan is a stall of large ware cards beside a For hire column; stops are big icon cards; the day bar and hero sheet use the icons.
-3. **Character figures** (8 heroes and 11 enemies) and portraits.
+3. **Character figures** (8 heroes and 11 enemies) and portraits. **Done:** `tools/art/characters.py` writes each character's body, held layer (it swings around the hand; beasts have none), and round portrait, plus `rig.json`. `CharacterArt` loads them; `Figure` draws a figure (flip, lunge offset, swing, squash, hit flash, fallen); portraits show in the guild bar, recruits, enemy previews, and fight cards; the hero sheet shows the full figure.
 4. **Fight Level 1** (animated rows).
 5. **Other screens:** title, run start, stop choice, events, rewards.
 6. Remaining item icons and relic icons.

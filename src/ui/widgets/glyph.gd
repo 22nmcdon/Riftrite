@@ -46,15 +46,24 @@ var infusion: Infusion = Infusion.SINGLE
 var progress: float = -1.0
 ## HEX: draw the rift bleed (cracks).
 var cracked: bool = false
-## ITEM: the item's art, drawn instead of its kind icon (null: none).
+## ITEM or PORTRAIT: the art, drawn instead of the code-drawn look (null:
+## none).
 var art: Texture2D = null
+## PORTRAIT art's tint (grey for a fallen unit).
+var modulate_art: Color = Color.WHITE
 
 ## Item art already looked up: item id -> texture, or null when there's none.
 static var _art_cache: Dictionary[String, Texture2D] = {}
 
 
-static func portrait(letter: String, fill: Color, size: int = 40) -> Glyph:
-	return _make(Shape.PORTRAIT, fill, letter.substr(0, 1).to_upper(), size)
+## A round portrait: the character's art when `char_id` has some
+## (CharacterArt), else their initial on their color.
+static func portrait(letter: String, fill: Color, size: int = 40, char_id: String = "") -> Glyph:
+	var glyph: Glyph = _make(Shape.PORTRAIT, fill, letter.substr(0, 1).to_upper(), size)
+	glyph.art = CharacterArt.portrait(CharacterArt.base_id(char_id)) if not char_id.is_empty() else null
+	if glyph.art != null:
+		glyph.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	return glyph
 
 
 ## An essence as a round gem with its glyph.
@@ -134,6 +143,8 @@ func _draw() -> void:
 	var c: Vector2 = size / 2.0
 	var r: float = s / 2.0
 	match shape:
+		Shape.PORTRAIT when art != null:
+			draw_texture_rect(art, Rect2(c - Vector2(r, r), Vector2(r, r) * 2.0), false, modulate_art)
 		Shape.PORTRAIT:
 			draw_circle(c, r, color.darkened(0.45))
 			draw_circle(c, r - 3.0, color)

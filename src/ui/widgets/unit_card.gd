@@ -40,7 +40,7 @@ static func make(fight_unit: UnitState, shown_name: String = "", rift: bool = fa
 	var top := HBoxContainer.new()
 	box.add_child(top)
 	var color: Color = Glyph.CLASS_COLORS.get(fight_unit.unit_class, UiStyle.EMBER) if hero else Glyph.ENEMY.lightened(0.25)
-	top.add_child(Glyph.portrait(card.display_name, color, 44))
+	top.add_child(Glyph.portrait(card.display_name, color, 44, fight_unit.id))
 	var names := VBoxContainer.new()
 	names.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(names)

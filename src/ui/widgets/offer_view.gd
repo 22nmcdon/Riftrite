@@ -62,7 +62,7 @@ static func _hero_card(session: RunSession, offer: Dictionary, cost: String, act
 	var held: RunHero = session.state.hero(def.id) if session.state != null else null
 	var top := HBoxContainer.new()
 	box.add_child(top)
-	top.add_child(Glyph.portrait(def.name, Glyph.CLASS_COLORS.get(def.hero_class, UiStyle.EMBER), 64 if big else 48))
+	top.add_child(Glyph.portrait(def.name, Glyph.CLASS_COLORS.get(def.hero_class, UiStyle.EMBER), 72 if big else 48, def.id))
 	var names := VBoxContainer.new()
 	top.add_child(names)
 	var title: String = "%s  %s" % [def.name, TuningDef.TIER_LABELS[offer["rank"]]]

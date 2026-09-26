@@ -53,7 +53,7 @@ func _enemy_preview(unit: UnitSetup) -> Control:
 		card.add_child(FrameDecor.make(0, true))
 	var top := HBoxContainer.new()
 	box.add_child(top)
-	top.add_child(Glyph.portrait(unit.name, Glyph.ENEMY.lightened(0.25), 44))
+	top.add_child(Glyph.portrait(unit.name, Glyph.ENEMY.lightened(0.25), 56, unit.id))
 	var names_box := VBoxContainer.new()
 	top.add_child(names_box)
 	names_box.add_child(UiStyle.label(unit.name, 17))

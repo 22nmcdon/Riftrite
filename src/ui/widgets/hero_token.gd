@@ -37,7 +37,7 @@ func _build(hero: RunHero) -> void:
 	box.add_theme_constant_override("separation", 1)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(box)
-	var portrait: Glyph = Glyph.portrait(def.name, Glyph.CLASS_COLORS.get(def.hero_class, UiStyle.EMBER), 52)
+	var portrait: Glyph = Glyph.portrait(def.name, Glyph.CLASS_COLORS.get(def.hero_class, UiStyle.EMBER), 56, hero.hero_id)
 	portrait.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	if hero.benched:
 		portrait.modulate = Color(1, 1, 1, 0.55)

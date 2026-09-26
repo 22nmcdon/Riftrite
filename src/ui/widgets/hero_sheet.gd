@@ -29,7 +29,14 @@ func _build(hero: RunHero) -> void:
 	var line := HBoxContainer.new()
 	line.add_theme_constant_override("separation", 16)
 	add_child(line)
-	line.add_child(Glyph.portrait(def.name, Glyph.CLASS_COLORS.get(def.hero_class, UiStyle.EMBER), 88))
+	# The hero's full figure (or their portrait, without art).
+	var figure: Figure = Figure.make(hero.hero_id, 150)
+	if figure.has_art():
+		figure.bob = true
+		line.add_child(figure)
+	else:
+		figure.free()
+		line.add_child(Glyph.portrait(def.name, Glyph.CLASS_COLORS.get(def.hero_class, UiStyle.EMBER), 88, hero.hero_id))
 	# Who they are, and their controls.
 	var info := VBoxContainer.new()
 	info.add_theme_constant_override("separation", 4)

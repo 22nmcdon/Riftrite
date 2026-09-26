@@ -1,0 +1,154 @@
+{
+ "ash_hound": {
+  "beast": true,
+  "hand": [
+   88,
+   108
+  ],
+  "held": false
+ },
+ "ashling": {
+  "beast": false,
+  "hand": [
+   88,
+   108
+  ],
+  "held": true
+ },
+ "bog_lurker": {
+  "beast": true,
+  "hand": [
+   88,
+   108
+  ],
+  "held": false
+ },
+ "brannoc": {
+  "beast": false,
+  "hand": [
+   88,
+   108
+  ],
+  "held": true
+ },
+ "cairn_guardian": {
+  "beast": true,
+  "hand": [
+   88,
+   108
+  ],
+  "held": false
+ },
+ "cinder_moth": {
+  "beast": true,
+  "hand": [
+   88,
+   108
+  ],
+  "held": false
+ },
+ "gloam_witch": {
+  "beast": false,
+  "hand": [
+   88,
+   108
+  ],
+  "held": true
+ },
+ "hesk": {
+  "beast": false,
+  "hand": [
+   88,
+   108
+  ],
+  "held": true
+ },
+ "hollow_archer": {
+  "beast": false,
+  "hand": [
+   88,
+   108
+  ],
+  "held": true
+ },
+ "maren": {
+  "beast": false,
+  "hand": [
+   88,
+   108
+  ],
+  "held": true
+ },
+ "mother_ash": {
+  "beast": true,
+  "hand": [
+   88,
+   108
+  ],
+  "held": false
+ },
+ "odo": {
+  "beast": false,
+  "hand": [
+   88,
+   108
+  ],
+  "held": true
+ },
+ "pell": {
+  "beast": false,
+  "hand": [
+   88,
+   108
+  ],
+  "held": true
+ },
+ "rift_hound": {
+  "beast": true,
+  "hand": [
+   88,
+   108
+  ],
+  "held": false
+ },
+ "rift_pup": {
+  "beast": true,
+  "hand": [
+   88,
+   108
+  ],
+  "held": false
+ },
+ "rift_sentinel": {
+  "beast": true,
+  "hand": [
+   88,
+   108
+  ],
+  "held": false
+ },
+ "vell": {
+  "beast": false,
+  "hand": [
+   88,
+   108
+  ],
+  "held": true
+ },
+ "wren": {
+  "beast": false,
+  "hand": [
+   88,
+   108
+  ],
+  "held": true
+ },
+ "ysolde": {
+  "beast": false,
+  "hand": [
+   88,
+   108
+  ],
+  "held": true
+ }
+}
