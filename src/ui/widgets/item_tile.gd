@@ -15,6 +15,10 @@ signal clicked
 
 enum Drop { INFUSE, COMBINE, MOVE }
 
+## A compact tile (the guild bar's stash): icon, tier, and gem only, per slot.
+const COMPACT_SLOT_WIDTH: int = 60
+const COMPACT_HEIGHT: int = 64
+
 var session: RunSession
 ## Owned: the item's uid, who holds it (a hero id or RunState.STASH), and its
 ## index in that list. Offers have uid -1.
@@ -25,6 +29,8 @@ var item_id: String
 var tier: int = 0
 var essence_ids: Array[String] = []
 var lit: bool = false
+## Icon, tier, and gem only (the name shows on hover).
+var compact: bool = false
 ## What the item does (shown in the inspector on hover).
 var info: String = ""
 ## The frame when not hovered or a drop target.
@@ -33,9 +39,10 @@ var _style: StyleBoxFlat
 var _drop_checks: Dictionary[String, bool] = {}
 
 
-static func owned(run_session: RunSession, item: RunItem, holder: String, at: int, holder_stats: UnitStats) -> ItemTile:
+static func owned(run_session: RunSession, item: RunItem, holder: String, at: int, holder_stats: UnitStats, small: bool = false) -> ItemTile:
 	var tile := ItemTile.new()
 	tile.session = run_session
+	tile.compact = small
 	tile.uid = item.uid
 	tile.owner_id = holder
 	tile.index = at
@@ -57,7 +64,8 @@ func _fill(item: String, item_tier: int, essences: Array[String], xp: int, holde
 	essence_ids = essences
 	var content: ContentDb = session.content
 	var def: ItemDef = content.items[item]
-	custom_minimum_size = Vector2(maxi(def.size, 1) * UiStyle.SLOT_WIDTH, UiStyle.TILE_HEIGHT)
+	var slots: int = maxi(def.size, 1)
+	custom_minimum_size = Vector2(slots * COMPACT_SLOT_WIDTH, COMPACT_HEIGHT) if compact else Vector2(slots * UiStyle.SLOT_WIDTH, UiStyle.TILE_HEIGHT)
 	var selected: bool = uid >= 0 and session.selected_uid == uid
 	var border: Color = UiStyle.HIGHLIGHT if lit or selected else UiStyle.rarity_color(def.rarity)
 	var fill: Color = UiStyle.PANEL_WARM if selected else (Color("241a2e") if def.enemy_only else UiStyle.PANEL)
@@ -70,25 +78,39 @@ func _fill(item: String, item_tier: int, essences: Array[String], xp: int, holde
 	mouse_exited.connect(_lift.bind(false))
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 2)
+	box.add_theme_constant_override("separation", 0 if compact else 2)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(box)
 	var top := HBoxContainer.new()
 	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(top)
-	top.add_child(Glyph.item(def, UiStyle.rarity_color(def.rarity).lightened(0.25), 38))
-	var tier_label: Label = UiStyle.label(TuningDef.TIER_LABELS[item_tier], 16, UiStyle.EMBER)
+	top.add_theme_constant_override("separation", 2 if compact else 4)
+	top.add_child(Glyph.item(def, UiStyle.rarity_color(def.rarity).lightened(0.25), 32 if compact else 38))
+	if compact:
+		# Tier and gems go on a second line under the icon.
+		top.alignment = BoxContainer.ALIGNMENT_CENTER
+		top = HBoxContainer.new()
+		top.alignment = BoxContainer.ALIGNMENT_CENTER
+		top.add_theme_constant_override("separation", 2)
+		top.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(top)
+	var tier_label: Label = UiStyle.label(TuningDef.TIER_LABELS[item_tier], 13 if compact else 16, UiStyle.EMBER)
 	tier_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top.add_child(tier_label)
 	var discovered: Array[String] = session.state.discovered if session.state != null else ([] as Array[String])
 	var form: Glyph.Infusion = InfusionLook.form(content, item, essences, discovered)
 	var sockets: int = content.tuning.socket_count(def)
 	if form != Glyph.Infusion.EMPTY:
-		top.add_child(Glyph.infusion_gem(form, essences, 28))
+		top.add_child(Glyph.infusion_gem(form, essences, 16 if compact else 28))
 	# Empty sockets: all of them, or the second one beside a single essence.
 	var filled: int = 0 if form == Glyph.Infusion.EMPTY else (1 if form == Glyph.Infusion.SINGLE else sockets)
 	for i: int in sockets - filled:
-		top.add_child(Glyph.infusion_gem(Glyph.Infusion.EMPTY, [] as Array[String], 22))
+		top.add_child(Glyph.infusion_gem(Glyph.Infusion.EMPTY, [] as Array[String], 14 if compact else 22))
+	var level: int = InfusionLook.level(content, essences, xp)
+	var decor: FrameDecor = FrameDecor.make(ItemDef.RARITIES.find(def.rarity), def.enemy_only, InfusionLook.spill_colors(form, essences, level), InfusionLook.shows_no_spill(form, level))
+	if compact:
+		add_child(decor)
+		return
 	var name_label: Label = UiStyle.label(def.name, 14)
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -97,8 +119,7 @@ func _fill(item: String, item_tier: int, essences: Array[String], xp: int, holde
 		var price: Label = UiStyle.label(footer, 14, UiStyle.HIGHLIGHT)
 		price.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(price)
-	var level: int = InfusionLook.level(content, essences, xp)
-	add_child(FrameDecor.make(ItemDef.RARITIES.find(def.rarity), def.enemy_only, InfusionLook.spill_colors(form, essences, level), InfusionLook.shows_no_spill(form, level)))
+	add_child(decor)
 
 
 ## Hover: lift the token a little with a brass rim (docs/ui-asset-design.md, 9).

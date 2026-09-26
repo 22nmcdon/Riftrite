@@ -1,7 +1,7 @@
 extends GutTest
-## The inspector (the side panel): click an item to select it, then act on it
-## with buttons; hovering shows things; plain-language item text; fight
-## names for the log.
+## The inspector (the item panel): click an item to select it, then act on
+## it with buttons; hovering shows the hover card; plain-language item text;
+## fight names for the log.
 
 const U = preload("res://tests/ui/ui_test_kit.gd")
 const MainScript = preload("res://src/ui/main.gd")
@@ -15,7 +15,7 @@ func _main(session: RunSession) -> Main:
 
 
 func _tile(main: Main, uid: int) -> ItemTile:
-	for node: Node in U.find_all(main.screen, ItemTile):
+	for node: Node in U.find_all(main, ItemTile):
 		if (node as ItemTile).uid == uid:
 			return node
 	return null
@@ -33,7 +33,7 @@ func _selected() -> Main:
 	var session: RunSession = U.at_caravan()
 	var main: Main = _main(session)
 	var ware: ItemTile = null
-	for node: Node in U.find_all(main.screen, ItemTile):
+	for node: Node in U.find_all(main, ItemTile):
 		if (node as ItemTile).uid < 0:
 			ware = node
 			break
@@ -47,6 +47,7 @@ func test_clicking_an_item_selects_it() -> void:
 	var session: RunSession = main.session
 	var item: RunItem = session.state.stash[0]
 	assert_eq(session.selected_uid, item.uid)
+	assert_true(main.inspector.visible, "the item panel pops up")
 	assert_true(_tile(main, item.uid).get_theme_stylebox("panel").border_color == UiStyle.HIGHLIGHT, "the selected tile is highlighted")
 	var text: String = U.text_of(main.inspector)
 	assert_string_contains(text, session.content.items[item.item_id].name)
@@ -55,7 +56,7 @@ func test_clicking_an_item_selects_it() -> void:
 	assert_null(U.button(main.inspector, "Put in the stash"), "already there")
 	_release(_tile(main, item.uid))
 	assert_eq(session.selected_uid, -1, "clicking again clears it")
-	assert_string_contains(U.text_of(main.inspector), "Click an item you hold")
+	assert_false(main.inspector.visible, "and the panel hides")
 
 
 func test_inspector_buttons_act_on_the_item() -> void:
@@ -122,21 +123,27 @@ func test_the_inspector_follows_the_step() -> void:
 	assert_null(U.button(main.inspector, "Upgrade"), "the anvil is spent")
 
 
-func test_hovering_previews_then_returns_to_the_selection() -> void:
+func test_hovering_shows_the_hover_card_and_keeps_the_selection() -> void:
 	var main: Main = _selected()
 	var selected_name: String = main.inspector._title.text
-	var hero_card: Control = null
-	for node: Node in U.find_all(main.screen, PanelContainer):
-		if U.text_of(node).contains("Basic attack:") and not node is Inspector:
-			hero_card = node
-			break
-	hero_card.mouse_entered.emit()
-	assert_string_contains(main.inspector._title.text, "rank C")
-	assert_string_contains(U.text_of(main.inspector), "Basic attack:")
-	assert_null(U.button(main.inspector, "Sell"), "a preview has no buttons")
-	hero_card.mouse_exited.emit()
-	assert_eq(main.inspector._title.text, selected_name)
+	var token: HeroToken = U.find_all(main.guild_bar(), HeroToken)[0]
+	token.mouse_entered.emit()
+	assert_true(main.hover_card.visible)
+	assert_string_contains(main.hover_card.title_text(), "rank C")
+	assert_string_contains(main.hover_card.body_text(), "Basic attack:")
+	assert_eq(main.inspector._title.text, selected_name, "the item panel keeps the selection")
 	assert_not_null(U.button(main.inspector, "Sell"))
+	token.mouse_exited.emit()
+	assert_false(main.hover_card.visible)
+
+
+func test_hovering_a_tile_describes_the_item() -> void:
+	var main: Main = _selected()
+	var item: RunItem = main.session.state.stash[0]
+	var tile: ItemTile = _tile(main, item.uid)
+	tile.mouse_entered.emit()
+	assert_eq(main.hover_card.title_text(), tile.info.split("\n")[0])
+	assert_string_contains(main.hover_card.title_text(), main.session.content.items[item.item_id].name)
 
 
 func test_selection_is_not_saved() -> void:
@@ -189,18 +196,28 @@ func after_each() -> void:
 
 # --- synergies in the UI -----------------------------------------------------------
 
-func test_discovered_synergies_show_in_the_guild_panel() -> void:
+func _synergy_badge(main: Main) -> Label:
+	for node: Node in U.find_all(main.guild_bar(), Label):
+		if (node as Label).mouse_filter == Control.MOUSE_FILTER_STOP and ((node as Label).text.contains("found") or (node as Label).text == "none yet"):
+			return node
+	return null
+
+
+func test_discovered_synergies_show_in_the_guild_bar() -> void:
 	var session: RunSession = U.at_caravan()
 	var state: RunState = session.state
 	state.heroes[0] = RunHero.make("brannoc")
 	state.heroes[0].items.append(RunItem.make(state.take_uid(), "oak_buckler"))
 	var main: Main = _main(session)
-	assert_string_contains(U.text_of(main.screen), "none yet")
+	assert_eq(_synergy_badge(main).text, "none yet")
 	assert_eq(session.active_synergies(), ["wardens_oath"] as Array[String], "Brannoc with his buckler")
 	state.discovered.append_array(["wardens_oath", "paper_cuts"] as Array[String])
 	main.refresh()
-	var text: String = U.text_of(main.screen)
-	assert_true(text.contains("★ Warden's Oath"), "active, so lit")
+	var badge: Label = _synergy_badge(main)
+	assert_eq(badge.text, "2 found · 1 active")
+	badge.mouse_entered.emit()
+	var text: String = main.hover_card.body_text()
+	assert_true(text.contains("★ Warden's Oath"), "active, so starred")
 	assert_string_contains(text, "Paper Cuts")
 	assert_false(text.contains("★ Paper Cuts"), "found but not active")
 	assert_false(text.contains("Dawnstrike"), "undiscovered synergies stay hidden")

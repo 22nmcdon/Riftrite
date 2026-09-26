@@ -8,7 +8,7 @@ extends UiScreen
 ## end). At the end: the result and the damage meter, then Continue.
 
 signal finished
-## Playback began (Main hides the inspector).
+## Playback began (Main hides the guild bar, hero sheet, and item panel).
 signal started
 
 ## True from pressing Fight until Continue (Main leaves the screen alone).
@@ -41,7 +41,6 @@ func build() -> void:
 	fight_button.add_theme_font_size_override("font_size", 24)
 	fight_button.custom_minimum_size = Vector2(200, 56)
 	add_child(fight_button)
-	add_child(GuildPanel.make(session))
 
 
 func _enemy_preview(unit: UnitSetup) -> Control:

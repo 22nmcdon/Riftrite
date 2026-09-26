@@ -16,21 +16,28 @@ func _main(session: RunSession) -> Main:
 
 func _offer_tiles(main: Main) -> Array[ItemTile]:
 	var tiles: Array[ItemTile] = []
-	for node: Node in U.find_all(main.screen, ItemTile):
+	for node: Node in U.find_all(main, ItemTile):
 		if (node as ItemTile).uid < 0:
 			tiles.append(node)
 	return tiles
 
 
 func _owned_tile(main: Main, uid: int) -> ItemTile:
-	for node: Node in U.find_all(main.screen, ItemTile):
+	for node: Node in U.find_all(main, ItemTile):
 		if (node as ItemTile).uid == uid:
 			return node
 	return null
 
 
+func _click(control: Control) -> void:
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = false
+	control._gui_input(click)
+
+
 func _zone(main: Main, text: String) -> DropZone:
-	for node: Node in U.find_all(main.screen, DropZone):
+	for node: Node in U.find_all(main, DropZone):
 		if U.text_of(node).contains(text):
 			return node
 	return null
@@ -123,10 +130,15 @@ func test_drag_and_drop_moves_sells_and_throws_away() -> void:
 	var first: RunItem = state.stash[0]
 	var second: RunItem = state.stash[1]
 	var hero: RunHero = state.heroes[0]
-	var zone: DropZone = _zone(main, "free slot")
-	assert_true(zone._can_drop_data(Vector2.ZERO, {"uid": first.uid}))
-	zone._drop_data(Vector2.ZERO, {"uid": first.uid})
+	var token: HeroToken = U.find_all(main.guild_bar(), HeroToken)[0]
+	assert_true(token._can_drop_data(Vector2.ZERO, {"uid": first.uid}), "a hero's token takes items")
+	assert_eq(token.get_theme_stylebox("panel").border_color, UiStyle.GOOD)
+	token._drop_data(Vector2.ZERO, {"uid": first.uid})
 	assert_eq(state.owner_of(first.uid), hero.hero_id, "into the hero's row")
+	main.session.open_hero(hero.hero_id)
+	var zone: DropZone = _zone(main, "free slot")
+	assert_not_null(zone, "the sheet shows the hero's row")
+	assert_true(zone._can_drop_data(Vector2.ZERO, {"uid": second.uid}))
 	var gold: int = state.gold
 	_zone(main, "sell")._drop_data(Vector2.ZERO, {"uid": first.uid})
 	assert_eq(state.owner_of(first.uid), RunState.NOWHERE)
@@ -154,7 +166,7 @@ func test_dropping_a_copy_combines_and_an_essence_infuses() -> void:
 	assert_eq([state.stash, keep.tier], [[lower, keep] as Array[RunItem], 1], "a copy at another tier just moves")
 	state.stash.erase(lower)
 	main.refresh()
-	var chips: Array[Node] = U.find_all(main.screen, EssenceChip)
+	var chips: Array[Node] = U.find_all(main, EssenceChip)
 	assert_eq(chips.size(), 1)
 	var tile_now: ItemTile = _owned_tile(main, keep.uid)
 	assert_true(tile_now._can_drop_data(Vector2.ZERO, {"pouch_index": 0}))
@@ -167,11 +179,35 @@ func test_formation_buttons() -> void:
 	var main: Main = _main(U.at_caravan())
 	var hero: RunHero = main.session.state.heroes[0]
 	var row: UnitSetup.Row = hero.row
-	assert_true(U.press(main.screen, "Front" if row == UnitSetup.Row.FRONT else "Back"))
+	assert_null(main.hero_sheet(), "closed until a hero is clicked")
+	_click(U.find_all(main.guild_bar(), HeroToken)[0])
+	assert_not_null(main.hero_sheet())
+	assert_true(U.press(main.hero_sheet(), "Front" if row == UnitSetup.Row.FRONT else "Back"))
 	assert_ne(hero.row, row)
-	assert_true(U.press(main.screen, "Fielded"))
+	assert_true(U.press(main.hero_sheet(), "Fielded"))
 	assert_true(main._toast.visible, "the only hero can't sit in backup")
 	assert_false(hero.benched)
+
+
+func test_the_hero_sheet_opens_steps_and_closes() -> void:
+	var session: RunSession = U.at_caravan()
+	var state: RunState = session.state
+	state.heroes.append(RunHero.make("brannoc"))
+	state.heroes[1].benched = true
+	var main: Main = _main(session)
+	var tokens: Array[Node] = U.find_all(main.guild_bar(), HeroToken)
+	assert_eq(tokens.size(), 2)
+	_click(tokens[1])
+	assert_eq(main.hero_sheet().hero_id, "brannoc")
+	assert_string_contains(U.text_of(main.hero_sheet()), "Brannoc of the Hearthwatch")
+	assert_not_null(U.button(main.hero_sheet(), "In backup"))
+	assert_true(U.press(main.hero_sheet(), "Next hero"))
+	assert_eq(main.hero_sheet().hero_id, state.heroes[0].hero_id, "wraps around")
+	assert_true(U.press(main.hero_sheet(), "✕"))
+	assert_null(main.hero_sheet())
+	_click(U.find_all(main.guild_bar(), HeroToken)[0])
+	_click(U.find_all(main.guild_bar(), HeroToken)[0])
+	assert_null(main.hero_sheet(), "clicking the open hero's token closes it")
 
 
 # --- stops, the fight, rewards ------------------------------------------------------
@@ -193,8 +229,10 @@ func test_the_fight_plays_back_then_moves_on() -> void:
 	var session: RunSession = main.session
 	var fight: FightScreen = main.screen
 	assert_string_contains(U.text_of(fight), "Today's fight")
+	assert_not_null(main.guild_bar(), "the guild bar shows before the fight")
 	assert_true(U.press(fight, "Fight!"))
 	assert_true(fight.playing)
+	assert_null(main.guild_bar(), "and hides while it plays")
 	assert_eq(main.screen, fight, "the fight keeps its screen while it plays")
 	assert_ne(session.state.phase, "fight")
 	fight._process(1.0)
@@ -356,11 +394,13 @@ func _item_offers(state: RunState) -> Array[Dictionary]:
 	return items
 
 
+## Drops each stash item onto the first hero token that takes it.
 func _equip(main: Main) -> void:
 	for item: RunItem in main.session.state.stash.duplicate():
-		var zone: DropZone = _zone(main, "free slot")
-		if zone != null:
-			zone._drop_data(Vector2.ZERO, {"uid": item.uid})
+		for token: Node in U.find_all(main.guild_bar(), HeroToken):
+			if (token as HeroToken)._can_drop_data(Vector2.ZERO, {"uid": item.uid}):
+				(token as HeroToken)._drop_data(Vector2.ZERO, {"uid": item.uid})
+				break
 
 
 ## Returns how many offers it took.

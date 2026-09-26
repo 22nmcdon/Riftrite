@@ -19,7 +19,6 @@ func build() -> void:
 		add_child(UiStyle.label("Choose one relic (or none):", 16, UiStyle.EMBER))
 		add_child(offer_row(relic_choice, _take))
 	add_child(UiStyle.button("Continue", func() -> void: session.done()))
-	add_child(GuildPanel.make(session))
 
 
 func _take(index: int) -> void:

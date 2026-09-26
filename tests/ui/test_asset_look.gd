@@ -22,7 +22,7 @@ func _main(session: RunSession) -> Main:
 
 
 func _tile(main: Main, uid: int) -> ItemTile:
-	for node: Node in U.find_all(main.screen, ItemTile):
+	for node: Node in U.find_all(main, ItemTile):
 		if (node as ItemTile).uid == uid:
 			return node
 	return null
@@ -115,8 +115,9 @@ func test_drop_zones_check_room() -> void:
 		hero.items.append(RunItem.make(state.take_uid(), "hearth_knife"))
 	var extra := RunItem.make(state.take_uid(), "hearth_knife")
 	state.stash.append(extra)
+	session.open_hero_id = hero.hero_id
 	var main: Main = _main(session)
-	var zones: Array[Node] = U.find_all(main.screen, DropZone)
+	var zones: Array[Node] = U.find_all(main, DropZone)
 	var slot_zone: DropZone = zones.filter(func(z: DropZone) -> bool: return U.text_of(z).contains("free slot"))[0]
 	var stash_zone: DropZone = zones.filter(func(z: DropZone) -> bool: return U.text_of(z).contains("stash"))[0]
 	var sell_zone: DropZone = zones.filter(func(z: DropZone) -> bool: return U.text_of(z).contains("sell"))[0]
@@ -132,7 +133,7 @@ func test_relics_are_hex_tokens() -> void:
 	var session: RunSession = U.at_caravan()
 	session.state.relics.append_array(["warding_knot", "rift_eaters_fang"] as Array[String])
 	var main: Main = _main(session)
-	var hexes: Array[Node] = U.find_all(main.screen, Glyph).filter(func(g: Glyph) -> bool: return g.shape == Glyph.Shape.HEX)
+	var hexes: Array[Node] = U.find_all(main.guild_bar(), Glyph).filter(func(g: Glyph) -> bool: return g.shape == Glyph.Shape.HEX)
 	assert_eq(hexes.size(), 2)
 	assert_eq([(hexes[0] as Glyph).cracked, (hexes[1] as Glyph).cracked], [false, true], "Legendary (boss) relics carry the rift bleed")
 	assert_eq((hexes[1] as Glyph).color, UiStyle.rarity_color("legendary"))

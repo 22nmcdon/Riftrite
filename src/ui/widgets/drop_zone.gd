@@ -14,16 +14,16 @@ var _style: StyleBoxFlat
 var _checks: Dictionary[String, bool] = {}
 
 
-static func make(text: String, action: Callable, essences: bool = false, width: int = 120, would_work: Callable = Callable()) -> DropZone:
+static func make(text: String, action: Callable, essences: bool = false, width: int = 120, would_work: Callable = Callable(), height: int = UiStyle.TILE_HEIGHT) -> DropZone:
 	var zone := DropZone.new()
 	zone.on_drop = action
 	zone.check = would_work
 	zone.accepts_essences = essences
-	zone.custom_minimum_size = Vector2(width, UiStyle.TILE_HEIGHT)
+	zone.custom_minimum_size = Vector2(width, height)
 	zone._style = UiStyle.box(UiStyle.BACKGROUND, UiStyle.BORDER)
 	zone._style.draw_center = true
 	zone.add_theme_stylebox_override("panel", zone._style)
-	var label: Label = UiStyle.label(text, 14, UiStyle.TEXT_DIM)
+	var label: Label = UiStyle.label(text, 14 if height >= UiStyle.TILE_HEIGHT else 12, UiStyle.TEXT_DIM)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	zone.add_child(label)

@@ -92,6 +92,14 @@ func _showcase(session: RunSession) -> void:
 		state.relics.append(relic_id)
 	session.select(-1)
 	await _snap("showcase")
+	# The hero sheet open, and the hover card over a stash item.
+	session.open_hero(state.heroes[0].hero_id)
+	await _snap("showcase_sheet")
+	for node: Node in _main.guild_bar().find_children("*", "ItemTile", true, false):
+		(node as ItemTile).mouse_entered.emit()
+		break
+	await _snap("showcase_hover")
+	session.open_hero("")
 	session.state = RunState.from_dict(saved, content)[0]
 	session.select(-1)
 

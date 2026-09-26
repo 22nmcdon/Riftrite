@@ -25,6 +25,9 @@ var fixed_seed: int = -1
 ## UI only (not part of the run or its save): the item selected in the
 ## inspector, or -1.
 var selected_uid: int = -1
+## UI only: the hero whose sheet is open (docs/plans/ui-overhaul.md, 3.2),
+## or "" when it's closed.
+var open_hero_id: String = ""
 
 
 static func make(fight_content: ContentDb, run_content: RunContent, path: String = RunSave.DEFAULT_PATH, journal_dir: String = "") -> RunSession:
@@ -55,6 +58,7 @@ func next_seed() -> int:
 func new_run(run_seed: int) -> void:
 	state = RunFlow.new_run(run_seed, content)
 	selected_uid = -1
+	open_hero_id = ""
 	if journal != null:
 		journal.open(state)
 	last_fight = null
@@ -70,6 +74,7 @@ func continue_run() -> String:
 		return errors[0]
 	state = loaded[0]
 	selected_uid = -1
+	open_hero_id = ""
 	if journal != null:
 		journal.open(state)
 	changed.emit(RunActions._ok("the run continues"))
@@ -89,6 +94,20 @@ func abandon() -> void:
 func select(uid: int) -> void:
 	selected_uid = -1 if uid == selected_uid else uid
 	changed.emit(RunActions._ok("selected"))
+
+
+## Opens a hero's sheet (again, or "", to close it). Not a run change,
+## like select().
+func open_hero(hero_id: String) -> void:
+	open_hero_id = "" if hero_id == open_hero_id else hero_id
+	changed.emit(RunActions._ok("selected"))
+
+
+## The open sheet's hero, or null (closed, or the hero has left the guild).
+func open_hero_or_null() -> RunHero:
+	if state == null or open_hero_id.is_empty():
+		return null
+	return state.hero(open_hero_id)
 
 
 ## The synergies the guild would have in today's fight as it stands (ids,

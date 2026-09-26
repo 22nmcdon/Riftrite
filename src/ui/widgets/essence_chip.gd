@@ -5,7 +5,8 @@ extends PanelContainer
 var pouch_index: int
 
 
-static func make(content: ContentDb, essence_id: String, at: int) -> EssenceChip:
+## `small`: just the gem (the guild bar); the name shows on hover.
+static func make(content: ContentDb, essence_id: String, at: int, small: bool = false) -> EssenceChip:
 	var chip := EssenceChip.new()
 	chip.pouch_index = at
 	var color: Color = UiStyle.ESSENCE.get(essence_id, UiStyle.TEXT)
@@ -13,10 +14,11 @@ static func make(content: ContentDb, essence_id: String, at: int) -> EssenceChip
 	var line := HBoxContainer.new()
 	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	chip.add_child(line)
-	line.add_child(Glyph.gem(essence_id, 24))
-	var name_label: Label = UiStyle.label(content.essences[essence_id].name, 16, color)
-	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	line.add_child(name_label)
+	line.add_child(Glyph.gem(essence_id, 30 if small else 24))
+	if not small:
+		var name_label: Label = UiStyle.label(content.essences[essence_id].name, 16, color)
+		name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		line.add_child(name_label)
 	Inspector.hover(chip, "%s essence" % content.essences[essence_id].name, "Drag it onto an item to infuse it, or select an item and use its Infuse button.")
 	return chip
 

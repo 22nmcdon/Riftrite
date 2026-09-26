@@ -31,7 +31,6 @@ func build() -> void:
 				all.append(i)
 			add_child(offer_row(all, _take))
 	add_child(UiStyle.button("Leave, on to the fight", func() -> void: session.leave_stop()))
-	add_child(GuildPanel.make(session))
 
 
 func _take(index: int) -> void:

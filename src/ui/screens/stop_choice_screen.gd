@@ -22,7 +22,6 @@ func build() -> void:
 		button.custom_minimum_size = Vector2(300, 90)
 		row.add_child(button)
 	add_child(row)
-	add_child(GuildPanel.make(session))
 
 
 func _pick(index: int) -> void:
