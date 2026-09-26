@@ -1,6 +1,6 @@
 # Plan: content to the slice targets, ready for playtesting (Phase 3, step 8)
 
-Status: **proposed**, waiting on the questions at the end.
+Status: **approved; being built**, one PR per step. The answers are at the end.
 
 **The goal** (`docs/plans/phase3-vertical-slice.md`, Part D): one full act, playable start to boss, with enough variety that playtesters want a second run. The targets are 8 heroes, 60 items, 6+ essences, 10 alloys, and 20 synergies, plus the Act 1 encounters, events, and relics.
 
@@ -123,3 +123,73 @@ The content is data only (rule 3). Anything that needs code is flagged below and
    - 25–35% of bot runs clearing the act (people should do better than the bot)
    - about 90% of day-1 fights won
    - day 3's elite no longer the biggest wall
+
+## Answers
+
+1. **Second heroes:** a second Warden and a second Arcanist for now. Eventually every class will have several heroes.
+2. **Act 1's essences:** not decided yet. For now Act 1 keeps its four (Wrath, Stone, Venom, Ember), and new enemies spread across them. This is an open question in `docs/design.md`.
+3. **Items:** 60 items the guild can get from the Caravan and loot. Enemy-only items come on top.
+4. **Legendary items:** they wait. Legendary items and their upgrade paths are the next piece of work after this step.
+5. (Playtest builds: not answered yet. Playtests run from the Godot editor until then.)
+6. **Balance targets** (for now):
+   - 25–35% of bot runs clear the act
+   - about 90% of day-1 fights won
+   - day 3's elite no longer the biggest wall
+
+## Built: step 1, the four new heroes
+
+All data, using existing effect types (no new code).
+
+| Hero | Class | Role | Basic attack | Backup | Signature item |
+| --- | --- | --- | --- | --- | --- |
+| Maren Thistledown | Ranger | Back-row archer | Longshot: hits the enemy back row | Marking Shot: Bleed on a back-row enemy every 6s | Thistledown Longbow (Blackthorn Bow, +15% crit) |
+| Pell Candlewick | Trickster | Blind, Slow, cooldowns | Sleight of Hand: a random enemy | Loaded Dice: blinds a random enemy every 6s | Pinch of Salt (Salt Ward also slows a random enemy) |
+| Old Hesk of the Gate | Warden | A second wall | Gate Slam: scales from his HP | Gatekeeper's Toll: a small shield on every ally every 6s | The Gate Bell (Bell of Vigil, 15% faster) |
+| Ysolde Ashwhisper | Arcanist | A burn caster | Cinder Dart: damage plus Burn | Smolder: Burn on the front row every 5s | Brazier Keeper (Ember Brazier burns 20% hotter) |
+
+**Specializations** (3 each, locked potential at B/A/S):
+- **Maren:**
+  - **Deadeye:** ranged crits, follow-up shots, heavier arrows.
+  - **Trapper:** a Snare ability that slows, then bleeds, then covers every enemy.
+  - **Volley:** her auto-attack hits every enemy. It comes with an auto-attack part, an arcing shot at the back row.
+- **Pell:**
+  - **Smoke and Mirrors:** a Smoke Bomb that blinds, then slows; at S, a once-per-fight save.
+  - **Clockwork Tricks:** faster tools that wind their neighbors; at S, a Spanner in the Works that freezes every enemy for 1s every 8s.
+  - **Cutpurse:** a quick auto-attack on the weakest enemy that slows; at S, crits that blind.
+- **Old Hesk:**
+  - **Bulwark:** a Brace ability; at S it covers his row.
+  - **Thornhide:** his defense items strike back, then leave Bleed.
+  - **Old Guard:** a backup spec.
+- **Ysolde:**
+  - **Ashcaller:** Ash Rain.
+  - **Emberheart:** her own magic and crits.
+  - **Kindler:** support that quickens and winds her allies.
+
+**Class traits:** Rangers (ranged items hit harder) and Tricksters (tools fire faster). With Hesk and Ysolde, the Warden and Arcanist traits can now trigger. The Ranger and Trickster traits wait for more heroes of those classes.
+
+**Tests:**
+- Every hero has a basic attack, a Backup effect, three specializations, and one signature.
+- Every class has a trait, and all six classes are in the slice.
+- Two Wardens set off the Wardens trait.
+- Hesk's Gate Slam scales from his HP.
+- Mutation checks (dropping a class trait, dropping a Backup) fail these tests.
+
+**Balance findings:**
+- **Sim parties** (`tools/sim_parties.json`: `newcomers_specialized`, `newcomers_with_vell`, `twin_classes`):
+  - At rank A with specializations, the new heroes win every Act 1 fight, as the original four do.
+  - Swapped one at a time into the starter party with the same items, Hesk plays like Brannoc and Ysolde like Odo.
+  - Maren and Pell trail Wren in her front-row slot, partly because Maren spends her damage on the back row. Their stats were raised to Wren's level (HP 270, ATK 22/20, ATSP 10/15).
+- **The run bot:** act clears fell from 17% to 7%, but every hero fell, not the new ones.
+
+  | Starting hero | Act clears before | Act clears after |
+  | --- | --- | --- |
+  | Brannoc | 30% | 17% |
+  | Old Hesk | – | 18% |
+  | Wren | 15% | 5% |
+  | Maren | – | 8% |
+  | Pell | – | 9% |
+  | Vell | 9% | 0% |
+  | Odo | 1% | 0% |
+  | Ysolde | – | 1% |
+
+  With 8 heroes in the pool, the Caravan offers a copy of a held hero half as often, so guilds rank up less. The balance pass (step 4) retunes for the bigger pool against the targets above. Starts with a fragile hero (Odo, Vell, Ysolde) are the weakest either way.

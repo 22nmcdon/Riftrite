@@ -684,5 +684,139 @@
         ]
       }
     ]
+  },
+  {
+    "id": "thistledown_longbow",
+    "name": "Thistledown Longbow",
+    "layer": "signature",
+    "hero": "maren",
+    "item": "blackthorn_bow",
+    "_note": "Maren with her bow: +15% crit chance.",
+    "auras": [
+      {
+        "target": "matched_items",
+        "stat": "crit_chance_bp",
+        "value": 1500
+      }
+    ]
+  },
+  {
+    "id": "pinch_of_salt",
+    "name": "Pinch of Salt",
+    "layer": "signature",
+    "hero": "pell",
+    "item": "salt_ward",
+    "_note": "Pell's salt ward also slows a random enemy.",
+    "grants": [
+      {
+        "effect": {
+          "trigger": "on_fire",
+          "type": "apply_status",
+          "status": "slow",
+          "stacks": 1,
+          "target": "enemy_random"
+        }
+      }
+    ]
+  },
+  {
+    "id": "gate_bell",
+    "name": "The Gate Bell",
+    "layer": "signature",
+    "hero": "hesk",
+    "item": "bell_of_vigil",
+    "_note": "Old Hesk rings the bell 15% faster.",
+    "auras": [
+      {
+        "target": "matched_items",
+        "stat": "cooldown_bp",
+        "value": -1500
+      }
+    ]
+  },
+  {
+    "id": "brazier_keeper",
+    "name": "Brazier Keeper",
+    "layer": "signature",
+    "hero": "ysolde",
+    "item": "ember_brazier",
+    "_note": "Ysolde's brazier burns 20% hotter.",
+    "auras": [
+      {
+        "target": "matched_items",
+        "stat": "over_time_bp",
+        "value": 12000
+      }
+    ]
+  },
+  {
+    "id": "ranger_trait",
+    "name": "Rangers",
+    "layer": "class_trait",
+    "class": "ranger",
+    "_note": "Ranged items hit harder.",
+    "tiers": [
+      {
+        "count": 2,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "tag": "ranged"
+            },
+            "stat": "damage_bp",
+            "value": 11500
+          }
+        ]
+      },
+      {
+        "count": 3,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "tag": "ranged"
+            },
+            "stat": "damage_bp",
+            "value": 12500
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "trickster_trait",
+    "name": "Tricksters",
+    "layer": "class_trait",
+    "class": "trickster",
+    "_note": "Tools fire faster.",
+    "tiers": [
+      {
+        "count": 2,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "tag": "tool"
+            },
+            "stat": "cooldown_bp",
+            "value": -500
+          }
+        ]
+      },
+      {
+        "count": 3,
+        "auras": [
+          {
+            "target": "all_items",
+            "filter": {
+              "tag": "tool"
+            },
+            "stat": "cooldown_bp",
+            "value": -1000
+          }
+        ]
+      }
+    ]
   }
 ]

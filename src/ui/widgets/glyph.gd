@@ -13,6 +13,7 @@ enum Infusion { EMPTY, SINGLE, ALLOY, PURE, TRANSFORMATION }
 ## Portrait colors by hero class (enemies use ENEMY).
 const CLASS_COLORS: Dictionary[String, Color] = {
 	"warden": Color("c98b4a"), "striker": Color("d65a4a"), "mender": Color("8dbf76"), "arcanist": Color("9b6fe0"),
+	"ranger": Color("6fae6a"), "trickster": Color("d6a24a"),
 }
 const ENEMY := Color("7a3b4a")
 ## The first of an item's tags found here picks its icon.

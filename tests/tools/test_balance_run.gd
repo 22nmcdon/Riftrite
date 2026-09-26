@@ -7,7 +7,7 @@ const K = preload("res://tests/sim/sim_test_kit.gd")
 func test_sim_parties_file_is_valid() -> void:
 	var parties: BalanceRun.Parties = BalanceRun.load_parties(K.content())
 	assert_eq(parties.errors, [] as Array[String])
-	assert_eq(parties.list.size(), 7)
+	assert_eq(parties.list.size(), 10)
 
 
 func test_every_party_runs_against_every_encounter() -> void:

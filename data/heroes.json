@@ -161,5 +161,185 @@
         }
       ]
     }
+  },
+  {
+    "id": "maren",
+    "name": "Maren Thistledown",
+    "class": "ranger",
+    "_note": "Placeholder stats. A back-row archer: her basic attack reaches the enemy back row.",
+    "stats": {
+      "hp": 270,
+      "atk": 22,
+      "def": 8,
+      "crit": 8,
+      "atsp": 10
+    },
+    "basic_attack": {
+      "id": "longshot",
+      "name": "Longshot",
+      "cooldown_ms": 1400,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 4,
+          "target": "enemy_back",
+          "scaling": {
+            "atk": 5500
+          }
+        }
+      ]
+    },
+    "backup": {
+      "name": "Marking Shot",
+      "_note": "From the bench, every 6s she marks a back-row enemy with Bleed.",
+      "cooldown_ms": 6000,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "apply_status",
+          "status": "bleed",
+          "stacks": 1,
+          "target": "enemy_back"
+        }
+      ]
+    }
+  },
+  {
+    "id": "pell",
+    "name": "Pell Candlewick",
+    "class": "trickster",
+    "_note": "Placeholder stats. Blind, Slow, and fiddling with cooldowns.",
+    "stats": {
+      "hp": 270,
+      "atk": 20,
+      "mgk": 10,
+      "def": 8,
+      "crit": 10,
+      "atsp": 15
+    },
+    "basic_attack": {
+      "id": "sleight",
+      "name": "Sleight of Hand",
+      "cooldown_ms": 1100,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 3,
+          "target": "enemy_random",
+          "scaling": {
+            "atk": 5000
+          }
+        }
+      ]
+    },
+    "backup": {
+      "name": "Loaded Dice",
+      "_note": "From the bench, every 6s he blinds a random enemy.",
+      "cooldown_ms": 6000,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "apply_status",
+          "status": "blind",
+          "stacks": 1,
+          "target": "enemy_random"
+        }
+      ]
+    }
+  },
+  {
+    "id": "hesk",
+    "name": "Old Hesk of the Gate",
+    "class": "warden",
+    "_note": "Placeholder stats. A second shield wall: tougher and slower than Brannoc; his blows scale from his HP.",
+    "stats": {
+      "hp": 460,
+      "atk": 10,
+      "def": 26
+    },
+    "basic_attack": {
+      "id": "gate_slam",
+      "name": "Gate Slam",
+      "cooldown_ms": 1700,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 3,
+          "target": "enemy_front",
+          "scaling": {
+            "hp": 200
+          }
+        }
+      ]
+    },
+    "backup": {
+      "name": "Gatekeeper's Toll",
+      "_note": "From the bench, every 6s he shields every fielded ally a little.",
+      "cooldown_ms": 6000,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "shield",
+          "amount": 2,
+          "target": "all_allies",
+          "scaling": {
+            "def": 1500
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "ysolde",
+    "name": "Ysolde Ashwhisper",
+    "class": "arcanist",
+    "_note": "Placeholder stats. A second Arcanist who burns rather than hexes.",
+    "stats": {
+      "hp": 230,
+      "mgk": 24,
+      "def": 6,
+      "crit": 5,
+      "atsp": 5
+    },
+    "basic_attack": {
+      "id": "cinder_dart",
+      "name": "Cinder Dart",
+      "cooldown_ms": 1300,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 3,
+          "target": "enemy_front",
+          "scaling": {
+            "mgk": 4500
+          }
+        },
+        {
+          "trigger": "on_fire",
+          "type": "apply_status",
+          "status": "burn",
+          "stacks": 1,
+          "target": "enemy_front"
+        }
+      ]
+    },
+    "backup": {
+      "name": "Smolder",
+      "_note": "From the bench, every 5s she sets the enemy front row alight.",
+      "cooldown_ms": 5000,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "apply_status",
+          "status": "burn",
+          "stacks": 2,
+          "target": "enemy_front"
+        }
+      ]
+    }
   }
 ]

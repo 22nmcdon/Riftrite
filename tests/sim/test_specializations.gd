@@ -97,7 +97,7 @@ func test_basic_attack_needs_an_auto_attack_part() -> void:
 
 func test_real_specializations_load() -> void:
 	var content: ContentDb = K.content()
-	assert_eq(content.specialization_ids.size(), 12)
+	assert_eq(content.specialization_ids.size(), 24)
 	for hero_id: String in content.hero_ids:
 		var count: int = 0
 		for spec_id: String in content.specialization_ids:
@@ -278,3 +278,47 @@ func test_cleanse_strips_damage_over_time() -> void:
 	assert_eq(reduced.size(), 2)
 	assert_string_contains(reduced[0], "Poison on a loses 5 stacks (cleansed by a · Wash)")
 	assert_string_contains(reduced[1], "Golden Flame on a loses 4 stacks (cleansed by a · Wash)", "Golden Flame resists cleansing (75%)")
+
+
+# --- the slice's heroes (docs/plans/slice-content.md) ---------------------------
+
+func test_every_hero_is_complete() -> void:
+	var content: ContentDb = K.content()
+	assert_eq(content.hero_ids.size(), 8)
+	var classes: Array[String] = []
+	for hero_id: String in content.hero_ids:
+		var hero: HeroDef = content.heroes[hero_id]
+		assert_not_null(hero.backup, "%s has a Backup effect" % hero_id)
+		assert_false(hero.basic_attack.effects.is_empty(), "%s has a basic attack" % hero_id)
+		var signatures: Array[String] = []
+		for synergy_id: String in content.synergy_ids:
+			var synergy: SynergyDef = content.synergies[synergy_id]
+			if synergy.layer == SynergyDef.Layer.SIGNATURE and synergy.hero == hero_id:
+				signatures.append(synergy_id)
+		assert_eq(signatures.size(), 1, "%s has a signature item" % hero_id)
+		if not classes.has(hero.hero_class):
+			classes.append(hero.hero_class)
+	for hero_class: String in classes:
+		var traits: int = 0
+		for synergy_id: String in content.synergy_ids:
+			if content.synergies[synergy_id].layer == SynergyDef.Layer.CLASS_TRAIT and content.synergies[synergy_id].unit_class == hero_class:
+				traits += 1
+		assert_eq(traits, 1, "the %s class has a trait" % hero_class)
+	assert_eq(classes.size(), 6, "all six classes are in the slice")
+
+
+func test_two_heroes_of_a_class_reach_its_trait() -> void:
+	var content: ContentDb = K.content()
+	var heroes: Array[UnitSetup] = [
+		SetupBuilder.hero(content, "brannoc", 0, FRONT, [] as Array[LoadoutEntry]),
+		SetupBuilder.hero(content, "hesk", 0, FRONT, [] as Array[LoadoutEntry]),
+	]
+	var result: FightResult = CombatSim.run(FightSetup.make(heroes, SetupBuilder.encounter_units(content, "pup_litter")), content)
+	assert_string_contains(result.combat_log.to_text(), "Wardens")
+
+
+func test_old_hesk_hits_from_his_hp() -> void:
+	var content: ContentDb = K.content()
+	var hesk: UnitSetup = SetupBuilder.hero(content, "hesk", 0, FRONT, [] as Array[LoadoutEntry])
+	var state: ItemState = ItemState.make(hesk.basic_attack, 0, hesk.stats, content)
+	assert_eq(state.effects[0].value.final, 3 + 460 * 200 / FixedMath.BP_ONE, "3 + 2% of 460 HP")

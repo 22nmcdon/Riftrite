@@ -379,6 +379,8 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
   - Details: `docs/plans/day-structure.md`.
 - **Run rules (decided):** reforging destroys the essences. You can always pass on a new item or essence; to take one without room, throw something away first (discarding works any time, selling only at the Caravan), and you can't buy without room. The roster's first slot is always a field slot; the other five can each be field or backup. New heroes join fielded if fewer than 5 are.
 - **Signature gear strength:** should signature items be rarer, or their bonuses smaller? The balance parties always hold them, which flips close matchups (`docs/plans/synergies-in-sim.md`). To be decided after playtesting.
+- **Act 1's essences:** the design says each biome favors two essences, but Act 1 drops four for now (Wrath, Stone, Venom, Ember). Undecided; revisit after playtesting (`docs/plans/slice-content.md`).
+- **Legendary items** and their upgrade paths come right after the slice content (`docs/plans/slice-content.md`); the slice has none until then.
 - **Tier schedule:** at what point in a run does the Caravan start offering B, A, and S? (A tuning table; it can be set once the run structure is being built.)
 - **Stats and essence rework (in progress):** decisions, placeholders, and the build order are in `docs/plans/essence-rework.md`. Damage essences on items that don't hit need real per-item designs later; for now they hit the enemy directly across.
 - More open questions on tiers, backup, Oathbinding, and Legendaries are listed at the end of `docs/tiers-backup-specialization.md`.

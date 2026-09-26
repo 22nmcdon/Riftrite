@@ -184,11 +184,10 @@ func test_buying_an_upgrade_combines_into_the_held_copy() -> void:
 func test_full_roster_only_offers_copies() -> void:
 	var state: RunState = _started()
 	for hero_id: String in _content().hero_ids:
-		if state.hero(hero_id) == null:
+		if state.hero(hero_id) == null and state.heroes.size() < FightSetup.ROSTER_CAP:
 			state.heroes.append(RunHero.make(hero_id))
-	for i: int in 2:
-		state.heroes.append(RunHero.make("x%d" % i))
 	assert_eq(state.heroes.size(), FightSetup.ROSTER_CAP)
+	assert_lt(state.heroes.size(), _content().hero_ids.size(), "some heroes are left out")
 	RunFlow._fill_caravan(state, _content(), _run())
 	for offer: Dictionary in state.offers:
 		if offer["type"] == "hero":
