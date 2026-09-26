@@ -89,9 +89,18 @@ func refresh() -> void:
 		return
 	var owner: String = state.owner_of(item.uid)
 	var stats: UnitStats = ItemInfo.hero_stats(session.content, state.hero(owner)) if owner != RunState.STASH else null
-	var text: String = ItemInfo.item_text(session.content, item.item_id, item.tier, item.essence_ids, item.xp, stats)
+	var text: String = ItemInfo.item_text(session.content, item.item_id, item.tier, item.essence_ids, item.xp, stats, item.trace_bp(session.content))
 	var lines: PackedStringArray = text.split("\n", true, 1)
 	var where: String = "In the stash" if owner == RunState.STASH else "Held by " + session.content.heroes[owner].name
+	var path: String = RunLegendary.describe(session.content, item)
+	if not path.is_empty():
+		where += "\n" + path
+	if not item.eaten.is_empty():
+		var meals: PackedStringArray = PackedStringArray()
+		for eaten_id: String in item.eaten:
+			meals.append(session.content.items[eaten_id].name)
+		@warning_ignore("integer_division")
+		where += "\nHas eaten: %s (+%d%% to its numbers)" % [", ".join(meals), item.trace_bp(session.content) / 100]
 	_show(lines[0], where + "\n" + (lines[1] if lines.size() > 1 else ""))
 	_add_actions(item, owner)
 
@@ -132,6 +141,20 @@ func _add_actions(item: RunItem, owner: String) -> void:
 			if not offered.has(state.pouch[i]):
 				offered.append(state.pouch[i])
 				_action("Infuse with %s" % content.essences[state.pouch[i]].name, func() -> void: session.infuse(uid, i), UiStyle.ESSENCE.get(state.pouch[i], UiStyle.TEXT).lightened(0.3))
+	# Legendary paths: feed an Essence-hungry Legendary what it wants; feed
+	# this item to a Devourer.
+	var path: LegendaryDef = def.legendary
+	if path != null and path.path == "essence" and item.tier < 3:
+		var wanted: String = path.wanted_at(item.tier)
+		var at: int = state.pouch.find(wanted)
+		if at >= 0:
+			_action("Feed it %s (%d/%d to %s)" % [content.essences[wanted].name, item.progress, path.goal_at(item.tier), TuningDef.TIER_LABELS[item.tier + 1]],
+				func() -> void: session.feed_essence(uid, at), UiStyle.rarity_color("legendary").lightened(0.3))
+	if LegendaryDef.EDIBLE_RARITIES.has(def.rarity):
+		for devourer: RunItem in RunLegendary.devourers(state, content):
+			var devourer_uid: int = devourer.uid
+			_action("Feed to %s (a meal worth %d)" % [content.items[devourer.item_id].name, RunLegendary.meal_value(item)],
+				func() -> void: session.devour(devourer_uid, uid), UiStyle.rarity_color("legendary").lightened(0.3))
 	# Move it.
 	for hero: RunHero in state.heroes:
 		if hero.hero_id != owner:

@@ -3,18 +3,20 @@ extends RefCounted
 ## An event stop from data/events.json. Each is one outcome the player takes
 ## or passes on:
 ##   gold             "amount" gold
-##   item_by_rarity   a random item, rarity by the economy's rarity weights
+##   item_by_rarity   a random item, rarity by the economy's event rarity weights
 ##   item_by_tier     a random item, tier by the loot tier weights
 ##   relic_by_rarity  a random relic, by the relic rarity weights
 ##   relic_merchant   buy 1 of the economy's relic_choices relics, or leave
 ##   legendary_relic  a Legendary relic (a boss relic; rare events only)
+##   legendary_item   a Legendary item not yet seen this run, at its path's
+##                    start tier (rare events only)
 ##   essence          a random essence
 ##   key              a key
 ##   tier_shop        "count" different items, all at "tier", each for sale at
 ##                    that tier's Caravan price (buy any, or leave). This is how
 ##                    higher tiers show up before the Caravan sells them.
 
-const KINDS: Array[String] = ["gold", "item_by_rarity", "item_by_tier", "relic_by_rarity", "relic_merchant", "legendary_relic", "essence", "key", "tier_shop"]
+const KINDS: Array[String] = ["gold", "item_by_rarity", "item_by_tier", "relic_by_rarity", "relic_merchant", "legendary_relic", "legendary_item", "essence", "key", "tier_shop"]
 
 var id: String
 var name: String

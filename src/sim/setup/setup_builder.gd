@@ -8,7 +8,7 @@ extends RefCounted
 static func item_setups(content: ContentDb, entries: Array[LoadoutEntry]) -> Array[ItemSetup]:
 	var result: Array[ItemSetup] = []
 	for entry: LoadoutEntry in entries:
-		result.append(ItemSetup.make(content.items[entry.item_id], entry.essence_ids, entry.tier, entry.xp))
+		result.append(ItemSetup.make(content.items[entry.item_id], entry.essence_ids, entry.tier, entry.xp, entry.trace_bp))
 	return result
 
 

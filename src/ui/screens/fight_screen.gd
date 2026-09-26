@@ -100,7 +100,7 @@ func _build_playback() -> void:
 	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	field.add_theme_constant_override("separation", 8)
 	main.add_child(field)
-	if not session.last_discoveries.is_empty():
+	if not session.last_discoveries.is_empty() or not session.last_growth.is_empty():
 		field.add_child(_discovery_banner())
 	var sim: CombatSim = player.sim
 	var rows: Array[Array] = [
@@ -160,7 +160,8 @@ func _build_playback() -> void:
 	side.add_child(_end_box)
 
 
-## "Synergy discovered!" for each synergy this fight found for the first time.
+## "Synergy discovered!" for each synergy this fight found for the first
+## time, and a line for each Legendary that grew a tier.
 func _discovery_banner() -> Control:
 	var banner := PanelContainer.new()
 	banner.add_theme_stylebox_override("panel", UiStyle.box(UiStyle.OAK_600, UiStyle.BRASS_300, 3))
@@ -171,6 +172,8 @@ func _discovery_banner() -> Control:
 		line.mouse_filter = Control.MOUSE_FILTER_STOP
 		line.tooltip_text = ItemInfo.synergy_text(session.content, synergy_id)
 		box.add_child(line)
+	for note: String in session.last_growth:
+		box.add_child(UiStyle.label("✦ %s" % note, 20, UiStyle.rarity_color("legendary").lightened(0.3)))
 	return banner
 
 

@@ -98,7 +98,7 @@ static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column:
 		var essences: Array[EssenceDef] = []
 		for essence_id: String in item.essence_ids:
 			essences.append(content.essences[essence_id])
-		state.items.append(ItemState.make(item.def, slot, state.stats, content, essences, item.tier, item.infusion_xp))
+		state.items.append(ItemState.make(item.def, slot, state.stats, content, essences, item.tier, item.infusion_xp, item.trace_bp))
 		slot += item.def.size
 	state.rederive_items(content)
 	return state
@@ -116,7 +116,7 @@ func _add_backup_items(setup: UnitSetup, content: ContentDb) -> void:
 			var essences: Array[EssenceDef] = []
 			for essence_id: String in item.essence_ids:
 				essences.append(content.essences[essence_id])
-			items.append(ItemState.make(item.def.backup.as_item_def(item.def, setup.id), slot, stats, content, essences, item.tier, item.infusion_xp))
+			items.append(ItemState.make(item.def.backup.as_item_def(item.def, setup.id), slot, stats, content, essences, item.tier, item.infusion_xp, item.trace_bp))
 		slot += item.def.size
 
 

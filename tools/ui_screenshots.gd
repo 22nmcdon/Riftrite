@@ -92,6 +92,19 @@ func _showcase(session: RunSession) -> void:
 		state.relics.append(relic_id)
 	session.select(-1)
 	await _snap("showcase")
+	# Legendaries: a Devourer that has eaten, and an Essence-hungry one to feed.
+	state.stash.clear()
+	for legendary_id: String in ["maw_of_the_hollow", "hungering_censer", "tallymans_bow"]:
+		RunActions.add_item(state, content, legendary_id)
+	state.stash[0].eaten.append_array(["hearth_knife", "rimewood_longbow"] as Array[String])
+	state.stash[0].progress = 2
+	state.stash[2].progress = 41
+	state.stash.append(RunItem.make(state.take_uid(), "hearth_knife", 1))
+	session.select(state.stash[0].uid)
+	await _snap("legendary_devourer")
+	session.select(state.stash[-1].uid)
+	await _snap("legendary_feed_to")
+	session.select(-1)
 	session.state = RunState.from_dict(saved, content)[0]
 	session.select(-1)
 

@@ -1958,5 +1958,313 @@
         }
       ]
     }
+  },
+  {
+    "id": "tallymans_bow",
+    "name": "The Tallyman's Bow",
+    "_note": "Legendary, grows by use: counts its hits. An auto-attack longbow for ATSP builds.",
+    "size": 2,
+    "tags": [
+      "weapon",
+      "ranged"
+    ],
+    "rarity": "legendary",
+    "auto_attack": true,
+    "xp_per_fire": 1,
+    "cooldown_ms": 1400,
+    "crit_chance_bp": 1000,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "damage",
+        "amount": 8,
+        "target": "enemy_back",
+        "scaling": {
+          "atk": 8500,
+          "atsp": 3000
+        }
+      }
+    ],
+    "backup": {
+      "name": "Tally Volley",
+      "cooldown_ms": 2500,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 4,
+          "target": "enemy_random",
+          "scaling": {
+            "atk": 4000,
+            "atsp": 2000
+          }
+        }
+      ]
+    },
+    "legendary": {
+      "path": "hits",
+      "start_tier": "c",
+      "goals": [
+        60,
+        120,
+        200
+      ]
+    }
+  },
+  {
+    "id": "hungering_censer",
+    "name": "The Hungering Censer",
+    "_note": "Legendary, essence-hungry: feed it Ember, then Venom.",
+    "size": 2,
+    "tags": [
+      "tome",
+      "magic"
+    ],
+    "rarity": "legendary",
+    "xp_per_fire": 4,
+    "cooldown_ms": 3000,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "damage",
+        "amount": 11,
+        "target": "all_enemies",
+        "scaling": {
+          "mgk": 6500
+        }
+      }
+    ],
+    "backup": {
+      "name": "Censer Smoke",
+      "cooldown_ms": 4000,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 4,
+          "target": "all_enemies",
+          "scaling": {
+            "mgk": 3000
+          }
+        }
+      ]
+    },
+    "legendary": {
+      "path": "essence",
+      "start_tier": "b",
+      "goals": [
+        1,
+        2
+      ],
+      "wants": [
+        "ember",
+        "venom"
+      ]
+    }
+  },
+  {
+    "id": "maw_of_the_hollow",
+    "name": "Maw of the Hollow",
+    "_note": "Legendary, devourer: feed it other items; each meal leaves a trace.",
+    "size": 2,
+    "tags": [
+      "weapon",
+      "melee"
+    ],
+    "rarity": "legendary",
+    "xp_per_fire": 3,
+    "cooldown_ms": 1800,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "damage",
+        "amount": 18,
+        "target": "enemy_front",
+        "scaling": {
+          "atk": 15000
+        }
+      }
+    ],
+    "backup": {
+      "name": "Hollow Hunger",
+      "cooldown_ms": 3500,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 6,
+          "target": "enemy_random",
+          "scaling": {
+            "atk": 5000
+          }
+        }
+      ]
+    },
+    "legendary": {
+      "path": "devour",
+      "start_tier": "c",
+      "goals": [
+        3,
+        4,
+        5
+      ],
+      "trace_bp": {
+        "common": 300,
+        "uncommon": 500,
+        "rare": 800,
+        "epic": 1200
+      }
+    }
+  },
+  {
+    "id": "kinstone_aegis",
+    "name": "The Kinstone Aegis",
+    "_note": "Legendary, bonded: grows when its holder ranks up.",
+    "size": 2,
+    "tags": [
+      "tool",
+      "defense"
+    ],
+    "rarity": "legendary",
+    "xp_per_fire": 4,
+    "cooldown_ms": 3500,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "shield",
+        "amount": 14,
+        "target": "row_allies",
+        "scaling": {
+          "def": 7000
+        }
+      }
+    ],
+    "backup": {
+      "name": "Kinstone Ward",
+      "auras": [
+        {
+          "target": "all_allies",
+          "stat": "def_bp",
+          "value": 9000
+        }
+      ]
+    },
+    "legendary": {
+      "path": "bonded",
+      "start_tier": "b",
+      "goals": [
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "last_hearth_lantern",
+    "name": "The Last Hearth-Lantern",
+    "_note": "Legendary, martyr: grows when its holder falls in a fight the guild still wins.",
+    "size": 1,
+    "tags": [
+      "tool",
+      "healing",
+      "defense"
+    ],
+    "rarity": "legendary",
+    "xp_per_fire": 3,
+    "cooldown_ms": 2600,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "heal",
+        "amount": 8,
+        "target": "ally_lowest_hp",
+        "scaling": {
+          "mgk": 4500,
+          "hp": 200
+        }
+      },
+      {
+        "trigger": "on_fire",
+        "type": "shield",
+        "amount": 8,
+        "target": "self",
+        "scaling": {
+          "def": 4000
+        }
+      }
+    ],
+    "backup": {
+      "name": "Hearth Glow",
+      "cooldown_ms": 3500,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "heal",
+          "amount": 5,
+          "target": "ally_lowest_hp",
+          "scaling": {
+            "mgk": 3000
+          }
+        }
+      ]
+    },
+    "legendary": {
+      "path": "martyr",
+      "start_tier": "b",
+      "goals": [
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "riftbreakers_brand",
+    "name": "The Riftbreaker's Brand",
+    "_note": "Legendary, boss-forged: grows with each boss beaten while it's equipped.",
+    "size": 2,
+    "tags": [
+      "weapon",
+      "melee"
+    ],
+    "rarity": "legendary",
+    "xp_per_fire": 3,
+    "cooldown_ms": 2200,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "damage",
+        "amount": 12,
+        "target": "enemy_lowest_hp",
+        "scaling": {
+          "atk": 10000
+        }
+      },
+      {
+        "trigger": "on_hit",
+        "type": "apply_status",
+        "status": "bleed",
+        "stacks": 3,
+        "target": "hit_target"
+      }
+    ],
+    "backup": {
+      "name": "Brand's Mark",
+      "cooldown_ms": 3000,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "apply_status",
+          "status": "bleed",
+          "stacks": 2,
+          "target": "enemy_random"
+        }
+      ]
+    },
+    "legendary": {
+      "path": "boss",
+      "start_tier": "a",
+      "goals": [
+        1
+      ]
+    }
   }
 ]

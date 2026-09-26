@@ -225,3 +225,63 @@ func test_synergy_text_says_what_sets_it_off() -> void:
 	assert_string_contains(ItemInfo.synergy_text(content, "paper_cuts"), "When one fielded hero holds Whetstone and Twin Daggers.")
 	assert_string_contains(ItemInfo.synergy_text(content, "warden_trait"), "2+:")
 	assert_string_contains(ItemInfo.synergy_text(content, "wildfire_torch"), "Tallow Torch infused with Ember")
+
+
+# --- Legendaries --------------------------------------------------------------------
+
+func test_a_legendary_shows_its_path_and_can_be_fed() -> void:
+	var session: RunSession = U.at_caravan()
+	var state: RunState = session.state
+	assert_true(RunActions.add_item(state, session.content, "hungering_censer").ok)
+	var censer: RunItem = state.stash[-1]
+	state.pouch.append_array(["venom", "ember"] as Array[String])
+	var knife := RunItem.make(state.take_uid(), "hearth_knife")
+	state.stash.append(knife)
+	var main: Main = _main(session)
+	session.select(censer.uid)
+	var text: String = U.text_of(main.inspector)
+	assert_true(text.contains("Essence-hungry: feed it Ember (0/1 fed to A)"), text)
+	assert_true(text.contains("Never combines. Upgrade path: Essence-hungry (starts at B)"), text)
+	assert_true(U.press(main.inspector, "Feed it Ember (0/1 to A)"))
+	assert_eq([censer.tier, censer.progress, state.pouch], [2, 0, ["venom"] as Array[String]])
+	assert_true(U.press(main.inspector, "Feed it Venom (0/2 to S)"), "now it wants Venom")
+	assert_eq([censer.progress, state.pouch], [1, [] as Array[String]])
+	assert_null(U.button(main.inspector, "Feed it"), "no Venom left")
+	var bar: ProgressBar = _tile(main, censer.uid).find_child("PathBar", true, false)
+	assert_not_null(bar, "a Legendary's tile has a path bar")
+	assert_eq([int(bar.value), int(bar.max_value)], [1, 2])
+	assert_null(_tile(main, knife.uid).find_child("PathBar", true, false), "other tiles don't")
+
+
+func test_items_can_be_fed_to_a_devourer_from_the_inspector() -> void:
+	var session: RunSession = U.at_caravan()
+	var state: RunState = session.state
+	assert_true(RunActions.add_item(state, session.content, "maw_of_the_hollow").ok)
+	var maw: RunItem = state.stash[-1]
+	var knife := RunItem.make(state.take_uid(), "hearth_knife", 2)
+	state.stash.append(knife)
+	var main: Main = _main(session)
+	session.select(maw.uid)
+	assert_null(U.button(main.inspector, "Feed to"), "a Devourer doesn't eat itself")
+	session.select(knife.uid)
+	assert_true(U.press(main.inspector, "Feed to Maw of the Hollow (a meal worth 3)"))
+	assert_eq([maw.tier, maw.progress, maw.eaten], [1, 0, ["hearth_knife"] as Array[String]])
+	assert_eq(state.owner_of(knife.uid), RunState.NOWHERE)
+	session.select(maw.uid)
+	var text: String = U.text_of(main.inspector)
+	assert_true(text.contains("Has eaten: Hearth Knife (+3% to its numbers)"), text)
+	assert_true(text.contains("x1.03 devoured"), "the trace shows in the numbers")
+
+
+func test_a_fight_announces_a_legendary_growing() -> void:
+	var session: RunSession = U.at_fight()
+	var state: RunState = session.state
+	assert_true(RunActions.add_item(state, session.content, "tallymans_bow").ok)
+	var bow: RunItem = state.stash[-1]
+	assert_true(RunActions.move_item(state, session.content, bow.uid, state.heroes[0].hero_id, 0).ok)
+	bow.progress = 59
+	state.encounter_id = "pup_litter"
+	var main: Main = _main(session)
+	(main.screen as FightScreen).start_fight()
+	assert_eq(session.last_growth, ["The Tallyman's Bow grows to B"] as Array[String])
+	assert_string_contains(U.text_of(main.screen), "✦ The Tallyman's Bow grows to B")

@@ -17,13 +17,13 @@ const TARGET_WORDS: Array[String] = [
 const ITEM_TARGET_WORDS: Array[String] = ["itself", "the item to its left", "the item to its right", "the items beside it", "every item in its row", "its partner items"]
 
 
-static func item_text(content: ContentDb, item_id: String, tier: int, essence_ids: Array[String], xp: int, holder_stats: UnitStats = null) -> String:
+static func item_text(content: ContentDb, item_id: String, tier: int, essence_ids: Array[String], xp: int, holder_stats: UnitStats = null, trace_bp: int = 0) -> String:
 	var def: ItemDef = content.items[item_id]
 	var essences: Array[EssenceDef] = []
 	for essence_id: String in essence_ids:
 		essences.append(content.essences[essence_id])
 	var stats: UnitStats = holder_stats if holder_stats != null else UnitStats.make(1)
-	var state: ItemState = ItemState.make(def, 0, stats, content, essences, tier, xp)
+	var state: ItemState = ItemState.make(def, 0, stats, content, essences, tier, xp, trace_bp)
 	var lines: PackedStringArray = PackedStringArray()
 	lines.append("%s  (%s, tier %s)" % [def.name, def.rarity.capitalize(), TuningDef.TIER_LABELS[tier]])
 	var kind: PackedStringArray = PackedStringArray(["%d slot%s" % [def.size, "" if def.size == 1 else "s"]])
@@ -49,6 +49,8 @@ static func item_text(content: ContentDb, item_id: String, tier: int, essence_id
 		lines.append("• Aura: " + aura.describe())
 	if def.backup != null:
 		lines.append("• Backup mode: acts from the bench")
+	if def.legendary != null:
+		lines.append("• Never combines. Upgrade path: %s (starts at %s)" % [LegendaryDef.NAMES[def.legendary.path], TuningDef.TIER_LABELS[def.legendary.start_tier]])
 	if holder_stats == null:
 		lines.append("")
 		lines.append("(numbers shown without a holder's stats)")

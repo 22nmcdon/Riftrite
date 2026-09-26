@@ -35,7 +35,22 @@
   "shards_per_essence": 3,
   "elite_key_chance_bp": 5000,
   "relic_choices": 3,
+  "_rarity_note": "rarity_weights: the Caravan, Loot, and tier shops. Legendary must be 0: Legendary items come only from the Vault and rare events (docs/plans/legendary-items.md).",
   "rarity_weights": {
+    "common": 50,
+    "uncommon": 28,
+    "rare": 14,
+    "epic": 6,
+    "legendary": 0
+  },
+  "vault_rarity_weights": {
+    "common": 0,
+    "uncommon": 0,
+    "rare": 14,
+    "epic": 6,
+    "legendary": 6
+  },
+  "event_rarity_weights": {
     "common": 50,
     "uncommon": 28,
     "rare": 14,

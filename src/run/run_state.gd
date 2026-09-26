@@ -153,6 +153,7 @@ func check(content: ContentDb) -> Array[String]:
 			_check_item(item, content, candidate.hero_id, errors, seen_uids)
 	for item: RunItem in stash:
 		_check_item(item, content, "the stash", errors, seen_uids)
+	_check_legendaries_once(content, errors)
 	if stash_used(content) > content.tuning.stash_slots:
 		errors.append("the stash holds %d slots of items; it has %d" % [stash_used(content), content.tuning.stash_slots])
 	if pouch.size() > content.tuning.pouch_cap:
@@ -211,6 +212,37 @@ func _check_item(item: RunItem, content: ContentDb, where: String, errors: Array
 			errors.append("%s: %s has an unknown essence \"%s\"" % [where, def.name, essence_id])
 	if item.xp < 0 or (item.xp > 0 and item.essence_ids.is_empty()):
 		errors.append("%s: %s has %d XP but no infusion" % [where, def.name, item.xp])
+	var path: LegendaryDef = def.legendary
+	if path == null:
+		if item.progress != 0 or not item.eaten.is_empty():
+			errors.append("%s: %s has no upgrade path, so no path progress" % [where, def.name])
+		return
+	if item.tier < path.start_tier:
+		errors.append("%s: %s starts at %s, so it can't be below it" % [where, def.name, TuningDef.TIER_LABELS[path.start_tier]])
+	if item.progress < 0 or (item.tier >= 3 and item.progress != 0):
+		errors.append("%s: %s has %d path progress (never negative, 0 at S)" % [where, def.name, item.progress])
+	if not item.eaten.is_empty() and path.path != "devour":
+		errors.append("%s: only a Devourer eats items" % where)
+	for eaten_id: String in item.eaten:
+		if not content.items.has(eaten_id):
+			errors.append("%s: %s ate an unknown item \"%s\"" % [where, def.name, eaten_id])
+
+
+## A Legendary is held at most once, and counts as seen.
+func _check_legendaries_once(content: ContentDb, errors: Array[String]) -> void:
+	var held: Array[String] = []
+	var lists: Array = [stash]
+	for candidate: RunHero in heroes:
+		lists.append(candidate.items)
+	for list: Array in lists:
+		for item: RunItem in list:
+			if not content.items.has(item.item_id) or content.items[item.item_id].legendary == null:
+				continue
+			if held.has(item.item_id):
+				errors.append("%s is held twice (a Legendary appears once per run)" % content.items[item.item_id].name)
+			held.append(item.item_id)
+			if not legendaries_seen.has(item.item_id):
+				errors.append("%s is held but not marked as seen" % content.items[item.item_id].name)
 
 
 # --- save and load --------------------------------------------------------------

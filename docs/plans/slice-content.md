@@ -129,7 +129,7 @@ The content is data only (rule 3). Anything that needs code is flagged below and
 1. **Second heroes:** a second Warden and a second Arcanist for now. Eventually every class will have several heroes.
 2. **Act 1's essences:** not decided yet. For now Act 1 keeps its four (Wrath, Stone, Venom, Ember), and new enemies spread across them. This is an open question in `docs/design.md`.
 3. **Items:** 60 items the guild can get from the Caravan and loot. Enemy-only items come on top.
-4. **Legendary items:** they wait. Legendary items and their upgrade paths are the next piece of work after this step.
+4. **Legendary items:** they wait. Legendary items and their upgrade paths are the next piece of work after this step (now built: `docs/plans/legendary-items.md`).
 5. (Playtest builds: not answered yet. Playtests run from the Godot editor until then.)
 6. **Balance targets** (for now):
    - 25–35% of bot runs clear the act

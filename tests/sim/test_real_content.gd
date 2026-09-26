@@ -73,7 +73,8 @@ func test_real_content_fights_replay_identically() -> void:
 
 
 ## The slice's item targets (docs/plans/slice-content.md): 60 items the
-## guild can get, enemy-only items on top; more Small than Medium than
+## guild can get plus 6 Legendaries (docs/plans/legendary-items.md), enemy-only
+## items on top; more Small than Medium than
 ## Large; enough Epics for alloys; items for every hero's tags.
 func test_slice_item_roster() -> void:
 	var db: ContentDb = K.content()
@@ -81,10 +82,15 @@ func test_slice_item_roster() -> void:
 	for item_id: String in db.item_ids:
 		if not db.items[item_id].enemy_only:
 			guild.append(db.items[item_id])
-	assert_eq(guild.size(), 60)
+	assert_eq(guild.size(), 66)
 	var sizes: Array[int] = [0, 0, 0, 0]
 	var epics: int = 0
+	var paths: Array[String] = []
 	for item: ItemDef in guild:
+		if item.legendary != null:
+			paths.append(item.legendary.path)
+			assert_eq(db.tuning.socket_count(item), 2, "%s has two sockets" % item.id)
+			assert_not_null(item.backup, "%s has a backup mode" % item.id)
 		sizes[item.size] += 1
 		if item.rarity == "epic":
 			epics += 1
@@ -92,5 +98,7 @@ func test_slice_item_roster() -> void:
 	assert_gt(sizes[1], sizes[2], "more Small than Medium")
 	assert_gt(sizes[2], sizes[3], "more Medium than Large")
 	assert_gte(epics, 6)
+	paths.sort()
+	assert_eq(paths, ["bonded", "boss", "devour", "essence", "hits", "martyr"] as Array[String], "one Legendary per path")
 	for tag: String in ["ranged", "melee", "magic", "healing", "defense", "tool", "charm", "tome", "food", "weapon"]:
 		assert_gte(guild.filter(func(item: ItemDef) -> bool: return item.tags.has(tag)).size(), 3, "at least 3 %s items" % tag)

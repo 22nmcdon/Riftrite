@@ -114,7 +114,7 @@ Legendaries are the rarest and most powerful items. Each one always has both an 
 
 | Path | How it upgrades |
 | --- | --- |
-| Grows by use | A set number of kills or triggers per tier; a natural fit for C-start Legendaries |
+| Grows by use | A set number of hits per tier (the first one, a bow for ATSP builds); a kills-counting one comes later. A natural fit for C-start Legendaries |
 | Essence-hungry | Feed it essences instead of copies; each tier may want a specific essence, which steers your route |
 | Boss-forged | Gains one tier per boss defeated while equipped |
 | Devourer | Sacrifice another item to it; it keeps a trace of what it consumed |
@@ -125,7 +125,7 @@ Legendaries are the rarest and most powerful items. Each one always has both an 
 
 - [ ] Rare Oathbindings: hand-written per class, or one tag-based effect that scales by fit?
 - [ ] What do backup-only items do on a fielded hero: nothing, or a small passive?
-- [ ] Starting tier for each Legendary path (C, B, or A).
+- [x] Starting tier for each Legendary path: grows by use C, essence-hungry B, devourer C, bonded B, martyr B, boss-forged A (`docs/plans/legendary-items.md`).
 - [ ] Backup Oathbinding effects above Common: derived by a rule from the active effect, or hand-written?
 - [ ] An early S hero + S item could allow an Act 1 Oathbinding. Track how often it happens in the headless sim.
 - [ ] Final class similarity groups.

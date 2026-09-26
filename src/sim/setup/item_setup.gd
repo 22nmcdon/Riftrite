@@ -11,14 +11,17 @@ var tier: int = 0
 var essence_ids: Array[String] = []
 ## The infusion's XP going into the fight (decides Base/Attuned/Resonant).
 var infusion_xp: int = 0
+## A Devourer's trace (see LegendaryDef): +this share of its own numbers.
+var trace_bp: int = 0
 
 
-static func make(item_def: ItemDef, essences: Array[String] = [], item_tier: int = 0, xp: int = 0) -> ItemSetup:
+static func make(item_def: ItemDef, essences: Array[String] = [], item_tier: int = 0, xp: int = 0, trace: int = 0) -> ItemSetup:
 	var setup := ItemSetup.new()
 	setup.def = item_def
 	setup.essence_ids = essences
 	setup.tier = item_tier
 	setup.infusion_xp = xp
+	setup.trace_bp = trace
 	return setup
 
 

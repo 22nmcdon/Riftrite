@@ -19,6 +19,8 @@ var last_setup: FightSetup = null
 var journal: PlaytestJournal = null
 ## Synergies the last fight discovered for the first time (ids).
 var last_discoveries: Array[String] = []
+## Legendaries that grew a tier in the last fight (plain-words notes).
+var last_growth: Array[String] = []
 ## Tests set this so "New run" is repeatable; otherwise each run gets a
 ## fresh seed.
 var fixed_seed: int = -1
@@ -120,7 +122,7 @@ func _after(result: RunActions.Result) -> RunActions.Result:
 		if not problem.is_empty():
 			result.note += " (not saved: %s)" % problem
 		if journal != null:
-			journal.action(state, result.note)
+			journal.action(state, "; ".join(PackedStringArray([result.note] + result.notes)))
 	changed.emit(result)
 	return result
 
@@ -202,6 +204,7 @@ func fight() -> RunActions.Result:
 		for synergy_id: String in state.discovered:
 			if not known.has(synergy_id):
 				last_discoveries.append(synergy_id)
+		last_growth = result.notes.duplicate()
 		if journal != null:
 			journal.fight(state, encounter_id, day, last_fight)
 	return _after(result)
@@ -223,6 +226,14 @@ func combine(keep_uid: int, new_uid: int) -> RunActions.Result:
 
 func infuse(uid: int, pouch_index: int) -> RunActions.Result:
 	return _after(RunActions.infuse(state, content, uid, pouch_index))
+
+
+func feed_essence(uid: int, pouch_index: int) -> RunActions.Result:
+	return _after(RunActions.feed_essence(state, content, uid, pouch_index))
+
+
+func devour(uid: int, food_uid: int) -> RunActions.Result:
+	return _after(RunActions.devour_item(state, content, uid, food_uid))
 
 
 func discard_item(uid: int) -> RunActions.Result:

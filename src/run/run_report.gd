@@ -20,7 +20,16 @@ static func lines(reports: Array[RunBot.Report], first_seed: int) -> PackedStrin
 	var found: Dictionary[String, int] = {}
 	var reached_boss: int = 0
 	var boss_fights: int = 0
+	var legendary_runs: int = 0
+	var legendary_clears: int = 0
+	var legendaries: Dictionary[String, int] = {}
 	for report: RunBot.Report in reports:
+		if not report.legendaries.is_empty():
+			legendary_runs += 1
+			if report.ending == "act_end":
+				legendary_clears += 1
+		for held: String in report.legendaries:
+			legendaries[held] = legendaries.get(held, 0) + 1
 		if report.reached_boss:
 			reached_boss += 1
 			boss_fights += report.boss_fights
@@ -59,8 +68,21 @@ static func lines(reports: Array[RunBot.Report], first_seed: int) -> PackedStrin
 	out.append("Gold at the Caravan: %s" % ", ".join(gold))
 	out.append("Most taken items and heroes: %s" % ", ".join(_top(bought, 8, count)))
 	out.append("Synergies found: %s" % ", ".join(_top(found, 12, count)))
+	if legendary_runs > 0:
+		out.append("Legendaries: held at the end of %d runs (%d%% of those cleared the act); by item:tier: %s" % [
+			legendary_runs, roundi(100.0 * legendary_clears / legendary_runs), ", ".join(_counts(legendaries))])
 	if stuck > 0:
 		out.append("! %d run(s) got stuck or hit errors" % stuck)
+	return out
+
+
+## Every id with its count, "id x N", highest first (ties by id).
+static func _counts(counts: Dictionary[String, int]) -> PackedStringArray:
+	var ids: Array = counts.keys()
+	ids.sort_custom(func(a: String, b: String) -> bool: return counts[a] > counts[b] or (counts[a] == counts[b] and a < b))
+	var out := PackedStringArray()
+	for id: String in ids:
+		out.append("%s x%d" % [id, counts[id]])
 	return out
 
 

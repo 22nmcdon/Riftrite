@@ -14,7 +14,7 @@ static func setup_for(state: RunState, content: ContentDb, encounter_id: String)
 	for hero: RunHero in state.heroes:
 		var entries: Array[LoadoutEntry] = []
 		for item: RunItem in hero.items:
-			entries.append(item.to_entry())
+			entries.append(item.to_entry(content))
 		var unit: UnitSetup = SetupBuilder.hero(content, hero.hero_id, hero.rank, hero.row, entries, hero.specialization_id)
 		if hero.benched:
 			bench.append(unit)
@@ -26,9 +26,10 @@ static func setup_for(state: RunState, content: ContentDb, encounter_id: String)
 
 
 ## Writes a finished fight back into the run: each infused item's XP
-## (matched by hero and slot), newly found synergies, and the result (a tie
-## counts as a win).
-static func apply_result(state: RunState, content: ContentDb, result: FightResult) -> void:
+## (matched by hero and slot), newly found synergies, Legendary path progress,
+## and the result (a tie counts as a win). Returns notes on Legendaries that
+## grew.
+static func apply_result(state: RunState, content: ContentDb, result: FightResult) -> Array[String]:
 	for infusion: FightResult.InfusionResult in result.infusions:
 		var item: RunItem = _item_at(state, content, infusion.unit_id, infusion.slot)
 		if item != null and item.item_id == infusion.item_id:
@@ -36,10 +37,12 @@ static func apply_result(state: RunState, content: ContentDb, result: FightResul
 	for found: FightResult.SynergyResult in result.synergies:
 		if not state.discovered.has(found.synergy_id):
 			state.discovered.append(found.synergy_id)
+	var notes: Array[String] = RunLegendary.after_fight(state, content, result)
 	if result.guild_won():
 		state.wins += 1
 	else:
 		state.losses += 1
+	return notes
 
 
 ## The item on a hero's row starting at `slot` (slots count item sizes, as in

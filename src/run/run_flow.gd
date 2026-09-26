@@ -317,10 +317,7 @@ static func _enter_stop(state: RunState, content: ContentDb, run: RunContent, st
 			if rng.range_int(2) == 0:
 				_add_relic_offers(state, content, rng, run.economy.relic_weights, 1, "", 0)
 			else:
-				var better: Array[int] = run.economy.rarity_weights.duplicate()
-				better[0] = 0
-				better[1] = 0
-				_add_item_offer(state, content, rng, better, run.economy.loot_tier_weights, true)
+				_add_item_offer(state, content, rng, run.economy.vault_rarity_weights, run.economy.loot_tier_weights, true)
 		"event":
 			_add_event(state, content, run, rng)
 
@@ -345,7 +342,7 @@ static func _add_event(state: RunState, content: ContentDb, run: RunContent, rng
 		"gold":
 			state.offers.append({"type": "gold", "amount": event.amount, "price": 0, "taken": false})
 		"item_by_rarity":
-			_add_item_offer(state, content, rng, run.economy.rarity_weights, flat_tiers, true)
+			_add_item_offer(state, content, rng, run.economy.event_rarity_weights, flat_tiers, true)
 		"item_by_tier":
 			var common_up: Array[int] = [1, 1, 1, 1, 0]
 			_add_item_offer(state, content, rng, common_up, run.economy.loot_tier_weights, false)
@@ -355,6 +352,8 @@ static func _add_event(state: RunState, content: ContentDb, run: RunContent, rng
 			_add_relic_offers(state, content, rng, run.economy.relic_weights, run.economy.relic_choices, "merchant", -1, run.economy)
 		"legendary_relic":
 			_add_relic_offers(state, content, rng, _rarity_only("legendary"), 1, "", 0)
+		"legendary_item":
+			_add_item_offer(state, content, rng, _rarity_only("legendary"), flat_tiers, false)
 		"essence":
 			state.offers.append({"type": "essence", "essence": content.essence_ids[rng.range_int(content.essence_ids.size())], "price": 0, "taken": false})
 		"key":
@@ -493,18 +492,22 @@ static func fight(state: RunState, content: ContentDb, run: RunContent) -> Array
 	var result: FightResult = CombatSim.run(setup, content)
 	if not result.errors.is_empty():
 		return [_fail("the fight couldn't start: %s" % result.errors[0]), result, setup]
-	RunFight.apply_result(state, content, result)
+	var grown: Array[String] = RunFight.apply_result(state, content, result)
+	var outcome: RunActions.Result
 	if result.guild_won():
 		_give_rewards(state, content, run)
-		return [_ok("won"), result, setup]
-	if state.losses >= LOSSES_TO_END:
+		outcome = _ok("won")
+	elif state.losses >= LOSSES_TO_END:
 		state.phase = "run_over"
 		state.offers.clear()
-		return [_ok("the guild falls; the run is over"), result, setup]
-	state.gold += run.economy.loss_gold_base + run.economy.loss_gold_per_win * state.wins
-	state.attempt += 1
-	_start_day(state, content, run)
-	return [_ok("lost; the day starts over"), result, setup]
+		outcome = _ok("the guild falls; the run is over")
+	else:
+		state.gold += run.economy.loss_gold_base + run.economy.loss_gold_per_win * state.wins
+		state.attempt += 1
+		_start_day(state, content, run)
+		outcome = _ok("lost; the day starts over")
+	outcome.notes = grown
+	return [outcome, result, setup]
 
 
 static func _give_rewards(state: RunState, content: ContentDb, run: RunContent) -> void:
@@ -628,8 +631,13 @@ static func _pick_item(state: RunState, content: ContentDb, rng: SimRng, weights
 
 static func _add_item_offer(state: RunState, content: ContentDb, rng: SimRng, rarity_weights: Array[int], tier_weights: Array[int], enemy_only_ok: bool) -> void:
 	var item_id: String = _pick_item(state, content, rng, rarity_weights, enemy_only_ok)
-	if not item_id.is_empty():
-		state.offers.append({"type": "item", "item": item_id, "tier": maxi(RunRandom.pick_weighted(rng, tier_weights), 0), "price": 0, "taken": false})
+	if item_id.is_empty():
+		return
+	var tier: int = maxi(RunRandom.pick_weighted(rng, tier_weights), 0)
+	var path: LegendaryDef = content.items[item_id].legendary
+	if path != null:
+		tier = path.start_tier
+	state.offers.append({"type": "item", "item": item_id, "tier": tier, "price": 0, "taken": false})
 
 
 static func _pick_relic(state: RunState, content: ContentDb, rng: SimRng, weights: Array[int], exclude: Array[String]) -> String:
