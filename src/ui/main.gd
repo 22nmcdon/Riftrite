@@ -17,6 +17,9 @@ const SCREENS: Dictionary[String, String] = {
 const SCREEN_DIR: String = "res://src/ui/screens/%s_screen.gd"
 ## Phases whose screens show the guild bar.
 const GUILD_PHASES: Array[String] = ["caravan", "stop_choice", "stop", "fight", "rewards"]
+## The title backdrop (tools/art/backdrops.py), shown behind the title, the
+## run start, and the run's end.
+const BACKDROP: String = "res://art/ui/backgrounds/title.svg"
 
 var session: RunSession
 var screen: UiScreen = null
@@ -27,6 +30,7 @@ var _sheet_slot: MarginContainer
 var _guild_slot: MarginContainer
 var inspector: Inspector
 var hover_card: HoverCard
+var _backdrop: TextureRect
 var _toast: Toast
 
 
@@ -39,6 +43,13 @@ func _ready() -> void:
 	background.color = UiStyle.BACKGROUND
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(background)
+	_backdrop = TextureRect.new()
+	_backdrop.texture = load(BACKDROP) as Texture2D
+	_backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_backdrop)
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side: String in ["left", "right", "top", "bottom"]:
@@ -129,6 +140,8 @@ func _update_guild() -> void:
 		for child: Node in slot.get_children():
 			slot.remove_child(child)
 			child.queue_free()
+	var phase: String = session.state.phase if session.state != null else ""
+	_backdrop.visible = phase.is_empty() or phase.begins_with("start") or phase == "act_end" or phase == "run_over"
 	var guild: bool = shows_guild()
 	if guild:
 		_guild_slot.add_child(GuildBar.make(session))

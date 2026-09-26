@@ -6,31 +6,69 @@ extends UiScreen
 
 func build() -> void:
 	var state: RunState = session.state
+	add_theme_constant_override("separation", 18)
+	var spacer := Control.new()
+	spacer.custom_minimum_size = Vector2(0, 12)
+	add_child(spacer)
 	match state.stop_kind:
 		"forge":
-			heading("The Forge")
-			add_child(UiStyle.label("Reforging strips an item's infusion (the essences are lost) for %d gold." % session.content.tuning.reforge_gold, 14, UiStyle.TEXT_DIM))
-			add_child(_item_buttons(func(item: RunItem) -> bool: return not item.essence_ids.is_empty(), "Reforge", func(uid: int) -> void: session.forge_reforge(uid)))
+			var forge: VBoxContainer = _stop_card("forge", "The Forge", "Reforging strips an item's infusion (the essences are lost) for %d gold." % session.content.tuning.reforge_gold)
+			forge.add_child(_item_buttons(func(item: RunItem) -> bool: return not item.essence_ids.is_empty(), "Reforge", func(uid: int) -> void: session.forge_reforge(uid)))
+			forge.add_child(_leave())
 		"retrain":
-			heading("Retrain")
-			_retrain_options()
+			var retrain: VBoxContainer = _stop_card("retrain", "Retrain", "Switch a hero to another of their specializations.")
+			_retrain_options(retrain)
+			retrain.add_child(_leave())
 		"upgrade":
-			heading("An anvil before the boss")
-			add_child(UiStyle.label("Raise one item a tier, for free." if not state.stop_used else "The anvil is spent.", 14, UiStyle.TEXT_DIM))
+			var anvil: VBoxContainer = _stop_card("upgrade", "An anvil before the boss", "Raise one item a tier, for free." if not state.stop_used else "The anvil is spent.")
 			if not state.stop_used:
-				add_child(_item_buttons(func(item: RunItem) -> bool: return item.tier < 3 and session.content.items[item.item_id].rarity != "legendary", "Upgrade", func(uid: int) -> void: session.upgrade(uid)))
+				anvil.add_child(_item_buttons(func(item: RunItem) -> bool: return item.tier < 3 and session.content.items[item.item_id].rarity != "legendary", "Upgrade", func(uid: int) -> void: session.upgrade(uid)))
+			anvil.add_child(_leave())
 		_:
+			# Events, Loot, and the Vault: an illustrated parchment card.
 			var event_id: String = state.offers[0].get("event", "") if not state.offers.is_empty() else ""
-			if not event_id.is_empty():
-				heading(session.run.events[event_id].name)
-				add_child(UiStyle.label(session.run.events[event_id].text, 16, UiStyle.TEXT_DIM))
-			else:
-				heading(state.stop_kind.capitalize())
+			var title: String = session.run.events[event_id].name if not event_id.is_empty() else state.stop_kind.capitalize()
+			var text: String = session.run.events[event_id].text if not event_id.is_empty() else ""
+			var page: VBoxContainer = card("panel_parchment", 980)
+			var top := HBoxContainer.new()
+			top.add_theme_constant_override("separation", 18)
+			page.add_child(top)
+			var icon_name: String = "stop_" + (state.stop_kind if ResourceLoader.exists(UiStyle.ICON_DIR % ("stop_" + state.stop_kind)) else "event")
+			top.add_child(UiStyle.icon(icon_name, 96))
+			var words := VBoxContainer.new()
+			words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			top.add_child(words)
+			words.add_child(UiStyle.heading(title, 30, UiStyle.OAK_600))
+			if not text.is_empty():
+				var body: Label = UiStyle.label(text, 18, UiStyle.INK_TEXT)
+				body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+				words.add_child(body)
 			var all: Array[int] = []
 			for i: int in state.offers.size():
 				all.append(i)
-			add_child(offer_row(all, _take))
-	add_child(UiStyle.button("Leave, on to the fight", func() -> void: session.leave_stop()))
+			page.add_child(offer_row(all, _take))
+			page.add_child(_leave())
+
+
+## A stop's card (oak): its icon and name over what it does; returns the
+## column to fill.
+func _stop_card(stop: String, title: String, text: String) -> VBoxContainer:
+	var column: VBoxContainer = card("panel_oak", 900)
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 18)
+	column.add_child(top)
+	top.add_child(UiStyle.icon("stop_" + stop, 88))
+	var words := VBoxContainer.new()
+	top.add_child(words)
+	words.add_child(UiStyle.heading(title, 30, UiStyle.EMBER))
+	words.add_child(UiStyle.label(text, 17, UiStyle.TEXT_DIM))
+	return column
+
+
+func _leave() -> Button:
+	var button: Button = primary_button("Leave, on to the fight", func() -> void: session.leave_stop(), 320)
+	button.size_flags_horizontal = Control.SIZE_SHRINK_END
+	return button
 
 
 func _take(index: int) -> void:
@@ -53,9 +91,9 @@ func _item_buttons(keep: Callable, verb: String, action: Callable) -> HFlowConta
 	return flow
 
 
-func _retrain_options() -> void:
+func _retrain_options(into: VBoxContainer) -> void:
 	if session.state.stop_used:
-		add_child(UiStyle.label("Retraining done.", 14, UiStyle.TEXT_DIM))
+		into.add_child(UiStyle.label("Retraining done.", 16, UiStyle.TEXT_DIM))
 		return
 	for hero: RunHero in session.state.heroes:
 		if hero.specialization_id.is_empty():
@@ -66,4 +104,4 @@ func _retrain_options() -> void:
 			var spec: SpecializationDef = session.content.specializations[spec_id]
 			if spec.hero == hero.hero_id and spec_id != hero.specialization_id:
 				line.add_child(UiStyle.button("Become a " + spec.name, func() -> void: session.retrain(hero.hero_id, spec_id)))
-		add_child(line)
+		into.add_child(line)

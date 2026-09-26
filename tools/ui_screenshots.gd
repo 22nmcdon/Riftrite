@@ -62,6 +62,12 @@ func _run() -> void:
 	await _snap("fight_end")
 	fight._continue()
 	await _snap("after_fight")
+	# The run's end (a look only: the phase is set by hand, then the run is
+	# abandoned, which deletes this tool's own save).
+	session.state.phase = "run_over"
+	_main.refresh()
+	await _snap("run_end")
+	session.abandon()
 	session.abandon()
 	quit()
 
