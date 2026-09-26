@@ -132,7 +132,33 @@ Asked for after the first build: make the UI easier to use and read, with basic 
   - more in `test_ui_screens.gd`: the log uses names and hides fires; keyboard shortcuts; abandoning from the day bar
   - mutation checks: selling anywhere, fires always shown, no deselect, duplicate infuse buttons, and selecting on press all fail a test
 
+## Asset design pass
+
+The UI now follows `docs/ui-asset-design.md` (the asset design doc, adopted for now with the fixes agreed in September 2026: 1920×1080, relics as hex tokens, heroes at the bottom, the game's spill rules). Still placeholder art, drawn in code:
+
+- **Palette:** the doc's tokens (ink, oak, parchment, brass, ember, moss, rift violet, frost, blood) in `UiStyle`. Buttons are brass on oak; "Fight!" is the ember primary action. The inspector and tooltips are parchment with dark ink text (the doc's contrast rule).
+- **Item tokens** (`ItemTile`, `FrameDecor`):
+  - The rarity ladder in color **and** shape: bare oak, brass with 2 rivets, silver-teal with 4, violet with a crest, gold with wings.
+  - Enemy-only items carry the rift bleed (violet cracks).
+  - Hovering lifts the token.
+  - While dragging, a target is outlined green if the drop would work and red if not. `RunSession.would_succeed` runs the drop on a throwaway copy of the run, so the check is the game's own rules and the real run never changes.
+- **Infusion gems** (`InfusionLook`, `Glyph`):
+  - One gem per item: a round gem with the essence's glyph (single), a split gem (alloy), or a faceted gem with a core and halo (pure double).
+  - A padlocked gem marks a transformation, shown only once discovered, so hidden synergies stay hidden.
+  - Empty sockets are rings.
+  - Spill arrows show only at Resonant: a single and a pure double show their hue both sides, an alloy its first essence left and second right, and a transformation shows flat bars (it never spills).
+- **Essences:** each of the 8 has a hue and a glyph (flame, droplet, claws, block, leaf, snowflake, bolt, crescent).
+- **Relics** are hex tokens in a row that wraps, rimmed by rarity; Legendary (boss) relics carry the rift bleed.
+- **Fight HUD:**
+  - item cooldowns as radial sweeps
+  - status pips with a shape per status
+  - a brass damage ghost that trails the HP bar
+  - damage numbers with an outline and shadow; crits are bigger with a brass outline
+  - elite and boss enemies carry the rift bleed
+- **Tests:** `tests/ui/test_asset_look.gd` covers gem forms (including hidden transformations), spill arrows by level and kind, the ladder and rift bleed on tiles, drop checks that never change the run, drop zones checking room, hex relics and the parchment inspector, the HP ghost, and crit numbers. Mutation checks all fail a test: spilling below Resonant, swapped alloy sides, revealing undiscovered transformations, checking drops on the real run, and no ghost.
+- **Screenshots:** `tools/ui_screenshots.gd` adds a "showcase" shot with every rarity, each gem form, Resonant arrows, an enemy-only item, and relics (on a copy of the run, for the picture only).
+
 ### Left for later
 
 - Dropping an item onto a later tile in the same row puts it after that tile (it's removed first). The inspector's "Move left/right" buttons move exactly one step.
-- Real art, sound, and animation wait for the art direction.
+- Real art, sound, and animation wait for the art direction. Not yet built from the asset design doc: pickup and snap animations, the reject wobble, screen transitions, the guild hub, VFX sheets, audio, and the accessibility toggles (reduce motion, colorblind hues, UI scale).

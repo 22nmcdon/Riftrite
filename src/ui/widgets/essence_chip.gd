@@ -13,7 +13,7 @@ static func make(content: ContentDb, essence_id: String, at: int) -> EssenceChip
 	var line := HBoxContainer.new()
 	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	chip.add_child(line)
-	line.add_child(Glyph.gem(essence_id, 18))
+	line.add_child(Glyph.gem(essence_id, 24))
 	var name_label: Label = UiStyle.label(content.essences[essence_id].name, 16, color)
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	line.add_child(name_label)

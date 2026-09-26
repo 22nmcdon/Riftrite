@@ -24,7 +24,8 @@ func _build() -> void:
 	stash_line.add_child(UiStyle.label("Stash (%d/%d slots)" % [state.stash_used(session.content), session.content.tuning.stash_slots], 16))
 	for i: int in state.stash.size():
 		stash_line.add_child(ItemTile.owned(session, state.stash[i], RunState.STASH, i, null))
-	stash_line.add_child(DropZone.make("Drop here to put it in the stash", func(data: Dictionary) -> void: session.move_item(data["uid"], RunState.STASH, 99)))
+	stash_line.add_child(DropZone.make("Drop here to put it in the stash", func(data: Dictionary) -> void: session.move_item(data["uid"], RunState.STASH, 99), false, 120,
+		_can_move.bind(RunState.STASH)))
 	add_child(stash_line)
 	var pouch_line := HBoxContainer.new()
 	pouch_line.add_child(UiStyle.label("Essences (%d/%d)" % [state.pouch.size(), session.content.tuning.pouch_cap], 16))
@@ -40,16 +41,35 @@ func _build() -> void:
 		pouch_line.add_child(UiStyle.label("   Shards: " + ", ".join(shards), 13, UiStyle.TEXT_DIM))
 	pouch_line.add_child(DropZone.make("Throw away", _discard, true, 110))
 	add_child(pouch_line)
-	var relic_line := HBoxContainer.new()
+	var relic_line := HFlowContainer.new()
+	relic_line.add_theme_constant_override("h_separation", 12)
 	relic_line.add_child(UiStyle.label("Relics:", 16))
 	for relic_id: String in state.relics:
-		var relic: Label = UiStyle.label(session.content.relics[relic_id].name, 16, UiStyle.rarity_color(session.content.relics[relic_id].rarity))
-		Inspector.hover_text(relic, ItemInfo.relic_text(session.content, relic_id))
-		relic.mouse_filter = Control.MOUSE_FILTER_STOP
-		relic_line.add_child(relic)
+		relic_line.add_child(_relic_token(relic_id))
 	if state.relics.is_empty():
 		relic_line.add_child(UiStyle.label("none yet", 16, UiStyle.TEXT_DIM))
 	add_child(relic_line)
+
+
+## A relic as a hex token with its name (docs/ui-asset-design.md, 8.2):
+## rim by rarity; Legendary (boss) relics carry the rift bleed.
+func _relic_token(relic_id: String) -> Control:
+	var def: RelicDef = session.content.relics[relic_id]
+	var token := VBoxContainer.new()
+	token.mouse_filter = Control.MOUSE_FILTER_STOP
+	token.add_theme_constant_override("separation", 0)
+	var hex: Glyph = Glyph.hex(def.name, UiStyle.rarity_color(def.rarity), 44, def.rarity == "legendary")
+	hex.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	token.add_child(hex)
+	var name_label: Label = UiStyle.label(def.name, 13, UiStyle.rarity_color(def.rarity).lightened(0.2))
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	token.add_child(name_label)
+	Inspector.hover_text(token, ItemInfo.relic_text(session.content, relic_id))
+	return token
+
+
+func _can_move(data: Dictionary, to: String) -> bool:
+	return session.would_succeed(func(state: RunState) -> RunActions.Result: return RunActions.move_item(state, session.content, data["uid"], to, 99))
 
 
 func _discard(data: Dictionary) -> void:
@@ -116,5 +136,6 @@ func _hero_row(hero: RunHero, at: int) -> Control:
 	for i: int in hero.items.size():
 		items.add_child(ItemTile.owned(session, hero.items[i], hero.hero_id, i, stats))
 	var free: int = hero.slots() - hero.used_slots(content)
-	items.add_child(DropZone.make("%d free slot%s" % [free, "" if free == 1 else "s"], func(data: Dictionary) -> void: session.move_item(data["uid"], hero.hero_id, 99), false, maxi(free, 1) * UiStyle.SLOT_WIDTH))
+	items.add_child(DropZone.make("%d free slot%s" % [free, "" if free == 1 else "s"], func(data: Dictionary) -> void: session.move_item(data["uid"], hero.hero_id, 99), false, maxi(free, 1) * UiStyle.SLOT_WIDTH,
+		_can_move.bind(hero.hero_id)))
 	return panel

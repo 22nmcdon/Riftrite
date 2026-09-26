@@ -20,7 +20,8 @@ func build() -> void:
 	var line := HBoxContainer.new()
 	line.add_theme_constant_override("separation", 12)
 	line.add_child(UiStyle.button("Reroll (%d gold)" % session.reroll_cost(), func() -> void: session.reroll()))
-	line.add_child(DropZone.make("Drop an item here to sell it (half price)", func(data: Dictionary) -> void: session.sell(data["uid"]), false, 220))
+	line.add_child(DropZone.make("Drop an item here to sell it (half price)", func(data: Dictionary) -> void: session.sell(data["uid"]), false, 220,
+		func(data: Dictionary) -> bool: return session.would_succeed(func(state: RunState) -> RunActions.Result: return RunFlow.sell(state, session.content, session.run, data["uid"]))))
 	line.add_child(UiStyle.button("Leave the Caravan", func() -> void: session.leave_caravan()))
 	add_child(line)
 	add_child(GuildPanel.make(session))

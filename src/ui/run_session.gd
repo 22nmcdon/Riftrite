@@ -81,6 +81,16 @@ func select(uid: int) -> void:
 	changed.emit(RunActions._ok("selected"))
 
 
+## Would this action succeed right now? `action` takes a RunState and
+## returns a Result; it runs on a throwaway copy of the run, so the real run
+## never changes (drag feedback uses this to outline drop targets).
+func would_succeed(action: Callable) -> bool:
+	if state == null:
+		return false
+	var copy: RunState = RunState.from_dict(state.to_dict(), content)[0]
+	return copy != null and (action.call(copy) as RunActions.Result).ok
+
+
 func _after(result: RunActions.Result) -> RunActions.Result:
 	if result.ok and state != null:
 		var problem: String = RunSave.save(state, save_path)

@@ -22,14 +22,15 @@ static func make(run_session: RunSession) -> Inspector:
 	var panel := Inspector.new()
 	panel.session = run_session
 	panel.custom_minimum_size = Vector2(WIDTH, 0)
+	panel.add_theme_stylebox_override("panel", UiStyle.parchment())
 	panel.add_to_group(GROUP)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 10)
 	panel.add_child(box)
-	panel._title = UiStyle.label("", 20, UiStyle.EMBER)
+	panel._title = UiStyle.label("", 21, UiStyle.OAK_600)
 	panel._title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(panel._title)
-	panel._body = UiStyle.label("", 16)
+	panel._body = UiStyle.label("", 16, UiStyle.INK_TEXT)
 	panel._body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(panel._body)
 	panel._actions = VBoxContainer.new()
@@ -130,7 +131,7 @@ func _add_actions(item: RunItem, owner: String) -> void:
 		for i: int in state.pouch.size():
 			if not offered.has(state.pouch[i]):
 				offered.append(state.pouch[i])
-				_action("Infuse with %s" % content.essences[state.pouch[i]].name, func() -> void: session.infuse(uid, i), UiStyle.ESSENCE.get(state.pouch[i], UiStyle.TEXT))
+				_action("Infuse with %s" % content.essences[state.pouch[i]].name, func() -> void: session.infuse(uid, i), UiStyle.ESSENCE.get(state.pouch[i], UiStyle.TEXT).lightened(0.3))
 	# Move it.
 	for hero: RunHero in state.heroes:
 		if hero.hero_id != owner:

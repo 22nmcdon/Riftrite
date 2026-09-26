@@ -25,9 +25,11 @@ var _speed_buttons: Array[Button] = []
 var _clock: Label
 var _end_box: VBoxContainer
 var _shown_end: bool = false
+var _rift: bool = false
 
 
 func build() -> void:
+	_rift = session.content.encounters[session.state.encounter_id].kind != "normal"
 	heading("Today's fight: " + session.content.encounters[session.state.encounter_id].name)
 	hint("Last chance to arrange your guild. Hover an enemy's item to read it. During the fight: Space pauses, 1-4 set the speed, S skips to the end.")
 	var enemies := HFlowContainer.new()
@@ -35,7 +37,7 @@ func build() -> void:
 	for unit: UnitSetup in SetupBuilder.encounter_units(session.content, session.state.encounter_id):
 		enemies.add_child(_enemy_preview(unit))
 	add_child(enemies)
-	var fight_button: Button = UiStyle.button("  Fight!  ", start_fight)
+	var fight_button: Button = UiStyle.primary(UiStyle.button("  Fight!  ", start_fight))
 	fight_button.add_theme_font_size_override("font_size", 24)
 	fight_button.custom_minimum_size = Vector2(200, 56)
 	add_child(fight_button)
@@ -48,6 +50,8 @@ func _enemy_preview(unit: UnitSetup) -> Control:
 	card.add_theme_stylebox_override("panel", UiStyle.box(Color("2a2230"), Glyph.ENEMY))
 	var box := VBoxContainer.new()
 	card.add_child(box)
+	if _rift_fight():
+		card.add_child(FrameDecor.make(0, true))
 	var top := HBoxContainer.new()
 	box.add_child(top)
 	top.add_child(Glyph.portrait(unit.name, Glyph.ENEMY.lightened(0.25), 44))
@@ -159,10 +163,16 @@ func _card_row(units: Array[UnitState]) -> HBoxContainer:
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_theme_constant_override("separation", 10)
 	for unit: UnitState in units:
-		var card: UnitCard = UnitCard.make(unit, names.name_of(unit.id))
+		var card: UnitCard = UnitCard.make(unit, names.name_of(unit.id), unit.side == UnitSetup.Side.ENEMIES and _rift_fight())
 		_cards[unit.id] = card
 		row.add_child(card)
 	return row
+
+
+## Elite and boss fights carry the rift bleed on their enemies. (Read
+## before the fight: afterwards the run may have moved on.)
+func _rift_fight() -> bool:
+	return _rift
 
 
 func toggle_pause() -> void:
@@ -243,7 +253,7 @@ func _animate(entry: LogEntry) -> void:
 				_cards[entry.source_unit].flash(entry.source_item)
 		LogEntry.Kind.DAMAGE, LogEntry.Kind.STATUS_DAMAGE, LogEntry.Kind.COLLAPSE:
 			if _cards.has(entry.target):
-				_cards[entry.target].float_number(("-%d!" if entry.crit else "-%d") % entry.amount, UiStyle.BAD.lightened(0.2), seconds)
+				_cards[entry.target].float_number(("-%d!" if entry.crit else "-%d") % entry.amount, UiStyle.BAD.lightened(0.2), seconds, entry.crit)
 				_cards[entry.target].hit()
 		LogEntry.Kind.HEAL:
 			if _cards.has(entry.target):
