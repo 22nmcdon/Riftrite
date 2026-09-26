@@ -5,7 +5,7 @@ extends Control
 ## Fights animate it through a few plain values, all presentation only:
 ## `offset` (a lunge or knockback, in pixels), `swing` (the held layer's
 ## turn, in radians), `squash` (1 = none), `flash` (0..1 white hit flash),
-## and `fallen` (greyed and tipped over). Without art it draws nothing.
+## and `fallen` (greyed and slumped). Without art it draws nothing.
 
 var char_id: String = ""
 var flip: bool = false
@@ -50,14 +50,15 @@ func _draw() -> void:
 	var scale_to: float = size.y / CharacterArt.CANVAS.y
 	var lift: float = sin(_time * 3.0 + bob_phase) * 2.0 if bob and not fallen else 0.0
 	var feet := Vector2(size.x / 2.0, size.y) + offset + Vector2(0, lift)
-	# Tip over around the feet when fallen (away from the enemy).
-	var turn: float = (-1.0 if flip else 1.0) * -PI / 2.0 * 0.85 if fallen else 0.0
+	# Fallen: slumped back on its heels, low and greyed (it stays in its card).
+	var turn: float = (-1.0 if flip else 1.0) * -0.35 if fallen else 0.0
 	var tint := Color(0.55, 0.55, 0.6, 0.6) if fallen else Color.WHITE
 	if flash > 0.0 and not fallen:
 		# Over-bright modulate reads as a white hit flash.
 		tint = Color(1.0 + flash * 2.5, 1.0 + flash * 2.5, 1.0 + flash * 2.5)
 	# Canvas space (feet at the origin) -> the control: flip, squash, scale.
-	var body_xform: Transform2D = Transform2D(turn, feet).scaled_local(Vector2((-1.0 if flip else 1.0) * scale_to / squash, scale_to * squash))
+	var sag: float = 0.8 if fallen else squash
+	var body_xform: Transform2D = Transform2D(turn, feet).scaled_local(Vector2((-1.0 if flip else 1.0) * scale_to / sag, scale_to * sag))
 	var origin := Vector2(-CharacterArt.CANVAS.x / 2.0, -CharacterArt.CANVAS.y)
 	var rect := Rect2(origin, CharacterArt.CANVAS)
 	draw_set_transform_matrix(body_xform)

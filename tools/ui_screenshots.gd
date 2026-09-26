@@ -52,6 +52,12 @@ func _run() -> void:
 	for frame: int in 90:
 		await process_frame
 	await _snap("fight_playing")
+	# A few frames apart at 1x, to catch the animations mid-swing.
+	fight.set_speed(1.0)
+	for shot: int in 3:
+		for frame: int in 6:
+			await process_frame
+		await _snap("fight_action_%d" % shot)
 	fight._on_entries(fight.player.skip_to_end())
 	await _snap("fight_end")
 	fight._continue()

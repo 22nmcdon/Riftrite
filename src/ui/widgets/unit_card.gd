@@ -5,13 +5,16 @@ extends PanelContainer
 ## (a shape per status), and its items, each with a radial cooldown sweep
 ## that flashes when the item fires. Damage, heals, and shields float up as
 ## outlined numbers (crits bigger, with a brass outline). Elite and boss
-## enemies carry the rift bleed. It reads the live UnitState every frame
-## (read-only).
+## enemies carry the rift bleed. With character art, the unit's Figure
+## stands at the card's left (enemies face left) for FightFx to animate.
+## It reads the live UnitState every frame (read-only).
 
 const WIDTH: int = 280
 
 var unit: UnitState
 var display_name: String
+## The unit's standing figure, or null without art.
+var figure: Figure = null
 var _hp_bar: ProgressBar
 ## Trails behind the HP bar after damage, then catches up.
 var _ghost_bar: ProgressBar
@@ -34,13 +37,26 @@ static func make(fight_unit: UnitState, shown_name: String = "", rift: bool = fa
 	card.custom_minimum_size = Vector2(WIDTH, 0)
 	var hero: bool = fight_unit.side == UnitSetup.Side.HEROES
 	card.add_theme_stylebox_override("panel", UiStyle.box(UiStyle.PANEL if hero else Color("2a2230"), UiStyle.BORDER if hero else Glyph.ENEMY))
+	var outer := HBoxContainer.new()
+	outer.add_theme_constant_override("separation", 6)
+	card.add_child(outer)
+	var art_id: String = CharacterArt.base_id(fight_unit.id)
+	if CharacterArt.has_art(art_id):
+		card.figure = Figure.make(art_id, 112, not hero)
+		card.figure.bob = true
+		card.figure.bob_phase = float(hash(fight_unit.id) % 628) / 100.0
+		card.figure.fallen = not fight_unit.alive
+		outer.add_child(card.figure)
+		card.custom_minimum_size.x = WIDTH + card.figure.custom_minimum_size.x
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
-	card.add_child(box)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	outer.add_child(box)
 	var top := HBoxContainer.new()
 	box.add_child(top)
 	var color: Color = Glyph.CLASS_COLORS.get(fight_unit.unit_class, UiStyle.EMBER) if hero else Glyph.ENEMY.lightened(0.25)
-	top.add_child(Glyph.portrait(card.display_name, color, 44, fight_unit.id))
+	if card.figure == null:
+		top.add_child(Glyph.portrait(card.display_name, color, 44, fight_unit.id))
 	var names := VBoxContainer.new()
 	names.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(names)
@@ -121,7 +137,9 @@ func refresh() -> void:
 	var shield: String = "   +%d shield" % unit.shield if unit.shield > 0 else ""
 	_hp_label.text = ("%d / %d%s" % [unit.hp, unit.max_hp, shield]) if unit.alive else "fallen"
 	_refresh_statuses()
-	modulate = Color(1, 1, 1, 1.0 if unit.alive else 0.4)
+	modulate = Color(1, 1, 1, 1.0 if unit.alive else 0.55)
+	if figure != null and not unit.alive and not figure.fallen:
+		FightFx.fall(figure)
 	for view: Array in _item_views:
 		var item: ItemState = view[0]
 		(view[2] as Glyph).set_progress(float(item.progress_bp) / float(maxi(item.cooldown_ticks * FixedMath.BP_ONE, 1)))

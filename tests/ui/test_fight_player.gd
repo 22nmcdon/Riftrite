@@ -56,3 +56,48 @@ func test_pause_stops_and_skip_ends() -> void:
 	assert_true(player.finished())
 	assert_eq(player.sim.combat_log.to_text(), session.last_fight.combat_log.to_text())
 	assert_eq(player.take_new(), [] as Array[LogEntry], "everything was handed out")
+
+
+# --- the animated fight (FightFx, Figure) ------------------------------------------
+
+func test_attack_styles_come_from_item_tags() -> void:
+	assert_eq(FightFx.style_for(["weapon", "melee"] as Array[String]), FightFx.Style.MELEE)
+	assert_eq(FightFx.style_for(["weapon", "ranged"] as Array[String]), FightFx.Style.RANGED)
+	assert_eq(FightFx.style_for(["tome", "magic"] as Array[String]), FightFx.Style.MAGIC)
+	assert_eq(FightFx.style_for([] as Array[String]), FightFx.Style.MELEE, "no tags: a plain swing")
+
+
+func test_fight_cards_stand_up_figures_that_fall() -> void:
+	var session: RunSession = U.at_fight()
+	session.fight()
+	var player: FightPlayer = FightPlayer.make(session.last_setup, session.content)
+	var hero: UnitState = player.sim.heroes[0]
+	var enemy: UnitState = player.sim.enemies[0]
+	assert_eq(CharacterArt.base_id(enemy.id), enemy.id.left(enemy.id.rfind("_")), "fight ids map to their art")
+	var hero_card: UnitCard = UnitCard.make(hero)
+	var enemy_card: UnitCard = UnitCard.make(enemy)
+	add_child_autofree(hero_card)
+	add_child_autofree(enemy_card)
+	assert_not_null(hero_card.figure)
+	assert_false(hero_card.figure.flip, "heroes face right")
+	assert_true(enemy_card.figure.flip, "enemies face left")
+	enemy.alive = false
+	enemy_card.refresh()
+	assert_true(enemy_card.figure.fallen)
+
+
+func test_a_hit_and_a_melee_attack_animate_the_figures() -> void:
+	var attacker: Figure = Figure.make("wren", 100)
+	var target: Figure = Figure.make("rift_pup", 100, true)
+	var layer := Control.new()
+	add_child_autofree(attacker)
+	add_child_autofree(target)
+	add_child_autofree(layer)
+	target.position = Vector2(0, -200)
+	var landed: Array[bool] = [false]
+	FightFx.attack(attacker, target, FightFx.Style.MELEE, layer, 4.0, Color.WHITE, func() -> void: landed[0] = true)
+	await wait_seconds(0.5)
+	assert_true(landed[0], "the blow lands")
+	assert_almost_eq(attacker.offset.length(), 0.0, 0.5, "and the attacker steps back")
+	FightFx.hit(target, 4.0, true)
+	assert_true(target.has_meta("hit_tween"))
