@@ -193,3 +193,93 @@ All data, using existing effect types (no new code).
   | Ysolde | – | 1% |
 
   With 8 heroes in the pool, the Caravan offers a copy of a held hero half as often, so guilds rank up less. The balance pass (step 4) retunes for the bigger pool against the targets above. Starts with a fragile hero (Odo, Vell, Ysolde) are the weakest either way.
+
+## Built: step 2, items, alloys, synergies, and relics
+
+All data. The six new alloys each bring a status type built from the existing status parts (no new code).
+
+**Items:** 37 new ones, for 60 the guild can get plus 5 enemy-only.
+- **Rarity:** 12 Common, 9 Uncommon, 9 Rare, and 7 Epic, for 20/18/14/8 overall.
+- **Size:** 18 Small, 15 Medium, and 4 Large.
+- **By role:**
+  - **Ranged (for Maren):**
+    - Birch Shortbow, a Crow-Feather Crossbow, and a Rimewood Longbow (Epic), all auto-attacks that reach the back row
+    - Flint Arrows and Thorn Darts
+    - a Greywood Warbow (Large)
+    - Stormglass Arrowheads, which boost the ranged items beside them
+    - a Hunter's Snare
+  - **Tricks (for Pell):**
+    - Soot Bomb and Mirror Shard (Blind)
+    - Trick Coin (winds its neighbors)
+    - Hexed Lockbox (Freeze)
+    - Hobnail Boots (+8% ATSP)
+    - a Clockwork Owl (Epic: winds the row and blinds)
+  - **Defense:**
+    - Iron Pot Lid and Spiked Pauldron (strikes back)
+    - Mudbrick Wall (the row)
+    - Quartered Shield
+    - Gatekeeper's Tower Shield (Epic)
+  - **Magic:**
+    - Slate Tablet and an Ashwood Staff (an auto-attack for casters)
+    - a Grimoire of Cinders
+    - Venom Censer and Bone Flute (every enemy)
+    - an Ashen Censer and a Wyrdglass Orb (Epics)
+  - **Healing:**
+    - Peat Poultice and Bitter Draught (scales from HP)
+    - a Mender's Satchel (cleanses)
+    - Pilgrim's Censer (the whole guild)
+    - Hearthkeeper's Kettle (Epic)
+  - **Melee:**
+    - Hatchet and Longspear (grazes the back row)
+    - a Reaper's Sickle (hunts the weakest; crits bleed)
+    - Twinfang Stilettos (Epic)
+- **Tuning:** numbers were tuned against the existing items of the same size and rarity:
+  - shields against Oak Buckler (10 + 40% DEF every 2.5s)
+  - damage against Hearth Knife, Rusted Cleaver, and Twin Daggers
+  - heals against Old Lantern
+
+  Epics may scale from CRIT and ATSP, as the design allows.
+
+**Alloys:** 6 new ones, for 10 in total.
+
+| Alloy | Recipe | Its status |
+| --- | --- | --- |
+| Deathcap | Venom + Venom | Poison that also lowers DEF |
+| Deep Freeze | Frost + Frost | Rime: a stronger, longer Slow |
+| Searfire | Ember + Wrath | Burn that's full strength against shields and lingers |
+| Caustic | Ember + Venom | Poison that ticks twice as fast but fades |
+| Nightshade | Venom + Umbral | Bleed that ignores shields and lowers DEF by 2 |
+| Hemorrhage | Umbral + Umbral | Bleed with twice the damage per stack |
+
+**Synergies** (33 in total):
+- **Pairs:**
+  - Fletcher's Rhythm (Birch Shortbow + Flint Arrows)
+  - Hunter's Kit (Hunter's Snare + Barbed Net)
+  - Smoke and Coin (Soot Bomb + Trick Coin)
+  - A Full Kettle (Hearthkeeper's Kettle + Hearth Stew)
+- **Transformations:**
+  - Frostfletch: Flint Arrows + Frost slow the back row
+  - Venomous Snare: Hunter's Snare + Venom also poisons
+
+**Relics** (20 in total), all build-shaping:
+- **Common:** Fletcher's Quiver (ranged crit), Rootbound Charm (back-row DEF)
+- **Uncommon:** Tinker's Mainspring (tools faster), Adder's Vial (poison items)
+- **Rare:** Mourning Bell (a shield on every ally at 30s), Thief's Glove (weapon crits blind)
+
+**UI:** a color and a shape for each new status.
+
+**Tests:**
+- Each new alloy turns the item's own status into its own status type, and plain statuses are untouched.
+- Recipes work in either order.
+- Hemorrhage deals twice Bleed's damage per stack.
+- The slice item roster holds: 60 guild items; more Small than Medium than Large; Epics with 2 sockets; at least 3 items per tag.
+- Mutation checks (Hemorrhage at 1 damage per stack, Searfire turning Burn into the wrong status) fail these tests.
+
+**Balance findings:**
+- **Sim parties** `slice_commons` (the starter heroes with only the new Commons) and `slice_kit` (the new heroes with new items and Epics):
+  - The Commons party beats the sentinel vigil but mostly loses to the hound pack. It carries no Uncommon or Rare items, so this is expected.
+  - The Epic kit beats the hound pack, the sentinel, and the witch-coven elite (93%).
+- **The run bot:** act clears fell again, from 7% to 3%.
+  - It's the same effect as the new heroes: with 60 items, the Caravan offers a copy of an item you hold far less often, so fewer items combine to a higher tier.
+  - 97 of 200 runs end on day 3's elite.
+  - Steps 3 (encounters) and 4 (the balance pass) retune for this against the targets.

@@ -56,6 +56,8 @@ const STATUS_TAGS: Dictionary[String, String] = {
 const STATUS_COLORS: Dictionary[String, Color] = {
 	"burn": Color("e0703a"), "poison": Color("7ed14f"), "bleed": Color("d14545"), "golden_flame": Color("e8c877"),
 	"plasma": Color("c37bff"), "blight": Color("5f8f3a"), "slow": Color("8fb8e8"), "freeze": Color("8fe8f0"), "blind": Color("9a9a9a"),
+	"deathcap": Color("5c9a3a"), "rime": Color("b8e4f5"), "searfire": Color("ff5a2a"), "caustic": Color("c8d84a"),
+	"nightshade": Color("8a5ab8"), "hemorrhage": Color("a82a3a"),
 }
 ## Pixels per item slot.
 const SLOT_WIDTH: int = 100

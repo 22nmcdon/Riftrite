@@ -81,5 +81,62 @@
     "name": "Blind",
     "kind": "blind",
     "max_stacks": 1
+  },
+  {
+    "id": "deathcap",
+    "name": "Deathcap",
+    "kind": "damage_over_time",
+    "interval_ms": 1000,
+    "damage_per_stack": 1,
+    "vs_shield_bp": 0,
+    "defense_shred_per_stack": 1,
+    "_note": "Deathcap's poison: like Poison (never fades, ignores shields), and each stack lowers the target's DEF by 1."
+  },
+  {
+    "id": "rime",
+    "name": "Rime",
+    "kind": "slow",
+    "slow_bp_per_stack": 2000,
+    "duration_ms": 4000,
+    "max_slow_bp": 6000,
+    "_note": "Deep Freeze's slow: twice as strong per stack, lasts longer, and caps at 60%."
+  },
+  {
+    "id": "searfire",
+    "name": "Searfire",
+    "kind": "damage_over_time",
+    "interval_ms": 500,
+    "damage_per_stack": 1,
+    "stacks_lost_bp": 300,
+    "_note": "Searfire's burn: like Burn, but full strength against shields and fades more slowly."
+  },
+  {
+    "id": "caustic",
+    "name": "Caustic",
+    "kind": "damage_over_time",
+    "interval_ms": 500,
+    "damage_per_stack": 1,
+    "vs_shield_bp": 0,
+    "stacks_lost_bp": 500,
+    "_note": "Caustic's poison: ticks twice as fast as Poison but fades like Burn; ignores shields."
+  },
+  {
+    "id": "nightshade",
+    "name": "Nightshade",
+    "kind": "damage_over_time",
+    "interval_ms": 1000,
+    "damage_per_stack": 1,
+    "vs_shield_bp": 0,
+    "defense_shred_per_stack": 2,
+    "_note": "Nightshade's bleed: ignores shields and lowers DEF by 2 per stack."
+  },
+  {
+    "id": "hemorrhage",
+    "name": "Hemorrhage",
+    "kind": "damage_over_time",
+    "interval_ms": 1000,
+    "damage_per_stack": 2,
+    "defense_shred_per_stack": 1,
+    "_note": "Hemorrhage's bleed: twice the damage per stack."
   }
 ]

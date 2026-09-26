@@ -27,6 +27,7 @@ const ESSENCE_GLYPHS: Dictionary[String, String] = {
 const STATUS_SHAPES: Dictionary[String, String] = {
 	"burn": "flame", "golden_flame": "flame_core", "poison": "circle", "bleed": "droplet", "plasma": "diamond",
 	"blight": "block", "slow": "hourglass", "freeze": "snowflake", "blind": "bar",
+	"deathcap": "circle", "rime": "snowflake", "searfire": "flame", "caustic": "circle", "nightshade": "droplet", "hemorrhage": "droplet",
 }
 
 var shape: Shape = Shape.DOT

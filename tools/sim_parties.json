@@ -664,5 +664,131 @@
         ]
       }
     ]
+  },
+  {
+    "id": "slice_commons",
+    "name": "Hearth starter's heroes with only the slice's new Common items (rank C)",
+    "heroes": [
+      {
+        "hero": "brannoc",
+        "row": "front",
+        "items": [
+          {
+            "item": "mudbrick_wall"
+          },
+          {
+            "item": "hatchet"
+          }
+        ]
+      },
+      {
+        "hero": "wren",
+        "row": "front",
+        "items": [
+          {
+            "item": "hatchet"
+          },
+          {
+            "item": "longspear"
+          },
+          {
+            "item": "iron_pot_lid"
+          }
+        ]
+      },
+      {
+        "hero": "vell",
+        "row": "back",
+        "items": [
+          {
+            "item": "peat_poultice"
+          },
+          {
+            "item": "chalk_circle"
+          },
+          {
+            "item": "hobnail_boots"
+          }
+        ]
+      },
+      {
+        "hero": "odo",
+        "row": "back",
+        "items": [
+          {
+            "item": "slate_tablet"
+          },
+          {
+            "item": "thorn_darts"
+          },
+          {
+            "item": "soot_bomb"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "slice_kit",
+    "name": "The new heroes with the slice's new items, Epics included (rank C)",
+    "heroes": [
+      {
+        "hero": "hesk",
+        "row": "front",
+        "items": [
+          {
+            "item": "tower_shield"
+          },
+          {
+            "item": "hatchet"
+          }
+        ]
+      },
+      {
+        "hero": "pell",
+        "row": "front",
+        "items": [
+          {
+            "item": "soot_bomb"
+          },
+          {
+            "item": "trick_coin"
+          },
+          {
+            "item": "twinfang_stilettos"
+          },
+          {
+            "item": "iron_pot_lid"
+          }
+        ]
+      },
+      {
+        "hero": "maren",
+        "row": "back",
+        "items": [
+          {
+            "item": "rimewood_longbow"
+          },
+          {
+            "item": "flint_arrows"
+          },
+          {
+            "item": "stormglass_arrowheads"
+          }
+        ]
+      },
+      {
+        "hero": "vell",
+        "row": "back",
+        "items": [
+          {
+            "item": "hearthkeepers_kettle"
+          },
+          {
+            "item": "menders_satchel"
+          }
+        ]
+      }
+    ]
   }
 ]

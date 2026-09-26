@@ -818,5 +818,127 @@
         ]
       }
     ]
+  },
+  {
+    "id": "fletchers_rhythm",
+    "name": "Fletcher's Rhythm",
+    "layer": "pair",
+    "items": [
+      "birch_shortbow",
+      "flint_arrows"
+    ],
+    "_note": "Each shortbow hit winds the arrows by 0.3s.",
+    "grants": [
+      {
+        "filter": {
+          "item": "birch_shortbow"
+        },
+        "effect": {
+          "trigger": "on_hit",
+          "type": "charge",
+          "amount_ms": 300,
+          "target": "partner_items"
+        }
+      }
+    ]
+  },
+  {
+    "id": "hunters_kit",
+    "name": "Hunter's Kit",
+    "layer": "pair",
+    "items": [
+      "hunters_snare",
+      "barbed_net"
+    ],
+    "_note": "The net also slows every enemy.",
+    "grants": [
+      {
+        "filter": {
+          "item": "barbed_net"
+        },
+        "effect": {
+          "trigger": "on_fire",
+          "type": "apply_status",
+          "status": "slow",
+          "stacks": 1,
+          "target": "all_enemies"
+        }
+      }
+    ]
+  },
+  {
+    "id": "smoke_and_coin",
+    "name": "Smoke and Coin",
+    "layer": "pair",
+    "items": [
+      "soot_bomb",
+      "trick_coin"
+    ],
+    "_note": "Both tricks fire 25% faster.",
+    "auras": [
+      {
+        "target": "matched_items",
+        "stat": "cooldown_bp",
+        "value": -2500
+      }
+    ]
+  },
+  {
+    "id": "full_kettle",
+    "name": "A Full Kettle",
+    "layer": "pair",
+    "items": [
+      "hearthkeepers_kettle",
+      "hearth_stew"
+    ],
+    "_note": "Both heal x1.25.",
+    "auras": [
+      {
+        "target": "matched_items",
+        "stat": "heal_bp",
+        "value": 12500
+      }
+    ]
+  },
+  {
+    "id": "frostfletch",
+    "name": "Frostfletch",
+    "layer": "transformation",
+    "item": "flint_arrows",
+    "essence": "frost",
+    "_note": "The arrows slow the back row instead of hitting it.",
+    "item_effects": [
+      {
+        "trigger": "on_fire",
+        "type": "apply_status",
+        "status": "slow",
+        "stacks": 2,
+        "target": "enemy_back"
+      }
+    ]
+  },
+  {
+    "id": "venomous_snare",
+    "name": "Venomous Snare",
+    "layer": "transformation",
+    "item": "hunters_snare",
+    "essence": "venom",
+    "_note": "The snare poisons what it catches as well as slowing it.",
+    "item_effects": [
+      {
+        "trigger": "on_fire",
+        "type": "apply_status",
+        "status": "slow",
+        "stacks": 1,
+        "target": "enemy_front"
+      },
+      {
+        "trigger": "on_fire",
+        "type": "apply_status",
+        "status": "poison",
+        "stacks": 2,
+        "target": "enemy_front"
+      }
+    ]
   }
 ]

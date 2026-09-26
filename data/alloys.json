@@ -44,5 +44,77 @@
       "storm"
     ],
     "heal_echo_bp": 5000
+  },
+  {
+    "_note": "Pure double (Venom + Venom). Everything the item would Poison lands as Deathcap, which also lowers DEF.",
+    "id": "deathcap",
+    "name": "Deathcap",
+    "recipe": [
+      "venom",
+      "venom"
+    ],
+    "replaces": {
+      "poison": "deathcap"
+    }
+  },
+  {
+    "_note": "Pure double (Frost + Frost). Everything the item would Slow lands as Rime: stronger and longer.",
+    "id": "deep_freeze",
+    "name": "Deep Freeze",
+    "recipe": [
+      "frost",
+      "frost"
+    ],
+    "replaces": {
+      "slow": "rime"
+    }
+  },
+  {
+    "_note": "Ember + Wrath. Everything the item would Burn lands as Searfire: full strength against shields, and it lingers.",
+    "id": "searfire",
+    "name": "Searfire",
+    "recipe": [
+      "ember",
+      "wrath"
+    ],
+    "replaces": {
+      "burn": "searfire"
+    }
+  },
+  {
+    "_note": "Ember + Venom. Everything the item would Poison lands as Caustic: twice as fast, but it fades.",
+    "id": "caustic",
+    "name": "Caustic",
+    "recipe": [
+      "ember",
+      "venom"
+    ],
+    "replaces": {
+      "poison": "caustic"
+    }
+  },
+  {
+    "_note": "Venom + Umbral. Everything the item would Bleed lands as Nightshade: ignores shields and lowers DEF faster.",
+    "id": "nightshade",
+    "name": "Nightshade",
+    "recipe": [
+      "venom",
+      "umbral"
+    ],
+    "replaces": {
+      "bleed": "nightshade"
+    }
+  },
+  {
+    "_note": "Pure double (Umbral + Umbral). Everything the item would Bleed lands as Hemorrhage: twice the damage per stack.",
+    "id": "hemorrhage",
+    "name": "Hemorrhage",
+    "recipe": [
+      "umbral",
+      "umbral"
+    ],
+    "replaces": {
+      "bleed": "hemorrhage"
+    }
   }
 ]

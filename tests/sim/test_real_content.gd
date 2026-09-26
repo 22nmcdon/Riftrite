@@ -70,3 +70,27 @@ func test_real_content_fights_replay_identically() -> void:
 		var setup: FightSetup = FightSetup.make(BalanceRun.party_units(db, party), SetupBuilder.encounter_units(db, "witch_coven"), 3, 1)
 		logs.append(CombatSim.run(setup, db).combat_log.to_text())
 	assert_eq(logs[0], logs[1])
+
+
+## The slice's item targets (docs/plans/slice-content.md): 60 items the
+## guild can get, enemy-only items on top; more Small than Medium than
+## Large; enough Epics for alloys; items for every hero's tags.
+func test_slice_item_roster() -> void:
+	var db: ContentDb = K.content()
+	var guild: Array[ItemDef] = []
+	for item_id: String in db.item_ids:
+		if not db.items[item_id].enemy_only:
+			guild.append(db.items[item_id])
+	assert_eq(guild.size(), 60)
+	var sizes: Array[int] = [0, 0, 0, 0]
+	var epics: int = 0
+	for item: ItemDef in guild:
+		sizes[item.size] += 1
+		if item.rarity == "epic":
+			epics += 1
+			assert_eq(db.tuning.socket_count(item), 2, "%s has two sockets" % item.id)
+	assert_gt(sizes[1], sizes[2], "more Small than Medium")
+	assert_gt(sizes[2], sizes[3], "more Medium than Large")
+	assert_gte(epics, 6)
+	for tag: String in ["ranged", "melee", "magic", "healing", "defense", "tool", "charm", "tome", "food", "weapon"]:
+		assert_gte(guild.filter(func(item: ItemDef) -> bool: return item.tags.has(tag)).size(), 3, "at least 3 %s items" % tag)
