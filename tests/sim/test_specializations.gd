@@ -277,7 +277,7 @@ func test_cleanse_strips_damage_over_time() -> void:
 		reduced.append(entry.to_text())
 	assert_eq(reduced.size(), 2)
 	assert_string_contains(reduced[0], "Poison on a loses 5 stacks (cleansed by a · Wash)")
-	assert_string_contains(reduced[1], "Golden Flame on a loses 4 stacks (cleansed by a · Wash)", "Golden Flame resists cleansing (75%)")
+	assert_true(reduced[1].contains("Golden Flame on a loses 4 stacks (cleansed by a · Wash)"), "Golden Flame resists cleansing (75%%): %s" % reduced[1])
 
 
 # --- the slice's heroes (docs/plans/slice-content.md) ---------------------------

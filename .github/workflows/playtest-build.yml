@@ -1,0 +1,66 @@
+name: Playtest build
+
+# Builds the Windows and macOS playtest builds and publishes them on a GitHub
+# Release (a pre-release named "Playtest build <n>"), so testers get a plain
+# download link. Run it from the Actions tab ("Run workflow"), or push a tag
+# starting with "playtest-". The tests run first; a red suite means no build.
+on:
+  workflow_dispatch:
+    inputs:
+      notes:
+        description: "Notes for testers (optional)"
+        required: false
+        default: ""
+  push:
+    tags: ["playtest-*"]
+
+env:
+  GODOT_VERSION: "4.7.2"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache Godot and its export templates
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/godot
+          key: godot-${{ env.GODOT_VERSION }}-desktop-templates
+      - name: Install Godot and the export templates
+        run: tools/ci/install_godot.sh --templates
+      - name: Import the project
+        run: godot --headless --path . --import || true
+      - name: Run the tests
+        run: godot --headless -s addons/gut/gut_cmdln.gd -gexit
+      - name: Export the builds
+        run: tools/ci/export_builds.sh "${GITHUB_SHA::7}"
+      - name: Keep the builds as workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: playtest-builds
+          path: build/dist/*.zip
+      - name: Publish a pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NOTES: ${{ github.event.inputs.notes }}
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/playtest-* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+          else
+            TAG="playtest-${GITHUB_RUN_NUMBER}"
+          fi
+          {
+            echo "Playtest build of ${GITHUB_SHA::7}."
+            echo
+            if [ -n "${NOTES}" ]; then echo "${NOTES}"; echo; fi
+            echo "Download the zip for your system, unzip, and see HOW-TO-PLAY.txt inside"
+            echo "(first-launch warnings on unsigned builds, and where playtest journals are saved)."
+          } > release-notes.txt
+          gh release create "${TAG}" build/dist/*.zip --target "${GITHUB_SHA}" \
+            --title "Playtest build ${GITHUB_RUN_NUMBER} (${GITHUB_SHA::7})" \
+            --notes-file release-notes.txt --prerelease

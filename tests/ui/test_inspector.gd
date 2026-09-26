@@ -200,7 +200,7 @@ func test_discovered_synergies_show_in_the_guild_panel() -> void:
 	state.discovered.append_array(["wardens_oath", "paper_cuts"] as Array[String])
 	main.refresh()
 	var text: String = U.text_of(main.screen)
-	assert_string_contains(text, "★ Warden's Oath", "active, so lit")
+	assert_true(text.contains("★ Warden's Oath"), "active, so lit")
 	assert_string_contains(text, "Paper Cuts")
 	assert_false(text.contains("★ Paper Cuts"), "found but not active")
 	assert_false(text.contains("Dawnstrike"), "undiscovered synergies stay hidden")
