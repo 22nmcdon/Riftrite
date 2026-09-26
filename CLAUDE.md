@@ -4,6 +4,8 @@
 
 A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The player leads a guild of heroes through the rifts, one day at a time. Each hero has a row of items that fire on cooldowns, and items are infused with essences harvested from enemies. Hidden, discoverable synergies drive build variety.
 
+**Redesign in progress:** `docs/plans/fun-redesign.md` and `docs/plans/heroes-and-deeds.md` (approved, built in steps; their **Decisions** sections win). The rules below describe the code as it is now; each redesign step updates them as it lands.
+
 **The full design lives in `docs/design.md`**, with item tiers, backup mode, and Oathbinding detailed in `docs/tiers-backup-specialization.md`. The UI's look follows `docs/ui-asset-design.md` (for now). Before building or changing a game system, read the matching section there. If the code and the design doc disagree, stop and ask. Don't silently pick one.
 
 ## Tech stack

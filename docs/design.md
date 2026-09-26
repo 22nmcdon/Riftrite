@@ -2,6 +2,8 @@
 
 Working title: Riftrite (placeholder). Synced from the Claude Docs version on 2026-09-25, then updated in the repo the same day with answers to the first round of design questions (see Decisions made). The Claude Docs version does not have those updates yet.
 
+> **Redesign in progress (2026-09-26):** `docs/plans/fun-redesign.md` and `docs/plans/heroes-and-deeds.md` are approved and being built in steps. They replace the item rows and adjacency, sockets by rarity and neighbor spill, buying and recruiting heroes, Backup, and class traits. This document describes the game as it is now, and each step updates it as it lands.
+
 ## High concept
 
 **Working title: Riftrite.** A PvE roguelite auto-battler where you lead a small adventurers' guild into collapsing rifts. Each hero carries a row of gear that fires on cooldowns, and you infuse that gear with essences pulled from the monsters you kill.
