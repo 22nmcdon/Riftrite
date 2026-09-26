@@ -5,7 +5,8 @@ extends RefCounted
 ## offers are dimmed and inert. `action` is called on click.
 
 
-static func make(session: RunSession, offer: Dictionary, action: Callable, lit: bool = false) -> Control:
+## `big`: the Caravan's large ware cards and recruit cards.
+static func make(session: RunSession, offer: Dictionary, action: Callable, lit: bool = false, big: bool = false) -> Control:
 	var content: ContentDb = session.content
 	var price: int = offer.get("price", 0)
 	var cost: String = "%d gold" % price if price > 0 else "Take"
@@ -14,12 +15,12 @@ static func make(session: RunSession, offer: Dictionary, action: Callable, lit: 
 	var node: Control
 	match offer["type"]:
 		"item":
-			var tile: ItemTile = ItemTile.offer(session, offer["item"], offer["tier"], cost, lit)
+			var tile: ItemTile = ItemTile.offer(session, offer["item"], offer["tier"], cost, lit, big)
 			if not offer.get("taken", false):
 				tile.clicked.connect(action)
 			node = tile
 		"hero":
-			node = _hero_card(session, offer, cost, action)
+			node = _hero_card(session, offer, cost, action, big)
 		_:
 			var button: Button = UiStyle.button("%s  (%s)" % [_describe(content, offer), cost], action)
 			button.custom_minimum_size = Vector2(0, 56)
@@ -49,23 +50,29 @@ static func _describe(content: ContentDb, offer: Dictionary) -> String:
 	return str(offer)
 
 
-static func _hero_card(session: RunSession, offer: Dictionary, cost: String, action: Callable) -> Control:
+static func _hero_card(session: RunSession, offer: Dictionary, cost: String, action: Callable, big: bool = false) -> Control:
 	var content: ContentDb = session.content
 	var def: HeroDef = content.heroes[offer["hero"]]
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(300, 0)
+	card.custom_minimum_size = Vector2(360 if big else 300, 0)
+	if big:
+		card.add_theme_stylebox_override("panel", UiStyle.chrome("panel_oak", 20, 16))
 	var box := VBoxContainer.new()
 	card.add_child(box)
 	var held: RunHero = session.state.hero(def.id) if session.state != null else null
 	var top := HBoxContainer.new()
 	box.add_child(top)
-	top.add_child(Glyph.portrait(def.name, Glyph.CLASS_COLORS.get(def.hero_class, UiStyle.EMBER), 48))
+	top.add_child(Glyph.portrait(def.name, Glyph.CLASS_COLORS.get(def.hero_class, UiStyle.EMBER), 64 if big else 48))
 	var names := VBoxContainer.new()
 	top.add_child(names)
-	names.add_child(UiStyle.label("%s  %s" % [def.name, TuningDef.TIER_LABELS[offer["rank"]]], 17, UiStyle.HIGHLIGHT if held != null else UiStyle.TEXT))
+	var title: String = "%s  %s" % [def.name, TuningDef.TIER_LABELS[offer["rank"]]]
+	names.add_child(UiStyle.heading(title, 19, UiStyle.HIGHLIGHT if held != null else UiStyle.TEXT) if big else UiStyle.label(title, 17, UiStyle.HIGHLIGHT if held != null else UiStyle.TEXT))
 	names.add_child(UiStyle.label(def.hero_class.capitalize() + ("  · ranks up yours" if held != null else ""), 14, UiStyle.EMBER if held != null else UiStyle.TEXT_DIM))
 	var stats: UnitStats = def.stats.boosted(content.tuning.rank_multiplier_bp[offer["rank"]])
-	box.add_child(UiStyle.label("HP %d  ATK %d  MGK %d  DEF %d" % [stats.get_stat(UnitStats.Stat.HP), stats.get_stat(UnitStats.Stat.ATK), stats.get_stat(UnitStats.Stat.MGK), stats.get_stat(UnitStats.Stat.DEF)], 14))
+	if big:
+		box.add_child(UiStyle.stat_row(stats, 15))
+	else:
+		box.add_child(UiStyle.label("HP %d  ATK %d  MGK %d  DEF %d" % [stats.get_stat(UnitStats.Stat.HP), stats.get_stat(UnitStats.Stat.ATK), stats.get_stat(UnitStats.Stat.MGK), stats.get_stat(UnitStats.Stat.DEF)], 14))
 	box.add_child(UiStyle.label("Basic attack: " + def.basic_attack.name, 14, UiStyle.TEXT_DIM))
 	if def.backup != null:
 		box.add_child(UiStyle.label("Backup: " + def.backup.name, 14, UiStyle.TEXT_DIM))

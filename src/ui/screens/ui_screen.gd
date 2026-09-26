@@ -20,7 +20,7 @@ func build() -> void:
 
 
 func heading(text: String) -> void:
-	add_child(UiStyle.label(text, 24, UiStyle.EMBER))
+	add_child(UiStyle.heading(text, 30))
 
 
 ## A dim line under a heading saying what to do here.

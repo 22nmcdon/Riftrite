@@ -15,6 +15,8 @@ signal clicked
 
 enum Drop { INFUSE, COMBINE, MOVE }
 
+## A ware card (the Caravan's stall): large art, name, rarity, size, price.
+const WARE_SIZE := Vector2(196, 250)
 ## A compact tile (the guild bar's stash): icon, tier, and gem only, per slot.
 const COMPACT_SLOT_WIDTH: int = 60
 const COMPACT_HEIGHT: int = 64
@@ -31,6 +33,8 @@ var essence_ids: Array[String] = []
 var lit: bool = false
 ## Icon, tier, and gem only (the name shows on hover).
 var compact: bool = false
+## A large card for the Caravan's stall.
+var ware: bool = false
 ## What the item does (shown in the inspector on hover).
 var info: String = ""
 ## The frame when not hovered or a drop target.
@@ -50,10 +54,11 @@ static func owned(run_session: RunSession, item: RunItem, holder: String, at: in
 	return tile
 
 
-static func offer(run_session: RunSession, item: String, item_tier: int, footer: String, glow: bool = false) -> ItemTile:
+static func offer(run_session: RunSession, item: String, item_tier: int, footer: String, glow: bool = false, big: bool = false) -> ItemTile:
 	var tile := ItemTile.new()
 	tile.session = run_session
 	tile.lit = glow
+	tile.ware = big
 	tile._fill(item, item_tier, [] as Array[String], 0, null, footer)
 	return tile
 
@@ -66,6 +71,8 @@ func _fill(item: String, item_tier: int, essences: Array[String], xp: int, holde
 	var def: ItemDef = content.items[item]
 	var slots: int = maxi(def.size, 1)
 	custom_minimum_size = Vector2(slots * COMPACT_SLOT_WIDTH, COMPACT_HEIGHT) if compact else Vector2(slots * UiStyle.SLOT_WIDTH, UiStyle.TILE_HEIGHT)
+	if ware:
+		custom_minimum_size = WARE_SIZE
 	var selected: bool = uid >= 0 and session.selected_uid == uid
 	var border: Color = UiStyle.HIGHLIGHT if lit or selected else UiStyle.rarity_color(def.rarity)
 	var fill: Color = UiStyle.PANEL_WARM if selected else (Color("241a2e") if def.enemy_only else UiStyle.PANEL)
@@ -77,6 +84,9 @@ func _fill(item: String, item_tier: int, essences: Array[String], xp: int, holde
 	mouse_entered.connect(_lift.bind(true))
 	mouse_exited.connect(_lift.bind(false))
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	if ware:
+		_fill_ware(def, footer)
+		return
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 0 if compact else 2)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -120,6 +130,44 @@ func _fill(item: String, item_tier: int, essences: Array[String], xp: int, holde
 		price.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(price)
 	add_child(decor)
+
+
+## A ware card: the art large, tier, name, rarity and size, and the price.
+func _fill_ware(def: ItemDef, footer: String) -> void:
+	_style.content_margin_top = 12
+	_style.content_margin_bottom = 10
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 4)
+	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(box)
+	var art: Glyph = Glyph.item(def, UiStyle.rarity_color(def.rarity).lightened(0.25), 96)
+	art.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	box.add_child(art)
+	var name_label: Label = UiStyle.heading("%s  %s" % [def.name, TuningDef.TIER_LABELS[tier]], 17, UiStyle.TEXT)
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	name_label.custom_minimum_size = Vector2(WARE_SIZE.x - 24, 0)
+	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(name_label)
+	var size_text: String = "%d slot%s" % [def.size, "" if def.size == 1 else "s"]
+	var kind: Label = UiStyle.label("%s · %s" % [def.rarity.capitalize(), size_text], 13, UiStyle.rarity_color(def.rarity).lightened(0.2))
+	kind.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	kind.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(kind)
+	var spacer := Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(spacer)
+	var price: Control = UiStyle.icon_label("gold", footer, 18, UiStyle.HIGHLIGHT) if footer.ends_with("gold") else UiStyle.label(footer, 16, UiStyle.TEXT_DIM)
+	price.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	box.add_child(price)
+	if lit:
+		var note: Label = UiStyle.label("Combines with yours", 13, UiStyle.HIGHLIGHT)
+		note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		note.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(note)
+	add_child(FrameDecor.make(ItemDef.RARITIES.find(def.rarity), def.enemy_only))
 
 
 ## Hover: lift the token a little with a brass rim (docs/ui-asset-design.md, 9).

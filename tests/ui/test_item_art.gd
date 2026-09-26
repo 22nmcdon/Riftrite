@@ -50,3 +50,31 @@ func test_items_with_art_show_it_and_others_keep_the_drawn_icon() -> void:
 	var without: Glyph = autofree(Glyph.item(_content.items["night_lantern"], Color.WHITE))
 	assert_null(without.art, "night_lantern has no art yet: it keeps its kind icon")
 	assert_eq(without.text, "healing")
+
+
+# --- UI art: chrome, icons, fonts (tools/art/ui_art.py) ----------------------------
+
+func test_every_chrome_piece_loads_with_its_margin() -> void:
+	for name: String in UiStyle.CHROME_MARGINS:
+		var style: StyleBoxTexture = UiStyle.chrome(name)
+		assert_not_null(style.texture, name)
+		assert_eq(style.texture_margin_left, float(UiStyle.CHROME_MARGINS[name]), name)
+		assert_lt(UiStyle.CHROME_MARGINS[name] * 2, style.texture.get_width(), name + ": margins fit the texture")
+
+
+func test_every_icon_the_ui_names_exists() -> void:
+	var names: Array[String] = ["gold", "key", "loss", "day", "fight_normal", "fight_elite", "fight_boss"]
+	names.append_array(UiStyle.STAT_ICONS)
+	for stop: String in ["caravan", "forge", "loot", "vault", "retrain", "event", "upgrade"]:
+		names.append("stop_" + stop)
+	for name: String in names:
+		assert_true(ResourceLoader.exists(UiStyle.ICON_DIR % name), name)
+		var rect: TextureRect = autofree(UiStyle.icon(name))
+		assert_not_null(rect.texture, name)
+
+
+func test_fonts_load() -> void:
+	for font_path: String in [UiStyle.BODY_FONT, UiStyle.BOLD_FONT, UiStyle.HEADING_FONT]:
+		assert_not_null(load(font_path) as Font, font_path)
+	var theme: Theme = UiStyle.make_theme()
+	assert_eq(theme.default_font.resource_path, UiStyle.BODY_FONT)

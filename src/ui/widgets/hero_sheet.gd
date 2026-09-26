@@ -16,14 +16,7 @@ static func make(run_session: RunSession, hero: RunHero) -> HeroSheet:
 	var sheet := HeroSheet.new()
 	sheet.session = run_session
 	sheet.hero_id = hero.hero_id
-	var style: StyleBoxFlat = UiStyle.box(UiStyle.PANEL, UiStyle.BRASS_500, 3)
-	style.content_margin_left = 16
-	style.content_margin_right = 16
-	style.content_margin_top = 12
-	style.content_margin_bottom = 12
-	style.shadow_color = Color(0, 0, 0, 0.5)
-	style.shadow_size = 12
-	sheet.add_theme_stylebox_override("panel", style)
+	sheet.add_theme_stylebox_override("panel", UiStyle.chrome("panel_oak", 22, 16))
 	sheet._build(hero)
 	return sheet
 
@@ -42,10 +35,10 @@ func _build(hero: RunHero) -> void:
 	info.add_theme_constant_override("separation", 4)
 	info.custom_minimum_size = Vector2(420, 0)
 	line.add_child(info)
-	info.add_child(UiStyle.label("%s   %s" % [def.name, TuningDef.TIER_LABELS[hero.rank]], 22, UiStyle.TEXT_DIM if hero.benched else UiStyle.TEXT))
+	info.add_child(UiStyle.heading("%s   %s" % [def.name, TuningDef.TIER_LABELS[hero.rank]], 24, UiStyle.TEXT_DIM if hero.benched else UiStyle.TEXT))
 	var spec: String = content.specializations[hero.specialization_id].name if not hero.specialization_id.is_empty() else "no specialization yet"
 	info.add_child(UiStyle.label("%s · %s" % [def.hero_class.capitalize(), spec], 16, UiStyle.EMBER))
-	info.add_child(UiStyle.label(ItemInfo.stat_line(stats), 15, UiStyle.TEXT))
+	info.add_child(UiStyle.stat_row(stats))
 	var about: Label = UiStyle.label(_basic_and_backup(def), 14, UiStyle.TEXT_DIM)
 	about.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	info.add_child(about)
@@ -60,7 +53,7 @@ func _build(hero: RunHero) -> void:
 	var top := HBoxContainer.new()
 	right.add_child(top)
 	var free: int = hero.slots() - hero.used_slots(content)
-	var heading: Label = UiStyle.label("Items (%d of %d slots used)" % [hero.used_slots(content), hero.slots()], 16, UiStyle.HIGHLIGHT)
+	var heading: Label = UiStyle.heading("Items (%d of %d slots used)" % [hero.used_slots(content), hero.slots()], 18, UiStyle.HIGHLIGHT)
 	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(heading)
 	var count: int = session.state.heroes.size()

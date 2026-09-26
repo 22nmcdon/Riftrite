@@ -12,12 +12,7 @@ var session: RunSession
 static func make(run_session: RunSession) -> GuildBar:
 	var bar := GuildBar.new()
 	bar.session = run_session
-	var style: StyleBoxFlat = UiStyle.box(Color("1c1624"), UiStyle.BORDER, 2)
-	style.content_margin_left = 12
-	style.content_margin_right = 12
-	style.content_margin_top = 8
-	style.content_margin_bottom = 8
-	bar.add_theme_stylebox_override("panel", style)
+	bar.add_theme_stylebox_override("panel", UiStyle.chrome("panel_bar", 14, 10))
 	bar._build()
 	return bar
 
@@ -43,7 +38,7 @@ func _build() -> void:
 func _section(title: String, body: Control, hint: String = "") -> VBoxContainer:
 	var section := VBoxContainer.new()
 	section.add_theme_constant_override("separation", 4)
-	var heading: Label = UiStyle.label(title, 14, UiStyle.EMBER)
+	var heading: Label = UiStyle.heading(title, 15, UiStyle.EMBER)
 	if not hint.is_empty():
 		heading.mouse_filter = Control.MOUSE_FILTER_STOP
 		Inspector.hover(heading, title, hint)
@@ -58,7 +53,7 @@ func _stash() -> Control:
 	row.add_theme_constant_override("separation", 3)
 	for i: int in state.stash.size():
 		row.add_child(ItemTile.owned(session, state.stash[i], RunState.STASH, i, null, true))
-	row.add_child(DropZone.make("Drop to stash", func(data: Dictionary) -> void: session.move_item(data["uid"], RunState.STASH, 99), false, 64,
+	row.add_child(DropZone.make("Drop to stash", func(data: Dictionary) -> void: session.move_item(data["uid"], RunState.STASH, 99), false, 84,
 		_can_move.bind(RunState.STASH), ItemTile.COMPACT_HEIGHT))
 	return _section("Stash (%d/%d slots)" % [state.stash_used(session.content), session.content.tuning.stash_slots], row,
 		"Items waiting for a hero. Drag one onto a hero's token (or into their sheet) to equip it.")

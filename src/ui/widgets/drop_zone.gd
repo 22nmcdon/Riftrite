@@ -23,7 +23,7 @@ static func make(text: String, action: Callable, essences: bool = false, width: 
 	zone._style = UiStyle.box(UiStyle.BACKGROUND, UiStyle.BORDER)
 	zone._style.draw_center = true
 	zone.add_theme_stylebox_override("panel", zone._style)
-	var label: Label = UiStyle.label(text, 14 if height >= UiStyle.TILE_HEIGHT else 12, UiStyle.TEXT_DIM)
+	var label: Label = UiStyle.label(text, 14 if height >= 56 else 12, UiStyle.TEXT_DIM)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	zone.add_child(label)

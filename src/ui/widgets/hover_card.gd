@@ -24,16 +24,12 @@ static func make() -> HoverCard:
 	card.visible = false
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.custom_minimum_size = Vector2(WIDTH, 0)
-	var style: StyleBoxFlat = UiStyle.parchment()
-	style.shadow_color = Color(0, 0, 0, 0.45)
-	style.shadow_size = 10
-	style.shadow_offset = Vector2(0, 4)
-	card.add_theme_stylebox_override("panel", style)
+	card.add_theme_stylebox_override("panel", UiStyle.parchment())
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.add_child(box)
-	card._title = UiStyle.label("", 20, UiStyle.OAK_600)
+	card._title = UiStyle.heading("", 20, UiStyle.OAK_600)
 	card._title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	# A set width, so wrapped text measures its height right away.
 	card._title.custom_minimum_size = Vector2(WIDTH - 32, 0)

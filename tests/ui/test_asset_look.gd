@@ -137,8 +137,8 @@ func test_relics_are_hex_tokens() -> void:
 	assert_eq(hexes.size(), 2)
 	assert_eq([(hexes[0] as Glyph).cracked, (hexes[1] as Glyph).cracked], [false, true], "Legendary (boss) relics carry the rift bleed")
 	assert_eq((hexes[1] as Glyph).color, UiStyle.rarity_color("legendary"))
-	var inspector_style: StyleBoxFlat = main.inspector.get_theme_stylebox("panel")
-	assert_eq(inspector_style.bg_color, UiStyle.PARCHMENT_100, "the inspector is parchment")
+	var inspector_style: StyleBoxTexture = main.inspector.get_theme_stylebox("panel")
+	assert_eq(inspector_style.texture.resource_path, UiStyle.CHROME_DIR % "panel_parchment", "the item panel is parchment")
 
 
 func test_the_hp_ghost_trails_then_catches_up() -> void:

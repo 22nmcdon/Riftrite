@@ -28,7 +28,7 @@ static func make(run_session: RunSession) -> Inspector:
 	panel.add_child(box)
 	var top := HBoxContainer.new()
 	box.add_child(top)
-	panel._title = UiStyle.label("", 21, UiStyle.OAK_600)
+	panel._title = UiStyle.heading("", 21, UiStyle.OAK_600)
 	panel._title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel._title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	top.add_child(panel._title)
