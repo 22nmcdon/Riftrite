@@ -3,16 +3,16 @@
   "base_gold": 10,
   "package_gold": 8,
   "item_price": {
-    "c": 4,
-    "b": 9,
-    "a": 20,
-    "s": 42
+    "c": 2,
+    "b": 4,
+    "a": 8,
+    "s": 16
   },
   "hero_price": {
-    "c": 6,
-    "b": 14,
-    "a": 30,
-    "s": 60
+    "c": 3,
+    "b": 5,
+    "a": 16,
+    "s": 32
   },
   "relic_price": {
     "common": 6,

@@ -104,8 +104,8 @@ Pick 1 of 3, drawn by weight from the stops that apply right now:
 | | |
 | --- | --- |
 | Base gold / packages | 10 / +8 gold, a random Common relic, or a random Common item |
-| Item price by tier | C 4, B 9, A 20, S 42 (rarity adds nothing for now) |
-| Hero price by rank | C 6, B 14, A 30, S 60 |
+| Item price by tier | C 2, B 4, A 8, S 16 (rarity adds nothing for now; lowered from 4/9/20/42 after playtest feedback that things cost too much) |
+| Hero price by rank | C 3, B 5, A 16, S 32 (lowered from 6/14/30/60) |
 | Relic price by rarity | 6, 9, 13, 18, 25 (the relic merchant event) |
 | Sell | half, rounded down |
 | Reroll | 1, +1 per reroll in a visit |
