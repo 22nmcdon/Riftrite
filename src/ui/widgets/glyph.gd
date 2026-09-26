@@ -4,7 +4,9 @@ extends Control
 ## language in docs/ui-asset-design.md: round gems with a glyph per essence,
 ## the four infusion gem forms, status shapes, hex relic tokens, unit
 ## portraits, and item-kind icons (with an optional cooldown sweep). Easy
-## to replace with real art later.
+## to replace with real art later: an item with an art file
+## (`art/ui/items/item_<id>.svg`, docs/ui-asset-design.md, 15) shows that
+## instead of its kind icon, and every other item keeps the drawn one.
 
 enum Shape { PORTRAIT, GEM, DOT, ITEM, INFUSION, STATUS, HEX }
 ## Infusion gem forms (docs/ui-asset-design.md, 8.3).
@@ -17,6 +19,8 @@ const CLASS_COLORS: Dictionary[String, Color] = {
 }
 const ENEMY := Color("7a3b4a")
 ## The first of an item's tags found here picks its icon.
+## Where item art lives; `%s` is the item's id.
+const ITEM_ART: String = "res://art/ui/items/item_%s.svg"
 const ITEM_ICONS: Array[String] = ["ranged", "defense", "healing", "food", "tome", "magic", "charm", "tool", "melee", "weapon"]
 ## Each essence's glyph (drawn in ink on its gem).
 const ESSENCE_GLYPHS: Dictionary[String, String] = {
@@ -42,10 +46,24 @@ var infusion: Infusion = Infusion.SINGLE
 var progress: float = -1.0
 ## HEX: draw the rift bleed (cracks).
 var cracked: bool = false
+## ITEM or PORTRAIT: the art, drawn instead of the code-drawn look (null:
+## none).
+var art: Texture2D = null
+## PORTRAIT art's tint (grey for a fallen unit).
+var modulate_art: Color = Color.WHITE
+
+## Item art already looked up: item id -> texture, or null when there's none.
+static var _art_cache: Dictionary[String, Texture2D] = {}
 
 
-static func portrait(letter: String, fill: Color, size: int = 40) -> Glyph:
-	return _make(Shape.PORTRAIT, fill, letter.substr(0, 1).to_upper(), size)
+## A round portrait: the character's art when `char_id` has some
+## (CharacterArt), else their initial on their color.
+static func portrait(letter: String, fill: Color, size: int = 40, char_id: String = "") -> Glyph:
+	var glyph: Glyph = _make(Shape.PORTRAIT, fill, letter.substr(0, 1).to_upper(), size)
+	glyph.art = CharacterArt.portrait(CharacterArt.base_id(char_id)) if not char_id.is_empty() else null
+	if glyph.art != null:
+		glyph.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	return glyph
 
 
 ## An essence as a round gem with its glyph.
@@ -73,11 +91,30 @@ static func status(status_id: String, size: int = 14) -> Glyph:
 	return _make(Shape.STATUS, UiStyle.STATUS_COLORS.get(status_id, UiStyle.EMBER), STATUS_SHAPES.get(status_id, "circle"), size)
 
 
-## A relic as a hex token: rim in its rarity color, its initial inside.
-static func hex(name: String, rim: Color, size: int = 44, rift: bool = false) -> Glyph:
+## Where relic art lives; `%s` is the relic's id.
+const RELIC_ART: String = "res://art/ui/relics/relic_%s.svg"
+
+
+## A relic as a hex token: rim in its rarity color, and its art inside (or
+## its initial, without art).
+static func hex(name: String, rim: Color, size: int = 44, rift: bool = false, relic_id: String = "") -> Glyph:
 	var glyph: Glyph = _make(Shape.HEX, rim, name.substr(0, 1).to_upper(), size)
 	glyph.cracked = rift
+	glyph.art = relic_art(relic_id)
+	if glyph.art != null:
+		glyph.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	return glyph
+
+
+## A relic's art as a texture, or null when it has none.
+static func relic_art(relic_id: String) -> Texture2D:
+	if relic_id.is_empty():
+		return null
+	var key: String = "relic:" + relic_id
+	if not _art_cache.has(key):
+		var art_path: String = RELIC_ART % relic_id
+		_art_cache[key] = load(art_path) as Texture2D if ResourceLoader.exists(art_path) else null
+	return _art_cache[key]
 
 
 ## An icon for an item, from its tags (a plain dot when none match).
@@ -87,7 +124,20 @@ static func item(def: ItemDef, fill: Color, size: int = 22) -> Glyph:
 		if def.tags.has(tag):
 			kind = tag
 			break
-	return _make(Shape.ITEM, fill, kind, size)
+	var glyph: Glyph = _make(Shape.ITEM, fill, kind, size)
+	glyph.art = item_art(def.id)
+	if glyph.art != null:
+		# The art is imported larger (with mipmaps) and drawn scaled down.
+		glyph.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	return glyph
+
+
+## An item's art file as a texture, or null when it has none yet.
+static func item_art(item_id: String) -> Texture2D:
+	if not _art_cache.has(item_id):
+		var art_path: String = ITEM_ART % item_id
+		_art_cache[item_id] = load(art_path) as Texture2D if ResourceLoader.exists(art_path) else null
+	return _art_cache[item_id]
 
 
 static func _make(glyph_shape: Shape, fill: Color, glyph_text: String, size: int) -> Glyph:
@@ -112,6 +162,8 @@ func _draw() -> void:
 	var c: Vector2 = size / 2.0
 	var r: float = s / 2.0
 	match shape:
+		Shape.PORTRAIT when art != null:
+			draw_texture_rect(art, Rect2(c - Vector2(r, r), Vector2(r, r) * 2.0), false, modulate_art)
 		Shape.PORTRAIT:
 			draw_circle(c, r, color.darkened(0.45))
 			draw_circle(c, r - 3.0, color)
@@ -124,7 +176,11 @@ func _draw() -> void:
 			if progress >= 0.0:
 				draw_circle(c, r, UiStyle.INK_900)
 				_pie(c, r, progress, Color(UiStyle.EMBER_500, 0.55))
-			_draw_item(c, r * (0.8 if progress >= 0.0 else 1.0))
+			var icon_r: float = r * (0.8 if progress >= 0.0 else 1.0)
+			if art != null:
+				draw_texture_rect(art, Rect2(c - Vector2(icon_r, icon_r), Vector2(icon_r, icon_r) * 2.0), false)
+			else:
+				_draw_item(c, icon_r)
 		Shape.INFUSION:
 			_draw_infusion(c, r)
 		Shape.STATUS:
@@ -206,7 +262,11 @@ func _draw_hex(c: Vector2, r: float) -> void:
 	draw_colored_polygon(inner, UiStyle.OAK_600 if not cracked else UiStyle.INK_700)
 	if cracked:
 		draw_polyline(PackedVector2Array([c + Vector2(-r * 0.7, -r * 0.2), c + Vector2(-r * 0.3, -r * 0.05), c + Vector2(-r * 0.2, r * 0.35)]), UiStyle.RIFT_300, 1.5)
-	_letter(c, r * 0.95, UiStyle.PARCHMENT_100)
+	if art != null:
+		var inner_r: float = r * 0.78
+		draw_texture_rect(art, Rect2(c - Vector2(inner_r, inner_r), Vector2(inner_r, inner_r) * 2.0), false)
+	else:
+		_letter(c, r * 0.95, UiStyle.PARCHMENT_100)
 
 
 ## The shared small shapes: essence glyphs and status shapes.

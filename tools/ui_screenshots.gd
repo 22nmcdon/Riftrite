@@ -52,10 +52,22 @@ func _run() -> void:
 	for frame: int in 90:
 		await process_frame
 	await _snap("fight_playing")
+	# A few frames apart at 1x, to catch the animations mid-swing.
+	fight.set_speed(1.0)
+	for shot: int in 3:
+		for frame: int in 6:
+			await process_frame
+		await _snap("fight_action_%d" % shot)
 	fight._on_entries(fight.player.skip_to_end())
 	await _snap("fight_end")
 	fight._continue()
 	await _snap("after_fight")
+	# The run's end (a look only: the phase is set by hand, then the run is
+	# abandoned, which deletes this tool's own save).
+	session.state.phase = "run_over"
+	_main.refresh()
+	await _snap("run_end")
+	session.abandon()
 	session.abandon()
 	quit()
 
@@ -92,6 +104,14 @@ func _showcase(session: RunSession) -> void:
 		state.relics.append(relic_id)
 	session.select(-1)
 	await _snap("showcase")
+	# The hero sheet open, and the hover card over a stash item.
+	session.open_hero(state.heroes[0].hero_id)
+	await _snap("showcase_sheet")
+	for node: Node in _main.guild_bar().find_children("*", "ItemTile", true, false):
+		(node as ItemTile).mouse_entered.emit()
+		break
+	await _snap("showcase_hover")
+	session.open_hero("")
 	# Legendaries: a Devourer that has eaten, and an Essence-hungry one to feed.
 	state.stash.clear()
 	for legendary_id: String in ["maw_of_the_hollow", "hungering_censer", "tallymans_bow"]:

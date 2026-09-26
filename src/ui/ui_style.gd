@@ -1,8 +1,11 @@
 class_name UiStyle
 extends RefCounted
-## The placeholder look, from docs/ui-asset-design.md: the doc's palette
-## tokens, one theme, and a cozy-grim split (oak, brass, and parchment for
-## chrome; ink and rift violet for the fight). Real art comes later.
+## The look, from docs/ui-asset-design.md and docs/plans/ui-overhaul.md:
+## the doc's palette tokens, the fonts (Work Sans for text, Young Serif for
+## headings, both OFL, in art/fonts), the chrome art (nine-slice panels and
+## button plaques from tools/art/ui_art.py), the UI icons, and one theme.
+## A cozy-grim split: oak, brass, and parchment for chrome; slate and rift
+## violet for the fight.
 
 # --- palette tokens (docs/ui-asset-design.md, section 3) ---
 const INK_900 := Color("14101a")
@@ -59,6 +62,18 @@ const STATUS_COLORS: Dictionary[String, Color] = {
 	"deathcap": Color("5c9a3a"), "rime": Color("b8e4f5"), "searfire": Color("ff5a2a"), "caustic": Color("c8d84a"),
 	"nightshade": Color("8a5ab8"), "hemorrhage": Color("a82a3a"),
 }
+## Chrome art (art/ui/chrome/<name>.svg) and its nine-slice margin in
+## pixels (keep in sync with CHROME in tools/art/ui_art.py).
+const CHROME_MARGINS: Dictionary[String, int] = {
+	"panel_oak": 22, "panel_parchment": 16, "panel_slate": 30, "panel_stall": 24, "panel_bar": 12,
+	"button_normal": 14, "button_hover": 14, "button_pressed": 14, "button_disabled": 14,
+	"button_primary": 14, "button_primary_hover": 14, "button_primary_pressed": 14,
+}
+const CHROME_DIR: String = "res://art/ui/chrome/%s.svg"
+const ICON_DIR: String = "res://art/ui/icons/%s.svg"
+const BODY_FONT: String = "res://art/fonts/WorkSans-Regular.ttf"
+const BOLD_FONT: String = "res://art/fonts/WorkSans-Bold.ttf"
+const HEADING_FONT: String = "res://art/fonts/YoungSerif-Regular.ttf"
 ## Pixels per item slot.
 const SLOT_WIDTH: int = 100
 const TILE_HEIGHT: int = 96
@@ -66,6 +81,7 @@ const TILE_HEIGHT: int = 96
 
 static func make_theme() -> Theme:
 	var theme := Theme.new()
+	theme.default_font = load(BODY_FONT) as Font
 	theme.default_font_size = 18
 	theme.set_color("font_color", "Label", TEXT)
 	theme.set_color("font_color", "Button", TEXT)
@@ -73,15 +89,16 @@ static func make_theme() -> Theme:
 	theme.set_color("default_color", "RichTextLabel", TEXT)
 	theme.set_stylebox("panel", "PanelContainer", box(PANEL, BORDER))
 	theme.set_stylebox("panel", "Panel", box(PANEL, BORDER))
-	# Buttons: brass on oak.
-	theme.set_stylebox("normal", "Button", box(PANEL_WARM, BRASS_500))
-	theme.set_stylebox("hover", "Button", box(PANEL_WARM.lightened(0.1), BRASS_300))
-	theme.set_stylebox("pressed", "Button", box(PANEL_WARM.darkened(0.2), BRASS_300))
-	theme.set_stylebox("disabled", "Button", box(PANEL.darkened(0.2), BORDER.darkened(0.3)))
+	# Buttons: brass-rimmed oak plaques.
+	theme.set_stylebox("normal", "Button", chrome("button_normal", 14, 8))
+	theme.set_stylebox("hover", "Button", chrome("button_hover", 14, 8))
+	theme.set_stylebox("pressed", "Button", chrome("button_pressed", 14, 8))
+	theme.set_stylebox("hover_pressed", "Button", chrome("button_pressed", 14, 8))
+	theme.set_stylebox("disabled", "Button", chrome("button_disabled", 14, 8))
 	theme.set_stylebox("focus", "Button", StyleBoxEmpty.new())
-	theme.set_stylebox("normal", "MenuButton", box(PANEL_WARM, HIGHLIGHT))
-	theme.set_stylebox("hover", "MenuButton", box(PANEL_WARM.lightened(0.1), EMBER))
-	theme.set_stylebox("hover_pressed", "Button", box(PANEL_WARM.darkened(0.2), HIGHLIGHT))
+	theme.set_color("font_disabled_color", "Button", TEXT_DIM.darkened(0.2))
+	theme.set_stylebox("normal", "MenuButton", chrome("button_hover", 14, 8))
+	theme.set_stylebox("hover", "MenuButton", chrome("button_primary_hover", 14, 8))
 	theme.set_color("font_pressed_color", "Button", HIGHLIGHT)
 	theme.set_stylebox("panel", "TooltipPanel", box(PARCHMENT_100, INK_900, 1))
 	theme.set_color("font_color", "TooltipLabel", INK_TEXT)
@@ -102,22 +119,86 @@ static func box(fill: Color, border: Color, width: int = 2) -> StyleBoxFlat:
 	return style
 
 
-## The primary action's look (ember), e.g. "Fight!".
+## A nine-slice panel or plaque from the chrome art, with its content
+## inset by `pad_x` and `pad_y`.
+static func chrome(name: String, pad_x: int = 16, pad_y: int = 12) -> StyleBoxTexture:
+	var style := StyleBoxTexture.new()
+	style.texture = load(CHROME_DIR % name) as Texture2D
+	style.set_texture_margin_all(CHROME_MARGINS[name])
+	if name.begins_with("panel"):
+		# Panel edges repeat (stitches, grain) rather than stretch.
+		style.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE_FIT
+		style.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE_FIT
+	style.content_margin_left = pad_x
+	style.content_margin_right = pad_x
+	style.content_margin_top = pad_y
+	style.content_margin_bottom = pad_y
+	return style
+
+
+## The primary action's look (an ember plaque), e.g. "Fight!".
 static func primary(button: Button) -> Button:
-	button.add_theme_stylebox_override("normal", box(EMBER_500.darkened(0.35), EMBER_500))
-	button.add_theme_stylebox_override("hover", box(EMBER_500.darkened(0.2), BRASS_300))
-	button.add_theme_stylebox_override("pressed", box(EMBER_500.darkened(0.45), BRASS_300))
+	button.add_theme_stylebox_override("normal", chrome("button_primary", 18, 10))
+	button.add_theme_stylebox_override("hover", chrome("button_primary_hover", 18, 10))
+	button.add_theme_stylebox_override("pressed", chrome("button_primary_pressed", 18, 10))
+	button.add_theme_color_override("font_color", PARCHMENT_100)
+	button.add_theme_color_override("font_hover_color", Color.WHITE)
+	button.add_theme_color_override("font_outline_color", Color("5a2410"))
+	button.add_theme_constant_override("outline_size", 4)
 	return button
 
 
-## The parchment panel (the inspector, tooltips): ink border, dark text.
-static func parchment() -> StyleBoxFlat:
-	var style: StyleBoxFlat = box(PARCHMENT_100, OAK_400, 3)
-	style.content_margin_left = 16
-	style.content_margin_right = 16
-	style.content_margin_top = 14
-	style.content_margin_bottom = 14
-	return style
+## The parchment panel (the item panel, hover cards): dark text.
+static func parchment() -> StyleBoxTexture:
+	return chrome("panel_parchment", 18, 14)
+
+
+## A UI icon (art/ui/icons/<name>.svg): stat_hp, gold, stop_forge, ...
+## Stat icons in UnitStats.Stat order.
+const STAT_ICONS: Array[String] = ["stat_hp", "stat_atk", "stat_mgk", "stat_def", "stat_crit", "stat_atsp"]
+
+
+## A unit's stats as a row of icon + number chips.
+static func stat_row(stats: UnitStats, size: int = 16) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 14)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for stat: int in UnitStats.LABELS.size():
+		var chip: HBoxContainer = icon_label(STAT_ICONS[stat], "%d" % stats.get_stat(stat), size)
+		chip.tooltip_text = UnitStats.LABELS[stat]
+		chip.mouse_filter = Control.MOUSE_FILTER_PASS
+		row.add_child(chip)
+	return row
+
+
+static func icon(name: String, size: int = 24) -> TextureRect:
+	var rect := TextureRect.new()
+	rect.texture = load(ICON_DIR % name) as Texture2D
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	rect.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	rect.custom_minimum_size = Vector2(size, size)
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return rect
+
+
+## A heading in the storybook serif.
+static func heading(text: String, size: int = 28, color: Color = EMBER) -> Label:
+	var node: Label = label(text, size, color)
+	node.add_theme_font_override("font", load(HEADING_FONT) as Font)
+	return node
+
+
+## An icon and a label side by side (a stat, gold, keys).
+static func icon_label(icon_name: String, text: String, size: int = 16, color: Color = TEXT, icon_size: int = 0) -> HBoxContainer:
+	var line := HBoxContainer.new()
+	line.add_theme_constant_override("separation", 4)
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	line.add_child(icon(icon_name, icon_size if icon_size > 0 else size + 6))
+	var text_label: Label = label(text, size, color)
+	text_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	line.add_child(text_label)
+	return line
 
 
 static func rarity_color(rarity: String) -> Color:
