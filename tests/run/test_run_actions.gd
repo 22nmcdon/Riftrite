@@ -206,6 +206,36 @@ func test_specialization_pick() -> void:
 	assert_eq([state.hero("brannoc").specialization_id, state.hero("brannoc").needs_specialization], ["brannoc_hearthwall", false])
 
 
+func test_deed_unlock_choices() -> void:
+	var state: RunState = _run()
+	var brannoc: RunHero = state.hero("brannoc")
+	var goals: Array[int] = _content().heroes["brannoc"].calling.deed.goals
+	brannoc.calling_progress = goals[0]
+	_refused(RunActions.choose_deed_unlock(state, _content(), "brannoc", DeedSetup.CALLING, 0), "brannoc has no calling unlock to choose")
+	brannoc.calling_progress = goals[1]
+	assert_true(brannoc.choice_waiting(_content(), DeedSetup.CALLING))
+	_refused(RunActions.choose_deed_unlock(state, _content(), "brannoc", DeedSetup.CALLING, 2), "no option 2")
+	_refused(RunActions.choose_deed_unlock(state, _content(), "brannoc", DeedSetup.SPECIALIZATION, 0), "brannoc has no specialization deed")
+	_refused(RunActions.choose_deed_unlock(state, _content(), "wren", DeedSetup.CALLING, 0), "no hero \"wren\" in the team")
+	var taken: RunActions.Result = RunActions.choose_deed_unlock(state, _content(), "brannoc", DeedSetup.CALLING, 1)
+	assert_true(taken.ok)
+	assert_string_contains(taken.note, _content().heroes["brannoc"].calling.levels[1].options[1].name)
+	assert_eq(brannoc.calling_choice, 1)
+	var before: String = _snapshot(state)
+	_refused(RunActions.choose_deed_unlock(state, _content(), "brannoc", DeedSetup.CALLING, 0), "brannoc already chose that unlock")
+	assert_eq(_snapshot(state), before, "the choice is for good")
+	assert_eq(state.check(_content()), [] as Array[String])
+
+
+func test_a_new_specialization_starts_its_deed_from_zero() -> void:
+	var state: RunState = _run()
+	RunActions.rank_up(state, _content(), "brannoc")
+	var brannoc: RunHero = state.hero("brannoc")
+	brannoc.spec_progress = 5
+	assert_true(RunActions.choose_specialization(state, _content(), "brannoc", "brannoc_hearthwall").ok)
+	assert_eq([brannoc.spec_progress, brannoc.spec_choice], [0, -1])
+
+
 func test_heroes_joining_above_c_come_with_a_specialization() -> void:
 	var state: RunState = _run()
 	assert_true(RunActions.add_hero(state, _content(), "wren", 2, "wren_duelist").ok)

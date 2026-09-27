@@ -42,6 +42,8 @@ var side_boosts: Array[ItemAura] = [ItemAura.new(), ItemAura.new()]
 var finished: bool = false
 ## Ticks where some aura's window opens or closes (lookup only).
 var _aura_boundaries: Dictionary[int, bool] = {}
+## Log entries before this index have been counted for deeds.
+var _deed_log_index: int = 0
 ## Auras active after the last rederive_all, as "unit:item:aura" keys, for
 ## logging when they start and end.
 var _active_auras: Array[String] = []
@@ -84,6 +86,16 @@ static func run(fight_setup: FightSetup, fight_content: ContentDb) -> FightResul
 			infusion.level_before = item.start_level
 			infusion.level_after = item.infusion_level
 			result.infusions.append(infusion)
+	for unit: UnitState in sim.heroes:
+		for deed: UnitState.Deed in unit.deeds:
+			var progress := FightResult.DeedResult.new()
+			progress.unit_id = unit.id
+			progress.track_id = deed.track_id
+			progress.progress_before = deed.start_progress
+			progress.progress_after = deed.progress
+			progress.level_before = deed.start_level
+			progress.level_after = deed.level
+			result.deeds.append(progress)
 	return result
 
 
@@ -128,6 +140,11 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 			for part: SpecializationDef.Part in phase.parts:
 				if part.aura != null:
 					all_auras.append(part.aura)
+		# Deed levels can unlock windowed auras mid-fight.
+		for deed: UnitState.Deed in unit.deeds:
+			for part: SpecializationDef.Part in deed.def.all_parts():
+				if part.aura != null:
+					all_auras.append(part.aura)
 	for aura: AuraDef in all_auras:
 		if aura.window_from_ticks > 0:
 			_aura_boundaries[aura.window_from_ticks] = true
@@ -168,6 +185,7 @@ func step() -> void:
 		RelicRunner.fire_due(self, side)
 	RelicRunner.check_below_hp(self)
 	_check_phases()
+	_check_deeds()
 
 	_process_deaths()
 	_check_end()
@@ -520,16 +538,69 @@ func _enter_phase(unit: UnitState, phase: PhaseDef) -> Array[ItemState]:
 	entry.target = unit.id
 	entry.note = phase.name
 	combat_log.add(entry)
+	return _apply_parts(unit, phase.parts)
+
+
+## Adds each deed's progress from this tick's log entries (heroes only;
+## docs/plans/deeds.md). A level reached turns on at once, logged, like a
+## phase; a choice level with no option picked yet waits, unspent.
+func _check_deeds() -> void:
+	var end: int = combat_log.entries.size()
+	var new_abilities: Array[ItemState] = []
+	var any_level: bool = false
+	for unit: UnitState in heroes:
+		for deed: UnitState.Deed in unit.deeds:
+			if deed.def.deed == null:
+				continue
+			for i: int in range(_deed_log_index, end):
+				deed.progress += deed.def.deed.progress_from(combat_log.entries[i], unit, self)
+			while deed.level < DeedDef.LEVELS and deed.def.level_for(deed.progress) > deed.level:
+				var index: int = deed.level
+				deed.level += 1
+				any_level = true
+				new_abilities.append_array(_reach_level(unit, deed, index))
+	_deed_log_index = end
+	if not any_level:
+		return
+	rederive_all()
+	for item: ItemState in new_abilities:
+		for i: int in item.def.effects.size():
+			if item.def.effects[i].trigger == EffectDef.Trigger.ON_FIGHT_START:
+				EffectRunner.run_triggered(self, item, item.effects[i], null)
+
+
+## Logs `unit` reaching deed level `index` + 1 and turns its parts on.
+func _reach_level(unit: UnitState, deed: UnitState.Deed, index: int) -> Array[ItemState]:
+	var level: DeedTrackDef.Level = deed.def.levels[index]
+	var entry := LogEntry.new()
+	entry.tick = tick
+	entry.kind = LogEntry.Kind.DEED_LEVEL
+	entry.target = unit.id
+	entry.amount = index + 1
+	entry.source_unit = unit.id
+	entry.note = "%s %d" % [deed.def.name, index + 1]
+	var parts: Array[SpecializationDef.Part] = deed.def.level_parts(index, deed.choice)
+	if level.is_choice():
+		entry.note += ": %s" % (level.options[deed.choice].text if not parts.is_empty() else "choose its unlock between fights")
+	else:
+		entry.note += ": %s" % level.text
+	combat_log.add(entry)
+	return _apply_parts(unit, parts)
+
+
+## Turns parts on for `unit` mid-fight (same key replaces). Returns the
+## ability items it added.
+func _apply_parts(unit: UnitState, parts: Array[SpecializationDef.Part]) -> Array[ItemState]:
 	var added: Array[ItemState] = []
-	for part: SpecializationDef.Part in phase.parts:
+	for part: SpecializationDef.Part in parts:
 		match part.kind:
 			SpecializationDef.Kind.ABILITY:
-				if unit.phase_abilities.has(part.key):
-					unit.items.erase(unit.phase_abilities[part.key])
+				if unit.part_abilities.has(part.key):
+					unit.items.erase(unit.part_abilities[part.key])
 				var ability: ItemState = ItemState.make(part.item, -1, unit.stats, content)
 				ability.owner_index = units.find(unit)
 				unit.items.append(ability)
-				unit.phase_abilities[part.key] = ability
+				unit.part_abilities[part.key] = ability
 				added.append(ability)
 			SpecializationDef.Kind.BASIC_ATTACK:
 				for i: int in unit.items.size():

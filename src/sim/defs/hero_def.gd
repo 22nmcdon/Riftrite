@@ -1,7 +1,8 @@
 class_name HeroDef
 extends RefCounted
 ## A hero from data/heroes.json: class, stats at rank C, their own basic
-## auto-attack, and their innate. Loadout slots come from rank (see
+## auto-attack, their innate, and their calling (a deed track from the start
+## of the run; docs/plans/deeds.md). Loadout slots come from rank (see
 ## TuningDef.ability_slots / passive_slots), and the loadout comes from the
 ## run (or a balance-sim party).
 
@@ -18,6 +19,11 @@ var basic_attack: ItemDef
 var innate_name: String = ""
 var innate_text: String = ""
 var innate: Array[SpecializationDef.Part] = []
+## The calling: "calling": {"name", "text", "deed", "levels"}. Its parts
+## merge with the innate's (a same-key part replaces the innate's).
+var calling_name: String = ""
+var calling_text: String = ""
+var calling: DeedTrackDef = null
 
 
 static func read(reader: DataReader) -> HeroDef:
@@ -46,5 +52,10 @@ static func read(reader: DataReader) -> HeroDef:
 		if def.innate.is_empty():
 			innate_reader.error("an innate needs parts")
 		innate_reader.finish()
+	var calling_reader: DataReader = reader.req_object("calling")
+	if calling_reader != null:
+		def.calling_name = calling_reader.req_string("name")
+		def.calling_text = calling_reader.req_string("text")
+		def.calling = DeedTrackDef.read(calling_reader, def.calling_name, "%s_calling" % def.id)
 	reader.finish()
 	return def

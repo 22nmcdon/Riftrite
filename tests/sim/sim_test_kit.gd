@@ -203,3 +203,33 @@ static func targets_of(found: Array[LogEntry]) -> Array[String]:
 	for entry: LogEntry in found:
 		targets.append(entry.target)
 	return targets
+
+
+## Test shorthand for a specialization's deed track: {"b": parts, "a": parts,
+## "s": parts} become levels 1-3 (level 2's first option is the "a" parts, its
+## second a harmless stand-in), with a damage deed of goals 10/20/30. A level
+## left out gets a harmless stand-in part too.
+static func track_data(ranks: Dictionary, deed: Dictionary = {}) -> Dictionary:
+	var levels: Array = []
+	for i: int in 3:
+		var key: String = ["b", "a", "s"][i]
+		var parts: Array = ranks.get(key, [_stand_in("pad_%s" % key)])
+		if i == DeedTrackDef.CHOICE_LEVEL:
+			levels.append({"options": [{"name": "First", "text": "The first option.", "parts": parts},
+				{"name": "Second", "text": "The second option.", "parts": [_stand_in("pad_second")]}]})
+		else:
+			levels.append({"text": "Level %d." % (i + 1), "parts": parts})
+	return {"deed": deed if not deed.is_empty() else {"text": "Deal damage", "counts": "damage", "goals": [10, 20, 30]}, "levels": levels}
+
+
+static func _stand_in(key: String) -> Dictionary:
+	return {"key": key, "kind": "aura", "target": "holder", "stat": "def_bp", "value": 10000}
+
+
+## Gives `setup` the specialization `spec` at deed `level` (progress exactly
+## at that level's goal), with level 2's option `choice`.
+static func with_spec(setup: UnitSetup, spec: SpecializationDef, level: int, choice: int = 0) -> UnitSetup:
+	setup.specialization = spec
+	var progress: int = spec.track.deed.goals[level - 1] if level > 0 else 0
+	setup.deeds = [DeedSetup.make(DeedSetup.SPECIALIZATION, spec.track, progress, choice if level > DeedTrackDef.CHOICE_LEVEL else -1)]
+	return setup

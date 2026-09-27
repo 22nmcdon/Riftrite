@@ -104,6 +104,11 @@ func _showcase(session: RunSession) -> void:
 		if content.specializations[spec_id].hero == state.heroes[0].hero_id:
 			state.heroes[0].specialization_id = spec_id
 			break
+	# Deeds: the calling at level 2 with its choice waiting, the
+	# specialization at level 1.
+	state.heroes[0].calling_progress = content.heroes[state.heroes[0].hero_id].calling.deed.goals[1]
+	if not state.heroes[0].specialization_id.is_empty():
+		state.heroes[0].spec_progress = content.specializations[state.heroes[0].specialization_id].track.deed.goals[0]
 	state.heroes[0].items.clear()
 	for loadout: Array in [["night_lantern", ["ember", "storm"] as Array[String]], ["grave_hook", ["ember"] as Array[String]], ["hearth_knife", [] as Array[String]]]:
 		var held := RunItem.make(state.take_uid(), loadout[0], 2)

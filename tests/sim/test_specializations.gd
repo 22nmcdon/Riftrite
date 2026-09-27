@@ -1,7 +1,8 @@
 extends GutTest
 ## Rank-B specializations (docs/plans/specializations-in-sim.md): parts by
-## rank (locked potential), abilities, basic attacks, and
-## the cleanse effect.
+## deed level (docs/plans/deeds.md), abilities, basic attacks, and the cleanse
+## effect. The tests write a track in rank shorthand (K.track_data): "b", "a",
+## and "s" parts become levels 1, 2 (its first option), and 3.
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
 const FRONT := UnitSetup.Row.FRONT
@@ -10,6 +11,10 @@ const BACK := UnitSetup.Row.BACK
 
 func _read(data: Dictionary) -> Array:
 	var full: Dictionary = {"id": "test_spec", "hero": "a", "name": "Test Spec"}
+	if data.has("ranks"):
+		full.merge(K.track_data(data["ranks"]), true)
+		data = data.duplicate()
+		data.erase("ranks")
 	full.merge(data, true)
 	var errors: Array[String] = []
 	var def: SpecializationDef = SpecializationDef.read(DataReader.new(full, "spec", errors))
@@ -29,11 +34,11 @@ func _assert_error(errors: Array[String], expected: String) -> void:
 	assert_true(found, "expected an error containing '%s', got: %s" % [expected, errors])
 
 
-## A hero `unit_id` at `rank` with `spec` and `items`.
+## A hero `unit_id` at `rank` with `spec` at deed level `rank` (level 2's
+## first option) and `items`.
 func _hero(unit_id: String, spec: SpecializationDef, rank: int = 1, items: Array = [], stats: UnitStats = null, row: UnitSetup.Row = FRONT) -> UnitSetup:
 	var setup: UnitSetup = K.unit_with(unit_id, stats if stats != null else UnitStats.make(1000, 20, 20, 0), row, items, null, rank)
-	setup.specialization = spec
-	return setup
+	return K.with_spec(setup, spec, rank)
 
 
 func _sim(heroes: Array[UnitSetup], enemies: Array[UnitSetup]) -> CombatSim:
@@ -54,27 +59,29 @@ func _crit_aura(value: int, filter: Dictionary = {}, key: String = "edge") -> Di
 
 # --- data ---------------------------------------------------------------------
 
-func test_parts_unlock_by_rank() -> void:
+func test_parts_unlock_by_level() -> void:
 	var spec: SpecializationDef = _spec({
 		"b": [_crit_aura(1000), {"key": "tough", "kind": "aura", "target": "holder", "stat": "def_bp", "value": 12000}],
 		"a": [_crit_aura(2000)],
 		"s": [{"key": "burst", "kind": "ability", "cooldown_ms": 1000, "effects": K.damage(3)}],
 	})
-	assert_eq(spec.parts_at(0).size(), 0, "rank C: nothing")
-	var at_b: Array[SpecializationDef.Part] = spec.parts_at(1)
-	assert_eq([at_b.size(), at_b[0].aura.value], [2, 1000])
-	var at_a: Array[SpecializationDef.Part] = spec.parts_at(2)
-	assert_eq([at_a.size(), at_a[0].aura.value, at_a[0].label], [2, 2000, "Test Spec A"], "same key: the A part replaces the B part, in its place")
-	var at_s: Array[SpecializationDef.Part] = spec.parts_at(3)
-	assert_eq(at_s.size(), 3)
-	assert_eq(at_s[2].kind, SpecializationDef.Kind.ABILITY)
-	assert_eq(at_s[2].item.name, "Test Spec S", "an ability without a name is named after the specialization")
+	var track: DeedTrackDef = spec.track
+	assert_eq(track.parts_at(0, 0).size(), 0, "level 0: nothing")
+	var at_1: Array[SpecializationDef.Part] = track.parts_at(1, 0)
+	assert_eq([at_1.size(), at_1[0].aura.value], [2, 1000])
+	var at_2: Array[SpecializationDef.Part] = track.parts_at(2, 0)
+	assert_eq([at_2.size(), at_2[0].aura.value, at_2[0].label], [2, 2000, "Test Spec 2"], "same key: the level-2 part replaces the level-1 part, in its place")
+	assert_eq(track.parts_at(2, -1).size(), 2, "level 2 unchosen: it waits, so only level 1's parts")
+	assert_eq(track.parts_at(2, 1)[2].key, "pad_second", "the other option")
+	var at_3: Array[SpecializationDef.Part] = track.parts_at(3, 0)
+	assert_eq(at_3.size(), 3)
+	assert_eq(at_3[2].kind, SpecializationDef.Kind.ABILITY)
+	assert_eq(at_3[2].item.name, "Test Spec 3", "an ability without a name is named after the specialization")
 
 
 func test_rejects_bad_specializations() -> void:
-	_assert_error(_read({"ranks": {"a": [_crit_aura(1000)]}})[1], "a specialization needs rank b parts")
-	_assert_error(_read({"ranks": {"b": [_crit_aura(1000)], "x": []}})[1], "unknown rank \"x\"")
-	_assert_error(_read({"ranks": {"b": [_crit_aura(1000), _crit_aura(2000)]}})[1], "key \"edge\" is used twice in rank b")
+	_assert_error(_read({"ranks": {"b": []}})[1], "a level needs parts")
+	_assert_error(_read({"ranks": {"b": [_crit_aura(1000), _crit_aura(2000)]}})[1], "key \"edge\" is used twice in one level")
 	_assert_error(_read({"ranks": {"b": [{"key": "k", "kind": "lore"}]}})[1], "kind: unknown value \"lore\"")
 	_assert_error(_read({"ranks": {"b": [{"key": "k", "kind": "aura", "target": "self_item", "stat": "damage_bp", "value": 12000}]}})[1],
 		"a specialization aura can't target self_item")
@@ -87,7 +94,7 @@ func test_rejects_bad_specializations() -> void:
 
 func test_basic_attack_needs_an_auto_attack_part() -> void:
 	var attack: Dictionary = {"key": "blow", "kind": "basic_attack", "basic_attack": {"id": "blow", "name": "Blow", "cooldown_ms": 1000, "effects": K.damage(5)}}
-	_assert_error(_read({"ranks": {"b": [attack]}})[1], "rank b replaces the basic attack, so it needs a part for auto-attack items too")
+	_assert_error(_read({"ranks": {"b": [attack]}})[1], "level 1 replaces the basic attack, so it needs a part for basic-attack items too")
 	var covered: Dictionary = _crit_aura(500, {"auto_attack": true}, "keen")
 	assert_eq(_read({"ranks": {"b": [attack, covered]}})[1], [] as Array[String])
 
@@ -108,13 +115,20 @@ func test_content_checks_specializations() -> void:
 	for file_name: String in ContentDb.FILES:
 		texts[file_name] = FileAccess.get_file_as_string("res://data".path_join(file_name))
 	var specs: Array = JSON.parse_string(texts[ContentDb.SPECIALIZATIONS_FILE])
-	specs.append({"id": "ghost_spec", "hero": "nobody", "name": "Ghost", "ranks": {"b": [{"key": "odd", "kind": "replace_status", "from": "burn", "to": "moonfire"}]}})
-	specs.append({"id": "brannoc_fourth", "hero": "brannoc", "name": "Fourth", "ranks": {"b": [_crit_aura(100)]}})
+	var ghost: Dictionary = {"id": "ghost_spec", "hero": "nobody", "name": "Ghost"}
+	ghost.merge(K.track_data({"b": [{"key": "odd", "kind": "replace_status", "from": "burn", "to": "moonfire"}]}))
+	var fourth: Dictionary = {"id": "brannoc_fourth", "hero": "brannoc", "name": "Fourth"}
+	fourth.merge(K.track_data({"b": [_crit_aura(100)]}, {"text": "Deal damage", "counts": "stacks", "filter": {"statuses": ["glitter"]}, "goals": [1, 2, 3]}))
+	var clash: Dictionary = {"id": "wren_clash", "hero": "wren", "name": "Clash"}
+	clash.merge(K.track_data({"b": [_crit_aura(100, {}, "flurry")]}))
+	specs.append_array([ghost, fourth, clash])
 	texts[ContentDb.SPECIALIZATIONS_FILE] = JSON.stringify(specs)
 	var errors: Array[String] = ContentDb.load_texts(texts).errors
 	_assert_error(errors, "unknown hero \"nobody\"")
 	_assert_error(errors, "unknown status \"moonfire\"")
 	_assert_error(errors, "brannoc has 4 specializations; the limit is 3")
+	_assert_error(errors, "(brannoc_fourth).deed: unknown status \"glitter\"")
+	_assert_error(errors, "key \"flurry\" is also used by wren's innate or calling")
 
 
 func test_setup_checks_rank_and_hero() -> void:
@@ -132,7 +146,7 @@ func test_setup_builder_takes_a_specialization() -> void:
 
 # --- auras, grants, status replacement ----------------------------------------
 
-func test_holder_items_aura_by_rank() -> void:
+func test_holder_items_aura_by_level() -> void:
 	var spec: SpecializationDef = _spec({
 		"b": [_crit_aura(1000, {"tag": "weapon"})],
 		"a": [_crit_aura(2000, {"tag": "weapon"})],
@@ -149,10 +163,10 @@ func test_holder_items_aura_by_rank() -> void:
 		assert_eq(hero.stats.get_stat(UnitStats.Stat.DEF), case[2], "rank %d" % case[0])
 
 
-func test_spec_auras_are_logged_with_the_rank() -> void:
+func test_spec_auras_are_logged_with_the_level() -> void:
 	var spec: SpecializationDef = _spec({"b": [_crit_aura(1000, {"tag": "weapon"})]})
 	var sim: CombatSim = _sim([_hero("a", spec)], [K.dummy("b", 100)])
-	assert_eq(sim.combat_log.of_kind(LogEntry.Kind.AURA)[0].to_text(), "[0.00s] a · Test Spec B aura starts: +10% crit chance for the holder's items (weapon)")
+	assert_eq(sim.combat_log.of_kind(LogEntry.Kind.AURA)[0].to_text(), "[0.00s] a · Test Spec 1 aura starts: +10% crit chance for the holder's items (weapon)")
 
 
 func test_grants_scale_from_the_hero_not_the_tier() -> void:
@@ -161,7 +175,7 @@ func test_grants_scale_from_the_hero_not_the_tier() -> void:
 	var sword: ItemDef = K.item("sp_sword", {"tags": ["weapon"]})
 	var sim: CombatSim = _sim([_hero("a", spec, 1, [K.equip(sword, [], 3)], UnitStats.make(1000, 20))], [K.dummy("b", 100)])
 	var item: ItemState = sim.unit_by_id("a").loadout_items()[0]
-	assert_eq(item.effects[1].granted_by, "Test Spec B")
+	assert_eq(item.effects[1].granted_by, "Test Spec 1")
 	assert_eq(item.effects[1].final_amount(), 15, "2 + 50% of 25 ATK (20 at rank B); no S-tier x3")
 	assert_eq(item.effects[0].final_amount(), 30, "the item's own damage still gets its tier")
 
@@ -188,9 +202,9 @@ func test_ability_fires_on_its_cooldown_from_the_heros_stats() -> void:
 	_step_to(sim, 20)
 	var hits: Array[String] = []
 	for entry: LogEntry in sim.combat_log.of_kind(LogEntry.Kind.DAMAGE):
-		if entry.source_item == "test_spec_jab":
+		if entry.source_item == "test_spec_1_jab":
 			hits.append(entry.to_text())
-	assert_eq(hits, ["[1.00s] a · Test Spec B hits b for 16"] as Array[String], "3 + 50% of 25 ATK (20 at rank B)")
+	assert_eq(hits, ["[1.00s] a · Test Spec 1 hits b for 16"] as Array[String], "3 + 50% of 25 ATK (20 at rank B)")
 
 
 func test_triggered_abilities() -> void:
@@ -201,13 +215,13 @@ func test_triggered_abilities() -> void:
 	var sim: CombatSim = _sim([_hero("a", spec, 1, [], UnitStats.make(1000, 0, 0, 10)), K.dummy("c", 100, BACK)],
 		[K.unit("b", 1000, FRONT, [slam], K.basic("idle", {"cooldown_ms": 60000, "effects": K.damage(1)}))])
 	var shields: Array[LogEntry] = sim.combat_log.of_kind(LogEntry.Kind.SHIELD)
-	assert_eq([shields[0].tick, shields[0].amount, shields[0].source_text()], [0, 18, "a · Rally (Test Spec B)"], "5 + 100% of 13 DEF (10 at rank B)")
+	assert_eq([shields[0].tick, shields[0].amount, shields[0].source_text()], [0, 18, "a · Rally (Test Spec 1)"], "5 + 100% of 13 DEF (10 at rank B)")
 	_step_to(sim, 45)
 	var heals: Array[String] = []
 	for entry: LogEntry in sim.combat_log.of_kind(LogEntry.Kind.HEAL):
 		heals.append("%d %s %d" % [entry.tick, entry.target, entry.amount])
 	assert_eq(heals, ["20 c 7"] as Array[String], "c dropped to 20% at 1s; a (hit for 80 of 1000) never did")
-	assert_eq(sim.combat_log.of_kind(LogEntry.Kind.FIRE).filter(func(e: LogEntry) -> bool: return e.source_item == "test_spec_rally").size(), 0,
+	assert_eq(sim.combat_log.of_kind(LogEntry.Kind.FIRE).filter(func(e: LogEntry) -> bool: return e.source_item == "test_spec_1_rally").size(), 0,
 		"a trigger-only ability never fires on a cooldown")
 
 
@@ -230,7 +244,7 @@ func test_new_basic_attack_and_its_auto_attack_item_fallback() -> void:
 	var items: Array[ItemState] = with_item.unit_by_id("a").items
 	assert_eq(items.size(), 2, "the auto-attack item replaces the basic attack")
 	assert_eq(items[1].effects.size(), 1, "a plain item doesn't get the auto-attack part")
-	assert_eq([items[0].def.id, items[0].effects.size(), items[0].effects[1].granted_by], ["sp_claw", 2, "Test Spec B"], "and gets the auto-attack part")
+	assert_eq([items[0].def.id, items[0].effects.size(), items[0].effects[1].granted_by], ["sp_claw", 2, "Test Spec 1"], "and gets the auto-attack part")
 
 
 # --- cleanse ------------------------------------------------------------------

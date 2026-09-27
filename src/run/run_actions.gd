@@ -288,7 +288,34 @@ static func choose_specialization(state: RunState, content: ContentDb, hero_id: 
 		return _fail(problem)
 	target.specialization_id = specialization_id
 	target.needs_specialization = false
+	target.spec_progress = 0
+	target.spec_choice = -1
 	return _ok("%s becomes a %s" % [hero_id, content.specializations[specialization_id].name])
+
+
+## Picks a deed track's level-2 unlock (option 0 or 1), once the hero has
+## reached that level (docs/plans/deeds.md). Between fights only; the choice
+## is for good (retraining resets the specialization's).
+static func choose_deed_unlock(state: RunState, content: ContentDb, hero_id: String, track_id: String, option: int) -> Result:
+	var target: RunHero = state.hero(hero_id)
+	if target == null:
+		return _fail("no hero \"%s\" in the team" % hero_id)
+	var track: DeedSetup = null
+	for deed: DeedSetup in target.deed_setups(content):
+		if deed.track_id == track_id:
+			track = deed
+	if track == null:
+		return _fail("%s has no %s deed" % [hero_id, track_id])
+	if not target.choice_waiting(content, track_id):
+		return _fail("%s has no %s unlock to choose" % [hero_id, track_id] if track.choice < 0 else "%s already chose that unlock" % hero_id)
+	var options: Array[DeedTrackDef.Level] = track.def.levels[DeedTrackDef.CHOICE_LEVEL].options
+	if option < 0 or option >= options.size():
+		return _fail("no option %d" % option)
+	if track_id == DeedSetup.CALLING:
+		target.calling_choice = option
+	else:
+		target.spec_choice = option
+	return _ok("%s takes %s" % [hero_id, options[option].name])
 
 
 static func _spec_problem(content: ContentDb, hero_id: String, specialization_id: String) -> String:

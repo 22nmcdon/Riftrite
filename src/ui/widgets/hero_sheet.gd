@@ -34,6 +34,9 @@ func _build(hero: RunHero) -> void:
 	var figure: Figure = Figure.make(hero.hero_id, 150)
 	if figure.has_art():
 		figure.bob = true
+		# Keep its own size: stretched to the sheet's height it would draw
+		# wider than its box, over the text beside it.
+		figure.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		line.add_child(figure)
 	else:
 		figure.free()
@@ -53,6 +56,7 @@ func _build(hero: RunHero) -> void:
 	info.add_child(_controls(hero, at))
 	if hero.needs_specialization:
 		info.add_child(_specialization_pick(hero))
+	info.add_child(_deeds(hero))
 	# Their items.
 	var right := VBoxContainer.new()
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -104,6 +108,34 @@ func _basic_and_innate(def: HeroDef) -> String:
 	lines.append("Basic attack: %s" % def.basic_attack.name)
 	lines.append("Innate: %s. %s" % [def.innate_name, def.innate_text])
 	return "\n".join(lines)
+
+
+## The hero's deed tracks (docs/plans/deeds.md): each one's progress toward
+## its next level (hover for every level), and the level-2 choice once it
+## waits.
+func _deeds(hero: RunHero) -> VBoxContainer:
+	var content: ContentDb = session.content
+	var box := VBoxContainer.new()
+	box.name = "Deeds"
+	box.add_theme_constant_override("separation", 2)
+	for deed: DeedSetup in hero.deed_setups(content):
+		var track: DeedTrackDef = deed.def
+		var level: int = deed.level()
+		var progress: String = "%d / %d" % [deed.progress, track.deed.goals[level]] if level < DeedDef.LEVELS else "complete"
+		var line: Label = UiStyle.label("%s, level %d: %s (%s)" % [track.name, level, track.deed.text, progress], 14, UiStyle.BRASS_300)
+		line.mouse_filter = Control.MOUSE_FILTER_STOP
+		line.tooltip_text = "\n".join(ItemInfo.track_lines(track, deed.progress, deed.choice))
+		box.add_child(line)
+		if hero.choice_waiting(content, deed.track_id):
+			var row := HBoxContainer.new()
+			row.add_child(UiStyle.label("Level 2, choose:", 14, UiStyle.HIGHLIGHT))
+			var options: Array[DeedTrackDef.Level] = track.levels[DeedTrackDef.CHOICE_LEVEL].options
+			for o: int in options.size():
+				var button: Button = UiStyle.button(options[o].name, func() -> void: session.choose_deed_unlock(hero.hero_id, deed.track_id, o))
+				button.tooltip_text = options[o].text
+				row.add_child(button)
+			box.add_child(row)
+	return box
 
 
 func _controls(hero: RunHero, at: int) -> HBoxContainer:

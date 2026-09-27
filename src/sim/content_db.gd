@@ -249,6 +249,8 @@ func _check_references() -> void:
 			_check_effects(heroes[id].basic_attack.effects, "%s (%s).basic_attack" % [HEROES_FILE, id])
 		for part: SpecializationDef.Part in heroes[id].innate:
 			_check_part(part, "%s (%s).innate.%s" % [HEROES_FILE, id, part.key])
+		if heroes[id].calling != null:
+			_check_track(heroes[id].calling, "%s (%s).calling" % [HEROES_FILE, id])
 	for id: String in enemy_ids:
 		var enemy: EnemyDef = enemies[id]
 		var where: String = "%s (%s)" % [ENEMIES_FILE, id]
@@ -294,7 +296,32 @@ func _check_references() -> void:
 func _check_specialization(specialization: SpecializationDef, where: String) -> void:
 	if not heroes.has(specialization.hero):
 		errors.append("%s: unknown hero \"%s\"" % [where, specialization.hero])
-	for part: SpecializationDef.Part in specialization.all_parts():
+	if specialization.track != null:
+		_check_track(specialization.track, where)
+		# One key space per hero: the innate and calling can't share a key
+		# with a specialization (a same key would replace across tracks).
+		if heroes.has(specialization.hero):
+			var hero: HeroDef = heroes[specialization.hero]
+			var own: Array[SpecializationDef.Part] = hero.innate.duplicate()
+			if hero.calling != null:
+				own.append_array(hero.calling.all_parts())
+			var taken: Array[String] = []
+			for part: SpecializationDef.Part in own:
+				taken.append(part.key)
+			for part: SpecializationDef.Part in specialization.all_parts():
+				if taken.has(part.key):
+					errors.append("%s: key \"%s\" is also used by %s's innate or calling" % [where, part.key, specialization.hero])
+
+
+## Checks a deed track: its deed's statuses and keyword, and every part.
+func _check_track(track: DeedTrackDef, where: String) -> void:
+	if track.deed != null:
+		for status_id: String in track.deed.statuses:
+			if not statuses.has(status_id):
+				errors.append("%s.deed: unknown status \"%s\"" % [where, status_id])
+		if not track.deed.keyword.is_empty() and not keywords.has(track.deed.keyword):
+			errors.append("%s.deed: unknown keyword \"%s\"" % [where, track.deed.keyword])
+	for part: SpecializationDef.Part in track.all_parts():
 		_check_part(part, "%s.%s" % [where, part.key])
 
 
@@ -403,6 +430,8 @@ func _check_filter(filter: AuraFilter, where: String) -> void:
 		errors.append("%s.filter: unknown status \"%s\"" % [where, filter.applies])
 	if not filter.essence.is_empty() and not essences.has(filter.essence):
 		errors.append("%s.filter: unknown essence \"%s\"" % [where, filter.essence])
+	if not filter.keyword.is_empty() and not keywords.has(filter.keyword):
+		errors.append("%s.filter: unknown keyword \"%s\"" % [where, filter.keyword])
 
 
 func _check_effects(effects: Array[EffectDef], where: String) -> void:

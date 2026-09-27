@@ -77,8 +77,51 @@ static func lines(reports: Array[RunBot.Report], first_seed: int) -> PackedStrin
 	if legendary_runs > 0:
 		out.append("Legendaries: held at the end of %d runs (%d%% of those cleared the act); by item:tier: %s" % [
 			legendary_runs, roundi(100.0 * legendary_clears / legendary_runs), ", ".join(_counts(legendaries))])
+	out.append_array(_deed_lines(reports))
 	if stuck > 0:
 		out.append("! %d run(s) got stuck or hit errors" % stuck)
+	return out
+
+
+## Deed levels and how even the team is (docs/plans/deeds.md, "How to
+## measure it"): average levels, the spread between each run's highest and
+## lowest hero, the clear rate by that spread, and the rank-up spread.
+static func _deed_lines(reports: Array[RunBot.Report]) -> PackedStringArray:
+	var out := PackedStringArray()
+	var heroes: int = 0
+	var calling: int = 0
+	var spec: int = 0
+	var spread_total: int = 0
+	var rank_spread_total: int = 0
+	var by_spread: Dictionary[int, Array] = {}
+	for report: RunBot.Report in reports:
+		if report.calling_levels.is_empty():
+			continue
+		var totals: Array[int] = []
+		for i: int in report.calling_levels.size():
+			heroes += 1
+			calling += report.calling_levels[i]
+			spec += report.spec_levels[i]
+			totals.append(report.calling_levels[i] + report.spec_levels[i])
+		var spread: int = totals.max() - totals.min()
+		spread_total += spread
+		rank_spread_total += report.ranks.max() - report.ranks.min()
+		if not by_spread.has(spread):
+			by_spread[spread] = [0, 0]
+		by_spread[spread][0] += 1
+		if report.ending == "act_end":
+			by_spread[spread][1] += 1
+	if heroes == 0:
+		return out
+	var runs: int = reports.size()
+	out.append("Deed levels at the end, per hero: calling %.2f, specialization %.2f; spread (highest - lowest hero) %.2f; rank spread %.2f" % [
+		float(calling) / heroes, float(spec) / heroes, float(spread_total) / runs, float(rank_spread_total) / runs])
+	var spreads: Array = by_spread.keys()
+	spreads.sort()
+	var parts := PackedStringArray()
+	for spread: int in spreads:
+		parts.append("%d: %d runs, %d%% cleared" % [spread, by_spread[spread][0], roundi(100.0 * by_spread[spread][1] / by_spread[spread][0])])
+	out.append("Clear rate by level spread: %s" % ", ".join(parts))
 	return out
 
 

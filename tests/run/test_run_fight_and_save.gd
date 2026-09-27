@@ -49,6 +49,29 @@ func test_setup_for_builds_the_guilds_fight() -> void:
 	assert_eq(setup.enemy_relics, ["gloam_totem"] as Array[String])
 
 
+func test_deeds_go_into_the_fight_and_come_back() -> void:
+	var state: RunState = _run()
+	var brannoc: RunHero = state.hero("brannoc")
+	var calling: DeedTrackDef = _content().heroes["brannoc"].calling
+	brannoc.calling_progress = calling.deed.goals[1]
+	brannoc.calling_choice = 1
+	brannoc.spec_progress = 7
+	var setup: FightSetup = RunFight.setup_for(state, _content(), "witch_coven")
+	var deeds: Array[DeedSetup] = setup.heroes[0].deeds
+	assert_eq([deeds.size(), deeds[0].track_id, deeds[0].progress, deeds[0].choice, deeds[1].track_id, deeds[1].progress],
+		[2, DeedSetup.CALLING, calling.deed.goals[1], 1, DeedSetup.SPECIALIZATION, 7])
+	assert_eq(setup.heroes[1].deeds.size(), 1, "Wren has no specialization yet: only her calling")
+	var result: FightResult = CombatSim.run(setup, _content())
+	RunFight.apply_result(state, _content(), result)
+	assert_gt(brannoc.calling_progress, calling.deed.goals[1], "progress written back")
+	assert_eq(brannoc.calling_choice, 1)
+	var wren: FightResult.DeedResult = result.deeds.filter(func(d: FightResult.DeedResult) -> bool: return d.unit_id == "wren")[0]
+	assert_eq(state.hero("wren").calling_progress, wren.progress_after)
+	var round_trip: RunState = _round_trip(state)[0]
+	assert_eq([round_trip.hero("brannoc").calling_progress, round_trip.hero("brannoc").calling_choice, round_trip.hero("brannoc").spec_progress],
+		[brannoc.calling_progress, 1, brannoc.spec_progress])
+
+
 func test_fight_seeds_come_from_the_run() -> void:
 	var first: FightSetup = RunFight.setup_for(_run(), _content(), "hound_pack")
 	var same: FightSetup = RunFight.setup_for(_run(), _content(), "hound_pack")
@@ -106,7 +129,13 @@ func test_broken_saves_are_refused() -> void:
 		broken[case[0]] = case[1]
 		var errors: Array[String] = RunState.from_dict(broken, _content())[1]
 		assert_true(errors.any(func(e: String) -> bool: return e.contains(case[2])), "%s: %s" % [case[2], errors])
-	_assert_refused(_with({"version": 1}), "version 1 isn't supported (expected 2)")
+	_assert_refused(_with({"version": 2}), "version 2 isn't supported (expected 3)")
+	var early_choice: Dictionary = data.duplicate(true)
+	early_choice["heroes"][0]["deeds"]["calling_choice"] = 1
+	_assert_refused(early_choice, "brannoc: a calling unlock chosen before its level")
+	var orphan: Dictionary = data.duplicate(true)
+	orphan["heroes"][1]["deeds"]["specialization"] = 40
+	_assert_refused(orphan, "wren: specialization deed progress without a specialization")
 	var overfull: Dictionary = data.duplicate(true)
 	for i: int in 6:
 		overfull["stash"].append({"uid": 90 + i, "item": "rusted_cleaver", "tier": 0, "essences": [], "xp": 0})

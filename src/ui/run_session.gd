@@ -302,3 +302,7 @@ func move_hero(hero_id: String, index: int) -> RunActions.Result:
 
 func choose_specialization(hero_id: String, specialization_id: String) -> RunActions.Result:
 	return _after(RunActions.choose_specialization(state, content, hero_id, specialization_id))
+
+
+func choose_deed_unlock(hero_id: String, track_id: String, option: int) -> RunActions.Result:
+	return _after(RunActions.choose_deed_unlock(state, content, hero_id, track_id, option))

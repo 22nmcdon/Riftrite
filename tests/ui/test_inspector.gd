@@ -202,6 +202,23 @@ func test_an_equipped_items_tooltip_lists_the_spills_it_gets() -> void:
 	assert_string_contains(U.text_of(main.inspector), "Gets 30% Wrath spill from Grave Hook")
 
 
+func test_deed_text_in_plain_words() -> void:
+	var content: ContentDb = U.K.content()
+	var calling: DeedTrackDef = content.heroes["vell"].calling
+	var lines: PackedStringArray = ItemInfo.track_lines(calling, calling.deed.goals[1], 1)
+	assert_eq(lines[0], "Deed: %s (%d / %d toward level 3)" % [calling.deed.text, calling.deed.goals[1], calling.deed.goals[2]])
+	assert_true(lines[1].begins_with("✓ Level 1: "))
+	assert_string_contains(lines[2], "%s (chosen)" % calling.levels[1].options[1].name)
+	assert_true(lines[3].begins_with("• Level 3: "), "not reached yet")
+	assert_string_contains(ItemInfo.hero_text(content, "vell", 0), "Calling: %s." % content.heroes["vell"].calling_name)
+	var entry := LogEntry.new()
+	entry.kind = LogEntry.Kind.DEED_LEVEL
+	entry.tick = 20
+	entry.target = "vell"
+	entry.note = "Lamplighter 1: Lantern Vigil also washes away some damage over time."
+	assert_eq(entry.to_text(), "[1.00s] vell reaches Lamplighter 1: Lantern Vigil also washes away some damage over time.")
+
+
 func test_fight_names_number_duplicates_and_replace_ids() -> void:
 	var session: RunSession = U.at_fight()
 	session.state.encounter_id = "pup_litter"

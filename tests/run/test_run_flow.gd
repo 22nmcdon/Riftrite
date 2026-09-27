@@ -269,11 +269,15 @@ func test_forge_reforge_and_retrain_need_their_stops() -> void:
 		if _content().specializations[spec_id].hero == hero.hero_id:
 			specs.append(spec_id)
 	hero.specialization_id = specs[0]
+	hero.spec_progress = 999
+	hero.spec_choice = 1
+	hero.calling_progress = 50
 	_refused(RunFlow.retrain(state, _content(), hero.hero_id, specs[1]), "retraining needs a Retrain stop")
 	RunFlow._enter_stop(state, _content(), _run(), "retrain")
 	_refused(RunFlow.retrain(state, _content(), hero.hero_id, specs[0]), "already their specialization")
 	assert_true(RunFlow.retrain(state, _content(), hero.hero_id, specs[1]).ok)
 	assert_eq(hero.specialization_id, specs[1])
+	assert_eq([hero.spec_progress, hero.spec_choice, hero.calling_progress], [0, -1, 50], "the new deed starts from zero; the calling is kept")
 	_refused(RunFlow.retrain(state, _content(), hero.hero_id, specs[2]), "used")
 
 

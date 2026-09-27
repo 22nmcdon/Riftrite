@@ -2,9 +2,9 @@ class_name SpecializationDef
 extends RefCounted
 ## A hero's rank-B specialization from data/specializations.json
 ## (docs/plans/specializations-in-sim.md). Each hero has three of their own.
-## It is a set of parts by rank: "b" parts apply from rank B, "a" parts unlock
-## at A, "s" parts at S (locked potential). A later part with the same "key"
-## replaces the earlier one; a new key adds.
+## Its power is locked behind a deed (docs/plans/deeds.md): three levels of
+## parts, earned in fights once it's picked (see DeedTrackDef). A later part
+## with the same "key" replaces the earlier one; a new key adds.
 ##
 ## Part kinds ("kind"):
 ##   aura:           an AuraDef from the hero (targets below)
@@ -16,18 +16,16 @@ extends RefCounted
 ##                   at_time, on_ally_below_hp)
 ##   basic_attack:   {"basic_attack": {...}} replaces the hero's own. Needs an
 ##                   auto_attack part (an aura or grant filtered to
-##                   {"auto_attack": true}) at the same or an earlier rank, so
-##                   an auto-attack item doesn't blank the specialization
+##                   {"auto_attack": true}) at the same or an earlier level,
+##                   so a basic-attack item doesn't blank the specialization
 ##   replace_status: {"from": "burn", "to": "golden_flame"}: the hero's items
 ##                   apply one status as another, like an alloy special
-## A hero's innate (HeroDef) and enemy phases (PhaseDef) are made of the same
-## parts.
+## A hero's innate and calling (HeroDef) and enemy phases (PhaseDef) are
+## made of the same parts.
 
 enum Kind { AURA, GRANT, ABILITY, BASIC_ATTACK, REPLACE_STATUS }
 
 const KIND_NAMES: Array[String] = ["aura", "grant", "ability", "basic_attack", "replace_status"]
-## Rank letters in unlock order, and the hero rank each unlocks at.
-const RANK_KEYS: Array[String] = ["b", "a", "s"]
 const AURA_TARGETS: Array[AuraDef.Target] = [
 	AuraDef.Target.HOLDER, AuraDef.Target.HOLDER_ITEMS, AuraDef.Target.ROW_ALLIES,
 	AuraDef.Target.ALL_ALLIES, AuraDef.Target.ALL_ITEMS,
@@ -37,9 +35,10 @@ const AURA_TARGETS: Array[AuraDef.Target] = [
 class Part:
 	var key: String
 	var kind: Kind
-	## "B", "A", or "S": the rank it unlocks at.
+	## "1", "2", or "3": the deed level it unlocks at ("" for innates and
+	## phases).
 	var rank_label: String
-	## "Hearthwall A", for the log.
+	## "Hearthwall 2", for the log.
 	var label: String
 	var aura: AuraDef = null
 	var grant: GrantDef = null
@@ -60,8 +59,9 @@ class Part:
 var id: String
 var hero: String
 var name: String
-## Parts by rank: [b parts, a parts, s parts].
-var ranks: Array[Array] = [[], [], []]
+## The specialization's deed and its three levels of unlocks (see
+## DeedTrackDef); they replace "parts by rank".
+var track: DeedTrackDef
 
 
 static func read(reader: DataReader) -> SpecializationDef:
@@ -69,30 +69,11 @@ static func read(reader: DataReader) -> SpecializationDef:
 	def.id = reader.req_string("id")
 	def.hero = reader.req_string("hero")
 	def.name = reader.req_string("name")
-	var ranks_reader: DataReader = reader.req_object("ranks")
-	if ranks_reader != null:
-		for key: String in ranks_reader.map_keys():
-			if not RANK_KEYS.has(key):
-				ranks_reader.error("unknown rank \"%s\" (expected b, a, or s)" % key)
-		for r: int in RANK_KEYS.size():
-			if not ranks_reader.has(RANK_KEYS[r]):
-				continue
-			var keys: Array[String] = []
-			for part_reader: DataReader in ranks_reader.opt_object_array(RANK_KEYS[r]):
-				var part: Part = read_part(part_reader, "%s %s" % [def.name, RANK_KEYS[r].to_upper()], def.id, RANK_KEYS[r].to_upper())
-				if keys.has(part.key):
-					part_reader.error("key \"%s\" is used twice in rank %s" % [part.key, RANK_KEYS[r]])
-				keys.append(part.key)
-				def.ranks[r].append(part)
-		ranks_reader.finish()
-		if def.ranks[0].is_empty():
-			reader.error("a specialization needs rank b parts")
-	_check_auto_attack(def, reader)
-	reader.finish()
+	def.track = DeedTrackDef.read(reader, def.name, def.id)
 	return def
 
 
-## Reads one part. `label` credits it in the log ("Hearthwall A", or an
+## Reads one part. `label` credits it in the log ("Hearthwall 2", or an
 ## enemy phase's name); `id_prefix` makes its ability item's id unique.
 ## Enemy phases use this too (EnemyDef).
 static func read_part(reader: DataReader, label: String, id_prefix: String, rank_label: String = "") -> Part:
@@ -132,8 +113,8 @@ static func read_part(reader: DataReader, label: String, id_prefix: String, rank
 static func _read_ability(id_prefix: String, part: Part, reader: DataReader) -> ItemDef:
 	var item := ItemDef.new()
 	item.id = "%s_%s" % [id_prefix, part.key]
-	# The log names the specialization: "Catch (Hearthwall A)", or just
-	# "Hearthwall A" for an unnamed ability.
+	# The log names the specialization: "Catch (Hearthwall 2)", or just
+	# "Hearthwall 2" for an unnamed ability.
 	item.name = "%s (%s)" % [reader.req_string("name"), part.label] if reader.has("name") else part.label
 	item.is_ability = true
 	var fires: bool = false
@@ -154,37 +135,6 @@ static func _read_ability(id_prefix: String, part: Part, reader: DataReader) -> 
 	return item
 
 
-## A basic_attack part needs an auto_attack part at its rank or before.
-static func _check_auto_attack(def: SpecializationDef, reader: DataReader) -> void:
-	var covered: bool = false
-	for r: int in RANK_KEYS.size():
-		for part: Part in def.ranks[r]:
-			covered = covered or part.covers_auto_attack()
-		for part: Part in def.ranks[r]:
-			if part.kind == Kind.BASIC_ATTACK and not covered:
-				reader.error("rank %s replaces the basic attack, so it needs a part for auto-attack items too (an aura or grant with {\"auto_attack\": true})" % RANK_KEYS[r])
-
-
-## The parts that apply at a hero rank (1 = B, 2 = A, 3 = S). A later part
-## replaces an earlier one with the same key, in its place.
-func parts_at(rank: int) -> Array[Part]:
-	var result: Array[Part] = []
-	for r: int in mini(rank, RANK_KEYS.size()):
-		for part: Part in ranks[r]:
-			var replaced: bool = false
-			for i: int in result.size():
-				if result[i].key == part.key:
-					result[i] = part
-					replaced = true
-			if not replaced:
-				result.append(part)
-	return result
-
-
-## Every part at every rank, for content checks.
+## Every part on every level, for content checks.
 func all_parts() -> Array[Part]:
-	var result: Array[Part] = []
-	for rank_parts: Array in ranks:
-		for part: Part in rank_parts:
-			result.append(part)
-	return result
+	return track.all_parts()

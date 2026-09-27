@@ -197,7 +197,12 @@ Start with rules 1, 2, and 5, which are cheap and don't feel like rubber-banding
 - **Innates** should be **pretty unique** to each hero. Some reuse a Backup effect, but not all: Brannoc's Hearthguard (shields an ally who drops below 40%), Wren's Opening Flurry (faster basic attacks for the first 6s), Vell's Lantern Vigil (a heal every 5s), Odo's Smoldering Hex (Burn every 6s), Maren's Marking Shot (Bleed on the back row every 6s), Pell's Loaded Dice (Blind every 6s), Hesk's Gatekeeper's Toll (a shield for every ally at the start), and Ysolde's Flashpoint (3 Burn on every enemy at 10s). Their strength is a first pass; the sim shows most contribute 1–3% of hero output, to tune with deeds (step 3).
 - **Old saves may break:** the save version is now 2, and version-1 saves are refused.
 
-**Recommended, waiting on the user's OK:**
-- **Specializations:** the parts unlocked at B, A, and S become specialization deed levels 1, 2, and 3. The mid-fight unlock reuses the boss phase system.
-- **Levels:** 3 per track (calling and specialization), so about 2 per act. Level 2 of each track offers a choice of 2 unlocks.
-- **Snowballing:** start with rules 1, 2, and 5, plus the run-bot measurements. Add the catch-up bonus only if the numbers call for it.
+**Step 3 answers (2026-09-27), built in step 3 (`docs/plans/deeds.md`):**
+- **Levels:** 3 per track, and level 2 offers a choice of 2 unlocks: yes.
+- **Specializations:** the old B, A, S parts become deed levels 1, 2 (next to a new alternative), 3: correct.
+- **Callings** use the existing building blocks now; the example unlocks that need new triggers (Thorns, spread on death, overheal to Shield, every 3rd status) wait for step 5.
+- **Content** (8 callings, 24 specialization deeds and alternatives) was built directly and is reviewed in the PR.
+- **Snowball rules:** not decided yet. Rules 1, 2, and 5 are in by construction; the run bot report measures the level spread.
+
+**Still open:**
+- **Snowballing:** whether to add the catch-up bonus (rule 3) or a level cap per act (rule 4). The run bot report now measures the level spread to decide from.
