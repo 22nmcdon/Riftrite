@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Writes the character art (docs/plans/ui-overhaul.md, sections 4 and 5).
+"""Writes the character art (docs/archive/plans/ui-overhaul.md, sections 4 and 5).
 
 For each hero and enemy id, into art/ui/characters/:
   <id>_body.svg      the figure without what it holds (128x160 canvas,
@@ -11,7 +11,7 @@ For each hero and enemy id, into art/ui/characters/:
 and rig.json: each id's hand point (the held layer's pivot) and whether
 it's a beast.
 
-Same look as the item icons: bold shapes, ink outline, flat fills with one
+Same look as the rest of the placeholder art: bold shapes, ink outline, flat fills with one
 shade and one highlight, light from the top left. Heroes are warm and
 cozy; rift creatures are violet-black with glowing eyes and cracks.
 
@@ -24,7 +24,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from item_icons import (  # noqa: E402
+from art_kit import (  # noqa: E402
     INK, OAK_D, OAK, OAK_L, BRASS_D, BRASS, BRASS_L, STEEL_D, STEEL, STEEL_L, BONE_D, BONE, BONE_L, PARCH,
     EMBER, FLAME_Y, FROST, FROST_L, MOSS_D, MOSS, RIFT_D, RIFT, RIFT_L, BLOOD, SLATE_D, SLATE, SLATE_L,
     path, line, circle, rect, group, flame,

@@ -1,6 +1,6 @@
 # Rebuild plan, part 5: build order and what gets gutted
 
-Status: **proposal (2026-09-27), not started.** This turns parts 1–4 (`rebuild-heroes.md`, `rebuild-arena.md`, `rebuild-enemies.md`, `rebuild-run.md`) into a build order, and marks everything in the current code that goes. Each phase below gets its own detailed build plan (files, data shape, tests) before code is written, as `CLAUDE.md` asks.
+Status: **agreed (2026-09-27). Phase 0 is done; phase 1 is next.** This turns parts 1–4 (`rebuild-heroes.md`, `rebuild-arena.md`, `rebuild-enemies.md`, `rebuild-run.md`) into a build order, and marks everything in the current code that goes. Each phase below gets its own detailed build plan (files, data shape, tests) before code is written, as `CLAUDE.md` asks.
 
 ## Principles
 
@@ -126,3 +126,10 @@ Three labels: **Remove** (deleted), **Rewrite** (the file or idea stays, the con
 - **The fight sandbox:** it stays in the game as a **Practice** mode on the title screen, so playtest builds can reach it for gate 1. It can stay rough until the art rehaul.
 - **Old saves:** the gut bumps the save version, and the title screen quietly drops a save it can't load.
 - **Phase 1's build plan** is `docs/plans/rebuild-phase1-arena-sim.md`.
+- **How the gut went (phase 0, done 2026-09-27):**
+  - **Removed, not stubbed:** runtime code labeled Keep (trim) or Keep (adapt) that couldn't run without items was removed rather than stubbed or left as dead code: `events.gd`, the statuses runtime, the relic runner, `sim_test_kit`, `test_determinism`, `fight_tally`, and the other fight UI.
+  - **Written fresh from history:** each later phase writes these fresh, using the old versions in git history. The phase 1 plan lists which ones come back in phase 1.
+  - **Kept:** the definitions that stand alone (effects, auras, damage-over-time statuses, tuning, unit stats), the log, and the foundation. The title screen stays, with no run to start yet.
+  - **Determinism tests:** they return with the arena sim in phase 1, step 2.
+  - **Placeholder art:** `tools/art/item_icons.py` and `item_icons_more.py` went with the item icons. Their shared palette and helpers moved to `tools/art/art_kit.py`. The relic icons stay, but nothing draws them anymore.
+  - **Saves:** the title drops `user://run.json` quietly, since no save from before the rebuild can load.

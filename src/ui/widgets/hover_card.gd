@@ -1,6 +1,6 @@
 class_name HoverCard
 extends PanelContainer
-## The hover popup (docs/plans/ui-overhaul.md, 3.3): a parchment card beside
+## The hover popup (docs/archive/plans/ui-overhaul.md, 3.3): a parchment card beside
 ## whatever the mouse is over (a hero, enemy, or relic),
 ## showing what it is and does. It sits on top of everything and never takes
 ## the mouse. Controls call show_for() and hide_for().

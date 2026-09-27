@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
-"""Writes the UI art (docs/plans/ui-overhaul.md, section 5) as SVG.
+"""Writes the UI art (docs/archive/plans/ui-overhaul.md, section 5) as SVG.
 
   art/ui/chrome/  nine-slice panels and button plaques (StyleBoxTexture in
                   UiStyle; the slice margins are in CHROME below and in
                   UiStyle.CHROME_MARGINS: keep them in sync)
   art/ui/icons/   stat, currency, stop, and fight-kind icons (64x64 canvas)
 
-Same look as the item icons (tools/art/item_icons.py): bold shapes, ink
+Same look as the rest of the placeholder art (tools/art/art_kit.py): bold shapes, ink
 outline, flat fills with one shade and one highlight, light from the top left.
 Panels use flat fills so their edges and centers tile cleanly at any size;
 buttons stretch (their gradients would band if tiled).
 
 Run from the repo root:  python3 tools/art/ui_art.py
 then `godot --headless --import`, then this script once more (it sets the
-import settings), as with item_icons.py.
+import settings).
 """
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from item_icons import (  # noqa: E402
+from art_kit import (  # noqa: E402
     INK, OAK_D, OAK, OAK_L, BRASS_D, BRASS, BRASS_L, STEEL_D, STEEL, STEEL_L, BONE, BONE_L, PARCH,
     EMBER, FLAME_Y, FROST, FROST_L, MOSS, RIFT_D, RIFT, RIFT_L, BLOOD, SLATE_D, SLATE, SLATE_L,
     path, line, circle, rect, group, flame,

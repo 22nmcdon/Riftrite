@@ -157,4 +157,4 @@ Gold, shops and the Caravan, items, the stash, rewards picks of items, the Forge
 
 - **When a duo bond switches on:** when both heroes transform, or already (weakly) when both are vowed?
 - **Camp menus:** which places offer which options, and 2 or 3 options per camp?
-- **Art direction:** the rehaul starts with a new style guide (replacing `docs/ui-asset-design.md`); its direction is still to be set.
+- **Art direction:** the rehaul starts with a new style guide (replacing the old look, now `docs/archive/ui-asset-design.md`); its direction is still to be set.

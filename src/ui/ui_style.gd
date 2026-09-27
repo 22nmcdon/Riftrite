@@ -1,13 +1,14 @@
 class_name UiStyle
 extends RefCounted
-## The look, from docs/ui-asset-design.md and docs/plans/ui-overhaul.md:
+## The placeholder look, kept until the art rehaul (rebuild phase 7), from
+## docs/archive/ui-asset-design.md and docs/archive/plans/ui-overhaul.md:
 ## the doc's palette tokens, the fonts (Work Sans for text, Young Serif for
 ## headings, both OFL, in art/fonts), the chrome art (nine-slice panels and
 ## button plaques from tools/art/ui_art.py), the UI icons, and one theme.
 ## A cozy-grim split: oak, brass, and parchment for chrome; slate and rift
 ## violet for the fight.
 
-# --- palette tokens (docs/ui-asset-design.md, section 3) ---
+# --- palette tokens (docs/archive/ui-asset-design.md, section 3) ---
 const INK_900 := Color("14101a")
 const INK_700 := Color("2a2233")
 const OAK_600 := Color("5b3a29")

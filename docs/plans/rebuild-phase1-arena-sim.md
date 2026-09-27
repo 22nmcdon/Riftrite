@@ -1,12 +1,19 @@
 # Rebuild phase 1: the arena sim (build plan)
 
-Status: **proposal, revised 2026-09-27 after two rounds of answers; waiting for approval to start phase 0.** Phase 1 of `docs/plans/rebuild-build-order.md`. Design sources: `rebuild-arena.md` (placement, movement, tanks, areas, the collapse), `rebuild-heroes.md` (mana and signature triggers), and `rebuild-enemies.md` (what enemies need from the sim). Numbers are placeholders to tune.
+Status: **approved (2026-09-27), after two rounds of answers; phase 0 is done, so this is next.** Phase 1 of `docs/plans/rebuild-build-order.md`. Design sources: `rebuild-arena.md` (placement, movement, tanks, areas, the collapse), `rebuild-heroes.md` (mana and signature triggers), and `rebuild-enemies.md` (what enemies need from the sim). Numbers are placeholders to tune.
 
 **The big change in this revision:** hexes are only for **placement**. Once the fight starts, units move freely on a flat plane. So there are no reservations, no hex-by-hex steps, and no snapping to six directions. Distances are still counted in hexes, because that's how every design doc talks about them.
 
 **Goal:** a headless combat sim on a free plane. Units start on hex centers, then walk, block each other, pick targets by rule, and attack in melee or with shots that fly. They also get pushed and pulled, fire signatures on mana or other triggers, drop warned area attacks, and are squeezed by a shrinking arena. **Done when** seeded fights repeat exactly, and every move, push, shot, and hit is in the log with its source.
 
-**Written before phase 0** (the gut), as the build order asks. It assumes phase 0 has removed items, essences, and rows, and left stubs where the rewrites go.
+**Written before phase 0** (the gut), as the build order asks. **What phase 0 left** (`rebuild-build-order.md`, Decisions):
+- **Kept:** the data reader, RNG, fixed math, the combat log and `LogEntry` (already `source_ability` / `source_ability_name`), `EffectSource`, `FightResult` (outcome, end tick, log, errors), `ValueBreakdown`, `UnitStats`, `EffectDef` and `AuraDef` (no item targets, charges, row targets, keywords, or multi-strike), `StatusDef` (damage over time only), `TuningDef`, `CollapseDef`, and a `ContentDb` that loads `tuning.json` and `statuses.json`.
+- **Removed, not stubbed:** every piece of the old row-based sim that couldn't run without items: `CombatSim`, `EffectRunner`, `Targeting`, `Statuses`, `Events`, `UnitState`, `UnitSetup`, `FightSetup`, the relic runner, `SpecializationDef.Part`, `PhaseDef`, and the test kit.
+
+So everything this plan calls **rewritten** is written fresh, using the old version (in git history before the gut) as a reference. The pieces the old sim already had that phase 1 needs back:
+- **`Events`** comes back in step 4 (the `count` trigger and event passives), adapted from abilities instead of items.
+- **The `Part` kinds** (aura, ability on an event trigger, replace_status) come back in step 4 as a `PartDef`.
+- **`PhaseDef`** comes back on top of `PartDef` in step 8, so enemies can have phases in phase 2.
 
 ## Scope
 
@@ -31,7 +38,7 @@ Status: **proposal, revised 2026-09-27 after two rounds of answers; waiting for 
 - Paths, vows, taste and cost, and deeds on the new sim (phase 4).
 - **Lasting areas and walls** (Arrow Storm, Night Lantern, Warding Circle, snares, Hearthwall, hazards). Phase 4 adds them on top of shapes. Only instant, warned areas come now.
   - Flying shots are built so a wall can stop one in the air later.
-- Relics and duo bonds (phase 5). The relic runner stays stubbed from phase 0.
+- Relics and duo bonds (phase 5). The relic runner comes back then.
 - The UI (phase 3) and the sim runner's placed parties (phase 2).
 
 ## Decisions this plan builds on
@@ -133,7 +140,7 @@ Heroes and enemies share one **kit** (`UnitDef`). `HeroDef` (paths, phase 4) and
 - **`mana`:** optional. **A unit without it has no mana bar**, and Silence and mana drain do nothing to it.
 - **`basic_attack`** and **`signature`** are **abilities** (`AbilityDef`), with effects in the `EffectDef` vocabulary.
   - An ability with reach 2 or more fires a **shot** (section 5). An ability can say `"shot": false` to land at once, for example a beam.
-- **`passives`:** the `Part` kinds that survive phase 0 (aura, ability on an event trigger, replace_status).
+- **`passives`:** `Part` kinds (aura, ability on an event trigger, replace_status), rebuilt as `PartDef` in step 4.
 
 ## 3. The tick
 
@@ -151,7 +158,7 @@ Each tick runs these steps in order. Resolution order is the fight's unit order:
    5. **Attack or move:**
       - If the target is in range and the unit isn't being displaced, it stands still. Its **basic attack** fires when its cooldown is ready.
       - Otherwise, it **moves** (section 4).
-6. **Event effects**, read from this tick's log (the `Events` code we keep); then **phases**.
+6. **Event effects**, read from this tick's log (`Events`, rebuilt from the old sim's); then **phases**.
 7. **Deaths:** units at 0 HP fall, unless Undying holds them or a `would_fall` signature saves them. Then on_kill effects run, and any deaths those cause.
 8. **Victory, defeat, or a tie:** a fight still running at 180s is a tie, as is both sides falling on the same tick. A tie counts as a win.
 
@@ -368,7 +375,7 @@ All the displacements **move the unit instantly in the sim** and log the start a
 - `src/sim/mana.gd`.
 - `FixedMath.isqrt` in `fixed_math.gd`.
 
-**Rewritten:**
+**Rewritten** (written fresh; the old versions are in git history):
 
 - `combat_sim.gd`: the tick above.
 - `effects/targeting.gd`: the rules above.
@@ -380,6 +387,7 @@ All the displacements **move the unit instantly in the sim** and log the start a
 - `state/unit_state.gd`: position, path, target, mana, engagement, where it started, and abilities.
 - `setup/unit_setup.gd`, `setup/fight_setup.gd`: grid hexes and rocks, and validation.
 - `log_entry.gd`: new kinds and position fields.
+- `events.gd`, `defs/part_def.gd`, `defs/phase_def.gd`: back from the old sim, for abilities (see the top).
 
 **Data:** `tuning.json` gains these values:
 
@@ -396,7 +404,7 @@ It keeps `collapse_start_ms`, `collapse_by_act`, `tie_ms`, `crit_damage_bp`, `cr
 
 ## 13. Tests
 
-Each rule gets its own test file under `tests/sim/`. They build tiny boards through a rewritten `sim_test_kit.gd`: `K.kit(...)`, `K.at(kit, col, row)`, and `K.fight(heroes, enemies, rocks, seed)`.
+Each rule gets its own test file under `tests/sim/`. They build tiny boards through a new `sim_test_kit.gd`: `K.kit(...)`, `K.at(kit, col, row)`, and `K.fight(heroes, enemies, rocks, seed)`.
 
 | Test file | Covers |
 | --- | --- |
@@ -416,7 +424,7 @@ Each rule gets its own test file under `tests/sim/`. They build tiny boards thro
 | `test_collapse.gd` | ring timing and warnings, the safe rectangle shrinking, damage only on crumbled ground, flat and Shield-first, can't walk in, start_collapse, the 180s tie |
 | `test_summons.gd` | placement in each mode, fight order, the cap of 30, the log |
 | `test_arena_log.gd` | in a busy fight, every entry that changes state names a source; replaying the log gives every unit's position on every tick |
-| `test_determinism.gd` | rewritten (see below) |
+| `test_determinism.gd` | new (see below) |
 
 - **The determinism test:** a chaotic seeded fight that uses everything above, plus random crits, runs twice with identical logs. A third run, whose setup lists units in a different order, gives a different log, which proves the order is actually used.
 - `test_sim_rng`, `test_fixed_math` (plus isqrt), and `test_project_setup` stay as they are.
@@ -434,11 +442,11 @@ If step 2 measures slower, the cell size and repath interval are the knobs, and 
 1. **Grid and plane:** `hex_grid`, `plane`, `nav_grid`, `arena_debug`, `FixedMath.isqrt`, and their tests. Pure functions, no sim.
 2. **Skeleton fight:** kits, setups with hexes and rocks, the new `CombatSim` tick, walking and blocking, `nearest` targeting, melee attacks and shots, deaths, the end of the fight, the MOVE, STOP, TARGET, and SHOT logs, and the log replay test. The first determinism test, and a speed measurement.
 3. **Statuses:** Root, Stun, Slow, Taunt, Silence, Marked, and damage over time.
-4. **Mana and signatures:** the five triggers, cast_ms, and Undying.
+4. **Mana and signatures:** the five triggers, cast_ms, Undying, `Events`, and `PartDef`.
 5. **Tanks:** Engage.
 6. **Displacement and flying:** knockback, pull, leap, charge, collisions, flying, and hop away.
 7. **Areas:** shapes, warnings, landing, and the rest of the targeting rules.
-8. **Collapse and summons:** rings, the safe rectangle, damage, start_collapse, and summons.
+8. **Collapse, summons, and phases:** rings, the safe rectangle, damage, start_collapse, summons, and `PhaseDef`.
 9. **The full determinism fight and the log audit.** Update `CLAUDE.md`'s sim rules to describe the arena.
 
 ## 15. Proposals to confirm

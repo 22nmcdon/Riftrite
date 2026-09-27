@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Writes the title backdrop (art/ui/backgrounds/title.svg, 1920x1080).
 
-The game's two moods in one picture (docs/ui-asset-design.md, 1): the warm,
+The game's two moods in one picture (docs/archive/ui-asset-design.md, 1): the warm,
 lamplit Guildhall on a hill at the left, and the cold rift splitting the sky
 at the right, over the dark Hollow. Layered strokes stand in for glow.
 
@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from item_icons import INK, RIFT, RIFT_L  # noqa: E402
+from art_kit import INK, RIFT, RIFT_L  # noqa: E402
 
 OUT = Path(__file__).resolve().parents[2] / "art" / "ui" / "backgrounds"
 W, H = 1920, 1080
