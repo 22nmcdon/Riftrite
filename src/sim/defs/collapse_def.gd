@@ -1,7 +1,6 @@
 class_name CollapseDef
 extends RefCounted
-## Rift Collapse numbers for one act (see "The arena" in docs/design.md).
-## Damage per second starts at `base`, grows by `growth` each second, and from
+## Rift Collapse numbers for one act. Damage per second starts at `base`, grows by `growth` each second, and from
 ## the surge time onward the growth itself goes up by `accel` each second.
 
 var act: int

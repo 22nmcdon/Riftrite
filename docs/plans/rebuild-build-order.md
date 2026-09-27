@@ -1,0 +1,135 @@
+# Rebuild plan, part 5: build order and what gets gutted
+
+Status: **agreed (2026-09-27). Phase 0 is done; phase 1 is next.** This turns parts 1–4 (`rebuild-heroes.md`, `rebuild-arena.md`, `rebuild-enemies.md`, `rebuild-run.md`) into a build order, and marks everything in the current code that goes. Each phase below gets its own detailed build plan (files, data shape, tests) before code is written, as `CLAUDE.md` asks.
+
+## Principles
+
+- **Find out early whether arena fights are fun.** The first playable goal is a single fight with the three base heroes, before paths, camps, or a run exist.
+- **Gut first, on its own.** Removing the old systems is one clean step, so later phases never work around dead code.
+- **Keep the foundation.** Determinism, integer math, the combat log, data loading, the effect system, tests, CI, and playtest builds are all worth keeping.
+- **Placeholder art until the run works.** The art rehaul starts with a style guide in parallel, but real art goes in late, once the game is known to be fun.
+- **A playtest gate after each playable phase.** If a gate fails, fix it before moving on.
+
+---
+
+## Part A: what gets gutted
+
+Three labels: **Remove** (deleted), **Rewrite** (the file or idea stays, the contents are mostly new), **Keep** (stays, with small changes).
+
+### The combat sim (`src/sim/`)
+
+| File(s) | Label | Why |
+| --- | --- | --- |
+| `infusions.gd`, `effects/conversions.gd`, `state/essence_application.gd` | Remove | Essences are gone |
+| `defs/essence_def.gd`, `defs/alloy_def.gd`, `defs/keyword_def.gd`, `defs/modifier_def.gd` | Remove | Essences, alloys, keywords, and item modifiers are gone |
+| `defs/item_def.gd`, `defs/loadout_entry.gd`, `defs/legendary_def.gd`, `setup/item_setup.gd`, `state/item_state.gd`, `state/item_aura.gd` | Remove (replaced) | Items are gone. A hero's basic attack, signature, and passive become **abilities** on the hero (a new, smaller `AbilityDef` / `AbilityState`), reusing `EffectDef` |
+| `synergies.gd`, `defs/synergy_def.gd` | Rewrite | Only **duo bonds** survive (path + path); pairs, transformations, signatures, resonance, and affinities go |
+| `damage_meter.gd` | Remove | Per-item totals; the per-hero fight chart (`FightTally`) replaces it |
+| `combat_sim.gd` | Rewrite | The core loop becomes spatial: positions, movement, reservations, pathfinding, areas, knockback, mana, signature triggers, the shrinking arena, summons |
+| `effects/targeting.gd` | Rewrite | Row targeting goes; targeting rules become spatial (nearest reachable, weakest back-liner, largest group, farthest hero, lowest HP ally, and so on) |
+| `effects/effect_runner.gd`, `defs/effect_def.gd` | Keep (trim) | Remove item targets, charge, spill, and essence fields; add shapes (circle, line, cone, ring), leaps, pulls, charges, knockback, summons |
+| `effects/relic_runner.gd`, `defs/relic_def.gd`, `state/relic_state.gd` | Keep (trim) | Relics stay, rarer and with costs; drop item filters and keyword filters |
+| `statuses.gd`, `defs/status_def.gd`, `state/status_state.gd` | Keep (trim) | Keep Root, Slow, Stun, Taunt, Engaged, Marked, Bleed, Burn, Poison, Shield, Silence; remove Golden Flame, Plasma, Blight, Blind, and item Slow; add Knockback handling |
+| `events.gd` | Keep (trim) | Event triggers stay useful for deeds, passives, and enemies; drop item-specific ones |
+| `defs/hero_def.gd` | Rewrite | Stats, movement, range, basic attack, signature and trigger, passive, traits, 3 paths |
+| `defs/specialization_def.gd`, `defs/deed_def.gd`, `defs/deed_track_def.gd`, `setup/deed_setup.gd` | Rewrite | Become **paths**: taste, cost, deed, transformation, upgrade pool, apexes. The `Part` kinds (aura, grant, ability, basic_attack, replace_status) are reused |
+| `defs/enemy_def.gd`, `defs/encounter_def.gd`, `defs/phase_def.gd` | Keep (extend) | Add targeting rule, signature trigger, traits, threat line, archetype, hand-placed positions, summons |
+| `defs/collapse_def.gd` | Rewrite | Rift Collapse becomes the shrinking arena |
+| `defs/tuning_def.gd` | Keep (trim) | Remove essence, spill, tier, rank, and slot values; add grid, mana, and collapse values |
+| `defs/aura_def.gd`, `defs/aura_filter.gd`, `defs/grant_def.gd` | Keep (trim) | Drop item and keyword filters |
+| `defs/unit_stats.gd`, `state/unit_state.gd` | Keep (extend) | Add position, movement, mana, vow and path state |
+| `setup/setup_builder.gd`, `setup/unit_setup.gd`, `setup/fight_setup.gd` | Rewrite | Setups carry hex positions and path state instead of rows and loadouts |
+| `sim_rng.gd`, `fixed_math.gd`, `data_reader.gd`, `combat_log.gd`, `log_entry.gd`, `fight_result.gd`, `state/effect_source.gd`, `state/sourced_effect.gd`, `state/value_breakdown.gd` | Keep | The foundation. `LogEntry` gains move, push, and area kinds |
+| `content_db.gd` | Rewrite | Loads the new data set |
+
+### The run (`src/run/`)
+
+| File(s) | Label | Why |
+| --- | --- | --- |
+| `run_item.gd`, `run_legendary.gd`, `defs/shop_def.gd`, `defs/economy_def.gd`, `defs/node_def.gd` | Remove | Items, Legendaries, shops, gold, and stop nodes are gone |
+| `defs/event_def.gd` | Rewrite | Becomes rift events at camp |
+| `run_flow.gd`, `run_actions.gd`, `run_state.gd` | Rewrite | New flow: choose heroes, vow, then days of camp, fight choice, placement, fight, deeds and picks |
+| `run_hero.gd` | Rewrite | Vow, path progress, transformation, upgrades, apex |
+| `defs/act_def.gd`, `run_content.gd` | Rewrite | Days, fight pairs, elites, boss, camp places |
+| `run_fight.gd` | Keep (adapt) | Builds fights from a run and writes deed progress back |
+| `run_random.gd`, `run_save.gd` | Keep | Seeded streams and save/resume still apply |
+| `run_bot.gd`, `run_report.gd` | Rewrite | A bot that places heroes and picks vows, fights, and camps; new report lines |
+
+### The UI (`src/ui/`)
+
+| File(s) | Label | Why |
+| --- | --- | --- |
+| `infusion_look.gd`, `item_info.gd`, `widgets/essence_chip.gd`, `widgets/item_tile.gd`, `widgets/offer_view.gd`, `widgets/drop_zone.gd`, `widgets/inspector.gd`, `widgets/damage_meter_view.gd` | Remove | Items, essences, shops, and dragging items |
+| `screens/shop_screen.gd`, `screens/stop_choice_screen.gd`, `screens/stop_screen.gd` | Remove | Replaced by a camp screen |
+| `widgets/guild_bar.gd`, `widgets/hero_token.gd`, `widgets/hero_sheet.gd` | Rewrite | A team bar and hero sheet showing vows, deeds, paths, and upgrades |
+| `screens/fight_screen.gd`, `fight_player.gd`, `fight_fx.gd`, `widgets/unit_card.gd`, `widgets/figure.gd` | Rewrite | A hex board with movement, area warnings, and mana bars |
+| `screens/run_start_screen.gd`, `screens/rewards_screen.gd`, `screens/fight_choice_screen.gd` | Rewrite | Hero choice and vows; deed and upgrade picks; fight choice with threats |
+| New | Build | A placement screen, a camp screen, vow and transformation popups, a fight sandbox |
+| `fight_tally.gd`, `widgets/fight_chart.gd`, `widgets/fight_banners.gd`, `widgets/day_bar.gd`, `widgets/toast.gd`, `widgets/hover_card.gd`, `fight_names.gd`, `encounter_info.gd` | Keep (adapt) | Still useful as they are, with new content |
+| `main.gd`, `main.tscn`, `run_session.gd`, `playtest_journal.gd`, `screens/ui_screen.gd`, `screens/title_screen.gd`, `screens/run_end_screen.gd` | Keep (adapt) | The shell, sessions, and playtest journal stay |
+| `ui_style.gd`, `widgets/frame_decor.gd`, `widgets/glyph.gd`, `character_art.gd` | Keep as placeholders | Replaced in the art rehaul |
+
+### Data (`data/`)
+
+| File | Label |
+| --- | --- |
+| `essences.json`, `alloys.json`, `keywords.json`, `items.json`, `economy.json`, `nodes.json` | Remove |
+| `synergies.json` | Rewrite (duo bonds only) |
+| `specializations.json` | Rewrite (becomes paths, perhaps `paths.json`) |
+| `heroes.json` | Rewrite (3 heroes) |
+| `enemies.json`, `encounters.json`, `acts.json` | Rewrite |
+| `relics.json` | Rewrite (fewer, each with a cost) |
+| `events.json` | Rewrite (rift events for camp) |
+| `statuses.json`, `tuning.json` | Keep (trim) |
+| New | `camps.json` (places and options), `upgrades.json` (hero and role layers, if not inside paths) |
+
+### Art, tools, tests, and docs
+
+| What | Label | Notes |
+| --- | --- | --- |
+| `art/` (items, relics, characters, chrome, backgrounds, icons) and `tools/art/` | Remove after the rehaul | Placeholders until the new style exists. Item icons can go right away |
+| `art/fonts/` | Review | The rehaul may keep or replace them |
+| `tools/sim_parties.json`, `tools/balance_run.gd`, `tools/sim_runner.gd`, `tools/run_runner.gd` | Rewrite | Parties become placed heroes on paths; reports change |
+| `tools/validate_data.gd`, `tools/ui_screenshots.gd`, `tools/ci/`, `.github/workflows/`, `export_presets.cfg`, `addons/gut/` | Keep | |
+| Tests for removed systems (`test_alloys`, `test_essences`, `test_infusions`, `test_slice_alloys`, `test_spread_and_conduits`, `test_item_def`, `test_loadout`, `test_hero_epics`, `test_strikes_and_rows`, `test_damage_meter`, `test_legendary`, `test_item_art`, `test_inspector`, and parts of the rest) | Remove | Written fresh alongside each phase |
+| `test_determinism`, `test_sim_rng`, `test_fixed_math`, `sim_test_kit`, `ui_test_kit` | Keep | The determinism tests must keep passing throughout |
+| `docs/design.md` | Rewrite | Rebuilt from the rebuild plans |
+| `CLAUDE.md` | Rewrite | New rules: heroes and paths, the arena, mana, enemies, the run; the infusion, item, and synergy rules go |
+| `docs/tiers-backup-specialization.md`, `docs/ui-asset-design.md`, all earlier `docs/plans/*` | Move to `docs/archive/` | Kept for history, marked as superseded |
+
+---
+
+## Part B: build order
+
+| Phase | What | Done when |
+| --- | --- | --- |
+| **0. Gut** | New branch. Archive old docs; remove everything marked Remove and its tests and data; stub what's being rewritten; rewrite `design.md` and `CLAUDE.md` from the rebuild plans | The project compiles, the game boots to the title screen, the tests that remain pass |
+| **1. Arena sim** | Headless: hex placement, free movement on a plane, blocking, pathfinding, shots in flight, targeting rules, melee and ranged, Engage, taunt, knockback, area shapes and warnings, the slice's statuses, mana and signature triggers, the shrinking arena, summons, full logging | Seeded fights repeat exactly; every move, push, and hit is in the log with its source |
+| **2. Base heroes and Act 1 enemies** | Brannoc, Maren, and Vell's base kits; the 9 Act 1 enemies; hand-placed encounters; the sim runner reports on placed parties | The sim runner shows **placement matters**: the same team wins clearly more with a good formation than a bad one against each archetype |
+| **3. Fight sandbox (placeholder art)** | Hex board, placement screen, fight playback with movement, area warnings, mana bars, the fight chart and log; a sandbox mode: pick an encounter, place, fight | **Playtest gate 1:** a single arena fight with base heroes is fun and readable |
+| **4. Paths** | Vows, tastes and costs, path deeds, transformations for all 9 paths, upgrade pools (path and hero layers first), vow and transformation popups, the sandbox can set a hero's path | **Playtest gate 2:** each path changes where you place the hero and how the fight plays |
+| **5. The run (Act 1)** | Hero choice and vows, 7 days, fight choice, camps (a first set of options and places), deed progress and picks, relics with costs, losing, save and resume, Old Mother Ash, duo bonds, the run end screen | **Playtest gate 3:** a full Act 1 run is playable start to finish |
+| **6. Bot and tuning** | A good-player bot (placement heuristics, vows, fight and camp picks); tune Act 1 | The good bot clears about 45–50%; a random bot clears far less |
+| **7. Art rehaul** | Style guide first (can start any time after phase 3), then characters, enemies, arena tiles, UI chrome, effects | The game no longer uses any placeholder or old art |
+| **8. Later** | Rocks and more camp options, role-layer upgrades, apexes (Acts 2–3), enemy specializations and upgrades, difficulty tiers, the Codex, hero 4 and the team draft, Acts 2 and 3 | — |
+
+**Notes**
+
+- **Rocks** are needed by the camp options Dig In and Choose the Ground. They're built in phase 1 (decided).
+- **Apexes** only matter in Acts 2 and 3, so the Act 1 slice can ship without them.
+- **Phase 1 is the biggest risk.** Its build plan should be written and approved before phase 0 starts, so the gut doesn't leave the project unplayable for longer than needed.
+
+## Decisions (2026-09-27)
+
+- **Branch strategy:** gut straight on the main working branch (no long-lived rebuild branch).
+- **Rocks:** in phase 1.
+- **The fight sandbox:** it stays in the game as a **Practice** mode on the title screen, so playtest builds can reach it for gate 1. It can stay rough until the art rehaul.
+- **Old saves:** the gut bumps the save version, and the title screen quietly drops a save it can't load.
+- **Phase 1's build plan** is `docs/plans/rebuild-phase1-arena-sim.md`.
+- **How the gut went (phase 0, done 2026-09-27):**
+  - **Removed, not stubbed:** runtime code labeled Keep (trim) or Keep (adapt) that couldn't run without items was removed rather than stubbed or left as dead code: `events.gd`, the statuses runtime, the relic runner, `sim_test_kit`, `test_determinism`, `fight_tally`, and the other fight UI.
+  - **Written fresh from history:** each later phase writes these fresh, using the old versions in git history. The phase 1 plan lists which ones come back in phase 1.
+  - **Kept:** the definitions that stand alone (effects, auras, damage-over-time statuses, tuning, unit stats), the log, and the foundation. The title screen stays, with no run to start yet.
+  - **Determinism tests:** they return with the arena sim in phase 1, step 2.
+  - **Placeholder art:** `tools/art/item_icons.py` and `item_icons_more.py` went with the item icons. Their shared palette and helpers moved to `tools/art/art_kit.py`. The relic icons stay, but nothing draws them anymore.
+  - **Saves:** the title drops `user://run.json` quietly, since no save from before the rebuild can load.

@@ -1,9 +1,9 @@
 class_name ValueBreakdown
 extends RefCounted
-## How one of an item's numbers is built, kept so the UI can show base and
+## How one of an ability's numbers is built, kept so the UI can show base and
 ## final values side by side:
 ##   scaled = base + (each stat x its ratio)
-##   final  = scaled x every multiplier (tier, essences, ...), rounded once.
+##   final  = scaled x every multiplier (auras, ...), rounded once.
 
 
 class Multiplier:

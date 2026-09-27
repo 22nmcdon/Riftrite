@@ -1,14 +1,14 @@
 class_name UnitStats
 extends RefCounted
-## A unit's six stats (see docs/plans/essence-rework.md):
+## A unit's six stats:
 ##   HP    max health
-##   ATK   attack power; items scale from it
-##   MGK   magic power; items scale from it
+##   ATK   attack power; abilities scale from it
+##   MGK   magic power; abilities scale from it
 ##   DEF   hit damage taken is multiplied by C / (C + DEF), C from tuning
-##   CRIT  each point adds crit chance to all the unit's items
-##   ATSP  each point speeds up the unit's auto-attack
-## CRIT and ATSP are "rate" stats: only Epic and Legendary items may scale
-## their numbers from them.
+##   CRIT  each point adds crit chance to all the unit's abilities
+##   ATSP  each point speeds up the unit's basic attack
+## CRIT and ATSP are "rate" stats. The arena sim adds speed and range
+## (docs/plans/rebuild-phase1-arena-sim.md, section 2).
 
 enum Stat { HP, ATK, MGK, DEF, CRIT, ATSP }
 

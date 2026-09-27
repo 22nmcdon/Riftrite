@@ -1,20 +1,16 @@
 class_name UiScreen
 extends VBoxContainer
-## A screen of the game. Screens read the run through their RunSession and
-## change it only through its actions; Main rebuilds the screen after each
-## change.
-
-var session: RunSession
+## A screen of the game. Main shows one at a time; a screen builds itself
+## in build().
 
 
-func setup(run_session: RunSession) -> UiScreen:
-	session = run_session
+func setup() -> UiScreen:
 	add_theme_constant_override("separation", 12)
 	build()
 	return self
 
 
-## Fills the screen from the session. Screens override this.
+## Fills the screen. Screens override this.
 func build() -> void:
 	pass
 
@@ -28,17 +24,6 @@ func hint(text: String) -> void:
 	var line: Label = UiStyle.label(text, 16, UiStyle.TEXT_DIM)
 	line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(line)
-
-
-## A row of offers (indexes into state.offers) as clickable views.
-func offer_row(indexes: Array[int], action: Callable, lit: Callable = Callable()) -> HFlowContainer:
-	var row := HFlowContainer.new()
-	row.add_theme_constant_override("h_separation", 10)
-	row.add_theme_constant_override("v_separation", 10)
-	for i: int in indexes:
-		var glow: bool = lit.is_valid() and lit.call(i)
-		row.add_child(OfferView.make(session, session.state.offers[i], action.bind(i), glow))
-	return row
 
 
 ## A centered panel of chrome art (UiStyle.chrome) holding a column; returns
@@ -61,4 +46,3 @@ func primary_button(text: String, action: Callable, width: int = 280) -> Button:
 	button.add_theme_font_size_override("font_size", 22)
 	button.custom_minimum_size = Vector2(width, 56)
 	return button
-

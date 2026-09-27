@@ -2,11 +2,22 @@
 
 ## Project
 
-A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The player leads a guild of heroes through the rifts, one day at a time. Each hero has a row of items that fire on cooldowns, and items are infused with essences harvested from enemies. Hidden, discoverable synergies drive build variety.
+A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The player leads three heroes into the rift, one day at a time: they place the heroes in an arena before each fight, then watch it play out. Each hero is vowed to a path and transforms into it by doing what the path asks in fights.
 
-**Redesign in progress:** `docs/plans/fun-redesign.md` and `docs/plans/heroes-and-deeds.md` (approved, built in steps; their **Decisions** sections win). The rules below describe the code as it is now; each redesign step updates them as it lands.
+**The game is being rebuilt from scratch.** The design is `docs/design.md`, built from the rebuild plans in `docs/plans/`:
 
-**The full design lives in `docs/design.md`**, with item tiers and Oathbinding detailed in `docs/tiers-backup-specialization.md` (its Backup parts are superseded). Redesign steps built so far: 1 (loadout, drafted trio, no Backup), 2 (the infusion rework, `docs/plans/infusion-rework.md`), 3 (deeds, `docs/plans/deeds.md`), 4 (the new day, economy, and pacing, `docs/plans/new-day.md`), 5 (keywords: affinities, event passives, duo bonds, conduits, `docs/plans/keywords-and-affinities.md`), and 6 (fight questions and readability, `docs/plans/fight-questions-and-readability.md`). The UI's look follows `docs/ui-asset-design.md` (for now). Before building or changing a game system, read the matching section there. If the code and the design doc disagree, stop and ask. Don't silently pick one.
+| Plan | What it covers |
+| --- | --- |
+| `rebuild-heroes.md` | heroes, paths, vows, taste and cost, deeds, transformations, upgrades, apexes, mana |
+| `rebuild-arena.md` | placement, the free-moving fight, tanks, areas, statuses, the shrinking arena |
+| `rebuild-enemies.md` | archetypes, the Act 1 roster, elites, the boss, enemy specializations |
+| `rebuild-run.md` | days, camp, fight choice, relics with costs, duo bonds, losing, pacing |
+| `rebuild-build-order.md` | the phases, and what was gutted |
+| `rebuild-phase1-arena-sim.md` | phase 1's build plan (approved): the arena sim |
+
+**Where the rebuild is:** phase 0 (the gut) is done. Items, essences, shops, the run, and the old UI are gone; what's left is the foundation (the data reader, RNG, fixed math, the combat log, the effect and aura definitions, damage-over-time statuses, tuning) and the title screen. **Phase 1 (the arena sim) is next.** Follow `rebuild-build-order.md` for the order of work. Each phase's plan has a **Decisions** section; those win. If the code and a plan disagree, stop and ask. Don't silently pick one.
+
+The old game (items, the row-based sim, the run layer) is in git history: the commit before "Rebuild phase 0: gut items, essences, shops, the run, and the old UI". Its docs are in `docs/archive/`. Use them as a reference when a phase brings an old piece back, never as the design.
 
 ## Tech stack
 
@@ -17,15 +28,13 @@ A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The pl
 
 ## Commands
 
-<!-- Update these once the project is set up -->
-- Run the game: `godot --path .` (main scene `src/ui/main.tscn`; the run saves to `user://run.json`, and each run writes a playtest journal to `user://playtests/run_<seed>.json`)
+- Run the game: `godot --path .` (main scene `src/ui/main.tscn`; for now it shows the title screen)
 - Screenshots of each screen (needs a display): `xvfb-run godot --path . -s tools/ui_screenshots.gd -- --out=/tmp/shots`
 - Run all tests: `godot --headless -s addons/gut/gut_cmdln.gd -gexit` (settings in `.gutconfig.json`)
 - Run one test file: add `-gselect=test_project_setup.gd`
 - Fresh checkout: run `godot --headless --import` once first, so class names are registered. The session-start hook does this in cloud sessions.
 - Validate game data: `godot --headless --path . -s tools/validate_data.gd` (also covered by the test run)
-- Headless balance sim: `godot --headless --path . -s tools/sim_runner.gd -- --fights=200 --seed=1` (optional `--party=id`, `--encounter=id`). Parties live in `tools/sim_parties.json`; encounters in `data/encounters.json`.
-- Run-level balance (the run bot): `godot --headless --path . -s tools/run_runner.gd -- --runs=200 --seed=1`. Run data lives in `data/economy.json`, `data/acts.json`, `data/events.json`, `data/nodes.json`. The report shows loss rates and lengths by fight kind, day, and encounter.
+- The headless sim runner comes back in phase 2 (placed parties) and the run bot in phase 6.
 - Cloud sessions: `.claude/hooks/session-start.sh` installs the pinned Godot as `godot` in `~/.local/bin`.
 - CI: `.github/workflows/tests.yml` runs the tests and the data validator on every PR and push to main.
 - Playtest builds (Windows and macOS, from `export_presets.cfg`): run the "Playtest build" workflow from the Actions tab (or push a `playtest-*` tag). It publishes the zips on a GitHub pre-release. Locally: `tools/ci/install_godot.sh --templates` (with `GODOT_VERSION` set), then `tools/ci/export_builds.sh` (zips land in `build/dist/`). Builds aren't code-signed; `tools/ci/HOW-TO-PLAY.txt` (shipped in each zip) covers the first-launch warnings.
@@ -33,104 +42,44 @@ A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The pl
 ## Folder layout
 
 ```
-data/          items, essences, alloys, relics, heroes, enemies, synergies, specializations; economy, acts, events (JSON)
-docs/          design.md and other design notes
+data/          tuning and statuses for now; heroes, enemies, encounters, paths, relics, and the run's data come back phase by phase
+docs/          design.md, the rebuild plans (plans/), and the old design (archive/)
 src/sim/       combat simulation: pure logic, NO nodes, NO rendering
-src/run/       run state, days and stops, shop, forge, economy, save
-src/meta/      Guildhall, unlocks, codex, save data
+src/run/       the run: days, camp, fights, save (only RunRandom until phase 5)
 src/ui/        scenes and UI scripts (reads sim state, never changes it)
 tests/         GUT tests, mirroring src/
-tools/         headless sim runner, data validators
+tools/         data validator, screenshots, CI scripts, placeholder art scripts
 ```
 
 ## Rules the code must never break
 
 1. **The combat sim is deterministic.** Same seed + same inputs = same fight, every time. Use only the sim's seeded RNG (never `randi()`, `randf()`, or unseeded RandomNumberGenerator). Use a fixed timestep, not frame delta. Never iterate a Dictionary where order affects the outcome.
-   - **Integer math only in `src/sim/`.** No `float`: HP, damage, shields, and stats are `int`; percentages are basis points (`10000` = 100%); time is ticks at a fixed **20 ticks per second**. Data files give durations in milliseconds, and the loader converts them to ticks. Round with explicit integer division, in one shared helper.
+   - **Integer math only in `src/sim/`.** No `float`: HP, damage, shields, stats, and positions are `int`; percentages are basis points (`10000` = 100%); time is ticks at a fixed **20 ticks per second**; on the arena's plane, **1 hex = 1000 units**. Data files give durations in milliseconds, and the loader converts them to ticks. Round with explicit integer division, in one shared helper.
 2. **The sim is separate from presentation.** `src/sim/` never references nodes, scenes, animations, or UI. The UI plays back events the sim emits.
-3. **Content is data, not code.** New items, essences, alloys, relics, and synergies are added as JSON entries using existing effect/trigger types. Only add a new effect type in code when no combination of existing ones can express it, and say so when you do.
-4. **Every combat effect writes to the combat log** with its source (hero, item, infusion, synergy). If a player can't trace why something happened, it's a bug.
-5. **Meta progression never adds stats.** Unlocks add variety (items, heroes, alloys into the pool), cosmetics, and codex entries only.
+3. **Content is data, not code.** Heroes, enemies, encounters, paths, upgrades, relics, and duo bonds are JSON entries using existing effect, trigger, and part types. Only add a new effect type in code when no combination of existing ones can express it, and say so when you do.
+4. **Every combat effect writes to the combat log** with its source (unit and ability, relic, duo bond, status, or Rift Collapse). Every move, push, shot, and area is logged too. If a player can't trace why something happened, it's a bug.
+5. **Meta progression never adds stats.** Unlocks add variety (heroes, camp options, places, relics), cosmetics, and codex entries only.
 
-## Infusion rules (easy to get wrong)
+## The design the rebuild builds toward
 
-- **Any item holds one infusion of up to 2 essences** (`Infusions.MAX_ESSENCES`); a second essence **fuses** with the first, and there's never a third. Passives can be infused too: an infused passive spreads its essences (see below). Relics can't be infused. Infusing can happen any time between fights (for now).
-- Two different essences in one item = an **Alloy** with its own effect. Two of the same = a **pure double**.
-- Pure doubles are alloys too, and each has its own effect.
-- An alloy **keeps both essences' normal effects**. Its special works only once it **awakens** at Resonant (`ItemState.awakened()`); pairs without a named alloy have nothing to awaken into. A special that changes how a status behaves must use **its own status type** (Inferno → Golden Flame), never modify the shared one, so it can't leak into other items' statuses.
-- Infusions level up: base → Attuned → Resonant. XP comes from **item fires** (XP per fire is set per item in data; basic attacks get less) **plus each battle fought**.
-- XP **resets** when a second essence is added (single → alloy or pure double) and when an infusion is removed.
-- **Keyword spill:** only a Resonant **single** spills: `spill_single_bp` (30%) of its Resonant strength goes to its holder's other items that **share a keyword** (`"keywords"` on items, `data/keywords.json`), at most one spill per essence per item, never outside the holder's loadout (unless a conduit says so). The built-in basic attack and slotless abilities have no keywords, so they never receive spill (unless a conduit says so). Alloys and pure doubles awaken instead and never spill. Essence transformations never spill or awaken.
-- **Passives spread instead of spilling:** an infused passive spreads each of its essences, at every level, to its holder's items that share a keyword (`passive_spread_bp`: 15/25/35% of its level's strength), under the same one-per-essence rule.
-- **Conduits** (`"conduit"` on a passive, `ItemDef.CONDUITS`): `basic_attack` (spills also reach the basic attack), `all_abilities` (they reach every ability), `row` (they reach the heroes in the holder's row, through a shared keyword), `awakened` (awakened infusions also spill). Built in `ItemState.spills_into`/`outgoing_spills` and `CombatSim._row_sources`.
-- Spill percentages and XP thresholds are tuning values in `data/`, never hard-coded.
-- Essence resonance counts **essences**, not items: a single = 1, an alloy = 1 of each half, a pure double = 2, and a transformation counts its essence(s).
+These are summaries; the plans have the details and the decisions. As each phase lands, move its rules into a "how the code works" section here.
 
-## Synergy rules
-
-- Six layers (`data/synergies.json`, `docs/plans/synergies-in-sim.md`, `docs/plans/keywords-and-affinities.md`): pairs (two items on one hero), transformations (item + essence), signatures (item on a specific hero), essence resonance (3/5/7), **shared affinities** (2/3 heroes with the same affinity keyword; they replaced class traits), and **duo bonds** (two specific heroes; each gets its own specialization-style parts; hidden until found). Tiered layers apply only their highest tier reached.
-- **Affinities:** every hero has two affinity keywords (`"affinities"` in `data/heroes.json`); each keyword's `"affinity"` perk in `data/keywords.json` (parts, usually an aura on the hero's items with that keyword) is added to the hero's innate by `SetupBuilder`, credited as "Blade affinity".
-- Synergies are checked once at fight start, for the guild only (enemies get none for now). Their bonuses run through the relic code (auras, grants, relic triggers), and the log credits the synergy.
-- Resonance counts every hero's essences.
-- A transformation replaces the item's own effects, uses one copy of its essence (other essences work as plain singles, no alloy special), never spills, and still counts for resonance.
-
-## Specialization rules
-
-- Each **hero** has three specializations of their own (`data/specializations.json`, `docs/plans/specializations-in-sim.md`), each unique to the hero and unlike the other two. A hero picks one at rank B.
-- **Deeds unlock power; ranks give slots** (`docs/plans/deeds.md`). Each hero has two deed tracks: a **calling** (`"calling"` in `data/heroes.json`, from the start) and their specialization's (from the pick). Each track has a deed (a goal counted from the combat log, deterministic integers; kinds in `DeedDef`) and **3 levels** of parts. **Level 2 is a choice of 2**, made between fights (`RunActions.choose_deed_unlock`); until then it waits, unspent. Levels reached mid-fight turn on at once and are logged. Progress carries over; losses count. Retraining resets the specialization's deed, never the calling. A later part with the same key replaces the earlier one; a calling part may replace an innate part; a specialization's keys can't reuse its hero's innate or calling keys.
-- Part kinds: aura, grant (numbered from the hero's stats), ability (slotless, on a cooldown or relic trigger), basic_attack, replace_status.
-- A part that replaces the basic attack must come with an `auto_attack` part, so equipping a basic-attack item never blanks the specialization.
-- **Innates** (`"innate"` in `data/heroes.json`): every hero has one, always on while they fight, made of the same parts (no basic_attack) and credited by name. Keep them unique to the hero.
-- **Event triggers** (`EffectDef`, `src/sim/events.gd`): `on_ability`, `on_basic_attack`, `on_holder_crit`, `on_shielded`, `on_hit_taken`, `on_heal`, `on_status`, `on_kill`, with optional `every`, `keyword` (on_ability), `statuses` (on_status). Items and slotless abilities (innates, deeds, duo bonds) use them, never relics. They're read from the combat log each tick; what an event effect does is marked `from_event` and never sets off another; they earn no XP.
-
-## Boss rules
-
-- Bosses (and any enemy) can have **HP-threshold phases** (`PhaseDef`, `docs/plans/act1-boss.md`). A phase is entered once, the first time the enemy drops below its threshold while still standing, and is made of specialization-style parts; a same-key part replaces an earlier one. Summons (units joining mid-fight) come later.
-- **Legendary relics are boss relics:** only the boss's relic choice and rare events give them.
-- **Every elite and boss asks a question:** its encounter has a `"mechanic"` (name, what it does, what answers it; required for elites and bosses). It's UI text only: what the enemies do lives in their items, relics, and phases, so keep the text true to them.
-
-## Item rules
-
-- **Loadout slots** (`"slot"` on every item): `basic_attack`, `ability` (fires on its cooldown, needs effects), or `passive` (auras, event-trigger effects, or a conduit; it never fires on a cooldown). Slots by rank are tuning values (`ability_slots`, `passive_slots`: C 2/1, B 3/1, A 3/2, S 4/3) plus one basic-attack slot. There's no item size, no row order that matters, and no adjacency: "neighbor" effects reach the holder's other items (`holder_items`).
-- Every unit has a built-in **basic auto-attack** (no slot). Each hero's basic auto-attack is their own and **can't be upgraded** (no sockets, no tier). A **basic-attack item** replaces it and takes the one basic-attack slot. Remove the item and the unit falls back to its basic auto-attack.
-- **Two** copies of the same item at the same tier combine into the next tier (never three). If the new copy has an infusion, it replaces the old one (and the old XP is lost); if not, the old infusion and its XP stay. The player chooses whether to combine. Copies at *different* tiers can be held together.
-- Tier and rarity are separate. Rarity decides how often an item appears; any item can be tiered up. Tiers are **C → B → A → S** (same as hero ranks). Items and heroes can be found above C; shops unlock higher tiers as the run progresses (`shop_tier_weights` per act in `data/acts.json`). Earlier, higher tiers come only from tier shops, events, enemy drops, and loot.
-- Rarities: **Common, Uncommon, Rare, Epic, Legendary**. S is the top tier (S items can't combine). **Legendaries never combine**; they upgrade through their own paths and appear at most once per run.
-- **Legendary paths** (`"legendary"` on the item, `docs/plans/legendary-items.md`): hits, essence (fed from the pouch), devour (fed other items; each meal leaves a trace, a % boost to the item's own numbers), bonded (holder ranks up), martyr (holder falls in a won fight), boss (a boss beaten while on a hero's loadout). A Legendary always joins at its path's start tier; progress carries over between tiers and stops at S. Legendaries come only from the Vault and rare events, never shops, Loot, or the reward pick (`rarity_weights` and the reward weights must give Legendary 0).
-- **Oathbinding:** an S hero + an S item can be permanently oathbound (one per hero; the item then can't be removed, moved, or sold, but can be infused). "Specialization" means only the hero's rank-B choice; don't mix the two terms.
-- **Reforging** = removing an item's infusion.
-- **Item numbers** are a small base plus multipliers on the holder's stats (HP, ATK, MGK, DEF, CRIT, ATSP). **Percentage boosts** (tier, and later others) then **multiply** on top. Keep base, stat-scaled, and final values all available (the UI shows the breakdown). Basic auto-attacks scale from stats but have no tier.
-- Items carry **multiple tags** (item tags and class-fit tags; relic and specialization filters use them) and **1–3 keywords** (Blade, Bow, Spell, Mend, Ward, Burn, Bleed, Hex; spill and later affinities use them).
-- Every item has its own crit chance (default 0). Crit damage multiplier is a tuning value (150%).
-- Enemy-only items can end up with the guild through drops, but shops never sell them: they upgrade only through a second copy from random loot or an upgrade stop.
-- Enemies use hand-made, fixed item layouts with set tiers, built from the same item system; some items are enemy-only. Some enemy teams carry relics (enemy-only relics exist too). Every win's reward pick (1 of 3) includes one drop from the enemy team's items and relics, enemy-only ones included.
-
-## Other core rules
-
-- Items are per hero; relics are shared by the team. The guild can hold any number of relics (no board, no slots, no sockets); a relic can be turned down, but once taken it can't be removed. Relics are rare and change how a build works rather than adding flat stats. Relic numbers are flat (no stat scaling); only percentage boosts that apply to everything of that kind ("all shields +10%", "shields on this hero +50%") change them. In the sim, such a boost is an `all_items` aura with no filter. Relic details: `docs/plans/relics-in-sim.md`.
-- **The team** (`docs/plans/heroes-and-deeds.md`): a run drafts three heroes at the start (three picks, each 1 of 3 not yet taken) and keeps them all run; all three fight. No bench, no Backup, no buying heroes. Each elite win gives a **rank-up** the player hands to one hero (`RunFlow.give_rank_up`); a hero keeps their specialization, items, and deed progress as they rank up. After the draft comes a **starting package**: gold, a common relic, or one of two **kits** (`"kits"` in `data/economy.json`: an item already infused with an essence, one kit per keyword; the two offered match the team's affinities).
-- **A shop never offers an item at a different tier than a copy the player already holds** (tier shops, which sell at a fixed tier, excepted). Different-tier copies of the same item can still be held when they come from elsewhere (Vault, loot, fights, events). Items can move between heroes freely between fights (never during combat).
-- Fallen heroes always come back after a fight, with no downside.
-- A lost fight restarts the day (everything kept, plus bonus gold); the second loss ends the run. Every fight starts at full HP (unless an item or relic says otherwise). Unequipped items wait in a shared stash that holds 6 items; relics can't go there.
-- **The run layer** (`src/run/`, `docs/plans/run-state.md`): change a run only through `RunActions` (each refuses cleanly and changes nothing when it fails); `RunState.check()` lists every run rule, and loading a save checks them all. `RunFight` builds fights from a run and writes XP, discoveries, and results back.
-- **The day structure** (`RunFlow`, `docs/plans/day-structure.md`, `docs/plans/new-day.md`): a run moves through phases (start, stop choice and stop twice a day, fight choice, fight, rewards, act end or run over); each RunFlow action checks the phase. Offers use `RunRandom` streams seeded by where they happen, never by earlier picks.
-- There is no branching map: each act is a set number of days (Act 1: 8, elites on days 3 and 6, the boss on day 8). A day is **two stop visits, then a pick of 2 fights, then rewards**. **Stops are nodes** (`data/nodes.json` plus every event in `data/events.json`, one weighted pool, `docs/plans/stop-nodes.md`): each visit offers `node_choices` (2) different nodes that apply, **one of them a shop** (`"kind": "shop"`, a `ShopDef` filter: any item, a keyword, a slot, an essence merchant, a tier, or the Synergy Peddler). Buying, selling, and rerolling happen only at a shop. The boss day's second visit is always the Upgrade stop. The day's two fights (an easier and a harder one, `"hard"` in `data/acts.json`; the harder pays more gold and rarer rewards; elite days offer two elites; the boss day only the boss) come from the seed, the act, and the day alone (`RunFlow.fights_for_day`), so the whole act's fights are known from its start (the day bar shows them). The act scales each fight's enemy HP by day (`"hp_bp"` on its pool entry). A win gives gold, a whole essence of the enemy team's essence, and a **reward pick of 3** (one enemy drop and two pool items), plus the elite or boss extras. A lost fight replays the day: fresh stops, the same two fights. Offers come from the run seed and don't depend on earlier picks (for now). The run layer is deterministic from its seed, like the sim.
-- The sim still allows 1–5 heroes per side (balance parties use 4); the run layer fields exactly its three.
+- **Heroes** (`rebuild-heroes.md`): a team of 3 (Brannoc, Maren, Vell for now), kept all run. Stats (HP, ATK, MGK, DEF, CRIT, ATSP, speed, range), a basic attack, a signature, a passive, sometimes a trait. Three paths each: vow at the start (a taste and a cost), transform when the path's deed fills, then upgrade picks and later an apex. Every deed must be hard to fill without its taste. No ranks, items, or duplicates.
+- **Signatures and mana:** a signature fires on a trigger: mana, HP threshold, a count, a set moment, or would-fall. Only signatures use mana; a unit without a mana signature has no mana bar. Silence stops mana gain. Stun doesn't, but a stunned unit can't fire a mana signature (other triggers still fire).
+- **The arena** (`rebuild-arena.md`, `rebuild-phase1-arena-sim.md`): placement on flat-topped hexes (8 × 7, 3-row zones, a neutral middle row), then a fight on a free-moving plane. Units never overlap. Heroes come first in the fight's order. Targeting rules are data, with sticky targets. Melee lands when the attack finishes; ranged shots travel about 1 tick per hex and follow their target. Engage, Taunt, knockback (a stopped push stuns), pulls, leaps, charges, flying, hop-away. Areas are warned and hit by center. Rift Collapse shrinks the arena one ring every 10s from 45s, and nobody can walk onto crumbled ground. Up to 30 standing units per side. A fight still running at 180s is a tie, and a tie counts as a guild victory.
+- **Enemies** (`rebuild-enemies.md`): each tests one positioning question; hand-placed formations; elites built around one mechanic; Old Mother Ash with phases. Every elite and boss says what it does and what answers it. Harder means new problems, not more HP.
+- **The run** (`rebuild-run.md`): Act 1 is about 7 days; a day is camp, a pick of 2 fights (known from the act's start), placement, the fight, then deed rewards. No currency, items, or shops. Relics are rare and each has a cost. Duo bonds link two paths. A lost fight replays the day; the second loss ends the run. The run is deterministic from its seed, like the sim.
 - "Lowest HP" (heals and targeting) means lowest HP **percentage**.
-- **The fight screen** (`docs/plans/fight-questions-and-readability.md`): the combat log is hidden until opened (Log, or L); its panel holds the **fight chart** (`FightTally`, `FightChart`: per hero, damage by type, healing and Shield, damage taken, with a breakdown by source), which adds up the log entries played so far and never counts on its own. Banners mark phases, Resonant and awakening, deed levels, and new synergies as they happen. The fight speed starts at 1x and is remembered in the player's settings (`user://settings.json`), never in the run.
-- Rift Collapse starts at 45s of combat and deals **flat** damage (never % of max HP) that grows every second, hitting **Shield before HP**. From 90s the growth itself accelerates. The numbers are set per act (Act 2 = double Act 1) in `data/`. Early fights end around 60s; later ones can run much longer. There is no hard time limit, but a fight still running at **180s is a tie**, as is both sides dying on the same tick, and **a tie counts as a guild victory**.
-- Formation for now: each side has fixed **front and back rows**, ordered left to right. The hex arena comes later, so don't build hex code until asked.
 - PvE only. Don't add networking or PvP code.
 
 ## How to work in this repo
 
-- For any new system, propose a plan first (files, data shape, tests) and wait for approval before writing code.
-- Write or update tests for sim logic in the same change. Determinism tests (run a seeded fight twice, compare logs) must keep passing.
+- For any new system, propose a plan first (files, data shape, tests) and wait for approval before writing code. Each rebuild phase gets its own build plan before code is written.
+- Write or update tests for sim logic in the same change. Determinism tests (run a seeded fight twice, compare logs) must keep passing once phase 1 brings them back.
 - Keep changes small and focused. Don't refactor unrelated code.
-- When adding content, validate the JSON with `tools/` before finishing, and run the balance sim on anything that changes numbers.
-- Damage-over-time scale: one Burn stack is worth about 20 damage over its life, and one Poison or Bleed stack deals 1 damage per second for the rest of the fight. Items that apply these directly should apply few stacks (the conversion rule's 5% already assumes this).
-- If a design question isn't answered in `docs/design.md`, ask instead of inventing an answer. Then note the answer in the design doc. Unanswered questions live under **Open questions** in `docs/design.md`.
+- When adding content, validate the JSON with `tools/` before finishing, and run the balance sim on anything that changes numbers (once it's back).
+- If a design question isn't answered in the design or the plans, ask instead of inventing an answer. Then note the answer in the matching plan's **Decisions**. Unanswered questions live under **Open questions** in `docs/design.md`.
 
 ## Tone and naming
 
-The setting mixes cozy and grim: a warm Guildhall and dark rifts. Content names should fit that. Don't use names, characters, or items from Guildrun, The Bazaar, or Enter the Gungeon.
+The setting is the rift: dark and dangerous, with no warm hub to come home to. Content names should fit that. All art is placeholder until the art rehaul (rebuild phase 7). Don't use names, characters, or items from Guildrun, The Bazaar, or Enter the Gungeon.

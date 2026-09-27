@@ -1,97 +1,39 @@
 class_name TuningDef
 extends RefCounted
 ## Global tuning values from data/tuning.json. Durations are stored in ticks
-## (the file gives milliseconds). Percentages are basis points.
+## (the file gives milliseconds). Percentages are basis points. The rebuild's
+## arena sim (docs/plans/rebuild-phase1-arena-sim.md, section 12) adds the
+## grid, movement, and collapse-ring values.
 
-## Item tiers and hero ranks share one ladder: C, B, A, S (index 0-3).
-const TIER_NAMES: Array[String] = ["c", "b", "a", "s"]
-const TIER_LABELS: Array[String] = ["C", "B", "A", "S"]
-
-## Share of a Resonant single's strength that spills to its holder's other
-## items sharing a keyword.
-var spill_single_bp: int
-var xp_to_attuned: int
-var xp_to_resonant: int
-var xp_per_battle: int
-## How strong an infusion is at each level (Base, Attuned, Resonant).
-var infusion_level_bp: Array[int] = []
-## An infused passive spreads each essence at this share of its level's
-## strength, by level (docs/plans/keywords-and-affinities.md, section 2).
-var passive_spread_bp: Array[int] = []
 var crit_damage_bp: int
-var rush_end_ticks: int
-var stall_start_ticks: int
 var collapse_start_ticks: int
 var collapse_surge_ticks: int
 var tie_ticks: int
-## Multiplier on an item's numbers per tier, indexed by tier (0 = C).
-var tier_multiplier_bp: Array[int] = []
-## Multiplier on a unit's stats per rank, indexed by rank (0 = C).
-var rank_multiplier_bp: Array[int] = []
-## Crit chance (bp) each CRIT point adds to every item the unit holds.
+## Crit chance (bp) each CRIT point adds to every ability the unit has.
 var crit_bp_per_point: int
-## Auto-attack speed (bp) each ATSP point adds.
+## Attack speed (bp) each ATSP point adds.
 var atsp_bp_per_point: int
 ## Hit damage taken is multiplied by C / (C + DEF).
 var defense_constant: int
-## Essence conversion rule (docs/plans/essence-rework.md): how much of an
-## item's output an essence adds as its own kind.
-var convert_same_kind_bp: int
-var convert_same_family_bp: int
-var convert_direct_to_over_time_bp: int
-var convert_over_time_to_direct_bp: int
 ## Share of each damage-over-time status a heal removes from its target.
 var heal_cleanse_bp: int
-## Heals within this window of each other strip less (see EffectRunner.heal).
+## Heals within this window of each other strip less.
 var heal_cleanse_window_ticks: int
 ## Each further heal in the window strips this share of the previous heal's.
 var heal_cleanse_falloff_bp: int
 ## Keyed by act number. Look up with collapse_for_act(); don't iterate.
 var collapse_by_act: Dictionary[int, CollapseDef] = {}
-## A hero's loadout slots by rank (index 0 = C): abilities and passives. Every
-## hero also has exactly one basic-attack slot.
-var ability_slots: Array[int] = []
-var passive_slots: Array[int] = []
-## Run layer: how many items the stash holds, essence pouch cap, and the gold
-## a reforge costs.
-var stash_slots: int = 6
-var pouch_cap: int = 8
-var reforge_gold: int = 0
 
 
 static func read(reader: DataReader) -> TuningDef:
 	var def := TuningDef.new()
-	def.spill_single_bp = reader.req_int("spill_single_bp", 0, FixedMath.BP_ONE)
-	def.xp_to_attuned = reader.req_int("xp_to_attuned", 1)
-	def.xp_to_resonant = reader.req_int("xp_to_resonant", 1)
-	def.xp_per_battle = reader.req_int("xp_per_battle", 0)
-	var levels: DataReader = reader.req_object("infusion_level_bp")
-	def.infusion_level_bp = [FixedMath.BP_ONE, FixedMath.BP_ONE, FixedMath.BP_ONE]
-	if levels != null:
-		def.infusion_level_bp = [levels.req_int("base", 0), levels.req_int("attuned", 0), levels.req_int("resonant", 0)]
-		levels.finish()
-	var spread: DataReader = reader.req_object("passive_spread_bp")
-	def.passive_spread_bp = [0, 0, 0]
-	if spread != null:
-		def.passive_spread_bp = [spread.req_int("base", 0, FixedMath.BP_ONE), spread.req_int("attuned", 0, FixedMath.BP_ONE), spread.req_int("resonant", 0, FixedMath.BP_ONE)]
-		spread.finish()
 	def.crit_damage_bp = reader.req_int("crit_damage_bp", FixedMath.BP_ONE)
-	def.tier_multiplier_bp = _read_tier_table(reader, "tier_multiplier_bp")
-	def.ability_slots = _read_tier_table(reader, "ability_slots")
-	def.passive_slots = _read_tier_table(reader, "passive_slots")
-	def.rank_multiplier_bp = _read_tier_table(reader, "rank_multiplier_bp")
 	def.crit_bp_per_point = reader.req_int("crit_bp_per_point", 0)
 	def.atsp_bp_per_point = reader.req_int("atsp_bp_per_point", 0)
 	def.defense_constant = reader.req_int("defense_constant", 1)
-	def.convert_same_kind_bp = reader.req_int("convert_same_kind_bp", 0)
-	def.convert_same_family_bp = reader.req_int("convert_same_family_bp", 0)
-	def.convert_direct_to_over_time_bp = reader.req_int("convert_direct_to_over_time_bp", 0)
-	def.convert_over_time_to_direct_bp = reader.req_int("convert_over_time_to_direct_bp", 0)
 	def.heal_cleanse_bp = reader.req_int("heal_cleanse_bp", 0, FixedMath.BP_ONE)
 	def.heal_cleanse_window_ticks = reader.req_ticks("heal_cleanse_window_ms")
 	def.heal_cleanse_falloff_bp = reader.req_int("heal_cleanse_falloff_bp", 0, FixedMath.BP_ONE)
-	def.rush_end_ticks = reader.req_ticks("rush_end_ms")
-	def.stall_start_ticks = reader.req_ticks("stall_start_ms")
 	def.collapse_start_ticks = reader.req_ticks("collapse_start_ms")
 	def.collapse_surge_ticks = reader.req_ticks("collapse_surge_ms")
 	def.tie_ticks = reader.req_ticks("tie_ms", 1)
@@ -109,33 +51,12 @@ static func read(reader: DataReader) -> TuningDef:
 			acts.error("must define act \"1\"")
 		acts.finish()
 
-	var run: DataReader = reader.req_object("run")
-	if run != null:
-		def.stash_slots = run.req_int("stash_slots", 0)
-		def.pouch_cap = run.req_int("pouch_cap", 0)
-		def.reforge_gold = run.req_int("reforge_gold", 0)
-		run.finish()
-
-	if def.xp_to_resonant <= def.xp_to_attuned:
-		reader.error("xp_to_resonant (%d) must be greater than xp_to_attuned (%d)" % [def.xp_to_resonant, def.xp_to_attuned])
 	if def.collapse_surge_ticks < def.collapse_start_ticks:
 		reader.error("collapse_surge_ms must not be earlier than collapse_start_ms")
 	if def.tie_ticks <= def.collapse_start_ticks:
 		reader.error("tie_ms must be later than collapse_start_ms")
 	reader.finish()
 	return def
-
-
-## Reads {"c": .., "b": .., "a": .., "s": ..} into an array indexed by tier.
-static func _read_tier_table(reader: DataReader, key: String) -> Array[int]:
-	var table: Array[int] = [FixedMath.BP_ONE, FixedMath.BP_ONE, FixedMath.BP_ONE, FixedMath.BP_ONE]
-	var tiers: DataReader = reader.req_object(key)
-	if tiers == null:
-		return table
-	for i: int in TIER_NAMES.size():
-		table[i] = tiers.req_int(TIER_NAMES[i], 1)
-	tiers.finish()
-	return table
 
 
 ## Returns the collapse numbers for an act, or null if that act has none.

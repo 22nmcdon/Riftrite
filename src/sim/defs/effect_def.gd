@@ -1,9 +1,12 @@
 class_name EffectDef
 extends RefCounted
 ## One effect entry: WHEN it happens (trigger), WHAT it does (type), and WHO it
-## affects (target). This is the shared vocabulary for essences, alloys,
-## items, relics, and synergies (CLAUDE.md rule 3). Adding a trigger, type, or
-## target is a code change; say so when you make one.
+## affects (target). This is the shared vocabulary for abilities, relics, and
+## duo bonds (CLAUDE.md rule 3). Adding a trigger, type, or target is a code
+## change; say so when you make one. The arena sim
+## (docs/plans/rebuild-phase1-arena-sim.md) adds spatial targets and the
+## knockback, pull, leap, charge, area, summon, mana_drain, and
+## start_collapse types.
 ##
 ## Fields per type:
 ##   damage:       amount
@@ -13,22 +16,15 @@ extends RefCounted
 ##   cleanse:      amount_bp; strips that share of the target's
 ##                 damage-over-time stacks (times each status's
 ##                 cleanse_effectiveness_bp, like heals do)
-##   charge:       amount_ms; advances *items'* cooldowns, so its target is
-##                 an item target (see ITEM_TARGET_NAMES): self_item,
-##                 holder_items (every other item the holder has), or
-##                 partner_items (the other items of the pair synergy that
-##                 granted it)
 ## `amount` (or `stacks`) is the base value. An optional "scaling" object adds
-## a share of the holder's stats, in basis points of each stat:
+## a share of the unit's stats, in basis points of each stat:
 ##   "scaling": {"atk": 6000, "atsp": 2000}  ->  base + 60% ATK + 20% ATSP
 ## (Not allowed with amount_bp_of_damage, which scales from the hit instead.)
 ## An optional "window" limits the effect to part of the fight:
 ##   "window": {"from_ms": 0, "until_ms": 8000}   (either end optional)
-## Rush and Stall items use windows; outside its window the effect does nothing.
 ##
 ## Targets that reach several units (each gets its own hit/heal/...):
 ##   all_enemies, all_allies (standing units, in resolution order)
-##   row_allies (every other standing ally in the holder's row)
 ##
 ## Relic effects (read with relic = true) have no holder, so their triggers
 ## and targets differ:
@@ -39,47 +35,38 @@ extends RefCounted
 ##                      HP while still standing; "once": true means only the
 ##                      first ally in the fight, otherwise once per ally
 ##   trigger_ally       target: the ally that set off on_ally_below_hp
-## Relic numbers are flat: no "scaling" (see AuraDef.covers_everything for
-## what can boost them). Targets that need a spot on the field are rejected.
-## A specialization's ability (read with ability = true) takes the relic
-## triggers too, but it belongs to a hero: its numbers scale from the hero's
-## stats, and hero-relative targets work.
+## Relic numbers are flat: no "scaling". Targets that need a unit on the
+## field are rejected.
 ##
-## Event triggers (items and abilities, not relics; docs/plans/
-## keywords-and-affinities.md): the effect runs when its holder does
-## something, read from the combat log each tick (see Events):
-##   on_ability       another of the holder's abilities fires ("keyword":
-##                    only abilities with it)
-##   on_basic_attack  the holder's basic attack fires
-##   on_holder_crit   any of the holder's hits crits (hit_target: the unit
+## Event triggers (abilities, not relics): the effect runs when its unit does
+## something, read from the combat log each tick:
+##   on_ability       another of the unit's abilities fires
+##   on_basic_attack  the unit's basic attack fires
+##   on_holder_crit   any of the unit's hits crits (hit_target: the unit
 ##                    hit; amount_bp_of_damage: of that hit)
-##   on_shielded      the holder gains Shield (hit_target: the holder)
-##   on_hit_taken     an enemy's hit lands on the holder (hit_target: the
+##   on_shielded      the unit gains Shield (hit_target: the unit)
+##   on_hit_taken     an enemy's hit lands on the unit (hit_target: the
 ##                    attacker; amount_bp_of_damage: of that hit)
-##   on_heal          the holder restores HP to an ally (hit_target: them)
-##   on_status        the holder applies a status ("statuses": only those;
+##   on_heal          the unit restores HP to an ally (hit_target: them)
+##   on_status        the unit applies a status ("statuses": only those;
 ##                    hit_target: the unit it went on)
-##   on_kill          an enemy the holder hit last falls
+##   on_kill          an enemy the unit hit last falls
 ## "every": N runs it on every Nth time. What an event effect does never sets
-## off another event effect, and it earns no infusion XP.
+## off another event effect.
 
 enum Trigger {
 	ON_FIRE, ON_HIT, ON_CRIT, ON_FIGHT_START, AT_TIME, ON_ALLY_BELOW_HP,
 	ON_ABILITY, ON_BASIC_ATTACK, ON_HOLDER_CRIT, ON_SHIELDED, ON_HIT_TAKEN, ON_HEAL, ON_STATUS, ON_KILL,
 }
-enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CHARGE, CLEANSE }
-enum ItemTarget { SELF_ITEM, HOLDER_ITEMS, PARTNER_ITEMS }
+enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE }
 enum Target {
 	HIT_TARGET,
 	SELF,
 	ALLY_LOWEST_HP,
-	ENEMY_FRONT,
-	ENEMY_BACK,
 	ENEMY_RANDOM,
 	ENEMY_LOWEST_HP,
 	ALL_ENEMIES,
 	ALL_ALLIES,
-	ROW_ALLIES,
 	TRIGGER_ALLY,
 }
 
@@ -87,7 +74,7 @@ const TRIGGER_NAMES: Array[String] = [
 	"on_fire", "on_hit", "on_crit", "on_fight_start", "at_time", "on_ally_below_hp",
 	"on_ability", "on_basic_attack", "on_holder_crit", "on_shielded", "on_hit_taken", "on_heal", "on_status", "on_kill",
 ]
-## The holder's events (see the top).
+## The unit's events (see the top).
 const EVENT_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL,
@@ -96,36 +83,30 @@ const EVENT_TRIGGERS: Array[Trigger] = [
 ## (amount_bp_of_damage).
 const EVENT_UNIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED, Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS]
 const EVENT_HIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_HIT_TAKEN]
-const ITEM_TRIGGERS: Array[Trigger] = [
+const ABILITY_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_FIRE, Trigger.ON_HIT, Trigger.ON_CRIT,
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL,
 ]
 const RELIC_TRIGGERS: Array[Trigger] = [Trigger.ON_FIRE, Trigger.ON_FIGHT_START, Trigger.AT_TIME, Trigger.ON_ALLY_BELOW_HP]
-## Targets that need the effect's holder to stand on the field.
-const FIELD_ONLY_TARGETS: Array[Target] = [Target.HIT_TARGET, Target.SELF, Target.ROW_ALLIES]
-const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "charge", "cleanse"]
-const ITEM_TARGET_NAMES: Array[String] = ["self_item", "holder_items", "partner_items"]
+## Targets that need the effect's unit to stand on the field.
+const FIELD_ONLY_TARGETS: Array[Target] = [Target.HIT_TARGET, Target.SELF]
+const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse"]
 const TARGET_NAMES: Array[String] = [
 	"hit_target",
 	"self",
 	"ally_lowest_hp",
-	"enemy_front",
-	"enemy_back",
 	"enemy_random",
 	"enemy_lowest_hp",
 	"all_enemies",
 	"all_allies",
-	"row_allies",
 	"trigger_ally",
 ]
 
 var trigger: Trigger
 var type: Type
 var target: Target
-## charge: which items it charges.
-var item_target: ItemTarget = ItemTarget.SELF_ITEM
-## damage/heal/shield: the amount; charge: ticks of cooldown it advances.
+## damage/heal/shield: the amount.
 var amount: int = 0
 var amount_bp_of_damage: int = 0
 var status_id: String = ""
@@ -143,31 +124,18 @@ var threshold_bp: int = 0
 var once: bool = false
 ## Event triggers: runs on every Nth event.
 var every: int = 1
-## on_ability: only abilities with this keyword ("" = any).
-var keyword: String = ""
 ## on_status: only these statuses (empty = any).
 var statuses: Array[String] = []
 
-
 ## `relic`: read a relic's effect (relic triggers and targets, flat numbers).
-## `ability`: read a specialization ability's effect (relic triggers, hero
-## targets, scaled numbers).
-static func read(reader: DataReader, relic: bool = false, ability: bool = false) -> EffectDef:
+static func read(reader: DataReader, relic: bool = false) -> EffectDef:
 	var def := EffectDef.new()
 	var trigger_name: String = reader.req_choice("trigger", TRIGGER_NAMES)
 	var type_name: String = reader.req_choice("type", TYPE_NAMES)
 	def.trigger = maxi(TRIGGER_NAMES.find(trigger_name), 0) as Trigger
 	def.type = maxi(TYPE_NAMES.find(type_name), 0) as Type
-	var target_name: String = ""
-	if type_name == "charge":
-		def.item_target = maxi(ITEM_TARGET_NAMES.find(reader.req_choice("target", ITEM_TARGET_NAMES)), 0) as ItemTarget
-		# The unit target is unused; SELF keeps the hit checks below quiet.
-		def.target = Target.SELF
-		if relic:
-			reader.error("a relic holds no item, so its effects can't charge")
-	else:
-		target_name = reader.req_choice("target", TARGET_NAMES)
-		def.target = maxi(TARGET_NAMES.find(target_name), 0) as Target
+	var target_name: String = reader.req_choice("target", TARGET_NAMES)
+	def.target = maxi(TARGET_NAMES.find(target_name), 0) as Target
 
 	if not type_name.is_empty():
 		match def.type:
@@ -181,8 +149,6 @@ static func read(reader: DataReader, relic: bool = false, ability: bool = false)
 			Type.APPLY_STATUS:
 				def.status_id = reader.req_string("status")
 				def.stacks = reader.req_int("stacks", 1)
-			Type.CHARGE:
-				def.amount = reader.req_ticks("amount_ms", FixedMath.MS_PER_TICK)
 			Type.CLEANSE:
 				def.amount = reader.req_int("amount_bp", 1, FixedMath.BP_ONE)
 		if reader.has("scaling"):
@@ -192,11 +158,11 @@ static func read(reader: DataReader, relic: bool = false, ability: bool = false)
 
 	read_window(reader, def)
 	if not trigger_name.is_empty():
-		_read_trigger_fields(def, reader, relic, ability)
+		_read_trigger_fields(def, reader, relic)
 
 	# "hit_target" and damage-based shields need a hit to refer to.
 	var needs_hit: bool = def.target == Target.HIT_TARGET or def.amount_bp_of_damage > 0
-	if needs_hit and not trigger_name.is_empty() and not relic and not ability and def.trigger == Trigger.ON_FIRE:
+	if needs_hit and not trigger_name.is_empty() and not relic and def.trigger == Trigger.ON_FIRE:
 		reader.error("\"%s\" needs a hit, so its trigger must be on_hit or on_crit, not on_fire" % (target_name if def.target == Target.HIT_TARGET else "amount_bp_of_damage"))
 	if not trigger_name.is_empty() and EVENT_TRIGGERS.has(def.trigger):
 		if def.target == Target.HIT_TARGET and not EVENT_UNIT_TRIGGERS.has(def.trigger):
@@ -208,20 +174,16 @@ static func read(reader: DataReader, relic: bool = false, ability: bool = false)
 
 
 ## Checks the trigger is allowed here and reads its extra fields.
-static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool, ability: bool) -> void:
-	var allowed: Array[Trigger] = RELIC_TRIGGERS if relic or ability else ITEM_TRIGGERS
-	if ability:
-		allowed = RELIC_TRIGGERS + EVENT_TRIGGERS
+static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool) -> void:
+	var allowed: Array[Trigger] = RELIC_TRIGGERS if relic else ABILITY_TRIGGERS
 	if not allowed.has(def.trigger):
-		reader.error("%s effects can't use the trigger \"%s\"" % ["relic" if relic else ("ability" if ability else "item"), TRIGGER_NAMES[def.trigger]])
+		reader.error("%s effects can't use the trigger \"%s\"" % ["relic" if relic else "ability", TRIGGER_NAMES[def.trigger]])
 	match def.trigger:
 		Trigger.AT_TIME:
 			def.at_ticks = reader.req_ticks("at_ms", FixedMath.MS_PER_TICK)
 		Trigger.ON_ALLY_BELOW_HP:
 			def.threshold_bp = reader.req_int("threshold_bp", 1, FixedMath.BP_ONE - 1)
 			def.once = reader.opt_bool("once", false)
-		Trigger.ON_ABILITY:
-			def.keyword = reader.opt_string("keyword", "")
 		Trigger.ON_STATUS:
 			if reader.has("statuses"):
 				def.statuses = reader.req_string_array("statuses")
@@ -229,12 +191,10 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 		def.every = reader.opt_int("every", 1, 1)
 	if def.target == Target.TRIGGER_ALLY and def.trigger != Trigger.ON_ALLY_BELOW_HP:
 		reader.error("\"trigger_ally\" only works with the on_ally_below_hp trigger")
-	if ability and def.target == Target.HIT_TARGET and not EVENT_UNIT_TRIGGERS.has(def.trigger):
-		reader.error("an ability has no hit, so it can't use hit_target")
 	if not relic:
 		return
 	if FIELD_ONLY_TARGETS.has(def.target):
-		reader.error("\"%s\" needs a spot on the field, so a relic can't use it" % TARGET_NAMES[def.target])
+		reader.error("\"%s\" needs a unit on the field, so a relic can't use it" % TARGET_NAMES[def.target])
 	if def.amount_bp_of_damage > 0:
 		reader.error("a relic has no hit, so it can't use amount_bp_of_damage")
 	if def.scaling.any(func(ratio: int) -> bool: return ratio != 0):
