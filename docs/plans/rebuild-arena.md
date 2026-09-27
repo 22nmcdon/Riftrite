@@ -13,10 +13,10 @@ Status: **agreed in discussion (2026-09-27), not built.** Part of the from-scrat
 
 ## 1. The grid
 
-- **Hexes, 8 wide × 7 tall.**
+- **Hexes, 8 wide × 7 tall, flat-topped** (decided). **The hexes are only for placing units before the fight;** the fight itself takes place on a free-moving plane (decided, section 3).
 - **Your zone is the 3 rows nearest you; the enemy zone is the 3 rows nearest them.** The middle row belongs to no one.
-- **One unit per hex.** Every unit takes one hex, bosses included, for now.
-- **Terrain:** start flat. Once the basics work, add a few **rocks** per encounter that block movement, so each fight's layout differs. No line of sight at first (rocks don't block arrows); it adds a lot of complexity for little gain.
+- **One unit per hex** when placing. Every unit takes one hex, bosses included, for now.
+- **Terrain:** start flat, then add a few **rocks** per encounter, each on a hex, that block movement, so each fight's layout differs. No line of sight at first (rocks don't block arrows); it adds a lot of complexity for little gain.
 
 ## 2. Placement before each fight
 
@@ -27,17 +27,17 @@ Status: **agreed in discussion (2026-09-27), not built.** Part of the from-scrat
 
 ## 3. Movement and targeting
 
-- **Units move one hex at a time**, at a speed set per unit (hexes per second, converted to ticks).
-- **A unit reserves the hex it's moving into**, so two units never collide. Ties are settled in a fixed order (by unit id), so the sim stays deterministic.
-- **Pathfinding** takes the shortest route around other units and rocks (breadth-first, with a fixed neighbor order). If there's no route, the unit waits.
+- **Units move freely**, not hex to hex, at a speed set per unit (hexes per second; a hex is the distance between two neighboring hex centers).
+- **Units never overlap.** Each unit moves in turn, in a fixed order with heroes first, so the sim stays deterministic.
+- **Pathfinding** takes the shortest route around other units and rocks, with a fixed tie-break. If there's no route, the unit waits.
 - **Default targeting: the nearest enemy it can reach.** Once a unit picks a target, it keeps it until the target dies, a taunt pulls it away, or the target becomes unreachable.
 - **Some units target differently:** Vell heals the ally lowest on HP; enemy flankers go for the weakest back-liner. Targeting rules are data on the unit.
-- **Units stop to attack.** Melee has to be adjacent; ranged units fire from their range. Units that can fire while moving (Volley Maren, once transformed) say so in their data.
+- **Units stop to attack.** Melee has to be touching; ranged units fire from their range, and **their shots travel** (about 1 tick per hex) instead of landing at once. Units that can fire while moving (Volley Maren, once transformed) say so in their data.
 
 ## 4. What makes tanks matter
 
 - **Blocking:** nobody moves through anyone else. A tank standing in a gap physically closes it.
-- **Engage (Brannoc's trait):** enemies next to him must spend 1s breaking free to walk away from him.
+- **Engage (Brannoc's trait):** an enemy next to him that's trying to reach someone else can't move past him for 1s.
 - **Taunt:** pulls enemies' targeting onto him.
 - **Knockback:** pushes a unit a number of hexes. If it hits another unit or a rock, it's stunned.
 
@@ -45,8 +45,8 @@ A good formation (Brannoc in the lane, Maren behind him) keeps a melee enemy off
 
 ## 5. Area shapes and statuses
 
-- **Shapes:** circle (radius), line, cone (a 3-hex arc), and ring, all measured in hex distance.
-- **Warnings:** the hexes a big area attack will hit light up briefly before it lands, so it's always clear why someone got hit.
+- **Shapes:** circle (radius), line, cone (widening 1, 2, 3 hexes), and ring, all measured in hexes on the plane.
+- **Warnings:** the ground a big area attack will hit lights up briefly before it lands, so it's always clear why someone got hit.
 - **Statuses for the slice (kept small):**
 
 | Status | What it does |
@@ -77,17 +77,17 @@ Enemies get their own part of the plan.
 
 ## 7. Rift Collapse: the arena shrinks
 
-- **At 45s, the outer ring of hexes starts crumbling inward**, one ring at a time.
-- **Anyone standing on a crumbling hex takes damage.**
+- **At 45s, the arena's outer ring starts crumbling inward**, one ring at a time (the rings of the placement grid).
+- **Anyone standing on crumbled ground takes damage.** Nobody can walk onto it, but a push can put them there.
 - Fights still end, but through positioning: slow, defensive teams get squeezed toward the middle, into each other's area attacks.
 - This replaces the flat damage ramp. A fight still running at **180s is a tie, and a tie counts as a win.**
 
 ## 8. What it means for the code
 
-- The combat sim gets a **spatial layer**: positions, movement, pathfinding, reservations, areas, knockback, and the shrinking arena.
+- The combat sim gets a **spatial layer**: positions on a plane, movement, pathfinding, shots in flight, areas, knockback, and the shrinking arena.
 - **Carried over:** effects, statuses, the combat log (every move and push is logged with its source), determinism, and integer math.
 - **Replaced:** front-row and back-row targeting (`enemy_front`, `enemy_back`, and the row targets).
-- **UI:** a hex board, a placement screen, area warnings, and movement animation.
+- **UI:** a hex placement screen, an open arena for the fight, area warnings, shots in flight, and movement animation.
 - It's the biggest single piece of work in the rebuild, so it gets its own build plan.
 
 ## Decisions (2026-09-27)
@@ -98,6 +98,21 @@ Enemies get their own part of the plan.
 - **Rift Collapse, first numbers:** from 45s, one rectangular ring of the board crumbles every 10s. Standing on a crumbled hex deals flat damage each second (tuning values).
 - **Flying units pass over other units**, but **Engage still stops them**: an engaged flier has to break free like anyone else.
 - **Rocks come in phase 1.**
+
+Answers to the phase 1 plan's proposals (2026-09-27; the details are in `rebuild-phase1-arena-sim.md`):
+
+- **Flat-top hexes**, not pointy-top.
+- **Hexes are for placement only.** Fights happen on a free-moving plane.
+- **Heroes come first in the fight order** (it settles who gets a contested gap).
+- **Engage** holds a unit for 1s when it's trying to get past the engager to someone else.
+- **Back-liners** are the units that **started** in their side's back two rows; it's fixed at the start of the fight.
+- **The arena's edge stops a push** like a rock does, and stuns.
+- **Leaps and pushes are instant in the sim;** only the UI animates them.
+- **Fliers pass over rocks** as well as units.
+- **Stun doesn't stop mana gain,** but a stunned unit can't fire its mana signature.
+- **Crumbled ground can't be walked into,** only pushed into.
+- **Up to 30 standing units per side**, since summons may be small and frequent.
+- **Ranged hits travel,** about 1 tick per hex.
 
 ## Open questions
 

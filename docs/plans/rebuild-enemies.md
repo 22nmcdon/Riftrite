@@ -15,6 +15,7 @@ Status: **agreed in discussion (2026-09-27), not built.** Part of the from-scrat
 - **Heroes never step out of marked areas.** Placement before the fight is the skill. A hero that can dodge areas may come later, but it isn't Maren (her hop is about getting away from enemy units, not areas).
 - **Enemies can have specializations and upgrades later** (section 7), far narrower than a hero's.
 - **"The rift learns" is a difficulty modifier**, not always on (section 8).
+- **Summon limit:** at most 30 standing units per side (2026-09-27), because summons may be small and spawn often.
 
 ## 1. What an enemy is
 
@@ -110,5 +111,4 @@ More come later (the list and order are tuned with playtesting). Meta progressio
 ## Open questions
 
 - **When do enemy specializations arrive:** late Act 1, or from Act 2?
-- **Summon limits:** how many summoned units can be on the board at once?
 - **Rocks:** hand-placed per encounter, or drawn from a few layouts?

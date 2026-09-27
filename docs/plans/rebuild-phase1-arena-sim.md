@@ -1,8 +1,10 @@
 # Rebuild phase 1: the arena sim (build plan)
 
-Status: **proposal (2026-09-27), waiting for approval.** Phase 1 of `docs/plans/rebuild-build-order.md`. Design sources: `rebuild-arena.md` (the grid, movement, tanks, areas, the collapse), `rebuild-heroes.md` (mana and signature triggers), and `rebuild-enemies.md` (what enemies need from the sim). Numbers are placeholders to tune.
+Status: **proposal, revised 2026-09-27 after the first round of answers; waiting for approval.** Phase 1 of `docs/plans/rebuild-build-order.md`. Design sources: `rebuild-arena.md` (placement, movement, tanks, areas, the collapse), `rebuild-heroes.md` (mana and signature triggers), and `rebuild-enemies.md` (what enemies need from the sim). Numbers are placeholders to tune.
 
-**Goal:** a headless combat sim on a hex board. Units move, block each other, pick targets by rule, attack in melee or at range, get pushed and pulled, fire signatures on mana or other triggers, drop warned area attacks, and are squeezed by a shrinking arena. **Done when** seeded fights repeat exactly and every move, push, and hit is in the log with its source.
+**The big change in this revision:** hexes are only for **placement**. Once the fight starts, units move freely on a flat plane. So there are no reservations, no hex-by-hex steps, and no snapping to six directions. Distances are still counted in hexes, because that's how every design doc talks about them.
+
+**Goal:** a headless combat sim on a free plane. Units start on hex centers, then walk, block each other, pick targets by rule, and attack in melee or with shots that fly. They also get pushed and pulled, fire signatures on mana or other triggers, drop warned area attacks, and are squeezed by a shrinking arena. **Done when** seeded fights repeat exactly, and every move, push, shot, and hit is in the log with its source.
 
 **Written before phase 0** (the gut), as the build order asks. It assumes phase 0 has removed items, essences, and rows, and left stubs where the rewrites go.
 
@@ -10,11 +12,12 @@ Status: **proposal (2026-09-27), waiting for approval.** Phase 1 of `docs/plans/
 
 **In phase 1:**
 
-- The hex grid, rocks, positions, movement with reservations, and pathfinding.
+- The placement grid, rocks, and the plane.
+- Positions, movement, blocking, and pathfinding.
 - Targeting rules, with sticky targets.
-- Melee and ranged basic attacks, and blocking.
+- Melee attacks, and ranged attacks as flying shots.
 - Engage, Taunt, and Knockback (with a stun on collision).
-- Pulls, leaps, charges, and flying.
+- Pulls, leaps, charges, hops, and flying.
 - Area shapes (circle, line, cone, ring) with warnings.
 - The slice's statuses.
 - Mana, and the four signature triggers.
@@ -26,36 +29,66 @@ Status: **proposal (2026-09-27), waiting for approval.** Phase 1 of `docs/plans/
 
 - Real hero and enemy content: the three heroes' kits and the 9 Act 1 enemies are phase 2. Phase 1 tests use small units defined inside the tests.
 - Paths, vows, taste and cost, and deeds on the new sim (phase 4).
-- **Lasting areas** (Arrow Storm, Night Lantern, Warding Circle, snares, hazards). Phase 4 adds them on top of shapes. Only instant, warned areas come now.
+- **Lasting areas and walls** (Arrow Storm, Night Lantern, Warding Circle, snares, Hearthwall, hazards). Phase 4 adds them on top of shapes. Only instant, warned areas come now.
+  - Flying shots are built so a wall can stop one in the air later.
 - Relics and duo bonds (phase 5). The relic runner stays stubbed from phase 0.
 - The UI (phase 3) and the sim runner's placed parties (phase 2).
 
 ## Decisions this plan builds on
 
-From the rebuild plans and the 2026-09-27 answers:
+From the rebuild plans:
 
-- Hexes, **8 wide × 7 tall**. Each side has a 3-row zone, with one neutral row between. One unit per hex.
+- The placement board is **8 wide × 7 tall**. Each side has a 3-row zone, with one neutral row between them, and one unit per hex.
 - **Speed** is a stat: its number is hexes per second.
 - **Nearest** means the shortest path, with ties broken by fight order.
 - **Cones** widen 1, 2, 3.
-- **The collapse** takes one ring every 10s from 45s. A crumbled hex deals flat damage per second.
+- **The collapse** takes one ring every 10s from 45s. Standing on crumbled ground deals flat damage per second.
 - **Flying** passes over units, but **Engage still stops fliers**.
 - **Rocks** come in phase 1.
 - Integer math, a fixed 20 ticks per second, the seeded RNG only, and no Dictionary iteration that affects outcomes (CLAUDE.md rule 1).
 
+The first round of answers on this plan (2026-09-27):
+
+1. **Flat-top hexes**, not pointy-top.
+2. **Hexes are only for the setup.** The fight takes place on a free-moving plane.
+3. **Heroes come first in the fight order.**
+4. **Engage:** a unit next to an engager can't move past it for 1s when it's trying to reach someone else.
+5. **"Back-liner"** means a unit that **started** in its side's back two rows. It's fixed at the start and doesn't change during the fight.
+6. **The board's edge stops a push** like a rock does, and stuns.
+7. **Leaps and pushes are instant in the sim.** Only the UI animates them.
+8. **Fliers pass over rocks too.**
+9. **Stun doesn't stop mana gain,** but a stunned unit can't fire a mana signature.
+10. **Crumbled ground can't be walked into,** only pushed into.
+11. **Summon cap:** 30 standing units per side, because small summons may spawn often.
+12. **Ranged hits travel:** a shot takes about 1 tick per hex.
+
 ---
 
-## 1. The board
+## 1. Placement and the plane
 
-- **Coordinates:** `(col, row)`, where `col` is 0–7 left to right and `row` is 0–6. **Row 0 is the heroes' back row, row 6 the enemies' back row.** The heroes' zone is rows 0–2, row 3 is neutral, and the enemies' zone is rows 4–6. Data (encounters, rocks) uses these board coordinates.
-- **Layout:** pointy-top hexes in horizontal rows, with odd rows shifted half a hex right ("odd-r"). The sim stores a hex as one int, `row * 8 + col`. Distance, directions, and lines are computed in cube coordinates, all integers.
-- **Neighbor order:** fixed, and **forward-first for each side**. A hero looks at north-east and north-west before east and west, then south. An enemy uses the mirror image. So neither side drifts toward one flank when routes tie.
-- **Directions:** the 6 hex directions. Lines, cones, charges, knockback, and pulls all **snap to the direction closest to the target** (compared with integer dot products, ties by the fixed order). That keeps them readable and integer-only.
-- **Rocks:** hexes that block movement and knockback, but not attacks (no line of sight). An encounter lists them; the fight setup carries them.
+### The placement grid (setup only)
+
+- **Coordinates:** `(col, row)`, where `col` is 0–7 left to right and `row` is 0–6.
+  - **Row 0 is the heroes' back row**, and row 6 the enemies' back row.
+  - The heroes' zone is rows 0–2, row 3 is neutral, and the enemies' zone is rows 4–6.
+  - Data (encounters, rocks, summon spots) uses these coordinates.
+- **Layout:** flat-top hexes in **columns**, with odd columns shifted half a hex toward the enemy ("odd-q"). The setup stores a hex as one int, `row * 8 + col`.
+- **Validation:** each unit stands in its own zone, no two share a hex, and none stands on a rock.
+
+### The plane (the fight)
+
+- **Units:** at the fight's start, each unit stands on its hex's center. From then on it has a free position `(x, y)`, in integers.
+- **Scale:** **1 hex = 1000 units**, which is the distance between two neighboring hex centers.
+  - A hex's center sits at `x = col × 866 + 500` and `y = row × 1000 + 500`, plus 500 more for odd columns.
+  - 866 is 1000 × cos 30°. That makes neighbors in the same column exactly 1000 apart, and neighbors in the next column 999.98 apart. That's close enough, and it stays integer.
+- **The arena's edge** is the rectangle around the hex centers, half a hex beyond the outermost ones.
+- **Units are circles**, all with radius **400** (0.4 hex) for now. No two units overlap, so two neighbors on the grid start with a 200 gap between them, which is too narrow to walk through.
+- **Rocks** are circles of radius **500** on a hex center. Rocks on neighboring hexes touch, so a row of rocks is a wall. Rocks block movement and pushes, but not attacks (no line of sight).
+- **Distances** are straight-line, computed with a shared integer square root (`FixedMath.isqrt`) and compared squared where possible. Directions are integer vectors scaled to length 1000.
 
 ## 2. What a unit is (data shape)
 
-Heroes and enemies share one **kit** (`UnitDef`). `HeroDef` (paths, phase 4) and `EnemyDef` (threat line, archetype, phases) each wrap one. Phase 1 only reads kits from inline test data. The real files are phase 2.
+Heroes and enemies share one **kit** (`UnitDef`). `HeroDef` (paths, phase 4) and `EnemyDef` (threat line, archetype, phases) each wrap one. Phase 1 only reads kits from inline test data; the real files are phase 2.
 
 ```json
 {
@@ -79,72 +112,107 @@ Heroes and enemies share one **kit** (`UnitDef`). `HeroDef` (paths, phase 4) and
 }
 ```
 
-- **Stats:** the six we have, plus **`speed`** (hexes per second) and **`range`** (the basic attack's reach in hexes; 1 = melee). Both are `UnitStats` stats, so auras and path costs can change them later.
+- **Stats:** the six we have, plus two new ones. Both are `UnitStats` stats, so auras and path costs can change them later.
+  - **`speed`:** hexes per second.
+  - **`range`:** the basic attack's reach in hexes. 1 means melee.
 - **`targeting`:** the unit's rule for its basic attack, and so for where it walks (section 4). A signature can have its own rule.
 - **`traits`:** `engage`, `flying`, and `hop_away` for now (section 6). Each one is a code path, and the validator names the allowed ones.
 - **`mana`:** optional. **A unit without it has no mana bar**, and Silence and mana drain do nothing to it.
-- **`basic_attack`** and **`signature`:** these are **abilities** (`AbilityDef`), with effects in the `EffectDef` vocabulary.
+- **`basic_attack`** and **`signature`** are **abilities** (`AbilityDef`), with effects in the `EffectDef` vocabulary.
+  - An ability with reach 2 or more fires a **shot** (section 5). An ability can say `"shot": false` to land at once, for example a beam.
 - **`passives`:** the `Part` kinds that survive phase 0 (aura, ability on an event trigger, replace_status).
 
 ## 3. The tick
 
-Each tick, in this order (resolution order = the fight's unit order: heroes in setup order, then enemies, then summons in the order they join):
+Each tick runs these steps in order. Resolution order is the fight's unit order: heroes in setup order, then enemies, then summons in the order they join.
 
-1. **Collapse:** a ring's warning or crumble, and damage once per second to everyone on crumbled hexes.
+1. **Collapse:** a ring's warning or crumble, and damage once per second to everyone on crumbled ground.
 2. **Statuses tick:** damage over time, and timers running out.
-3. **Warned areas land** if they're due, in the order they were cast.
-4. **Each standing unit acts** in resolution order:
-   1. Stunned: skip to the next unit.
-   2. Mana regen (unless Silenced).
-   3. **Signature:** if its trigger is met and it has a valid target, it fires (see section 5).
-   4. **Target:** keep or pick one (section 4).
-   5. If the target is in range, the unit is standing still, and it isn't mid-step, the **basic attack** advances its cooldown and fires when ready. Otherwise it **moves** (section 4).
-5. **Event effects**, read from this tick's log (the `Events` code we keep); then **phases**.
-6. **Deaths:** units at 0 HP fall, and their hexes free up. Then on_kill effects, and any deaths those cause.
-7. **Victory, defeat, or a tie** (180s, or both sides falling on the same tick; a tie counts as a win).
+3. **Shots land** if they're due, in the order they were fired.
+4. **Warned areas land** if they're due, in the order they were cast.
+5. **Each standing unit acts**, in resolution order:
+   1. Mana regen (unless Silenced).
+   2. **Stunned:** stop here.
+   3. **Signature:** if its trigger is met and it has a valid target, it fires (section 5).
+   4. **Target:** keep the current one or pick a new one (section 4).
+   5. **Attack or move:**
+      - If the target is in range and the unit isn't being displaced, it stands still. Its **basic attack** fires when its cooldown is ready.
+      - Otherwise, it **moves** (section 4).
+6. **Event effects**, read from this tick's log (the `Events` code we keep); then **phases**.
+7. **Deaths:** units at 0 HP fall. Then on_kill effects run, and any deaths those cause.
+8. **Victory, defeat, or a tie:** a fight still running at 180s is a tie, as is both sides falling on the same tick. A tie counts as a win.
 
-Units act one after another inside a tick, but **deaths wait until step 6**, as now. So a unit knocked to 0 this tick still acts if its turn comes later in the tick, and neither side gets an edge from going first.
-
-- **Heroes come first in the order.** The old sim's "fires regardless of who died this tick" makes that mostly harmless. The one place it shows is **reservations**: when a hero and an enemy want the same free hex on the same tick, the hero gets it. (A proposal; see section 14.)
+- **Deaths wait until step 7**, as now. A unit knocked to 0 this tick still acts if its turn comes later in the tick, so neither side gets an edge from going first.
+- **Movement is resolved one unit at a time,** each against the positions everyone else already has. So two units can never overlap. When a hero and an enemy want the same gap on the same tick, the hero gets it (decided).
 
 ## 4. Movement, targeting, and blocking
 
 ### Moving
 
-- **One hex at a time.** A step takes `step_ticks = 20 / speed` ticks (one shared rounding helper; speed 2 = 10 ticks, speed 3 = 7). Slow stretches it.
-- **Reservation:** when a unit starts a step, it **reserves the next hex**. It keeps its current hex until it arrives, then frees it. While a step is under way, both hexes are blocked for everyone else, so two units never collide.
-- **Pathfinding:** breadth-first search with the fixed neighbor order. Units, reserved hexes, rocks, and crumbled hexes block it (a unit standing on a crumbled hex can still leave). The goal is **any free hex from which the target is in range**. The unit takes the first step of that path, and paths again before each new step, so it reacts to a board that keeps changing.
-- **No path:** the unit waits. After **1s with no path** (tuning `repath_give_up_ms`), it drops its target and picks again.
-- **Units stop to attack.** A unit with its target in range doesn't move (it may finish a step already begun). A `fires_while_moving` flag on the unit (Volley Maren, phase 4) is left for later; phase 1 only reserves the field name.
+- **Speed:** a unit covers `speed × 1000 / 20` units per tick (speed 2 = 100 per tick). Slow reduces it.
+- **Straight when it can:** if the straight way to a spot in range of its target is clear, the unit walks straight at it.
+- **Around when it must:** otherwise it finds a path and walks along it, straight between the path's corners.
+  - **Pathfinding** runs on a **hidden grid of quarter-hex cells** (about 30 × 30). It isn't a hex grid, and nothing snaps to it.
+  - A cell is blocked if the walker's circle there would overlap a unit, a rock, crumbled ground, or the edge. The walker's own target doesn't block cells, so it can reach it.
+  - The search is Dijkstra with integer costs (250 straight, 354 diagonal) and a fixed neighbor order, forward-first for each side. So neither side drifts toward one flank when routes tie.
+  - **Its goal** is any free cell from which the target is in range.
+- **Repathing:** a unit keeps its path until it's blocked, its target changes, or 0.5s passes (`repath_ms`). The board keeps changing, so it looks again regularly.
+- **Blocked:** if the next piece of movement would overlap anything, the unit doesn't move this tick and repaths on its next turn.
+- **No path:** the unit waits. After **1s with no path** (`repath_give_up_ms`), it drops its target and picks again.
+- **Units stop to attack.** A unit whose target is in range stands still. A `fires_while_moving` flag (Volley Maren, phase 4) is left for later; phase 1 only reserves the field name.
+
+### Range
+
+- **In range** means the centers are at most `range × 1000` apart.
+- Two touching units are 800 apart, so melee (range 1) works when they touch or nearly touch.
+- A ranged unit with range 4 fires from up to 4000 away.
 
 ### Targeting rules (`Targeting`)
 
 | Rule | Picks | Used by (later) |
 | --- | --- | --- |
-| `nearest` | the enemy with the shortest path to a hex in range | most units |
-| `weakest_backliner` | among enemies in their side's **back two rows**, the lowest HP%; if none stand there, the lowest HP% anywhere | Rift Hound's Pounce, flankers |
-| `largest_group` | the enemy whose 2-hex circle holds the most enemies | Cinder Moth, Brand Slam, Ember Breath |
-| `farthest` | the enemy farthest away (hex distance) | Bog Lurker's Drag |
+| `nearest` | the enemy with the shortest path to a spot in range | most units |
+| `weakest_backliner` | among enemies that **started** in their side's back two rows, the lowest HP%; if none of them stand, the lowest HP% anywhere | Rift Hound's Pounce, flankers |
+| `largest_group` | the enemy with the most enemies within 2 hexes of it | Cinder Moth, Brand Slam, Ember Breath |
+| `farthest` | the enemy farthest away (straight line) | Bog Lurker's Drag |
 | `lowest_hp_ally` | the ally lowest on HP% (the unit itself included) | Vell's Mend |
 | `highest_mana` | the enemy with the most mana (units with no mana are never picked) | Gloam Witch's Hush |
 | `self` | the unit itself | Hold the Line |
 
-- Ties always go to the earlier unit in fight order.
-- **Sticky:** a unit keeps its basic-attack target until the target falls, **Taunt** overrides it, or the target stays unreachable for `repath_give_up_ms`. Each pick is logged with its reason ("Rift Hound targets Maren: nearest"), so the fight can always answer "who is attacking whom, and why?"
+- **Ties** always go to the earlier unit in fight order.
+- **One search, every distance:** a single search from the unit gives its path length to every enemy, so `nearest` costs one search per pick.
+- **Sticky:** a unit keeps its basic-attack target until one of these happens:
+  - the target falls
+  - a **Taunt** overrides it
+  - the target stays unreachable for `repath_give_up_ms`
+- **Each pick is logged with its reason** ("Rift Hound targets Maren: nearest"). The fight can always answer "who is attacking whom, and why?"
 - **Signatures pick fresh each time they fire**, with their own rule and optional `max_range`. If nothing fits, a mana signature stays full and waits.
 
 ### What makes tanks matter
 
-- **Blocking:** units never share a hex or pass through each other (fliers aside, section 6).
-- **Engage** (trait): a unit next to an engager is **Engaged** by it. **Before taking any step, an engaged unit spends `break_free_ms` (1s) breaking free.** It can't move or attack during that time, and it's logged. Once free, it can move until it's no longer next to that engager, and then the engagement ends. Coming back into contact engages it again. **Fliers break free too** (decided). Knockback or a pull out of contact ends the engagement at once.
+- **Blocking:** units never overlap or pass through each other (fliers aside, section 6).
+- **Engage** (trait): a unit whose center is within `engage_reach` (1 hex, 1000) of an engager is next to it. How it works:
+  - **Holding:** a unit next to an engager whose target is **someone else** has to spend `break_free_ms` (1s) breaking free before it can move (decided). It can't move during that time, and it's logged. It can still attack if its target is already in range.
+  - **Attacking the engager:** a unit whose target *is* the engager isn't held; it just fights.
+  - **Once free:** the unit can move until it's no longer next to that engager, and then the engagement ends. Coming back into contact engages it again.
+  - **Fliers break free too** (decided).
+  - **Displacement:** a knockback or pull out of contact ends the engagement at once.
 - **Taunt** (status, with the taunter as its source): the taunted unit's target becomes the taunter while the status lasts. If a second Taunt lands, the newer one wins.
 
-## 5. Attacks, mana, and signatures
+## 5. Attacks, shots, mana, and signatures
 
-- **Basic attack:** its cooldown runs all the time (sped up by ATSP, slowed by Slow), so a unit arriving in range with the attack ready hits at once. It fires only when its target is in range and the unit isn't moving. **Hits are instant**: the sim has no projectiles, and the UI can draw arrows.
+- **Basic attack:** its cooldown runs all the time, sped up by ATSP and slowed by Slow. So a unit arriving in range with the attack ready hits at once. It fires only when its target is in range and the unit is standing still.
+- **Shots** (decided: ranged hits travel):
+  - An attack with reach 2 or more fires a **shot**. It flies for `ceil(distance / 1000)` ticks, that is 1 tick per hex, at least 1.
+  - The shot **follows its target**, so it can't miss or be dodged.
+  - **The numbers are set when it's fired:** damage, crit, and the attacker's stats. It still lands if the attacker falls first.
+  - **If the target falls before it lands**, the shot fizzles, and that's logged.
+  - Melee (reach 1) lands at once.
+  - The log gets `SHOT` when it's fired and the hit when it lands, so the UI can draw the arrow in flight.
 - **Mana** (for units that have it) is kept in hundredths internally, so "1 per 10 damage" stays an integer. The data gives whole mana.
   - **Sources:** `per_attack` (each basic attack that fires), `per_10_damage_taken` (HP and Shield damage both count), `regen_per_s`, and `start`.
   - **Silence** blocks all of them. `mana_drain` is an effect type.
+  - **Stun doesn't stop mana gain** (decided). A stunned unit still regenerates and still gains mana from hits.
 - **Signature triggers:**
 
 | Trigger | Data | Fires |
@@ -154,36 +222,53 @@ Units act one after another inside a tick, but **deaths wait until step 6**, as 
 | `fight_start` / `at_time` | `at_ms` | once, at that moment |
 | `count` | an event trigger (`on_hit_taken`, `on_heal`, `on_kill`, …), `every` | on every Nth such event |
 
-- **`cast_ms`** (optional): the unit stands still for that long before the signature lands. Stun during a cast cancels it, and a mana signature keeps its mana. Big area attacks use **`warning_ms`** instead (section 7), so the caster doesn't have to stand still while the warning shows.
-- Every fire logs `FIRE` with the ability as its source, as now.
+- **Stunned units don't fire signatures** (decided for mana signatures, and proposed for every trigger, section 15). A full mana bar waits and fires once the stun ends. A trigger that came due during the stun fires as soon as it ends.
+- **`cast_ms`** (optional): the unit stands still for that long before the signature lands. A stun during the cast cancels it, and a mana signature keeps its mana.
+- Big area attacks use **`warning_ms`** instead (section 7), so the caster doesn't have to stand still while the warning shows.
+- Every fire logs `FIRE`, with the ability as its source, as now.
 
 ## 6. Displacement and flying
 
-All four displacements **move the unit instantly in the sim** and log the full path. The UI animates them. A moving unit that gets displaced loses its step and its reservation.
+All the displacements **move the unit instantly in the sim** and log the start and end points (decided). The UI animates them. A unit that gets displaced loses its path and repaths on its next turn.
 
 | Effect | What it does | Data |
 | --- | --- | --- |
-| `knockback` | pushes the target away from the source, straight along one hex direction | `hexes` |
-| `pull` | drags the target toward the source, straight | `hexes` |
-| `leap` | the source jumps to the free hex **next to its target** that is closest to where it stands, ignoring anything in between | `max_hexes`, `land_ms` (it can't act while landing) |
-| `charge` | the source runs straight toward its target, up to N hexes, stopping before the first unit. If that unit is an enemy, it knocks it back | `hexes`, `knockback` |
+| `knockback` | pushes the target straight away from the source | `hexes` |
+| `pull` | drags the target straight toward the source, stopping when it touches the source | `hexes` |
+| `leap` | the source jumps to a free spot touching its target, the one closest to where it stands, ignoring anything in between | `max_hexes`, `land_ms` (it can't act while landing) |
+| `charge` | the source runs straight at its target, up to N hexes, stopping when it touches the first unit in the way. If that unit is an enemy, it knocks it back | `hexes`, `knockback` |
 
-- **Collision:** a knockback or pull that's stopped early by a unit, a rock, or the **board's edge** stops at the last free hex. **The pushed unit is Stunned** for `collision_stun_ms` (1s). If it hit a unit, that unit is stunned too. (The rebuild plans name units and rocks; counting the edge is a proposal, section 14.)
-- **Pushed into a crumbled hex:** allowed. It hurts.
-- **Leap with no free landing hex:** the leap fails, and it's logged. A mana signature keeps its mana.
-- **Flying** (trait): a flier's path ignores units and rocks. It **only stops on a free hex**, which it reserves when it chooses its path; it can pass over occupied hexes. It can be targeted wherever it is, including over another unit. If a push leaves it over an occupied hex, it drops to the nearest free hex. **Engage still stops it** (section 4).
-- **Hop away** (trait, Maren's Keep Your Distance and the Hollow Archer's step back): when an enemy **moves next to** the unit, it steps 1 hex to the free neighbor farthest from that enemy. It has `hop_cooldown_ms` (in the trait's data) and is logged. Engaged units have to break free first.
+- **Directions are exact:** along the line from source to target, with no snapping. If two units stand on the same point, the push goes straight forward for the source's side.
+- **Collision:** a push is swept along its line in fixed small steps (50 units) and stops at the last clear point.
+  - Anything stops it: a unit, a rock, or **the arena's edge** (decided).
+  - **If it's stopped early, the pushed unit is Stunned** for `collision_stun_ms` (1s). If it hit a unit, that unit is stunned too.
+- **Pushed onto crumbled ground:** allowed. It hurts.
+- **Leap spots:** the candidates are 12 fixed points around the target, each 800 from its center. The first free one closest to the leaper wins.
+  - If none is free, the leap fails, and that's logged. A mana signature keeps its mana.
+- **Flying** (trait):
+  - A flier **moving** ignores units and rocks (decided), and nothing blocks on it.
+  - A flier **stopping** (to attack) has to stop on a free spot. If it's over someone, it keeps going to the nearest free spot that's still in range. A stopped flier blocks like anyone.
+  - It can be targeted wherever it is.
+  - If a push leaves it over another unit, it drops to the nearest free spot.
+  - **Engage still stops it** (section 4).
+- **Hop away** (trait, Maren's Keep Your Distance and the Hollow Archer's step back):
+  - When an enemy comes within 1 hex, the unit hops 1 hex straight away from that enemy. The hop is instant, and stops early at anything in the way, with no stun: it's the unit's own move.
+  - It has `hop_cooldown_ms` (in the trait's data) and is logged.
+  - Units held by Engage have to break free first.
 
 ## 7. Areas and warnings
 
-- **Shapes** (`ShapeDef`), all in hex distance:
-  - `circle` (radius r: every hex within r).
-  - `ring` (the hexes at exactly r).
-  - `line` (length n, 1 wide, along the snapped direction).
-  - `cone` (depth 3 by default; widths 1, 2, 3 along the snapped direction).
-- **Anchor:** `target` (centered on the target's hex), `self`, or `target_direction` (lines and cones start next to the caster and point at the target).
-- **`area` effect:** a shape, an anchor, `warning_ms`, `hits` (`enemies`, `allies`, or `all`), and nested `effects` that run on every unit standing in the area **when it lands**. The hexes are fixed when it's cast, so a warned area doesn't follow anyone.
-- **Warning:** at cast, the log gets `AREA_WARNING` with the hexes and the landing tick, and the UI lights them. At the landing tick it gets `AREA_LANDED`, then one entry per unit hit. Areas without `warning_ms` land at once.
+- **Shapes** (`ShapeDef`), measured in hexes (× 1000) on the plane. **A unit is hit if its center is inside.**
+  - `circle` (radius r): within r.
+  - `ring` (radius r): between r − ½ and r + ½.
+  - `line` (length n): 1 hex wide, from the caster's edge along the aim.
+  - `cone` (depth 3 by default): widens evenly from 1 hex wide at the caster to 3 hexes wide at its end, so it's 1, 2, 3 as decided.
+- **Anchor:**
+  - `target`: centered where the target stands.
+  - `self`: centered on the caster.
+  - `target_direction`: lines and cones start at the caster and aim straight at the target.
+- **`area` effect:** a shape, an anchor, `warning_ms`, `hits` (`enemies`, `allies`, or `all`), and nested `effects`. The nested effects run on every unit inside the area **when it lands**. Where it lands is fixed when it's cast, so a warned area doesn't follow anyone.
+- **Warning:** at cast, the log gets `AREA_WARNING` with the shape, where it is, and the landing tick, and the UI draws it. At the landing tick, the log gets `AREA_LANDED`, then one entry per unit hit. Areas without `warning_ms` land at once.
 - Heroes **never step out of marked areas** (decided in the enemies plan). Placement is the answer, so movement ignores warnings.
 
 ## 8. Statuses for the slice
@@ -193,38 +278,56 @@ All four displacements **move the unit instantly in the sim** and log the full p
 | Status | Kind | Effect in the sim |
 | --- | --- | --- |
 | Root | `root` | can't move (can still attack and cast) |
-| Stun | `stun` | skips its turn: no moving, attacking, casting, or regen (hits taken still give mana) |
-| Slow | `slow` | the unit's steps and attack cooldown run `slow_bp` slower; strongest wins, no stacking |
+| Stun | `stun` | can't move, attack, or fire signatures; mana still comes in |
+| Slow | `slow` | the unit moves and its attack cooldown runs `slow_bp` slower; the strongest Slow wins, no stacking |
 | Taunt | `taunt` | target forced to the status's source |
 | Silence | `silence` | no mana gain |
 | Marked | `marked` | takes `damage_taken_bp` more damage from every source |
 | Engaged | `engaged` | set and cleared by the Engage trait, never by effects; see section 4 |
 | Bleed, Burn, Poison | `damage_over_time` | as now |
 
-- Timed statuses have `duration_ms`; a new application refreshes it. **Shield** stays a unit value, not a status, as now.
+- Timed statuses have `duration_ms`, and a new application refreshes it.
+- **Shield** stays a unit value, not a status, as now.
 - Knockback isn't a status. It's an effect (section 6), and its stun is Stun.
 
 ## 9. Rift Collapse: the shrinking arena
 
-- **Rings are rectangular:** a hex's ring is `min(col, 7 − col, row, 6 − row)`. On 8 × 7 that gives ring 0 (the border, 26 hexes), ring 1 (18), ring 2 (10), and ring 3 (the 2 middle hexes, which never crumble).
+- **Rings follow the placement grid:** a hex's ring is `min(col, 7 − col, row, 6 − row)`. On 8 × 7 that's ring 0 (the border), ring 1, ring 2, and ring 3, the 2 middle hexes, which never crumble.
+- **On the plane,** each crumbled ring moves the safe rectangle's edge in by one ring: 866 at the sides and 1000 at the ends. Everything outside the safe rectangle is crumbled ground.
 - **Timing:** from `collapse_start_ms` (45s), one ring every `collapse_ring_ms` (10s). Each ring is **warned** `collapse_warning_ms` (3s) before it crumbles, and the warning is logged like an area's.
-- **Damage:** anyone on a crumbled hex takes flat damage once per second, starting at `base` and growing per second (the current `collapse_by_act` numbers, reused). It hits Shield before HP, and never deals % of max HP.
-- **Crumbled hexes block paths**, except for a unit leaving one.
+- **Damage:** anyone whose center is on crumbled ground takes flat damage once per second.
+  - It starts at `base` and grows every second (the current `collapse_by_act` numbers, reused).
+  - It hits Shield before HP, and is never a % of max HP.
+- **Crumbled ground can't be walked into** (decided). A unit already on it can walk out, and pathfinding sends it back to safe ground first.
 - **`start_collapse` effect:** starts the collapse now if it hasn't started yet (Old Mother Ash's Last Ember).
 - **Tie at 180s**, as now.
 
 ## 10. Summons
 
-- **`summon` effect:** a kit id, a count, and where they appear: `edges` (the nearest free hexes on ring 0, closest to the anchor first), `adjacent` (free hexes next to the caster), or `hexes` (a fixed list, each falling back to the nearest free hex).
-- A summoned unit joins **at the end of the fight order**, gets a unique id (`rift_pup#2`), and starts with no target and empty mana (unless its kit says otherwise). It's logged as `SUMMON` with its source.
-- **Cap:** at most `max_units_per_side` (placeholder 10) standing units per side. Extra summons are dropped, and that's logged too.
+- **`summon` effect:** a kit id, a count, and where the summons appear:
+  - `edges`: free spots along the safe edge, closest to the anchor first.
+  - `adjacent`: free spots touching the caster, from the same 12 points as leaps.
+  - `hexes`: a fixed list of grid hexes, each falling back to the nearest free spot.
+- **A summoned unit** joins **at the end of the fight order** and gets a unique id (`rift_pup#2`). It starts with no target and empty mana, unless its kit says otherwise. It's logged as `SUMMON`, with its source.
+- **Cap:** at most `max_units_per_side` (**30**, decided) standing units per side. Extra summons are dropped, and that's logged too.
 
 ## 11. The combat log
 
-- **New kinds:** `MOVE` (from, to), `TARGET` (who, whom, and the rule or Taunt), `BREAK_FREE`, `PUSH` (knockback or pull: from, to, and what it hit), `LEAP`, `CHARGE`, `HOP`, `AREA_WARNING` (hexes, landing tick), `AREA_LANDED`, `COLLAPSE_RING` (warned or crumbled), `SUMMON`, and `MANA_DRAIN`.
-- **`LogEntry` gains** `from_hex`, `to_hex`, and `hexes`. Phase 0 renames the item fields to ability fields (`source_ability`, `source_ability_name`).
-- Every entry that changes the board or a unit names its source unit and ability (or "Rift Collapse", or a status). A test walks every entry of the determinism fight and checks this.
-- **`ArenaDebug.render(sim)`:** a plain-text board (rocks, units by short tag, crumbled hexes, warned hexes). Tests use it to show the board when an assertion fails; it doesn't touch the fight.
+- **New kinds:**
+  - `MOVE`: one straight leg, with from, to, start tick, and arrival tick. A leg that's cut short (blocked, stunned, pushed, or re-aimed) ends with `STOP` at the point reached.
+  - `TARGET`: who, whom, and the rule or Taunt.
+  - `BREAK_FREE`.
+  - `PUSH`: knockback or pull, with from, to, and what it hit.
+  - `LEAP`, `CHARGE`, `HOP`.
+  - `SHOT`: fired, with the landing tick; `SHOT_FIZZLED`.
+  - `AREA_WARNING` (the shape, where it is, and the landing tick) and `AREA_LANDED`.
+  - `COLLAPSE_RING`: warned or crumbled.
+  - `SUMMON`.
+  - `MANA_DRAIN`.
+- **Moves are logged as legs, not per tick,** so a 60s fight's log stays small. A test replays every leg, push, and leap from the log, and checks that it gives each unit's exact position on every tick. So the UI can always draw the true board from the log alone.
+- **`LogEntry` gains** `from_pos`, `to_pos`, `end_tick`, and `shape`. Phase 0 renames the item fields to ability fields (`source_ability`, `source_ability_name`).
+- **Every entry that changes the board or a unit names its source unit and ability**, or "Rift Collapse", or a status. A test walks every entry of the determinism fight and checks this.
+- **`ArenaDebug.render(sim)`:** a plain-text board, one character cell per quarter hex, showing rocks, units by short tag, crumbled ground, and warned areas. Tests use it to show the board when an assertion fails; it doesn't touch the fight.
 
 ## 12. Files
 
@@ -232,92 +335,108 @@ All four displacements **move the unit instantly in the sim** and log the full p
 
 | File | What it holds |
 | --- | --- |
-| `hex_grid.gd` | board size, index ↔ (col, row) ↔ cube, neighbors in side order, distance, snapped directions, straight lines, shapes, rings |
-| `pathfinder.gd` | breadth-first search over a blocked mask: first step toward any goal hex, and path length |
-| `arena_state.gd` | per fight: rocks, occupancy, reservations, crumbled and warned hexes |
-| `movement.gd` | steps, reservations, break free, hop away, flying |
+| `hex_grid.gd` | the placement grid: index ↔ (col, row), zones, rings, a hex's center on the plane |
+| `plane.gd` | integer vector helpers: length, direction to 1000, dot products, point-in-shape tests, sweeps |
+| `nav_grid.gd` | the hidden quarter-hex cells: blocking for a given walker, Dijkstra, path corners, path lengths |
+| `arena_state.gd` | per fight: rocks, the safe rectangle, pending warned areas and shots |
+| `movement.gd` | walking, blocking, repathing, break free, hop away, flying |
 | `displacement.gd` | knockback, pull, leap, charge, collisions |
+| `shots.gd` | shots in flight and landing them |
 | `areas.gd` | casting shapes, pending warned areas, landing them |
 | `collapse.gd` | ring timing, warnings, crumbling, damage |
 | `arena_debug.gd` | the text board |
 
 **New elsewhere:**
 
-- `src/sim/defs/unit_def.gd` (the shared kit), `ability_def.gd`, `mana_def.gd`, `shape_def.gd`, `trigger_def.gd` (signature triggers).
+- `src/sim/defs/unit_def.gd` (the shared kit), `ability_def.gd`, `mana_def.gd`, `shape_def.gd`, and `trigger_def.gd` (signature triggers).
 - `src/sim/state/ability_state.gd` (cooldown, event count, fired once).
 - `src/sim/mana.gd`.
+- `FixedMath.isqrt` in `fixed_math.gd`.
 
 **Rewritten:**
 
 - `combat_sim.gd`: the tick above.
 - `effects/targeting.gd`: the rules above.
-- `effects/effect_runner.gd`: damage, heal, shield, apply_status, cleanse, mana_drain, knockback, pull, leap, charge, area, summon, start_collapse.
-- `defs/effect_def.gd`: targets `target`, `self`, `all_enemies`, `all_allies`, `trigger_ally`, plus the new types.
+- `effects/effect_runner.gd`: damage, heal, shield, apply_status, cleanse, mana_drain, knockback, pull, leap, charge, area, summon, and start_collapse.
+- `defs/effect_def.gd`: targets `target`, `self`, `all_enemies`, `all_allies`, and `trigger_ally`, plus the new types.
 - `defs/status_def.gd`, `statuses.gd`: the new kinds.
 - `defs/collapse_def.gd`, `defs/tuning_def.gd`: the new values.
 - `defs/unit_stats.gd`: adds speed and range.
-- `state/unit_state.gd`: hex, step, reservation, target, mana, engagement, abilities.
-- `setup/unit_setup.gd`, `setup/fight_setup.gd`: positions and rocks, and validation (in your own zone, no overlaps, not on a rock).
-- `log_entry.gd`: new kinds and hex fields.
+- `state/unit_state.gd`: position, path, target, mana, engagement, where it started, and abilities.
+- `setup/unit_setup.gd`, `setup/fight_setup.gd`: grid hexes and rocks, and validation.
+- `log_entry.gd`: new kinds and position fields.
 
-**Data:** `tuning.json` gains:
+**Data:** `tuning.json` gains these values:
 
-- `grid` (width, height, zone rows)
-- `break_free_ms`, `collision_stun_ms`, `repath_give_up_ms`, `leap_land_ms`
-- `collapse_ring_ms`, `collapse_warning_ms`
-- `max_units_per_side`
+| Group | Values |
+| --- | --- |
+| The grid | `grid` (width, height, zone rows) |
+| The plane | `unit_radius`, `rock_radius`, `nav_cell` |
+| Movement | `engage_reach`, `repath_ms`, `repath_give_up_ms` |
+| Timers | `break_free_ms`, `collision_stun_ms`, `leap_land_ms` |
+| The collapse | `collapse_ring_ms`, `collapse_warning_ms` |
+| Summons | `max_units_per_side` |
 
 It keeps `collapse_start_ms`, `collapse_by_act`, `tie_ms`, `crit_damage_bp`, `crit_bp_per_point`, `atsp_bp_per_point`, and `defense_constant`. `statuses.json` is trimmed (section 8). No hero or enemy content yet.
 
 ## 13. Tests
 
-Each rule gets its own test file under `tests/sim/`. They build tiny boards through a rewritten `sim_test_kit.gd` (`K.kit(...)`, `K.at(kit, col, row)`, `K.fight(heroes, enemies, rocks, seed)`).
+Each rule gets its own test file under `tests/sim/`. They build tiny boards through a rewritten `sim_test_kit.gd`: `K.kit(...)`, `K.at(kit, col, row)`, and `K.fight(heroes, enemies, rocks, seed)`.
 
 | Test file | Covers |
 | --- | --- |
-| `test_hex_grid.gd` | coordinates both ways, distance, neighbor order per side, snapped directions, each shape's exact hexes, rings |
-| `test_pathfinder.gd` | routes around units and rocks, the fixed tie-break, no route, leaving a crumbled hex |
-| `test_movement.gd` | speed → ticks, reservations (two units, one hex: the earlier unit wins, no overlap ever), stop in range, Slow, Root, repath give-up |
-| `test_targeting.gd` | every rule and its ties, sticky targets, Taunt overriding and ending, TARGET log lines |
-| `test_attacks_and_mana.gd` | melee needs adjacency, range by hex distance, ATSP, every mana source, Silence, units with no mana |
-| `test_signature_triggers.gd` | mana (bar empties), hp_below once, fight_start, at_time, count; cast_ms cancelled by Stun keeps its mana |
-| `test_engage.gd` | break free takes 1s, freedom ends on leaving contact, fliers still stop, a push ends the engagement |
-| `test_displacement.gd` | knockback distance and direction, collisions with a unit, a rock, and the edge (both stunned), pull, leap landing and failure, charge, a displaced mover losing its reservation |
-| `test_flying.gd` | passing over units, stopping only on free hexes, dropping after a push |
-| `test_areas.gd` | warnings are logged, and the area hits whoever stands there at landing, not at cast; each shape; `hits` filters |
+| `test_hex_grid.gd` | coordinates both ways, zones, rings, hex centers on the plane (neighbors 1000 apart) |
+| `test_plane.gd` | isqrt, directions, each shape's point test, sweeps stopping at circles and edges |
+| `test_nav_grid.gd` | routes around units and rocks, gaps too narrow to pass, the fixed tie-break, no route, leaving crumbled ground |
+| `test_movement.gd` | speed → distance per tick, straight when clear, around when not, no overlap ever (checked every tick), the hero winning a contested gap, stopping in range, Slow, Root, the repath give-up |
+| `test_targeting.gd` | every rule and its ties, back-liners by starting row, sticky targets, Taunt overriding and ending, TARGET log lines |
+| `test_attacks_and_mana.gd` | melee reach, range by distance, ATSP, every mana source, Silence, Stun still gaining mana, units with no mana |
+| `test_shots.gd` | flight time by distance, following a moving target, numbers fixed at firing, fizzling on a fallen target, landing after the shooter falls |
+| `test_signature_triggers.gd` | mana (the bar empties), hp_below once, fight_start, at_time, count; no firing while stunned; a cast cancelled by Stun keeps its mana |
+| `test_engage.gd` | held 1s only when targeting someone else, the engager's attackers not held, freedom ending on leaving contact, fliers still held, a push ending the engagement |
+| `test_displacement.gd` | knockback distance and direction, collisions with a unit, a rock, and the edge (both stunned), pull, leap landing and failure, charge, a displaced walker losing its path |
+| `test_flying.gd` | passing over units and rocks, stopping only on free spots, dropping after a push |
+| `test_areas.gd` | warnings are logged, and the area hits whoever stands there when it lands, not when it's cast; each shape; `hits` filters |
 | `test_statuses.gd` | rewritten for the new kinds, plus damage over time as now |
-| `test_collapse.gd` | ring timing and warnings, damage only on crumbled hexes, flat and Shield-first, start_collapse, the 180s tie |
-| `test_summons.gd` | placement per mode, fight order, the cap, the log |
-| `test_arena_log.gd` | in a busy fight, every entry that changes state names a source |
-| `test_determinism.gd` | rewritten: a chaotic seeded fight using everything above (plus random crits) runs twice with identical logs; a third run whose setup lists units in a different order gives a different log (proving the order is actually used) |
+| `test_collapse.gd` | ring timing and warnings, the safe rectangle shrinking, damage only on crumbled ground, flat and Shield-first, can't walk in, start_collapse, the 180s tie |
+| `test_summons.gd` | placement in each mode, fight order, the cap of 30, the log |
+| `test_arena_log.gd` | in a busy fight, every entry that changes state names a source; replaying the log gives every unit's position on every tick |
+| `test_determinism.gd` | rewritten (see below) |
 
-`test_sim_rng`, `test_fixed_math`, and `test_project_setup` stay as they are.
+- **The determinism test:** a chaotic seeded fight that uses everything above, plus random crits, runs twice with identical logs. A third run, whose setup lists units in a different order, gives a different log, which proves the order is actually used.
+- `test_sim_rng`, `test_fixed_math` (plus isqrt), and `test_project_setup` stay as they are.
 
-**Speed budget:** a 60s fight of 3 against 6 should sim in well under 100 ms headless. Pathfinding runs only when a unit is about to take a step, not every tick. `tools/sim_runner.gd` (phase 2) needs hundreds of fights at a time.
+**Speed budget:** a 60s fight of 3 against 6 should sim in **under 100 ms** headless. `tools/sim_runner.gd` (phase 2) needs hundreds of fights at a time. What keeps it cheap:
+
+- Walking straight when the way is clear.
+- Pathfinding only when blocked, on a new target, or every 0.5s.
+- Only about 900 cells per search.
+
+If step 2 measures slower, the cell size and repath interval are the knobs, and I'll report before going further.
 
 ## 14. Order of work (each step: code, tests, green run, commit)
 
-1. **Board:** `hex_grid`, `pathfinder`, `arena_debug`, and their tests. Pure functions, no sim.
-2. **Skeleton fight:** kits, setups with positions and rocks, the new `CombatSim` tick, movement with reservations, `nearest` targeting, melee and ranged basic attacks, deaths, the end of the fight, and the MOVE and TARGET logs. First determinism test.
+1. **Grid and plane:** `hex_grid`, `plane`, `nav_grid`, `arena_debug`, `FixedMath.isqrt`, and their tests. Pure functions, no sim.
+2. **Skeleton fight:** kits, setups with hexes and rocks, the new `CombatSim` tick, walking and blocking, `nearest` targeting, melee attacks and shots, deaths, the end of the fight, the MOVE, STOP, TARGET, and SHOT logs, and the log replay test. The first determinism test, and a speed measurement.
 3. **Statuses:** Root, Stun, Slow, Taunt, Silence, Marked, and damage over time.
 4. **Mana and signatures:** the four triggers, and cast_ms.
-5. **Tanks:** Engage, and blocking checks.
+5. **Tanks:** Engage.
 6. **Displacement and flying:** knockback, pull, leap, charge, collisions, flying, and hop away.
 7. **Areas:** shapes, warnings, landing, and the rest of the targeting rules.
-8. **Collapse and summons:** rings, damage, start_collapse, and summons.
+8. **Collapse and summons:** rings, the safe rectangle, damage, start_collapse, and summons.
 9. **The full determinism fight and the log audit.** Update `CLAUDE.md`'s sim rules to describe the arena.
 
-## 15. Proposals to confirm (defaults I picked)
+## 15. New proposals to confirm (defaults I picked)
 
-These aren't answered in the rebuild plans. I'll build them as written unless you say otherwise:
+The free plane raises questions the rebuild plans don't answer. I'll build these as written unless you say otherwise:
 
-1. **Fight order puts heroes first.** It only matters for two units reserving the same hex on the same tick. Alternatives: alternate hero and enemy, or order by unit id alphabetically.
-2. **Engage is strict:** any step at all needs a break-free first, including sliding sideways along Brannoc. That's what makes "can't walk past him" true.
-3. **"Back-liner" means the back two rows of your side's zone** (rows 0–1 for heroes), wherever the units actually stand at that moment.
-4. **The board's edge stops a push like a rock does** (and stuns).
-5. **Leaps and pushes are instant in the sim**, with only the UI animating them. A leaper can't act for `leap_land_ms`.
-6. **Fliers also pass over rocks.**
-7. **Stun stops regen** but not mana from hits taken.
-8. **Crumbled hexes can't be walked into** (only pushed into), so the squeeze is about space, not a choice to stand in fire.
-9. **Summon cap:** 10 standing units per side.
-10. **No projectiles:** ranged hits land the tick they fire.
+1. **Every unit is the same size:** a circle 0.8 hex across. Bigger bosses stay an open question in `rebuild-arena.md`.
+2. **Shots follow their target** and can't miss or be dodged. One whose target falls first fizzles. (A later wall, such as Hearthwall, can stop one in flight.)
+3. **A shot's numbers are fixed when it's fired**, and it still lands if the shooter falls first.
+4. **Melee lands at once;** reach 2 or more fires a shot. Signatures with reach use shots too, unless their data says `"shot": false`.
+5. **A unit is inside an area if its center is.** Grazing the edge doesn't count.
+6. **Knockback, pulls, charges, lines, and cones aim exactly** along the line to the target, since nothing snaps to hexes any more.
+7. **Stunned units can't fire any signature,** not only mana ones. A trigger that came due during the stun fires once it ends. (You decided this for mana; this extends it.)
+8. **The collapse shrinks a rectangle** that follows the old hex rings, leaving the middle 2 hexes' worth of ground safe for good.
+9. **Pathfinding uses a hidden fine grid** (quarter-hex cells) that nothing snaps to. Units walk straight when they can, and straight between the path's corners when they can't.
+10. **Engage reaches 1 hex, center to center.** So it holds a unit touching the engager or standing a hand's width off.

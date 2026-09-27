@@ -13,7 +13,7 @@ Status: **agreed in discussion (2026-09-27), not built.** This is the first part
 - **Transformations are permanent.** Only the apex vow can still be switched, until the apex is earned.
 - **Heroes only grow through deeds.** No ranks, no buying heroes, no combining duplicates. Upgrade picks come from deeds.
 - **Essences are removed.**
-- **Fights happen in an arena** (a hex grid), not two rows. The arena gets its own part of the plan; the heroes below are designed for it.
+- **Fights happen in an arena**, not two rows: heroes are placed on a hex grid, then fight on a free-moving plane. The arena gets its own part of the plan; the heroes below are designed for it.
 - **Mana is the most common way a signature fires, but not the only one** (see section 4). Some signatures fire on other triggers, and some heroes or paths have no mana at all. Only signatures ever use mana.
 - **What happens to items and shops is still open.** It comes in a later part.
 
