@@ -54,6 +54,8 @@ func bbcode(entry: LogEntry) -> String:
 			color = UiStyle.BAD
 		LogEntry.Kind.PHASE, LogEntry.Kind.SYNERGY, LogEntry.Kind.FIGHT_START, LogEntry.Kind.FIGHT_END:
 			return "[b][color=#%s]%s[/color][/b]" % [UiStyle.EMBER.to_html(false), line]
+		LogEntry.Kind.DEED_LEVEL:
+			return "[b][color=#%s]✦ %s[/color][/b]" % [UiStyle.BRASS_300.to_html(false), line]
 		LogEntry.Kind.HEAL:
 			color = UiStyle.GOOD
 		LogEntry.Kind.SHIELD:

@@ -32,15 +32,42 @@ var statuses: Array[StatusState] = []
 var recent_heal_ticks: Array[int] = []
 ## What dealt the last damage, for the death log line.
 var last_hit_by: String = ""
-## The innate's and the specialization's aura, grant, and replace_status
-## parts that apply now (by rank); CombatSim.rederive_all applies them.
+## The innate's, calling's, and specialization's aura, grant, and
+## replace_status parts that apply now (by deed level), and phases'; 
+## CombatSim.rederive_all applies them.
 var spec_parts: Array[SpecializationDef.Part] = []
 ## Phases (see PhaseDef) and how many have begun.
 var phases: Array[PhaseDef] = []
 var phases_entered: int = 0
-## Ability items added by phases, by part key (so a later phase's part with
-## the same key replaces it). Looked up by key only.
-var phase_abilities: Dictionary[String, ItemState] = {}
+## Ability items from parts (innate, deeds, phases), by part key, so a later
+## part with the same key replaces it. Looked up by key only.
+var part_abilities: Dictionary[String, ItemState] = {}
+## The hero's deed tracks during the fight (docs/plans/deeds.md).
+var deeds: Array[Deed] = []
+
+
+## One deed track's progress during a fight.
+class Deed:
+	var track_id: String
+	var def: DeedTrackDef
+	var start_progress: int
+	var progress: int
+	var level: int
+	var start_level: int
+	## Level 2's option, or -1 (the level waits, unspent).
+	var choice: int
+
+
+static func _deed_from(setup: DeedSetup) -> Deed:
+	var deed := Deed.new()
+	deed.track_id = setup.track_id
+	deed.def = setup.def
+	deed.start_progress = setup.progress
+	deed.progress = setup.progress
+	deed.level = setup.level()
+	deed.start_level = deed.level
+	deed.choice = setup.choice
+	return deed
 
 
 static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column: int, content: ContentDb) -> UnitState:
@@ -56,17 +83,21 @@ static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column:
 	state.max_hp = state.stats.get_stat(UnitStats.Stat.HP)
 	state.hp = state.max_hp
 	state.phases = setup.phases
+	# The innate, then each deed track's parts at its level (a calling part
+	# with the innate's key replaces it).
 	var parts: Array[SpecializationDef.Part] = setup.innate.duplicate()
-	if setup.specialization != null:
-		parts.append_array(setup.specialization.parts_at(setup.rank))
+	for deed_setup: DeedSetup in setup.deeds:
+		var deed: Deed = _deed_from(deed_setup)
+		state.deeds.append(deed)
+		DeedTrackDef.merge(parts, deed.def.parts_at(deed.level, deed.choice))
 	var basic_attack: ItemDef = setup.basic_attack
-	var abilities: Array[ItemDef] = []
+	var abilities: Array[SpecializationDef.Part] = []
 	for part: SpecializationDef.Part in parts:
 		match part.kind:
 			SpecializationDef.Kind.AURA, SpecializationDef.Kind.GRANT, SpecializationDef.Kind.REPLACE_STATUS:
 				state.spec_parts.append(part)
 			SpecializationDef.Kind.ABILITY:
-				abilities.append(part.item)
+				abilities.append(part)
 			SpecializationDef.Kind.BASIC_ATTACK:
 				basic_attack = part.item
 
@@ -76,8 +107,10 @@ static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column:
 	if not has_auto_attack_item:
 		state.items.append(ItemState.make(basic_attack, -1, state.stats, content))
 	# Abilities: slotless, after the auto-attack and before the loadout.
-	for ability: ItemDef in abilities:
-		state.items.append(ItemState.make(ability, -1, state.stats, content))
+	for ability: SpecializationDef.Part in abilities:
+		var item: ItemState = ItemState.make(ability.item, -1, state.stats, content)
+		state.items.append(item)
+		state.part_abilities[ability.key] = item
 	for slot: int in setup.items.size():
 		var item: ItemSetup = setup.items[slot]
 		var essences: Array[EssenceDef] = []

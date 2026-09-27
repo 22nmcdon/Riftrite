@@ -17,7 +17,7 @@ const BACK := UnitSetup.Row.BACK
 ## real synergies (Paper Cuts' charge, the Wildfire Torch transformation,
 ## and Ember Resonance), specializations at rank S (one with a new basic
 ## attack and auto-attack grants), a real innate, and an enemy with the Act 1
-## boss's phases.
+## boss's phases, and deeds that level mid-fight.
 func _chaotic_fight(seed_value: int) -> FightSetup:
 	var scatter: ItemDef = K.item("scatter", {"cooldown_ms": 700, "crit_chance_bp": 3000, "effects": K.damage(9, "enemy_random")})
 	var cleave: ItemDef = K.item("cleave", {"rarity": "epic", "tags": ["weapon"], "cooldown_ms": 2150, "crit_chance_bp": 2000, "effects": K.damage(25)})
@@ -34,9 +34,15 @@ func _chaotic_fight(seed_value: int) -> FightSetup:
 	setup.relics = ["warding_knot", "pilgrims_flask", "cinder_crown", "hourglass", "emberglass"] as Array[String]
 	setup.enemy_relics = ["gloam_totem", "kindled_seal"] as Array[String]
 	setup.heroes[0].rank = 3
-	setup.heroes[0].specialization = _real_spec_for("brannoc_ironbrand", "warden")
-	setup.heroes[3].rank = 3
-	setup.heroes[3].specialization = K.content().specializations["vell_vigil_keeper"]
+	K.with_spec(setup.heroes[0], _real_spec_for("brannoc_ironbrand", "warden"), 3)
+	# Vell's deeds sit just short of a level, so they level mid-fight: her
+	# calling to 1, her specialization to 3 (with level 2's second option).
+	var vell: UnitSetup = setup.heroes[3]
+	vell.rank = 3
+	var keeper: SpecializationDef = K.content().specializations["vell_vigil_keeper"]
+	var calling: DeedTrackDef = K.content().heroes["vell"].calling
+	vell.specialization = keeper
+	vell.deeds = [DeedSetup.make(DeedSetup.CALLING, calling, calling.deed.goals[0] - 5), DeedSetup.make(DeedSetup.SPECIALIZATION, keeper.track, keeper.track.deed.goals[2] - 5, 1)]
 	setup.enemies[0].phases = K.content().enemies["mother_ash"].phases
 	return setup
 
@@ -71,7 +77,7 @@ func test_same_seed_same_log() -> void:
 	assert_eq(first.combat_log.of_kind(LogEntry.Kind.AURA).size() >= 2, true, "auras start and end")
 	assert_string_contains(first.combat_log.to_text(), "(Cinder Crown) applies", "a relic grant fires")
 	assert_string_contains(first.combat_log.to_text(), "relic · Pilgrim's Flask heals", "a cooldown relic fires")
-	for expected: String in ["ghoul_a enters Molt", "warden · Brand Blow", "(Ironbrand S) charges", "vell · Shelter (Vigil Keeper A)", "vell · Lantern Vigil", "Paper Cuts: striker", "Wildfire Torch: striker", "Ember Resonance (3): 3 Ember", "(Paper Cuts) charges Whetstone", "Golden Flame to", "Plasma to", "Verdant spill from Test Item"]:
+	for expected: String in ["ghoul_a enters Molt", "warden · Brand Blow", "(Ironbrand 3) charges", "vell · Night Vigil (Vigil Keeper 2)", "vell · Lantern Vigil", "vell reaches Lamplighter 1", "vell reaches Vigil Keeper 3", "Paper Cuts: striker", "Wildfire Torch: striker", "Ember Resonance (3): 3 Ember", "(Paper Cuts) charges Whetstone", "Golden Flame to", "Plasma to", "Verdant spill from Test Item"]:
 		assert_string_contains(first.combat_log.to_text(), expected)
 	assert_eq(first.combat_log.to_text(), second.combat_log.to_text())
 	assert_eq(first.outcome, second.outcome)

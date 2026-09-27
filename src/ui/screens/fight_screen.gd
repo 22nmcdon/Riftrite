@@ -318,6 +318,10 @@ func _animate(entry: LogEntry) -> void:
 		LogEntry.Kind.DEATH:
 			if _cards.has(entry.target):
 				FightFx.fall(_cards[entry.target].figure)
+		LogEntry.Kind.DEED_LEVEL:
+			# The level-up banner: "✦ Shieldbearer 2" over the hero.
+			if _cards.has(entry.target):
+				_cards[entry.target].float_number("✦ %s" % entry.note.get_slice(":", 0), UiStyle.BRASS_300, seconds * 2.5, true)
 
 
 ## The tags of the item a unit used (its basic attack included), for how the
@@ -354,6 +358,16 @@ func _show_end() -> void:
 		elif session.state.phase == "stop":
 			losses = "A lost skirmish costs nothing: no spoils, and it doesn't count as a loss."
 		_end_box.add_child(UiStyle.label(losses, 16, UiStyle.TEXT_DIM))
+	var hero_names: Dictionary = {}
+	for unit: UnitState in player.sim.heroes:
+		hero_names[unit.id] = names.name_of(unit.id)
+	var deeds: PackedStringArray = ItemInfo.deed_result_lines(result, session.last_setup, hero_names)
+	if not deeds.is_empty():
+		_end_box.add_child(UiStyle.label("Deeds", 18, UiStyle.HIGHLIGHT))
+		for line: String in deeds:
+			var deed_label: Label = UiStyle.label(line, 14, UiStyle.BRASS_300 if line.contains("✦") else UiStyle.TEXT_DIM)
+			deed_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			_end_box.add_child(deed_label)
 	_end_box.add_child(DamageMeterView.make(result, names))
 	var button: Button = UiStyle.button("Continue (Enter)", _continue)
 	button.size_flags_horizontal = Control.SIZE_FILL

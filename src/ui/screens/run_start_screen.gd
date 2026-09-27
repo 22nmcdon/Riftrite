@@ -62,6 +62,10 @@ func _hero_card(offer: Dictionary, index: int) -> Control:
 	var innate: Label = UiStyle.label("Innate: %s. %s" % [def.innate_name, def.innate_text], 15, UiStyle.TEXT_DIM)
 	innate.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(innate)
+	if def.calling != null:
+		var calling: Label = UiStyle.label("Calling: %s. Grows by: %s." % [def.calling_name, def.calling.deed.text.to_lower()], 15, UiStyle.BRASS_300)
+		calling.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		box.add_child(calling)
 	var take: Button = primary_button("Take", _pick_hero.bind(index), 0)
 	take.size_flags_horizontal = Control.SIZE_FILL
 	box.add_child(take)

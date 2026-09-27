@@ -364,6 +364,46 @@ func test_rewards_and_the_run_end() -> void:
 	assert_false(session.has_save())
 
 
+func test_the_hero_sheet_shows_deeds_and_the_level_two_choice() -> void:
+	var session: RunSession = U.at_caravan()
+	var hero: RunHero = session.state.heroes[0]
+	var calling: DeedTrackDef = session.content.heroes[hero.hero_id].calling
+	hero.calling_progress = calling.deed.goals[0]
+	session.open_hero(hero.hero_id)
+	var main: Main = _main(session)
+	var deeds: Node = main.hero_sheet().find_child("Deeds", true, false)
+	assert_not_null(deeds)
+	assert_string_contains(U.text_of(deeds), "%s, level 1: %s (%d / %d)" % [calling.name, calling.deed.text, calling.deed.goals[0], calling.deed.goals[1]])
+	var first: String = calling.levels[DeedTrackDef.CHOICE_LEVEL].options[0].name
+	assert_null(U.button(deeds, first), "no choice before level 2")
+	hero.calling_progress = calling.deed.goals[1]
+	main.refresh()
+	deeds = main.hero_sheet().find_child("Deeds", true, false)
+	assert_true(U.press(deeds, first))
+	assert_eq(hero.calling_choice, 0)
+	deeds = main.hero_sheet().find_child("Deeds", true, false)
+	assert_null(U.button(deeds, first), "chosen for good")
+
+
+func test_the_draft_shows_each_heros_calling() -> void:
+	var session: RunSession = U.session()
+	session.new_run(5)
+	var main: Main = _main(session)
+	var first: HeroDef = session.content.heroes[session.state.offers[0]["hero"]]
+	assert_string_contains(U.text_of(main.screen), "Calling: %s." % first.calling_name)
+
+
+func test_the_fight_ends_with_deed_progress() -> void:
+	var session: RunSession = U.at_fight()
+	var main: Main = _main(session)
+	(main.screen as FightScreen).start_fight()
+	(main.screen as FightScreen).skip()
+	var text: String = U.text_of(main.screen)
+	assert_string_contains(text, "Deeds")
+	var hero: RunHero = session.state.heroes[0]
+	assert_string_contains(text, "%s (%s): 0 → %d" % [session.content.heroes[hero.hero_id].calling_name, session.content.heroes[hero.hero_id].calling.deed.text, hero.calling_progress])
+
+
 func test_the_rewards_screen_gives_a_rank_up() -> void:
 	var session: RunSession = U.at_caravan()
 	var state: RunState = session.state

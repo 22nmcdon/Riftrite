@@ -23,9 +23,12 @@ var basic_attack: ItemDef
 var items: Array[ItemSetup] = []
 ## The hero's innate parts (HeroDef.innate), credited to `innate_name`.
 var innate: Array[SpecializationDef.Part] = []
-## The hero's rank-B specialization, or null. Which parts apply depends on
-## the rank (locked potential).
+## The hero's rank-B specialization, or null. Its parts come from its deed
+## track in `deeds`, by level.
 var specialization: SpecializationDef = null
+## The hero's deed tracks (calling, then specialization if picked), with
+## their progress: which parts apply depends on the levels reached.
+var deeds: Array[DeedSetup] = []
 ## HP-threshold phases (enemies; see PhaseDef).
 var phases: Array[PhaseDef] = []
 
@@ -49,6 +52,11 @@ func validate(content: ContentDb, errors: Array[String]) -> void:
 		errors.append("%s: stats can't be negative" % id)
 	if rank < 0 or rank >= TuningDef.TIER_NAMES.size():
 		errors.append("%s: rank must be 0-3 (C-S)" % id)
+	for deed: DeedSetup in deeds:
+		if deed.progress < 0:
+			errors.append("%s: %s deed progress can't be negative" % [id, deed.track_id])
+		if deed.choice < -1 or deed.choice > 1:
+			errors.append("%s: %s level-2 choice must be -1, 0, or 1" % [id, deed.track_id])
 	if specialization != null:
 		if rank < 1:
 			errors.append("%s: a rank-C hero has no specialization (\"%s\")" % [id, specialization.id])

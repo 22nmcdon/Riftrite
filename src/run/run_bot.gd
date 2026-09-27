@@ -42,6 +42,11 @@ class Report:
 	var skirmish_wins: int = 0
 	## Legendaries held at the end, with their tier: "tallymans_bow:B".
 	var legendaries: Array[String] = []
+	## Per hero at the end (draft order): calling level, specialization
+	## level, and rank (docs/plans/deeds.md, "How to measure it").
+	var calling_levels: Array[int] = []
+	var spec_levels: Array[int] = []
+	var ranks: Array[int] = []
 	var errors: Array[String] = []
 
 
@@ -67,6 +72,10 @@ static func play(run_seed: int, content: ContentDb, run: RunContent) -> Report:
 	for item: RunItem in held:
 		if content.items[item.item_id].legendary != null:
 			report.legendaries.append("%s:%s" % [item.item_id, TuningDef.TIER_LABELS[item.tier]])
+	for hero: RunHero in state.heroes:
+		report.calling_levels.append(hero.deed_level(content, DeedSetup.CALLING))
+		report.spec_levels.append(hero.deed_level(content, DeedSetup.SPECIALIZATION))
+		report.ranks.append(hero.rank)
 	var problems: Array[String] = state.check(content)
 	report.errors.append_array(problems)
 	return report
@@ -168,7 +177,8 @@ static func _upgrade_best(state: RunState, content: ContentDb) -> void:
 		RunFlow.upgrade(state, content, best.uid)
 
 
-## Combine copies, pick specializations, equip, infuse, arrange the rows.
+## Combine copies, pick specializations and deed unlocks, equip, infuse,
+## arrange the rows.
 static func _organize(state: RunState, content: ContentDb) -> void:
 	var combined: bool = true
 	while combined:
@@ -186,6 +196,12 @@ static func _organize(state: RunState, content: ContentDb) -> void:
 				if content.specializations[spec_id].hero == hero.hero_id:
 					RunActions.choose_specialization(state, content, hero.hero_id, spec_id)
 					break
+	# Level-2 deed unlocks: alternate options across heroes and runs.
+	for i: int in state.heroes.size():
+		var hero: RunHero = state.heroes[i]
+		for track_id: String in [DeedSetup.CALLING, DeedSetup.SPECIALIZATION]:
+			if hero.choice_waiting(content, track_id):
+				RunActions.choose_deed_unlock(state, content, hero.hero_id, track_id, (state.seed_value + i) % 2)
 	for item: RunItem in state.stash.duplicate():
 		for hero: RunHero in state.heroes:
 			if RunActions.move_item(state, content, item.uid, hero.hero_id, hero.items.size()).ok:

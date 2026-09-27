@@ -5,7 +5,7 @@ extends RefCounted
 ## Change it only through RunActions; check it with check().
 
 ## 2: loadout slots and the fixed trio (docs/plans/fun-redesign.md, step 1).
-const SAVE_VERSION: int = 2
+const SAVE_VERSION: int = 3
 ## The run's team: three drafted heroes (docs/plans/heroes-and-deeds.md).
 const TEAM_SIZE: int = 3
 ## Owner names for items: a hero id, STASH, or NOWHERE (not in the guild).
@@ -173,6 +173,14 @@ func _check_hero(candidate: RunHero, content: ContentDb, errors: Array[String]) 
 	var problem: String = candidate.slot_problem(content)
 	if not problem.is_empty():
 		errors.append(problem)
+	if candidate.calling_progress < 0 or candidate.spec_progress < 0:
+		errors.append("%s: deed progress can't be negative" % who)
+	if candidate.specialization_id.is_empty() and (candidate.spec_progress != 0 or candidate.spec_choice != -1):
+		errors.append("%s: specialization deed progress without a specialization" % who)
+	for track_id: String in [DeedSetup.CALLING, DeedSetup.SPECIALIZATION]:
+		var choice: int = candidate.calling_choice if track_id == DeedSetup.CALLING else candidate.spec_choice
+		if choice != -1 and (choice < 0 or choice > 1 or candidate.deed_level(content, track_id) <= DeedTrackDef.CHOICE_LEVEL):
+			errors.append("%s: a %s unlock chosen before its level" % [who, track_id])
 
 
 func _check_item(item: RunItem, content: ContentDb, where: String, errors: Array[String], seen_uids: Array[int]) -> void:

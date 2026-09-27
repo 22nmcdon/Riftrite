@@ -15,6 +15,11 @@ class PartyHero:
 	var specialization_id: String = ""
 	var row: UnitSetup.Row = UnitSetup.Row.FRONT
 	var items: Array[LoadoutEntry] = []
+	## Deed levels (docs/plans/deeds.md): "calling_level" (default 0) and
+	## "specialization_level" (default the rank, as ranks used to unlock
+	## specialization parts), with level 2's first option.
+	var calling_level: int = 0
+	var spec_level: int = -1
 
 
 class Party:
@@ -119,6 +124,8 @@ static func _read_heroes(content: ContentDb, reader: DataReader, key: String) ->
 		hero.items = LoadoutEntry.read_list(hero_reader, "items")
 		if hero_reader.has("specialization"):
 			hero.specialization_id = hero_reader.req_string("specialization")
+		hero.calling_level = hero_reader.opt_int("calling_level", 0, 0, DeedDef.LEVELS)
+		hero.spec_level = hero_reader.opt_int("specialization_level", mini(hero.rank, DeedDef.LEVELS), 0, DeedDef.LEVELS)
 		hero_reader.finish()
 		if not content.heroes.has(hero.hero_id):
 			hero_reader.error("unknown hero \"%s\"" % hero.hero_id)
@@ -132,7 +139,12 @@ static func _read_heroes(content: ContentDb, reader: DataReader, key: String) ->
 static func party_units(content: ContentDb, party: Party) -> Array[UnitSetup]:
 	var units: Array[UnitSetup] = []
 	for hero: PartyHero in party.heroes:
-		units.append(SetupBuilder.hero(content, hero.hero_id, hero.rank, hero.row, hero.items, hero.specialization_id))
+		var unit: UnitSetup = SetupBuilder.hero(content, hero.hero_id, hero.rank, hero.row, hero.items, hero.specialization_id)
+		for deed: DeedSetup in unit.deeds:
+			var level: int = hero.calling_level if deed.track_id == DeedSetup.CALLING else hero.spec_level
+			deed.progress = deed.def.deed.goals[level - 1] if level > 0 else 0
+			deed.choice = 0 if level > DeedTrackDef.CHOICE_LEVEL else -1
+		units.append(unit)
 	return units
 
 

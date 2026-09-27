@@ -234,7 +234,7 @@ Almost everything depends on the loadout change, so it goes first. Rerun the run
 **Build order (revised):**
 1. **Loadout:** slot types and keywords on items; item size, rows, and adjacency removed. Also the fixed trio and Backup removal, since they rewrite the same code. **Built** (keywords come with step 2, whose spill needs them): every item has a slot type; Linked and adjacency targets became `row_allies` and `holder_items`; neighbor spill is off until step 2; the stash holds 6 items; the team is drafted (3 picks) and ranks up once per elite; innates replace Backup effects; the save version is 2. The run bot clears Act 1 in about 2% of runs, down from before: the day-3 elite now meets three rank-C heroes. Step 4 retunes the pacing.
 2. **The infusion rework:** fusing, keyword spill, and Awakening. **Built** (`docs/plans/infusion-rework.md`): any item holds two essences, which fuse; 8 keywords on every item; a Resonant single spills by keyword; an alloy's special switches on when it awakens at Resonant; passives can be infused; spill arrows became marks.
-3. **Ranks and deeds** (`docs/plans/heroes-and-deeds.md`).
+3. **Ranks and deeds** (`docs/plans/heroes-and-deeds.md`). **Built** (`docs/plans/deeds.md`): a calling and a specialization deed per hero, 3 levels each with a choice at level 2, levels mid-fight, goals from measured rates, and snowball measurements in the run bot report (the rules themselves are still open).
 4. **The new day, the economy, and pacing.**
 5. **Keywords:** hero affinities, passives that fire on events, duo bonds, and conduits.
 6. **Fight questions and readability.**

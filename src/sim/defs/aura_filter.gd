@@ -11,13 +11,15 @@ extends RefCounted
 ##                                  infusion, or spill; Inferno's Golden Flame
 ##                                  counts as both)
 ##          {"essence": "frost"}    items infused with that essence
+##          {"keyword": "blade"}    items with that keyword (data/keywords.json;
+##                                  added for deed unlocks, docs/plans/deeds.md)
 ##          {"auto_attack": true}   the unit's auto-attack (basic attack or
 ##                                  auto-attack item)
 ##   units: {"row": "front"}        units in that row
 ##          {"class": "warden"}     heroes of that class
 ## Adding a key is a code change; say so when you make one.
 
-const ITEM_KEYS: Array[String] = ["item", "tag", "slot", "applies", "essence", "auto_attack"]
+const ITEM_KEYS: Array[String] = ["item", "tag", "slot", "applies", "essence", "keyword", "auto_attack"]
 const UNIT_KEYS: Array[String] = ["row", "class"]
 const ROW_NAMES: Array[String] = ["front", "back"]
 
@@ -27,6 +29,7 @@ var tag: String = ""
 var slot_type: int = -1
 var applies: String = ""
 var essence: String = ""
+var keyword: String = ""
 var auto_attack: bool = false
 ## -1 = any row.
 var row: int = -1
@@ -58,6 +61,8 @@ static func read(reader: DataReader, for_items: bool) -> AuraFilter:
 			filter.applies = reader.req_string("applies")
 		if reader.has("essence"):
 			filter.essence = reader.req_string("essence")
+		if reader.has("keyword"):
+			filter.keyword = reader.req_string("keyword")
 		if reader.has("auto_attack"):
 			filter.auto_attack = reader.opt_bool("auto_attack", false)
 			if not filter.auto_attack:
@@ -82,6 +87,8 @@ func matches_item(item: ItemState) -> bool:
 		return false
 	if not essence.is_empty() and not item.essences.any(func(e: EssenceDef) -> bool: return e.id == essence):
 		return false
+	if not keyword.is_empty() and not item.def.keywords.has(keyword):
+		return false
 	if auto_attack and not item.is_auto_attack:
 		return false
 	return true
@@ -98,7 +105,7 @@ func matches_unit(unit: UnitState) -> bool:
 ## For the log, e.g. " (weapon, abilities)".
 func describe() -> String:
 	var parts: Array[String] = []
-	for part: String in [item_id, tag, applies, essence, unit_class]:
+	for part: String in [item_id, tag, applies, essence, keyword, unit_class]:
 		if not part.is_empty():
 			parts.append(part)
 	if slot_type >= 0:

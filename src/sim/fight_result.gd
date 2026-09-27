@@ -18,6 +18,18 @@ class InfusionResult:
 	var level_after: int
 
 
+## One hero's progress on one deed track over the fight (losses count too),
+## for the run layer to keep (docs/plans/deeds.md).
+class DeedResult:
+	var unit_id: String
+	## DeedSetup.CALLING or DeedSetup.SPECIALIZATION.
+	var track_id: String
+	var progress_before: int
+	var progress_after: int
+	var level_before: int
+	var level_after: int
+
+
 ## A synergy that was active, for the run layer to record discoveries.
 class SynergyResult:
 	var synergy_id: String
@@ -36,6 +48,8 @@ var errors: Array[String] = []
 var infusions: Array[InfusionResult] = []
 ## The guild's active synergies, in data order.
 var synergies: Array[SynergyResult] = []
+## Each hero's deed tracks, in hero order (calling, then specialization).
+var deeds: Array[DeedResult] = []
 
 
 func guild_won() -> bool:

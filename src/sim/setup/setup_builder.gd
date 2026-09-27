@@ -13,14 +13,19 @@ static func item_setups(content: ContentDb, entries: Array[LoadoutEntry]) -> Arr
 
 
 ## A hero at a rank, standing in a row, carrying a loadout, with an optional
-## specialization id.
+## specialization id. Deed progress starts at 0 with no level-2 choice; set
+## it on `deeds` (calling first, then the specialization's).
 static func hero(content: ContentDb, hero_id: String, rank: int, row: UnitSetup.Row, entries: Array[LoadoutEntry], specialization_id: String = "") -> UnitSetup:
 	var def: HeroDef = content.heroes[hero_id]
 	var setup: UnitSetup = UnitSetup.make(def.id, def.name, def.stats, row, def.basic_attack, item_setups(content, entries), rank)
 	setup.innate = def.innate
 	setup.unit_class = def.hero_class
+	if def.calling != null:
+		setup.deeds.append(DeedSetup.make(DeedSetup.CALLING, def.calling))
 	if not specialization_id.is_empty():
 		setup.specialization = content.specializations.get(specialization_id, null)
+		if setup.specialization != null:
+			setup.deeds.append(DeedSetup.make(DeedSetup.SPECIALIZATION, setup.specialization.track))
 	return setup
 
 

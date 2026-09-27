@@ -385,7 +385,8 @@ static func forge_reforge(state: RunState, content: ContentDb, uid: int) -> RunA
 	return RunActions.reforge(state, content, uid)
 
 
-## Switches a hero to another of their specializations (once, at a Retrain stop).
+## Switches a hero to another of their specializations (once, at a Retrain
+## stop). The new specialization's deed starts from zero; the calling is kept.
 static func retrain(state: RunState, content: ContentDb, hero_id: String, specialization_id: String) -> RunActions.Result:
 	if state.phase != "stop" or state.stop_kind != "retrain":
 		return _fail("retraining needs a Retrain stop")
@@ -400,6 +401,8 @@ static func retrain(state: RunState, content: ContentDb, hero_id: String, specia
 	if not problem.is_empty():
 		return _fail(problem)
 	hero.specialization_id = specialization_id
+	hero.spec_progress = 0
+	hero.spec_choice = -1
 	state.stop_used = true
 	return _ok("%s retrains as a %s" % [hero_id, content.specializations[specialization_id].name])
 

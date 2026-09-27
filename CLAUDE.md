@@ -6,7 +6,7 @@ A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The pl
 
 **Redesign in progress:** `docs/plans/fun-redesign.md` and `docs/plans/heroes-and-deeds.md` (approved, built in steps; their **Decisions** sections win). The rules below describe the code as it is now; each redesign step updates them as it lands.
 
-**The full design lives in `docs/design.md`**, with item tiers and Oathbinding detailed in `docs/tiers-backup-specialization.md` (its Backup parts are superseded). Redesign steps built so far: 1 (loadout, drafted trio, no Backup) and 2 (the infusion rework, `docs/plans/infusion-rework.md`). The UI's look follows `docs/ui-asset-design.md` (for now). Before building or changing a game system, read the matching section there. If the code and the design doc disagree, stop and ask. Don't silently pick one.
+**The full design lives in `docs/design.md`**, with item tiers and Oathbinding detailed in `docs/tiers-backup-specialization.md` (its Backup parts are superseded). Redesign steps built so far: 1 (loadout, drafted trio, no Backup), 2 (the infusion rework, `docs/plans/infusion-rework.md`), and 3 (deeds, `docs/plans/deeds.md`). The UI's look follows `docs/ui-asset-design.md` (for now). Before building or changing a game system, read the matching section there. If the code and the design doc disagree, stop and ask. Don't silently pick one.
 
 ## Tech stack
 
@@ -74,7 +74,7 @@ tools/         headless sim runner, data validators
 ## Specialization rules
 
 - Each **hero** has three specializations of their own (`data/specializations.json`, `docs/plans/specializations-in-sim.md`), each unique to the hero and unlike the other two. A hero picks one at rank B.
-- **Locked potential:** parts unlock at B, A, and S. A later part with the same key replaces the earlier one.
+- **Deeds unlock power; ranks give slots** (`docs/plans/deeds.md`). Each hero has two deed tracks: a **calling** (`"calling"` in `data/heroes.json`, from the start) and their specialization's (from the pick). Each track has a deed (a goal counted from the combat log, deterministic integers; kinds in `DeedDef`) and **3 levels** of parts. **Level 2 is a choice of 2**, made between fights (`RunActions.choose_deed_unlock`); until then it waits, unspent. Levels reached mid-fight turn on at once and are logged. Progress carries over; losses and skirmishes count. Retraining resets the specialization's deed, never the calling. A later part with the same key replaces the earlier one; a calling part may replace an innate part; a specialization's keys can't reuse its hero's innate or calling keys.
 - Part kinds: aura, grant (numbered from the hero's stats), ability (slotless, on a cooldown or relic trigger), basic_attack, replace_status.
 - A part that replaces the basic attack must come with an `auto_attack` part, so equipping a basic-attack item never blanks the specialization.
 - **Innates** (`"innate"` in `data/heroes.json`): every hero has one, always on while they fight, made of the same parts (no basic_attack) and credited by name. Keep them unique to the hero.
@@ -103,7 +103,7 @@ tools/         headless sim runner, data validators
 ## Other core rules
 
 - Items are per hero; relics are shared by the team. The guild can hold any number of relics (no board, no slots, no sockets); a relic can be turned down, but once taken it can't be removed. Relics are rare and change how a build works rather than adding flat stats. Relic numbers are flat (no stat scaling); only percentage boosts that apply to everything of that kind ("all shields +10%", "shields on this hero +50%") change them. In the sim, such a boost is an `all_items` aura with no filter. Relic details: `docs/plans/relics-in-sim.md`.
-- **The team** (`docs/plans/heroes-and-deeds.md`): a run drafts three heroes at the start (three picks, each 1 of 3 not yet taken) and keeps them all run; all three fight. No bench, no Backup, no buying heroes. Each elite win gives a **rank-up** the player hands to one hero (`RunFlow.give_rank_up`); a hero keeps their specialization and items as they rank up.
+- **The team** (`docs/plans/heroes-and-deeds.md`): a run drafts three heroes at the start (three picks, each 1 of 3 not yet taken) and keeps them all run; all three fight. No bench, no Backup, no buying heroes. Each elite win gives a **rank-up** the player hands to one hero (`RunFlow.give_rank_up`); a hero keeps their specialization, items, and deed progress as they rank up.
 - **The Caravan never offers an item at a different tier than a copy the player already holds.** Different-tier copies of the same item can still be held when they come from elsewhere (Vault, loot, fights, events). Items can move between heroes freely between fights (never during combat).
 - Fallen heroes always come back after a fight, with no downside.
 - A lost fight restarts the day (everything kept, plus bonus gold); the second loss ends the run. Every fight starts at full HP (unless an item or relic says otherwise). Unequipped items wait in a shared stash that holds 6 items; relics can't go there.

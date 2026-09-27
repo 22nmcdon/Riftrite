@@ -196,7 +196,54 @@ static func hero_text(content: ContentDb, hero_id: String, rank: int) -> String:
 		lines.append("• " + effect_line(content, sourced))
 	lines.append("")
 	lines.append("Innate: %s. %s" % [def.innate_name, def.innate_text])
+	if def.calling != null:
+		lines.append("")
+		lines.append("Calling: %s. %s" % [def.calling_name, def.calling_text])
+		lines.append_array(track_lines(def.calling, 0, -1))
 	return "\n".join(lines)
+
+
+## A deed track in plain words: the deed, then each level's unlock (both
+## options at the choice level), marking what's reached and chosen.
+static func track_lines(track: DeedTrackDef, progress: int, choice: int) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	var level: int = track.level_for(progress)
+	lines.append("Deed: %s (%d / %d toward level %d)" % [track.deed.text, progress, track.deed.goals[mini(level, DeedDef.LEVELS - 1)], mini(level + 1, DeedDef.LEVELS)] if level < DeedDef.LEVELS \
+		else "Deed: %s (all 3 levels reached)" % track.deed.text)
+	for i: int in track.levels.size():
+		var reached: String = "✓" if level > i else "•"
+		var unlock: DeedTrackDef.Level = track.levels[i]
+		if unlock.is_choice():
+			var names: PackedStringArray = PackedStringArray()
+			for o: int in unlock.options.size():
+				var option: DeedTrackDef.Level = unlock.options[o]
+				names.append("%s%s: %s" % [option.name, " (chosen)" if choice == o else "", option.text])
+			lines.append("%s Level %d, choose one: %s" % [reached, i + 1, " / ".join(names)])
+		else:
+			lines.append("%s Level %d: %s" % [reached, i + 1, unlock.text])
+	return lines
+
+
+## One line per hero and deed track about this fight's progress, e.g.
+## "Brannoc · Shieldbearer: 120 → 300 / 882". A level reached says so. The
+## tracks come from the fight's setup; `names` maps unit ids to names.
+static func deed_result_lines(result: FightResult, setup: FightSetup, names: Dictionary) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	for deed: FightResult.DeedResult in result.deeds:
+		var track: DeedTrackDef = null
+		for unit: UnitSetup in setup.heroes:
+			if unit.id == deed.unit_id:
+				for deed_setup: DeedSetup in unit.deeds:
+					if deed_setup.track_id == deed.track_id:
+						track = deed_setup.def
+		if track == null:
+			continue
+		var goal: String = "" if deed.level_after >= DeedDef.LEVELS else " / %d" % track.deed.goals[deed.level_after]
+		var line: String = "%s · %s (%s): %d → %d%s" % [names.get(deed.unit_id, deed.unit_id), track.name, track.deed.text, deed.progress_before, deed.progress_after, goal]
+		if deed.level_after > deed.level_before:
+			line += "  ✦ level %d!" % deed.level_after
+		lines.append(line)
+	return lines
 
 
 static func stat_line(stats: UnitStats) -> String:

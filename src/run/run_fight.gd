@@ -14,14 +14,17 @@ static func setup_for(state: RunState, content: ContentDb, encounter_id: String)
 		var entries: Array[LoadoutEntry] = []
 		for item: RunItem in hero.items:
 			entries.append(item.to_entry(content))
-		team.append(SetupBuilder.hero(content, hero.hero_id, hero.rank, hero.row, entries, hero.specialization_id))
+		var unit: UnitSetup = SetupBuilder.hero(content, hero.hero_id, hero.rank, hero.row, entries, hero.specialization_id)
+		unit.deeds = hero.deed_setups(content)
+		team.append(unit)
 	var fight_seed: int = state.rng.next_u32()
 	return FightSetup.make(team, SetupBuilder.encounter_units(content, encounter_id), fight_seed,
 		content.encounters[encounter_id].act, state.relics.duplicate(), SetupBuilder.encounter_relics(content, encounter_id))
 
 
 ## Writes a finished fight back into the run: each infused item's XP
-## (matched by hero and loadout place), newly found synergies, Legendary path progress,
+## (matched by hero and loadout place), each hero's deed progress (a lost or
+## extra fight counts too), newly found synergies, Legendary path progress,
 ## and the result (a tie counts as a win). Returns notes on Legendaries that
 ## grew.
 ## `encounter_id` is who was fought (default: the day's fight); an extra
@@ -31,6 +34,14 @@ static func apply_result(state: RunState, content: ContentDb, result: FightResul
 		var item: RunItem = _item_at(state, content, infusion.unit_id, infusion.slot)
 		if item != null and item.item_id == infusion.item_id:
 			item.xp = infusion.xp_after
+	for deed: FightResult.DeedResult in result.deeds:
+		var hero: RunHero = state.hero(deed.unit_id)
+		if hero == null:
+			continue
+		if deed.track_id == DeedSetup.CALLING:
+			hero.calling_progress = deed.progress_after
+		else:
+			hero.spec_progress = deed.progress_after
 	for found: FightResult.SynergyResult in result.synergies:
 		if not state.discovered.has(found.synergy_id):
 			state.discovered.append(found.synergy_id)

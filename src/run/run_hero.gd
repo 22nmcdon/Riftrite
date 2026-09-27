@@ -15,6 +15,13 @@ var row: UnitSetup.Row = UnitSetup.Row.FRONT
 ## passives up to their rank's slot counts (see slot_problem). The UI shows
 ## them grouped by slot type.
 var items: Array[RunItem] = []
+## Deed progress (docs/plans/deeds.md): the calling's from the start of the
+## run, the specialization's from its pick. Level 2's chosen option on each
+## track (0 or 1), or -1 while that level waits, unspent.
+var calling_progress: int = 0
+var calling_choice: int = -1
+var spec_progress: int = 0
+var spec_choice: int = -1
 
 
 static func make(id: String, hero_rank: int = 0) -> RunHero:
@@ -64,6 +71,7 @@ func to_dict() -> Dictionary:
 	}
 	if not specialization_id.is_empty():
 		data["specialization"] = specialization_id
+	data["deeds"] = {"calling": calling_progress, "calling_choice": calling_choice, "specialization": spec_progress, "specialization_choice": spec_choice}
 	return data
 
 
@@ -77,5 +85,38 @@ static func from_dict(reader: DataReader) -> RunHero:
 	hero.row = maxi(EncounterDef.ROW_NAMES.find(reader.req_choice("row", EncounterDef.ROW_NAMES)), 0) as UnitSetup.Row
 	for item_reader: DataReader in reader.opt_object_array("items"):
 		hero.items.append(RunItem.from_dict(item_reader))
+	var deeds: DataReader = reader.req_object("deeds")
+	if deeds != null:
+		hero.calling_progress = deeds.req_int("calling", 0)
+		hero.calling_choice = deeds.req_int("calling_choice", -1, 1)
+		hero.spec_progress = deeds.req_int("specialization", 0)
+		hero.spec_choice = deeds.req_int("specialization_choice", -1, 1)
+		deeds.finish()
 	reader.finish()
 	return hero
+
+
+## The hero's deed tracks for a fight: the calling, then the
+## specialization's (if picked), with their progress.
+func deed_setups(content: ContentDb) -> Array[DeedSetup]:
+	var result: Array[DeedSetup] = []
+	var def: HeroDef = content.heroes.get(hero_id)
+	if def != null and def.calling != null:
+		result.append(DeedSetup.make(DeedSetup.CALLING, def.calling, calling_progress, calling_choice))
+	if content.specializations.has(specialization_id):
+		result.append(DeedSetup.make(DeedSetup.SPECIALIZATION, content.specializations[specialization_id].track, spec_progress, spec_choice))
+	return result
+
+
+## The level reached on a track (DeedSetup.CALLING or SPECIALIZATION).
+func deed_level(content: ContentDb, track_id: String) -> int:
+	for deed: DeedSetup in deed_setups(content):
+		if deed.track_id == track_id:
+			return deed.level()
+	return 0
+
+
+## True if a track has reached its choice level with no option picked.
+func choice_waiting(content: ContentDb, track_id: String) -> bool:
+	var choice: int = calling_choice if track_id == DeedSetup.CALLING else spec_choice
+	return choice < 0 and deed_level(content, track_id) > DeedTrackDef.CHOICE_LEVEL
