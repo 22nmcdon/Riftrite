@@ -104,6 +104,10 @@ The second round (2026-09-27):
 - **The arena's edge** is the rectangle around the hex centers, half a hex beyond the outermost ones.
 - **Units are circles**, all with radius **400** (0.4 hex) for now. No two units overlap, so two neighbors on the grid start with a 200 gap between them, which is too narrow to walk through.
 - **Rocks** are circles of radius **500** on a hex center. Rocks on neighboring hexes touch, so a row of rocks is a wall. Rocks block movement and pushes, but not attacks (no line of sight).
+- **What gets through (built in step 1):**
+  - **Units:** two units on neighboring hexes leave 200 between them, so nobody passes. One empty hex between two units leaves at least 932, so a unit (800 across) fits through.
+  - **Rocks:** they're bigger. One missing rock in a row of rocks leaves only 732, so a unit can't pass. It takes two missing rocks.
+  - **At the arena's edge:** a rock one hex in from the edge leaves too little room to pass behind it.
 - **Distances** are straight-line, computed with a shared integer square root (`FixedMath.isqrt`) and compared squared where possible. Directions are integer vectors scaled to length 1000.
 
 ## 2. What a unit is (data shape)
@@ -172,10 +176,13 @@ Each tick runs these steps in order. Resolution order is the fight's unit order:
 - **Speed:** a unit covers `speed × 1000 / 20` units per tick (speed 2 = 100 per tick). Slow reduces it.
 - **Straight when it can:** if the straight way to a spot in range of its target is clear, the unit walks straight at it.
 - **Around when it must:** otherwise it finds a path and walks along it, straight between the path's corners.
-  - **Pathfinding** runs on a **hidden grid of quarter-hex cells** (about 30 × 30). It isn't a hex grid, and nothing snaps to it.
-  - A cell is blocked if the walker's circle there would overlap a unit, a rock, crumbled ground, or the edge. The walker's own target doesn't block cells, so it can reach it.
-  - The search is Dijkstra with integer costs (250 straight, 354 diagonal) and a fixed neighbor order, forward-first for each side. So neither side drifts toward one flank when routes tie.
+  - **Pathfinding** runs on a **hidden grid of eighth-hex cells** (125 across, 57 × 60). It isn't a hex grid, and nothing snaps to it. (Quarter-hex cells were planned, but they miss the one-hex gap between two staggered units, a corridor only 132 wide.)
+  - **Blocked cells:** a cell is blocked if the walker standing on its center would overlap a unit, a rock, crumbled ground, or the edge. The test is exact, never optimistic, so a path never leads into a gap the walker can't fit. Cells are only checked when a search reaches them. The walker's own target doesn't block cells, so it can reach it.
+  - **The search** is A* with integer costs (125 straight, 177 diagonal, never cutting past a blocked cell) and a fixed neighbor order, forward-first for each side (the enemies' order is the heroes' turned around). So neither side drifts toward one flank when routes tie.
+    - Its estimate is the larger of the x and y distances to the target, less the reach.
+    - `nearest` uses the same search against every enemy at once, and keeps going until no closer tie is possible.
   - **Its goal** is any free cell from which the target is in range.
+  - **Leaving crumbled ground:** a walker standing on crumbled ground may cross crumbled cells, so it can always get back to safe ground.
 - **Repathing:** a unit keeps its path until it's blocked, its target changes, or 0.5s passes (`repath_ms`). The board keeps changing, so it looks again regularly.
 - **Blocked:** if the next piece of movement would overlap anything, the unit doesn't move this tick and repaths on its next turn.
 - **No path:** the unit waits. After **1s with no path** (`repath_give_up_ms`), it drops its target and picks again.
@@ -315,7 +322,7 @@ All the displacements **move the unit instantly in the sim** and log the start a
 ## 9. Rift Collapse: the shrinking arena
 
 - **Rings follow the placement grid:** a hex's ring is `min(col, 7 − col, row, 6 − row)`. On 8 × 7 that's ring 0 (the border), ring 1, ring 2, and ring 3, the 2 middle hexes, which never crumble.
-- **On the plane,** each crumbled ring moves the safe rectangle's edge in by one ring: 866 at the sides and 1000 at the ends. Everything outside the safe rectangle is crumbled ground.
+- **On the plane,** each crumbled ring moves the safe rectangle's edge in by one ring: 866 at the sides and 1000 at the ends. The ends sit a further quarter hex in, because odd columns are shifted half a hex; that way a hex's center is on safe ground exactly when its ring hasn't crumbled. Everything outside the safe rectangle is crumbled ground. (Rings on 8 × 7 hold 26, 18, 10, and 2 hexes.)
 - **Timing:** from `collapse_start_ms` (45s), one ring every `collapse_ring_ms` (10s). Each ring is **warned** `collapse_warning_ms` (3s) before it crumbles, and the warning is logged like an area's.
 - **Damage:** anyone whose center is on crumbled ground takes flat damage once per second.
   - It starts at `base` and grows every second (the current `collapse_by_act` numbers, reused).
@@ -349,7 +356,7 @@ All the displacements **move the unit instantly in the sim** and log the start a
 - **Moves are logged as legs, not per tick,** so a 60s fight's log stays small. A test replays every leg, push, and leap from the log, and checks that it gives each unit's exact position on every tick. So the UI can always draw the true board from the log alone.
 - **`LogEntry` gains** `from_pos`, `to_pos`, `end_tick`, and `shape`. Phase 0 renames the item fields to ability fields (`source_ability`, `source_ability_name`).
 - **Every entry that changes the board or a unit names its source unit and ability**, or "Rift Collapse", or a status. A test walks every entry of the determinism fight and checks this.
-- **`ArenaDebug.render(sim)`:** a plain-text board, one character cell per quarter hex, showing rocks, units by short tag, crumbled ground, and warned areas. Tests use it to show the board when an assertion fails; it doesn't touch the fight.
+- **`ArenaDebug.render(sim)`:** a plain-text board (`ArenaDebug.draw` in step 1; `render(sim)` wraps it in step 2), one character cell per quarter hex, showing rocks, units by short tag, crumbled ground, and warned areas. Tests use it to show the board when an assertion fails; it doesn't touch the fight.
 
 ## 12. Files
 
@@ -358,8 +365,8 @@ All the displacements **move the unit instantly in the sim** and log the start a
 | File | What it holds |
 | --- | --- |
 | `hex_grid.gd` | the placement grid: index ↔ (col, row), zones, rings, a hex's center on the plane |
-| `plane.gd` | integer vector helpers: length, direction to 1000, dot products, point-in-shape tests, sweeps |
-| `nav_grid.gd` | the hidden quarter-hex cells: blocking for a given walker, Dijkstra, path corners, path lengths |
+| `arena_plane.gd` (`ArenaPlane`: Godot already has a `Plane` class) | integer vector helpers: length, direction to 1000, dot products, point-in-shape tests, sweeps |
+| `nav_grid.gd` | the hidden eighth-hex cells: blocking for a given walker, A* paths and nearest, path corners, path lengths |
 | `arena_state.gd` | per fight: rocks, the safe rectangle, pending warned areas and shots |
 | `movement.gd` | walking, blocking, repathing, break free, hop away, flying |
 | `displacement.gd` | knockback, pull, leap, charge, collisions |
@@ -409,7 +416,7 @@ Each rule gets its own test file under `tests/sim/`. They build tiny boards thro
 | Test file | Covers |
 | --- | --- |
 | `test_hex_grid.gd` | coordinates both ways, zones, rings, hex centers on the plane (neighbors 1000 apart) |
-| `test_plane.gd` | isqrt, directions, each shape's point test, sweeps stopping at circles and edges |
+| `test_arena_plane.gd` | isqrt, directions, each shape's point test, sweeps stopping at circles and edges |
 | `test_nav_grid.gd` | routes around units and rocks, gaps too narrow to pass, the fixed tie-break, no route, leaving crumbled ground |
 | `test_movement.gd` | speed → distance per tick, straight when clear, around when not, no overlap ever (checked every tick), the hero winning a contested gap, stopping in range, Slow, Root, the repath give-up |
 | `test_targeting.gd` | every rule and its ties, back-liners by starting row, sticky targets, Taunt overriding and ending, TARGET log lines |
@@ -433,13 +440,19 @@ Each rule gets its own test file under `tests/sim/`. They build tiny boards thro
 
 - Walking straight when the way is clear.
 - Pathfinding only when blocked, on a new target, or every 0.5s.
-- Only about 900 cells per search.
+- Searches guided toward the target, which touch a few hundred of the 3,420 cells.
+
+**Measured in step 1** (one search, 3 heroes against 6 enemies):
+- A clear path takes well under 1 ms.
+- `nearest` takes about 2.5 ms.
+- A path to an enemy boxed in at the back of its formation takes about 2.7 ms.
+- So a fight can afford a few dozen searches, not hundreds. Repathing only when needed matters.
 
 If step 2 measures slower, the cell size and repath interval are the knobs, and I'll report before going further.
 
 ## 14. Order of work (each step: code, tests, green run, commit)
 
-1. **Grid and plane:** `hex_grid`, `plane`, `nav_grid`, `arena_debug`, `FixedMath.isqrt`, and their tests. Pure functions, no sim.
+1. **Grid and plane (done):** `hex_grid`, `arena_plane`, `nav_grid`, `arena_debug`, `FixedMath.isqrt`, and their tests. Pure functions, no sim.
 2. **Skeleton fight:** kits, setups with hexes and rocks, the new `CombatSim` tick, walking and blocking, `nearest` targeting, melee attacks and shots, deaths, the end of the fight, the MOVE, STOP, TARGET, and SHOT logs, and the log replay test. The first determinism test, and a speed measurement.
 3. **Statuses:** Root, Stun, Slow, Taunt, Silence, Marked, and damage over time.
 4. **Mana and signatures:** the five triggers, cast_ms, Undying, `Events`, and `PartDef`.

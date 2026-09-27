@@ -44,3 +44,25 @@ static func is_whole_ticks(ms: int) -> bool:
 static func ms_to_ticks(ms: int) -> int:
 	@warning_ignore("integer_division")
 	return ms / MS_PER_TICK
+
+
+## The integer square root: the largest r with r * r <= n (n must be >= 0).
+## The arena uses it for distances and directions on the plane.
+static func isqrt(n: int) -> int:
+	assert(n >= 0, "FixedMath.isqrt: n must not be negative")
+	if n < 2:
+		return n
+	# Newton's method from a power of two at least as big as the root (so it
+	# steps down in a few iterations), stopping once it stops shrinking.
+	var x: int = 1
+	var rest: int = n
+	while rest > 0:
+		rest >>= 2
+		x <<= 1
+	@warning_ignore("integer_division")
+	var y: int = (x + n / x) / 2
+	while y < x:
+		x = y
+		@warning_ignore("integer_division")
+		y = (x + n / x) / 2
+	return x
