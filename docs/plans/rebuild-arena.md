@@ -90,9 +90,16 @@ Enemies get their own part of the plan.
 - **UI:** a hex board, a placement screen, area warnings, and movement animation.
 - It's the biggest single piece of work in the rebuild, so it gets its own build plan.
 
+## Decisions (2026-09-27)
+
+- **Movement speed is a stat** (`speed`). Its number is hexes per second; the sim turns it into ticks per step.
+- **"Nearest" means the shortest path**, not straight hex distance: an enemy behind a wall of units counts as farther away. Ties go to the unit that comes first in the fight's order.
+- **A cone widens as it goes:** 1 hex, then 2, then 3 (3 hexes deep).
+- **Rift Collapse, first numbers:** from 45s, one rectangular ring of the board crumbles every 10s. Standing on a crumbled hex deals flat damage each second (tuning values).
+- **Flying units pass over other units**, but **Engage still stops them**: an engaged flier has to break free like anyone else.
+- **Rocks come in phase 1.**
+
 ## Open questions
 
 - **Grid size:** is 8 × 7 right with 3 heroes against 3–6 enemies? Playtesting decides.
-- **When rocks arrive:** in the first build, or after the flat arena works?
 - **Large units:** should bosses ever take more than one hex?
-- **Collapse numbers:** how often a ring crumbles, and how much damage it deals.

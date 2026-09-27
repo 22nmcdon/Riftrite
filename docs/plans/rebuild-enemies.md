@@ -33,7 +33,7 @@ Every enemy has a **one-line threat** shown on the fight card ("Pounces on your 
 
 | Archetype | Enemy | What it does | What it tests | Answers |
 | --- | --- | --- | --- | --- |
-| **Swarm** | **Rift Pup** | fast (moves 3), weak; +ATK for each adjacent pup | Area damage, and closing lanes | Ironbrand's cleave, Arrow Storm, Engage holding a gap |
+| **Swarm** | **Rift Pup** | fast (speed 3), weak; +ATK for each adjacent pup | Area damage, and closing lanes | Ironbrand's cleave, Arrow Storm, Engage holding a gap |
 | **Swarm** | **Ashling** | bursts into Burn on adjacent units when it dies | Standing in melee crowds | Ranged damage, Lanternbearer's cleanse |
 | **Flanker** | **Rift Hound** | **Pounce** (once per fight, at the start): leaps to the weakest back-liner within 4 hexes | Protecting the back line | Hearthwall's Guard, Engage, a snare on the landing spot |
 | **Caster** | **Cinder Moth** | flies over units; **Ember Dust** (mana): a marked 2-hex circle on your largest group, which Burns | Bunching up | Spreading out, killing it fast with Deadeye |

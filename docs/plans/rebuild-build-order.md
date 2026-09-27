@@ -115,12 +115,14 @@ Three labels: **Remove** (deleted), **Rewrite** (the file or idea stays, the con
 
 **Notes**
 
-- **Rocks** are needed by the camp options Dig In and Choose the Ground. Phase 5 can start with the camp options that don't need them, or rocks can move into phase 1 if they're cheap.
+- **Rocks** are needed by the camp options Dig In and Choose the Ground. They're built in phase 1 (decided).
 - **Apexes** only matter in Acts 2 and 3, so the Act 1 slice can ship without them.
 - **Phase 1 is the biggest risk.** Its build plan should be written and approved before phase 0 starts, so the gut doesn't leave the project unplayable for longer than needed.
 
-## Open questions
+## Decisions (2026-09-27)
 
-- **Branch strategy:** gut on a new branch and merge when phase 3 is playable (proposed), or gut straight on the main working branch?
-- **Rocks:** in phase 1, or later?
-- **The fight sandbox:** keep it in the final game as a practice mode, or as a developer tool only?
+- **Branch strategy:** gut straight on the main working branch (no long-lived rebuild branch).
+- **Rocks:** in phase 1.
+- **The fight sandbox:** it stays in the game as a **Practice** mode on the title screen, so playtest builds can reach it for gate 1. It can stay rough until the art rehaul.
+- **Old saves:** the gut bumps the save version, and the title screen quietly drops a save it can't load.
+- **Phase 1's build plan** is `docs/plans/rebuild-phase1-arena-sim.md`.

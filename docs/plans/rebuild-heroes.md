@@ -21,7 +21,7 @@ Status: **agreed in discussion (2026-09-27), not built.** This is the first part
 
 | Part | What it is | Changes over a run? |
 | --- | --- | --- |
-| **Stats** | HP, ATK, MGK, DEF, CRIT, ATSP, plus movement and range | Yes, when the hero transforms |
+| **Stats** | HP, ATK, MGK, DEF, CRIT, ATSP, plus speed (hexes per second) and range | Yes, when the hero transforms |
 | **Basic attack** | Their steady attack; it builds mana | Some paths change it |
 | **Signature** | Their big move. It fires on its trigger: usually a full mana bar, sometimes something else (section 4) | Replaced when the hero transforms |
 | **Passive** | Always on; usually about positioning | Rarely |
@@ -118,7 +118,7 @@ Example: if Vell attacks, she earns about 10 mana a second and Mends every 6s. I
 | | |
 | --- | --- |
 | **Stats** | HP 270, ATK 22, DEF 8, CRIT 8, ATSP 10 |
-| **Movement / range** | moves 2 hexes, fires at up to 4 |
+| **Speed / range** | speed 2, fires at up to 4 hexes |
 | **Basic attack: Longshot** | an arrow at the nearest enemy in range |
 | **Signature: Marking Shot** (50 mana) | Marks an enemy: it takes +15% damage from everyone for 4s |
 | **Passive: Keep Your Distance** | when an enemy moves next to her, she hops 1 hex away (once every 6s) |
@@ -189,7 +189,7 @@ The fantasy: she's always moving and filling the air with arrows.
 | | |
 | --- | --- |
 | **Stats** | HP 420, ATK 14, DEF 30 |
-| **Movement / range** | moves 2 hexes, melee (1) |
+| **Speed / range** | speed 2, melee (1) |
 | **Basic attack: Shield Bash** | a blow on an adjacent enemy |
 | **Signature: Hold the Line** (80 mana) | taunts enemies within 2 hexes for 3s; he gains DEF while they're taunted |
 | **Passive: Hearthguard** | the first ally to drop below 40% HP gets a Shield from him (once per fight) |
@@ -205,7 +205,7 @@ The fantasy: nothing reaches the people behind him.
 | **Signature** | Hold the Line | **Hearthwall:** a wall of shields across 3 hexes in front of him that blocks ranged attacks for 4s |
 | **Stats** | unchanged | +HP, +DEF, –ATK |
 | **Mana** | unchanged | gains mana from damage he takes for allies |
-| **Cost** | –10% Shield Bash damage | moves 1 hex; can't move while his wall stands |
+| **Cost** | –10% Shield Bash damage | speed 1; can't move while his wall stands |
 
 - **Deed:** damage he takes in place of allies. Taunted hits don't count (they're attacks on him), so without Guard it doesn't move.
 - **Where he stands:** right in front of Maren and Vell, covering the lane to them.
@@ -261,7 +261,7 @@ The fantasy: he's at his most dangerous when he should already be dead.
 | | |
 | --- | --- |
 | **Stats** | HP 300, ATK 6, MGK 20, DEF 10 |
-| **Movement / range** | moves 2 hexes, casts at up to 3 |
+| **Speed / range** | speed 2, casts at up to 3 hexes |
 | **Basic attack: Lantern Glow** | a bolt of light at the nearest enemy in range; her main source of mana |
 | **Signature: Mend** (60 mana) | heals the ally lowest on HP (by %) within 3 hexes |
 | **Passive: Hearthlight** | allies within 1 hex of her regenerate 1% HP per second |
