@@ -6,13 +6,15 @@ extends RefCounted
 ##
 ## Each tick (section 3; the parts marked "later" come with later steps):
 ##   1. Rift Collapse (later).
-##   2. Statuses tick (later).
+##   2. Statuses tick: damage over time, and timers running out (Statuses).
 ##   3. Shots land, in the order they were fired (Shots).
 ##   4. Warned areas land (later).
-##   5. Each standing unit acts, in the fight's order (heroes, then enemies):
-##      its attack's cooldown runs; it keeps or picks a target (Targeting);
-##      with the target in reach it stands and attacks when ready, otherwise
-##      it walks (Movement). Mana and signatures come later.
+##   5. Each standing unit acts, in the fight's order (heroes, then enemies).
+##      Stunned, it does nothing. Otherwise its attack's cooldown runs
+##      (slower when Slowed); a Taunt makes the taunter its target, or it
+##      keeps or picks a target (Targeting); with the target in reach it
+##      stands and attacks when ready, otherwise it walks (Movement; not
+##      when Rooted). Mana and signatures come later.
 ##   6. Event effects and phases (later).
 ##   7. Units at 0 HP fall. They still acted this tick if their turn came,
 ##      so going first gives neither side an edge.
@@ -83,6 +85,7 @@ func step() -> void:
 	if finished:
 		return
 	tick += 1
+	Statuses.tick_all(self)
 	Shots.land_due(self)
 	for unit: UnitState in units:
 		if unit.alive:
@@ -92,8 +95,18 @@ func step() -> void:
 
 
 func _act(unit: UnitState) -> void:
-	unit.attack.advance(unit.attack_rate_bp)
+	if not unit.statuses.is_empty() and Statuses.has_kind(unit, StatusDef.Kind.STUN):
+		if unit.leg_active:
+			Movement.halt(self, unit, "stunned")
+		return
+	var slow: int = Statuses.slow_bp(unit) if not unit.statuses.is_empty() else 0
+	unit.attack.advance(FixedMath.apply_bp(unit.attack_rate_bp, FixedMath.BP_ONE - slow))
 	var target: UnitState = unit.target
+	if not unit.statuses.is_empty():
+		var taunter: UnitState = Statuses.taunter(self, unit)
+		if taunter != null and taunter != target:
+			Targeting.set_target(self, unit, taunter, "taunted")
+			target = taunter
 	if target == null or not target.alive:
 		Targeting.update(self, unit)
 		target = unit.target
@@ -110,8 +123,8 @@ func _act(unit: UnitState) -> void:
 	Movement.walk(self, unit)
 
 
-## How fast the unit's basic attack cooldown runs (10000 = normal): faster
-## with ATSP.
+## How fast the unit's basic attack cooldown runs before any Slow (10000 =
+## normal): faster with ATSP.
 func attack_rate_bp(unit: UnitState) -> int:
 	return FixedMath.BP_ONE + unit.stats.get_stat(UnitStats.Stat.ATSP) * tuning.atsp_bp_per_point
 
@@ -194,8 +207,22 @@ func mitigate_hit(target: UnitState, amount: int) -> int:
 ## Shield takes damage first, then HP (HP stops at 0). Returns how much the
 ## shield absorbed.
 func apply_damage(target: UnitState, amount: int) -> int:
-	var absorbed: int = mini(target.shield, amount)
-	target.shield -= absorbed
+	return apply_damage_vs_shield(target, amount, FixedMath.BP_ONE)
+
+
+## Like apply_damage, but the damage is only `vs_shield_bp` effective against
+## Shield (5000: each point of Shield soaks 2 damage; 0: skips Shield).
+## Whatever the Shield doesn't soak hits HP at full strength.
+func apply_damage_vs_shield(target: UnitState, amount: int, vs_shield_bp: int) -> int:
+	if vs_shield_bp <= 0 or target.shield <= 0:
+		target.hp = maxi(target.hp - amount, 0)
+		return 0
+	var shield_cost: int = FixedMath.apply_bp(amount, vs_shield_bp)
+	if target.shield >= shield_cost:
+		target.shield -= shield_cost
+		return amount
+	var absorbed: int = mini(FixedMath.mul_div(target.shield, FixedMath.BP_ONE, vs_shield_bp), amount)
+	target.shield = 0
 	target.hp = maxi(target.hp - (amount - absorbed), 0)
 	return absorbed
 

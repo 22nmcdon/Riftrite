@@ -319,6 +319,14 @@ All the displacements **move the unit instantly in the sim** and log the start a
 - Timed statuses have `duration_ms`, and a new application refreshes it.
 - **Shield** stays a unit value, not a status, as now.
 - Knockback isn't a status. It's an effect (section 6), and its stun is Stun.
+- **Built in step 3** (`Statuses`, `StatusState`; Undying comes with step 4 and Engaged with step 5):
+  - A timed status lasts from the tick it lands until `ends_at`, then ends at the start of that tick. An `apply_status` effect can give its own `duration_ms`; otherwise the status's own duration is used. A new application refreshes the timer and becomes the status's source.
+  - Root and Stun both stop the unit where it stands (the log gets a STOP, "rooted" or "stunned"). A stunned unit's attack cooldown **waits** rather than running on. Silence has nothing to stop until mana arrives in step 4.
+  - Slow scales both the step length and the cooldown's rate by `10000 − slow_bp`. Two Slows don't add up: the strongest wins. Marked works the same way.
+  - Marked raises a hit before DEF, and damage over time too.
+  - Taunt: each tick, a taunted unit's target is whoever taunted it (TARGET, "taunted"). When the taunter falls, it picks as usual.
+  - Damage over time works as before phase 0. Burn, Poison, and Bleed are credited to whoever applied each stack. Heals weaken damage over time: the first heal in a 1s window strips `heal_cleanse_bp` (10%) of the stacks, and each later heal in that window strips half as much again.
+  - Statuses sit on a unit in `statuses.json` order, so ticking them never depends on the order they arrived in.
 
 ## 9. Rift Collapse: the shrinking arena
 
@@ -466,7 +474,7 @@ If step 2 measures slower, the cell size and repath interval are the knobs, and 
 
 1. **Grid and plane (done):** `hex_grid`, `arena_plane`, `nav_grid`, `arena_debug`, `FixedMath.isqrt`, and their tests. Pure functions, no sim.
 2. **Skeleton fight (done):** kits, setups with hexes and rocks, the new `CombatSim` tick, walking and blocking, `nearest` targeting, melee attacks and shots, deaths, the end of the fight, the MOVE, STOP, TARGET, and SHOT logs, and the log replay test. The first determinism test, and a speed measurement.
-3. **Statuses:** Root, Stun, Slow, Taunt, Silence, Marked, and damage over time.
+3. **Statuses (done):** Root, Stun, Slow, Taunt, Silence, Marked, and damage over time.
 4. **Mana and signatures:** the five triggers, cast_ms, Undying, `Events`, and `PartDef`.
 5. **Tanks:** Engage.
 6. **Displacement and flying:** knockback, pull, leap, charge, collisions, flying, and hop away.

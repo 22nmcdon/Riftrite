@@ -11,7 +11,8 @@ extends RefCounted
 ##   - each tick it steps `speed x 1000 / 20` toward its next corner. A step
 ##     that would overlap anything is tried again sliding along what it hit;
 ##     if that fails too, it waits and plans again next tick;
-##   - with no way to its target for repath_give_up_ms, it gives up on it.
+##   - with no way to its target for repath_give_up_ms, it gives up on it;
+##   - Rooted, it stands where it is; Slowed, its steps are shorter.
 ## Units move one at a time, in the fight's order, each against where the
 ## others already stand, so no two ever overlap.
 ##
@@ -22,6 +23,9 @@ extends RefCounted
 
 ## One tick of walking toward the unit's target.
 static func walk(sim: CombatSim, unit: UnitState) -> void:
+	if not unit.statuses.is_empty() and Statuses.has_kind(unit, StatusDef.Kind.ROOT):
+		halt(sim, unit, "rooted")
+		return
 	var target: UnitState = unit.target
 	if unit.route.is_empty() or unit.route_for != target or sim.tick >= unit.replan_at:
 		_plan(sim, unit)

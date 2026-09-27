@@ -1,20 +1,25 @@
 class_name StatusDef
 extends RefCounted
-## A status effect from data/statuses.json. The kind decides how the sim runs
-## it; the numbers come from data. Which fields a kind needs:
+## A status effect from data/statuses.json (docs/plans/rebuild-phase1-arena-sim.md,
+## section 8). The kind decides how the sim runs it; the numbers come from
+## data. Which fields a kind needs:
 ##   damage_over_time: interval_ms, damage_per_stack, and optionally
 ##                     stacks_lost_per_interval (flat), stacks_lost_bp (a share,
 ##                     rounded up), vs_shield_bp (how hard it hits shields:
 ##                     10000 normal, 5000 half, 0 = skips shields entirely),
 ##                     defense_shred_per_stack (lowers the target's DEF),
 ##                     cleanse_effectiveness_bp (how much heals strip it;
-##                     10000 normal)
-## The arena sim (docs/plans/rebuild-phase1-arena-sim.md, section 8) adds
-## Root, Stun, Slow, Taunt, Silence, Marked, Engaged, and Undying.
+##                     10000 normal), max_stacks
+##   root, stun, taunt, silence:   duration_ms
+##   slow:     duration_ms, slow_bp (moves and attacks that much slower)
+##   marked:   duration_ms, damage_taken_bp (takes that much more damage)
+## A timed status's duration_ms is its default; an apply_status effect can
+## give its own. A new application refreshes the timer. Engaged and Undying
+## come with later steps.
 
-enum Kind { DAMAGE_OVER_TIME }
+enum Kind { DAMAGE_OVER_TIME, ROOT, STUN, SLOW, TAUNT, SILENCE, MARKED }
 
-const KIND_NAMES: Array[String] = ["damage_over_time"]
+const KIND_NAMES: Array[String] = ["damage_over_time", "root", "stun", "slow", "taunt", "silence", "marked"]
 
 var id: String
 var name: String
@@ -32,6 +37,10 @@ var vs_shield_bp: int = FixedMath.BP_ONE
 var defense_shred_per_stack: int = 0
 ## How effective heals are at stripping this status.
 var cleanse_effectiveness_bp: int = FixedMath.BP_ONE
+## Timed kinds: how long it lasts unless the effect says otherwise.
+var duration_ticks: int = 0
+var slow_bp: int = 0
+var damage_taken_bp: int = 0
 
 
 static func read(reader: DataReader) -> StatusDef:
@@ -40,16 +49,28 @@ static func read(reader: DataReader) -> StatusDef:
 	def.name = reader.req_string("name")
 	var kind_name: String = reader.req_choice("kind", KIND_NAMES)
 	def.kind = maxi(KIND_NAMES.find(kind_name), 0) as Kind
-	def.max_stacks = reader.opt_int("max_stacks", 0, 0)
-
-	match def.kind:
-		Kind.DAMAGE_OVER_TIME:
-			def.interval_ticks = reader.req_ticks("interval_ms", FixedMath.MS_PER_TICK)
-			def.damage_per_stack = reader.req_int("damage_per_stack", 0)
-			def.stacks_lost_per_interval = reader.opt_int("stacks_lost_per_interval", 0, 0)
-			def.stacks_lost_bp = reader.opt_int("stacks_lost_bp", 0, 0, FixedMath.BP_ONE)
-			def.vs_shield_bp = reader.opt_int("vs_shield_bp", FixedMath.BP_ONE, 0, FixedMath.BP_ONE)
-			def.defense_shred_per_stack = reader.opt_int("defense_shred_per_stack", 0, 0)
-			def.cleanse_effectiveness_bp = reader.opt_int("cleanse_effectiveness_bp", FixedMath.BP_ONE, 0, FixedMath.BP_ONE)
+	if kind_name.is_empty():
+		reader.finish()
+		return def
+	if def.kind == Kind.DAMAGE_OVER_TIME:
+		def.max_stacks = reader.opt_int("max_stacks", 0, 0)
+		def.interval_ticks = reader.req_ticks("interval_ms", FixedMath.MS_PER_TICK)
+		def.damage_per_stack = reader.req_int("damage_per_stack", 0)
+		def.stacks_lost_per_interval = reader.opt_int("stacks_lost_per_interval", 0, 0)
+		def.stacks_lost_bp = reader.opt_int("stacks_lost_bp", 0, 0, FixedMath.BP_ONE)
+		def.vs_shield_bp = reader.opt_int("vs_shield_bp", FixedMath.BP_ONE, 0, FixedMath.BP_ONE)
+		def.defense_shred_per_stack = reader.opt_int("defense_shred_per_stack", 0, 0)
+		def.cleanse_effectiveness_bp = reader.opt_int("cleanse_effectiveness_bp", FixedMath.BP_ONE, 0, FixedMath.BP_ONE)
+	else:
+		def.duration_ticks = reader.req_ticks("duration_ms", FixedMath.MS_PER_TICK)
+		match def.kind:
+			Kind.SLOW:
+				def.slow_bp = reader.req_int("slow_bp", 1, FixedMath.BP_ONE)
+			Kind.MARKED:
+				def.damage_taken_bp = reader.req_int("damage_taken_bp", 1)
 	reader.finish()
 	return def
+
+
+func is_timed() -> bool:
+	return kind != Kind.DAMAGE_OVER_TIME

@@ -55,6 +55,11 @@ var leg_active: bool = false
 var leg_to: Vector2i
 var leg_amount: int = 0
 
+# Statuses, in ContentDb.status_ids order (see Statuses).
+var statuses: Array[StatusState] = []
+## Ticks of this unit's recent heals, for the heal-cleanse falloff.
+var recent_heal_ticks: Array[int] = []
+
 # For the log.
 var last_hit_by: String = ""
 ## The unit that last hit it (an enemy), for on_kill.
@@ -83,10 +88,11 @@ func forward() -> int:
 	return 1 if side == EffectSource.Team.HEROES else -1
 
 
-## Plane units a tick at its speed.
+## Plane units a tick at its speed, less any Slow.
 func step_length() -> int:
 	@warning_ignore("integer_division")
-	return stats.get_stat(UnitStats.Stat.SPEED) * HexGrid.HEX / FixedMath.TICKS_PER_SECOND
+	var full: int = stats.get_stat(UnitStats.Stat.SPEED) * HexGrid.HEX / FixedMath.TICKS_PER_SECOND
+	return FixedMath.apply_bp(full, FixedMath.BP_ONE - Statuses.slow_bp(self))
 
 
 ## Its basic attack's reach in plane units.
@@ -101,8 +107,9 @@ func in_reach_of(other: UnitState) -> bool:
 	return dx * dx + dy * dy <= reach_units * reach_units
 
 
+## Its DEF, less what damage over time has shredded (never below 0).
 func defense() -> int:
-	return stats.get_stat(UnitStats.Stat.DEF)
+	return maxi(stats.get_stat(UnitStats.Stat.DEF) - Statuses.defense_shred(self), 0)
 
 
 func circle() -> ArenaPlane.Circle:

@@ -10,9 +10,9 @@ extends RefCounted
 ## and land when it does; the rest (on the unit itself, or every ally) happen
 ## as it fires.
 ##
-## Built so far: damage, heal, and shield. Statuses and cleanse come with
-## step 3, and the arena's own effects (knockback, pull, leap, charge, area,
-## summon, mana drain, start_collapse) with their steps.
+## Built so far: damage, heal, shield, apply_status, and cleanse. The arena's
+## own effects (knockback, pull, leap, charge, area, summon, mana drain,
+## start_collapse) come with their steps.
 
 
 ## What an on_hit or on_crit effect knows about the hit that set it off.
@@ -75,8 +75,10 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			heal(sim, victim, amount, source)
 		EffectDef.Type.SHIELD:
 			give_shield(sim, victim, amount, source)
-		_:
-			push_error("EffectRunner: %s isn't built yet (phase 1, step 3)" % EffectDef.TYPE_NAMES[effect.type])
+		EffectDef.Type.APPLY_STATUS:
+			Statuses.apply(sim, victim, effect.status_id, amount, effect.duration_ticks, source)
+		EffectDef.Type.CLEANSE:
+			Statuses.cleanse_over_time(sim, victim, mini(amount, FixedMath.BP_ONE), source)
 
 
 static func _on_hit(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: EffectSource, hit: Hit) -> void:
@@ -128,14 +130,15 @@ static func _targets(sim: CombatSim, unit: UnitState, target: EffectDef.Target, 
 	return found
 
 
-## Lands `amount` of hit damage (after crits) on `target`: DEF, then Shield,
-## then HP. Logs it and returns what got through DEF.
+## Lands `amount` of hit damage (after crits) on `target`: a Mark, DEF, then
+## Shield, then HP. Logs it and returns what got through DEF.
 static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, amount: int, crit: bool) -> int:
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.DAMAGE, source)
-	var dealt: int = sim.mitigate_hit(target, amount)
+	var marked: int = Statuses.damage_taken_bp(target) if not target.statuses.is_empty() else 0
+	var dealt: int = sim.mitigate_hit(target, FixedMath.apply_bp(amount, FixedMath.BP_ONE + marked))
 	entry.target = target.id
 	entry.amount = dealt
-	entry.mitigated = amount - dealt
+	entry.mitigated = maxi(FixedMath.apply_bp(amount, FixedMath.BP_ONE + marked) - dealt, 0)
 	entry.crit = crit
 	entry.absorbed = sim.apply_damage(target, dealt)
 	target.last_hit_by = source.describe()
@@ -145,7 +148,11 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 	return dealt
 
 
-## Heals `target`, capped at its max HP, and logs it.
+## Heals `target` (capped at its max HP), logs it, and if any HP came back,
+## weakens its damage over time. The first heal in a window strips
+## heal_cleanse_bp of each damage-over-time status; each further heal within
+## heal_cleanse_window strips that share times heal_cleanse_falloff_bp again
+## (by default 10%, 5%, 2.5%, ...), so rapid small heals can't wipe it out.
 static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectSource) -> void:
 	var healed: int = clampi(target.max_hp - target.hp, 0, amount)
 	target.hp += healed
@@ -153,6 +160,17 @@ static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectS
 	entry.target = target.id
 	entry.amount = healed
 	sim.combat_log.add(entry)
+	if healed <= 0:
+		return
+	var window_start: int = sim.tick - sim.tuning.heal_cleanse_window_ticks
+	while not target.recent_heal_ticks.is_empty() and target.recent_heal_ticks[0] <= window_start:
+		target.recent_heal_ticks.remove_at(0)
+	var share_bp: int = sim.tuning.heal_cleanse_bp
+	for i: int in target.recent_heal_ticks.size():
+		share_bp = FixedMath.apply_bp(share_bp, sim.tuning.heal_cleanse_falloff_bp)
+	target.recent_heal_ticks.append(sim.tick)
+	if not target.statuses.is_empty():
+		Statuses.cleanse_over_time(sim, target, share_bp)
 
 
 static func give_shield(sim: CombatSim, target: UnitState, amount: int, source: EffectSource) -> void:

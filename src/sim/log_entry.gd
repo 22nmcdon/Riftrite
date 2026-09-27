@@ -107,6 +107,8 @@ func to_text() -> String:
 		Kind.FIGHT_END:
 			return line + note
 		Kind.STATUS_APPLIED:
+			if stacks == 0:
+				return line + "%s applies %s to %s until %s" % [source_text(), status_name, target, _format_time(end_tick)]
 			return line + "%s applies %d %s to %s (%d total)%s" % [source_text(), amount, status_name, target, stacks, "" if note.is_empty() else " " + note]
 		Kind.STATUS_DAMAGE:
 			return line + "%s (%s) hits %s for %d%s" % [status_name, source_text(), target, amount, _damage_detail()]

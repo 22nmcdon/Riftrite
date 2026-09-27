@@ -12,7 +12,8 @@ extends RefCounted
 ##   damage:       amount
 ##   heal:         amount
 ##   shield:       exactly one of amount, amount_bp_of_damage
-##   apply_status: status, stacks
+##   apply_status: status; stacks (damage over time; default 1); optional
+##                 duration_ms (a timed status; default: the status's own)
 ##   cleanse:      amount_bp; strips that share of the target's
 ##                 damage-over-time stacks (times each status's
 ##                 cleanse_effectiveness_bp, like heals do)
@@ -112,6 +113,8 @@ var amount: int = 0
 var amount_bp_of_damage: int = 0
 var status_id: String = ""
 var stacks: int = 0
+## apply_status: how long a timed status lasts (0: the status's own duration).
+var duration_ticks: int = 0
 ## Basis points of each stat added to the base value, indexed by UnitStats.Stat
 ## (the first SCALING_STATS only).
 var scaling: Array[int] = [0, 0, 0, 0, 0, 0]
@@ -150,7 +153,8 @@ static func read(reader: DataReader, relic: bool = false) -> EffectDef:
 				def.amount_bp_of_damage = reader.opt_int("amount_bp_of_damage", 0, 0)
 			Type.APPLY_STATUS:
 				def.status_id = reader.req_string("status")
-				def.stacks = reader.req_int("stacks", 1)
+				def.stacks = reader.opt_int("stacks", 1, 1)
+				def.duration_ticks = reader.opt_ticks("duration_ms", 0)
 			Type.CLEANSE:
 				def.amount = reader.req_int("amount_bp", 1, FixedMath.BP_ONE)
 		if reader.has("scaling"):
