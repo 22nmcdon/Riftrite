@@ -1,6 +1,6 @@
 # Plan: fight questions and readability (redesign step 6)
 
-Step 6 of `docs/plans/fun-redesign.md`: sections 7 and 8. The user's answers so far are under **Decisions** at the end; the rest is proposed and waits for approval.
+Step 6 of `docs/plans/fun-redesign.md`: sections 7 and 8. The user's answers are under **Decisions** at the end.
 
 **Why:** today the player sees only the current day's fights, the elites and the boss don't say what they do, the start gives no direction, and the fight screen is a wall of log text where the big moments (boss phases, Awakening) are only log lines.
 
@@ -45,7 +45,24 @@ Each elite and boss encounter gets a `"mechanic"` in `data/encounters.json`: a n
   Today the synergy banner shows from the start of the fight, and phases and Awakening are log lines only. The banners read the log entries the fight player is already playing back, so the sim doesn't change.
 - **Fight speed starts at 1x, and a speed you change is remembered** (the user's answer). It's saved in the player's settings (`user://settings.json`), not in the run, so it never touches the sim.
 
-## 5. Code
+## 5. The fight chart (the user's addition)
+
+Opening the log panel during a fight shows a chart of what each hero is doing, above the log text. It updates live as the fight plays back.
+
+- **Three tabs:** **Damage**, **Healing and Shield**, and **Damage taken**.
+- **One bar per hero,** sorted from most to least, each split into colored segments by type:
+
+  | Tab | Segments |
+  | --- | --- |
+  | Damage | Basic attack, Abilities, then each status that dealt damage (Burn, Poison, Bleed, ...) |
+  | Healing and Shield | Healing, Shield |
+  | Damage taken | To HP, absorbed by Shield; hits and each status shown in the breakdown |
+
+- **Hovering a hero's bar shows a breakdown by source:** each item (with its infusion), each status, and each innate, deed, duo bond, or synergy, with its amount and share. On the Damage taken tab, the sources are the enemies and their items.
+- **Relics:** a relic's damage, healing, or Shield belongs to the team, not a hero, so it gets its own "Relics" bar.
+- **Where the numbers come from:** the combat log entries played so far (damage, status damage, healing, Shield, and Rift Collapse). Status damage counts for whoever applied it, the same rule as deeds and kills. It's UI only; the sim doesn't change.
+
+## 6. Code
 
 - **Run layer:** `RunFlow.fights_for_day`; start kits in `RunFlow` (the start offers) and `data/economy.json` (the kit list); the validator checks kits and encounter mechanics.
 - **Data:** `"mechanic"` on elite and boss encounters; the Hound Alpha enemy, its items, and its phase; the 8 kits.
@@ -53,23 +70,20 @@ Each elite and boss encounter gets a `"mechanic"` in `data/encounters.json`: a n
   - `day_bar.gd`: every day's fights, three icon kinds, hover details
   - `fight_choice_screen.gd` and the fight screen's enemy preview: the mechanic
   - `fight_screen.gd`: the hidden log, the banner queue
+  - a new `fight_chart.gd` widget and a `FightTally` that adds up the log entries played so far (by hero, type, and source)
   - `fight_player.gd`: the remembered speed
   - `run_start_screen.gd`: the kits
-- **Tests:** fights for any day match the fights that day actually offers (also after a lost fight); kit offers follow the team and are deterministic; picking a kit gives an infused item; every elite and boss has a mechanic; the Hound Alpha targets the weakest hero and enters its phase; the banner queue picks the right log entries; the speed setting is remembered. Then mutation checks, the balance sim on the Hound Alpha, and the run bot.
+- **Tests:** fights for any day match the fights that day actually offers (also after a lost fight); kit offers follow the team and are deterministic; picking a kit gives an infused item; every elite and boss has a mechanic; the Hound Alpha targets the weakest hero and enters its phase; the banner queue picks the right log entries; the tally credits each entry to the right hero, type, and source (status damage to its applier, relics to their own bar); the speed setting is remembered. Then mutation checks, the balance sim on the Hound Alpha, and the run bot.
 
 ## Balance
 
 The Hound Alpha makes the day-3 elite harder, so its numbers are tuned against the run bot's targets (elites about 30% lost). The kits make the start a bit stronger; the run bot shows by how much.
-
-## Open questions
-
-- **The mechanics in section 2:** is this list right, and is the new Hound Alpha fine?
-- **Kits:** two kits from the team's affinities next to gold and a relic, and the item comes infused? Or a different shape?
-- **Banners:** is the list in section 4 right, or too many?
 
 ## Decisions (from the user, 2026-09-27)
 
 - **Lookahead:** the day bar shows every fight in the act. Elites and the boss have their own icons, different from normal fights, and hovering them shows the elite and boss details.
 - **Start kits:** themed kits replace the random-item package.
 - **Fight speed:** 1x by default; a speed the player changes is remembered.
+- **The mechanics, the kits, and the banners:** fine as proposed, for now.
+- **The fight chart** (section 5): the user's addition. Damage by type per hero, a breakdown on hover, and tabs for Healing and Shield and for Damage taken.
 - **Snowball rules:** still open (the user is looking at examples).
