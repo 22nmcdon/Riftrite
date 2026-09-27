@@ -1,6 +1,6 @@
 # Rebuild phase 1: the arena sim (build plan)
 
-Status: **proposal, revised 2026-09-27 after the first round of answers; waiting for approval.** Phase 1 of `docs/plans/rebuild-build-order.md`. Design sources: `rebuild-arena.md` (placement, movement, tanks, areas, the collapse), `rebuild-heroes.md` (mana and signature triggers), and `rebuild-enemies.md` (what enemies need from the sim). Numbers are placeholders to tune.
+Status: **proposal, revised 2026-09-27 after two rounds of answers; waiting for approval to start phase 0.** Phase 1 of `docs/plans/rebuild-build-order.md`. Design sources: `rebuild-arena.md` (placement, movement, tanks, areas, the collapse), `rebuild-heroes.md` (mana and signature triggers), and `rebuild-enemies.md` (what enemies need from the sim). Numbers are placeholders to tune.
 
 **The big change in this revision:** hexes are only for **placement**. Once the fight starts, units move freely on a flat plane. So there are no reservations, no hex-by-hex steps, and no snapping to six directions. Distances are still counted in hexes, because that's how every design doc talks about them.
 
@@ -20,7 +20,7 @@ Status: **proposal, revised 2026-09-27 after the first round of answers; waiting
 - Pulls, leaps, charges, hops, and flying.
 - Area shapes (circle, line, cone, ring) with warnings.
 - The slice's statuses.
-- Mana, and the four signature triggers.
+- Mana, and the signature triggers (mana, HP threshold, a set time, a count, and would-fall).
 - The shrinking arena.
 - Summons.
 - Full logging, and a text dump of the board for tests and debugging.
@@ -61,6 +61,19 @@ The first round of answers on this plan (2026-09-27):
 10. **Crumbled ground can't be walked into,** only pushed into.
 11. **Summon cap:** 30 standing units per side, because small summons may spawn often.
 12. **Ranged hits travel:** a shot takes about 1 tick per hex.
+
+The second round (2026-09-27):
+
+13. **Every unit is the same size** for now.
+14. **Shots follow their target** and can't miss. One whose target falls first fizzles.
+15. **A shot's numbers are fixed when it's fired,** and the shooter falling doesn't make the arrow disappear.
+16. **Melee lands the moment the attack finishes.** How long an attack takes comes from the unit's attack speed (a hammer-wielder attacks slower than a dagger-wielder), never from a weapon type.
+17. **A unit is inside an area if its center is,** so whichever side most of it is on decides.
+18. **Nothing snaps:** a push, pull, charge, line, or cone goes exactly its number of hexes along the line from the unit.
+19. **Stun only holds back mana signatures.** Other triggers still fire while the unit is stunned: Brannoc dropping below 30% HP, or "when he hits 1 HP, he can't fall for 1s", has to work even if he's stunned.
+20. **The collapse shrinks a rectangle** along the old hex rings, for now.
+21. **Engage reaches 1 hex** from the engager.
+22. **The speed budget** is under 100 ms for a 60s fight of 3 against 6.
 
 ---
 
@@ -132,14 +145,14 @@ Each tick runs these steps in order. Resolution order is the fight's unit order:
 4. **Warned areas land** if they're due, in the order they were cast.
 5. **Each standing unit acts**, in resolution order:
    1. Mana regen (unless Silenced).
-   2. **Stunned:** stop here.
-   3. **Signature:** if its trigger is met and it has a valid target, it fires (section 5).
+   2. **Signature:** if its trigger is met and it has a valid target, it fires (section 5). A stunned unit can fire any signature except a mana one.
+   3. **Stunned:** stop here.
    4. **Target:** keep the current one or pick a new one (section 4).
    5. **Attack or move:**
       - If the target is in range and the unit isn't being displaced, it stands still. Its **basic attack** fires when its cooldown is ready.
       - Otherwise, it **moves** (section 4).
 6. **Event effects**, read from this tick's log (the `Events` code we keep); then **phases**.
-7. **Deaths:** units at 0 HP fall. Then on_kill effects run, and any deaths those cause.
+7. **Deaths:** units at 0 HP fall, unless Undying holds them or a `would_fall` signature saves them. Then on_kill effects run, and any deaths those cause.
 8. **Victory, defeat, or a tie:** a fight still running at 180s is a tie, as is both sides falling on the same tick. A tie counts as a win.
 
 - **Deaths wait until step 7**, as now. A unit knocked to 0 this tick still acts if its turn comes later in the tick, so neither side gets an edge from going first.
@@ -207,7 +220,7 @@ Each tick runs these steps in order. Resolution order is the fight's unit order:
   - The shot **follows its target**, so it can't miss or be dodged.
   - **The numbers are set when it's fired:** damage, crit, and the attacker's stats. It still lands if the attacker falls first.
   - **If the target falls before it lands**, the shot fizzles, and that's logged.
-  - Melee (reach 1) lands at once.
+  - **Melee (reach 1) lands at once,** the moment the attack finishes (decided). How long an attack takes is the unit's attack speed: its basic attack's cooldown and ATSP.
   - The log gets `SHOT` when it's fired and the hit when it lands, so the UI can draw the arrow in flight.
 - **Mana** (for units that have it) is kept in hundredths internally, so "1 per 10 damage" stays an integer. The data gives whole mana.
   - **Sources:** `per_attack` (each basic attack that fires), `per_10_damage_taken` (HP and Shield damage both count), `regen_per_s`, and `start`.
@@ -221,9 +234,10 @@ Each tick runs these steps in order. Resolution order is the fight's unit order:
 | `hp_below` | `threshold_bp` | once, the first time the unit drops below it while standing |
 | `fight_start` / `at_time` | `at_ms` | once, at that moment |
 | `count` | an event trigger (`on_hit_taken`, `on_heal`, `on_kill`, …), `every` | on every Nth such event |
+| `would_fall` | — | once, the first time the unit would fall: it's left at 1 HP instead, and the signature fires (proposed, section 15) |
 
-- **Stunned units don't fire signatures** (decided for mana signatures, and proposed for every trigger, section 15). A full mana bar waits and fires once the stun ends. A trigger that came due during the stun fires as soon as it ends.
-- **`cast_ms`** (optional): the unit stands still for that long before the signature lands. A stun during the cast cancels it, and a mana signature keeps its mana.
+- **Stun only holds back mana signatures** (decided). A full mana bar waits and fires once the stun ends. Every other trigger fires even while the unit is stunned, so a tank's last stand still happens when he's stunned.
+- **`cast_ms`** (optional, **mana signatures only**; the validator refuses it on other triggers): the unit stands still for that long before the signature lands. A stun during the cast cancels it, and the signature keeps its mana.
 - Big area attacks use **`warning_ms`** instead (section 7), so the caster doesn't have to stand still while the warning shows.
 - Every fire logs `FIRE`, with the ability as its source, as now.
 
@@ -238,7 +252,7 @@ All the displacements **move the unit instantly in the sim** and log the start a
 | `leap` | the source jumps to a free spot touching its target, the one closest to where it stands, ignoring anything in between | `max_hexes`, `land_ms` (it can't act while landing) |
 | `charge` | the source runs straight at its target, up to N hexes, stopping when it touches the first unit in the way. If that unit is an enemy, it knocks it back | `hexes`, `knockback` |
 
-- **Directions are exact:** along the line from source to target, with no snapping. If two units stand on the same point, the push goes straight forward for the source's side.
+- **Directions are exact** (decided): the unit goes its number of hexes along the line from source to target, with no snapping. If two units stand on the same point, the push goes straight forward for the source's side.
 - **Collision:** a push is swept along its line in fixed small steps (50 units) and stops at the last clear point.
   - Anything stops it: a unit, a rock, or **the arena's edge** (decided).
   - **If it's stopped early, the pushed unit is Stunned** for `collision_stun_ms` (1s). If it hit a unit, that unit is stunned too.
@@ -258,7 +272,7 @@ All the displacements **move the unit instantly in the sim** and log the start a
 
 ## 7. Areas and warnings
 
-- **Shapes** (`ShapeDef`), measured in hexes (× 1000) on the plane. **A unit is hit if its center is inside.**
+- **Shapes** (`ShapeDef`), measured in hexes (× 1000) on the plane. **A unit is hit if its center is inside** (decided), so whichever side most of it is on decides.
   - `circle` (radius r): within r.
   - `ring` (radius r): between r − ½ and r + ½.
   - `line` (length n): 1 hex wide, from the caster's edge along the aim.
@@ -278,7 +292,8 @@ All the displacements **move the unit instantly in the sim** and log the start a
 | Status | Kind | Effect in the sim |
 | --- | --- | --- |
 | Root | `root` | can't move (can still attack and cast) |
-| Stun | `stun` | can't move, attack, or fire signatures; mana still comes in |
+| Stun | `stun` | can't move, attack, or fire mana signatures; mana still comes in, and other signature triggers still fire |
+| Undying | `undying` | HP can't drop below 1 while it lasts; each save is logged (proposed, section 15) |
 | Slow | `slow` | the unit moves and its attack cooldown runs `slow_bp` slower; the strongest Slow wins, no stacking |
 | Taunt | `taunt` | target forced to the status's source |
 | Silence | `silence` | no mana gain |
@@ -392,12 +407,12 @@ Each rule gets its own test file under `tests/sim/`. They build tiny boards thro
 | `test_targeting.gd` | every rule and its ties, back-liners by starting row, sticky targets, Taunt overriding and ending, TARGET log lines |
 | `test_attacks_and_mana.gd` | melee reach, range by distance, ATSP, every mana source, Silence, Stun still gaining mana, units with no mana |
 | `test_shots.gd` | flight time by distance, following a moving target, numbers fixed at firing, fizzling on a fallen target, landing after the shooter falls |
-| `test_signature_triggers.gd` | mana (the bar empties), hp_below once, fight_start, at_time, count; no firing while stunned; a cast cancelled by Stun keeps its mana |
+| `test_signature_triggers.gd` | mana (the bar empties), hp_below once, fight_start, at_time, count, would_fall (left at 1 HP, once); Stun holding back only mana signatures; a cast cancelled by Stun keeps its mana; cast_ms refused off mana |
 | `test_engage.gd` | held 1s only when targeting someone else, the engager's attackers not held, freedom ending on leaving contact, fliers still held, a push ending the engagement |
 | `test_displacement.gd` | knockback distance and direction, collisions with a unit, a rock, and the edge (both stunned), pull, leap landing and failure, charge, a displaced walker losing its path |
 | `test_flying.gd` | passing over units and rocks, stopping only on free spots, dropping after a push |
 | `test_areas.gd` | warnings are logged, and the area hits whoever stands there when it lands, not when it's cast; each shape; `hits` filters |
-| `test_statuses.gd` | rewritten for the new kinds, plus damage over time as now |
+| `test_statuses.gd` | rewritten for the new kinds (Undying included), plus damage over time as now |
 | `test_collapse.gd` | ring timing and warnings, the safe rectangle shrinking, damage only on crumbled ground, flat and Shield-first, can't walk in, start_collapse, the 180s tie |
 | `test_summons.gd` | placement in each mode, fight order, the cap of 30, the log |
 | `test_arena_log.gd` | in a busy fight, every entry that changes state names a source; replaying the log gives every unit's position on every tick |
@@ -419,24 +434,18 @@ If step 2 measures slower, the cell size and repath interval are the knobs, and 
 1. **Grid and plane:** `hex_grid`, `plane`, `nav_grid`, `arena_debug`, `FixedMath.isqrt`, and their tests. Pure functions, no sim.
 2. **Skeleton fight:** kits, setups with hexes and rocks, the new `CombatSim` tick, walking and blocking, `nearest` targeting, melee attacks and shots, deaths, the end of the fight, the MOVE, STOP, TARGET, and SHOT logs, and the log replay test. The first determinism test, and a speed measurement.
 3. **Statuses:** Root, Stun, Slow, Taunt, Silence, Marked, and damage over time.
-4. **Mana and signatures:** the four triggers, and cast_ms.
+4. **Mana and signatures:** the five triggers, cast_ms, and Undying.
 5. **Tanks:** Engage.
 6. **Displacement and flying:** knockback, pull, leap, charge, collisions, flying, and hop away.
 7. **Areas:** shapes, warnings, landing, and the rest of the targeting rules.
 8. **Collapse and summons:** rings, the safe rectangle, damage, start_collapse, and summons.
 9. **The full determinism fight and the log audit.** Update `CLAUDE.md`'s sim rules to describe the arena.
 
-## 15. New proposals to confirm (defaults I picked)
+## 15. Proposals to confirm
 
-The free plane raises questions the rebuild plans don't answer. I'll build these as written unless you say otherwise:
+The second round's answers are under **Decisions** above. Answer 19 needs two small pieces the plan didn't have, so I've added them:
 
-1. **Every unit is the same size:** a circle 0.8 hex across. Bigger bosses stay an open question in `rebuild-arena.md`.
-2. **Shots follow their target** and can't miss or be dodged. One whose target falls first fizzles. (A later wall, such as Hearthwall, can stop one in flight.)
-3. **A shot's numbers are fixed when it's fired**, and it still lands if the shooter falls first.
-4. **Melee lands at once;** reach 2 or more fires a shot. Signatures with reach use shots too, unless their data says `"shot": false`.
-5. **A unit is inside an area if its center is.** Grazing the edge doesn't count.
-6. **Knockback, pulls, charges, lines, and cones aim exactly** along the line to the target, since nothing snaps to hexes any more.
-7. **Stunned units can't fire any signature,** not only mana ones. A trigger that came due during the stun fires once it ends. (You decided this for mana; this extends it.)
-8. **The collapse shrinks a rectangle** that follows the old hex rings, leaving the middle 2 hexes' worth of ground safe for good.
-9. **Pathfinding uses a hidden fine grid** (quarter-hex cells) that nothing snaps to. Units walk straight when they can, and straight between the path's corners when they can't.
-10. **Engage reaches 1 hex, center to center.** So it holds a unit touching the engager or standing a hand's width off.
+1. **A `would_fall` trigger:** the first time a unit would fall, it's left at 1 HP instead, and the signature fires (once per fight). That's "when he hits 1 HP".
+2. **An Undying status** (`undying`): the unit's HP can't drop below 1 while it lasts. That's "he can't fall for 1s", and Last Rites' "can't be felled for 3s" (phase 4) uses it too.
+
+Brannoc's example is then a `would_fall` signature that applies Undying for 1s.
