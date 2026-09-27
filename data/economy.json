@@ -118,45 +118,45 @@
     },
     {
       "keyword": "bow",
-      "name": "Flint Quiver",
-      "item": "flint_arrows",
-      "essence": "wrath"
+      "name": "Fletcher's Kit",
+      "item": "birch_shortbow",
+      "essence": "storm"
     },
     {
       "keyword": "spell",
-      "name": "Storm Slate",
-      "item": "slate_tablet",
+      "name": "Storm Grimoire",
+      "item": "grimoire_of_cinders",
       "essence": "storm"
     },
     {
       "keyword": "mend",
-      "name": "Herbalist's Satchel",
-      "item": "peat_poultice",
+      "name": "Herbalist's Pot",
+      "item": "hearth_stew",
       "essence": "verdant"
     },
     {
       "keyword": "ward",
-      "name": "Stonewarden's Kit",
-      "item": "oak_buckler",
+      "name": "Mason's Kit",
+      "item": "mudbrick_wall",
       "essence": "stone"
     },
     {
       "keyword": "burn",
-      "name": "Tinder Box",
-      "item": "tallow_torch",
+      "name": "Tinder Staff",
+      "item": "ashwood_staff",
       "essence": "ember"
     },
     {
       "keyword": "bleed",
       "name": "Barbed Bundle",
-      "item": "barbed_net",
+      "item": "grave_hook",
       "essence": "umbral"
     },
     {
       "keyword": "hex",
-      "name": "Frostsoot Pouch",
-      "item": "soot_bomb",
-      "essence": "frost"
+      "name": "Dartmaker's Pouch",
+      "item": "thorn_darts",
+      "essence": "venom"
     }
   ]
 }

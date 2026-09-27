@@ -116,16 +116,9 @@ def grave_hook():
     return svg(hook + line("M36 14 Q46 10 50 18", STEEL_L, 2) + circle(20, 50, 3, BONE_L))
 
 
-def nettle_vial():
-    leaf = path("M44 6 Q58 8 56 22 Q46 22 44 6 Z", MOSS, sw=2.5) + line("M45 8 L54 20", MOSS_D, 1.5)
-    return svg(bottle("#5E8A3A", VENOM_L, round_=False) + leaf)
-
-
-def salt_ward():
-    pouch = path("M16 26 Q8 44 18 56 L46 56 Q56 44 48 26 Z", "#D9C79E") + line("M18 26 L46 26", OAK_D, 4)
-    salt = circle(32, 22, 10, "#FFFFFF") + circle(24, 18, 2, "#FFFFFF", stroke=False)
-    rune = path("M26 36 L38 36 L32 48 Z", "none", sw=2.5) + circle(32, 40, 2, BLOOD, stroke=False)
-    return svg(salt + pouch + rune)
+def smokeglass_vial():
+    smoke = circle(46, 10, 6, SLATE_L, stroke=False) + circle(54, 4, 4, SLATE_L, stroke=False) + circle(40, 4, 3, SLATE_L, stroke=False)
+    return svg(bottle("#6E6878", "#B8B0C4", round_=False) + smoke)
 
 
 def war_drum():
@@ -136,34 +129,21 @@ def war_drum():
     return svg(shell + ropes + top + sticks)
 
 
-def bell_of_vigil():
+def vespers_bell():
     return svg(bell(BRASS, BRASS_D) + line("M10 14 L14 18", FLAME_Y, 2.5) + line("M54 14 L50 18", FLAME_Y, 2.5))
 
 
-def hearth_banner():
+def old_guards_standard():
     pole = line("M14 4 L14 60", INK, 6) + line("M14 4 L14 60", OAK, 3) + circle(14, 5, 3.5, BRASS)
     cloth = path("M16 10 L54 10 L54 44 L35 36 L16 44 Z", RED_CLOTH)
     emblem = flame(35, 29, 0.6)
     return svg(pole + cloth + emblem + line("M16 14 L54 14", BRASS, 2.5))
 
 
-def first_light_dagger():
-    return svg(group(knife("#F2E4B0", "#FFFFFF", BRASS, BRASS_D, long=32, width=12), "rotate(35 32 32)")
-               + circle(50, 12, 4, FLAME_Y, stroke=False, extra=' opacity="0.8"') + line("M50 4 L50 20", FLAME_Y, 1.5) + line("M42 12 L58 12", FLAME_Y, 1.5))
-
-
-def hearthstone_ward():
-    stone = path("M10 50 Q6 30 20 20 Q32 10 46 18 Q60 28 54 50 Z", SLATE) + path("M14 30 Q20 20 30 18", "none", sw=0)
-    glow = path("M32 28 Q40 36 32 46 Q24 36 32 28 Z", EMBER, sw=2) + circle(32, 38, 3, FLAME_Y, stroke=False)
-    base = rect(8, 50, 48, 8, OAK, 2)
-    return svg(stone + line("M16 28 Q22 20 30 18", SLATE_L, 3) + glow + base)
-
-
-def ember_brazier():
-    bowl = path("M10 30 L54 30 Q50 46 32 46 Q14 46 10 30 Z", STEEL_D) + line("M12 34 L52 34", STEEL, 2)
-    legs = line("M20 44 L14 58", INK, 5) + line("M44 44 L50 58", INK, 5) + line("M32 46 L32 58", INK, 5)
-    coals = circle(24, 29, 5, EMBER) + circle(34, 28, 5, FLAME_Y) + circle(42, 29, 4.5, EMBER)
-    return svg(flame(32, 26, 0.9) + legs + bowl + coals)
+def gale_blades():
+    wind = line("M6 20 Q20 14 30 20", FROST_L, 2.5) + line("M4 30 Q18 24 26 30", FROST_L, 2.5) + line("M10 40 Q22 36 28 40", FROST_L, 2)
+    return svg(wind + group(knife("#DDE8F0", "#FFFFFF", STEEL_D, INK, long=30, width=10), "rotate(35 36 32)")
+               + group(knife("#DDE8F0", "#FFFFFF", STEEL_D, INK, long=26, width=9), "rotate(55 44 40)"))
 
 
 def vesper_chime():
@@ -217,33 +197,9 @@ def thorn_darts():
     return svg(darts)
 
 
-def iron_pot_lid():
-    return svg(ellipse(32, 38, 26, 16, STEEL_D) + ellipse(32, 36, 22, 12, STEEL) + rect(26, 16, 12, 10, OAK, 3)
-               + line("M18 32 Q24 26 34 26", STEEL_L, 2.5) + path("M44 44 Q48 40 50 44", "none", sw=0) + line("M46 40 L50 36", STEEL_D, 2))
-
-
-def peat_poultice():
-    wrap = path("M12 24 Q32 12 52 24 L50 48 Q32 58 14 48 Z", "#D9C79E") + line("M14 32 Q32 22 50 32", "#8A6A40", 3)
-    herb = path("M28 22 Q24 6 34 4 Q38 16 32 22 Z", MOSS, sw=2) + path("M34 22 Q44 10 50 16 Q44 22 36 24 Z", MOSS_D, sw=2)
-    return svg(wrap + herb + line("M20 40 Q32 46 44 40", "#8A6A40", 2.5) + circle(32, 42, 3, MOSS_D, stroke=False))
-
-
 def hatchet():
     return svg(group(line("M32 60 L32 10", INK, 8) + line("M32 60 L32 10", OAK, 4.5)
                      + path("M30 8 Q54 4 56 26 Q44 22 30 24 Z", STEEL) + line("M34 10 Q50 8 52 20", STEEL_L, 2), "rotate(-30 32 32)"))
-
-
-def chalk_circle():
-    ring = f'<circle cx="32" cy="34" r="20" fill="none" stroke="{INK}" stroke-width="7"/>' + '<circle cx="32" cy="34" r="20" fill="none" stroke="#F4ECD8" stroke-width="3.5" stroke-dasharray="10 4"/>'
-    rune = path("M32 22 L42 42 L22 42 Z", "none", stroke=False, extra=' stroke="#F4ECD8" stroke-width="3"') + circle(32, 36, 2.5, "#F4ECD8", stroke=False)
-    stick = group(rect(40, 6, 8, 20, "#F4ECD8", 2), "rotate(30 44 16)")
-    return svg(ring + rune + stick)
-
-
-def hobnail_boots():
-    boot = path("M18 8 L34 8 L34 38 Q50 38 54 48 L54 56 L14 56 L14 40 Z", "#6E4A33")
-    return svg(boot + rect(14, 52, 40, 6, OAK_D, 2) + "".join(circle(x, 57, 1.6, STEEL_L, stroke=False) for x in (20, 28, 36, 44, 50))
-               + line("M18 14 L34 14", OAK_D, 2.5) + line("M22 20 L30 24", PARCH, 1.8) + line("M22 26 L30 30", PARCH, 1.8))
 
 
 def longspear():
@@ -257,12 +213,6 @@ def mudbrick_wall():
         for x in range(off + 6, 58, 20):
             bricks += rect(max(x, 6), y, min(18, 58 - max(x, 6)), 12, "#A07850" if (x + row) % 3 else "#8A6440", 1.5)
     return svg(bricks + rect(4, 50, 56, 8, OAK_D, 2) + circle(20, 44, 2, MOSS, stroke=False))
-
-
-def slate_tablet():
-    return svg(rect(12, 8, 40, 50, SLATE, 6) + rect(16, 12, 32, 42, "#4A4756", 3, stroke=False)
-               + "".join(line(f"M20 {y} L{44 - (y % 7)} {y}", "#E6E0D6", 2) for y in (20, 28, 36, 44))
-               + group(rect(40, 30, 6, 22, "#F4ECD8", 2), "rotate(25 43 41)"))
 
 
 def crow_crossbow():
@@ -282,12 +232,6 @@ def barbed_net():
     return svg(path("M4 8 L60 8 L56 58 L8 58 Z", "#2A2433", stroke=False, extra=' opacity="0.25"') + web + barbs)
 
 
-def mirror_shard():
-    shard = path("M22 6 L46 14 L50 44 L30 58 L14 36 Z", "#B8D8E8") + path("M22 6 L46 14 L30 30 Z", "#E6F4FA", stroke=False)
-    return svg(shard + path("M22 6 L46 14 L50 44 L30 58 L14 36 Z", "none") + line("M20 34 L42 20", "#FFFFFF", 2)
-               + circle(48, 8, 2.5, "#FFFFFF", stroke=False))
-
-
 def menders_satchel():
     bag = rect(8, 22, 48, 34, "#8A5A3C", 8) + path("M8 30 Q32 40 56 30 L56 24 Q56 22 48 22 L16 22 Q8 22 8 24 Z", "#6E4A33")
     strap = line("M14 22 Q32 0 50 22", INK, 6) + line("M14 22 Q32 0 50 22", OAK_L, 3)
@@ -301,7 +245,7 @@ def ashwood_staff():
     return svg(staff + crook + circle(46, 13, 4, EMBER) + circle(46, 13, 7, EMBER, stroke=False, extra=' opacity="0.3"'))
 
 
-def spiked_pauldron():
+def bramble_mail():
     plate = path("M8 44 Q10 16 34 14 Q56 14 58 36 L58 44 Q40 34 8 44 Z", STEEL) + path("M12 42 Q22 34 40 34", "none", sw=0)
     spikes = "".join(path(f"M{x} {y} L{x + dx} {y - 14} L{x + 7} {y} Z", STEEL_L, sw=2) for x, y, dx in ((16, 24, -2), (28, 17, 1), (42, 18, 5)))
     return svg(spikes + plate + line("M12 40 Q30 30 56 38", STEEL_D, 3) + circle(22, 34, 2, BRASS, stroke=False) + circle(46, 32, 2, BRASS, stroke=False))
@@ -318,29 +262,14 @@ def stormglass_arrowheads():
     return svg(heads + path("M28 44 L34 50 L30 50 L36 58 L26 48 L30 48 Z", STORM, sw=1.5))
 
 
-def hexed_lockbox():
-    box = rect(10, 24, 44, 30, "#4A3438", 3) + path("M10 24 Q10 12 32 12 Q54 12 54 24 Z", "#5A3E44")
-    bands = rect(10, 22, 44, 5, STEEL_D, 1.5) + rect(28, 30, 8, 12, BRASS, 2) + circle(32, 35, 1.5, INK, stroke=False)
-    return svg(box + bands + rift_cracks("M14 48 L20 42 L18 36", "M50 30 L46 38 L50 44") + circle(32, 16, 3, RIFT_L, stroke=False))
-
-
 def venom_censer():
     return censer("#5E7A3A", "#3E5A24", VENOM_L, VENOM)
 
 
-def bone_flute():
-    return svg(group(rect(28, 4, 9, 56, BONE, 4) + "".join(circle(32.5, y, 2, BONE_D, stroke=False) for y in (18, 27, 36, 45))
-                     + circle(32.5, 6, 5, BONE_L), "rotate(40 32 32)") + line("M44 10 Q50 6 56 10", RIFT_L, 2) + line("M46 18 Q52 14 58 18", RIFT_L, 2))
-
-
-def quartered_shield():
+def gatekeepers_pavise():
     q = (path("M32 10 L32 33 L10 33 L10 14 Z", RED_CLOTH, stroke=False) + path("M32 33 L54 33 Q52 48 32 58 Z", RED_CLOTH, stroke=False)
          + path("M32 10 L54 14 L54 33 L32 33 Z", PARCH, stroke=False) + path("M10 33 L32 33 L32 58 Q12 48 10 33 Z", PARCH, stroke=False))
     return kite_shield("#D9C79E", BRASS, q + line("M32 8 L32 58", BRASS, 3) + line("M9 33 L55 33", BRASS, 3))
-
-
-def pilgrims_censer():
-    return censer(BRASS, BRASS_D, PARCH, FLAME_Y)
 
 
 def reapers_sickle():
@@ -410,7 +339,6 @@ def cairn_stone():
                + line("M28 36 L34 40 L30 44", FROST, 2) + circle(32, 25, 2.5, FROST_L, stroke=False))
 
 
-
 # --- Legendaries (docs/plans/legendary-items.md) ----------------------------------
 
 def _with(svg_text, extra):
@@ -467,17 +395,14 @@ LEGENDARIES = {
 }
 
 MORE_ITEMS = {
-    "night_lantern": night_lantern, "grave_hook": grave_hook, "nettle_vial": nettle_vial, "salt_ward": salt_ward,
-    "war_drum": war_drum, "bell_of_vigil": bell_of_vigil, "hearth_banner": hearth_banner, "first_light_dagger": first_light_dagger,
-    "hearthstone_ward": hearthstone_ward, "ember_brazier": ember_brazier, "vesper_chime": vesper_chime, "hollow_maw": hollow_maw,
+    "night_lantern": night_lantern, "grave_hook": grave_hook, "smokeglass_vial": smokeglass_vial,
+    "war_drum": war_drum, "vespers_bell": vespers_bell, "old_guards_standard": old_guards_standard, "gale_blades": gale_blades, "vesper_chime": vesper_chime, "hollow_maw": hollow_maw,
     "gloom_spit": gloom_spit, "pack_bond": pack_bond, "ember_maw": ember_maw, "birch_shortbow": birch_shortbow,
-    "flint_arrows": flint_arrows, "thorn_darts": thorn_darts, "iron_pot_lid": iron_pot_lid, "peat_poultice": peat_poultice,
-    "hatchet": hatchet, "chalk_circle": chalk_circle, "hobnail_boots": hobnail_boots, "longspear": longspear,
-    "mudbrick_wall": mudbrick_wall, "slate_tablet": slate_tablet, "crow_crossbow": crow_crossbow, "hunters_snare": hunters_snare,
-    "barbed_net": barbed_net, "mirror_shard": mirror_shard, "menders_satchel": menders_satchel, "ashwood_staff": ashwood_staff,
-    "spiked_pauldron": spiked_pauldron, "greywood_warbow": greywood_warbow, "stormglass_arrowheads": stormglass_arrowheads,
-    "hexed_lockbox": hexed_lockbox, "venom_censer": venom_censer, "bone_flute": bone_flute, "quartered_shield": quartered_shield,
-    "pilgrims_censer": pilgrims_censer, "reapers_sickle": reapers_sickle, "grimoire_of_cinders": grimoire_of_cinders,
+    "flint_arrows": flint_arrows, "thorn_darts": thorn_darts,
+    "hatchet": hatchet, "longspear": longspear,
+    "mudbrick_wall": mudbrick_wall, "crow_crossbow": crow_crossbow, "hunters_snare": hunters_snare,
+    "barbed_net": barbed_net, "menders_satchel": menders_satchel, "ashwood_staff": ashwood_staff,
+    "bramble_mail": bramble_mail, "greywood_warbow": greywood_warbow, "stormglass_arrowheads": stormglass_arrowheads, "venom_censer": venom_censer, "gatekeepers_pavise": gatekeepers_pavise, "reapers_sickle": reapers_sickle, "grimoire_of_cinders": grimoire_of_cinders,
     "rimewood_longbow": rimewood_longbow, "tower_shield": tower_shield, "ashen_censer": ashen_censer,
     "twinfang_stilettos": twinfang_stilettos, "clockwork_owl": clockwork_owl, "wyrdglass_orb": wyrdglass_orb,
     "hearthkeepers_kettle": hearthkeepers_kettle, "cinder_dust": cinder_dust, "lurker_fang": lurker_fang, "cairn_stone": cairn_stone,
@@ -636,26 +561,11 @@ def rift_prism():
                + rift_cracks("M28 42 L34 36"))
 
 
-def tinder_charm():
-    return svg(line("M32 4 L32 14", INK, 2.5) + circle(32, 38, 20, OAK_D) + circle(32, 38, 15, "#3A2A22", stroke=False) + flame(32, 48, 0.62))
-
-
-def fencers_bracer():
-    return svg(path("M14 18 Q32 10 50 18 L50 46 Q32 54 14 46 Z", STEEL) + line("M14 26 Q32 19 50 26", STEEL_D, 3)
-               + line("M14 38 Q32 31 50 38", STEEL_D, 3) + rect(26, 24, 12, 16, BRASS, 2) + line("M18 20 L18 44", "#FFFFFF", 2))
-
-
 def thorn_vest():
     thorns = "".join(path(f"M{x} {y} L{x + dx} {y + dy} L{x + 3} {y + 3} Z", MOSS_D, sw=2) for x, y, dx, dy in
                      ((10, 22, -6, -2), (10, 36, -6, 2), (54, 22, 6, -2), (54, 36, 6, 2), (26, 54, -2, 6), (38, 54, 2, 6)))
     body = path("M20 6 L26 10 L38 10 L44 6 L54 16 L50 26 L50 56 L14 56 L14 26 L10 16 Z", OAK)
     return svg(thorns + body + line("M32 12 L32 56", OAK_D, 2.5) + circle(32, 24, 2.5, BRASS) + circle(32, 36, 2.5, BRASS))
-
-
-def drummers_cadence():
-    drum = rect(14, 26, 36, 26, RED_CLOTH, 4) + ellipse(32, 26, 18, 7, BONE_L) + line("M16 32 L24 48 L32 32 L40 48 L48 32", BRASS, 2.5)
-    sticks = line("M18 6 L30 22", INK, 6) + line("M18 6 L30 22", OAK_L, 3) + line("M48 4 L36 21", INK, 6) + line("M48 4 L36 21", OAK_L, 3)
-    return svg(drum + sticks + circle(18, 6, 3.5, BONE) + circle(48, 4, 3.5, BONE))
 
 
 def leech_vial():
@@ -671,7 +581,71 @@ def hex_bag():
 
 
 MORE_ITEMS |= {
-    "ember_censer": ember_censer, "open_channel": open_channel, "bond_chain": bond_chain, "rift_prism": rift_prism,
-    "tinder_charm": tinder_charm, "fencers_bracer": fencers_bracer, "thorn_vest": thorn_vest,
-    "drummers_cadence": drummers_cadence, "leech_vial": leech_vial, "hex_bag": hex_bag,
+    "ember_censer": ember_censer, "open_channel": open_channel, "bond_chain": bond_chain, "rift_prism": rift_prism, "thorn_vest": thorn_vest, "leech_vial": leech_vial, "hex_bag": hex_bag,
+}
+
+
+# --- redesign step 7: hero Epics (docs/plans/items-and-clarity.md) -------------------------
+
+def hearthbrand_mace():
+    handle = line("M16 58 L36 22", INK, 8) + line("M16 58 L36 22", OAK, 4.5)
+    head = circle(40, 16, 12, STEEL) + "".join(path(f"M{40 + dx} {16 + dy} L{40 + dx * 1.7} {16 + dy * 1.7} L{40 + dx + dy * 0.3} {16 + dy - dx * 0.3} Z", STEEL_L, sw=2)
+                                              for dx, dy in ((10, 0), (0, -10), (-10, 0), (0, 10), (7, 7), (-7, -7)))
+    return svg(handle + head + flame(40, 20, 0.35) + rect(14, 52, 8, 8, BRASS, 2))
+
+
+def watchmans_horn():
+    horn = path("M8 44 Q24 50 40 36 Q50 26 52 12 L60 16 Q58 34 44 46 Q28 58 8 52 Z", BONE) + path("M52 12 L60 16 L58 22 L50 18 Z", BRASS, sw=2)
+    bands = line("M20 48 Q22 52 20 54", BRASS_D, 3) + line("M36 40 Q40 44 38 48", BRASS_D, 3)
+    return svg(horn + bands + line("M6 44 L6 52", INK, 3) + line("M2 18 Q8 12 14 18", PARCH, 2) + line("M4 26 Q10 20 16 26", PARCH, 2))
+
+
+def hunters_moon():
+    moon = path("M40 6 A20 20 0 1 0 58 34 A15 15 0 1 1 40 6 Z", "#E8E0C8")
+    blade = group(knife(STEEL_L, "#FFFFFF", "#4A3438", INK, long=30, width=10), "rotate(-30 26 38)")
+    return svg(moon + blade + circle(18, 50, 3, BLOOD, stroke=False) + circle(24, 56, 2, BLOOD, stroke=False))
+
+
+def ember_grimoire():
+    return book("#7A2E20", "#4A1A12", flame(30, 40, 0.8) + circle(40, 16, 2.5, FLAME_Y, stroke=False) + circle(20, 18, 2, EMBER, stroke=False))
+
+
+def hexbinders_rod():
+    rod = line("M16 60 L42 12", INK, 8) + line("M16 60 L42 12", "#3E3368", 4.5)
+    orb = circle(44, 10, 7, VENOM) + circle(44, 10, 11, VENOM, stroke=False, extra=' opacity="0.25"') + circle(42, 8, 2, VENOM_L, stroke=False)
+    runes = line("M24 44 L28 40 M27 46 L31 42", RIFT_L, 2)
+    return svg(rod + runes + orb)
+
+
+def bramble_snares():
+    loop = f'<ellipse cx="32" cy="40" rx="22" ry="12" fill="none" stroke="{INK}" stroke-width="7"/>' + f'<ellipse cx="32" cy="40" rx="22" ry="12" fill="none" stroke="{MOSS}" stroke-width="3.5"/>'
+    thorns = "".join(path(f"M{x} {y} L{x + dx} {y - 8} L{x + 4} {y} Z", MOSS_D, sw=1.5) for x, y, dx in ((12, 34, -3), (24, 29, 0), (38, 29, 2), (50, 34, 4)))
+    stake = line("M32 6 L32 28", INK, 6) + line("M32 6 L32 28", OAK, 3)
+    return svg(stake + loop + thorns + circle(20, 50, 2.5, BLOOD, stroke=False))
+
+
+def stormfeather_quiver():
+    quiver = path("M18 20 L44 12 L50 52 L26 58 Z", "#6E4A33") + line("M20 28 L46 20", BRASS, 3)
+    arrows = "".join(line(f"M{x} {y} L{x + 4} {y - 16}", OAK_L, 2.5) + path(f"M{x + 2} {y - 22} L{x + 8} {y - 16} L{x + 1} {y - 13} Z", STORM, sw=1.5)
+                     for x, y in ((22, 22), (30, 19), (38, 17)))
+    bolt = path("M34 34 L40 40 L36 40 L42 50 L30 38 L34 38 Z", STORM, sw=1.5)
+    return svg(arrows + quiver + bolt)
+
+
+def cutpurses_kris():
+    blade = group(knife("#C8C0D8", "#FFFFFF", "#3E3368", INK, long=34, width=9), "rotate(30 32 32)")
+    coin = circle(48, 48, 7, BRASS) + circle(48, 48, 4, BRASS_D, stroke=False)
+    return svg(blade + coin + line("M10 12 Q14 8 18 12", RIFT_L, 2))
+
+
+def heartfire_wand():
+    wand = line("M16 58 L40 18", INK, 7) + line("M16 58 L40 18", "#8A5A3C", 4) + rect(18, 48, 6, 8, BRASS, 2)
+    heart = path("M42 18 Q42 8 50 10 Q58 12 52 22 L44 30 Q34 22 36 14 Q40 8 42 18 Z", EMBER)
+    return svg(wand + heart + flame(46, 14, 0.35) + circle(56, 6, 2, FLAME_Y, stroke=False))
+
+
+MORE_ITEMS |= {
+    "hearthbrand_mace": hearthbrand_mace, "watchmans_horn": watchmans_horn, "hunters_moon": hunters_moon,
+    "ember_grimoire": ember_grimoire, "hexbinders_rod": hexbinders_rod, "bramble_snares": bramble_snares,
+    "stormfeather_quiver": stormfeather_quiver, "cutpurses_kris": cutpurses_kris, "heartfire_wand": heartfire_wand,
 }

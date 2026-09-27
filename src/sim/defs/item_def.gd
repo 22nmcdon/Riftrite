@@ -66,6 +66,12 @@ var auras: Array[AuraDef] = []
 var legendary: LegendaryDef = null
 ## A passive's conduit (see CONDUITS), or "".
 var conduit: String = ""
+## A hero's Epic (docs/plans/items-and-clarity.md, section 3): the hero it
+## belongs to, and what it adds when that hero holds it (specialization-style
+## parts, credited "<item> (<hero>'s own)"). Anyone can hold it; only the
+## team's Epics appear in shops.
+var hero: String = ""
+var hero_parts: Array[SpecializationDef.Part] = []
 
 
 static func read(reader: DataReader) -> ItemDef:
@@ -95,6 +101,19 @@ static func read(reader: DataReader) -> ItemDef:
 			def.legendary = LegendaryDef.read(path_reader)
 	if reader.has("conduit"):
 		def.conduit = reader.req_choice("conduit", CONDUITS)
+	if reader.has("hero"):
+		def.hero = reader.req_string("hero")
+		for part_reader: DataReader in reader.opt_object_array("hero_parts"):
+			var part: SpecializationDef.Part = SpecializationDef.read_part(part_reader, "%s (own hero)" % def.name, "%s_own" % def.id)
+			if part.kind == SpecializationDef.Kind.BASIC_ATTACK:
+				part_reader.error("a hero's Epic can't replace the basic attack")
+			def.hero_parts.append(part)
+		if def.hero_parts.is_empty():
+			reader.error("a hero's Epic needs \"hero_parts\" (what it adds on its hero)")
+		if def.rarity != "epic":
+			reader.error("only Epics belong to a hero")
+	elif reader.has("hero_parts"):
+		reader.error("\"hero_parts\" needs a \"hero\"")
 	_read_common(def, reader, true)
 	if slot_name.is_empty():
 		pass

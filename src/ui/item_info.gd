@@ -325,8 +325,6 @@ static func synergy_text(content: ContentDb, synergy_id: String) -> String:
 			lines.append("When one hero holds %s." % " and ".join(item_names))
 		SynergyDef.Layer.TRANSFORMATION:
 			lines.append("%s infused with %s: the item works differently (and never spills)." % [item_names[0], content.essences[def.essence].name])
-		SynergyDef.Layer.SIGNATURE:
-			lines.append("When %s holds %s." % [content.heroes[def.hero].name, item_names[0]])
 		SynergyDef.Layer.RESONANCE:
 			lines.append("Counting %s essences in the team's items:" % content.essences[def.essence].name)
 		SynergyDef.Layer.AFFINITY:

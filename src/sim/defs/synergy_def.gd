@@ -1,11 +1,10 @@
 class_name SynergyDef
 extends RefCounted
 ## A synergy from data/synergies.json (docs/plans/synergies-in-sim.md).
-## Six layers, each with its own condition:
+## Five layers, each with its own condition:
 ##   pair:           "items": two items on the same hero
 ##   transformation: "item" with "essence" socketed; "item_effects" replace
 ##                   the item's own effects
-##   signature:      "item" on the hero "hero"
 ##   resonance:      "essence", with "tiers" by essence count (every hero's
 ##                   items)
 ##   affinity:       "keyword", with "tiers" by heroes with that affinity
@@ -17,11 +16,12 @@ extends RefCounted
 ## "auras", "grants", and relic-trigger "effects". Tiered layers put those
 ## in each tier; only the highest tier reached applies. Item layers may aim
 ## auras at matched_items or the holder, and their grants reach only the
-## matched items.
+## matched items. (Signatures, an item on a specific hero, became hero Epics:
+## ItemDef.hero, docs/plans/items-and-clarity.md.)
 
-enum Layer { PAIR, TRANSFORMATION, SIGNATURE, RESONANCE, AFFINITY, DUO }
+enum Layer { PAIR, TRANSFORMATION, RESONANCE, AFFINITY, DUO }
 
-const LAYER_NAMES: Array[String] = ["pair", "transformation", "signature", "resonance", "affinity", "duo"]
+const LAYER_NAMES: Array[String] = ["pair", "transformation", "resonance", "affinity", "duo"]
 const ITEM_LAYER_AURA_TARGETS: Array[AuraDef.Target] = [
 	AuraDef.Target.MATCHED_ITEMS, AuraDef.Target.HOLDER, AuraDef.Target.ALL_ITEMS, AuraDef.Target.ALL_ALLIES,
 ]
@@ -36,10 +36,8 @@ class Tier:
 var id: String
 var name: String
 var layer: Layer
-## pair: both items; transformation and signature: the one item.
+## pair: both items; transformation: the one item.
 var items: Array[String] = []
-## signature: the hero's id.
-var hero: String = ""
 ## transformation and resonance.
 var essence: String = ""
 ## affinity: the keyword.
@@ -47,7 +45,7 @@ var keyword: String = ""
 ## duo: the two heroes, and each one's parts (lined up with `heroes`).
 var heroes: Array[String] = []
 var duo_parts: Array[Array] = []
-## pair, transformation, signature: what the synergy does.
+## pair, transformation: what the synergy does.
 var bonus: RelicDef = null
 ## transformation: the item's new effects.
 var item_effects: Array[EffectDef] = []
@@ -76,9 +74,6 @@ static func read(reader: DataReader) -> SynergyDef:
 				def.item_effects.append(EffectDef.read(effect_reader))
 			if def.item_effects.is_empty():
 				reader.error("a transformation needs item_effects (the item's new effects)")
-		Layer.SIGNATURE:
-			def.hero = reader.req_string("hero")
-			def.items = [reader.req_string("item")]
 		Layer.RESONANCE:
 			def.essence = reader.req_string("essence")
 		Layer.AFFINITY:

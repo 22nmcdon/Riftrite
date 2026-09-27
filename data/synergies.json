@@ -3,11 +3,8 @@
     "id": "paper_cuts",
     "name": "Paper Cuts",
     "layer": "pair",
-    "items": [
-      "whetstone",
-      "twin_daggers"
-    ],
-    "_note": "Each dagger hit charges the Whetstone by 0.2s.",
+    "items": ["twin_daggers", "longspear"],
+    "_note": "Each dagger hit winds the Sweeping Spear by 0.3s.",
     "grants": [
       {
         "filter": {
@@ -16,7 +13,7 @@
         "effect": {
           "trigger": "on_hit",
           "type": "charge",
-          "amount_ms": 200,
+          "amount_ms": 300,
           "target": "partner_items"
         }
       }
@@ -26,11 +23,8 @@
     "id": "hearth_and_home",
     "name": "Hearth and Home",
     "layer": "pair",
-    "items": [
-      "hearth_banner",
-      "hearth_stew"
-    ],
-    "_note": "The stew heals x1.5.",
+    "items": ["vesper_chime", "hearth_stew"],
+    "_note": "The Hearth Feast heals x1.5.",
     "auras": [
       {
         "target": "matched_items",
@@ -44,16 +38,16 @@
   },
   {
     "id": "tolling_ward",
-    "name": "Tolling Ward",
+    "name": "Thorn and Mortar",
     "layer": "pair",
-    "items": [
-      "bell_of_vigil",
-      "oak_buckler"
-    ],
-    "_note": "Both items' shields x1.3.",
+    "items": ["mudbrick_wall", "thorn_vest"],
+    "_note": "Raise Wall's Shields x1.3.",
     "auras": [
       {
         "target": "matched_items",
+        "filter": {
+          "item": "mudbrick_wall"
+        },
         "stat": "shield_bp",
         "value": 13000
       }
@@ -61,21 +55,27 @@
   },
   {
     "id": "wildfire_torch",
-    "name": "Wildfire Torch",
+    "name": "Wildfire Staff",
     "layer": "transformation",
-    "item": "tallow_torch",
+    "item": "ashwood_staff",
     "essence": "ember",
-    "_note": "The torch's Burn lands on every enemy instead of one.",
+    "_note": "The staff's Burn leaps to a random enemy instead of riding its hits.",
     "item_effects": [
+      {
+        "trigger": "on_fire",
+        "type": "damage",
+        "amount": 5,
+        "target": "enemy_front",
+        "scaling": {
+          "mgk": 6500
+        }
+      },
       {
         "trigger": "on_fire",
         "type": "apply_status",
         "status": "burn",
         "stacks": 1,
-        "target": "all_enemies",
-        "scaling": {
-          "mgk": 500
-        }
+        "target": "enemy_random"
       }
     ]
   },
@@ -83,81 +83,18 @@
     "id": "bulwark_of_stone",
     "name": "Bulwark of Stone",
     "layer": "transformation",
-    "item": "oak_buckler",
+    "item": "mudbrick_wall",
     "essence": "stone",
-    "_note": "The buckler shields the whole guild instead of its holder.",
+    "_note": "Raise Wall shields the whole guild instead of its row.",
     "item_effects": [
       {
         "trigger": "on_fire",
         "type": "shield",
-        "amount": 6,
+        "amount": 14,
         "target": "all_allies",
         "scaling": {
-          "def": 2000
+          "def": 6000
         }
-      }
-    ]
-  },
-  {
-    "id": "lantern_of_mercy",
-    "name": "Lantern of Mercy",
-    "layer": "signature",
-    "hero": "vell",
-    "item": "old_lantern",
-    "_note": "Sister Vell's lantern also gives a small shield.",
-    "grants": [
-      {
-        "effect": {
-          "trigger": "on_fire",
-          "type": "shield",
-          "amount": 8,
-          "target": "ally_lowest_hp"
-        }
-      }
-    ]
-  },
-  {
-    "id": "wardens_oath",
-    "name": "Warden's Oath",
-    "layer": "signature",
-    "hero": "brannoc",
-    "item": "oak_buckler",
-    "_note": "Brannoc with his buckler: x1.15 DEF.",
-    "auras": [
-      {
-        "target": "holder",
-        "stat": "def_bp",
-        "value": 11500
-      }
-    ]
-  },
-  {
-    "id": "dawnstrike",
-    "name": "Dawnstrike",
-    "layer": "signature",
-    "hero": "wren",
-    "item": "first_light_dagger",
-    "_note": "Wren's dagger: +15% crit chance.",
-    "auras": [
-      {
-        "target": "matched_items",
-        "stat": "crit_chance_bp",
-        "value": 1500
-      }
-    ]
-  },
-  {
-    "id": "dusk_recitation",
-    "name": "Dusk Recitation",
-    "layer": "signature",
-    "hero": "odo",
-    "item": "dusk_tome",
-    "_note": "Odo reads the tome 15% faster.",
-    "auras": [
-      {
-        "target": "matched_items",
-        "stat": "cooldown_bp",
-        "value": -1500
       }
     ]
   },
@@ -546,78 +483,11 @@
     ]
   },
   {
-    "id": "thistledown_longbow",
-    "name": "Thistledown Longbow",
-    "layer": "signature",
-    "hero": "maren",
-    "item": "blackthorn_bow",
-    "_note": "Maren with her bow: +15% crit chance.",
-    "auras": [
-      {
-        "target": "matched_items",
-        "stat": "crit_chance_bp",
-        "value": 1500
-      }
-    ]
-  },
-  {
-    "id": "pinch_of_salt",
-    "name": "Pinch of Salt",
-    "layer": "signature",
-    "hero": "pell",
-    "item": "salt_ward",
-    "_note": "Pell's salt ward also slows a random enemy.",
-    "grants": [
-      {
-        "effect": {
-          "trigger": "on_fire",
-          "type": "apply_status",
-          "status": "slow",
-          "stacks": 1,
-          "target": "enemy_random"
-        }
-      }
-    ]
-  },
-  {
-    "id": "gate_bell",
-    "name": "The Gate Bell",
-    "layer": "signature",
-    "hero": "hesk",
-    "item": "bell_of_vigil",
-    "_note": "Old Hesk rings the bell 15% faster.",
-    "auras": [
-      {
-        "target": "matched_items",
-        "stat": "cooldown_bp",
-        "value": -1500
-      }
-    ]
-  },
-  {
-    "id": "brazier_keeper",
-    "name": "Brazier Keeper",
-    "layer": "signature",
-    "hero": "ysolde",
-    "item": "ember_brazier",
-    "_note": "Ysolde's brazier burns 20% hotter.",
-    "auras": [
-      {
-        "target": "matched_items",
-        "stat": "over_time_bp",
-        "value": 12000
-      }
-    ]
-  },
-  {
     "id": "fletchers_rhythm",
     "name": "Fletcher's Rhythm",
     "layer": "pair",
-    "items": [
-      "birch_shortbow",
-      "flint_arrows"
-    ],
-    "_note": "Each shortbow hit winds the arrows by 0.3s.",
+    "items": ["birch_shortbow", "flint_arrows"],
+    "_note": "Each shortbow hit winds the Barrage by 0.3s.",
     "grants": [
       {
         "filter": {
@@ -636,10 +506,7 @@
     "id": "hunters_kit",
     "name": "Hunter's Kit",
     "layer": "pair",
-    "items": [
-      "hunters_snare",
-      "barbed_net"
-    ],
+    "items": ["hunters_snare", "barbed_net"],
     "_note": "The net also slows every enemy.",
     "grants": [
       {
@@ -658,16 +525,16 @@
   },
   {
     "id": "smoke_and_coin",
-    "name": "Smoke and Coin",
+    "name": "Choking Charms",
     "layer": "pair",
-    "items": [
-      "soot_bomb",
-      "trick_coin"
-    ],
-    "_note": "Both tricks fire 25% faster.",
+    "items": ["hex_bag", "venom_censer"],
+    "_note": "The Plague Cloud rises 25% faster.",
     "auras": [
       {
         "target": "matched_items",
+        "filter": {
+          "item": "venom_censer"
+        },
         "stat": "cooldown_bp",
         "value": -2500
       }
@@ -677,10 +544,7 @@
     "id": "full_kettle",
     "name": "A Full Kettle",
     "layer": "pair",
-    "items": [
-      "hearthkeepers_kettle",
-      "hearth_stew"
-    ],
+    "items": ["hearthkeepers_kettle", "hearth_stew"],
     "_note": "Both heal x1.25.",
     "auras": [
       {
@@ -696,8 +560,19 @@
     "layer": "transformation",
     "item": "flint_arrows",
     "essence": "frost",
-    "_note": "The arrows slow the back row instead of hitting it.",
+    "_note": "The Barrage's arrows also Slow the back row.",
     "item_effects": [
+      {
+        "trigger": "on_fire",
+        "type": "damage",
+        "amount": 4,
+        "target": "enemy_back",
+        "hits": 4,
+        "hit_interval_ms": 200,
+        "scaling": {
+          "atk": 5300
+        }
+      },
       {
         "trigger": "on_fire",
         "type": "apply_status",
@@ -1015,10 +890,7 @@
     "id": "shield_and_sword",
     "name": "Shield and Sword",
     "layer": "duo",
-    "heroes": [
-      "brannoc",
-      "wren"
-    ],
+    "heroes": ["brannoc", "wren"],
     "_note": "Wren's every 3rd crit shields the lowest-HP ally; Brannoc bashes the front enemy every 2nd time he gains Shield.",
     "parts": {
       "brannoc": [
@@ -1065,10 +937,7 @@
     "id": "gate_and_lantern",
     "name": "The Gate and the Lantern",
     "layer": "duo",
-    "heroes": [
-      "vell",
-      "hesk"
-    ],
+    "heroes": ["vell", "hesk"],
     "_note": "Vell's every 2nd heal also shields whoever she healed; Hesk catches his breath (a heal) every 4th hit he takes.",
     "parts": {
       "vell": [
@@ -1115,10 +984,7 @@
     "id": "ash_and_ink",
     "name": "Ash and Ink",
     "layer": "duo",
-    "heroes": [
-      "odo",
-      "ysolde"
-    ],
+    "heroes": ["odo", "ysolde"],
     "_note": "Odo's every 2nd Spell ability sets a random enemy alight; Ysolde's every 3rd Burn speeds up her items.",
     "parts": {
       "odo": [
@@ -1147,9 +1013,7 @@
           "effects": [
             {
               "trigger": "on_status",
-              "statuses": [
-                "burn"
-              ],
+              "statuses": ["burn"],
               "every": 3,
               "type": "charge",
               "amount_ms": 500,
@@ -1164,10 +1028,7 @@
     "id": "marked_cards",
     "name": "Marked Cards",
     "layer": "duo",
-    "heroes": [
-      "maren",
-      "pell"
-    ],
+    "heroes": ["maren", "pell"],
     "_note": "Pell's tricks make every hero's Bow items crit more; Maren's crits Poison.",
     "parts": {
       "maren": [
@@ -1204,10 +1065,7 @@
     "id": "twin_walls",
     "name": "Twin Walls",
     "layer": "duo",
-    "heroes": [
-      "brannoc",
-      "hesk"
-    ],
+    "heroes": ["brannoc", "hesk"],
     "_note": "Brannoc toughens his row; Hesk's every 3rd hit taken shields it.",
     "parts": {
       "brannoc": [
@@ -1244,10 +1102,7 @@
     "id": "hunters_accord",
     "name": "Hunters' Accord",
     "layer": "duo",
-    "heroes": [
-      "wren",
-      "maren"
-    ],
+    "heroes": ["wren", "maren"],
     "_note": "Each kill speeds up Maren's items and heals Wren.",
     "parts": {
       "wren": [
@@ -1289,10 +1144,7 @@
     "id": "candle_and_page",
     "name": "Candle and Page",
     "layer": "duo",
-    "heroes": [
-      "vell",
-      "odo"
-    ],
+    "heroes": ["vell", "odo"],
     "_note": "Odo's every 3rd Spell ability heals the lowest-HP ally; Vell makes every hero's Mend items fire faster.",
     "parts": {
       "vell": [
@@ -1333,10 +1185,7 @@
     "id": "smoke_and_mirrors",
     "name": "Smoke and Mirrors",
     "layer": "duo",
-    "heroes": [
-      "pell",
-      "ysolde"
-    ],
+    "heroes": ["pell", "ysolde"],
     "_note": "Pell's every 4th status adds Burn; Ysolde's kills Blind every enemy.",
     "parts": {
       "pell": [

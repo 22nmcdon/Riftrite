@@ -90,12 +90,16 @@ static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column:
 	state.hp = state.max_hp
 	state.phases = setup.phases
 	# The innate, then each deed track's parts at its level (a calling part
-	# with the innate's key replaces it).
+	# with the innate's key replaces it), then the hero's own Epics' parts.
 	var parts: Array[SpecializationDef.Part] = setup.innate.duplicate()
 	for deed_setup: DeedSetup in setup.deeds:
 		var deed: Deed = _deed_from(deed_setup)
 		state.deeds.append(deed)
 		DeedTrackDef.merge(parts, deed.def.parts_at(deed.level, deed.choice))
+	# A hero's own Epics add their parts (docs/plans/items-and-clarity.md).
+	for item: ItemSetup in setup.items:
+		if not item.def.hero.is_empty() and item.def.hero == setup.id:
+			DeedTrackDef.merge(parts, item.def.hero_parts)
 	var basic_attack: ItemDef = setup.basic_attack
 	var abilities: Array[SpecializationDef.Part] = []
 	for part: SpecializationDef.Part in parts:

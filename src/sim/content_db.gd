@@ -241,6 +241,19 @@ func _check_references() -> void:
 					errors.append("%s.legendary.wants: unknown essence \"%s\"" % [item_where, essence_id])
 			if items[id].enemy_only:
 				errors.append("%s: a Legendary can't be enemy-only" % item_where)
+		if not items[id].hero.is_empty():
+			if not heroes.has(items[id].hero):
+				errors.append("%s: unknown hero \"%s\"" % [item_where, items[id].hero])
+			else:
+				# Credit the parts to their hero by name: "Twinfang Stilettos (Wren's own)".
+				var first_name: String = heroes[items[id].hero].name.get_slice(" ", 0)
+				for part: SpecializationDef.Part in items[id].hero_parts:
+					var credit: String = "%s (%s's own)" % [items[id].name, first_name]
+					if part.item != null:
+						part.item.name = part.item.name.replace(part.label, credit)
+					part.label = credit
+			for part: SpecializationDef.Part in items[id].hero_parts:
+				_check_part(part, "%s.hero_parts.%s" % [item_where, part.key])
 		for i: int in items[id].auras.size():
 			if items[id].auras[i].target == AuraDef.Target.MATCHED_ITEMS:
 				errors.append("%s.auras[%d]: matched_items only works in a synergy" % [item_where, i])
@@ -354,8 +367,6 @@ func _check_synergy(synergy: SynergyDef, where: String) -> void:
 	for item_id: String in synergy.items:
 		if not items.has(item_id):
 			errors.append("%s: unknown item \"%s\"" % [where, item_id])
-	if not synergy.hero.is_empty() and not heroes.has(synergy.hero):
-		errors.append("%s: unknown hero \"%s\"" % [where, synergy.hero])
 	if not synergy.essence.is_empty() and not essences.has(synergy.essence):
 		errors.append("%s: unknown essence \"%s\"" % [where, synergy.essence])
 	if not synergy.keyword.is_empty() and not keywords.has(synergy.keyword):

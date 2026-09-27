@@ -11,7 +11,7 @@
             "item": "rusted_cleaver"
           },
           {
-            "item": "oak_buckler"
+            "item": "mudbrick_wall"
           }
         ]
       },
@@ -20,13 +20,13 @@
         "row": "front",
         "items": [
           {
-            "item": "hearth_knife"
+            "item": "hatchet"
           },
           {
-            "item": "first_light_dagger"
+            "item": "gale_blades"
           },
           {
-            "item": "bone_sling"
+            "item": "flint_arrows"
           }
         ]
       },
@@ -35,7 +35,7 @@
         "row": "back",
         "items": [
           {
-            "item": "old_lantern"
+            "item": "menders_satchel"
           },
           {
             "item": "hearth_stew"
@@ -47,10 +47,10 @@
         "row": "back",
         "items": [
           {
-            "item": "dusk_tome"
+            "item": "wyrdglass_orb"
           },
           {
-            "item": "tallow_torch"
+            "item": "ashwood_staff"
           }
         ]
       }
@@ -66,16 +66,12 @@
         "items": [
           {
             "item": "rusted_cleaver",
-            "essences": [
-              "wrath"
-            ],
+            "essences": ["wrath"],
             "xp": 120
           },
           {
-            "item": "oak_buckler",
-            "essences": [
-              "stone"
-            ]
+            "item": "mudbrick_wall",
+            "essences": ["stone"]
           }
         ]
       },
@@ -84,20 +80,16 @@
         "row": "front",
         "items": [
           {
-            "item": "hearth_knife",
-            "essences": [
-              "ember"
-            ]
+            "item": "hatchet",
+            "essences": ["ember"]
           },
           {
-            "item": "first_light_dagger",
-            "essences": [
-              "umbral"
-            ],
+            "item": "gale_blades",
+            "essences": ["umbral"],
             "xp": 300
           },
           {
-            "item": "bone_sling"
+            "item": "flint_arrows"
           }
         ]
       },
@@ -106,10 +98,8 @@
         "row": "back",
         "items": [
           {
-            "item": "old_lantern",
-            "essences": [
-              "verdant"
-            ],
+            "item": "menders_satchel",
+            "essences": ["verdant"],
             "xp": 100
           },
           {
@@ -122,16 +112,12 @@
         "row": "back",
         "items": [
           {
-            "item": "dusk_tome",
-            "essences": [
-              "ember"
-            ]
+            "item": "wyrdglass_orb",
+            "essences": ["ember"]
           },
           {
-            "item": "tallow_torch",
-            "essences": [
-              "ember"
-            ]
+            "item": "ashwood_staff",
+            "essences": ["ember"]
           }
         ]
       }
@@ -147,13 +133,11 @@
         "row": "front",
         "items": [
           {
-            "item": "bell_of_vigil"
+            "item": "old_guards_standard"
           },
           {
-            "item": "oak_buckler",
-            "essences": [
-              "stone"
-            ]
+            "item": "mudbrick_wall",
+            "essences": ["stone"]
           },
           {
             "item": "war_drum"
@@ -167,15 +151,10 @@
         "items": [
           {
             "item": "grave_hook",
-            "essences": [
-              "umbral"
-            ]
+            "essences": ["umbral"]
           },
           {
-            "item": "hearth_knife"
-          },
-          {
-            "item": "first_light_dagger"
+            "item": "gale_blades"
           }
         ]
       },
@@ -186,10 +165,7 @@
         "items": [
           {
             "item": "night_lantern",
-            "essences": [
-              "verdant",
-              "storm"
-            ]
+            "essences": ["verdant", "storm"]
           },
           {
             "item": "hearth_stew"
@@ -202,16 +178,12 @@
         "row": "back",
         "items": [
           {
-            "item": "ember_brazier",
-            "essences": [
-              "ember"
-            ]
+            "item": "ember_grimoire",
+            "essences": ["ember"]
           },
           {
-            "item": "nettle_vial",
-            "essences": [
-              "venom"
-            ]
+            "item": "venom_censer",
+            "essences": ["venom"]
           }
         ]
       }
@@ -226,10 +198,10 @@
         "row": "front",
         "items": [
           {
-            "item": "hearth_banner"
+            "item": "war_drum"
           },
           {
-            "item": "oak_buckler"
+            "item": "mudbrick_wall"
           }
         ]
       },
@@ -238,19 +210,15 @@
         "row": "front",
         "items": [
           {
-            "item": "first_light_dagger",
-            "essences": [
-              "wrath"
-            ]
+            "item": "gale_blades",
+            "essences": ["wrath"]
           },
           {
-            "item": "hearth_knife"
+            "item": "hatchet"
           },
           {
-            "item": "rime_charm",
-            "essences": [
-              "frost"
-            ]
+            "item": "hunters_snare",
+            "essences": ["frost"]
           }
         ]
       },
@@ -259,13 +227,10 @@
         "row": "front",
         "items": [
           {
-            "item": "blackthorn_bow"
+            "item": "birch_shortbow"
           },
           {
-            "item": "salt_ward"
-          },
-          {
-            "item": "tallow_torch"
+            "item": "smokeglass_vial"
           }
         ]
       },
@@ -274,7 +239,7 @@
         "row": "back",
         "items": [
           {
-            "item": "old_lantern"
+            "item": "menders_satchel"
           },
           {
             "item": "hearth_stew"
@@ -295,7 +260,7 @@
             "item": "rusted_cleaver"
           },
           {
-            "item": "oak_buckler"
+            "item": "mudbrick_wall"
           }
         ]
       },
@@ -304,13 +269,13 @@
         "row": "front",
         "items": [
           {
-            "item": "hearth_knife"
+            "item": "hatchet"
           },
           {
-            "item": "first_light_dagger"
+            "item": "gale_blades"
           },
           {
-            "item": "bone_sling"
+            "item": "flint_arrows"
           }
         ]
       },
@@ -319,7 +284,7 @@
         "row": "back",
         "items": [
           {
-            "item": "old_lantern"
+            "item": "menders_satchel"
           },
           {
             "item": "hearth_stew"
@@ -331,19 +296,15 @@
         "row": "back",
         "items": [
           {
-            "item": "dusk_tome"
+            "item": "wyrdglass_orb"
           },
           {
-            "item": "tallow_torch"
+            "item": "ashwood_staff"
           }
         ]
       }
     ],
-    "relics": [
-      "warding_knot",
-      "tinkers_loupe",
-      "cinder_crown"
-    ]
+    "relics": ["warding_knot", "tinkers_loupe", "cinder_crown"]
   },
   {
     "id": "hearth_specialized",
@@ -357,7 +318,7 @@
             "item": "rusted_cleaver"
           },
           {
-            "item": "oak_buckler"
+            "item": "mudbrick_wall"
           }
         ],
         "rank": "a",
@@ -368,13 +329,13 @@
         "row": "front",
         "items": [
           {
-            "item": "hearth_knife"
+            "item": "hatchet"
           },
           {
-            "item": "first_light_dagger"
+            "item": "gale_blades"
           },
           {
-            "item": "bone_sling"
+            "item": "flint_arrows"
           }
         ],
         "rank": "a",
@@ -385,7 +346,7 @@
         "row": "back",
         "items": [
           {
-            "item": "old_lantern"
+            "item": "menders_satchel"
           },
           {
             "item": "hearth_stew"
@@ -399,10 +360,10 @@
         "row": "back",
         "items": [
           {
-            "item": "dusk_tome"
+            "item": "wyrdglass_orb"
           },
           {
-            "item": "tallow_torch"
+            "item": "ashwood_staff"
           }
         ],
         "rank": "a",
@@ -422,7 +383,7 @@
             "item": "rusted_cleaver"
           },
           {
-            "item": "oak_buckler"
+            "item": "mudbrick_wall"
           }
         ],
         "rank": "a",
@@ -433,13 +394,13 @@
         "row": "front",
         "items": [
           {
-            "item": "hearth_knife"
+            "item": "hatchet"
           },
           {
-            "item": "whetstone"
+            "item": "reapers_sickle"
           },
           {
-            "item": "salt_ward"
+            "item": "smokeglass_vial"
           }
         ],
         "rank": "a",
@@ -450,10 +411,10 @@
         "row": "back",
         "items": [
           {
-            "item": "blackthorn_bow"
+            "item": "birch_shortbow"
           },
           {
-            "item": "bone_sling"
+            "item": "flint_arrows"
           }
         ],
         "rank": "a",
@@ -464,10 +425,10 @@
         "row": "back",
         "items": [
           {
-            "item": "dusk_tome"
+            "item": "wyrdglass_orb"
           },
           {
-            "item": "tallow_torch"
+            "item": "ashwood_staff"
           }
         ],
         "rank": "a",
@@ -487,7 +448,7 @@
             "item": "rusted_cleaver"
           },
           {
-            "item": "oak_buckler"
+            "item": "mudbrick_wall"
           }
         ]
       },
@@ -496,10 +457,10 @@
         "row": "front",
         "items": [
           {
-            "item": "hearth_knife"
+            "item": "hatchet"
           },
           {
-            "item": "bell_of_vigil"
+            "item": "old_guards_standard"
           }
         ]
       },
@@ -508,7 +469,7 @@
         "row": "back",
         "items": [
           {
-            "item": "dusk_tome"
+            "item": "wyrdglass_orb"
           }
         ]
       },
@@ -517,10 +478,10 @@
         "row": "back",
         "items": [
           {
-            "item": "tallow_torch"
+            "item": "ashwood_staff"
           },
           {
-            "item": "rime_charm"
+            "item": "hunters_snare"
           }
         ]
       }
@@ -538,7 +499,7 @@
             "item": "rusted_cleaver"
           },
           {
-            "item": "oak_buckler"
+            "item": "mudbrick_wall"
           }
         ]
       },
@@ -547,13 +508,13 @@
         "row": "front",
         "items": [
           {
-            "item": "hearth_knife"
+            "item": "hatchet"
           },
           {
-            "item": "whetstone"
+            "item": "reapers_sickle"
           },
           {
-            "item": "salt_ward"
+            "item": "smokeglass_vial"
           }
         ]
       },
@@ -562,10 +523,10 @@
         "row": "back",
         "items": [
           {
-            "item": "blackthorn_bow"
+            "item": "birch_shortbow"
           },
           {
-            "item": "bone_sling"
+            "item": "flint_arrows"
           }
         ]
       },
@@ -574,7 +535,7 @@
         "row": "back",
         "items": [
           {
-            "item": "old_lantern"
+            "item": "menders_satchel"
           },
           {
             "item": "hearth_stew"
@@ -610,7 +571,7 @@
             "item": "longspear"
           },
           {
-            "item": "iron_pot_lid"
+            "item": "mudbrick_wall"
           }
         ]
       },
@@ -619,13 +580,13 @@
         "row": "back",
         "items": [
           {
-            "item": "peat_poultice"
+            "item": "hearth_stew"
           },
           {
-            "item": "chalk_circle"
+            "item": "mudbrick_wall"
           },
           {
-            "item": "hobnail_boots"
+            "item": "stormglass_arrowheads"
           }
         ]
       },
@@ -634,13 +595,10 @@
         "row": "back",
         "items": [
           {
-            "item": "slate_tablet"
+            "item": "hexbinders_rod"
           },
           {
-            "item": "thorn_darts"
-          },
-          {
-            "item": "soot_bomb"
+            "item": "smokeglass_vial"
           }
         ]
       }
@@ -667,16 +625,16 @@
         "row": "front",
         "items": [
           {
-            "item": "soot_bomb"
+            "item": "smokeglass_vial"
           },
           {
-            "item": "trick_coin"
+            "item": "clockwork_owl"
           },
           {
             "item": "twinfang_stilettos"
           },
           {
-            "item": "iron_pot_lid"
+            "item": "mudbrick_wall"
           }
         ]
       },

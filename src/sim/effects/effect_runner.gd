@@ -49,6 +49,18 @@ static func run_event(sim: CombatSim, item: ItemState, sourced: SourcedEffect, u
 	_run(sim, item, sourced, hit)
 
 
+## One queued strike of a multi-strike effect (see EffectDef.hits): aimed
+## again now, a hit like the first (it can crit and set off on_hit).
+static func strike(sim: CombatSim, item: ItemState, sourced: SourcedEffect) -> void:
+	var holder: UnitState = sim.owner_of(item)
+	if holder == null or not holder.is_standing():
+		return
+	var source: EffectSource = _source(sim, item, sourced)
+	var own: bool = sourced.infusion_id.is_empty() and sourced.granted_by.is_empty()
+	for target: UnitState in Targeting.pick(sourced.effect.target, holder, null, sim):
+		_hit(sim, item, source, target, sourced.take_amount(), true, own)
+
+
 static func _fire_once(sim: CombatSim, item: ItemState, note: String) -> void:
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.FIRE, _source(sim, item, null))
 	entry.note = note
@@ -70,6 +82,11 @@ static func _run(sim: CombatSim, item: ItemState, sourced: SourcedEffect, hit: H
 	# Only the item's own effects produce output that essences convert
 	# (not its infusion's, and not relic grants).
 	var own: bool = sourced.infusion_id.is_empty() and sourced.granted_by.is_empty()
+	# A multi-strike damage effect lands its first strike now and queues the
+	# rest (CombatSim.pending_strikes), each aimed again when it lands.
+	if effect.type == EffectDef.Type.DAMAGE and effect.hits > 1 and hit == null:
+		for strike: int in range(1, effect.hits):
+			sim.queue_strike(item, sourced, sim.tick + strike * effect.hit_interval_ticks)
 	for target: UnitState in Targeting.pick(effect.target, sim.owner_of(item), hit_target, sim):
 		var amount: int = sourced.take_amount()
 		match effect.type:

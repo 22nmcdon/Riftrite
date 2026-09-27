@@ -355,9 +355,9 @@ static func _fill_shop(state: RunState, content: ContentDb, run: RunContent) -> 
 		return shop.fits(def) and (not shop.partners or partners.has(def.id))
 	var offered: Array[String] = []
 	for i: int in shop.count if shop.count > 0 else economy.shop_items:
-		var item_id: String = _pick_item(state, content, rng, economy.rarity_weights, false, offered, fits)
+		var item_id: String = _pick_item(state, content, rng, economy.rarity_weights, false, offered, fits, false)
 		if item_id.is_empty():
-			item_id = _pick_item(state, content, rng, economy.rarity_weights, false, offered)
+			item_id = _pick_item(state, content, rng, economy.rarity_weights, false, offered, Callable(), false)
 		if item_id.is_empty():
 			break
 		offered.append(item_id)
@@ -371,8 +371,8 @@ static func _fill_shop(state: RunState, content: ContentDb, run: RunContent) -> 
 
 
 ## The Synergy Peddler's wares: items that would complete a synergy with what
-## the guild holds (a pair's missing half, a signature item for a hero in the
-## team, an item that transforms with an essence held), minus items held.
+## the guild holds (a pair's missing half, an item that transforms with an
+## essence held) and the team's own hero Epics, minus items held.
 static func partner_items(state: RunState, content: ContentDb) -> Array[String]:
 	var held: Array[String] = []
 	var essences: Array[String] = state.pouch.duplicate()
@@ -388,12 +388,12 @@ static func partner_items(state: RunState, content: ContentDb) -> Array[String]:
 				for i: int in 2:
 					if held.has(synergy.items[i]):
 						wanted.append(synergy.items[1 - i])
-			SynergyDef.Layer.SIGNATURE:
-				if state.hero(synergy.hero) != null:
-					wanted.append(synergy.items[0])
 			SynergyDef.Layer.TRANSFORMATION:
 				if essences.has(synergy.essence):
 					wanted.append(synergy.items[0])
+	for item_id: String in content.item_ids:
+		if not content.items[item_id].hero.is_empty() and state.hero(content.items[item_id].hero) != null:
+			wanted.append(item_id)
 	var result: Array[String] = []
 	for item_id: String in wanted:
 		if not held.has(item_id) and not result.has(item_id):
@@ -744,7 +744,8 @@ static func team_essence(content: ContentDb, encounter: EncounterDef) -> String:
 ## The reward pick (take one): one drop from the enemy team's items (at
 ## their tier) and relics (not already held), enemy-only ones included; then
 ## reward_pool_items different items from the pool (never enemy-only or
-## Legendary), rarity by `weights`, tier by the act's shop tier odds.
+## Legendary; any hero's Epic after an elite or the boss, else only the
+## team's), rarity by `weights`, tier by the act's shop tier odds.
 static func _add_reward_pick(state: RunState, content: ContentDb, run: RunContent, encounter: EncounterDef, weights: Array[int], rng: SimRng) -> void:
 	var candidates: Array[Dictionary] = []
 	for slot: EncounterDef.Slot in encounter.units:
@@ -760,7 +761,7 @@ static func _add_reward_pick(state: RunState, content: ContentDb, run: RunConten
 		if drop["type"] == "item":
 			picked.append(drop["item"])
 	for i: int in run.economy.reward_pool_items:
-		var item_id: String = _pick_item(state, content, rng, weights, false, picked)
+		var item_id: String = _pick_item(state, content, rng, weights, false, picked, Callable(), encounter.kind != "normal")
 		if item_id.is_empty():
 			break
 		picked.append(item_id)
@@ -779,12 +780,16 @@ static func _rarity_only(rarity: String) -> Array[int]:
 ## A random item id: rarity by `weights` (rarities with nothing to offer are
 ## skipped), then any item of that rarity equally. Never a Legendary already
 ## seen (and an offered Legendary counts as seen). Enemy-only items only when
-## `enemy_only_ok`; with `fits` (ItemDef -> bool), only items it accepts.
-static func _pick_item(state: RunState, content: ContentDb, rng: SimRng, weights: Array[int], enemy_only_ok: bool, exclude: Array[String] = [], fits: Callable = Callable()) -> String:
+## `enemy_only_ok`; with `fits` (ItemDef -> bool), only items it accepts. A
+## hero's Epic only for a hero on the team, unless `any_epic` (the Vault,
+## events, Loot, and elite and boss rewards; docs/plans/items-and-clarity.md).
+static func _pick_item(state: RunState, content: ContentDb, rng: SimRng, weights: Array[int], enemy_only_ok: bool, exclude: Array[String] = [], fits: Callable = Callable(), any_epic: bool = true) -> String:
 	var by_rarity: Array[Array] = [[], [], [], [], []]
 	for item_id: String in content.item_ids:
 		var def: ItemDef = content.items[item_id]
 		if (def.enemy_only and not enemy_only_ok) or exclude.has(item_id) or state.legendaries_seen.has(item_id):
+			continue
+		if not any_epic and not def.hero.is_empty() and state.hero(def.hero) == null:
 			continue
 		if fits.is_valid() and not fits.call(def):
 			continue

@@ -64,8 +64,6 @@ static func find_active(sim: CombatSim) -> Array[RelicState]:
 ## The items on `hero` that satisfy an item-layer synergy, or none.
 static func _match_items(synergy: SynergyDef, hero: UnitState) -> Array[ItemState]:
 	var matched: Array[ItemState] = []
-	if synergy.layer == SynergyDef.Layer.SIGNATURE and hero.id != synergy.hero:
-		return matched
 	for item_id: String in synergy.items:
 		var found: ItemState = null
 		for item: ItemState in hero.loadout_items():

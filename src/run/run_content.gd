@@ -129,8 +129,8 @@ func _check(content: ContentDb) -> void:
 		errors.append("%s: the node pool needs at least %d stops that aren't shops (node_choices)" % [NODES_FILE, economy.node_choices - 1])
 
 
-## Every kit names a known keyword, a known essence, and an item with that
-## keyword that the shops could sell (no Legendaries, no enemy-only items),
+## Every kit names a known keyword, a known essence, and a shared item with
+## that keyword (no Legendaries, enemy-only items, or hero Epics),
 ## and there are enough kits for the start's offer.
 func _check_kits(content: ContentDb) -> void:
 	for kit: EconomyDef.Kit in economy.kits:
@@ -144,8 +144,8 @@ func _check_kits(content: ContentDb) -> void:
 			errors.append("%s: unknown item \"%s\"" % [where, kit.item])
 		elif not item.keywords.has(kit.keyword):
 			errors.append("%s: %s doesn't have the %s keyword" % [where, kit.item, kit.keyword])
-		elif item.rarity == "legendary" or item.enemy_only:
-			errors.append("%s: %s can't be in a kit (no Legendaries or enemy-only items)" % [where, kit.item])
+		elif item.rarity == "legendary" or item.enemy_only or not item.hero.is_empty():
+			errors.append("%s: %s can't be in a kit (no Legendaries, enemy-only items, or hero Epics)" % [where, kit.item])
 	if economy.kits.size() < economy.kit_offers:
 		errors.append("%s: needs at least %d kits (kit_offers)" % [ECONOMY_FILE, economy.kit_offers])
 

@@ -23,6 +23,13 @@ extends RefCounted
 ## (Synergies.find_active) and relics' and synergies' on_fight_start effects
 ## run.
 
+## A strike waiting to land (see queue_strike).
+class PendingStrike:
+	var tick: int
+	var item: ItemState
+	var sourced: SourcedEffect
+
+
 var content: ContentDb
 var tuning: TuningDef
 var setup: FightSetup
@@ -42,6 +49,8 @@ var synergies: Array[RelicState] = []
 ## are the only boosts a relic's own flat numbers get.
 var side_boosts: Array[ItemAura] = [ItemAura.new(), ItemAura.new()]
 var finished: bool = false
+## Later strikes of multi-strike effects (EffectDef.hits), in queue order.
+var pending_strikes: Array[PendingStrike] = []
 ## Ticks where some aura's window opens or closes (lookup only).
 var _aura_boundaries: Dictionary[int, bool] = {}
 ## Log entries before this index have been counted for deeds.
@@ -168,6 +177,7 @@ func step() -> void:
 	_apply_collapse()
 	Statuses.tick_all(self)
 
+	_land_strikes()
 	var ready: Array[ItemState] = []
 	for unit: UnitState in units:
 		if not unit.alive:
@@ -195,6 +205,30 @@ func step() -> void:
 
 	_process_deaths()
 	_check_end()
+
+
+## Queues one later strike of a multi-strike effect (EffectDef.hits) for
+## `at_tick`. Strikes land in the order queued.
+func queue_strike(item: ItemState, sourced: SourcedEffect, at_tick: int) -> void:
+	var strike := PendingStrike.new()
+	strike.tick = at_tick
+	strike.item = item
+	strike.sourced = sourced
+	pending_strikes.append(strike)
+
+
+## Lands the strikes due this tick, in the order they were queued.
+func _land_strikes() -> void:
+	var due: Array[PendingStrike] = []
+	var later: Array[PendingStrike] = []
+	for strike: PendingStrike in pending_strikes:
+		if strike.tick <= tick:
+			due.append(strike)
+		else:
+			later.append(strike)
+	pending_strikes = later
+	for strike: PendingStrike in due:
+		EffectRunner.strike(self, strike.item, strike.sourced)
 
 
 ## Recomputes every unit's stats and every item's derived values from the

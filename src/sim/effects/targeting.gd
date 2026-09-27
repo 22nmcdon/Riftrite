@@ -7,6 +7,8 @@ extends RefCounted
 ##   enemy_back:  items that reach the back row; the front row once the back is empty.
 ##   Within a row: the unit directly across (same column), else the nearest
 ##   one, with ties going to the left.
+##   enemy_front_row / enemy_back_row: every standing enemy in that row, or
+##   in the other row once that one is empty.
 
 
 static func pick(target: EffectDef.Target, source: UnitState, hit_target: UnitState, sim: CombatSim) -> Array[UnitState]:
@@ -32,6 +34,10 @@ static func _pick(target: EffectDef.Target, allies: Array[UnitState], foes: Arra
 			return _standing(allies)
 		EffectDef.Target.ROW_ALLIES:
 			return row_allies(source, allies)
+		EffectDef.Target.ENEMY_FRONT_ROW:
+			return _whole_row(foes, UnitSetup.Row.FRONT)
+		EffectDef.Target.ENEMY_BACK_ROW:
+			return _whole_row(foes, UnitSetup.Row.BACK)
 		EffectDef.Target.HIT_TARGET, EffectDef.Target.TRIGGER_ALLY:
 			picked = hit_target
 		EffectDef.Target.SELF:
@@ -65,6 +71,18 @@ static func row_allies(source: UnitState, allies: Array[UnitState]) -> Array[Uni
 		if ally != source and ally.row == source.row and ally.is_standing():
 			result.append(ally)
 	return result
+
+
+## Every standing unit in `row`, or in the other row if `row` is empty.
+static func _whole_row(units: Array[UnitState], row: UnitSetup.Row) -> Array[UnitState]:
+	for wanted: UnitSetup.Row in [row, UnitSetup.Row.BACK if row == UnitSetup.Row.FRONT else UnitSetup.Row.FRONT]:
+		var result: Array[UnitState] = []
+		for unit: UnitState in units:
+			if unit.row == wanted and unit.is_standing():
+				result.append(unit)
+		if not result.is_empty():
+			return result
+	return [] as Array[UnitState]
 
 
 static func _standing(units: Array[UnitState]) -> Array[UnitState]:

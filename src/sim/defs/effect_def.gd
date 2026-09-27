@@ -81,6 +81,8 @@ enum Target {
 	ALL_ALLIES,
 	ROW_ALLIES,
 	TRIGGER_ALLY,
+	ENEMY_FRONT_ROW,
+	ENEMY_BACK_ROW,
 }
 
 const TRIGGER_NAMES: Array[String] = [
@@ -118,6 +120,8 @@ const TARGET_NAMES: Array[String] = [
 	"all_allies",
 	"row_allies",
 	"trigger_ally",
+	"enemy_front_row",
+	"enemy_back_row",
 ]
 
 var trigger: Trigger
@@ -147,6 +151,12 @@ var every: int = 1
 var keyword: String = ""
 ## on_status: only these statuses (empty = any).
 var statuses: Array[String] = []
+## An on_fire damage effect can land several strikes (docs/plans/items-and-
+## clarity.md, section 1): the first when the item fires, then one every
+## hit_interval_ticks. Each strike picks its target again and is a hit (it
+## can crit and set off on_hit effects).
+var hits: int = 1
+var hit_interval_ticks: int = 0
 
 
 ## `relic`: read a relic's effect (relic triggers and targets, flat numbers).
@@ -185,6 +195,11 @@ static func read(reader: DataReader, relic: bool = false, ability: bool = false)
 				def.amount = reader.req_ticks("amount_ms", FixedMath.MS_PER_TICK)
 			Type.CLEANSE:
 				def.amount = reader.req_int("amount_bp", 1, FixedMath.BP_ONE)
+		if reader.has("hits"):
+			def.hits = reader.req_int("hits", 1, 12)
+			def.hit_interval_ticks = reader.req_ticks("hit_interval_ms", FixedMath.MS_PER_TICK)
+			if def.type != Type.DAMAGE:
+				reader.error("only damage effects can land several \"hits\"")
 		if reader.has("scaling"):
 			if def.amount_bp_of_damage > 0:
 				reader.error("\"scaling\" can't be combined with amount_bp_of_damage")
@@ -193,6 +208,8 @@ static func read(reader: DataReader, relic: bool = false, ability: bool = false)
 	read_window(reader, def)
 	if not trigger_name.is_empty():
 		_read_trigger_fields(def, reader, relic, ability)
+	if def.hits > 1 and not trigger_name.is_empty() and def.trigger != Trigger.ON_FIRE:
+		reader.error("several \"hits\" only work on on_fire effects")
 
 	# "hit_target" and damage-based shields need a hit to refer to.
 	var needs_hit: bool = def.target == Target.HIT_TARGET or def.amount_bp_of_damage > 0
