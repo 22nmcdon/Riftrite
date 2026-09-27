@@ -54,9 +54,9 @@ func test_phases_read_and_reject() -> void:
 	assert_eq([(good[0] as PhaseDef).below_hp_bp, (good[0] as PhaseDef).parts[0].label], [6000, "Molt"])
 	_assert_error(_phase({"name": "Empty", "below_hp_bp": 5000})[1], "a phase needs parts")
 	_assert_error(_phase({"name": "X", "below_hp_bp": 5000, "parts": [{"key": "b", "kind": "backup", "backup": {"cooldown_ms": 1000, "effects": K.damage(1)}}]})[1],
-		"a phase can't have a backup part")
+		"kind: unknown value \"backup\"")
 	_assert_error(_phase({"name": "X", "below_hp_bp": 5000, "parts": [
-		{"key": "a", "kind": "aura", "when": "always", "target": "holder", "stat": "def_bp", "value": 11000}]})[1], "phase parts always apply on the field")
+		{"key": "a", "kind": "aura", "when": "always", "target": "holder", "stat": "def_bp", "value": 11000}]})[1], "unknown key \"when\"")
 	_assert_error(_phase({"name": "X", "below_hp_bp": 0, "parts": []})[1], "below_hp_bp: 0 is out of range")
 
 

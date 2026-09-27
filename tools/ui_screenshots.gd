@@ -31,6 +31,9 @@ func _run() -> void:
 	session.new_run(session.next_seed())
 	await _snap("run_start_hero")
 	session.pick_start_hero(0)
+	await _snap("run_start_hero_2")
+	session.pick_start_hero(0)
+	session.pick_start_hero(0)
 	session.pick_package(0)
 	await _snap("caravan")
 	for i: int in 2:

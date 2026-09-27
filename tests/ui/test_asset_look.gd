@@ -45,20 +45,15 @@ func test_gem_forms() -> void:
 	assert_eq(InfusionLook.form(_content, "tallow_torch", ["frost"] as Array[String], ["wildfire_torch"] as Array[String]), F.SINGLE, "only with its essence")
 
 
-func test_only_resonant_infusions_spill() -> void:
+## Neighbor spill is gone and keyword spill comes with the infusion rework,
+## so no tile shows spill arrows for now.
+func test_no_infusion_shows_spill_arrows_yet() -> void:
 	var F := Glyph.Infusion
-	var R := Infusions.Level.RESONANT
-	var ember: Color = UiStyle.ESSENCE["ember"]
-	var one: Array[String] = ["ember"]
-	assert_eq(InfusionLook.spill_colors(F.SINGLE, one, Infusions.Level.ATTUNED), [] as Array[Color])
-	assert_eq(InfusionLook.spill_colors(F.SINGLE, one, R), [ember, ember] as Array[Color], "a single: both sides")
-	assert_eq(InfusionLook.spill_colors(F.PURE, ["ember", "ember"] as Array[String], R), [ember, ember] as Array[Color], "a pure double: the same as a single")
-	assert_eq(InfusionLook.spill_colors(F.ALLOY, ["frost", "storm"] as Array[String], R), [UiStyle.ESSENCE["frost"], UiStyle.ESSENCE["storm"]] as Array[Color], "an alloy: first left, second right")
-	assert_eq(InfusionLook.spill_colors(F.TRANSFORMATION, one, R), [] as Array[Color], "a transformation never spills")
-	assert_true(InfusionLook.shows_no_spill(F.TRANSFORMATION, R))
-	assert_false(InfusionLook.shows_no_spill(F.TRANSFORMATION, Infusions.Level.BASE))
-	assert_false(InfusionLook.shows_no_spill(F.SINGLE, R))
-	assert_eq(InfusionLook.level(_content, one, _content.tuning.xp_to_resonant), R)
+	var R: int = Infusions.Level.RESONANT
+	for form: Glyph.Infusion in [F.SINGLE, F.PURE, F.ALLOY, F.TRANSFORMATION]:
+		assert_eq(InfusionLook.spill_colors(form, ["frost", "storm"] as Array[String], R), [] as Array[Color])
+		assert_false(InfusionLook.shows_no_spill(form, R))
+	assert_eq(InfusionLook.level(_content, ["ember"] as Array[String], _content.tuning.xp_to_resonant), R)
 	assert_eq(InfusionLook.level(_content, E, 9999), Infusions.Level.BASE, "no infusion, no level")
 
 
@@ -75,7 +70,7 @@ func test_tiles_carry_the_ladder_the_rift_bleed_and_arrows() -> void:
 	var plain: FrameDecor = _decor(_tile(main, knife.uid))
 	assert_eq([plain.ornament, plain.cracks, plain.spill], [ItemDef.RARITIES.find(_content.items["hearth_knife"].rarity), false, [] as Array[Color]])
 	var resonant: FrameDecor = _decor(_tile(main, daggers.uid))
-	assert_eq(resonant.spill, [UiStyle.ESSENCE["ember"], UiStyle.ESSENCE["ember"]] as Array[Color])
+	assert_eq(resonant.spill, [] as Array[Color], "no spill arrows for now")
 	assert_true(_decor(_tile(main, bond.uid)).cracks, "enemy-only items carry the rift bleed")
 	var gems: Array[Node] = U.find_all(_tile(main, daggers.uid), Glyph).filter(func(g: Glyph) -> bool: return g.shape == Glyph.Shape.INFUSION)
 	assert_eq(gems.size(), 1, "one socket, one gem")
@@ -111,17 +106,17 @@ func test_drop_zones_check_room() -> void:
 	var session: RunSession = U.at_caravan()
 	var state: RunState = session.state
 	var hero: RunHero = state.heroes[0]
-	while hero.used_slots(_content) < hero.slots():
+	while hero.used_for(_content, ItemDef.Slot.ABILITY) < hero.slots_for(_content, ItemDef.Slot.ABILITY):
 		hero.items.append(RunItem.make(state.take_uid(), "hearth_knife"))
 	var extra := RunItem.make(state.take_uid(), "hearth_knife")
 	state.stash.append(extra)
 	session.open_hero_id = hero.hero_id
 	var main: Main = _main(session)
 	var zones: Array[Node] = U.find_all(main, DropZone)
-	var slot_zone: DropZone = zones.filter(func(z: DropZone) -> bool: return U.text_of(z).contains("free slot"))[0]
+	var slot_zone: DropZone = zones.filter(func(z: DropZone) -> bool: return U.text_of(z).contains(" free"))[0]
 	var stash_zone: DropZone = zones.filter(func(z: DropZone) -> bool: return U.text_of(z).contains("stash"))[0]
 	var sell_zone: DropZone = zones.filter(func(z: DropZone) -> bool: return U.text_of(z).contains("sell"))[0]
-	assert_false(slot_zone._can_drop_data(Vector2.ZERO, {"uid": extra.uid}), "the hero's row is full")
+	assert_false(slot_zone._can_drop_data(Vector2.ZERO, {"uid": extra.uid}), "the ability slots are full, and a passive slot won't take an ability")
 	assert_true(stash_zone._can_drop_data(Vector2.ZERO, {"uid": hero.items[0].uid}))
 	assert_true(sell_zone._can_drop_data(Vector2.ZERO, {"uid": extra.uid}))
 	assert_eq(state.stash, [extra] as Array[RunItem], "nothing moved")

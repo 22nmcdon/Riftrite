@@ -26,10 +26,10 @@ func _crit_aura(filter: Dictionary) -> Array:
 	return [{"target": "all_items", "filter": filter, "stat": "crit_chance_bp", "value": 1000}]
 
 
-## The unit's row items' crit chances, left to right.
+## The unit's loadout items' crit chances, in order.
 func _row_crits(sim: CombatSim, unit_id: String) -> Array[int]:
 	var crits: Array[int] = []
-	for item: ItemState in sim.unit_by_id(unit_id).row_items():
+	for item: ItemState in sim.unit_by_id(unit_id).loadout_items():
 		crits.append(item.crit_chance_bp)
 	return crits
 
@@ -81,7 +81,7 @@ func test_rejects_empty_relic() -> void:
 
 
 func test_rejects_targets_that_need_a_holder() -> void:
-	for target: String in ["self", "linked_ally", "row_allies"]:
+	for target: String in ["self", "row_allies"]:
 		var errors: Array[String] = _read({"effects": [{"trigger": "on_fight_start", "type": "shield", "amount": 5, "target": target}]})[1]
 		_assert_error(errors, "\"%s\" needs a spot on the field, so a relic can't use it" % target)
 
@@ -161,7 +161,7 @@ func test_heroes_cant_hold_enemy_only_relics_from_content() -> void:
 
 func test_fight_setup_checks_relics() -> void:
 	var knot: RelicDef = K.relic("setup_knot", {"auras": _crit_aura({"tag": "weapon"})})
-	var setup := FightSetup.make([K.dummy("a", 100)] as Array[UnitSetup], [K.dummy("b", 100)] as Array[UnitSetup], 1, 1, [] as Array[UnitSetup], ["missing_relic", knot.id, knot.id] as Array[String])
+	var setup := FightSetup.make([K.dummy("a", 100)] as Array[UnitSetup], [K.dummy("b", 100)] as Array[UnitSetup], 1, 1, ["missing_relic", knot.id, knot.id] as Array[String])
 	var errors: Array[String] = setup.validate(K.relic_content())
 	_assert_error(errors, "guild relic \"missing_relic\" doesn't exist")
 	_assert_error(errors, "guild relic \"setup_knot\" is held twice")
@@ -170,22 +170,22 @@ func test_fight_setup_checks_relics() -> void:
 # --- auras and filters --------------------------------------------------------
 
 func test_item_filters() -> void:
-	var sword: ItemDef = K.item("f_sword", {"tags": ["weapon"], "size": 2})
-	var charm: ItemDef = K.item("f_charm", {"tags": ["charm"]})
+	var sword: ItemDef = K.item("f_sword", {"tags": ["weapon"]})
+	var charm: ItemDef = K.item("f_charm", {"tags": ["charm"], "slot": "passive", "effects": null, "auras": [{"target": "holder", "stat": "def_bp", "value": 10000}]})
 	var brand: ItemDef = K.item("f_brand", {"effects": [{"trigger": "on_fire", "type": "apply_status", "status": "burn", "stacks": 1, "target": "enemy_front"}]})
 	var heroes: Array[UnitSetup] = [K.unit("a", 100, FRONT, [sword, charm, brand, K.equip(K.item("f_plain"), ["ember"] as Array[String]), K.equip(K.item("f_cold"), ["frost"] as Array[String])])]
 	var cases: Dictionary = {
 		"tag": [{"tag": "weapon"}, [1000, 0, 0, 0, 0]],
-		"size": [{"size": 1}, [0, 1000, 1000, 1000, 1000]],
+		"slot": [{"slot": "passive"}, [0, 1000, 0, 0, 0]],
 		"applies": [{"applies": "burn"}, [0, 0, 1000, 1000, 0]],
 		"essence": [{"essence": "frost"}, [0, 0, 0, 0, 1000]],
 		"item": [{"item": "f_charm"}, [0, 1000, 0, 0, 0]],
 	}
-	for label: String in ["tag", "size", "applies", "essence", "item"]:
+	for label: String in ["tag", "slot", "applies", "essence", "item"]:
 		var relic: RelicDef = K.relic("filter_%s" % label, {"auras": _crit_aura(cases[label][0])})
 		var sim: CombatSim = K.relic_sim(heroes, [K.dummy("b", 100)], [relic])
 		assert_eq(_row_crits(sim, "a"), cases[label][1] as Array[int], "filter by %s" % label)
-		assert_eq(_basic_crit(sim, "a"), 0, "the basic attack has no tags, size, or infusion")
+		assert_eq(_basic_crit(sim, "a"), 0, "the built-in basic attack has no tags, slot, or infusion")
 
 
 func test_unfiltered_all_items_reaches_the_basic_attack_too() -> void:
@@ -213,14 +213,6 @@ func test_real_heroes_carry_their_class() -> void:
 	var content: ContentDb = K.content()
 	var brannoc: UnitSetup = SetupBuilder.hero(content, "brannoc", 0, FRONT, [])
 	assert_eq(brannoc.unit_class, "warden")
-
-
-func test_relic_auras_reach_backup_heroes() -> void:
-	var benched: UnitSetup = K.unit("vell", 100, BACK)
-	benched.backup = K.backup({"cooldown_ms": 3000, "effects": [{"trigger": "on_fire", "type": "heal", "amount": 5, "target": "all_allies"}]})
-	var relic: RelicDef = K.relic("bench_crit", {"auras": [{"target": "all_items", "stat": "crit_chance_bp", "value": 1000}]})
-	var sim: CombatSim = K.relic_sim([K.unit("a", 100)], [K.dummy("b", 100)], [relic], [], [benched])
-	assert_eq(sim.bench[0].items[0].crit_chance_bp, 1000)
 
 
 func test_relic_auras_are_logged() -> void:
@@ -253,12 +245,12 @@ func test_only_side_wide_boosts_reach_relic_numbers() -> void:
 	assert_eq(shields[0].amount, 60, "40 x1.5 from the unfiltered aura; the weapon-only one doesn't apply")
 	assert_eq(shields[0].to_text(), "[0.00s] relic · Start Wall gives a 60 shield")
 	# The item's own shield still gets its tier (S x3) and the side-wide boost.
-	assert_eq(sim.unit_by_id("a").row_items()[0].effects[0].final_amount(), 45)
+	assert_eq(sim.unit_by_id("a").loadout_items()[0].effects[0].final_amount(), 45)
 
 
 func test_item_auras_over_everything_also_boost_relics() -> void:
 	var wall: RelicDef = K.relic("start_wall_2", {"effects": [{"trigger": "on_fight_start", "type": "shield", "amount": 40, "target": "all_allies"}]})
-	var banner: ItemDef = K.item("s_banner", {"effects": [], "auras": [{"target": "all_items", "stat": "shield_bp", "value": 15000}]})
+	var banner: ItemDef = K.item("s_banner", {"slot": "passive", "effects": null, "auras": [{"target": "all_items", "stat": "shield_bp", "value": 15000}]})
 	var sim: CombatSim = K.relic_sim([K.unit("a", 100, FRONT, [banner])], [K.dummy("b", 100)], [wall])
 	assert_eq(_relic_entries(sim, LogEntry.Kind.SHIELD, "start_wall_2")[0].amount, 60)
 
@@ -285,12 +277,12 @@ func test_grants_add_a_flat_effect_to_matching_items() -> void:
 func test_grants_get_side_wide_boosts_only() -> void:
 	var crown: RelicDef = K.relic("boost_crown", {"grants": [{"effect": {"trigger": "on_fire", "type": "damage", "amount": 10, "target": "enemy_front"}}]})
 	var all_damage: RelicDef = K.relic("all_damage", {"auras": [{"target": "all_items", "stat": "damage_bp", "value": 15000}]})
-	var weapon_damage: RelicDef = K.relic("weapon_damage", {"auras": [{"target": "all_items", "filter": {"size": 1}, "stat": "damage_bp", "value": 20000}]})
+	var weapon_damage: RelicDef = K.relic("weapon_damage", {"auras": [{"target": "all_items", "filter": {"slot": "ability"}, "stat": "damage_bp", "value": 20000}]})
 	var sim: CombatSim = K.relic_sim([K.unit("a", 100, FRONT, [K.equip(K.item("g_small"), [], 2)])], [K.dummy("b", 100)], [crown, all_damage, weapon_damage])
-	var small: ItemState = sim.unit_by_id("a").row_items()[0]
+	var small: ItemState = sim.unit_by_id("a").loadout_items()[0]
 	var granted: SourcedEffect = small.effects[1]
 	assert_eq(granted.granted_by, "Boost Crown")
-	assert_eq(granted.final_amount(), 15, "10 x1.5 (side-wide); not the tier or the size-filtered aura")
+	assert_eq(granted.final_amount(), 15, "10 x1.5 (side-wide); not the tier or the slot-filtered aura")
 	assert_eq(small.effects[0].final_amount(), 60, "the item's own damage: 10 x2 tier A x1.5 x2")
 	assert_true(small.describe_values()[1].begins_with("damage (Boost Crown):"))
 
@@ -388,7 +380,7 @@ func test_relic_fights_are_deterministic() -> void:
 			entry.item_id = item_id
 			entries.append(entry)
 			party.append(SetupBuilder.hero(K.content(), hero_id, 0, FRONT if hero_id != "odo" else BACK, entries))
-		setups.append(FightSetup.make(party, SetupBuilder.encounter_units(K.content(), "witch_coven"), 3, 1, [] as Array[UnitSetup], relics, SetupBuilder.encounter_relics(K.content(), "witch_coven")))
+		setups.append(FightSetup.make(party, SetupBuilder.encounter_units(K.content(), "witch_coven"), 3, 1, relics, SetupBuilder.encounter_relics(K.content(), "witch_coven")))
 	var first: FightResult = CombatSim.run(setups[0], K.content())
 	var second: FightResult = CombatSim.run(setups[1], K.content())
 	assert_eq(first.errors, [] as Array[String])

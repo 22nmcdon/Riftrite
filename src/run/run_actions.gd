@@ -31,14 +31,15 @@ static func _fail(error: String) -> Result:
 
 # --- items --------------------------------------------------------------------
 
-## Moves an item to a hero's row (by hero id) or the stash (RunState.STASH),
-## at `index` (clamped). Works within one list too.
+## Moves an item to a hero's loadout (by hero id) or the stash
+## (RunState.STASH), at `index` (clamped). Works within one list too. A hero
+## takes it only into a free slot of its type (basic attack, ability, passive).
 static func move_item(state: RunState, content: ContentDb, uid: int, to: String, index: int) -> Result:
 	var from_owner: String = state.owner_of(uid)
 	if from_owner == RunState.NOWHERE:
 		return _fail("that item isn't in the guild")
 	if not state.is_owner(to):
-		return _fail("no hero \"%s\" in the roster" % to)
+		return _fail("no hero \"%s\" in the team" % to)
 	var source: Array[RunItem] = state.list_for(from_owner)
 	var destination: Array[RunItem] = state.list_for(to)
 	var item: RunItem = state.find_item(uid)
@@ -53,23 +54,14 @@ static func move_item(state: RunState, content: ContentDb, uid: int, to: String,
 	return _ok("moved %s to %s" % [_name(content, item), "the stash" if to == RunState.STASH else to])
 
 
-## Why `owner`'s list breaks a rule after a change (space, one auto-attack
-## item), or "".
+## Why `owner`'s list breaks a rule after a change (room in the stash, free
+## slots of each type), or "".
 static func _room_problem(state: RunState, content: ContentDb, owner: String) -> String:
 	if owner == RunState.STASH:
-		if state.stash_used(content) > content.tuning.stash_slots:
-			return "the stash has no room for that (%d slots)" % content.tuning.stash_slots
+		if state.stash.size() > content.tuning.stash_slots:
+			return "the stash has no room for that (%d items)" % content.tuning.stash_slots
 		return ""
-	var target: RunHero = state.hero(owner)
-	if target.used_slots(content) > target.slots():
-		return "%s has no room for that (%d slots)" % [owner, target.slots()]
-	var auto_attacks: int = 0
-	for item: RunItem in target.items:
-		if content.items[item.item_id].auto_attack:
-			auto_attacks += 1
-	if auto_attacks > 1:
-		return "%s can hold only one auto-attack item" % owner
-	return ""
+	return state.hero(owner).slot_problem(content)
 
 
 ## Throws an item away (any time; selling is only at the Caravan).
@@ -89,7 +81,7 @@ static func add_item(state: RunState, content: ContentDb, item_id: String, tier:
 	var def: ItemDef = content.items[item_id]
 	if def.legendary != null and _holds(state, item_id):
 		return _fail("the guild already holds %s" % def.name)
-	if state.stash_used(content) + def.size > content.tuning.stash_slots:
+	if state.stash.size() >= content.tuning.stash_slots:
 		return _fail("the stash has no room for %s" % def.name)
 	var item: RunItem = RunItem.make(state.take_uid(), item_id, def.legendary.start_tier if def.legendary != null else clampi(tier, 0, 3))
 	state.stash.append(item)
@@ -238,30 +230,18 @@ static func _holds(state: RunState, item_id: String) -> bool:
 
 # --- heroes -------------------------------------------------------------------
 
-## A hero joins: from the Caravan, the run start, or a reward. The same hero
-## at the same rank combines (rank +1; the one you have keeps their
-## specialization and items); a different rank is refused. A new hero joins
-## fielded (the first in front, later ones in the back row) if fewer than 5
-## are, else benched. A hero at B or above without `specialization_id` must
-## pick one.
+## A hero joins the team (the draft at the run's start). Refused when the
+## team is full or they're already in it. A hero joining at B or above
+## without `specialization_id` must pick one. The first stands in front,
+## later ones behind.
 static func add_hero(state: RunState, content: ContentDb, hero_id: String, rank: int = 0, specialization_id: String = "") -> Result:
 	if not content.heroes.has(hero_id):
 		return _fail("unknown hero \"%s\"" % hero_id)
 	var name: String = content.heroes[hero_id].name
-	var existing: RunHero = state.hero(hero_id)
-	if existing != null:
-		if existing.rank != rank:
-			return _fail("%s is already in the guild at another rank" % name)
-		if existing.rank >= 3:
-			return _fail("%s is already rank S" % name)
-		existing.rank += 1
-		if existing.rank == 1 and existing.specialization_id.is_empty():
-			existing.needs_specialization = true
-		var ranked: Result = _ok("%s ranks up to %s" % [name, TuningDef.TIER_LABELS[existing.rank]])
-		ranked.notes = RunLegendary.on_rank_up(state, content, existing)
-		return ranked
-	if state.heroes.size() >= FightSetup.ROSTER_CAP:
-		return _fail("the roster is full (%d)" % FightSetup.ROSTER_CAP)
+	if state.hero(hero_id) != null:
+		return _fail("%s is already in the team" % name)
+	if state.heroes.size() >= RunState.TEAM_SIZE:
+		return _fail("the team is full (%d)" % RunState.TEAM_SIZE)
 	if not specialization_id.is_empty():
 		var problem: String = _spec_problem(content, hero_id, specialization_id)
 		if not problem.is_empty():
@@ -272,15 +252,32 @@ static func add_hero(state: RunState, content: ContentDb, hero_id: String, rank:
 	joined.specialization_id = specialization_id
 	joined.needs_specialization = joined.rank >= 1 and specialization_id.is_empty()
 	joined.row = UnitSetup.Row.FRONT if state.heroes.is_empty() else UnitSetup.Row.BACK
-	joined.benched = state.fielded_count() >= FightSetup.MAX_FIELDED
 	state.heroes.append(joined)
-	return _ok("%s joins the guild%s" % [name, " in backup" if joined.benched else ""])
+	return _ok("%s joins the team" % name)
+
+
+## Spends a rank-up on a hero (docs/plans/heroes-and-deeds.md: ranks are a
+## resource you hand out). Reaching B without a specialization means picking
+## one. A Bonded Legendary on their loadout grows too.
+static func rank_up(state: RunState, content: ContentDb, hero_id: String) -> Result:
+	var target: RunHero = state.hero(hero_id)
+	if target == null:
+		return _fail("no hero \"%s\" in the team" % hero_id)
+	var name: String = content.heroes[hero_id].name
+	if target.rank >= 3:
+		return _fail("%s is already rank S" % name)
+	target.rank += 1
+	if target.rank == 1 and target.specialization_id.is_empty():
+		target.needs_specialization = true
+	var ranked: Result = _ok("%s ranks up to %s" % [name, TuningDef.TIER_LABELS[target.rank]])
+	ranked.notes = RunLegendary.on_rank_up(state, content, target)
+	return ranked
 
 
 static func choose_specialization(state: RunState, content: ContentDb, hero_id: String, specialization_id: String) -> Result:
 	var target: RunHero = state.hero(hero_id)
 	if target == null:
-		return _fail("no hero \"%s\" in the roster" % hero_id)
+		return _fail("no hero \"%s\" in the team" % hero_id)
 	if not target.needs_specialization:
 		return _fail("%s has no specialization to pick" % hero_id)
 	var problem: String = _spec_problem(content, hero_id, specialization_id)
@@ -299,44 +296,24 @@ static func _spec_problem(content: ContentDb, hero_id: String, specialization_id
 	return ""
 
 
-## Moves a hero to a roster slot. Slot 0 is always a field slot.
+## Moves a hero to a place in the team's order (who stands leftmost in
+## their row).
 static func move_hero(state: RunState, hero_id: String, index: int) -> Result:
 	var target: RunHero = state.hero(hero_id)
 	if target == null:
-		return _fail("no hero \"%s\" in the roster" % hero_id)
+		return _fail("no hero \"%s\" in the team" % hero_id)
 	var to: int = clampi(index, 0, state.heroes.size() - 1)
-	var from: int = state.heroes.find(target)
-	state.heroes.remove_at(from)
+	state.heroes.erase(target)
 	state.heroes.insert(to, target)
-	if state.heroes[0].benched:
-		state.heroes.remove_at(to)
-		state.heroes.insert(from, target)
-		return _fail("the first roster slot is always a field slot")
-	return _ok("moved %s to slot %d" % [hero_id, to + 1])
+	return _ok("moved %s to place %d" % [hero_id, to + 1])
 
 
 static func set_row(state: RunState, hero_id: String, row: UnitSetup.Row) -> Result:
 	var target: RunHero = state.hero(hero_id)
 	if target == null:
-		return _fail("no hero \"%s\" in the roster" % hero_id)
+		return _fail("no hero \"%s\" in the team" % hero_id)
 	target.row = row
 	return _ok("%s moves to the %s row" % [hero_id, EncounterDef.ROW_NAMES[row]])
-
-
-## Puts a hero in a backup slot or a field slot: 1-5 fielded, and slot 0 is
-## always a field slot.
-static func set_benched(state: RunState, hero_id: String, benched: bool) -> Result:
-	var target: RunHero = state.hero(hero_id)
-	if target == null:
-		return _fail("no hero \"%s\" in the roster" % hero_id)
-	if target.benched == benched:
-		return _ok("no change")
-	if benched and state.heroes[0] == target:
-		return _fail("the first roster slot is always a field slot")
-	if not benched and state.fielded_count() >= FightSetup.MAX_FIELDED:
-		return _fail("at most %d heroes can be fielded" % FightSetup.MAX_FIELDED)
-	target.benched = benched
-	return _ok("%s moves to %s" % [hero_id, "backup" if benched else "the field"])
 
 
 # --- gold and relics ----------------------------------------------------------

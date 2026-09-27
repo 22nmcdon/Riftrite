@@ -14,7 +14,7 @@ func _idle() -> ItemDef:
 
 ## An Epic item, so it has two sockets for an alloy or pure double.
 func _big(item_id: String, overrides: Dictionary = {}) -> ItemDef:
-	var data: Dictionary = {"name": item_id.capitalize(), "size": 2, "rarity": "epic", "effects": K.damage(100)}
+	var data: Dictionary = {"name": item_id.capitalize(), "rarity": "epic", "effects": K.damage(100)}
 	data.merge(overrides, true)
 	return K.item(item_id, data)
 
@@ -168,27 +168,3 @@ func test_bloom_echoes_heals_onto_another_ally() -> void:
 	for entry: LogEntry in sim.combat_log.of_kind(LogEntry.Kind.HEAL):
 		heals.append("%s %d [%s]" % [entry.target, entry.amount, entry.source_infusion_name])
 	assert_eq(heals, ["hero 100 [Bloom]", "ally 50 [Bloom echo]"] as Array[String])
-
-
-# --- spill -------------------------------------------------------------------------------
-
-func _row(essences: Array[String]) -> Array:
-	return [K.item("left", {"name": "Left", "effects": K.damage(100)}), _with(_big("mid"), essences, 300), K.item("right", {"name": "Right", "effects": K.damage(100)})]
-
-
-func test_alloy_spills_first_essence_left_and_second_right() -> void:
-	var sim := _sim([_hero(_row(["ember", "storm"] as Array[String]))], [K.dummy("foe", BIG_HP)])
-	assert_eq(sim.units[0].items[3].cooldown_ticks, 18, "right gets Storm: -15% x 0.6 = -9%")
-	assert_eq(sim.units[0].items[1].cooldown_ticks, 20, "left gets no Storm")
-	var result: FightResult = K.run([_hero(_row(["ember", "storm"] as Array[String]))], [K.dummy("foe", BIG_HP)])
-	var left_burn: LogEntry = _applied(result, "burn").filter(func(entry: LogEntry) -> bool: return entry.source_item == "left")[0]
-	assert_eq([left_burn.amount, left_burn.source_infusion_name], [3, "Ember spill from Mid"], "plain Burn: the Plasma special doesn't spill")
-
-
-func test_pure_double_spills_its_essence_both_ways() -> void:
-	var result: FightResult = K.run([_hero(_row(["ember", "ember"] as Array[String]))], [K.dummy("foe", BIG_HP)])
-	var spilled: Array[String] = []
-	for entry: LogEntry in _applied(result, "burn"):
-		if entry.tick == 20:
-			spilled.append("%s %d" % [entry.source_item, entry.amount])
-	assert_eq(spilled, ["left 3", "right 3"] as Array[String], "one Ember spill per side, as plain Burn")

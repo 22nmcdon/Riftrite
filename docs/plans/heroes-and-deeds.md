@@ -191,8 +191,13 @@ Start with rules 1, 2, and 5, which are cheap and don't feel like rubber-banding
 - **Class traits are replaced** by shared affinities and duo bonds. With three heroes from five classes, class traits would rarely trigger.
 - **Backup is removed completely:** the bench, items' backup modes, the "Legendaries must have a backup mode" rule, `benched` specialization parts, and resonance counting backup heroes. Each hero's Backup effect becomes their innate passive. A few of the best backup modes may come back later as passive items.
 
+**Step 1 answers (2026-09-26), built in step 1:**
+- **Rank-ups:** one per **elite** win ("for now; this might change later"). That's 2 per act and 6 per run, which is less than the 9 needed to take everyone to S, so it stays a choice. The boss keeps its Legendary relic choice. The rewards screen offers the rank-up with a button per hero; a hero reaching B picks a specialization.
+- **The 5 aura items** (items whose only job was an aura) became **passives**.
+- **Innates** should be **pretty unique** to each hero. Some reuse a Backup effect, but not all: Brannoc's Hearthguard (shields an ally who drops below 40%), Wren's Opening Flurry (faster basic attacks for the first 6s), Vell's Lantern Vigil (a heal every 5s), Odo's Smoldering Hex (Burn every 6s), Maren's Marking Shot (Bleed on the back row every 6s), Pell's Loaded Dice (Blind every 6s), Hesk's Gatekeeper's Toll (a shield for every ally at the start), and Ysolde's Flashpoint (3 Burn on every enemy at 10s). Their strength is a first pass; the sim shows most contribute 1–3% of hero output, to tune with deeds (step 3).
+- **Old saves may break:** the save version is now 2, and version-1 saves are refused.
+
 **Recommended, waiting on the user's OK:**
-- **Rank-ups:** one per **elite** only. That's 2 per act and 6 per run, which is less than the 9 needed to take everyone to S, so it stays a choice. The boss keeps its Legendary relic choice. In an Act-1-only build, both rank-ups come before the boss, so at least one hero reaches B and picks a specialization.
 - **Specializations:** the parts unlocked at B, A, and S become specialization deed levels 1, 2, and 3. The mid-fight unlock reuses the boss phase system.
 - **Levels:** 3 per track (calling and specialization), so about 2 per act. Level 2 of each track offers a choice of 2 unlocks.
 - **Snowballing:** start with rules 1, 2, and 5, plus the run-bot measurements. Add the catch-up bonus only if the numbers call for it.

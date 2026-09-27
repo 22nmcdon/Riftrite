@@ -102,43 +102,10 @@ func test_xp_without_an_infusion_is_rejected() -> void:
 
 # --- spill ---------------------------------------------------------------------------------
 
-func _row(middle_essence: String, middle_xp: int, middle_xp_per_fire: int = 0) -> Array:
-	return [_blade("left"), _infused(_blade("mid", middle_xp_per_fire), middle_essence, middle_xp), _blade("right")]
-
-
-func test_resonant_single_essence_spills_to_both_neighbors() -> void:
-	var result: FightResult = K.run([_hero(_row("ember", 300))], [K.dummy("foe", BIG_HP)])
-	var first: Array[String] = []
-	for item_id: String in ["left", "mid", "right"]:
-		var entry: LogEntry = _applied(result, item_id)[0]
-		first.append("%s: %d [%s]" % [item_id, entry.amount, entry.source_infusion_name])
-	assert_eq(first, ["left: 3 [Ember spill from Mid]", "mid: 10 [Ember, Resonant]", "right: 3 [Ember spill from Mid]"] as Array[String],
-		"Resonant x2; spill is 30% of that: 5% x 0.6 = 3% of 100")
-
-
-func test_spill_carries_the_same_kind_bonus() -> void:
-	assert_eq(_values(_row("wrath", 300), 1), PackedStringArray(["damage: 130 (base 100, x1.3 Wrath spill from Mid)"]))
-
-
-func test_only_resonant_infusions_spill() -> void:
-	assert_eq(_values(_row("wrath", 299), 1), PackedStringArray(["damage: 100"]))
-
-
-func test_spill_stays_in_the_row_and_skips_the_basic_attack() -> void:
-	var swing: ItemDef = K.basic("swing", {"effects": K.damage(100)})
-	var hero: UnitSetup = K.unit("hero", BIG_HP, FRONT, [_infused(_blade("mid"), "wrath", 300)], swing)
-	var ally: UnitSetup = K.unit("ally", BIG_HP, FRONT, [_blade("other")], _idle())
-	var sim := CombatSim.new(K.fight([hero, ally], [K.dummy("foe", BIG_HP)]), K.content())
-	assert_eq(sim.units[0].items[0].describe_values(), PackedStringArray(["damage: 100"]), "basic attack gets no spill")
-	assert_eq(sim.units[1].items[1].describe_values(), PackedStringArray(["damage: 100"]), "another hero's row gets no spill")
-
-
-func test_reaching_resonant_mid_fight_starts_the_spill() -> void:
-	var result: FightResult = K.run([_hero(_row("ember", 296, 4))], [K.dummy("foe", BIG_HP)])
-	# At 1s: left fires first (no spill yet), then mid reaches Resonant, then right fires with the spill.
-	var at_20: Array[String] = []
-	for entry: LogEntry in result.combat_log.of_kind(LogEntry.Kind.STATUS_APPLIED):
-		if entry.tick == 20:
-			at_20.append("%s [%s]" % [entry.source_item, entry.source_infusion_name])
-	assert_eq(at_20, ["mid [Ember, Attuned]", "right [Ember spill from Mid]"] as Array[String])
-	assert_eq(_applied(result, "left")[0].tick, 40)
+## Neighbor spill went with item rows (docs/plans/fun-redesign.md); keyword
+## spill comes with the infusion rework.
+func test_a_resonant_infusion_doesnt_spill_to_other_items() -> void:
+	var row: Array = [_blade("left"), _infused(_blade("mid"), "ember", 300), _blade("right")]
+	var result: FightResult = K.run([_hero(row)], [K.dummy("foe", BIG_HP)])
+	assert_eq(_applied(result, "mid")[0].source_infusion_name, "Ember, Resonant")
+	assert_eq([_applied(result, "left").size(), _applied(result, "right").size()], [0, 0])

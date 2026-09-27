@@ -3,13 +3,13 @@
     "id": "brannoc_hearthwall",
     "hero": "brannoc",
     "name": "Hearthwall",
-    "_note": "Protector: his wall grows from his neighbors to the whole guild.",
+    "_note": "Protector: his wall grows from his row to the whole guild.",
     "ranks": {
       "b": [
         {
           "key": "wall",
           "kind": "aura",
-          "target": "linked_allies",
+          "target": "row_allies",
           "stat": "def_bp",
           "value": 11500
         }
@@ -115,7 +115,7 @@
             "trigger": "on_hit",
             "type": "charge",
             "amount_ms": 200,
-            "target": "row_items"
+            "target": "holder_items"
           }
         }
       ]
@@ -125,34 +125,31 @@
     "id": "brannoc_last_watch",
     "hero": "brannoc",
     "name": "Last Watch",
-    "_note": "Works only from backup: he watches over the guild from the rear.",
+    "_note": "A watcher: he keeps a steady eye on the guild, then everyone stands firmer, then the line holds late.",
     "ranks": {
       "b": [
         {
           "key": "watch",
-          "kind": "backup",
-          "backup": {
-            "name": "Last Watch",
-            "cooldown_ms": 6000,
-            "effects": [
-              {
-                "trigger": "on_fire",
-                "type": "shield",
-                "amount": 8,
-                "scaling": {
-                  "def": 4000
-                },
-                "target": "ally_lowest_hp"
-              }
-            ]
-          }
+          "kind": "ability",
+          "name": "Last Watch",
+          "cooldown_ms": 6000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "shield",
+              "amount": 8,
+              "scaling": {
+                "def": 4000
+              },
+              "target": "ally_lowest_hp"
+            }
+          ]
         }
       ],
       "a": [
         {
           "key": "stand",
           "kind": "aura",
-          "when": "benched",
           "target": "all_allies",
           "stat": "def_bp",
           "value": 11000
@@ -162,7 +159,6 @@
         {
           "key": "hold",
           "kind": "aura",
-          "when": "benched",
           "target": "all_allies",
           "stat": "shield_bp",
           "value": 13000,
@@ -287,7 +283,7 @@
             "trigger": "on_hit",
             "type": "charge",
             "amount_ms": 100,
-            "target": "row_items"
+            "target": "holder_items"
           }
         }
       ],
@@ -518,13 +514,12 @@
     "id": "vell_vigil_keeper",
     "hero": "vell",
     "name": "Vigil Keeper",
-    "_note": "Her strength is backup: stronger backup heals, then backup shields, then a guild-wide blessing from anywhere.",
+    "_note": "Her strength is healing: stronger heals, then shields, then a guild-wide blessing.",
     "ranks": {
       "b": [
         {
           "key": "vigil",
           "kind": "aura",
-          "when": "benched",
           "target": "holder_items",
           "stat": "heal_bp",
           "value": 15000
@@ -533,29 +528,26 @@
       "a": [
         {
           "key": "shelter",
-          "kind": "backup",
-          "backup": {
-            "name": "Shelter",
-            "cooldown_ms": 5000,
-            "effects": [
-              {
-                "trigger": "on_fire",
-                "type": "shield",
-                "amount": 5,
-                "scaling": {
-                  "mgk": 3000
-                },
-                "target": "ally_lowest_hp"
-              }
-            ]
-          }
+          "kind": "ability",
+          "name": "Shelter",
+          "cooldown_ms": 5000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "shield",
+              "amount": 5,
+              "scaling": {
+                "mgk": 3000
+              },
+              "target": "ally_lowest_hp"
+            }
+          ]
         }
       ],
       "s": [
         {
           "key": "blessing",
           "kind": "aura",
-          "when": "always",
           "target": "all_allies",
           "stat": "heal_bp",
           "value": 11500
@@ -676,7 +668,7 @@
             "trigger": "on_hit",
             "type": "charge",
             "amount_ms": 100,
-            "target": "row_items"
+            "target": "holder_items"
           }
         }
       ]
@@ -739,7 +731,7 @@
               "trigger": "on_fire",
               "type": "charge",
               "amount_ms": 300,
-              "target": "row_items"
+              "target": "holder_items"
             }
           ]
         }
@@ -933,7 +925,7 @@
             "trigger": "on_hit",
             "type": "charge",
             "amount_ms": 150,
-            "target": "row_items"
+            "target": "holder_items"
           }
         }
       ]
@@ -1012,7 +1004,7 @@
     "id": "pell_clockwork",
     "hero": "pell",
     "name": "Clockwork Tricks",
-    "_note": "His tools: faster, then winding their neighbors, then a trick that freezes every enemy's cooldowns for a moment.",
+    "_note": "His tools: faster, then winding his other items, then a trick that freezes every enemy's cooldowns for a moment.",
     "ranks": {
       "b": [
         {
@@ -1036,8 +1028,8 @@
           "effect": {
             "trigger": "on_fire",
             "type": "charge",
-            "amount_ms": 200,
-            "target": "adjacent_items"
+            "amount_ms": 100,
+            "target": "holder_items"
           }
         }
       ],
@@ -1136,7 +1128,7 @@
     "id": "hesk_bulwark",
     "hero": "hesk",
     "name": "Bulwark",
-    "_note": "An ability: he braces behind a big shield, then his neighbors' shields grow, then the brace covers his whole row.",
+    "_note": "An ability: he braces behind a big shield, then his row's shields grow, then the brace covers his whole row.",
     "ranks": {
       "b": [
         {
@@ -1161,7 +1153,7 @@
         {
           "key": "shelter",
           "kind": "aura",
-          "target": "linked_allies",
+          "target": "row_allies",
           "stat": "shield_bp",
           "value": 12000
         }
@@ -1245,27 +1237,25 @@
     "id": "hesk_old_guard",
     "hero": "hesk",
     "name": "Old Guard",
-    "_note": "Works best from backup: he shields the weakest ally, then hardens the front row, then every shield in the guild.",
+    "_note": "A guardian: he shields the weakest ally, then hardens the front row, then every shield in the guild.",
     "ranks": {
       "b": [
         {
           "key": "watch",
-          "kind": "backup",
-          "backup": {
-            "name": "Gate Watch",
-            "cooldown_ms": 5000,
-            "effects": [
-              {
-                "trigger": "on_fire",
-                "type": "shield",
-                "amount": 6,
-                "scaling": {
-                  "def": 5000
-                },
-                "target": "ally_lowest_hp"
-              }
-            ]
-          }
+          "kind": "ability",
+          "name": "Gate Watch",
+          "cooldown_ms": 5000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "shield",
+              "amount": 6,
+              "scaling": {
+                "def": 5000
+              },
+              "target": "ally_lowest_hp"
+            }
+          ]
         }
       ],
       "a": [
@@ -1275,7 +1265,6 @@
           "target": "all_allies",
           "stat": "def_bp",
           "value": 11500,
-          "when": "benched",
           "filter": {
             "row": "front"
           }
@@ -1287,8 +1276,7 @@
           "kind": "aura",
           "target": "all_allies",
           "stat": "shield_bp",
-          "value": 11500,
-          "when": "always"
+          "value": 11500
         }
       ]
     }
@@ -1405,13 +1393,13 @@
     "id": "ysolde_kindler",
     "hero": "ysolde",
     "name": "Kindler",
-    "_note": "Support: she quickens her neighbors, then her magic winds the items beside it, then the whole guild's magic grows.",
+    "_note": "Support: she quickens her row, then her magic winds her other items, then the whole guild's magic grows.",
     "ranks": {
       "b": [
         {
           "key": "quicken",
           "kind": "aura",
-          "target": "linked_allies",
+          "target": "row_allies",
           "stat": "atsp_bp",
           "value": 11000
         }
@@ -1426,8 +1414,8 @@
           "effect": {
             "trigger": "on_fire",
             "type": "charge",
-            "amount_ms": 150,
-            "target": "adjacent_items"
+            "amount_ms": 100,
+            "target": "holder_items"
           }
         }
       ],

@@ -10,7 +10,7 @@ const BIG_HP: int = 10000000
 
 ## An Epic item (two sockets) that applies `stacks` of `status` to the front.
 func _applier(status: String, stacks: int) -> ItemDef:
-	return K.item("applier", {"name": "Applier", "size": 2, "rarity": "epic",
+	return K.item("applier", {"name": "Applier", "rarity": "epic",
 		"effects": [{"trigger": "on_fire", "type": "apply_status", "status": status, "stacks": stacks, "target": "enemy_front"}]})
 
 

@@ -28,10 +28,7 @@ var collapse: CollapseDef
 var rng: SimRng
 var combat_log: CombatLog = CombatLog.new()
 var tick: int = 0
-## Fielded heroes.
 var heroes: Array[UnitState] = []
-## Heroes in backup (never targeted; see UnitState.benched).
-var bench: Array[UnitState] = []
 var enemies: Array[UnitState] = []
 ## Every unit, in resolution order.
 var units: Array[UnitState] = []
@@ -100,11 +97,8 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 	rng = SimRng.new(setup.seed_value)
 	heroes = _build_side(setup.heroes, UnitSetup.Side.HEROES, content)
 	enemies = _build_side(setup.enemies, UnitSetup.Side.ENEMIES, content)
-	for unit_setup: UnitSetup in setup.bench:
-		bench.append(UnitState.from_setup(unit_setup, UnitSetup.Side.HEROES, 0, content, true))
-	# Resolution order: fielded heroes, then the bench, then enemies.
+	# Resolution order: heroes, then enemies.
 	units.append_array(heroes)
-	units.append_array(bench)
 	units.append_array(enemies)
 	for i: int in units.size():
 		for item: ItemState in units[i].items:
@@ -313,18 +307,18 @@ func bonuses() -> Array[RelicState]:
 	return result
 
 
-## The row items an item-layer synergy matched on its holder.
+## The loadout items an item-layer synergy matched on its holder.
 func _matched_items(relic: RelicState) -> Array[ItemState]:
 	var result: Array[ItemState] = []
 	if relic.holder_index < 0:
 		return result
-	for item: ItemState in units[relic.holder_index].row_items():
+	for item: ItemState in units[relic.holder_index].loadout_items():
 		if relic.matched_slots.has(item.slot):
 			result.append(item)
 	return result
 
 
-## Every unit on a side, backup heroes included, in resolution order.
+## Every unit on a side, in resolution order.
 func _side_all(side: UnitSetup.Side) -> Array[UnitState]:
 	var result: Array[UnitState] = []
 	for unit: UnitState in units:
@@ -333,7 +327,7 @@ func _side_all(side: UnitSetup.Side) -> Array[UnitState]:
 	return result
 
 
-## Every item of every unit on a side (backup heroes' too), in resolution order.
+## Every item of every unit on a side, in resolution order.
 func _side_items(side: UnitSetup.Side) -> Array[ItemState]:
 	var result: Array[ItemState] = []
 	for unit: UnitState in _side_all(side):
@@ -341,42 +335,19 @@ func _side_items(side: UnitSetup.Side) -> Array[ItemState]:
 	return result
 
 
-## Items in `item`'s row that a charge effect reaches (partner_items is
-## handled by EffectRunner).
-func row_item_targets(holder: UnitState, item: ItemState, target: EffectDef.ItemTarget) -> Array[ItemState]:
-	var aura_target: AuraDef.Target = AuraDef.Target.SELF_ITEM
-	match target:
-		EffectDef.ItemTarget.LEFT_ITEM:
-			aura_target = AuraDef.Target.LEFT_ITEM
-		EffectDef.ItemTarget.RIGHT_ITEM:
-			aura_target = AuraDef.Target.RIGHT_ITEM
-		EffectDef.ItemTarget.ADJACENT_ITEMS:
-			aura_target = AuraDef.Target.ADJACENT_ITEMS
-		EffectDef.ItemTarget.ROW_ITEMS:
-			aura_target = AuraDef.Target.ROW_ITEMS
-	return _aura_item_targets(holder, item, aura_target)
+## The items a charge effect reaches (partner_items is handled by
+## EffectRunner): the item itself, or every other item its holder has.
+func charge_targets(holder: UnitState, item: ItemState, target: EffectDef.ItemTarget) -> Array[ItemState]:
+	return _aura_item_targets(holder, item, AuraDef.Target.HOLDER_ITEMS if target == EffectDef.ItemTarget.HOLDER_ITEMS else AuraDef.Target.SELF_ITEM)
 
 
 func _aura_item_targets(holder: UnitState, item: ItemState, target: AuraDef.Target) -> Array[ItemState]:
-	var row: Array[ItemState] = holder.row_items()
-	var index: int = row.find(item)
 	var result: Array[ItemState] = []
 	match target:
 		AuraDef.Target.SELF_ITEM:
 			result.append(item)
-		AuraDef.Target.LEFT_ITEM:
-			if index > 0:
-				result.append(row[index - 1])
-		AuraDef.Target.RIGHT_ITEM:
-			if index >= 0 and index < row.size() - 1:
-				result.append(row[index + 1])
-		AuraDef.Target.ADJACENT_ITEMS:
-			if index > 0:
-				result.append(row[index - 1])
-			if index >= 0 and index < row.size() - 1:
-				result.append(row[index + 1])
-		AuraDef.Target.ROW_ITEMS:
-			for other: ItemState in row:
+		AuraDef.Target.HOLDER_ITEMS:
+			for other: ItemState in holder.items:
 				if other != item:
 					result.append(other)
 	return result
@@ -389,16 +360,8 @@ func _aura_unit_targets(holder: UnitState, target: AuraDef.Target) -> Array[Unit
 			return only
 		AuraDef.Target.ALL_ALLIES:
 			return Targeting.pick(EffectDef.Target.ALL_ALLIES, holder, null, self)
-		AuraDef.Target.LINKED_ALLY:
-			return Targeting.linked(EffectDef.Target.LINKED_ALLY, holder, allies_of(holder))
-		AuraDef.Target.LINKED_LEFT_ALLY:
-			return Targeting.linked(EffectDef.Target.LINKED_LEFT_ALLY, holder, allies_of(holder))
-		AuraDef.Target.LINKED_RIGHT_ALLY:
-			return Targeting.linked(EffectDef.Target.LINKED_RIGHT_ALLY, holder, allies_of(holder))
-		AuraDef.Target.LINKED_ALLIES:
-			return Targeting.linked(EffectDef.Target.LINKED_ALLIES, holder, allies_of(holder))
 		AuraDef.Target.ROW_ALLIES:
-			return Targeting.linked(EffectDef.Target.ROW_ALLIES, holder, allies_of(holder))
+			return Targeting.row_allies(holder, allies_of(holder))
 	var none: Array[UnitState] = []
 	return none
 
@@ -513,7 +476,7 @@ func _apply_collapse() -> void:
 	if damage <= 0:
 		return
 	for unit: UnitState in units:
-		if not unit.alive or unit.benched:
+		if not unit.alive:
 			continue
 		var entry := LogEntry.new()
 		entry.tick = tick
@@ -588,7 +551,7 @@ func _enter_phase(unit: UnitState, phase: PhaseDef) -> Array[ItemState]:
 func _process_deaths() -> void:
 	var anyone_fell: bool = false
 	for unit: UnitState in units:
-		if unit.alive and unit.hp <= 0 and not unit.benched:
+		if unit.alive and unit.hp <= 0:
 			unit.alive = false
 			anyone_fell = true
 			var entry := LogEntry.new()

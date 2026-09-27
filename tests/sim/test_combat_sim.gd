@@ -21,7 +21,7 @@ func test_basic_attack_fires_without_auto_attack_item() -> void:
 
 
 func test_auto_attack_item_replaces_basic_attack() -> void:
-	var blade: ItemDef = K.item("blade", {"auto_attack": true, "effects": K.damage(1)})
+	var blade: ItemDef = K.item("blade", {"slot": "basic_attack", "effects": K.damage(1)})
 	var result: FightResult = K.run([K.unit("hero", BIG_HP, FRONT, [blade])], [K.dummy("foe", BIG_HP)])
 	assert_eq(K.entries(result, LogEntry.Kind.FIRE, "basic").size(), 0, "basic attack doesn't fire")
 	assert_gt(K.entries(result, LogEntry.Kind.FIRE, "blade").size(), 0)
@@ -40,15 +40,9 @@ func _assert_setup_error(heroes: Array[UnitSetup], enemies: Array[UnitSetup], ex
 
 
 func test_rejects_two_auto_attack_items() -> void:
-	var a: ItemDef = K.item("a", {"auto_attack": true})
-	var b: ItemDef = K.item("b", {"auto_attack": true})
+	var a: ItemDef = K.item("a", {"slot": "basic_attack"})
+	var b: ItemDef = K.item("b", {"slot": "basic_attack"})
 	_assert_setup_error([K.unit("hero", 100, FRONT, [a, b])], [K.dummy("foe", 100)], "the limit is one")
-
-
-func test_rejects_items_over_slot_count() -> void:
-	var large: ItemDef = K.item("large", {"size": 3})
-	var items: Array[ItemDef] = [large, large, large]
-	_assert_setup_error([K.unit("hero", 100, FRONT, items)], [K.dummy("foe", 100)], "items take 9 slots but the unit has 7")
 
 
 func test_rejects_duplicate_unit_ids() -> void:

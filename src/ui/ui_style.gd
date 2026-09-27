@@ -75,7 +75,7 @@ const BODY_FONT: String = "res://art/fonts/WorkSans-Regular.ttf"
 const BOLD_FONT: String = "res://art/fonts/WorkSans-Bold.ttf"
 const HEADING_FONT: String = "res://art/fonts/YoungSerif-Regular.ttf"
 ## Pixels per item slot.
-const SLOT_WIDTH: int = 100
+const SLOT_WIDTH: int = 132
 const TILE_HEIGHT: int = 96
 
 

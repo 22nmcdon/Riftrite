@@ -9,24 +9,19 @@ extends RefCounted
 ## A fight between the guild and an encounter. Draws the fight's seed from
 ## the run's RNG, so the same run and actions give the same fights.
 static func setup_for(state: RunState, content: ContentDb, encounter_id: String) -> FightSetup:
-	var fielded: Array[UnitSetup] = []
-	var bench: Array[UnitSetup] = []
+	var team: Array[UnitSetup] = []
 	for hero: RunHero in state.heroes:
 		var entries: Array[LoadoutEntry] = []
 		for item: RunItem in hero.items:
 			entries.append(item.to_entry(content))
-		var unit: UnitSetup = SetupBuilder.hero(content, hero.hero_id, hero.rank, hero.row, entries, hero.specialization_id)
-		if hero.benched:
-			bench.append(unit)
-		else:
-			fielded.append(unit)
+		team.append(SetupBuilder.hero(content, hero.hero_id, hero.rank, hero.row, entries, hero.specialization_id))
 	var fight_seed: int = state.rng.next_u32()
-	return FightSetup.make(fielded, SetupBuilder.encounter_units(content, encounter_id), fight_seed,
-		content.encounters[encounter_id].act, bench, state.relics.duplicate(), SetupBuilder.encounter_relics(content, encounter_id))
+	return FightSetup.make(team, SetupBuilder.encounter_units(content, encounter_id), fight_seed,
+		content.encounters[encounter_id].act, state.relics.duplicate(), SetupBuilder.encounter_relics(content, encounter_id))
 
 
 ## Writes a finished fight back into the run: each infused item's XP
-## (matched by hero and slot), newly found synergies, Legendary path progress,
+## (matched by hero and loadout place), newly found synergies, Legendary path progress,
 ## and the result (a tie counts as a win). Returns notes on Legendaries that
 ## grew.
 ## `encounter_id` is who was fought (default: the day's fight); an extra
@@ -49,15 +44,9 @@ static func apply_result(state: RunState, content: ContentDb, result: FightResul
 	return notes
 
 
-## The item on a hero's row starting at `slot` (slots count item sizes, as in
-## the sim), or null.
-static func _item_at(state: RunState, content: ContentDb, hero_id: String, slot: int) -> RunItem:
+## The item at a place in a hero's loadout (the sim's slot index), or null.
+static func _item_at(state: RunState, _content: ContentDb, hero_id: String, slot: int) -> RunItem:
 	var hero: RunHero = state.hero(hero_id)
-	if hero == null:
+	if hero == null or slot < 0 or slot >= hero.items.size():
 		return null
-	var at: int = 0
-	for item: RunItem in hero.items:
-		if at == slot:
-			return item
-		at += content.items[item.item_id].size
-	return null
+	return hero.items[slot]

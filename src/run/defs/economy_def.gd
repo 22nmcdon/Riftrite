@@ -7,16 +7,14 @@ extends RefCounted
 
 var base_gold: int
 var package_gold: int
-## Buy prices by tier (items) and rank (heroes), C..S.
+## Item buy prices by tier, C..S.
 var item_price: Array[int] = []
-var hero_price: Array[int] = []
 ## By rarity, in ItemDef.RARITIES order.
 var relic_price: Array[int] = []
 var sell_bp: int
 var reroll_base: int
 var reroll_step: int
 var caravan_items: int
-var caravan_heroes: int
 var win_gold_base: int
 var win_gold_per_day: int
 var elite_gold_bp: int
@@ -51,13 +49,11 @@ static func read(reader: DataReader) -> EconomyDef:
 	def.base_gold = reader.req_int("base_gold", 0)
 	def.package_gold = reader.req_int("package_gold", 0)
 	def.item_price = _table(reader, "item_price", TuningDef.TIER_NAMES, 0)
-	def.hero_price = _table(reader, "hero_price", TuningDef.TIER_NAMES, 0)
 	def.relic_price = _table(reader, "relic_price", ItemDef.RARITIES, 0)
 	def.sell_bp = reader.req_int("sell_bp", 0, FixedMath.BP_ONE)
 	def.reroll_base = reader.req_int("reroll_base", 0)
 	def.reroll_step = reader.req_int("reroll_step", 0)
 	def.caravan_items = reader.req_int("caravan_items", 0)
-	def.caravan_heroes = reader.req_int("caravan_heroes", 0)
 	def.win_gold_base = reader.req_int("win_gold_base", 0)
 	def.win_gold_per_day = reader.req_int("win_gold_per_day", 0)
 	def.elite_gold_bp = reader.req_int("elite_gold_bp", 0)

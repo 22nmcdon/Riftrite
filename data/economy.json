@@ -8,12 +8,6 @@
     "a": 8,
     "s": 16
   },
-  "hero_price": {
-    "c": 3,
-    "b": 5,
-    "a": 16,
-    "s": 32
-  },
   "relic_price": {
     "common": 6,
     "uncommon": 9,
@@ -25,7 +19,6 @@
   "reroll_base": 1,
   "reroll_step": 1,
   "caravan_items": 5,
-  "caravan_heroes": 2,
   "win_gold_base": 5,
   "win_gold_per_day": 1,
   "elite_gold_bp": 15000,

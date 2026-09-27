@@ -2,13 +2,13 @@ class_name SynergyDef
 extends RefCounted
 ## A synergy from data/synergies.json (docs/plans/synergies-in-sim.md).
 ## Five layers, each with its own condition:
-##   pair:           "items": two items on the same fielded hero
+##   pair:           "items": two items on the same hero
 ##   transformation: "item" with "essence" socketed; "item_effects" replace
 ##                   the item's own effects
-##   signature:      "item" on the fielded hero "hero"
-##   resonance:      "essence", with "tiers" by essence count (fielded and
-##                   backup heroes' items)
-##   class_trait:    "class", with "tiers" by fielded heroes of that class
+##   signature:      "item" on the hero "hero"
+##   resonance:      "essence", with "tiers" by essence count (every hero's
+##                   items)
+##   class_trait:    "class", with "tiers" by heroes of that class
 ## What a synergy does works like a relic (see RelicDef.read_bonus):
 ## "auras", "grants", and relic-trigger "effects". Tiered layers put those
 ## in each tier; only the highest tier reached applies. Item layers may aim

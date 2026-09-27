@@ -16,32 +16,29 @@ var stats: UnitStats
 ## 0 = C, 1 = B, 2 = A, 3 = S. Each rank boosts every stat (tuning).
 var rank: int = 0
 var row: Row = Row.FRONT
-## Item slots available. Item sizes must fit.
-var slots: int
-## Fires when the unit has no auto-attack item. Takes no slot and can't be
-## infused.
+## Fires when the unit has no basic-attack item. Can't be infused.
 var basic_attack: ItemDef
-## In row order, left to right.
+## The loadout: a basic-attack item (at most one), abilities, and passives,
+## in loadout order. Slot counts are the run layer's rule, not the sim's.
 var items: Array[ItemSetup] = []
-## The hero's own Backup effect (used when benched), or null.
-var backup: BackupDef = null
+## The hero's innate parts (HeroDef.innate), credited to `innate_name`.
+var innate: Array[SpecializationDef.Part] = []
 ## The hero's rank-B specialization, or null. Which parts apply depends on
-## the rank (locked potential) and on fielded vs benched.
+## the rank (locked potential).
 var specialization: SpecializationDef = null
 ## HP-threshold phases (enemies; see PhaseDef).
 var phases: Array[PhaseDef] = []
 
 
-static func make(unit_id: String, unit_name: String, unit_stats: UnitStats, unit_row: Row, unit_slots: int, basic: ItemDef, row_items: Array[ItemSetup] = [], unit_rank: int = 0) -> UnitSetup:
+static func make(unit_id: String, unit_name: String, unit_stats: UnitStats, unit_row: Row, basic: ItemDef, loadout: Array[ItemSetup] = [], unit_rank: int = 0) -> UnitSetup:
 	var setup := UnitSetup.new()
 	setup.id = unit_id
 	setup.name = unit_name
 	setup.stats = unit_stats
 	setup.rank = unit_rank
 	setup.row = unit_row
-	setup.slots = unit_slots
 	setup.basic_attack = basic
-	setup.items = row_items
+	setup.items = loadout
 	return setup
 
 
@@ -61,12 +58,10 @@ func validate(content: ContentDb, errors: Array[String]) -> void:
 		errors.append("%s: needs a basic auto-attack" % id)
 	else:
 		_validate_effects(basic_attack, content, errors)
-	var used_slots: int = 0
 	var auto_attacks: int = 0
 	for item: ItemSetup in items:
 		if item.def.is_basic_attack:
 			errors.append("%s: basic auto-attack \"%s\" can't sit in an item slot" % [id, item.def.id])
-		used_slots += item.def.size
 		if item.def.auto_attack:
 			auto_attacks += 1
 		_validate_effects(item.def, content, errors)
@@ -75,10 +70,8 @@ func validate(content: ContentDb, errors: Array[String]) -> void:
 			errors.append("%s: item \"%s\" has %d infusion XP but no infusion" % [id, item.def.id, item.infusion_xp])
 		if item.tier < 0 or item.tier >= TuningDef.TIER_NAMES.size():
 			errors.append("%s: item \"%s\" tier must be 0-3 (C-S)" % [id, item.def.id])
-	if used_slots > slots:
-		errors.append("%s: items take %d slots but the unit has %d" % [id, used_slots, slots])
 	if auto_attacks > 1:
-		errors.append("%s: has %d auto-attack items; the limit is one" % [id, auto_attacks])
+		errors.append("%s: has %d basic-attack items; the limit is one" % [id, auto_attacks])
 
 
 ## Rejects effects that point at content that doesn't exist.

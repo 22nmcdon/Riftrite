@@ -60,7 +60,7 @@ static func make(fight_unit: UnitState, shown_name: String = "", rift: bool = fa
 	var names := VBoxContainer.new()
 	names.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(names)
-	names.add_child(UiStyle.label(card.display_name + (" (backup)" if fight_unit.benched else ""), 17))
+	names.add_child(UiStyle.label(card.display_name, 17))
 	card._hp_label = UiStyle.label("", 15)
 	names.add_child(card._hp_label)
 	var bars := Control.new()

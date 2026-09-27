@@ -1,5 +1,7 @@
 # Item Tiers, Backup & Oathbinding
 
+> **Backup is removed** (redesign step 1, `docs/plans/heroes-and-deeds.md`): the three drafted heroes all fight, items have no backup modes, and Backup effects became innates. The Backup sections below are kept as history; the tier and Oathbinding rules still hold.
+
 Sep 25, 2026 · @Noah
 
 An add-on to the Roguelite Game Plan. Items now have both a rarity and a tier, heroes can go into backup by choice, and an S-rank hero can be permanently **oathbound** to an S-rank item.

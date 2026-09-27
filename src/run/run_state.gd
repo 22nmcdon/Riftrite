@@ -4,7 +4,10 @@ extends RefCounted
 ## logic like the sim: no nodes, integers only, deterministic from the seed.
 ## Change it only through RunActions; check it with check().
 
-const SAVE_VERSION: int = 1
+## 2: loadout slots and the fixed trio (docs/plans/fun-redesign.md, step 1).
+const SAVE_VERSION: int = 2
+## The run's team: three drafted heroes (docs/plans/heroes-and-deeds.md).
+const TEAM_SIZE: int = 3
 ## Owner names for items: a hero id, STASH, or NOWHERE (not in the guild).
 const STASH: String = "stash"
 const NOWHERE: String = ""
@@ -18,10 +21,10 @@ var step: int = 0
 var attempt: int = 0
 var gold: int = 0
 var keys: int = 0
-## The roster in slot order. Slot 0 is always a field slot; within each row,
-## fielded heroes stand left to right in this order.
+## The team (up to TEAM_SIZE), in order; within each row, heroes stand left
+## to right in this order. All of them fight.
 var heroes: Array[RunHero] = []
-## Unequipped items, in order; sizes count against tuning.stash_slots.
+## Unequipped items, in order (up to tuning.stash_slots).
 var stash: Array[RunItem] = []
 ## Essence ids waiting to be socketed (cap: tuning.pouch_cap).
 var pouch: Array[String] = []
@@ -111,22 +114,6 @@ func list_for(owner: String) -> Array[RunItem]:
 	return target.items
 
 
-func fielded_count() -> int:
-	var count: int = 0
-	for candidate: RunHero in heroes:
-		if not candidate.benched:
-			count += 1
-	return count
-
-
-func stash_used(content: ContentDb) -> int:
-	var used: int = 0
-	for item: RunItem in stash:
-		if content.items.has(item.item_id):
-			used += content.items[item.item_id].size
-	return used
-
-
 func take_uid() -> int:
 	next_uid += 1
 	return next_uid - 1
@@ -140,27 +127,22 @@ func check(content: ContentDb) -> Array[String]:
 	var errors: Array[String] = []
 	if gold < 0 or keys < 0:
 		errors.append("gold and keys can't be negative")
-	if heroes.size() > FightSetup.ROSTER_CAP:
-		errors.append("%d heroes; the roster cap is %d" % [heroes.size(), FightSetup.ROSTER_CAP])
-	if not heroes.is_empty():
-		if heroes[0].benched:
-			errors.append("the first roster slot is always a field slot")
-		if fielded_count() > FightSetup.MAX_FIELDED:
-			errors.append("%d heroes fielded; the limit is %d" % [fielded_count(), FightSetup.MAX_FIELDED])
+	if heroes.size() > TEAM_SIZE:
+		errors.append("%d heroes; the team is %d" % [heroes.size(), TEAM_SIZE])
 	var seen_heroes: Array[String] = []
 	var seen_uids: Array[int] = []
 	for candidate: RunHero in heroes:
 		_check_hero(candidate, content, errors)
 		if seen_heroes.has(candidate.hero_id):
-			errors.append("%s is in the roster twice" % candidate.hero_id)
+			errors.append("%s is in the team twice" % candidate.hero_id)
 		seen_heroes.append(candidate.hero_id)
 		for item: RunItem in candidate.items:
 			_check_item(item, content, candidate.hero_id, errors, seen_uids)
 	for item: RunItem in stash:
 		_check_item(item, content, "the stash", errors, seen_uids)
 	_check_legendaries_once(content, errors)
-	if stash_used(content) > content.tuning.stash_slots:
-		errors.append("the stash holds %d slots of items; it has %d" % [stash_used(content), content.tuning.stash_slots])
+	if stash.size() > content.tuning.stash_slots:
+		errors.append("the stash holds %d items; it has room for %d" % [stash.size(), content.tuning.stash_slots])
 	if pouch.size() > content.tuning.pouch_cap:
 		errors.append("the pouch holds %d essences; the cap is %d" % [pouch.size(), content.tuning.pouch_cap])
 	for essence_id: String in pouch:
@@ -188,14 +170,9 @@ func _check_hero(candidate: RunHero, content: ContentDb, errors: Array[String]) 
 			errors.append("%s: a rank-C hero has no specialization" % who)
 	if candidate.needs_specialization and (candidate.rank < 1 or not candidate.specialization_id.is_empty()):
 		errors.append("%s: only a rank-B+ hero without one can need a specialization" % who)
-	if candidate.used_slots(content) > candidate.slots():
-		errors.append("%s: items take %d slots but they have %d" % [who, candidate.used_slots(content), candidate.slots()])
-	var auto_attacks: int = 0
-	for item: RunItem in candidate.items:
-		if content.items.has(item.item_id) and content.items[item.item_id].auto_attack:
-			auto_attacks += 1
-	if auto_attacks > 1:
-		errors.append("%s: holds %d auto-attack items; the limit is one" % [who, auto_attacks])
+	var problem: String = candidate.slot_problem(content)
+	if not problem.is_empty():
+		errors.append(problem)
 
 
 func _check_item(item: RunItem, content: ContentDb, where: String, errors: Array[String], seen_uids: Array[int]) -> void:

@@ -18,10 +18,12 @@ func _run() -> RunContent:
 	return _run_content
 
 
-## A run past the start (first hero, gold package), at day 1's Caravan.
+## A run past the start (the first offer of each draft pick, gold package),
+## at day 1's Caravan.
 func _started(run_seed: int = 5) -> RunState:
 	var state: RunState = RunFlow.new_run(run_seed, _content())
-	assert_true(RunFlow.pick_start_hero(state, _content(), 0).ok)
+	for pick: int in RunState.TEAM_SIZE:
+		assert_true(RunFlow.pick_start_hero(state, _content(), 0).ok)
 	assert_true(RunFlow.pick_package(state, _content(), _run(), 0).ok)
 	return state
 
@@ -52,18 +54,33 @@ func _to_fight(state: RunState) -> void:
 
 # --- the run start ------------------------------------------------------------
 
-func test_a_run_starts_with_one_of_three_heroes_and_a_package() -> void:
-	var state: RunState = RunFlow.new_run(5, _content())
-	assert_eq(state.phase, "start_hero")
-	assert_eq(state.offers.size(), 3)
+func _offered_heroes(state: RunState) -> Array[String]:
 	var heroes: Array[String] = []
 	for offer: Dictionary in state.offers:
 		heroes.append(offer["hero"])
-	assert_eq(heroes.size(), 3)
-	assert_ne(heroes[0], heroes[1])
+	return heroes
+
+
+func test_a_run_starts_with_a_drafted_team_and_a_package() -> void:
+	var state: RunState = RunFlow.new_run(5, _content())
+	assert_eq(state.phase, "start_hero")
 	_refused(RunFlow.buy(state, _content(), 0), "that isn't possible now (the run is at start_hero)")
-	assert_true(RunFlow.pick_start_hero(state, _content(), 1).ok)
-	assert_eq(state.heroes[0].hero_id, heroes[1])
+	var drafted: Array[String] = []
+	for pick: int in RunState.TEAM_SIZE:
+		var heroes: Array[String] = _offered_heroes(state)
+		assert_eq(heroes.size(), 3, "pick %d offers three" % pick)
+		assert_ne(heroes[0], heroes[1])
+		assert_ne(heroes[1], heroes[2])
+		for hero_id: String in heroes:
+			assert_false(drafted.has(hero_id), "a drafted hero isn't offered again")
+		_refused(RunFlow.pick_start_hero(state, _content(), 3), "no offer there")
+		assert_true(RunFlow.pick_start_hero(state, _content(), 1).ok)
+		drafted.append(heroes[1])
+	var team: Array[String] = []
+	for hero: RunHero in state.heroes:
+		team.append(hero.hero_id)
+	assert_eq(team, drafted)
+	assert_eq([state.heroes[0].row, state.heroes[1].row, state.heroes[2].row], [UnitSetup.Row.FRONT, UnitSetup.Row.BACK, UnitSetup.Row.BACK], "the first pick stands in front")
 	var packages: Array[String] = []
 	for offer: Dictionary in state.offers:
 		packages.append(offer["package"])
@@ -94,9 +111,8 @@ func test_caravan_offers_follow_the_rules() -> void:
 			assert_false(def.enemy_only, "never enemy-only")
 			assert_eq(offer["price"], _run().economy.item_price[offer["tier"]])
 			assert_lt(offer["tier"], 2, "Act 1: C or B only")
-		else:
-			assert_eq(offer["type"], "hero")
 	assert_eq(items, 5)
+	assert_eq(state.offers.size(), 5, "only items")
 
 
 func test_caravan_never_offers_enemy_only_items() -> void:
@@ -182,21 +198,12 @@ func test_buying_an_upgrade_combines_into_the_held_copy() -> void:
 	assert_eq(RunFlow.upgrade_target(state, _content(), index), -1)
 
 
-func test_full_roster_only_offers_copies() -> void:
-	var state: RunState = _started()
-	for hero_id: String in _content().hero_ids:
-		if state.hero(hero_id) == null and state.heroes.size() < FightSetup.ROSTER_CAP:
-			state.heroes.append(RunHero.make(hero_id))
-	assert_eq(state.heroes.size(), FightSetup.ROSTER_CAP)
-	assert_lt(state.heroes.size(), _content().hero_ids.size(), "some heroes are left out")
-	RunFlow._fill_caravan(state, _content(), _run())
-	for offer: Dictionary in state.offers:
-		if offer["type"] == "hero":
-			assert_not_null(state.hero(offer["hero"]), "only heroes already held (they combine)")
-			assert_eq(offer["rank"], state.hero(offer["hero"]).rank, "at the held rank")
+func test_the_caravan_never_offers_heroes() -> void:
+	for run_seed: int in [1, 2, 3, 4, 5]:
+		var state: RunState = _started(run_seed)
+		for offer: Dictionary in state.offers:
+			assert_ne(offer["type"], "hero", "the team is drafted at the start")
 
-
-# --- stops ----------------------------------------------------------------------
 
 func test_two_different_nodes_that_apply_are_offered() -> void:
 	var seen: Array[String] = []
@@ -472,7 +479,7 @@ func test_three_shards_make_an_essence() -> void:
 	assert_eq(state.shards["frost"], 3, "they wait while the pouch is full")
 
 
-func test_an_elite_win_gives_an_essence_and_a_relic_choice() -> void:
+func test_an_elite_win_gives_an_essence_a_relic_choice_and_a_rank_up() -> void:
 	var state: RunState = _started()
 	_make_army(state)
 	state.day = 3
@@ -493,6 +500,31 @@ func test_an_elite_win_gives_an_essence_and_a_relic_choice() -> void:
 	assert_true(RunFlow.take(state, _content(), relics[1]).ok)
 	assert_eq(state.relics.size(), 1)
 	_refused(RunFlow.take(state, _content(), relics[0]), "already taken")
+	var rank_up: int = types.find("rank_up")
+	assert_gte(rank_up, 0, "an elite gives a rank-up")
+	assert_eq(types.count("rank_up"), 1)
+	_refused(RunFlow.take(state, _content(), rank_up), "choose which hero gets the rank-up")
+	_refused(RunFlow.give_rank_up(state, _content(), relics[0], state.heroes[0].hero_id), "no rank-up there")
+	var before: String = JSON.stringify(state.to_dict())
+	_refused(RunFlow.give_rank_up(state, _content(), rank_up, state.heroes[0].hero_id), "is already rank S")
+	assert_eq(JSON.stringify(state.to_dict()), before, "a refused rank-up changes nothing")
+	var second: RunHero = state.heroes[1]
+	second.rank = 0
+	second.specialization_id = ""
+	assert_true(RunFlow.give_rank_up(state, _content(), rank_up, second.hero_id).ok)
+	assert_eq([second.rank, second.needs_specialization], [1, true])
+	_refused(RunFlow.give_rank_up(state, _content(), rank_up, second.hero_id), "already given")
+	assert_true(RunFlow.done(state, _content(), _run()).ok)
+	_refused(RunFlow.give_rank_up(state, _content(), rank_up, second.hero_id), "there's no rank-up to give now")
+
+
+func test_normal_wins_give_no_rank_up() -> void:
+	var state: RunState = _started()
+	_make_army(state)
+	_to_fight(state)
+	assert_true((RunFlow.fight(state, _content(), _run())[1] as FightResult).guild_won())
+	for offer: Dictionary in state.offers:
+		assert_ne(offer["type"], "rank_up")
 
 
 func test_the_first_loss_replays_the_day_and_the_second_ends_the_run() -> void:
@@ -513,19 +545,17 @@ func test_the_first_loss_replays_the_day_and_the_second_ends_the_run() -> void:
 	_refused(RunFlow.leave_caravan(state, _content(), _run()), "run_over")
 
 
-## The whole roster at S, each with a specialization and a strong row.
+## The whole team at S, each with a specialization and a strong loadout.
 func _make_army(state: RunState) -> void:
 	_make_strong(state)
-	for hero_id: String in ["wren", "vell", "odo", "brannoc"]:
-		if state.hero(hero_id) == null:
-			RunActions.add_hero(state, _content(), hero_id, 3, _first_spec(hero_id))
 	for hero: RunHero in state.heroes:
 		hero.rank = 3
 		if hero.specialization_id.is_empty():
 			hero.specialization_id = _first_spec(hero.hero_id)
 		hero.needs_specialization = false
 		if hero.items.is_empty():
-			hero.items.append(RunItem.make(state.take_uid(), "first_light_dagger", 3))
+			for item_id: String in ["hearthstone_ward", "first_light_dagger", "hearth_knife"]:
+				hero.items.append(RunItem.make(state.take_uid(), item_id, 3))
 
 
 func test_beating_the_boss_ends_the_act() -> void:

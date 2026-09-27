@@ -54,14 +54,14 @@ func _setup_errors(items: Array) -> Array[String]:
 	return K.run([K.unit("hero", 100, FRONT, items)], [K.dummy("foe", 100)]).errors
 
 
-## Sockets depend on rarity, not size: Epic and Legendary have 2 (tuning).
+## Sockets depend on rarity: Epic and Legendary have 2 (tuning).
 func test_sockets_follow_rarity() -> void:
 	for rarity: String in ["common", "uncommon", "rare"]:
-		var large: ItemDef = _sword(100, {"size": 3, "rarity": rarity})
-		var errors: Array[String] = _setup_errors([K.equip(large, ["ember", "frost"] as Array[String])])
+		var plain: ItemDef = _sword(100, {"rarity": rarity})
+		var errors: Array[String] = _setup_errors([K.equip(plain, ["ember", "frost"] as Array[String])])
 		assert_true(errors.any(func(e: String) -> bool: return e.contains("has 2 essences but only 1 socket(s)")), "%s: %s" % [rarity, errors])
-	var small_epic: ItemDef = _sword(100, {"rarity": "epic"})
-	assert_eq(_setup_errors([K.equip(small_epic, ["ember", "frost"] as Array[String])]), [] as Array[String], "a Small Epic has 2")
+	var epic: ItemDef = _sword(100, {"rarity": "epic"})
+	assert_eq(_setup_errors([K.equip(epic, ["ember", "frost"] as Array[String])]), [] as Array[String], "an Epic has 2")
 	assert_eq(K.tuning().two_socket_rarities, ["epic", "legendary"] as Array[String])
 
 

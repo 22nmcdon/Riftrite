@@ -22,11 +22,9 @@ var max_hp: int
 var hp: int
 var shield: int = 0
 var alive: bool = true
-## In backup: not on the field (can't be targeted, takes no collapse damage,
-## can't fall). Its items are its Backup effect and its items' backup modes.
-var benched: bool = false
-## Items that fire, in resolution order: the basic auto-attack first (if the
-## unit has no auto-attack item), then row items left to right.
+## Items in resolution order: the built-in basic auto-attack first (if the
+## unit has no basic-attack item), then innate and specialization abilities,
+## then the loadout in order.
 var items: Array[ItemState] = []
 ## Active statuses, kept in content order (StatusState.order).
 var statuses: Array[StatusState] = []
@@ -34,8 +32,8 @@ var statuses: Array[StatusState] = []
 var recent_heal_ticks: Array[int] = []
 ## What dealt the last damage, for the death log line.
 var last_hit_by: String = ""
-## The specialization's aura, grant, and replace_status parts that apply now
-## (by rank and fielded/benched); CombatSim.rederive_all applies them.
+## The innate's and the specialization's aura, grant, and replace_status
+## parts that apply now (by rank); CombatSim.rederive_all applies them.
 var spec_parts: Array[SpecializationDef.Part] = []
 ## Phases (see PhaseDef) and how many have begun.
 var phases: Array[PhaseDef] = []
@@ -45,7 +43,7 @@ var phases_entered: int = 0
 var phase_abilities: Dictionary[String, ItemState] = {}
 
 
-static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column: int, content: ContentDb, in_backup: bool = false) -> UnitState:
+static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column: int, content: ContentDb) -> UnitState:
 	var state := UnitState.new()
 	state.id = setup.id
 	state.name = setup.name
@@ -57,13 +55,10 @@ static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column:
 	state.stats = state.base_stats
 	state.max_hp = state.stats.get_stat(UnitStats.Stat.HP)
 	state.hp = state.max_hp
-	state.benched = in_backup
 	state.phases = setup.phases
-	var parts: Array[SpecializationDef.Part] = []
+	var parts: Array[SpecializationDef.Part] = setup.innate.duplicate()
 	if setup.specialization != null:
-		for part: SpecializationDef.Part in setup.specialization.parts_at(setup.rank):
-			if part.applies(in_backup):
-				parts.append(part)
+		parts.append_array(setup.specialization.parts_at(setup.rank))
 	var basic_attack: ItemDef = setup.basic_attack
 	var abilities: Array[ItemDef] = []
 	for part: SpecializationDef.Part in parts:
@@ -74,82 +69,39 @@ static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column:
 				abilities.append(part.item)
 			SpecializationDef.Kind.BASIC_ATTACK:
 				basic_attack = part.item
-			SpecializationDef.Kind.BACKUP:
-				var backup_item: ItemDef = part.backup.as_item_def(null, setup.id)
-				backup_item.id = "%s_%s" % [setup.specialization.id, part.key]
-				abilities.append(backup_item)
-	if in_backup:
-		state._add_backup_items(setup, content)
-		for ability: ItemDef in abilities:
-			state.items.append(ItemState.make(ability, -1, state.stats, content))
-		state.rederive_items(content)
-		return state
 
 	var has_auto_attack_item: bool = false
 	for item: ItemSetup in setup.items:
 		has_auto_attack_item = has_auto_attack_item or item.def.auto_attack
 	if not has_auto_attack_item:
 		state.items.append(ItemState.make(basic_attack, -1, state.stats, content))
-	# Abilities: slotless, after the auto-attack and before the row.
+	# Abilities: slotless, after the auto-attack and before the loadout.
 	for ability: ItemDef in abilities:
 		state.items.append(ItemState.make(ability, -1, state.stats, content))
-	var slot: int = 0
-	for item: ItemSetup in setup.items:
+	for slot: int in setup.items.size():
+		var item: ItemSetup = setup.items[slot]
 		var essences: Array[EssenceDef] = []
 		for essence_id: String in item.essence_ids:
 			essences.append(content.essences[essence_id])
 		state.items.append(ItemState.make(item.def, slot, state.stats, content, essences, item.tier, item.infusion_xp, item.trace_bp))
-		slot += item.def.size
 	state.rederive_items(content)
 	return state
 
 
-## A benched hero fires its own Backup effect and its items' backup modes
-## (items without one do nothing from backup). Backup modes keep the item's
-## slot, tier, and infusion, so essences and XP work as usual.
-func _add_backup_items(setup: UnitSetup, content: ContentDb) -> void:
-	if setup.backup != null:
-		items.append(ItemState.make(setup.backup.as_item_def(null, setup.id), -1, stats, content))
-	var slot: int = 0
-	for item: ItemSetup in setup.items:
-		if item.def.backup != null:
-			var essences: Array[EssenceDef] = []
-			for essence_id: String in item.essence_ids:
-				essences.append(content.essences[essence_id])
-			items.append(ItemState.make(item.def.backup.as_item_def(item.def, setup.id), slot, stats, content, essences, item.tier, item.infusion_xp, item.trace_bp))
-		slot += item.def.size
-
-
-## Re-derives every item, handing each Resonant item's spill to its row
-## neighbors (the items just left and right of it; the basic auto-attack has
-## no slot, so it never gives or gets spill). Spill stays inside this row.
-## `auras` lines up with `items` (empty = no auras); CombatSim.rederive_all
-## gathers them.
+## Re-derives every item. `auras` lines up with `items` (empty = no auras);
+## CombatSim.rederive_all gathers them. (Neighbor spill is gone with item
+## rows; keyword spill comes with the infusion rework.)
 func rederive_items(content: ContentDb, auras: Array[ItemAura] = []) -> void:
-	var row: Array[ItemState] = []
-	for item: ItemState in items:
-		if item.slot >= 0:
-			row.append(item)
-	var incoming: Array[Array] = []
-	for i: int in row.size():
-		incoming.append([])
-	for i: int in row.size():
-		if i > 0:
-			incoming[i - 1].append_array(row[i].spill_to(-1, content.tuning))
-		if i < row.size() - 1:
-			incoming[i + 1].append_array(row[i].spill_to(1, content.tuning))
+	var none: Array[EssenceApplication] = []
 	for i: int in items.size():
 		var item: ItemState = items[i]
-		var received: Array[EssenceApplication] = []
-		var index: int = row.find(item)
-		if index >= 0:
-			received.assign(incoming[index])
 		item.stats = stats
-		item.derive(content, received, auras[i] if i < auras.size() else null)
+		item.derive(content, none, auras[i] if i < auras.size() else null)
 
 
-## Items in the row (everything but the basic auto-attack), left to right.
-func row_items() -> Array[ItemState]:
+## The loadout's items (everything but the built-in basic attack and
+## slotless abilities), in loadout order.
+func loadout_items() -> Array[ItemState]:
 	var row: Array[ItemState] = []
 	for item: ItemState in items:
 		if item.slot >= 0:

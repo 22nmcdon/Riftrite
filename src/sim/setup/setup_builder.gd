@@ -16,8 +16,8 @@ static func item_setups(content: ContentDb, entries: Array[LoadoutEntry]) -> Arr
 ## specialization id.
 static func hero(content: ContentDb, hero_id: String, rank: int, row: UnitSetup.Row, entries: Array[LoadoutEntry], specialization_id: String = "") -> UnitSetup:
 	var def: HeroDef = content.heroes[hero_id]
-	var setup: UnitSetup = UnitSetup.make(def.id, def.name, def.stats, row, HeroDef.slots_at_rank(rank), def.basic_attack, item_setups(content, entries), rank)
-	setup.backup = def.backup
+	var setup: UnitSetup = UnitSetup.make(def.id, def.name, def.stats, row, def.basic_attack, item_setups(content, entries), rank)
+	setup.innate = def.innate
 	setup.unit_class = def.hero_class
 	if not specialization_id.is_empty():
 		setup.specialization = content.specializations.get(specialization_id, null)
@@ -38,7 +38,7 @@ static func encounter_units(content: ContentDb, encounter_id: String) -> Array[U
 		var slot: EncounterDef.Slot = encounter.units[i]
 		var def: EnemyDef = content.enemies[slot.enemy_id]
 		var unit_id: String = "%s_%d" % [def.id, i + 1]
-		var unit: UnitSetup = UnitSetup.make(unit_id, def.name, def.stats, slot.row, def.slots, def.basic_attack, item_setups(content, def.items), def.rank)
+		var unit: UnitSetup = UnitSetup.make(unit_id, def.name, def.stats, slot.row, def.basic_attack, item_setups(content, def.items), def.rank)
 		unit.phases = def.phases
 		result.append(unit)
 	return result

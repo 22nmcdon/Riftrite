@@ -166,7 +166,10 @@ func test_item_text_is_plain_words() -> void:
 	assert_string_contains(text, "x1.5 B tier")
 	var relic: String = ItemInfo.relic_text(content, "warding_knot")
 	assert_string_contains(relic, "When an ally drops below 30% HP: shield that ally for 80")
-	assert_string_contains(ItemInfo.hero_text(content, "vell", 0), "Backup: Lantern Vigil")
+	assert_eq(ItemInfo.TARGET_WORDS.size(), EffectDef.TARGET_NAMES.size(), "a word for every target")
+	assert_eq(ItemInfo.ITEM_TARGET_WORDS.size(), EffectDef.ITEM_TARGET_NAMES.size(), "a word for every item target")
+	assert_string_contains(ItemInfo.item_text(content, "whetstone", 0, [] as Array[String], 0), "its holder's other items")
+	assert_string_contains(ItemInfo.hero_text(content, "vell", 0), "Innate: Lantern Vigil")
 
 
 func test_fight_names_number_duplicates_and_replace_ids() -> void:
@@ -206,7 +209,7 @@ func _synergy_badge(main: Main) -> Label:
 func test_discovered_synergies_show_in_the_guild_bar() -> void:
 	var session: RunSession = U.at_caravan()
 	var state: RunState = session.state
-	state.heroes[0] = RunHero.make("brannoc")
+	state.heroes.assign([RunHero.make("brannoc")])
 	state.heroes[0].items.append(RunItem.make(state.take_uid(), "oak_buckler"))
 	var main: Main = _main(session)
 	assert_eq(_synergy_badge(main).text, "none yet")
@@ -226,7 +229,7 @@ func test_discovered_synergies_show_in_the_guild_bar() -> void:
 func test_a_fight_announces_new_synergies() -> void:
 	var session: RunSession = U.at_fight()
 	var state: RunState = session.state
-	state.heroes[0] = RunHero.make("brannoc")
+	state.heroes.assign([RunHero.make("brannoc")])
 	state.heroes[0].items.append(RunItem.make(state.take_uid(), "oak_buckler"))
 	var main: Main = _main(session)
 	(main.screen as FightScreen).start_fight()
@@ -239,7 +242,7 @@ func test_a_fight_announces_new_synergies() -> void:
 
 func test_synergy_text_says_what_sets_it_off() -> void:
 	var content: ContentDb = U.K.content()
-	assert_string_contains(ItemInfo.synergy_text(content, "paper_cuts"), "When one fielded hero holds Whetstone and Twin Daggers.")
+	assert_string_contains(ItemInfo.synergy_text(content, "paper_cuts"), "When one hero holds Whetstone and Twin Daggers.")
 	assert_string_contains(ItemInfo.synergy_text(content, "warden_trait"), "2+:")
 	assert_string_contains(ItemInfo.synergy_text(content, "wildfire_torch"), "Tallow Torch infused with Ember")
 

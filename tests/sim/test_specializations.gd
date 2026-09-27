@@ -1,6 +1,6 @@
 extends GutTest
 ## Rank-B specializations (docs/plans/specializations-in-sim.md): parts by
-## rank (locked potential), fielded/benched, abilities, basic attacks, and
+## rank (locked potential), abilities, basic attacks, and
 ## the cleanse effect.
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
@@ -36,8 +36,8 @@ func _hero(unit_id: String, spec: SpecializationDef, rank: int = 1, items: Array
 	return setup
 
 
-func _sim(heroes: Array[UnitSetup], enemies: Array[UnitSetup], bench: Array[UnitSetup] = []) -> CombatSim:
-	return CombatSim.new(FightSetup.make(heroes, enemies, 1, 1, bench), K.content())
+func _sim(heroes: Array[UnitSetup], enemies: Array[UnitSetup]) -> CombatSim:
+	return CombatSim.new(FightSetup.make(heroes, enemies), K.content())
 
 
 func _step_to(sim: CombatSim, tick: int) -> void:
@@ -76,10 +76,10 @@ func test_rejects_bad_specializations() -> void:
 	_assert_error(_read({"ranks": {"b": [_crit_aura(1000)], "x": []}})[1], "unknown rank \"x\"")
 	_assert_error(_read({"ranks": {"b": [_crit_aura(1000), _crit_aura(2000)]}})[1], "key \"edge\" is used twice in rank b")
 	_assert_error(_read({"ranks": {"b": [{"key": "k", "kind": "lore"}]}})[1], "kind: unknown value \"lore\"")
-	_assert_error(_read({"ranks": {"b": [{"key": "k", "kind": "aura", "target": "left_item", "stat": "damage_bp", "value": 12000}]}})[1],
-		"a specialization aura can't target left_item")
-	_assert_error(_read({"ranks": {"b": [{"key": "k", "kind": "aura", "when": "benched", "target": "linked_allies", "stat": "def_bp", "value": 12000}]}})[1],
-		"\"linked_allies\" needs the hero on the field, so it can't work from backup")
+	_assert_error(_read({"ranks": {"b": [{"key": "k", "kind": "aura", "target": "self_item", "stat": "damage_bp", "value": 12000}]}})[1],
+		"a specialization aura can't target self_item")
+	_assert_error(_read({"ranks": {"b": [{"key": "k", "kind": "aura", "when": "benched", "target": "row_allies", "stat": "def_bp", "value": 12000}]}})[1],
+		"unknown key \"when\"")
 	_assert_error(_read({"ranks": {"b": [{"key": "k", "kind": "ability", "cooldown_ms": 1000, "effects": [
 		{"trigger": "on_fire", "type": "damage", "amount": 3, "target": "hit_target"}]}]}})[1], "an ability has no hit, so it can't use hit_target")
 	_assert_error(_read({"ranks": {"b": [{"key": "k", "kind": "ability", "effects": K.damage(3)}]}})[1], "missing required key \"cooldown_ms\"")
@@ -90,9 +90,6 @@ func test_basic_attack_needs_an_auto_attack_part() -> void:
 	_assert_error(_read({"ranks": {"b": [attack]}})[1], "rank b replaces the basic attack, so it needs a part for auto-attack items too")
 	var covered: Dictionary = _crit_aura(500, {"auto_attack": true}, "keen")
 	assert_eq(_read({"ranks": {"b": [attack, covered]}})[1], [] as Array[String])
-	var benched: Dictionary = attack.duplicate(true)
-	benched["when"] = "benched"
-	_assert_error(_read({"ranks": {"b": [benched, covered]}})[1], "a new basic attack only works on the field")
 
 
 func test_real_specializations_load() -> void:
@@ -114,14 +111,10 @@ func test_content_checks_specializations() -> void:
 	specs.append({"id": "ghost_spec", "hero": "nobody", "name": "Ghost", "ranks": {"b": [{"key": "odd", "kind": "replace_status", "from": "burn", "to": "moonfire"}]}})
 	specs.append({"id": "brannoc_fourth", "hero": "brannoc", "name": "Fourth", "ranks": {"b": [_crit_aura(100)]}})
 	texts[ContentDb.SPECIALIZATIONS_FILE] = JSON.stringify(specs)
-	var items: Array = JSON.parse_string(texts[ContentDb.ITEMS_FILE])
-	items[0]["auras"] = [{"target": "holder_items", "stat": "damage_bp", "value": 12000}]
-	texts[ContentDb.ITEMS_FILE] = JSON.stringify(items)
 	var errors: Array[String] = ContentDb.load_texts(texts).errors
 	_assert_error(errors, "unknown hero \"nobody\"")
 	_assert_error(errors, "unknown status \"moonfire\"")
 	_assert_error(errors, "brannoc has 4 specializations; the limit is 3")
-	_assert_error(errors, "holder_items only works in a specialization")
 
 
 func test_setup_checks_rank_and_hero() -> void:
@@ -152,7 +145,7 @@ func test_holder_items_aura_by_rank() -> void:
 	for case: Array in expected:
 		var sim: CombatSim = _sim([_hero("a", spec, case[0], [sword, charm], UnitStats.make(1000, 0, 0, 100))], [K.dummy("b", 100)])
 		var hero: UnitState = sim.unit_by_id("a")
-		assert_eq([hero.row_items()[0].crit_chance_bp, hero.row_items()[1].crit_chance_bp, hero.items[0].crit_chance_bp], [case[1], 0, 0], "rank %d" % case[0])
+		assert_eq([hero.loadout_items()[0].crit_chance_bp, hero.loadout_items()[1].crit_chance_bp, hero.items[0].crit_chance_bp], [case[1], 0, 0], "rank %d" % case[0])
 		assert_eq(hero.stats.get_stat(UnitStats.Stat.DEF), case[2], "rank %d" % case[0])
 
 
@@ -167,7 +160,7 @@ func test_grants_scale_from_the_hero_not_the_tier() -> void:
 		"effect": {"trigger": "on_fire", "type": "damage", "amount": 2, "scaling": {"atk": 5000}, "target": "enemy_front"}}]})
 	var sword: ItemDef = K.item("sp_sword", {"tags": ["weapon"]})
 	var sim: CombatSim = _sim([_hero("a", spec, 1, [K.equip(sword, [], 3)], UnitStats.make(1000, 20))], [K.dummy("b", 100)])
-	var item: ItemState = sim.unit_by_id("a").row_items()[0]
+	var item: ItemState = sim.unit_by_id("a").loadout_items()[0]
 	assert_eq(item.effects[1].granted_by, "Test Spec B")
 	assert_eq(item.effects[1].final_amount(), 15, "2 + 50% of 25 ATK (20 at rank B); no S-tier x3")
 	assert_eq(item.effects[0].final_amount(), 30, "the item's own damage still gets its tier")
@@ -191,7 +184,7 @@ func test_ability_fires_on_its_cooldown_from_the_heros_stats() -> void:
 		{"trigger": "on_fire", "type": "damage", "amount": 3, "scaling": {"atk": 5000}, "target": "enemy_front"}]}]})
 	var sim: CombatSim = _sim([_hero("a", spec, 1, [], UnitStats.make(1000, 20))], [K.dummy("b", 100000)])
 	var hero: UnitState = sim.unit_by_id("a")
-	assert_eq(hero.row_items().size(), 0, "abilities take no slot")
+	assert_eq(hero.loadout_items().size(), 0, "abilities take no slot")
 	_step_to(sim, 20)
 	var hits: Array[String] = []
 	for entry: LogEntry in sim.combat_log.of_kind(LogEntry.Kind.DAMAGE):
@@ -232,33 +225,12 @@ func test_new_basic_attack_and_its_auto_attack_item_fallback() -> void:
 	var plain: CombatSim = _sim([_hero("a", spec)], [K.dummy("b", 100)])
 	var basic: ItemState = plain.unit_by_id("a").items[0]
 	assert_eq([basic.def.id, basic.effects.size()], ["sp_blow", 2], "the new basic attack, plus the auto-attack grant")
-	var claw: ItemDef = K.item("sp_claw", {"auto_attack": true})
+	var claw: ItemDef = K.item("sp_claw", {"slot": "basic_attack"})
 	var with_item: CombatSim = _sim([_hero("a", spec, 1, [claw, K.item("sp_plain")])], [K.dummy("b", 100)])
 	var items: Array[ItemState] = with_item.unit_by_id("a").items
 	assert_eq(items.size(), 2, "the auto-attack item replaces the basic attack")
 	assert_eq(items[1].effects.size(), 1, "a plain item doesn't get the auto-attack part")
 	assert_eq([items[0].def.id, items[0].effects.size(), items[0].effects[1].granted_by], ["sp_claw", 2, "Test Spec B"], "and gets the auto-attack part")
-
-
-# --- fielded and benched ------------------------------------------------------
-
-func test_when_decides_fielded_and_benched_parts() -> void:
-	var spec: SpecializationDef = _spec({"b": [
-		{"key": "front", "kind": "aura", "target": "all_allies", "stat": "atk_bp", "value": 12000},
-		{"key": "rear", "kind": "aura", "when": "benched", "target": "all_allies", "stat": "mgk_bp", "value": 12000},
-		{"key": "both", "kind": "aura", "when": "always", "target": "all_allies", "stat": "def_bp", "value": 12000},
-		{"key": "post", "kind": "backup", "backup": {"cooldown_ms": 2000, "effects": K.damage(1, "enemy_random")}},
-	]})
-	var stats: UnitStats = UnitStats.make(1000, 100, 100, 100)
-	var fielded: CombatSim = _sim([_hero("a", spec, 1, [], stats), K.unit_with("c", stats)], [K.dummy("b", 100)])
-	var ally: UnitState = fielded.unit_by_id("c")
-	assert_eq([ally.stats.get_stat(UnitStats.Stat.ATK), ally.stats.get_stat(UnitStats.Stat.MGK), ally.stats.get_stat(UnitStats.Stat.DEF)], [120, 100, 120])
-	assert_false(fielded.unit_by_id("a").items.any(func(item: ItemState) -> bool: return item.def.id == "test_spec_post"))
-	var benched: CombatSim = _sim([K.unit_with("c", stats)], [K.dummy("b", 100)], [_hero("a", spec, 1, [], stats, BACK)])
-	var bench_ally: UnitState = benched.unit_by_id("c")
-	assert_eq([bench_ally.stats.get_stat(UnitStats.Stat.ATK), bench_ally.stats.get_stat(UnitStats.Stat.MGK), bench_ally.stats.get_stat(UnitStats.Stat.DEF)], [100, 120, 120])
-	var backup_item: ItemState = benched.bench[0].items.filter(func(item: ItemState) -> bool: return item.def.id == "test_spec_post")[0]
-	assert_eq(backup_item.def.name, "Test Spec B (backup)")
 
 
 # --- cleanse ------------------------------------------------------------------
@@ -288,7 +260,7 @@ func test_every_hero_is_complete() -> void:
 	var classes: Array[String] = []
 	for hero_id: String in content.hero_ids:
 		var hero: HeroDef = content.heroes[hero_id]
-		assert_not_null(hero.backup, "%s has a Backup effect" % hero_id)
+		assert_false(hero.innate.is_empty(), "%s has an innate" % hero_id)
 		assert_false(hero.basic_attack.effects.is_empty(), "%s has a basic attack" % hero_id)
 		var signatures: Array[String] = []
 		for synergy_id: String in content.synergy_ids:

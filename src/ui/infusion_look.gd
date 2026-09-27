@@ -1,10 +1,10 @@
 class_name InfusionLook
 extends RefCounted
 ## How an item's infusion looks (docs/ui-asset-design.md, 8.3): its gem form
-## and its spill arrows, from the game's infusion rules (CLAUDE.md). Only
-## Resonant infusions spill; a single and a pure double spill their essence
-## to both sides, an alloy its first essence left and its second right; a
-## transformation never spills. Read-only, like the rest of the UI.
+## and its spill arrows, from the game's infusion rules (CLAUDE.md). For now
+## nothing spills: neighbor spill went with item rows, and keyword spill comes
+## with the infusion rework (docs/plans/fun-redesign.md), which redraws the
+## arrows. Read-only, like the rest of the UI.
 
 
 ## The gem form. A transformation shows as one only once it's discovered
@@ -31,19 +31,13 @@ static func level(content: ContentDb, essence_ids: Array[String], xp: int) -> in
 	return Infusions.level_for(xp, content.tuning) if not essence_ids.is_empty() else Infusions.Level.BASE
 
 
-## The spill arrows' colors, [left, right], or [] when it doesn't spill.
-static func spill_colors(gem_form: Glyph.Infusion, essence_ids: Array[String], infusion_level: int) -> Array[Color]:
-	if infusion_level != Infusions.Level.RESONANT:
-		return [] as Array[Color]
-	match gem_form:
-		Glyph.Infusion.SINGLE, Glyph.Infusion.PURE:
-			var hue: Color = UiStyle.ESSENCE.get(essence_ids[0], UiStyle.TEXT)
-			return [hue, hue] as Array[Color]
-		Glyph.Infusion.ALLOY:
-			return [UiStyle.ESSENCE.get(essence_ids[0], UiStyle.TEXT), UiStyle.ESSENCE.get(essence_ids[1], UiStyle.TEXT)] as Array[Color]
+## The spill arrows' colors, [left, right], or [] when it doesn't spill:
+## always [] until keyword spill arrives.
+static func spill_colors(_gem_form: Glyph.Infusion, _essence_ids: Array[String], _infusion_level: int) -> Array[Color]:
 	return [] as Array[Color]
 
 
-## A transformation at Resonant shows flat bars where arrows would be.
-static func shows_no_spill(gem_form: Glyph.Infusion, infusion_level: int) -> bool:
-	return gem_form == Glyph.Infusion.TRANSFORMATION and infusion_level == Infusions.Level.RESONANT
+## Flat bars where arrows would be (a transformation never spills): off
+## while nothing spills.
+static func shows_no_spill(_gem_form: Glyph.Infusion, _infusion_level: int) -> bool:
+	return false

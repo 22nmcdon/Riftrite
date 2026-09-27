@@ -33,8 +33,10 @@ func test_every_encounter_builds_a_valid_fight() -> void:
 
 func test_hero_slots_and_stats_follow_rank() -> void:
 	var db: ContentDb = K.content()
+	assert_eq(db.tuning.ability_slots, [2, 3, 3, 4] as Array[int], "abilities by rank C to S")
+	assert_eq(db.tuning.passive_slots, [1, 1, 2, 3] as Array[int], "passives by rank C to S")
 	var at_b: UnitSetup = SetupBuilder.hero(db, "wren", 1, UnitSetup.Row.FRONT, [] as Array[LoadoutEntry])
-	assert_eq([at_b.slots, at_b.rank], [5, 1], "4 slots at C, +1 per rank")
+	assert_eq(at_b.rank, 1)
 	var sim := CombatSim.new(FightSetup.make([at_b] as Array[UnitSetup], SetupBuilder.encounter_units(db, "hound_pack")), db)
 	assert_eq(sim.units[0].max_hp, 350, "280 HP x1.25 at rank B")
 
@@ -74,8 +76,9 @@ func test_real_content_fights_replay_identically() -> void:
 
 ## The slice's item targets (docs/plans/slice-content.md): 60 items the
 ## guild can get plus 6 Legendaries (docs/plans/legendary-items.md), enemy-only
-## items on top; more Small than Medium than
-## Large; enough Epics for alloys; items for every hero's tags.
+## items on top; mostly abilities, with some basic attacks and passives
+## (docs/plans/fun-redesign.md); enough Epics for alloys; items for every
+## hero's tags.
 func test_slice_item_roster() -> void:
 	var db: ContentDb = K.content()
 	var guild: Array[ItemDef] = []
@@ -83,20 +86,20 @@ func test_slice_item_roster() -> void:
 		if not db.items[item_id].enemy_only:
 			guild.append(db.items[item_id])
 	assert_eq(guild.size(), 66)
-	var sizes: Array[int] = [0, 0, 0, 0]
+	var slots: Array[int] = [0, 0, 0]
 	var epics: int = 0
 	var paths: Array[String] = []
 	for item: ItemDef in guild:
 		if item.legendary != null:
 			paths.append(item.legendary.path)
 			assert_eq(db.tuning.socket_count(item), 2, "%s has two sockets" % item.id)
-			assert_not_null(item.backup, "%s has a backup mode" % item.id)
-		sizes[item.size] += 1
+		slots[item.slot] += 1
 		if item.rarity == "epic":
 			epics += 1
 			assert_eq(db.tuning.socket_count(item), 2, "%s has two sockets" % item.id)
-	assert_gt(sizes[1], sizes[2], "more Small than Medium")
-	assert_gt(sizes[2], sizes[3], "more Medium than Large")
+	assert_gte(slots[ItemDef.Slot.BASIC_ATTACK], 5, "basic attacks to choose from")
+	assert_gte(slots[ItemDef.Slot.PASSIVE], 5, "passives to choose from")
+	assert_gt(slots[ItemDef.Slot.ABILITY], slots[ItemDef.Slot.BASIC_ATTACK] + slots[ItemDef.Slot.PASSIVE], "mostly abilities")
 	assert_gte(epics, 6)
 	paths.sort()
 	assert_eq(paths, ["bonded", "boss", "devour", "essence", "hits", "martyr"] as Array[String], "one Legendary per path")

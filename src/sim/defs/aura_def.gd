@@ -2,23 +2,22 @@ class_name AuraDef
 extends RefCounted
 ## A continuous boost an item gives while its window is open (the whole fight
 ## if it has no window). Listed under an item's "auras":
-##   {"target": "adjacent_items", "stat": "crit_chance_bp", "value": 2000}
+##   {"target": "holder_items", "stat": "crit_chance_bp", "value": 1000}
 ##   {"target": "holder", "stat": "def_bp", "value": 20000,
 ##    "window": {"until_ms": 8000}, "label": "Rush"}
 ##
 ## Targets:
-##   items in the holder's row: self_item, left_item, right_item,
-##       adjacent_items, row_items (every other item in the row)
-##   all_items: every item of every hero on the holder's side, backup
-##       heroes' included. With no filter it boosts *everything* on the
-##       side, so it also boosts relic effects and grants (relic numbers
-##       are flat; only side-wide boosts change them).
+##   self_item: the item itself
+##   holder_items: every other item the holder has (their basic attack,
+##       abilities, and passives; from a specialization, every item)
+##   all_items: every item of every hero on the holder's side. With no
+##       filter it boosts *everything* on the side, so it also boosts relic
+##       effects and grants (relic numbers are flat; only side-wide boosts
+##       change them).
 ##   matched_items: the items that matched a pair, signature, or
 ##       transformation synergy (synergies only)
-##   holder_items: every item the holder has, basic attack and abilities
-##       included (specializations only)
-##   units: holder, linked_ally, linked_left_ally, linked_right_ally,
-##       linked_allies, row_allies, all_allies (see Targeting.linked)
+##   units: holder, row_allies (the other allies in the holder's row),
+##       all_allies
 ## An optional "filter" narrows the targets (see AuraFilter):
 ##   {"target": "all_items", "filter": {"tag": "weapon"}, ...}
 ## Stats:
@@ -33,15 +32,7 @@ extends RefCounted
 
 enum Target {
 	SELF_ITEM,
-	LEFT_ITEM,
-	RIGHT_ITEM,
-	ADJACENT_ITEMS,
-	ROW_ITEMS,
 	HOLDER,
-	LINKED_ALLY,
-	LINKED_LEFT_ALLY,
-	LINKED_RIGHT_ALLY,
-	LINKED_ALLIES,
 	ROW_ALLIES,
 	ALL_ALLIES,
 	ALL_ITEMS,
@@ -50,14 +41,8 @@ enum Target {
 }
 enum Stat { DAMAGE_BP, HEAL_BP, SHIELD_BP, OVER_TIME_BP, CRIT_CHANCE_BP, COOLDOWN_BP, ATK_BP, MGK_BP, DEF_BP, ATSP_BP, CRIT_BP }
 
-const TARGET_NAMES: Array[String] = [
-	"self_item", "left_item", "right_item", "adjacent_items", "row_items",
-	"holder", "linked_ally", "linked_left_ally", "linked_right_ally", "linked_allies", "row_allies", "all_allies", "all_items", "matched_items", "holder_items",
-]
-const TARGET_LABELS: Array[String] = [
-	"itself", "the item to its left", "the item to its right", "adjacent items", "the rest of the row",
-	"its holder", "a linked ally", "the linked ally on the left", "the linked ally on the right", "linked allies", "row allies", "all allies", "all items", "matched items", "the holder's items",
-]
+const TARGET_NAMES: Array[String] = ["self_item", "holder", "row_allies", "all_allies", "all_items", "matched_items", "holder_items"]
+const TARGET_LABELS: Array[String] = ["itself", "its holder", "row allies", "all allies", "all items", "matched items", "the holder's other items"]
 const STAT_NAMES: Array[String] = [
 	"damage_bp", "heal_bp", "shield_bp", "over_time_bp", "crit_chance_bp", "cooldown_bp",
 	"atk_bp", "mgk_bp", "def_bp", "atsp_bp", "crit_bp",
@@ -84,6 +69,9 @@ var label: String = ""
 var filter: AuraFilter = null
 var window_from_ticks: int = 0
 var window_until_ticks: int = -1
+## True for an aura from a specialization, innate, or phase part: there is no
+## item to leave out, so holder_items reaches every item the holder has.
+var from_part: bool = false
 
 
 static func read(reader: DataReader) -> AuraDef:
@@ -114,7 +102,7 @@ func active_at(tick: int) -> bool:
 
 
 func targets_items() -> bool:
-	return target <= Target.ROW_ITEMS or target == Target.ALL_ITEMS or target == Target.MATCHED_ITEMS or target == Target.HOLDER_ITEMS
+	return target == Target.SELF_ITEM or target == Target.ALL_ITEMS or target == Target.MATCHED_ITEMS or target == Target.HOLDER_ITEMS
 
 
 ## True for an unfiltered all_items aura: it boosts everything on the side,
@@ -131,11 +119,12 @@ func is_additive() -> bool:
 	return stat == Stat.CRIT_CHANCE_BP or stat == Stat.COOLDOWN_BP
 
 
-## For the log, e.g. "x2 damage for adjacent items" or "+20% crit chance for itself".
+## For the log, e.g. "x2 damage for the holder's other items" or "+20% crit chance for itself".
 func describe() -> String:
 	var amount: String
 	if is_additive():
 		amount = "%s%s %s" % ["+" if value >= 0 else "", ValueBreakdown._percent(value), STAT_LABELS[stat]]
 	else:
 		amount = "x%s %s" % [ValueBreakdown._ratio(value), STAT_LABELS[stat]]
-	return "%s for %s%s" % [amount, TARGET_LABELS[target], "" if filter == null else filter.describe()]
+	var who: String = "the holder's items" if from_part and target == Target.HOLDER_ITEMS else TARGET_LABELS[target]
+	return "%s for %s%s" % [amount, who, "" if filter == null else filter.describe()]

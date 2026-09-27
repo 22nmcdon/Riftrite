@@ -20,10 +20,7 @@ class PartyHero:
 class Party:
 	var id: String
 	var name: String
-	## Fielded heroes.
 	var heroes: Array[PartyHero] = []
-	## Heroes in backup.
-	var bench: Array[PartyHero] = []
 	## Relic ids the guild holds.
 	var relics: Array[String] = []
 
@@ -95,7 +92,6 @@ static func parse_parties(content: ContentDb, data: Variant, label: String) -> P
 			reader.error("duplicate party id \"%s\"" % party.id)
 		ids.append(party.id)
 		party.heroes = _read_heroes(content, reader, "heroes")
-		party.bench = _read_heroes(content, reader, "bench")
 		if reader.has("relics"):
 			party.relics = reader.req_string_array("relics")
 		reader.finish()
@@ -105,7 +101,7 @@ static func parse_parties(content: ContentDb, data: Variant, label: String) -> P
 		checker.items = content.items
 		checker.essences = content.essences
 		checker.relics = content.relics
-		for hero: PartyHero in party.heroes + party.bench:
+		for hero: PartyHero in party.heroes:
 			checker.check_loadout(hero.items, "%s (%s).%s" % [label, party.id, hero.hero_id], false)
 		checker.check_relics(party.relics, "%s (%s)" % [label, party.id], false)
 		parties.errors.append_array(checker.errors)
@@ -132,10 +128,10 @@ static func _read_heroes(content: ContentDb, reader: DataReader, key: String) ->
 	return heroes
 
 
-## The party's fielded heroes (or its bench, with `benched`).
-static func party_units(content: ContentDb, party: Party, benched: bool = false) -> Array[UnitSetup]:
+## The party's heroes as fight units.
+static func party_units(content: ContentDb, party: Party) -> Array[UnitSetup]:
 	var units: Array[UnitSetup] = []
-	for hero: PartyHero in (party.bench if benched else party.heroes):
+	for hero: PartyHero in party.heroes:
 		units.append(SetupBuilder.hero(content, hero.hero_id, hero.rank, hero.row, hero.items, hero.specialization_id))
 	return units
 
@@ -148,12 +144,12 @@ static func run(content: ContentDb, party: Party, encounter_id: String, fights: 
 	stats.first_seed = first_seed
 	var act: int = content.encounters[encounter_id].act
 	var hero_ids: Array[String] = []
-	for hero: PartyHero in party.heroes + party.bench:
+	for hero: PartyHero in party.heroes:
 		hero_ids.append(hero.hero_id)
 	for i: int in fights:
 		var seed_value: int = first_seed + i
 		var setup: FightSetup = FightSetup.make(party_units(content, party), SetupBuilder.encounter_units(content, encounter_id), seed_value, act,
-			party_units(content, party, true), party.relics.duplicate(), SetupBuilder.encounter_relics(content, encounter_id))
+			party.relics.duplicate(), SetupBuilder.encounter_relics(content, encounter_id))
 		var result: FightResult = CombatSim.run(setup, content)
 		if not result.errors.is_empty():
 			stats.errors = result.errors

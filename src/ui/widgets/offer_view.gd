@@ -51,6 +51,8 @@ static func _describe(content: ContentDb, offer: Dictionary) -> String:
 			return "%d gold" % offer["amount"]
 		"key":
 			return "A vault key"
+		"rank_up":
+			return "A rank-up"
 	return str(offer)
 
 
@@ -78,8 +80,7 @@ static func _hero_card(session: RunSession, offer: Dictionary, cost: String, act
 	else:
 		box.add_child(UiStyle.label("HP %d  ATK %d  MGK %d  DEF %d" % [stats.get_stat(UnitStats.Stat.HP), stats.get_stat(UnitStats.Stat.ATK), stats.get_stat(UnitStats.Stat.MGK), stats.get_stat(UnitStats.Stat.DEF)], 14))
 	box.add_child(UiStyle.label("Basic attack: " + def.basic_attack.name, 14, UiStyle.TEXT_DIM))
-	if def.backup != null:
-		box.add_child(UiStyle.label("Backup: " + def.backup.name, 14, UiStyle.TEXT_DIM))
+	box.add_child(UiStyle.label("Innate: " + def.innate_name, 14, UiStyle.TEXT_DIM))
 	if not str(offer.get("specialization", "")).is_empty():
 		box.add_child(UiStyle.label(content.specializations[offer["specialization"]].name, 14, UiStyle.EMBER))
 	var button: Button = UiStyle.button(cost, action)

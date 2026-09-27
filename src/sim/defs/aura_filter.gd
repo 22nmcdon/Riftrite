@@ -4,8 +4,9 @@ extends RefCounted
 ## key given. An optional "filter" object:
 ##   items: {"item": "rust_hook"}   that item
 ##          {"tag": "weapon"}       items with that tag
-##          {"size": 1}             items of that size (the basic auto-attack
-##                                  has no size and never matches)
+##          {"slot": "ability"}     loadout items of that slot type (basic_attack,
+##                                  ability, passive; a built-in basic attack
+##                                  never matches: use auto_attack)
 ##          {"applies": "burn"}     items that apply that status (own effects,
 ##                                  infusion, or spill; Inferno's Golden Flame
 ##                                  counts as both)
@@ -16,14 +17,14 @@ extends RefCounted
 ##          {"class": "warden"}     heroes of that class
 ## Adding a key is a code change; say so when you make one.
 
-const ITEM_KEYS: Array[String] = ["item", "tag", "size", "applies", "essence", "auto_attack"]
+const ITEM_KEYS: Array[String] = ["item", "tag", "slot", "applies", "essence", "auto_attack"]
 const UNIT_KEYS: Array[String] = ["row", "class"]
 const ROW_NAMES: Array[String] = ["front", "back"]
 
 var item_id: String = ""
 var tag: String = ""
-## 0 = any size.
-var size: int = 0
+## An ItemDef.Slot, or -1 for any.
+var slot_type: int = -1
 var applies: String = ""
 var essence: String = ""
 var auto_attack: bool = false
@@ -51,8 +52,8 @@ static func read(reader: DataReader, for_items: bool) -> AuraFilter:
 			filter.item_id = reader.req_string("item")
 		if reader.has("tag"):
 			filter.tag = reader.req_choice("tag", ItemDef.TAGS)
-		if reader.has("size"):
-			filter.size = reader.req_int("size", 1, ItemDef.MAX_SIZE)
+		if reader.has("slot"):
+			filter.slot_type = maxi(ItemDef.SLOT_NAMES.find(reader.req_choice("slot", ItemDef.SLOT_NAMES)), 0)
 		if reader.has("applies"):
 			filter.applies = reader.req_string("applies")
 		if reader.has("essence"):
@@ -75,7 +76,7 @@ func matches_item(item: ItemState) -> bool:
 		return false
 	if not tag.is_empty() and not item.def.tags.has(tag):
 		return false
-	if size > 0 and (item.slot < 0 or item.def.size != size):
+	if slot_type >= 0 and (item.slot < 0 or item.def.slot != slot_type):
 		return false
 	if not applies.is_empty() and not item.applies_status(applies):
 		return false
@@ -94,14 +95,14 @@ func matches_unit(unit: UnitState) -> bool:
 	return true
 
 
-## For the log, e.g. " (weapon, size 1)".
+## For the log, e.g. " (weapon, abilities)".
 func describe() -> String:
 	var parts: Array[String] = []
 	for part: String in [item_id, tag, applies, essence, unit_class]:
 		if not part.is_empty():
 			parts.append(part)
-	if size > 0:
-		parts.append("size %d" % size)
+	if slot_type >= 0:
+		parts.append(ItemDef.SLOT_PLURALS[slot_type].to_lower())
 	if auto_attack:
 		parts.append("auto-attack")
 	if row >= 0:

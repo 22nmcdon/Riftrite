@@ -232,7 +232,7 @@ Almost everything depends on the loadout change, so it goes first. Rerun the run
 - prices by rarity: Common 2, Uncommon 3, Rare 5, Epic 7, with less starting gold
 
 **Build order (revised):**
-1. **Loadout:** slot types and keywords on items; item size, rows, and adjacency removed. Also the fixed trio and Backup removal, since they rewrite the same code.
+1. **Loadout:** slot types and keywords on items; item size, rows, and adjacency removed. Also the fixed trio and Backup removal, since they rewrite the same code. **Built** (keywords come with step 2, whose spill needs them): every item has a slot type; Linked and adjacency targets became `row_allies` and `holder_items`; neighbor spill is off until step 2; the stash holds 6 items; the team is drafted (3 picks) and ranks up once per elite; innates replace Backup effects; the save version is 2. The run bot clears Act 1 in about 2% of runs, down from before: the day-3 elite now meets three rank-C heroes. Step 4 retunes the pacing.
 2. **The infusion rework:** fusing, keyword spill, and Awakening.
 3. **Ranks and deeds** (`docs/plans/heroes-and-deeds.md`).
 4. **The new day, the economy, and pacing.**

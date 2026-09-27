@@ -5,7 +5,7 @@ extends RefCounted
 
 const DEFAULT_ITEM: Dictionary = {
 	"name": "Test Item",
-	"size": 1,
+	"slot": "ability",
 	"rarity": "common",
 	"xp_per_fire": 0,
 	"cooldown_ms": 1000,
@@ -43,10 +43,14 @@ static func equip(def: ItemDef, essences: Array[String] = [], tier: int = 0, xp:
 	return ItemSetup.make(def, essences, tier, xp)
 
 
-## An item from DEFAULT_ITEM with `overrides` applied. Fails loudly on errors.
+## An item from DEFAULT_ITEM with `overrides` applied (a null value removes
+## that key). Fails loudly on errors.
 static func item(item_id: String, overrides: Dictionary = {}) -> ItemDef:
 	var data: Dictionary = DEFAULT_ITEM.duplicate(true)
 	data.merge(overrides, true)
+	for key: String in overrides:
+		if overrides[key] == null:
+			data.erase(key)
 	data["id"] = item_id
 	var errors: Array[String] = []
 	var def: ItemDef = ItemDef.read(DataReader.new(data, item_id, errors))
@@ -61,14 +65,6 @@ static func basic(attack_id: String = "basic", overrides: Dictionary = {}) -> It
 	var errors: Array[String] = []
 	var def: ItemDef = ItemDef.read_basic_attack(DataReader.new(data, attack_id, errors))
 	assert(errors.is_empty(), "test basic attack %s is invalid: %s" % [attack_id, errors])
-	return def
-
-
-## A backup block (hero Backup effect or item backup mode). Fails loudly on errors.
-static func backup(data: Dictionary) -> BackupDef:
-	var errors: Array[String] = []
-	var def: BackupDef = BackupDef.read(DataReader.new(data, "backup", errors), false)
-	assert(errors.is_empty(), "test backup is invalid: %s" % [errors])
 	return def
 
 
@@ -99,17 +95,17 @@ static func relic_ids(defs: Array[RelicDef]) -> Array[String]:
 
 
 ## A fight where the guild holds `relics` and the enemies `enemy_relics`.
-static func relic_fight(heroes: Array[UnitSetup], enemies: Array[UnitSetup], relics: Array[RelicDef], enemy_relics: Array[RelicDef] = [], seed_value: int = 1, bench: Array[UnitSetup] = []) -> FightSetup:
-	return FightSetup.make(heroes, enemies, seed_value, 1, bench, relic_ids(relics), relic_ids(enemy_relics))
+static func relic_fight(heroes: Array[UnitSetup], enemies: Array[UnitSetup], relics: Array[RelicDef], enemy_relics: Array[RelicDef] = [], seed_value: int = 1) -> FightSetup:
+	return FightSetup.make(heroes, enemies, seed_value, 1, relic_ids(relics), relic_ids(enemy_relics))
 
 
-static func run_relics(heroes: Array[UnitSetup], enemies: Array[UnitSetup], relics: Array[RelicDef], enemy_relics: Array[RelicDef] = [], seed_value: int = 1, bench: Array[UnitSetup] = []) -> FightResult:
-	return CombatSim.run(relic_fight(heroes, enemies, relics, enemy_relics, seed_value, bench), relic_content())
+static func run_relics(heroes: Array[UnitSetup], enemies: Array[UnitSetup], relics: Array[RelicDef], enemy_relics: Array[RelicDef] = [], seed_value: int = 1) -> FightResult:
+	return CombatSim.run(relic_fight(heroes, enemies, relics, enemy_relics, seed_value), relic_content())
 
 
 ## A fight built but not stepped, for checking derived values at the start.
-static func relic_sim(heroes: Array[UnitSetup], enemies: Array[UnitSetup], relics: Array[RelicDef], enemy_relics: Array[RelicDef] = [], bench: Array[UnitSetup] = []) -> CombatSim:
-	return CombatSim.new(relic_fight(heroes, enemies, relics, enemy_relics, 1, bench), relic_content())
+static func relic_sim(heroes: Array[UnitSetup], enemies: Array[UnitSetup], relics: Array[RelicDef], enemy_relics: Array[RelicDef] = []) -> CombatSim:
+	return CombatSim.new(relic_fight(heroes, enemies, relics, enemy_relics, 1), relic_content())
 
 
 ## A synergy from `data` (an "id" and "name" are filled in), registered in
@@ -142,12 +138,12 @@ static func clear_synergies() -> void:
 	db.synergy_ids.clear()
 
 
-static func synergy_sim(heroes: Array[UnitSetup], enemies: Array[UnitSetup], bench: Array[UnitSetup] = []) -> CombatSim:
-	return CombatSim.new(FightSetup.make(heroes, enemies, 1, 1, bench), synergy_content())
+static func synergy_sim(heroes: Array[UnitSetup], enemies: Array[UnitSetup]) -> CombatSim:
+	return CombatSim.new(FightSetup.make(heroes, enemies, 1, 1), synergy_content())
 
 
-static func synergy_run(heroes: Array[UnitSetup], enemies: Array[UnitSetup], bench: Array[UnitSetup] = []) -> FightResult:
-	return CombatSim.run(FightSetup.make(heroes, enemies, 1, 1, bench), synergy_content())
+static func synergy_run(heroes: Array[UnitSetup], enemies: Array[UnitSetup]) -> FightResult:
+	return CombatSim.run(FightSetup.make(heroes, enemies, 1, 1), synergy_content())
 
 
 ## A damage-only effect list, for overrides.
@@ -161,7 +157,7 @@ static func unit(unit_id: String, hp: int, row: UnitSetup.Row = UnitSetup.Row.FR
 	var row_items: Array[ItemSetup] = []
 	for entry: Variant in items:
 		row_items.append(entry if entry is ItemSetup else ItemSetup.make(entry))
-	return UnitSetup.make(unit_id, unit_id, UnitStats.make(hp), row, 7, attack, row_items)
+	return UnitSetup.make(unit_id, unit_id, UnitStats.make(hp), row, attack, row_items)
 
 
 ## A unit with a full stat block and rank.
@@ -181,8 +177,8 @@ static func fight(heroes: Array[UnitSetup], enemies: Array[UnitSetup], seed_valu
 	return FightSetup.make(heroes, enemies, seed_value, act)
 
 
-static func run(heroes: Array[UnitSetup], enemies: Array[UnitSetup], seed_value: int = 1, act: int = 1, bench: Array[UnitSetup] = []) -> FightResult:
-	return CombatSim.run(FightSetup.make(heroes, enemies, seed_value, act, bench), content())
+static func run(heroes: Array[UnitSetup], enemies: Array[UnitSetup], seed_value: int = 1, act: int = 1) -> FightResult:
+	return CombatSim.run(FightSetup.make(heroes, enemies, seed_value, act), content())
 
 
 ## Log entries of one kind whose source item is `item_id`.

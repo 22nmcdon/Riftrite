@@ -14,14 +14,14 @@ static func pick(target: EffectDef.Target, source: UnitState, hit_target: UnitSt
 
 
 ## Targets for a relic's effect. A relic stands nowhere, so enemy_front and
-## enemy_back aim from column 0 (like a backup hero). `trigger_ally` is the
+## enemy_back aim from column 0. `trigger_ally` is the
 ## ally that set off on_ally_below_hp, or null.
 static func for_relic(target: EffectDef.Target, side: UnitSetup.Side, trigger_ally: UnitState, sim: CombatSim) -> Array[UnitState]:
 	var foe_side: UnitSetup.Side = UnitSetup.Side.ENEMIES if side == UnitSetup.Side.HEROES else UnitSetup.Side.HEROES
 	return _pick(target, sim.side_units(side), sim.side_units(foe_side), 0, null, trigger_ally, sim)
 
 
-## `source` is null for relics (which can't use self or linked targets);
+## `source` is null for relics (which can't use self or row targets);
 ## `hit_target` is the hit's target, or the trigger ally for trigger_ally.
 static func _pick(target: EffectDef.Target, allies: Array[UnitState], foes: Array[UnitState], column: int, source: UnitState, hit_target: UnitState, sim: CombatSim) -> Array[UnitState]:
 	var picked: UnitState = null
@@ -30,8 +30,8 @@ static func _pick(target: EffectDef.Target, allies: Array[UnitState], foes: Arra
 			return _standing(foes)
 		EffectDef.Target.ALL_ALLIES:
 			return _standing(allies)
-		EffectDef.Target.LINKED_ALLY, EffectDef.Target.LINKED_LEFT_ALLY, EffectDef.Target.LINKED_RIGHT_ALLY, EffectDef.Target.LINKED_ALLIES, EffectDef.Target.ROW_ALLIES:
-			return linked(target, source, allies)
+		EffectDef.Target.ROW_ALLIES:
+			return row_allies(source, allies)
 		EffectDef.Target.HIT_TARGET, EffectDef.Target.TRIGGER_ALLY:
 			picked = hit_target
 		EffectDef.Target.SELF:
@@ -58,40 +58,12 @@ static func _pick(target: EffectDef.Target, allies: Array[UnitState], foes: Arra
 	return result
 
 
-## Linked targets: allies standing next to `source` in its row (columns are
-## fixed at fight start, so a fallen neighbor leaves a gap, not a new link).
-static func linked(target: EffectDef.Target, source: UnitState, allies: Array[UnitState]) -> Array[UnitState]:
-	var left: UnitState = null
-	var right: UnitState = null
-	var row_mates: Array[UnitState] = []
-	for ally: UnitState in allies:
-		if ally == source or ally.row != source.row or not ally.is_standing():
-			continue
-		row_mates.append(ally)
-		if ally.column == source.column - 1:
-			left = ally
-		elif ally.column == source.column + 1:
-			right = ally
+## The other standing allies in `source`'s row.
+static func row_allies(source: UnitState, allies: Array[UnitState]) -> Array[UnitState]:
 	var result: Array[UnitState] = []
-	match target:
-		EffectDef.Target.LINKED_ALLY:
-			if left != null:
-				result.append(left)
-			elif right != null:
-				result.append(right)
-		EffectDef.Target.LINKED_LEFT_ALLY:
-			if left != null:
-				result.append(left)
-		EffectDef.Target.LINKED_RIGHT_ALLY:
-			if right != null:
-				result.append(right)
-		EffectDef.Target.LINKED_ALLIES:
-			if left != null:
-				result.append(left)
-			if right != null:
-				result.append(right)
-		EffectDef.Target.ROW_ALLIES:
-			result = row_mates
+	for ally: UnitState in allies:
+		if ally != source and ally.row == source.row and ally.is_standing():
+			result.append(ally)
 	return result
 
 

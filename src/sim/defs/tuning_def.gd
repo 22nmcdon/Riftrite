@@ -16,7 +16,7 @@ var xp_per_battle: int
 ## How strong an infusion is at each level (Base, Attuned, Resonant).
 var infusion_level_bp: Array[int] = []
 var crit_damage_bp: int
-## Item rarities with 2 sockets; every other item has 1, whatever its size.
+## Item rarities with 2 sockets; every other item has 1.
 var two_socket_rarities: Array[String] = []
 var rush_end_ticks: int
 var stall_start_ticks: int
@@ -47,8 +47,12 @@ var heal_cleanse_window_ticks: int
 var heal_cleanse_falloff_bp: int
 ## Keyed by act number. Look up with collapse_for_act(); don't iterate.
 var collapse_by_act: Dictionary[int, CollapseDef] = {}
-## Run layer: stash size (slots, like a hero row), essence pouch cap, and the
-## gold a reforge costs.
+## A hero's loadout slots by rank (index 0 = C): abilities and passives. Every
+## hero also has exactly one basic-attack slot.
+var ability_slots: Array[int] = []
+var passive_slots: Array[int] = []
+## Run layer: how many items the stash holds, essence pouch cap, and the gold
+## a reforge costs.
 var stash_slots: int = 6
 var pouch_cap: int = 8
 var reforge_gold: int = 0
@@ -75,6 +79,8 @@ static func read(reader: DataReader) -> TuningDef:
 	def.crit_damage_bp = reader.req_int("crit_damage_bp", FixedMath.BP_ONE)
 	def.two_socket_rarities = reader.opt_choice_array("two_socket_rarities", ItemDef.RARITIES)
 	def.tier_multiplier_bp = _read_tier_table(reader, "tier_multiplier_bp")
+	def.ability_slots = _read_tier_table(reader, "ability_slots")
+	def.passive_slots = _read_tier_table(reader, "passive_slots")
 	def.rank_multiplier_bp = _read_tier_table(reader, "rank_multiplier_bp")
 	def.crit_bp_per_point = reader.req_int("crit_bp_per_point", 0)
 	def.atsp_bp_per_point = reader.req_int("atsp_bp_per_point", 0)

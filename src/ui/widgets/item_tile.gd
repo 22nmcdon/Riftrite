@@ -18,7 +18,7 @@ enum Drop { INFUSE, COMBINE, MOVE }
 ## A ware card (the Caravan's stall): large art, name, rarity, size, price.
 const WARE_SIZE := Vector2(196, 250)
 ## A compact tile (the guild bar's stash): icon, tier, and gem only, per slot.
-const COMPACT_SLOT_WIDTH: int = 60
+const COMPACT_SLOT_WIDTH: int = 76
 const COMPACT_HEIGHT: int = 64
 
 var session: RunSession
@@ -72,8 +72,7 @@ func _fill(item: String, item_tier: int, essences: Array[String], xp: int, holde
 	essence_ids = essences
 	var content: ContentDb = session.content
 	var def: ItemDef = content.items[item]
-	var slots: int = maxi(def.size, 1)
-	custom_minimum_size = Vector2(slots * COMPACT_SLOT_WIDTH, COMPACT_HEIGHT) if compact else Vector2(slots * UiStyle.SLOT_WIDTH, UiStyle.TILE_HEIGHT)
+	custom_minimum_size = Vector2(COMPACT_SLOT_WIDTH, COMPACT_HEIGHT) if compact else Vector2(UiStyle.SLOT_WIDTH, UiStyle.TILE_HEIGHT)
 	if ware:
 		custom_minimum_size = WARE_SIZE
 	var selected: bool = uid >= 0 and session.selected_uid == uid
@@ -154,8 +153,7 @@ func _fill_ware(def: ItemDef, footer: String) -> void:
 	name_label.custom_minimum_size = Vector2(WARE_SIZE.x - 24, 0)
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(name_label)
-	var size_text: String = "%d slot%s" % [def.size, "" if def.size == 1 else "s"]
-	var kind: Label = UiStyle.label("%s · %s" % [def.rarity.capitalize(), size_text], 13, UiStyle.rarity_color(def.rarity).lightened(0.2))
+	var kind: Label = UiStyle.label("%s · %s" % [def.rarity.capitalize(), ItemDef.SLOT_LABELS[def.slot]], 13, UiStyle.rarity_color(def.rarity).lightened(0.2))
 	kind.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	kind.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(kind)

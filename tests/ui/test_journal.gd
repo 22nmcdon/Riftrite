@@ -19,21 +19,23 @@ func test_a_run_writes_its_journal() -> void:
 	var session: RunSession = _session()
 	session.new_run(21)
 	assert_true(FileAccess.file_exists(DIR.path_join("run_21.json")))
-	session.pick_start_hero(0)
+	for pick: int in RunState.TEAM_SIZE:
+		session.pick_start_hero(0)
 	session.pick_package(0)
 	session.reroll()
 	var data: Dictionary = _read(session)
 	assert_eq([int(data["seed"]), int(data["sessions"])], [21, 1])
 	var did: Array = (data["actions"] as Array).map(func(entry: Dictionary) -> String: return entry["did"])
-	assert_eq(did.size(), 4, "new run, hero, package, reroll: %s" % [did])
-	assert_string_contains(did[3], "rerolled")
-	assert_eq([int((data["actions"] as Array)[3]["day"]), (data["actions"] as Array)[3]["phase"]], [1, "caravan"])
+	assert_eq(did.size(), 6, "new run, three heroes, package, reroll: %s" % [did])
+	assert_string_contains(did[5], "rerolled")
+	assert_eq([int((data["actions"] as Array)[5]["day"]), (data["actions"] as Array)[5]["phase"]], [1, "caravan"])
 
 
 func test_fights_are_recorded_with_the_guild() -> void:
 	var session: RunSession = _session()
 	session.new_run(21)
-	session.pick_start_hero(0)
+	for pick: int in RunState.TEAM_SIZE:
+		session.pick_start_hero(0)
 	session.pick_package(0)
 	var encounter: String = session.state.encounter_id
 	session.leave_caravan()

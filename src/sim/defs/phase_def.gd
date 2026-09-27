@@ -27,8 +27,6 @@ static func read(reader: DataReader, enemy_id: String) -> PhaseDef:
 		var part: SpecializationDef.Part = SpecializationDef.read_part(part_reader, def.name, "%s_%s" % [enemy_id, def.name.to_snake_case()])
 		if not PART_KINDS.has(part.kind):
 			part_reader.error("a phase can't have a %s part" % SpecializationDef.KIND_NAMES[part.kind])
-		if part.when != SpecializationDef.When.FIELDED:
-			part_reader.error("phase parts always apply on the field (no \"when\")")
 		if keys.has(part.key):
 			part_reader.error("key \"%s\" is used twice in this phase" % part.key)
 		keys.append(part.key)

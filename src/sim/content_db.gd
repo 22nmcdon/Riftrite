@@ -234,11 +234,11 @@ func _check_references() -> void:
 		for i: int in items[id].auras.size():
 			if items[id].auras[i].target == AuraDef.Target.MATCHED_ITEMS:
 				errors.append("%s.auras[%d]: matched_items only works in a synergy" % [item_where, i])
-			if items[id].auras[i].target == AuraDef.Target.HOLDER_ITEMS:
-				errors.append("%s.auras[%d]: holder_items only works in a specialization" % [item_where, i])
 	for id: String in hero_ids:
 		if heroes[id].basic_attack != null:
 			_check_effects(heroes[id].basic_attack.effects, "%s (%s).basic_attack" % [HEROES_FILE, id])
+		for part: SpecializationDef.Part in heroes[id].innate:
+			_check_part(part, "%s (%s).innate.%s" % [HEROES_FILE, id, part.key])
 	for id: String in enemy_ids:
 		var enemy: EnemyDef = enemies[id]
 		var where: String = "%s (%s)" % [ENEMIES_FILE, id]
@@ -302,8 +302,6 @@ func _check_part(part: SpecializationDef.Part, at: String) -> void:
 	if part.item != null:
 		_check_effects(part.item.effects, at)
 		_check_no_partners(part.item.effects, at)
-	if part.backup != null:
-		_check_effects(part.backup.effects, at)
 	for status_id: String in [part.replace_from, part.replace_to]:
 		if part.kind == SpecializationDef.Kind.REPLACE_STATUS and not statuses.has(status_id):
 			errors.append("%s: unknown status \"%s\"" % [at, status_id])
