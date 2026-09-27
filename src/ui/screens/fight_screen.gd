@@ -31,30 +31,19 @@ var _fx_layer: Control
 
 
 func build() -> void:
-	var encounter_id: String = _encounter_id()
+	var encounter_id: String = session.state.encounter_id
 	_rift = session.content.encounters[encounter_id].kind != "normal"
-	if session.skirmish_pending():
-		heading("%s: %s" % [session.run.node_name(session.state.stop_node), session.content.encounters[encounter_id].name])
-		hint("An extra fight before today's. Win for a normal win's spoils; losing costs nothing (it isn't a loss). Hover an enemy's item to read it.")
-	else:
-		heading("Today's fight: " + session.content.encounters[encounter_id].name)
-		hint("Last chance to arrange your guild. Hover an enemy's item to read it. During the fight: Space pauses, 1-4 set the speed, S skips to the end.")
+	heading("Today's fight: " + session.content.encounters[encounter_id].name)
+	hint("Last chance to arrange your guild. Hover an enemy's item to read it. During the fight: Space pauses, 1-4 set the speed, S skips to the end.")
 	var enemies := HFlowContainer.new()
 	enemies.add_theme_constant_override("h_separation", 10)
-	for unit: UnitSetup in SetupBuilder.encounter_units(session.content, encounter_id):
+	for unit: UnitSetup in SetupBuilder.encounter_units(session.content, encounter_id, RunFlow.fight_hp_bp(session.state, session.run, encounter_id)):
 		enemies.add_child(_enemy_preview(unit))
 	add_child(enemies)
 	var fight_button: Button = UiStyle.primary(UiStyle.button("  Fight!  ", start_fight))
 	fight_button.add_theme_font_size_override("font_size", 24)
 	fight_button.custom_minimum_size = Vector2(200, 56)
 	add_child(fight_button)
-	if session.skirmish_pending():
-		add_child(UiStyle.button("Skip the skirmish, on to today's fight", func() -> void: session.leave_stop()))
-
-
-## Who this screen fights: a pending skirmish's enemies, or the day's.
-func _encounter_id() -> String:
-	return session.state.stop_encounter if session.skirmish_pending() else session.state.encounter_id
 
 
 func _enemy_preview(unit: UnitSetup) -> Control:
@@ -90,7 +79,7 @@ func _enemy_preview(unit: UnitSetup) -> Control:
 
 func start_fight() -> void:
 	playing = true
-	var result: RunActions.Result = session.skirmish() if session.skirmish_pending() else session.fight()
+	var result: RunActions.Result = session.fight()
 	if not result.ok:
 		playing = false
 		return
@@ -355,8 +344,6 @@ func _show_end() -> void:
 		var losses: String = "The day starts over (with bonus gold). One more loss ends the run."
 		if session.state.phase == "run_over":
 			losses = "The run is over."
-		elif session.state.phase == "stop":
-			losses = "A lost skirmish costs nothing: no spoils, and it doesn't count as a loss."
 		_end_box.add_child(UiStyle.label(losses, 16, UiStyle.TEXT_DIM))
 	var hero_names: Dictionary = {}
 	for unit: UnitState in player.sim.heroes:

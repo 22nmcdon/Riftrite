@@ -71,7 +71,7 @@ func test_infusion_marks_follow_the_sims_rules() -> void:
 
 
 func test_tiles_carry_the_ladder_the_rift_bleed_and_marks() -> void:
-	var session: RunSession = U.at_caravan()
+	var session: RunSession = U.at_shop()
 	var state: RunState = session.state
 	var knife := RunItem.make(state.take_uid(), "hearth_knife")
 	var daggers := RunItem.make(state.take_uid(), "twin_daggers")
@@ -95,7 +95,7 @@ func test_tiles_carry_the_ladder_the_rift_bleed_and_marks() -> void:
 # --- drop feedback ------------------------------------------------------------------
 
 func test_drop_checks_never_touch_the_real_run() -> void:
-	var session: RunSession = U.at_caravan()
+	var session: RunSession = U.at_shop()
 	var state: RunState = session.state
 	var keep := RunItem.make(state.take_uid(), "hearth_knife")
 	var copy := RunItem.make(state.take_uid(), "hearth_knife")
@@ -118,7 +118,7 @@ func test_drop_checks_never_touch_the_real_run() -> void:
 
 
 func test_drop_zones_check_room() -> void:
-	var session: RunSession = U.at_caravan()
+	var session: RunSession = U.at_shop()
 	var state: RunState = session.state
 	var hero: RunHero = state.heroes[0]
 	while hero.used_for(_content, ItemDef.Slot.ABILITY) < hero.slots_for(_content, ItemDef.Slot.ABILITY):
@@ -140,7 +140,7 @@ func test_drop_zones_check_room() -> void:
 # --- relics, the inspector, and the fight HUD ----------------------------------------
 
 func test_relics_are_hex_tokens() -> void:
-	var session: RunSession = U.at_caravan()
+	var session: RunSession = U.at_shop()
 	session.state.relics.append_array(["warding_knot", "rift_eaters_fang"] as Array[String])
 	var main: Main = _main(session)
 	var hexes: Array[Node] = U.find_all(main.guild_bar(), Glyph).filter(func(g: Glyph) -> bool: return g.shape == Glyph.Shape.HEX)

@@ -4,20 +4,24 @@ extends RefCounted
 ## RunActions only (like a player would), so the run runner can report
 ## run-level balance (tools/run_runner.gd). The strategy:
 ##   - draft the first offered hero three times, then take the gold package
-##   - at the Caravan: buy items: upgrades for held copies first, then the
-##     rarest first, cheapest first within a rarity
+##   - stops: the shop on the day's first visit; on the second, Loot, Events,
+##     the Vault, Retrain, the Forge (a shop if nothing else); upgrade the
+##     best item before the boss
+##   - at a shop: buy items (and an essence merchant's essence): upgrades for
+##     held copies first, then the rarest first, cheapest first within a
+##     rarity
+##   - the fight: in even-seeded runs always the harder one, in odd-seeded
+##     runs the easier one (so the report can compare them)
 ##   - combine copies, equip what fits, feed Legendaries (the essences an
 ##     Essence-hungry one wants; stash leftovers to a Devourer), infuse (a
 ##     single for each equipped item, then fuse into Base infusions), sturdy
 ##     classes in the front row and the rest in the back
-##   - stops: a skirmish (an extra fight: losing costs nothing), then Loot,
-##     Events, the Vault, Retrain, the Forge; take what fits; upgrade the best
-##     item before the boss
-##   - rewards: take everything that fits (the first relic of a choice);
+##   - take what fits at other stops; rewards: take everything that fits
+##     (the first relic of a choice, the rarest item of the reward pick);
 ##     give each rank-up to the lowest-ranked hero
 
-## Node kinds, best first.
-const STOP_PREFERENCE: Array[String] = ["fight", "loot", "event", "vault", "retrain", "forge"]
+## Node kinds for the day's second visit, best first.
+const STOP_PREFERENCE: Array[String] = ["loot", "event", "vault", "retrain", "forge", "shop"]
 ## Classes that stand in the front row; the rest stand in the back.
 const FRONT_CLASSES: Array[String] = ["warden", "striker", "trickster"]
 const MAX_ACTIONS: int = 2000
@@ -32,14 +36,16 @@ class Report:
 	var wins: int = 0
 	## Gold at the start of each day (index 0 = day 1).
 	var gold_by_day: Array[int] = []
+	## Whether this run always took the harder fight.
+	var took_hard: bool = false
+	## Every fight: [kind ("normal", "elite", "boss"), hard, won, seconds, day,
+	## encounter id].
+	var fights: Array[Array] = []
 	var bought: Array[String] = []
 	var discovered: Array[String] = []
 	## Reached the act's last day (the boss), and how many boss fights it took.
 	var reached_boss: bool = false
 	var boss_fights: int = 0
-	## Skirmishes (extra fights) fought and won.
-	var skirmishes: int = 0
-	var skirmish_wins: int = 0
 	## Legendaries held at the end, with their tier: "tallymans_bow:B".
 	var legendaries: Array[String] = []
 	## Per hero at the end (draft order): calling level, specialization
@@ -47,12 +53,17 @@ class Report:
 	var calling_levels: Array[int] = []
 	var spec_levels: Array[int] = []
 	var ranks: Array[int] = []
+	## Equipped items at the end: infused, Resonant, and holding two essences.
+	var infused: int = 0
+	var resonant: int = 0
+	var fused: int = 0
 	var errors: Array[String] = []
 
 
 static func play(run_seed: int, content: ContentDb, run: RunContent) -> Report:
 	var report := Report.new()
 	report.seed_value = run_seed
+	report.took_hard = run_seed % 2 == 0
 	var state: RunState = RunFlow.new_run(run_seed, content)
 	for step: int in MAX_ACTIONS:
 		if state.phase == "act_end" or state.phase == "run_over":
@@ -76,6 +87,14 @@ static func play(run_seed: int, content: ContentDb, run: RunContent) -> Report:
 		report.calling_levels.append(hero.deed_level(content, DeedSetup.CALLING))
 		report.spec_levels.append(hero.deed_level(content, DeedSetup.SPECIALIZATION))
 		report.ranks.append(hero.rank)
+		for item: RunItem in hero.items:
+			if item.essence_ids.is_empty():
+				continue
+			report.infused += 1
+			if item.essence_ids.size() > 1:
+				report.fused += 1
+			if Infusions.level_for(item.xp, content.tuning) == Infusions.Level.RESONANT:
+				report.resonant += 1
 	var problems: Array[String] = state.check(content)
 	report.errors.append_array(problems)
 	return report
@@ -87,34 +106,39 @@ static func _act(state: RunState, content: ContentDb, run: RunContent, report: R
 			_must(RunFlow.pick_start_hero(state, content, 0), report)
 		"start_package":
 			_must(RunFlow.pick_package(state, content, run, 0), report)
-		"caravan":
+		"stop_choice":
 			if report.gold_by_day.size() < state.day:
 				report.gold_by_day.append(state.gold)
-			_shop(state, content, report)
-			_organize(state, content)
-			_must(RunFlow.leave_caravan(state, content, run), report)
-		"stop_choice":
 			_must(RunFlow.pick_stop(state, content, run, _preferred_stop(state, run)), report)
 		"stop":
-			if state.stop_kind == "upgrade":
-				_upgrade_best(state, content)
-			else:
-				if state.stop_kind == "fight":
-					_organize(state, content)
-					var fought: Array = RunFlow.skirmish(state, content, run)
-					_must(fought[0], report)
-					report.skirmishes += 1
-					if fought[1] != null and (fought[1] as FightResult).guild_won():
-						report.skirmish_wins += 1
-				_take_all(state, content, report)
+			match state.stop_kind:
+				"upgrade":
+					_upgrade_best(state, content)
+				"shop":
+					_shop(state, content, report)
+				_:
+					_take_all(state, content, report)
 			_organize(state, content)
-			_must(RunFlow.leave_stop(state), report)
+			_must(RunFlow.leave_stop(state, content, run), report)
+		"fight_choice":
+			var pick: int = 0
+			for i: int in state.fight_options.size():
+				if RunFlow.is_hard_fight(state, run, state.fight_options[i]) == report.took_hard:
+					pick = i
+			_must(RunFlow.pick_fight(state, content, pick), report)
 		"fight":
 			_organize(state, content)
 			if run.act(state.act).is_boss_day(state.day):
 				report.boss_fights += 1
+			var kind: String = content.encounters[state.encounter_id].kind
+			var hard: bool = RunFlow.is_hard_fight(state, run, state.encounter_id)
+			var encounter_id: String = state.encounter_id
+			var day: int = state.day
 			var fought: Array = RunFlow.fight(state, content, run)
 			_must(fought[0], report)
+			var result: FightResult = fought[1]
+			if result != null:
+				report.fights.append([kind, hard, result.guild_won(), float(result.end_tick) / FixedMath.TICKS_PER_SECOND, day, encounter_id])
 		"rewards":
 			_take_all(state, content, report)
 			_organize(state, content)
@@ -129,6 +153,8 @@ static func _must(result: RunActions.Result, report: Report) -> void:
 static func _shop(state: RunState, content: ContentDb, report: Report) -> void:
 	var order: Array[int] = []
 	for i: int in state.offers.size():
+		if state.offers[i]["type"] == "essence" and state.offers[i]["price"] <= state.gold:
+			RunFlow.buy(state, content, i)
 		if state.offers[i]["type"] == "item":
 			order.append(i)
 	var rank: Callable = func(i: int) -> Array:
@@ -144,6 +170,10 @@ static func _shop(state: RunState, content: ContentDb, report: Report) -> void:
 
 
 static func _preferred_stop(state: RunState, run: RunContent) -> int:
+	if state.visit == 0:
+		for i: int in state.offers.size():
+			if run.is_shop(state.offers[i]["stop"]):
+				return i
 	for kind: String in STOP_PREFERENCE:
 		for i: int in state.offers.size():
 			if run.node_kind(state.offers[i]["stop"]) == kind:
@@ -152,6 +182,16 @@ static func _preferred_stop(state: RunState, run: RunContent) -> int:
 
 
 static func _take_all(state: RunState, content: ContentDb, report: Report) -> void:
+	# The reward pick: the rarest item (or the relic, when it's all there is).
+	var best: int = -1
+	for i: int in state.offers.size():
+		var offer: Dictionary = state.offers[i]
+		if offer.get("group", "") != RunFlow.REWARD_PICK or offer["taken"]:
+			continue
+		if best < 0 or _rarity(content, offer) > _rarity(content, state.offers[best]):
+			best = i
+	if best >= 0 and RunFlow.take(state, content, best).ok and state.offers[best]["type"] == "item":
+		report.bought.append(state.offers[best]["item"])
 	for i: int in state.offers.size():
 		var offer: Dictionary = state.offers[i]
 		if offer["type"] == "rank_up" and not offer["taken"]:
@@ -165,6 +205,11 @@ static func _take_all(state: RunState, content: ContentDb, report: Report) -> vo
 		if not offer["taken"] and offer["price"] <= state.gold and RunFlow.take(state, content, i).ok:
 			if offer["type"] == "item":
 				report.bought.append(offer["item"])
+
+
+## An item offer's rarity (0 = Common); relics count as Common.
+static func _rarity(content: ContentDb, offer: Dictionary) -> int:
+	return ItemDef.RARITIES.find(content.items[offer["item"]].rarity) if offer["type"] == "item" else 0
 
 
 static func _upgrade_best(state: RunState, content: ContentDb) -> void:

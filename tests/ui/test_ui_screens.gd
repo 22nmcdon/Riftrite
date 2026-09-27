@@ -70,22 +70,22 @@ func test_the_run_start_drafts_a_team_then_a_package() -> void:
 			assert_string_contains(U.text_of(main.screen), session.content.heroes[session.state.heroes[0].hero_id].name, "the team so far")
 	assert_eq(session.state.phase, "start_package")
 	assert_true(U.press(main.screen, "gold"))
-	assert_true(main.screen is CaravanScreen)
+	assert_true(main.screen is StopChoiceScreen)
 	assert_string_contains(U.text_of(main._day_slot), "Day 1 of")
 
 
 func test_continue_resumes_the_saved_run() -> void:
-	var saved: RunSession = U.at_caravan(9)
+	var saved: RunSession = U.at_shop(9)
 	var main: Main = _main(RunSession.make(saved.content, saved.run, U.SAVE_PATH))
 	assert_true(U.press(main.screen, "Continue"))
-	assert_true(main.screen is CaravanScreen)
+	assert_true(main.screen is ShopScreen)
 	assert_eq(main.session.state.gold, saved.state.gold)
 
 
-# --- the Caravan ------------------------------------------------------------------
+# --- shops --------------------------------------------------------------------------
 
 func test_clicking_a_ware_buys_it_into_the_stash() -> void:
-	var main: Main = _main(U.at_caravan())
+	var main: Main = _main(U.at_shop())
 	var state: RunState = main.session.state
 	var tiles: Array[ItemTile] = _offer_tiles(main)
 	assert_eq(tiles.size(), 5, "5 wares")
@@ -100,7 +100,7 @@ func test_clicking_a_ware_buys_it_into_the_stash() -> void:
 
 
 func test_an_upgrade_lights_up_and_combines_into_your_copy() -> void:
-	var session: RunSession = U.at_caravan()
+	var session: RunSession = U.at_shop()
 	var state: RunState = session.state
 	var ware: Dictionary = state.offers[1]
 	var held := RunItem.make(state.take_uid(), ware["item"], ware["tier"])
@@ -114,7 +114,7 @@ func test_an_upgrade_lights_up_and_combines_into_your_copy() -> void:
 
 
 func test_reroll_leave_and_refusals() -> void:
-	var main: Main = _main(U.at_caravan())
+	var main: Main = _main(U.at_shop())
 	var state: RunState = main.session.state
 	var before: Array = state.offers.duplicate(true)
 	assert_true(U.press(main.screen, "Reroll (1 gold)"))
@@ -124,12 +124,14 @@ func test_reroll_leave_and_refusals() -> void:
 	_offer_tiles(main)[0].clicked.emit()
 	assert_true(main._toast.visible, "a refused buy shows why")
 	assert_string_contains(main._toast.text, "Not enough gold")
-	assert_true(U.press(main.screen, "Leave the Caravan"))
+	assert_string_contains(U.text_of(main.screen), main.session.run.node_name(state.stop_node), "the shop's name")
+	assert_true(U.press(main.screen, "Leave, on down the road"))
 	assert_true(main.screen is StopChoiceScreen)
+	assert_string_contains(U.text_of(main.screen), "stop 2 of 2")
 
 
 func test_drag_and_drop_moves_sells_and_throws_away() -> void:
-	var main: Main = _main(U.at_caravan())
+	var main: Main = _main(U.at_shop())
 	var state: RunState = main.session.state
 	_offer_tiles(main)[0].clicked.emit()
 	_offer_tiles(main)[1].clicked.emit()
@@ -148,13 +150,13 @@ func test_drag_and_drop_moves_sells_and_throws_away() -> void:
 	var gold: int = state.gold
 	_zone(main, "sell")._drop_data(Vector2.ZERO, {"uid": first.uid})
 	assert_eq(state.owner_of(first.uid), RunState.NOWHERE)
-	assert_eq(state.gold, gold + main.session.run.economy.sell_price(state.offers[0]["price"]))
+	assert_eq(state.gold, gold + main.session.run.economy.sell_price(state.offers[0]["price"]), "half the price paid")
 	_zone(main, "Throw away")._drop_data(Vector2.ZERO, {"uid": second.uid})
 	assert_eq(state.stash, [] as Array[RunItem])
 
 
 func test_dropping_a_copy_combines_and_an_essence_infuses() -> void:
-	var session: RunSession = U.at_caravan()
+	var session: RunSession = U.at_shop()
 	var state: RunState = session.state
 	var keep := RunItem.make(state.take_uid(), "hearth_knife")
 	var copy := RunItem.make(state.take_uid(), "hearth_knife")
@@ -182,7 +184,7 @@ func test_dropping_a_copy_combines_and_an_essence_infuses() -> void:
 
 
 func test_formation_buttons() -> void:
-	var main: Main = _main(U.at_caravan())
+	var main: Main = _main(U.at_shop())
 	var hero: RunHero = main.session.state.heroes[0]
 	var row: UnitSetup.Row = hero.row
 	assert_null(main.hero_sheet(), "closed until a hero is clicked")
@@ -194,7 +196,7 @@ func test_formation_buttons() -> void:
 
 
 func test_the_hero_sheet_opens_steps_and_closes() -> void:
-	var session: RunSession = U.at_caravan()
+	var session: RunSession = U.at_shop()
 	var state: RunState = session.state
 	var main: Main = _main(session)
 	var tokens: Array[Node] = U.find_all(main.guild_bar(), HeroToken)
@@ -215,60 +217,56 @@ func test_the_hero_sheet_opens_steps_and_closes() -> void:
 
 # --- stops, the fight, rewards ------------------------------------------------------
 
-func test_stop_choice_and_stop() -> void:
-	var session: RunSession = U.at_caravan()
-	session.leave_caravan()
+func test_two_stops_then_the_fight_choice() -> void:
+	var session: RunSession = U.at_start()
 	var main: Main = _main(session)
+	assert_true(main.screen is StopChoiceScreen)
+	assert_string_contains(U.text_of(main.screen), "stop 1 of 2")
 	assert_eq(session.state.offers.size(), 2, "two nodes")
-	var stop: String = session.state.offers[0]["stop"]
-	if session.run.node_kind(stop) == "fight":
-		stop = session.state.offers[1]["stop"]
 	for offer: Dictionary in session.state.offers:
 		var card: Button = U.button(main.screen, session.run.node_name(offer["stop"]))
 		assert_not_null(card, "each node shows its name")
 		assert_true(card.text.contains(session.run.node_text(offer["stop"])), "and its blurb")
+	assert_true(U.button(main.screen, session.run.node_name(session.state.offers[0]["stop"])).text.contains("(Shop)"), "one is a shop")
+	var stop: String = session.state.offers[1]["stop"]
 	assert_true(U.press(main.screen, session.run.node_name(stop)))
 	assert_eq([session.state.phase, session.state.stop_node], ["stop", stop])
 	assert_true(main.screen is StopScreen)
 	assert_string_contains(U.text_of(main.screen), session.run.node_name(stop))
+	assert_true(U.press(main.screen, "Leave, on down the road"))
+	assert_true(main.screen is StopChoiceScreen)
+	assert_true(U.press(main.screen, session.run.node_name(session.state.offers[0]["stop"])))
+	assert_true(main.screen is ShopScreen)
 	assert_true(U.press(main.screen, "Leave, on to the fight"))
-	assert_true(main.screen is FightScreen)
-
-
-func test_a_skirmish_plays_back_then_offers_its_spoils() -> void:
-	var session: RunSession = U.at_caravan()
-	session.leave_caravan()
-	var state: RunState = session.state
-	state.offers = [{"type": "stop", "stop": "skirmish", "price": 0, "taken": false}] as Array[Dictionary]
-	var main: Main = _main(session)
-	assert_true(U.press(main.screen, "A Rift Skirmish"))
-	assert_true(main.screen is FightScreen, "a skirmish to fight shows the fight screen")
+	assert_true(main.screen is FightChoiceScreen)
 	var text: String = U.text_of(main.screen)
-	assert_true(text.contains("A Rift Skirmish: " + session.content.encounters[state.stop_encounter].name), text)
-	assert_not_null(U.button(main.screen, "Skip the skirmish"))
-	var fight: FightScreen = main.screen
-	var losses: int = state.losses
-	assert_true(U.press(fight, "Fight!"))
-	assert_true(fight.playing)
-	assert_eq([state.phase, state.stop_used, state.losses], ["stop", true, losses], "never counted as a loss")
-	fight._on_entries(fight.player.skip_to_end())
-	fight._continue()
-	assert_true(main.screen is StopScreen, "then the stop, with any spoils")
-	assert_string_contains(U.text_of(main.screen), "The skirmish is over")
-	assert_true(U.press(main.screen, "Leave, on to the fight"))
+	for encounter_id: String in session.state.fight_options:
+		assert_string_contains(text, session.content.encounters[encounter_id].name)
+	assert_string_contains(text, "easier")
+	assert_string_contains(text, "harder")
+	assert_string_contains(text, "More gold, and rarer spoils")
+	assert_string_contains(U.text_of(main._day_slot), " or ", "the day bar shows both fights")
+	var buttons: Array[Node] = U.find_all(main.screen, Button)
+	(buttons[1] as Button).pressed.emit()
+	assert_eq([session.state.phase, session.state.encounter_id], ["fight", session.state.fight_options[1]])
 	assert_true(main.screen is FightScreen)
-	assert_string_contains(U.text_of(main.screen), "Today's fight")
+	assert_string_contains(U.text_of(main.screen), "Today's fight: " + session.content.encounters[session.state.fight_options[1]].name)
 
 
-func test_a_skirmish_can_be_skipped() -> void:
-	var session: RunSession = U.at_caravan()
-	session.leave_caravan()
-	session.state.offers = [{"type": "stop", "stop": "skirmish", "price": 0, "taken": false}] as Array[Dictionary]
-	session.pick_stop(0)
+func test_the_rewards_screen_shows_the_pick_of_three() -> void:
+	var session: RunSession = U.at_shop()
+	var state: RunState = session.state
+	state.phase = "rewards"
+	state.offers.assign([
+		{"type": "item", "item": "rift_claw", "tier": 0, "price": 0, "taken": false, "group": RunFlow.REWARD_PICK, "drop": "yes"},
+		{"type": "item", "item": "hearth_knife", "tier": 0, "price": 0, "taken": false, "group": RunFlow.REWARD_PICK},
+		{"type": "item", "item": "hatchet", "tier": 0, "price": 0, "taken": false, "group": RunFlow.REWARD_PICK},
+	])
 	var main: Main = _main(session)
-	assert_true(U.press(main.screen, "Skip the skirmish"))
-	assert_eq(session.state.phase, "fight")
-	assert_string_contains(U.text_of(main.screen), "Today's fight")
+	assert_string_contains(U.text_of(main.screen), "Choose one spoil (or none): the first is from the enemy team")
+	_offer_tiles(main)[1].clicked.emit()
+	assert_eq(state.stash[0].item_id, "hearth_knife")
+	assert_eq([state.offers[0]["taken"], state.offers[2]["taken"]], [true, true], "one of the three")
 
 
 func test_the_fight_plays_back_then_moves_on() -> void:
@@ -337,7 +335,7 @@ func test_fight_keyboard_shortcuts() -> void:
 
 
 func test_the_day_bar_abandons_the_run() -> void:
-	var main: Main = _main(U.at_caravan())
+	var main: Main = _main(U.at_shop())
 	var bar: Node = main._day_slot.get_child(0)
 	assert_string_contains(U.text_of(bar), "Seed 5")
 	var dialog: ConfirmationDialog = U.find_all(bar, ConfirmationDialog)[0]
@@ -354,7 +352,7 @@ func test_rewards_and_the_run_end() -> void:
 	if session.state.phase == "rewards":
 		assert_true(main.screen is RewardsScreen)
 		assert_true(U.press(main.screen, "Continue"))
-	assert_true(main.screen is CaravanScreen)
+	assert_true(main.screen is StopChoiceScreen)
 	session.state.phase = "run_over"
 	main.refresh()
 	assert_true(main.screen is RunEndScreen)
@@ -365,7 +363,7 @@ func test_rewards_and_the_run_end() -> void:
 
 
 func test_the_hero_sheet_shows_deeds_and_the_level_two_choice() -> void:
-	var session: RunSession = U.at_caravan()
+	var session: RunSession = U.at_shop()
 	var hero: RunHero = session.state.heroes[0]
 	var calling: DeedTrackDef = session.content.heroes[hero.hero_id].calling
 	hero.calling_progress = calling.deed.goals[0]
@@ -405,7 +403,7 @@ func test_the_fight_ends_with_deed_progress() -> void:
 
 
 func test_the_rewards_screen_gives_a_rank_up() -> void:
-	var session: RunSession = U.at_caravan()
+	var session: RunSession = U.at_shop()
 	var state: RunState = session.state
 	state.phase = "rewards"
 	state.offers.assign([{"type": "rank_up", "price": 0, "taken": false}])
@@ -448,20 +446,18 @@ func test_a_whole_run_clicked_through() -> void:
 				assert_true(U.press(main.screen, "Take"))
 			"start_package":
 				assert_true(U.press(main.screen, "gold"))
-			"caravan":
+			"stop_choice":
+				# The shop on the first visit, the other stop on the second.
+				assert_true(U.press(main.screen, main.session.run.node_name(main.session.state.offers[mini(main.session.state.visit, 1)]["stop"])))
+			"stop" when main.screen is ShopScreen:
 				bought += _shop(main)
 				_equip(main)
-				assert_true(U.press(main.screen, "Leave the Caravan"))
-			"stop_choice":
-				assert_true(U.press(main.screen, main.session.run.node_name(main.session.state.offers[0]["stop"])))
-			"stop" when main.session.skirmish_pending():
-				fights += 1
-				assert_true(U.press(main.screen, "Fight!"))
-				assert_true(U.press(main.screen, "Skip"))
-				assert_true(U.press(main.screen, "Continue"))
+				assert_true(U.press(main.screen, "Leave, on"))
 			"stop":
 				taken += _take_everything(main)
-				assert_true(U.press(main.screen, "Leave, on to the fight"))
+				assert_true(U.press(main.screen, "Leave, on"))
+			"fight_choice":
+				assert_true(U.press(main.screen, "Fight them"))
 			"fight":
 				_equip(main)
 				_pick_specializations(main)
@@ -561,3 +557,17 @@ func _take_everything(main: Main) -> int:
 func after_each() -> void:
 	if FileAccess.file_exists(U.SAVE_PATH):
 		DirAccess.remove_absolute(U.SAVE_PATH)
+
+
+func test_the_draft_shows_affinities_and_how_a_hero_fits_the_team() -> void:
+	var session: RunSession = U.session()
+	session.new_run(5)
+	var main: Main = _main(session)
+	var first: HeroDef = session.content.heroes[session.state.offers[0]["hero"]]
+	assert_string_contains(U.text_of(main.screen), "Affinities: " + ItemInfo.keyword_names(session.content, first.affinities))
+	var state := RunState.make(1)
+	state.heroes.append(RunHero.make("brannoc"))
+	assert_eq(RunStartScreen.team_notes(session.content, state, "hesk"), PackedStringArray(["Shares Ward with Brannoc", "A bond with Brannoc: ?"]), "the bond's name stays hidden")
+	state.discovered.append("twin_walls")
+	assert_eq(RunStartScreen.team_notes(session.content, state, "hesk")[1], "A bond with Brannoc: Twin Walls", "until it's found")
+	assert_eq(RunStartScreen.team_notes(session.content, state, "maren"), PackedStringArray(), "nothing shared, no bond")

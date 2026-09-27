@@ -163,7 +163,7 @@ func _add_actions(item: RunItem, owner: String) -> void:
 	if owner != RunState.STASH:
 		_action("Put in the stash", func() -> void: session.move_item(uid, RunState.STASH, 99))
 	# What the current step allows.
-	if state.phase == "caravan":
+	if RunFlow.at_shop(state):
 		_action("Sell for %d gold" % session.sell_price(uid), func() -> void: session.sell(uid), UiStyle.HIGHLIGHT)
 	if state.phase == "stop" and state.stop_kind == "forge" and not item.essence_ids.is_empty():
 		_action("Reforge: remove the infusion (%d gold)" % content.tuning.reforge_gold, func() -> void: session.forge_reforge(uid))

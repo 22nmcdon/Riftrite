@@ -6,9 +6,10 @@ extends RefCounted
 ## day structure (step 5).
 
 
-## A fight between the guild and an encounter. Draws the fight's seed from
-## the run's RNG, so the same run and actions give the same fights.
-static func setup_for(state: RunState, content: ContentDb, encounter_id: String) -> FightSetup:
+## A fight between the guild and an encounter (its enemies' HP times
+## `hp_bp`). Draws the fight's seed from the run's RNG, so the same run and
+## actions give the same fights.
+static func setup_for(state: RunState, content: ContentDb, encounter_id: String, hp_bp: int = FixedMath.BP_ONE) -> FightSetup:
 	var team: Array[UnitSetup] = []
 	for hero: RunHero in state.heroes:
 		var entries: Array[LoadoutEntry] = []
@@ -18,18 +19,15 @@ static func setup_for(state: RunState, content: ContentDb, encounter_id: String)
 		unit.deeds = hero.deed_setups(content)
 		team.append(unit)
 	var fight_seed: int = state.rng.next_u32()
-	return FightSetup.make(team, SetupBuilder.encounter_units(content, encounter_id), fight_seed,
+	return FightSetup.make(team, SetupBuilder.encounter_units(content, encounter_id, hp_bp), fight_seed,
 		content.encounters[encounter_id].act, state.relics.duplicate(), SetupBuilder.encounter_relics(content, encounter_id))
 
 
 ## Writes a finished fight back into the run: each infused item's XP
-## (matched by hero and loadout place), each hero's deed progress (a lost or
-## extra fight counts too), newly found synergies, Legendary path progress,
-## and the result (a tie counts as a win). Returns notes on Legendaries that
-## grew.
-## `encounter_id` is who was fought (default: the day's fight); an extra
-## fight passes `counts` false, so it's neither a win nor a loss.
-static func apply_result(state: RunState, content: ContentDb, result: FightResult, encounter_id: String = "", counts: bool = true) -> Array[String]:
+## (matched by hero and loadout place), each hero's deed progress (a lost
+## fight counts too), newly found synergies, Legendary path progress, and the
+## result (a tie counts as a win). Returns notes on Legendaries that grew.
+static func apply_result(state: RunState, content: ContentDb, result: FightResult) -> Array[String]:
 	for infusion: FightResult.InfusionResult in result.infusions:
 		var item: RunItem = _item_at(state, content, infusion.unit_id, infusion.slot)
 		if item != null and item.item_id == infusion.item_id:
@@ -45,9 +43,7 @@ static func apply_result(state: RunState, content: ContentDb, result: FightResul
 	for found: FightResult.SynergyResult in result.synergies:
 		if not state.discovered.has(found.synergy_id):
 			state.discovered.append(found.synergy_id)
-	var notes: Array[String] = RunLegendary.after_fight(state, content, result, encounter_id if not encounter_id.is_empty() else state.encounter_id)
-	if not counts:
-		return notes
+	var notes: Array[String] = RunLegendary.after_fight(state, content, result, state.encounter_id)
 	if result.guild_won():
 		state.wins += 1
 	else:

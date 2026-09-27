@@ -1,10 +1,10 @@
 [
-  {"id": "blade", "name": "Blade", "text": "Melee weapons and the things that keep them sharp."},
-  {"id": "bow", "name": "Bow", "text": "Bows, slings, and whatever else strikes from afar."},
-  {"id": "spell", "name": "Spell", "text": "Magic: tomes, charms, and fire called from nothing."},
-  {"id": "mend", "name": "Mend", "text": "Healing: salves, stews, and lanterns that close wounds."},
-  {"id": "ward", "name": "Ward", "text": "Shields and the things that hold the line."},
-  {"id": "burn", "name": "Burn", "text": "Sets enemies alight."},
-  {"id": "bleed", "name": "Bleed", "text": "Opens wounds that keep bleeding."},
-  {"id": "hex", "name": "Hex", "text": "Poison, Slow, Blind, and Freeze: the dirty tricks."}
+  {"id": "blade", "name": "Blade", "text": "Melee weapons and the things that keep them sharp.", "affinity": {"text": "Your Blade items crit 10% more often.", "parts": [{"key": "perk", "kind": "aura", "target": "holder_items", "stat": "crit_chance_bp", "value": 1000, "filter": {"keyword": "blade"}}]}},
+  {"id": "bow", "name": "Bow", "text": "Bows, slings, and whatever else strikes from afar.", "affinity": {"text": "Your Bow items hit 15% harder.", "parts": [{"key": "perk", "kind": "aura", "target": "holder_items", "stat": "damage_bp", "value": 11500, "filter": {"keyword": "bow"}}]}},
+  {"id": "spell", "name": "Spell", "text": "Magic: tomes, charms, and fire called from nothing.", "affinity": {"text": "Your Spell items hit 15% harder.", "parts": [{"key": "perk", "kind": "aura", "target": "holder_items", "stat": "damage_bp", "value": 11500, "filter": {"keyword": "spell"}}]}},
+  {"id": "mend", "name": "Mend", "text": "Healing: salves, stews, and lanterns that close wounds.", "affinity": {"text": "Your Mend items heal 20% more.", "parts": [{"key": "perk", "kind": "aura", "target": "holder_items", "stat": "heal_bp", "value": 12000, "filter": {"keyword": "mend"}}]}},
+  {"id": "ward", "name": "Ward", "text": "Shields and the things that hold the line.", "affinity": {"text": "Your Ward items give 20% more Shield.", "parts": [{"key": "perk", "kind": "aura", "target": "holder_items", "stat": "shield_bp", "value": 12000, "filter": {"keyword": "ward"}}]}},
+  {"id": "burn", "name": "Burn", "text": "Sets enemies alight.", "affinity": {"text": "Your Burn items' damage over time is 25% stronger.", "parts": [{"key": "perk", "kind": "aura", "target": "holder_items", "stat": "over_time_bp", "value": 12500, "filter": {"keyword": "burn"}}]}},
+  {"id": "bleed", "name": "Bleed", "text": "Opens wounds that keep bleeding.", "affinity": {"text": "Your Bleed items' damage over time is 25% stronger.", "parts": [{"key": "perk", "kind": "aura", "target": "holder_items", "stat": "over_time_bp", "value": 12500, "filter": {"keyword": "bleed"}}]}},
+  {"id": "hex", "name": "Hex", "text": "Poison, Slow, Blind, and Freeze: the dirty tricks.", "affinity": {"text": "Your Hex items fire 10% faster.", "parts": [{"key": "perk", "kind": "aura", "target": "holder_items", "stat": "cooldown_bp", "value": -1000, "filter": {"keyword": "hex"}}]}}
 ]

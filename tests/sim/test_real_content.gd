@@ -85,7 +85,7 @@ func test_slice_item_roster() -> void:
 	for item_id: String in db.item_ids:
 		if not db.items[item_id].enemy_only:
 			guild.append(db.items[item_id])
-	assert_eq(guild.size(), 66)
+	assert_eq(guild.size(), 76, "66, plus 4 conduits and 6 event passives (step 5)")
 	var slots: Array[int] = [0, 0, 0]
 	var epics: int = 0
 	var paths: Array[String] = []

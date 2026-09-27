@@ -12,11 +12,9 @@ extends RefCounted
 ##                    start tier (rare events only)
 ##   essence          a random essence
 ##   key              a key
-##   tier_shop        "count" different items, all at "tier", each for sale at
-##                    that tier's Caravan price (buy any, or leave). This is how
-##                    higher tiers show up before the Caravan sells them.
+## (Tier shops are shop nodes now: data/nodes.json.)
 
-const KINDS: Array[String] = ["gold", "item_by_rarity", "item_by_tier", "relic_by_rarity", "relic_merchant", "legendary_relic", "legendary_item", "essence", "key", "tier_shop"]
+const KINDS: Array[String] = ["gold", "item_by_rarity", "item_by_tier", "relic_by_rarity", "relic_merchant", "legendary_relic", "legendary_item", "essence", "key"]
 
 var id: String
 var name: String
@@ -24,9 +22,6 @@ var text: String
 var kind: String
 var amount: int = 0
 var weight: int = 1
-## tier_shop: the wares' tier (TuningDef.TIER_NAMES index) and how many.
-var tier: int = 0
-var count: int = 0
 
 
 static func read(reader: DataReader) -> EventDef:
@@ -37,9 +32,6 @@ static func read(reader: DataReader) -> EventDef:
 	def.kind = reader.req_choice("kind", KINDS)
 	if def.kind == "gold":
 		def.amount = reader.req_int("amount", 1)
-	if def.kind == "tier_shop":
-		def.tier = maxi(TuningDef.TIER_NAMES.find(reader.req_choice("tier", TuningDef.TIER_NAMES)), 0)
-		def.count = reader.req_int("count", 1, 5)
 	def.weight = reader.opt_int("weight", 1, 1)
 	reader.finish()
 	return def

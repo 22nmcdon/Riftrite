@@ -284,23 +284,25 @@ func test_every_hero_is_complete() -> void:
 		assert_eq(signatures.size(), 1, "%s has a signature item" % hero_id)
 		if not classes.has(hero.hero_class):
 			classes.append(hero.hero_class)
-	for hero_class: String in classes:
-		var traits: int = 0
+	for keyword_id: String in content.keyword_ids:
+		var affinities: int = 0
 		for synergy_id: String in content.synergy_ids:
-			if content.synergies[synergy_id].layer == SynergyDef.Layer.CLASS_TRAIT and content.synergies[synergy_id].unit_class == hero_class:
-				traits += 1
-		assert_eq(traits, 1, "the %s class has a trait" % hero_class)
+			if content.synergies[synergy_id].layer == SynergyDef.Layer.AFFINITY and content.synergies[synergy_id].keyword == keyword_id:
+				affinities += 1
+		assert_eq(affinities, 1, "the %s keyword has an affinity synergy" % keyword_id)
 	assert_eq(classes.size(), 6, "all six classes are in the slice")
 
 
-func test_two_heroes_of_a_class_reach_its_trait() -> void:
+func test_two_heroes_sharing_an_affinity_reach_its_synergy() -> void:
 	var content: ContentDb = K.content()
+	assert_true(content.heroes["brannoc"].affinities.has("ward") and content.heroes["hesk"].affinities.has("ward"))
 	var heroes: Array[UnitSetup] = [
 		SetupBuilder.hero(content, "brannoc", 0, FRONT, [] as Array[LoadoutEntry]),
 		SetupBuilder.hero(content, "hesk", 0, FRONT, [] as Array[LoadoutEntry]),
 	]
 	var result: FightResult = CombatSim.run(FightSetup.make(heroes, SetupBuilder.encounter_units(content, "pup_litter")), content)
-	assert_string_contains(result.combat_log.to_text(), "Wardens")
+	assert_string_contains(result.combat_log.to_text(), "Shieldwall (2): 2 heroes")
+	assert_string_contains(result.combat_log.to_text(), "Twin Walls: brannoc + hesk", "and their duo bond")
 
 
 func test_old_hesk_hits_from_his_hp() -> void:
@@ -308,3 +310,25 @@ func test_old_hesk_hits_from_his_hp() -> void:
 	var hesk: UnitSetup = SetupBuilder.hero(content, "hesk", 0, FRONT, [] as Array[LoadoutEntry])
 	var state: ItemState = ItemState.make(hesk.basic_attack, 0, hesk.stats, content)
 	assert_eq(state.effects[0].value.final, 3 + 460 * 200 / FixedMath.BP_ONE, "3 + 2% of 460 HP")
+
+
+func test_each_hero_gets_their_affinity_perks() -> void:
+	var content: ContentDb = K.content()
+	for hero_id: String in content.hero_ids:
+		assert_eq(content.heroes[hero_id].affinities.size(), 2, hero_id)
+	var knife: LoadoutEntry = LoadoutEntry.new()
+	knife.item_id = "hearth_knife"
+	var wren: UnitSetup = SetupBuilder.hero(content, "wren", 0, FRONT, [knife] as Array[LoadoutEntry])
+	assert_eq(wren.affinities, ["blade", "bleed"] as Array[String])
+	var keys: Array[String] = []
+	for part: SpecializationDef.Part in wren.innate:
+		keys.append(part.key)
+	assert_true(keys.has("affinity_blade_perk") and keys.has("affinity_bleed_perk"), str(keys))
+	assert_eq(content.heroes["wren"].innate.size() + 2, wren.innate.size(), "the innate's own parts are untouched")
+	var sim := CombatSim.new(FightSetup.make([wren], SetupBuilder.encounter_units(content, "pup_litter")), content)
+	var held: ItemState = sim.units[0].loadout_items()[0]
+	assert_true(content.items["hearth_knife"].keywords.has("blade"))
+	var plain: ItemState = ItemState.make(content.items["hearth_knife"], 0, sim.units[0].stats, content)
+	assert_eq(held.crit_chance_bp, plain.crit_chance_bp + 1000, "Blade affinity: +10% crit on Blade items")
+	var auras: String = sim.combat_log.to_text()
+	assert_string_contains(auras, "wren · Blade affinity aura starts")

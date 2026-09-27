@@ -610,3 +610,68 @@ RELICS = {
 }
 
 MORE_ITEMS |= LEGENDARIES
+
+
+# --- redesign step 5: conduits and event passives ---------------------------------
+
+def ember_censer():
+    return censer(BRASS, BRASS_D, SLATE_L, EMBER)
+
+
+def open_channel():
+    swirl = line("M24 26 Q32 18 40 26 Q46 34 36 40 Q28 44 26 36 Q26 30 32 30", RIFT_L, 3)
+    return book(RIFT_D, RIFT, circle(33, 32, 12, "#2E2450") + swirl)
+
+
+def bond_chain():
+    links = "".join(group(ellipse(0, 0, 11, 6, "none", sw=5) + ellipse(0, 0, 11, 6, "none", stroke=False, extra=f' stroke="{STEEL_L}" stroke-width="2.5"'),
+                          f"translate({x} {y}) rotate({r})") for x, y, r in ((16, 44, -40), (27, 33, 50), (38, 22, -40), (49, 11, 50)))
+    return svg(links)
+
+
+def rift_prism():
+    return svg(path("M32 6 L54 52 L10 52 Z", "#D8C8F8") + path("M32 6 L40 52 L10 52 Z", "#B79CF0", stroke=False)
+               + path("M32 6 L54 52 L10 52 Z", "none") + line("M4 30 L22 30", PARCH, 3)
+               + line("M42 30 L60 22", EMBER, 3) + line("M42 34 L60 34", FROST, 3) + line("M42 38 L60 46", VENOM, 3)
+               + rift_cracks("M28 42 L34 36"))
+
+
+def tinder_charm():
+    return svg(line("M32 4 L32 14", INK, 2.5) + circle(32, 38, 20, OAK_D) + circle(32, 38, 15, "#3A2A22", stroke=False) + flame(32, 48, 0.62))
+
+
+def fencers_bracer():
+    return svg(path("M14 18 Q32 10 50 18 L50 46 Q32 54 14 46 Z", STEEL) + line("M14 26 Q32 19 50 26", STEEL_D, 3)
+               + line("M14 38 Q32 31 50 38", STEEL_D, 3) + rect(26, 24, 12, 16, BRASS, 2) + line("M18 20 L18 44", "#FFFFFF", 2))
+
+
+def thorn_vest():
+    thorns = "".join(path(f"M{x} {y} L{x + dx} {y + dy} L{x + 3} {y + 3} Z", MOSS_D, sw=2) for x, y, dx, dy in
+                     ((10, 22, -6, -2), (10, 36, -6, 2), (54, 22, 6, -2), (54, 36, 6, 2), (26, 54, -2, 6), (38, 54, 2, 6)))
+    body = path("M20 6 L26 10 L38 10 L44 6 L54 16 L50 26 L50 56 L14 56 L14 26 L10 16 Z", OAK)
+    return svg(thorns + body + line("M32 12 L32 56", OAK_D, 2.5) + circle(32, 24, 2.5, BRASS) + circle(32, 36, 2.5, BRASS))
+
+
+def drummers_cadence():
+    drum = rect(14, 26, 36, 26, RED_CLOTH, 4) + ellipse(32, 26, 18, 7, BONE_L) + line("M16 32 L24 48 L32 32 L40 48 L48 32", BRASS, 2.5)
+    sticks = line("M18 6 L30 22", INK, 6) + line("M18 6 L30 22", OAK_L, 3) + line("M48 4 L36 21", INK, 6) + line("M48 4 L36 21", OAK_L, 3)
+    return svg(drum + sticks + circle(18, 6, 3.5, BONE) + circle(48, 4, 3.5, BONE))
+
+
+def leech_vial():
+    leech = line("M22 44 Q28 38 34 44 Q40 50 44 44", INK, 6) + line("M22 44 Q28 38 34 44 Q40 50 44 44", "#3A1E24", 3.5)
+    return svg(bottle(BLOOD, "#E07A70", label=leech))
+
+
+def hex_bag():
+    bag = path("M18 26 Q10 56 32 58 Q54 56 46 26 Z", "#5A3E8C") + path("M20 26 L44 26 L40 18 L24 18 Z", "#4A3278")
+    tie = line("M22 24 L42 24", BONE, 3) + path("M30 22 L22 12 L32 18 L42 12 L34 22 Z", MOSS, sw=2)
+    rune = line("M26 36 L38 48 M38 36 L26 48", VENOM_L, 3) + circle(32, 42, 7, "none", stroke=False, extra=f' stroke="{VENOM}" stroke-width="2"')
+    return svg(bag + tie + rune)
+
+
+MORE_ITEMS |= {
+    "ember_censer": ember_censer, "open_channel": open_channel, "bond_chain": bond_chain, "rift_prism": rift_prism,
+    "tinder_charm": tinder_charm, "fencers_bracer": fencers_bracer, "thorn_vest": thorn_vest,
+    "drummers_cadence": drummers_cadence, "leech_vial": leech_vial, "hex_bag": hex_bag,
+}

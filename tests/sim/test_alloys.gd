@@ -7,7 +7,7 @@ const K = preload("res://tests/sim/sim_test_kit.gd")
 const FRONT := UnitSetup.Row.FRONT
 const BACK := UnitSetup.Row.BACK
 const BIG_HP: int = 10000000
-const RESONANT: int = 300
+const RESONANT: int = 150
 
 
 func _idle() -> ItemDef:
@@ -80,7 +80,7 @@ func test_alloy_keeps_both_essences() -> void:
 
 
 func test_an_alloy_awakens_only_at_resonant() -> void:
-	for xp: int in [0, 100, RESONANT - 1]:
+	for xp: int in [0, 60, RESONANT - 1]:
 		var result: FightResult = K.run([_hero([_with(_big("hex"), ["ember", "storm"] as Array[String], xp)])], [K.dummy("foe", BIG_HP)])
 		assert_eq(_applied(result, "plasma").size(), 0, "not awakened at %d XP" % xp)
 		assert_gt(_applied(result, "burn").size(), 0, "plain Burn at %d XP" % xp)
@@ -97,7 +97,7 @@ func test_an_alloy_awakens_mid_fight_and_says_so() -> void:
 	var hex: ItemDef = _big("hex", {"xp_per_fire": 5})
 	var result: FightResult = K.run([_hero([_with(hex, ["ember", "storm"] as Array[String], RESONANT - 5)])], [K.dummy("foe", BIG_HP)])
 	var level_up: LogEntry = result.combat_log.of_kind(LogEntry.Kind.INFUSION_LEVEL)[0]
-	assert_eq(level_up.to_text(), "[0.80s] hero · Hex [Plasma] becomes Resonant and awakens (300 XP)")
+	assert_eq(level_up.to_text(), "[0.80s] hero · Hex [Plasma] becomes Resonant and awakens (150 XP)")
 	var burns: Array[LogEntry] = _applied(result, "burn")
 	var plasmas: Array[LogEntry] = _applied(result, "plasma")
 	assert_eq([burns.size() > 0, plasmas.size() > 0], [true, true], "Burn before it awakened, Plasma after")

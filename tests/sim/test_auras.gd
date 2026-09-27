@@ -103,6 +103,6 @@ func test_row_aura_stops_when_its_holder_falls() -> void:
 func test_auras_survive_an_infusion_level_up() -> void:
 	var drum: ItemDef = _with_aura("drum", [{"target": "holder_items", "stat": "crit_chance_bp", "value": 10000}])
 	var sword: ItemDef = K.item("sword", {"xp_per_fire": 4, "effects": K.damage(10)})
-	var result: FightResult = K.run([K.unit("hero", BIG_HP, FRONT, [drum, K.equip(sword, ["stone"] as Array[String], 0, 96)], _idle())], [K.dummy("foe", BIG_HP)])
+	var result: FightResult = K.run([K.unit("hero", BIG_HP, FRONT, [drum, K.equip(sword, ["stone"] as Array[String], 0, 56)], _idle())], [K.dummy("foe", BIG_HP)])
 	assert_eq(result.combat_log.of_kind(LogEntry.Kind.INFUSION_LEVEL)[0].tick, 20)
 	assert_true(K.entries(result, LogEntry.Kind.DAMAGE, "sword")[1].crit, "still critting after the level-up at 1s")

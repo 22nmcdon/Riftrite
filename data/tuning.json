@@ -2,8 +2,14 @@
   "_note": "Starting values for tuning. Durations are in milliseconds and must be multiples of 50 (one tick). Percentages are basis points: 10000 = 100%.",
   "spill_single_bp": 3000,
   "_spill_note": "A Resonant single spills this share of its Resonant strength to its holder's other items that share a keyword. Alloys and pure doubles awaken instead of spilling.",
-  "xp_to_attuned": 100,
-  "xp_to_resonant": 300,
+  "passive_spread_bp": {
+    "_note": "An infused passive spreads each essence to its holder's items that share a keyword, at this share of its level's strength (docs/plans/keywords-and-affinities.md). It replaces the Resonant spill for passives.",
+    "base": 1500,
+    "attuned": 2500,
+    "resonant": 3500
+  },
+  "xp_to_attuned": 60,
+  "xp_to_resonant": 150,
   "xp_per_battle": 10,
   "infusion_level_bp": {
     "_note": "How strong an infusion is at each level (placeholders).",

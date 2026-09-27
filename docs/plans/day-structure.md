@@ -15,6 +15,8 @@ The boss's unique mechanic is step 6; until then, day 6's fight is the act's str
 
 Everything stays deterministic from the run seed and saved after every action (step 4's `RunSave`).
 
+> **Changed again** (redesign step 4, `docs/plans/new-day.md`): the daily Caravan, shards, and the Skirmish are gone. A day is two stop visits (one choice always a shop), a pick of 2 fights, and a reward pick of 3; the act is 8 days; prices go by rarity.
+
 ## The flow
 
 `src/run/run_flow.gd`, with `RunFlow`, drives the run. The run is always at one **step**, and each step has its own actions:

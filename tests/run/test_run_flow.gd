@@ -1,6 +1,7 @@
 extends GutTest
-## The day structure (docs/plans/day-structure.md): the run start, the
-## Caravan, stops, fights, rewards, losing, and the run bot.
+## The day structure (docs/plans/day-structure.md, docs/plans/new-day.md):
+## the run start, the day's stops and shops, the fight pick, rewards, losing,
+## and the run bot.
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
 
@@ -19,12 +20,21 @@ func _run() -> RunContent:
 
 
 ## A run past the start (the first offer of each draft pick, gold package),
-## at day 1's Caravan.
+## at day 1's first stop choice.
 func _started(run_seed: int = 5) -> RunState:
 	var state: RunState = RunFlow.new_run(run_seed, _content())
 	for pick: int in RunState.TEAM_SIZE:
 		assert_true(RunFlow.pick_start_hero(state, _content(), 0).ok)
 	assert_true(RunFlow.pick_package(state, _content(), _run(), 0).ok)
+	return state
+
+
+## A run at day 1's first stop, which is a shop: `node_id` (the Caravan by
+## default).
+func _at_shop(node_id: String = "caravan", run_seed: int = 5) -> RunState:
+	var state: RunState = _started(run_seed)
+	RunFlow._enter_stop(state, _content(), _run(), node_id)
+	assert_eq([state.phase, state.stop_kind, state.stop_node], ["stop", "shop", node_id])
 	return state
 
 
@@ -44,12 +54,23 @@ func _make_strong(state: RunState) -> void:
 		hero.items.append(item)
 
 
-## Walks from the Caravan to the fight (leaving the Caravan, first stop).
-func _to_fight(state: RunState) -> void:
-	assert_true(RunFlow.leave_caravan(state, _content(), _run()).ok)
-	if state.phase == "stop_choice":
-		assert_true(RunFlow.pick_stop(state, _content(), _run(), 0).ok)
-	assert_true(RunFlow.leave_stop(state).ok)
+## Walks through the day's stops (the first offer each time, left at once)
+## and picks fight `pick`.
+func _to_fight(state: RunState, pick: int = 0) -> void:
+	while state.phase == "stop_choice" or state.phase == "stop":
+		if state.phase == "stop_choice":
+			assert_true(RunFlow.pick_stop(state, _content(), _run(), 0).ok)
+		assert_true(RunFlow.leave_stop(state, _content(), _run()).ok)
+	if state.phase == "fight_choice":
+		assert_true(RunFlow.pick_fight(state, _content(), pick).ok)
+	assert_eq(state.phase, "fight")
+
+
+## Makes `encounter_id` the day's only fight, then walks to it.
+func _to_only_fight(state: RunState, encounter_id: String) -> void:
+	state.fight_options = [encounter_id] as Array[String]
+	_to_fight(state)
+	assert_eq(state.encounter_id, encounter_id)
 
 
 # --- the run start ------------------------------------------------------------
@@ -64,7 +85,7 @@ func _offered_heroes(state: RunState) -> Array[String]:
 func test_a_run_starts_with_a_drafted_team_and_a_package() -> void:
 	var state: RunState = RunFlow.new_run(5, _content())
 	assert_eq(state.phase, "start_hero")
-	_refused(RunFlow.buy(state, _content(), 0), "that isn't possible now (the run is at start_hero)")
+	_refused(RunFlow.pick_stop(state, _content(), _run(), 0), "that isn't possible now (the run is at start_hero)")
 	var drafted: Array[String] = []
 	for pick: int in RunState.TEAM_SIZE:
 		var heroes: Array[String] = _offered_heroes(state)
@@ -88,9 +109,11 @@ func test_a_run_starts_with_a_drafted_team_and_a_package() -> void:
 	assert_eq(_content().relics[state.offers[1]["relic"]].rarity, "common")
 	assert_eq(_content().items[state.offers[2]["item"]].rarity, "common")
 	assert_true(RunFlow.pick_package(state, _content(), _run(), 0).ok)
-	assert_eq(state.gold, 18, "base 10 + the gold package's 8")
-	assert_eq([state.phase, state.day], ["caravan", 1])
-	assert_true(_run().act(1).encounters_for(_run().act(1).normal, 1).has(state.encounter_id), "a day-1 fight")
+	assert_eq(state.gold, 14, "base 8 + the gold package's 6")
+	assert_eq([state.phase, state.day, state.visit, state.encounter_id], ["stop_choice", 1, 0, ""])
+	assert_eq(state.fight_options.size(), 2, "two fights to pick from")
+	for encounter_id: String in state.fight_options:
+		assert_true(_run().act(1).encounters_for(_run().act(1).normal, 1).has(encounter_id), "a day-1 fight")
 
 
 func test_the_same_seed_gives_the_same_start() -> void:
@@ -99,145 +122,55 @@ func test_the_same_seed_gives_the_same_start() -> void:
 	assert_eq(JSON.stringify(one.to_dict()), JSON.stringify(two.to_dict()))
 
 
-# --- the Caravan ----------------------------------------------------------------
+# --- the day's stops --------------------------------------------------------------
 
-func test_caravan_offers_follow_the_rules() -> void:
-	var state: RunState = _started()
-	var items: int = 0
-	for offer: Dictionary in state.offers:
-		if offer["type"] == "item":
-			items += 1
-			var def: ItemDef = _content().items[offer["item"]]
-			assert_false(def.enemy_only, "never enemy-only")
-			assert_eq(offer["price"], _run().economy.item_price[offer["tier"]])
-			assert_lt(offer["tier"], 2, "Act 1: C or B only")
-	assert_eq(items, 5)
-	assert_eq(state.offers.size(), 5, "only items")
-
-
-func test_caravan_never_offers_enemy_only_items() -> void:
-	var state: RunState = _started()
-	for reroll: int in 40:
-		state.reroll_count = reroll
-		RunFlow._fill_caravan(state, _content(), _run())
-		for offer: Dictionary in state.offers:
-			if offer["type"] == "item":
-				assert_false(_content().items[offer["item"]].enemy_only, "%s is enemy-only" % offer["item"])
-
-
-func test_caravan_offers_held_items_at_the_held_tier() -> void:
-	var state: RunState = _started()
-	for item_id: String in _content().item_ids:
-		if not _content().items[item_id].enemy_only:
-			state.stash.clear()
-			state.stash.append(RunItem.make(state.take_uid(), item_id, 1))
-			for reroll: int in 3:
-				state.reroll_count = reroll
-				RunFlow._fill_caravan(state, _content(), _run())
-				for offer: Dictionary in state.offers:
-					if offer.get("item", "") == item_id:
-						assert_eq(offer["tier"], 1, "%s is held at B" % item_id)
-
-
-func test_buying_selling_and_rerolling() -> void:
-	var state: RunState = _started()
-	var index: int = -1
-	for i: int in state.offers.size():
-		if state.offers[i]["type"] == "item":
-			index = i
-			break
-	var price: int = state.offers[index]["price"]
-	assert_true(RunFlow.buy(state, _content(), index).ok)
-	assert_eq([state.gold, state.stash.size()], [18 - price, 1])
-	_refused(RunFlow.buy(state, _content(), index), "already taken")
-	var uid: int = state.stash[0].uid
-	assert_true(RunFlow.sell(state, _content(), _run(), uid).ok)
-	assert_eq(state.gold, 18 - price + price / 2, "sold for half, rounded down")
-	var before: Array[Dictionary] = state.offers.duplicate(true)
-	var gold: int = state.gold
-	assert_true(RunFlow.reroll(state, _content(), _run()).ok)
-	assert_true(RunFlow.reroll(state, _content(), _run()).ok)
-	assert_eq(state.gold, gold - 1 - 2, "rerolls cost 1, then 2")
-	assert_ne(JSON.stringify(state.offers), JSON.stringify(before))
-	state.gold = 0
-	_refused(RunFlow.reroll(state, _content(), _run()), "not enough gold")
-
-
-func test_buying_needs_gold_and_room() -> void:
-	var state: RunState = _started()
-	var index: int = 0
-	while state.offers[index]["type"] != "item":
-		index += 1
-	state.gold = 0
-	_refused(RunFlow.buy(state, _content(), index), "not enough gold")
-	state.gold = 100
-	for i: int in _content().tuning.stash_slots:
-		state.stash.append(RunItem.make(state.take_uid(), "hearth_knife"))
-	var before: String = JSON.stringify(state.to_dict())
-	_refused(RunFlow.buy(state, _content(), index), "the stash has no room")
-	assert_eq(JSON.stringify(state.to_dict()), before, "a refused purchase changes nothing")
-
-
-func test_buying_an_upgrade_combines_into_the_held_copy() -> void:
-	var state: RunState = _started()
-	var index: int = 0
-	while state.offers[index]["type"] != "item":
-		index += 1
-	var offer: Dictionary = state.offers[index]
-	assert_eq(RunFlow.upgrade_target(state, _content(), index), -1, "nothing held yet")
-	var held: RunItem = RunItem.make(state.take_uid(), offer["item"], offer["tier"])
-	held.essence_ids = ["ember"] as Array[String]
-	state.stash.append(held)
-	for i: int in _content().tuning.stash_slots:
-		state.stash.append(RunItem.make(state.take_uid(), "hearth_knife", 2))
-	assert_eq(RunFlow.upgrade_target(state, _content(), index), held.uid, "it lights up")
-	state.gold = 50
-	assert_true(RunFlow.buy(state, _content(), index).ok, "an upgrade needs no stash room")
-	assert_eq([held.tier, held.essence_ids, state.gold], [offer["tier"] + 1, ["ember"] as Array[String], 50 - offer["price"]])
-	assert_true(state.offers[index]["taken"])
-	assert_eq(RunFlow.upgrade_target(state, _content(), index), -1)
-
-
-func test_the_caravan_never_offers_heroes() -> void:
-	for run_seed: int in [1, 2, 3, 4, 5]:
-		var state: RunState = _started(run_seed)
-		for offer: Dictionary in state.offers:
-			assert_ne(offer["type"], "hero", "the team is drafted at the start")
-
-
-func test_two_different_nodes_that_apply_are_offered() -> void:
+func test_each_visit_offers_a_shop_and_a_different_stop() -> void:
 	var seen: Array[String] = []
-	for run_seed: int in range(1, 80):
+	for run_seed: int in range(1, 120):
 		var state: RunState = _started(run_seed)
-		assert_true(RunFlow.leave_caravan(state, _content(), _run()).ok)
-		assert_eq(state.phase, "stop_choice")
-		var stops: Array[String] = []
-		for offer: Dictionary in state.offers:
-			stops.append(offer["stop"])
-			if not seen.has(offer["stop"]):
-				seen.append(offer["stop"])
-		assert_eq(stops.size(), _run().economy.node_choices, "two nodes")
-		assert_ne(stops[0], stops[1], "always different")
-		for stop: String in ["forge", "vault", "retrain", "upgrade"]:
-			assert_false(stops.has(stop), "%s needs an infusion, a key, or a specialization, or it's before the boss" % stop)
-	for stop: String in ["loot_item", "loot_essence", "loot_gold", "skirmish", "barrow_hoard", "smiths_cart"]:
-		assert_true(seen.has(stop), "%s can come up, each event its own node" % stop)
-	assert_false(seen.has("event") or seen.has("loot"), "no catch-all stops")
+		for visit: int in _run().economy.stops_per_day:
+			assert_eq([state.phase, state.visit], ["stop_choice", visit])
+			var stops: Array[String] = []
+			for offer: Dictionary in state.offers:
+				stops.append(offer["stop"])
+				if not seen.has(offer["stop"]):
+					seen.append(offer["stop"])
+			assert_eq(stops.size(), _run().economy.node_choices, "two stops")
+			assert_true(_run().is_shop(stops[0]), "the first is a shop")
+			assert_false(_run().is_shop(stops[1]), "the other isn't")
+			for stop: String in ["forge", "vault", "retrain", "upgrade"]:
+				assert_false(stops.has(stop), "%s needs an infusion, a key, or a specialization, or it's before the boss" % stop)
+			assert_true(RunFlow.pick_stop(state, _content(), _run(), 1).ok)
+			assert_true(RunFlow.leave_stop(state, _content(), _run()).ok)
+		assert_eq(state.phase, "fight_choice", "after the last stop, the fight")
+	for stop: String in ["caravan", "whetstone_stall", "arms_rack", "ember_seller", "smiths_cart", "synergy_peddler", "loot_item", "loot_essence", "loot_gold", "barrow_hoard"]:
+		assert_true(seen.has(stop), "%s can come up" % stop)
+	assert_false(seen.has("skirmish"), "no more extra fights")
 	var keyed: RunState = _started(3)
 	keyed.keys = 1
 	keyed.stash.append(RunItem.make(keyed.take_uid(), "hearth_knife"))
 	keyed.stash[0].essence_ids = ["ember"] as Array[String]
 	var found: Array[String] = []
 	for day: int in range(1, 6):
-		keyed.phase = "caravan"
 		keyed.day = day
 		for attempt: int in 12:
-			keyed.phase = "caravan"
 			keyed.attempt = attempt
-			RunFlow.leave_caravan(keyed, _content(), _run())
+			RunFlow._offer_stops(keyed, _content(), _run())
 			for offer: Dictionary in keyed.offers:
 				found.append(offer["stop"])
 	assert_true(found.has("vault") and found.has("forge"), "a key and an infusion open the Vault and the Forge")
+
+
+func test_the_second_visits_stops_are_drawn_fresh() -> void:
+	var differs: bool = false
+	for run_seed: int in range(1, 20):
+		var state: RunState = _started(run_seed)
+		var first: String = JSON.stringify(state.offers)
+		RunFlow.pick_stop(state, _content(), _run(), 1)
+		RunFlow.leave_stop(state, _content(), _run())
+		assert_eq(state.visit, 1)
+		differs = differs or JSON.stringify(state.offers) != first
+	assert_true(differs, "each visit has its own draw")
 
 
 func test_the_node_pool_is_checked() -> void:
@@ -247,11 +180,22 @@ func test_the_node_pool_is_checked() -> void:
 	var nodes: Array = JSON.parse_string(texts[RunContent.NODES_FILE])
 	nodes.append({"id": "lost_purse", "name": "X", "text": "?", "kind": "loot", "loot": "gold", "weight": 1})
 	nodes.append({"id": "y", "name": "Y", "text": "?", "kind": "loot", "loot": "relics", "weight": 1})
-	nodes.append({"id": "z", "name": "Z", "text": "?", "kind": "shrine", "weight": 0})
+	nodes.append({"id": "z", "name": "Z", "text": "?", "kind": "fight", "weight": 0})
+	nodes.append({"id": "w", "name": "W", "text": "?", "kind": "shop", "shop": {"keyword": "thorns", "slot": "hat"}, "weight": 1})
+	nodes.append({"id": "v", "name": "V", "text": "?", "kind": "shop", "shop": {"essence": "mud", "keywords": ["ward"]}, "weight": 1})
+	nodes.append({"id": "u", "name": "U", "text": "?", "kind": "shop", "shop": {"keywords": ["ward"]}, "weight": 1})
 	texts[RunContent.NODES_FILE] = JSON.stringify(nodes)
 	var errors: Array[String] = RunContent.load_texts(texts, _content()).errors
-	for expected: String in ["duplicate id \"lost_purse\"", "loot: unknown value \"relics\"", "kind: unknown value \"shrine\"", "weight: 0 is out of range"]:
+	for expected: String in ["duplicate id \"lost_purse\"", "loot: unknown value \"relics\"", "kind: unknown value \"fight\"", "weight: 0 is out of range",
+			"unknown keyword \"thorns\"", "slot: unknown value \"hat\"", "unknown essence \"mud\"", "keywords go with an essence merchant's essence"]:
 		assert_true(errors.any(func(e: String) -> bool: return e.contains(expected)), "%s in %s" % [expected, errors])
+	var no_shops: Array = []
+	for node: Dictionary in JSON.parse_string(FileAccess.get_file_as_string("res://data".path_join(RunContent.NODES_FILE))):
+		if node["kind"] != "shop":
+			no_shops.append(node)
+	texts[RunContent.NODES_FILE] = JSON.stringify(no_shops)
+	errors = RunContent.load_texts(texts, _content()).errors
+	assert_true(errors.any(func(e: String) -> bool: return e.contains("needs at least one shop")), str(errors))
 
 
 func test_forge_reforge_and_retrain_need_their_stops() -> void:
@@ -309,8 +253,8 @@ func test_loot_and_events_can_be_taken_or_passed() -> void:
 		assert_eq([state.stop_kind, state.stop_node], ["event", event_id])
 		for offer: Dictionary in state.offers:
 			assert_eq(offer["event"], event_id, "the node picked is the event you get")
-		assert_true(RunFlow.leave_stop(state).ok, "passing is just leaving")
-		assert_eq(state.stop_node, "")
+		assert_true(RunFlow.leave_stop(state, _content(), _run()).ok, "passing is just leaving")
+		assert_eq([state.stop_node, state.visit, state.phase], ["", 1, "stop_choice"], "on to the day's second stop")
 
 
 func test_relic_merchant_sells_one() -> void:
@@ -327,41 +271,265 @@ func test_relic_merchant_sells_one() -> void:
 	_refused(RunFlow.take(state, _content(), 0), "already taken")
 
 
-func test_tier_shop_sells_different_items_at_its_tier() -> void:
-	var state: RunState = _started()
-	state.gold = 100
-	state.offers.clear()
-	var cart: EventDef = _run().events["smiths_cart"]
-	RunFlow._add_tier_shop(state, _content(), _run(), SimRng.new(4), cart)
-	state.phase = "stop"
-	assert_eq(state.offers.size(), 3)
-	var seen: Array[String] = []
-	for offer: Dictionary in state.offers:
-		assert_eq([offer["type"], offer["tier"], offer["price"]], ["item", 1, _run().economy.item_price[1]], "B tier at the Caravan's B price")
-		assert_false(_content().items[offer["item"]].enemy_only)
-		assert_false(seen.has(offer["item"]), "different items")
-		seen.append(offer["item"])
-	assert_true(RunFlow.take(state, _content(), 0).ok)
-	assert_true(RunFlow.take(state, _content(), 2).ok, "buy as many as you can afford")
-	assert_eq(state.gold, 100 - 2 * _run().economy.item_price[1])
-	assert_eq([state.stash[0].item_id, state.stash[0].tier], [state.offers[0]["item"], 1])
-	state.gold = 0
-	_refused(RunFlow.take(state, _content(), 1), "not enough gold")
-	for seed_value: int in range(1, 60):
-		state.offers.clear()
-		RunFlow._add_tier_shop(state, _content(), _run(), SimRng.new(seed_value), cart)
-		var ids: Array[String] = []
+# --- shops ------------------------------------------------------------------------
+
+func test_the_caravan_follows_the_shop_rules() -> void:
+	for run_seed: int in range(1, 30):
+		var state: RunState = _at_shop("caravan", run_seed)
+		assert_eq(state.offers.size(), 5, "shop_items wares")
+		var seen: Array[String] = []
 		for offer: Dictionary in state.offers:
-			assert_false(ids.has(offer["item"]), "no repeats (seed %d)" % seed_value)
-			ids.append(offer["item"])
+			assert_eq(offer["type"], "item", "only items (no heroes, no relics)")
+			var def: ItemDef = _content().items[offer["item"]]
+			assert_false(def.enemy_only, "never enemy-only")
+			assert_ne(def.rarity, "legendary", "never Legendary")
+			assert_eq(offer["price"], _run().economy.item_price_for(def.rarity, offer["tier"]), "priced by rarity and tier")
+			assert_lt(offer["tier"], 2, "Act 1: C or B only")
+			assert_false(seen.has(offer["item"]), "different items")
+			seen.append(offer["item"])
 
 
-func test_the_upgrade_stop_comes_before_the_boss() -> void:
+func test_prices_go_by_rarity_then_double_per_tier() -> void:
+	var economy: EconomyDef = _run().economy
+	assert_eq([economy.item_price_for("common", 0), economy.item_price_for("uncommon", 0), economy.item_price_for("rare", 0), economy.item_price_for("epic", 0)], [2, 3, 5, 7])
+	assert_eq([economy.item_price_for("rare", 1), economy.item_price_for("rare", 2), economy.item_price_for("rare", 3)], [10, 20, 40])
+	var state: RunState = _at_shop()
+	var item: RunItem = RunItem.make(state.take_uid(), "hearth_knife", 1)
+	state.stash.append(item)
+	assert_eq(RunFlow.sell_price(_content(), _run(), item), economy.item_price_for(_content().items["hearth_knife"].rarity, 1) / 2, "half, rounded down")
+
+
+func test_shops_never_offer_enemy_only_items() -> void:
+	var state: RunState = _at_shop()
+	for reroll: int in 40:
+		state.reroll_count = reroll
+		RunFlow._fill_shop(state, _content(), _run())
+		for offer: Dictionary in state.offers:
+			assert_false(_content().items[offer["item"]].enemy_only, "%s is enemy-only" % offer["item"])
+
+
+func test_shops_offer_held_items_at_the_held_tier() -> void:
+	var state: RunState = _at_shop()
+	for item_id: String in _content().item_ids:
+		if not _content().items[item_id].enemy_only:
+			state.stash.clear()
+			state.stash.append(RunItem.make(state.take_uid(), item_id, 1))
+			for reroll: int in 3:
+				state.reroll_count = reroll
+				RunFlow._fill_shop(state, _content(), _run())
+				for offer: Dictionary in state.offers:
+					if offer.get("item", "") == item_id:
+						assert_eq(offer["tier"], 1, "%s is held at B" % item_id)
+
+
+func test_keyword_and_slot_shops_sell_what_fits() -> void:
+	for pair: Array in [["whetstone_stall", "keyword", "blade"], ["hedge_witch", "keyword", "hex"], ["charm_seller", "slot", ItemDef.Slot.PASSIVE], ["arms_rack", "slot", ItemDef.Slot.BASIC_ATTACK]]:
+		for run_seed: int in [1, 2, 3]:
+			var state: RunState = _at_shop(pair[0], run_seed)
+			var fitting: int = 0
+			for offer: Dictionary in state.offers:
+				var def: ItemDef = _content().items[offer["item"]]
+				if (pair[1] == "keyword" and def.keywords.has(pair[2])) or (pair[1] == "slot" and def.slot == pair[2]):
+					fitting += 1
+			assert_eq(state.offers.size(), 5, "%s: topped up with any item when too few fit" % pair[0])
+			assert_gte(fitting, 3, "%s sells mostly its own wares" % pair[0])
+
+
+func test_a_shop_tops_up_when_too_few_items_fit() -> void:
+	var shop := ShopDef.new()
+	shop.keyword = "bleed"
+	var bleed: Array[String] = []
+	for item_id: String in _content().item_ids:
+		var def: ItemDef = _content().items[item_id]
+		if shop.fits(def) and not def.enemy_only and def.rarity != "legendary":
+			bleed.append(item_id)
+	assert_lt(bleed.size(), 5, "few Bleed items can be sold, so the Barber-Surgeon tops up")
+	var state: RunState = _at_shop("barber_surgeon")
+	assert_eq(state.offers.size(), 5)
+	var sold: int = 0
+	for offer: Dictionary in state.offers:
+		if bleed.has(offer["item"]):
+			sold += 1
+	assert_eq(sold, bleed.size(), "every Bleed item first, then anything")
+
+
+func test_an_essence_merchant_sells_its_essence_and_suited_items() -> void:
+	var state: RunState = _at_shop("ember_seller")
+	assert_eq([state.offers[0]["type"], state.offers[0]["essence"], state.offers[0]["price"]], ["essence", "ember", _run().economy.essence_price])
+	assert_eq(state.offers.size(), 1 + _run().economy.shop_items)
+	state.gold = 50
+	assert_true(RunFlow.buy(state, _content(), 0).ok)
+	assert_eq([state.pouch, state.gold], [["ember"] as Array[String], 50 - _run().economy.essence_price])
+	var suited: int = 0
+	for i: int in range(1, state.offers.size()):
+		var def: ItemDef = _content().items[state.offers[i]["item"]]
+		if def.keywords.has("burn") or def.keywords.has("spell"):
+			suited += 1
+	assert_gte(suited, 3, "mostly Burn and Spell items")
+
+
+func test_a_tier_shop_sells_different_items_at_its_tier() -> void:
+	for run_seed: int in range(1, 30):
+		var state: RunState = _at_shop("smiths_cart", run_seed)
+		assert_eq(state.offers.size(), 3)
+		var seen: Array[String] = []
+		for offer: Dictionary in state.offers:
+			var def: ItemDef = _content().items[offer["item"]]
+			assert_eq([offer["type"], offer["tier"], offer["price"]], ["item", 1, _run().economy.item_price_for(def.rarity, 1)], "B tier at B prices")
+			assert_false(def.enemy_only)
+			assert_false(seen.has(offer["item"]), "different items")
+			seen.append(offer["item"])
+
+
+func test_the_synergy_peddler_sells_partners_for_what_you_hold() -> void:
+	var pair: SynergyDef = null
+	for synergy_id: String in _content().synergy_ids:
+		var synergy: SynergyDef = _content().synergies[synergy_id]
+		if synergy.layer == SynergyDef.Layer.PAIR and pair == null:
+			pair = synergy
 	var state: RunState = _started()
-	state.day = 6
+	state.stash.append(RunItem.make(state.take_uid(), pair.items[0]))
+	var partners: Array[String] = RunFlow.partner_items(state, _content())
+	assert_true(partners.has(pair.items[1]), "the pair's other half")
+	assert_false(partners.has(pair.items[0]), "never what you hold")
+	for synergy_id: String in _content().synergy_ids:
+		var synergy: SynergyDef = _content().synergies[synergy_id]
+		if synergy.layer == SynergyDef.Layer.SIGNATURE:
+			assert_eq(partners.has(synergy.items[0]), state.hero(synergy.hero) != null and not synergy.items[0] == pair.items[0], "signature items for the team's heroes only")
+	state.pouch.append("ember")
+	for synergy_id: String in _content().synergy_ids:
+		var synergy: SynergyDef = _content().synergies[synergy_id]
+		if synergy.layer == SynergyDef.Layer.TRANSFORMATION and synergy.essence == "ember":
+			assert_true(RunFlow.partner_items(state, _content()).has(synergy.items[0]), "an item that transforms with an essence you hold")
+	RunFlow._enter_stop(state, _content(), _run(), "synergy_peddler")
+	var wanted: Array[String] = RunFlow.partner_items(state, _content())
+	var sold: int = 0
+	for offer: Dictionary in state.offers:
+		if wanted.has(offer["item"]):
+			sold += 1
+	assert_gt(sold, 0, "sells partners (topped up with anything)")
+
+
+func test_buying_selling_and_rerolling_at_a_shop() -> void:
+	var state: RunState = _at_shop()
+	var price: int = state.offers[0]["price"]
+	assert_true(RunFlow.buy(state, _content(), 0).ok)
+	assert_eq([state.gold, state.stash.size()], [14 - price, 1])
+	_refused(RunFlow.buy(state, _content(), 0), "already taken")
+	var uid: int = state.stash[0].uid
+	var sold_for: int = RunFlow.sell_price(_content(), _run(), state.stash[0])
+	assert_true(RunFlow.sell(state, _content(), _run(), uid).ok)
+	assert_eq(state.gold, 14 - price + sold_for)
+	var before: Array[Dictionary] = state.offers.duplicate(true)
+	var gold: int = state.gold
+	assert_true(RunFlow.reroll(state, _content(), _run()).ok)
+	assert_true(RunFlow.reroll(state, _content(), _run()).ok)
+	assert_eq(state.gold, gold - 1 - 2, "rerolls cost 1, then 2")
+	assert_ne(JSON.stringify(state.offers), JSON.stringify(before))
+	state.gold = 0
+	_refused(RunFlow.reroll(state, _content(), _run()), "not enough gold")
+	assert_true(RunFlow.leave_stop(state, _content(), _run()).ok)
+	assert_eq(state.reroll_count, 2, "kept until the next stop")
+	RunFlow.pick_stop(state, _content(), _run(), 0)
+	assert_eq(state.reroll_count, 0, "each shop visit's rerolls start over")
+
+
+func test_buying_selling_and_rerolling_need_a_shop() -> void:
+	var state: RunState = _started()
+	state.stash.append(RunItem.make(state.take_uid(), "hearth_knife"))
+	_refused(RunFlow.buy(state, _content(), 0), "buying needs a shop")
+	_refused(RunFlow.sell(state, _content(), _run(), state.stash[0].uid), "selling needs a shop")
+	_refused(RunFlow.reroll(state, _content(), _run()), "rerolling needs a shop")
+	RunFlow._enter_stop(state, _content(), _run(), "loot_gold")
+	_refused(RunFlow.sell(state, _content(), _run(), state.stash[0].uid), "selling needs a shop")
+
+
+func test_buying_needs_gold_and_room() -> void:
+	var state: RunState = _at_shop()
+	state.gold = 0
+	_refused(RunFlow.buy(state, _content(), 0), "not enough gold")
+	state.gold = 100
+	for i: int in _content().tuning.stash_slots:
+		state.stash.append(RunItem.make(state.take_uid(), "hearth_knife"))
+	var before: String = JSON.stringify(state.to_dict())
+	_refused(RunFlow.buy(state, _content(), 0), "the stash has no room")
+	assert_eq(JSON.stringify(state.to_dict()), before, "a refused purchase changes nothing")
+
+
+func test_buying_an_upgrade_combines_into_the_held_copy() -> void:
+	var state: RunState = _at_shop()
+	var offer: Dictionary = state.offers[0]
+	assert_eq(RunFlow.upgrade_target(state, _content(), 0), -1, "nothing held yet")
+	var held: RunItem = RunItem.make(state.take_uid(), offer["item"], offer["tier"])
+	held.essence_ids = ["ember"] as Array[String]
+	state.stash.append(held)
+	for i: int in _content().tuning.stash_slots:
+		state.stash.append(RunItem.make(state.take_uid(), "hearth_knife", 2))
+	assert_eq(RunFlow.upgrade_target(state, _content(), 0), held.uid, "it lights up")
+	state.gold = 50
+	assert_true(RunFlow.take(state, _content(), 0).ok, "an upgrade needs no stash room (take buys at a shop, combining too)")
+	assert_eq([held.tier, held.essence_ids, state.gold], [offer["tier"] + 1, ["ember"] as Array[String], 50 - offer["price"]])
+	assert_true(state.offers[0]["taken"])
+	assert_eq(RunFlow.upgrade_target(state, _content(), 0), -1)
+	state.stash.clear()
+	state.stash.append(held)
+	assert_true(RunFlow.take(state, _content(), 1).ok, "take buys at a shop")
+	assert_eq(state.gold, 50 - offer["price"] - state.offers[1]["price"])
+
+
+# --- the day's fights ---------------------------------------------------------------
+
+func test_every_day_offers_an_easier_and_a_harder_fight() -> void:
+	var act: ActDef = _run().act(1)
+	assert_eq([act.days, act.elite_days], [8, [3, 6] as Array[int]], "an 8-day act, elites on days 3 and 6")
+	for day: int in range(1, act.days):
+		for run_seed: int in range(1, 12):
+			var state: RunState = _started(run_seed)
+			state.day = day
+			RunFlow._start_day(state, _content(), _run())
+			assert_eq(state.fight_options.size(), 2, "day %d" % day)
+			assert_false(RunFlow.is_hard_fight(state, _run(), state.fight_options[0]), "the easier one first")
+			assert_true(RunFlow.is_hard_fight(state, _run(), state.fight_options[1]), "then the harder one")
+			for encounter_id: String in state.fight_options:
+				assert_eq(_content().encounters[encounter_id].kind, "elite" if act.is_elite_day(day) else "normal", "day %d" % day)
+	var boss_day: RunState = _started()
+	boss_day.day = act.days
+	RunFlow._start_day(boss_day, _content(), _run())
+	assert_eq(boss_day.fight_options, ["the_ash_mother"] as Array[String], "only the boss")
+
+
+func test_picking_the_days_fight() -> void:
+	var state: RunState = _started()
+	_refused(RunFlow.pick_fight(state, _content(), 0), "the run is at stop_choice")
+	for visit: int in _run().economy.stops_per_day:
+		assert_true(RunFlow.pick_stop(state, _content(), _run(), 0).ok)
+		assert_true(RunFlow.leave_stop(state, _content(), _run()).ok)
+	assert_eq([state.phase, state.encounter_id], ["fight_choice", ""])
+	_refused(RunFlow.pick_fight(state, _content(), 2), "no fight there")
+	_refused(RunFlow.fight(state, _content(), _run())[0], "the run is at fight_choice")
+	assert_true(RunFlow.pick_fight(state, _content(), 1).ok)
+	assert_eq([state.phase, state.encounter_id], ["fight", state.fight_options[1]])
+
+
+func test_the_act_scales_its_fights_hp() -> void:
+	var state: RunState = _started()
+	state.day = 1
+	var scale: int = RunFlow.fight_hp_bp(state, _run(), "pup_litter")
+	assert_gt(scale, FixedMath.BP_ONE, "day-1 pups have more HP than their data says")
+	_to_only_fight(state, "pup_litter")
+	var setup: FightSetup = RunFight.setup_for(state, _content(), "pup_litter", scale)
+	assert_eq(setup.enemies[0].stats.get_stat(UnitStats.Stat.HP), FixedMath.apply_bp(_content().enemies["rift_pup"].stats.get_stat(UnitStats.Stat.HP), scale))
+	assert_eq(_content().enemies["rift_pup"].stats.get_stat(UnitStats.Stat.HP), 200, "the enemy's own data is untouched")
+	assert_eq(RunFlow.fight_hp_bp(state, _run(), "the_ash_mother"), FixedMath.BP_ONE, "the boss is as written")
+
+
+func test_the_upgrade_stop_is_the_boss_days_last_stop() -> void:
+	var state: RunState = _started()
+	state.day = 8
 	RunFlow._start_day(state, _content(), _run())
-	assert_eq(state.encounter_id, "the_ash_mother")
-	assert_true(RunFlow.leave_caravan(state, _content(), _run()).ok)
+	assert_eq(state.phase, "stop_choice", "the first visit is a normal pick")
+	assert_true(RunFlow.pick_stop(state, _content(), _run(), 0).ok)
+	assert_true(RunFlow.leave_stop(state, _content(), _run()).ok)
 	assert_eq([state.phase, state.stop_kind], ["stop", "upgrade"])
 	var claw: RunItem = RunItem.make(state.take_uid(), "rift_claw", 0)
 	state.stash.append(claw)
@@ -371,116 +539,59 @@ func test_the_upgrade_stop_comes_before_the_boss() -> void:
 	assert_true(RunFlow.upgrade(state, _content(), claw.uid).ok, "enemy-only items too")
 	assert_eq(claw.tier, 1)
 	_refused(RunFlow.upgrade(state, _content(), claw.uid), "used")
+	assert_true(RunFlow.leave_stop(state, _content(), _run()).ok)
+	assert_eq([state.phase, state.encounter_id], ["fight", "the_ash_mother"], "no pick: straight to the boss")
 
 
 # --- fights, rewards, losing ----------------------------------------------------
 
-func test_a_normal_win_gives_gold_a_shard_and_a_drop() -> void:
+func _reward_pick(state: RunState) -> Array[int]:
+	var picks: Array[int] = []
+	for i: int in state.offers.size():
+		if state.offers[i].get("group", "") == RunFlow.REWARD_PICK:
+			picks.append(i)
+	return picks
+
+
+func test_a_win_gives_gold_an_essence_and_a_pick_of_three() -> void:
 	var state: RunState = _started()
 	_make_strong(state)
-	state.encounter_id = "pup_litter"
-	_to_fight(state)
+	_to_only_fight(state, "pup_litter")
 	var gold: int = state.gold
 	var fought: Array = RunFlow.fight(state, _content(), _run())
 	assert_true((fought[0] as RunActions.Result).ok)
 	assert_true((fought[1] as FightResult).guild_won())
 	assert_eq(state.phase, "rewards")
 	assert_eq(state.gold, gold + 5 + 1, "5 + the day number")
-	assert_eq(state.shards.get("wrath", 0), 1, "pups yield Wrath")
-	assert_eq(state.offers.size(), 1, "the guaranteed drop")
-	assert_eq(state.offers[0]["item"], "rift_claw", "enemy-only items drop too")
+	assert_eq([state.offers[0]["type"], state.offers[0]["essence"]], ["essence", "wrath"], "a whole essence: pups yield Wrath")
+	var picks: Array[int] = _reward_pick(state)
+	assert_eq(picks.size(), 1 + _run().economy.reward_pool_items, "a pick of three")
+	assert_eq([state.offers[picks[0]]["item"], state.offers[picks[0]]["drop"]], ["rift_claw", "yes"], "the enemy drop first: enemy-only items drop too")
+	var ids: Array[String] = []
+	for i: int in picks.slice(1):
+		var def: ItemDef = _content().items[state.offers[i]["item"]]
+		assert_false(def.enemy_only or def.rarity == "legendary", "pool items: never enemy-only or Legendary")
+		assert_false(ids.has(def.id) or def.id == "rift_claw", "three different items")
+		ids.append(def.id)
+	assert_true(RunFlow.take(state, _content(), picks[2]).ok)
+	_refused(RunFlow.take(state, _content(), picks[0]), "already taken")
+	assert_true(RunFlow.take(state, _content(), 0).ok, "the essence is separate")
+	assert_eq(state.pouch, ["wrath"] as Array[String])
 	assert_true(RunFlow.done(state, _content(), _run()).ok)
-	assert_eq([state.day, state.phase], [2, "caravan"])
+	assert_eq([state.day, state.phase, state.visit], [2, "stop_choice", 0])
 
 
-# --- the skirmish (an extra fight node) -------------------------------------------
-
-## A run at a skirmish node on day `day`, with the day's fight set.
-func _at_skirmish(day: int = 1) -> RunState:
-	var state: RunState = _started()
-	state.day = day
-	state.encounter_id = "pup_litter"
-	RunFlow._enter_stop(state, _content(), _run(), "skirmish")
-	return state
-
-
-func test_a_skirmish_fights_another_of_the_days_normal_encounters() -> void:
-	for day: int in range(1, 6):
-		var state: RunState = _at_skirmish(day)
-		assert_eq([state.phase, state.stop_kind, state.stop_node], ["stop", "fight", "skirmish"])
-		var act: ActDef = _run().act(1)
-		var pool: Array[String] = act.encounters_for(act.normal, day)
-		assert_true(pool.has(state.stop_encounter), "one of the day's normal encounters")
-		if pool.size() > 1:
-			assert_ne(state.stop_encounter, state.encounter_id, "not the day's own fight")
-		assert_eq(state.offers, [] as Array[Dictionary], "nothing until it's fought")
-
-
-func test_a_won_skirmish_gives_a_normal_wins_rewards_but_isnt_a_win() -> void:
-	var state: RunState = _at_skirmish()
-	_make_strong(state)
-	state.stop_encounter = "pup_litter"
-	state.heroes[0].items[0].essence_ids = ["ember"] as Array[String]
-	var gold: int = state.gold
-	var fought: Array = RunFlow.skirmish(state, _content(), _run())
-	assert_true((fought[0] as RunActions.Result).ok)
-	assert_true((fought[1] as FightResult).guild_won())
-	assert_eq([state.phase, state.stop_used, state.wins, state.losses], ["stop", true, 0, 0], "still at the stop; not a win")
-	assert_eq(state.gold, gold + 5 + 1, "a normal win's gold")
-	assert_eq(state.shards.get("wrath", 0), 1, "and shard")
-	assert_eq(state.offers.size(), 1, "and drop")
-	assert_gt(state.heroes[0].items[0].xp, 0, "infusion XP counts")
-	_refused(RunFlow.skirmish(state, _content(), _run())[0], "already fought")
-	assert_true(RunFlow.take(state, _content(), 0).ok)
-	assert_true(RunFlow.leave_stop(state).ok)
-	assert_eq([state.phase, state.stop_encounter], ["fight", ""])
-
-
-func test_a_lost_skirmish_gives_nothing_and_costs_nothing() -> void:
-	var state: RunState = _at_skirmish()
-	state.stop_encounter = "the_ash_mother"
-	var gold: int = state.gold
-	var fought: Array = RunFlow.skirmish(state, _content(), _run())
-	assert_true((fought[0] as RunActions.Result).ok)
-	assert_false((fought[1] as FightResult).guild_won())
-	assert_eq([state.phase, state.stop_used, state.losses, state.gold, state.offers.size()], ["stop", true, 0, gold, 0])
-	assert_true(RunFlow.leave_stop(state).ok, "on to the day's fight")
-
-
-func test_a_skirmish_needs_its_stop_and_a_ready_guild() -> void:
-	var state: RunState = _started()
-	_refused(RunFlow.skirmish(state, _content(), _run())[0], "needs a skirmish stop")
-	RunFlow._enter_stop(state, _content(), _run(), "loot_gold")
-	_refused(RunFlow.skirmish(state, _content(), _run())[0], "needs a skirmish stop")
-	state = _at_skirmish()
-	state.heroes[0].rank = 1
-	state.heroes[0].needs_specialization = true
-	_refused(RunFlow.skirmish(state, _content(), _run())[0], "needs a specialization first")
-	assert_false(state.stop_used)
-
-
-func test_a_skirmish_survives_save_and_load_and_replays_the_same() -> void:
-	var state: RunState = _at_skirmish(2)
-	var loaded: Array = RunState.from_dict(JSON.parse_string(JSON.stringify(state.to_dict())), _content())
-	assert_eq(loaded[1], [] as Array[String])
-	var back: RunState = loaded[0]
-	assert_eq([back.stop_node, back.stop_encounter, back.stop_kind], [state.stop_node, state.stop_encounter, "fight"])
-	var one: FightResult = RunFlow.skirmish(state, _content(), _run())[1]
-	var two: FightResult = RunFlow.skirmish(back, _content(), _run())[1]
-	assert_eq(one.combat_log.to_text(), two.combat_log.to_text(), "deterministic")
-	assert_eq(state.to_dict(), back.to_dict())
-
-
-func test_three_shards_make_an_essence() -> void:
-	var state: RunState = _started()
-	state.shards["frost"] = 5
-	RunFlow._convert_shards(state, _content(), _run())
-	assert_eq([state.pouch, state.shards["frost"]], [["frost"] as Array[String], 2])
-	for i: int in _content().tuning.pouch_cap - 1:
-		state.pouch.append("ember")
-	state.shards["frost"] = 3
-	RunFlow._convert_shards(state, _content(), _run())
-	assert_eq(state.shards["frost"], 3, "they wait while the pouch is full")
+func test_the_harder_fight_pays_more() -> void:
+	var golds: Array[int] = []
+	for pick: int in 2:
+		var state: RunState = _started()
+		_make_strong(state)
+		_to_fight(state, pick)
+		assert_eq(RunFlow.is_hard_fight(state, _run(), state.encounter_id), pick == 1)
+		var gold: int = state.gold
+		assert_true((RunFlow.fight(state, _content(), _run())[1] as FightResult).guild_won())
+		golds.append(state.gold - gold)
+	assert_eq(golds, [6, FixedMath.apply_bp(6, _run().economy.hard_gold_bp)], "the harder fight's gold, times hard_gold_bp")
 
 
 func test_an_elite_win_gives_an_essence_a_relic_choice_and_a_rank_up() -> void:
@@ -488,14 +599,14 @@ func test_an_elite_win_gives_an_essence_a_relic_choice_and_a_rank_up() -> void:
 	_make_army(state)
 	state.day = 3
 	RunFlow._start_day(state, _content(), _run())
-	assert_eq(state.encounter_id, "hound_alpha")
-	_to_fight(state)
+	_to_only_fight(state, "hound_alpha")
 	var fought: Array = RunFlow.fight(state, _content(), _run())
 	assert_true((fought[1] as FightResult).guild_won())
 	var types: Array[String] = []
 	for offer: Dictionary in state.offers:
 		types.append(offer["type"])
 	assert_eq(types.slice(0, 1), ["essence"] as Array[String], "a whole essence")
+	assert_eq(_reward_pick(state).size(), 3, "and the reward pick")
 	var relics: Array[int] = []
 	for i: int in state.offers.size():
 		if state.offers[i].get("group", "") == "relic_choice":
@@ -533,20 +644,21 @@ func test_normal_wins_give_no_rank_up() -> void:
 
 func test_the_first_loss_replays_the_day_and_the_second_ends_the_run() -> void:
 	var state: RunState = _started()
-	state.day = 6
+	state.day = 8
 	RunFlow._start_day(state, _content(), _run())
-	var caravan_before: String = JSON.stringify(state.offers)
+	var stops_before: String = JSON.stringify(state.offers)
 	_to_fight(state)
 	var gold: int = state.gold
 	var fought: Array = RunFlow.fight(state, _content(), _run())
-	assert_false((fought[1] as FightResult).guild_won(), "one C hero against the boss")
-	assert_eq([state.phase, state.day, state.attempt, state.losses, state.encounter_id], ["caravan", 6, 1, 1, "the_ash_mother"])
+	assert_false((fought[1] as FightResult).guild_won(), "a C team against the boss")
+	assert_eq([state.phase, state.day, state.visit, state.attempt, state.losses, state.encounter_id], ["stop_choice", 8, 0, 1, 1, ""])
+	assert_eq(state.fight_options, ["the_ash_mother"] as Array[String], "the same fight")
 	assert_eq(state.gold, gold + 10, "bonus gold: 10 + 5 per win (none yet)")
-	assert_ne(JSON.stringify(state.offers), caravan_before, "a fresh Caravan")
+	assert_ne(JSON.stringify(state.offers), stops_before, "fresh stops")
 	_to_fight(state)
 	RunFlow.fight(state, _content(), _run())
 	assert_eq(state.phase, "run_over")
-	_refused(RunFlow.leave_caravan(state, _content(), _run()), "run_over")
+	_refused(RunFlow.pick_stop(state, _content(), _run(), 0), "run_over")
 
 
 ## The whole team at S, each with a specialization and a strong loadout.
@@ -565,7 +677,7 @@ func _make_army(state: RunState) -> void:
 func test_beating_the_boss_ends_the_act() -> void:
 	var state: RunState = _started()
 	_make_army(state)
-	state.day = 6
+	state.day = 8
 	RunFlow._start_day(state, _content(), _run())
 	_to_fight(state)
 	var fought: Array = RunFlow.fight(state, _content(), _run())
@@ -597,39 +709,41 @@ func test_a_fight_needs_specializations_picked() -> void:
 
 # --- determinism and saving -----------------------------------------------------
 
-func test_a_replayed_day_keeps_its_fight() -> void:
+func test_a_replayed_day_keeps_its_fights() -> void:
 	var seen: Array[String] = []
 	for run_seed: int in range(1, 25):
 		var state: RunState = _started(run_seed)
 		state.day = 4
 		RunFlow._start_day(state, _content(), _run())
-		var first: String = state.encounter_id
-		if not seen.has(first):
-			seen.append(first)
+		var first: Array[String] = state.fight_options.duplicate()
+		for encounter_id: String in first:
+			if not seen.has(encounter_id):
+				seen.append(encounter_id)
 		state.attempt = 1
 		state.gold += 37
 		state.wins += 2
 		RunFlow._start_day(state, _content(), _run())
-		assert_eq(state.encounter_id, first, "seed %d" % run_seed)
-	assert_gt(seen.size(), 1, "day 4 has several possible fights")
+		assert_eq(state.fight_options, first, "seed %d" % run_seed)
+	assert_gt(seen.size(), 2, "day 4 has several possible fights")
 
 
 func test_offers_dont_depend_on_earlier_picks() -> void:
 	var one: RunState = _started(21)
 	var two: RunState = _started(21)
-	RunFlow.leave_caravan(one, _content(), _run())
-	RunFlow.leave_caravan(two, _content(), _run())
 	RunFlow.pick_stop(one, _content(), _run(), 0)
 	RunFlow.pick_stop(two, _content(), _run(), 1)
 	two.gold += 11
 	for state: RunState in [one, two]:
+		RunFlow.leave_stop(state, _content(), _run())
+	assert_eq(JSON.stringify(one.offers), JSON.stringify(two.offers), "the second visit's stops don't depend on the first's")
+	for state: RunState in [one, two]:
 		state.day = 2
 		RunFlow._start_day(state, _content(), _run())
-	assert_eq(one.encounter_id, two.encounter_id, "tomorrow's fight doesn't depend on today's stop")
+	assert_eq(one.fight_options, two.fight_options, "tomorrow's fights don't depend on today's stops")
 
 
 func test_save_and_load_mid_run_continues_the_same() -> void:
-	var state: RunState = _started(13)
+	var state: RunState = _at_shop("caravan", 13)
 	RunFlow.reroll(state, _content(), _run())
 	var loaded: Array = RunState.from_dict(JSON.parse_string(JSON.stringify(state.to_dict())), _content())
 	assert_eq(loaded[1], [] as Array[String])
@@ -638,9 +752,18 @@ func test_save_and_load_mid_run_continues_the_same() -> void:
 	for run_state: RunState in [state, copy]:
 		RunFlow.buy(run_state, _content(), 0)
 		RunFlow.reroll(run_state, _content(), _run())
-		_to_fight(run_state)
+		_to_fight(run_state, 1)
 		RunFlow.fight(run_state, _content(), _run())
 	assert_eq(JSON.stringify(copy.to_dict()), JSON.stringify(state.to_dict()))
+
+
+func test_a_save_names_only_the_days_fights() -> void:
+	var state: RunState = _started()
+	_to_fight(state)
+	var data: Dictionary = state.to_dict()
+	data["encounter"] = "the_ash_mother"
+	var errors: Array[String] = RunState.from_dict(JSON.parse_string(JSON.stringify(data)), _content())[1]
+	assert_true(errors.any(func(e: String) -> bool: return e.contains("isn't one of the day's")), str(errors))
 
 
 # --- the bot ------------------------------------------------------------------
@@ -651,9 +774,11 @@ func test_the_bot_plays_whole_runs() -> void:
 		var report: RunBot.Report = RunBot.play(run_seed, _content(), _run())
 		assert_eq(report.errors, [] as Array[String], "seed %d" % run_seed)
 		assert_true(["act_end", "run_over"].has(report.ending), "seed %d ended: %s" % [run_seed, report.ending])
+		assert_gt(report.fights.size(), 0)
 		reports.append(report)
 	var again: RunBot.Report = RunBot.play(1, _content(), _run())
 	assert_eq([again.ending, again.day, again.bought], [reports[0].ending, reports[0].day, reports[0].bought], "same seed, same run")
 	var lines: PackedStringArray = RunReport.lines(reports, 1)
 	assert_eq(lines[0], "== 4 runs, seeds 1-4 ==")
 	assert_true(lines[1].begins_with("Act cleared: "))
+	assert_true(Array(lines).any(func(line: String) -> bool: return line.begins_with("Fights: ")))

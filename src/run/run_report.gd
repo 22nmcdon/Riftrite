@@ -20,14 +20,10 @@ static func lines(reports: Array[RunBot.Report], first_seed: int) -> PackedStrin
 	var found: Dictionary[String, int] = {}
 	var reached_boss: int = 0
 	var boss_fights: int = 0
-	var skirmishes: int = 0
-	var skirmish_wins: int = 0
 	var legendary_runs: int = 0
 	var legendary_clears: int = 0
 	var legendaries: Dictionary[String, int] = {}
 	for report: RunBot.Report in reports:
-		skirmishes += report.skirmishes
-		skirmish_wins += report.skirmish_wins
 		if not report.legendaries.is_empty():
 			legendary_runs += 1
 			if report.ending == "act_end":
@@ -69,17 +65,78 @@ static func lines(reports: Array[RunBot.Report], first_seed: int) -> PackedStrin
 	var gold: PackedStringArray = PackedStringArray()
 	for i: int in gold_totals.size():
 		gold.append("d%d %.1f" % [i + 1, float(gold_totals[i]) / gold_counts[i]])
-	out.append("Gold at the Caravan: %s" % ", ".join(gold))
+	out.append("Gold at the start of each day: %s" % ", ".join(gold))
 	out.append("Most taken items and heroes: %s" % ", ".join(_top(bought, 8, count)))
 	out.append("Synergies found: %s" % ", ".join(_top(found, 12, count)))
-	if skirmishes > 0:
-		out.append("Skirmishes: %.2f per run, %d%% won" % [float(skirmishes) / count, roundi(100.0 * skirmish_wins / skirmishes)])
 	if legendary_runs > 0:
 		out.append("Legendaries: held at the end of %d runs (%d%% of those cleared the act); by item:tier: %s" % [
 			legendary_runs, roundi(100.0 * legendary_clears / legendary_runs), ", ".join(_counts(legendaries))])
+	var infused: int = 0
+	var resonant: int = 0
+	var fused: int = 0
+	for report: RunBot.Report in reports:
+		infused += report.infused
+		resonant += report.resonant
+		fused += report.fused
+	out.append("Equipped infusions at the end, per run: %.2f (%.2f Resonant, %.2f with two essences)" % [float(infused) / count, float(resonant) / count, float(fused) / count])
+	out.append_array(_fight_lines(reports))
 	out.append_array(_deed_lines(reports))
 	if stuck > 0:
 		out.append("! %d run(s) got stuck or hit errors" % stuck)
+	return out
+
+
+## Fights by kind (docs/plans/new-day.md, the pacing targets): how many,
+## the share lost, and the average length, for normal fights (easier and
+## harder), elites (easier and harder), and the boss; then the clear rate of
+## runs that always took the harder fight against those that took the easier.
+static func _fight_lines(reports: Array[RunBot.Report]) -> PackedStringArray:
+	var out := PackedStringArray()
+	var groups: Array[String] = ["normal, easier", "normal, harder", "elite, easier", "elite, harder", "boss"]
+	var counts: Array[int] = [0, 0, 0, 0, 0]
+	var lost: Array[int] = [0, 0, 0, 0, 0]
+	var seconds: Array[float] = [0.0, 0.0, 0.0, 0.0, 0.0]
+	var hard_runs: Array[int] = [0, 0]
+	var easy_runs: Array[int] = [0, 0]
+	# By day and by encounter: [fights, lost, seconds].
+	var by_day: Dictionary[int, Array] = {}
+	var by_encounter: Dictionary[String, Array] = {}
+	for report: RunBot.Report in reports:
+		var tally: Array[int] = hard_runs if report.took_hard else easy_runs
+		tally[0] += 1
+		if report.ending == "act_end":
+			tally[1] += 1
+		for fought: Array in report.fights:
+			var group: int = 4
+			if fought[0] != "boss":
+				group = (0 if fought[0] == "normal" else 2) + (1 if fought[1] else 0)
+			counts[group] += 1
+			if not fought[2]:
+				lost[group] += 1
+			seconds[group] += fought[3]
+			for pair: Array in [[by_day, fought[4]], [by_encounter, fought[5]]]:
+				var table: Dictionary = pair[0]
+				if not table.has(pair[1]):
+					table[pair[1]] = [0, 0, 0.0]
+				table[pair[1]][0] += 1
+				table[pair[1]][1] += 0 if fought[2] else 1
+				table[pair[1]][2] += fought[3]
+	var parts := PackedStringArray()
+	for i: int in groups.size():
+		if counts[i] > 0:
+			parts.append("%s: %d, %d%% lost, %.1fs" % [groups[i], counts[i], roundi(100.0 * lost[i] / counts[i]), seconds[i] / counts[i]])
+	out.append("Fights: %s" % "; ".join(parts))
+	for pair: Array in [["Lost by day", by_day], ["Lost by encounter", by_encounter]]:
+		var table: Dictionary = pair[1]
+		var keys: Array = table.keys()
+		keys.sort()
+		var cells := PackedStringArray()
+		for key: Variant in keys:
+			cells.append("%s %d%% (%.0fs)" % [str(key), roundi(100.0 * table[key][1] / table[key][0]), table[key][2] / table[key][0]])
+		out.append("%s: %s" % [pair[0], ", ".join(cells)])
+	if hard_runs[0] > 0 and easy_runs[0] > 0:
+		out.append("Always the harder fight: %d%% cleared (%d runs); always the easier: %d%% (%d runs)" % [
+			roundi(100.0 * hard_runs[1] / hard_runs[0]), hard_runs[0], roundi(100.0 * easy_runs[1] / easy_runs[0]), easy_runs[0]])
 	return out
 
 

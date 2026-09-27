@@ -18,7 +18,12 @@ static func item_setups(content: ContentDb, entries: Array[LoadoutEntry]) -> Arr
 static func hero(content: ContentDb, hero_id: String, rank: int, row: UnitSetup.Row, entries: Array[LoadoutEntry], specialization_id: String = "") -> UnitSetup:
 	var def: HeroDef = content.heroes[hero_id]
 	var setup: UnitSetup = UnitSetup.make(def.id, def.name, def.stats, row, def.basic_attack, item_setups(content, entries), rank)
-	setup.innate = def.innate
+	# The innate, then each affinity's perk (keys of their own).
+	var parts: Array[SpecializationDef.Part] = def.innate.duplicate()
+	for keyword_id: String in def.affinities:
+		parts.append_array(content.keywords[keyword_id].affinity)
+	setup.innate = parts
+	setup.affinities = def.affinities.duplicate()
 	setup.unit_class = def.hero_class
 	if def.calling != null:
 		setup.deeds.append(DeedSetup.make(DeedSetup.CALLING, def.calling))
@@ -36,14 +41,17 @@ static func encounter_relics(content: ContentDb, encounter_id: String) -> Array[
 
 ## An encounter's enemy team. Unit ids get a position number so twins can be
 ## told apart in the log: "rift_hound_1", "rift_hound_2", ...
-static func encounter_units(content: ContentDb, encounter_id: String) -> Array[UnitSetup]:
+## `hp_bp` multiplies every unit's HP (a run's act scales its fights by day:
+## docs/plans/new-day.md).
+static func encounter_units(content: ContentDb, encounter_id: String, hp_bp: int = FixedMath.BP_ONE) -> Array[UnitSetup]:
 	var encounter: EncounterDef = content.encounters[encounter_id]
 	var result: Array[UnitSetup] = []
 	for i: int in encounter.units.size():
 		var slot: EncounterDef.Slot = encounter.units[i]
 		var def: EnemyDef = content.enemies[slot.enemy_id]
 		var unit_id: String = "%s_%d" % [def.id, i + 1]
-		var unit: UnitSetup = UnitSetup.make(unit_id, def.name, def.stats, slot.row, def.basic_attack, item_setups(content, def.items), def.rank)
+		var stats: UnitStats = def.stats if hp_bp == FixedMath.BP_ONE else def.stats.with_hp_bp(hp_bp)
+		var unit: UnitSetup = UnitSetup.make(unit_id, def.name, stats, slot.row, def.basic_attack, item_setups(content, def.items), def.rank)
 		unit.phases = def.phases
 		result.append(unit)
 	return result

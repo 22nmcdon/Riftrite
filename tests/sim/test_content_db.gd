@@ -180,12 +180,22 @@ func test_rejects_unknown_status_reference() -> void:
 	_assert_error(db, "essences.json (ember).effects[0]: unknown status \"scorch\"")
 
 
+func test_rejects_unknown_event_filters() -> void:
+	var db: ContentDb = _load_with(ContentDb.ESSENCES_FILE, _essences_with(0, {
+		"id": "ember", "name": "Ember",
+		"effects": [{"trigger": "on_ability", "keyword": "cudgel", "type": "damage", "amount": 1, "target": "enemy_front"},
+			{"trigger": "on_status", "statuses": ["gloom"], "type": "damage", "amount": 1, "target": "enemy_front"}],
+	}))
+	_assert_error(db, "essences.json (ember).effects[0]: unknown keyword \"cudgel\"")
+	_assert_error(db, "essences.json (ember).effects[1]: unknown status \"gloom\"")
+
+
 func test_rejects_unknown_vocabulary() -> void:
 	var db: ContentDb = _load_with(ContentDb.ESSENCES_FILE, _essences_with(0, {
 		"id": "ember", "name": "Ember",
-		"effects": [{"trigger": "on_kill", "type": "apply_status", "status": "burn", "stacks": 1, "target": "hit_target"}],
+		"effects": [{"trigger": "on_sneeze", "type": "apply_status", "status": "burn", "stacks": 1, "target": "hit_target"}],
 	}))
-	_assert_error(db, "trigger: unknown value \"on_kill\"")
+	_assert_error(db, "trigger: unknown value \"on_sneeze\"")
 
 
 func test_rejects_hit_target_on_fire() -> void:
@@ -219,5 +229,5 @@ func test_tuning_cross_checks() -> void:
 	tuning["xp_to_resonant"] = 50
 	tuning["collapse_by_act"].erase("1")
 	var db: ContentDb = _load_with(ContentDb.TUNING_FILE, tuning)
-	_assert_error(db, "xp_to_resonant (50) must be greater than xp_to_attuned (100)")
+	_assert_error(db, "xp_to_resonant (50) must be greater than xp_to_attuned (60)")
 	_assert_error(db, "collapse_by_act: must define act \"1\"")

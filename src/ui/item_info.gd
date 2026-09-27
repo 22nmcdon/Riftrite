@@ -6,7 +6,24 @@ extends RefCounted
 
 
 ## When an effect happens, in plain words (by EffectDef.Trigger).
-const TRIGGER_WORDS: Array[String] = ["When it fires", "On hit", "On a crit", "At the fight's start", "At %s", "When an ally drops below %s HP"]
+const TRIGGER_WORDS: Array[String] = [
+	"When it fires", "On hit", "On a crit", "At the fight's start", "At %s", "When an ally drops below %s HP",
+	"When another ability fires", "When the basic attack fires", "When its holder crits", "When its holder gains Shield",
+	"When its holder is hit", "When its holder heals an ally", "When its holder applies a status", "When its holder fells an enemy",
+]
+## What hit_target means for each event trigger that names a unit.
+const EVENT_UNIT_WORDS: Dictionary[int, String] = {
+	EffectDef.Trigger.ON_HOLDER_CRIT: "the unit hit", EffectDef.Trigger.ON_SHIELDED: "its holder",
+	EffectDef.Trigger.ON_HIT_TAKEN: "the attacker", EffectDef.Trigger.ON_HEAL: "the ally healed",
+	EffectDef.Trigger.ON_STATUS: "that unit",
+}
+## Conduits in plain words (ItemDef.CONDUITS order).
+const CONDUIT_WORDS: Array[String] = [
+	"Conduit: its holder's spills and spreads also reach the basic attack.",
+	"Conduit: its holder's spills and spreads reach every ability, keyword or not.",
+	"Conduit: its holder's spills also reach the heroes in its row (through a shared keyword).",
+	"Conduit: its holder's awakened alloys and pure doubles also spill.",
+]
 ## Who an effect lands on (by EffectDef.Target).
 const TARGET_WORDS: Array[String] = [
 	"the unit it hit", "its holder", "the most-hurt ally", "the front enemy", "a back-row enemy",
@@ -36,8 +53,10 @@ static func item_text(content: ContentDb, item_id: String, tier: int, essence_id
 		kind.append(", ".join(def.tags))
 	lines.append(" · ".join(kind))
 	lines.append("Keywords: %s" % keyword_names(content, def.keywords))
-	if not def.effects.is_empty():
+	if not def.effects.is_empty() and not def.triggered_only:
 		lines.append("Fires every %ss" % _seconds(state.cooldown_ticks))
+	if not def.conduit.is_empty():
+		lines.append(CONDUIT_WORDS[ItemDef.CONDUITS.find(def.conduit)])
 	lines.append_array(infusion_lines(content, state))
 	lines.append_array(received)
 	lines.append("")
@@ -72,6 +91,13 @@ static func infusion_lines(content: ContentDb, state: ItemState) -> PackedString
 	var keywords: String = keyword_names(content, state.def.keywords).replace(", ", " or ")
 	@warning_ignore("integer_division")
 	var share: int = content.tuning.spill_single_bp / 100
+	if state.def.slot == ItemDef.Slot.PASSIVE:
+		@warning_ignore("integer_division")
+		lines.append("A passive spreads its essences: %d%% of their strength (%d%% at Resonant) to its holder's other %s items." % [
+			content.tuning.passive_spread_bp[state.infusion_level] / 100, content.tuning.passive_spread_bp[Infusions.Level.RESONANT] / 100, keywords])
+		if state.alloy != null:
+			lines.append(("Awakened: %s" if state.awakened() else "Awakens at Resonant: %s") % alloy_words(content, state.alloy))
+		return lines
 	if state.essences.size() == 1:
 		var essence: String = state.essences[0].name
 		if state.spills():
@@ -123,10 +149,10 @@ static func spills_received(content: ContentDb, holder: RunHero, item: RunItem) 
 			target = state
 	if target == null:
 		return lines
-	@warning_ignore("integer_division")
-	var share: int = content.tuning.spill_single_bp / 100
+	ItemState.set_holder_conduits(states)
 	for app: EssenceApplication in ItemState.spills_into(target, states, content.tuning):
-		lines.append("Gets %d%% %s" % [share, app.label])
+		@warning_ignore("integer_division")
+		lines.append("Gets %d%% %s" % [app.share_bp / 100, app.label])
 	return lines
 
 
@@ -152,12 +178,23 @@ static func effect_line(content: ContentDb, sourced: SourcedEffect) -> String:
 ## status, ticks for a charge).
 static func effect_words(content: ContentDb, effect: EffectDef, amount: int) -> String:
 	var when: String = TRIGGER_WORDS[effect.trigger]
+	if effect.trigger == EffectDef.Trigger.ON_ABILITY and not effect.keyword.is_empty():
+		when = "When another %s ability fires" % keyword_names(content, [effect.keyword] as Array[String])
+	elif effect.trigger == EffectDef.Trigger.ON_STATUS and not effect.statuses.is_empty():
+		var names: PackedStringArray = PackedStringArray()
+		for status_id: String in effect.statuses:
+			names.append(_status_name(content, status_id))
+		when = "When its holder applies %s" % " or ".join(names)
+	if effect.every > 1:
+		when += " (every %s time)" % _ordinal(effect.every)
 	if effect.trigger == EffectDef.Trigger.AT_TIME:
 		when = when % (_seconds(effect.at_ticks) + "s")
 	elif effect.trigger == EffectDef.Trigger.ON_ALLY_BELOW_HP:
 		@warning_ignore("integer_division")
 		when = when % ("%d%%" % (effect.threshold_bp / 100))
 	var who: String = TARGET_WORDS[effect.target]
+	if effect.target == EffectDef.Target.HIT_TARGET and EVENT_UNIT_WORDS.has(effect.trigger):
+		who = EVENT_UNIT_WORDS[effect.trigger]
 	var what: String
 	match effect.type:
 		EffectDef.Type.DAMAGE:
@@ -174,6 +211,14 @@ static func effect_words(content: ContentDb, effect: EffectDef, amount: int) -> 
 		_:
 			what = "cleanse %d from %s" % [amount, who]
 	return "%s: %s" % [when, what]
+
+
+## "2nd", "3rd", "4th".
+static func _ordinal(n: int) -> String:
+	var suffix: String = "th"
+	if n % 100 < 11 or n % 100 > 13:
+		suffix = {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+	return "%d%s" % [n, suffix]
 
 
 ## Ticks as seconds, e.g. 24 -> "1.2" (display only).
@@ -195,6 +240,9 @@ static func hero_text(content: ContentDb, hero_id: String, rank: int) -> String:
 	for sourced: SourcedEffect in basic.effects:
 		lines.append("• " + effect_line(content, sourced))
 	lines.append("")
+	lines.append("Affinities: %s" % keyword_names(content, def.affinities))
+	for keyword_id: String in def.affinities:
+		lines.append("• %s affinity: %s" % [content.keywords[keyword_id].name, content.keywords[keyword_id].affinity_text])
 	lines.append("Innate: %s. %s" % [def.innate_name, def.innate_text])
 	if def.calling != null:
 		lines.append("")
@@ -281,8 +329,10 @@ static func synergy_text(content: ContentDb, synergy_id: String) -> String:
 			lines.append("When %s holds %s." % [content.heroes[def.hero].name, item_names[0]])
 		SynergyDef.Layer.RESONANCE:
 			lines.append("Counting %s essences in the team's items:" % content.essences[def.essence].name)
-		SynergyDef.Layer.CLASS_TRAIT:
-			lines.append("Counting %ss in the team:" % def.unit_class.capitalize())
+		SynergyDef.Layer.AFFINITY:
+			lines.append("Counting heroes with the %s affinity:" % content.keywords[def.keyword].name)
+		SynergyDef.Layer.DUO:
+			lines.append("When %s and %s are both in the team." % [content.heroes[def.heroes[0]].name, content.heroes[def.heroes[1]].name])
 	lines.append("")
 	if def.is_tiered():
 		for tier: SynergyDef.Tier in def.tiers:
@@ -291,6 +341,10 @@ static func synergy_text(content: ContentDb, synergy_id: String) -> String:
 	elif def.layer == SynergyDef.Layer.TRANSFORMATION:
 		for effect: EffectDef in def.item_effects:
 			lines.append("• " + effect_words(content, effect, _flat(effect)))
+	elif def.layer == SynergyDef.Layer.DUO:
+		for i: int in def.heroes.size():
+			for part: SpecializationDef.Part in def.duo_parts[i]:
+				lines.append("• %s: %s" % [content.heroes[def.heroes[i]].name.split(" ")[0], part_words(content, part)])
 	else:
 		lines.append_array(_bonus_lines(content, def.bonus))
 	return "\n".join(lines)
@@ -307,6 +361,24 @@ static func _bonus_lines(content: ContentDb, bonus: RelicDef) -> PackedStringArr
 	for effect: EffectDef in bonus.effects:
 		lines.append("• " + effect_words(content, effect, _flat(effect)))
 	return lines
+
+
+## A part in plain words: an aura, a grant, an ability's effects, or a
+## status replacement.
+static func part_words(content: ContentDb, part: SpecializationDef.Part) -> String:
+	match part.kind:
+		SpecializationDef.Kind.AURA:
+			return "aura: " + part.aura.describe()
+		SpecializationDef.Kind.GRANT:
+			return "gives %s: %s" % ["matching items" if part.grant.filter != null else "the items", effect_words(content, part.grant.effect, _flat(part.grant.effect))]
+		SpecializationDef.Kind.ABILITY:
+			var effects: PackedStringArray = PackedStringArray()
+			for effect: EffectDef in part.item.effects:
+				effects.append(effect_words(content, effect, _flat(effect)))
+			return "; ".join(effects)
+		SpecializationDef.Kind.REPLACE_STATUS:
+			return "its %s lands as %s" % [_status_name(content, part.replace_from), _status_name(content, part.replace_to)]
+	return part.label
 
 
 ## An effect's flat number (stacks for a status).

@@ -23,6 +23,9 @@ var basic_attack: ItemDef
 var items: Array[ItemSetup] = []
 ## The hero's innate parts (HeroDef.innate), credited to `innate_name`.
 var innate: Array[SpecializationDef.Part] = []
+## Keyword ids (HeroDef.affinities). Their perks are already in `innate`;
+## affinity synergies count them.
+var affinities: Array[String] = []
 ## The hero's rank-B specialization, or null. Its parts come from its deed
 ## track in `deeds`, by level.
 var specialization: SpecializationDef = null

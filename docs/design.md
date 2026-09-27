@@ -2,7 +2,7 @@
 
 Working title: Riftrite (placeholder). Synced from the Claude Docs version on 2026-09-25, then updated in the repo the same day with answers to the first round of design questions (see Decisions made). The Claude Docs version does not have those updates yet.
 
-> **Redesign in progress (2026-09-26):** `docs/plans/fun-redesign.md` and `docs/plans/heroes-and-deeds.md` are approved and being built in steps. They replace the item rows and adjacency, sockets by rarity and neighbor spill, buying and recruiting heroes, Backup, and class traits. This document describes the game as it is now, and each step updates it as it lands. **Step 1 is built:** the loadout (basic attack, abilities, passives), the drafted team of three, a rank-up per elite, innates, and no Backup, item size, rows, or neighbor effects. **Step 2 is built:** any item fuses two essences, Resonant singles spill by keyword, and alloys awaken at Resonant. **Step 3 is built:** deeds (`docs/plans/deeds.md`): each hero levels a calling and their specialization by playing to type.
+> **Redesign in progress (2026-09-26):** `docs/plans/fun-redesign.md` and `docs/plans/heroes-and-deeds.md` are approved and being built in steps. They replace the item rows and adjacency, sockets by rarity and neighbor spill, buying and recruiting heroes, Backup, and class traits. This document describes the game as it is now, and each step updates it as it lands. **Step 1 is built:** the loadout (basic attack, abilities, passives), the drafted team of three, a rank-up per elite, innates, and no Backup, item size, rows, or neighbor effects. **Step 2 is built:** any item fuses two essences, Resonant singles spill by keyword, and alloys awaken at Resonant. **Step 3 is built:** deeds (`docs/plans/deeds.md`): each hero levels a calling and their specialization by playing to type. **Step 4 is built:** the new day, economy, and pacing (`docs/plans/new-day.md`). **Step 5 is built:** affinities, event-trigger passives, passive spreading, conduits, and duo bonds (`docs/plans/keywords-and-affinities.md`).
 
 ## High concept
 
@@ -33,11 +33,11 @@ Sources for Guildrun details: [Steam page](https://store.steampowered.com/app/36
 
 ## Core loop
 
-A run is about 45–60 minutes: three acts, each a set number of **days** and ending in a boss. Each day has a shop, a fight, and a stop you pick (loot, an event, and so on). Between fights you shop, recruit, and infuse; in fights you watch.
+A run is about 45–60 minutes: three acts, each a set number of **days** and ending in a boss. Each day has two stops you pick (one choice is always a shop; the other is loot, an event, and so on), then a pick of two fights. Between fights you shop, recruit, and infuse; in fights you watch.
 
 ```mermaid
 flowchart LR
-  A[A day: shop,<br/>a fight, a stop] --> B[Prep: position heroes<br/>and arrange item rows]
+  A[A day: two stops,<br/>then a fight you pick] --> B[Prep: position heroes<br/>and arrange item rows]
   B --> C[Auto-battle]
   C --> D[Loot: gold, items,<br/>enemy essences]
   D --> E[Spend: shop, recruit,<br/>infuse, fuse]
@@ -52,7 +52,7 @@ The inner loop (day to day) is where builds form. The outer loop (run to run) fe
 
 ## Guild, heroes, and combat
 
-You draft **three heroes** at the start of the run (three times, pick 1 of 3) and keep them for the whole run. They all fight; there's no bench and no Backup (`docs/plans/heroes-and-deeds.md`). Nobody joins later, and the Caravan doesn't sell heroes.
+You draft **three heroes** at the start of the run (three times, pick 1 of 3) and keep them for the whole run. They all fight; there's no bench and no Backup (`docs/plans/heroes-and-deeds.md`). Nobody joins later, and shops don't sell heroes.
 
 **Heroes**
 
@@ -91,7 +91,7 @@ You draft **three heroes** at the start of the run (three times, pick 1 of 3) an
 - Some items are **enemy-only**, especially on bosses, which gives bosses their unique mechanics.
 - Some enemy teams also carry **relics**, including **enemy-only relics**.
 - Enemy items have **set tiers**, so you know what tier a given enemy's gear is.
-- **Every fight guarantees one drop** (for now), picked from the enemy team's items and relics. Enemy-only items and relics can drop too, which is how players get a boss's gear. A dropped item keeps the tier the enemy had it at.
+- **Every win offers a pick of 3 rewards** (`docs/plans/new-day.md`): one drop from the enemy team's items and relics, plus two items from the pool. Enemy-only items and relics can drop too, which is how players get a boss's gear. A dropped item keeps the tier the enemy had it at.
 
 **Readability tools** (required, not polish): a combat log, a per-item damage meter after each fight, 0.5×/1×/2×/4× speed, and pause.
 
@@ -167,8 +167,8 @@ Items use the **same tiers as hero ranks: C → B → A → S**. Items don't hav
 
 - **Two copies of the same item at the same tier combine** into one item of the next tier. (Only two copies, not three.)
 - You **can** hold two copies of the same item at *different* tiers; only same-tier copies combine. Duplicates are meant to be uncommon, so an upgrade you chased across a run feels earned.
-- **Where higher tiers come from:** the Caravan unlocks higher tiers (for items and heroes) as the run goes on. The first shop never offers A or S, and probably nothing above B shows up in all of Act 1. The exact schedule is a tuning table in `data/`. Before then, higher tiers only come from:
-  - **Events** that open a tier-specific shop (say, an A-tier-only shop in Act 1) or hand out a single high-tier item.
+- **Where higher tiers come from:** shops unlock higher tiers as the run goes on. The first shop never offers A or S, and probably nothing above B shows up in all of Act 1. The exact schedule is a tuning table in `data/`. Before then, higher tiers only come from:
+  - **Tier shops** (a B-tier-only shop, even an A-tier one in Act 1) and **events** that hand out a single high-tier item.
   - **Enemy drops**, at that enemy's set tier.
   - **Loot drops** (Vault chests and the like), where the tier is random.
 - **What happens to infusions when copies combine:**
@@ -176,7 +176,7 @@ Items use the **same tiers as hero ranks: C → B → A → S**. Items don't hav
   - If the new copy has its own essence or alloy, **the new infusion replaces yours**, and your infusion's XP is lost. So you choose: take the tier upgrade with the new infusion, or keep your item as it is and pass on the copy.
 - Tier and rarity are separate. **S is the top tier**: an S item is maxed out and can't combine further.
 - **Legendaries never combine.** Each has its own upgrade path (grows by use, essence-hungry, boss-forged, and so on), and a Legendary can appear only once per run.
-- Shop tier odds by act (C/B/A/S, starting values): Act 1 80/20/0/0, Act 2 45/40/15/0, Act 3 20/40/30/10. The same table applies to heroes in the Caravan, so it lives in one data file.
+- Shop tier odds by act (C/B/A/S, starting values): Act 1 80/20/0/0, Act 2 45/40/15/0, Act 3 20/40/30/10. It lives in `data/acts.json` (`shop_tier_weights`) and also sets the tiers of the reward pick's pool items.
 
 **Oathbinding (hero–item):** when a hero and an item are both S tier, the player can permanently oathbind the hero to that item. One per hero; the item can't be removed, moved, or sold after that (but can be repositioned in the row and still infused); it leaves with the hero if the hero is dismissed; and a preview is shown before confirming. How specific the result is depends on rarity (Common: basic and generic, plus a basic backup ability; Legendary: unique). Full rules, the class-fit table, and Legendary upgrade paths: `docs/tiers-backup-specialization.md`.
 
@@ -199,7 +199,10 @@ Synergies work in five layers, from specific and secret (Gungeon-style) to broad
 | Essence transformations | A specific item + a specific essence | *Twin Daggers* + Frost: daggers become piercing icicles. Never spills or awakens | Hidden until found, then saved in the Codex |
 | Signature gear | A specific item on a specific hero | Mender *Sister Vell* + *Old Lantern*: lantern heals also cleanse | Hinted in the hero's profile as "???" |
 | Essence resonance | 3 / 5 / 7 of one essence infused team-wide, across all heroes' items. It counts essences, not items: a single counts 1, an alloy counts 1 for each half, a pure double counts 2 of its essence, and an essence transformation counts as whatever essence(s) it holds | 5 Frost: frozen enemies take +30% damage | Always shown, like trait counters |
-| Class traits | 2 or more heroes of a class fielded | 2 Wardens: front-row heroes get +15% Shield | Always shown |
+| Shared affinities | 2 or 3 heroes with the same affinity keyword (each hero has two, each with its own perk on their matching items) | 2 heroes with Ward: every Ward item gives +15% Shield | Always shown |
+| Duo bonds | Two specific heroes in the team | Vell + Hesk, **"The Gate and the Lantern"**: Vell's heals also shield; Hesk heals when hit | Hidden until found; the draft shows "a bond: ?" |
+
+**Items that react (redesign step 5):** passives can answer their holder's events (an ability firing, a basic attack, a crit, gaining Shield, being hit, healing, applying a status, felling an enemy), sometimes on every Nth time. An infused passive spreads its essences to its holder's items that share a keyword, at every level. Conduit passives change where spills go: to the basic attack (Ember Censer), to every ability (Open Channel), to the heroes in the same row (Bond Chain), or from awakened infusions too (Rift Prism).
 
 **How discovery works**
 
@@ -208,46 +211,45 @@ Synergies work in five layers, from specific and secret (Gungeon-style) to broad
 - When both halves of an **undiscovered** synergy are available, it gets a "?" spark. The player knows *something* is there, but not what.
 - The Codex tracks found / total per category, which gives completionists a long-term goal.
 
-**Targets for launch:** about 80 named pairs, about 30 essence transformations, 1–2 signature items per hero, 6 essence resonances, 6 class traits.
+**Targets for launch:** about 80 named pairs, about 30 essence transformations, 1–2 signature items per hero, 6 essence resonances, 8 shared affinities, 8+ duo bonds.
 
 ## Run structure and economy
 
 There's no branching map. Like Guildrun and The Bazaar, each act is a set number of **days**, and the game only ever shows what's next. The last fight of an act is its boss. Act 1 ends in a challenge fight, Act 3 in the final boss, then optional Endless mode.
 
-**A day** is always:
-1. **Caravan:** buy items. (It no longer sells heroes: the team is drafted at the start.)
-2. **Stop:** pick one of **2 nodes**, drawn each day from one pool. Every event is its own node, next to the Forge, three kinds of Loot, the Vault, Retrain, and an extra fight (a skirmish). Each node shows its name and what it offers before you pick. Some only show up when they'd be useful: the Forge only if something is infused, the Vault only with a key, and Retrain only when a hero has a specialization. Details: `docs/plans/stop-nodes.md`.
-3. **Fight:** one fight, shown ahead of time. It shows the enemy team, so you know which essences it drops.
+**A day** is always (`docs/plans/new-day.md`):
+1. **Two stops.** Each stop visit offers **2 nodes** from one pool, and **one of them is always a shop**. Shops sell items: the Caravan (anything), keyword shops (Blade, Bow, Spell, Mend, Ward, Burn, Bleed, Hex), shops by slot, essence merchants (their essence plus items that suit it), tier shops, and the Synergy Peddler (partners for what you hold). The other node is anything else: every event is its own node, next to the Forge, three kinds of Loot, the Vault, and Retrain. Each node shows its name and what it offers before you pick. Some only show up when they'd be useful: the Forge only if something is infused, the Vault only with a key, and Retrain only when a hero has a specialization. Details: `docs/plans/stop-nodes.md`.
+2. **Fight:** pick 1 of 2 fights, both shown from the start of the day with their enemies and the essence they yield. One is **easier**, one **harder**; the harder pays more gold and has rarer rewards. Elite days offer two elites; the boss day has only the boss.
+3. **Rewards:** gold, the enemy team's essence, and a pick of 3 (one enemy drop, two pool items); elites and the boss add their extras.
 
-A possible later change: two rounds per day (Caravan, stop, fight, then Caravan, stop, and an elite or the boss). The day's steps live in data, so trying it is a data change.
+**Act 1 is 8 days:** elites on days 3 and 6, the boss on day 8, and the boss day's second stop is always the Upgrade stop. Normal fights run about 25–35s (the act scales enemy HP by day).
 
 - **Offers don't depend on earlier picks (for now).** They're random per run, from the run seed.
 - **Starting a run:** draft three heroes (each pick is 1 of 3 random heroes not yet taken), then 1 of 3 starting packages (such as extra gold, a Common relic, or a Common item), on top of a base amount of gold.
 - **The team:** the three drafted heroes all fight, for the whole run.
-- **Losing a fight** restarts the day: you keep everything you have and get bonus gold (10, +5 per fight won so far), so you can visit the Caravan and another stop before a rematch against the same enemies. **The second loss ends the run.** (A tie still counts as a victory.)
+- **Losing a fight** restarts the day: you keep everything you have and get bonus gold (10, +5 per fight won so far), so you can visit two fresh stops before the rematch (the same two fights to pick from). **The second loss ends the run.** (A tie still counts as a victory.)
 - **HP:** every fight starts everyone at full HP, unless an item or relic says otherwise.
 - **Stash:** a shared stash that holds **6 unequipped items**. Relics can't go in the stash.
 - **Save and resume:** a run can be saved and resumed between steps. Fights have no player input, so there's nothing to save mid-fight.
 
 | Step | What happens |
 | --- | --- |
-| Caravan | Buy/sell items, reroll for gold. Never offers an item at a different tier than a copy you hold |
-| Fight | Encounter; drops gold, 1–2 essences, and one guaranteed item (or, rarely, relic) from the enemy team |
-| Elite | Harder fight; guaranteed Rare item or rank-up |
+| Shops (stops) | Buy/sell items, reroll for gold. One is offered at every stop visit. Never offers an item at a different tier than a copy you hold (tier shops excepted) |
+| Fight | Pick 1 of 2; a win gives gold, an essence, and a pick of 3 rewards (one from the enemy team) |
+| Elite | Harder fight; also a rank-up and a relic choice |
 | Forge (stop) | Reforge (remove infusions); only offered when something is infused |
 | Loot (stops) | A free reward. Three nodes, each with its own appearance rate: an item, an essence, or gold |
-| Skirmish (stop) | An extra fight against another of the day's normal encounters. A win gives a normal win's rewards; a loss gives nothing and isn't counted as a loss. It counts for infusion XP, discoveries, and Legendary paths |
 | Vault (stop) | Spend a key on a locked chest (Gungeon-style); only offered when you hold a key |
 | Event (stops) | Each event is its own node with its own appearance rate: a choice, sometimes with trade-offs, sometimes a rescued NPC |
 | Boss | Act boss with a unique mechanic; the act's last fight; drops an item or a relic |
 
 **First events:** gold; a random item by rarity (Common most likely, Legendary least); a random relic by rarity; a random item by tier (C most likely, S least). More, including one that offers retraining, come later.
 
-**Prices (placeholders, tuned with the balance runner):** higher-tier items and higher-rank heroes cost more, and rarer relics cost more. An item's rarity mostly makes it harder to find, not pricier.
+**Prices (placeholders, tuned with the balance runner):** an item's price is set by its rarity (Common 2, Uncommon 3, Rare 5, Epic 7 at tier C) and doubles per tier above C; rarer relics cost more.
 
 **Currencies in a run**
 
-- **Gold:** the Caravan, rerolls, removing infusions.
+- **Gold:** shops, rerolls, removing infusions.
 - **Essences:** stored in a pouch (cap of 8) until infused, so you can't hoard every one.
 - **Keys:** rare; open Vault chests.
 
@@ -306,8 +308,8 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - Engine: Godot 4 + GDScript. Sim math is integer-only, with time counted in ticks.
 - The spreadsheet prototype is skipped; the headless combat sim tests the infusion math instead.
 - The first combat sim uses fixed front/back rows; the hex arena comes later.
-- Enemies have hand-made, fixed item layouts with set tiers, and some items are enemy-only (especially boss items). Some enemy teams carry relics, including enemy-only ones. Every fight guarantees one drop from the enemy team's items and relics, and enemy-only ones can drop.
-- Tier and rarity are separate. Same-tier copies combine. Copies at different tiers can be held together. Tiers are C → B → A → S, the same as hero ranks. Items and heroes can be found above C. The Caravan unlocks higher tiers as the run goes on (no A/S early); before then, higher tiers come from events (such as tier-specific shops), enemy drops (set tier), and loot drops (random tier).
+- Enemies have hand-made, fixed item layouts with set tiers, and some items are enemy-only (especially boss items). Some enemy teams carry relics, including enemy-only ones. Every win's reward pick includes one drop from the enemy team's items and relics, and enemy-only ones can drop.
+- Tier and rarity are separate. Same-tier copies combine. Copies at different tiers can be held together. Tiers are C → B → A → S, the same as hero ranks. Items and heroes can be found above C. Shops unlock higher tiers as the run goes on (no A/S early); before then, higher tiers come from tier shops, events, enemy drops (set tier), and loot drops (random tier).
 - Items have no size (removed in the redesign). Each item of a given rarity shows up equally often.
 - Every item has a crit chance, starting at 0%. Crits deal 150% damage.
 - Rift Collapse deals flat damage that grows every second (never a percentage of HP) and hits Shield before HP. The ramp gets much steeper after 90s, and Act 2 doubles the numbers. There's no time limit; reaching 3 minutes, or both sides dying on the same tick, is a tie, and a tie counts as a victory. Surviving to 3 minutes is meant to be possible, especially for strong mid- and late-game teams.
@@ -341,13 +343,13 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - Pure doubles each have their own effect, which switches on when they awaken.
 - Infusion XP comes from item fires (amount set per item) plus battles fought. XP resets when an infusion becomes an alloy or pure double.
 - Essence resonance counts essences: a single = 1, an alloy = 1 of each half, a pure double = 2, and a transformation counts its essence(s).
-- **No branching map.** Each act is a set number of days. A day is a guaranteed shop, one fight shown ahead, and a stop you pick from 2 nodes drawn from one pool (every event, three loot kinds, the Forge only if something is infused, the Vault only with a key, Retrain, and an extra fight). Offers are random per run from the seed and don't depend on earlier picks for now.
-- **The Caravan** is the shop: it sells items (it sold heroes until redesign step 1; heroes are drafted now and rank up from elite wins).
-- **The Caravan never offers an item at a different tier than a copy you already hold.** Holding the same item at different tiers is still allowed when the copies come from elsewhere (Vault, loot, fight drops, events), just not from the Caravan.
-- **Day order:** Caravan → stop → fight. Two rounds per day (Caravan, stop, fight, Caravan, stop, elite or boss) is a possible later change.
+- **No branching map.** Each act is a set number of days. A day is two stop visits (each a pick of 2 nodes from one pool, one of them always a shop), then a pick of 2 fights (easier and harder), then rewards (redesign step 4, `docs/plans/new-day.md`). Offers are random per run from the seed and don't depend on earlier picks for now.
+- **Shops** are stop nodes (the Caravan is one of them); they sell items only (heroes are drafted and rank up from elite wins).
+- **A shop never offers an item at a different tier than a copy you already hold** (tier shops excepted). Holding the same item at different tiers is still allowed when the copies come from elsewhere (Vault, loot, fight drops, events, tier shops).
+- **Day order:** stop, stop, fight pick, fight, rewards.
 - **Infusing** can happen any time between fights for now; the Forge is for reforging.
 - **A lost fight is replayed against the same enemies.**
-- **Synergies (built):** resonance counts every hero's essences; class traits count heroes, at 2 and 3 (to be replaced by affinities in step 5); enemies get no synergies for now (maybe bosses in later acts). A transformation uses one copy of its essence; any other essence works as a plain single. Pairs can use a new `charge` effect (advance another item's cooldown). Details: `docs/plans/synergies-in-sim.md`.
+- **Synergies (built):** resonance counts every hero's essences; shared affinities count heroes with the keyword, at 2 and 3 (they replaced class traits in step 5); duo bonds give each of their two heroes parts, which can use event triggers; enemies get no synergies for now (maybe bosses in later acts). A transformation uses one copy of its essence; any other essence works as a plain single. Pairs can use a new `charge` effect (advance another item's cooldown). Details: `docs/plans/synergies-in-sim.md`.
 - **Two essences on any item** (redesign step 2) replaced "sockets by rarity": only Epic and Legendary items used to hold two.
 - **Relics:** hold any number, no board and no sockets. They can be turned down but never removed once taken, change how a build works (Epic ones a lot), and are much rarer than items, essences, or heroes. Bosses drop an item or a relic.
 - **A run starts with a drafted team of three** (three picks, each 1 of 3 random heroes), then 1 of 3 starting packages (extra gold, a Common relic, or a Common item), plus base gold. All three fight.
@@ -362,21 +364,20 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 
 - **Act 3 collapse numbers:** to be decided later.
 - **Bosses** have HP-threshold phases (built from the same parts as specializations). Summons (units joining mid-fight) come later. The Act 1 boss is Old Mother Ash and her pack (`docs/plans/act1-boss.md`).
-- **Enemy-only items** can end up with the guild (fight drops include them). The Caravan never sells them, so the only ways to upgrade one are a second copy from random loot (not the Caravan) or an upgrade stop.
+- **Enemy-only items** can end up with the guild (the reward pick's drop includes them). Shops never sell them, so the only ways to upgrade one are a second copy from random loot or a drop, or an upgrade stop.
 - **Day structure (decided):**
   - **Stops:** the Upgrade stop (free, one item up one tier) is always the stop right before the boss and appears nowhere else. A Retrain stop switches a hero's specialization.
-  - **Relics:** you pick 1 of 3 after every elite and after the boss. A relic merchant event sells one; the Caravan never sells relics.
+  - **Relics:** you pick 1 of 3 after every elite and after the boss. A relic merchant event sells one; shops never sell relics.
   - **Legendary relics are boss relics:** game-altering, and obtainable only by winning a boss fight (its relic choice is all Legendary) or from rare events at an event stop.
   - **Keys:** elites drop one half the time, and some events give one.
   - **Essences:**
-    - a normal win gives 1 shard of the enemy team's essence, and 3 shards make an essence
-    - an elite or boss win gives a whole essence
+    - every win gives a whole essence of the enemy team's essence (shards were removed in redesign step 4)
     - Loot and Events give essences too
   - Details: `docs/plans/day-structure.md`.
-- **Run rules (decided):** reforging destroys the essences. You can always pass on a new item or essence; to take one without room, throw something away first (discarding works any time, selling only at the Caravan), and you can't buy without room. The roster's first slot is always a field slot; the other five can each be field or backup. New heroes join fielded if fewer than 5 are.
+- **Run rules (decided):** reforging destroys the essences. You can always pass on a new item or essence; to take one without room, throw something away first (discarding works any time, selling only at a shop), and you can't buy without room. The roster's first slot is always a field slot; the other five can each be field or backup. New heroes join fielded if fewer than 5 are.
 - **Signature gear strength:** should signature items be rarer, or their bonuses smaller? The balance parties always hold them, which flips close matchups (`docs/plans/synergies-in-sim.md`). To be decided after playtesting.
 - **Act 1's essences:** the design says each biome favors two essences, but Act 1 drops four for now (Wrath, Stone, Venom, Ember). Undecided; revisit after playtesting (`docs/plans/slice-content.md`).
-- **Legendary items (decided, built):** six, one per upgrade path: grows by use (counts the item's hits; starts at C), essence-hungry (fed essences from the pouch; B), devourer (fed other items, keeps a trace of each; C), bonded (its holder ranking up; B), martyr (its holder falling in a won fight; B), and boss-forged (a boss beaten while equipped; A). They come from the Vault and rare events (including the Barrow Hoard, a Legendary item event), never the Caravan, Loot, or tier shops. A kills-counting grows-by-use Legendary comes later. Details: `docs/plans/legendary-items.md`.
-- **Tier schedule:** at what point in a run does the Caravan start offering B, A, and S? (A tuning table; it can be set once the run structure is being built.)
+- **Legendary items (decided, built):** six, one per upgrade path: grows by use (counts the item's hits; starts at C), essence-hungry (fed essences from the pouch; B), devourer (fed other items, keeps a trace of each; C), bonded (its holder ranking up; B), martyr (its holder falling in a won fight; B), and boss-forged (a boss beaten while equipped; A). They come from the Vault and rare events (including the Barrow Hoard, a Legendary item event), never shops, Loot, or the reward pick. A kills-counting grows-by-use Legendary comes later. Details: `docs/plans/legendary-items.md`.
+- **Tier schedule:** at what point in a run do shops start offering B, A, and S? (A tuning table per act, `shop_tier_weights`; Act 1 is C 80%, B 20%.)
 - **Stats and essence rework (in progress):** decisions, placeholders, and the build order are in `docs/plans/essence-rework.md`. Damage essences on items that don't hit need real per-item designs later; for now they hit the enemy directly across.
 - More open questions on tiers, backup, Oathbinding, and Legendaries are listed at the end of `docs/tiers-backup-specialization.md`.

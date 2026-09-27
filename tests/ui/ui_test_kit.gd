@@ -16,9 +16,9 @@ static func session() -> RunSession:
 	return RunSession.make(K.content(), _run_content, SAVE_PATH)
 
 
-## A session with a run at day 1's Caravan (the first offer of each draft
-## pick, gold package).
-static func at_caravan(run_seed: int = 5) -> RunSession:
+## A session with a run at day 1's first stop choice (the first offer of
+## each draft pick, gold package).
+static func at_start(run_seed: int = 5) -> RunSession:
 	var s: RunSession = session()
 	s.new_run(run_seed)
 	for pick: int in RunState.TEAM_SIZE:
@@ -27,12 +27,22 @@ static func at_caravan(run_seed: int = 5) -> RunSession:
 	return s
 
 
-## The same, moved on to today's fight.
-static func at_fight(run_seed: int = 5) -> RunSession:
-	var s: RunSession = at_caravan(run_seed)
-	s.leave_caravan()
+## The same, in the first stop's shop (every visit's first offer is a shop).
+static func at_shop(run_seed: int = 5) -> RunSession:
+	var s: RunSession = at_start(run_seed)
 	s.pick_stop(0)
-	s.leave_stop()
+	return s
+
+
+## The same, moved on to the day's first fight (the first stops, left at
+## once, then the first fight offered).
+static func at_fight(run_seed: int = 5) -> RunSession:
+	var s: RunSession = at_start(run_seed)
+	while s.state.phase == "stop_choice" or s.state.phase == "stop":
+		if s.state.phase == "stop_choice":
+			s.pick_stop(0)
+		s.leave_stop()
+	s.pick_fight(0)
 	return s
 
 

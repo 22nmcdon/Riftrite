@@ -10,6 +10,8 @@ var id: String
 var name: String
 ## A hero's class, or "" (see UnitSetup.unit_class).
 var unit_class: String = ""
+## A hero's affinities (keyword ids; see UnitSetup.affinities).
+var affinities: Array[String] = []
 var side: UnitSetup.Side
 var row: UnitSetup.Row
 ## Position within the row, 0 = leftmost.
@@ -32,6 +34,9 @@ var statuses: Array[StatusState] = []
 var recent_heal_ticks: Array[int] = []
 ## What dealt the last damage, for the death log line.
 var last_hit_by: String = ""
+## The unit whose hit or status dealt the last damage ("" for the Rift
+## Collapse or a relic), for on_kill (see Events).
+var last_attacker: String = ""
 ## The innate's, calling's, and specialization's aura, grant, and
 ## replace_status parts that apply now (by deed level), and phases'; 
 ## CombatSim.rederive_all applies them.
@@ -75,6 +80,7 @@ static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column:
 	state.id = setup.id
 	state.name = setup.name
 	state.unit_class = setup.unit_class
+	state.affinities = setup.affinities
 	state.side = unit_side
 	state.row = setup.row
 	state.column = unit_column
@@ -117,19 +123,21 @@ static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column:
 		for essence_id: String in item.essence_ids:
 			essences.append(content.essences[essence_id])
 		state.items.append(ItemState.make(item.def, slot, state.stats, content, essences, item.tier, item.infusion_xp, item.trace_bp))
+	ItemState.set_holder_conduits(state.items)
 	state.rederive_items(content)
 	return state
 
 
 ## Re-derives every item. `auras` lines up with `items` (empty = no auras);
-## CombatSim.rederive_all gathers them. Each item gets keyword spills from
-## the unit's other Resonant singles that share a keyword with it, in item
-## order, at most one per essence.
-func rederive_items(content: ContentDb, auras: Array[ItemAura] = []) -> void:
+## CombatSim.rederive_all gathers them. Each item gets spills from the
+## unit's other items (Resonant singles, infused passives, and whatever its
+## conduits add), in item order, then from `row_sources` (see
+## ItemState.spills_into), at most one per essence.
+func rederive_items(content: ContentDb, auras: Array[ItemAura] = [], row_sources: Array[ItemState] = []) -> void:
 	for i: int in items.size():
 		var item: ItemState = items[i]
 		item.stats = stats
-		item.derive(content, ItemState.spills_into(item, items, content.tuning), auras[i] if i < auras.size() else null)
+		item.derive(content, ItemState.spills_into(item, items, content.tuning, row_sources), auras[i] if i < auras.size() else null)
 
 
 ## The loadout's items (everything but the built-in basic attack and

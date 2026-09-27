@@ -1,8 +1,9 @@
 class_name RewardsScreen
 extends UiScreen
-## After a win: the spoils on a parchment ledger. Take or pass each reward
-## (a relic choice takes one of three). After an elite, a rank-up to give to
-## one hero (docs/plans/heroes-and-deeds.md, section 3).
+## After a win: the spoils on a parchment ledger. Take or pass each reward:
+## the essence, the reward pick (one of three: the enemy drop first,
+## docs/plans/new-day.md), and a relic choice (one of three). After an elite,
+## a rank-up to give to one hero (docs/plans/heroes-and-deeds.md, section 3).
 
 
 func build() -> void:
@@ -20,12 +21,16 @@ func build() -> void:
 	words.add_child(UiStyle.heading("Spoils", 32, UiStyle.OAK_600))
 	words.add_child(UiStyle.label("Take what you want; anything left behind is lost when you continue.", 17, UiStyle.INK_TEXT))
 	var singles: Array[int] = []
+	var reward_pick: Array[int] = []
 	var relic_choice: Array[int] = []
 	var rank_ups: Array[int] = []
 	for i: int in session.state.offers.size():
+		var group: String = session.state.offers[i].get("group", "")
 		if session.state.offers[i]["type"] == "rank_up":
 			rank_ups.append(i)
-		elif session.state.offers[i].get("group", "") == "relic_choice":
+		elif group == RunFlow.REWARD_PICK:
+			reward_pick.append(i)
+		elif group == "relic_choice":
 			relic_choice.append(i)
 		else:
 			singles.append(i)
@@ -33,6 +38,10 @@ func build() -> void:
 		page.add_child(_rank_up(i))
 	if not singles.is_empty():
 		page.add_child(offer_row(singles, _take))
+	if not reward_pick.is_empty():
+		var drop: bool = session.state.offers[reward_pick[0]].has("drop")
+		page.add_child(UiStyle.heading("Choose one spoil (or none):" + (" the first is from the enemy team" if drop else ""), 20, UiStyle.OAK_600))
+		page.add_child(offer_row(reward_pick, _take))
 	if not relic_choice.is_empty():
 		page.add_child(UiStyle.heading("Choose one relic (or none):", 20, UiStyle.OAK_600))
 		page.add_child(offer_row(relic_choice, _take))

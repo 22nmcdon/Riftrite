@@ -67,14 +67,6 @@ func _pouch() -> Control:
 		row.add_child(EssenceChip.make(session.content, state.pouch[i], i, true))
 	row.add_child(DropZone.make("Throw away", _discard, true, 76, Callable(), ItemTile.COMPACT_HEIGHT))
 	var hint: String = "Drag an essence onto an item to infuse it. Drop an item or essence on Throw away to get rid of it."
-	var shards: PackedStringArray = PackedStringArray()
-	var shard_ids: Array = state.shards.keys()
-	shard_ids.sort()
-	for essence_id: String in shard_ids:
-		if state.shards[essence_id] > 0:
-			shards.append("%s %d" % [session.content.essences[essence_id].name, state.shards[essence_id]])
-	if not shards.is_empty():
-		hint += "\n\nShards: " + ", ".join(shards)
 	return _section("Essences (%d/%d)" % [state.pouch.size(), session.content.tuning.pouch_cap], row, hint)
 
 

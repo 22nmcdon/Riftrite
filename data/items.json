@@ -2028,5 +2028,198 @@
         1
       ]
     }
+  },
+  {
+    "id": "ember_censer",
+    "_note": "Conduit: its holder's spills and spreads also reach the basic attack.",
+    "name": "Ember Censer",
+    "slot": "passive",
+    "keywords": ["burn", "spell"],
+    "tags": [
+      "charm"
+    ],
+    "rarity": "rare",
+    "xp_per_fire": 0,
+    "conduit": "basic_attack"
+  },
+  {
+    "id": "open_channel",
+    "_note": "Conduit: its holder's spills and spreads reach every ability, keyword or not.",
+    "name": "Open Channel",
+    "slot": "passive",
+    "keywords": ["spell"],
+    "tags": [
+      "charm",
+      "magic"
+    ],
+    "rarity": "epic",
+    "xp_per_fire": 0,
+    "conduit": "all_abilities"
+  },
+  {
+    "id": "bond_chain",
+    "_note": "Conduit: its holder's spills also reach the heroes in its row.",
+    "name": "Bond Chain",
+    "slot": "passive",
+    "keywords": ["ward"],
+    "tags": [
+      "charm",
+      "defense"
+    ],
+    "rarity": "rare",
+    "xp_per_fire": 0,
+    "conduit": "row"
+  },
+  {
+    "id": "rift_prism",
+    "_note": "Conduit: its holder's awakened alloys and pure doubles also spill.",
+    "name": "Rift Prism",
+    "slot": "passive",
+    "keywords": ["spell", "hex"],
+    "tags": [
+      "charm",
+      "magic"
+    ],
+    "rarity": "epic",
+    "xp_per_fire": 0,
+    "conduit": "awakened"
+  },
+  {
+    "id": "tinder_charm",
+    "_note": "When another Spell ability fires, 1 Burn on a random enemy.",
+    "name": "Tinder Charm",
+    "slot": "passive",
+    "keywords": ["burn", "spell"],
+    "tags": [
+      "charm",
+      "magic"
+    ],
+    "rarity": "uncommon",
+    "xp_per_fire": 0,
+    "effects": [
+      {
+        "trigger": "on_ability",
+        "keyword": "spell",
+        "type": "apply_status",
+        "status": "burn",
+        "stacks": 1,
+        "target": "enemy_random"
+      }
+    ]
+  },
+  {
+    "id": "fencers_bracer",
+    "_note": "Every 3rd crit speeds up the holder's other items.",
+    "name": "Fencer's Bracer",
+    "slot": "passive",
+    "keywords": ["blade"],
+    "tags": [
+      "tool",
+      "melee"
+    ],
+    "rarity": "uncommon",
+    "xp_per_fire": 0,
+    "effects": [
+      {
+        "trigger": "on_holder_crit",
+        "every": 3,
+        "type": "charge",
+        "amount_ms": 500,
+        "target": "holder_items"
+      }
+    ]
+  },
+  {
+    "id": "thorn_vest",
+    "_note": "When an enemy's hit lands, it strikes the attacker back.",
+    "name": "Thorn Vest",
+    "slot": "passive",
+    "keywords": ["ward"],
+    "tags": [
+      "defense"
+    ],
+    "rarity": "common",
+    "xp_per_fire": 0,
+    "effects": [
+      {
+        "trigger": "on_hit_taken",
+        "type": "damage",
+        "amount": 2,
+        "target": "hit_target",
+        "scaling": {
+          "def": 2000
+        }
+      }
+    ]
+  },
+  {
+    "id": "drummers_cadence",
+    "_note": "Every 3rd basic attack Shields its holder.",
+    "name": "Drummer's Cadence",
+    "slot": "passive",
+    "keywords": ["ward", "blade"],
+    "tags": [
+      "tool"
+    ],
+    "rarity": "common",
+    "xp_per_fire": 0,
+    "effects": [
+      {
+        "trigger": "on_basic_attack",
+        "every": 3,
+        "type": "shield",
+        "amount": 3,
+        "target": "self",
+        "scaling": {
+          "def": 2000
+        }
+      }
+    ]
+  },
+  {
+    "id": "leech_vial",
+    "_note": "Each enemy its holder fells heals them.",
+    "name": "Leech Vial",
+    "slot": "passive",
+    "keywords": ["bleed", "mend"],
+    "tags": [
+      "food",
+      "healing"
+    ],
+    "rarity": "uncommon",
+    "xp_per_fire": 0,
+    "effects": [
+      {
+        "trigger": "on_kill",
+        "type": "heal",
+        "amount": 8,
+        "target": "self",
+        "scaling": {
+          "atk": 2000
+        }
+      }
+    ]
+  },
+  {
+    "id": "hex_bag",
+    "_note": "Every 3rd status its holder applies also Slows.",
+    "name": "Hex Bag",
+    "slot": "passive",
+    "keywords": ["hex"],
+    "tags": [
+      "charm"
+    ],
+    "rarity": "uncommon",
+    "xp_per_fire": 0,
+    "effects": [
+      {
+        "trigger": "on_status",
+        "every": 3,
+        "type": "apply_status",
+        "status": "slow",
+        "stacks": 1,
+        "target": "hit_target"
+      }
+    ]
   }
 ]

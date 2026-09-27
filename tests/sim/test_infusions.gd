@@ -36,7 +36,7 @@ func _applied(result: FightResult, item_id: String) -> Array[LogEntry]:
 
 func test_level_thresholds() -> void:
 	var levels: Array[int] = []
-	for xp: int in [0, 99, 100, 299, 300, 5000]:
+	for xp: int in [0, 59, 60, 149, 150, 5000]:
 		levels.append(Infusions.level_for(xp, K.tuning()))
 	assert_eq(levels, [0, 0, 1, 1, 2, 2] as Array[int])
 
@@ -70,9 +70,9 @@ func test_attuned_frost_lands_one_and_a_half_slows() -> void:
 # --- XP ------------------------------------------------------------------------------------
 
 func test_fires_earn_xp_and_level_up_mid_fight() -> void:
-	var result: FightResult = K.run([_hero([_infused(_blade("sword", 4), "ember", 92)])], [K.dummy("foe", BIG_HP)])
+	var result: FightResult = K.run([_hero([_infused(_blade("sword", 4), "ember", 52)])], [K.dummy("foe", BIG_HP)])
 	var level_up: LogEntry = result.combat_log.of_kind(LogEntry.Kind.INFUSION_LEVEL)[0]
-	assert_eq(level_up.to_text(), "[2.00s] hero · Sword [Ember] becomes Attuned (100 XP)")
+	assert_eq(level_up.to_text(), "[2.00s] hero · Sword [Ember] becomes Attuned (60 XP)")
 	var burns: Array[int] = []
 	for entry: LogEntry in _applied(result, "sword").slice(0, 3):
 		burns.append(entry.amount)
@@ -80,19 +80,19 @@ func test_fires_earn_xp_and_level_up_mid_fight() -> void:
 
 
 func test_fight_reports_infusion_xp() -> void:
-	var result: FightResult = K.run([_hero([_infused(_blade("sword", 4), "ember", 92), _blade("plain", 4)])], [K.dummy("foe", BIG_HP)])
+	var result: FightResult = K.run([_hero([_infused(_blade("sword", 4), "ember", 52), _blade("plain", 4)])], [K.dummy("foe", BIG_HP)])
 	assert_eq(result.infusions.size(), 1, "only infused items")
 	var infusion: FightResult.InfusionResult = result.infusions[0]
 	var fires: int = K.entries(result, LogEntry.Kind.FIRE, "sword").size()
 	assert_eq([infusion.unit_id, infusion.item_id, infusion.slot], ["hero", "sword", 0])
-	assert_eq([infusion.xp_before, infusion.xp_after], [92, 92 + 4 * fires + 10], "fires plus 10 for the battle")
+	assert_eq([infusion.xp_before, infusion.xp_after], [52, 52 + 4 * fires + 10], "fires plus 10 for the battle")
 	assert_eq([infusion.level_before, infusion.level_after], [0, 2])
 
 
 func test_battle_xp_can_level_up_after_the_fight() -> void:
-	var result: FightResult = K.run([_hero([_infused(_blade("sword"), "ember", 95)])], [K.dummy("foe", 50)])
+	var result: FightResult = K.run([_hero([_infused(_blade("sword"), "ember", 55)])], [K.dummy("foe", 50)])
 	var last: LogEntry = result.combat_log.entries[-1]
-	assert_eq(last.to_text(), "[1.00s] hero · Sword [Ember] becomes Attuned (105 XP, after the fight)")
+	assert_eq(last.to_text(), "[1.00s] hero · Sword [Ember] becomes Attuned (65 XP, after the fight)")
 
 
 func test_xp_without_an_infusion_is_rejected() -> void:
@@ -124,7 +124,7 @@ func test_spill_carries_the_same_kind_bonus() -> void:
 
 
 func test_only_resonant_singles_spill() -> void:
-	assert_eq(_values([_infused(_blade("mid"), "wrath", 299), _blade("other")], 2), PackedStringArray(["damage: 100"]))
+	assert_eq(_values([_infused(_blade("mid"), "wrath", 149), _blade("other")], 2), PackedStringArray(["damage: 100"]))
 
 
 func test_each_item_gets_one_spill_per_essence() -> void:
@@ -155,7 +155,7 @@ func test_spill_stays_in_the_loadout_and_skips_the_built_in_basic_attack() -> vo
 
 
 func test_reaching_resonant_mid_fight_starts_the_spill() -> void:
-	var result: FightResult = K.run([_hero([_blade("left"), _infused(_blade("mid", 4), "ember", 296), _blade("right")])], [K.dummy("foe", BIG_HP)])
+	var result: FightResult = K.run([_hero([_blade("left"), _infused(_blade("mid", 4), "ember", 146), _blade("right")])], [K.dummy("foe", BIG_HP)])
 	# At 1s: left fires first (no spill yet), then mid reaches Resonant, then right fires with the spill.
 	var at_20: Array[String] = []
 	for entry: LogEntry in result.combat_log.of_kind(LogEntry.Kind.STATUS_APPLIED):
@@ -165,10 +165,10 @@ func test_reaching_resonant_mid_fight_starts_the_spill() -> void:
 	assert_eq(_applied(result, "left")[0].tick, 40)
 
 
-func test_passives_can_be_infused_and_their_singles_spill() -> void:
+func test_passives_can_be_infused_and_spread() -> void:
 	var drum: ItemDef = K.item("drum", {"name": "Drum", "slot": "passive", "effects": null, "auras": [{"target": "holder", "stat": "def_bp", "value": 10000}]})
 	var result: FightResult = K.run([_hero([_infused(drum, "wrath", 290), _blade("blade")])], [K.dummy("foe", 50)])
 	assert_eq(result.errors, [] as Array[String])
 	assert_eq([result.infusions[0].item_id, result.infusions[0].xp_after], ["drum", 300], "a passive never fires: battle XP only")
 	var sim := CombatSim.new(K.fight([_hero([_infused(drum, "wrath", 300), _blade("blade")])], [K.dummy("foe", BIG_HP)]), K.content())
-	assert_eq(sim.units[0].items[2].describe_values(), PackedStringArray(["damage: 130 (base 100, x1.3 Wrath spill from Drum)"]))
+	assert_eq(sim.units[0].items[2].describe_values(), PackedStringArray(["damage: 135 (base 100, x1.35 Wrath spread from Drum)"]), "a passive spreads instead of spilling (tests/sim/test_spread_and_conduits.gd)")

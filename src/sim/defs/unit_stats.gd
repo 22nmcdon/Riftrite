@@ -46,3 +46,11 @@ func boosted(bp: int) -> UnitStats:
 	for i: int in values.size():
 		result.values[i] = FixedMath.apply_bp(values[i], bp)
 	return result
+
+
+## A copy with only HP multiplied by `bp` (a run's fight scaling).
+func with_hp_bp(bp: int) -> UnitStats:
+	var result := UnitStats.new()
+	result.values = values.duplicate()
+	result.values[Stat.HP] = FixedMath.apply_bp(values[Stat.HP], bp)
+	return result
