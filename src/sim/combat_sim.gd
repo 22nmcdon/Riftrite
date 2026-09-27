@@ -554,7 +554,7 @@ func _enter_phase(unit: UnitState, phase: PhaseDef) -> Array[ItemState]:
 	entry.target = unit.id
 	entry.note = phase.name
 	combat_log.add(entry)
-	return _apply_parts(unit, phase.parts)
+	return apply_parts(unit, phase.parts)
 
 
 ## Adds each deed's progress from this tick's log entries (heroes only;
@@ -601,12 +601,13 @@ func _reach_level(unit: UnitState, deed: UnitState.Deed, index: int) -> Array[It
 	else:
 		entry.note += ": %s" % level.text
 	combat_log.add(entry)
-	return _apply_parts(unit, parts)
+	return apply_parts(unit, parts)
 
 
-## Turns parts on for `unit` mid-fight (same key replaces). Returns the
-## ability items it added.
-func _apply_parts(unit: UnitState, parts: Array[SpecializationDef.Part]) -> Array[ItemState]:
+## Turns parts on for `unit` (same key replaces): mid-fight for phases and
+## deed levels, at the start for duo bonds. Returns the ability items it
+## added.
+func apply_parts(unit: UnitState, parts: Array[SpecializationDef.Part]) -> Array[ItemState]:
 	var added: Array[ItemState] = []
 	for part: SpecializationDef.Part in parts:
 		match part.kind:

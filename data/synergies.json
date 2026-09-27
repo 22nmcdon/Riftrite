@@ -546,146 +546,6 @@
     ]
   },
   {
-    "id": "warden_trait",
-    "name": "Wardens",
-    "layer": "class_trait",
-    "class": "warden",
-    "_note": "Front-row heroes' shields are x1.15 (x1.25 with 3 Wardens).",
-    "tiers": [
-      {
-        "count": 2,
-        "auras": [
-          {
-            "target": "all_allies",
-            "stat": "shield_bp",
-            "value": 11500,
-            "filter": {
-              "row": "front"
-            }
-          }
-        ]
-      },
-      {
-        "count": 3,
-        "auras": [
-          {
-            "target": "all_allies",
-            "stat": "shield_bp",
-            "value": 12500,
-            "filter": {
-              "row": "front"
-            }
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "striker_trait",
-    "name": "Strikers",
-    "layer": "class_trait",
-    "class": "striker",
-    "_note": "Weapons crit more.",
-    "tiers": [
-      {
-        "count": 2,
-        "auras": [
-          {
-            "target": "all_items",
-            "filter": {
-              "tag": "weapon"
-            },
-            "stat": "crit_chance_bp",
-            "value": 500
-          }
-        ]
-      },
-      {
-        "count": 3,
-        "auras": [
-          {
-            "target": "all_items",
-            "filter": {
-              "tag": "weapon"
-            },
-            "stat": "crit_chance_bp",
-            "value": 1000
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "mender_trait",
-    "name": "Menders",
-    "layer": "class_trait",
-    "class": "mender",
-    "_note": "Healing items heal more.",
-    "tiers": [
-      {
-        "count": 2,
-        "auras": [
-          {
-            "target": "all_items",
-            "filter": {
-              "tag": "healing"
-            },
-            "stat": "heal_bp",
-            "value": 11500
-          }
-        ]
-      },
-      {
-        "count": 3,
-        "auras": [
-          {
-            "target": "all_items",
-            "filter": {
-              "tag": "healing"
-            },
-            "stat": "heal_bp",
-            "value": 12500
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "arcanist_trait",
-    "name": "Arcanists",
-    "layer": "class_trait",
-    "class": "arcanist",
-    "_note": "Magic items hit harder.",
-    "tiers": [
-      {
-        "count": 2,
-        "auras": [
-          {
-            "target": "all_items",
-            "filter": {
-              "tag": "magic"
-            },
-            "stat": "damage_bp",
-            "value": 11500
-          }
-        ]
-      },
-      {
-        "count": 3,
-        "auras": [
-          {
-            "target": "all_items",
-            "filter": {
-              "tag": "magic"
-            },
-            "stat": "damage_bp",
-            "value": 12500
-          }
-        ]
-      }
-    ]
-  },
-  {
     "id": "thistledown_longbow",
     "name": "Thistledown Longbow",
     "layer": "signature",
@@ -746,76 +606,6 @@
         "target": "matched_items",
         "stat": "over_time_bp",
         "value": 12000
-      }
-    ]
-  },
-  {
-    "id": "ranger_trait",
-    "name": "Rangers",
-    "layer": "class_trait",
-    "class": "ranger",
-    "_note": "Ranged items hit harder.",
-    "tiers": [
-      {
-        "count": 2,
-        "auras": [
-          {
-            "target": "all_items",
-            "filter": {
-              "tag": "ranged"
-            },
-            "stat": "damage_bp",
-            "value": 11500
-          }
-        ]
-      },
-      {
-        "count": 3,
-        "auras": [
-          {
-            "target": "all_items",
-            "filter": {
-              "tag": "ranged"
-            },
-            "stat": "damage_bp",
-            "value": 12500
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "trickster_trait",
-    "name": "Tricksters",
-    "layer": "class_trait",
-    "class": "trickster",
-    "_note": "Tools fire faster.",
-    "tiers": [
-      {
-        "count": 2,
-        "auras": [
-          {
-            "target": "all_items",
-            "filter": {
-              "tag": "tool"
-            },
-            "stat": "cooldown_bp",
-            "value": -500
-          }
-        ]
-      },
-      {
-        "count": 3,
-        "auras": [
-          {
-            "target": "all_items",
-            "filter": {
-              "tag": "tool"
-            },
-            "stat": "cooldown_bp",
-            "value": -1000
-          }
-        ]
       }
     ]
   },
@@ -940,5 +730,648 @@
         "target": "enemy_front"
       }
     ]
+  },
+  {
+    "id": "blade_affinity",
+    "name": "Sworn Blades",
+    "layer": "affinity",
+    "keyword": "blade",
+    "_note": "Heroes sharing the Blade affinity: every hero's Blade items crit more (docs/plans/keywords-and-affinities.md).",
+    "tiers": [
+      {
+        "count": 2,
+        "auras": [
+          {
+            "target": "all_items",
+            "stat": "crit_chance_bp",
+            "value": 1000,
+            "filter": {
+              "keyword": "blade"
+            }
+          }
+        ]
+      },
+      {
+        "count": 3,
+        "auras": [
+          {
+            "target": "all_items",
+            "stat": "crit_chance_bp",
+            "value": 2000,
+            "filter": {
+              "keyword": "blade"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bow_affinity",
+    "name": "Fletchers' Circle",
+    "layer": "affinity",
+    "keyword": "bow",
+    "_note": "Heroes sharing the Bow affinity: every hero's Bow items hit harder (docs/plans/keywords-and-affinities.md).",
+    "tiers": [
+      {
+        "count": 2,
+        "auras": [
+          {
+            "target": "all_items",
+            "stat": "damage_bp",
+            "value": 11500,
+            "filter": {
+              "keyword": "bow"
+            }
+          }
+        ]
+      },
+      {
+        "count": 3,
+        "auras": [
+          {
+            "target": "all_items",
+            "stat": "damage_bp",
+            "value": 13000,
+            "filter": {
+              "keyword": "bow"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "spell_affinity",
+    "name": "Candle Circle",
+    "layer": "affinity",
+    "keyword": "spell",
+    "_note": "Heroes sharing the Spell affinity: every hero's Spell items hit harder (docs/plans/keywords-and-affinities.md).",
+    "tiers": [
+      {
+        "count": 2,
+        "auras": [
+          {
+            "target": "all_items",
+            "stat": "damage_bp",
+            "value": 11500,
+            "filter": {
+              "keyword": "spell"
+            }
+          }
+        ]
+      },
+      {
+        "count": 3,
+        "auras": [
+          {
+            "target": "all_items",
+            "stat": "damage_bp",
+            "value": 13000,
+            "filter": {
+              "keyword": "spell"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "mend_affinity",
+    "name": "Hearth-Menders",
+    "layer": "affinity",
+    "keyword": "mend",
+    "_note": "Heroes sharing the Mend affinity: every hero's Mend items heal more (docs/plans/keywords-and-affinities.md).",
+    "tiers": [
+      {
+        "count": 2,
+        "auras": [
+          {
+            "target": "all_items",
+            "stat": "heal_bp",
+            "value": 11500,
+            "filter": {
+              "keyword": "mend"
+            }
+          }
+        ]
+      },
+      {
+        "count": 3,
+        "auras": [
+          {
+            "target": "all_items",
+            "stat": "heal_bp",
+            "value": 13000,
+            "filter": {
+              "keyword": "mend"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ward_affinity",
+    "name": "Shieldwall",
+    "layer": "affinity",
+    "keyword": "ward",
+    "_note": "Heroes sharing the Ward affinity: every hero's Ward items give more Shield (docs/plans/keywords-and-affinities.md).",
+    "tiers": [
+      {
+        "count": 2,
+        "auras": [
+          {
+            "target": "all_items",
+            "stat": "shield_bp",
+            "value": 11500,
+            "filter": {
+              "keyword": "ward"
+            }
+          }
+        ]
+      },
+      {
+        "count": 3,
+        "auras": [
+          {
+            "target": "all_items",
+            "stat": "shield_bp",
+            "value": 13000,
+            "filter": {
+              "keyword": "ward"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "burn_affinity",
+    "name": "Kindled Hearts",
+    "layer": "affinity",
+    "keyword": "burn",
+    "_note": "Heroes sharing the Burn affinity: every hero's Burn items' damage over time is stronger (docs/plans/keywords-and-affinities.md).",
+    "tiers": [
+      {
+        "count": 2,
+        "auras": [
+          {
+            "target": "all_items",
+            "stat": "over_time_bp",
+            "value": 11500,
+            "filter": {
+              "keyword": "burn"
+            }
+          }
+        ]
+      },
+      {
+        "count": 3,
+        "auras": [
+          {
+            "target": "all_items",
+            "stat": "over_time_bp",
+            "value": 13000,
+            "filter": {
+              "keyword": "burn"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bleed_affinity",
+    "name": "Red Harvest",
+    "layer": "affinity",
+    "keyword": "bleed",
+    "_note": "Heroes sharing the Bleed affinity: every hero's Bleed items' damage over time is stronger (docs/plans/keywords-and-affinities.md).",
+    "tiers": [
+      {
+        "count": 2,
+        "auras": [
+          {
+            "target": "all_items",
+            "stat": "over_time_bp",
+            "value": 11500,
+            "filter": {
+              "keyword": "bleed"
+            }
+          }
+        ]
+      },
+      {
+        "count": 3,
+        "auras": [
+          {
+            "target": "all_items",
+            "stat": "over_time_bp",
+            "value": 13000,
+            "filter": {
+              "keyword": "bleed"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "hex_affinity",
+    "name": "Hedge Coven",
+    "layer": "affinity",
+    "keyword": "hex",
+    "_note": "Heroes sharing the Hex affinity: every hero's Hex items fire faster (docs/plans/keywords-and-affinities.md).",
+    "tiers": [
+      {
+        "count": 2,
+        "auras": [
+          {
+            "target": "all_items",
+            "stat": "cooldown_bp",
+            "value": -1000,
+            "filter": {
+              "keyword": "hex"
+            }
+          }
+        ]
+      },
+      {
+        "count": 3,
+        "auras": [
+          {
+            "target": "all_items",
+            "stat": "cooldown_bp",
+            "value": -2000,
+            "filter": {
+              "keyword": "hex"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "shield_and_sword",
+    "name": "Shield and Sword",
+    "layer": "duo",
+    "heroes": [
+      "brannoc",
+      "wren"
+    ],
+    "_note": "Wren's every 3rd crit shields the lowest-HP ally; Brannoc bashes the front enemy every 2nd time he gains Shield.",
+    "parts": {
+      "brannoc": [
+        {
+          "key": "bash",
+          "kind": "ability",
+          "name": "Shield Bash",
+          "effects": [
+            {
+              "trigger": "on_shielded",
+              "every": 2,
+              "type": "damage",
+              "amount": 3,
+              "scaling": {
+                "def": 3000
+              },
+              "target": "enemy_front"
+            }
+          ]
+        }
+      ],
+      "wren": [
+        {
+          "key": "guard",
+          "kind": "ability",
+          "name": "Guarding Strike",
+          "effects": [
+            {
+              "trigger": "on_holder_crit",
+              "every": 3,
+              "type": "shield",
+              "amount": 4,
+              "scaling": {
+                "atk": 3000
+              },
+              "target": "ally_lowest_hp"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "gate_and_lantern",
+    "name": "The Gate and the Lantern",
+    "layer": "duo",
+    "heroes": [
+      "vell",
+      "hesk"
+    ],
+    "_note": "Vell's every 2nd heal also shields whoever she healed; Hesk catches his breath (a heal) every 4th hit he takes.",
+    "parts": {
+      "vell": [
+        {
+          "key": "guard",
+          "kind": "ability",
+          "name": "Lantern's Guard",
+          "effects": [
+            {
+              "trigger": "on_heal",
+              "every": 2,
+              "type": "shield",
+              "amount": 3,
+              "scaling": {
+                "mgk": 2000
+              },
+              "target": "hit_target"
+            }
+          ]
+        }
+      ],
+      "hesk": [
+        {
+          "key": "breath",
+          "kind": "ability",
+          "name": "Second Breath",
+          "effects": [
+            {
+              "trigger": "on_hit_taken",
+              "every": 4,
+              "type": "heal",
+              "amount": 4,
+              "scaling": {
+                "def": 3000
+              },
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "ash_and_ink",
+    "name": "Ash and Ink",
+    "layer": "duo",
+    "heroes": [
+      "odo",
+      "ysolde"
+    ],
+    "_note": "Odo's every 2nd Spell ability sets a random enemy alight; Ysolde's every 3rd Burn speeds up her items.",
+    "parts": {
+      "odo": [
+        {
+          "key": "inked",
+          "kind": "ability",
+          "name": "Inked Flame",
+          "effects": [
+            {
+              "trigger": "on_ability",
+              "keyword": "spell",
+              "every": 2,
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 1,
+              "target": "enemy_random"
+            }
+          ]
+        }
+      ],
+      "ysolde": [
+        {
+          "key": "pages",
+          "kind": "ability",
+          "name": "Fanned Pages",
+          "effects": [
+            {
+              "trigger": "on_status",
+              "statuses": [
+                "burn"
+              ],
+              "every": 3,
+              "type": "charge",
+              "amount_ms": 500,
+              "target": "holder_items"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "marked_cards",
+    "name": "Marked Cards",
+    "layer": "duo",
+    "heroes": [
+      "maren",
+      "pell"
+    ],
+    "_note": "Pell's tricks make every hero's Bow items crit more; Maren's crits Poison.",
+    "parts": {
+      "maren": [
+        {
+          "key": "tipped",
+          "kind": "ability",
+          "name": "Tipped Arrows",
+          "effects": [
+            {
+              "trigger": "on_holder_crit",
+              "type": "apply_status",
+              "status": "poison",
+              "stacks": 1,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ],
+      "pell": [
+        {
+          "key": "marked",
+          "kind": "aura",
+          "target": "all_items",
+          "stat": "crit_chance_bp",
+          "value": 1000,
+          "filter": {
+            "keyword": "bow"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "twin_walls",
+    "name": "Twin Walls",
+    "layer": "duo",
+    "heroes": [
+      "brannoc",
+      "hesk"
+    ],
+    "_note": "Brannoc toughens his row; Hesk's every 3rd hit taken shields it.",
+    "parts": {
+      "brannoc": [
+        {
+          "key": "walls",
+          "kind": "aura",
+          "target": "row_allies",
+          "stat": "def_bp",
+          "value": 11500
+        }
+      ],
+      "hesk": [
+        {
+          "key": "stone",
+          "kind": "ability",
+          "name": "Shared Stone",
+          "effects": [
+            {
+              "trigger": "on_hit_taken",
+              "every": 3,
+              "type": "shield",
+              "amount": 3,
+              "scaling": {
+                "def": 2000
+              },
+              "target": "row_allies"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "hunters_accord",
+    "name": "Hunters' Accord",
+    "layer": "duo",
+    "heroes": [
+      "wren",
+      "maren"
+    ],
+    "_note": "Each kill speeds up Maren's items and heals Wren.",
+    "parts": {
+      "wren": [
+        {
+          "key": "price",
+          "kind": "ability",
+          "name": "Blood Price",
+          "effects": [
+            {
+              "trigger": "on_kill",
+              "type": "heal",
+              "amount": 10,
+              "scaling": {
+                "atk": 3000
+              },
+              "target": "self"
+            }
+          ]
+        }
+      ],
+      "maren": [
+        {
+          "key": "quarry",
+          "kind": "ability",
+          "name": "Fresh Quarry",
+          "effects": [
+            {
+              "trigger": "on_kill",
+              "type": "charge",
+              "amount_ms": 1500,
+              "target": "holder_items"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "candle_and_page",
+    "name": "Candle and Page",
+    "layer": "duo",
+    "heroes": [
+      "vell",
+      "odo"
+    ],
+    "_note": "Odo's every 3rd Spell ability heals the lowest-HP ally; Vell makes every hero's Mend items fire faster.",
+    "parts": {
+      "vell": [
+        {
+          "key": "candle",
+          "kind": "aura",
+          "target": "all_items",
+          "stat": "cooldown_bp",
+          "value": -1000,
+          "filter": {
+            "keyword": "mend"
+          }
+        }
+      ],
+      "odo": [
+        {
+          "key": "verse",
+          "kind": "ability",
+          "name": "Kindly Verse",
+          "effects": [
+            {
+              "trigger": "on_ability",
+              "keyword": "spell",
+              "every": 3,
+              "type": "heal",
+              "amount": 4,
+              "scaling": {
+                "mgk": 3000
+              },
+              "target": "ally_lowest_hp"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "smoke_and_mirrors",
+    "name": "Smoke and Mirrors",
+    "layer": "duo",
+    "heroes": [
+      "pell",
+      "ysolde"
+    ],
+    "_note": "Pell's every 4th status adds Burn; Ysolde's kills Blind every enemy.",
+    "parts": {
+      "pell": [
+        {
+          "key": "smoke",
+          "kind": "ability",
+          "name": "Smoke Bomb",
+          "effects": [
+            {
+              "trigger": "on_status",
+              "every": 4,
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 1,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ],
+      "ysolde": [
+        {
+          "key": "flare",
+          "kind": "ability",
+          "name": "Blinding Flare",
+          "effects": [
+            {
+              "trigger": "on_kill",
+              "type": "apply_status",
+              "status": "blind",
+              "stacks": 1,
+              "target": "all_enemies"
+            }
+          ]
+        }
+      ]
+    }
   }
 ]

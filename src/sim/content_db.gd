@@ -251,6 +251,12 @@ func _check_references() -> void:
 			_check_part(part, "%s (%s).innate.%s" % [HEROES_FILE, id, part.key])
 		if heroes[id].calling != null:
 			_check_track(heroes[id].calling, "%s (%s).calling" % [HEROES_FILE, id])
+		for keyword_id: String in heroes[id].affinities:
+			if not keywords.has(keyword_id):
+				errors.append("%s (%s): unknown affinity keyword \"%s\"" % [HEROES_FILE, id, keyword_id])
+	for id: String in keyword_ids:
+		for part: SpecializationDef.Part in keywords[id].affinity:
+			_check_part(part, "%s (%s).affinity.%s" % [KEYWORDS_FILE, id, part.key])
 	for id: String in enemy_ids:
 		var enemy: EnemyDef = enemies[id]
 		var where: String = "%s (%s)" % [ENEMIES_FILE, id]
@@ -352,6 +358,14 @@ func _check_synergy(synergy: SynergyDef, where: String) -> void:
 		errors.append("%s: unknown hero \"%s\"" % [where, synergy.hero])
 	if not synergy.essence.is_empty() and not essences.has(synergy.essence):
 		errors.append("%s: unknown essence \"%s\"" % [where, synergy.essence])
+	if not synergy.keyword.is_empty() and not keywords.has(synergy.keyword):
+		errors.append("%s: unknown keyword \"%s\"" % [where, synergy.keyword])
+	for i: int in synergy.heroes.size():
+		if not heroes.has(synergy.heroes[i]):
+			errors.append("%s: unknown hero \"%s\"" % [where, synergy.heroes[i]])
+		if i < synergy.duo_parts.size():
+			for part: SpecializationDef.Part in synergy.duo_parts[i]:
+				_check_part(part, "%s.parts.%s.%s" % [where, synergy.heroes[i], part.key])
 	_check_effects(synergy.item_effects, where + ".item_effects")
 	_check_no_partners(synergy.item_effects, where + ".item_effects")
 	for bonus: RelicDef in synergy.all_bonuses():

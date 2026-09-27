@@ -3,6 +3,10 @@
     "id": "brannoc",
     "name": "Brannoc of the Hearthwatch",
     "class": "warden",
+    "affinities": [
+      "ward",
+      "mend"
+    ],
     "_note": "Placeholder stats.",
     "stats": {
       "hp": 420,
@@ -159,6 +163,10 @@
     "id": "wren",
     "name": "Wren Ashfoot",
     "class": "striker",
+    "affinities": [
+      "blade",
+      "bleed"
+    ],
     "stats": {
       "hp": 280,
       "atk": 22,
@@ -298,6 +306,10 @@
     "id": "vell",
     "name": "Sister Vell",
     "class": "mender",
+    "affinities": [
+      "mend",
+      "ward"
+    ],
     "stats": {
       "hp": 300,
       "atk": 6,
@@ -461,6 +473,10 @@
     "id": "odo",
     "name": "Odo Quillmire",
     "class": "arcanist",
+    "affinities": [
+      "spell",
+      "hex"
+    ],
     "stats": {
       "hp": 280,
       "mgk": 26,
@@ -627,6 +643,10 @@
     "id": "maren",
     "name": "Maren Thistledown",
     "class": "ranger",
+    "affinities": [
+      "bow",
+      "bleed"
+    ],
     "_note": "Placeholder stats. A back-row archer: her basic attack reaches the enemy back row.",
     "stats": {
       "hp": 270,
@@ -786,6 +806,10 @@
     "id": "pell",
     "name": "Pell Candlewick",
     "class": "trickster",
+    "affinities": [
+      "hex",
+      "blade"
+    ],
     "_note": "Placeholder stats. Blind, Slow, and fiddling with cooldowns.",
     "stats": {
       "hp": 270,
@@ -919,7 +943,7 @@
           ]
         },
         {
-          "text": "The House Always Wins: 15 seconds in, he Blinds and Slows every enemy.",
+          "text": "The House Always Wins: 15 seconds in, he Blinds and Slows every enemy, and every 3rd status he applies adds a Poison.",
           "parts": [
             {
               "key": "house",
@@ -943,6 +967,21 @@
                   "target": "all_enemies"
                 }
               ]
+            },
+            {
+              "key": "house_edge",
+              "kind": "ability",
+              "name": "House Edge",
+              "effects": [
+                {
+                  "trigger": "on_status",
+                  "every": 3,
+                  "type": "apply_status",
+                  "status": "poison",
+                  "stacks": 1,
+                  "target": "hit_target"
+                }
+              ]
             }
           ]
         }
@@ -953,6 +992,10 @@
     "id": "hesk",
     "name": "Old Hesk of the Gate",
     "class": "warden",
+    "affinities": [
+      "ward",
+      "blade"
+    ],
     "_note": "Placeholder stats. A second shield wall: tougher and slower than Brannoc; his blows scale from his HP.",
     "stats": {
       "hp": 460,
@@ -1068,22 +1111,21 @@
             },
             {
               "name": "Rebuke",
-              "text": "Every 4 seconds, he strikes back at the front enemy.",
+              "text": "When an enemy's hit lands on him, he strikes back at the attacker.",
               "parts": [
                 {
                   "key": "rebuke",
                   "kind": "ability",
                   "name": "Rebuke",
-                  "cooldown_ms": 4000,
                   "effects": [
                     {
-                      "trigger": "on_fire",
+                      "trigger": "on_hit_taken",
                       "type": "damage",
                       "amount": 2,
                       "scaling": {
                         "def": 2500
                       },
-                      "target": "enemy_front"
+                      "target": "hit_target"
                     }
                   ]
                 }
@@ -1121,6 +1163,10 @@
     "id": "ysolde",
     "name": "Ysolde Ashwhisper",
     "class": "arcanist",
+    "affinities": [
+      "spell",
+      "burn"
+    ],
     "_note": "Placeholder stats. A second Arcanist who burns rather than hexes.",
     "stats": {
       "hp": 270,
@@ -1265,7 +1311,7 @@
           ]
         },
         {
-          "text": "Firestorm: Flashpoint strikes a third time at 40 seconds.",
+          "text": "Firestorm: Flashpoint strikes a third time at 40 seconds, and each enemy she fells sets every enemy alight (2 Burn).",
           "parts": [
             {
               "key": "flashpoint",
@@ -1293,6 +1339,20 @@
                   "status": "burn",
                   "stacks": 3,
                   "at_ms": 40000,
+                  "target": "all_enemies"
+                }
+              ]
+            },
+            {
+              "key": "firestorm",
+              "kind": "ability",
+              "name": "Firestorm",
+              "effects": [
+                {
+                  "trigger": "on_kill",
+                  "type": "apply_status",
+                  "status": "burn",
+                  "stacks": 2,
                   "target": "all_enemies"
                 }
               ]

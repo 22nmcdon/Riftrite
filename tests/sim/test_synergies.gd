@@ -90,8 +90,13 @@ func test_reads_each_layer() -> void:
 	assert_eq(def.tier_for(4).count, 3)
 	assert_eq(def.tier_for(9).count, 5)
 	assert_eq(def.tier_for(5).bonus.name, "Test Synergy (5)")
-	var class_trait: Array = _read({"layer": "class_trait", "class": "warden", "tiers": [{"count": 2, "auras": [{"target": "all_allies", "stat": "def_bp", "value": 11000}]}]})
-	assert_eq(class_trait[1], [] as Array[String])
+	var affinity: Array = _read({"layer": "affinity", "keyword": "ward", "tiers": [{"count": 2, "auras": [{"target": "all_allies", "stat": "def_bp", "value": 11000}]}]})
+	assert_eq(affinity[1], [] as Array[String])
+	var duo: Array = _read({"layer": "duo", "heroes": ["vell", "hesk"], "parts": {
+		"vell": [{"key": "a", "kind": "aura", "target": "holder", "stat": "def_bp", "value": 11000}],
+		"hesk": [{"key": "b", "kind": "ability", "effects": [{"trigger": "on_hit_taken", "type": "damage", "amount": 1, "target": "hit_target"}]}]}})
+	assert_eq(duo[1], [] as Array[String])
+	assert_eq(((duo[0] as SynergyDef).duo_parts[1][0] as SpecializationDef.Part).item.name, "Test Synergy")
 
 
 func test_rejects_bad_synergies() -> void:
@@ -99,13 +104,18 @@ func test_rejects_bad_synergies() -> void:
 	_assert_error(_read({"layer": "transformation", "item": "a", "essence": "ember"})[1], "a transformation needs item_effects")
 	_assert_error(_read({"layer": "signature", "hero": "vell", "item": "a"})[1], "a synergy needs auras, grants, or effects")
 	_assert_error(_read({"layer": "resonance", "essence": "ember"})[1], "a resonance needs tiers")
-	_assert_error(_read({"layer": "class_trait", "class": "warden", "tiers": [
+	_assert_error(_read({"layer": "affinity", "keyword": "ward", "tiers": [
 		{"count": 3, "auras": [{"target": "all_items", "stat": "damage_bp", "value": 11000}]},
 		{"count": 2, "auras": [{"target": "all_items", "stat": "damage_bp", "value": 12000}]}]})[1], "tier counts must go up (2 after 3)")
 	_assert_error(_read({"layer": "resonance", "essence": "ember", "tiers": [{"count": 3, "auras": [{"target": "holder", "stat": "def_bp", "value": 11000}]}]})[1],
 		"a synergy tier aura can only target all_items or all_allies")
 	_assert_error(_read({"layer": "pair", "items": ["a", "b"], "essence": "ember", "auras": _crit_on_matched()})[1], "unknown key \"essence\"")
 	_assert_error(_read({"layer": "combo"})[1], "layer: unknown value \"combo\"")
+	_assert_error(_read({"layer": "class_trait", "class": "warden"})[1], "layer: unknown value \"class_trait\"")
+	_assert_error(_read({"layer": "duo", "heroes": ["vell", "vell"], "parts": {"vell": []}})[1], "a duo bond needs two different heroes")
+	_assert_error(_read({"layer": "duo", "heroes": ["vell", "hesk"], "parts": {"vell": [{"key": "a", "kind": "aura", "target": "holder", "stat": "def_bp", "value": 11000}]}})[1], "hesk needs parts")
+	_assert_error(_read({"layer": "duo", "heroes": ["vell", "hesk"], "parts": {"vell": [{"key": "a", "kind": "basic_attack", "basic_attack": {"id": "x", "name": "X", "cooldown_ms": 1000, "effects": [{"trigger": "on_fire", "type": "damage", "amount": 1, "target": "enemy_front"}]}}],
+		"hesk": [{"key": "b", "kind": "aura", "target": "holder", "stat": "def_bp", "value": 11000}]}})[1], "a duo bond can't replace the basic attack")
 
 
 func test_content_checks_synergy_references() -> void:
@@ -136,7 +146,7 @@ func test_real_synergies_load() -> void:
 	for synergy_id: String in content.synergy_ids:
 		if not layers.has(content.synergies[synergy_id].layer):
 			layers.append(content.synergies[synergy_id].layer)
-	assert_eq(layers.size(), 5, "every layer has at least one synergy")
+	assert_eq(layers.size(), SynergyDef.LAYER_NAMES.size(), "every layer has at least one synergy")
 
 
 # --- charge -------------------------------------------------------------------
@@ -325,20 +335,43 @@ func test_transformations_count_for_resonance() -> void:
 	assert_eq(ids, ["test_blaze", "test_res"] as Array[String])
 
 
-func test_class_trait_counts_fielded_heroes() -> void:
-	K.synergy("test_wardens", {"name": "Test Wardens", "layer": "class_trait", "class": "warden", "tiers": [
+func test_an_affinity_counts_the_heroes_who_share_it() -> void:
+	K.clear_synergies()
+	K.synergy("test_wall", {"name": "Test Wall", "layer": "affinity", "keyword": "ward", "tiers": [
 		{"count": 2, "auras": [{"target": "all_allies", "stat": "def_bp", "value": 11000}]},
 		{"count": 3, "auras": [{"target": "all_allies", "stat": "def_bp", "value": 12000}]}]})
 	var heroes: Array[UnitSetup] = []
 	for unit_id: String in ["w1", "w2", "x"]:
 		var unit: UnitSetup = K.unit_with(unit_id, UnitStats.make(100, 0, 0, 100))
-		unit.unit_class = "warden" if unit_id != "x" else "striker"
+		unit.affinities.assign(["ward", "mend"] if unit_id != "x" else ["blade", "bow"])
 		heroes.append(unit)
 	var sim: CombatSim = K.synergy_sim(heroes, [K.dummy("b", 100)])
 	assert_eq(sim.synergies.size(), 1)
 	assert_eq(sim.synergies[0].count, 2)
 	assert_eq(sim.unit_by_id("x").stats.get_stat(UnitStats.Stat.DEF), 110, "the tier's aura reaches all allies")
-	assert_eq(_synergy_lines(sim), ["[0.00s] Test Wardens (2): 2 heroes"] as Array[String])
+	assert_eq(_synergy_lines(sim), ["[0.00s] Test Wall (2): 2 heroes"] as Array[String])
+
+
+func test_a_duo_bond_gives_each_hero_its_parts() -> void:
+	K.clear_synergies()
+	K.synergy("test_bond", {"name": "Test Bond", "layer": "duo", "heroes": ["a", "b"], "parts": {
+		"a": [{"key": "tough", "kind": "aura", "target": "holder", "stat": "def_bp", "value": 15000}],
+		"b": [{"key": "thorns", "kind": "ability", "name": "Thorns", "effects": [{"trigger": "on_hit_taken", "type": "damage", "amount": 4, "target": "hit_target"}]}]}})
+	var foe: UnitSetup = K.unit("foe", 1000, FRONT, [], K.basic("claw", {"cooldown_ms": 1000, "effects": K.damage(2, "enemy_random")}))
+	var a: UnitSetup = K.unit_with("a", UnitStats.make(1000, 0, 0, 100))
+	var b: UnitSetup = K.unit_with("b", UnitStats.make(1000, 0, 0, 100))
+	var sim: CombatSim = K.synergy_sim([a, b], [foe])
+	assert_eq(_synergy_lines(sim), ["[0.00s] Test Bond: a + b"] as Array[String])
+	assert_eq(sim.unit_by_id("a").stats.get_stat(UnitStats.Stat.DEF), 150, "a's part")
+	assert_eq(sim.unit_by_id("b").stats.get_stat(UnitStats.Stat.DEF), 100, "only a's")
+	var result: FightResult = K.synergy_run([a, b], [foe])
+	var thorns: Array[LogEntry] = K.entries(result, LogEntry.Kind.DAMAGE).filter(func(e: LogEntry) -> bool: return e.source_item_name == "Thorns (Test Bond)")
+	assert_gt(thorns.size(), 0, "b strikes back, credited to the bond")
+	for entry: LogEntry in thorns:
+		assert_eq([entry.source_unit, entry.target], ["b", "foe"])
+	assert_eq(result.synergies[0].synergy_id, "test_bond", "found like any synergy")
+	var alone: CombatSim = K.synergy_sim([a], [foe])
+	assert_eq(alone.synergies.size(), 0, "both heroes must be there")
 
 
 func test_enemies_get_no_synergies() -> void:

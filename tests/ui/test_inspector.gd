@@ -291,7 +291,11 @@ func test_a_fight_announces_new_synergies() -> void:
 func test_synergy_text_says_what_sets_it_off() -> void:
 	var content: ContentDb = U.K.content()
 	assert_string_contains(ItemInfo.synergy_text(content, "paper_cuts"), "When one hero holds Whetstone and Twin Daggers.")
-	assert_string_contains(ItemInfo.synergy_text(content, "warden_trait"), "2+:")
+	assert_string_contains(ItemInfo.synergy_text(content, "ward_affinity"), "Counting heroes with the Ward affinity:")
+	assert_string_contains(ItemInfo.synergy_text(content, "ward_affinity"), "2+:")
+	var bond: String = ItemInfo.synergy_text(content, "gate_and_lantern")
+	assert_string_contains(bond, "When Sister Vell and")
+	assert_string_contains(bond, "When its holder heals an ally (every 2nd time): shield the ally healed for 3")
 	assert_string_contains(ItemInfo.synergy_text(content, "wildfire_torch"), "Tallow Torch infused with Ember")
 
 

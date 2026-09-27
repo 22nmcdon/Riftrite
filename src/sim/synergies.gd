@@ -6,7 +6,8 @@ extends RefCounted
 ##
 ## Each active synergy becomes a RelicState holding its bonus, so its auras,
 ## grants, and effects run through the relic code. A transformation also
-## marks its item (ItemState.transformation), which ItemState.derive uses.
+## marks its item (ItemState.transformation), which ItemState.derive uses. A
+## duo bond gives each of its two heroes its parts (like a specialization's).
 
 
 ## The active synergies, in data/synergies.json order. Logs one SYNERGY line
@@ -16,13 +17,26 @@ static func find_active(sim: CombatSim) -> Array[RelicState]:
 	for synergy_id: String in sim.content.synergy_ids:
 		var synergy: SynergyDef = sim.content.synergies[synergy_id]
 		if synergy.is_tiered():
-			var count: int = _essence_count(sim, synergy.essence) if synergy.layer == SynergyDef.Layer.RESONANCE else _class_count(sim, synergy.unit_class)
+			var count: int = _essence_count(sim, synergy.essence) if synergy.layer == SynergyDef.Layer.RESONANCE else _affinity_count(sim, synergy.keyword)
 			var tier: SynergyDef.Tier = synergy.tier_for(count)
 			if tier != null:
 				var state: RelicState = _state(synergy, tier.bonus)
 				state.count = count
 				active.append(state)
 				_log(sim, state, "%s: %d %s" % [tier.bonus.name, count, _count_label(sim, synergy, count)])
+			continue
+		if synergy.layer == SynergyDef.Layer.DUO:
+			var pair: Array[UnitState] = []
+			for hero_id: String in synergy.heroes:
+				for hero: UnitState in sim.heroes:
+					if hero.id == hero_id:
+						pair.append(hero)
+			if pair.size() == 2:
+				var bond: RelicState = _state(synergy, synergy.bonus)
+				active.append(bond)
+				_log(sim, bond, "%s: %s + %s" % [synergy.name, pair[0].id, pair[1].id])
+				for i: int in 2:
+					sim.apply_parts(pair[i], synergy.duo_parts[i])
 			continue
 		for u: int in sim.units.size():
 			var hero: UnitState = sim.units[u]
@@ -78,11 +92,11 @@ static func _essence_count(sim: CombatSim, essence_id: String) -> int:
 	return count
 
 
-## Heroes of a class.
-static func _class_count(sim: CombatSim, unit_class: String) -> int:
+## Heroes with an affinity.
+static func _affinity_count(sim: CombatSim, keyword: String) -> int:
 	var count: int = 0
 	for hero: UnitState in sim.heroes:
-		if hero.unit_class == unit_class:
+		if hero.affinities.has(keyword):
 			count += 1
 	return count
 

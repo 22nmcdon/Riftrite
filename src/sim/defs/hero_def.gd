@@ -24,6 +24,10 @@ var innate: Array[SpecializationDef.Part] = []
 var calling_name: String = ""
 var calling_text: String = ""
 var calling: DeedTrackDef = null
+## Two keyword ids: the hero's affinities (docs/plans/keywords-and-affinities.md).
+## Each keyword's affinity perk applies to the hero, and heroes sharing one
+## count toward its affinity synergy.
+var affinities: Array[String] = []
 
 
 static func read(reader: DataReader) -> HeroDef:
@@ -36,6 +40,9 @@ static func read(reader: DataReader) -> HeroDef:
 	var attack_reader: DataReader = reader.req_object("basic_attack")
 	if attack_reader != null:
 		def.basic_attack = ItemDef.read_basic_attack(attack_reader)
+	def.affinities = reader.req_string_array("affinities")
+	if def.affinities.size() != 2 or def.affinities[0] == def.affinities[1]:
+		reader.error("a hero needs two different affinities")
 	var innate_reader: DataReader = reader.req_object("innate")
 	if innate_reader != null:
 		def.innate_name = innate_reader.req_string("name")

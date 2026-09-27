@@ -18,7 +18,12 @@ static func item_setups(content: ContentDb, entries: Array[LoadoutEntry]) -> Arr
 static func hero(content: ContentDb, hero_id: String, rank: int, row: UnitSetup.Row, entries: Array[LoadoutEntry], specialization_id: String = "") -> UnitSetup:
 	var def: HeroDef = content.heroes[hero_id]
 	var setup: UnitSetup = UnitSetup.make(def.id, def.name, def.stats, row, def.basic_attack, item_setups(content, entries), rank)
-	setup.innate = def.innate
+	# The innate, then each affinity's perk (keys of their own).
+	var parts: Array[SpecializationDef.Part] = def.innate.duplicate()
+	for keyword_id: String in def.affinities:
+		parts.append_array(content.keywords[keyword_id].affinity)
+	setup.innate = parts
+	setup.affinities = def.affinities.duplicate()
 	setup.unit_class = def.hero_class
 	if def.calling != null:
 		setup.deeds.append(DeedSetup.make(DeedSetup.CALLING, def.calling))
