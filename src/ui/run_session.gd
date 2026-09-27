@@ -30,6 +30,14 @@ var selected_uid: int = -1
 ## UI only: the hero whose sheet is open (docs/plans/ui-overhaul.md, 3.2),
 ## or "" when it's closed.
 var open_hero_id: String = ""
+## The player's settings (not part of any run): the fight speed starts at 1x
+## and, once changed, is remembered (docs/plans/fight-questions-and-
+## readability.md, section 4). Saved to `settings_path` ("" keeps them in
+## memory only, as tests do).
+var fight_speed: float = 1.0
+var settings_path: String = ""
+
+const SETTINGS_PATH: String = "user://settings.json"
 
 
 static func make(fight_content: ContentDb, run_content: RunContent, path: String = RunSave.DEFAULT_PATH, journal_dir: String = "") -> RunSession:
@@ -45,7 +53,32 @@ static func make(fight_content: ContentDb, run_content: RunContent, path: String
 ## Loads the game data from res://data.
 static func open(path: String = RunSave.DEFAULT_PATH, journal_dir: String = PlaytestJournal.DEFAULT_DIR) -> RunSession:
 	var fight_content: ContentDb = ContentDb.load_dir("res://data")
-	return make(fight_content, RunContent.load_dir("res://data", fight_content), path, journal_dir)
+	var session: RunSession = make(fight_content, RunContent.load_dir("res://data", fight_content), path, journal_dir)
+	session.load_settings(SETTINGS_PATH)
+	return session
+
+
+## Reads the player's settings from `path` (and saves there from now on).
+## A missing or broken file keeps the defaults.
+func load_settings(path: String) -> void:
+	settings_path = path
+	if not FileAccess.file_exists(path):
+		return
+	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if data is Dictionary and (data as Dictionary).get("fight_speed") is float and FightPlayer.SPEEDS.has(data["fight_speed"]):
+		fight_speed = data["fight_speed"]
+
+
+## Remembers the fight speed the player picked (one of FightPlayer.SPEEDS).
+func set_fight_speed(speed: float) -> void:
+	if not FightPlayer.SPEEDS.has(speed):
+		return
+	fight_speed = speed
+	if settings_path.is_empty():
+		return
+	var file: FileAccess = FileAccess.open(settings_path, FileAccess.WRITE)
+	if file != null:
+		file.store_string(JSON.stringify({"fight_speed": fight_speed}))
 
 
 func has_save() -> bool:

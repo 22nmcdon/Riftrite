@@ -3,9 +3,12 @@ extends UiScreen
 ## Before the fight: the enemy team and your guild, then "Fight!". The fight
 ## then plays back (a FightPlayer stepping a fresh sim from the same setup):
 ## enemies at the top (back row furthest), heroes at the bottom, both front
-## rows meeting in the middle, the combat log beside it, and speed controls
-## (keys: Space pauses, 1-4 set the speed, S skips, Enter continues at the
-## end). At the end: the result and the damage meter, then Continue.
+## rows meeting in the middle, banners for the big moments, and speed
+## controls (keys: Space pauses, 1-4 set the speed, S skips, L opens the log,
+## Enter continues at the end). The speed starts where the player last set
+## it. The Log button opens the fight chart and the combat log beside the
+## arena (docs/plans/fight-questions-and-readability.md). At the end: the
+## result and the damage meter, then Continue.
 
 signal finished
 ## Playback began (Main hides the guild bar, hero sheet, and item panel).
@@ -20,6 +23,13 @@ var shown: Array[LogEntry] = []
 var show_fires: bool = false
 var _cards: Dictionary[String, UnitCard] = {}
 var _log: RichTextLabel
+## The log panel (the chart, the fires toggle, and the log): hidden until
+## the Log button opens it (docs/plans/fight-questions-and-readability.md).
+var _log_panel: VBoxContainer
+var _log_button: Button
+var tally: FightTally
+var chart: FightChart
+var banners: FightBanners
 var _pause_button: Button
 var _speed_buttons: Array[Button] = []
 var _clock: Label
@@ -34,7 +44,10 @@ func build() -> void:
 	var encounter_id: String = session.state.encounter_id
 	_rift = session.content.encounters[encounter_id].kind != "normal"
 	heading("Today's fight: " + session.content.encounters[encounter_id].name)
-	hint("Last chance to arrange your guild. Hover an enemy's item to read it. During the fight: Space pauses, 1-4 set the speed, S skips to the end.")
+	hint("Last chance to arrange your guild. Hover an enemy's item to read it. During the fight: Space pauses, 1-4 set the speed, L opens the chart and log, S skips to the end.")
+	var mechanic: Control = EncounterInfo.mechanic_box(session.content.encounters[encounter_id], 900)
+	if mechanic != null:
+		add_child(mechanic)
 	var enemies := HFlowContainer.new()
 	enemies.add_theme_constant_override("h_separation", 10)
 	for unit: UnitSetup in SetupBuilder.encounter_units(session.content, encounter_id, RunFlow.fight_hp_bp(session.state, session.run, encounter_id)):
@@ -87,7 +100,12 @@ func start_fight() -> void:
 		remove_child(child)
 		child.queue_free()
 	player = FightPlayer.make(session.last_setup, session.content)
+	player.speed = session.fight_speed
 	names = FightNames.make(player.sim)
+	var unit_names: Dictionary[String, String] = {}
+	for unit: UnitState in player.sim.heroes + player.sim.enemies:
+		unit_names[unit.id] = names.name_of(unit.id)
+	tally = FightTally.make(player.sim, unit_names)
 	started.emit()
 	_build_playback()
 	_on_entries(player.take_new())
@@ -109,8 +127,16 @@ func _build_playback() -> void:
 	_fx_layer = Control.new()
 	_fx_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	arena.add_child(_fx_layer)
-	if not session.last_discoveries.is_empty() or not session.last_growth.is_empty():
-		field.add_child(_discovery_banner())
+	var middle := CenterContainer.new()
+	middle.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	arena.add_child(middle)
+	banners = FightBanners.make()
+	banners.speed = player.speed
+	middle.add_child(banners)
+	# Synergies are checked as the fight starts: the ones found for the first
+	# time get their banner then.
+	for synergy_id: String in session.last_discoveries:
+		banners.push("✦ Synergy discovered: %s" % session.content.synergies[synergy_id].name)
 	var sim: CombatSim = player.sim
 	var rows: Array[Array] = [
 		[sim.enemies, UnitSetup.Row.BACK, "Enemy back row"], [sim.enemies, UnitSetup.Row.FRONT, "Enemy front row"],
@@ -131,7 +157,6 @@ func _build_playback() -> void:
 		field.add_child(UiStyle.label(rows[i][2], 14, UiStyle.TEXT_DIM))
 		field.add_child(_card_row(units))
 	var side := VBoxContainer.new()
-	side.custom_minimum_size = Vector2(520, 0)
 	main.add_child(side)
 	var controls := HBoxContainer.new()
 	side.add_child(controls)
@@ -148,39 +173,34 @@ func _build_playback() -> void:
 	controls.add_child(UiStyle.button("Skip", skip))
 	_clock = UiStyle.label("0.0s", 18, UiStyle.HIGHLIGHT)
 	controls.add_child(_clock)
+	_log_button = UiStyle.button("Log", func() -> void: pass)
+	_log_button.toggle_mode = true
+	_log_button.tooltip_text = "Show the chart of what each hero does, and the combat log (L)"
+	_log_button.toggled.connect(set_log_open)
+	controls.add_child(_log_button)
+	_log_panel = VBoxContainer.new()
+	_log_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_log_panel.custom_minimum_size = Vector2(520, 0)
+	_log_panel.visible = false
+	side.add_child(_log_panel)
+	chart = FightChart.make(tally)
+	_log_panel.add_child(chart)
 	var fires: Button = UiStyle.button("Item fires: hidden", func() -> void: pass)
 	fires.toggle_mode = true
 	fires.toggled.connect(func(on: bool) -> void:
 		fires.text = "Item fires: shown" if on else "Item fires: hidden"
 		_set_show_fires(on))
-	side.add_child(fires)
+	_log_panel.add_child(fires)
 	_log = RichTextLabel.new()
 	_log.bbcode_enabled = true
 	_log.scroll_following = true
 	_log.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_log.custom_minimum_size = Vector2(500, 420)
+	_log.custom_minimum_size = Vector2(500, 260)
 	_log.add_theme_font_size_override("normal_font_size", 15)
 	_log.add_theme_font_size_override("bold_font_size", 15)
-	side.add_child(_log)
+	_log_panel.add_child(_log)
 	_end_box = VBoxContainer.new()
 	side.add_child(_end_box)
-
-
-## "Synergy discovered!" for each synergy this fight found for the first
-## time, and a line for each Legendary that grew a tier.
-func _discovery_banner() -> Control:
-	var banner := PanelContainer.new()
-	banner.add_theme_stylebox_override("panel", UiStyle.box(UiStyle.OAK_600, UiStyle.BRASS_300, 3))
-	var box := VBoxContainer.new()
-	banner.add_child(box)
-	for synergy_id: String in session.last_discoveries:
-		var line: Label = UiStyle.label("✦ Synergy discovered: %s" % session.content.synergies[synergy_id].name, 20, UiStyle.BRASS_300)
-		line.mouse_filter = Control.MOUSE_FILTER_STOP
-		line.tooltip_text = ItemInfo.synergy_text(session.content, synergy_id)
-		box.add_child(line)
-	for note: String in session.last_growth:
-		box.add_child(UiStyle.label("✦ %s" % note, 20, UiStyle.rarity_color("legendary").lightened(0.3)))
-	return banner
 
 
 func _card_row(units: Array[UnitState]) -> HBoxContainer:
@@ -205,8 +225,18 @@ func toggle_pause() -> void:
 	_pause_button.text = "Resume" if player.paused else "Pause"
 
 
+## Opens or closes the log panel (the chart and the log).
+func set_log_open(open: bool) -> void:
+	_log_panel.visible = open
+	_log_button.set_pressed_no_signal(open)
+	if open:
+		chart.refresh()
+
+
 func set_speed(speed: float) -> void:
 	player.speed = speed
+	banners.speed = speed
+	session.set_fight_speed(speed)
 	for i: int in _speed_buttons.size():
 		_speed_buttons[i].set_pressed_no_signal(FightPlayer.SPEEDS[i] == speed)
 
@@ -235,6 +265,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			set_speed(FightPlayer.SPEEDS[key.keycode - KEY_1])
 		KEY_S:
 			skip()
+		KEY_L:
+			set_log_open(not _log_panel.visible)
 		KEY_ENTER, KEY_KP_ENTER:
 			if _shown_end:
 				_continue()
@@ -250,11 +282,18 @@ func _process(delta: float) -> void:
 
 func _on_entries(entries: Array[LogEntry]) -> void:
 	var animate: bool = entries.size() < 40
+	var heroes: Array[String] = []
+	for unit: UnitState in player.sim.heroes:
+		heroes.append(unit.id)
 	for entry: LogEntry in entries:
 		shown.append(entry)
+		tally.add(entry)
 		_write(entry)
 		if animate:
 			_animate(entry)
+			banners.push(FightBanners.text_for(entry, heroes, names))
+	if _log_panel.visible:
+		chart.refresh()
 	for card: UnitCard in _cards.values():
 		card.refresh()
 	_clock.text = "%.1fs" % (player.sim.tick / float(FixedMath.TICKS_PER_SECOND))
@@ -335,6 +374,8 @@ func _shot_color(entry: LogEntry) -> Color:
 
 func _show_end() -> void:
 	_shown_end = true
+	banners.clear()
+	chart.refresh()
 	for card: UnitCard in _cards.values():
 		card.clear_floats()
 	var result: FightResult = session.last_fight
@@ -348,6 +389,8 @@ func _show_end() -> void:
 	var hero_names: Dictionary = {}
 	for unit: UnitState in player.sim.heroes:
 		hero_names[unit.id] = names.name_of(unit.id)
+	for note: String in session.last_growth:
+		_end_box.add_child(UiStyle.label("✦ %s" % note, 18, UiStyle.rarity_color("legendary").lightened(0.3)))
 	var deeds: PackedStringArray = ItemInfo.deed_result_lines(result, session.last_setup, hero_names)
 	if not deeds.is_empty():
 		_end_box.add_child(UiStyle.label("Deeds", 18, UiStyle.HIGHLIGHT))

@@ -1,16 +1,22 @@
 class_name DayBar
 extends PanelContainer
 ## Where the run is: act and day, the day's steps, losses left, gold, keys,
-## and the day's fights (with the essence each yields).
+## and the day's fights (with the essence each yields). Below it, the whole
+## act: a mark per day with its kind's icon (normal, elite, boss); hovering a
+## day lists its fights, and an elite's or the boss's mechanic
+## (docs/plans/fight-questions-and-readability.md, section 1).
 
 
 static func make(session: RunSession) -> DayBar:
 	var bar := DayBar.new()
 	var state: RunState = session.state
 	bar.add_theme_stylebox_override("panel", UiStyle.chrome("panel_bar", 16, 8))
+	var rows := VBoxContainer.new()
+	rows.add_theme_constant_override("separation", 4)
+	bar.add_child(rows)
 	var line := HBoxContainer.new()
 	line.add_theme_constant_override("separation", 26)
-	bar.add_child(line)
+	rows.add_child(line)
 	var act: ActDef = session.run.act(state.act)
 	var where := HBoxContainer.new()
 	where.add_theme_constant_override("separation", 8)
@@ -50,8 +56,7 @@ static func make(session: RunSession) -> DayBar:
 		parts.append("%s%s%s" % [encounter.name, kind, yields])
 	if not fights.is_empty():
 		var shown: EncounterDef = session.content.encounters[fights[0]]
-		var kind_icon: String = "fight_%s" % shown.kind if ["normal", "elite", "boss"].has(shown.kind) else "fight_normal"
-		line.add_child(UiStyle.icon_label(kind_icon, "Today's fight%s: %s" % ["" if fights.size() == 1 else "s", " or ".join(parts)], 16, UiStyle.TEXT_DIM))
+		line.add_child(UiStyle.icon_label(EncounterInfo.kind_icon(shown), "Today's fight%s: %s" % ["" if fights.size() == 1 else "s", " or ".join(parts)], 16, UiStyle.TEXT_DIM))
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	line.add_child(spacer)
@@ -62,4 +67,37 @@ static func make(session: RunSession) -> DayBar:
 	confirm.confirmed.connect(session.abandon)
 	bar.add_child(confirm)
 	line.add_child(UiStyle.button("Abandon run", confirm.popup_centered))
+	rows.add_child(act_track(session))
 	return bar
+
+
+## The act's days in a row: a mark per day with its kind's icon, today lit
+## and days gone dimmed. Hovering a day lists its fights.
+static func act_track(session: RunSession) -> HBoxContainer:
+	var track := HBoxContainer.new()
+	track.add_theme_constant_override("separation", 6)
+	var act: ActDef = session.run.act(session.state.act)
+	for day: int in range(1, act.days + 1):
+		var kind: String = EncounterInfo.day_kind(session, day)
+		var mark := PanelContainer.new()
+		mark.name = "Day%d" % day
+		var today: bool = day == session.state.day
+		var border: Color = UiStyle.HIGHLIGHT if today else (UiStyle.EMBER if kind != "normal" else UiStyle.BORDER)
+		mark.add_theme_stylebox_override("panel", UiStyle.box(UiStyle.INK_700, border, 2 if today or kind != "normal" else 1))
+		mark.mouse_filter = Control.MOUSE_FILTER_STOP
+		mark.tooltip_text = EncounterInfo.day_text(session, day)
+		mark.modulate = Color(1, 1, 1, 0.5) if day < session.state.day else Color.WHITE
+		var inside := HBoxContainer.new()
+		inside.add_theme_constant_override("separation", 4)
+		inside.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		mark.add_child(inside)
+		var icon: Control = UiStyle.icon("fight_%s" % kind, 30 if kind == "boss" else (26 if kind == "elite" else 20))
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		inside.add_child(icon)
+		var words: String = "Day %d" % day
+		if kind != "normal":
+			words += " · %s" % ("Boss" if kind == "boss" else "Elite")
+		var label: Label = UiStyle.label(words, 14, UiStyle.HIGHLIGHT if today else (UiStyle.EMBER if kind != "normal" else UiStyle.TEXT_DIM))
+		inside.add_child(label)
+		track.add_child(mark)
+	return track

@@ -356,4 +356,6 @@ func test_a_fight_announces_a_legendary_growing() -> void:
 	var main: Main = _main(session)
 	(main.screen as FightScreen).start_fight()
 	assert_eq(session.last_growth, ["The Tallyman's Bow grows to B"] as Array[String])
+	assert_false(U.text_of(main.screen).contains("grows to B"), "the growth waits for the fight's end")
+	(main.screen as FightScreen).skip()
 	assert_string_contains(U.text_of(main.screen), "✦ The Tallyman's Bow grows to B")
