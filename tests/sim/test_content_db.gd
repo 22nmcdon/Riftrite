@@ -162,6 +162,16 @@ func test_rejects_badly_formed_id() -> void:
 
 # --- effects and references ---------------------------------------------------
 
+func test_keywords_load_and_items_use_known_ones() -> void:
+	var db: ContentDb = ContentDb.load_dir("res://data")
+	assert_eq(db.keyword_ids, ["blade", "bow", "spell", "mend", "ward", "burn", "bleed", "hex"] as Array[String])
+	assert_eq(db.keywords["hex"].name, "Hex")
+	var items: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/items.json"))
+	items[0]["keywords"] = ["blade", "glitter"]
+	var errors: Array[String] = _load_with(ContentDb.ITEMS_FILE, items).errors
+	assert_true(errors.any(func(e: String) -> bool: return e.contains("unknown keyword \"glitter\"")), str(errors))
+
+
 func test_rejects_unknown_status_reference() -> void:
 	var db: ContentDb = _load_with(ContentDb.ESSENCES_FILE, _essences_with(0, {
 		"id": "ember", "name": "Ember",

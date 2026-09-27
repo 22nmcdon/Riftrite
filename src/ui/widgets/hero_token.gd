@@ -1,8 +1,7 @@
 class_name HeroToken
 extends PanelContainer
 ## A hero in the guild bar (docs/plans/ui-overhaul.md, 3.1): portrait, name,
-## rank and class, and where they stand (front, back, or backup; backup
-## heroes are dimmed). Click it to open or close the hero's sheet. Drop an
+## rank and class, and where they stand (front or back row). Click it to open or close the hero's sheet. Drop an
 ## item on it to give it to that hero (outlined green or red while dragging,
 ## by the game's own rules). Hover it to read about the hero.
 
@@ -30,7 +29,7 @@ func _build(hero: RunHero) -> void:
 	custom_minimum_size = Vector2(WIDTH, 0)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	var fill: Color = UiStyle.PANEL_WARM if open else (UiStyle.BACKGROUND if hero.benched else UiStyle.PANEL)
+	var fill: Color = UiStyle.PANEL_WARM if open else UiStyle.PANEL
 	_style = UiStyle.box(fill, UiStyle.HIGHLIGHT if open else UiStyle.BORDER, 3 if open else 2)
 	add_theme_stylebox_override("panel", _style)
 	var box := VBoxContainer.new()
@@ -39,14 +38,12 @@ func _build(hero: RunHero) -> void:
 	add_child(box)
 	var portrait: Glyph = Glyph.portrait(def.name, Glyph.CLASS_COLORS.get(def.hero_class, UiStyle.EMBER), 56, hero.hero_id)
 	portrait.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	if hero.benched:
-		portrait.modulate = Color(1, 1, 1, 0.55)
 	box.add_child(portrait)
-	var name_label: Label = _centered(first_name(def.name), 15, UiStyle.TEXT_DIM if hero.benched else UiStyle.TEXT)
+	var name_label: Label = _centered(first_name(def.name), 15, UiStyle.TEXT)
 	name_label.clip_text = true
 	box.add_child(name_label)
 	box.add_child(_centered("%s · %s" % [TuningDef.TIER_LABELS[hero.rank], def.hero_class.capitalize()], 12, UiStyle.EMBER))
-	var where: String = "Backup" if hero.benched else ("Front row" if hero.row == UnitSetup.Row.FRONT else "Back row")
+	var where: String = "Front row" if hero.row == UnitSetup.Row.FRONT else "Back row"
 	box.add_child(_centered(where, 12, UiStyle.TEXT_DIM))
 	if hero.needs_specialization:
 		box.add_child(_centered("★ Choose a path", 12, UiStyle.HIGHLIGHT))

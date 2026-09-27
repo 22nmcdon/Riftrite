@@ -34,13 +34,15 @@ func _hit_amounts(result: FightResult, item_id: String, count: int) -> Array[int
 
 # --- item targets --------------------------------------------------------------------
 
-func test_adjacent_items_get_crit() -> void:
-	var drum: ItemDef = _with_aura("drum", [{"target": "adjacent_items", "stat": "crit_chance_bp", "value": 10000}])
-	var result: FightResult = K.run([K.unit("hero", BIG_HP, FRONT, [_plain("left"), drum, _plain("right"), _plain("far")], _idle())], [K.dummy("foe", BIG_HP)])
+func test_holder_items_get_crit() -> void:
+	var drum: ItemDef = _with_aura("drum", [{"target": "holder_items", "stat": "crit_chance_bp", "value": 10000}])
+	var hero: UnitSetup = K.unit("hero", BIG_HP, FRONT, [_plain("left"), drum, _plain("right")], _idle())
+	var other: UnitSetup = K.unit("other", BIG_HP, FRONT, [_plain("far")], _idle())
+	var result: FightResult = K.run([hero, other], [K.dummy("foe", BIG_HP)])
 	var first: Array[String] = []
 	for item_id: String in ["left", "drum", "right", "far"]:
 		first.append("%s %d" % [item_id, K.entries(result, LogEntry.Kind.DAMAGE, item_id)[0].amount])
-	assert_eq(first, ["left 15", "drum 10", "right 15", "far 10"] as Array[String], "+100% crit on the neighbors only")
+	assert_eq(first, ["left 15", "drum 10", "right 15", "far 10"] as Array[String], "+100% crit on the holder's other items only")
 
 
 func test_rush_self_boost_shows_in_the_breakdown_and_ends() -> void:
@@ -78,15 +80,15 @@ func test_item_stat_on_a_unit_boosts_all_its_items() -> void:
 func test_unit_stats_need_a_unit_target() -> void:
 	var errors: Array[String] = []
 	var data: Dictionary = K.DEFAULT_ITEM.duplicate(true)
-	data.merge({"id": "x", "auras": [{"target": "left_item", "stat": "atk_bp", "value": 20000}]}, true)
+	data.merge({"id": "x", "auras": [{"target": "holder_items", "stat": "atk_bp", "value": 20000}]}, true)
 	ItemDef.read(DataReader.new(data, "x", errors))
 	assert_true(errors.any(func(e: String) -> bool: return e.contains("\"atk_bp\" boosts a unit, so its target must be a unit")), str(errors))
 
 
-# --- linked, holder falling, logging ---------------------------------------------------
+# --- row allies, holder falling, logging ---------------------------------------------------
 
-func test_linked_aura_stops_when_its_holder_falls() -> void:
-	var banner: ItemDef = _with_aura("banner", [{"target": "linked_allies", "stat": "damage_bp", "value": 20000}], 0)
+func test_row_aura_stops_when_its_holder_falls() -> void:
+	var banner: ItemDef = _with_aura("banner", [{"target": "row_allies", "stat": "damage_bp", "value": 20000}], 0)
 	var bearer: UnitSetup = K.unit("bearer", 5, FRONT, [banner], _idle())
 	var ally: UnitSetup = K.unit("ally", BIG_HP, FRONT, [_plain("sword")], _idle())
 	var foe: UnitSetup = K.unit("foe", BIG_HP, FRONT, [_plain("spear", 5)], _idle())
@@ -95,11 +97,11 @@ func test_linked_aura_stops_when_its_holder_falls() -> void:
 	var auras: Array[String] = []
 	for entry: LogEntry in result.combat_log.of_kind(LogEntry.Kind.AURA):
 		auras.append(entry.to_text())
-	assert_eq(auras, ["[0.00s] bearer · Banner aura starts: x2 damage for linked allies", "[1.00s] bearer · Banner aura ends: x2 damage for linked allies"] as Array[String])
+	assert_eq(auras, ["[0.00s] bearer · Banner aura starts: x2 damage for row allies", "[1.00s] bearer · Banner aura ends: x2 damage for row allies"] as Array[String])
 
 
 func test_auras_survive_an_infusion_level_up() -> void:
-	var drum: ItemDef = _with_aura("drum", [{"target": "adjacent_items", "stat": "crit_chance_bp", "value": 10000}])
+	var drum: ItemDef = _with_aura("drum", [{"target": "holder_items", "stat": "crit_chance_bp", "value": 10000}])
 	var sword: ItemDef = K.item("sword", {"xp_per_fire": 4, "effects": K.damage(10)})
 	var result: FightResult = K.run([K.unit("hero", BIG_HP, FRONT, [drum, K.equip(sword, ["stone"] as Array[String], 0, 96)], _idle())], [K.dummy("foe", BIG_HP)])
 	assert_eq(result.combat_log.of_kind(LogEntry.Kind.INFUSION_LEVEL)[0].tick, 20)

@@ -1,7 +1,7 @@
 class_name RunFlow
 extends RefCounted
 ## Drives a run through its days (docs/plans/day-structure.md):
-##   start_hero -> start_package -> [caravan -> stop_choice -> stop -> fight
+##   start_hero (x3: the team draft) -> start_package -> [caravan -> stop_choice -> stop -> fight
 ##   -> rewards] x days -> act_end
 ## A first loss replays the day (back to the Caravan, same fight); a second
 ## ends the run (run_over). The day before the boss, the stop is always the
@@ -12,7 +12,8 @@ extends RefCounted
 ## (moving items, infusing, formation) work in any phase but run_over.
 ##
 ## Offers are plain dictionaries (so they save as JSON):
-##   type: "hero" (hero, rank, specialization), "item" (item, tier),
+##   type: "hero" (hero, rank, specialization: a draft pick), "item" (item,
+##         tier), "rank_up" (after an elite: give it to a hero),
 ##         "relic" (relic), "essence" (essence), "gold" (amount), "key",
 ##         "stop" (stop: a node or event id, see RunContent.node_pool),
 ##         "package" (package: "gold" | "relic" | "item", plus that package's
@@ -42,18 +43,31 @@ static func _phase_problem(state: RunState, phase: String) -> String:
 
 # --- the run start ------------------------------------------------------------
 
-## A new run: 3 random heroes to pick from.
+## A new run: the team draft (docs/plans/heroes-and-deeds.md, section 1).
+## Pick 1 of 3 heroes, three times; each offer leaves out heroes already
+## picked.
 static func new_run(run_seed: int, content: ContentDb) -> RunState:
 	var state: RunState = RunState.make(run_seed)
 	state.phase = "start_hero"
-	var rng: SimRng = RunRandom.stream(run_seed, [RunRandom.START] as Array[int])
-	var pool: Array[String] = content.hero_ids.duplicate()
-	for i: int in mini(3, pool.size()):
-		var hero_id: String = pool.pop_at(rng.range_int(pool.size()))
-		state.offers.append({"type": "hero", "hero": hero_id, "rank": 0, "specialization": "", "price": 0, "taken": false})
+	_offer_draft(state, content)
 	return state
 
 
+## Three heroes not yet in the team, from the draft stream for this pick.
+static func _offer_draft(state: RunState, content: ContentDb) -> void:
+	state.offers.clear()
+	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.START, state.heroes.size()] as Array[int])
+	var pool: Array[String] = []
+	for hero_id: String in content.hero_ids:
+		if state.hero(hero_id) == null:
+			pool.append(hero_id)
+	for i: int in mini(3, pool.size()):
+		var hero_id: String = pool.pop_at(rng.range_int(pool.size()))
+		state.offers.append({"type": "hero", "hero": hero_id, "rank": 0, "specialization": "", "price": 0, "taken": false})
+
+
+## Drafts one of the offered heroes. After the third, on to the starting
+## package.
 static func pick_start_hero(state: RunState, content: ContentDb, index: int) -> RunActions.Result:
 	var problem: String = _phase_problem(state, "start_hero")
 	if not problem.is_empty():
@@ -62,6 +76,9 @@ static func pick_start_hero(state: RunState, content: ContentDb, index: int) -> 
 		return _fail("no offer there")
 	var result: RunActions.Result = RunActions.add_hero(state, content, state.offers[index]["hero"])
 	if not result.ok:
+		return result
+	if state.heroes.size() < RunState.TEAM_SIZE:
+		_offer_draft(state, content)
 		return result
 	state.phase = "start_package"
 	state.offers.clear()
@@ -138,19 +155,6 @@ static func _fill_caravan(state: RunState, content: ContentDb, run: RunContent) 
 		if not held.is_empty() and not held.has(tier):
 			tier = held.min()
 		state.offers.append({"type": "item", "item": item_id, "tier": tier, "price": economy.item_price[tier], "taken": false})
-	var heroes: Array[String] = []
-	for hero_id: String in content.hero_ids:
-		var held_hero: RunHero = state.hero(hero_id)
-		if (held_hero != null and held_hero.rank < 3) or (held_hero == null and state.heroes.size() < FightSetup.ROSTER_CAP):
-			heroes.append(hero_id)
-	for i: int in mini(economy.caravan_heroes, heroes.size()):
-		var hero_id: String = heroes.pop_at(rng.range_int(heroes.size()))
-		var held_hero: RunHero = state.hero(hero_id)
-		var rank: int = held_hero.rank if held_hero != null else maxi(RunRandom.pick_weighted(rng, tier_weights), 0)
-		var spec: String = ""
-		if held_hero == null and rank >= 1:
-			spec = _random_specialization(content, hero_id, rng)
-		state.offers.append({"type": "hero", "hero": hero_id, "rank": rank, "specialization": spec, "price": economy.hero_price[rank], "taken": false})
 
 
 static func _held_tiers(state: RunState, item_id: String) -> Array[int]:
@@ -163,14 +167,6 @@ static func _held_tiers(state: RunState, item_id: String) -> Array[int]:
 			if item.item_id == item_id and not tiers.has(item.tier):
 				tiers.append(item.tier)
 	return tiers
-
-
-static func _random_specialization(content: ContentDb, hero_id: String, rng: SimRng) -> String:
-	var options: Array[String] = []
-	for spec_id: String in content.specialization_ids:
-		if content.specializations[spec_id].hero == hero_id:
-			options.append(spec_id)
-	return "" if options.is_empty() else options[rng.range_int(options.size())]
 
 
 ## Buys a Caravan offer. An item that would combine with a copy the guild
@@ -481,6 +477,21 @@ static func skirmish(state: RunState, content: ContentDb, run: RunContent) -> Ar
 	return [outcome, result, setup]
 
 
+## Gives a rank-up (an elite's reward) to a hero of your choice
+## (docs/plans/heroes-and-deeds.md, section 3).
+static func give_rank_up(state: RunState, content: ContentDb, index: int, hero_id: String) -> RunActions.Result:
+	if state.phase != "rewards":
+		return _fail("there's no rank-up to give now")
+	if index < 0 or index >= state.offers.size() or state.offers[index]["type"] != "rank_up":
+		return _fail("no rank-up there")
+	if state.offers[index]["taken"]:
+		return _fail("already given")
+	var result: RunActions.Result = RunActions.rank_up(state, content, hero_id)
+	if result.ok:
+		state.offers[index]["taken"] = true
+	return result
+
+
 ## Takes an offer at a stop or among rewards (or a relic-merchant purchase).
 static func take(state: RunState, content: ContentDb, index: int) -> RunActions.Result:
 	if state.phase != "stop" and state.phase != "rewards":
@@ -501,8 +512,8 @@ static func _take_offer(state: RunState, content: ContentDb, index: int) -> RunA
 	match offer["type"]:
 		"item":
 			result = RunActions.add_item(state, content, offer["item"], offer["tier"])
-		"hero":
-			result = RunActions.add_hero(state, content, offer["hero"], offer["rank"], offer["specialization"] if state.hero(offer["hero"]) == null else "")
+		"rank_up":
+			return _fail("choose which hero gets the rank-up")
 		"relic":
 			result = RunActions.add_relic(state, content, offer["relic"])
 		"essence":
@@ -586,6 +597,7 @@ static func _grant_rewards(state: RunState, content: ContentDb, run: RunContent,
 		state.offers.append({"type": "essence", "essence": essence, "price": 0, "taken": false})
 	_add_drop(state, content, encounter, rng)
 	if encounter.kind == "elite":
+		state.offers.append({"type": "rank_up", "price": 0, "taken": false})
 		_add_relic_offers(state, content, rng, economy.elite_relic_weights, economy.relic_choices, "relic_choice", 0)
 		if rng.roll_bp(economy.elite_key_chance_bp):
 			state.keys += 1

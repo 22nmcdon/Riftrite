@@ -2,13 +2,13 @@
   {
     "id": "rusted_cleaver",
     "name": "Rusted Cleaver",
-    "size": 2,
+    "slot": "basic_attack",
+    "keywords": ["blade"],
     "tags": [
       "weapon",
       "melee"
     ],
     "rarity": "common",
-    "auto_attack": true,
     "xp_per_fire": 2,
     "cooldown_ms": 2000,
     "effects": [
@@ -26,7 +26,8 @@
   {
     "id": "hearth_knife",
     "name": "Hearth Knife",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["blade"],
     "tags": [
       "weapon",
       "melee"
@@ -49,7 +50,8 @@
   {
     "id": "bone_sling",
     "name": "Bone Sling",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["bow"],
     "tags": [
       "weapon",
       "ranged"
@@ -72,13 +74,13 @@
   {
     "id": "blackthorn_bow",
     "name": "Blackthorn Bow",
-    "size": 2,
+    "slot": "basic_attack",
+    "keywords": ["bow"],
     "tags": [
       "weapon",
       "ranged"
     ],
     "rarity": "common",
-    "auto_attack": true,
     "xp_per_fire": 1,
     "cooldown_ms": 1600,
     "effects": [
@@ -96,7 +98,8 @@
   {
     "id": "oak_buckler",
     "name": "Oak Buckler",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["ward"],
     "tags": [
       "tool",
       "defense"
@@ -119,7 +122,8 @@
   {
     "id": "tallow_torch",
     "name": "Tallow Torch",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["spell", "burn"],
     "tags": [
       "tool",
       "magic"
@@ -144,7 +148,8 @@
   {
     "id": "rime_charm",
     "name": "Rime Charm",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["spell", "hex"],
     "tags": [
       "charm",
       "magic"
@@ -165,7 +170,8 @@
   {
     "id": "old_lantern",
     "name": "Old Lantern",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["mend"],
     "tags": [
       "tool",
       "healing"
@@ -183,26 +189,13 @@
           "mgk": 6000
         }
       }
-    ],
-    "backup": {
-      "cooldown_ms": 3000,
-      "effects": [
-        {
-          "trigger": "on_fire",
-          "type": "heal",
-          "amount": 3,
-          "scaling": {
-            "mgk": 3000
-          },
-          "target": "ally_lowest_hp"
-        }
-      ]
-    }
+    ]
   },
   {
     "id": "hearth_stew",
     "name": "Hearth Stew",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["mend"],
     "tags": [
       "food",
       "healing"
@@ -220,23 +213,13 @@
           "mgk": 2000
         }
       }
-    ],
-    "backup": {
-      "cooldown_ms": 5000,
-      "effects": [
-        {
-          "trigger": "on_fire",
-          "type": "heal",
-          "amount": 2,
-          "target": "all_allies"
-        }
-      ]
-    }
+    ]
   },
   {
     "id": "grave_hook",
     "name": "Grave Hook",
-    "size": 2,
+    "slot": "ability",
+    "keywords": ["blade", "bleed"],
     "tags": [
       "weapon",
       "melee"
@@ -266,7 +249,8 @@
   {
     "id": "nettle_vial",
     "name": "Nettle Vial",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["spell", "hex"],
     "tags": [
       "tool",
       "magic"
@@ -290,7 +274,8 @@
   {
     "id": "salt_ward",
     "name": "Salt Ward",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["ward", "hex"],
     "tags": [
       "charm",
       "defense"
@@ -310,103 +295,59 @@
   },
   {
     "id": "war_drum",
-    "_note": "Its neighbors crit more.",
+    "_note": "Passive: its holder's other items crit more.",
     "name": "War Drum",
-    "size": 1,
+    "slot": "passive",
+    "keywords": ["blade"],
     "tags": [
       "tool"
     ],
     "rarity": "uncommon",
-    "xp_per_fire": 3,
-    "cooldown_ms": 3000,
-    "effects": [
-      {
-        "trigger": "on_fire",
-        "type": "shield",
-        "amount": 3,
-        "target": "self",
-        "scaling": {
-          "def": 2000
-        }
-      }
-    ],
+    "xp_per_fire": 0,
     "auras": [
       {
-        "target": "adjacent_items",
+        "target": "holder_items",
         "stat": "crit_chance_bp",
-        "value": 1500
+        "value": 1000
       }
-    ],
-    "backup": {
-      "auras": [
-        {
-          "target": "all_allies",
-          "stat": "crit_chance_bp",
-          "value": 500
-        }
-      ]
-    }
+    ]
   },
   {
     "id": "bell_of_vigil",
-    "_note": "Linked: the heroes beside the holder stand firmer.",
+    "_note": "Passive: steadies its holder and the allies in their row.",
     "name": "Bell of Vigil",
-    "size": 2,
+    "slot": "passive",
+    "keywords": ["ward"],
     "tags": [
       "charm",
       "defense"
     ],
     "rarity": "uncommon",
-    "xp_per_fire": 3,
-    "cooldown_ms": 4000,
-    "effects": [
-      {
-        "trigger": "on_fire",
-        "type": "shield",
-        "amount": 5,
-        "target": "linked_allies",
-        "scaling": {
-          "def": 2000
-        }
-      }
-    ],
+    "xp_per_fire": 0,
     "auras": [
       {
-        "target": "linked_allies",
+        "target": "row_allies",
         "stat": "def_bp",
-        "value": 13000
+        "value": 12500
+      },
+      {
+        "target": "holder",
+        "stat": "def_bp",
+        "value": 11000
       }
-    ],
-    "backup": {
-      "auras": [
-        {
-          "target": "all_allies",
-          "stat": "def_bp",
-          "value": 10500
-        }
-      ]
-    }
+    ]
   },
   {
     "id": "hearth_banner",
-    "_note": "Rush: the whole row hits harder for the first 8 seconds.",
+    "_note": "Passive, Rush: its holder and their row hit harder for the first 8 seconds.",
     "name": "Hearth Banner",
-    "size": 2,
+    "slot": "passive",
+    "keywords": ["blade"],
     "tags": [
       "charm"
     ],
     "rarity": "rare",
-    "timing": "rush",
-    "xp_per_fire": 3,
-    "cooldown_ms": 3000,
-    "effects": [
-      {
-        "trigger": "on_fire",
-        "type": "heal",
-        "amount": 4,
-        "target": "self"
-      }
-    ],
+    "xp_per_fire": 0,
     "auras": [
       {
         "target": "row_allies",
@@ -432,7 +373,8 @@
     "id": "first_light_dagger",
     "_note": "Rush: fierce for 8 seconds, then a plain knife.",
     "name": "First-Light Dagger",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["blade"],
     "tags": [
       "weapon",
       "melee"
@@ -472,7 +414,8 @@
     "id": "dusk_tome",
     "_note": "Stall: silent until 15 seconds, then scours every enemy.",
     "name": "Dusk Tome",
-    "size": 2,
+    "slot": "ability",
+    "keywords": ["spell"],
     "tags": [
       "tome",
       "magic"
@@ -499,7 +442,8 @@
   {
     "id": "hearthstone_ward",
     "name": "Hearthstone Ward",
-    "size": 3,
+    "slot": "ability",
+    "keywords": ["ward"],
     "tags": [
       "tool",
       "defense"
@@ -529,7 +473,8 @@
   {
     "id": "ember_brazier",
     "name": "Ember Brazier",
-    "size": 3,
+    "slot": "ability",
+    "keywords": ["spell", "burn"],
     "tags": [
       "tool",
       "magic"
@@ -554,7 +499,8 @@
     "id": "night_lantern",
     "_note": "Epic: may scale from ATSP. Rush: faster for the first 8 seconds.",
     "name": "Night Lantern",
-    "size": 2,
+    "slot": "ability",
+    "keywords": ["spell", "mend"],
     "tags": [
       "tool",
       "healing",
@@ -586,48 +532,33 @@
           "until_ms": 8000
         }
       }
-    ],
-    "backup": {
-      "cooldown_ms": 3000,
-      "effects": [
-        {
-          "trigger": "on_fire",
-          "type": "heal",
-          "amount": 5,
-          "scaling": {
-            "mgk": 4000
-          },
-          "target": "ally_lowest_hp"
-        }
-      ]
-    }
+    ]
   },
   {
     "id": "vesper_chime",
     "name": "Vesper Chime",
-    "_note": "Backup-only: does nothing when fielded; from backup, all allies heal 20% more.",
-    "size": 1,
+    "_note": "Passive: all healing on the team is stronger.",
+    "slot": "passive",
+    "keywords": ["mend"],
     "tags": [
       "charm",
       "healing"
     ],
     "rarity": "uncommon",
-    "backup_only": true,
     "xp_per_fire": 0,
-    "backup": {
-      "auras": [
-        {
-          "target": "all_allies",
-          "stat": "heal_bp",
-          "value": 12000
-        }
-      ]
-    }
+    "auras": [
+      {
+        "target": "all_allies",
+        "stat": "heal_bp",
+        "value": 11500
+      }
+    ]
   },
   {
     "id": "rift_claw",
     "name": "Rift Claw",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["blade"],
     "tags": [
       "weapon",
       "melee"
@@ -651,7 +582,8 @@
   {
     "id": "hollow_maw",
     "name": "Hollow Maw",
-    "size": 2,
+    "slot": "ability",
+    "keywords": ["blade"],
     "tags": [
       "weapon",
       "melee"
@@ -681,7 +613,8 @@
   {
     "id": "gloom_spit",
     "name": "Gloom Spit",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["spell", "hex"],
     "tags": [
       "magic"
     ],
@@ -705,8 +638,9 @@
   {
     "id": "whetstone",
     "name": "Whetstone",
-    "_note": "Keeps the blades beside it sharp: charges its neighbors.",
-    "size": 1,
+    "_note": "Keeps the blades sharp: charges its holder's other items.",
+    "slot": "ability",
+    "keywords": ["blade"],
     "tags": [
       "tool",
       "melee"
@@ -718,15 +652,16 @@
       {
         "trigger": "on_fire",
         "type": "charge",
-        "amount_ms": 250,
-        "target": "adjacent_items"
+        "amount_ms": 150,
+        "target": "holder_items"
       }
     ]
   },
   {
     "id": "twin_daggers",
     "name": "Twin Daggers",
-    "size": 2,
+    "slot": "ability",
+    "keywords": ["blade"],
     "tags": [
       "weapon",
       "melee"
@@ -759,7 +694,8 @@
     "id": "pack_bond",
     "name": "Pack Bond",
     "_note": "Carried by Old Mother Ash's hounds: the pack stands firmer while its holder stands.",
-    "size": 1,
+    "slot": "passive",
+    "keywords": ["ward"],
     "tags": [
       "charm",
       "defense"
@@ -780,14 +716,14 @@
     "id": "ember_maw",
     "name": "Ember Maw",
     "_note": "Old Mother Ash's bite: an auto-attack that leaves the wound bleeding.",
-    "size": 2,
+    "slot": "basic_attack",
+    "keywords": ["blade", "bleed"],
     "tags": [
       "weapon",
       "melee"
     ],
     "rarity": "rare",
     "enemy_only": true,
-    "auto_attack": true,
     "xp_per_fire": 1,
     "cooldown_ms": 1400,
     "effects": [
@@ -813,7 +749,8 @@
     "id": "birch_shortbow",
     "name": "Birch Shortbow",
     "_note": "Auto-attack: a quick bow that reaches the back row.",
-    "size": 2,
+    "slot": "basic_attack",
+    "keywords": ["bow"],
     "tags": [
       "weapon",
       "ranged"
@@ -831,13 +768,13 @@
           "atk": 5500
         }
       }
-    ],
-    "auto_attack": true
+    ]
   },
   {
     "id": "flint_arrows",
     "name": "Flint Arrows",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["bow"],
     "tags": [
       "tool",
       "ranged"
@@ -860,7 +797,8 @@
   {
     "id": "thorn_darts",
     "name": "Thorn Darts",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["bow", "hex"],
     "tags": [
       "weapon",
       "ranged"
@@ -881,7 +819,8 @@
   {
     "id": "iron_pot_lid",
     "name": "Iron Pot Lid",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["ward"],
     "tags": [
       "tool",
       "defense"
@@ -904,7 +843,8 @@
   {
     "id": "peat_poultice",
     "name": "Peat Poultice",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["mend"],
     "tags": [
       "food",
       "healing"
@@ -927,7 +867,8 @@
   {
     "id": "soot_bomb",
     "name": "Soot Bomb",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["hex"],
     "tags": [
       "tool"
     ],
@@ -947,7 +888,8 @@
   {
     "id": "hatchet",
     "name": "Hatchet",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["blade"],
     "tags": [
       "weapon",
       "melee"
@@ -970,8 +912,9 @@
   {
     "id": "chalk_circle",
     "name": "Chalk Circle",
-    "_note": "Linked: wards the heroes beside its holder.",
-    "size": 1,
+    "_note": "Wards the heroes in its holder's row.",
+    "slot": "ability",
+    "keywords": ["spell", "ward"],
     "tags": [
       "charm",
       "magic"
@@ -984,7 +927,7 @@
         "trigger": "on_fire",
         "type": "shield",
         "amount": 6,
-        "target": "linked_allies",
+        "target": "row_allies",
         "scaling": {
           "mgk": 4000
         }
@@ -995,7 +938,8 @@
     "id": "hobnail_boots",
     "name": "Hobnail Boots",
     "_note": "No effect of its own: its holder attacks 8% faster.",
-    "size": 1,
+    "slot": "passive",
+    "keywords": ["bow"],
     "tags": [
       "tool"
     ],
@@ -1013,7 +957,8 @@
     "id": "longspear",
     "name": "Longspear",
     "_note": "Reach: a thrust at the front that also grazes the back row.",
-    "size": 2,
+    "slot": "ability",
+    "keywords": ["blade"],
     "tags": [
       "weapon",
       "melee"
@@ -1045,7 +990,8 @@
   {
     "id": "mudbrick_wall",
     "name": "Mudbrick Wall",
-    "size": 3,
+    "slot": "ability",
+    "keywords": ["ward"],
     "tags": [
       "tool",
       "defense"
@@ -1068,7 +1014,8 @@
   {
     "id": "slate_tablet",
     "name": "Slate Tablet",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["spell"],
     "tags": [
       "tome",
       "magic"
@@ -1092,7 +1039,8 @@
     "id": "crow_crossbow",
     "name": "Crow-Feather Crossbow",
     "_note": "Auto-attack: slow, heavy bolts at the back row.",
-    "size": 2,
+    "slot": "basic_attack",
+    "keywords": ["bow"],
     "tags": [
       "weapon",
       "ranged"
@@ -1111,13 +1059,13 @@
         }
       }
     ],
-    "auto_attack": true,
     "crit_chance_bp": 500
   },
   {
     "id": "hunters_snare",
     "name": "Hunter's Snare",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["bow", "hex"],
     "tags": [
       "tool",
       "ranged"
@@ -1133,24 +1081,13 @@
         "stacks": 2,
         "target": "enemy_front"
       }
-    ],
-    "backup": {
-      "cooldown_ms": 5000,
-      "effects": [
-        {
-          "trigger": "on_fire",
-          "type": "apply_status",
-          "status": "slow",
-          "stacks": 1,
-          "target": "enemy_random"
-        }
-      ]
-    }
+    ]
   },
   {
     "id": "barbed_net",
     "name": "Barbed Net",
-    "size": 2,
+    "slot": "ability",
+    "keywords": ["bleed"],
     "tags": [
       "tool"
     ],
@@ -1170,8 +1107,9 @@
   {
     "id": "trick_coin",
     "name": "Trick Coin",
-    "_note": "Flips to wind the items beside it.",
-    "size": 1,
+    "_note": "Flips to wind its holder's other items.",
+    "slot": "ability",
+    "keywords": ["hex"],
     "tags": [
       "charm"
     ],
@@ -1182,24 +1120,16 @@
       {
         "trigger": "on_fire",
         "type": "charge",
-        "amount_ms": 300,
-        "target": "adjacent_items"
+        "amount_ms": 150,
+        "target": "holder_items"
       }
-    ],
-    "backup": {
-      "auras": [
-        {
-          "target": "all_allies",
-          "stat": "crit_chance_bp",
-          "value": 300
-        }
-      ]
-    }
+    ]
   },
   {
     "id": "mirror_shard",
     "name": "Mirror Shard",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["spell", "hex"],
     "tags": [
       "charm",
       "magic"
@@ -1229,7 +1159,8 @@
   {
     "id": "menders_satchel",
     "name": "Mender's Satchel",
-    "size": 2,
+    "slot": "ability",
+    "keywords": ["mend"],
     "tags": [
       "tool",
       "healing"
@@ -1253,27 +1184,14 @@
         "amount_bp": 1500,
         "target": "ally_lowest_hp"
       }
-    ],
-    "backup": {
-      "cooldown_ms": 5000,
-      "effects": [
-        {
-          "trigger": "on_fire",
-          "type": "heal",
-          "amount": 3,
-          "target": "ally_lowest_hp",
-          "scaling": {
-            "mgk": 2500
-          }
-        }
-      ]
-    }
+    ]
   },
   {
     "id": "ashwood_staff",
     "name": "Ashwood Staff",
     "_note": "Auto-attack for casters: a burning bolt.",
-    "size": 2,
+    "slot": "basic_attack",
+    "keywords": ["spell", "burn"],
     "tags": [
       "weapon",
       "magic"
@@ -1298,13 +1216,13 @@
         "stacks": 1,
         "target": "enemy_front"
       }
-    ],
-    "auto_attack": true
+    ]
   },
   {
     "id": "spiked_pauldron",
     "name": "Spiked Pauldron",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["blade", "ward"],
     "tags": [
       "tool",
       "defense",
@@ -1337,7 +1255,8 @@
   {
     "id": "bitter_draught",
     "name": "Bitter Draught",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["mend"],
     "tags": [
       "food",
       "healing"
@@ -1355,26 +1274,13 @@
           "hp": 400
         }
       }
-    ],
-    "backup": {
-      "cooldown_ms": 6000,
-      "effects": [
-        {
-          "trigger": "on_fire",
-          "type": "heal",
-          "amount": 3,
-          "target": "ally_lowest_hp",
-          "scaling": {
-            "hp": 200
-          }
-        }
-      ]
-    }
+    ]
   },
   {
     "id": "greywood_warbow",
     "name": "Greywood Warbow",
-    "size": 3,
+    "slot": "ability",
+    "keywords": ["bow"],
     "tags": [
       "weapon",
       "ranged"
@@ -1398,8 +1304,9 @@
   {
     "id": "stormglass_arrowheads",
     "name": "Stormglass Arrowheads",
-    "_note": "No effect of its own: ranged items beside it hit 20% harder.",
-    "size": 1,
+    "_note": "Passive: its holder's ranged items hit harder.",
+    "slot": "passive",
+    "keywords": ["bow"],
     "tags": [
       "tool",
       "ranged"
@@ -1408,12 +1315,12 @@
     "xp_per_fire": 0,
     "auras": [
       {
-        "target": "adjacent_items",
+        "target": "holder_items",
         "filter": {
           "tag": "ranged"
         },
         "stat": "damage_bp",
-        "value": 12000
+        "value": 11500
       }
     ]
   },
@@ -1421,7 +1328,8 @@
     "id": "hexed_lockbox",
     "name": "Hexed Lockbox",
     "_note": "Opens on a random enemy and freezes its cooldowns for a moment.",
-    "size": 2,
+    "slot": "ability",
+    "keywords": ["hex"],
     "tags": [
       "tool"
     ],
@@ -1436,24 +1344,13 @@
         "stacks": 1,
         "target": "enemy_random"
       }
-    ],
-    "backup": {
-      "cooldown_ms": 8000,
-      "effects": [
-        {
-          "trigger": "on_fire",
-          "type": "apply_status",
-          "status": "freeze",
-          "stacks": 1,
-          "target": "enemy_random"
-        }
-      ]
-    }
+    ]
   },
   {
     "id": "venom_censer",
     "name": "Venom Censer",
-    "size": 2,
+    "slot": "ability",
+    "keywords": ["spell", "hex"],
     "tags": [
       "tool",
       "magic"
@@ -1474,7 +1371,8 @@
   {
     "id": "bone_flute",
     "name": "Bone Flute",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["spell", "hex"],
     "tags": [
       "charm",
       "magic"
@@ -1495,46 +1393,33 @@
   {
     "id": "quartered_shield",
     "name": "Quartered Shield",
-    "size": 2,
+    "slot": "passive",
+    "keywords": ["ward"],
     "tags": [
       "tool",
       "defense"
     ],
     "rarity": "rare",
-    "xp_per_fire": 3,
-    "cooldown_ms": 4000,
-    "effects": [
-      {
-        "trigger": "on_fire",
-        "type": "shield",
-        "amount": 10,
-        "target": "linked_allies",
-        "scaling": {
-          "def": 5000
-        }
-      }
-    ],
+    "xp_per_fire": 0,
     "auras": [
       {
         "target": "holder",
         "stat": "def_bp",
         "value": 11500
+      },
+      {
+        "target": "row_allies",
+        "stat": "shield_bp",
+        "value": 12000
       }
     ],
-    "backup": {
-      "auras": [
-        {
-          "target": "all_allies",
-          "stat": "shield_bp",
-          "value": 11000
-        }
-      ]
-    }
+    "_note": "Passive: its holder's DEF, and stronger Shields for the allies in their row."
   },
   {
     "id": "pilgrims_censer",
     "name": "Pilgrim's Censer",
-    "size": 2,
+    "slot": "ability",
+    "keywords": ["spell", "mend"],
     "tags": [
       "tool",
       "healing",
@@ -1553,27 +1438,14 @@
           "mgk": 2500
         }
       }
-    ],
-    "backup": {
-      "cooldown_ms": 5000,
-      "effects": [
-        {
-          "trigger": "on_fire",
-          "type": "heal",
-          "amount": 2,
-          "target": "all_allies",
-          "scaling": {
-            "mgk": 1500
-          }
-        }
-      ]
-    }
+    ]
   },
   {
     "id": "reapers_sickle",
     "name": "Reaper's Sickle",
     "_note": "Hunts the weakest enemy; crits leave Bleed.",
-    "size": 2,
+    "slot": "ability",
+    "keywords": ["blade", "bleed"],
     "tags": [
       "weapon",
       "melee"
@@ -1604,7 +1476,8 @@
   {
     "id": "grimoire_of_cinders",
     "name": "Grimoire of Cinders",
-    "size": 3,
+    "slot": "ability",
+    "keywords": ["spell", "burn"],
     "tags": [
       "tome",
       "magic"
@@ -1635,7 +1508,8 @@
     "id": "rimewood_longbow",
     "name": "Rimewood Longbow",
     "_note": "Epic auto-attack: a longbow that grows with its holder's CRIT.",
-    "size": 2,
+    "slot": "basic_attack",
+    "keywords": ["bow"],
     "tags": [
       "weapon",
       "ranged"
@@ -1655,13 +1529,13 @@
         }
       }
     ],
-    "auto_attack": true,
     "crit_chance_bp": 1500
   },
   {
     "id": "tower_shield",
     "name": "Gatekeeper's Tower Shield",
-    "size": 3,
+    "slot": "ability",
+    "keywords": ["ward"],
     "tags": [
       "tool",
       "defense"
@@ -1686,22 +1560,14 @@
         "stat": "def_bp",
         "value": 12000
       }
-    ],
-    "backup": {
-      "auras": [
-        {
-          "target": "all_allies",
-          "stat": "def_bp",
-          "value": 11000
-        }
-      ]
-    }
+    ]
   },
   {
     "id": "ashen_censer",
     "name": "Ashen Censer",
     "_note": "Burns every enemy and warms every ally.",
-    "size": 2,
+    "slot": "ability",
+    "keywords": ["spell", "mend", "burn"],
     "tags": [
       "tool",
       "magic",
@@ -1732,7 +1598,8 @@
   {
     "id": "twinfang_stilettos",
     "name": "Twinfang Stilettos",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["blade"],
     "tags": [
       "weapon",
       "melee"
@@ -1767,8 +1634,9 @@
   {
     "id": "clockwork_owl",
     "name": "Clockwork Owl",
-    "_note": "Winds the whole row and pecks a random enemy blind.",
-    "size": 2,
+    "_note": "Winds its holder's other items and pecks a random enemy blind.",
+    "slot": "ability",
+    "keywords": ["hex"],
     "tags": [
       "tool"
     ],
@@ -1780,7 +1648,7 @@
         "trigger": "on_fire",
         "type": "charge",
         "amount_ms": 300,
-        "target": "row_items"
+        "target": "holder_items"
       },
       {
         "trigger": "on_fire",
@@ -1789,21 +1657,13 @@
         "stacks": 1,
         "target": "enemy_random"
       }
-    ],
-    "backup": {
-      "auras": [
-        {
-          "target": "all_allies",
-          "stat": "atsp_bp",
-          "value": 10500
-        }
-      ]
-    }
+    ]
   },
   {
     "id": "wyrdglass_orb",
     "name": "Wyrdglass Orb",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["spell"],
     "tags": [
       "charm",
       "magic"
@@ -1828,7 +1688,8 @@
   {
     "id": "hearthkeepers_kettle",
     "name": "Hearthkeeper's Kettle",
-    "size": 2,
+    "slot": "ability",
+    "keywords": ["mend", "ward"],
     "tags": [
       "food",
       "healing"
@@ -1855,27 +1716,14 @@
           "mgk": 3000
         }
       }
-    ],
-    "backup": {
-      "cooldown_ms": 5000,
-      "effects": [
-        {
-          "trigger": "on_fire",
-          "type": "heal",
-          "amount": 5,
-          "target": "ally_lowest_hp",
-          "scaling": {
-            "mgk": 3000
-          }
-        }
-      ]
-    }
+    ]
   },
   {
     "id": "cinder_dust",
     "name": "Cinder Dust",
     "_note": "Enemy-only: a Cinder Moth's wings shed Burn on a random foe.",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["spell", "burn"],
     "tags": [
       "magic"
     ],
@@ -1897,7 +1745,8 @@
     "id": "lurker_fang",
     "name": "Lurker Fang",
     "_note": "Enemy-only: a bog-soaked fang whose bite poisons.",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["blade", "hex"],
     "tags": [
       "weapon",
       "melee"
@@ -1929,7 +1778,8 @@
     "id": "cairn_stone",
     "name": "Cairn Stone",
     "_note": "Enemy-only: a standing stone that shields every ally of its holder.",
-    "size": 2,
+    "slot": "ability",
+    "keywords": ["ward"],
     "tags": [
       "charm",
       "defense"
@@ -1948,28 +1798,19 @@
           "def": 3000
         }
       }
-    ],
-    "backup": {
-      "auras": [
-        {
-          "target": "all_allies",
-          "stat": "shield_bp",
-          "value": 11000
-        }
-      ]
-    }
+    ]
   },
   {
     "id": "tallymans_bow",
     "name": "The Tallyman's Bow",
     "_note": "Legendary, grows by use: counts its hits. An auto-attack longbow for ATSP builds.",
-    "size": 2,
+    "slot": "basic_attack",
+    "keywords": ["bow"],
     "tags": [
       "weapon",
       "ranged"
     ],
     "rarity": "legendary",
-    "auto_attack": true,
     "xp_per_fire": 1,
     "cooldown_ms": 1400,
     "crit_chance_bp": 1000,
@@ -1985,22 +1826,6 @@
         }
       }
     ],
-    "backup": {
-      "name": "Tally Volley",
-      "cooldown_ms": 2500,
-      "effects": [
-        {
-          "trigger": "on_fire",
-          "type": "damage",
-          "amount": 4,
-          "target": "enemy_random",
-          "scaling": {
-            "atk": 4000,
-            "atsp": 2000
-          }
-        }
-      ]
-    },
     "legendary": {
       "path": "hits",
       "start_tier": "c",
@@ -2015,7 +1840,8 @@
     "id": "hungering_censer",
     "name": "The Hungering Censer",
     "_note": "Legendary, essence-hungry: feed it Ember, then Venom.",
-    "size": 2,
+    "slot": "ability",
+    "keywords": ["spell"],
     "tags": [
       "tome",
       "magic"
@@ -2034,21 +1860,6 @@
         }
       }
     ],
-    "backup": {
-      "name": "Censer Smoke",
-      "cooldown_ms": 4000,
-      "effects": [
-        {
-          "trigger": "on_fire",
-          "type": "damage",
-          "amount": 4,
-          "target": "all_enemies",
-          "scaling": {
-            "mgk": 3000
-          }
-        }
-      ]
-    },
     "legendary": {
       "path": "essence",
       "start_tier": "b",
@@ -2066,7 +1877,8 @@
     "id": "maw_of_the_hollow",
     "name": "Maw of the Hollow",
     "_note": "Legendary, devourer: feed it other items; each meal leaves a trace.",
-    "size": 2,
+    "slot": "ability",
+    "keywords": ["blade"],
     "tags": [
       "weapon",
       "melee"
@@ -2085,21 +1897,6 @@
         }
       }
     ],
-    "backup": {
-      "name": "Hollow Hunger",
-      "cooldown_ms": 3500,
-      "effects": [
-        {
-          "trigger": "on_fire",
-          "type": "damage",
-          "amount": 6,
-          "target": "enemy_random",
-          "scaling": {
-            "atk": 5000
-          }
-        }
-      ]
-    },
     "legendary": {
       "path": "devour",
       "start_tier": "c",
@@ -2120,7 +1917,8 @@
     "id": "kinstone_aegis",
     "name": "The Kinstone Aegis",
     "_note": "Legendary, bonded: grows when its holder ranks up.",
-    "size": 2,
+    "slot": "ability",
+    "keywords": ["ward"],
     "tags": [
       "tool",
       "defense"
@@ -2139,16 +1937,6 @@
         }
       }
     ],
-    "backup": {
-      "name": "Kinstone Ward",
-      "auras": [
-        {
-          "target": "all_allies",
-          "stat": "def_bp",
-          "value": 9000
-        }
-      ]
-    },
     "legendary": {
       "path": "bonded",
       "start_tier": "b",
@@ -2162,7 +1950,8 @@
     "id": "last_hearth_lantern",
     "name": "The Last Hearth-Lantern",
     "_note": "Legendary, martyr: grows when its holder falls in a fight the guild still wins.",
-    "size": 1,
+    "slot": "ability",
+    "keywords": ["mend", "ward"],
     "tags": [
       "tool",
       "healing",
@@ -2192,21 +1981,6 @@
         }
       }
     ],
-    "backup": {
-      "name": "Hearth Glow",
-      "cooldown_ms": 3500,
-      "effects": [
-        {
-          "trigger": "on_fire",
-          "type": "heal",
-          "amount": 5,
-          "target": "ally_lowest_hp",
-          "scaling": {
-            "mgk": 3000
-          }
-        }
-      ]
-    },
     "legendary": {
       "path": "martyr",
       "start_tier": "b",
@@ -2220,7 +1994,8 @@
     "id": "riftbreakers_brand",
     "name": "The Riftbreaker's Brand",
     "_note": "Legendary, boss-forged: grows with each boss beaten while it's equipped.",
-    "size": 2,
+    "slot": "ability",
+    "keywords": ["blade", "bleed"],
     "tags": [
       "weapon",
       "melee"
@@ -2246,19 +2021,6 @@
         "target": "hit_target"
       }
     ],
-    "backup": {
-      "name": "Brand's Mark",
-      "cooldown_ms": 3000,
-      "effects": [
-        {
-          "trigger": "on_fire",
-          "type": "apply_status",
-          "status": "bleed",
-          "stacks": 2,
-          "target": "enemy_random"
-        }
-      ]
-    },
     "legendary": {
       "path": "boss",
       "start_tier": "a",

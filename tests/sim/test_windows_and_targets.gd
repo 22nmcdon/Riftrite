@@ -60,10 +60,10 @@ func test_all_allies_heals_the_whole_team() -> void:
 	assert_eq(K.targets_of(K.entries(result, LogEntry.Kind.HEAL, "hymn")).slice(0, 2), ["hero", "ally"] as Array[String])
 
 
-# --- linked --------------------------------------------------------------------------
+# --- row allies ----------------------------------------------------------------------
 
-func _linked_heals(target: String, holder_column: int) -> Array[String]:
-	var mend: ItemDef = K.item("mend", {"effects": [{"trigger": "on_fire", "type": "heal", "amount": 1, "target": target}]})
+func _row_heals(holder_column: int) -> Array[String]:
+	var mend: ItemDef = K.item("mend", {"effects": [{"trigger": "on_fire", "type": "heal", "amount": 1, "target": "row_allies"}]})
 	var heroes: Array[UnitSetup] = []
 	for i: int in 4:
 		if i == holder_column:
@@ -79,21 +79,6 @@ func _linked_heals(target: String, holder_column: int) -> Array[String]:
 	return first
 
 
-func test_linked_variants() -> void:
-	assert_eq(_linked_heals("linked_allies", 1), ["h0", "h2"] as Array[String], "both neighbors")
-	assert_eq(_linked_heals("linked_left_ally", 1), ["h0"] as Array[String])
-	assert_eq(_linked_heals("linked_right_ally", 1), ["h2"] as Array[String])
-	assert_eq(_linked_heals("linked_ally", 1), ["h0"] as Array[String], "one neighbor: left first")
-	assert_eq(_linked_heals("linked_ally", 0), ["h1"] as Array[String], "right if there's no left")
-	assert_eq(_linked_heals("row_allies", 1), ["h0", "h2", "h3"] as Array[String], "the whole row, not the back row")
-
-
-func test_a_fallen_neighbor_breaks_the_link() -> void:
-	var mend: ItemDef = K.item("mend", {"effects": [{"trigger": "on_fire", "type": "heal", "amount": 1, "target": "linked_allies"}]})
-	var result: FightResult = K.run([K.dummy("h0", 5), K.unit("h1", BIG_HP, FRONT, [mend], _idle()), K.dummy("h2", BIG_HP)],
-		[K.unit("foe", BIG_HP, FRONT, [K.item("spear", {"effects": K.damage(10)})], _idle())])
-	var at_40: Array[String] = []
-	for entry: LogEntry in K.entries(result, LogEntry.Kind.HEAL, "mend"):
-		if entry.tick == 40:
-			at_40.append(entry.target)
-	assert_eq(at_40, ["h2"] as Array[String], "h0 fell at 1s; h2 doesn't become the left link")
+func test_row_allies_is_the_whole_row() -> void:
+	assert_eq(_row_heals(1), ["h0", "h2", "h3"] as Array[String], "the whole row, not the back row")
+	assert_eq(_row_heals(0), ["h1", "h2", "h3"] as Array[String], "wherever the holder stands")

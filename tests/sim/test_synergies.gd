@@ -38,7 +38,7 @@ func _crit_on_matched() -> Array:
 
 func _row_crits(sim: CombatSim, unit_id: String) -> Array[int]:
 	var crits: Array[int] = []
-	for item: ItemState in sim.unit_by_id(unit_id).row_items():
+	for item: ItemState in sim.unit_by_id(unit_id).loadout_items():
 		crits.append(item.crit_chance_bp)
 	return crits
 
@@ -143,10 +143,10 @@ func test_real_synergies_load() -> void:
 
 func test_charge_reads_and_rejects() -> void:
 	var errors: Array[String] = []
-	var effect: EffectDef = EffectDef.read(DataReader.new({"trigger": "on_fire", "type": "charge", "amount_ms": 250, "target": "adjacent_items"}, "effect", errors))
+	var effect: EffectDef = EffectDef.read(DataReader.new({"trigger": "on_fire", "type": "charge", "amount_ms": 250, "target": "holder_items"}, "effect", errors))
 	assert_eq(errors, [] as Array[String])
 	assert_eq(effect.amount, 5)
-	assert_eq(effect.item_target, EffectDef.ItemTarget.ADJACENT_ITEMS)
+	assert_eq(effect.item_target, EffectDef.ItemTarget.HOLDER_ITEMS)
 	errors.clear()
 	EffectDef.read(DataReader.new({"trigger": "on_fire", "type": "charge", "amount_ms": 250, "target": "enemy_front"}, "effect", errors))
 	_assert_error(errors, "target: unknown value \"enemy_front\"")
@@ -155,19 +155,22 @@ func test_charge_reads_and_rejects() -> void:
 	_assert_error(errors, "a relic holds no item, so its effects can't charge")
 
 
-func test_charge_advances_a_neighbor() -> void:
+func test_charge_advances_the_holders_other_items() -> void:
 	var blade: ItemDef = _named("blade")
-	var stone: ItemDef = _named("stone", {"cooldown_ms": 3000, "effects": [{"trigger": "on_fire", "type": "charge", "amount_ms": 250, "target": "left_item"}]})
+	var stone: ItemDef = _named("stone", {"cooldown_ms": 3000, "effects": [{"trigger": "on_fire", "type": "charge", "amount_ms": 250, "target": "holder_items"}]})
 	var sim: CombatSim = K.synergy_sim([K.unit("a", 100, FRONT, [blade, stone])], [K.dummy("b", 100000)])
 	_step_to(sim, 100)
 	assert_eq(_fire_ticks(sim, "blade"), [20, 40, 60, 75, 95] as Array[int], "charged 5 ticks at 60")
-	var charges: Array[LogEntry] = sim.combat_log.of_kind(LogEntry.Kind.CHARGE)
-	assert_eq(charges[0].to_text(), "[3.00s] a · Stone charges Blade by 0.25s")
+	var charges: Array[String] = []
+	for entry: LogEntry in sim.combat_log.of_kind(LogEntry.Kind.CHARGE):
+		charges.append(entry.to_text())
+	assert_has(charges, "[3.00s] a · Stone charges Blade by 0.25s")
+	assert_eq(charges.size() % 2, 0, "each fire charges both other items (the basic attack too)")
 
 
 func test_charge_never_banks_a_second_fire() -> void:
 	var blade: ItemDef = _named("blade")
-	var stone: ItemDef = _named("stone", {"cooldown_ms": 3000, "effects": [{"trigger": "on_fire", "type": "charge", "amount_ms": 2000, "target": "left_item"}]})
+	var stone: ItemDef = _named("stone", {"cooldown_ms": 3000, "effects": [{"trigger": "on_fire", "type": "charge", "amount_ms": 2000, "target": "holder_items"}]})
 	var sim: CombatSim = K.synergy_sim([K.unit("a", 100, FRONT, [blade, stone])], [K.dummy("b", 100000)])
 	_step_to(sim, 81)
 	assert_eq(_fire_ticks(sim, "blade"), [20, 40, 60, 61, 80] as Array[int])
@@ -193,16 +196,12 @@ func test_pair_grant_charges_the_partner() -> void:
 	assert_eq(sim.combat_log.of_kind(LogEntry.Kind.CHARGE)[0].to_text(), "[1.00s] a · P Dagger (Test Cuts) charges P Whet by 0.20s")
 
 
-func test_pair_needs_both_items_on_one_fielded_hero() -> void:
+func test_pair_needs_both_items_on_one_hero() -> void:
 	_paper_cuts()
 	var whet: ItemDef = _named("p_whet")
 	var dagger: ItemDef = _named("p_dagger")
 	var split: FightResult = K.synergy_run([K.unit("a", 100, FRONT, [whet]), K.unit("c", 100, FRONT, [dagger])], [K.dummy("b", 100)])
 	assert_eq(split.synergies.size(), 0)
-	var backup: Dictionary = {"rarity": "uncommon", "backup": {"cooldown_ms": 3000, "effects": K.damage(1, "enemy_random")}}
-	var benched: UnitSetup = K.unit("v", 100, BACK, [_named("p_whet", backup), _named("p_dagger", backup)])
-	var bench_result: FightResult = K.synergy_run([K.unit("a", 100)], [K.dummy("b", 100)], [benched])
-	assert_eq(bench_result.synergies.size(), 0, "pairs need the hero on the field")
 	var paired: FightResult = K.synergy_run([K.unit("a", 100, FRONT, [dagger, whet])], [K.dummy("b", 100)])
 	assert_eq(paired.synergies.size(), 1)
 	assert_eq([paired.synergies[0].synergy_id, paired.synergies[0].unit_id], ["test_cuts", "a"])
@@ -222,7 +221,7 @@ func test_item_layer_grants_reach_only_matched_items() -> void:
 	K.synergy("lamp_grant", {"layer": "signature", "hero": "vell", "item": "s_lamp",
 		"grants": [{"effect": {"trigger": "on_fire", "type": "shield", "amount": 8, "target": "self"}}]})
 	var sim: CombatSim = K.synergy_sim([K.unit("vell", 100, FRONT, [_named("s_lamp"), _named("s_other")])], [K.dummy("b", 100)])
-	var row: Array[ItemState] = sim.unit_by_id("vell").row_items()
+	var row: Array[ItemState] = sim.unit_by_id("vell").loadout_items()
 	assert_eq(row[0].effects.size(), 2, "the lamp gains the grant")
 	assert_eq(row[1].effects.size(), 1, "the other item doesn't")
 	assert_eq(sim.unit_by_id("vell").items[0].effects.size(), 1, "nor does the basic attack")
@@ -249,7 +248,7 @@ func test_transformation_replaces_the_items_effects() -> void:
 	_transform_torch()
 	var torch: ItemDef = _named("t_torch")
 	var sim: CombatSim = K.synergy_sim([K.unit("a", 100, FRONT, [K.equip(torch, ["ember"] as Array[String])])], [K.dummy("b", 100000), K.dummy("c", 100000)])
-	var item: ItemState = sim.unit_by_id("a").row_items()[0]
+	var item: ItemState = sim.unit_by_id("a").loadout_items()[0]
 	assert_eq(item.effects.size(), 1)
 	assert_eq(item.effects[0].effect.target, EffectDef.Target.ALL_ENEMIES)
 	assert_eq(item.conversions.size(), 0, "Ember's own conversion (damage -> Burn) doesn't apply")
@@ -268,14 +267,14 @@ func test_untransformed_items_keep_their_effects() -> void:
 	var torch: ItemDef = _named("t_torch")
 	var sim: CombatSim = K.synergy_sim([K.unit("a", 100, FRONT, [K.equip(torch, ["frost"] as Array[String])])], [K.dummy("b", 100)])
 	assert_eq(sim.synergies.size(), 0)
-	assert_eq(sim.unit_by_id("a").row_items()[0].effects[0].effect.target, EffectDef.Target.ENEMY_FRONT)
+	assert_eq(sim.unit_by_id("a").loadout_items()[0].effects[0].effect.target, EffectDef.Target.ENEMY_FRONT)
 
 
 func test_transformation_levels_up_and_never_spills() -> void:
 	_transform_torch()
 	var torch: ItemDef = _named("t_torch")
 	var sim: CombatSim = K.synergy_sim([K.unit("a", 100, FRONT, [K.equip(torch, ["ember"] as Array[String], 0, 300), _named("t_next")])], [K.dummy("b", 100)])
-	var row: Array[ItemState] = sim.unit_by_id("a").row_items()
+	var row: Array[ItemState] = sim.unit_by_id("a").loadout_items()
 	assert_eq(row[0].infusion_level, Infusions.Level.RESONANT)
 	assert_eq(row[0].effects[0].final_amount(), 8, "Resonant: x2")
 	assert_eq(row[1].spills_received.size(), 0, "a transformed item never spills")
@@ -285,11 +284,11 @@ func test_other_essence_works_as_a_plain_single() -> void:
 	_transform_torch()
 	var torch: ItemDef = _named("t_torch", {"rarity": "epic"})
 	var sim: CombatSim = K.synergy_sim([K.unit("a", 100, FRONT, [K.equip(torch, ["ember", "ember"] as Array[String])])], [K.dummy("b", 100)])
-	var item: ItemState = sim.unit_by_id("a").row_items()[0]
+	var item: ItemState = sim.unit_by_id("a").loadout_items()[0]
 	assert_null(item.alloy, "no pure-double special")
 	assert_eq(item.conversions.size(), 1, "the second Ember converts as a plain single")
 	var mixed: CombatSim = K.synergy_sim([K.unit("a", 100, FRONT, [K.equip(torch, ["frost", "ember"] as Array[String])])], [K.dummy("b", 100)])
-	var mixed_item: ItemState = mixed.unit_by_id("a").row_items()[0]
+	var mixed_item: ItemState = mixed.unit_by_id("a").loadout_items()[0]
 	var sources: Array[String] = []
 	for sourced: SourcedEffect in mixed_item.effects:
 		sources.append(sourced.infusion_id)
@@ -307,9 +306,9 @@ func test_resonance_counts_essences_across_the_guild() -> void:
 	assert_eq(two.synergies.size(), 0, "2 Ember: no tier yet")
 	var three: FightResult = K.synergy_run([K.unit("a", 100, FRONT, [single, double])], [K.dummy("b", 100)])
 	assert_eq([three.synergies[0].synergy_id, three.synergies[0].count], ["test_res", 3])
-	var bench: UnitSetup = K.unit("v", 100, BACK, [K.equip(_named("r_alloy", {"rarity": "epic"}), ["frost", "ember"] as Array[String]), K.equip(_named("r_two"), ["ember"] as Array[String])])
-	var sim: CombatSim = K.synergy_sim([K.unit("a", 100, FRONT, [single, double])], [K.dummy("b", 100)], [bench])
-	assert_eq(sim.synergies[0].count, 5, "backup heroes count; an alloy counts its half")
+	var other: UnitSetup = K.unit("v", 100, BACK, [K.equip(_named("r_alloy", {"rarity": "epic"}), ["frost", "ember"] as Array[String]), K.equip(_named("r_two"), ["ember"] as Array[String])])
+	var sim: CombatSim = K.synergy_sim([K.unit("a", 100, FRONT, [single, double]), other], [K.dummy("b", 100)])
+	assert_eq(sim.synergies[0].count, 5, "every hero counts; an alloy counts its half")
 	assert_eq(_synergy_lines(sim), ["[0.00s] Test Res (5): 5 Ember"] as Array[String])
 	assert_eq(sim.synergies[0].def.name, "Test Res (5)", "only the highest tier applies")
 	var aura: LogEntry = sim.combat_log.of_kind(LogEntry.Kind.AURA)[0]
@@ -335,11 +334,9 @@ func test_class_trait_counts_fielded_heroes() -> void:
 		var unit: UnitSetup = K.unit_with(unit_id, UnitStats.make(100, 0, 0, 100))
 		unit.unit_class = "warden" if unit_id != "x" else "striker"
 		heroes.append(unit)
-	var benched: UnitSetup = K.unit("w3", 100, BACK)
-	benched.unit_class = "warden"
-	var sim: CombatSim = K.synergy_sim(heroes, [K.dummy("b", 100)], [benched])
+	var sim: CombatSim = K.synergy_sim(heroes, [K.dummy("b", 100)])
 	assert_eq(sim.synergies.size(), 1)
-	assert_eq(sim.synergies[0].count, 2, "the benched Warden doesn't count")
+	assert_eq(sim.synergies[0].count, 2)
 	assert_eq(sim.unit_by_id("x").stats.get_stat(UnitStats.Stat.DEF), 110, "the tier's aura reaches all allies")
 	assert_eq(_synergy_lines(sim), ["[0.00s] Test Wardens (2): 2 heroes"] as Array[String])
 

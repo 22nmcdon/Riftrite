@@ -16,11 +16,13 @@ static func session() -> RunSession:
 	return RunSession.make(K.content(), _run_content, SAVE_PATH)
 
 
-## A session with a run at day 1's Caravan (first hero, gold package).
+## A session with a run at day 1's Caravan (the first offer of each draft
+## pick, gold package).
 static func at_caravan(run_seed: int = 5) -> RunSession:
 	var s: RunSession = session()
 	s.new_run(run_seed)
-	s.pick_start_hero(0)
+	for pick: int in RunState.TEAM_SIZE:
+		s.pick_start_hero(0)
 	s.pick_package(0)
 	return s
 

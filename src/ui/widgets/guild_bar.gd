@@ -27,7 +27,7 @@ func _build() -> void:
 	heroes.add_theme_constant_override("separation", 6)
 	for hero: RunHero in state.heroes:
 		heroes.add_child(HeroToken.make(session, hero))
-	line.add_child(_section("Your guild (%d/%d)" % [state.heroes.size(), FightSetup.ROSTER_CAP], heroes, "Click a hero to open their sheet."))
+	line.add_child(_section("Your team", heroes, "Click a hero to open their sheet."))
 	line.add_child(_stash())
 	line.add_child(_pouch())
 	line.add_child(_relics())
@@ -55,7 +55,7 @@ func _stash() -> Control:
 		row.add_child(ItemTile.owned(session, state.stash[i], RunState.STASH, i, null, true))
 	row.add_child(DropZone.make("Drop to stash", func(data: Dictionary) -> void: session.move_item(data["uid"], RunState.STASH, 99), false, 84,
 		_can_move.bind(RunState.STASH), ItemTile.COMPACT_HEIGHT))
-	return _section("Stash (%d/%d slots)" % [state.stash_used(session.content), session.content.tuning.stash_slots], row,
+	return _section("Stash (%d/%d)" % [state.stash.size(), session.content.tuning.stash_slots], row,
 		"Items waiting for a hero. Drag one onto a hero's token (or into their sheet) to equip it.")
 
 

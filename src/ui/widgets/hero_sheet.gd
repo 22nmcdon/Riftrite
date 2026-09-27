@@ -2,9 +2,10 @@ class_name HeroSheet
 extends PanelContainer
 ## A hero's sheet (docs/plans/ui-overhaul.md, 3.2), opened by clicking their
 ## token in the guild bar. It opens above the bar: portrait, name, class and
-## specialization, stats, basic attack and Backup, the formation controls,
-## and the hero's item row at full size, where items are rearranged,
-## combined, and infused by dragging. Arrows step to the next hero; ✕ (or
+## specialization, stats, basic attack and innate, the formation controls,
+## and the hero's loadout at full size in three groups (basic attack,
+## abilities, passives; docs/plans/fun-redesign.md, section 2), where items
+## are equipped, combined, and infused by dragging. Arrows step to the next hero; ✕ (or
 ## clicking the token again) closes it. Everything goes through the
 ## RunSession.
 
@@ -42,11 +43,11 @@ func _build(hero: RunHero) -> void:
 	info.add_theme_constant_override("separation", 4)
 	info.custom_minimum_size = Vector2(420, 0)
 	line.add_child(info)
-	info.add_child(UiStyle.heading("%s   %s" % [def.name, TuningDef.TIER_LABELS[hero.rank]], 24, UiStyle.TEXT_DIM if hero.benched else UiStyle.TEXT))
+	info.add_child(UiStyle.heading("%s   %s" % [def.name, TuningDef.TIER_LABELS[hero.rank]], 24, UiStyle.TEXT))
 	var spec: String = content.specializations[hero.specialization_id].name if not hero.specialization_id.is_empty() else "no specialization yet"
 	info.add_child(UiStyle.label("%s · %s" % [def.hero_class.capitalize(), spec], 16, UiStyle.EMBER))
 	info.add_child(UiStyle.stat_row(stats))
-	var about: Label = UiStyle.label(_basic_and_backup(def), 14, UiStyle.TEXT_DIM)
+	var about: Label = UiStyle.label(_basic_and_innate(def), 14, UiStyle.TEXT_DIM)
 	about.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	info.add_child(about)
 	info.add_child(_controls(hero, at))
@@ -59,8 +60,7 @@ func _build(hero: RunHero) -> void:
 	line.add_child(right)
 	var top := HBoxContainer.new()
 	right.add_child(top)
-	var free: int = hero.slots() - hero.used_slots(content)
-	var heading: Label = UiStyle.heading("Items (%d of %d slots used)" % [hero.used_slots(content), hero.slots()], 18, UiStyle.HIGHLIGHT)
+	var heading: Label = UiStyle.heading("Loadout", 18, UiStyle.HIGHLIGHT)
 	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(heading)
 	var count: int = session.state.heroes.size()
@@ -72,22 +72,37 @@ func _build(hero: RunHero) -> void:
 	var close: Button = UiStyle.button("✕", func() -> void: session.open_hero(""))
 	close.tooltip_text = "Close the sheet"
 	top.add_child(close)
-	right.add_child(UiStyle.label("Drag items to rearrange them, onto a copy to combine, or drop an essence on one to infuse it. Click an item for everything else.", 13, UiStyle.TEXT_DIM))
-	var items := HBoxContainer.new()
-	items.add_theme_constant_override("separation", 4)
-	right.add_child(items)
+	right.add_child(UiStyle.label("Drag an item onto a free slot of its kind, onto a copy to combine, or drop an essence on one to infuse it. Click an item for everything else.", 13, UiStyle.TEXT_DIM))
+	for slot: int in ItemDef.SLOT_NAMES.size():
+		right.add_child(_slot_group(hero, slot as ItemDef.Slot, stats))
+
+
+## One slot type's row: its items, then a drop zone for each free slot.
+func _slot_group(hero: RunHero, slot: ItemDef.Slot, stats: UnitStats) -> HBoxContainer:
+	var content: ContentDb = session.content
+	var room: int = hero.slots_for(content, slot)
+	var group := HBoxContainer.new()
+	group.name = "Slots_%s" % ItemDef.SLOT_NAMES[slot]
+	group.add_theme_constant_override("separation", 4)
+	var title: Label = UiStyle.label("%s\n%d / %d" % [ItemDef.SLOT_LABELS[slot] if slot == ItemDef.Slot.BASIC_ATTACK else ItemDef.SLOT_PLURALS[slot], hero.used_for(content, slot), room], 14, UiStyle.EMBER)
+	title.custom_minimum_size = Vector2(96, 0)
+	group.add_child(title)
 	for i: int in hero.items.size():
-		items.add_child(ItemTile.owned(session, hero.items[i], hero.hero_id, i, stats))
-	items.add_child(DropZone.make("%d free slot%s" % [free, "" if free == 1 else "s"], func(data: Dictionary) -> void: session.move_item(data["uid"], hero.hero_id, 99), false, maxi(free, 1) * UiStyle.SLOT_WIDTH,
-		func(data: Dictionary) -> bool: return session.would_succeed(func(state: RunState) -> RunActions.Result: return RunActions.move_item(state, content, data["uid"], hero.hero_id, 99))))
+		if content.items[hero.items[i].item_id].slot == slot:
+			group.add_child(ItemTile.owned(session, hero.items[i], hero.hero_id, i, stats))
+	var free: int = room - hero.used_for(content, slot)
+	if free > 0:
+		var empty: String = "Built-in: %s" % content.heroes[hero.hero_id].basic_attack.name if slot == ItemDef.Slot.BASIC_ATTACK else "%d free" % free
+		group.add_child(DropZone.make(empty, func(data: Dictionary) -> void: session.move_item(data["uid"], hero.hero_id, 99), false, UiStyle.SLOT_WIDTH,
+			func(data: Dictionary) -> bool: return session.would_succeed(func(state: RunState) -> RunActions.Result: return RunActions.move_item(state, content, data["uid"], hero.hero_id, 99))))
+	return group
 
 
-## The basic attack and Backup lines from the hero's info text.
-func _basic_and_backup(def: HeroDef) -> String:
+## The basic attack and innate lines from the hero's info text.
+func _basic_and_innate(def: HeroDef) -> String:
 	var lines: PackedStringArray = PackedStringArray()
 	lines.append("Basic attack: %s" % def.basic_attack.name)
-	if def.backup != null:
-		lines.append("Backup: %s (acts while this hero sits in backup)" % def.backup.name)
+	lines.append("Innate: %s. %s" % [def.innate_name, def.innate_text])
 	return "\n".join(lines)
 
 
@@ -98,9 +113,6 @@ func _controls(hero: RunHero, at: int) -> HBoxContainer:
 		session.set_row(hero.hero_id, UnitSetup.Row.BACK if hero.row == UnitSetup.Row.FRONT else UnitSetup.Row.FRONT))
 	row_button.tooltip_text = "Switch rows"
 	controls.add_child(row_button)
-	var bench_button: Button = UiStyle.button("In backup" if hero.benched else "Fielded", func() -> void: session.set_benched(hero.hero_id, not hero.benched))
-	bench_button.tooltip_text = "Field this hero, or sit them in backup"
-	controls.add_child(bench_button)
 	var left: Button = UiStyle.button("◀ Move", func() -> void: session.move_hero(hero.hero_id, at - 1))
 	left.tooltip_text = "Move this hero earlier (further left)"
 	controls.add_child(left)

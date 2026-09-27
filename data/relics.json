@@ -19,15 +19,15 @@
     "id": "tinkers_loupe",
     "name": "Tinker's Loupe",
     "rarity": "common",
-    "_note": "Small items fire 10% sooner.",
+    "_note": "Abilities fire 7% sooner.",
     "auras": [
       {
         "target": "all_items",
         "filter": {
-          "size": 1
+          "slot": "ability"
         },
         "stat": "cooldown_bp",
-        "value": -1000
+        "value": -700
       }
     ]
   },

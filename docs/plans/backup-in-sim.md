@@ -1,5 +1,7 @@
 # Plan: backup heroes in the combat sim
 
+> **Removed in redesign step 1** (`docs/plans/heroes-and-deeds.md`). This plan is kept as history.
+
 Status: **approved and built.** Answers: backup-only items do what their own data says when fielded (often nothing); infusions work in backup mode; backup fires earn infusion XP; rarity rules as proposed.
 
 Design (docs/design.md, docs/tiers-backup-specialization.md): with 6 heroes and at most 5 fielded, at least one sits in backup, and the player may bench more. A backup hero's **Backup effect** applies, and so do the **backup modes** of the items in their row. Backup-only items exist.

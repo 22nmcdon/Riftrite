@@ -20,7 +20,7 @@ static func make(sim: CombatSim) -> FightNames:
 	for unit: UnitState in sim.enemies:
 		seen[unit.name] = seen.get(unit.name, 0) + 1
 		made.names[unit.id] = unit.name if counts[unit.name] == 1 else "%s %d" % [unit.name, seen[unit.name]]
-	for unit: UnitState in sim.heroes + sim.bench:
+	for unit: UnitState in sim.heroes:
 		made.names[unit.id] = unit.name.split(" of ")[0]
 		made.hero_ids.append(unit.id)
 	# Longest ids first, so rift_pup_10 is replaced before rift_pup_1.

@@ -1,10 +1,10 @@
 class_name InfusionLook
 extends RefCounted
 ## How an item's infusion looks (docs/ui-asset-design.md, 8.3): its gem form
-## and its spill arrows, from the game's infusion rules (CLAUDE.md). Only
-## Resonant infusions spill; a single and a pure double spill their essence
-## to both sides, an alloy its first essence left and its second right; a
-## transformation never spills. Read-only, like the rest of the UI.
+## and its mark (docs/plans/infusion-rework.md): rays while a Resonant single
+## spills to its holder's items that share a keyword, a star once an alloy or
+## pure double awakens. The rules come from the sim's ItemState, so the UI
+## never re-implements them. Read-only, like the rest of the UI.
 
 
 ## The gem form. A transformation shows as one only once it's discovered
@@ -31,19 +31,27 @@ static func level(content: ContentDb, essence_ids: Array[String], xp: int) -> in
 	return Infusions.level_for(xp, content.tuning) if not essence_ids.is_empty() else Infusions.Level.BASE
 
 
-## The spill arrows' colors, [left, right], or [] when it doesn't spill.
-static func spill_colors(gem_form: Glyph.Infusion, essence_ids: Array[String], infusion_level: int) -> Array[Color]:
-	if infusion_level != Infusions.Level.RESONANT:
-		return [] as Array[Color]
-	match gem_form:
-		Glyph.Infusion.SINGLE, Glyph.Infusion.PURE:
-			var hue: Color = UiStyle.ESSENCE.get(essence_ids[0], UiStyle.TEXT)
-			return [hue, hue] as Array[Color]
-		Glyph.Infusion.ALLOY:
-			return [UiStyle.ESSENCE.get(essence_ids[0], UiStyle.TEXT), UiStyle.ESSENCE.get(essence_ids[1], UiStyle.TEXT)] as Array[Color]
-	return [] as Array[Color]
+## The item's mark: SPILLS for a Resonant single, AWAKENED for a Resonant
+## named alloy or pure double, else NONE. A known transformation never spills
+## or awakens.
+static func mark(content: ContentDb, item_id: String, essence_ids: Array[String], xp: int, gem_form: Glyph.Infusion) -> FrameDecor.Mark:
+	if essence_ids.is_empty() or gem_form == Glyph.Infusion.TRANSFORMATION:
+		return FrameDecor.Mark.NONE
+	var state: ItemState = _state(content, item_id, essence_ids, xp)
+	if state.spills():
+		return FrameDecor.Mark.SPILLS
+	if state.awakened():
+		return FrameDecor.Mark.AWAKENED
+	return FrameDecor.Mark.NONE
 
 
-## A transformation at Resonant shows flat bars where arrows would be.
-static func shows_no_spill(gem_form: Glyph.Infusion, infusion_level: int) -> bool:
-	return gem_form == Glyph.Infusion.TRANSFORMATION and infusion_level == Infusions.Level.RESONANT
+## The mark's color: the (first) essence's.
+static func mark_color(essence_ids: Array[String]) -> Color:
+	return UiStyle.ESSENCE.get(essence_ids[0], UiStyle.TEXT) if not essence_ids.is_empty() else UiStyle.TEXT
+
+
+static func _state(content: ContentDb, item_id: String, essence_ids: Array[String], xp: int) -> ItemState:
+	var essences: Array[EssenceDef] = []
+	for essence_id: String in essence_ids:
+		essences.append(content.essences[essence_id])
+	return ItemState.make(content.items[item_id], 0, UnitStats.make(1), content, essences, 0, xp)

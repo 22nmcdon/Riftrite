@@ -292,8 +292,8 @@ func set_row(hero_id: String, row: UnitSetup.Row) -> RunActions.Result:
 	return _after(RunActions.set_row(state, hero_id, row))
 
 
-func set_benched(hero_id: String, benched: bool) -> RunActions.Result:
-	return _after(RunActions.set_benched(state, hero_id, benched))
+func give_rank_up(index: int, hero_id: String) -> RunActions.Result:
+	return _after(RunFlow.give_rank_up(state, content, index, hero_id))
 
 
 func move_hero(hero_id: String, index: int) -> RunActions.Result:

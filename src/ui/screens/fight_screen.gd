@@ -141,9 +141,6 @@ func _build_playback() -> void:
 			continue
 		field.add_child(UiStyle.label(rows[i][2], 14, UiStyle.TEXT_DIM))
 		field.add_child(_card_row(units))
-	if not sim.bench.is_empty():
-		field.add_child(UiStyle.label("In backup", 14, UiStyle.TEXT_DIM))
-		field.add_child(_card_row(sim.bench))
 	var side := VBoxContainer.new()
 	side.custom_minimum_size = Vector2(520, 0)
 	main.add_child(side)

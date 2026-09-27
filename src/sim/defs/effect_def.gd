@@ -14,10 +14,10 @@ extends RefCounted
 ##                 damage-over-time stacks (times each status's
 ##                 cleanse_effectiveness_bp, like heals do)
 ##   charge:       amount_ms; advances *items'* cooldowns, so its target is
-##                 an item target (see ITEM_TARGET_NAMES):
-##                 self_item, left_item, right_item, adjacent_items,
-##                 row_items (in the holder's row), or partner_items (the
-##                 other items of the pair synergy that granted it)
+##                 an item target (see ITEM_TARGET_NAMES): self_item,
+##                 holder_items (every other item the holder has), or
+##                 partner_items (the other items of the pair synergy that
+##                 granted it)
 ## `amount` (or `stacks`) is the base value. An optional "scaling" object adds
 ## a share of the holder's stats, in basis points of each stat:
 ##   "scaling": {"atk": 6000, "atsp": 2000}  ->  base + 60% ATK + 20% ATSP
@@ -28,9 +28,7 @@ extends RefCounted
 ##
 ## Targets that reach several units (each gets its own hit/heal/...):
 ##   all_enemies, all_allies (standing units, in resolution order)
-##   linked_ally (the ally just left of the holder in its row, else just
-##   right), linked_left_ally, linked_right_ally, linked_allies (both),
-##   row_allies (every other ally in the holder's row)
+##   row_allies (every other standing ally in the holder's row)
 ##
 ## Relic effects (read with relic = true) have no holder, so their triggers
 ## and targets differ:
@@ -49,7 +47,7 @@ extends RefCounted
 
 enum Trigger { ON_FIRE, ON_HIT, ON_CRIT, ON_FIGHT_START, AT_TIME, ON_ALLY_BELOW_HP }
 enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CHARGE, CLEANSE }
-enum ItemTarget { SELF_ITEM, LEFT_ITEM, RIGHT_ITEM, ADJACENT_ITEMS, ROW_ITEMS, PARTNER_ITEMS }
+enum ItemTarget { SELF_ITEM, HOLDER_ITEMS, PARTNER_ITEMS }
 enum Target {
 	HIT_TARGET,
 	SELF,
@@ -58,12 +56,8 @@ enum Target {
 	ENEMY_BACK,
 	ENEMY_RANDOM,
 	ENEMY_LOWEST_HP,
-	LINKED_ALLY,
 	ALL_ENEMIES,
 	ALL_ALLIES,
-	LINKED_LEFT_ALLY,
-	LINKED_RIGHT_ALLY,
-	LINKED_ALLIES,
 	ROW_ALLIES,
 	TRIGGER_ALLY,
 }
@@ -72,12 +66,9 @@ const TRIGGER_NAMES: Array[String] = ["on_fire", "on_hit", "on_crit", "on_fight_
 const ITEM_TRIGGERS: Array[Trigger] = [Trigger.ON_FIRE, Trigger.ON_HIT, Trigger.ON_CRIT]
 const RELIC_TRIGGERS: Array[Trigger] = [Trigger.ON_FIRE, Trigger.ON_FIGHT_START, Trigger.AT_TIME, Trigger.ON_ALLY_BELOW_HP]
 ## Targets that need the effect's holder to stand on the field.
-const FIELD_ONLY_TARGETS: Array[Target] = [
-	Target.HIT_TARGET, Target.SELF, Target.LINKED_ALLY, Target.LINKED_LEFT_ALLY,
-	Target.LINKED_RIGHT_ALLY, Target.LINKED_ALLIES, Target.ROW_ALLIES,
-]
+const FIELD_ONLY_TARGETS: Array[Target] = [Target.HIT_TARGET, Target.SELF, Target.ROW_ALLIES]
 const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "charge", "cleanse"]
-const ITEM_TARGET_NAMES: Array[String] = ["self_item", "left_item", "right_item", "adjacent_items", "row_items", "partner_items"]
+const ITEM_TARGET_NAMES: Array[String] = ["self_item", "holder_items", "partner_items"]
 const TARGET_NAMES: Array[String] = [
 	"hit_target",
 	"self",
@@ -86,12 +77,8 @@ const TARGET_NAMES: Array[String] = [
 	"enemy_back",
 	"enemy_random",
 	"enemy_lowest_hp",
-	"linked_ally",
 	"all_enemies",
 	"all_allies",
-	"linked_left_ally",
-	"linked_right_ally",
-	"linked_allies",
 	"row_allies",
 	"trigger_ally",
 ]

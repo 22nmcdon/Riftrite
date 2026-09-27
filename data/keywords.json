@@ -1,0 +1,10 @@
+[
+  {"id": "blade", "name": "Blade", "text": "Melee weapons and the things that keep them sharp."},
+  {"id": "bow", "name": "Bow", "text": "Bows, slings, and whatever else strikes from afar."},
+  {"id": "spell", "name": "Spell", "text": "Magic: tomes, charms, and fire called from nothing."},
+  {"id": "mend", "name": "Mend", "text": "Healing: salves, stews, and lanterns that close wounds."},
+  {"id": "ward", "name": "Ward", "text": "Shields and the things that hold the line."},
+  {"id": "burn", "name": "Burn", "text": "Sets enemies alight."},
+  {"id": "bleed", "name": "Bleed", "text": "Opens wounds that keep bleeding."},
+  {"id": "hex", "name": "Hex", "text": "Poison, Slow, Blind, and Freeze: the dirty tricks."}
+]

@@ -31,6 +31,9 @@ func _run() -> void:
 	session.new_run(session.next_seed())
 	await _snap("run_start_hero")
 	session.pick_start_hero(0)
+	await _snap("run_start_hero_2")
+	session.pick_start_hero(0)
+	session.pick_start_hero(0)
 	session.pick_package(0)
 	await _snap("caravan")
 	for i: int in 2:
@@ -92,13 +95,21 @@ func _showcase(session: RunSession) -> void:
 		item.xp = pick[2]
 		state.stash.append(item)
 	state.discovered.append_array(["wildfire_torch", "arcanist_trait", "paper_cuts"] as Array[String])
-	# The Epic item twice: an alloy and a pure double, both Resonant.
+	# The first hero at A: an awakened alloy (Plasma), a Resonant single that
+	# spills Ember to the other Blade item, and that item.
+	state.heroes[0].rank = 2
+	state.heroes[0].needs_specialization = false
+	state.heroes[0].specialization_id = ""
+	for spec_id: String in content.specialization_ids:
+		if content.specializations[spec_id].hero == state.heroes[0].hero_id:
+			state.heroes[0].specialization_id = spec_id
+			break
 	state.heroes[0].items.clear()
-	for essences: Array[String] in [["frost", "storm"] as Array[String], ["venom", "venom"] as Array[String]]:
-		var fancy := RunItem.make(state.take_uid(), "night_lantern", 2)
-		fancy.essence_ids = essences
-		fancy.xp = resonant
-		state.heroes[0].items.append(fancy)
+	for loadout: Array in [["night_lantern", ["ember", "storm"] as Array[String]], ["grave_hook", ["ember"] as Array[String]], ["hearth_knife", [] as Array[String]]]:
+		var held := RunItem.make(state.take_uid(), loadout[0], 2)
+		held.essence_ids = loadout[1]
+		held.xp = resonant if not held.essence_ids.is_empty() else 0
+		state.heroes[0].items.append(held)
 	state.pouch.append_array(["ember", "venom", "wrath", "stone", "verdant", "frost", "storm", "umbral"] as Array[String])
 	for relic_id: String in content.relic_ids.slice(0, 3) + [content.relic_ids[-1]]:
 		state.relics.append(relic_id)
@@ -111,6 +122,9 @@ func _showcase(session: RunSession) -> void:
 		(node as ItemTile).mouse_entered.emit()
 		break
 	await _snap("showcase_hover")
+	session.select(state.heroes[0].items[2].uid)
+	await _snap("showcase_spill_received")
+	session.select(-1)
 	session.open_hero("")
 	# Legendaries: a Devourer that has eaten, and an Essence-hungry one to feed.
 	state.stash.clear()

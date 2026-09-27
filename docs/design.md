@@ -2,9 +2,11 @@
 
 Working title: Riftrite (placeholder). Synced from the Claude Docs version on 2026-09-25, then updated in the repo the same day with answers to the first round of design questions (see Decisions made). The Claude Docs version does not have those updates yet.
 
+> **Redesign in progress (2026-09-26):** `docs/plans/fun-redesign.md` and `docs/plans/heroes-and-deeds.md` are approved and being built in steps. They replace the item rows and adjacency, sockets by rarity and neighbor spill, buying and recruiting heroes, Backup, and class traits. This document describes the game as it is now, and each step updates it as it lands. **Step 1 is built:** the loadout (basic attack, abilities, passives), the drafted team of three, a rank-up per elite, innates, and no Backup, item size, rows, or neighbor effects. **Step 2 is built:** any item fuses two essences, Resonant singles spill by keyword, and alloys awaken at Resonant.
+
 ## High concept
 
-**Working title: Riftrite.** A PvE roguelite auto-battler where you lead a small adventurers' guild into collapsing rifts. Each hero carries a row of gear that fires on cooldowns, and you infuse that gear with essences pulled from the monsters you kill.
+**Working title: Riftrite.** A PvE roguelite auto-battler where you lead a small adventurers' guild into collapsing rifts. Each hero carries a loadout of gear that fires on cooldowns, and you infuse that gear with essences pulled from the monsters you kill.
 
 The one-line pitch: *Guildrun's team-building, fought with Bazaar-style item boards, where hidden Gungeon-style synergies are the thing you chase.*
 
@@ -50,35 +52,30 @@ The inner loop (day to day) is where builds form. The outer loop (run to run) fe
 
 ## Guild, heroes, and combat
 
-You start a run with one hero (pick 1 of 3) and recruit more at shops, up to a roster of 6, with 1 to 5 fielded. The benched hero is never dead weight: each hero has a **Backup** effect that works from the bench, like Guildrun's.
-
-**Backup is a choice.** The player decides who fights and who sits in backup (at most 5 fielded, so with 6 heroes at least one is always in backup). A backup hero's Backup effect applies, and so do the backup modes of the items in their row, which allows builds like 3 fielded + 3 backup. Full rules: `docs/tiers-backup-specialization.md`.
+You draft **three heroes** at the start of the run (three times, pick 1 of 3) and keep them for the whole run. They all fight; there's no bench and no Backup (`docs/plans/heroes-and-deeds.md`). Nobody joins later, and the Caravan doesn't sell heroes.
 
 **Heroes**
 
-- Each hero has a class (Warden, Striker, Arcanist, Mender, Trickster, Ranger) and one signature passive.
-- Ranks go C → B → A → S. At B you pick one of three specializations. Each rank-up also **adds one item slot**, so leveling a hero grows their board.
-- A C-rank hero has 4 slots and an S-rank hero has 7.
-- **A hero ranks up like an item tiers up:** buy a second copy of the same hero at the same rank from the Caravan and combine them.
-- Heroes don't have to start at C. The Caravan can offer higher-rank recruits, following the same run-progress rules as item tiers (see Item tiers). A recruit at B or above comes with a **preset specialization**; changing it means **retraining** the hero.
+- Each hero has a class (Warden, Striker, Arcanist, Mender, Trickster, Ranger) and an **innate**: something only they do, always on while they fight (Brannoc shields an ally who drops low, Ysolde sets every enemy alight at 10s, and so on). Innates are built from specialization-style parts and credited by name in the log.
+- Ranks go C → B → A → S. At B you pick one of three specializations. Ranks add loadout slots (below) and boost stats.
+- **Ranks are a resource:** each elite win gives one rank-up, and you choose which hero gets it (for now; `docs/plans/heroes-and-deeds.md` adds deeds later). A hero reaching B picks a specialization.
 
-**Item rows (the Bazaar part)**
+**The loadout (`docs/plans/fun-redesign.md`, section 2)**
 
-- Every hero has their own row of slots. Items are Small (1 slot), Medium (2), or Large (3).
+- Every item has a **slot type**: a **basic attack**, an **ability** (fires on its cooldown), or a **passive** (auras only; it never fires). There are no item sizes and no rows.
+- Slots by rank (basic attack / abilities / passives): **C 1/2/1, B 1/3/1, A 1/3/2, S 1/4/3** (tuning values).
 - Items fire on their own cooldown during the fight, so gear decides most of what a hero does.
-- **Auto-attacks:** every hero has a **basic auto-attack** built in. **Auto-attack items** are items that replace it. They take up slots like any other item and can be Small, Medium, or Large. A hero can equip **only one** auto-attack item at a time. Take it out and the hero falls back to their basic auto-attack.
+- **Basic attacks:** every hero has a **basic auto-attack** built in. A **basic-attack item** replaces it and fills the basic-attack slot, so a hero holds **only one**. Take it out and the hero falls back to their own.
 - Each hero's **basic auto-attack is their own** (a Ranger's differs from a Warden's). It **can't be upgraded**: it has no sockets and no tiers.
-- Slot space is a real trade-off. Bigger items are stronger than smaller ones, so a Large item that fills most of a 4-slot hero's row is a valid build. A player can even drop the auto-attack item for another item and rely on the basic auto-attack. Synergies are what make a row of small items worth it instead.
-- Adjacency matters inside a row: "the item to the left gets +20% crit" style effects.
+- There's no adjacency. Items that used to boost or charge their neighbors now reach **the holder's other items**.
 - Items move freely between heroes at any time between fights, so reshuffling gear is part of every prep phase.
 - The guild also shares its **relics** (see Items and infusions).
 
 **The arena (the Guildrun part)**
 
-> **Prototype formation:** the first combat sim uses fixed **front and back rows** on each side instead of a hex grid. Each row is ordered left to right, and "adjacent ally" (for Linked effects) means the neighbor in the same row. The hex arena below is the target design and gets added once the item math feels good.
+> **Prototype formation:** the first combat sim uses fixed **front and back rows** on each side instead of a hex grid. Each row is ordered left to right; effects can reach "allies in its row". (Linked effects, which reached one neighbor, are gone with the redesign.) The hex arena below is the target design and gets added once the item math feels good.
 
 - A small hex grid. Heroes move and target on their own, but you set starting hexes.
-- Some items care about position: *Linked* effects reach an adjacent ally's row, so two heroes standing together can share buffs.
 - **Rush** items are strong for the first 8 seconds; **Stall** items wake up after 15 seconds. That gives fast and slow builds real identities. **What "strong" or "asleep" means is per item** (decided): a Rush item might deal 2x damage, hit every enemy, boost its neighbors, or double its holder's defense for 8 seconds; a Stall item might do nothing, or something weaker, before 15 seconds. Rush and Stall are labels (for the shop and synergies); each item's data says what actually changes.
 - **Rift Collapse:** at 45 seconds the rift starts dealing damage to every unit on both sides every second, and the damage keeps growing. Early fights end around 60 seconds; strong mid- and late-game teams can last much longer.
   - It's a **flat amount, not a percentage of max HP**, so high-HP builds get to use their HP.
@@ -99,7 +96,7 @@ You start a run with one hero (pick 1 of 3) and recruit more at shops, up to a r
 
 ## Items and infusions (our take on enchantments)
 
-In The Bazaar an item gets one fixed enchantment. Here, enchantments are **Infusions**: essences you harvest from enemies, socket into gear, fuse into new types, and level up by using them.
+In The Bazaar an item gets one fixed enchantment. Here, enchantments are **Infusions**: essences you harvest from enemies, infuse into gear, fuse into new types, and level up by using them.
 
 **1. Harvest.** Each enemy family drops one of six base essences. The act's biome decides which essences can drop, and each day's fight shows its enemy team ahead of time.
 
@@ -116,9 +113,9 @@ In The Bazaar an item gets one fixed enchantment. Here, enchantments are **Infus
 
 "Sized from the item's output" follows one conversion rule (same kind +50%; same family 50%; direct → over time 5%; over time → direct 500%). Details: `docs/plans/essence-rework.md`.
 
-**2. Socket.** Most items have 1 socket. Only **Legendary** items (and, as a placeholder to try, **Epic**) have 2, whatever their size. That makes alloys and pure doubles a high-rarity payoff. For now, infusing can happen any time between fights, straight from the essence pouch.
+**2. Infuse.** Every item holds **one infusion of up to 2 essences** (redesign step 2, `docs/plans/infusion-rework.md`; it replaced "2 sockets for Epic and Legendary only"). Passives can be infused too; what that does is decided with the keyword step. For now, infusing can happen any time between fights, straight from the essence pouch.
 
-**3. Fuse.** Two essences in one two-socket item fuse into an **Alloy** with its own effect, not just both effects added. Six essences give 15 cross-pairs plus 6 "pure" doubles, so 21 alloys in total. Examples:
+**3. Fuse.** A second essence put on an infused item **fuses** with the first into an **Alloy** with its own effect, not just both effects added. There's no third essence, and the order doesn't matter. Six essences give 15 cross-pairs plus 6 "pure" doubles, so 21 alloys in total. Examples:
 
 | Alloy | Recipe | Effect |
 | --- | --- | --- |
@@ -129,28 +126,27 @@ In The Bazaar an item gets one fixed enchantment. Here, enchantments are **Infus
 | Blight | Umbral + Verdant | The item's Bleed lands as **Blight**, whose damage heals your team (split evenly) |
 | Inferno | Ember + Ember | The item's Burn lands as **Golden Flame** (placeholder name): same amount, never fades, heals strip it only 75% as well |
 
-**How alloys work:** an alloy keeps both essences' normal effects and adds its special on top. A special that changes how a status behaves uses **its own status type** (Golden Flame, Plasma, Blight), so it never changes other items' or heroes' plain Burn or Bleed. Two essences with no named alloy yet still work, with both essences' effects and no special.
+**How alloys work:** an alloy keeps both essences' normal effects. Its special switches on when it **awakens** at Resonant (see Attune below). A special that changes how a status behaves uses **its own status type** (Golden Flame, Plasma, Blight), so it never changes other items' or heroes' plain Burn or Bleed. Two essences with no named alloy yet still work, with both essences' effects and no special.
 
-**Pure doubles** (two of the same essence) are alloys too, each with its own effect, and what that effect is depends on the essence. Most pure doubles add a bonus effect like Inferno's. **Doubled spill** is an optional idea: a pure double whose effect is doubled spill instead of a bonus effect. Maybe no pure double gets it. The first one to try is **Overgrowth (Verdant + Verdant)**, since spreading growth fits the idea, and the sim will show whether it earns its place. A pure double's bonus effect never makes its spill stronger. See the spill table below.
+**Pure doubles** (two of the same essence) are alloys too, each with its own effect, and what that effect is depends on the essence. Most pure doubles add a bonus effect like Inferno's, which also switches on when it awakens. (The old "doubled spill" idea for Overgrowth is set aside: alloys and pure doubles never spill now.)
 
 **4. Attune.** Each infusion gains experience (XP) and levels up at thresholds: base → Attuned (stronger) → Resonant.
 
 - **XP comes from two sources:** each time the item fires, and each battle the item takes part in.
-- **XP per fire is set per item**, based on its type and size. Items that fire often (like auto-attacks, which don't have the same kind of cooldown as other items) earn less per fire, so they don't level faster just by firing more.
+- **XP per fire is set per item**, based on its type. Items that fire often (like auto-attacks, which don't have the same kind of cooldown as other items) earn less per fire, so they don't level faster just by firing more.
 - **XP resets** when a second essence is added to an item (turning a single into an alloy or pure double), and when an infusion is removed at a Forge.
 
-A **Resonant** infusion spills a partial copy of its effect onto its neighbors (items in the row). How it spills depends on what is socketed:
+**At Resonant** an infusion pays off, in one of two ways (`docs/plans/infusion-rework.md`):
 
-| Infusion | Spill to neighbors when Resonant |
+| Infusion | At Resonant |
 | --- | --- |
-| Single essence | Partial effect (about 30%) to **both** sides |
-| Alloy (fused) | Split: one essence's partial effect to the left, the other's to the right, each at the same strength as a single essence's spill (about 30%) for now. For example, Steam (Ember + Frost) spills Ember only to its left neighbor and Frost only to its right. The alloy effect itself never spills |
-| Pure double | The base essence's partial effect (about 30%, same as a single) to **both** sides. Its bonus effect never spills and never makes the spill stronger. Exception: a pure double whose effect *is* doubled spill (an optional idea, first tried on Overgrowth) spills about 60% instead |
-| Essence transformation | **Never** spills |
+| Single essence | **Keyword spill:** a partial copy of its effect (about 30%, `spill_single_bp`) goes to the holder's other items that **share a keyword** with it. Each item gets at most one spill per essence. The spill stays in the holder's loadout, and the built-in basic attack has no keywords, so it gets none |
+| Alloy or pure double | **Awakens:** its special switches on (Plasma, Inferno's Golden Flame, Bloom's echo, and so on). It never spills. Pairs with no named alloy have nothing to awaken into yet |
+| Essence transformation | Never spills and never awakens |
 
-The trade-off: an alloy is the strongest effect on its own item, but its spill is split, so each neighbor only gets one essence. Singles and pure doubles give both neighbors the same essence, which matters when stacking one essence across a row. Percentages are starting points for tuning, and the alloy spill strength may change after testing.
+**Keywords** (`data/keywords.json`): every item carries 1–3 of Blade, Bow, Spell, Mend, Ward, Burn, Bleed, and Hex (Poison, Slow, Blind, Freeze), shown on the item. Stacking one keyword is a build direction: a Resonant Ember on a Blade puts a little Burn on every other Blade the hero holds. The choice is clean: spread one essence wide (a single) or build one powerful item (an alloy or pure double). Later steps build hero affinities, duo bonds, and conduit passives on the same keywords.
 
-**5. Transform.** Some specific item + essence pairs are **Essence Transformations**. Instead of adding an effect, the essence changes how the item works. The drawback: a transformation never spills to its neighbors, even when Resonant.
+**5. Transform.** Some specific item + essence pairs are **Essence Transformations**. Instead of adding an effect, the essence changes how the item works. The drawback: a transformation never spills or awakens, even when Resonant.
 
 - *Twin Daggers* + Frost: the daggers become thrown icicles that pierce through the first target.
 - *Iron Bulwark* + Ember: the shield no longer blocks damage; it explodes when broken, burning nearby enemies.
@@ -159,8 +155,8 @@ The trade-off: an alloy is the strongest effect on its own item, but its spill i
 
 **Other item rules**
 
-- Rarity: **Common, Uncommon, Rare, Epic, Legendary** (Epic sits between Rare and Legendary). Rarity decides how often an item shows up, and also how complex it is, whether it has a backup mode, and how tailored its Oathbinding is. It is **separate from tier** (see Item tiers below): an item of any rarity can show up at any tier the run allows, and can be tiered up.
-- **Size doesn't affect rarity.** Any Small item shows up exactly as often as any Large item of the same rarity. The game has more Small items than Medium, and more Medium than Large, so Small items turn up more overall simply because there are more of them.
+- Rarity: **Common, Uncommon, Rare, Epic, Legendary** (Epic sits between Rare and Legendary). Rarity decides how often an item shows up, and also how complex it is and how tailored its Oathbinding is. It is **separate from tier** (see Item tiers below): an item of any rarity can show up at any tier the run allows, and can be tiered up.
+- Items have no size (removed in redesign step 1); every item of a given rarity shows up equally often.
 - Every item has its own **crit chance, starting at 0%**. Umbral and some items raise it. A crit deals 150% damage (a tuning value).
 - Items carry **multiple tags**: item tags (Weapon, Tome, Charm, Tool, Food) and class-fit tags (Melee, Ranged, Magic, Healing, Defense). Tags drive synergies, Oathbinding fit, and (later) boosts from other items and heroes.
 
@@ -199,9 +195,9 @@ Synergies work in five layers, from specific and secret (Gungeon-style) to broad
 | Layer | Trigger | Example | Visibility |
 | --- | --- | --- | --- |
 | Named pairs | Two specific items on the **same hero** | *Whetstone* + *Twin Daggers* = **"Paper Cuts"**: each dagger hit reduces the other's cooldown by 0.2s | Hidden until found, then saved in the Codex |
-| Essence transformations | A specific item + a specific essence | *Twin Daggers* + Frost: daggers become piercing icicles. Never spills to neighbors | Hidden until found, then saved in the Codex |
+| Essence transformations | A specific item + a specific essence | *Twin Daggers* + Frost: daggers become piercing icicles. Never spills or awakens | Hidden until found, then saved in the Codex |
 | Signature gear | A specific item on a specific hero | Mender *Sister Vell* + *Old Lantern*: lantern heals also cleanse | Hinted in the hero's profile as "???" |
-| Essence resonance | 3 / 5 / 7 of one essence socketed team-wide, across all heroes' items. It counts essences, not items: a single counts 1, an alloy counts 1 for each half, a pure double counts 2 of its essence, and an essence transformation counts as whatever essence(s) are socketed | 5 Frost: frozen enemies take +30% damage | Always shown, like trait counters |
+| Essence resonance | 3 / 5 / 7 of one essence infused team-wide, across all heroes' items. It counts essences, not items: a single counts 1, an alloy counts 1 for each half, a pure double counts 2 of its essence, and an essence transformation counts as whatever essence(s) it holds | 5 Frost: frozen enemies take +30% damage | Always shown, like trait counters |
 | Class traits | 2 or more heroes of a class fielded | 2 Wardens: front-row heroes get +15% Shield | Always shown |
 
 **How discovery works**
@@ -218,23 +214,23 @@ Synergies work in five layers, from specific and secret (Gungeon-style) to broad
 There's no branching map. Like Guildrun and The Bazaar, each act is a set number of **days**, and the game only ever shows what's next. The last fight of an act is its boss. Act 1 ends in a challenge fight, Act 3 in the final boss, then optional Endless mode.
 
 **A day** is always:
-1. **Caravan:** buy items and recruit heroes (buying a second copy of a hero ranks them up). It's the shop and tavern in one.
+1. **Caravan:** buy items. (It no longer sells heroes: the team is drafted at the start.)
 2. **Stop:** pick one of **2 nodes**, drawn each day from one pool. Every event is its own node, next to the Forge, three kinds of Loot, the Vault, Retrain, and an extra fight (a skirmish). Each node shows its name and what it offers before you pick. Some only show up when they'd be useful: the Forge only if something is infused, the Vault only with a key, and Retrain only when a hero has a specialization. Details: `docs/plans/stop-nodes.md`.
 3. **Fight:** one fight, shown ahead of time. It shows the enemy team, so you know which essences it drops.
 
 A possible later change: two rounds per day (Caravan, stop, fight, then Caravan, stop, and an elite or the boss). The day's steps live in data, so trying it is a data change.
 
 - **Offers don't depend on earlier picks (for now).** They're random per run, from the run seed.
-- **Starting a run:** pick 1 of 3 random heroes (you start with just one), then 1 of 3 starting packages (such as extra gold, a Common relic, or a Common item), on top of a base amount of gold.
-- **Fielding:** 1 to 5 heroes, so a one-hero start is legal.
+- **Starting a run:** draft three heroes (each pick is 1 of 3 random heroes not yet taken), then 1 of 3 starting packages (such as extra gold, a Common relic, or a Common item), on top of a base amount of gold.
+- **The team:** the three drafted heroes all fight, for the whole run.
 - **Losing a fight** restarts the day: you keep everything you have and get bonus gold (10, +5 per fight won so far), so you can visit the Caravan and another stop before a rematch against the same enemies. **The second loss ends the run.** (A tie still counts as a victory.)
 - **HP:** every fight starts everyone at full HP, unless an item or relic says otherwise.
-- **Stash:** a shared stash for unequipped items, with **6 slots that work like a hero row** (a Large item takes 3). Relics can't go in the stash.
+- **Stash:** a shared stash that holds **6 unequipped items**. Relics can't go in the stash.
 - **Save and resume:** a run can be saved and resumed between steps. Fights have no player input, so there's nothing to save mid-fight.
 
 | Step | What happens |
 | --- | --- |
-| Caravan | Buy/sell items, recruit heroes (a second copy ranks one up), reroll for gold. Never offers an item or hero at a different tier than a copy you hold |
+| Caravan | Buy/sell items, reroll for gold. Never offers an item at a different tier than a copy you hold |
 | Fight | Encounter; drops gold, 1–2 essences, and one guaranteed item (or, rarely, relic) from the enemy team |
 | Elite | Harder fight; guaranteed Rare item or rank-up |
 | Forge (stop) | Reforge (remove infusions); only offered when something is infused |
@@ -251,7 +247,7 @@ A possible later change: two rounds per day (Caravan, stop, fight, then Caravan,
 **Currencies in a run**
 
 - **Gold:** the Caravan, rerolls, removing infusions.
-- **Essences:** stored in a pouch (cap of 8) until socketed, so you can't hoard every one.
+- **Essences:** stored in a pouch (cap of 8) until infused, so you can't hoard every one.
 - **Keys:** rare; open Vault chests.
 
 **Biomes** each favor two essences (for example, the Ashen Mines drop Ember and Stone). Each day's fight shows its enemy team ahead of time, so a player chasing a Frost build knows when frost essences are coming.
@@ -296,7 +292,7 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 | Fights are hard to read | Post-fight damage meter, combat log, slow-mo, and a cap of 7 slots per hero |
 | Too many combinations to balance | Headless sim runner; ship fewer alloys (10) first and add more later |
 | Feels like a mash-up of its sources | Lean hardest on the infusion system; it's the part none of the three games has |
-| Fusion feels mandatory | Alloys split their spill (one essence per side) while singles and pure doubles give both neighbors the same essence; fusing resets XP; only Epic and Legendary items have 2 sockets; essence transformations give single essences a unique payoff, at the cost of never spilling. The headless sim will show whether this is enough, and alloy spill strength is the first thing to tune if it isn't |
+| Fusion feels mandatory | Only singles spill (by keyword), while alloys and pure doubles awaken on their own item and never spill; fusing resets XP; essence transformations give single essences a unique payoff, at the cost of never spilling. The run bot and playtests will show whether this is enough; the spill share is the first thing to tune if it isn't |
 | Scope creep | Hold the vertical slice to one act until playtesters ask for a second run |
 
 **Decisions made**
@@ -311,20 +307,19 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - The first combat sim uses fixed front/back rows; the hex arena comes later.
 - Enemies have hand-made, fixed item layouts with set tiers, and some items are enemy-only (especially boss items). Some enemy teams carry relics, including enemy-only ones. Every fight guarantees one drop from the enemy team's items and relics, and enemy-only ones can drop.
 - Tier and rarity are separate. Same-tier copies combine. Copies at different tiers can be held together. Tiers are C → B → A → S, the same as hero ranks. Items and heroes can be found above C. The Caravan unlocks higher tiers as the run goes on (no A/S early); before then, higher tiers come from events (such as tier-specific shops), enemy drops (set tier), and loot drops (random tier).
-- Item size doesn't affect rarity. Each item of a given rarity shows up equally often; there are just more Small items than Large ones.
+- Items have no size (removed in the redesign). Each item of a given rarity shows up equally often.
 - Every item has a crit chance, starting at 0%. Crits deal 150% damage.
 - Rift Collapse deals flat damage that grows every second (never a percentage of HP) and hits Shield before HP. The ramp gets much steeper after 90s, and Act 2 doubles the numbers. There's no time limit; reaching 3 minutes, or both sides dying on the same tick, is a tie, and a tie counts as a victory. Surviving to 3 minutes is meant to be possible, especially for strong mid- and late-game teams.
 - Combat sim targeting: attacks hit the enemy front row; the back row only once the front row is empty, unless an item says it reaches the back row. Units killed during a tick still fire what they had ready that tick (for now). Heroes have HP only for now.
-- A hero recruited at B or above has a preset specialization; changing it requires an event that offers retraining.
+- A hero who joins at B or above (not possible in the drafted game for now) has a preset specialization; changing it requires an event that offers retraining.
 - Heals and "lowest HP" targeting use the lowest HP **percentage**, not the lowest raw HP.
 - Items have five rarities (Epic added) and four tiers (C/B/A/S). S items can't combine; Legendaries never combine and appear at most once per run.
-- Backup is the player's choice; backup heroes' Backup effects and their items' backup modes apply.
+- **Backup is removed** (redesign step 1): the three drafted heroes all fight. Some old Backup effects live on as innates.
 - An S-tier hero can be permanently **oathbound** to an S-tier item (**Oathbinding**; see `docs/tiers-backup-specialization.md`). "Specialization" is reserved for the rank-B choice.
 - **Reforging** means removing an item's infusion (at a Forge; costs gold and resets its XP).
 - **Item numbers are base values.** Tier and hero stats add **percentage boosts** on top (so do other bonuses later). The game shows both the base and the boosted value. This also applies to heroes' basic auto-attacks (hero stats only, since they have no tier).
 - **Fallen heroes always come back** after a fight, with no downside.
 - Items carry **multiple tags**, from both the item tags (Weapon, Tome, Charm, Tool, Food) and the class-fit tags (Melee, Ranged, Magic, Healing, Defense). Later, items and heroes can boost based on other items' tags.
-- **Backup in the combat sim** is added after Phase 2's build steps.
 - **Eight essences:** Venom (poison) and Wrath (attack damage) join the six. Alloys grow to 36 (28 cross-pairs + 8 pure doubles); essence resonances to 8.
 - **Essences scale from the item's output** by one conversion rule (see `docs/plans/essence-rework.md`). Added damage and damage over time go to the enemy the item hit; added shield and heal go to whoever the item shields or heals, otherwise its holder.
 - **Burn** is strongest, fades fast, and is weaker against shields. **Poison** never fades and ignores shields. **Bleed** never fades, hits shields, and lowers the target's defense by its stacks.
@@ -336,35 +331,34 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - **Healing weakens damage over time:** a heal removes 10% of the target's Burn, Poison, and Bleed stacks; each further heal on the same unit within one second removes half as much as the previous one (10%, 5%, 2.5%, ...). Placeholders.
 - **Slow caps at 50%** per item.
 - **Infusion levels:** Attuned makes an infusion ×1.5 as strong, Resonant ×2 (placeholders).
-- **Rush/Stall and adjacency are built from per-item building blocks:** effect windows (active only for part of the fight), auras (continuous boosts to items or units, optionally windowed), area targets (all enemies/allies), and Linked variants (one neighbor, left, right, both, or the whole row). Aura output and stat boosts multiply; crit chance and cooldown boosts add.
-- **Backup in the sim** (built): backup heroes are off the field (untargetable, no collapse damage, don't count for victory). Their Backup effect and their items' backup modes act from the bench, using effects on a cooldown and/or all-ally auras, scaled from the backup hero's stats; infusions work and earn XP. Backup-only items do what their own data says when fielded (often nothing). Common items can't have a backup mode (until Oathbinding); Legendary items must. Details: `docs/plans/backup-in-sim.md`.
+- **Rush/Stall and adjacency are built from per-item building blocks:** effect windows (active only for part of the fight), auras (continuous boosts to items or units, optionally windowed), area targets (all enemies/allies), and the holder's row. (Linked and adjacency targets were removed in the redesign; item auras and charges reach the holder's other items instead.) Aura output and stat boosts multiply; crit chance and cooldown boosts add.
+- **Backup in the sim** was built (`docs/plans/backup-in-sim.md`) and then **removed** in redesign step 1, with item backup modes.
 - **Alloys keep both essences' effects** plus their special. Specials that alter a status get their own status type (Inferno → Golden Flame, Plasma → Plasma, Blight → Blight) so they don't leak into other items' statuses. First alloys built: Inferno, Plasma, Blight, Bloom.
-- Every hero has their own built-in basic auto-attack, which can't be upgraded. An auto-attack item (Small, Medium, or Large) replaces it and takes up slots, and a hero can equip only one. Take the item out and the hero uses the basic auto-attack again.
+- Every hero has their own built-in basic auto-attack, which can't be upgraded. A basic-attack item replaces it and fills the one basic-attack slot. Take the item out and the hero uses the basic auto-attack again.
 - Two copies of the same item combine into the next tier (two, not three). A new copy's infusion replaces the old one.
-- Alloy spill per side equals a single essence's spill for now.
-- Pure doubles each have their own effect. Their bonus effect never strengthens spill. Doubled spill as a pure double's effect is an optional idea, tried first on Overgrowth (Verdant + Verdant).
-- Infusion XP comes from item fires (amount set per item, by type and size) plus battles fought. XP resets when an infusion becomes an alloy or pure double.
-- Essence resonance counts essences: a single = 1, an alloy = 1 of each half, a pure double = 2, and a transformation counts its socketed essence(s).
+- **Infusion rework (redesign step 2, built):** any item holds up to 2 essences, which fuse; only a Resonant single spills, to its holder's items that share a keyword; alloys and pure doubles awaken at Resonant (their special switches on) and never spill. Details and the user's answers: `docs/plans/infusion-rework.md`.
+- Pure doubles each have their own effect, which switches on when they awaken.
+- Infusion XP comes from item fires (amount set per item) plus battles fought. XP resets when an infusion becomes an alloy or pure double.
+- Essence resonance counts essences: a single = 1, an alloy = 1 of each half, a pure double = 2, and a transformation counts its essence(s).
 - **No branching map.** Each act is a set number of days. A day is a guaranteed shop, one fight shown ahead, and a stop you pick from 2 nodes drawn from one pool (every event, three loot kinds, the Forge only if something is infused, the Vault only with a key, Retrain, and an extra fight). Offers are random per run from the seed and don't depend on earlier picks for now.
-- **The Caravan** is the shop: it sells items and heroes (Merchant and Tavern are one). Heroes rank up like items: buy a second copy at the same rank and combine. The hero you already have keeps their specialization and items; heroes in the Caravan come with no items.
-- **The Caravan never offers an item or hero at a different tier than a copy you already hold.** Holding the same item at different tiers is still allowed when the copies come from elsewhere (Vault, loot, fight drops, events), just not from the Caravan.
+- **The Caravan** is the shop: it sells items (it sold heroes until redesign step 1; heroes are drafted now and rank up from elite wins).
+- **The Caravan never offers an item at a different tier than a copy you already hold.** Holding the same item at different tiers is still allowed when the copies come from elsewhere (Vault, loot, fight drops, events), just not from the Caravan.
 - **Day order:** Caravan → stop → fight. Two rounds per day (Caravan, stop, fight, Caravan, stop, elite or boss) is a possible later change.
 - **Infusing** can happen any time between fights for now; the Forge is for reforging.
 - **A lost fight is replayed against the same enemies.**
-- **Synergies (built):** resonance counts fielded and backup heroes' essences; class traits count fielded heroes, at 2 and 3; enemies get no synergies for now (maybe bosses in later acts). A transformation uses one copy of its essence; any other essence works as a plain single. Pairs can use a new `charge` effect (advance another item's cooldown). Details: `docs/plans/synergies-in-sim.md`.
-- **Sockets by rarity, not size:** only Legendary (and, as a placeholder, Epic) items have 2 sockets; every other item has 1. The rarity list is a tuning value.
+- **Synergies (built):** resonance counts every hero's essences; class traits count heroes, at 2 and 3 (to be replaced by affinities in step 5); enemies get no synergies for now (maybe bosses in later acts). A transformation uses one copy of its essence; any other essence works as a plain single. Pairs can use a new `charge` effect (advance another item's cooldown). Details: `docs/plans/synergies-in-sim.md`.
+- **Two essences on any item** (redesign step 2) replaced "sockets by rarity": only Epic and Legendary items used to hold two.
 - **Relics:** hold any number, no board and no sockets. They can be turned down but never removed once taken, change how a build works (Epic ones a lot), and are much rarer than items, essences, or heroes. Bosses drop an item or a relic.
-- **A run starts with one hero** (pick 1 of 3 random), then 1 of 3 starting packages (extra gold, a Common relic, or a Common item), plus base gold. Fielding is 1–5 heroes.
+- **A run starts with a drafted team of three** (three picks, each 1 of 3 random heroes), then 1 of 3 starting packages (extra gold, a Common relic, or a Common item), plus base gold. All three fight.
 - **Losing a fight restarts the day** with everything kept, plus bonus gold (10, +5 per fight won so far). **The second loss ends the run.** Every fight starts at full HP unless an item or relic changes that.
-- **Shared stash:** 6 slots that work like a hero row (sizes count). Relics can't go in the stash.
-- **Rank-B specializations** are in the vertical slice. Each **hero** has three of their own (not shared with the class), each unique to the hero and unlike the other two: an ability, an aura, an effect on their items, much like relics. Some work only when fielded, some also from backup, some only from backup. A specialization that changes the basic attack must also say what happens when an auto-attack item replaces it. **Locked potential** (decided, replacing class-based rank-up picks): each specialization unlocks more at ranks A and S (`docs/plans/specializations-in-sim.md`). There is a `cleanse` effect (strips damage over time); Odo's Pyromancer capstone turns his Burn into Golden Flame rather than a Burn that ignores cleansing.
+- **Shared stash:** holds 6 items. Relics can't go in the stash.
+- **Rank-B specializations** are in the vertical slice. Each **hero** has three of their own (not shared with the class), each unique to the hero and unlike the other two: an ability, an aura, an effect on their items, much like relics. (Parts that worked from backup became abilities when Backup was removed.) A specialization that changes the basic attack must also say what happens when an auto-attack item replaces it. **Locked potential** (decided, replacing class-based rank-up picks): each specialization unlocks more at ranks A and S (`docs/plans/specializations-in-sim.md`). There is a `cleanse` effect (strips damage over time); Odo's Pyromancer capstone turns his Burn into Golden Flame rather than a Burn that ignores cleansing.
 - **Prices** are placeholders tuned with the balance runner: higher tiers and ranks cost more, rarer relics cost more, item rarity barely affects price.
 - **All five synergy layers** are in the vertical slice.
 - **Save and resume** between stops is in the vertical slice.
 
 **Open questions**
 
-- **Doubled spill:** does any pure double keep it? Overgrowth (Verdant + Verdant) is the first one to test.
 - **Act 3 collapse numbers:** to be decided later.
 - **Bosses** have HP-threshold phases (built from the same parts as specializations). Summons (units joining mid-fight) come later. The Act 1 boss is Old Mother Ash and her pack (`docs/plans/act1-boss.md`).
 - **Enemy-only items** can end up with the guild (fight drops include them). The Caravan never sells them, so the only ways to upgrade one are a second copy from random loot (not the Caravan) or an upgrade stop.

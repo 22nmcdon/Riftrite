@@ -89,9 +89,8 @@ func test_bad_path_data_is_reported() -> void:
 
 
 func test_items_need_a_path_exactly_when_legendary() -> void:
-	var backup: Dictionary = {"auras": [{"target": "all_allies", "stat": "def_bp", "value": 100}]}
 	var legendary: Dictionary = K.DEFAULT_ITEM.duplicate(true)
-	legendary.merge({"id": "x", "rarity": "legendary", "backup": backup}, true)
+	legendary.merge({"id": "x", "rarity": "legendary"}, true)
 	var errors: Array[String] = []
 	ItemDef.read(DataReader.new(legendary, "x", errors))
 	assert_true(_has(errors, "Legendary items need an upgrade path"))
@@ -210,15 +209,14 @@ func test_the_bow_grows_from_a_real_fight_won_or_lost() -> void:
 	assert_eq([bow.tier, bow.progress], [1, 0])
 
 
-func test_backup_hits_count_too() -> void:
+func test_other_heroes_hits_count_for_their_own_bow() -> void:
 	var state: RunState = _holding("tallymans_bow")
 	assert_true(RunActions.add_hero(state, _content(), "wren").ok)
 	assert_true(RunActions.move_item(state, _content(), _legendary(state).uid, "wren", 0).ok)
-	assert_true(RunActions.set_benched(state, "wren", true).ok)
 	state.encounter_id = "pup_litter"
 	var result: FightResult = CombatSim.run(RunFight.setup_for(state, _content(), state.encounter_id), _content())
 	RunFight.apply_result(state, _content(), result)
-	assert_gt(state.hero("wren").items[0].progress, 0, "Tally Volley hits from the bench")
+	assert_gt(state.hero("wren").items[0].progress, 0, "Wren's hits grow the bow she holds")
 
 
 # --- martyr, boss-forged, bonded ------------------------------------------------
@@ -247,8 +245,7 @@ func test_boss_forged_grows_when_a_boss_falls_while_equipped() -> void:
 	assert_eq(brand.tier, 2, "not a loss")
 	assert_true(RunActions.add_hero(state, _content(), "wren").ok)
 	assert_true(RunActions.move_item(state, _content(), brand.uid, "wren", 0).ok)
-	assert_true(RunActions.set_benched(state, "wren", true).ok)
-	assert_eq(RunFight.apply_result(state, _content(), won), ["The Riftbreaker's Brand grows to S"] as Array[String], "equipped in backup counts")
+	assert_eq(RunFight.apply_result(state, _content(), won), ["The Riftbreaker's Brand grows to S"] as Array[String], "on any hero's loadout")
 	var stashed: RunState = _holding("riftbreakers_brand")
 	assert_true(RunActions.move_item(stashed, _content(), _legendary(stashed).uid, RunState.STASH, 0).ok)
 	stashed.encounter_id = "the_ash_mother"
@@ -260,12 +257,12 @@ func test_bonded_grows_when_its_holder_ranks_up() -> void:
 	var state: RunState = _holding("kinstone_aegis")
 	var aegis: RunItem = _legendary(state)
 	assert_true(RunActions.add_hero(state, _content(), "wren").ok)
-	assert_eq(RunActions.add_hero(state, _content(), "wren").notes, [] as Array[String], "another hero ranking up")
+	assert_eq(RunActions.rank_up(state, _content(), "wren").notes, [] as Array[String], "another hero ranking up")
 	assert_eq(aegis.tier, 1)
 	assert_true(RunActions.add_item(state, _content(), "tallymans_bow").ok)
 	var bow: RunItem = state.stash[0]
 	assert_true(RunActions.move_item(state, _content(), bow.uid, "brannoc", 9).ok)
-	var ranked: RunActions.Result = RunActions.add_hero(state, _content(), "brannoc")
+	var ranked: RunActions.Result = RunActions.rank_up(state, _content(), "brannoc")
 	assert_true(ranked.ok)
 	assert_eq(ranked.notes, ["The Kinstone Aegis grows to A"] as Array[String])
 	assert_eq(aegis.tier, 2)
@@ -335,9 +332,6 @@ func test_the_trace_multiplies_the_items_own_numbers() -> void:
 	var fed: ItemState = ItemState.make(def, 0, stats, _content(), [], 0, 0, 5000)
 	assert_eq(fed.effects[0].value.final, FixedMath.apply_bp(plain.effects[0].value.final, 15000))
 	assert_true(fed.effects[0].value.to_text().contains("x1.5 devoured"), fed.effects[0].value.to_text())
-	var backup: ItemState = ItemState.make(def.backup.as_item_def(def, "brannoc"), 0, stats, _content(), [], 0, 0, 5000)
-	var plain_backup: ItemState = ItemState.make(def.backup.as_item_def(def, "brannoc"), 0, stats, _content())
-	assert_gt(backup.effects[0].value.final, plain_backup.effects[0].value.final, "the backup mode too")
 
 
 func test_the_trace_reaches_the_fight() -> void:
@@ -462,7 +456,8 @@ func test_the_barrow_hoard_offers_an_unseen_legendary() -> void:
 
 func test_a_fights_growth_comes_back_with_the_result() -> void:
 	var state: RunState = RunFlow.new_run(5, _content())
-	RunFlow.pick_start_hero(state, _content(), 0)
+	for pick: int in RunState.TEAM_SIZE:
+		RunFlow.pick_start_hero(state, _content(), 0)
 	RunFlow.pick_package(state, _content(), _run(), 0)
 	var hero: RunHero = state.heroes[0]
 	hero.rank = 3

@@ -9,7 +9,7 @@ func _content() -> ContentDb:
 	return K.content()
 
 
-## A run with brannoc (fielded) and 20 gold.
+## A run with brannoc (in front) and 20 gold.
 func _run() -> RunState:
 	var state: RunState = RunState.make(7)
 	assert_true(RunActions.add_hero(state, _content(), "brannoc").ok)
@@ -49,17 +49,27 @@ func test_items_move_between_the_stash_and_rows() -> void:
 	assert_eq(state.check(_content()), [] as Array[String])
 
 
-func test_rows_and_the_stash_have_room_limits() -> void:
+func test_loadout_slots_and_the_stash_have_room_limits() -> void:
 	var state: RunState = _run()
-	var large: int = _add(state, "hearthstone_ward")
-	var medium: int = _add(state, "rusted_cleaver")
-	var small: int = _add(state, "hearth_knife")
+	var knives: Array[int] = []
+	for i: int in _content().tuning.stash_slots:
+		knives.append(_add(state, "hearth_knife"))
 	_refused(RunActions.add_item(state, _content(), "oak_buckler"), "the stash has no room for Oak Buckler")
-	assert_true(RunActions.move_item(state, _content(), large, "brannoc", 0).ok)
+	assert_true(RunActions.move_item(state, _content(), knives[0], "brannoc", 0).ok)
+	assert_true(RunActions.move_item(state, _content(), knives[1], "brannoc", 0).ok)
 	var before: String = _snapshot(state)
-	_refused(RunActions.move_item(state, _content(), medium, "brannoc", 1), "brannoc has no room for that (4 slots)")
+	_refused(RunActions.move_item(state, _content(), knives[2], "brannoc", 0), "brannoc has room for 2 abilities")
 	assert_eq(_snapshot(state), before, "a refused move changes nothing")
-	assert_true(RunActions.move_item(state, _content(), small, "brannoc", 1).ok, "3 + 1 slots fit")
+	var drum: int = _add(state, "war_drum")
+	var bell: int = _add(state, "bell_of_vigil")
+	assert_true(RunActions.move_item(state, _content(), drum, "brannoc", 9).ok, "passives have their own slots")
+	_refused(RunActions.move_item(state, _content(), bell, "brannoc", 9), "brannoc has room for 1 passive")
+	assert_true(RunActions.rank_up(state, _content(), "brannoc").ok)
+	assert_true(RunActions.move_item(state, _content(), knives[2], "brannoc", 0).ok, "rank B: 3 abilities")
+	assert_eq(state.check(_content()), [] as Array[String])
+	while state.stash.size() < _content().tuning.stash_slots:
+		_add(state, "hearth_knife")
+	_refused(RunActions.move_item(state, _content(), knives[0], RunState.STASH, 0), "the stash has no room for that (6 items)")
 
 
 func test_one_auto_attack_item_per_hero() -> void:
@@ -70,7 +80,7 @@ func test_one_auto_attack_item_per_hero() -> void:
 		var def: ItemDef = _content().items[state.find_item(uid).item_id]
 		assert_true(def.auto_attack, "%s is an auto-attack item" % def.id)
 	assert_true(RunActions.move_item(state, _content(), claw, "brannoc", 0).ok)
-	_refused(RunActions.move_item(state, _content(), maw, "brannoc", 0), "brannoc can hold only one auto-attack item")
+	_refused(RunActions.move_item(state, _content(), maw, "brannoc", 0), "brannoc has room for 1 basic attack")
 
 
 func test_combining_items() -> void:
@@ -110,21 +120,25 @@ func test_discard_and_legendaries_seen() -> void:
 
 # --- essences -----------------------------------------------------------------
 
-func test_infusing_follows_sockets_and_resets_xp() -> void:
+func test_any_item_fuses_two_essences_and_resets_xp() -> void:
 	var state: RunState = _run()
 	var knife: int = _add(state, "hearth_knife")
-	var lantern: int = _add(state, "night_lantern")
-	for essence_id: String in ["ember", "frost", "verdant", "storm"]:
+	var drum: int = _add(state, "war_drum")
+	for essence_id: String in ["ember", "storm", "frost", "verdant"]:
 		assert_true(RunActions.add_essence(state, _content(), essence_id).ok)
 	assert_true(RunActions.infuse(state, _content(), knife, 0).ok)
-	state.find_item(knife).xp = 40
-	_refused(RunActions.infuse(state, _content(), knife, 0), "Hearth Knife has no free socket (1)")
-	assert_true(RunActions.infuse(state, _content(), lantern, 1).ok, "an Epic has 2 sockets")
-	state.find_item(lantern).xp = 90
-	assert_true(RunActions.infuse(state, _content(), lantern, 1).ok)
-	assert_eq(state.find_item(lantern).essence_ids, ["verdant", "storm"] as Array[String])
-	assert_eq(state.find_item(lantern).xp, 0, "a second essence resets XP")
+	state.find_item(knife).xp = 90
+	var fused: RunActions.Result = RunActions.infuse(state, _content(), knife, 0)
+	assert_true(fused.ok, "a Common takes a second essence too")
+	assert_string_contains(fused.note, "Plasma")
+	assert_eq(state.find_item(knife).essence_ids, ["ember", "storm"] as Array[String])
+	assert_eq(state.find_item(knife).xp, 0, "fusing resets XP")
+	var before: String = _snapshot(state)
+	_refused(RunActions.infuse(state, _content(), knife, 0), "Hearth Knife already holds two essences")
+	assert_eq(_snapshot(state), before, "no third essence")
+	assert_true(RunActions.infuse(state, _content(), drum, 1).ok, "passives can be infused")
 	assert_eq(state.pouch, ["frost"] as Array[String])
+	assert_eq(state.check(_content()), [] as Array[String])
 
 
 func test_the_pouch_has_a_cap() -> void:
@@ -152,31 +166,47 @@ func test_reforging_costs_gold_and_destroys_the_essence() -> void:
 
 # --- heroes -------------------------------------------------------------------
 
-func test_heroes_join_and_combine() -> void:
+func test_heroes_join_the_team() -> void:
 	var state: RunState = _run()
-	assert_eq([state.heroes[0].row, state.heroes[0].benched], [UnitSetup.Row.FRONT, false], "the first hero stands in front")
+	assert_eq(state.heroes[0].row, UnitSetup.Row.FRONT, "the first hero stands in front")
 	assert_true(RunActions.add_hero(state, _content(), "wren").ok)
 	assert_eq(state.hero("wren").row, UnitSetup.Row.BACK)
+	_refused(RunActions.add_hero(state, _content(), "brannoc"), "Brannoc of the Hearthwatch is already in the team")
+	_refused(RunActions.add_hero(state, _content(), "nobody"), "unknown hero \"nobody\"")
+	assert_true(RunActions.add_hero(state, _content(), "vell").ok)
+	var before: String = _snapshot(state)
+	_refused(RunActions.add_hero(state, _content(), "odo"), "the team is full (3)")
+	assert_eq(_snapshot(state), before)
+	assert_eq(state.check(_content()), [] as Array[String])
+
+
+func test_rank_ups() -> void:
+	var state: RunState = _run()
 	var knife: int = _add(state, "hearth_knife")
 	RunActions.move_item(state, _content(), knife, "brannoc", 0)
-	assert_true(RunActions.add_hero(state, _content(), "brannoc").ok)
+	assert_true(RunActions.rank_up(state, _content(), "brannoc").ok)
 	var brannoc: RunHero = state.hero("brannoc")
-	assert_eq([brannoc.rank, brannoc.items.size(), brannoc.needs_specialization, state.heroes.size()], [1, 1, true, 2], "same rank: combine, keep items, pick at B")
-	_refused(RunActions.add_hero(state, _content(), "brannoc", 0), "already in the guild at another rank")
+	assert_eq([brannoc.rank, brannoc.items.size(), brannoc.needs_specialization], [1, 1, true], "B: keeps items, picks a specialization")
+	RunActions.choose_specialization(state, _content(), "brannoc", "brannoc_hearthwall")
+	assert_true(RunActions.rank_up(state, _content(), "brannoc").ok)
+	assert_true(RunActions.rank_up(state, _content(), "brannoc").ok)
+	assert_eq([brannoc.rank, brannoc.specialization_id, brannoc.needs_specialization], [3, "brannoc_hearthwall", false], "later rank-ups keep it")
+	var before: String = _snapshot(state)
+	_refused(RunActions.rank_up(state, _content(), "brannoc"), "Brannoc of the Hearthwatch is already rank S")
+	_refused(RunActions.rank_up(state, _content(), "wren"), "no hero \"wren\" in the team")
+	assert_eq(_snapshot(state), before)
 
 
 func test_specialization_pick() -> void:
 	var state: RunState = _run()
 	_refused(RunActions.choose_specialization(state, _content(), "brannoc", "brannoc_hearthwall"), "no specialization to pick")
-	RunActions.add_hero(state, _content(), "brannoc")
+	RunActions.rank_up(state, _content(), "brannoc")
 	_refused(RunActions.choose_specialization(state, _content(), "brannoc", "wren_duelist"), "isn't one of brannoc's specializations")
 	assert_true(RunActions.choose_specialization(state, _content(), "brannoc", "brannoc_hearthwall").ok)
 	assert_eq([state.hero("brannoc").specialization_id, state.hero("brannoc").needs_specialization], ["brannoc_hearthwall", false])
-	RunActions.add_hero(state, _content(), "brannoc", 1)
-	assert_eq([state.hero("brannoc").rank, state.hero("brannoc").specialization_id], [2, "brannoc_hearthwall"], "a rank-up keeps the specialization")
 
 
-func test_recruits_above_c_come_with_a_specialization() -> void:
+func test_heroes_joining_above_c_come_with_a_specialization() -> void:
 	var state: RunState = _run()
 	assert_true(RunActions.add_hero(state, _content(), "wren", 2, "wren_duelist").ok)
 	assert_eq([state.hero("wren").rank, state.hero("wren").needs_specialization], [2, false])
@@ -185,42 +215,18 @@ func test_recruits_above_c_come_with_a_specialization() -> void:
 	assert_true(state.hero("vell").needs_specialization)
 
 
-## Real content plus three more heroes (copies of Brannoc), for roster limits.
-func _seven_heroes() -> ContentDb:
-	var content: ContentDb = ContentDb.load_dir("res://data")
-	for hero_id: String in ["h5", "h6", "h7"]:
-		var extra := HeroDef.new()
-		var brannoc: HeroDef = content.heroes["brannoc"]
-		extra.id = hero_id
-		extra.name = hero_id.capitalize()
-		extra.hero_class = brannoc.hero_class
-		extra.stats = brannoc.stats
-		extra.basic_attack = brannoc.basic_attack
-		content.heroes[hero_id] = extra
-		content.hero_ids.append(hero_id)
-	return content
-
-
-func test_roster_and_fielding_limits() -> void:
-	var content: ContentDb = _seven_heroes()
-	var state: RunState = RunState.make(3)
-	for hero_id: String in ["brannoc", "wren", "vell", "odo", "h5"]:
-		assert_true(RunActions.add_hero(state, content, hero_id).ok)
-	assert_eq(state.fielded_count(), 5)
-	assert_true(RunActions.add_hero(state, content, "h6").ok)
-	assert_true(state.hero("h6").benched, "a full field sends a new hero to backup")
-	_refused(RunActions.add_hero(state, content, "h7"), "the roster is full (6)")
-	_refused(RunActions.set_benched(state, "h6", false), "at most 5 heroes can be fielded")
-	_refused(RunActions.set_benched(state, "brannoc", true), "the first roster slot is always a field slot")
-	assert_true(RunActions.set_benched(state, "wren", true).ok)
-	assert_true(RunActions.set_benched(state, "h6", false).ok)
-	_refused(RunActions.move_hero(state, "wren", 0), "the first roster slot is always a field slot")
-	assert_eq(state.heroes[1].hero_id, "wren", "a refused move puts the hero back")
-	assert_true(RunActions.move_hero(state, "odo", 0).ok)
-	assert_eq(state.heroes[0].hero_id, "odo")
-	assert_true(RunActions.set_benched(state, "brannoc", true).ok, "brannoc isn't in the first slot any more")
-	assert_true(RunActions.set_row(state, "odo", UnitSetup.Row.BACK).ok)
-	assert_eq(state.check(content), [] as Array[String])
+func test_team_order_and_rows() -> void:
+	var state: RunState = _run()
+	for hero_id: String in ["wren", "vell"]:
+		assert_true(RunActions.add_hero(state, _content(), hero_id).ok)
+	assert_true(RunActions.move_hero(state, "vell", 0).ok)
+	assert_eq([state.heroes[0].hero_id, state.heroes[1].hero_id, state.heroes[2].hero_id], ["vell", "brannoc", "wren"])
+	assert_true(RunActions.move_hero(state, "vell", 99).ok, "clamped to the end")
+	assert_eq(state.heroes[2].hero_id, "vell")
+	_refused(RunActions.move_hero(state, "odo", 0), "no hero \"odo\" in the team")
+	assert_true(RunActions.set_row(state, "brannoc", UnitSetup.Row.BACK).ok)
+	assert_eq(state.hero("brannoc").row, UnitSetup.Row.BACK)
+	assert_eq(state.check(_content()), [] as Array[String])
 
 
 # --- gold and relics ----------------------------------------------------------

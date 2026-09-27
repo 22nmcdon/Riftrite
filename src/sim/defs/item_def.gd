@@ -1,27 +1,42 @@
 class_name ItemDef
 extends RefCounted
-## An item that sits in a hero's (or enemy's) row and fires on its cooldown.
-## Also used for a unit's basic auto-attack, which reads a reduced set of
-## fields: it has no size, tags, rarity, or XP, because it takes no slot and
-## can't be upgraded (see "Item rules" in CLAUDE.md).
+## An item in a hero's (or enemy's) loadout (docs/plans/fun-redesign.md,
+## section 2). Its "slot" says where it goes:
+##   basic_attack  the hero's weapon: replaces their built-in basic attack
+##                 (at most one); ATSP speeds it up
+##   ability       fires on its own cooldown
+##   passive       gives auras (and later, reacts to events); never fires
+## Also used for a unit's built-in basic auto-attack, which reads a reduced
+## set of fields: no slot, tags, keywords, rarity, or XP, because it can't be
+## upgraded (see "Item rules" in CLAUDE.md).
 
 enum Timing { NORMAL, RUSH, STALL }
 
 ## Item tags and class-fit tags (docs/design.md); items can carry several.
 const TAGS: Array[String] = ["weapon", "tome", "charm", "tool", "food", "melee", "ranged", "magic", "healing", "defense"]
 const RARITIES: Array[String] = ["common", "uncommon", "rare", "epic", "legendary"]
+## How many keywords an item carries (docs/plans/infusion-rework.md).
+const MAX_KEYWORDS: int = 3
 const TIMING_NAMES: Array[String] = ["normal", "rush", "stall"]
-const MAX_SIZE: int = 3
+enum Slot { BASIC_ATTACK, ABILITY, PASSIVE }
+const SLOT_NAMES: Array[String] = ["basic_attack", "ability", "passive"]
+const SLOT_LABELS: Array[String] = ["Basic attack", "Ability", "Passive"]
+const SLOT_PLURALS: Array[String] = ["Basic attacks", "Abilities", "Passives"]
 ## Rarities whose items may scale their numbers from CRIT and ATSP.
 const RATE_SCALING_RARITIES: Array[String] = ["epic", "legendary"]
 
 var id: String
 var name: String
-## Slots taken: 1 = Small, 2 = Medium, 3 = Large. 0 for a basic auto-attack.
-var size: int = 0
+## Which loadout slot it goes in (items only; see the top).
+var slot: Slot = Slot.ABILITY
 var tags: Array[String] = []
+## Keyword ids (data/keywords.json; ContentDb checks them). A Resonant single
+## spills to its holder's other items that share one. Empty for built-in
+## basic attacks and slotless abilities.
+var keywords: Array[String] = []
 var rarity: String = ""
-## An auto-attack item replaces its owner's basic auto-attack.
+## A basic-attack item (slot basic_attack): it replaces its owner's built-in
+## basic auto-attack.
 var auto_attack: bool = false
 var enemy_only: bool = false
 var is_basic_attack: bool = false
@@ -38,11 +53,6 @@ var timing: Timing = Timing.NORMAL
 var effects: Array[EffectDef] = []
 ## Continuous boosts while their windows are open (not on basic attacks).
 var auras: Array[AuraDef] = []
-## What the item does while its hero is in backup, or null (does nothing).
-var backup: BackupDef = null
-## Marked for the shop: the item is meant for backup. When fielded it does
-## only what its own effects/auras say (often nothing).
-var backup_only: bool = false
 ## A Legendary's upgrade path (every Legendary has one; nothing else does).
 var legendary: LegendaryDef = null
 
@@ -51,35 +61,37 @@ static func read(reader: DataReader) -> ItemDef:
 	var def := ItemDef.new()
 	def.id = reader.req_string("id")
 	def.name = reader.req_string("name")
-	def.size = reader.req_int("size", 1, MAX_SIZE)
+	var slot_name: String = reader.req_choice("slot", SLOT_NAMES)
+	def.slot = maxi(SLOT_NAMES.find(slot_name), 0) as Slot
 	def.tags = reader.opt_choice_array("tags", TAGS)
+	def.keywords = reader.req_string_array("keywords")
+	if def.keywords.is_empty() or def.keywords.size() > MAX_KEYWORDS:
+		reader.error("an item needs 1 to %d keywords" % MAX_KEYWORDS)
+	for i: int in def.keywords.size():
+		if def.keywords.find(def.keywords[i]) < i:
+			reader.error("keyword \"%s\" is listed twice" % def.keywords[i])
 	def.rarity = reader.req_choice("rarity", RARITIES)
-	def.auto_attack = reader.opt_bool("auto_attack", false)
+	def.auto_attack = def.slot == Slot.BASIC_ATTACK
 	def.enemy_only = reader.opt_bool("enemy_only", false)
 	def.xp_per_fire = reader.req_int("xp_per_fire", 0)
 	var timing_name: String = reader.opt_string_choice("timing", "normal", TIMING_NAMES)
 	def.timing = maxi(TIMING_NAMES.find(timing_name), 0) as Timing
 	for aura_reader: DataReader in reader.opt_object_array("auras"):
 		def.auras.append(AuraDef.read(aura_reader))
-	def.backup_only = reader.opt_bool("backup_only", false)
-	if reader.has("backup"):
-		var backup_reader: DataReader = reader.req_object("backup")
-		if backup_reader != null:
-			def.backup = BackupDef.read(backup_reader, RATE_SCALING_RARITIES.has(def.rarity))
 	if reader.has("legendary"):
 		var path_reader: DataReader = reader.req_object("legendary")
 		if path_reader != null:
 			def.legendary = LegendaryDef.read(path_reader)
 	_read_common(def, reader, true)
-	if def.effects.is_empty() and def.auras.is_empty() and def.backup == null:
-		reader.error("an item needs effects, auras, or a backup mode")
-	if def.backup_only and def.backup == null:
-		reader.error("a backup-only item needs a backup mode")
-	# Backup modes by rarity (docs/tiers-backup-specialization.md).
-	if def.rarity == "common" and def.backup != null:
-		reader.error("Common items can't have a backup mode (they only get one through Oathbinding)")
-	if def.rarity == "legendary" and def.backup == null:
-		reader.error("Legendary items must have a backup mode")
+	if slot_name.is_empty():
+		pass
+	elif def.slot == Slot.PASSIVE:
+		if not def.effects.is_empty():
+			reader.error("a passive doesn't fire, so it has auras but no effects")
+		if def.auras.is_empty():
+			reader.error("a passive needs auras")
+	elif def.effects.is_empty():
+		reader.error("%s needs effects (it fires on its cooldown)" % ("a basic attack" if def.auto_attack else "an ability"))
 	if def.rarity == "legendary" and def.legendary == null and not reader.has("legendary"):
 		reader.error("Legendary items need an upgrade path (\"legendary\")")
 	if def.rarity != "legendary" and reader.has("legendary"):
@@ -97,8 +109,8 @@ static func read_basic_attack(reader: DataReader) -> ItemDef:
 	return def
 
 
-## `effects_optional`: items may have no effects of their own (auras or a
-## backup mode only); basic attacks must have some.
+## `effects_optional`: items may have no effects of their own (passives);
+## basic attacks must have some.
 static func _read_common(def: ItemDef, reader: DataReader, effects_optional: bool) -> void:
 	def.crit_chance_bp = reader.opt_int("crit_chance_bp", 0, 0, FixedMath.BP_ONE)
 	var effect_readers: Array[DataReader] = reader.opt_object_array("effects")

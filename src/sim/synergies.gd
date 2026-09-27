@@ -26,7 +26,7 @@ static func find_active(sim: CombatSim) -> Array[RelicState]:
 			continue
 		for u: int in sim.units.size():
 			var hero: UnitState = sim.units[u]
-			if hero.side != UnitSetup.Side.HEROES or hero.benched:
+			if hero.side != UnitSetup.Side.HEROES:
 				continue
 			var matched: Array[ItemState] = _match_items(synergy, hero)
 			if matched.is_empty():
@@ -54,7 +54,7 @@ static func _match_items(synergy: SynergyDef, hero: UnitState) -> Array[ItemStat
 		return matched
 	for item_id: String in synergy.items:
 		var found: ItemState = null
-		for item: ItemState in hero.row_items():
+		for item: ItemState in hero.loadout_items():
 			if item.def.id != item_id or matched.has(item):
 				continue
 			if synergy.layer == SynergyDef.Layer.TRANSFORMATION and (item.transformation != null or not item.has_essence(synergy.essence)):
@@ -68,17 +68,17 @@ static func _match_items(synergy: SynergyDef, hero: UnitState) -> Array[ItemStat
 	return matched
 
 
-## Essences of one kind socketed across fielded and backup heroes' items:
-## a single counts 1, an alloy 1 per half, a pure double 2.
+## Essences of one kind socketed across the heroes' items: a single counts
+## 1, an alloy 1 per half, a pure double 2.
 static func _essence_count(sim: CombatSim, essence_id: String) -> int:
 	var count: int = 0
-	for unit_setup: UnitSetup in sim.setup.heroes + sim.setup.bench:
+	for unit_setup: UnitSetup in sim.setup.heroes:
 		for item: ItemSetup in unit_setup.items:
 			count += item.essence_ids.count(essence_id)
 	return count
 
 
-## Fielded heroes of a class.
+## Heroes of a class.
 static func _class_count(sim: CombatSim, unit_class: String) -> int:
 	var count: int = 0
 	for hero: UnitState in sim.heroes:

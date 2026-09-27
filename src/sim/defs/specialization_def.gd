@@ -18,35 +18,25 @@ extends RefCounted
 ##                   auto_attack part (an aura or grant filtered to
 ##                   {"auto_attack": true}) at the same or an earlier rank, so
 ##                   an auto-attack item doesn't blank the specialization
-##   backup:         {"backup": {...}} adds to the hero's Backup effect
 ##   replace_status: {"from": "burn", "to": "golden_flame"}: the hero's items
 ##                   apply one status as another, like an alloy special
-## "when": fielded (default), benched, or always. basic_attack is fielded
-## only; backup is benched only.
+## A hero's innate (HeroDef) and enemy phases (PhaseDef) are made of the same
+## parts.
 
-enum Kind { AURA, GRANT, ABILITY, BASIC_ATTACK, BACKUP, REPLACE_STATUS }
-enum When { FIELDED, BENCHED, ALWAYS }
+enum Kind { AURA, GRANT, ABILITY, BASIC_ATTACK, REPLACE_STATUS }
 
-const KIND_NAMES: Array[String] = ["aura", "grant", "ability", "basic_attack", "backup", "replace_status"]
-const WHEN_NAMES: Array[String] = ["fielded", "benched", "always"]
+const KIND_NAMES: Array[String] = ["aura", "grant", "ability", "basic_attack", "replace_status"]
 ## Rank letters in unlock order, and the hero rank each unlocks at.
 const RANK_KEYS: Array[String] = ["b", "a", "s"]
 const AURA_TARGETS: Array[AuraDef.Target] = [
-	AuraDef.Target.HOLDER, AuraDef.Target.HOLDER_ITEMS, AuraDef.Target.LINKED_ALLY, AuraDef.Target.LINKED_LEFT_ALLY,
-	AuraDef.Target.LINKED_RIGHT_ALLY, AuraDef.Target.LINKED_ALLIES, AuraDef.Target.ROW_ALLIES,
+	AuraDef.Target.HOLDER, AuraDef.Target.HOLDER_ITEMS, AuraDef.Target.ROW_ALLIES,
 	AuraDef.Target.ALL_ALLIES, AuraDef.Target.ALL_ITEMS,
-]
-## Aura targets that need the hero standing in a row (not from backup).
-const FIELD_AURA_TARGETS: Array[AuraDef.Target] = [
-	AuraDef.Target.LINKED_ALLY, AuraDef.Target.LINKED_LEFT_ALLY, AuraDef.Target.LINKED_RIGHT_ALLY,
-	AuraDef.Target.LINKED_ALLIES, AuraDef.Target.ROW_ALLIES,
 ]
 
 
 class Part:
 	var key: String
 	var kind: Kind
-	var when: When = When.FIELDED
 	## "B", "A", or "S": the rank it unlocks at.
 	var rank_label: String
 	## "Hearthwall A", for the log.
@@ -55,12 +45,8 @@ class Part:
 	var grant: GrantDef = null
 	## ability or basic_attack: the item it becomes.
 	var item: ItemDef = null
-	var backup: BackupDef = null
 	var replace_from: String = ""
 	var replace_to: String = ""
-
-	func applies(benched: bool) -> bool:
-		return when == When.ALWAYS or (when == When.BENCHED) == benched
 
 	## True for an aura or grant aimed at the auto-attack.
 	func covers_auto_attack() -> bool:
@@ -114,7 +100,6 @@ static func read_part(reader: DataReader, label: String, id_prefix: String, rank
 	part.key = reader.req_string("key")
 	var kind_name: String = reader.req_choice("kind", KIND_NAMES)
 	part.kind = maxi(KIND_NAMES.find(kind_name), 0) as Kind
-	part.when = maxi(WHEN_NAMES.find(reader.opt_string_choice("when", "fielded", WHEN_NAMES)), 0) as When
 	part.rank_label = rank_label
 	part.label = label
 	if kind_name.is_empty():
@@ -123,10 +108,9 @@ static func read_part(reader: DataReader, label: String, id_prefix: String, rank
 	match part.kind:
 		Kind.AURA:
 			part.aura = AuraDef.read(reader)
+			part.aura.from_part = true
 			if not AURA_TARGETS.has(part.aura.target):
 				reader.error("a specialization aura can't target %s" % AuraDef.TARGET_NAMES[part.aura.target])
-			elif part.when != When.FIELDED and FIELD_AURA_TARGETS.has(part.aura.target):
-				reader.error("\"%s\" needs the hero on the field, so it can't work from backup" % AuraDef.TARGET_NAMES[part.aura.target])
 			return part
 		Kind.GRANT:
 			part.grant = GrantDef.read(reader, true)
@@ -137,15 +121,6 @@ static func read_part(reader: DataReader, label: String, id_prefix: String, rank
 			var attack_reader: DataReader = reader.req_object("basic_attack")
 			if attack_reader != null:
 				part.item = ItemDef.read_basic_attack(attack_reader)
-			if part.when != When.FIELDED:
-				reader.error("a new basic attack only works on the field")
-		Kind.BACKUP:
-			var backup_reader: DataReader = reader.req_object("backup")
-			if backup_reader != null:
-				part.backup = BackupDef.read(backup_reader, true)
-				if part.backup.name.is_empty():
-					part.backup.name = part.label
-			part.when = When.BENCHED
 		Kind.REPLACE_STATUS:
 			part.replace_from = reader.req_string("from")
 			part.replace_to = reader.req_string("to")

@@ -54,14 +54,20 @@ func test_the_title_starts_a_run() -> void:
 	assert_eq(main.session.state.phase, "start_hero")
 
 
-func test_the_run_start_picks_a_hero_then_a_package() -> void:
+func test_the_run_start_drafts_a_team_then_a_package() -> void:
 	var session: RunSession = U.session()
 	session.new_run(5)
 	var main: Main = _main(session)
-	var first_hero: String = session.state.offers[0]["hero"]
-	assert_string_contains(U.text_of(main.screen), session.content.heroes[first_hero].name)
-	assert_true(U.press(main.screen, "Take"))
-	assert_eq(session.state.heroes[0].hero_id, first_hero)
+	for pick: int in RunState.TEAM_SIZE:
+		var first_hero: HeroDef = session.content.heroes[session.state.offers[0]["hero"]]
+		var text: String = U.text_of(main.screen)
+		assert_string_contains(text, "hero %d of %d" % [pick + 1, RunState.TEAM_SIZE])
+		assert_string_contains(text, first_hero.name)
+		assert_string_contains(text, first_hero.innate_name)
+		assert_true(U.press(main.screen, "Take"))
+		assert_eq(session.state.heroes[pick].hero_id, first_hero.id)
+		if pick < RunState.TEAM_SIZE - 1:
+			assert_string_contains(U.text_of(main.screen), session.content.heroes[session.state.heroes[0].hero_id].name, "the team so far")
 	assert_eq(session.state.phase, "start_package")
 	assert_true(U.press(main.screen, "gold"))
 	assert_true(main.screen is CaravanScreen)
@@ -136,7 +142,7 @@ func test_drag_and_drop_moves_sells_and_throws_away() -> void:
 	token._drop_data(Vector2.ZERO, {"uid": first.uid})
 	assert_eq(state.owner_of(first.uid), hero.hero_id, "into the hero's row")
 	main.session.open_hero(hero.hero_id)
-	var zone: DropZone = _zone(main, "free slot")
+	var zone: DropZone = _zone(main, " free")
 	assert_not_null(zone, "the sheet shows the hero's row")
 	assert_true(zone._can_drop_data(Vector2.ZERO, {"uid": second.uid}))
 	var gold: int = state.gold
@@ -184,23 +190,20 @@ func test_formation_buttons() -> void:
 	assert_not_null(main.hero_sheet())
 	assert_true(U.press(main.hero_sheet(), "Front" if row == UnitSetup.Row.FRONT else "Back"))
 	assert_ne(hero.row, row)
-	assert_true(U.press(main.hero_sheet(), "Fielded"))
-	assert_true(main._toast.visible, "the only hero can't sit in backup")
-	assert_false(hero.benched)
+	assert_null(U.button(main.hero_sheet(), "Fielded"), "no backup any more")
 
 
 func test_the_hero_sheet_opens_steps_and_closes() -> void:
 	var session: RunSession = U.at_caravan()
 	var state: RunState = session.state
-	state.heroes.append(RunHero.make("brannoc"))
-	state.heroes[1].benched = true
 	var main: Main = _main(session)
 	var tokens: Array[Node] = U.find_all(main.guild_bar(), HeroToken)
-	assert_eq(tokens.size(), 2)
-	_click(tokens[1])
-	assert_eq(main.hero_sheet().hero_id, "brannoc")
-	assert_string_contains(U.text_of(main.hero_sheet()), "Brannoc of the Hearthwatch")
-	assert_not_null(U.button(main.hero_sheet(), "In backup"))
+	assert_eq(tokens.size(), 3)
+	_click(tokens[2])
+	var last: HeroDef = session.content.heroes[state.heroes[2].hero_id]
+	assert_eq(main.hero_sheet().hero_id, last.id)
+	assert_string_contains(U.text_of(main.hero_sheet()), last.name)
+	assert_string_contains(U.text_of(main.hero_sheet()), "Innate: %s" % last.innate_name)
 	assert_true(U.press(main.hero_sheet(), "Next hero"))
 	assert_eq(main.hero_sheet().hero_id, state.heroes[0].hero_id, "wraps around")
 	assert_true(U.press(main.hero_sheet(), "✕"))
@@ -361,11 +364,31 @@ func test_rewards_and_the_run_end() -> void:
 	assert_false(session.has_save())
 
 
+func test_the_rewards_screen_gives_a_rank_up() -> void:
+	var session: RunSession = U.at_caravan()
+	var state: RunState = session.state
+	state.phase = "rewards"
+	state.offers.assign([{"type": "rank_up", "price": 0, "taken": false}])
+	state.heroes[0].rank = 3
+	var main: Main = _main(session)
+	var text: String = U.text_of(main.screen)
+	assert_string_contains(text, "A rank-up: give it to one hero")
+	var first_names: Array[String] = []
+	for hero: RunHero in state.heroes:
+		first_names.append(HeroToken.first_name(session.content.heroes[hero.hero_id].name))
+	assert_null(U.button(main.screen, "%s: S" % first_names[0]), "an S hero can't rank up")
+	assert_true(U.press(main.screen, "%s: C → B" % first_names[1]))
+	assert_eq([state.heroes[1].rank, state.heroes[1].needs_specialization, state.heroes[2].rank], [1, true, 0])
+	assert_string_contains(U.text_of(main.screen), "Rank-up given")
+	assert_null(U.button(main.screen, " → "), "only one hero gets it")
+
+
 # --- a whole run, clicked through ------------------------------------------------------
 
-## Plays a run only through the UI: buys the cheapest ware it can afford,
-## drops stash items onto a hero's free slots, takes every stop and reward
-## offer, and fights (skipping to the end). Stops at the run's end.
+## Plays a run only through the UI: drafts a team, buys the cheapest ware it
+## can afford, drops stash items onto a hero's free slots, takes every stop
+## and reward offer, gives rank-ups (picking the first specialization), and
+## fights (skipping to the end). Stops at the run's end.
 func test_a_whole_run_clicked_through() -> void:
 	var session: RunSession = U.session()
 	session.fixed_seed = 1
@@ -374,6 +397,7 @@ func test_a_whole_run_clicked_through() -> void:
 	var fights: int = 0
 	var taken: int = 0
 	var bought: int = 0
+	var ranked: int = 0
 	var ending: String = ""
 	for step: int in 400:
 		var state: RunState = main.session.state
@@ -400,11 +424,16 @@ func test_a_whole_run_clicked_through() -> void:
 				assert_true(U.press(main.screen, "Leave, on to the fight"))
 			"fight":
 				_equip(main)
+				_pick_specializations(main)
 				fights += 1
 				assert_true(U.press(main.screen, "Fight!"))
 				assert_true(U.press(main.screen, "Skip"))
 				assert_true(U.press(main.screen, "Continue"))
 			"rewards":
+				var rank_up: Button = U.button(main.screen, " → ")
+				if rank_up != null:
+					rank_up.pressed.emit()
+					ranked += 1
 				taken += _take_everything(main)
 				assert_true(U.press(main.screen, "Continue"))
 			"act_end", "run_over":
@@ -417,7 +446,7 @@ func test_a_whole_run_clicked_through() -> void:
 	assert_gt(fights, 1)
 	assert_gt(bought, 0)
 	assert_gt(taken, 0)
-	gut.p("clicked-through run: %s, %d fights, %d bought, %d taken" % [ending, fights, bought, taken])
+	gut.p("clicked-through run: %s, %d fights, %d bought, %d taken, %d rank-ups" % [ending, fights, bought, taken, ranked])
 
 
 ## Returns how many wares it bought.
@@ -441,6 +470,19 @@ func _item_offers(state: RunState) -> Array[Dictionary]:
 		if offer["type"] == "item":
 			items.append(offer)
 	return items
+
+
+## Picks the first specialization for each hero who needs one, from their
+## sheet's menu.
+func _pick_specializations(main: Main) -> void:
+	for hero: RunHero in main.session.state.heroes:
+		if hero.needs_specialization:
+			if main.session.open_hero_id != hero.hero_id:
+				main.session.open_hero(hero.hero_id)
+			var menu: MenuButton = U.find_all(main.hero_sheet(), MenuButton)[0]
+			menu.get_popup().id_pressed.emit(0)
+			assert_false(hero.needs_specialization)
+	main.session.open_hero("")
 
 
 ## Drops each stash item onto the first hero token that takes it.

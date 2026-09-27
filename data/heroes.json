@@ -25,14 +25,25 @@
         }
       ]
     },
-    "backup": {
-      "name": "Hearthwatch",
-      "_note": "All fielded allies +10% DEF while Brannoc is in backup.",
-      "auras": [
+    "innate": {
+      "name": "Hearthguard",
+      "text": "When an ally first drops below 40% HP, Brannoc throws a Shield over them.",
+      "parts": [
         {
-          "target": "all_allies",
-          "stat": "def_bp",
-          "value": 11000
+          "key": "hearthguard",
+          "kind": "ability",
+          "effects": [
+            {
+              "trigger": "on_ally_below_hp",
+              "threshold_bp": 4000,
+              "type": "shield",
+              "amount": 10,
+              "scaling": {
+                "def": 8000
+              },
+              "target": "trigger_ally"
+            }
+          ]
         }
       ]
     }
@@ -64,18 +75,23 @@
         }
       ]
     },
-    "backup": {
-      "name": "Harrying Cuts",
-      "cooldown_ms": 4000,
-      "effects": [
+    "innate": {
+      "name": "Opening Flurry",
+      "text": "Her basic attack fires 35% faster for the first 6 seconds.",
+      "parts": [
         {
-          "trigger": "on_fire",
-          "type": "damage",
-          "amount": 3,
-          "scaling": {
-            "atk": 4000
+          "key": "flurry",
+          "kind": "aura",
+          "target": "holder_items",
+          "filter": {
+            "auto_attack": true
           },
-          "target": "enemy_random"
+          "stat": "cooldown_bp",
+          "value": -3500,
+          "label": "Opening Flurry",
+          "window": {
+            "until_ms": 6000
+          }
         }
       ]
     }
@@ -106,18 +122,25 @@
         }
       ]
     },
-    "backup": {
+    "innate": {
       "name": "Lantern Vigil",
-      "cooldown_ms": 5000,
-      "effects": [
+      "text": "Every 5 seconds, she heals the ally lowest on HP.",
+      "parts": [
         {
-          "trigger": "on_fire",
-          "type": "heal",
-          "amount": 4,
-          "scaling": {
-            "mgk": 3000
-          },
-          "target": "ally_lowest_hp"
+          "key": "vigil",
+          "kind": "ability",
+          "cooldown_ms": 5000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "heal",
+              "amount": 4,
+              "scaling": {
+                "mgk": 3000
+              },
+              "target": "ally_lowest_hp"
+            }
+          ]
         }
       ]
     }
@@ -148,16 +171,23 @@
         }
       ]
     },
-    "backup": {
+    "innate": {
       "name": "Smoldering Hex",
-      "cooldown_ms": 6000,
-      "effects": [
+      "text": "Every 6 seconds, he sets every enemy smoldering (1 Burn).",
+      "parts": [
         {
-          "trigger": "on_fire",
-          "type": "apply_status",
-          "status": "burn",
-          "stacks": 1,
-          "target": "all_enemies"
+          "key": "hex",
+          "kind": "ability",
+          "cooldown_ms": 6000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 1,
+              "target": "all_enemies"
+            }
+          ]
         }
       ]
     }
@@ -190,17 +220,23 @@
         }
       ]
     },
-    "backup": {
+    "innate": {
       "name": "Marking Shot",
-      "_note": "From the bench, every 6s she marks a back-row enemy with Bleed.",
-      "cooldown_ms": 6000,
-      "effects": [
+      "text": "Every 6 seconds, she marks a back-row enemy with Bleed.",
+      "parts": [
         {
-          "trigger": "on_fire",
-          "type": "apply_status",
-          "status": "bleed",
-          "stacks": 1,
-          "target": "enemy_back"
+          "key": "mark",
+          "kind": "ability",
+          "cooldown_ms": 6000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "apply_status",
+              "status": "bleed",
+              "stacks": 1,
+              "target": "enemy_back"
+            }
+          ]
         }
       ]
     }
@@ -234,17 +270,23 @@
         }
       ]
     },
-    "backup": {
+    "innate": {
       "name": "Loaded Dice",
-      "_note": "From the bench, every 6s he blinds a random enemy.",
-      "cooldown_ms": 6000,
-      "effects": [
+      "text": "Every 6 seconds, he Blinds a random enemy.",
+      "parts": [
         {
-          "trigger": "on_fire",
-          "type": "apply_status",
-          "status": "blind",
-          "stacks": 1,
-          "target": "enemy_random"
+          "key": "dice",
+          "kind": "ability",
+          "cooldown_ms": 6000,
+          "effects": [
+            {
+              "trigger": "on_fire",
+              "type": "apply_status",
+              "status": "blind",
+              "stacks": 1,
+              "target": "enemy_random"
+            }
+          ]
         }
       ]
     }
@@ -275,19 +317,24 @@
         }
       ]
     },
-    "backup": {
+    "innate": {
       "name": "Gatekeeper's Toll",
-      "_note": "From the bench, every 6s he shields every fielded ally a little.",
-      "cooldown_ms": 6000,
-      "effects": [
+      "text": "As the fight begins, he Shields every ally.",
+      "parts": [
         {
-          "trigger": "on_fire",
-          "type": "shield",
-          "amount": 2,
-          "target": "all_allies",
-          "scaling": {
-            "def": 1500
-          }
+          "key": "toll",
+          "kind": "ability",
+          "effects": [
+            {
+              "trigger": "on_fight_start",
+              "type": "shield",
+              "amount": 8,
+              "scaling": {
+                "def": 5000
+              },
+              "target": "all_allies"
+            }
+          ]
         }
       ]
     }
@@ -327,17 +374,23 @@
         }
       ]
     },
-    "backup": {
-      "name": "Smolder",
-      "_note": "From the bench, every 5s she sets the enemy front row alight.",
-      "cooldown_ms": 5000,
-      "effects": [
+    "innate": {
+      "name": "Flashpoint",
+      "text": "Ten seconds in, she sets every enemy ablaze (3 Burn), once a fight.",
+      "parts": [
         {
-          "trigger": "on_fire",
-          "type": "apply_status",
-          "status": "burn",
-          "stacks": 2,
-          "target": "enemy_front"
+          "key": "flashpoint",
+          "kind": "ability",
+          "effects": [
+            {
+              "trigger": "at_time",
+              "at_ms": 10000,
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 3,
+              "target": "all_enemies"
+            }
+          ]
         }
       ]
     }

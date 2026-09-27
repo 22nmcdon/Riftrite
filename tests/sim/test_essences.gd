@@ -54,15 +54,13 @@ func _setup_errors(items: Array) -> Array[String]:
 	return K.run([K.unit("hero", 100, FRONT, items)], [K.dummy("foe", 100)]).errors
 
 
-## Sockets depend on rarity, not size: Epic and Legendary have 2 (tuning).
-func test_sockets_follow_rarity() -> void:
-	for rarity: String in ["common", "uncommon", "rare"]:
-		var large: ItemDef = _sword(100, {"size": 3, "rarity": rarity})
-		var errors: Array[String] = _setup_errors([K.equip(large, ["ember", "frost"] as Array[String])])
-		assert_true(errors.any(func(e: String) -> bool: return e.contains("has 2 essences but only 1 socket(s)")), "%s: %s" % [rarity, errors])
-	var small_epic: ItemDef = _sword(100, {"rarity": "epic"})
-	assert_eq(_setup_errors([K.equip(small_epic, ["ember", "frost"] as Array[String])]), [] as Array[String], "a Small Epic has 2")
-	assert_eq(K.tuning().two_socket_rarities, ["epic", "legendary"] as Array[String])
+## Any item holds up to two essences (docs/plans/infusion-rework.md).
+func test_any_item_holds_two_essences_but_not_three() -> void:
+	for rarity: String in ["common", "uncommon", "rare", "epic"]:
+		var plain: ItemDef = _sword(100, {"rarity": rarity})
+		assert_eq(_setup_errors([K.equip(plain, ["ember", "frost"] as Array[String])]), [] as Array[String], rarity)
+		var errors: Array[String] = _setup_errors([K.equip(plain, ["ember", "frost", "storm"] as Array[String])])
+		assert_true(errors.any(func(e: String) -> bool: return e.contains("has 3 essences; an infusion holds at most 2")), "%s: %s" % [rarity, errors])
 
 
 func test_unknown_essence_is_rejected() -> void:

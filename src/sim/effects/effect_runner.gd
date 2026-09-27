@@ -89,11 +89,11 @@ static func _charge(sim: CombatSim, item: ItemState, sourced: SourcedEffect, sou
 	var holder: UnitState = sim.owner_of(item)
 	var targets: Array[ItemState] = []
 	if sourced.effect.item_target == EffectDef.ItemTarget.PARTNER_ITEMS:
-		for other: ItemState in holder.row_items():
+		for other: ItemState in holder.loadout_items():
 			if sourced.partner_slots.has(other.slot):
 				targets.append(other)
 	else:
-		targets = sim.row_item_targets(holder, item, sourced.effect.item_target)
+		targets = sim.charge_targets(holder, item, sourced.effect.item_target)
 	var ticks: int = sourced.take_amount()
 	for target: ItemState in targets:
 		target.charge(ticks)

@@ -1,8 +1,7 @@
 {
   "_note": "Starting values for tuning. Durations are in milliseconds and must be multiples of 50 (one tick). Percentages are basis points: 10000 = 100%.",
   "spill_single_bp": 3000,
-  "spill_alloy_bp": 3000,
-  "spill_pure_double_bp": 3000,
+  "_spill_note": "A Resonant single spills this share of its Resonant strength to its holder's other items that share a keyword. Alloys and pure doubles awaken instead of spilling.",
   "xp_to_attuned": 100,
   "xp_to_resonant": 300,
   "xp_per_battle": 10,
@@ -13,8 +12,6 @@
     "resonant": 20000
   },
   "crit_damage_bp": 15000,
-  "two_socket_rarities": ["epic", "legendary"],
-  "_two_socket_note": "Rarities whose items have 2 sockets; every other item has 1, whatever its size. Legendary for sure; Epic is a placeholder to try.",
   "tier_multiplier_bp": {
     "_note": "Item numbers are multiplied by this per tier (placeholders).",
     "c": 10000,
@@ -28,6 +25,20 @@
     "b": 12500,
     "a": 15625,
     "s": 19531
+  },
+  "ability_slots": {
+    "_note": "A hero's ability slots by rank (docs/plans/fun-redesign.md, section 2). Every hero also has one basic-attack slot.",
+    "c": 2,
+    "b": 3,
+    "a": 3,
+    "s": 4
+  },
+  "passive_slots": {
+    "_note": "A hero's passive slots by rank.",
+    "c": 1,
+    "b": 1,
+    "a": 2,
+    "s": 3
   },
   "crit_bp_per_point": 100,
   "atsp_bp_per_point": 100,

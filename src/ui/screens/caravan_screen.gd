@@ -1,7 +1,8 @@
 class_name CaravanScreen
 extends UiScreen
 ## The Caravan (docs/plans/ui-overhaul.md, 3.4): wares as large cards on a
-## cloth stall, heroes for hire beside it, and along the bottom the reroll,
+## cloth stall (it sells no heroes: the team is drafted at the start), and
+## along the bottom the reroll,
 ## a coin dish to sell into, and the way out. Click a ware to buy it (it
 ## goes to your stash). A ware that would upgrade something you hold lights
 ## up, and buying it combines it straight into your copy. Drag one of your
@@ -12,12 +13,8 @@ func build() -> void:
 	heading("The Caravan")
 	hint("Click a ware to buy it; it goes to your stash, below. A gold-framed ware combines with an item you hold. Hover anything to read about it.")
 	var items: Array[int] = []
-	var heroes: Array[int] = []
 	for i: int in session.state.offers.size():
-		if session.state.offers[i]["type"] == "hero":
-			heroes.append(i)
-		else:
-			items.append(i)
+		items.append(i)
 	var market := HBoxContainer.new()
 	market.add_theme_constant_override("separation", 20)
 	market.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -38,19 +35,6 @@ func build() -> void:
 	for i: int in items:
 		wares.add_child(OfferView.make(session, session.state.offers[i], _buy.bind(i), session.upgrade_target(i) >= 0, true))
 	stall_box.add_child(wares)
-	# Heroes for hire.
-	var hire := PanelContainer.new()
-	hire.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hire.add_theme_stylebox_override("panel", UiStyle.chrome("panel_slate", 24, 20))
-	market.add_child(hire)
-	var hire_box := VBoxContainer.new()
-	hire_box.add_theme_constant_override("separation", 12)
-	hire.add_child(hire_box)
-	hire_box.add_child(UiStyle.heading("For hire", 24, UiStyle.HIGHLIGHT))
-	for i: int in heroes:
-		hire_box.add_child(OfferView.make(session, session.state.offers[i], _buy.bind(i), false, true))
-	if heroes.is_empty():
-		hire_box.add_child(UiStyle.label("No one is looking for work today.", 16, UiStyle.TEXT_DIM))
 	# Reroll, sell, leave.
 	var line := HBoxContainer.new()
 	line.add_theme_constant_override("separation", 16)

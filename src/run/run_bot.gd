@@ -3,25 +3,23 @@ extends RefCounted
 ## Plays whole runs headlessly with a simple strategy, through RunFlow and
 ## RunActions only (like a player would), so the run runner can report
 ## run-level balance (tools/run_runner.gd). The strategy:
-##   - pick the first starting hero and the gold package
-##   - at the Caravan: buy heroes while the guild is small (or to rank one up),
-##     then items: upgrades for held copies first, then the rarest (Epics for
-##     alloys), cheapest first within a rarity
+##   - draft the first offered hero three times, then take the gold package
+##   - at the Caravan: buy items: upgrades for held copies first, then the
+##     rarest first, cheapest first within a rarity
 ##   - combine copies, equip what fits, feed Legendaries (the essences an
-##     Essence-hungry one wants; stash leftovers to a Devourer), infuse free
-##     sockets, field up to 5, sturdy classes in the front row and the rest
-##     in the back
+##     Essence-hungry one wants; stash leftovers to a Devourer), infuse (a
+##     single for each equipped item, then fuse into Base infusions), sturdy
+##     classes in the front row and the rest in the back
 ##   - stops: a skirmish (an extra fight: losing costs nothing), then Loot,
 ##     Events, the Vault, Retrain, the Forge; take what fits; upgrade the best
 ##     item before the boss
-##   - rewards: take everything that fits (the first relic of a choice)
+##   - rewards: take everything that fits (the first relic of a choice);
+##     give each rank-up to the lowest-ranked hero
 
 ## Node kinds, best first.
 const STOP_PREFERENCE: Array[String] = ["fight", "loot", "event", "vault", "retrain", "forge"]
 ## Classes that stand in the front row; the rest stand in the back.
 const FRONT_CLASSES: Array[String] = ["warden", "striker", "trickster"]
-## Heroes to recruit before only buying copies (to rank up).
-const RECRUIT_UP_TO: int = 4
 const MAX_ACTIONS: int = 2000
 
 
@@ -120,11 +118,6 @@ static func _must(result: RunActions.Result, report: Report) -> void:
 
 
 static func _shop(state: RunState, content: ContentDb, report: Report) -> void:
-	for i: int in state.offers.size():
-		var offer: Dictionary = state.offers[i]
-		if offer["type"] == "hero" and (state.heroes.size() < RECRUIT_UP_TO or state.hero(offer["hero"]) != null) and offer["price"] <= state.gold:
-			if RunFlow.buy(state, content, i).ok:
-				report.bought.append(offer["hero"])
 	var order: Array[int] = []
 	for i: int in state.offers.size():
 		if state.offers[i]["type"] == "item":
@@ -152,6 +145,14 @@ static func _preferred_stop(state: RunState, run: RunContent) -> int:
 static func _take_all(state: RunState, content: ContentDb, report: Report) -> void:
 	for i: int in state.offers.size():
 		var offer: Dictionary = state.offers[i]
+		if offer["type"] == "rank_up" and not offer["taken"]:
+			var lowest: RunHero = null
+			for hero: RunHero in state.heroes:
+				if hero.rank < 3 and (lowest == null or hero.rank < lowest.rank):
+					lowest = hero
+			if lowest != null:
+				RunFlow.give_rank_up(state, content, i, lowest.hero_id)
+			continue
 		if not offer["taken"] and offer["price"] <= state.gold and RunFlow.take(state, content, i).ok:
 			if offer["type"] == "item":
 				report.bought.append(offer["item"])
@@ -167,7 +168,7 @@ static func _upgrade_best(state: RunState, content: ContentDb) -> void:
 		RunFlow.upgrade(state, content, best.uid)
 
 
-## Combine copies, pick specializations, equip, infuse, field up to 5.
+## Combine copies, pick specializations, equip, infuse, arrange the rows.
 static func _organize(state: RunState, content: ContentDb) -> void:
 	var combined: bool = true
 	while combined:
@@ -190,16 +191,23 @@ static func _organize(state: RunState, content: ContentDb) -> void:
 			if RunActions.move_item(state, content, item.uid, hero.hero_id, hero.items.size()).ok:
 				break
 	_feed_legendaries(state, content)
-	var holders: Array[RunItem] = state.stash.duplicate()
-	for hero: RunHero in state.heroes:
-		holders.append_array(hero.items)
-	for item: RunItem in holders:
-		while not state.pouch.is_empty() and RunActions.infuse(state, content, item.uid, 0).ok:
-			pass
-	for hero: RunHero in state.heroes:
-		if hero.benched:
-			RunActions.set_benched(state, hero.hero_id, false)
+	_infuse(state, content)
 	_arrange_rows(state, content)
+
+
+## Gives each equipped item without an infusion one essence, then fuses what's
+## left into infusions that are still at Base (fusing resets XP, so it spares
+## infusions that have grown).
+static func _infuse(state: RunState, content: ContentDb) -> void:
+	var equipped: Array[RunItem] = []
+	for hero: RunHero in state.heroes:
+		equipped.append_array(hero.items)
+	for item: RunItem in equipped:
+		if item.essence_ids.is_empty() and not state.pouch.is_empty():
+			RunActions.infuse(state, content, item.uid, 0)
+	for item: RunItem in equipped:
+		if item.essence_ids.size() == 1 and item.xp < content.tuning.xp_to_attuned and not state.pouch.is_empty():
+			RunActions.infuse(state, content, item.uid, 0)
 
 
 ## Essence-hungry Legendaries eat the essences they want before anything is

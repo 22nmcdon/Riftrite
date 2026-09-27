@@ -1,6 +1,7 @@
 class_name RunStartScreen
 extends UiScreen
-## Pick your first hero (standing figures on pedestals), then a starting
+## The team draft (docs/plans/heroes-and-deeds.md, section 1): pick 1 of 3
+## heroes, three times (standing figures on pedestals), then a starting
 ## package (three cards), over the title backdrop.
 
 
@@ -11,8 +12,11 @@ func build() -> void:
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_theme_constant_override("separation", 28)
 	if state.phase == "start_hero":
-		heading("Choose your first hero")
-		hint("A run starts with one hero. You can recruit more at the Caravan (up to 6).")
+		heading("Draft your team: hero %d of %d" % [state.heroes.size() + 1, RunState.TEAM_SIZE])
+		var picked: PackedStringArray = PackedStringArray()
+		for hero: RunHero in state.heroes:
+			picked.append(session.content.heroes[hero.hero_id].name)
+		hint("Pick one. These three heroes fight together for the whole run; nobody joins later." + ("" if picked.is_empty() else "  Your team so far: " + ", ".join(picked) + "."))
 		for i: int in state.offers.size():
 			row.add_child(_hero_card(state.offers[i], i))
 	else:
@@ -55,8 +59,9 @@ func _hero_card(offer: Dictionary, index: int) -> Control:
 	stats.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.add_child(stats)
 	box.add_child(UiStyle.label("Basic attack: " + def.basic_attack.name, 15, UiStyle.TEXT_DIM))
-	if def.backup != null:
-		box.add_child(UiStyle.label("Backup: " + def.backup.name, 15, UiStyle.TEXT_DIM))
+	var innate: Label = UiStyle.label("Innate: %s. %s" % [def.innate_name, def.innate_text], 15, UiStyle.TEXT_DIM)
+	innate.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(innate)
 	var take: Button = primary_button("Take", _pick_hero.bind(index), 0)
 	take.size_flags_horizontal = Control.SIZE_FILL
 	box.add_child(take)

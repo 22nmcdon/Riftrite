@@ -9,32 +9,34 @@ const BACK := UnitSetup.Row.BACK
 
 ## A fight that leans on randomness: random targets, frequent crits, and
 ## all eight essences (conversions, statuses, Storm's extra fires, Umbral crits),
-## a mid-fight level-up to Resonant that starts a spill, alloys (Inferno,
-## Plasma's jumping burn), auras with windows, and relics on both sides
+## a mid-fight level-up to Resonant that starts a keyword spill, awakened
+## alloys (Inferno,
+## Plasma's jumping burn), auras with windows (row allies, the holder's
+## other items), and relics on both sides
 ## (a grant, filtered and side-wide auras, and every relic trigger), and
 ## real synergies (Paper Cuts' charge, the Wildfire Torch transformation,
-## and Ember Resonance), and specializations at rank S: a fielded one with a
-## new basic attack and auto-attack grants, and a benched one; and an enemy
-## with the Act 1 boss's phases.
+## and Ember Resonance), specializations at rank S (one with a new basic
+## attack and auto-attack grants), a real innate, and an enemy with the Act 1
+## boss's phases.
 func _chaotic_fight(seed_value: int) -> FightSetup:
 	var scatter: ItemDef = K.item("scatter", {"cooldown_ms": 700, "crit_chance_bp": 3000, "effects": K.damage(9, "enemy_random")})
-	var cleave: ItemDef = K.item("cleave", {"size": 2, "rarity": "epic", "tags": ["weapon"], "cooldown_ms": 2150, "crit_chance_bp": 2000, "effects": K.damage(25)})
+	var cleave: ItemDef = K.item("cleave", {"rarity": "epic", "tags": ["weapon"], "cooldown_ms": 2150, "crit_chance_bp": 2000, "effects": K.damage(25)})
 	var mend: ItemDef = K.item("mend", {"cooldown_ms": 1650, "xp_per_fire": 5, "effects": [{"trigger": "on_fire", "type": "heal", "amount": 12, "target": "ally_lowest_hp"}]})
-	var hex: ItemDef = K.item("hex", {"size": 2, "rarity": "epic", "cooldown_ms": 1300, "effects": K.damage(12, "enemy_random")})
+	var hex: ItemDef = K.item("hex", {"rarity": "epic", "cooldown_ms": 1300, "effects": K.damage(12, "enemy_random")})
 	var drum: ItemDef = K.item("drum", {"cooldown_ms": 2000, "effects": K.damage(3, "all_enemies"), "auras": [
-		{"target": "linked_allies", "stat": "damage_bp", "value": 15000, "window": {"until_ms": 10000}},
-		{"target": "adjacent_items", "stat": "crit_chance_bp", "value": 2000}]})
+		{"target": "row_allies", "stat": "damage_bp", "value": 15000, "window": {"until_ms": 10000}},
+		{"target": "holder_items", "stat": "crit_chance_bp", "value": 2000}]})
 	var claw: ItemDef = K.item("claw", {"cooldown_ms": 900, "crit_chance_bp": 2500, "effects": K.damage(7, "enemy_random")})
 	var setup: FightSetup = FightSetup.make(
-		[K.unit("warden", 420, FRONT, [K.equip(cleave, ["ember", "ember"] as Array[String]), drum]), K.unit("striker", 300, FRONT, [K.equip(scatter, ["umbral"] as Array[String]), K.content().items["whetstone"], K.content().items["twin_daggers"], K.equip(K.content().items["tallow_torch"], ["ember"] as Array[String])]), K.unit("mender", 260, BACK, [K.equip(mend, ["verdant"] as Array[String], 0, 280), K.equip(scatter, ["stone"] as Array[String])])],
-		[K.unit("ghoul_a", 380, FRONT, [K.equip(claw, ["frost"] as Array[String])]), K.unit("ghoul_b", 380, FRONT, [K.equip(claw, ["venom"] as Array[String])]), K.unit("shade", 300, BACK, [K.equip(claw, ["wrath"] as Array[String]), K.equip(hex, ["ember", "storm"] as Array[String])])],
-		seed_value, 1, [_benched_vell(mend)])
+		[K.unit("warden", 420, FRONT, [K.equip(cleave, ["ember", "ember"] as Array[String], 0, 300), drum]), K.unit("striker", 300, FRONT, [K.equip(scatter, ["umbral"] as Array[String], 0, 300), K.content().items["whetstone"], K.content().items["twin_daggers"], K.equip(K.content().items["tallow_torch"], ["ember"] as Array[String])]), K.unit("mender", 260, BACK, [K.equip(mend, ["verdant"] as Array[String], 0, 280), K.equip(scatter, ["stone"] as Array[String])]), _vell()],
+		[K.unit("ghoul_a", 380, FRONT, [K.equip(claw, ["frost"] as Array[String])]), K.unit("ghoul_b", 380, FRONT, [K.equip(claw, ["venom"] as Array[String])]), K.unit("shade", 300, BACK, [K.equip(claw, ["wrath"] as Array[String]), K.equip(hex, ["ember", "storm"] as Array[String], 0, 300)])],
+		seed_value, 1)
 	setup.relics = ["warding_knot", "pilgrims_flask", "cinder_crown", "hourglass", "emberglass"] as Array[String]
 	setup.enemy_relics = ["gloam_totem", "kindled_seal"] as Array[String]
 	setup.heroes[0].rank = 3
 	setup.heroes[0].specialization = _real_spec_for("brannoc_ironbrand", "warden")
-	setup.bench[0].rank = 3
-	setup.bench[0].specialization = K.content().specializations["vell_vigil_keeper"]
+	setup.heroes[3].rank = 3
+	setup.heroes[3].specialization = K.content().specializations["vell_vigil_keeper"]
 	setup.enemies[0].phases = K.content().enemies["mother_ash"].phases
 	return setup
 
@@ -51,10 +53,11 @@ func _real_spec_for(spec_id: String, unit_id: String) -> SpecializationDef:
 	return null
 
 
-func _benched_vell(mend: ItemDef) -> UnitSetup:
-	var vell: UnitSetup = K.unit("vell", 260, BACK, [K.item("chime", {"rarity": "uncommon", "effects": [],
-		"backup": {"cooldown_ms": 2500, "effects": [{"trigger": "on_fire", "type": "heal", "amount": 9, "target": "ally_lowest_hp"}]}})])
-	vell.backup = K.backup({"cooldown_ms": 3000, "effects": [{"trigger": "on_fire", "type": "damage", "amount": 6, "target": "enemy_random"}]})
+## Vell with her real innate (Lantern Vigil) and a passive.
+func _vell() -> UnitSetup:
+	var vell: UnitSetup = K.unit("vell", 260, BACK, [K.item("chime", {"rarity": "uncommon", "slot": "passive", "effects": null,
+		"auras": [{"target": "row_allies", "stat": "heal_bp", "value": 12000}]})])
+	vell.innate = K.content().heroes["vell"].innate
 	return vell
 
 
@@ -68,7 +71,7 @@ func test_same_seed_same_log() -> void:
 	assert_eq(first.combat_log.of_kind(LogEntry.Kind.AURA).size() >= 2, true, "auras start and end")
 	assert_string_contains(first.combat_log.to_text(), "(Cinder Crown) applies", "a relic grant fires")
 	assert_string_contains(first.combat_log.to_text(), "relic · Pilgrim's Flask heals", "a cooldown relic fires")
-	for expected: String in ["ghoul_a enters Molt", "warden · Brand Blow", "(Ironbrand S) charges", "vell · Shelter (backup)", "Paper Cuts: striker", "Wildfire Torch: striker", "Ember Resonance (3): 3 Ember", "(Paper Cuts) charges Whetstone"]:
+	for expected: String in ["ghoul_a enters Molt", "warden · Brand Blow", "(Ironbrand S) charges", "vell · Shelter (Vigil Keeper A)", "vell · Lantern Vigil", "Paper Cuts: striker", "Wildfire Torch: striker", "Ember Resonance (3): 3 Ember", "(Paper Cuts) charges Whetstone", "Golden Flame to", "Plasma to", "Verdant spill from Test Item"]:
 		assert_string_contains(first.combat_log.to_text(), expected)
 	assert_eq(first.combat_log.to_text(), second.combat_log.to_text())
 	assert_eq(first.outcome, second.outcome)

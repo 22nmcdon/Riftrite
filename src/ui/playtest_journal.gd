@@ -59,7 +59,7 @@ func fight(state: RunState, encounter_id: String, day: int, result: FightResult)
 		for item: RunItem in hero.items:
 			items.append({"item": item.item_id, "tier": TuningDef.TIER_LABELS[item.tier], "essences": item.essence_ids.duplicate(), "xp": item.xp})
 		guild.append({"hero": hero.hero_id, "rank": TuningDef.TIER_LABELS[hero.rank], "specialization": hero.specialization_id,
-			"row": EncounterDef.ROW_NAMES[hero.row], "backup": hero.benched, "items": items})
+			"row": EncounterDef.ROW_NAMES[hero.row], "items": items})
 	var outcome: String = ["victory", "defeat", "tie"][result.outcome]
 	(data["fights"] as Array).append({"day": day, "encounter": encounter_id, "outcome": outcome,
 		"seconds": snappedf(result.end_tick / float(FixedMath.TICKS_PER_SECOND), 0.1), "guild": guild, "relics": state.relics.duplicate()})
