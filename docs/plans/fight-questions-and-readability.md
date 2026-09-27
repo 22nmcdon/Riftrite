@@ -107,7 +107,20 @@ Opening the log panel during a fight shows a chart of what each hero is doing, a
   - banner texts and the queue; a new synergy's banner at the start
   - the hidden log, the remembered and saved speed, the day bar's act, the fight cards' mechanics, the kit cards
 
-## Balance
+## Balance (run bot, 200 runs, after step 6)
+
+- **The Hound Alpha:** first at 900 HP it lost 32% of its fights, more than the harder day-3 elite, so it's now 800 HP with a softer bite. It loses 21% (the old Hound Alpha: 18%).
+- **Kits:** the bot now takes a kit. With a kit it clears 58% of runs; with the gold package it clears 53% (54% before step 6). Resonant infusions per run rise from 3.0 to 3.7.
+- **Fights lost:**
+
+  | | Easier | Harder |
+  | --- | --- | --- |
+  | Normal | 1% | 15% |
+  | Elite | 17% | 29% |
+  | Boss | 27% | |
+
+  Elites and the boss stay on target. Normal fights got a bit easier with the kits (the target is 10–20% overall); worth watching in playtests before retuning.
+- **Snowballing** is unchanged (level spread 2.7), since its rules are still open.
 
 ## Decisions (from the user, 2026-09-27)
 

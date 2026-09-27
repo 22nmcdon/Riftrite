@@ -78,6 +78,13 @@ func test_damage_taken_splits_hp_and_shield_by_where_it_came_from() -> void:
 	assert_eq(tally.bar(FightTally.Tab.TAKEN, "b").total(), 0)
 
 
+func test_a_breakdown_keeps_ties_in_first_seen_order() -> void:
+	var tally: FightTally = _tally()
+	for item_name: String in ["Cleaver", "Axe", "Bow"]:
+		tally.add(_entry(LogEntry.Kind.DAMAGE, "a", "foe", 5, {"source_item_name": item_name}))
+	assert_eq(tally.bar(FightTally.Tab.DAMAGE, "a").breakdown(), [["Cleaver", 5], ["Axe", 5], ["Bow", 5]] as Array[Array])
+
+
 func test_relics_get_their_own_bar_and_heroes_sort_by_total() -> void:
 	var tally: FightTally = _tally()
 	assert_eq(_ids(tally.sorted(FightTally.Tab.DAMAGE)), ["a", "b"] as Array[String], "team order on a tie; no relic bar until relics act")
@@ -231,6 +238,9 @@ func test_banner_texts_for_the_big_moments() -> void:
 	resonant.note = "Resonant and awakens (150 XP)"
 	resonant.source_infusion_name = "Plasma"
 	assert_eq(FightBanners.text_for(resonant, heroes, names), "✦ Hatchet awakens: Plasma")
+	resonant.source_unit = foe
+	assert_eq(FightBanners.text_for(resonant, heroes, names), "", "only the guild's infusions")
+	resonant.source_unit = hero
 	resonant.note = "Attuned (60 XP)"
 	assert_eq(FightBanners.text_for(resonant, heroes, names), "", "Attuned isn't a banner")
 	assert_eq(FightBanners.text_for(_entry(LogEntry.Kind.DAMAGE, hero, foe, 5), heroes, names), "")
@@ -249,12 +259,25 @@ func test_banners_queue_one_at_a_time() -> void:
 	assert_eq(banners._label.text, "One", "each stays about 1.5s")
 	banners._process(0.6)
 	assert_eq(banners._label.text, "Two")
+	banners.push("Three")
 	banners.speed = 4.0
 	banners._process(1.6)
-	assert_false(banners.visible, "the queue is done")
+	assert_eq(banners._label.text, "Three")
+	banners._process(0.7)
+	assert_false(banners.visible, "at 4x each is shorter (but at least 0.6s)")
 	banners.push("Three")
 	banners.clear()
 	assert_false(banners.visible)
+
+
+func test_the_fight_screen_shows_a_phase_banner_as_it_plays() -> void:
+	var fight: FightScreen = _main(U.at_fight()).screen
+	fight.start_fight()
+	var foe: String = fight.player.sim.enemies[0].id
+	var phase: LogEntry = _entry(LogEntry.Kind.PHASE, "", foe, 0, {"note": "Blood Frenzy"})
+	fight._on_entries([phase] as Array[LogEntry])
+	assert_true(fight.banners.visible)
+	assert_eq(fight.banners._label.text, "%s: Blood Frenzy" % fight.names.name_of(foe))
 
 
 func test_a_discovery_gets_a_banner_as_the_fight_starts() -> void:
