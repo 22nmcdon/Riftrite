@@ -396,7 +396,7 @@ func test_shops_loot_and_rewards_never_offer_legendaries() -> void:
 		assert_true(_has(RunContent.load_texts(texts, _content()).errors, "legendary must be 0"), key)
 	for run_seed: int in range(1, 41):
 		var state: RunState = RunFlow.new_run(run_seed, _content())
-		RunFlow.pick_start_hero(state, _content(), 0)
+		RunFlow.pick_start_hero(state, _content(), _run(), 0)
 		RunFlow.pick_package(state, _content(), _run(), 0)
 		for stop: String in ["caravan", "smiths_cart", "synergy_peddler", "loot_item"]:
 			RunFlow._enter_stop(state, _content(), _run(), stop)
@@ -409,7 +409,7 @@ func test_the_vault_can_hold_a_legendary_at_its_start_tier() -> void:
 	var found: int = 0
 	for run_seed: int in range(1, 120):
 		var state: RunState = RunFlow.new_run(run_seed, _content())
-		RunFlow.pick_start_hero(state, _content(), 0)
+		RunFlow.pick_start_hero(state, _content(), _run(), 0)
 		RunFlow.pick_package(state, _content(), _run(), 0)
 		state.keys = 1
 		RunFlow._enter_stop(state, _content(), _run(), "vault")
@@ -434,7 +434,7 @@ func test_the_barrow_hoard_offers_an_unseen_legendary() -> void:
 	var hoard_only: RunContent = RunContent.load_texts(texts, _content())
 	assert_eq(hoard_only.errors, [] as Array[String])
 	var state: RunState = RunFlow.new_run(4, _content())
-	RunFlow.pick_start_hero(state, _content(), 0)
+	RunFlow.pick_start_hero(state, _content(), _run(), 0)
 	RunFlow.pick_package(state, _content(), _run(), 0)
 	var seen: Array[String] = []
 	for day: int in range(1, 7):
@@ -456,7 +456,7 @@ func test_the_barrow_hoard_offers_an_unseen_legendary() -> void:
 func test_a_fights_growth_comes_back_with_the_result() -> void:
 	var state: RunState = RunFlow.new_run(5, _content())
 	for pick: int in RunState.TEAM_SIZE:
-		RunFlow.pick_start_hero(state, _content(), 0)
+		RunFlow.pick_start_hero(state, _content(), _run(), 0)
 	RunFlow.pick_package(state, _content(), _run(), 0)
 	var hero: RunHero = state.heroes[0]
 	hero.rank = 3

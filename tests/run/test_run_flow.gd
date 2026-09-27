@@ -19,12 +19,22 @@ func _run() -> RunContent:
 	return _run_content
 
 
+## A run whose team is drafted (the first offer each time), at the
+## starting package.
+func _drafted(run_seed: int) -> RunState:
+	var state: RunState = RunFlow.new_run(run_seed, _content())
+	for pick: int in RunState.TEAM_SIZE:
+		assert_true(RunFlow.pick_start_hero(state, _content(), _run(), 0).ok)
+	assert_eq(state.phase, "start_package")
+	return state
+
+
 ## A run past the start (the first offer of each draft pick, gold package),
 ## at day 1's first stop choice.
 func _started(run_seed: int = 5) -> RunState:
 	var state: RunState = RunFlow.new_run(run_seed, _content())
 	for pick: int in RunState.TEAM_SIZE:
-		assert_true(RunFlow.pick_start_hero(state, _content(), 0).ok)
+		assert_true(RunFlow.pick_start_hero(state, _content(), _run(), 0).ok)
 	assert_true(RunFlow.pick_package(state, _content(), _run(), 0).ok)
 	return state
 
@@ -94,8 +104,8 @@ func test_a_run_starts_with_a_drafted_team_and_a_package() -> void:
 		assert_ne(heroes[1], heroes[2])
 		for hero_id: String in heroes:
 			assert_false(drafted.has(hero_id), "a drafted hero isn't offered again")
-		_refused(RunFlow.pick_start_hero(state, _content(), 3), "no offer there")
-		assert_true(RunFlow.pick_start_hero(state, _content(), 1).ok)
+		_refused(RunFlow.pick_start_hero(state, _content(), _run(), 3), "no offer there")
+		assert_true(RunFlow.pick_start_hero(state, _content(), _run(), 1).ok)
 		drafted.append(heroes[1])
 	var team: Array[String] = []
 	for hero: RunHero in state.heroes:
@@ -105,15 +115,105 @@ func test_a_run_starts_with_a_drafted_team_and_a_package() -> void:
 	var packages: Array[String] = []
 	for offer: Dictionary in state.offers:
 		packages.append(offer["package"])
-	assert_eq(packages, ["gold", "relic", "item"] as Array[String])
+	assert_eq(packages, ["gold", "relic", "kit", "kit"] as Array[String])
 	assert_eq(_content().relics[state.offers[1]["relic"]].rarity, "common")
-	assert_eq(_content().items[state.offers[2]["item"]].rarity, "common")
 	assert_true(RunFlow.pick_package(state, _content(), _run(), 0).ok)
 	assert_eq(state.gold, 14, "base 8 + the gold package's 6")
 	assert_eq([state.phase, state.day, state.visit, state.encounter_id], ["stop_choice", 1, 0, ""])
 	assert_eq(state.fight_options.size(), 2, "two fights to pick from")
 	for encounter_id: String in state.fight_options:
 		assert_true(_run().act(1).encounters_for(_run().act(1).normal, 1).has(encounter_id), "a day-1 fight")
+
+
+# --- start kits (docs/plans/fight-questions-and-readability.md, section 3) ----------
+
+func _kits(state: RunState) -> Array[String]:
+	var kits: Array[String] = []
+	for offer: Dictionary in state.offers:
+		if offer["package"] == "kit":
+			kits.append(offer["kit"])
+	return kits
+
+
+func test_the_start_offers_two_kits_for_the_teams_affinities() -> void:
+	var seen: Array[String] = []
+	for run_seed: int in range(1, 60):
+		var state: RunState = _drafted(run_seed)
+		var affinities: Array[String] = []
+		for hero: RunHero in state.heroes:
+			affinities.append_array(_content().heroes[hero.hero_id].affinities)
+		var kits: Array[String] = _kits(state)
+		assert_eq(kits.size(), 2, "seed %d" % run_seed)
+		assert_ne(kits[0], kits[1], "two different kits")
+		for keyword: String in kits:
+			assert_true(affinities.has(keyword), "seed %d: %s is one of the team's affinities" % [run_seed, keyword])
+			if not seen.has(keyword):
+				seen.append(keyword)
+		for offer: Dictionary in state.offers:
+			if offer["package"] == "kit":
+				var kit: EconomyDef.Kit = _run().economy.kit_for(offer["kit"])
+				assert_eq([offer["name"], offer["item"], offer["essence"], offer["tier"]], [kit.name, kit.item, kit.essence, 0])
+	assert_gt(seen.size(), 4, "different teams get different kits")
+
+
+func test_kits_top_up_from_other_keywords_when_the_team_has_too_few() -> void:
+	var texts: Dictionary[String, String] = {}
+	for file_name: String in RunContent.FILES:
+		texts[file_name] = FileAccess.get_file_as_string("res://data".path_join(file_name))
+	var economy: Dictionary = JSON.parse_string(texts[RunContent.ECONOMY_FILE])
+	economy["kits"] = [{"keyword": "bow", "name": "Only Bows", "item": "flint_arrows", "essence": "wrath"},
+		{"keyword": "hex", "name": "Only Hexes", "item": "soot_bomb", "essence": "frost"}]
+	texts[RunContent.ECONOMY_FILE] = JSON.stringify(economy)
+	var run: RunContent = RunContent.load_texts(texts, _content())
+	assert_true(run.is_valid(), str(run.errors))
+	var state: RunState = RunFlow.new_run(3, _content())
+	for pick: int in RunState.TEAM_SIZE:
+		RunFlow.pick_start_hero(state, _content(), run, 0)
+	var kits: Array[String] = _kits(state)
+	kits.sort()
+	assert_eq(kits, ["bow", "hex"] as Array[String], "the only two kits there are")
+
+
+func test_picking_a_kit_gives_its_item_already_infused() -> void:
+	var state: RunState = _drafted(5)
+	var index: int = -1
+	for i: int in state.offers.size():
+		if state.offers[i]["package"] == "kit":
+			index = i
+	var offer: Dictionary = state.offers[index]
+	var result: RunActions.Result = RunFlow.pick_package(state, _content(), _run(), index)
+	assert_true(result.ok, result.error)
+	assert_eq(state.stash.size(), 1)
+	assert_eq([state.stash[0].item_id, state.stash[0].tier, state.stash[0].essence_ids, state.stash[0].xp], [offer["item"], 0, [offer["essence"]], 0])
+	assert_string_contains(result.note, "infused with %s" % _content().essences[offer["essence"]].name)
+	assert_eq(state.gold, _run().economy.base_gold, "a kit gives no gold")
+	assert_eq(state.phase, "stop_choice")
+	assert_true(state.check(_content()).is_empty(), str(state.check(_content())))
+
+
+# --- the whole act's fights (docs/plans/fight-questions-and-readability.md, 1) ------
+
+func test_every_days_fights_are_known_from_the_start_and_match_the_day() -> void:
+	for run_seed: int in range(1, 15):
+		var state: RunState = _started(run_seed)
+		var act: ActDef = _run().act(1)
+		var planned: Array = []
+		for day: int in range(1, act.days + 1):
+			planned.append(RunFlow.fights_for_day(state, _run(), day))
+		assert_eq(RunFlow.fights_for_day(state, _run(), 1), state.fight_options, "day 1 as offered")
+		for day: int in range(1, act.days + 1):
+			var fights: Array[String] = planned[day - 1]
+			if act.is_boss_day(day):
+				assert_eq(fights, [act.boss] as Array[String])
+			else:
+				assert_eq(fights.size(), 2, "day %d" % day)
+				for encounter_id: String in fights:
+					assert_eq(_content().encounters[encounter_id].kind, "elite" if act.is_elite_day(day) else "normal", "day %d" % day)
+		var other: RunState = _started(run_seed + 1000)
+		var differs: bool = false
+		for day: int in range(1, act.days):
+			differs = differs or RunFlow.fights_for_day(other, _run(), day) != planned[day - 1]
+		assert_true(differs, "another seed plans other fights")
 
 
 func test_the_same_seed_gives_the_same_start() -> void:

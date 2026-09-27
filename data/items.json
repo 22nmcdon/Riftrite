@@ -580,6 +580,32 @@
     ]
   },
   {
+    "id": "alphas_bite",
+    "name": "Alpha's Bite",
+    "_note": "The Hound Alpha's bite (The Hunt): it always goes for the weakest foe, by HP percentage.",
+    "slot": "ability",
+    "keywords": ["blade"],
+    "tags": [
+      "weapon",
+      "melee"
+    ],
+    "rarity": "uncommon",
+    "enemy_only": true,
+    "xp_per_fire": 1,
+    "cooldown_ms": 1600,
+    "effects": [
+      {
+        "trigger": "on_fire",
+        "type": "damage",
+        "amount": 6,
+        "target": "enemy_lowest_hp",
+        "scaling": {
+          "atk": 6000
+        }
+      }
+    ]
+  },
+  {
     "id": "hollow_maw",
     "name": "Hollow Maw",
     "slot": "ability",

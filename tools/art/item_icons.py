@@ -277,6 +277,17 @@ def rift_claw() -> str:
     return svg(talons + palm + glow + cracks)
 
 
+def alphas_bite() -> str:
+    """The Hound Alpha's bite: a jaw of rift-glass fangs closing on a mark."""
+    jaw = path("M8 30 Q32 6 56 30 Q32 20 8 30 Z", RIFT_D) + path("M8 36 Q32 60 56 36 Q32 46 8 36 Z", RIFT_D)
+    fangs = ""
+    for x in (16, 26, 38, 48):
+        fangs += path(f"M{x - 4} 26 L{x} 36 L{x + 4} 26 Z", "#E8DDF5", sw=1.5)
+        fangs += path(f"M{x - 4} 40 L{x} 31 L{x + 4} 40 Z", "#E8DDF5", sw=1.5)
+    mark = f'<circle cx="32" cy="33" r="4" fill="{RIFT}" opacity="0.8"/>'
+    return svg(jaw + fangs + mark + line("M12 29 Q32 14 52 29", RIFT_L, 1.6))
+
+
 ICONS = {
     "rusted_cleaver": rusted_cleaver,
     "hearth_knife": hearth_knife,
@@ -294,6 +305,7 @@ ICONS = {
     "rime_charm": rime_charm,
     "dusk_tome": dusk_tome,
     "rift_claw": rift_claw,
+    "alphas_bite": alphas_bite,
 }
 
 

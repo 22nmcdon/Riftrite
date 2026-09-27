@@ -283,6 +283,11 @@ def rift_hound() -> tuple[str, str]:
     return beast(fur="#3A2A55", fur_d="#2A1B45", eye="#E0C8FF", size=1.05, mane="#4A3470"), ""
 
 
+def hound_alpha() -> tuple[str, str]:
+    """The pack's leader: bigger, a darker mane, horns, and a hot rift glow."""
+    return beast(fur="#33224D", fur_d="#22163A", eye="#FFD8F0", size=1.2, mane="#5A3E8C", horns=True), ""
+
+
 def ash_hound() -> tuple[str, str]:
     return beast(fur="#6B6875", fur_d="#45424E", eye=FLAME_Y, cracks=EMBER, mane="#55525E"), ""
 
@@ -361,16 +366,16 @@ def cairn_guardian() -> tuple[str, str]:
 
 HEROES = {"brannoc": ("warden", brannoc), "wren": ("striker", wren), "vell": ("mender", vell), "odo": ("arcanist", odo),
           "maren": ("ranger", maren), "pell": ("trickster", pell), "hesk": ("warden", hesk), "ysolde": ("arcanist", ysolde)}
-ENEMIES = {"rift_pup": rift_pup, "rift_hound": rift_hound, "rift_sentinel": rift_sentinel, "gloam_witch": gloam_witch,
+ENEMIES = {"rift_pup": rift_pup, "rift_hound": rift_hound, "hound_alpha": hound_alpha, "rift_sentinel": rift_sentinel, "gloam_witch": gloam_witch,
            "ash_hound": ash_hound, "mother_ash": mother_ash, "ashling": ashling, "cinder_moth": cinder_moth,
            "bog_lurker": bog_lurker, "hollow_archer": hollow_archer, "cairn_guardian": cairn_guardian}
-BEASTS = {"rift_pup", "rift_hound", "ash_hound", "mother_ash", "bog_lurker", "cinder_moth", "rift_sentinel", "cairn_guardian"}
+BEASTS = {"rift_pup", "rift_hound", "hound_alpha", "ash_hound", "mother_ash", "bog_lurker", "cinder_moth", "rift_sentinel", "cairn_guardian"}
 
 
 ## Where each portrait looks: (x, y, zoom) on the figure's canvas.
 PORTRAIT_FOCUS = {
     "humanoid": (66, 64, 1.3), "beast": (100, 84, 1.25),
-    "rift_pup": (92, 97, 1.5), "rift_hound": (101, 81, 1.2), "mother_ash": (104, 74, 1.0),
+    "rift_pup": (92, 97, 1.5), "rift_hound": (101, 81, 1.2), "hound_alpha": (104, 76, 1.05), "mother_ash": (104, 74, 1.0),
     "rift_sentinel": (64, 52, 1.1), "cairn_guardian": (64, 70, 1.2), "cinder_moth": (64, 80, 0.85),
     "bog_lurker": (96, 92, 1.1), "ashling": (66, 80, 1.3), "gloam_witch": (66, 62, 1.2), "hollow_archer": (66, 62, 1.2),
 }

@@ -123,8 +123,31 @@ func _check(content: ContentDb) -> void:
 			errors.append("%s (%s): unknown essence \"%s\"" % [NODES_FILE, node_id, node.shop.essence])
 	if shops == 0:
 		errors.append("%s: needs at least one shop (every stop visit offers one)" % NODES_FILE)
+	if economy != null:
+		_check_kits(content)
 	if economy != null and node_pool().size() - shops < economy.node_choices - 1:
 		errors.append("%s: the node pool needs at least %d stops that aren't shops (node_choices)" % [NODES_FILE, economy.node_choices - 1])
+
+
+## Every kit names a known keyword, a known essence, and an item with that
+## keyword that the shops could sell (no Legendaries, no enemy-only items),
+## and there are enough kits for the start's offer.
+func _check_kits(content: ContentDb) -> void:
+	for kit: EconomyDef.Kit in economy.kits:
+		var where: String = "%s (kit %s)" % [ECONOMY_FILE, kit.keyword]
+		if not content.keywords.has(kit.keyword):
+			errors.append("%s: unknown keyword \"%s\"" % [where, kit.keyword])
+		if not content.essences.has(kit.essence):
+			errors.append("%s: unknown essence \"%s\"" % [where, kit.essence])
+		var item: ItemDef = content.items.get(kit.item, null)
+		if item == null:
+			errors.append("%s: unknown item \"%s\"" % [where, kit.item])
+		elif not item.keywords.has(kit.keyword):
+			errors.append("%s: %s doesn't have the %s keyword" % [where, kit.item, kit.keyword])
+		elif item.rarity == "legendary" or item.enemy_only:
+			errors.append("%s: %s can't be in a kit (no Legendaries or enemy-only items)" % [where, kit.item])
+	if economy.kits.size() < economy.kit_offers:
+		errors.append("%s: needs at least %d kits (kit_offers)" % [ECONOMY_FILE, economy.kit_offers])
 
 
 func _parse(texts: Dictionary[String, String], file_name: String) -> Variant:

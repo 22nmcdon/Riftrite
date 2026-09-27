@@ -57,6 +57,29 @@ func test_every_day_needs_two_fights() -> void:
 	_assert_error(_errors_with(RunContent.ACTS_FILE, acts), "hp_bp: 0 is out of range")
 
 
+func test_kits_are_checked() -> void:
+	var cases: Dictionary = {
+		"unknown keyword \"sling\"": {"keyword": "sling", "name": "x", "item": "flint_arrows", "essence": "wrath"},
+		"unknown essence \"mud\"": {"keyword": "bow", "name": "x", "item": "flint_arrows", "essence": "mud"},
+		"unknown item \"stick\"": {"keyword": "bow", "name": "x", "item": "stick", "essence": "wrath"},
+		"hatchet doesn't have the bow keyword": {"keyword": "bow", "name": "x", "item": "hatchet", "essence": "wrath"},
+		"rift_claw can't be in a kit": {"keyword": "blade", "name": "x", "item": "rift_claw", "essence": "wrath"},
+		"last_hearth_lantern can't be in a kit": {"keyword": "mend", "name": "x", "item": "last_hearth_lantern", "essence": "verdant"},
+	}
+	var ward: Dictionary = {"keyword": "ward", "name": "y", "item": "oak_buckler", "essence": "stone"}
+	for expected: String in cases:
+		var economy: Dictionary = JSON.parse_string(_texts()[RunContent.ECONOMY_FILE])
+		economy["kits"] = [cases[expected], ward]
+		_assert_error(_errors_with(RunContent.ECONOMY_FILE, economy), expected)
+	var economy: Dictionary = JSON.parse_string(_texts()[RunContent.ECONOMY_FILE])
+	economy["kits"] = [ward]
+	_assert_error(_errors_with(RunContent.ECONOMY_FILE, economy), "needs at least 2 kits (kit_offers)")
+	economy["kits"] = [ward, ward.duplicate()]
+	_assert_error(_errors_with(RunContent.ECONOMY_FILE, economy), "two kits for \"ward\"")
+	economy["kits"] = [ward, {"keyword": "bow", "name": "x", "item": "flint_arrows", "essence": "wrath"}]
+	assert_eq(_errors_with(RunContent.ECONOMY_FILE, economy), [] as Array[String], "two good kits are fine")
+
+
 func test_economy_and_events_are_checked() -> void:
 	var economy: Dictionary = JSON.parse_string(_texts()[RunContent.ECONOMY_FILE])
 	economy.erase("base_gold")

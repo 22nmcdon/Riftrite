@@ -155,7 +155,7 @@ func _after(result: RunActions.Result) -> RunActions.Result:
 # --- the run's flow -------------------------------------------------------------
 
 func pick_start_hero(index: int) -> RunActions.Result:
-	return _after(RunFlow.pick_start_hero(state, content, index))
+	return _after(RunFlow.pick_start_hero(state, content, run, index))
 
 
 func pick_package(index: int) -> RunActions.Result:

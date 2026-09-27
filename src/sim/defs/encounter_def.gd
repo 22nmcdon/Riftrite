@@ -21,6 +21,13 @@ var kind: String = "normal"
 var units: Array[Slot] = []
 ## Relic ids the enemy team carries.
 var relics: Array[String] = []
+## What this fight asks of the player (docs/plans/fight-questions-and-
+## readability.md, section 2): a name, what it does, and what answers it.
+## Text for the UI only; what the enemies do lives in their items, relics,
+## and phases. Every elite and boss has one.
+var mechanic_name: String = ""
+var mechanic_text: String = ""
+var mechanic_counter: String = ""
 
 
 static func read(reader: DataReader) -> EncounterDef:
@@ -37,6 +44,14 @@ static func read(reader: DataReader) -> EncounterDef:
 		def.units.append(slot)
 	if reader.has("relics"):
 		def.relics = reader.req_string_array("relics")
+	var mechanic: DataReader = reader.req_object("mechanic") if reader.has("mechanic") else null
+	if mechanic != null:
+		def.mechanic_name = mechanic.req_string("name")
+		def.mechanic_text = mechanic.req_string("text")
+		def.mechanic_counter = mechanic.req_string("counter")
+		mechanic.finish()
+	elif def.kind != "normal":
+		reader.error("%s encounter needs a mechanic (name, text, counter)" % ("an elite" if def.kind == "elite" else "a boss"))
 	if def.units.is_empty():
 		reader.error("an encounter needs at least one unit")
 	reader.finish()

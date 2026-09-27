@@ -55,6 +55,19 @@ var stops_per_day: int
 var node_choices: int
 ## How much gold a gold loot gives.
 var loot_gold: int
+## Start kits (docs/plans/fight-questions-and-readability.md, section 3): an
+## item that comes infused, one kit per keyword. The start offers
+## `kit_offers` of them, matching the drafted heroes' affinities.
+var kits: Array[Kit] = []
+var kit_offers: int
+
+
+## A start kit: `item` at tier C, already infused with `essence`.
+class Kit:
+	var keyword: String
+	var name: String
+	var item: String
+	var essence: String
 
 
 static func read(reader: DataReader) -> EconomyDef:
@@ -97,6 +110,18 @@ static func read(reader: DataReader) -> EconomyDef:
 	def.stops_per_day = reader.req_int("stops_per_day", 1)
 	def.node_choices = reader.req_int("node_choices", 2)
 	def.loot_gold = reader.req_int("loot_gold", 0)
+	def.kit_offers = reader.req_int("kit_offers", 1)
+	for kit_reader: DataReader in reader.opt_object_array("kits"):
+		var kit := Kit.new()
+		kit.keyword = kit_reader.req_string("keyword")
+		kit.name = kit_reader.req_string("name")
+		kit.item = kit_reader.req_string("item")
+		kit.essence = kit_reader.req_string("essence")
+		kit_reader.finish()
+		for other: Kit in def.kits:
+			if other.keyword == kit.keyword:
+				reader.error("kits: two kits for \"%s\"" % kit.keyword)
+		def.kits.append(kit)
 	reader.finish()
 	return def
 
@@ -110,6 +135,14 @@ static func _table(reader: DataReader, key: String, keys: Array[String], min_val
 	if sub != null:
 		sub.finish()
 	return table
+
+
+## The kit for a keyword, or null.
+func kit_for(keyword: String) -> Kit:
+	for kit: Kit in kits:
+		if kit.keyword == keyword:
+			return kit
+	return null
 
 
 ## An item's buy price: its rarity's price, times its tier's multiplier.

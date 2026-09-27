@@ -36,9 +36,14 @@
     "name": "The Hound Alpha",
     "act": 1,
     "kind": "elite",
+    "mechanic": {
+      "name": "The Hunt",
+      "text": "The Hound Alpha's bite always goes for your weakest hero (lowest HP %), and below half HP it frenzies and attacks 40% faster.",
+      "counter": "Shield or heal your weakest hero, and bring the Alpha down before it frenzies."
+    },
     "units": [
       {
-        "enemy": "rift_hound",
+        "enemy": "hound_alpha",
         "row": "front"
       },
       {
@@ -112,13 +117,23 @@
     "relics": [
       "gloam_totem"
     ],
-    "kind": "elite"
+    "kind": "elite",
+    "mechanic": {
+      "name": "Gloam Totem",
+      "text": "The witches in the back row cast 20% stronger, and the Sentinel in front heals as it bites.",
+      "counter": "Reach the back row, or wash away their damage over time."
+    }
   },
   {
     "id": "the_ash_mother",
     "name": "The Ash Mother",
     "act": 1,
     "kind": "boss",
+    "mechanic": {
+      "name": "Molt, then Last Ember",
+      "text": "Below 60% HP she attacks faster and her bites Bleed. Below 25% she hardens with Shield and breathes Burn on everyone every 3 seconds.",
+      "counter": "Burst through her last quarter, and heal and cleanse against the Burn."
+    },
     "_note": "Act 1 boss: Old Mother Ash behind two Ash Hounds (docs/plans/act1-boss.md).",
     "units": [
       {
@@ -216,6 +231,11 @@
     "name": "The Cairn Watch",
     "act": 1,
     "kind": "elite",
+    "mechanic": {
+      "name": "Stone Ward",
+      "text": "The Cairn Guardian shields its whole side every 5 seconds, and the archers shoot your back row.",
+      "counter": "Poison goes around Shield, and Burn is halved against it. Protect your back row."
+    },
     "_note": "Elite: a Cairn Guardian shields two archers who shoot at the guild's back row.",
     "units": [
       {
