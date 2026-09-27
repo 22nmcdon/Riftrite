@@ -129,7 +129,7 @@ func test_broken_saves_are_refused() -> void:
 		broken[case[0]] = case[1]
 		var errors: Array[String] = RunState.from_dict(broken, _content())[1]
 		assert_true(errors.any(func(e: String) -> bool: return e.contains(case[2])), "%s: %s" % [case[2], errors])
-	_assert_refused(_with({"version": 2}), "version 2 isn't supported (expected 3)")
+	_assert_refused(_with({"version": 3}), "version 3 isn't supported (expected 4)")
 	var early_choice: Dictionary = data.duplicate(true)
 	early_choice["heroes"][0]["deeds"]["calling_choice"] = 1
 	_assert_refused(early_choice, "brannoc: a calling unlock chosen before its level")

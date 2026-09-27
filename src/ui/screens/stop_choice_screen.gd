@@ -1,20 +1,22 @@
 class_name StopChoiceScreen
 extends UiScreen
-## Pick one of the day's stop nodes (docs/plans/stop-nodes.md): big cards,
-## each with its kind's icon over its name, its kind, and its blurb.
+## Pick one of the stop visit's nodes (docs/plans/new-day.md): big cards,
+## each with its kind's icon over its name, its kind, and its blurb. One is
+## always a shop.
 
 const KIND_LABELS: Dictionary[String, String] = {
-	"forge": "Forge", "loot": "Loot", "vault": "Vault", "retrain": "Retrain", "event": "Event", "fight": "Extra fight",
+	"shop": "Shop", "forge": "Forge", "loot": "Loot", "vault": "Vault", "retrain": "Retrain", "event": "Event",
 }
 ## The icon for each kind (art/ui/icons/<name>.svg).
 const KIND_ICONS: Dictionary[String, String] = {
-	"forge": "stop_forge", "loot": "stop_loot", "vault": "stop_vault", "retrain": "stop_retrain", "event": "stop_event", "fight": "fight_normal",
+	"shop": "stop_caravan", "forge": "stop_forge", "loot": "stop_loot", "vault": "stop_vault", "retrain": "stop_retrain", "event": "stop_event",
 }
 
 
 func build() -> void:
-	heading("Where to, before the fight?")
-	hint("Pick one stop. Then comes today's fight.")
+	var stops: int = session.run.economy.stops_per_day
+	heading("Where to? (stop %d of %d today)" % [session.state.visit + 1, stops])
+	hint("Pick one stop. After the last one, choose the day's fight." if session.state.visit + 1 >= stops else "Pick one stop. Another comes after it, then the day's fight.")
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 24)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER

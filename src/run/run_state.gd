@@ -4,8 +4,9 @@ extends RefCounted
 ## logic like the sim: no nodes, integers only, deterministic from the seed.
 ## Change it only through RunActions; check it with check().
 
-## 2: loadout slots and the fixed trio (docs/plans/fun-redesign.md, step 1).
-const SAVE_VERSION: int = 3
+## 4: the new day (docs/plans/new-day.md): two stop visits, a fight pick,
+## no shards.
+const SAVE_VERSION: int = 4
 ## The run's team: three drafted heroes (docs/plans/heroes-and-deeds.md).
 const TEAM_SIZE: int = 3
 ## Owner names for items: a hero id, STASH, or NOWHERE (not in the guild).
@@ -17,7 +18,8 @@ var seed_value: int = 1
 var rng: SimRng
 var act: int = 1
 var day: int = 1
-var step: int = 0
+## Which of the day's stop visits this is (0-based; economy.stops_per_day).
+var visit: int = 0
 var attempt: int = 0
 var gold: int = 0
 var keys: int = 0
@@ -39,26 +41,25 @@ var legendaries_seen: Array[String] = []
 var next_uid: int = 1
 
 # --- where the run is (RunFlow) -------------------------------------------------
-## One of RunFlow's phases ("start_hero", "caravan", ...).
+## One of RunFlow's phases ("start_hero", "stop_choice", ...).
 var phase: String = ""
-## What the player is being offered right now (heroes, packages, Caravan
+## What the player is being offered right now (heroes, packages, shop
 ## wares, stops, loot, rewards), as plain dictionaries (see RunFlow).
 var offers: Array[Dictionary] = []
-## The stop being visited: what it does ("loot", "event", "fight",
+## The stop being visited: what it does ("shop", "loot", "event",
 ## "upgrade", ...; RunFlow.STOP_KINDS), and which node it is (a node or event
 ## id, or "upgrade"), or "".
 var stop_kind: String = ""
 var stop_node: String = ""
-## A skirmish stop's enemies (an encounter id), or "".
-var stop_encounter: String = ""
 ## Whether this stop's one-time action (retrain, upgrade) is spent.
 var stop_used: bool = false
-## Today's fight.
+## The day's fights to pick from (encounter ids; one on the boss day), known
+## from the start of the day.
+var fight_options: Array[String] = []
+## The fight picked (from fight_options), or "" before the pick.
 var encounter_id: String = ""
-## Rerolls in this Caravan visit.
+## Rerolls in this shop visit.
 var reroll_count: int = 0
-## Essence shards by essence id (shards_per_essence make an essence).
-var shards: Dictionary[String, int] = {}
 
 
 static func make(run_seed: int) -> RunState:
@@ -248,7 +249,7 @@ func to_dict() -> Dictionary:
 		"version": SAVE_VERSION,
 		"seed": seed_value,
 		"rng": rng.get_state(),
-		"act": act, "day": day, "step": step, "attempt": attempt,
+		"act": act, "day": day, "visit": visit, "attempt": attempt,
 		"gold": gold, "keys": keys,
 		"heroes": hero_list,
 		"stash": stash_list,
@@ -262,21 +263,11 @@ func to_dict() -> Dictionary:
 		"offers": offers.duplicate(true),
 		"stop_kind": stop_kind,
 		"stop_node": stop_node,
-		"stop_encounter": stop_encounter,
 		"stop_used": stop_used,
+		"fight_options": fight_options.duplicate(),
 		"encounter": encounter_id,
 		"reroll_count": reroll_count,
-		"shards": _sorted_shards(),
 	}
-
-
-func _sorted_shards() -> Dictionary:
-	var result: Dictionary = {}
-	var ids: Array = shards.keys()
-	ids.sort()
-	for essence_id: String in ids:
-		result[essence_id] = shards[essence_id]
-	return result
 
 
 ## Rebuilds a run from to_dict()'s output. Returns [state, errors]; the state
@@ -299,7 +290,7 @@ static func from_dict(data: Variant, content: ContentDb) -> Array:
 		reader.error("rng needs 4 numbers")
 	state.act = reader.req_int("act", 1)
 	state.day = reader.req_int("day", 1)
-	state.step = reader.req_int("step", 0)
+	state.visit = reader.req_int("visit", 0)
 	state.attempt = reader.req_int("attempt", 0)
 	state.gold = reader.req_int("gold")
 	state.keys = reader.req_int("keys")
@@ -323,20 +314,17 @@ static func from_dict(data: Variant, content: ContentDb) -> Array:
 	if not state.stop_kind.is_empty() and not RunFlow.STOP_KINDS.has(state.stop_kind):
 		reader.error("unknown stop \"%s\"" % state.stop_kind)
 	state.stop_node = reader.opt_string("stop_node", "")
-	state.stop_encounter = reader.opt_string("stop_encounter", "")
-	if not state.stop_encounter.is_empty() and not content.encounters.has(state.stop_encounter):
-		reader.error("unknown encounter \"%s\"" % state.stop_encounter)
 	state.stop_used = reader.opt_bool("stop_used", false)
+	state.fight_options = reader.req_string_array("fight_options")
 	state.encounter_id = reader.opt_string("encounter", "")
-	if not state.encounter_id.is_empty() and not content.encounters.has(state.encounter_id):
-		reader.error("unknown encounter \"%s\"" % state.encounter_id)
+	var named: Array[String] = state.fight_options.duplicate()
+	named.append(state.encounter_id)
+	for encounter_id: String in named:
+		if not encounter_id.is_empty() and not content.encounters.has(encounter_id):
+			reader.error("unknown encounter \"%s\"" % encounter_id)
+	if not state.encounter_id.is_empty() and not state.fight_options.has(state.encounter_id):
+		reader.error("the fight \"%s\" isn't one of the day's" % state.encounter_id)
 	state.reroll_count = reader.opt_int("reroll_count", 0, 0)
-	if reader.has("shards"):
-		var shard_reader: DataReader = reader.req_object("shards")
-		if shard_reader != null:
-			for essence_id: String in shard_reader.map_keys():
-				state.shards[essence_id] = shard_reader.req_int(essence_id, 0)
-			shard_reader.finish()
 	reader.finish()
 	if errors.is_empty():
 		errors.append_array(state.check(content))

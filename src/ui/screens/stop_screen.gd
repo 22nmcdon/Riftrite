@@ -1,8 +1,8 @@
 class_name StopScreen
 extends UiScreen
 ## The stop being visited: take or pass what's offered (Loot, the Vault,
-## events, a won skirmish's spoils), reforge (Forge), retrain, or upgrade an
-## item (before the boss). A skirmish still to fight shows the FightScreen.
+## events), reforge (Forge), retrain, or upgrade an item (before the boss).
+## Shops have their own screen (ShopScreen).
 
 
 func build() -> void:
@@ -26,12 +26,10 @@ func build() -> void:
 				anvil.add_child(_item_buttons(func(item: RunItem) -> bool: return item.tier < 3 and session.content.items[item.item_id].rarity != "legendary", "Upgrade", func(uid: int) -> void: session.upgrade(uid)))
 			anvil.add_child(_leave())
 		_:
-			# Events, Loot, the Vault, and a fought skirmish: an illustrated
-			# parchment card with the node's name and blurb.
+			# Events, Loot, and the Vault: an illustrated parchment card with
+			# the node's name and blurb.
 			var title: String = _title(state.stop_kind.capitalize())
 			var text: String = session.run.node_text(state.stop_node) if session.run.node_pool().has(state.stop_node) else ""
-			if state.stop_kind == "fight":
-				text = "The skirmish is over. A win's spoils wait below; a loss leaves none, and no harm done."
 			var page: VBoxContainer = card("panel_parchment", 980)
 			var top := HBoxContainer.new()
 			top.add_theme_constant_override("separation", 18)
@@ -71,8 +69,15 @@ func _title(fallback: String) -> String:
 	return session.run.node_name(session.state.stop_node) if session.run.node_pool().has(session.state.stop_node) else fallback
 
 
+## What leaving a stop leads to: the day's next stop, or the fight.
+static func leave_text(for_session: RunSession) -> String:
+	if for_session.state.visit + 1 < for_session.run.economy.stops_per_day:
+		return "Leave, on down the road"
+	return "Leave, on to the fight"
+
+
 func _leave() -> Button:
-	var button: Button = primary_button("Leave, on to the fight", func() -> void: session.leave_stop(), 320)
+	var button: Button = primary_button(leave_text(session), func() -> void: session.leave_stop(), 320)
 	button.size_flags_horizontal = Control.SIZE_SHRINK_END
 	return button
 

@@ -1,16 +1,17 @@
-class_name CaravanScreen
+class_name ShopScreen
 extends UiScreen
-## The Caravan (docs/plans/ui-overhaul.md, 3.4): wares as large cards on a
-## cloth stall (it sells no heroes: the team is drafted at the start), and
-## along the bottom the reroll,
-## a coin dish to sell into, and the way out. Click a ware to buy it (it
-## goes to your stash). A ware that would upgrade something you hold lights
-## up, and buying it combines it straight into your copy. Drag one of your
-## items onto the dish to sell it.
+## A shop stop (docs/plans/new-day.md; the look of docs/plans/ui-overhaul.md,
+## 3.4): the shop's name and blurb, its wares as large cards on a cloth stall
+## (an essence merchant's essence among them), and along the bottom the
+## reroll, a coin dish to sell into, and the way out. Click a ware to buy it
+## (it goes to your stash). A ware that would upgrade something you hold
+## lights up, and buying it combines it straight into your copy. Drag one of
+## your items onto the dish to sell it.
 
 
 func build() -> void:
-	heading("The Caravan")
+	heading(session.run.node_name(session.state.stop_node))
+	hint(session.run.node_text(session.state.stop_node))
 	hint("Click a ware to buy it; it goes to your stash, below. A gold-framed ware combines with an item you hold. Hover anything to read about it.")
 	var items: Array[int] = []
 	for i: int in session.state.offers.size():
@@ -48,7 +49,7 @@ func build() -> void:
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	line.add_child(spacer)
-	var leave: Button = UiStyle.primary(UiStyle.button("Leave the Caravan  ›", func() -> void: session.leave_caravan()))
+	var leave: Button = UiStyle.primary(UiStyle.button(StopScreen.leave_text(session) + "  ›", func() -> void: session.leave_stop()))
 	leave.add_theme_font_size_override("font_size", 22)
 	leave.custom_minimum_size = Vector2(260, 56)
 	line.add_child(leave)

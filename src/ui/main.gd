@@ -11,12 +11,12 @@ extends Control
 ## Screens by run phase.
 const SCREENS: Dictionary[String, String] = {
 	"start_hero": "run_start", "start_package": "run_start",
-	"caravan": "caravan", "stop_choice": "stop_choice", "stop": "stop",
+	"stop_choice": "stop_choice", "stop": "stop", "fight_choice": "fight_choice",
 	"fight": "fight", "rewards": "rewards", "act_end": "run_end", "run_over": "run_end",
 }
 const SCREEN_DIR: String = "res://src/ui/screens/%s_screen.gd"
 ## Phases whose screens show the guild bar.
-const GUILD_PHASES: Array[String] = ["caravan", "stop_choice", "stop", "fight", "rewards"]
+const GUILD_PHASES: Array[String] = ["stop_choice", "stop", "fight_choice", "fight", "rewards"]
 ## The title backdrop (tools/art/backdrops.py), shown behind the title, the
 ## run start, and the run's end.
 const BACKDROP: String = "res://art/ui/backgrounds/title.svg"
@@ -93,11 +93,12 @@ func _ready() -> void:
 	refresh()
 
 
-## The screen for the run's phase (the title when there's no run).
+## The screen for the run's phase (the title when there's no run; a shop
+## stop has its own).
 func screen_script() -> GDScript:
 	var screen_name: String = "title" if session.state == null else SCREENS[session.state.phase]
-	if session.skirmish_pending():
-		screen_name = "fight"
+	if RunFlow.at_shop(session.state) if session.state != null else false:
+		screen_name = "shop"
 	return load(SCREEN_DIR % screen_name)
 
 

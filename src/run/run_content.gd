@@ -86,6 +86,10 @@ func node_kind(node_id: String) -> String:
 	return nodes[node_id].kind if nodes.has(node_id) else "event"
 
 
+func is_shop(node_id: String) -> bool:
+	return node_kind(node_id) == "shop"
+
+
 func node_weight(node_id: String) -> int:
 	return nodes[node_id].weight if nodes.has(node_id) else events[node_id].weight
 
@@ -106,8 +110,21 @@ func _check(content: ContentDb) -> void:
 					errors.append("%s: \"%s\" belongs to act %d" % [where, encounter_id, encounter.act])
 	if event_ids.is_empty():
 		errors.append("%s: needs at least one event" % EVENTS_FILE)
-	if economy != null and node_pool().size() < economy.node_choices:
-		errors.append("%s: the node pool needs at least %d nodes (node_choices)" % [NODES_FILE, economy.node_choices])
+	var shops: int = 0
+	for node_id: String in node_ids:
+		var node: NodeDef = nodes[node_id]
+		if node.shop == null:
+			continue
+		shops += 1
+		for keyword: String in node.shop.named_keywords():
+			if not content.keywords.has(keyword):
+				errors.append("%s (%s): unknown keyword \"%s\"" % [NODES_FILE, node_id, keyword])
+		if not node.shop.essence.is_empty() and not content.essences.has(node.shop.essence):
+			errors.append("%s (%s): unknown essence \"%s\"" % [NODES_FILE, node_id, node.shop.essence])
+	if shops == 0:
+		errors.append("%s: needs at least one shop (every stop visit offers one)" % NODES_FILE)
+	if economy != null and node_pool().size() - shops < economy.node_choices - 1:
+		errors.append("%s: the node pool needs at least %d stops that aren't shops (node_choices)" % [NODES_FILE, economy.node_choices - 1])
 
 
 func _parse(texts: Dictionary[String, String], file_name: String) -> Variant:

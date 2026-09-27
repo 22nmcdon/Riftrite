@@ -28,9 +28,9 @@ func _release(tile: ItemTile) -> void:
 	tile._gui_input(click)
 
 
-## A Caravan with an item bought into the stash, selected.
+## A shop with an item bought into the stash, selected.
 func _selected() -> Main:
-	var session: RunSession = U.at_caravan()
+	var session: RunSession = U.at_shop()
 	var main: Main = _main(session)
 	var ware: ItemTile = null
 	for node: Node in U.find_all(main, ItemTile):
@@ -80,7 +80,7 @@ func test_inspector_buttons_act_on_the_item() -> void:
 
 
 func test_combine_infuse_and_throw_away_from_the_inspector() -> void:
-	var session: RunSession = U.at_caravan()
+	var session: RunSession = U.at_shop()
 	var state: RunState = session.state
 	var keep := RunItem.make(state.take_uid(), "hearth_knife")
 	var copy := RunItem.make(state.take_uid(), "hearth_knife")
@@ -100,7 +100,7 @@ func test_combine_infuse_and_throw_away_from_the_inspector() -> void:
 
 
 func test_the_inspector_follows_the_step() -> void:
-	var session: RunSession = U.at_caravan()
+	var session: RunSession = U.at_shop()
 	var state: RunState = session.state
 	var item := RunItem.make(state.take_uid(), "hearth_knife")
 	item.essence_ids.append("ember")
@@ -110,7 +110,7 @@ func test_the_inspector_follows_the_step() -> void:
 	state.offers.clear()
 	var main: Main = _main(session)
 	session.select(item.uid)
-	assert_null(U.button(main.inspector, "Sell"), "selling is only at the Caravan")
+	assert_null(U.button(main.inspector, "Sell"), "selling is only at a shop")
 	assert_true(U.press(main.inspector, "Reforge"))
 	assert_eq(item.essence_ids, [] as Array[String])
 	state.stop_kind = "upgrade"
@@ -185,7 +185,7 @@ func test_item_text_explains_keywords_spill_and_awakening() -> void:
 
 
 func test_an_equipped_items_tooltip_lists_the_spills_it_gets() -> void:
-	var session: RunSession = U.at_caravan()
+	var session: RunSession = U.at_shop()
 	var hero: RunHero = session.state.heroes[0]
 	hero.items.clear()
 	var hook := RunItem.make(session.state.take_uid(), "grave_hook")
@@ -254,7 +254,7 @@ func _synergy_badge(main: Main) -> Label:
 
 
 func test_discovered_synergies_show_in_the_guild_bar() -> void:
-	var session: RunSession = U.at_caravan()
+	var session: RunSession = U.at_shop()
 	var state: RunState = session.state
 	state.heroes.assign([RunHero.make("brannoc")])
 	state.heroes[0].items.append(RunItem.make(state.take_uid(), "oak_buckler"))
@@ -283,6 +283,7 @@ func test_a_fight_announces_new_synergies() -> void:
 	assert_eq(session.last_discoveries, ["wardens_oath"] as Array[String])
 	assert_string_contains(U.text_of(main.screen), "Synergy discovered: Warden's Oath")
 	session.state.phase = "fight"
+	session.state.encounter_id = session.state.fight_options[0]
 	session.fight()
 	assert_eq(session.last_discoveries, [] as Array[String], "only the first time")
 
@@ -297,7 +298,7 @@ func test_synergy_text_says_what_sets_it_off() -> void:
 # --- Legendaries --------------------------------------------------------------------
 
 func test_a_legendary_shows_its_path_and_can_be_fed() -> void:
-	var session: RunSession = U.at_caravan()
+	var session: RunSession = U.at_shop()
 	var state: RunState = session.state
 	assert_true(RunActions.add_item(state, session.content, "hungering_censer").ok)
 	var censer: RunItem = state.stash[-1]
@@ -321,7 +322,7 @@ func test_a_legendary_shows_its_path_and_can_be_fed() -> void:
 
 
 func test_items_can_be_fed_to_a_devourer_from_the_inspector() -> void:
-	var session: RunSession = U.at_caravan()
+	var session: RunSession = U.at_shop()
 	var state: RunState = session.state
 	assert_true(RunActions.add_item(state, session.content, "maw_of_the_hollow").ok)
 	var maw: RunItem = state.stash[-1]

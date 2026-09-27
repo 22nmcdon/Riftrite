@@ -64,7 +64,7 @@ static func _room_problem(state: RunState, content: ContentDb, owner: String) ->
 	return state.hero(owner).slot_problem(content)
 
 
-## Throws an item away (any time; selling is only at the Caravan).
+## Throws an item away (any time; selling is only at a shop).
 static func discard_item(state: RunState, content: ContentDb, uid: int) -> Result:
 	var item: RunItem = state.find_item(uid)
 	if item == null:

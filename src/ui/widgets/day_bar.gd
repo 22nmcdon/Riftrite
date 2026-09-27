@@ -1,9 +1,7 @@
 class_name DayBar
 extends PanelContainer
 ## Where the run is: act and day, the day's steps, losses left, gold, keys,
-## and the day's fight (with the essence it yields).
-
-const STEPS: Array[Array] = [["caravan", "Caravan"], ["stop_choice", "Stop"], ["fight", "Fight"]]
+## and the day's fights (with the essence each yields).
 
 
 static func make(session: RunSession) -> DayBar:
@@ -19,27 +17,41 @@ static func make(session: RunSession) -> DayBar:
 	where.add_child(UiStyle.icon("day", 30))
 	where.add_child(UiStyle.heading("%s · Day %d of %d" % [act.name, state.day, act.days], 20, UiStyle.EMBER))
 	line.add_child(where)
-	# The day's steps, the current one lit.
+	# The day's steps (each stop visit, then the fight), the current one lit.
 	var steps := HBoxContainer.new()
 	steps.add_theme_constant_override("separation", 6)
-	for i: int in STEPS.size():
-		var step: Array = STEPS[i]
-		var here: bool = state.phase == step[0] or (step[0] == "stop_choice" and state.phase == "stop") or (step[0] == "fight" and state.phase == "rewards")
+	var stopping: bool = state.phase == "stop_choice" or state.phase == "stop"
+	var names: Array[String] = []
+	var lit: Array[bool] = []
+	for visit: int in session.run.economy.stops_per_day:
+		names.append("Stop %d" % (visit + 1))
+		lit.append(stopping and state.visit == visit)
+	names.append("Fight")
+	lit.append(not stopping)
+	for i: int in names.size():
 		if i > 0:
 			steps.add_child(UiStyle.label("›", 16, UiStyle.TEXT_DIM))
-		steps.add_child(UiStyle.label("[%s]" % step[1] if here else step[1], 17 if here else 16, UiStyle.HIGHLIGHT if here else UiStyle.TEXT_DIM))
+		steps.add_child(UiStyle.label("[%s]" % names[i] if lit[i] else names[i], 17 if lit[i] else 16, UiStyle.HIGHLIGHT if lit[i] else UiStyle.TEXT_DIM))
 	line.add_child(steps)
 	var losses: HBoxContainer = UiStyle.icon_label("loss", "Losses %d/%d" % [state.losses, RunFlow.LOSSES_TO_END], 16, UiStyle.BAD if state.losses > 0 else UiStyle.TEXT)
 	line.add_child(losses)
 	line.add_child(UiStyle.icon_label("gold", "%d gold" % state.gold, 17, UiStyle.HIGHLIGHT))
 	line.add_child(UiStyle.icon_label("key", "%d key%s" % [state.keys, "" if state.keys == 1 else "s"], 16))
+	# The fight picked, or the two to pick from.
+	var fights: Array[String] = state.fight_options.duplicate()
 	if not state.encounter_id.is_empty():
-		var encounter: EncounterDef = session.content.encounters[state.encounter_id]
+		fights = [state.encounter_id]
+	var parts: PackedStringArray = PackedStringArray()
+	for encounter_id: String in fights:
+		var encounter: EncounterDef = session.content.encounters[encounter_id]
 		var essence: String = RunFlow.team_essence(session.content, encounter)
 		var kind: String = "" if encounter.kind == "normal" else " (%s)" % encounter.kind
-		var yields: String = "" if essence.is_empty() else " · yields %s" % session.content.essences[essence].name
-		var kind_icon: String = "fight_%s" % encounter.kind if ["normal", "elite", "boss"].has(encounter.kind) else "fight_normal"
-		line.add_child(UiStyle.icon_label(kind_icon, "Today's fight: %s%s%s" % [encounter.name, kind, yields], 16, UiStyle.TEXT_DIM))
+		var yields: String = "" if essence.is_empty() else ", %s" % session.content.essences[essence].name
+		parts.append("%s%s%s" % [encounter.name, kind, yields])
+	if not fights.is_empty():
+		var shown: EncounterDef = session.content.encounters[fights[0]]
+		var kind_icon: String = "fight_%s" % shown.kind if ["normal", "elite", "boss"].has(shown.kind) else "fight_normal"
+		line.add_child(UiStyle.icon_label(kind_icon, "Today's fight%s: %s" % ["" if fights.size() == 1 else "s", " or ".join(parts)], 16, UiStyle.TEXT_DIM))
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	line.add_child(spacer)

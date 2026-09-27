@@ -36,14 +36,17 @@ static func encounter_relics(content: ContentDb, encounter_id: String) -> Array[
 
 ## An encounter's enemy team. Unit ids get a position number so twins can be
 ## told apart in the log: "rift_hound_1", "rift_hound_2", ...
-static func encounter_units(content: ContentDb, encounter_id: String) -> Array[UnitSetup]:
+## `hp_bp` multiplies every unit's HP (a run's act scales its fights by day:
+## docs/plans/new-day.md).
+static func encounter_units(content: ContentDb, encounter_id: String, hp_bp: int = FixedMath.BP_ONE) -> Array[UnitSetup]:
 	var encounter: EncounterDef = content.encounters[encounter_id]
 	var result: Array[UnitSetup] = []
 	for i: int in encounter.units.size():
 		var slot: EncounterDef.Slot = encounter.units[i]
 		var def: EnemyDef = content.enemies[slot.enemy_id]
 		var unit_id: String = "%s_%d" % [def.id, i + 1]
-		var unit: UnitSetup = UnitSetup.make(unit_id, def.name, def.stats, slot.row, def.basic_attack, item_setups(content, def.items), def.rank)
+		var stats: UnitStats = def.stats if hp_bp == FixedMath.BP_ONE else def.stats.with_hp_bp(hp_bp)
+		var unit: UnitSetup = UnitSetup.make(unit_id, def.name, stats, slot.row, def.basic_attack, item_setups(content, def.items), def.rank)
 		unit.phases = def.phases
 		result.append(unit)
 	return result

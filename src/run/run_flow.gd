@@ -1,11 +1,11 @@
 class_name RunFlow
 extends RefCounted
-## Drives a run through its days (docs/plans/day-structure.md):
-##   start_hero (x3: the team draft) -> start_package -> [caravan -> stop_choice -> stop -> fight
-##   -> rewards] x days -> act_end
-## A first loss replays the day (back to the Caravan, same fight); a second
-## ends the run (run_over). The day before the boss, the stop is always the
-## Upgrade stop.
+## Drives a run through its days (docs/plans/new-day.md):
+##   start_hero (x3: the team draft) -> start_package -> [(stop_choice -> stop)
+##   x stops_per_day -> fight_choice -> fight -> rewards] x days -> act_end
+## Each stop visit offers a shop and other stops; the boss day's last visit
+## is always the Upgrade stop. A first loss replays the day (fresh stops, the
+## same two fights); a second ends the run (run_over).
 ##
 ## Every action checks the phase, applies, and returns a RunActions.Result;
 ## a refused action changes nothing. RunActions' between-fight actions
@@ -13,18 +13,21 @@ extends RefCounted
 ##
 ## Offers are plain dictionaries (so they save as JSON):
 ##   type: "hero" (hero, rank, specialization: a draft pick), "item" (item,
-##         tier), "rank_up" (after an elite: give it to a hero),
+##         tier: a shop's ware, loot, or a reward), "rank_up" (after an
+##         elite: give it to a hero),
 ##         "relic" (relic), "essence" (essence), "gold" (amount), "key",
 ##         "stop" (stop: a node or event id, see RunContent.node_pool),
 ##         "package" (package: "gold" | "relic" | "item", plus that package's
 ##         fields)
 ##   price: gold to pay (0 = free); group: taking one takes the whole group
-##   (a relic choice); taken: already taken or bought.
+##   (a relic choice, the reward pick); taken: already taken or bought.
 ## Randomness comes from RunRandom streams, never from earlier picks.
 
-const PHASES: Array[String] = ["start_hero", "start_package", "caravan", "stop_choice", "stop", "fight", "rewards", "act_end", "run_over"]
+const PHASES: Array[String] = ["start_hero", "start_package", "stop_choice", "stop", "fight_choice", "fight", "rewards", "act_end", "run_over"]
 ## What a stop does (a node's kind, "event", or the fixed "upgrade").
-const STOP_KINDS: Array[String] = ["forge", "loot", "vault", "retrain", "event", "fight", "upgrade"]
+const STOP_KINDS: Array[String] = ["shop", "forge", "loot", "vault", "retrain", "event", "upgrade"]
+## The reward pick's group (taking one takes them all).
+const REWARD_PICK: String = "reward_pick"
 const INT_KEYS: Array[String] = ["rank", "tier", "amount", "price"]
 const LOSSES_TO_END: int = 2
 
@@ -117,152 +120,88 @@ static func pick_package(state: RunState, content: ContentDb, run: RunContent, i
 
 # --- days -----------------------------------------------------------------------
 
-## Today's fight, from the day alone (a replayed day keeps it).
-static func _pick_encounter(state: RunState, run: RunContent) -> String:
+## The day's fights to pick from, from the day alone (a replayed day keeps
+## them): the boss on the boss day; otherwise one easier and one harder fight
+## when the day's pool has both, or else two different ones.
+static func _pick_fights(state: RunState, run: RunContent) -> Array[String]:
 	var act: ActDef = run.act(state.act)
+	var picked: Array[String] = []
 	if act.is_boss_day(state.day):
-		return act.boss
-	var pool: Array[String] = act.encounters_for(act.elites if act.is_elite_day(state.day) else act.normal, state.day)
+		picked.append(act.boss)
+		return picked
 	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.FIGHT, state.act, state.day] as Array[int])
-	return pool[rng.range_int(pool.size())]
+	var easier: Array[String] = []
+	var harder: Array[String] = []
+	for encounter_id: String in act.encounters_for(act.pool_for(state.day), state.day):
+		if act.is_hard(encounter_id, state.day):
+			harder.append(encounter_id)
+		else:
+			easier.append(encounter_id)
+	if not easier.is_empty() and not harder.is_empty():
+		picked.append(easier[rng.range_int(easier.size())])
+		picked.append(harder[rng.range_int(harder.size())])
+		return picked
+	var pool: Array[String] = easier + harder
+	for i: int in mini(2, pool.size()):
+		picked.append(pool.pop_at(rng.range_int(pool.size())))
+	return picked
 
 
 static func _start_day(state: RunState, content: ContentDb, run: RunContent) -> void:
-	state.encounter_id = _pick_encounter(state, run)
-	state.phase = "caravan"
+	state.fight_options = _pick_fights(state, run)
+	state.encounter_id = ""
+	state.visit = 0
+	_offer_stops(state, content, run)
+
+
+## A fight's enemy HP scaling today (the act's pool entry).
+static func fight_hp_bp(state: RunState, run: RunContent, encounter_id: String) -> int:
+	return run.act(state.act).hp_bp(encounter_id, state.day)
+
+
+## Whether a fight is the harder of the day's two.
+static func is_hard_fight(state: RunState, run: RunContent, encounter_id: String) -> bool:
+	return state.fight_options.size() > 1 and run.act(state.act).is_hard(encounter_id, state.day)
+
+
+# --- stop choices -----------------------------------------------------------------
+
+## The day's next stop visit: a pick of node_choices stops, one of them a
+## shop and the rest anything but a shop, each drawn by weight from the
+## stops that apply now. The boss day's last visit is always the Upgrade stop.
+static func _offer_stops(state: RunState, content: ContentDb, run: RunContent) -> void:
+	state.offers.clear()
 	state.stop_kind = ""
+	state.stop_node = ""
 	state.stop_used = false
-	state.reroll_count = 0
-	_convert_shards(state, content, run)
-	_fill_caravan(state, content, run)
-
-
-# --- the Caravan ----------------------------------------------------------------
-
-static func _fill_caravan(state: RunState, content: ContentDb, run: RunContent) -> void:
-	state.offers.clear()
-	var economy: EconomyDef = run.economy
-	var tier_weights: Array[int] = run.act(state.act).caravan_tier_weights
-	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.CARAVAN, state.act, state.day, state.attempt, state.reroll_count] as Array[int])
-	var offered: Array[String] = []
-	for i: int in economy.caravan_items:
-		var item_id: String = _pick_item(state, content, rng, economy.rarity_weights, false, offered)
-		if item_id.is_empty():
-			break
-		offered.append(item_id)
-		var tier: int = maxi(RunRandom.pick_weighted(rng, tier_weights), 0)
-		var held: Array[int] = _held_tiers(state, item_id)
-		if not held.is_empty() and not held.has(tier):
-			tier = held.min()
-		state.offers.append({"type": "item", "item": item_id, "tier": tier, "price": economy.item_price[tier], "taken": false})
-
-
-static func _held_tiers(state: RunState, item_id: String) -> Array[int]:
-	var tiers: Array[int] = []
-	var lists: Array = [state.stash]
-	for hero: RunHero in state.heroes:
-		lists.append(hero.items)
-	for list: Array in lists:
-		for item: RunItem in list:
-			if item.item_id == item_id and not tiers.has(item.tier):
-				tiers.append(item.tier)
-	return tiers
-
-
-## Buys a Caravan offer. An item that would combine with a copy the guild
-## holds (see upgrade_target) combines straight into that copy, so buying
-## an upgrade needs no stash room.
-static func buy(state: RunState, content: ContentDb, index: int) -> RunActions.Result:
-	var problem: String = _phase_problem(state, "caravan")
-	if not problem.is_empty():
-		return _fail(problem)
-	var target: int = upgrade_target(state, content, index)
-	if target < 0:
-		return _take_offer(state, content, index)
-	var offer: Dictionary = state.offers[index]
-	if offer["price"] > state.gold:
-		return _fail("not enough gold (%d of %d)" % [state.gold, offer["price"]])
-	var held: RunItem = state.find_item(target)
-	held.tier += 1
-	state.gold -= offer["price"]
-	offer["taken"] = true
-	return _ok("%s upgraded to %s" % [content.items[held.item_id].name, TuningDef.TIER_LABELS[held.tier]])
-
-
-## The uid of the held item a Caravan item offer would upgrade (same item
-## and tier, below S, not Legendary), or -1. The UI lights these up.
-static func upgrade_target(state: RunState, content: ContentDb, index: int) -> int:
-	if index < 0 or index >= state.offers.size():
-		return -1
-	var offer: Dictionary = state.offers[index]
-	if offer["type"] != "item" or offer["taken"] or offer["tier"] >= 3 or content.items[offer["item"]].rarity == "legendary":
-		return -1
-	var lists: Array = []
-	for hero: RunHero in state.heroes:
-		lists.append(hero.items)
-	lists.append(state.stash)
-	for list: Array in lists:
-		for item: RunItem in list:
-			if item.item_id == offer["item"] and item.tier == offer["tier"]:
-				return item.uid
-	return -1
-
-
-static func sell(state: RunState, content: ContentDb, run: RunContent, uid: int) -> RunActions.Result:
-	var problem: String = _phase_problem(state, "caravan")
-	if not problem.is_empty():
-		return _fail(problem)
-	var item: RunItem = state.find_item(uid)
-	if item == null:
-		return _fail("that item isn't in the guild")
-	var price: int = run.economy.sell_price(run.economy.item_price[item.tier])
-	var result: RunActions.Result = RunActions.discard_item(state, content, uid)
-	state.gold += price
-	result.note = "sold %s for %d gold" % [content.items[item.item_id].name, price]
-	return result
-
-
-static func reroll_cost(state: RunState, run: RunContent) -> int:
-	return run.economy.reroll_base + run.economy.reroll_step * state.reroll_count
-
-
-static func reroll(state: RunState, content: ContentDb, run: RunContent) -> RunActions.Result:
-	var problem: String = _phase_problem(state, "caravan")
-	if not problem.is_empty():
-		return _fail(problem)
-	var cost: int = reroll_cost(state, run)
-	var result: RunActions.Result = RunActions.spend_gold(state, cost)
-	if not result.ok:
-		return result
-	state.reroll_count += 1
-	_fill_caravan(state, content, run)
-	return _ok("rerolled the Caravan for %d gold" % cost)
-
-
-static func leave_caravan(state: RunState, content: ContentDb, run: RunContent) -> RunActions.Result:
-	var problem: String = _phase_problem(state, "caravan")
-	if not problem.is_empty():
-		return _fail(problem)
-	state.offers.clear()
-	if run.act(state.act).is_boss_day(state.day):
+	if run.act(state.act).is_boss_day(state.day) and state.visit == run.economy.stops_per_day - 1:
 		_enter_stop(state, content, run, "upgrade")
-		return _ok("the road ends at an anvil before the boss")
+		return
 	state.phase = "stop_choice"
-	var available: Array[String] = []
-	var weights: Array[int] = []
+	var shops: Array[String] = []
+	var shop_weights: Array[int] = []
+	var others: Array[String] = []
+	var other_weights: Array[int] = []
 	for node_id: String in run.node_pool():
-		if _stop_applies(state, run.node_kind(node_id)):
-			available.append(node_id)
-			weights.append(run.node_weight(node_id))
-	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.STOPS, state.act, state.day, state.attempt] as Array[int])
-	for i: int in mini(run.economy.node_choices, available.size()):
-		var picked: int = RunRandom.pick_weighted(rng, weights)
+		if not _stop_applies(state, run.node_kind(node_id)):
+			continue
+		if run.is_shop(node_id):
+			shops.append(node_id)
+			shop_weights.append(run.node_weight(node_id))
+		else:
+			others.append(node_id)
+			other_weights.append(run.node_weight(node_id))
+	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.STOPS, state.act, state.day, state.attempt, state.visit] as Array[int])
+	var shop: int = RunRandom.pick_weighted(rng, shop_weights)
+	if shop >= 0:
+		state.offers.append({"type": "stop", "stop": shops[shop], "price": 0, "taken": false})
+	for i: int in run.economy.node_choices - state.offers.size():
+		var picked: int = RunRandom.pick_weighted(rng, other_weights)
 		if picked < 0:
 			break
-		state.offers.append({"type": "stop", "stop": available[picked], "price": 0, "taken": false})
-		available.remove_at(picked)
-		weights.remove_at(picked)
-	return _ok("left the Caravan")
+		state.offers.append({"type": "stop", "stop": others[picked], "price": 0, "taken": false})
+		others.remove_at(picked)
+		other_weights.remove_at(picked)
 
 
 ## Whether a node of this kind can do anything right now.
@@ -309,11 +248,13 @@ static func _enter_stop(state: RunState, content: ContentDb, run: RunContent, st
 	state.phase = "stop"
 	state.stop_kind = kind
 	state.stop_node = stop
-	state.stop_encounter = ""
 	state.stop_used = false
+	state.reroll_count = 0
 	state.offers.clear()
-	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.STOP, state.act, state.day, state.attempt] as Array[int])
+	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.STOP, state.act, state.day, state.attempt, state.visit] as Array[int])
 	match kind:
+		"shop":
+			_fill_shop(state, content, run)
 		"loot":
 			_add_loot(state, content, run, rng, run.nodes[stop].loot)
 		"vault":
@@ -324,8 +265,6 @@ static func _enter_stop(state: RunState, content: ContentDb, run: RunContent, st
 				_add_item_offer(state, content, rng, run.economy.vault_rarity_weights, run.economy.loot_tier_weights, true)
 		"event":
 			_add_event(state, content, run, rng, run.events[stop])
-		"fight":
-			state.stop_encounter = _pick_skirmish(state, run, rng)
 
 
 static func _add_loot(state: RunState, content: ContentDb, run: RunContent, rng: SimRng, loot: String) -> void:
@@ -360,23 +299,175 @@ static func _add_event(state: RunState, content: ContentDb, run: RunContent, rng
 			state.offers.append({"type": "essence", "essence": content.essence_ids[rng.range_int(content.essence_ids.size())], "price": 0, "taken": false})
 		"key":
 			state.offers.append({"type": "key", "price": 0, "taken": false})
-		"tier_shop":
-			_add_tier_shop(state, content, run, rng, event)
 	for offer: Dictionary in state.offers:
 		offer["event"] = event.id
 
 
-## A tier-specific shop: different items (never enemy-only), all at the
-## event's tier and priced like the Caravan's wares of that tier.
-static func _add_tier_shop(state: RunState, content: ContentDb, run: RunContent, rng: SimRng, event: EventDef) -> void:
-	var picked: Array[String] = []
-	for i: int in event.count:
-		var item_id: String = _pick_item(state, content, rng, run.economy.rarity_weights, false, picked)
-		if item_id.is_empty():
-			return
-		picked.append(item_id)
-		state.offers.append({"type": "item", "item": item_id, "tier": event.tier, "price": run.economy.item_price[event.tier], "taken": false})
+# --- shops ------------------------------------------------------------------------
 
+## Whether the run is at a shop stop (where buy, sell, and reroll work).
+static func at_shop(state: RunState) -> bool:
+	return state.phase == "stop" and state.stop_kind == "shop"
+
+
+## Fills the shop being visited (docs/plans/new-day.md, "Shops"): an essence
+## merchant's essence, then items that fit the shop (topped up with any item),
+## at the shop's tier or by the act's shop tier odds. Never relics,
+## enemy-only items, or Legendaries; outside tier shops, never at a different
+## tier than a copy the guild holds.
+static func _fill_shop(state: RunState, content: ContentDb, run: RunContent) -> void:
+	state.offers.clear()
+	var shop: ShopDef = run.nodes[state.stop_node].shop
+	var economy: EconomyDef = run.economy
+	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.SHOP, state.act, state.day, state.attempt, state.visit, state.reroll_count] as Array[int])
+	if not shop.essence.is_empty():
+		state.offers.append({"type": "essence", "essence": shop.essence, "price": economy.essence_price, "taken": false})
+	var partners: Array[String] = []
+	if shop.partners:
+		partners = partner_items(state, content)
+	var fits: Callable = func(def: ItemDef) -> bool:
+		return shop.fits(def) and (not shop.partners or partners.has(def.id))
+	var offered: Array[String] = []
+	for i: int in shop.count if shop.count > 0 else economy.shop_items:
+		var item_id: String = _pick_item(state, content, rng, economy.rarity_weights, false, offered, fits)
+		if item_id.is_empty():
+			item_id = _pick_item(state, content, rng, economy.rarity_weights, false, offered)
+		if item_id.is_empty():
+			break
+		offered.append(item_id)
+		var tier: int = shop.tier
+		if tier < 0:
+			tier = maxi(RunRandom.pick_weighted(rng, run.act(state.act).shop_tier_weights), 0)
+			var held: Array[int] = _held_tiers(state, item_id)
+			if not held.is_empty() and not held.has(tier):
+				tier = held.min()
+		state.offers.append({"type": "item", "item": item_id, "tier": tier, "price": economy.item_price_for(content.items[item_id].rarity, tier), "taken": false})
+
+
+## The Synergy Peddler's wares: items that would complete a synergy with what
+## the guild holds (a pair's missing half, a signature item for a hero in the
+## team, an item that transforms with an essence held), minus items held.
+static func partner_items(state: RunState, content: ContentDb) -> Array[String]:
+	var held: Array[String] = []
+	var essences: Array[String] = state.pouch.duplicate()
+	for list: Array in _item_lists(state):
+		for item: RunItem in list:
+			held.append(item.item_id)
+			essences.append_array(item.essence_ids)
+	var wanted: Array[String] = []
+	for synergy_id: String in content.synergy_ids:
+		var synergy: SynergyDef = content.synergies[synergy_id]
+		match synergy.layer:
+			SynergyDef.Layer.PAIR:
+				for i: int in 2:
+					if held.has(synergy.items[i]):
+						wanted.append(synergy.items[1 - i])
+			SynergyDef.Layer.SIGNATURE:
+				if state.hero(synergy.hero) != null:
+					wanted.append(synergy.items[0])
+			SynergyDef.Layer.TRANSFORMATION:
+				if essences.has(synergy.essence):
+					wanted.append(synergy.items[0])
+	var result: Array[String] = []
+	for item_id: String in wanted:
+		if not held.has(item_id) and not result.has(item_id):
+			result.append(item_id)
+	return result
+
+
+## The stash, then each hero's items.
+static func _item_lists(state: RunState) -> Array:
+	var lists: Array = [state.stash]
+	for hero: RunHero in state.heroes:
+		lists.append(hero.items)
+	return lists
+
+
+static func _held_tiers(state: RunState, item_id: String) -> Array[int]:
+	var tiers: Array[int] = []
+	for list: Array in _item_lists(state):
+		for item: RunItem in list:
+			if item.item_id == item_id and not tiers.has(item.tier):
+				tiers.append(item.tier)
+	return tiers
+
+
+## Buys a shop offer. An item that would combine with a copy the guild holds
+## (see upgrade_target) combines straight into that copy, so buying an
+## upgrade needs no stash room.
+static func buy(state: RunState, content: ContentDb, index: int) -> RunActions.Result:
+	if not at_shop(state):
+		return _fail("buying needs a shop")
+	var target: int = upgrade_target(state, content, index)
+	if target < 0:
+		return _take_offer(state, content, index)
+	var offer: Dictionary = state.offers[index]
+	if offer["price"] > state.gold:
+		return _fail("not enough gold (%d of %d)" % [state.gold, offer["price"]])
+	var held: RunItem = state.find_item(target)
+	held.tier += 1
+	state.gold -= offer["price"]
+	offer["taken"] = true
+	return _ok("%s upgraded to %s" % [content.items[held.item_id].name, TuningDef.TIER_LABELS[held.tier]])
+
+
+## The uid of the held item a shop's item offer would upgrade (same item and
+## tier, below S, not Legendary), or -1. The UI lights these up.
+static func upgrade_target(state: RunState, content: ContentDb, index: int) -> int:
+	if index < 0 or index >= state.offers.size():
+		return -1
+	var offer: Dictionary = state.offers[index]
+	if offer["type"] != "item" or offer["taken"] or offer["tier"] >= 3 or content.items[offer["item"]].rarity == "legendary":
+		return -1
+	var lists: Array = []
+	for hero: RunHero in state.heroes:
+		lists.append(hero.items)
+	lists.append(state.stash)
+	for list: Array in lists:
+		for item: RunItem in list:
+			if item.item_id == offer["item"] and item.tier == offer["tier"]:
+				return item.uid
+	return -1
+
+
+## What an item sells for: half its buy price (by rarity and tier), rounded
+## down.
+static func sell_price(content: ContentDb, run: RunContent, item: RunItem) -> int:
+	return run.economy.sell_price(run.economy.item_price_for(content.items[item.item_id].rarity, item.tier))
+
+
+static func sell(state: RunState, content: ContentDb, run: RunContent, uid: int) -> RunActions.Result:
+	if not at_shop(state):
+		return _fail("selling needs a shop")
+	var item: RunItem = state.find_item(uid)
+	if item == null:
+		return _fail("that item isn't in the guild")
+	var price: int = sell_price(content, run, item)
+	var result: RunActions.Result = RunActions.discard_item(state, content, uid)
+	if not result.ok:
+		return result
+	state.gold += price
+	result.note = "sold %s for %d gold" % [content.items[item.item_id].name, price]
+	return result
+
+
+static func reroll_cost(state: RunState, run: RunContent) -> int:
+	return run.economy.reroll_base + run.economy.reroll_step * state.reroll_count
+
+
+static func reroll(state: RunState, content: ContentDb, run: RunContent) -> RunActions.Result:
+	if not at_shop(state):
+		return _fail("rerolling needs a shop")
+	var cost: int = reroll_cost(state, run)
+	var result: RunActions.Result = RunActions.spend_gold(state, cost)
+	if not result.ok:
+		return result
+	state.reroll_count += 1
+	_fill_shop(state, content, run)
+	return _ok("rerolled the shop for %d gold" % cost)
+
+
+# --- one-time stops -----------------------------------------------------------------
 
 ## Reforges at the Forge.
 static func forge_reforge(state: RunState, content: ContentDb, uid: int) -> RunActions.Result:
@@ -427,57 +518,38 @@ static func upgrade(state: RunState, content: ContentDb, uid: int) -> RunActions
 	return _ok("%s rises to %s" % [def.name, TuningDef.TIER_LABELS[item.tier]])
 
 
-static func leave_stop(state: RunState) -> RunActions.Result:
+## Leaves the stop: on to the day's next stop visit, or to the fight pick
+## after the last (straight to the fight when there's only one).
+static func leave_stop(state: RunState, content: ContentDb, run: RunContent) -> RunActions.Result:
 	var problem: String = _phase_problem(state, "stop")
 	if not problem.is_empty():
 		return _fail(problem)
-	state.phase = "fight"
+	state.visit += 1
+	if state.visit < run.economy.stops_per_day:
+		_offer_stops(state, content, run)
+		return _ok("back on the road")
+	state.offers.clear()
 	state.stop_kind = ""
 	state.stop_node = ""
-	state.stop_encounter = ""
-	state.offers.clear()
-	return _ok("on to the fight")
+	state.reroll_count = 0
+	if state.fight_options.size() == 1:
+		state.encounter_id = state.fight_options[0]
+		state.phase = "fight"
+		return _ok("on to the fight")
+	state.phase = "fight_choice"
+	return _ok("choose the day's fight")
 
 
-# --- the extra fight (a skirmish node) --------------------------------------------
-
-## The skirmish's enemies: another of the day's normal encounters (the day's
-## own fight only if it's the only one), or "".
-static func _pick_skirmish(state: RunState, run: RunContent, rng: SimRng) -> String:
-	var act: ActDef = run.act(state.act)
-	var pool: Array[String] = act.encounters_for(act.normal, state.day)
-	if pool.size() > 1:
-		pool.erase(state.encounter_id)
-	return pool[rng.range_int(pool.size())] if not pool.is_empty() else ""
-
-
-## Fights the skirmish (once, at a skirmish node). Like fight(), returns
-## [Result, FightResult, FightSetup]. It counts for infusion XP, discoveries,
-## and Legendary paths, but not as a win or a loss: a win adds a normal win's
-## rewards to the stop's offers; a loss just gives nothing.
-static func skirmish(state: RunState, content: ContentDb, run: RunContent) -> Array:
-	if state.phase != "stop" or state.stop_kind != "fight":
-		return [_fail("a skirmish needs a skirmish stop"), null, null]
-	if state.stop_used:
-		return [_fail("this skirmish is already fought"), null, null]
-	for hero: RunHero in state.heroes:
-		if hero.needs_specialization:
-			return [_fail("%s needs a specialization first" % hero.hero_id), null, null]
-	var setup: FightSetup = RunFight.setup_for(state, content, state.stop_encounter)
-	var result: FightResult = CombatSim.run(setup, content)
-	if not result.errors.is_empty():
-		return [_fail("the fight couldn't start: %s" % result.errors[0]), result, setup]
-	var grown: Array[String] = RunFight.apply_result(state, content, result, state.stop_encounter, false)
-	state.stop_used = true
-	var outcome: RunActions.Result
-	if result.guild_won():
-		var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.SKIRMISH, state.act, state.day, state.attempt] as Array[int])
-		_grant_rewards(state, content, run, content.encounters[state.stop_encounter], rng)
-		outcome = _ok("won the skirmish")
-	else:
-		outcome = _ok("lost the skirmish; no spoils, and no harm done")
-	outcome.notes = grown
-	return [outcome, result, setup]
+## Picks one of the day's fights.
+static func pick_fight(state: RunState, content: ContentDb, index: int) -> RunActions.Result:
+	var problem: String = _phase_problem(state, "fight_choice")
+	if not problem.is_empty():
+		return _fail(problem)
+	if index < 0 or index >= state.fight_options.size():
+		return _fail("no fight there")
+	state.encounter_id = state.fight_options[index]
+	state.phase = "fight"
+	return _ok("on to fight %s" % content.encounters[state.encounter_id].name)
 
 
 ## Gives a rank-up (an elite's reward) to a hero of your choice
@@ -495,8 +567,11 @@ static func give_rank_up(state: RunState, content: ContentDb, index: int, hero_i
 	return result
 
 
-## Takes an offer at a stop or among rewards (or a relic-merchant purchase).
+## Takes an offer at a stop or among rewards (or a relic-merchant purchase;
+## at a shop, buys it).
 static func take(state: RunState, content: ContentDb, index: int) -> RunActions.Result:
+	if at_shop(state):
+		return buy(state, content, index)
 	if state.phase != "stop" and state.phase != "rewards":
 		return _fail("there's nothing to take now")
 	return _take_offer(state, content, index)
@@ -551,7 +626,7 @@ static func fight(state: RunState, content: ContentDb, run: RunContent) -> Array
 	for hero: RunHero in state.heroes:
 		if hero.needs_specialization:
 			return [_fail("%s needs a specialization first" % hero.hero_id), null, null]
-	var setup: FightSetup = RunFight.setup_for(state, content, state.encounter_id)
+	var setup: FightSetup = RunFight.setup_for(state, content, state.encounter_id, fight_hp_bp(state, run, state.encounter_id))
 	var result: FightResult = CombatSim.run(setup, content)
 	if not result.errors.is_empty():
 		return [_fail("the fight couldn't start: %s" % result.errors[0]), result, setup]
@@ -573,32 +648,30 @@ static func fight(state: RunState, content: ContentDb, run: RunContent) -> Array
 	return [outcome, result, setup]
 
 
+## A win's rewards (docs/plans/new-day.md): gold now (more after the harder
+## fight), and offers for the rest: the team's essence, the reward pick, and
+## after an elite the rank-up and a relic choice (and maybe a key), after the
+## boss a relic choice.
 static func _give_rewards(state: RunState, content: ContentDb, run: RunContent) -> void:
 	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.REWARDS, state.act, state.day] as Array[int])
 	state.phase = "rewards"
 	state.offers.clear()
-	_grant_rewards(state, content, run, content.encounters[state.encounter_id], rng)
-
-
-## A win's rewards against `encounter`: gold (and shards) now, and offers for
-## the rest (an essence after an elite or boss, the drop, a relic choice).
-static func _grant_rewards(state: RunState, content: ContentDb, run: RunContent, encounter: EncounterDef, rng: SimRng) -> void:
+	var encounter: EncounterDef = content.encounters[state.encounter_id]
 	var economy: EconomyDef = run.economy
-	var essence: String = team_essence(content, encounter)
+	var hard: bool = is_hard_fight(state, run, state.encounter_id)
 	var gold: int = economy.win_gold_base + economy.win_gold_per_day * state.day
 	match encounter.kind:
 		"elite":
 			gold = FixedMath.apply_bp(gold, economy.elite_gold_bp)
 		"boss":
 			gold = economy.boss_gold
+	if hard:
+		gold = FixedMath.apply_bp(gold, economy.hard_gold_bp)
 	state.gold += gold
-	if encounter.kind == "normal":
-		if not essence.is_empty():
-			state.shards[essence] = state.shards.get(essence, 0) + 1
-			_convert_shards(state, content, run)
-	elif not essence.is_empty():
+	var essence: String = team_essence(content, encounter)
+	if not essence.is_empty():
 		state.offers.append({"type": "essence", "essence": essence, "price": 0, "taken": false})
-	_add_drop(state, content, encounter, rng)
+	_add_reward_pick(state, content, run, encounter, economy.hard_reward_rarity_weights if hard else economy.reward_rarity_weights, rng)
 	if encounter.kind == "elite":
 		state.offers.append({"type": "rank_up", "price": 0, "taken": false})
 		_add_relic_offers(state, content, rng, economy.elite_relic_weights, economy.relic_choices, "relic_choice", 0)
@@ -642,28 +715,31 @@ static func team_essence(content: ContentDb, encounter: EncounterDef) -> String:
 	return best
 
 
-## Shards become essences while there's room in the pouch.
-static func _convert_shards(state: RunState, content: ContentDb, run: RunContent) -> void:
-	var ids: Array = state.shards.keys()
-	ids.sort()
-	for essence_id: String in ids:
-		while state.shards[essence_id] >= run.economy.shards_per_essence and state.pouch.size() < content.tuning.pouch_cap:
-			state.shards[essence_id] -= run.economy.shards_per_essence
-			state.pouch.append(essence_id)
-
-
-## The guaranteed drop: one of the enemy team's items (at its tier) or relics
-## (not already held), enemy-only ones included.
-static func _add_drop(state: RunState, content: ContentDb, encounter: EncounterDef, rng: SimRng) -> void:
+## The reward pick (take one): one drop from the enemy team's items (at
+## their tier) and relics (not already held), enemy-only ones included; then
+## reward_pool_items different items from the pool (never enemy-only or
+## Legendary), rarity by `weights`, tier by the act's shop tier odds.
+static func _add_reward_pick(state: RunState, content: ContentDb, run: RunContent, encounter: EncounterDef, weights: Array[int], rng: SimRng) -> void:
 	var candidates: Array[Dictionary] = []
 	for slot: EncounterDef.Slot in encounter.units:
 		for entry: LoadoutEntry in content.enemies[slot.enemy_id].items:
-			candidates.append({"type": "item", "item": entry.item_id, "tier": entry.tier, "price": 0, "taken": false})
+			candidates.append({"type": "item", "item": entry.item_id, "tier": entry.tier, "price": 0, "taken": false, "group": REWARD_PICK, "drop": "yes"})
 	for relic_id: String in encounter.relics:
 		if not state.relics.has(relic_id):
-			candidates.append({"type": "relic", "relic": relic_id, "price": 0, "taken": false})
+			candidates.append({"type": "relic", "relic": relic_id, "price": 0, "taken": false, "group": REWARD_PICK, "drop": "yes"})
+	var picked: Array[String] = []
 	if not candidates.is_empty():
-		state.offers.append(candidates[rng.range_int(candidates.size())])
+		var drop: Dictionary = candidates[rng.range_int(candidates.size())]
+		state.offers.append(drop)
+		if drop["type"] == "item":
+			picked.append(drop["item"])
+	for i: int in run.economy.reward_pool_items:
+		var item_id: String = _pick_item(state, content, rng, weights, false, picked)
+		if item_id.is_empty():
+			break
+		picked.append(item_id)
+		var tier: int = maxi(RunRandom.pick_weighted(rng, run.act(state.act).shop_tier_weights), 0)
+		state.offers.append({"type": "item", "item": item_id, "tier": tier, "price": 0, "taken": false, "group": REWARD_PICK})
 
 
 # --- picking items and relics ---------------------------------------------------
@@ -677,12 +753,14 @@ static func _rarity_only(rarity: String) -> Array[int]:
 ## A random item id: rarity by `weights` (rarities with nothing to offer are
 ## skipped), then any item of that rarity equally. Never a Legendary already
 ## seen (and an offered Legendary counts as seen). Enemy-only items only when
-## `enemy_only_ok`.
-static func _pick_item(state: RunState, content: ContentDb, rng: SimRng, weights: Array[int], enemy_only_ok: bool, exclude: Array[String] = []) -> String:
+## `enemy_only_ok`; with `fits` (ItemDef -> bool), only items it accepts.
+static func _pick_item(state: RunState, content: ContentDb, rng: SimRng, weights: Array[int], enemy_only_ok: bool, exclude: Array[String] = [], fits: Callable = Callable()) -> String:
 	var by_rarity: Array[Array] = [[], [], [], [], []]
 	for item_id: String in content.item_ids:
 		var def: ItemDef = content.items[item_id]
 		if (def.enemy_only and not enemy_only_ok) or exclude.has(item_id) or state.legendaries_seen.has(item_id):
+			continue
+		if fits.is_valid() and not fits.call(def):
 			continue
 		by_rarity[ItemDef.RARITIES.find(def.rarity)].append(item_id)
 	var usable: Array[int] = []

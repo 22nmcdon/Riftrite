@@ -28,7 +28,7 @@ func _chaotic_fight(seed_value: int) -> FightSetup:
 		{"target": "holder_items", "stat": "crit_chance_bp", "value": 2000}]})
 	var claw: ItemDef = K.item("claw", {"cooldown_ms": 900, "crit_chance_bp": 2500, "effects": K.damage(7, "enemy_random")})
 	var setup: FightSetup = FightSetup.make(
-		[K.unit("warden", 420, FRONT, [K.equip(cleave, ["ember", "ember"] as Array[String], 0, 300), drum]), K.unit("striker", 300, FRONT, [K.equip(scatter, ["umbral"] as Array[String], 0, 300), K.content().items["whetstone"], K.content().items["twin_daggers"], K.equip(K.content().items["tallow_torch"], ["ember"] as Array[String])]), K.unit("mender", 260, BACK, [K.equip(mend, ["verdant"] as Array[String], 0, 280), K.equip(scatter, ["stone"] as Array[String])]), _vell()],
+		[K.unit("warden", 420, FRONT, [K.equip(cleave, ["ember", "ember"] as Array[String], 0, 300), drum]), K.unit("striker", 300, FRONT, [K.equip(scatter, ["umbral"] as Array[String], 0, 300), K.content().items["whetstone"], K.content().items["twin_daggers"], K.equip(K.content().items["tallow_torch"], ["ember"] as Array[String])]), K.unit("mender", 260, BACK, [K.equip(mend, ["verdant"] as Array[String], 0, 140), K.equip(scatter, ["stone"] as Array[String])]), _vell()],
 		[K.unit("ghoul_a", 380, FRONT, [K.equip(claw, ["frost"] as Array[String])]), K.unit("ghoul_b", 380, FRONT, [K.equip(claw, ["venom"] as Array[String])]), K.unit("shade", 300, BACK, [K.equip(claw, ["wrath"] as Array[String]), K.equip(hex, ["ember", "storm"] as Array[String], 0, 300)])],
 		seed_value, 1)
 	setup.relics = ["warding_knot", "pilgrims_flask", "cinder_crown", "hourglass", "emberglass"] as Array[String]

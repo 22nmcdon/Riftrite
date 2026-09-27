@@ -12,10 +12,10 @@ func _init() -> void:
 		run = RunContent.load_dir("res://data", db)
 		errors.append_array(run.errors)
 	if errors.is_empty():
-		print("data/ OK: %d statuses, %d essences, %d alloys, %d keywords, %d items, %d heroes, %d enemies, %d encounters, %d relics, %d synergies, %d specializations, %d acts, %d events, %d other stop nodes" % [
+		print("data/ OK: %d statuses, %d essences, %d alloys, %d keywords, %d items, %d heroes, %d enemies, %d encounters, %d relics, %d synergies, %d specializations, %d acts, %d events, %d other stop nodes (%d shops)" % [
 			db.status_ids.size(), db.essence_ids.size(), db.alloy_ids.size(), db.keyword_ids.size(), db.item_ids.size(),
 			db.hero_ids.size(), db.enemy_ids.size(), db.encounter_ids.size(), db.relic_ids.size(), db.synergy_ids.size(), db.specialization_ids.size(),
-			run.acts.size(), run.event_ids.size(), run.node_ids.size()])
+			run.acts.size(), run.event_ids.size(), run.node_ids.size(), run.node_ids.filter(func(id: String) -> bool: return run.is_shop(id)).size()])
 		quit(0)
 		return
 	for message: String in errors:

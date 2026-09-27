@@ -1,7 +1,7 @@
 class_name NodeDef
 extends RefCounted
 ## A stop the day's node choice can offer (data/nodes.json;
-## docs/plans/stop-nodes.md). Every event is a node too (its own name, text,
+## docs/plans/stop-nodes.md, docs/plans/new-day.md). Every event is a node too (its own name, text,
 ## and weight in data/events.json), so the pool is these plus the events.
 ##   {"id": "loot_item", "name": "A Fallen Cache", "text": "...",
 ##    "kind": "loot", "loot": "item", "weight": 7}
@@ -10,10 +10,10 @@ extends RefCounted
 ##   loot     a free "item", "essence", or "gold" (the "loot" key)
 ##   vault    spend a key on a chest (only with a key)
 ##   retrain  switch a hero's specialization (only when one has one)
-##   fight    an extra fight against another of the day's normal encounters;
-##            a win gives a normal win's rewards, a loss just gives nothing
+##   shop     buy, sell, and reroll (the "shop" key: a ShopDef); every stop
+##            visit offers one shop (docs/plans/new-day.md)
 
-const KINDS: Array[String] = ["forge", "loot", "vault", "retrain", "fight"]
+const KINDS: Array[String] = ["forge", "loot", "vault", "retrain", "shop"]
 const LOOT_KINDS: Array[String] = ["item", "essence", "gold"]
 
 var id: String
@@ -22,6 +22,8 @@ var text: String
 var kind: String
 ## loot: what it gives.
 var loot: String = ""
+## shop: what it sells.
+var shop: ShopDef = null
 var weight: int = 1
 
 
@@ -33,6 +35,9 @@ static func read(reader: DataReader) -> NodeDef:
 	def.kind = reader.req_choice("kind", KINDS)
 	if def.kind == "loot":
 		def.loot = reader.req_choice("loot", LOOT_KINDS)
+	if def.kind == "shop":
+		var shop_reader: DataReader = reader.req_object("shop")
+		def.shop = ShopDef.read(shop_reader) if shop_reader != null else ShopDef.new()
 	def.weight = reader.req_int("weight", 1)
 	reader.finish()
 	return def

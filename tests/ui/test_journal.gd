@@ -22,13 +22,14 @@ func test_a_run_writes_its_journal() -> void:
 	for pick: int in RunState.TEAM_SIZE:
 		session.pick_start_hero(0)
 	session.pick_package(0)
+	session.pick_stop(0)
 	session.reroll()
 	var data: Dictionary = _read(session)
 	assert_eq([int(data["seed"]), int(data["sessions"])], [21, 1])
 	var did: Array = (data["actions"] as Array).map(func(entry: Dictionary) -> String: return entry["did"])
-	assert_eq(did.size(), 6, "new run, three heroes, package, reroll: %s" % [did])
-	assert_string_contains(did[5], "rerolled")
-	assert_eq([int((data["actions"] as Array)[5]["day"]), (data["actions"] as Array)[5]["phase"]], [1, "caravan"])
+	assert_eq(did.size(), 7, "new run, three heroes, package, a shop, reroll: %s" % [did])
+	assert_string_contains(did[6], "rerolled")
+	assert_eq([int((data["actions"] as Array)[6]["day"]), (data["actions"] as Array)[6]["phase"]], [1, "stop"])
 
 
 func test_fights_are_recorded_with_the_guild() -> void:
@@ -37,10 +38,12 @@ func test_fights_are_recorded_with_the_guild() -> void:
 	for pick: int in RunState.TEAM_SIZE:
 		session.pick_start_hero(0)
 	session.pick_package(0)
+	while session.state.phase == "stop_choice" or session.state.phase == "stop":
+		if session.state.phase == "stop_choice":
+			session.pick_stop(0)
+		session.leave_stop()
+	session.pick_fight(0)
 	var encounter: String = session.state.encounter_id
-	session.leave_caravan()
-	session.pick_stop(0)
-	session.leave_stop()
 	session.fight()
 	var fight: Dictionary = (_read(session)["fights"] as Array)[0]
 	assert_eq([int(fight["day"]), fight["encounter"]], [1, encounter])

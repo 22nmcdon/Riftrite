@@ -113,12 +113,18 @@ func open_hero_or_null() -> RunHero:
 
 
 ## The synergies the guild would have in today's fight as it stands (ids,
-## in data order). Read from a throwaway fight setup; the run never changes.
+## in data order): the fight picked, or else the first on offer. Read from a
+## throwaway fight setup; the run never changes.
 func active_synergies() -> Array[String]:
 	var ids: Array[String] = []
-	if state == null or state.encounter_id.is_empty() or state.heroes.is_empty():
+	if state == null or state.heroes.is_empty():
 		return ids
-	var sim := CombatSim.new(RunFight.setup_for(state, content, state.encounter_id), content)
+	var encounter_id: String = state.encounter_id
+	if encounter_id.is_empty() and not state.fight_options.is_empty():
+		encounter_id = state.fight_options[0]
+	if encounter_id.is_empty():
+		return ids
+	var sim := CombatSim.new(RunFight.setup_for(state, content, encounter_id), content)
 	for synergy: RelicState in sim.synergies:
 		if not ids.has(synergy.synergy.id):
 			ids.append(synergy.synergy.id)
@@ -170,7 +176,7 @@ func sell(uid: int) -> RunActions.Result:
 
 func sell_price(uid: int) -> int:
 	var item: RunItem = state.find_item(uid)
-	return run.economy.sell_price(run.economy.item_price[item.tier]) if item != null else 0
+	return RunFlow.sell_price(content, run, item) if item != null else 0
 
 
 func reroll() -> RunActions.Result:
@@ -179,10 +185,6 @@ func reroll() -> RunActions.Result:
 
 func reroll_cost() -> int:
 	return RunFlow.reroll_cost(state, run)
-
-
-func leave_caravan() -> RunActions.Result:
-	return _after(RunFlow.leave_caravan(state, content, run))
 
 
 func pick_stop(index: int) -> RunActions.Result:
@@ -206,7 +208,11 @@ func upgrade(uid: int) -> RunActions.Result:
 
 
 func leave_stop() -> RunActions.Result:
-	return _after(RunFlow.leave_stop(state))
+	return _after(RunFlow.leave_stop(state, content, run))
+
+
+func pick_fight(index: int) -> RunActions.Result:
+	return _after(RunFlow.pick_fight(state, content, index))
 
 
 ## Keeps a finished fight for playback: its result and setup, the synergies
@@ -233,25 +239,6 @@ func fight() -> RunActions.Result:
 		if journal != null:
 			journal.fight(state, encounter_id, day, last_fight)
 	return _after(result)
-
-
-## Fights a skirmish stop's extra fight and keeps it for playback.
-func skirmish() -> RunActions.Result:
-	var known: Array[String] = state.discovered.duplicate()
-	var encounter_id: String = state.stop_encounter
-	var day: int = state.day
-	var out: Array = RunFlow.skirmish(state, content, run)
-	var result: RunActions.Result = out[0]
-	if result.ok:
-		_keep_fight(out, known, result)
-		if journal != null:
-			journal.fight(state, encounter_id, day, last_fight)
-	return _after(result)
-
-
-## Whether the screen's fight is a skirmish still to fight (not the day's).
-func skirmish_pending() -> bool:
-	return state != null and state.phase == "stop" and state.stop_kind == "fight" and not state.stop_used
 
 
 func done() -> RunActions.Result:

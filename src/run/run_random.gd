@@ -2,17 +2,16 @@ class_name RunRandom
 extends RefCounted
 ## Seeded randomness for the run layer. Each offer draws from its own stream,
 ## seeded by the run seed plus where it happens (what, act, day, attempt,
-## reroll), so skipping one stop never changes what a later one offers.
+## visit, reroll), so skipping one stop never changes what a later one offers.
 
 ## Stream tags.
 const START: int = 1
 const PACKAGE: int = 2
 const FIGHT: int = 3
-const CARAVAN: int = 4
+const SHOP: int = 4
 const STOPS: int = 5
 const STOP: int = 6
 const REWARDS: int = 7
-const SKIRMISH: int = 8
 
 const MIX: int = 0x2545F4914F6CDD1D
 

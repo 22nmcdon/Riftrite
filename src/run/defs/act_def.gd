@@ -1,26 +1,33 @@
 class_name ActDef
 extends RefCounted
 ## One act from data/acts.json: how many days, which encounters, and the
-## Caravan's tier odds. The last day's fight is the boss.
+## shops' tier odds. The last day's fight is the boss; every other day offers
+## a pick of 2 fights (docs/plans/new-day.md).
 
 var act: int
 var name: String
 var days: int
 ## Encounter pools for normal days and elite days: each entry is an
 ## encounter id with the days it can appear on (inclusive), as
-## {"encounter": "pup_litter", "days": [1, 2]} ("days" optional: any day).
+## {"encounter": "pup_litter", "days": [1, 2], "hard": true, "hp_bp": 20000}
+## ("days" optional: any day; "hard" optional: the harder kind of fight;
+## "hp_bp" optional: the enemies' HP, times this, on those days).
 var normal: Array[Pool] = []
 var elites: Array[Pool] = []
 var elite_days: Array[int] = []
 var boss: String
-## Caravan tier odds (C..S), for items and heroes.
-var caravan_tier_weights: Array[int] = []
+## Shop and reward tier odds (C..S).
+var shop_tier_weights: Array[int] = []
 
 
 class Pool:
 	var encounter: String
 	var from_day: int = 1
 	var to_day: int = 999
+	## The harder kind of fight (docs/plans/new-day.md): more gold, better
+	## reward odds.
+	var hard: bool = false
+	var hp_bp: int = FixedMath.BP_ONE
 
 
 static func read(reader: DataReader) -> ActDef:
@@ -32,14 +39,14 @@ static func read(reader: DataReader) -> ActDef:
 	def.elites = _read_pools(reader, "elites")
 	def.elite_days = reader.req_int_array("elite_days")
 	def.boss = reader.req_string("boss")
-	def.caravan_tier_weights = EconomyDef._table(reader, "caravan_tier_weights", TuningDef.TIER_NAMES, 0)
+	def.shop_tier_weights = EconomyDef._table(reader, "shop_tier_weights", TuningDef.TIER_NAMES, 0)
 	for day: int in def.elite_days:
 		if day < 1 or day >= def.days:
 			reader.error("elite day %d must be between 1 and %d (the last day is the boss)" % [day, def.days - 1])
 	for day: int in range(1, def.days):
 		var pool: Array[Pool] = def.elites if def.is_elite_day(day) else def.normal
-		if def.encounters_for(pool, day).is_empty():
-			reader.error("day %d has no %s encounter" % [day, "elite" if def.is_elite_day(day) else "normal"])
+		if def.encounters_for(pool, day).size() < 2:
+			reader.error("day %d needs at least 2 %s encounters (a pick of 2)" % [day, "elite" if def.is_elite_day(day) else "normal"])
 	reader.finish()
 	return def
 
@@ -56,6 +63,8 @@ static func _read_pools(reader: DataReader, key: String) -> Array[Pool]:
 			else:
 				pool.from_day = days[0]
 				pool.to_day = days[1]
+		pool.hard = entry.opt_bool("hard", false)
+		pool.hp_bp = entry.opt_int("hp_bp", FixedMath.BP_ONE, 1)
 		entry.finish()
 		pools.append(pool)
 	return pools
@@ -68,6 +77,30 @@ func encounters_for(pool: Array[Pool], day: int) -> Array[String]:
 		if day >= entry.from_day and day <= entry.to_day:
 			result.append(entry.encounter)
 	return result
+
+
+## The pool a day's fights come from (elite days: the elites).
+func pool_for(day: int) -> Array[Pool]:
+	return elites if is_elite_day(day) else normal
+
+
+## Whether an encounter is the harder kind of fight on a day.
+func is_hard(encounter_id: String, day: int) -> bool:
+	var entry: Pool = _entry(encounter_id, day)
+	return entry != null and entry.hard
+
+
+## An encounter's HP scaling on a day (1x for the boss).
+func hp_bp(encounter_id: String, day: int) -> int:
+	var entry: Pool = _entry(encounter_id, day)
+	return entry.hp_bp if entry != null else FixedMath.BP_ONE
+
+
+func _entry(encounter_id: String, day: int) -> Pool:
+	for entry: Pool in pool_for(day):
+		if entry.encounter == encounter_id and day >= entry.from_day and day <= entry.to_day:
+			return entry
+	return null
 
 
 ## Every encounter id the act names, for content checks.

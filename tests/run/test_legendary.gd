@@ -385,25 +385,24 @@ func test_the_run_rules_cover_legendaries() -> void:
 
 # --- where Legendaries come from ------------------------------------------------
 
-func test_the_caravan_loot_and_tier_shops_never_offer_legendaries() -> void:
-	var economy: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/economy.json"))
-	economy["rarity_weights"]["legendary"] = 1
-	var texts: Dictionary[String, String] = {}
-	for file_name: String in RunContent.FILES:
-		texts[file_name] = FileAccess.get_file_as_string("res://data".path_join(file_name))
-	texts[RunContent.ECONOMY_FILE] = JSON.stringify(economy)
-	assert_true(_has(RunContent.load_texts(texts, _content()).errors, "legendary must be 0"))
+func test_shops_loot_and_rewards_never_offer_legendaries() -> void:
+	for key: String in ["rarity_weights", "reward_rarity_weights", "hard_reward_rarity_weights"]:
+		var economy: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/economy.json"))
+		economy[key]["legendary"] = 1
+		var texts: Dictionary[String, String] = {}
+		for file_name: String in RunContent.FILES:
+			texts[file_name] = FileAccess.get_file_as_string("res://data".path_join(file_name))
+		texts[RunContent.ECONOMY_FILE] = JSON.stringify(economy)
+		assert_true(_has(RunContent.load_texts(texts, _content()).errors, "legendary must be 0"), key)
 	for run_seed: int in range(1, 41):
 		var state: RunState = RunFlow.new_run(run_seed, _content())
 		RunFlow.pick_start_hero(state, _content(), 0)
 		RunFlow.pick_package(state, _content(), _run(), 0)
-		for offer: Dictionary in state.offers:
-			if offer["type"] == "item":
-				assert_ne(_content().items[offer["item"]].rarity, "legendary", "the Caravan")
-		RunFlow._enter_stop(state, _content(), _run(), "loot_item")
-		for offer: Dictionary in state.offers:
-			if offer["type"] == "item":
-				assert_ne(_content().items[offer["item"]].rarity, "legendary", "Loot")
+		for stop: String in ["caravan", "smiths_cart", "synergy_peddler", "loot_item"]:
+			RunFlow._enter_stop(state, _content(), _run(), stop)
+			for offer: Dictionary in state.offers:
+				if offer["type"] == "item":
+					assert_ne(_content().items[offer["item"]].rarity, "legendary", stop)
 
 
 func test_the_vault_can_hold_a_legendary_at_its_start_tier() -> void:
@@ -469,10 +468,11 @@ func test_a_fights_growth_comes_back_with_the_result() -> void:
 	assert_true(RunActions.move_item(state, _content(), state.stash[-1].uid, hero.hero_id, 0).ok)
 	state.stash.clear()
 	hero.items[0].progress = 59
-	assert_true(RunFlow.leave_caravan(state, _content(), _run()).ok)
-	if state.phase == "stop_choice":
-		RunFlow.pick_stop(state, _content(), _run(), 0)
-	RunFlow.leave_stop(state)
+	while state.phase == "stop_choice" or state.phase == "stop":
+		if state.phase == "stop_choice":
+			RunFlow.pick_stop(state, _content(), _run(), 0)
+		RunFlow.leave_stop(state, _content(), _run())
+	RunFlow.pick_fight(state, _content(), 0)
 	var out: Array = RunFlow.fight(state, _content(), _run())
 	assert_true((out[0] as RunActions.Result).ok)
 	assert_eq((out[0] as RunActions.Result).notes, ["The Tallyman's Bow grows to B"] as Array[String])

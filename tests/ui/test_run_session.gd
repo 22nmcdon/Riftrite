@@ -24,7 +24,7 @@ func test_a_new_run_saves_and_emits() -> void:
 
 
 func test_actions_save_and_emit() -> void:
-	var session: RunSession = U.at_caravan()
+	var session: RunSession = U.at_shop()
 	_watch(session)
 	var gold: int = session.state.gold
 	var result: RunActions.Result = session.reroll()
@@ -36,7 +36,7 @@ func test_actions_save_and_emit() -> void:
 
 
 func test_a_refused_action_passes_its_error_and_changes_nothing() -> void:
-	var session: RunSession = U.at_caravan()
+	var session: RunSession = U.at_shop()
 	_watch(session)
 	var before: String = FileAccess.get_file_as_string(U.SAVE_PATH)
 	var result: RunActions.Result = session.pick_stop(0)
@@ -48,7 +48,7 @@ func test_a_refused_action_passes_its_error_and_changes_nothing() -> void:
 
 
 func test_continue_and_abandon() -> void:
-	var session: RunSession = U.at_caravan(11)
+	var session: RunSession = U.at_shop(11)
 	session.reroll()
 	var other: RunSession = RunSession.make(session.content, session.run, U.SAVE_PATH)
 	assert_eq(other.continue_run(), "")

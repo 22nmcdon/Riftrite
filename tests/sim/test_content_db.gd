@@ -219,5 +219,5 @@ func test_tuning_cross_checks() -> void:
 	tuning["xp_to_resonant"] = 50
 	tuning["collapse_by_act"].erase("1")
 	var db: ContentDb = _load_with(ContentDb.TUNING_FILE, tuning)
-	_assert_error(db, "xp_to_resonant (50) must be greater than xp_to_attuned (100)")
+	_assert_error(db, "xp_to_resonant (50) must be greater than xp_to_attuned (60)")
 	_assert_error(db, "collapse_by_act: must define act \"1\"")

@@ -4,6 +4,8 @@ Status: **approved; built.** The answers are at the end.
 
 **Why** (playtest feedback): the stop choice kept showing the same options. You picked 1 of 3 stop *kinds*: Forge, Loot, Vault, Retrain, or Event. "Event" hid a random draw from all the events, so the same few kinds came back every day.
 
+> **Changed** (redesign step 4, `docs/plans/new-day.md`): shops are nodes now (every stop visit offers one), there are two visits a day, the Skirmish node and the tier-shop events are gone (tier shops are shop nodes).
+
 ## What changed
 
 - **One node pool.**
