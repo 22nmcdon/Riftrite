@@ -45,19 +45,32 @@ func test_gem_forms() -> void:
 	assert_eq(InfusionLook.form(_content, "tallow_torch", ["frost"] as Array[String], ["wildfire_torch"] as Array[String]), F.SINGLE, "only with its essence")
 
 
-## Neighbor spill is gone and keyword spill comes with the infusion rework,
-## so no tile shows spill arrows for now.
-func test_no_infusion_shows_spill_arrows_yet() -> void:
+## The mark (docs/plans/infusion-rework.md): rays for a Resonant single, a
+## star for an awakened alloy or pure double, nothing otherwise.
+func test_infusion_marks_follow_the_sims_rules() -> void:
 	var F := Glyph.Infusion
-	var R: int = Infusions.Level.RESONANT
-	for form: Glyph.Infusion in [F.SINGLE, F.PURE, F.ALLOY, F.TRANSFORMATION]:
-		assert_eq(InfusionLook.spill_colors(form, ["frost", "storm"] as Array[String], R), [] as Array[Color])
-		assert_false(InfusionLook.shows_no_spill(form, R))
-	assert_eq(InfusionLook.level(_content, ["ember"] as Array[String], _content.tuning.xp_to_resonant), R)
+	var M := FrameDecor.Mark
+	var R: int = _content.tuning.xp_to_resonant
+	var cases: Array = [
+		[["ember"], R, F.SINGLE, M.SPILLS, "a Resonant single spills"],
+		[["ember"], R - 1, F.SINGLE, M.NONE, "only at Resonant"],
+		[["ember", "storm"], R, F.ALLOY, M.AWAKENED, "Plasma awakens"],
+		[["ember", "ember"], R, F.PURE, M.AWAKENED, "Inferno awakens"],
+		[["ember", "storm"], R - 1, F.ALLOY, M.NONE, "not before Resonant"],
+		[["ember", "frost"], R, F.ALLOY, M.NONE, "no named alloy: nothing to awaken"],
+		[["ember"], R, F.TRANSFORMATION, M.NONE, "a transformation neither spills nor awakens"],
+		[[], 0, F.EMPTY, M.NONE, "empty"],
+	]
+	for case: Array in cases:
+		var essences: Array[String] = []
+		essences.assign(case[0])
+		assert_eq(InfusionLook.mark(_content, "tallow_torch", essences, case[1], case[2]), case[3], case[4])
+	assert_eq(InfusionLook.mark_color(["frost"] as Array[String]), UiStyle.ESSENCE["frost"])
+	assert_eq(InfusionLook.level(_content, ["ember"] as Array[String], R), Infusions.Level.RESONANT)
 	assert_eq(InfusionLook.level(_content, E, 9999), Infusions.Level.BASE, "no infusion, no level")
 
 
-func test_tiles_carry_the_ladder_the_rift_bleed_and_arrows() -> void:
+func test_tiles_carry_the_ladder_the_rift_bleed_and_marks() -> void:
 	var session: RunSession = U.at_caravan()
 	var state: RunState = session.state
 	var knife := RunItem.make(state.take_uid(), "hearth_knife")
@@ -68,13 +81,15 @@ func test_tiles_carry_the_ladder_the_rift_bleed_and_arrows() -> void:
 	state.stash.append_array([knife, daggers, bond])
 	var main: Main = _main(session)
 	var plain: FrameDecor = _decor(_tile(main, knife.uid))
-	assert_eq([plain.ornament, plain.cracks, plain.spill], [ItemDef.RARITIES.find(_content.items["hearth_knife"].rarity), false, [] as Array[Color]])
+	assert_eq([plain.ornament, plain.cracks, plain.mark], [ItemDef.RARITIES.find(_content.items["hearth_knife"].rarity), false, FrameDecor.Mark.NONE])
 	var resonant: FrameDecor = _decor(_tile(main, daggers.uid))
-	assert_eq(resonant.spill, [] as Array[Color], "no spill arrows for now")
+	assert_eq([resonant.mark, resonant.mark_hue], [FrameDecor.Mark.SPILLS, UiStyle.ESSENCE["ember"]])
 	assert_true(_decor(_tile(main, bond.uid)).cracks, "enemy-only items carry the rift bleed")
 	var gems: Array[Node] = U.find_all(_tile(main, daggers.uid), Glyph).filter(func(g: Glyph) -> bool: return g.shape == Glyph.Shape.INFUSION)
-	assert_eq(gems.size(), 1, "one socket, one gem")
-	assert_eq((gems[0] as Glyph).infusion, Glyph.Infusion.SINGLE)
+	assert_eq(gems.size(), 2, "the essence's gem, and an empty one: a second essence would fuse")
+	assert_eq([(gems[0] as Glyph).infusion, (gems[1] as Glyph).infusion], [Glyph.Infusion.SINGLE, Glyph.Infusion.EMPTY])
+	var knife_gems: Array[Node] = U.find_all(_tile(main, knife.uid), Glyph).filter(func(g: Glyph) -> bool: return g.shape == Glyph.Shape.INFUSION)
+	assert_eq(knife_gems.size(), 2, "every item holds up to two essences")
 
 
 # --- drop feedback ------------------------------------------------------------------
@@ -85,7 +100,7 @@ func test_drop_checks_never_touch_the_real_run() -> void:
 	var keep := RunItem.make(state.take_uid(), "hearth_knife")
 	var copy := RunItem.make(state.take_uid(), "hearth_knife")
 	var infused := RunItem.make(state.take_uid(), "dusk_tome")
-	infused.essence_ids.append("frost")
+	infused.essence_ids.append_array(["frost", "storm"])
 	state.stash.append_array([keep, copy, infused])
 	state.pouch.append("ember")
 	var main: Main = _main(session)
@@ -94,7 +109,7 @@ func test_drop_checks_never_touch_the_real_run() -> void:
 	assert_true(keep_tile._can_drop_data(Vector2.ZERO, {"uid": copy.uid}), "a copy combines")
 	assert_eq(keep_tile.get_theme_stylebox("panel").border_color, UiStyle.GOOD)
 	var full: ItemTile = _tile(main, infused.uid)
-	assert_false(full._can_drop_data(Vector2.ZERO, {"pouch_index": 0}), "no free socket")
+	assert_false(full._can_drop_data(Vector2.ZERO, {"pouch_index": 0}), "already two essences")
 	assert_eq(full.get_theme_stylebox("panel").border_color, UiStyle.BAD)
 	assert_true(keep_tile._can_drop_data(Vector2.ZERO, {"pouch_index": 0}))
 	assert_eq(state.to_dict(), before, "checking changed nothing")

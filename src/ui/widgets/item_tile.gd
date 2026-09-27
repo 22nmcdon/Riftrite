@@ -2,9 +2,9 @@ class_name ItemTile
 extends PanelContainer
 ## One item as a token (docs/ui-asset-design.md, 8.1), as wide as its slots:
 ## its icon, tier, and infusion gem, with the rarity ladder's frame (color
-## plus rivets, crest, wings), the rift bleed for enemy-only items, and
-## spill arrows when its infusion is Resonant. Hovering lifts it and shows
-## it in the inspector.
+## plus rivets, crest, wings), the rift bleed for enemy-only items, and the
+## infusion's mark (spilling or awakened; see InfusionLook). Hovering lifts it
+## and shows it in the inspector.
 ## Owned tiles are clicked to select them and drag and drop (move, combine
 ## onto a copy, drop an essence on to infuse); while dragging, a target is
 ## outlined green if the drop would work and red if not. Offer tiles are
@@ -52,7 +52,8 @@ static func owned(run_session: RunSession, item: RunItem, holder: String, at: in
 	tile.uid = item.uid
 	tile.owner_id = holder
 	tile.index = at
-	tile._fill(item.item_id, item.tier, item.essence_ids, item.xp, holder_stats, "", item.trace_bp(run_session.content))
+	var received: PackedStringArray = ItemInfo.spills_received(run_session.content, run_session.state.hero(holder), item) if run_session.state != null else PackedStringArray()
+	tile._fill(item.item_id, item.tier, item.essence_ids, item.xp, holder_stats, "", item.trace_bp(run_session.content), received)
 	tile._add_path_bar(item)
 	return tile
 
@@ -66,7 +67,7 @@ static func offer(run_session: RunSession, item: String, item_tier: int, footer:
 	return tile
 
 
-func _fill(item: String, item_tier: int, essences: Array[String], xp: int, holder_stats: UnitStats, footer: String, trace_bp: int = 0) -> void:
+func _fill(item: String, item_tier: int, essences: Array[String], xp: int, holder_stats: UnitStats, footer: String, trace_bp: int = 0, received: PackedStringArray = PackedStringArray()) -> void:
 	item_id = item
 	tier = item_tier
 	essence_ids = essences
@@ -81,7 +82,7 @@ func _fill(item: String, item_tier: int, essences: Array[String], xp: int, holde
 	_style = UiStyle.box(fill, border, 4 if lit or selected else 3)
 	add_theme_stylebox_override("panel", _style)
 	pivot_offset = custom_minimum_size / 2.0
-	info = ItemInfo.item_text(content, item, item_tier, essences, xp, holder_stats, trace_bp)
+	info = ItemInfo.item_text(content, item, item_tier, essences, xp, holder_stats, trace_bp, received)
 	Inspector.hover_text(self, info)
 	mouse_entered.connect(_lift.bind(true))
 	mouse_exited.connect(_lift.bind(false))
@@ -112,15 +113,13 @@ func _fill(item: String, item_tier: int, essences: Array[String], xp: int, holde
 	top.add_child(tier_label)
 	var discovered: Array[String] = session.state.discovered if session.state != null else ([] as Array[String])
 	var form: Glyph.Infusion = InfusionLook.form(content, item, essences, discovered)
-	var sockets: int = content.tuning.socket_count(def)
 	if form != Glyph.Infusion.EMPTY:
 		top.add_child(Glyph.infusion_gem(form, essences, 16 if compact else 28))
-	# Empty sockets: all of them, or the second one beside a single essence.
-	var filled: int = 0 if form == Glyph.Infusion.EMPTY else (1 if form == Glyph.Infusion.SINGLE else sockets)
-	for i: int in sockets - filled:
+	# Room left in the infusion: two empty gems, or one beside a single
+	# essence (a second fuses with it).
+	for i: int in Infusions.MAX_ESSENCES - essences.size():
 		top.add_child(Glyph.infusion_gem(Glyph.Infusion.EMPTY, [] as Array[String], 14 if compact else 22))
-	var level: int = InfusionLook.level(content, essences, xp)
-	var decor: FrameDecor = FrameDecor.make(ItemDef.RARITIES.find(def.rarity), def.enemy_only, InfusionLook.spill_colors(form, essences, level), InfusionLook.shows_no_spill(form, level))
+	var decor: FrameDecor = FrameDecor.make(ItemDef.RARITIES.find(def.rarity), def.enemy_only, InfusionLook.mark(content, item, essences, xp, form), InfusionLook.mark_color(essences))
 	if compact:
 		add_child(decor)
 		return

@@ -89,14 +89,14 @@ static func from_setup(setup: UnitSetup, unit_side: UnitSetup.Side, unit_column:
 
 
 ## Re-derives every item. `auras` lines up with `items` (empty = no auras);
-## CombatSim.rederive_all gathers them. (Neighbor spill is gone with item
-## rows; keyword spill comes with the infusion rework.)
+## CombatSim.rederive_all gathers them. Each item gets keyword spills from
+## the unit's other Resonant singles that share a keyword with it, in item
+## order, at most one per essence.
 func rederive_items(content: ContentDb, auras: Array[ItemAura] = []) -> void:
-	var none: Array[EssenceApplication] = []
 	for i: int in items.size():
 		var item: ItemState = items[i]
 		item.stats = stats
-		item.derive(content, none, auras[i] if i < auras.size() else null)
+		item.derive(content, ItemState.spills_into(item, items, content.tuning), auras[i] if i < auras.size() else null)
 
 
 ## The loadout's items (everything but the built-in basic attack and

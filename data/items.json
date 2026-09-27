@@ -3,6 +3,7 @@
     "id": "rusted_cleaver",
     "name": "Rusted Cleaver",
     "slot": "basic_attack",
+    "keywords": ["blade"],
     "tags": [
       "weapon",
       "melee"
@@ -26,6 +27,7 @@
     "id": "hearth_knife",
     "name": "Hearth Knife",
     "slot": "ability",
+    "keywords": ["blade"],
     "tags": [
       "weapon",
       "melee"
@@ -49,6 +51,7 @@
     "id": "bone_sling",
     "name": "Bone Sling",
     "slot": "ability",
+    "keywords": ["bow"],
     "tags": [
       "weapon",
       "ranged"
@@ -72,6 +75,7 @@
     "id": "blackthorn_bow",
     "name": "Blackthorn Bow",
     "slot": "basic_attack",
+    "keywords": ["bow"],
     "tags": [
       "weapon",
       "ranged"
@@ -95,6 +99,7 @@
     "id": "oak_buckler",
     "name": "Oak Buckler",
     "slot": "ability",
+    "keywords": ["ward"],
     "tags": [
       "tool",
       "defense"
@@ -118,6 +123,7 @@
     "id": "tallow_torch",
     "name": "Tallow Torch",
     "slot": "ability",
+    "keywords": ["spell", "burn"],
     "tags": [
       "tool",
       "magic"
@@ -143,6 +149,7 @@
     "id": "rime_charm",
     "name": "Rime Charm",
     "slot": "ability",
+    "keywords": ["spell", "hex"],
     "tags": [
       "charm",
       "magic"
@@ -164,6 +171,7 @@
     "id": "old_lantern",
     "name": "Old Lantern",
     "slot": "ability",
+    "keywords": ["mend"],
     "tags": [
       "tool",
       "healing"
@@ -187,6 +195,7 @@
     "id": "hearth_stew",
     "name": "Hearth Stew",
     "slot": "ability",
+    "keywords": ["mend"],
     "tags": [
       "food",
       "healing"
@@ -210,6 +219,7 @@
     "id": "grave_hook",
     "name": "Grave Hook",
     "slot": "ability",
+    "keywords": ["blade", "bleed"],
     "tags": [
       "weapon",
       "melee"
@@ -240,6 +250,7 @@
     "id": "nettle_vial",
     "name": "Nettle Vial",
     "slot": "ability",
+    "keywords": ["spell", "hex"],
     "tags": [
       "tool",
       "magic"
@@ -264,6 +275,7 @@
     "id": "salt_ward",
     "name": "Salt Ward",
     "slot": "ability",
+    "keywords": ["ward", "hex"],
     "tags": [
       "charm",
       "defense"
@@ -286,6 +298,7 @@
     "_note": "Passive: its holder's other items crit more.",
     "name": "War Drum",
     "slot": "passive",
+    "keywords": ["blade"],
     "tags": [
       "tool"
     ],
@@ -304,6 +317,7 @@
     "_note": "Passive: steadies its holder and the allies in their row.",
     "name": "Bell of Vigil",
     "slot": "passive",
+    "keywords": ["ward"],
     "tags": [
       "charm",
       "defense"
@@ -328,6 +342,7 @@
     "_note": "Passive, Rush: its holder and their row hit harder for the first 8 seconds.",
     "name": "Hearth Banner",
     "slot": "passive",
+    "keywords": ["blade"],
     "tags": [
       "charm"
     ],
@@ -359,6 +374,7 @@
     "_note": "Rush: fierce for 8 seconds, then a plain knife.",
     "name": "First-Light Dagger",
     "slot": "ability",
+    "keywords": ["blade"],
     "tags": [
       "weapon",
       "melee"
@@ -399,6 +415,7 @@
     "_note": "Stall: silent until 15 seconds, then scours every enemy.",
     "name": "Dusk Tome",
     "slot": "ability",
+    "keywords": ["spell"],
     "tags": [
       "tome",
       "magic"
@@ -426,6 +443,7 @@
     "id": "hearthstone_ward",
     "name": "Hearthstone Ward",
     "slot": "ability",
+    "keywords": ["ward"],
     "tags": [
       "tool",
       "defense"
@@ -456,6 +474,7 @@
     "id": "ember_brazier",
     "name": "Ember Brazier",
     "slot": "ability",
+    "keywords": ["spell", "burn"],
     "tags": [
       "tool",
       "magic"
@@ -481,6 +500,7 @@
     "_note": "Epic: may scale from ATSP. Rush: faster for the first 8 seconds.",
     "name": "Night Lantern",
     "slot": "ability",
+    "keywords": ["spell", "mend"],
     "tags": [
       "tool",
       "healing",
@@ -519,6 +539,7 @@
     "name": "Vesper Chime",
     "_note": "Passive: all healing on the team is stronger.",
     "slot": "passive",
+    "keywords": ["mend"],
     "tags": [
       "charm",
       "healing"
@@ -537,6 +558,7 @@
     "id": "rift_claw",
     "name": "Rift Claw",
     "slot": "ability",
+    "keywords": ["blade"],
     "tags": [
       "weapon",
       "melee"
@@ -561,6 +583,7 @@
     "id": "hollow_maw",
     "name": "Hollow Maw",
     "slot": "ability",
+    "keywords": ["blade"],
     "tags": [
       "weapon",
       "melee"
@@ -591,6 +614,7 @@
     "id": "gloom_spit",
     "name": "Gloom Spit",
     "slot": "ability",
+    "keywords": ["spell", "hex"],
     "tags": [
       "magic"
     ],
@@ -616,6 +640,7 @@
     "name": "Whetstone",
     "_note": "Keeps the blades sharp: charges its holder's other items.",
     "slot": "ability",
+    "keywords": ["blade"],
     "tags": [
       "tool",
       "melee"
@@ -636,6 +661,7 @@
     "id": "twin_daggers",
     "name": "Twin Daggers",
     "slot": "ability",
+    "keywords": ["blade"],
     "tags": [
       "weapon",
       "melee"
@@ -669,6 +695,7 @@
     "name": "Pack Bond",
     "_note": "Carried by Old Mother Ash's hounds: the pack stands firmer while its holder stands.",
     "slot": "passive",
+    "keywords": ["ward"],
     "tags": [
       "charm",
       "defense"
@@ -690,6 +717,7 @@
     "name": "Ember Maw",
     "_note": "Old Mother Ash's bite: an auto-attack that leaves the wound bleeding.",
     "slot": "basic_attack",
+    "keywords": ["blade", "bleed"],
     "tags": [
       "weapon",
       "melee"
@@ -722,6 +750,7 @@
     "name": "Birch Shortbow",
     "_note": "Auto-attack: a quick bow that reaches the back row.",
     "slot": "basic_attack",
+    "keywords": ["bow"],
     "tags": [
       "weapon",
       "ranged"
@@ -745,6 +774,7 @@
     "id": "flint_arrows",
     "name": "Flint Arrows",
     "slot": "ability",
+    "keywords": ["bow"],
     "tags": [
       "tool",
       "ranged"
@@ -768,6 +798,7 @@
     "id": "thorn_darts",
     "name": "Thorn Darts",
     "slot": "ability",
+    "keywords": ["bow", "hex"],
     "tags": [
       "weapon",
       "ranged"
@@ -789,6 +820,7 @@
     "id": "iron_pot_lid",
     "name": "Iron Pot Lid",
     "slot": "ability",
+    "keywords": ["ward"],
     "tags": [
       "tool",
       "defense"
@@ -812,6 +844,7 @@
     "id": "peat_poultice",
     "name": "Peat Poultice",
     "slot": "ability",
+    "keywords": ["mend"],
     "tags": [
       "food",
       "healing"
@@ -835,6 +868,7 @@
     "id": "soot_bomb",
     "name": "Soot Bomb",
     "slot": "ability",
+    "keywords": ["hex"],
     "tags": [
       "tool"
     ],
@@ -855,6 +889,7 @@
     "id": "hatchet",
     "name": "Hatchet",
     "slot": "ability",
+    "keywords": ["blade"],
     "tags": [
       "weapon",
       "melee"
@@ -877,8 +912,9 @@
   {
     "id": "chalk_circle",
     "name": "Chalk Circle",
-    "_note": "Linked: wards the heroes beside its holder.",
+    "_note": "Wards the heroes in its holder's row.",
     "slot": "ability",
+    "keywords": ["spell", "ward"],
     "tags": [
       "charm",
       "magic"
@@ -903,6 +939,7 @@
     "name": "Hobnail Boots",
     "_note": "No effect of its own: its holder attacks 8% faster.",
     "slot": "passive",
+    "keywords": ["bow"],
     "tags": [
       "tool"
     ],
@@ -921,6 +958,7 @@
     "name": "Longspear",
     "_note": "Reach: a thrust at the front that also grazes the back row.",
     "slot": "ability",
+    "keywords": ["blade"],
     "tags": [
       "weapon",
       "melee"
@@ -953,6 +991,7 @@
     "id": "mudbrick_wall",
     "name": "Mudbrick Wall",
     "slot": "ability",
+    "keywords": ["ward"],
     "tags": [
       "tool",
       "defense"
@@ -976,6 +1015,7 @@
     "id": "slate_tablet",
     "name": "Slate Tablet",
     "slot": "ability",
+    "keywords": ["spell"],
     "tags": [
       "tome",
       "magic"
@@ -1000,6 +1040,7 @@
     "name": "Crow-Feather Crossbow",
     "_note": "Auto-attack: slow, heavy bolts at the back row.",
     "slot": "basic_attack",
+    "keywords": ["bow"],
     "tags": [
       "weapon",
       "ranged"
@@ -1024,6 +1065,7 @@
     "id": "hunters_snare",
     "name": "Hunter's Snare",
     "slot": "ability",
+    "keywords": ["bow", "hex"],
     "tags": [
       "tool",
       "ranged"
@@ -1045,6 +1087,7 @@
     "id": "barbed_net",
     "name": "Barbed Net",
     "slot": "ability",
+    "keywords": ["bleed"],
     "tags": [
       "tool"
     ],
@@ -1064,8 +1107,9 @@
   {
     "id": "trick_coin",
     "name": "Trick Coin",
-    "_note": "Flips to wind the items beside it.",
+    "_note": "Flips to wind its holder's other items.",
     "slot": "ability",
+    "keywords": ["hex"],
     "tags": [
       "charm"
     ],
@@ -1085,6 +1129,7 @@
     "id": "mirror_shard",
     "name": "Mirror Shard",
     "slot": "ability",
+    "keywords": ["spell", "hex"],
     "tags": [
       "charm",
       "magic"
@@ -1115,6 +1160,7 @@
     "id": "menders_satchel",
     "name": "Mender's Satchel",
     "slot": "ability",
+    "keywords": ["mend"],
     "tags": [
       "tool",
       "healing"
@@ -1145,6 +1191,7 @@
     "name": "Ashwood Staff",
     "_note": "Auto-attack for casters: a burning bolt.",
     "slot": "basic_attack",
+    "keywords": ["spell", "burn"],
     "tags": [
       "weapon",
       "magic"
@@ -1175,6 +1222,7 @@
     "id": "spiked_pauldron",
     "name": "Spiked Pauldron",
     "slot": "ability",
+    "keywords": ["blade", "ward"],
     "tags": [
       "tool",
       "defense",
@@ -1208,6 +1256,7 @@
     "id": "bitter_draught",
     "name": "Bitter Draught",
     "slot": "ability",
+    "keywords": ["mend"],
     "tags": [
       "food",
       "healing"
@@ -1231,6 +1280,7 @@
     "id": "greywood_warbow",
     "name": "Greywood Warbow",
     "slot": "ability",
+    "keywords": ["bow"],
     "tags": [
       "weapon",
       "ranged"
@@ -1256,6 +1306,7 @@
     "name": "Stormglass Arrowheads",
     "_note": "Passive: its holder's ranged items hit harder.",
     "slot": "passive",
+    "keywords": ["bow"],
     "tags": [
       "tool",
       "ranged"
@@ -1278,6 +1329,7 @@
     "name": "Hexed Lockbox",
     "_note": "Opens on a random enemy and freezes its cooldowns for a moment.",
     "slot": "ability",
+    "keywords": ["hex"],
     "tags": [
       "tool"
     ],
@@ -1298,6 +1350,7 @@
     "id": "venom_censer",
     "name": "Venom Censer",
     "slot": "ability",
+    "keywords": ["spell", "hex"],
     "tags": [
       "tool",
       "magic"
@@ -1319,6 +1372,7 @@
     "id": "bone_flute",
     "name": "Bone Flute",
     "slot": "ability",
+    "keywords": ["spell", "hex"],
     "tags": [
       "charm",
       "magic"
@@ -1340,6 +1394,7 @@
     "id": "quartered_shield",
     "name": "Quartered Shield",
     "slot": "passive",
+    "keywords": ["ward"],
     "tags": [
       "tool",
       "defense"
@@ -1364,6 +1419,7 @@
     "id": "pilgrims_censer",
     "name": "Pilgrim's Censer",
     "slot": "ability",
+    "keywords": ["spell", "mend"],
     "tags": [
       "tool",
       "healing",
@@ -1389,6 +1445,7 @@
     "name": "Reaper's Sickle",
     "_note": "Hunts the weakest enemy; crits leave Bleed.",
     "slot": "ability",
+    "keywords": ["blade", "bleed"],
     "tags": [
       "weapon",
       "melee"
@@ -1420,6 +1477,7 @@
     "id": "grimoire_of_cinders",
     "name": "Grimoire of Cinders",
     "slot": "ability",
+    "keywords": ["spell", "burn"],
     "tags": [
       "tome",
       "magic"
@@ -1451,6 +1509,7 @@
     "name": "Rimewood Longbow",
     "_note": "Epic auto-attack: a longbow that grows with its holder's CRIT.",
     "slot": "basic_attack",
+    "keywords": ["bow"],
     "tags": [
       "weapon",
       "ranged"
@@ -1476,6 +1535,7 @@
     "id": "tower_shield",
     "name": "Gatekeeper's Tower Shield",
     "slot": "ability",
+    "keywords": ["ward"],
     "tags": [
       "tool",
       "defense"
@@ -1507,6 +1567,7 @@
     "name": "Ashen Censer",
     "_note": "Burns every enemy and warms every ally.",
     "slot": "ability",
+    "keywords": ["spell", "mend", "burn"],
     "tags": [
       "tool",
       "magic",
@@ -1538,6 +1599,7 @@
     "id": "twinfang_stilettos",
     "name": "Twinfang Stilettos",
     "slot": "ability",
+    "keywords": ["blade"],
     "tags": [
       "weapon",
       "melee"
@@ -1572,8 +1634,9 @@
   {
     "id": "clockwork_owl",
     "name": "Clockwork Owl",
-    "_note": "Winds the whole row and pecks a random enemy blind.",
+    "_note": "Winds its holder's other items and pecks a random enemy blind.",
     "slot": "ability",
+    "keywords": ["hex"],
     "tags": [
       "tool"
     ],
@@ -1600,6 +1663,7 @@
     "id": "wyrdglass_orb",
     "name": "Wyrdglass Orb",
     "slot": "ability",
+    "keywords": ["spell"],
     "tags": [
       "charm",
       "magic"
@@ -1625,6 +1689,7 @@
     "id": "hearthkeepers_kettle",
     "name": "Hearthkeeper's Kettle",
     "slot": "ability",
+    "keywords": ["mend", "ward"],
     "tags": [
       "food",
       "healing"
@@ -1658,6 +1723,7 @@
     "name": "Cinder Dust",
     "_note": "Enemy-only: a Cinder Moth's wings shed Burn on a random foe.",
     "slot": "ability",
+    "keywords": ["spell", "burn"],
     "tags": [
       "magic"
     ],
@@ -1680,6 +1746,7 @@
     "name": "Lurker Fang",
     "_note": "Enemy-only: a bog-soaked fang whose bite poisons.",
     "slot": "ability",
+    "keywords": ["blade", "hex"],
     "tags": [
       "weapon",
       "melee"
@@ -1712,6 +1779,7 @@
     "name": "Cairn Stone",
     "_note": "Enemy-only: a standing stone that shields every ally of its holder.",
     "slot": "ability",
+    "keywords": ["ward"],
     "tags": [
       "charm",
       "defense"
@@ -1737,6 +1805,7 @@
     "name": "The Tallyman's Bow",
     "_note": "Legendary, grows by use: counts its hits. An auto-attack longbow for ATSP builds.",
     "slot": "basic_attack",
+    "keywords": ["bow"],
     "tags": [
       "weapon",
       "ranged"
@@ -1772,6 +1841,7 @@
     "name": "The Hungering Censer",
     "_note": "Legendary, essence-hungry: feed it Ember, then Venom.",
     "slot": "ability",
+    "keywords": ["spell"],
     "tags": [
       "tome",
       "magic"
@@ -1808,6 +1878,7 @@
     "name": "Maw of the Hollow",
     "_note": "Legendary, devourer: feed it other items; each meal leaves a trace.",
     "slot": "ability",
+    "keywords": ["blade"],
     "tags": [
       "weapon",
       "melee"
@@ -1847,6 +1918,7 @@
     "name": "The Kinstone Aegis",
     "_note": "Legendary, bonded: grows when its holder ranks up.",
     "slot": "ability",
+    "keywords": ["ward"],
     "tags": [
       "tool",
       "defense"
@@ -1879,6 +1951,7 @@
     "name": "The Last Hearth-Lantern",
     "_note": "Legendary, martyr: grows when its holder falls in a fight the guild still wins.",
     "slot": "ability",
+    "keywords": ["mend", "ward"],
     "tags": [
       "tool",
       "healing",
@@ -1922,6 +1995,7 @@
     "name": "The Riftbreaker's Brand",
     "_note": "Legendary, boss-forged: grows with each boss beaten while it's equipped.",
     "slot": "ability",
+    "keywords": ["blade", "bleed"],
     "tags": [
       "weapon",
       "melee"

@@ -187,8 +187,8 @@ func _check_item(item: RunItem, content: ContentDb, where: String, errors: Array
 	var def: ItemDef = content.items[item.item_id]
 	if item.tier < 0 or item.tier > 3:
 		errors.append("%s: %s tier must be C-S" % [where, def.name])
-	if item.essence_ids.size() > content.tuning.socket_count(def):
-		errors.append("%s: %s has %d essences but only %d socket(s)" % [where, def.name, item.essence_ids.size(), content.tuning.socket_count(def)])
+	if item.essence_ids.size() > Infusions.MAX_ESSENCES:
+		errors.append("%s: %s has %d essences; an infusion holds at most %d" % [where, def.name, item.essence_ids.size(), Infusions.MAX_ESSENCES])
 	for essence_id: String in item.essence_ids:
 		if not content.essences.has(essence_id):
 			errors.append("%s: %s has an unknown essence \"%s\"" % [where, def.name, essence_id])

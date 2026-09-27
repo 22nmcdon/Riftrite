@@ -82,11 +82,12 @@ func refresh() -> void:
 	var state: RunState = session.state
 	var item: RunItem = state.find_item(session.selected_uid) if state != null and session.selected_uid >= 0 else null
 	if item == null:
-		_show("Inspector", "Click an item you hold to see what it does and what you can do with it.\n\nHover a ware, relic, or hero to read about it.\n\nYou can also drag items between rows, the stash, and the zones.")
+		_show("Inspector", "Click an item you hold to see what it does and what you can do with it.\n\nHover a ware, relic, or hero to read about it.\n\nYou can also drag items between heroes, the stash, and the zones.")
 		return
 	var owner: String = state.owner_of(item.uid)
 	var stats: UnitStats = ItemInfo.hero_stats(session.content, state.hero(owner)) if owner != RunState.STASH else null
-	var text: String = ItemInfo.item_text(session.content, item.item_id, item.tier, item.essence_ids, item.xp, stats, item.trace_bp(session.content))
+	var received: PackedStringArray = ItemInfo.spills_received(session.content, state.hero(owner), item) if owner != RunState.STASH else PackedStringArray()
+	var text: String = ItemInfo.item_text(session.content, item.item_id, item.tier, item.essence_ids, item.xp, stats, item.trace_bp(session.content), received)
 	var lines: PackedStringArray = text.split("\n", true, 1)
 	var where: String = "In the stash" if owner == RunState.STASH else "Held by " + session.content.heroes[owner].name
 	var path: String = RunLegendary.describe(session.content, item)
@@ -131,13 +132,15 @@ func _add_actions(item: RunItem, owner: String) -> void:
 		if other.uid != uid and other.item_id == item.item_id and other.tier == item.tier and item.tier < 3 and def.rarity != "legendary":
 			_action("Combine with your other copy → tier %s" % TuningDef.TIER_LABELS[item.tier + 1], func() -> void: session.combine(uid, other.uid), UiStyle.HIGHLIGHT)
 			break
-	# Infuse from the pouch (one button per kind of essence).
-	if item.essence_ids.size() < content.tuning.socket_count(def):
+	# Infuse from the pouch, or fuse a second essence in (one button per kind
+	# of essence).
+	if item.essence_ids.size() < Infusions.MAX_ESSENCES:
 		var offered: Array[String] = []
 		for i: int in state.pouch.size():
 			if not offered.has(state.pouch[i]):
 				offered.append(state.pouch[i])
-				_action("Infuse with %s" % content.essences[state.pouch[i]].name, func() -> void: session.infuse(uid, i), UiStyle.ESSENCE.get(state.pouch[i], UiStyle.TEXT).lightened(0.3))
+				var verb: String = "Infuse with %s" if item.essence_ids.is_empty() else "Fuse in %s (resets its XP)"
+				_action(verb % content.essences[state.pouch[i]].name, func() -> void: session.infuse(uid, i), UiStyle.ESSENCE.get(state.pouch[i], UiStyle.TEXT).lightened(0.3))
 	# Legendary paths: feed an Essence-hungry Legendary what it wants; feed
 	# this item to a Devourer.
 	var path: LegendaryDef = def.legendary
@@ -156,12 +159,8 @@ func _add_actions(item: RunItem, owner: String) -> void:
 	for hero: RunHero in state.heroes:
 		if hero.hero_id != owner:
 			_action("Give to %s" % content.heroes[hero.hero_id].name, func() -> void: session.move_item(uid, hero.hero_id, 99))
+	# (A loadout's order changes nothing, so there's no moving within it.)
 	if owner != RunState.STASH:
-		var at: int = state.list_for(owner).find(item)
-		if at > 0:
-			_action("◀ Move left in the row", func() -> void: session.move_item(uid, owner, at - 1))
-		if at < state.list_for(owner).size() - 1:
-			_action("Move right in the row ▶", func() -> void: session.move_item(uid, owner, at + 1))
 		_action("Put in the stash", func() -> void: session.move_item(uid, RunState.STASH, 99))
 	# What the current step allows.
 	if state.phase == "caravan":

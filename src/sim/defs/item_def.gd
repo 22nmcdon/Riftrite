@@ -7,14 +7,16 @@ extends RefCounted
 ##   ability       fires on its own cooldown
 ##   passive       gives auras (and later, reacts to events); never fires
 ## Also used for a unit's built-in basic auto-attack, which reads a reduced
-## set of fields: no slot, tags, rarity, or XP, because it can't be upgraded
-## (see "Item rules" in CLAUDE.md).
+## set of fields: no slot, tags, keywords, rarity, or XP, because it can't be
+## upgraded (see "Item rules" in CLAUDE.md).
 
 enum Timing { NORMAL, RUSH, STALL }
 
 ## Item tags and class-fit tags (docs/design.md); items can carry several.
 const TAGS: Array[String] = ["weapon", "tome", "charm", "tool", "food", "melee", "ranged", "magic", "healing", "defense"]
 const RARITIES: Array[String] = ["common", "uncommon", "rare", "epic", "legendary"]
+## How many keywords an item carries (docs/plans/infusion-rework.md).
+const MAX_KEYWORDS: int = 3
 const TIMING_NAMES: Array[String] = ["normal", "rush", "stall"]
 enum Slot { BASIC_ATTACK, ABILITY, PASSIVE }
 const SLOT_NAMES: Array[String] = ["basic_attack", "ability", "passive"]
@@ -28,6 +30,10 @@ var name: String
 ## Which loadout slot it goes in (items only; see the top).
 var slot: Slot = Slot.ABILITY
 var tags: Array[String] = []
+## Keyword ids (data/keywords.json; ContentDb checks them). A Resonant single
+## spills to its holder's other items that share one. Empty for built-in
+## basic attacks and slotless abilities.
+var keywords: Array[String] = []
 var rarity: String = ""
 ## A basic-attack item (slot basic_attack): it replaces its owner's built-in
 ## basic auto-attack.
@@ -58,6 +64,12 @@ static func read(reader: DataReader) -> ItemDef:
 	var slot_name: String = reader.req_choice("slot", SLOT_NAMES)
 	def.slot = maxi(SLOT_NAMES.find(slot_name), 0) as Slot
 	def.tags = reader.opt_choice_array("tags", TAGS)
+	def.keywords = reader.req_string_array("keywords")
+	if def.keywords.is_empty() or def.keywords.size() > MAX_KEYWORDS:
+		reader.error("an item needs 1 to %d keywords" % MAX_KEYWORDS)
+	for i: int in def.keywords.size():
+		if def.keywords.find(def.keywords[i]) < i:
+			reader.error("keyword \"%s\" is listed twice" % def.keywords[i])
 	def.rarity = reader.req_choice("rarity", RARITIES)
 	def.auto_attack = def.slot == Slot.BASIC_ATTACK
 	def.enemy_only = reader.opt_bool("enemy_only", false)

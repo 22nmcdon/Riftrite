@@ -82,9 +82,8 @@ func _validate_effects(item: ItemDef, content: ContentDb, errors: Array[String])
 
 
 func _validate_essences(item: ItemSetup, content: ContentDb, errors: Array[String]) -> void:
-	var sockets: int = item.socket_count(content.tuning)
-	if item.essence_ids.size() > sockets:
-		errors.append("%s: item \"%s\" has %d essences but only %d socket(s)" % [id, item.def.id, item.essence_ids.size(), sockets])
+	if item.essence_ids.size() > Infusions.MAX_ESSENCES:
+		errors.append("%s: item \"%s\" has %d essences; an infusion holds at most %d" % [id, item.def.id, item.essence_ids.size(), Infusions.MAX_ESSENCES])
 	for essence_id: String in item.essence_ids:
 		if not content.essences.has(essence_id):
 			errors.append("%s: item \"%s\" has unknown essence \"%s\"" % [id, item.def.id, essence_id])

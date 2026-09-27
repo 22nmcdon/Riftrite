@@ -52,6 +52,23 @@ func test_basic_attack_rejects_upgrade_fields() -> void:
 	_assert_error(errors, "unknown key \"slot\"")
 
 
+func test_items_need_one_to_three_keywords() -> void:
+	var data: Dictionary = SimTestKit.DEFAULT_ITEM.duplicate(true)
+	data["id"] = "keyed"
+	data["keywords"] = ["blade", "burn"]
+	var result: Array = _read(data)
+	assert_eq([result[1], (result[0] as ItemDef).keywords], [[] as Array[String], ["blade", "burn"] as Array[String]])
+	for keywords: Array in [[], ["blade", "bow", "spell", "mend"], ["blade", "blade"]]:
+		data["keywords"] = keywords
+		assert_gt((_read(data)[1] as Array[String]).size(), 0, "refused: %s" % [keywords])
+	_assert_error(_read(data)[1], "keyword \"blade\" is listed twice")
+	data.erase("keywords")
+	_assert_error(_read(data)[1], "missing required key \"keywords\"")
+	var basic: Dictionary = SimTestKit.DEFAULT_BASIC.duplicate(true)
+	basic.merge({"id": "swing", "keywords": ["blade"]}, true)
+	_assert_error(_read(basic, true)[1], "unknown key \"keywords\"")
+
+
 func test_rejects_bad_fields() -> void:
 	var data: Dictionary = SimTestKit.DEFAULT_ITEM.duplicate(true)
 	data.merge({"id": "bad", "slot": "trinket", "tags": ["weapon", "hat"], "rarity": "mythic", "cooldown_ms": 0}, true)

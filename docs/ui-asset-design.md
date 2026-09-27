@@ -173,7 +173,7 @@ The main place items move. **(Fixed)** There are no hero tabs for now: up to 6 h
 ```
 
 - Dragging an item between hero grids is a first-class interaction (see section 9).
-- Adjacent-slot effects preview live on hover: neighbors highlight and a ghost "spill" arrow shows direction.
+- Keyword spill previews on hover: the holder's items that share a keyword with a spilling single highlight. *(not built yet)*
 
 ### 6.5 The Caravan (shop) (Fixed: renamed; no enchantments)
 
@@ -181,7 +181,7 @@ A wagon-side market stall. Items and heroes for hire sit on cloth with price tag
 
 ### 6.6 Forge / Essence Infusion
 
-**(Fixed)** Infusing happens any time between fights, from the guild panel, not at the Forge. The Forge stop is for **reforging** (removing an item's infusion). An infusion workbench view can still come later: place an item, drop one or two essence gems into its sockets (Epic and Legendary items have 2, others 1), and preview the result. Two different essences make an alloy (swirl animation, split gem; see section 8).
+**(Fixed)** Infusing happens any time between fights, from the guild panel, not at the Forge. The Forge stop is for **reforging** (removing an item's infusion). An infusion workbench view can still come later: place an item, drop one or two essence gems into it (any item holds two), and preview the result. Two different essences make an alloy (swirl animation, split gem; see section 8).
 
 ### 6.7 Event / Rift Encounter
 
@@ -228,7 +228,7 @@ Layers, back to front:
 2. **Rarity frame:** per the rarity ladder. Enemy-only items get the rift-bleed frame.
 3. **Icon:** centered; the token is as wide as the item's slots.
 4. **Tier:** C, B, A, or S.
-5. **Essence pips:** one per socket (Epic and Legendary have 2, others 1); empty sockets show as dim dots.
+5. **Essence pips:** up to two (any item holds two essences); room left shows as dim dots.
 6. **Overlays:** cooldown sweep, oathbound chain (later: an oathbound item can't be moved off its hero), "new" sparkle.
 
 Item states: empty, filled, hover, picked-up (lifted with shadow), valid-drop, invalid-drop, selected, lit (combines with a held copy), oathbound, on-cooldown, triggering. **(Fixed)** No "cursed" state.
@@ -243,16 +243,18 @@ Item states: empty, filled, hover, picked-up (lifted with shadow), valid-drop, i
 
 Essences change how an item works, so they need the clearest visual grammar in the game.
 
-**(Fixed)** These follow the game's infusion rules (`CLAUDE.md`, "Infusion rules"). **Only Resonant infusions spill**, so spill arrows show only at Resonant.
+**(Fixed)** These follow the game's infusion rules (`CLAUDE.md`, "Infusion rules"; `docs/plans/infusion-rework.md`). An item holds up to two essences. At Resonant a single spills by keyword and an alloy or pure double awakens.
 
-| Kind | Visual | What it spills (at Resonant) |
+| Kind | Visual | At Resonant |
 |---|---|---|
-| Single essence | One round gem, single hue | Its partial effect to **both** neighbors |
-| Alloy (two different essences) | Half-and-half split gem with a seam | The first essence to the **left**, the second to the **right**; the alloy's own effect never spills |
-| Pure double (same essence twice) | Faceted gem with a bright inner core and a halo | The **same** as a single: the base essence's partial effect to both sides. Its bonus never spills and never strengthens the spill. (The one exception would be a pure double whose effect *is* doubled spill, an optional idea for Overgrowth.) |
-| Essence Transformation (item + essence pair) | Gem with a small padlock | **Never** spills, even at Resonant |
+| Single essence | One round gem, single hue | Spills its partial effect to the holder's other items that share a keyword |
+| Alloy (two different essences) | Half-and-half split gem with a seam | Awakens: its special switches on. Never spills |
+| Pure double (same essence twice) | Faceted gem with a bright inner core and a halo | Awakens, like an alloy. Never spills |
+| Essence Transformation (item + essence pair) | Gem with a small padlock | Never spills or awakens |
 
-**Spill indicators:** small chevron arrows on the left and right edges of an item token, tinted in the essence hue, shown only at Resonant. A single essence and a pure double show one arrow on each side in their hue. An alloy shows its first essence's color on the left and its second's on the right. A transformation shows a flat bar instead of arrows. Spills stay inside the hero's row, so the end of a row gets no arrow target. On hover, the arrows animate outward to the neighbors that would receive the effect.
+**Room left:** an item shows two dim empty gems with no infusion, and one beside a single essence (a second would fuse with it).
+
+**Infusion marks (redesign step 2; the old left/right spill arrows are removed):** a small mark at the item token's bottom-right corner. A spilling single shows a dot in the essence hue with four short rays. An awakened alloy or pure double shows a brass four-pointed star around its first essence's hue. Nothing else gets a mark. The tooltip names the keywords a single spills to, what an alloy awakens into, and each spill an equipped item gets.
 
 **Discovery:** transformations are hidden synergies. The padlock shows only once that transformation has been discovered; until then the gem looks like a plain single.
 

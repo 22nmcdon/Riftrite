@@ -21,7 +21,8 @@ const ENCOUNTERS_FILE: String = "encounters.json"
 const RELICS_FILE: String = "relics.json"
 const SYNERGIES_FILE: String = "synergies.json"
 const SPECIALIZATIONS_FILE: String = "specializations.json"
-const FILES: Array[String] = [TUNING_FILE, STATUSES_FILE, ESSENCES_FILE, ALLOYS_FILE, ITEMS_FILE, HEROES_FILE, ENEMIES_FILE, ENCOUNTERS_FILE, RELICS_FILE, SYNERGIES_FILE, SPECIALIZATIONS_FILE]
+const KEYWORDS_FILE: String = "keywords.json"
+const FILES: Array[String] = [TUNING_FILE, STATUSES_FILE, ESSENCES_FILE, ALLOYS_FILE, KEYWORDS_FILE, ITEMS_FILE, HEROES_FILE, ENEMIES_FILE, ENCOUNTERS_FILE, RELICS_FILE, SYNERGIES_FILE, SPECIALIZATIONS_FILE]
 
 var errors: Array[String] = []
 var tuning: TuningDef
@@ -31,6 +32,8 @@ var essences: Dictionary[String, EssenceDef] = {}
 var essence_ids: Array[String] = []
 var alloys: Dictionary[String, AlloyDef] = {}
 var alloy_ids: Array[String] = []
+var keywords: Dictionary[String, KeywordDef] = {}
+var keyword_ids: Array[String] = []
 var items: Dictionary[String, ItemDef] = {}
 var item_ids: Array[String] = []
 var heroes: Dictionary[String, HeroDef] = {}
@@ -76,6 +79,10 @@ static func load_texts(texts: Dictionary[String, String]) -> ContentDb:
 	db._load_statuses(db._parse(texts, STATUSES_FILE))
 	db._load_essences(db._parse(texts, ESSENCES_FILE))
 	db._load_alloys(db._parse(texts, ALLOYS_FILE))
+	for reader: DataReader in db._entries(db._parse(texts, KEYWORDS_FILE), KEYWORDS_FILE):
+		var keyword: KeywordDef = KeywordDef.read(reader)
+		if db._claim_id(keyword.id, reader, db.keyword_ids):
+			db.keywords[keyword.id] = keyword
 	for reader: DataReader in db._entries(db._parse(texts, ITEMS_FILE), ITEMS_FILE):
 		var item: ItemDef = ItemDef.read(reader)
 		if db._claim_id(item.id, reader, db.item_ids):
@@ -225,6 +232,9 @@ func _check_references() -> void:
 		_check_effects(items[id].effects, item_where)
 		_check_auras(items[id].auras, item_where)
 		_check_no_partners(items[id].effects, item_where)
+		for keyword: String in items[id].keywords:
+			if not keywords.has(keyword):
+				errors.append("%s: unknown keyword \"%s\"" % [item_where, keyword])
 		if items[id].legendary != null:
 			for essence_id: String in items[id].legendary.wants:
 				if not essences.has(essence_id):
@@ -349,7 +359,8 @@ func check_relics(relic_list: Array[String], where: String, enemy: bool) -> void
 			errors.append("%s: \"%s\" is listed twice" % [at, relic_id])
 
 
-## Checks a fixed item layout's references: items, essences, and sockets.
+## Checks a fixed item layout's references: items, essences, and the
+## two-essence limit.
 ## Enemy-only items are allowed only when `enemy` is true.
 func check_loadout(entries: Array[LoadoutEntry], where: String, enemy: bool) -> void:
 	for i: int in entries.size():
@@ -361,9 +372,8 @@ func check_loadout(entries: Array[LoadoutEntry], where: String, enemy: bool) -> 
 		var item: ItemDef = items[entry.item_id]
 		if item.enemy_only and not enemy:
 			errors.append("%s: \"%s\" is enemy-only" % [at, entry.item_id])
-		var sockets: int = tuning.socket_count(item) if tuning != null else 1
-		if entry.essence_ids.size() > sockets:
-			errors.append("%s: \"%s\" has %d essences but only %d socket(s)" % [at, entry.item_id, entry.essence_ids.size(), sockets])
+		if entry.essence_ids.size() > Infusions.MAX_ESSENCES:
+			errors.append("%s: \"%s\" has %d essences; an infusion holds at most %d" % [at, entry.item_id, entry.essence_ids.size(), Infusions.MAX_ESSENCES])
 		for essence_id: String in entry.essence_ids:
 			if not essences.has(essence_id):
 				errors.append("%s: unknown essence \"%s\"" % [at, essence_id])

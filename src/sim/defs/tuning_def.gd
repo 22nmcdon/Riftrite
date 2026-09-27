@@ -7,17 +7,15 @@ extends RefCounted
 const TIER_NAMES: Array[String] = ["c", "b", "a", "s"]
 const TIER_LABELS: Array[String] = ["C", "B", "A", "S"]
 
+## Share of a Resonant single's strength that spills to its holder's other
+## items sharing a keyword.
 var spill_single_bp: int
-var spill_alloy_bp: int
-var spill_pure_double_bp: int
 var xp_to_attuned: int
 var xp_to_resonant: int
 var xp_per_battle: int
 ## How strong an infusion is at each level (Base, Attuned, Resonant).
 var infusion_level_bp: Array[int] = []
 var crit_damage_bp: int
-## Item rarities with 2 sockets; every other item has 1.
-var two_socket_rarities: Array[String] = []
 var rush_end_ticks: int
 var stall_start_ticks: int
 var collapse_start_ticks: int
@@ -58,16 +56,9 @@ var pouch_cap: int = 8
 var reforge_gold: int = 0
 
 
-## Sockets an item has: 2 for the two-socket rarities, else 1.
-func socket_count(item: ItemDef) -> int:
-	return 2 if two_socket_rarities.has(item.rarity) else 1
-
-
 static func read(reader: DataReader) -> TuningDef:
 	var def := TuningDef.new()
 	def.spill_single_bp = reader.req_int("spill_single_bp", 0, FixedMath.BP_ONE)
-	def.spill_alloy_bp = reader.req_int("spill_alloy_bp", 0, FixedMath.BP_ONE)
-	def.spill_pure_double_bp = reader.req_int("spill_pure_double_bp", 0, FixedMath.BP_ONE)
 	def.xp_to_attuned = reader.req_int("xp_to_attuned", 1)
 	def.xp_to_resonant = reader.req_int("xp_to_resonant", 1)
 	def.xp_per_battle = reader.req_int("xp_per_battle", 0)
@@ -77,7 +68,6 @@ static func read(reader: DataReader) -> TuningDef:
 		def.infusion_level_bp = [levels.req_int("base", 0), levels.req_int("attuned", 0), levels.req_int("resonant", 0)]
 		levels.finish()
 	def.crit_damage_bp = reader.req_int("crit_damage_bp", FixedMath.BP_ONE)
-	def.two_socket_rarities = reader.opt_choice_array("two_socket_rarities", ItemDef.RARITIES)
 	def.tier_multiplier_bp = _read_tier_table(reader, "tier_multiplier_bp")
 	def.ability_slots = _read_tier_table(reader, "ability_slots")
 	def.passive_slots = _read_tier_table(reader, "passive_slots")

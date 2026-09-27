@@ -2,7 +2,7 @@
 
 Working title: Riftrite (placeholder). Synced from the Claude Docs version on 2026-09-25, then updated in the repo the same day with answers to the first round of design questions (see Decisions made). The Claude Docs version does not have those updates yet.
 
-> **Redesign in progress (2026-09-26):** `docs/plans/fun-redesign.md` and `docs/plans/heroes-and-deeds.md` are approved and being built in steps. They replace the item rows and adjacency, sockets by rarity and neighbor spill, buying and recruiting heroes, Backup, and class traits. This document describes the game as it is now, and each step updates it as it lands. **Step 1 is built:** the loadout (basic attack, abilities, passives), the drafted team of three, a rank-up per elite, innates, and no Backup, item size, rows, or neighbor effects. Neighbor spill is off until the infusion rework (step 2) brings keyword spill.
+> **Redesign in progress (2026-09-26):** `docs/plans/fun-redesign.md` and `docs/plans/heroes-and-deeds.md` are approved and being built in steps. They replace the item rows and adjacency, sockets by rarity and neighbor spill, buying and recruiting heroes, Backup, and class traits. This document describes the game as it is now, and each step updates it as it lands. **Step 1 is built:** the loadout (basic attack, abilities, passives), the drafted team of three, a rank-up per elite, innates, and no Backup, item size, rows, or neighbor effects. **Step 2 is built:** any item fuses two essences, Resonant singles spill by keyword, and alloys awaken at Resonant.
 
 ## High concept
 
@@ -96,7 +96,7 @@ You draft **three heroes** at the start of the run (three times, pick 1 of 3) an
 
 ## Items and infusions (our take on enchantments)
 
-In The Bazaar an item gets one fixed enchantment. Here, enchantments are **Infusions**: essences you harvest from enemies, socket into gear, fuse into new types, and level up by using them.
+In The Bazaar an item gets one fixed enchantment. Here, enchantments are **Infusions**: essences you harvest from enemies, infuse into gear, fuse into new types, and level up by using them.
 
 **1. Harvest.** Each enemy family drops one of six base essences. The act's biome decides which essences can drop, and each day's fight shows its enemy team ahead of time.
 
@@ -113,9 +113,9 @@ In The Bazaar an item gets one fixed enchantment. Here, enchantments are **Infus
 
 "Sized from the item's output" follows one conversion rule (same kind +50%; same family 50%; direct → over time 5%; over time → direct 500%). Details: `docs/plans/essence-rework.md`.
 
-**2. Socket.** Most items have 1 socket. Only **Legendary** items (and, as a placeholder to try, **Epic**) have 2, whatever their size. That makes alloys and pure doubles a high-rarity payoff. For now, infusing can happen any time between fights, straight from the essence pouch.
+**2. Infuse.** Every item holds **one infusion of up to 2 essences** (redesign step 2, `docs/plans/infusion-rework.md`; it replaced "2 sockets for Epic and Legendary only"). Passives can be infused too; what that does is decided with the keyword step. For now, infusing can happen any time between fights, straight from the essence pouch.
 
-**3. Fuse.** Two essences in one two-socket item fuse into an **Alloy** with its own effect, not just both effects added. Six essences give 15 cross-pairs plus 6 "pure" doubles, so 21 alloys in total. Examples:
+**3. Fuse.** A second essence put on an infused item **fuses** with the first into an **Alloy** with its own effect, not just both effects added. There's no third essence, and the order doesn't matter. Six essences give 15 cross-pairs plus 6 "pure" doubles, so 21 alloys in total. Examples:
 
 | Alloy | Recipe | Effect |
 | --- | --- | --- |
@@ -126,30 +126,27 @@ In The Bazaar an item gets one fixed enchantment. Here, enchantments are **Infus
 | Blight | Umbral + Verdant | The item's Bleed lands as **Blight**, whose damage heals your team (split evenly) |
 | Inferno | Ember + Ember | The item's Burn lands as **Golden Flame** (placeholder name): same amount, never fades, heals strip it only 75% as well |
 
-**How alloys work:** an alloy keeps both essences' normal effects and adds its special on top. A special that changes how a status behaves uses **its own status type** (Golden Flame, Plasma, Blight), so it never changes other items' or heroes' plain Burn or Bleed. Two essences with no named alloy yet still work, with both essences' effects and no special.
+**How alloys work:** an alloy keeps both essences' normal effects. Its special switches on when it **awakens** at Resonant (see Attune below). A special that changes how a status behaves uses **its own status type** (Golden Flame, Plasma, Blight), so it never changes other items' or heroes' plain Burn or Bleed. Two essences with no named alloy yet still work, with both essences' effects and no special.
 
-**Pure doubles** (two of the same essence) are alloys too, each with its own effect, and what that effect is depends on the essence. Most pure doubles add a bonus effect like Inferno's. **Doubled spill** is an optional idea: a pure double whose effect is doubled spill instead of a bonus effect. Maybe no pure double gets it. The first one to try is **Overgrowth (Verdant + Verdant)**, since spreading growth fits the idea, and the sim will show whether it earns its place. A pure double's bonus effect never makes its spill stronger. See the spill table below.
+**Pure doubles** (two of the same essence) are alloys too, each with its own effect, and what that effect is depends on the essence. Most pure doubles add a bonus effect like Inferno's, which also switches on when it awakens. (The old "doubled spill" idea for Overgrowth is set aside: alloys and pure doubles never spill now.)
 
 **4. Attune.** Each infusion gains experience (XP) and levels up at thresholds: base → Attuned (stronger) → Resonant.
 
 - **XP comes from two sources:** each time the item fires, and each battle the item takes part in.
-- **XP per fire is set per item**, based on its type and size. Items that fire often (like auto-attacks, which don't have the same kind of cooldown as other items) earn less per fire, so they don't level faster just by firing more.
+- **XP per fire is set per item**, based on its type. Items that fire often (like auto-attacks, which don't have the same kind of cooldown as other items) earn less per fire, so they don't level faster just by firing more.
 - **XP resets** when a second essence is added to an item (turning a single into an alloy or pure double), and when an infusion is removed at a Forge.
 
-> **Step 1 of the redesign turned neighbor spill off** (there are no rows any more). The infusion rework (step 2) replaces it with keyword spill and Awakening (`docs/plans/fun-redesign.md`). The rules below are the old ones, kept until then.
+**At Resonant** an infusion pays off, in one of two ways (`docs/plans/infusion-rework.md`):
 
-A **Resonant** infusion spills a partial copy of its effect onto its neighbors (items in the row). How it spills depends on what is socketed:
-
-| Infusion | Spill to neighbors when Resonant |
+| Infusion | At Resonant |
 | --- | --- |
-| Single essence | Partial effect (about 30%) to **both** sides |
-| Alloy (fused) | Split: one essence's partial effect to the left, the other's to the right, each at the same strength as a single essence's spill (about 30%) for now. For example, Steam (Ember + Frost) spills Ember only to its left neighbor and Frost only to its right. The alloy effect itself never spills |
-| Pure double | The base essence's partial effect (about 30%, same as a single) to **both** sides. Its bonus effect never spills and never makes the spill stronger. Exception: a pure double whose effect *is* doubled spill (an optional idea, first tried on Overgrowth) spills about 60% instead |
-| Essence transformation | **Never** spills |
+| Single essence | **Keyword spill:** a partial copy of its effect (about 30%, `spill_single_bp`) goes to the holder's other items that **share a keyword** with it. Each item gets at most one spill per essence. The spill stays in the holder's loadout, and the built-in basic attack has no keywords, so it gets none |
+| Alloy or pure double | **Awakens:** its special switches on (Plasma, Inferno's Golden Flame, Bloom's echo, and so on). It never spills. Pairs with no named alloy have nothing to awaken into yet |
+| Essence transformation | Never spills and never awakens |
 
-The trade-off: an alloy is the strongest effect on its own item, but its spill is split, so each neighbor only gets one essence. Singles and pure doubles give both neighbors the same essence, which matters when stacking one essence across a row. Percentages are starting points for tuning, and the alloy spill strength may change after testing.
+**Keywords** (`data/keywords.json`): every item carries 1–3 of Blade, Bow, Spell, Mend, Ward, Burn, Bleed, and Hex (Poison, Slow, Blind, Freeze), shown on the item. Stacking one keyword is a build direction: a Resonant Ember on a Blade puts a little Burn on every other Blade the hero holds. The choice is clean: spread one essence wide (a single) or build one powerful item (an alloy or pure double). Later steps build hero affinities, duo bonds, and conduit passives on the same keywords.
 
-**5. Transform.** Some specific item + essence pairs are **Essence Transformations**. Instead of adding an effect, the essence changes how the item works. The drawback: a transformation never spills to its neighbors, even when Resonant.
+**5. Transform.** Some specific item + essence pairs are **Essence Transformations**. Instead of adding an effect, the essence changes how the item works. The drawback: a transformation never spills or awakens, even when Resonant.
 
 - *Twin Daggers* + Frost: the daggers become thrown icicles that pierce through the first target.
 - *Iron Bulwark* + Ember: the shield no longer blocks damage; it explodes when broken, burning nearby enemies.
@@ -198,9 +195,9 @@ Synergies work in five layers, from specific and secret (Gungeon-style) to broad
 | Layer | Trigger | Example | Visibility |
 | --- | --- | --- | --- |
 | Named pairs | Two specific items on the **same hero** | *Whetstone* + *Twin Daggers* = **"Paper Cuts"**: each dagger hit reduces the other's cooldown by 0.2s | Hidden until found, then saved in the Codex |
-| Essence transformations | A specific item + a specific essence | *Twin Daggers* + Frost: daggers become piercing icicles. Never spills to neighbors | Hidden until found, then saved in the Codex |
+| Essence transformations | A specific item + a specific essence | *Twin Daggers* + Frost: daggers become piercing icicles. Never spills or awakens | Hidden until found, then saved in the Codex |
 | Signature gear | A specific item on a specific hero | Mender *Sister Vell* + *Old Lantern*: lantern heals also cleanse | Hinted in the hero's profile as "???" |
-| Essence resonance | 3 / 5 / 7 of one essence socketed team-wide, across all heroes' items. It counts essences, not items: a single counts 1, an alloy counts 1 for each half, a pure double counts 2 of its essence, and an essence transformation counts as whatever essence(s) are socketed | 5 Frost: frozen enemies take +30% damage | Always shown, like trait counters |
+| Essence resonance | 3 / 5 / 7 of one essence infused team-wide, across all heroes' items. It counts essences, not items: a single counts 1, an alloy counts 1 for each half, a pure double counts 2 of its essence, and an essence transformation counts as whatever essence(s) it holds | 5 Frost: frozen enemies take +30% damage | Always shown, like trait counters |
 | Class traits | 2 or more heroes of a class fielded | 2 Wardens: front-row heroes get +15% Shield | Always shown |
 
 **How discovery works**
@@ -250,7 +247,7 @@ A possible later change: two rounds per day (Caravan, stop, fight, then Caravan,
 **Currencies in a run**
 
 - **Gold:** the Caravan, rerolls, removing infusions.
-- **Essences:** stored in a pouch (cap of 8) until socketed, so you can't hoard every one.
+- **Essences:** stored in a pouch (cap of 8) until infused, so you can't hoard every one.
 - **Keys:** rare; open Vault chests.
 
 **Biomes** each favor two essences (for example, the Ashen Mines drop Ember and Stone). Each day's fight shows its enemy team ahead of time, so a player chasing a Frost build knows when frost essences are coming.
@@ -295,7 +292,7 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 | Fights are hard to read | Post-fight damage meter, combat log, slow-mo, and a cap of 7 slots per hero |
 | Too many combinations to balance | Headless sim runner; ship fewer alloys (10) first and add more later |
 | Feels like a mash-up of its sources | Lean hardest on the infusion system; it's the part none of the three games has |
-| Fusion feels mandatory | Alloys split their spill (one essence per side) while singles and pure doubles give both neighbors the same essence; fusing resets XP; only Epic and Legendary items have 2 sockets; essence transformations give single essences a unique payoff, at the cost of never spilling. The headless sim will show whether this is enough, and alloy spill strength is the first thing to tune if it isn't |
+| Fusion feels mandatory | Only singles spill (by keyword), while alloys and pure doubles awaken on their own item and never spill; fusing resets XP; essence transformations give single essences a unique payoff, at the cost of never spilling. The run bot and playtests will show whether this is enough; the spill share is the first thing to tune if it isn't |
 | Scope creep | Hold the vertical slice to one act until playtesters ask for a second run |
 
 **Decisions made**
@@ -339,10 +336,10 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - **Alloys keep both essences' effects** plus their special. Specials that alter a status get their own status type (Inferno → Golden Flame, Plasma → Plasma, Blight → Blight) so they don't leak into other items' statuses. First alloys built: Inferno, Plasma, Blight, Bloom.
 - Every hero has their own built-in basic auto-attack, which can't be upgraded. A basic-attack item replaces it and fills the one basic-attack slot. Take the item out and the hero uses the basic auto-attack again.
 - Two copies of the same item combine into the next tier (two, not three). A new copy's infusion replaces the old one.
-- Alloy spill per side equals a single essence's spill for now.
-- Pure doubles each have their own effect. Their bonus effect never strengthens spill. Doubled spill as a pure double's effect is an optional idea, tried first on Overgrowth (Verdant + Verdant).
+- **Infusion rework (redesign step 2, built):** any item holds up to 2 essences, which fuse; only a Resonant single spills, to its holder's items that share a keyword; alloys and pure doubles awaken at Resonant (their special switches on) and never spill. Details and the user's answers: `docs/plans/infusion-rework.md`.
+- Pure doubles each have their own effect, which switches on when they awaken.
 - Infusion XP comes from item fires (amount set per item) plus battles fought. XP resets when an infusion becomes an alloy or pure double.
-- Essence resonance counts essences: a single = 1, an alloy = 1 of each half, a pure double = 2, and a transformation counts its socketed essence(s).
+- Essence resonance counts essences: a single = 1, an alloy = 1 of each half, a pure double = 2, and a transformation counts its essence(s).
 - **No branching map.** Each act is a set number of days. A day is a guaranteed shop, one fight shown ahead, and a stop you pick from 2 nodes drawn from one pool (every event, three loot kinds, the Forge only if something is infused, the Vault only with a key, Retrain, and an extra fight). Offers are random per run from the seed and don't depend on earlier picks for now.
 - **The Caravan** is the shop: it sells items (it sold heroes until redesign step 1; heroes are drafted now and rank up from elite wins).
 - **The Caravan never offers an item at a different tier than a copy you already hold.** Holding the same item at different tiers is still allowed when the copies come from elsewhere (Vault, loot, fight drops, events), just not from the Caravan.
@@ -350,7 +347,7 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - **Infusing** can happen any time between fights for now; the Forge is for reforging.
 - **A lost fight is replayed against the same enemies.**
 - **Synergies (built):** resonance counts every hero's essences; class traits count heroes, at 2 and 3 (to be replaced by affinities in step 5); enemies get no synergies for now (maybe bosses in later acts). A transformation uses one copy of its essence; any other essence works as a plain single. Pairs can use a new `charge` effect (advance another item's cooldown). Details: `docs/plans/synergies-in-sim.md`.
-- **Sockets by rarity, not size:** only Legendary (and, as a placeholder, Epic) items have 2 sockets; every other item has 1. The rarity list is a tuning value.
+- **Two essences on any item** (redesign step 2) replaced "sockets by rarity": only Epic and Legendary items used to hold two.
 - **Relics:** hold any number, no board and no sockets. They can be turned down but never removed once taken, change how a build works (Epic ones a lot), and are much rarer than items, essences, or heroes. Bosses drop an item or a relic.
 - **A run starts with a drafted team of three** (three picks, each 1 of 3 random heroes), then 1 of 3 starting packages (extra gold, a Common relic, or a Common item), plus base gold. All three fight.
 - **Losing a fight restarts the day** with everything kept, plus bonus gold (10, +5 per fight won so far). **The second loss ends the run.** Every fight starts at full HP unless an item or relic changes that.
@@ -362,7 +359,6 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 
 **Open questions**
 
-- **Doubled spill:** does any pure double keep it? Overgrowth (Verdant + Verdant) is the first one to test.
 - **Act 3 collapse numbers:** to be decided later.
 - **Bosses** have HP-threshold phases (built from the same parts as specializations). Summons (units joining mid-fight) come later. The Act 1 boss is Old Mother Ash and her pack (`docs/plans/act1-boss.md`).
 - **Enemy-only items** can end up with the guild (fight drops include them). The Caravan never sells them, so the only ways to upgrade one are a second copy from random loot (not the Caravan) or an upgrade stop.

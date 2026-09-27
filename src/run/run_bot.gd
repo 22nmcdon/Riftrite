@@ -5,10 +5,11 @@ extends RefCounted
 ## run-level balance (tools/run_runner.gd). The strategy:
 ##   - draft the first offered hero three times, then take the gold package
 ##   - at the Caravan: buy items: upgrades for held copies first, then the
-##     rarest (Epics for alloys), cheapest first within a rarity
+##     rarest first, cheapest first within a rarity
 ##   - combine copies, equip what fits, feed Legendaries (the essences an
-##     Essence-hungry one wants; stash leftovers to a Devourer), infuse free
-##     sockets, sturdy classes in the front row and the rest in the back
+##     Essence-hungry one wants; stash leftovers to a Devourer), infuse (a
+##     single for each equipped item, then fuse into Base infusions), sturdy
+##     classes in the front row and the rest in the back
 ##   - stops: a skirmish (an extra fight: losing costs nothing), then Loot,
 ##     Events, the Vault, Retrain, the Forge; take what fits; upgrade the best
 ##     item before the boss
@@ -190,13 +191,23 @@ static func _organize(state: RunState, content: ContentDb) -> void:
 			if RunActions.move_item(state, content, item.uid, hero.hero_id, hero.items.size()).ok:
 				break
 	_feed_legendaries(state, content)
-	var holders: Array[RunItem] = state.stash.duplicate()
-	for hero: RunHero in state.heroes:
-		holders.append_array(hero.items)
-	for item: RunItem in holders:
-		while not state.pouch.is_empty() and RunActions.infuse(state, content, item.uid, 0).ok:
-			pass
+	_infuse(state, content)
 	_arrange_rows(state, content)
+
+
+## Gives each equipped item without an infusion one essence, then fuses what's
+## left into infusions that are still at Base (fusing resets XP, so it spares
+## infusions that have grown).
+static func _infuse(state: RunState, content: ContentDb) -> void:
+	var equipped: Array[RunItem] = []
+	for hero: RunHero in state.heroes:
+		equipped.append_array(hero.items)
+	for item: RunItem in equipped:
+		if item.essence_ids.is_empty() and not state.pouch.is_empty():
+			RunActions.infuse(state, content, item.uid, 0)
+	for item: RunItem in equipped:
+		if item.essence_ids.size() == 1 and item.xp < content.tuning.xp_to_attuned and not state.pouch.is_empty():
+			RunActions.infuse(state, content, item.uid, 0)
 
 
 ## Essence-hungry Legendaries eat the essences they want before anything is

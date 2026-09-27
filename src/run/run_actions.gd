@@ -135,8 +135,9 @@ static func discard_essence(state: RunState, content: ContentDb, pouch_index: in
 	return _ok("threw away %s" % content.essences[essence_id].name)
 
 
-## Sockets an essence from the pouch into an item (any time between fights).
-## Adding a second essence (single -> alloy or pure double) resets XP.
+## Infuses an item with an essence from the pouch (any time between
+## fights). Any item takes up to two: a second essence fuses with the first
+## into their alloy or pure double, which resets XP. Never a third.
 static func infuse(state: RunState, content: ContentDb, uid: int, pouch_index: int) -> Result:
 	var item: RunItem = state.find_item(uid)
 	if item == null:
@@ -144,14 +145,16 @@ static func infuse(state: RunState, content: ContentDb, uid: int, pouch_index: i
 	if pouch_index < 0 or pouch_index >= state.pouch.size():
 		return _fail("no essence there")
 	var def: ItemDef = content.items[item.item_id]
-	var sockets: int = content.tuning.socket_count(def)
-	if item.essence_ids.size() >= sockets:
-		return _fail("%s has no free socket (%d)" % [def.name, sockets])
+	if item.essence_ids.size() >= Infusions.MAX_ESSENCES:
+		return _fail("%s already holds two essences; reforge it to start again" % def.name)
 	var essence_id: String = state.pouch[pouch_index]
 	state.pouch.remove_at(pouch_index)
 	item.essence_ids.append(essence_id)
 	if item.essence_ids.size() == 2:
 		item.xp = 0
+		var alloy: AlloyDef = content.alloy_for(item.essence_ids[0], item.essence_ids[1])
+		var fused: String = alloy.name if alloy != null else "%s + %s" % [content.essences[item.essence_ids[0]].name, content.essences[essence_id].name]
+		return _ok("fused %s into %s's infusion: %s" % [content.essences[essence_id].name, def.name, fused])
 	return _ok("infused %s with %s" % [def.name, content.essences[essence_id].name])
 
 

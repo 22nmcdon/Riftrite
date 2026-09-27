@@ -16,7 +16,9 @@ const TARGET_WORDS: Array[String] = [
 const ITEM_TARGET_WORDS: Array[String] = ["itself", "its holder's other items", "its partner items"]
 
 
-static func item_text(content: ContentDb, item_id: String, tier: int, essence_ids: Array[String], xp: int, holder_stats: UnitStats = null, trace_bp: int = 0) -> String:
+## `received`: lines about the keyword spills the item gets from its holder
+## (see spills_received), shown under its infusion.
+static func item_text(content: ContentDb, item_id: String, tier: int, essence_ids: Array[String], xp: int, holder_stats: UnitStats = null, trace_bp: int = 0, received: PackedStringArray = PackedStringArray()) -> String:
 	var def: ItemDef = content.items[item_id]
 	var essences: Array[EssenceDef] = []
 	for essence_id: String in essence_ids:
@@ -33,14 +35,11 @@ static func item_text(content: ContentDb, item_id: String, tier: int, essence_id
 	if not def.tags.is_empty():
 		kind.append(", ".join(def.tags))
 	lines.append(" · ".join(kind))
+	lines.append("Keywords: %s" % keyword_names(content, def.keywords))
 	if not def.effects.is_empty():
 		lines.append("Fires every %ss" % _seconds(state.cooldown_ticks))
-	var sockets: int = content.tuning.socket_count(def)
-	if essences.is_empty():
-		lines.append("Sockets: %d empty" % sockets)
-	else:
-		lines.append("Infusion: %s, %s (%d XP)%s" % [state.infusion_name(), Infusions.LEVEL_NAMES[state.infusion_level], xp,
-			"" if essences.size() >= sockets else ", 1 socket free"])
+	lines.append_array(infusion_lines(content, state))
+	lines.append_array(received)
 	lines.append("")
 	for sourced: SourcedEffect in state.effects:
 		lines.append("• " + effect_line(content, sourced))
@@ -52,6 +51,83 @@ static func item_text(content: ContentDb, item_id: String, tier: int, essence_id
 		lines.append("")
 		lines.append("(numbers shown without a holder's stats)")
 	return "\n".join(lines)
+
+
+## "Blade, Bleed".
+static func keyword_names(content: ContentDb, keyword_ids: Array[String]) -> String:
+	var names: PackedStringArray = PackedStringArray()
+	for keyword: String in keyword_ids:
+		names.append(content.keywords[keyword].name if content.keywords.has(keyword) else keyword)
+	return ", ".join(names)
+
+
+## The infusion in plain words: what it is, its level, and what it spills or
+## awakens into (docs/plans/infusion-rework.md).
+static func infusion_lines(content: ContentDb, state: ItemState) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	if state.essences.is_empty():
+		lines.append("Infusion: empty (holds up to %d essences)" % Infusions.MAX_ESSENCES)
+		return lines
+	lines.append("Infusion: %s, %s (%d XP)" % [state.infusion_name(), Infusions.LEVEL_NAMES[state.infusion_level], state.infusion_xp])
+	var keywords: String = keyword_names(content, state.def.keywords).replace(", ", " or ")
+	@warning_ignore("integer_division")
+	var share: int = content.tuning.spill_single_bp / 100
+	if state.essences.size() == 1:
+		var essence: String = state.essences[0].name
+		if state.spills():
+			lines.append("Spills %d%% of its %s to its holder's other %s items." % [share, essence, keywords])
+		else:
+			lines.append("At Resonant it spills %d%% of its %s to its holder's other %s items. A second essence fuses with it instead." % [share, essence, keywords])
+	elif state.alloy == null:
+		lines.append("No named alloy for this pair yet: it gives both essences' effects, and has nothing to awaken.")
+	elif state.awakened():
+		lines.append("Awakened: %s" % alloy_words(content, state.alloy))
+	else:
+		lines.append("Awakens at Resonant: %s" % alloy_words(content, state.alloy))
+	return lines
+
+
+## What an alloy's special does, e.g. "its Burn lands as Golden Flame".
+static func alloy_words(content: ContentDb, alloy: AlloyDef) -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	var replaced: Array = alloy.replaces.keys()
+	replaced.sort()
+	for from_status: String in replaced:
+		parts.append("its %s lands as %s" % [_status_name(content, from_status), _status_name(content, alloy.replaces[from_status])])
+	if alloy.heal_echo_bp > 0:
+		@warning_ignore("integer_division")
+		parts.append("each heal echoes %d%% onto another ally" % (alloy.heal_echo_bp / 100))
+	return "; ".join(parts) + "."
+
+
+static func _status_name(content: ContentDb, status_id: String) -> String:
+	return content.statuses[status_id].name if content.statuses.has(status_id) else status_id
+
+
+## The keyword spills an equipped item gets from its holder's other items,
+## in plain words ("Gets 30% Ember spill from Hearth Knife"). Empty for the
+## stash.
+static func spills_received(content: ContentDb, holder: RunHero, item: RunItem) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	if holder == null:
+		return lines
+	var states: Array[ItemState] = []
+	var target: ItemState = null
+	for held: RunItem in holder.items:
+		var essences: Array[EssenceDef] = []
+		for essence_id: String in held.essence_ids:
+			essences.append(content.essences[essence_id])
+		var state: ItemState = ItemState.make(content.items[held.item_id], 0, UnitStats.make(1), content, essences, held.tier, held.xp)
+		states.append(state)
+		if held == item:
+			target = state
+	if target == null:
+		return lines
+	@warning_ignore("integer_division")
+	var share: int = content.tuning.spill_single_bp / 100
+	for app: EssenceApplication in ItemState.spills_into(target, states, content.tuning):
+		lines.append("Gets %d%% %s" % [share, app.label])
+	return lines
 
 
 ## One effect in plain words, with its number's breakdown, e.g. "When it

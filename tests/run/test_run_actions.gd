@@ -120,21 +120,25 @@ func test_discard_and_legendaries_seen() -> void:
 
 # --- essences -----------------------------------------------------------------
 
-func test_infusing_follows_sockets_and_resets_xp() -> void:
+func test_any_item_fuses_two_essences_and_resets_xp() -> void:
 	var state: RunState = _run()
 	var knife: int = _add(state, "hearth_knife")
-	var lantern: int = _add(state, "night_lantern")
-	for essence_id: String in ["ember", "frost", "verdant", "storm"]:
+	var drum: int = _add(state, "war_drum")
+	for essence_id: String in ["ember", "storm", "frost", "verdant"]:
 		assert_true(RunActions.add_essence(state, _content(), essence_id).ok)
 	assert_true(RunActions.infuse(state, _content(), knife, 0).ok)
-	state.find_item(knife).xp = 40
-	_refused(RunActions.infuse(state, _content(), knife, 0), "Hearth Knife has no free socket (1)")
-	assert_true(RunActions.infuse(state, _content(), lantern, 1).ok, "an Epic has 2 sockets")
-	state.find_item(lantern).xp = 90
-	assert_true(RunActions.infuse(state, _content(), lantern, 1).ok)
-	assert_eq(state.find_item(lantern).essence_ids, ["verdant", "storm"] as Array[String])
-	assert_eq(state.find_item(lantern).xp, 0, "a second essence resets XP")
+	state.find_item(knife).xp = 90
+	var fused: RunActions.Result = RunActions.infuse(state, _content(), knife, 0)
+	assert_true(fused.ok, "a Common takes a second essence too")
+	assert_string_contains(fused.note, "Plasma")
+	assert_eq(state.find_item(knife).essence_ids, ["ember", "storm"] as Array[String])
+	assert_eq(state.find_item(knife).xp, 0, "fusing resets XP")
+	var before: String = _snapshot(state)
+	_refused(RunActions.infuse(state, _content(), knife, 0), "Hearth Knife already holds two essences")
+	assert_eq(_snapshot(state), before, "no third essence")
+	assert_true(RunActions.infuse(state, _content(), drum, 1).ok, "passives can be infused")
 	assert_eq(state.pouch, ["frost"] as Array[String])
+	assert_eq(state.check(_content()), [] as Array[String])
 
 
 func test_the_pouch_has_a_cap() -> void:

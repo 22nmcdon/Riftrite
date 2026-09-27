@@ -3,10 +3,10 @@ extends RefCounted
 ## An item (or basic auto-attack) during a fight.
 ##
 ## Everything that depends on infusions is *derived* (see derive()): the
-## item's own essences at their level's strength, plus spills from Resonant
-## neighbors, fold into its effect list, conversions, stats, and numbers.
-## derive() runs at fight start and again whenever an infusion in the
-## holder's row levels up. Cooldown progress and Slow survive a re-derive;
+## item's own essences at their level's strength, plus keyword spills from
+## the holder's Resonant singles, fold into its effect list, conversions,
+## stats, and numbers. derive() runs at fight start and again whenever an
+## infusion levels up. Cooldown progress and Slow survive a re-derive;
 ## fractional carries restart.
 
 var def: ItemDef
@@ -26,16 +26,18 @@ var is_auto_attack: bool = false
 ## The holder's stats, which the item's numbers scale from.
 var stats: UnitStats
 
-## The socketed essences, in socket order.
+## The infused essences (at most Infusions.MAX_ESSENCES), in the order they
+## were added. The order changes nothing.
 var essences: Array[EssenceDef] = []
-## The named alloy for two different or matching essences, or null.
+## The named alloy for two different or matching essences, or null. Its
+## special only works once the infusion awakens (see awakened()).
 var alloy: AlloyDef = null
 var infusion_xp: int = 0
 var infusion_level: int = Infusions.Level.BASE
 ## An essence transformation active on this item (set at fight start by
 ## Synergies), or null. It replaces the item's own effects, uses one copy of
 ## its essence (the rest work as plain singles, with no alloy special), and
-## stops all spill.
+## never spills or awakens.
 var transformation: SynergyDef = null
 ## XP and level going into the fight, for the fight result.
 var start_xp: int = 0
@@ -46,7 +48,8 @@ var start_level: int = Infusions.Level.BASE
 var effects: Array[SourcedEffect] = []
 ## Essence applications that add an output kind, converting this item's output.
 var conversions: Array[Conversions.Conversion] = []
-## Spills this item currently receives from neighbors.
+## Keyword spills this item currently receives from its holder's Resonant
+## singles.
 var spills_received: Array[EssenceApplication] = []
 var cooldown_ticks: int
 var crit_chance_bp: int
@@ -115,7 +118,7 @@ func infusion_name() -> String:
 
 
 ## This item's own infusion, at its level's strength. An alloy keeps both
-## essences' normal effects (its special is applied separately).
+## essences' normal effects (its special applies once awakened).
 func own_applications(tuning: TuningDef) -> Array[EssenceApplication]:
 	var apps: Array[EssenceApplication] = []
 	var strength: int = tuning.infusion_level_bp[infusion_level]
@@ -132,33 +135,60 @@ func own_applications(tuning: TuningDef) -> Array[EssenceApplication]:
 	return apps
 
 
-## What this item spills to its neighbor on one side (-1 left, +1 right), if
-## it's Resonant. Every spill is a share of the essence's Resonant strength:
-##   single essence: that essence, both sides (spill_single_bp)
-##   pure double:    the base essence, both sides (spill_pure_double_bp)
-##   alloy:          first socket's essence left, second's right (spill_alloy_bp)
-## An alloy's special never spills.
-func spill_to(side: int, tuning: TuningDef) -> Array[EssenceApplication]:
-	var apps: Array[EssenceApplication] = []
-	if infusion_level != Infusions.Level.RESONANT or essences.is_empty() or transformation != null:
-		return apps
-	var essence: EssenceDef = essences[0]
-	var share_bp: int = tuning.spill_single_bp
-	if essences.size() == 2 and essences[0].id == essences[1].id:
-		share_bp = tuning.spill_pure_double_bp
-	elif essences.size() == 2:
-		share_bp = tuning.spill_alloy_bp
-		essence = essences[0] if side < 0 else essences[1]
-	var strength: int = FixedMath.apply_bp(tuning.infusion_level_bp[infusion_level], share_bp)
-	apps.append(EssenceApplication.make(essence, strength, "%s spill from %s" % [essence.name, def.name]))
-	return apps
+## True once a Resonant alloy or pure double has awakened: its named
+## special (alloy.replaces, heal_echo_bp) works. Before that it gives both
+## essences' normal effects only. A transformation never awakens.
+func awakened() -> bool:
+	return alloy != null and transformation == null and infusion_level == Infusions.Level.RESONANT
+
+
+## True if this item spills its essence to its holder's other items that
+## share a keyword: a Resonant single, not transformed. Alloys and pure
+## doubles awaken instead, and never spill.
+func spills() -> bool:
+	return essences.size() == 1 and transformation == null and infusion_level == Infusions.Level.RESONANT and not def.keywords.is_empty()
+
+
+## True if this item and `other` share a keyword.
+func shares_keyword(other: ItemState) -> bool:
+	for keyword: String in def.keywords:
+		if other.def.keywords.has(keyword):
+			return true
+	return false
+
+
+## The keyword spills `item` receives from `others` (its holder's items, in
+## order): one per essence, from the first spilling item that shares a
+## keyword with it. UnitState uses this in fights; the UI uses it to show an
+## equipped item's spills.
+static func spills_into(item: ItemState, others: Array[ItemState], tuning: TuningDef) -> Array[EssenceApplication]:
+	var result: Array[EssenceApplication] = []
+	var seen: Array[String] = []
+	for other: ItemState in others:
+		if other == item or not other.spills() or not other.shares_keyword(item):
+			continue
+		var essence_id: String = other.essences[0].id
+		if seen.has(essence_id):
+			continue
+		seen.append(essence_id)
+		result.append(other.keyword_spill(tuning))
+	return result
+
+
+## What this item spills (see spills()): its essence at spill_single_bp of
+## its Resonant strength, or null.
+func keyword_spill(tuning: TuningDef) -> EssenceApplication:
+	if not spills():
+		return null
+	var strength: int = FixedMath.apply_bp(tuning.infusion_level_bp[infusion_level], tuning.spill_single_bp)
+	return EssenceApplication.make(essences[0], strength, "%s spill from %s" % [essences[0].name, def.name])
 
 
 ## The status this item actually applies in place of `status_id` (an alloy
 ## like Inferno turns Burn into Golden Flame).
 func replaced_status(status_id: String) -> String:
 	var result: String = status_id
-	if alloy != null:
+	if awakened():
 		result = alloy.replaces.get(status_id, status_id)
 	# A specialization's replacement applies to whatever the alloy left alone.
 	if result == status_id:
@@ -167,7 +197,7 @@ func replaced_status(status_id: String) -> String:
 
 
 ## True if the item applies `status_id` through its own effects, its
-## infusion, or a neighbor's spill (not through relic grants). A replaced
+## infusion, or a keyword spill (not through relic grants). A replaced
 ## status counts as both: an Inferno item applies Burn and Golden Flame.
 func applies_status(status_id: String) -> bool:
 	var essence_list: Array[EssenceDef] = essences.duplicate()
@@ -184,9 +214,10 @@ func applies_status(status_id: String) -> bool:
 	return false
 
 
-## Share of each heal this item echoes onto a random other ally (Bloom).
+## Share of each heal this item echoes onto a random other ally (an
+## awakened Bloom).
 func heal_echo_bp() -> int:
-	return alloy.heal_echo_bp if alloy != null else 0
+	return alloy.heal_echo_bp if awakened() else 0
 
 
 ## Rebuilds everything infusion- and aura-dependent from the item's own

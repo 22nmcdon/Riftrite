@@ -1,6 +1,7 @@
 extends GutTest
 ## The slice's six new alloys (docs/plans/slice-content.md): each turns the
-## item's own status into its own status type, so plain Poison, Slow, Burn,
+## item's own status into its own status type once awakened (Resonant; the
+## tests infuse at 300 XP), so plain Poison, Slow, Burn,
 ## and Bleed on other items are untouched.
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
@@ -8,14 +9,14 @@ const FRONT := UnitSetup.Row.FRONT
 const BIG_HP: int = 10000000
 
 
-## An Epic item (two sockets) that applies `stacks` of `status` to the front.
+## An item that applies `stacks` of `status` to the front.
 func _applier(status: String, stacks: int) -> ItemDef:
 	return K.item("applier", {"name": "Applier", "rarity": "epic",
 		"effects": [{"trigger": "on_fire", "type": "apply_status", "status": status, "stacks": stacks, "target": "enemy_front"}]})
 
 
 func _fight(status: String, stacks: int, essences: Array[String]) -> FightResult:
-	var hero: UnitSetup = K.unit("hero", BIG_HP, FRONT, [K.equip(_applier(status, stacks), essences, 0, 0)],
+	var hero: UnitSetup = K.unit("hero", BIG_HP, FRONT, [K.equip(_applier(status, stacks), essences, 0, 0 if essences.is_empty() else 300)],
 		K.basic("idle", {"cooldown_ms": 60000, "effects": K.damage(1)}))
 	return K.run([hero], [K.dummy("foe", BIG_HP)])
 

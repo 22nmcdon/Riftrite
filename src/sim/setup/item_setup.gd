@@ -24,7 +24,3 @@ static func make(item_def: ItemDef, essences: Array[String] = [], item_tier: int
 	setup.trace_bp = trace
 	return setup
 
-
-## Sockets depend on rarity, not size (see TuningDef.socket_count).
-func socket_count(tuning: TuningDef) -> int:
-	return tuning.socket_count(def)

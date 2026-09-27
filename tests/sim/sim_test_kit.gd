@@ -6,6 +6,7 @@ extends RefCounted
 const DEFAULT_ITEM: Dictionary = {
 	"name": "Test Item",
 	"slot": "ability",
+	"keywords": ["blade"],
 	"rarity": "common",
 	"xp_per_fire": 0,
 	"cooldown_ms": 1000,

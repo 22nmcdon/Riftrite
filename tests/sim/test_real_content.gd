@@ -50,10 +50,10 @@ func test_encounter_units_are_numbered() -> void:
 
 func test_enemy_layouts_are_checked() -> void:
 	var enemies: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/enemies.json"))
-	enemies[0]["items"] = [{"item": "moon_blade"}, {"item": "hearth_knife", "essences": ["ember", "frost"]}, {"item": "rift_claw", "xp": 50}]
+	enemies[0]["items"] = [{"item": "moon_blade"}, {"item": "hearth_knife", "essences": ["ember", "frost", "storm"]}, {"item": "rift_claw", "xp": 50}]
 	var errors: Array[String] = _texts_with(ContentDb.ENEMIES_FILE, enemies).errors
 	assert_true(_has(errors, "unknown item \"moon_blade\""), str(errors))
-	assert_true(_has(errors, "\"hearth_knife\" has 2 essences but only 1 socket(s)"), str(errors))
+	assert_true(_has(errors, "\"hearth_knife\" has 3 essences; an infusion holds at most 2"), str(errors))
 	assert_true(_has(errors, "has 50 infusion XP but no infusion"), str(errors))
 
 
@@ -77,7 +77,7 @@ func test_real_content_fights_replay_identically() -> void:
 ## The slice's item targets (docs/plans/slice-content.md): 60 items the
 ## guild can get plus 6 Legendaries (docs/plans/legendary-items.md), enemy-only
 ## items on top; mostly abilities, with some basic attacks and passives
-## (docs/plans/fun-redesign.md); enough Epics for alloys; items for every
+## (docs/plans/fun-redesign.md); some Epics; 1-3 keywords each; items for every
 ## hero's tags.
 func test_slice_item_roster() -> void:
 	var db: ContentDb = K.content()
@@ -92,11 +92,10 @@ func test_slice_item_roster() -> void:
 	for item: ItemDef in guild:
 		if item.legendary != null:
 			paths.append(item.legendary.path)
-			assert_eq(db.tuning.socket_count(item), 2, "%s has two sockets" % item.id)
 		slots[item.slot] += 1
+		assert_between(item.keywords.size(), 1, ItemDef.MAX_KEYWORDS, "%s has keywords" % item.id)
 		if item.rarity == "epic":
 			epics += 1
-			assert_eq(db.tuning.socket_count(item), 2, "%s has two sockets" % item.id)
 	assert_gte(slots[ItemDef.Slot.BASIC_ATTACK], 5, "basic attacks to choose from")
 	assert_gte(slots[ItemDef.Slot.PASSIVE], 5, "passives to choose from")
 	assert_gt(slots[ItemDef.Slot.ABILITY], slots[ItemDef.Slot.BASIC_ATTACK] + slots[ItemDef.Slot.PASSIVE], "mostly abilities")

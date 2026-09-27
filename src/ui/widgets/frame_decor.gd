@@ -2,25 +2,27 @@ class_name FrameDecor
 extends Control
 ## Drawn over a framed panel (docs/ui-asset-design.md): the rarity ladder's
 ## non-color cues (rivets, a crest, wings), the rift bleed's cracks, and an
-## infusion's spill arrows on the left and right edges. Add it as the last
-## child of a PanelContainer; it draws out to the panel's edges.
+## infusion's mark at the bottom right: rays while a Resonant single spills
+## (docs/plans/infusion-rework.md), a star once an alloy awakens. Add it as
+## the last child of a PanelContainer; it draws out to the panel's edges.
+
+enum Mark { NONE, SPILLS, AWAKENED }
 
 ## ItemDef.RARITIES index: 0 none, 1 two rivets, 2 four rivets, 3 plus a
 ## crest, 4 plus wings.
 var ornament: int = 0
 var cracks: bool = false
-## Spill arrow colors, [left, right], or empty.
-var spill: Array[Color] = []
-## Flat bars instead of arrows (a transformation never spills).
-var no_spill: bool = false
+var mark: Mark = Mark.NONE
+## The mark's essence color.
+var mark_hue: Color = Color.WHITE
 
 
-static func make(rarity_index: int, rift: bool = false, spill_colors: Array[Color] = [], never_spills: bool = false) -> FrameDecor:
+static func make(rarity_index: int, rift: bool = false, infusion_mark: Mark = Mark.NONE, hue: Color = Color.WHITE) -> FrameDecor:
 	var decor := FrameDecor.new()
 	decor.ornament = rarity_index
 	decor.cracks = rift
-	decor.spill = spill_colors
-	decor.no_spill = never_spills
+	decor.mark = infusion_mark
+	decor.mark_hue = hue
 	decor.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return decor
 
@@ -56,24 +58,35 @@ func _draw() -> void:
 		var y: float = tl.y + outer.size.y * 0.3
 		draw_colored_polygon(PackedVector2Array([Vector2(tl.x, y - 6), Vector2(tl.x - 7, y), Vector2(tl.x, y + 6)]), UiStyle.BRASS_300)
 		draw_colored_polygon(PackedVector2Array([Vector2(br.x, y - 6), Vector2(br.x + 7, y), Vector2(br.x, y + 6)]), UiStyle.BRASS_300)
-	var mid: float = outer.get_center().y + outer.size.y * 0.15
-	if spill.size() == 2:
-		# Just inside each edge, pointing out, so neighbors' arrows never overlap.
-		_chevron(Vector2(tl.x + 11, mid), -1.0, spill[0])
-		_chevron(Vector2(br.x - 11, mid), 1.0, spill[1])
-	elif no_spill:
-		draw_rect(Rect2(tl.x + 3, mid - 9, 5, 18), UiStyle.INK_900)
-		draw_rect(Rect2(tl.x + 4, mid - 8, 3, 16), UiStyle.PARCHMENT_300)
-		draw_rect(Rect2(br.x - 8, mid - 9, 5, 18), UiStyle.INK_900)
-		draw_rect(Rect2(br.x - 7, mid - 8, 3, 16), UiStyle.PARCHMENT_300)
+	var corner: Vector2 = br - Vector2(13, 13)
+	match mark:
+		Mark.SPILLS:
+			_rays(corner, mark_hue)
+		Mark.AWAKENED:
+			_star(corner, mark_hue)
 
 
-## A spill arrow pointing out of the frame (`side` -1 left, 1 right).
-func _chevron(base: Vector2, side: float, hue: Color) -> void:
-	var points := PackedVector2Array([base + Vector2(0, -10), base + Vector2(side * 11, 0), base + Vector2(0, 10)])
-	draw_colored_polygon(points, UiStyle.INK_900)
-	var inner := PackedVector2Array([base + Vector2(side * 1, -7), base + Vector2(side * 8.5, 0), base + Vector2(side * 1, 7)])
-	draw_colored_polygon(inner, hue)
+## A spilling single: a dot in the essence's color with four short rays.
+func _rays(c: Vector2, hue: Color) -> void:
+	for direction: Vector2 in [Vector2(1, 0), Vector2(-1, 0), Vector2(0, 1), Vector2(0, -1)]:
+		draw_line(c + direction * 4.0, c + direction * 9.0, UiStyle.INK_900, 4.0)
+		draw_line(c + direction * 4.0, c + direction * 8.0, hue, 2.0)
+	draw_circle(c, 4.5, UiStyle.INK_900)
+	draw_circle(c, 3.5, hue)
+
+
+## An awakened alloy: a brass four-pointed star around the essence's color.
+func _star(c: Vector2, hue: Color) -> void:
+	var outer := PackedVector2Array()
+	for i: int in 8:
+		var angle: float = PI * 0.25 * i - PI * 0.5
+		outer.append(c + Vector2(cos(angle), sin(angle)) * (10.0 if i % 2 == 0 else 4.0))
+	draw_colored_polygon(outer, UiStyle.INK_900)
+	var inner := PackedVector2Array()
+	for point: Vector2 in outer:
+		inner.append(c + (point - c) * 0.78)
+	draw_colored_polygon(inner, UiStyle.BRASS_300)
+	draw_circle(c, 2.5, hue)
 
 
 func _rivet(at: Vector2) -> void:

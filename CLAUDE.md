@@ -6,7 +6,7 @@ A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The pl
 
 **Redesign in progress:** `docs/plans/fun-redesign.md` and `docs/plans/heroes-and-deeds.md` (approved, built in steps; their **Decisions** sections win). The rules below describe the code as it is now; each redesign step updates them as it lands.
 
-**The full design lives in `docs/design.md`**, with item tiers and Oathbinding detailed in `docs/tiers-backup-specialization.md` (its Backup parts are superseded). A redesign is being built in steps (`docs/plans/fun-redesign.md`, `docs/plans/heroes-and-deeds.md`); step 1 (loadout, drafted trio, no Backup) is in. The UI's look follows `docs/ui-asset-design.md` (for now). Before building or changing a game system, read the matching section there. If the code and the design doc disagree, stop and ask. Don't silently pick one.
+**The full design lives in `docs/design.md`**, with item tiers and Oathbinding detailed in `docs/tiers-backup-specialization.md` (its Backup parts are superseded). Redesign steps built so far: 1 (loadout, drafted trio, no Backup) and 2 (the infusion rework, `docs/plans/infusion-rework.md`). The UI's look follows `docs/ui-asset-design.md` (for now). Before building or changing a game system, read the matching section there. If the code and the design doc disagree, stop and ask. Don't silently pick one.
 
 ## Tech stack
 
@@ -54,15 +54,15 @@ tools/         headless sim runner, data validators
 
 ## Infusion rules (easy to get wrong)
 
-- **Sockets depend on rarity:** Epic and Legendary items have 2 sockets (Epic is a placeholder to try; the list is `two_socket_rarities` in `data/tuning.json`); every other item has 1. Relics have no sockets. Infusing can happen any time between fights (for now).
+- **Any item holds one infusion of up to 2 essences** (`Infusions.MAX_ESSENCES`); a second essence **fuses** with the first, and there's never a third. Passives can be infused too (what that does is decided in redesign step 5; until then they follow the normal rules). Relics can't be infused. Infusing can happen any time between fights (for now).
 - Two different essences in one item = an **Alloy** with its own effect. Two of the same = a **pure double**.
 - Pure doubles are alloys too, and each has its own effect.
-- An alloy **keeps both essences' normal effects** and adds its special. A special that changes how a status behaves must use **its own status type** (Inferno → Golden Flame), never modify the shared one, so it can't leak into other items' statuses.
+- An alloy **keeps both essences' normal effects**. Its special works only once it **awakens** at Resonant (`ItemState.awakened()`); pairs without a named alloy have nothing to awaken into. A special that changes how a status behaves must use **its own status type** (Inferno → Golden Flame), never modify the shared one, so it can't leak into other items' statuses.
 - Infusions level up: base → Attuned → Resonant. XP comes from **item fires** (XP per fire is set per item in data; basic attacks get less) **plus each battle fought**.
 - XP **resets** when a second essence is added (single → alloy or pure double) and when an infusion is removed.
-- **Nothing spills right now.** Neighbor spill went with item rows (redesign step 1). The infusion rework (step 2, `docs/plans/fun-redesign.md`) brings: a Resonant single spills ~30% to the holder's other items that share a keyword (at most one spill per essence per item); alloys and pure doubles **Awaken** at Resonant and never spill; transformations never spill.
+- **Keyword spill:** only a Resonant **single** spills: `spill_single_bp` (30%) of its Resonant strength goes to its holder's other items that **share a keyword** (`"keywords"` on items, `data/keywords.json`), at most one spill per essence per item, never outside the holder's loadout. The built-in basic attack and slotless abilities have no keywords, so they never receive spill. Alloys and pure doubles awaken instead and never spill. Essence transformations never spill or awaken.
 - Spill percentages and XP thresholds are tuning values in `data/`, never hard-coded.
-- Essence resonance counts **essences**, not items: a single = 1, an alloy = 1 of each half, a pure double = 2, and a transformation counts its socketed essence(s).
+- Essence resonance counts **essences**, not items: a single = 1, an alloy = 1 of each half, a pure double = 2, and a transformation counts its essence(s).
 
 ## Synergy rules
 
@@ -95,7 +95,7 @@ tools/         headless sim runner, data validators
 - **Oathbinding:** an S hero + an S item can be permanently oathbound (one per hero; the item then can't be removed, moved, or sold, but can be infused). "Specialization" means only the hero's rank-B choice; don't mix the two terms.
 - **Reforging** = removing an item's infusion.
 - **Item numbers** are a small base plus multipliers on the holder's stats (HP, ATK, MGK, DEF, CRIT, ATSP). **Percentage boosts** (tier, and later others) then **multiply** on top. Keep base, stat-scaled, and final values all available (the UI shows the breakdown). Basic auto-attacks scale from stats but have no tier.
-- Items carry **multiple tags** (item tags and class-fit tags).
+- Items carry **multiple tags** (item tags and class-fit tags; relic and specialization filters use them) and **1–3 keywords** (Blade, Bow, Spell, Mend, Ward, Burn, Bleed, Hex; spill and later affinities use them).
 - Every item has its own crit chance (default 0). Crit damage multiplier is a tuning value (150%).
 - Enemy-only items can end up with the guild through drops, but the Caravan never sells them: they upgrade only through a second copy from random loot or an upgrade stop.
 - Enemies use hand-made, fixed item layouts with set tiers, built from the same item system; some items are enemy-only. Some enemy teams carry relics (enemy-only relics exist too). Every fight guarantees one drop from the enemy team's items and relics, enemy-only ones included.
