@@ -113,3 +113,19 @@ func test_bond_chain_reaches_the_heroes_in_its_row() -> void:
 	assert_eq(_received(sim.unit_by_id("c").items[1]), [] as Array[String], "not the back row")
 	var unchained := _sim([K.unit("a", BIG_HP, FRONT, [_resonant_sword()]), K.unit("b", BIG_HP, FRONT, [_blade("knife")])])
 	assert_eq(_received(unchained.unit_by_id("b").items[1]), [] as Array[String], "spills stay in the loadout without it")
+
+
+func test_bond_chain_spills_only_through_a_shared_keyword_and_ends_when_its_holder_falls() -> void:
+	var chained: UnitSetup = K.unit("a", BIG_HP, FRONT, [_resonant_sword(), _conduit("chain", "row")])
+	var beside: UnitSetup = K.unit("b", BIG_HP, FRONT, [_blade("bow", ["bow"] as Array[String]), _conduit("channel", "all_abilities"), _conduit("censer", "basic_attack")])
+	var sim := _sim([chained, beside])
+	var b: UnitState = sim.unit_by_id("b")
+	assert_eq(_received(b.items[1]), [] as Array[String], "b's own conduits don't carry a's spill")
+	assert_eq(_received(b.items[0]), [] as Array[String], "nor to b's basic attack")
+	var knife := _sim([K.unit("a", BIG_HP, FRONT, [_resonant_sword(), _conduit("chain", "row")]), K.unit("b", BIG_HP, FRONT, [_blade("knife")])])
+	var holder: UnitState = knife.unit_by_id("b")
+	assert_eq(_received(holder.items[1]).size(), 1)
+	knife.unit_by_id("a").hp = 0
+	knife.step()
+	assert_false(knife.unit_by_id("a").alive)
+	assert_eq(_received(holder.items[1]), [] as Array[String], "the spill ends when the chain's holder falls")

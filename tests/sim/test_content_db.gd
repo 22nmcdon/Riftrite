@@ -180,6 +180,16 @@ func test_rejects_unknown_status_reference() -> void:
 	_assert_error(db, "essences.json (ember).effects[0]: unknown status \"scorch\"")
 
 
+func test_rejects_unknown_event_filters() -> void:
+	var db: ContentDb = _load_with(ContentDb.ESSENCES_FILE, _essences_with(0, {
+		"id": "ember", "name": "Ember",
+		"effects": [{"trigger": "on_ability", "keyword": "cudgel", "type": "damage", "amount": 1, "target": "enemy_front"},
+			{"trigger": "on_status", "statuses": ["gloom"], "type": "damage", "amount": 1, "target": "enemy_front"}],
+	}))
+	_assert_error(db, "essences.json (ember).effects[0]: unknown keyword \"cudgel\"")
+	_assert_error(db, "essences.json (ember).effects[1]: unknown status \"gloom\"")
+
+
 func test_rejects_unknown_vocabulary() -> void:
 	var db: ContentDb = _load_with(ContentDb.ESSENCES_FILE, _essences_with(0, {
 		"id": "ember", "name": "Ember",

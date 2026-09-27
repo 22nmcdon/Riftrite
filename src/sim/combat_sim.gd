@@ -642,7 +642,9 @@ func _process_deaths() -> void:
 	var fallen: Array[UnitState] = _fell()
 	Events.kills(self, fallen)
 	fallen.append_array(_fell())
-	if not fallen.is_empty() and not _active_auras.is_empty():
+	# Auras and a Bond Chain's reach end with their holder.
+	var chained: bool = fallen.any(func(unit: UnitState) -> bool: return not unit.items.is_empty() and unit.items[0].holder_conduits.has("row"))
+	if not fallen.is_empty() and (not _active_auras.is_empty() or chained):
 		rederive_all()
 
 
