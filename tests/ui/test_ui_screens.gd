@@ -74,6 +74,75 @@ func test_the_run_start_drafts_a_team_then_a_package() -> void:
 	assert_string_contains(U.text_of(main._day_slot), "Day 1 of")
 
 
+## Two kits for the team next to the gold and the relic
+## (docs/plans/fight-questions-and-readability.md, section 3).
+func test_the_start_offers_kits_with_their_infused_item() -> void:
+	var session: RunSession = U.session()
+	session.new_run(5)
+	var main: Main = _main(session)
+	for pick: int in RunState.TEAM_SIZE:
+		assert_true(U.press(main.screen, "Take"))
+	var text: String = U.text_of(main.screen)
+	var kit: Dictionary = {}
+	for offer: Dictionary in session.state.offers:
+		if offer["package"] == "kit":
+			kit = offer
+			assert_not_null(U.button(main.screen, offer["name"]), "a button per kit, by its name")
+			assert_string_contains(text, "%s, infused with %s." % [session.content.items[offer["item"]].name, session.content.essences[offer["essence"]].name])
+	assert_true(U.press(main.screen, kit["name"]))
+	assert_eq([session.state.stash[0].item_id, session.state.stash[0].essence_ids], [kit["item"], [kit["essence"]]])
+	assert_true(main.screen is StopChoiceScreen)
+
+
+## The day bar shows the whole act: a mark per day, elites and the boss
+## marked, and each day's fights on hover (section 1).
+func test_the_day_bar_shows_the_whole_act() -> void:
+	var main: Main = _main(U.at_start())
+	var session: RunSession = main.session
+	var bar: Node = main._day_slot.get_child(0)
+	var act: ActDef = session.run.act(1)
+	for day: int in range(1, act.days + 1):
+		var mark: Control = bar.find_child("Day%d" % day, true, false)
+		assert_not_null(mark, "day %d" % day)
+		var hover: String = mark.tooltip_text
+		for encounter_id: String in RunFlow.fights_for_day(session.state, session.run, day):
+			var encounter: EncounterDef = session.content.encounters[encounter_id]
+			assert_string_contains(hover, encounter.name, "day %d lists its fights" % day)
+			if encounter.kind != "normal":
+				assert_string_contains(hover, encounter.mechanic_name + ": " + encounter.mechanic_text)
+				assert_string_contains(hover, "What answers it: " + encounter.mechanic_counter)
+		var icon: TextureRect = U.find_all(mark, TextureRect)[0]
+		assert_eq(icon.texture.resource_path, UiStyle.ICON_DIR % ("fight_%s" % EncounterInfo.day_kind(session, day)), "day %d's icon" % day)
+	var text: String = U.text_of(bar)
+	assert_string_contains(text, "Day 3 · Elite")
+	assert_string_contains(text, "Day %d · Boss" % act.days)
+	assert_string_contains(bar.find_child("Day1", true, false).tooltip_text, "easier")
+	assert_string_contains(bar.find_child("Day%d" % act.days, true, false).tooltip_text, "Day %d: the boss" % act.days)
+
+
+## An elite's or the boss's mechanic on its fight card and before the fight
+## (section 2).
+func test_elite_cards_show_their_mechanic() -> void:
+	var session: RunSession = U.at_start()
+	session.state.day = 3
+	session.state.fight_options = RunFlow.fights_for_day(session.state, session.run, 3)
+	session.state.phase = "fight_choice"
+	var main: Main = _main(session)
+	assert_true(main.screen is FightChoiceScreen)
+	var text: String = U.text_of(main.screen)
+	for encounter_id: String in session.state.fight_options:
+		var encounter: EncounterDef = session.content.encounters[encounter_id]
+		assert_string_contains(text, encounter.mechanic_name)
+		assert_string_contains(text, encounter.mechanic_text)
+		assert_string_contains(text, "What answers it: " + encounter.mechanic_counter)
+	session.pick_fight(0)
+	main.refresh()
+	assert_true(main.screen is FightScreen)
+	assert_string_contains(U.text_of(main.screen), session.content.encounters[session.state.encounter_id].mechanic_text)
+	var plain: Main = _main(U.at_fight())
+	assert_false(U.text_of(plain.screen).contains("What answers it"), "a normal fight has no mechanic")
+
+
 func test_continue_resumes_the_saved_run() -> void:
 	var saved: RunSession = U.at_shop(9)
 	var main: Main = _main(RunSession.make(saved.content, saved.run, U.SAVE_PATH))

@@ -71,6 +71,14 @@
   ],
   "held": true
  },
+ "hound_alpha": {
+  "beast": true,
+  "hand": [
+   88,
+   108
+  ],
+  "held": false
+ },
  "maren": {
   "beast": false,
   "hand": [

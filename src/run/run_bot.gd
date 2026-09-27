@@ -3,7 +3,7 @@ extends RefCounted
 ## Plays whole runs headlessly with a simple strategy, through RunFlow and
 ## RunActions only (like a player would), so the run runner can report
 ## run-level balance (tools/run_runner.gd). The strategy:
-##   - draft the first offered hero three times, then take the gold package
+##   - draft the first offered hero three times, then take the first kit
 ##   - stops: the shop on the day's first visit; on the second, Loot, Events,
 ##     the Vault, Retrain, the Forge (a shop if nothing else); upgrade the
 ##     best item before the boss
@@ -103,9 +103,13 @@ static func play(run_seed: int, content: ContentDb, run: RunContent) -> Report:
 static func _act(state: RunState, content: ContentDb, run: RunContent, report: Report) -> void:
 	match state.phase:
 		"start_hero":
-			_must(RunFlow.pick_start_hero(state, content, 0), report)
+			_must(RunFlow.pick_start_hero(state, content, run, 0), report)
 		"start_package":
-			_must(RunFlow.pick_package(state, content, run, 0), report)
+			var kit: int = 0
+			for i: int in range(state.offers.size() - 1, -1, -1):
+				if state.offers[i]["package"] == "kit":
+					kit = i
+			_must(RunFlow.pick_package(state, content, run, kit), report)
 		"stop_choice":
 			if report.gold_by_day.size() < state.day:
 				report.gold_by_day.append(state.gold)

@@ -19,7 +19,7 @@ func _has(errors: Array[String], expected: String) -> bool:
 
 func test_draft_content_counts() -> void:
 	var db: ContentDb = K.content()
-	assert_eq([db.hero_ids.size(), db.enemy_ids.size(), db.encounter_ids.size()], [8, 11, 12])
+	assert_eq([db.hero_ids.size(), db.enemy_ids.size(), db.encounter_ids.size()], [8, 12, 12])
 	assert_gt(db.item_ids.size(), 20)
 
 
@@ -62,6 +62,54 @@ func test_encounters_are_checked() -> void:
 	var errors: Array[String] = _texts_with(ContentDb.ENCOUNTERS_FILE, encounters).errors
 	assert_true(_has(errors, "unknown enemy \"dragon\""), str(errors))
 	assert_true(_has(errors, "act 3 has no Rift Collapse numbers"), str(errors))
+	var elite: Array = [{"id": "x", "name": "X", "kind": "elite", "units": [{"enemy": "rift_pup"}]}]
+	assert_true(_has(_texts_with(ContentDb.ENCOUNTERS_FILE, elite).errors, "an elite encounter needs a mechanic (name, text, counter)"))
+	elite[0]["mechanic"] = {"name": "Nips", "text": "It nips."}
+	assert_true(_has(_texts_with(ContentDb.ENCOUNTERS_FILE, elite).errors, "missing required key \"counter\""))
+	elite[0]["mechanic"]["counter"] = "Don't be nipped."
+	assert_false(_has(_texts_with(ContentDb.ENCOUNTERS_FILE, elite).errors, "mechanic"), "a full mechanic is fine")
+	elite[0]["kind"] = "boss"
+	elite[0].erase("mechanic")
+	assert_true(_has(_texts_with(ContentDb.ENCOUNTERS_FILE, elite).errors, "a boss encounter needs a mechanic"))
+
+
+## Every elite and boss says what it asks of the player
+## (docs/plans/fight-questions-and-readability.md, section 2).
+func test_every_elite_and_boss_has_a_mechanic() -> void:
+	var db: ContentDb = K.content()
+	var found: int = 0
+	for encounter_id: String in db.encounter_ids:
+		var encounter: EncounterDef = db.encounters[encounter_id]
+		if encounter.kind == "normal":
+			continue
+		found += 1
+		for text: String in [encounter.mechanic_name, encounter.mechanic_text, encounter.mechanic_counter]:
+			assert_false(text.is_empty(), encounter_id)
+	assert_eq(found, 4, "three elites and the boss")
+	assert_eq(db.encounters["hound_alpha"].mechanic_name, "The Hunt")
+
+
+## The Hound Alpha (The Hunt): its bite hunts the weakest foe, and it
+## frenzies below half HP, which a real fight reaches and logs.
+func test_the_hound_alpha_hunts_the_weakest_and_frenzies() -> void:
+	var db: ContentDb = K.content()
+	var alpha: EnemyDef = db.enemies["hound_alpha"]
+	assert_eq(alpha.items[0].item_id, "alphas_bite")
+	assert_eq(db.items["alphas_bite"].effects[0].target, EffectDef.Target.ENEMY_LOWEST_HP)
+	assert_eq([alpha.phases.size(), alpha.phases[0].name, alpha.phases[0].below_hp_bp], [1, "Blood Frenzy", 5000])
+	assert_eq(db.encounters["hound_alpha"].units[0].enemy_id, "hound_alpha")
+	var party: BalanceRun.Party = BalanceRun.load_parties(db).list[1]
+	var setup: FightSetup = FightSetup.make(BalanceRun.party_units(db, party), SetupBuilder.encounter_units(db, "hound_alpha"), 3, 1)
+	var result: FightResult = CombatSim.run(setup, db)
+	var bites: int = 0
+	var frenzy: int = 0
+	for entry: LogEntry in result.combat_log.entries:
+		if entry.kind == LogEntry.Kind.FIRE and entry.source_item == "alphas_bite":
+			bites += 1
+		if entry.kind == LogEntry.Kind.PHASE and entry.note == "Blood Frenzy":
+			frenzy += 1
+	assert_gt(bites, 3, "the Alpha bites")
+	assert_eq(frenzy, 1, "and frenzies once")
 
 
 func test_real_content_fights_replay_identically() -> void:

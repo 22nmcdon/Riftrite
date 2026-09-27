@@ -67,6 +67,55 @@
     "essence": "wrath"
   },
   {
+    "id": "hound_alpha",
+    "name": "Hound Alpha",
+    "_note": "Leads the day-3 elite (The Hunt, docs/plans/fight-questions-and-readability.md): its bite hunts the weakest foe, and it frenzies below half HP.",
+    "stats": {
+      "hp": 800,
+      "atk": 18,
+      "def": 10,
+      "atsp": 10
+    },
+    "tier": "c",
+    "basic_attack": {
+      "id": "snap",
+      "name": "Snap",
+      "cooldown_ms": 1000,
+      "effects": [
+        {
+          "trigger": "on_fire",
+          "type": "damage",
+          "amount": 4,
+          "target": "enemy_front",
+          "scaling": {
+            "atk": 5000
+          }
+        }
+      ]
+    },
+    "items": [
+      {
+        "item": "alphas_bite"
+      }
+    ],
+    "essence": "wrath",
+    "phases": [
+      {
+        "name": "Blood Frenzy",
+        "below_hp_bp": 5000,
+        "parts": [
+          {
+            "key": "frenzy",
+            "kind": "aura",
+            "target": "holder",
+            "stat": "atsp_bp",
+            "value": 14000
+          }
+        ]
+      }
+    ]
+  },
+  {
     "id": "rift_sentinel",
     "name": "Rift-Worn Sentinel",
     "stats": {

@@ -34,6 +34,7 @@ func _run() -> void:
 	await _snap("run_start_hero_2")
 	session.pick_start_hero(0)
 	session.pick_start_hero(0)
+	await _snap("run_start_package")
 	session.pick_package(0)
 	await _snap("stop_choice")
 	session.pick_stop(0)
@@ -58,6 +59,12 @@ func _run() -> void:
 	for frame: int in 90:
 		await process_frame
 	await _snap("fight_playing")
+	fight.set_log_open(true)
+	await _snap("fight_chart")
+	fight.chart.show_tab(FightTally.Tab.TAKEN)
+	await _snap("fight_chart_taken")
+	fight.chart.show_tab(FightTally.Tab.DAMAGE)
+	fight.set_log_open(false)
 	# A few frames apart at 1x, to catch the animations mid-swing.
 	fight.set_speed(1.0)
 	for shot: int in 3:
@@ -68,6 +75,13 @@ func _run() -> void:
 	await _snap("fight_end")
 	fight._continue()
 	await _snap("after_fight")
+	# An elite day's fight choice (a look only: the day is set by hand).
+	session.state.day = 3
+	session.state.fight_options = RunFlow.fights_for_day(session.state, session.run, 3)
+	session.state.encounter_id = ""
+	session.state.phase = "fight_choice"
+	_main.refresh()
+	await _snap("fight_choice_elite")
 	# The run's end (a look only: the phase is set by hand, then the run is
 	# abandoned, which deletes this tool's own save).
 	session.state.phase = "run_over"

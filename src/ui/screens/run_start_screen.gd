@@ -2,7 +2,7 @@ class_name RunStartScreen
 extends UiScreen
 ## The team draft (docs/plans/heroes-and-deeds.md, section 1): pick 1 of 3
 ## heroes, three times (standing figures on pedestals), then a starting
-## package (three cards), over the title backdrop.
+## package (gold, a relic, or one of two kits), over the title backdrop.
 
 
 func build() -> void:
@@ -76,7 +76,6 @@ func _hero_card(offer: Dictionary, index: int) -> Control:
 	return panel
 
 
-## A starting package: its picture, what it is, and a button to take it.
 ## How a hero on offer fits the heroes already drafted
 ## (docs/plans/heroes-and-deeds.md, section 1): the affinities they share,
 ## and "a bond: ?" for each duo bond they'd form (its name stays hidden
@@ -100,6 +99,8 @@ static func team_notes(content: ContentDb, state: RunState, hero_id: String) -> 
 	return notes
 
 
+## A starting package (gold, a relic, or a kit): its picture, what it is,
+## and a button to take it.
 func _package_card(offer: Dictionary, index: int) -> Control:
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(320, 300)
@@ -117,10 +118,20 @@ func _package_card(offer: Dictionary, index: int) -> Control:
 			picture = Glyph.hex(def.name, UiStyle.rarity_color(def.rarity), 112, def.rarity == "legendary", offer["relic"])
 			Inspector.hover_text(panel, ItemInfo.relic_text(session.content, offer["relic"]))
 		_:
-			picture = Glyph.item(session.content.items[offer["item"]], UiStyle.TEXT, 112)
-			Inspector.hover_text(panel, ItemInfo.item_text(session.content, offer["item"], 0, [] as Array[String], 0))
+			# A kit (docs/plans/fight-questions-and-readability.md, section 3):
+			# its item, already infused.
+			var essences: Array[String] = [offer["essence"]]
+			picture = Glyph.item(session.content.items[offer["item"]], UiStyle.ESSENCE.get(offer["essence"], UiStyle.TEXT), 112)
+			Inspector.hover_text(panel, ItemInfo.item_text(session.content, offer["item"], 0, essences, 0))
 	picture.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(picture)
+	if offer["package"] == "kit":
+		var about: Label = UiStyle.label("%s, infused with %s. For %s heroes." % [session.content.items[offer["item"]].name,
+			session.content.essences[offer["essence"]].name, session.content.keywords[offer["kit"]].name], 16, UiStyle.TEXT_DIM)
+		about.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		about.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		about.custom_minimum_size = Vector2(280, 0)
+		box.add_child(about)
 	var button: Button = UiStyle.button(_package_text(offer), _pick_package.bind(index))
 	button.size_flags_horizontal = Control.SIZE_FILL
 	button.custom_minimum_size = Vector2(0, 52)
@@ -135,7 +146,7 @@ func _package_text(offer: Dictionary) -> String:
 			return "+%d gold" % session.run.economy.package_gold
 		"relic":
 			return "A relic: %s" % session.content.relics[offer["relic"]].name
-	return "An item: %s" % session.content.items[offer["item"]].name
+	return offer["name"]
 
 
 func _pick_hero(index: int) -> void:

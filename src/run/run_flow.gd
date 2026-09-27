@@ -17,8 +17,8 @@ extends RefCounted
 ##         elite: give it to a hero),
 ##         "relic" (relic), "essence" (essence), "gold" (amount), "key",
 ##         "stop" (stop: a node or event id, see RunContent.node_pool),
-##         "package" (package: "gold" | "relic" | "item", plus that package's
-##         fields)
+##         "package" (package: "gold" | "relic" | "kit", plus that package's
+##         fields; a kit has kit (its keyword), name, item, essence, tier)
 ##   price: gold to pay (0 = free); group: taking one takes the whole group
 ##   (a relic choice, the reward pick); taken: already taken or bought.
 ## Randomness comes from RunRandom streams, never from earlier picks.
@@ -71,7 +71,7 @@ static func _offer_draft(state: RunState, content: ContentDb) -> void:
 
 ## Drafts one of the offered heroes. After the third, on to the starting
 ## package.
-static func pick_start_hero(state: RunState, content: ContentDb, index: int) -> RunActions.Result:
+static func pick_start_hero(state: RunState, content: ContentDb, run: RunContent, index: int) -> RunActions.Result:
 	var problem: String = _phase_problem(state, "start_hero")
 	if not problem.is_empty():
 		return _fail(problem)
@@ -90,10 +90,31 @@ static func pick_start_hero(state: RunState, content: ContentDb, index: int) -> 
 	var relic: String = _pick_relic(state, content, rng, _rarity_only("common"), [])
 	if not relic.is_empty():
 		state.offers.append({"type": "package", "package": "relic", "relic": relic, "price": 0, "taken": false})
-	var item: String = _pick_item(state, content, rng, _rarity_only("common"), false)
-	if not item.is_empty():
-		state.offers.append({"type": "package", "package": "item", "item": item, "tier": 0, "price": 0, "taken": false})
+	for kit: EconomyDef.Kit in _pick_kits(state, content, run, rng):
+		state.offers.append({"type": "package", "package": "kit", "kit": kit.keyword, "name": kit.name, "item": kit.item,
+			"essence": kit.essence, "tier": 0, "price": 0, "taken": false})
 	return result
+
+
+## The start's kits (docs/plans/fight-questions-and-readability.md, section
+## 3): kit_offers different kits for the team's affinities (in draft order),
+## topped up with other kits if the team has too few.
+static func _pick_kits(state: RunState, content: ContentDb, run: RunContent, rng: SimRng) -> Array[EconomyDef.Kit]:
+	var matching: Array[EconomyDef.Kit] = []
+	for hero: RunHero in state.heroes:
+		for keyword: String in content.heroes[hero.hero_id].affinities:
+			var kit: EconomyDef.Kit = run.economy.kit_for(keyword)
+			if kit != null and not matching.has(kit):
+				matching.append(kit)
+	var others: Array[EconomyDef.Kit] = []
+	for kit: EconomyDef.Kit in run.economy.kits:
+		if not matching.has(kit):
+			others.append(kit)
+	var picked: Array[EconomyDef.Kit] = []
+	for pool: Array[EconomyDef.Kit] in [matching, others]:
+		while picked.size() < run.economy.kit_offers and not pool.is_empty():
+			picked.append(pool.pop_at(rng.range_int(pool.size())))
+	return picked
 
 
 static func pick_package(state: RunState, content: ContentDb, run: RunContent, index: int) -> RunActions.Result:
@@ -111,6 +132,9 @@ static func pick_package(state: RunState, content: ContentDb, run: RunContent, i
 			result = RunActions.add_relic(state, content, offer["relic"])
 		_:
 			result = RunActions.add_item(state, content, offer["item"], offer["tier"])
+			if result.ok:
+				state.stash.back().essence_ids.append(offer["essence"])
+				result.note += ", infused with %s" % content.essences[offer["essence"]].name
 	if not result.ok:
 		return result
 	state.gold += run.economy.base_gold
@@ -120,20 +144,22 @@ static func pick_package(state: RunState, content: ContentDb, run: RunContent, i
 
 # --- days -----------------------------------------------------------------------
 
-## The day's fights to pick from, from the day alone (a replayed day keeps
-## them): the boss on the boss day; otherwise one easier and one harder fight
-## when the day's pool has both, or else two different ones.
-static func _pick_fights(state: RunState, run: RunContent) -> Array[String]:
+## A day's fights to pick from (any day of the current act), from the run
+## seed, the act, and the day alone: the day bar shows the whole act, and a
+## replayed day keeps them. The boss on the boss day; otherwise one easier
+## and one harder fight when the day's pool has both, or else two different
+## ones.
+static func fights_for_day(state: RunState, run: RunContent, day: int) -> Array[String]:
 	var act: ActDef = run.act(state.act)
 	var picked: Array[String] = []
-	if act.is_boss_day(state.day):
+	if act.is_boss_day(day):
 		picked.append(act.boss)
 		return picked
-	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.FIGHT, state.act, state.day] as Array[int])
+	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.FIGHT, state.act, day] as Array[int])
 	var easier: Array[String] = []
 	var harder: Array[String] = []
-	for encounter_id: String in act.encounters_for(act.pool_for(state.day), state.day):
-		if act.is_hard(encounter_id, state.day):
+	for encounter_id: String in act.encounters_for(act.pool_for(day), day):
+		if act.is_hard(encounter_id, day):
 			harder.append(encounter_id)
 		else:
 			easier.append(encounter_id)
@@ -148,7 +174,7 @@ static func _pick_fights(state: RunState, run: RunContent) -> Array[String]:
 
 
 static func _start_day(state: RunState, content: ContentDb, run: RunContent) -> void:
-	state.fight_options = _pick_fights(state, run)
+	state.fight_options = fights_for_day(state, run, state.day)
 	state.encounter_id = ""
 	state.visit = 0
 	_offer_stops(state, content, run)

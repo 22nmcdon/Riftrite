@@ -2,8 +2,9 @@ class_name FightChoiceScreen
 extends UiScreen
 ## Pick the day's fight (docs/plans/new-day.md): a card per fight, with its
 ## kind's icon, its name, whether it's the easier or the harder fight (the
-## harder pays more gold and has better rewards), the essence it yields, and
-## its enemies. The fight screen after the pick shows the enemies in full.
+## harder pays more gold and has better rewards), the essence it yields, its
+## enemies, and an elite's or the boss's mechanic (what it does and what
+## answers it). The fight screen after the pick shows the enemies in full.
 
 
 func build() -> void:
@@ -32,7 +33,7 @@ func _card(index: int) -> PanelContainer:
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 14)
 	column.add_child(top)
-	top.add_child(UiStyle.icon("fight_%s" % encounter.kind if ["normal", "elite", "boss"].has(encounter.kind) else "fight_normal", 72))
+	top.add_child(UiStyle.icon(EncounterInfo.kind_icon(encounter), 72))
 	var words := VBoxContainer.new()
 	top.add_child(words)
 	words.add_child(UiStyle.heading(encounter.name, 26, UiStyle.EMBER))
@@ -45,6 +46,9 @@ func _card(index: int) -> PanelContainer:
 		column.add_child(UiStyle.label("More gold, and rarer spoils", 16, UiStyle.HIGHLIGHT))
 	for unit: UnitSetup in SetupBuilder.encounter_units(session.content, encounter_id):
 		column.add_child(UiStyle.label("• %s (%s row)" % [unit.name, EncounterDef.ROW_NAMES[unit.row]], 15, UiStyle.TEXT_DIM))
+	var mechanic: Control = EncounterInfo.mechanic_box(encounter, 360)
+	if mechanic != null:
+		column.add_child(mechanic)
 	var pick: Button = primary_button("Fight them", func() -> void: session.pick_fight(index), 240)
 	pick.size_flags_horizontal = Control.SIZE_SHRINK_END
 	column.add_child(pick)

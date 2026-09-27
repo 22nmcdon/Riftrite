@@ -106,5 +106,57 @@
   "node_choices": 2,
   "_node_note": "Each day has stops_per_day stop visits; each offers node_choices different nodes, one of them a shop, drawn by weight from data/nodes.json and data/events.json (docs/plans/new-day.md).",
   "loot_gold": 6,
-  "_legendary_note": "Legendary relics are boss relics: only the boss's relic choice and the rare Ancient Reliquary event give them."
+  "_legendary_note": "Legendary relics are boss relics: only the boss's relic choice and the rare Ancient Reliquary event give them.",
+  "_kit_note": "Start kits (docs/plans/fight-questions-and-readability.md, section 3): each kit's item comes infused with its essence. The start offers kit_offers of them, matching the drafted heroes' affinities.",
+  "kit_offers": 2,
+  "kits": [
+    {
+      "keyword": "blade",
+      "name": "Woodcutter's Kit",
+      "item": "hatchet",
+      "essence": "wrath"
+    },
+    {
+      "keyword": "bow",
+      "name": "Flint Quiver",
+      "item": "flint_arrows",
+      "essence": "wrath"
+    },
+    {
+      "keyword": "spell",
+      "name": "Storm Slate",
+      "item": "slate_tablet",
+      "essence": "storm"
+    },
+    {
+      "keyword": "mend",
+      "name": "Herbalist's Satchel",
+      "item": "peat_poultice",
+      "essence": "verdant"
+    },
+    {
+      "keyword": "ward",
+      "name": "Stonewarden's Kit",
+      "item": "oak_buckler",
+      "essence": "stone"
+    },
+    {
+      "keyword": "burn",
+      "name": "Tinder Box",
+      "item": "tallow_torch",
+      "essence": "ember"
+    },
+    {
+      "keyword": "bleed",
+      "name": "Barbed Bundle",
+      "item": "barbed_net",
+      "essence": "umbral"
+    },
+    {
+      "keyword": "hex",
+      "name": "Frostsoot Pouch",
+      "item": "soot_bomb",
+      "essence": "frost"
+    }
+  ]
 }
