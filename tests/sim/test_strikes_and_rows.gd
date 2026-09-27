@@ -60,13 +60,14 @@ func test_each_strike_is_a_hit_and_aims_again() -> void:
 
 
 func test_strikes_stop_when_the_holder_falls() -> void:
-	var sim := CombatSim.new(K.fight([_hero(_flurry(4))], [K.dummy("foe", BIG_HP)]), K.content())
+	var sim := CombatSim.new(K.fight([_hero(_flurry(4)), K.dummy("friend", BIG_HP)], [K.dummy("foe", BIG_HP)]), K.content())
 	while _entries(sim, LogEntry.Kind.FIRE).is_empty():
 		sim.step()
 	assert_eq(sim.pending_strikes.size(), 3, "three more strikes queued")
 	sim.unit_by_id("hero").hp = 0
 	sim.step()
 	_run_ticks(sim, 20)
+	assert_false(sim.finished, "a friend fights on")
 	assert_eq(_entries(sim, LogEntry.Kind.DAMAGE).size(), 1, "only the first strike landed")
 
 

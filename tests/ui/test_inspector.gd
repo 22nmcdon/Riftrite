@@ -166,6 +166,8 @@ func test_item_text_is_plain_words() -> void:
 	assert_eq(ItemInfo.TARGET_WORDS.size(), EffectDef.TARGET_NAMES.size(), "a word for every target")
 	assert_eq(ItemInfo.ITEM_TARGET_WORDS.size(), EffectDef.ITEM_TARGET_NAMES.size(), "a word for every item target")
 	assert_string_contains(ItemInfo.item_text(content, "clockwork_owl", 0, [] as Array[String], 0), "its holder's other items")
+	assert_string_contains(ItemInfo.item_text(content, "gale_blades", 0, [] as Array[String], 0), "strike 6 times over 0.75s, each dealing")
+	assert_string_contains(ItemInfo.item_text(content, "longspear", 0, [] as Array[String], 0), "every enemy in the front row")
 	assert_string_contains(ItemInfo.hero_text(content, "vell", 0), "Innate: Lantern Vigil")
 
 
