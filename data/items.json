@@ -266,19 +266,19 @@
       {
         "trigger": "on_fire",
         "type": "shield",
-        "amount": 18,
+        "amount": 12,
         "target": "self",
         "scaling": {
-          "def": 7000
+          "def": 5000
         }
       },
       {
         "trigger": "on_fire",
         "type": "shield",
-        "amount": 18,
+        "amount": 12,
         "target": "row_allies",
         "scaling": {
-          "def": 7000
+          "def": 5000
         }
       }
     ]
@@ -326,10 +326,10 @@
       {
         "trigger": "on_fire",
         "type": "heal",
-        "amount": 8,
+        "amount": 6,
         "target": "all_allies",
         "scaling": {
-          "mgk": 5500
+          "mgk": 4000
         }
       }
     ]
@@ -348,10 +348,10 @@
       {
         "trigger": "on_fire",
         "type": "heal",
-        "amount": 27,
+        "amount": 20,
         "target": "ally_lowest_hp",
         "scaling": {
-          "mgk": 20000
+          "mgk": 15000
         }
       },
       {
@@ -1937,10 +1937,10 @@
       {
         "trigger": "on_fire",
         "type": "damage",
-        "amount": 9,
+        "amount": 8,
         "target": "enemy_front",
         "scaling": {
-          "atk": 11000
+          "atk": 10000
         }
       }
     ]
@@ -1982,16 +1982,16 @@
       {
         "trigger": "on_fire",
         "type": "damage",
-        "amount": 33,
+        "amount": 38,
         "target": "enemy_front",
         "scaling": {
-          "atk": 16500
+          "atk": 19000
         }
       },
       {
         "trigger": "on_fire",
         "type": "heal",
-        "amount": 11,
+        "amount": 14,
         "target": "self"
       }
     ]
@@ -2011,7 +2011,7 @@
         "trigger": "on_fire",
         "type": "apply_status",
         "status": "poison",
-        "stacks": 3,
+        "stacks": 4,
         "target": "enemy_front"
       }
     ]
@@ -2101,10 +2101,10 @@
       {
         "trigger": "on_fire",
         "type": "damage",
-        "amount": 4,
+        "amount": 8,
         "target": "enemy_front",
         "scaling": {
-          "atk": 5000
+          "atk": 10000
         }
       },
       {

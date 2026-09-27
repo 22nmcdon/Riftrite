@@ -97,6 +97,8 @@ You draft **three heroes** at the start of the run (three times, pick 1 of 3) an
 
 ## Items and infusions (our take on enchantments)
 
+**Each slot has one job** (`docs/plans/items-and-clarity.md`): a **weapon** (the basic-attack slot) is the steady damage, firing every 1–2s; an **ability** is a real move on a 6–15s cooldown (a flurry of strikes, a sweep across a row, a heal for everyone); a **passive** is always on. **The roster** is 28 shared Commons, Uncommons, and Rares, 24 **hero Epics** (each hero has three, one built for each of their specializations; anyone can hold one, but it does more on its own hero, and only the team's Epics appear in shops), and 6 Legendaries.
+
 In The Bazaar an item gets one fixed enchantment. Here, enchantments are **Infusions**: essences you harvest from enemies, infuse into gear, fuse into new types, and level up by using them.
 
 **1. Harvest.** Each enemy family drops one of six base essences. The act's biome decides which essences can drop, and each day's fight shows its enemy team ahead of time.
@@ -197,7 +199,7 @@ Synergies work in five layers, from specific and secret (Gungeon-style) to broad
 | --- | --- | --- | --- |
 | Named pairs | Two specific items on the **same hero** | *Whetstone* + *Twin Daggers* = **"Paper Cuts"**: each dagger hit reduces the other's cooldown by 0.2s | Hidden until found, then saved in the Codex |
 | Essence transformations | A specific item + a specific essence | *Twin Daggers* + Frost: daggers become piercing icicles. Never spills or awakens | Hidden until found, then saved in the Codex |
-| Signature gear | A specific item on a specific hero | Mender *Sister Vell* + *Old Lantern*: lantern heals also cleanse | Hinted in the hero's profile as "???" |
+| Hero Epics (replaced signature gear) | A hero's own Epic on that hero | *Wren* + *Gale Blades*: the Flurry fires 25% faster | Shown on the item: "On Wren: ..." |
 | Essence resonance | 3 / 5 / 7 of one essence infused team-wide, across all heroes' items. It counts essences, not items: a single counts 1, an alloy counts 1 for each half, a pure double counts 2 of its essence, and an essence transformation counts as whatever essence(s) it holds | 5 Frost: frozen enemies take +30% damage | Always shown, like trait counters |
 | Shared affinities | 2 or 3 heroes with the same affinity keyword (each hero has two, each with its own perk on their matching items) | 2 heroes with Ward: every Ward item gives +15% Shield | Always shown |
 | Duo bonds | Two specific heroes in the team | Vell + Hesk, **"The Gate and the Lantern"**: Vell's heals also shield; Hesk heals when hit | Hidden until found; the draft shows "a bond: ?" |
@@ -211,7 +213,7 @@ Synergies work in five layers, from specific and secret (Gungeon-style) to broad
 - When both halves of an **undiscovered** synergy are available, it gets a "?" spark. The player knows *something* is there, but not what.
 - The Codex tracks found / total per category, which gives completionists a long-term goal.
 
-**Targets for launch:** about 80 named pairs, about 30 essence transformations, 1–2 signature items per hero, 6 essence resonances, 8 shared affinities, 8+ duo bonds.
+**Targets for launch:** about 80 named pairs, about 30 essence transformations, 3 Epics per hero, 6 essence resonances, 8 shared affinities, 8+ duo bonds.
 
 ## Run structure and economy
 
@@ -379,7 +381,7 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
     - Loot and Events give essences too
   - Details: `docs/plans/day-structure.md`.
 - **Run rules (decided):** reforging destroys the essences. You can always pass on a new item or essence; to take one without room, throw something away first (discarding works any time, selling only at a shop), and you can't buy without room. The roster's first slot is always a field slot; the other five can each be field or backup. New heroes join fielded if fewer than 5 are.
-- **Signature gear strength:** should signature items be rarer, or their bonuses smaller? The balance parties always hold them, which flips close matchups (`docs/plans/synergies-in-sim.md`). To be decided after playtesting.
+- **Signature gear (decided, redesign step 7):** signature synergies became hero Epics: each hero has 3 Epics (one per specialization) that anyone can hold but that do more on their own hero; only the team's Epics appear in shops (`docs/plans/items-and-clarity.md`).
 - **Act 1's essences:** the design says each biome favors two essences, but Act 1 drops four for now (Wrath, Stone, Venom, Ember). Undecided; revisit after playtesting (`docs/plans/slice-content.md`).
 - **Legendary items (decided, built):** six, one per upgrade path: grows by use (counts the item's hits; starts at C), essence-hungry (fed essences from the pouch; B), devourer (fed other items, keeps a trace of each; C), bonded (its holder ranking up; B), martyr (its holder falling in a won fight; B), and boss-forged (a boss beaten while equipped; A). They come from the Vault and rare events (including the Barrow Hoard, a Legendary item event), never shops, Loot, or the reward pick. A kills-counting grows-by-use Legendary comes later. Details: `docs/plans/legendary-items.md`.
 - **Tier schedule:** at what point in a run do shops start offering B, A, and S? (A tuning table per act, `shop_tier_weights`; Act 1 is C 80%, B 20%.)

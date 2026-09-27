@@ -66,14 +66,14 @@ In all: 28 shared + 24 Epics = 52 items, down from 76. A run only ever sees abou
 | --- | --- | --- | --- |
 | Longspear → **Sweeping Spear** | Common | Blade | hits the whole enemy front row (7s) |
 | Flint Arrows → **Barrage** | Common | Bow | 4 quick shots at the back row (6s) |
-| Mudbrick Wall → **Raise Wall** | Common | Ward | Shields the holder's row (8s) |
-| Hunter's Snare | Uncommon | Bow, Hex | 3 Slow on the front enemy (8s) |
+| Mudbrick Wall → **Raise Wall** | Common | Ward | Shields the holder and its row (8s) |
+| Hunter's Snare | Uncommon | Bow, Hex | hits the front enemy and Slows it 3 (8s) |
 | Hearth Stew → **Hearth Feast** | Uncommon | Mend | heals every ally (10s) |
 | Mender's Satchel → **Triage** | Uncommon | Mend | a big heal and a cleanse on the ally lowest on HP (8s) |
-| Barbed Net | Uncommon | Bleed | 2 Bleed and 1 Slow on every enemy in the front row (9s) |
+| Barbed Net | Uncommon | Bleed | 3 Bleed and 1 Slow on every enemy in the front row (9s) |
 | Reaper's Sickle | Rare | Blade, Bleed | a heavy blow on the weakest enemy; a crit adds 3 Bleed (9s) |
 | Greywood Warbow → **Volley** | Rare | Bow | an arrow at every enemy in the back row (7s) |
-| Grimoire of Cinders → **Firebolt** | Rare | Spell, Burn | a big magic hit and 3 Burn (8s) |
+| Grimoire of Cinders → **Firebolt** | Rare | Spell, Burn | a big magic hit and 5 Burn (8s) |
 | Venom Censer → **Plague Cloud** | Rare | Spell, Hex | 3 Poison on every enemy (10s) |
 
 **Shared passives (9):** War Drum (Blade: crit), Stormglass Arrowheads (Bow: damage), Vesper Chime (Mend: healing), Thorn Vest (Ward: strikes back when hit), Leech Vial (Bleed, Mend: a kill heals), Hex Bag (Hex: every 3rd status Slows), and three conduits: Ember Censer, Bond Chain, and Rift Prism.
@@ -82,18 +82,18 @@ In all: 28 shared + 24 Epics = 52 items, down from 76. A run only ever sees abou
 
 | Hero | Specialization | Epic | Slot | Keywords | What it does | On its hero |
 | --- | --- | --- | --- | --- | --- | --- |
-| Brannoc | Hearthwall | Tower Shield → **Bulwark** | Ability | Ward | a big Shield on every ally (14s) | the Shields are 30% bigger |
+| Brannoc | Hearthwall | Tower Shield (Bulwark) | Ability | Ward | a big Shield on every ally (14s) | the Shields are 30% bigger |
 | Brannoc | Ironbrand | **Hearthbrand Mace** | Weapon | Blade, Ward | heavy blows that Shield him (1.8s) | each blow also Shields his row a little |
-| Brannoc | Last Watch | **Watchman's Horn** | Ability | Ward, Mend | Shields and heals every ally (12s) | the first blow at 50% HP sounds it at once |
+| Brannoc | Last Watch | **Watchman's Horn** | Ability | Ward, Mend | Shields and heals every ally (12s) | it also sounds by itself the first time an ally drops below 50% HP |
 | Wren | Duelist | Twinfang Stilettos | Weapon | Blade | two fast stabs; crits Bleed (1.1s) | +15% crit |
-| Wren | Windrunner | **Gale Blades** → Flurry | Ability | Blade | 6 quick strikes in 1 second at the front enemy (8s) | 8 strikes |
-| Wren | Nightstalker | **Hunter's Moon** | Ability | Blade, Bleed | a strike on the weakest enemy and 3 Bleed (8s) | a kill brings it back at once |
+| Wren | Windrunner | **Gale Blades** (Flurry) | Ability | Blade | 6 quick strikes in 1 second at the front enemy (8s) | it fires 25% faster |
+| Wren | Nightstalker | **Hunter's Moon** | Ability | Blade, Bleed | a strike on the weakest enemy and 3 Bleed (8s) | 2 more Bleed |
 | Vell | Lanternbearer | Night Lantern | Ability | Mend, Spell | a big heal on the ally lowest on HP, and a little for everyone (9s) | also cleanses |
-| Vell | Wardweaver | Hearthkeeper's Kettle | Ability | Mend, Ward | heals and Shields the ally lowest on HP (9s) | Shields the next-lowest too |
-| Vell | Vigil Keeper | **Vespers Bell** | Passive | Mend | every 3rd heal she gives also heals every ally a little | every 2nd heal |
-| Odo | Pyromancer | **Ember Grimoire** | Ability | Spell, Burn | a big hit and 3 Burn on the front enemy, and 1 Burn on two others (8s) | Burn spreads to three |
+| Vell | Wardweaver | Hearthkeeper's Kettle | Ability | Mend, Ward | heals and Shields the ally lowest on HP (9s) | also heals every ally a little |
+| Vell | Vigil Keeper | **Vespers Bell** | Passive | Mend | every 3rd heal its holder gives also heals every ally a little | those heals are 50% stronger |
+| Odo | Pyromancer | **Ember Grimoire** | Ability | Spell, Burn | a big hit and 3 Burn on the front enemy, and 1 Burn on two others (8s) | one more ember |
 | Odo | Hexweaver | **Hexbinder's Rod** | Weapon | Spell, Hex | magic hits that Poison (1.5s) | every 4th hit Poisons every enemy |
-| Odo | Stormcaller | Wyrdglass Orb → **Stormglass Orb** | Ability | Spell | magic damage and 1 Slow on every enemy (10s) | the storm strikes twice |
+| Odo | Stormcaller | Wyrdglass Orb | Ability | Spell | magic damage and 1 Slow on every enemy (10s) | a second, smaller storm |
 | Maren | Deadeye | Rimewood Longbow | Weapon | Bow | heavy shots at the back row, crits often (1.5s) | +15% crit |
 | Maren | Trapper | **Bramble Snares** | Ability | Bow, Bleed | 2 Slow and 2 Bleed on every enemy in the front row (9s) | the back row too |
 | Maren | Volley | **Stormfeather Quiver** | Ability | Bow | an arrow at every enemy (7s) | two arrows each |
@@ -101,13 +101,13 @@ In all: 28 shared + 24 Epics = 52 items, down from 76. A run only ever sees abou
 | Pell | Clockwork | Clockwork Owl | Ability | Hex | charges his other abilities by 3s and Blinds a random enemy (10s) | charges by 5s |
 | Pell | Cutpurse | **Cutpurse's Kris** | Weapon | Blade, Hex | quick picks at the weakest enemy that Slow; crits often (1.0s) | crits Blind |
 | Hesk | Bulwark | **Gatekeeper's Pavise** | Ability | Ward | a big Shield on him and a smaller one on his row (10s) | the row's Shield matches his |
-| Hesk | Thornhide | **Bramble Mail** | Passive | Ward, Bleed | when an enemy's hit lands, it strikes back; every 3rd also Bleeds | every 2nd Bleeds |
-| Hesk | Old Guard | **Old Guard's Standard** | Passive | Ward | his row gets +15% DEF, and Shields on it are 15% stronger | covers every ally |
-| Ysolde | Ashcaller | Ashen Censer | Ability | Spell, Burn | 3 Burn on every enemy, and a little healing for every ally (10s) | 4 Burn |
+| Hesk | Thornhide | **Bramble Mail** | Passive | Ward, Bleed | when an enemy's hit lands, it strikes back; every 3rd also Bleeds | it strikes back twice as hard |
+| Hesk | Old Guard | **Old Guard's Standard** | Passive | Ward | its holder's row gets +15% DEF, and Shields on it are 15% stronger | every ally gets +15% DEF too |
+| Ysolde | Ashcaller | Ashen Censer | Ability | Spell, Mend, Burn | 3 Burn on every enemy, and a little healing for every ally (10s) | 4 Burn |
 | Ysolde | Emberheart | **Heartfire Wand** | Weapon | Spell, Burn | magic bolts; crits Burn (1.3s) | +10% crit |
 | Ysolde | Kindler | Open Channel | Passive | Spell | a conduit: the holder's spills reach every ability | her Spell items fire 10% faster |
 
-Names in bold are new items; the rest are current items moved into place.
+Names in bold are new items; the rest are current items moved into place. Some bonuses differ from the first plan: a hero part can add effects, auras, and abilities, but can't change an item's number of strikes or its "every Nth" count, so those became other bonuses.
 
 **What else changes with the roster:**
 - **The cut items leave the game:** near-duplicates (several quick blades, bows, and shields that did the same thing), most of the items that only charge other items, the Blind trinkets, and the weakest commons.
@@ -166,6 +166,13 @@ Names in bold are new items; the rest are current items moved into place.
 - Rift Collapse timing
 
 The run report shows both bots side by side, so the gap between a random player and a planned one stays visible.
+
+## Part 1 balance (run bot, 200 runs)
+
+- **The act:** the bot clears 66% of runs (58% before part 1). Difficulty gets its own pass in part 4, with a smarter bot.
+- **Enemy items follow the slot split,** with their damage per second kept close to before: Rift Claw became the hounds' weapon, the Sentinel's Hollow Maw and the witches' Gloom Spit became 6s and 5s moves, the Lurker Fang a weapon, and the Cairn Stone an 8s ward.
+- **The guild's shared defensive abilities were trimmed** (Raise Wall, Triage, Hearth Feast) after the first run showed them shielding and healing far more than before.
+- **Fights lost:** normal 2% easier and 13% harder; elites 15% and 28%; the boss 18%. By encounter, the Witch Coven (5%) and the Sentinel's Vigil (10%) became easier and the Hound Alpha (24%) harder; part 4 retunes them.
 
 ## 7. Build order
 
