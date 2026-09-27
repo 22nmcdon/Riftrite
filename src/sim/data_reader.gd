@@ -2,7 +2,7 @@ class_name DataReader
 extends RefCounted
 ## Reads one JSON object with typed accessors. Every problem is appended to a
 ## shared error list with the full path (for example
-## `essences.json[1] (frost).effects[0].stacks`), and accessors return a safe
+## `statuses.json[1] (poison).interval_ms`), and accessors return a safe
 ## default so loading keeps going and reports every problem in one pass.
 ##
 ## Keys that are never read are reported as unknown by finish(), which catches

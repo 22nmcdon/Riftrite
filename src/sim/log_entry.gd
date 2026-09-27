@@ -1,8 +1,9 @@
 class_name LogEntry
 extends RefCounted
-## One line of the combat log. Every effect names its source unit, item, and
-## infusion (CLAUDE.md rule 4); Rift Collapse uses the source item
-## "rift_collapse".
+## One line of the combat log. Every effect names its source unit and
+## ability (CLAUDE.md rule 4); Rift Collapse uses the source ability
+## "rift_collapse". The arena sim adds move, push, shot, and area kinds
+## (docs/plans/rebuild-phase1-arena-sim.md, section 11).
 
 enum Kind {
 	FIGHT_START,
@@ -16,12 +17,8 @@ enum Kind {
 	STATUS_APPLIED,
 	STATUS_DAMAGE,
 	STATUS_ENDED,
-	MISS,
 	STATUS_REDUCED,
-	INFUSION_LEVEL,
-	STATUS_JUMPED,
 	AURA,
-	CHARGE,
 	SYNERGY,
 	PHASE,
 	DEED_LEVEL,
@@ -32,22 +29,16 @@ const COLLAPSE_SOURCE: String = "rift_collapse"
 var tick: int
 var kind: Kind
 var source_unit: String = ""
-var source_item: String = ""
-var source_item_name: String = ""
-## Essence id if the effect came from an infusion, else "".
-var source_infusion: String = ""
-var source_infusion_name: String = ""
-## The relic that granted the source item this effect, or "".
-var source_granted_by: String = ""
-## Relic effects: the side holding the relic (source_item is the relic);
+var source_ability: String = ""
+var source_ability_name: String = ""
+## Relic effects: the side holding the relic (source_ability is the relic);
 ## -1 when the source is a unit.
 var source_relic_side: int = -1
-## The source is a synergy's own effect (see EffectSource.synergy).
+## The source is a duo bond's own effect (see EffectSource.synergy).
 var source_synergy: bool = false
 var target: String = ""
 ## DAMAGE/COLLAPSE/STATUS_DAMAGE: the hit's full damage. HEAL: HP restored.
-## SHIELD: shield given. STATUS_APPLIED: stacks added. CHARGE: ticks of
-## cooldown advanced (the charged item's name is in `note`).
+## SHIELD: shield given. STATUS_APPLIED: stacks added.
 var amount: int = 0
 ## Damage kinds: how much of `amount` the target's shield absorbed.
 var absorbed: int = 0
@@ -60,24 +51,20 @@ var status_name: String = ""
 ## STATUS_APPLIED: the status's total stacks afterward.
 var stacks: int = 0
 var note: String = ""
-## Made by an event effect (see Events): never sets off another one.
+## Made by an event effect: never sets off another one.
 var from_event: bool = false
 
 
 func set_source(source: EffectSource) -> void:
 	source_unit = source.unit_id
-	source_item = source.item_id
-	source_item_name = source.item_name
-	source_infusion = source.infusion_id
-	source_infusion_name = source.infusion_name
-	source_granted_by = source.granted_by
+	source_ability = source.ability_id
+	source_ability_name = source.ability_name
 	source_relic_side = source.relic_side
 	source_synergy = source.synergy
 
 
 func source() -> EffectSource:
-	var result: EffectSource = EffectSource.make(source_unit, source_item, source_item_name, source_infusion, source_infusion_name)
-	result.granted_by = source_granted_by
+	var result: EffectSource = EffectSource.make(source_unit, source_ability, source_ability_name)
 	result.relic_side = source_relic_side
 	result.synergy = source_synergy
 	return result
@@ -114,22 +101,14 @@ func to_text() -> String:
 			return line + "%s on %s%s ends" % [status_name, target, "" if note.is_empty() else " (%s)" % note]
 		Kind.AURA:
 			return line + "%s aura %s" % [source_text(), note]
-		Kind.CHARGE:
-			return line + "%s charges %s by %s" % [source_text(), note, _format_time(amount)]
 		Kind.SYNERGY:
 			return line + note
 		Kind.PHASE:
 			return line + "%s enters %s" % [target, note]
 		Kind.DEED_LEVEL:
 			return line + "%s reaches %s" % [target, note]
-		Kind.STATUS_JUMPED:
-			return line + "%s jumps from %s to %s (%d stacks)" % [status_name, note, target, stacks]
-		Kind.INFUSION_LEVEL:
-			return line + "%s becomes %s" % [source_text(), note]
 		Kind.STATUS_REDUCED:
 			return line + "%s on %s loses %d stacks (%s)" % [status_name, target, amount, note]
-		Kind.MISS:
-			return line + "%s misses %s (%s)" % [source_text(), target, note]
 	return line + "?"
 
 

@@ -41,27 +41,15 @@ const HIGHLIGHT := BRASS_300
 ## Enemy lines in the fight log (the rift's cold violet).
 const ENEMY_TEXT := RIFT_300
 
-## Frame colors by rarity (ItemDef.RARITIES order): bare oak, brass,
-## silver-teal, violet, gold. Rivets, a crest, and wings back them up
-## (FrameDecor), so rarity never relies on color alone.
+## Relic rarities, and their frame colors: bare oak, brass, silver-teal,
+## violet, gold. Rivets, a crest, and wings back them up (FrameDecor), so
+## rarity never relies on color alone.
+const RARITIES: Array[String] = ["common", "uncommon", "rare", "epic", "legendary"]
 const RARITY: Array[Color] = [OAK_400, BRASS_500, Color("8fc7c9"), Color("9b6fe0"), Color("f0c040")]
-## Essence hues (each also has its own glyph; see Glyph).
-const ESSENCE: Dictionary[String, Color] = {
-	"ember": Color("e0703a"), "venom": Color("7ed14f"), "wrath": Color("d14545"), "stone": Color("a8906c"),
-	"verdant": Color("6e9a5a"), "frost": Color("5fb4c9"), "storm": Color("e8c877"), "umbral": Color("7a4fd1"),
-}
 ## Short status tags for the fight view.
-const STATUS_TAGS: Dictionary[String, String] = {
-	"burn": "BRN", "poison": "PSN", "bleed": "BLD", "golden_flame": "GLD", "plasma": "PLS",
-	"blight": "BLT", "slow": "SLW", "freeze": "FRZ", "blind": "BLN",
-}
+const STATUS_TAGS: Dictionary[String, String] = {"burn": "BRN", "poison": "PSN", "bleed": "BLD"}
 ## Status colors for the fight view.
-const STATUS_COLORS: Dictionary[String, Color] = {
-	"burn": Color("e0703a"), "poison": Color("7ed14f"), "bleed": Color("d14545"), "golden_flame": Color("e8c877"),
-	"plasma": Color("c37bff"), "blight": Color("5f8f3a"), "slow": Color("8fb8e8"), "freeze": Color("8fe8f0"), "blind": Color("9a9a9a"),
-	"deathcap": Color("5c9a3a"), "rime": Color("b8e4f5"), "searfire": Color("ff5a2a"), "caustic": Color("c8d84a"),
-	"nightshade": Color("8a5ab8"), "hemorrhage": Color("a82a3a"),
-}
+const STATUS_COLORS: Dictionary[String, Color] = {"burn": Color("e0703a"), "poison": Color("7ed14f"), "bleed": Color("d14545")}
 ## Chrome art (art/ui/chrome/<name>.svg) and its nine-slice margin in
 ## pixels (keep in sync with CHROME in tools/art/ui_art.py).
 const CHROME_MARGINS: Dictionary[String, int] = {
@@ -74,9 +62,6 @@ const ICON_DIR: String = "res://art/ui/icons/%s.svg"
 const BODY_FONT: String = "res://art/fonts/WorkSans-Regular.ttf"
 const BOLD_FONT: String = "res://art/fonts/WorkSans-Bold.ttf"
 const HEADING_FONT: String = "res://art/fonts/YoungSerif-Regular.ttf"
-## Pixels per item slot.
-const SLOT_WIDTH: int = 132
-const TILE_HEIGHT: int = 96
 
 
 static func make_theme() -> Theme:
@@ -148,7 +133,7 @@ static func primary(button: Button) -> Button:
 	return button
 
 
-## The parchment panel (the item panel, hover cards): dark text.
+## The parchment panel (hover cards): dark text.
 static func parchment() -> StyleBoxTexture:
 	return chrome("panel_parchment", 18, 14)
 
@@ -202,7 +187,7 @@ static func icon_label(icon_name: String, text: String, size: int = 16, color: C
 
 
 static func rarity_color(rarity: String) -> Color:
-	var index: int = ItemDef.RARITIES.find(rarity)
+	var index: int = RARITIES.find(rarity)
 	return RARITY[index] if index >= 0 else BORDER
 
 

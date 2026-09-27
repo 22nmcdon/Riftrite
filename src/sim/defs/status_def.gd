@@ -8,20 +8,13 @@ extends RefCounted
 ##                     10000 normal, 5000 half, 0 = skips shields entirely),
 ##                     defense_shred_per_stack (lowers the target's DEF),
 ##                     cleanse_effectiveness_bp (how much heals strip it;
-##                     10000 normal), jumps (after each damage tick the stacks
-##                     move to the nearest other enemy), heal_team_bp (this
-##                     share of its damage heals the applier's team, split
-##                     evenly across living allies)
-##   slow:             slow_bp_per_stack, duration_ms, optional max_slow_bp (cap
-##                     on the total slow per item). Slow sits on items, not
-##                     units: each application lands on one random item of
-##                     the target plus its auto-attack (see Statuses).
-##   freeze:           duration_ms
-##   blind:            (none; each stack makes one attack miss)
+##                     10000 normal)
+## The arena sim (docs/plans/rebuild-phase1-arena-sim.md, section 8) adds
+## Root, Stun, Slow, Taunt, Silence, Marked, Engaged, and Undying.
 
-enum Kind { DAMAGE_OVER_TIME, SLOW, FREEZE, BLIND }
+enum Kind { DAMAGE_OVER_TIME }
 
-const KIND_NAMES: Array[String] = ["damage_over_time", "slow", "freeze", "blind"]
+const KIND_NAMES: Array[String] = ["damage_over_time"]
 
 var id: String
 var name: String
@@ -37,17 +30,8 @@ var stacks_lost_bp: int = 0
 var vs_shield_bp: int = FixedMath.BP_ONE
 ## DEF removed from the target per stack.
 var defense_shred_per_stack: int = 0
-## How effective heals are at stripping this status (see Statuses).
+## How effective heals are at stripping this status.
 var cleanse_effectiveness_bp: int = FixedMath.BP_ONE
-## After each damage tick, the stacks move to the nearest other enemy.
-var jumps: bool = false
-## Share of this status's damage that heals the applier's team.
-var heal_team_bp: int = 0
-var slow_bp_per_stack: int
-## The most a Slow can slow one item, however many stacks it has.
-var max_slow_bp: int = FixedMath.BP_ONE
-## 0 means the status has no timer.
-var duration_ticks: int
 
 
 static func read(reader: DataReader) -> StatusDef:
@@ -67,15 +51,5 @@ static func read(reader: DataReader) -> StatusDef:
 			def.vs_shield_bp = reader.opt_int("vs_shield_bp", FixedMath.BP_ONE, 0, FixedMath.BP_ONE)
 			def.defense_shred_per_stack = reader.opt_int("defense_shred_per_stack", 0, 0)
 			def.cleanse_effectiveness_bp = reader.opt_int("cleanse_effectiveness_bp", FixedMath.BP_ONE, 0, FixedMath.BP_ONE)
-			def.jumps = reader.opt_bool("jumps", false)
-			def.heal_team_bp = reader.opt_int("heal_team_bp", 0, 0)
-		Kind.SLOW:
-			def.slow_bp_per_stack = reader.req_int("slow_bp_per_stack", 0, FixedMath.BP_ONE)
-			def.max_slow_bp = reader.opt_int("max_slow_bp", FixedMath.BP_ONE, 0, FixedMath.BP_ONE)
-			def.duration_ticks = reader.req_ticks("duration_ms", FixedMath.MS_PER_TICK)
-		Kind.FREEZE:
-			def.duration_ticks = reader.req_ticks("duration_ms", FixedMath.MS_PER_TICK)
-		Kind.BLIND:
-			pass
 	reader.finish()
 	return def
