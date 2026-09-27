@@ -31,7 +31,20 @@ Each elite and boss encounter gets a `"mechanic"` in `data/encounters.json`: a n
 - **The start offers:** gold (as now), a common relic (as now), and **two kits** in place of the random item.
 - **A kit** is a common item at tier C that comes **already infused** with an essence that suits it, so the first shop has a purpose. For example, a Burn kit could be a Burn item infused with Ember.
 - **Kits follow the team:** there's a kit per keyword (8, in `data/economy.json`), and the two offered match affinities of the drafted heroes, picked by the run seed (`RunRandom`).
-- **Kit contents** are content, built directly and reviewed in the PR.
+- **Kit contents** are content, built directly and reviewed in the PR:
+
+  | Keyword | Kit | Item | Essence |
+  | --- | --- | --- | --- |
+  | Blade | Woodcutter's Kit | Hatchet | Wrath |
+  | Bow | Flint Quiver | Flint Arrows | Wrath |
+  | Spell | Storm Slate | Slate Tablet | Storm |
+  | Mend | Herbalist's Satchel | Peat Poultice | Verdant |
+  | Ward | Stonewarden's Kit | Oak Buckler | Stone |
+  | Burn | Tinder Box | Tallow Torch | Ember |
+  | Bleed | Barbed Bundle | Barbed Net (Uncommon: no Common has Bleed) | Umbral |
+  | Hex | Frostsoot Pouch | Soot Bomb | Frost |
+
+  Each essence is one its merchant pairs with that keyword. If the team has fewer than two affinities with a kit, other kits fill in (no hero has that problem now).
 
 ## 4. Readability
 
@@ -64,20 +77,37 @@ Opening the log panel during a fight shows a chart of what each hero is doing, a
 
 ## 6. Code
 
-- **Run layer:** `RunFlow.fights_for_day`; start kits in `RunFlow` (the start offers) and `data/economy.json` (the kit list); the validator checks kits and encounter mechanics.
-- **Data:** `"mechanic"` on elite and boss encounters; the Hound Alpha enemy, its items, and its phase; the 8 kits.
+- **Run layer:**
+  - `RunFlow.fights_for_day` (any day's fights, from the seed, the act, and the day)
+  - start kits in `RunFlow` (`_pick_kits`, the kit package) and `EconomyDef.kits`; `RunContent` checks them
+  - `RunFlow.pick_start_hero` now takes the run content (the draft's end offers the kits)
+  - the run bot takes a kit
+- **Sim data:** `EncounterDef` reads the `"mechanic"` (required on elites and the boss).
+- **Data:**
+  - the mechanics of the four elite and boss encounters
+  - the Hound Alpha (`data/enemies.json`), its bite (`alphas_bite`, enemy-only), and their art
+  - the 8 kits (`data/economy.json`)
 - **UI:**
-  - `day_bar.gd`: every day's fights, three icon kinds, hover details
+  - `EncounterInfo` (new): mechanic text and boxes, a day's hover text
+  - `day_bar.gd`: the act's days, three icon kinds, hover details
   - `fight_choice_screen.gd` and the fight screen's enemy preview: the mechanic
-  - `fight_screen.gd`: the hidden log, the banner queue
-  - a new `fight_chart.gd` widget and a `FightTally` that adds up the log entries played so far (by hero, type, and source)
-  - `fight_player.gd`: the remembered speed
-  - `run_start_screen.gd`: the kits
-- **Tests:** fights for any day match the fights that day actually offers (also after a lost fight); kit offers follow the team and are deterministic; picking a kit gives an infused item; every elite and boss has a mechanic; the Hound Alpha targets the weakest hero and enters its phase; the banner queue picks the right log entries; the tally credits each entry to the right hero, type, and source (status damage to its applier, relics to their own bar); the speed setting is remembered. Then mutation checks, the balance sim on the Hound Alpha, and the run bot.
+  - `run_start_screen.gd`: the kit cards
+  - `fight_screen.gd`: the hidden log panel (Log, L), the chart, the banners, the remembered speed
+  - `FightTally` (new, `src/ui/fight_tally.gd`): adds up the log entries played so far, by hero, type, and source
+  - `FightChart` (new widget): tabs, legend, stacked bars, hover breakdowns. The type colors were checked with the dataviz palette validator as neighbors in a stack on the panel color; the gaps between segments, the legend, and the hover back them up.
+  - `FightBanners` (new widget): the banner queue
+  - `RunSession.fight_speed`, `set_fight_speed`, `load_settings` (`user://settings.json`)
+- **Tests:**
+  - every day's fights are known from the start and match what the day offers; other seeds plan other fights
+  - kits follow the team's affinities, top up from other keywords, and give an infused item; kit data is checked
+  - every elite and boss has a mechanic, and the check refuses one without
+  - the Hound Alpha hunts the weakest and frenzies in a real fight
+  - the tally credits each entry to the right hero, type, and source (status damage to its applier, relics to their own bar, a real fight matching the damage meter)
+  - the chart's bars, legend, tabs, hover text, and in-place updates
+  - banner texts and the queue; a new synergy's banner at the start
+  - the hidden log, the remembered and saved speed, the day bar's act, the fight cards' mechanics, the kit cards
 
 ## Balance
-
-The Hound Alpha makes the day-3 elite harder, so its numbers are tuned against the run bot's targets (elites about 30% lost). The kits make the start a bit stronger; the run bot shows by how much.
 
 ## Decisions (from the user, 2026-09-27)
 

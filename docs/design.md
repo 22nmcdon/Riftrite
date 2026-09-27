@@ -215,17 +215,17 @@ Synergies work in five layers, from specific and secret (Gungeon-style) to broad
 
 ## Run structure and economy
 
-There's no branching map. Like Guildrun and The Bazaar, each act is a set number of **days**, and the game only ever shows what's next. The last fight of an act is its boss. Act 1 ends in a challenge fight, Act 3 in the final boss, then optional Endless mode.
+There's no branching map. Like Guildrun and The Bazaar, each act is a set number of **days**. The day bar shows every fight of the act from its first day: normal fights, elites, and the boss each with their own icon, and hovering a day lists its fights and an elite's or the boss's mechanic (`docs/plans/fight-questions-and-readability.md`). The last fight of an act is its boss. Act 1 ends in a challenge fight, Act 3 in the final boss, then optional Endless mode.
 
 **A day** is always (`docs/plans/new-day.md`):
 1. **Two stops.** Each stop visit offers **2 nodes** from one pool, and **one of them is always a shop**. Shops sell items: the Caravan (anything), keyword shops (Blade, Bow, Spell, Mend, Ward, Burn, Bleed, Hex), shops by slot, essence merchants (their essence plus items that suit it), tier shops, and the Synergy Peddler (partners for what you hold). The other node is anything else: every event is its own node, next to the Forge, three kinds of Loot, the Vault, and Retrain. Each node shows its name and what it offers before you pick. Some only show up when they'd be useful: the Forge only if something is infused, the Vault only with a key, and Retrain only when a hero has a specialization. Details: `docs/plans/stop-nodes.md`.
-2. **Fight:** pick 1 of 2 fights, both shown from the start of the day with their enemies and the essence they yield. One is **easier**, one **harder**; the harder pays more gold and has rarer rewards. Elite days offer two elites; the boss day has only the boss.
+2. **Fight:** pick 1 of 2 fights, both known from the start of the act with their enemies and the essence they yield. One is **easier**, one **harder**; the harder pays more gold and has rarer rewards. Elite days offer two elites; the boss day has only the boss.
 3. **Rewards:** gold, the enemy team's essence, and a pick of 3 (one enemy drop, two pool items); elites and the boss add their extras.
 
 **Act 1 is 8 days:** elites on days 3 and 6, the boss on day 8, and the boss day's second stop is always the Upgrade stop. Normal fights run about 25–35s (the act scales enemy HP by day).
 
 - **Offers don't depend on earlier picks (for now).** They're random per run, from the run seed.
-- **Starting a run:** draft three heroes (each pick is 1 of 3 random heroes not yet taken), then 1 of 3 starting packages (such as extra gold, a Common relic, or a Common item), on top of a base amount of gold.
+- **Starting a run:** draft three heroes (each pick is 1 of 3 random heroes not yet taken), then a starting package: extra gold, a Common relic, or one of two **kits**, on top of a base amount of gold. A kit is an item already infused with an essence that suits it (one kit per keyword); the two offered match the team's affinities, so the first shop has a purpose.
 - **The team:** the three drafted heroes all fight, for the whole run.
 - **Losing a fight** restarts the day: you keep everything you have and get bonus gold (10, +5 per fight won so far), so you can visit two fresh stops before the rematch (the same two fights to pick from). **The second loss ends the run.** (A tie still counts as a victory.)
 - **HP:** every fight starts everyone at full HP, unless an item or relic says otherwise.
@@ -242,6 +242,10 @@ There's no branching map. Like Guildrun and The Bazaar, each act is a set number
 | Vault (stop) | Spend a key on a locked chest (Gungeon-style); only offered when you hold a key |
 | Event (stops) | Each event is its own node with its own appearance rate: a choice, sometimes with trade-offs, sometimes a rescued NPC |
 | Boss | Act boss with a unique mechanic; the act's last fight; drops an item or a relic |
+
+**Every elite and boss asks a question:** each has a named mechanic, shown with what answers it (on the day bar's hover, the fight card, and before the fight). Act 1: the Hound Alpha (The Hunt: its bite hunts the weakest hero, and it frenzies below half HP), Cairn Watch (Stone Ward: its side is shielded every 5s, and archers shoot the back row), Witch Coven (Gloam Totem: stronger back-row casters behind a healing Sentinel), and Old Mother Ash (Molt, then Last Ember).
+
+**The fight screen** starts at 1x speed and remembers a speed the player picks. The combat log is hidden until opened; its panel shows a chart of each hero's damage by type, healing and Shield, and damage taken, with a breakdown by source on hover. Banners mark the big moments as they happen: a phase, an infusion reaching Resonant or awakening, a deed level, a synergy found.
 
 **First events:** gold; a random item by rarity (Common most likely, Legendary least); a random relic by rarity; a random item by tier (C most likely, S least). More, including one that offers retraining, come later.
 
@@ -352,7 +356,7 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - **Synergies (built):** resonance counts every hero's essences; shared affinities count heroes with the keyword, at 2 and 3 (they replaced class traits in step 5); duo bonds give each of their two heroes parts, which can use event triggers; enemies get no synergies for now (maybe bosses in later acts). A transformation uses one copy of its essence; any other essence works as a plain single. Pairs can use a new `charge` effect (advance another item's cooldown). Details: `docs/plans/synergies-in-sim.md`.
 - **Two essences on any item** (redesign step 2) replaced "sockets by rarity": only Epic and Legendary items used to hold two.
 - **Relics:** hold any number, no board and no sockets. They can be turned down but never removed once taken, change how a build works (Epic ones a lot), and are much rarer than items, essences, or heroes. Bosses drop an item or a relic.
-- **A run starts with a drafted team of three** (three picks, each 1 of 3 random heroes), then 1 of 3 starting packages (extra gold, a Common relic, or a Common item), plus base gold. All three fight.
+- **A run starts with a drafted team of three** (three picks, each 1 of 3 random heroes), then a starting package (extra gold, a Common relic, or one of two kits for the team's affinities), plus base gold. All three fight.
 - **Losing a fight restarts the day** with everything kept, plus bonus gold (10, +5 per fight won so far). **The second loss ends the run.** Every fight starts at full HP unless an item or relic changes that.
 - **Shared stash:** holds 6 items. Relics can't go in the stash.
 - **Rank-B specializations** are in the vertical slice. Each **hero** has three of their own (not shared with the class), each unique to the hero and unlike the other two: an ability, an aura, an effect on their items, much like relics. (Parts that worked from backup became abilities when Backup was removed.) A specialization that changes the basic attack must also say what happens when an auto-attack item replaces it. **Locked potential** (decided, replacing class-based rank-up picks) now comes from the specialization's **deed**: its old rank-B, A, and S parts are deed levels 1, 2 (next to a new alternative), and 3 (redesign step 3, `docs/plans/deeds.md`). There is a `cleanse` effect (strips damage over time); Odo's Pyromancer capstone turns his Burn into Golden Flame rather than a Burn that ignores cleansing.
