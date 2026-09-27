@@ -229,6 +229,14 @@ static func read_window(reader: DataReader, holder: Object) -> void:
 	holder.set("window_until_ticks", until_ticks)
 
 
+## The event triggers' names, in order.
+static func event_trigger_names() -> Array[String]:
+	var names: Array[String] = []
+	for trigger: Trigger in EVENT_TRIGGERS:
+		names.append(TRIGGER_NAMES[trigger])
+	return names
+
+
 ## True if the effect is active at this tick of the fight.
 func active_at(tick: int) -> bool:
 	return tick >= window_from_ticks and (window_until_ticks < 0 or tick < window_until_ticks)

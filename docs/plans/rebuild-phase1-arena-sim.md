@@ -145,6 +145,18 @@ Heroes and enemies share one **kit** (`UnitDef`). `HeroDef` (paths, phase 4) and
 - **`basic_attack`** and **`signature`** are **abilities** (`AbilityDef`), with effects in the `EffectDef` vocabulary.
   - An ability with reach 2 or more fires a **shot** (section 5). An ability can say `"shot": false` to land at once, for example a beam.
 - **`passives`:** `Part` kinds (aura, ability on an event trigger, replace_status), rebuilt as `PartDef` in step 4.
+  - **Built in step 4, second half** (`PartDef`, `Passives`). Each passive has an `id` and a `name`, and the log credits them. A kit's abilities and passives each need their own id.
+  - **`aura`:** `{"kind": "aura", "aura": {...an AuraDef...}}`. While its holder stands and its window is open, it boosts the holder or all its allies.
+    - Auras are folded into stats, output multipliers (damage, healing, Shield, damage-over-time stacks), crit chance, and the basic attack's cooldown. This happens at the start, when a window opens or closes, and when a holder falls.
+    - Several on one stat multiply, in fight order.
+    - Each start and end is logged (`AURA`).
+  - **`ability`:** effects on event triggers, each counting its own events for `every`.
+    - They run when the log is read after every unit has acted, and they land at once (never a shot).
+    - `hit_target` is the unit the event names; `target` is the unit's current target.
+    - What they do is marked `from_event`, so it never sets off another event or a count signature.
+    - They don't log a `FIRE`, so `on_ability` means "its signature fired". A count signature can't count `on_ability`; the validator refuses it.
+  - **`replace_status`:** statuses the unit applies as `from` land as `to`.
+  - **Setup validation:** a fight's setup checks that every status a kit names exists.
 
 ## 3. The tick
 
@@ -484,10 +496,12 @@ If step 2 measures slower, the cell size and repath interval are the knobs, and 
 - Units point at their target weakly, so two units targeting each other don't keep each other alive after the fight.
 - Watch the budget again once statuses, mana, and areas add their per-tick work.
 
-**Measured in step 4** (3 against 6, test kits with a mana signature with a cast, an HP-triggered one, and Slow):
+**Measured in step 4** (3 against 6, test kits with a mana signature with a cast, an HP-triggered one, and Slow; the second half added an all-allies attack-speed aura and an event passive):
 - A 95s fight takes 175–180 ms, about **110 ms per 60s**. A 180s stand-off takes 250–290 ms, about **85–95 ms per 60s**. So the budget is at its edge.
 - Where it goes (the 95s fight): walking and targeting take about a third. The rest is each unit's turn and its attacks, about 4 µs per unit per tick, spread thinly.
   - Signatures and mana add about a tenth.
+  - With the passives, the same fight is about **128 ms per 60s**. Part of that is the aura's 10% faster attacks. Reading the log for events is about 6%.
+- **Over budget, then, when units walk and re-target a lot.** The cost is spread across every unit's turn in GDScript, not in one hot spot. It needs a speed pass of its own before phase 2's sim runner needs hundreds of fights (see the report on step 4).
 - **Speed-ups in this step,** none of which change results:
   - Units with no statuses skip the status loop.
   - Units are looked up by id in a Dictionary (lookup only, never iterated).
@@ -503,7 +517,7 @@ If step 2 measures slower, the cell size and repath interval are the knobs, and 
 1. **Grid and plane (done):** `hex_grid`, `arena_plane`, `nav_grid`, `arena_debug`, `FixedMath.isqrt`, and their tests. Pure functions, no sim.
 2. **Skeleton fight (done):** kits, setups with hexes and rocks, the new `CombatSim` tick, walking and blocking, `nearest` targeting, melee attacks and shots, deaths, the end of the fight, the MOVE, STOP, TARGET, and SHOT logs, and the log replay test. The first determinism test, and a speed measurement.
 3. **Statuses (done):** Root, Stun, Slow, Taunt, Silence, Marked, and damage over time.
-4. **Mana and signatures:** the five triggers, cast_ms, Undying, `Events`, and `PartDef`. (First half done: mana, the triggers, casts, Undying, `mana_drain`, and `Events` for `count`. Second half: `PartDef` passives.)
+4. **Mana and signatures (done):** the five triggers, cast_ms, Undying, `Events`, and `PartDef`.
 5. **Tanks:** Engage.
 6. **Displacement and flying:** knockback, pull, leap, charge, collisions, flying, and hop away.
 7. **Areas:** shapes, warnings, landing, and the rest of the targeting rules.

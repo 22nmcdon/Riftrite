@@ -64,12 +64,9 @@ static func act(sim: CombatSim, unit: UnitState) -> bool:
 
 ## Events counts toward a count signature. A count that reaches its "every"
 ## queues a fire for the unit's next turn.
-static func on_event(unit: UnitState, event: EffectDef.Trigger, fired_ability: String) -> void:
+static func on_event(unit: UnitState, event: EffectDef.Trigger) -> void:
 	var signature: AbilityState = unit.signature
 	if signature == null or signature.def.trigger.kind != TriggerDef.Kind.COUNT or signature.def.trigger.event != event:
-		return
-	# Its own firing isn't one of "another ability fires".
-	if event == EffectDef.Trigger.ON_ABILITY and fired_ability == signature.def.id:
 		return
 	signature.count += 1
 	if signature.count % signature.def.trigger.every == 0:

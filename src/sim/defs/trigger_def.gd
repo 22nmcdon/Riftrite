@@ -7,7 +7,7 @@ extends RefCounted
 ##   {"kind": "at_time", "at_ms": 8000}              once, at 8s
 ##   {"kind": "count", "event": "on_hit_taken", "every": 5}
 ##                                                   on every 5th such event (EffectDef's
-##                                                   event triggers)
+##                                                   event triggers, but on_ability)
 ##   {"kind": "would_fall"}                          once, the first time it would fall: it's
 ##                                                   left at 1 HP instead
 ## A stunned unit can't fire a mana signature; every other trigger still fires.
@@ -37,12 +37,11 @@ static func read(reader: DataReader) -> TriggerDef:
 		Kind.AT_TIME:
 			def.at_ticks = reader.req_ticks("at_ms", FixedMath.MS_PER_TICK)
 		Kind.COUNT:
-			var names: Array[String] = []
-			for trigger: EffectDef.Trigger in EffectDef.EVENT_TRIGGERS:
-				names.append(EffectDef.TRIGGER_NAMES[trigger])
-			var event_name: String = reader.req_choice("event", names)
+			var event_name: String = reader.req_choice("event", EffectDef.event_trigger_names())
 			if not event_name.is_empty():
 				def.event = EffectDef.TRIGGER_NAMES.find(event_name) as EffectDef.Trigger
+			if def.event == EffectDef.Trigger.ON_ABILITY:
+				reader.error("event: a signature can't count on_ability (the unit's only other ability is its basic attack: count on_basic_attack)")
 			def.every = reader.opt_int("every", 1, 1)
 	reader.finish()
 	return def

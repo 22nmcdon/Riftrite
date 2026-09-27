@@ -10,6 +10,8 @@ extends RefCounted
 ## and land when it does; the rest (on the unit itself, or every ally) happen
 ## as it fires.
 ##
+## Numbers come from the unit's stats (with its auras) and its output auras
+## (Passives.boosted); statuses it applies may be swapped (replace_status).
 ## Built so far: damage, heal, shield, apply_status, cleanse, and mana_drain.
 ## The arena's own effects (knockback, pull, leap, charge, area, summon,
 ## start_collapse) come with their steps.
@@ -79,7 +81,8 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 		EffectDef.Type.SHIELD:
 			give_shield(sim, victim, amount, source)
 		EffectDef.Type.APPLY_STATUS:
-			Statuses.apply(sim, victim, effect.status_id, amount, effect.duration_ticks, source)
+			var status_id: String = unit.status_swaps.get(effect.status_id, effect.status_id)
+			Statuses.apply(sim, victim, status_id, amount, effect.duration_ticks, source)
 		EffectDef.Type.CLEANSE:
 			Statuses.cleanse_over_time(sim, victim, mini(amount, FixedMath.BP_ONE), source)
 		EffectDef.Type.MANA_DRAIN:
@@ -92,26 +95,44 @@ static func _on_hit(sim: CombatSim, unit: UnitState, ability: AbilityDef, source
 		if not wanted or not effect.active_at(sim.tick):
 			continue
 		for victim: UnitState in _targets(sim, unit, effect.target, null, hit):
-			var amount: int = amount_of(effect, unit)
-			if effect.amount_bp_of_damage > 0:
-				amount = FixedMath.apply_bp(hit.damage, effect.amount_bp_of_damage)
+			var amount: int = amount_of(effect, unit, hit.damage)
 			var crit: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability))
 			land(sim, unit, ability, source, effect, victim, amount, crit)
 
 
-## The effect's number from the unit's stats: base plus stat scaling.
-## (The same number ValueBreakdown.compute gives with no multipliers, worked
-## out without building the breakdown.)
-static func amount_of(effect: EffectDef, unit: UnitState) -> int:
-	var amount: int = effect.base_value()
-	for stat: int in effect.scaling.size():
-		if effect.scaling[stat] != 0:
-			amount += FixedMath.apply_bp(unit.stats.values[stat], effect.scaling[stat])
-	return amount
+## An ability passive's effect, set off by an event (Passives.on_event):
+## `other` is the unit the event names, `damage` the hit it's about. It
+## lands at once, and never sets off on_hit effects.
+static func run_event(sim: CombatSim, unit: UnitState, ability: AbilityDef, effect: EffectDef, other: UnitState, damage: int) -> void:
+	var source: EffectSource = EffectSource.make(unit.id, ability.id, ability.name)
+	var hit: Hit = null
+	if other != null:
+		hit = Hit.new()
+		hit.target = other
+		hit.damage = damage
+	for victim: UnitState in _targets(sim, unit, effect.target, unit.target, hit):
+		var crit: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability))
+		land(sim, unit, ability, source, effect, victim, amount_of(effect, unit, damage), crit)
+
+
+## The effect's number: base plus stat scaling from the unit's stats (or a
+## share of the hit's `damage`, for amount_bp_of_damage), then its output
+## auras. (The same number ValueBreakdown.compute gives, worked out without
+## building the breakdown.)
+static func amount_of(effect: EffectDef, unit: UnitState, damage: int = 0) -> int:
+	var amount: int
+	if effect.amount_bp_of_damage > 0:
+		amount = FixedMath.apply_bp(damage, effect.amount_bp_of_damage)
+	else:
+		amount = effect.base_value()
+		for stat: int in effect.scaling.size():
+			if effect.scaling[stat] != 0:
+				amount += FixedMath.apply_bp(unit.stats.values[stat], effect.scaling[stat])
+	return Passives.boosted(unit, effect, amount)
 
 
 static func crit_chance_bp(sim: CombatSim, unit: UnitState, ability: AbilityDef) -> int:
-	return ability.crit_chance_bp + unit.stats.get_stat(UnitStats.Stat.CRIT) * sim.tuning.crit_bp_per_point
+	return ability.crit_chance_bp + unit.stats.get_stat(UnitStats.Stat.CRIT) * sim.tuning.crit_bp_per_point + unit.aura_bp[AuraDef.Stat.CRIT_CHANCE_BP]
 
 
 ## Who an effect reaches: its ability's target, the unit hit, the unit

@@ -13,7 +13,12 @@ var side: EffectSource.Team
 ## two rows (decided).
 var start_col: int
 var start_row: int
+## Its kit's stats; `stats` is these with its auras folded in (Passives).
+var base_stats: UnitStats
 var stats: UnitStats
+## What auras do to it, indexed by AuraDef.Stat: multipliers (10000 = x1)
+## for the output and unit stats, additions for crit chance and cooldown.
+var aura_bp: Array[int] = []
 var max_hp: int
 var hp: int
 var shield: int = 0
@@ -59,6 +64,12 @@ var leg_active: bool = false
 var leg_to: Vector2i
 var leg_amount: int = 0
 
+# Passives (see Passives).
+## Its ability passives' event effects, each with its own count.
+var listeners: Array[Passives.Listener] = []
+## Statuses it applies as the key land as the value (lookup only).
+var status_swaps: Dictionary[String, String] = {}
+
 # Statuses, in ContentDb.status_ids order (see Statuses).
 var statuses: Array[StatusState] = []
 ## Ticks of this unit's recent heals, for the heal-cleanse falloff.
@@ -78,7 +89,9 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 	unit.side = setup.side
 	unit.start_col = setup.col
 	unit.start_row = setup.row
+	unit.base_stats = setup.def.stats
 	unit.stats = setup.def.stats.copy()
+	unit.aura_bp = Passives.no_auras()
 	unit.max_hp = unit.stats.get_stat(UnitStats.Stat.HP)
 	unit.hp = unit.max_hp
 	unit.pos = grid.center(setup.col, setup.row)
@@ -88,6 +101,7 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 		unit.signature = AbilityState.make(setup.def.signature)
 	if setup.def.mana != null:
 		unit.mana = setup.def.mana.start * Mana.SCALE
+	Passives.set_up(unit)
 	return unit
 
 

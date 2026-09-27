@@ -5,6 +5,7 @@ extends RefCounted
 ## content = same log. Design: docs/plans/rebuild-phase1-arena-sim.md.
 ##
 ## Each tick (section 3; the parts marked "later" come with later steps):
+##   0. Auras whose window opens or closes now are folded in again (Passives).
 ##   1. Rift Collapse (later).
 ##   2. Statuses tick: damage over time, and timers running out (Statuses).
 ##   3. Shots land, in the order they were fired (Shots).
@@ -16,8 +17,8 @@ extends RefCounted
 ##      Slowed); a Taunt makes the taunter its target, or it keeps or picks
 ##      a target (Targeting); with the target in reach it stands and
 ##      attacks when ready, otherwise it walks (Movement; not when Rooted).
-##   6. Events: this tick's log is read for count signatures (Events). Event
-##      effects and phases come later.
+##   6. Events: this tick's log is read for count signatures and ability
+##      passives (Events). Phases come later.
 ##   7. Units at 0 HP fall, unless Undying holds them at 1 HP or a would_fall
 ##      signature saves them; on_kill is raised for whoever felled them.
 ##      They still acted this tick if their turn came, so going first gives
@@ -50,6 +51,10 @@ var _events_read: int = 0
 var _listening: bool = false
 ## Each unit by id (lookup only; never iterated).
 var _by_id: Dictionary[String, UnitState] = {}
+## Ticks where an aura window opens or closes (lookup only), and the auras
+## active now ("unit:passive", see Passives.rederive).
+var _aura_ticks: Dictionary[int, bool] = {}
+var _active_auras: Array[String] = []
 
 
 ## Validates the setup and runs the whole fight.
@@ -85,12 +90,14 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 		units.append(unit)
 		_by_id[unit.id] = unit
 		(heroes if unit.side == EffectSource.Team.HEROES else enemies).append(unit)
-		if unit.signature != null and unit.signature.def.trigger.kind == TriggerDef.Kind.COUNT:
+		if (unit.signature != null and unit.signature.def.trigger.kind == TriggerDef.Kind.COUNT) or not unit.listeners.is_empty():
 			_listening = true
 	var start := LogEntry.new()
 	start.kind = LogEntry.Kind.FIGHT_START
 	start.note = "seed %d, act %d" % [setup.seed_value, setup.act]
 	combat_log.add(start)
+	_aura_ticks = Passives.aura_boundaries(self)
+	_active_auras = Passives.rederive(self, _active_auras)
 
 
 ## Advances one tick. Does nothing once the fight is over.
@@ -98,6 +105,8 @@ func step() -> void:
 	if finished:
 		return
 	tick += 1
+	if _aura_ticks.has(tick):
+		_active_auras = Passives.rederive(self, _active_auras)
 	Statuses.tick_all(self)
 	Shots.land_due(self)
 	for unit: UnitState in units:
@@ -257,6 +266,7 @@ func apply_damage_vs_shield(target: UnitState, amount: int, vs_shield_bp: int) -
 ## Settles who falls. A would_fall signature fires at once and may fell
 ## others, so it goes round again until nobody new is at 0 HP.
 func _process_deaths() -> void:
+	var aura_lost: bool = false
 	var again: bool = true
 	while again:
 		again = false
@@ -275,7 +285,10 @@ func _process_deaths() -> void:
 				again = true
 				continue
 			_fall(unit)
+			aura_lost = aura_lost or Passives.has_aura(unit)
 			Events.kill(self, unit)
+	if aura_lost:
+		_active_auras = Passives.rederive(self, _active_auras)
 
 
 func _undying(unit: UnitState) -> StatusState:

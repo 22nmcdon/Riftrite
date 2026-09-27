@@ -8,10 +8,12 @@ extends RefCounted
 ##    "targeting": "nearest",
 ##    "mana": {...a ManaDef...},
 ##    "basic_attack": {...an AbilityDef...},
-##    "signature": {...an AbilityDef with a trigger...}}
+##    "signature": {...an AbilityDef with a trigger...},
+##    "passives": [...PartDefs...]}
 ## Only a unit whose signature fires on mana has a mana bar, and it must have
-## one. Passives come with step 4's second half, traits with later steps;
-## until then those keys are unknown and rejected.
+## one. The basic attack, the signature, and the passives each need their own
+## id. Traits come with later steps; until then that key is unknown and
+## rejected.
 
 ## The targeting rules built so far (section 4).
 const TARGETING_RULES: Array[String] = ["nearest"]
@@ -25,6 +27,7 @@ var mana: ManaDef = null
 var basic_attack: AbilityDef
 ## Null: no signature.
 var signature: AbilityDef = null
+var passives: Array[PartDef] = []
 
 
 static func read(reader: DataReader) -> UnitDef:
@@ -42,15 +45,43 @@ static func read(reader: DataReader) -> UnitDef:
 	if reader.has("signature"):
 		var signature_reader: DataReader = reader.req_object("signature")
 		def.signature = AbilityDef.read_signature(signature_reader) if signature_reader != null else null
+	for part_reader: DataReader in reader.opt_object_array("passives"):
+		def.passives.append(PartDef.read(part_reader))
 	var mana_signature: bool = def.signature != null and def.signature.trigger.kind == TriggerDef.Kind.MANA
 	if mana_signature and def.mana == null:
 		reader.error("a mana signature needs \"mana\"")
 	if def.mana != null and not mana_signature:
 		reader.error("\"mana\": only a unit whose signature fires on mana has a mana bar")
-	if def.signature != null and def.basic_attack != null and def.signature.id == def.basic_attack.id:
-		reader.error("the signature and the basic attack need different ids (\"%s\")" % def.signature.id)
+	var ids: Array[String] = []
+	if def.basic_attack != null:
+		ids.append(def.basic_attack.id)
+	if def.signature != null:
+		ids.append(def.signature.id)
+	for part: PartDef in def.passives:
+		ids.append(part.id)
+	for i: int in ids.size():
+		if ids.find(ids[i]) < i:
+			reader.error("its abilities and passives need different ids (\"%s\" twice)" % ids[i])
 	reader.finish()
 	return def
+
+
+## Every status its abilities and passives name (for FightSetup.validate).
+func status_ids() -> Array[String]:
+	var found: Array[String] = []
+	var abilities: Array[AbilityDef] = [basic_attack, signature]
+	for part: PartDef in passives:
+		abilities.append(part.ability)
+		if part.kind == PartDef.Kind.REPLACE_STATUS:
+			found.append_array([part.from_status, part.to_status])
+	for ability: AbilityDef in abilities:
+		if ability == null:
+			continue
+		for effect: EffectDef in ability.effects:
+			if effect.type == EffectDef.Type.APPLY_STATUS:
+				found.append(effect.status_id)
+			found.append_array(effect.statuses)
+	return found
 
 
 func has_mana() -> bool:

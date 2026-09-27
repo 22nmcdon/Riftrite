@@ -7,6 +7,8 @@ extends RefCounted
 
 var def: AbilityDef
 var progress_bp: int = 0
+## From auras (AuraDef cooldown_bp): -1500 makes the cooldown 15% shorter.
+var cooldown_add_bp: int = 0
 
 # Signatures.
 ## A once-a-fight trigger has fired (or, for would_fall, saved the unit).
@@ -33,7 +35,7 @@ static func make(ability: AbilityDef) -> AbilityState:
 
 
 func needed_bp() -> int:
-	return def.cooldown_ticks * FixedMath.BP_ONE
+	return maxi(def.cooldown_ticks * (FixedMath.BP_ONE + cooldown_add_bp), FixedMath.BP_ONE)
 
 
 ## Runs the cooldown for one tick at `rate_bp` (10000 = normal speed). A full

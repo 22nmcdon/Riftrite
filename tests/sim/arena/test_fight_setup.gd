@@ -91,10 +91,13 @@ func test_bad_signatures() -> void:
 	_assert_error(_kit_errors(cast), "cast_ms: only a mana signature can have a cast")
 	var same: Dictionary = _base()
 	same["signature"] = {"id": "bite", "name": "Big Bite", "trigger": {"kind": "fight_start"}, "effects": effects}
-	_assert_error(_kit_errors(same), "the signature and the basic attack need different ids (\"bite\")")
+	_assert_error(_kit_errors(same), "its abilities and passives need different ids (\"bite\" twice)")
 	var event: Dictionary = _base()
 	event["signature"] = {"id": "count", "name": "Count", "trigger": {"kind": "count", "event": "on_fire"}, "effects": effects}
 	_assert_error(_kit_errors(event), "event: unknown value \"on_fire\"")
+	var itself: Dictionary = _base()
+	itself["signature"] = {"id": "count", "name": "Count", "trigger": {"kind": "count", "event": "on_ability"}, "effects": effects}
+	_assert_error(_kit_errors(itself), "a signature can't count on_ability")
 	var threshold: Dictionary = _base()
 	threshold["signature"] = {"id": "stand", "name": "Stand", "trigger": {"kind": "hp_below", "threshold_bp": 10000}, "effects": effects}
 	_assert_error(_kit_errors(threshold), "threshold_bp: 10000 is out of range")
