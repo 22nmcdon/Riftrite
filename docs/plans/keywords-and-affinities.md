@@ -108,6 +108,25 @@ The draft shows "shares Blade with Wren" and "a bond: ?" for heroes already pick
   - Pell: The House Always Wins applies extra Poison on every 3rd status
   - Ysolde: Firestorm sets every enemy alight when she kills
 
+## Balance (run bot, 200 runs, after step 5)
+
+- **The act:** 54% of runs clear it (was 47% after step 4). Affinity perks and bonds make heroes a little stronger.
+- **Fights lost:**
+
+  | | Easier | Harder |
+  | --- | --- | --- |
+  | Normal | 3% | 19% |
+  | Elite | 14% | 31% |
+  | Boss | 28% | |
+
+  These are still in the step 4 targets, so the enemy HP scaling wasn't retuned.
+- **What the bot finds:**
+  - duo bonds, about 0.8 per run in total (it drafts at random)
+  - shared affinities, Ward and Blade most often
+  - Leech Vial, the second most-taken item
+- **How much the bonds do:** in the balance sim they add 0.5–2% of a hero's output. That's modest; tune them after playtesting.
+- **Affinities no team can share yet:** only one hero has Bow and only one has Burn, so those two affinity synergies can't trigger until more heroes arrive.
+
 ## 7. Code
 
 - **The sim:**

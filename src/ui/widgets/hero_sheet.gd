@@ -102,10 +102,14 @@ func _slot_group(hero: RunHero, slot: ItemDef.Slot, stats: UnitStats) -> HBoxCon
 	return group
 
 
-## The basic attack and innate lines from the hero's info text.
+## The basic attack, affinity, and innate lines from the hero's info text.
 func _basic_and_innate(def: HeroDef) -> String:
 	var lines: PackedStringArray = PackedStringArray()
 	lines.append("Basic attack: %s" % def.basic_attack.name)
+	var perks := PackedStringArray()
+	for keyword_id: String in def.affinities:
+		perks.append(session.content.keywords[keyword_id].affinity_text)
+	lines.append("Affinities: %s (%s)" % [ItemInfo.keyword_names(session.content, def.affinities), " ".join(perks)])
 	lines.append("Innate: %s. %s" % [def.innate_name, def.innate_text])
 	return "\n".join(lines)
 

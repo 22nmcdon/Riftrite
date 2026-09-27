@@ -557,3 +557,17 @@ func _take_everything(main: Main) -> int:
 func after_each() -> void:
 	if FileAccess.file_exists(U.SAVE_PATH):
 		DirAccess.remove_absolute(U.SAVE_PATH)
+
+
+func test_the_draft_shows_affinities_and_how_a_hero_fits_the_team() -> void:
+	var session: RunSession = U.session()
+	session.new_run(5)
+	var main: Main = _main(session)
+	var first: HeroDef = session.content.heroes[session.state.offers[0]["hero"]]
+	assert_string_contains(U.text_of(main.screen), "Affinities: " + ItemInfo.keyword_names(session.content, first.affinities))
+	var state := RunState.make(1)
+	state.heroes.append(RunHero.make("brannoc"))
+	assert_eq(RunStartScreen.team_notes(session.content, state, "hesk"), PackedStringArray(["Shares Ward with Brannoc", "A bond with Brannoc: ?"]), "the bond's name stays hidden")
+	state.discovered.append("twin_walls")
+	assert_eq(RunStartScreen.team_notes(session.content, state, "hesk")[1], "A bond with Brannoc: Twin Walls", "until it's found")
+	assert_eq(RunStartScreen.team_notes(session.content, state, "maren"), PackedStringArray(), "nothing shared, no bond")

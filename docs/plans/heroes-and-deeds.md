@@ -204,5 +204,10 @@ Start with rules 1, 2, and 5, which are cheap and don't feel like rubber-banding
 - **Content** (8 callings, 24 specialization deeds and alternatives) was built directly and is reviewed in the PR.
 - **Snowball rules:** not decided yet. Rules 1, 2, and 5 are in by construction; the run bot report measures the level spread.
 
+**Step 5 (2026-09-27), built in step 5 (`docs/plans/keywords-and-affinities.md`):**
+- **Affinities:** a perk per keyword; heroes sharing one get a team bonus (it replaced class traits). The affinity table above became Ward/Mend (Brannoc), Ward/Blade (Hesk), Blade/Bleed (Wren), Hex/Blade (Pell), Bow/Bleed (Maren), Spell/Hex (Odo), Spell/Burn (Ysolde), and Mend/Ward (Vell), using the 8 keywords.
+- **Duo bonds:** 8, each hero in 2, hidden until found; the draft shows shared affinities and "a bond: ?".
+- **Callings** gained the new triggers: Hesk's Rebuke is Thorns, Pell's capstone adds Poison on every 3rd status, and Ysolde's Firestorm spreads Burn on each kill.
+
 **Still open:**
 - **Snowballing:** whether to add the catch-up bonus (rule 3) or a level cap per act (rule 4). The run bot report now measures the level spread to decide from.

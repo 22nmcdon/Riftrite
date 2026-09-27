@@ -2,7 +2,7 @@
 
 Working title: Riftrite (placeholder). Synced from the Claude Docs version on 2026-09-25, then updated in the repo the same day with answers to the first round of design questions (see Decisions made). The Claude Docs version does not have those updates yet.
 
-> **Redesign in progress (2026-09-26):** `docs/plans/fun-redesign.md` and `docs/plans/heroes-and-deeds.md` are approved and being built in steps. They replace the item rows and adjacency, sockets by rarity and neighbor spill, buying and recruiting heroes, Backup, and class traits. This document describes the game as it is now, and each step updates it as it lands. **Step 1 is built:** the loadout (basic attack, abilities, passives), the drafted team of three, a rank-up per elite, innates, and no Backup, item size, rows, or neighbor effects. **Step 2 is built:** any item fuses two essences, Resonant singles spill by keyword, and alloys awaken at Resonant. **Step 3 is built:** deeds (`docs/plans/deeds.md`): each hero levels a calling and their specialization by playing to type.
+> **Redesign in progress (2026-09-26):** `docs/plans/fun-redesign.md` and `docs/plans/heroes-and-deeds.md` are approved and being built in steps. They replace the item rows and adjacency, sockets by rarity and neighbor spill, buying and recruiting heroes, Backup, and class traits. This document describes the game as it is now, and each step updates it as it lands. **Step 1 is built:** the loadout (basic attack, abilities, passives), the drafted team of three, a rank-up per elite, innates, and no Backup, item size, rows, or neighbor effects. **Step 2 is built:** any item fuses two essences, Resonant singles spill by keyword, and alloys awaken at Resonant. **Step 3 is built:** deeds (`docs/plans/deeds.md`): each hero levels a calling and their specialization by playing to type. **Step 4 is built:** the new day, economy, and pacing (`docs/plans/new-day.md`). **Step 5 is built:** affinities, event-trigger passives, passive spreading, conduits, and duo bonds (`docs/plans/keywords-and-affinities.md`).
 
 ## High concept
 
@@ -199,7 +199,10 @@ Synergies work in five layers, from specific and secret (Gungeon-style) to broad
 | Essence transformations | A specific item + a specific essence | *Twin Daggers* + Frost: daggers become piercing icicles. Never spills or awakens | Hidden until found, then saved in the Codex |
 | Signature gear | A specific item on a specific hero | Mender *Sister Vell* + *Old Lantern*: lantern heals also cleanse | Hinted in the hero's profile as "???" |
 | Essence resonance | 3 / 5 / 7 of one essence infused team-wide, across all heroes' items. It counts essences, not items: a single counts 1, an alloy counts 1 for each half, a pure double counts 2 of its essence, and an essence transformation counts as whatever essence(s) it holds | 5 Frost: frozen enemies take +30% damage | Always shown, like trait counters |
-| Class traits | 2 or more heroes of a class fielded | 2 Wardens: front-row heroes get +15% Shield | Always shown |
+| Shared affinities | 2 or 3 heroes with the same affinity keyword (each hero has two, each with its own perk on their matching items) | 2 heroes with Ward: every Ward item gives +15% Shield | Always shown |
+| Duo bonds | Two specific heroes in the team | Vell + Hesk, **"The Gate and the Lantern"**: Vell's heals also shield; Hesk heals when hit | Hidden until found; the draft shows "a bond: ?" |
+
+**Items that react (redesign step 5):** passives can answer their holder's events (an ability firing, a basic attack, a crit, gaining Shield, being hit, healing, applying a status, felling an enemy), sometimes on every Nth time. An infused passive spreads its essences to its holder's items that share a keyword, at every level. Conduit passives change where spills go: to the basic attack (Ember Censer), to every ability (Open Channel), to the heroes in the same row (Bond Chain), or from awakened infusions too (Rift Prism).
 
 **How discovery works**
 
@@ -208,7 +211,7 @@ Synergies work in five layers, from specific and secret (Gungeon-style) to broad
 - When both halves of an **undiscovered** synergy are available, it gets a "?" spark. The player knows *something* is there, but not what.
 - The Codex tracks found / total per category, which gives completionists a long-term goal.
 
-**Targets for launch:** about 80 named pairs, about 30 essence transformations, 1–2 signature items per hero, 6 essence resonances, 6 class traits.
+**Targets for launch:** about 80 named pairs, about 30 essence transformations, 1–2 signature items per hero, 6 essence resonances, 8 shared affinities, 8+ duo bonds.
 
 ## Run structure and economy
 
@@ -346,7 +349,7 @@ The biggest risk is that combat becomes unreadable: five heroes each firing 5–
 - **Day order:** stop, stop, fight pick, fight, rewards.
 - **Infusing** can happen any time between fights for now; the Forge is for reforging.
 - **A lost fight is replayed against the same enemies.**
-- **Synergies (built):** resonance counts every hero's essences; class traits count heroes, at 2 and 3 (to be replaced by affinities in step 5); enemies get no synergies for now (maybe bosses in later acts). A transformation uses one copy of its essence; any other essence works as a plain single. Pairs can use a new `charge` effect (advance another item's cooldown). Details: `docs/plans/synergies-in-sim.md`.
+- **Synergies (built):** resonance counts every hero's essences; shared affinities count heroes with the keyword, at 2 and 3 (they replaced class traits in step 5); duo bonds give each of their two heroes parts, which can use event triggers; enemies get no synergies for now (maybe bosses in later acts). A transformation uses one copy of its essence; any other essence works as a plain single. Pairs can use a new `charge` effect (advance another item's cooldown). Details: `docs/plans/synergies-in-sim.md`.
 - **Two essences on any item** (redesign step 2) replaced "sockets by rarity": only Epic and Legendary items used to hold two.
 - **Relics:** hold any number, no board and no sockets. They can be turned down but never removed once taken, change how a build works (Epic ones a lot), and are much rarer than items, essences, or heroes. Bosses drop an item or a relic.
 - **A run starts with a drafted team of three** (three picks, each 1 of 3 random heroes), then 1 of 3 starting packages (extra gold, a Common relic, or a Common item), plus base gold. All three fight.

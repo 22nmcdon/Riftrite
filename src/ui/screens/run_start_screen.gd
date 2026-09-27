@@ -59,6 +59,9 @@ func _hero_card(offer: Dictionary, index: int) -> Control:
 	stats.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.add_child(stats)
 	box.add_child(UiStyle.label("Basic attack: " + def.basic_attack.name, 15, UiStyle.TEXT_DIM))
+	box.add_child(UiStyle.label("Affinities: " + ItemInfo.keyword_names(content, def.affinities), 15, UiStyle.HIGHLIGHT))
+	for note: String in team_notes(content, session.state, def.id):
+		box.add_child(UiStyle.label(note, 15, UiStyle.GOOD))
 	var innate: Label = UiStyle.label("Innate: %s. %s" % [def.innate_name, def.innate_text], 15, UiStyle.TEXT_DIM)
 	innate.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(innate)
@@ -74,6 +77,29 @@ func _hero_card(offer: Dictionary, index: int) -> Control:
 
 
 ## A starting package: its picture, what it is, and a button to take it.
+## How a hero on offer fits the heroes already drafted
+## (docs/plans/heroes-and-deeds.md, section 1): the affinities they share,
+## and "a bond: ?" for each duo bond they'd form (its name stays hidden
+## until it's found).
+static func team_notes(content: ContentDb, state: RunState, hero_id: String) -> PackedStringArray:
+	var notes := PackedStringArray()
+	var def: HeroDef = content.heroes[hero_id]
+	for hero: RunHero in state.heroes:
+		var other: HeroDef = content.heroes[hero.hero_id]
+		var shared: Array[String] = []
+		for keyword_id: String in def.affinities:
+			if other.affinities.has(keyword_id):
+				shared.append(keyword_id)
+		var first: String = HeroToken.first_name(other.name)
+		if not shared.is_empty():
+			notes.append("Shares %s with %s" % [ItemInfo.keyword_names(content, shared), first])
+		for synergy_id: String in content.synergy_ids:
+			var synergy: SynergyDef = content.synergies[synergy_id]
+			if synergy.layer == SynergyDef.Layer.DUO and synergy.heroes.has(hero_id) and synergy.heroes.has(hero.hero_id):
+				notes.append("A bond with %s: %s" % [first, synergy.name if state.discovered.has(synergy_id) else "?"])
+	return notes
+
+
 func _package_card(offer: Dictionary, index: int) -> Control:
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(320, 300)

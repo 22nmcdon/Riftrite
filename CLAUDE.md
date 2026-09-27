@@ -6,7 +6,7 @@ A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The pl
 
 **Redesign in progress:** `docs/plans/fun-redesign.md` and `docs/plans/heroes-and-deeds.md` (approved, built in steps; their **Decisions** sections win). The rules below describe the code as it is now; each redesign step updates them as it lands.
 
-**The full design lives in `docs/design.md`**, with item tiers and Oathbinding detailed in `docs/tiers-backup-specialization.md` (its Backup parts are superseded). Redesign steps built so far: 1 (loadout, drafted trio, no Backup), 2 (the infusion rework, `docs/plans/infusion-rework.md`), 3 (deeds, `docs/plans/deeds.md`), and 4 (the new day, economy, and pacing, `docs/plans/new-day.md`). The UI's look follows `docs/ui-asset-design.md` (for now). Before building or changing a game system, read the matching section there. If the code and the design doc disagree, stop and ask. Don't silently pick one.
+**The full design lives in `docs/design.md`**, with item tiers and Oathbinding detailed in `docs/tiers-backup-specialization.md` (its Backup parts are superseded). Redesign steps built so far: 1 (loadout, drafted trio, no Backup), 2 (the infusion rework, `docs/plans/infusion-rework.md`), 3 (deeds, `docs/plans/deeds.md`), 4 (the new day, economy, and pacing, `docs/plans/new-day.md`), and 5 (keywords: affinities, event passives, duo bonds, conduits, `docs/plans/keywords-and-affinities.md`). The UI's look follows `docs/ui-asset-design.md` (for now). Before building or changing a game system, read the matching section there. If the code and the design doc disagree, stop and ask. Don't silently pick one.
 
 ## Tech stack
 
@@ -54,19 +54,22 @@ tools/         headless sim runner, data validators
 
 ## Infusion rules (easy to get wrong)
 
-- **Any item holds one infusion of up to 2 essences** (`Infusions.MAX_ESSENCES`); a second essence **fuses** with the first, and there's never a third. Passives can be infused too (what that does is decided in redesign step 5; until then they follow the normal rules). Relics can't be infused. Infusing can happen any time between fights (for now).
+- **Any item holds one infusion of up to 2 essences** (`Infusions.MAX_ESSENCES`); a second essence **fuses** with the first, and there's never a third. Passives can be infused too: an infused passive spreads its essences (see below). Relics can't be infused. Infusing can happen any time between fights (for now).
 - Two different essences in one item = an **Alloy** with its own effect. Two of the same = a **pure double**.
 - Pure doubles are alloys too, and each has its own effect.
 - An alloy **keeps both essences' normal effects**. Its special works only once it **awakens** at Resonant (`ItemState.awakened()`); pairs without a named alloy have nothing to awaken into. A special that changes how a status behaves must use **its own status type** (Inferno → Golden Flame), never modify the shared one, so it can't leak into other items' statuses.
 - Infusions level up: base → Attuned → Resonant. XP comes from **item fires** (XP per fire is set per item in data; basic attacks get less) **plus each battle fought**.
 - XP **resets** when a second essence is added (single → alloy or pure double) and when an infusion is removed.
-- **Keyword spill:** only a Resonant **single** spills: `spill_single_bp` (30%) of its Resonant strength goes to its holder's other items that **share a keyword** (`"keywords"` on items, `data/keywords.json`), at most one spill per essence per item, never outside the holder's loadout. The built-in basic attack and slotless abilities have no keywords, so they never receive spill. Alloys and pure doubles awaken instead and never spill. Essence transformations never spill or awaken.
+- **Keyword spill:** only a Resonant **single** spills: `spill_single_bp` (30%) of its Resonant strength goes to its holder's other items that **share a keyword** (`"keywords"` on items, `data/keywords.json`), at most one spill per essence per item, never outside the holder's loadout (unless a conduit says so). The built-in basic attack and slotless abilities have no keywords, so they never receive spill (unless a conduit says so). Alloys and pure doubles awaken instead and never spill. Essence transformations never spill or awaken.
+- **Passives spread instead of spilling:** an infused passive spreads each of its essences, at every level, to its holder's items that share a keyword (`passive_spread_bp`: 15/25/35% of its level's strength), under the same one-per-essence rule.
+- **Conduits** (`"conduit"` on a passive, `ItemDef.CONDUITS`): `basic_attack` (spills also reach the basic attack), `all_abilities` (they reach every ability), `row` (they reach the heroes in the holder's row, through a shared keyword), `awakened` (awakened infusions also spill). Built in `ItemState.spills_into`/`outgoing_spills` and `CombatSim._row_sources`.
 - Spill percentages and XP thresholds are tuning values in `data/`, never hard-coded.
 - Essence resonance counts **essences**, not items: a single = 1, an alloy = 1 of each half, a pure double = 2, and a transformation counts its essence(s).
 
 ## Synergy rules
 
-- Five layers (`data/synergies.json`, `docs/plans/synergies-in-sim.md`): pairs (two items on one hero), transformations (item + essence), signatures (item on a specific hero), essence resonance (3/5/7), class traits (2/3 heroes; to be replaced by affinities and duo bonds). Tiered layers apply only their highest tier reached.
+- Six layers (`data/synergies.json`, `docs/plans/synergies-in-sim.md`, `docs/plans/keywords-and-affinities.md`): pairs (two items on one hero), transformations (item + essence), signatures (item on a specific hero), essence resonance (3/5/7), **shared affinities** (2/3 heroes with the same affinity keyword; they replaced class traits), and **duo bonds** (two specific heroes; each gets its own specialization-style parts; hidden until found). Tiered layers apply only their highest tier reached.
+- **Affinities:** every hero has two affinity keywords (`"affinities"` in `data/heroes.json`); each keyword's `"affinity"` perk in `data/keywords.json` (parts, usually an aura on the hero's items with that keyword) is added to the hero's innate by `SetupBuilder`, credited as "Blade affinity".
 - Synergies are checked once at fight start, for the guild only (enemies get none for now). Their bonuses run through the relic code (auras, grants, relic triggers), and the log credits the synergy.
 - Resonance counts every hero's essences.
 - A transformation replaces the item's own effects, uses one copy of its essence (other essences work as plain singles, no alloy special), never spills, and still counts for resonance.
@@ -78,6 +81,7 @@ tools/         headless sim runner, data validators
 - Part kinds: aura, grant (numbered from the hero's stats), ability (slotless, on a cooldown or relic trigger), basic_attack, replace_status.
 - A part that replaces the basic attack must come with an `auto_attack` part, so equipping a basic-attack item never blanks the specialization.
 - **Innates** (`"innate"` in `data/heroes.json`): every hero has one, always on while they fight, made of the same parts (no basic_attack) and credited by name. Keep them unique to the hero.
+- **Event triggers** (`EffectDef`, `src/sim/events.gd`): `on_ability`, `on_basic_attack`, `on_holder_crit`, `on_shielded`, `on_hit_taken`, `on_heal`, `on_status`, `on_kill`, with optional `every`, `keyword` (on_ability), `statuses` (on_status). Items and slotless abilities (innates, deeds, duo bonds) use them, never relics. They're read from the combat log each tick; what an event effect does is marked `from_event` and never sets off another; they earn no XP.
 
 ## Boss rules
 
@@ -86,7 +90,7 @@ tools/         headless sim runner, data validators
 
 ## Item rules
 
-- **Loadout slots** (`"slot"` on every item): `basic_attack`, `ability` (fires on its cooldown, needs effects), or `passive` (auras only, no effects). Slots by rank are tuning values (`ability_slots`, `passive_slots`: C 2/1, B 3/1, A 3/2, S 4/3) plus one basic-attack slot. There's no item size, no row order that matters, and no adjacency: "neighbor" effects reach the holder's other items (`holder_items`).
+- **Loadout slots** (`"slot"` on every item): `basic_attack`, `ability` (fires on its cooldown, needs effects), or `passive` (auras, event-trigger effects, or a conduit; it never fires on a cooldown). Slots by rank are tuning values (`ability_slots`, `passive_slots`: C 2/1, B 3/1, A 3/2, S 4/3) plus one basic-attack slot. There's no item size, no row order that matters, and no adjacency: "neighbor" effects reach the holder's other items (`holder_items`).
 - Every unit has a built-in **basic auto-attack** (no slot). Each hero's basic auto-attack is their own and **can't be upgraded** (no sockets, no tier). A **basic-attack item** replaces it and takes the one basic-attack slot. Remove the item and the unit falls back to its basic auto-attack.
 - **Two** copies of the same item at the same tier combine into the next tier (never three). If the new copy has an infusion, it replaces the old one (and the old XP is lost); if not, the old infusion and its XP stay. The player chooses whether to combine. Copies at *different* tiers can be held together.
 - Tier and rarity are separate. Rarity decides how often an item appears; any item can be tiered up. Tiers are **C → B → A → S** (same as hero ranks). Items and heroes can be found above C; shops unlock higher tiers as the run progresses (`shop_tier_weights` per act in `data/acts.json`). Earlier, higher tiers come only from tier shops, events, enemy drops, and loot.

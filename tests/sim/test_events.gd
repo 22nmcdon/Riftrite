@@ -201,3 +201,15 @@ func test_event_effects_are_checked() -> void:
 	var relic_errors: Array[String] = []
 	RelicDef.read(DataReader.new({"id": "r", "name": "R", "rarity": "rare", "effects": [{"trigger": "on_kill", "type": "heal", "amount": 1, "target": "all_allies"}]}, "r", relic_errors))
 	_assert_error(relic_errors, "relic effects can't use the trigger \"on_kill\"")
+
+
+func test_a_kill_effect_never_sets_off_another_event() -> void:
+	var leech: ItemDef = _passive("leech", [{"trigger": "on_kill", "type": "shield", "amount": 9, "target": "self"}])
+	var spark: ItemDef = _passive("spark", [{"trigger": "on_shielded", "type": "damage", "amount": 7, "target": "enemy_front"}])
+	var sword: ItemDef = K.item("sword", {"effects": K.damage(50)})
+	var entries: Array[LogEntry] = _log([_hero([sword, leech, spark])], [K.dummy("a", 40), K.dummy("b", BIG_HP)], 4)
+	assert_eq(_from(entries, LogEntry.Kind.SHIELD, "leech").size(), 1, "the kill shields")
+	assert_eq(_from(entries, LogEntry.Kind.DAMAGE, "spark").size(), 0, "but that shield sets nothing off, even a tick later")
+	var ward: ItemDef = K.item("ward", {"cooldown_ms": 3000, "effects": [{"trigger": "on_fire", "type": "shield", "amount": 5, "target": "self"}]})
+	var plain: Array[LogEntry] = _log([_hero([ward, spark])], [_foe()], 4)
+	assert_eq(_from(plain, LogEntry.Kind.DAMAGE, "spark").size(), 1, "a real shield does")
