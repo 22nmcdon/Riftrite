@@ -60,6 +60,8 @@ var status_name: String = ""
 ## STATUS_APPLIED: the status's total stacks afterward.
 var stacks: int = 0
 var note: String = ""
+## Made by an event effect (see Events): never sets off another one.
+var from_event: bool = false
 
 
 func set_source(source: EffectSource) -> void:

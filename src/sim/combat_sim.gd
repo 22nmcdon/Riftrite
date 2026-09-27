@@ -12,10 +12,12 @@ extends RefCounted
 ##   4. Resolve those firings in resolution order: heroes then enemies, front
 ##      row then back, left to right, and each unit's items in row order.
 ##      Each side's relics act right after its units (RelicRunner).
-##   5. Relics' on_ally_below_hp checks, then enemy phases (PhaseDef) for
-##      anyone who just dropped below a threshold.
+##   5. Event effects (Events) for what the log says happened this tick;
+##      then relics' on_ally_below_hp checks, then enemy phases (PhaseDef)
+##      for anyone who just dropped below a threshold.
 ##   6. Units at 0 HP die. They still fired whatever was ready this tick,
-##      so resolution order gives neither side an edge.
+##      so resolution order gives neither side an edge. Their killers'
+##      on_kill effects run, and anyone those drop dies too.
 ##   7. Check for victory, defeat, or a tie.
 ## At tick 0, before the first step: the guild's synergies are found
 ## (Synergies.find_active) and relics' and synergies' on_fight_start effects
@@ -44,6 +46,8 @@ var finished: bool = false
 var _aura_boundaries: Dictionary[int, bool] = {}
 ## Log entries before this index have been counted for deeds.
 var _deed_log_index: int = 0
+## Log entries before this index have been read for event effects.
+var _event_log_index: int = 0
 ## Auras active after the last rederive_all, as "unit:item:aura" keys, for
 ## logging when they start and end.
 var _active_auras: Array[String] = []
@@ -183,6 +187,8 @@ func step() -> void:
 			if owner_of(item).side == side:
 				EffectRunner.fire(self, item)
 		RelicRunner.fire_due(self, side)
+	Events.dispatch(self, _event_log_index, combat_log.entries.size())
+	_event_log_index = combat_log.entries.size()
 	RelicRunner.check_below_hp(self)
 	_check_phases()
 	_check_deeds()
@@ -292,7 +298,17 @@ func rederive_all() -> void:
 		unit.stats = stats
 		var per_item: Array[ItemAura] = []
 		per_item.assign(item_auras[u])
-		unit.rederive_items(content, per_item)
+		unit.rederive_items(content, per_item, _row_sources(unit))
+
+
+## Items whose spills reach `unit` from its row (ItemDef "row" conduit, Bond
+## Chain): every item of each standing ally in its row that holds one.
+func _row_sources(unit: UnitState) -> Array[ItemState]:
+	var sources: Array[ItemState] = []
+	for ally: UnitState in allies_of(unit):
+		if ally != unit and ally.row == unit.row and ally.is_standing() and not ally.items.is_empty() and ally.items[0].holder_conduits.has("row"):
+			sources.append_array(ally.items)
+	return sources
 
 
 ## Adds one aura's boost to the items or units it reaches, after its filter.
@@ -619,20 +635,30 @@ func _apply_parts(unit: UnitState, parts: Array[SpecializationDef.Part]) -> Arra
 	return added
 
 
+## Units at 0 HP die; then their killers' on_kill effects run, and anyone
+## those drop dies too (without setting off more on_kill effects).
 func _process_deaths() -> void:
-	var anyone_fell: bool = false
+	var fallen: Array[UnitState] = _fell()
+	Events.kills(self, fallen)
+	fallen.append_array(_fell())
+	if not fallen.is_empty() and not _active_auras.is_empty():
+		rederive_all()
+
+
+## Marks units at 0 HP dead (logged) and returns them.
+func _fell() -> Array[UnitState]:
+	var fallen: Array[UnitState] = []
 	for unit: UnitState in units:
 		if unit.alive and unit.hp <= 0:
 			unit.alive = false
-			anyone_fell = true
+			fallen.append(unit)
 			var entry := LogEntry.new()
 			entry.tick = tick
 			entry.kind = LogEntry.Kind.DEATH
 			entry.target = unit.id
 			entry.note = "last hit: %s" % unit.last_hit_by
 			combat_log.add(entry)
-	if anyone_fell and not _active_auras.is_empty():
-		rederive_all()
+	return fallen
 
 
 func _check_end() -> void:

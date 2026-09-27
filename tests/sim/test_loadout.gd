@@ -36,7 +36,7 @@ func test_every_item_names_its_slot() -> void:
 	assert_true(_has(_item_errors({"slot": null}), "missing required key \"slot\""))
 	assert_true(_has(_item_errors({"slot": "trinket"}), "unknown value \"trinket\""))
 	var aura: Array = [{"target": "holder", "stat": "def_bp", "value": 11000}]
-	assert_true(_has(_item_errors({"slot": "passive", "auras": aura}), "a passive doesn't fire"), "passives have auras, not effects")
+	assert_true(_has(_item_errors({"slot": "passive", "auras": aura}), "a passive never fires, so its effects need event triggers"), "a passive's effects answer events")
 	assert_true(_has(_item_errors({"slot": "passive", "effects": null, "cooldown_ms": null}), "a passive needs auras"))
 	assert_eq(_item_errors({"slot": "passive", "effects": null, "cooldown_ms": null, "auras": aura}), [] as Array[String])
 	assert_true(_has(_item_errors({"effects": null, "auras": aura}), "an ability needs effects"))

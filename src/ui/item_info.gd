@@ -123,10 +123,10 @@ static func spills_received(content: ContentDb, holder: RunHero, item: RunItem) 
 			target = state
 	if target == null:
 		return lines
-	@warning_ignore("integer_division")
-	var share: int = content.tuning.spill_single_bp / 100
+	ItemState.set_holder_conduits(states)
 	for app: EssenceApplication in ItemState.spills_into(target, states, content.tuning):
-		lines.append("Gets %d%% %s" % [share, app.label])
+		@warning_ignore("integer_division")
+		lines.append("Gets %d%% %s" % [app.share_bp / 100, app.label])
 	return lines
 
 

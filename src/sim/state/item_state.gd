@@ -49,8 +49,11 @@ var effects: Array[SourcedEffect] = []
 ## Essence applications that add an output kind, converting this item's output.
 var conversions: Array[Conversions.Conversion] = []
 ## Keyword spills this item currently receives from its holder's Resonant
-## singles.
+## singles and infused passives (and conduits' extra reach).
 var spills_received: Array[EssenceApplication] = []
+## The conduits among its holder's items (ItemDef.CONDUITS), set when the
+## unit is built (see set_holder_conduits).
+var holder_conduits: Array[String] = []
 var cooldown_ticks: int
 var crit_chance_bp: int
 var extra_trigger_chance_bp: int = 0
@@ -143,10 +146,67 @@ func awakened() -> bool:
 
 
 ## True if this item spills its essence to its holder's other items that
-## share a keyword: a Resonant single, not transformed. Alloys and pure
-## doubles awaken instead, and never spill.
+## share a keyword: a Resonant single, not transformed, not a passive.
+## Alloys and pure doubles awaken instead, and never spill (unless the
+## holder has a Prism: see outgoing_spills); passives spread.
 func spills() -> bool:
-	return essences.size() == 1 and transformation == null and infusion_level == Infusions.Level.RESONANT and not def.keywords.is_empty()
+	return essences.size() == 1 and transformation == null and infusion_level == Infusions.Level.RESONANT and not def.keywords.is_empty() and not is_passive()
+
+
+## A passive in a loadout (not a slotless ability).
+func is_passive() -> bool:
+	return slot >= 0 and def.slot == ItemDef.Slot.PASSIVE
+
+
+## True if this item spreads its infusion: an infused passive, not
+## transformed, at any level (docs/plans/keywords-and-affinities.md).
+func spreads() -> bool:
+	return is_passive() and not essences.is_empty() and transformation == null
+
+
+## Everything this item sends to its holder's other items (those it reaches:
+## see spills_into): a passive's spread (each essence at passive_spread_bp
+## of its level's strength), a Resonant single's spill, or with a Prism
+## (the "awakened" conduit) an awakened infusion's essences at spill strength.
+func outgoing_spills(tuning: TuningDef) -> Array[EssenceApplication]:
+	var result: Array[EssenceApplication] = []
+	var ids: Array[String] = []
+	if spreads():
+		for essence: EssenceDef in essences:
+			if not ids.has(essence.id):
+				ids.append(essence.id)
+				var strength: int = FixedMath.apply_bp(tuning.infusion_level_bp[infusion_level], tuning.passive_spread_bp[infusion_level])
+				result.append(EssenceApplication.make(essence, strength, "%s spread from %s" % [essence.name, def.name], tuning.passive_spread_bp[infusion_level]))
+	elif spills():
+		result.append(keyword_spill(tuning))
+	elif awakened() and holder_conduits.has("awakened") and not def.keywords.is_empty():
+		for essence: EssenceDef in essences:
+			if not ids.has(essence.id):
+				ids.append(essence.id)
+				var strength: int = FixedMath.apply_bp(tuning.infusion_level_bp[infusion_level], tuning.spill_single_bp)
+				result.append(EssenceApplication.make(essence, strength, "%s spill from %s" % [essence.name, def.name], tuning.spill_single_bp))
+	return result
+
+
+## Whether `other` (an item of the same holder) sends its spills to this
+## item: a shared keyword, or a conduit that reaches it (the basic attack,
+## or any loadout ability).
+func reached_by(other: ItemState) -> bool:
+	if other.shares_keyword(self):
+		return true
+	if is_auto_attack and holder_conduits.has("basic_attack"):
+		return true
+	return slot >= 0 and def.slot == ItemDef.Slot.ABILITY and holder_conduits.has("all_abilities")
+
+
+## Sets every item's holder_conduits from the conduits among `items`.
+static func set_holder_conduits(items: Array[ItemState]) -> void:
+	var conduits: Array[String] = []
+	for item: ItemState in items:
+		if not item.def.conduit.is_empty() and not conduits.has(item.def.conduit):
+			conduits.append(item.def.conduit)
+	for item: ItemState in items:
+		item.holder_conduits = conduits
 
 
 ## True if this item and `other` share a keyword.
@@ -157,21 +217,23 @@ func shares_keyword(other: ItemState) -> bool:
 	return false
 
 
-## The keyword spills `item` receives from `others` (its holder's items, in
-## order): one per essence, from the first spilling item that shares a
-## keyword with it. UnitState uses this in fights; the UI uses it to show an
-## equipped item's spills.
-static func spills_into(item: ItemState, others: Array[ItemState], tuning: TuningDef) -> Array[EssenceApplication]:
+## The spills `item` receives from `others` (its holder's items, in order;
+## see reached_by and outgoing_spills), then from `row_sources` (items of
+## heroes in its row whose holders have a Bond Chain; only through a shared
+## keyword): at most one per essence, the first one found. UnitState uses
+## this in fights; the UI uses it to show an equipped item's spills.
+static func spills_into(item: ItemState, others: Array[ItemState], tuning: TuningDef, row_sources: Array[ItemState] = []) -> Array[EssenceApplication]:
 	var result: Array[EssenceApplication] = []
 	var seen: Array[String] = []
-	for other: ItemState in others:
-		if other == item or not other.spills() or not other.shares_keyword(item):
+	for other: ItemState in others + row_sources:
+		if other == item:
 			continue
-		var essence_id: String = other.essences[0].id
-		if seen.has(essence_id):
+		if not (other.shares_keyword(item) if row_sources.has(other) else item.reached_by(other)):
 			continue
-		seen.append(essence_id)
-		result.append(other.keyword_spill(tuning))
+		for app: EssenceApplication in other.outgoing_spills(tuning):
+			if not seen.has(app.essence.id):
+				seen.append(app.essence.id)
+				result.append(app)
 	return result
 
 
@@ -181,7 +243,7 @@ func keyword_spill(tuning: TuningDef) -> EssenceApplication:
 	if not spills():
 		return null
 	var strength: int = FixedMath.apply_bp(tuning.infusion_level_bp[infusion_level], tuning.spill_single_bp)
-	return EssenceApplication.make(essences[0], strength, "%s spill from %s" % [essences[0].name, def.name])
+	return EssenceApplication.make(essences[0], strength, "%s spill from %s" % [essences[0].name, def.name], tuning.spill_single_bp)
 
 
 ## The status this item actually applies in place of `status_id` (an alloy
@@ -322,6 +384,9 @@ func advance(rate_bp: int) -> bool:
 var ability_triggered: Array[PackedStringArray] = []
 ## Status replacements from the holder's specialization (see ItemAura).
 var status_replacements: Dictionary[String, String] = {}
+## Event effects (by index into `effects`): how many times their event has
+## happened, for "every" (see Events). Looked up by index only.
+var event_counts: Dictionary[int, int] = {}
 
 
 ## Moves the cooldown forward by `ticks`, but never past ready: the item

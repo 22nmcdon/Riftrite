@@ -165,10 +165,10 @@ func test_reaching_resonant_mid_fight_starts_the_spill() -> void:
 	assert_eq(_applied(result, "left")[0].tick, 40)
 
 
-func test_passives_can_be_infused_and_their_singles_spill() -> void:
+func test_passives_can_be_infused_and_spread() -> void:
 	var drum: ItemDef = K.item("drum", {"name": "Drum", "slot": "passive", "effects": null, "auras": [{"target": "holder", "stat": "def_bp", "value": 10000}]})
 	var result: FightResult = K.run([_hero([_infused(drum, "wrath", 290), _blade("blade")])], [K.dummy("foe", 50)])
 	assert_eq(result.errors, [] as Array[String])
 	assert_eq([result.infusions[0].item_id, result.infusions[0].xp_after], ["drum", 300], "a passive never fires: battle XP only")
 	var sim := CombatSim.new(K.fight([_hero([_infused(drum, "wrath", 300), _blade("blade")])], [K.dummy("foe", BIG_HP)]), K.content())
-	assert_eq(sim.units[0].items[2].describe_values(), PackedStringArray(["damage: 130 (base 100, x1.3 Wrath spill from Drum)"]))
+	assert_eq(sim.units[0].items[2].describe_values(), PackedStringArray(["damage: 135 (base 100, x1.35 Wrath spread from Drum)"]), "a passive spreads instead of spilling (tests/sim/test_spread_and_conduits.gd)")

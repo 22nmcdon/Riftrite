@@ -439,3 +439,8 @@ func _check_effects(effects: Array[EffectDef], where: String) -> void:
 		var effect: EffectDef = effects[i]
 		if effect.type == EffectDef.Type.APPLY_STATUS and not effect.status_id.is_empty() and not statuses.has(effect.status_id):
 			errors.append("%s.effects[%d]: unknown status \"%s\"" % [where, i, effect.status_id])
+		if not effect.keyword.is_empty() and not keywords.has(effect.keyword):
+			errors.append("%s.effects[%d]: unknown keyword \"%s\"" % [where, i, effect.keyword])
+		for status_id: String in effect.statuses:
+			if not statuses.has(status_id):
+				errors.append("%s.effects[%d]: unknown status \"%s\"" % [where, i, status_id])

@@ -15,6 +15,9 @@ var xp_to_resonant: int
 var xp_per_battle: int
 ## How strong an infusion is at each level (Base, Attuned, Resonant).
 var infusion_level_bp: Array[int] = []
+## An infused passive spreads each essence at this share of its level's
+## strength, by level (docs/plans/keywords-and-affinities.md, section 2).
+var passive_spread_bp: Array[int] = []
 var crit_damage_bp: int
 var rush_end_ticks: int
 var stall_start_ticks: int
@@ -67,6 +70,11 @@ static func read(reader: DataReader) -> TuningDef:
 	if levels != null:
 		def.infusion_level_bp = [levels.req_int("base", 0), levels.req_int("attuned", 0), levels.req_int("resonant", 0)]
 		levels.finish()
+	var spread: DataReader = reader.req_object("passive_spread_bp")
+	def.passive_spread_bp = [0, 0, 0]
+	if spread != null:
+		def.passive_spread_bp = [spread.req_int("base", 0, FixedMath.BP_ONE), spread.req_int("attuned", 0, FixedMath.BP_ONE), spread.req_int("resonant", 0, FixedMath.BP_ONE)]
+		spread.finish()
 	def.crit_damage_bp = reader.req_int("crit_damage_bp", FixedMath.BP_ONE)
 	def.tier_multiplier_bp = _read_tier_table(reader, "tier_multiplier_bp")
 	def.ability_slots = _read_tier_table(reader, "ability_slots")

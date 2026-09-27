@@ -183,9 +183,9 @@ func test_rejects_unknown_status_reference() -> void:
 func test_rejects_unknown_vocabulary() -> void:
 	var db: ContentDb = _load_with(ContentDb.ESSENCES_FILE, _essences_with(0, {
 		"id": "ember", "name": "Ember",
-		"effects": [{"trigger": "on_kill", "type": "apply_status", "status": "burn", "stacks": 1, "target": "hit_target"}],
+		"effects": [{"trigger": "on_sneeze", "type": "apply_status", "status": "burn", "stacks": 1, "target": "hit_target"}],
 	}))
-	_assert_error(db, "trigger: unknown value \"on_kill\"")
+	_assert_error(db, "trigger: unknown value \"on_sneeze\"")
 
 
 func test_rejects_hit_target_on_fire() -> void:

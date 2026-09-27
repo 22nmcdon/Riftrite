@@ -5,7 +5,9 @@ extends RefCounted
 ##   basic_attack  the hero's weapon: replaces their built-in basic attack
 ##                 (at most one); ATSP speeds it up
 ##   ability       fires on its own cooldown
-##   passive       gives auras (and later, reacts to events); never fires
+##   passive       gives auras, reacts to its holder's events (event-trigger
+##                 effects, see EffectDef), spreads its infusion, or is a
+##                 conduit; never fires on a cooldown
 ## Also used for a unit's built-in basic auto-attack, which reads a reduced
 ## set of fields: no slot, tags, keywords, rarity, or XP, because it can't be
 ## upgraded (see "Item rules" in CLAUDE.md).
@@ -24,6 +26,13 @@ const SLOT_LABELS: Array[String] = ["Basic attack", "Ability", "Passive"]
 const SLOT_PLURALS: Array[String] = ["Basic attacks", "Abilities", "Passives"]
 ## Rarities whose items may scale their numbers from CRIT and ATSP.
 const RATE_SCALING_RARITIES: Array[String] = ["epic", "legendary"]
+## Passives that change where their holder's spills go
+## (docs/plans/keywords-and-affinities.md, section 3):
+##   basic_attack   spills and spreads also reach the basic attack
+##   all_abilities  they reach every ability, keyword or not
+##   row            they also reach the items of heroes in the holder's row
+##   awakened       awakened alloys and pure doubles also spill
+const CONDUITS: Array[String] = ["basic_attack", "all_abilities", "row", "awakened"]
 
 var id: String
 var name: String
@@ -55,6 +64,8 @@ var effects: Array[EffectDef] = []
 var auras: Array[AuraDef] = []
 ## A Legendary's upgrade path (every Legendary has one; nothing else does).
 var legendary: LegendaryDef = null
+## A passive's conduit (see CONDUITS), or "".
+var conduit: String = ""
 
 
 static func read(reader: DataReader) -> ItemDef:
@@ -82,14 +93,21 @@ static func read(reader: DataReader) -> ItemDef:
 		var path_reader: DataReader = reader.req_object("legendary")
 		if path_reader != null:
 			def.legendary = LegendaryDef.read(path_reader)
+	if reader.has("conduit"):
+		def.conduit = reader.req_choice("conduit", CONDUITS)
 	_read_common(def, reader, true)
 	if slot_name.is_empty():
 		pass
 	elif def.slot == Slot.PASSIVE:
-		if not def.effects.is_empty():
-			reader.error("a passive doesn't fire, so it has auras but no effects")
-		if def.auras.is_empty():
-			reader.error("a passive needs auras")
+		def.triggered_only = true
+		for effect: EffectDef in def.effects:
+			if not EffectDef.EVENT_TRIGGERS.has(effect.trigger):
+				reader.error("a passive never fires, so its effects need event triggers (not %s)" % EffectDef.TRIGGER_NAMES[effect.trigger])
+				break
+		if def.auras.is_empty() and def.effects.is_empty() and def.conduit.is_empty():
+			reader.error("a passive needs auras, event effects, or a conduit")
+	elif not def.conduit.is_empty():
+		reader.error("only a passive can be a conduit")
 	elif def.effects.is_empty():
 		reader.error("%s needs effects (it fires on its cooldown)" % ("a basic attack" if def.auto_attack else "an ability"))
 	if def.rarity == "legendary" and def.legendary == null and not reader.has("legendary"):
@@ -118,8 +136,8 @@ static func _read_common(def: ItemDef, reader: DataReader, effects_optional: boo
 		def.effects.append(EffectDef.read(effect_reader))
 	if effect_readers.is_empty() and not effects_optional:
 		reader.error("an item needs at least one effect")
-	# Cooldown only matters for items that fire.
-	if def.effects.is_empty():
+	# Cooldown only matters for items that fire (event effects don't).
+	if def.effects.all(func(effect: EffectDef) -> bool: return EffectDef.EVENT_TRIGGERS.has(effect.trigger)):
 		def.cooldown_ticks = maxi(reader.opt_ticks("cooldown_ms", 0), 1)
 	else:
 		def.cooldown_ticks = reader.req_ticks("cooldown_ms", FixedMath.MS_PER_TICK)

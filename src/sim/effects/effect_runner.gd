@@ -39,6 +39,16 @@ static func run_triggered(sim: CombatSim, item: ItemState, sourced: SourcedEffec
 	_run(sim, item, sourced, hit)
 
 
+## Runs one event effect (see Events): `unit` is who hit_target means (or
+## null), `damage` the hit amount_bp_of_damage reads. Its hits never set off
+## on_hit effects.
+static func run_event(sim: CombatSim, item: ItemState, sourced: SourcedEffect, unit: UnitState, damage: int) -> void:
+	var hit := Hit.new()
+	hit.target = unit
+	hit.damage = damage
+	_run(sim, item, sourced, hit)
+
+
 static func _fire_once(sim: CombatSim, item: ItemState, note: String) -> void:
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.FIRE, _source(sim, item, null))
 	entry.note = note
@@ -140,6 +150,7 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 	entry.crit = crit
 	entry.absorbed = sim.apply_damage(target, dealt)
 	target.last_hit_by = source.describe()
+	target.last_attacker = source.unit_id if source.relic_side < 0 else ""
 	sim.combat_log.add(entry)
 	return dealt
 
