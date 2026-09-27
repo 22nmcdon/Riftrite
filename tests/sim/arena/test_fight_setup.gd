@@ -36,13 +36,13 @@ func test_bad_kits() -> void:
 	_assert_error(_kit_errors(no_fire), "an ability needs at least one on_fire effect")
 	var event: Dictionary = _base()
 	event["basic_attack"]["effects"].append({"trigger": "on_kill", "type": "heal", "amount": 5, "target": "self"})
-	_assert_error(_kit_errors(event), "an attack's effects can only use on_fire, on_hit, or on_crit")
+	_assert_error(_kit_errors(event), "an ability's effects can only use on_fire, on_hit, or on_crit")
 	var rule: Dictionary = _base()
 	rule["targeting"] = "weakest_backliner"
 	_assert_error(_kit_errors(rule), "targeting: unknown value \"weakest_backliner\"")
 	var later: Dictionary = _base()
-	later["mana"] = {"max": 60}
-	_assert_error(_kit_errors(later), "unknown key \"mana\"")
+	later["traits"] = ["flying"]
+	_assert_error(_kit_errors(later), "unknown key \"traits\"")
 	var no_attack: Dictionary = _base()
 	no_attack.erase("basic_attack")
 	_assert_error(_kit_errors(no_attack), "missing required key \"basic_attack\"")
@@ -50,6 +50,63 @@ func test_bad_kits() -> void:
 	beam["basic_attack"]["shot"] = false
 	var errors: Array[String] = []
 	assert_false(UnitDef.read(DataReader.new(beam, "kit", errors)).basic_attack.is_shot(5), "\"shot\": false lands at once from any range")
+
+
+func test_a_kit_with_mana_and_a_signature() -> void:
+	var data: Dictionary = _base()
+	data["mana"] = {"max": 60, "start": 20, "per_attack": 12, "per_10_damage_taken": 1, "regen_per_s": 2}
+	data["signature"] = {"id": "mend", "name": "Mend", "trigger": {"kind": "mana"}, "targeting": "self", "max_range": 3, "cast_ms": 500,
+		"effects": [{"type": "heal", "amount": 20, "target": "target"}]}
+	var errors: Array[String] = []
+	var def: UnitDef = UnitDef.read(DataReader.new(data, "kit", errors))
+	assert_eq(errors, [] as Array[String])
+	assert_eq([def.mana.max, def.mana.start, def.mana.per_attack, def.mana.per_10_damage_taken, def.mana.regen_per_s], [60, 20, 12, 1, 2])
+	var mend: AbilityDef = def.signature
+	assert_eq([mend.trigger.kind, mend.targeting, mend.max_range, mend.cast_ticks, mend.is_signature()], [TriggerDef.Kind.MANA, "self", 3, 10, true])
+	assert_eq([mend.reach_for(1), def.basic_attack.reach_for(4)], [3, 4], "max_range, or the unit's own range")
+	assert_false(def.basic_attack.is_signature())
+	var count: Dictionary = _base()
+	count["signature"] = {"id": "rage", "name": "Rage", "trigger": {"kind": "count", "event": "on_hit_taken", "every": 5}, "effects": [{"type": "damage", "amount": 1, "target": "target"}]}
+	var counted: TriggerDef = UnitDef.read(DataReader.new(count, "kit", errors)).signature.trigger
+	assert_eq([counted.kind, counted.event, counted.every, counted.is_once()], [TriggerDef.Kind.COUNT, EffectDef.Trigger.ON_HIT_TAKEN, 5, false])
+	var timed: Dictionary = _base()
+	timed["signature"] = {"id": "howl", "name": "Howl", "trigger": {"kind": "at_time", "at_ms": 8000}, "effects": [{"type": "damage", "amount": 1, "target": "target"}]}
+	var at_time: TriggerDef = UnitDef.read(DataReader.new(timed, "kit", errors)).signature.trigger
+	assert_eq([at_time.at_ticks, at_time.is_once()], [160, true])
+	assert_eq(errors, [] as Array[String])
+
+
+func test_bad_signatures() -> void:
+	var effects: Array = [{"type": "damage", "amount": 1, "target": "target"}]
+	var no_mana: Dictionary = _base()
+	no_mana["signature"] = {"id": "burst", "name": "Burst", "trigger": {"kind": "mana"}, "effects": effects}
+	_assert_error(_kit_errors(no_mana), "a mana signature needs \"mana\"")
+	var idle_bar: Dictionary = _base()
+	idle_bar["mana"] = {"max": 60}
+	_assert_error(_kit_errors(idle_bar), "only a unit whose signature fires on mana has a mana bar")
+	idle_bar["signature"] = {"id": "stand", "name": "Stand", "trigger": {"kind": "hp_below", "threshold_bp": 3000}, "effects": effects}
+	_assert_error(_kit_errors(idle_bar), "only a unit whose signature fires on mana has a mana bar")
+	var cast: Dictionary = _base()
+	cast["signature"] = {"id": "stand", "name": "Stand", "trigger": {"kind": "hp_below", "threshold_bp": 3000}, "cast_ms": 500, "effects": effects}
+	_assert_error(_kit_errors(cast), "cast_ms: only a mana signature can have a cast")
+	var same: Dictionary = _base()
+	same["signature"] = {"id": "bite", "name": "Big Bite", "trigger": {"kind": "fight_start"}, "effects": effects}
+	_assert_error(_kit_errors(same), "the signature and the basic attack need different ids (\"bite\")")
+	var event: Dictionary = _base()
+	event["signature"] = {"id": "count", "name": "Count", "trigger": {"kind": "count", "event": "on_fire"}, "effects": effects}
+	_assert_error(_kit_errors(event), "event: unknown value \"on_fire\"")
+	var threshold: Dictionary = _base()
+	threshold["signature"] = {"id": "stand", "name": "Stand", "trigger": {"kind": "hp_below", "threshold_bp": 10000}, "effects": effects}
+	_assert_error(_kit_errors(threshold), "threshold_bp: 10000 is out of range")
+	var rule: Dictionary = _base()
+	rule["signature"] = {"id": "stand", "name": "Stand", "trigger": {"kind": "fight_start"}, "targeting": "farthest", "cooldown_ms": 1000, "effects": effects}
+	var errors: Array[String] = _kit_errors(rule)
+	_assert_error(errors, "targeting: unknown value \"farthest\"")
+	_assert_error(errors, "unknown key \"cooldown_ms\"")
+	var start: Dictionary = _base()
+	start["mana"] = {"max": 60, "start": 70}
+	start["signature"] = {"id": "burst", "name": "Burst", "trigger": {"kind": "mana"}, "effects": effects}
+	_assert_error(_kit_errors(start), "start: 70 is out of range")
 
 
 func test_a_valid_fight() -> void:

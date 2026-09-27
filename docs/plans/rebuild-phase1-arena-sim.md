@@ -249,12 +249,26 @@ Each tick runs these steps in order. Resolution order is the fight's unit order:
 | `hp_below` | `threshold_bp` | once, the first time the unit drops below it while standing |
 | `fight_start` / `at_time` | `at_ms` | once, at that moment |
 | `count` | an event trigger (`on_hit_taken`, `on_heal`, `on_kill`, …), `every` | on every Nth such event |
-| `would_fall` | — | once, the first time the unit would fall: it's left at 1 HP instead, and the signature fires (proposed, section 15) |
+| `would_fall` | — | once, the first time the unit would fall: it's left at 1 HP instead, and the signature fires (approved, section 15) |
 
 - **Stun only holds back mana signatures** (decided). A full mana bar waits and fires once the stun ends. Every other trigger fires even while the unit is stunned, so a tank's last stand still happens when he's stunned.
 - **`cast_ms`** (optional, **mana signatures only**; the validator refuses it on other triggers): the unit stands still for that long before the signature lands. A stun during the cast cancels it, and the signature keeps its mana.
 - Big area attacks use **`warning_ms`** instead (section 7), so the caster doesn't have to stand still while the warning shows.
 - Every fire logs `FIRE`, with the ability as its source, as now.
+- **Built in step 4, first half** (`Mana`, `Signatures`, `Events`, `ManaDef`, `TriggerDef`; `AbilityDef` reads a signature):
+  - **A kit's `mana` and a mana signature come together.** The validator refuses either without the other.
+  - **Timing:** a signature is checked at the start of its unit's turn, right after mana regen. A full bar from this turn's attack fires on the next turn.
+  - **`count`** reads the log after every unit has acted, so the Nth event queues a fire for the unit's next turn. Events from the deaths step (`on_kill`) are raised as the unit falls.
+  - **`hp_below`** needs the unit standing above 0 HP. A hit from above the threshold straight to 0 is a job for `would_fall`, not `hp_below`.
+  - **Saves:** Undying holds a unit at 1 HP in the deaths step (logged as `SAVED`). If nothing holds it, an unspent `would_fall` signature leaves it at 1 HP and fires at once. If that fells someone, the deaths step goes round again, so they fall on the same tick.
+  - **Signature targets:** a signature picks fresh each time it fires, by its own `targeting` (for now `nearest` and `self`; the rest in step 7).
+    - `nearest` is by **straight line** within reach, not by path, since a signature fires from where the unit stands.
+    - **Reach** is `max_range`, or the unit's own range if it has none. From 2 hexes up, it's a shot, like an attack. An ability aimed at the unit itself never flies.
+    - With no target in reach, a mana signature stays full, and a queued fire waits.
+  - **Casts:** the unit stands still (STOP "casting"), and its attack cooldown keeps running. The bar is spent when the cast lands.
+    - If its target fell or left its reach, the cast lands on a fresh one; with none, it's cancelled and the bar stays full.
+    - A Stun cancels it on the unit's next turn (`CAST_CANCELLED`).
+  - **Mana gains aren't logged:** each comes from something that is, so the bar can be rebuilt from the log. `MANA_DRAIN` is logged.
 
 ## 6. Displacement and flying
 
@@ -308,7 +322,7 @@ All the displacements **move the unit instantly in the sim** and log the start a
 | --- | --- | --- |
 | Root | `root` | can't move (can still attack and cast) |
 | Stun | `stun` | can't move, attack, or fire mana signatures; mana still comes in, and other signature triggers still fire |
-| Undying | `undying` | HP can't drop below 1 while it lasts; each save is logged (proposed, section 15) |
+| Undying | `undying` | HP can't drop below 1 while it lasts; each save is logged (approved, section 15) |
 | Slow | `slow` | the unit moves and its attack cooldown runs `slow_bp` slower; the strongest Slow wins, no stacking |
 | Taunt | `taunt` | target forced to the status's source |
 | Silence | `silence` | no mana gain |
@@ -470,12 +484,26 @@ If step 2 measures slower, the cell size and repath interval are the knobs, and 
 - Units point at their target weakly, so two units targeting each other don't keep each other alive after the fight.
 - Watch the budget again once statuses, mana, and areas add their per-tick work.
 
+**Measured in step 4** (3 against 6, test kits with a mana signature with a cast, an HP-triggered one, and Slow):
+- A 95s fight takes 175–180 ms, about **110 ms per 60s**. A 180s stand-off takes 250–290 ms, about **85–95 ms per 60s**. So the budget is at its edge.
+- Where it goes (the 95s fight): walking and targeting take about a third. The rest is each unit's turn and its attacks, about 4 µs per unit per tick, spread thinly.
+  - Signatures and mana add about a tenth.
+- **Speed-ups in this step,** none of which change results:
+  - Units with no statuses skip the status loop.
+  - Units are looked up by id in a Dictionary (lookup only, never iterated).
+  - The end-of-fight check builds no lists.
+  - The log is read for events only when some unit listens.
+- **The next knobs, if later steps push it over:**
+  - repath_ms (0.5s now).
+  - The nav cell size.
+  - Keeping the per-turn status checks out of units that have none.
+
 ## 14. Order of work (each step: code, tests, green run, commit)
 
 1. **Grid and plane (done):** `hex_grid`, `arena_plane`, `nav_grid`, `arena_debug`, `FixedMath.isqrt`, and their tests. Pure functions, no sim.
 2. **Skeleton fight (done):** kits, setups with hexes and rocks, the new `CombatSim` tick, walking and blocking, `nearest` targeting, melee attacks and shots, deaths, the end of the fight, the MOVE, STOP, TARGET, and SHOT logs, and the log replay test. The first determinism test, and a speed measurement.
 3. **Statuses (done):** Root, Stun, Slow, Taunt, Silence, Marked, and damage over time.
-4. **Mana and signatures:** the five triggers, cast_ms, Undying, `Events`, and `PartDef`.
+4. **Mana and signatures:** the five triggers, cast_ms, Undying, `Events`, and `PartDef`. (First half done: mana, the triggers, casts, Undying, `mana_drain`, and `Events` for `count`. Second half: `PartDef` passives.)
 5. **Tanks:** Engage.
 6. **Displacement and flying:** knockback, pull, leap, charge, collisions, flying, and hop away.
 7. **Areas:** shapes, warnings, landing, and the rest of the targeting rules.
@@ -484,7 +512,7 @@ If step 2 measures slower, the cell size and repath interval are the knobs, and 
 
 ## 15. Proposals to confirm
 
-The second round's answers are under **Decisions** above. Answer 19 needs two small pieces the plan didn't have, so I've added them:
+The second round's answers are under **Decisions** above. Answer 19 needs two small pieces the plan didn't have, so I added them, and both were approved (2026-09-27) and built in step 4:
 
 1. **A `would_fall` trigger:** the first time a unit would fall, it's left at 1 HP instead, and the signature fires (once per fight). That's "when he hits 1 HP".
 2. **An Undying status** (`undying`): the unit's HP can't drop below 1 while it lasts. That's "he can't fall for 1s", and Last Rites' "can't be felled for 3s" (phase 4) uses it too.

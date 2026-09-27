@@ -22,6 +22,10 @@ var alive: bool = true
 var pos: Vector2i
 var radius: int
 var attack: AbilityState
+## Its signature (null if it has none).
+var signature: AbilityState = null
+## Mana in hundredths (see Mana); only a unit with a mana bar has any.
+var mana: int = 0
 ## How fast its basic attack's cooldown runs (10000 = normal).
 var attack_rate_bp: int = FixedMath.BP_ONE
 
@@ -80,6 +84,10 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 	unit.pos = grid.center(setup.col, setup.row)
 	unit.radius = unit_radius
 	unit.attack = AbilityState.make(setup.def.basic_attack)
+	if setup.def.signature != null:
+		unit.signature = AbilityState.make(setup.def.signature)
+	if setup.def.mana != null:
+		unit.mana = setup.def.mana.start * Mana.SCALE
 	return unit
 
 

@@ -9,15 +9,19 @@ extends RefCounted
 ##   2. Statuses tick: damage over time, and timers running out (Statuses).
 ##   3. Shots land, in the order they were fired (Shots).
 ##   4. Warned areas land (later).
-##   5. Each standing unit acts, in the fight's order (heroes, then enemies).
-##      Stunned, it does nothing. Otherwise its attack's cooldown runs
-##      (slower when Slowed); a Taunt makes the taunter its target, or it
-##      keeps or picks a target (Targeting); with the target in reach it
-##      stands and attacks when ready, otherwise it walks (Movement; not
-##      when Rooted). Mana and signatures come later.
-##   6. Event effects and phases (later).
-##   7. Units at 0 HP fall. They still acted this tick if their turn came,
-##      so going first gives neither side an edge.
+##   5. Each standing unit acts, in the fight's order (heroes, then enemies):
+##      its mana regenerates (Mana), and its signature fires if its trigger
+##      is met (Signatures; a unit casting does nothing else). Stunned, it
+##      stops there. Otherwise its attack's cooldown runs (slower when
+##      Slowed); a Taunt makes the taunter its target, or it keeps or picks
+##      a target (Targeting); with the target in reach it stands and
+##      attacks when ready, otherwise it walks (Movement; not when Rooted).
+##   6. Events: this tick's log is read for count signatures (Events). Event
+##      effects and phases come later.
+##   7. Units at 0 HP fall, unless Undying holds them at 1 HP or a would_fall
+##      signature saves them; on_kill is raised for whoever felled them.
+##      They still acted this tick if their turn came, so going first gives
+##      neither side an edge.
 ##   8. Victory, defeat, or a tie (180s, or both sides falling together; a
 ##      tie counts as a guild victory).
 
@@ -40,6 +44,12 @@ var shots: Array[Shots.Shot] = []
 var finished: bool = false
 var outcome: FightResult.Outcome = FightResult.Outcome.TIE
 var _nav: NavGrid
+## Log entries before this one have been read by Events.
+var _events_read: int = 0
+## Some unit listens for events (a count signature), so the log is read.
+var _listening: bool = false
+## Each unit by id (lookup only; never iterated).
+var _by_id: Dictionary[String, UnitState] = {}
 
 
 ## Validates the setup and runs the whole fight.
@@ -73,7 +83,10 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 		var unit: UnitState = UnitState.from_setup(unit_setup, units.size(), grid, tuning.unit_radius)
 		unit.attack_rate_bp = attack_rate_bp(unit)
 		units.append(unit)
+		_by_id[unit.id] = unit
 		(heroes if unit.side == EffectSource.Team.HEROES else enemies).append(unit)
+		if unit.signature != null and unit.signature.def.trigger.kind == TriggerDef.Kind.COUNT:
+			_listening = true
 	var start := LogEntry.new()
 	start.kind = LogEntry.Kind.FIGHT_START
 	start.note = "seed %d, act %d" % [setup.seed_value, setup.act]
@@ -90,19 +103,31 @@ func step() -> void:
 	for unit: UnitState in units:
 		if unit.alive:
 			_act(unit)
+	var read_to: int = combat_log.entries.size()
+	if _listening:
+		Events.dispatch(self, _events_read, read_to)
+	_events_read = read_to
 	_process_deaths()
 	_check_end()
 
 
 func _act(unit: UnitState) -> void:
-	if not unit.statuses.is_empty() and Statuses.has_kind(unit, StatusDef.Kind.STUN):
+	if unit.def.mana != null:
+		Mana.regen(self, unit)
+	var casting: bool = Signatures.act(self, unit) if unit.signature != null else false
+	var has_statuses: bool = not unit.statuses.is_empty()
+	if has_statuses and Statuses.has_kind(unit, StatusDef.Kind.STUN):
 		if unit.leg_active:
 			Movement.halt(self, unit, "stunned")
 		return
-	var slow: int = Statuses.slow_bp(unit) if not unit.statuses.is_empty() else 0
-	unit.attack.advance(FixedMath.apply_bp(unit.attack_rate_bp, FixedMath.BP_ONE - slow))
+	var slow: int = Statuses.slow_bp(unit) if has_statuses else 0
+	unit.attack.advance(unit.attack_rate_bp if slow == 0 else FixedMath.apply_bp(unit.attack_rate_bp, FixedMath.BP_ONE - slow))
+	if casting:
+		if unit.leg_active:
+			Movement.halt(self, unit, "casting")
+		return
 	var target: UnitState = unit.target
-	if not unit.statuses.is_empty():
+	if has_statuses:
 		var taunter: UnitState = Statuses.taunter(self, unit)
 		if taunter != null and taunter != target:
 			Targeting.set_target(self, unit, taunter, "taunted")
@@ -174,10 +199,7 @@ func standing_enemies_of(unit: UnitState) -> Array[UnitState]:
 
 
 func unit_by_id(unit_id: String) -> UnitState:
-	for unit: UnitState in units:
-		if unit.id == unit_id:
-			return unit
-	return null
+	return _by_id.get(unit_id, null)
 
 
 static func _standing(side_units: Array[UnitState]) -> Array[UnitState]:
@@ -212,8 +234,11 @@ func apply_damage(target: UnitState, amount: int) -> int:
 
 ## Like apply_damage, but the damage is only `vs_shield_bp` effective against
 ## Shield (5000: each point of Shield soaks 2 damage; 0: skips Shield).
-## Whatever the Shield doesn't soak hits HP at full strength.
+## Whatever the Shield doesn't soak hits HP at full strength. All of it
+## counts as damage taken, for mana.
 func apply_damage_vs_shield(target: UnitState, amount: int, vs_shield_bp: int) -> int:
+	if amount > 0:
+		Mana.on_damage_taken(self, target, amount)
 	if vs_shield_bp <= 0 or target.shield <= 0:
 		target.hp = maxi(target.hp - amount, 0)
 		return 0
@@ -229,25 +254,54 @@ func apply_damage_vs_shield(target: UnitState, amount: int, vs_shield_bp: int) -
 
 # --- the end -----------------------------------------------------------------
 
+## Settles who falls. A would_fall signature fires at once and may fell
+## others, so it goes round again until nobody new is at 0 HP.
 func _process_deaths() -> void:
-	for unit: UnitState in units:
-		if unit.alive and unit.hp <= 0:
-			unit.alive = false
-			unit.target = null
-			unit.route.clear()
-			unit.leg_active = false
-			var entry := LogEntry.new()
-			entry.tick = tick
-			entry.kind = LogEntry.Kind.DEATH
-			entry.target = unit.id
-			entry.to_pos = unit.pos
-			entry.note = "last hit: %s" % unit.last_hit_by
-			combat_log.add(entry)
+	var again: bool = true
+	while again:
+		again = false
+		for unit: UnitState in units:
+			if not unit.alive or unit.hp > 0:
+				continue
+			var undying: StatusState = _undying(unit)
+			if undying != null:
+				unit.hp = 1
+				var held: LogEntry = new_entry(LogEntry.Kind.SAVED, undying.source)
+				held.target = unit.id
+				held.note = undying.def.name
+				combat_log.add(held)
+				continue
+			if Signatures.would_fall(self, unit):
+				again = true
+				continue
+			_fall(unit)
+			Events.kill(self, unit)
+
+
+func _undying(unit: UnitState) -> StatusState:
+	for state: StatusState in unit.statuses:
+		if state.def.kind == StatusDef.Kind.UNDYING:
+			return state
+	return null
+
+
+func _fall(unit: UnitState) -> void:
+	unit.alive = false
+	unit.target = null
+	unit.route.clear()
+	unit.leg_active = false
+	var entry := LogEntry.new()
+	entry.tick = tick
+	entry.kind = LogEntry.Kind.DEATH
+	entry.target = unit.id
+	entry.to_pos = unit.pos
+	entry.note = "last hit: %s" % unit.last_hit_by
+	combat_log.add(entry)
 
 
 func _check_end() -> void:
-	var heroes_up: bool = not _standing(heroes).is_empty()
-	var enemies_up: bool = not _standing(enemies).is_empty()
+	var heroes_up: bool = heroes.any(func(unit: UnitState) -> bool: return unit.alive)
+	var enemies_up: bool = enemies.any(func(unit: UnitState) -> bool: return unit.alive)
 	if heroes_up and enemies_up and tick < tuning.tie_ticks:
 		return
 	finished = true

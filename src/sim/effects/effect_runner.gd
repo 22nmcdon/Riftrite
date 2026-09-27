@@ -10,8 +10,8 @@ extends RefCounted
 ## and land when it does; the rest (on the unit itself, or every ally) happen
 ## as it fires.
 ##
-## Built so far: damage, heal, shield, apply_status, and cleanse. The arena's
-## own effects (knockback, pull, leap, charge, area, summon, mana drain,
+## Built so far: damage, heal, shield, apply_status, cleanse, and mana_drain.
+## The arena's own effects (knockback, pull, leap, charge, area, summon,
 ## start_collapse) come with their steps.
 
 
@@ -22,20 +22,23 @@ class Hit:
 	var crit: bool
 
 
-## The unit's basic attack fires at its target.
+## The unit's basic attack fires at its target, and gives it mana.
 static func basic_attack(sim: CombatSim, unit: UnitState) -> void:
-	fire(sim, unit, unit.attack.def, unit.target)
+	fire(sim, unit, unit.attack.def, unit.target, unit.stats.get_stat(UnitStats.Stat.RANGE))
 	unit.attack.spend()
+	Mana.on_attack(sim, unit)
 
 
-## `ability` fires from `unit` at `target`.
-static func fire(sim: CombatSim, unit: UnitState, ability: AbilityDef, target: UnitState) -> void:
+## `ability` fires from `unit` at `target`; `reach` (in hexes) decides whether
+## it's a shot (AbilityDef.is_shot). An ability aimed at the unit itself never
+## is.
+static func fire(sim: CombatSim, unit: UnitState, ability: AbilityDef, target: UnitState, reach: int) -> void:
 	var source: EffectSource = EffectSource.make(unit.id, ability.id, ability.name)
 	var fired: LogEntry = sim.new_entry(LogEntry.Kind.FIRE, source)
 	fired.target = target.id if target != null else ""
 	sim.combat_log.add(fired)
 	var shot: Shots.Shot = null
-	if target != null and ability.is_shot(unit.stats.get_stat(UnitStats.Stat.RANGE)):
+	if target != null and target != unit and ability.is_shot(reach):
 		shot = Shots.Shot.new()
 		shot.source = source
 		shot.shooter = unit
@@ -79,6 +82,8 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			Statuses.apply(sim, victim, effect.status_id, amount, effect.duration_ticks, source)
 		EffectDef.Type.CLEANSE:
 			Statuses.cleanse_over_time(sim, victim, mini(amount, FixedMath.BP_ONE), source)
+		EffectDef.Type.MANA_DRAIN:
+			Mana.drain(sim, victim, amount, source)
 
 
 static func _on_hit(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: EffectSource, hit: Hit) -> void:

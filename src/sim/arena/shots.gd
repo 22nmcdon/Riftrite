@@ -42,6 +42,8 @@ static func fire(sim: CombatSim, shot: Shot) -> void:
 
 ## Lands every shot that's due this tick, in the order they were fired.
 static func land_due(sim: CombatSim) -> void:
+	if sim.shots.is_empty():
+		return
 	var waiting: Array[Shot] = []
 	for shot: Shot in sim.shots:
 		if shot.land_tick > sim.tick:

@@ -13,13 +13,14 @@ extends RefCounted
 ##   root, stun, taunt, silence:   duration_ms
 ##   slow:     duration_ms, slow_bp (moves and attacks that much slower)
 ##   marked:   duration_ms, damage_taken_bp (takes that much more damage)
+##   undying:  duration_ms (its HP can't drop below 1)
 ## A timed status's duration_ms is its default; an apply_status effect can
-## give its own. A new application refreshes the timer. Engaged and Undying
-## come with later steps.
+## give its own. A new application refreshes the timer. Engaged comes with
+## step 5.
 
-enum Kind { DAMAGE_OVER_TIME, ROOT, STUN, SLOW, TAUNT, SILENCE, MARKED }
+enum Kind { DAMAGE_OVER_TIME, ROOT, STUN, SLOW, TAUNT, SILENCE, MARKED, UNDYING }
 
-const KIND_NAMES: Array[String] = ["damage_over_time", "root", "stun", "slow", "taunt", "silence", "marked"]
+const KIND_NAMES: Array[String] = ["damage_over_time", "root", "stun", "slow", "taunt", "silence", "marked", "undying"]
 
 var id: String
 var name: String

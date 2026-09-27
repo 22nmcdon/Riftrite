@@ -70,5 +70,12 @@
     "kind": "marked",
     "duration_ms": 4000,
     "damage_taken_bp": 1500
+  },
+  {
+    "_note": "Its HP can't drop below 1 while it lasts; each save is logged. Brannoc's 'can't fall for 1s' when he hits 1 HP; Last Rites gives it for 3s.",
+    "id": "undying",
+    "name": "Undying",
+    "kind": "undying",
+    "duration_ms": 1000
   }
 ]

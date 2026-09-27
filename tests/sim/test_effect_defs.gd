@@ -31,6 +31,9 @@ func test_reads_each_type() -> void:
 	assert_eq([status.status_id, status.stacks, status.base_value()], ["bleed", 2, 2])
 	var cleanse: EffectDef = _effect({"trigger": "on_fire", "type": "cleanse", "amount_bp": 5000, "target": "all_allies"})[0]
 	assert_eq([cleanse.type, cleanse.amount], [EffectDef.Type.CLEANSE, 5000])
+	var drain: EffectDef = _effect({"type": "mana_drain", "amount": 20, "target": "target"})[0]
+	assert_eq([drain.type, drain.amount], [EffectDef.Type.MANA_DRAIN, 20])
+	_assert_error(_errors({"type": "mana_drain", "amount": 0, "target": "target"}), "amount: 0 is out of range")
 
 
 func test_good_effects_have_no_errors() -> void:

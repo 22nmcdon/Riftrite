@@ -56,7 +56,7 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: 
 ## order: damage over time deals its damage, and timed statuses run out.
 static func tick_all(sim: CombatSim) -> void:
 	for unit: UnitState in sim.units:
-		if not unit.alive:
+		if not unit.alive or unit.statuses.is_empty():
 			continue
 		for state: StatusState in unit.statuses.duplicate():
 			if state.def.is_timed():

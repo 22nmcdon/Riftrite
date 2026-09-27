@@ -48,7 +48,7 @@ func test_the_gut_left_only_tuning_and_statuses() -> void:
 
 func test_real_statuses() -> void:
 	var db: ContentDb = ContentDb.load_dir("res://data")
-	assert_eq(db.status_ids, ["burn", "poison", "bleed", "root", "stun", "slow", "taunt", "silence", "marked"] as Array[String])
+	assert_eq(db.status_ids, ["burn", "poison", "bleed", "root", "stun", "slow", "taunt", "silence", "marked", "undying"] as Array[String])
 	assert_eq(db.statuses["burn"].interval_ticks, 10, "Burn ticks twice a second")
 	assert_eq(db.statuses["burn"].stacks_lost_bp, 500)
 	assert_eq(db.statuses["burn"].vs_shield_bp, 5000, "Burn is half as effective against shields")
@@ -57,7 +57,7 @@ func test_real_statuses() -> void:
 	for id: String in ["burn", "poison", "bleed"]:
 		assert_eq(db.statuses[id].kind, StatusDef.Kind.DAMAGE_OVER_TIME)
 		assert_false(db.statuses[id].is_timed())
-	var kinds: Array[StatusDef.Kind] = [StatusDef.Kind.ROOT, StatusDef.Kind.STUN, StatusDef.Kind.SLOW, StatusDef.Kind.TAUNT, StatusDef.Kind.SILENCE, StatusDef.Kind.MARKED]
+	var kinds: Array[StatusDef.Kind] = [StatusDef.Kind.ROOT, StatusDef.Kind.STUN, StatusDef.Kind.SLOW, StatusDef.Kind.TAUNT, StatusDef.Kind.SILENCE, StatusDef.Kind.MARKED, StatusDef.Kind.UNDYING]
 	for i: int in kinds.size():
 		var def: StatusDef = db.statuses[db.status_ids[3 + i]]
 		assert_eq(def.kind, kinds[i])

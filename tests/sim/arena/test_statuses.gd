@@ -285,3 +285,18 @@ func test_the_heal_falloff_window_is_1s() -> void:
 	fight.tick = 40
 	EffectRunner.heal(fight, target, 10, _source())
 	assert_eq(Statuses.find(target, "poison").total_stacks(), 73, "all out of the window: 10% of 81, rounded")
+
+
+func test_undying_holds_at_1_hp() -> void:
+	var fight: CombatSim = _duel(_dummy())
+	var target: UnitState = fight.units[1]
+	Statuses.apply(fight, target, "undying", 1, 0, _source("keeper"))
+	target.hp = 0
+	fight.step()
+	assert_eq([target.alive, target.hp], [true, 1])
+	var held: LogEntry = K.entries(fight, LogEntry.Kind.SAVED)[0]
+	assert_eq(held.to_text(), "[0.05s] dummy#2 is held at 1 HP by keeper · Test (Undying)")
+	K.step(fight, 19)
+	target.hp = 0
+	fight.step()
+	assert_false(target.alive, "after 1s it can fall")

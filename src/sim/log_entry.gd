@@ -27,6 +27,10 @@ enum Kind {
 	TARGET,
 	SHOT,
 	SHOT_FIZZLED,
+	CAST,
+	CAST_CANCELLED,
+	SAVED,
+	MANA_DRAIN,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -43,7 +47,8 @@ var source_relic_side: int = -1
 var source_synergy: bool = false
 var target: String = ""
 ## DAMAGE/COLLAPSE/STATUS_DAMAGE: the hit's full damage. HEAL: HP restored.
-## SHIELD: shield given. STATUS_APPLIED: stacks added.
+## SHIELD: shield given. STATUS_APPLIED: stacks added. MANA_DRAIN: mana
+## taken, in hundredths (Mana.SCALE).
 var amount: int = 0
 ## Damage kinds: how much of `amount` the target's shield absorbed.
 var absorbed: int = 0
@@ -64,7 +69,8 @@ var from_event: bool = false
 ## SHOT: from the shooter to where the target stood when it was fired.
 var from_pos: Vector2i = Vector2i.ZERO
 var to_pos: Vector2i = Vector2i.ZERO
-## MOVE: the tick it should arrive; SHOT: the tick it lands.
+## MOVE: the tick it should arrive; SHOT: the tick it lands; CAST: the tick
+## the cast ends.
 var end_tick: int = 0
 
 
@@ -136,6 +142,14 @@ func to_text() -> String:
 			return line + "%s's shot at %s fizzles (%s)" % [source_text(), target, note]
 		Kind.STATUS_REDUCED:
 			return line + "%s on %s loses %d stacks (%s)" % [status_name, target, amount, note]
+		Kind.CAST:
+			return line + "%s starts casting at %s (lands at %s)" % [source_text(), target, _format_time(end_tick)]
+		Kind.CAST_CANCELLED:
+			return line + "%s's cast is cancelled (%s)" % [source_text(), note]
+		Kind.SAVED:
+			return line + "%s is held at 1 HP by %s (%s)" % [target, source_text(), note]
+		Kind.MANA_DRAIN:
+			return line + "%s drains %s mana from %s%s" % [source_text(), Mana.text(amount), target, "" if note.is_empty() else " (%s)" % note]
 	return line + "?"
 
 

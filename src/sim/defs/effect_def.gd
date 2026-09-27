@@ -17,6 +17,7 @@ extends RefCounted
 ##   cleanse:      amount_bp; strips that share of the target's
 ##                 damage-over-time stacks (times each status's
 ##                 cleanse_effectiveness_bp, like heals do)
+##   mana_drain:   amount (whole mana taken from the target's bar)
 ## `amount` (or `stacks`) is the base value. An optional "scaling" object adds
 ## a share of the unit's stats, in basis points of each stat:
 ##   "scaling": {"atk": 6000, "atsp": 2000}  ->  base + 60% ATK + 20% ATSP
@@ -64,7 +65,7 @@ enum Trigger {
 	ON_FIRE, ON_HIT, ON_CRIT, ON_FIGHT_START, AT_TIME, ON_ALLY_BELOW_HP,
 	ON_ABILITY, ON_BASIC_ATTACK, ON_HOLDER_CRIT, ON_SHIELDED, ON_HIT_TAKEN, ON_HEAL, ON_STATUS, ON_KILL,
 }
-enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE }
+enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN }
 enum Target {
 	TARGET,
 	HIT_TARGET,
@@ -95,7 +96,7 @@ const ABILITY_TRIGGERS: Array[Trigger] = [
 const RELIC_TRIGGERS: Array[Trigger] = [Trigger.ON_FIRE, Trigger.ON_FIGHT_START, Trigger.AT_TIME, Trigger.ON_ALLY_BELOW_HP]
 ## Targets that need the effect's unit to stand on the field.
 const FIELD_ONLY_TARGETS: Array[Target] = [Target.TARGET, Target.HIT_TARGET, Target.SELF]
-const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse"]
+const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain"]
 const TARGET_NAMES: Array[String] = [
 	"target",
 	"hit_target",
@@ -146,6 +147,8 @@ static func read(reader: DataReader, relic: bool = false) -> EffectDef:
 		match def.type:
 			Type.DAMAGE, Type.HEAL:
 				def.amount = reader.req_int("amount", 0)
+			Type.MANA_DRAIN:
+				def.amount = reader.req_int("amount", 1)
 			Type.SHIELD:
 				if reader.has("amount") == reader.has("amount_bp_of_damage"):
 					reader.error("shield needs exactly one of \"amount\" or \"amount_bp_of_damage\"")
