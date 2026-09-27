@@ -36,55 +36,83 @@ Everywhere items show up (the shop, loadouts, the stash, rewards, the fight scre
 
 The loadout's slot groups use the same shapes, so an empty ability slot looks like an empty medallion.
 
-## 3. About 40 items (the user's pick)
+## 3. A shared pool, plus Epics that belong to heroes (the user's idea)
 
-The roster drops from 76 to **40**: 10 weapons, 18 abilities, and 12 passives. Every keyword stays covered. The six Legendaries stay, each moved to the slot that fits it. Enemy-only items follow the same split. Names are kept where the item survives; numbers are first passes, tuned with the balance sim.
+**Commons, Uncommons, and Rares are shared:** a fixed set of 28 any team can find. **Epics belong to heroes:** each hero has three, one built for each of their specializations (24 in all).
+- **Only the drafted team's Epics show up in shops.** A run's shop pool is the 28 shared items plus the team's 9 Epics, about 37.
+- **Off-team Epics can still turn up** from the Vault, events, elite and boss rewards, and Loot (rarely).
+- **Anyone can equip a hero's Epic,** but on its own hero it gets an extra effect: "On Wren: ...". This replaces the signature synergy layer (the 8 signatures are removed; their ideas move into the Epics).
+- **Shops show Epics a bit more often,** since only 9 of 24 are in a run's pool.
+- **Legendaries stay as they are** (6, from the Vault and rare events only), each moved to the slot that fits it: Tallyman's Bow, Maw of the Hollow, and Riftbreaker's Brand become weapons; Hungering Censer, Kinstone Aegis, and Last Hearth Lantern become abilities with longer cooldowns and bigger numbers.
 
-**Weapons (10)**
+In all: 28 shared + 24 Epics = 52 items, down from 76. A run only ever sees about 37 of them (the shared 28 and its team's 9 Epics), close to the 40 asked for. Names stay where an item survives. Numbers are first passes, tuned with the balance sim.
 
-| Item | Keywords | What it does |
-| --- | --- | --- |
-| Hatchet | Blade | quick chops at the front enemy (1.2s) |
-| Rusted Cleaver | Blade | slow, heavy hits at the front enemy (2.0s) |
-| Twin Daggers | Blade | two light stabs, crits often (1.0s) |
-| Grave Hook | Blade, Bleed | hits and Bleeds the front enemy (1.6s) |
-| Birch Shortbow | Bow | fast shots at the back row (1.3s) |
-| Crow Crossbow | Bow | slow, heavy bolts at the back row (2.0s) |
-| Thorn Darts | Bow, Hex | darts at a random enemy that Poison (1.5s) |
-| Ashwood Staff | Spell, Burn | magic hits that Burn (1.5s) |
-| Wyrdglass Orb | Spell | magic bolts at a random enemy, crits often (1.4s) |
-| Spiked Pauldron | Blade, Ward | shoulder charges that also Shield the holder (1.8s) |
+**Shared weapons (8)**
 
-**Abilities (18)**
+| Item | Rarity | Keywords | What it does |
+| --- | --- | --- | --- |
+| Hatchet | Common | Blade | quick chops at the front enemy (1.2s) |
+| Rusted Cleaver | Common | Blade | slow, heavy hits at the front enemy (2.0s) |
+| Birch Shortbow | Common | Bow | fast shots at the back row (1.3s) |
+| Thorn Darts | Common | Bow, Hex | darts at a random enemy that Poison (1.5s) |
+| Twin Daggers | Uncommon | Blade | two light stabs, crits often (1.0s) |
+| Grave Hook | Uncommon | Blade, Bleed | hits and Bleeds the front enemy (1.6s) |
+| Crow Crossbow | Uncommon | Bow | slow, heavy bolts at the back row (2.0s) |
+| Ashwood Staff | Uncommon | Spell, Burn | magic hits that Burn (1.5s) |
 
-| Item | Keywords | What it does |
-| --- | --- | --- |
-| Twinfang Stilettos → **Flurry** | Blade | 6 quick strikes in 1 second at the front enemy (8s) |
-| Longspear → **Sweeping Spear** | Blade | hits the whole enemy front row (7s) |
-| Reaper's Sickle | Blade, Bleed | a heavy blow on the weakest enemy; a crit adds 3 Bleed (9s) |
-| Greywood Warbow → **Volley** | Bow | an arrow at every enemy in the back row (7s) |
-| Flint Arrows → **Barrage** | Bow | 4 quick shots at the back row (6s) |
-| Hunter's Snare | Bow, Hex | 3 Slow on the front enemy (8s) |
-| Grimoire of Cinders → **Firebolt** | Spell, Burn | a big magic hit and 3 Burn (8s) |
-| Ember Brazier → **Wildfire** | Spell, Burn | 2 Burn on every enemy (9s) |
-| Dusk Tome → **Dusk Wave** | Spell | magic damage to every enemy (10s) |
-| Hearth Stew → **Hearth Feast** | Mend | heals every ally (10s) |
-| Mender's Satchel → **Triage** | Mend | a big heal and a cleanse on the ally lowest on HP (8s) |
-| Hearthkeeper's Kettle | Mend, Ward | heals and Shields the ally lowest on HP (9s) |
-| Mudbrick Wall → **Raise Wall** | Ward | Shields the holder's row (8s) |
-| Tower Shield → **Bulwark** | Ward | a big Shield on every ally (14s) |
-| Venom Censer → **Plague Cloud** | Spell, Hex | 3 Poison on every enemy (10s) |
-| Bone Flute → **Dirge** | Hex | 2 Slow on every enemy (9s) |
-| Barbed Net | Bleed | 2 Bleed and 1 Slow on every enemy in the front row (9s) |
-| Clockwork Owl | Hex | charges the holder's other abilities by 3s, and Blinds a random enemy (10s) |
+**Shared abilities (11)**
 
-**Passives (12):** War Drum (Blade), Bell of Vigil (Ward), Stormglass Arrowheads (Bow), Vesper Chime (Mend), the four conduits (Ember Censer, Open Channel, Bond Chain, Rift Prism), Tinder Charm (Burn), Thorn Vest (Ward), Leech Vial (Bleed), and Hex Bag (Hex).
+| Item | Rarity | Keywords | What it does |
+| --- | --- | --- | --- |
+| Longspear → **Sweeping Spear** | Common | Blade | hits the whole enemy front row (7s) |
+| Flint Arrows → **Barrage** | Common | Bow | 4 quick shots at the back row (6s) |
+| Mudbrick Wall → **Raise Wall** | Common | Ward | Shields the holder's row (8s) |
+| Hunter's Snare | Uncommon | Bow, Hex | 3 Slow on the front enemy (8s) |
+| Hearth Stew → **Hearth Feast** | Uncommon | Mend | heals every ally (10s) |
+| Mender's Satchel → **Triage** | Uncommon | Mend | a big heal and a cleanse on the ally lowest on HP (8s) |
+| Barbed Net | Uncommon | Bleed | 2 Bleed and 1 Slow on every enemy in the front row (9s) |
+| Reaper's Sickle | Rare | Blade, Bleed | a heavy blow on the weakest enemy; a crit adds 3 Bleed (9s) |
+| Greywood Warbow → **Volley** | Rare | Bow | an arrow at every enemy in the back row (7s) |
+| Grimoire of Cinders → **Firebolt** | Rare | Spell, Burn | a big magic hit and 3 Burn (8s) |
+| Venom Censer → **Plague Cloud** | Rare | Spell, Hex | 3 Poison on every enemy (10s) |
 
-**Legendaries (6, kept):** Tallyman's Bow, Maw of the Hollow, and Riftbreaker's Brand become weapons. Hungering Censer, Kinstone Aegis, and Last Hearth Lantern become abilities, with longer cooldowns and bigger numbers.
+**Shared passives (9):** War Drum (Blade: crit), Stormglass Arrowheads (Bow: damage), Vesper Chime (Mend: healing), Thorn Vest (Ward: strikes back when hit), Leech Vial (Bleed, Mend: a kill heals), Hex Bag (Hex: every 3rd status Slows), and three conduits: Ember Censer, Bond Chain, and Rift Prism.
+
+**Hero Epics (24)**, one per specialization. "On X" is the extra effect on its own hero.
+
+| Hero | Specialization | Epic | Slot | Keywords | What it does | On its hero |
+| --- | --- | --- | --- | --- | --- | --- |
+| Brannoc | Hearthwall | Tower Shield → **Bulwark** | Ability | Ward | a big Shield on every ally (14s) | the Shields are 30% bigger |
+| Brannoc | Ironbrand | **Hearthbrand Mace** | Weapon | Blade, Ward | heavy blows that Shield him (1.8s) | each blow also Shields his row a little |
+| Brannoc | Last Watch | **Watchman's Horn** | Ability | Ward, Mend | Shields and heals every ally (12s) | the first blow at 50% HP sounds it at once |
+| Wren | Duelist | Twinfang Stilettos | Weapon | Blade | two fast stabs; crits Bleed (1.1s) | +15% crit |
+| Wren | Windrunner | **Gale Blades** → Flurry | Ability | Blade | 6 quick strikes in 1 second at the front enemy (8s) | 8 strikes |
+| Wren | Nightstalker | **Hunter's Moon** | Ability | Blade, Bleed | a strike on the weakest enemy and 3 Bleed (8s) | a kill brings it back at once |
+| Vell | Lanternbearer | Night Lantern | Ability | Mend, Spell | a big heal on the ally lowest on HP, and a little for everyone (9s) | also cleanses |
+| Vell | Wardweaver | Hearthkeeper's Kettle | Ability | Mend, Ward | heals and Shields the ally lowest on HP (9s) | Shields the next-lowest too |
+| Vell | Vigil Keeper | **Vespers Bell** | Passive | Mend | every 3rd heal she gives also heals every ally a little | every 2nd heal |
+| Odo | Pyromancer | **Ember Grimoire** | Ability | Spell, Burn | a big hit and 3 Burn on the front enemy, and 1 Burn on two others (8s) | Burn spreads to three |
+| Odo | Hexweaver | **Hexbinder's Rod** | Weapon | Spell, Hex | magic hits that Poison (1.5s) | every 4th hit Poisons every enemy |
+| Odo | Stormcaller | Wyrdglass Orb → **Stormglass Orb** | Ability | Spell | magic damage and 1 Slow on every enemy (10s) | the storm strikes twice |
+| Maren | Deadeye | Rimewood Longbow | Weapon | Bow | heavy shots at the back row, crits often (1.5s) | +15% crit |
+| Maren | Trapper | **Bramble Snares** | Ability | Bow, Bleed | 2 Slow and 2 Bleed on every enemy in the front row (9s) | the back row too |
+| Maren | Volley | **Stormfeather Quiver** | Ability | Bow | an arrow at every enemy (7s) | two arrows each |
+| Pell | Smoke and Mirrors | **Smokeglass Vial** | Ability | Hex | Blinds every enemy (10s) | also Slows |
+| Pell | Clockwork | Clockwork Owl | Ability | Hex | charges his other abilities by 3s and Blinds a random enemy (10s) | charges by 5s |
+| Pell | Cutpurse | **Cutpurse's Kris** | Weapon | Blade, Hex | quick picks at the weakest enemy that Slow; crits often (1.0s) | crits Blind |
+| Hesk | Bulwark | **Gatekeeper's Pavise** | Ability | Ward | a big Shield on him and a smaller one on his row (10s) | the row's Shield matches his |
+| Hesk | Thornhide | **Bramble Mail** | Passive | Ward, Bleed | when an enemy's hit lands, it strikes back; every 3rd also Bleeds | every 2nd Bleeds |
+| Hesk | Old Guard | **Old Guard's Standard** | Passive | Ward | his row gets +15% DEF, and Shields on it are 15% stronger | covers every ally |
+| Ysolde | Ashcaller | Ashen Censer | Ability | Spell, Burn | 3 Burn on every enemy, and a little healing for every ally (10s) | 4 Burn |
+| Ysolde | Emberheart | **Heartfire Wand** | Weapon | Spell, Burn | magic bolts; crits Burn (1.3s) | +10% crit |
+| Ysolde | Kindler | Open Channel | Passive | Spell | a conduit: the holder's spills reach every ability | her Spell items fire 10% faster |
+
+Names in bold are new items; the rest are current items moved into place.
 
 **What else changes with the roster:**
-- **The 36 cut items leave the game:** near-duplicates (several quick blades, bows, and shields that did the same thing), most of the items that only charge other items, the Blind trinkets, and the weakest commons.
-- **Synergies:** the 11 that name a cut item (4 pairs, 2 transformations, 5 signatures) are moved to kept items, so every hero keeps a signature.
+- **The cut items leave the game:** near-duplicates (several quick blades, bows, and shields that did the same thing), most of the items that only charge other items, the Blind trinkets, and the weakest commons.
+- **Code:** an Epic names its hero (`"hero"` on the item) and its extra effect (`"hero_parts"`, the same parts as specializations and duo bonds), credited "Twinfang Stilettos (Wren's own)". The shop pool filters Epics by the team. The signature synergy layer is removed.
+- **Synergies:** the 3 pairs and 2 transformations that name a cut item move to kept items.
 - **Kits, shops, and sim parties** are updated to match.
 - **Enemies:** enemy items follow the same split. Rift Claw becomes a weapon, and some enemies get an ability as their "move".
 
@@ -143,15 +171,16 @@ The run report shows both bots side by side, so the gap between a random player 
 
 Each part is its own PR:
 
-1. **Slots and roster:** the two sim additions (multi-hit, row targets), the 40 items, the cut items removed, synergies, kits, enemy items, sim parties, and tests. Rerun the balance sim.
+1. **Slots and roster:** the two sim additions (multi-hit, row targets), hero Epics (`hero`, `hero_parts`, the shop filter), the 52 items, the cut items removed, synergies, kits, enemy items, sim parties, and tests. Rerun the balance sim.
 2. **The look:** slot frames and labels everywhere.
 3. **Popups:** the item and hero popups, then the unlock popup.
 4. **Difficulty:** the good-player bot, then tuning Act 1 to its target.
 
 ## Decisions (from the user, 2026-09-27)
 
-- **Roster:** about 40 items for now.
+- **Roster:** about 40 items for now, then (the user's idea) a shared pool of Commons, Uncommons, and Rares, plus Epics that belong to heroes: 3 per hero, one per specialization. Only the team's Epics appear in shops; the Vault, events, elite and boss rewards, and Loot can give any hero's. Anyone can equip a hero's Epic, and on its own hero it does more (replacing signature synergies).
 - **Slots:** weapons carry the steady damage (every 1–2s); abilities are real moves on 6–15s cooldowns with big, specific effects; passives are always on.
 - **Difficulty:** a good player should clear Act 1 about half the time.
 - **Clicking:** only items and heroes, as a big popup, and only while not in a fight.
-- **Unlocks:** a deed unlock or specialization unlock shows a popup with its paths, covering the screen; during a fight, it waits until after the fight.
+- **Unlocks:** a deed unlock or specialization unlock shows a popup with its paths, covering the screen; during a fight, it waits until after the fight. The player must pick one to close it.
+- **Build order:** slots and roster, then the look, then the popups, then difficulty.
