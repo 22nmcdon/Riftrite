@@ -37,13 +37,13 @@ func _snapshot(state: RunState) -> String:
 func test_items_move_between_the_stash_and_rows() -> void:
 	var state: RunState = _run()
 	var cleaver: int = _add(state, "rusted_cleaver")
-	var buckler: int = _add(state, "oak_buckler")
+	var buckler: int = _add(state, "mudbrick_wall")
 	assert_true(RunActions.move_item(state, _content(), cleaver, "brannoc", 0).ok)
 	assert_true(RunActions.move_item(state, _content(), buckler, "brannoc", 0).ok)
 	var row: Array[String] = []
 	for item: RunItem in state.hero("brannoc").items:
 		row.append(item.item_id)
-	assert_eq(row, ["oak_buckler", "rusted_cleaver"] as Array[String], "inserted at the index")
+	assert_eq(row, ["mudbrick_wall", "rusted_cleaver"] as Array[String], "inserted at the index")
 	assert_true(RunActions.move_item(state, _content(), cleaver, RunState.STASH, 0).ok)
 	assert_eq(state.stash.size(), 1)
 	assert_eq(state.check(_content()), [] as Array[String])
@@ -53,29 +53,29 @@ func test_loadout_slots_and_the_stash_have_room_limits() -> void:
 	var state: RunState = _run()
 	var knives: Array[int] = []
 	for i: int in _content().tuning.stash_slots:
-		knives.append(_add(state, "hearth_knife"))
-	_refused(RunActions.add_item(state, _content(), "oak_buckler"), "the stash has no room for Oak Buckler")
+		knives.append(_add(state, "longspear"))
+	_refused(RunActions.add_item(state, _content(), "mudbrick_wall"), "the stash has no room for Raise Wall")
 	assert_true(RunActions.move_item(state, _content(), knives[0], "brannoc", 0).ok)
 	assert_true(RunActions.move_item(state, _content(), knives[1], "brannoc", 0).ok)
 	var before: String = _snapshot(state)
 	_refused(RunActions.move_item(state, _content(), knives[2], "brannoc", 0), "brannoc has room for 2 abilities")
 	assert_eq(_snapshot(state), before, "a refused move changes nothing")
 	var drum: int = _add(state, "war_drum")
-	var bell: int = _add(state, "bell_of_vigil")
+	var bell: int = _add(state, "vesper_chime")
 	assert_true(RunActions.move_item(state, _content(), drum, "brannoc", 9).ok, "passives have their own slots")
 	_refused(RunActions.move_item(state, _content(), bell, "brannoc", 9), "brannoc has room for 1 passive")
 	assert_true(RunActions.rank_up(state, _content(), "brannoc").ok)
 	assert_true(RunActions.move_item(state, _content(), knives[2], "brannoc", 0).ok, "rank B: 3 abilities")
 	assert_eq(state.check(_content()), [] as Array[String])
 	while state.stash.size() < _content().tuning.stash_slots:
-		_add(state, "hearth_knife")
+		_add(state, "longspear")
 	_refused(RunActions.move_item(state, _content(), knives[0], RunState.STASH, 0), "the stash has no room for that (6 items)")
 
 
 func test_one_auto_attack_item_per_hero() -> void:
 	var state: RunState = _run()
 	var claw: int = _add(state, "rusted_cleaver")
-	var maw: int = _add(state, "blackthorn_bow")
+	var maw: int = _add(state, "crow_crossbow")
 	for uid: int in [claw, maw]:
 		var def: ItemDef = _content().items[state.find_item(uid).item_id]
 		assert_true(def.auto_attack, "%s is an auto-attack item" % def.id)
@@ -85,9 +85,9 @@ func test_one_auto_attack_item_per_hero() -> void:
 
 func test_combining_items() -> void:
 	var state: RunState = _run()
-	var kept: int = _add(state, "hearth_knife")
-	var copy: int = _add(state, "hearth_knife")
-	var other_tier: int = _add(state, "hearth_knife", 1)
+	var kept: int = _add(state, "longspear")
+	var copy: int = _add(state, "longspear")
+	var other_tier: int = _add(state, "longspear", 1)
 	state.find_item(kept).essence_ids = ["ember"] as Array[String]
 	state.find_item(kept).xp = 50
 	_refused(RunActions.combine_items(state, _content(), kept, other_tier), "only copies at the same tier combine")
@@ -102,17 +102,17 @@ func test_combining_items() -> void:
 
 func test_combining_limits() -> void:
 	var state: RunState = _run()
-	var a: int = _add(state, "hearth_knife", 3)
-	var b: int = _add(state, "hearth_knife", 3)
+	var a: int = _add(state, "longspear", 3)
+	var b: int = _add(state, "longspear", 3)
 	_refused(RunActions.combine_items(state, _content(), a, b), "S items can't combine")
-	var knife: int = _add(state, "bone_sling")
+	var knife: int = _add(state, "flint_arrows")
 	_refused(RunActions.combine_items(state, _content(), a, knife), "only two copies of the same item combine")
 	_refused(RunActions.combine_items(state, _content(), a, a), "pick two different items")
 
 
 func test_discard_and_legendaries_seen() -> void:
 	var state: RunState = _run()
-	var knife: int = _add(state, "hearth_knife")
+	var knife: int = _add(state, "longspear")
 	assert_true(RunActions.discard_item(state, _content(), knife).ok)
 	assert_eq(state.stash.size(), 0)
 	_refused(RunActions.add_item(state, _content(), "moon_blade"), "unknown item")
@@ -122,7 +122,7 @@ func test_discard_and_legendaries_seen() -> void:
 
 func test_any_item_fuses_two_essences_and_resets_xp() -> void:
 	var state: RunState = _run()
-	var knife: int = _add(state, "hearth_knife")
+	var knife: int = _add(state, "longspear")
 	var drum: int = _add(state, "war_drum")
 	for essence_id: String in ["ember", "storm", "frost", "verdant"]:
 		assert_true(RunActions.add_essence(state, _content(), essence_id).ok)
@@ -134,7 +134,7 @@ func test_any_item_fuses_two_essences_and_resets_xp() -> void:
 	assert_eq(state.find_item(knife).essence_ids, ["ember", "storm"] as Array[String])
 	assert_eq(state.find_item(knife).xp, 0, "fusing resets XP")
 	var before: String = _snapshot(state)
-	_refused(RunActions.infuse(state, _content(), knife, 0), "Hearth Knife already holds two essences")
+	_refused(RunActions.infuse(state, _content(), knife, 0), "Sweeping Spear already holds two essences")
 	assert_eq(_snapshot(state), before, "no third essence")
 	assert_true(RunActions.infuse(state, _content(), drum, 1).ok, "passives can be infused")
 	assert_eq(state.pouch, ["frost"] as Array[String])
@@ -152,7 +152,7 @@ func test_the_pouch_has_a_cap() -> void:
 
 func test_reforging_costs_gold_and_destroys_the_essence() -> void:
 	var state: RunState = _run()
-	var knife: int = _add(state, "hearth_knife")
+	var knife: int = _add(state, "longspear")
 	_refused(RunActions.reforge(state, _content(), knife), "has no infusion")
 	RunActions.add_essence(state, _content(), "ember")
 	RunActions.infuse(state, _content(), knife, 0)
@@ -182,7 +182,7 @@ func test_heroes_join_the_team() -> void:
 
 func test_rank_ups() -> void:
 	var state: RunState = _run()
-	var knife: int = _add(state, "hearth_knife")
+	var knife: int = _add(state, "longspear")
 	RunActions.move_item(state, _content(), knife, "brannoc", 0)
 	assert_true(RunActions.rank_up(state, _content(), "brannoc").ok)
 	var brannoc: RunHero = state.hero("brannoc")

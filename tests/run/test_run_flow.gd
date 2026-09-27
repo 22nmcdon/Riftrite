@@ -59,7 +59,7 @@ func _make_strong(state: RunState) -> void:
 	hero.rank = 3
 	hero.needs_specialization = false
 	hero.items.clear()
-	for item_id: String in ["hearthstone_ward", "first_light_dagger", "hearth_knife"]:
+	for item_id: String in ["tower_shield", "reapers_sickle", "longspear"]:
 		var item: RunItem = RunItem.make(state.take_uid(), item_id, 3)
 		hero.items.append(item)
 
@@ -162,7 +162,7 @@ func test_kits_top_up_from_other_keywords_when_the_team_has_too_few() -> void:
 		texts[file_name] = FileAccess.get_file_as_string("res://data".path_join(file_name))
 	var economy: Dictionary = JSON.parse_string(texts[RunContent.ECONOMY_FILE])
 	economy["kits"] = [{"keyword": "bow", "name": "Only Bows", "item": "flint_arrows", "essence": "wrath"},
-		{"keyword": "hex", "name": "Only Hexes", "item": "soot_bomb", "essence": "frost"}]
+		{"keyword": "hex", "name": "Only Hexes", "item": "thorn_darts", "essence": "frost"}]
 	texts[RunContent.ECONOMY_FILE] = JSON.stringify(economy)
 	var run: RunContent = RunContent.load_texts(texts, _content())
 	assert_true(run.is_valid(), str(run.errors))
@@ -248,7 +248,7 @@ func test_each_visit_offers_a_shop_and_a_different_stop() -> void:
 	assert_false(seen.has("skirmish"), "no more extra fights")
 	var keyed: RunState = _started(3)
 	keyed.keys = 1
-	keyed.stash.append(RunItem.make(keyed.take_uid(), "hearth_knife"))
+	keyed.stash.append(RunItem.make(keyed.take_uid(), "longspear"))
 	keyed.stash[0].essence_ids = ["ember"] as Array[String]
 	var found: Array[String] = []
 	for day: int in range(1, 6):
@@ -300,7 +300,7 @@ func test_the_node_pool_is_checked() -> void:
 
 func test_forge_reforge_and_retrain_need_their_stops() -> void:
 	var state: RunState = _started()
-	state.stash.append(RunItem.make(state.take_uid(), "hearth_knife"))
+	state.stash.append(RunItem.make(state.take_uid(), "longspear"))
 	state.stash[0].essence_ids = ["ember"] as Array[String]
 	state.gold = 10
 	_refused(RunFlow.forge_reforge(state, _content(), state.stash[0].uid), "reforging needs the Forge")
@@ -394,9 +394,9 @@ func test_prices_go_by_rarity_then_double_per_tier() -> void:
 	assert_eq([economy.item_price_for("common", 0), economy.item_price_for("uncommon", 0), economy.item_price_for("rare", 0), economy.item_price_for("epic", 0)], [2, 3, 5, 7])
 	assert_eq([economy.item_price_for("rare", 1), economy.item_price_for("rare", 2), economy.item_price_for("rare", 3)], [10, 20, 40])
 	var state: RunState = _at_shop()
-	var item: RunItem = RunItem.make(state.take_uid(), "hearth_knife", 1)
+	var item: RunItem = RunItem.make(state.take_uid(), "longspear", 1)
 	state.stash.append(item)
-	assert_eq(RunFlow.sell_price(_content(), _run(), item), economy.item_price_for(_content().items["hearth_knife"].rarity, 1) / 2, "half, rounded down")
+	assert_eq(RunFlow.sell_price(_content(), _run(), item), economy.item_price_for(_content().items["longspear"].rarity, 1) / 2, "half, rounded down")
 
 
 func test_shops_never_offer_enemy_only_items() -> void:
@@ -435,22 +435,87 @@ func test_keyword_and_slot_shops_sell_what_fits() -> void:
 			assert_gte(fitting, 3, "%s sells mostly its own wares" % pair[0])
 
 
+# --- hero Epics (docs/plans/items-and-clarity.md, section 3) ---------------------
+
+func _off_team(state: RunState, item_id: String) -> bool:
+	var hero_id: String = _content().items[item_id].hero
+	return not hero_id.is_empty() and state.hero(hero_id) == null
+
+
+func test_shops_offer_only_the_teams_epics() -> void:
+	var team_epics: int = 0
+	for run_seed: int in range(1, 60):
+		var state: RunState = _at_shop("caravan", run_seed)
+		for reroll: int in 3:
+			for offer: Dictionary in state.offers:
+				if offer["type"] != "item":
+					continue
+				assert_false(_off_team(state, offer["item"]), "seed %d: %s is another hero's Epic" % [run_seed, offer["item"]])
+				if not _content().items[offer["item"]].hero.is_empty():
+					team_epics += 1
+			state.gold = 99
+			RunFlow.reroll(state, _content(), _run())
+	assert_gt(team_epics, 0, "the team's own Epics do show up")
+
+
+func test_other_sources_can_give_any_heros_epic() -> void:
+	var epic_only: Array[int] = [0, 0, 0, 1, 0]
+	var off_team: int = 0
+	for run_seed: int in range(1, 40):
+		var state: RunState = _started(run_seed)
+		var rng := SimRng.new(run_seed)
+		var any: String = RunFlow._pick_item(state, _content(), rng, epic_only, false)
+		if _off_team(state, any):
+			off_team += 1
+		var shop_like: String = RunFlow._pick_item(state, _content(), rng, epic_only, false, [], Callable(), false)
+		assert_false(_off_team(state, shop_like), "seed %d: a shop-style pick never names another hero's Epic" % run_seed)
+	assert_gt(off_team, 10, "the Vault, events, Loot, and elite and boss rewards can")
+
+
+func test_the_reward_pick_after_a_normal_fight_keeps_to_the_team() -> void:
+	var epic_only: Array[int] = [0, 0, 0, 1, 0]
+	var off_team_after: Dictionary = {"normal": 0, "elite": 0}
+	for run_seed: int in range(1, 40):
+		for kind: String in ["normal", "elite"]:
+			var state: RunState = _started(run_seed)
+			state.offers.clear()
+			var encounter := EncounterDef.new()
+			encounter.kind = kind
+			RunFlow._add_reward_pick(state, _content(), _run(), encounter, epic_only, SimRng.new(run_seed))
+			for offer: Dictionary in state.offers:
+				if offer["type"] == "item" and _off_team(state, offer["item"]):
+					off_team_after[kind] += 1
+	assert_eq(off_team_after["normal"], 0, "a normal fight's reward pick offers only the team's Epics")
+	assert_gt(off_team_after["elite"], 0, "an elite's can offer any hero's")
+
+
+## A keyword shop whose keyword has too few items for this team (their Epics
+## count; other heroes' don't) tops up with any item.
 func test_a_shop_tops_up_when_too_few_items_fit() -> void:
-	var shop := ShopDef.new()
-	shop.keyword = "bleed"
-	var bleed: Array[String] = []
-	for item_id: String in _content().item_ids:
-		var def: ItemDef = _content().items[item_id]
-		if shop.fits(def) and not def.enemy_only and def.rarity != "legendary":
-			bleed.append(item_id)
-	assert_lt(bleed.size(), 5, "few Bleed items can be sold, so the Barber-Surgeon tops up")
-	var state: RunState = _at_shop("barber_surgeon")
+	var probe: RunState = _started()
+	var chosen: String = ""
+	var fitting: Array[String] = []
+	for node_id: String in _run().node_ids:
+		var shop: ShopDef = _run().nodes[node_id].shop
+		if shop == null or shop.keyword.is_empty() or not shop.essence.is_empty() or not chosen.is_empty():
+			continue
+		var items: Array[String] = []
+		for item_id: String in _content().item_ids:
+			var def: ItemDef = _content().items[item_id]
+			var for_team: bool = def.hero.is_empty() or probe.hero(def.hero) != null
+			if shop.fits(def) and not def.enemy_only and def.rarity != "legendary" and for_team:
+				items.append(item_id)
+		if items.size() < 5:
+			chosen = node_id
+			fitting = items
+	assert_ne(chosen, "", "some keyword shop has too few wares for this team")
+	var state: RunState = _at_shop(chosen)
 	assert_eq(state.offers.size(), 5)
 	var sold: int = 0
 	for offer: Dictionary in state.offers:
-		if bleed.has(offer["item"]):
+		if fitting.has(offer["item"]):
 			sold += 1
-	assert_eq(sold, bleed.size(), "every Bleed item first, then anything")
+	assert_eq(sold, fitting.size(), "%s: every fitting item first, then anything" % chosen)
 
 
 func test_an_essence_merchant_sells_its_essence_and_suited_items() -> void:
@@ -492,10 +557,10 @@ func test_the_synergy_peddler_sells_partners_for_what_you_hold() -> void:
 	var partners: Array[String] = RunFlow.partner_items(state, _content())
 	assert_true(partners.has(pair.items[1]), "the pair's other half")
 	assert_false(partners.has(pair.items[0]), "never what you hold")
-	for synergy_id: String in _content().synergy_ids:
-		var synergy: SynergyDef = _content().synergies[synergy_id]
-		if synergy.layer == SynergyDef.Layer.SIGNATURE:
-			assert_eq(partners.has(synergy.items[0]), state.hero(synergy.hero) != null and not synergy.items[0] == pair.items[0], "signature items for the team's heroes only")
+	for item_id: String in _content().item_ids:
+		var hero_id: String = _content().items[item_id].hero
+		if not hero_id.is_empty():
+			assert_eq(partners.has(item_id), state.hero(hero_id) != null, "the team's heroes' Epics only")
 	state.pouch.append("ember")
 	for synergy_id: String in _content().synergy_ids:
 		var synergy: SynergyDef = _content().synergies[synergy_id]
@@ -536,7 +601,7 @@ func test_buying_selling_and_rerolling_at_a_shop() -> void:
 
 func test_buying_selling_and_rerolling_need_a_shop() -> void:
 	var state: RunState = _started()
-	state.stash.append(RunItem.make(state.take_uid(), "hearth_knife"))
+	state.stash.append(RunItem.make(state.take_uid(), "longspear"))
 	_refused(RunFlow.buy(state, _content(), 0), "buying needs a shop")
 	_refused(RunFlow.sell(state, _content(), _run(), state.stash[0].uid), "selling needs a shop")
 	_refused(RunFlow.reroll(state, _content(), _run()), "rerolling needs a shop")
@@ -550,7 +615,7 @@ func test_buying_needs_gold_and_room() -> void:
 	_refused(RunFlow.buy(state, _content(), 0), "not enough gold")
 	state.gold = 100
 	for i: int in _content().tuning.stash_slots:
-		state.stash.append(RunItem.make(state.take_uid(), "hearth_knife"))
+		state.stash.append(RunItem.make(state.take_uid(), "longspear"))
 	var before: String = JSON.stringify(state.to_dict())
 	_refused(RunFlow.buy(state, _content(), 0), "the stash has no room")
 	assert_eq(JSON.stringify(state.to_dict()), before, "a refused purchase changes nothing")
@@ -564,7 +629,7 @@ func test_buying_an_upgrade_combines_into_the_held_copy() -> void:
 	held.essence_ids = ["ember"] as Array[String]
 	state.stash.append(held)
 	for i: int in _content().tuning.stash_slots:
-		state.stash.append(RunItem.make(state.take_uid(), "hearth_knife", 2))
+		state.stash.append(RunItem.make(state.take_uid(), "longspear", 2))
 	assert_eq(RunFlow.upgrade_target(state, _content(), 0), held.uid, "it lights up")
 	state.gold = 50
 	assert_true(RunFlow.take(state, _content(), 0).ok, "an upgrade needs no stash room (take buys at a shop, combining too)")
@@ -633,7 +698,7 @@ func test_the_upgrade_stop_is_the_boss_days_last_stop() -> void:
 	assert_eq([state.phase, state.stop_kind], ["stop", "upgrade"])
 	var claw: RunItem = RunItem.make(state.take_uid(), "rift_claw", 0)
 	state.stash.append(claw)
-	var top: RunItem = RunItem.make(state.take_uid(), "hearth_knife", 3)
+	var top: RunItem = RunItem.make(state.take_uid(), "longspear", 3)
 	state.stash.append(top)
 	_refused(RunFlow.upgrade(state, _content(), top.uid), "already S")
 	assert_true(RunFlow.upgrade(state, _content(), claw.uid).ok, "enemy-only items too")
@@ -770,7 +835,7 @@ func _make_army(state: RunState) -> void:
 			hero.specialization_id = _first_spec(hero.hero_id)
 		hero.needs_specialization = false
 		if hero.items.is_empty():
-			for item_id: String in ["hearthstone_ward", "first_light_dagger", "hearth_knife"]:
+			for item_id: String in ["tower_shield", "reapers_sickle", "longspear"]:
 				hero.items.append(RunItem.make(state.take_uid(), item_id, 3))
 
 

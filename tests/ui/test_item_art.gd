@@ -46,7 +46,7 @@ func test_art_is_imported_large_with_mipmaps() -> void:
 
 
 func test_items_with_art_show_it_and_others_keep_the_drawn_icon() -> void:
-	var with_art: Glyph = autofree(Glyph.item(_content.items["oak_buckler"], Color.WHITE))
+	var with_art: Glyph = autofree(Glyph.item(_content.items["mudbrick_wall"], Color.WHITE))
 	assert_not_null(with_art.art)
 	assert_eq(with_art.texture_filter, CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS)
 	var made_up := ItemDef.new()

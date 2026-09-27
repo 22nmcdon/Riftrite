@@ -65,7 +65,7 @@ func test_inspector_buttons_act_on_the_item() -> void:
 	var item: RunItem = state.stash[0]
 	var hero: RunHero = state.heroes[0]
 	var gold: int = state.gold
-	hero.items.append(RunItem.make(state.take_uid(), "hearth_knife"))
+	hero.items.append(RunItem.make(state.take_uid(), "longspear"))
 	main.refresh()
 	assert_true(U.press(main.inspector, "Give to " + main.session.content.heroes[hero.hero_id].name))
 	assert_eq(state.owner_of(item.uid), hero.hero_id)
@@ -82,8 +82,8 @@ func test_inspector_buttons_act_on_the_item() -> void:
 func test_combine_infuse_and_throw_away_from_the_inspector() -> void:
 	var session: RunSession = U.at_shop()
 	var state: RunState = session.state
-	var keep := RunItem.make(state.take_uid(), "hearth_knife")
-	var copy := RunItem.make(state.take_uid(), "hearth_knife")
+	var keep := RunItem.make(state.take_uid(), "longspear")
+	var copy := RunItem.make(state.take_uid(), "longspear")
 	state.stash.append_array([keep, copy])
 	state.pouch.append_array(["ember", "frost", "ember"] as Array[String])
 	var main: Main = _main(session)
@@ -102,7 +102,7 @@ func test_combine_infuse_and_throw_away_from_the_inspector() -> void:
 func test_the_inspector_follows_the_step() -> void:
 	var session: RunSession = U.at_shop()
 	var state: RunState = session.state
-	var item := RunItem.make(state.take_uid(), "hearth_knife")
+	var item := RunItem.make(state.take_uid(), "longspear")
 	item.essence_ids.append("ember")
 	state.stash.append(item)
 	state.phase = "stop"
@@ -156,8 +156,8 @@ func test_selection_is_not_saved() -> void:
 
 func test_item_text_is_plain_words() -> void:
 	var content: ContentDb = U.K.content()
-	var text: String = ItemInfo.item_text(content, "tallow_torch", 1, ["ember"] as Array[String], 0, content.heroes["odo"].stats)
-	assert_string_contains(text, "Tallow Torch  (Common, tier B)")
+	var text: String = ItemInfo.item_text(content, "grimoire_of_cinders", 1, ["ember"] as Array[String], 0, content.heroes["odo"].stats)
+	assert_string_contains(text, "Firebolt  (Rare, tier B)")
 	assert_string_contains(text, "When it fires: apply ")
 	assert_string_contains(text, " Burn to the front enemy")
 	assert_string_contains(text, "x1.5 B tier")
@@ -165,14 +165,14 @@ func test_item_text_is_plain_words() -> void:
 	assert_string_contains(relic, "When an ally drops below 30% HP: shield that ally for 80")
 	assert_eq(ItemInfo.TARGET_WORDS.size(), EffectDef.TARGET_NAMES.size(), "a word for every target")
 	assert_eq(ItemInfo.ITEM_TARGET_WORDS.size(), EffectDef.ITEM_TARGET_NAMES.size(), "a word for every item target")
-	assert_string_contains(ItemInfo.item_text(content, "whetstone", 0, [] as Array[String], 0), "its holder's other items")
+	assert_string_contains(ItemInfo.item_text(content, "clockwork_owl", 0, [] as Array[String], 0), "its holder's other items")
 	assert_string_contains(ItemInfo.hero_text(content, "vell", 0), "Innate: Lantern Vigil")
 
 
 func test_item_text_explains_keywords_spill_and_awakening() -> void:
 	var content: ContentDb = U.K.content()
 	var R: int = content.tuning.xp_to_resonant
-	var knife: String = ItemInfo.item_text(content, "hearth_knife", 0, [] as Array[String], 0)
+	var knife: String = ItemInfo.item_text(content, "longspear", 0, [] as Array[String], 0)
 	assert_string_contains(knife, "Keywords: Blade")
 	assert_string_contains(knife, "Infusion: empty (holds up to 2 essences)")
 	var hook: String = ItemInfo.item_text(content, "grave_hook", 0, ["ember"] as Array[String], 0)
@@ -191,7 +191,7 @@ func test_an_equipped_items_tooltip_lists_the_spills_it_gets() -> void:
 	var hook := RunItem.make(session.state.take_uid(), "grave_hook")
 	hook.essence_ids.append("wrath")
 	hook.xp = session.content.tuning.xp_to_resonant
-	var knife := RunItem.make(session.state.take_uid(), "hearth_knife")
+	var knife := RunItem.make(session.state.take_uid(), "longspear")
 	hero.items.append_array([hook, knife])
 	var content: ContentDb = session.content
 	assert_eq(ItemInfo.spills_received(content, hero, knife), PackedStringArray(["Gets 30% Wrath spill from Grave Hook"]))
@@ -257,31 +257,33 @@ func test_discovered_synergies_show_in_the_guild_bar() -> void:
 	var session: RunSession = U.at_shop()
 	var state: RunState = session.state
 	state.heroes.assign([RunHero.make("brannoc")])
-	state.heroes[0].items.append(RunItem.make(state.take_uid(), "oak_buckler"))
+	state.heroes[0].items.append(RunItem.make(state.take_uid(), "mudbrick_wall"))
+	state.heroes[0].items[0].essence_ids.append("stone")
 	var main: Main = _main(session)
 	assert_eq(_synergy_badge(main).text, "none yet")
-	assert_eq(session.active_synergies(), ["wardens_oath"] as Array[String], "Brannoc with his buckler")
-	state.discovered.append_array(["wardens_oath", "paper_cuts"] as Array[String])
+	assert_eq(session.active_synergies(), ["bulwark_of_stone"] as Array[String], "Raise Wall with Stone")
+	state.discovered.append_array(["bulwark_of_stone", "paper_cuts"] as Array[String])
 	main.refresh()
 	var badge: Label = _synergy_badge(main)
 	assert_eq(badge.text, "2 found · 1 active")
 	badge.mouse_entered.emit()
 	var text: String = main.hover_card.body_text()
-	assert_true(text.contains("★ Warden's Oath"), "active, so starred")
+	assert_true(text.contains("★ Bulwark of Stone"), "active, so starred")
 	assert_string_contains(text, "Paper Cuts")
 	assert_false(text.contains("★ Paper Cuts"), "found but not active")
-	assert_false(text.contains("Dawnstrike"), "undiscovered synergies stay hidden")
+	assert_false(text.contains("Frostfletch"), "undiscovered synergies stay hidden")
 
 
 func test_a_fight_announces_new_synergies() -> void:
 	var session: RunSession = U.at_fight()
 	var state: RunState = session.state
 	state.heroes.assign([RunHero.make("brannoc")])
-	state.heroes[0].items.append(RunItem.make(state.take_uid(), "oak_buckler"))
+	state.heroes[0].items.append(RunItem.make(state.take_uid(), "mudbrick_wall"))
+	state.heroes[0].items[0].essence_ids.append("stone")
 	var main: Main = _main(session)
 	(main.screen as FightScreen).start_fight()
-	assert_eq(session.last_discoveries, ["wardens_oath"] as Array[String])
-	assert_string_contains(U.text_of(main.screen), "Synergy discovered: Warden's Oath")
+	assert_eq(session.last_discoveries, ["bulwark_of_stone"] as Array[String])
+	assert_eq(main.screen.banners._label.text, "✦ Synergy discovered: Bulwark of Stone")
 	session.state.phase = "fight"
 	session.state.encounter_id = session.state.fight_options[0]
 	session.fight()
@@ -290,13 +292,13 @@ func test_a_fight_announces_new_synergies() -> void:
 
 func test_synergy_text_says_what_sets_it_off() -> void:
 	var content: ContentDb = U.K.content()
-	assert_string_contains(ItemInfo.synergy_text(content, "paper_cuts"), "When one hero holds Whetstone and Twin Daggers.")
+	assert_string_contains(ItemInfo.synergy_text(content, "paper_cuts"), "When one hero holds Twin Daggers and Sweeping Spear.")
 	assert_string_contains(ItemInfo.synergy_text(content, "ward_affinity"), "Counting heroes with the Ward affinity:")
 	assert_string_contains(ItemInfo.synergy_text(content, "ward_affinity"), "2+:")
 	var bond: String = ItemInfo.synergy_text(content, "gate_and_lantern")
 	assert_string_contains(bond, "When Sister Vell and")
 	assert_string_contains(bond, "When its holder heals an ally (every 2nd time): shield the ally healed for 3")
-	assert_string_contains(ItemInfo.synergy_text(content, "wildfire_torch"), "Tallow Torch infused with Ember")
+	assert_string_contains(ItemInfo.synergy_text(content, "wildfire_torch"), "Ashwood Staff infused with Ember")
 
 
 # --- Legendaries --------------------------------------------------------------------
@@ -307,7 +309,7 @@ func test_a_legendary_shows_its_path_and_can_be_fed() -> void:
 	assert_true(RunActions.add_item(state, session.content, "hungering_censer").ok)
 	var censer: RunItem = state.stash[-1]
 	state.pouch.append_array(["venom", "ember"] as Array[String])
-	var knife := RunItem.make(state.take_uid(), "hearth_knife")
+	var knife := RunItem.make(state.take_uid(), "longspear")
 	state.stash.append(knife)
 	var main: Main = _main(session)
 	session.select(censer.uid)
@@ -330,18 +332,18 @@ func test_items_can_be_fed_to_a_devourer_from_the_inspector() -> void:
 	var state: RunState = session.state
 	assert_true(RunActions.add_item(state, session.content, "maw_of_the_hollow").ok)
 	var maw: RunItem = state.stash[-1]
-	var knife := RunItem.make(state.take_uid(), "hearth_knife", 2)
+	var knife := RunItem.make(state.take_uid(), "longspear", 2)
 	state.stash.append(knife)
 	var main: Main = _main(session)
 	session.select(maw.uid)
 	assert_null(U.button(main.inspector, "Feed to"), "a Devourer doesn't eat itself")
 	session.select(knife.uid)
 	assert_true(U.press(main.inspector, "Feed to Maw of the Hollow (a meal worth 3)"))
-	assert_eq([maw.tier, maw.progress, maw.eaten], [1, 0, ["hearth_knife"] as Array[String]])
+	assert_eq([maw.tier, maw.progress, maw.eaten], [1, 0, ["longspear"] as Array[String]])
 	assert_eq(state.owner_of(knife.uid), RunState.NOWHERE)
 	session.select(maw.uid)
 	var text: String = U.text_of(main.inspector)
-	assert_true(text.contains("Has eaten: Hearth Knife (+3% to its numbers)"), text)
+	assert_true(text.contains("Has eaten: Sweeping Spear (+3% to its numbers)"), text)
 	assert_true(text.contains("x1.03 devoured"), "the trace shows in the numbers")
 
 

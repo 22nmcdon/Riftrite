@@ -158,10 +158,10 @@ func test_old_mother_ash() -> void:
 	var army: Array[UnitSetup] = []
 	for hero_id: String in ["brannoc", "wren", "vell", "odo"]:
 		var entries: Array[LoadoutEntry] = []
-		for item_id: String in ["first_light_dagger", "hearth_knife", "dusk_tome"]:
+		for item_id: String in ["reapers_sickle", "longspear", "wyrdglass_orb"]:
 			var entry := LoadoutEntry.new()
 			entry.item_id = item_id
-			entry.tier = 3
+			entry.tier = 1
 			entries.append(entry)
 		army.append(SetupBuilder.hero(content, hero_id, 3, FRONT if hero_id != "odo" else BACK, entries))
 	var result: FightResult = CombatSim.run(FightSetup.make(army, units, 2), content)

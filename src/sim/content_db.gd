@@ -245,10 +245,11 @@ func _check_references() -> void:
 			if not heroes.has(items[id].hero):
 				errors.append("%s: unknown hero \"%s\"" % [item_where, items[id].hero])
 			else:
-				# Credit the parts to their hero by name: "Twinfang Stilettos (Wren's own)".
+				# Credit the parts to their hero by name: "Twinfang Stilettos (Wren's own)"
+				# for a grant, "Alarm (Brannoc's own)" for an ability.
 				var first_name: String = heroes[items[id].hero].name.get_slice(" ", 0)
 				for part: SpecializationDef.Part in items[id].hero_parts:
-					var credit: String = "%s (%s's own)" % [items[id].name, first_name]
+					var credit: String = "%s's own" % first_name
 					if part.item != null:
 						part.item.name = part.item.name.replace(part.label, credit)
 					part.label = credit

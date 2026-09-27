@@ -276,12 +276,11 @@ func test_every_hero_is_complete() -> void:
 		var hero: HeroDef = content.heroes[hero_id]
 		assert_false(hero.innate.is_empty(), "%s has an innate" % hero_id)
 		assert_false(hero.basic_attack.effects.is_empty(), "%s has a basic attack" % hero_id)
-		var signatures: Array[String] = []
-		for synergy_id: String in content.synergy_ids:
-			var synergy: SynergyDef = content.synergies[synergy_id]
-			if synergy.layer == SynergyDef.Layer.SIGNATURE and synergy.hero == hero_id:
-				signatures.append(synergy_id)
-		assert_eq(signatures.size(), 1, "%s has a signature item" % hero_id)
+		var epics: Array[String] = []
+		for item_id: String in content.item_ids:
+			if content.items[item_id].hero == hero_id:
+				epics.append(item_id)
+		assert_eq(epics.size(), 3, "%s has three Epics, one per specialization" % hero_id)
 		if not classes.has(hero.hero_class):
 			classes.append(hero.hero_class)
 	for keyword_id: String in content.keyword_ids:
@@ -317,7 +316,7 @@ func test_each_hero_gets_their_affinity_perks() -> void:
 	for hero_id: String in content.hero_ids:
 		assert_eq(content.heroes[hero_id].affinities.size(), 2, hero_id)
 	var knife: LoadoutEntry = LoadoutEntry.new()
-	knife.item_id = "hearth_knife"
+	knife.item_id = "longspear"
 	var wren: UnitSetup = SetupBuilder.hero(content, "wren", 0, FRONT, [knife] as Array[LoadoutEntry])
 	assert_eq(wren.affinities, ["blade", "bleed"] as Array[String])
 	var keys: Array[String] = []
@@ -327,8 +326,8 @@ func test_each_hero_gets_their_affinity_perks() -> void:
 	assert_eq(content.heroes["wren"].innate.size() + 2, wren.innate.size(), "the innate's own parts are untouched")
 	var sim := CombatSim.new(FightSetup.make([wren], SetupBuilder.encounter_units(content, "pup_litter")), content)
 	var held: ItemState = sim.units[0].loadout_items()[0]
-	assert_true(content.items["hearth_knife"].keywords.has("blade"))
-	var plain: ItemState = ItemState.make(content.items["hearth_knife"], 0, sim.units[0].stats, content)
+	assert_true(content.items["longspear"].keywords.has("blade"))
+	var plain: ItemState = ItemState.make(content.items["longspear"], 0, sim.units[0].stats, content)
 	assert_eq(held.crit_chance_bp, plain.crit_chance_bp + 1000, "Blade affinity: +10% crit on Blade items")
 	var auras: String = sim.combat_log.to_text()
 	assert_string_contains(auras, "wren · Blade affinity aura starts")

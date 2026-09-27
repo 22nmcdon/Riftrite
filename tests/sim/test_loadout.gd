@@ -53,7 +53,7 @@ func test_the_real_items_sort_into_slots() -> void:
 		var def: ItemDef = K.content().items[item_id]
 		counts[def.slot] += 1
 		assert_eq(def.auto_attack, def.slot == ItemDef.Slot.BASIC_ATTACK, item_id)
-	assert_eq(counts[ItemDef.Slot.BASIC_ATTACK], 8, "the auto-attack items")
+	assert_eq(counts[ItemDef.Slot.BASIC_ATTACK], 20, "the weapons (17 the guild can get, 3 enemy-only)")
 	assert_gte(counts[ItemDef.Slot.PASSIVE], 8, "enough passives to fill the passive slots")
 
 

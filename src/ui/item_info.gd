@@ -28,6 +28,7 @@ const CONDUIT_WORDS: Array[String] = [
 const TARGET_WORDS: Array[String] = [
 	"the unit it hit", "its holder", "the most-hurt ally", "the front enemy", "a back-row enemy",
 	"a random enemy", "the most-hurt enemy", "every enemy", "every ally", "allies in its row", "that ally",
+	"every enemy in the front row", "every enemy in the back row",
 ]
 ## Which items a charge speeds up (by EffectDef.ItemTarget).
 const ITEM_TARGET_WORDS: Array[String] = ["itself", "its holder's other items", "its partner items"]
@@ -199,6 +200,8 @@ static func effect_words(content: ContentDb, effect: EffectDef, amount: int) -> 
 	match effect.type:
 		EffectDef.Type.DAMAGE:
 			what = "deal %d damage to %s" % [amount, who]
+			if effect.hits > 1:
+				what = "strike %d times over %ss, each dealing %d damage to %s" % [effect.hits, _seconds((effect.hits - 1) * effect.hit_interval_ticks), amount, who]
 		EffectDef.Type.HEAL:
 			what = "heal %s for %d" % [who, amount]
 		EffectDef.Type.SHIELD:

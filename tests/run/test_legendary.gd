@@ -75,7 +75,7 @@ func test_path_data_is_read() -> void:
 	assert_eq([path.wanted_at(1), path.wanted_at(2), path.wanted_at(3)], ["ember", "venom", ""])
 	var maw: LegendaryDef = _content().items["maw_of_the_hollow"].legendary
 	assert_eq([maw.trace_for("common"), maw.trace_for("epic"), maw.trace_for("legendary")], [300, 1200, 0])
-	assert_null(_content().items["hearth_knife"].legendary, "only Legendaries have a path")
+	assert_null(_content().items["longspear"].legendary, "only Legendaries have a path")
 
 
 func test_bad_path_data_is_reported() -> void:
@@ -156,7 +156,7 @@ func test_progress_tiers_up_carries_over_and_stops_at_s() -> void:
 	assert_eq([bow.tier, bow.progress], [3, 0], "at S progress stops")
 	assert_eq(RunLegendary.advance(content, bow, 10), [] as Array[String])
 	assert_eq(bow.progress, 0)
-	var knife := RunItem.make(2, "hearth_knife", 0)
+	var knife := RunItem.make(2, "longspear", 0)
 	assert_eq(RunLegendary.advance(content, knife, 10), [] as Array[String])
 	assert_eq([knife.tier, knife.progress], [0, 0], "only Legendaries have a path")
 	assert_eq(RunLegendary.advance(content, RunItem.make(3, "tallymans_bow", 0), 0), [] as Array[String])
@@ -170,7 +170,7 @@ func test_the_path_reads_in_plain_words() -> void:
 	assert_eq(RunLegendary.describe(content, RunItem.make(2, "hungering_censer", 2)), "Essence-hungry: feed it Venom (0/2 fed to S)")
 	assert_true(RunLegendary.describe(content, RunItem.make(3, "maw_of_the_hollow", 0)).begins_with("Devourer: feed it other items (0/3 meals to B"))
 	assert_eq(RunLegendary.describe(content, RunItem.make(4, "riftbreakers_brand", 3)), "Boss-forged: fully grown (S)")
-	assert_eq(RunLegendary.describe(content, RunItem.make(5, "hearth_knife", 0)), "")
+	assert_eq(RunLegendary.describe(content, RunItem.make(5, "longspear", 0)), "")
 
 
 # --- grows by use (hits) --------------------------------------------------------
@@ -180,7 +180,7 @@ func test_hits_count_only_the_items_own_direct_damage_on_enemies() -> void:
 		_entry(LogEntry.Kind.DAMAGE, "maren", "tallymans_bow", "rift_pup_1"),
 		_entry(LogEntry.Kind.DAMAGE, "maren", "tallymans_bow", "rift_pup_2"),
 		_entry(LogEntry.Kind.STATUS_DAMAGE, "maren", "tallymans_bow", "rift_pup_1"),
-		_entry(LogEntry.Kind.DAMAGE, "maren", "hearth_knife", "rift_pup_1"),
+		_entry(LogEntry.Kind.DAMAGE, "maren", "longspear", "rift_pup_1"),
 		_entry(LogEntry.Kind.DAMAGE, "wren", "tallymans_bow", "rift_pup_1"),
 		_entry(LogEntry.Kind.DAMAGE, "maren", "tallymans_bow", "wren"),
 		_entry(LogEntry.Kind.HEAL, "maren", "tallymans_bow", "rift_pup_1"),
@@ -302,7 +302,7 @@ func test_feeding_the_censer_the_essence_it_wants() -> void:
 func test_the_maw_devours_items_and_keeps_a_trace() -> void:
 	var state: RunState = _holding("maw_of_the_hollow")
 	var maw: RunItem = _legendary(state)
-	assert_true(RunActions.add_item(state, _content(), "hearth_knife", 1).ok)
+	assert_true(RunActions.add_item(state, _content(), "longspear", 1).ok)
 	assert_true(RunActions.add_item(state, _content(), "rimewood_longbow", 0).ok)
 	assert_true(RunActions.add_item(state, _content(), "tallymans_bow").ok)
 	var knife: RunItem = state.stash[0]
@@ -315,8 +315,8 @@ func test_the_maw_devours_items_and_keeps_a_trace() -> void:
 	assert_eq(state.stash.size(), 3, "refusals change nothing")
 	var ate: RunActions.Result = RunActions.devour_item(state, _content(), maw.uid, knife.uid)
 	assert_true(ate.ok)
-	assert_eq(ate.note, "Maw of the Hollow devours Hearth Knife")
-	assert_eq([maw.tier, maw.progress, maw.eaten], [0, 2, ["hearth_knife"] as Array[String]], "a B meal is worth 2")
+	assert_eq(ate.note, "Maw of the Hollow devours Sweeping Spear")
+	assert_eq([maw.tier, maw.progress, maw.eaten], [0, 2, ["longspear"] as Array[String]], "a B meal is worth 2")
 	assert_eq(RunActions.devour_item(state, _content(), maw.uid, longbow.uid).notes, ["Maw of the Hollow grows to B"] as Array[String])
 	assert_eq([maw.tier, maw.progress], [1, 0])
 	assert_eq(state.stash, [bow] as Array[RunItem], "eaten items are gone")
@@ -337,7 +337,7 @@ func test_the_trace_multiplies_the_items_own_numbers() -> void:
 func test_the_trace_reaches_the_fight() -> void:
 	var state: RunState = _holding("maw_of_the_hollow")
 	var maw: RunItem = _legendary(state)
-	maw.eaten.append_array(["hearth_knife", "hearth_knife"] as Array[String])
+	maw.eaten.append_array(["longspear", "longspear"] as Array[String])
 	var setup: FightSetup = RunFight.setup_for(state, _content(), "pup_litter")
 	assert_eq(setup.heroes[0].items[0].trace_bp, 600)
 
@@ -348,12 +348,12 @@ func test_progress_and_meals_survive_save_and_load() -> void:
 	var state: RunState = _holding("maw_of_the_hollow")
 	var maw: RunItem = _legendary(state)
 	maw.progress = 2
-	maw.eaten.append("hearth_knife")
+	maw.eaten.append("longspear")
 	var loaded: Array = RunState.from_dict(JSON.parse_string(JSON.stringify(state.to_dict())), _content())
 	assert_eq(loaded[1], [] as Array[String])
 	var back: RunItem = (loaded[0] as RunState).hero("brannoc").items[0]
-	assert_eq([back.progress, back.eaten], [2, ["hearth_knife"] as Array[String]])
-	var plain: Dictionary = RunItem.make(4, "hearth_knife").to_dict()
+	assert_eq([back.progress, back.eaten], [2, ["longspear"] as Array[String]])
+	var plain: Dictionary = RunItem.make(4, "longspear").to_dict()
 	assert_false(plain.has("progress") or plain.has("eaten"), "only saved when set, so older saves still load")
 
 
@@ -376,7 +376,7 @@ func test_the_run_rules_cover_legendaries() -> void:
 	state.stash.clear()
 	state.legendaries_seen.clear()
 	assert_true(_has(state.check(_content()), "not marked as seen"))
-	var knife := RunItem.make(state.take_uid(), "hearth_knife")
+	var knife := RunItem.make(state.take_uid(), "longspear")
 	knife.progress = 3
 	state.legendaries_seen.append("riftbreakers_brand")
 	state.stash.append(knife)
@@ -462,7 +462,7 @@ func test_a_fights_growth_comes_back_with_the_result() -> void:
 	hero.rank = 3
 	hero.needs_specialization = false
 	hero.items.clear()
-	for item_id: String in ["hearthstone_ward", "first_light_dagger"]:
+	for item_id: String in ["tower_shield", "reapers_sickle"]:
 		hero.items.append(RunItem.make(state.take_uid(), item_id, 3))
 	assert_true(RunActions.add_item(state, _content(), "tallymans_bow").ok)
 	assert_true(RunActions.move_item(state, _content(), state.stash[-1].uid, hero.hero_id, 0).ok)
@@ -490,9 +490,9 @@ func test_the_bot_feeds_legendaries() -> void:
 	assert_eq([censer.tier, censer.progress], [2, 1], "Ember, then one Venom, before any infusing")
 	assert_eq(state.pouch, [] as Array[String])
 	assert_eq(maw.eaten, [] as Array[String], "a Devourer never eats itself")
-	var knife := RunItem.make(state.take_uid(), "hearth_knife")
+	var knife := RunItem.make(state.take_uid(), "longspear")
 	state.stash.append(knife)
 	RunBot._feed_legendaries(state, _content())
-	assert_eq(maw.eaten, ["hearth_knife"] as Array[String], "stash leftovers go to the Devourer")
+	assert_eq(maw.eaten, ["longspear"] as Array[String], "stash leftovers go to the Devourer")
 	assert_eq(state.stash, [maw] as Array[RunItem])
 	assert_eq(state.check(_content()), [] as Array[String])

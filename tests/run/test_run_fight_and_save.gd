@@ -16,7 +16,7 @@ func _run() -> RunState:
 	var state: RunState = RunState.make(11)
 	RunActions.add_hero(state, content, "brannoc", 1, "brannoc_hearthwall")
 	RunActions.add_hero(state, content, "wren")
-	for item_id: String in ["rusted_cleaver", "oak_buckler"]:
+	for item_id: String in ["rusted_cleaver", "mudbrick_wall"]:
 		RunActions.add_item(state, content, item_id)
 		RunActions.move_item(state, content, state.stash[-1].uid, "brannoc", 9)
 	RunActions.add_essence(state, content, "ember")
@@ -24,7 +24,7 @@ func _run() -> RunState:
 	state.hero("brannoc").items[0].xp = 40
 	RunActions.add_essence(state, content, "frost")
 	RunActions.add_relic(state, content, "warding_knot")
-	RunActions.add_item(state, content, "hearth_knife", 1)
+	RunActions.add_item(state, content, "longspear", 1)
 	state.gold = 12
 	assert_eq(state.check(content), [] as Array[String])
 	return state
@@ -93,7 +93,7 @@ func test_apply_result_keeps_xp_discoveries_and_the_record() -> void:
 	RunFight.apply_result(state, _content(), result)
 	assert_gt(state.hero("brannoc").items[0].xp, 40, "fires and the battle added XP")
 	assert_gt(buckler.xp, 0, "matched by loadout index")
-	assert_true(state.discovered.has("wardens_oath"), "Brannoc with his buckler")
+	assert_true(state.discovered.has("bulwark_of_stone"), "Raise Wall infused with Stone")
 	assert_eq(state.wins + state.losses, 1)
 	assert_eq(state.wins, 1 if result.guild_won() else 0)
 
@@ -147,7 +147,7 @@ func test_broken_saves_are_refused() -> void:
 	_assert_refused(crowded, "4 heroes; the team is 3")
 	var packed: Dictionary = data.duplicate(true)
 	for i: int in 3:
-		packed["heroes"][0]["items"].append({"uid": 80 + i, "item": "hearth_knife", "tier": 0, "essences": [], "xp": 0})
+		packed["heroes"][0]["items"].append({"uid": 80 + i, "item": "longspear", "tier": 0, "essences": [], "xp": 0})
 	packed["next_uid"] = 100
 	_assert_refused(packed, "brannoc has room for 3 abilities")
 	var wrong_spec: Dictionary = data.duplicate(true)

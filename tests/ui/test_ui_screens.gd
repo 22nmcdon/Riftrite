@@ -227,8 +227,8 @@ func test_drag_and_drop_moves_sells_and_throws_away() -> void:
 func test_dropping_a_copy_combines_and_an_essence_infuses() -> void:
 	var session: RunSession = U.at_shop()
 	var state: RunState = session.state
-	var keep := RunItem.make(state.take_uid(), "hearth_knife")
-	var copy := RunItem.make(state.take_uid(), "hearth_knife")
+	var keep := RunItem.make(state.take_uid(), "longspear")
+	var copy := RunItem.make(state.take_uid(), "longspear")
 	state.stash.append_array([keep, copy])
 	state.pouch.append("ember")
 	var main: Main = _main(session)
@@ -236,7 +236,7 @@ func test_dropping_a_copy_combines_and_an_essence_infuses() -> void:
 	assert_false(tile._can_drop_data(Vector2.ZERO, {"uid": keep.uid}), "not onto itself")
 	tile._drop_data(Vector2.ZERO, {"uid": copy.uid})
 	assert_eq([state.stash.size(), keep.tier], [1, 1])
-	var lower := RunItem.make(state.take_uid(), "hearth_knife")
+	var lower := RunItem.make(state.take_uid(), "longspear")
 	state.stash.append(lower)
 	main.refresh()
 	_owned_tile(main, keep.uid)._drop_data(Vector2.ZERO, {"uid": lower.uid})
@@ -328,13 +328,13 @@ func test_the_rewards_screen_shows_the_pick_of_three() -> void:
 	state.phase = "rewards"
 	state.offers.assign([
 		{"type": "item", "item": "rift_claw", "tier": 0, "price": 0, "taken": false, "group": RunFlow.REWARD_PICK, "drop": "yes"},
-		{"type": "item", "item": "hearth_knife", "tier": 0, "price": 0, "taken": false, "group": RunFlow.REWARD_PICK},
+		{"type": "item", "item": "longspear", "tier": 0, "price": 0, "taken": false, "group": RunFlow.REWARD_PICK},
 		{"type": "item", "item": "hatchet", "tier": 0, "price": 0, "taken": false, "group": RunFlow.REWARD_PICK},
 	])
 	var main: Main = _main(session)
 	assert_string_contains(U.text_of(main.screen), "Choose one spoil (or none): the first is from the enemy team")
 	_offer_tiles(main)[1].clicked.emit()
-	assert_eq(state.stash[0].item_id, "hearth_knife")
+	assert_eq(state.stash[0].item_id, "longspear")
 	assert_eq([state.offers[0]["taken"], state.offers[2]["taken"]], [true, true], "one of the three")
 
 

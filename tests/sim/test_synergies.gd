@@ -79,8 +79,6 @@ func test_reads_each_layer() -> void:
 	var transform: Array = _read({"layer": "transformation", "item": "a", "essence": "ember", "item_effects": K.damage(4, "all_enemies")})
 	assert_eq(transform[1], [] as Array[String])
 	assert_eq((transform[0] as SynergyDef).item_effects.size(), 1)
-	var signature: Array = _read({"layer": "signature", "hero": "vell", "item": "a", "auras": [{"target": "holder", "stat": "def_bp", "value": 11000}]})
-	assert_eq(signature[1], [] as Array[String])
 	var resonance: Array = _read({"layer": "resonance", "essence": "ember", "tiers": [
 		{"count": 3, "auras": [{"target": "all_items", "stat": "damage_bp", "value": 11000}]},
 		{"count": 5, "auras": [{"target": "all_items", "stat": "damage_bp", "value": 12000}]}]})
@@ -102,7 +100,8 @@ func test_reads_each_layer() -> void:
 func test_rejects_bad_synergies() -> void:
 	_assert_error(_read({"layer": "pair", "items": ["a", "a"], "auras": _crit_on_matched()})[1], "a pair needs two different items")
 	_assert_error(_read({"layer": "transformation", "item": "a", "essence": "ember"})[1], "a transformation needs item_effects")
-	_assert_error(_read({"layer": "signature", "hero": "vell", "item": "a"})[1], "a synergy needs auras, grants, or effects")
+	_assert_error(_read({"layer": "pair", "items": ["a", "b"]})[1], "a synergy needs auras, grants, or effects")
+	_assert_error(_read({"layer": "signature", "hero": "vell", "item": "a"})[1], "layer: unknown value \"signature\"")
 	_assert_error(_read({"layer": "resonance", "essence": "ember"})[1], "a resonance needs tiers")
 	_assert_error(_read({"layer": "affinity", "keyword": "ward", "tiers": [
 		{"count": 3, "auras": [{"target": "all_items", "stat": "damage_bp", "value": 11000}]},
@@ -123,8 +122,7 @@ func test_content_checks_synergy_references() -> void:
 	for file_name: String in ContentDb.FILES:
 		texts[file_name] = FileAccess.get_file_as_string("res://data".path_join(file_name))
 	texts[ContentDb.SYNERGIES_FILE] = JSON.stringify([
-		{"id": "odd_pair", "name": "Odd", "layer": "pair", "items": ["hearth_knife", "moon_blade"], "auras": _crit_on_matched()},
-		{"id": "odd_sig", "name": "Odd", "layer": "signature", "hero": "nobody", "item": "hearth_knife", "auras": _crit_on_matched()},
+		{"id": "odd_pair", "name": "Odd", "layer": "pair", "items": ["longspear", "moon_blade"], "auras": _crit_on_matched()},
 		{"id": "odd_res", "name": "Odd", "layer": "resonance", "essence": "glitter", "tiers": [{"count": 3,
 			"grants": [{"effect": {"trigger": "on_fire", "type": "charge", "amount_ms": 100, "target": "partner_items"}}]}]},
 	])
@@ -133,7 +131,6 @@ func test_content_checks_synergy_references() -> void:
 	texts[ContentDb.ITEMS_FILE] = JSON.stringify(items)
 	var errors: Array[String] = ContentDb.load_texts(texts).errors
 	_assert_error(errors, "unknown item \"moon_blade\"")
-	_assert_error(errors, "unknown hero \"nobody\"")
 	_assert_error(errors, "unknown essence \"glitter\"")
 	_assert_error(errors, "partner_items only works in a pair synergy's grants")
 	_assert_error(errors, "matched_items only works in a synergy")
@@ -225,26 +222,17 @@ func test_matched_items_aura_reaches_only_the_pair() -> void:
 	assert_eq(aura.to_text(), "[0.00s] synergy · Crit Pair aura starts: +10% crit chance for matched items")
 
 
-# --- signatures ---------------------------------------------------------------
+# --- item-layer grants ---------------------------------------------------------
 
 func test_item_layer_grants_reach_only_matched_items() -> void:
-	K.synergy("lamp_grant", {"layer": "signature", "hero": "vell", "item": "s_lamp",
+	K.synergy("lamp_grant", {"layer": "pair", "items": ["s_lamp", "s_other"],
 		"grants": [{"effect": {"trigger": "on_fire", "type": "shield", "amount": 8, "target": "self"}}]})
-	var sim: CombatSim = K.synergy_sim([K.unit("vell", 100, FRONT, [_named("s_lamp"), _named("s_other")])], [K.dummy("b", 100)])
+	var sim: CombatSim = K.synergy_sim([K.unit("vell", 100, FRONT, [_named("s_lamp"), _named("s_other"), _named("s_third")])], [K.dummy("b", 100)])
 	var row: Array[ItemState] = sim.unit_by_id("vell").loadout_items()
 	assert_eq(row[0].effects.size(), 2, "the lamp gains the grant")
-	assert_eq(row[1].effects.size(), 1, "the other item doesn't")
+	assert_eq(row[1].effects.size(), 2, "so does its partner")
+	assert_eq(row[2].effects.size(), 1, "an item outside the pair doesn't")
 	assert_eq(sim.unit_by_id("vell").items[0].effects.size(), 1, "nor does the basic attack")
-
-
-func test_signature_needs_its_hero() -> void:
-	K.synergy("vells_own", {"layer": "signature", "hero": "vell", "item": "s_lamp", "auras": [{"target": "holder", "stat": "def_bp", "value": 15000}]})
-	var vell: UnitSetup = K.unit_with("vell", UnitStats.make(100, 0, 0, 100), FRONT, [_named("s_lamp")])
-	var other: UnitSetup = K.unit_with("other", UnitStats.make(100, 0, 0, 100), FRONT, [_named("s_lamp")])
-	var sim: CombatSim = K.synergy_sim([vell, other], [K.dummy("b", 100)])
-	assert_eq(sim.unit_by_id("vell").stats.get_stat(UnitStats.Stat.DEF), 150)
-	assert_eq(sim.unit_by_id("other").stats.get_stat(UnitStats.Stat.DEF), 100)
-	assert_eq(sim.synergies.size(), 1)
 
 
 # --- transformations ----------------------------------------------------------
@@ -385,16 +373,16 @@ func test_enemies_get_no_synergies() -> void:
 func test_real_synergies_show_up_in_a_real_fight() -> void:
 	var content: ContentDb = K.content()
 	var entries: Array[LoadoutEntry] = []
-	for item_id: String in ["whetstone", "twin_daggers", "tallow_torch"]:
+	for item_id: String in ["twin_daggers", "longspear", "hunters_snare"]:
 		var entry := LoadoutEntry.new()
 		entry.item_id = item_id
-		if item_id == "tallow_torch":
-			entry.essence_ids = ["ember"] as Array[String]
+		if item_id == "hunters_snare":
+			entry.essence_ids = ["venom"] as Array[String]
 		entries.append(entry)
 	var wren: UnitSetup = SetupBuilder.hero(content, "wren", 1, FRONT, entries)
 	var result: FightResult = CombatSim.run(FightSetup.make([wren] as Array[UnitSetup], SetupBuilder.encounter_units(content, "hound_pack"), 4), content)
 	assert_eq(result.errors, [] as Array[String])
 	var text: String = result.combat_log.to_text()
-	assert_string_contains(text, "Paper Cuts: wren · Whetstone + Twin Daggers")
-	assert_string_contains(text, "Wildfire Torch: wren · Tallow Torch + Ember")
-	assert_string_contains(text, "wren · Twin Daggers (Paper Cuts) charges Whetstone")
+	assert_string_contains(text, "Paper Cuts: wren · Twin Daggers + Sweeping Spear")
+	assert_string_contains(text, "Venomous Snare: wren · Hunter's Snare + Venom")
+	assert_string_contains(text, "wren · Twin Daggers (Paper Cuts) charges Sweeping Spear")

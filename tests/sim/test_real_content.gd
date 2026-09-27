@@ -50,10 +50,10 @@ func test_encounter_units_are_numbered() -> void:
 
 func test_enemy_layouts_are_checked() -> void:
 	var enemies: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/enemies.json"))
-	enemies[0]["items"] = [{"item": "moon_blade"}, {"item": "hearth_knife", "essences": ["ember", "frost", "storm"]}, {"item": "rift_claw", "xp": 50}]
+	enemies[0]["items"] = [{"item": "moon_blade"}, {"item": "longspear", "essences": ["ember", "frost", "storm"]}, {"item": "rift_claw", "xp": 50}]
 	var errors: Array[String] = _texts_with(ContentDb.ENEMIES_FILE, enemies).errors
 	assert_true(_has(errors, "unknown item \"moon_blade\""), str(errors))
-	assert_true(_has(errors, "\"hearth_knife\" has 3 essences; an infusion holds at most 2"), str(errors))
+	assert_true(_has(errors, "\"longspear\" has 3 essences; an infusion holds at most 2"), str(errors))
 	assert_true(_has(errors, "has 50 infusion XP but no infusion"), str(errors))
 
 
@@ -108,7 +108,7 @@ func test_the_hound_alpha_hunts_the_weakest_and_frenzies() -> void:
 			bites += 1
 		if entry.kind == LogEntry.Kind.PHASE and entry.note == "Blood Frenzy":
 			frenzy += 1
-	assert_gt(bites, 3, "the Alpha bites")
+	assert_gte(bites, 2, "the Alpha bites (every 4s)")
 	assert_eq(frenzy, 1, "and frenzies once")
 
 
@@ -122,33 +122,42 @@ func test_real_content_fights_replay_identically() -> void:
 	assert_eq(logs[0], logs[1])
 
 
-## The slice's item targets (docs/plans/slice-content.md): 60 items the
-## guild can get plus 6 Legendaries (docs/plans/legendary-items.md), enemy-only
-## items on top; mostly abilities, with some basic attacks and passives
-## (docs/plans/fun-redesign.md); some Epics; 1-3 keywords each; items for every
-## hero's tags.
-func test_slice_item_roster() -> void:
+## The roster (docs/plans/items-and-clarity.md, section 3): 28 shared
+## Commons, Uncommons, and Rares (8 weapons, 11 abilities, 9 passives), 24
+## hero Epics (3 per hero, each hero's own), and 6 Legendaries (one per
+## path), enemy-only items on top. Weapons fire every 1-2s; abilities are
+## moves on 6-15s cooldowns. 1-3 keywords each, and every keyword has
+## shared items.
+func test_the_item_roster() -> void:
 	var db: ContentDb = K.content()
 	var guild: Array[ItemDef] = []
 	for item_id: String in db.item_ids:
 		if not db.items[item_id].enemy_only:
 			guild.append(db.items[item_id])
-	assert_eq(guild.size(), 76, "66, plus 4 conduits and 6 event passives (step 5)")
-	var slots: Array[int] = [0, 0, 0]
-	var epics: int = 0
+	assert_eq(guild.size(), 58, "28 shared, 24 hero Epics, 6 Legendaries")
+	var shared_slots: Array[int] = [0, 0, 0]
+	var epics_by_hero: Dictionary[String, int] = {}
 	var paths: Array[String] = []
 	for item: ItemDef in guild:
+		assert_between(item.keywords.size(), 1, ItemDef.MAX_KEYWORDS, "%s has keywords" % item.id)
+		assert_eq(item.rarity == "epic", not item.hero.is_empty(), "%s: Epics, and only Epics, belong to a hero" % item.id)
 		if item.legendary != null:
 			paths.append(item.legendary.path)
-		slots[item.slot] += 1
-		assert_between(item.keywords.size(), 1, ItemDef.MAX_KEYWORDS, "%s has keywords" % item.id)
-		if item.rarity == "epic":
-			epics += 1
-	assert_gte(slots[ItemDef.Slot.BASIC_ATTACK], 5, "basic attacks to choose from")
-	assert_gte(slots[ItemDef.Slot.PASSIVE], 5, "passives to choose from")
-	assert_gt(slots[ItemDef.Slot.ABILITY], slots[ItemDef.Slot.BASIC_ATTACK] + slots[ItemDef.Slot.PASSIVE], "mostly abilities")
-	assert_gte(epics, 6)
+		elif item.hero.is_empty():
+			shared_slots[item.slot] += 1
+		else:
+			epics_by_hero[item.hero] = epics_by_hero.get(item.hero, 0) + 1
+		if item.slot == ItemDef.Slot.BASIC_ATTACK:
+			assert_between(item.cooldown_ticks, 20, 40, "%s: a weapon fires every 1-2s" % item.id)
+		elif item.slot == ItemDef.Slot.ABILITY:
+			assert_between(item.cooldown_ticks, 120, 300, "%s: an ability is a move on a 6-15s cooldown" % item.id)
+	assert_eq(shared_slots, [8, 11, 9] as Array[int], "shared weapons, abilities, passives")
+	for hero_id: String in db.hero_ids:
+		assert_eq(epics_by_hero.get(hero_id, 0), 3, "%s has 3 Epics" % hero_id)
 	paths.sort()
 	assert_eq(paths, ["bonded", "boss", "devour", "essence", "hits", "martyr"] as Array[String], "one Legendary per path")
+	for keyword_id: String in db.keyword_ids:
+		var shared: int = guild.filter(func(item: ItemDef) -> bool: return item.hero.is_empty() and item.legendary == null and item.keywords.has(keyword_id)).size()
+		assert_gte(shared, 2, "%s has shared items" % keyword_id)
 	for tag: String in ["ranged", "melee", "magic", "healing", "defense", "tool", "charm", "tome", "food", "weapon"]:
-		assert_gte(guild.filter(func(item: ItemDef) -> bool: return item.tags.has(tag)).size(), 3, "at least 3 %s items" % tag)
+		assert_gte(guild.filter(func(item: ItemDef) -> bool: return item.tags.has(tag)).size(), 2, "at least 2 %s items" % tag)

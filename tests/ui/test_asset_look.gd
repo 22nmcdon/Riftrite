@@ -36,13 +36,13 @@ func _decor(tile: ItemTile) -> FrameDecor:
 
 func test_gem_forms() -> void:
 	var F := Glyph.Infusion
-	assert_eq(InfusionLook.form(_content, "hearth_knife", E, E), F.EMPTY)
-	assert_eq(InfusionLook.form(_content, "hearth_knife", ["ember"] as Array[String], E), F.SINGLE)
+	assert_eq(InfusionLook.form(_content, "longspear", E, E), F.EMPTY)
+	assert_eq(InfusionLook.form(_content, "longspear", ["ember"] as Array[String], E), F.SINGLE)
 	assert_eq(InfusionLook.form(_content, "night_lantern", ["frost", "storm"] as Array[String], E), F.ALLOY)
 	assert_eq(InfusionLook.form(_content, "night_lantern", ["venom", "venom"] as Array[String], E), F.PURE)
-	assert_eq(InfusionLook.form(_content, "tallow_torch", ["ember"] as Array[String], E), F.SINGLE, "a hidden transformation looks like a single")
-	assert_eq(InfusionLook.form(_content, "tallow_torch", ["ember"] as Array[String], ["wildfire_torch"] as Array[String]), F.TRANSFORMATION, "once discovered")
-	assert_eq(InfusionLook.form(_content, "tallow_torch", ["frost"] as Array[String], ["wildfire_torch"] as Array[String]), F.SINGLE, "only with its essence")
+	assert_eq(InfusionLook.form(_content, "ashwood_staff", ["ember"] as Array[String], E), F.SINGLE, "a hidden transformation looks like a single")
+	assert_eq(InfusionLook.form(_content, "ashwood_staff", ["ember"] as Array[String], ["wildfire_torch"] as Array[String]), F.TRANSFORMATION, "once discovered")
+	assert_eq(InfusionLook.form(_content, "ashwood_staff", ["frost"] as Array[String], ["wildfire_torch"] as Array[String]), F.SINGLE, "only with its essence")
 
 
 ## The mark (docs/plans/infusion-rework.md): rays for a Resonant single, a
@@ -64,7 +64,7 @@ func test_infusion_marks_follow_the_sims_rules() -> void:
 	for case: Array in cases:
 		var essences: Array[String] = []
 		essences.assign(case[0])
-		assert_eq(InfusionLook.mark(_content, "tallow_torch", essences, case[1], case[2]), case[3], case[4])
+		assert_eq(InfusionLook.mark(_content, "grimoire_of_cinders", essences, case[1], case[2]), case[3], case[4])
 	assert_eq(InfusionLook.mark_color(["frost"] as Array[String]), UiStyle.ESSENCE["frost"])
 	assert_eq(InfusionLook.level(_content, ["ember"] as Array[String], R), Infusions.Level.RESONANT)
 	assert_eq(InfusionLook.level(_content, E, 9999), Infusions.Level.BASE, "no infusion, no level")
@@ -73,7 +73,7 @@ func test_infusion_marks_follow_the_sims_rules() -> void:
 func test_tiles_carry_the_ladder_the_rift_bleed_and_marks() -> void:
 	var session: RunSession = U.at_shop()
 	var state: RunState = session.state
-	var knife := RunItem.make(state.take_uid(), "hearth_knife")
+	var knife := RunItem.make(state.take_uid(), "longspear")
 	var daggers := RunItem.make(state.take_uid(), "twin_daggers")
 	daggers.essence_ids.append("ember")
 	daggers.xp = _content.tuning.xp_to_resonant
@@ -81,7 +81,7 @@ func test_tiles_carry_the_ladder_the_rift_bleed_and_marks() -> void:
 	state.stash.append_array([knife, daggers, bond])
 	var main: Main = _main(session)
 	var plain: FrameDecor = _decor(_tile(main, knife.uid))
-	assert_eq([plain.ornament, plain.cracks, plain.mark], [ItemDef.RARITIES.find(_content.items["hearth_knife"].rarity), false, FrameDecor.Mark.NONE])
+	assert_eq([plain.ornament, plain.cracks, plain.mark], [ItemDef.RARITIES.find(_content.items["longspear"].rarity), false, FrameDecor.Mark.NONE])
 	var resonant: FrameDecor = _decor(_tile(main, daggers.uid))
 	assert_eq([resonant.mark, resonant.mark_hue], [FrameDecor.Mark.SPILLS, UiStyle.ESSENCE["ember"]])
 	assert_true(_decor(_tile(main, bond.uid)).cracks, "enemy-only items carry the rift bleed")
@@ -97,9 +97,9 @@ func test_tiles_carry_the_ladder_the_rift_bleed_and_marks() -> void:
 func test_drop_checks_never_touch_the_real_run() -> void:
 	var session: RunSession = U.at_shop()
 	var state: RunState = session.state
-	var keep := RunItem.make(state.take_uid(), "hearth_knife")
-	var copy := RunItem.make(state.take_uid(), "hearth_knife")
-	var infused := RunItem.make(state.take_uid(), "dusk_tome")
+	var keep := RunItem.make(state.take_uid(), "longspear")
+	var copy := RunItem.make(state.take_uid(), "longspear")
+	var infused := RunItem.make(state.take_uid(), "wyrdglass_orb")
 	infused.essence_ids.append_array(["frost", "storm"])
 	state.stash.append_array([keep, copy, infused])
 	state.pouch.append("ember")
@@ -122,8 +122,8 @@ func test_drop_zones_check_room() -> void:
 	var state: RunState = session.state
 	var hero: RunHero = state.heroes[0]
 	while hero.used_for(_content, ItemDef.Slot.ABILITY) < hero.slots_for(_content, ItemDef.Slot.ABILITY):
-		hero.items.append(RunItem.make(state.take_uid(), "hearth_knife"))
-	var extra := RunItem.make(state.take_uid(), "hearth_knife")
+		hero.items.append(RunItem.make(state.take_uid(), "longspear"))
+	var extra := RunItem.make(state.take_uid(), "longspear")
 	state.stash.append(extra)
 	session.open_hero_id = hero.hero_id
 	var main: Main = _main(session)

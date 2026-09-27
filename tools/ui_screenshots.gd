@@ -102,9 +102,9 @@ func _showcase(session: RunSession) -> void:
 	var resonant: int = content.tuning.xp_to_resonant
 	state.stash.clear()
 	var picks: Array[Array] = [
-		["hearth_knife", [] as Array[String], 0], ["twin_daggers", ["ember"] as Array[String], resonant],
-		["dusk_tome", ["frost"] as Array[String], 0], ["pack_bond", [] as Array[String], 0],
-		["tallow_torch", ["ember"] as Array[String], resonant],
+		["longspear", [] as Array[String], 0], ["twin_daggers", ["ember"] as Array[String], resonant],
+		["wyrdglass_orb", ["frost"] as Array[String], 0], ["pack_bond", [] as Array[String], 0],
+		["ashwood_staff", ["ember"] as Array[String], resonant],
 	]
 	for pick: Array in picks:
 		var item := RunItem.make(state.take_uid(), pick[0], 1)
@@ -127,7 +127,7 @@ func _showcase(session: RunSession) -> void:
 	if not state.heroes[0].specialization_id.is_empty():
 		state.heroes[0].spec_progress = content.specializations[state.heroes[0].specialization_id].track.deed.goals[0]
 	state.heroes[0].items.clear()
-	for loadout: Array in [["night_lantern", ["ember", "storm"] as Array[String]], ["grave_hook", ["ember"] as Array[String]], ["hearth_knife", [] as Array[String]]]:
+	for loadout: Array in [["night_lantern", ["ember", "storm"] as Array[String]], ["grave_hook", ["ember"] as Array[String]], ["longspear", [] as Array[String]]]:
 		var held := RunItem.make(state.take_uid(), loadout[0], 2)
 		held.essence_ids = loadout[1]
 		held.xp = resonant if not held.essence_ids.is_empty() else 0
@@ -152,10 +152,10 @@ func _showcase(session: RunSession) -> void:
 	state.stash.clear()
 	for legendary_id: String in ["maw_of_the_hollow", "hungering_censer", "tallymans_bow"]:
 		RunActions.add_item(state, content, legendary_id)
-	state.stash[0].eaten.append_array(["hearth_knife", "rimewood_longbow"] as Array[String])
+	state.stash[0].eaten.append_array(["longspear", "rimewood_longbow"] as Array[String])
 	state.stash[0].progress = 2
 	state.stash[2].progress = 41
-	state.stash.append(RunItem.make(state.take_uid(), "hearth_knife", 1))
+	state.stash.append(RunItem.make(state.take_uid(), "longspear", 1))
 	session.select(state.stash[0].uid)
 	await _snap("legendary_devourer")
 	session.select(state.stash[-1].uid)

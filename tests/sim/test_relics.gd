@@ -375,7 +375,7 @@ func test_relic_fights_are_deterministic() -> void:
 		var party: Array[UnitSetup] = []
 		for hero_id: String in ["brannoc", "wren", "odo"]:
 			var entries: Array[LoadoutEntry] = []
-			var item_id: String = "rusted_cleaver" if hero_id == "brannoc" else ("hearth_knife" if hero_id == "wren" else "tallow_torch")
+			var item_id: String = "rusted_cleaver" if hero_id == "brannoc" else ("longspear" if hero_id == "wren" else "grimoire_of_cinders")
 			var entry := LoadoutEntry.new()
 			entry.item_id = item_id
 			entries.append(entry)

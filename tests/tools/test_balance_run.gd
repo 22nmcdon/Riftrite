@@ -25,15 +25,16 @@ func test_report_lines() -> void:
 	var lines: PackedStringArray = BalanceRun.report(stats)
 	assert_eq(lines[0], "== hearth_starter vs hound_pack (3 fights, seeds 5-7) ==")
 	assert_true(lines[1].begins_with("Guild wins: "), lines[1])
-	assert_true(Array(lines).any(func(line: String) -> bool: return line.contains("wren · First-Light Dagger")))
-	assert_true(Array(lines).has("Synergy: Warden's Oath: brannoc · Oak Buckler (100% of fights)"), "\n".join(lines))
+	assert_true(Array(lines).any(func(line: String) -> bool: return line.contains("wren · Gale Blades")))
+	assert_true(Array(lines).has("Synergy: Shield and Sword: brannoc + wren (100% of fights)"), "\n".join(lines))
+	assert_true(Array(lines).any(func(line: String) -> bool: return line.contains("odo · Wyrdglass Orb (Odo's own)")), "an Epic's bonus on its hero is credited")
 
 
 func test_party_errors() -> void:
 	var data: Array = [
 		{"id": "bad", "name": "Bad", "heroes": [
 			{"hero": "nobody"},
-			{"hero": "wren", "items": [{"item": "rift_claw"}, {"item": "hearth_knife", "tier": "z"}]},
+			{"hero": "wren", "items": [{"item": "rift_claw"}, {"item": "longspear", "tier": "z"}]},
 		]},
 	]
 	var errors: Array[String] = BalanceRun.parse_parties(K.content(), data, "parties").errors

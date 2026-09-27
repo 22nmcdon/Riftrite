@@ -65,8 +65,9 @@ func test_kits_are_checked() -> void:
 		"hatchet doesn't have the bow keyword": {"keyword": "bow", "name": "x", "item": "hatchet", "essence": "wrath"},
 		"rift_claw can't be in a kit": {"keyword": "blade", "name": "x", "item": "rift_claw", "essence": "wrath"},
 		"last_hearth_lantern can't be in a kit": {"keyword": "mend", "name": "x", "item": "last_hearth_lantern", "essence": "verdant"},
+		"tower_shield can't be in a kit": {"keyword": "ward", "name": "x", "item": "tower_shield", "essence": "stone"},
 	}
-	var ward: Dictionary = {"keyword": "ward", "name": "y", "item": "oak_buckler", "essence": "stone"}
+	var ward: Dictionary = {"keyword": "ward", "name": "y", "item": "mudbrick_wall", "essence": "stone"}
 	for expected: String in cases:
 		var economy: Dictionary = JSON.parse_string(_texts()[RunContent.ECONOMY_FILE])
 		economy["kits"] = [cases[expected], ward]
