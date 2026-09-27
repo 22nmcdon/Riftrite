@@ -184,7 +184,8 @@ Each tick runs these steps in order. Resolution order is the fight's unit order:
   - **Its goal** is any free cell from which the target is in range.
   - **Leaving crumbled ground:** a walker standing on crumbled ground may cross crumbled cells, so it can always get back to safe ground.
 - **Repathing:** a unit keeps its path until it's blocked, its target changes, or 0.5s passes (`repath_ms`). The board keeps changing, so it looks again regularly.
-- **Blocked:** if the next piece of movement would overlap anything, the unit doesn't move this tick and repaths on its next turn.
+- **Straight or around (built in step 2):** when it plans, the unit sweeps its circle along the straight line to the point where its target would be in reach. If nothing is in the way it walks straight at the target; otherwise it asks the pathfinder.
+- **Blocked:** if the next piece of movement would overlap anything, the unit first tries to **slide**: it drops the part of the step heading into the circle it hit and keeps the rest. That lets it brush past what a straight leg grazes. If the slide doesn't fit either, it doesn't move this tick and repaths on its next turn. A slide is logged as a leg of its own, one tick long.
 - **No path:** the unit waits. After **1s with no path** (`repath_give_up_ms`), it drops its target and picks again.
 - **Units stop to attack.** A unit whose target is in range stands still. A `fires_while_moving` flag (Volley Maren, phase 4) is left for later; phase 1 only reserves the field name.
 
@@ -387,7 +388,7 @@ All the displacements **move the unit instantly in the sim** and log the start a
 - `combat_sim.gd`: the tick above.
 - `effects/targeting.gd`: the rules above.
 - `effects/effect_runner.gd`: damage, heal, shield, apply_status, cleanse, mana_drain, knockback, pull, leap, charge, area, summon, and start_collapse.
-- `defs/effect_def.gd`: targets `target`, `self`, `all_enemies`, `all_allies`, and `trigger_ally`, plus the new types.
+- `defs/effect_def.gd`: targets `target`, `hit_target`, `self`, `all_enemies`, `all_allies`, and `trigger_ally` (step 2 dropped `enemy_random`, `enemy_lowest_hp`, and `ally_lowest_hp`; units and abilities pick with targeting rules instead), plus the new types. `"trigger"` is optional and defaults to `on_fire`.
 - `defs/status_def.gd`, `statuses.gd`: the new kinds.
 - `defs/collapse_def.gd`, `defs/tuning_def.gd`: the new values.
 - `defs/unit_stats.gd`: adds speed and range.
@@ -450,10 +451,21 @@ Each rule gets its own test file under `tests/sim/`. They build tiny boards thro
 
 If step 2 measures slower, the cell size and repath interval are the knobs, and I'll report before going further.
 
+**Measured in step 2** (whole fights, 3 against 6, with test kits):
+- A 22s fight takes about 49 ms, and a 65s one about 80 ms. That's inside the budget, with nothing to spare.
+- The costliest ticks are the first one, when all nine units pick a target, and the ones where units re-target across the board.
+- The rest is the fixed cost of every unit's turn, about 50 µs a tick for all nine units together.
+- Speed-ups so far, none of which change results:
+  - The search loop works on plain integer arrays with its queue inline.
+  - The collision check doesn't build lists.
+  - Effect numbers are worked out without building a breakdown.
+- Units point at their target weakly, so two units targeting each other don't keep each other alive after the fight.
+- Watch the budget again once statuses, mana, and areas add their per-tick work.
+
 ## 14. Order of work (each step: code, tests, green run, commit)
 
 1. **Grid and plane (done):** `hex_grid`, `arena_plane`, `nav_grid`, `arena_debug`, `FixedMath.isqrt`, and their tests. Pure functions, no sim.
-2. **Skeleton fight:** kits, setups with hexes and rocks, the new `CombatSim` tick, walking and blocking, `nearest` targeting, melee attacks and shots, deaths, the end of the fight, the MOVE, STOP, TARGET, and SHOT logs, and the log replay test. The first determinism test, and a speed measurement.
+2. **Skeleton fight (done):** kits, setups with hexes and rocks, the new `CombatSim` tick, walking and blocking, `nearest` targeting, melee attacks and shots, deaths, the end of the fight, the MOVE, STOP, TARGET, and SHOT logs, and the log replay test. The first determinism test, and a speed measurement.
 3. **Statuses:** Root, Stun, Slow, Taunt, Silence, Marked, and damage over time.
 4. **Mana and signatures:** the five triggers, cast_ms, Undying, `Events`, and `PartDef`.
 5. **Tanks:** Engage.

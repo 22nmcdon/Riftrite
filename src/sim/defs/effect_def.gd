@@ -23,8 +23,13 @@ extends RefCounted
 ## An optional "window" limits the effect to part of the fight:
 ##   "window": {"from_ms": 0, "until_ms": 8000}   (either end optional)
 ##
-## Targets that reach several units (each gets its own hit/heal/...):
-##   all_enemies, all_allies (standing units, in resolution order)
+## "trigger" is optional and defaults to on_fire.
+##
+## Targets:
+##   target       the ability's target (picked by its targeting rule)
+##   hit_target   on_hit/on_crit and some events: the unit hit
+##   self         the unit itself
+##   all_enemies, all_allies   every standing unit of that side, in fight order
 ##
 ## Relic effects (read with relic = true) have no holder, so their triggers
 ## and targets differ:
@@ -60,11 +65,9 @@ enum Trigger {
 }
 enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE }
 enum Target {
+	TARGET,
 	HIT_TARGET,
 	SELF,
-	ALLY_LOWEST_HP,
-	ENEMY_RANDOM,
-	ENEMY_LOWEST_HP,
 	ALL_ENEMIES,
 	ALL_ALLIES,
 	TRIGGER_ALLY,
@@ -90,14 +93,12 @@ const ABILITY_TRIGGERS: Array[Trigger] = [
 ]
 const RELIC_TRIGGERS: Array[Trigger] = [Trigger.ON_FIRE, Trigger.ON_FIGHT_START, Trigger.AT_TIME, Trigger.ON_ALLY_BELOW_HP]
 ## Targets that need the effect's unit to stand on the field.
-const FIELD_ONLY_TARGETS: Array[Target] = [Target.HIT_TARGET, Target.SELF]
+const FIELD_ONLY_TARGETS: Array[Target] = [Target.TARGET, Target.HIT_TARGET, Target.SELF]
 const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse"]
 const TARGET_NAMES: Array[String] = [
+	"target",
 	"hit_target",
 	"self",
-	"ally_lowest_hp",
-	"enemy_random",
-	"enemy_lowest_hp",
 	"all_enemies",
 	"all_allies",
 	"trigger_ally",
@@ -111,7 +112,8 @@ var amount: int = 0
 var amount_bp_of_damage: int = 0
 var status_id: String = ""
 var stacks: int = 0
-## Basis points of each stat added to the base value, indexed by UnitStats.Stat.
+## Basis points of each stat added to the base value, indexed by UnitStats.Stat
+## (the first SCALING_STATS only).
 var scaling: Array[int] = [0, 0, 0, 0, 0, 0]
 ## Fight ticks the effect is active in: [from, until). until = -1: no end.
 var window_from_ticks: int = 0
@@ -130,7 +132,7 @@ var statuses: Array[String] = []
 ## `relic`: read a relic's effect (relic triggers and targets, flat numbers).
 static func read(reader: DataReader, relic: bool = false) -> EffectDef:
 	var def := EffectDef.new()
-	var trigger_name: String = reader.req_choice("trigger", TRIGGER_NAMES)
+	var trigger_name: String = reader.opt_string_choice("trigger", "on_fire", TRIGGER_NAMES)
 	var type_name: String = reader.req_choice("type", TYPE_NAMES)
 	def.trigger = maxi(TRIGGER_NAMES.find(trigger_name), 0) as Trigger
 	def.type = maxi(TYPE_NAMES.find(type_name), 0) as Type
@@ -230,8 +232,8 @@ static func _read_scaling(def: EffectDef, reader: DataReader) -> void:
 		return
 	for key: String in reader.map_keys():
 		var stat: int = UnitStats.STAT_NAMES.find(key)
-		if stat < 0:
-			reader.error("unknown stat \"%s\" (expected one of: %s)" % [key, ", ".join(UnitStats.STAT_NAMES)])
+		if stat < 0 or stat >= UnitStats.SCALING_STATS:
+			reader.error("can't scale from \"%s\" (expected one of: %s)" % [key, ", ".join(UnitStats.STAT_NAMES.slice(0, UnitStats.SCALING_STATS))])
 			continue
 		def.scaling[stat] = reader.req_int(key, 0)
 	reader.finish()

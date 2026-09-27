@@ -34,6 +34,9 @@ const UNREACHED: int = -1
 ## Obstacles are filed in square buckets this wide, so a cell only checks
 ## the obstacles near it.
 const BUCKET: int = 1000
+## Queue keys are an estimate times this, plus the push count (so ties go
+## to whatever was queued first).
+const ORDER: int = 1 << 24
 
 var cell: int
 var cols: int
@@ -136,8 +139,14 @@ func add_obstacle(point: Vector2i, obstacle_radius: int) -> void:
 ## True if the walker fits on the cell's center.
 func is_free(at_cell: int) -> bool:
 	var known: int = _free[at_cell]
-	if known != 0:
-		return known == 1
+	if known == 0:
+		known = _work_out(at_cell)
+	return known == 1
+
+
+## Works out whether the walker fits on the cell's center, and remembers it:
+## 1 if it does, 2 if not.
+func _work_out(at_cell: int) -> int:
 	var point: Vector2i = center(at_cell)
 	var free: bool = ArenaPlane.inside(bounds if _leaving else _safe, point, _radius)
 	if free:
@@ -147,7 +156,7 @@ func is_free(at_cell: int) -> bool:
 				free = false
 				break
 	_free[at_cell] = 1 if free else 2
-	return free
+	return _free[at_cell]
 
 
 func _bucket_of(point: Vector2i) -> Vector2i:
@@ -176,9 +185,16 @@ func find_nearest(start: Vector2i, forward: int, targets: Array[Vector2i], reach
 
 
 ## Returns (goal cell, target index), or (-1, -1). Both searches are A*,
-## guided by how far the closest target's reach at least is (_estimate). With
-## `first`, it stops at the first goal; otherwise it keeps settling every
-## cell that could still be as close, so ties go to the lower index.
+## guided by how far the closest target's reach at least is: the larger of
+## the x and y distances, less the reach (never more than the straight-line
+## distance, so never an overestimate, and it changes by no more than a step
+## costs, so A* stays exact). With `first`, it stops at the first goal;
+## otherwise it keeps settling every cell that could still be as close, so
+## ties go to the lower index. Cells are queued by (estimate, then the order
+## they were queued in), so the search settles them the same way every time.
+##
+## This runs a lot, so it's written for speed: plain integer arrays, the
+## queue inline, and a cell's blocking looked up before it's worked out.
 func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int, first: bool) -> Vector2i:
 	_start = cell_at(start)
 	var leaving: bool = not ArenaPlane.inside(_safe, start, _radius)
@@ -188,71 +204,139 @@ func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int
 	_distance.fill(UNREACHED)
 	_previous.fill(-1)
 	_settled.fill(0)
-	var heap := _Heap.new()
-	_distance[_start] = 0
-	heap.push(_estimate(_start, targets, reach), _start)
+	var target_count: int = targets.size()
+	var xs := PackedInt32Array()
+	var ys := PackedInt32Array()
+	for target: Vector2i in targets:
+		xs.append(target.x)
+		ys.append(target.y)
+	@warning_ignore("integer_division")
+	var half: int = cell / 2
+	var x0: int = origin.x + half
+	var y0: int = origin.y + half
+	var reach_sq: int = reach * reach
+	var steps_x := PackedInt32Array()
+	var steps_y := PackedInt32Array()
+	for offset: Vector2i in FORWARD_NEIGHBORS:
+		steps_x.append(offset.x * forward)
+		steps_y.append(offset.y * forward)
+	# The queue: a binary min-heap of keys (estimate x ORDER + push count).
+	var keys := PackedInt64Array()
+	var queued := PackedInt32Array()
+	var pushes: int = 0
 	var best_cell: int = -1
 	var best_target: int = -1
 	var best_distance: int = UNREACHED
-	var reach_sq: int = reach * reach
-	while not heap.is_empty():
-		var at: int = heap.pop()
+	_distance[_start] = 0
+	keys.append(_estimate(_start % cols, _start / cols, xs, ys, target_count, reach, x0, y0) * ORDER + pushes)
+	queued.append(_start)
+	pushes += 1
+	while not keys.is_empty():
+		# Pop the smallest.
+		var at: int = queued[0]
+		var last: int = keys.size() - 1
+		keys[0] = keys[last]
+		queued[0] = queued[last]
+		keys.resize(last)
+		queued.resize(last)
+		var i: int = 0
+		while true:
+			var smallest: int = i
+			var left: int = 2 * i + 1
+			if left < last and keys[left] < keys[smallest]:
+				smallest = left
+			if left + 1 < last and keys[left + 1] < keys[smallest]:
+				smallest = left + 1
+			if smallest == i:
+				break
+			var key: int = keys[i]
+			keys[i] = keys[smallest]
+			keys[smallest] = key
+			var cell_at_i: int = queued[i]
+			queued[i] = queued[smallest]
+			queued[smallest] = cell_at_i
+			i = smallest
 		if _settled[at] != 0:
 			continue
-		if best_distance != UNREACHED and _distance[at] + _estimate(at, targets, reach) > best_distance:
+		var col: int = at % cols
+		@warning_ignore("integer_division")
+		var row: int = at / cols
+		var here: int = _distance[at]
+		if best_distance != UNREACHED and here + _estimate(col, row, xs, ys, target_count, reach, x0, y0) > best_distance:
 			break
 		_settled[at] = 1
-		var point: Vector2i = center(at)
-		for t: int in targets.size():
-			if ArenaPlane.length_sq(targets[t] - point) > reach_sq:
+		var px: int = x0 + col * cell
+		var py: int = y0 + row * cell
+		for t: int in target_count:
+			var dx: int = xs[t] - px
+			var dy: int = ys[t] - py
+			if dx * dx + dy * dy > reach_sq:
 				continue
 			if best_distance == UNREACHED or t < best_target:
 				best_cell = at
 				best_target = t
-				best_distance = _distance[at]
+				best_distance = here
 			if first:
 				return Vector2i(best_cell, best_target)
 			break
-		_expand(at, forward, heap, targets, reach)
+		# Queue its neighbors.
+		for n: int in 8:
+			var step_x: int = steps_x[n]
+			var step_y: int = steps_y[n]
+			var next_col: int = col + step_x
+			var next_row: int = row + step_y
+			if next_col < 0 or next_col >= cols or next_row < 0 or next_row >= rows:
+				continue
+			var next: int = next_row * cols + next_col
+			if _settled[next] != 0:
+				continue
+			var known: int = _free[next]
+			if known == 0:
+				known = _work_out(next)
+			if known != 1:
+				continue
+			var cost: int = _straight
+			if step_x != 0 and step_y != 0:
+				# Never cut a corner past a blocked cell.
+				var side_a: int = row * cols + next_col
+				var side_b: int = next_row * cols + col
+				if (_free[side_a] if _free[side_a] != 0 else _work_out(side_a)) != 1:
+					continue
+				if (_free[side_b] if _free[side_b] != 0 else _work_out(side_b)) != 1:
+					continue
+				cost = _diagonal
+			var reached_at: int = here + cost
+			if _distance[next] != UNREACHED and reached_at >= _distance[next]:
+				continue
+			_distance[next] = reached_at
+			_previous[next] = at
+			# Push, then sift up.
+			keys.append((reached_at + _estimate(next_col, next_row, xs, ys, target_count, reach, x0, y0)) * ORDER + pushes)
+			queued.append(next)
+			pushes += 1
+			var j: int = keys.size() - 1
+			while j > 0:
+				@warning_ignore("integer_division")
+				var parent: int = (j - 1) / 2
+				if keys[parent] <= keys[j]:
+					break
+				var parent_key: int = keys[parent]
+				keys[parent] = keys[j]
+				keys[j] = parent_key
+				var parent_cell: int = queued[parent]
+				queued[parent] = queued[j]
+				queued[j] = parent_cell
+				j = parent
 	return Vector2i(best_cell, best_target)
 
 
-func _expand(at: int, forward: int, heap: _Heap, targets: Array[Vector2i], reach: int) -> void:
-	var col: int = at % cols
-	@warning_ignore("integer_division")
-	var row: int = at / cols
-	for offset: Vector2i in FORWARD_NEIGHBORS:
-		var dx: int = offset.x * forward
-		var dy: int = offset.y * forward
-		var next_col: int = col + dx
-		var next_row: int = row + dy
-		if next_col < 0 or next_col >= cols or next_row < 0 or next_row >= rows:
-			continue
-		var next: int = next_row * cols + next_col
-		if _settled[next] != 0 or not is_free(next):
-			continue
-		var cost: int = _straight
-		if dx != 0 and dy != 0:
-			# Never cut a corner past a blocked cell.
-			if not is_free(row * cols + next_col) or not is_free(next_row * cols + col):
-				continue
-			cost = _diagonal
-		var reached_at: int = _distance[at] + cost
-		if _distance[next] == UNREACHED or reached_at < _distance[next]:
-			_distance[next] = reached_at
-			_previous[next] = at
-			heap.push(reached_at + _estimate(next, targets, reach), next)
-
-
-## How far the cell at least is from getting within reach of any target:
-## the larger of the x and y distances (never more than the straight-line
-## distance, so never an overestimate, and it changes by no more than a step
-## costs, so A* stays exact), less the reach.
-func _estimate(at: int, targets: Array[Vector2i], reach: int) -> int:
-	var point: Vector2i = center(at)
+## The estimate for the cell at (col, row): see _search.
+func _estimate(col: int, row: int, xs: PackedInt32Array, ys: PackedInt32Array, target_count: int, reach: int, x0: int, y0: int) -> int:
+	var px: int = x0 + col * cell
+	var py: int = y0 + row * cell
 	var best: int = -1
-	for target: Vector2i in targets:
-		var estimate: int = maxi(maxi(absi(target.x - point.x), absi(target.y - point.y)) - reach, 0)
+	for t: int in target_count:
+		var estimate: int = maxi(maxi(absi(xs[t] - px), absi(ys[t] - py)) - reach, 0)
 		if best < 0 or estimate < best:
 			best = estimate
 	return maxi(best, 0)
@@ -300,58 +384,3 @@ func corners(path: Array[int]) -> Array[Vector2i]:
 func _step(from: int, to: int) -> Vector2i:
 	@warning_ignore("integer_division")
 	return Vector2i(to % cols - from % cols, to / cols - from / cols)
-
-
-## A binary min-heap of cells by key, ties broken by push order, so a search
-## settles cells in the same order every time.
-class _Heap:
-	const ORDER: int = 1 << 24
-	var _keys: PackedInt64Array = PackedInt64Array()
-	var _cells: PackedInt32Array = PackedInt32Array()
-	var _pushes: int = 0
-
-	func is_empty() -> bool:
-		return _keys.is_empty()
-
-	func push(key: int, at: int) -> void:
-		_keys.append(key * ORDER + _pushes)
-		_cells.append(at)
-		_pushes += 1
-		var i: int = _keys.size() - 1
-		while i > 0:
-			@warning_ignore("integer_division")
-			var parent: int = (i - 1) / 2
-			if _keys[parent] <= _keys[i]:
-				break
-			_swap(i, parent)
-			i = parent
-
-	## Pops the cell with the smallest key.
-	func pop() -> int:
-		var at: int = _cells[0]
-		var last: int = _keys.size() - 1
-		_swap(0, last)
-		_keys.resize(last)
-		_cells.resize(last)
-		var i: int = 0
-		while true:
-			var smallest: int = i
-			var left: int = 2 * i + 1
-			var right: int = left + 1
-			if left < last and _keys[left] < _keys[smallest]:
-				smallest = left
-			if right < last and _keys[right] < _keys[smallest]:
-				smallest = right
-			if smallest == i:
-				break
-			_swap(i, smallest)
-			i = smallest
-		return at
-
-	func _swap(a: int, b: int) -> void:
-		var key: int = _keys[a]
-		_keys[a] = _keys[b]
-		_keys[b] = key
-		var at: int = _cells[a]
-		_cells[a] = _cells[b]
-		_cells[b] = at

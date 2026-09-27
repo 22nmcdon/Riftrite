@@ -21,7 +21,9 @@ static func draw(bounds: Rect2i, safe: Rect2i, rocks: Array[ArenaPlane.Circle], 
 	var chars: PackedStringArray = PackedStringArray()
 	chars.resize(nav.size())
 	for at: int in nav.size():
-		chars[at] = GROUND if safe.has_point(nav.center(at)) else CRUMBLED
+		var point: Vector2i = nav.center(at)
+		# Cells hanging past the arena's edge (the last row or column) show as ground.
+		chars[at] = CRUMBLED if bounds.has_point(point) and not safe.has_point(point) else GROUND
 	for point: Vector2i in warned:
 		chars[nav.cell_at(point)] = WARNED
 	for rock: ArenaPlane.Circle in rocks:
@@ -40,3 +42,13 @@ static func _fill(nav: NavGrid, chars: PackedStringArray, circle: ArenaPlane.Cir
 			chars[at] = mark
 	# Always mark the cell under the center, however small the circle.
 	chars[nav.cell_at(circle.center)] = mark
+
+
+## The board of a fight as it stands: its rocks, safe ground, and standing
+## units (each by its id's first letter).
+static func render(sim: CombatSim) -> String:
+	var units: Array[ArenaPlane.Circle] = []
+	for unit: UnitState in sim.units:
+		if unit.alive:
+			units.append(unit.circle())
+	return draw(sim.grid.bounds(), sim.safe, sim.rocks, units, [] as Array[Vector2i], 250)

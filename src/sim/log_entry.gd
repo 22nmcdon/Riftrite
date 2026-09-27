@@ -22,6 +22,11 @@ enum Kind {
 	SYNERGY,
 	PHASE,
 	DEED_LEVEL,
+	MOVE,
+	STOP,
+	TARGET,
+	SHOT,
+	SHOT_FIZZLED,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -53,6 +58,14 @@ var stacks: int = 0
 var note: String = ""
 ## Made by an event effect: never sets off another one.
 var from_event: bool = false
+## MOVE: where the leg starts and the point it heads for; the unit moves
+## `amount` a tick straight at it (FixedMath / ArenaPlane.step_toward) until it
+## gets there or its next MOVE or STOP. STOP: to_pos is where it stands.
+## SHOT: from the shooter to where the target stood when it was fired.
+var from_pos: Vector2i = Vector2i.ZERO
+var to_pos: Vector2i = Vector2i.ZERO
+## MOVE: the tick it should arrive; SHOT: the tick it lands.
+var end_tick: int = 0
 
 
 func set_source(source: EffectSource) -> void:
@@ -107,6 +120,18 @@ func to_text() -> String:
 			return line + "%s enters %s" % [target, note]
 		Kind.DEED_LEVEL:
 			return line + "%s reaches %s" % [target, note]
+		Kind.MOVE:
+			return line + "%s walks from %s toward %s" % [source_unit, _point(from_pos), _point(to_pos)]
+		Kind.STOP:
+			return line + "%s stops at %s%s" % [source_unit, _point(to_pos), "" if note.is_empty() else " (%s)" % note]
+		Kind.TARGET:
+			if target.is_empty():
+				return line + "%s has no target (%s)" % [source_unit, note]
+			return line + "%s targets %s: %s" % [source_unit, target, note]
+		Kind.SHOT:
+			return line + "%s shoots at %s (lands at %s)" % [source_text(), target, _format_time(end_tick)]
+		Kind.SHOT_FIZZLED:
+			return line + "%s's shot at %s fizzles (%s)" % [source_text(), target, note]
 		Kind.STATUS_REDUCED:
 			return line + "%s on %s loses %d stacks (%s)" % [status_name, target, amount, note]
 	return line + "?"
@@ -121,6 +146,18 @@ func _damage_detail() -> String:
 	if absorbed > 0:
 		parts.append("%d absorbed by shield" % absorbed)
 	return "" if parts.is_empty() else " (%s)" % ", ".join(parts)
+
+
+## A point on the plane in hexes, like "(3.10, 4.00)".
+static func _point(point: Vector2i) -> String:
+	return "(%s, %s)" % [_hexes(point.x), _hexes(point.y)]
+
+
+static func _hexes(units: int) -> String:
+	var sign: String = "-" if units < 0 else ""
+	var value: int = absi(units)
+	@warning_ignore("integer_division")
+	return "%s%d.%02d" % [sign, value / 1000, (value % 1000) / 10]
 
 
 static func _format_time(at_tick: int) -> String:

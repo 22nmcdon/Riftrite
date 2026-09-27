@@ -113,6 +113,7 @@ Answers to the phase 1 plan's proposals (2026-09-27; the details are in `rebuild
 - **Crumbled ground can't be walked into,** only pushed into.
 - **Up to 30 standing units per side**, since summons may be small and frequent.
 - **Ranged hits travel,** about 1 tick per hex.
+- **Rocks keep their size for now** (1 hex across): one missing rock in a row is too narrow to walk through, and it takes two. You'll judge it in playtesting.
 - **Shots follow their target** and can't miss; the numbers are fixed when fired, and the shooter falling doesn't stop the arrow. A shot whose target falls first fizzles.
 - **Melee lands the moment the attack finishes.** How long an attack takes comes from the unit's attack speed, not a weapon type.
 - **A unit is inside an area if its center is** (whichever side most of it is on).

@@ -1,5 +1,18 @@
 {
   "_note": "Starting values for tuning. Durations are in milliseconds and must be multiples of 50 (one tick). Percentages are basis points: 10000 = 100%.",
+  "grid": {
+    "_note": "The placement board: flat-topped hexes in columns; each side has zone_rows rows and the rows between belong to no one (docs/plans/rebuild-phase1-arena-sim.md, section 1).",
+    "width": 8,
+    "height": 7,
+    "zone_rows": 3
+  },
+  "unit_radius": 400,
+  "rock_radius": 500,
+  "nav_cell": 125,
+  "_plane_note": "On the plane 1 hex = 1000 units. Units and rocks are circles; nav_cell is the hidden pathfinding grid's cell size.",
+  "repath_ms": 500,
+  "repath_give_up_ms": 1000,
+  "max_units_per_side": 30,
   "crit_damage_bp": 15000,
   "crit_bp_per_point": 100,
   "atsp_bp_per_point": 100,
