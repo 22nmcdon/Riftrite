@@ -65,6 +65,24 @@ Title ──Practice──> Encounter list ──pick──> Placement ──Fig
 - **Fight:** the same board, now the free-moving plane, playing the fight live. Controls: pause, speed (0.5×, 1×, 2×), skip to the end, and restart.
 - **Result:** victory, defeat, or tie (a tie counts as a win), the fight's length, and the fight chart. **Place again** returns to placement with this formation; **Rematch** replays the same placement with the next seed (seeds only change crits); **Back** returns to the list.
 
+**Built in step 8** (`src/ui/screens/encounter_list_screen.gd`, `Main`'s navigation, the title's Practice button, the result on `ArenaScreen`, `tests/ui/test_practice_flow.gd`):
+
+- **The title** has Practice (the primary button) above Quit.
+- **The encounter list:** nine cards in `encounters.json`'s order, three to a row, over the title backdrop.
+  - Each card has the name, "Tests … · Days 1-3", one line per kind of enemy ("3 × Cinder Moth (caster): Burns whoever stands together"), and "Place your heroes".
+  - Back returns to the title.
+- **`Main`** moves between the screens on their signals: title, then list, then arena. The arena's Back returns to the list.
+  - Practice's session is made, and the content loaded, the first time Practice opens. It then lasts while the game is open: the formation, the speed, the log's state, and the seed.
+- **The result is on the arena screen, not a screen of its own** (section 9 put it there). When the fight ends it takes the controls' place in the side column:
+  - the outcome and length ("Victory in 39.1s");
+  - the seed ("it only changes crits");
+  - how each hero came out ("Brannoc 120/420 HP · Maren fell · Vell 300/300 HP");
+  - the fight chart, in full;
+  - **Rematch** (the same placement, the next seed, which the session keeps) and **Watch again** (the same fight from the start).
+  Place again, Log, and Back stay under it. The result is filled in once when the fight ends, and cleared by a restart or rematch.
+- **The chart fits the side column:** its tabs are 14px and its legend is tighter, so the board keeps its size at the end (a test checks the width).
+- **Mutation checks:** all 24 changes to the list, the navigation, the seed, and the result are caught. 3 survived at first: 2 got tighter tests, and 1 redundant guard was removed.
+
 ## 2. The board
 
 - **One view, `ArenaView`, for both modes.** It maps the plane to pixels: 1 hex (1000 units) = `hex_px` pixels, sized to fit the screen (about 120 px at 1920 × 1080 for the 8 × 7 board). Heroes' rows at the bottom of the screen, enemies' at the top (the sim's row 0 is the heroes' back row).
@@ -291,7 +309,7 @@ UI tests run headless and drive time by hand, so they're deterministic.
 5. **What the fight shows (section 5)**, in two passes: bars, statuses, shots, swipes, and numbers first; then areas, displacement tweens, collapse, summons, deaths, phases, target lines, and Engage links. **Done.**
 6. **Log panel and fight chart.** **Done.**
 7. **Unit details:** the ability text in the data, the enemy side panel, and the hero popup. **Done.**
-8. **Practice flow:** the title button, encounter list, result screen, place again, rematch.
+8. **Practice flow:** the title button, encounter list, result screen, place again, rematch. **Done** (the result is on the arena screen).
 9. **Every encounter plays headless;** screenshots; a playtest build (the "Playtest build" workflow) for gate 1.
 10. **Docs:** CLAUDE.md gains "How the UI works"; the plans are updated with what the playtest says.
 

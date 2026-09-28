@@ -20,6 +20,8 @@ const SURFACE := UiStyle.INK_700
 const NAME_WIDTH: float = 150.0
 const BAR_HEIGHT: float = 18.0
 const GAP: float = 2.0
+## Small enough that the three tabs fit the arena's side column.
+const TAB_FONT: int = 14
 
 var tally: FightTally
 var tab: FightTally.Tab = FightTally.Tab.DAMAGE
@@ -43,6 +45,7 @@ static func make(fight_tally: FightTally) -> FightChart:
 	for i: int in FightTally.TAB_NAMES.size():
 		var button: Button = UiStyle.button(FightTally.TAB_NAMES[i], chart.show_tab.bind(i))
 		button.toggle_mode = true
+		button.add_theme_font_size_override("font_size", TAB_FONT)
 		button.button_group = group
 		button.button_pressed = i == 0
 		chart._tab_buttons.append(button)
@@ -55,7 +58,7 @@ static func make(fight_tally: FightTally) -> FightChart:
 	inside.add_theme_constant_override("separation", 6)
 	panel.add_child(inside)
 	chart._legend = HBoxContainer.new()
-	chart._legend.add_theme_constant_override("separation", 12)
+	chart._legend.add_theme_constant_override("separation", 8)
 	inside.add_child(chart._legend)
 	chart._rows = VBoxContainer.new()
 	chart._rows.add_theme_constant_override("separation", 4)

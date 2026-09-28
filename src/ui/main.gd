@@ -2,8 +2,11 @@ class_name Main
 extends Control
 ## The game's root: the title backdrop, the current screen in the middle, and
 ## the hover card and a toast floating over everything. After the rebuild's
-## gut (docs/plans/rebuild-build-order.md, phase 0) the only screen is the
-## title; Practice (phase 3) and the run (phase 5) add theirs.
+## gut (docs/plans/rebuild-build-order.md, phase 0) the screens are the
+## title and Practice (phase 3: the encounter list, then placement and the
+## fight on ArenaScreen); the run (phase 5) adds its own.
+## Main moves between screens on their signals. Practice's session (the
+## remembered formation, speed, and seed) lives here while the game is open.
 
 ## The title backdrop (tools/art/backdrops.py).
 const BACKDROP: String = "res://art/ui/backgrounds/title.svg"
@@ -14,6 +17,8 @@ const OLD_SAVE_PATH: String = "user://run.json"
 ## Tests point this somewhere harmless.
 var old_save_path: String = OLD_SAVE_PATH
 var screen: UiScreen = null
+## Made the first time Practice opens (it loads the content then).
+var practice: PracticeSession = null
 var hover_card: HoverCard
 var backdrop: TextureRect
 var _screen_slot: ScrollContainer
@@ -57,7 +62,30 @@ func _ready() -> void:
 	_toast.add_theme_constant_override("outline_size", 8)
 	_toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_toast)
-	show_screen(TitleScreen.new())
+	show_title()
+
+
+func show_title() -> void:
+	var title := TitleScreen.new()
+	title.practice_requested.connect(show_encounters)
+	show_screen(title)
+
+
+## Practice's list of encounters.
+func show_encounters() -> void:
+	if practice == null:
+		practice = PracticeSession.make(ContentDb.load_dir("res://data"))
+	var list: EncounterListScreen = EncounterListScreen.make(practice.content)
+	list.encounter_picked.connect(show_arena)
+	list.back_requested.connect(show_title)
+	show_screen(list)
+
+
+## Placement, then the fight, for one encounter.
+func show_arena(encounter_id: String) -> void:
+	var arena: ArenaScreen = ArenaScreen.make(practice, encounter_id)
+	arena.back_requested.connect(show_encounters)
+	show_screen(arena)
 
 
 ## Replaces the current screen.

@@ -2,9 +2,9 @@ extends SceneTree
 ## Renders each screen to PNGs (for checking the layout by eye). Needs a
 ## display, e.g.:
 ##   xvfb-run godot --path . -s tools/ui_screenshots.gd -- --out=/tmp/shots
-## After the rebuild's gut the title was the only screen; phase 3 adds the
-## arena board (placement, and the fight with its log and chart), then its
-## screens.
+## The title, then Practice (phase 3): the encounter list, placement, the
+## fight with its log and chart, a hero's popup, the result, an area
+## warning, and Rift Collapse.
 
 var _main: Main
 var _out: String = "user://screenshots"
@@ -26,9 +26,12 @@ func _initialize() -> void:
 
 func _run() -> void:
 	await _snap("title")
-	var content: ContentDb = ContentDb.load_dir("res://data")
-	var arena: ArenaScreen = ArenaScreen.make(PracticeSession.make(content), "sentinel_gate")
-	_main.show_screen(arena)
+	# Practice, through the real screens.
+	_main.show_encounters()
+	await _snap("practice_encounters")
+	var content: ContentDb = _main.practice.content
+	_main.show_arena("sentinel_gate")
+	var arena: ArenaScreen = _main.screen as ArenaScreen
 	arena._on_hovered("rift_worn_sentinel")
 	await _snap("placement_sentinel_gate")
 	arena._fight()
@@ -40,6 +43,7 @@ func _run() -> void:
 	arena.view.unit_clicked.emit("brannoc")
 	await _snap("fight_sentinel_gate_paused_brannoc")
 	arena.toggle_pause()
+	arena._process(1.0 / 30.0)
 	arena.skip()
 	await _snap("fight_sentinel_gate_end")
 	# An area warning up (Moth Cloud's Ember Dust), with every target line.

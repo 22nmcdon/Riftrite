@@ -5,6 +5,8 @@ extends RefCounted
 ##   - One remembered formation for every encounter: the last one fought
 ##     with (Brannoc guarding the other two until then), the fight speed
 ##     last chosen, and whether the log panel was left open.
+##   - The fight's seed: 1 to begin with; Rematch moves to the next one.
+##     Seeds only change crits (the sim runner's finding).
 ##   - What's legal comes from the sim: a formation is legal when
 ##     `Encounters.setup` builds it and `FightSetup.validate` finds nothing
 ##     wrong. The UI keeps no rules of its own.
@@ -20,6 +22,8 @@ var formation: Dictionary[String, Vector2i] = {}
 var speed: float = 1.0
 ## Whether the fight's log panel (the chart and the log) is open.
 var log_open: bool = true
+## The seed fights are set up with.
+var seed_value: int = 1
 
 
 static func make(content_db: ContentDb) -> PracticeSession:

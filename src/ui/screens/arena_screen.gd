@@ -10,8 +10,12 @@ extends UiScreen
 ##   - Fight remembers the formation for the session (Decision 4) and starts
 ##     the fight at once, at the session's speed (Decision 2).
 ##   - During the fight: pause, 0.5x, 1x, 2x, skip to the end, and restart,
-##     with keys Space, 1-3, and S. At the end, the outcome, and Place again
-##     goes back to placement with the same formation.
+##     with keys Space, 1-3, and S. Place again goes back to placement with
+##     the same formation.
+##   - The result (section 1), in place of the controls when the fight ends:
+##     the outcome and length, the seed, how each hero came out, and the
+##     fight chart; Rematch fights the same placement with the next seed, and
+##     Watch again replays this one. Back returns to the encounter list.
 ##   - The log panel (section 6), beside the controls: the fight chart and
 ##     the combat log, open or hidden with its button or L (remembered in the
 ##     session). Clicking a unit filters the log to it. Banners over the board
@@ -42,6 +46,12 @@ var hint_label: Label
 var player: FightPlayer = null
 var clock_label: Label
 var outcome_label: Label
+## The result, shown when the fight ends in place of the controls.
+var result_box: VBoxContainer
+var result_details: Label
+var result_chart: FightChart
+var _controls_box: VBoxContainer
+var _result_shown: bool = false
 var pause_button: Button
 var speed_buttons: Array[Button] = []
 var target_lines: CheckButton
@@ -146,7 +156,7 @@ func move_hero(hero_id: String, hex: Vector2i) -> bool:
 
 
 func current_setup() -> FightSetup:
-	return session.setup(encounter.id, formation)
+	return session.setup(encounter.id, formation, session.seed_value)
 
 
 func _show() -> void:
@@ -245,9 +255,12 @@ func _build_fight_box() -> VBoxContainer:
 	box.add_theme_constant_override("separation", 10)
 	clock_label = UiStyle.label("0.0s", 28, UiStyle.TEXT)
 	box.add_child(clock_label)
+	_controls_box = VBoxContainer.new()
+	_controls_box.add_theme_constant_override("separation", 10)
+	box.add_child(_controls_box)
 	var speeds := HBoxContainer.new()
 	speeds.add_theme_constant_override("separation", 6)
-	box.add_child(speeds)
+	_controls_box.add_child(speeds)
 	pause_button = UiStyle.button("Pause", toggle_pause)
 	speeds.add_child(pause_button)
 	for speed: float in FightPlayer.SPEEDS:
@@ -257,20 +270,34 @@ func _build_fight_box() -> VBoxContainer:
 		speeds.add_child(button)
 	var jumps := HBoxContainer.new()
 	jumps.add_theme_constant_override("separation", 6)
-	box.add_child(jumps)
+	_controls_box.add_child(jumps)
 	jumps.add_child(UiStyle.button("Skip to end", skip))
 	jumps.add_child(UiStyle.button("Restart", restart))
 	target_lines = CheckButton.new()
 	target_lines.text = "Target lines (for testing)"
 	target_lines.toggled.connect(func(on: bool) -> void: view.fx.all_targets = on)
-	box.add_child(target_lines)
+	_controls_box.add_child(target_lines)
+	result_box = VBoxContainer.new()
+	result_box.add_theme_constant_override("separation", 10)
+	result_box.visible = false
+	box.add_child(result_box)
+	outcome_label = UiStyle.label("", 28, UiStyle.HIGHLIGHT)
+	outcome_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	result_box.add_child(outcome_label)
+	result_details = UiStyle.label("", 16, UiStyle.TEXT)
+	result_details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	result_box.add_child(result_details)
+	result_chart = FightChart.make(null)
+	result_box.add_child(result_chart)
+	var again := HBoxContainer.new()
+	again.add_theme_constant_override("separation", 6)
+	result_box.add_child(again)
+	again.add_child(UiStyle.primary(UiStyle.button("Rematch", rematch)))
+	again.add_child(UiStyle.button("Watch again", restart))
 	log_button = UiStyle.button("Log", func() -> void: pass)
 	log_button.toggle_mode = true
 	log_button.toggled.connect(set_log_open)
 	box.add_child(log_button)
-	outcome_label = UiStyle.label("", 24, UiStyle.HIGHLIGHT)
-	outcome_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	box.add_child(outcome_label)
 	box.add_child(UiStyle.button("Place again", place_again))
 	return box
 
@@ -305,6 +332,7 @@ func _begin() -> void:
 	banners.speed = player.speed
 	view.fx.clear()
 	outcome_label.text = ""
+	_result_shown = false
 	player.take_new()
 	var so_far: Array[LogEntry] = []
 	so_far.assign(player.sim.combat_log.entries)
@@ -367,6 +395,12 @@ func skip() -> void:
 	_on_frame()
 
 
+## The same placement again, with the next seed (seeds only change crits).
+func rematch() -> void:
+	session.seed_value += 1
+	start_fight(current_setup())
+
+
 func restart() -> void:
 	if player == null:
 		return
@@ -405,8 +439,27 @@ func _on_frame() -> void:
 		hero_popup.close()
 	_show_live()
 	clock_label.text = "%.1fs" % player.fight_seconds()
-	if player.finished():
-		outcome_label.text = outcome_text(player.sim.outcome, player.fight_seconds())
+	_controls_box.visible = not player.finished()
+	result_box.visible = player.finished()
+	if player.finished() and not _result_shown:
+		_show_result()
+
+
+## Fills in the result once the fight is over.
+func _show_result() -> void:
+	_result_shown = true
+	outcome_label.text = outcome_text(player.sim.outcome, player.fight_seconds())
+	result_details.text = result_text(player.sim, names)
+	result_chart.set_tally(tally)
+
+
+## "Seed 2 (it only changes crits)", then how each hero came out:
+## "Brannoc 120/420 HP · Maren fell · Vell 300/300 HP".
+static func result_text(sim: CombatSim, fight_names: FightNames) -> String:
+	var heroes: Array[String] = []
+	for hero: UnitState in sim.heroes:
+		heroes.append("%s %s" % [fight_names.name_of(hero.id), "%d/%d HP" % [hero.hp, hero.max_hp] if hero.alive else "fell"])
+	return "Seed %d (it only changes crits)\n%s" % [sim.setup.seed_value, " · ".join(heroes)]
 
 
 static func outcome_text(outcome: FightResult.Outcome, seconds: float) -> String:

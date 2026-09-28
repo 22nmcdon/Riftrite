@@ -1,10 +1,12 @@
 class_name TitleScreen
 extends UiScreen
 ## The title, over the backdrop. While the rebuild is under way
-## (docs/plans/rebuild-build-order.md) there's nothing to start yet: Practice
-## comes with the arena (phase 3) and the run with phase 5.
+## (docs/plans/rebuild-build-order.md) the way in is Practice: the Act 1
+## fights, one at a time (phase 3). The run comes with phase 5.
 
-const REBUILD_NOTE: String = "The rift is being rebuilt. Practice fights arrive with the new arena."
+signal practice_requested
+
+const REBUILD_NOTE: String = "The rift is being rebuilt. Until the run returns, practice its fights."
 
 
 func build() -> void:
@@ -27,7 +29,8 @@ func build() -> void:
 	note.add_theme_color_override("font_outline_color", UiStyle.INK_900)
 	note.add_theme_constant_override("outline_size", 6)
 	add_child(note)
-	add_child(primary_button("Quit", _quit))
+	add_child(primary_button("Practice", func() -> void: practice_requested.emit()))
+	add_child(UiStyle.button("Quit", _quit))
 	for child: Control in get_children():
 		child.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 

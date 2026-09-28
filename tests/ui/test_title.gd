@@ -1,6 +1,6 @@
 extends GutTest
-## After the rebuild's gut the game boots to the title and nothing else
-## (docs/plans/rebuild-build-order.md, phase 0).
+## The game boots to the title (docs/plans/rebuild-build-order.md, phase 0);
+## its way in is Practice (phase 3, tested in test_practice_flow.gd).
 
 const MainScript = preload("res://src/ui/main.gd")
 const SAVE: String = "user://test_old_run.json"
@@ -29,7 +29,7 @@ func test_the_game_boots_to_the_title() -> void:
 	var buttons: Array[String] = []
 	for node: Node in main.screen.find_children("*", "Button", true, false):
 		buttons.append((node as Button).text)
-	assert_eq(buttons, ["Quit"] as Array[String], "no run to start or continue yet")
+	assert_eq(buttons, ["Practice", "Quit"] as Array[String], "Practice, and no run to start or continue yet")
 
 
 func test_the_main_scene_is_the_title() -> void:
