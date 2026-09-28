@@ -197,6 +197,26 @@ func req_int_array(key: String) -> Array[int]:
 	return result
 
 
+## Reads a required, non-empty list of board hexes, each a [col, row] pair.
+func req_hex_array(key: String) -> Array[Vector2i]:
+	var result: Array[Vector2i] = []
+	if not _require(key):
+		return result
+	var value: Variant = _data[key]
+	if typeof(value) != TYPE_ARRAY or (value as Array).is_empty():
+		_errors.append("%s: expected a list of [col, row] hexes, got %s" % [key_path(key), _describe(value)])
+		return result
+	var items: Array = value
+	for i: int in items.size():
+		var element_path: String = "%s[%d]" % [key_path(key), i]
+		if typeof(items[i]) != TYPE_ARRAY or (items[i] as Array).size() != 2:
+			_errors.append("%s: expected [col, row], got %s" % [element_path, _describe(items[i])])
+			continue
+		var pair: Array = items[i]
+		result.append(Vector2i(to_int(pair[0], element_path, _errors), to_int(pair[1], element_path, _errors)))
+	return result
+
+
 ## Reads an optional list of strings, each of which must be in `allowed`.
 func opt_choice_array(key: String, allowed: Array[String]) -> Array[String]:
 	_read_keys[key] = true

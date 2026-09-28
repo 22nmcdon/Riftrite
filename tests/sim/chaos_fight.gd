@@ -1,0 +1,98 @@
+extends RefCounted
+## The chaos fight (docs/plans/rebuild-phase1-arena-sim.md, section 13): one
+## seeded fight that uses every piece of the arena sim, for the determinism
+## tests and the log audit. test_determinism checks it uses them all.
+##
+## Heroes: a warden (Engage; a hit that marks and, on a crit, stuns; below
+## half HP a ring that taunts), a mender (a cast that heals, shields, and
+## cleanses the most hurt ally; an attack aura for a while; Burn it applies
+## lands as Poison), a brand (burning strikes that stun on a crit; every
+## third attack a charge that knocks back), and a hook (hops away; Bleed; a
+## pull every fourth attack; when it would fall, Undying).
+## Enemies: two hounds (flying, Engage, a Pounce leap, a pack aura, and a
+## knockback on every third hit taken), a witch (Slow on hit; a cast that
+## warns a circle of Silence and mana drain on whoever has the most mana), a
+## caller (a poison line; pups on two hexes every fourth hit taken), and a
+## brute with phases: it Roots and pulls the farthest hero at 5s; below 80%
+## it casts a call for pups from the edges each time its bar fills, and the
+## first call starts Rift Collapse early; below 50% it breathes a warned cone
+## at the largest group and hits back on every fifth hit taken. Rocks sit in
+## the middle.
+##
+## Some pieces (a shot fizzling, a cleanse cutting stacks, a cast cancelled
+## by a stun) happen only in some seeds; 17 has them all. If a change to the
+## sim moves them, test_the_chaos_fight_uses_everything says which, and the
+## seed or the kits need adjusting.
+
+const K = preload("res://tests/sim/sim_test_kit.gd")
+
+
+static func setup(fight_seed: int = 17) -> FightSetup:
+	var warden: UnitDef = K.kit("warden", {"stats": {"hp": 1400, "atk": 14, "def": 30, "crit": 15, "speed": 2}, "traits": ["engage"],
+		"basic_attack": {"effects": [{"type": "damage", "amount": 8, "target": "target", "scaling": {"atk": 5000}},
+			{"trigger": "on_hit", "type": "apply_status", "status": "marked", "target": "hit_target"},
+			{"trigger": "on_crit", "type": "apply_status", "status": "stun", "target": "hit_target"}]},
+		"signature": {"id": "hold", "name": "Hold the Line", "trigger": {"kind": "hp_below", "threshold_bp": 5000}, "targeting": "self",
+			"effects": [{"type": "area", "shape": {"kind": "ring", "radius": 2}, "anchor": "self", "hits": "enemies",
+				"effects": [{"type": "apply_status", "status": "taunt", "target": "target"}, {"type": "damage", "amount": 10, "target": "target"}]}]}})
+	var mender: UnitDef = K.kit("mender", {"stats": {"hp": 700, "atk": 10, "mgk": 20, "speed": 2, "range": 4},
+		"mana": {"max": 40, "per_attack": 10, "per_10_damage_taken": 2, "regen_per_s": 3},
+		"basic_attack": {"cooldown_ms": 1100, "effects": [{"type": "damage", "amount": 6, "target": "target"}, {"type": "apply_status", "status": "burn", "stacks": 2, "target": "target"}]},
+		"signature": {"id": "mend", "name": "Mend", "trigger": {"kind": "mana"}, "targeting": "lowest_hp_ally", "cast_ms": 500, "max_range": 6,
+			"effects": [{"type": "heal", "amount": 40, "target": "target", "scaling": {"mgk": 10000}}, {"type": "shield", "amount": 20, "target": "target"},
+				{"type": "cleanse", "amount_bp": 5000, "target": "target"}]},
+		"passives": [{"id": "rally", "name": "Rally", "kind": "aura", "aura": {"target": "all_allies", "stat": "atk_bp", "value": 12000, "window": {"until_ms": 20000}}},
+			{"id": "venom", "name": "Venom", "kind": "replace_status", "from": "burn", "to": "poison"}]})
+	var brand: UnitDef = K.kit("brand", {"stats": {"hp": 900, "atk": 18, "crit": 25, "speed": 3},
+		"basic_attack": {"cooldown_ms": 900, "effects": [{"type": "damage", "amount": 10, "target": "target", "scaling": {"atk": 6000}},
+			{"trigger": "on_hit", "type": "apply_status", "status": "burn", "target": "hit_target"},
+			{"trigger": "on_crit", "type": "apply_status", "status": "stun", "target": "hit_target"}]},
+		"signature": {"id": "rush", "name": "Rush", "trigger": {"kind": "count", "event": "on_basic_attack", "every": 3}, "max_range": 3,
+			"effects": [{"type": "charge", "hexes": 3, "knockback": 1, "target": "target"}, {"type": "damage", "amount": 15, "target": "target"}]},
+		"passives": [{"id": "feast", "name": "Feast", "kind": "ability", "effects": [{"trigger": "on_kill", "type": "heal", "amount": 60, "target": "self"}]}]})
+	var hook: UnitDef = K.kit("hook", {"stats": {"hp": 600, "atk": 12, "speed": 2, "range": 5}, "traits": ["hop_away"], "hop_cooldown_ms": 3000,
+		"basic_attack": {"effects": [{"type": "damage", "amount": 9, "target": "target", "scaling": {"atk": 5000}}, {"type": "apply_status", "status": "bleed", "target": "target"}]},
+		"signature": {"id": "last_rites", "name": "Last Rites", "trigger": {"kind": "would_fall"}, "targeting": "self",
+			"effects": [{"type": "apply_status", "status": "undying", "duration_ms": 2000, "target": "self"}]},
+		"passives": [{"id": "snare", "name": "Snare", "kind": "ability", "effects": [{"trigger": "on_basic_attack", "every": 4, "type": "pull", "hexes": 2, "target": "target"}]}]})
+
+	var hound: UnitDef = K.kit("hound", {"stats": {"hp": 500, "atk": 14, "speed": 3, "crit": 10}, "traits": ["engage", "flying"],
+		"passives": [{"id": "pack", "name": "Pack", "kind": "aura", "aura": {"target": "all_allies", "stat": "atsp_bp", "value": 11000}},
+			{"id": "snap", "name": "Snap", "kind": "ability", "effects": [{"trigger": "on_hit_taken", "every": 3, "type": "knockback", "hexes": 1, "target": "hit_target"}]}],
+		"signature": {"id": "pounce", "name": "Pounce", "trigger": {"kind": "fight_start"}, "targeting": "weakest_backliner", "max_range": 5,
+			"effects": [{"type": "leap", "max_hexes": 5, "target": "target"}, {"type": "damage", "amount": 12, "target": "target"}]}})
+	var witch: UnitDef = K.kit("witch", {"stats": {"hp": 600, "atk": 10, "speed": 2, "range": 4},
+		"mana": {"max": 30, "per_attack": 10, "regen_per_s": 2},
+		"basic_attack": {"effects": [{"type": "damage", "amount": 7, "target": "target"}, {"type": "apply_status", "status": "slow", "target": "target"}]},
+		"signature": {"id": "hush", "name": "Hush", "trigger": {"kind": "mana"}, "targeting": "highest_mana", "max_range": 6, "cast_ms": 1000,
+			"effects": [{"type": "area", "shape": {"kind": "circle", "radius": 1}, "anchor": "target", "warning_ms": 500, "hits": "enemies",
+				"effects": [{"type": "apply_status", "status": "silence", "target": "target"}, {"type": "mana_drain", "amount": 20, "target": "target"}]}]}})
+	var caller: UnitDef = K.kit("caller", {"stats": {"hp": 700, "atk": 10, "speed": 1, "range": 3},
+		"basic_attack": {"cooldown_ms": 1500, "effects": [{"type": "area", "shape": {"kind": "line", "length": 3}, "anchor": "target_direction", "hits": "enemies",
+			"effects": [{"type": "damage", "amount": 8, "target": "target"}, {"type": "apply_status", "status": "poison", "target": "target"}]}]},
+		"signature": {"id": "brood", "name": "Brood", "trigger": {"kind": "count", "event": "on_hit_taken", "every": 4}, "targeting": "self",
+			"effects": [{"type": "summon", "kit": "pup", "placement": "hexes", "hexes": [[0, 6], [7, 6]]}]}})
+	var brute: UnitDef = K.kit("brute", {"stats": {"hp": 2400, "atk": 20, "def": 20, "speed": 2, "range": 1},
+		"basic_attack": {"cooldown_ms": 1400, "effects": [{"type": "damage", "amount": 16, "target": "target", "scaling": {"atk": 5000}}]},
+		"signature": {"id": "drag", "name": "Drag", "trigger": {"kind": "at_time", "at_ms": 5000}, "targeting": "farthest",
+			"effects": [{"type": "pull", "hexes": 3, "target": "target"}, {"type": "apply_status", "status": "root", "target": "target"}]},
+		"phases": [
+			{"id": "molt", "name": "Molt", "below_hp_bp": 8000, "targeting": "farthest",
+				"mana": {"max": 100, "regen_per_s": 20},
+				"signature": {"id": "call", "name": "Call the Brood", "trigger": {"kind": "mana"}, "targeting": "self", "cast_ms": 1500,
+					"effects": [{"type": "start_collapse"}, {"type": "summon", "kit": "pup", "count": 2, "placement": "edges"}]}},
+			{"id": "last_ember", "name": "Last Ember", "below_hp_bp": 5000, "targeting": "nearest",
+				"signature": {"id": "ember_breath", "name": "Ember Breath", "trigger": {"kind": "fight_start"}, "targeting": "largest_group", "max_range": 6,
+					"effects": [{"type": "start_collapse"}, {"type": "area", "shape": {"kind": "cone", "depth": 3}, "anchor": "target_direction", "warning_ms": 800, "hits": "enemies",
+						"effects": [{"type": "damage", "amount": 30, "target": "target"}]}]},
+				"passives": [{"id": "cinders", "name": "Cinders", "kind": "ability", "effects": [{"trigger": "on_hit_taken", "every": 5, "type": "damage", "amount": 6, "target": "hit_target"}]}]},
+		]})
+	var pup: UnitDef = K.kit("pup", {"stats": {"hp": 90, "atk": 8, "speed": 3}, "basic_attack": {"cooldown_ms": 800, "effects": [{"type": "damage", "amount": 5, "target": "target"}]},
+		"signature": {"id": "yelp", "name": "Yelp", "trigger": {"kind": "fight_start"}, "targeting": "self", "effects": [{"type": "shield", "amount": 10, "target": "self"}]}})
+
+	var fight: FightSetup = K.fight(
+		[K.at(warden, 3, 2), K.at(mender, 2, 0), K.at(brand, 5, 2), K.at(hook, 6, 1)] as Array[UnitSetup],
+		[K.foe(hound, 2, 4), K.foe(hound, 5, 4), K.foe(witch, 1, 6), K.foe(caller, 6, 6), K.foe(brute, 4, 5)] as Array[UnitSetup],
+		[Vector2i(3, 3), Vector2i(4, 3), Vector2i(0, 3)] as Array[Vector2i], fight_seed)
+	fight.summon_kits.append(pup)
+	return fight

@@ -26,5 +26,62 @@
     "interval_ms": 1000,
     "damage_per_stack": 1,
     "defense_shred_per_stack": 1
+  },
+  {
+    "_note": "Can't move; can still attack and cast. Snares (Trapper Maren) and Drag (Bog Lurker) root.",
+    "id": "root",
+    "name": "Root",
+    "kind": "root",
+    "duration_ms": 1500
+  },
+  {
+    "_note": "Can't move, attack, or fire a mana signature; mana still comes in, and other signature triggers still fire (decided). A push stopped short stuns for collision_stun_ms.",
+    "id": "stun",
+    "name": "Stun",
+    "kind": "stun",
+    "duration_ms": 1000
+  },
+  {
+    "_note": "Moves and attacks slow_bp slower. Slows don't stack: the strongest on a unit wins.",
+    "id": "slow",
+    "name": "Slow",
+    "kind": "slow",
+    "duration_ms": 2000,
+    "slow_bp": 3000
+  },
+  {
+    "_note": "The unit's target becomes whoever taunted it, for as long as it lasts; a newer Taunt wins. Hold the Line taunts for 3s.",
+    "id": "taunt",
+    "name": "Taunt",
+    "kind": "taunt",
+    "duration_ms": 3000
+  },
+  {
+    "_note": "No mana gain while it lasts (the Gloam Witch's Hush). Units without mana ignore it.",
+    "id": "silence",
+    "name": "Silence",
+    "kind": "silence",
+    "duration_ms": 3000
+  },
+  {
+    "_note": "Takes damage_taken_bp more damage from every source (Marking Shot: +15% for 4s). Marks don't stack: the strongest wins.",
+    "id": "marked",
+    "name": "Marked",
+    "kind": "marked",
+    "duration_ms": 4000,
+    "damage_taken_bp": 1500
+  },
+  {
+    "_note": "Its HP can't drop below 1 while it lasts; each save is logged. Brannoc's 'can't fall for 1s' when he hits 1 HP; Last Rites gives it for 3s.",
+    "id": "undying",
+    "name": "Undying",
+    "kind": "undying",
+    "duration_ms": 1000
+  },
+  {
+    "_note": "Held by an engager: can't move until it breaks free (break_free_ms in tuning.json). Only the Engage trait sets and clears it; effects can't apply it.",
+    "id": "engaged",
+    "name": "Engaged",
+    "kind": "engaged"
   }
 ]

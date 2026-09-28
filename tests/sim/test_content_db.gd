@@ -48,14 +48,23 @@ func test_the_gut_left_only_tuning_and_statuses() -> void:
 
 func test_real_statuses() -> void:
 	var db: ContentDb = ContentDb.load_dir("res://data")
-	assert_eq(db.status_ids, ["burn", "poison", "bleed"] as Array[String])
+	assert_eq(db.status_ids, ["burn", "poison", "bleed", "root", "stun", "slow", "taunt", "silence", "marked", "undying", "engaged"] as Array[String])
 	assert_eq(db.statuses["burn"].interval_ticks, 10, "Burn ticks twice a second")
 	assert_eq(db.statuses["burn"].stacks_lost_bp, 500)
 	assert_eq(db.statuses["burn"].vs_shield_bp, 5000, "Burn is half as effective against shields")
 	assert_eq(db.statuses["poison"].vs_shield_bp, 0, "Poison skips shields")
 	assert_eq(db.statuses["bleed"].defense_shred_per_stack, 1)
-	for id: String in db.status_ids:
+	for id: String in ["burn", "poison", "bleed"]:
 		assert_eq(db.statuses[id].kind, StatusDef.Kind.DAMAGE_OVER_TIME)
+		assert_false(db.statuses[id].is_timed())
+	var kinds: Array[StatusDef.Kind] = [StatusDef.Kind.ROOT, StatusDef.Kind.STUN, StatusDef.Kind.SLOW, StatusDef.Kind.TAUNT, StatusDef.Kind.SILENCE, StatusDef.Kind.MARKED, StatusDef.Kind.UNDYING]
+	for i: int in kinds.size():
+		var def: StatusDef = db.statuses[db.status_ids[3 + i]]
+		assert_eq(def.kind, kinds[i])
+		assert_true(def.is_timed())
+	assert_eq(db.statuses["stun"].duration_ticks, 20, "1s")
+	assert_eq(db.statuses["slow"].slow_bp, 3000)
+	assert_eq([db.statuses["marked"].duration_ticks, db.statuses["marked"].damage_taken_bp], [80, 1500], "Marking Shot: +15% for 4s")
 
 
 func test_real_tuning_converted_to_ticks() -> void:
@@ -156,8 +165,40 @@ func test_rejects_badly_formed_id() -> void:
 
 func test_rejects_removed_status_kinds() -> void:
 	var statuses: Array = _real_json(ContentDb.STATUSES_FILE)
-	statuses.append({"id": "slow", "name": "Slow", "kind": "slow", "slow_bp_per_stack": 1000, "duration_ms": 3000})
-	_assert_error(_load_with(ContentDb.STATUSES_FILE, statuses), "kind: unknown value \"slow\"")
+	statuses.append({"id": "freeze", "name": "Freeze", "kind": "freeze", "duration_ms": 1000})
+	_assert_error(_load_with(ContentDb.STATUSES_FILE, statuses), "kind: unknown value \"freeze\"")
+
+
+func test_exactly_one_engaged_status() -> void:
+	var db: ContentDb = ContentDb.load_dir("res://data")
+	assert_eq(db.engaged_status.id, "engaged")
+	assert_false(db.engaged_status.is_timed())
+	var statuses: Array = _real_json(ContentDb.STATUSES_FILE)
+	statuses.append({"id": "held", "name": "Held", "kind": "engaged"})
+	_assert_error(_load_with(ContentDb.STATUSES_FILE, statuses), "needs exactly one status of kind \"engaged\" (the Engage trait sets it), found 2")
+	var none: Array = _real_json(ContentDb.STATUSES_FILE).filter(func(entry: Dictionary) -> bool: return entry["kind"] != "engaged")
+	_assert_error(_load_with(ContentDb.STATUSES_FILE, none), "found 0")
+
+
+func test_the_collision_stun_is_the_first_stun() -> void:
+	assert_eq(ContentDb.load_dir("res://data").stun_status.id, "stun")
+	var statuses: Array = _real_json(ContentDb.STATUSES_FILE)
+	statuses.append({"id": "daze", "name": "Daze", "kind": "stun", "duration_ms": 500})
+	var db: ContentDb = _load_with(ContentDb.STATUSES_FILE, statuses)
+	assert_eq(db.stun_status.id, "stun", "the first, not the last")
+	var none: Array = _real_json(ContentDb.STATUSES_FILE).filter(func(entry: Dictionary) -> bool: return entry["kind"] != "stun")
+	_assert_error(_load_with(ContentDb.STATUSES_FILE, none), "needs a status of kind \"stun\"")
+
+
+func test_status_fields_by_kind() -> void:
+	var statuses: Array = _real_json(ContentDb.STATUSES_FILE)
+	statuses.append({"id": "slow_two", "name": "Slow", "kind": "slow", "duration_ms": 1000})
+	statuses.append({"id": "mark_two", "name": "Mark", "kind": "marked", "damage_taken_bp": 1000})
+	statuses.append({"id": "dot_two", "name": "Rot", "kind": "damage_over_time", "interval_ms": 1000, "damage_per_stack": 1, "duration_ms": 1000})
+	var db: ContentDb = _load_with(ContentDb.STATUSES_FILE, statuses)
+	_assert_error(db, "(slow_two): missing required key \"slow_bp\"")
+	_assert_error(db, "(mark_two): missing required key \"duration_ms\"")
+	_assert_error(db, "(dot_two): unknown key \"duration_ms\"")
 
 
 func test_tuning_cross_checks() -> void:

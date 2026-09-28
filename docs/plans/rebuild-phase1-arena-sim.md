@@ -1,6 +1,6 @@
 # Rebuild phase 1: the arena sim (build plan)
 
-Status: **approved (2026-09-27), after two rounds of answers; phase 0 is done, so this is next.** Phase 1 of `docs/plans/rebuild-build-order.md`. Design sources: `rebuild-arena.md` (placement, movement, tanks, areas, the collapse), `rebuild-heroes.md` (mana and signature triggers), and `rebuild-enemies.md` (what enemies need from the sim). Numbers are placeholders to tune.
+Status: **built (2026-09-28).** Approved 2026-09-27 after two rounds of answers; every step below is done. Phase 1 of `docs/plans/rebuild-build-order.md`. Design sources: `rebuild-arena.md` (placement, movement, tanks, areas, the collapse), `rebuild-heroes.md` (mana and signature triggers), and `rebuild-enemies.md` (what enemies need from the sim). Numbers are placeholders to tune.
 
 **The big change in this revision:** hexes are only for **placement**. Once the fight starts, units move freely on a flat plane. So there are no reservations, no hex-by-hex steps, and no snapping to six directions. Distances are still counted in hexes, because that's how every design doc talks about them.
 
@@ -104,6 +104,10 @@ The second round (2026-09-27):
 - **The arena's edge** is the rectangle around the hex centers, half a hex beyond the outermost ones.
 - **Units are circles**, all with radius **400** (0.4 hex) for now. No two units overlap, so two neighbors on the grid start with a 200 gap between them, which is too narrow to walk through.
 - **Rocks** are circles of radius **500** on a hex center. Rocks on neighboring hexes touch, so a row of rocks is a wall. Rocks block movement and pushes, but not attacks (no line of sight).
+- **What gets through (built in step 1):**
+  - **Units:** two units on neighboring hexes leave 200 between them, so nobody passes. One empty hex between two units leaves at least 932, so a unit (800 across) fits through.
+  - **Rocks:** they're bigger. One missing rock in a row of rocks leaves only 732, so a unit can't pass. It takes two missing rocks.
+  - **At the arena's edge:** a rock one hex in from the edge leaves too little room to pass behind it.
 - **Distances** are straight-line, computed with a shared integer square root (`FixedMath.isqrt`) and compared squared where possible. Directions are integer vectors scaled to length 1000.
 
 ## 2. What a unit is (data shape)
@@ -141,6 +145,18 @@ Heroes and enemies share one **kit** (`UnitDef`). `HeroDef` (paths, phase 4) and
 - **`basic_attack`** and **`signature`** are **abilities** (`AbilityDef`), with effects in the `EffectDef` vocabulary.
   - An ability with reach 2 or more fires a **shot** (section 5). An ability can say `"shot": false` to land at once, for example a beam.
 - **`passives`:** `Part` kinds (aura, ability on an event trigger, replace_status), rebuilt as `PartDef` in step 4.
+  - **Built in step 4, second half** (`PartDef`, `Passives`). Each passive has an `id` and a `name`, and the log credits them. A kit's abilities and passives each need their own id.
+  - **`aura`:** `{"kind": "aura", "aura": {...an AuraDef...}}`. While its holder stands and its window is open, it boosts the holder or all its allies.
+    - Auras are folded into stats, output multipliers (damage, healing, Shield, damage-over-time stacks), crit chance, and the basic attack's cooldown. This happens at the start, when a window opens or closes, and when a holder falls.
+    - Several on one stat multiply, in fight order.
+    - Each start and end is logged (`AURA`).
+  - **`ability`:** effects on event triggers, each counting its own events for `every`.
+    - They run when the log is read after every unit has acted, and they land at once (never a shot).
+    - `hit_target` is the unit the event names; `target` is the unit's current target.
+    - What they do is marked `from_event`, so it never sets off another event or a count signature.
+    - They don't log a `FIRE`, so `on_ability` means "its signature fired". A count signature can't count `on_ability`; the validator refuses it.
+  - **`replace_status`:** statuses the unit applies as `from` land as `to`.
+  - **Setup validation:** a fight's setup checks that every status a kit names exists.
 
 ## 3. The tick
 
@@ -162,8 +178,18 @@ Each tick runs these steps in order. Resolution order is the fight's unit order:
 7. **Deaths:** units at 0 HP fall, unless Undying holds them or a `would_fall` signature saves them. Then on_kill effects run, and any deaths those cause.
 8. **Victory, defeat, or a tie:** a fight still running at 180s is a tie, as is both sides falling on the same tick. A tie counts as a win.
 
-- **Deaths wait until step 7**, as now. A unit knocked to 0 this tick still acts if its turn comes later in the tick, so neither side gets an edge from going first.
+- **Deaths wait until step 7**, as now. A unit knocked to 0 this tick is still updated if it comes later in the tick's order, so neither side gets an edge from being updated first.
 - **Movement is resolved one unit at a time,** each against the positions everyone else already has. So two units can never overlap. When a hero and an enemy want the same gap on the same tick, the hero gets it (decided).
+- **Phases, built in step 8, third part** (`PhaseDef`, `Phases`). They're on the kit for now (`"phases"` in `UnitDef`); phase 2's `EnemyDef` can take them over.
+  - **A phase** has an id, a name, and `below_hp_bp`, and changes the kit: a new `signature`, `mana` bar, `basic_attack`, or `targeting` rule, and `passives` added (one with an earlier passive's id replaces it). It needs at least one of these.
+  - **Read as whole kits:** phases go from the highest threshold down, each building on the one before, and each result must be a sound kit (a mana signature needs a bar; a bar needs a mana signature, so a new signature that isn't one takes the bar away; ids stay unique). The setup's checks (statuses, summons) cover what phases bring.
+  - **Entered** in step 6, after events: a unit with HP above 0 below its next threshold enters it (`PHASE`, credited to the unit and the phase), and one that dropped past several enters each in order. It goes on with the new kit from its next update:
+    - A new signature starts fresh, so a `fight_start` one fires as the phase begins (Old Mother Ash's Last Ember: Ember Breath and `start_collapse`). A cast under way is cancelled (`CAST_CANCELLED`, "phase").
+    - A new basic attack keeps the cooldown progress the old one had.
+    - A new mana bar starts at its own start.
+    - A new targeting rule drops the target, so the unit picks again by it.
+    - Passives are set up again, and event counts carry over for passives the phase kept. Auras are folded in again.
+  - **Not covered:** "She stalks into the middle" (Molt) needs a way to walk to a spot rather than a unit. Phase 2 can add one when Old Mother Ash is built.
 
 ## 4. Movement, targeting, and blocking
 
@@ -172,12 +198,16 @@ Each tick runs these steps in order. Resolution order is the fight's unit order:
 - **Speed:** a unit covers `speed × 1000 / 20` units per tick (speed 2 = 100 per tick). Slow reduces it.
 - **Straight when it can:** if the straight way to a spot in range of its target is clear, the unit walks straight at it.
 - **Around when it must:** otherwise it finds a path and walks along it, straight between the path's corners.
-  - **Pathfinding** runs on a **hidden grid of quarter-hex cells** (about 30 × 30). It isn't a hex grid, and nothing snaps to it.
-  - A cell is blocked if the walker's circle there would overlap a unit, a rock, crumbled ground, or the edge. The walker's own target doesn't block cells, so it can reach it.
-  - The search is Dijkstra with integer costs (250 straight, 354 diagonal) and a fixed neighbor order, forward-first for each side. So neither side drifts toward one flank when routes tie.
+  - **Pathfinding** runs on a **hidden grid of eighth-hex cells** (125 across, 57 × 60). It isn't a hex grid, and nothing snaps to it. (Quarter-hex cells were planned, but they miss the one-hex gap between two staggered units, a corridor only 132 wide.)
+  - **Blocked cells:** a cell is blocked if the walker standing on its center would overlap a unit, a rock, crumbled ground, or the edge. The test is exact, never optimistic, so a path never leads into a gap the walker can't fit. Cells are only checked when a search reaches them. The walker's own target doesn't block cells, so it can reach it.
+  - **The search** is A* with integer costs (125 straight, 177 diagonal, never cutting past a blocked cell) and a fixed neighbor order, forward-first for each side (the enemies' order is the heroes' turned around). So neither side drifts toward one flank when routes tie.
+    - Its estimate is the **octile distance** to the target (the longer of the x and y distances plus 0.4142 of the shorter, as if walked straight and diagonally on open ground), less the reach stretched to that measure. It never overestimates, and on open ground it's close to the real cost. (Until the speed pass after step 4 it was the larger of the x and y distances, which made searches spread about five times wider.)
+    - `nearest` uses the same search against every enemy at once, and keeps going until no closer tie is possible.
   - **Its goal** is any free cell from which the target is in range.
+  - **Leaving crumbled ground:** a walker standing on crumbled ground may cross crumbled cells, so it can always get back to safe ground.
 - **Repathing:** a unit keeps its path until it's blocked, its target changes, or 0.5s passes (`repath_ms`). The board keeps changing, so it looks again regularly.
-- **Blocked:** if the next piece of movement would overlap anything, the unit doesn't move this tick and repaths on its next turn.
+- **Straight or around (built in step 2):** when it plans, the unit sweeps its circle along the straight line to the point where its target would be in reach. If nothing is in the way it walks straight at the target; otherwise it asks the pathfinder.
+- **Blocked:** if the next piece of movement would overlap anything, the unit first tries to **slide**: it drops the part of the step heading into the circle it hit and keeps the rest. That lets it brush past what a straight leg grazes. If the slide doesn't fit either, it doesn't move this tick and repaths on the next tick. A slide is logged as a leg of its own, one tick long.
 - **No path:** the unit waits. After **1s with no path** (`repath_give_up_ms`), it drops its target and picks again.
 - **Units stop to attack.** A unit whose target is in range stands still. A `fires_while_moving` flag (Volley Maren, phase 4) is left for later; phase 1 only reserves the field name.
 
@@ -200,6 +230,12 @@ Each tick runs these steps in order. Resolution order is the fight's unit order:
 | `self` | the unit itself | Hold the Line |
 
 - **Ties** always go to the earlier unit in fight order.
+- **Built in step 7, first half** (`Targeting.pick`):
+  - A unit's own rule can be any but `self`; a signature's can be any.
+  - Every rule but a unit's own `nearest` is by straight line, and doesn't search paths. The unit then walks to its pick as usual.
+  - A signature picks among units within its reach. For `weakest_backliner`, the fallback to anyone is also within reach.
+  - `largest_group` counts the target's own side within 2 hexes of it, not counting itself.
+  - HP% is compared by cross-multiplying, so 9,999 of 20,000 is lower than 5,000 of 10,000.
 - **One search, every distance:** a single search from the unit gives its path length to every enemy, so `nearest` costs one search per pick.
 - **Sticky:** a unit keeps its basic-attack target until one of these happens:
   - the target falls
@@ -217,6 +253,16 @@ Each tick runs these steps in order. Resolution order is the fight's unit order:
   - **Once free:** the unit can move until it's no longer next to that engager, and then the engagement ends. Coming back into contact engages it again.
   - **Fliers break free too** (decided).
   - **Displacement:** a knockback or pull out of contact ends the engagement at once.
+  - **Built in step 5** (`Engage`; the `engage` trait; the Engaged status):
+    - **When it's checked:** as a unit is about to walk, and every tick while it has an engagement.
+      - A unit standing in reach of its target isn't trying to get past anyone, so it's never held.
+      - Checking only then keeps Engage nearly free; checking every unit every tick cost about 35 ms per 60s.
+    - **The timer:** the break-free timer starts the first tick the unit is held, and runs to the end even if it retargets.
+      - The Engaged status (credited to "tank · Engage") shows while it's held.
+      - A held unit that finds its target in reach attacks, still held.
+    - **Each engager holds a unit separately.** Next to two, a unit has to break free of both, each on its own clock.
+    - **Ending:** breaking free logs `BREAK_FREE`. An engagement ends when contact ends or the engager falls (`STATUS_ENDED`, with why).
+    - **Engaged is a status only the trait sets.** `statuses.json` needs exactly one, a setup naming it is refused, and it doesn't raise `on_status` for the engager.
 - **Taunt** (status, with the taunter as its source): the taunted unit's target becomes the taunter while the status lasts. If a second Taunt lands, the newer one wins.
 
 ## 5. Attacks, shots, mana, and signatures
@@ -241,16 +287,30 @@ Each tick runs these steps in order. Resolution order is the fight's unit order:
 | `hp_below` | `threshold_bp` | once, the first time the unit drops below it while standing |
 | `fight_start` / `at_time` | `at_ms` | once, at that moment |
 | `count` | an event trigger (`on_hit_taken`, `on_heal`, `on_kill`, …), `every` | on every Nth such event |
-| `would_fall` | — | once, the first time the unit would fall: it's left at 1 HP instead, and the signature fires (proposed, section 15) |
+| `would_fall` | — | once, the first time the unit would fall: it's left at 1 HP instead, and the signature fires (approved, section 15) |
 
 - **Stun only holds back mana signatures** (decided). A full mana bar waits and fires once the stun ends. Every other trigger fires even while the unit is stunned, so a tank's last stand still happens when he's stunned.
 - **`cast_ms`** (optional, **mana signatures only**; the validator refuses it on other triggers): the unit stands still for that long before the signature lands. A stun during the cast cancels it, and the signature keeps its mana.
 - Big area attacks use **`warning_ms`** instead (section 7), so the caster doesn't have to stand still while the warning shows.
 - Every fire logs `FIRE`, with the ability as its source, as now.
+- **Built in step 4, first half** (`Mana`, `Signatures`, `Events`, `ManaDef`, `TriggerDef`; `AbilityDef` reads a signature):
+  - **A kit's `mana` and a mana signature come together.** The validator refuses either without the other.
+  - **Timing:** a signature is checked at the start of its unit's update each tick, right after mana regen. A bar filled by this tick's attack fires on the next tick (50 ms later).
+  - **`count`** reads the log after every unit has acted, so the Nth event queues a fire for the next tick. Events from the deaths step (`on_kill`) are raised as the unit falls.
+  - **`hp_below`** needs the unit standing above 0 HP. A hit from above the threshold straight to 0 is a job for `would_fall`, not `hp_below`.
+  - **Saves:** Undying holds a unit at 1 HP in the deaths step (logged as `SAVED`). If nothing holds it, an unspent `would_fall` signature leaves it at 1 HP and fires at once. If that fells someone, the deaths step goes round again, so they fall on the same tick.
+  - **Signature targets:** a signature picks fresh each time it fires, by its own `targeting` (for now `nearest` and `self`; the rest in step 7).
+    - `nearest` is by **straight line** within reach, not by path, since a signature fires from where the unit stands.
+    - **Reach** is `max_range`, or the unit's own range if it has none. From 2 hexes up, it's a shot, like an attack. An ability aimed at the unit itself never flies.
+    - With no target in reach, a mana signature stays full, and a queued fire waits.
+  - **Casts:** the unit stands still (STOP "casting"), and its attack cooldown keeps running. The bar is spent when the cast lands.
+    - If its target fell or left its reach, the cast lands on a fresh one; with none, it's cancelled and the bar stays full.
+    - A Stun cancels it on the next tick (`CAST_CANCELLED`).
+  - **Mana gains aren't logged:** each comes from something that is, so the bar can be rebuilt from the log. `MANA_DRAIN` is logged.
 
 ## 6. Displacement and flying
 
-All the displacements **move the unit instantly in the sim** and log the start and end points (decided). The UI animates them. A unit that gets displaced loses its path and repaths on its next turn.
+All the displacements **move the unit instantly in the sim** and log the start and end points (decided). The UI animates them. A unit that gets displaced loses its path and repaths on the next tick.
 
 | Effect | What it does | Data |
 | --- | --- | --- |
@@ -266,6 +326,23 @@ All the displacements **move the unit instantly in the sim** and log the start a
 - **Pushed onto crumbled ground:** allowed. It hurts.
 - **Leap spots:** the candidates are 12 fixed points around the target, each 800 from its center. The first free one closest to the leaper wins.
   - If none is free, the leap fails, and that's logged. A mana signature keeps its mana.
+- **Built in step 6, first half** (`Displacement`; effect types `knockback`, `pull`, `leap`, `charge`; log kinds `PUSH`, `LEAP`, `CHARGE`):
+  - **Pushes (knockback, pull, and a charge's knockback)** use the arena's edge, not the safe ground, so a push can end on crumbled ground. A leap or a charge is the unit's own move, so it stays on safe ground.
+  - **A pull** goes no further than touching the puller. Stopping there isn't a collision, so nothing is stunned.
+  - **A charge** is the unit's own move, so being stopped short (by an ally, a rock, or the edge) stuns no one. Only the enemy it touches gets knocked back, and a knockback stopped early stuns as usual.
+    - The target counts as the first unit in the way if nothing's before it.
+  - **A leap:**
+    - Candidates: 12 spots every 30 degrees round the target, starting straight down the board, each touching it. Among the free ones within `max_hexes`, the closest wins; ties go to the first in that order.
+    - The unit can't act until its landing ends (`land_ms`, else `leap_land_ms`, 300 ms for now). Only mana regen runs.
+  - **Leap and charge move the unit itself,** so:
+    - They aim at `target` and fire at once, and an ability with one is never a shot.
+    - Only signatures can have them (not basic attacks, not passives).
+  - **A leap with no room to land fails whole:** nothing in the ability happens and no `FIRE` is logged.
+    - A mana signature keeps its bar, and any other trigger stays queued; both try again next tick.
+    - The failure is logged once, not every tick it waits.
+  - **Moving a unit** drops its path (it plans again next tick) and ends, at once, any engagement it's been moved out of.
+  - **The log replay** takes a `PUSH` as where the unit ends up, since a push can come after the unit stepped that tick. A push, leap, or charge ends any leg.
+  - **`collision_stun_ms`** stuns with the first status of kind `stun`, credited to whatever pushed.
 - **Flying** (trait):
   - A flier **moving** ignores units and rocks (decided), and nothing blocks on it.
   - A flier **stopping** (to attack) has to stop on a free spot. If it's over someone, it keeps going to the nearest free spot that's still in range. A stopped flier blocks like anyone.
@@ -276,6 +353,17 @@ All the displacements **move the unit instantly in the sim** and log the start a
   - When an enemy comes within 1 hex, the unit hops 1 hex straight away from that enemy. The hop is instant, and stops early at anything in the way, with no stun: it's the unit's own move.
   - It has `hop_cooldown_ms` (in the trait's data) and is logged.
   - Units held by Engage have to break free first.
+- **Built in step 6, second half** (the `flying` and `hop_away` traits; log kind `HOP`):
+  - **In the air:** a flier is in the air while it moves (`UnitState.airborne`). Others move, plan, and fit as if it weren't there, and it goes straight at its target: no pathfinding, no blocking, over rocks too. It still keeps to the safe ground.
+  - **Landing:** in reach, it lands where it is if that's free (a STOP, "lands"). Otherwise it flies on to the nearest free spot still in reach, and attacks only once it has landed.
+    - The spot is searched in rings 100 apart, 12 spots each, out to 3 hexes. With no free spot at all, it attacks from the air.
+    - Landed, it blocks like anyone, until it next moves.
+  - **Targets:** a flier picks its nearest target by straight line, since it doesn't path.
+  - **Pushed:** a push carries a flier over units and rocks; only the edge stops it (and stuns it, as usual). Left over someone, it drops to the nearest free spot (the log says "dropped clear"), with no stun.
+  - **Hop away:** `"traits": ["hop_away"]` with `"hop_cooldown_ms"` on the kit (the trait's data, kept flat).
+    - Each tick it's off cooldown, a unit with an enemy within a hex hops a hex straight away from the nearest one. The hop is its whole update that tick.
+    - It checks Engage first, since it's about to move.
+    - A hop that can't move at all doesn't happen, and doesn't start the cooldown.
 
 ## 7. Areas and warnings
 
@@ -291,6 +379,17 @@ All the displacements **move the unit instantly in the sim** and log the start a
 - **`area` effect:** a shape, an anchor, `warning_ms`, `hits` (`enemies`, `allies`, or `all`), and nested `effects`. The nested effects run on every unit inside the area **when it lands**. Where it lands is fixed when it's cast, so a warned area doesn't follow anyone.
 - **Warning:** at cast, the log gets `AREA_WARNING` with the shape, where it is, and the landing tick, and the UI draws it. At the landing tick, the log gets `AREA_LANDED`, then one entry per unit hit. Areas without `warning_ms` land at once.
 - Heroes **never step out of marked areas** (decided in the enemies plan). Placement is the answer, so movement ignores warnings.
+- **Built in step 7, second half** (`ShapeDef`, `Areas`, the `area` effect type, `AREA_WARNING` and `AREA_LANDED`):
+  - **Data:** `{"type": "area", "shape": {"kind": "circle", "radius": 2}, "anchor": "target", "warning_ms": 1000, "hits": "enemies", "effects": [...]}`.
+    - Sizes are whole hexes, and a cone's depth defaults to 3.
+    - Circles and rings take `target` or `self`; lines and cones take `target_direction`. The validator checks the pairing.
+  - **Lines and cones start at the caster's edge,** not its center: the plan says so for lines, and cones do the same.
+  - **At cast:** where the area goes is fixed, and so are its effects' numbers and crit chance, like a shot's. Crits are rolled per unit when it lands.
+  - **It still lands if the caster has fallen.** An area never rides a shot, even from range.
+  - **What it hits:** every standing unit on its `hits` side whose center is inside, in fight order. For `allies` and `all`, the caster counts.
+  - **Nested effects:** they aim at `target` (each unit hit) and fire on_fire. No area in an area, and no leap or charge. An area is itself cast on_fire.
+  - **Pushes inside an area:** a knockback goes away from a circle's or ring's center, or from the caster for a line or cone. A pull goes toward the caster.
+  - **The log:** `AREA_WARNING` and `AREA_LANDED` carry the shape ("circle 2"), where it's placed (`from_pos`), and a line's or cone's far end (`to_pos`). `AREA_LANDED` counts the units hit.
 
 ## 8. Statuses for the slice
 
@@ -300,7 +399,7 @@ All the displacements **move the unit instantly in the sim** and log the start a
 | --- | --- | --- |
 | Root | `root` | can't move (can still attack and cast) |
 | Stun | `stun` | can't move, attack, or fire mana signatures; mana still comes in, and other signature triggers still fire |
-| Undying | `undying` | HP can't drop below 1 while it lasts; each save is logged (proposed, section 15) |
+| Undying | `undying` | HP can't drop below 1 while it lasts; each save is logged (approved, section 15) |
 | Slow | `slow` | the unit moves and its attack cooldown runs `slow_bp` slower; the strongest Slow wins, no stacking |
 | Taunt | `taunt` | target forced to the status's source |
 | Silence | `silence` | no mana gain |
@@ -311,11 +410,19 @@ All the displacements **move the unit instantly in the sim** and log the start a
 - Timed statuses have `duration_ms`, and a new application refreshes it.
 - **Shield** stays a unit value, not a status, as now.
 - Knockback isn't a status. It's an effect (section 6), and its stun is Stun.
+- **Built in step 3** (`Statuses`, `StatusState`; Undying comes with step 4 and Engaged with step 5):
+  - A timed status lasts from the tick it lands until `ends_at`, then ends at the start of that tick. An `apply_status` effect can give its own `duration_ms`; otherwise the status's own duration is used. A new application refreshes the timer and becomes the status's source.
+  - Root and Stun both stop the unit where it stands (the log gets a STOP, "rooted" or "stunned"). A stunned unit's attack cooldown **waits** rather than running on. Silence has nothing to stop until mana arrives in step 4.
+  - Slow scales both the step length and the cooldown's rate by `10000 − slow_bp`. Two Slows don't add up: the strongest wins. Marked works the same way.
+  - Marked raises a hit before DEF, and damage over time too.
+  - Taunt: each tick, a taunted unit's target is whoever taunted it (TARGET, "taunted"). When the taunter falls, it picks as usual.
+  - Damage over time works as before phase 0. Burn, Poison, and Bleed are credited to whoever applied each stack. Heals weaken damage over time: the first heal in a 1s window strips `heal_cleanse_bp` (10%) of the stacks, and each later heal in that window strips half as much again.
+  - Statuses sit on a unit in `statuses.json` order, so ticking them never depends on the order they arrived in.
 
 ## 9. Rift Collapse: the shrinking arena
 
 - **Rings follow the placement grid:** a hex's ring is `min(col, 7 − col, row, 6 − row)`. On 8 × 7 that's ring 0 (the border), ring 1, ring 2, and ring 3, the 2 middle hexes, which never crumble.
-- **On the plane,** each crumbled ring moves the safe rectangle's edge in by one ring: 866 at the sides and 1000 at the ends. Everything outside the safe rectangle is crumbled ground.
+- **On the plane,** each crumbled ring moves the safe rectangle's edge in by one ring: 866 at the sides and 1000 at the ends. The ends sit a further quarter hex in, because odd columns are shifted half a hex; that way a hex's center is on safe ground exactly when its ring hasn't crumbled. Everything outside the safe rectangle is crumbled ground. (Rings on 8 × 7 hold 26, 18, 10, and 2 hexes.)
 - **Timing:** from `collapse_start_ms` (45s), one ring every `collapse_ring_ms` (10s). Each ring is **warned** `collapse_warning_ms` (3s) before it crumbles, and the warning is logged like an area's.
 - **Damage:** anyone whose center is on crumbled ground takes flat damage once per second.
   - It starts at `base` and grows every second (the current `collapse_by_act` numbers, reused).
@@ -323,6 +430,19 @@ All the displacements **move the unit instantly in the sim** and log the start a
 - **Crumbled ground can't be walked into** (decided). A unit already on it can walk out, and pathfinding sends it back to safe ground first.
 - **`start_collapse` effect:** starts the collapse now if it hasn't started yet (Old Mother Ash's Last Ember).
 - **Tie at 180s**, as now.
+- **Built in step 8, first part** (`Collapse`, first each tick; `start_collapse`; `Movement.escape`; `NavGrid.find_safe`):
+  - **Timing:** the border ring crumbles at 45s (warned at 42s), ring 1 at 55s, ring 2 at 65s. The warnings and crumbles are logged as `COLLAPSE_RING`, with the safe rectangle each leaves.
+  - **Damage** starts on the first crumble and comes once a second after it, from the act's numbers (act 1: 10, then 10 more each second). The surge counts from the first crumble too (45s after it, so 90s when nothing starts it early). A fight in an act with no collapse numbers is refused.
+    - Collapse damage counts as damage taken, so it gives mana like any other.
+  - **Walking back:** a unit whose center is on crumbled ground walks back to safe ground before anything else, even with its target in reach. It walks straight to the nearest spot where it's wholly on safe ground, or finds the shortest way round (`find_safe`). It stops as soon as its center is safe: from there it stands and attacks if it can.
+    - A unit only partly over the edge stands and fights, but when it's about to walk, it first steps clear.
+    - While walking back, a step may cross crumbled ground but never reaches further past the edge than it did.
+    - A unit with no way back waits, and takes the damage. It looks again every `repath_ms`.
+    - When a ring crumbles, every walker plans its way again at once, since old routes may cross the new crumbled ground.
+    - **Fliers** in the air fly over crumbled ground (and are hit if their center is over it). Only a landed flier walks back, and it takes off to do it. They land only on safe ground.
+  - **`start_collapse`** (no target key; not in an area) warns the first ring at once, credited to its unit and ability, so it crumbles 3s later; every later ring keeps the same spacing. Once the first warning is out, it does nothing.
+  - **Speed** (`tools/bench_sim.gd`): fights that end before 42s are unchanged, fingerprints and all. The steady fight at 3x HP now ends at 56–57s instead of 62–64s, because the collapse finishes the snipers at the back, and takes 93–103 ms (99–107 ms per 60s, against 85 before, measured side by side). Most of the extra is ordinary walking and re-targeting: the heroes walk around the crumbled edge to reach the back row. The crowded fight is unchanged at about 155–240 ms per 60s.
+  - **A speed fix it needed:** targets huddled on the crumbling edge are often out of reach, and a walker with no way to its target searched again every tick. Now it looks again every `repath_ms`, as it gives up after `repath_give_up_ms`. Fights with no such walker are unchanged (the benchmark's fingerprints under 42s stayed the same).
 
 ## 10. Summons
 
@@ -332,6 +452,16 @@ All the displacements **move the unit instantly in the sim** and log the start a
   - `hexes`: a fixed list of grid hexes, each falling back to the nearest free spot.
 - **A summoned unit** joins **at the end of the fight order** and gets a unique id (`rift_pup#2`). It starts with no target and empty mana, unless its kit says otherwise. It's logged as `SUMMON`, with its source.
 - **Cap:** at most `max_units_per_side` (**30**, decided) standing units per side. Extra summons are dropped, and that's logged too.
+- **Built in step 8, second part** (`Summons`; the `summon` effect):
+  - **Where kits come from:** until phase 2 puts kits in the content files, a fight's setup lists the kits its summons use (`FightSetup.summon_kits`). The setup refuses a summon of a kit it doesn't list (a summoned kit's own summons included), two kits with one id, and hexes off the board.
+  - **The effect:** `{"type": "summon", "kit": "rift_pup", "placement": "edges", "count": 2, "near": "target"}`. It has no `target` key, and can't go in an area. `hexes` takes a list of `[col, row]` and makes one on each, so it takes no `count`.
+  - **Edges:** spots a radius in from the safe ground's edge, every nav cell (125) going round, nearest first to the caster or, with `"near": "target"`, to its ability's target (an event passive's: the unit's current target). Ties go round clockwise from the heroes' left corner. Each summon takes the nearest spot where it fits.
+  - **Adjacent:** the 12 points touching the caster that leaps use, the one straight ahead (toward the other side) first, then clockwise.
+  - **Hexes:** the hex's center, or the free spot nearest it (the same search a flier uses to land).
+  - **Joining:** a summon goes at the end of the fight's order, and acts on the tick it joins if the order hasn't passed it (so one summoned in step 5 acts that tick; one summoned by an event or a death, the next). Auras are folded in again, both ways.
+  - **Ids** go on from the setup's: a second `rift_pup` is `rift_pup#2`, whether the first was placed or summoned.
+  - A summon is never a back-liner, has no starting hex, and starts with its kit's starting mana.
+  - **Logged** as `SUMMON` ("caller · Call summons pup#2 at (x, y)"), and a dropped one too ("can't summon pup (its side is full)", or "(no room)"). The log replay test places a summon where its entry says.
 
 ## 11. The combat log
 
@@ -349,7 +479,7 @@ All the displacements **move the unit instantly in the sim** and log the start a
 - **Moves are logged as legs, not per tick,** so a 60s fight's log stays small. A test replays every leg, push, and leap from the log, and checks that it gives each unit's exact position on every tick. So the UI can always draw the true board from the log alone.
 - **`LogEntry` gains** `from_pos`, `to_pos`, `end_tick`, and `shape`. Phase 0 renames the item fields to ability fields (`source_ability`, `source_ability_name`).
 - **Every entry that changes the board or a unit names its source unit and ability**, or "Rift Collapse", or a status. A test walks every entry of the determinism fight and checks this.
-- **`ArenaDebug.render(sim)`:** a plain-text board, one character cell per quarter hex, showing rocks, units by short tag, crumbled ground, and warned areas. Tests use it to show the board when an assertion fails; it doesn't touch the fight.
+- **`ArenaDebug.render(sim)`:** a plain-text board (`ArenaDebug.draw` in step 1; `render(sim)` wraps it in step 2), one character cell per quarter hex, showing rocks, units by short tag, crumbled ground, and warned areas. Tests use it to show the board when an assertion fails; it doesn't touch the fight.
 
 ## 12. Files
 
@@ -358,8 +488,8 @@ All the displacements **move the unit instantly in the sim** and log the start a
 | File | What it holds |
 | --- | --- |
 | `hex_grid.gd` | the placement grid: index ↔ (col, row), zones, rings, a hex's center on the plane |
-| `plane.gd` | integer vector helpers: length, direction to 1000, dot products, point-in-shape tests, sweeps |
-| `nav_grid.gd` | the hidden quarter-hex cells: blocking for a given walker, Dijkstra, path corners, path lengths |
+| `arena_plane.gd` (`ArenaPlane`: Godot already has a `Plane` class) | integer vector helpers: length, direction to 1000, dot products, point-in-shape tests, sweeps |
+| `nav_grid.gd` | the hidden eighth-hex cells: blocking for a given walker, A* paths and nearest, path corners, path lengths |
 | `arena_state.gd` | per fight: rocks, the safe rectangle, pending warned areas and shots |
 | `movement.gd` | walking, blocking, repathing, break free, hop away, flying |
 | `displacement.gd` | knockback, pull, leap, charge, collisions |
@@ -380,7 +510,7 @@ All the displacements **move the unit instantly in the sim** and log the start a
 - `combat_sim.gd`: the tick above.
 - `effects/targeting.gd`: the rules above.
 - `effects/effect_runner.gd`: damage, heal, shield, apply_status, cleanse, mana_drain, knockback, pull, leap, charge, area, summon, and start_collapse.
-- `defs/effect_def.gd`: targets `target`, `self`, `all_enemies`, `all_allies`, and `trigger_ally`, plus the new types.
+- `defs/effect_def.gd`: targets `target`, `hit_target`, `self`, `all_enemies`, `all_allies`, and `trigger_ally` (step 2 dropped `enemy_random`, `enemy_lowest_hp`, and `ally_lowest_hp`; units and abilities pick with targeting rules instead), plus the new types. `"trigger"` is optional and defaults to `on_fire`.
 - `defs/status_def.gd`, `statuses.gd`: the new kinds.
 - `defs/collapse_def.gd`, `defs/tuning_def.gd`: the new values.
 - `defs/unit_stats.gd`: adds speed and range.
@@ -409,7 +539,7 @@ Each rule gets its own test file under `tests/sim/`. They build tiny boards thro
 | Test file | Covers |
 | --- | --- |
 | `test_hex_grid.gd` | coordinates both ways, zones, rings, hex centers on the plane (neighbors 1000 apart) |
-| `test_plane.gd` | isqrt, directions, each shape's point test, sweeps stopping at circles and edges |
+| `test_arena_plane.gd` | isqrt, directions, each shape's point test, sweeps stopping at circles and edges |
 | `test_nav_grid.gd` | routes around units and rocks, gaps too narrow to pass, the fixed tie-break, no route, leaving crumbled ground |
 | `test_movement.gd` | speed → distance per tick, straight when clear, around when not, no overlap ever (checked every tick), the hero winning a contested gap, stopping in range, Slow, Root, the repath give-up |
 | `test_targeting.gd` | every rule and its ties, back-liners by starting row, sticky targets, Taunt overriding and ending, TARGET log lines |
@@ -433,25 +563,93 @@ Each rule gets its own test file under `tests/sim/`. They build tiny boards thro
 
 - Walking straight when the way is clear.
 - Pathfinding only when blocked, on a new target, or every 0.5s.
-- Only about 900 cells per search.
+- Searches guided toward the target, which touch a few hundred of the 3,420 cells.
+
+**Measured in step 1** (one search, 3 heroes against 6 enemies):
+- A clear path takes well under 1 ms.
+- `nearest` takes about 2.5 ms.
+- A path to an enemy boxed in at the back of its formation takes about 2.7 ms.
+- So a fight can afford a few dozen searches, not hundreds. Repathing only when needed matters.
 
 If step 2 measures slower, the cell size and repath interval are the knobs, and I'll report before going further.
 
+**Measured in step 2** (whole fights, 3 against 6, with test kits):
+- A 22s fight takes about 49 ms, and a 65s one about 80 ms. That's inside the budget, with nothing to spare.
+- The costliest ticks are the first one, when all nine units pick a target, and the ones where units re-target across the board.
+- The rest is the fixed cost of updating every unit each tick, about 50 µs a tick for all nine units together.
+- Speed-ups so far, none of which change results:
+  - The search loop works on plain integer arrays with its queue inline.
+  - The collision check doesn't build lists.
+  - Effect numbers are worked out without building a breakdown.
+- Units point at their target weakly, so two units targeting each other don't keep each other alive after the fight.
+- Watch the budget again once statuses, mana, and areas add their per-tick work.
+
+**Measured in step 4** (3 against 6, test kits with a mana signature with a cast, an HP-triggered one, and Slow; the second half added an all-allies attack-speed aura and an event passive):
+- A 95s fight takes 175–180 ms, about **110 ms per 60s**. A 180s stand-off takes 250–290 ms, about **85–95 ms per 60s**. So the budget is at its edge.
+- Where it goes (the 95s fight): walking and targeting take about a third. The rest is each unit's update and its attacks, about 4 µs per unit per tick, spread thinly.
+  - Signatures and mana add about a tenth.
+  - With the passives, the same fight is about **128 ms per 60s**. Part of that is the aura's 10% faster attacks. Reading the log for events is about 6%.
+- **Over budget, then, when units walk and re-target a lot.** The cost is spread across every unit's update in GDScript, not in one hot spot. It needs a speed pass of its own before phase 2's sim runner needs hundreds of fights (see the report on step 4).
+- **Speed-ups in this step,** none of which change results:
+  - Units with no statuses skip the status loop.
+  - Units are looked up by id in a Dictionary (lookup only, never iterated).
+  - The end-of-fight check builds no lists.
+  - The log is read for events only when some unit listens.
+**Measured in step 5** (`tools/bench_sim.gd` now has its own fixed kits, so changing the test fights doesn't move its numbers; it scales HP once per kit, where it used to compound on shared kits):
+- **Steady** (the fight above): a one-minute fight takes 79–85 ms. Engage costs nothing measurable there.
+- **Crowded** (snipers taunt whoever they hit, and hounds engage, so heroes keep walking through the enemy line): a one-minute fight takes about 150–160 ms, over the budget.
+  - About a third of that is pathfinding: 57 searches, each settling about 160 cells.
+  - It's a worst case, with a taunt every second on each sniper's target. Hold the Line taunts every ~10s.
+- **Speed-ups in this step,** none of which change results:
+  - A cell check reads plain arrays with the bounds precomputed.
+  - Each queued cell's estimate is written out in the loop.
+  - The search's queue no longer shrinks its arrays as it drains.
+- If real encounters come near the crowded case, the knobs are repath_ms, the nav cell size, and reusing a `nearest` search's route when the unit starts walking.
+
+**The speed pass after step 4** (`tools/bench_sim.gd`: the busy fight, 3 against 6, at 1x to 3x HP; the fastest of three runs; each fight's log fingerprinted):
+- **A 60s fight takes 83–96 ms** (it varies by about 10% from run to run), inside the budget but with little to spare. Overall it's **83–84 ms per 60s**, down from 106. Short fights cost more per second (about 48 ms for 22s) because of the searches at the start.
+- **What changed:**
+  - **The pathfinder's estimate is octile** (section 4). Searches settle about a fifth of the cells they did.
+    - Paths are still shortest, but where two are exactly as long, it may pick the other. So fights with walking can come out differently from before, and the log fingerprints changed. Everything is still deterministic, and every test passes.
+    - A test checks that the estimate never overshoots, from over a thousand cells around a target.
+  - **Each unit's update inlines its common checks.** Mana regen and the attack cooldown's progress are precomputed; so is reach. The signature code runs only when something may fire.
+  - **Log sources are made once** per unit and ability, not on every fire, move, or target pick. "Last hit" text is built only when a unit falls.
+  - **Shots land only when one is due.** The log is read only for the kinds that raise events. The on-hit record is made only for abilities with on-hit effects.
+  - None of these change results but the estimate: every log fingerprint stayed the same through them.
+- **Where the time goes now,** in a long fight's steady state: about 5 µs to update each unit per tick, and about 25 µs per attack (most of it the three log entries a shot makes).
+- **In this container,** memory the process touches for the first time is slow: an object costs about 3 µs on reused memory, but up to 19 µs on new. That inflates a fight's first run, which is why the benchmark keeps the fastest of three.
+- **The next knobs, if later steps push it over:**
+  - repath_ms (0.5s now).
+  - The nav cell size.
+  - Keeping the per-tick status checks out of units that have none.
+
 ## 14. Order of work (each step: code, tests, green run, commit)
 
-1. **Grid and plane:** `hex_grid`, `plane`, `nav_grid`, `arena_debug`, `FixedMath.isqrt`, and their tests. Pure functions, no sim.
-2. **Skeleton fight:** kits, setups with hexes and rocks, the new `CombatSim` tick, walking and blocking, `nearest` targeting, melee attacks and shots, deaths, the end of the fight, the MOVE, STOP, TARGET, and SHOT logs, and the log replay test. The first determinism test, and a speed measurement.
-3. **Statuses:** Root, Stun, Slow, Taunt, Silence, Marked, and damage over time.
-4. **Mana and signatures:** the five triggers, cast_ms, Undying, `Events`, and `PartDef`.
-5. **Tanks:** Engage.
-6. **Displacement and flying:** knockback, pull, leap, charge, collisions, flying, and hop away.
-7. **Areas:** shapes, warnings, landing, and the rest of the targeting rules.
-8. **Collapse, summons, and phases:** rings, the safe rectangle, damage, start_collapse, summons, and `PhaseDef`.
-9. **The full determinism fight and the log audit.** Update `CLAUDE.md`'s sim rules to describe the arena.
+1. **Grid and plane (done):** `hex_grid`, `arena_plane`, `nav_grid`, `arena_debug`, `FixedMath.isqrt`, and their tests. Pure functions, no sim.
+2. **Skeleton fight (done):** kits, setups with hexes and rocks, the new `CombatSim` tick, walking and blocking, `nearest` targeting, melee attacks and shots, deaths, the end of the fight, the MOVE, STOP, TARGET, and SHOT logs, and the log replay test. The first determinism test, and a speed measurement.
+3. **Statuses (done):** Root, Stun, Slow, Taunt, Silence, Marked, and damage over time.
+4. **Mana and signatures (done):** the five triggers, cast_ms, Undying, `Events`, and `PartDef`.
+5. **Tanks (done):** Engage.
+6. **Displacement and flying (done):** knockback, pull, leap, charge, collisions, flying, and hop away.
+7. **Areas (done):** shapes, warnings, landing, and the rest of the targeting rules.
+8. **Collapse, summons, and phases (done):** rings, the safe rectangle, damage, start_collapse, summons, and `PhaseDef`.
+9. **The full determinism fight and the log audit (done).** Update `CLAUDE.md`'s sim rules to describe the arena.
+   - **Built in step 9:**
+     - **The chaos fight** (`tests/sim/chaos_fight.gd`): 4 heroes against 5 enemies and their pups, with rocks. It uses every trait, status, shape, trigger, and displacement, summons both ways, both of the brute's phases, a cast cancelled by a stun, a fizzled shot, and the collapse started early. `test_determinism` checks it has every log kind the arena sim makes, every status, shape, and trigger, and that it repeats exactly (stepped by hand against `run()`), and that the seed and the fight's order each change it.
+       - A few pieces (a fizzled shot, a cleanse cutting stacks, a cancelled cast) happen only in some seeds; 17 has them all. If the sim changes, the coverage test says which went missing.
+     - **The log audit** (`test_arena_log`): every kind of entry has a rule for what it names (its unit, ability, the unit it's about, its status, or why), and every entry in the busy fight and the chaos fight follows its kind's rule. A new kind fails the audit until it gets a rule. Every entry's text is written out (none falls through to "?").
+       - A status that simply runs out ends with no note ("Burn on hound ends"); the others say why (broke free, cleansed, its source fell).
+     - **The replay** runs on the chaos fight too: pushes, leaps, charges, hops, summons, and walking off crumbled ground all replay from the log to the exact position, and no two units overlap on any tick.
+     - `test_moves_name_their_unit` was folded into the audit.
+   - **Speed, measured on the chaos fight:** a 65s fight with up to 25 units (16 of them summoned) takes about 2.5s, and 2.1s of that is pathfinding.
+     - The biggest share is `nearest` searches that find no one (about 400 of them, 137,000 cells): pups boxed in by the crowd and the crumbling edge keep looking every 0.5s, and each failed search floods everything they can reach.
+     - Walking back to safe ground comes next (190 searches, 82,000 cells).
+     - Each search also costs more with 25 units on the board (about 8 µs a cell, against about 5 with 9).
+     - So a swarm is far over the budget. Before phase 2's Old Mother Ash (pups every 10s), the sim needs a pass on this. The knobs are: looking again less often after a failed `nearest`; reusing what a failed search reached until the board changes; and a cheaper search setup.
 
 ## 15. Proposals to confirm
 
-The second round's answers are under **Decisions** above. Answer 19 needs two small pieces the plan didn't have, so I've added them:
+The second round's answers are under **Decisions** above. Answer 19 needs two small pieces the plan didn't have, so I added them, and both were approved (2026-09-27) and built in step 4:
 
 1. **A `would_fall` trigger:** the first time a unit would fall, it's left at 1 HP instead, and the signature fires (once per fight). That's "when he hits 1 HP".
 2. **An Undying status** (`undying`): the unit's HP can't drop below 1 while it lasts. That's "he can't fall for 1s", and Last Rites' "can't be felled for 3s" (phase 4) uses it too.

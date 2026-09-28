@@ -35,3 +35,13 @@ func test_mul_div_rounds_to_nearest() -> void:
 	assert_eq(FixedMath.mul_div(10, 100, 130), 8, "7.69 rounds to 8")
 	assert_eq(FixedMath.mul_div(3, 1, 2), 2, "1.5 rounds up")
 	assert_eq(FixedMath.mul_div(-3, 1, 2), -2, "-1.5 rounds away from zero")
+
+
+func test_isqrt() -> void:
+	assert_eq([FixedMath.isqrt(0), FixedMath.isqrt(1), FixedMath.isqrt(2), FixedMath.isqrt(3), FixedMath.isqrt(4)], [0, 1, 1, 1, 2])
+	assert_eq(FixedMath.isqrt(999_999), 999, "rounds down")
+	assert_eq(FixedMath.isqrt(1_000_000), 1000)
+	assert_eq(FixedMath.isqrt(1_000_000_000_000), 1_000_000)
+	for n: int in [5, 17, 99, 1000, 12345, 866 * 866 + 500 * 500, 7062 * 7062 + 7500 * 7500]:
+		var r: int = FixedMath.isqrt(n)
+		assert_true(r * r <= n and (r + 1) * (r + 1) > n, "isqrt(%d) = %d" % [n, r])

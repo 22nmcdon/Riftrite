@@ -28,7 +28,7 @@ Status: **agreed in discussion (2026-09-27), not built.** Part of the from-scrat
 ## 3. Movement and targeting
 
 - **Units move freely**, not hex to hex, at a speed set per unit (hexes per second; a hex is the distance between two neighboring hex centers).
-- **Units never overlap.** Each unit moves in turn, in a fixed order with heroes first, so the sim stays deterministic.
+- **Units never overlap.** Within each tick, units are updated one after another in a fixed order with heroes first, so the sim stays deterministic. The fight itself is real-time: everyone acts at once as far as the player can see.
 - **Pathfinding** takes the shortest route around other units and rocks, with a fixed tie-break. If there's no route, the unit waits.
 - **Default targeting: the nearest enemy it can reach.** Once a unit picks a target, it keeps it until the target dies, a taunt pulls it away, or the target becomes unreachable.
 - **Some units target differently:** Vell heals the ally lowest on HP; enemy flankers go for the weakest back-liner. Targeting rules are data on the unit.
@@ -113,6 +113,7 @@ Answers to the phase 1 plan's proposals (2026-09-27; the details are in `rebuild
 - **Crumbled ground can't be walked into,** only pushed into.
 - **Up to 30 standing units per side**, since summons may be small and frequent.
 - **Ranged hits travel,** about 1 tick per hex.
+- **Rocks keep their size for now** (1 hex across): one missing rock in a row is too narrow to walk through, and it takes two. You'll judge it in playtesting.
 - **Shots follow their target** and can't miss; the numbers are fixed when fired, and the shooter falling doesn't stop the arrow. A shot whose target falls first fizzles.
 - **Melee lands the moment the attack finishes.** How long an attack takes comes from the unit's attack speed, not a weapon type.
 - **A unit is inside an area if its center is** (whichever side most of it is on).
