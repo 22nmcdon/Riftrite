@@ -15,9 +15,9 @@ A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The pl
 | `rebuild-build-order.md` | the phases, and what was gutted |
 | `rebuild-phase1-arena-sim.md` | phase 1's build plan (built): the arena sim |
 | `rebuild-phase2-heroes-enemies.md` | phase 2's build plan (built): base heroes, the Act 1 enemies, encounters, the sim runner |
-| `rebuild-phase3-fight-sandbox.md` | phase 3's build plan (questions answered): Practice mode, the hex board, placement, fight playback |
+| `rebuild-phase3-fight-sandbox.md` | phase 3's build plan (built; waiting on playtest gate 1): Practice mode, the hex board, placement, fight playback |
 
-**Where the rebuild is:** phase 0 (the gut) is done. Items, essences, shops, the run, and the old UI are gone; what's left is the foundation (the data reader, RNG, fixed math, the combat log, the effect and aura definitions, damage-over-time statuses, tuning) and the title screen. **Phase 1 (the arena sim) is done:** a headless fight on a free plane, described under "How the arena sim works" below. **Phase 2 (base heroes and the Act 1 enemies) is done:** the three base kits, the nine Act 1 enemies, and nine hand-placed encounters are data, and the sim runner shows placement matters in every encounter. See "How the content works" below; `rebuild-phase2-heroes-enemies.md` has what each step built and measured. **Phase 3 (the fight sandbox, with placeholder art) is next;** its build plan, `rebuild-phase3-fight-sandbox.md`, has its questions answered (see its Decisions). Follow `rebuild-build-order.md` for the order of work. Each phase's plan has a **Decisions** section; those win. If the code and a plan disagree, stop and ask. Don't silently pick one.
+**Where the rebuild is:** phase 0 (the gut) is done. Items, essences, shops, the run, and the old UI are gone; what was left was the foundation (the data reader, RNG, fixed math, the combat log, the effect and aura definitions, damage-over-time statuses, tuning) and the title screen. **Phase 1 (the arena sim) is done:** a headless fight on a free plane, described under "How the arena sim works" below. **Phase 2 (base heroes and the Act 1 enemies) is done:** the three base kits, the nine Act 1 enemies, and nine hand-placed encounters are data, and the sim runner shows placement matters in every encounter. See "How the content works" below; `rebuild-phase2-heroes-enemies.md` has what each step built and measured. **Phase 3 (the fight sandbox, with placeholder art) is built:** Practice on the title screen (pick an Act 1 encounter, place, watch the fight, see the result), described under "How the UI works" below; `rebuild-phase3-fight-sandbox.md` has what each step built. It's **waiting on playtest gate 1** (is a single fight fun and readable?), judged in playtest build 4. What the playtest finds goes back into the plans before phase 4 starts. Follow `rebuild-build-order.md` for the order of work. Each phase's plan has a **Decisions** section; those win. If the code and a plan disagree, stop and ask. Don't silently pick one.
 
 The old game (items, the row-based sim, the run layer) is in git history: the commit before "Rebuild phase 0: gut items, essences, shops, the run, and the old UI". Its docs are in `docs/archive/`. Use them as a reference when a phase brings an old piece back, never as the design.
 
@@ -30,8 +30,8 @@ The old game (items, the row-based sim, the run layer) is in git history: the co
 
 ## Commands
 
-- Run the game: `godot --path .` (main scene `src/ui/main.tscn`; for now it shows the title screen)
-- Screenshots of each screen (needs a display): `xvfb-run godot --path . -s tools/ui_screenshots.gd -- --out=/tmp/shots`
+- Run the game: `godot --path .` (main scene `src/ui/main.tscn`: the title, then Practice)
+- Screenshots of each screen (needs a display): `xvfb-run godot --path . -s tools/ui_screenshots.gd -- --out=/tmp/shots` (the title, the encounter list, placement, fights mid-way with a popup and an area warning, the result, and Rift Collapse)
 - Run all tests: `godot --headless -s addons/gut/gut_cmdln.gd -gexit` (settings in `.gutconfig.json`)
 - Run one test file: add `-gselect=test_project_setup.gd`
 - Fresh checkout: run `godot --headless --import` once first, so class names are registered. The session-start hook does this in cloud sessions.
@@ -81,9 +81,30 @@ Phase 2's details are in `docs/plans/rebuild-phase2-heroes-enemies.md` (sections
 
 - **Files** (`ContentDb` loads and cross-checks them): `heroes.json` (`HeroDef`: name, title, role, and a kit), `enemies.json` (`EnemyDef`: archetype, threat line, and a kit, phases included), and `encounters.json` (`EncounterDef`: enemies on hexes, optional rocks, act, days, and `scale_bp`). A hero's or enemy's kit is a `UnitDef` without its own id or name; heroes and enemies share one space of ids. Heroes act in `heroes.json`'s order.
 - **A fight from content:** `Encounters.setup(content, encounter_id, formation, seed, errors)`, where a formation is hero id -> hex. It adds every enemy a unit may summon as a summon kit, and scales enemies' HP and ATK by `scale_bp`.
+- **Ability text:** every basic attack, signature, and passive of a hero or enemy has a `"text"`: the player's sentence for it (the sim never reads it). It says what the ability is for and **names every reach** ("within 4 hexes"), since the board never draws one; `test_unit_info.gd` checks both. Keep numbers out of it: the UI adds a numbers line generated from the kit.
 - **Numbers:** hero stats are the design's. Enemy HP, ATK, and a few kit numbers come from step 7's first tuning pass. Change numbers with the sim runner, not by hand-feel.
 - **The sim runner** (`tools/sim_runner.gd`, its work in `tools/sim_report.gd`) fights each encounter from the named formations in `tools/sim_formations.json` and from drawn ones. **The gate:** the best formation wins at least 30 points more often than the worst. Seeds only change crits, so formations mostly win all or nothing; the report also counts how many formations win, and tuning aims for about a third to two thirds.
 - **Tests:** `test_hero_kits.gd` and `test_enemy_kits.gd` check each kit's text in small fights; `test_encounters.gd` checks every encounter builds and plays out; `test_arena_log.gd` replays and audits a fight of the three heroes against one of each enemy; `tests/tools/test_sim_runner.gd` runs the runner small. Content changes that should move numbers change these tests on purpose.
+
+## How the UI works
+
+Phase 3's details are in `docs/plans/rebuild-phase3-fight-sandbox.md` (sections 1-9, their "Built in step N" notes, and its Decisions). In short:
+
+- **Screens:** `Main` shows one `UiScreen` at a time and moves between them on their signals: the title, then Practice's `EncounterListScreen`, then `ArenaScreen`, which holds placement, the fight, and the result. `PracticeSession` keeps the remembered formation, the speed, the log's state, and the seed while the game is open; nothing is saved to disk.
+- **The UI never changes a fight** (rule 2). `FightPlayer` owns the `CombatSim` and is the only thing that steps it:
+  - `advance(seconds)` steps whole ticks at 0.5x, 1x, or 2x; tests pass fake time.
+  - A seek or restart builds a fresh sim and runs it to that tick.
+  - Units are drawn between their last two ticks (`drawn_position`, `drawn_time`).
+  `test_every_encounter_plays.gd` checks that each encounter played on the screen is exactly the fight `CombatSim.run` gives.
+- **The board** (`ArenaView`): the plane mapped to pixels with the heroes at the bottom; one `UnitToken` per unit (its bars and status tags read from `UnitState` each frame); `FightFx` above them for what the log says happened (shots, swipes, numbers, areas, slides, ghosts, rings), plus the ground layer (areas, Rift Collapse, target and Engage lines). Effects run on the fight's clock; a batch of more than 60 entries (a skip) clears them instead. The view resolves clicks itself (`token_at`).
+- **Placement:** heroes are dragged onto hexes; what's legal comes only from the sim (`Encounters.setup` and `FightSetup.validate`, through `PracticeSession.errors`). The board never draws an enemy's reach (Decision 5).
+- **Beside the board:**
+  - the controls, and the result when the fight ends (outcome, seed, heroes, chart, Rematch, Watch again);
+  - `EnemyPanel` on hover and `HeroPopup` on a click while the fight isn't playing, both built by `UnitInfo` (the data's sentence plus a generated numbers line);
+  - the log column: `FightChart` over `LogPanel`.
+  `FightNames` turns ids into names ("Rift Hound 2"). `FightTally` (in `src/sim/`, shared with the sim runner) counts the chart. `FightBanners` shows a phase, the collapse, and the end.
+- **Every kind of log entry needs a form on the board:** `test_every_encounter_plays.gd` has a table of them, and checks the board showed each kind a fight produced. A new log kind needs a row there as well as its audit rule in `test_arena_log.gd`.
+- **Tests:** UI tests run headless and drive time by hand (`ArenaScreen._process(delta)`); `tests/ui/ui_test_kit.gd` finds and presses controls by text; `test_practice_flow.gd` drives a real `Main` from the title to the result. A test that replaces screens lets a frame pass before it ends, since `Main` frees the old screen on the next frame.
 
 ## The design the rebuild builds toward
 

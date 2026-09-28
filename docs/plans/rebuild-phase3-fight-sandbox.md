@@ -1,6 +1,6 @@
 # Rebuild phase 3: the fight sandbox (build plan)
 
-Status: **questions answered (2026-09-28); see Decisions.** Phase 3 of `docs/plans/rebuild-build-order.md`. Design sources: `rebuild-arena.md` (placement, the free-moving fight, areas, the shrinking arena), `rebuild-enemies.md` (fair fights: threats shown before placing), and `rebuild-run.md` (the fight card). It builds on the arena sim (phase 1, `rebuild-phase1-arena-sim.md`) and the content and sim runner (phase 2, `rebuild-phase2-heroes-enemies.md`).
+Status: **built (2026-09-28); waiting on playtest gate 1** (playtest build 4). Approved with the answers under Decisions; each section's "Built in step N" notes say what was built. What the playtest finds goes under "Playtest gate 1" at the end. Phase 3 of `docs/plans/rebuild-build-order.md`. Design sources: `rebuild-arena.md` (placement, the free-moving fight, areas, the shrinking arena), `rebuild-enemies.md` (fair fights: threats shown before placing), and `rebuild-run.md` (the fight card). It builds on the arena sim (phase 1, `rebuild-phase1-arena-sim.md`) and the content and sim runner (phase 2, `rebuild-phase2-heroes-enemies.md`).
 
 **Goal:** a **Practice** mode on the title screen where you pick an Act 1 encounter, place Brannoc, Maren, and Vell on the hex board, and watch the fight play out on the free-moving plane, readable enough to tell who is attacking whom and why. All art is placeholder (decided: the art rehaul is phase 7).
 
@@ -327,7 +327,7 @@ UI tests run headless and drive time by hand, so they're deterministic.
 7. **Unit details:** the ability text in the data, the enemy side panel, and the hero popup. **Done.**
 8. **Practice flow:** the title button, encounter list, result screen, place again, rematch. **Done** (the result is on the arena screen).
 9. **Every encounter plays headless;** screenshots; a playtest build (the "Playtest build" workflow) for gate 1. **Done.**
-10. **Docs:** CLAUDE.md gains "How the UI works"; the plans are updated with what the playtest says.
+10. **Docs:** CLAUDE.md gains "How the UI works"; the plans are updated with what the playtest says. **Done** (the playtest's findings are still to come).
 
 ## Decisions
 
@@ -340,3 +340,9 @@ Answers to the proposal's questions (2026-09-28):
 5. **No reach drawn on the board** when hovering an enemy: that's too much help. The player learns it by reading the enemy's panel (so the Hound's text says "within 4 hexes").
 6. **Target lines:** a toggle, and on hover. They're for testing for now.
 7. **Only the nine hand-placed encounters** for now; no free sandbox.
+
+## Playtest gate 1
+
+Build: playtest build 4 (0865f6b), https://github.com/22nmcdon/Riftrite/releases/tag/playtest-4. The question: is a single arena fight with the base heroes fun and readable?
+
+Findings: none yet. Record what the playtest says here: what read well, what confused, which fights felt unfair. Then decide what goes back into which plan (a change to the sim's rules or content numbers goes to the plans, not into phase 3; see Scope).

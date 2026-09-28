@@ -59,7 +59,7 @@ jobs:
             echo
             if [ -n "${NOTES}" ]; then echo "${NOTES}"; echo; fi
             echo "Download the zip for your system, unzip, and see HOW-TO-PLAY.txt inside"
-            echo "(first-launch warnings on unsigned builds, and where playtest journals are saved)."
+            echo "(first-launch warnings on unsigned builds, how to play, and what we want to know)."
           } > release-notes.txt
           gh release create "${TAG}" build/dist/*.zip --target "${GITHUB_SHA}" \
             --title "Playtest build ${GITHUB_RUN_NUMBER} (${GITHUB_SHA::7})" \
