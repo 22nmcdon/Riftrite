@@ -240,6 +240,25 @@ First numbers, to tune in step 7. Every enemy has its archetype and threat line.
 - **Cinder Burst** hits every unit within 1 hex, heroes and enemies alike: bursting in the middle of its own swarm is part of the puzzle (decided for now).
 - **The Witch's Ward** is a passive on her attacks, and Hush is her signature, since a unit has one signature.
 
+**Built in step 5** (`data/enemies.json`, `test_enemy_kits.gd`). Stats, archetypes, threat lines, and kits are the table's. The table leaves some numbers open, so these are first numbers for step 7 to tune:
+
+- **Basic attacks** deal 100% ATK. Cooldowns: pups and hounds 1s, Ashlings and Archers 1.2s, the Witch 1.3s, the Sentinel, the Guardian, and the Lurker 1.4s, and the Moth 1.5s.
+- **Mana:**
+
+  | Enemy | Signature cost | Per attack | Per 10 damage taken | Regen |
+  | --- | --- | --- | --- | --- |
+  | Cinder Moth | 40 | +10 | none | 2/s |
+  | Sentinel ("mostly from hits taken") | 60 | +4 | +3 | none |
+  | Cairn Guardian | 60 | +10 | none | 3/s |
+  | Bog Lurker | 50 | +10 | none | 4/s |
+  | Gloam Witch | 50 | +10 | none | 2/s |
+
+- **Cinder Burst** puts 3 Burn on every unit within 1 hex. **Ember Dust** is a 2-hex circle (radius 2, the same reach `largest_group` counts by), warned for 1s, that puts 4 Burn on each hero in it. It's aimed within 5 hexes.
+- **Pounce's bite** is 100% ATK. **Rampart Charge** does no damage of its own, as the table says: the charge and the 2-hex knockback are the threat.
+- **Reach:** Drag and Hush can pick targets up to 5 and 6 hexes away, beyond the unit's own range, so they fire as shots and land a few ticks later. A pull stops at anyone in the way, and both units are Stunned, like any stopped push.
+- **Ward** shields every standing ally, the Witch included.
+- **The tests:** each enemy's threat in a small fight built for it. Every kit also fights together in the log tests: the three heroes against one of each enemy (`test_arena_log.content_setup`) must replay exactly from the log, with every entry naming its source. That fight is a loss at 23s, as expected against nine enemies at once. All 28 mutations of the enemy data are caught.
+
 ## 6. Encounters
 
 About 9 for phase 2, hand-placed, each asking one question and then a few combining two:
@@ -320,7 +339,7 @@ The elites and Old Mother Ash come in phase 5 (decided). What they'll need, so t
 2. **Content files and loading:** hero, enemy, and encounter defs, `ContentDb`, the validator, `Encounters.setup`, and summon kits from content. **Done.**
 3. **Section 4's new pieces,** each with its tests. **Done.**
 4. **The three base kits** in `heroes.json`, and `test_hero_kits`. **Done.**
-5. **The nine enemies** in `enemies.json`, and `test_enemy_kits`.
+5. **The nine enemies** in `enemies.json`, and `test_enemy_kits`. **Done.**
 6. **The encounters,** hand-placed, and `test_encounters`.
 7. **The sim runner and the first tuning pass,** until the gate holds and fights run 30–60s. The results go in this plan.
 8. **Docs:** CLAUDE.md's "how it works" gains the content files and the runner; the design's open questions are updated.
