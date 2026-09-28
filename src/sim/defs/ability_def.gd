@@ -16,6 +16,8 @@ extends RefCounted
 ## a fresh target each time it fires, by its own rule (Targeting.RULES; its
 ## nearest is by straight line, since it fires from where the unit stands),
 ## among units within max_range hexes (default: the unit's own range).
+## An optional "text" is the player's sentence for it (docs/plans/rebuild-phase3-fight-sandbox.md,
+## section 7); the sim never reads it.
 ## cast_ms (mana signatures only): the unit stands
 ## still that long before it lands; a Stun cancels the cast, and the
 ## signature keeps its mana.
@@ -26,6 +28,8 @@ const TRIGGERS: Array[EffectDef.Trigger] = [EffectDef.Trigger.ON_FIRE, EffectDef
 
 var id: String
 var name: String
+## What it does, for the player (optional; the UI shows it).
+var text: String = ""
 var cooldown_ticks: int
 var effects: Array[EffectDef] = []
 ## Added to the unit's own crit chance (from CRIT).
@@ -69,6 +73,7 @@ static func read_signature(reader: DataReader) -> AbilityDef:
 func _read_common(reader: DataReader) -> void:
 	id = reader.req_string("id")
 	name = reader.req_string("name")
+	text = reader.opt_string("text", "")
 	crit_chance_bp = reader.opt_int("crit_chance_bp", 0, 0, FixedMath.BP_ONE)
 	if reader.has("shot"):
 		shot = 1 if reader.opt_bool("shot", true) else 0

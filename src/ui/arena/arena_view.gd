@@ -19,8 +19,9 @@ extends Control
 ##     as it joins, and hides the fallen (section 4). The log entries the
 ##     player hands out go to `fx`, the layer of momentary things drawn over
 ##     the tokens (section 5).
-##   - Clicking a token reports it (`unit_clicked`): the fight's log filters
-##     to it (section 6).
+##   - Clicking reports the token under the pointer (`unit_clicked`: the log
+##     filters to it, and a hero's details open while the fight isn't
+##     playing; sections 6 and 7), or the bare board (`ground_clicked`).
 ##   - Placement: a hero's token can be dragged onto a hex (section 3). The
 ##     view only reports the drop (`hero_dropped`); whoever shows it decides
 ##     whether the move is legal, and calls `flash_hex` if it isn't.
@@ -30,6 +31,8 @@ signal unit_hovered(unit_id: String)
 signal unit_unhovered(unit_id: String)
 ## A unit's token was clicked (the left button let go on it, not a drag).
 signal unit_clicked(unit_id: String)
+## The board was clicked away from every token.
+signal ground_clicked
 
 enum Mode { PLACEMENT, FIGHT }
 
@@ -114,10 +117,6 @@ func _add_token(unit_token: UnitToken) -> void:
 		if fx.hovered == unit_token.unit_id:
 			fx.hovered = ""
 		unit_unhovered.emit(unit_token.unit_id))
-	unit_token.gui_input.connect(func(event: InputEvent) -> void:
-		var click := event as InputEventMouseButton
-		if click != null and click.button_index == MOUSE_BUTTON_LEFT and not click.pressed:
-			unit_clicked.emit(unit_token.unit_id))
 
 
 func set_mode(new_mode: Mode) -> void:
@@ -132,6 +131,28 @@ func _init() -> void:
 
 func _ready() -> void:
 	set_process(false)
+
+
+## A left click let go on the board (tokens pass their clicks up to here).
+func _gui_input(event: InputEvent) -> void:
+	var click := event as InputEventMouseButton
+	if click == null or click.button_index != MOUSE_BUTTON_LEFT or click.pressed:
+		return
+	var hit: UnitToken = token_at(click.position)
+	if hit != null:
+		unit_clicked.emit(hit.unit_id)
+	else:
+		ground_clicked.emit()
+
+
+## The shown token whose circle covers a pixel (the one drawn on top), or
+## null.
+func token_at(pixel: Vector2) -> UnitToken:
+	for i: int in range(tokens.size() - 1, -1, -1):
+		var found: UnitToken = tokens[i]
+		if found.visible and found.center().distance_to(pixel) <= found.radius_px:
+			return found
+	return null
 
 
 func token(unit_id: String) -> UnitToken:

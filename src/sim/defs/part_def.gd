@@ -13,7 +13,8 @@ extends RefCounted
 ##       (Passives). They land at once, never as a shot.
 ##   {"id": "embers", "name": "Embers", "kind": "replace_status", "from": "burn", "to": "poison"}
 ##       statuses the unit applies as `from` land as `to`
-## Adding a kind is a code change; say so when you make one.
+## Adding a kind is a code change; say so when you make one. An optional
+## "text" is the player's sentence for it; the sim never reads it.
 
 enum Kind { AURA, ABILITY, REPLACE_STATUS }
 
@@ -21,6 +22,8 @@ const KIND_NAMES: Array[String] = ["aura", "ability", "replace_status"]
 
 var id: String
 var name: String
+## What it does, for the player (optional; the UI shows it).
+var text: String = ""
 var kind: Kind
 var aura: AuraDef = null
 ## ability: its effects, as an ability with no cooldown and no shot.
@@ -33,6 +36,7 @@ static func read(reader: DataReader) -> PartDef:
 	var def := PartDef.new()
 	def.id = reader.req_string("id")
 	def.name = reader.req_string("name")
+	def.text = reader.opt_string("text", "")
 	var kind_name: String = reader.req_choice("kind", KIND_NAMES)
 	def.kind = maxi(KIND_NAMES.find(kind_name), 0) as Kind
 	if kind_name.is_empty():

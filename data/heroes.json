@@ -10,19 +10,19 @@
       "traits": ["engage"],
       "mana": {"max": 80, "start": 30, "per_attack": 8, "per_10_damage_taken": 1},
       "basic_attack": {
-        "id": "shield_bash", "name": "Shield Bash", "cooldown_ms": 1200,
+        "id": "shield_bash", "name": "Shield Bash", "text": "Bashes the enemy in front of him.", "cooldown_ms": 1200,
         "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
       },
       "signature": {
         "_note": "Taunts enemies within 2 hexes for Taunt's own 3s. The DEF is the passive of the same name below: it holds while any enemy is taunted by him.",
-        "id": "hold_the_line", "name": "Hold the Line", "trigger": {"kind": "mana"}, "targeting": "self",
+        "id": "hold_the_line", "name": "Hold the Line", "text": "Taunts every enemy within 2 hexes of him, so they turn on him instead.", "trigger": {"kind": "mana"}, "targeting": "self",
         "effects": [{"type": "area", "shape": {"kind": "circle", "radius": 2}, "anchor": "self", "hits": "enemies",
           "effects": [{"type": "apply_status", "status": "taunt", "target": "target"}]}]
       },
       "passives": [
-        {"id": "hold_the_line_guard", "name": "Hold the Line", "kind": "aura",
+        {"id": "hold_the_line_guard", "name": "Hold the Line", "text": "His DEF is 1.5 times as high while any enemy is taunted by him.", "kind": "aura",
           "aura": {"target": "holder", "stat": "def_bp", "value": 15000, "while": "taunting"}},
-        {"id": "hearthguard", "name": "Hearthguard", "kind": "ability",
+        {"id": "hearthguard", "name": "Hearthguard", "text": "The first ally to fall low on HP gets a Shield from him, once a fight.", "kind": "ability",
           "effects": [{"trigger": "on_ally_below_hp", "threshold_bp": 4000, "once": true, "type": "shield", "amount": 60, "target": "trigger_ally"}]}
       ]
     }
@@ -39,12 +39,12 @@
       "hop_cooldown_ms": 6000,
       "mana": {"max": 50, "per_attack": 10, "regen_per_s": 2},
       "basic_attack": {
-        "id": "longshot", "name": "Longshot", "cooldown_ms": 1000,
+        "id": "longshot", "name": "Longshot", "text": "Shoots her target from up to 4 hexes away.", "cooldown_ms": 1000,
         "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
       },
       "signature": {
         "_note": "Marked for its own 4s: +15% damage taken from everyone.",
-        "id": "marking_shot", "name": "Marking Shot", "trigger": {"kind": "mana"}, "targeting": "nearest",
+        "id": "marking_shot", "name": "Marking Shot", "text": "Marks the nearest enemy within 4 hexes, so it takes more damage from everyone for a while.", "trigger": {"kind": "mana"}, "targeting": "nearest",
         "effects": [{"type": "apply_status", "status": "marked", "target": "target"}]
       }
     }
@@ -59,16 +59,16 @@
       "mana": {"max": 60, "start": 20, "per_attack": 12, "regen_per_s": 2},
       "basic_attack": {
         "_note": "Slow, but her main source of mana: about 10 mana a second while she attacks.",
-        "id": "lantern_glow", "name": "Lantern Glow", "cooldown_ms": 1500,
+        "id": "lantern_glow", "name": "Lantern Glow", "text": "Throws lantern light at her target from up to 3 hexes away. Weak, but it's where most of her mana comes from.", "cooldown_ms": 1500,
         "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
       },
       "signature": {
         "_note": "The ally lowest on HP% within 3 hexes, Vell included.",
-        "id": "mend", "name": "Mend", "trigger": {"kind": "mana"}, "targeting": "lowest_hp_ally",
+        "id": "mend", "name": "Mend", "text": "Heals whichever ally within 3 hexes is lowest on HP, herself included.", "trigger": {"kind": "mana"}, "targeting": "lowest_hp_ally",
         "effects": [{"type": "heal", "amount": 20, "target": "target", "scaling": {"mgk": 10000}}]
       },
       "passives": [
-        {"id": "hearthlight", "name": "Hearthlight", "kind": "ability",
+        {"id": "hearthlight", "name": "Hearthlight", "text": "Every second, heals the other allies within 1 hex of her by a little of their max HP.", "kind": "ability",
           "effects": [{"trigger": "on_interval", "interval_ms": 1000, "type": "area", "shape": {"kind": "circle", "radius": 1}, "anchor": "self", "hits": "other_allies",
             "effects": [{"type": "heal", "amount_bp_of_max_hp": 100, "target": "target"}]}]}
       ]

@@ -16,19 +16,25 @@ extends UiScreen
 ##     the combat log, open or hidden with its button or L (remembered in the
 ##     session). Clicking a unit filters the log to it. Banners over the board
 ##     for a phase, the collapse, and the end.
+##   - Unit details (section 7, Decision 3): hovering an enemy fills the side
+##     panel, at any time (with its numbers now, in a fight); clicking a hero
+##     while the fight isn't playing (placement, paused, or over) opens its
+##     popup beside it, which a click elsewhere closes, and so does the fight
+##     playing on.
 
 signal fight_requested(setup: FightSetup)
 signal back_requested
 
 const SIDE_WIDTH: int = 380
 const LOG_WIDTH: int = 480
-const FIGHT_HINT: String = "Space pauses, 1-3 set the speed, S skips to the end, L shows the log, T shows every target line. Hover an enemy to read it; click a unit to see only its lines in the log."
+const FIGHT_HINT: String = "Space pauses, 1-3 set the speed, S skips to the end, L shows the log, T shows every target line. Hover an enemy to read it; click a unit to see only its lines in the log, or pause and click a hero to read them."
 
 var session: PracticeSession
 var encounter: EncounterDef
 var formation: Dictionary[String, Vector2i] = {}
 var view: ArenaView
 var enemy_panel: EnemyPanel
+var hero_popup: HeroPopup
 var fight_button: Button
 var error_label: Label
 var hint_label: Label
@@ -107,17 +113,24 @@ func build() -> void:
 	banners.position.y = 24
 	banners.z_index = 2
 	view.add_child(banners)
+	hero_popup = HeroPopup.make()
+	hero_popup.z_index = 3
+	view.add_child(hero_popup)
 	set_process(false)
 	view.hero_dropped.connect(move_hero)
 	view.unit_hovered.connect(_on_hovered)
 	view.unit_unhovered.connect(_on_unhovered)
 	view.unit_clicked.connect(_on_clicked)
+	view.ground_clicked.connect(hero_popup.close)
+	# Its wrapped lines only know their height once laid out: place it again
+	# then.
+	hero_popup.minimum_size_changed.connect(_place_popup, CONNECT_DEFERRED)
 	_show()
 
 
 ## Moves a hero to a hex if the result is legal. Returns true if it moved.
 func placement_hint() -> String:
-	return "It tests %s. Drag your heroes onto your side's hexes, then Fight. Hover an enemy to read it." % encounter.tests
+	return "It tests %s. Drag your heroes onto your side's hexes, then Fight. Hover an enemy to read it; click a hero to read them." % encounter.tests
 
 
 func move_hero(hero_id: String, hex: Vector2i) -> bool:
@@ -144,9 +157,60 @@ func _show() -> void:
 
 
 func _on_hovered(unit_id: String) -> void:
-	for placed: UnitSetup in current_setup().enemies:
+	var kit_id: String = _kit_of(unit_id)
+	if session.content.enemies.has(kit_id):
+		enemy_panel.show_enemy(unit_id, session.content.enemies[kit_id], session.content)
+		_show_live()
+
+
+## The kit a unit on the board is: from the fight when there is one (so
+## summons count), else from the placement.
+func _kit_of(unit_id: String) -> String:
+	if player != null:
+		var unit: UnitState = player.sim.unit_by_id(unit_id)
+		return unit.def.id if unit != null else ""
+	for placed: UnitSetup in current_setup().units():
 		if placed.id == unit_id:
-			enemy_panel.show_enemy(session.content.enemies[placed.def.id])
+			return placed.def.id
+	return ""
+
+
+## Whether the fight is on screen and moving (not paused, not over).
+func playing() -> bool:
+	return player != null and not player.paused and not player.finished()
+
+
+## Opens a hero's popup beside its token.
+func open_hero(unit_id: String) -> void:
+	hero_popup.show_hero(session.content.heroes[_kit_of(unit_id)], session.content)
+	hero_popup.set_meta("unit_id", unit_id)
+	_show_live()
+	_place_popup()
+
+
+## Beside its hero: to the right, or to the left near the board's right
+## edge, and kept on the board.
+func _place_popup() -> void:
+	if not hero_popup.visible:
+		return
+	hero_popup.reset_size()
+	var hero_token: UnitToken = view.token(hero_popup.get_meta("unit_id"))
+	var at: Vector2 = hero_token.center() + Vector2(hero_token.radius_px + 12.0, -hero_token.radius_px)
+	if at.x + hero_popup.size.x > view.size.x:
+		at.x = hero_token.center().x - hero_token.radius_px - 12.0 - hero_popup.size.x
+	at.y = clampf(at.y, 0.0, maxf(view.size.y - hero_popup.size.y, 0.0))
+	hero_popup.position = at
+
+
+## The shown enemy's and hero's numbers now, in a fight.
+func _show_live() -> void:
+	if player == null:
+		return
+	if not enemy_panel.showing.is_empty():
+		enemy_panel.show_live(player.sim.unit_by_id(enemy_panel.showing))
+	if hero_popup.visible:
+		var hero_id: String = hero_popup.get_meta("unit_id")
+		hero_popup.show_live(player.sim.unit_by_id(hero_id), UnitInfo.recent_lines(hero_id, player.sim.combat_log, names))
 
 
 func _on_unhovered(unit_id: String) -> void:
@@ -154,10 +218,15 @@ func _on_unhovered(unit_id: String) -> void:
 		enemy_panel.clear()
 
 
-## Clicking a unit during the fight filters the log to it.
+## Clicking a unit during the fight filters the log to it; clicking a hero
+## while the fight isn't playing opens its popup (anything else closes it).
 func _on_clicked(unit_id: String) -> void:
 	if player != null:
 		log_panel.filter_to(unit_id)
+	if not playing() and session.content.heroes.has(_kit_of(unit_id)):
+		open_hero(unit_id)
+	else:
+		hero_popup.close()
 
 
 func _fight() -> void:
@@ -315,6 +384,8 @@ func place_again() -> void:
 	_placement_box.visible = true
 	log_column.visible = false
 	banners.clear()
+	hero_popup.close()
+	enemy_panel.clear()
 	_show()
 
 
@@ -330,6 +401,9 @@ func _process(delta: float) -> void:
 ## Draws the fight as it stands.
 func _on_frame() -> void:
 	view.sync_fight(player)
+	if playing():
+		hero_popup.close()
+	_show_live()
 	clock_label.text = "%.1fs" % player.fight_seconds()
 	if player.finished():
 		outcome_label.text = outcome_text(player.sim.outcome, player.fight_seconds())

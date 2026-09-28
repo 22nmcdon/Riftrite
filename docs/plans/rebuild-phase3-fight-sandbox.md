@@ -223,6 +223,20 @@ Each item names the sim state or log entries it comes from. Anything a player co
 
 So: **(a) for the sentence, plus a generated numbers line** under it from what's easy and exact (damage per hit with `ValueBreakdown`, the cooldown or mana cost, ranges). The sentence says what it's for; the numbers stay true. Since the board never draws reach, **every ability with a reach says it in its sentence** ("within 4 hexes"), and a test checks those sentences name the kit's reach.
 
+**Built in step 7** (`src/ui/unit_info.gd`, `src/ui/widgets/hero_popup.gd`, `EnemyPanel`, the `"text"` in `heroes.json` and `enemies.json`, `tests/ui/test_unit_info.gd`):
+
+- **The data:** every basic attack, signature, and passive of the three heroes and nine enemies has a `"text"` (`AbilityDef.text`, `PartDef.text`; the sim never reads it). The sentences say what it's for and name every reach. The numbers stay out of them, so tuning can't make them wrong.
+- **`UnitInfo`** builds a unit's details: a line per basic attack, signature, passive, trait, and phase, each with its sentence and a numbers line generated from the kit.
+  - The numbers line covers when it fires (cooldown, mana, trigger), its cast time, its reach, and what it does. Amounts are worked out from the kit's stats: "14 damage (100% ATK)", "heals 40 (20 + 100% MGK)", "2-hex circle around it", "Taunt 3s", "4 Burn".
+  - **Traits** are rules, not content, so their sentences are fixed in `UnitInfo`, with the unit's name ("When a foe comes within 1 hex, Maren hops a hex away from it."). A phase gets a numbers line only ("Below 80% HP · new signature: …").
+  - **The reach test:** `reaches()` lists a ranged basic attack's range, a signature's reach (unless it's on the unit itself), every area's size, and a damage bonus's "within". Every sentence has to name each of them as "N hex". All 18 in the Act 1 kits do.
+- **The enemy panel** adds a line per ability under the stats, and during a fight the unit's numbers now: HP, Shield, mana, and its statuses. These refresh every frame while it's hovered; summons count too.
+- **The hero popup:** clicking a hero while the fight isn't playing (placement, paused, or over) opens it beside the hero, or to its left near the board's right edge, kept on the board.
+  - It shows the name and title, role, stats, and the lines; in a fight, also the numbers now and the last three log lines about them.
+  - A click on the bare board or on an enemy closes it, and so do the fight playing on and Place again. While the fight plays, a click on a hero only filters the log.
+- **Clicks are the view's now:** it finds the token under the pointer (the top one) and reports it, or the bare board.
+- **Checks:** the bench's log fingerprints are unchanged. Mutation checks: all 79 changes to the details, the panels, the popup, and the clicks are caught. 13 survived at first: 9 got tighter tests, and 4 bits of redundant code were removed.
+
 ## 8. Placeholder look
 
 - Uses the existing `UiStyle` palette and theme, `HoverCard`, and `Toast`. No new art files; everything on the board is drawn shapes and text.
@@ -276,7 +290,7 @@ UI tests run headless and drive time by hand, so they're deterministic.
 4. **`FightPlayer`:** live stepping, speeds, pause, restart, rewind, interpolation. **Done.**
 5. **What the fight shows (section 5)**, in two passes: bars, statuses, shots, swipes, and numbers first; then areas, displacement tweens, collapse, summons, deaths, phases, target lines, and Engage links. **Done.**
 6. **Log panel and fight chart.** **Done.**
-7. **Unit details:** the ability text in the data, the enemy side panel, and the hero popup.
+7. **Unit details:** the ability text in the data, the enemy side panel, and the hero popup. **Done.**
 8. **Practice flow:** the title button, encounter list, result screen, place again, rematch.
 9. **Every encounter plays headless;** screenshots; a playtest build (the "Playtest build" workflow) for gate 1.
 10. **Docs:** CLAUDE.md gains "How the UI works"; the plans are updated with what the playtest says.

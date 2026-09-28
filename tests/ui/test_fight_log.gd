@@ -354,13 +354,15 @@ func test_clicking_a_unit_filters_the_log() -> void:
 	var click := InputEventMouseButton.new()
 	click.button_index = MOUSE_BUTTON_LEFT
 	click.pressed = true
-	screen.view.token("rift_hound#3").gui_input.emit(click)
+	click.position = screen.view.token("rift_hound#3").center()
+	screen.view._gui_input(click)
 	assert_eq(screen.log_panel.only_unit, "", "not on the press")
 	click.pressed = false
-	screen.view.token("rift_hound#3").gui_input.emit(click)
+	screen.view._gui_input(click)
 	assert_eq(screen.log_panel.only_unit, "rift_hound#3", "on the release")
 	click.button_index = MOUSE_BUTTON_RIGHT
-	screen.view.token("maren").gui_input.emit(click)
+	click.position = screen.view.token("maren").center()
+	screen.view._gui_input(click)
 	assert_eq(screen.log_panel.only_unit, "rift_hound#3", "only the left button")
 	screen._process(3.0)
 	assert_eq(screen.log_panel.shown_text(), _expected(screen.log_panel, screen.player.sim.combat_log.entries))

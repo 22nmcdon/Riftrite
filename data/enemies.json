@@ -8,7 +8,7 @@
     "kit": {
       "stats": {"hp": 210, "atk": 10, "speed": 3, "range": 1},
       "basic_attack": {
-        "id": "pack_bite", "name": "Pack Bite", "cooldown_ms": 1000,
+        "id": "pack_bite", "name": "Pack Bite", "text": "Bites harder for each other Rift Pup within 1 hex of it.", "cooldown_ms": 1000,
         "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000},
           "bonus_per_ally": {"bp": 2500, "within_hexes": 1, "kit": "rift_pup"}}]
       }
@@ -22,12 +22,12 @@
     "kit": {
       "stats": {"hp": 220, "atk": 18, "speed": 2, "range": 1},
       "basic_attack": {
-        "id": "scorch", "name": "Scorch", "cooldown_ms": 1200,
+        "id": "scorch", "name": "Scorch", "text": "Scorches the hero in front of it.", "cooldown_ms": 1200,
         "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
       },
       "passives": [
         {"_note": "Every unit within 1 hex, its own side included (decided for now).",
-          "id": "cinder_burst", "name": "Cinder Burst", "kind": "ability",
+          "id": "cinder_burst", "name": "Cinder Burst", "text": "When it falls, it bursts: every unit within 1 hex, its own side included, catches Burn.", "kind": "ability",
           "effects": [{"trigger": "on_fall", "type": "area", "shape": {"kind": "circle", "radius": 1}, "anchor": "self", "hits": "all",
             "effects": [{"type": "apply_status", "status": "burn", "stacks": 6, "target": "target"}]}]}
       ]
@@ -41,11 +41,11 @@
     "kit": {
       "stats": {"hp": 420, "atk": 16, "def": 4, "speed": 3, "range": 1},
       "basic_attack": {
-        "id": "bite", "name": "Bite", "cooldown_ms": 1000,
+        "id": "bite", "name": "Bite", "text": "Bites the hero in front of it.", "cooldown_ms": 1000,
         "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
       },
       "signature": {
-        "id": "pounce", "name": "Pounce", "trigger": {"kind": "fight_start"}, "targeting": "weakest_backliner", "max_range": 4,
+        "id": "pounce", "name": "Pounce", "text": "As the fight starts, it leaps onto your weakest back-liner within 4 hexes and bites.", "trigger": {"kind": "fight_start"}, "targeting": "weakest_backliner", "max_range": 4,
         "effects": [{"type": "leap", "max_hexes": 4, "target": "target"},
           {"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
       }
@@ -61,12 +61,12 @@
       "traits": ["flying"],
       "mana": {"max": 40, "per_attack": 10, "regen_per_s": 2},
       "basic_attack": {
-        "id": "ember_flick", "name": "Ember Flick", "cooldown_ms": 1500,
+        "id": "ember_flick", "name": "Ember Flick", "text": "Flicks embers at its target from up to 3 hexes away.", "cooldown_ms": 1500,
         "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
       },
       "signature": {
         "_note": "Aimed at the hero with the most of the heroes within 2 hexes of it; the circle's radius matches.",
-        "id": "ember_dust", "name": "Ember Dust", "trigger": {"kind": "mana"}, "targeting": "largest_group", "max_range": 5,
+        "id": "ember_dust", "name": "Ember Dust", "text": "Throws ember dust at the thickest group of heroes within 5 hexes. After a second's warning, everyone within 2 hexes of where it lands catches Burn.", "trigger": {"kind": "mana"}, "targeting": "largest_group", "max_range": 5,
         "effects": [{"type": "area", "shape": {"kind": "circle", "radius": 2}, "anchor": "target", "warning_ms": 1000, "hits": "enemies",
           "effects": [{"type": "apply_status", "status": "burn", "stacks": 4, "target": "target"}]}]
       }
@@ -82,7 +82,7 @@
       "traits": ["hop_away"],
       "hop_cooldown_ms": 4000,
       "basic_attack": {
-        "id": "hollow_shot", "name": "Hollow Shot", "cooldown_ms": 1200,
+        "id": "hollow_shot", "name": "Hollow Shot", "text": "Shoots its target from up to 5 hexes away.", "cooldown_ms": 1200,
         "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
       }
     }
@@ -97,11 +97,11 @@
       "traits": ["engage"],
       "mana": {"max": 60, "per_attack": 4, "per_10_damage_taken": 3},
       "basic_attack": {
-        "id": "stone_fist", "name": "Stone Fist", "cooldown_ms": 1400,
+        "id": "stone_fist", "name": "Stone Fist", "text": "Pounds the hero in front of it.", "cooldown_ms": 1400,
         "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
       },
       "signature": {
-        "id": "bulwark", "name": "Bulwark", "trigger": {"kind": "mana"}, "targeting": "self",
+        "id": "bulwark", "name": "Bulwark", "text": "Taunts every hero within 2 hexes of it, so they turn on it instead.", "trigger": {"kind": "mana"}, "targeting": "self",
         "effects": [{"type": "area", "shape": {"kind": "circle", "radius": 2}, "anchor": "self", "hits": "enemies",
           "effects": [{"type": "apply_status", "status": "taunt", "target": "target"}]}]
       }
@@ -116,12 +116,12 @@
       "stats": {"hp": 440, "atk": 16, "def": 20, "speed": 2, "range": 1},
       "mana": {"max": 60, "per_attack": 10, "regen_per_s": 3},
       "basic_attack": {
-        "id": "cairn_slam", "name": "Cairn Slam", "cooldown_ms": 1400,
+        "id": "cairn_slam", "name": "Cairn Slam", "text": "Slams the hero in front of it.", "cooldown_ms": 1400,
         "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
       },
       "signature": {
         "_note": "Runs up to 3 hexes at its target and knocks the first hero in the way back 2 hexes.",
-        "id": "rampart_charge", "name": "Rampart Charge", "trigger": {"kind": "mana"}, "targeting": "nearest", "max_range": 3,
+        "id": "rampart_charge", "name": "Rampart Charge", "text": "Charges at the nearest hero within 3 hexes and knocks back the first one in its way.", "trigger": {"kind": "mana"}, "targeting": "nearest", "max_range": 3,
         "effects": [{"type": "charge", "hexes": 3, "knockback": 2, "target": "target"}]
       }
     }
@@ -135,12 +135,12 @@
       "stats": {"hp": 640, "atk": 24, "def": 8, "speed": 1, "range": 1},
       "mana": {"max": 50, "per_attack": 10, "regen_per_s": 8},
       "basic_attack": {
-        "id": "grasp", "name": "Grasp", "cooldown_ms": 1400,
+        "id": "grasp", "name": "Grasp", "text": "Grasps the hero in front of it.", "cooldown_ms": 1400,
         "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
       },
       "signature": {
         "_note": "Every 6s or so (mostly regen); Root for 3s, twice its own.",
-        "id": "drag", "name": "Drag", "trigger": {"kind": "mana"}, "targeting": "farthest", "max_range": 5,
+        "id": "drag", "name": "Drag", "text": "Drags the farthest hero within 5 hexes toward it and roots them there.", "trigger": {"kind": "mana"}, "targeting": "farthest", "max_range": 5,
         "effects": [{"type": "pull", "hexes": 2, "target": "target"}, {"type": "apply_status", "status": "root", "duration_ms": 3000, "target": "target"}]
       }
     }
@@ -154,16 +154,16 @@
       "stats": {"hp": 300, "atk": 18, "def": 4, "speed": 2, "range": 4},
       "mana": {"max": 50, "per_attack": 10, "regen_per_s": 2},
       "basic_attack": {
-        "id": "gloam_bolt", "name": "Gloam Bolt", "cooldown_ms": 1300,
+        "id": "gloam_bolt", "name": "Gloam Bolt", "text": "Throws a bolt at its target from up to 4 hexes away.", "cooldown_ms": 1300,
         "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
       },
       "signature": {
         "_note": "Silence lasts its own 3s. Heroes with no mana bar are never picked.",
-        "id": "hush", "name": "Hush", "trigger": {"kind": "mana"}, "targeting": "highest_mana", "max_range": 6,
+        "id": "hush", "name": "Hush", "text": "Silences the hero with the most mana within 6 hexes: no mana while it lasts.", "trigger": {"kind": "mana"}, "targeting": "highest_mana", "max_range": 6,
         "effects": [{"type": "apply_status", "status": "silence", "target": "target"}]
       },
       "passives": [
-        {"id": "ward", "name": "Ward", "kind": "ability",
+        {"id": "ward", "name": "Ward", "text": "Every third bolt, it gives all its allies a Shield.", "kind": "ability",
           "effects": [{"trigger": "on_basic_attack", "every": 3, "type": "shield", "amount": 30, "target": "all_allies"}]}
       ]
     }

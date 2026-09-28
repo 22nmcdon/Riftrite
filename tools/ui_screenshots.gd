@@ -35,6 +35,11 @@ func _run() -> void:
 	for frame: int in 8 * 30:
 		arena._process(1.0 / 30.0)
 	await _snap("fight_sentinel_gate_8s")
+	# Paused, with Brannoc's popup open.
+	arena.toggle_pause()
+	arena.view.unit_clicked.emit("brannoc")
+	await _snap("fight_sentinel_gate_paused_brannoc")
+	arena.toggle_pause()
 	arena.skip()
 	await _snap("fight_sentinel_gate_end")
 	# An area warning up (Moth Cloud's Ember Dust), with every target line.
