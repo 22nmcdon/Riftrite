@@ -1,12 +1,12 @@
 [
   {
-    "_note": "The Act 1 enemies (docs/plans/rebuild-phase2-heroes-enemies.md, sections 5 and 7; docs/plans/rebuild-enemies.md). Kits are the plan's; HP, ATK, Cinder Burst, Drag, and Ward are from step 7's first tuning pass (tools/sim_runner.gd), the rest first numbers. Rift Pup's ATK (10 to 8) and Pack Bite's bonus (25% to 20%) were retuned when units shrank to 0.2 hex wide (playtest gate 1), since six pups can now all bite at once; then Ashling's ATK (18 to 22) and Bog Lurker's HP and ATK (640 to 760, 24 to 32), since their encounters got easier with weaker pups.",
+    "_note": "The Act 1 enemies (docs/plans/rebuild-phase2-heroes-enemies.md, sections 5 and 7; docs/plans/rebuild-enemies.md). Kits are the plan's; HP, ATK, Cinder Burst, Drag, and Ward are from step 7's first tuning pass (tools/sim_runner.gd), the rest first numbers. Rift Pup's ATK (10 to 8) and Pack Bite's bonus (25% to 20%) were retuned when units shrank to 0.2 hex wide (playtest gate 1), since six pups can now all bite at once; then Ashling's ATK (18 to 22) and Bog Lurker's HP and ATK (640 to 760, 24 to 32), since their encounters got easier with weaker pups. Later that day, pups slowed to speed 2 and Maren gained Stealth on her hop, which made fights easier again: Rift Hound ATK 16 to 18, Gloam Witch HP and ATK 300 to 360, 18 to 22, Ashling ATK 22 to 25.",
     "id": "rift_pup",
     "name": "Rift Pup",
     "archetype": "swarm",
     "threat": "Swarms, stronger in packs",
     "kit": {
-      "stats": {"hp": 210, "atk": 8, "speed": 3, "range": 1},
+      "stats": {"hp": 210, "atk": 8, "speed": 2, "range": 1},
       "basic_attack": {
         "id": "pack_bite", "name": "Pack Bite", "text": "Bites harder for each other Rift Pup within 1 hex of it.", "cooldown_ms": 1000,
         "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000},
@@ -20,7 +20,7 @@
     "archetype": "swarm",
     "threat": "Bursts into flame when it falls",
     "kit": {
-      "stats": {"hp": 220, "atk": 22, "speed": 2, "range": 1},
+      "stats": {"hp": 220, "atk": 25, "speed": 2, "range": 1},
       "basic_attack": {
         "id": "scorch", "name": "Scorch", "text": "Scorches the hero in front of it.", "cooldown_ms": 1200,
         "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
@@ -39,7 +39,7 @@
     "archetype": "flanker",
     "threat": "Pounces on your weakest back-liner",
     "kit": {
-      "stats": {"hp": 420, "atk": 16, "def": 4, "speed": 3, "range": 1},
+      "stats": {"hp": 420, "atk": 18, "def": 4, "speed": 3, "range": 1},
       "basic_attack": {
         "id": "bite", "name": "Bite", "text": "Bites the hero in front of it.", "cooldown_ms": 1000,
         "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
@@ -151,7 +151,7 @@
     "archetype": "support",
     "threat": "Shields her allies and silences your casters",
     "kit": {
-      "stats": {"hp": 300, "atk": 18, "def": 4, "speed": 2, "range": 4},
+      "stats": {"hp": 360, "atk": 22, "def": 4, "speed": 2, "range": 4},
       "mana": {"max": 50, "per_attack": 10, "regen_per_s": 2},
       "basic_attack": {
         "id": "gloam_bolt", "name": "Gloam Bolt", "text": "Throws a bolt at its target from up to 4 hexes away.", "cooldown_ms": 1300,

@@ -279,6 +279,36 @@ func test_heals_that_heal_nothing_cleanse_nothing() -> void:
 	assert_eq(target.recent_heal_ticks, [] as Array[int], "and it doesn't count toward the falloff")
 
 
+func test_stealth_hides_a_unit_from_enemies_targeting() -> void:
+	# Two heroes; the shooter's nearest is "near". Stealthed, "near" can't be
+	# picked; a shot already flying still lands (playtest gate 1).
+	var shooter: UnitDef = K.kit("shooter", {"stats": {"hp": 10000, "speed": 0, "range": 5}, "basic_attack": {"cooldown_ms": 1000, "effects": [{"type": "damage", "amount": 5, "target": "target"}]}})
+	var fight: CombatSim = K.sim(K.fight([K.at(_dummy(), 3, 2, "near"), K.at(_dummy(), 0, 0, "far")] as Array[UnitSetup], [K.foe(shooter, 3, 6)] as Array[UnitSetup]))
+	var near: UnitState = fight.unit_by_id("near")
+	var far: UnitState = fight.unit_by_id("far")
+	var foe: UnitState = fight.unit_by_id("shooter")
+	while K.entries(fight, LogEntry.Kind.SHOT, "shooter").is_empty():
+		fight.step()
+	assert_eq(foe.target, near)
+	var shot: LogEntry = K.entries(fight, LogEntry.Kind.SHOT, "shooter")[0]
+	Statuses.apply(fight, near, "stealth", 0, 0, _source("near"))
+	assert_true(Statuses.is_stealthed(near))
+	assert_eq(fight.targetable_enemies_of(foe), [far] as Array[UnitState])
+	assert_eq(fight.standing_enemies_of(foe), [near, far] as Array[UnitState], "it still stands")
+	assert_eq(Targeting.pick(fight, foe, "nearest", -1), far)
+	assert_eq(Targeting.pick(fight, far, "lowest_hp_ally", -1) in [near, far], true, "allies still see it")
+	near.hp -= 100
+	assert_eq(Targeting.pick(fight, far, "lowest_hp_ally", -1), near, "and can heal it")
+	far.target = near
+	fight.step()
+	assert_eq(foe.target, far, "it picks again at once")
+	assert_eq(far.target, near, "an ally that targets it keeps it (only enemies lose it)")
+	assert_eq(K.entries(fight, LogEntry.Kind.TARGET, "shooter").back().note, "nearest")
+	K.step(fight, shot.end_tick - fight.tick + 1)
+	assert_true(K.entries(fight, LogEntry.Kind.DAMAGE, "shooter").any(func(entry: LogEntry) -> bool: return entry.target == "near"), "the shot already flying still lands")
+	assert_eq(Statuses.find(near, "stealth").ends_at, shot.tick + 20, "its own 1s")
+
+
 func test_a_heals_cleanse_names_the_healer() -> void:
 	var fight: CombatSim = _duel(_dummy())
 	var target: UnitState = fight.units[1]

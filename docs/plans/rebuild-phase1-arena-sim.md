@@ -405,6 +405,7 @@ All the displacements **move the unit instantly in the sim** and log the start a
 | Silence | `silence` | no mana gain |
 | Marked | `marked` | takes `damage_taken_bp` more damage from every source |
 | Engaged | `engaged` | set and cleared by the Engage trait, never by effects; see section 4 |
+| Stealth | `stealth` | no enemy can pick it as a target, and one already targeting it picks again at once (logged); shots already flying and areas still hit it, and it keeps attacking. *Added at playtest gate 1 (2026-09-28) for Maren's Slip Away, with the `on_hop` event trigger (the unit hops away).* |
 | Bleed, Burn, Poison | `damage_over_time` | as now |
 
 - Timed statuses have `duration_ms`, and a new application refreshes it.

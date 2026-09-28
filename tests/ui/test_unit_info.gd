@@ -105,12 +105,12 @@ func test_the_numbers_lines_of_the_act_1_kits() -> void:
 		"When an ally drops below 40% HP (once a fight) · 60 Shield",
 		"Breaking free takes 1s",
 	] as Array[String])
-	assert_eq(_numbers(kits["maren"]), ["Every 1s · reach 4 hexes · 22 damage (100% ATK)", "At 50 mana · reach 4 hexes · Marked 4s", "At most once every 6s"] as Array[String])
+	assert_eq(_numbers(kits["maren"]), ["Every 1s · reach 4 hexes · 22 damage (100% ATK)", "At 50 mana · reach 4 hexes · Marked 4s", "Every hop · Stealth 1s", "At most once every 6s"] as Array[String])
 	assert_eq(_numbers(kits["vell"]), ["Every 1.5s · reach 3 hexes · 6 damage (100% ATK)", "At 60 mana · reach 3 hexes · heals 40 (20 + 100% MGK)",
 		"Every 1s · 1-hex circle around it · heals 1% of max HP"] as Array[String])
 	assert_eq(_numbers(kits["rift_pup"]), ["Every 1s · melee · 8 damage (100% ATK), +20% per other Rift Pup within 1 hex"] as Array[String])
 	assert_eq(_numbers(kits["ashling"])[1], "As it falls · 1-hex circle around it · 6 Burn")
-	assert_eq(_numbers(kits["rift_hound"])[1], "Once, as the fight starts · reach 4 hexes · leaps up to 4 hexes · 16 damage (100% ATK)")
+	assert_eq(_numbers(kits["rift_hound"])[1], "Once, as the fight starts · reach 4 hexes · leaps up to 4 hexes · 18 damage (100% ATK)")
 	assert_eq(_numbers(kits["cinder_moth"]), ["Every 1.5s · reach 3 hexes · 8 damage (100% ATK)", "At 40 mana · reach 5 hexes · 2-hex circle at the target (1s warning) · 4 Burn", ""] as Array[String])
 	assert_eq(_numbers(kits["cairn_guardian"])[1], "At 60 mana · reach 3 hexes · charges 3 hexes, knocking back 2 hexes")
 	assert_eq(_numbers(kits["bog_lurker"])[1], "At 50 mana · reach 5 hexes · pulls 2 hexes · Root 3s")
@@ -145,6 +145,7 @@ func test_the_numbers_of_every_other_piece() -> void:
 		"Strike: Every 1s · reach 5 hexes · 15 damage (9 + 50% ATK) · 1 Bleed",
 		"Last Rites: Once, when it would fall · Undying 2s",
 		"Snare: Every 4th basic attack · pulls 2 hexes",
+		"Vanish: Every hop · Stealth 1s",
 		"Hop away: At most once every 3s",
 		"Strike: Every 1s · melee · 10 damage",
 		"Pounce: Once, as the fight starts · reach 5 hexes · leaps up to 5 hexes · 12 damage",

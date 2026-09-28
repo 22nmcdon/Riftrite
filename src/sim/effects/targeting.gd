@@ -25,9 +25,9 @@ const RULES: Array[String] = ["nearest", "weakest_backliner", "largest_group", "
 const GROUP_REACH: int = 2 * HexGrid.HEX
 
 
-## Picks a new target for a unit whose target has fallen (or that has none
-## yet): null if nothing can be reached, and then it looks again after
-## repath_ms.
+## Picks a new target for a unit whose target has fallen, or turned stealthed
+## (or that has none yet): null if nothing can be reached, and then it looks
+## again after repath_ms. A stealthed enemy is never picked.
 static func update(sim: CombatSim, unit: UnitState) -> void:
 	unit.target = null
 	if sim.tick < unit.look_again_at:
@@ -45,7 +45,7 @@ static func update(sim: CombatSim, unit: UnitState) -> void:
 static func pick(sim: CombatSim, unit: UnitState, rule: String, reach_sq: int) -> UnitState:
 	if rule == "self":
 		return unit
-	var pool: Array[UnitState] = sim.standing_allies_of(unit) if rule == "lowest_hp_ally" else sim.standing_enemies_of(unit)
+	var pool: Array[UnitState] = sim.standing_allies_of(unit) if rule == "lowest_hp_ally" else sim.targetable_enemies_of(unit)
 	if reach_sq >= 0:
 		pool = pool.filter(func(other: UnitState) -> bool: return ArenaPlane.length_sq(other.pos - unit.pos) <= reach_sq)
 	var best: UnitState = null
@@ -105,6 +105,16 @@ static func set_target(sim: CombatSim, unit: UnitState, picked: UnitState, reaso
 	sim.combat_log.add(entry)
 
 
+## Drops the unit's target because it can't be targeted now (`why`: "maren
+## is stealthed"), and logs it; the unit picks again.
+static func lose(sim: CombatSim, unit: UnitState, why: String) -> void:
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.TARGET, unit.own_source)
+	entry.note = why
+	sim.combat_log.add(entry)
+	unit.target = null
+	unit.no_path_since = -1
+
+
 ## Drops the unit's target (it couldn't get there), and logs why.
 static func give_up(sim: CombatSim, unit: UnitState) -> void:
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.TARGET, unit.own_source)
@@ -118,7 +128,7 @@ static func give_up(sim: CombatSim, unit: UnitState) -> void:
 ## An enemy already in reach is nearest (the earliest such one).
 ## A flier goes over everything, so its nearest is by straight line.
 static func nearest(sim: CombatSim, unit: UnitState) -> UnitState:
-	var candidates: Array[UnitState] = sim.standing_enemies_of(unit)
+	var candidates: Array[UnitState] = sim.targetable_enemies_of(unit)
 	for enemy: UnitState in candidates:
 		if unit.in_reach_of(enemy):
 			return enemy

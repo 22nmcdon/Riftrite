@@ -8,7 +8,8 @@ extends RefCounted
 ## cleanses the most hurt ally; an attack aura for a while; Burn it applies
 ## lands as Poison), a brand (burning strikes that stun on a crit; every
 ## third attack a charge that knocks back), and a hook (hops away; Bleed; a
-## pull every fourth attack; when it would fall, Undying).
+## pull every fourth attack; Stealth each time it hops; when it would fall,
+## Undying).
 ## Enemies: two hounds (flying, Engage, a Pounce leap, a pack aura, and a
 ## knockback on every third hit taken), a witch (Slow on hit; a cast that
 ## warns a circle of Silence and mana drain on whoever has the most mana), a
@@ -20,15 +21,16 @@ extends RefCounted
 ## the middle.
 ##
 ## Some pieces (a shot fizzling, a cleanse cutting stacks, a cast cancelled
-## by a stun) happen only in some seeds; 18 has them all (17 did before units
-## shrank to 0.2 hex wide: playtest gate 1). If a change to the
+## by a stun, a target lost to Stealth) happen only in some seeds; 21 has them
+## all (17, then 18, did before playtest gate 1 shrank units and added
+## Stealth). If a change to the
 ## sim moves them, test_the_chaos_fight_uses_everything says which, and the
 ## seed or the kits need adjusting.
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
 
 
-static func setup(fight_seed: int = 18) -> FightSetup:
+static func setup(fight_seed: int = 21) -> FightSetup:
 	var warden: UnitDef = K.kit("warden", {"stats": {"hp": 1400, "atk": 14, "def": 30, "crit": 15, "speed": 2}, "traits": ["engage"],
 		"basic_attack": {"effects": [{"type": "damage", "amount": 8, "target": "target", "scaling": {"atk": 5000}},
 			{"trigger": "on_hit", "type": "apply_status", "status": "marked", "target": "hit_target"},
@@ -55,7 +57,8 @@ static func setup(fight_seed: int = 18) -> FightSetup:
 		"basic_attack": {"effects": [{"type": "damage", "amount": 9, "target": "target", "scaling": {"atk": 5000}}, {"type": "apply_status", "status": "bleed", "target": "target"}]},
 		"signature": {"id": "last_rites", "name": "Last Rites", "trigger": {"kind": "would_fall"}, "targeting": "self",
 			"effects": [{"type": "apply_status", "status": "undying", "duration_ms": 2000, "target": "self"}]},
-		"passives": [{"id": "snare", "name": "Snare", "kind": "ability", "effects": [{"trigger": "on_basic_attack", "every": 4, "type": "pull", "hexes": 2, "target": "target"}]}]})
+		"passives": [{"id": "snare", "name": "Snare", "kind": "ability", "effects": [{"trigger": "on_basic_attack", "every": 4, "type": "pull", "hexes": 2, "target": "target"}]},
+			{"id": "vanish", "name": "Vanish", "kind": "ability", "effects": [{"trigger": "on_hop", "type": "apply_status", "status": "stealth", "target": "self"}]}]})
 
 	var hound: UnitDef = K.kit("hound", {"stats": {"hp": 500, "atk": 14, "speed": 3, "crit": 10}, "traits": ["engage", "flying"],
 		"passives": [{"id": "pack", "name": "Pack", "kind": "aura", "aura": {"target": "all_allies", "stat": "atsp_bp", "value": 11000}},

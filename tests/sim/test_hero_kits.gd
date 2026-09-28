@@ -120,6 +120,21 @@ func test_maren_hops_away_once_every_6s() -> void:
 		assert_gte(hops[i].tick - hops[i - 1].tick, 120, "at most once every 6s")
 
 
+func test_maren_slips_from_sight_after_each_hop() -> void:
+	# The biter goes for Maren (nearest); when she hops, Slip Away hides her
+	# for 1s and it turns on the other hero (playtest gate 1).
+	var biter: UnitDef = K.kit("biter", {"stats": {"hp": 10000, "speed": 2, "range": 1}, "basic_attack": {"cooldown_ms": 60000, "effects": [{"type": "damage", "amount": 0, "target": "target"}]}})
+	var fight: CombatSim = _sim([K.at(_kit("maren"), 3, 2), K.at(_dummy("bait"), 0, 0)] as Array[UnitSetup], [K.foe(biter, 3, 4)] as Array[UnitSetup])
+	K.step(fight, 60)
+	var hop: LogEntry = K.entries(fight, LogEntry.Kind.HOP, "maren")[0]
+	var hidden: LogEntry = K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "maren").filter(func(entry: LogEntry) -> bool: return entry.status == "stealth")[0]
+	assert_eq([hidden.tick, hidden.target, hidden.source_ability, hidden.end_tick], [hop.tick, "maren", "slip_away", hop.tick + 20], "on the hop, for 1s")
+	var picks: Array = K.entries(fight, LogEntry.Kind.TARGET, "biter").map(func(entry: LogEntry) -> Array: return [entry.tick, entry.target, entry.note])
+	assert_eq(picks, [[1, "maren", "nearest"], [hop.tick + 1, "", "maren is stealthed"], [hop.tick + 1, "bait", "nearest"]], "it loses her at once and takes the other hero")
+	var ended: Array[LogEntry] = K.entries(fight, LogEntry.Kind.STATUS_ENDED).filter(func(entry: LogEntry) -> bool: return entry.status == "stealth")
+	assert_eq(ended[0].tick, hop.tick + 20)
+
+
 func test_marking_shot_marks_the_nearest_enemy_for_4s() -> void:
 	var fight: CombatSim = _sim([K.at(_kit("maren"), 3, 2)] as Array[UnitSetup],
 		[K.foe(_dummy("far"), 1, 5), K.foe(_dummy("near"), 3, 4)] as Array[UnitSetup])

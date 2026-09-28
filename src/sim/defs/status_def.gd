@@ -16,12 +16,17 @@ extends RefCounted
 ##   undying:  duration_ms (its HP can't drop below 1)
 ##   engaged:  nothing (held by an engager; only the Engage trait sets and
 ##             clears it, and effects can't apply it)
+##   stealth:  duration_ms (no enemy can pick it as a target, and one
+##             targeting it picks again; areas and shots already flying
+##             still hit it, and it keeps attacking. Added at playtest
+##             gate 1 for Maren's hop: a code change, since no other kind
+##             can hide a unit)
 ## A timed status's duration_ms is its default; an apply_status effect can
 ## give its own. A new application refreshes the timer.
 
-enum Kind { DAMAGE_OVER_TIME, ROOT, STUN, SLOW, TAUNT, SILENCE, MARKED, UNDYING, ENGAGED }
+enum Kind { DAMAGE_OVER_TIME, ROOT, STUN, SLOW, TAUNT, SILENCE, MARKED, UNDYING, ENGAGED, STEALTH }
 
-const KIND_NAMES: Array[String] = ["damage_over_time", "root", "stun", "slow", "taunt", "silence", "marked", "undying", "engaged"]
+const KIND_NAMES: Array[String] = ["damage_over_time", "root", "stun", "slow", "taunt", "silence", "marked", "undying", "engaged", "stealth"]
 
 var id: String
 var name: String

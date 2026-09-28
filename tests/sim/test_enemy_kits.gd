@@ -55,15 +55,15 @@ func test_the_enemies_read_as_designed() -> void:
 		return [EnemyDef.ARCHETYPE_NAMES[enemy.archetype], stats.get_stat(UnitStats.Stat.HP), stats.get_stat(UnitStats.Stat.ATK), stats.get_stat(UnitStats.Stat.DEF),
 			stats.get_stat(UnitStats.Stat.SPEED), stats.get_stat(UnitStats.Stat.RANGE), enemy.kit.traits])
 	assert_eq(rows, [
-		["swarm", 210, 8, 0, 3, 1, []],
-		["swarm", 220, 22, 0, 2, 1, []],
-		["flanker", 420, 16, 4, 3, 1, []],
+		["swarm", 210, 8, 0, 2, 1, []],
+		["swarm", 220, 25, 0, 2, 1, []],
+		["flanker", 420, 18, 4, 3, 1, []],
 		["caster", 260, 8, 0, 2, 3, ["flying"]],
 		["ranged", 460, 18, 4, 2, 5, ["hop_away"]],
 		["anchor", 520, 10, 25, 1, 1, ["engage"]],
 		["charger", 440, 16, 20, 2, 1, []],
 		["disruptor", 760, 32, 8, 1, 1, []],
-		["support", 300, 18, 4, 2, 4, []],
+		["support", 360, 22, 4, 2, 4, []],
 	])
 	assert_eq((_content.enemies["rift_hound"] as EnemyDef).threat, "Pounces on your weakest back-liner")
 	assert_true(_content.enemy_ids.all(func(enemy_id: String) -> bool: return not (_content.enemies[enemy_id] as EnemyDef).threat.is_empty()))
@@ -110,7 +110,7 @@ func test_a_rift_hound_pounces_on_the_weakest_back_liner_at_the_start() -> void:
 	var leaps: Array = K.entries(fight, LogEntry.Kind.LEAP, "rift_hound").map(func(entry: LogEntry) -> Array: return [entry.tick, entry.target, entry.source_ability])
 	assert_eq(leaps, [[1, "back_b", "pounce"]], "the lowest HP% of the back two rows, not the weaker front-liner")
 	var bites: Array = K.entries(fight, LogEntry.Kind.DAMAGE, "rift_hound").map(func(entry: LogEntry) -> Array: return [entry.target, entry.source_ability, entry.amount])
-	assert_eq(bites, [["back_b", "pounce", 16]], "then bites")
+	assert_eq(bites, [["back_b", "pounce", 18]], "then bites")
 
 
 # --- caster ------------------------------------------------------------------------

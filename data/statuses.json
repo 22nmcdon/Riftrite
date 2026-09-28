@@ -83,5 +83,12 @@
     "id": "engaged",
     "name": "Engaged",
     "kind": "engaged"
+  },
+  {
+    "_note": "No enemy can pick it as a target while it lasts, and one already targeting it picks again. Shots already flying and areas still hit it, and it keeps attacking. Maren's Slip Away gives it for 1s after each hop (playtest gate 1).",
+    "id": "stealth",
+    "name": "Stealth",
+    "kind": "stealth",
+    "duration_ms": 1000
   }
 ]

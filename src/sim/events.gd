@@ -10,6 +10,7 @@ extends RefCounted
 ##   on_heal          it restores HP to a unit
 ##   on_status        it applies a status
 ##   on_kill          an enemy it hit last falls
+##   on_hop           it hops away (hop_away)
 ## After every unit has acted, CombatSim hands over the entries logged since
 ## the last read, in log order (so what happens in the deaths step is read
 ## on the next tick); kills are raised as deaths are settled. Relic effects
@@ -20,7 +21,7 @@ extends RefCounted
 
 
 ## The log kinds that raise events (the rest are skipped at once).
-const _RAISES: Array[LogEntry.Kind] = [LogEntry.Kind.FIRE, LogEntry.Kind.DAMAGE, LogEntry.Kind.SHIELD, LogEntry.Kind.HEAL, LogEntry.Kind.STATUS_APPLIED]
+const _RAISES: Array[LogEntry.Kind] = [LogEntry.Kind.FIRE, LogEntry.Kind.DAMAGE, LogEntry.Kind.SHIELD, LogEntry.Kind.HEAL, LogEntry.Kind.STATUS_APPLIED, LogEntry.Kind.HOP]
 
 
 ## Raises the events in log entries [from, to).
@@ -52,6 +53,8 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> void:
 				# Engaged comes from the Engage trait, not an effect.
 				if target != null and entry.status != sim.content.engaged_status.id:
 					_raise(sim, source, EffectDef.Trigger.ON_STATUS, target, 0, entry.status)
+			LogEntry.Kind.HOP:
+				_raise(sim, source, EffectDef.Trigger.ON_HOP)
 
 
 ## on_kill for a unit that just fell, credited to whoever hit it last (an

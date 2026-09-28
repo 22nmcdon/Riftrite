@@ -46,7 +46,12 @@
         "_note": "Marked for its own 4s: +15% damage taken from everyone.",
         "id": "marking_shot", "name": "Marking Shot", "text": "Marks the nearest enemy within 4 hexes, so it takes more damage from everyone for a while.", "trigger": {"kind": "mana"}, "targeting": "nearest",
         "effects": [{"type": "apply_status", "status": "marked", "target": "target"}]
-      }
+      },
+      "passives": [
+        {"id": "slip_away", "name": "Slip Away", "kind": "ability",
+          "text": "Each time she hops away, she slips from sight for a moment: no enemy can target her.",
+          "effects": [{"trigger": "on_hop", "type": "apply_status", "status": "stealth", "target": "self"}]}
+      ]
     }
   },
   {

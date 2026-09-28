@@ -378,4 +378,33 @@ Build: playtest build 4 (0865f6b), https://github.com/22nmcdon/Riftrite/releases
   - The chaos fight moved to seed 18, which again uses every piece.
   - New tests for melee reach, for keeping a target when blocked only by units, and for a heal's cleanse naming the healer.
 
+Playtest build 5 carried these.
+
+**Findings (2026-09-28, second play, build 5):**
+
+3. **Pups were too fast** (speed 3, 3 hexes a second).
+4. **Maren's evade didn't shake anyone off:** after she hopped away, every enemy still targeted her, even with another hero closer.
+
+**Decisions:**
+
+- **Rift Pups move at speed 2**, like the heroes and most enemies. Rift Hounds stay at 3: flanking fast is their job.
+- **Maren gains Slip Away:** each hop hides her for **1s** with a new status kind, **Stealth**. No enemy can pick a stealthed unit, and one targeting it picks again at once (the log says "…is stealthed"). It's **untargetable only**: shots already flying and areas still hit her, and she keeps attacking. Only Maren has it; the Hollow Archer's hop doesn't hide it.
+- Maren is she/her (confirmed).
+
+**What changed:**
+
+- **Two code additions** (rule 3: no existing kind could hide a unit or react to a hop):
+  - the `stealth` status kind (`Statuses.is_stealthed`, `CombatSim.targetable_enemies_of`, `Targeting.lose`);
+  - the `on_hop` event trigger, raised from the log's HOP entries.
+  Maren's Slip Away is data: an ability passive, `on_hop`, applying `stealth` to herself. Allies still see a stealthed unit (heals, `lowest_hp_ally`).
+- **The board** draws a stealthed unit see-through, with a "HID" tag.
+- **Balance** (the sim runner, `--seeds=5`, 44 formations each): stealth made Maren much harder to kill, so Witch Circle (42 of 44 won), Cairn Road (39), Ash Nest (34), and The Pack (33) got easy.
+  - Retuned: Rift Hound ATK 16 to 18, Gloam Witch HP 300 to 360 and ATK 18 to 22, Ashling ATK 22 to 25.
+  - All nine pass the gate, with 15 to 31 of 44 winning (Pup Warren 21, Ash Nest 25, The Pack 15, Moth Cloud 30, Hollow Line 26, Bog Crossing 21, Sentinel Gate 31, Cairn Road 24, Witch Circle 24).
+- **Tests:**
+  - Stealth's rules: it can't be picked, a targeting enemy picks again, allies keep it, and a shot already flying lands.
+  - Slip Away: stealth on the hop for 1s, and the enemy turning on the other hero.
+  - The token's fading and tag.
+  - The chaos fight's hook got the same on-hop stealth (every status must be applied there), and the fight moved to seed 21, which also has an enemy losing its target to Stealth.
+
 The next playtest build carries these; gate 1 is judged again on it.

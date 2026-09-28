@@ -27,7 +27,7 @@ func test_the_chaos_fight_repeats_exactly() -> void:
 
 
 func test_the_seed_matters() -> void:
-	assert_ne(K.run(Chaos.setup(19)).combat_log.to_text(), chaos.combat_log.to_text())
+	assert_ne(K.run(Chaos.setup(22)).combat_log.to_text(), chaos.combat_log.to_text())
 
 
 func test_the_fight_order_matters() -> void:
@@ -67,4 +67,5 @@ func test_the_chaos_fight_uses_everything() -> void:
 	assert_eq(log.of_kind(LogEntry.Kind.PHASE).map(func(entry: LogEntry) -> String: return entry.note), ["Molt", "Last Ember"])
 	assert_eq(log.of_kind(LogEntry.Kind.COLLAPSE_RING)[0].source_text(), "brute · Call the Brood", "the collapse starts early")
 	assert_true(log.of_kind(LogEntry.Kind.AURA).any(func(entry: LogEntry) -> bool: return entry.note == "ends"), "an aura's window closes")
+	assert_true(log.of_kind(LogEntry.Kind.TARGET).any(func(entry: LogEntry) -> bool: return entry.note == "hook is stealthed"), "an enemy loses its target to Stealth")
 	assert_true(log.of_kind(LogEntry.Kind.MOVE).any(func(entry: LogEntry) -> bool: return entry.tick > log.of_kind(LogEntry.Kind.COLLAPSE_RING)[1].tick), "units walk on the crumbling arena")

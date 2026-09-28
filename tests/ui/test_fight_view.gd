@@ -73,6 +73,11 @@ func test_status_tags_show_what_the_unit_has() -> void:
 	var tags: Array = view.token("rift_hound").status_tags.map(func(tag: Array) -> String: return tag[0])
 	assert_eq(tags, ["BRN 4", "STUN", "MARK"], "in the unit's status order, damage over time with its stacks")
 	assert_eq(view.token("rift_hound").status_tags[0][1], UiStyle.STATUS_COLORS["burn"])
+	assert_eq(view.token("rift_hound").modulate.a, 1.0)
+	Statuses.apply(player.sim, hound, "stealth", 0, 0, source)
+	view.sync_fight(player)
+	assert_almost_eq(view.token("rift_hound").modulate.a, UnitToken.STEALTH_ALPHA, 0.001, "a stealthed unit is drawn see-through")
+	assert_eq(view.token("rift_hound").status_tags.back()[0], "HID")
 	for kind: int in StatusDef.Kind.values():
 		if kind != StatusDef.Kind.DAMAGE_OVER_TIME:
 			assert_true(UnitToken.STATUS_TAGS.has(kind) and UnitToken.STATUS_COLORS.has(kind), "every status kind has a tag: %s" % StatusDef.KIND_NAMES[kind])

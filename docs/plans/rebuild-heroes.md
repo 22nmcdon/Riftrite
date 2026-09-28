@@ -121,7 +121,7 @@ Example: if Vell attacks, she earns about 10 mana a second and Mends every 6s. I
 | **Speed / range** | speed 2, fires at up to 4 hexes |
 | **Basic attack: Longshot** | an arrow at the nearest enemy in range |
 | **Signature: Marking Shot** (50 mana) | Marks an enemy: it takes +15% damage from everyone for 4s |
-| **Passive: Keep Your Distance** | when an enemy moves next to her, she hops 1 hex away (once every 6s) |
+| **Passive: Keep Your Distance** | when an enemy moves next to her, she hops 1 hex away (once every 6s); *since playtest gate 1, each hop also hides her for 1s (Slip Away: Stealth, so no enemy can target her)* |
 
 ### Path 1: Deadeye (the sniper)
 

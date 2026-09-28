@@ -10,7 +10,8 @@ extends Control
 ## `ArenaView` places it. In a fight, show_state() gives it the unit's bars
 ## (section 5): HP with any Shield after it, mana under that (only for a unit
 ## with a mana signature), a cast bar under the circle while it casts, and
-## a tag per status (with stacks for damage over time).
+## a tag per status (with stacks for damage over time). A stealthed unit is
+## drawn see-through.
 ## While placing, a hero's token can be dragged (drops on a token go to the
 ## view, as if on the hex under it).
 
@@ -29,12 +30,16 @@ const CAST := UiStyle.BRASS_300
 const STATUS_TAGS: Dictionary = {
 	StatusDef.Kind.ROOT: "ROOT", StatusDef.Kind.STUN: "STUN", StatusDef.Kind.SLOW: "SLOW", StatusDef.Kind.TAUNT: "TAUNT",
 	StatusDef.Kind.SILENCE: "SIL", StatusDef.Kind.MARKED: "MARK", StatusDef.Kind.UNDYING: "UNDY", StatusDef.Kind.ENGAGED: "ENG",
+	StatusDef.Kind.STEALTH: "HID",
 }
 const STATUS_COLORS: Dictionary = {
 	StatusDef.Kind.ROOT: Color("8fbf5a"), StatusDef.Kind.STUN: Color("f0d060"), StatusDef.Kind.SLOW: Color("7fb8d8"),
 	StatusDef.Kind.TAUNT: Color("e07050"), StatusDef.Kind.SILENCE: Color("b79cf0"), StatusDef.Kind.MARKED: Color("ff8a80"),
 	StatusDef.Kind.UNDYING: Color("f1e6cc"), StatusDef.Kind.ENGAGED: Color("c9993b"),
+	StatusDef.Kind.STEALTH: Color("9aa7b8"),
 }
+## How see-through a stealthed unit is drawn.
+const STEALTH_ALPHA: float = 0.4
 ## How far above its shadow a flier is drawn, in its own radii.
 const FLIGHT_LIFT: float = 0.35
 ## The smallest circle drawn, the smallest half-width to hover or grab, and
@@ -127,6 +132,7 @@ func show_state(unit: UnitState, tick: int) -> void:
 	status_tags.clear()
 	for state: StatusState in unit.statuses:
 		status_tags.append(status_tag(state))
+	modulate.a = STEALTH_ALPHA if Statuses.is_stealthed(unit) else 1.0
 	queue_redraw()
 
 

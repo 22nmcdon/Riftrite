@@ -112,6 +112,11 @@ static func find(unit: UnitState, status_id: String) -> StatusState:
 	return null
 
 
+## True if no enemy may pick `unit` as a target now (Stealth).
+static func is_stealthed(unit: UnitState) -> bool:
+	return not unit.statuses.is_empty() and has_kind(unit, StatusDef.Kind.STEALTH)
+
+
 static func has_kind(unit: UnitState, kind: StatusDef.Kind) -> bool:
 	for state: StatusState in unit.statuses:
 		if state.def.kind == kind:

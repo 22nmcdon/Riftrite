@@ -21,6 +21,7 @@ const EVENT_WORDS: Dictionary[int, String] = {
 	EffectDef.Trigger.ON_HOLDER_CRIT: "crit", EffectDef.Trigger.ON_SHIELDED: "Shield taken",
 	EffectDef.Trigger.ON_HIT_TAKEN: "hit taken", EffectDef.Trigger.ON_HEAL: "heal",
 	EffectDef.Trigger.ON_STATUS: "status applied", EffectDef.Trigger.ON_KILL: "kill",
+	EffectDef.Trigger.ON_HOP: "hop",
 }
 const ORDINALS: Array[String] = ["th", "st", "nd", "rd"]
 const CHATTER: Array[LogEntry.Kind] = [LogEntry.Kind.MOVE, LogEntry.Kind.STOP, LogEntry.Kind.TARGET]
