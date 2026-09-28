@@ -15,6 +15,7 @@ const OLD_SAVE_PATH: String = "user://run.json"
 var old_save_path: String = OLD_SAVE_PATH
 var screen: UiScreen = null
 var hover_card: HoverCard
+var backdrop: TextureRect
 var _screen_slot: ScrollContainer
 var _toast: Toast
 
@@ -27,7 +28,7 @@ func _ready() -> void:
 	background.color = UiStyle.BACKGROUND
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(background)
-	var backdrop := TextureRect.new()
+	backdrop = TextureRect.new()
 	backdrop.texture = load(BACKDROP) as Texture2D
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -69,6 +70,7 @@ func show_screen(next: UiScreen) -> void:
 	screen.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_screen_slot.add_child(screen)
 	screen.setup()
+	backdrop.visible = screen.shows_backdrop
 
 
 ## A short message over everything.

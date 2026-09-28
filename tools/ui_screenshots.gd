@@ -25,28 +25,30 @@ func _initialize() -> void:
 
 func _run() -> void:
 	await _snap("title")
-	await _snap_boards()
+	var content: ContentDb = ContentDb.load_dir("res://data")
+	var placement: ArenaScreen = ArenaScreen.make(PracticeSession.make(content), "sentinel_gate")
+	_main.show_screen(placement)
+	placement._on_hovered("rift_worn_sentinel")
+	await _snap("placement_sentinel_gate")
+	await _snap_board(content, "moth_cloud")
 	quit(0)
 
 
-## The arena view on its own (phase 3, step 2): Sentinel Gate's board in
-## placement mode, and Moth Cloud's in fight mode, with Brannoc guarding.
-func _snap_boards() -> void:
-	var content: ContentDb = ContentDb.load_dir("res://data")
-	var formation: Dictionary[String, Vector2i] = {"brannoc": Vector2i(3, 2), "maren": Vector2i(3, 0), "vell": Vector2i(4, 0)}
-	for shot: Array in [["sentinel_gate", ArenaView.Mode.PLACEMENT], ["moth_cloud", ArenaView.Mode.FIGHT]]:
-		var errors: Array[String] = []
-		var backing := ColorRect.new()
-		backing.color = UiStyle.BACKGROUND
-		backing.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		_main.add_child(backing)
-		var view := ArenaView.new()
-		view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		backing.add_child(view)
-		view.show_setup(Encounters.setup(content, shot[0], formation, 1, errors), content)
-		view.set_mode(shot[1])
-		await _snap("board_%s" % shot[0])
-		backing.queue_free()
+## The arena view on its own in fight mode (phase 3, step 2): Moth Cloud,
+## with Brannoc guarding. The fight screen replaces it in step 4.
+func _snap_board(content: ContentDb, encounter_id: String) -> void:
+	var errors: Array[String] = []
+	var backing := ColorRect.new()
+	backing.color = UiStyle.BACKGROUND
+	backing.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_main.add_child(backing)
+	var view := ArenaView.new()
+	view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	backing.add_child(view)
+	view.show_setup(Encounters.setup(content, encounter_id, PracticeSession.DEFAULT_FORMATION, 1, errors), content)
+	view.set_mode(ArenaView.Mode.FIGHT)
+	await _snap("board_%s" % encounter_id)
+	backing.queue_free()
 
 
 func _snap(name: String) -> void:

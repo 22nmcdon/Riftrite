@@ -13,6 +13,13 @@ extends Control
 ##     mode keeps the hexes faint, since distances still count in hexes.
 ##   - Hexes and rocks are drawn with `_draw()`; units are `UnitToken` nodes
 ##     (for hover and tweening later).
+##   - Placement: a hero's token can be dragged onto a hex (section 3). The
+##     view only reports the drop (`hero_dropped`); whoever shows it decides
+##     whether the move is legal, and calls `flash_hex` if it isn't.
+
+signal hero_dropped(hero_id: String, hex: Vector2i)
+signal unit_hovered(unit_id: String)
+signal unit_unhovered(unit_id: String)
 
 enum Mode { PLACEMENT, FIGHT }
 
@@ -25,6 +32,9 @@ const HEX_LINE := Color("5b4a3a")
 const FIGHT_HEX_LINE := Color(0.36, 0.29, 0.23, 0.35)
 const ROCK_FILL := UiStyle.OAK_600
 const ROCK_LINE := UiStyle.OAK_400
+const FLASH := Color(0.84, 0.35, 0.31, 0.7)
+## How long a refused hex flashes, in seconds.
+const FLASH_SECONDS: float = 0.5
 
 var mode: Mode = Mode.PLACEMENT
 var grid: HexGrid
@@ -39,6 +49,9 @@ var tokens: Array[UnitToken] = []
 ## Pixels per plane unit, and where the board's top-left corner is drawn.
 var scale_px: float = 0.1
 var _origin: Vector2 = Vector2.ZERO
+## A refused hex, and how long it still flashes.
+var flashing: Vector2i = Vector2i(-1, -1)
+var _flash_left: float = 0.0
 
 
 ## Shows a fight's setup: its board, rocks, and every unit on its hex.
@@ -58,12 +71,18 @@ func show_setup(setup: FightSetup, content: ContentDb) -> void:
 		token.plane_pos = grid.center(unit.col, unit.row)
 		tokens.append(token)
 		add_child(token)
+		token.mouse_entered.connect(func() -> void: unit_hovered.emit(token.unit_id))
+		token.mouse_exited.connect(func() -> void: unit_unhovered.emit(token.unit_id))
 	_layout()
 
 
 func set_mode(new_mode: Mode) -> void:
 	mode = new_mode
 	queue_redraw()
+
+
+func _ready() -> void:
+	set_process(false)
 
 
 func token(unit_id: String) -> UnitToken:
@@ -108,6 +127,42 @@ func hex_px() -> float:
 	return scale_px * HexGrid.HEX
 
 
+# --- placement --------------------------------------------------------------------
+
+## True for a hero's token while placing: it can be dragged.
+func can_drag(unit_token: UnitToken) -> bool:
+	return mode == Mode.PLACEMENT and unit_token.is_hero()
+
+
+func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
+	return mode == Mode.PLACEMENT and data is Dictionary and (data as Dictionary).has("hero")
+
+
+func _drop_data(at_position: Vector2, data: Variant) -> void:
+	var hex: Vector2i = hex_at(at_position)
+	if hex.x < 0:
+		return
+	hero_dropped.emit(String((data as Dictionary)["hero"]), hex)
+
+
+## Flashes a hex red for a moment (a refused move).
+func flash_hex(hex: Vector2i) -> void:
+	flashing = hex
+	_flash_left = FLASH_SECONDS
+	set_process(true)
+	queue_redraw()
+
+
+func _process(delta: float) -> void:
+	if _flash_left <= 0.0:
+		set_process(false)
+		return
+	_flash_left -= delta
+	if _flash_left <= 0.0:
+		flashing = Vector2i(-1, -1)
+	queue_redraw()
+
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:
 		_layout()
@@ -142,6 +197,10 @@ func _draw() -> void:
 		var outline: PackedVector2Array = corners.duplicate()
 		outline.append(corners[0])
 		draw_polyline(outline, HEX_LINE if mode == Mode.PLACEMENT else FIGHT_HEX_LINE, 1.5, true)
+	if flashing.x >= 0:
+		var flash := FLASH
+		flash.a *= clampf(_flash_left / FLASH_SECONDS, 0.0, 1.0)
+		draw_colored_polygon(hex_corners(grid.center(flashing.x, flashing.y)), flash)
 	for rock: ArenaPlane.Circle in rocks:
 		var center: Vector2 = to_pixel(rock.center)
 		draw_circle(center, rock.radius * scale_px, ROCK_FILL)

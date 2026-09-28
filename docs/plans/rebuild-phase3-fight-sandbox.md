@@ -86,10 +86,21 @@ Title ──Practice──> Encounter list ──pick──> Placement ──Fig
 
 ## 3. Placement
 
-- **Moving a hero:** drag a hero token to a hex, or click a hero and then a hex. A hero dropped on another hero swaps them. Illegal hexes (outside your zone, on a rock) refuse the drop and flash.
+- **Moving a hero:** drag a hero token to a hex. A hero dropped on another hero swaps them. Illegal hexes (outside your zone, on a rock) refuse the drop and flash. (Clicking a hero opens their details instead, Decision 3, so there's no click-to-move.)
 - **Legality comes from the sim:** the screen builds the formation, then `Encounters.setup` and `FightSetup.validate`; the Fight button shows the first error if there is one. The UI never keeps its own copy of the rules.
 - **Enemies are shown where they'll stand.** Hovering one opens its panel at the side of the screen (section 7). Nothing is drawn on the board for its reach: the panel says it ("Pounces on your weakest back-liner within 4 hexes"), and reading it is the player's job (Decisions).
 - **Remembered formation:** one formation for all encounters, for this session only. The last formation you fought with is used again when you open any encounter; if a hex is now illegal (a rock), that hero goes to the nearest free legal hex (Decisions).
+
+**Built in step 3** (`src/ui/practice/practice_session.gd`, `src/ui/screens/arena_screen.gd`, `src/ui/widgets/enemy_panel.gd`, `tests/ui/test_placement.gd`):
+
+- **`PracticeSession`** holds the remembered formation, and asks the sim whether a formation is legal (`errors()`: `Encounters.setup`, then `FightSetup.validate`). `formation_for` places each hero, in heroes.json's order, on its remembered hex or the nearest legal free one. Ties go to the lower hex index, which counts column by column. The first formation is the runner's "guarded".
+- **`ArenaScreen`** shows the board with a side column: the enemy panel, any error, Fight, and Back.
+  - **A drop** is tried on a copy of the formation and kept only if the sim finds it legal; otherwise the hex flashes for half a second.
+  - **Dragging:** only heroes can be dragged, and only while placing. A drop on a token counts for the hex under it, and a drop off the board does nothing.
+  - **Fight** remembers the formation and hands the `FightSetup` on (`fight_requested`; step 4 plays it).
+- **`EnemyPanel`** (hover an enemy): name, archetype, threat line, and stats. The abilities' text comes in step 7.
+- **Screens can hide the title backdrop** (`UiScreen.shows_backdrop`); the arena does, so the board reads cleanly.
+- **Mutation checks:** all 23 changes to placement's logic are caught, bar one that can't change anything: a token forwarding the drop's position to the view's "can drop" check, which ignores the position.
 
 ## 4. Fight playback
 
@@ -210,7 +221,7 @@ UI tests run headless and drive time by hand, so they're deterministic.
 
 1. **`FightTally`** in the sim, and the runner switched to it (fingerprints and runner numbers unchanged). **Done.**
 2. **`ArenaView` and tokens:** the board and units drawn from a `FightSetup`, static. Screenshot. **Done.**
-3. **Placement:** moving heroes, legality from the sim, enemy hover with reach, the remembered formation.
+3. **Placement:** moving heroes, legality from the sim, enemy hover with reach, the remembered formation. **Done** (no reach drawn: Decision 5).
 4. **`FightPlayer`:** live stepping, speeds, pause, restart, rewind, interpolation.
 5. **What the fight shows (section 5)**, in two passes: bars, statuses, shots, swipes, and numbers first; then areas, displacement tweens, collapse, summons, deaths, phases, target lines, and Engage links.
 6. **Log panel and fight chart.**

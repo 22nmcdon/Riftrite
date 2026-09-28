@@ -3,6 +3,10 @@ extends VBoxContainer
 ## A screen of the game. Main shows one at a time; a screen builds itself
 ## in build().
 
+## False: Main hides the title backdrop behind this screen (the arena needs
+## a quiet background to read).
+var shows_backdrop: bool = true
+
 
 func setup() -> UiScreen:
 	add_theme_constant_override("separation", 12)
