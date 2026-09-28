@@ -277,6 +277,29 @@ About 9 for phase 2, hand-placed, each asking one question and then a few combin
 
 Placements and rocks are set in step 6 and tuned in step 7.
 
+**Built in step 6** (`data/encounters.json`; tests in `test_encounters.gd`). Placements, rocks, and days are first choices for step 7 to tune:
+
+| Encounter | Enemies (col, row) | Rocks | Days |
+| --- | --- | --- | --- |
+| Pup Warren | pups spread across the front and flanks: (0,4) (2,4) (5,4) (7,4) (1,5) (6,5) | (2,3) (5,3), making three lanes | 1–2 |
+| Ash Nest | Ashlings clumped in the middle: (3,4) (4,4) (3,5); pups on the flanks: (1,4) (6,4) | | 1–2 |
+| The Pack | hounds (1,4) (4,4) (6,4) | (3,3) | 1–3 |
+| Moth Cloud | Moths at the back: (2,6) (4,6) (6,6); pups (2,4) (5,4) | | 2–3 |
+| Hollow Line | Archers (2,6) (4,6) (6,6) | (3,5) (5,5), in front of them | 2–4 |
+| Bog Crossing | the Lurker (3,5); pups (1,4) (4,4) (6,4) | (1,3) (6,3) | 3–4 |
+| Sentinel Gate | the Sentinel (3,4) between rocks; Archers (1,6) (5,6) | (2,4) (4,4), a wall with the Sentinel | 4–6 |
+| Cairn Road | the Guardian (3,4); hounds (1,5) (6,5) | | 4–6 |
+| Witch Circle | the Sentinel (3,4), the Witch (3,6) behind it, a Moth (5,5) | | 5–6 |
+
+- **Days:** Act 1 is about 7 days, with elites on two of them (phase 5) and the boss on day 7 (`rebuild-run.md`). So these fill days 1–6: single questions early, combinations from day 4. Every day offers at least two, since a day is a pick of two fights.
+- **An encounter with no rocks leaves `rocks` out.** An empty list is refused, like every list the reader takes.
+- **The tests:**
+  - each encounter has section 6's roster, act 1, and scale 10000;
+  - every day from 1 to 6 offers at least two encounters, and none comes on day 7;
+  - each builds a valid fight from Brannoc guarding the other two, with its enemies and rocks where it says, and plays out with no errors and no tie.
+  - Mutations that change an encounter's enemies or rocks are caught. Moving one encounter's days isn't: the test checks every day is covered, not which days each encounter comes on.
+- **How they play now:** with the first numbers, every encounter is won from all four of the runner's formations (guarded, exposed, spread, clumped) on every seed, in 10–30s. That's too easy, and placement doesn't matter yet. Getting fights to 30–60s with the 30-point gap is step 7's work.
+
 ## 7. The sim runner
 
 `tools/sim_runner.gd` comes back for placed parties:
@@ -340,7 +363,7 @@ The elites and Old Mother Ash come in phase 5 (decided). What they'll need, so t
 3. **Section 4's new pieces,** each with its tests. **Done.**
 4. **The three base kits** in `heroes.json`, and `test_hero_kits`. **Done.**
 5. **The nine enemies** in `enemies.json`, and `test_enemy_kits`. **Done.**
-6. **The encounters,** hand-placed, and `test_encounters`.
+6. **The encounters,** hand-placed, and `test_encounters`. **Done.**
 7. **The sim runner and the first tuning pass,** until the gate holds and fights run 30–60s. The results go in this plan.
 8. **Docs:** CLAUDE.md's "how it works" gains the content files and the runner; the design's open questions are updated.
 

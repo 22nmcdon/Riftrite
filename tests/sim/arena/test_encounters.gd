@@ -96,3 +96,62 @@ func test_the_setup_checks_the_formation() -> void:
 	var formation: Dictionary[String, Vector2i] = {"warden": Vector2i(3, 4), "ranger": Vector2i(2, 4)}
 	var fight: FightSetup = Encounters.setup(content, "den", formation, 1, errors)
 	assert_eq(fight.validate(content), ["warden at (3, 4) is outside its side's zone", "ranger at (2, 4) is outside its side's zone", "pup at (2, 4) shares its hex with ranger"] as Array[String])
+
+
+# --- the Act 1 encounters in data/encounters.json ---------------------------------
+
+## Brannoc in front of the other two (the sim runner's "guarded").
+const GUARDED: Dictionary[String, Vector2i] = {"brannoc": Vector2i(3, 2), "maren": Vector2i(3, 0), "vell": Vector2i(4, 0)}
+
+
+## Each encounter's enemies (section 6's table), as enemy id -> how many.
+const ROSTERS: Dictionary = {
+	"pup_warren": {"rift_pup": 6},
+	"ash_nest": {"ashling": 3, "rift_pup": 2},
+	"the_pack": {"rift_hound": 3},
+	"moth_cloud": {"cinder_moth": 3, "rift_pup": 2},
+	"hollow_line": {"hollow_archer": 3},
+	"bog_crossing": {"bog_lurker": 1, "rift_pup": 3},
+	"sentinel_gate": {"rift_worn_sentinel": 1, "hollow_archer": 2},
+	"cairn_road": {"cairn_guardian": 1, "rift_hound": 2},
+	"witch_circle": {"gloam_witch": 1, "rift_worn_sentinel": 1, "cinder_moth": 1},
+}
+
+
+func test_the_act_1_encounters_are_the_plans() -> void:
+	var content: ContentDb = ContentDb.load_dir("res://data")
+	assert_eq(content.encounter_ids, ["pup_warren", "ash_nest", "the_pack", "moth_cloud", "hollow_line", "bog_crossing", "sentinel_gate", "cairn_road", "witch_circle"])
+	for encounter_id: String in content.encounter_ids:
+		var encounter: EncounterDef = content.encounters[encounter_id]
+		var counts: Dictionary = {}
+		for placed: EncounterDef.Placed in encounter.enemies:
+			counts[placed.enemy] = counts.get(placed.enemy, 0) + 1
+		assert_eq(counts, ROSTERS[encounter_id], encounter_id)
+		assert_eq([encounter.act, encounter.scale_bp], [1, 10000], encounter_id)
+		assert_false(encounter.tests.is_empty(), encounter_id)
+	assert_eq((content.encounters["hollow_line"] as EncounterDef).rocks.size(), 2, "archers behind 2 rocks")
+
+
+func test_every_day_before_the_boss_offers_at_least_two_encounters() -> void:
+	var content: ContentDb = ContentDb.load_dir("res://data")
+	for day: int in range(1, 7):
+		var offered: Array = content.encounter_ids.filter(func(encounter_id: String) -> bool: return (content.encounters[encounter_id] as EncounterDef).days.has(day))
+		assert_gte(offered.size(), 2, "day %d: %s" % [day, offered])
+	for encounter_id: String in content.encounter_ids:
+		assert_false((content.encounters[encounter_id] as EncounterDef).days.has(7), "day 7 is the boss's: %s" % encounter_id)
+
+
+func test_every_act_1_encounter_builds_a_fight_that_plays_out() -> void:
+	var content: ContentDb = ContentDb.load_dir("res://data")
+	for encounter_id: String in content.encounter_ids:
+		var errors: Array[String] = []
+		var fight: FightSetup = Encounters.setup(content, encounter_id, GUARDED, 1, errors)
+		assert_eq(errors, [] as Array[String], encounter_id)
+		assert_eq(fight.validate(content), [] as Array[String], encounter_id)
+		var encounter: EncounterDef = content.encounters[encounter_id]
+		var placed: Array = fight.enemies.map(func(unit: UnitSetup) -> Array: return [unit.def.id, Vector2i(unit.col, unit.row)])
+		assert_eq(placed, encounter.enemies.map(func(enemy: EncounterDef.Placed) -> Array: return [enemy.enemy, enemy.hex]), "%s: its enemies stand where it says" % encounter_id)
+		assert_eq(fight.rocks, encounter.rocks, encounter_id)
+		var result: FightResult = CombatSim.run(fight, content)
+		assert_eq(result.errors, [] as Array[String], encounter_id)
+		assert_ne(result.outcome, FightResult.Outcome.TIE, "%s ends before 180s" % encounter_id)

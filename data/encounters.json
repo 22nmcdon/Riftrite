@@ -1,1 +1,104 @@
-[]
+[
+  {
+    "_note": "The Act 1 encounters (docs/plans/rebuild-phase2-heroes-enemies.md, section 6). Enemies stand on rows 4 (front) to 6 (back); row 3 is no one's. Placements, rocks, and days are first choices for step 7 to tune: single questions come early, combinations later, and every day from 1 to 6 offers at least two (the elites join on two days in phase 5, and day 7 is the boss's).",
+    "id": "pup_warren",
+    "name": "Pup Warren",
+    "tests": "closing lanes against a swarm",
+    "act": 1,
+    "days": [1, 2],
+    "enemies": [
+      {"enemy": "rift_pup", "hex": [0, 4]}, {"enemy": "rift_pup", "hex": [2, 4]}, {"enemy": "rift_pup", "hex": [5, 4]},
+      {"enemy": "rift_pup", "hex": [7, 4]}, {"enemy": "rift_pup", "hex": [1, 5]}, {"enemy": "rift_pup", "hex": [6, 5]}
+    ],
+    "rocks": [[2, 3], [5, 3]]
+  },
+  {
+    "id": "ash_nest",
+    "name": "Ash Nest",
+    "tests": "not fighting in a crowd",
+    "act": 1,
+    "days": [1, 2],
+    "enemies": [
+      {"enemy": "ashling", "hex": [3, 4]}, {"enemy": "ashling", "hex": [4, 4]}, {"enemy": "ashling", "hex": [3, 5]},
+      {"enemy": "rift_pup", "hex": [1, 4]}, {"enemy": "rift_pup", "hex": [6, 4]}
+    ]
+  },
+  {
+    "id": "the_pack",
+    "name": "The Pack",
+    "tests": "protecting the back line",
+    "act": 1,
+    "days": [1, 2, 3],
+    "enemies": [
+      {"enemy": "rift_hound", "hex": [1, 4]}, {"enemy": "rift_hound", "hex": [4, 4]}, {"enemy": "rift_hound", "hex": [6, 4]}
+    ],
+    "rocks": [[3, 3]]
+  },
+  {
+    "id": "moth_cloud",
+    "name": "Moth Cloud",
+    "tests": "spreading out",
+    "act": 1,
+    "days": [2, 3],
+    "enemies": [
+      {"enemy": "cinder_moth", "hex": [2, 6]}, {"enemy": "cinder_moth", "hex": [4, 6]}, {"enemy": "cinder_moth", "hex": [6, 6]},
+      {"enemy": "rift_pup", "hex": [2, 4]}, {"enemy": "rift_pup", "hex": [5, 4]}
+    ]
+  },
+  {
+    "id": "hollow_line",
+    "name": "Hollow Line",
+    "tests": "closing distance",
+    "act": 1,
+    "days": [2, 3, 4],
+    "enemies": [
+      {"enemy": "hollow_archer", "hex": [2, 6]}, {"enemy": "hollow_archer", "hex": [4, 6]}, {"enemy": "hollow_archer", "hex": [6, 6]}
+    ],
+    "rocks": [[3, 5], [5, 5]]
+  },
+  {
+    "id": "bog_crossing",
+    "name": "Bog Crossing",
+    "tests": "back-line safety",
+    "act": 1,
+    "days": [3, 4],
+    "enemies": [
+      {"enemy": "bog_lurker", "hex": [3, 5]},
+      {"enemy": "rift_pup", "hex": [1, 4]}, {"enemy": "rift_pup", "hex": [4, 4]}, {"enemy": "rift_pup", "hex": [6, 4]}
+    ],
+    "rocks": [[1, 3], [6, 3]]
+  },
+  {
+    "id": "sentinel_gate",
+    "name": "Sentinel Gate",
+    "tests": "going around a wall",
+    "act": 1,
+    "days": [4, 5, 6],
+    "enemies": [
+      {"enemy": "rift_worn_sentinel", "hex": [3, 4]},
+      {"enemy": "hollow_archer", "hex": [1, 6]}, {"enemy": "hollow_archer", "hex": [5, 6]}
+    ],
+    "rocks": [[2, 4], [4, 4]]
+  },
+  {
+    "id": "cairn_road",
+    "name": "Cairn Road",
+    "tests": "a tank knocked out of place, then flankers",
+    "act": 1,
+    "days": [4, 5, 6],
+    "enemies": [
+      {"enemy": "cairn_guardian", "hex": [3, 4]},
+      {"enemy": "rift_hound", "hex": [1, 5]}, {"enemy": "rift_hound", "hex": [6, 5]}
+    ]
+  },
+  {
+    "id": "witch_circle",
+    "name": "Witch Circle",
+    "tests": "target priority",
+    "act": 1,
+    "days": [5, 6],
+    "enemies": [
+      {"enemy": "rift_worn_sentinel", "hex": [3, 4]}, {"enemy": "gloam_witch", "hex": [3, 6]}, {"enemy": "cinder_moth", "hex": [5, 5]}
+    ]
+  }
+]
