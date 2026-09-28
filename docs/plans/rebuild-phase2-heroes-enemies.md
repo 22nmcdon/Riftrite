@@ -182,6 +182,17 @@ From `rebuild-heroes.md`, sections 4 and 6–8. Hero numbers are the design's; t
 
 Hold the Line's DEF, Hearthguard, and Hearthlight need new pieces (section 4). Everything else is data on phase 1's sim.
 
+**Built in step 4** (`data/heroes.json`, `test_hero_kits.gd`). The stats, mana, and texts are the table's. The table leaves some numbers open, so these are first numbers for step 7 to tune:
+
+- **Basic attacks** deal 100% ATK. Cooldowns: Shield Bash 1.2s, Longshot 1s (0.9s with her ATSP 10), Lantern Glow 1.5s. With Vell's +12 an attack and 2/s regen, that's about 10 mana a second while she attacks, as `rebuild-heroes.md` expects.
+- **Mend** heals 20 + 100% MGK (40 for Vell). It can pick Vell herself, since `lowest_hp_ally` includes the unit.
+- **Hearthguard's Shield** is 60.
+- **Hold the Line** is an unwarned 2-hex circle around Brannoc that applies Taunt for Taunt's own 3s. The DEF is a separate aura passive, also named Hold the Line (id `hold_the_line_guard`), so the log credits both to Hold the Line.
+- **Marking Shot** Marks the nearest enemy in her range, for Marked's own 4s.
+- **Hearthlight** heals 1% of each ally's max HP a second, rounded to the nearest whole HP (Brannoc 4, Maren 3).
+- **Keep Your Distance** is the `hop_away` trait with a 6s cooldown. The log names it "Hop Away" (the trait's own name), not "Keep Your Distance".
+- **The tests:** each kit's text in a small fight against still dummies, and a whole fight of the three against four brutes (a victory at 27.6s that uses every ability). All 21 mutations of the kit data are caught.
+
 ## 4. What the kits need that the sim doesn't have
 
 CLAUDE.md rule 3: a new effect, trigger, or part type only when no combination of existing ones can express it, and said out loud. These are the ones I found, **approved** (Decisions).
@@ -297,7 +308,7 @@ The elites and Old Mother Ash come in phase 5 (decided). What they'll need, so t
 | `test_encounters.gd` | every encounter builds a valid fight from a formation; its enemies stand where it says; summons resolve to enemies |
 | `test_hero_kits.gd` | each base kit does what its text says: Hold the Line taunts, and Brannoc's DEF holds exactly while an enemy is taunted by him (not after another unit's newer Taunt, and for as long as a longer Taunt lasts); Hearthguard shields once; Maren hops and Marks; Mend heals the lowest HP%; Hearthlight heals allies within 1 hex, not Vell |
 | `test_enemy_kits.gd` | each enemy's threat happens: in a small fight built for it, the Pounce lands on the back-liner, the Moth's circle lands on the group, the Lurker drags the farthest hero, and so on |
-| `test_new_pieces.gd` | section 4's pieces, one rule at a time |
+| `test_kit_pieces.gd` | section 4's pieces, one rule at a time |
 | `test_sim_runner.gd` | the runner's report on a small run |
 | Determinism | the chaos fight and the log audit keep passing. The audit gets rules for any new log kind |
 
@@ -308,7 +319,7 @@ The elites and Old Mother Ash come in phase 5 (decided). What they'll need, so t
 1. **Swarm speed pass** (section 1), measured with the new bench case and the chaos fight. **Done,** with results unchanged; the swarm's budget isn't met yet (section 1).
 2. **Content files and loading:** hero, enemy, and encounter defs, `ContentDb`, the validator, `Encounters.setup`, and summon kits from content. **Done.**
 3. **Section 4's new pieces,** each with its tests. **Done.**
-4. **The three base kits** in `heroes.json`, and `test_hero_kits`.
+4. **The three base kits** in `heroes.json`, and `test_hero_kits`. **Done.**
 5. **The nine enemies** in `enemies.json`, and `test_enemy_kits`.
 6. **The encounters,** hand-placed, and `test_encounters`.
 7. **The sim runner and the first tuning pass,** until the gate holds and fights run 30–60s. The results go in this plan.

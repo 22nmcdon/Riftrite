@@ -1,1 +1,77 @@
-[]
+[
+  {
+    "_note": "The base kits (docs/plans/rebuild-phase2-heroes-enemies.md, section 3; docs/plans/rebuild-heroes.md, sections 4 and 6-8). Heroes act in this order in a fight. Stats and mana are the design's; cooldowns, Mend's heal, and Hearthguard's Shield are first numbers for step 7 to tune.",
+    "id": "brannoc",
+    "name": "Brannoc of the Hearthwatch",
+    "title": "the warden",
+    "role": "tank",
+    "kit": {
+      "stats": {"hp": 420, "atk": 14, "def": 30, "speed": 2, "range": 1},
+      "traits": ["engage"],
+      "mana": {"max": 80, "start": 30, "per_attack": 8, "per_10_damage_taken": 1},
+      "basic_attack": {
+        "id": "shield_bash", "name": "Shield Bash", "cooldown_ms": 1200,
+        "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
+      },
+      "signature": {
+        "_note": "Taunts enemies within 2 hexes for Taunt's own 3s. The DEF is the passive of the same name below: it holds while any enemy is taunted by him.",
+        "id": "hold_the_line", "name": "Hold the Line", "trigger": {"kind": "mana"}, "targeting": "self",
+        "effects": [{"type": "area", "shape": {"kind": "circle", "radius": 2}, "anchor": "self", "hits": "enemies",
+          "effects": [{"type": "apply_status", "status": "taunt", "target": "target"}]}]
+      },
+      "passives": [
+        {"id": "hold_the_line_guard", "name": "Hold the Line", "kind": "aura",
+          "aura": {"target": "holder", "stat": "def_bp", "value": 15000, "while": "taunting"}},
+        {"id": "hearthguard", "name": "Hearthguard", "kind": "ability",
+          "effects": [{"trigger": "on_ally_below_hp", "threshold_bp": 4000, "once": true, "type": "shield", "amount": 60, "target": "trigger_ally"}]}
+      ]
+    }
+  },
+  {
+    "id": "maren",
+    "name": "Maren Thistledown",
+    "title": "the ranger",
+    "role": "damage",
+    "kit": {
+      "_note": "Keep Your Distance is the hop_away trait: when an enemy comes within a hex, she hops a hex away, once every 6s.",
+      "stats": {"hp": 270, "atk": 22, "def": 8, "crit": 8, "atsp": 10, "speed": 2, "range": 4},
+      "traits": ["hop_away"],
+      "hop_cooldown_ms": 6000,
+      "mana": {"max": 50, "per_attack": 10, "regen_per_s": 2},
+      "basic_attack": {
+        "id": "longshot", "name": "Longshot", "cooldown_ms": 1000,
+        "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
+      },
+      "signature": {
+        "_note": "Marked for its own 4s: +15% damage taken from everyone.",
+        "id": "marking_shot", "name": "Marking Shot", "trigger": {"kind": "mana"}, "targeting": "nearest",
+        "effects": [{"type": "apply_status", "status": "marked", "target": "target"}]
+      }
+    }
+  },
+  {
+    "id": "vell",
+    "name": "Sister Vell",
+    "title": "the mender",
+    "role": "support",
+    "kit": {
+      "stats": {"hp": 300, "atk": 6, "mgk": 20, "def": 10, "speed": 2, "range": 3},
+      "mana": {"max": 60, "start": 20, "per_attack": 12, "regen_per_s": 2},
+      "basic_attack": {
+        "_note": "Slow, but her main source of mana: about 10 mana a second while she attacks.",
+        "id": "lantern_glow", "name": "Lantern Glow", "cooldown_ms": 1500,
+        "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
+      },
+      "signature": {
+        "_note": "The ally lowest on HP% within 3 hexes, Vell included.",
+        "id": "mend", "name": "Mend", "trigger": {"kind": "mana"}, "targeting": "lowest_hp_ally",
+        "effects": [{"type": "heal", "amount": 20, "target": "target", "scaling": {"mgk": 10000}}]
+      },
+      "passives": [
+        {"id": "hearthlight", "name": "Hearthlight", "kind": "ability",
+          "effects": [{"trigger": "on_interval", "interval_ms": 1000, "type": "area", "shape": {"kind": "circle", "radius": 1}, "anchor": "self", "hits": "other_allies",
+            "effects": [{"type": "heal", "amount_bp_of_max_hp": 100, "target": "target"}]}]}
+      ]
+    }
+  }
+]
