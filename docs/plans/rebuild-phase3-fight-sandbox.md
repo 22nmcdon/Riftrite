@@ -73,6 +73,17 @@ Title ──Practice──> Encounter list ──pick──> Placement ──Fig
 - **Units are placeholder tokens:** a circle of the unit's radius (400, so they read as big as they are), colored by side, with a short label (the hero's initial, or the enemy's short name) and a small role or archetype glyph. Fliers get a shadow offset. Summons are drawn smaller-labelled but the same size, since they are.
 - **Everything is drawn with `_draw()`** on a few layers (ground, areas, units, shots and effects, overlays), not one node per hex. Units are nodes (for hover and tweening); shots and floating numbers are pooled.
 
+**Built in step 2** (`src/ui/arena/arena_view.gd`, `unit_token.gd`, `tests/ui/test_arena_view.gd`):
+
+- **`ArenaView.show_setup(setup, content)`** draws a fight's board, rocks, and a `UnitToken` per unit on its hex. `set_mode` switches between placement (hexes shaded by zone) and fight (faint hex lines).
+- **The mapping:**
+  - `to_pixel`, `to_plane`, and `hex_at` (which uses `HexGrid.nearest_hex`, so the hex under a pixel is exactly the sim's).
+  - `hex_px` is the size of a hex on screen; about 117 px at 1920 × 1080.
+  - A flat-top hex's corners reach 77 units past the plane's sides, so the drawn area (`drawn_rect`) is that much wider than the board, and nothing is clipped.
+- **Token labels:** a hero's id ("Vell", not "Sister"), or the last word of an enemy's name ("Pup", "Sentinel"). Heroes are brass, enemies violet. Fliers sit lifted over a shadow.
+- **Screenshots:** `tools/ui_screenshots.gd` now also renders the board: Sentinel Gate in placement mode and Moth Cloud in fight mode, with Brannoc guarding.
+- **Mutation checks:** all 13 changes to the mapping, fitting, and tokens are caught.
+
 ## 3. Placement
 
 - **Moving a hero:** drag a hero token to a hex, or click a hero and then a hex. A hero dropped on another hero swaps them. Illegal hexes (outside your zone, on a rock) refuse the drop and flash.
@@ -198,7 +209,7 @@ UI tests run headless and drive time by hand, so they're deterministic.
 ## 11. Order of work (each step: code, tests, green run, commit)
 
 1. **`FightTally`** in the sim, and the runner switched to it (fingerprints and runner numbers unchanged). **Done.**
-2. **`ArenaView` and tokens:** the board and units drawn from a `FightSetup`, static. Screenshot.
+2. **`ArenaView` and tokens:** the board and units drawn from a `FightSetup`, static. Screenshot. **Done.**
 3. **Placement:** moving heroes, legality from the sim, enemy hover with reach, the remembered formation.
 4. **`FightPlayer`:** live stepping, speeds, pause, restart, rewind, interpolation.
 5. **What the fight shows (section 5)**, in two passes: bars, statuses, shots, swipes, and numbers first; then areas, displacement tweens, collapse, summons, deaths, phases, target lines, and Engage links.

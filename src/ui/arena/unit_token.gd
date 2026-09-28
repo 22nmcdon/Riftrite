@@ -1,0 +1,69 @@
+class_name UnitToken
+extends Control
+## One unit on the board (docs/plans/rebuild-phase3-fight-sandbox.md, sections
+## 2 and 8): a placeholder circle of the unit's own radius, warm for heroes
+## and cold for enemies, with a short label. A flier sits over a shadow.
+## `ArenaView` places it; bars, statuses, and effects come in later steps.
+
+const HERO_FILL := UiStyle.BRASS_500
+const HERO_TEXT := UiStyle.INK_900
+const ENEMY_FILL := UiStyle.RIFT_500
+const ENEMY_TEXT := UiStyle.PARCHMENT_100
+const LINE := UiStyle.INK_900
+const SHADOW := Color(0.0, 0.0, 0.0, 0.45)
+## How far above its shadow a flier is drawn, in its own radii.
+const FLIGHT_LIFT: float = 0.35
+
+var unit_id: String
+var label_text: String
+var side: EffectSource.Team
+## Its radius on the plane, and where it stands there.
+var radius: int
+var flying: bool = false
+var plane_pos: Vector2i
+## Its radius on screen (set by place()).
+var radius_px: float = 0.0
+
+
+static func make(id: String, text: String, team: EffectSource.Team, unit_radius: int, flies: bool = false) -> UnitToken:
+	var token := UnitToken.new()
+	token.unit_id = id
+	token.label_text = text
+	token.side = team
+	token.radius = unit_radius
+	token.flying = flies
+	token.name = id.replace("#", "_")
+	token.mouse_filter = Control.MOUSE_FILTER_PASS
+	return token
+
+
+func is_hero() -> bool:
+	return side == EffectSource.Team.HEROES
+
+
+## The screen point its circle is centered on.
+func center() -> Vector2:
+	return position + Vector2(radius_px, radius_px)
+
+
+## Puts it where `view` draws its plane position, at the view's scale.
+func place(view: ArenaView) -> void:
+	radius_px = radius * view.scale_px
+	size = Vector2(radius_px, radius_px) * 2.0
+	position = view.to_pixel(plane_pos) - Vector2(radius_px, radius_px)
+	queue_redraw()
+
+
+func _draw() -> void:
+	var middle: Vector2 = Vector2(radius_px, radius_px)
+	var body: Vector2 = middle
+	if flying:
+		draw_circle(middle + Vector2(0.0, radius_px * 0.15), radius_px * 0.8, SHADOW)
+		body -= Vector2(0.0, radius_px * FLIGHT_LIFT)
+	draw_circle(body, radius_px, HERO_FILL if is_hero() else ENEMY_FILL)
+	draw_arc(body, radius_px, 0.0, TAU, 40, LINE, 2.0, true)
+	var font: Font = get_theme_default_font()
+	var font_size: int = maxi(int(radius_px * 0.42), 8)
+	var width: float = font.get_string_size(label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+	var baseline: Vector2 = body + Vector2(-width / 2.0, font.get_ascent(font_size) / 2.0 - font.get_descent(font_size) / 2.0)
+	draw_string(font, baseline, label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, HERO_TEXT if is_hero() else ENEMY_TEXT)
