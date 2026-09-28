@@ -2,10 +2,11 @@ class_name Areas
 extends RefCounted
 ## Area effects (docs/plans/rebuild-phase1-arena-sim.md, section 7; the data
 ## is EffectDef's area and ShapeDef).
-##   - Cast (as its ability fires): where it goes is fixed now, so a warned
-##     area doesn't follow anyone: a circle or ring on the target (or the
-##     unit), a line or cone from the unit's edge aimed at the target. Its
-##     effects' numbers and crit chance are fixed now too, like a shot's.
+##   - Cast (as its ability fires, or on a passive's trigger): where it
+##     goes is fixed now, so a warned area doesn't follow anyone: a circle
+##     or ring on the target (or the unit), a line or cone from the unit's
+##     edge aimed at the target. Its effects' numbers and crit chance are
+##     fixed now too, like a shot's.
 ##   - Warned (warning_ms): AREA_WARNING is logged with the shape, where it
 ##     is, and the landing tick, and it lands then (the tick's step 4, after
 ##     shots, in the order they were cast). Without a warning, it lands at
@@ -54,7 +55,7 @@ static func cast(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			area.origin = ArenaPlane.along(unit.pos, area.dir, unit.radius)
 			area.push_from = unit.pos
 	for nested: EffectDef in effect.area_effects:
-		area.amounts.append(EffectRunner.amount_of(nested, unit))
+		area.amounts.append(EffectRunner.amount_of(nested, unit, 0, sim))
 	area.crit_bp = EffectRunner.crit_chance_bp(sim, unit, ability)
 	area.land_tick = sim.tick + effect.warning_ticks
 	if effect.warning_ticks == 0:
@@ -102,6 +103,8 @@ static func _counts(area: Pending, other: UnitState) -> bool:
 			return other.side != area.unit.side
 		EffectDef.Hits.ALLIES:
 			return other.side == area.unit.side
+		EffectDef.Hits.OTHER_ALLIES:
+			return other.side == area.unit.side and other != area.unit
 	return true
 
 

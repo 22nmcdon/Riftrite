@@ -56,6 +56,8 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: 
 		entry.amount = stacks
 		entry.stacks = state.total_stacks()
 	sim.combat_log.add(entry)
+	if def.kind == StatusDef.Kind.TAUNT and sim.taunt_auras:
+		sim.refold_auras()
 
 
 ## Runs one tick of every status on every standing unit, in the fight's
@@ -214,6 +216,8 @@ static func _end(sim: CombatSim, unit: UnitState, state: StatusState, why: Strin
 	entry.status_name = state.def.name
 	entry.note = why
 	sim.combat_log.add(entry)
+	if state.def.kind == StatusDef.Kind.TAUNT and sim.taunt_auras:
+		sim.refold_auras()
 
 
 static func _insert_in_order(unit: UnitState, state: StatusState) -> void:

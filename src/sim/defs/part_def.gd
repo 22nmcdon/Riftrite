@@ -9,7 +9,8 @@ extends RefCounted
 ##   {"id": "spite", "name": "Spite", "kind": "ability",
 ##    "effects": [{"trigger": "on_hit_taken", "every": 3, "type": "damage", "amount": 5, "target": "hit_target"}]}
 ##       effects on event triggers (EffectDef), which run when the unit does
-##       something (Events). They land at once, never as a shot.
+##       something (Events), or on on_interval, on_ally_below_hp, or on_fall
+##       (Passives). They land at once, never as a shot.
 ##   {"id": "embers", "name": "Embers", "kind": "replace_status", "from": "burn", "to": "poison"}
 ##       statuses the unit applies as `from` land as `to`
 ## Adding a kind is a code change; say so when you make one.
@@ -53,8 +54,8 @@ static func read(reader: DataReader) -> PartDef:
 				var effect: EffectDef = EffectDef.read(effect_reader)
 				if EffectDef.MOVES_SELF.has(effect.type):
 					effect_reader.error("a passive can't leap or charge")
-				elif not EffectDef.EVENT_TRIGGERS.has(effect.trigger):
-					effect_reader.error("a passive's effects need an event trigger (%s)" % ", ".join(EffectDef.event_trigger_names()))
+				elif not EffectDef.PASSIVE_TRIGGERS.has(effect.trigger):
+					effect_reader.error("a passive's effects need a passive trigger (%s)" % ", ".join(EffectDef.PASSIVE_TRIGGERS.map(func(trigger: EffectDef.Trigger) -> String: return EffectDef.TRIGGER_NAMES[trigger])))
 				def.ability.effects.append(effect)
 		Kind.REPLACE_STATUS:
 			def.from_status = reader.req_string("from")

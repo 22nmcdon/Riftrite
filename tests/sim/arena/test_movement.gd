@@ -109,3 +109,34 @@ func test_it_aims_again_as_its_target_moves() -> void:
 	for i: int in range(1, legs.size()):
 		assert_lte(legs[i].tick - legs[i - 1].tick, 10)
 		assert_gt(legs[i].to_pos.x, legs[i - 1].to_pos.x, "each leg aims where the target has got to")
+
+
+func test_a_walker_with_no_way_checks_cheaply_before_searching_again() -> void:
+	# The only enemy is boxed in by rocks: the first searches flood the board,
+	# and later ones see at once that its surroundings are closed off (the
+	# result is the same; see NavGrid.find_path's `suspect`).
+	# (The post is a flier, so its own targeting never searches.)
+	var boxed: Vector2i = Vector2i(4, 5)
+	var post: UnitDef = K.kit("post", {"stats": {"hp": 10000, "speed": 0}, "traits": ["flying"], "basic_attack": {"effects": [{"type": "damage", "amount": 0, "target": "target"}]}})
+	var fight: CombatSim = K.sim(K.fight([K.at(_walker(), 4, 1)] as Array[UnitSetup], [K.foe(post, boxed.x, boxed.y, "boxed")] as Array[UnitSetup],
+		HexGrid.make().neighbors(boxed.x, boxed.y)))
+	var walker: UnitState = fight.units[0]
+	fight.step()
+	assert_null(walker.target, "nearest finds no one")
+	assert_true(walker.nearest_failed)
+	assert_gt(fight._nav.settled_count(), 500, "the first search floods what it can reach")
+	K.step(fight, 10)
+	assert_eq(fight._nav.settled_count(), 0, "the next one checks first")
+	# Given the boxed post as its target, its routes fail the same way.
+	Targeting.set_target(fight, walker, fight.units[1], "test")
+	fight.step()
+	assert_gt(fight._nav.settled_count(), 500)
+	assert_eq(walker.no_path_since, fight.tick)
+	K.step(fight, 10)
+	assert_eq(fight._nav.settled_count(), 0)
+	# Once it can reach someone again, the flag clears.
+	fight.rocks.clear()
+	walker.target = null
+	K.step(fight, 10)
+	assert_eq(walker.target, fight.units[1])
+	assert_false(walker.nearest_failed)

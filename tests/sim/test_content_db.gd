@@ -1,8 +1,8 @@
 extends GutTest
-## ContentDb loading and validation. After the rebuild's gut, data/ holds
-## only tuning and statuses. Each "bad data" test starts from the real files
-## and changes one thing, so it also proves that exact problem is what gets
-## reported.
+## ContentDb loading and validation of tuning and statuses
+## (test_units_content has heroes, enemies, and encounters). Each "bad data"
+## test starts from the real files and changes one thing, so it also proves
+## that exact problem is what gets reported.
 
 
 func _real_texts() -> Dictionary[String, String]:
@@ -39,11 +39,13 @@ func test_real_data_is_valid() -> void:
 	assert_true(db.is_valid())
 
 
-func test_the_gut_left_only_tuning_and_statuses() -> void:
-	assert_eq(ContentDb.FILES, ["tuning.json", "statuses.json"] as Array[String])
+func test_every_data_file_is_loaded() -> void:
+	assert_eq(ContentDb.FILES, ["tuning.json", "statuses.json", "heroes.json", "enemies.json", "encounters.json"] as Array[String])
 	var files: PackedStringArray = DirAccess.get_files_at("res://data")
 	files.sort()
-	assert_eq(Array(files), ["statuses.json", "tuning.json"], "every file in data/ is one ContentDb loads")
+	var expected: Array = ContentDb.FILES.duplicate()
+	expected.sort()
+	assert_eq(Array(files), expected, "every file in data/ is one ContentDb loads")
 
 
 func test_real_statuses() -> void:

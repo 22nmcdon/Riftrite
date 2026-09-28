@@ -137,5 +137,6 @@ static func nearest(sim: CombatSim, unit: UnitState) -> UnitState:
 	for enemy: UnitState in candidates:
 		points.append(enemy.pos)
 	var nav: NavGrid = sim.nav_for(unit, null)
-	var found: int = nav.find_nearest(unit.pos, unit.forward(), points, unit.reach())
+	var found: int = nav.find_nearest(unit.pos, unit.forward(), points, unit.reach(), unit.nearest_failed)
+	unit.nearest_failed = found < 0
 	return candidates[found] if found >= 0 else null

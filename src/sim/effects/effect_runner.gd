@@ -69,7 +69,7 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 			Summons.summon(sim, unit, source, effect, target)
 			continue
 		if shot != null and effect.target == EffectDef.Target.TARGET:
-			var amount: int = amount_of(effect, unit)
+			var amount: int = amount_of(effect, unit, 0, sim)
 			var crit: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability))
 			shot.effects.append(effect)
 			shot.amounts.append(amount)
@@ -77,7 +77,7 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 			continue
 		for victim: UnitState in _targets(sim, unit, effect.target, target, null):
 			var crit_now: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability))
-			land(sim, unit, ability, source, effect, victim, amount_of(effect, unit), crit_now)
+			land(sim, unit, ability, source, effect, victim, amount_of(effect, unit, 0, sim), crit_now)
 	if shot != null and not shot.effects.is_empty():
 		Shots.fire(sim, shot)
 	return true
@@ -99,6 +99,8 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 				hit.damage = dealt
 				_on_hit(sim, unit, ability, source, hit)
 		EffectDef.Type.HEAL:
+			if effect.amount_bp_of_max_hp > 0:
+				amount = Passives.boosted(unit, effect, FixedMath.apply_bp(victim.max_hp, effect.amount_bp_of_max_hp))
 			heal(sim, victim, amount, source)
 		EffectDef.Type.SHIELD:
 			give_shield(sim, victim, amount, source)
@@ -129,7 +131,7 @@ static func _on_hit(sim: CombatSim, unit: UnitState, ability: AbilityDef, source
 		if not wanted or not effect.active_at(sim.tick):
 			continue
 		for victim: UnitState in _targets(sim, unit, effect.target, null, hit):
-			var amount: int = amount_of(effect, unit, hit.damage)
+			var amount: int = amount_of(effect, unit, hit.damage, sim)
 			var crit: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability))
 			land(sim, unit, ability, source, effect, victim, amount, crit)
 
@@ -138,6 +140,9 @@ static func _on_hit(sim: CombatSim, unit: UnitState, ability: AbilityDef, source
 ## `other` is the unit the event names, `damage` the hit it's about. It
 ## lands at once, and never sets off on_hit effects.
 static func run_event(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: EffectSource, effect: EffectDef, other: UnitState, damage: int) -> void:
+	if effect.type == EffectDef.Type.AREA:
+		Areas.cast(sim, unit, ability, source, effect, other if other != null else unit.target)
+		return
 	var hit: Hit = null
 	if other != null:
 		hit = Hit.new()
@@ -145,14 +150,16 @@ static func run_event(sim: CombatSim, unit: UnitState, ability: AbilityDef, sour
 		hit.damage = damage
 	for victim: UnitState in _targets(sim, unit, effect.target, unit.target, hit):
 		var crit: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability))
-		land(sim, unit, ability, source, effect, victim, amount_of(effect, unit, damage), crit)
+		land(sim, unit, ability, source, effect, victim, amount_of(effect, unit, damage, sim), crit)
 
 
 ## The effect's number: base plus stat scaling from the unit's stats (or a
 ## share of the hit's `damage`, for amount_bp_of_damage), then its output
 ## auras. (The same number ValueBreakdown.compute gives, worked out without
 ## building the breakdown.)
-static func amount_of(effect: EffectDef, unit: UnitState, damage: int = 0) -> int:
+## `sim` counts the allies near the unit for a damage effect's
+## bonus_per_ally.
+static func amount_of(effect: EffectDef, unit: UnitState, damage: int = 0, sim: CombatSim = null) -> int:
 	var amount: int
 	if effect.amount_bp_of_damage > 0:
 		amount = FixedMath.apply_bp(damage, effect.amount_bp_of_damage)
@@ -161,7 +168,20 @@ static func amount_of(effect: EffectDef, unit: UnitState, damage: int = 0) -> in
 		for stat: int in effect.scaling.size():
 			if effect.scaling[stat] != 0:
 				amount += FixedMath.apply_bp(unit.stats.values[stat], effect.scaling[stat])
+	if effect.bonus_bp_per_ally > 0 and sim != null:
+		amount = FixedMath.apply_bp(amount, FixedMath.BP_ONE + effect.bonus_bp_per_ally * allies_near(sim, unit, effect))
 	return Passives.boosted(unit, effect, amount)
+
+
+## How many other standing allies (of bonus_kit, if it's set) stand within
+## the effect's bonus_within of the unit.
+static func allies_near(sim: CombatSim, unit: UnitState, effect: EffectDef) -> int:
+	var count: int = 0
+	var reach_sq: int = effect.bonus_within * effect.bonus_within
+	for ally: UnitState in sim.standing_allies_of(unit):
+		if ally != unit and (effect.bonus_kit.is_empty() or ally.def.id == effect.bonus_kit) and ArenaPlane.length_sq(ally.pos - unit.pos) <= reach_sq:
+			count += 1
+	return count
 
 
 static func crit_chance_bp(sim: CombatSim, unit: UnitState, ability: AbilityDef) -> int:
@@ -182,6 +202,9 @@ static func _targets(sim: CombatSim, unit: UnitState, target: EffectDef.Target, 
 		EffectDef.Target.SELF:
 			if unit.alive:
 				found.append(unit)
+		EffectDef.Target.TRIGGER_ALLY:
+			if hit != null and hit.target.alive:
+				found.append(hit.target)
 		EffectDef.Target.ALL_ENEMIES:
 			found = sim.standing_enemies_of(unit)
 		EffectDef.Target.ALL_ALLIES:

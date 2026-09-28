@@ -1,0 +1,175 @@
+extends GutTest
+## The three base kits in data/heroes.json do what their text says
+## (docs/plans/rebuild-phase2-heroes-enemies.md, section 3). Each test fights
+## the real kits against still dummies; heroes that shouldn't walk are Rooted
+## for the whole test.
+
+const K = preload("res://tests/sim/sim_test_kit.gd")
+
+var _content: ContentDb
+
+
+func before_all() -> void:
+	_content = K.content()
+
+
+func _kit(hero_id: String) -> UnitDef:
+	return (_content.heroes[hero_id] as HeroDef).kit
+
+
+## An enemy that stands still and never hurts anyone.
+func _dummy(dummy_id: String = "dummy", stats: Dictionary = {}) -> UnitDef:
+	var all_stats: Dictionary = {"hp": 10000, "speed": 0, "range": 1}
+	all_stats.merge(stats, true)
+	return K.kit(dummy_id, {"stats": all_stats, "basic_attack": {"cooldown_ms": 60000, "shot": false, "effects": [{"type": "damage", "amount": 0, "target": "target"}]}})
+
+
+func _sim(heroes: Array[UnitSetup], enemies: Array[UnitSetup]) -> CombatSim:
+	return CombatSim.new(K.fight(heroes, enemies), _content)
+
+
+func _root_all(fight: CombatSim, units: Array[UnitState]) -> void:
+	for unit: UnitState in units:
+		Statuses.apply(fight, unit, "root", 0, 100000, EffectSource.make("", "test", "Test"))
+
+
+func _def(unit: UnitState) -> int:
+	return unit.stats.get_stat(UnitStats.Stat.DEF)
+
+
+func _fill_mana(unit: UnitState) -> void:
+	unit.mana = unit.mana_cap
+
+
+func _rows(fight: CombatSim, kind: LogEntry.Kind, unit_id: String, ability: String = "") -> Array:
+	return K.entries(fight, kind, unit_id).filter(func(entry: LogEntry) -> bool: return ability.is_empty() or entry.source_ability == ability) \
+		.map(func(entry: LogEntry) -> Array: return [entry.target, entry.amount])
+
+
+func test_the_kits_read_as_designed() -> void:
+	assert_eq(_content.hero_ids, ["brannoc", "maren", "vell"])
+	var roles: Array = _content.hero_ids.map(func(hero_id: String) -> int: return (_content.heroes[hero_id] as HeroDef).role)
+	assert_eq(roles, [HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT])
+	var stats: Array = _content.hero_ids.map(func(hero_id: String) -> Array: return _kit(hero_id).stats.values)
+	assert_eq(stats, [[420, 14, 0, 30, 0, 0, 2, 1], [270, 22, 0, 8, 8, 10, 2, 4], [300, 6, 20, 10, 0, 0, 2, 3]], "HP, ATK, MGK, DEF, CRIT, ATSP, speed, range")
+	var mana: Array = _content.hero_ids.map(func(hero_id: String) -> Array:
+		var bar: ManaDef = _kit(hero_id).mana
+		return [bar.max, bar.start, bar.per_attack, bar.per_10_damage_taken, bar.regen_per_s])
+	assert_eq(mana, [[80, 30, 8, 1, 0], [50, 0, 10, 0, 2], [60, 20, 12, 0, 2]], "cost, start, per attack, per 10 damage taken, regen")
+	assert_eq([_kit("brannoc").traits, _kit("maren").traits, _kit("vell").traits], [["engage"], ["hop_away"], []])
+	assert_eq(_kit("maren").hop_cooldown_ticks, 120)
+	var names: Array = _content.hero_ids.map(func(hero_id: String) -> Array: return [_kit(hero_id).basic_attack.name, _kit(hero_id).signature.name])
+	assert_eq(names, [["Shield Bash", "Hold the Line"], ["Longshot", "Marking Shot"], ["Lantern Glow", "Mend"]])
+
+
+# --- Brannoc ---------------------------------------------------------------------
+
+func test_hold_the_line_taunts_within_2_hexes_and_his_def_follows_his_taunts() -> void:
+	var fight: CombatSim = _sim([K.at(_kit("brannoc"), 3, 2), K.at(_kit("maren"), 0, 0)] as Array[UnitSetup],
+		[K.foe(_dummy("near_a"), 3, 4), K.foe(_dummy("near_b"), 4, 4), K.foe(_dummy("far"), 3, 5)] as Array[UnitSetup])
+	var brannoc: UnitState = fight.unit_by_id("brannoc")
+	_root_all(fight, fight.heroes)
+	assert_eq(_def(brannoc), 30)
+	_fill_mana(brannoc)
+	K.step(fight, 1)
+	var taunts: Array = K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "brannoc").filter(func(entry: LogEntry) -> bool: return entry.status == "taunt") \
+		.map(func(entry: LogEntry) -> Array: return [entry.target, entry.end_tick])
+	assert_eq(taunts, [["near_a", 61], ["near_b", 61]], "enemies within 2 hexes, for Taunt's 3s")
+	assert_eq(_def(brannoc), 45, "x1.5 DEF while they're taunted")
+	K.step(fight, 59)
+	assert_eq(_def(brannoc), 45)
+	K.step(fight, 1)
+	assert_eq(_def(brannoc), 30, "back as the Taunts run out")
+	assert_eq(K.entries(fight, LogEntry.Kind.AURA, "brannoc").map(func(entry: LogEntry) -> Array: return [entry.tick, entry.source_ability_name]),
+		[[1, "Hold the Line"], [61, "Hold the Line"]])
+
+	var from_brannoc: EffectSource = EffectSource.make("brannoc", "hold_the_line", "Hold the Line")
+	Statuses.apply(fight, fight.unit_by_id("near_a"), "taunt", 0, 60, from_brannoc)
+	Statuses.apply(fight, fight.unit_by_id("near_a"), "taunt", 0, 60, EffectSource.make("maren", "jeer", "Jeer"))
+	assert_eq(_def(brannoc), 30, "not once another unit's newer Taunt takes the enemy over")
+	Statuses.apply(fight, fight.unit_by_id("near_b"), "taunt", 0, 200, from_brannoc)
+	K.step(fight, 150)
+	assert_eq(_def(brannoc), 45, "for as long as a longer Taunt lasts")
+
+
+func test_hearthguard_shields_the_first_ally_below_40_percent_once() -> void:
+	var fight: CombatSim = _sim([K.at(_kit("brannoc"), 3, 2), K.at(_kit("maren"), 0, 0), K.at(_kit("vell"), 7, 0)] as Array[UnitSetup],
+		[K.foe(_dummy(), 3, 6)] as Array[UnitSetup])
+	_root_all(fight, fight.heroes)
+	var maren: UnitState = fight.unit_by_id("maren")
+	maren.hp = 109
+	K.step(fight, 1)
+	assert_eq(_rows(fight, LogEntry.Kind.SHIELD, "brannoc"), [], "109 of 270 isn't below 40%")
+	maren.hp = 107
+	fight.unit_by_id("vell").hp = 50
+	fight.unit_by_id("brannoc").hp = 50
+	K.step(fight, 5)
+	assert_eq(_rows(fight, LogEntry.Kind.SHIELD, "brannoc", "hearthguard"), [["maren", 60]], "once a fight, and never for himself")
+	assert_eq(maren.shield, 60)
+
+
+# --- Maren -----------------------------------------------------------------------
+
+func test_maren_hops_away_once_every_6s() -> void:
+	var biter: UnitDef = K.kit("biter", {"stats": {"hp": 10000, "speed": 3, "range": 1}, "basic_attack": {"cooldown_ms": 60000, "effects": [{"type": "damage", "amount": 0, "target": "target"}]}})
+	var fight: CombatSim = _sim([K.at(_kit("maren"), 3, 2)] as Array[UnitSetup], [K.foe(biter, 3, 4)] as Array[UnitSetup])
+	K.step(fight, 200)
+	var hops: Array[LogEntry] = K.entries(fight, LogEntry.Kind.HOP, "maren")
+	assert_gt(hops.size(), 1)
+	for i: int in range(1, hops.size()):
+		assert_gte(hops[i].tick - hops[i - 1].tick, 120, "at most once every 6s")
+
+
+func test_marking_shot_marks_the_nearest_enemy_for_4s() -> void:
+	var fight: CombatSim = _sim([K.at(_kit("maren"), 3, 2)] as Array[UnitSetup],
+		[K.foe(_dummy("far"), 1, 5), K.foe(_dummy("near"), 3, 4)] as Array[UnitSetup])
+	_root_all(fight, fight.heroes)
+	_fill_mana(fight.unit_by_id("maren"))
+	K.step(fight, 10)
+	var marks: Array = K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "maren").filter(func(entry: LogEntry) -> bool: return entry.status == "marked") \
+		.map(func(entry: LogEntry) -> Array: return [entry.target, entry.source_ability, entry.end_tick - entry.tick])
+	assert_eq(marks, [["near", "marking_shot", 80]])
+
+
+# --- Vell ------------------------------------------------------------------------
+
+func test_mend_heals_the_ally_lowest_on_hp_within_3_hexes() -> void:
+	var fight: CombatSim = _sim([K.at(_kit("brannoc"), 3, 2), K.at(_kit("maren"), 1, 1), K.at(_kit("vell"), 3, 1),
+		K.at(K.kit("straggler", {"stats": {"hp": 100, "speed": 0}}), 7, 0)] as Array[UnitSetup], [K.foe(_dummy(), 3, 6)] as Array[UnitSetup])
+	_root_all(fight, fight.heroes)
+	fight.unit_by_id("brannoc").hp = 300
+	fight.unit_by_id("maren").hp = 150
+	fight.unit_by_id("straggler").hp = 10
+	_fill_mana(fight.unit_by_id("vell"))
+	K.step(fight, 10)
+	assert_eq(_rows(fight, LogEntry.Kind.HEAL, "vell", "mend"), [["maren", 40]], "20 + 100% MGK, on the lowest HP% in reach (the straggler is 4 hexes off)")
+
+
+func test_hearthlight_heals_allies_within_1_hex_by_1_percent_a_second_not_vell() -> void:
+	var fight: CombatSim = _sim([K.at(_kit("brannoc"), 3, 2), K.at(_kit("maren"), 3, 0), K.at(_kit("vell"), 3, 1),
+		K.at(K.kit("straggler", {"stats": {"hp": 1000, "speed": 0}}), 5, 1)] as Array[UnitSetup], [K.foe(_dummy(), 3, 6)] as Array[UnitSetup])
+	_root_all(fight, fight.heroes)
+	for unit: UnitState in fight.heroes:
+		unit.hp = 100
+	K.step(fight, 40)
+	assert_eq(_rows(fight, LogEntry.Kind.HEAL, "vell", "hearthlight"), [["brannoc", 4], ["maren", 3], ["brannoc", 4], ["maren", 3]],
+		"1% of each ally's max HP (4.2 and 2.7, rounded); the straggler is 2 hexes off")
+	assert_eq(fight.unit_by_id("vell").hp, 100)
+
+
+# --- together -----------------------------------------------------------------------
+
+func test_the_three_fight_a_whole_fight_using_their_kits() -> void:
+	var brute: UnitDef = K.kit("brute", {"stats": {"hp": 260, "atk": 12, "speed": 2, "range": 1}, "basic_attack": {"cooldown_ms": 1200,
+		"effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]}})
+	var setup: FightSetup = K.fight([K.at(_kit("brannoc"), 3, 2), K.at(_kit("maren"), 3, 0), K.at(_kit("vell"), 4, 0)] as Array[UnitSetup],
+		[K.foe(brute, 2, 4, "brute_a"), K.foe(brute, 3, 4, "brute_b"), K.foe(brute, 4, 4, "brute_c"), K.foe(brute, 5, 5, "brute_d")] as Array[UnitSetup], [] as Array[Vector2i], 3)
+	var result: FightResult = CombatSim.run(setup, _content)
+	assert_eq(result.errors, [] as Array[String])
+	assert_eq(result.outcome, FightResult.Outcome.VICTORY)
+	var used: Array[String] = []
+	for entry: LogEntry in result.combat_log.entries:
+		if not entry.source_ability_name.is_empty() and not used.has(entry.source_ability_name):
+			used.append(entry.source_ability_name)
+	for ability: String in ["Shield Bash", "Hold the Line", "Longshot", "Marking Shot", "Lantern Glow", "Mend", "Hearthlight"]:
+		assert_has(used, ability)

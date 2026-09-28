@@ -12,8 +12,12 @@ extends RefCounted
 ##       crit_chance_bp, cooldown_bp                  add (-1500 = 15% faster)
 ##   unit stats, multiply:
 ##       atk_bp, mgk_bp, def_bp, atsp_bp, crit_bp
-## A unit's aura stops when it falls; a relic's lasts all fight. Adding a
-## target or stat is a code change; say so when you make one.
+## A unit's aura stops when it falls; a relic's lasts all fight.
+## "while": "taunting" keeps a unit's aura on only while at least one
+## standing enemy's Taunt in effect is its own (Brannoc's Hold the Line;
+## docs/plans/rebuild-phase2-heroes-enemies.md, section 4).
+## Adding a target, stat, or condition is a code change; say so when you
+## make one.
 ## (The rebuild's gut, phase 0, removed the item targets and filters; the
 ## arena sim, phase 1, adds what abilities need.)
 
@@ -47,6 +51,8 @@ var value: int
 var label: String = ""
 var window_from_ticks: int = 0
 var window_until_ticks: int = -1
+## On only while its holder is taunting someone.
+var while_taunting: bool = false
 
 
 static func read(reader: DataReader) -> AuraDef:
@@ -61,6 +67,8 @@ static func read(reader: DataReader) -> AuraDef:
 		def.value = reader.req_int("value", 0)
 	if reader.has("label"):
 		def.label = reader.req_string("label")
+	if reader.has("while"):
+		def.while_taunting = reader.req_choice("while", ["taunting"]) == "taunting"
 	EffectDef.read_window(reader, def)
 	reader.finish()
 	return def
@@ -85,4 +93,4 @@ func describe() -> String:
 		amount = "%s%s %s" % ["+" if value >= 0 else "", ValueBreakdown._percent(value), STAT_LABELS[stat]]
 	else:
 		amount = "x%s %s" % [ValueBreakdown._ratio(value), STAT_LABELS[stat]]
-	return "%s for %s" % [amount, TARGET_LABELS[target]]
+	return "%s for %s%s" % [amount, TARGET_LABELS[target], " while taunting" if while_taunting else ""]

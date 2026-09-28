@@ -196,6 +196,119 @@ func test_the_way_back_estimate() -> void:
 	assert_eq(nav.estimate_safe(end + Vector2i(300, 200)), 300 + 200 * 4142 / 10000)
 
 
+## A nav grid with unit obstacles at plane points (not hexes).
+func _nav_at(points: Array[Vector2i]) -> NavGrid:
+	var nav: NavGrid = NavGrid.make(grid.bounds())
+	nav.begin(grid.bounds(), UNIT_R)
+	for point: Vector2i in points:
+		nav.add_obstacle(point, UNIT_R)
+	return nav
+
+
+## Units packed around `center`, every 800 on a ring of 800: no gap a walker
+## fits through, and no free spot within 1 hex of it.
+func _ringed(center: Vector2i) -> Array[Vector2i]:
+	var points: Array[Vector2i] = []
+	for dir: Vector2i in Displacement.LEAP_DIRECTIONS:
+		points.append(ArenaPlane.along(center, dir, 800))
+	return points
+
+
+## A ring of 24 units 1500 around `center`: a closed wall with free ground
+## inside.
+func _walled(center: Vector2i) -> Array[Vector2i]:
+	var wall: Array[Vector2i] = []
+	for i: int in 12:
+		var dir: Vector2i = Displacement.LEAP_DIRECTIONS[i]
+		wall.append(ArenaPlane.along(center, dir, 1500))
+		wall.append(ArenaPlane.along(center, ArenaPlane.direction(Vector2i.ZERO, dir + Displacement.LEAP_DIRECTIONS[(i + 1) % 12]), 1500))
+	return wall
+
+
+func test_a_suspect_search_fails_fast_when_every_goal_is_taken() -> void:
+	var target: Vector2i = _hex(3, 4)
+	var nav: NavGrid = _nav_at(_ringed(target))
+	assert_eq(nav.find_path(_hex(3, 0), 1, target, MELEE), -1)
+	assert_gt(nav.settled_count(), 1000, "a plain search floods the board")
+	assert_eq(nav.find_path(_hex(3, 0), 1, target, MELEE, true), -1)
+	assert_eq(nav.settled_count(), 0, "a suspect one sees every goal cell is taken")
+	var targets: Array[Vector2i] = [target]
+	assert_eq(nav.find_nearest(_hex(3, 0), 1, targets, MELEE, true), -1)
+	assert_eq(nav.settled_count(), 0)
+
+
+func test_a_suspect_search_fails_fast_when_the_goals_are_walled_in() -> void:
+	# The target stands in a pocket of free cells, walled in by a ring of
+	# units 1500 out: the goal cells are free, but no way leads there.
+	var target: Vector2i = _hex(3, 4)
+	var nav: NavGrid = _nav_at(_walled(target))
+	assert_eq(nav.find_path(_hex(3, 0), 1, target, MELEE), -1)
+	assert_gt(nav.settled_count(), 1000)
+	assert_eq(nav.find_path(_hex(3, 0), 1, target, MELEE, true), -1)
+	assert_eq(nav.settled_count(), 0, "the pocket around the target is closed")
+
+
+func test_a_suspect_search_still_finds_the_way() -> void:
+	var nav: NavGrid = _nav()
+	var plain: int = nav.find_path(_hex(3, 0), 1, _hex(3, 6), MELEE)
+	var plain_distance: int = nav.distance_to(plain)
+	var suspect: int = nav.find_path(_hex(3, 0), 1, _hex(3, 6), MELEE, true)
+	assert_eq([suspect, nav.distance_to(suspect)], [plain, plain_distance])
+	# A walker already inside the walled pocket: the check sees it there and
+	# the search finds its way.
+	var target: Vector2i = _hex(3, 4)
+	var walled: NavGrid = _nav_at(_walled(target))
+	var inside: Vector2i = target + Vector2i(0, -600)
+	assert_ne(walled.find_path(inside, 1, target, 500, true), -1)
+	var outside_goal: int = walled.find_path(inside, 1, target + Vector2i(0, 500), 300)
+	assert_eq(walled.find_path(inside, 1, target + Vector2i(0, 500), 300, true), outside_goal)
+
+
+func test_the_checks_skip_ranged_and_crowded_searches() -> void:
+	var target: Vector2i = _hex(3, 4)
+	var nav: NavGrid = _nav_at(_ringed(target))
+	# Reach 2: the goal cells reach past the ring, so there is a way.
+	assert_ne(nav.find_path(_hex(3, 0), 1, target, 2 * MELEE, true), -1)
+	# Five targets, all ringed: no way to any, but too many to check first.
+	var many: Array[Vector2i] = []
+	var points: Array[Vector2i] = []
+	for col: int in [1, 2, 3, 4, 5]:
+		many.append(_hex(col, 5))
+	for point: Vector2i in many:
+		points.append_array(_ringed(point))
+	var crowded: NavGrid = _nav_at(points)
+	assert_eq(crowded.find_nearest(_hex(3, 0), 1, many, MELEE, true), -1)
+	assert_gt(crowded.settled_count(), 0, "it searches as usual")
+	assert_eq(crowded.find_nearest(_hex(3, 0), 1, many.slice(0, 4), MELEE, true), -1)
+	assert_eq(crowded.settled_count(), 0, "four targets are checked first")
+
+
+func test_suspect_searches_match_plain_ones() -> void:
+	# Random crowds: whatever the board, a suspect search gives exactly what
+	# a plain one does.
+	var rng := SimRng.new(7)
+	for layout: int in 60:
+		var points: Array[Vector2i] = []
+		for i: int in 10 + rng.range_int(30):
+			points.append(Vector2i(400 + rng.range_int(6262), 400 + rng.range_int(6700)))
+		var nav: NavGrid = _nav_at(points)
+		var start: Vector2i = Vector2i(400 + rng.range_int(6262), 400 + rng.range_int(6700))
+		var targets: Array[Vector2i] = []
+		for i: int in 1 + rng.range_int(4):
+			targets.append(points[rng.range_int(points.size())])
+		var reach: int = MELEE if rng.range_int(3) > 0 else 1400
+		var plain: int = nav.find_nearest(start, 1, targets, reach)
+		var suspect: int = nav.find_nearest(start, 1, targets, reach, true)
+		var plain_path: int = nav.find_path(start, 1, targets[0], reach)
+		var plain_distance: int = nav.distance_to(plain_path) if plain_path >= 0 else -1
+		var suspect_path: int = nav.find_path(start, 1, targets[0], reach, true)
+		var suspect_distance: int = nav.distance_to(suspect_path) if suspect_path >= 0 else -1
+		if [plain, plain_path, plain_distance] != [suspect, suspect_path, suspect_distance]:
+			fail_test("layout %d: plain %s, suspect %s" % [layout, [plain, plain_path, plain_distance], [suspect, suspect_path, suspect_distance]])
+			return
+	pass_test("60 random layouts")
+
+
 func test_searches_are_repeatable_and_lean_forward() -> void:
 	var start: Vector2i = _hex(3, 3)
 	var units: Array[Vector2i] = [Vector2i(3, 4), Vector2i(4, 4), Vector2i(2, 4)]

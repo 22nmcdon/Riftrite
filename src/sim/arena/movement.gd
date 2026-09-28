@@ -135,7 +135,7 @@ static func _plan(sim: CombatSim, unit: UnitState) -> void:
 		unit.route.append(target.pos)
 		return
 	var nav: NavGrid = sim.nav_for(unit, target)
-	var goal: int = nav.find_path(unit.pos, unit.forward(), target.pos, unit.reach())
+	var goal: int = nav.find_path(unit.pos, unit.forward(), target.pos, unit.reach(), unit.no_path_since >= 0)
 	if goal < 0:
 		return
 	unit.route = nav.corners(nav.path_to(goal))

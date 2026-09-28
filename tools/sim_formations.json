@@ -1,0 +1,7 @@
+{
+  "_note": "The sim runner's named formations (docs/plans/rebuild-phase2-heroes-enemies.md, section 7): hero id -> [col, row] on the heroes' rows 0 (back) to 2 (front). Every encounter is fought with each of these, plus the drawn ones.",
+  "guarded": {"brannoc": [3, 2], "maren": [3, 0], "vell": [4, 0]},
+  "exposed": {"brannoc": [3, 0], "maren": [3, 2], "vell": [4, 2]},
+  "spread": {"brannoc": [4, 2], "maren": [0, 0], "vell": [7, 0]},
+  "clumped": {"brannoc": [3, 2], "maren": [3, 1], "vell": [4, 1]}
+}

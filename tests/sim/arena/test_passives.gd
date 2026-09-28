@@ -55,7 +55,7 @@ func test_reading_passives() -> void:
 	PartDef.read(DataReader.new({"id": "b", "name": "B", "kind": "ability"}, "part", bad))
 	PartDef.read(DataReader.new({"id": "c", "name": "C", "kind": "grant"}, "part", bad))
 	PartDef.read(DataReader.new({"id": "d", "name": "D", "kind": "aura"}, "part", bad))
-	for expected: String in ["a passive's effects need an event trigger", "an ability passive needs effects", "kind: unknown value \"grant\"", "missing required key \"aura\""]:
+	for expected: String in ["a passive's effects need a passive trigger", "an ability passive needs effects", "kind: unknown value \"grant\"", "missing required key \"aura\""]:
 		assert_true(bad.any(func(message: String) -> bool: return message.contains(expected)), "expected '%s' in %s" % [expected, bad])
 
 

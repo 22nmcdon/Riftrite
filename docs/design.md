@@ -10,6 +10,7 @@ Working title: **Riftrite** (a placeholder). This document was rewritten on 2026
 | The run: days, camp, fights, relics, duo bonds | `docs/plans/rebuild-run.md` |
 | Build order, and what the rebuild removed | `docs/plans/rebuild-build-order.md` |
 | Phase 1, the arena sim (build plan) | `docs/plans/rebuild-phase1-arena-sim.md` |
+| Phase 2, base heroes, the Act 1 enemies, encounters, and the sim runner (build plan) | `docs/plans/rebuild-phase2-heroes-enemies.md` |
 
 Where this summary and a plan disagree, the plan wins; fix this document.
 
@@ -82,7 +83,7 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 - **The combat sim is deterministic:** a seeded RNG, a fixed 20 ticks per second, and integer math only (percentages in basis points, positions in thousandths of a hex). Same seed, same inputs, same fight.
 - **Every change in a fight is logged with its source**, so the fight screen can always answer why something happened, and replays, bug reports, and balance runs are possible.
 - **Content is data:** heroes, enemies, encounters, paths, and relics are JSON in `data/`, validated at load.
-- **A headless sim runner and a run bot** measure balance; the good-player bot is the tuning target.
+- **A headless sim runner and a run bot** measure balance; the good-player bot is the tuning target. The sim runner (phase 2) fights every encounter from many formations and checks that placement matters; the run bot comes in phase 6.
 
 ## Decisions
 
@@ -105,9 +106,14 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - **Large units:** should bosses ever take more than one hex? (arena plan)
 - **Pacing:** how many fights a transformation takes, and how many upgrade picks come before the apex vow. (heroes plan)
 - **Deed thresholds after the transformation:** does the same deed keep counting? (heroes plan)
-- **Mana numbers** are a first pass for the sim to tune. (heroes plan)
+- **Mana numbers** are a first pass for the sim to tune. Phase 2's first tuning pass left the heroes' numbers as designed. (heroes plan)
 - **Last Watch after Last Rites:** is having no big move left the right feel? (heroes plan)
 - **When enemy specializations arrive:** late Act 1 or from Act 2. (enemies plan)
 - **When a duo bond switches on:** once both heroes transform, or weakly once both are vowed. (run plan)
 - **Camp menus:** which places offer which options, and 2 or 3 options per camp. (run plan)
 - **Art direction** for the rehaul. (run plan)
+- **Grow enemies or shrink heroes?** Phase 2's tuning grew enemies (a Rift Pup has 210 HP, most of Maren's 270) and kept heroes as designed. Lowering heroes' damage instead would keep enemies nearer the roster's first numbers. (phase 2 plan, section 7)
+- **Hollow Line's answer:** it's won by standing back out of the Archers' reach, not by closing distance as intended. (phase 2 plan, section 7)
+- **Brannoc falls in almost every fight,** wins included. Is the tank dying last fine, or should he usually live? (phase 2 plan, section 7)
+- **Ember Dust's size:** a radius-2 circle (the reach `largest_group` counts by) covers a lot of the board; radius 1 would be a much smaller zone. (phase 2 plan, section 5)
+- **Maren's hop** shows in the log as the trait's "Hop Away", not her passive's name, "Keep Your Distance". (phase 2 plan, section 3)
