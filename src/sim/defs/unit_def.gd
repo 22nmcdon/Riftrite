@@ -13,12 +13,13 @@ extends RefCounted
 ## Only a unit whose signature fires on mana has a mana bar, and it must have
 ## one. The basic attack, the signature, and the passives each need their own
 ## id.
-##   "traits": ["engage"]    code paths a unit has (section 4); flying and
-##                           hop_away come with step 6
+##   "traits": ["engage", "flying", "hop_away"]
+##       code paths a unit has (sections 4 and 6); hop_away needs
+##       "hop_cooldown_ms" too
 
 ## The targeting rules built so far (section 4).
 const TARGETING_RULES: Array[String] = ["nearest"]
-const TRAITS: Array[String] = ["engage"]
+const TRAITS: Array[String] = ["engage", "flying", "hop_away"]
 
 var id: String
 var name: String
@@ -31,6 +32,8 @@ var basic_attack: AbilityDef
 var signature: AbilityDef = null
 var passives: Array[PartDef] = []
 var traits: Array[String] = []
+## hop_away: how long between hops (0 without the trait).
+var hop_cooldown_ticks: int = 0
 
 
 static func read(reader: DataReader) -> UnitDef:
@@ -49,6 +52,10 @@ static func read(reader: DataReader) -> UnitDef:
 		var signature_reader: DataReader = reader.req_object("signature")
 		def.signature = AbilityDef.read_signature(signature_reader) if signature_reader != null else null
 	def.traits = reader.opt_choice_array("traits", TRAITS)
+	if def.traits.has("hop_away"):
+		def.hop_cooldown_ticks = reader.req_ticks("hop_cooldown_ms", FixedMath.MS_PER_TICK)
+	elif reader.has("hop_cooldown_ms"):
+		reader.error("hop_cooldown_ms: only a unit with the hop_away trait hops")
 	for part_reader: DataReader in reader.opt_object_array("passives"):
 		def.passives.append(PartDef.read(part_reader))
 	var mana_signature: bool = def.signature != null and def.signature.trigger.kind == TriggerDef.Kind.MANA

@@ -16,7 +16,7 @@ static func busy_setup(fight_seed: int = 5) -> FightSetup:
 		"mana": {"max": 40, "per_attack": 10, "regen_per_s": 2},
 		"signature": {"id": "volley", "name": "Volley", "trigger": {"kind": "mana"}, "max_range": 5, "cast_ms": 400,
 			"effects": [{"type": "damage", "amount": 15, "target": "target", "scaling": {"atk": 5000}}, {"type": "apply_status", "status": "slow", "target": "target"}]}})
-	var hound: UnitDef = K.kit("hound", {"stats": {"hp": 180, "atk": 14, "speed": 3, "crit": 10}, "traits": ["engage"],
+	var hound: UnitDef = K.kit("hound", {"stats": {"hp": 180, "atk": 14, "speed": 3, "crit": 10}, "traits": ["engage", "flying"],
 		"passives": [{"id": "pack", "name": "Pack", "kind": "aura", "aura": {"target": "all_allies", "stat": "atsp_bp", "value": 11000}},
 			{"id": "snap", "name": "Snap", "kind": "ability", "effects": [{"trigger": "on_hit_taken", "every": 3, "type": "damage", "amount": 4, "target": "hit_target"},
 				{"trigger": "on_hit_taken", "every": 3, "type": "knockback", "hexes": 1, "target": "hit_target"}]}],
@@ -24,7 +24,7 @@ static func busy_setup(fight_seed: int = 5) -> FightSetup:
 			"effects": [{"type": "leap", "max_hexes": 4, "target": "target"}, {"type": "damage", "amount": 8, "target": "target"}]}})
 	# Snipers taunt whoever they hit, so heroes walk past the hounds, which
 	# engage them.
-	var sniper: UnitDef = K.kit("sniper", {"stats": {"hp": 140, "atk": 12, "speed": 2, "range": 5},
+	var sniper: UnitDef = K.kit("sniper", {"stats": {"hp": 140, "atk": 12, "speed": 2, "range": 5}, "traits": ["hop_away"], "hop_cooldown_ms": 4000,
 		"basic_attack": {"effects": [{"type": "damage", "amount": 10, "target": "target"}, {"type": "apply_status", "status": "taunt", "target": "target"}]}})
 	return K.fight([K.at(tank, 3, 2), K.at(archer, 3, 0), K.at(tank, 5, 1), K.at(archer, 1, 1)] as Array[UnitSetup],
 		[K.foe(hound, 1, 4), K.foe(hound, 3, 4), K.foe(hound, 5, 4), K.foe(sniper, 2, 6), K.foe(sniper, 4, 6), K.foe(hound, 6, 5)] as Array[UnitSetup],
@@ -69,7 +69,7 @@ func test_the_log_replays_every_position() -> void:
 				LogEntry.Kind.PUSH:
 					pos[entry.target] = entry.to_pos
 					legs.erase(entry.target)
-				LogEntry.Kind.LEAP, LogEntry.Kind.CHARGE:
+				LogEntry.Kind.LEAP, LogEntry.Kind.CHARGE, LogEntry.Kind.HOP:
 					assert_eq(entry.from_pos, pos[entry.source_unit], "it leaps or charges from where it is (%s)" % entry.to_text())
 					pos[entry.source_unit] = entry.to_pos
 					legs.erase(entry.source_unit)

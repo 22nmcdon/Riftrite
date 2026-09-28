@@ -80,6 +80,16 @@ var status_swaps: Dictionary[String, String] = {}
 
 ## A leap's landing: it can't act before this tick.
 var landing_until: int = 0
+## The flying trait (read every tick, so kept here).
+var flying: bool = false
+## A flier in the air: others move as if it weren't there. It's in the air
+## while it moves, and lands on a free spot to attack (Movement.settle).
+var airborne: bool = false
+## Where a flier over someone is heading to land (valid while has_spot).
+var settle_spot: Vector2i
+var has_settle_spot: bool = false
+## hop_away: the first tick it can hop again.
+var hop_ready_at: int = 0
 ## The engagers it's next to (Engage).
 var engagements: Array[Engage.Engagement] = []
 
@@ -122,6 +132,7 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 		@warning_ignore("integer_division")
 		unit.mana_regen = setup.def.mana.regen_per_s * Mana.SCALE / FixedMath.TICKS_PER_SECOND
 	unit.refresh_reach()
+	unit.flying = setup.def.has_trait("flying")
 	Passives.set_up(unit)
 	return unit
 

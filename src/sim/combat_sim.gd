@@ -182,9 +182,14 @@ func _act(unit: UnitState) -> void:
 		if unit.leg_active:
 			Movement.halt(self, unit, "no target")
 		return
+	if unit.def.hop_cooldown_ticks > 0 and tick >= unit.hop_ready_at and Displacement.hop_away(self, unit, engagers):
+		return
 	var dx: int = target.pos.x - unit.pos.x
 	var dy: int = target.pos.y - unit.pos.y
 	if dx * dx + dy * dy <= unit.reach_sq:
+		# A flier in the air lands on a free spot before it attacks.
+		if unit.airborne and not Movement.settle(self, unit, target):
+			return
 		if unit.leg_active:
 			Movement.halt(self, unit, "in reach")
 		if attack.progress_bp >= attack.needed:
@@ -209,23 +214,23 @@ func attack_rate_bp(unit: UnitState) -> int:
 # --- the board ---------------------------------------------------------------
 
 ## Everything `unit` mustn't overlap: every other standing unit (but
-## `except`, if given) and every rock.
+## `except`, if given, and fliers in the air) and every rock.
 func obstacles_for(unit: UnitState, except: UnitState) -> Array[ArenaPlane.Circle]:
 	var found: Array[ArenaPlane.Circle] = []
 	for other: UnitState in units:
-		if other != unit and other != except and other.alive:
+		if other != unit and other != except and other.alive and not other.airborne:
 			found.append(other.circle())
 	found.append_array(rocks)
 	return found
 
 
 ## True if `unit` fits at `point`: inside the safe ground and overlapping no
-## other standing unit and no rock.
+## other standing unit (fliers in the air aside) and no rock.
 func fits(unit: UnitState, point: Vector2i) -> bool:
 	if not ArenaPlane.inside(safe, point, unit.radius):
 		return false
 	for other: UnitState in units:
-		if other != unit and other.alive and ArenaPlane.overlaps(point, unit.radius, other.pos, other.radius):
+		if other != unit and other.alive and not other.airborne and ArenaPlane.overlaps(point, unit.radius, other.pos, other.radius):
 			return false
 	for rock: ArenaPlane.Circle in rocks:
 		if ArenaPlane.overlaps(point, unit.radius, rock.center, rock.radius):

@@ -337,6 +337,17 @@ All the displacements **move the unit instantly in the sim** and log the start a
   - When an enemy comes within 1 hex, the unit hops 1 hex straight away from that enemy. The hop is instant, and stops early at anything in the way, with no stun: it's the unit's own move.
   - It has `hop_cooldown_ms` (in the trait's data) and is logged.
   - Units held by Engage have to break free first.
+- **Built in step 6, second half** (the `flying` and `hop_away` traits; log kind `HOP`):
+  - **In the air:** a flier is in the air while it moves (`UnitState.airborne`). Others move, plan, and fit as if it weren't there, and it goes straight at its target: no pathfinding, no blocking, over rocks too. It still keeps to the safe ground.
+  - **Landing:** in reach, it lands where it is if that's free (a STOP, "lands"). Otherwise it flies on to the nearest free spot still in reach, and attacks only once it has landed.
+    - The spot is searched in rings 100 apart, 12 spots each, out to 3 hexes. With no free spot at all, it attacks from the air.
+    - Landed, it blocks like anyone, until it next moves.
+  - **Targets:** a flier picks its nearest target by straight line, since it doesn't path.
+  - **Pushed:** a push carries a flier over units and rocks; only the edge stops it (and stuns it, as usual). Left over someone, it drops to the nearest free spot (the log says "dropped clear"), with no stun.
+  - **Hop away:** `"traits": ["hop_away"]` with `"hop_cooldown_ms"` on the kit (the trait's data, kept flat).
+    - Each tick it's off cooldown, a unit with an enemy within a hex hops a hex straight away from the nearest one. The hop is its whole update that tick.
+    - It checks Engage first, since it's about to move.
+    - A hop that can't move at all doesn't happen, and doesn't start the cooldown.
 
 ## 7. Areas and warnings
 
@@ -569,7 +580,7 @@ If step 2 measures slower, the cell size and repath interval are the knobs, and 
 3. **Statuses (done):** Root, Stun, Slow, Taunt, Silence, Marked, and damage over time.
 4. **Mana and signatures (done):** the five triggers, cast_ms, Undying, `Events`, and `PartDef`.
 5. **Tanks (done):** Engage.
-6. **Displacement and flying:** knockback, pull, leap, charge, collisions, flying, and hop away.
+6. **Displacement and flying (done):** knockback, pull, leap, charge, collisions, flying, and hop away.
 7. **Areas:** shapes, warnings, landing, and the rest of the targeting rules.
 8. **Collapse, summons, and phases:** rings, the safe rectangle, damage, start_collapse, summons, and `PhaseDef`.
 9. **The full determinism fight and the log audit.** Update `CLAUDE.md`'s sim rules to describe the arena.

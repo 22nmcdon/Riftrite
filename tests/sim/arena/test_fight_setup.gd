@@ -41,8 +41,14 @@ func test_bad_kits() -> void:
 	rule["targeting"] = "weakest_backliner"
 	_assert_error(_kit_errors(rule), "targeting: unknown value \"weakest_backliner\"")
 	var later: Dictionary = _base()
-	later["traits"] = ["flying"]
-	_assert_error(_kit_errors(later), "traits[0]: unknown value \"flying\" (expected one of: engage)")
+	later["traits"] = ["burrowing"]
+	_assert_error(_kit_errors(later), "traits[0]: unknown value \"burrowing\" (expected one of: engage, flying, hop_away)")
+	var hopper: Dictionary = _base()
+	hopper["traits"] = ["hop_away"]
+	_assert_error(_kit_errors(hopper), "missing required key \"hop_cooldown_ms\"")
+	var stray: Dictionary = _base()
+	stray["hop_cooldown_ms"] = 6000
+	_assert_error(_kit_errors(stray), "hop_cooldown_ms: only a unit with the hop_away trait hops")
 	var no_attack: Dictionary = _base()
 	no_attack.erase("basic_attack")
 	_assert_error(_kit_errors(no_attack), "missing required key \"basic_attack\"")

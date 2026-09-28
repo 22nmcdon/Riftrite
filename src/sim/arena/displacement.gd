@@ -26,7 +26,14 @@ extends RefCounted
 ## stops it; stopped early, the pushed unit is Stunned for collision_stun_ms,
 ## and so is a unit it hit. It may end on crumbled ground (that hurts). A
 ## leap or a charge is the unit's own move: it stays on safe ground, and a
-## charge stopped short stuns no one.
+## charge stopped short stuns no one. A flier is pushed over units and rocks
+## (only the edge stops it); left over someone, it drops to the nearest free
+## spot.
+##
+## hop_away (a trait): when an enemy is within a hex, the unit hops a hex
+## straight away from the nearest one, stopping early at anything in the way
+## (no stun: it's its own move), then waits hop_cooldown_ms. A unit an
+## engager holds has to break free first. Logged as HOP.
 
 ## The 12 leap directions (length ArenaPlane.DIR), starting straight "down"
 ## the board and going round every 30 degrees.
@@ -55,7 +62,9 @@ static func pull(sim: CombatSim, target: UnitState, puller: UnitState, hexes: in
 ## `how` goes in the log ("knocked back", "pulled").
 static func push(sim: CombatSim, unit: UnitState, dir: Vector2i, distance: int, source: EffectSource, how: String) -> void:
 	var from: Vector2i = unit.pos
-	var circles: Array[ArenaPlane.Circle] = sim.obstacles_for(unit, null)
+	var circles: Array[ArenaPlane.Circle] = []
+	if not unit.flying:
+		circles = sim.obstacles_for(unit, null)
 	var sweep: ArenaPlane.Sweep = ArenaPlane.sweep(from, ArenaPlane.along(from, dir, distance), unit.radius, circles, sim.grid.bounds())
 	var hit_unit: UnitState = null
 	var note: String = how
@@ -65,8 +74,16 @@ static func push(sim: CombatSim, unit: UnitState, dir: Vector2i, distance: int, 
 		ArenaPlane.Hit.CIRCLE:
 			hit_unit = sim.unit_by_id(circles[sweep.circle].tag)
 			note += ", stopped by %s" % (hit_unit.id if hit_unit != null else "a rock")
-	_log(sim, LogEntry.Kind.PUSH, source, unit, from, sweep.point, note)
-	_place(sim, unit, sweep.point)
+	var to: Vector2i = sweep.point
+	if unit.flying:
+		unit.airborne = false
+		if not sim.fits(unit, to):
+			var spot: Vector2i = free_spot_near(sim, unit, to, null, 0)
+			if spot.x >= 0:
+				to = spot
+				note += ", dropped clear"
+	_log(sim, LogEntry.Kind.PUSH, source, unit, from, to, note)
+	_place(sim, unit, to)
 	if sweep.hit != ArenaPlane.Hit.NONE:
 		stun(sim, unit, source)
 		if hit_unit != null:
@@ -139,6 +156,49 @@ static func charge(sim: CombatSim, unit: UnitState, target: UnitState, effect: E
 	_place(sim, unit, sweep.point)
 	if hit_unit != null and hit_unit.side != unit.side and effect.knockback_hexes > 0:
 		knockback(sim, hit_unit, unit.pos, unit.forward(), effect.knockback_hexes, source)
+
+
+## The nearest free spot to `around` for `unit` (the point itself, then rings
+## 100 apart, 12 spots each, starting straight down the board): within
+## `reach_sq` of `target` if one's given. -1 in x if there's none within 3
+## hexes.
+static func free_spot_near(sim: CombatSim, unit: UnitState, around: Vector2i, target: UnitState, reach_sq: int) -> Vector2i:
+	for ring: int in range(0, 3001, 100):
+		for dir: Vector2i in (LEAP_DIRECTIONS if ring > 0 else [Vector2i.ZERO] as Array[Vector2i]):
+			var spot: Vector2i = ArenaPlane.along(around, dir, ring)
+			if target != null and ArenaPlane.length_sq(target.pos - spot) > reach_sq:
+				continue
+			if sim.fits(unit, spot):
+				return spot
+	return Vector2i(-1, -1)
+
+
+## The hop_away trait (see the top). Returns true if it hopped.
+static func hop_away(sim: CombatSim, unit: UnitState, engagers: Array[UnitState]) -> bool:
+	var hex_sq: int = HexGrid.HEX * HexGrid.HEX
+	var near: UnitState = null
+	var near_distance: int = 0
+	for enemy: UnitState in sim.standing_enemies_of(unit):
+		var distance: int = ArenaPlane.length_sq(enemy.pos - unit.pos)
+		if distance <= hex_sq and (near == null or distance < near_distance):
+			near = enemy
+			near_distance = distance
+	if near == null:
+		return false
+	if not engagers.is_empty():
+		Engage.update(sim, unit, engagers)
+	if not unit.engagements.is_empty() and Engage.holds(unit):
+		return false
+	var dir: Vector2i = ArenaPlane.direction(near.pos, unit.pos, Vector2i(0, -ArenaPlane.DIR * unit.forward()))
+	var sweep: ArenaPlane.Sweep = ArenaPlane.sweep(unit.pos, ArenaPlane.along(unit.pos, dir, HexGrid.HEX), unit.radius, sim.obstacles_for(unit, null), sim.safe)
+	if sweep.point == unit.pos:
+		return false
+	var entry: LogEntry = _log(sim, LogEntry.Kind.HOP, EffectSource.make(unit.id, "hop_away", "Hop Away"), near, unit.pos, sweep.point, "")
+	if sweep.hit != ArenaPlane.Hit.NONE:
+		entry.note = "cut short"
+	_place(sim, unit, sweep.point)
+	unit.hop_ready_at = sim.tick + unit.def.hop_cooldown_ticks
+	return true
 
 
 ## Moves `unit` to `point`: its path is dropped, and an engagement it's been

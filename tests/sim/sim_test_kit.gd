@@ -75,10 +75,11 @@ static func entries(fight: CombatSim, kind: LogEntry.Kind, unit_id: String = "")
 	return found
 
 
-## True if no two standing units overlap and each fits in the arena.
+## True if no two standing units overlap and each fits in the arena (fliers
+## in the air may be over anyone).
 static func no_overlaps(fight: CombatSim) -> bool:
 	for unit: UnitState in fight.units:
-		if not unit.alive:
+		if not unit.alive or unit.airborne:
 			continue
 		if not ArenaPlane.inside(fight.grid.bounds(), unit.pos, unit.radius):
 			return false

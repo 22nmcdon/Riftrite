@@ -35,6 +35,7 @@ enum Kind {
 	PUSH,
 	LEAP,
 	CHARGE,
+	HOP,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -163,6 +164,8 @@ func to_text() -> String:
 			return line + "%s leaps from %s to %s beside %s (lands at %s)" % [source_text(), _point(from_pos), _point(to_pos), target, _format_time(end_tick)]
 		Kind.CHARGE:
 			return line + "%s charges at %s from %s to %s%s" % [source_text(), target, _point(from_pos), _point(to_pos), "" if note.is_empty() else " (%s)" % note]
+		Kind.HOP:
+			return line + "%s hops away from %s, from %s to %s%s" % [source_unit, target, _point(from_pos), _point(to_pos), "" if note.is_empty() else " (%s)" % note]
 		Kind.BREAK_FREE:
 			return line + "%s breaks free of %s" % [source_unit, target]
 		Kind.MANA_DRAIN:

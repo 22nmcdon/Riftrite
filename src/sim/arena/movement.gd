@@ -13,6 +13,11 @@ extends RefCounted
 ##     if that fails too, it waits and plans again next tick;
 ##   - with no way to its target for repath_give_up_ms, it gives up on it;
 ##   - Rooted, it stands where it is; Slowed, its steps are shorter.
+## A flier (the flying trait) goes straight at its target over units and
+## rocks, in the air (UnitState.airborne), where others move as if it weren't
+## there. In reach, it lands on a free spot before it attacks: where it is,
+## or else the nearest free spot still in reach, which it flies on to
+## (settle). Landed, it blocks like anyone.
 ## Units move one at a time, in the fight's order, each against where the
 ## others already stand, so no two ever overlap.
 ##
@@ -27,6 +32,9 @@ static func walk(sim: CombatSim, unit: UnitState) -> void:
 		halt(sim, unit, "rooted")
 		return
 	var target: UnitState = unit.target
+	if unit.flying:
+		unit.airborne = true
+		unit.has_settle_spot = false
 	if unit.route.is_empty() or unit.route_for != target or sim.tick >= unit.replan_at:
 		_plan(sim, unit)
 	if unit.route.is_empty():
@@ -42,7 +50,7 @@ static func walk(sim: CombatSim, unit: UnitState) -> void:
 	if amount <= 0:
 		return
 	var next: Vector2i = ArenaPlane.step_toward(unit.pos, corner, amount)
-	if not sim.fits(unit, next):
+	if not unit.flying and not sim.fits(unit, next):
 		next = _slide(sim, unit, next)
 		if next == unit.pos:
 			halt(sim, unit, "blocked")
@@ -80,6 +88,10 @@ static func _plan(sim: CombatSim, unit: UnitState) -> void:
 	unit.route_for = target
 	unit.replan_at = sim.tick + sim.tuning.repath_ticks
 	unit.route.clear()
+	if unit.flying:
+		# Over everything, straight at it.
+		unit.route.append(target.pos)
+		return
 	var gap: int = ArenaPlane.distance(unit.pos, target.pos) - unit.reach()
 	var reach_point: Vector2i = ArenaPlane.along(unit.pos, ArenaPlane.direction(unit.pos, target.pos), maxi(gap, 0))
 	var sweep: ArenaPlane.Sweep = ArenaPlane.sweep(unit.pos, reach_point, unit.radius, sim.obstacles_for(unit, target), sim.safe)
@@ -94,6 +106,34 @@ static func _plan(sim: CombatSim, unit: UnitState) -> void:
 	if unit.route.is_empty():
 		# The cell it stands in already counts as in reach: close the gap.
 		unit.route.append(target.pos)
+
+
+## A flier in the air, in reach of `target`: it lands where it is if that's
+## free, or flies on toward the nearest free spot still in reach. Returns true
+## once it has landed (it may attack); with no free spot anywhere in reach, it
+## attacks from the air (true, still in the air).
+static func settle(sim: CombatSim, unit: UnitState, target: UnitState) -> bool:
+	if sim.fits(unit, unit.pos):
+		unit.airborne = false
+		unit.has_settle_spot = false
+		halt(sim, unit, "lands")
+		return true
+	if not unit.has_settle_spot or not sim.fits(unit, unit.settle_spot) \
+			or ArenaPlane.length_sq(target.pos - unit.settle_spot) > unit.reach_sq:
+		var spot: Vector2i = Displacement.free_spot_near(sim, unit, unit.pos, target, unit.reach_sq)
+		if spot.x < 0:
+			return true
+		unit.settle_spot = spot
+		unit.has_settle_spot = true
+	var amount: int = unit.step_length()
+	if amount <= 0:
+		return false
+	if not unit.leg_active or unit.leg_to != unit.settle_spot or unit.leg_amount != amount:
+		_log_leg(sim, unit, unit.settle_spot, amount)
+	unit.pos = ArenaPlane.step_toward(unit.pos, unit.settle_spot, amount)
+	if unit.pos == unit.settle_spot:
+		unit.leg_active = false
+	return false
 
 
 ## A step that would overlap something, tried again along the edge of the

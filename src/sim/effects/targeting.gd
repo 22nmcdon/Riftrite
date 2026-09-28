@@ -43,6 +43,7 @@ static func give_up(sim: CombatSim, unit: UnitState) -> void:
 
 ## The enemy with the shortest path to a spot in the unit's reach, or null.
 ## An enemy already in reach is nearest (the earliest such one).
+## A flier goes over everything, so its nearest is by straight line.
 static func nearest(sim: CombatSim, unit: UnitState) -> UnitState:
 	var candidates: Array[UnitState] = sim.standing_enemies_of(unit)
 	for enemy: UnitState in candidates:
@@ -50,6 +51,15 @@ static func nearest(sim: CombatSim, unit: UnitState) -> UnitState:
 			return enemy
 	if candidates.is_empty():
 		return null
+	if unit.flying:
+		var best: UnitState = null
+		var best_distance: int = 0
+		for enemy: UnitState in candidates:
+			var distance: int = ArenaPlane.length_sq(enemy.pos - unit.pos)
+			if best == null or distance < best_distance:
+				best = enemy
+				best_distance = distance
+		return best
 	var points: Array[Vector2i] = []
 	for enemy: UnitState in candidates:
 		points.append(enemy.pos)
