@@ -24,7 +24,8 @@ extends RefCounted
 ##      or while an engager holds it: Engage, checked as it's about to walk,
 ##      and every tick while it's engaged).
 ##   6. Events: this tick's log is read for count signatures and ability
-##      passives (Events). Phases come later.
+##      passives (Events). Then units below a phase's threshold enter it
+##      (Phases).
 ##   7. Units at 0 HP fall, unless Undying holds them at 1 HP or a would_fall
 ##      signature saves them; on_kill is raised for whoever felled them.
 ##      They were still updated this tick if their place in the order came,
@@ -70,6 +71,8 @@ var _nav: NavGrid
 var _events_read: int = 0
 ## Some unit listens for events (a count signature), so the log is read.
 var _listening: bool = false
+## Some unit has phases, so they're checked each tick.
+var _phased: bool = false
 ## The units with the Engage trait on each side.
 var _hero_engagers: Array[UnitState] = []
 var _enemy_engagers: Array[UnitState] = []
@@ -128,12 +131,20 @@ func add_unit(unit: UnitState) -> void:
 	if unit.def.has_trait("engage"):
 		(_hero_engagers if unit.side == EffectSource.Team.HEROES else _enemy_engagers).append(unit)
 	(heroes if unit.side == EffectSource.Team.HEROES else enemies).append(unit)
+	note_listeners(unit)
+	if not unit.phases.is_empty():
+		_phased = true
+
+
+## Starts reading the log for events if `unit` listens for any (a count
+## signature or an ability passive).
+func note_listeners(unit: UnitState) -> void:
 	if (unit.signature != null and unit.signature.def.trigger.kind == TriggerDef.Kind.COUNT) or not unit.listeners.is_empty():
 		_listening = true
 
 
-## After units join (at the start, or summons): auras are folded in again,
-## so theirs count and they get their side's.
+## After units join (at the start, or summons) or enter a phase: auras are
+## folded in again, so theirs count and they get their side's.
 func units_joined() -> void:
 	_aura_ticks = Passives.aura_boundaries(self)
 	_active_auras = Passives.rederive(self, _active_auras)
@@ -176,6 +187,8 @@ func step() -> void:
 	if _listening:
 		Events.dispatch(self, _events_read, read_to)
 	_events_read = read_to
+	if _phased:
+		Phases.check(self)
 	_process_deaths()
 	_check_end()
 

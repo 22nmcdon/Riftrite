@@ -67,6 +67,10 @@ var route_for: UnitState:
 		_route_for = weakref(value) if value != null else null
 var _route_for: WeakRef = null
 var replan_at: int = 0
+## Its kit's phases (UnitDef.phases; `def` becomes each one's kit in turn),
+## and how many it has entered (Phases).
+var phases: Array[PhaseDef] = []
+var phase: int = 0
 ## The first tick it had no way to its target (-1: it has one).
 var no_path_since: int = -1
 ## The leg last written to the log (a MOVE): while it's active, each tick's
@@ -115,6 +119,7 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 	unit.index = fight_index
 	unit.id = setup.id
 	unit.def = setup.def
+	unit.phases = setup.def.phases
 	unit.own_source = EffectSource.make(setup.id, "", "")
 	unit.side = setup.side
 	unit.start_col = setup.col
@@ -131,11 +136,7 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 	unit.attack = AbilityState.make(setup.def.basic_attack, setup.id)
 	if setup.def.signature != null:
 		unit.signature = AbilityState.make(setup.def.signature, setup.id)
-	if setup.def.mana != null:
-		unit.mana = setup.def.mana.start * Mana.SCALE
-		unit.mana_cap = setup.def.mana.max * Mana.SCALE
-		@warning_ignore("integer_division")
-		unit.mana_regen = setup.def.mana.regen_per_s * Mana.SCALE / FixedMath.TICKS_PER_SECOND
+	Mana.set_bar(unit, setup.def.mana)
 	unit.refresh_reach()
 	unit.flying = setup.def.has_trait("flying")
 	Passives.set_up(unit)

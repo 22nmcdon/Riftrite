@@ -36,6 +36,19 @@ static func gain(sim: CombatSim, unit: UnitState, hundredths: int) -> void:
 	unit.mana = mini(unit.mana + hundredths, unit.def.mana.max * SCALE)
 
 
+## Gives the unit the bar `mana` describes, at its start (null: no bar).
+static func set_bar(unit: UnitState, mana: ManaDef) -> void:
+	if mana == null:
+		unit.mana = 0
+		unit.mana_cap = 0
+		unit.mana_regen = 0
+		return
+	unit.mana = mana.start * SCALE
+	unit.mana_cap = mana.max * SCALE
+	@warning_ignore("integer_division")
+	unit.mana_regen = mana.regen_per_s * SCALE / FixedMath.TICKS_PER_SECOND
+
+
 static func is_full(unit: UnitState) -> bool:
 	return unit.def.mana != null and unit.mana >= unit.def.mana.max * SCALE
 

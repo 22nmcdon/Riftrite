@@ -28,7 +28,7 @@ static func act(sim: CombatSim, unit: UnitState) -> bool:
 	var stunned: bool = not unit.statuses.is_empty() and Statuses.has_kind(unit, StatusDef.Kind.STUN)
 	if signature.casting():
 		if stunned:
-			_cancel_cast(sim, unit, "stunned")
+			cancel_cast(sim, unit, "stunned")
 			return false
 		if sim.tick < signature.cast_ends_at:
 			return true
@@ -138,7 +138,7 @@ static func _land_cast(sim: CombatSim, unit: UnitState) -> void:
 	if target == null or not target.alive or (target != unit and not _in_reach(unit, target)):
 		target = pick_target(sim, unit)
 	if target == null:
-		_cancel_cast(sim, unit, "no target")
+		cancel_cast(sim, unit, "no target")
 		return
 	signature.cast_ends_at = -1
 	signature.cast_target = null
@@ -148,7 +148,7 @@ static func _land_cast(sim: CombatSim, unit: UnitState) -> void:
 		unit.mana = bar
 
 
-static func _cancel_cast(sim: CombatSim, unit: UnitState, reason: String) -> void:
+static func cancel_cast(sim: CombatSim, unit: UnitState, reason: String) -> void:
 	var signature: AbilityState = unit.signature
 	signature.cast_ends_at = -1
 	signature.cast_target = null

@@ -180,6 +180,16 @@ Each tick runs these steps in order. Resolution order is the fight's unit order:
 
 - **Deaths wait until step 7**, as now. A unit knocked to 0 this tick is still updated if it comes later in the tick's order, so neither side gets an edge from being updated first.
 - **Movement is resolved one unit at a time,** each against the positions everyone else already has. So two units can never overlap. When a hero and an enemy want the same gap on the same tick, the hero gets it (decided).
+- **Phases, built in step 8, third part** (`PhaseDef`, `Phases`). They're on the kit for now (`"phases"` in `UnitDef`); phase 2's `EnemyDef` can take them over.
+  - **A phase** has an id, a name, and `below_hp_bp`, and changes the kit: a new `signature`, `mana` bar, `basic_attack`, or `targeting` rule, and `passives` added (one with an earlier passive's id replaces it). It needs at least one of these.
+  - **Read as whole kits:** phases go from the highest threshold down, each building on the one before, and each result must be a sound kit (a mana signature needs a bar; a bar needs a mana signature, so a new signature that isn't one takes the bar away; ids stay unique). The setup's checks (statuses, summons) cover what phases bring.
+  - **Entered** in step 6, after events: a unit with HP above 0 below its next threshold enters it (`PHASE`, credited to the unit and the phase), and one that dropped past several enters each in order. It goes on with the new kit from its next update:
+    - A new signature starts fresh, so a `fight_start` one fires as the phase begins (Old Mother Ash's Last Ember: Ember Breath and `start_collapse`). A cast under way is cancelled (`CAST_CANCELLED`, "phase").
+    - A new basic attack keeps the cooldown progress the old one had.
+    - A new mana bar starts at its own start.
+    - A new targeting rule drops the target, so the unit picks again by it.
+    - Passives are set up again, and event counts carry over for passives the phase kept. Auras are folded in again.
+  - **Not covered:** "She stalks into the middle" (Molt) needs a way to walk to a spot rather than a unit. Phase 2 can add one when Old Mother Ash is built.
 
 ## 4. Movement, targeting, and blocking
 
@@ -622,7 +632,7 @@ If step 2 measures slower, the cell size and repath interval are the knobs, and 
 5. **Tanks (done):** Engage.
 6. **Displacement and flying (done):** knockback, pull, leap, charge, collisions, flying, and hop away.
 7. **Areas (done):** shapes, warnings, landing, and the rest of the targeting rules.
-8. **Collapse, summons, and phases:** rings, the safe rectangle, damage, start_collapse, summons, and `PhaseDef`.
+8. **Collapse, summons, and phases (done):** rings, the safe rectangle, damage, start_collapse, summons, and `PhaseDef`.
 9. **The full determinism fight and the log audit.** Update `CLAUDE.md`'s sim rules to describe the arena.
 
 ## 15. Proposals to confirm
