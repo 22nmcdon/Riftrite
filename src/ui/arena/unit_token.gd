@@ -49,12 +49,22 @@ func center() -> Vector2:
 	return position + Vector2(radius_px, radius_px)
 
 
+## Where it was last drawn on the plane (between whole units mid-step).
+var drawn_at: Vector2 = Vector2.ZERO
+
+
 ## Puts it where `view` draws its plane position, at the view's scale.
 func place(view: ArenaView) -> void:
+	place_at(view, Vector2(plane_pos))
+
+
+## Puts it where `view` draws `point` on the plane.
+func place_at(view: ArenaView, point: Vector2) -> void:
 	_view = view
+	drawn_at = point
 	radius_px = radius * view.scale_px
 	size = Vector2(radius_px, radius_px) * 2.0
-	position = view.to_pixel(plane_pos) - Vector2(radius_px, radius_px)
+	position = view.to_pixel_f(point) - Vector2(radius_px, radius_px)
 	queue_redraw()
 
 

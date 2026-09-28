@@ -3,7 +3,8 @@ extends RefCounted
 ## Practice's state while the game is open (docs/plans/rebuild-phase3-fight-sandbox.md,
 ## sections 1 and 3, and Decisions 2 and 4). Nothing is saved to disk.
 ##   - One remembered formation for every encounter: the last one fought
-##     with (Brannoc guarding the other two until then).
+##     with (Brannoc guarding the other two until then), and the fight speed
+##     last chosen.
 ##   - What's legal comes from the sim: a formation is legal when
 ##     `Encounters.setup` builds it and `FightSetup.validate` finds nothing
 ##     wrong. The UI keeps no rules of its own.
@@ -15,6 +16,8 @@ const DEFAULT_FORMATION: Dictionary[String, Vector2i] = {"brannoc": Vector2i(3, 
 var content: ContentDb
 ## The last formation fought with.
 var formation: Dictionary[String, Vector2i] = {}
+## The fight speed last chosen (Decision 2).
+var speed: float = 1.0
 
 
 static func make(content_db: ContentDb) -> PracticeSession:

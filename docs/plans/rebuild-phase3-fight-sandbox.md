@@ -116,6 +116,20 @@ Title ──Practice──> Encounter list ──pick──> Placement ──Fig
 - **Skip to the end** runs the rest of the fight at once and shows the end state without animating the entries it skipped (the old screen skipped animation for large batches the same way).
 - **The UI never writes to the sim.** `FightPlayer` is the only thing that calls `step()`.
 
+**Built in step 4** (`src/ui/arena/fight_player.gd`, `ArenaScreen`'s fight, `tests/ui/test_fight_player.gd`):
+
+- **`FightPlayer`:** the old player, adapted.
+  - `advance(seconds)` steps whole ticks and returns the new log entries, at 0.5×, 1×, or 2×; pause; `skip_to_end`.
+  - `seek(tick)` and `restart()` build a fresh sim and run it there.
+  - `drawn_position(unit)` draws each unit between where it stood before the last step and where it stands now.
+  - A test plays a fight at every speed, 60 frames a second, and gets the recorded log line for line. Seeking gives the same units and log as playing straight there.
+- **On `ArenaScreen`:** Fight switches the board to fight mode and starts playing at the session's speed.
+  - **The side column:** a clock; Pause/Play and the three speeds (the chosen one is remembered in the session); Skip to end; Restart; the outcome line at the end; and Place again, back to placement with the same formation.
+  - **Keys:** Space, 1–3, and S. The hint under the heading switches to them during the fight.
+- **The view** (`sync_fight`) moves each token to where the player draws it, gives each summon a token as it joins, and hides the fallen (step 5 fades them).
+- **Not yet:** bars, shots, areas, and the rest of section 5 come in step 5; tokens simply move for now. Displaced units jump to their new spot, since the smoothing only covers one tick; step 5 tweens them. The full result screen comes in step 8.
+- **Mutation checks:** all 23 changes to the player, the controls, and the view's syncing are caught. Two survived at first and got tighter tests, and one redundant check was removed.
+
 ## 5. What the fight shows
 
 Each item names the sim state or log entries it comes from. Anything a player could ask "why?" about has a log line behind it.
@@ -222,7 +236,7 @@ UI tests run headless and drive time by hand, so they're deterministic.
 1. **`FightTally`** in the sim, and the runner switched to it (fingerprints and runner numbers unchanged). **Done.**
 2. **`ArenaView` and tokens:** the board and units drawn from a `FightSetup`, static. Screenshot. **Done.**
 3. **Placement:** moving heroes, legality from the sim, enemy hover with reach, the remembered formation. **Done** (no reach drawn: Decision 5).
-4. **`FightPlayer`:** live stepping, speeds, pause, restart, rewind, interpolation.
+4. **`FightPlayer`:** live stepping, speeds, pause, restart, rewind, interpolation. **Done.**
 5. **What the fight shows (section 5)**, in two passes: bars, statuses, shots, swipes, and numbers first; then areas, displacement tweens, collapse, summons, deaths, phases, target lines, and Engage links.
 6. **Log panel and fight chart.**
 7. **Unit details:** the ability text in the data, the enemy side panel, and the hero popup.

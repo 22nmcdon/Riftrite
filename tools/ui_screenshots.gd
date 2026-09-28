@@ -26,29 +26,17 @@ func _initialize() -> void:
 func _run() -> void:
 	await _snap("title")
 	var content: ContentDb = ContentDb.load_dir("res://data")
-	var placement: ArenaScreen = ArenaScreen.make(PracticeSession.make(content), "sentinel_gate")
-	_main.show_screen(placement)
-	placement._on_hovered("rift_worn_sentinel")
+	var arena: ArenaScreen = ArenaScreen.make(PracticeSession.make(content), "sentinel_gate")
+	_main.show_screen(arena)
+	arena._on_hovered("rift_worn_sentinel")
 	await _snap("placement_sentinel_gate")
-	await _snap_board(content, "moth_cloud")
+	arena._fight()
+	arena.player.advance(8.0)
+	arena._on_frame()
+	await _snap("fight_sentinel_gate_8s")
+	arena.skip()
+	await _snap("fight_sentinel_gate_end")
 	quit(0)
-
-
-## The arena view on its own in fight mode (phase 3, step 2): Moth Cloud,
-## with Brannoc guarding. The fight screen replaces it in step 4.
-func _snap_board(content: ContentDb, encounter_id: String) -> void:
-	var errors: Array[String] = []
-	var backing := ColorRect.new()
-	backing.color = UiStyle.BACKGROUND
-	backing.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_main.add_child(backing)
-	var view := ArenaView.new()
-	view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	backing.add_child(view)
-	view.show_setup(Encounters.setup(content, encounter_id, PracticeSession.DEFAULT_FORMATION, 1, errors), content)
-	view.set_mode(ArenaView.Mode.FIGHT)
-	await _snap("board_%s" % encounter_id)
-	backing.queue_free()
 
 
 func _snap(name: String) -> void:

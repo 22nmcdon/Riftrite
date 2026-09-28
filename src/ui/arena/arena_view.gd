@@ -13,6 +13,9 @@ extends Control
 ##     mode keeps the hexes faint, since distances still count in hexes.
 ##   - Hexes and rocks are drawn with `_draw()`; units are `UnitToken` nodes
 ##     (for hover and tweening later).
+##   - The fight: sync_fight() moves the tokens to where a FightPlayer draws
+##     each unit, adds a token for each summon as it joins, and hides the
+##     fallen (section 4).
 ##   - Placement: a hero's token can be dragged onto a hex (section 3). The
 ##     view only reports the drop (`hero_dropped`); whoever shows it decides
 ##     whether the move is legal, and calls `flash_hex` if it isn't.
@@ -69,11 +72,28 @@ func show_setup(setup: FightSetup, content: ContentDb) -> void:
 	for unit: UnitSetup in setup.units():
 		var token: UnitToken = UnitToken.make(unit.id, label_for(unit.def, content), unit.side, content.tuning.unit_radius, unit.def.has_trait("flying"))
 		token.plane_pos = grid.center(unit.col, unit.row)
-		tokens.append(token)
-		add_child(token)
-		token.mouse_entered.connect(func() -> void: unit_hovered.emit(token.unit_id))
-		token.mouse_exited.connect(func() -> void: unit_unhovered.emit(token.unit_id))
+		_add_token(token)
 	_layout()
+
+
+## Puts every unit where `player` draws it: a token for each unit the fight
+## has (summons included, as they join), hidden once it falls.
+func sync_fight(player: FightPlayer) -> void:
+	for unit: UnitState in player.sim.units:
+		var unit_token: UnitToken = token(unit.id)
+		if unit_token == null:
+			unit_token = UnitToken.make(unit.id, label_for(unit.def, player.content), unit.side, unit.radius, unit.flying)
+			_add_token(unit_token)
+		unit_token.plane_pos = unit.pos
+		unit_token.visible = unit.alive
+		unit_token.place_at(self, player.drawn_position(unit))
+
+
+func _add_token(unit_token: UnitToken) -> void:
+	tokens.append(unit_token)
+	add_child(unit_token)
+	unit_token.mouse_entered.connect(func() -> void: unit_hovered.emit(unit_token.unit_id))
+	unit_token.mouse_exited.connect(func() -> void: unit_unhovered.emit(unit_token.unit_id))
 
 
 func set_mode(new_mode: Mode) -> void:
@@ -105,6 +125,11 @@ static func label_for(kit: UnitDef, content: ContentDb) -> String:
 
 ## Where a point on the plane is drawn.
 func to_pixel(point: Vector2i) -> Vector2:
+	return to_pixel_f(Vector2(point))
+
+
+## to_pixel for a point between whole units (a unit drawn mid-step).
+func to_pixel_f(point: Vector2) -> Vector2:
 	return Vector2(_origin.x + (point.x - board.position.x) * scale_px, _origin.y + (board.end.y - point.y) * scale_px)
 
 
