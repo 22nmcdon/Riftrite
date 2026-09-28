@@ -16,6 +16,8 @@ var side: EffectSource.Team
 ## two rows (decided).
 var start_col: int
 var start_row: int
+## It started in its side's back two rows (fixed for the fight).
+var back_liner: bool = false
 ## Its kit's stats; `stats` is these with its auras folded in (Passives).
 var base_stats: UnitStats
 var stats: UnitStats
@@ -116,6 +118,7 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 	unit.side = setup.side
 	unit.start_col = setup.col
 	unit.start_row = setup.row
+	unit.back_liner = grid.is_back_row(setup.row)
 	unit.base_stats = setup.def.stats
 	unit.stats = setup.def.stats.copy()
 	unit.aura_bp = Passives.no_auras()

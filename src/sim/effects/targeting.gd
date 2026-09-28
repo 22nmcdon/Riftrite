@@ -5,8 +5,24 @@ extends RefCounted
 ## on reaching it; then it picks again by its rule. Every pick is logged with
 ## its reason. Ties go to the earlier unit in the fight's order.
 ##
-## Rules built so far: nearest (the enemy with the shortest path to a spot in
-## range). The rest come with later steps.
+## The rules (ties always go to the earlier unit in the fight's order):
+##   nearest            the enemy with the shortest path to a spot in range (a
+##                      flier's, or a signature's, by straight line)
+##   weakest_backliner  the lowest HP% among enemies that started in their
+##                      side's back two rows; if none stand, the lowest HP%
+##                      of all
+##   largest_group      the enemy with the most of its own side within 2 hexes
+##   farthest           the enemy farthest away (straight line)
+##   lowest_hp_ally     the ally lowest on HP% (the unit itself included)
+##   highest_mana       the enemy with the most mana (units with no mana bar
+##                      are never picked)
+##   self               the unit itself (signatures only)
+## A signature picks among units within its reach (Signatures). "HP%" is
+## compared exactly, by cross-multiplying, with no rounding.
+
+const RULES: Array[String] = ["nearest", "weakest_backliner", "largest_group", "farthest", "lowest_hp_ally", "highest_mana", "self"]
+## How close a unit must be to count toward largest_group.
+const GROUP_REACH: int = 2 * HexGrid.HEX
 
 
 ## Picks a new target for a unit whose target has fallen (or that has none
@@ -16,11 +32,68 @@ static func update(sim: CombatSim, unit: UnitState) -> void:
 	unit.target = null
 	if sim.tick < unit.look_again_at:
 		return
-	var picked: UnitState = nearest(sim, unit)
+	var rule: String = unit.def.targeting
+	var picked: UnitState = nearest(sim, unit) if rule == "nearest" else pick(sim, unit, rule, -1)
 	if picked == null:
 		unit.look_again_at = sim.tick + sim.tuning.repath_ticks
 		return
 	set_target(sim, unit, picked, unit.def.targeting)
+
+
+## The unit `rule` picks for `unit`, among those within `reach_sq` of it
+## (-1: anywhere), or null. Here nearest is by straight line.
+static func pick(sim: CombatSim, unit: UnitState, rule: String, reach_sq: int) -> UnitState:
+	if rule == "self":
+		return unit
+	var pool: Array[UnitState] = sim.standing_allies_of(unit) if rule == "lowest_hp_ally" else sim.standing_enemies_of(unit)
+	if reach_sq >= 0:
+		pool = pool.filter(func(other: UnitState) -> bool: return ArenaPlane.length_sq(other.pos - unit.pos) <= reach_sq)
+	var best: UnitState = null
+	match rule:
+		"nearest", "farthest":
+			var best_distance: int = 0
+			for other: UnitState in pool:
+				var distance: int = ArenaPlane.length_sq(other.pos - unit.pos)
+				if best == null or (distance < best_distance if rule == "nearest" else distance > best_distance):
+					best = other
+					best_distance = distance
+		"weakest_backliner":
+			for other: UnitState in pool:
+				if other.back_liner and (best == null or _lower_share(other, best)):
+					best = other
+			if best == null:
+				best = _lowest_share(pool)
+		"lowest_hp_ally":
+			best = _lowest_share(pool)
+		"largest_group":
+			var best_count: int = -1
+			var side: Array[UnitState] = sim.standing_enemies_of(unit)
+			for other: UnitState in pool:
+				var count: int = 0
+				for near: UnitState in side:
+					if near != other and ArenaPlane.length_sq(near.pos - other.pos) <= GROUP_REACH * GROUP_REACH:
+						count += 1
+				if count > best_count:
+					best = other
+					best_count = count
+		"highest_mana":
+			for other: UnitState in pool:
+				if other.def.mana != null and (best == null or other.mana > best.mana):
+					best = other
+	return best
+
+
+static func _lowest_share(pool: Array[UnitState]) -> UnitState:
+	var best: UnitState = null
+	for other: UnitState in pool:
+		if best == null or _lower_share(other, best):
+			best = other
+	return best
+
+
+## True if `a` is on a lower share of its max HP than `b`.
+static func _lower_share(a: UnitState, b: UnitState) -> bool:
+	return a.hp * b.max_hp < b.hp * a.max_hp
 
 
 static func set_target(sim: CombatSim, unit: UnitState, picked: UnitState, reason: String) -> void:

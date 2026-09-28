@@ -98,18 +98,8 @@ static func would_fall(sim: CombatSim, unit: UnitState) -> bool:
 ## nothing fits.
 static func pick_target(sim: CombatSim, unit: UnitState) -> UnitState:
 	var ability: AbilityDef = unit.signature.def
-	if ability.targeting == "self":
-		return unit
-	var best: UnitState = null
-	var best_distance: int = 0
-	for enemy: UnitState in sim.standing_enemies_of(unit):
-		if not _in_reach(unit, enemy):
-			continue
-		var distance: int = _distance_squared(unit, enemy)
-		if best == null or distance < best_distance:
-			best = enemy
-			best_distance = distance
-	return best
+	var reach: int = ability.reach_for(unit.stats.get_stat(UnitStats.Stat.RANGE)) * HexGrid.HEX
+	return Targeting.pick(sim, unit, ability.targeting, reach * reach)
 
 
 static func _queue_once(signature: AbilityState) -> void:

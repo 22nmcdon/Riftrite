@@ -38,8 +38,8 @@ func test_bad_kits() -> void:
 	event["basic_attack"]["effects"].append({"trigger": "on_kill", "type": "heal", "amount": 5, "target": "self"})
 	_assert_error(_kit_errors(event), "an ability's effects can only use on_fire, on_hit, or on_crit")
 	var rule: Dictionary = _base()
-	rule["targeting"] = "weakest_backliner"
-	_assert_error(_kit_errors(rule), "targeting: unknown value \"weakest_backliner\"")
+	rule["targeting"] = "self"
+	_assert_error(_kit_errors(rule), "targeting: unknown value \"self\"")
 	var later: Dictionary = _base()
 	later["traits"] = ["burrowing"]
 	_assert_error(_kit_errors(later), "traits[0]: unknown value \"burrowing\" (expected one of: engage, flying, hop_away)")
@@ -108,9 +108,9 @@ func test_bad_signatures() -> void:
 	threshold["signature"] = {"id": "stand", "name": "Stand", "trigger": {"kind": "hp_below", "threshold_bp": 10000}, "effects": effects}
 	_assert_error(_kit_errors(threshold), "threshold_bp: 10000 is out of range")
 	var rule: Dictionary = _base()
-	rule["signature"] = {"id": "stand", "name": "Stand", "trigger": {"kind": "fight_start"}, "targeting": "farthest", "cooldown_ms": 1000, "effects": effects}
+	rule["signature"] = {"id": "stand", "name": "Stand", "trigger": {"kind": "fight_start"}, "targeting": "sneakiest", "cooldown_ms": 1000, "effects": effects}
 	var errors: Array[String] = _kit_errors(rule)
-	_assert_error(errors, "targeting: unknown value \"farthest\"")
+	_assert_error(errors, "targeting: unknown value \"sneakiest\"")
 	_assert_error(errors, "unknown key \"cooldown_ms\"")
 	var start: Dictionary = _base()
 	start["mana"] = {"max": 60, "start": 70}

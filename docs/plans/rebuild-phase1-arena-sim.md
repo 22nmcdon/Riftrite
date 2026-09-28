@@ -220,6 +220,12 @@ Each tick runs these steps in order. Resolution order is the fight's unit order:
 | `self` | the unit itself | Hold the Line |
 
 - **Ties** always go to the earlier unit in fight order.
+- **Built in step 7, first half** (`Targeting.pick`):
+  - A unit's own rule can be any but `self`; a signature's can be any.
+  - Every rule but a unit's own `nearest` is by straight line, and doesn't search paths. The unit then walks to its pick as usual.
+  - A signature picks among units within its reach. For `weakest_backliner`, the fallback to anyone is also within reach.
+  - `largest_group` counts the target's own side within 2 hexes of it, not counting itself.
+  - HP% is compared by cross-multiplying, so 9,999 of 20,000 is lower than 5,000 of 10,000.
 - **One search, every distance:** a single search from the unit gives its path length to every enemy, so `nearest` costs one search per pick.
 - **Sticky:** a unit keeps its basic-attack target until one of these happens:
   - the target falls

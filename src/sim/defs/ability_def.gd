@@ -13,19 +13,16 @@ extends RefCounted
 ## "shot": false (a beam, say).
 ##
 ## A signature has no cooldown: it fires on its trigger (TriggerDef). It picks
-## a fresh target each time it fires, by its own rule:
-##   nearest  the enemy nearest in a straight line (it fires from where the
-##            unit stands, so no path is needed); ties go to the earlier unit
-##   self     the unit itself
-## within max_range hexes (default: the unit's own range). The rest of the
-## rules come with step 7. cast_ms (mana signatures only): the unit stands
+## a fresh target each time it fires, by its own rule (Targeting.RULES; its
+## nearest is by straight line, since it fires from where the unit stands),
+## among units within max_range hexes (default: the unit's own range).
+## cast_ms (mana signatures only): the unit stands
 ## still that long before it lands; a Stun cancels the cast, and the
 ## signature keeps its mana.
 
 ## What an ability's effects can be set off by.
 const TRIGGERS: Array[EffectDef.Trigger] = [EffectDef.Trigger.ON_FIRE, EffectDef.Trigger.ON_HIT, EffectDef.Trigger.ON_CRIT]
-## The signature targeting rules built so far.
-const SIGNATURE_RULES: Array[String] = ["nearest", "self"]
+
 
 var id: String
 var name: String
@@ -60,7 +57,7 @@ static func read_signature(reader: DataReader) -> AbilityDef:
 	def._read_common(reader)
 	var trigger_reader: DataReader = reader.req_object("trigger")
 	def.trigger = TriggerDef.read(trigger_reader) if trigger_reader != null else TriggerDef.new()
-	def.targeting = reader.opt_string_choice("targeting", "nearest", SIGNATURE_RULES)
+	def.targeting = reader.opt_string_choice("targeting", "nearest", Targeting.RULES)
 	def.max_range = reader.opt_int("max_range", 0, 1)
 	def.cast_ticks = reader.opt_ticks("cast_ms", 0)
 	if def.cast_ticks > 0 and def.trigger.kind != TriggerDef.Kind.MANA:

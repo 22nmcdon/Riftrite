@@ -17,8 +17,8 @@ extends RefCounted
 ##       code paths a unit has (sections 4 and 6); hop_away needs
 ##       "hop_cooldown_ms" too
 
-## The targeting rules built so far (section 4).
-const TARGETING_RULES: Array[String] = ["nearest"]
+## A unit's own rule (section 4): Targeting.RULES but self.
+const TARGETING_RULES: Array[String] = ["nearest", "weakest_backliner", "largest_group", "farthest", "lowest_hp_ally", "highest_mana"]
 const TRAITS: Array[String] = ["engage", "flying", "hop_away"]
 
 var id: String
