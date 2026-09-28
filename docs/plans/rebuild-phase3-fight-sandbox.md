@@ -314,7 +314,7 @@ UI tests run headless and drive time by hand, so they're deterministic.
   - Breaking any one form (the ghost, slides, auras, the warned ring, signature names, landing flashes, the collapse banner, the log panel, the chart's tally) fails the test.
 - **The real game** boots from `main.tscn` in a window and plays Witch Circle to its end at 2x (813 frames, a victory at 52.8s).
 - **Tester notes:** `HOW-TO-PLAY.txt` (in each zip) says how to play Practice, the keys, and what gate 1 asks.
-- **The playtest build** comes from the "Playtest build" workflow, run on this branch.
+- **The playtest build for gate 1** is "Playtest build 4 (0865f6b)", a pre-release made by the workflow on this branch: https://github.com/22nmcdon/Riftrite/releases/tag/playtest-4 (Windows and macOS zips; the tests passed first).
 
 ## 11. Order of work (each step: code, tests, green run, commit)
 
