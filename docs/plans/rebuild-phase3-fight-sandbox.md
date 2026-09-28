@@ -127,6 +127,14 @@ Each item names the sim state or log entries it comes from. Anything a player co
 - **The fight chart** shows, per hero, damage dealt, healing and Shield given, and damage taken, live during the fight and in full on the result screen.
 - **Its numbers come from one place:** a small pure `FightTally` in `src/sim/` that reads a log (the same counting `tools/sim_report.gd` does now). The sim runner switches to it, so the chart and the runner can't disagree.
 
+**Built in step 1** (`src/sim/fight_tally.gd`, `tests/sim/test_fight_tally.gd`):
+
+- **The old tally, adapted:** no items; no relics' bar until relics return in phase 5. It's made from a `FightSetup` (`make`, or `of_fight` for a whole log), so the runner can use it without a live sim.
+- **Basic attacks** are the hero's own basic attack (its kit's, or a phase's), not fired by an event. Everything else, signatures and passives included, is "Abilities".
+- **A damage-over-time status outside Burn, Poison, and Bleed** counts as "Abilities" rather than being dropped, and a test checks every such status in the data has a family.
+- **The sim runner** now takes damage dealt and taken from the tally. Its output on three encounters is identical to before the switch.
+- **Mutation checks:** every change to the counting is caught. Two can't be: dropping the tie order in `sorted` and in `breakdown`, since Godot sorts arrays this small with a stable insertion sort.
+
 ## 7. Unit info
 
 **How you see it (decided):**
@@ -189,7 +197,7 @@ UI tests run headless and drive time by hand, so they're deterministic.
 
 ## 11. Order of work (each step: code, tests, green run, commit)
 
-1. **`FightTally`** in the sim, and the runner switched to it (fingerprints and runner numbers unchanged).
+1. **`FightTally`** in the sim, and the runner switched to it (fingerprints and runner numbers unchanged). **Done.**
 2. **`ArenaView` and tokens:** the board and units drawn from a `FightSetup`, static. Screenshot.
 3. **Placement:** moving heroes, legality from the sim, enemy hover with reach, the remembered formation.
 4. **`FightPlayer`:** live stepping, speeds, pause, restart, rewind, interpolation.

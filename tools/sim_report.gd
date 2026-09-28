@@ -6,7 +6,7 @@ extends RefCounted
 ##   - A win is a victory or a tie (a tie counts as a guild victory).
 ##   - For each formation: its win rate, its median fight length, and per
 ##     hero how often they fell and their mean damage dealt and taken
-##     (hits and damage over time, Shield included).
+##     (FightTally's, as the fight chart counts them).
 ##   - The gate ("placement matters"): the best formation's win rate is at
 ##     least GATE_POINTS above the worst's.
 ##   - Since the seeds only change crits, a formation mostly wins every fight
@@ -182,16 +182,13 @@ static func _fight(content: ContentDb, encounter_id: String, row: Row, fight_see
 	if result.outcome != FightResult.Outcome.DEFEAT:
 		row.wins += 1
 	row.lengths.append(result.end_tick)
+	var tally: FightTally = FightTally.of_fight(setup, result.combat_log)
+	for hero: UnitSetup in setup.heroes:
+		row.dealt[hero.id] = row.dealt.get(hero.id, 0) + tally.bar(FightTally.Tab.DAMAGE, hero.id).total()
+		row.taken[hero.id] = row.taken.get(hero.id, 0) + tally.bar(FightTally.Tab.TAKEN, hero.id).total()
 	for entry: LogEntry in result.combat_log.entries:
-		match entry.kind:
-			LogEntry.Kind.DAMAGE, LogEntry.Kind.STATUS_DAMAGE, LogEntry.Kind.COLLAPSE:
-				if row.formation.has(entry.source_unit):
-					row.dealt[entry.source_unit] = row.dealt.get(entry.source_unit, 0) + entry.amount
-				if row.formation.has(entry.target):
-					row.taken[entry.target] = row.taken.get(entry.target, 0) + entry.amount
-			LogEntry.Kind.DEATH:
-				if row.formation.has(entry.target):
-					row.deaths[entry.target] = row.deaths.get(entry.target, 0) + 1
+		if entry.kind == LogEntry.Kind.DEATH and row.formation.has(entry.target):
+			row.deaths[entry.target] = row.deaths.get(entry.target, 0) + 1
 
 
 # --- text -------------------------------------------------------------------------
