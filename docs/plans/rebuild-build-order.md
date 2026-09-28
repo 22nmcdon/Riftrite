@@ -125,7 +125,7 @@ Three labels: **Remove** (deleted), **Rewrite** (the file or idea stays, the con
 - **Rocks:** in phase 1.
 - **The fight sandbox:** it stays in the game as a **Practice** mode on the title screen, so playtest builds can reach it for gate 1. It can stay rough until the art rehaul.
 - **Old saves:** the gut bumps the save version, and the title screen quietly drops a save it can't load.
-- **Phase 1's build plan** is `docs/plans/rebuild-phase1-arena-sim.md`. **Phase 1 is done (2026-09-28);** its notes list what each step built and what it measured. Phase 2 is next, and needs its own build plan first. Its speed notes flag summon swarms as the next thing to make cheaper.
+- **Phase 1's build plan** is `docs/plans/rebuild-phase1-arena-sim.md`. **Phase 1 is done (2026-09-28);** its notes list what each step built and what it measured. Phase 2 is next: its build plan, `docs/plans/rebuild-phase2-heroes-enemies.md`, is proposed and waits for approval. It starts with a speed pass for summon swarms.
 - **How the gut went (phase 0, done 2026-09-27):**
   - **Removed, not stubbed:** runtime code labeled Keep (trim) or Keep (adapt) that couldn't run without items was removed rather than stubbed or left as dead code: `events.gd`, the statuses runtime, the relic runner, `sim_test_kit`, `test_determinism`, `fight_tally`, and the other fight UI.
   - **Written fresh from history:** each later phase writes these fresh, using the old versions in git history. The phase 1 plan lists which ones come back in phase 1.
