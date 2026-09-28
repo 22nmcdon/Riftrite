@@ -139,12 +139,17 @@ func _act(unit: UnitState) -> void:
 	# Mana regen (Mana), unless Silenced.
 	if unit.mana_regen > 0 and unit.mana < unit.mana_cap and not (has_statuses and Statuses.has_kind(unit, StatusDef.Kind.SILENCE)):
 		unit.mana = mini(unit.mana + unit.mana_regen, unit.mana_cap)
+	# Landing from a leap: it can't act.
+	if tick < unit.landing_until:
+		return
 	var casting: bool = false
 	var signature: AbilityState = unit.signature
 	if signature != null and (signature.pending > 0 or signature.cast_ends_at >= 0 \
 			or (signature.mana_trigger and unit.mana >= unit.mana_cap) or (signature.once_trigger and not signature.fired)):
 		casting = Signatures.act(self, unit)
 		has_statuses = not unit.statuses.is_empty()
+		if tick < unit.landing_until:
+			return
 	if has_statuses and Statuses.has_kind(unit, StatusDef.Kind.STUN):
 		if unit.leg_active:
 			Movement.halt(self, unit, "stunned")

@@ -78,6 +78,18 @@ static func holds(unit: UnitState) -> bool:
 	return false
 
 
+## Ends the unit's engagements it's no longer next to (it was moved).
+static func drop_out_of_reach(sim: CombatSim, unit: UnitState) -> void:
+	var reach_sq: int = sim.tuning.engage_reach * sim.tuning.engage_reach
+	var i: int = unit.engagements.size() - 1
+	while i >= 0:
+		var engagement: Engagement = unit.engagements[i]
+		var engager: UnitState = engagement.engager
+		if engager != null and _distance_sq(unit, engager) > reach_sq:
+			_end(sim, unit, engagement, "moved out of reach of %s" % engager.id)
+		i -= 1
+
+
 static func _end(sim: CombatSim, unit: UnitState, engagement: Engagement, why: String) -> void:
 	unit.engagements.erase(engagement)
 	if not engagement.free and engagement.free_at >= 0 and not _still_held(unit):

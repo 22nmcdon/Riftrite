@@ -18,6 +18,15 @@ extends RefCounted
 ##                 damage-over-time stacks (times each status's
 ##                 cleanse_effectiveness_bp, like heals do)
 ##   mana_drain:   amount (whole mana taken from the target's bar)
+##   knockback:    hexes; pushes the target straight away from the unit
+##   pull:         hexes; drags the target straight toward the unit, stopping
+##                 when it touches
+##   leap:         max_hexes, optional land_ms (tuning's leap_land_ms); the
+##                 unit jumps to a free spot touching its target
+##   charge:       hexes, optional knockback (hexes); the unit runs straight
+##                 at its target and knocks back the first enemy it touches
+## (Displacement has the rules. leap and charge move the unit itself, so
+## they aim at "target", fire at once, and only signatures have them.)
 ## `amount` (or `stacks`) is the base value. An optional "scaling" object adds
 ## a share of the unit's stats, in basis points of each stat:
 ##   "scaling": {"atk": 6000, "atsp": 2000}  ->  base + 60% ATK + 20% ATSP
@@ -65,7 +74,7 @@ enum Trigger {
 	ON_FIRE, ON_HIT, ON_CRIT, ON_FIGHT_START, AT_TIME, ON_ALLY_BELOW_HP,
 	ON_ABILITY, ON_BASIC_ATTACK, ON_HOLDER_CRIT, ON_SHIELDED, ON_HIT_TAKEN, ON_HEAL, ON_STATUS, ON_KILL,
 }
-enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN }
+enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE }
 enum Target {
 	TARGET,
 	HIT_TARGET,
@@ -96,7 +105,9 @@ const ABILITY_TRIGGERS: Array[Trigger] = [
 const RELIC_TRIGGERS: Array[Trigger] = [Trigger.ON_FIRE, Trigger.ON_FIGHT_START, Trigger.AT_TIME, Trigger.ON_ALLY_BELOW_HP]
 ## Targets that need the effect's unit to stand on the field.
 const FIELD_ONLY_TARGETS: Array[Target] = [Target.TARGET, Target.HIT_TARGET, Target.SELF]
-const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain"]
+const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain", "knockback", "pull", "leap", "charge"]
+## The types that move the unit itself.
+const MOVES_SELF: Array[Type] = [Type.LEAP, Type.CHARGE]
 const TARGET_NAMES: Array[String] = [
 	"target",
 	"hit_target",
@@ -116,6 +127,12 @@ var status_id: String = ""
 var stacks: int = 0
 ## apply_status: how long a timed status lasts (0: the status's own duration).
 var duration_ticks: int = 0
+## knockback, pull, charge: how far; leap: how far it can jump (hexes).
+var hexes: int = 0
+## charge: how far it knocks back the enemy it hits (hexes; 0: not at all).
+var knockback_hexes: int = 0
+## leap: how long the landing takes (-1: tuning's leap_land_ms).
+var land_ticks: int = -1
 ## Basis points of each stat added to the base value, indexed by UnitStats.Stat
 ## (the first SCALING_STATS only).
 var scaling: Array[int] = [0, 0, 0, 0, 0, 0]
@@ -149,6 +166,15 @@ static func read(reader: DataReader, relic: bool = false) -> EffectDef:
 				def.amount = reader.req_int("amount", 0)
 			Type.MANA_DRAIN:
 				def.amount = reader.req_int("amount", 1)
+			Type.KNOCKBACK, Type.PULL:
+				def.hexes = reader.req_int("hexes", 1)
+			Type.LEAP:
+				def.hexes = reader.req_int("max_hexes", 1)
+				if reader.has("land_ms"):
+					def.land_ticks = reader.req_ticks("land_ms")
+			Type.CHARGE:
+				def.hexes = reader.req_int("hexes", 1)
+				def.knockback_hexes = reader.opt_int("knockback", 0, 0)
 			Type.SHIELD:
 				if reader.has("amount") == reader.has("amount_bp_of_damage"):
 					reader.error("shield needs exactly one of \"amount\" or \"amount_bp_of_damage\"")
@@ -168,6 +194,9 @@ static func read(reader: DataReader, relic: bool = false) -> EffectDef:
 	read_window(reader, def)
 	if not trigger_name.is_empty():
 		_read_trigger_fields(def, reader, relic)
+	if MOVES_SELF.has(def.type) and not type_name.is_empty() and not target_name.is_empty():
+		if def.target != Target.TARGET or def.trigger != Trigger.ON_FIRE:
+			reader.error("%s moves the unit itself to its target, so it needs \"target\": \"target\" and the on_fire trigger" % type_name)
 
 	# "hit_target" and damage-based shields need a hit to refer to.
 	var needs_hit: bool = def.target == Target.HIT_TARGET or def.amount_bp_of_damage > 0

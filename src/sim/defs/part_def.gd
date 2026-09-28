@@ -51,7 +51,9 @@ static func read(reader: DataReader) -> PartDef:
 				reader.error("an ability passive needs effects")
 			for effect_reader: DataReader in effect_readers:
 				var effect: EffectDef = EffectDef.read(effect_reader)
-				if not EffectDef.EVENT_TRIGGERS.has(effect.trigger):
+				if EffectDef.MOVES_SELF.has(effect.type):
+					effect_reader.error("a passive can't leap or charge")
+				elif not EffectDef.EVENT_TRIGGERS.has(effect.trigger):
 					effect_reader.error("a passive's effects need an event trigger (%s)" % ", ".join(EffectDef.event_trigger_names()))
 				def.ability.effects.append(effect)
 		Kind.REPLACE_STATUS:

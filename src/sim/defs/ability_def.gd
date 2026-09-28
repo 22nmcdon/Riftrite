@@ -49,6 +49,8 @@ static func read(reader: DataReader) -> AbilityDef:
 	var def := AbilityDef.new()
 	def._read_common(reader)
 	def.cooldown_ticks = reader.req_ticks("cooldown_ms", FixedMath.MS_PER_TICK)
+	if def.moves_self():
+		reader.error("leap and charge are for signatures, not basic attacks")
 	reader.finish()
 	return def
 
@@ -89,9 +91,28 @@ func is_signature() -> bool:
 	return trigger != null
 
 
-## True if this ability, used from `reach` hexes, fires a shot.
+## True if this ability, used from `reach` hexes, fires a shot. One that
+## leaps or charges never does: the unit closes the distance itself.
 func is_shot(reach: int) -> bool:
+	if moves_self():
+		return false
 	return shot == 1 or (shot == -1 and reach >= 2)
+
+
+## It leaps or charges.
+func moves_self() -> bool:
+	for effect: EffectDef in effects:
+		if EffectDef.MOVES_SELF.has(effect.type):
+			return true
+	return false
+
+
+## Its leap effect, or null.
+func leap_effect() -> EffectDef:
+	for effect: EffectDef in effects:
+		if effect.type == EffectDef.Type.LEAP:
+			return effect
+	return null
 
 
 ## How far it reaches, in hexes, for a unit with range `unit_range`.

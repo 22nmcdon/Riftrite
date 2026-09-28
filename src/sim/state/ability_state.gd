@@ -23,6 +23,8 @@ var once_trigger: bool = false
 var fired: bool = false
 ## count: events seen so far.
 var count: int = 0
+## Its last try to fire failed (a leap with no room), and that's logged.
+var failing: bool = false
 ## Fires waiting for the unit's next update (count, and once-a-fight triggers
 ## waiting for a target).
 var pending: int = 0

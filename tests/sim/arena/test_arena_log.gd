@@ -18,7 +18,10 @@ static func busy_setup(fight_seed: int = 5) -> FightSetup:
 			"effects": [{"type": "damage", "amount": 15, "target": "target", "scaling": {"atk": 5000}}, {"type": "apply_status", "status": "slow", "target": "target"}]}})
 	var hound: UnitDef = K.kit("hound", {"stats": {"hp": 180, "atk": 14, "speed": 3, "crit": 10}, "traits": ["engage"],
 		"passives": [{"id": "pack", "name": "Pack", "kind": "aura", "aura": {"target": "all_allies", "stat": "atsp_bp", "value": 11000}},
-			{"id": "snap", "name": "Snap", "kind": "ability", "effects": [{"trigger": "on_hit_taken", "every": 3, "type": "damage", "amount": 4, "target": "hit_target"}]}]})
+			{"id": "snap", "name": "Snap", "kind": "ability", "effects": [{"trigger": "on_hit_taken", "every": 3, "type": "damage", "amount": 4, "target": "hit_target"},
+				{"trigger": "on_hit_taken", "every": 3, "type": "knockback", "hexes": 1, "target": "hit_target"}]}],
+		"signature": {"id": "pounce", "name": "Pounce", "trigger": {"kind": "fight_start"}, "max_range": 4,
+			"effects": [{"type": "leap", "max_hexes": 4, "target": "target"}, {"type": "damage", "amount": 8, "target": "target"}]}})
 	# Snipers taunt whoever they hit, so heroes walk past the hounds, which
 	# engage them.
 	var sniper: UnitDef = K.kit("sniper", {"stats": {"hp": 140, "atk": 12, "speed": 2, "range": 5},
@@ -60,6 +63,15 @@ func test_the_log_replays_every_position() -> void:
 					legs[entry.source_unit] = [entry.to_pos, entry.amount]
 				LogEntry.Kind.STOP:
 					assert_eq(entry.to_pos, pos[entry.source_unit], "a stop is where the unit is (%s)" % entry.to_text())
+					legs.erase(entry.source_unit)
+				# A push can come after the pushed unit stepped this tick, so
+				# it's taken as where the unit ends up; it ends any leg.
+				LogEntry.Kind.PUSH:
+					pos[entry.target] = entry.to_pos
+					legs.erase(entry.target)
+				LogEntry.Kind.LEAP, LogEntry.Kind.CHARGE:
+					assert_eq(entry.from_pos, pos[entry.source_unit], "it leaps or charges from where it is (%s)" % entry.to_text())
+					pos[entry.source_unit] = entry.to_pos
 					legs.erase(entry.source_unit)
 		for id: String in legs.keys():
 			var leg: Array = legs[id]

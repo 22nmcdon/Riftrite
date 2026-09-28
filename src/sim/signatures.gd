@@ -44,8 +44,10 @@ static func act(sim: CombatSim, unit: UnitState) -> bool:
 				if signature.def.cast_ticks > 0:
 					_start_cast(sim, unit, target)
 					return true
+				var bar: int = unit.mana
 				unit.mana = 0
-				_fire(sim, unit, target)
+				if not _fire(sim, unit, target):
+					unit.mana = bar
 			return false
 		TriggerDef.Kind.HP_BELOW:
 			if not signature.fired and unit.hp > 0 and unit.hp * FixedMath.BP_ONE < unit.max_hp * trigger.threshold_bp:
@@ -57,10 +59,9 @@ static func act(sim: CombatSim, unit: UnitState) -> bool:
 				_queue_once(signature)
 	while signature.pending > 0:
 		var target: UnitState = pick_target(sim, unit)
-		if target == null:
+		if target == null or not _fire(sim, unit, target):
 			break
 		signature.pending -= 1
-		_fire(sim, unit, target)
 	return false
 
 
@@ -88,9 +89,7 @@ static func would_fall(sim: CombatSim, unit: UnitState) -> bool:
 	saved.note = "would fall"
 	sim.combat_log.add(saved)
 	var target: UnitState = pick_target(sim, unit)
-	if target != null:
-		_fire(sim, unit, target)
-	else:
+	if target == null or not _fire(sim, unit, target):
 		signature.pending += 1
 	return true
 
@@ -119,9 +118,16 @@ static func _queue_once(signature: AbilityState) -> void:
 		signature.pending += 1
 
 
-static func _fire(sim: CombatSim, unit: UnitState, target: UnitState) -> void:
-	var ability: AbilityDef = unit.signature.def
-	EffectRunner.fire(sim, unit, unit.signature, target, ability.reach_for(unit.stats.get_stat(UnitStats.Stat.RANGE)))
+## Fires the signature at `target`. False if it couldn't (a leap with no room
+## to land): it waits, and the failure is logged once until it next fires.
+static func _fire(sim: CombatSim, unit: UnitState, target: UnitState) -> bool:
+	var signature: AbilityState = unit.signature
+	var ability: AbilityDef = signature.def
+	if not EffectRunner.fire(sim, unit, signature, target, ability.reach_for(unit.stats.get_stat(UnitStats.Stat.RANGE)), not signature.failing):
+		signature.failing = true
+		return false
+	signature.failing = false
+	return true
 
 
 static func _start_cast(sim: CombatSim, unit: UnitState, target: UnitState) -> void:
@@ -146,8 +152,10 @@ static func _land_cast(sim: CombatSim, unit: UnitState) -> void:
 		return
 	signature.cast_ends_at = -1
 	signature.cast_target = null
+	var bar: int = unit.mana
 	unit.mana = 0
-	_fire(sim, unit, target)
+	if not _fire(sim, unit, target):
+		unit.mana = bar
 
 
 static func _cancel_cast(sim: CombatSim, unit: UnitState, reason: String) -> void:

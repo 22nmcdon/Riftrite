@@ -310,6 +310,23 @@ All the displacements **move the unit instantly in the sim** and log the start a
 - **Pushed onto crumbled ground:** allowed. It hurts.
 - **Leap spots:** the candidates are 12 fixed points around the target, each 800 from its center. The first free one closest to the leaper wins.
   - If none is free, the leap fails, and that's logged. A mana signature keeps its mana.
+- **Built in step 6, first half** (`Displacement`; effect types `knockback`, `pull`, `leap`, `charge`; log kinds `PUSH`, `LEAP`, `CHARGE`):
+  - **Pushes (knockback, pull, and a charge's knockback)** use the arena's edge, not the safe ground, so a push can end on crumbled ground. A leap or a charge is the unit's own move, so it stays on safe ground.
+  - **A pull** goes no further than touching the puller. Stopping there isn't a collision, so nothing is stunned.
+  - **A charge** is the unit's own move, so being stopped short (by an ally, a rock, or the edge) stuns no one. Only the enemy it touches gets knocked back, and a knockback stopped early stuns as usual.
+    - The target counts as the first unit in the way if nothing's before it.
+  - **A leap:**
+    - Candidates: 12 spots every 30 degrees round the target, starting straight down the board, each touching it. Among the free ones within `max_hexes`, the closest wins; ties go to the first in that order.
+    - The unit can't act until its landing ends (`land_ms`, else `leap_land_ms`, 300 ms for now). Only mana regen runs.
+  - **Leap and charge move the unit itself,** so:
+    - They aim at `target` and fire at once, and an ability with one is never a shot.
+    - Only signatures can have them (not basic attacks, not passives).
+  - **A leap with no room to land fails whole:** nothing in the ability happens and no `FIRE` is logged.
+    - A mana signature keeps its bar, and any other trigger stays queued; both try again next tick.
+    - The failure is logged once, not every tick it waits.
+  - **Moving a unit** drops its path (it plans again next tick) and ends, at once, any engagement it's been moved out of.
+  - **The log replay** takes a `PUSH` as where the unit ends up, since a push can come after the unit stepped that tick. A push, leap, or charge ends any leg.
+  - **`collision_stun_ms`** stuns with the first status of kind `stun`, credited to whatever pushed.
 - **Flying** (trait):
   - A flier **moving** ignores units and rocks (decided), and nothing blocks on it.
   - A flier **stopping** (to attack) has to stop on a free spot. If it's over someone, it keeps going to the nearest free spot that's still in range. A stopped flier blocks like anyone.

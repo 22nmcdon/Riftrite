@@ -78,6 +78,8 @@ var listeners: Array[Passives.Listener] = []
 ## Statuses it applies as the key land as the value (lookup only).
 var status_swaps: Dictionary[String, String] = {}
 
+## A leap's landing: it can't act before this tick.
+var landing_until: int = 0
 ## The engagers it's next to (Engage).
 var engagements: Array[Engage.Engagement] = []
 

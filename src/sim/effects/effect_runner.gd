@@ -12,9 +12,9 @@ extends RefCounted
 ##
 ## Numbers come from the unit's stats (with its auras) and its output auras
 ## (Passives.boosted); statuses it applies may be swapped (replace_status).
-## Built so far: damage, heal, shield, apply_status, cleanse, and mana_drain.
-## The arena's own effects (knockback, pull, leap, charge, area, summon,
-## start_collapse) come with their steps.
+## Built so far: damage, heal, shield, apply_status, cleanse, mana_drain,
+## knockback, pull, leap, and charge (Displacement). Area, summon, and
+## start_collapse come with their steps.
 
 
 ## What an on_hit or on_crit effect knows about the hit that set it off.
@@ -33,10 +33,16 @@ static func basic_attack(sim: CombatSim, unit: UnitState) -> void:
 
 ## `ability` fires from `unit` at `target`; `reach` (in hexes) decides whether
 ## it's a shot (AbilityDef.is_shot). An ability aimed at the unit itself never
-## is.
-static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: UnitState, reach: int) -> void:
+## is. One that leaps fails whole if there's no room to land: nothing fires,
+## and it returns false (the failure is logged unless `log_failure` is off).
+static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: UnitState, reach: int, log_failure: bool = true) -> bool:
 	var ability: AbilityDef = state.def
 	var source: EffectSource = state.source
+	var leap: EffectDef = ability.leap_effect() if target != null else null
+	if leap != null and Displacement.leap_spot(sim, unit, target, leap.hexes).x < 0:
+		if log_failure:
+			Displacement.leap_failed(sim, unit, target, source)
+		return false
 	var fired: LogEntry = sim.new_entry(LogEntry.Kind.FIRE, source)
 	fired.target = target.id if target != null else ""
 	sim.combat_log.add(fired)
@@ -62,6 +68,7 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 			land(sim, unit, ability, source, effect, victim, amount_of(effect, unit), crit_now)
 	if shot != null and not shot.effects.is_empty():
 		Shots.fire(sim, shot)
+	return true
 
 
 ## One effect reaching `victim` with its number already worked out (as it
@@ -89,6 +96,14 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			Statuses.cleanse_over_time(sim, victim, mini(amount, FixedMath.BP_ONE), source)
 		EffectDef.Type.MANA_DRAIN:
 			Mana.drain(sim, victim, amount, source)
+		EffectDef.Type.KNOCKBACK:
+			Displacement.knockback(sim, victim, unit.pos, unit.forward(), effect.hexes, source)
+		EffectDef.Type.PULL:
+			Displacement.pull(sim, victim, unit, effect.hexes, source)
+		EffectDef.Type.LEAP:
+			Displacement.leap(sim, unit, victim, effect, source)
+		EffectDef.Type.CHARGE:
+			Displacement.charge(sim, unit, victim, effect, source)
 
 
 static func _on_hit(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: EffectSource, hit: Hit) -> void:

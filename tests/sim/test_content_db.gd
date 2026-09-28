@@ -180,6 +180,16 @@ func test_exactly_one_engaged_status() -> void:
 	_assert_error(_load_with(ContentDb.STATUSES_FILE, none), "found 0")
 
 
+func test_the_collision_stun_is_the_first_stun() -> void:
+	assert_eq(ContentDb.load_dir("res://data").stun_status.id, "stun")
+	var statuses: Array = _real_json(ContentDb.STATUSES_FILE)
+	statuses.append({"id": "daze", "name": "Daze", "kind": "stun", "duration_ms": 500})
+	var db: ContentDb = _load_with(ContentDb.STATUSES_FILE, statuses)
+	assert_eq(db.stun_status.id, "stun", "the first, not the last")
+	var none: Array = _real_json(ContentDb.STATUSES_FILE).filter(func(entry: Dictionary) -> bool: return entry["kind"] != "stun")
+	_assert_error(_load_with(ContentDb.STATUSES_FILE, none), "needs a status of kind \"stun\"")
+
+
 func test_status_fields_by_kind() -> void:
 	var statuses: Array = _real_json(ContentDb.STATUSES_FILE)
 	statuses.append({"id": "slow_two", "name": "Slow", "kind": "slow", "duration_ms": 1000})

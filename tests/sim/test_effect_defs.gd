@@ -47,7 +47,7 @@ func test_good_effects_have_no_errors() -> void:
 
 
 func test_the_removed_vocabulary_is_rejected() -> void:
-	_assert_error(_errors({"trigger": "on_fire", "type": "charge", "amount_ms": 500, "target": "holder_items"}), "type: unknown value \"charge\"")
+	_assert_error(_errors({"trigger": "on_fire", "type": "spill", "amount_ms": 500, "target": "holder_items"}), "type: unknown value \"spill\"")
 	for gone: String in ["enemy_front", "enemy_back", "row_allies", "enemy_front_row", "enemy_back_row", "enemy_random", "enemy_lowest_hp", "ally_lowest_hp"]:
 		_assert_error(_errors({"trigger": "on_fire", "type": "damage", "amount": 5, "target": gone}), "target: unknown value \"%s\"" % gone)
 	_assert_error(_errors({"trigger": "on_fire", "type": "damage", "amount": 5, "target": "all_enemies", "hits": 3, "hit_interval_ms": 100}), "unknown key \"hits\"")

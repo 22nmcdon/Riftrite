@@ -19,6 +19,9 @@ var nav_cell: int = 125
 ## it takes to break free.
 var engage_reach: int = 1000
 var break_free_ticks: int = 20
+## Displacement: how long a push stopped early stuns, and a leap's landing.
+var collision_stun_ticks: int = 20
+var leap_land_ticks: int = 6
 var repath_ticks: int
 var repath_give_up_ticks: int
 ## Standing units per side, summons included.
@@ -58,6 +61,8 @@ static func read(reader: DataReader) -> TuningDef:
 	def.nav_cell = reader.req_int("nav_cell", 25, 1000)
 	def.engage_reach = reader.req_int("engage_reach", 1)
 	def.break_free_ticks = reader.req_ticks("break_free_ms", FixedMath.MS_PER_TICK)
+	def.collision_stun_ticks = reader.req_ticks("collision_stun_ms", FixedMath.MS_PER_TICK)
+	def.leap_land_ticks = reader.req_ticks("leap_land_ms")
 	def.repath_ticks = reader.req_ticks("repath_ms", FixedMath.MS_PER_TICK)
 	def.repath_give_up_ticks = reader.req_ticks("repath_give_up_ms", FixedMath.MS_PER_TICK)
 	def.max_units_per_side = reader.req_int("max_units_per_side", 1)

@@ -25,6 +25,8 @@ var statuses: Dictionary[String, StatusDef] = {}
 var status_ids: Array[String] = []
 ## The status the Engage trait sets (the one of kind engaged).
 var engaged_status: StatusDef = null
+## The status a push stopped early stuns with (the first of kind stun).
+var stun_status: StatusDef = null
 
 var _id_pattern: RegEx = RegEx.create_from_string("^[a-z][a-z0-9_]*$")
 
@@ -63,6 +65,12 @@ static func load_texts(texts: Dictionary[String, String]) -> ContentDb:
 		db.engaged_status = db.statuses[engaged[0]]
 	elif texts.has(STATUSES_FILE):
 		db.errors.append("%s: needs exactly one status of kind \"engaged\" (the Engage trait sets it), found %d" % [STATUSES_FILE, engaged.size()])
+	for id: String in db.status_ids:
+		if db.statuses[id].kind == StatusDef.Kind.STUN:
+			db.stun_status = db.statuses[id]
+			break
+	if db.stun_status == null and texts.has(STATUSES_FILE):
+		db.errors.append("%s: needs a status of kind \"stun\" (a push stopped early stuns with the first)" % STATUSES_FILE)
 	return db
 
 
