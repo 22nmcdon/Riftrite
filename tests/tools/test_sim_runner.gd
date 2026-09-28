@@ -68,7 +68,7 @@ func test_a_small_run_reports_every_formation() -> void:
 	assert_eq(guarded.lengths[0], result.end_tick, "seed 1 is the first fight")
 	var text: String = Report.text(_content, report)
 	for expected: String in ["The Pack (the_pack): protecting the back line. 2 seeds, 4 named + 3 drawn formations", "  guarded ", "  drawn: worst",
-		"  gate: ", "  best (", "  worst ("]:
+		"  gate: ", "formations win. Median fight", "  best (", "  worst ("]:
 		assert_string_contains(text, expected)
 
 
@@ -82,5 +82,8 @@ func test_the_gate_needs_a_30_point_gap() -> void:
 	assert_eq([report.gap_points(), report.passes()], [30, true])
 	report.rows[1].wins = 6
 	assert_eq([report.gap_points(), report.passes()], [20, false])
+	assert_eq(report.winning(), 2, "8 and 6 of 10 are at least half")
+	report.rows[1].wins = 4
+	assert_eq(report.winning(), 1)
 	assert_eq(Report.Report.median([5, 1, 3] as Array[int]), 3)
 	assert_eq(Report.seconds(551), "27.5s")

@@ -314,6 +314,46 @@ godot --headless --path . -s tools/sim_runner.gd -- [--encounter=id] [--seeds=50
 - **"Placement matters"** (the gate): for each archetype's encounter, the best formation's win rate is at least **30 points** above the worst's, and the best isn't "any formation wins". 30 points is the bar for now, to revisit once the runner's first results are in (Decisions).
 - A test runs the runner on one encounter with a few seeds, so it can't rot.
 
+**Built in step 7:**
+
+- **The runner:** `tools/sim_runner.gd`, as above, with its work in `tools/sim_report.gd` so `tests/tools/test_sim_runner.gd` can run it small.
+  - The named formations live in `tools/sim_formations.json`: guarded, exposed, spread (Brannoc in front, the other two in the back corners), and clumped (the three side by side).
+  - It also takes `--draw-seed` and `--no-boards`, and exits 1 if any encounter fails the gate.
+  - The fight seeds only change crits, so a formation almost always wins every fight or none. The gate then really asks whether any formation loses while another wins, and one odd formation is enough. So the report also counts **how many formations win** (at least half their fights). The tuning aimed for about a third to two thirds of them.
+- **The first tuning pass** changed only enemies, each in the encounter that asks its question, in this order: pups, hounds, Archers, Ashlings, Moths, the Lurker, the Sentinel, the Guardian, and the Witch. Heroes keep the design's numbers.
+
+  | Enemy | HP (was) | ATK (was) | Other changes |
+  | --- | --- | --- | --- |
+  | Rift Pup | 210 (60) | 10 (8) | |
+  | Ashling | 220 (80) | 18 (6) | Cinder Burst: 6 Burn (3) |
+  | Rift Hound | 420 (180) | 16 (14) | |
+  | Cinder Moth | 260 (140) | 8 | |
+  | Hollow Archer | 460 (160) | 18 (16) | |
+  | Rift-Worn Sentinel | 520 (450) | 10 | |
+  | Cairn Guardian | 440 (380) | 16 | |
+  | Bog Lurker | 640 (260) | 24 (12) | Drag about every 6s (8 regen, was 4), and a 3s Root (its own 1.5s) |
+  | Gloam Witch | 300 (200) | 18 (8) | Ward: 30 Shield (15) |
+
+- **Results** (10 seeds; 4 named and 40 drawn formations; draw seed 1, and draw seed 2 in brackets): every encounter passes the gate with a 100-point gap.
+
+  | Encounter | Formations that win (of 44) | Median fight | Named formations that win |
+  | --- | --- | --- | --- |
+  | Pup Warren | 29 (21) | 33s | guarded, exposed, clumped; spread loses |
+  | Ash Nest | 28 (29) | 31s | guarded, exposed; spread and clumped lose |
+  | The Pack | 29 (36) | 35s | guarded, exposed, spread; clumped mostly loses |
+  | Moth Cloud | 24 (26) | 33s | only spread |
+  | Hollow Line | 28 (28) | 41s | none: the winners stand back and let the Archers come |
+  | Bog Crossing | 32 (31) | 40s | exposed and spread |
+  | Sentinel Gate | 28 (27) | 47s | only spread (around the wall) |
+  | Cairn Road | 26 (29) | 40s | exposed (Brannoc behind the charge's reach); guarded and clumped sometimes |
+  | Witch Circle | 31 (32) | 53s | guarded, spread, clumped; exposed loses |
+
+- **What the results say, for later passes:**
+  - Most encounters' losing formations fit their question: spreading out loses to the swarm, crowding loses to the Ashlings and the Moths, and only going around wins Sentinel Gate.
+  - Hollow Line doesn't fit yet. It's won by standing back out of the Archers' first reach, not by closing distance.
+  - Brannoc falls in almost every fight, wins included. The tank dying last is fine; dying every time may not be.
+  - The swarm enemies are no longer small: a pup has 210 HP, most of Maren's 270. Heroes kept the design's numbers, so enemies grew instead. Shrinking heroes' damage instead would keep the table's enemy numbers; that's a choice for the next pass.
+
 ## 8. What the elites and the boss will need (phase 5, noted now)
 
 The elites and Old Mother Ash come in phase 5 (decided). What they'll need, so the sim is ready when they come:
@@ -364,7 +404,7 @@ The elites and Old Mother Ash come in phase 5 (decided). What they'll need, so t
 4. **The three base kits** in `heroes.json`, and `test_hero_kits`. **Done.**
 5. **The nine enemies** in `enemies.json`, and `test_enemy_kits`. **Done.**
 6. **The encounters,** hand-placed, and `test_encounters`. **Done.**
-7. **The sim runner and the first tuning pass,** until the gate holds and fights run 30–60s. The results go in this plan.
+7. **The sim runner and the first tuning pass,** until the gate holds and fights run 30–60s. The results go in this plan. **Done** (section 7).
 8. **Docs:** CLAUDE.md's "how it works" gains the content files and the runner; the design's open questions are updated.
 
 ## Decisions

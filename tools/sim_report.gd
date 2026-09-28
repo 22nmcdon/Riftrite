@@ -9,6 +9,10 @@ extends RefCounted
 ##     (hits and damage over time, Shield included).
 ##   - The gate ("placement matters"): the best formation's win rate is at
 ##     least GATE_POINTS above the worst's.
+##   - Since the seeds only change crits, a formation mostly wins every fight
+##     or none, so the report also counts the formations that win at least
+##     half their fights: the gate passes when one loses, but a question
+##     worth asking has many formations on each side.
 
 ## The gate, in percentage points (Decisions: 30 for now).
 const GATE_POINTS: int = 30
@@ -65,6 +69,14 @@ class Report:
 
 	func passes() -> bool:
 		return gap_points() >= GATE_POINTS
+
+	## How many formations win at least half their fights.
+	func winning() -> int:
+		var count: int = 0
+		for row: Row in rows:
+			if row.wins * 2 >= row.fights:
+				count += 1
+		return count
 
 	## Every fight's length in ticks, all formations together.
 	func median_ticks() -> int:
@@ -203,8 +215,9 @@ static func text(content: ContentDb, report: Report, boards: bool = true) -> Str
 		lines.append("  drawn: worst %d%%, median %d%%, best %d%%" % [percents[0], Report.median(percents), percents[-1]])
 	var best: Row = report.best()
 	var worst: Row = report.worst()
-	lines.append("  gate: %s. Best %s %d%%, worst %s %d%%: a %d-point gap (needs %d). Median fight %s" % [
-		"passes" if report.passes() else "FAILS", best.name, best.win_percent(), worst.name, worst.win_percent(), report.gap_points(), GATE_POINTS, seconds(report.median_ticks())])
+	lines.append("  gate: %s. Best %s %d%%, worst %s %d%%: a %d-point gap (needs %d). %d of %d formations win. Median fight %s" % [
+		"passes" if report.passes() else "FAILS", best.name, best.win_percent(), worst.name, worst.win_percent(), report.gap_points(), GATE_POINTS,
+		report.winning(), report.rows.size(), seconds(report.median_ticks())])
 	if boards:
 		for pair: Array in [["best", best], ["worst", worst]]:
 			lines.append("  %s (%s): %s" % [pair[0], (pair[1] as Row).name, formation_text((pair[1] as Row).formation)])

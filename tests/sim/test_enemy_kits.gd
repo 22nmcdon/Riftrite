@@ -55,15 +55,15 @@ func test_the_enemies_read_as_designed() -> void:
 		return [EnemyDef.ARCHETYPE_NAMES[enemy.archetype], stats.get_stat(UnitStats.Stat.HP), stats.get_stat(UnitStats.Stat.ATK), stats.get_stat(UnitStats.Stat.DEF),
 			stats.get_stat(UnitStats.Stat.SPEED), stats.get_stat(UnitStats.Stat.RANGE), enemy.kit.traits])
 	assert_eq(rows, [
-		["swarm", 60, 8, 0, 3, 1, []],
-		["swarm", 80, 6, 0, 2, 1, []],
-		["flanker", 180, 14, 4, 3, 1, []],
-		["caster", 140, 8, 0, 2, 3, ["flying"]],
-		["ranged", 160, 16, 4, 2, 5, ["hop_away"]],
-		["anchor", 450, 10, 25, 1, 1, ["engage"]],
-		["charger", 380, 16, 20, 2, 1, []],
-		["disruptor", 260, 12, 8, 1, 1, []],
-		["support", 200, 8, 4, 2, 4, []],
+		["swarm", 210, 10, 0, 3, 1, []],
+		["swarm", 220, 18, 0, 2, 1, []],
+		["flanker", 420, 16, 4, 3, 1, []],
+		["caster", 260, 8, 0, 2, 3, ["flying"]],
+		["ranged", 460, 18, 4, 2, 5, ["hop_away"]],
+		["anchor", 520, 10, 25, 1, 1, ["engage"]],
+		["charger", 440, 16, 20, 2, 1, []],
+		["disruptor", 640, 24, 8, 1, 1, []],
+		["support", 300, 18, 4, 2, 4, []],
 	])
 	assert_eq((_content.enemies["rift_hound"] as EnemyDef).threat, "Pounces on your weakest back-liner")
 	assert_true(_content.enemy_ids.all(func(enemy_id: String) -> bool: return not (_content.enemies[enemy_id] as EnemyDef).threat.is_empty()))
@@ -76,7 +76,7 @@ func test_rift_pups_bite_harder_for_each_pup_beside_them() -> void:
 	K.step(alone, 100)
 	var alone_bites: Array = K.entries(alone, LogEntry.Kind.DAMAGE, "rift_pup").map(func(entry: LogEntry) -> int: return entry.amount)
 	assert_false(alone_bites.is_empty())
-	assert_true(alone_bites.all(func(amount: int) -> bool: return amount == 8), "alone, a pup bites for its ATK: %s" % [alone_bites])
+	assert_true(alone_bites.all(func(amount: int) -> bool: return amount == 10), "alone, a pup bites for its ATK: %s" % [alone_bites])
 
 	var pack: CombatSim = _sim([K.at(_still("hero", {"hp": 10000}), 3, 2)] as Array[UnitSetup],
 		[K.foe(_kit("rift_pup"), 2, 4, "pup_a"), K.foe(_kit("rift_pup"), 3, 4, "pup_b"), K.foe(_kit("rift_pup"), 4, 4, "pup_c")] as Array[UnitSetup])
@@ -84,8 +84,8 @@ func test_rift_pups_bite_harder_for_each_pup_beside_them() -> void:
 	K.step(pack, 100)
 	var bites: Array = K.entries(pack, LogEntry.Kind.DAMAGE).filter(func(entry: LogEntry) -> bool: return entry.source_unit.begins_with("pup_")) \
 		.map(func(entry: LogEntry) -> int: return entry.amount)
-	assert_true(bites.all(func(amount: int) -> bool: return amount in [8, 10, 12]), "+25%% of 8 for each other pup within a hex: %s" % [bites])
-	assert_true(bites.has(10) or bites.has(12), "in a pack, some bites are stronger: %s" % [bites])
+	assert_true(bites.all(func(amount: int) -> bool: return amount in [10, 13, 15]), "+25%% of 10 for each other pup within a hex (12.5 rounds to 13): %s" % [bites])
+	assert_true(bites.has(13) or bites.has(15), "in a pack, some bites are stronger: %s" % [bites])
 
 
 func test_an_ashling_bursts_into_burn_on_every_unit_within_a_hex() -> void:
@@ -96,7 +96,7 @@ func test_an_ashling_bursts_into_burn_on_every_unit_within_a_hex() -> void:
 	fight.unit_by_id("ashling").hp = 0
 	K.step(fight, 1)
 	assert_false(fight.unit_by_id("ashling").alive)
-	assert_eq(_statuses(fight, "ashling", "burn"), [["near", "cinder_burst", 3], ["pup", "cinder_burst", 3]], "heroes and its own side alike; not pup_two_off or far")
+	assert_eq(_statuses(fight, "ashling", "burn"), [["near", "cinder_burst", 6], ["pup", "cinder_burst", 6]], "heroes and its own side alike; not pup_two_off or far")
 
 
 # --- flanker -------------------------------------------------------------------------
@@ -110,7 +110,7 @@ func test_a_rift_hound_pounces_on_the_weakest_back_liner_at_the_start() -> void:
 	var leaps: Array = K.entries(fight, LogEntry.Kind.LEAP, "rift_hound").map(func(entry: LogEntry) -> Array: return [entry.tick, entry.target, entry.source_ability])
 	assert_eq(leaps, [[1, "back_b", "pounce"]], "the lowest HP% of the back two rows, not the weaker front-liner")
 	var bites: Array = K.entries(fight, LogEntry.Kind.DAMAGE, "rift_hound").map(func(entry: LogEntry) -> Array: return [entry.target, entry.source_ability, entry.amount])
-	assert_eq(bites, [["back_b", "pounce", 14]], "then bites")
+	assert_eq(bites, [["back_b", "pounce", 16]], "then bites")
 
 
 # --- caster ------------------------------------------------------------------------
@@ -184,6 +184,8 @@ func test_a_bog_lurker_drags_the_farthest_hero_2_hexes_and_roots_them() -> void:
 	var pulls: Array = K.entries(fight, LogEntry.Kind.PUSH, "bog_lurker").map(func(entry: LogEntry) -> Array: return [entry.target, _moved(entry)])
 	assert_eq(pulls, [["far", 2000]], "the farthest within 5 hexes (Drag is a shot from 4 hexes off)")
 	assert_eq(_statuses(fight, "bog_lurker", "root").map(func(row: Array) -> Array: return [row[0], row[1]]), [["far", "drag"]])
+	var roots: Array[LogEntry] = K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "bog_lurker").filter(func(entry: LogEntry) -> bool: return entry.status == "root")
+	assert_eq(roots[0].end_tick - roots[0].tick, 60, "Rooted for 3s")
 
 
 # --- support -----------------------------------------------------------------------
@@ -198,7 +200,7 @@ func test_a_gloam_witch_wards_her_allies_every_third_attack() -> void:
 	var wards: Array = K.entries(fight, LogEntry.Kind.SHIELD, "gloam_witch").map(func(entry: LogEntry) -> Array: return [entry.target, entry.source_ability, entry.amount])
 	var expected: Array = []
 	for i: int in attacks / 3:
-		expected.append_array([["gloam_witch", "ward", 15], ["pup", "ward", 15]])
+		expected.append_array([["gloam_witch", "ward", 30], ["pup", "ward", 30]])
 	assert_eq(wards, expected)
 
 
