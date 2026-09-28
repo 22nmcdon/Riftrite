@@ -94,16 +94,22 @@ func sync_fight(player: FightPlayer) -> void:
 			_add_token(unit_token)
 		unit_token.plane_pos = unit.pos
 		unit_token.visible = unit.alive
-		unit_token.place_at(self, player.drawn_position(unit))
+		unit_token.place_at(self, fx.moved_position(unit.id, player.drawn_position(unit), player.drawn_time()))
 		unit_token.show_state(unit, player.sim.tick)
 	fx.update(player)
+	queue_redraw()
 
 
 func _add_token(unit_token: UnitToken) -> void:
 	tokens.append(unit_token)
 	add_child(unit_token)
-	unit_token.mouse_entered.connect(func() -> void: unit_hovered.emit(unit_token.unit_id))
-	unit_token.mouse_exited.connect(func() -> void: unit_unhovered.emit(unit_token.unit_id))
+	unit_token.mouse_entered.connect(func() -> void:
+		fx.hovered = unit_token.unit_id
+		unit_hovered.emit(unit_token.unit_id))
+	unit_token.mouse_exited.connect(func() -> void:
+		if fx.hovered == unit_token.unit_id:
+			fx.hovered = ""
+		unit_unhovered.emit(unit_token.unit_id))
 
 
 func set_mode(new_mode: Mode) -> void:
@@ -242,6 +248,8 @@ func _draw() -> void:
 		var flash := FLASH
 		flash.a *= clampf(_flash_left / FLASH_SECONDS, 0.0, 1.0)
 		draw_colored_polygon(hex_corners(grid.center(flashing.x, flashing.y)), flash)
+	if mode == Mode.FIGHT:
+		fx.draw_ground(self)
 	for rock: ArenaPlane.Circle in rocks:
 		var center: Vector2 = to_pixel(rock.center)
 		draw_circle(center, rock.radius * scale_px, ROCK_FILL)

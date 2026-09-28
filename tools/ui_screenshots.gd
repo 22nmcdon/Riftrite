@@ -36,6 +36,23 @@ func _run() -> void:
 	await _snap("fight_sentinel_gate_8s")
 	arena.skip()
 	await _snap("fight_sentinel_gate_end")
+	# An area warning up (Moth Cloud's Ember Dust), with every target line.
+	var moths: ArenaScreen = ArenaScreen.make(PracticeSession.make(content), "moth_cloud")
+	_main.show_screen(moths)
+	moths._fight()
+	moths.target_lines.button_pressed = true
+	while not moths.player.finished() and not moths.view.fx.effects.any(func(fx: FightFx.Fx) -> bool: return fx.kind == FightFx.Kind.AREA):
+		moths._process(1.0 / 30.0)
+	for frame: int in 12:
+		moths._process(1.0 / 30.0)
+	await _snap("fight_moth_cloud_warning")
+	# Rift Collapse under way (Witch Circle runs past 45s).
+	var witches: ArenaScreen = ArenaScreen.make(PracticeSession.make(content), "witch_circle")
+	_main.show_screen(witches)
+	witches._fight()
+	while not witches.player.finished() and witches.player.sim.tick < 47 * 20:
+		witches._process(1.0 / 30.0)
+	await _snap("fight_witch_circle_collapse")
 	quit(0)
 
 

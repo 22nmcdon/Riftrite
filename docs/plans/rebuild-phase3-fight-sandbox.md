@@ -157,6 +157,25 @@ Each item names the sim state or log entries it comes from. Anything a player co
 
 - **Unit details** follow section 7: hover an enemy for its side panel at any time; click a hero while the fight isn't playing (placement, paused, or over) for its popup.
 
+**Built in step 5** (`src/ui/arena/fight_fx.gd`, `UnitToken.show_state`, `tests/ui/test_fight_view.gd`):
+
+- **Tokens read the unit's state every frame:**
+  - an HP bar (green for heroes, red for enemies) with any Shield after it;
+  - a mana bar only for a unit with a mana signature;
+  - a cast bar while a signature is cast;
+  - a tag per status ("STUN", "BRN 4").
+  The board keeps a third of a hex of room above it for the top row's bars.
+- **`FightFx`** turns the log into what the table above lists. Everything runs on the fight's own clock (`FightPlayer.drawn_time`), so it pauses and changes speed with the fight.
+  - **Over the tokens:** shots in flight (a fizzle removes its own), melee swipes (only when attacker and target are within reach; a shot or area shows its own), floating numbers, signature names and phase names, a ghost where a unit fell, a pulse where a summon appears, and aura rings.
+  - **On the ground, under the tokens:** area warnings filling until they land and then a flash, colored by the caster's side (so Vell's Hearthlight is brass, not hostile); crumbled ground dark and the next ring striped; target lines; Taunt lines; and Engage links.
+  - **Pushes, leaps, charges, and hops** slide over 5 ticks from where the unit was.
+  - **A skip or seek** (more than 60 entries at once) clears the board's effects instead of animating them.
+- **Target lines:** a "Target lines (for testing)" toggle and the T key show every unit's; hovering a unit shows its own.
+- **Not in this step:**
+  - the banners (a phase, the collapse at 45s, the end) come with the log panel in step 6;
+  - the enemy panel's and heroes' details are step 7.
+- **Tests:** a test plays the whole chaos fight with every frame drawn, and checks it shows every kind of effect and a slide. Mutation checks: all 33 changes to the effects, bars, and toggles are caught (four needed an added test).
+
 ## 6. The log panel and the fight chart
 
 - **The log panel** is a side panel that can be hidden, showing `LogEntry.to_text()` lines as they happen. By default it hides the chatter (`MOVE`, `STOP`, `TARGET`) and shows everything else; a toggle shows all. Clicking a unit filters the panel to lines about it. Lines are colored by side.
@@ -237,7 +256,7 @@ UI tests run headless and drive time by hand, so they're deterministic.
 2. **`ArenaView` and tokens:** the board and units drawn from a `FightSetup`, static. Screenshot. **Done.**
 3. **Placement:** moving heroes, legality from the sim, enemy hover with reach, the remembered formation. **Done** (no reach drawn: Decision 5).
 4. **`FightPlayer`:** live stepping, speeds, pause, restart, rewind, interpolation. **Done.**
-5. **What the fight shows (section 5)**, in two passes: bars, statuses, shots, swipes, and numbers first; then areas, displacement tweens, collapse, summons, deaths, phases, target lines, and Engage links.
+5. **What the fight shows (section 5)**, in two passes: bars, statuses, shots, swipes, and numbers first; then areas, displacement tweens, collapse, summons, deaths, phases, target lines, and Engage links. **Done.**
 6. **Log panel and fight chart.**
 7. **Unit details:** the ability text in the data, the enemy side panel, and the hero popup.
 8. **Practice flow:** the title button, encounter list, result screen, place again, rematch.

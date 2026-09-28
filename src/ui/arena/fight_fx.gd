@@ -9,6 +9,18 @@ extends Control
 ##                    reach (a shot or an area shows its own), and a number
 ##   STATUS_DAMAGE, COLLAPSE, HEAL, SHIELD   a number
 ##   FIRE             a signature's name over the unit that fired it
+##   AREA_WARNING     the shape on the ground, filling up until it lands
+##   AREA_LANDED      a flash of the shape
+##   PUSH, LEAP, CHARGE, HOP   the moved unit slides from where it was to
+##                    where it went (the sim moves it at once; moved_position)
+##   DEATH            a fading ghost where it fell
+##   SUMMON           a pulse where the summon appears
+##   PHASE            the phase's name over the unit
+##   AURA             a faint ring round the holder while the aura holds
+##   COLLAPSE_RING    the ring about to crumble striped, crumbled ground dark
+## Target lines (for a hovered unit, or all with a toggle; brighter for a
+## Taunt) and Engage links come from the sim's state. The ground things are
+## drawn under the tokens by ArenaView (draw_ground); the rest over them.
 ## Each lasts a set number of ticks of fight time (FightPlayer.drawn_time),
 ## so it pauses and changes speed with the fight. It only reads.
 
@@ -16,6 +28,11 @@ extends Control
 const NUMBER_TICKS: int = 16
 const SWIPE_TICKS: int = 4
 const POPUP_TICKS: int = 24
+const PHASE_TICKS: int = 40
+const LANDED_TICKS: int = 6
+const MOVE_TICKS: int = 5
+const GHOST_TICKS: int = 12
+const PULSE_TICKS: int = 8
 ## A swipe is drawn when attacker and target are this close (plane units),
 ## measured between their edges.
 const MELEE_GAP: int = 600
@@ -25,8 +42,16 @@ const DAMAGE_COLOR := Color("f1e6cc")
 const CRIT_COLOR := Color("ffd166")
 const HEAL_COLOR := UiStyle.GOOD
 const COLLAPSE_COLOR := UiStyle.EMBER
+## Areas by the caster's side: enemies' hostile, heroes' their own brass.
+const ENEMY_AREA := Color(0.88, 0.36, 0.23)
+const HERO_AREA := Color(0.91, 0.78, 0.47)
+const CRUMBLED := Color(0.02, 0.01, 0.03, 0.72)
+const WARNED := Color(0.88, 0.44, 0.23, 0.22)
+const TARGET_LINE := Color(1, 1, 1, 0.28)
+const TAUNT_LINE := Color(0.88, 0.44, 0.23, 0.8)
+const ENGAGE_LINK := UiStyle.BRASS_300
 
-enum Kind { SHOT, SWIPE, NUMBER, POPUP }
+enum Kind { SHOT, SWIPE, NUMBER, POPUP, AREA, LANDED, GHOST, PULSE }
 
 
 ## One effect on the board.
@@ -42,9 +67,23 @@ class Fx:
 	var text: String = ""
 	var color: Color = Color.WHITE
 	var big: bool = false
+	## Areas: the shape's kind and size (hexes), and where an aimed one ends.
+	var shape: String = ""
+	var size: int = 0
+	var to: Vector2 = Vector2.ZERO
 
 
 var effects: Array[Fx] = []
+## Units sliding after a push, leap, charge, or hop, by id.
+var moves: Dictionary[String, Fx] = {}
+## Auras holding now: "holder:ability" -> holder id (a lookup; drawn in the
+## fight's order).
+var auras: Dictionary[String, String] = {}
+## The ground left after the ring being warned crumbles (none: size 0).
+var warned_safe: Rect2i = Rect2i()
+## Target lines for every unit (a toggle), or only the hovered one.
+var all_targets: bool = false
+var hovered: String = ""
 var _view: ArenaView
 var _player: FightPlayer = null
 
@@ -60,6 +99,9 @@ static func make(view: ArenaView) -> FightFx:
 
 func clear() -> void:
 	effects.clear()
+	moves.clear()
+	auras.clear()
+	warned_safe = Rect2i()
 	queue_redraw()
 
 
@@ -79,7 +121,21 @@ func update(player: FightPlayer) -> void:
 	_player = player
 	var now: float = player.drawn_time()
 	effects = effects.filter(func(fx: Fx) -> bool: return now < fx.end)
+	for unit_id: String in moves.keys():
+		if now >= moves[unit_id].end:
+			moves.erase(unit_id)
+	if warned_safe.size != Vector2i.ZERO and player.sim.safe == warned_safe:
+		warned_safe = Rect2i()
 	queue_redraw()
+
+
+## Where a sliding unit is drawn (after a push, leap, charge, or hop), or
+## `otherwise` if it isn't sliding.
+func moved_position(unit_id: String, otherwise: Vector2, now: float) -> Vector2:
+	if not moves.has(unit_id):
+		return otherwise
+	var move: Fx = moves[unit_id]
+	return move.from.lerp(move.to, clampf((now - move.start) / float(move.end - move.start), 0.0, 1.0))
 
 
 func _add(entry: LogEntry, sim: CombatSim) -> void:
@@ -114,6 +170,48 @@ func _add(entry: LogEntry, sim: CombatSim) -> void:
 				var popup: Fx = _new(Kind.POPUP, entry.tick, entry.tick + POPUP_TICKS, Vector2(unit.pos), unit.id)
 				popup.text = entry.source_ability_name
 				popup.color = UiStyle.HIGHLIGHT
+		LogEntry.Kind.AREA_WARNING, LogEntry.Kind.AREA_LANDED:
+			var warning: bool = entry.kind == LogEntry.Kind.AREA_WARNING
+			var area: Fx = _new(Kind.AREA if warning else Kind.LANDED, entry.tick, entry.end_tick if warning else entry.tick + LANDED_TICKS, Vector2(entry.from_pos), "")
+			var parts: PackedStringArray = entry.shape.split(" ")
+			area.shape = parts[0]
+			area.size = parts[1].to_int() if parts.size() > 1 else 1
+			area.to = Vector2(entry.to_pos)
+			var caster: UnitState = sim.unit_by_id(entry.source_unit)
+			area.color = HERO_AREA if caster != null and caster.side == EffectSource.Team.HEROES else ENEMY_AREA
+		LogEntry.Kind.PUSH, LogEntry.Kind.LEAP, LogEntry.Kind.CHARGE, LogEntry.Kind.HOP:
+			if entry.from_pos != entry.to_pos:
+				var mover: String = entry.target if entry.kind == LogEntry.Kind.PUSH else entry.source_unit
+				var move := Fx.new()
+				move.start = entry.tick
+				move.end = entry.tick + MOVE_TICKS
+				move.from = Vector2(entry.from_pos)
+				move.to = Vector2(entry.to_pos)
+				move.unit_id = mover
+				moves[mover] = move
+		LogEntry.Kind.DEATH:
+			var ghost: Fx = _new(Kind.GHOST, entry.tick, entry.tick + GHOST_TICKS, Vector2(entry.to_pos), entry.target)
+			ghost.color = _side_color(sim, entry.target)
+		LogEntry.Kind.SUMMON:
+			if entry.note.is_empty():
+				var pulse: Fx = _new(Kind.PULSE, entry.tick, entry.tick + PULSE_TICKS, Vector2(entry.to_pos), entry.target)
+				pulse.color = _side_color(sim, entry.target)
+		LogEntry.Kind.PHASE:
+			var target: UnitState = sim.unit_by_id(entry.target)
+			if target != null:
+				var phase: Fx = _new(Kind.POPUP, entry.tick, entry.tick + PHASE_TICKS, Vector2(target.pos), target.id)
+				phase.text = entry.note
+				phase.color = UiStyle.EMBER
+				phase.big = true
+		LogEntry.Kind.AURA:
+			var key: String = "%s:%s" % [entry.source_unit, entry.source_ability]
+			if entry.note.begins_with("starts"):
+				auras[key] = entry.source_unit
+			else:
+				auras.erase(key)
+		LogEntry.Kind.COLLAPSE_RING:
+			if entry.note == "warned":
+				warned_safe = Rect2i(entry.from_pos, entry.to_pos - entry.from_pos)
 
 
 func _new(kind: Kind, start: int, end: int, from: Vector2, unit_id: String) -> Fx:
@@ -157,6 +255,12 @@ func _draw() -> void:
 	if _player == null:
 		return
 	var now: float = _player.drawn_time()
+	for key: String in auras:
+		var holder: UnitState = _player.sim.unit_by_id(auras[key])
+		if holder != null and holder.alive:
+			var ring: Color = _side_color(_player.sim, holder.id)
+			ring.a = 0.45
+			draw_arc(_view.to_pixel_f(_unit_point(holder.id, Vector2(holder.pos))), holder.radius * _view.scale_px * 1.3, 0.0, TAU, 40, ring, 2.0, true)
 	var font: Font = get_theme_default_font()
 	var hex: float = _view.hex_px()
 	var stacked: Dictionary[String, int] = {}
@@ -182,12 +286,105 @@ func _draw() -> void:
 				color.a = 1.0 - t * t
 				draw_string_outline(font, point, fx.text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 4, Color(0, 0, 0, color.a))
 				draw_string(font, point, fx.text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, color)
+			Kind.GHOST:
+				var color: Color = fx.color
+				color.a = 0.6 * (1.0 - t)
+				draw_arc(_view.to_pixel_f(fx.from), hex * 0.4 * (1.0 + 0.3 * t), 0.0, TAU, 32, color, 3.0, true)
+			Kind.PULSE:
+				var color: Color = fx.color
+				color.a = 1.0 - t
+				draw_arc(_view.to_pixel_f(fx.from), hex * (0.4 + 0.4 * t), 0.0, TAU, 32, color, 3.0, true)
 			Kind.POPUP:
 				var base: Vector2 = _view.to_pixel_f(_unit_point(fx.unit_id, fx.from))
-				var size: int = int(hex * 0.2)
+				var size: int = int(hex * (0.26 if fx.big else 0.2))
 				var width: float = font.get_string_size(fx.text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
 				var point: Vector2 = base + Vector2(-width / 2.0, -hex * (0.75 + 0.15 * t))
 				var color: Color = fx.color
 				color.a = 1.0 - t * t
 				draw_string_outline(font, point, fx.text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 5, Color(0, 0, 0, color.a))
 				draw_string(font, point, fx.text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, color)
+
+
+# --- the ground (drawn under the tokens by ArenaView) ------------------------------
+
+## Crumbled and warned ground, area warnings and flashes, target lines, and
+## Engage links, on `canvas` (the ArenaView, from its _draw).
+func draw_ground(canvas: CanvasItem) -> void:
+	if _player == null:
+		return
+	var sim: CombatSim = _player.sim
+	var now: float = _player.drawn_time()
+	_draw_outside(canvas, sim.safe, CRUMBLED)
+	if warned_safe.size != Vector2i.ZERO:
+		_draw_between(canvas, sim.safe, warned_safe, WARNED)
+	for fx: Fx in effects:
+		if fx.kind == Kind.AREA or fx.kind == Kind.LANDED:
+			var t: float = clampf((now - fx.start) / float(fx.end - fx.start), 0.0, 1.0)
+			var fill: Color = fx.color
+			fill.a = 0.06 + 0.2 * t if fx.kind == Kind.AREA else 0.35 * (1.0 - t)
+			var line: Color = fx.color
+			line.a = 0.9 if fx.kind == Kind.AREA else 0.5 * (1.0 - t)
+			_draw_shape(canvas, fx, fill, line)
+	for unit: UnitState in sim.units:
+		if not unit.alive:
+			continue
+		var from: Vector2 = _view.to_pixel_f(_unit_point(unit.id, Vector2(unit.pos)))
+		var taunter: UnitState = Statuses.taunter(sim, unit)
+		if taunter != null:
+			canvas.draw_line(from, _view.to_pixel_f(_unit_point(taunter.id, Vector2(taunter.pos))), TAUNT_LINE, 2.0, true)
+		elif unit.target != null and unit.target.alive and (all_targets or unit.id == hovered):
+			canvas.draw_line(from, _view.to_pixel_f(_unit_point(unit.target.id, Vector2(unit.target.pos))), TARGET_LINE, 1.5, true)
+		for state: StatusState in unit.statuses:
+			if state.def.kind == StatusDef.Kind.ENGAGED and state.source != null:
+				var engager: UnitState = sim.unit_by_id(state.source.unit_id)
+				if engager != null and engager.alive:
+					canvas.draw_line(from, _view.to_pixel_f(_unit_point(engager.id, Vector2(engager.pos))), ENGAGE_LINK, 4.0, true)
+
+
+func _draw_shape(canvas: CanvasItem, fx: Fx, fill: Color, line: Color) -> void:
+	var hex: float = HexGrid.HEX
+	match fx.shape:
+		"circle":
+			var center: Vector2 = _view.to_pixel_f(fx.from)
+			var radius: float = fx.size * hex * _view.scale_px
+			canvas.draw_circle(center, radius, fill)
+			canvas.draw_arc(center, radius, 0.0, TAU, 48, line, 2.0, true)
+		"ring":
+			var center: Vector2 = _view.to_pixel_f(fx.from)
+			var outer: float = (fx.size * hex + HexGrid.HALF_HEX) * _view.scale_px
+			var inner: float = maxf(fx.size * hex - HexGrid.HALF_HEX, 0.0) * _view.scale_px
+			canvas.draw_arc(center, (outer + inner) / 2.0, 0.0, TAU, 48, fill, outer - inner, true)
+			canvas.draw_arc(center, outer, 0.0, TAU, 48, line, 2.0, true)
+			canvas.draw_arc(center, inner, 0.0, TAU, 48, line, 2.0, true)
+		_:
+			var along: Vector2 = (fx.to - fx.from).normalized()
+			var across := Vector2(-along.y, along.x)
+			var far_half: float = (HexGrid.HALF_HEX if fx.shape == "line" else 3.0 * HexGrid.HALF_HEX)
+			var corners := PackedVector2Array([
+				_view.to_pixel_f(fx.from + across * HexGrid.HALF_HEX), _view.to_pixel_f(fx.to + across * far_half),
+				_view.to_pixel_f(fx.to - across * far_half), _view.to_pixel_f(fx.from - across * HexGrid.HALF_HEX)])
+			canvas.draw_colored_polygon(corners, fill)
+			var outline: PackedVector2Array = corners.duplicate()
+			outline.append(corners[0])
+			canvas.draw_polyline(outline, line, 2.0, true)
+
+
+## Fills the board outside `inside` (crumbled ground).
+func _draw_outside(canvas: CanvasItem, inside: Rect2i, color: Color) -> void:
+	_draw_between(canvas, _view.drawn_rect, inside, color)
+
+
+## Fills what's in `outer` but not in `inner` (both on the plane).
+func _draw_between(canvas: CanvasItem, outer: Rect2i, inner: Rect2i, color: Color) -> void:
+	if inner.encloses(outer):
+		return
+	var bands: Array[Rect2i] = [
+		Rect2i(outer.position.x, outer.position.y, outer.size.x, inner.position.y - outer.position.y),
+		Rect2i(outer.position.x, inner.end.y, outer.size.x, outer.end.y - inner.end.y),
+		Rect2i(outer.position.x, inner.position.y, inner.position.x - outer.position.x, inner.size.y),
+		Rect2i(inner.end.x, inner.position.y, outer.end.x - inner.end.x, inner.size.y)]
+	for band: Rect2i in bands:
+		if band.size.x <= 0 or band.size.y <= 0:
+			continue
+		var top_left: Vector2 = _view.to_pixel(Vector2i(band.position.x, band.end.y))
+		canvas.draw_rect(Rect2(top_left, Vector2(band.size) * _view.scale_px), color)

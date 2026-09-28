@@ -17,7 +17,7 @@ signal fight_requested(setup: FightSetup)
 signal back_requested
 
 const SIDE_WIDTH: int = 380
-const FIGHT_HINT: String = "Space pauses, 1-3 set the speed, S skips to the end. Hover an enemy to read it."
+const FIGHT_HINT: String = "Space pauses, 1-3 set the speed, S skips to the end, T shows every target line. Hover an enemy to read it."
 
 var session: PracticeSession
 var encounter: EncounterDef
@@ -33,6 +33,7 @@ var clock_label: Label
 var outcome_label: Label
 var pause_button: Button
 var speed_buttons: Array[Button] = []
+var target_lines: CheckButton
 var _placement_box: VBoxContainer
 var _fight_box: VBoxContainer
 
@@ -155,6 +156,10 @@ func _build_fight_box() -> VBoxContainer:
 	box.add_child(jumps)
 	jumps.add_child(UiStyle.button("Skip to end", skip))
 	jumps.add_child(UiStyle.button("Restart", restart))
+	target_lines = CheckButton.new()
+	target_lines.text = "Target lines (for testing)"
+	target_lines.toggled.connect(func(on: bool) -> void: view.fx.all_targets = on)
+	box.add_child(target_lines)
 	outcome_label = UiStyle.label("", 24, UiStyle.HIGHLIGHT)
 	outcome_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(outcome_label)
@@ -263,6 +268,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			set_speed(FightPlayer.SPEEDS[(event as InputEventKey).keycode - KEY_1])
 		KEY_S:
 			skip()
+		KEY_T:
+			target_lines.button_pressed = not target_lines.button_pressed
 		_:
 			return
 	get_viewport().set_input_as_handled()
