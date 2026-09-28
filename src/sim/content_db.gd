@@ -11,13 +11,18 @@ extends RefCounted
 ## use the *_ids arrays (file order), never the dictionaries (CLAUDE.md rule 1).
 ##
 ## The rebuild (docs/plans/rebuild-build-order.md) left only tuning and
-## statuses after the gut; each later phase adds its files here (units and
-## encounters in phase 2, paths in phase 4, relics, bonds, and the run's data
-## in phase 5).
+## statuses after the gut; phase 2 adds heroes, enemies, and encounters
+## (docs/plans/rebuild-phase2-heroes-enemies.md, section 2), and later phases
+## add theirs (paths in phase 4; relics, bonds, and the run's data in phase 5).
+## Heroes and enemies share one space of ids, since a fight names its units by
+## them.
 
 const TUNING_FILE: String = "tuning.json"
 const STATUSES_FILE: String = "statuses.json"
-const FILES: Array[String] = [TUNING_FILE, STATUSES_FILE]
+const HEROES_FILE: String = "heroes.json"
+const ENEMIES_FILE: String = "enemies.json"
+const ENCOUNTERS_FILE: String = "encounters.json"
+const FILES: Array[String] = [TUNING_FILE, STATUSES_FILE, HEROES_FILE, ENEMIES_FILE, ENCOUNTERS_FILE]
 
 var errors: Array[String] = []
 var tuning: TuningDef
@@ -27,6 +32,12 @@ var status_ids: Array[String] = []
 var engaged_status: StatusDef = null
 ## The status a push stopped early stuns with (the first of kind stun).
 var stun_status: StatusDef = null
+var heroes: Dictionary[String, HeroDef] = {}
+var hero_ids: Array[String] = []
+var enemies: Dictionary[String, EnemyDef] = {}
+var enemy_ids: Array[String] = []
+var encounters: Dictionary[String, EncounterDef] = {}
+var encounter_ids: Array[String] = []
 
 var _id_pattern: RegEx = RegEx.create_from_string("^[a-z][a-z0-9_]*$")
 
@@ -71,7 +82,77 @@ static func load_texts(texts: Dictionary[String, String]) -> ContentDb:
 			break
 	if db.stun_status == null and texts.has(STATUSES_FILE):
 		db.errors.append("%s: needs a status of kind \"stun\" (a push stopped early stuns with the first)" % STATUSES_FILE)
+	for reader: DataReader in db._entries(db._parse(texts, HEROES_FILE), HEROES_FILE):
+		var hero: HeroDef = HeroDef.read(reader)
+		if db._claim_id(hero.id, reader, db.hero_ids):
+			db.heroes[hero.id] = hero
+	for reader: DataReader in db._entries(db._parse(texts, ENEMIES_FILE), ENEMIES_FILE):
+		var enemy: EnemyDef = EnemyDef.read(reader)
+		if db.heroes.has(enemy.id):
+			reader.error("\"%s\" is already a hero's id" % enemy.id)
+		elif db._claim_id(enemy.id, reader, db.enemy_ids):
+			db.enemies[enemy.id] = enemy
+	for reader: DataReader in db._entries(db._parse(texts, ENCOUNTERS_FILE), ENCOUNTERS_FILE):
+		var encounter: EncounterDef = EncounterDef.read(reader)
+		if db._claim_id(encounter.id, reader, db.encounter_ids):
+			db.encounters[encounter.id] = encounter
+	db._check_links()
 	return db
+
+
+## Checks what entries name across files: the statuses and summons in every
+## kit, and each encounter's enemies, hexes, rocks, and act.
+func _check_links() -> void:
+	var grid: HexGrid = tuning.make_grid() if tuning != null else HexGrid.make()
+	for id: String in hero_ids:
+		_check_kit(heroes[id].kit, "%s (%s)" % [HEROES_FILE, id], grid)
+	for id: String in enemy_ids:
+		_check_kit(enemies[id].kit, "%s (%s)" % [ENEMIES_FILE, id], grid)
+	for id: String in encounter_ids:
+		var encounter: EncounterDef = encounters[id]
+		var where: String = "%s (%s)" % [ENCOUNTERS_FILE, id]
+		if tuning != null and tuning.collapse_for_act(encounter.act) == null:
+			errors.append("%s: tuning has no Rift Collapse numbers for act %d" % [where, encounter.act])
+		var taken: Dictionary[int, String] = {}
+		for rock: Vector2i in encounter.rocks:
+			if not grid.has(rock.x, rock.y):
+				errors.append("%s: a rock at (%d, %d) is off the board" % [where, rock.x, rock.y])
+			else:
+				taken[grid.index(rock.x, rock.y)] = "a rock"
+		for placed: EncounterDef.Placed in encounter.enemies:
+			var at: String = "%s at (%d, %d)" % [placed.enemy, placed.hex.x, placed.hex.y]
+			if not enemies.has(placed.enemy):
+				errors.append("%s: unknown enemy \"%s\"" % [where, placed.enemy])
+			if not grid.has(placed.hex.x, placed.hex.y):
+				errors.append("%s: %s is off the board" % [where, at])
+				continue
+			if grid.zone(placed.hex.y) != HexGrid.Zone.ENEMIES:
+				errors.append("%s: %s is outside the enemies' zone" % [where, at])
+			var hex: int = grid.index(placed.hex.x, placed.hex.y)
+			if taken.has(hex):
+				errors.append("%s: %s shares its hex with %s" % [where, at, taken[hex]])
+			else:
+				taken[hex] = placed.enemy
+
+
+## A kit's statuses must exist (and not be Engaged, which only the trait
+## sets), and its summons must be enemies, onto hexes on the board.
+func _check_kit(kit: UnitDef, where: String, grid: HexGrid) -> void:
+	if kit == null:
+		return
+	for status_id: String in kit.status_ids():
+		if not statuses.has(status_id):
+			errors.append("%s: unknown status \"%s\"" % [where, status_id])
+		elif statuses[status_id].kind == StatusDef.Kind.ENGAGED:
+			errors.append("%s: names \"%s\", which only the Engage trait sets" % [where, status_id])
+	for effect: EffectDef in kit.all_effects():
+		if effect.type != EffectDef.Type.SUMMON:
+			continue
+		if not enemies.has(effect.summon_kit):
+			errors.append("%s: summons \"%s\", which isn't an enemy" % [where, effect.summon_kit])
+		for hex: Vector2i in effect.summon_hexes:
+			if not grid.has(hex.x, hex.y):
+				errors.append("%s: summons onto (%d, %d), off the board" % [where, hex.x, hex.y])
 
 
 func is_valid() -> bool:

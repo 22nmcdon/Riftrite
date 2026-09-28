@@ -41,10 +41,12 @@ var hop_cooldown_ticks: int = 0
 var phases: Array[PhaseDef] = []
 
 
-static func read(reader: DataReader) -> UnitDef:
+## Reads a kit. A hero's or enemy's kit (HeroDef, EnemyDef) takes its id and
+## name from the entry around it, so it has neither key.
+static func read(reader: DataReader, kit_id: String = "", kit_name: String = "") -> UnitDef:
 	var def := UnitDef.new()
-	def.id = reader.req_string("id")
-	def.name = reader.req_string("name")
+	def.id = kit_id if not kit_id.is_empty() else reader.req_string("id")
+	def.name = kit_name if not kit_name.is_empty() else reader.req_string("name")
 	var stats_reader: DataReader = reader.req_object("stats")
 	def.stats = UnitStats.read(stats_reader) if stats_reader != null else UnitStats.make(1)
 	def.targeting = reader.opt_string_choice("targeting", "nearest", TARGETING_RULES)

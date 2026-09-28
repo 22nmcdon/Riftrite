@@ -151,6 +151,21 @@ Kits stay `UnitDef`s (phase 1). Heroes and enemies each wrap one, as the phase 1
 
 **Building a fight:** `Encounters.setup(content, encounter_id, formation, seed)` returns a `FightSetup` of the three heroes on the formation's hexes plus the encounter's enemies. A **formation** is `{"brannoc": [3, 2], "maren": [3, 0], "vell": [4, 0]}`.
 
+**Built in step 2** (`HeroDef`, `EnemyDef`, `EncounterDef`, `Encounters`; the three files start empty, and steps 4–6 fill them):
+
+- **A hero's or enemy's kit has no `id` or `name` of its own;** it takes the entry's. Heroes and enemies share one space of ids, since a fight names its units by them.
+- **ContentDb checks across files:**
+  - every kit's statuses exist (and aren't Engaged, which only the trait sets);
+  - every summon names an enemy, onto hexes on the board;
+  - every encounter's enemies exist, stand in the enemies' zone, and share no hex with each other or a rock;
+  - its rocks are on the board, and its act has Rift Collapse numbers.
+  - A placement with a malformed hex is reported once and skipped, so it doesn't cause a second, misleading error.
+- **`Encounters.setup`:**
+  - The heroes go in the fight's order as `heroes.json` lists them, never in the formation's own order (a Dictionary's). Then come the enemies, in the encounter's order.
+  - `scale_bp` makes copies of the enemies' kits with HP and ATK scaled, and keeps their phases. Summoned enemies are scaled the same way; heroes never are.
+  - Every enemy a unit may summon becomes a summon kit, and so do the ones those summon, in the order they're first named.
+  - An unknown encounter or hero returns null with the reason. `FightSetup.validate` checks the formation (zones, shared hexes).
+
 ## 3. The three base kits
 
 From `rebuild-heroes.md`, sections 4 and 6–8. Hero numbers are the design's; the mana columns come from its table.
@@ -277,7 +292,7 @@ The elites and Old Mother Ash come in phase 5 (decided). What they'll need, so t
 ## 11. Order of work (each step: code, tests, green run, commit)
 
 1. **Swarm speed pass** (section 1), measured with the new bench case and the chaos fight. **Done,** with results unchanged; the swarm's budget isn't met yet (section 1).
-2. **Content files and loading:** hero, enemy, and encounter defs, `ContentDb`, the validator, `Encounters.setup`, and summon kits from content.
+2. **Content files and loading:** hero, enemy, and encounter defs, `ContentDb`, the validator, `Encounters.setup`, and summon kits from content. **Done.**
 3. **Section 4's new pieces,** each with its tests.
 4. **The three base kits** in `heroes.json`, and `test_hero_kits`.
 5. **The nine enemies** in `enemies.json`, and `test_enemy_kits`.
@@ -296,3 +311,7 @@ Answers to the proposal's questions (2026-09-28):
 5. **Hold the Line's DEF follows the taunt itself, not a timer.** A fixed boost tied to the Taunt's length won't work: another unit can apply a newer Taunt, and an upgrade could make the Taunt longer or shorter. So the DEF and the Taunt are separate pieces: an aura that holds while any enemy is taunted by Brannoc (section 4, piece 1).
 6. **The gate is 30 points** between the best and worst formation, probably; to revisit with the runner's first results.
 7. **The speed pass's third idea** (looking again less often after a failed search) is tried only if the first two fall short.
+
+After step 1 (2026-09-28):
+
+8. **The swarm's remaining cost waits.** Step 1 made swarms 35–75% faster with the same results, but not within 300 ms per 60s. The rest needs a change to how fights play (fewer route plans, or one shared search per side), and it waits until Old Mother Ash's continuous summons come in phase 5, measured on real encounters then. Phase 2 moves on.
