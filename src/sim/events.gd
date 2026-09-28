@@ -19,11 +19,15 @@ extends RefCounted
 ## (Passives.on_event) listen.
 
 
+## The log kinds that raise events (the rest are skipped at once).
+const _RAISES: Array[LogEntry.Kind] = [LogEntry.Kind.FIRE, LogEntry.Kind.DAMAGE, LogEntry.Kind.SHIELD, LogEntry.Kind.HEAL, LogEntry.Kind.STATUS_APPLIED]
+
+
 ## Raises the events in log entries [from, to).
 static func dispatch(sim: CombatSim, from: int, to: int) -> void:
 	for i: int in range(from, to):
 		var entry: LogEntry = sim.combat_log.entries[i]
-		if entry.source_relic_side >= 0 or entry.from_event or entry.source_unit.is_empty():
+		if not _RAISES.has(entry.kind) or entry.source_relic_side >= 0 or entry.from_event or entry.source_unit.is_empty():
 			continue
 		var source: UnitState = sim.unit_by_id(entry.source_unit)
 		var target: UnitState = sim.unit_by_id(entry.target) if not entry.target.is_empty() else null

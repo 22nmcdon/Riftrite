@@ -9,16 +9,11 @@ extends RefCounted
 ##   - The bar stops at max; a full bar fires the mana signature and empties.
 ##   - mana_drain takes it away (logged). A unit without a bar ignores both
 ##     Silence and drains.
-## Gains aren't logged: each comes from something that is (an attack firing,
+## Regen runs in CombatSim's unit update: it's every tick, so it's inlined
+## there (UnitState.mana_regen). Gains aren't logged: each comes from something that is (an attack firing,
 ## a hit landing, time passing), so the bar can be rebuilt from the log.
 
 const SCALE: int = 100
-
-
-static func regen(sim: CombatSim, unit: UnitState) -> void:
-	if unit.def.mana != null and unit.def.mana.regen_per_s > 0:
-		@warning_ignore("integer_division")
-		gain(sim, unit, unit.def.mana.regen_per_s * SCALE / FixedMath.TICKS_PER_SECOND)
 
 
 static func on_attack(sim: CombatSim, unit: UnitState) -> void:

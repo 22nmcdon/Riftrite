@@ -3,13 +3,15 @@ extends RefCounted
 ## Signatures and their triggers (docs/plans/rebuild-phase1-arena-sim.md,
 ## section 5; the data is AbilityDef and TriggerDef).
 ##
-## In each unit's turn, right after its mana regen (act):
+## In each unit's update every tick, right after its mana regen (act;
+## CombatSim calls it only when something may fire: fires queued, a cast
+## under way, a full bar, or a once-a-fight trigger not yet spent):
 ##   - mana: a full bar fires it, and the bar empties. Not while Stunned: the
 ##     bar waits, full. With cast_ms, the unit first stands still for the cast
 ##     (CAST); a Stun cancels it (CAST_CANCELLED) and the bar stays full.
 ##   - hp_below, fight_start, at_time: once a fight, when the condition first
 ##     holds.
-##   - count: every Nth event (Events) queues a fire for the unit's next turn.
+##   - count: every Nth event (Events) queues a fire for the next tick.
 ## Everything but mana fires even while the unit is Stunned. A signature
 ## picks a fresh target each time it fires; with none in reach, it waits
 ## (a mana bar stays full, and other fires stay queued).
@@ -17,8 +19,8 @@ extends RefCounted
 ##     would fall, it's left at 1 HP (SAVED) and the signature fires at once.
 
 
-## The signature's part of the unit's turn. Returns true if the unit is
-## casting, so it does nothing else this turn.
+## The signature's part of the unit's update. Returns true if the unit is
+## casting, so it does nothing else this tick.
 static func act(sim: CombatSim, unit: UnitState) -> bool:
 	var signature: AbilityState = unit.signature
 	if signature == null:
@@ -63,7 +65,7 @@ static func act(sim: CombatSim, unit: UnitState) -> bool:
 
 
 ## Events counts toward a count signature. A count that reaches its "every"
-## queues a fire for the unit's next turn.
+## queues a fire for the next tick.
 static func on_event(unit: UnitState, event: EffectDef.Trigger) -> void:
 	var signature: AbilityState = unit.signature
 	if signature == null or signature.def.trigger.kind != TriggerDef.Kind.COUNT or signature.def.trigger.event != event:
@@ -81,8 +83,7 @@ static func would_fall(sim: CombatSim, unit: UnitState) -> bool:
 		return false
 	signature.fired = true
 	unit.hp = 1
-	var source := EffectSource.make(unit.id, signature.def.id, signature.def.name)
-	var saved: LogEntry = sim.new_entry(LogEntry.Kind.SAVED, source)
+	var saved: LogEntry = sim.new_entry(LogEntry.Kind.SAVED, signature.source)
 	saved.target = unit.id
 	saved.note = "would fall"
 	sim.combat_log.add(saved)
@@ -120,14 +121,14 @@ static func _queue_once(signature: AbilityState) -> void:
 
 static func _fire(sim: CombatSim, unit: UnitState, target: UnitState) -> void:
 	var ability: AbilityDef = unit.signature.def
-	EffectRunner.fire(sim, unit, ability, target, ability.reach_for(unit.stats.get_stat(UnitStats.Stat.RANGE)))
+	EffectRunner.fire(sim, unit, unit.signature, target, ability.reach_for(unit.stats.get_stat(UnitStats.Stat.RANGE)))
 
 
 static func _start_cast(sim: CombatSim, unit: UnitState, target: UnitState) -> void:
 	var signature: AbilityState = unit.signature
 	signature.cast_ends_at = sim.tick + signature.def.cast_ticks
 	signature.cast_target = target
-	var entry: LogEntry = sim.new_entry(LogEntry.Kind.CAST, EffectSource.make(unit.id, signature.def.id, signature.def.name))
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.CAST, signature.source)
 	entry.target = target.id
 	entry.end_tick = signature.cast_ends_at
 	sim.combat_log.add(entry)
@@ -153,7 +154,7 @@ static func _cancel_cast(sim: CombatSim, unit: UnitState, reason: String) -> voi
 	var signature: AbilityState = unit.signature
 	signature.cast_ends_at = -1
 	signature.cast_target = null
-	var entry: LogEntry = sim.new_entry(LogEntry.Kind.CAST_CANCELLED, EffectSource.make(unit.id, signature.def.id, signature.def.name))
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.CAST_CANCELLED, signature.source)
 	entry.note = reason
 	sim.combat_log.add(entry)
 

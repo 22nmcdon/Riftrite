@@ -7,6 +7,9 @@ extends RefCounted
 ## Where it is in the fight's order (heroes, then enemies, then summons).
 var index: int
 var id: String
+## What the log credits for what the unit does itself (moving, picking a
+## target), made once.
+var own_source: EffectSource
 var def: UnitDef
 var side: EffectSource.Team
 ## The hex it started on; "back-liner" means it started in its side's back
@@ -29,8 +32,13 @@ var radius: int
 var attack: AbilityState
 ## Its signature (null if it has none).
 var signature: AbilityState = null
-## Mana in hundredths (see Mana); only a unit with a mana bar has any.
+## Mana in hundredths (see Mana); only a unit with a mana bar has any. Its
+## full bar and its regen a tick, in hundredths (0 without a bar).
 var mana: int = 0
+var mana_cap: int = 0
+var mana_regen: int = 0
+## Its basic attack's reach, squared (plane units).
+var reach_sq: int = 0
 ## How fast its basic attack's cooldown runs (10000 = normal).
 var attack_rate_bp: int = FixedMath.BP_ONE
 
@@ -76,7 +84,10 @@ var statuses: Array[StatusState] = []
 var recent_heal_ticks: Array[int] = []
 
 # For the log.
-var last_hit_by: String = ""
+## What last hurt it: a hit's source, or a damage-over-time status (then
+## last_hit_status is its name).
+var last_hit_source: EffectSource = null
+var last_hit_status: String = ""
 ## The unit that last hit it (an enemy), for on_kill.
 var last_attacker: String = ""
 
@@ -86,6 +97,7 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 	unit.index = fight_index
 	unit.id = setup.id
 	unit.def = setup.def
+	unit.own_source = EffectSource.make(setup.id, "", "")
 	unit.side = setup.side
 	unit.start_col = setup.col
 	unit.start_row = setup.row
@@ -96,11 +108,15 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 	unit.hp = unit.max_hp
 	unit.pos = grid.center(setup.col, setup.row)
 	unit.radius = unit_radius
-	unit.attack = AbilityState.make(setup.def.basic_attack)
+	unit.attack = AbilityState.make(setup.def.basic_attack, setup.id)
 	if setup.def.signature != null:
-		unit.signature = AbilityState.make(setup.def.signature)
+		unit.signature = AbilityState.make(setup.def.signature, setup.id)
 	if setup.def.mana != null:
 		unit.mana = setup.def.mana.start * Mana.SCALE
+		unit.mana_cap = setup.def.mana.max * Mana.SCALE
+		@warning_ignore("integer_division")
+		unit.mana_regen = setup.def.mana.regen_per_s * Mana.SCALE / FixedMath.TICKS_PER_SECOND
+	unit.refresh_reach()
 	Passives.set_up(unit)
 	return unit
 
@@ -108,6 +124,16 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 ## +1 for a hero (toward larger y, the enemy's side), -1 for an enemy.
 func forward() -> int:
 	return 1 if side == EffectSource.Team.HEROES else -1
+
+
+## What last hurt it, for the log ("maren · Marking Shot", "Burn from
+## brannoc · Brand").
+func last_hit_text() -> String:
+	if last_hit_source == null:
+		return ""
+	if last_hit_status.is_empty():
+		return last_hit_source.describe()
+	return "%s from %s" % [last_hit_status, last_hit_source.describe()]
 
 
 ## Plane units a tick at its speed, less any Slow.
@@ -125,8 +151,13 @@ func reach() -> int:
 func in_reach_of(other: UnitState) -> bool:
 	var dx: int = other.pos.x - pos.x
 	var dy: int = other.pos.y - pos.y
+	return dx * dx + dy * dy <= reach_sq
+
+
+## Works out reach_sq again (its stats changed).
+func refresh_reach() -> void:
 	var reach_units: int = stats.values[UnitStats.Stat.RANGE] * HexGrid.HEX
-	return dx * dx + dy * dy <= reach_units * reach_units
+	reach_sq = reach_units * reach_units
 
 
 ## Its DEF, less what damage over time has shredded (never below 0).

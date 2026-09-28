@@ -67,7 +67,7 @@ static func halt(sim: CombatSim, unit: UnitState, reason: String = "") -> void:
 	if not unit.leg_active:
 		return
 	unit.leg_active = false
-	var entry: LogEntry = sim.new_entry(LogEntry.Kind.STOP, EffectSource.make(unit.id, "", ""))
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.STOP, unit.own_source)
 	entry.to_pos = unit.pos
 	entry.note = reason
 	sim.combat_log.add(entry)
@@ -122,7 +122,7 @@ static func _log_leg(sim: CombatSim, unit: UnitState, to: Vector2i, amount: int)
 	unit.leg_active = true
 	unit.leg_to = to
 	unit.leg_amount = amount
-	var entry: LogEntry = sim.new_entry(LogEntry.Kind.MOVE, EffectSource.make(unit.id, "", ""))
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.MOVE, unit.own_source)
 	entry.from_pos = unit.pos
 	entry.to_pos = to
 	entry.amount = amount

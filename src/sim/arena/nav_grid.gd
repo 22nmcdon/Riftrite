@@ -23,6 +23,12 @@ extends RefCounted
 
 ## Diagonal cost per straight cost, in basis points.
 const DIAGONAL_BP: int = 14142
+## The search's estimate counts the shorter of the x and y distances at this
+## share extra (a diagonal step's extra, rounded down), and takes off the
+## reach times OCTILE_REACH_BP (the most the estimate's measure can exceed a
+## straight line), so it never overestimates.
+const OCTILE_EXTRA_BP: int = 4142
+const OCTILE_REACH_BP: int = 10824
 ## Neighbor offsets for a walker heading toward larger y (the heroes):
 ## forward, the forward diagonals, the sides, the back diagonals, back. The
 ## enemies use the same list turned around.
@@ -185,10 +191,12 @@ func find_nearest(start: Vector2i, forward: int, targets: Array[Vector2i], reach
 
 
 ## Returns (goal cell, target index), or (-1, -1). Both searches are A*,
-## guided by how far the closest target's reach at least is: the larger of
-## the x and y distances, less the reach (never more than the straight-line
-## distance, so never an overestimate, and it changes by no more than a step
-## costs, so A* stays exact). With `first`, it stops at the first goal;
+## guided by how far the closest target's reach at least is: the octile
+## distance (the longer of the x and y distances, plus 0.4142 of the shorter,
+## as if walked straight and diagonally on open ground), less the reach
+## stretched to the octile measure. It never overestimates, and it changes by
+## no more than a step costs, so A* stays exact; on open ground it's close to
+## the true cost, so a search spreads little beyond its path. With `first`, it stops at the first goal;
 ## otherwise it keeps settling every cell that could still be as close, so
 ## ties go to the lower index. Cells are queued by (estimate, then the order
 ## they were queued in), so the search settles them the same way every time.
@@ -215,6 +223,8 @@ func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int
 	var x0: int = origin.x + half
 	var y0: int = origin.y + half
 	var reach_sq: int = reach * reach
+	@warning_ignore("integer_division")
+	var slack: int = (reach * OCTILE_REACH_BP + FixedMath.BP_ONE - 1) / FixedMath.BP_ONE
 	var steps_x := PackedInt32Array()
 	var steps_y := PackedInt32Array()
 	for offset: Vector2i in FORWARD_NEIGHBORS:
@@ -228,7 +238,7 @@ func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int
 	var best_target: int = -1
 	var best_distance: int = UNREACHED
 	_distance[_start] = 0
-	keys.append(_estimate(_start % cols, _start / cols, xs, ys, target_count, reach, x0, y0) * ORDER + pushes)
+	keys.append(_estimate(_start % cols, _start / cols, xs, ys, target_count, slack, x0, y0) * ORDER + pushes)
 	queued.append(_start)
 	pushes += 1
 	while not keys.is_empty():
@@ -262,7 +272,7 @@ func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int
 		@warning_ignore("integer_division")
 		var row: int = at / cols
 		var here: int = _distance[at]
-		if best_distance != UNREACHED and here + _estimate(col, row, xs, ys, target_count, reach, x0, y0) > best_distance:
+		if best_distance != UNREACHED and here + _estimate(col, row, xs, ys, target_count, slack, x0, y0) > best_distance:
 			break
 		_settled[at] = 1
 		var px: int = x0 + col * cell
@@ -311,7 +321,7 @@ func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int
 			_distance[next] = reached_at
 			_previous[next] = at
 			# Push, then sift up.
-			keys.append((reached_at + _estimate(next_col, next_row, xs, ys, target_count, reach, x0, y0)) * ORDER + pushes)
+			keys.append((reached_at + _estimate(next_col, next_row, xs, ys, target_count, slack, x0, y0)) * ORDER + pushes)
 			queued.append(next)
 			pushes += 1
 			var j: int = keys.size() - 1
@@ -330,16 +340,38 @@ func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int
 	return Vector2i(best_cell, best_target)
 
 
+## The search's estimate from the cell holding `point` to the nearest of
+## `targets` within `reach` (see _search). The search computes it inline;
+## this is for tests.
+func estimate(point: Vector2i, targets: Array[Vector2i], reach: int) -> int:
+	var xs := PackedInt32Array()
+	var ys := PackedInt32Array()
+	for target: Vector2i in targets:
+		xs.append(target.x)
+		ys.append(target.y)
+	@warning_ignore("integer_division")
+	var half: int = cell / 2
+	@warning_ignore("integer_division")
+	var slack: int = (reach * OCTILE_REACH_BP + FixedMath.BP_ONE - 1) / FixedMath.BP_ONE
+	var at: int = cell_at(point)
+	@warning_ignore("integer_division")
+	return _estimate(at % cols, at / cols, xs, ys, targets.size(), slack, origin.x + half, origin.y + half)
+
+
 ## The estimate for the cell at (col, row): see _search.
-func _estimate(col: int, row: int, xs: PackedInt32Array, ys: PackedInt32Array, target_count: int, reach: int, x0: int, y0: int) -> int:
+func _estimate(col: int, row: int, xs: PackedInt32Array, ys: PackedInt32Array, target_count: int, slack: int, x0: int, y0: int) -> int:
 	var px: int = x0 + col * cell
 	var py: int = y0 + row * cell
 	var best: int = -1
 	for t: int in target_count:
-		var estimate: int = maxi(maxi(absi(xs[t] - px), absi(ys[t] - py)) - reach, 0)
+		var dx: int = absi(xs[t] - px)
+		var dy: int = absi(ys[t] - py)
+		# Clamped to 0 before comparing: -1 means "none yet".
+		@warning_ignore("integer_division")
+		var estimate: int = maxi(maxi(dx, dy) + mini(dx, dy) * OCTILE_EXTRA_BP / FixedMath.BP_ONE - slack, 0)
 		if best < 0 or estimate < best:
 			best = estimate
-	return maxi(best, 0)
+	return best
 
 
 ## How many cells the last search settled (for tests and speed checks).

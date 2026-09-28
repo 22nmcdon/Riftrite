@@ -193,6 +193,30 @@ func test_the_search_is_guided() -> void:
 	assert_lt(nav.settled_count(), 200, "A* heads straight for the target instead of flooding the board (%d cells)" % nav.settled_count())
 	nav.find_nearest(_hex(3, 0), 1, [_hex(3, 6), _hex(6, 6)] as Array[Vector2i], MELEE)
 	assert_lt(nav.settled_count(), 1000, "so does the nearest search (%d of %d cells)" % [nav.settled_count(), nav.size()])
+	nav.find_path(_hex(0, 0), 1, _hex(7, 6), MELEE)
+	assert_lt(nav.settled_count(), 400, "a diagonal too: the estimate counts diagonal steps at their cost (%d cells)" % nav.settled_count())
+
+
+func test_the_estimate_never_overshoots() -> void:
+	# From every cell around a target, the estimate is at most the real walk,
+	# or A* could settle for a longer path. The target is off a cell center, so
+	# the goal ring's edge isn't lined up with the cells.
+	var nav: NavGrid = _nav()
+	var target: Vector2i = _hex(3, 3) + Vector2i(37, 61)
+	var targets: Array[Vector2i] = [target]
+	var checked: int = 0
+	for dx: int in range(-2500, 2501, 125):
+		for dy: int in range(-2500, 2501, 125):
+			var start: Vector2i = nav.center(nav.cell_at(target + Vector2i(dx, dy)))
+			var goal: int = nav.find_path(start, 1, target, MELEE)
+			if goal < 0:
+				continue
+			var estimate: int = nav.estimate(start, targets, MELEE)
+			if estimate > nav.distance_to(goal):
+				fail_test("from %s: estimate %d, walk %d" % [start, estimate, nav.distance_to(goal)])
+				return
+			checked += 1
+	assert_gt(checked, 1000)
 
 
 func test_diagonals_never_cut_a_corner() -> void:

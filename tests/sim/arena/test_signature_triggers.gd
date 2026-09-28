@@ -183,6 +183,23 @@ func test_a_cast_stands_still_then_lands() -> void:
 	assert_ne(fight.units[0].pos, at, "then it walks again")
 
 
+func test_a_cast_under_way_lands_though_its_mana_is_drained() -> void:
+	var fight: CombatSim = _duel(_hero({"kind": "mana"}, {"cast_ms": 500}, {"max": 10, "start": 10}))
+	K.step(fight, 3)
+	Mana.drain(fight, fight.units[0], 10, _source())
+	K.step(fight, 8)
+	assert_eq(_fires(fight), [11], "the mana was committed when the cast began")
+	assert_eq(fight.units[0].mana, 0)
+
+
+func test_a_signature_that_stuns_its_unit_holds_it_that_tick() -> void:
+	var walker: UnitDef = _hero({"kind": "fight_start"}, {"targeting": "self", "effects": [{"type": "apply_status", "status": "stun", "target": "target"}]}, {}, {"speed": 2, "range": 1})
+	var fight: CombatSim = _duel(walker)
+	var at: Vector2i = fight.units[0].pos
+	fight.step()
+	assert_eq(fight.units[0].pos, at, "stunned from the moment it fired")
+
+
 func test_stun_cancels_a_cast_and_keeps_the_mana() -> void:
 	var fight: CombatSim = _duel(_hero({"kind": "mana"}, {"cast_ms": 500}, {"max": 10, "start": 10}))
 	K.step(fight, 5)

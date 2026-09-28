@@ -20,6 +20,7 @@ extends RefCounted
 class Listener:
 	var part: PartDef
 	var effect: EffectDef
+	var source: EffectSource
 	var count: int = 0
 
 
@@ -40,6 +41,7 @@ static func set_up(unit: UnitState) -> void:
 					var listener := Listener.new()
 					listener.part = part
 					listener.effect = effect
+					listener.source = EffectSource.make(unit.id, part.id, part.name)
 					unit.listeners.append(listener)
 			PartDef.Kind.REPLACE_STATUS:
 				unit.status_swaps[part.from_status] = part.to_status
@@ -96,8 +98,9 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 				continue
 			var stat: int = AuraDef.UNIT_STAT_FOR[aura_stat]
 			unit.stats.values[stat] = FixedMath.apply_bp(unit.base_stats.values[stat], unit.aura_bp[aura_stat])
-		unit.attack.cooldown_add_bp = unit.aura_bp[AuraDef.Stat.COOLDOWN_BP]
+		unit.attack.set_cooldown_add(unit.aura_bp[AuraDef.Stat.COOLDOWN_BP])
 		unit.attack_rate_bp = sim.attack_rate_bp(unit)
+		unit.refresh_reach()
 	_log_changes(sim, was_active, now_active)
 	return now_active
 
@@ -155,6 +158,6 @@ static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, 
 		if listener.count % effect.every != 0:
 			continue
 		var first: int = sim.combat_log.entries.size()
-		EffectRunner.run_event(sim, unit, listener.part.ability, effect, other, damage)
+		EffectRunner.run_event(sim, unit, listener.part.ability, listener.source, effect, other, damage)
 		for i: int in range(first, sim.combat_log.entries.size()):
 			sim.combat_log.entries[i].from_event = true

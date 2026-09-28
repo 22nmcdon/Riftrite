@@ -178,7 +178,7 @@ Each tick runs these steps in order. Resolution order is the fight's unit order:
 7. **Deaths:** units at 0 HP fall, unless Undying holds them or a `would_fall` signature saves them. Then on_kill effects run, and any deaths those cause.
 8. **Victory, defeat, or a tie:** a fight still running at 180s is a tie, as is both sides falling on the same tick. A tie counts as a win.
 
-- **Deaths wait until step 7**, as now. A unit knocked to 0 this tick still acts if its turn comes later in the tick, so neither side gets an edge from going first.
+- **Deaths wait until step 7**, as now. A unit knocked to 0 this tick is still updated if it comes later in the tick's order, so neither side gets an edge from being updated first.
 - **Movement is resolved one unit at a time,** each against the positions everyone else already has. So two units can never overlap. When a hero and an enemy want the same gap on the same tick, the hero gets it (decided).
 
 ## 4. Movement, targeting, and blocking
@@ -191,13 +191,13 @@ Each tick runs these steps in order. Resolution order is the fight's unit order:
   - **Pathfinding** runs on a **hidden grid of eighth-hex cells** (125 across, 57 × 60). It isn't a hex grid, and nothing snaps to it. (Quarter-hex cells were planned, but they miss the one-hex gap between two staggered units, a corridor only 132 wide.)
   - **Blocked cells:** a cell is blocked if the walker standing on its center would overlap a unit, a rock, crumbled ground, or the edge. The test is exact, never optimistic, so a path never leads into a gap the walker can't fit. Cells are only checked when a search reaches them. The walker's own target doesn't block cells, so it can reach it.
   - **The search** is A* with integer costs (125 straight, 177 diagonal, never cutting past a blocked cell) and a fixed neighbor order, forward-first for each side (the enemies' order is the heroes' turned around). So neither side drifts toward one flank when routes tie.
-    - Its estimate is the larger of the x and y distances to the target, less the reach.
+    - Its estimate is the **octile distance** to the target (the longer of the x and y distances plus 0.4142 of the shorter, as if walked straight and diagonally on open ground), less the reach stretched to that measure. It never overestimates, and on open ground it's close to the real cost. (Until the speed pass after step 4 it was the larger of the x and y distances, which made searches spread about five times wider.)
     - `nearest` uses the same search against every enemy at once, and keeps going until no closer tie is possible.
   - **Its goal** is any free cell from which the target is in range.
   - **Leaving crumbled ground:** a walker standing on crumbled ground may cross crumbled cells, so it can always get back to safe ground.
 - **Repathing:** a unit keeps its path until it's blocked, its target changes, or 0.5s passes (`repath_ms`). The board keeps changing, so it looks again regularly.
 - **Straight or around (built in step 2):** when it plans, the unit sweeps its circle along the straight line to the point where its target would be in reach. If nothing is in the way it walks straight at the target; otherwise it asks the pathfinder.
-- **Blocked:** if the next piece of movement would overlap anything, the unit first tries to **slide**: it drops the part of the step heading into the circle it hit and keeps the rest. That lets it brush past what a straight leg grazes. If the slide doesn't fit either, it doesn't move this tick and repaths on its next turn. A slide is logged as a leg of its own, one tick long.
+- **Blocked:** if the next piece of movement would overlap anything, the unit first tries to **slide**: it drops the part of the step heading into the circle it hit and keeps the rest. That lets it brush past what a straight leg grazes. If the slide doesn't fit either, it doesn't move this tick and repaths on the next tick. A slide is logged as a leg of its own, one tick long.
 - **No path:** the unit waits. After **1s with no path** (`repath_give_up_ms`), it drops its target and picks again.
 - **Units stop to attack.** A unit whose target is in range stands still. A `fires_while_moving` flag (Volley Maren, phase 4) is left for later; phase 1 only reserves the field name.
 
@@ -269,8 +269,8 @@ Each tick runs these steps in order. Resolution order is the fight's unit order:
 - Every fire logs `FIRE`, with the ability as its source, as now.
 - **Built in step 4, first half** (`Mana`, `Signatures`, `Events`, `ManaDef`, `TriggerDef`; `AbilityDef` reads a signature):
   - **A kit's `mana` and a mana signature come together.** The validator refuses either without the other.
-  - **Timing:** a signature is checked at the start of its unit's turn, right after mana regen. A full bar from this turn's attack fires on the next turn.
-  - **`count`** reads the log after every unit has acted, so the Nth event queues a fire for the unit's next turn. Events from the deaths step (`on_kill`) are raised as the unit falls.
+  - **Timing:** a signature is checked at the start of its unit's update each tick, right after mana regen. A bar filled by this tick's attack fires on the next tick (50 ms later).
+  - **`count`** reads the log after every unit has acted, so the Nth event queues a fire for the next tick. Events from the deaths step (`on_kill`) are raised as the unit falls.
   - **`hp_below`** needs the unit standing above 0 HP. A hit from above the threshold straight to 0 is a job for `would_fall`, not `hp_below`.
   - **Saves:** Undying holds a unit at 1 HP in the deaths step (logged as `SAVED`). If nothing holds it, an unspent `would_fall` signature leaves it at 1 HP and fires at once. If that fells someone, the deaths step goes round again, so they fall on the same tick.
   - **Signature targets:** a signature picks fresh each time it fires, by its own `targeting` (for now `nearest` and `self`; the rest in step 7).
@@ -279,12 +279,12 @@ Each tick runs these steps in order. Resolution order is the fight's unit order:
     - With no target in reach, a mana signature stays full, and a queued fire waits.
   - **Casts:** the unit stands still (STOP "casting"), and its attack cooldown keeps running. The bar is spent when the cast lands.
     - If its target fell or left its reach, the cast lands on a fresh one; with none, it's cancelled and the bar stays full.
-    - A Stun cancels it on the unit's next turn (`CAST_CANCELLED`).
+    - A Stun cancels it on the next tick (`CAST_CANCELLED`).
   - **Mana gains aren't logged:** each comes from something that is, so the bar can be rebuilt from the log. `MANA_DRAIN` is logged.
 
 ## 6. Displacement and flying
 
-All the displacements **move the unit instantly in the sim** and log the start and end points (decided). The UI animates them. A unit that gets displaced loses its path and repaths on its next turn.
+All the displacements **move the unit instantly in the sim** and log the start and end points (decided). The UI animates them. A unit that gets displaced loses its path and repaths on the next tick.
 
 | Effect | What it does | Data |
 | --- | --- | --- |
@@ -488,7 +488,7 @@ If step 2 measures slower, the cell size and repath interval are the knobs, and 
 **Measured in step 2** (whole fights, 3 against 6, with test kits):
 - A 22s fight takes about 49 ms, and a 65s one about 80 ms. That's inside the budget, with nothing to spare.
 - The costliest ticks are the first one, when all nine units pick a target, and the ones where units re-target across the board.
-- The rest is the fixed cost of every unit's turn, about 50 µs a tick for all nine units together.
+- The rest is the fixed cost of updating every unit each tick, about 50 µs a tick for all nine units together.
 - Speed-ups so far, none of which change results:
   - The search loop works on plain integer arrays with its queue inline.
   - The collision check doesn't build lists.
@@ -498,19 +498,31 @@ If step 2 measures slower, the cell size and repath interval are the knobs, and 
 
 **Measured in step 4** (3 against 6, test kits with a mana signature with a cast, an HP-triggered one, and Slow; the second half added an all-allies attack-speed aura and an event passive):
 - A 95s fight takes 175–180 ms, about **110 ms per 60s**. A 180s stand-off takes 250–290 ms, about **85–95 ms per 60s**. So the budget is at its edge.
-- Where it goes (the 95s fight): walking and targeting take about a third. The rest is each unit's turn and its attacks, about 4 µs per unit per tick, spread thinly.
+- Where it goes (the 95s fight): walking and targeting take about a third. The rest is each unit's update and its attacks, about 4 µs per unit per tick, spread thinly.
   - Signatures and mana add about a tenth.
   - With the passives, the same fight is about **128 ms per 60s**. Part of that is the aura's 10% faster attacks. Reading the log for events is about 6%.
-- **Over budget, then, when units walk and re-target a lot.** The cost is spread across every unit's turn in GDScript, not in one hot spot. It needs a speed pass of its own before phase 2's sim runner needs hundreds of fights (see the report on step 4).
+- **Over budget, then, when units walk and re-target a lot.** The cost is spread across every unit's update in GDScript, not in one hot spot. It needs a speed pass of its own before phase 2's sim runner needs hundreds of fights (see the report on step 4).
 - **Speed-ups in this step,** none of which change results:
   - Units with no statuses skip the status loop.
   - Units are looked up by id in a Dictionary (lookup only, never iterated).
   - The end-of-fight check builds no lists.
   - The log is read for events only when some unit listens.
+**The speed pass after step 4** (`tools/bench_sim.gd`: the busy fight, 3 against 6, at 1x to 3x HP; the fastest of three runs; each fight's log fingerprinted):
+- **A 60s fight takes 83–96 ms** (it varies by about 10% from run to run), inside the budget but with little to spare. Overall it's **83–84 ms per 60s**, down from 106. Short fights cost more per second (about 48 ms for 22s) because of the searches at the start.
+- **What changed:**
+  - **The pathfinder's estimate is octile** (section 4). Searches settle about a fifth of the cells they did.
+    - Paths are still shortest, but where two are exactly as long, it may pick the other. So fights with walking can come out differently from before, and the log fingerprints changed. Everything is still deterministic, and every test passes.
+    - A test checks that the estimate never overshoots, from over a thousand cells around a target.
+  - **Each unit's update inlines its common checks.** Mana regen and the attack cooldown's progress are precomputed; so is reach. The signature code runs only when something may fire.
+  - **Log sources are made once** per unit and ability, not on every fire, move, or target pick. "Last hit" text is built only when a unit falls.
+  - **Shots land only when one is due.** The log is read only for the kinds that raise events. The on-hit record is made only for abilities with on-hit effects.
+  - None of these change results but the estimate: every log fingerprint stayed the same through them.
+- **Where the time goes now,** in a long fight's steady state: about 5 µs to update each unit per tick, and about 25 µs per attack (most of it the three log entries a shot makes).
+- **In this container,** memory the process touches for the first time is slow: an object costs about 3 µs on reused memory, but up to 19 µs on new. That inflates a fight's first run, which is why the benchmark keeps the fastest of three.
 - **The next knobs, if later steps push it over:**
   - repath_ms (0.5s now).
   - The nav cell size.
-  - Keeping the per-turn status checks out of units that have none.
+  - Keeping the per-tick status checks out of units that have none.
 
 ## 14. Order of work (each step: code, tests, green run, commit)
 

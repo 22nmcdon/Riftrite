@@ -26,7 +26,7 @@ static func update(sim: CombatSim, unit: UnitState) -> void:
 static func set_target(sim: CombatSim, unit: UnitState, picked: UnitState, reason: String) -> void:
 	unit.target = picked
 	unit.no_path_since = -1
-	var entry: LogEntry = sim.new_entry(LogEntry.Kind.TARGET, EffectSource.make(unit.id, "", ""))
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.TARGET, unit.own_source)
 	entry.target = picked.id
 	entry.note = reason
 	sim.combat_log.add(entry)
@@ -34,7 +34,7 @@ static func set_target(sim: CombatSim, unit: UnitState, picked: UnitState, reaso
 
 ## Drops the unit's target (it couldn't get there), and logs why.
 static func give_up(sim: CombatSim, unit: UnitState) -> void:
-	var entry: LogEntry = sim.new_entry(LogEntry.Kind.TARGET, EffectSource.make(unit.id, "", ""))
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.TARGET, unit.own_source)
 	entry.note = "no way to reach %s" % unit.target.id
 	sim.combat_log.add(entry)
 	unit.target = null

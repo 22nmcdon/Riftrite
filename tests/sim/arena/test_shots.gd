@@ -40,6 +40,15 @@ func test_a_shot_takes_a_tick_per_hex() -> void:
 	assert_eq(Shots.flight_ticks(1001), 2, "rounded up")
 
 
+func test_shots_in_flight_together_each_land_on_time() -> void:
+	# Two archers fire on the same tick from 4 and 2 hexes; nothing else is
+	# fired until tick 40.
+	var fight: CombatSim = K.sim(K.fight([K.at(_archer(), 3, 0, "far"), K.at(_archer(), 3, 2, "near")] as Array[UnitSetup], [K.foe(_target(), 3, 4)] as Array[UnitSetup]))
+	K.step(fight, 30)
+	var hits: Array = K.entries(fight, LogEntry.Kind.DAMAGE).map(func(entry: LogEntry) -> Array: return [entry.tick, entry.source_unit])
+	assert_eq(hits, [[22, "near"], [24, "far"]])
+
+
 func test_what_isnt_aimed_at_the_target_happens_as_it_fires() -> void:
 	var fight: CombatSim = _range(5)
 	fight.units[0].hp = 9000

@@ -21,10 +21,13 @@ extends RefCounted
 ##      passives (Events). Phases come later.
 ##   7. Units at 0 HP fall, unless Undying holds them at 1 HP or a would_fall
 ##      signature saves them; on_kill is raised for whoever felled them.
-##      They still acted this tick if their turn came, so going first gives
-##      neither side an edge.
+##      They were still updated this tick if their place in the order came,
+##      so being updated first gives neither side an edge.
 ##   8. Victory, defeat, or a tie (180s, or both sides falling together; a
 ##      tie counts as a guild victory).
+
+## A tick that never comes.
+const NEVER: int = 1 << 62
 
 var content: ContentDb
 var tuning: TuningDef
@@ -40,8 +43,10 @@ var enemies: Array[UnitState] = []
 var rocks: Array[ArenaPlane.Circle] = []
 ## The ground still standing (the whole arena until the collapse).
 var safe: Rect2i
-## Shots in flight, in the order they were fired.
+## Shots in flight, in the order they were fired, and the soonest one lands
+## on (NEVER: none in flight).
 var shots: Array[Shots.Shot] = []
+var next_shot_tick: int = NEVER
 var finished: bool = false
 var outcome: FightResult.Outcome = FightResult.Outcome.TIE
 var _nav: NavGrid
@@ -120,17 +125,31 @@ func step() -> void:
 	_check_end()
 
 
+## One unit's update this tick. It runs for every unit every tick, so it's
+## written for speed: the common checks are inlined.
 func _act(unit: UnitState) -> void:
-	if unit.def.mana != null:
-		Mana.regen(self, unit)
-	var casting: bool = Signatures.act(self, unit) if unit.signature != null else false
 	var has_statuses: bool = not unit.statuses.is_empty()
+	# Mana regen (Mana), unless Silenced.
+	if unit.mana_regen > 0 and unit.mana < unit.mana_cap and not (has_statuses and Statuses.has_kind(unit, StatusDef.Kind.SILENCE)):
+		unit.mana = mini(unit.mana + unit.mana_regen, unit.mana_cap)
+	var casting: bool = false
+	var signature: AbilityState = unit.signature
+	if signature != null and (signature.pending > 0 or signature.cast_ends_at >= 0 \
+			or (signature.mana_trigger and unit.mana >= unit.mana_cap) or (signature.once_trigger and not signature.fired)):
+		casting = Signatures.act(self, unit)
+		has_statuses = not unit.statuses.is_empty()
 	if has_statuses and Statuses.has_kind(unit, StatusDef.Kind.STUN):
 		if unit.leg_active:
 			Movement.halt(self, unit, "stunned")
 		return
-	var slow: int = Statuses.slow_bp(unit) if has_statuses else 0
-	unit.attack.advance(unit.attack_rate_bp if slow == 0 else FixedMath.apply_bp(unit.attack_rate_bp, FixedMath.BP_ONE - slow))
+	var attack: AbilityState = unit.attack
+	if attack.progress_bp < attack.needed:
+		var rate: int = unit.attack_rate_bp
+		if has_statuses:
+			var slow: int = Statuses.slow_bp(unit)
+			if slow != 0:
+				rate = FixedMath.apply_bp(rate, FixedMath.BP_ONE - slow)
+		attack.progress_bp = mini(attack.progress_bp + rate, attack.needed)
 	if casting:
 		if unit.leg_active:
 			Movement.halt(self, unit, "casting")
@@ -148,10 +167,12 @@ func _act(unit: UnitState) -> void:
 		if unit.leg_active:
 			Movement.halt(self, unit, "no target")
 		return
-	if unit.in_reach_of(target):
+	var dx: int = target.pos.x - unit.pos.x
+	var dy: int = target.pos.y - unit.pos.y
+	if dx * dx + dy * dy <= unit.reach_sq:
 		if unit.leg_active:
 			Movement.halt(self, unit, "in reach")
-		if unit.attack.ready():
+		if attack.progress_bp >= attack.needed:
 			EffectRunner.basic_attack(self, unit)
 		return
 	Movement.walk(self, unit)
@@ -209,6 +230,13 @@ func standing_enemies_of(unit: UnitState) -> Array[UnitState]:
 
 func unit_by_id(unit_id: String) -> UnitState:
 	return _by_id.get(unit_id, null)
+
+
+static func _any_standing(side_units: Array[UnitState]) -> bool:
+	for unit: UnitState in side_units:
+		if unit.alive:
+			return true
+	return false
 
 
 static func _standing(side_units: Array[UnitState]) -> Array[UnitState]:
@@ -308,13 +336,13 @@ func _fall(unit: UnitState) -> void:
 	entry.kind = LogEntry.Kind.DEATH
 	entry.target = unit.id
 	entry.to_pos = unit.pos
-	entry.note = "last hit: %s" % unit.last_hit_by
+	entry.note = "last hit: %s" % unit.last_hit_text()
 	combat_log.add(entry)
 
 
 func _check_end() -> void:
-	var heroes_up: bool = heroes.any(func(unit: UnitState) -> bool: return unit.alive)
-	var enemies_up: bool = enemies.any(func(unit: UnitState) -> bool: return unit.alive)
+	var heroes_up: bool = _any_standing(heroes)
+	var enemies_up: bool = _any_standing(enemies)
 	if heroes_up and enemies_up and tick < tuning.tie_ticks:
 		return
 	finished = true

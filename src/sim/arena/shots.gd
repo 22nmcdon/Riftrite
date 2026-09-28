@@ -32,6 +32,7 @@ static func flight_ticks(distance: int) -> int:
 static func fire(sim: CombatSim, shot: Shot) -> void:
 	shot.land_tick = sim.tick + flight_ticks(ArenaPlane.distance(shot.shooter.pos, shot.target.pos))
 	sim.shots.append(shot)
+	sim.next_shot_tick = mini(sim.next_shot_tick, shot.land_tick)
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.SHOT, shot.source)
 	entry.target = shot.target.id
 	entry.from_pos = shot.shooter.pos
@@ -42,12 +43,14 @@ static func fire(sim: CombatSim, shot: Shot) -> void:
 
 ## Lands every shot that's due this tick, in the order they were fired.
 static func land_due(sim: CombatSim) -> void:
-	if sim.shots.is_empty():
+	if sim.tick < sim.next_shot_tick:
 		return
 	var waiting: Array[Shot] = []
+	var next: int = CombatSim.NEVER
 	for shot: Shot in sim.shots:
 		if shot.land_tick > sim.tick:
 			waiting.append(shot)
+			next = mini(next, shot.land_tick)
 			continue
 		if not shot.target.alive:
 			var entry: LogEntry = sim.new_entry(LogEntry.Kind.SHOT_FIZZLED, shot.source)
@@ -58,3 +61,4 @@ static func land_due(sim: CombatSim) -> void:
 		for i: int in shot.effects.size():
 			EffectRunner.land(sim, shot.shooter, shot.ability, shot.source, shot.effects[i], shot.target, shot.amounts[i], shot.crits[i])
 	sim.shots = waiting
+	sim.next_shot_tick = next

@@ -35,6 +35,8 @@ var effects: Array[EffectDef] = []
 var crit_chance_bp: int = 0
 ## -1: decided by reach (a shot from 2 hexes up); 0: never a shot; 1: always.
 var shot: int = -1
+## Some effect runs on_hit or on_crit (worked out as it's read).
+var has_hit_effects: bool = false
 ## Signatures only (null on a basic attack).
 var trigger: TriggerDef = null
 var targeting: String = "nearest"
@@ -77,6 +79,7 @@ func _read_common(reader: DataReader) -> void:
 		if not TRIGGERS.has(effect.trigger):
 			effect_reader.error("an ability's effects can only use on_fire, on_hit, or on_crit")
 		fires = fires or effect.trigger == EffectDef.Trigger.ON_FIRE
+		has_hit_effects = has_hit_effects or effect.trigger != EffectDef.Trigger.ON_FIRE
 		effects.append(effect)
 	if not fires:
 		reader.error("an ability needs at least one on_fire effect")

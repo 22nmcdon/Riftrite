@@ -130,7 +130,8 @@ static func _deal_damage_over_time(sim: CombatSim, unit: UnitState, state: Statu
 		entry.status_name = state.def.name
 		entry.amount = damage
 		entry.absorbed = sim.apply_damage_vs_shield(unit, damage, state.def.vs_shield_bp)
-		unit.last_hit_by = "%s from %s" % [state.def.name, group.source.describe()]
+		unit.last_hit_source = group.source
+		unit.last_hit_status = state.def.name
 		if group.source.relic_side < 0 and group.source.unit_id != unit.id:
 			unit.last_attacker = group.source.unit_id
 		sim.combat_log.add(entry)

@@ -26,7 +26,7 @@ class Hit:
 
 ## The unit's basic attack fires at its target, and gives it mana.
 static func basic_attack(sim: CombatSim, unit: UnitState) -> void:
-	fire(sim, unit, unit.attack.def, unit.target, unit.stats.get_stat(UnitStats.Stat.RANGE))
+	fire(sim, unit, unit.attack, unit.target, unit.stats.get_stat(UnitStats.Stat.RANGE))
 	unit.attack.spend()
 	Mana.on_attack(sim, unit)
 
@@ -34,8 +34,9 @@ static func basic_attack(sim: CombatSim, unit: UnitState) -> void:
 ## `ability` fires from `unit` at `target`; `reach` (in hexes) decides whether
 ## it's a shot (AbilityDef.is_shot). An ability aimed at the unit itself never
 ## is.
-static func fire(sim: CombatSim, unit: UnitState, ability: AbilityDef, target: UnitState, reach: int) -> void:
-	var source: EffectSource = EffectSource.make(unit.id, ability.id, ability.name)
+static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: UnitState, reach: int) -> void:
+	var ability: AbilityDef = state.def
+	var source: EffectSource = state.source
 	var fired: LogEntry = sim.new_entry(LogEntry.Kind.FIRE, source)
 	fired.target = target.id if target != null else ""
 	sim.combat_log.add(fired)
@@ -70,11 +71,12 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 	match effect.type:
 		EffectDef.Type.DAMAGE:
 			var damage: int = FixedMath.apply_bp(amount, sim.tuning.crit_damage_bp) if crit else amount
-			var hit := Hit.new()
-			hit.target = victim
-			hit.crit = crit
-			hit.damage = deal_hit(sim, source, victim, damage, crit)
-			if effect.trigger == EffectDef.Trigger.ON_FIRE:
+			var dealt: int = deal_hit(sim, source, victim, damage, crit)
+			if effect.trigger == EffectDef.Trigger.ON_FIRE and ability.has_hit_effects:
+				var hit := Hit.new()
+				hit.target = victim
+				hit.crit = crit
+				hit.damage = dealt
 				_on_hit(sim, unit, ability, source, hit)
 		EffectDef.Type.HEAL:
 			heal(sim, victim, amount, source)
@@ -103,8 +105,7 @@ static func _on_hit(sim: CombatSim, unit: UnitState, ability: AbilityDef, source
 ## An ability passive's effect, set off by an event (Passives.on_event):
 ## `other` is the unit the event names, `damage` the hit it's about. It
 ## lands at once, and never sets off on_hit effects.
-static func run_event(sim: CombatSim, unit: UnitState, ability: AbilityDef, effect: EffectDef, other: UnitState, damage: int) -> void:
-	var source: EffectSource = EffectSource.make(unit.id, ability.id, ability.name)
+static func run_event(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: EffectSource, effect: EffectDef, other: UnitState, damage: int) -> void:
 	var hit: Hit = null
 	if other != null:
 		hit = Hit.new()
@@ -167,7 +168,8 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 	entry.mitigated = maxi(FixedMath.apply_bp(amount, FixedMath.BP_ONE + marked) - dealt, 0)
 	entry.crit = crit
 	entry.absorbed = sim.apply_damage(target, dealt)
-	target.last_hit_by = source.describe()
+	target.last_hit_source = source
+	target.last_hit_status = ""
 	if source.relic_side < 0 and source.unit_id != target.id:
 		target.last_attacker = source.unit_id
 	sim.combat_log.add(entry)

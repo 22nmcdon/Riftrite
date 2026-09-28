@@ -3,7 +3,7 @@ extends RefCounted
 ## What fires a signature (docs/plans/rebuild-phase1-arena-sim.md, section 5):
 ##   {"kind": "mana"}                                the bar is full (the unit needs "mana")
 ##   {"kind": "hp_below", "threshold_bp": 3000}      once, the first time it's below 30% HP
-##   {"kind": "fight_start"}                         once, on its first turn
+##   {"kind": "fight_start"}                         once, on the first tick
 ##   {"kind": "at_time", "at_ms": 8000}              once, at 8s
 ##   {"kind": "count", "event": "on_hit_taken", "every": 5}
 ##                                                   on every 5th such event (EffectDef's

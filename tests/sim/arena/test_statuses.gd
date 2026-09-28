@@ -53,6 +53,15 @@ func test_burn_ticks_fades_and_is_credited() -> void:
 	assert_eq(Statuses.find(fight.units[1], "burn").total_stacks(), 19, "then loses 5% of its stacks, rounded up")
 
 
+func test_a_fall_to_damage_over_time_names_it() -> void:
+	var fight: CombatSim = _duel(_dummy())
+	var target: UnitState = fight.units[1]
+	target.hp = 3
+	Statuses.apply(fight, target, "poison", 5, 0, _source())
+	K.step(fight, 20)
+	assert_eq(K.entries(fight, LogEntry.Kind.DEATH)[0].note, "last hit: Poison from tester · Test")
+
+
 func test_poison_skips_shield_and_bleed_shreds_def() -> void:
 	var fight: CombatSim = _duel(_dummy(), _dummy(10000, {"def": 10}))
 	var target: UnitState = fight.units[1]
