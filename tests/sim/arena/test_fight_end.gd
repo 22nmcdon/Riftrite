@@ -31,7 +31,8 @@ func test_both_falling_together_is_a_tie() -> void:
 
 
 func test_three_minutes_is_a_tie() -> void:
-	# Neither can reach the other.
-	var result: FightResult = K.run(K.fight([K.at(_brawler(100, 1), 0, 0)] as Array[UnitSetup], [K.foe(_brawler(100, 1), 7, 6)] as Array[UnitSetup]))
+	# Neither can reach the other, and both outlast Rift Collapse on the
+	# border (about 350,000 damage by 180s).
+	var result: FightResult = K.run(K.fight([K.at(_brawler(1000000, 1), 0, 0)] as Array[UnitSetup], [K.foe(_brawler(1000000, 1), 7, 6)] as Array[UnitSetup]))
 	assert_eq([result.outcome, result.end_tick], [FightResult.Outcome.TIE, 3600])
 	assert_string_contains(result.combat_log.to_text(), "Tie: both sides outlasted the rift")

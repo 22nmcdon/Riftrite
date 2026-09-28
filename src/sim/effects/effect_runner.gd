@@ -13,9 +13,9 @@ extends RefCounted
 ## Numbers come from the unit's stats (with its auras) and its output auras
 ## (Passives.boosted); statuses it applies may be swapped (replace_status).
 ## Built so far: damage, heal, shield, apply_status, cleanse, mana_drain,
-## knockback, pull, leap, charge (Displacement), and area (Areas; an area is
-## cast as the ability fires, never riding a shot). Summon and start_collapse
-## come with their steps.
+## knockback, pull, leap, charge (Displacement), area (Areas; an area is
+## cast as the ability fires, never riding a shot), and start_collapse
+## (Collapse). Summon comes with its step.
 
 
 ## No point given (land's push_from).
@@ -113,6 +113,8 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			Displacement.leap(sim, unit, victim, effect, source)
 		EffectDef.Type.CHARGE:
 			Displacement.charge(sim, unit, victim, effect, source)
+		EffectDef.Type.START_COLLAPSE:
+			Collapse.start_now(sim, source)
 
 
 static func _on_hit(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: EffectSource, hit: Hit) -> void:

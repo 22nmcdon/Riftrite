@@ -27,6 +27,9 @@
   "heal_cleanse_window_ms": 1000,
   "heal_cleanse_falloff_bp": 5000,
   "collapse_start_ms": 45000,
+  "collapse_ring_ms": 10000,
+  "collapse_warning_ms": 3000,
+  "_collapse_note": "Rift Collapse: the outer ring crumbles at collapse_start_ms, then one ring inward every collapse_ring_ms (the middle ring never does); each is warned collapse_warning_ms before. Anyone whose center is on crumbled ground takes flat damage every second (collapse_by_act); the growth speeds up collapse_surge_ms - collapse_start_ms after the first ring crumbles.",
   "collapse_surge_ms": 90000,
   "tie_ms": 180000,
   "collapse_by_act": {

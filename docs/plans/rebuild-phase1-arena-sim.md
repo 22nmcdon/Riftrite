@@ -420,6 +420,19 @@ All the displacements **move the unit instantly in the sim** and log the start a
 - **Crumbled ground can't be walked into** (decided). A unit already on it can walk out, and pathfinding sends it back to safe ground first.
 - **`start_collapse` effect:** starts the collapse now if it hasn't started yet (Old Mother Ash's Last Ember).
 - **Tie at 180s**, as now.
+- **Built in step 8, first part** (`Collapse`, first each tick; `start_collapse`; `Movement.escape`; `NavGrid.find_safe`):
+  - **Timing:** the border ring crumbles at 45s (warned at 42s), ring 1 at 55s, ring 2 at 65s. The warnings and crumbles are logged as `COLLAPSE_RING`, with the safe rectangle each leaves.
+  - **Damage** starts on the first crumble and comes once a second after it, from the act's numbers (act 1: 10, then 10 more each second). The surge counts from the first crumble too (45s after it, so 90s when nothing starts it early). A fight in an act with no collapse numbers is refused.
+    - Collapse damage counts as damage taken, so it gives mana like any other.
+  - **Walking back:** a unit whose center is on crumbled ground walks back to safe ground before anything else, even with its target in reach. It walks straight to the nearest spot where it's wholly on safe ground, or finds the shortest way round (`find_safe`). It stops as soon as its center is safe: from there it stands and attacks if it can.
+    - A unit only partly over the edge stands and fights, but when it's about to walk, it first steps clear.
+    - While walking back, a step may cross crumbled ground but never reaches further past the edge than it did.
+    - A unit with no way back waits, and takes the damage. It looks again every `repath_ms`.
+    - When a ring crumbles, every walker plans its way again at once, since old routes may cross the new crumbled ground.
+    - **Fliers** in the air fly over crumbled ground (and are hit if their center is over it). Only a landed flier walks back, and it takes off to do it. They land only on safe ground.
+  - **`start_collapse`** (no target key; not in an area) warns the first ring at once, credited to its unit and ability, so it crumbles 3s later; every later ring keeps the same spacing. Once the first warning is out, it does nothing.
+  - **Speed** (`tools/bench_sim.gd`): fights that end before 42s are unchanged, fingerprints and all. The steady fight at 3x HP now ends at 56–57s instead of 62–64s, because the collapse finishes the snipers at the back, and takes 93–103 ms (99–107 ms per 60s, against 85 before, measured side by side). Most of the extra is ordinary walking and re-targeting: the heroes walk around the crumbled edge to reach the back row. The crowded fight is unchanged at about 155–240 ms per 60s.
+  - **A speed fix it needed:** targets huddled on the crumbling edge are often out of reach, and a walker with no way to its target searched again every tick. Now it looks again every `repath_ms`, as it gives up after `repath_give_up_ms`. Fights with no such walker are unchanged (the benchmark's fingerprints under 42s stayed the same).
 
 ## 10. Summons
 

@@ -13,8 +13,6 @@ var zone_rows: int = 3
 var unit_radius: int = 400
 var rock_radius: int = 500
 var nav_cell: int = 125
-## A walker looks for a new route this often, and gives up on a target it
-## can't reach for this long.
 ## Engage: how close an enemy must be to be next to an engager, and how long
 ## it takes to break free.
 var engage_reach: int = 1000
@@ -22,12 +20,20 @@ var break_free_ticks: int = 20
 ## Displacement: how long a push stopped early stuns, and a leap's landing.
 var collision_stun_ticks: int = 20
 var leap_land_ticks: int = 6
+## A walker looks for a new route this often, and gives up on a target it
+## can't reach for this long.
 var repath_ticks: int
 var repath_give_up_ticks: int
 ## Standing units per side, summons included.
 var max_units_per_side: int = 30
 var crit_damage_bp: int
+## Rift Collapse: the first ring crumbles at collapse_start, then one more
+## every collapse_ring; each is warned collapse_warning before it crumbles.
+## Its damage's growth speeds up collapse_surge - collapse_start after the
+## first ring crumbles.
 var collapse_start_ticks: int
+var collapse_ring_ticks: int
+var collapse_warning_ticks: int
 var collapse_surge_ticks: int
 var tie_ticks: int
 ## Crit chance (bp) each CRIT point adds to every ability the unit has.
@@ -74,6 +80,8 @@ static func read(reader: DataReader) -> TuningDef:
 	def.heal_cleanse_window_ticks = reader.req_ticks("heal_cleanse_window_ms")
 	def.heal_cleanse_falloff_bp = reader.req_int("heal_cleanse_falloff_bp", 0, FixedMath.BP_ONE)
 	def.collapse_start_ticks = reader.req_ticks("collapse_start_ms")
+	def.collapse_ring_ticks = reader.req_ticks("collapse_ring_ms", FixedMath.MS_PER_TICK)
+	def.collapse_warning_ticks = reader.req_ticks("collapse_warning_ms")
 	def.collapse_surge_ticks = reader.req_ticks("collapse_surge_ms")
 	def.tie_ticks = reader.req_ticks("tie_ms", 1)
 

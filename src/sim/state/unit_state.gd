@@ -58,7 +58,8 @@ var look_again_at: int = 0
 # Walking (Movement).
 ## The corners still to walk to, in order.
 var route: Array[Vector2i] = []
-## The target the route leads to, and when to plan it again.
+## The target the route leads to (null: it leads back to safe ground, see
+## Movement.escape), and when to plan it again.
 var route_for: UnitState:
 	get:
 		return _route_for.get_ref() as UnitState if _route_for != null else null

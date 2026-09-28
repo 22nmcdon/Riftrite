@@ -229,6 +229,14 @@ func find_nearest(start: Vector2i, forward: int, targets: Array[Vector2i], reach
 	return _search(start, forward, targets, reach, false).y
 
 
+## A* from `start`, on crumbled ground, to the nearest free cell (not the
+## one it starts in, which may not be free) where the walker stands wholly on
+## safe ground again. Returns that cell, or -1 if there's none.
+func find_safe(start: Vector2i, forward: int) -> int:
+	var targets: Array[Vector2i] = []
+	return _search(start, forward, targets, 0, true, true).x
+
+
 ## Returns (goal cell, target index), or (-1, -1). Both searches are A*,
 ## guided by how far the closest target's reach at least is: the octile
 ## distance (the longer of the x and y distances, plus 0.4142 of the shorter,
@@ -237,12 +245,14 @@ func find_nearest(start: Vector2i, forward: int, targets: Array[Vector2i], reach
 ## no more than a step costs, so A* stays exact; on open ground it's close to
 ## the true cost, so a search spreads little beyond its path. With `first`, it stops at the first goal;
 ## otherwise it keeps settling every cell that could still be as close, so
-## ties go to the lower index. Cells are queued by (estimate, then the order
+## ties go to the lower index. With `to_safe`, there are no targets: the
+## goal is any cell inside the safe ground, and the estimate is the octile
+## distance to it. Cells are queued by (estimate, then the order
 ## they were queued in), so the search settles them the same way every time.
 ##
 ## This runs a lot, so it's written for speed: plain integer arrays, the
 ## queue inline, and a cell's blocking looked up before it's worked out.
-func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int, first: bool) -> Vector2i:
+func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int, first: bool, to_safe: bool = false) -> Vector2i:
 	_start = cell_at(start)
 	var leaving: bool = not ArenaPlane.inside(_safe, start, _radius)
 	if leaving != _leaving:
@@ -253,6 +263,11 @@ func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int
 	_previous.fill(-1)
 	_settled.fill(0)
 	var target_count: int = targets.size()
+	# The safe ground's limits for the walker's center (to_safe's goal).
+	var safe_x0: int = _safe.position.x + _radius
+	var safe_y0: int = _safe.position.y + _radius
+	var safe_x1: int = _safe.end.x - _radius
+	var safe_y1: int = _safe.end.y - _radius
 	var xs := PackedInt32Array()
 	var ys := PackedInt32Array()
 	for target: Vector2i in targets:
@@ -280,7 +295,8 @@ func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int
 	var best_target: int = -1
 	var best_distance: int = UNREACHED
 	_distance[_start] = 0
-	keys.append(_estimate(_start % cols, _start / cols, xs, ys, target_count, slack, x0, y0) * ORDER + pushes)
+	var first_guess: int = _estimate_safe(center(_start)) if to_safe else _estimate(_start % cols, _start / cols, xs, ys, target_count, slack, x0, y0)
+	keys.append(first_guess * ORDER + pushes)
 	queued.append(_start)
 	size = 1
 	pushes += 1
@@ -319,6 +335,8 @@ func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int
 		_settled[at] = 1
 		var px: int = x0 + col * cell
 		var py: int = y0 + row * cell
+		if to_safe and at != _start and px >= safe_x0 and px <= safe_x1 and py >= safe_y0 and py <= safe_y1:
+			return Vector2i(at, 0)
 		for t: int in target_count:
 			var dx: int = xs[t] - px
 			var dy: int = ys[t] - py
@@ -367,6 +385,8 @@ func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int
 			var nx: int = x0 + next_col * cell
 			var ny: int = y0 + next_row * cell
 			var guess: int = -1
+			if to_safe:
+				guess = _estimate_safe(Vector2i(nx, ny))
 			for t: int in target_count:
 				var gx: int = absi(xs[t] - nx)
 				var gy: int = absi(ys[t] - ny)
@@ -432,6 +452,20 @@ func _estimate(col: int, row: int, xs: PackedInt32Array, ys: PackedInt32Array, t
 		if best < 0 or estimate < best:
 			best = estimate
 	return best
+
+
+## find_safe's estimate from `point`: the octile distance to the nearest
+## point where the walker stands wholly on safe ground (for the walker set
+## by begin).
+func estimate_safe(point: Vector2i) -> int:
+	return _estimate_safe(point)
+
+
+func _estimate_safe(point: Vector2i) -> int:
+	var dx: int = maxi(maxi(_safe.position.x + _radius - point.x, point.x - (_safe.end.x - _radius)), 0)
+	var dy: int = maxi(maxi(_safe.position.y + _radius - point.y, point.y - (_safe.end.y - _radius)), 0)
+	@warning_ignore("integer_division")
+	return maxi(dx, dy) + mini(dx, dy) * OCTILE_EXTRA_BP / FixedMath.BP_ONE
 
 
 ## How many cells the last search settled (for tests and speed checks).

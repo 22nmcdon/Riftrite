@@ -6,7 +6,8 @@ extends RefCounted
 ##
 ## Each tick (section 3; the parts marked "later" come with later steps):
 ##   0. Auras whose window opens or closes now are folded in again (Passives).
-##   1. Rift Collapse (later).
+##   1. Rift Collapse: a ring's warning or crumble, and once a second,
+##      damage to everyone on crumbled ground (Collapse).
 ##   2. Statuses tick: damage over time, and timers running out (Statuses).
 ##   3. Shots land, in the order they were fired (Shots).
 ##   4. Warned areas land, in the order they were cast (Areas).
@@ -15,7 +16,8 @@ extends RefCounted
 ##      is met (Signatures; a unit casting does nothing else). Stunned, it
 ##      stops there. Otherwise its attack's cooldown runs (slower when
 ##      Slowed); a Taunt makes the taunter its target, or it keeps or picks
-##      a target (Targeting); with the target in reach it stands and
+##      a target (Targeting). On crumbled ground, it walks back to safe
+##      ground (Movement.escape). With the target in reach it stands and
 ##      attacks when ready, otherwise it walks (Movement; not when Rooted,
 ##      or while an engager holds it: Engage, checked as it's about to walk,
 ##      and every tick while it's engaged).
@@ -45,6 +47,14 @@ var enemies: Array[UnitState] = []
 var rocks: Array[ArenaPlane.Circle] = []
 ## The ground still standing (the whole arena until the collapse).
 var safe: Rect2i
+## Rift Collapse (Collapse): the act's numbers, the tick the first ring
+## crumbles, how many rings have been warned and have crumbled, and its log
+## source.
+var collapse: CollapseDef
+var collapse_start: int
+var collapse_warned: int = 0
+var collapse_rings: int = 0
+var collapse_source: EffectSource = EffectSource.make("", LogEntry.COLLAPSE_SOURCE, "Rift Collapse")
 ## Shots in flight, in the order they were fired, and the soonest one lands
 ## on (NEVER: none in flight).
 var shots: Array[Shots.Shot] = []
@@ -93,6 +103,8 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 	grid = tuning.make_grid()
 	rng = SimRng.new(setup.seed_value)
 	safe = grid.bounds()
+	collapse = tuning.collapse_for_act(setup.act)
+	collapse_start = tuning.collapse_start_ticks
 	_nav = NavGrid.make(grid.bounds(), tuning.nav_cell)
 	for rock: Vector2i in setup.rocks:
 		rocks.append(ArenaPlane.Circle.make(grid.center(rock.x, rock.y), tuning.rock_radius, "rock"))
@@ -121,6 +133,7 @@ func step() -> void:
 	tick += 1
 	if _aura_ticks.has(tick):
 		_active_auras = Passives.rederive(self, _active_auras)
+	Collapse.tick(self)
 	Statuses.tick_all(self)
 	Shots.land_due(self)
 	Areas.land_due(self)
@@ -181,6 +194,9 @@ func _act(unit: UnitState) -> void:
 	var engagers: Array[UnitState] = _enemy_engagers if unit.side == EffectSource.Team.HEROES else _hero_engagers
 	if not unit.engagements.is_empty():
 		Engage.update(self, unit, engagers)
+	if collapse_rings > 0 and not unit.airborne and on_crumbled(unit.pos):
+		Movement.escape(self, unit)
+		return
 	if target == null:
 		if unit.leg_active:
 			Movement.halt(self, unit, "no target")
@@ -230,8 +246,39 @@ func obstacles_for(unit: UnitState, except: UnitState) -> Array[ArenaPlane.Circl
 ## True if `unit` fits at `point`: inside the safe ground and overlapping no
 ## other standing unit (fliers in the air aside) and no rock.
 func fits(unit: UnitState, point: Vector2i) -> bool:
-	if not ArenaPlane.inside(safe, point, unit.radius):
-		return false
+	return ArenaPlane.inside(safe, point, unit.radius) and _clear(unit, point)
+
+
+## Like fits, for a unit not wholly on safe ground walking back to it: it
+## may step anywhere in the arena that reaches no further past the safe
+## ground than where it stands.
+func fits_leaving(unit: UnitState, point: Vector2i) -> bool:
+	return ArenaPlane.inside(grid.bounds(), point, unit.radius) \
+		and crumbled_depth(point, unit.radius) <= crumbled_depth(unit.pos, unit.radius) and _clear(unit, point)
+
+
+## True if `point` is on crumbled ground (outside the safe rectangle).
+func on_crumbled(point: Vector2i) -> bool:
+	return point.x < safe.position.x or point.x > safe.end.x or point.y < safe.position.y or point.y > safe.end.y
+
+
+## How far a circle of `radius` at `point` reaches past the safe ground
+## (0: it's wholly on it), the most on any side.
+func crumbled_depth(point: Vector2i, radius: int) -> int:
+	return maxi(maxi(maxi(safe.position.x + radius - point.x, point.x + radius - safe.end.x),
+		maxi(safe.position.y + radius - point.y, point.y + radius - safe.end.y)), 0)
+
+
+## The nearest point to `point` where a circle of `radius` is wholly on safe
+## ground.
+func nearest_safe_point(point: Vector2i, radius: int) -> Vector2i:
+	return Vector2i(clampi(point.x, safe.position.x + radius, safe.end.x - radius),
+		clampi(point.y, safe.position.y + radius, safe.end.y - radius))
+
+
+## True if `unit` at `point` overlaps no other standing unit (fliers in the
+## air aside) and no rock.
+func _clear(unit: UnitState, point: Vector2i) -> bool:
 	for other: UnitState in units:
 		if other != unit and other.alive and not other.airborne and ArenaPlane.overlaps(point, unit.radius, other.pos, other.radius):
 			return false

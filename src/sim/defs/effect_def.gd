@@ -40,6 +40,9 @@ extends RefCounted
 ##     hits:   enemies, allies, or all (by the unit's side)
 ##     Each nested effect aims at "target" (every unit hit), on_fire; no
 ##     area in an area, and no leap or charge.
+##   start_collapse: nothing else, and no "target" key: starts Rift Collapse
+##                 now if it hasn't started (Collapse.start_now). Not in an
+##                 area.
 ## `amount` (or `stacks`) is the base value. An optional "scaling" object adds
 ## a share of the unit's stats, in basis points of each stat:
 ##   "scaling": {"atk": 6000, "atsp": 2000}  ->  base + 60% ATK + 20% ATSP
@@ -87,7 +90,7 @@ enum Trigger {
 	ON_FIRE, ON_HIT, ON_CRIT, ON_FIGHT_START, AT_TIME, ON_ALLY_BELOW_HP,
 	ON_ABILITY, ON_BASIC_ATTACK, ON_HOLDER_CRIT, ON_SHIELDED, ON_HIT_TAKEN, ON_HEAL, ON_STATUS, ON_KILL,
 }
-enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA }
+enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE }
 enum Anchor { TARGET, SELF, TARGET_DIRECTION }
 enum Hits { ENEMIES, ALLIES, ALL }
 enum Target {
@@ -120,7 +123,7 @@ const ABILITY_TRIGGERS: Array[Trigger] = [
 const RELIC_TRIGGERS: Array[Trigger] = [Trigger.ON_FIRE, Trigger.ON_FIGHT_START, Trigger.AT_TIME, Trigger.ON_ALLY_BELOW_HP]
 ## Targets that need the effect's unit to stand on the field.
 const FIELD_ONLY_TARGETS: Array[Target] = [Target.TARGET, Target.HIT_TARGET, Target.SELF]
-const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain", "knockback", "pull", "leap", "charge", "area"]
+const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain", "knockback", "pull", "leap", "charge", "area", "start_collapse"]
 const ANCHOR_NAMES: Array[String] = ["target", "self", "target_direction"]
 const HITS_NAMES: Array[String] = ["enemies", "allies", "all"]
 ## The types that move the unit itself.
@@ -181,8 +184,12 @@ static func read(reader: DataReader, relic: bool = false) -> EffectDef:
 	var type_name: String = reader.req_choice("type", TYPE_NAMES)
 	def.trigger = maxi(TRIGGER_NAMES.find(trigger_name), 0) as Trigger
 	def.type = maxi(TYPE_NAMES.find(type_name), 0) as Type
-	# An area has an anchor instead of a target.
-	var target_name: String = "target" if type_name == "area" else reader.req_choice("target", TARGET_NAMES)
+	# An area has an anchor instead of a target; start_collapse needs none.
+	var target_name: String = "target"
+	if type_name == "start_collapse":
+		target_name = "self"
+	elif type_name != "area":
+		target_name = reader.req_choice("target", TARGET_NAMES)
 	def.target = maxi(TARGET_NAMES.find(target_name), 0) as Target
 
 	if not type_name.is_empty():

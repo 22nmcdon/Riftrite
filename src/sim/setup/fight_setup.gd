@@ -45,6 +45,8 @@ func validate(content: ContentDb) -> Array[String]:
 	var grid: HexGrid = content.tuning.make_grid()
 	if heroes.is_empty() or enemies.is_empty():
 		errors.append("both sides need at least one unit")
+	if content.tuning.collapse_for_act(act) == null:
+		errors.append("tuning has no Rift Collapse numbers for act %d" % act)
 	for side: Array[UnitSetup] in [heroes, enemies]:
 		if side.size() > content.tuning.max_units_per_side:
 			errors.append("at most %d units per side" % content.tuning.max_units_per_side)

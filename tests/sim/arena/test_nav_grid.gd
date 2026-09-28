@@ -144,6 +144,58 @@ func test_a_walker_on_crumbled_ground_can_leave() -> void:
 		assert_true(nav.is_free(at), "every step after the first is on safe ground")
 
 
+## True if a walker at `point` stands wholly on `safe` ground.
+func _wholly_safe(point: Vector2i, safe: Rect2i) -> bool:
+	return ArenaPlane.inside(safe, point, UNIT_R)
+
+
+func test_the_way_back_to_safe_ground() -> void:
+	var safe: Rect2i = grid.safe_rect(1)
+	var nav: NavGrid = _nav([], [], safe)
+	for start: Vector2i in [_hex(0, 3), _hex(3, 0), _hex(4, 6), _hex(0, 0), _hex(7, 6)]:
+		var goal: int = nav.find_safe(start, 1)
+		assert_true(_wholly_safe(nav.center(goal), safe), "from %s to %s" % [start, nav.center(goal)])
+		assert_lt(nav.settled_count(), 60, "guided (%d cells)" % nav.settled_count())
+		var cheapest: int = -1
+		for at: int in nav.size():
+			if _wholly_safe(nav.center(at), safe):
+				var d: Vector2i = (nav.center(at) - nav.center(nav.cell_at(start))).abs() / nav.cell
+				var cost: int = maxi(d.x, d.y) * 125 + mini(d.x, d.y) * (177 - 125)
+				if cheapest < 0 or cost < cheapest:
+					cheapest = cost
+		assert_eq(nav.distance_to(goal), cheapest, "the shortest way, from %s" % start)
+
+
+func test_the_way_back_never_ends_where_it_starts() -> void:
+	# The walker's cell center is on safe ground, but the walker isn't.
+	var safe: Rect2i = grid.safe_rect(1)
+	var nav: NavGrid = _nav([], [], safe)
+	# The walker's center must stay at x >= 1266; the cell from 1250 to 1375
+	# has its center at 1312.
+	var start: Vector2i = Vector2i(1255, _hex(3, 3).y)
+	assert_false(_wholly_safe(start, safe))
+	assert_true(_wholly_safe(nav.center(nav.cell_at(start)), safe))
+	var goal: int = nav.find_safe(start, 1)
+	assert_ne(goal, nav.cell_at(start))
+	assert_eq(nav.path_to(goal).size(), 1)
+
+
+func test_no_way_back() -> void:
+	var nav: NavGrid = _nav([], [Vector2i(0, 1), Vector2i(1, 1), Vector2i(1, 2), Vector2i(0, 3)], grid.safe_rect(1))
+	assert_eq(nav.find_safe(_hex(0, 2), 1), -1)
+
+
+func test_the_way_back_estimate() -> void:
+	var safe: Rect2i = grid.safe_rect(1)
+	var nav: NavGrid = _nav([], [], safe)
+	var corner: Vector2i = safe.position + Vector2i(UNIT_R, UNIT_R)
+	assert_eq(nav.estimate_safe(corner - Vector2i(1000, 1000)), 1414, "straight and diagonal, as on open ground")
+	assert_eq(nav.estimate_safe(corner - Vector2i(0, 700)), 700)
+	assert_eq(nav.estimate_safe(corner + Vector2i(100, 100)), 0, "on safe ground already")
+	var end: Vector2i = safe.end - Vector2i(UNIT_R, UNIT_R)
+	assert_eq(nav.estimate_safe(end + Vector2i(300, 200)), 300 + 200 * 4142 / 10000)
+
+
 func test_searches_are_repeatable_and_lean_forward() -> void:
 	var start: Vector2i = _hex(3, 3)
 	var units: Array[Vector2i] = [Vector2i(3, 4), Vector2i(4, 4), Vector2i(2, 4)]
