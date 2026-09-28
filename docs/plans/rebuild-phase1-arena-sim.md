@@ -369,6 +369,17 @@ All the displacements **move the unit instantly in the sim** and log the start a
 - **`area` effect:** a shape, an anchor, `warning_ms`, `hits` (`enemies`, `allies`, or `all`), and nested `effects`. The nested effects run on every unit inside the area **when it lands**. Where it lands is fixed when it's cast, so a warned area doesn't follow anyone.
 - **Warning:** at cast, the log gets `AREA_WARNING` with the shape, where it is, and the landing tick, and the UI draws it. At the landing tick, the log gets `AREA_LANDED`, then one entry per unit hit. Areas without `warning_ms` land at once.
 - Heroes **never step out of marked areas** (decided in the enemies plan). Placement is the answer, so movement ignores warnings.
+- **Built in step 7, second half** (`ShapeDef`, `Areas`, the `area` effect type, `AREA_WARNING` and `AREA_LANDED`):
+  - **Data:** `{"type": "area", "shape": {"kind": "circle", "radius": 2}, "anchor": "target", "warning_ms": 1000, "hits": "enemies", "effects": [...]}`.
+    - Sizes are whole hexes, and a cone's depth defaults to 3.
+    - Circles and rings take `target` or `self`; lines and cones take `target_direction`. The validator checks the pairing.
+  - **Lines and cones start at the caster's edge,** not its center: the plan says so for lines, and cones do the same.
+  - **At cast:** where the area goes is fixed, and so are its effects' numbers and crit chance, like a shot's. Crits are rolled per unit when it lands.
+  - **It still lands if the caster has fallen.** An area never rides a shot, even from range.
+  - **What it hits:** every standing unit on its `hits` side whose center is inside, in fight order. For `allies` and `all`, the caster counts.
+  - **Nested effects:** they aim at `target` (each unit hit) and fire on_fire. No area in an area, and no leap or charge. An area is itself cast on_fire.
+  - **Pushes inside an area:** a knockback goes away from a circle's or ring's center, or from the caster for a line or cone. A pull goes toward the caster.
+  - **The log:** `AREA_WARNING` and `AREA_LANDED` carry the shape ("circle 2"), where it's placed (`from_pos`), and a line's or cone's far end (`to_pos`). `AREA_LANDED` counts the units hit.
 
 ## 8. Statuses for the slice
 
@@ -587,7 +598,7 @@ If step 2 measures slower, the cell size and repath interval are the knobs, and 
 4. **Mana and signatures (done):** the five triggers, cast_ms, Undying, `Events`, and `PartDef`.
 5. **Tanks (done):** Engage.
 6. **Displacement and flying (done):** knockback, pull, leap, charge, collisions, flying, and hop away.
-7. **Areas:** shapes, warnings, landing, and the rest of the targeting rules.
+7. **Areas (done):** shapes, warnings, landing, and the rest of the targeting rules.
 8. **Collapse, summons, and phases:** rings, the safe rectangle, damage, start_collapse, summons, and `PhaseDef`.
 9. **The full determinism fight and the log audit.** Update `CLAUDE.md`'s sim rules to describe the arena.
 

@@ -15,7 +15,8 @@ static func busy_setup(fight_seed: int = 5) -> FightSetup:
 		"basic_attack": {"cooldown_ms": 900, "effects": [{"type": "damage", "amount": 6, "target": "target", "scaling": {"atk": 6000}}]},
 		"mana": {"max": 40, "per_attack": 10, "regen_per_s": 2},
 		"signature": {"id": "volley", "name": "Volley", "trigger": {"kind": "mana"}, "max_range": 5, "cast_ms": 400,
-			"effects": [{"type": "damage", "amount": 15, "target": "target", "scaling": {"atk": 5000}}, {"type": "apply_status", "status": "slow", "target": "target"}]}})
+			"effects": [{"type": "area", "shape": {"kind": "circle", "radius": 1}, "anchor": "target", "warning_ms": 500, "hits": "enemies",
+				"effects": [{"type": "damage", "amount": 15, "target": "target", "scaling": {"atk": 5000}}, {"type": "apply_status", "status": "slow", "target": "target"}]}]}})
 	var hound: UnitDef = K.kit("hound", {"stats": {"hp": 180, "atk": 14, "speed": 3, "crit": 10}, "traits": ["engage", "flying"],
 		"passives": [{"id": "pack", "name": "Pack", "kind": "aura", "aura": {"target": "all_allies", "stat": "atsp_bp", "value": 11000}},
 			{"id": "snap", "name": "Snap", "kind": "ability", "effects": [{"trigger": "on_hit_taken", "every": 3, "type": "damage", "amount": 4, "target": "hit_target"},

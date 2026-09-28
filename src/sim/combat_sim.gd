@@ -9,7 +9,7 @@ extends RefCounted
 ##   1. Rift Collapse (later).
 ##   2. Statuses tick: damage over time, and timers running out (Statuses).
 ##   3. Shots land, in the order they were fired (Shots).
-##   4. Warned areas land (later).
+##   4. Warned areas land, in the order they were cast (Areas).
 ##   5. Each standing unit acts, in the fight's order (heroes, then enemies):
 ##      its mana regenerates (Mana), and its signature fires if its trigger
 ##      is met (Signatures; a unit casting does nothing else). Stunned, it
@@ -49,6 +49,8 @@ var safe: Rect2i
 ## on (NEVER: none in flight).
 var shots: Array[Shots.Shot] = []
 var next_shot_tick: int = NEVER
+## Warned areas on their way, in the order they were cast.
+var areas: Array[Areas.Pending] = []
 var finished: bool = false
 var outcome: FightResult.Outcome = FightResult.Outcome.TIE
 var _nav: NavGrid
@@ -121,6 +123,7 @@ func step() -> void:
 		_active_auras = Passives.rederive(self, _active_auras)
 	Statuses.tick_all(self)
 	Shots.land_due(self)
+	Areas.land_due(self)
 	for unit: UnitState in units:
 		if unit.alive:
 			_act(unit)

@@ -27,6 +27,19 @@ extends RefCounted
 ##                 at its target and knocks back the first enemy it touches
 ## (Displacement has the rules. leap and charge move the unit itself, so
 ## they aim at "target", fire at once, and only signatures have them.)
+##   area:         shape (ShapeDef), anchor, optional warning_ms, hits, and
+##                 nested effects (no "target" key of its own; Areas has
+##                 the rules):
+##     {"type": "area", "shape": {"kind": "circle", "radius": 2},
+##      "anchor": "target", "warning_ms": 1000, "hits": "enemies",
+##      "effects": [{"type": "damage", "amount": 20, "target": "target"}]}
+##     anchor: target (centered on the ability's target), self (on the
+##             unit), target_direction (a line or cone from the unit aimed
+##             at the target); circles and rings take target or self,
+##             lines and cones target_direction
+##     hits:   enemies, allies, or all (by the unit's side)
+##     Each nested effect aims at "target" (every unit hit), on_fire; no
+##     area in an area, and no leap or charge.
 ## `amount` (or `stacks`) is the base value. An optional "scaling" object adds
 ## a share of the unit's stats, in basis points of each stat:
 ##   "scaling": {"atk": 6000, "atsp": 2000}  ->  base + 60% ATK + 20% ATSP
@@ -74,7 +87,9 @@ enum Trigger {
 	ON_FIRE, ON_HIT, ON_CRIT, ON_FIGHT_START, AT_TIME, ON_ALLY_BELOW_HP,
 	ON_ABILITY, ON_BASIC_ATTACK, ON_HOLDER_CRIT, ON_SHIELDED, ON_HIT_TAKEN, ON_HEAL, ON_STATUS, ON_KILL,
 }
-enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE }
+enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA }
+enum Anchor { TARGET, SELF, TARGET_DIRECTION }
+enum Hits { ENEMIES, ALLIES, ALL }
 enum Target {
 	TARGET,
 	HIT_TARGET,
@@ -105,7 +120,9 @@ const ABILITY_TRIGGERS: Array[Trigger] = [
 const RELIC_TRIGGERS: Array[Trigger] = [Trigger.ON_FIRE, Trigger.ON_FIGHT_START, Trigger.AT_TIME, Trigger.ON_ALLY_BELOW_HP]
 ## Targets that need the effect's unit to stand on the field.
 const FIELD_ONLY_TARGETS: Array[Target] = [Target.TARGET, Target.HIT_TARGET, Target.SELF]
-const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain", "knockback", "pull", "leap", "charge"]
+const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain", "knockback", "pull", "leap", "charge", "area"]
+const ANCHOR_NAMES: Array[String] = ["target", "self", "target_direction"]
+const HITS_NAMES: Array[String] = ["enemies", "allies", "all"]
 ## The types that move the unit itself.
 const MOVES_SELF: Array[Type] = [Type.LEAP, Type.CHARGE]
 const TARGET_NAMES: Array[String] = [
@@ -133,6 +150,13 @@ var hexes: int = 0
 var knockback_hexes: int = 0
 ## leap: how long the landing takes (-1: tuning's leap_land_ms).
 var land_ticks: int = -1
+## area: its shape, where it goes, how long it's warned, whom it hits, and
+## what it does to each of them.
+var shape: ShapeDef = null
+var anchor: Anchor = Anchor.TARGET
+var warning_ticks: int = 0
+var hits: Hits = Hits.ENEMIES
+var area_effects: Array[EffectDef] = []
 ## Basis points of each stat added to the base value, indexed by UnitStats.Stat
 ## (the first SCALING_STATS only).
 var scaling: Array[int] = [0, 0, 0, 0, 0, 0]
@@ -157,7 +181,8 @@ static func read(reader: DataReader, relic: bool = false) -> EffectDef:
 	var type_name: String = reader.req_choice("type", TYPE_NAMES)
 	def.trigger = maxi(TRIGGER_NAMES.find(trigger_name), 0) as Trigger
 	def.type = maxi(TYPE_NAMES.find(type_name), 0) as Type
-	var target_name: String = reader.req_choice("target", TARGET_NAMES)
+	# An area has an anchor instead of a target.
+	var target_name: String = "target" if type_name == "area" else reader.req_choice("target", TARGET_NAMES)
 	def.target = maxi(TARGET_NAMES.find(target_name), 0) as Target
 
 	if not type_name.is_empty():
@@ -175,6 +200,8 @@ static func read(reader: DataReader, relic: bool = false) -> EffectDef:
 			Type.CHARGE:
 				def.hexes = reader.req_int("hexes", 1)
 				def.knockback_hexes = reader.opt_int("knockback", 0, 0)
+			Type.AREA:
+				_read_area(def, reader)
 			Type.SHIELD:
 				if reader.has("amount") == reader.has("amount_bp_of_damage"):
 					reader.error("shield needs exactly one of \"amount\" or \"amount_bp_of_damage\"")
@@ -194,6 +221,8 @@ static func read(reader: DataReader, relic: bool = false) -> EffectDef:
 	read_window(reader, def)
 	if not trigger_name.is_empty():
 		_read_trigger_fields(def, reader, relic)
+	if def.type == Type.AREA and not trigger_name.is_empty() and def.trigger != Trigger.ON_FIRE:
+		reader.error("an area is cast as its ability fires (on_fire)")
 	if MOVES_SELF.has(def.type) and not type_name.is_empty() and not target_name.is_empty():
 		if def.target != Target.TARGET or def.trigger != Trigger.ON_FIRE:
 			reader.error("%s moves the unit itself to its target, so it needs \"target\": \"target\" and the on_fire trigger" % type_name)
@@ -209,6 +238,27 @@ static func read(reader: DataReader, relic: bool = false) -> EffectDef:
 			reader.error("%s names no hit, so it can't use amount_bp_of_damage" % trigger_name)
 	reader.finish()
 	return def
+
+
+static func _read_area(def: EffectDef, reader: DataReader) -> void:
+	var shape_reader: DataReader = reader.req_object("shape")
+	def.shape = ShapeDef.read(shape_reader) if shape_reader != null else ShapeDef.new()
+	var anchor_name: String = reader.req_choice("anchor", ANCHOR_NAMES)
+	def.anchor = maxi(ANCHOR_NAMES.find(anchor_name), 0) as Anchor
+	def.warning_ticks = reader.opt_ticks("warning_ms", 0)
+	def.hits = maxi(HITS_NAMES.find(reader.req_choice("hits", HITS_NAMES)), 0) as Hits
+	if not anchor_name.is_empty() and def.shape.is_aimed() != (def.anchor == Anchor.TARGET_DIRECTION):
+		reader.error("anchor: a %s takes %s" % [ShapeDef.KIND_NAMES[def.shape.kind], "target_direction" if def.shape.is_aimed() else "target or self"])
+	var effect_readers: Array[DataReader] = reader.opt_object_array("effects")
+	if effect_readers.is_empty():
+		reader.error("an area needs effects")
+	for effect_reader: DataReader in effect_readers:
+		var effect: EffectDef = EffectDef.read(effect_reader)
+		if effect.type == Type.AREA or MOVES_SELF.has(effect.type):
+			effect_reader.error("an area's effects can't be an area, a leap, or a charge")
+		elif effect.target != Target.TARGET or effect.trigger != Trigger.ON_FIRE:
+			effect_reader.error("an area's effects aim at \"target\" (each unit hit), on_fire")
+		def.area_effects.append(effect)
 
 
 ## Checks the trigger is allowed here and reads its extra fields.

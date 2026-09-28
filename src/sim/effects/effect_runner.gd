@@ -13,8 +13,13 @@ extends RefCounted
 ## Numbers come from the unit's stats (with its auras) and its output auras
 ## (Passives.boosted); statuses it applies may be swapped (replace_status).
 ## Built so far: damage, heal, shield, apply_status, cleanse, mana_drain,
-## knockback, pull, leap, and charge (Displacement). Area, summon, and
-## start_collapse come with their steps.
+## knockback, pull, leap, charge (Displacement), and area (Areas; an area is
+## cast as the ability fires, never riding a shot). Summon and start_collapse
+## come with their steps.
+
+
+## No point given (land's push_from).
+const NO_POINT: Vector2i = Vector2i(-1073741824, -1073741824)
 
 
 ## What an on_hit or on_crit effect knows about the hit that set it off.
@@ -56,6 +61,9 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 	for effect: EffectDef in ability.effects:
 		if effect.trigger != EffectDef.Trigger.ON_FIRE or not effect.active_at(sim.tick):
 			continue
+		if effect.type == EffectDef.Type.AREA:
+			Areas.cast(sim, unit, ability, source, effect, target)
+			continue
 		if shot != null and effect.target == EffectDef.Target.TARGET:
 			var amount: int = amount_of(effect, unit)
 			var crit: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability))
@@ -72,9 +80,10 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 
 
 ## One effect reaching `victim` with its number already worked out (as it
-## fired, or as its shot left). A damage hit then sets off the ability's
-## on_hit (and on a crit, on_crit) effects.
-static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: EffectSource, effect: EffectDef, victim: UnitState, amount: int, crit: bool) -> void:
+## fired, as its shot left, or as its area was cast). A damage hit then sets
+## off the ability's on_hit (and on a crit, on_crit) effects. A knockback
+## goes away from `push_from` (an area's center), or else from the unit.
+static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: EffectSource, effect: EffectDef, victim: UnitState, amount: int, crit: bool, push_from: Vector2i = NO_POINT) -> void:
 	match effect.type:
 		EffectDef.Type.DAMAGE:
 			var damage: int = FixedMath.apply_bp(amount, sim.tuning.crit_damage_bp) if crit else amount
@@ -97,7 +106,7 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 		EffectDef.Type.MANA_DRAIN:
 			Mana.drain(sim, victim, amount, source)
 		EffectDef.Type.KNOCKBACK:
-			Displacement.knockback(sim, victim, unit.pos, unit.forward(), effect.hexes, source)
+			Displacement.knockback(sim, victim, unit.pos if push_from == NO_POINT else push_from, unit.forward(), effect.hexes, source)
 		EffectDef.Type.PULL:
 			Displacement.pull(sim, victim, unit, effect.hexes, source)
 		EffectDef.Type.LEAP:

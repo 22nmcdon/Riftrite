@@ -88,7 +88,10 @@ func status_ids() -> Array[String]:
 	for ability: AbilityDef in abilities:
 		if ability == null:
 			continue
+		var effects: Array[EffectDef] = ability.effects.duplicate()
 		for effect: EffectDef in ability.effects:
+			effects.append_array(effect.area_effects)
+		for effect: EffectDef in effects:
 			if effect.type == EffectDef.Type.APPLY_STATUS:
 				found.append(effect.status_id)
 			found.append_array(effect.statuses)

@@ -36,6 +36,8 @@ enum Kind {
 	LEAP,
 	CHARGE,
 	HOP,
+	AREA_WARNING,
+	AREA_LANDED,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -78,6 +80,10 @@ var to_pos: Vector2i = Vector2i.ZERO
 ## the cast ends; STATUS_APPLIED: the tick a timed status ends (-1: it isn't
 ## timed, like Engaged).
 var end_tick: int = 0
+## AREA_WARNING, AREA_LANDED: the shape ("circle 2"); from_pos is where it's
+## placed (a line's or cone's start), to_pos a line's or cone's far end (or
+## the center again). AREA_LANDED: amount is how many it hit.
+var shape: String = ""
 
 
 func set_source(source: EffectSource) -> void:
@@ -164,6 +170,10 @@ func to_text() -> String:
 			return line + "%s leaps from %s to %s beside %s (lands at %s)" % [source_text(), _point(from_pos), _point(to_pos), target, _format_time(end_tick)]
 		Kind.CHARGE:
 			return line + "%s charges at %s from %s to %s%s" % [source_text(), target, _point(from_pos), _point(to_pos), "" if note.is_empty() else " (%s)" % note]
+		Kind.AREA_WARNING:
+			return line + "%s marks a %s at %s (lands at %s)" % [source_text(), shape, _point(from_pos), _format_time(end_tick)]
+		Kind.AREA_LANDED:
+			return line + "%s: the %s at %s lands, hitting %d" % [source_text(), shape, _point(from_pos), amount]
 		Kind.HOP:
 			return line + "%s hops away from %s, from %s to %s%s" % [source_unit, target, _point(from_pos), _point(to_pos), "" if note.is_empty() else " (%s)" % note]
 		Kind.BREAK_FREE:
