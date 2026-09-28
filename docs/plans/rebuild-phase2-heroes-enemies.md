@@ -1,6 +1,6 @@
 # Rebuild phase 2: base heroes and the Act 1 enemies (build plan)
 
-Status: **proposed (2026-09-28), waiting for approval.** Phase 2 of `docs/plans/rebuild-build-order.md`. Design sources: `rebuild-heroes.md` (the three base kits), `rebuild-enemies.md` (the Act 1 roster and how encounters scale), and `rebuild-arena.md`. It builds on the arena sim from phase 1 (`rebuild-phase1-arena-sim.md`). Numbers are placeholders; step 7 tunes them.
+Status: **approved (2026-09-28), with the answers under Decisions.** Phase 2 of `docs/plans/rebuild-build-order.md`. Design sources: `rebuild-heroes.md` (the three base kits), `rebuild-enemies.md` (the Act 1 roster and how encounters scale), and `rebuild-arena.md`. It builds on the arena sim from phase 1 (`rebuild-phase1-arena-sim.md`). Numbers are placeholders; step 7 tunes them.
 
 **Goal:** Brannoc, Maren, and Vell's base kits and the 9 Act 1 enemies as data, hand-placed encounters, and a headless sim runner that fights placed parties against them. **Done when** (the build order's gate) the sim runner shows **placement matters**: against each archetype, the same team wins clearly more with a good formation than with a bad one.
 
@@ -20,7 +20,7 @@ Status: **proposed (2026-09-28), waiting for approval.** Phase 2 of `docs/plans/
 **Not in phase 2:**
 
 - **Paths, vows, tastes and costs, deeds, and upgrades** (phase 4).
-- **The elites** (Hound Alpha, Witch Coven, Cairn Watch) and **Old Mother Ash**. The build order puts Old Mother Ash in phase 5 with the run. I propose the elites go there too, since each needs a mechanic of its own (section 8).
+- **The elites** (Hound Alpha, Witch Coven, Cairn Watch) and **Old Mother Ash**. The build order puts Old Mother Ash in phase 5 with the run, and the elites go there too (decided), since each needs a mechanic of its own (section 8).
 - **Enemy specializations and upgrades** (phase 8).
 - **The run:** days, fight choice, camp, relics, and duo bonds (phase 5).
 - **Any UI** (phase 3). The fight card's threat line and archetype are stored now, so phase 3 only has to show them.
@@ -71,7 +71,7 @@ So the steady fight sits at the edge of its 100 ms budget again since the collap
 
 1. **A failed search is remembered until the board changes.** A search that found no one reached a region of the board. While nobody enters or leaves that region's edge, searching again gives the same answer. So a unit keeps its "no one reachable" result until a unit that bounded it moves, falls, or joins, or the ground crumbles. This gives the same results as now, so the log fingerprints must stay the same.
 2. **Cheaper search setup.** Each search clears three arrays of 3,420 cells and re-files every obstacle. The fix is to keep the obstacle buckets between searches in a tick and clear only the cells the last search touched. Results stay the same.
-3. **Only if 1 and 2 aren't enough: look again less often after a failed `nearest`** (1s instead of 0.5s). This changes results, so I'd ask first.
+3. **Only if 1 and 2 aren't enough: look again less often after a failed `nearest`** (1s instead of 0.5s). This changes results; approved as a fallback only (Decisions).
 
 **Budget:** the steady 3-against-6 fight stays under 100 ms per 60s. I propose a new **swarm** case in `tools/bench_sim.gd`: 3 heroes against a caller that brings 2 pups every 10s (about 12 at once), under **300 ms per 60s**. The chaos fight should drop from about 2.5s to under 0.5s.
 
@@ -130,20 +130,20 @@ From `rebuild-heroes.md`, sections 4 and 6–8. Hero numbers are the design's; t
 | **Stats** | HP 420, ATK 14, DEF 30 | HP 270, ATK 22, DEF 8, CRIT 8, ATSP 10 | HP 300, ATK 6, MGK 20, DEF 10 |
 | **Speed / range** | 2 / 1 | 2 / 4 | 2 / 3 |
 | **Basic attack** | Shield Bash | Longshot (a shot) | Lantern Glow (a shot) |
-| **Signature** | **Hold the Line** (80 mana): taunts enemies within 2 hexes for 3s, and he gains DEF for 3s | **Marking Shot** (50): Marked (+15% damage taken) for 4s | **Mend** (60): heals the ally lowest on HP% within 3 hexes |
+| **Signature** | **Hold the Line** (80 mana): taunts enemies within 2 hexes for 3s; he has x1.5 DEF while any enemy is taunted by him | **Marking Shot** (50): Marked (+15% damage taken) for 4s | **Mend** (60): heals the ally lowest on HP% within 3 hexes |
 | **Mana** | +8 an attack, +1 per 10 damage taken, starts at 30 | +10 an attack, 2/s, starts at 0 | +12 an attack, 2/s, starts at 20 |
-| **Passive** | **Hearthguard:** the first ally to drop below 40% HP gets a Shield from him (once a fight) | **Keep Your Distance:** hops 1 hex away from an enemy next to her, once every 6s (`hop_away`) | **Hearthlight:** allies within 1 hex of her regenerate 1% HP a second |
+| **Passive** | **Hearthguard:** the first ally to drop below 40% HP gets a Shield from him (once a fight) | **Keep Your Distance:** hops 1 hex away from an enemy next to her, once every 6s (`hop_away`) | **Hearthlight:** allies within 1 hex of her (not Vell herself) regenerate 1% of their max HP a second |
 | **Trait** | Engage | | |
 
 Hold the Line's DEF, Hearthguard, and Hearthlight need new pieces (section 4). Everything else is data on phase 1's sim.
 
 ## 4. What the kits need that the sim doesn't have
 
-CLAUDE.md rule 3: a new effect, trigger, or part type only when no combination of existing ones can express it, and said out loud. These are the ones I found. **Each needs your approval.**
+CLAUDE.md rule 3: a new effect, trigger, or part type only when no combination of existing ones can express it, and said out loud. These are the ones I found, **approved** (Decisions).
 
 | # | Needed by | Proposal | Why existing pieces can't do it |
 | --- | --- | --- | --- |
-| 1 | Brannoc's Hold the Line ("he gains DEF while they're taunted") | **A timed boost status:** a status kind `boost` with an aura stat and value (`{"id": "fortified", "kind": "boost", "stat": "def_bp", "value": 15000, "duration_ms": 3000}`), folded in like an aura while it lasts | Auras only follow the fight's clock, not an ability firing. I'd tie it to the same 3s as the taunt rather than track "while taunted" |
+| 1 | Brannoc's Hold the Line ("he gains DEF while they're taunted") | **An aura that holds while its holder is taunting:** `"while": "taunting"` on an `AuraDef` (`{"target": "holder", "stat": "def_bp", "value": 15000, "while": "taunting"}`). It's on while at least one standing enemy's Taunt in effect is the holder's, and auras are folded in again whenever one of the holder's Taunts starts or ends, or a taunted unit falls. It lives in Brannoc's kit as a passive credited to Hold the Line | Auras only follow the fight's clock. A timed boost can't follow the taunt: another unit's newer Taunt takes a taunted enemy away, and an upgrade may make the Taunt last longer or shorter (Decisions) |
 | 2 | Brannoc's Hearthguard | **Let ability passives use `on_ally_below_hp`** (it exists for relics: `threshold_bp`, `once`), with `trigger_ally` as the target | The trigger exists but only relics can use it |
 | 3 | Vell's Hearthlight | **A timed passive trigger `every_ms`**, **areas in passive effects** (unwarned, around the unit), and **heal `amount_bp_of_max_hp`** (of the healed unit's max HP) | Passives only react to events, and areas are only cast as abilities fire |
 | 4 | Rift Pup ("+ATK for each adjacent pup") | **Damage `bonus_bp_per_ally_within`** (hexes and bp), counted as the attack fires | An aura that follows positions would have to be refolded every tick, which is costly; counting on the attack is cheap and reads the same |
@@ -167,7 +167,7 @@ First numbers, to tune in step 7. Every enemy has its archetype and threat line.
 | **Bog Lurker** | disruptor | 260 / 12 / 8, 1, 1 | **Drag** (50 mana, within 5 hexes): pulls the farthest hero 2 hexes and Roots them | "Drags your back line forward" |
 | **Gloam Witch** | support | 200 / 8 / 4, 2, 4 | **Ward** (every third attack): Shields every ally for 15. **Hush** (50 mana): Silences the hero with the most mana for 3s | "Shields her allies and silences your casters" |
 
-- **Cinder Burst** hits every unit within 1 hex, heroes and enemies alike: bursting in the middle of its own swarm is part of the puzzle. (A question for you: or only heroes?)
+- **Cinder Burst** hits every unit within 1 hex, heroes and enemies alike: bursting in the middle of its own swarm is part of the puzzle (decided for now).
 - **The Witch's Ward** is a passive on her attacks, and Hush is her signature, since a unit has one signature.
 
 ## 6. Encounters
@@ -199,12 +199,12 @@ godot --headless --path . -s tools/sim_runner.gd -- [--encounter=id] [--seeds=50
 - **Formations** live in `tools/sim_formations.json`: a few named ones every encounter is fought with, for example **guarded** (Brannoc in front of the other two), **exposed** (Maren and Vell up front, Brannoc behind), **spread** (three corners), and **clumped** (all three together).
 - **The sweep** also fights `--sweep` formations drawn from the seed (every legal placement is 24 × 23 × 22, too many to try all). It reports the best, the median, and the worst, and prints the best and worst formations as boards (`ArenaDebug`).
 - **For each encounter × formation,** it reports the win rate over the seeds (which only change crits), the median fight length, deaths per hero, and damage dealt and taken per hero.
-- **"Placement matters"** (the gate): for each archetype's encounter, the best formation's win rate is at least **30 points** above the worst's, and the best isn't "any formation wins". I'd like you to confirm the 30.
+- **"Placement matters"** (the gate): for each archetype's encounter, the best formation's win rate is at least **30 points** above the worst's, and the best isn't "any formation wins". 30 points is the bar for now, to revisit once the runner's first results are in (Decisions).
 - A test runs the runner on one encounter with a few seeds, so it can't rot.
 
 ## 8. What the elites and the boss will need (phase 5, noted now)
 
-So the sim is ready when they come, and so you can move them into phase 2 if you'd rather:
+The elites and Old Mother Ash come in phase 5 (decided). What they'll need, so the sim is ready when they come:
 
 - **The Hound Alpha, "The Hunt":** when any hound Pounces, every hound Pounces on the same hero. It needs one unit's signature to set off its allies' signatures at a shared target: an "an ally fires X" trigger.
 - **The Witch Coven, "Gloam Totem":** a totem that Shields every enemy within 2 hexes until it's destroyed. That's a unit with no attack and an `every_ms` area (piece 3).
@@ -228,7 +228,7 @@ So the sim is ready when they come, and so you can move them into phase 2 if you
 - `tools/validate_data.gd`: reports them.
 - `nav_grid.gd`, `targeting.gd`, `movement.gd`: the speed pass.
 - `tools/bench_sim.gd`: the swarm case.
-- For section 4, if approved: `status_def.gd` and `statuses.gd` (boost), `effect_def.gd`, `events.gd`, `passives.gd`, `effect_runner.gd` (triggers, the heal and damage fields, areas in passives), and `data/statuses.json` (fortified).
+- For section 4: `aura_def.gd`, `passives.gd`, and `statuses.gd` (the taunting aura and when it's folded in again), `effect_def.gd`, `events.gd`, and `effect_runner.gd` (the triggers, the heal and damage fields, areas in passives).
 
 ## 10. Tests
 
@@ -236,7 +236,7 @@ So the sim is ready when they come, and so you can move them into phase 2 if you
 | --- | --- |
 | `test_content_db.gd` | the new files load; every validation error reads clearly |
 | `test_encounters.gd` | every encounter builds a valid fight from a formation; its enemies stand where it says; summons resolve to enemies |
-| `test_hero_kits.gd` | each base kit does what its text says: Hold the Line taunts and fortifies, Hearthguard shields once, Maren hops and Marks, Mend heals the lowest HP%, Hearthlight heals only within 1 hex |
+| `test_hero_kits.gd` | each base kit does what its text says: Hold the Line taunts, and Brannoc's DEF holds exactly while an enemy is taunted by him (not after another unit's newer Taunt, and for as long as a longer Taunt lasts); Hearthguard shields once; Maren hops and Marks; Mend heals the lowest HP%; Hearthlight heals allies within 1 hex, not Vell |
 | `test_enemy_kits.gd` | each enemy's threat happens: in a small fight built for it, the Pounce lands on the back-liner, the Moth's circle lands on the group, the Lurker drags the farthest hero, and so on |
 | `test_new_pieces.gd` | section 4's pieces, one rule at a time |
 | `test_sim_runner.gd` | the runner's report on a small run |
@@ -248,23 +248,21 @@ So the sim is ready when they come, and so you can move them into phase 2 if you
 
 1. **Swarm speed pass** (section 1), measured with the new bench case and the chaos fight.
 2. **Content files and loading:** hero, enemy, and encounter defs, `ContentDb`, the validator, `Encounters.setup`, and summon kits from content.
-3. **Section 4's new pieces** (once approved), each with its tests.
+3. **Section 4's new pieces,** each with its tests.
 4. **The three base kits** in `heroes.json`, and `test_hero_kits`.
 5. **The nine enemies** in `enemies.json`, and `test_enemy_kits`.
 6. **The encounters,** hand-placed, and `test_encounters`.
 7. **The sim runner and the first tuning pass,** until the gate holds and fights run 30–60s. The results go in this plan.
 8. **Docs:** CLAUDE.md's "how it works" gains the content files and the runner; the design's open questions are updated.
 
-## 12. Questions for you
-
-1. **Section 4's five new pieces:** approve them, change them, or say which to express another way.
-2. **The elites:** phase 5 with Old Mother Ash (my proposal), or phase 2?
-3. **Cinder Burst:** every unit within 1 hex (my proposal), or only heroes?
-4. **Hearthlight:** 1% of the healed ally's max HP a second, within 1 hex, Vell included?
-5. **Hold the Line:** a fixed 3s DEF boost (x1.5), tied to the taunt's length rather than to whether enemies are still taunted?
-6. **The gate:** is 30 points between the best and the worst formation the right bar for "clearly more"?
-7. **The speed pass's third idea** changes results (units look again less often after a failed search). Try it only if the first two fall short?
-
 ## Decisions
 
-(Filled in as you answer.)
+Answers to the proposal's questions (2026-09-28):
+
+1. **Section 4's new pieces are approved,** with piece 1 reshaped by answer 5.
+2. **The elites come in phase 5,** with Old Mother Ash and the run.
+3. **Cinder Burst hits every unit within 1 hex,** enemies included, for now.
+4. **Hearthlight heals allies within 1 hex, not Vell herself:** 1% of the healed ally's max HP a second.
+5. **Hold the Line's DEF follows the taunt itself, not a timer.** A fixed boost tied to the Taunt's length won't work: another unit can apply a newer Taunt, and an upgrade could make the Taunt longer or shorter. So the DEF and the Taunt are separate pieces: an aura that holds while any enemy is taunted by Brannoc (section 4, piece 1).
+6. **The gate is 30 points** between the best and worst formation, probably; to revisit with the runner's first results.
+7. **The speed pass's third idea** (looking again less often after a failed search) is tried only if the first two fall short.
