@@ -43,6 +43,15 @@ const BUCKET: int = 1000
 ## Queue keys are an estimate times this, plus the push count (so ties go
 ## to whatever was queued first).
 const ORDER: int = 1 << 24
+## _pocket_closed gives up past this many cells.
+const POCKET_CAP: int = 120
+## The checks before a suspect search run only for a reach up to this: a
+## melee walker's goal cells are few and easily taken or walled in, while a
+## ranged one's are many and the checks would cost more than they save.
+const CHECK_REACH: int = 1500
+## ...and for at most this many targets: a `nearest` over a crowd of enemies
+## has too many goal cells to close off.
+const CHECK_TARGETS: int = 4
 
 var cell: int
 var cols: int
@@ -217,16 +226,22 @@ func _bucket_of(point: Vector2i) -> Vector2i:
 ## A* from `start` to the nearest free cell whose center is within `reach` of
 ## `target`. Returns that cell, or -1 if there's none. `forward` is +1 for a
 ## walker heading toward larger y (the heroes), -1 for the enemies.
-func find_path(start: Vector2i, forward: int, target: Vector2i, reach: int) -> int:
+## `suspect`: the walker's last search like this found nothing, so first check
+## cheaply whether the goal cells are all taken or closed off
+## (_pocket_closed). It only changes how fast a search fails,
+## never what it finds; a first search skips the checks, since they cost
+## something when the way is open, and so does a ranged walker or a search
+## over many targets (CHECK_REACH, CHECK_TARGETS).
+func find_path(start: Vector2i, forward: int, target: Vector2i, reach: int, suspect: bool = false) -> int:
 	var targets: Array[Vector2i] = [target]
-	return _search(start, forward, targets, reach, true).x
+	return _search(start, forward, targets, reach, true, false, suspect).x
 
 
 ## The index of the target in `targets` with the shortest path to a free cell
 ## within `reach` of it, or -1 if none can be reached. Ties go to the lower
 ## index (list the targets in fight order).
-func find_nearest(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int) -> int:
-	return _search(start, forward, targets, reach, false).y
+func find_nearest(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int, suspect: bool = false) -> int:
+	return _search(start, forward, targets, reach, false, false, suspect).y
 
 
 ## A* from `start`, on crumbled ground, to the nearest free cell (not the
@@ -252,7 +267,7 @@ func find_safe(start: Vector2i, forward: int) -> int:
 ##
 ## This runs a lot, so it's written for speed: plain integer arrays, the
 ## queue inline, and a cell's blocking looked up before it's worked out.
-func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int, first: bool, to_safe: bool = false) -> Vector2i:
+func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int, first: bool, to_safe: bool = false, suspect: bool = false) -> Vector2i:
 	_start = cell_at(start)
 	var leaving: bool = not ArenaPlane.inside(_safe, start, _radius)
 	if leaving != _leaving:
@@ -262,6 +277,14 @@ func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int
 	_distance.fill(UNREACHED)
 	_previous.fill(-1)
 	_settled.fill(0)
+	if suspect and not to_safe and reach <= CHECK_REACH and targets.size() <= CHECK_TARGETS and _pocket_closed(targets, reach):
+		# No goal cell is free, or every one is cut off from the walker (in a
+		# crowd, the spots beside a target are taken or walled in), so the
+		# search would flood everything it can reach and find nothing.
+		_settled.fill(0)
+		return Vector2i(-1, -1)
+	if suspect:
+		_settled.fill(0)
 	var target_count: int = targets.size()
 	# The safe ground's limits for the walker's center (to_safe's goal).
 	var safe_x0: int = _safe.position.x + _radius
@@ -418,6 +441,74 @@ func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int
 				queued[j] = parent_cell
 				j = parent
 	return Vector2i(best_cell, best_target)
+
+
+## True if the goal cells (free cells within `reach` of a target) and
+## everything joined to them make up a closed pocket the walker's cell isn't
+## in (or there are none): then no path reaches a goal. It floods out from the goals, with the
+## search's own moves (which work the same both ways), and gives up (false)
+## after POCKET_CAP cells, since then the pocket is too big to be worth it.
+## Uses _settled as its marks: it must start clear, and the caller clears it
+## again after.
+func _pocket_closed(targets: Array[Vector2i], reach: int) -> bool:
+	var reach_sq: int = reach * reach
+	@warning_ignore("integer_division")
+	var half: int = cell / 2
+	var queue := PackedInt32Array()
+	var start_center: Vector2i = center(_start)
+	for target: Vector2i in targets:
+		if ArenaPlane.length_sq(start_center - target) <= reach_sq:
+			return false
+		@warning_ignore("integer_division")
+		var col0: int = maxi((target.x - reach - origin.x - half) / cell, 0)
+		@warning_ignore("integer_division")
+		var col1: int = mini((target.x + reach - origin.x - half) / cell + 1, cols - 1)
+		@warning_ignore("integer_division")
+		var row0: int = maxi((target.y - reach - origin.y - half) / cell, 0)
+		@warning_ignore("integer_division")
+		var row1: int = mini((target.y + reach - origin.y - half) / cell + 1, rows - 1)
+		for row: int in range(row0, row1 + 1):
+			var dy: int = origin.y + half + row * cell - target.y
+			for col: int in range(col0, col1 + 1):
+				var dx: int = origin.x + half + col * cell - target.x
+				var at: int = row * cols + col
+				if dx * dx + dy * dy > reach_sq or _settled[at] != 0:
+					continue
+				if (_free[at] if _free[at] != 0 else _work_out(at)) != 1:
+					continue
+				_settled[at] = 1
+				queue.append(at)
+				if queue.size() > POCKET_CAP:
+					return false
+	var next_index: int = 0
+	while next_index < queue.size():
+		var at: int = queue[next_index]
+		next_index += 1
+		var col: int = at % cols
+		@warning_ignore("integer_division")
+		var row: int = at / cols
+		for offset: Vector2i in FORWARD_NEIGHBORS:
+			var next_col: int = col + offset.x
+			var next_row: int = row + offset.y
+			if next_col < 0 or next_col >= cols or next_row < 0 or next_row >= rows:
+				continue
+			var next: int = next_row * cols + next_col
+			if offset.x != 0 and offset.y != 0:
+				var side_a: int = row * cols + next_col
+				var side_b: int = next_row * cols + col
+				if (_free[side_a] if _free[side_a] != 0 else _work_out(side_a)) != 1:
+					continue
+				if (_free[side_b] if _free[side_b] != 0 else _work_out(side_b)) != 1:
+					continue
+			if next == _start:
+				return false
+			if _settled[next] != 0 or (_free[next] if _free[next] != 0 else _work_out(next)) != 1:
+				continue
+			_settled[next] = 1
+			queue.append(next)
+			if queue.size() > POCKET_CAP:
+				return false
+	return true
 
 
 ## The search's estimate from the cell holding `point` to the nearest of

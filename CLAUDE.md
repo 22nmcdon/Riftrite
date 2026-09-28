@@ -35,7 +35,7 @@ The old game (items, the row-based sim, the run layer) is in git history: the co
 - Run one test file: add `-gselect=test_project_setup.gd`
 - Fresh checkout: run `godot --headless --import` once first, so class names are registered. The session-start hook does this in cloud sessions.
 - Validate game data: `godot --headless --path . -s tools/validate_data.gd` (also covered by the test run)
-- Time the arena sim against its budget (a 60s fight of 3 against 6 in under 100 ms): `godot --headless --path . -s tools/bench_sim.gd`. It runs a steady fight and a crowded worst case, and prints each fight's log fingerprint, so a speed-up can be checked to change nothing.
+- Time the arena sim against its budget (a 60s fight of 3 against 6 in under 100 ms): `godot --headless --path . -s tools/bench_sim.gd`. It runs a steady fight, a crowded worst case, and a summon swarm, and prints each fight's log fingerprint, so a speed-up can be checked to change nothing.
 - The headless sim runner comes back in phase 2 (placed parties) and the run bot in phase 6.
 - Cloud sessions: `.claude/hooks/session-start.sh` installs the pinned Godot as `godot` in `~/.local/bin`.
 - CI: `.github/workflows/tests.yml` runs the tests and the data validator on every PR and push to main.

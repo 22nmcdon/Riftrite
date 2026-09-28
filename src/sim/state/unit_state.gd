@@ -54,6 +54,9 @@ var target: UnitState:
 var _target: WeakRef = null
 ## When a unit with no target looks again.
 var look_again_at: int = 0
+## Its last `nearest` search found no one (the next one checks cheaply first
+## whether the enemies are closed off; see NavGrid.find_nearest).
+var nearest_failed: bool = false
 
 # Walking (Movement).
 ## The corners still to walk to, in order.

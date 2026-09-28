@@ -75,6 +75,36 @@ So the steady fight sits at the edge of its 100 ms budget again since the collap
 
 **Budget:** the steady 3-against-6 fight stays under 100 ms per 60s. I propose a new **swarm** case in `tools/bench_sim.gd`: 3 heroes against a caller that brings 2 pups every 10s (about 12 at once), under **300 ms per 60s**. The chaos fight should drop from about 2.5s to under 0.5s.
 
+**Built in step 1** (every log fingerprint unchanged: the steady, crowded, and swarm fights and the chaos fight all give the same logs as before):
+
+- **The swarm case** in `tools/bench_sim.gd`: a tank, an archer, and a bruiser against a caller behind rocks with 4 pups, bringing 2 more pups every 5s near the heroes. At the caller's 1x and 2x HP, 10 and 16 pups stand at once, and the heroes lose at 45–49s.
+- **Where its time went:** mostly `nearest` and route searches that find nothing, each flooding everything the pup can reach (about 1,000 cells).
+  - With 2x HP, the pups packed every spot around the heroes, so no goal cell was free at all.
+  - With 1x, free spots existed, but other pups walled them in.
+- **What changed:** a walker whose last search of the same kind found nothing (`UnitState.nearest_failed`, or `no_path_since` for a route) first checks the goal cells around its targets (`NavGrid._pocket_closed`).
+  - It floods out from the free goal cells, with the same moves the search uses (they work the same both ways), for up to 120 cells. If they're all taken, or they close off into a pocket without reaching the walker, the search can't succeed, so it fails at once.
+  - The check only runs for melee reach (up to 1.5 hexes) and at most 4 targets. Ranged walkers' goal cells, and `nearest` over a crowd of enemies, rarely close off, and checking them cost more than it saved: in the chaos fight it first made fights about 8% slower.
+  - `test_suspect_searches_match_plain_ones` checks, on 60 random crowds, that a checked search gives exactly the plain one's result.
+- **Results** (the new code and the old run alternately, fastest of 2–3; this container varies by up to 40% between runs, so only side-by-side numbers compare):
+
+| Fight | Before | After |
+| --- | --- | --- |
+| Swarm, 1x (49s, up to 10 pups) | 1.9–2.1s | 1.15–1.55s |
+| Swarm, 2x (45s, up to 16 pups) | 2.2–3.0s | 0.64–0.87s |
+| Chaos fight (65s) | 2.5–3.6s | 2.9–3.1s (no change within the noise) |
+| Steady and crowded | unchanged within the noise | |
+
+- **Not reached: the swarm's 300 ms per 60s.** The swarm at 1x still takes about 1.3s for 49s. What's left:
+  - About 120 successful route searches (routes are planned again every 0.5s in a crowd) and the first failed search of each attempt.
+  - The update of 15–20 units every tick.
+  - Speeding up the search's setup (idea 2) wouldn't help much: setting up takes about 1.5% of the fight.
+  - Looking again less often after a failed `nearest` (idea 3) would save about 5% now, since the checks already make those failures cheap. So I haven't used it: it changes results for little.
+  - What would get there is fewer searches, and every way to get them changes results:
+    - planning routes less often in a crowd (`repath_ms`);
+    - keeping a route while it's still clear;
+    - one search per side shared by all its walkers (a flow field) instead of one per walker.
+  - That's a decision for you (see the report on step 1).
+
 ## 2. Content files
 
 Kits stay `UnitDef`s (phase 1). Heroes and enemies each wrap one, as the phase 1 plan says.
@@ -246,7 +276,7 @@ The elites and Old Mother Ash come in phase 5 (decided). What they'll need, so t
 
 ## 11. Order of work (each step: code, tests, green run, commit)
 
-1. **Swarm speed pass** (section 1), measured with the new bench case and the chaos fight.
+1. **Swarm speed pass** (section 1), measured with the new bench case and the chaos fight. **Done,** with results unchanged; the swarm's budget isn't met yet (section 1).
 2. **Content files and loading:** hero, enemy, and encounter defs, `ContentDb`, the validator, `Encounters.setup`, and summon kits from content.
 3. **Section 4's new pieces,** each with its tests.
 4. **The three base kits** in `heroes.json`, and `test_hero_kits`.

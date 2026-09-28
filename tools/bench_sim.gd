@@ -4,12 +4,17 @@ extends SceneTree
 ## fingerprint of each fight's log, so a speed-up can be checked to change
 ## nothing.
 ## Usage: godot --headless --path . -s tools/bench_sim.gd
-## Two fights, 3 against 6, at 1x to 3x HP (1.5x runs about a minute, the
-## budget's case); each is run 3 times and the fastest counts:
-##   steady    tanks, archers, hounds, and snipers that mostly stand and trade
+## Three fights, each run 3 times (the fastest counts):
+##   steady    3 against 6 at 1x to 3x HP (1.5x runs about a minute, the
+##             budget's case): tanks, archers, hounds, and snipers that mostly
+##             stand and trade
 ##   crowded   the same, but the snipers taunt whoever they hit and the hounds
 ##             engage, so heroes keep walking through the enemy line (the
 ##             hardest case for pathfinding)
+##   swarm     3 against a caller behind rocks that brings 2 pups from the
+##             edges every 5s, at 1x and 2x its HP (docs/plans/
+##             rebuild-phase2-heroes-enemies.md, section 1: under 300 ms per
+##             60s)
 ## The kits are fixed here, so the numbers compare across changes.
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
@@ -19,13 +24,13 @@ const RUNS: int = 3
 func _init() -> void:
 	var total_ms: int = 0
 	var total_ticks: int = 0
-	for crowded: bool in [false, true]:
-		for hp_bp: int in [10000, 15000, 20000, 30000]:
+	for kind: String in ["steady", "crowded", "swarm"]:
+		for hp_bp: int in ([10000, 20000] if kind == "swarm" else [10000, 15000, 20000, 30000]):
 			for fight_seed: int in [5, 11]:
 				var best_usec: int = 0
 				var result: FightResult = null
 				for run: int in RUNS:
-					var setup: FightSetup = _setup(fight_seed, hp_bp, crowded)
+					var setup: FightSetup = _swarm_setup(fight_seed, hp_bp) if kind == "swarm" else _setup(fight_seed, hp_bp, kind == "crowded")
 					var started: int = Time.get_ticks_usec()
 					result = K.run(setup)
 					var usec: int = Time.get_ticks_usec() - started
@@ -35,10 +40,48 @@ func _init() -> void:
 				total_ms += ms
 				total_ticks += result.end_tick
 				@warning_ignore("integer_division")
-				print("%-8s hp x%-3s seed %2d: %4d ticks (%3ds), %4d ms, %3d ms per 60s, log %s" % ["crowded" if crowded else "steady", str(hp_bp / 10000.0), fight_seed, result.end_tick, result.end_tick / FixedMath.TICKS_PER_SECOND, ms, ms * 1200 / maxi(result.end_tick, 1), result.combat_log.to_text().md5_text()])
+				var units: String = ""
+				if kind == "swarm":
+					units = ", up to %d pups" % _most_pups(result)
+				print("%-8s hp x%-3s seed %2d: %4d ticks (%3ds), %4d ms, %3d ms per 60s%s, log %s" % [kind, str(hp_bp / 10000.0), fight_seed, result.end_tick, result.end_tick / FixedMath.TICKS_PER_SECOND, ms, ms * 1200 / maxi(result.end_tick, 1), units, result.combat_log.to_text().md5_text()])
 	@warning_ignore("integer_division")
 	print("all: %d ms per 60s" % (total_ms * 1200 / maxi(total_ticks, 1)))
 	quit()
+
+
+## The swarm: a tank, an archer, and a healer-less bruiser against a caller
+## that stands behind rocks and brings 2 pups every 5s, near the heroes'
+## side of the arena, plus 4 pups to start.
+static func _swarm_setup(fight_seed: int, hp_bp: int) -> FightSetup:
+	var tank: UnitDef = K.kit("tank", {"stats": {"hp": 600, "atk": 12, "def": 30, "speed": 2}, "traits": ["engage"]})
+	var archer: UnitDef = K.kit("archer", {"stats": {"hp": 300, "atk": 20, "speed": 2, "range": 4},
+		"basic_attack": {"cooldown_ms": 900, "effects": [{"type": "damage", "amount": 6, "target": "target", "scaling": {"atk": 6000}}]}})
+	var bruiser: UnitDef = K.kit("bruiser", {"stats": {"hp": 450, "atk": 16, "def": 10, "speed": 2},
+		"basic_attack": {"effects": [{"type": "damage", "amount": 8, "target": "target", "scaling": {"atk": 5000}}]}})
+	var pup: UnitDef = K.kit("pup", {"stats": {"hp": 60, "atk": 8, "speed": 3}, "basic_attack": {"cooldown_ms": 800, "effects": [{"type": "damage", "amount": 5, "target": "target"}]}})
+	var caller: UnitDef = K.kit("caller", {"stats": {"hp": 900, "atk": 10, "def": 10, "speed": 0, "range": 3},
+		"mana": {"max": 100, "regen_per_s": 20},
+		"signature": {"id": "call", "name": "Call", "trigger": {"kind": "mana"}, "targeting": "nearest", "max_range": 8,
+			"effects": [{"type": "summon", "kit": "pup", "count": 2, "placement": "edges", "near": "target"}]}})
+	caller.stats.values[UnitStats.Stat.HP] = FixedMath.apply_bp(caller.stats.values[UnitStats.Stat.HP], hp_bp)
+	var setup: FightSetup = K.fight([K.at(tank, 3, 2), K.at(archer, 3, 0), K.at(bruiser, 5, 1)] as Array[UnitSetup],
+		[K.foe(caller, 3, 6), K.foe(pup, 1, 4), K.foe(pup, 2, 4), K.foe(pup, 5, 4), K.foe(pup, 6, 4)] as Array[UnitSetup],
+		[Vector2i(2, 5), Vector2i(3, 5), Vector2i(4, 5)] as Array[Vector2i], fight_seed)
+	setup.summon_kits.append(pup)
+	return setup
+
+
+## The most pups standing at once, from the log.
+static func _most_pups(result: FightResult) -> int:
+	var standing: int = 4
+	var most: int = standing
+	for entry: LogEntry in result.combat_log.entries:
+		if entry.kind == LogEntry.Kind.SUMMON and entry.note.is_empty():
+			standing += 1
+		elif entry.kind == LogEntry.Kind.DEATH and entry.target.begins_with("pup"):
+			standing -= 1
+		most = maxi(most, standing)
+	return most
 
 
 static func _setup(fight_seed: int, hp_bp: int, crowded: bool = false) -> FightSetup:
