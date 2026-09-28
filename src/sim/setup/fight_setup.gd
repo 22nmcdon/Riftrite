@@ -66,6 +66,8 @@ func validate(content: ContentDb) -> Array[String]:
 			for status_id: String in unit.def.status_ids():
 				if not content.statuses.has(status_id):
 					errors.append("%s names an unknown status \"%s\"" % [where, status_id])
+				elif content.statuses[status_id].kind == StatusDef.Kind.ENGAGED:
+					errors.append("%s names \"%s\", which only the Engage trait sets" % [where, status_id])
 		if not grid.has(unit.col, unit.row):
 			errors.append("%s is off the board" % where)
 			continue

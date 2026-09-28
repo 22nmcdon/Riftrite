@@ -42,7 +42,7 @@ func test_bad_kits() -> void:
 	_assert_error(_kit_errors(rule), "targeting: unknown value \"weakest_backliner\"")
 	var later: Dictionary = _base()
 	later["traits"] = ["flying"]
-	_assert_error(_kit_errors(later), "unknown key \"traits\"")
+	_assert_error(_kit_errors(later), "traits[0]: unknown value \"flying\" (expected one of: engage)")
 	var no_attack: Dictionary = _base()
 	no_attack.erase("basic_attack")
 	_assert_error(_kit_errors(no_attack), "missing required key \"basic_attack\"")

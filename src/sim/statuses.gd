@@ -17,6 +17,9 @@ extends RefCounted
 ##   silence: no mana gain (mana comes in step 4).
 ##   marked:  takes damage_taken_bp more damage from hits and damage over
 ##            time; the strongest Mark wins.
+##   undying: its HP can't drop below 1 (CombatSim's deaths step).
+##   engaged: held by an engager (Engage sets and clears it with hold and
+##            release; effects can't apply it).
 ## A timed status lasts its duration from the moment it lands; a new
 ## application refreshes it (and takes over as its source).
 
@@ -26,6 +29,9 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: 
 		push_error("Statuses: unknown status \"%s\"" % status_id)
 		return
 	var def: StatusDef = sim.content.statuses[status_id]
+	if def.kind == StatusDef.Kind.ENGAGED:
+		push_error("Statuses: \"%s\" is set only by the Engage trait" % status_id)
+		return
 	if not target.alive or (not def.is_timed() and stacks <= 0):
 		return
 	var state: StatusState = find(target, status_id)
@@ -59,6 +65,8 @@ static func tick_all(sim: CombatSim) -> void:
 		if not unit.alive or unit.statuses.is_empty():
 			continue
 		for state: StatusState in unit.statuses.duplicate():
+			if state.def.kind == StatusDef.Kind.ENGAGED:
+				continue
 			if state.def.is_timed():
 				if sim.tick >= state.ends_at:
 					_end(sim, unit, state)
@@ -67,6 +75,32 @@ static func tick_all(sim: CombatSim) -> void:
 			if state.interval_left <= 0:
 				state.interval_left = state.def.interval_ticks
 				_deal_damage_over_time(sim, unit, state)
+
+
+## Puts the Engaged status on `unit`, credited to `source` (the engager's
+## Engage), unless it's already there.
+static func hold(sim: CombatSim, unit: UnitState, source: EffectSource) -> void:
+	var def: StatusDef = sim.content.engaged_status
+	if find(unit, def.id) != null:
+		return
+	var state := StatusState.new()
+	state.def = def
+	state.order = sim.content.status_ids.find(def.id)
+	state.source = source
+	_insert_in_order(unit, state)
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.STATUS_APPLIED, source)
+	entry.target = unit.id
+	entry.status = def.id
+	entry.status_name = def.name
+	entry.end_tick = -1
+	sim.combat_log.add(entry)
+
+
+## Takes the Engaged status off `unit`, if it's there; `why` goes in the log.
+static func release(sim: CombatSim, unit: UnitState, why: String) -> void:
+	var state: StatusState = find(unit, sim.content.engaged_status.id)
+	if state != null:
+		_end(sim, unit, state, why)
 
 
 static func find(unit: UnitState, status_id: String) -> StatusState:
@@ -170,7 +204,7 @@ static func cleanse_over_time(sim: CombatSim, unit: UnitState, share_bp: int, so
 			_end(sim, unit, state)
 
 
-static func _end(sim: CombatSim, unit: UnitState, state: StatusState) -> void:
+static func _end(sim: CombatSim, unit: UnitState, state: StatusState, why: String = "") -> void:
 	unit.statuses.erase(state)
 	var entry := LogEntry.new()
 	entry.tick = sim.tick
@@ -178,6 +212,7 @@ static func _end(sim: CombatSim, unit: UnitState, state: StatusState) -> void:
 	entry.target = unit.id
 	entry.status = state.def.id
 	entry.status_name = state.def.name
+	entry.note = why
 	sim.combat_log.add(entry)
 
 

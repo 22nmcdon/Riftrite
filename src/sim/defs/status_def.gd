@@ -14,13 +14,14 @@ extends RefCounted
 ##   slow:     duration_ms, slow_bp (moves and attacks that much slower)
 ##   marked:   duration_ms, damage_taken_bp (takes that much more damage)
 ##   undying:  duration_ms (its HP can't drop below 1)
+##   engaged:  nothing (held by an engager; only the Engage trait sets and
+##             clears it, and effects can't apply it)
 ## A timed status's duration_ms is its default; an apply_status effect can
-## give its own. A new application refreshes the timer. Engaged comes with
-## step 5.
+## give its own. A new application refreshes the timer.
 
-enum Kind { DAMAGE_OVER_TIME, ROOT, STUN, SLOW, TAUNT, SILENCE, MARKED, UNDYING }
+enum Kind { DAMAGE_OVER_TIME, ROOT, STUN, SLOW, TAUNT, SILENCE, MARKED, UNDYING, ENGAGED }
 
-const KIND_NAMES: Array[String] = ["damage_over_time", "root", "stun", "slow", "taunt", "silence", "marked", "undying"]
+const KIND_NAMES: Array[String] = ["damage_over_time", "root", "stun", "slow", "taunt", "silence", "marked", "undying", "engaged"]
 
 var id: String
 var name: String
@@ -62,6 +63,8 @@ static func read(reader: DataReader) -> StatusDef:
 		def.vs_shield_bp = reader.opt_int("vs_shield_bp", FixedMath.BP_ONE, 0, FixedMath.BP_ONE)
 		def.defense_shred_per_stack = reader.opt_int("defense_shred_per_stack", 0, 0)
 		def.cleanse_effectiveness_bp = reader.opt_int("cleanse_effectiveness_bp", FixedMath.BP_ONE, 0, FixedMath.BP_ONE)
+	elif def.kind == Kind.ENGAGED:
+		pass
 	else:
 		def.duration_ticks = reader.req_ticks("duration_ms", FixedMath.MS_PER_TICK)
 		match def.kind:
@@ -74,4 +77,4 @@ static func read(reader: DataReader) -> StatusDef:
 
 
 func is_timed() -> bool:
-	return kind != Kind.DAMAGE_OVER_TIME
+	return kind != Kind.DAMAGE_OVER_TIME and kind != Kind.ENGAGED

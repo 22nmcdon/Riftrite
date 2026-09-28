@@ -12,11 +12,13 @@ extends RefCounted
 ##    "passives": [...PartDefs...]}
 ## Only a unit whose signature fires on mana has a mana bar, and it must have
 ## one. The basic attack, the signature, and the passives each need their own
-## id. Traits come with later steps; until then that key is unknown and
-## rejected.
+## id.
+##   "traits": ["engage"]    code paths a unit has (section 4); flying and
+##                           hop_away come with step 6
 
 ## The targeting rules built so far (section 4).
 const TARGETING_RULES: Array[String] = ["nearest"]
+const TRAITS: Array[String] = ["engage"]
 
 var id: String
 var name: String
@@ -28,6 +30,7 @@ var basic_attack: AbilityDef
 ## Null: no signature.
 var signature: AbilityDef = null
 var passives: Array[PartDef] = []
+var traits: Array[String] = []
 
 
 static func read(reader: DataReader) -> UnitDef:
@@ -45,6 +48,7 @@ static func read(reader: DataReader) -> UnitDef:
 	if reader.has("signature"):
 		var signature_reader: DataReader = reader.req_object("signature")
 		def.signature = AbilityDef.read_signature(signature_reader) if signature_reader != null else null
+	def.traits = reader.opt_choice_array("traits", TRAITS)
 	for part_reader: DataReader in reader.opt_object_array("passives"):
 		def.passives.append(PartDef.read(part_reader))
 	var mana_signature: bool = def.signature != null and def.signature.trigger.kind == TriggerDef.Kind.MANA
@@ -82,6 +86,10 @@ func status_ids() -> Array[String]:
 				found.append(effect.status_id)
 			found.append_array(effect.statuses)
 	return found
+
+
+func has_trait(trait_name: String) -> bool:
+	return traits.has(trait_name)
 
 
 func has_mana() -> bool:

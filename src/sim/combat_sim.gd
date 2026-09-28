@@ -16,7 +16,9 @@ extends RefCounted
 ##      stops there. Otherwise its attack's cooldown runs (slower when
 ##      Slowed); a Taunt makes the taunter its target, or it keeps or picks
 ##      a target (Targeting); with the target in reach it stands and
-##      attacks when ready, otherwise it walks (Movement; not when Rooted).
+##      attacks when ready, otherwise it walks (Movement; not when Rooted,
+##      or while an engager holds it: Engage, checked as it's about to walk,
+##      and every tick while it's engaged).
 ##   6. Events: this tick's log is read for count signatures and ability
 ##      passives (Events). Phases come later.
 ##   7. Units at 0 HP fall, unless Undying holds them at 1 HP or a would_fall
@@ -54,6 +56,9 @@ var _nav: NavGrid
 var _events_read: int = 0
 ## Some unit listens for events (a count signature), so the log is read.
 var _listening: bool = false
+## The units with the Engage trait on each side.
+var _hero_engagers: Array[UnitState] = []
+var _enemy_engagers: Array[UnitState] = []
 ## Each unit by id (lookup only; never iterated).
 var _by_id: Dictionary[String, UnitState] = {}
 ## Ticks where an aura window opens or closes (lookup only), and the auras
@@ -94,6 +99,8 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 		unit.attack_rate_bp = attack_rate_bp(unit)
 		units.append(unit)
 		_by_id[unit.id] = unit
+		if unit.def.has_trait("engage"):
+			(_hero_engagers if unit.side == EffectSource.Team.HEROES else _enemy_engagers).append(unit)
 		(heroes if unit.side == EffectSource.Team.HEROES else enemies).append(unit)
 		if (unit.signature != null and unit.signature.def.trigger.kind == TriggerDef.Kind.COUNT) or not unit.listeners.is_empty():
 			_listening = true
@@ -163,6 +170,9 @@ func _act(unit: UnitState) -> void:
 	if target == null or not target.alive:
 		Targeting.update(self, unit)
 		target = unit.target
+	var engagers: Array[UnitState] = _enemy_engagers if unit.side == EffectSource.Team.HEROES else _hero_engagers
+	if not unit.engagements.is_empty():
+		Engage.update(self, unit, engagers)
 	if target == null:
 		if unit.leg_active:
 			Movement.halt(self, unit, "no target")
@@ -174,6 +184,13 @@ func _act(unit: UnitState) -> void:
 			Movement.halt(self, unit, "in reach")
 		if attack.progress_bp >= attack.needed:
 			EffectRunner.basic_attack(self, unit)
+		return
+	# About to walk: an engager next to it may hold it.
+	if unit.engagements.is_empty() and not engagers.is_empty():
+		Engage.update(self, unit, engagers)
+	if not unit.engagements.is_empty() and Engage.holds(unit):
+		if unit.leg_active:
+			Movement.halt(self, unit, "engaged")
 		return
 	Movement.walk(self, unit)
 

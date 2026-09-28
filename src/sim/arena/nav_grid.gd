@@ -57,8 +57,19 @@ var _safe: Rect2i
 ## The walker started on crumbled ground: crumbled cells are free for it.
 var _leaving: bool = false
 var _radius: int
-var _centers: Array[Vector2i] = []
-var _reaches: PackedInt32Array = PackedInt32Array()
+## Each obstacle's center, and how close the walker's center may come
+## (squared): plain arrays, since every cell check reads them.
+var _obstacle_xs: PackedInt32Array = PackedInt32Array()
+var _obstacle_ys: PackedInt32Array = PackedInt32Array()
+var _obstacle_reach_sq: PackedInt32Array = PackedInt32Array()
+## Where the walker's center must stay (inside the safe ground, or the whole
+## arena when it's leaving crumbled ground), and the first cell's center.
+var _min_x: int
+var _min_y: int
+var _max_x: int
+var _max_y: int
+var _x0: int
+var _y0: int
 var _bucket_cols: int
 var _bucket_rows: int
 var _buckets: Array[PackedInt32Array] = []
@@ -92,6 +103,10 @@ static func make(arena: Rect2i, cell_size: int = 125) -> NavGrid:
 	grid._distance.resize(grid.size())
 	grid._previous.resize(grid.size())
 	grid._settled.resize(grid.size())
+	@warning_ignore("integer_division")
+	grid._x0 = grid.origin.x + cell_size / 2
+	@warning_ignore("integer_division")
+	grid._y0 = grid.origin.y + cell_size / 2
 	grid.begin(arena, 0)
 	return grid
 
@@ -121,8 +136,10 @@ func center(at_cell: int) -> Vector2i:
 func begin(safe: Rect2i, radius: int) -> void:
 	_safe = safe
 	_radius = radius
-	_centers.clear()
-	_reaches.clear()
+	_set_limits()
+	_obstacle_xs.clear()
+	_obstacle_ys.clear()
+	_obstacle_reach_sq.clear()
 	for i: int in _buckets.size():
 		_buckets[i] = PackedInt32Array()
 	_free.fill(0)
@@ -130,10 +147,11 @@ func begin(safe: Rect2i, radius: int) -> void:
 
 ## A circle the walker mustn't overlap: a unit or a rock of `obstacle_radius`.
 func add_obstacle(point: Vector2i, obstacle_radius: int) -> void:
-	var index: int = _centers.size()
+	var index: int = _obstacle_xs.size()
 	var reach: int = obstacle_radius + _radius
-	_centers.append(point)
-	_reaches.append(reach)
+	_obstacle_xs.append(point.x)
+	_obstacle_ys.append(point.y)
+	_obstacle_reach_sq.append(reach * reach)
 	var low: Vector2i = _bucket_of(point - Vector2i(reach, reach))
 	var high: Vector2i = _bucket_of(point + Vector2i(reach, reach))
 	for row: int in range(low.y, high.y + 1):
@@ -152,17 +170,38 @@ func is_free(at_cell: int) -> bool:
 
 ## Works out whether the walker fits on the cell's center, and remembers it:
 ## 1 if it does, 2 if not.
+## (Written out by hand, since every search runs it hundreds of times.)
 func _work_out(at_cell: int) -> int:
-	var point: Vector2i = center(at_cell)
-	var free: bool = ArenaPlane.inside(bounds if _leaving else _safe, point, _radius)
-	if free:
-		var bucket: Vector2i = _bucket_of(point)
-		for index: int in _buckets[bucket.y * _bucket_cols + bucket.x]:
-			if ArenaPlane.overlaps(point, 0, _centers[index], _reaches[index]):
-				free = false
+	@warning_ignore("integer_division")
+	var row: int = at_cell / cols
+	var px: int = _x0 + (at_cell - row * cols) * cell
+	var py: int = _y0 + row * cell
+	var result: int = 1
+	if px < _min_x or px > _max_x or py < _min_y or py > _max_y:
+		result = 2
+	else:
+		@warning_ignore("integer_division")
+		var bucket_col: int = clampi((px - origin.x) / BUCKET, 0, _bucket_cols - 1)
+		@warning_ignore("integer_division")
+		var bucket_row: int = clampi((py - origin.y) / BUCKET, 0, _bucket_rows - 1)
+		for index: int in _buckets[bucket_row * _bucket_cols + bucket_col]:
+			var dx: int = _obstacle_xs[index] - px
+			var dy: int = _obstacle_ys[index] - py
+			if dx * dx + dy * dy < _obstacle_reach_sq[index]:
+				result = 2
 				break
-	_free[at_cell] = 1 if free else 2
-	return _free[at_cell]
+	_free[at_cell] = result
+	return result
+
+
+## Where the walker's center may be: inside the safe ground (or the whole
+## arena while it's leaving crumbled ground), a radius in from the edge.
+func _set_limits() -> void:
+	var area: Rect2i = bounds if _leaving else _safe
+	_min_x = area.position.x + _radius
+	_min_y = area.position.y + _radius
+	_max_x = area.end.x - _radius
+	_max_y = area.end.y - _radius
 
 
 func _bucket_of(point: Vector2i) -> Vector2i:
@@ -208,6 +247,7 @@ func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int
 	var leaving: bool = not ArenaPlane.inside(_safe, start, _radius)
 	if leaving != _leaving:
 		_leaving = leaving
+		_set_limits()
 		_free.fill(0)
 	_distance.fill(UNREACHED)
 	_previous.fill(-1)
@@ -230,9 +270,11 @@ func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int
 	for offset: Vector2i in FORWARD_NEIGHBORS:
 		steps_x.append(offset.x * forward)
 		steps_y.append(offset.y * forward)
-	# The queue: a binary min-heap of keys (estimate x ORDER + push count).
+	# The queue: a binary min-heap of keys (estimate x ORDER + push count),
+	# the first `size` entries of its arrays (kept, not shrunk, as it drains).
 	var keys := PackedInt64Array()
 	var queued := PackedInt32Array()
+	var size: int = 0
 	var pushes: int = 0
 	var best_cell: int = -1
 	var best_target: int = -1
@@ -240,15 +282,15 @@ func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int
 	_distance[_start] = 0
 	keys.append(_estimate(_start % cols, _start / cols, xs, ys, target_count, slack, x0, y0) * ORDER + pushes)
 	queued.append(_start)
+	size = 1
 	pushes += 1
-	while not keys.is_empty():
+	while size > 0:
 		# Pop the smallest.
 		var at: int = queued[0]
-		var last: int = keys.size() - 1
+		var last: int = size - 1
 		keys[0] = keys[last]
 		queued[0] = queued[last]
-		keys.resize(last)
-		queued.resize(last)
+		size = last
 		var i: int = 0
 		while true:
 			var smallest: int = i
@@ -320,11 +362,29 @@ func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int
 				continue
 			_distance[next] = reached_at
 			_previous[next] = at
+			# Its estimate (as _estimate works it out, written out here since
+			# it runs for every cell queued).
+			var nx: int = x0 + next_col * cell
+			var ny: int = y0 + next_row * cell
+			var guess: int = -1
+			for t: int in target_count:
+				var gx: int = absi(xs[t] - nx)
+				var gy: int = absi(ys[t] - ny)
+				@warning_ignore("integer_division")
+				var one: int = maxi(maxi(gx, gy) + mini(gx, gy) * OCTILE_EXTRA_BP / FixedMath.BP_ONE - slack, 0)
+				if guess < 0 or one < guess:
+					guess = one
 			# Push, then sift up.
-			keys.append((reached_at + _estimate(next_col, next_row, xs, ys, target_count, slack, x0, y0)) * ORDER + pushes)
-			queued.append(next)
+			var pushed: int = (reached_at + guess) * ORDER + pushes
+			if size < keys.size():
+				keys[size] = pushed
+				queued[size] = next
+			else:
+				keys.append(pushed)
+				queued.append(next)
+			size += 1
 			pushes += 1
-			var j: int = keys.size() - 1
+			var j: int = size - 1
 			while j > 0:
 				@warning_ignore("integer_division")
 				var parent: int = (j - 1) / 2

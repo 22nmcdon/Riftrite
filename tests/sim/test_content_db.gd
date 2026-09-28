@@ -48,7 +48,7 @@ func test_the_gut_left_only_tuning_and_statuses() -> void:
 
 func test_real_statuses() -> void:
 	var db: ContentDb = ContentDb.load_dir("res://data")
-	assert_eq(db.status_ids, ["burn", "poison", "bleed", "root", "stun", "slow", "taunt", "silence", "marked", "undying"] as Array[String])
+	assert_eq(db.status_ids, ["burn", "poison", "bleed", "root", "stun", "slow", "taunt", "silence", "marked", "undying", "engaged"] as Array[String])
 	assert_eq(db.statuses["burn"].interval_ticks, 10, "Burn ticks twice a second")
 	assert_eq(db.statuses["burn"].stacks_lost_bp, 500)
 	assert_eq(db.statuses["burn"].vs_shield_bp, 5000, "Burn is half as effective against shields")
@@ -167,6 +167,17 @@ func test_rejects_removed_status_kinds() -> void:
 	var statuses: Array = _real_json(ContentDb.STATUSES_FILE)
 	statuses.append({"id": "freeze", "name": "Freeze", "kind": "freeze", "duration_ms": 1000})
 	_assert_error(_load_with(ContentDb.STATUSES_FILE, statuses), "kind: unknown value \"freeze\"")
+
+
+func test_exactly_one_engaged_status() -> void:
+	var db: ContentDb = ContentDb.load_dir("res://data")
+	assert_eq(db.engaged_status.id, "engaged")
+	assert_false(db.engaged_status.is_timed())
+	var statuses: Array = _real_json(ContentDb.STATUSES_FILE)
+	statuses.append({"id": "held", "name": "Held", "kind": "engaged"})
+	_assert_error(_load_with(ContentDb.STATUSES_FILE, statuses), "needs exactly one status of kind \"engaged\" (the Engage trait sets it), found 2")
+	var none: Array = _real_json(ContentDb.STATUSES_FILE).filter(func(entry: Dictionary) -> bool: return entry["kind"] != "engaged")
+	_assert_error(_load_with(ContentDb.STATUSES_FILE, none), "found 0")
 
 
 func test_status_fields_by_kind() -> void:

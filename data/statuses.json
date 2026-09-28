@@ -77,5 +77,11 @@
     "name": "Undying",
     "kind": "undying",
     "duration_ms": 1000
+  },
+  {
+    "_note": "Held by an engager: can't move until it breaks free (break_free_ms in tuning.json). Only the Engage trait sets and clears it; effects can't apply it.",
+    "id": "engaged",
+    "name": "Engaged",
+    "kind": "engaged"
   }
 ]

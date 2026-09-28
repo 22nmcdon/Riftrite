@@ -15,6 +15,10 @@ var rock_radius: int = 500
 var nav_cell: int = 125
 ## A walker looks for a new route this often, and gives up on a target it
 ## can't reach for this long.
+## Engage: how close an enemy must be to be next to an engager, and how long
+## it takes to break free.
+var engage_reach: int = 1000
+var break_free_ticks: int = 20
 var repath_ticks: int
 var repath_give_up_ticks: int
 ## Standing units per side, summons included.
@@ -52,6 +56,8 @@ static func read(reader: DataReader) -> TuningDef:
 	def.unit_radius = reader.req_int("unit_radius", 1, 1000)
 	def.rock_radius = reader.req_int("rock_radius", 1, 1000)
 	def.nav_cell = reader.req_int("nav_cell", 25, 1000)
+	def.engage_reach = reader.req_int("engage_reach", 1)
+	def.break_free_ticks = reader.req_ticks("break_free_ms", FixedMath.MS_PER_TICK)
 	def.repath_ticks = reader.req_ticks("repath_ms", FixedMath.MS_PER_TICK)
 	def.repath_give_up_ticks = reader.req_ticks("repath_give_up_ms", FixedMath.MS_PER_TICK)
 	def.max_units_per_side = reader.req_int("max_units_per_side", 1)

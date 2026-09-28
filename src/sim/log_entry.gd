@@ -31,6 +31,7 @@ enum Kind {
 	CAST_CANCELLED,
 	SAVED,
 	MANA_DRAIN,
+	BREAK_FREE,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -70,7 +71,8 @@ var from_event: bool = false
 var from_pos: Vector2i = Vector2i.ZERO
 var to_pos: Vector2i = Vector2i.ZERO
 ## MOVE: the tick it should arrive; SHOT: the tick it lands; CAST: the tick
-## the cast ends.
+## the cast ends; STATUS_APPLIED: the tick a timed status ends (-1: it isn't
+## timed, like Engaged).
 var end_tick: int = 0
 
 
@@ -113,6 +115,8 @@ func to_text() -> String:
 		Kind.FIGHT_END:
 			return line + note
 		Kind.STATUS_APPLIED:
+			if stacks == 0 and end_tick < 0:
+				return line + "%s applies %s to %s" % [source_text(), status_name, target]
 			if stacks == 0:
 				return line + "%s applies %s to %s until %s" % [source_text(), status_name, target, _format_time(end_tick)]
 			return line + "%s applies %d %s to %s (%d total)%s" % [source_text(), amount, status_name, target, stacks, "" if note.is_empty() else " " + note]
@@ -148,6 +152,8 @@ func to_text() -> String:
 			return line + "%s's cast is cancelled (%s)" % [source_text(), note]
 		Kind.SAVED:
 			return line + "%s is held at 1 HP by %s (%s)" % [target, source_text(), note]
+		Kind.BREAK_FREE:
+			return line + "%s breaks free of %s" % [source_unit, target]
 		Kind.MANA_DRAIN:
 			return line + "%s drains %s mana from %s%s" % [source_text(), Mana.text(amount), target, "" if note.is_empty() else " (%s)" % note]
 	return line + "?"

@@ -78,6 +78,9 @@ var listeners: Array[Passives.Listener] = []
 ## Statuses it applies as the key land as the value (lookup only).
 var status_swaps: Dictionary[String, String] = {}
 
+## The engagers it's next to (Engage).
+var engagements: Array[Engage.Engagement] = []
+
 # Statuses, in ContentDb.status_ids order (see Statuses).
 var statuses: Array[StatusState] = []
 ## Ticks of this unit's recent heals, for the heal-cleanse falloff.

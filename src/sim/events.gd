@@ -49,7 +49,8 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> void:
 				if target != null and entry.amount > 0:
 					_raise(sim, source, EffectDef.Trigger.ON_HEAL, target)
 			LogEntry.Kind.STATUS_APPLIED:
-				if target != null:
+				# Engaged comes from the Engage trait, not an effect.
+				if target != null and entry.status != sim.content.engaged_status.id:
 					_raise(sim, source, EffectDef.Trigger.ON_STATUS, target, 0, entry.status)
 
 

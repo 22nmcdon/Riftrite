@@ -237,6 +237,16 @@ Each tick runs these steps in order. Resolution order is the fight's unit order:
   - **Once free:** the unit can move until it's no longer next to that engager, and then the engagement ends. Coming back into contact engages it again.
   - **Fliers break free too** (decided).
   - **Displacement:** a knockback or pull out of contact ends the engagement at once.
+  - **Built in step 5** (`Engage`; the `engage` trait; the Engaged status):
+    - **When it's checked:** as a unit is about to walk, and every tick while it has an engagement.
+      - A unit standing in reach of its target isn't trying to get past anyone, so it's never held.
+      - Checking only then keeps Engage nearly free; checking every unit every tick cost about 35 ms per 60s.
+    - **The timer:** the break-free timer starts the first tick the unit is held, and runs to the end even if it retargets.
+      - The Engaged status (credited to "tank · Engage") shows while it's held.
+      - A held unit that finds its target in reach attacks, still held.
+    - **Each engager holds a unit separately.** Next to two, a unit has to break free of both, each on its own clock.
+    - **Ending:** breaking free logs `BREAK_FREE`. An engagement ends when contact ends or the engager falls (`STATUS_ENDED`, with why).
+    - **Engaged is a status only the trait sets.** `statuses.json` needs exactly one, a setup naming it is refused, and it doesn't raise `on_status` for the engager.
 - **Taunt** (status, with the taunter as its source): the taunted unit's target becomes the taunter while the status lasts. If a second Taunt lands, the newer one wins.
 
 ## 5. Attacks, shots, mana, and signatures
@@ -507,6 +517,17 @@ If step 2 measures slower, the cell size and repath interval are the knobs, and 
   - Units are looked up by id in a Dictionary (lookup only, never iterated).
   - The end-of-fight check builds no lists.
   - The log is read for events only when some unit listens.
+**Measured in step 5** (`tools/bench_sim.gd` now has its own fixed kits, so changing the test fights doesn't move its numbers; it scales HP once per kit, where it used to compound on shared kits):
+- **Steady** (the fight above): a one-minute fight takes 79–85 ms. Engage costs nothing measurable there.
+- **Crowded** (snipers taunt whoever they hit, and hounds engage, so heroes keep walking through the enemy line): a one-minute fight takes about 150–160 ms, over the budget.
+  - About a third of that is pathfinding: 57 searches, each settling about 160 cells.
+  - It's a worst case, with a taunt every second on each sniper's target. Hold the Line taunts every ~10s.
+- **Speed-ups in this step,** none of which change results:
+  - A cell check reads plain arrays with the bounds precomputed.
+  - Each queued cell's estimate is written out in the loop.
+  - The search's queue no longer shrinks its arrays as it drains.
+- If real encounters come near the crowded case, the knobs are repath_ms, the nav cell size, and reusing a `nearest` search's route when the unit starts walking.
+
 **The speed pass after step 4** (`tools/bench_sim.gd`: the busy fight, 3 against 6, at 1x to 3x HP; the fastest of three runs; each fight's log fingerprinted):
 - **A 60s fight takes 83–96 ms** (it varies by about 10% from run to run), inside the budget but with little to spare. Overall it's **83–84 ms per 60s**, down from 106. Short fights cost more per second (about 48 ms for 22s) because of the searches at the start.
 - **What changed:**
@@ -530,7 +551,7 @@ If step 2 measures slower, the cell size and repath interval are the knobs, and 
 2. **Skeleton fight (done):** kits, setups with hexes and rocks, the new `CombatSim` tick, walking and blocking, `nearest` targeting, melee attacks and shots, deaths, the end of the fight, the MOVE, STOP, TARGET, and SHOT logs, and the log replay test. The first determinism test, and a speed measurement.
 3. **Statuses (done):** Root, Stun, Slow, Taunt, Silence, Marked, and damage over time.
 4. **Mana and signatures (done):** the five triggers, cast_ms, Undying, `Events`, and `PartDef`.
-5. **Tanks:** Engage.
+5. **Tanks (done):** Engage.
 6. **Displacement and flying:** knockback, pull, leap, charge, collisions, flying, and hop away.
 7. **Areas:** shapes, warnings, landing, and the rest of the targeting rules.
 8. **Collapse, summons, and phases:** rings, the safe rectangle, damage, start_collapse, summons, and `PhaseDef`.

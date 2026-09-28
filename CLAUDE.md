@@ -15,7 +15,7 @@ A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The pl
 | `rebuild-build-order.md` | the phases, and what was gutted |
 | `rebuild-phase1-arena-sim.md` | phase 1's build plan (approved): the arena sim |
 
-**Where the rebuild is:** phase 0 (the gut) is done. Items, essences, shops, the run, and the old UI are gone; what's left is the foundation (the data reader, RNG, fixed math, the combat log, the effect and aura definitions, damage-over-time statuses, tuning) and the title screen. **Phase 1 (the arena sim) is under way:** steps 1 (the grid, plane geometry, and pathfinding, in `src/sim/arena/`), 2 (a skeleton fight: kits, setups, walking, nearest targeting, melee and shots, the log), 3 (statuses: Root, Stun, Slow, Taunt, Silence, Marked, damage over time), and 4 (mana, signatures and their five triggers, casts, Undying, events, and passives) are built. Follow `rebuild-build-order.md` for the order of work. Each phase's plan has a **Decisions** section; those win. If the code and a plan disagree, stop and ask. Don't silently pick one.
+**Where the rebuild is:** phase 0 (the gut) is done. Items, essences, shops, the run, and the old UI are gone; what's left is the foundation (the data reader, RNG, fixed math, the combat log, the effect and aura definitions, damage-over-time statuses, tuning) and the title screen. **Phase 1 (the arena sim) is under way:** steps 1 (the grid, plane geometry, and pathfinding, in `src/sim/arena/`), 2 (a skeleton fight: kits, setups, walking, nearest targeting, melee and shots, the log), 3 (statuses: Root, Stun, Slow, Taunt, Silence, Marked, damage over time), 4 (mana, signatures and their five triggers, casts, Undying, events, and passives), and 5 (Engage) are built. Follow `rebuild-build-order.md` for the order of work. Each phase's plan has a **Decisions** section; those win. If the code and a plan disagree, stop and ask. Don't silently pick one.
 
 The old game (items, the row-based sim, the run layer) is in git history: the commit before "Rebuild phase 0: gut items, essences, shops, the run, and the old UI". Its docs are in `docs/archive/`. Use them as a reference when a phase brings an old piece back, never as the design.
 
@@ -34,7 +34,7 @@ The old game (items, the row-based sim, the run layer) is in git history: the co
 - Run one test file: add `-gselect=test_project_setup.gd`
 - Fresh checkout: run `godot --headless --import` once first, so class names are registered. The session-start hook does this in cloud sessions.
 - Validate game data: `godot --headless --path . -s tools/validate_data.gd` (also covered by the test run)
-- Time the arena sim against its budget (a 60s fight of 3 against 6 in under 100 ms): `godot --headless --path . -s tools/bench_sim.gd`. It prints each fight's log fingerprint, so a speed-up can be checked to change nothing.
+- Time the arena sim against its budget (a 60s fight of 3 against 6 in under 100 ms): `godot --headless --path . -s tools/bench_sim.gd`. It runs a steady fight and a crowded worst case, and prints each fight's log fingerprint, so a speed-up can be checked to change nothing.
 - The headless sim runner comes back in phase 2 (placed parties) and the run bot in phase 6.
 - Cloud sessions: `.claude/hooks/session-start.sh` installs the pinned Godot as `godot` in `~/.local/bin`.
 - CI: `.github/workflows/tests.yml` runs the tests and the data validator on every PR and push to main.
