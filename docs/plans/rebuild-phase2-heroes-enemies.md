@@ -1,6 +1,6 @@
 # Rebuild phase 2: base heroes and the Act 1 enemies (build plan)
 
-Status: **approved (2026-09-28), with the answers under Decisions.** Phase 2 of `docs/plans/rebuild-build-order.md`. Design sources: `rebuild-heroes.md` (the three base kits), `rebuild-enemies.md` (the Act 1 roster and how encounters scale), and `rebuild-arena.md`. It builds on the arena sim from phase 1 (`rebuild-phase1-arena-sim.md`). Numbers are placeholders; step 7 tunes them.
+Status: **built (2026-09-28).** Approved with the answers under Decisions; each section's "Built in step N" notes say what was built and measured. Phase 2 of `docs/plans/rebuild-build-order.md`. Design sources: `rebuild-heroes.md` (the three base kits), `rebuild-enemies.md` (the Act 1 roster and how encounters scale), and `rebuild-arena.md`. It builds on the arena sim from phase 1 (`rebuild-phase1-arena-sim.md`). Numbers are placeholders; step 7 tunes them.
 
 **Goal:** Brannoc, Maren, and Vell's base kits and the 9 Act 1 enemies as data, hand-placed encounters, and a headless sim runner that fights placed parties against them. **Done when** (the build order's gate) the sim runner shows **placement matters**: against each archetype, the same team wins clearly more with a good formation than with a bad one.
 
@@ -405,7 +405,7 @@ The elites and Old Mother Ash come in phase 5 (decided). What they'll need, so t
 5. **The nine enemies** in `enemies.json`, and `test_enemy_kits`. **Done.**
 6. **The encounters,** hand-placed, and `test_encounters`. **Done.**
 7. **The sim runner and the first tuning pass,** until the gate holds and fights run 30–60s. The results go in this plan. **Done** (section 7).
-8. **Docs:** CLAUDE.md's "how it works" gains the content files and the runner; the design's open questions are updated.
+8. **Docs:** CLAUDE.md's "how it works" gains the content files and the runner; the design's open questions are updated. **Done:** CLAUDE.md has "How the content works", and the design's open questions gain what step 7's results left open.
 
 ## Decisions
 

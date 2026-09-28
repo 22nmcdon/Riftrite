@@ -14,9 +14,9 @@ A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The pl
 | `rebuild-run.md` | days, camp, fight choice, relics with costs, duo bonds, losing, pacing |
 | `rebuild-build-order.md` | the phases, and what was gutted |
 | `rebuild-phase1-arena-sim.md` | phase 1's build plan (built): the arena sim |
-| `rebuild-phase2-heroes-enemies.md` | phase 2's build plan (approved): base heroes, the Act 1 enemies, encounters, the sim runner |
+| `rebuild-phase2-heroes-enemies.md` | phase 2's build plan (built): base heroes, the Act 1 enemies, encounters, the sim runner |
 
-**Where the rebuild is:** phase 0 (the gut) is done. Items, essences, shops, the run, and the old UI are gone; what's left is the foundation (the data reader, RNG, fixed math, the combat log, the effect and aura definitions, damage-over-time statuses, tuning) and the title screen. **Phase 1 (the arena sim) is done:** a headless fight on a free plane, described under "How the arena sim works" below. **Phase 2 (base heroes and the Act 1 enemies) is under way** (`rebuild-phase2-heroes-enemies.md`, approved): steps 1 (a speed pass for summon swarms), 2 (`heroes.json`, `enemies.json`, and `encounters.json`, loaded and cross-checked, and `Encounters.setup` to build a fight from an encounter and a formation), and 3 (the new sim pieces the kits need: an aura that holds while its holder is taunting, the `on_ally_below_hp`, `on_interval`, and `on_fall` passive triggers, areas in passives, heals of a share of max HP, and damage that grows with nearby allies), 4 (Brannoc, Maren, and Vell's base kits in `heroes.json`), 5 (the nine Act 1 enemies in `enemies.json`), 6 (nine hand-placed encounters in `encounters.json`), and 7 (the sim runner, and a first tuning pass that passes its "placement matters" gate in every encounter) are built. Follow `rebuild-build-order.md` for the order of work. Each phase's plan has a **Decisions** section; those win. If the code and a plan disagree, stop and ask. Don't silently pick one.
+**Where the rebuild is:** phase 0 (the gut) is done. Items, essences, shops, the run, and the old UI are gone; what's left is the foundation (the data reader, RNG, fixed math, the combat log, the effect and aura definitions, damage-over-time statuses, tuning) and the title screen. **Phase 1 (the arena sim) is done:** a headless fight on a free plane, described under "How the arena sim works" below. **Phase 2 (base heroes and the Act 1 enemies) is done:** the three base kits, the nine Act 1 enemies, and nine hand-placed encounters are data, and the sim runner shows placement matters in every encounter. See "How the content works" below; `rebuild-phase2-heroes-enemies.md` has what each step built and measured. **Phase 3 (the fight sandbox, with placeholder art) is next;** it needs its own build plan first. Follow `rebuild-build-order.md` for the order of work. Each phase's plan has a **Decisions** section; those win. If the code and a plan disagree, stop and ask. Don't silently pick one.
 
 The old game (items, the row-based sim, the run layer) is in git history: the commit before "Rebuild phase 0: gut items, essences, shops, the run, and the old UI". Its docs are in `docs/archive/`. Use them as a reference when a phase brings an old piece back, never as the design.
 
@@ -50,7 +50,7 @@ src/sim/       combat simulation: pure logic, NO nodes, NO rendering
 src/run/       the run: days, camp, fights, save (only RunRandom until phase 5)
 src/ui/        scenes and UI scripts (reads sim state, never changes it)
 tests/         GUT tests, mirroring src/
-tools/         data validator, screenshots, CI scripts, placeholder art scripts
+tools/         data validator, sim runner and bench, screenshots, CI scripts, placeholder art scripts
 ```
 
 ## Rules the code must never break
@@ -72,7 +72,17 @@ The details and every decision are in `docs/plans/rebuild-phase1-arena-sim.md`; 
 - **Effects** (`EffectRunner`, `EffectDef`): damage, heal, shield, statuses, cleanse, mana drain, knockback, pull, leap, charge, warned areas (circle, ring, line, cone; hit by center), summons (`Summons`), and start_collapse. From 2 hexes or more, an attack is a shot that flies about a tick per hex, with its numbers fixed as it leaves.
 - **Passives** (`Passives`, `PartDef`): auras (a window, or `"while": "taunting"`), status swaps, and effects on the unit's events (read from the log), on `on_ally_below_hp` and `on_interval` (after the events each tick), or `on_fall` (in the deaths step). What they do is marked from_event, so it never sets off another event.
 - **The log** (`LogEntry`): every entry names its source by the rules in `test_arena_log.gd`'s audit. A new log kind needs a rule there.
-- **Tests:** `tests/sim/sim_test_kit.gd` builds tiny fights. `tests/sim/chaos_fight.gd` is one seeded fight using everything; `test_determinism` checks it repeats exactly and still uses every piece, and `test_arena_log` replays it and audits its sources. A change that alters fights changes `tools/bench_sim.gd`'s fingerprints; one that shouldn't must leave them alone.
+- **Tests:** `tests/sim/sim_test_kit.gd` builds tiny fights. `test_kit_pieces.gd` covers the passive pieces phase 2 added, one rule at a time. `tests/sim/chaos_fight.gd` is one seeded fight using everything; `test_determinism` checks it repeats exactly and still uses every piece, and `test_arena_log` replays it and audits its sources. A change that alters fights changes `tools/bench_sim.gd`'s fingerprints; one that shouldn't must leave them alone.
+
+## How the content works
+
+Phase 2's details are in `docs/plans/rebuild-phase2-heroes-enemies.md` (sections 2–7 and their "Built in step N" notes). In short:
+
+- **Files** (`ContentDb` loads and cross-checks them): `heroes.json` (`HeroDef`: name, title, role, and a kit), `enemies.json` (`EnemyDef`: archetype, threat line, and a kit, phases included), and `encounters.json` (`EncounterDef`: enemies on hexes, optional rocks, act, days, and `scale_bp`). A hero's or enemy's kit is a `UnitDef` without its own id or name; heroes and enemies share one space of ids. Heroes act in `heroes.json`'s order.
+- **A fight from content:** `Encounters.setup(content, encounter_id, formation, seed, errors)`, where a formation is hero id -> hex. It adds every enemy a unit may summon as a summon kit, and scales enemies' HP and ATK by `scale_bp`.
+- **Numbers:** hero stats are the design's. Enemy HP, ATK, and a few kit numbers come from step 7's first tuning pass. Change numbers with the sim runner, not by hand-feel.
+- **The sim runner** (`tools/sim_runner.gd`, its work in `tools/sim_report.gd`) fights each encounter from the named formations in `tools/sim_formations.json` and from drawn ones. **The gate:** the best formation wins at least 30 points more often than the worst. Seeds only change crits, so formations mostly win all or nothing; the report also counts how many formations win, and tuning aims for about a third to two thirds.
+- **Tests:** `test_hero_kits.gd` and `test_enemy_kits.gd` check each kit's text in small fights; `test_encounters.gd` checks every encounter builds and plays out; `test_arena_log.gd` replays and audits a fight of the three heroes against one of each enemy; `tests/tools/test_sim_runner.gd` runs the runner small. Content changes that should move numbers change these tests on purpose.
 
 ## The design the rebuild builds toward
 
