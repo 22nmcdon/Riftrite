@@ -1,6 +1,6 @@
 # Rebuild phase 1: the arena sim (build plan)
 
-Status: **approved (2026-09-27), after two rounds of answers; phase 0 is done, so this is next.** Phase 1 of `docs/plans/rebuild-build-order.md`. Design sources: `rebuild-arena.md` (placement, movement, tanks, areas, the collapse), `rebuild-heroes.md` (mana and signature triggers), and `rebuild-enemies.md` (what enemies need from the sim). Numbers are placeholders to tune.
+Status: **built (2026-09-28).** Approved 2026-09-27 after two rounds of answers; every step below is done. Phase 1 of `docs/plans/rebuild-build-order.md`. Design sources: `rebuild-arena.md` (placement, movement, tanks, areas, the collapse), `rebuild-heroes.md` (mana and signature triggers), and `rebuild-enemies.md` (what enemies need from the sim). Numbers are placeholders to tune.
 
 **The big change in this revision:** hexes are only for **placement**. Once the fight starts, units move freely on a flat plane. So there are no reservations, no hex-by-hex steps, and no snapping to six directions. Distances are still counted in hexes, because that's how every design doc talks about them.
 
@@ -633,7 +633,19 @@ If step 2 measures slower, the cell size and repath interval are the knobs, and 
 6. **Displacement and flying (done):** knockback, pull, leap, charge, collisions, flying, and hop away.
 7. **Areas (done):** shapes, warnings, landing, and the rest of the targeting rules.
 8. **Collapse, summons, and phases (done):** rings, the safe rectangle, damage, start_collapse, summons, and `PhaseDef`.
-9. **The full determinism fight and the log audit.** Update `CLAUDE.md`'s sim rules to describe the arena.
+9. **The full determinism fight and the log audit (done).** Update `CLAUDE.md`'s sim rules to describe the arena.
+   - **Built in step 9:**
+     - **The chaos fight** (`tests/sim/chaos_fight.gd`): 4 heroes against 5 enemies and their pups, with rocks. It uses every trait, status, shape, trigger, and displacement, summons both ways, both of the brute's phases, a cast cancelled by a stun, a fizzled shot, and the collapse started early. `test_determinism` checks it has every log kind the arena sim makes, every status, shape, and trigger, and that it repeats exactly (stepped by hand against `run()`), and that the seed and the fight's order each change it.
+       - A few pieces (a fizzled shot, a cleanse cutting stacks, a cancelled cast) happen only in some seeds; 17 has them all. If the sim changes, the coverage test says which went missing.
+     - **The log audit** (`test_arena_log`): every kind of entry has a rule for what it names (its unit, ability, the unit it's about, its status, or why), and every entry in the busy fight and the chaos fight follows its kind's rule. A new kind fails the audit until it gets a rule. Every entry's text is written out (none falls through to "?").
+       - A status that simply runs out ends with no note ("Burn on hound ends"); the others say why (broke free, cleansed, its source fell).
+     - **The replay** runs on the chaos fight too: pushes, leaps, charges, hops, summons, and walking off crumbled ground all replay from the log to the exact position, and no two units overlap on any tick.
+     - `test_moves_name_their_unit` was folded into the audit.
+   - **Speed, measured on the chaos fight:** a 65s fight with up to 25 units (16 of them summoned) takes about 2.5s, and 2.1s of that is pathfinding.
+     - The biggest share is `nearest` searches that find no one (about 400 of them, 137,000 cells): pups boxed in by the crowd and the crumbling edge keep looking every 0.5s, and each failed search floods everything they can reach.
+     - Walking back to safe ground comes next (190 searches, 82,000 cells).
+     - Each search also costs more with 25 units on the board (about 8 µs a cell, against about 5 with 9).
+     - So a swarm is far over the budget. Before phase 2's Old Mother Ash (pups every 10s), the sim needs a pass on this. The knobs are: looking again less often after a failed `nearest`; reusing what a failed search reached until the board changes; and a cheaper search setup.
 
 ## 15. Proposals to confirm
 

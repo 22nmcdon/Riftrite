@@ -15,7 +15,7 @@ A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The pl
 | `rebuild-build-order.md` | the phases, and what was gutted |
 | `rebuild-phase1-arena-sim.md` | phase 1's build plan (approved): the arena sim |
 
-**Where the rebuild is:** phase 0 (the gut) is done. Items, essences, shops, the run, and the old UI are gone; what's left is the foundation (the data reader, RNG, fixed math, the combat log, the effect and aura definitions, damage-over-time statuses, tuning) and the title screen. **Phase 1 (the arena sim) is under way:** steps 1 (the grid, plane geometry, and pathfinding, in `src/sim/arena/`), 2 (a skeleton fight: kits, setups, walking, nearest targeting, melee and shots, the log), 3 (statuses: Root, Stun, Slow, Taunt, Silence, Marked, damage over time), 4 (mana, signatures and their five triggers, casts, Undying, events, and passives), 5 (Engage), 6 (knockback, pull, leap, charge, flying, hop away), 7 (areas with warnings, and every targeting rule), and 8 (Rift Collapse, summons, and phases) are built. Follow `rebuild-build-order.md` for the order of work. Each phase's plan has a **Decisions** section; those win. If the code and a plan disagree, stop and ask. Don't silently pick one.
+**Where the rebuild is:** phase 0 (the gut) is done. Items, essences, shops, the run, and the old UI are gone; what's left is the foundation (the data reader, RNG, fixed math, the combat log, the effect and aura definitions, damage-over-time statuses, tuning) and the title screen. **Phase 1 (the arena sim) is done:** a headless fight on a free plane, described under "How the arena sim works" below. **Phase 2 (base heroes and the Act 1 enemies) is next,** and needs its own build plan first; the phase 1 plan's speed notes flag summon swarms as the next thing to make cheaper. Follow `rebuild-build-order.md` for the order of work. Each phase's plan has a **Decisions** section; those win. If the code and a plan disagree, stop and ask. Don't silently pick one.
 
 The old game (items, the row-based sim, the run layer) is in git history: the commit before "Rebuild phase 0: gut items, essences, shops, the run, and the old UI". Its docs are in `docs/archive/`. Use them as a reference when a phase brings an old piece back, never as the design.
 
@@ -60,6 +60,17 @@ tools/         data validator, screenshots, CI scripts, placeholder art scripts
 3. **Content is data, not code.** Heroes, enemies, encounters, paths, upgrades, relics, and duo bonds are JSON entries using existing effect, trigger, and part types. Only add a new effect type in code when no combination of existing ones can express it, and say so when you do.
 4. **Every combat effect writes to the combat log** with its source (unit and ability, relic, duo bond, status, or Rift Collapse). Every move, push, shot, and area is logged too. If a player can't trace why something happened, it's a bug.
 5. **Meta progression never adds stats.** Unlocks add variety (heroes, camp options, places, relics), cosmetics, and codex entries only.
+
+## How the arena sim works
+
+The details and every decision are in `docs/plans/rebuild-phase1-arena-sim.md`; each module's header comment has its rules. In short:
+
+- **Setup** (`FightSetup`, `UnitSetup`): units on hexes of an 8 × 7 flat-top grid (`HexGrid`, odd columns shifted), rocks, a seed, an act, and the kits summons may use. `validate` refuses what can't be fought. Kits (`UnitDef`) are data: stats, a targeting rule, traits (`engage`, `flying`, `hop_away`), a basic attack, an optional signature and mana bar, passives (`PartDef`), and phases (`PhaseDef`).
+- **The plane:** once the fight starts, units move freely (1 hex = 1000, units are circles of 400, rocks 500) and never overlap. Walking is straight when clear, otherwise along an A* route on hidden 125-unit cells (`NavGrid`). Every leg is logged, so the board replays from the log.
+- **The tick** (`CombatSim.step`, 20 a second): auras whose window changes; Rift Collapse (`Collapse`); statuses (`Statuses`); shots landing (`Shots`); warned areas landing (`Areas`); each standing unit's update in the fight's order (heroes, enemies, then summons as they join): mana, signature (`Signatures`), Stun, attack cooldown, target (`Targeting`, sticky), then attack or walk (`Movement`, `Engage`, `Displacement`); events from this tick's log (`Events`, `Passives`) and phases (`Phases`); deaths (Undying, would_fall); the end (180s is a tie, a guild win).
+- **Effects** (`EffectRunner`, `EffectDef`): damage, heal, shield, statuses, cleanse, mana drain, knockback, pull, leap, charge, warned areas (circle, ring, line, cone; hit by center), summons (`Summons`), and start_collapse. From 2 hexes or more, an attack is a shot that flies about a tick per hex, with its numbers fixed as it leaves.
+- **The log** (`LogEntry`): every entry names its source by the rules in `test_arena_log.gd`'s audit. A new log kind needs a rule there.
+- **Tests:** `tests/sim/sim_test_kit.gd` builds tiny fights. `tests/sim/chaos_fight.gd` is one seeded fight using everything; `test_determinism` checks it repeats exactly and still uses every piece, and `test_arena_log` replays it and audits its sources. A change that alters fights changes `tools/bench_sim.gd`'s fingerprints; one that shouldn't must leave them alone.
 
 ## The design the rebuild builds toward
 

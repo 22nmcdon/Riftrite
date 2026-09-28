@@ -1,9 +1,11 @@
 extends GutTest
 ## The log tells the whole story of the board (docs/plans/rebuild-phase1-arena-sim.md,
-## section 11): replaying every leg and stop from the log alone gives each
-## unit's exact position on every tick, and every move names its unit.
+## section 11): replaying every leg, stop, push, and summon from the log
+## alone gives each unit's exact position on every tick, and every entry
+## names its source (CLAUDE.md rule 4), in a busy fight and the chaos fight.
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
+const Chaos = preload("res://tests/sim/chaos_fight.gd")
 
 
 ## A busy fight: melee and ranged on both sides, a rock in the middle.
@@ -33,7 +35,18 @@ static func busy_setup(fight_seed: int = 5) -> FightSetup:
 
 
 func test_the_log_replays_every_position() -> void:
-	var setup: FightSetup = busy_setup()
+	_assert_replays(busy_setup())
+
+
+func test_the_log_replays_the_chaos_fight() -> void:
+	# Pushes, leaps, charges, hops, summons, and walking off crumbled ground.
+	_assert_replays(Chaos.setup())
+
+
+## Runs the fight, noting where every standing unit is on every tick (and
+## that no two overlap), then replays the log from the hex centers alone and
+## checks it lands every unit in the same place on every tick.
+func _assert_replays(setup: FightSetup) -> void:
 	var fight: CombatSim = K.sim(setup)
 	var truth: Array[Dictionary] = []
 	while not fight.finished:
@@ -43,6 +56,9 @@ func test_the_log_replays_every_position() -> void:
 			if unit.alive:
 				at[unit.id] = unit.pos
 		truth.append(at)
+		if not K.no_overlaps(fight):
+			fail_test("tick %d: two units overlap\n%s" % [fight.tick, ArenaDebug.render(fight)])
+			return
 	assert_gt(K.entries(fight, LogEntry.Kind.MOVE).size(), 10, "plenty of walking")
 	# Replay: start on the hex centers, then follow the log.
 	var grid: HexGrid = fight.grid
@@ -90,16 +106,66 @@ func test_the_log_replays_every_position() -> void:
 	pass_test("every unit's position replays on every tick")
 
 
-func test_moves_name_their_unit() -> void:
-	var fight: CombatSim = K.sim(busy_setup())
-	while not fight.finished:
-		fight.step()
-	for entry: LogEntry in fight.combat_log.entries:
-		match entry.kind:
-			LogEntry.Kind.MOVE, LogEntry.Kind.STOP, LogEntry.Kind.TARGET:
-				assert_false(entry.source_unit.is_empty(), entry.to_text())
-			LogEntry.Kind.FIRE, LogEntry.Kind.SHOT, LogEntry.Kind.DAMAGE, LogEntry.Kind.HEAL, LogEntry.Kind.SHIELD, LogEntry.Kind.SHOT_FIZZLED:
-				assert_false(entry.source_unit.is_empty() or entry.source_ability.is_empty(), "names its unit and ability: " + entry.to_text())
+## What each kind of entry must name (CLAUDE.md rule 4): "unit" a source
+## unit, "ability" a source ability, "target" a unit it's about, "status" a
+## status. COLLAPSE and COLLAPSE_RING are Rift Collapse's (or, for a ring, the
+## unit and ability that started it early); the fight's start and end name
+## nothing. A status that just runs out ends with no note. Every kind the
+## log can hold is listed, so a new one needs a rule.
+const NAMES: Dictionary = {
+	LogEntry.Kind.FIGHT_START: [], LogEntry.Kind.FIGHT_END: [],
+	LogEntry.Kind.FIRE: ["unit", "ability"],
+	LogEntry.Kind.DAMAGE: ["unit", "ability", "target"], LogEntry.Kind.HEAL: ["unit", "ability", "target"],
+	LogEntry.Kind.SHIELD: ["unit", "ability", "target"], LogEntry.Kind.MANA_DRAIN: ["unit", "ability", "target"],
+	LogEntry.Kind.COLLAPSE: ["collapse", "target"], LogEntry.Kind.COLLAPSE_RING: ["collapse"],
+	LogEntry.Kind.DEATH: ["target", "note"],
+	LogEntry.Kind.STATUS_APPLIED: ["unit", "ability", "target", "status"], LogEntry.Kind.STATUS_DAMAGE: ["unit", "ability", "target", "status"],
+	LogEntry.Kind.STATUS_REDUCED: ["unit", "ability", "target", "status"], LogEntry.Kind.STATUS_ENDED: ["target", "status"],
+	LogEntry.Kind.AURA: ["unit", "ability"], LogEntry.Kind.PHASE: ["unit", "ability", "target"],
+	LogEntry.Kind.MOVE: ["unit"], LogEntry.Kind.STOP: ["unit"], LogEntry.Kind.TARGET: ["unit", "note"], LogEntry.Kind.BREAK_FREE: ["unit", "target"],
+	LogEntry.Kind.SHOT: ["unit", "ability", "target"], LogEntry.Kind.SHOT_FIZZLED: ["unit", "ability", "target"],
+	LogEntry.Kind.CAST: ["unit", "ability", "target"], LogEntry.Kind.CAST_CANCELLED: ["unit", "ability", "note"],
+	LogEntry.Kind.SAVED: ["unit", "ability", "target"],
+	LogEntry.Kind.PUSH: ["unit", "ability", "target"], LogEntry.Kind.LEAP: ["unit", "ability", "target"],
+	LogEntry.Kind.CHARGE: ["unit", "ability", "target"], LogEntry.Kind.HOP: ["unit", "ability", "target"],
+	LogEntry.Kind.AREA_WARNING: ["unit", "ability"], LogEntry.Kind.AREA_LANDED: ["unit", "ability"],
+	LogEntry.Kind.SUMMON: ["unit", "ability", "target"],
+}
+
+
+func test_every_entry_names_its_source() -> void:
+	for setup: FightSetup in [busy_setup(), Chaos.setup()]:
+		_assert_sources(K.run(setup), setup)
+
+
+func _assert_sources(result: FightResult, setup: FightSetup) -> void:
+	var ids: Array[String] = []
+	for unit: UnitSetup in setup.units():
+		ids.append(unit.id)
+	for entry: LogEntry in result.combat_log.entries:
+		if entry.kind == LogEntry.Kind.SUMMON and entry.note.is_empty():
+			ids.append(entry.target)
+	for entry: LogEntry in result.combat_log.entries:
+		var line: String = entry.to_text()
+		assert_false(line.ends_with("?"), "every kind has its text: %s" % line)
+		if not NAMES.has(entry.kind):
+			fail_test("no rule for %s" % LogEntry.Kind.keys()[entry.kind])
+			return
+		var needs: Array = NAMES[entry.kind]
+		var by_collapse: bool = entry.source_ability == LogEntry.COLLAPSE_SOURCE and entry.source_unit.is_empty()
+		if needs.has("collapse") and not by_collapse:
+			assert_true(entry.kind == LogEntry.Kind.COLLAPSE_RING and ids.has(entry.source_unit) and not entry.source_ability.is_empty(), "Rift Collapse's, or who started it: " + line)
+		if needs.has("unit"):
+			assert_true(ids.has(entry.source_unit), "names its unit: " + line)
+		if needs.has("ability"):
+			assert_false(entry.source_ability.is_empty() or entry.source_ability_name.is_empty(), "names its ability: " + line)
+		if needs.has("target"):
+			var dropped: bool = entry.kind == LogEntry.Kind.SUMMON and not entry.note.is_empty()
+			assert_true(dropped or ids.has(entry.target), "names the unit it's about: " + line)
+		if needs.has("status"):
+			assert_false(entry.status.is_empty() or entry.status_name.is_empty(), "names its status: " + line)
+		if needs.has("note"):
+			assert_false(entry.note.is_empty(), "says why: " + line)
 
 
 func test_the_text_board_shows_a_fight() -> void:
