@@ -188,7 +188,8 @@ func test_fight_starts_playing_at_once_on_the_same_board() -> void:
 	assert_eq(screen.player.sim.tick, 20)
 	assert_eq(screen.clock_label.text, "1.0s")
 	var hound: UnitState = screen.player.sim.unit_by_id("rift_hound")
-	assert_almost_eq(screen.view.token("rift_hound").center(), screen.view.to_pixel_f(screen.player.drawn_position(hound)), Vector2(0.01, 0.01))
+	var drawn: Vector2 = screen.view.fx.moved_position(hound.id, screen.player.drawn_position(hound), screen.player.drawn_time())
+	assert_almost_eq(screen.view.token("rift_hound").center(), screen.view.to_pixel_f(drawn), Vector2(0.01, 0.01), "where it's drawn (sliding, if a leap or push is still being shown)")
 
 
 func test_the_controls_and_keys() -> void:

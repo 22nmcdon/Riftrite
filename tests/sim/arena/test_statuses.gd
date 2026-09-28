@@ -279,6 +279,17 @@ func test_heals_that_heal_nothing_cleanse_nothing() -> void:
 	assert_eq(target.recent_heal_ticks, [] as Array[int], "and it doesn't count toward the falloff")
 
 
+func test_a_heals_cleanse_names_the_healer() -> void:
+	var fight: CombatSim = _duel(_dummy())
+	var target: UnitState = fight.units[1]
+	target.hp -= 50
+	Statuses.apply(fight, target, "poison", 100, 0, _source())
+	EffectRunner.heal(fight, target, 10, _source("mender"))
+	var reduced: LogEntry = K.entries(fight, LogEntry.Kind.STATUS_REDUCED)[0]
+	assert_eq([reduced.source_unit, reduced.target, reduced.amount], ["mender", target.id, 10], "credited to the heal (rule 4)")
+	assert_string_contains(reduced.note, "healed by mender")
+
+
 func test_the_heal_falloff_window_is_1s() -> void:
 	var fight: CombatSim = _duel(_dummy())
 	var target: UnitState = fight.units[1]

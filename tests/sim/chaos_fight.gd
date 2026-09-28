@@ -20,14 +20,15 @@ extends RefCounted
 ## the middle.
 ##
 ## Some pieces (a shot fizzling, a cleanse cutting stacks, a cast cancelled
-## by a stun) happen only in some seeds; 17 has them all. If a change to the
+## by a stun) happen only in some seeds; 18 has them all (17 did before units
+## shrank to 0.2 hex wide: playtest gate 1). If a change to the
 ## sim moves them, test_the_chaos_fight_uses_everything says which, and the
 ## seed or the kits need adjusting.
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
 
 
-static func setup(fight_seed: int = 17) -> FightSetup:
+static func setup(fight_seed: int = 18) -> FightSetup:
 	var warden: UnitDef = K.kit("warden", {"stats": {"hp": 1400, "atk": 14, "def": 30, "crit": 15, "speed": 2}, "traits": ["engage"],
 		"basic_attack": {"effects": [{"type": "damage", "amount": 8, "target": "target", "scaling": {"atk": 5000}},
 			{"trigger": "on_hit", "type": "apply_status", "status": "marked", "target": "hit_target"},

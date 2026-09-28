@@ -62,8 +62,8 @@ func test_a_push_stopped_by_a_unit_stuns_both() -> void:
 	var start: Vector2i = front.pos
 	fight.step()
 	assert_eq(front.pos.x, start.x)
-	assert_lt(front.pos.y - start.y, 250, "stopped at the last clear point, 200 on")
-	assert_false(ArenaPlane.overlaps(front.pos, 400, behind.pos, 400))
+	assert_between(front.pos.y - start.y, 750, 800, "stopped at the last clear point, touching the unit behind (1000 apart, less two radii)")
+	assert_false(ArenaPlane.overlaps(front.pos, front.radius, behind.pos, behind.radius))
 	assert_true(_stunned(front))
 	assert_true(_stunned(behind), "the unit it hit too")
 	assert_eq(Statuses.find(front, "stun").ends_at, 1 + 20, "for collision_stun_ms")
@@ -89,7 +89,7 @@ func test_pull_stops_touching_the_puller() -> void:
 	var hero: UnitState = fight.units[0]
 	var foe: UnitState = fight.units[1]
 	fight.step()
-	assert_eq(ArenaPlane.distance(hero.pos, foe.pos), 800, "touching, not overlapping")
+	assert_eq(ArenaPlane.distance(hero.pos, foe.pos), 200, "touching (two radii), not overlapping")
 	assert_false(_stunned(foe), "stopping at the puller isn't a collision")
 	assert_eq(K.entries(fight, LogEntry.Kind.PUSH)[0].note, "pulled")
 	var short: CombatSim = _fight(_caster([{"type": "pull", "hexes": 1, "target": "target"}]), [K.foe(_post(), 3, 5)] as Array[UnitSetup])
@@ -144,7 +144,7 @@ func test_a_leap_lands_on_the_closest_free_spot() -> void:
 	var hero: UnitState = fight.units[0]
 	var foe: UnitState = fight.units[1]
 	fight.step()
-	assert_eq(hero.pos, foe.pos - Vector2i(0, 800), "the spot facing it: straight up from the target")
+	assert_eq(hero.pos, foe.pos - Vector2i(0, 200), "the spot facing it, touching: straight up from the target")
 	var leap: LogEntry = K.entries(fight, LogEntry.Kind.LEAP)[0]
 	assert_eq([leap.tick, leap.end_tick, leap.target, leap.to_pos], [1, 1 + 6, "post", hero.pos])
 	var hit: LogEntry = K.entries(fight, LogEntry.Kind.DAMAGE, "caster")[0]
@@ -175,12 +175,14 @@ func test_a_leap_skips_taken_spots_and_can_fail() -> void:
 	var fight: CombatSim = _fight(_post(), [K.foe(_post(), 3, 6, "prey"), K.foe(_post(), 0, 6, "guard")] as Array[UnitSetup])
 	var hero: UnitState = fight.units[0]
 	var prey: UnitState = fight.unit_by_id("prey")
-	assert_eq(Displacement.leap_spot(fight, hero, prey, 6), prey.pos - Vector2i(0, 800), "the spot facing the leaper")
-	fight.unit_by_id("guard").pos = prey.pos - Vector2i(0, 800)
+	assert_eq(Displacement.leap_spot(fight, hero, prey, 6), prey.pos - Vector2i(0, 200), "the spot facing the leaper")
+	fight.unit_by_id("guard").pos = prey.pos - Vector2i(0, 200)
 	var spot: Vector2i = Displacement.leap_spot(fight, hero, prey, 6)
-	# The guard blocks that spot and the two beside it; the next two are as
-	# close as each other, and the first in the list wins.
-	assert_eq(spot, prey.pos + Vector2i(693, -400))
+	# The guard blocks that spot and the two on each side of it (the spots
+	# are 30 degrees apart on a circle two radii round the prey, so the ones
+	# at 60 degrees would just touch it); the next two are as close as each
+	# other, and the first in the list wins.
+	assert_eq(spot, prey.pos + Vector2i(200, 0))
 	assert_true(fight.fits(hero, spot))
 	# Too far to reach any spot: the whole signature fails, and waits.
 	var far: CombatSim = _fight(_caster([{"type": "leap", "max_hexes": 1, "target": "target"}, {"type": "damage", "amount": 7, "target": "target"}]), [K.foe(_post(), 3, 6)] as Array[UnitSetup])
@@ -190,7 +192,7 @@ func test_a_leap_skips_taken_spots_and_can_fail() -> void:
 	assert_eq(failed[0].to_text(), "[0.05s] caster · Move can't leap to post (no room to land)")
 	assert_eq(K.entries(far, LogEntry.Kind.DAMAGE).size(), 0, "nothing else in it happened")
 	assert_eq(K.entries(far, LogEntry.Kind.FIRE).size(), 0)
-	far.units[0].pos = far.units[1].pos - Vector2i(0, 1500)
+	far.units[0].pos = far.units[1].pos - Vector2i(0, 1100)
 	far.step()
 	assert_eq(K.entries(far, LogEntry.Kind.LEAP).size(), 2, "it fires once there's room")
 
@@ -200,7 +202,7 @@ func test_a_new_failure_is_logged_after_a_success() -> void:
 	var hero: UnitState = fight.units[0]
 	var foe: UnitState = fight.units[1]
 	K.step(fight, 3)
-	hero.pos = foe.pos - Vector2i(0, 1500)
+	hero.pos = foe.pos - Vector2i(0, 1100)
 	fight.step()
 	assert_eq(K.entries(fight, LogEntry.Kind.LEAP).map(func(entry: LogEntry) -> String: return entry.note), ["no room to land", ""])
 	hero.pos = foe.pos - Vector2i(0, 3000)
@@ -245,7 +247,7 @@ func test_a_charge_goes_up_to_its_hexes_and_spares_allies() -> void:
 	assert_eq(K.entries(fight, LogEntry.Kind.PUSH).size(), 0, "it touched no one")
 	var reaching: CombatSim = _fight(_caster([{"type": "charge", "hexes": 5, "target": "target"}]), [K.foe(_post(), 3, 5)] as Array[UnitSetup])
 	reaching.step()
-	assert_eq(ArenaPlane.distance(reaching.units[0].pos, reaching.units[1].pos), 800)
+	assert_eq(ArenaPlane.distance(reaching.units[0].pos, reaching.units[1].pos), 200, "touching")
 	assert_eq(K.entries(reaching, LogEntry.Kind.CHARGE)[0].note, "reached post")
 	assert_eq(K.entries(reaching, LogEntry.Kind.PUSH).size(), 0, "no knockback set")
 	# An ally in the way stops it, unharmed.

@@ -55,14 +55,14 @@ func test_the_enemies_read_as_designed() -> void:
 		return [EnemyDef.ARCHETYPE_NAMES[enemy.archetype], stats.get_stat(UnitStats.Stat.HP), stats.get_stat(UnitStats.Stat.ATK), stats.get_stat(UnitStats.Stat.DEF),
 			stats.get_stat(UnitStats.Stat.SPEED), stats.get_stat(UnitStats.Stat.RANGE), enemy.kit.traits])
 	assert_eq(rows, [
-		["swarm", 210, 10, 0, 3, 1, []],
-		["swarm", 220, 18, 0, 2, 1, []],
+		["swarm", 210, 8, 0, 3, 1, []],
+		["swarm", 220, 22, 0, 2, 1, []],
 		["flanker", 420, 16, 4, 3, 1, []],
 		["caster", 260, 8, 0, 2, 3, ["flying"]],
 		["ranged", 460, 18, 4, 2, 5, ["hop_away"]],
 		["anchor", 520, 10, 25, 1, 1, ["engage"]],
 		["charger", 440, 16, 20, 2, 1, []],
-		["disruptor", 640, 24, 8, 1, 1, []],
+		["disruptor", 760, 32, 8, 1, 1, []],
 		["support", 300, 18, 4, 2, 4, []],
 	])
 	assert_eq((_content.enemies["rift_hound"] as EnemyDef).threat, "Pounces on your weakest back-liner")
@@ -76,7 +76,7 @@ func test_rift_pups_bite_harder_for_each_pup_beside_them() -> void:
 	K.step(alone, 100)
 	var alone_bites: Array = K.entries(alone, LogEntry.Kind.DAMAGE, "rift_pup").map(func(entry: LogEntry) -> int: return entry.amount)
 	assert_false(alone_bites.is_empty())
-	assert_true(alone_bites.all(func(amount: int) -> bool: return amount == 10), "alone, a pup bites for its ATK: %s" % [alone_bites])
+	assert_true(alone_bites.all(func(amount: int) -> bool: return amount == 8), "alone, a pup bites for its ATK: %s" % [alone_bites])
 
 	var pack: CombatSim = _sim([K.at(_still("hero", {"hp": 10000}), 3, 2)] as Array[UnitSetup],
 		[K.foe(_kit("rift_pup"), 2, 4, "pup_a"), K.foe(_kit("rift_pup"), 3, 4, "pup_b"), K.foe(_kit("rift_pup"), 4, 4, "pup_c")] as Array[UnitSetup])
@@ -84,8 +84,8 @@ func test_rift_pups_bite_harder_for_each_pup_beside_them() -> void:
 	K.step(pack, 100)
 	var bites: Array = K.entries(pack, LogEntry.Kind.DAMAGE).filter(func(entry: LogEntry) -> bool: return entry.source_unit.begins_with("pup_")) \
 		.map(func(entry: LogEntry) -> int: return entry.amount)
-	assert_true(bites.all(func(amount: int) -> bool: return amount in [10, 13, 15]), "+25%% of 10 for each other pup within a hex (12.5 rounds to 13): %s" % [bites])
-	assert_true(bites.has(13) or bites.has(15), "in a pack, some bites are stronger: %s" % [bites])
+	assert_true(bites.all(func(amount: int) -> bool: return amount in [8, 10, 11]), "+20%% of 8 for each other pup within a hex (9.6 rounds to 10, 11.2 to 11): %s" % [bites])
+	assert_true(bites.has(10) or bites.has(11), "in a pack, some bites are stronger: %s" % [bites])
 
 
 func test_an_ashling_bursts_into_burn_on_every_unit_within_a_hex() -> void:

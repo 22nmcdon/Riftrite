@@ -27,7 +27,7 @@ func test_the_chaos_fight_repeats_exactly() -> void:
 
 
 func test_the_seed_matters() -> void:
-	assert_ne(K.run(Chaos.setup(18)).combat_log.to_text(), chaos.combat_log.to_text())
+	assert_ne(K.run(Chaos.setup(19)).combat_log.to_text(), chaos.combat_log.to_text())
 
 
 func test_the_fight_order_matters() -> void:

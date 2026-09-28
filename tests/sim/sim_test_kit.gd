@@ -50,11 +50,25 @@ static func fight(heroes: Array[UnitSetup], enemies: Array[UnitSetup], rocks: Ar
 	return FightSetup.make(heroes, enemies, rocks, fight_seed)
 
 
-## A fight ready to step tick by tick.
-static func sim(setup: FightSetup) -> CombatSim:
-	var errors: Array[String] = setup.validate(content())
+## The real content with wide units: phase 1's geometry (units 0.8 hex
+## wide, melee reaching a whole hex). For tests whose scenario needs units
+## bulky enough to box a unit in or wall a way off (a hop with no room, a
+## way back blocked by units); the rules they test don't depend on size.
+## Everything else uses the real tuning (units 0.2 hex wide, melee half a
+## hex: playtest gate 1).
+static func wide_content() -> ContentDb:
+	var loaded: ContentDb = content()
+	loaded.tuning.unit_radius = 400
+	loaded.tuning.melee_reach = 1000
+	return loaded
+
+
+## A fight ready to step tick by tick (with wide units if `wide`).
+static func sim(setup: FightSetup, wide: bool = false) -> CombatSim:
+	var fight_content: ContentDb = wide_content() if wide else content()
+	var errors: Array[String] = setup.validate(fight_content)
 	assert(errors.is_empty(), str(errors))
-	return CombatSim.new(setup, content())
+	return CombatSim.new(setup, fight_content)
 
 
 static func run(setup: FightSetup) -> FightResult:

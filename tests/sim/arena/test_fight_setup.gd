@@ -164,5 +164,5 @@ func test_units_start_on_their_hex_centers() -> void:
 func test_the_arena_tuning() -> void:
 	var tuning: TuningDef = K.content().tuning
 	assert_eq([tuning.grid_width, tuning.grid_height, tuning.zone_rows], [8, 7, 3])
-	assert_eq([tuning.unit_radius, tuning.rock_radius, tuning.nav_cell], [400, 500, 125])
+	assert_eq([tuning.unit_radius, tuning.rock_radius, tuning.nav_cell, tuning.melee_reach], [100, 500, 125, 500], "units 0.2 hex wide, melee reaching half a hex (playtest gate 1)")
 	assert_eq([tuning.repath_ticks, tuning.repath_give_up_ticks, tuning.max_units_per_side], [10, 20, 30])

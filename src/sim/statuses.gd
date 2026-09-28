@@ -182,9 +182,10 @@ static func _deal_damage_over_time(sim: CombatSim, unit: UnitState, state: Statu
 
 ## Each damage-over-time status on `unit` loses `share_bp` of its stacks
 ## (times its cleanse_effectiveness_bp; rounded; oldest first). A heal does
-## this (source null), and so does a cleanse effect. Timed statuses have no
-## stacks, so they're never touched.
-static func cleanse_over_time(sim: CombatSim, unit: UnitState, share_bp: int, source: EffectSource = null) -> void:
+## this (`by_heal`), and so does a cleanse effect; either way the line names
+## its source (rule 4). Timed statuses have no stacks, so they're never
+## touched.
+static func cleanse_over_time(sim: CombatSim, unit: UnitState, share_bp: int, source: EffectSource, by_heal: bool = false) -> void:
 	for state: StatusState in unit.statuses.duplicate():
 		var removed: int = FixedMath.apply_bp(state.total_stacks(), FixedMath.apply_bp(share_bp, state.def.cleanse_effectiveness_bp))
 		if removed <= 0:
@@ -197,10 +198,8 @@ static func cleanse_over_time(sim: CombatSim, unit: UnitState, share_bp: int, so
 		entry.status = state.def.id
 		entry.status_name = state.def.name
 		entry.amount = removed
-		entry.note = "healed"
-		if source != null:
-			entry.set_source(source)
-			entry.note = "cleansed by %s" % source.describe()
+		entry.set_source(source)
+		entry.note = ("healed by %s" if by_heal else "cleansed by %s") % source.describe()
 		sim.combat_log.add(entry)
 		if state.total_stacks() == 0:
 			_end(sim, unit, state)

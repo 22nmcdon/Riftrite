@@ -345,4 +345,37 @@ Answers to the proposal's questions (2026-09-28):
 
 Build: playtest build 4 (0865f6b), https://github.com/22nmcdon/Riftrite/releases/tag/playtest-4. The question: is a single arena fight with the base heroes fun and readable?
 
-Findings: none yet. Record what the playtest says here: what read well, what confused, which fights felt unfair. Then decide what goes back into which plan (a change to the sim's rules or content numbers goes to the plans, not into phase 3; see Scope).
+**Findings (2026-09-28, first play):**
+
+1. **Enemies didn't all stay on the hero they went for.** With Brannoc in front and nearest to every enemy, every melee enemy should go for him (others by their own rules, like the Hound's Pounce). They did pick him first, but units were too big for more than about four to reach him; the rest waited 1s with no way in, gave up on him, and walked round to Maren and Vell (in Pup Warren, two pups at 2.55s).
+2. **Units were too big:** 0.8 hex wide. Six enemies should be able to attack Brannoc together.
+
+**Decisions (the playtester's answers):**
+
+- **Units are 0.2 hex wide** (`unit_radius` 400 to 100), and **melee reaches half a hex** (new tuning, `melee_reach`: 500, center to center; it was a whole hex). A signature with no `max_range` reaches as far as its unit.
+- **A unit blocked only by other units keeps its target** and waits for an opening. It gives up only when the target is walled off (no way even with every unit aside: rocks or crumbled ground). That should be rare outside big swarms, which no Act 1 fight has.
+
+**What changed** (the phase 1 plan's Space, Movement, and Range sections say so where the rules live):
+
+- **The sim:**
+  - `TuningDef.melee_reach`; `UnitState.reach()` and `reach_of(signature)`.
+  - `Movement.walled_off`, checked on `CombatSim.ground_nav_for`: the nav grid with only the rocks.
+  - **A rule-4 fix the new geometry turned up:** a heal that strips damage-over-time stacks now credits the healer ("Poison on brand loses 1 stacks (healed by mender · Mend)"). Before, that line had no source; the log audit caught it once the chaos fight's heals started landing on poisoned units.
+- **Balance** (the sim runner, `--seeds=5`, 44 formations each):
+  - At the new size, Pup Warren failed the gate: six pups could all bite Brannoc at once, each at Pack Bite's full bonus, and 0 of 44 formations won.
+  - Retuned: Rift Pup ATK 10 to 8, Pack Bite's bonus 25% to 20%. Weaker pups made Ash Nest and Bog Crossing easy (36 and 40 of 44), so Ashling ATK 18 to 22, and Bog Lurker HP 640 to 760 and ATK 24 to 32.
+  - All nine pass the gate, with 18 to 32 of 44 formations winning (Pup Warren 18, Ash Nest 24, The Pack 30, Moth Cloud 26, Hollow Line 26, Bog Crossing 25, Sentinel Gate 27, Cairn Road 29, Witch Circle 32).
+  - The bench is faster (220 ms per 60s of fight overall on the cloud machine, from 387): small units leave the nav grid more open.
+- **The board:**
+  - Tokens draw the unit's true circle (at least 8px), with the name under it and fixed-width bars.
+  - What hovers, clicks, and drags is at least 16px from the center.
+  - A swipe means a hit from within the attacker's melee reach.
+  - **A bug the new sizes showed:** a slide (leap, push) that ended inside a long frame left the token at the landing spot for that frame. A finished slide no longer counts.
+  - The screenshots gain six pups crowding Brannoc in Pup Warren.
+- **Tests:**
+  - Sim tests updated to the new geometry.
+  - Tests whose scenario needs bulky units (a hopper boxed in, a way back walled by units, hand-worked summon spots) use `K.sim(setup, true)`, with phase 1's size.
+  - The chaos fight moved to seed 18, which again uses every piece.
+  - New tests for melee reach, for keeping a target when blocked only by units, and for a heal's cleanse naming the healer.
+
+The next playtest build carries these; gate 1 is judged again on it.

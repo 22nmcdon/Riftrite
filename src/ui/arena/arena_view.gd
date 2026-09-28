@@ -145,12 +145,13 @@ func _gui_input(event: InputEvent) -> void:
 		ground_clicked.emit()
 
 
-## The shown token whose circle covers a pixel (the one drawn on top), or
-## null.
+## The shown token whose rect's circle covers a pixel (at least
+## UnitToken.HIT_PX round, so small units are easy to click; the one drawn
+## on top), or null.
 func token_at(pixel: Vector2) -> UnitToken:
 	for i: int in range(tokens.size() - 1, -1, -1):
 		var found: UnitToken = tokens[i]
-		if found.visible and found.center().distance_to(pixel) <= found.radius_px:
+		if found.visible and found.center().distance_to(pixel) <= found.size.x / 2.0:
 			return found
 	return null
 

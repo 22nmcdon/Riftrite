@@ -134,6 +134,8 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 ## Adds a unit at the end of the fight's order (at the start, or a summon:
 ## then call units_joined once they're all in).
 func add_unit(unit: UnitState) -> void:
+	unit.melee_reach = tuning.melee_reach
+	unit.refresh_reach()
 	unit.joined_at = tick
 	unit.attack_rate_bp = attack_rate_bp(unit)
 	units.append(unit)
@@ -363,6 +365,15 @@ func nav_for(unit: UnitState, except: UnitState) -> NavGrid:
 	_nav.begin(safe, unit.radius)
 	for circle: ArenaPlane.Circle in obstacles_for(unit, except):
 		_nav.add_obstacle(circle.center, circle.radius)
+	return _nav
+
+
+## The nav grid for `unit` with only the rocks in it (and the safe ground's
+## edge): the way it could go if every unit stood aside.
+func ground_nav_for(unit: UnitState) -> NavGrid:
+	_nav.begin(safe, unit.radius)
+	for rock: ArenaPlane.Circle in rocks:
+		_nav.add_obstacle(rock.center, rock.radius)
 	return _nav
 
 

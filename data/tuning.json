@@ -6,10 +6,11 @@
     "height": 7,
     "zone_rows": 3
   },
-  "unit_radius": 400,
+  "unit_radius": 100,
   "rock_radius": 500,
   "nav_cell": 125,
-  "_plane_note": "On the plane 1 hex = 1000 units. Units and rocks are circles; nav_cell is the hidden pathfinding grid's cell size.",
+  "melee_reach": 500,
+  "_plane_note": "On the plane 1 hex = 1000 units. Units and rocks are circles; nav_cell is the hidden pathfinding grid's cell size. A unit with range 1 is melee: it reaches melee_reach (center to center); range 2 and up reach that many hexes. Units are 0.2 hex wide and melee reaches half a hex, so six can crowd one unit (playtest gate 1, decided 2026-09-28).",
   "engage_reach": 1000,
   "break_free_ms": 1000,
   "_engage_note": "Engage: an enemy whose center is within engage_reach of an engager is next to it; one trying to reach someone else must spend break_free_ms breaking free before it can move.",

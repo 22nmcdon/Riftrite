@@ -15,7 +15,8 @@ extends RefCounted
 ## A signature has no cooldown: it fires on its trigger (TriggerDef). It picks
 ## a fresh target each time it fires, by its own rule (Targeting.RULES; its
 ## nearest is by straight line, since it fires from where the unit stands),
-## among units within max_range hexes (default: the unit's own range).
+## among units within max_range hexes (default: the unit's own reach, half a
+## hex for a melee unit).
 ## An optional "text" is the player's sentence for it (docs/plans/rebuild-phase3-fight-sandbox.md,
 ## section 7); the sim never reads it.
 ## cast_ms (mana signatures only): the unit stands

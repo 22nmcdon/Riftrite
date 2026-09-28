@@ -41,6 +41,8 @@ var mana_cap: int = 0
 var mana_regen: int = 0
 ## Its basic attack's reach, squared (plane units).
 var reach_sq: int = 0
+## How far it reaches if it's melee (tuning's melee_reach; set as it joins).
+var melee_reach: int = HexGrid.HEX
 ## How fast its basic attack's cooldown runs (10000 = normal).
 var attack_rate_bp: int = FixedMath.BP_ONE
 
@@ -180,8 +182,16 @@ func step_length() -> int:
 
 
 ## Its basic attack's reach in plane units.
+## How far its attacks reach on the plane: melee_reach for range 1 (melee),
+## otherwise its range in hexes.
 func reach() -> int:
-	return stats.get_stat(UnitStats.Stat.RANGE) * HexGrid.HEX
+	var hexes: int = stats.get_stat(UnitStats.Stat.RANGE)
+	return melee_reach if hexes <= 1 else hexes * HexGrid.HEX
+
+
+## How far a signature reaches: its own max_range, or the unit's reach.
+func reach_of(ability: AbilityDef) -> int:
+	return ability.max_range * HexGrid.HEX if ability.max_range > 0 else reach()
 
 
 func in_reach_of(other: UnitState) -> bool:
@@ -192,7 +202,7 @@ func in_reach_of(other: UnitState) -> bool:
 
 ## Works out reach_sq again (its stats changed).
 func refresh_reach() -> void:
-	var reach_units: int = stats.values[UnitStats.Stat.RANGE] * HexGrid.HEX
+	var reach_units: int = reach()
 	reach_sq = reach_units * reach_units
 
 

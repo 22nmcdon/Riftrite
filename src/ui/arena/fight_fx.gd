@@ -33,9 +33,10 @@ const LANDED_TICKS: int = 6
 const MOVE_TICKS: int = 5
 const GHOST_TICKS: int = 12
 const PULSE_TICKS: int = 8
-## A swipe is drawn when attacker and target are this close (plane units),
-## measured between their edges.
-const MELEE_GAP: int = 600
+## A swipe is drawn when the target is within the attacker's melee reach,
+## plus this much slack (plane units): hits from melee distance, not areas or
+## shots.
+const MELEE_SLACK: int = 100
 ## A batch this big (a skip or seek) isn't animated.
 const MAX_ANIMATED: int = 60
 const DAMAGE_COLOR := Color("f1e6cc")
@@ -135,6 +136,10 @@ func moved_position(unit_id: String, otherwise: Vector2, now: float) -> Vector2:
 	if not moves.has(unit_id):
 		return otherwise
 	var move: Fx = moves[unit_id]
+	# Over (a frame can outlast a slide): where it stands now, not where it
+	# landed.
+	if now >= move.end:
+		return otherwise
 	return move.from.lerp(move.to, clampf((now - move.start) / float(move.end - move.start), 0.0, 1.0))
 
 
@@ -236,7 +241,7 @@ func _number(entry: LogEntry, sim: CombatSim, text: String, color: Color, big: b
 
 
 static func _in_melee(source: UnitState, target: UnitState) -> bool:
-	var reach: int = source.radius + target.radius + MELEE_GAP
+	var reach: int = source.melee_reach + MELEE_SLACK
 	return ArenaPlane.length_sq(source.pos - target.pos) <= reach * reach
 
 
@@ -260,7 +265,7 @@ func _draw() -> void:
 		if holder != null and holder.alive:
 			var ring: Color = _side_color(_player.sim, holder.id)
 			ring.a = 0.45
-			draw_arc(_view.to_pixel_f(_unit_point(holder.id, Vector2(holder.pos))), holder.radius * _view.scale_px * 1.3, 0.0, TAU, 40, ring, 2.0, true)
+			draw_arc(_view.to_pixel_f(_unit_point(holder.id, Vector2(holder.pos))), maxf(holder.radius * _view.scale_px, UnitToken.MIN_BODY_PX) * 1.6, 0.0, TAU, 40, ring, 2.0, true)
 	var font: Font = get_theme_default_font()
 	var hex: float = _view.hex_px()
 	var stacked: Dictionary[String, int] = {}

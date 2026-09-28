@@ -73,7 +73,7 @@ func test_it_lands_on_a_free_spot_still_in_reach() -> void:
 
 
 func test_landing_spots() -> void:
-	var fight: CombatSim = K.sim(K.fight([K.at(_flier(), 3, 0)] as Array[UnitSetup], [K.foe(_post(), 3, 5, "prey"), K.foe(_post(), 3, 4, "guard")] as Array[UnitSetup]))
+	var fight: CombatSim = K.sim(K.fight([K.at(_flier(), 3, 0)] as Array[UnitSetup], [K.foe(_post(), 3, 5, "prey"), K.foe(_post(), 3, 4, "guard")] as Array[UnitSetup]), true)
 	var flier: UnitState = fight.units[0]
 	var prey: UnitState = fight.unit_by_id("prey")
 	var guard: UnitState = fight.unit_by_id("guard")
@@ -180,7 +180,7 @@ func test_only_an_enemy_within_a_hex_and_the_nearest_one() -> void:
 
 
 func test_no_room_means_no_hop() -> void:
-	var fight: CombatSim = K.sim(K.fight([K.at(_hopper(), 3, 1)] as Array[UnitSetup], [K.foe(_post(), 3, 5)] as Array[UnitSetup]))
+	var fight: CombatSim = K.sim(K.fight([K.at(_hopper(), 3, 1)] as Array[UnitSetup], [K.foe(_post(), 3, 5)] as Array[UnitSetup]), true)
 	var hopper: UnitState = fight.units[0]
 	fight.units[1].pos = hopper.pos + Vector2i(0, 800)
 	fight.safe = Rect2i(hopper.pos - Vector2i(400, 400), Vector2i(800, 2000))

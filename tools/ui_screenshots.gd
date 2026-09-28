@@ -46,6 +46,14 @@ func _run() -> void:
 	arena._process(1.0 / 30.0)
 	arena.skip()
 	await _snap("fight_sentinel_gate_end")
+	# Six pups crowding Brannoc (units are 0.2 hex wide: playtest gate 1).
+	_main.show_arena("pup_warren")
+	var pups: ArenaScreen = _main.screen as ArenaScreen
+	pups._fight()
+	pups.target_lines.button_pressed = true
+	while not pups.player.finished() and pups.player.sim.tick < 4 * 20:
+		pups._process(1.0 / 30.0)
+	await _snap("fight_pup_warren_crowd")
 	# An area warning up (Moth Cloud's Ember Dust), with every target line.
 	var moths: ArenaScreen = ArenaScreen.make(PracticeSession.make(content), "moth_cloud")
 	_main.show_screen(moths)

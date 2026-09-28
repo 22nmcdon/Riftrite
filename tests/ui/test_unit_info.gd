@@ -108,7 +108,7 @@ func test_the_numbers_lines_of_the_act_1_kits() -> void:
 	assert_eq(_numbers(kits["maren"]), ["Every 1s · reach 4 hexes · 22 damage (100% ATK)", "At 50 mana · reach 4 hexes · Marked 4s", "At most once every 6s"] as Array[String])
 	assert_eq(_numbers(kits["vell"]), ["Every 1.5s · reach 3 hexes · 6 damage (100% ATK)", "At 60 mana · reach 3 hexes · heals 40 (20 + 100% MGK)",
 		"Every 1s · 1-hex circle around it · heals 1% of max HP"] as Array[String])
-	assert_eq(_numbers(kits["rift_pup"]), ["Every 1s · melee · 10 damage (100% ATK), +25% per other Rift Pup within 1 hex"] as Array[String])
+	assert_eq(_numbers(kits["rift_pup"]), ["Every 1s · melee · 8 damage (100% ATK), +20% per other Rift Pup within 1 hex"] as Array[String])
 	assert_eq(_numbers(kits["ashling"])[1], "As it falls · 1-hex circle around it · 6 Burn")
 	assert_eq(_numbers(kits["rift_hound"])[1], "Once, as the fight starts · reach 4 hexes · leaps up to 4 hexes · 16 damage (100% ATK)")
 	assert_eq(_numbers(kits["cinder_moth"]), ["Every 1.5s · reach 3 hexes · 8 damage (100% ATK)", "At 40 mana · reach 5 hexes · 2-hex circle at the target (1s warning) · 4 Burn", ""] as Array[String])
@@ -328,6 +328,9 @@ func test_clicking_a_hero_opens_the_popup_only_while_the_fight_isnt_playing() ->
 	var rect := Rect2(screen.hero_popup.position, screen.hero_popup.size)
 	assert_true(Rect2(Vector2.ZERO, screen.view.size).encloses(rect), "inside the board")
 	assert_false(rect.has_point(token.center()), "beside the hero, not over it")
+	assert_gte(token.size.x, UnitToken.HIT_PX * 2.0, "a small unit still has a grabbable rect")
+	assert_lt(token.radius_px, UnitToken.HIT_PX, "0.2 hex units draw smaller than that")
+	assert_eq(screen.view.token_at(token.center() + Vector2(UnitToken.HIT_PX - 1.0, 0.0)), token, "a click just off its circle still finds it")
 	_click(screen, "")
 	assert_false(screen.hero_popup.visible, "a click on the board closes it")
 	_click(screen, "maren")
@@ -352,15 +355,16 @@ func test_clicking_a_hero_opens_the_popup_only_while_the_fight_isnt_playing() ->
 	assert_false(screen.hero_popup.visible, "playing on closes it")
 	screen.skip()
 	var standing: String = ""
-	var fallen: String = ""
 	for hero: UnitState in screen.player.sim.heroes:
 		if hero.alive:
 			standing = hero.id
-		else:
-			fallen = hero.id
+	var fallen: String = ""
+	for unit: UnitState in screen.player.sim.units:
+		if not unit.alive:
+			fallen = unit.id
 	assert_ne(fallen, "", "someone fell")
-	var fallen_at: Vector2 = screen.view.token(fallen).center()
-	assert_eq(screen.view.token_at(fallen_at), null, "a fallen unit's token takes no clicks")
+	var fallen_token: UnitToken = screen.view.token(fallen)
+	assert_ne(screen.view.token_at(fallen_token.center()), fallen_token, "a fallen unit's token takes no clicks")
 	_click(screen, standing)
 	assert_true(screen.hero_popup.visible, "over")
 	assert_eq(screen.hero_popup.live.text, UnitInfo.live_text(screen.player.sim.unit_by_id(standing)))
@@ -370,6 +374,10 @@ func test_clicking_a_hero_opens_the_popup_only_while_the_fight_isnt_playing() ->
 
 func test_the_popup_opens_on_the_left_near_the_right_edge() -> void:
 	var screen: ArenaScreen = await _screen()
+	# Narrow enough that a popup to the right of the board's last column
+	# wouldn't fit.
+	screen.size = Vector2(1320, 1000)
+	await wait_process_frames(2)
 	screen.move_hero("vell", Vector2i(7, 0))
 	_click(screen, "vell")
 	await wait_process_frames(2)

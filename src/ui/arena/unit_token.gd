@@ -2,7 +2,11 @@ class_name UnitToken
 extends Control
 ## One unit on the board (docs/plans/rebuild-phase3-fight-sandbox.md, sections
 ## 2 and 8): a placeholder circle of the unit's own radius, warm for heroes
-## and cold for enemies, with a short label. A flier sits over a shadow.
+## and cold for enemies, with its short name under it. A flier sits over a
+## shadow. Units are small (0.2 hex wide since playtest gate 1), so the
+## circle is never drawn under MIN_BODY_PX, the bars keep a fixed width, and
+## the token's own rect (what hovers, clicks, and drags) is at least
+## HIT_PX from its center to its edge.
 ## `ArenaView` places it. In a fight, show_state() gives it the unit's bars
 ## (section 5): HP with any Shield after it, mana under that (only for a unit
 ## with a mana signature), a cast bar under the circle while it casts, and
@@ -33,6 +37,15 @@ const STATUS_COLORS: Dictionary = {
 }
 ## How far above its shadow a flier is drawn, in its own radii.
 const FLIGHT_LIFT: float = 0.35
+## The smallest circle drawn, the smallest half-width to hover or grab, and
+## the bars' and text's sizes, in pixels.
+const MIN_BODY_PX: float = 8.0
+const HIT_PX: float = 16.0
+const BAR_WIDTH: float = 36.0
+const BAR_HEIGHT: float = 4.0
+const LABEL_SIZE: int = 13
+const TAG_SIZE: int = 10
+const LABEL_OUTLINE := Color(0.05, 0.03, 0.06, 0.9)
 
 var unit_id: String
 var label_text: String
@@ -73,7 +86,12 @@ func is_hero() -> bool:
 
 ## The screen point its circle is centered on.
 func center() -> Vector2:
-	return position + Vector2(radius_px, radius_px)
+	return position + size / 2.0
+
+
+## The radius its circle is drawn at.
+func body_px() -> float:
+	return maxf(radius_px, MIN_BODY_PX)
 
 
 ## Where it was last drawn on the plane (between whole units mid-step).
@@ -90,8 +108,9 @@ func place_at(view: ArenaView, point: Vector2) -> void:
 	_view = view
 	drawn_at = point
 	radius_px = radius * view.scale_px
-	size = Vector2(radius_px, radius_px) * 2.0
-	position = view.to_pixel_f(point) - Vector2(radius_px, radius_px)
+	var half: float = maxf(radius_px, HIT_PX)
+	size = Vector2(half, half) * 2.0
+	position = view.to_pixel_f(point) - Vector2(half, half)
 	queue_redraw()
 
 
@@ -149,51 +168,51 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 
 
 func _draw() -> void:
-	var middle: Vector2 = Vector2(radius_px, radius_px)
+	var middle: Vector2 = size / 2.0
+	var body_radius: float = body_px()
 	var body: Vector2 = middle
 	if flying:
-		draw_circle(middle + Vector2(0.0, radius_px * 0.15), radius_px * 0.8, SHADOW)
-		body -= Vector2(0.0, radius_px * FLIGHT_LIFT)
-	draw_circle(body, radius_px, HERO_FILL if is_hero() else ENEMY_FILL)
-	draw_arc(body, radius_px, 0.0, TAU, 40, LINE, 2.0, true)
+		draw_circle(middle + Vector2(0.0, body_radius * 0.15), body_radius * 0.8, SHADOW)
+		body -= Vector2(0.0, body_radius * FLIGHT_LIFT)
+	draw_circle(body, body_radius, HERO_FILL if is_hero() else ENEMY_FILL)
+	draw_arc(body, body_radius, 0.0, TAU, 32, LINE, 1.5, true)
 	var font: Font = get_theme_default_font()
-	var font_size: int = maxi(int(radius_px * 0.42), 8)
-	var width: float = font.get_string_size(label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
-	var baseline: Vector2 = body + Vector2(-width / 2.0, font.get_ascent(font_size) / 2.0 - font.get_descent(font_size) / 2.0)
-	draw_string(font, baseline, label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, HERO_TEXT if is_hero() else ENEMY_TEXT)
+	var below: float = body.y + body_radius + 2.0
+	if in_fight and cast_share >= 0.0:
+		var left: float = body.x - BAR_WIDTH / 2.0
+		draw_rect(Rect2(left, below, BAR_WIDTH, BAR_HEIGHT * 0.75), BAR_BACK)
+		draw_rect(Rect2(left, below, BAR_WIDTH * cast_share, BAR_HEIGHT * 0.75), CAST)
+		below += BAR_HEIGHT + 1.0
+	var width: float = font.get_string_size(label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE).x
+	var baseline: Vector2 = Vector2(body.x - width / 2.0, below + font.get_ascent(LABEL_SIZE))
+	draw_string_outline(font, baseline, label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE, 4, LABEL_OUTLINE)
+	draw_string(font, baseline, label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE, UiStyle.BRASS_300 if is_hero() else UiStyle.RIFT_300)
+	below = baseline.y + font.get_descent(LABEL_SIZE) + 2.0
 	if in_fight:
-		_draw_bars(body, font)
+		_draw_bars(body, body_radius, below, font)
 
 
-func _draw_bars(body: Vector2, font: Font) -> void:
-	var width: float = radius_px * 2.0
-	var height: float = maxf(radius_px * 0.12, 4.0)
-	var left: float = body.x - radius_px
-	var y: float = body.y - radius_px - height * (3.4 if mana_share >= 0.0 else 2.0)
-	draw_rect(Rect2(left, y, width, height), BAR_BACK)
-	draw_rect(Rect2(left, y, width * clampf(hp_share, 0.0, 1.0), height), HERO_HP if is_hero() else ENEMY_HP)
+func _draw_bars(body: Vector2, body_radius: float, below: float, font: Font) -> void:
+	var left: float = body.x - BAR_WIDTH / 2.0
+	var y: float = body.y - body_radius - 3.0 - BAR_HEIGHT * (2.0 if mana_share >= 0.0 else 1.0) - (1.0 if mana_share >= 0.0 else 0.0)
+	draw_rect(Rect2(left, y, BAR_WIDTH, BAR_HEIGHT), BAR_BACK)
+	draw_rect(Rect2(left, y, BAR_WIDTH * clampf(hp_share, 0.0, 1.0), BAR_HEIGHT), HERO_HP if is_hero() else ENEMY_HP)
 	if shield_share > 0.0:
 		var start: float = clampf(hp_share, 0.0, 1.0)
 		var shield_width: float = minf(shield_share, 1.0 - start) if start < 1.0 else minf(shield_share, 1.0)
-		var shield_left: float = left + width * (start if start < 1.0 else 1.0 - shield_width)
-		draw_rect(Rect2(shield_left, y, width * shield_width, height), UiStyle.SHIELD)
+		var shield_left: float = left + BAR_WIDTH * (start if start < 1.0 else 1.0 - shield_width)
+		draw_rect(Rect2(shield_left, y, BAR_WIDTH * shield_width, BAR_HEIGHT), UiStyle.SHIELD)
 	if mana_share >= 0.0:
-		var mana_y: float = y + height + 2.0
-		draw_rect(Rect2(left, mana_y, width, height * 0.7), BAR_BACK)
-		draw_rect(Rect2(left, mana_y, width * clampf(mana_share, 0.0, 1.0), height * 0.7), MANA)
-	var below: float = body.y + radius_px + 3.0
-	if cast_share >= 0.0:
-		draw_rect(Rect2(left, below, width, height * 0.7), BAR_BACK)
-		draw_rect(Rect2(left, below, width * cast_share, height * 0.7), CAST)
-		below += height + 2.0
-	var tag_size: int = maxi(int(radius_px * 0.26), 8)
+		var mana_y: float = y + BAR_HEIGHT + 1.0
+		draw_rect(Rect2(left, mana_y, BAR_WIDTH, BAR_HEIGHT), BAR_BACK)
+		draw_rect(Rect2(left, mana_y, BAR_WIDTH * clampf(mana_share, 0.0, 1.0), BAR_HEIGHT), MANA)
 	var x: float = left
 	for tag: Array in status_tags:
 		var text: String = tag[0]
-		var tag_width: float = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, tag_size).x + 6.0
-		if x + tag_width > left + width + radius_px:
+		var tag_width: float = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_SIZE).x + 4.0
+		if x + tag_width > left + BAR_WIDTH * 1.5:
 			x = left
-			below += tag_size + 4.0
-		draw_rect(Rect2(x, below, tag_width, tag_size + 3.0), BAR_BACK)
-		draw_string(font, Vector2(x + 3.0, below + tag_size), text, HORIZONTAL_ALIGNMENT_LEFT, -1, tag_size, tag[1])
-		x += tag_width + 3.0
+			below += TAG_SIZE + 3.0
+		draw_rect(Rect2(x, below, tag_width, TAG_SIZE + 2.0), BAR_BACK)
+		draw_string(font, Vector2(x + 2.0, below + TAG_SIZE), text, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_SIZE, tag[1])
+		x += tag_width + 2.0

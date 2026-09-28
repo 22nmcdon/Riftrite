@@ -12,6 +12,8 @@ var zone_rows: int = 3
 ## Circles on the plane (1 hex = 1000), and the pathfinding cell size.
 var unit_radius: int = 400
 var rock_radius: int = 500
+## How far a melee unit (range 1) reaches, center to center.
+var melee_reach: int = 500
 var nav_cell: int = 125
 ## Engage: how close an enemy must be to be next to an engager, and how long
 ## it takes to break free.
@@ -64,6 +66,7 @@ static func read(reader: DataReader) -> TuningDef:
 		grid.finish()
 	def.unit_radius = reader.req_int("unit_radius", 1, 1000)
 	def.rock_radius = reader.req_int("rock_radius", 1, 1000)
+	def.melee_reach = reader.req_int("melee_reach", 1, 1000)
 	def.nav_cell = reader.req_int("nav_cell", 25, 1000)
 	def.engage_reach = reader.req_int("engage_reach", 1)
 	def.break_free_ticks = reader.req_ticks("break_free_ms", FixedMath.MS_PER_TICK)

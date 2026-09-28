@@ -67,7 +67,7 @@ func test_each_shape() -> void:
 	line.step()
 	assert_eq(_hit_ids(line), ["a", "b"])
 	var drawn: LogEntry = K.entries(line, LogEntry.Kind.AREA_LANDED)[0]
-	assert_eq(drawn.from_pos, line.units[0].pos + Vector2i(0, 400), "from the caster's edge")
+	assert_eq(drawn.from_pos, line.units[0].pos + Vector2i(0, line.units[0].radius), "from the caster's edge")
 	assert_eq(drawn.to_pos, drawn.from_pos + Vector2i(0, 4000))
 	# A cone widens: c (0.87 hexes off the line, 2.1 down it) is inside, where
 	# the line missed it; d isn't.

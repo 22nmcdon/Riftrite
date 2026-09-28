@@ -253,7 +253,7 @@ static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectS
 		share_bp = FixedMath.apply_bp(share_bp, sim.tuning.heal_cleanse_falloff_bp)
 	target.recent_heal_ticks.append(sim.tick)
 	if not target.statuses.is_empty():
-		Statuses.cleanse_over_time(sim, target, share_bp)
+		Statuses.cleanse_over_time(sim, target, share_bp, source, true)
 
 
 static func give_shield(sim: CombatSim, target: UnitState, amount: int, source: EffectSource) -> void:

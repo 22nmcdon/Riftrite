@@ -154,4 +154,4 @@ func test_every_act_1_encounter_builds_a_fight_that_plays_out() -> void:
 		assert_eq(fight.rocks, encounter.rocks, encounter_id)
 		var result: FightResult = CombatSim.run(fight, content)
 		assert_eq(result.errors, [] as Array[String], encounter_id)
-		assert_ne(result.outcome, FightResult.Outcome.TIE, "%s ends before 180s" % encounter_id)
+		assert_lt(result.combat_log.entries.back().tick, content.tuning.tie_ticks, "%s ends before 180s (a tie can still happen: both sides falling together)" % encounter_id)

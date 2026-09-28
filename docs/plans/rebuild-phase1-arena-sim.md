@@ -102,7 +102,7 @@ The second round (2026-09-27):
   - A hex's center sits at `x = col × 866 + 500` and `y = row × 1000 + 500`, plus 500 more for odd columns.
   - 866 is 1000 × cos 30°. That makes neighbors in the same column exactly 1000 apart, and neighbors in the next column 999.98 apart. That's close enough, and it stays integer.
 - **The arena's edge** is the rectangle around the hex centers, half a hex beyond the outermost ones.
-- **Units are circles**, all with radius **400** (0.4 hex) for now. No two units overlap, so two neighbors on the grid start with a 200 gap between them, which is too narrow to walk through.
+- **Units are circles**, all with radius **100** (0.2 hex wide; `unit_radius`). No two units overlap. *Changed at playtest gate 1 (2026-09-28): it was 400 (0.8 hex wide), which let only about four units reach one; now six enemies can all attack Brannoc. See `rebuild-phase3-fight-sandbox.md`, "Playtest gate 1".*
 - **Rocks** are circles of radius **500** on a hex center. Rocks on neighboring hexes touch, so a row of rocks is a wall. Rocks block movement and pushes, but not attacks (no line of sight).
 - **What gets through (built in step 1):**
   - **Units:** two units on neighboring hexes leave 200 between them, so nobody passes. One empty hex between two units leaves at least 932, so a unit (800 across) fits through.
@@ -208,13 +208,13 @@ Each tick runs these steps in order. Resolution order is the fight's unit order:
 - **Repathing:** a unit keeps its path until it's blocked, its target changes, or 0.5s passes (`repath_ms`). The board keeps changing, so it looks again regularly.
 - **Straight or around (built in step 2):** when it plans, the unit sweeps its circle along the straight line to the point where its target would be in reach. If nothing is in the way it walks straight at the target; otherwise it asks the pathfinder.
 - **Blocked:** if the next piece of movement would overlap anything, the unit first tries to **slide**: it drops the part of the step heading into the circle it hit and keeps the rest. That lets it brush past what a straight leg grazes. If the slide doesn't fit either, it doesn't move this tick and repaths on the next tick. A slide is logged as a leg of its own, one tick long.
-- **No path:** the unit waits. After **1s with no path** (`repath_give_up_ms`), it drops its target and picks again.
+- **No path:** the unit waits. After **1s with no path** (`repath_give_up_ms`), it drops its target and picks again, but only if the target is **walled off**: no way even with every unit out of the way (rocks or crumbled ground). Blocked only by units, it keeps its target and waits for an opening. *Changed at playtest gate 1 (2026-09-28): it used to give up whenever it had no path.*
 - **Units stop to attack.** A unit whose target is in range stands still. A `fires_while_moving` flag (Volley Maren, phase 4) is left for later; phase 1 only reserves the field name.
 
 ### Range
 
-- **In range** means the centers are at most `range × 1000` apart.
-- Two touching units are 800 apart, so melee (range 1) works when they touch or nearly touch.
+- **In range** means the centers are at most `range × 1000` apart, except **melee (range 1), which reaches `melee_reach`: 500, half a hex**. A signature with no `max_range` of its own reaches as far as its unit.
+- Two touching units are 200 apart, so a melee unit stands 200 to 500 from its target. *Changed at playtest gate 1 (2026-09-28): melee reached a whole hex, with units 800 apart when touching.*
 - A ranged unit with range 4 fires from up to 4000 away.
 
 ### Targeting rules (`Targeting`)
@@ -524,7 +524,7 @@ All the displacements **move the unit instantly in the sim** and log the start a
 | Group | Values |
 | --- | --- |
 | The grid | `grid` (width, height, zone rows) |
-| The plane | `unit_radius`, `rock_radius`, `nav_cell` |
+| The plane | `unit_radius`, `rock_radius`, `nav_cell`, `melee_reach` |
 | Movement | `engage_reach`, `repath_ms`, `repath_give_up_ms` |
 | Timers | `break_free_ms`, `collision_stun_ms`, `leap_land_ms` |
 | The collapse | `collapse_ring_ms`, `collapse_warning_ms` |

@@ -98,7 +98,7 @@ static func would_fall(sim: CombatSim, unit: UnitState) -> bool:
 ## nothing fits.
 static func pick_target(sim: CombatSim, unit: UnitState) -> UnitState:
 	var ability: AbilityDef = unit.signature.def
-	var reach: int = ability.reach_for(unit.stats.get_stat(UnitStats.Stat.RANGE)) * HexGrid.HEX
+	var reach: int = unit.reach_of(ability)
 	return Targeting.pick(sim, unit, ability.targeting, reach * reach)
 
 
@@ -158,7 +158,7 @@ static func cancel_cast(sim: CombatSim, unit: UnitState, reason: String) -> void
 
 
 static func _in_reach(unit: UnitState, target: UnitState) -> bool:
-	var reach: int = unit.signature.def.reach_for(unit.stats.get_stat(UnitStats.Stat.RANGE)) * HexGrid.HEX
+	var reach: int = unit.reach_of(unit.signature.def)
 	return _distance_squared(unit, target) <= reach * reach
 
 

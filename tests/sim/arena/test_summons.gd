@@ -31,7 +31,9 @@ func _caller(summon: Dictionary, targeting: String = "self") -> UnitDef:
 func _fight(caller: UnitDef, pup: UnitDef = _pup(), rocks: Array[Vector2i] = []) -> CombatSim:
 	var setup: FightSetup = K.fight([K.at(_post(), 3, 1, "hero")] as Array[UnitSetup], [K.foe(caller, 3, 5)] as Array[UnitSetup], rocks)
 	setup.summon_kits.append(pup)
-	return K.sim(setup)
+	# Wide units (K.wide_content): the spots below are worked out by hand
+	# for units 0.8 hex wide; the placement rules don't depend on size.
+	return K.sim(setup, true)
 
 
 func _spots(fight: CombatSim) -> Array:

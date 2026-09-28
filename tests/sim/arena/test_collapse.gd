@@ -167,7 +167,7 @@ func test_a_unit_on_crumbled_ground_walks_back_before_it_attacks() -> void:
 func test_a_unit_only_partly_on_crumbled_ground_steps_clear_before_it_walks() -> void:
 	# A melee hero stands half over the edge of what will be ring 0's line; its
 	# target is out of reach, so it walks.
-	var fight: CombatSim = K.sim(K.fight([K.at(K.kit("walker", {"stats": {"hp": 100000}}), 1, 1, "walker")] as Array[UnitSetup], [K.foe(_post(), 6, 5)] as Array[UnitSetup]))
+	var fight: CombatSim = K.sim(K.fight([K.at(K.kit("walker", {"stats": {"hp": 100000}}), 1, 1, "walker")] as Array[UnitSetup], [K.foe(_post(), 6, 5)] as Array[UnitSetup]), true)
 	var walker: UnitState = fight.unit_by_id("walker")
 	fight.collapse_start = 1
 	fight.step()
@@ -189,7 +189,7 @@ func test_nobody_walks_onto_crumbled_ground() -> void:
 	# reached from safe ground. The hero fights on half over the edge until
 	# ring 1 crumbles under its center, then walks clear and waits.
 	var hero: UnitDef = K.kit("walker", {"stats": {"hp": 100000, "speed": 3}, "basic_attack": {"effects": [{"type": "damage", "amount": 1, "target": "target"}]}})
-	var fight: CombatSim = K.sim(K.fight([K.at(hero, 4, 2, "walker")] as Array[UnitSetup], [K.foe(_post(), 7, 6, "cornered")] as Array[UnitSetup]))
+	var fight: CombatSim = K.sim(K.fight([K.at(hero, 4, 2, "walker")] as Array[UnitSetup], [K.foe(_post(), 7, 6, "cornered")] as Array[UnitSetup]), true)
 	var walker: UnitState = fight.unit_by_id("walker")
 	K.step(fight, START)
 	var clear_since: int = -1
@@ -209,7 +209,7 @@ func test_nobody_walks_onto_crumbled_ground() -> void:
 
 func test_the_way_back_goes_round_what_blocks_it() -> void:
 	# A rock sits right inward of the hero; the way back goes round it.
-	var fight: CombatSim = K.sim(K.fight([K.at(_shooter({"range": 1}), 0, 2, "hero")] as Array[UnitSetup], [K.foe(_post(), 7, 6)] as Array[UnitSetup], [Vector2i(1, 2)] as Array[Vector2i]))
+	var fight: CombatSim = K.sim(K.fight([K.at(_shooter({"range": 1}), 0, 2, "hero")] as Array[UnitSetup], [K.foe(_post(), 7, 6)] as Array[UnitSetup], [Vector2i(1, 2)] as Array[Vector2i]), true)
 	var hero: UnitState = fight.unit_by_id("hero")
 	fight.collapse_start = 1
 	var route_start: Vector2i = hero.pos
@@ -226,7 +226,7 @@ func test_the_way_back_goes_round_what_blocks_it() -> void:
 func test_a_unit_with_no_way_back_waits() -> void:
 	var hero: UnitDef = _shooter({"range": 1})
 	# Boxed in against the edge by rocks.
-	var fight: CombatSim = K.sim(K.fight([K.at(hero, 0, 2, "hero")] as Array[UnitSetup], [K.foe(_post(), 7, 6)] as Array[UnitSetup], [Vector2i(0, 1), Vector2i(1, 1), Vector2i(1, 2), Vector2i(0, 3)] as Array[Vector2i]))
+	var fight: CombatSim = K.sim(K.fight([K.at(hero, 0, 2, "hero")] as Array[UnitSetup], [K.foe(_post(), 7, 6)] as Array[UnitSetup], [Vector2i(0, 1), Vector2i(1, 1), Vector2i(1, 2), Vector2i(0, 3)] as Array[Vector2i]), true)
 	var hero_state: UnitState = fight.unit_by_id("hero")
 	var start: Vector2i = hero_state.pos
 	fight.collapse_start = 1
@@ -301,7 +301,7 @@ func test_crumbled_ground_starts_past_the_safe_edge() -> void:
 
 
 func test_walking_back_never_goes_further_out_or_off_the_arena() -> void:
-	var fight: CombatSim = K.sim(K.fight([K.at(_post(), 3, 2, "hero")] as Array[UnitSetup], [K.foe(_post(), 4, 4)] as Array[UnitSetup]))
+	var fight: CombatSim = K.sim(K.fight([K.at(_post(), 3, 2, "hero")] as Array[UnitSetup], [K.foe(_post(), 4, 4)] as Array[UnitSetup]), true)
 	var hero: UnitState = fight.unit_by_id("hero")
 	fight.safe = fight.grid.safe_rect(2)
 	# 1632 past the left edge and 2150 past the top: the top counts.
@@ -343,7 +343,7 @@ func test_a_unit_with_no_way_looks_again_every_half_second() -> void:
 	# target; the ally is moved away on tick 5, and the hero sees the way
 	# only when it looks again.
 	var fight: CombatSim = K.sim(K.fight([K.at(_shooter({"range": 1}), 0, 0, "hero"), K.at(_post(), 1, 0, "ally")] as Array[UnitSetup],
-		[K.foe(_post(), 7, 6, "taunter")] as Array[UnitSetup], [Vector2i(0, 1)] as Array[Vector2i]))
+		[K.foe(_post(), 7, 6, "taunter")] as Array[UnitSetup], [Vector2i(0, 1)] as Array[Vector2i]), true)
 	Statuses.apply(fight, fight.unit_by_id("hero"), "taunt", 1, 1000, EffectSource.make("taunter", "test", "Test"))
 	fight.step()
 	assert_eq(K.entries(fight, LogEntry.Kind.STOP, "hero"), [] as Array[LogEntry])
@@ -360,7 +360,7 @@ func test_a_unit_with_no_way_looks_again_every_half_second() -> void:
 func test_a_unit_with_no_way_back_looks_again_every_half_second() -> void:
 	# Two rocks and two allies box the hero in; one ally is moved away.
 	var fight: CombatSim = K.sim(K.fight([K.at(_shooter({"range": 1}), 0, 1, "hero"), K.at(_post(), 1, 1), K.at(_post(), 0, 2, "ally")] as Array[UnitSetup],
-		[K.foe(_post(), 7, 6)] as Array[UnitSetup], [Vector2i(0, 0), Vector2i(1, 0)] as Array[Vector2i]))
+		[K.foe(_post(), 7, 6)] as Array[UnitSetup], [Vector2i(0, 0), Vector2i(1, 0)] as Array[Vector2i]), true)
 	_fast_collapse(fight, 10000)
 	K.step(fight, 5)
 	assert_eq(K.entries(fight, LogEntry.Kind.MOVE, "hero"), [] as Array[LogEntry], "no way back yet")

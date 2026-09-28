@@ -31,7 +31,8 @@ func test_it_stops_once_in_reach() -> void:
 		K.step(fight, 100)
 		var walker: UnitState = fight.units[0]
 		var gap: int = ArenaPlane.distance(walker.pos, fight.units[1].pos)
-		assert_between(gap, reach * 1000 - 100, reach * 1000, "stops within reach %d, a step short at most" % reach)
+		var units: int = 500 if reach == 1 else reach * 1000
+		assert_between(gap, units - 100, units, "stops within reach %d (melee: half a hex), a step short at most" % reach)
 		var stops: Array[LogEntry] = K.entries(fight, LogEntry.Kind.STOP, "walker")
 		assert_eq(stops.size(), 1)
 		assert_eq([stops[0].to_pos, stops[0].note], [walker.pos, "in reach"])
@@ -86,6 +87,54 @@ func test_it_gives_up_on_a_target_it_cant_reach() -> void:
 		notes.append("%s: %s" % [entry.target, entry.note])
 	assert_eq(notes, ["open: nearest", "boxed: test", ": no way to reach boxed", "open: nearest"] as Array[String])
 	assert_between(picks[2].tick - picks[1].tick, 20, 21, "it waits 1s with no way through")
+
+
+func test_blocked_only_by_units_it_keeps_its_target() -> void:
+	# A post ringed by six others (wide units, so the ring leaves no spot in
+	# reach): no way in, but no rock walls it off, so the walker waits for an
+	# opening instead of giving up (playtest gate 1).
+	var boxed: Vector2i = Vector2i(4, 5)
+	var enemies: Array[UnitSetup] = [K.foe(_post(), boxed.x, boxed.y, "boxed")]
+	var ring: Array[Vector2i] = HexGrid.make().neighbors(boxed.x, boxed.y)
+	for i: int in ring.size():
+		enemies.append(K.foe(_post(), ring[i].x, ring[i].y, "guard%d" % i))
+	enemies.append(K.foe(_post(), 0, 6, "open"))
+	var fight: CombatSim = K.sim(K.fight([K.at(_walker(), 4, 1)] as Array[UnitSetup], enemies), true)
+	var walker: UnitState = fight.units[0]
+	var target: UnitState = fight.unit_by_id("boxed")
+	fight.step()
+	Targeting.set_target(fight, walker, target, "test")
+	K.step(fight, 100)
+	assert_eq(walker.target, target, "5s blocked, still on it")
+	assert_false(K.entries(fight, LogEntry.Kind.TARGET, "walker").any(func(entry: LogEntry) -> bool: return entry.note.begins_with("no way")), "never gave up")
+	assert_false(Movement.walled_off(fight, walker, target), "units aside, there's a way")
+	# A guard steps aside: the way opens.
+	fight.unit_by_id("guard%d" % (ring.size() - 1)).pos = fight.grid.center(0, 3)
+	K.step(fight, 100)
+	assert_true(walker.in_reach_of(target), "it got there")
+	assert_true(K.entries(fight, LogEntry.Kind.DAMAGE, "walker").any(func(entry: LogEntry) -> bool: return entry.target == "boxed"))
+
+
+func test_melee_reaches_half_a_hex() -> void:
+	var sig: Dictionary = {"id": "jab", "name": "Jab", "trigger": {"kind": "fight_start"}, "targeting": "nearest", "effects": [{"type": "damage", "amount": 1, "target": "target"}]}
+	var melee: UnitDef = K.kit("melee", {"stats": {"hp": 100, "speed": 0, "range": 1}, "signature": sig})
+	var far_sig: Dictionary = sig.duplicate(true)
+	far_sig["max_range"] = 4
+	var ranged: UnitDef = K.kit("ranged", {"stats": {"hp": 100, "speed": 0, "range": 3}, "signature": far_sig})
+	var fight: CombatSim = K.sim(K.fight([K.at(melee, 3, 0, "melee"), K.at(ranged, 5, 0, "ranged")] as Array[UnitSetup], [K.foe(_post(), 3, 6)] as Array[UnitSetup]))
+	var close: UnitState = fight.unit_by_id("melee")
+	var far: UnitState = fight.unit_by_id("ranged")
+	assert_eq([close.reach(), far.reach()], [500, 3000], "range 1 is melee: tuning's melee_reach; range 3 is 3 hexes")
+	assert_eq(close.reach_sq, 500 * 500)
+	assert_eq([close.reach_of(close.def.signature), far.reach_of(far.def.signature)], [500, 4000], "a signature reaches its own max_range, or its unit's reach")
+	var summoned: UnitState = UnitState.make_summon(melee, EffectSource.Team.ENEMIES, "melee#9", fight.units.size(), fight.tuning.unit_radius)
+	fight.add_unit(summoned)
+	assert_eq([summoned.reach(), summoned.radius], [500, 100], "summons too")
+	var post: UnitState = fight.unit_by_id("post")
+	post.pos = close.pos + Vector2i(0, 501)
+	assert_false(close.in_reach_of(post))
+	post.pos = close.pos + Vector2i(0, 500)
+	assert_true(close.in_reach_of(post))
 
 
 func test_it_slides_past_what_it_grazes() -> void:

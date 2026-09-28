@@ -1,16 +1,16 @@
 [
   {
-    "_note": "The Act 1 enemies (docs/plans/rebuild-phase2-heroes-enemies.md, sections 5 and 7; docs/plans/rebuild-enemies.md). Kits are the plan's; HP, ATK, Cinder Burst, Drag, and Ward are from step 7's first tuning pass (tools/sim_runner.gd), the rest first numbers.",
+    "_note": "The Act 1 enemies (docs/plans/rebuild-phase2-heroes-enemies.md, sections 5 and 7; docs/plans/rebuild-enemies.md). Kits are the plan's; HP, ATK, Cinder Burst, Drag, and Ward are from step 7's first tuning pass (tools/sim_runner.gd), the rest first numbers. Rift Pup's ATK (10 to 8) and Pack Bite's bonus (25% to 20%) were retuned when units shrank to 0.2 hex wide (playtest gate 1), since six pups can now all bite at once; then Ashling's ATK (18 to 22) and Bog Lurker's HP and ATK (640 to 760, 24 to 32), since their encounters got easier with weaker pups.",
     "id": "rift_pup",
     "name": "Rift Pup",
     "archetype": "swarm",
     "threat": "Swarms, stronger in packs",
     "kit": {
-      "stats": {"hp": 210, "atk": 10, "speed": 3, "range": 1},
+      "stats": {"hp": 210, "atk": 8, "speed": 3, "range": 1},
       "basic_attack": {
         "id": "pack_bite", "name": "Pack Bite", "text": "Bites harder for each other Rift Pup within 1 hex of it.", "cooldown_ms": 1000,
         "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000},
-          "bonus_per_ally": {"bp": 2500, "within_hexes": 1, "kit": "rift_pup"}}]
+          "bonus_per_ally": {"bp": 2000, "within_hexes": 1, "kit": "rift_pup"}}]
       }
     }
   },
@@ -20,7 +20,7 @@
     "archetype": "swarm",
     "threat": "Bursts into flame when it falls",
     "kit": {
-      "stats": {"hp": 220, "atk": 18, "speed": 2, "range": 1},
+      "stats": {"hp": 220, "atk": 22, "speed": 2, "range": 1},
       "basic_attack": {
         "id": "scorch", "name": "Scorch", "text": "Scorches the hero in front of it.", "cooldown_ms": 1200,
         "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
@@ -132,7 +132,7 @@
     "archetype": "disruptor",
     "threat": "Drags your back line forward",
     "kit": {
-      "stats": {"hp": 640, "atk": 24, "def": 8, "speed": 1, "range": 1},
+      "stats": {"hp": 760, "atk": 32, "def": 8, "speed": 1, "range": 1},
       "mana": {"max": 50, "per_attack": 10, "regen_per_s": 8},
       "basic_attack": {
         "id": "grasp", "name": "Grasp", "text": "Grasps the hero in front of it.", "cooldown_ms": 1400,

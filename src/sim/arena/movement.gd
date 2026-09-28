@@ -11,8 +11,11 @@ extends RefCounted
 ##   - each tick it steps `speed x 1000 / 20` toward its next corner. A step
 ##     that would overlap anything is tried again sliding along what it hit;
 ##     if that fails too, it waits and plans again next tick;
-##   - with no way to its target, it waits and looks again every repath_ms;
-##     after repath_give_up_ms, it gives up on it;
+##   - with no way to its target, it waits and looks again every repath_ms.
+##     After repath_give_up_ms it gives up on it only if the target is walled
+##     off (no way even with every unit out of the way: rocks or crumbled
+##     ground). Blocked only by units, it keeps its target and waits for an
+##     opening (playtest gate 1, decided 2026-09-28);
 ##   - Rooted, it stands where it is; Slowed, its steps are shorter.
 ## A flier (the flying trait) goes straight at its target over units and
 ## rocks, in the air (UnitState.airborne), where others move as if it weren't
@@ -54,7 +57,10 @@ static func walk(sim: CombatSim, unit: UnitState) -> void:
 		if unit.no_path_since < 0:
 			unit.no_path_since = sim.tick
 		elif sim.tick - unit.no_path_since >= sim.tuning.repath_give_up_ticks:
-			Targeting.give_up(sim, unit)
+			if walled_off(sim, unit, target):
+				Targeting.give_up(sim, unit)
+			else:
+				unit.no_path_since = sim.tick
 		return
 	unit.no_path_since = -1
 	_follow(sim, unit, false)
@@ -115,6 +121,12 @@ static func halt(sim: CombatSim, unit: UnitState, reason: String = "") -> void:
 	entry.to_pos = unit.pos
 	entry.note = reason
 	sim.combat_log.add(entry)
+
+
+## True if nothing but rocks and crumbled ground keeps `unit` from reaching
+## `target`: no way to its reach even with every unit out of the way.
+static func walled_off(sim: CombatSim, unit: UnitState, target: UnitState) -> bool:
+	return sim.ground_nav_for(unit).find_path(unit.pos, unit.forward(), target.pos, unit.reach()) < 0
 
 
 ## Plans a route to the unit's target: straight at it when the way to its
