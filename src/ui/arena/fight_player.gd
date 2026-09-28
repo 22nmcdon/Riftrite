@@ -100,6 +100,15 @@ func drawn_position(unit: UnitState) -> Vector2:
 	return Vector2(_before[unit.id]).lerp(now, clampf(_carry, 0.0, 1.0))
 
 
+## The fight's time as drawn, in ticks: between the last two ticks, like
+## drawn_position (the tick itself after a skip or seek). Effects on the
+## board run on this clock, so they pause and change speed with the fight.
+func drawn_time() -> float:
+	if _before.is_empty():
+		return float(sim.tick)
+	return float(sim.tick) - 1.0 + clampf(_carry, 0.0, 1.0)
+
+
 ## Seconds of fight so far.
 func fight_seconds() -> float:
 	return float(sim.tick) / FixedMath.TICKS_PER_SECOND

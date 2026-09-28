@@ -109,6 +109,7 @@ func test_units_are_drawn_between_their_last_two_ticks() -> void:
 	var player: FightPlayer = _player("hollow_line")
 	var brannoc: UnitState = player.sim.unit_by_id("brannoc")
 	assert_eq(player.drawn_position(brannoc), Vector2(brannoc.pos), "before any step, where it stands")
+	assert_eq(player.drawn_time(), 0.0, "and the drawn time is the tick itself")
 	player.advance(0.5)
 	player.advance(0.025)
 	var walker: UnitState = null
@@ -118,8 +119,10 @@ func test_units_are_drawn_between_their_last_two_ticks() -> void:
 	assert_not_null(walker, "someone is moving")
 	var before: Vector2i = player._before[walker.id]
 	assert_almost_eq(player.drawn_position(walker), Vector2(before).lerp(Vector2(walker.pos), 0.5), Vector2(0.01, 0.01), "halfway into the next tick")
+	assert_almost_eq(player.drawn_time(), player.sim.tick - 0.5, 0.001, "drawn time trails the sim by the smoothing")
 	player.skip_to_end()
 	assert_eq(player.drawn_position(walker), Vector2(walker.pos), "after a skip, where it stands")
+	assert_eq(player.drawn_time(), float(player.sim.tick))
 
 
 # --- the view ---------------------------------------------------------------------

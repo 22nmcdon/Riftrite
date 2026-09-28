@@ -171,7 +171,7 @@ static func speed_text(speed: float) -> String:
 func start_fight(fight_setup: FightSetup) -> void:
 	player = FightPlayer.make(fight_setup, session.content)
 	player.speed = session.speed
-	player.take_new()
+	view.fx.add_entries(player.take_new(), player)
 	view.set_mode(ArenaView.Mode.FIGHT)
 	hint_label.text = FIGHT_HINT
 	_placement_box.visible = false
@@ -199,7 +199,7 @@ func set_speed(speed: float) -> void:
 func skip() -> void:
 	if player == null:
 		return
-	player.skip_to_end()
+	view.fx.add_entries(player.skip_to_end(), player)
 	_on_frame()
 
 
@@ -207,6 +207,7 @@ func restart() -> void:
 	if player == null:
 		return
 	player.restart()
+	view.fx.clear()
 	outcome_label.text = ""
 	_on_frame()
 
@@ -225,7 +226,7 @@ func place_again() -> void:
 func _process(delta: float) -> void:
 	if player == null:
 		return
-	player.advance(delta)
+	view.fx.add_entries(player.advance(delta), player)
 	_on_frame()
 
 

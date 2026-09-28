@@ -51,8 +51,9 @@ func test_the_whole_board_fits_the_view_centered() -> void:
 		var top: float = view.to_pixel(Vector2i(0, view.drawn_rect.end.y)).y
 		var bottom: float = view.to_pixel(Vector2i(0, view.drawn_rect.position.y)).y
 		assert_almost_eq(left, view_size.x - right, 1.0, "centered across")
-		assert_almost_eq(top, view_size.y - bottom, 1.0, "centered up and down")
-		assert_true(is_equal_approx(right - left, view_size.x - 2 * ArenaView.MARGIN) or is_equal_approx(bottom - top, view_size.y - 2 * ArenaView.MARGIN),
+		var top_room: float = ArenaView.TOP_ROOM_HEXES * view.hex_px()
+		assert_almost_eq(top - top_room, view_size.y - bottom, 1.0, "centered up and down, with room over it for bars")
+		assert_true(is_equal_approx(right - left, view_size.x - 2 * ArenaView.MARGIN) or is_equal_approx(bottom - top + top_room, view_size.y - 2 * ArenaView.MARGIN),
 			"it fills one way")
 
 

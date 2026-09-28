@@ -8,14 +8,17 @@ extends Control
 ##     rows are at the bottom of the screen: the plane's y grows up the
 ##     screen (the sim's row 0 is the heroes' back row). A flat-top hex's
 ##     corners reach past the plane's edge at the sides, so the drawn area is
-##     that much wider than the plane (`drawn_rect`).
+##     that much wider than the plane (`drawn_rect`), and room is kept over
+##     it for the top row's bars (`TOP_ROOM_HEXES`).
 ##   - Placement mode shades each hex by zone (yours, no one's, theirs); fight
 ##     mode keeps the hexes faint, since distances still count in hexes.
 ##   - Hexes and rocks are drawn with `_draw()`; units are `UnitToken` nodes
 ##     (for hover and tweening later).
 ##   - The fight: sync_fight() moves the tokens to where a FightPlayer draws
-##     each unit, adds a token for each summon as it joins, and hides the
-##     fallen (section 4).
+##     each unit (with its bars and statuses), adds a token for each summon
+##     as it joins, and hides the fallen (section 4). The log entries the
+##     player hands out go to `fx`, the layer of momentary things drawn over
+##     the tokens (section 5).
 ##   - Placement: a hero's token can be dragged onto a hex (section 3). The
 ##     view only reports the drop (`hero_dropped`); whoever shows it decides
 ##     whether the move is legal, and calls `flash_hex` if it isn't.
@@ -27,6 +30,8 @@ signal unit_unhovered(unit_id: String)
 enum Mode { PLACEMENT, FIGHT }
 
 const MARGIN: float = 12.0
+## Extra room over the board, in hexes, for the top row's bars.
+const TOP_ROOM_HEXES: float = 0.35
 ## A flat-top hex's corner radius on the plane: rows are HEX apart, so the
 ## corners are HEX / sqrt(3) from the center.
 const HEX_CORNER: float = HexGrid.HEX / 1.7320508
@@ -49,6 +54,8 @@ var drawn_rect: Rect2i
 var rocks: Array[ArenaPlane.Circle] = []
 ## One per unit, in the fight's order.
 var tokens: Array[UnitToken] = []
+## Shots, swipes, numbers, and names over the tokens.
+var fx: FightFx
 ## Pixels per plane unit, and where the board's top-left corner is drawn.
 var scale_px: float = 0.1
 var _origin: Vector2 = Vector2.ZERO
@@ -69,6 +76,7 @@ func show_setup(setup: FightSetup, content: ContentDb) -> void:
 	for token: UnitToken in tokens:
 		token.queue_free()
 	tokens.clear()
+	fx.clear()
 	for unit: UnitSetup in setup.units():
 		var token: UnitToken = UnitToken.make(unit.id, label_for(unit.def, content), unit.side, content.tuning.unit_radius, unit.def.has_trait("flying"))
 		token.plane_pos = grid.center(unit.col, unit.row)
@@ -87,6 +95,8 @@ func sync_fight(player: FightPlayer) -> void:
 		unit_token.plane_pos = unit.pos
 		unit_token.visible = unit.alive
 		unit_token.place_at(self, player.drawn_position(unit))
+		unit_token.show_state(unit, player.sim.tick)
+	fx.update(player)
 
 
 func _add_token(unit_token: UnitToken) -> void:
@@ -99,6 +109,11 @@ func _add_token(unit_token: UnitToken) -> void:
 func set_mode(new_mode: Mode) -> void:
 	mode = new_mode
 	queue_redraw()
+
+
+func _init() -> void:
+	fx = FightFx.make(self)
+	add_child(fx)
 
 
 func _ready() -> void:
@@ -197,10 +212,11 @@ func _layout() -> void:
 	if grid == null:
 		return
 	var room: Vector2 = size - Vector2(MARGIN, MARGIN) * 2.0
-	scale_px = maxf(minf(room.x / drawn_rect.size.x, room.y / drawn_rect.size.y), 0.001)
-	var drawn: Vector2 = Vector2(drawn_rect.size) * scale_px
+	var tall: float = drawn_rect.size.y + TOP_ROOM_HEXES * HexGrid.HEX
+	scale_px = maxf(minf(room.x / drawn_rect.size.x, room.y / tall), 0.001)
+	var drawn: Vector2 = Vector2(drawn_rect.size.x, tall) * scale_px
 	# _origin is where the plane's board.position.x, board.end.y lands.
-	_origin = (size - drawn) / 2.0 + Vector2(board.position.x - drawn_rect.position.x, drawn_rect.end.y - board.end.y) * scale_px
+	_origin = (size - drawn) / 2.0 + Vector2(board.position.x - drawn_rect.position.x, drawn_rect.end.y - board.end.y + TOP_ROOM_HEXES * HexGrid.HEX) * scale_px
 	for unit_token: UnitToken in tokens:
 		unit_token.place(self)
 	queue_redraw()

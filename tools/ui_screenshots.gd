@@ -31,8 +31,8 @@ func _run() -> void:
 	arena._on_hovered("rift_worn_sentinel")
 	await _snap("placement_sentinel_gate")
 	arena._fight()
-	arena.player.advance(8.0)
-	arena._on_frame()
+	for frame: int in 8 * 30:
+		arena._process(1.0 / 30.0)
 	await _snap("fight_sentinel_gate_8s")
 	arena.skip()
 	await _snap("fight_sentinel_gate_end")
