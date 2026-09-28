@@ -11,7 +11,9 @@ extends RefCounted
 ##   2. Statuses tick: damage over time, and timers running out (Statuses).
 ##   3. Shots land, in the order they were fired (Shots).
 ##   4. Warned areas land, in the order they were cast (Areas).
-##   5. Each standing unit acts, in the fight's order (heroes, then enemies):
+##   5. Each standing unit acts, in the fight's order (heroes, then enemies,
+##      then summons as they joined; one summoned this tick acts when the
+##      order reaches it):
 ##      its mana regenerates (Mana), and its signature fires if its trigger
 ##      is met (Signatures; a unit casting does nothing else). Stunned, it
 ##      stops there. Otherwise its attack's cooldown runs (slower when
@@ -109,21 +111,51 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 	for rock: Vector2i in setup.rocks:
 		rocks.append(ArenaPlane.Circle.make(grid.center(rock.x, rock.y), tuning.rock_radius, "rock"))
 	for unit_setup: UnitSetup in setup.units():
-		var unit: UnitState = UnitState.from_setup(unit_setup, units.size(), grid, tuning.unit_radius)
-		unit.attack_rate_bp = attack_rate_bp(unit)
-		units.append(unit)
-		_by_id[unit.id] = unit
-		if unit.def.has_trait("engage"):
-			(_hero_engagers if unit.side == EffectSource.Team.HEROES else _enemy_engagers).append(unit)
-		(heroes if unit.side == EffectSource.Team.HEROES else enemies).append(unit)
-		if (unit.signature != null and unit.signature.def.trigger.kind == TriggerDef.Kind.COUNT) or not unit.listeners.is_empty():
-			_listening = true
+		add_unit(UnitState.from_setup(unit_setup, units.size(), grid, tuning.unit_radius))
 	var start := LogEntry.new()
 	start.kind = LogEntry.Kind.FIGHT_START
 	start.note = "seed %d, act %d" % [setup.seed_value, setup.act]
 	combat_log.add(start)
+	units_joined()
+
+
+## Adds a unit at the end of the fight's order (at the start, or a summon:
+## then call units_joined once they're all in).
+func add_unit(unit: UnitState) -> void:
+	unit.attack_rate_bp = attack_rate_bp(unit)
+	units.append(unit)
+	_by_id[unit.id] = unit
+	if unit.def.has_trait("engage"):
+		(_hero_engagers if unit.side == EffectSource.Team.HEROES else _enemy_engagers).append(unit)
+	(heroes if unit.side == EffectSource.Team.HEROES else enemies).append(unit)
+	if (unit.signature != null and unit.signature.def.trigger.kind == TriggerDef.Kind.COUNT) or not unit.listeners.is_empty():
+		_listening = true
+
+
+## After units join (at the start, or summons): auras are folded in again,
+## so theirs count and they get their side's.
+func units_joined() -> void:
 	_aura_ticks = Passives.aura_boundaries(self)
 	_active_auras = Passives.rederive(self, _active_auras)
+
+
+## The first free id for a unit of this kit: its id, then "#2", "#3", ...
+func next_unit_id(kit_id: String) -> String:
+	if not _by_id.has(kit_id):
+		return kit_id
+	var n: int = 2
+	while _by_id.has("%s#%d" % [kit_id, n]):
+		n += 1
+	return "%s#%d" % [kit_id, n]
+
+
+## How many units stand on a side.
+func standing_count(side: EffectSource.Team) -> int:
+	var count: int = 0
+	for unit: UnitState in (heroes if side == EffectSource.Team.HEROES else enemies):
+		if unit.alive:
+			count += 1
+	return count
 
 
 ## Advances one tick. Does nothing once the fight is over.

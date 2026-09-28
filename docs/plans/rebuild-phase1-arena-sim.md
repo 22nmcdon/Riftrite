@@ -442,6 +442,16 @@ All the displacements **move the unit instantly in the sim** and log the start a
   - `hexes`: a fixed list of grid hexes, each falling back to the nearest free spot.
 - **A summoned unit** joins **at the end of the fight order** and gets a unique id (`rift_pup#2`). It starts with no target and empty mana, unless its kit says otherwise. It's logged as `SUMMON`, with its source.
 - **Cap:** at most `max_units_per_side` (**30**, decided) standing units per side. Extra summons are dropped, and that's logged too.
+- **Built in step 8, second part** (`Summons`; the `summon` effect):
+  - **Where kits come from:** until phase 2 puts kits in the content files, a fight's setup lists the kits its summons use (`FightSetup.summon_kits`). The setup refuses a summon of a kit it doesn't list (a summoned kit's own summons included), two kits with one id, and hexes off the board.
+  - **The effect:** `{"type": "summon", "kit": "rift_pup", "placement": "edges", "count": 2, "near": "target"}`. It has no `target` key, and can't go in an area. `hexes` takes a list of `[col, row]` and makes one on each, so it takes no `count`.
+  - **Edges:** spots a radius in from the safe ground's edge, every nav cell (125) going round, nearest first to the caster or, with `"near": "target"`, to its ability's target (an event passive's: the unit's current target). Ties go round clockwise from the heroes' left corner. Each summon takes the nearest spot where it fits.
+  - **Adjacent:** the 12 points touching the caster that leaps use, the one straight ahead (toward the other side) first, then clockwise.
+  - **Hexes:** the hex's center, or the free spot nearest it (the same search a flier uses to land).
+  - **Joining:** a summon goes at the end of the fight's order, and acts on the tick it joins if the order hasn't passed it (so one summoned in step 5 acts that tick; one summoned by an event or a death, the next). Auras are folded in again, both ways.
+  - **Ids** go on from the setup's: a second `rift_pup` is `rift_pup#2`, whether the first was placed or summoned.
+  - A summon is never a back-liner, has no starting hex, and starts with its kit's starting mana.
+  - **Logged** as `SUMMON` ("caller · Call summons pup#2 at (x, y)"), and a dropped one too ("can't summon pup (its side is full)", or "(no room)"). The log replay test places a summon where its entry says.
 
 ## 11. The combat log
 

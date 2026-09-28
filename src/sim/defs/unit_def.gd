@@ -80,21 +80,38 @@ static func read(reader: DataReader) -> UnitDef:
 ## Every status its abilities and passives name (for FightSetup.validate).
 func status_ids() -> Array[String]:
 	var found: Array[String] = []
+	for part: PartDef in passives:
+		if part.kind == PartDef.Kind.REPLACE_STATUS:
+			found.append_array([part.from_status, part.to_status])
+	for effect: EffectDef in all_effects():
+		if effect.type == EffectDef.Type.APPLY_STATUS:
+			found.append(effect.status_id)
+		found.append_array(effect.statuses)
+	return found
+
+
+## The effects in its abilities and passives (an area's own effects
+## included).
+func all_effects() -> Array[EffectDef]:
 	var abilities: Array[AbilityDef] = [basic_attack, signature]
 	for part: PartDef in passives:
 		abilities.append(part.ability)
-		if part.kind == PartDef.Kind.REPLACE_STATUS:
-			found.append_array([part.from_status, part.to_status])
+	var effects: Array[EffectDef] = []
 	for ability: AbilityDef in abilities:
 		if ability == null:
 			continue
-		var effects: Array[EffectDef] = ability.effects.duplicate()
 		for effect: EffectDef in ability.effects:
+			effects.append(effect)
 			effects.append_array(effect.area_effects)
-		for effect: EffectDef in effects:
-			if effect.type == EffectDef.Type.APPLY_STATUS:
-				found.append(effect.status_id)
-			found.append_array(effect.statuses)
+	return effects
+
+
+## The kits its summon effects name, in order (repeats included).
+func summon_ids() -> Array[String]:
+	var found: Array[String] = []
+	for effect: EffectDef in all_effects():
+		if effect.type == EffectDef.Type.SUMMON:
+			found.append(effect.summon_kit)
 	return found
 
 

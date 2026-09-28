@@ -70,6 +70,9 @@ func test_the_log_replays_every_position() -> void:
 				LogEntry.Kind.PUSH:
 					pos[entry.target] = entry.to_pos
 					legs.erase(entry.target)
+				LogEntry.Kind.SUMMON:
+					if entry.note.is_empty():
+						pos[entry.target] = entry.to_pos
 				LogEntry.Kind.LEAP, LogEntry.Kind.CHARGE, LogEntry.Kind.HOP:
 					assert_eq(entry.from_pos, pos[entry.source_unit], "it leaps or charges from where it is (%s)" % entry.to_text())
 					pos[entry.source_unit] = entry.to_pos

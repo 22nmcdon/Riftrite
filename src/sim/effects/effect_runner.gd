@@ -15,7 +15,8 @@ extends RefCounted
 ## Built so far: damage, heal, shield, apply_status, cleanse, mana_drain,
 ## knockback, pull, leap, charge (Displacement), area (Areas; an area is
 ## cast as the ability fires, never riding a shot), and start_collapse
-## (Collapse). Summon comes with its step.
+## (Collapse), and summon (Summons; near the ability's target, or for an
+## event, the unit's current target).
 
 
 ## No point given (land's push_from).
@@ -63,6 +64,9 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 			continue
 		if effect.type == EffectDef.Type.AREA:
 			Areas.cast(sim, unit, ability, source, effect, target)
+			continue
+		if effect.type == EffectDef.Type.SUMMON:
+			Summons.summon(sim, unit, source, effect, target)
 			continue
 		if shot != null and effect.target == EffectDef.Target.TARGET:
 			var amount: int = amount_of(effect, unit)
@@ -115,6 +119,8 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			Displacement.charge(sim, unit, victim, effect, source)
 		EffectDef.Type.START_COLLAPSE:
 			Collapse.start_now(sim, source)
+		EffectDef.Type.SUMMON:
+			Summons.summon(sim, unit, source, effect, unit.target)
 
 
 static func _on_hit(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: EffectSource, hit: Hit) -> void:

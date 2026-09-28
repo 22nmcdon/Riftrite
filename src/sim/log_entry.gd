@@ -39,6 +39,7 @@ enum Kind {
 	AREA_WARNING,
 	AREA_LANDED,
 	COLLAPSE_RING,
+	SUMMON,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -84,6 +85,8 @@ var end_tick: int = 0
 ## COLLAPSE_RING: amount is the ring (0 = the border), note "warned" or
 ## "crumbled", from_pos and to_pos the corners of the safe rectangle it
 ## leaves, end_tick the tick it crumbles.
+## SUMMON: target is the new unit and to_pos where it appears; or, when a
+## summon is dropped, target is the kit and note says why.
 ## AREA_WARNING, AREA_LANDED: the shape ("circle 2"); from_pos is where it's
 ## placed (a line's or cone's start), to_pos a line's or cone's far end (or
 ## the center again). AREA_LANDED: amount is how many it hit.
@@ -182,6 +185,10 @@ func to_text() -> String:
 			if note == "warned":
 				return line + "%s: ring %d will crumble at %s" % [source_text(), amount, _format_time(end_tick)]
 			return line + "Rift Collapse: ring %d crumbles, leaving %s to %s" % [amount, _point(from_pos), _point(to_pos)]
+		Kind.SUMMON:
+			if not note.is_empty():
+				return line + "%s can't summon %s (%s)" % [source_text(), target, note]
+			return line + "%s summons %s at %s" % [source_text(), target, _point(to_pos)]
 		Kind.HOP:
 			return line + "%s hops away from %s, from %s to %s%s" % [source_unit, target, _point(from_pos), _point(to_pos), "" if note.is_empty() else " (%s)" % note]
 		Kind.BREAK_FREE:

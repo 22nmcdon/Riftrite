@@ -43,6 +43,16 @@ extends RefCounted
 ##   start_collapse: nothing else, and no "target" key: starts Rift Collapse
 ##                 now if it hasn't started (Collapse.start_now). Not in an
 ##                 area.
+##   summon:       kit (a kit the fight's setup lists), placement, and no
+##                 "target" key; not in an area (Summons has the rules):
+##     {"type": "summon", "kit": "rift_pup", "count": 2, "placement": "edges", "near": "target"}
+##     {"type": "summon", "kit": "rift_pup", "placement": "adjacent"}
+##     {"type": "summon", "kit": "rift_pup", "placement": "hexes", "hexes": [[0, 6], [7, 6]]}
+##     edges:    count (default 1) free spots along the safe ground's edge,
+##               nearest first to the unit ("near": "self", the default) or
+##               to its target ("near": "target")
+##     adjacent: count free spots touching the unit
+##     hexes:    one on each [col, row] hex, or the free spot nearest it
 ## `amount` (or `stacks`) is the base value. An optional "scaling" object adds
 ## a share of the unit's stats, in basis points of each stat:
 ##   "scaling": {"atk": 6000, "atsp": 2000}  ->  base + 60% ATK + 20% ATSP
@@ -90,7 +100,8 @@ enum Trigger {
 	ON_FIRE, ON_HIT, ON_CRIT, ON_FIGHT_START, AT_TIME, ON_ALLY_BELOW_HP,
 	ON_ABILITY, ON_BASIC_ATTACK, ON_HOLDER_CRIT, ON_SHIELDED, ON_HIT_TAKEN, ON_HEAL, ON_STATUS, ON_KILL,
 }
-enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE }
+enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON }
+enum Placement { EDGES, ADJACENT, HEXES }
 enum Anchor { TARGET, SELF, TARGET_DIRECTION }
 enum Hits { ENEMIES, ALLIES, ALL }
 enum Target {
@@ -123,7 +134,11 @@ const ABILITY_TRIGGERS: Array[Trigger] = [
 const RELIC_TRIGGERS: Array[Trigger] = [Trigger.ON_FIRE, Trigger.ON_FIGHT_START, Trigger.AT_TIME, Trigger.ON_ALLY_BELOW_HP]
 ## Targets that need the effect's unit to stand on the field.
 const FIELD_ONLY_TARGETS: Array[Target] = [Target.TARGET, Target.HIT_TARGET, Target.SELF]
-const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain", "knockback", "pull", "leap", "charge", "area", "start_collapse"]
+const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain", "knockback", "pull", "leap", "charge", "area", "start_collapse", "summon"]
+const PLACEMENT_NAMES: Array[String] = ["edges", "adjacent", "hexes"]
+const NEAR_NAMES: Array[String] = ["self", "target"]
+## The types with no "target" key: they act from the unit itself.
+const UNTARGETED: Array[Type] = [Type.START_COLLAPSE, Type.SUMMON]
 const ANCHOR_NAMES: Array[String] = ["target", "self", "target_direction"]
 const HITS_NAMES: Array[String] = ["enemies", "allies", "all"]
 ## The types that move the unit itself.
@@ -160,6 +175,12 @@ var anchor: Anchor = Anchor.TARGET
 var warning_ticks: int = 0
 var hits: Hits = Hits.ENEMIES
 var area_effects: Array[EffectDef] = []
+## summon: the kit, how many, where, and (edges) whether nearest the target.
+var summon_kit: String = ""
+var count: int = 1
+var placement: Placement = Placement.EDGES
+var summon_hexes: Array[Vector2i] = []
+var near_target: bool = false
 ## Basis points of each stat added to the base value, indexed by UnitStats.Stat
 ## (the first SCALING_STATS only).
 var scaling: Array[int] = [0, 0, 0, 0, 0, 0]
@@ -184,9 +205,10 @@ static func read(reader: DataReader, relic: bool = false) -> EffectDef:
 	var type_name: String = reader.req_choice("type", TYPE_NAMES)
 	def.trigger = maxi(TRIGGER_NAMES.find(trigger_name), 0) as Trigger
 	def.type = maxi(TYPE_NAMES.find(type_name), 0) as Type
-	# An area has an anchor instead of a target; start_collapse needs none.
+	# An area has an anchor instead of a target; start_collapse and summon
+	# need none.
 	var target_name: String = "target"
-	if type_name == "start_collapse":
+	if UNTARGETED.has(def.type) and not type_name.is_empty():
 		target_name = "self"
 	elif type_name != "area":
 		target_name = reader.req_choice("target", TARGET_NAMES)
@@ -209,6 +231,8 @@ static func read(reader: DataReader, relic: bool = false) -> EffectDef:
 				def.knockback_hexes = reader.opt_int("knockback", 0, 0)
 			Type.AREA:
 				_read_area(def, reader)
+			Type.SUMMON:
+				_read_summon(def, reader)
 			Type.SHIELD:
 				if reader.has("amount") == reader.has("amount_bp_of_damage"):
 					reader.error("shield needs exactly one of \"amount\" or \"amount_bp_of_damage\"")
@@ -266,6 +290,22 @@ static func _read_area(def: EffectDef, reader: DataReader) -> void:
 		elif effect.target != Target.TARGET or effect.trigger != Trigger.ON_FIRE:
 			effect_reader.error("an area's effects aim at \"target\" (each unit hit), on_fire")
 		def.area_effects.append(effect)
+
+
+static func _read_summon(def: EffectDef, reader: DataReader) -> void:
+	def.summon_kit = reader.req_string("kit")
+	var placement_name: String = reader.req_choice("placement", PLACEMENT_NAMES)
+	def.placement = maxi(PLACEMENT_NAMES.find(placement_name), 0) as Placement
+	if def.placement == Placement.HEXES:
+		def.summon_hexes = reader.req_hex_array("hexes")
+		def.count = def.summon_hexes.size()
+		if reader.has("count"):
+			reader.opt_int("count", 0)
+			reader.error("summon on hexes makes one on each hex, so it takes no \"count\"")
+	else:
+		def.count = reader.opt_int("count", 1, 1)
+	if def.placement == Placement.EDGES:
+		def.near_target = reader.opt_string_choice("near", "self", NEAR_NAMES) == "target"
 
 
 ## Checks the trigger is allowed here and reads its extra fields.

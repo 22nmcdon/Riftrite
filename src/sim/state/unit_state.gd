@@ -119,13 +119,14 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 	unit.side = setup.side
 	unit.start_col = setup.col
 	unit.start_row = setup.row
-	unit.back_liner = grid.is_back_row(setup.row)
+	unit.back_liner = grid != null and grid.is_back_row(setup.row)
 	unit.base_stats = setup.def.stats
 	unit.stats = setup.def.stats.copy()
 	unit.aura_bp = Passives.no_auras()
 	unit.max_hp = unit.stats.get_stat(UnitStats.Stat.HP)
 	unit.hp = unit.max_hp
-	unit.pos = grid.center(setup.col, setup.row)
+	if grid != null:
+		unit.pos = grid.center(setup.col, setup.row)
 	unit.radius = unit_radius
 	unit.attack = AbilityState.make(setup.def.basic_attack, setup.id)
 	if setup.def.signature != null:
@@ -138,6 +139,14 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 	unit.refresh_reach()
 	unit.flying = setup.def.has_trait("flying")
 	Passives.set_up(unit)
+	return unit
+
+
+## A summoned unit of `kit` (Summons): placed by its summoner, with no
+## starting hex, and never a back-liner.
+static func make_summon(kit: UnitDef, unit_side: EffectSource.Team, unit_id: String, fight_index: int, unit_radius: int) -> UnitState:
+	var setup: UnitSetup = UnitSetup.make(kit, unit_side, -1, -1, unit_id)
+	var unit: UnitState = from_setup(setup, fight_index, null, unit_radius)
 	return unit
 
 

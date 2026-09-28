@@ -2,7 +2,8 @@ class_name FightSetup
 extends RefCounted
 ## Everything a fight starts from: both sides placed on the board, the rocks,
 ## the seed, and the act (docs/plans/rebuild-phase1-arena-sim.md, section 1).
-## The fight's order is the heroes in this order, then the enemies.
+## The fight's order is the heroes in this order, then the enemies, then
+## summons as they join. The kits summons use are listed in summon_kits.
 
 var heroes: Array[UnitSetup] = []
 var enemies: Array[UnitSetup] = []
@@ -10,6 +11,8 @@ var enemies: Array[UnitSetup] = []
 var rocks: Array[Vector2i] = []
 var seed_value: int = 1
 var act: int = 1
+## The kits summon effects may use (looked up by id; each id once).
+var summon_kits: Array[UnitDef] = []
 
 
 static func make(hero_setups: Array[UnitSetup], enemy_setups: Array[UnitSetup], rock_hexes: Array[Vector2i] = [], fight_seed: int = 1, fight_act: int = 1) -> FightSetup:
@@ -39,6 +42,14 @@ func name_copies() -> void:
 			unit.id = "%s#%d" % [unit.id, count]
 
 
+## The summon kit with this id, or null.
+func summon_kit(kit_id: String) -> UnitDef:
+	for kit: UnitDef in summon_kits:
+		if kit.id == kit_id:
+			return kit
+	return null
+
+
 ## Every problem with the setup (empty when it can be fought).
 func validate(content: ContentDb) -> Array[String]:
 	var errors: Array[String] = []
@@ -65,11 +76,7 @@ func validate(content: ContentDb) -> Array[String]:
 		if unit.def == null or unit.def.basic_attack == null:
 			errors.append("%s has no kit" % where)
 		else:
-			for status_id: String in unit.def.status_ids():
-				if not content.statuses.has(status_id):
-					errors.append("%s names an unknown status \"%s\"" % [where, status_id])
-				elif content.statuses[status_id].kind == StatusDef.Kind.ENGAGED:
-					errors.append("%s names \"%s\", which only the Engage trait sets" % [where, status_id])
+			_check_kit(unit.def, where, content, grid, errors)
 		if not grid.has(unit.col, unit.row):
 			errors.append("%s is off the board" % where)
 			continue
@@ -82,4 +89,27 @@ func validate(content: ContentDb) -> Array[String]:
 			errors.append("%s shares its hex with %s" % [where, taken[hex]])
 		else:
 			taken[hex] = unit.id
+	var kit_ids: Array[String] = []
+	for kit: UnitDef in summon_kits:
+		if kit_ids.has(kit.id):
+			errors.append("two summon kits are called %s" % kit.id)
+		kit_ids.append(kit.id)
+		_check_kit(kit, "summon kit %s" % kit.id, content, grid, errors)
 	return errors
+
+
+## The checks every kit gets: the statuses it names, and its summons.
+func _check_kit(kit: UnitDef, where: String, content: ContentDb, grid: HexGrid, errors: Array[String]) -> void:
+	for status_id: String in kit.status_ids():
+		if not content.statuses.has(status_id):
+			errors.append("%s names an unknown status \"%s\"" % [where, status_id])
+		elif content.statuses[status_id].kind == StatusDef.Kind.ENGAGED:
+			errors.append("%s names \"%s\", which only the Engage trait sets" % [where, status_id])
+	for effect: EffectDef in kit.all_effects():
+		if effect.type != EffectDef.Type.SUMMON:
+			continue
+		if summon_kit(effect.summon_kit) == null:
+			errors.append("%s summons \"%s\", which isn't among the fight's summon kits" % [where, effect.summon_kit])
+		for hex: Vector2i in effect.summon_hexes:
+			if not grid.has(hex.x, hex.y):
+				errors.append("%s summons onto (%d, %d), off the board" % [where, hex.x, hex.y])
