@@ -15,5 +15,23 @@ MACOS
      and click "Open Anyway" near the bottom.
 
 PLAYING
-  The game is being rebuilt around heroes and an open arena. Until the
-  arena's Practice mode lands, a build only shows the title screen.
+  The game is being rebuilt around heroes and an open arena. This build is
+  Practice: the Act 1 fights, one at a time, with placeholder art.
+
+  1. Title > Practice, then pick a fight ("Place your heroes").
+  2. Drag Brannoc, Maren, and Vell onto your side's hexes (the bottom three
+     rows). Hover an enemy to read what it does; click a hero to read them.
+  3. Fight. It plays by itself:
+       Space   pause            1 2 3   speed 0.5x, 1x, 2x
+       S       skip to the end  L       show or hide the log and chart
+       T       every target line (for testing)
+     Click a unit to see only its lines in the log. Pause and click a hero
+     for their details.
+  4. At the end: Rematch (same placement, new crits), Watch again, or
+     Place again to try another formation. Back goes to the list.
+
+  Nothing is saved: your formation and speed last until you close the game.
+
+WHAT WE WANT TO KNOW (playtest gate 1)
+  Is a single fight fun to set up and watch? Can you tell who is attacking
+  whom, and why you won or lost? Which fights felt unfair or confusing?

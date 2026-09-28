@@ -300,6 +300,22 @@ UI tests run headless and drive time by hand, so they're deterministic.
 | `test_unit_info.gd` | every hero and enemy kit gets details with every ability; every ability has text, and one with a reach names it; hovering an enemy opens the side panel; clicking a hero opens the popup only while the fight isn't playing |
 | screenshots | `tools/ui_screenshots.gd` gains the list, placement, a fight mid-way (with an area warning up), and the result |
 
+**Built in step 9** (`tests/ui/test_every_encounter_plays.gd`, `tools/ci/HOW-TO-PLAY.txt`):
+
+- **Every encounter plays to its end on `ArenaScreen`** with fake time, at 2x in 1/30s frames. Each has to:
+  - finish with no errors;
+  - have played exactly the fight `CombatSim.run` gives for the same setup (the screen never changes the fight);
+  - have every entry in the log panel, a line each with the chatter shown;
+  - show the result, with a chart that counts the whole log.
+  All nine take about 8 seconds.
+- **Every kind of log entry has a form:** a table in the test says how each of the 34 kinds shows besides its log line. A new kind can't be added without one; `SYNERGY` and `DEED_LEVEL` are marked as not in the rebuild yet.
+  - For each kind a fight produced, the board must have shown its evidence at some frame: a shot, a number, a signature's name, an area filling, its flash, a ghost, a pulse, a slide, an aura ring, the warned ring, a status tag, or the end's banner.
+  - Act 1 produces 25 of the 34 kinds. None of it summons, casts, drains mana, has phases, or saves a unit, so the chaos fight's tests in `test_fight_view.gd` cover those.
+  - Breaking any one form (the ghost, slides, auras, the warned ring, signature names, landing flashes, the collapse banner, the log panel, the chart's tally) fails the test.
+- **The real game** boots from `main.tscn` in a window and plays Witch Circle to its end at 2x (813 frames, a victory at 52.8s).
+- **Tester notes:** `HOW-TO-PLAY.txt` (in each zip) says how to play Practice, the keys, and what gate 1 asks.
+- **The playtest build** comes from the "Playtest build" workflow, run on this branch.
+
 ## 11. Order of work (each step: code, tests, green run, commit)
 
 1. **`FightTally`** in the sim, and the runner switched to it (fingerprints and runner numbers unchanged). **Done.**
@@ -310,7 +326,7 @@ UI tests run headless and drive time by hand, so they're deterministic.
 6. **Log panel and fight chart.** **Done.**
 7. **Unit details:** the ability text in the data, the enemy side panel, and the hero popup. **Done.**
 8. **Practice flow:** the title button, encounter list, result screen, place again, rematch. **Done** (the result is on the arena screen).
-9. **Every encounter plays headless;** screenshots; a playtest build (the "Playtest build" workflow) for gate 1.
+9. **Every encounter plays headless;** screenshots; a playtest build (the "Playtest build" workflow) for gate 1. **Done.**
 10. **Docs:** CLAUDE.md gains "How the UI works"; the plans are updated with what the playtest says.
 
 ## Decisions
