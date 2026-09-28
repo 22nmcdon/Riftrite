@@ -3,7 +3,8 @@ extends SceneTree
 ## display, e.g.:
 ##   xvfb-run godot --path . -s tools/ui_screenshots.gd -- --out=/tmp/shots
 ## After the rebuild's gut the title was the only screen; phase 3 adds the
-## arena board, then its screens.
+## arena board (placement, and the fight with its log and chart), then its
+## screens.
 
 var _main: Main
 var _out: String = "user://screenshots"
@@ -46,11 +47,13 @@ func _run() -> void:
 	for frame: int in 12:
 		moths._process(1.0 / 30.0)
 	await _snap("fight_moth_cloud_warning")
-	# Rift Collapse under way (Witch Circle runs past 45s).
+	# Rift Collapse starting (Witch Circle runs past 45s): its banner, and
+	# the log showing only Maren's lines.
 	var witches: ArenaScreen = ArenaScreen.make(PracticeSession.make(content), "witch_circle")
 	_main.show_screen(witches)
 	witches._fight()
-	while not witches.player.finished() and witches.player.sim.tick < 47 * 20:
+	witches.view.unit_clicked.emit("maren")
+	while not witches.player.finished() and witches.player.sim.tick < 91 * 10:
 		witches._process(1.0 / 30.0)
 	await _snap("fight_witch_circle_collapse")
 	quit(0)

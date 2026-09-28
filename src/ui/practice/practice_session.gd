@@ -3,8 +3,8 @@ extends RefCounted
 ## Practice's state while the game is open (docs/plans/rebuild-phase3-fight-sandbox.md,
 ## sections 1 and 3, and Decisions 2 and 4). Nothing is saved to disk.
 ##   - One remembered formation for every encounter: the last one fought
-##     with (Brannoc guarding the other two until then), and the fight speed
-##     last chosen.
+##     with (Brannoc guarding the other two until then), the fight speed
+##     last chosen, and whether the log panel was left open.
 ##   - What's legal comes from the sim: a formation is legal when
 ##     `Encounters.setup` builds it and `FightSetup.validate` finds nothing
 ##     wrong. The UI keeps no rules of its own.
@@ -18,6 +18,8 @@ var content: ContentDb
 var formation: Dictionary[String, Vector2i] = {}
 ## The fight speed last chosen (Decision 2).
 var speed: float = 1.0
+## Whether the fight's log panel (the chart and the log) is open.
+var log_open: bool = true
 
 
 static func make(content_db: ContentDb) -> PracticeSession:

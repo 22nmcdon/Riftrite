@@ -190,6 +190,24 @@ Each item names the sim state or log entries it comes from. Anything a player co
 - **The sim runner** now takes damage dealt and taken from the tally. Its output on three encounters is identical to before the switch.
 - **Mutation checks:** every change to the counting is caught. Two can't be: dropping the tie order in `sorted` and in `breakdown`, since Godot sorts arrays this small with a stable insertion sort.
 
+**Built in step 6** (`src/ui/fight_names.gd`, `src/ui/widgets/log_panel.gd`, `fight_chart.gd`, and `fight_banners.gd`, `tests/ui/test_fight_log.gd`):
+
+- **`FightNames`** (the old one, adapted) turns ids into names in every line:
+  - heroes go by their token's name ("Brannoc");
+  - copies are numbered from their id (`rift_hound#2` is "Rift Hound 2"), and the first copy is "Rift Hound 1" when the fight starts with several;
+  - summons are named as they join, and never rename anyone already written.
+  The chart's tally reads the same names, so a summon's hits on a hero name it too.
+- **The log panel** is a column beside the controls, with the chart on top and the log under it.
+  - Open by default in a fight; its Log button or L hides it, and the session remembers that (like the speed).
+  - Lines are colored by the side that did it. Deaths are red, heals green, Shields frost, the collapse ember; "fires" lines and auras are dimmer; the fight's start, end, and phases are bold.
+  - "Show movement and targeting" shows the chatter (`MOVE`, `STOP`, `TARGET`), hidden by default.
+  - **Clicking a unit** (let go of the left button on its token) filters the log to lines by it or aimed at it; clicking it again, or "Show everyone", lifts the filter. It works at any point in the fight; placement's clicks are step 7's.
+  - The log keeps every entry, hidden or not, so a skip fills it in and changing a filter rewrites it from the start.
+- **The chart** is the old `FightChart` without the relics' bar: three tabs, a legend, a bar per hero split by type, and the breakdown on hover. It refreshes as entries come in while the column is open, and catches up when it opens.
+- **Banners** over the board, one at a time, 1.5s each (0.75s at 2x), waiting while the fight is paused: a phase ("Name: phase"), "The rift collapses" when the first ring crumbles, and the end ("Victory", "Defeat", or the tie's line). After a skip, only the end's banner shows. A restart starts the log, chart, and banners over.
+- **Tests:** the log's lines match `FightNames.text` for every shown entry, live and after a skip; the chart's tally equals `FightTally.of_fight` on the same log; the collapse banner shows at 45s in Witch Circle.
+- **Mutation checks:** 66 changes to names, the log, the chart, the banners, and the screen's wiring are caught (16 survived at first: 9 got tighter tests, and 3 redundant checks were removed). Two can't change what's shown, since they only save work each frame: `learn` skipping when nobody joined, and the screen skipping an empty batch.
+
 ## 7. Unit info
 
 **How you see it (decided):**
@@ -257,7 +275,7 @@ UI tests run headless and drive time by hand, so they're deterministic.
 3. **Placement:** moving heroes, legality from the sim, enemy hover with reach, the remembered formation. **Done** (no reach drawn: Decision 5).
 4. **`FightPlayer`:** live stepping, speeds, pause, restart, rewind, interpolation. **Done.**
 5. **What the fight shows (section 5)**, in two passes: bars, statuses, shots, swipes, and numbers first; then areas, displacement tweens, collapse, summons, deaths, phases, target lines, and Engage links. **Done.**
-6. **Log panel and fight chart.**
+6. **Log panel and fight chart.** **Done.**
 7. **Unit details:** the ability text in the data, the enemy side panel, and the hero popup.
 8. **Practice flow:** the title button, encounter list, result screen, place again, rematch.
 9. **Every encounter plays headless;** screenshots; a playtest build (the "Playtest build" workflow) for gate 1.
