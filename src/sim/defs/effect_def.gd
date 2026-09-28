@@ -9,8 +9,12 @@ extends RefCounted
 ## start_collapse types.
 ##
 ## Fields per type:
-##   damage:       amount
-##   heal:         amount
+##   damage:       amount; optional "bonus_per_ally": {"bp": 2500,
+##                 "within_hexes": 1, "kit": "rift_pup"} adds bp for each
+##                 other standing ally within that many hexes as it fires
+##                 (of that kit only, if "kit" is given)
+##   heal:         exactly one of amount, amount_bp_of_max_hp (a share of
+##                 the healed unit's max HP)
 ##   shield:       exactly one of amount, amount_bp_of_damage
 ##   apply_status: status; stacks (damage over time; default 1); optional
 ##                 duration_ms (a timed status; default: the status's own)
@@ -37,7 +41,8 @@ extends RefCounted
 ##             unit), target_direction (a line or cone from the unit aimed
 ##             at the target); circles and rings take target or self,
 ##             lines and cones target_direction
-##     hits:   enemies, allies, or all (by the unit's side)
+##     hits:   enemies, allies, all, or other_allies (allies but the
+##             unit itself), by the unit's side
 ##     Each nested effect aims at "target" (every unit hit), on_fire; no
 ##     area in an area, and no leap or charge.
 ##   start_collapse: nothing else, and no "target" key: starts Rift Collapse
@@ -95,15 +100,32 @@ extends RefCounted
 ##   on_kill          an enemy the unit hit last falls
 ## "every": N runs it on every Nth time. What an event effect does never sets
 ## off another event effect.
+##
+## Passive triggers that aren't read from the log (docs/plans/
+## rebuild-phase2-heroes-enemies.md, section 4; Passives runs them):
+##   on_interval       every "interval_ms" while the unit stands, counted
+##                     from when it joined the fight
+##   on_ally_below_hp  when an ally (not the unit itself) first drops below
+##                     "threshold_bp" of its max HP while standing; once per
+##                     ally, or with "once": true only the first
+##                     (trigger_ally: that ally)
+##   on_fall           as the unit falls, from where it fell: an area
+##                     anchored on it, or all_enemies or all_allies
+## None of them names a hit, so none can use hit_target or
+## amount_bp_of_damage.
+## A passive's effects may cast an area on any of these, or on an event
+## (never on_hit or on_crit): around the unit (anchor self), or on the unit
+## the event names, else the unit's target.
 
 enum Trigger {
 	ON_FIRE, ON_HIT, ON_CRIT, ON_FIGHT_START, AT_TIME, ON_ALLY_BELOW_HP,
 	ON_ABILITY, ON_BASIC_ATTACK, ON_HOLDER_CRIT, ON_SHIELDED, ON_HIT_TAKEN, ON_HEAL, ON_STATUS, ON_KILL,
+	ON_INTERVAL, ON_FALL,
 }
 enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON }
 enum Placement { EDGES, ADJACENT, HEXES }
 enum Anchor { TARGET, SELF, TARGET_DIRECTION }
-enum Hits { ENEMIES, ALLIES, ALL }
+enum Hits { ENEMIES, ALLIES, ALL, OTHER_ALLIES }
 enum Target {
 	TARGET,
 	HIT_TARGET,
@@ -116,6 +138,7 @@ enum Target {
 const TRIGGER_NAMES: Array[String] = [
 	"on_fire", "on_hit", "on_crit", "on_fight_start", "at_time", "on_ally_below_hp",
 	"on_ability", "on_basic_attack", "on_holder_crit", "on_shielded", "on_hit_taken", "on_heal", "on_status", "on_kill",
+	"on_interval", "on_fall",
 ]
 ## The unit's events (see the top).
 const EVENT_TRIGGERS: Array[Trigger] = [
@@ -130,7 +153,16 @@ const ABILITY_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_FIRE, Trigger.ON_HIT, Trigger.ON_CRIT,
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL,
+	Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL,
 ]
+## What a passive's effects may run on (PartDef).
+const PASSIVE_TRIGGERS: Array[Trigger] = [
+	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
+	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL,
+	Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL,
+]
+## The passive triggers that aren't events (Passives.run_timed, on_fall).
+const UNIT_TRIGGERS: Array[Trigger] = [Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL]
 const RELIC_TRIGGERS: Array[Trigger] = [Trigger.ON_FIRE, Trigger.ON_FIGHT_START, Trigger.AT_TIME, Trigger.ON_ALLY_BELOW_HP]
 ## Targets that need the effect's unit to stand on the field.
 const FIELD_ONLY_TARGETS: Array[Target] = [Target.TARGET, Target.HIT_TARGET, Target.SELF]
@@ -140,7 +172,7 @@ const NEAR_NAMES: Array[String] = ["self", "target"]
 ## The types with no "target" key: they act from the unit itself.
 const UNTARGETED: Array[Type] = [Type.START_COLLAPSE, Type.SUMMON]
 const ANCHOR_NAMES: Array[String] = ["target", "self", "target_direction"]
-const HITS_NAMES: Array[String] = ["enemies", "allies", "all"]
+const HITS_NAMES: Array[String] = ["enemies", "allies", "all", "other_allies"]
 ## The types that move the unit itself.
 const MOVES_SELF: Array[Type] = [Type.LEAP, Type.CHARGE]
 const TARGET_NAMES: Array[String] = [
@@ -158,6 +190,15 @@ var target: Target
 ## damage/heal/shield: the amount.
 var amount: int = 0
 var amount_bp_of_damage: int = 0
+## heal: a share of the healed unit's max HP (0: `amount` instead).
+var amount_bp_of_max_hp: int = 0
+## damage: more for each other standing ally near the unit as it fires
+## (bp each, within this many plane units, of this kit if not empty).
+var bonus_bp_per_ally: int = 0
+var bonus_within: int = 0
+var bonus_kit: String = ""
+## on_interval: how often.
+var interval_ticks: int = 0
 var status_id: String = ""
 var stacks: int = 0
 ## apply_status: how long a timed status lasts (0: the status's own duration).
@@ -216,8 +257,15 @@ static func read(reader: DataReader, relic: bool = false) -> EffectDef:
 
 	if not type_name.is_empty():
 		match def.type:
-			Type.DAMAGE, Type.HEAL:
+			Type.DAMAGE:
 				def.amount = reader.req_int("amount", 0)
+				if reader.has("bonus_per_ally"):
+					_read_bonus(def, reader.req_object("bonus_per_ally"))
+			Type.HEAL:
+				if reader.has("amount") == reader.has("amount_bp_of_max_hp"):
+					reader.error("heal needs exactly one of \"amount\" or \"amount_bp_of_max_hp\"")
+				def.amount = reader.opt_int("amount", 0, 0)
+				def.amount_bp_of_max_hp = reader.opt_int("amount_bp_of_max_hp", 0, 0, FixedMath.BP_ONE)
 			Type.MANA_DRAIN:
 				def.amount = reader.req_int("amount", 1)
 			Type.KNOCKBACK, Type.PULL:
@@ -245,15 +293,15 @@ static func read(reader: DataReader, relic: bool = false) -> EffectDef:
 			Type.CLEANSE:
 				def.amount = reader.req_int("amount_bp", 1, FixedMath.BP_ONE)
 		if reader.has("scaling"):
-			if def.amount_bp_of_damage > 0:
-				reader.error("\"scaling\" can't be combined with amount_bp_of_damage")
+			if def.amount_bp_of_damage > 0 or def.amount_bp_of_max_hp > 0:
+				reader.error("\"scaling\" can't be combined with %s" % ("amount_bp_of_damage" if def.amount_bp_of_damage > 0 else "amount_bp_of_max_hp"))
 			_read_scaling(def, reader.req_object("scaling"))
 
 	read_window(reader, def)
 	if not trigger_name.is_empty():
 		_read_trigger_fields(def, reader, relic)
-	if def.type == Type.AREA and not trigger_name.is_empty() and def.trigger != Trigger.ON_FIRE:
-		reader.error("an area is cast as its ability fires (on_fire)")
+	if def.type == Type.AREA and (def.trigger == Trigger.ON_HIT or def.trigger == Trigger.ON_CRIT):
+		reader.error("an area is cast as its ability fires or on a passive's trigger, never on_hit or on_crit")
 	if MOVES_SELF.has(def.type) and not type_name.is_empty() and not target_name.is_empty():
 		if def.target != Target.TARGET or def.trigger != Trigger.ON_FIRE:
 			reader.error("%s moves the unit itself to its target, so it needs \"target\": \"target\" and the on_fire trigger" % type_name)
@@ -262,11 +310,16 @@ static func read(reader: DataReader, relic: bool = false) -> EffectDef:
 	var needs_hit: bool = def.target == Target.HIT_TARGET or def.amount_bp_of_damage > 0
 	if needs_hit and not trigger_name.is_empty() and not relic and def.trigger == Trigger.ON_FIRE:
 		reader.error("\"%s\" needs a hit, so its trigger must be on_hit or on_crit, not on_fire" % (target_name if def.target == Target.HIT_TARGET else "amount_bp_of_damage"))
-	if not trigger_name.is_empty() and EVENT_TRIGGERS.has(def.trigger):
+	if not trigger_name.is_empty() and (EVENT_TRIGGERS.has(def.trigger) or UNIT_TRIGGERS.has(def.trigger)):
 		if def.target == Target.HIT_TARGET and not EVENT_UNIT_TRIGGERS.has(def.trigger):
 			reader.error("%s names no unit, so it can't use hit_target" % trigger_name)
 		if def.amount_bp_of_damage > 0 and not EVENT_HIT_TRIGGERS.has(def.trigger):
 			reader.error("%s names no hit, so it can't use amount_bp_of_damage" % trigger_name)
+	if def.trigger == Trigger.ON_FALL and not type_name.is_empty():
+		if def.type == Type.AREA and def.anchor != Anchor.SELF:
+			reader.error("on_fall runs once the unit has fallen, so its area is anchored on it (\"anchor\": \"self\")")
+		elif def.type != Type.AREA and FIELD_ONLY_TARGETS.has(def.target) and not UNTARGETED.has(def.type):
+			reader.error("on_fall runs once the unit has fallen, so it can't aim at \"%s\"" % TARGET_NAMES[def.target])
 	reader.finish()
 	return def
 
@@ -319,6 +372,8 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 		Trigger.ON_ALLY_BELOW_HP:
 			def.threshold_bp = reader.req_int("threshold_bp", 1, FixedMath.BP_ONE - 1)
 			def.once = reader.opt_bool("once", false)
+		Trigger.ON_INTERVAL:
+			def.interval_ticks = reader.req_ticks("interval_ms", FixedMath.MS_PER_TICK)
 		Trigger.ON_STATUS:
 			if reader.has("statuses"):
 				def.statuses = reader.req_string_array("statuses")
@@ -334,6 +389,15 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 		reader.error("a relic has no hit, so it can't use amount_bp_of_damage")
 	if def.scaling.any(func(ratio: int) -> bool: return ratio != 0):
 		reader.error("relic numbers are flat, so relic effects can't have \"scaling\"")
+
+
+static func _read_bonus(def: EffectDef, reader: DataReader) -> void:
+	if reader == null:
+		return
+	def.bonus_bp_per_ally = reader.req_int("bp", 1)
+	def.bonus_within = reader.req_int("within_hexes", 1) * HexGrid.HEX
+	def.bonus_kit = reader.opt_string("kit", "")
+	reader.finish()
 
 
 ## Reads an optional "window" object into `holder` (an EffectDef or AuraDef,

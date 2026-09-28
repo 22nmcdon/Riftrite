@@ -142,7 +142,7 @@ func test_area_data_is_checked() -> void:
 		"an area needs effects": {"type": "area", "shape": {"kind": "circle", "radius": 1}, "anchor": "self", "hits": "enemies"},
 		"an area's effects aim at \"target\" (each unit hit), on_fire": {"type": "area", "shape": {"kind": "circle", "radius": 1}, "anchor": "self", "hits": "enemies", "effects": [{"type": "damage", "amount": 1, "target": "self"}]},
 		"an area's effects can't be an area, a leap, or a charge": {"type": "area", "shape": {"kind": "circle", "radius": 1}, "anchor": "self", "hits": "enemies", "effects": [{"type": "leap", "max_hexes": 1, "target": "target"}]},
-		"an area is cast as its ability fires (on_fire)": {"type": "area", "trigger": "on_hit", "shape": {"kind": "circle", "radius": 1}, "anchor": "self", "hits": "enemies", "effects": [{"type": "damage", "amount": 1, "target": "target"}]},
+		"an area is cast as its ability fires or on a passive's trigger, never on_hit or on_crit": {"type": "area", "trigger": "on_hit", "shape": {"kind": "circle", "radius": 1}, "anchor": "self", "hits": "enemies", "effects": [{"type": "damage", "amount": 1, "target": "target"}]},
 		"hits: unknown value \"foes\"": {"type": "area", "shape": {"kind": "circle", "radius": 1}, "anchor": "self", "hits": "foes", "effects": [{"type": "damage", "amount": 1, "target": "target"}]},
 	}
 	for expected: String in cases:

@@ -87,6 +87,9 @@ var leg_amount: int = 0
 var listeners: Array[Passives.Listener] = []
 ## Statuses it applies as the key land as the value (lookup only).
 var status_swaps: Dictionary[String, String] = {}
+## The tick it joined the fight (0, or when it was summoned): on_interval
+## counts from here.
+var joined_at: int = 0
 
 ## A leap's landing: it can't act before this tick.
 var landing_until: int = 0

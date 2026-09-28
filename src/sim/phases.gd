@@ -9,7 +9,8 @@ extends RefCounted
 ##   - a new signature starts fresh (a cast under way is cancelled);
 ##   - a new mana bar starts at its own start; a bar taken away is gone;
 ##   - a new targeting rule drops its target, so it picks again by it;
-##   - passives are set up again (event counts carry over for those kept),
+##   - passives are set up again (event counts, and the allies an
+##     on_ally_below_hp passive has run for, carry over for those kept),
 ##     and auras are folded in again.
 
 
@@ -48,14 +49,17 @@ static func _enter(sim: CombatSim, unit: UnitState, phase: PhaseDef) -> void:
 	if kit.targeting != before.targeting:
 		unit.target = null
 		unit.look_again_at = 0
-	var counts: Dictionary[String, int] = {}
+	var kept: Dictionary[String, Passives.Listener] = {}
 	for listener: Passives.Listener in unit.listeners:
-		counts[_listener_key(listener)] = listener.count
+		kept[_listener_key(listener)] = listener
 	unit.listeners.clear()
 	unit.status_swaps.clear()
 	Passives.set_up(unit)
 	for listener: Passives.Listener in unit.listeners:
-		listener.count = counts.get(_listener_key(listener), 0)
+		var before_listener: Passives.Listener = kept.get(_listener_key(listener))
+		if before_listener != null:
+			listener.count = before_listener.count
+			listener.allies_done = before_listener.allies_done
 	sim.note_listeners(unit)
 
 

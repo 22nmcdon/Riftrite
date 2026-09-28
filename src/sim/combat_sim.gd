@@ -24,10 +24,13 @@ extends RefCounted
 ##      or while an engager holds it: Engage, checked as it's about to walk,
 ##      and every tick while it's engaged).
 ##   6. Events: this tick's log is read for count signatures and ability
-##      passives (Events). Then units below a phase's threshold enter it
-##      (Phases).
+##      passives (Events). Then on_interval and on_ally_below_hp passives
+##      run (Passives.run_timed), and units below a phase's threshold enter
+##      it (Phases).
 ##   7. Units at 0 HP fall, unless Undying holds them at 1 HP or a would_fall
-##      signature saves them; on_kill is raised for whoever felled them.
+##      signature saves them; on_kill is raised for whoever felled them,
+##      and their on_fall passives run (which may fell others: it goes
+##      round again).
 ##      They were still updated this tick if their place in the order came,
 ##      so being updated first gives neither side an edge.
 ##   8. Victory, defeat, or a tie (180s, or both sides falling together; a
@@ -73,6 +76,12 @@ var _events_read: int = 0
 var _listening: bool = false
 ## Some unit has phases, so they're checked each tick.
 var _phased: bool = false
+## Some unit has on_interval or on_ally_below_hp passives, so they're
+## checked each tick.
+var _timed_passives: bool = false
+## Some unit has an aura that holds while it's taunting, so auras are folded
+## in again when a Taunt starts or ends, or a taunted unit falls.
+var taunt_auras: bool = false
 ## The units with the Engage trait on each side.
 var _hero_engagers: Array[UnitState] = []
 var _enemy_engagers: Array[UnitState] = []
@@ -125,6 +134,7 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 ## Adds a unit at the end of the fight's order (at the start, or a summon:
 ## then call units_joined once they're all in).
 func add_unit(unit: UnitState) -> void:
+	unit.joined_at = tick
 	unit.attack_rate_bp = attack_rate_bp(unit)
 	units.append(unit)
 	_by_id[unit.id] = unit
@@ -141,12 +151,24 @@ func add_unit(unit: UnitState) -> void:
 func note_listeners(unit: UnitState) -> void:
 	if (unit.signature != null and unit.signature.def.trigger.kind == TriggerDef.Kind.COUNT) or not unit.listeners.is_empty():
 		_listening = true
+	if Passives.has_timed(unit):
+		_timed_passives = true
 
 
 ## After units join (at the start, or summons) or enter a phase: auras are
 ## folded in again, so theirs count and they get their side's.
 func units_joined() -> void:
 	_aura_ticks = Passives.aura_boundaries(self)
+	taunt_auras = false
+	for unit: UnitState in units:
+		if Passives.has_taunting_aura(unit):
+			taunt_auras = true
+	_active_auras = Passives.rederive(self, _active_auras)
+
+
+## Folds every aura in again (a Taunt started or ended, for auras that hold
+## while taunting).
+func refold_auras() -> void:
 	_active_auras = Passives.rederive(self, _active_auras)
 
 
@@ -187,6 +209,8 @@ func step() -> void:
 	if _listening:
 		Events.dispatch(self, _events_read, read_to)
 	_events_read = read_to
+	if _timed_passives:
+		Passives.run_timed(self)
 	if _phased:
 		Phases.check(self)
 	_process_deaths()
@@ -435,8 +459,10 @@ func _process_deaths() -> void:
 				again = true
 				continue
 			_fall(unit)
-			aura_lost = aura_lost or Passives.has_aura(unit)
+			aura_lost = aura_lost or Passives.has_aura(unit) or (taunt_auras and Statuses.has_kind(unit, StatusDef.Kind.TAUNT))
 			Events.kill(self, unit)
+			if Passives.on_fall(self, unit):
+				again = true
 	if aura_lost:
 		_active_auras = Passives.rederive(self, _active_auras)
 

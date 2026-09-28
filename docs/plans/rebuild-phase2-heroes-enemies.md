@@ -196,6 +196,20 @@ CLAUDE.md rule 3: a new effect, trigger, or part type only when no combination o
 
 With these, every Act 1 enemy and base kit is data. The elites and Old Mother Ash need more (section 8).
 
+**Built in step 3** (every log fingerprint unchanged: no existing fight uses the new pieces). Two names differ from the table above: the timed trigger is `on_interval` with `interval_ms` (like the other `on_` triggers), and the pup's bonus is an object on the damage effect, `"bonus_per_ally": {"bp": 2500, "within_hexes": 1, "kit": "rift_pup"}`, where `kit` is optional and limits the count to that kit.
+
+- **`"while": "taunting"` on an aura:** it's on while at least one standing enemy's Taunt names its holder as the source. A newer Taunt from someone else takes that enemy over. Auras are folded in again when a Taunt starts or ends, and when a taunted unit falls. This only happens in fights where some unit has such an aura (`CombatSim.taunt_auras`), so other fights pay nothing for it. The AURA log shows each start and end, like a window's.
+- **Passive triggers that aren't events** (`EffectDef.UNIT_TRIGGERS`). None of them names a hit, so none of them can use `hit_target` or `amount_bp_of_damage`.
+  - They run in tick step 6, after the events are read and before phases, for each standing unit in the fight's order (`Passives.run_timed`).
+  - `on_ally_below_hp` runs for an ally (never the holder itself) the first time it's below the threshold while it still has HP. It runs once per ally, or with `"once": true` only for the first ally, in the fight's order. `trigger_ally` aims at that ally. The allies it has run for carry over through a phase, like event counts.
+  - `on_interval` runs every `interval_ms`, counted from the tick the unit joined the fight (a summon counts from when it was summoned). It never runs at the tick the unit joins.
+  - `on_fall` runs as the unit falls, in the deaths step. Its area is anchored on where the unit fell, or it aims at `all_enemies` or `all_allies` (aiming at `self`, `target`, or `hit_target` is refused). Anyone it fells falls in the same deaths step, and their own `on_fall` runs too. The fallen unit is never hit by its own burst.
+  - What these triggers do is marked from_event, like other passive effects, so it never sets off an event.
+- **Areas in passives:** a passive's effect may be an area on any passive trigger (never `on_hit` or `on_crit`). It's anchored on the unit (`self`), on the unit the event names, or else on the unit's target. `"hits": "other_allies"` hits the unit's side, not the unit itself.
+- **`amount_bp_of_max_hp` on a heal:** a share of the healed unit's max HP, taken as it lands, then the healer's heal auras. A heal takes exactly one of `amount` or `amount_bp_of_max_hp`, and it can't take `scaling` with the share.
+- **`bonus_per_ally` on damage:** each other standing ally (of `kit`, if given) whose center is within `within_hexes` of the unit's center adds `bp` to the hit. It's counted as the attack fires (a shot or an area keeps the number it left with).
+- **Tests:** `test_kit_pieces.gd`. All 48 mutation checks of the new code are caught.
+
 ## 5. The Act 1 enemies
 
 First numbers, to tune in step 7. Every enemy has its archetype and threat line.
@@ -293,7 +307,7 @@ The elites and Old Mother Ash come in phase 5 (decided). What they'll need, so t
 
 1. **Swarm speed pass** (section 1), measured with the new bench case and the chaos fight. **Done,** with results unchanged; the swarm's budget isn't met yet (section 1).
 2. **Content files and loading:** hero, enemy, and encounter defs, `ContentDb`, the validator, `Encounters.setup`, and summon kits from content. **Done.**
-3. **Section 4's new pieces,** each with its tests.
+3. **Section 4's new pieces,** each with its tests. **Done.**
 4. **The three base kits** in `heroes.json`, and `test_hero_kits`.
 5. **The nine enemies** in `enemies.json`, and `test_enemy_kits`.
 6. **The encounters,** hand-placed, and `test_encounters`.
