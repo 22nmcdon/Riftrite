@@ -35,6 +35,7 @@ Status: **agreed in discussion (2026-09-28, answers 2026-09-29), not built.** Ad
 - **A loadout gate for the sim runner:** sample loadouts (every combination is too many) and check that the best beats the worst by a margin. It catches filler charms the way the placement gate catches filler formations.
 - **Wounds show as a greyed chunk of the HP bar.** It reads at a glance, needs no new marker, and shows what matters: how much HP is missing.
 - **A tactic may carry a small payoff** (2026-09-29, from the phase 3b tactics report), but only while its behavior applies, or to what the behavior produced ("+20% attack speed while it holds its ground"). A tactic is still a behavior first. A flat number change is a charm's job.
+- **A future tactic: the inverse of Hold your ground** (added 2026-09-29, the playtester's idea; working name **Plant your feet**). The hero **stops walking while any enemy is within 2 hexes**, and walks toward its target again when none is. A tank then stands still against melee instead of chasing, which keeps the fight in one place and makes it easy for Vell to stay within 1 hex of it for Hearthlight's heal. It's a behavior like the other three, so it can be written against the slot and survives a transformation. Not built; it comes with the rest of the tactics in phase 5 (or sooner, as a 3b round if the playtest asks for more tactics). Its open questions are below.
 - **Now and then the Pedlar carries one relic** (added 2026-09-29): about 1 visit in 3, or only at certain places (a market in the ruins, say). It's expensive, about two days of income, so buying it means skipping charms and paying for wounds yourself for a while. It **counts toward the 3–5 relics a run**, so the total stays the same; it's just another way to get one. Relics stay rare, and currency gets a second big use.
 
 ## 1. A pick after every fight
@@ -55,7 +56,7 @@ Three kinds of slotted things can share the slots:
 | Kind | What it does | Examples |
 | --- | --- | --- |
 | **Charm** | A small passive change to the hero's kit | "Your basic attack Slows on crits", "+1 range while you haven't moved for 2s", "Your heals also cleanse Bleed" |
-| **Tactic** | Changes how the hero behaves, not what they can do | "Target casters first", "Hold your starting hex until an enemy comes within 2", "Heal only allies below 50% HP" |
+| **Tactic** | Changes how the hero behaves, not what they can do | "Target casters first", "Hold your starting hex until an enemy comes within 2", "Heal only allies below 50% HP", "Stop walking while an enemy is within 2 hexes; close in again when none is" |
 | **Sigil** | Changes how the hero's signature fires | "Your signature costs 15 less mana", "Your signature also fires when an ally falls", "Your signature's area is 1 hex larger", "Your heal goes to the healthiest ally instead, and overheal becomes a shield twice as big" (the playtester's, for Vell) |
 
 - **Most are hero-specific** (a Maren charm can't go on Vell); some tactics are shared by every hero with the same role.
@@ -137,4 +138,9 @@ Wounds give real stakes to close wins, make the easier fight tempting when someo
 - **Wounds from a lost fight:** a loss usually means all three fell, and the day replays with every hero wounded. Should a loss's falls wound (a death spiral risk), or is the loss its own cost?
 - **Sigils on signatures without mana:** "costs 15 less mana" does nothing for a signature that fires on HP, a count, or would-fall. Write sigils by what they do ("your signature comes sooner"), or mark them with the triggers they fit?
 - **Tactics:** how many choices per hero, and which are shared by role?
+- **Plant your feet** (the future tactic above):
+  - **Its payoff.** Round 2's rule says a tactic's payoff applies only while its behavior does. Something while it stands still fits, such as more DEF or more healing taken, but nothing is chosen yet.
+  - **A target out of reach.** While it stands, it could attack only what's in reach, like a holder does. Or it could switch to the nearest enemy in reach, which would change targeting as well as movement.
+  - **Who takes it.** Every hero, or tanks only? On Maren, it would keep her from walking into melee reach.
+  - **Engage and pushes.** Brannoc's Engage pulls him to enemies that come close; does Engage still move him? A push moves a unit without it walking, so it isn't affected, but should the tactic say so?
 - **How fast heroes grow:** a pick after every win is about 8 picks in Act 1, where part 4 aimed for 1–2 per hero by the boss. Picks should stay small so transformations still feel big; the run bot will measure it.
