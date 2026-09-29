@@ -1,12 +1,17 @@
 class_name TitleScreen
 extends UiScreen
-## The title, over the backdrop. While the rebuild is under way
-## (docs/plans/rebuild-build-order.md) the way in is Practice: the Act 1
-## fights, one at a time (phase 3). The run comes with phase 5.
+## The title, over the backdrop: Continue (when a run is saved), New run
+## (phase 5: Act 1, day by day), and Practice (the Act 1 fights one at a
+## time, phase 3).
 
 signal practice_requested
+signal run_requested
+signal continue_requested
 
-const REBUILD_NOTE: String = "The rift is being rebuilt. Until the run returns, practice its fights."
+const REBUILD_NOTE: String = "Act 1 of the rift is open: seven days, and Old Mother Ash at the end."
+
+## Main sets this when a run is saved.
+var can_continue: bool = false
 
 
 func build() -> void:
@@ -29,7 +34,15 @@ func build() -> void:
 	var gap := Control.new()
 	gap.custom_minimum_size = Vector2(0, 6)
 	add_child(gap)
-	add_child(primary_button("Practice", func() -> void: practice_requested.emit()))
+	if can_continue:
+		add_child(primary_button("Continue the run", func() -> void: continue_requested.emit()))
+	var new_run: Button = UiStyle.button("New run", func() -> void: run_requested.emit())
+	if not can_continue:
+		UiStyle.primary(new_run)
+	new_run.custom_minimum_size = Vector2(280, 56)
+	new_run.add_theme_font_size_override("font_size", 22)
+	add_child(new_run)
+	add_child(UiStyle.button("Practice", func() -> void: practice_requested.emit()))
 	add_child(UiStyle.button("Quit", _quit))
 	for child: Control in get_children():
 		child.size_flags_horizontal = Control.SIZE_SHRINK_CENTER

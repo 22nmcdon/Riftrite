@@ -14,6 +14,9 @@ extends PanelContainer
 ##   - its three slots as chips: Charm, Tactic, Sigil. A filled slot is
 ##     outlined in its kind's color (the tactic it took, by name on hover);
 ##     charms and sigils come with the run, so theirs are empty.
+## In a run (RunSession): wounds (a greyed chunk of the HP bar, and a count),
+## the deed toward its threshold ("Deadeye 1,240 / 2,000"), and each slot's
+## item by name.
 
 signal card_clicked(hero_id: String)
 
@@ -171,6 +174,13 @@ func refresh(sim: CombatSim = null) -> void:
 		if unit != null:
 			hp = unit.hp if unit.alive else 0
 			max_hp = unit.max_hp
+		var run_session := session as RunSession
+		if run_session != null and unit == null:
+			var wounds: int = run_session.state().hero(hero_id).wounds
+			card.hp_bar.lost = run_session.wound_share(hero_id)
+			max_hp = FixedMath.apply_bp(max_hp, FixedMath.BP_ONE - int(round(card.hp_bar.lost * FixedMath.BP_ONE)))
+			hp = max_hp
+			card.wounds_text.text = "No wounds" if wounds == 0 else ("1 wound" if wounds == 1 else "%d wounds" % wounds)
 		card.hp_bar.set_share(float(hp) / maxf(max_hp, 1))
 		card.portrait_holder.modulate = Color(0.45, 0.45, 0.5) if hp <= 0 else Color.WHITE
 		card.hp_text.text = "HP %d / %d" % [hp, max_hp]
@@ -181,6 +191,15 @@ func refresh(sim: CombatSim = null) -> void:
 func _deed_text(hero_id: String, path: PathDef, sim: CombatSim, amounts: Array[FightResult.Deed]) -> String:
 	if path == null:
 		return "No vow"
+	var run_session := session as RunSession
+	if run_session != null:
+		var progress: Array = run_session.deed_progress(hero_id)
+		var so_far: String = ""
+		if sim != null:
+			for deed: FightResult.Deed in amounts:
+				if deed.hero == hero_id and deed.path == path.id:
+					so_far = " · +%s now" % UnitInfo.deed_amount_text(path.deed, deed.amount)
+		return "%s deed %s / %s%s" % [path.name, UnitInfo.deed_amount_text(path.deed, progress[0]), UnitInfo.deed_amount_text(path.deed, progress[1]), so_far]
 	if sim != null:
 		for deed: FightResult.Deed in amounts:
 			if deed.hero == hero_id and deed.path == path.id:
@@ -190,6 +209,10 @@ func _deed_text(hero_id: String, path: PathDef, sim: CombatSim, amounts: Array[F
 
 
 func _fill_chips(card: Card, hero_id: String) -> void:
+	var run_session := session as RunSession
+	if run_session != null:
+		_fill_run_chips(card, run_session, hero_id)
+		return
 	var tactic_id: String = session.tactics.get(hero_id, "")
 	if card.chips.get_child_count() > 0 and card.chips.get_meta("tactic", "") == tactic_id:
 		return
@@ -204,5 +227,24 @@ func _fill_chips(card: Card, hero_id: String) -> void:
 	for slot: Array in slots:
 		var chip: PanelContainer = UiStyle.chip(slot[0], slot[1], slot[2], 14)
 		chip.tooltip_text = slot[3]
+		chip.mouse_filter = Control.MOUSE_FILTER_PASS
+		card.chips.add_child(chip)
+
+
+## A run's slots: each item by name in its kind's color, or "Empty".
+func _fill_run_chips(card: Card, run_session: RunSession, hero_id: String) -> void:
+	var slots: Array[String] = run_session.state().hero(hero_id).slots
+	var key: String = ",".join(slots)
+	if card.chips.get_child_count() > 0 and card.chips.get_meta("slots", "") == key:
+		return
+	card.chips.set_meta("slots", key)
+	for child: Node in card.chips.get_children():
+		card.chips.remove_child(child)
+		child.free()
+	var colors: Array[Color] = [UiStyle.CHARM, UiStyle.TACTIC, UiStyle.SIGIL, UiStyle.EMBER]
+	for id: String in slots:
+		var item: ItemDef = run_session.run.items.get(id, null)
+		var chip: PanelContainer = UiStyle.chip(item.name if item != null else "Empty", colors[item.kind] if item != null else UiStyle.LINE_500, item != null, 14)
+		chip.tooltip_text = item.text if item != null else "An empty slot"
 		chip.mouse_filter = Control.MOUSE_FILTER_PASS
 		card.chips.add_child(chip)

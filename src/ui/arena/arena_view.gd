@@ -44,6 +44,8 @@ signal unit_unhovered(unit_id: String)
 signal unit_clicked(unit_id: String)
 ## The board was clicked away from every token.
 signal ground_clicked
+## A click on the bare board, on a hex (phase 5: Dig In's rock).
+signal hex_clicked(hex: Vector2i)
 
 enum Mode { PLACEMENT, FIGHT }
 
@@ -199,6 +201,9 @@ func _gui_input(event: InputEvent) -> void:
 		unit_clicked.emit(hit.unit_id)
 	else:
 		ground_clicked.emit()
+		var hex: Vector2i = hex_at(click.position)
+		if hex.x >= 0:
+			hex_clicked.emit(hex)
 
 
 ## The shown token whose rect covers a pixel (its figure, and at least

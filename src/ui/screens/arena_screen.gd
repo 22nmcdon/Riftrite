@@ -45,6 +45,8 @@ extends UiScreen
 
 signal fight_requested(setup: FightSetup)
 signal back_requested
+## A run's fight is over and Continue was pressed (phase 5): Main records it.
+signal run_fight_done(formation: Dictionary[String, Vector2i], result: FightResult)
 
 const SIDE_WIDTH: int = 380
 ## The log popup's widest (it reaches past the gutter into the board's
@@ -53,6 +55,10 @@ const LOG_WIDTH: int = 480
 const FIGHT_HINT: String = "Space pauses, 1-3 set the speed, S skips to the end, L shows the log, T shows every target line. Hover an enemy to read it; click a unit to see only its lines in the log, or pause and click a hero to read them."
 
 var session: PracticeSession
+## The run's session when this is a run's fight (null in Practice): the top
+## bar is the run's, the result has Continue instead of Rematch, and the
+## fight can't be fought again.
+var run_session: RunSession = null
 var encounter: EncounterDef
 var formation: Dictionary[String, Vector2i] = {}
 var view: ArenaView
@@ -90,11 +96,15 @@ var names: FightNames
 var tally: FightTally
 var _placement_box: VBoxContainer
 var _fight_box: VBoxContainer
+var _back_button: Button
+var _again_row: HBoxContainer
+var _place_again: Button
 
 
 static func make(practice: PracticeSession, encounter_id: String) -> ArenaScreen:
 	var screen := ArenaScreen.new()
 	screen.session = practice
+	screen.run_session = practice as RunSession
 	screen.encounter = practice.content.encounters[encounter_id]
 	screen.full_bleed = true
 	screen.formation = practice.formation_for(encounter_id)
@@ -164,7 +174,8 @@ func build() -> void:
 	_fight_box = _build_fight_box()
 	_fight_box.visible = false
 	side.add_child(_fight_box)
-	side.add_child(UiStyle.button("Back", func() -> void: back_requested.emit()))
+	_back_button = UiStyle.button("Back to the day" if run_session != null else "Back", func() -> void: back_requested.emit())
+	side.add_child(_back_button)
 	log_popup = _build_log_popup()
 	gutter.add_child(log_popup)
 	view.resized.connect(_fit_log_popup)
@@ -187,6 +198,7 @@ func build() -> void:
 	# then.
 	hero_popup.minimum_size_changed.connect(_place_popup, CONNECT_DEFERRED)
 	view.snare_dropped.connect(move_snare)
+	view.hex_clicked.connect(_place_rock)
 	hero_panel = HeroPanel.make(session)
 	hero_panel.z_index = 5
 	upper.add_child(hero_panel)
@@ -203,7 +215,19 @@ func build() -> void:
 
 ## Moves a hero to a hex if the result is legal. Returns true if it moved.
 func placement_hint() -> String:
+	if run_session != null:
+		var dig_in: String = " Dig In: click a hex of your zone for your rock." if run_session.state().dig_in and run_session.state().hunt.is_empty() else ""
+		return "It tests %s. Drag your heroes onto your side's hexes, then Fight. Hover an enemy to read it; click a hero's card below to read them.%s" % [encounter.tests, dig_in]
 	return "It tests %s. Drag your heroes onto your side's hexes, then Fight. Hover an enemy to read it; click a hero's card below to choose their path and tactic." % encounter.tests
+
+
+## Dig In (a run): a click on a hex of the heroes' zone sets the rock there.
+func _place_rock(hex: Vector2i) -> void:
+	if run_session == null or player != null or not run_session.state().dig_in or not run_session.state().hunt.is_empty():
+		return
+	if not run_session.act(run_session.flow.place_rock.bind(hex)).is_empty():
+		view.flash_hex(hex)
+	_show()
 
 
 func move_hero(hero_id: String, hex: Vector2i) -> bool:
@@ -247,13 +271,16 @@ func _build_top_bar() -> PanelContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 28)
 	bar.add_child(row)
-	row.add_child(UiStyle.heading("Practice", 34, UiStyle.HIGHLIGHT))
-	var where: Label = UiStyle.label("Act %d · %s" % [encounter.act, encounter.name], 20, UiStyle.TEXT_DIM)
-	where.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(where)
-	var gap := Control.new()
-	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(gap)
+	if run_session != null:
+		RunDayScreen.fill_top_bar(row, run_session, encounter.name)
+	else:
+		row.add_child(UiStyle.heading("Practice", 34, UiStyle.HIGHLIGHT))
+		var where: Label = UiStyle.label("Act %d · %s" % [encounter.act, encounter.name], 20, UiStyle.TEXT_DIM)
+		where.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(where)
+		var gap := Control.new()
+		gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(gap)
 	seed_label = UiStyle.label("", 18, UiStyle.TEXT_DIM)
 	seed_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(seed_label)
@@ -269,7 +296,7 @@ func open_panel(hero_id: String) -> void:
 	if playing():
 		toggle_pause()
 	hero_popup.close()
-	hero_panel.editable = player == null
+	hero_panel.editable = player == null and run_session == null
 	hero_panel.open(hero_id)
 	hero_bar.select(hero_id)
 
@@ -277,7 +304,7 @@ func open_panel(hero_id: String) -> void:
 func _show() -> void:
 	view.show_setup(current_setup(), session.content)
 	hero_bar.refresh()
-	seed_label.text = "Seed %d" % session.seed_value
+	seed_label.text = "Seed %d" % (current_setup().seed_value if run_session != null and current_setup() != null else session.seed_value)
 	var errors: Array[String] = session.errors(encounter.id, formation)
 	error_label.text = errors[0] if not errors.is_empty() else ""
 	fight_button.disabled = not errors.is_empty()
@@ -448,8 +475,12 @@ func _build_fight_box() -> VBoxContainer:
 	var again := HBoxContainer.new()
 	again.add_theme_constant_override("separation", 6)
 	result_box.add_child(again)
-	again.add_child(UiStyle.primary(UiStyle.button("Rematch", rematch)))
+	if run_session != null:
+		again.add_child(UiStyle.primary(UiStyle.button("Continue", continue_run)))
+	else:
+		again.add_child(UiStyle.primary(UiStyle.button("Rematch", rematch)))
 	again.add_child(UiStyle.button("Watch again", restart))
+	_again_row = again
 	var more := HBoxContainer.new()
 	more.add_theme_constant_override("separation", 6)
 	box.add_child(more)
@@ -457,7 +488,9 @@ func _build_fight_box() -> VBoxContainer:
 	log_button.toggle_mode = true
 	log_button.toggled.connect(set_log_open)
 	more.add_child(log_button)
-	more.add_child(UiStyle.button("Place again", place_again))
+	_place_again = UiStyle.button("Place again", place_again)
+	_place_again.visible = run_session == null
+	more.add_child(_place_again)
 	return box
 
 
@@ -502,6 +535,8 @@ func start_fight(fight_setup: FightSetup) -> void:
 	hint_label.text = FIGHT_HINT
 	_placement_box.visible = false
 	_fight_box.visible = true
+	# A run's fight is fought once: no way back to placement.
+	_back_button.visible = run_session == null
 	set_log_open(session.log_open)
 	_begin()
 	_refresh_controls()
@@ -587,6 +622,15 @@ func skip() -> void:
 		return
 	_on_entries(player.skip_to_end())
 	_on_frame()
+
+
+## A run's fight is over: hands its result on (it's exactly RunFlow's
+## fight, played tick by tick).
+func continue_run() -> void:
+	if run_session == null or player == null or not player.finished():
+		return
+	set_process(false)
+	run_fight_done.emit(formation.duplicate(), CombatSim.result_of(player.sim))
 
 
 ## The same placement again, with the next seed (seeds only change crits).

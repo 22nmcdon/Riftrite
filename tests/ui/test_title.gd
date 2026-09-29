@@ -1,19 +1,23 @@
 extends GutTest
 ## The game boots to the title (docs/plans/rebuild-build-order.md, phase 0);
-## its way in is Practice (phase 3, tested in test_practice_flow.gd).
+## its ways in are the run (phase 5, tested in test_run_screens.gd) and
+## Practice (phase 3, tested in test_practice_flow.gd).
 
 const MainScript = preload("res://src/ui/main.gd")
 const SAVE: String = "user://test_old_run.json"
+const RUN_SAVE: String = "user://test_title_run.json"
 
 
 func after_each() -> void:
 	if FileAccess.file_exists(SAVE):
 		DirAccess.remove_absolute(SAVE)
+	RunSave.erase(RUN_SAVE)
 
 
 func _main() -> Main:
 	var main: Main = MainScript.new()
 	main.old_save_path = SAVE
+	main.run_save_path = RUN_SAVE
 	add_child_autofree(main)
 	return main
 
@@ -29,7 +33,19 @@ func test_the_game_boots_to_the_title() -> void:
 	var buttons: Array[String] = []
 	for node: Node in main.screen.find_children("*", "Button", true, false):
 		buttons.append((node as Button).text)
-	assert_eq(buttons, ["Practice", "Quit"] as Array[String], "Practice, and no run to start or continue yet")
+	assert_eq(buttons, ["New run", "Practice", "Quit"] as Array[String], "no run to continue yet")
+
+
+func test_a_saved_run_can_be_continued() -> void:
+	var run: RunContent = RunContent.load_dir("res://data", ContentDb.load_dir("res://data"))
+	var errors: Array[String] = []
+	var flow: RunFlow = RunFlow.start(run, 1, {"brannoc": "hearthwall", "maren": "deadeye", "vell": "lanternbearer"} as Dictionary[String, String], errors)
+	RunSave.save(flow.state, RUN_SAVE)
+	var main: Main = _main()
+	var buttons: Array[String] = []
+	for node: Node in main.screen.find_children("*", "Button", true, false):
+		buttons.append((node as Button).text)
+	assert_eq(buttons, ["Continue the run", "New run", "Practice", "Quit"] as Array[String])
 
 
 func test_the_main_scene_is_the_title() -> void:

@@ -20,6 +20,7 @@ func before_all() -> void:
 func _main() -> Main:
 	var main: Main = MainScript.new()
 	main.old_save_path = SAVE
+	main.run_save_path = "user://test_practice_no_run.json"
 	add_child_autofree(main)
 	return main
 

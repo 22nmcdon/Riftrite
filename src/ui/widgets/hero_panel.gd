@@ -24,6 +24,10 @@ extends Control
 ##   - The Loadout tab: the slots (Tactic filled when one is taken) and the
 ##     tactic (TacticPicker). Charms and sigils come with the run (phase 5).
 ##   - In a fight (editable false) nothing can be changed: it's for reading.
+##   - In a run (RunSession): the deed toward its threshold; another path's
+##     card has Switch vow (until the hero transforms), and nothing else
+##     changes a path; the upgrades taken, the duo bond (found, or stirring),
+##     wounds, and the loadout's items (changed before each fight).
 
 ## A path and stage were picked for a hero (stage BASE: no path).
 signal path_chosen(hero_id: String, path_id: String, stage: PathDef.Stage)
@@ -234,6 +238,12 @@ func show_hero(hero_id: String) -> void:
 	role.text = role_text(hero, kit)
 	var hp: int = kit.stats.get_stat(UnitStats.Stat.HP)
 	hp_bar.set_share(1.0)
+	var run_session := session as RunSession
+	if run_session != null:
+		hp_bar.lost = run_session.wound_share(hero_id)
+		hp = FixedMath.apply_bp(hp, FixedMath.BP_ONE - int(round(hp_bar.lost * FixedMath.BP_ONE)))
+		var wounds: int = run_session.state().hero(hero_id).wounds
+		wounds_text.text = "No wounds" if wounds == 0 else ("1 wound" if wounds == 1 else "%d wounds" % wounds)
 	hp_text.text = "HP %d / %d" % [hp, hp]
 	stats.text = UnitInfo.stats_text(kit.stats)
 	visible = true
@@ -324,8 +334,37 @@ func _fill_path() -> void:
 	var extras := HBoxContainer.new()
 	extras.add_theme_constant_override("separation", 40)
 	page.add_child(extras)
+	var run_session := session as RunSession
+	if run_session != null:
+		extras.add_child(_extra("Upgrades taken", _run_upgrades(run_session)))
+		extras.add_child(_extra("Duo bond", _run_bond(run_session)))
+		return
 	extras.add_child(_extra("Upgrades taken", "None yet: upgrades come after won fights in the run."))
 	extras.add_child(_extra("Duo bond", "None yet: bonds are found in the run."))
+
+
+## The upgrades the hero has taken, by name (a path's that waits off its
+## path says so).
+func _run_upgrades(run_session: RunSession) -> String:
+	var hero: RunState.Hero = run_session.state().hero(showing)
+	var names: Array[String] = []
+	for id: String in hero.upgrades:
+		var upgrade: UpgradeDef = run_session.run.upgrades[id]
+		var waiting: bool = upgrade.layer == UpgradeDef.Layer.PATH and upgrade.path != hero.path
+		names.append("%s%s: %s" % [upgrade.name, " (waits for %s)" % run_session.content.paths[upgrade.path].name if waiting else "", upgrade.text])
+	return "None yet: a pick comes after each won fight." if names.is_empty() else "\n".join(names)
+
+
+## The hero's duo bond: on (and what it gives), stirring, or none.
+func _run_bond(run_session: RunSession) -> String:
+	var path_id: String = run_session.state().hero(showing).path
+	for bond: BondDef in run_session.run.active_bonds(run_session.state()):
+		if bond.paths.has(path_id):
+			return "%s: %s" % [bond.name, bond.texts[path_id]]
+	for bond: BondDef in run_session.run.stirring_bonds(run_session.state()):
+		if bond.paths.has(path_id):
+			return "A bond stirs with %s: it wakes when both have transformed." % run_session.content.paths[bond.partner(path_id)].name
+	return "None: no bond links this path with another hero's vow."
 
 
 func _extra(title: String, body: String) -> VBoxContainer:
@@ -426,6 +465,8 @@ func _vowed_card(path: PathDef, stage: PathDef.Stage) -> PanelContainer:
 	var buttons := VBoxContainer.new()
 	buttons.add_theme_constant_override("separation", 10)
 	row.add_child(buttons)
+	if session is RunSession:
+		return card
 	if transformed:
 		buttons.add_child(_choice("Back to vow", path.id, PathDef.Stage.VOWED))
 	else:
@@ -458,7 +499,10 @@ func _deed_row(path: PathDef, font_size: int) -> HBoxContainer:
 	row.add_theme_constant_override("separation", 12)
 	row.add_child(_wrapped("Deed: " + path.deed.text, font_size - 1, UiStyle.TEXT_DIM))
 	var amount: int = session.last_deed(showing, path.id)
-	var last: Label = UiStyle.strong("no fight yet" if amount < 0 else "last fight: %s" % UnitInfo.deed_amount_text(path.deed, amount), font_size - 1, UiStyle.ACCENT_TEXT)
+	var said: String = "no fight yet" if amount < 0 else "last fight: %s" % UnitInfo.deed_amount_text(path.deed, amount)
+	if session is RunSession:
+		said = "%s / %s" % [UnitInfo.deed_amount_text(path.deed, amount), UnitInfo.deed_amount_text(path.deed, path.deed.threshold)]
+	var last: Label = UiStyle.strong(said, font_size - 1, UiStyle.ACCENT_TEXT)
 	last.size_flags_vertical = Control.SIZE_SHRINK_END
 	row.add_child(last)
 	return row
@@ -493,7 +537,10 @@ func _path_card(path: PathDef) -> PanelContainer:
 	var buttons := VBoxContainer.new()
 	buttons.add_theme_constant_override("separation", 6)
 	buttons.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	for pair: Array in [["Vow", PathDef.Stage.VOWED], ["Transform", PathDef.Stage.TRANSFORMED]]:
+	var choices: Array = [["Vow", PathDef.Stage.VOWED], ["Transform", PathDef.Stage.TRANSFORMED]]
+	if session is RunSession:
+		choices = [["Switch vow", PathDef.Stage.VOWED]]
+	for pair: Array in choices:
 		var button: Button = _choice(pair[0], path.id, pair[1])
 		button.add_theme_font_size_override("font_size", 15)
 		for state: String in ["normal", "hover", "pressed", "disabled"]:
@@ -523,6 +570,10 @@ func _fill_kit() -> void:
 
 
 func _fill_loadout() -> void:
+	var run_session := session as RunSession
+	if run_session != null:
+		_fill_run_loadout(run_session)
+		return
 	var slots := HBoxContainer.new()
 	slots.add_theme_constant_override("separation", 10)
 	page.add_child(slots)
@@ -535,3 +586,23 @@ func _fill_loadout() -> void:
 	page.add_child(tactic_picker)
 	tactic_picker.show_tactics(session.tactics_for(showing), tactic_id, editable)
 	page.add_child(_wrapped("Charm and sigil slots come with the run.", 16, UiStyle.TEXT_DIM))
+
+
+
+## A run's loadout: each slot's item (its kind, name, and rule), and a line
+## on where to change it.
+func _fill_run_loadout(run_session: RunSession) -> void:
+	var hero: RunState.Hero = run_session.state().hero(showing)
+	var colors: Array[Color] = [UiStyle.CHARM, UiStyle.TACTIC, UiStyle.SIGIL, UiStyle.EMBER]
+	for id: String in hero.slots:
+		var item: ItemDef = run_session.run.items.get(id, null)
+		if item == null:
+			page.add_child(UiStyle.chip("Empty slot", UiStyle.LINE_500, false, 16))
+			continue
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 12)
+		row.add_child(UiStyle.chip("%s · %s" % [ItemDef.KIND_NAMES[item.kind].capitalize(), item.name], colors[item.kind], true, 16))
+		var works: bool = item.works_on(run_session.run.hero_kit(hero), hero.id)
+		row.add_child(_wrapped(item.text + ("" if works else " (no effect on this hero)"), 16, UiStyle.TEXT if works else UiStyle.BAD))
+		page.add_child(row)
+	page.add_child(_wrapped("Change the loadout before each fight, from the stash.", 16, UiStyle.TEXT_DIM))

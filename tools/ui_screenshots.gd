@@ -4,7 +4,9 @@ extends SceneTree
 ##   xvfb-run godot --path . -s tools/ui_screenshots.gd -- --out=/tmp/shots
 ## The title, then Practice (phase 3): the encounter list, placement (and
 ## the hero panel's tabs, paths and snares on the board), the fight with its chart, a hero's popup, the result, an area warning, and
-## Rift Collapse with the combat log's popup open.
+## Rift Collapse with the combat log's popup open. Then the run (phase 5):
+## vowing, camp, the Pedlar, the route, the loadout, a run's fight and its
+## result, the pick after it, a relic choice, a hero's panel, and the end.
 
 var _main: Main
 var _out: String = "user://screenshots"
@@ -94,7 +96,59 @@ func _run() -> void:
 	while not witches.player.finished() and witches.player.sim.tick < 91 * 10:
 		witches._process(1.0 / 30.0)
 	await _snap("fight_witch_circle_collapse")
+	await _run_screens()
+	RunSave.erase(_main.run_save_path)
 	quit(0)
+
+
+## A run from seed 7 through the real screens (phase 5).
+func _run_screens() -> void:
+	_main.show_run_start(7)
+	var start: RunStartScreen = _main.screen as RunStartScreen
+	start.choose("brannoc", "hearthwall")
+	start.choose("maren", "deadeye")
+	await _snap("run_vows")
+	start.run_started.emit(start.vows, start.run_seed)
+	var flow: RunFlow = _main.run_session.flow
+	await _snap("run_camp")
+	flow.state.camp.assign(["pedlar", "rest", "train"])
+	flow.state.shards = 12
+	flow.choose_camp(0)
+	_main.show_day()
+	await _snap("run_pedlar")
+	flow.buy(0)
+	flow.buy(1)
+	flow.leave_camp()
+	_main.show_day()
+	await _snap("run_route")
+	flow.choose_fight(0)
+	flow.equip("maren", 0, flow.state.stash[0])
+	_main.show_day()
+	await _snap("run_loadout")
+	_main.show_run_fight()
+	var arena: ArenaScreen = _main.screen as ArenaScreen
+	await _snap("run_placement")
+	arena._fight()
+	for frame: int in 6 * 30:
+		arena._process(1.0 / 30.0)
+	await _snap("run_fight_6s")
+	arena.skip()
+	await _snap("run_fight_end")
+	arena.continue_run()
+	var day: RunDayScreen = _main.screen as RunDayScreen
+	if flow.state.pick.is_empty():
+		flow.state.pick = Offers.pick(flow.run, flow.state, 0)
+		day.refresh()
+	flow.state.relic_choice = Offers.relics(flow.run, flow.state, RunFlow.RELIC_SHRINE, 2)
+	day.refresh()
+	await _snap("run_pick_and_relic")
+	day.open_panel("maren")
+	await _snap("run_panel_maren")
+	day.hero_panel.close()
+	flow.state.phase = RunState.Phase.ENDED
+	flow.state.outcome = RunState.Outcome.WON
+	day.refresh()
+	await _snap("run_end")
 
 
 func _snap(name: String) -> void:
