@@ -1,0 +1,102 @@
+[
+  {
+    "_note": "Duo bonds (docs/plans/rebuild-phase5-run.md, section 8; Decision 4): two paths of two heroes; each gets its mod once both heroes have transformed into them. Vowing both shows the bond as \"?\" (a bond stirs). First versions of part 4's examples, within what kit mods can say.",
+    "id": "sentry_and_sniper",
+    "name": "Sentry and Sniper",
+    "text": "The wall and the eye behind it.",
+    "paths": {
+      "hearthwall": {
+        "text": "His attacks give more mana, so Hearthwall comes sooner.",
+        "mod": {
+          "mana": {
+            "per_attack_add": 2
+          }
+        }
+      },
+      "deadeye": {
+        "text": "Planted, she reaches 1 hex farther still.",
+        "mod": {
+          "passives": [
+            {
+              "id": "sentry_sight",
+              "name": "Sentry's Sight",
+              "kind": "aura",
+              "text": "After 1.5s without moving, she reaches 1 hex farther (Sentry and Sniper).",
+              "aura": {
+                "target": "holder",
+                "stat": "range",
+                "value": 1,
+                "while": "planted",
+                "after_ms": 1500
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "snare_and_cleave",
+    "name": "Snare and Cleave",
+    "text": "She holds them; he breaks them.",
+    "paths": {
+      "ironbrand": {
+        "text": "Brand Slam hits 20% harder.",
+        "mod": {
+          "on": [
+            {
+              "slot": "signature",
+              "types": [
+                "damage"
+              ],
+              "amount_bp": 12000
+            }
+          ]
+        }
+      },
+      "trapper": {
+        "text": "Her snares root 1s longer.",
+        "mod": {
+          "on": [
+            {
+              "slot": "signature",
+              "types": [
+                "apply_status"
+              ],
+              "duration_add_ms": 1000
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "light_and_iron",
+    "name": "Light and Iron",
+    "text": "Her wards on his iron.",
+    "paths": {
+      "wardweaver": {
+        "text": "Her Weave's Shield is 25% bigger.",
+        "mod": {
+          "on": [
+            {
+              "slot": "passive:weave",
+              "types": [
+                "shield"
+              ],
+              "amount_bp": 12500
+            }
+          ]
+        }
+      },
+      "hearthwall": {
+        "text": "His DEF is 8% higher.",
+        "mod": {
+          "stats_bp": {
+            "def": 10800
+          }
+        }
+      }
+    }
+  }
+]

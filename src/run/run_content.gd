@@ -1,14 +1,16 @@
 class_name RunContent
 extends RefCounted
 ## The run's data, apart from the sim's (docs/plans/rebuild-phase5-run.md):
-## the act, the upgrades, the items, and (as later steps add them) relics,
-## duo bonds, and camps. It sits over the sim's ContentDb, which it cross-checks
+## the act, the upgrades, the items, camp, the relics, and the duo bonds. It sits over the sim's ContentDb, which it cross-checks
 ## against: every encounter a day can draw, every path and hero named.
 
 const ACT_FILE: String = "act1.json"
 const UPGRADES_FILE: String = "upgrades.json"
 const ITEMS_FILE: String = "items.json"
-const FILES: Array[String] = [ACT_FILE, UPGRADES_FILE, ITEMS_FILE]
+const CAMPS_FILE: String = "camps.json"
+const RELICS_FILE: String = "relics.json"
+const BONDS_FILE: String = "bonds.json"
+const FILES: Array[String] = [ACT_FILE, UPGRADES_FILE, ITEMS_FILE, CAMPS_FILE, RELICS_FILE, BONDS_FILE]
 
 var content: ContentDb
 var act: ActDef = null
@@ -17,6 +19,11 @@ var upgrades: Dictionary[String, UpgradeDef] = {}
 var upgrade_ids: Array[String] = []
 var items: Dictionary[String, ItemDef] = {}
 var item_ids: Array[String] = []
+var camps: CampsDef = null
+var relics: Dictionary[String, RelicDef] = {}
+var relic_ids: Array[String] = []
+var bonds: Dictionary[String, BondDef] = {}
+var bond_ids: Array[String] = []
 var errors: Array[String] = []
 
 
@@ -46,6 +53,19 @@ static func load_texts(texts: Dictionary[String, String], content_db: ContentDb)
 			run.act = ActDef.read(reader)
 	run._read_upgrades(run._parse(texts, UPGRADES_FILE))
 	run._read_items(run._parse(texts, ITEMS_FILE))
+	var camps_data: Variant = run._parse(texts, CAMPS_FILE)
+	if camps_data != null:
+		var camps_reader: DataReader = DataReader.from_value(camps_data, CAMPS_FILE, run.errors)
+		if camps_reader != null:
+			run.camps = CampsDef.read(camps_reader)
+	for reader: DataReader in run._entries(run._parse(texts, RELICS_FILE), RELICS_FILE):
+		var relic: RelicDef = RelicDef.read(reader)
+		if run._claim(relic.id, reader, run.relic_ids):
+			run.relics[relic.id] = relic
+	for reader: DataReader in run._entries(run._parse(texts, BONDS_FILE), BONDS_FILE):
+		var bond: BondDef = BondDef.read(reader)
+		if run._claim(bond.id, reader, run.bond_ids):
+			run.bonds[bond.id] = bond
 	run._check()
 	return run
 
@@ -127,6 +147,63 @@ func loadout_tactic(hero: RunState.Hero) -> TacticDef:
 	return null
 
 
+## The kit mods the run's relics give every hero, in the order taken.
+func relic_mods(state: RunState) -> Array[KitMod]:
+	var mods: Array[KitMod] = []
+	for id: String in state.relics:
+		if relics.has(id) and relics[id].mod != null:
+			mods.append(relics[id].mod)
+	return mods
+
+
+## The bonds on for the run's heroes: both paths vowed and transformed.
+func active_bonds(state: RunState) -> Array[BondDef]:
+	return _bonds_where(state, true)
+
+
+## The bonds that stir: both paths vowed, not both transformed (shown as "?").
+func stirring_bonds(state: RunState) -> Array[BondDef]:
+	var stirring: Array[BondDef] = _bonds_where(state, false)
+	return stirring.filter(func(bond: BondDef) -> bool: return not active_bonds(state).has(bond))
+
+
+func _bonds_where(state: RunState, transformed: bool) -> Array[BondDef]:
+	var found: Array[BondDef] = []
+	for id: String in bond_ids:
+		var bond: BondDef = bonds[id]
+		var on: bool = true
+		for path_id: String in bond.paths:
+			var hero: RunState.Hero = state.hero(content.paths[path_id].hero) if content.paths.has(path_id) else null
+			if hero == null or hero.path != path_id or (transformed and not hero.transformed):
+				on = false
+		if on:
+			found.append(bond)
+	return found
+
+
+## The run's rules from its relics: the sum of one of RelicDef's numbers.
+func relic_sum(state: RunState, key: String) -> int:
+	var total: int = 0
+	for id: String in state.relics:
+		if relics.has(id):
+			total += int(relics[id].get(key))
+	return total
+
+
+func relic_rule(state: RunState, key: String) -> bool:
+	return state.relics.any(func(id: String) -> bool: return relics.has(id) and bool(relics[id].get(key)))
+
+
+func _claim(id: String, reader: DataReader, ids: Array[String]) -> bool:
+	if id.is_empty():
+		return false
+	if ids.has(id):
+		reader.error("duplicate id \"%s\"" % id)
+		return false
+	ids.append(id)
+	return true
+
+
 func _entries(data: Variant, file_name: String) -> Array[DataReader]:
 	var readers: Array[DataReader] = []
 	if data == null:
@@ -185,6 +262,63 @@ func _check() -> void:
 		_check_all_upgrades(hero_id)
 	for id: String in item_ids:
 		_check_item(items[id], "%s (%s)" % [ITEMS_FILE, id])
+	var hero_kits: Array[UnitDef] = []
+	for path_id: String in content.path_ids:
+		hero_kits.append_array([content.paths[path_id].vowed_kit, content.paths[path_id].transformed_kit])
+	var enemy_kits: Array[UnitDef] = []
+	for enemy_id: String in content.enemy_ids:
+		enemy_kits.append(content.enemies[enemy_id].kit)
+	for id: String in relic_ids:
+		var relic: RelicDef = relics[id]
+		_check_mod(relic.mod, hero_kits, "%s (%s)" % [RELICS_FILE, id])
+		_check_mod(relic.rest_mod, hero_kits, "%s (%s): rest_mod" % [RELICS_FILE, id])
+		_check_mod(relic.enemy_mod, enemy_kits, "%s (%s): enemy_mod" % [RELICS_FILE, id])
+	if camps != null:
+		_check_mod(camps.fortify_mod, hero_kits, "%s: fortify_mod" % CAMPS_FILE)
+		_check_mod(camps.rift_tear_mod, enemy_kits, "%s: rift_tear_mod" % CAMPS_FILE)
+		if act != null:
+			for day: int in range(1, act.days.size()):
+				if act.days[day - 1] == "normal" and encounters_for("hunt", day).is_empty():
+					errors.append("%s: day %d needs a hunt pack (an encounter of tier hunt)" % [CAMPS_FILE, day])
+	for id: String in bond_ids:
+		_check_bond(bonds[id], "%s (%s)" % [BONDS_FILE, id])
+
+
+## A mod must be sound on every kit it can meet.
+func _check_mod(mod: KitMod, kits: Array[UnitDef], where: String) -> void:
+	if mod == null:
+		return
+	for kit: UnitDef in kits:
+		if kit == null:
+			continue
+		var problems: Array[String] = []
+		mod.apply(kit, problems)
+		for problem: String in problems:
+			errors.append("%s: on %s, %s" % [where, kit.id, problem])
+
+
+## A bond's two paths must exist and belong to two different heroes; each
+## mod must change its path's transformed kit, soundly.
+func _check_bond(bond: BondDef, where: String) -> void:
+	if bond.paths.size() != 2:
+		return
+	for path_id: String in bond.paths:
+		if not content.paths.has(path_id):
+			errors.append("%s: unknown path \"%s\"" % [where, path_id])
+			return
+	if content.paths[bond.paths[0]].hero == content.paths[bond.paths[1]].hero:
+		errors.append("%s: a bond links two different heroes' paths" % where)
+	for path_id: String in bond.paths:
+		var kit: UnitDef = content.paths[path_id].transformed_kit
+		var mod: KitMod = bond.mods.get(path_id)
+		if kit == null or mod == null:
+			continue
+		var problems: Array[String] = []
+		mod.apply(kit, problems)
+		for problem: String in problems:
+			errors.append("%s: on %s transformed, %s" % [where, path_id, problem])
+		if not mod.affects(kit):
+			errors.append("%s: does nothing on %s transformed" % [where, path_id])
 
 
 ## A tactic item's tactic must exist; a mod must be sound on every hero kit

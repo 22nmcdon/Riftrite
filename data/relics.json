@@ -1,0 +1,140 @@
+[
+  {
+    "_note": "Relics (docs/plans/rebuild-phase5-run.md, section 8; part 4, section 7): each has a boon and a cost. A \"mod\" changes every hero's kit (after the loadout); an \"enemy_mod\" every enemy's; the rest are run rules (RelicDef). Sources: elites, the Shrine, a Rift Tear win (a choice of 2, or neither), the Pedlar now and then, and the Magpie. Numbers are first guesses.",
+    "id": "ember_heart",
+    "name": "Ember Heart",
+    "flavor": "It still beats, and it still burns.",
+    "boon": "Every hero's basic attack sets its target Burning.",
+    "cost": "Every heal your heroes give is 20% weaker.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "add_effects": [
+            {
+              "trigger": "on_hit",
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 1,
+              "target": "target"
+            }
+          ]
+        },
+        {
+          "slot": "abilities",
+          "types": [
+            "heal"
+          ],
+          "amount_bp": 8000
+        }
+      ]
+    }
+  },
+  {
+    "id": "hollow_crown",
+    "name": "Hollow Crown",
+    "flavor": "Whoever wore it wanted more.",
+    "boon": "Each hero gets a fourth loadout slot.",
+    "cost": "Each wound takes 20% of max HP, not 15%.",
+    "slots_add": 1,
+    "wound_bp_add": 500
+  },
+  {
+    "id": "rift_glass_eye",
+    "name": "Rift-Glass Eye",
+    "flavor": "Look through it and the rift looks back.",
+    "boon": "Every fight is Scouted: you see where its enemies stand.",
+    "cost": "Enemies have 10% more HP.",
+    "always_scout": true,
+    "enemy_mod": {
+      "stats_bp": {
+        "hp": 11000
+      }
+    }
+  },
+  {
+    "id": "pilgrims_lantern",
+    "name": "Pilgrim's Lantern",
+    "flavor": "It has walked further than you will.",
+    "boon": "Rest also steadies the team: 10% more max HP in the next fight.",
+    "cost": "The Pedlar charges 1 more shard for everything.",
+    "rest_mod": {
+      "stats_bp": {
+        "hp": 11000
+      }
+    },
+    "price_add": 1
+  },
+  {
+    "id": "bloodstone",
+    "name": "Bloodstone",
+    "flavor": "Warm to the touch, and thirsty.",
+    "boon": "Every hero hits 12% harder.",
+    "cost": "Every hero has 8% less max HP.",
+    "mod": {
+      "stats_bp": {
+        "atk": 11200,
+        "hp": 9200
+      }
+    }
+  },
+  {
+    "id": "wardens_chain",
+    "name": "Warden's Chain",
+    "flavor": "Heavy links, and heavier oaths.",
+    "boon": "Every hero's DEF is 15% higher.",
+    "cost": "Every hero walks slower.",
+    "mod": {
+      "stats_bp": {
+        "def": 11500
+      },
+      "stats_add": {
+        "speed": -1
+      }
+    }
+  },
+  {
+    "id": "gravediggers_coin",
+    "name": "Gravedigger's Coin",
+    "flavor": "Paid in advance.",
+    "boon": "Every won fight pays 2 more shards.",
+    "cost": "After-fight picks show only 2 cards.",
+    "pay_add": 2,
+    "pick_cards": 2
+  },
+  {
+    "id": "hungry_blade",
+    "name": "Hungry Blade",
+    "flavor": "It never quite stops cutting.",
+    "boon": "Every hero's basic attack heals it for a tenth of the damage.",
+    "cost": "Every hero takes 20% less healing from others.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "add_effects": [
+            {
+              "trigger": "on_hit",
+              "type": "heal",
+              "amount_bp_of_damage": 1000,
+              "target": "self"
+            }
+          ]
+        }
+      ],
+      "passives": [
+        {
+          "id": "hungry_blade",
+          "name": "Hungry Blade",
+          "kind": "aura",
+          "text": "Heals on the holder are 20% weaker.",
+          "aura": {
+            "target": "holder",
+            "stat": "healing_taken_bp",
+            "value": 8000
+          }
+        }
+      ]
+    }
+  }
+]

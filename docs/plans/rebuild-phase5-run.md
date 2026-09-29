@@ -135,6 +135,17 @@ Decisions made while building it (step 4):
 - **Hunt** is a fight right away (a small pack drawn for the day), paying shards; losing it doesn't count as a loss.
 - Scout and the next fight's modifiers show on the route and placement screens.
 
+**Built in steps 5 and 6 (2026-09-29):** `data/camps.json` (`CampsDef`): the options' names and lines, the four places and their menus (6 options each; a camp shows 3), the Magpie's days (3–6), the Pedlar's relic chance (33%), and Fortify's and Rift Tear's mods. What each option does is `RunFlow.choose_camp`'s (one job each; `CampsDef.OPTIONS` lists them). A camp is drawn on arriving (`Offers.camp`, the CAMP stream by day and attempt); on the Magpie's day (its first try) he's the only option. The next fight's modifiers (Fortify, Dig In's rock, Rift Tear, a steadying Rest) are spent by the day's fight, won or lost. A Hunt draws one of two new small packs (`stray_pups`, `lone_hounds`: tier `hunt`, left out of the sim runner's gate), fights at camp with its own seed stream, pays 2 shards on a win, and a loss isn't a loss. `data/relics.json` (`RelicDef`: a team mod, an enemy mod, a Rest mod, and run rules: slots, what a wound takes, always Scouted, prices, pay, pick cards); a choice of 2 or neither after a won elite or Rift Tear fight and at the Shrine; one for sale at the Pedlar now and then (9 shards) and at the Magpie always (14). `data/bonds.json` (`BondDef`): three bonds, on once both heroes have transformed (found then), stirring while both are vowed. A fight's kit order: path, upgrades, loadout, relics, camp modifiers, bonds. The run bot takes camp options by a fixed order (Rest when someone has 2 wounds), shops, hunts, and takes the first relic. Tests: `tests/run/test_camp.gd`.
+
+Decisions made while building them (steps 5 and 6):
+- **Leaving camp without taking an option** is allowed; anything an option opened (a pick, a relic choice, a Hunt, Map the Rift's swap) must be settled first.
+- **Map the Rift:** the player picks which of tomorrow's two fights to swap; the new one is of the same tier and allowed that day. Not before the boss.
+- **Dig In:** the rock can be placed any time before the fight, on a hex of the heroes' zone; one under a hero is refused at the fight.
+- **Fortify and Rift Tear** are kit mods (a Shield at the fight's first tick, 40 on each hero and 30 on each enemy), so they need no new code.
+- **A Hunt** takes no camp modifiers and counts deeds and wounds like any fight; it gives no pick.
+- **Relics, first versions within kit mods:** Ember Heart's "Burn doubled" became "every basic attack Burns" (a mod can't double a status); Pilgrim's Lantern's Rest bonus lasts the next fight.
+- **Bonds, first versions within kit mods:** Sentry and Sniper gives Brannoc mana per attack (not mana on Maren's far hits) and Maren +1 range while planted; Light and Iron gives Brannoc DEF (not mana for Vell from guarded damage). Richer versions need their own sim pieces; the run report decides whether they're worth it.
+
 ## 10. Elites and Old Mother Ash
 
 - **The Hound Alpha, "The Hunt"**, **the Witch Coven, "Gloam Totem"**, and **the Cairn Watch, "Stone Ward"** (`rebuild-enemies.md`, section 3), each an encounter of tier `elite` with its leader and pack, previewed from the act's start. Each says what it does and what answers it on its card.

@@ -70,7 +70,8 @@ static func setup(content: ContentDb, encounter_id: String, formation: Dictionar
 			var hero: UnitSetup = UnitSetup.make(kit, EffectSource.Team.HEROES, hex.x, hex.y)
 			if extras.has(hero_id):
 				hero.mods = extras[hero_id].mods.duplicate()
-				hero.max_hp_bp = FixedMath.BP_ONE - extras[hero_id].wounds * content.tuning.wound_bp
+				var each_wound: int = extras[hero_id].wound_bp if extras[hero_id].wound_bp > 0 else content.tuning.wound_bp
+				hero.max_hp_bp = FixedMath.BP_ONE - extras[hero_id].wounds * each_wound
 			hero.path = path
 			hero.stage = stage
 			hero.deed_paths = hero_def.paths.duplicate()

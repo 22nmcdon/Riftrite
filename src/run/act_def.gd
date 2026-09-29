@@ -24,6 +24,8 @@ var wild_card_pct: int = 0
 ## Shards to treat one wound, and to reroll the Pedlar's wares.
 var wound_price: int = 2
 var reroll_price: int = 1
+## A relic's price at the Pedlar (the Magpie's markup on top).
+var relic_price: int = 9
 ## How many wares the Pedlar and the Magpie lay out; the Magpie's prices
 ## are the items' times magpie_markup_pct (rounded up).
 var pedlar_wares: int = 4
@@ -43,6 +45,7 @@ static func read(reader: DataReader) -> ActDef:
 	if prices != null:
 		def.wound_price = prices.req_int("wound", 0)
 		def.reroll_price = prices.req_int("reroll", 0)
+		def.relic_price = prices.req_int("relic", 0)
 		prices.finish()
 	def.pedlar_wares = reader.req_int("pedlar_wares", 1, 8)
 	def.magpie_wares = reader.req_int("magpie_wares", 1, 8)

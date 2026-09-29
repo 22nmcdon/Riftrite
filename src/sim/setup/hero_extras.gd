@@ -7,10 +7,14 @@ extends RefCounted
 
 var mods: Array[KitMod] = []
 var wounds: int = 0
+## What each wound takes, in basis points of max HP (0: tuning's wound_bp;
+## a relic can change it).
+var wound_bp: int = 0
 
 
-static func make(kit_mods: Array[KitMod] = [], wound_count: int = 0) -> HeroExtras:
+static func make(kit_mods: Array[KitMod] = [], wound_count: int = 0, each_wound_bp: int = 0) -> HeroExtras:
 	var extras := HeroExtras.new()
 	extras.mods = kit_mods
 	extras.wounds = wound_count
+	extras.wound_bp = each_wound_bp
 	return extras

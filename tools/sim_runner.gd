@@ -58,7 +58,9 @@ func _init() -> void:
 	if not errors.is_empty():
 		_fail("\n".join(errors))
 		return
-	var encounter_ids: Array[String] = content.encounter_ids
+	# A Hunt's small pack (phase 5) is a quick fight for shards, not a
+	# placement question, so only --encounter runs one.
+	var encounter_ids: Array[String] = content.encounter_ids.filter(func(id: String) -> bool: return content.encounters[id].tier != "hunt")
 	if not options["encounter"].is_empty():
 		if not content.encounters.has(options["encounter"]):
 			_fail("unknown encounter %s" % options["encounter"])

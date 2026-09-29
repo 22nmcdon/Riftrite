@@ -1,0 +1,162 @@
+{
+  "_note": "Camp (docs/plans/rebuild-phase5-run.md, section 9; Decisions 8, 9, 13): each option has one job, and what it does is code (RunFlow); this file names them, says which places offer which, and gives their numbers. A camp shows `shown` options drawn from its place's menu. The Magpie is no place's: once an act, on a day drawn from magpie_days, it's the camp's only option. All numbers are first guesses.",
+  "shown": 3,
+  "magpie_days": [
+    3,
+    4,
+    5,
+    6
+  ],
+  "pedlar_relic_pct": 33,
+  "options": [
+    {
+      "id": "train",
+      "name": "Train",
+      "text": "An upgrade pick: one of three upgrades for your heroes."
+    },
+    {
+      "id": "hunt",
+      "name": "Hunt",
+      "text": "Fight a small pack right now for shards. Losing it doesn't count as a loss."
+    },
+    {
+      "id": "pedlar",
+      "name": "Pedlar",
+      "text": "Buy charms, tactics, and sigils, and treat wounds; now and then a relic."
+    },
+    {
+      "id": "rest",
+      "name": "Rest",
+      "text": "Clears every wound on the team."
+    },
+    {
+      "id": "scout",
+      "name": "Scout",
+      "text": "See where the enemies of the next 2 days stand."
+    },
+    {
+      "id": "map_the_rift",
+      "name": "Map the Rift",
+      "text": "Swap one of tomorrow's two fights for a different one."
+    },
+    {
+      "id": "fortify",
+      "name": "Fortify",
+      "text": "Your heroes start the next fight behind a small Shield."
+    },
+    {
+      "id": "dig_in",
+      "name": "Dig In",
+      "text": "Place a rock in your zone for the next fight."
+    },
+    {
+      "id": "rift_tear",
+      "name": "Rift Tear",
+      "text": "The next fight's enemies start behind a Shield from the rift; win it for a relic choice."
+    },
+    {
+      "id": "shrine",
+      "name": "Shrine",
+      "text": "A choice of two relics, each with a cost, or neither."
+    },
+    {
+      "id": "magpie",
+      "name": "The Magpie",
+      "text": "He sells what he took from bands who fell in the rift: grafts, other gear, and a relic. Dear, and one look only."
+    }
+  ],
+  "places": [
+    {
+      "id": "waystone",
+      "name": "Waystone",
+      "text": "A standing stone the rift hasn't swallowed yet.",
+      "options": [
+        "train",
+        "rest",
+        "pedlar",
+        "scout",
+        "fortify",
+        "map_the_rift"
+      ]
+    },
+    {
+      "id": "ruined_chapel",
+      "name": "Ruined Chapel",
+      "text": "Half a roof, and something still kneeling at the altar.",
+      "options": [
+        "shrine",
+        "rest",
+        "train",
+        "fortify",
+        "dig_in",
+        "pedlar"
+      ]
+    },
+    {
+      "id": "hunters_blind",
+      "name": "Hunter's Blind",
+      "text": "A blind of bone and hide, facing the dark.",
+      "options": [
+        "hunt",
+        "scout",
+        "dig_in",
+        "train",
+        "map_the_rift",
+        "pedlar"
+      ]
+    },
+    {
+      "id": "rift_scar",
+      "name": "Rift Scar",
+      "text": "The ground here is torn, and it hums.",
+      "options": [
+        "rift_tear",
+        "hunt",
+        "shrine",
+        "fortify",
+        "dig_in",
+        "rest"
+      ]
+    }
+  ],
+  "fortify_mod": {
+    "passives": [
+      {
+        "id": "fortified",
+        "name": "Fortified",
+        "kind": "ability",
+        "text": "Starts the fight behind a small Shield (Fortify, at camp).",
+        "effects": [
+          {
+            "trigger": "on_interval",
+            "interval_ms": 50,
+            "once": true,
+            "type": "shield",
+            "amount": 40,
+            "target": "self"
+          }
+        ]
+      }
+    ]
+  },
+  "rift_tear_mod": {
+    "passives": [
+      {
+        "id": "rift_warded",
+        "name": "Rift-Warded",
+        "kind": "ability",
+        "text": "Starts the fight behind a Shield from the rift (Rift Tear).",
+        "effects": [
+          {
+            "trigger": "on_interval",
+            "interval_ms": 50,
+            "once": true,
+            "type": "shield",
+            "amount": 30,
+            "target": "self"
+          }
+        ]
+      }
+    ]
+  }
+}

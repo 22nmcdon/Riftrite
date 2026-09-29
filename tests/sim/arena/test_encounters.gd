@@ -117,12 +117,16 @@ const ROSTERS: Dictionary = {
 	"sentinel_gate": {"rift_worn_sentinel": 1, "hollow_archer": 2},
 	"cairn_road": {"cairn_guardian": 1, "rift_hound": 2},
 	"witch_circle": {"gloam_witch": 1, "rift_worn_sentinel": 1, "cinder_moth": 1},
+	# Phase 5: a Hunt's packs.
+	"stray_pups": {"rift_pup": 4},
+	"lone_hounds": {"rift_hound": 2},
 }
 
 
 func test_the_act_1_encounters_are_the_plans() -> void:
 	var content: ContentDb = ContentDb.load_dir("res://data")
-	assert_eq(content.encounter_ids, ["pup_warren", "ash_nest", "the_pack", "moth_cloud", "hollow_line", "bog_crossing", "sentinel_gate", "cairn_road", "witch_circle"])
+	assert_eq(content.encounter_ids, ["pup_warren", "ash_nest", "the_pack", "moth_cloud", "hollow_line", "bog_crossing", "sentinel_gate", "cairn_road", "witch_circle",
+		"stray_pups", "lone_hounds"])
 	for encounter_id: String in content.encounter_ids:
 		var encounter: EncounterDef = content.encounters[encounter_id]
 		var counts: Dictionary = {}

@@ -66,3 +66,49 @@ static func _draw(rng: SimRng, pool: Array[String], count: int) -> Array[String]
 	while drawn.size() < count and not left.is_empty():
 		drawn.append(left.pop_at(rng.range_int(left.size())))
 	return drawn
+
+
+## Today's camp: a place (by the camp stream), then camps.shown different
+## options from its menu, in the menu's order. Returns [place id, options].
+static func camp(run: RunContent, state: RunState) -> Array:
+	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.CAMP, state.act, state.day, state.attempt])
+	var place: CampsDef.Place = run.camps.places[rng.range_int(run.camps.places.size())]
+	var picked: Array[String] = _draw(rng, place.options, run.camps.shown)
+	var options: Array[String] = place.options.filter(func(id: String) -> bool: return picked.has(id))
+	return [place.id, options]
+
+
+## The day the Magpie comes: one of camps.magpie_days, drawn once a run.
+static func magpie_day(run: RunContent, run_seed: int, act: int) -> int:
+	var days: Array[int] = run.camps.magpie_days
+	if days.is_empty():
+		return 0
+	return days[RunRandom.stream(run_seed, [RunRandom.MAGPIE, act, 0]).range_int(days.size())]
+
+
+## A Hunt's pack: one of the hunt encounters allowed today ("" if none).
+static func hunt(run: RunContent, state: RunState) -> String:
+	var packs: Array[String] = run.encounters_for("hunt", state.day)
+	if packs.is_empty():
+		return ""
+	return packs[RunRandom.stream(state.seed_value, [RunRandom.HUNT, state.act, state.day, state.attempt]).range_int(packs.size())]
+
+
+## `count` different relics the run doesn't hold, from the relic stream at
+## `visit` (where the choice happens: see RunFlow).
+static func relics(run: RunContent, state: RunState, visit: int, count: int) -> Array[String]:
+	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.RELIC, state.act, state.day, state.attempt, visit])
+	var pool: Array[String] = run.relic_ids.filter(func(id: String) -> bool: return not state.relics.has(id))
+	return _draw(rng, pool, count)
+
+
+## Map the Rift: a fight to swap in for tomorrow's option `index`, of the
+## same tier, allowed that day, and not already offered ("" if there's none).
+static func swap(run: RunContent, state: RunState, index: int) -> String:
+	var tomorrow: int = state.day + 1
+	var offered: Array = state.options[tomorrow - 1]
+	var tier: String = run.content.encounters[offered[index]].tier
+	var pool: Array[String] = run.encounters_for(tier, tomorrow).filter(func(id: String) -> bool: return not offered.has(id))
+	if pool.is_empty():
+		return ""
+	return pool[RunRandom.stream(state.seed_value, [RunRandom.ACT_DRAW, state.act, tomorrow, index, 1]).range_int(pool.size())]

@@ -31,7 +31,7 @@ func test_the_encounter_list() -> void:
 	assert_not_null(main.practice, "Practice's session is made on the way in")
 	var list: EncounterListScreen = main.screen
 	var cards: Array[Node] = U.find_all(list, Button).filter(func(node: Node) -> bool: return (node as Button).text == "Place your heroes")
-	assert_eq(cards.size(), 9, "all nine Act 1 encounters (Decision 7)")
+	assert_eq(cards.size(), _content.encounter_ids.size(), "every Act 1 encounter (Decision 7), the run's new ones too")
 	var picked: Array[String] = []
 	list.encounter_picked.disconnect(main.show_arena)
 	list.encounter_picked.connect(func(encounter_id: String) -> void: picked.append(encounter_id))

@@ -22,6 +22,11 @@ extends RefCounted
 ## Pedlar only) reroll; leaving camp closes it. A fight's kit is the path's,
 ## then its upgrades, then its loadout in slot order.
 
+## Where a relic choice happens (its stream's visit).
+const RELIC_SHRINE: int = 0
+const RELIC_AFTER_FIGHT: int = 1
+const RELIC_SHOP: int = 2
+
 var run: RunContent
 var state: RunState
 
@@ -55,7 +60,10 @@ static func start(run_content: RunContent, run_seed: int, vows: Dictionary[Strin
 			hero.slots.append("")
 		state.heroes.append(hero)
 	state.options = ActDraw.draw(run_content, run_seed)
-	return resume(run_content, state)
+	state.magpie_day = Offers.magpie_day(run_content, run_seed, state.act)
+	var flow: RunFlow = resume(run_content, state)
+	flow._arrive()
+	return flow
 
 
 ## A flow over a state already made (a loaded save).
@@ -66,16 +74,123 @@ static func resume(run_content: RunContent, run_state: RunState) -> RunFlow:
 	return flow
 
 
-# --- the day ---------------------------------------------------------------------
+# --- camp -------------------------------------------------------------------------
 
-## Leaves camp without taking an option (step 5 brings the options).
+## Arrives at camp (a new day, or a day replayed): the place and its options
+## are drawn; on the Magpie's day (its first try), he's the only option.
+func _arrive() -> void:
+	state.phase = RunState.Phase.CAMP
+	state.camp_used = ""
+	state.hunt = ""
+	state.mapping = false
+	if state.day == state.magpie_day and state.attempt == 0:
+		state.place = ""
+		state.camp.assign(["magpie"])
+		return
+	var drawn: Array = Offers.camp(run, state)
+	state.place = drawn[0]
+	state.camp.assign(drawn[1])
+
+
+## Takes camp option `index` (one a camp). What it does is its one job:
+## train (a pick), hunt (a pack to fight now), pedlar and magpie (a shop),
+## rest (clears wounds), scout (the next 2 days), map_the_rift (then
+## swap_fight), fortify, dig_in (then place_rock), rift_tear (for the next
+## fight), shrine (a relic choice).
+func choose_camp(index: int) -> String:
+	if state.phase != RunState.Phase.CAMP:
+		return _not_now("choose a camp option")
+	if not state.camp_used.is_empty():
+		return "camp's option is already taken today (%s)" % state.camp_used
+	if index < 0 or index >= state.camp.size():
+		return "there's no camp option %d" % index
+	var option: String = state.camp[index]
+	match option:
+		"train":
+			state.pick = _pick_cards(1)
+		"hunt":
+			state.hunt = Offers.hunt(run, state)
+			if state.hunt.is_empty():
+				return "there's no pack to hunt today"
+		"pedlar", "magpie":
+			open_shop(option)
+		"rest":
+			for hero: RunState.Hero in state.heroes:
+				hero.wounds = 0
+			state.rested = state.relics.any(func(id: String) -> bool: return run.relics.has(id) and run.relics[id].rest_mod != null)
+		"scout":
+			for day: int in [state.day + 1, state.day + 2]:
+				if day <= run.act.days.size() and not state.scouted.has(day):
+					state.scouted.append(day)
+		"map_the_rift":
+			if state.day >= run.act.days.size() or run.act.days[state.day] == "boss":
+				return "there's no fight tomorrow to swap"
+			state.mapping = true
+		"fortify":
+			state.fortify = true
+		"dig_in":
+			state.dig_in = true
+		"rift_tear":
+			state.rift_tear = true
+		"shrine":
+			state.relic_choice = Offers.relics(run, state, RELIC_SHRINE, 2)
+	state.camp_used = option
+	return ""
+
+
+## Map the Rift: swaps tomorrow's fight `index` for another of its tier.
+func swap_fight(index: int) -> String:
+	if not state.mapping:
+		return "Map the Rift isn't waiting"
+	var tomorrow: Array = state.options[state.day]
+	if index < 0 or index >= tomorrow.size():
+		return "there's no fight %d tomorrow" % index
+	var swapped: String = Offers.swap(run, state, index)
+	if swapped.is_empty():
+		return "there's no other fight to swap in"
+	tomorrow[index] = swapped
+	state.mapping = false
+	return ""
+
+
+## Dig In: the rock's hex for the next fight, in the heroes' zone.
+func place_rock(hex: Vector2i) -> String:
+	if not state.dig_in:
+		return "Dig In wasn't taken"
+	if state.phase == RunState.Phase.ENDED:
+		return _not_now("place a rock")
+	var grid: HexGrid = run.content.tuning.make_grid()
+	if not grid.has(hex.x, hex.y) or grid.zone(hex.y) != HexGrid.Zone.HEROES:
+		return "a rock goes on a hex in your zone"
+	state.rock.assign([hex.x, hex.y])
+	return ""
+
+
+## Leaves camp, once nothing there is waiting.
 func leave_camp() -> String:
 	if state.phase != RunState.Phase.CAMP:
 		return _not_now("leave camp")
+	var waiting: String = _camp_waiting()
+	if not waiting.is_empty():
+		return waiting
 	close_shop()
 	state.phase = RunState.Phase.ROUTE
 	return ""
 
+
+func _camp_waiting() -> String:
+	if not state.pick.is_empty():
+		return "choose an upgrade or take the shards first"
+	if not state.relic_choice.is_empty():
+		return "choose a relic or neither first"
+	if not state.hunt.is_empty():
+		return "fight the Hunt first"
+	if state.mapping:
+		return "choose which fight to swap first"
+	return ""
+
+
+# --- the day ---------------------------------------------------------------------
 
 ## Chooses today's fight: `index` into today's options.
 func choose_fight(index: int) -> String:
@@ -89,17 +204,35 @@ func choose_fight(index: int) -> String:
 	return ""
 
 
-## The chosen fight from `formation` (hero id -> hex), with every hero as the
-## run has it (path, stage, wounds), or null with the reasons in `errors`.
+## The fight waiting now: a Hunt's pack at camp, or the day's chosen fight
+## at the loadout ("" if neither).
+func fight_encounter() -> String:
+	if state.phase == RunState.Phase.CAMP and not state.hunt.is_empty():
+		return state.hunt
+	if state.phase == RunState.Phase.LOADOUT:
+		return state.chosen
+	return ""
+
+
+## The waiting fight from `formation` (hero id -> hex), with every hero as the
+## run has it, or null with the reasons in `errors`. A hero's kit is its
+## path's at its stage, then its upgrades, its loadout (slot order), the
+## relics, the day's camp modifiers (Fortify, a steadying Rest), and its duo
+## bonds. Enemies take the relics' enemy mods and a Rift Tear's; Dig In's
+## rock joins the encounter's. A Hunt takes no camp modifiers.
 func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String]) -> FightSetup:
-	if state.phase != RunState.Phase.LOADOUT:
+	var encounter_id: String = fight_encounter()
+	if encounter_id.is_empty():
 		errors.append(_not_now("fight"))
 		return null
+	var hunting: bool = encounter_id == state.hunt
 	var content: ContentDb = run.content
 	var vows: Dictionary[String, String] = {}
 	var transformed: Array[String] = []
 	var extras: Dictionary[String, HeroExtras] = {}
 	var tactics: Dictionary[String, String] = {}
+	var bonds: Array[BondDef] = run.active_bonds(state)
+	var wound_bp: int = content.tuning.wound_bp + run.relic_sum(state, "wound_bp_add")
 	for hero: RunState.Hero in state.heroes:
 		if not formation.has(hero.id):
 			continue
@@ -108,12 +241,26 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String])
 			transformed.append(hero.id)
 		var mods: Array[KitMod] = run.upgrade_mods(hero)
 		mods.append_array(run.loadout_mods(hero))
-		extras[hero.id] = HeroExtras.make(mods, hero.wounds)
+		mods.append_array(run.relic_mods(state))
+		if not hunting:
+			if state.fortify:
+				mods.append(run.camps.fortify_mod)
+			if state.rested:
+				for id: String in state.relics:
+					if run.relics[id].rest_mod != null:
+						mods.append(run.relics[id].rest_mod)
+		for bond: BondDef in bonds:
+			if bond.mods.has(hero.path):
+				mods.append(bond.mods[hero.path])
+		extras[hero.id] = HeroExtras.make(mods, hero.wounds, wound_bp)
 		var tactic: TacticDef = run.loadout_tactic(hero)
 		if tactic != null:
 			tactics[hero.id] = tactic.id
-	var setup: FightSetup = Encounters.setup(content, state.chosen, formation, fight_seed(), errors, tactics, vows, transformed, extras)
+	var setup: FightSetup = Encounters.setup(content, encounter_id, formation, fight_seed(), errors, tactics, vows, transformed, extras)
 	if setup != null:
+		_modify_enemies(setup, hunting, errors)
+		if not hunting and state.dig_in and state.rock.size() == 2:
+			setup.rocks.append(Vector2i(state.rock[0], state.rock[1]))
 		errors.append_array(setup.validate(content))
 		for hero: RunState.Hero in state.heroes:
 			if not formation.has(hero.id):
@@ -121,12 +268,35 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String])
 	return setup if errors.is_empty() else null
 
 
-## The seed of today's fight (this attempt's).
+## Every enemy and summon kit takes the relics' enemy mods, and a Rift
+## Tear's upgrade (not on a Hunt).
+func _modify_enemies(setup: FightSetup, hunting: bool, errors: Array[String]) -> void:
+	var mods: Array[KitMod] = []
+	for id: String in state.relics:
+		if run.relics[id].enemy_mod != null:
+			mods.append(run.relics[id].enemy_mod)
+	if state.rift_tear and not hunting:
+		mods.append(run.camps.rift_tear_mod)
+	if mods.is_empty():
+		return
+	var problems: Array[String] = []
+	for enemy: UnitSetup in setup.enemies:
+		for mod: KitMod in mods:
+			enemy.def = mod.apply(enemy.def, problems)
+	for i: int in setup.summon_kits.size():
+		for mod: KitMod in mods:
+			setup.summon_kits[i] = mod.apply(setup.summon_kits[i], problems)
+	for problem: String in problems:
+		errors.append("an enemy upgrade leaves a kit unsound: %s" % problem)
+
+
+## The seed of the waiting fight (this attempt's; a Hunt has its own).
 func fight_seed() -> int:
-	return RunRandom.stream(state.seed_value, [RunRandom.FIGHT, state.act, state.day, state.attempt]).range_int(1 << 30) + 1
+	var what: int = RunRandom.HUNT if fight_encounter() == state.hunt and not state.hunt.is_empty() else RunRandom.FIGHT
+	return RunRandom.stream(state.seed_value, [what, state.act, state.day, state.attempt]).range_int(1 << 30) + 1
 
 
-## Fights the chosen fight from `formation` and records it. Returns the
+## Fights the waiting fight from `formation` and records it. Returns the
 ## result, or null with the reasons in `errors`.
 func fight(formation: Dictionary[String, Vector2i], errors: Array[String]) -> FightResult:
 	var setup: FightSetup = fight_setup(formation, errors)
@@ -137,16 +307,23 @@ func fight(formation: Dictionary[String, Vector2i], errors: Array[String]) -> Fi
 	return result
 
 
-## Records a fought fight: the formation, deeds, wounds, then a win (shards
-## by the fight's tier) or a loss (a replay, or the run's end). fight() calls
-## it; tests call it with a result of their own.
+## Records a fought fight: the formation, deeds, wounds, transformations
+## (and bonds found), then the outcome. A Hunt pays its shards on a win and
+## is done, won or lost (its loss isn't a loss). The day's fight: a win pays
+## by its tier (plus relics), offers the pick, and (an elite, or a Rift
+## Tear) a relic choice; a loss replays the day, or ends the run. Either way
+## the day's camp modifiers are spent. fight() calls it; tests call it with
+## a result of their own.
 func record(formation: Dictionary[String, Vector2i], result: FightResult) -> void:
+	var hunting: bool = fight_encounter() == state.hunt and not state.hunt.is_empty()
+	var encounter_id: String = state.hunt if hunting else state.chosen
+	var won: bool = result.outcome != FightResult.Outcome.DEFEAT
 	state.formation = formation.duplicate()
 	state.just_transformed.clear()
 	var fought := RunState.Fought.new()
 	fought.day = state.day
 	fought.attempt = state.attempt
-	fought.encounter = state.chosen
+	fought.encounter = encounter_id
 	fought.outcome = result.outcome
 	@warning_ignore("integer_division")
 	fought.seconds = result.end_tick / FixedMath.TICKS_PER_SECOND
@@ -163,21 +340,94 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 		if not hero.transformed and hero.deeds.get(hero.path, 0) >= run.content.paths[hero.path].deed.threshold:
 			hero.transformed = true
 			state.just_transformed.append(hero.id)
-	if result.outcome == FightResult.Outcome.DEFEAT:
+	for bond: BondDef in run.active_bonds(state):
+		if not state.bonds_found.has(bond.id):
+			state.bonds_found.append(bond.id)
+	if hunting:
+		state.hunt = ""
+		if won:
+			state.shards += run.act.pay["hunt"]
+		return
+	var torn: bool = state.rift_tear
+	state.fortify = false
+	state.dig_in = false
+	state.rock.clear()
+	state.rift_tear = false
+	state.rested = false
+	if not won:
 		state.losses += 1
 		state.chosen = ""
 		if state.losses >= run.act.losses_to_end:
 			_end(RunState.Outcome.LOST)
 		else:
 			state.attempt += 1
-			state.phase = RunState.Phase.CAMP
+			_arrive()
 		return
-	state.shards += run.act.pay[run.content.encounters[state.chosen].tier]
+	var tier: String = run.content.encounters[state.chosen].tier
+	state.shards += run.act.pay[tier] + run.relic_sum(state, "pay_add")
 	if run.act.days[state.day - 1] == "boss":
 		_end(RunState.Outcome.WON)
 		return
 	state.phase = RunState.Phase.AFTER
-	state.pick = Offers.pick(run, state, 0)
+	state.pick = _pick_cards(0)
+	if tier == "elite" or torn:
+		state.relic_choice = Offers.relics(run, state, RELIC_AFTER_FIGHT, 2)
+
+
+## A pick's cards at `visit`, as many as the relics allow.
+func _pick_cards(visit: int) -> Array[String]:
+	var cards: Array[String] = Offers.pick(run, state, visit)
+	for id: String in state.relics:
+		var most: int = run.relics[id].pick_cards
+		if most > 0 and cards.size() > most:
+			cards.resize(most)
+	return cards
+
+
+# --- relics -----------------------------------------------------------------------
+
+## Takes relic `index` of the waiting choice: it's the run's for good.
+func take_relic(index: int) -> String:
+	if state.relic_choice.is_empty():
+		return "there's no relic choice waiting"
+	if index < 0 or index >= state.relic_choice.size():
+		return "there's no relic %d" % index
+	_gain_relic(state.relic_choice[index])
+	state.relic_choice.clear()
+	return ""
+
+
+## Turns down the waiting relic choice.
+func decline_relic() -> String:
+	if state.relic_choice.is_empty():
+		return "there's no relic choice waiting"
+	state.relic_choice.clear()
+	return ""
+
+
+## Buys the open shop's relic.
+func buy_relic() -> String:
+	if state.shop.is_empty() or state.shop_relic.is_empty():
+		return "there's no relic for sale"
+	var price: int = relic_price()
+	if state.shards < price:
+		return "it costs %d shards; there are %d" % [price, state.shards]
+	state.shards -= price
+	_gain_relic(state.shop_relic)
+	state.shop_relic = ""
+	return ""
+
+
+## What the open shop's relic costs.
+func relic_price() -> int:
+	return _marked_up(run.act.relic_price)
+
+
+func _gain_relic(relic_id: String) -> void:
+	state.relics.append(relic_id)
+	for i: int in run.relics[relic_id].slots_add:
+		for hero: RunState.Hero in state.heroes:
+			hero.slots.append("")
 
 
 ## Takes card `index` of the waiting pick: the upgrade is its hero's for good.
@@ -260,16 +510,21 @@ func unequip(hero_id: String, slot: int) -> String:
 
 # --- shops ------------------------------------------------------------------------
 
-## Opens a shop at camp ("pedlar" or "magpie"), its wares drawn now. Camp's
-## options open it (step 5).
+## Opens a shop at camp ("pedlar" or "magpie"), its wares drawn now (camp's
+## option opens it; tests open one directly). The Pedlar now and then, and
+## the Magpie always, also sells a relic.
 func open_shop(kind: String) -> String:
 	if state.phase != RunState.Phase.CAMP:
 		return _not_now("open a shop")
+	state.shop_relic = ""
 	match kind:
 		"pedlar":
 			state.wares = Offers.pedlar(run, state, 0)
+			if RunRandom.stream(state.seed_value, [RunRandom.PEDLAR, state.act, state.day, state.attempt, -1]).range_int(100) < run.camps.pedlar_relic_pct:
+				state.shop_relic = _first(Offers.relics(run, state, RELIC_SHOP, 1))
 		"magpie":
 			state.wares = Offers.magpie(run, state)
+			state.shop_relic = _first(Offers.relics(run, state, RELIC_SHOP, 1))
 		_:
 			return "there's no shop \"%s\"" % kind
 	state.shop = kind
@@ -277,19 +532,29 @@ func open_shop(kind: String) -> String:
 	return ""
 
 
+static func _first(ids: Array[String]) -> String:
+	return ids[0] if not ids.is_empty() else ""
+
+
 func close_shop() -> void:
 	state.shop = ""
 	state.wares.clear()
 	state.rerolls = 0
+	state.shop_relic = ""
 
 
 ## What ware `item_id` costs at the open shop (the Magpie's markup, rounded up).
 func price_of(item_id: String) -> int:
-	var price: int = run.items[item_id].price
+	return _marked_up(run.items[item_id].price)
+
+
+## A price at the open shop: the Magpie's markup (rounded up), or the
+## Pedlar's, with the relics' price_add.
+func _marked_up(price: int) -> int:
 	if state.shop == "magpie":
 		@warning_ignore("integer_division")
 		return (price * run.act.magpie_markup_pct + 99) / 100
-	return price
+	return price + run.relic_sum(state, "price_add")
 
 
 ## Buys ware `index` into the stash.
@@ -341,11 +606,13 @@ func finish_day() -> String:
 		return _not_now("move on to the next day")
 	if not state.pick.is_empty():
 		return "choose an upgrade or take the shards first"
+	if not state.relic_choice.is_empty():
+		return "choose a relic or neither first"
 	state.day += 1
 	state.attempt = 0
 	state.chosen = ""
 	state.just_transformed.clear()
-	state.phase = RunState.Phase.CAMP
+	_arrive()
 	return ""
 
 

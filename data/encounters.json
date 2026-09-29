@@ -100,5 +100,24 @@
     "enemies": [
       {"enemy": "rift_worn_sentinel", "hex": [3, 4]}, {"enemy": "gloam_witch", "hex": [3, 6]}, {"enemy": "cinder_moth", "hex": [5, 5]}
     ]
+  },
+  {
+    "_note": "Phase 5: a Hunt's small packs (camp: a fight right away for shards; losing it isn't a loss). Not placement questions, so the sim runner's gate leaves them out.",
+    "id": "stray_pups",
+    "name": "Stray Pups",
+    "tests": "a quick fight for shards",
+    "tier": "hunt",
+    "act": 1,
+    "days": [1, 2, 3, 4, 5, 6],
+    "enemies": [{"enemy": "rift_pup", "hex": [2, 4]}, {"enemy": "rift_pup", "hex": [3, 4]}, {"enemy": "rift_pup", "hex": [4, 4]}, {"enemy": "rift_pup", "hex": [5, 4]}]
+  },
+  {
+    "id": "lone_hounds",
+    "name": "Lone Hounds",
+    "tests": "a quick fight for shards",
+    "tier": "hunt",
+    "act": 1,
+    "days": [2, 3, 4, 5, 6],
+    "enemies": [{"enemy": "rift_hound", "hex": [2, 5]}, {"enemy": "rift_hound", "hex": [5, 5]}]
   }
 ]

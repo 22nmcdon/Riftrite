@@ -103,6 +103,38 @@ var shop: String = ""
 ## Its wares (item ids; "" once bought), and how often it's been rerolled.
 var wares: Array[String] = []
 var rerolls: int = 0
+## A relic the open shop sells ("": none, or bought).
+var shop_relic: String = ""
+
+# Camp.
+## Where today's camp is (a place id; "" on the Magpie's day), its options,
+## and the one taken ("": none yet).
+var place: String = ""
+var camp: Array[String] = []
+var camp_used: String = ""
+## A Hunt's pack, waiting to be fought ("": none).
+var hunt: String = ""
+## Map the Rift waits for which of tomorrow's fights to swap.
+var mapping: bool = false
+## For the next fight (the day's, not a Hunt): Fortify, Dig In (and the
+## rock's hex once placed; empty: not yet), Rift Tear, and a Rest with a
+## relic that steadies.
+var fortify: bool = false
+var dig_in: bool = false
+var rock: Array[int] = []
+var rift_tear: bool = false
+var rested: bool = false
+## Days whose fights are Scouted.
+var scouted: Array[int] = []
+## The day the Magpie comes (drawn at the start).
+var magpie_day: int = 0
+
+# Relics and bonds.
+var relics: Array[String] = []
+## A relic choice waiting (relic ids; empty: none).
+var relic_choice: Array[String] = []
+## Duo bonds found (on at least once), in the order found.
+var bonds_found: Array[String] = []
 
 
 func hero(hero_id: String) -> Hero:
@@ -131,7 +163,11 @@ func to_dict() -> Dictionary:
 		"shards": shards, "options": options.duplicate(true), "chosen": chosen, "formation": hexes,
 		"fought": fought.map(func(entry: Fought) -> Dictionary: return entry.to_dict()),
 		"pick": pick.duplicate(), "just_transformed": just_transformed.duplicate(),
-		"stash": stash.duplicate(), "shop": shop, "wares": wares.duplicate(), "rerolls": rerolls,
+		"stash": stash.duplicate(), "shop": shop, "wares": wares.duplicate(), "rerolls": rerolls, "shop_relic": shop_relic,
+		"place": place, "camp": camp.duplicate(), "camp_used": camp_used, "hunt": hunt, "mapping": mapping,
+		"fortify": fortify, "dig_in": dig_in, "rock": rock.duplicate(), "rift_tear": rift_tear, "rested": rested,
+		"scouted": scouted.duplicate(), "magpie_day": magpie_day,
+		"relics": relics.duplicate(), "relic_choice": relic_choice.duplicate(), "bonds_found": bonds_found.duplicate(),
 	}
 
 
@@ -165,4 +201,26 @@ static func from_dict(data: Dictionary) -> RunState:
 	state.shop = str(data.get("shop", ""))
 	state.wares.assign((data.get("wares", []) as Array).map(func(value: Variant) -> String: return str(value)))
 	state.rerolls = int(data.get("rerolls", 0))
+	state.shop_relic = str(data.get("shop_relic", ""))
+	state.place = str(data.get("place", ""))
+	state.camp = _strings(data.get("camp", []))
+	state.camp_used = str(data.get("camp_used", ""))
+	state.hunt = str(data.get("hunt", ""))
+	state.mapping = bool(data.get("mapping", false))
+	state.fortify = bool(data.get("fortify", false))
+	state.dig_in = bool(data.get("dig_in", false))
+	state.rock.assign((data.get("rock", []) as Array).map(func(value: Variant) -> int: return int(value)))
+	state.rift_tear = bool(data.get("rift_tear", false))
+	state.rested = bool(data.get("rested", false))
+	state.scouted.assign((data.get("scouted", []) as Array).map(func(value: Variant) -> int: return int(value)))
+	state.magpie_day = int(data.get("magpie_day", 0))
+	state.relics = _strings(data.get("relics", []))
+	state.relic_choice = _strings(data.get("relic_choice", []))
+	state.bonds_found = _strings(data.get("bonds_found", []))
 	return state
+
+
+static func _strings(values: Variant) -> Array[String]:
+	var found: Array[String] = []
+	found.assign((values as Array).map(func(value: Variant) -> String: return str(value)))
+	return found

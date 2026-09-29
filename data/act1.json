@@ -8,7 +8,7 @@
   "slots": 3,
   "pick_shards": 3,
   "wild_card_pct": 25,
-  "prices": {"wound": 2, "reroll": 1},
+  "prices": {"wound": 2, "reroll": 1, "relic": 9},
   "pedlar_wares": 4,
   "magpie_wares": 4,
   "magpie_markup_pct": 150
