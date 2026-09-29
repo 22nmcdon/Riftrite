@@ -12,13 +12,17 @@ extends RefCounted
 ##                                                   left at 1 HP instead
 ##   {"kind": "ally_falls"}                          each time an ally falls (phase 5's
 ##                                                   sigils)
+##   {"kind": "ally_fires", "ability": "pounce"}     once, when an ally's ability of
+##                                                   that id fires: at that fire's
+##                                                   target, wherever it is (phase 5,
+##                                                   the Hound Alpha's Hunt)
 ## A signature may also fire on extra triggers (AbilityDef.also, from a
 ## sigil's KitMod): hp_below or ally_falls, free of mana.
 ## A stunned unit can't fire a mana signature; every other trigger still fires.
 
-enum Kind { MANA, HP_BELOW, FIGHT_START, AT_TIME, COUNT, WOULD_FALL, ALLY_FALLS }
+enum Kind { MANA, HP_BELOW, FIGHT_START, AT_TIME, COUNT, WOULD_FALL, ALLY_FALLS, ALLY_FIRES }
 
-const KIND_NAMES: Array[String] = ["mana", "hp_below", "fight_start", "at_time", "count", "would_fall", "ally_falls"]
+const KIND_NAMES: Array[String] = ["mana", "hp_below", "fight_start", "at_time", "count", "would_fall", "ally_falls", "ally_fires"]
 ## The kinds an extra trigger (AbilityDef.also) can be.
 const ALSO_KINDS: Array[Kind] = [Kind.HP_BELOW, Kind.ALLY_FALLS]
 
@@ -28,6 +32,8 @@ var at_ticks: int = 0
 ## count: the event counted, and how many make it fire.
 var event: EffectDef.Trigger = EffectDef.Trigger.ON_HIT_TAKEN
 var every: int = 1
+## ally_fires: the ally's ability id.
+var ability: String = ""
 
 
 static func read(reader: DataReader) -> TriggerDef:
@@ -49,6 +55,8 @@ static func read(reader: DataReader) -> TriggerDef:
 			if def.event == EffectDef.Trigger.ON_ABILITY:
 				reader.error("event: a signature can't count on_ability (the unit's only other ability is its basic attack: count on_basic_attack)")
 			def.every = reader.opt_int("every", 1, 1)
+		Kind.ALLY_FIRES:
+			def.ability = reader.req_string("ability")
 	reader.finish()
 	return def
 
@@ -65,4 +73,4 @@ func reason() -> String:
 
 ## Triggers that fire once a fight.
 func is_once() -> bool:
-	return kind == Kind.HP_BELOW or kind == Kind.FIGHT_START or kind == Kind.AT_TIME or kind == Kind.WOULD_FALL
+	return kind == Kind.HP_BELOW or kind == Kind.FIGHT_START or kind == Kind.AT_TIME or kind == Kind.WOULD_FALL or kind == Kind.ALLY_FIRES

@@ -191,11 +191,53 @@ def gloam_witch(uid):
     return "".join(o)
 
 
+def _scaled(body, k):
+    """`body` grown by `k` about its feet (150, 500)."""
+    return f'<g transform="translate(150,500) scale({k}) translate(-150,-500)">{body}</g>'
+
+
+def hound_alpha(uid):
+    # the pack's leader: a bigger hound with a gold-lit crest and collar (phase 5)
+    body = rift_hound(uid).replace(AQUA, GOLD)
+    return _scaled(body, 1.16) + rune(200, 392, 6)
+
+
+def hunt_hound(uid):
+    # a hound of the Alpha's pack: a rift hound with an ember mark
+    return rift_hound(uid) + glow_dot(160, 410, 9, EMBER) + rune(160, 410, 4)
+
+
+def ash_hound(uid):
+    # Old Mother Ash's hounds: ash-grey, with embers for rift light
+    return rift_hound(uid).replace(TIDE_DK, ASH_DK).replace(TIDE, ASH).replace(AQUA, EMBER)
+
+
+def gloam_totem(uid):
+    stone = "M118,496 L112,300 C112,270 128,250 150,246 C172,250 188,270 188,300 L182,496 Z"
+    o = [ground(58),
+         P(stone, STONE), shade(uid, [stone], cut=146, top=240),
+         P("M104,496 L196,496 L190,470 L110,470 Z", STONE_DK, 2),
+         P("M126,262 C136,236 164,236 174,262 L166,276 L134,276 Z", STONE_DK, 2),
+         glow_dot(150, 214, 22, AQUA, strong=True), circle(150, 214, 12, "#c9f7ef", 2),
+         rune(150, 320, 7), rune(150, 380, 6), rune(150, 440, 5),
+         rim("M188,300 C186,380 184,440 182,490", color=AQUA, w=2.4)]
+    return "".join(o)
+
+
+def old_mother_ash(uid):
+    # the boss: a witch's shape grown old and huge, ash and ember
+    body = gloam_witch(uid).replace(DUSK_DK, ASH_DK).replace(DUSK, ASH).replace(TIDE_DK, "#5a2a1a").replace(TIDE, "#7a3a22").replace(AQUA, EMBER)
+    return _scaled(body, 1.22) + glow_dot(150, 330, 26, EMBER)
+
+
 ENEMIES = [("rift_pup", "Rift Pup", rift_pup), ("ashling", "Ashling", ashling),
            ("rift_hound", "Rift Hound", rift_hound), ("cinder_moth", "Cinder Moth", cinder_moth),
            ("hollow_archer", "Hollow Archer", hollow_archer), ("rift_worn_sentinel", "Rift-Worn Sentinel", rift_worn_sentinel),
            ("cairn_guardian", "Cairn Guardian", cairn_guardian), ("bog_lurker", "Bog Lurker", bog_lurker),
-           ("gloam_witch", "Gloam Witch", gloam_witch)]
+           ("gloam_witch", "Gloam Witch", gloam_witch),
+           ("hound_alpha", "Hound Alpha", hound_alpha), ("hunt_hound", "Hunting Hound", hunt_hound),
+           ("gloam_totem", "Gloam Totem", gloam_totem), ("ash_hound", "Ash Hound", ash_hound),
+           ("old_mother_ash", "Old Mother Ash", old_mother_ash)]
 
 
 def standalone(body):

@@ -142,6 +142,8 @@ var tactic: TacticDef = null
 var holding: bool = false
 ## Plant your feet (stop_near): it stopped for a near enemy (Tactics.planted).
 var feet_planted: bool = false
+## The inert trait: it never targets, attacks, or walks.
+var inert: bool = false
 var tactic_waiting: bool = false
 ## Its Guard passive (phase 4; null: none).
 var guard: PartDef = null
@@ -182,6 +184,7 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 			unit.planted_bonus += part.aura.value
 	unit.tactic = setup.tactic
 	unit.holding = setup.tactic != null and setup.tactic.kind == TacticDef.Kind.HOLD_GROUND
+	unit.inert = setup.def.has_trait("inert")
 	unit.deeds = Deeds.make_counter(setup.deed_paths)
 	for part: PartDef in setup.def.passives:
 		if part.kind == PartDef.Kind.GUARD and unit.guard == null:

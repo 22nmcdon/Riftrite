@@ -152,6 +152,27 @@ Decisions made while building them (steps 5 and 6):
 - **Old Mother Ash** with two Ash Hounds: Pack Bond; Molt below 60% (she stalks into the middle, pups every 10s from the edges); Last Ember below 25% (Ember Breath, and the rift closes early). New enemies: the Hound Alpha, the Ash Hound, the Gloam Totem, and Old Mother Ash (the witch and guardian elites use existing enemies).
 - Their HP comes from the sim runner, like phase 2's: each must pass the placement gate.
 
+**Built in step 7 (2026-09-29):** five harder fights (tier `harder`: Hounds and Archers, Lurker's Kindling, Sentinel Under Moths, Witch's Brood, The Warded Charge), the three elites (The Hunt, Witch Coven, Cairn Watch; tier `elite`, days 3 and 5), and Old Mother Ash (tier `boss`, day 7), with five new enemies: the Hound Alpha, the Hunting Hound, the Gloam Totem, the Ash Hound, and Old Mother Ash. Each encounter's `tests` line says what it asks and (elites and the boss) what answers it. The sim pieces (each code, rule 3): an aura on while an ally of a kit stands (`"while": "ally_standing"`, Pack Bond); a signature that fires once when an ally's ability fires, at that fire's target (`ally_fires`, The Hunt; its FIRE entry notes "with <ally>"); and the `inert` trait (the Totem never targets, attacks, or walks; its passives work). Molt's walk into the middle is a range aura in the phase (she reaches 1 hex, so she walks in); her pups come from the edges and Last Ember closes the rift with pieces already there. `CombatSim.result_of` gives a fight's result from a sim played tick by tick (the screens). Tuned with the sim runner (1 seed, 4 named + 20 drawn formations, base heroes), by `scale_bp`, until each passes the placement gate:
+
+| Encounter | scale_bp | Formations that win |
+| --- | --- | --- |
+| Hounds and Archers | 8000 | 17 of 24 |
+| Lurker's Kindling | 8000 | 9 of 24 |
+| Sentinel Under Moths | 15500 | 14 of 24 |
+| Witch's Brood | 8000 | 8 of 24 |
+| The Warded Charge | 12500 | 7 of 24 |
+| The Hunt | 7500 | 19 of 24 |
+| Witch Coven | 5500 (and the Totem's Shield 25 to 15) | 4 of 24 |
+| Cairn Watch | 10000 | 21 of 24 |
+| Old Mother Ash | 6500 | 13 of 24 |
+
+These are against base heroes; in a run the heroes are vowed or transformed and upgraded by then, so the run report (step 9) tunes them again. Tests: `tests/sim/test_elite_pieces.gd`, and the encounter tests list the new rosters.
+
+Decisions made while building it (step 7):
+- **Molt's "stalks into the middle"** is a phase aura that cuts her reach to 1 hex, so she walks in toward the heroes; no "walk to a spot" piece.
+- **The Hunt:** the Alpha pounces at the start; its Hunting Hounds pounce once, when it does, on its target wherever that hero is (not their own pick).
+- **The Gloam Totem** is a support (Casters first goes for it) with the `inert` trait.
+
 ## 11. The screens
 
 All in the mock's style (`docs/mockups/hero-panel-layout.pdf`), with the top bar (day, act and place, shards, relics) and the hero bar along the bottom of every screen between fights:

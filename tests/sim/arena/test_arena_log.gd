@@ -37,18 +37,28 @@ static func busy_setup(fight_seed: int = 5) -> FightSetup:
 		[Vector2i(4, 3), Vector2i(1, 3)] as Array[Vector2i], fight_seed)
 
 
-## Brannoc, Maren, and Vell against one of each Act 1 enemy, all from content.
-static func content_setup(fight_seed: int = 7) -> FightSetup:
+## Brannoc, Maren, and Vell against one of each of phase 2's Act 1 enemies
+## (`first` of them: the first nine), or of `enemy_ids`, all from content.
+static func content_setup(fight_seed: int = 7, enemy_ids: Array[String] = []) -> FightSetup:
 	var content: ContentDb = K.content()
 	var heroes: Array[UnitSetup] = []
 	var hero_hexes: Array[Vector2i] = [Vector2i(3, 2), Vector2i(3, 0), Vector2i(4, 0)]
 	for i: int in content.hero_ids.size():
 		heroes.append(K.at((content.heroes[content.hero_ids[i]] as HeroDef).kit, hero_hexes[i].x, hero_hexes[i].y))
+	var ids: Array[String] = enemy_ids if not enemy_ids.is_empty() else content.enemy_ids.slice(0, 9)
 	var enemies: Array[UnitSetup] = []
 	var enemy_hexes: Array[Vector2i] = [Vector2i(1, 4), Vector2i(3, 4), Vector2i(5, 4), Vector2i(0, 5), Vector2i(2, 5), Vector2i(4, 5), Vector2i(6, 5), Vector2i(3, 6), Vector2i(5, 6)]
-	for i: int in content.enemy_ids.size():
-		enemies.append(K.foe((content.enemies[content.enemy_ids[i]] as EnemyDef).kit, enemy_hexes[i].x, enemy_hexes[i].y))
-	return K.fight(heroes, enemies, [Vector2i(1, 3)] as Array[Vector2i], fight_seed)
+	for i: int in ids.size():
+		enemies.append(K.foe((content.enemies[ids[i]] as EnemyDef).kit, enemy_hexes[i].x, enemy_hexes[i].y))
+	var fight: FightSetup = K.fight(heroes, enemies, [Vector2i(1, 3)] as Array[Vector2i], fight_seed)
+	fight.summon_kits = Encounters.summon_kits(content, heroes + enemies, FixedMath.BP_ONE)
+	return fight
+
+
+## The heroes against phase 5's elites' and boss's enemies (their kits
+## unscaled, so the heroes lose; the log is what's tested).
+static func elite_setup(fight_seed: int = 7) -> FightSetup:
+	return content_setup(fight_seed, ["hound_alpha", "hunt_hound", "gloam_totem", "ash_hound", "old_mother_ash"] as Array[String])
 
 
 func test_the_log_replays_every_position() -> void:
@@ -65,6 +75,7 @@ func test_the_log_replays_the_chaos_fight() -> void:
 ## checks it lands every unit in the same place on every tick.
 func test_the_log_replays_a_fight_of_the_content_kits() -> void:
 	_assert_replays(content_setup())
+	_assert_replays(elite_setup(), 5)
 
 
 ## The paths' leaps, pushes, and walls of moves replay too (phase 4).
@@ -165,7 +176,7 @@ const NAMES: Dictionary = {
 
 
 func test_every_entry_names_its_source() -> void:
-	var fights: Array[FightSetup] = [busy_setup(), Chaos.setup(), content_setup(), TacticFights.tactics_setup()]
+	var fights: Array[FightSetup] = [busy_setup(), Chaos.setup(), content_setup(), TacticFights.tactics_setup(), elite_setup()]
 	fights.append_array(PathFights.all(K.content()))
 	for setup: FightSetup in fights:
 		_assert_sources(K.run(setup), setup)

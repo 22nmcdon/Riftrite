@@ -21,6 +21,9 @@ extends RefCounted
 ##     would fall, it's left at 1 HP (SAVED) and the signature fires at once.
 ##   - ally_falls: each ally that falls (the deaths step, ally_fell) queues a
 ##     fire for the unit's next update.
+##   - ally_fires (once): an ally's fire of the named ability (read from the
+##     log with the events, ally_fired) queues a fire at that fire's target,
+##     wherever it stands (the FIRE entry notes "with <ally>").
 ## A sigil adds (phase 5, AbilityDef):
 ##   - extra triggers (also): hp_below (once) and ally_falls queue fires like
 ##     their own kinds, free of mana, whatever the main trigger; the FIRE
@@ -75,10 +78,13 @@ static func act(sim: CombatSim, unit: UnitState) -> bool:
 			if sim.tick >= trigger.at_ticks:
 				_queue_once(signature)
 	while signature.pending > 0:
-		var target: UnitState = pick_target(sim, unit)
+		var target: UnitState = signature.pending_target
+		if target == null or not target.alive:
+			target = pick_target(sim, unit)
 		if target == null or not _fire(sim, unit, target, signature.pending_note):
 			break
 		signature.pending -= 1
+		signature.pending_target = null
 	if signature.pending == 0:
 		signature.pending_note = ""
 	return false
@@ -99,6 +105,21 @@ static func ally_fell(sim: CombatSim, fallen: UnitState) -> void:
 			continue
 		unit.signature.pending += 1
 		unit.signature.pending_note = "an ally fell"
+
+
+## Events read `ally` firing `ability_id` at `target`: each standing ally
+## of it whose signature fires on that (ally_fires, once) queues a fire there.
+static func ally_fired(sim: CombatSim, ally: UnitState, ability_id: String, target: UnitState) -> void:
+	for unit: UnitState in sim.units:
+		if unit == ally or not unit.alive or unit.side != ally.side or unit.signature == null:
+			continue
+		var trigger: TriggerDef = unit.signature.def.trigger
+		if trigger.kind != TriggerDef.Kind.ALLY_FIRES or trigger.ability != ability_id or unit.signature.fired:
+			continue
+		unit.signature.fired = true
+		unit.signature.pending += 1
+		unit.signature.pending_target = target
+		unit.signature.pending_note = "with %s" % ally.id
 
 
 ## Extra hp_below triggers: each queues one fire, the first time the unit is

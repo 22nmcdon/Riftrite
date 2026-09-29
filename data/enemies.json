@@ -167,5 +167,377 @@
           "effects": [{"trigger": "on_basic_attack", "every": 3, "type": "shield", "amount": 30, "target": "all_allies"}]}
       ]
     }
+  },
+  {
+    "_note": "Phase 5's elites and boss (docs/plans/rebuild-phase5-run.md, section 10; docs/plans/rebuild-enemies.md, sections 3 and 4). First numbers, for the sim runner to tune.",
+    "id": "hound_alpha",
+    "name": "Hound Alpha",
+    "archetype": "flanker",
+    "threat": "Leads the Hunt: when it pounces, its whole pack pounces on the same hero",
+    "kit": {
+      "stats": {
+        "hp": 900,
+        "atk": 24,
+        "def": 6,
+        "speed": 3,
+        "range": 1
+      },
+      "basic_attack": {
+        "id": "bite",
+        "name": "Bite",
+        "text": "Bites the hero in front of it.",
+        "cooldown_ms": 1000,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "signature": {
+        "id": "pounce",
+        "name": "Pounce",
+        "text": "As the fight starts, it leaps onto your weakest back-liner within 6 hexes and bites; its pack follows.",
+        "trigger": {
+          "kind": "fight_start"
+        },
+        "targeting": "weakest_backliner",
+        "max_range": 6,
+        "effects": [
+          {
+            "type": "leap",
+            "max_hexes": 6,
+            "target": "target"
+          },
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "hunt_hound",
+    "name": "Hunting Hound",
+    "archetype": "flanker",
+    "threat": "Pounces with its Alpha, on the same hero",
+    "kit": {
+      "stats": {
+        "hp": 420,
+        "atk": 18,
+        "def": 4,
+        "speed": 3,
+        "range": 1
+      },
+      "basic_attack": {
+        "id": "bite",
+        "name": "Bite",
+        "text": "Bites the hero in front of it.",
+        "cooldown_ms": 1000,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "signature": {
+        "id": "join_the_hunt",
+        "name": "Join the Hunt",
+        "text": "When its Alpha pounces, it leaps onto the same hero, as far as 8 hexes away, and bites.",
+        "trigger": {
+          "kind": "ally_fires",
+          "ability": "pounce"
+        },
+        "targeting": "weakest_backliner",
+        "max_range": 8,
+        "effects": [
+          {
+            "type": "leap",
+            "max_hexes": 8,
+            "target": "target"
+          },
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "gloam_totem",
+    "name": "Gloam Totem",
+    "archetype": "support",
+    "threat": "Shields every enemy within 2 hexes, again and again, until it's broken",
+    "kit": {
+      "stats": {
+        "hp": 520,
+        "atk": 0,
+        "def": 10,
+        "speed": 0,
+        "range": 1
+      },
+      "traits": [
+        "inert"
+      ],
+      "basic_attack": {
+        "id": "still",
+        "name": "Still",
+        "text": "It never attacks.",
+        "cooldown_ms": 1000,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 0
+            }
+          }
+        ]
+      },
+      "passives": [
+        {
+          "id": "gloam_ward",
+          "name": "Gloam Ward",
+          "kind": "ability",
+          "text": "Every 2s, it Shields every other enemy within 2 hexes of it.",
+          "effects": [
+            {
+              "trigger": "on_interval",
+              "interval_ms": 2000,
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 2
+              },
+              "anchor": "self",
+              "hits": "other_allies",
+              "effects": [
+                {
+                  "type": "shield",
+                  "amount": 15,
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "ash_hound",
+    "name": "Ash Hound",
+    "archetype": "flanker",
+    "threat": "Pounces on your back line; while one lives, Old Mother Ash's pack is hardened",
+    "kit": {
+      "stats": {
+        "hp": 520,
+        "atk": 20,
+        "def": 6,
+        "speed": 3,
+        "range": 1
+      },
+      "basic_attack": {
+        "id": "bite",
+        "name": "Bite",
+        "text": "Bites the hero in front of it.",
+        "cooldown_ms": 1000,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "signature": {
+        "id": "pounce",
+        "name": "Pounce",
+        "text": "As the fight starts, it leaps onto your weakest back-liner within 5 hexes and bites.",
+        "trigger": {
+          "kind": "fight_start"
+        },
+        "targeting": "weakest_backliner",
+        "max_range": 5,
+        "effects": [
+          {
+            "type": "leap",
+            "max_hexes": 5,
+            "target": "target"
+          },
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "old_mother_ash",
+    "name": "Old Mother Ash",
+    "archetype": "caster",
+    "threat": "The rift's old mother: guard the back line, then weather her brood, then spread out as the rift closes",
+    "kit": {
+      "stats": {
+        "hp": 2600,
+        "atk": 26,
+        "def": 8,
+        "speed": 1,
+        "range": 4
+      },
+      "basic_attack": {
+        "id": "ash_spit",
+        "name": "Ash Spit",
+        "text": "Spits ash at her target from up to 4 hexes away.",
+        "cooldown_ms": 1400,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "passives": [
+        {
+          "id": "pack_bond",
+          "name": "Pack Bond",
+          "kind": "aura",
+          "text": "While an Ash Hound stands, her whole pack takes less damage (more DEF).",
+          "aura": {
+            "target": "all_allies",
+            "stat": "def_bp",
+            "value": 16000,
+            "while": "ally_standing",
+            "kit": "ash_hound"
+          }
+        }
+      ],
+      "phases": [
+        {
+          "id": "molt",
+          "name": "Molt",
+          "text": "Below 60% HP she stalks into the fight, and her brood crawls in from the edges.",
+          "below_hp_bp": 6000,
+          "mana": {
+            "max": 100,
+            "regen_per_s": 10
+          },
+          "signature": {
+            "id": "call_the_brood",
+            "name": "Call the Brood",
+            "text": "Every 10s, two Rift Pups crawl in from the arena's edges.",
+            "trigger": {
+              "kind": "mana"
+            },
+            "targeting": "self",
+            "effects": [
+              {
+                "type": "summon",
+                "kit": "rift_pup",
+                "count": 2,
+                "placement": "edges"
+              }
+            ]
+          },
+          "passives": [
+            {
+              "id": "stalk",
+              "name": "Stalk",
+              "kind": "aura",
+              "text": "She stalks into the fight: she reaches only 1 hex, so she walks in.",
+              "aura": {
+                "target": "holder",
+                "stat": "range",
+                "value": -3
+              }
+            }
+          ]
+        },
+        {
+          "id": "last_ember",
+          "name": "Last Ember",
+          "text": "Below 25% HP the rift closes early, and she breathes fire at your largest group.",
+          "below_hp_bp": 2500,
+          "mana": {
+            "max": 60,
+            "start": 60,
+            "regen_per_s": 12
+          },
+          "signature": {
+            "id": "ember_breath",
+            "name": "Ember Breath",
+            "text": "The rift closes early; every 5s she breathes a warned cone of fire, 3 hexes deep, at your largest group within 6 hexes.",
+            "trigger": {
+              "kind": "mana"
+            },
+            "targeting": "largest_group",
+            "max_range": 6,
+            "effects": [
+              {
+                "type": "start_collapse"
+              },
+              {
+                "type": "area",
+                "shape": {
+                  "kind": "cone",
+                  "depth": 3
+                },
+                "anchor": "target_direction",
+                "warning_ms": 800,
+                "hits": "enemies",
+                "effects": [
+                  {
+                    "type": "damage",
+                    "amount": 40,
+                    "target": "target",
+                    "scaling": {
+                      "atk": 5000
+                    }
+                  },
+                  {
+                    "type": "apply_status",
+                    "status": "burn",
+                    "stacks": 3,
+                    "target": "target"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
   }
 ]

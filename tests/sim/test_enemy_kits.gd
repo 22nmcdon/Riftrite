@@ -48,7 +48,8 @@ func _moved(entry: LogEntry) -> int:
 
 
 func test_the_enemies_read_as_designed() -> void:
-	assert_eq(_content.enemy_ids, ["rift_pup", "ashling", "rift_hound", "cinder_moth", "hollow_archer", "rift_worn_sentinel", "cairn_guardian", "bog_lurker", "gloam_witch"])
+	assert_eq(_content.enemy_ids, ["rift_pup", "ashling", "rift_hound", "cinder_moth", "hollow_archer", "rift_worn_sentinel", "cairn_guardian", "bog_lurker", "gloam_witch",
+		"hound_alpha", "hunt_hound", "gloam_totem", "ash_hound", "old_mother_ash"])
 	var rows: Array = _content.enemy_ids.map(func(enemy_id: String) -> Array:
 		var enemy: EnemyDef = _content.enemies[enemy_id]
 		var stats: UnitStats = enemy.kit.stats
@@ -64,6 +65,12 @@ func test_the_enemies_read_as_designed() -> void:
 		["charger", 440, 16, 20, 2, 1, []],
 		["disruptor", 760, 32, 8, 1, 1, []],
 		["support", 360, 22, 4, 2, 4, []],
+		# Phase 5's elites and boss (before their encounters' scale_bp).
+		["flanker", 900, 24, 6, 3, 1, []],
+		["flanker", 420, 18, 4, 3, 1, []],
+		["support", 520, 0, 10, 0, 1, ["inert"]],
+		["flanker", 520, 20, 6, 3, 1, []],
+		["caster", 2600, 26, 8, 1, 4, []],
 	])
 	assert_eq((_content.enemies["rift_hound"] as EnemyDef).threat, "Pounces on your weakest back-liner")
 	assert_true(_content.enemy_ids.all(func(enemy_id: String) -> bool: return not (_content.enemies[enemy_id] as EnemyDef).threat.is_empty()))

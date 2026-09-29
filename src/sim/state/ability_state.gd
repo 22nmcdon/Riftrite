@@ -37,6 +37,14 @@ var pending_note: String = ""
 ## whether one hasn't yet (so the unit's update looks each tick).
 var also_fired: Array[bool] = []
 var also_waiting: bool = false
+## ally_fires: the target the ally's fire had (the queued fire goes there,
+## if it still stands).
+var pending_target: UnitState:
+	get:
+		return _pending_target.get_ref() as UnitState if _pending_target != null else null
+	set(value):
+		_pending_target = weakref(value) if value != null else null
+var _pending_target: WeakRef = null
 ## A sigil's echo (AbilityDef.echo): its own state, and the tick it fires on
 ## (-1: none waiting).
 var echo: AbilityState = null

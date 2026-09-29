@@ -219,8 +219,9 @@ func fight_encounter() -> String:
 ## path's at its stage, then its upgrades, its loadout (slot order), the
 ## relics, the day's camp modifiers (Fortify, a steadying Rest), and its duo
 ## bonds. Enemies take the relics' enemy mods and a Rift Tear's; Dig In's
-## rock joins the encounter's. A Hunt takes no camp modifiers.
-func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String]) -> FightSetup:
+## rock joins the encounter's. A Hunt takes no camp modifiers. `snares`:
+## hero id -> the hexes of the snares it places (a transformed Trapper).
+func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String], snares: Dictionary[String, Array] = {}) -> FightSetup:
 	var encounter_id: String = fight_encounter()
 	if encounter_id.is_empty():
 		errors.append(_not_now("fight"))
@@ -258,6 +259,9 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String])
 			tactics[hero.id] = tactic.id
 	var setup: FightSetup = Encounters.setup(content, encounter_id, formation, fight_seed(), errors, tactics, vows, transformed, extras)
 	if setup != null:
+		for hero: UnitSetup in setup.heroes:
+			if hero.def.placed_snares > 0 and snares.has(hero.id):
+				hero.snares.assign(snares[hero.id])
 		_modify_enemies(setup, hunting, errors)
 		if not hunting and state.dig_in and state.rock.size() == 2:
 			setup.rocks.append(Vector2i(state.rock[0], state.rock[1]))
@@ -266,6 +270,23 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String])
 			if not formation.has(hero.id):
 				errors.append("%s isn't placed" % hero.id)
 	return setup if errors.is_empty() else null
+
+
+## The kit `hero_id` fights with as things stand between fights: its path's
+## at its stage, then its upgrades, loadout, relics, and bonds (camp's
+## modifiers for the next fight aside). For showing, not for fights.
+func kit_of(hero_id: String) -> UnitDef:
+	var hero: RunState.Hero = state.hero(hero_id)
+	var kit: UnitDef = run.hero_kit(hero)
+	var mods: Array[KitMod] = run.upgrade_mods(hero)
+	mods.append_array(run.loadout_mods(hero))
+	mods.append_array(run.relic_mods(state))
+	for bond: BondDef in run.active_bonds(state):
+		if bond.mods.has(hero.path):
+			mods.append(bond.mods[hero.path])
+	for mod: KitMod in mods:
+		kit = mod.apply(kit)
+	return kit
 
 
 ## Every enemy and summon kit takes the relics' enemy mods, and a Rift
@@ -298,8 +319,8 @@ func fight_seed() -> int:
 
 ## Fights the waiting fight from `formation` and records it. Returns the
 ## result, or null with the reasons in `errors`.
-func fight(formation: Dictionary[String, Vector2i], errors: Array[String]) -> FightResult:
-	var setup: FightSetup = fight_setup(formation, errors)
+func fight(formation: Dictionary[String, Vector2i], errors: Array[String], snares: Dictionary[String, Array] = {}) -> FightResult:
+	var setup: FightSetup = fight_setup(formation, errors, snares)
 	if setup == null:
 		return null
 	var result: FightResult = CombatSim.run(setup, run.content)

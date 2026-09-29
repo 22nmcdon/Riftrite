@@ -104,7 +104,7 @@ func test_every_kit_has_a_short_label() -> void:
 	var labels: Array = []
 	for enemy_id: String in _content.enemy_ids:
 		labels.append(ArenaView.label_for((_content.enemies[enemy_id] as EnemyDef).kit, _content))
-	assert_eq(labels, ["Pup", "Ashling", "Hound", "Moth", "Archer", "Sentinel", "Guardian", "Lurker", "Witch"])
+	assert_eq(labels, ["Pup", "Ashling", "Hound", "Moth", "Archer", "Sentinel", "Guardian", "Lurker", "Witch", "Alpha", "Hound", "Totem", "Hound", "Ash"])
 	assert_eq(ArenaView.label_for((_content.heroes["vell"] as HeroDef).kit, _content), "Vell", "a hero by their id, not \"Sister\"")
 
 

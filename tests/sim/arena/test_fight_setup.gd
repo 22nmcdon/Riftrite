@@ -42,7 +42,7 @@ func test_bad_kits() -> void:
 	_assert_error(_kit_errors(rule), "targeting: unknown value \"self\"")
 	var later: Dictionary = _base()
 	later["traits"] = ["burrowing"]
-	_assert_error(_kit_errors(later), "traits[0]: unknown value \"burrowing\" (expected one of: engage, flying, hop_away, fires_moving)")
+	_assert_error(_kit_errors(later), "traits[0]: unknown value \"burrowing\" (expected one of: engage, flying, hop_away, fires_moving, inert)")
 	var hopper: Dictionary = _base()
 	hopper["traits"] = ["hop_away"]
 	_assert_error(_kit_errors(hopper), "missing required key \"hop_cooldown_ms\"")

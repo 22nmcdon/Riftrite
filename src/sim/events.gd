@@ -17,7 +17,8 @@ extends RefCounted
 ## and entries made by event effects (LogEntry.from_event) raise nothing, so
 ## event effects never set each other off.
 ## Count signatures (Signatures.on_event) and ability passives
-## (Passives.on_event) listen.
+## (Passives.on_event) listen, and so do ally_fires signatures (a FIRE of
+## their ally's ability; Signatures.ally_fired).
 
 
 ## The log kinds that raise events (the rest are skipped at once).
@@ -36,6 +37,8 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> void:
 			LogEntry.Kind.FIRE:
 				var basic: bool = entry.source_ability == source.def.basic_attack.id
 				_raise(sim, source, EffectDef.Trigger.ON_BASIC_ATTACK if basic else EffectDef.Trigger.ON_ABILITY)
+				if sim.ally_fire_listeners:
+					Signatures.ally_fired(sim, source, entry.source_ability, target)
 			LogEntry.Kind.DAMAGE:
 				if target == null:
 					continue

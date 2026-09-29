@@ -99,6 +99,9 @@ var _conditional: Array[UnitState] = []
 ## Some unit's signature fires when an ally falls (a sigil; Signatures), so
 ## each fall is told to its side.
 var ally_fall_listeners: bool = false
+## Some unit's signature fires when an ally's ability does (ally_fires), so
+## FIRE entries are told to its side (Events).
+var ally_fire_listeners: bool = false
 ## Some hero counts deeds (Deeds), so the log is read for them each tick.
 var _counting: bool = false
 ## Log entries before this one have been counted for deeds.
@@ -122,6 +125,13 @@ static func run(fight_setup: FightSetup, fight_content: ContentDb) -> FightResul
 	var sim := CombatSim.new(fight_setup, fight_content)
 	while not sim.finished:
 		sim.step()
+	return result_of(sim)
+
+
+## A finished fight's result (the UI's FightPlayer runs a fight tick by
+## tick; this is what run() would have given for it).
+static func result_of(sim: CombatSim) -> FightResult:
+	var result := FightResult.new()
 	result.outcome = sim.outcome
 	result.end_tick = sim.tick
 	result.combat_log = sim.combat_log
@@ -188,6 +198,9 @@ func note_listeners(unit: UnitState) -> void:
 		_listening = true
 	if unit.signature != null and Signatures.fires_on_ally_falls(unit.signature.def):
 		ally_fall_listeners = true
+	if unit.signature != null and unit.signature.def.trigger.kind == TriggerDef.Kind.ALLY_FIRES:
+		ally_fire_listeners = true
+		_listening = true
 	if Passives.has_timed(unit):
 		_timed_passives = true
 
@@ -286,6 +299,9 @@ func _act(unit: UnitState) -> void:
 	if has_statuses and Statuses.has_kind(unit, StatusDef.Kind.STUN):
 		if unit.leg_active:
 			Movement.halt(self, unit, "stunned")
+		return
+	# An inert unit (phase 5: a totem) never attacks, targets, or walks.
+	if unit.inert:
 		return
 	var attack: AbilityState = unit.attack
 	if attack.progress_bp < attack.needed:

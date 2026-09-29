@@ -21,6 +21,8 @@ extends RefCounted
 
 var id: String
 var name: String
+## The player's sentence for it (optional; the sim never reads it).
+var text: String = ""
 var below_hp_bp: int
 ## What the phase gives (null or empty: unchanged).
 var signature: AbilityDef = null
@@ -39,6 +41,7 @@ static func read(reader: DataReader, before: UnitDef) -> PhaseDef:
 	def.id = reader.req_string("id")
 	def.name = reader.req_string("name")
 	def.below_hp_bp = reader.req_int("below_hp_bp", 1, FixedMath.BP_ONE - 1)
+	def.text = reader.opt_string("text", "")
 	if reader.has("signature"):
 		var signature_reader: DataReader = reader.req_object("signature")
 		def.signature = AbilityDef.read_signature(signature_reader) if signature_reader != null else null

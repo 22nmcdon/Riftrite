@@ -15,7 +15,7 @@ extends RefCounted
 ## During a fight, live_text() and recent_lines() add the unit's numbers now
 ## and its last few log lines.
 
-const TRAIT_NAMES: Dictionary[String, String] = {"engage": "Engage", "flying": "Flying", "hop_away": "Hop away", "fires_moving": "Fires moving"}
+const TRAIT_NAMES: Dictionary[String, String] = {"engage": "Engage", "flying": "Flying", "hop_away": "Hop away", "fires_moving": "Fires moving", "inert": "Inert"}
 const EVENT_WORDS: Dictionary[int, String] = {
 	EffectDef.Trigger.ON_ABILITY: "ability", EffectDef.Trigger.ON_BASIC_ATTACK: "basic attack",
 	EffectDef.Trigger.ON_HOLDER_CRIT: "crit", EffectDef.Trigger.ON_SHIELDED: "Shield taken",
@@ -49,7 +49,7 @@ static func lines(kit: UnitDef, who: String, content: ContentDb) -> Array[Line]:
 	for trait_id: String in kit.traits:
 		result.append(_line("Trait", TRAIT_NAMES[trait_id], trait_text(trait_id, who), trait_numbers(trait_id, kit, content.tuning)))
 	for phase: PhaseDef in kit.phases:
-		result.append(_line("Phase", phase.name, "", phase_numbers(phase)))
+		result.append(_line("Phase", phase.name, phase.text, phase_numbers(phase)))
 	return result
 
 
@@ -84,6 +84,8 @@ static func trait_text(trait_id: String, who: String) -> String:
 			return "When a foe comes within 1 hex, %s hops a hex away from it." % who
 		"fires_moving":
 			return "While walking, %s shoots the nearest foe in reach without stopping." % who
+		"inert":
+			return "%s never moves or attacks: only what it does on its own counts." % who.capitalize()
 	return ""
 
 
@@ -193,6 +195,8 @@ static func trigger_text(trigger: TriggerDef, kit: UnitDef) -> String:
 			return "Every %s" % _nth(trigger.every, EVENT_WORDS[trigger.event])
 		TriggerDef.Kind.ALLY_FALLS:
 			return "Each time an ally falls"
+		TriggerDef.Kind.ALLY_FIRES:
+			return "Once, when an ally's %s fires" % trigger.ability.replace("_", " ").capitalize()
 	return "Once, when it would fall"
 
 

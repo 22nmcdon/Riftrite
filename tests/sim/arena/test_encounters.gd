@@ -117,23 +117,36 @@ const ROSTERS: Dictionary = {
 	"sentinel_gate": {"rift_worn_sentinel": 1, "hollow_archer": 2},
 	"cairn_road": {"cairn_guardian": 1, "rift_hound": 2},
 	"witch_circle": {"gloam_witch": 1, "rift_worn_sentinel": 1, "cinder_moth": 1},
-	# Phase 5: a Hunt's packs.
+	# Phase 5: a Hunt's packs, the harder fights, the elites, and the boss.
 	"stray_pups": {"rift_pup": 4},
 	"lone_hounds": {"rift_hound": 2},
+	"hounds_and_archers": {"rift_hound": 2, "hollow_archer": 2},
+	"lurker_and_ashlings": {"bog_lurker": 1, "ashling": 3},
+	"sentinel_and_moths": {"rift_worn_sentinel": 1, "cinder_moth": 2},
+	"witch_and_pups": {"gloam_witch": 1, "rift_pup": 4},
+	"guardian_and_witch": {"cairn_guardian": 1, "gloam_witch": 1},
+	"the_hunt": {"hound_alpha": 1, "hunt_hound": 2},
+	"witch_coven": {"gloam_totem": 1, "gloam_witch": 2, "rift_worn_sentinel": 1},
+	"cairn_watch": {"cairn_guardian": 1, "hollow_archer": 2},
+	"old_mother_ash": {"old_mother_ash": 1, "ash_hound": 2},
 }
+## Phase 2's nine, tuned by their enemies' numbers rather than a scale.
+const UNSCALED: Array[String] = ["pup_warren", "ash_nest", "the_pack", "moth_cloud", "hollow_line", "bog_crossing", "sentinel_gate", "cairn_road", "witch_circle"]
 
 
 func test_the_act_1_encounters_are_the_plans() -> void:
 	var content: ContentDb = ContentDb.load_dir("res://data")
-	assert_eq(content.encounter_ids, ["pup_warren", "ash_nest", "the_pack", "moth_cloud", "hollow_line", "bog_crossing", "sentinel_gate", "cairn_road", "witch_circle",
-		"stray_pups", "lone_hounds"])
+	assert_eq(content.encounter_ids, UNSCALED + ["stray_pups", "lone_hounds", "hounds_and_archers", "lurker_and_ashlings", "sentinel_and_moths", "witch_and_pups",
+		"guardian_and_witch", "the_hunt", "witch_coven", "cairn_watch", "old_mother_ash"])
 	for encounter_id: String in content.encounter_ids:
 		var encounter: EncounterDef = content.encounters[encounter_id]
 		var counts: Dictionary = {}
 		for placed: EncounterDef.Placed in encounter.enemies:
 			counts[placed.enemy] = counts.get(placed.enemy, 0) + 1
 		assert_eq(counts, ROSTERS[encounter_id], encounter_id)
-		assert_eq([encounter.act, encounter.scale_bp], [1, 10000], encounter_id)
+		assert_eq(encounter.act, 1, encounter_id)
+		if UNSCALED.has(encounter_id):
+			assert_eq(encounter.scale_bp, 10000, encounter_id)
 		assert_false(encounter.tests.is_empty(), encounter_id)
 	assert_eq((content.encounters["hollow_line"] as EncounterDef).rocks.size(), 2, "archers behind 2 rocks")
 
@@ -144,7 +157,8 @@ func test_every_day_before_the_boss_offers_at_least_two_encounters() -> void:
 		var offered: Array = content.encounter_ids.filter(func(encounter_id: String) -> bool: return (content.encounters[encounter_id] as EncounterDef).days.has(day))
 		assert_gte(offered.size(), 2, "day %d: %s" % [day, offered])
 	for encounter_id: String in content.encounter_ids:
-		assert_false((content.encounters[encounter_id] as EncounterDef).days.has(7), "day 7 is the boss's: %s" % encounter_id)
+		var encounter: EncounterDef = content.encounters[encounter_id]
+		assert_eq(encounter.days.has(7), encounter.tier == "boss", "day 7 is the boss's, and only hers: %s" % encounter_id)
 
 
 func test_every_act_1_encounter_builds_a_fight_that_plays_out() -> void:

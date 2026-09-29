@@ -153,8 +153,8 @@ static func taunting(sim: CombatSim, holder: UnitState) -> bool:
 	return false
 
 
-## Whether a conditional aura's condition (planted, below_hp, a fallen
-## ally) holds for its holder now.
+## Whether a conditional aura's condition (planted, below_hp, an ally of a
+## kit standing, a fallen ally) holds for its holder now.
 static func condition_holds(sim: CombatSim, holder: UnitState, aura: AuraDef) -> bool:
 	match aura.while_kind:
 		AuraDef.While.PLANTED:
@@ -162,6 +162,10 @@ static func condition_holds(sim: CombatSim, holder: UnitState, aura: AuraDef) ->
 				return false
 		AuraDef.While.BELOW_HP:
 			if holder.hp * FixedMath.BP_ONE >= aura.below_bp * holder.max_hp:
+				return false
+		AuraDef.While.ALLY_STANDING:
+			if not (sim.heroes if holder.side == EffectSource.Team.HEROES else sim.enemies).any(
+					func(unit: UnitState) -> bool: return unit != holder and unit.alive and unit.def.id == aura.ally_kit):
 				return false
 	return not aura.per_fallen_ally or fallen_allies(sim, holder) > 0
 
