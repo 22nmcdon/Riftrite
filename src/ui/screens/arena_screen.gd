@@ -59,6 +59,10 @@ var view: ArenaView
 var enemy_panel: EnemyPanel
 var hero_popup: HeroPopup
 var hero_panel: HeroPanel
+## The hero bar along the bottom (the playtester's mock): clicking a hero's
+## card opens its panel.
+var hero_bar: HeroBar
+var seed_label: Label
 var fight_button: Button
 var error_label: Label
 var hint_label: Label
@@ -92,6 +96,7 @@ static func make(practice: PracticeSession, encounter_id: String) -> ArenaScreen
 	var screen := ArenaScreen.new()
 	screen.session = practice
 	screen.encounter = practice.content.encounters[encounter_id]
+	screen.full_bleed = true
 	screen.formation = practice.formation_for(encounter_id)
 	practice.fit_snares(encounter_id, screen.formation)
 	return screen
@@ -99,10 +104,27 @@ static func make(practice: PracticeSession, encounter_id: String) -> ArenaScreen
 
 func build() -> void:
 	shows_backdrop = false
+	add_theme_constant_override("separation", 0)
+	# Above the hero bar: the top bar and the screen, with the hero panel
+	# over both when it's open.
+	var upper := Control.new()
+	upper.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	upper.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(upper)
+	var upper_column := VBoxContainer.new()
+	upper_column.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	upper_column.add_theme_constant_override("separation", 0)
+	upper.add_child(upper_column)
+	upper_column.add_child(_build_top_bar())
+	var body := MarginContainer.new()
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	for side: String in ["left", "right", "top", "bottom"]:
+		body.add_theme_constant_override("margin_" + side, 16)
+	upper_column.add_child(body)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 16)
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_child(row)
+	body.add_child(row)
 	# As wide as the side column, so the board sits in the middle of the
 	# screen; the log pops up over it.
 	var gutter := Control.new()
@@ -114,10 +136,15 @@ func build() -> void:
 	view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	row.add_child(view)
+	# The side column scrolls if it's taller than the room above the hero bar.
+	var side_scroll := ScrollContainer.new()
+	side_scroll.custom_minimum_size = Vector2(SIDE_WIDTH + 12, 0)
+	side_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	row.add_child(side_scroll)
 	var side := VBoxContainer.new()
 	side.custom_minimum_size = Vector2(SIDE_WIDTH, 0)
 	side.add_theme_constant_override("separation", 12)
-	row.add_child(side)
+	side_scroll.add_child(side)
 	# The name and the hint go at the top of the side column, so the board
 	# has the screen's whole height.
 	side.add_child(UiStyle.heading(encounter.name, 30))
@@ -162,7 +189,11 @@ func build() -> void:
 	view.snare_dropped.connect(move_snare)
 	hero_panel = HeroPanel.make(session)
 	hero_panel.z_index = 5
-	add_child(hero_panel)
+	upper.add_child(hero_panel)
+	hero_bar = HeroBar.make(session)
+	add_child(hero_bar)
+	hero_bar.card_clicked.connect(open_panel)
+	hero_panel.closed.connect(func() -> void: hero_bar.select(""))
 	# Deferred: choosing rebuilds the panel, buttons and all, so not while
 	# the pressed button is still sending its signal.
 	hero_panel.path_chosen.connect(choose_path, CONNECT_DEFERRED)
@@ -172,7 +203,7 @@ func build() -> void:
 
 ## Moves a hero to a hex if the result is legal. Returns true if it moved.
 func placement_hint() -> String:
-	return "It tests %s. Drag your heroes onto your side's hexes, then Fight. Hover an enemy to read it; click a hero to choose their path and tactic." % encounter.tests
+	return "It tests %s. Drag your heroes onto your side's hexes, then Fight. Hover an enemy to read it; click a hero's card below to choose their path and tactic." % encounter.tests
 
 
 func move_hero(hero_id: String, hex: Vector2i) -> bool:
@@ -201,8 +232,52 @@ func current_setup() -> FightSetup:
 	return session.setup(encounter.id, formation, session.seed_value)
 
 
+## The top bar, as in the mock: where you are on the left in gold (here,
+## Practice and the encounter), and the seed on the right.
+func _build_top_bar() -> PanelContainer:
+	var bar := PanelContainer.new()
+	var style: StyleBoxFlat = UiStyle.box(UiStyle.NAVY_900, UiStyle.NAVY_900, 0, 0)
+	style.border_color = Color("121a21")
+	style.border_width_bottom = 2
+	style.content_margin_left = 38
+	style.content_margin_right = 38
+	style.content_margin_top = 12
+	style.content_margin_bottom = 12
+	bar.add_theme_stylebox_override("panel", style)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 28)
+	bar.add_child(row)
+	row.add_child(UiStyle.heading("Practice", 34, UiStyle.HIGHLIGHT))
+	var where: Label = UiStyle.label("Act %d · %s" % [encounter.act, encounter.name], 20, UiStyle.TEXT_DIM)
+	where.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(where)
+	var gap := Control.new()
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(gap)
+	seed_label = UiStyle.label("", 18, UiStyle.TEXT_DIM)
+	seed_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(seed_label)
+	return bar
+
+
+## Opens a hero's panel from its card in the hero bar (clicking it again
+## closes it). In a fight it pauses first, and the panel is for reading.
+func open_panel(hero_id: String) -> void:
+	if hero_panel.visible and hero_panel.showing == hero_id:
+		hero_panel.close()
+		return
+	if playing():
+		toggle_pause()
+	hero_popup.close()
+	hero_panel.editable = player == null
+	hero_panel.open(hero_id)
+	hero_bar.select(hero_id)
+
+
 func _show() -> void:
 	view.show_setup(current_setup(), session.content)
+	hero_bar.refresh()
+	seed_label.text = "Seed %d" % session.seed_value
 	var errors: Array[String] = session.errors(encounter.id, formation)
 	error_label.text = errors[0] if not errors.is_empty() else ""
 	fight_button.disabled = not errors.is_empty()
@@ -232,13 +307,12 @@ func playing() -> bool:
 	return player != null and not player.paused and not player.finished()
 
 
-## Opens a hero's panel while placing, or its popup beside its token in a
-## fight.
+## Opens a hero's panel while placing (as its card in the hero bar does), or
+## its popup beside its token in a fight.
 func open_hero(unit_id: String) -> void:
 	var hero_id: String = _kit_of(unit_id)
 	if player == null:
-		hero_popup.close()
-		hero_panel.open(hero_id)
+		open_panel(hero_id)
 		return
 	var placed: UnitSetup = null
 	for hero: UnitSetup in player.setup.heroes:
@@ -285,11 +359,12 @@ func _on_unhovered(unit_id: String) -> void:
 
 
 ## Clicking a unit during the fight filters the log to it; clicking a hero
-## while the fight isn't playing opens its popup (anything else closes it).
+## while the fight is paused or over opens its popup (anything else closes
+## it). While placing, a hero's panel opens from the hero bar, not the board.
 func _on_clicked(unit_id: String) -> void:
 	if player != null:
 		log_panel.filter_to(unit_id)
-	if not playing() and session.content.heroes.has(_kit_of(unit_id)):
+	if player != null and not playing() and session.content.heroes.has(_kit_of(unit_id)):
 		open_hero(unit_id)
 	else:
 		hero_popup.close()
@@ -303,6 +378,7 @@ func choose_tactic(hero_id: String, tactic_id: String) -> void:
 	_show()
 	if hero_panel.visible and hero_panel.showing == hero_id:
 		hero_panel.show_hero(hero_id)
+		hero_bar.select(hero_id)
 
 
 ## Puts a hero on a path at a stage while placing (base: no path), and
@@ -390,8 +466,8 @@ func _build_fight_box() -> VBoxContainer:
 func _build_log_popup() -> PanelContainer:
 	var popup := PanelContainer.new()
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(UiStyle.INK_900, 0.96)
-	style.border_color = UiStyle.BRASS_500
+	style.bg_color = Color(UiStyle.NAVY_800, 0.97)
+	style.border_color = UiStyle.LINE_500
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(6)
 	style.set_content_margin_all(10.0)
@@ -421,6 +497,7 @@ func start_fight(fight_setup: FightSetup) -> void:
 	player = FightPlayer.make(fight_setup, session.content)
 	player.speed = session.speed
 	hero_panel.close()
+	seed_label.text = "Seed %d" % fight_setup.seed_value
 	view.set_mode(ArenaView.Mode.FIGHT)
 	hint_label.text = FIGHT_HINT
 	_placement_box.visible = false
@@ -553,8 +630,10 @@ func _process(delta: float) -> void:
 ## Draws the fight as it stands.
 func _on_frame() -> void:
 	view.sync_fight(player)
+	hero_bar.refresh(player.sim)
 	if playing():
 		hero_popup.close()
+		hero_panel.close()
 	_show_live()
 	clock_label.text = "%.1fs" % player.fight_seconds()
 	_controls_box.visible = not player.finished()

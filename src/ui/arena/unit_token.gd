@@ -21,17 +21,17 @@ extends Control
 ## view, as if on the hex it stands on), and a hero's tactic is named under
 ## its name (phase 3b).
 
-const HERO_FILL := UiStyle.BRASS_500
-const HERO_TEXT := UiStyle.INK_900
+const HERO_FILL := UiStyle.TEAL_400
+const HERO_TEXT := UiStyle.NAVY_900
 const ENEMY_FILL := UiStyle.RIFT_500
-const ENEMY_TEXT := UiStyle.PARCHMENT_100
-const LINE := UiStyle.INK_900
+const ENEMY_TEXT := UiStyle.CREAM_100
+const LINE := UiStyle.NAVY_900
 const SHADOW := Color(0.0, 0.0, 0.0, 0.45)
-const BAR_BACK := Color(0.08, 0.06, 0.1, 0.85)
+const BAR_BACK := Color(0.04, 0.06, 0.09, 0.85)
 const HERO_HP := UiStyle.GOOD
 const ENEMY_HP := UiStyle.BAD
 const MANA := Color("7aa7ff")
-const CAST := UiStyle.BRASS_300
+const CAST := UiStyle.GOLD_300
 ## Tags for the statuses that aren't damage over time (by StatusDef.Kind).
 const STATUS_TAGS: Dictionary = {
 	StatusDef.Kind.ROOT: "ROOT", StatusDef.Kind.STUN: "STUN", StatusDef.Kind.SLOW: "SLOW", StatusDef.Kind.TAUNT: "TAUNT",
@@ -279,10 +279,10 @@ func _draw() -> void:
 	var width: float = font.get_string_size(label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE).x
 	var baseline: Vector2 = Vector2(feet.x - width / 2.0, below + font.get_ascent(LABEL_SIZE))
 	draw_string_outline(font, baseline, label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE, 4, LABEL_OUTLINE)
-	draw_string(font, baseline, label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE, UiStyle.BRASS_300 if is_hero() else UiStyle.RIFT_300)
+	draw_string(font, baseline, label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE, UiStyle.GOLD_300 if is_hero() else UiStyle.RIFT_300)
 	below = baseline.y + font.get_descent(LABEL_SIZE) + 2.0
 	if not in_fight:
-		for tag: Array in [[path_label, UiStyle.FROST_400], [tactic_label, UiStyle.PARCHMENT_300]]:
+		for tag: Array in [[path_label, UiStyle.GOLD_300], [tactic_label, UiStyle.CREAM_300]]:
 			var text: String = tag[0]
 			if text.is_empty():
 				continue

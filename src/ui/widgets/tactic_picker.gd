@@ -38,7 +38,7 @@ func show_tactics(options: Array[TacticDef], picked_id: String, can_choose: bool
 	for option: TacticDef in options:
 		if option.id == picked_id:
 			picked = option
-	add_child(UiStyle.label("Tactic" if can_choose else "Tactic: %s" % (picked.name if picked != null else "none"), 17, UiStyle.BRASS_300))
+	add_child(UiStyle.label("Tactic" if can_choose else "Tactic: %s" % (picked.name if picked != null else "none"), 17, UiStyle.GOLD_300))
 	if can_choose:
 		var buttons := HFlowContainer.new()
 		buttons.add_theme_constant_override("h_separation", 6)

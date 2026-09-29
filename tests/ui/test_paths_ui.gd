@@ -104,7 +104,7 @@ func test_a_transformed_trapper_places_her_snares() -> void:
 
 func test_the_panel_opens_on_the_path_tab_and_chooses_paths() -> void:
 	var screen: ArenaScreen = await _screen()
-	_click(screen, "maren")
+	screen.open_panel("maren")
 	await wait_process_frames(2)
 	var panel: HeroPanel = screen.hero_panel
 	assert_true(panel.visible)
@@ -115,7 +115,8 @@ func test_the_panel_opens_on_the_path_tab_and_chooses_paths() -> void:
 		assert_string_contains(text, said)
 	for path: PathDef in _content.heroes["maren"].paths:
 		assert_string_contains(text, path.name)
-		assert_string_contains(text, "Deed: %s · no fight yet" % path.deed.text)
+		assert_string_contains(text, "Deed: %s" % path.deed.text)
+		assert_string_contains(text, "no fight yet")
 	await _press_card(screen, "Deadeye", "Vow")
 	assert_eq(screen.session.vows, {"maren": "deadeye"} as Dictionary[String, String])
 	assert_eq([screen.view.token("maren").path_label, screen.view.token("maren").art_key], ["Deadeye (vow)", "heroes/maren_base"], "a vowed hero keeps her base figure")
@@ -123,13 +124,14 @@ func test_the_panel_opens_on_the_path_tab_and_chooses_paths() -> void:
 	assert_string_contains(text, HeroPanel.VOWED_TEXT)
 	assert_string_contains(text, "Taste: " + _content.paths["deadeye"].taste)
 	assert_string_contains(text, "Cost: " + _content.paths["deadeye"].vowed_cost)
-	assert_eq(panel.form_tag.text, "Deadeye · vowed")
+	assert_eq(panel.form_tag.text, "Base form", "a vowed hero keeps her base form")
 	await _press_card(screen, "Deadeye", "Transform")
 	assert_eq(screen.session.stage_of("maren"), PathDef.Stage.TRANSFORMED)
 	assert_eq([screen.view.token("maren").path_label, screen.view.token("maren").art_key], ["Deadeye", "heroes/maren_deadeye"], "transformed: her path's figure")
 	text = U.text_of(panel)
 	assert_string_contains(text, HeroPanel.TRANSFORMED_TEXT)
 	assert_string_contains(text, "Transformed: " + _content.paths["deadeye"].transformed_text)
+	assert_eq(panel.form_tag.text, "Deadeye form")
 	await _press_card(screen, "Volley", "Vow")
 	assert_eq(screen.session.vows, {"maren": "volley"} as Dictionary[String, String], "another card's Vow switches paths")
 	assert_eq(screen.session.stage_of("maren"), PathDef.Stage.VOWED)
@@ -141,7 +143,7 @@ func test_the_panel_opens_on_the_path_tab_and_chooses_paths() -> void:
 func test_the_kit_tab_is_the_kit_at_the_heros_stage() -> void:
 	var screen: ArenaScreen = await _screen()
 	screen.session.set_path("vell", "vigil_keeper", PathDef.Stage.TRANSFORMED)
-	_click(screen, "vell")
+	screen.open_panel("vell")
 	screen.hero_panel.show_tab(HeroPanel.Tab.KIT)
 	var text: String = U.text_of(screen.hero_panel.page)
 	for line: UnitInfo.Line in UnitInfo.lines(_content.paths["vigil_keeper"].transformed_kit, "Vell", _content):
@@ -150,9 +152,43 @@ func test_the_kit_tab_is_the_kit_at_the_heros_stage() -> void:
 	assert_eq(screen.hero_panel.stats.text, UnitInfo.stats_text(_content.paths["vigil_keeper"].transformed_kit.stats))
 
 
-func test_back_forward_and_close() -> void:
+func test_the_hero_bar_opens_the_panel_and_the_board_doesnt() -> void:
 	var screen: ArenaScreen = await _screen()
 	_click(screen, "maren")
+	assert_false(screen.hero_panel.visible, "clicking a hero on the board opens nothing while placing")
+	assert_false(screen.hero_popup.visible)
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = false
+	screen.hero_bar.cards["maren"].gui_input.emit(click)
+	assert_true(screen.hero_panel.visible, "its card in the hero bar does")
+	assert_eq(screen.hero_panel.showing, "maren")
+	assert_true(screen.hero_bar.cards["maren"].selected, "and the card is marked")
+	assert_false(screen.hero_bar.cards["vell"].selected)
+	screen.hero_bar.cards["vell"].gui_input.emit(click)
+	assert_eq(screen.hero_panel.showing, "vell", "another card switches heroes")
+	screen.hero_bar.cards["vell"].gui_input.emit(click)
+	assert_false(screen.hero_panel.visible, "its own card again closes it")
+	assert_false(screen.hero_bar.cards["vell"].selected)
+	screen.choose_path("maren", "trapper", PathDef.Stage.TRANSFORMED)
+	screen.choose_tactic("maren", "hold_ground")
+	var card: HeroBar.Card = screen.hero_bar.cards["maren"]
+	assert_eq([card.path_label.text, card.hp_text.text], ["Trapper", "HP %d / %d" % [screen.session.kit_of("maren").stats.get_stat(UnitStats.Stat.HP), screen.session.kit_of("maren").stats.get_stat(UnitStats.Stat.HP)]])
+	assert_eq(card.chips.get_child(1).tooltip_text, "Hold your ground", "the tactic's chip names it")
+	assert_eq(card.deed_text.text, "Trapper deed · no fight yet")
+	screen._fight()
+	screen._process(3.0)
+	assert_string_contains(card.deed_text.text, "this fight", "in a fight, the deed so far")
+	screen.hero_bar.cards["maren"].gui_input.emit(click)
+	assert_true(screen.player.paused, "opening a panel in a fight pauses it")
+	assert_true(screen.hero_panel.visible)
+	assert_false(screen.hero_panel.editable, "and it's for reading")
+	assert_true(U.button(screen.hero_panel, "Back to vow").disabled)
+
+
+func test_back_forward_and_close() -> void:
+	var screen: ArenaScreen = await _screen()
+	screen.open_panel("maren")
 	screen.hero_panel.show_tab(HeroPanel.Tab.KIT)
 	assert_true(U.press(screen.hero_panel, ">"))
 	assert_eq([screen.hero_panel.showing, screen.hero_panel.tab], ["vell", HeroPanel.Tab.KIT], "the same tab")
@@ -160,9 +196,9 @@ func test_back_forward_and_close() -> void:
 	assert_eq(screen.hero_panel.showing, "brannoc", "round to the first")
 	assert_true(U.press(screen.hero_panel, "<"))
 	assert_eq(screen.hero_panel.showing, "vell")
-	assert_true(U.press(screen.hero_panel, "Close"))
+	assert_true(U.press(screen.hero_panel, "✕"))
 	assert_false(screen.hero_panel.visible)
-	_click(screen, "vell")
+	screen.open_panel("vell")
 	await wait_process_frames(2)
 	var outside := InputEventMouseButton.new()
 	outside.button_index = MOUSE_BUTTON_LEFT
@@ -218,7 +254,7 @@ func test_the_fight_plays_with_paths_and_the_result_names_the_deeds() -> void:
 	assert_string_contains(details, "Brannoc: Hearthwall")
 	assert_eq(screen.session.last_deed("maren", "trapper"), trapper, "the session keeps it")
 	screen.place_again()
-	_click(screen, "maren")
+	screen.open_panel("maren")
 	assert_string_contains(U.text_of(screen.hero_panel), "last fight: %s" % UnitInfo.deed_amount_text(_content.paths["trapper"].deed, trapper))
 
 

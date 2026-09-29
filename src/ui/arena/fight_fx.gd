@@ -55,7 +55,7 @@ const CRUMBLED := Color(0.02, 0.01, 0.03, 0.72)
 const WARNED := Color(0.88, 0.44, 0.23, 0.22)
 const TARGET_LINE := Color(1, 1, 1, 0.28)
 const TAUNT_LINE := Color(0.88, 0.44, 0.23, 0.8)
-const ENGAGE_LINK := UiStyle.BRASS_300
+const ENGAGE_LINK := UiStyle.GOLD_300
 
 enum Kind { SHOT, SWIPE, NUMBER, POPUP, AREA, LANDED, GHOST, PULSE }
 ## Where on a unit an effect is drawn (_lift).
@@ -179,7 +179,7 @@ func _add(entry: LogEntry, sim: CombatSim) -> void:
 			if guard != null and entry.amount > 0:
 				var took: Fx = _new(Kind.NUMBER, entry.tick, entry.tick + NUMBER_TICKS, Vector2(guard.pos), guard.id)
 				took.text = str(entry.amount)
-				took.color = UiStyle.BRASS_300
+				took.color = UiStyle.GOLD_300
 		LogEntry.Kind.SHIELD:
 			_number(entry, sim, "+%d" % entry.amount, UiStyle.SHIELD, false)
 		LogEntry.Kind.FIRE:
@@ -193,7 +193,7 @@ func _add(entry: LogEntry, sim: CombatSim) -> void:
 			if holder != null:
 				var said: Fx = _new(Kind.POPUP, entry.tick, entry.tick + POPUP_TICKS, Vector2(holder.pos), holder.id)
 				said.text = tactic_popup(entry)
-				said.color = UiStyle.BRASS_300
+				said.color = UiStyle.GOLD_300
 		LogEntry.Kind.AREA_WARNING, LogEntry.Kind.AREA_LANDED:
 			var warning: bool = entry.kind == LogEntry.Kind.AREA_WARNING
 			var area: Fx = _new(Kind.AREA if warning else Kind.LANDED, entry.tick, entry.end_tick if warning else entry.tick + LANDED_TICKS, Vector2(entry.from_pos), "")

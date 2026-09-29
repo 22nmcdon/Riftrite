@@ -330,17 +330,13 @@ func test_hovering_an_enemy_shows_its_abilities() -> void:
 	assert_eq(screen.enemy_panel.showing, "", "placing again clears it")
 
 
-func test_clicking_a_hero_opens_the_panel_while_placing_and_the_popup_in_a_fight() -> void:
+func test_clicking_a_hero_on_the_board_opens_the_popup_in_a_fight() -> void:
 	var screen: ArenaScreen = await _screen()
 	assert_false(screen.hero_popup.visible)
 	_click(screen, "vell")
 	await wait_process_frames(2)
-	assert_true(screen.hero_panel.visible, "the panel in placement")
+	assert_false(screen.hero_panel.visible, "while placing, the board opens nothing: the hero bar does")
 	assert_false(screen.hero_popup.visible)
-	assert_eq(screen.hero_panel.showing, "vell")
-	screen.hero_panel.close()
-	_click(screen, "brannoc")
-	screen.hero_panel.close()
 	screen._fight()
 	screen._process(0.5)
 	screen.toggle_pause()

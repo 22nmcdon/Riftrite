@@ -16,7 +16,7 @@ const COLORS: Array[Array] = [
 	[Color("199e70"), Color("3987e5")],
 	[Color("e66767"), Color("3987e5")],
 ]
-const SURFACE := UiStyle.INK_700
+const SURFACE := UiStyle.NAVY_800
 const NAME_WIDTH: float = 150.0
 const BAR_HEIGHT: float = 18.0
 const GAP: float = 2.0

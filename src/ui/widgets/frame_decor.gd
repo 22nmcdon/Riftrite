@@ -45,16 +45,16 @@ func _draw() -> void:
 		_rivet(br - Vector2(6, 6))
 	if ornament >= 3:
 		var top: Vector2 = Vector2(outer.get_center().x, tl.y)
-		draw_colored_polygon(PackedVector2Array([top + Vector2(0, -6), top + Vector2(6, 1), top + Vector2(0, 5), top + Vector2(-6, 1)]), UiStyle.BRASS_300)
+		draw_colored_polygon(PackedVector2Array([top + Vector2(0, -6), top + Vector2(6, 1), top + Vector2(0, 5), top + Vector2(-6, 1)]), UiStyle.GOLD_300)
 	if ornament >= 4:
 		var y: float = tl.y + outer.size.y * 0.3
-		draw_colored_polygon(PackedVector2Array([Vector2(tl.x, y - 6), Vector2(tl.x - 7, y), Vector2(tl.x, y + 6)]), UiStyle.BRASS_300)
-		draw_colored_polygon(PackedVector2Array([Vector2(br.x, y - 6), Vector2(br.x + 7, y), Vector2(br.x, y + 6)]), UiStyle.BRASS_300)
+		draw_colored_polygon(PackedVector2Array([Vector2(tl.x, y - 6), Vector2(tl.x - 7, y), Vector2(tl.x, y + 6)]), UiStyle.GOLD_300)
+		draw_colored_polygon(PackedVector2Array([Vector2(br.x, y - 6), Vector2(br.x + 7, y), Vector2(br.x, y + 6)]), UiStyle.GOLD_300)
 
 
 func _rivet(at: Vector2) -> void:
-	draw_circle(at, 4.0, UiStyle.INK_900)
-	draw_circle(at, 3.0, UiStyle.BRASS_300)
+	draw_circle(at, 4.0, UiStyle.NAVY_900)
+	draw_circle(at, 3.0, UiStyle.GOLD_300)
 
 
 ## A jagged violet crack running in from a corner.

@@ -36,7 +36,7 @@ func _run() -> void:
 	await _snap("placement_sentinel_gate")
 	# Maren's panel (phase 4): the Path tab, vowed to Deadeye; the Kit tab
 	# transformed; the Loadout tab, taking Hold your ground (phase 3b).
-	arena.view.unit_clicked.emit("maren")
+	arena.open_panel("maren")
 	arena.choose_path("maren", "deadeye", PathDef.Stage.VOWED)
 	await _snap("panel_path_maren_vowed")
 	arena.choose_path("maren", "deadeye", PathDef.Stage.TRANSFORMED)

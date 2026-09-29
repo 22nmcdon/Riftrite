@@ -21,9 +21,9 @@ var left: float = 0.0
 
 static func make() -> FightBanners:
 	var banners := FightBanners.new()
-	banners.add_theme_stylebox_override("panel", UiStyle.box(UiStyle.OAK_600, UiStyle.BRASS_300, 3))
+	banners.add_theme_stylebox_override("panel", UiStyle.box(UiStyle.NAVY_700, UiStyle.GOLD_300, 3))
 	banners.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	banners.label = UiStyle.label("", 26, UiStyle.BRASS_300)
+	banners.label = UiStyle.label("", 26, UiStyle.GOLD_300)
 	banners.label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	banners.add_child(banners.label)
 	banners.visible = false

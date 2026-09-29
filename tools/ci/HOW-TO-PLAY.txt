@@ -22,7 +22,9 @@ PLAYING
   2. Drag Brannoc, Maren, and Vell onto your side's hexes (the three columns
      on the left; the enemies are on the right). Hover an enemy to read what
      it does.
-  3. Click a hero while placing to open their panel (new in this build).
+  3. Click a hero's card in the hero bar along the bottom to open their
+     panel (new in this build; clicking the hero on the board no longer
+     does). In a fight, it pauses and the panel is for reading.
      Back and forward (< >) move between the heroes; Close, Escape, or a
      click beside it shuts it.
        Path     each hero has three paths. Vow one to try its taste (a small

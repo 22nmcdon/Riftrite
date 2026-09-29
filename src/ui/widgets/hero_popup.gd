@@ -25,7 +25,7 @@ var _column: VBoxContainer
 
 static func make() -> HeroPopup:
 	var popup := HeroPopup.new()
-	popup.add_theme_stylebox_override("panel", UiStyle.box(UiStyle.PANEL_WARM, UiStyle.BRASS_300, 2))
+	popup.add_theme_stylebox_override("panel", UiStyle.box(UiStyle.PANEL_RAISED, UiStyle.GOLD_300, 2))
 	popup.custom_minimum_size = Vector2(WIDTH, 0)
 	popup.mouse_filter = Control.MOUSE_FILTER_STOP
 	popup._column = VBoxContainer.new()

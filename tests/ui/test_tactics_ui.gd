@@ -32,7 +32,7 @@ func _click(screen: ArenaScreen, unit_id: String) -> void:
 
 ## Opens a hero's panel on its Loadout tab (placing).
 func _loadout(screen: ArenaScreen, hero_id: String) -> TacticPicker:
-	_click(screen, hero_id)
+	screen.open_panel(hero_id)
 	screen.hero_panel.show_tab(HeroPanel.Tab.LOADOUT)
 	return screen.hero_panel.tactic_picker
 

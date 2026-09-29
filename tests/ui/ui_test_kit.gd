@@ -31,9 +31,13 @@ static func press(root: Node, text: String) -> bool:
 	return true
 
 
-## All the label text under `root`, one per line.
+## All the label text under `root`, one per line (rich text as it reads,
+## without its tags).
 static func text_of(root: Node) -> String:
 	var lines: PackedStringArray = PackedStringArray()
-	for node: Node in find_all(root, Label):
-		lines.append((node as Label).text)
+	for node: Node in find_all(root, Control):
+		if node is Label:
+			lines.append((node as Label).text)
+		elif node is RichTextLabel:
+			lines.append((node as RichTextLabel).get_parsed_text())
 	return "\n".join(lines)

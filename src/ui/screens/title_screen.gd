@@ -13,7 +13,7 @@ func build() -> void:
 	alignment = BoxContainer.ALIGNMENT_CENTER
 	add_theme_constant_override("separation", 18)
 	var logo: Label = UiStyle.heading("Riftrite", 112, UiStyle.EMBER)
-	logo.add_theme_color_override("font_outline_color", UiStyle.INK_900)
+	logo.add_theme_color_override("font_outline_color", UiStyle.NAVY_900)
 	logo.add_theme_constant_override("outline_size", 18)
 	logo.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.5))
 	logo.add_theme_constant_override("shadow_offset_y", 6)
@@ -21,8 +21,8 @@ func build() -> void:
 	# The words go on a plate: the backdrop's sky is bright.
 	var words := VBoxContainer.new()
 	words.add_theme_constant_override("separation", 10)
-	words.add_child(UiStyle.label("A guild of heroes, and the rifts below the Hollow.", 22, UiStyle.PARCHMENT_100))
-	words.add_child(UiStyle.label(REBUILD_NOTE, 18, UiStyle.PARCHMENT_300))
+	words.add_child(UiStyle.label("A guild of heroes, and the rifts below the Hollow.", 22, UiStyle.CREAM_100))
+	words.add_child(UiStyle.label(REBUILD_NOTE, 18, UiStyle.CREAM_300))
 	for line: Control in words.get_children():
 		(line as Label).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(UiStyle.plate(words))

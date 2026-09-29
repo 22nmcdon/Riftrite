@@ -53,11 +53,12 @@ const TOP_ROOM_HEXES: float = 0.6
 ## A flat-top hex's corner radius on the plane: rows are HEX apart, so the
 ## corners are HEX / sqrt(3) from the center.
 const HEX_CORNER: float = HexGrid.HEX / 1.7320508
-const ZONE_FILLS: Array[Color] = [Color("3a2c22"), Color("241e2a"), Color("1f2233")]
-const HEX_LINE := Color("5b4a3a")
-const FIGHT_HEX_LINE := Color(0.36, 0.29, 0.23, 0.35)
-const ROCK_FILL := UiStyle.OAK_600
-const ROCK_LINE := UiStyle.OAK_400
+## Your side teal-tinted navy, the middle row plain, theirs violet-tinted.
+const ZONE_FILLS: Array[Color] = [Color("1c3340"), Color("1b2433"), Color("241f3a")]
+const HEX_LINE := Color("395265")
+const FIGHT_HEX_LINE := Color(0.22, 0.32, 0.4, 0.45)
+const ROCK_FILL := Color("4a5161")
+const ROCK_LINE := Color("6b7385")
 const FLASH := Color(0.84, 0.35, 0.31, 0.7)
 ## How long a refused hex flashes, in seconds.
 const FLASH_SECONDS: float = 0.5
@@ -405,7 +406,7 @@ func _layout() -> void:
 func _draw() -> void:
 	if grid == null:
 		return
-	draw_rect(rect_to_pixels(drawn_rect), UiStyle.INK_700)
+	draw_rect(rect_to_pixels(drawn_rect), UiStyle.NAVY_850)
 	for index: int in grid.size():
 		var col: int = grid.col_of(index)
 		var row: int = grid.row_of(index)

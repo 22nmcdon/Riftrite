@@ -22,6 +22,7 @@ var practice: PracticeSession = null
 var hover_card: HoverCard
 var backdrop: TextureRect
 var _screen_slot: ScrollContainer
+var _margin: MarginContainer
 var _toast: Toast
 
 
@@ -42,8 +43,7 @@ func _ready() -> void:
 	add_child(backdrop)
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side: String in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 16)
+	_margin = margin
 	add_child(margin)
 	_screen_slot = ScrollContainer.new()
 	_screen_slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -58,7 +58,7 @@ func _ready() -> void:
 	_toast.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	_toast.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_toast.position.y += 64
-	_toast.add_theme_color_override("font_outline_color", UiStyle.INK_900)
+	_toast.add_theme_color_override("font_outline_color", UiStyle.NAVY_900)
 	_toast.add_theme_constant_override("outline_size", 8)
 	_toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_toast)
@@ -97,6 +97,8 @@ func show_screen(next: UiScreen) -> void:
 	screen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	screen.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_screen_slot.add_child(screen)
+	for side: String in ["left", "right", "top", "bottom"]:
+		_margin.add_theme_constant_override("margin_" + side, 0 if screen.full_bleed else 16)
 	screen.setup()
 	backdrop.visible = screen.shows_backdrop
 

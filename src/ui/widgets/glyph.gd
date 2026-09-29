@@ -91,7 +91,7 @@ func _draw() -> void:
 		Shape.PORTRAIT:
 			draw_circle(c, r, color.darkened(0.45))
 			draw_circle(c, r - 3.0, color)
-			_letter(c, s * 0.55, UiStyle.INK_900)
+			_letter(c, s * 0.55, UiStyle.NAVY_900)
 		Shape.DOT:
 			draw_circle(c, r, color)
 		Shape.STATUS:
@@ -115,14 +115,14 @@ func _draw_hex(c: Vector2, r: float) -> void:
 	for point: Vector2 in points:
 		inner.append(c + (point - c) * 0.84)
 	draw_colored_polygon(points, color)
-	draw_colored_polygon(inner, UiStyle.OAK_600 if not cracked else UiStyle.INK_700)
+	draw_colored_polygon(inner, UiStyle.NAVY_700 if not cracked else UiStyle.NAVY_800)
 	if cracked:
 		draw_polyline(PackedVector2Array([c + Vector2(-r * 0.7, -r * 0.2), c + Vector2(-r * 0.3, -r * 0.05), c + Vector2(-r * 0.2, r * 0.35)]), UiStyle.RIFT_300, 1.5)
 	if art != null:
 		var inner_r: float = r * 0.78
 		draw_texture_rect(art, Rect2(c - Vector2(inner_r, inner_r), Vector2(inner_r, inner_r) * 2.0), false)
 	else:
-		_letter(c, r * 0.95, UiStyle.PARCHMENT_100)
+		_letter(c, r * 0.95, UiStyle.CREAM_100)
 
 
 ## The status shapes.
@@ -136,7 +136,7 @@ func _shape(kind: String, c: Vector2, r: float, fill: Color) -> void:
 				c + Vector2(r * 0.4, r * 0.85), c + Vector2(-r * 0.4, r * 0.85), c + Vector2(-r * 0.7, r * 0.3), c + Vector2(-r * 0.6, -r * 0.6),
 				c + Vector2(-r * 0.25, -r * 0.3)]), fill)
 			if kind == "flame_core":
-				draw_circle(c + Vector2(0, r * 0.4), r * 0.3, UiStyle.BRASS_300)
+				draw_circle(c + Vector2(0, r * 0.4), r * 0.3, UiStyle.GOLD_300)
 		"droplet":
 			draw_circle(c + Vector2(0, r * 0.3), r * 0.6, fill)
 			draw_colored_polygon(PackedVector2Array([c + Vector2(0, -r), c + Vector2(r * 0.55, r * 0.15), c + Vector2(-r * 0.55, r * 0.15)]), fill)
@@ -148,7 +148,7 @@ func _shape(kind: String, c: Vector2, r: float, fill: Color) -> void:
 			draw_rect(Rect2(c - Vector2(r * 0.7, r * 0.7), Vector2(r * 1.4, r * 1.4)), fill)
 		"leaf":
 			draw_colored_polygon(PackedVector2Array([c + Vector2(-r * 0.8, r * 0.8), c + Vector2(-r * 0.5, -r * 0.3), c + Vector2(r * 0.8, -r * 0.8), c + Vector2(r * 0.4, r * 0.4)]), fill)
-			draw_line(c + Vector2(-r * 0.8, r * 0.8), c + Vector2(r * 0.4, -r * 0.4), UiStyle.INK_900 if fill != UiStyle.INK_900 else UiStyle.PARCHMENT_100, w * 0.5)
+			draw_line(c + Vector2(-r * 0.8, r * 0.8), c + Vector2(r * 0.4, -r * 0.4), UiStyle.NAVY_900 if fill != UiStyle.NAVY_900 else UiStyle.CREAM_100, w * 0.5)
 		"snowflake":
 			for i: int in 3:
 				var d: Vector2 = Vector2.from_angle(PI * i / 3.0 + PI / 2.0) * r

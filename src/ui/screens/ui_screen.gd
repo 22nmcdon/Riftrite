@@ -6,6 +6,9 @@ extends VBoxContainer
 ## False: Main hides the title backdrop behind this screen (the arena needs
 ## a quiet background to read).
 var shows_backdrop: bool = true
+## True: Main gives it the whole window, with no margin (a screen with its
+## own top bar and hero bar, like the mock's).
+var full_bleed: bool = false
 
 
 func setup() -> UiScreen:
@@ -26,7 +29,7 @@ func heading(text: String) -> void:
 ## A dim line under a heading saying what to do here (on a plate over the
 ## backdrop, whose sky is bright).
 func hint(text: String) -> void:
-	var line: Label = UiStyle.label(text, 16, UiStyle.PARCHMENT_300 if shows_backdrop else UiStyle.TEXT_DIM)
+	var line: Label = UiStyle.label(text, 16, UiStyle.CREAM_300 if shows_backdrop else UiStyle.TEXT_DIM)
 	if not shows_backdrop:
 		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		add_child(line)
@@ -37,11 +40,16 @@ func hint(text: String) -> void:
 	add_child(holder)
 
 
-## A centered panel of chrome art (UiStyle.chrome) holding a column; returns
+## A centered panel (the mock's rounded navy box) holding a column; returns
 ## the column. `width` 0 lets it size to its content.
-func card(chrome_name: String, width: int = 0) -> VBoxContainer:
+func card(_kind: String = "", width: int = 0) -> VBoxContainer:
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", UiStyle.chrome(chrome_name, 36, 28))
+	var style: StyleBoxFlat = UiStyle.box(UiStyle.PANEL, UiStyle.BORDER, 1, 12)
+	style.content_margin_left = 36
+	style.content_margin_right = 36
+	style.content_margin_top = 28
+	style.content_margin_bottom = 28
+	panel.add_theme_stylebox_override("panel", style)
 	panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	panel.custom_minimum_size = Vector2(width, 0)
 	add_child(panel)
