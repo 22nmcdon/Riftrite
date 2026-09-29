@@ -126,6 +126,31 @@ static func passive_numbers(part: PartDef, kit: UnitDef, content: ContentDb) -> 
 	return " · ".join(parts)
 
 
+## A tactic's numbers line (phase 3b, round 2): what its behavior waits for
+## or goes after, then its payoff.
+static func tactic_numbers(tactic: TacticDef) -> String:
+	var parts: Array[String] = []
+	match tactic.kind:
+		TacticDef.Kind.PREFER_TARGET:
+			var kinds: Array[String] = []
+			for archetype: String in tactic.archetypes:
+				kinds.append(archetype + "s")
+			var named: String = " and ".join(kinds)
+			parts.append("%s%s first" % [named.left(1).to_upper(), named.substr(1)])
+			if tactic.damage_vs_bp > 0:
+				parts.append("+%s damage to them from its basic attack and signature" % ValueBreakdown._percent(tactic.damage_vs_bp))
+		TacticDef.Kind.HOLD_GROUND:
+			@warning_ignore("integer_division")
+			parts.append("Holds until an enemy is within %s" % hexes(tactic.release_range / HexGrid.HEX))
+			if tactic.atsp_bp > 0:
+				parts.append("+%s attack speed while it holds" % ValueBreakdown._percent(tactic.atsp_bp))
+		TacticDef.Kind.SIGNATURE_THRESHOLD:
+			parts.append("Waits until an ally is below %s HP" % ValueBreakdown._percent(tactic.below_bp))
+			if tactic.heal_bp > 0:
+				parts.append("+%s healing from its signature" % ValueBreakdown._percent(tactic.heal_bp))
+	return " · ".join(parts)
+
+
 static func trigger_text(trigger: TriggerDef, kit: UnitDef) -> String:
 	match trigger.kind:
 		TriggerDef.Kind.MANA:

@@ -171,6 +171,26 @@ func test_the_numbers_of_every_other_piece() -> void:
 	assert_eq(UnitInfo.phase_numbers(molt), "Below 80% HP · new signature: Call the Brood · new basic attack: Strike")
 
 
+func test_the_tactics_numbers_lines() -> void:
+	assert_eq(UnitInfo.tactic_numbers(_content.tactics["casters_first"]), "Casters and supports first · +20% damage to them from its basic attack and signature")
+	assert_eq(UnitInfo.tactic_numbers(_content.tactics["hold_ground"]), "Holds until an enemy is within 2 hexes · +20% attack speed while it holds")
+	assert_eq(UnitInfo.tactic_numbers(_content.tactics["wait_to_heal"]), "Waits until an ally is below 60% HP · +30% healing from its signature")
+	# Made-up tactics: other numbers, and no payoff.
+	var odd := TacticDef.new()
+	odd.kind = TacticDef.Kind.PREFER_TARGET
+	odd.archetypes = ["swarm"] as Array[String]
+	odd.damage_vs_bp = 1250
+	assert_eq(UnitInfo.tactic_numbers(odd), "Swarms first · +12.5% damage to them from its basic attack and signature")
+	odd.damage_vs_bp = 0
+	assert_eq(UnitInfo.tactic_numbers(odd), "Swarms first")
+	odd.kind = TacticDef.Kind.HOLD_GROUND
+	odd.release_range = HexGrid.HEX
+	assert_eq(UnitInfo.tactic_numbers(odd), "Holds until an enemy is within 1 hex")
+	odd.kind = TacticDef.Kind.SIGNATURE_THRESHOLD
+	odd.below_bp = 5000
+	assert_eq(UnitInfo.tactic_numbers(odd), "Waits until an ally is below 50% HP")
+
+
 func test_small_words() -> void:
 	assert_eq([UnitInfo.seconds(20), UnitInfo.seconds(24), UnitInfo.seconds(3), UnitInfo.seconds(0), UnitInfo.seconds(1200)], ["1s", "1.2s", "0.15s", "0s", "60s"])
 	assert_eq([UnitInfo.hexes(1), UnitInfo.hexes(2)], ["1 hex", "2 hexes"])

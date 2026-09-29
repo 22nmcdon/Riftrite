@@ -9,7 +9,7 @@ extends PanelContainer
 ## Its Tactic row (docs/plans/rebuild-phase3b-tactics.md, section 4): while
 ## placing, a button for no tactic and one for each the hero can take (a
 ## press asks ArenaScreen to set it: tactic_chosen); in a fight, the one it
-## took. Either way, with the tactic's sentence.
+## took. Either way, with the tactic's sentence and its numbers line.
 
 ## A tactic was picked for the hero shown ("": none).
 signal tactic_chosen(hero_id: String, tactic_id: String)
@@ -27,6 +27,8 @@ var tactic_box: VBoxContainer
 ## The tactic buttons while placing (the first is "None").
 var tactic_buttons: Array[Button] = []
 var tactic_text: Label
+## The tactic's numbers line (UnitInfo.tactic_numbers; empty with none).
+var tactic_numbers: Label
 ## The hero shown ("": closed).
 var showing: String = ""
 var _column: VBoxContainer
@@ -111,6 +113,10 @@ func show_tactics(options: Array[TacticDef], chosen: String, can_choose: bool) -
 	tactic_text = UiStyle.label(picked.text if picked != null else "No tactic: it fights by its kit alone.", 14, UiStyle.TEXT_DIM)
 	tactic_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	tactic_box.add_child(tactic_text)
+	tactic_numbers = UiStyle.label(UnitInfo.tactic_numbers(picked) if picked != null else "", 13, UiStyle.TEXT_DIM)
+	tactic_numbers.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	tactic_numbers.visible = picked != null
+	tactic_box.add_child(tactic_numbers)
 
 
 ## Its numbers now and its last log lines, in a fight.

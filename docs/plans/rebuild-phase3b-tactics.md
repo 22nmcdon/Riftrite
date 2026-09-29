@@ -288,6 +288,10 @@ A tactic is a JSON entry in `data/tactics.json`, loaded by `ContentDb` as a `Tac
 - **The board:** the TACTIC popup drops the parenthesis, so it stays short.
 - **Checks:** the bench's fingerprints are unchanged, and every mutant of the three payoffs (wrong condition, wrong scope, no note) is caught by a test.
 
+**Built in R3 (2026-09-29):**
+- `UnitInfo.tactic_numbers` makes the tactic's numbers line from its data: what the behavior waits for or goes after, then the payoff ("Holds until an enemy is within 2 hexes · +20% attack speed while it holds"). The hero popup shows it under the sentence, while placing and in a fight; with no tactic there's no line.
+- `HOW-TO-PLAY.txt` gives each tactic's payoff and the 60% threshold, and asks whether the payoffs make each tactic worth trying.
+
 ## Decisions (2026-09-29, the playtester's answers)
 
 1. **"Casters" are the caster and support archetypes:** Cinder Moth and Gloam Witch in Act 1. (Caster only would have been just the Moth; any enemy with a signature would have taken in the Sentinel.)
