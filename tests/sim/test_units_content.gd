@@ -11,6 +11,7 @@ func _texts(heroes: Array, enemies: Array, encounters: Array) -> Dictionary[Stri
 	texts[ContentDb.HEROES_FILE] = JSON.stringify(heroes)
 	texts[ContentDb.ENEMIES_FILE] = JSON.stringify(enemies)
 	texts[ContentDb.ENCOUNTERS_FILE] = JSON.stringify(encounters)
+	texts[ContentDb.TACTICS_FILE] = "[]"
 	return texts
 
 

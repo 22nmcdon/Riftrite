@@ -77,6 +77,8 @@ func validate(content: ContentDb) -> Array[String]:
 			errors.append("%s has no kit" % where)
 		else:
 			_check_kit(unit.def, where, content, grid, errors)
+			if unit.tactic != null and (unit.side != EffectSource.Team.HEROES or not unit.tactic.allows(unit.def.id)):
+				errors.append("%s can't take the tactic %s" % [where, unit.tactic.name])
 		if not grid.has(unit.col, unit.row):
 			errors.append("%s is off the board" % where)
 			continue

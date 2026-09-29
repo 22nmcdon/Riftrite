@@ -39,6 +39,9 @@ var traits: Array[String] = []
 var hop_cooldown_ticks: int = 0
 ## Its phases, highest threshold first (a phase's own kit has none).
 var phases: Array[PhaseDef] = []
+## An enemy's archetype (EnemyDef.ARCHETYPE_NAMES; set from its entry, so
+## summons have theirs); "" for a hero. Tactics that prefer targets read it.
+var archetype: String = ""
 
 
 ## Reads a kit. A hero's or enemy's kit (HeroDef, EnemyDef) takes its id and
@@ -118,6 +121,7 @@ func copy() -> UnitDef:
 	other.passives = passives.duplicate()
 	other.traits = traits.duplicate()
 	other.hop_cooldown_ticks = hop_cooldown_ticks
+	other.archetype = archetype
 	return other
 
 

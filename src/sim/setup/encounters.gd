@@ -10,17 +10,25 @@ extends RefCounted
 ## encounter lists them. The encounter's scale_bp multiplies each enemy's HP
 ## and ATK. Every enemy a unit may summon (and every enemy those may summon)
 ## becomes a summon kit.
-## Returns null, with the reasons in `errors`, for an unknown encounter or
-## hero; FightSetup.validate checks the rest (zones, shared hexes).
+## `tactics` gives heroes their tactics: hero id -> tactic id (phase 3b).
+## Returns null, with the reasons in `errors`, for an unknown encounter,
+## hero, or tactic; FightSetup.validate checks the rest (zones, shared hexes,
+## who can take which tactic).
 
 
-static func setup(content: ContentDb, encounter_id: String, formation: Dictionary[String, Vector2i], fight_seed: int, errors: Array[String]) -> FightSetup:
+static func setup(content: ContentDb, encounter_id: String, formation: Dictionary[String, Vector2i], fight_seed: int, errors: Array[String],
+		tactics: Dictionary[String, String] = {}) -> FightSetup:
 	if not content.encounters.has(encounter_id):
 		errors.append("unknown encounter \"%s\"" % encounter_id)
 		return null
 	for hero_id: String in formation.keys():
 		if not content.heroes.has(hero_id):
 			errors.append("unknown hero \"%s\"" % hero_id)
+	for hero_id: String in tactics.keys():
+		if not formation.has(hero_id):
+			errors.append("a tactic for \"%s\", who isn't in the fight" % hero_id)
+		elif not content.tactics.has(tactics[hero_id]):
+			errors.append("unknown tactic \"%s\"" % tactics[hero_id])
 	if not errors.is_empty():
 		return null
 	var encounter: EncounterDef = content.encounters[encounter_id]
@@ -28,7 +36,10 @@ static func setup(content: ContentDb, encounter_id: String, formation: Dictionar
 	for hero_id: String in content.hero_ids:
 		if formation.has(hero_id):
 			var hex: Vector2i = formation[hero_id]
-			heroes.append(UnitSetup.make(content.heroes[hero_id].kit, EffectSource.Team.HEROES, hex.x, hex.y))
+			var hero: UnitSetup = UnitSetup.make(content.heroes[hero_id].kit, EffectSource.Team.HEROES, hex.x, hex.y)
+			if tactics.has(hero_id):
+				hero.tactic = content.tactics[tactics[hero_id]]
+			heroes.append(hero)
 	var enemies: Array[UnitSetup] = []
 	for placed: EncounterDef.Placed in encounter.enemies:
 		var kit: UnitDef = scaled(content.enemies[placed.enemy].kit, encounter.scale_bp)

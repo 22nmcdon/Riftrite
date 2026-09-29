@@ -15,14 +15,16 @@ extends RefCounted
 ## (docs/plans/rebuild-phase2-heroes-enemies.md, section 2), and later phases
 ## add theirs (paths in phase 4; relics, bonds, and the run's data in phase 5).
 ## Heroes and enemies share one space of ids, since a fight names its units by
-## them.
+## them. Phase 3b adds tactics (docs/plans/rebuild-phase3b-tactics.md), each
+## naming the heroes who can take it.
 
 const TUNING_FILE: String = "tuning.json"
 const STATUSES_FILE: String = "statuses.json"
 const HEROES_FILE: String = "heroes.json"
 const ENEMIES_FILE: String = "enemies.json"
 const ENCOUNTERS_FILE: String = "encounters.json"
-const FILES: Array[String] = [TUNING_FILE, STATUSES_FILE, HEROES_FILE, ENEMIES_FILE, ENCOUNTERS_FILE]
+const TACTICS_FILE: String = "tactics.json"
+const FILES: Array[String] = [TUNING_FILE, STATUSES_FILE, HEROES_FILE, ENEMIES_FILE, ENCOUNTERS_FILE, TACTICS_FILE]
 
 var errors: Array[String] = []
 var tuning: TuningDef
@@ -38,6 +40,8 @@ var enemies: Dictionary[String, EnemyDef] = {}
 var enemy_ids: Array[String] = []
 var encounters: Dictionary[String, EncounterDef] = {}
 var encounter_ids: Array[String] = []
+var tactics: Dictionary[String, TacticDef] = {}
+var tactic_ids: Array[String] = []
 
 var _id_pattern: RegEx = RegEx.create_from_string("^[a-z][a-z0-9_]*$")
 
@@ -96,12 +100,17 @@ static func load_texts(texts: Dictionary[String, String]) -> ContentDb:
 		var encounter: EncounterDef = EncounterDef.read(reader)
 		if db._claim_id(encounter.id, reader, db.encounter_ids):
 			db.encounters[encounter.id] = encounter
+	for reader: DataReader in db._entries(db._parse(texts, TACTICS_FILE), TACTICS_FILE):
+		var tactic: TacticDef = TacticDef.read(reader)
+		if db._claim_id(tactic.id, reader, db.tactic_ids):
+			db.tactics[tactic.id] = tactic
 	db._check_links()
 	return db
 
 
 ## Checks what entries name across files: the statuses and summons in every
-## kit, and each encounter's enemies, hexes, rocks, and act.
+## kit, each encounter's enemies, hexes, rocks, and act, and each tactic's
+## heroes.
 func _check_links() -> void:
 	var grid: HexGrid = tuning.make_grid() if tuning != null else HexGrid.make()
 	for id: String in hero_ids:
@@ -133,6 +142,26 @@ func _check_links() -> void:
 				errors.append("%s: %s shares its hex with %s" % [where, at, taken[hex]])
 			else:
 				taken[hex] = placed.enemy
+	for id: String in tactic_ids:
+		_check_tactic(tactics[id], "%s (%s)" % [TACTICS_FILE, id])
+
+
+## A tactic's heroes must exist; a signature_threshold tactic's must have a
+## mana signature that heals the lowest ally.
+func _check_tactic(tactic: TacticDef, where: String) -> void:
+	for i: int in tactic.heroes.size():
+		var hero_id: String = tactic.heroes[i]
+		if tactic.heroes.find(hero_id) < i:
+			errors.append("%s: lists \"%s\" twice" % [where, hero_id])
+			continue
+		if not heroes.has(hero_id):
+			errors.append("%s: unknown hero \"%s\"" % [where, hero_id])
+			continue
+		if tactic.kind != TacticDef.Kind.SIGNATURE_THRESHOLD:
+			continue
+		var signature: AbilityDef = heroes[hero_id].kit.signature if heroes[hero_id].kit != null else null
+		if signature == null or signature.targeting != "lowest_hp_ally" or signature.trigger.kind != TriggerDef.Kind.MANA:
+			errors.append("%s: %s's signature doesn't heal the lowest ally on mana, so it can't wait for one" % [where, hero_id])
 
 
 ## A kit's statuses must exist (and not be Engaged, which only the trait

@@ -1,7 +1,8 @@
 class_name UnitSetup
 extends RefCounted
-## One unit placed for a fight: its kit, its side, and the hex it starts on
-## (docs/plans/rebuild-phase1-arena-sim.md, section 1).
+## One unit placed for a fight: its kit, its side, the hex it starts on
+## (docs/plans/rebuild-phase1-arena-sim.md, section 1), and a hero's tactic,
+## if it took one (docs/plans/rebuild-phase3b-tactics.md, section 3).
 
 var def: UnitDef
 ## Unique within the fight (FightSetup gives a second copy of a kit "#2").
@@ -9,6 +10,8 @@ var id: String
 var side: EffectSource.Team
 var col: int
 var row: int
+## Null: no tactic (the fight is exactly as it would be without tactics).
+var tactic: TacticDef = null
 
 
 static func make(unit_def: UnitDef, unit_side: EffectSource.Team, at_col: int, at_row: int, unit_id: String = "") -> UnitSetup:

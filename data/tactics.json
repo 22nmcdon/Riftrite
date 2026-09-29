@@ -1,0 +1,29 @@
+[
+  {
+    "_note": "Casters are the caster and support archetypes (phase 3b, Decision 1): Cinder Moth and Gloam Witch in Act 1.",
+    "id": "casters_first",
+    "name": "Casters first",
+    "text": "Goes for the nearest enemy caster or support first; with none standing, picks as usual.",
+    "kind": "prefer_target",
+    "archetypes": ["caster", "support"],
+    "heroes": ["brannoc", "maren", "vell"]
+  },
+  {
+    "_note": "Lets go for good (phase 3b, Decision 2).",
+    "id": "hold_ground",
+    "name": "Hold your ground",
+    "text": "Stays where it's placed, fighting whatever is in reach, until an enemy comes within 2 hexes; then it moves out for the rest of the fight.",
+    "kind": "hold_ground",
+    "release_hexes": 2,
+    "heroes": ["brannoc", "maren", "vell"]
+  },
+  {
+    "_note": "The bar waits, full (phase 3b, Decision 3). Only a mana signature that heals the lowest ally can wait: Vell's Mend (Decision 4).",
+    "id": "wait_to_heal",
+    "name": "Wait to heal",
+    "text": "Holds the healing signature, its bar full, until an ally in its reach is badly hurt.",
+    "kind": "signature_threshold",
+    "below_pct": 50,
+    "heroes": ["vell"]
+  }
+]

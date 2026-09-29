@@ -59,6 +59,18 @@ A tactic is a JSON entry in `data/tactics.json`, loaded by `ContentDb` as a `Tac
 - **`text`** is the player's sentence, like every ability's. It names every reach (the content rule), and numbers are left to a generated line.
 - **The sim needs enemies' archetypes** for `prefer_target`. `UnitDef` gains `archetype` (a name, "" for heroes), copied from `EnemyDef` when content loads, so summons have theirs too.
 
+**Built in step 1 (2026-09-29):**
+- `TacticDef` (`src/sim/defs/tactic_def.gd`) reads each kind's own numbers, and only those:
+  - `archetypes` for prefer_target;
+  - `release_hexes` (1–10, kept as plane units) for hold_ground;
+  - `below_pct` (1–99, kept as basis points) for signature_threshold.
+- `ContentDb` loads `data/tactics.json` (Casters first, Hold your ground, Wait to heal) and checks:
+  - each tactic's heroes exist and aren't listed twice;
+  - a signature_threshold hero's signature heals the lowest ally on mana.
+- `UnitDef.archetype` comes from the enemy's entry, and `copy()` keeps it, so scaled kits and phases have it.
+- `UnitSetup.tactic`. `Encounters.setup` takes hero id -> tactic id and refuses an unknown tactic, or one for a hero not in the fight. `FightSetup.validate` refuses a tactic the unit can't take (enemies take none).
+- Tests: `tests/sim/test_tactic_defs.gd`. Mutation checks on the new code: all 9 caught, one after a test was added (a hero's kit on the enemies' side). Nothing in a fight uses a tactic yet (step 2).
+
 ## 2. The three tactics
 
 ### Casters first (`prefer_target`)
