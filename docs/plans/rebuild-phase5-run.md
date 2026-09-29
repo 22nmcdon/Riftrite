@@ -1,6 +1,6 @@
 # Rebuild phase 5: the run, Act 1 (build plan)
 
-Status: **in progress (go-ahead 2026-09-29).** Four questions are answered (Decisions 1–4); the playtester accepted the proposed defaults (Decisions 5–14, still marked *proposed* since they're first guesses to tune) and asked to start before playtest gate 2's findings are in. Phase 5 of `docs/plans/rebuild-build-order.md`. Design sources: part 4, `rebuild-run.md` (days, camp, fight choice, relics, duo bonds, losing, pacing); part 6, `rebuild-between-fights.md` (after-fight picks, loadout slots and the currency, wounds, the Magpie, and the screens from the playtester's mock); part 3, `rebuild-enemies.md` (elites and Old Mother Ash); part 1, `rebuild-heroes.md` (vows, transformations, upgrade pools). Part 6 wins where it and part 4 disagree. It builds on phases 1–4. What playtest gate 2 finds goes into this plan before its code starts.
+Status: **built (2026-09-29); waiting on playtest gate 3.** (Go-ahead 2026-09-29.) Four questions are answered (Decisions 1–4); the playtester accepted the proposed defaults (Decisions 5–14, still marked *proposed* since they're first guesses to tune) and asked to start before playtest gate 2's findings are in. Phase 5 of `docs/plans/rebuild-build-order.md`. Design sources: part 4, `rebuild-run.md` (days, camp, fight choice, relics, duo bonds, losing, pacing); part 6, `rebuild-between-fights.md` (after-fight picks, loadout slots and the currency, wounds, the Magpie, and the screens from the playtester's mock); part 3, `rebuild-enemies.md` (elites and Old Mother Ash); part 1, `rebuild-heroes.md` (vows, transformations, upgrade pools). Part 6 wins where it and part 4 disagree. It builds on phases 1–4. What playtest gate 2 finds goes into this plan before its code starts.
 
 **Goal:** a full Act 1 run, playable from New run to the run's end: choose and vow the heroes, seven days of camp, fight choice, loadout, placement, and the fight, then the after-fight pick; deeds filling into transformations; currency, the Pedlar, and wounds; relics, elites, Old Mother Ash, and duo bonds; save and resume.
 
@@ -163,7 +163,7 @@ Decisions made while building them (steps 5 and 6):
 | The Warded Charge | 12500 | 7 of 24 |
 | The Hunt | 7500 | 19 of 24 |
 | Witch Coven | 5500 (and the Totem's Shield 25 to 15) | 4 of 24 |
-| Cairn Watch | 10000 | 21 of 24 |
+| Cairn Watch | 11000 (step 9: 10000 won 21 of 24, and every run-report team beat it) | 11 of 24 |
 | Old Mother Ash | 6500 | 13 of 24 |
 
 These are against base heroes; in a run the heroes are vowed or transformed and upgraded by then, so the run report (step 9) tunes them again. Tests: `tests/sim/test_elite_pieces.gd`, and the encounter tests list the new rosters.
@@ -193,6 +193,20 @@ Not yet (the item language): items are drawn as cards with their kind's color, n
 
 - **`tools/run_bot.gd`** (Decision 14) plays whole runs through `RunFlow`: placement from the named formations, the easier fight unless its deed wants the harder, camp by a simple priority (Rest when wounded, Pedlar with shards, else Train), the first pick that suits the vowed path, and cheap purchases.
 - **`tools/run_runner.gd`** reports over many seeds: runs won, where they end, each hero's first transformation day, picks per hero, shards earned and spent, wounds taken, and relics found. Not a gate; it tunes thresholds and pay.
+
+**Built in step 9 (2026-09-29):** `tools/run_runner.gd` (its work in `tools/run_report.gd`) plays runs with the bot, each run's vows cycling through the 27 combinations, and reports runs won and where they end, the first transformation (each path's: how often, the median day, by the boss, and its deed per fight while vowed against its threshold), picks per hero, shards, wounds, relics, and each encounter's wins. For the report the bot looks ahead: it tries the sim runner's four named formations and keeps the first that doesn't lose (a stand-in for a player who places well; the tests' bot places "guarded" only). The bot takes the pick's card for the hero with the fewest upgrades. Camp offers only options with something to do today (no Hunt without a pack, no Map the Rift before the boss, no Scout on the last day): the report found the bot stuck on a day 7 Hunt.
+
+Tuned (54 runs, seeds 1–54): deed thresholds to about 3.5 fights of each path's deed per fight while vowed (Deadeye 900, Trapper 8.0s, Volley 10, Hearthwall 7, Ironbrand 36, Last Watch 52, Lanternbearer 25, Wardweaver 9, Vigil Keeper 140), and Cairn Watch's scale to 11000 (every run's team beat it at 10000). The read:
+
+| Measure | Result | The aim |
+| --- | --- | --- |
+| Runs won | 25 of 54 (46%) | about half, for a good player (part 3) |
+| First transformation | 46 of 54 runs; median day 3 | days 3–4 |
+| Paths transformed at all | 50–83% of runs vowed to each (Wardweaver 55%, Hearthwall 50%) | all three by the boss |
+| Picks per run | Brannoc 2.3, Maren 1.9, Vell 1.4 | small, steady (part 6's open question) |
+| Per run | 16.5 shards earned, 11.8 spent, 8.0 wounds, 1.6 relics | 3–5 relics |
+
+Flagged for the playtest (not changed): Old Mother Ash falls to 25 of the 26 teams that reach her (her scale is held down by the placement gate, which fights base heroes); Hollow Line is the hardest easier fight (29%); relics come less often than 3–5 a run; runs lost mostly end on days 2–3. Tests: `tests/tools/test_run_report.gd`.
 
 ## 13. Files
 

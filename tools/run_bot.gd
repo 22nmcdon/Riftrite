@@ -4,12 +4,14 @@ extends RefCounted
 ## rate (the good bot is phase 6). It vows each hero to its first path unless
 ## told otherwise, takes a camp option by a fixed order (Rest when someone has
 ## 2 wounds), buys what it can use and equips it, takes today's first fight,
-## places the sim runner's "guarded" formation, and takes the first card of
-## any pick or relic choice.
+## places the sim runner's "guarded" formation, takes the pick's card for
+## the hero with the fewest upgrades, and the first relic of a choice.
 
 const Report = preload("res://tools/sim_report.gd")
 const FORMATIONS_FILE: String = "res://tools/sim_formations.json"
 const FORMATION: String = "guarded"
+## The named formations a looking-ahead bot tries, in this order.
+const FORMATIONS: Array[String] = ["guarded", "exposed", "spread", "clumped"]
 ## A run is at most 7 days of at most 2 attempts, a few actions each;
 ## anything past this is a bug.
 const MAX_STEPS: int = 400
@@ -20,12 +22,25 @@ const ROCK: Vector2i = Vector2i(0, 0)
 
 
 ## The formation the bot places.
-static func formation() -> Dictionary[String, Vector2i]:
+static func formation(name: String = FORMATION) -> Dictionary[String, Vector2i]:
 	var errors: Array[String] = []
 	var named: Dictionary[String, Dictionary] = Report.read_formations(FileAccess.get_file_as_string(FORMATIONS_FILE), errors)
 	var hexes: Dictionary[String, Vector2i] = {}
-	hexes.assign(named[FORMATION])
+	hexes.assign(named[name])
 	return hexes
+
+
+## A looking-ahead bot's formation for the waiting fight (the run report's
+## stand-in for a player who places well): the first of FORMATIONS whose
+## fight isn't lost, or the first one.
+static func formation_for(flow: RunFlow) -> Dictionary[String, Vector2i]:
+	for name: String in FORMATIONS:
+		var hexes: Dictionary[String, Vector2i] = formation(name)
+		var errors: Array[String] = []
+		var setup: FightSetup = flow.fight_setup(hexes, errors)
+		if setup != null and CombatSim.run(setup, flow.run.content).outcome != FightResult.Outcome.DEFEAT:
+			return hexes
+	return formation()
 
 
 ## Each hero's first path.
@@ -55,10 +70,11 @@ static func play(run: RunContent, run_seed: int, errors: Array[String], vows: Di
 
 
 ## One action for wherever the day is. Returns why it was refused ("": done).
-static func step_once(flow: RunFlow, hexes: Dictionary[String, Vector2i], errors: Array[String]) -> String:
+## `look_ahead`: place by formation_for (the run report) instead of `hexes`.
+static func step_once(flow: RunFlow, hexes: Dictionary[String, Vector2i], errors: Array[String], look_ahead: bool = false) -> String:
 	var state: RunState = flow.state
 	if not state.pick.is_empty():
-		return flow.take_pick(0)
+		return flow.take_pick(pick_choice(flow))
 	if not state.relic_choice.is_empty():
 		return flow.take_relic(0)
 	match state.phase:
@@ -67,7 +83,10 @@ static func step_once(flow: RunFlow, hexes: Dictionary[String, Vector2i], errors
 				return flow.choose_camp(camp_choice(state))
 			if not state.hunt.is_empty():
 				var hunt_errors: Array[String] = []
-				if flow.fight(hexes, hunt_errors) == null:
+				var hunt_hexes: Dictionary[String, Vector2i] = hexes
+				if look_ahead:
+					hunt_hexes = formation_for(flow)
+				if flow.fight(hunt_hexes, hunt_errors) == null:
 					return ", ".join(hunt_errors)
 				return ""
 			if state.mapping:
@@ -81,12 +100,29 @@ static func step_once(flow: RunFlow, hexes: Dictionary[String, Vector2i], errors
 			return flow.choose_fight(0)
 		RunState.Phase.LOADOUT:
 			var fight_errors: Array[String] = []
-			if flow.fight(hexes, fight_errors) == null:
+			var fight_hexes: Dictionary[String, Vector2i] = hexes
+			if look_ahead:
+				fight_hexes = formation_for(flow)
+			if flow.fight(fight_hexes, fight_errors) == null:
 				return ", ".join(fight_errors)
 			return ""
 		RunState.Phase.AFTER:
 			return flow.finish_day()
 	return "nothing to do"
+
+
+## The pick's card the bot takes: the one for the hero with the fewest
+## upgrades so far (the first such card), so growth spreads out.
+static func pick_choice(flow: RunFlow) -> int:
+	var best: int = 0
+	var fewest: int = 1 << 30
+	for i: int in flow.state.pick.size():
+		var owner: String = flow.run.upgrades[flow.state.pick[i]].hero
+		var taken: int = flow.state.hero(owner).upgrades.size()
+		if taken < fewest:
+			fewest = taken
+			best = i
+	return best
 
 
 ## The camp option the bot takes: Rest if someone has 2 wounds or more,

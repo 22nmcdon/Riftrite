@@ -169,11 +169,12 @@ func test_the_hero_bar_and_panel_in_a_run() -> void:
 	day.refresh()
 	var card: HeroBar.Card = day.hero_bar.cards["maren"]
 	assert_eq(card.wounds_text.text, "2 wounds")
-	assert_eq(card.deed_text.text, "Deadeye deed 300 / 900")
+	var threshold: int = flow.run.content.paths["deadeye"].deed.threshold
+	assert_eq(card.deed_text.text, "Deadeye deed 300 / %s" % UnitInfo.deed_amount_text(flow.run.content.paths["deadeye"].deed, threshold))
 	assert_almost_eq(card.hp_bar.lost, 0.3, 0.001, "two wounds grey out 30%")
 	day.open_panel("maren")
 	assert_true(day.hero_panel.visible)
-	assert_string_contains(U.text_of(day.hero_panel), "300 / 900")
+	assert_string_contains(U.text_of(day.hero_panel), "300 / %d" % threshold)
 	assert_true(U.press(day.hero_panel, "Switch vow"))
 	await wait_frames(1)
 	assert_eq(flow.state.hero("maren").path, "trapper", "switched from the panel")

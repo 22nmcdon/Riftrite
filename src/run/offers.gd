@@ -69,13 +69,29 @@ static func _draw(rng: SimRng, pool: Array[String], count: int) -> Array[String]
 
 
 ## Today's camp: a place (by the camp stream), then camps.shown different
-## options from its menu, in the menu's order. Returns [place id, options].
+## options from its menu that have something to do today, in the menu's
+## order. Returns [place id, options].
 static func camp(run: RunContent, state: RunState) -> Array:
 	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.CAMP, state.act, state.day, state.attempt])
 	var place: CampsDef.Place = run.camps.places[rng.range_int(run.camps.places.size())]
-	var picked: Array[String] = _draw(rng, place.options, run.camps.shown)
-	var options: Array[String] = place.options.filter(func(id: String) -> bool: return picked.has(id))
+	var offered: Array[String] = place.options.filter(func(id: String) -> bool: return camp_option_open(run, state, id))
+	var picked: Array[String] = _draw(rng, offered, run.camps.shown)
+	var options: Array[String] = offered.filter(func(id: String) -> bool: return picked.has(id))
 	return [place.id, options]
+
+
+## Whether a camp option has anything to do today: a Hunt needs a pack
+## allowed today; Map the Rift and Scout need days ahead (Map the Rift, one
+## that isn't the boss's).
+static func camp_option_open(run: RunContent, state: RunState, option: String) -> bool:
+	match option:
+		"hunt":
+			return not run.encounters_for("hunt", state.day).is_empty()
+		"map_the_rift":
+			return state.day < run.act.days.size() and run.act.days[state.day] != "boss"
+		"scout":
+			return state.day < run.act.days.size()
+	return true
 
 
 ## The day the Magpie comes: one of camps.magpie_days, drawn once a run.

@@ -15,9 +15,47 @@ MACOS
      and click "Open Anyway" near the bottom.
 
 PLAYING
-  The game is being rebuilt around heroes and an open arena. This build is
-  Practice: the Act 1 fights, one at a time, with placeholder art.
+  The game is being rebuilt around heroes and an open arena. This build has
+  the first whole run: Act 1, seven days, with placeholder art. Practice
+  (the Act 1 fights one at a time, with every path free to try) is still
+  on the title.
 
+  A RUN (Title > New run)
+  1. Vow each hero to one of their three paths: a small taste of it now,
+     with a cost. Fill the path's deed in fights and the hero transforms
+     (a new form and signature). Until then you can switch the vow between
+     fights (the hero's panel: Switch vow). If two vowed paths are bonded,
+     "a bond stirs": it wakes when both heroes have transformed.
+  2. Each day:
+       Camp     a place with three options; take one: Train (an upgrade
+                pick), Hunt (a small fight now for shards; losing it isn't a
+                loss), Pedlar (buy charms, tactics, sigils; treat wounds;
+                now and then a relic), Rest (clears wounds), Scout (see the
+                next two days' enemies placed), Map the Rift (swap one of
+                tomorrow's fights), Fortify (a small Shield next fight), Dig
+                In (a rock in your zone next fight: click a hex while
+                placing), Rift Tear (next fight's enemies are Shielded; win
+                it for a relic), Shrine (a relic, or neither). Once in the
+                act, the Magpie comes instead: grafts, other gear, a relic;
+                dear, one look. Then Break camp.
+       Route    today's two fights: an easier one and a harder one that pays
+                more. Days 3 and 5 are elites; day 7 is Old Mother Ash.
+       Loadout  put items from the stash into each hero's three slots (any
+                hero can hold anything; one tactic each; "no effect" says
+                where it does nothing). Then To the fight.
+       Fight    place and fight as in Practice; Continue records it.
+       After    a win or a tie pays shards and offers an upgrade (one card
+                per hero, now and then a wild card), or take 3 shards
+                instead. An elite or a Rift Tear win offers a relic, or
+                neither. A filled deed transforms the hero.
+  3. A hero who falls gets a wound (less max HP, up to 3). A lost fight
+     replays the day; the second loss ends the run. Winning against Old
+     Mother Ash wins it.
+  4. The run is saved after everything you do: Title > Continue the run.
+     The hero bar along the bottom shows each hero's wounds, deed progress,
+     and items; click a card for the hero's panel.
+
+  PRACTICE (Title > Practice)
   1. Title > Practice, then pick a fight ("Place your heroes").
   2. Drag Brannoc, Maren, and Vell onto your side's hexes (the three columns
      on the left; the enemies are on the right). Hover an enemy to read what
@@ -69,7 +107,22 @@ PLAYING
   Nothing is saved: your formation, paths, snares, tactics, and speed
   last until you close the game.
 
-WHAT WE WANT TO KNOW (playtest gate 2: paths)
+WHAT WE WANT TO KNOW (playtest gate 3: a whole run)
+  Can you play Act 1 start to finish? Does each day's choice (camp, the two
+  fights, the loadout, placement, the pick) feel like a real decision? Do
+  heroes transform at a good pace (the aim: the first around days 3-4, all
+  three by the boss)? Are shards, items, wounds, and relics clear and worth
+  thinking about? Do the elites and Old Mother Ash each ask something new?
+  What was confusing on the screens?
+  Some choices were made while you were away; tell us if they feel wrong:
+    - Deed thresholds, pay, and prices are first guesses from the run bot.
+    - A hero holds one tactic; the Magpie sells grafts and other gear; a
+      wound is treated only at a shop.
+    - Rest only clears wounds; a lost fight's wounds and deeds still count.
+    - Bonds and a few relics are first versions within what the sim can
+      already do (their cards say exactly what they give).
+
+WHAT WE WANTED TO KNOW LAST TIME (playtest gate 2: paths)
   Does each path change where you place the hero and how the fight plays?
   Does a vow feel like a taste of its path, and is its cost felt? Does
   each transformation feel like a different, stronger hero? Can you tell,

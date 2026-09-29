@@ -250,7 +250,7 @@
     "deed": {
       "text": "Time enemies spend rooted by her",
       "counts": "rooted_ms",
-      "threshold": 5400
+      "threshold": 8000
     }
   },
   {
@@ -396,7 +396,7 @@
       "from_ability": [
         "longshot"
       ],
-      "threshold": 6
+      "threshold": 10
     }
   },
   {
@@ -496,7 +496,7 @@
     "deed": {
       "text": "Damage he takes in place of allies",
       "counts": "guarded",
-      "threshold": 10
+      "threshold": 7
     }
   },
   {
@@ -665,7 +665,7 @@
         "shield_bash",
         "hearthbrand_mace"
       ],
-      "threshold": 20
+      "threshold": 36
     }
   },
   {
@@ -802,7 +802,7 @@
       "text": "Damage he deals while he can't fall (when he should already be dead)",
       "counts": "damage",
       "while_undying": true,
-      "threshold": 35
+      "threshold": 52
     }
   },
   {
@@ -1102,7 +1102,7 @@
     "deed": {
       "text": "Shield she gives",
       "counts": "shield",
-      "threshold": 6
+      "threshold": 9
     }
   },
   {
@@ -1256,7 +1256,7 @@
       "from_ability": [
         "mend"
       ],
-      "threshold": 100
+      "threshold": 140
     }
   }
 ]
