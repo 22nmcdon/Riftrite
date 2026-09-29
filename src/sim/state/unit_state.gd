@@ -125,6 +125,8 @@ var last_attacker: String = ""
 var tactic: TacticDef = null
 var holding: bool = false
 var tactic_waiting: bool = false
+## The deeds it counts (Deeds; null: none).
+var deeds: Deeds.Counter = null
 
 
 static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_radius: int) -> UnitState:
@@ -154,6 +156,7 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 	unit.flying = setup.def.has_trait("flying")
 	unit.tactic = setup.tactic
 	unit.holding = setup.tactic != null and setup.tactic.kind == TacticDef.Kind.HOLD_GROUND
+	unit.deeds = Deeds.make_counter(setup.deed_paths)
 	Passives.set_up(unit)
 	return unit
 

@@ -86,6 +86,10 @@ var taunt_auras: bool = false
 ## Some hero has a tactic whose payoff adds damage (Tactics), so hits check
 ## for it; otherwise they never do.
 var damage_payoffs: bool = false
+## Some hero counts deeds (Deeds), so the log is read for them each tick.
+var _counting: bool = false
+## Log entries before this one have been counted for deeds.
+var _deeds_read: int = 0
 var _hero_engagers: Array[UnitState] = []
 var _enemy_engagers: Array[UnitState] = []
 ## Each unit by id (lookup only; never iterated).
@@ -108,6 +112,7 @@ static func run(fight_setup: FightSetup, fight_content: ContentDb) -> FightResul
 	result.outcome = sim.outcome
 	result.end_tick = sim.tick
 	result.combat_log = sim.combat_log
+	result.deeds = sim.deed_amounts()
 	return result
 
 
@@ -135,6 +140,7 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 		if unit.tactic != null:
 			Tactics.start(self, unit)
 			damage_payoffs = damage_payoffs or unit.tactic.damage_vs_bp > 0
+		_counting = _counting or unit.deeds != null
 	units_joined()
 
 
@@ -224,6 +230,10 @@ func step() -> void:
 		Phases.check(self)
 	_process_deaths()
 	_check_end()
+	if _counting:
+		var counted_to: int = combat_log.entries.size()
+		Deeds.count(self, _deeds_read, counted_to)
+		_deeds_read = counted_to
 
 
 ## One unit's update this tick. It runs for every unit every tick, so it's
@@ -406,6 +416,18 @@ func targetable_enemies_of(unit: UnitState) -> Array[UnitState]:
 
 func standing_enemies_of(unit: UnitState) -> Array[UnitState]:
 	return _standing(enemies if unit.side == EffectSource.Team.HEROES else heroes)
+
+
+## What each hero's deeds have added up to so far, in the fight's order and
+## each hero's path order.
+func deed_amounts() -> Array[FightResult.Deed]:
+	var found: Array[FightResult.Deed] = []
+	for unit: UnitState in units:
+		if unit.deeds == null:
+			continue
+		for d: int in unit.deeds.deeds.size():
+			found.append(FightResult.Deed.make(unit.id, unit.deeds.paths[d], unit.deeds.amounts[d]))
+	return found
 
 
 func unit_by_id(unit_id: String) -> UnitState:

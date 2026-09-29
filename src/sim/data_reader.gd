@@ -60,6 +60,15 @@ func has(key: String) -> bool:
 	return _data.has(key)
 
 
+## Whether the key is there and set to null (a patch's "mana": null, which
+## takes the bar away). Marks it read when it is.
+func is_null(key: String) -> bool:
+	if _data.has(key) and _data[key] == null:
+		_read_keys[key] = true
+		return true
+	return false
+
+
 func key_path(key: String) -> String:
 	return "%s.%s" % [path, key]
 

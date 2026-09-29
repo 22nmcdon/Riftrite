@@ -40,7 +40,7 @@ func test_real_data_is_valid() -> void:
 
 
 func test_every_data_file_is_loaded() -> void:
-	assert_eq(ContentDb.FILES, ["tuning.json", "statuses.json", "heroes.json", "enemies.json", "encounters.json", "tactics.json"] as Array[String])
+	assert_eq(ContentDb.FILES, ["tuning.json", "statuses.json", "heroes.json", "enemies.json", "encounters.json", "tactics.json", "paths.json"] as Array[String])
 	var files: PackedStringArray = DirAccess.get_files_at("res://data")
 	files.sort()
 	var expected: Array = ContentDb.FILES.duplicate()

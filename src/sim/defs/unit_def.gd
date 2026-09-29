@@ -94,6 +94,15 @@ func problems() -> Array[String]:
 		found.append("a mana signature needs \"mana\"")
 	if mana != null and not mana_signature:
 		found.append("\"mana\": only a unit whose signature fires on mana has a mana bar")
+	var ids: Array[String] = ability_ids()
+	for i: int in ids.size():
+		if ids.find(ids[i]) < i:
+			found.append("its abilities and passives need different ids (\"%s\" twice)" % ids[i])
+	return found
+
+
+## The ids of its basic attack, signature, and passives.
+func ability_ids() -> Array[String]:
 	var ids: Array[String] = []
 	if basic_attack != null:
 		ids.append(basic_attack.id)
@@ -101,13 +110,10 @@ func problems() -> Array[String]:
 		ids.append(signature.id)
 	for part: PartDef in passives:
 		ids.append(part.id)
-	for i: int in ids.size():
-		if ids.find(ids[i]) < i:
-			found.append("its abilities and passives need different ids (\"%s\" twice)" % ids[i])
-	return found
+	return ids
 
 
-## A copy to change (PhaseDef): the lists are its own, the parts shared,
+## A copy to change (PhaseDef, KitPatch): the lists are its own, the parts shared,
 ## and it has no phases.
 func copy() -> UnitDef:
 	var other := UnitDef.new()

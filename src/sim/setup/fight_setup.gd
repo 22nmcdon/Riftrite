@@ -50,6 +50,23 @@ func summon_kit(kit_id: String) -> UnitDef:
 	return null
 
 
+## What's wrong with a unit's path, stage, and deeds: only heroes have
+## them, a path is its own hero's, and a stage past base needs a path.
+static func _path_problems(unit: UnitSetup, where: String) -> Array[String]:
+	var problems: Array[String] = []
+	var hero: bool = unit.side == EffectSource.Team.HEROES
+	if unit.path != null and (not hero or unit.path.hero != unit.def.id):
+		problems.append("%s can't take the path %s" % [where, unit.path.name])
+	if unit.path == null and unit.stage != PathDef.Stage.BASE:
+		problems.append("%s is %s without a path" % [where, PathDef.STAGE_NAMES[unit.stage]])
+	if unit.path != null and unit.stage == PathDef.Stage.BASE:
+		problems.append("%s has the path %s but no stage" % [where, unit.path.name])
+	for path: PathDef in unit.deed_paths:
+		if not hero or path.hero != unit.def.id:
+			problems.append("%s can't count %s's deed" % [where, path.name])
+	return problems
+
+
 ## Every problem with the setup (empty when it can be fought).
 func validate(content: ContentDb) -> Array[String]:
 	var errors: Array[String] = []
@@ -79,6 +96,7 @@ func validate(content: ContentDb) -> Array[String]:
 			_check_kit(unit.def, where, content, grid, errors)
 			if unit.tactic != null and (unit.side != EffectSource.Team.HEROES or not unit.tactic.allows(unit.def.id)):
 				errors.append("%s can't take the tactic %s" % [where, unit.tactic.name])
+			errors.append_array(_path_problems(unit, where))
 		if not grid.has(unit.col, unit.row):
 			errors.append("%s is off the board" % where)
 			continue

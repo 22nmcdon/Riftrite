@@ -16,7 +16,9 @@ extends RefCounted
 ## add theirs (paths in phase 4; relics, bonds, and the run's data in phase 5).
 ## Heroes and enemies share one space of ids, since a fight names its units by
 ## them. Phase 3b adds tactics (docs/plans/rebuild-phase3b-tactics.md), each
-## naming the heroes who can take it.
+## naming the heroes who can take it. Phase 4 adds paths
+## (docs/plans/rebuild-phase4-paths.md): up to three per hero, each with its
+## vowed and transformed kits built from the hero's base kit.
 
 const TUNING_FILE: String = "tuning.json"
 const STATUSES_FILE: String = "statuses.json"
@@ -24,7 +26,10 @@ const HEROES_FILE: String = "heroes.json"
 const ENEMIES_FILE: String = "enemies.json"
 const ENCOUNTERS_FILE: String = "encounters.json"
 const TACTICS_FILE: String = "tactics.json"
-const FILES: Array[String] = [TUNING_FILE, STATUSES_FILE, HEROES_FILE, ENEMIES_FILE, ENCOUNTERS_FILE, TACTICS_FILE]
+const PATHS_FILE: String = "paths.json"
+const FILES: Array[String] = [TUNING_FILE, STATUSES_FILE, HEROES_FILE, ENEMIES_FILE, ENCOUNTERS_FILE, TACTICS_FILE, PATHS_FILE]
+## How many paths a hero has (rebuild-heroes.md).
+const PATHS_PER_HERO: int = 3
 
 var errors: Array[String] = []
 var tuning: TuningDef
@@ -42,6 +47,8 @@ var encounters: Dictionary[String, EncounterDef] = {}
 var encounter_ids: Array[String] = []
 var tactics: Dictionary[String, TacticDef] = {}
 var tactic_ids: Array[String] = []
+var paths: Dictionary[String, PathDef] = {}
+var path_ids: Array[String] = []
 
 var _id_pattern: RegEx = RegEx.create_from_string("^[a-z][a-z0-9_]*$")
 
@@ -104,6 +111,10 @@ static func load_texts(texts: Dictionary[String, String]) -> ContentDb:
 		var tactic: TacticDef = TacticDef.read(reader)
 		if db._claim_id(tactic.id, reader, db.tactic_ids):
 			db.tactics[tactic.id] = tactic
+	for reader: DataReader in db._entries(db._parse(texts, PATHS_FILE), PATHS_FILE):
+		var path: PathDef = PathDef.read(reader)
+		if db._claim_id(path.id, reader, db.path_ids):
+			db.paths[path.id] = path
 	db._check_links()
 	return db
 
@@ -144,6 +155,40 @@ func _check_links() -> void:
 				taken[hex] = placed.enemy
 	for id: String in tactic_ids:
 		_check_tactic(tactics[id], "%s (%s)" % [TACTICS_FILE, id])
+	for id: String in path_ids:
+		_check_path(paths[id], "%s (%s)" % [PATHS_FILE, id], grid)
+
+
+## A path's hero must exist and have room for it (up to three, in the file's
+## order); its vowed and transformed kits are built here and checked like
+## any kit; its deed's abilities must be in one of the hero's kits.
+func _check_path(path: PathDef, where: String, grid: HexGrid) -> void:
+	if not heroes.has(path.hero):
+		errors.append("%s: unknown hero \"%s\"" % [where, path.hero])
+		return
+	var hero: HeroDef = heroes[path.hero]
+	if hero.paths.size() >= PATHS_PER_HERO:
+		errors.append("%s: %s already has %d paths" % [where, path.hero, PATHS_PER_HERO])
+		return
+	hero.paths.append(path)
+	if hero.kit == null:
+		return
+	var problems: Array[String] = []
+	path.vowed_kit = path.vowed_patch.apply(hero.kit, problems)
+	for problem: String in problems:
+		errors.append("%s: vowed: %s" % [where, problem])
+	problems.clear()
+	path.transformed_kit = path.transformed_patch.apply(hero.kit, problems)
+	for problem: String in problems:
+		errors.append("%s: transformed: %s" % [where, problem])
+	_check_kit(path.vowed_kit, "%s: vowed" % where, grid)
+	_check_kit(path.transformed_kit, "%s: transformed" % where, grid)
+	var known: Array[String] = []
+	for kit: UnitDef in [hero.kit, path.vowed_kit, path.transformed_kit]:
+		known.append_array(kit.ability_ids())
+	for ability_id: String in path.deed.from_ability:
+		if not known.has(ability_id):
+			errors.append("%s: the deed counts \"%s\", which isn't in %s's kits on this path" % [where, ability_id, path.hero])
 
 
 ## A tactic's heroes must exist; a signature_threshold tactic's must have a

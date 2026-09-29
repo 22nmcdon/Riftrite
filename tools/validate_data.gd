@@ -6,7 +6,7 @@ extends SceneTree
 func _init() -> void:
 	var db: ContentDb = ContentDb.load_dir("res://data")
 	if db.is_valid():
-		print("data/ OK: tuning, %d statuses, %d heroes, %d enemies, %d encounters, %d tactics" % [db.status_ids.size(), db.hero_ids.size(), db.enemy_ids.size(), db.encounter_ids.size(), db.tactic_ids.size()])
+		print("data/ OK: tuning, %d statuses, %d heroes, %d enemies, %d encounters, %d tactics, %d paths" % [db.status_ids.size(), db.hero_ids.size(), db.enemy_ids.size(), db.encounter_ids.size(), db.tactic_ids.size(), db.path_ids.size()])
 		quit(0)
 		return
 	for message: String in db.errors:
