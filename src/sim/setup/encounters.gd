@@ -20,7 +20,8 @@ extends RefCounted
 
 
 static func setup(content: ContentDb, encounter_id: String, formation: Dictionary[String, Vector2i], fight_seed: int, errors: Array[String],
-		tactics: Dictionary[String, String] = {}, vows: Dictionary[String, String] = {}, transformed: Array[String] = []) -> FightSetup:
+		tactics: Dictionary[String, String] = {}, vows: Dictionary[String, String] = {}, transformed: Array[String] = [],
+		extras: Dictionary[String, HeroExtras] = {}) -> FightSetup:
 	if not content.encounters.has(encounter_id):
 		errors.append("unknown encounter \"%s\"" % encounter_id)
 		return null
@@ -40,6 +41,11 @@ static func setup(content: ContentDb, encounter_id: String, formation: Dictionar
 	for hero_id: String in transformed:
 		if not vows.has(hero_id):
 			errors.append("\"%s\" transforms without a vow" % hero_id)
+	for hero_id: String in extras.keys():
+		if not formation.has(hero_id):
+			errors.append("extras for \"%s\", who isn't in the fight" % hero_id)
+		elif extras[hero_id].wounds < 0 or extras[hero_id].wounds > content.tuning.max_wounds:
+			errors.append("%s can't have %d wounds" % [hero_id, extras[hero_id].wounds])
 	if not errors.is_empty():
 		return null
 	var encounter: EncounterDef = content.encounters[encounter_id]
@@ -55,7 +61,16 @@ static func setup(content: ContentDb, encounter_id: String, formation: Dictionar
 			# Another hero's path is refused by validate, so fall back to the
 			# base kit rather than build a kit from the wrong hero.
 			var kit: UnitDef = path.kit(stage, hero_def.kit) if path != null and path.hero == hero_id else hero_def.kit
+			if extras.has(hero_id):
+				for mod: KitMod in extras[hero_id].mods:
+					var problems: Array[String] = []
+					kit = mod.apply(kit, problems)
+					for problem: String in problems:
+						errors.append("%s: a modifier leaves it unsound: %s" % [hero_id, problem])
 			var hero: UnitSetup = UnitSetup.make(kit, EffectSource.Team.HEROES, hex.x, hex.y)
+			if extras.has(hero_id):
+				hero.mods = extras[hero_id].mods.duplicate()
+				hero.max_hp_bp = FixedMath.BP_ONE - extras[hero_id].wounds * content.tuning.wound_bp
 			hero.path = path
 			hero.stage = stage
 			hero.deed_paths = hero_def.paths.duplicate()
@@ -66,6 +81,8 @@ static func setup(content: ContentDb, encounter_id: String, formation: Dictionar
 	for placed: EncounterDef.Placed in encounter.enemies:
 		var kit: UnitDef = scaled(content.enemies[placed.enemy].kit, encounter.scale_bp)
 		enemies.append(UnitSetup.make(kit, EffectSource.Team.ENEMIES, placed.hex.x, placed.hex.y))
+	if not errors.is_empty():
+		return null
 	var fight: FightSetup = FightSetup.make(heroes, enemies, encounter.rocks.duplicate(), fight_seed, encounter.act)
 	fight.summon_kits = summon_kits(content, heroes + enemies, encounter.scale_bp)
 	return fight

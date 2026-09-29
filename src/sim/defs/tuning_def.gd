@@ -28,6 +28,9 @@ var repath_ticks: int
 var repath_give_up_ticks: int
 ## Standing units per side, summons included.
 var max_units_per_side: int = 30
+## Wounds (phase 5): each takes this share of max HP, up to max_wounds.
+var wound_bp: int = 1500
+var max_wounds: int = 3
 var crit_damage_bp: int
 ## Rift Collapse: the first ring crumbles at collapse_start, then one more
 ## every collapse_ring; each is warned collapse_warning before it crumbles.
@@ -75,6 +78,8 @@ static func read(reader: DataReader) -> TuningDef:
 	def.repath_ticks = reader.req_ticks("repath_ms", FixedMath.MS_PER_TICK)
 	def.repath_give_up_ticks = reader.req_ticks("repath_give_up_ms", FixedMath.MS_PER_TICK)
 	def.max_units_per_side = reader.req_int("max_units_per_side", 1)
+	def.wound_bp = reader.opt_int("wound_bp", 1500, 0, 3000)
+	def.max_wounds = reader.opt_int("max_wounds", 3, 0, 5)
 	def.crit_damage_bp = reader.req_int("crit_damage_bp", FixedMath.BP_ONE)
 	def.crit_bp_per_point = reader.req_int("crit_bp_per_point", 0)
 	def.atsp_bp_per_point = reader.req_int("atsp_bp_per_point", 0)

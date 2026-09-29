@@ -23,6 +23,11 @@ var deed_paths: Array[PathDef] = []
 ## Snares the player placed before the fight, by hex (phase 4, a transformed
 ## Trapper's; up to its kit's placed_snares).
 var snares: Array[Vector2i] = []
+## Its max HP, as a share of its kit's (phase 5: wounds lower it).
+var max_hp_bp: int = FixedMath.BP_ONE
+## The kit modifiers already applied to `def` (phase 5: upgrades, the
+## loadout, relics), kept so the UI can list them.
+var mods: Array[KitMod] = []
 
 
 static func make(unit_def: UnitDef, unit_side: EffectSource.Team, at_col: int, at_row: int, unit_id: String = "") -> UnitSetup:

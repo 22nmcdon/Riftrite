@@ -162,6 +162,8 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 	unit.stats = setup.def.stats.copy()
 	unit.aura_bp = Passives.no_auras()
 	unit.max_hp = unit.stats.get_stat(UnitStats.Stat.HP)
+	if setup.max_hp_bp != FixedMath.BP_ONE:
+		unit.max_hp = maxi(FixedMath.apply_bp(unit.max_hp, setup.max_hp_bp), 1)
 	unit.hp = unit.max_hp
 	if grid != null:
 		unit.pos = grid.center(setup.col, setup.row)
