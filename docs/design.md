@@ -13,6 +13,8 @@ Working title: **Riftrite** (a placeholder). This document was rewritten on 2026
 | Phase 1, the arena sim (build plan) | `docs/plans/rebuild-phase1-arena-sim.md` |
 | Phase 2, base heroes, the Act 1 enemies, encounters, and the sim runner (build plan) | `docs/plans/rebuild-phase2-heroes-enemies.md` |
 | Phase 3, the fight sandbox (build plan) | `docs/plans/rebuild-phase3-fight-sandbox.md` |
+| Phase 3b, tactics in Practice (build plan) | `docs/plans/rebuild-phase3b-tactics.md` |
+| Phase 4, paths (build plan) | `docs/plans/rebuild-phase4-paths.md` |
 
 Where this summary and a plan disagree, the plan wins; fix this document.
 
