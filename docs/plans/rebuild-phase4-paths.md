@@ -1,6 +1,6 @@
 # Rebuild phase 4: paths (build plan)
 
-Status: **proposed (2026-09-29); its questions are answered (Decisions), except Guard's reach, which waits on step 3's measurements. Waiting on the go-ahead.** No code yet. Phase 4 of `docs/plans/rebuild-build-order.md`. Design source: part 1, `rebuild-heroes.md` (paths, vows, tastes and costs, deeds, transformations), changed by part 6, `rebuild-between-fights.md` (upgrade picks come after every won fight, not from deeds). It builds on the arena sim (phase 1), the content (phase 2), Practice (phase 3), and tactics (phase 3b). What playtest gate 1 and the 3b playtest find goes into this plan before its code starts.
+Status: **in progress. Step 1 (paths, stages, and deeds in the sim) is built (2026-09-29).** Its questions are answered (Decisions), except Guard's reach, which waits on step 3's measurements. Phase 4 of `docs/plans/rebuild-build-order.md`. Design source: part 1, `rebuild-heroes.md` (paths, vows, tastes and costs, deeds, transformations), changed by part 6, `rebuild-between-fights.md` (upgrade picks come after every won fight, not from deeds). It builds on the arena sim (phase 1), the content (phase 2), Practice (phase 3), and tactics (phase 3b). What playtest gate 1 and the 3b playtest find goes into this plan before its code starts.
 
 **Goal:** each of the three heroes gets their three paths. In Practice you can vow a hero to a path (the taste and its cost) or take them straight to the transformed form, and see how far each deed moved in a fight.
 
@@ -113,6 +113,30 @@ The nine:
 - **Counted in the sim, as the fight runs** (`Deeds`, in the events step), since some filters need the fight's state (how far the shot flew, the hero's HP when it hit). Every hero with paths counts all three of their deeds, whatever their stage. **Counting never writes to the log or changes the fight**, so fingerprints stay put.
 - **`FightResult.deeds`:** hero id → path id → amount. Practice shows it; phase 5 adds it up across a run.
 - **Thresholds are phase 5's:** it sets them from the deed report, aiming at the run plan's pacing (the first transformation around days 3–4).
+
+**Built in step 1 (2026-09-29):**
+- **Data:** `data/paths.json` (empty until wave 1 adds its three), read as `PathDef`:
+  - its title ("the sniper"), fantasy, and placement line;
+  - `vowed` (taste, cost, patch) and `transformed` (text, cost, patch);
+  - its deed.
+- **`KitPatch`** reads `stats_bp`, `stats_add`, `basic_attack`, `signature`, `mana` (or `null`), `passives` (a base passive's id replaces it), and `remove_passives`. A new signature that doesn't fire on mana takes the bar away, like a phase. `DataReader.is_null` reads the `null`.
+- **`ContentDb`** loads paths after the heroes and lists up to three per hero in file order (`HeroDef.paths`, `HeroDef.path(id)`). It builds and checks each path's two kits once, as `vowed_kit` and `transformed_kit`:
+  - the patched kit must be sound;
+  - HP and range must stay at least 1, speed and CRIT at least 0;
+  - a removed passive must exist;
+  - statuses must be known;
+  - a deed's `from_ability` must name something in one of the hero's kits on that path.
+- **`DeedDef`** counts `damage` (hits, not damage over time, Shield included), `healing`, or `shield`. Its filters are `from_ability`, `from_hexes`, and `while_below_pct`; the last two are for damage only. The waves add the other kinds (extra hits, time rooted, damage taken for allies) as they need them.
+- **Setup:**
+  - `UnitSetup` gains `path`, `stage`, and `deed_paths`.
+  - `Encounters.setup(..., tactics, vows, transformed)`: `vows` maps a hero id to a path id; `transformed` lists the heroes past their vow. Every hero counts its paths' deeds.
+  - `FightSetup.validate` refuses a path that isn't the unit's own hero's, a stage without a path, a path without a stage, and deeds that aren't the unit's.
+- **Counting:**
+  - `Deeds` counts at the end of each tick, the deaths step included, and only when some unit has deeds.
+  - A shot's distance is taken as it's fired, from its SHOT entry; anything else counts where the two stand as it lands.
+  - It never writes to the log.
+  - `FightResult.deeds` (hero, path, amount) is in the fight's order; `deed_amount(hero, path)` reads one; `CombatSim.deed_amounts()` gives the same while a fight is being stepped (for the UI).
+- **Tests:** `tests/sim/test_paths.gd` (10) and `tests/sim/test_deeds.gd` (7). The bench's 20 fingerprints are unchanged, and a fight with test paths loaded but taken by no one is identical to one without.
 
 ## 4. The nine paths
 
