@@ -68,7 +68,7 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 - **Choosing fights feeds deeds:** which enemies you fight decides which deeds fill. The fight card shows the enemies, never which paths they suit.
 - **No items or shops.** Camp options are free. A **currency** (placeholder: shards) comes from fights and Hunts, and buys only loadout things (at the Pedlar), wound treatment, and rerolls. Nothing sells back.
 - **Wounds:** a hero who falls gets one (–15% max HP, up to 3), won or lost; Undying and would-fall saves don't count. Rest clears them all; currency clears one.
-- **Relics** are rare (about 3–5 a run), team-wide, and **every relic has a cost**. A relic can be turned down, but once taken it stays.
+- **Relics** are rare (about 3–5 a run), team-wide, and **every relic has a cost**. A relic can be turned down, but once taken it stays. Now and then the Pedlar sells one, for about two days of income; it counts toward the 3–5.
 - **Duo bonds** link two paths of two different heroes; the vow shows a bonded pair as "?" until it's found.
 - **Losing:** a lost fight replays the day, and the second loss ends the run. Deed progress from a lost fight still counts. A tie pays like a win.
 - **Random streams:** shop stock, picks, camp, and fight seeds each have their own stream from the run seed.
@@ -123,7 +123,7 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - **Ember Dust's size:** a radius-2 circle (the reach `largest_group` counts by) covers a lot of the board; radius 1 would be a much smaller zone. (phase 2 plan, section 5)
 - **Maren's hop** shows in the log as the trait's "Hop Away", not her passive's name, "Keep Your Distance". (phase 2 plan, section 3)
 - **Loadouts:** 3 slots each, or 2 then 3? How many tactics per hero, and which are shared by role? (part 6)
-- **The currency:** its name, prices, and income. (part 6)
+- **The currency:** its name, prices, and income; whether the Pedlar's relic turns up about 1 visit in 3 or only at certain places. (part 6)
 - **Rest:** does it also keep "the next loss doesn't count"? (part 6)
 - **Wounds:** is –15% up to 3 right, and should a lost fight's falls wound? (part 6)
 - **Sigils on signatures without mana:** written by what they do, or marked with the triggers they fit? (part 6)

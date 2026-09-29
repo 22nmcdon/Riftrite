@@ -84,7 +84,7 @@ One choice before each fight. **Different places offer different menus**, so whe
 
 **Spending** (part 6)
 
-- **Pedlar:** about 4 charms, tactics, and sigils for sale, drawn for your heroes and paths; treat a wound for currency.
+- **Pedlar:** about 4 charms, tactics, and sigils for sale, drawn for your heroes and paths; treat a wound for currency. Now and then (about 1 visit in 3, or at certain places) it also carries one relic, for about two days of income.
 - **Fortify:** your heroes start the next fight with a small Shield.
 
 **Relics**
@@ -119,6 +119,7 @@ Examples:
 - **Team-wide rule changers**, from elites, the boss, the Shrine, and Rift Tear.
 - **Every relic has a cost.** Example: *Ember Heart*: all Burn you apply is doubled, but your healing is 20% weaker. No pure upsides, which also helps with difficulty.
 - **About 3–5 per run.** A relic can be turned down, but once taken it stays.
+- **Now and then the Pedlar sells one** (part 6): about 1 visit in 3, or only at certain places, for about two days of income. It counts toward the 3–5; it's another way to get one, not more of them.
 
 ## 8. Currency: back, for loadouts and wounds only
 

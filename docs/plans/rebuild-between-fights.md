@@ -34,6 +34,7 @@ Status: **agreed in discussion (2026-09-28, answers 2026-09-29), not built.** Ad
 - **Separate random streams:** shop stock, picks, camp, and fight seeds each get their own stream from the run seed, so buying or rerolling never changes a later fight. The determinism rule already asks for this; build it in from the start.
 - **A loadout gate for the sim runner:** sample loadouts (every combination is too many) and check that the best beats the worst by a margin. It catches filler charms the way the placement gate catches filler formations.
 - **Wounds show as a greyed chunk of the HP bar.** It reads at a glance, needs no new marker, and shows what matters: how much HP is missing.
+- **Now and then the Pedlar carries one relic** (added 2026-09-29): about 1 visit in 3, or only at certain places (a market in the ruins, say). It's expensive, about two days of income, so buying it means skipping charms and paying for wounds yourself for a while. It **counts toward the 3–5 relics a run**, so the total stays the same; it's just another way to get one. Relics stay rare, and currency gets a second big use.
 
 ## 1. A pick after every fight
 
@@ -75,9 +76,11 @@ A transformation can replace a signature (Vigil Keeper's Sunfall replaces Mend) 
 - **Earned from fights:** a normal win pays a set amount, the harder fight pays more, and elites and the boss pay more still. A tie pays like a win. **A Hunt at camp pays currency.** (A name to pick later; placeholder: **shards**.)
 - **Spent on:**
   - **Buying** charms, tactics, and sigils.
+  - **Now and then, a relic** at the Pedlar (about two days of income; below).
   - **Treating one wound.**
   - **Rerolling** an offer, where rerolls exist.
 - **Where you buy:** a **Pedlar** camp option (a place's menu includes it) shows about 4 things for sale, drawn for your heroes and your paths. Some camp places also carry a smaller stall.
+- **The Pedlar's relic:** about 1 visit in 3 (or only at certain places, like a market in the ruins), the Pedlar also carries **one relic**, priced at about two days of income. Buying it means going without charms and wound treatment for a while. It counts toward the run's 3–5 relics: another way to get one, not more of them. Like every relic, it has a cost.
 - **Never** for upgrades from the after-fight pick, which stay free.
 - **Starting amount:** a little, so there's a first purchase before day 2.
 - **Nothing sells back**, except a charm a transformation broke.
@@ -126,6 +129,7 @@ Wounds give real stakes to close wins, make the easier fight tempting when someo
 
 - **Slot count:** 3 each, or fewer early (2) and one more later?
 - **Prices and income:** what things cost, and what fights pay.
+- **The Pedlar's relic:** about 1 visit in 3 everywhere, or only at certain places?
 - **The currency's name.**
 - **Rest:** does it also keep "the next loss doesn't count"?
 - **Wound size and cap:** is –15% up to 3 right?
