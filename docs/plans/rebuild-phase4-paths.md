@@ -1,6 +1,6 @@
 # Rebuild phase 4: paths (build plan)
 
-Status: **proposed (2026-09-29), waiting on answers to its questions and the go-ahead.** No code yet. Phase 4 of `docs/plans/rebuild-build-order.md`. Design source: part 1, `rebuild-heroes.md` (paths, vows, tastes and costs, deeds, transformations), changed by part 6, `rebuild-between-fights.md` (upgrade picks come after every won fight, not from deeds). It builds on the arena sim (phase 1), the content (phase 2), Practice (phase 3), and tactics (phase 3b). What playtest gate 1 and the 3b playtest find goes into this plan before its code starts.
+Status: **proposed (2026-09-29); its questions are answered (Decisions), except Guard's reach, which waits on step 2's measurements. Waiting on the go-ahead.** No code yet. Phase 4 of `docs/plans/rebuild-build-order.md`. Design source: part 1, `rebuild-heroes.md` (paths, vows, tastes and costs, deeds, transformations), changed by part 6, `rebuild-between-fights.md` (upgrade picks come after every won fight, not from deeds). It builds on the arena sim (phase 1), the content (phase 2), Practice (phase 3), and tactics (phase 3b). What playtest gate 1 and the 3b playtest find goes into this plan before its code starts.
 
 **Goal:** each of the three heroes gets their three paths. In Practice you can vow a hero to a path (the taste and its cost) or take them straight to the transformed form, and see how far each deed moved in a fight.
 
@@ -23,7 +23,7 @@ Status: **proposed (2026-09-29), waiting on answers to its questions and the go-
 **Not in phase 4:**
 - Deed **thresholds**, when a transformation happens, vow switching, and pacing: they belong to the run (phase 5), which decides how many fights a transformation takes. Phase 4 measures what a fight puts into each deed, so phase 5 can set thresholds from real numbers.
 - Apexes (Acts 2–3; phase 8).
-- Role-layer upgrades (phase 8), and possibly the path and hero layers (question 2).
+- Upgrade pools: the path and hero layers come in phase 5 with the after-fight pick (Decision 2); the role layer in phase 8.
 - Duo bonds (phase 5).
 - Retuning enemies. Transformed heroes will win Practice fights more often; the run's days scale enemies up (phases 5–6).
 
@@ -130,11 +130,11 @@ What each path's taste, cost, and transformation need, by the pieces in section 
 
 | Path | Taste and cost (vowed) | Transformed | Needs |
 | --- | --- | --- | --- |
-| **Hearthwall** | Guard: the ally directly behind him takes 10% less, and he takes it; –10% Shield Bash damage | Guard covers every adjacent ally at 30%; **Hearthwall** (a wall of shields 3 hexes wide in front of him that stops ranged attacks for 4s); +HP, +DEF, –ATK; mana from damage he takes for allies; speed 1, and he can't move while the wall stands | P4, P9 (Guard), P10 (the wall) |
-| **Ironbrand** | Brand: Shield Bash also hits one other adjacent enemy for 30%; Hold the Line taunts 1s less | **Hearthbrand Mace** (hits every adjacent enemy, heals him for 5% of the damage); **Brand Slam** (leaps up to 2 hexes into the largest group, damages, knocks back); +ATK, +HP, –DEF; mana per enemy the cleave hits; Hold the Line only taunts adjacent enemies (see the note below) | P4, P5, P6 (lifesteal) |
+| **Hearthwall** | Guard: the ally behind him (Decision 6) takes 10% less, and he takes it; –10% Shield Bash damage | Guard covers every adjacent ally at 30%; **Hearthwall** (a wall of shields 3 hexes wide in front of him that stops ranged attacks for 4s); +HP, +DEF, –ATK; mana from damage he takes for allies; speed 1, and he can't move while the wall stands | P4, P9 (Guard), P10 (the wall) |
+| **Ironbrand** | Brand: Shield Bash also hits one other adjacent enemy for 30%; Hold the Line taunts 1s less | **Hearthbrand Mace** (hits every adjacent enemy, heals him for 5% of the damage); **Brand Slam** (leaps up to 2 hexes into the largest group, damages, knocks back); +ATK, +HP, –DEF (his cost); mana per enemy the cleave hits | P4, P5, P6 (lifesteal) |
 | **Last Watch** | Unyielding: once a fight, a hit that would fell him leaves him at 1 HP; –5% max HP | Below 30% HP he gains DEF and ATK, more for each fallen ally; **Last Rites** (below 30% HP, once: taunts every enemy within 3 hexes, and he can't fall for 3s); no mana bar; +ATK, –10% max HP; healing on him 30% weaker | P3 (below HP, per fallen ally, healing taken), P12 (Unyielding) |
 
-Note on Ironbrand's cost: the design says transformed Brannoc's "Hold the Line only taunts adjacent enemies", but Brand Slam replaces Hold the Line as his signature. I read it as: Hold the Line isn't in his kit any more, so the cost line is dropped, unless you meant Brand Slam to taunt (question 5).
+Ironbrand's transformed cost: the design also said "Hold the Line only taunts adjacent enemies", but Brand Slam replaces Hold the Line, so that line is dropped; his cost is the lost DEF (Decision 5).
 
 ### Vell
 
@@ -181,7 +181,8 @@ Heartseeker's pierce, Brand Slam, Last Rites, Weave, the stat changes, and the c
 Two reports, like the tactics report: reports, not gates.
 
 - **The deed report** (`--deeds`): for each hero, each encounter, and each stage (base, each vow, each transformation), what a fight puts into each of the three deeds, on average over the formations. It answers **"is every deed hard to fill without its taste?"** (this plan's bar: vowed at least 4 times base or another vow), and gives phase 5 the numbers to set thresholds from.
-- **The paths report** (`--paths`): each encounter fought with one hero on a path (vowed, then transformed) and the others on base, from the same formations as the placement report, plus formations drawn with that hero anywhere in the zone. For each: its win rate against base, and **where the hero stands in the best formations** (how far forward, how far to the side, how near the other heroes). It answers **"does each path move its hero?"** (this plan's bar) and "is each transformation stronger?" (question 3 sets the target).
+- **The paths report** (`--paths`): each encounter fought with one hero on a path (vowed, then transformed) and the others on base, from the same formations as the placement report, plus formations drawn with that hero anywhere in the zone. For each: its win rate against base, and **where the hero stands in the best formations** (how far forward, how far to the side, how near the other heroes). It answers **"does each path move its hero?"** (this plan's bar) and **"is each transformation stronger?"** The target (Decision 3): a vowed hero's team wins about as often as base (the taste pays for its cost, within about 5 points), and a transformed hero's team wins **15–25 points more** than base across the encounters.
+- **Where allies stand around Brannoc** (for Guard, Decision 6): the deed report also measures, over each fight, how often an ally is within 1, 2, and 3 hexes of him on the side away from his target.
 
 ## 8. Files
 
@@ -217,22 +218,21 @@ Two reports, like the tactics report: reports, not gates.
 The paths come in **three waves** of one path per hero, so a playtest can check the first three before the rest are built (question 1). Each wave: its sim pieces, its three paths as data, tests, a tuning pass with the reports, and a playtest build.
 
 1. **Paths and deeds (P1, P2):** `PathDef`, `KitPatch`, stages, `DeedDef`, counting, `FightResult.deeds`, with test paths.
-2. **Practice and the reports:** the Path row and stage, the cards, figures, the result's deeds, `--deeds` and `--paths`.
-3. **Wave 1: Deadeye, Ironbrand, Vigil Keeper** (P3's planted and range, P4, P5, P6's lifesteal, P11's plant delay, P13). Three different spots: Maren in a far corner, Brannoc forward into the enemies, Vell off to the side for Sunfall's line. Tune; **playtest build.**
+2. **Practice and the reports:** the Path row and stage, the cards, figures, the result's deeds, `--deeds` (with where allies stand behind Brannoc, for Guard) and `--paths`.
+3. **Wave 1: Deadeye, Ironbrand, Vigil Keeper** (P3's planted and range, P4, P5, P6's lifesteal, P11's plant delay, P13), and Wait to heal for any healing signature (Decision 4). Three different spots: Maren in a far corner, Brannoc forward into the enemies, Vell off to the side for Sunfall's line. Tune; **playtest build.**
 4. **Wave 2: Volley, Last Watch, Wardweaver** (P7 zones, P11's firing while walking, P3's HP and fallen-ally conditions and healing taken, P12, P6's overheal).
-5. **Wave 3: Trapper, Hearthwall, Lanternbearer** (P8 snares and their placement, P9 Guard, P10 the wall, Night Lantern on P7).
-6. **Upgrades** (if question 2 keeps them in phase 4).
-7. **Docs** (CLAUDE.md, design.md, this plan's notes), screenshots, and the gate 2 playtest build.
+5. **Wave 3: Trapper, Hearthwall, Lanternbearer** (P8 snares and their placement, P9 Guard with its reach set from step 2's measurements, P10 the wall, Night Lantern on P7).
+6. **Docs** (CLAUDE.md, design.md, this plan's notes), screenshots, and the gate 2 playtest build.
 
-## Questions (to answer before the code starts)
+## Decisions (2026-09-29, the playtester's answers)
 
-1. **The order:** three waves of one path per hero, with a playtest build after the first (proposed above), or all nine before a playtest?
-2. **Upgrade pools:** the build order puts the path and hero layers (about 66 upgrades) in phase 4, but part 6 moved upgrade picks to after every won fight, which is phase 5. Build them in phase 5 with the pick (proposed: nothing in phase 4 can offer them, and the gate doesn't test them), or in phase 4 with a way to switch them on in Practice?
-3. **How much stronger a transformation is:** a target for the paths report, so tuning has something to aim at. For example: vowed is about even with base (the taste pays for the cost), and a transformed hero's team wins about 15–25 points more than base across the encounters.
-4. **Wait to heal after a transformation:** it waits on "a mana signature that heals the lowest ally", but Night Lantern (Lanternbearer) and Sunfall (Vigil Keeper) replace Mend, so it would go dead on two of Vell's three paths, against part 6's rule. Proposed: it works with any healing signature, waiting until an ally within the signature's reach is below 60%.
-5. **Ironbrand's cost:** transformed, "Hold the Line only taunts adjacent enemies", but Brand Slam replaces Hold the Line. Drop that line (proposed), keep Hold the Line as a second move somehow, or give Brand Slam a short taunt on the enemies it hits?
-6. **Guard's "directly behind":** behind as seen from where? Proposed: the ally within 1 hex of him on the side away from his target (the way he faces), so it moves as the fight does.
+1. **Three waves**, one path per hero in each, with a playtest build after wave 1: Deadeye, Ironbrand, Vigil Keeper; then Volley, Last Watch, Wardweaver; then Trapper, Hearthwall, Lanternbearer.
+2. **Upgrade pools come in phase 5**, with the after-fight pick. Nothing in phase 4 could offer an upgrade, and gate 2 doesn't test them. (The build order moves them.)
+3. **How much stronger:** a vowed hero's team wins about as often as base (within about 5 points: the taste pays for its cost); a transformed hero's team wins **15–25 points more** than base across the encounters. The paths report tunes toward it.
+4. **Wait to heal works with any healing signature:** it holds a signature that heals until an ally within the signature's reach is below 60%, so it keeps working on Lanternbearer (Night Lantern) and Vigil Keeper (Sunfall), as part 6's rule asks. Built in wave 1, with Sunfall.
+5. **Ironbrand's transformed cost:** the line "Hold the Line only taunts adjacent enemies" is dropped, since Brand Slam replaces Hold the Line. His cost is the lost DEF.
+6. **Guard's "behind" is open.** Away from his target seems the right direction, but in Practice fights nobody stays 1 hex behind Brannoc: he walks forward and the others are ranged, so a 1-hex Guard would rarely fire and Hearthwall's deed couldn't fill. Step 2's report measures how often an ally is 1, 2, or 3 hexes behind him (away from his target) during fights. Guard's reach, or another rule, is decided from that before wave 3 builds Hearthwall.
 
-## Decisions
+## Open questions
 
-None yet; the answers go here.
+- **Guard** (Decision 6): its reach, or another rule for which ally it covers, once step 2's measurements are in.
