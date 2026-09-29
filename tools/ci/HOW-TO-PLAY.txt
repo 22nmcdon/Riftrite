@@ -81,4 +81,8 @@ WHAT WE WANT TO KNOW (playtest gate 2: paths)
       Weave) every 4th Lantern Glow, beside their new signature.
     - Deadeye's deed counts damage from beyond 4 hexes, and a unit that
       reaches farther once planted stops walking to plant.
-    - Last Watch's deed (damage below 30% HP) also fills a little on base.
+    - Last Watch's deed is damage he deals while he can't fall: base
+      Brannoc filled "damage below 30% HP" as much as the vow did.
+    - Vow costs that cut damage are small (2%): in these fights even 5%
+      of Maren's damage lost many close fights. Is the cost still felt?
+    - Guard's share of a hit meets Brannoc's own DEF.

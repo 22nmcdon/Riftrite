@@ -178,6 +178,7 @@ func test_bad_deeds_are_reported() -> void:
 		assert_true(db.is_valid(), "%s is in one of her kits: %s" % [ability_id, db.errors])
 	_assert_error(_load_paths([maren_path({"deed": {"text": "x", "counts": "healing", "beyond_hexes": 5}})]), "only filter damage")
 	_assert_error(_load_paths([maren_path({"deed": {"text": "x", "counts": "shield", "while_below_pct": 30}})]), "only filter damage")
+	_assert_error(_load_paths([maren_path({"deed": {"text": "x", "counts": "healing", "while_undying": true}})]), "only filter damage")
 	_assert_error(_load_paths([maren_path({"deed": {"text": "x", "counts": "damage", "while_below_pct": 100}})]), "out of range")
 	_assert_error(_load_paths([maren_path({"deed": {"text": "x", "counts": "damage", "from_ability": []}})]), "from_ability needs at least one id")
 	var deed: DeedDef = _content.paths["sharpshot"].deed

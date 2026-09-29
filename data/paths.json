@@ -8,47 +8,60 @@
     "fantasy": "She plants her feet and makes one shot count.",
     "placement": "A corner with a long sightline.",
     "vowed": {
-      "taste": "Steady: after 2s without moving, she reaches 1 hex farther.",
-      "cost": "She shoots 10% slower.",
+      "taste": "Steady: after 1.5s without moving, she reaches 1 hex farther and crits more often.",
+      "cost": "She shoots 2% slower.",
       "patch": {
         "passives": [
           {
             "id": "steady",
             "name": "Steady",
-            "text": "After 2s without moving, she reaches 1 hex farther.",
+            "text": "After 1.5s without moving, she reaches 1 hex farther.",
             "kind": "aura",
             "aura": {
               "target": "holder",
               "stat": "range",
               "value": 1,
               "while": "planted",
-              "after_ms": 2000
+              "after_ms": 1500
+            }
+          },
+          {
+            "id": "steady_aim",
+            "name": "Steady Aim",
+            "text": "After 1.5s without moving, she crits more often.",
+            "kind": "aura",
+            "aura": {
+              "target": "holder",
+              "stat": "crit_chance_bp",
+              "value": 1000,
+              "while": "planted",
+              "after_ms": 1500
             }
           },
           {
             "id": "unsteady",
             "name": "Unsteady",
-            "text": "She shoots 10% slower.",
+            "text": "She shoots 2% slower.",
             "kind": "aura",
             "aura": {
               "target": "holder",
               "stat": "cooldown_bp",
-              "value": 1000
+              "value": 200
             }
           }
         ]
       }
     },
     "transformed": {
-      "text": "Planted for 1.5s, she reaches 2 hexes farther (6) and crits more. Heartseeker replaces Marking Shot: a charged shot that pierces every enemy in its line. Shots from 5 hexes or more give her double mana.",
+      "text": "Planted for 1.5s, she reaches 2 hexes farther (6) and crits more. Heartseeker replaces Marking Shot: a charged shot that pierces every enemy in its line. Shots from 5 hexes or more give her more mana.",
       "cost": "After she moves, she needs 1.5s to plant before she can shoot again.",
       "patch": {
         "stats_bp": {
-          "atk": 12000,
-          "atsp": 8000
+          "atk": 10500,
+          "atsp": 7000
         },
         "stats_add": {
-          "crit": 6
+          "crit": 2
         },
         "plant_ms": 1500,
         "mana": {
@@ -56,7 +69,7 @@
           "per_attack": 10,
           "regen_per_s": 2,
           "far_hexes": 5,
-          "per_far_attack": 20
+          "per_far_attack": 12
         },
         "signature": {
           "id": "heartseeker",
@@ -79,10 +92,10 @@
               "effects": [
                 {
                   "type": "damage",
-                  "amount": 20,
+                  "amount": 10,
                   "target": "target",
                   "scaling": {
-                    "atk": 20000
+                    "atk": 7500
                   }
                 }
               ]
@@ -111,7 +124,7 @@
             "aura": {
               "target": "holder",
               "stat": "crit_chance_bp",
-              "value": 1500,
+              "value": 500,
               "while": "planted",
               "after_ms": 1500
             }
@@ -135,7 +148,7 @@
     "placement": "Near the front, where her snares go.",
     "vowed": {
       "taste": "Snare: once a fight, 2s in, she drops a snare in her target's path; it roots whoever steps in it.",
-      "cost": "Her shots deal 10% less.",
+      "cost": "Her shots deal 2% less.",
       "patch": {
         "passives": [
           {
@@ -154,7 +167,7 @@
                     "type": "apply_status",
                     "status": "root",
                     "target": "target",
-                    "duration_ms": 1500
+                    "duration_ms": 2000
                   }
                 ]
               }
@@ -163,12 +176,12 @@
           {
             "id": "loose_draw",
             "name": "Loose Draw",
-            "text": "Her shots deal 10% less.",
+            "text": "Her shots deal 2% less.",
             "kind": "aura",
             "aura": {
               "target": "holder",
               "stat": "damage_bp",
-              "value": 9000
+              "value": 9800
             }
           }
         ]
@@ -247,7 +260,7 @@
     "fantasy": "Always moving, filling the air with arrows.",
     "placement": "A loose spot with room to move.",
     "vowed": {
-      "taste": "Split Shot: every 4th shot also hits the enemy nearest her target, within 1 hex of it.",
+      "taste": "Split Shot: every 6th shot also hits the enemy nearest her target, within 1 hex of it, for a third as much.",
       "cost": "She reaches only 3 hexes.",
       "patch": {
         "stats_add": {
@@ -256,7 +269,7 @@
         "basic_attack": {
           "id": "longshot",
           "name": "Longshot",
-          "text": "Shoots her target from up to 3 hexes away. Every 4th shot splits: it also hits the enemy nearest her target, within 1 hex of it.",
+          "text": "Shoots her target from up to 3 hexes away. Every 6th shot splits: it also hits the enemy nearest her target, within 1 hex of it, for a third as much.",
           "cooldown_ms": 1000,
           "effects": [
             {
@@ -272,10 +285,10 @@
               "amount": 0,
               "target": "enemy_near_target",
               "scaling": {
-                "atk": 10000
+                "atk": 3000
               },
               "within_hexes": 1,
-              "every": 4
+              "every": 6
             }
           ]
         },
@@ -305,8 +318,8 @@
           "range": -1
         },
         "stats_bp": {
-          "atsp": 15000,
-          "atk": 8500
+          "atsp": 11000,
+          "atk": 6500
         },
         "add_traits": [
           "fires_moving"
@@ -314,7 +327,7 @@
         "basic_attack": {
           "id": "longshot",
           "name": "Longshot",
-          "text": "Shoots her target from up to 3 hexes away, even while she walks. Every shot splits: it also hits the enemy nearest her target, within 1 hex of it, and each split gives her mana.",
+          "text": "Shoots her target from up to 3 hexes away, even while she walks. Every shot splits: it also hits the enemy nearest her target, within 1 hex of it, for less, and each split gives her mana.",
           "cooldown_ms": 1000,
           "effects": [
             {
@@ -330,7 +343,7 @@
               "amount": 0,
               "target": "enemy_near_target",
               "scaling": {
-                "atk": 10000
+                "atk": 4000
               },
               "within_hexes": 1
             },
@@ -363,10 +376,10 @@
               "effects": [
                 {
                   "type": "damage",
-                  "amount": 4,
+                  "amount": 3,
                   "target": "target",
                   "scaling": {
-                    "atk": 3500
+                    "atk": 2500
                   }
                 }
               ]
@@ -393,7 +406,7 @@
     "placement": "Right in front of Maren and Vell, covering the lane to them.",
     "vowed": {
       "taste": "Guard: an ally behind him, within 3 hexes, takes 10% less from each hit; he takes it instead.",
-      "cost": "His Shield Bash deals 10% less.",
+      "cost": "His Shield Bash deals 2% less.",
       "patch": {
         "passives": [
           {
@@ -408,12 +421,12 @@
           {
             "id": "braced",
             "name": "Braced",
-            "text": "His Shield Bash deals 10% less.",
+            "text": "His Shield Bash deals 2% less.",
             "kind": "aura",
             "aura": {
               "target": "holder",
               "stat": "damage_bp",
-              "value": 9000
+              "value": 9800
             }
           }
         ]
@@ -554,8 +567,8 @@
       "cost": "His DEF drops.",
       "patch": {
         "stats_bp": {
-          "atk": 13000,
-          "hp": 11500,
+          "atk": 10000,
+          "hp": 10000,
           "def": 7000
         },
         "remove_passives": [
@@ -564,7 +577,7 @@
         "basic_attack": {
           "id": "hearthbrand_mace",
           "name": "Hearthbrand Mace",
-          "text": "Swings at the enemy in front of him and every enemy within 1 hex of it; each hit heals him a little and gives him mana.",
+          "text": "Swings at the enemy in front of him, and at every enemy within 1 hex of it for less; each hit heals him a little and gives him mana.",
           "cooldown_ms": 1200,
           "effects": [
             {
@@ -580,14 +593,14 @@
               "amount": 0,
               "target": "enemies_near_target",
               "scaling": {
-                "atk": 10000
+                "atk": 3000
               },
               "within_hexes": 1
             },
             {
               "trigger": "on_hit",
               "type": "heal",
-              "amount_bp_of_damage": 500,
+              "amount_bp_of_damage": 400,
               "target": "self"
             },
             {
@@ -624,10 +637,10 @@
               "effects": [
                 {
                   "type": "damage",
-                  "amount": 15,
+                  "amount": 10,
                   "target": "target",
                   "scaling": {
-                    "atk": 15000
+                    "atk": 10000
                   }
                 },
                 {
@@ -686,11 +699,11 @@
     },
     "transformed": {
       "text": "Below 30% HP he hits harder and his DEF rises, and he grows stronger for each fallen ally. Last Rites replaces Hold the Line: the first time he drops below 30% HP, he taunts every enemy within 3 hexes and can't fall for 3s. He has no mana.",
-      "cost": "Heals on him are 30% weaker, and he has 10% less max HP.",
+      "cost": "Heals on him are 20% weaker, and he has 5% less max HP.",
       "patch": {
         "stats_bp": {
-          "hp": 9000,
-          "atk": 12500
+          "hp": 9500,
+          "atk": 13500
         },
         "mana": null,
         "signature": {
@@ -731,12 +744,12 @@
           {
             "id": "last_stand",
             "name": "Last Stand",
-            "text": "Below 30% HP he hits a third harder.",
+            "text": "Below 30% HP he hits half again as hard.",
             "kind": "aura",
             "aura": {
               "target": "holder",
               "stat": "atk_bp",
-              "value": 13300,
+              "value": 15000,
               "while": "below_hp",
               "below_pct": 30
             }
@@ -769,21 +782,21 @@
           {
             "id": "scarred",
             "name": "Scarred",
-            "text": "Heals on him are 30% weaker.",
+            "text": "Heals on him are 20% weaker.",
             "kind": "aura",
             "aura": {
               "target": "holder",
               "stat": "healing_taken_bp",
-              "value": 7000
+              "value": 8000
             }
           }
         ]
       }
     },
     "deed": {
-      "text": "Damage he deals while below 30% HP",
+      "text": "Damage he deals while he can't fall (when he should already be dead)",
       "counts": "damage",
-      "while_below_pct": 30
+      "while_undying": true
     }
   },
   {
@@ -795,11 +808,11 @@
     "fantasy": "A warm light that keeps everyone standing.",
     "placement": "In the middle, behind Brannoc, where her lantern reaches everyone.",
     "vowed": {
-      "taste": "Kindle: Mend also heals the ally nearest its target, within 2 hexes of it, for a tenth as much.",
-      "cost": "Mend costs 5 more mana.",
+      "taste": "Kindle: Mend also heals the ally nearest its target, within 2 hexes of it, for a fifth as much.",
+      "cost": "Mend costs 2 more mana.",
       "patch": {
         "mana": {
-          "max": 65,
+          "max": 62,
           "start": 20,
           "per_attack": 12,
           "regen_per_s": 2
@@ -807,7 +820,7 @@
         "signature": {
           "id": "mend",
           "name": "Mend",
-          "text": "Heals whichever ally within 3 hexes is lowest on HP, herself included, and kindles the ally nearest them, within 2 hexes, for a tenth as much.",
+          "text": "Heals whichever ally within 3 hexes is lowest on HP, herself included, and kindles the ally nearest them, within 2 hexes, for a fifth as much.",
           "trigger": {
             "kind": "mana"
           },
@@ -823,10 +836,10 @@
             },
             {
               "type": "heal",
-              "amount": 2,
+              "amount": 4,
               "target": "ally_near_target",
               "scaling": {
-                "mgk": 1000
+                "mgk": 2000
               },
               "within_hexes": 2
             }
@@ -839,7 +852,7 @@
       "cost": "Lantern Glow deals no damage (it still gives mana), and she has less HP.",
       "patch": {
         "stats_bp": {
-          "mgk": 12500,
+          "mgk": 10500,
           "hp": 8500
         },
         "basic_attack": {
@@ -963,8 +976,8 @@
     "fantasy": "Stop the damage before it lands.",
     "placement": "Forward, next to Brannoc; where the circle goes matters.",
     "vowed": {
-      "taste": "Ward Thread: what Mend would heal past full HP comes back as Shield, a tenth as much.",
-      "cost": "Mend heals 10% less.",
+      "taste": "Ward Thread: what Mend would heal past full HP comes back as Shield, a fifth as much.",
+      "cost": "Mend heals 5% less.",
       "patch": {
         "signature": {
           "id": "mend",
@@ -977,30 +990,30 @@
           "effects": [
             {
               "type": "heal",
-              "amount": 18,
+              "amount": 19,
               "target": "target",
               "scaling": {
-                "mgk": 9000
+                "mgk": 9500
               },
-              "overheal_shield_bp": 1000
+              "overheal_shield_bp": 2000
             }
           ]
         }
       }
     },
     "transformed": {
-      "text": "Warding Circle replaces Mend: for 4s, a circle 2 hexes around her Slows enemies inside and Wards allies inside (they take 20% less). Every 4th Lantern Glow, Weave shields the ally lowest on HP and heals them a little.",
+      "text": "Warding Circle replaces Mend: for 3s, a circle 2 hexes around her Slows enemies inside and Wards allies inside (they take 15% less). Every 4th Lantern Glow, Weave shields the ally lowest on HP and heals them a little.",
       "cost": "Her healing is 40% weaker.",
       "patch": {
         "stats_bp": {
-          "hp": 11500,
-          "def": 13000,
+          "hp": 9000,
+          "def": 10000,
           "mgk": 9000
         },
         "signature": {
           "id": "warding_circle",
           "name": "Warding Circle",
-          "text": "Draws a circle 2 hexes around herself for 4s: enemies inside are Slowed, and allies inside are Warded, taking 20% less damage.",
+          "text": "Draws a circle 2 hexes around herself for 3s: enemies inside are Slowed, and allies inside are Warded, taking 15% less damage.",
           "trigger": {
             "kind": "mana"
           },
@@ -1014,7 +1027,7 @@
               },
               "anchor": "self",
               "hits": "all",
-              "duration_ms": 4000,
+              "duration_ms": 3000,
               "every_ms": 500,
               "effects": [
                 {
@@ -1045,9 +1058,9 @@
                 "trigger": "on_basic_attack",
                 "every": 4,
                 "type": "shield",
-                "amount": 20,
+                "amount": 15,
                 "scaling": {
-                  "mgk": 12000
+                  "mgk": 9000
                 },
                 "target": "lowest_hp_ally",
                 "within_hexes": 3
@@ -1093,13 +1106,13 @@
     "fantasy": "Her light heals friends and burns enemies.",
     "placement": "Off to the side, with a clean line for Sunfall.",
     "vowed": {
-      "taste": "Judgment: every 4th Mend also smites the enemy nearest its target for a tenth of the heal.",
+      "taste": "Judgment: every 2nd Mend also smites the enemy nearest its target.",
       "cost": "Mend reaches 1 hex less (2 hexes).",
       "patch": {
         "signature": {
           "id": "mend",
           "name": "Mend",
-          "text": "Heals whichever ally within 2 hexes is lowest on HP, herself included; every 4th Mend also smites the enemy nearest them.",
+          "text": "Heals whichever ally within 2 hexes is lowest on HP, herself included; every 2nd Mend also smites the enemy nearest them.",
           "trigger": {
             "kind": "mana"
           },
@@ -1116,12 +1129,12 @@
             },
             {
               "type": "damage",
-              "amount": 2,
+              "amount": 8,
               "target": "enemy_near_target",
               "scaling": {
-                "mgk": 1000
+                "mgk": 4000
               },
-              "every": 4
+              "every": 2
             }
           ]
         }
@@ -1132,7 +1145,7 @@
       "cost": "Her healing is 30% weaker.",
       "patch": {
         "stats_bp": {
-          "mgk": 12000,
+          "mgk": 11000,
           "def": 8000
         },
         "stats_add": {
@@ -1158,10 +1171,10 @@
               "effects": [
                 {
                   "type": "damage",
-                  "amount": 15,
+                  "amount": 10,
                   "target": "target",
                   "scaling": {
-                    "mgk": 10000
+                    "mgk": 8000
                   },
                   "side": "enemies"
                 },

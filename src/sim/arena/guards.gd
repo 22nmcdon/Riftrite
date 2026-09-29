@@ -8,9 +8,10 @@ extends RefCounted
 ##   - It covers an ally within its reach; "behind" only one on the far side
 ##     of it from its target (with no target, any in reach). The first
 ##     guard in the fight's order that covers the ally takes it.
-##   - Its share of what got through the ally's DEF moves to the guard as it
-##     is (the guard's own DEF doesn't cut it again), into its Shield and HP;
-##     it counts as damage the guard takes, for mana. The ally's DAMAGE line
+##   - Its share of the hit (after a Mark on the ally, before DEF) goes to the
+##     guard, which takes it as if hit: its own DEF, then its Shield and HP
+##     (the ally's DEF cuts only the rest). It counts as damage the guard
+##     takes, for mana. The ally's DAMAGE line
 ##     shows what it took; a GUARD line, sourced to the guard's passive, what
 ##     the guard took for it.
 

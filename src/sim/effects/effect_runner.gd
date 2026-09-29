@@ -292,13 +292,15 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 			amount = FixedMath.apply_bp(amount, FixedMath.BP_ONE + payoff)
 			entry.bonus = Tactics.bonus_note(payoff, sim.unit_by_id(source.unit_id).tactic)
 	var marked: int = Statuses.damage_taken_bp(target) if not target.statuses.is_empty() else 0
-	var dealt: int = sim.mitigate_hit(target, FixedMath.apply_bp(amount, FixedMath.BP_ONE + marked))
-	entry.target = target.id
-	entry.mitigated = maxi(FixedMath.apply_bp(amount, FixedMath.BP_ONE + marked) - dealt, 0)
-	# Guard (phase 4): an ally's guard takes its share of what got through.
+	var raw: int = FixedMath.apply_bp(amount, FixedMath.BP_ONE + marked)
+	# Guard (phase 4): an ally's guard takes its share of the hit, against its
+	# own DEF.
 	var guard: UnitState = Guards.covering(sim, source, target) if not sim.guards.is_empty() else null
-	var guarded: int = FixedMath.apply_bp(dealt, guard.guard.share_bp) if guard != null else 0
-	dealt -= guarded
+	var guarded_raw: int = FixedMath.apply_bp(raw, guard.guard.share_bp) if guard != null else 0
+	var dealt: int = sim.mitigate_hit(target, raw - guarded_raw)
+	var guarded: int = sim.mitigate_hit(guard, guarded_raw) if guard != null else 0
+	entry.target = target.id
+	entry.mitigated = maxi(raw - guarded_raw - dealt, 0)
 	entry.amount = dealt
 	entry.crit = crit
 	entry.absorbed = sim.apply_damage(target, dealt)

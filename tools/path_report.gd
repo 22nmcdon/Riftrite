@@ -319,7 +319,7 @@ static func deeds_summary(content: ContentDb, reports: Array[PathReport]) -> Str
 			var parts: Array[String] = []
 			for stage: String in order:
 				parts.append("%s %d" % [stage, means[stage]])
-			lines.append("  %-14s %-5s own vow %d vs best other %d   (%s)" % [path.name, "ok" if own >= TASTE_TIMES * maxi(rival, 1) else "LOW", own, rival, ", ".join(parts)])
+			lines.append("  %-14s %-5s own vow %d vs best other %d   (%s)" % [path.name, "ok" if own > 0 and own >= TASTE_TIMES * rival else "LOW", own, rival, ", ".join(parts)])
 	var ticks: int = 0
 	var behind: Array[int] = [0, 0, 0, 0]
 	var any_side: Array[int] = [0, 0, 0, 0]

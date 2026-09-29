@@ -177,6 +177,33 @@ func test_while_below_counts_only_low_hits() -> void:
 	assert_eq(amount(fight, "brawler", "p0"), expected)
 
 
+func test_while_undying_counts_only_hits_while_it_cant_fall() -> void:
+	var unyielding: Dictionary = {"id": "unyielding", "name": "Unyielding", "kind": "ability",
+		"effects": [{"trigger": "on_would_fall", "type": "apply_status", "status": "undying", "duration_ms": 1000, "target": "self"}]}
+	var brawler: UnitDef = K.kit("brawler", {"stats": {"hp": 100}, "passives": [unyielding]})
+	var hero: UnitSetup = counting(K.at(brawler, 3, 2), [deed({"counts": "damage", "while_undying": true})])
+	var bruiser: UnitDef = dummy({"stats": {"hp": 5000, "atk": 10, "speed": 0},
+		"basic_attack": {"cooldown_ms": 500, "effects": [{"type": "damage", "amount": 30, "target": "target"}]}})
+	var fight: CombatSim = K.sim(K.fight([hero], [K.foe(bruiser, 3, 4)]))
+	var unit: UnitState = fight.unit_by_id("brawler")
+	var expected: int = 0
+	var other: int = 0
+	while not fight.finished:
+		var before: int = fight.combat_log.entries.size()
+		fight.step()
+		var undying: bool = unit.statuses.any(func(state: StatusState) -> bool: return state.def.kind == StatusDef.Kind.UNDYING)
+		for n: int in range(before, fight.combat_log.entries.size()):
+			var entry: LogEntry = fight.combat_log.entries[n]
+			if entry.kind == LogEntry.Kind.DAMAGE and entry.source_unit == "brawler":
+				if undying:
+					expected += entry.amount
+				else:
+					other += entry.amount
+	assert_gt(other, 0)
+	assert_gt(expected, 0, "it hit while it couldn't fall")
+	assert_eq(amount(fight, "brawler", "p0"), expected)
+
+
 func test_counting_changes_nothing_and_reaches_the_result() -> void:
 	var plain: FightSetup = K.fight([K.at(K.kit("brawler"), 3, 2), K.at(K.kit("archer", {"stats": {"range": 4}}), 2, 1)], [K.foe(dummy(), 3, 4)])
 	var counted: FightSetup = K.fight([counting(K.at(K.kit("brawler"), 3, 2), [deed({"counts": "damage"}), deed({"counts": "shield"})]),

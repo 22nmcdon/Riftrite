@@ -1,6 +1,6 @@
 # Rebuild phase 4: paths (build plan)
 
-Status: **in progress. Step 1 (paths, stages, and deeds in the sim) is built (2026-09-29).** Its questions are answered (Decisions), except Guard's reach, which waits on step 3's measurements. Phase 4 of `docs/plans/rebuild-build-order.md`. Design source: part 1, `rebuild-heroes.md` (paths, vows, tastes and costs, deeds, transformations), changed by part 6, `rebuild-between-fights.md` (upgrade picks come after every won fight, not from deeds). It builds on the arena sim (phase 1), the content (phase 2), Practice (phase 3), and tactics (phase 3b). What playtest gate 1 and the 3b playtest find goes into this plan before its code starts.
+Status: **built (2026-09-29); waiting on playtest gate 2.** All nine paths, their sim pieces, the hero panel, and the reports are in, and the paths are tuned (section 7). Decisions 6 to 10 were made while the playtester was away and are flagged for them. Phase 4 of `docs/plans/rebuild-build-order.md`. Design source: part 1, `rebuild-heroes.md` (paths, vows, tastes and costs, deeds, transformations), changed by part 6, `rebuild-between-fights.md` (upgrade picks come after every won fight, not from deeds). It builds on the arena sim (phase 1), the content (phase 2), Practice (phase 3), and tactics (phase 3b). What playtest gate 1 and the 3b playtest find goes into this plan before its code starts.
 
 **Goal:** each of the three heroes gets their three paths. In Practice you can vow a hero to a path (the taste and its cost) or take them straight to the transformed form, and see how far each deed moved in a fight.
 
@@ -276,6 +276,22 @@ Two reports, like the tactics report: reports, not gates.
 - **The paths report** (`--paths`): each encounter fought with one hero on a path (vowed, then transformed) and the others on base, from the same formations as the placement report, plus formations drawn with that hero anywhere in the zone. For each: its win rate against base, and **where the hero stands in the best formations** (how far forward, how far to the side, how near the other heroes). It answers **"does each path move its hero?"** (this plan's bar) and **"is each transformation stronger?"** The target (Decision 3): a vowed hero's team wins about as often as base (the taste pays for its cost, within about 5 points), and a transformed hero's team wins **15–25 points more** than base across the encounters.
 - **Where allies stand around Brannoc** (for Guard, Decision 6): the deed report also measures, over each fight, how often an ally is within 1, 2, and 3 hexes of him on the side away from his target.
 
+**Tuned (2026-09-29)**, over the 9 encounters, 24 formations each (the 4 named and 20 drawn), 1 seed; all base wins 53%:
+
+| Path | Vowed vs base | Transformed vs base | Deed per fight: vow (base 0 for all) / transformed |
+| --- | --- | --- | --- |
+| Deadeye | +1 | +19 | 312 / 384 damage from beyond 4 hexes |
+| Trapper | +1 | +19 | 1.8s / 11.5s rooted |
+| Volley | +6 | +21 | 2 / 10 extra hits |
+| Hearthwall | −1 | +24 | 3 / 41 damage guarded |
+| Ironbrand | +4 | +24 | 7 / 12 extra hits |
+| Last Watch | +3 | +20 | 11 / 66 damage while he can't fall |
+| Lanternbearer | −4 | +24 | 8 / 257 healing beside Mend's target |
+| Wardweaver | −5 | +17 | 2 / 158 Shield |
+| Vigil Keeper | −5 | +23 | 32 / 33 smite damage |
+
+The first read had transformations at +30 to +45 and Maren's vows at −18 to −22; the tuning cut transformed stats, splits, and signatures, cut vow costs to about 2% (Decision 10), made Guard meet Brannoc's DEF (Decision 8), and changed Last Watch's deed (Decision 9). Where allies stand around Brannoc in base fights matches the scratch measurement (Decision 6's table). Every deed passes the taste bar; Volley's vow is a point past Decision 3 (open question).
+
 **Built (2026-09-29):** `tools/path_report.gd`, from `tools/sim_runner.gd -- --paths` and/or `--deeds` (the same fights feed both). Variants: all base, then each path vowed and transformed on its hero (19). Where a hero stands is averaged over the formations a variant wins at least half its fights in. A transformed Trapper places her snares on (2, 3) and (5, 3), or the next middle-row hexes without a rock. Its fights are 19 times the placement report's, so tune with `--seeds=1 --sweep=20`. Tests: `tests/tools/test_path_report.gd`.
 
 ## 8. Files
@@ -336,6 +352,12 @@ The paths come in **three waves** of one path per hero, so a playtest can check 
    **Provisionally (flagged):** the taste's Guard covers an ally **behind him within 3 hexes** (the "behind" picture, often enough to fill the deed), and the transformation's covers **every ally within 2 hexes** at 30% (the design's "every adjacent ally", widened, since 1 hex is rarely anyone).
 7. **Vell's transformed kits hold two heals** (decided provisionally 2026-09-29, while the playtester was away; flagged for them): the design gives Lanternbearer and Wardweaver both a changed Mend (every ally next to the target; Weave) and a new signature (Night Lantern; Warding Circle), and the sim has one signature per unit. They follow Vigil Keeper's own rule from the design: **the new move is the mana signature, and the changed Mend becomes a smaller heal on every 4th basic attack.** Transformed Wardweaver's signature (Warding Circle) doesn't heal, so Wait to heal can't be taken there (Decision 4's "any healing signature"); that's the one tactic a transformation still breaks, and it's flagged too.
 
+8. **Guard takes its share against the guard's own DEF** (decided provisionally 2026-09-29; flagged): the share of the hit moves to Brannoc before DEF, and his DEF cuts it (the ally's DEF cuts only the rest). "He takes it instead" reads as being hit in the ally's place; moving damage that had already passed a light ally's DEF made Guard a pure loss for a tank.
+9. **Last Watch's deed is "damage he deals while he can't fall"** (decided provisionally 2026-09-29; flagged), not the design's "damage while below 30% HP". The design's reason ("without Unyielding he rarely survives long at low HP") doesn't hold in the sim: Vell keeps base Brannoc fighting at low HP, so base filled the 30% deed as much as the vow did (72 against 82 a fight), and 10% HP failed too (21 against 35). The new deed counts only while he has Undying (Unyielding's second; Last Rites' three), which base never has. It needed a new deed filter, `while_undying` (code, rule 3).
+10. **Vow costs are about 2% where they cut damage** (decided provisionally 2026-09-29; flagged): Deadeye shoots 2% slower (design: 10%), Trapper's shots deal 2% less (10%), Hearthwall's Shield Bash 2% less (10%). The paths report showed Act 1's fights are races: Deadeye's taste alone is worth about +1 point, while 5% slower shooting alone cost about 12, so each 1% of Maren's damage is 2 to 3 points of win rate. At the design's 10%, no taste could pay for its cost (Decision 3). Whether a cost this small is still felt, and whether vows should instead be a small net loss, is for the playtest.
+
 ## Open questions
 
-- **Guard** (Decision 6): its reach, or another rule for which ally it covers, once step 3's measurements are in.
+- **Guard** (Decision 6): its reach is provisional (behind within 3 hexes vowed, all within 2 transformed), from the measurements; the playtest decides.
+- **Volley's vow wins 6 points more than base**, a point past Decision 3's 5: its cost (range 3) doesn't cost anything in Act 1's fights, and its taste is already small (every 6th shot splits, for a third). A cost that bites, or leave it?
+- **"Each path moves its hero"** isn't shown by the paths report yet: in the formations each variant wins, the hero stands within 0.2 hexes of where base wins from (forward, side, and nearness alike). The drawn formations are random for all three heroes, so a hero's spot in the winning ones mostly follows the encounter. Gate 2's playtest answers it directly; a later report could search each hero's hex with the others fixed.

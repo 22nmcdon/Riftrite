@@ -6,7 +6,8 @@ extends RefCounted
 ## it's on, since the deeds count what it does with no bonus for the vow.
 ##   - At the end of each tick CombatSim hands over the entries logged since
 ##     the last read (the deaths step's included), so "as the tick ends" is
-##     when the hero's HP is read for while_below_pct.
+##     when the hero's HP is read for while_below_pct, and its statuses for
+##     while_undying.
 ##   - A shot's distance is taken as it's fired (its SHOT entry: from the
 ##     shooter to where the target stood), and looked up when its hit lands.
 ##   - Only the unit's own entries count: not its summons', a relic's, or
@@ -69,6 +70,8 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 			if deed.from_range > 0 and _range_sq(sim, unit, counter, entry) <= deed.from_range * deed.from_range:
 				continue
 			if deed.while_below_bp > 0 and unit.hp * FixedMath.BP_ONE >= deed.while_below_bp * unit.max_hp:
+				continue
+			if deed.while_undying and not unit.statuses.any(func(state: StatusState) -> bool: return state.def.kind == StatusDef.Kind.UNDYING):
 				continue
 			if deed.off_target and counter.fired_at.get(entry.source_ability, "") == entry.target:
 				continue

@@ -245,7 +245,7 @@ The fantasy: he's at his most dangerous when he should already be dead.
 | **Mana** | unchanged | **none**: his only signature is HP-triggered, so he has no mana bar (and mana drain and Silence can't touch him) |
 | **Cost** | –5% max HP | healing on him is 30% weaker |
 
-- **Deed:** damage he deals while below 30% HP. Without Unyielding he rarely survives long at low HP.
+- **Deed:** damage he deals while below 30% HP. Without Unyielding he rarely survives long at low HP. *(Phase 4 changed it provisionally to damage he deals while he can't fall: in the sim, Vell keeps base Brannoc fighting at low HP. See `rebuild-phase4-paths.md`, Decision 9.)*
 - **Where he stands:** the most exposed spot, to draw fire away from everyone else.
 - **Upgrade pool examples:** when he finally falls, allies gain a Shield / each second below 30% stacks DEF / Last Rites heals the allies it protected / kills while low restore 5% HP / Last Rites taunts for 1s longer.
 - **Apex options:**

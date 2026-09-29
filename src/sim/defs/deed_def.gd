@@ -31,6 +31,9 @@ extends RefCounted
 ##                                 (Kindle's heal beside Mend's target)
 ##   while_below_pct: 30           damage only: the hero is below this share
 ##                                 of max HP (as the tick it lands ends)
+##   while_undying: true           damage only: the hero can't fall (it has
+##                                 an Undying status as the tick it lands
+##                                 ends; Last Watch)
 ## Adding a kind or a filter is a code change.
 
 enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED }
@@ -47,6 +50,7 @@ var from_range: int = 0
 ## Basis points of max HP (0: any HP).
 var while_below_bp: int = 0
 var off_target: bool = false
+var while_undying: bool = false
 
 
 static func read(reader: DataReader) -> DeedDef:
@@ -62,8 +66,9 @@ static func read(reader: DataReader) -> DeedDef:
 	def.off_target = reader.opt_bool("off_target", false)
 	if reader.has("while_below_pct"):
 		def.while_below_bp = reader.req_int("while_below_pct", 1, 99) * 100
-	if def.counts != Counts.DAMAGE and (def.from_range > 0 or def.while_below_bp > 0):
-		reader.error("beyond_hexes and while_below_pct only filter damage")
+	def.while_undying = reader.opt_bool("while_undying", false)
+	if def.counts != Counts.DAMAGE and (def.from_range > 0 or def.while_below_bp > 0 or def.while_undying):
+		reader.error("beyond_hexes, while_below_pct, and while_undying only filter damage")
 	if (def.counts == Counts.ROOTED_MS or def.counts == Counts.GUARDED) and not def.from_ability.is_empty():
 		reader.error("%s counts every one, so it takes no from_ability" % COUNT_NAMES[def.counts])
 	reader.finish()

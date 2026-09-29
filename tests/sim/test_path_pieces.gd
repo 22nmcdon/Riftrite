@@ -361,11 +361,11 @@ func test_a_ward_takes_off_damage_and_adds_to_a_mark() -> void:
 	var dummy: UnitState = fight.unit_by_id("dummy")
 	var source: EffectSource = EffectSource.make("striker", "test", "Test")
 	Statuses.apply(fight, dummy, "warded", 1, 400, source)
-	assert_eq(Statuses.damage_taken_bp(dummy), -2000)
+	assert_eq(Statuses.damage_taken_bp(dummy), -1500)
 	K.step(fight, 20)
-	assert_eq(damage_to(fight, "striker", "dummy"), [80] as Array[int], "20% less")
+	assert_eq(damage_to(fight, "striker", "dummy"), [85] as Array[int], "15% less")
 	Statuses.apply(fight, dummy, "marked", 1, 400, source)
-	assert_eq(Statuses.damage_taken_bp(dummy), -500, "a Mark (+15%) and a Ward (-20%) add up")
+	assert_eq(Statuses.damage_taken_bp(dummy), 0, "a Mark (+15%) and a Ward (-15%) add up")
 
 
 # --- snares, walls, and Guard (wave 3) ----------------------------------------------------------
@@ -449,9 +449,9 @@ func test_a_wall_stops_enemy_shots_while_it_stands() -> void:
 	assert_false(Walls.crosses(Vector2i(0, 0), Vector2i(4, 4), Vector2i(6, 0), Vector2i(10, 0)))
 
 
-func _guard_fight(covers: String, ally_row: int) -> CombatSim:
+func _guard_fight(covers: String, ally_row: int, guard_def: int = 0) -> CombatSim:
 	var guard: Dictionary = {"id": "guard", "name": "Guard", "kind": "guard", "share_pct": 30, "within_hexes": 1, "covers": covers}
-	var guardian: UnitDef = still("guardian", [{"type": "damage", "amount": 0, "target": "target"}], {"passives": [guard]})
+	var guardian: UnitDef = still("guardian", [{"type": "damage", "amount": 0, "target": "target"}], {"passives": [guard], "stats": {"hp": 5000, "def": guard_def}})
 	# The archer shoots the ally: the farther one when it stands behind, the nearer in front.
 	var archer: UnitDef = still("archer", [{"type": "damage", "amount": 50, "target": "target"}], {"stats": {"range": 5}, "targeting": "farthest" if ally_row == 1 else "nearest"}, 1000, true)
 	# (The ally goes first in the fight's order: with both in the archer's reach, "nearest" is a tie.)
@@ -476,6 +476,15 @@ func test_guard_takes_a_share_of_hits_on_an_ally_behind() -> void:
 	var round: CombatSim = _guard_fight("all", 2)
 	K.step(round, 30)
 	assert_eq(damage_to(round, "archer", "ally"), [35] as Array[int])
+
+
+func test_a_guard_takes_its_share_against_its_own_def() -> void:
+	var fight: CombatSim = _guard_fight("behind", 1, 100)
+	K.step(fight, 30)
+	assert_eq(damage_to(fight, "archer", "ally"), [35] as Array[int], "the ally's DEF (0) cuts only its own part")
+	var guarded: Array[LogEntry] = K.entries(fight, LogEntry.Kind.GUARD, "guardian")
+	assert_eq(guarded.map(func(entry: LogEntry) -> int: return entry.amount), [8] as Array[int], "15 of the hit, halved by DEF 100 (constant 100), rounded")
+	assert_eq(fight.unit_by_id("guardian").hp, 5000 - 8)
 
 
 func test_an_on_interval_passive_can_run_once() -> void:

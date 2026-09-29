@@ -76,8 +76,8 @@ func test_the_kits_carry_what_the_texts_say() -> void:
 	var trapper: UnitDef = _kit("trapper", done)
 	assert_eq([trapper.signature.id, trapper.placed_snares, trapper.stats.get_stat(UnitStats.Stat.RANGE)], ["bramble_field", 2, 3])
 	assert_eq(Snares.placed_effect(trapper).max_standing, 3)
-	# Volley: every 4th shot splits, range 3; every shot, fires moving, Arrow Storm.
-	assert_eq(_kit("volley", vowed).basic_attack.effects[1].every, 4)
+	# Volley: every 6th shot splits, range 3; every shot, fires moving, Arrow Storm.
+	assert_eq(_kit("volley", vowed).basic_attack.effects[1].every, 6)
 	assert_eq(_kit("volley", vowed).stats.get_stat(UnitStats.Stat.RANGE), 3)
 	var volley: UnitDef = _kit("volley", done)
 	assert_eq([volley.basic_attack.effects[1].every, volley.has_trait("fires_moving"), volley.signature.id], [1, true, "arrow_storm"])
@@ -97,10 +97,10 @@ func test_the_kits_carry_what_the_texts_say() -> void:
 	assert_eq([last_watch.signature.id, last_watch.signature.trigger.kind, last_watch.mana], ["last_rites", TriggerDef.Kind.HP_BELOW, null])
 	for part_id: String in ["last_stand", "last_wall", "grief", "scarred"]:
 		assert_true(_has_part(last_watch, part_id), part_id)
-	# Vell: Kindle, Ward Thread, Judgment; Night Lantern, Warding Circle, Sunfall, with Mend (or Weave) every 4th Lantern Glow.
+	# Vell: Kindle, Ward Thread, Judgment (every 2nd Mend); Night Lantern, Warding Circle, Sunfall, with Mend (or Weave) every 4th Lantern Glow.
 	assert_eq(_kit("lanternbearer", vowed).signature.effects[1].target, EffectDef.Target.ALLY_NEAR_TARGET)
-	assert_eq(_kit("wardweaver", vowed).signature.effects[0].overheal_shield_bp, 1000)
-	assert_eq(_kit("vigil_keeper", vowed).signature.effects[1].every, 4)
+	assert_eq(_kit("wardweaver", vowed).signature.effects[0].overheal_shield_bp, 2000)
+	assert_eq(_kit("vigil_keeper", vowed).signature.effects[1].every, 2)
 	assert_eq(_kit("vigil_keeper", vowed).signature.max_range, 2)
 	for pair: Array in [["lanternbearer", "night_lantern", "mend"], ["wardweaver", "warding_circle", "weave"], ["vigil_keeper", "sunfall", "mend"]]:
 		var kit: UnitDef = _kit(pair[0], done)
