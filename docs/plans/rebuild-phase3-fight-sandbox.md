@@ -408,3 +408,23 @@ Playtest build 5 carried these.
   - The chaos fight's hook got the same on-hop stealth (every status must be applied there), and the fight moved to seed 21, which also has an enemy losing its target to Stealth.
 
 The next playtest build carries these; gate 1 is judged again on it.
+
+**The first figures (2026-09-29).** The playtester added placeholder art (commit 1c88c48): a figure for each hero in every form (base and the three paths), one for each Act 1 enemy, and a new title backdrop, made by `tools/art/hero_kit.py`, `enemy_kit.py`, and `backdrops.py`. Still placeholder until phase 7.
+
+- **The board draws the figures** in place of the circles (`FigureArt`, `UnitToken`):
+  - Each figure stands on its unit's point, over a small ring in its side's color.
+  - Figures are 1.1 hexes tall, canvas and all, so a pup is small and a sentinel big.
+  - The bars sit on the figure's head, and the name and statuses go under its feet.
+  - A unit faces the side its target is on. Heroes start facing right and enemies left.
+  - Heroes wear their base form; the path forms wait for phase 4.
+  - A kit without art is still drawn as a circle.
+- **Depth:**
+  - Units lower on the screen are drawn in front (`ArenaView._stack_tokens`).
+  - A click finds the frontmost figure under the pointer.
+  - A drop on a hero's figure counts for the hex the hero stands on.
+- **Effects follow the figures:** shots and swipes aim at the body, and numbers and names rise from over the bars.
+- **Where each figure's head is:** it comes from `art/figures/bounds.json`, which `tools/art/figure_bounds.gd` writes. A test fails when the file is out of date with the figures.
+- **The board has more room over it** (`TOP_ROOM_HEXES` 0.6) for the top row's figures.
+- **The screens:**
+  - The backdrop's sky is bright, so the title's lines and the encounter list's hint sit on a dark plate (`UiStyle.plate`).
+  - The look-test sheets (`art/look-tests/`) stay out of the playtest builds.

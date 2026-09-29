@@ -32,6 +32,7 @@ The old game (items, the row-based sim, the run layer) is in git history: the co
 
 - Run the game: `godot --path .` (main scene `src/ui/main.tscn`: the title, then Practice)
 - Screenshots of each screen (needs a display): `xvfb-run godot --path . -s tools/ui_screenshots.gd -- --out=/tmp/shots` (the title, the encounter list, placement, fights mid-way with a popup and an area warning, the result, and Rift Collapse)
+- Placeholder figures and the title backdrop: `python3 tools/art/hero_kit.py` (and `enemy_kit.py`, `backdrops.py`), then `godot --headless --path . -s tools/art/figure_bounds.gd` to refresh `art/figures/bounds.json` (a test checks it)
 - Run all tests: `godot --headless -s addons/gut/gut_cmdln.gd -gexit` (settings in `.gutconfig.json`)
 - Run one test file: add `-gselect=test_project_setup.gd`
 - Fresh checkout: run `godot --headless --import` once first, so class names are registered. The session-start hook does this in cloud sessions.
@@ -96,7 +97,7 @@ Phase 3's details are in `docs/plans/rebuild-phase3-fight-sandbox.md` (sections 
   - A seek or restart builds a fresh sim and runs it to that tick.
   - Units are drawn between their last two ticks (`drawn_position`, `drawn_time`).
   `test_every_encounter_plays.gd` checks that each encounter played on the screen is exactly the fight `CombatSim.run` gives.
-- **The board** (`ArenaView`): the plane mapped to pixels with the heroes at the bottom; one `UnitToken` per unit (its bars and status tags read from `UnitState` each frame); `FightFx` above them for what the log says happened (shots, swipes, numbers, areas, slides, ghosts, rings), plus the ground layer (areas, Rift Collapse, target and Engage lines). Effects run on the fight's clock; a batch of more than 60 entries (a skip) clears them instead. The view resolves clicks itself (`token_at`).
+- **The board** (`ArenaView`): the plane mapped to pixels with the heroes at the bottom; one `UnitToken` per unit, drawn as its figure (`FigureArt`: `art/figures/`, a hero's base form for now) standing on its point, nearer units in front, with its bars over its head and status tags read from `UnitState` each frame; `FightFx` above them for what the log says happened (shots, swipes, numbers, areas, slides, ghosts, rings), plus the ground layer (areas, Rift Collapse, target and Engage lines). Effects run on the fight's clock; a batch of more than 60 entries (a skip) clears them instead. The view resolves clicks itself (`token_at`).
 - **Placement:** heroes are dragged onto hexes; what's legal comes only from the sim (`Encounters.setup` and `FightSetup.validate`, through `PracticeSession.errors`). The board never draws an enemy's reach (Decision 5).
 - **Beside the board:**
   - the controls, and the result when the fight ends (outcome, seed, heroes, chart, Rematch, Watch again);

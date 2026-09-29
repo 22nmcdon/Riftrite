@@ -175,6 +175,23 @@ static func heading(text: String, size: int = 28, color: Color = EMBER) -> Label
 	return node
 
 
+## A dark see-through plate holding `child`, so text reads over the bright
+## backdrop.
+static func plate(child: Control) -> PanelContainer:
+	var panel := PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(INK_900, 0.72)
+	style.set_corner_radius_all(8)
+	style.content_margin_left = 14.0
+	style.content_margin_right = 14.0
+	style.content_margin_top = 6.0
+	style.content_margin_bottom = 6.0
+	panel.add_theme_stylebox_override("panel", style)
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(child)
+	return panel
+
+
 ## An icon and a label side by side (a stat, gold, keys).
 static func icon_label(icon_name: String, text: String, size: int = 16, color: Color = TEXT, icon_size: int = 0) -> HBoxContainer:
 	var line := HBoxContainer.new()

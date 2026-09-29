@@ -23,11 +23,18 @@ func heading(text: String) -> void:
 	add_child(UiStyle.heading(text, 30))
 
 
-## A dim line under a heading saying what to do here.
+## A dim line under a heading saying what to do here (on a plate over the
+## backdrop, whose sky is bright).
 func hint(text: String) -> void:
-	var line: Label = UiStyle.label(text, 16, UiStyle.TEXT_DIM)
-	line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	add_child(line)
+	var line: Label = UiStyle.label(text, 16, UiStyle.PARCHMENT_300 if shows_backdrop else UiStyle.TEXT_DIM)
+	if not shows_backdrop:
+		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		add_child(line)
+		return
+	# A plate sized to its line (a wrapping label would shrink it to nothing).
+	var holder: PanelContainer = UiStyle.plate(line)
+	holder.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	add_child(holder)
 
 
 ## A centered panel of chrome art (UiStyle.chrome) holding a column; returns

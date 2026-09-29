@@ -9,11 +9,12 @@ extends Control
 ##     screen (the sim's row 0 is the heroes' back row). A flat-top hex's
 ##     corners reach past the plane's edge at the sides, so the drawn area is
 ##     that much wider than the plane (`drawn_rect`), and room is kept over
-##     it for the top row's bars (`TOP_ROOM_HEXES`).
+##     it for the top row's figures and bars (`TOP_ROOM_HEXES`).
 ##   - Placement mode shades each hex by zone (yours, no one's, theirs); fight
 ##     mode keeps the hexes faint, since distances still count in hexes.
-##   - Hexes and rocks are drawn with `_draw()`; units are `UnitToken` nodes
-##     (for hover and tweening later).
+##   - Hexes and rocks are drawn with `_draw()`; units are `UnitToken` nodes,
+##     each a figure standing on its point, drawn in order down the screen
+##     so the nearer stand in front (`_stack_tokens`).
 ##   - The fight: sync_fight() moves the tokens to where a FightPlayer draws
 ##     each unit (with its bars and statuses), adds a token for each summon
 ##     as it joins, and hides the fallen (section 4). The log entries the
@@ -37,8 +38,8 @@ signal ground_clicked
 enum Mode { PLACEMENT, FIGHT }
 
 const MARGIN: float = 12.0
-## Extra room over the board, in hexes, for the top row's bars.
-const TOP_ROOM_HEXES: float = 0.35
+## Extra room over the board, in hexes, for the top row's figures and bars.
+const TOP_ROOM_HEXES: float = 0.6
 ## A flat-top hex's corner radius on the plane: rows are HEX apart, so the
 ## corners are HEX / sqrt(3) from the center.
 const HEX_CORNER: float = HexGrid.HEX / 1.7320508
@@ -85,7 +86,7 @@ func show_setup(setup: FightSetup, content: ContentDb) -> void:
 	tokens.clear()
 	fx.clear()
 	for unit: UnitSetup in setup.units():
-		var token: UnitToken = UnitToken.make(unit.id, label_for(unit.def, content), unit.side, content.tuning.unit_radius, unit.def.has_trait("flying"))
+		var token: UnitToken = UnitToken.make(unit.id, label_for(unit.def, content), unit.side, content.tuning.unit_radius, unit.def.has_trait("flying"), figure_for(unit.def, unit.side))
 		token.plane_pos = grid.center(unit.col, unit.row)
 		_add_token(token)
 	_layout()
@@ -97,12 +98,14 @@ func sync_fight(player: FightPlayer) -> void:
 	for unit: UnitState in player.sim.units:
 		var unit_token: UnitToken = token(unit.id)
 		if unit_token == null:
-			unit_token = UnitToken.make(unit.id, label_for(unit.def, player.content), unit.side, unit.radius, unit.flying)
+			unit_token = UnitToken.make(unit.id, label_for(unit.def, player.content), unit.side, unit.radius, unit.flying, figure_for(unit.def, unit.side))
 			_add_token(unit_token)
 		unit_token.plane_pos = unit.pos
 		unit_token.visible = unit.alive
-		unit_token.place_at(self, fx.moved_position(unit.id, player.drawn_position(unit), player.drawn_time()))
+		unit_token.facing_left = UnitToken.faces_left(unit, unit_token.facing_left)
 		unit_token.show_state(unit, player.sim.tick)
+		unit_token.place_at(self, fx.moved_position(unit.id, player.drawn_position(unit), player.drawn_time()))
+	_stack_tokens()
 	fx.update(player)
 	queue_redraw()
 
@@ -145,15 +148,39 @@ func _gui_input(event: InputEvent) -> void:
 		ground_clicked.emit()
 
 
-## The shown token whose rect's circle covers a pixel (at least
-## UnitToken.HIT_PX round, so small units are easy to click; the one drawn
-## on top), or null.
+## The shown token whose rect covers a pixel (its figure, and at least
+## UnitToken.HIT_PX around its point, so small units are easy to click; the
+## one drawn in front), or null.
 func token_at(pixel: Vector2) -> UnitToken:
-	for i: int in range(tokens.size() - 1, -1, -1):
-		var found: UnitToken = tokens[i]
-		if found.visible and found.center().distance_to(pixel) <= found.size.x / 2.0:
+	var children: Array[Node] = get_children()
+	for i: int in range(children.size() - 1, -1, -1):
+		var found: UnitToken = children[i] as UnitToken
+		if found != null and found.visible and not found.is_queued_for_deletion() and found.get_rect().has_point(pixel):
 			return found
 	return null
+
+
+## Keeps the tokens in order down the screen, so a unit nearer the bottom
+## (nearer the viewer) is drawn over the ones behind it; ties keep the
+## fight's order.
+func _stack_tokens() -> void:
+	var order: Array[UnitToken] = tokens.duplicate()
+	var rank: Dictionary[UnitToken, int] = {}
+	for i: int in tokens.size():
+		rank[tokens[i]] = i
+	order.sort_custom(func(a: UnitToken, b: UnitToken) -> bool:
+		var a_y: float = a.center().y
+		var b_y: float = b.center().y
+		return a_y < b_y if a_y != b_y else rank[a] < rank[b])
+	# The tokens trade places among the children's slots they already hold
+	# (the view has other children: the effects, banners, and the popup).
+	var slots: Array[int] = []
+	for unit_token: UnitToken in tokens:
+		slots.append(unit_token.get_index())
+	slots.sort()
+	for i: int in order.size():
+		if order[i].get_index() != slots[i]:
+			move_child(order[i], slots[i])
 
 
 func token(unit_id: String) -> UnitToken:
@@ -161,6 +188,12 @@ func token(unit_id: String) -> UnitToken:
 		if found.unit_id == unit_id:
 			return found
 	return null
+
+
+## A unit's figure (FigureArt): a hero's base form (paths come in phase 4),
+## or its enemy's.
+static func figure_for(kit: UnitDef, team: EffectSource.Team) -> String:
+	return FigureArt.key_for(kit.id, team == EffectSource.Team.HEROES)
 
 
 ## A token's short label: a hero's name (its id), or the last word of an
@@ -255,6 +288,7 @@ func _layout() -> void:
 	_origin = (size - drawn) / 2.0 + Vector2(board.position.x - drawn_rect.position.x, drawn_rect.end.y - board.end.y + TOP_ROOM_HEXES * HexGrid.HEX) * scale_px
 	for unit_token: UnitToken in tokens:
 		unit_token.place(self)
+	_stack_tokens()
 	queue_redraw()
 
 

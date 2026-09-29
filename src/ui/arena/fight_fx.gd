@@ -53,6 +53,8 @@ const TAUNT_LINE := Color(0.88, 0.44, 0.23, 0.8)
 const ENGAGE_LINK := UiStyle.BRASS_300
 
 enum Kind { SHOT, SWIPE, NUMBER, POPUP, AREA, LANDED, GHOST, PULSE }
+## Where on a unit an effect is drawn (_lift).
+enum Lift { BODY, OVER_BARS }
 
 
 ## One effect on the board.
@@ -256,6 +258,15 @@ func _unit_point(unit_id: String, fallback: Vector2) -> Vector2:
 	return _player.drawn_position(unit) if unit != null else fallback
 
 
+## How far above a unit's point its body, or the top of its bars, is drawn
+## (its token's figure), in pixels; nothing if it has no token.
+func _lift(unit_id: String, lift: Lift) -> Vector2:
+	var unit_token: UnitToken = _view.token(unit_id)
+	if unit_token == null:
+		return Vector2.ZERO
+	return unit_token.body_offset() if lift == Lift.BODY else unit_token.over_bars_offset()
+
+
 func _draw() -> void:
 	if _player == null:
 		return
@@ -274,19 +285,20 @@ func _draw() -> void:
 		match fx.kind:
 			Kind.SHOT:
 				var at: Vector2 = fx.from.lerp(_unit_point(fx.unit_id, fx.from), t)
-				draw_circle(_view.to_pixel_f(at), maxf(hex * 0.05, 3.0), fx.color)
+				draw_circle(_view.to_pixel_f(at) + _lift(fx.unit_id, Lift.BODY), maxf(hex * 0.05, 3.0), fx.color)
 			Kind.SWIPE:
-				var target: Vector2 = _view.to_pixel_f(_unit_point(fx.unit_id, fx.from))
+				var lift: Vector2 = _lift(fx.unit_id, Lift.BODY)
+				var target: Vector2 = _view.to_pixel_f(_unit_point(fx.unit_id, fx.from)) + lift
 				var color: Color = fx.color
 				color.a = 1.0 - t
-				draw_line(_view.to_pixel_f(fx.from), target, color, maxf(hex * 0.04, 2.0), true)
+				draw_line(_view.to_pixel_f(fx.from) + lift, target, color, maxf(hex * 0.04, 2.0), true)
 			Kind.NUMBER:
 				var slot: int = stacked.get(fx.unit_id, 0)
 				stacked[fx.unit_id] = slot + 1
-				var base: Vector2 = _view.to_pixel_f(_unit_point(fx.unit_id, fx.from))
+				var base: Vector2 = _view.to_pixel_f(_unit_point(fx.unit_id, fx.from)) + _lift(fx.unit_id, Lift.OVER_BARS)
 				var size: int = int(hex * (0.26 if fx.big else 0.2))
 				# Numbers on the same unit spread sideways, three abreast.
-				var point: Vector2 = base + Vector2(hex * 0.3 + (slot % 3) * size * 1.4, -hex * (0.3 + 0.35 * t) - (slot / 3) * size * 1.05)
+				var point: Vector2 = base + Vector2(hex * 0.3 + (slot % 3) * size * 1.4, -hex * 0.35 * t - (slot / 3) * size * 1.05)
 				var color: Color = fx.color
 				color.a = 1.0 - t * t
 				draw_string_outline(font, point, fx.text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 4, Color(0, 0, 0, color.a))
@@ -300,10 +312,10 @@ func _draw() -> void:
 				color.a = 1.0 - t
 				draw_arc(_view.to_pixel_f(fx.from), hex * (0.4 + 0.4 * t), 0.0, TAU, 32, color, 3.0, true)
 			Kind.POPUP:
-				var base: Vector2 = _view.to_pixel_f(_unit_point(fx.unit_id, fx.from))
+				var base: Vector2 = _view.to_pixel_f(_unit_point(fx.unit_id, fx.from)) + _lift(fx.unit_id, Lift.OVER_BARS)
 				var size: int = int(hex * (0.26 if fx.big else 0.2))
 				var width: float = font.get_string_size(fx.text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
-				var point: Vector2 = base + Vector2(-width / 2.0, -hex * (0.75 + 0.15 * t))
+				var point: Vector2 = base + Vector2(-width / 2.0, -hex * (0.45 + 0.15 * t))
 				var color: Color = fx.color
 				color.a = 1.0 - t * t
 				draw_string_outline(font, point, fx.text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 5, Color(0, 0, 0, color.a))

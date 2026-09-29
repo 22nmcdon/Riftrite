@@ -1,0 +1,23 @@
+{
+	"enemies/ashling": [79,323,142,188],
+	"enemies/bog_lurker": [60,230,221,281],
+	"enemies/cairn_guardian": [38,272,256,239],
+	"enemies/cinder_moth": [36,238,229,271],
+	"enemies/gloam_witch": [74,88,187,423],
+	"enemies/hollow_archer": [80,116,220,395],
+	"enemies/rift_hound": [42,330,254,181],
+	"enemies/rift_pup": [76,364,177,147],
+	"enemies/rift_worn_sentinel": [50,103,214,408],
+	"heroes/brannoc_base": [58,113,233,399],
+	"heroes/brannoc_hearthwall": [28,84,244,431],
+	"heroes/brannoc_ironbrand": [54,81,246,431],
+	"heroes/brannoc_last_watch": [36,59,256,453],
+	"heroes/maren_base": [68,94,196,418],
+	"heroes/maren_deadeye": [45,50,255,470],
+	"heroes/maren_trapper": [54,146,195,366],
+	"heroes/maren_volley": [60,115,210,397],
+	"heroes/vell_base": [74,106,177,406],
+	"heroes/vell_lanternbearer": [0,69,300,443],
+	"heroes/vell_vigil_keeper": [70,106,222,406],
+	"heroes/vell_wardweaver": [64,106,172,406]
+}

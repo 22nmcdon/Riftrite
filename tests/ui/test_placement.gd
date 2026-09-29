@@ -92,8 +92,8 @@ func test_a_legal_drop_moves_the_hero_and_its_token() -> void:
 func test_a_drop_on_a_hero_swaps_them() -> void:
 	var screen: ArenaScreen = await _screen()
 	var brannoc: UnitToken = screen.view.token("brannoc")
-	brannoc._drop_data(Vector2(brannoc.radius_px, brannoc.radius_px), {"hero": "vell"})
-	assert_eq([screen.formation["vell"], screen.formation["brannoc"]], [Vector2i(3, 2), Vector2i(4, 0)], "a drop on a token counts for the hex under it")
+	brannoc._drop_data(Vector2(brannoc.size.x / 2.0, 1.0), {"hero": "vell"})
+	assert_eq([screen.formation["vell"], screen.formation["brannoc"]], [Vector2i(3, 2), Vector2i(4, 0)], "a drop on a token, even on its head, counts for the hex it stands on")
 
 
 func test_an_illegal_drop_is_refused_and_its_hex_flashes() -> void:

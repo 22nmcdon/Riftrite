@@ -1,19 +1,23 @@
 class_name UnitToken
 extends Control
 ## One unit on the board (docs/plans/rebuild-phase3-fight-sandbox.md, sections
-## 2 and 8): a placeholder circle of the unit's own radius, warm for heroes
-## and cold for enemies, with its short name under it. A flier sits over a
-## shadow. Units are small (0.2 hex wide since playtest gate 1), so the
-## circle is never drawn under MIN_BODY_PX, the bars keep a fixed width, and
-## the token's own rect (what hovers, clicks, and drags) is at least
-## HIT_PX from its center to its edge.
+## 2 and 8): its figure (FigureArt), standing where the unit is on the plane,
+## over a small ring in its side's color, with its short name under it.
+## Figures face right; a unit faces the side its target is on (enemies
+## face left until they have one). A kit without art is drawn as a circle
+## of the unit's own radius instead, warm for heroes and cold for enemies.
+## A figure is FIGURE_HEXES tall (its whole canvas), so a pup is small and
+## a sentinel big. Units are small on the plane (0.2 hex wide since
+## playtest gate 1), so the ring is never drawn under MIN_BODY_PX, the bars
+## keep a fixed width, and the token's own rect (what hovers, clicks, and
+## drags) covers the figure and at least HIT_PX around the unit's point.
 ## `ArenaView` places it. In a fight, show_state() gives it the unit's bars
-## (section 5): HP with any Shield after it, mana under that (only for a unit
-## with a mana signature), a cast bar under the circle while it casts, and
-## a tag per status (with stacks for damage over time). A stealthed unit is
-## drawn see-through.
+## (section 5): HP with any Shield after it and mana under that (only for a
+## unit with a mana signature), over the figure's head; a cast bar under
+## its feet while it casts; and a tag per status (with stacks for damage
+## over time) under its name. A stealthed unit is drawn see-through.
 ## While placing, a hero's token can be dragged (drops on a token go to the
-## view, as if on the hex under it).
+## view, as if on the hex it stands on).
 
 const HERO_FILL := UiStyle.BRASS_500
 const HERO_TEXT := UiStyle.INK_900
@@ -40,8 +44,13 @@ const STATUS_COLORS: Dictionary = {
 }
 ## How see-through a stealthed unit is drawn.
 const STEALTH_ALPHA: float = 0.4
-## How far above its shadow a flier is drawn, in its own radii.
+## How far above its shadow a flier without art is drawn, in its own radii
+## (a flier's figure is drawn in the air already).
 const FLIGHT_LIFT: float = 0.35
+## A figure's canvas height, in hexes.
+const FIGURE_HEXES: float = 1.1
+## The ring under a figure's feet: how much flatter than wide it is.
+const RING_FLAT: float = 0.4
 ## The smallest circle drawn, the smallest half-width to hover or grab, and
 ## the bars' and text's sizes, in pixels.
 const MIN_BODY_PX: float = 8.0
@@ -59,8 +68,17 @@ var side: EffectSource.Team
 var radius: int
 var flying: bool = false
 var plane_pos: Vector2i
-## Its radius on screen (set by place()).
+## Its figure (FigureArt's key; null texture without art), what the figure
+## covers of its canvas, and which way it faces.
+var art_key: String = ""
+var figure: Texture2D = null
+var figure_bounds: Rect2 = Rect2(Vector2.ZERO, FigureArt.CANVAS)
+var facing_left: bool = false
+## Its radius on screen, the figure's pixels per canvas pixel, and where
+## the unit's point is in the token's rect (set by place()).
 var radius_px: float = 0.0
+var figure_scale: float = 0.0
+var feet: Vector2 = Vector2.ZERO
 ## In a fight (show_state): shares of the bars, 0 to 1; mana and cast are -1
 ## when there's no bar to show.
 var in_fight: bool = false
@@ -73,15 +91,20 @@ var status_tags: Array[Array] = []
 var _view: ArenaView = null
 
 
-static func make(id: String, text: String, team: EffectSource.Team, unit_radius: int, flies: bool = false) -> UnitToken:
+static func make(id: String, text: String, team: EffectSource.Team, unit_radius: int, flies: bool = false, figure_key: String = "") -> UnitToken:
 	var token := UnitToken.new()
 	token.unit_id = id
 	token.label_text = text
 	token.side = team
 	token.radius = unit_radius
 	token.flying = flies
+	token.art_key = figure_key
+	token.figure = FigureArt.texture(figure_key)
+	token.figure_bounds = FigureArt.bounds(figure_key)
+	token.facing_left = team != EffectSource.Team.HEROES
 	token.name = id.replace("#", "_")
 	token.mouse_filter = Control.MOUSE_FILTER_PASS
+	token.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	return token
 
 
@@ -89,9 +112,21 @@ func is_hero() -> bool:
 	return side == EffectSource.Team.HEROES
 
 
-## The screen point its circle is centered on.
+func has_figure() -> bool:
+	return figure != null
+
+
+## The screen point the unit stands on (its point on the plane).
 func center() -> Vector2:
-	return position + size / 2.0
+	return position + feet
+
+
+## Which way a unit faces: toward its target's side, or as it was when its
+## target is (nearly) straight ahead or it has none.
+static func faces_left(unit: UnitState, was_left: bool) -> bool:
+	if unit.target == null or absi(unit.target.pos.x - unit.pos.x) < HexGrid.HEX / 10:
+		return was_left
+	return unit.target.pos.x < unit.pos.x
 
 
 ## The radius its circle is drawn at.
@@ -113,10 +148,46 @@ func place_at(view: ArenaView, point: Vector2) -> void:
 	_view = view
 	drawn_at = point
 	radius_px = radius * view.scale_px
+	figure_scale = FIGURE_HEXES * view.hex_px() / FigureArt.CANVAS.y
+	var at: Vector2 = view.to_pixel_f(point)
 	var half: float = maxf(radius_px, HIT_PX)
-	size = Vector2(half, half) * 2.0
-	position = view.to_pixel_f(point) - Vector2(half, half)
+	var rect := Rect2(at - Vector2(half, half), Vector2(half, half) * 2.0)
+	if has_figure():
+		var drawn: Rect2 = figure_rect()
+		rect = rect.merge(Rect2(drawn.position + at, drawn.size))
+	position = rect.position
+	size = rect.size
+	feet = at - rect.position
 	queue_redraw()
+
+
+## What the figure covers, relative to the unit's point.
+func figure_rect() -> Rect2:
+	var left: float = FigureArt.FEET.x - figure_bounds.end.x if facing_left else figure_bounds.position.x - FigureArt.FEET.x
+	return Rect2(Vector2(left, figure_bounds.position.y - FigureArt.FEET.y) * figure_scale, figure_bounds.size * figure_scale)
+
+
+## Where the top of its head is (the top of the circle without art),
+## relative to the unit's point.
+func head_offset() -> Vector2:
+	if has_figure():
+		return Vector2(0.0, figure_rect().position.y)
+	return Vector2(0.0, -body_px() * ((1.0 + FLIGHT_LIFT) if flying else 1.0))
+
+
+## The middle of its body, relative to the unit's point (where shots and
+## swipes land).
+func body_offset() -> Vector2:
+	if has_figure():
+		var drawn: Rect2 = figure_rect()
+		return Vector2(0.0, (drawn.position.y + minf(drawn.end.y, 0.0)) / 2.0)
+	return Vector2(0.0, -body_px() * FLIGHT_LIFT if flying else 0.0)
+
+
+## Where the top of its bars is, relative to the unit's point (numbers and
+## names pop up over it).
+func over_bars_offset() -> Vector2:
+	return head_offset() - Vector2(0.0, 3.0 + BAR_HEIGHT * (2.0 if mana_share >= 0.0 else 1.0) + 1.0)
 
 
 ## Reads the unit's bars and statuses (a fight's `tick` for the cast bar).
@@ -155,52 +226,70 @@ func _get_drag_data(_at_position: Vector2) -> Variant:
 
 ## A see-through copy of the token under the pointer while it's dragged.
 func _set_preview() -> void:
-	var preview := UnitToken.make(unit_id, label_text, side, radius, flying)
+	var preview := UnitToken.make(unit_id, label_text, side, radius, flying, art_key)
 	preview.radius_px = radius_px
+	preview.figure_scale = figure_scale
+	preview.facing_left = facing_left
 	preview.size = size
+	preview.feet = feet
 	preview.modulate.a = 0.8
 	var holder := Control.new()
 	holder.add_child(preview)
-	preview.position = -size / 2.0
+	preview.position = -feet
 	set_drag_preview(holder)
 
 
-func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
-	return _view != null and _view._can_drop_data(at_position + position, data)
+func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
+	return _view != null and _view._can_drop_data(center(), data)
 
 
-func _drop_data(at_position: Vector2, data: Variant) -> void:
-	_view._drop_data(at_position + position, data)
+## A drop anywhere on the token (its figure reaches into the hex behind)
+## counts for the hex it stands on.
+func _drop_data(_at_position: Vector2, data: Variant) -> void:
+	_view._drop_data(center(), data)
 
 
 func _draw() -> void:
-	var middle: Vector2 = size / 2.0
+	var below: float
 	var body_radius: float = body_px()
-	var body: Vector2 = middle
-	if flying:
-		draw_circle(middle + Vector2(0.0, body_radius * 0.15), body_radius * 0.8, SHADOW)
-		body -= Vector2(0.0, body_radius * FLIGHT_LIFT)
-	draw_circle(body, body_radius, HERO_FILL if is_hero() else ENEMY_FILL)
-	draw_arc(body, body_radius, 0.0, TAU, 32, LINE, 1.5, true)
+	if has_figure():
+		# The ring under its feet, then the figure standing on it.
+		var ring_radius: float = maxf(body_radius, MIN_BODY_PX * 1.25)
+		draw_set_transform(feet, 0.0, Vector2(1.0, RING_FLAT))
+		var ring_fill: Color = HERO_FILL if is_hero() else ENEMY_FILL
+		ring_fill.a = 0.45
+		draw_circle(Vector2.ZERO, ring_radius, ring_fill)
+		draw_arc(Vector2.ZERO, ring_radius, 0.0, TAU, 32, HERO_FILL if is_hero() else ENEMY_FILL, 2.0 / RING_FLAT, true)
+		draw_set_transform(feet, 0.0, Vector2(-figure_scale if facing_left else figure_scale, figure_scale))
+		draw_texture_rect(figure, Rect2(-FigureArt.FEET, FigureArt.CANVAS), false)
+		draw_set_transform_matrix(Transform2D.IDENTITY)
+		below = feet.y + ring_radius * RING_FLAT + 2.0
+	else:
+		var body: Vector2 = feet
+		if flying:
+			draw_circle(feet + Vector2(0.0, body_radius * 0.15), body_radius * 0.8, SHADOW)
+			body -= Vector2(0.0, body_radius * FLIGHT_LIFT)
+		draw_circle(body, body_radius, HERO_FILL if is_hero() else ENEMY_FILL)
+		draw_arc(body, body_radius, 0.0, TAU, 32, LINE, 1.5, true)
+		below = body.y + body_radius + 2.0
 	var font: Font = get_theme_default_font()
-	var below: float = body.y + body_radius + 2.0
 	if in_fight and cast_share >= 0.0:
-		var left: float = body.x - BAR_WIDTH / 2.0
+		var left: float = feet.x - BAR_WIDTH / 2.0
 		draw_rect(Rect2(left, below, BAR_WIDTH, BAR_HEIGHT * 0.75), BAR_BACK)
 		draw_rect(Rect2(left, below, BAR_WIDTH * cast_share, BAR_HEIGHT * 0.75), CAST)
 		below += BAR_HEIGHT + 1.0
 	var width: float = font.get_string_size(label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE).x
-	var baseline: Vector2 = Vector2(body.x - width / 2.0, below + font.get_ascent(LABEL_SIZE))
+	var baseline: Vector2 = Vector2(feet.x - width / 2.0, below + font.get_ascent(LABEL_SIZE))
 	draw_string_outline(font, baseline, label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE, 4, LABEL_OUTLINE)
 	draw_string(font, baseline, label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE, UiStyle.BRASS_300 if is_hero() else UiStyle.RIFT_300)
 	below = baseline.y + font.get_descent(LABEL_SIZE) + 2.0
 	if in_fight:
-		_draw_bars(body, body_radius, below, font)
+		_draw_bars(below, font)
 
 
-func _draw_bars(body: Vector2, body_radius: float, below: float, font: Font) -> void:
-	var left: float = body.x - BAR_WIDTH / 2.0
-	var y: float = body.y - body_radius - 3.0 - BAR_HEIGHT * (2.0 if mana_share >= 0.0 else 1.0) - (1.0 if mana_share >= 0.0 else 0.0)
+func _draw_bars(below: float, font: Font) -> void:
+	var left: float = feet.x - BAR_WIDTH / 2.0
+	var y: float = feet.y + over_bars_offset().y + 1.0
 	draw_rect(Rect2(left, y, BAR_WIDTH, BAR_HEIGHT), BAR_BACK)
 	draw_rect(Rect2(left, y, BAR_WIDTH * clampf(hp_share, 0.0, 1.0), BAR_HEIGHT), HERO_HP if is_hero() else ENEMY_HP)
 	if shield_share > 0.0:

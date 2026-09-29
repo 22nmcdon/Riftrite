@@ -205,10 +205,10 @@ func _place_popup() -> void:
 		return
 	hero_popup.reset_size()
 	var hero_token: UnitToken = view.token(hero_popup.get_meta("unit_id"))
-	var half: float = hero_token.size.x / 2.0
-	var at: Vector2 = hero_token.center() + Vector2(half + 12.0, -half)
+	var beside: Rect2 = hero_token.get_rect()
+	var at: Vector2 = Vector2(beside.end.x + 12.0, beside.position.y)
 	if at.x + hero_popup.size.x > view.size.x:
-		at.x = hero_token.center().x - half - 12.0 - hero_popup.size.x
+		at.x = beside.position.x - 12.0 - hero_popup.size.x
 	at.y = clampf(at.y, 0.0, maxf(view.size.y - hero_popup.size.y, 0.0))
 	hero_popup.position = at
 

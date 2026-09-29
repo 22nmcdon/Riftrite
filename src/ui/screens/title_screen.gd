@@ -18,17 +18,17 @@ func build() -> void:
 	logo.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.5))
 	logo.add_theme_constant_override("shadow_offset_y", 6)
 	add_child(logo)
-	var tagline: Label = UiStyle.label("A guild of heroes, and the rifts below the Hollow.", 22, UiStyle.PARCHMENT_300)
-	tagline.add_theme_color_override("font_outline_color", UiStyle.INK_900)
-	tagline.add_theme_constant_override("outline_size", 6)
-	add_child(tagline)
+	# The words go on a plate: the backdrop's sky is bright.
+	var words := VBoxContainer.new()
+	words.add_theme_constant_override("separation", 10)
+	words.add_child(UiStyle.label("A guild of heroes, and the rifts below the Hollow.", 22, UiStyle.PARCHMENT_100))
+	words.add_child(UiStyle.label(REBUILD_NOTE, 18, UiStyle.PARCHMENT_300))
+	for line: Control in words.get_children():
+		(line as Label).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	add_child(UiStyle.plate(words))
 	var gap := Control.new()
-	gap.custom_minimum_size = Vector2(0, 24)
+	gap.custom_minimum_size = Vector2(0, 6)
 	add_child(gap)
-	var note: Label = UiStyle.label(REBUILD_NOTE, 18, UiStyle.TEXT_DIM)
-	note.add_theme_color_override("font_outline_color", UiStyle.INK_900)
-	note.add_theme_constant_override("outline_size", 6)
-	add_child(note)
 	add_child(primary_button("Practice", func() -> void: practice_requested.emit()))
 	add_child(UiStyle.button("Quit", _quit))
 	for child: Control in get_children():
