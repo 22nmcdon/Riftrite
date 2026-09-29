@@ -1,6 +1,6 @@
 # Rebuild phase 3b: tactics in Practice (build plan)
 
-Status: **proposed (2026-09-29); its questions answered the same day (Decisions); waiting on the go-ahead to build.** Phase 3b of `docs/plans/rebuild-build-order.md`, before paths. Design source: part 6, `rebuild-between-fights.md` (tactics are one of the three kinds of loadout things, and the playtester's answers put the first three in Practice early). It builds on the arena sim (phase 1), the content (phase 2), and Practice (phase 3, now landscape).
+Status: **built (2026-09-29); waiting on its playtest** (does a tactic change how a fight plays, readably?). Its questions were answered the same day (Decisions); each section's "Built in step N" notes say what was built. Phase 3b of `docs/plans/rebuild-build-order.md`, before paths. Design source: part 6, `rebuild-between-fights.md` (tactics are one of the three kinds of loadout things, and the playtester's answers put the first three in Practice early). It builds on the arena sim (phase 1), the content (phase 2), and Practice (phase 3, now landscape).
 
 **Goal:** give the player the first way to shape what heroes do in a fight they can't control. Before a Practice fight, each hero can take **one tactic** from three: **Casters first**, **Hold your ground**, and **Wait to heal**. The sim follows it, the log says so, and the board shows it.
 
@@ -224,6 +224,12 @@ A tactic is a JSON entry in `data/tactics.json`, loaded by `ContentDb` as a `Tac
 3. **Practice:** choosing in the hero popup, the tag, remembering, and the board's form for TACTIC.
 4. **Sim runner:** the tactics report, and a first read of what it says.
 5. **Docs** (CLAUDE.md, this plan's "Built in step N" notes), screenshots, and a playtest build for the gate.
+
+**Built in step 5 (2026-09-29):**
+- CLAUDE.md: phase 3b is built.
+- `tools/ci/HOW-TO-PLAY.txt`: tactics, the landscape board (your side is on the left), the log popup, and what the playtest asks.
+- The screenshots already show choosing a tactic (step 3).
+- A playtest build carries it all.
 
 ## Decisions (2026-09-29, the playtester's answers)
 
