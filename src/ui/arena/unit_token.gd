@@ -67,6 +67,8 @@ var unit_id: String
 var label_text: String
 ## While placing: the hero's tactic's name ("": none).
 var tactic_label: String = ""
+## While placing: the hero's path, as ArenaView.path_tag names it ("": none).
+var path_label: String = ""
 var side: EffectSource.Team
 ## Its radius on the plane, and where it stands there.
 var radius: int
@@ -279,11 +281,16 @@ func _draw() -> void:
 	draw_string_outline(font, baseline, label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE, 4, LABEL_OUTLINE)
 	draw_string(font, baseline, label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE, UiStyle.BRASS_300 if is_hero() else UiStyle.RIFT_300)
 	below = baseline.y + font.get_descent(LABEL_SIZE) + 2.0
-	if not in_fight and not tactic_label.is_empty():
-		var tag_width: float = font.get_string_size(tactic_label, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_SIZE + 1).x
-		var tag_at := Vector2(feet.x - tag_width / 2.0, below + font.get_ascent(TAG_SIZE + 1))
-		draw_string_outline(font, tag_at, tactic_label, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_SIZE + 1, 4, LABEL_OUTLINE)
-		draw_string(font, tag_at, tactic_label, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_SIZE + 1, UiStyle.PARCHMENT_300)
+	if not in_fight:
+		for tag: Array in [[path_label, UiStyle.FROST_400], [tactic_label, UiStyle.PARCHMENT_300]]:
+			var text: String = tag[0]
+			if text.is_empty():
+				continue
+			var tag_width: float = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_SIZE + 1).x
+			var tag_at := Vector2(feet.x - tag_width / 2.0, below + font.get_ascent(TAG_SIZE + 1))
+			draw_string_outline(font, tag_at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_SIZE + 1, 4, LABEL_OUTLINE)
+			draw_string(font, tag_at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_SIZE + 1, tag[1])
+			below = tag_at.y + font.get_descent(TAG_SIZE + 1) + 1.0
 	if in_fight:
 		_draw_bars(below, font)
 

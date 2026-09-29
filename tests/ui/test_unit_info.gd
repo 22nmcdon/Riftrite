@@ -330,12 +330,24 @@ func test_hovering_an_enemy_shows_its_abilities() -> void:
 	assert_eq(screen.enemy_panel.showing, "", "placing again clears it")
 
 
-func test_clicking_a_hero_opens_the_popup_only_while_the_fight_isnt_playing() -> void:
+func test_clicking_a_hero_opens_the_panel_while_placing_and_the_popup_in_a_fight() -> void:
 	var screen: ArenaScreen = await _screen()
 	assert_false(screen.hero_popup.visible)
 	_click(screen, "vell")
 	await wait_process_frames(2)
-	assert_true(screen.hero_popup.visible, "in placement")
+	assert_true(screen.hero_panel.visible, "the panel in placement")
+	assert_false(screen.hero_popup.visible)
+	assert_eq(screen.hero_panel.showing, "vell")
+	screen.hero_panel.close()
+	_click(screen, "brannoc")
+	screen.hero_panel.close()
+	screen._fight()
+	screen._process(0.5)
+	screen.toggle_pause()
+	_click(screen, "vell")
+	await wait_process_frames(2)
+	assert_true(screen.hero_popup.visible, "the popup, paused in a fight")
+	assert_false(screen.hero_panel.visible)
 	assert_eq(screen.hero_popup.showing, "vell")
 	assert_eq([screen.hero_popup.title.text, screen.hero_popup.role.text, screen.hero_popup.stats.text],
 		["Sister Vell", "The Mender · Support", "HP 300 · ATK 6 · MGK 20 · DEF 10 · Speed 2 · Range 3"])
@@ -343,7 +355,6 @@ func test_clicking_a_hero_opens_the_popup_only_while_the_fight_isnt_playing() ->
 	for line: UnitInfo.Line in UnitInfo.lines(_content.heroes["vell"].kit, "Vell", _content):
 		assert_string_contains(text, line.text)
 		assert_string_contains(text, line.numbers)
-	assert_false(screen.hero_popup.live.visible, "no fight, no live numbers")
 	var popup: HeroPopup = screen.hero_popup
 	assert_eq([popup.live.get_index() + 1, popup.tactic_box.get_index() - 1, popup.recent.get_index() - 2], [popup.abilities.get_index(), popup.abilities.get_index(), popup.abilities.get_index()],
 		"the lines between the numbers now and the tactic, then the log")
@@ -360,8 +371,9 @@ func test_clicking_a_hero_opens_the_popup_only_while_the_fight_isnt_playing() ->
 	_click(screen, "rift_hound")
 	assert_false(screen.hero_popup.visible, "clicking an enemy closes it")
 	_click(screen, "brannoc")
-	screen._fight()
-	assert_false(screen.hero_popup.visible, "the fight starting closes it")
+	screen.toggle_pause()
+	screen._process(0.1)
+	assert_false(screen.hero_popup.visible, "the fight playing on closes it")
 	_click(screen, "maren")
 	assert_false(screen.hero_popup.visible, "while the fight plays, a click on a hero only filters the log")
 	assert_eq(screen.log_panel.only_unit, "maren")
@@ -397,6 +409,8 @@ func test_clicking_a_hero_opens_the_popup_only_while_the_fight_isnt_playing() ->
 
 func test_the_popup_opens_on_the_left_near_the_right_edge() -> void:
 	var screen: ArenaScreen = await _screen()
+	screen._fight()
+	screen.toggle_pause()
 	_click(screen, "vell")
 	await wait_process_frames(2)
 	var token: UnitToken = screen.view.token("vell")
@@ -407,11 +421,6 @@ func test_the_popup_opens_on_the_left_near_the_right_edge() -> void:
 	screen._place_popup()
 	assert_lt(screen.hero_popup.position.x + screen.hero_popup.size.x, token.center().x, "to the left of the hero")
 	assert_gte(screen.hero_popup.position.x, 0.0, "on the board")
-	screen._show()
-	assert_false(screen.hero_popup.recent.visible)
-	screen._fight()
-	screen.toggle_pause()
-	_click(screen, "vell")
 	assert_eq(UnitInfo.recent_lines("vell", screen.player.sim.combat_log, screen.names), [] as Array[String])
 	assert_true(screen.hero_popup.live.visible)
 	assert_false(screen.hero_popup.recent.visible, "nothing in the log about her yet")

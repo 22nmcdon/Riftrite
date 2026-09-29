@@ -35,6 +35,13 @@ extends UiScreen
 ##     placing, the hero popup's Tactic row sets the hero's tactic in the
 ##     session (the board shows it under the hero's name); in a fight it
 ##     names the one taken, and so does the result.
+##   - Paths (docs/plans/rebuild-phase4-paths.md, section 6): clicking a hero
+##     while placing opens the hero panel (HeroPanel) instead of the popup:
+##     its Path tab vows or transforms the hero, its Loadout tab sets the
+##     tactic, both kept in the session. A transformed Trapper's snares are
+##     dragged like heroes, and the sim decides what's legal. The result
+##     names each hero's path and what the fight put into each deed (the
+##     panel shows it too).
 
 signal fight_requested(setup: FightSetup)
 signal back_requested
@@ -51,6 +58,7 @@ var formation: Dictionary[String, Vector2i] = {}
 var view: ArenaView
 var enemy_panel: EnemyPanel
 var hero_popup: HeroPopup
+var hero_panel: HeroPanel
 var fight_button: Button
 var error_label: Label
 var hint_label: Label
@@ -85,6 +93,7 @@ static func make(practice: PracticeSession, encounter_id: String) -> ArenaScreen
 	screen.session = practice
 	screen.encounter = practice.content.encounters[encounter_id]
 	screen.formation = practice.formation_for(encounter_id)
+	practice.fit_snares(encounter_id, screen.formation)
 	return screen
 
 
@@ -147,18 +156,23 @@ func build() -> void:
 	view.unit_unhovered.connect(_on_unhovered)
 	view.unit_clicked.connect(_on_clicked)
 	view.ground_clicked.connect(hero_popup.close)
-	# Deferred: choosing rebuilds the popup, buttons and all, so not while
-	# the pressed button is still sending its signal.
-	hero_popup.tactic_chosen.connect(choose_tactic, CONNECT_DEFERRED)
 	# Its wrapped lines only know their height once laid out: place it again
 	# then.
 	hero_popup.minimum_size_changed.connect(_place_popup, CONNECT_DEFERRED)
+	view.snare_dropped.connect(move_snare)
+	hero_panel = HeroPanel.make(session)
+	hero_panel.z_index = 5
+	add_child(hero_panel)
+	# Deferred: choosing rebuilds the panel, buttons and all, so not while
+	# the pressed button is still sending its signal.
+	hero_panel.path_chosen.connect(choose_path, CONNECT_DEFERRED)
+	hero_panel.tactic_chosen.connect(choose_tactic, CONNECT_DEFERRED)
 	_show()
 
 
 ## Moves a hero to a hex if the result is legal. Returns true if it moved.
 func placement_hint() -> String:
-	return "It tests %s. Drag your heroes onto your side's hexes, then Fight. Hover an enemy to read it; click a hero to read them." % encounter.tests
+	return "It tests %s. Drag your heroes onto your side's hexes, then Fight. Hover an enemy to read it; click a hero to choose their path and tactic." % encounter.tests
 
 
 func move_hero(hero_id: String, hex: Vector2i) -> bool:
@@ -169,6 +183,16 @@ func move_hero(hero_id: String, hex: Vector2i) -> bool:
 		view.flash_hex(hex)
 		return false
 	formation = trial
+	_show()
+	return true
+
+
+## Moves one of a hero's placed snares to a hex if the result is legal.
+## Returns true if it moved.
+func move_snare(hero_id: String, index: int, hex: Vector2i) -> bool:
+	if player != null or not session.move_snare(encounter.id, formation, hero_id, index, hex):
+		view.flash_hex(hex)
+		return false
 	_show()
 	return true
 
@@ -208,12 +232,21 @@ func playing() -> bool:
 	return player != null and not player.paused and not player.finished()
 
 
-## Opens a hero's popup beside its token.
+## Opens a hero's panel while placing, or its popup beside its token in a
+## fight.
 func open_hero(unit_id: String) -> void:
 	var hero_id: String = _kit_of(unit_id)
-	hero_popup.show_hero(session.content.heroes[hero_id], session.content)
-	# The session's tactic is the fight's too: it can't change mid-fight.
-	hero_popup.show_tactics(session.tactics_for(hero_id), session.tactics.get(hero_id, ""), player == null)
+	if player == null:
+		hero_popup.close()
+		hero_panel.open(hero_id)
+		return
+	var placed: UnitSetup = null
+	for hero: UnitSetup in player.setup.heroes:
+		if hero.id == unit_id:
+			placed = hero
+	hero_popup.show_hero(session.content.heroes[hero_id], session.content, placed.def, placed.path, placed.stage)
+	# The fight's tactic: it can't change mid-fight.
+	hero_popup.show_tactics(session.tactics_for(hero_id), placed.tactic.id if placed.tactic != null else "")
 	hero_popup.set_meta("unit_id", unit_id)
 	_show_live()
 	_place_popup()
@@ -268,8 +301,20 @@ func choose_tactic(hero_id: String, tactic_id: String) -> void:
 		return
 	session.set_tactic(hero_id, tactic_id)
 	_show()
-	if hero_popup.visible and hero_popup.showing == hero_id:
-		open_hero(hero_id)
+	if hero_panel.visible and hero_panel.showing == hero_id:
+		hero_panel.show_hero(hero_id)
+
+
+## Puts a hero on a path at a stage while placing (base: no path), and
+## shows it.
+func choose_path(hero_id: String, path_id: String, stage: PathDef.Stage) -> void:
+	if player != null:
+		return
+	session.set_path(hero_id, path_id, stage)
+	session.fit_snares(encounter.id, formation)
+	_show()
+	if hero_panel.visible and hero_panel.showing == hero_id:
+		hero_panel.show_hero(hero_id)
 
 
 func _fight() -> void:
@@ -375,6 +420,7 @@ static func speed_text(speed: float) -> String:
 func start_fight(fight_setup: FightSetup) -> void:
 	player = FightPlayer.make(fight_setup, session.content)
 	player.speed = session.speed
+	hero_panel.close()
 	view.set_mode(ArenaView.Mode.FIGHT)
 	hint_label.text = FIGHT_HINT
 	_placement_box.visible = false
@@ -490,6 +536,7 @@ func place_again() -> void:
 	log_popup.visible = false
 	banners.clear()
 	hero_popup.close()
+	hero_panel.close()
 	enemy_panel.clear()
 	_show()
 
@@ -521,21 +568,47 @@ func _show_result() -> void:
 	_result_shown = true
 	outcome_label.text = outcome_text(player.sim.outcome, player.fight_seconds())
 	result_details.text = result_text(player.sim, names)
+	session.remember_deeds(player.sim)
 	result_chart.set_tally(tally)
 
 
 ## "Seed 2 (it only changes crits)", then how each hero came out:
-## "Brannoc 120/420 HP · Maren fell · Vell 300/300 HP", then the tactics
-## taken, if any: "Tactics: Maren, Hold your ground".
+## "Brannoc 120/420 HP · Maren fell · Vell 300/300 HP", then the paths and
+## tactics taken, if any: "Paths: Maren, Deadeye (vowed)", "Tactics: Maren,
+## Hold your ground", then what the fight put into each hero's deeds, the
+## vowed path first: "Deeds: Maren: Deadeye 1,240 · Trapper 0 · Volley 35".
 static func result_text(sim: CombatSim, fight_names: FightNames) -> String:
 	var heroes: Array[String] = []
+	var paths: Array[String] = []
 	var tactics: Array[String] = []
-	for hero: UnitState in sim.heroes:
-		heroes.append("%s %s" % [fight_names.name_of(hero.id), "%d/%d HP" % [hero.hp, hero.max_hp] if hero.alive else "fell"])
+	var deeds: Array[String] = []
+	var amounts: Array[FightResult.Deed] = sim.deed_amounts()
+	for i: int in sim.heroes.size():
+		var hero: UnitState = sim.heroes[i]
+		var placed: UnitSetup = sim.setup.heroes[i]
+		var hero_name: String = fight_names.name_of(hero.id)
+		heroes.append("%s %s" % [hero_name, "%d/%d HP" % [hero.hp, hero.max_hp] if hero.alive else "fell"])
+		if placed.path != null:
+			paths.append("%s, %s (%s)" % [hero_name, placed.path.name, PathDef.STAGE_NAMES[placed.stage]])
 		if hero.tactic != null:
-			tactics.append("%s, %s" % [fight_names.name_of(hero.id), hero.tactic.name])
+			tactics.append("%s, %s" % [hero_name, hero.tactic.name])
+		var order: Array[PathDef] = placed.deed_paths.duplicate()
+		if placed.path != null and order.has(placed.path):
+			order.erase(placed.path)
+			order.push_front(placed.path)
+		var parts: Array[String] = []
+		for path: PathDef in order:
+			var amount: int = 0
+			for deed: FightResult.Deed in amounts:
+				if deed.hero == hero.id and deed.path == path.id:
+					amount = deed.amount
+			parts.append("%s %s" % [path.name, UnitInfo.deed_amount_text(path.deed, amount)])
+		if not parts.is_empty():
+			deeds.append("%s: %s" % [hero_name, " · ".join(parts)])
 	var text: String = "Seed %d (it only changes crits)\n%s" % [sim.setup.seed_value, " · ".join(heroes)]
-	return text + ("\nTactics: %s" % " · ".join(tactics) if not tactics.is_empty() else "")
+	text += "\nPaths: %s" % " · ".join(paths) if not paths.is_empty() else ""
+	text += "\nTactics: %s" % " · ".join(tactics) if not tactics.is_empty() else ""
+	return text + ("\nDeeds this fight:\n%s" % "\n".join(deeds) if not deeds.is_empty() else "")
 
 
 static func outcome_text(outcome: FightResult.Outcome, seconds: float) -> String:

@@ -12,7 +12,8 @@ extends RefCounted
 ##     "Abilities"; damage over time counts for whoever applied it, by
 ##     family.
 ##   - Damage taken: all of it, from enemies, statuses, and Rift Collapse,
-##     split into what reached HP and what a Shield absorbed.
+##     and what a guard took in an ally's place (Guard, phase 4), split into
+##     what reached HP and what a Shield absorbed.
 ## (The old game's tally, from git history, adapted: no items, and no relics
 ## until phase 5.)
 
@@ -112,6 +113,8 @@ func add(entry: LogEntry) -> void:
 			_count_taken(entry)
 		LogEntry.Kind.COLLAPSE:
 			_count_taken(entry)
+		LogEntry.Kind.GUARD:
+			_count_guarded(entry)
 		LogEntry.Kind.HEAL, LogEntry.Kind.SHIELD:
 			var giver: Bar = bar(Tab.SUPPORT, entry.source_unit)
 			if giver != null:
@@ -159,6 +162,18 @@ func _count_taken(entry: LogEntry) -> void:
 		source = "%s: %s" % [_names.get(entry.source_unit, entry.source_unit), entry.source_ability_name]
 	taker.by_type[0] += entry.amount - entry.absorbed
 	taker.by_type[1] += entry.absorbed
+	taker.sources[source] = taker.sources.get(source, 0) + entry.amount
+
+
+## Damage a hero took in place of an ally (Guard; phase 4): the guard's,
+## by the ally it covered.
+func _count_guarded(entry: LogEntry) -> void:
+	var taker: Bar = bar(Tab.TAKEN, entry.source_unit)
+	if taker == null or entry.amount <= 0:
+		return
+	taker.by_type[0] += entry.amount - entry.absorbed
+	taker.by_type[1] += entry.absorbed
+	var source: String = "%s for %s" % [entry.source_ability_name, _names.get(entry.target, entry.target)]
 	taker.sources[source] = taker.sources.get(source, 0) + entry.amount
 
 

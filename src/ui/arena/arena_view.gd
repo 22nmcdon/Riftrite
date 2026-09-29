@@ -29,8 +29,15 @@ extends Control
 ##   - Placement: a hero's token can be dragged onto a hex (section 3). The
 ##     view only reports the drop (`hero_dropped`); whoever shows it decides
 ##     whether the move is legal, and calls `flash_hex` if it isn't.
+##   - Paths (docs/plans/rebuild-phase4-paths.md, section 6): a transformed
+##     hero stands as its path's figure; a vowed one keeps its base figure.
+##     Either way the path is named under it while placing, with its
+##     tactic. A transformed Trapper's snares are markers on their hexes,
+##     dragged like heroes (`snare_dropped`), and the same rule decides.
 
 signal hero_dropped(hero_id: String, hex: Vector2i)
+## One of a hero's placed snares was dropped on a hex (placement).
+signal snare_dropped(hero_id: String, index: int, hex: Vector2i)
 signal unit_hovered(unit_id: String)
 signal unit_unhovered(unit_id: String)
 ## A unit's token was clicked (the left button let go on it, not a drag).
@@ -54,6 +61,8 @@ const ROCK_LINE := UiStyle.OAK_400
 const FLASH := Color(0.84, 0.35, 0.31, 0.7)
 ## How long a refused hex flashes, in seconds.
 const FLASH_SECONDS: float = 0.5
+## A placed snare's marker.
+const SNARE_COLOR := Color("8fbf5a")
 
 var mode: Mode = Mode.PLACEMENT
 var grid: HexGrid
@@ -73,6 +82,24 @@ var _origin: Vector2 = Vector2.ZERO
 ## A refused hex, and how long it still flashes.
 var flashing: Vector2i = Vector2i(-1, -1)
 var _flash_left: float = 0.0
+## While placing: the snares the heroes place, one per marker.
+var snare_markers: Array[SnareMarker] = []
+
+
+## One placed snare's marker on the board.
+class SnareMarker:
+	var hero_id: String
+	var index: int
+	var hex: Vector2i
+
+
+## What's drawn under the pointer while a snare is dragged.
+class SnarePreview:
+	extends Control
+	var reach: float = 8.0
+
+	func _draw() -> void:
+		ArenaView.draw_snare(self, Vector2.ZERO, reach, SNARE_COLOR)
 
 
 ## Shows a fight's setup: its board, rocks, and every unit on its hex.
@@ -88,12 +115,33 @@ func show_setup(setup: FightSetup, content: ContentDb) -> void:
 		token.queue_free()
 	tokens.clear()
 	fx.clear()
+	snare_markers.clear()
 	for unit: UnitSetup in setup.units():
-		var token: UnitToken = UnitToken.make(unit.id, label_for(unit.def, content), unit.side, content.tuning.unit_radius, unit.def.has_trait("flying"), figure_for(unit.def, unit.side))
+		var token: UnitToken = UnitToken.make(unit.id, label_for(unit.def, content), unit.side, content.tuning.unit_radius, unit.def.has_trait("flying"), figure_for(unit.def, unit.side, form_of(unit)))
 		token.plane_pos = grid.center(unit.col, unit.row)
 		token.tactic_label = unit.tactic.name if unit.tactic != null else ""
+		token.path_label = path_tag(unit)
 		_add_token(token)
+		for i: int in unit.snares.size():
+			var marker := SnareMarker.new()
+			marker.hero_id = unit.id
+			marker.index = i
+			marker.hex = unit.snares[i]
+			snare_markers.append(marker)
 	_layout()
+
+
+## A hero's form: its path's once transformed, else "base".
+static func form_of(unit: UnitSetup) -> String:
+	return unit.path.id if unit.path != null and unit.stage == PathDef.Stage.TRANSFORMED else "base"
+
+
+## What's named under a hero on a path while placing: "Deadeye (vow)" or,
+## transformed, "Deadeye" ("": no path).
+static func path_tag(unit: UnitSetup) -> String:
+	if unit.path == null:
+		return ""
+	return unit.path.name if unit.stage == PathDef.Stage.TRANSFORMED else "%s (vow)" % unit.path.name
 
 
 ## Puts every unit where `player` draws it: a token for each unit the fight
@@ -203,10 +251,10 @@ func faces_left(unit: UnitState, was_left: bool) -> bool:
 	return was_left if absf(across) < hex_px() / 10.0 else across < 0.0
 
 
-## A unit's figure (FigureArt): a hero's base form (paths come in phase 4),
-## or its enemy's.
-static func figure_for(kit: UnitDef, team: EffectSource.Team) -> String:
-	return FigureArt.key_for(kit.id, team == EffectSource.Team.HEROES)
+## A unit's figure (FigureArt): a hero's form (base, or a transformed
+## hero's path), or its enemy's.
+static func figure_for(kit: UnitDef, team: EffectSource.Team, form: String = "base") -> String:
+	return FigureArt.key_for(kit.id, team == EffectSource.Team.HEROES, form)
 
 
 ## A token's short label: a hero's name (its id), or the last word of an
@@ -264,14 +312,51 @@ func can_drag(unit_token: UnitToken) -> bool:
 
 
 func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
-	return mode == Mode.PLACEMENT and data is Dictionary and (data as Dictionary).has("hero")
+	return mode == Mode.PLACEMENT and data is Dictionary and ((data as Dictionary).has("hero") or (data as Dictionary).has("snare"))
 
 
 func _drop_data(at_position: Vector2, data: Variant) -> void:
 	var hex: Vector2i = hex_at(at_position)
 	if hex.x < 0:
 		return
-	hero_dropped.emit(String((data as Dictionary)["hero"]), hex)
+	var dropped: Dictionary = data
+	if dropped.has("snare"):
+		snare_dropped.emit(String(dropped["snare"]), int(dropped["index"]), hex)
+	else:
+		hero_dropped.emit(String(dropped["hero"]), hex)
+
+
+## Dragging a snare's marker (a drag that starts on a token is the token's).
+func _get_drag_data(at_position: Vector2) -> Variant:
+	var marker: SnareMarker = snare_at(at_position)
+	if mode != Mode.PLACEMENT or marker == null:
+		return null
+	var preview := SnarePreview.new()
+	preview.reach = snare_px()
+	preview.modulate.a = 0.8
+	set_drag_preview(preview)
+	return {"snare": marker.hero_id, "index": marker.index}
+
+
+## The snare marker under a pixel while placing, or null.
+func snare_at(pixel: Vector2) -> SnareMarker:
+	var reach: float = maxf(snare_px(), UnitToken.HIT_PX)
+	for marker: SnareMarker in snare_markers:
+		if to_pixel(grid.center(marker.hex.x, marker.hex.y)).distance_to(pixel) <= reach:
+			return marker
+	return null
+
+
+## A snare's radius on screen.
+func snare_px() -> float:
+	return maxf(Snares.RADIUS * scale_px * 0.7, 6.0)
+
+
+## A snare's mark: a ring with a cross in it.
+static func draw_snare(canvas: CanvasItem, at: Vector2, reach: float, color: Color) -> void:
+	canvas.draw_arc(at, reach, 0.0, TAU, 20, color, 2.0, true)
+	canvas.draw_line(at - Vector2(reach, reach) * 0.6, at + Vector2(reach, reach) * 0.6, color, 2.0, true)
+	canvas.draw_line(at - Vector2(reach, -reach) * 0.6, at + Vector2(reach, -reach) * 0.6, color, 2.0, true)
 
 
 ## Flashes a hex red for a moment (a refused move).
@@ -336,6 +421,9 @@ func _draw() -> void:
 		draw_colored_polygon(hex_corners(grid.center(flashing.x, flashing.y)), flash)
 	if mode == Mode.FIGHT:
 		fx.draw_ground(self)
+	else:
+		for marker: SnareMarker in snare_markers:
+			draw_snare(self, to_pixel(grid.center(marker.hex.x, marker.hex.y)), snare_px(), SNARE_COLOR)
 	for rock: ArenaPlane.Circle in rocks:
 		var center: Vector2 = to_pixel(rock.center)
 		draw_circle(center, rock.radius * scale_px, ROCK_FILL)

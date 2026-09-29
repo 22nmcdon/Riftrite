@@ -3,7 +3,7 @@ extends SceneTree
 ## display, e.g.:
 ##   xvfb-run godot --path . -s tools/ui_screenshots.gd -- --out=/tmp/shots
 ## The title, then Practice (phase 3): the encounter list, placement (and
-## choosing a tactic), the fight with its chart, a hero's popup, the result, an area warning, and
+## the hero panel's tabs, paths and snares on the board), the fight with its chart, a hero's popup, the result, an area warning, and
 ## Rift Collapse with the combat log's popup open.
 
 var _main: Main
@@ -34,12 +34,26 @@ func _run() -> void:
 	var arena: ArenaScreen = _main.screen as ArenaScreen
 	arena._on_hovered("rift_worn_sentinel")
 	await _snap("placement_sentinel_gate")
-	# Maren's popup, choosing a tactic (phase 3b); she takes Hold your ground.
+	# Maren's panel (phase 4): the Path tab, vowed to Deadeye; the Kit tab
+	# transformed; the Loadout tab, taking Hold your ground (phase 3b).
 	arena.view.unit_clicked.emit("maren")
+	arena.choose_path("maren", "deadeye", PathDef.Stage.VOWED)
+	await _snap("panel_path_maren_vowed")
+	arena.choose_path("maren", "deadeye", PathDef.Stage.TRANSFORMED)
+	arena.hero_panel.show_tab(HeroPanel.Tab.KIT)
+	await _snap("panel_kit_maren_transformed")
+	arena.hero_panel.show_tab(HeroPanel.Tab.LOADOUT)
 	arena.choose_tactic("maren", "hold_ground")
-	await _snap("placement_tactic_maren")
+	await _snap("panel_loadout_maren")
 	arena.choose_tactic("maren", "")
-	arena.hero_popup.close()
+	arena.choose_path("maren", "", PathDef.Stage.BASE)
+	arena.hero_panel.close()
+	# A transformed Trapper's snares and a vowed Brannoc on the board.
+	arena.choose_path("maren", "trapper", PathDef.Stage.TRANSFORMED)
+	arena.choose_path("brannoc", "hearthwall", PathDef.Stage.VOWED)
+	await _snap("placement_paths_snares")
+	arena.choose_path("maren", "", PathDef.Stage.BASE)
+	arena.choose_path("brannoc", "", PathDef.Stage.BASE)
 	arena._fight()
 	for frame: int in 8 * 30:
 		arena._process(1.0 / 30.0)

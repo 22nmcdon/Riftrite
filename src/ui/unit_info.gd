@@ -98,6 +98,23 @@ static func trait_numbers(trait_id: String, kit: UnitDef, tuning: TuningDef) -> 
 	return ""
 
 
+## What a fight put into a deed: "1,240", or for time rooted "12.5s".
+static func deed_amount_text(deed: DeedDef, amount: int) -> String:
+	if deed.counts == DeedDef.Counts.ROOTED_MS:
+		return "%.1fs" % (amount / 1000.0)
+	return thousands(amount)
+
+
+## 1240 -> "1,240".
+static func thousands(amount: int) -> String:
+	var digits: String = str(absi(amount))
+	var grouped: String = ""
+	while digits.length() > 3:
+		grouped = "," + digits.right(3) + grouped
+		digits = digits.left(digits.length() - 3)
+	return ("-" if amount < 0 else "") + digits + grouped
+
+
 # --- numbers lines ----------------------------------------------------------------
 
 static func basic_numbers(kit: UnitDef, content: ContentDb) -> String:

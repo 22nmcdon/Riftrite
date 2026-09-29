@@ -402,10 +402,7 @@ func _draw_placed(canvas: CanvasItem, sim: CombatSim) -> void:
 	for snare: Snares.Snare in sim.snares:
 		var at: Vector2 = _view.to_pixel_f(Vector2(snare.pos))
 		var reach: float = maxf(Snares.RADIUS * _view.scale_px, 6.0)
-		var color: Color = _side_color(sim, snare.unit.id)
-		canvas.draw_arc(at, reach, 0.0, TAU, 20, color, 2.0, true)
-		canvas.draw_line(at - Vector2(reach, reach) * 0.6, at + Vector2(reach, reach) * 0.6, color, 2.0, true)
-		canvas.draw_line(at - Vector2(reach, -reach) * 0.6, at + Vector2(reach, -reach) * 0.6, color, 2.0, true)
+		ArenaView.draw_snare(canvas, at, reach, _side_color(sim, snare.unit.id))
 	for wall: Walls.Wall in sim.walls:
 		if sim.tick >= wall.until_tick:
 			continue

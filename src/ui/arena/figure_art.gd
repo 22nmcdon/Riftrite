@@ -46,3 +46,21 @@ static func bounds(key: String) -> Rect2:
 	if rect.size() != 4:
 		return Rect2(Vector2.ZERO, CANVAS)
 	return Rect2(rect[0], rect[1], rect[2], rect[3])
+
+
+## A figure for a panel: what it covers of its canvas, fitted into `height`
+## pixels tall (and `width` wide; 0: 0.6 of the height), or an empty rect
+## without art.
+static func portrait(key: String, height: float, width: float = 0.0) -> TextureRect:
+	var rect := TextureRect.new()
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	rect.custom_minimum_size = Vector2(width if width > 0.0 else height * 0.6, height)
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var art: Texture2D = texture(key)
+	if art != null:
+		var region := AtlasTexture.new()
+		region.atlas = art
+		region.region = bounds(key)
+		rect.texture = region
+	return rect

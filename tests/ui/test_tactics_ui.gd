@@ -1,6 +1,6 @@
 extends GutTest
 ## Tactics in Practice (docs/plans/rebuild-phase3b-tactics.md, section 4):
-## choosing one in the hero popup while placing, the board naming it,
+## choosing one in the hero panel's Loadout tab while placing (phase 4), the board naming it,
 ## remembering it, the fight on screen being the sim's own fight with it,
 ## what a tactic did showing over the hero, and the result naming them.
 
@@ -30,9 +30,16 @@ func _click(screen: ArenaScreen, unit_id: String) -> void:
 	screen.view._gui_input(click)
 
 
-func _button_texts(popup: HeroPopup) -> Array[String]:
+## Opens a hero's panel on its Loadout tab (placing).
+func _loadout(screen: ArenaScreen, hero_id: String) -> TacticPicker:
+	_click(screen, hero_id)
+	screen.hero_panel.show_tab(HeroPanel.Tab.LOADOUT)
+	return screen.hero_panel.tactic_picker
+
+
+func _button_texts(picker: TacticPicker) -> Array[String]:
 	var texts: Array[String] = []
-	for button: Button in popup.tactic_buttons:
+	for button: Button in picker.tactic_buttons:
 		texts.append(button.text)
 	return texts
 
@@ -54,33 +61,36 @@ func test_the_session_keeps_each_heros_tactic() -> void:
 	assert_eq(session.tactics, {} as Dictionary[String, String])
 
 
-func test_choosing_a_tactic_in_the_hero_popup() -> void:
+func test_choosing_a_tactic_in_the_hero_panel() -> void:
 	var screen: ArenaScreen = await _screen()
-	_click(screen, "maren")
-	assert_true(screen.hero_popup.visible)
-	assert_eq(_button_texts(screen.hero_popup), ["None", "Casters first", "Hold your ground"] as Array[String])
-	assert_true(screen.hero_popup.tactic_buttons[0].button_pressed, "none to begin with")
+	var picker: TacticPicker = _loadout(screen, "maren")
+	assert_true(screen.hero_panel.visible)
+	assert_false(screen.hero_popup.visible, "the panel, not the popup, while placing")
+	assert_eq(_button_texts(picker), ["None", "Casters first", "Hold your ground"] as Array[String])
+	assert_true(picker.tactic_buttons[0].button_pressed, "none to begin with")
 	assert_eq(screen.view.token("maren").tactic_label, "")
-	assert_true(U.press(screen.hero_popup, "Hold your ground"))
-	await wait_process_frames(1)
+	assert_true(U.press(picker, "Hold your ground"))
+	await wait_process_frames(2)
 	assert_eq(screen.session.tactics, {"maren": "hold_ground"} as Dictionary[String, String])
 	assert_eq(screen.view.token("maren").tactic_label, "Hold your ground", "the board names it under her")
-	assert_true(screen.hero_popup.visible, "the popup stays open")
-	assert_true(screen.hero_popup.tactic_buttons[2].button_pressed)
-	assert_false(screen.hero_popup.tactic_buttons[0].button_pressed)
-	assert_string_contains(screen.hero_popup.tactic_text.text, "within 2 hexes", "with its sentence")
-	assert_eq(screen.hero_popup.tactic_numbers.text, "Holds until an enemy is within 2 hexes · +20% attack speed while it holds", "and its numbers line")
-	assert_true(screen.hero_popup.tactic_numbers.visible)
+	assert_true(screen.hero_panel.visible, "the panel stays open")
+	assert_eq(screen.hero_panel.tab, HeroPanel.Tab.LOADOUT, "on its tab")
+	picker = screen.hero_panel.tactic_picker
+	assert_true(picker.tactic_buttons[2].button_pressed)
+	assert_false(picker.tactic_buttons[0].button_pressed)
+	assert_string_contains(picker.tactic_text.text, "within 2 hexes", "with its sentence")
+	assert_eq(picker.tactic_numbers.text, "Holds until an enemy is within 2 hexes · +20% attack speed while it holds", "and its numbers line")
+	assert_true(picker.tactic_numbers.visible)
 	assert_eq(screen.current_setup().heroes[1].tactic, _content.tactics["hold_ground"])
-	_click(screen, "vell")
-	assert_eq(_button_texts(screen.hero_popup), ["None", "Casters first", "Hold your ground", "Wait to heal"] as Array[String])
-	assert_true(U.press(screen.hero_popup, "Wait to heal"))
-	await wait_process_frames(1)
+	picker = _loadout(screen, "vell")
+	assert_eq(_button_texts(picker), ["None", "Casters first", "Hold your ground", "Wait to heal"] as Array[String])
+	assert_true(U.press(picker, "Wait to heal"))
+	await wait_process_frames(2)
 	assert_eq(screen.view.token("vell").tactic_label, "Wait to heal")
-	_click(screen, "maren")
-	assert_true(U.press(screen.hero_popup, "None"))
-	await wait_process_frames(1)
-	assert_false(screen.hero_popup.tactic_numbers.visible, "no numbers line with no tactic")
+	picker = _loadout(screen, "maren")
+	assert_true(U.press(picker, "None"))
+	await wait_process_frames(2)
+	assert_false(screen.hero_panel.tactic_picker.tactic_numbers.visible, "no numbers line with no tactic")
 	assert_eq(screen.session.tactics, {"vell": "wait_to_heal"} as Dictionary[String, String])
 	assert_eq(screen.view.token("maren").tactic_label, "")
 
@@ -88,9 +98,8 @@ func test_choosing_a_tactic_in_the_hero_popup() -> void:
 func test_tactics_are_remembered_across_encounters() -> void:
 	var session: PracticeSession = PracticeSession.make(_content)
 	var first: ArenaScreen = await _screen("witch_circle", session)
-	_click(first, "brannoc")
-	U.press(first.hero_popup, "Hold your ground")
-	await wait_process_frames(1)
+	U.press(_loadout(first, "brannoc"), "Hold your ground")
+	await wait_process_frames(2)
 	var second: ArenaScreen = await _screen("the_pack", session)
 	assert_eq(second.view.token("brannoc").tactic_label, "Hold your ground")
 	assert_eq(second.current_setup().heroes[0].tactic, _content.tactics["hold_ground"])
@@ -128,7 +137,7 @@ func test_in_a_fight_the_popup_names_the_tactic_without_buttons() -> void:
 	screen.toggle_pause()
 	_click(screen, "maren")
 	assert_true(screen.hero_popup.visible)
-	assert_eq(screen.hero_popup.tactic_buttons.size(), 0, "no changing it mid-fight")
+	assert_eq(screen.hero_popup.tactic_box.tactic_buttons.size(), 0, "no changing it mid-fight")
 	assert_true(U.text_of(screen.hero_popup).contains("Tactic: Casters first"))
 	assert_true(U.text_of(screen.hero_popup).contains("+20% damage to them"), "its numbers line in a fight too")
 	screen.choose_tactic("maren", "hold_ground")
