@@ -83,6 +83,9 @@ var _timed_passives: bool = false
 ## in again when a Taunt starts or ends, or a taunted unit falls.
 var taunt_auras: bool = false
 ## The units with the Engage trait on each side.
+## Some hero has a tactic whose payoff adds damage (Tactics), so hits check
+## for it; otherwise they never do.
+var damage_payoffs: bool = false
 var _hero_engagers: Array[UnitState] = []
 var _enemy_engagers: Array[UnitState] = []
 ## Each unit by id (lookup only; never iterated).
@@ -131,6 +134,7 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 	for unit: UnitState in units:
 		if unit.tactic != null:
 			Tactics.start(self, unit)
+			damage_payoffs = damage_payoffs or unit.tactic.damage_vs_bp > 0
 	units_joined()
 
 
@@ -247,6 +251,8 @@ func _act(unit: UnitState) -> void:
 	var attack: AbilityState = unit.attack
 	if attack.progress_bp < attack.needed:
 		var rate: int = unit.attack_rate_bp
+		if unit.holding and unit.tactic.atsp_bp > 0:
+			rate = FixedMath.apply_bp(rate, FixedMath.BP_ONE + unit.tactic.atsp_bp)
 		if has_statuses:
 			var slow: int = Statuses.slow_bp(unit)
 			if slow != 0:

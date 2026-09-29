@@ -19,6 +19,17 @@ extends RefCounted
 ##                        ally (the lowest in reach) must be below below_bp
 ##                        of max HP, or the full bar waits (logged once a bar).
 ## Every line is a TACTIC entry sourced to the unit and its tactic (rule 4).
+## Payoffs (round 2, section 9), only while the behavior applies, each named
+## in the log line it changes ("+20% from Casters first"):
+##   prefer_target        damage_bonus_bp(): its own basic attack's and
+##                        signature's hits on its archetypes deal more
+##                        (EffectRunner.deal_hit, before DEF)
+##   hold_ground          its attack cooldown runs faster while it holds
+##                        (CombatSim)
+##   signature_threshold  every fire of its signature has passed
+##                        hurt_enough(), so EffectRunner.fire heals more on
+##                        each (its heals only; a shot keeps the number it
+##                        left with)
 
 
 ## Logs what a unit's tactic did (`note`), about `about` if it names a unit.
@@ -33,7 +44,24 @@ static func log_tactic(sim: CombatSim, unit: UnitState, note: String, about: Str
 ## a unit that holds its ground says so.
 static func start(sim: CombatSim, unit: UnitState) -> void:
 	if unit.holding:
-		log_tactic(sim, unit, "holds its ground")
+		var payoff: String = " (+%d%% attack speed while it holds)" % (unit.tactic.atsp_bp / 100) if unit.tactic.atsp_bp > 0 else ""
+		log_tactic(sim, unit, "holds its ground" + payoff)
+
+
+## How a payoff reads in the line it changes: "+20% from Casters first".
+static func bonus_note(bonus_bp: int, tactic: TacticDef) -> String:
+	return "+%d%% from %s" % [bonus_bp / 100, tactic.name]
+
+
+## prefer_target's payoff on one hit: the extra damage (basis points) when
+## the attacker's own basic attack or signature hits one of its archetypes;
+## 0 otherwise.
+static func damage_bonus_bp(sim: CombatSim, source: EffectSource, target: UnitState) -> int:
+	var attacker: UnitState = sim.unit_by_id(source.unit_id)
+	if attacker == null or attacker.tactic == null or attacker.tactic.damage_vs_bp <= 0 or not attacker.tactic.archetypes.has(target.def.archetype):
+		return 0
+	var own: bool = source.ability_id == attacker.attack.def.id or (attacker.signature != null and source.ability_id == attacker.signature.def.id)
+	return attacker.tactic.damage_vs_bp if own else 0
 
 
 ## prefer_target: the nearest enemy of the tactic's archetypes, or null.

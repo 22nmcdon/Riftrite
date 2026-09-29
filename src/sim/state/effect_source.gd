@@ -15,6 +15,9 @@ var ability_name: String = ""
 var relic_side: int = -1
 ## A duo bond's own effect (credited like a relic, as "bond · Name").
 var synergy: bool = false
+## What made its numbers bigger, for the log ("+30% from Wait to heal"; a
+## tactic's payoff), or "".
+var bonus: String = ""
 
 
 static func make(unit: String, ability: String, ability_label: String) -> EffectSource:
@@ -32,6 +35,15 @@ static func relic(relic_id: String, relic_name: String, side: Team) -> EffectSou
 	source.ability_name = relic_name
 	source.relic_side = side
 	return source
+
+
+## A copy with `note` as its bonus (Tactics: a payoff on one fire).
+func with_bonus(note: String) -> EffectSource:
+	var copy: EffectSource = EffectSource.make(unit_id, ability_id, ability_name)
+	copy.relic_side = relic_side
+	copy.synergy = synergy
+	copy.bonus = note
+	return copy
 
 
 func same_as(other: EffectSource) -> bool:

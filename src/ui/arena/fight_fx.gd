@@ -228,10 +228,10 @@ func _add(entry: LogEntry, sim: CombatSim) -> void:
 				warned_safe = Rect2i(entry.from_pos, entry.to_pos - entry.from_pos)
 
 
-## What a TACTIC line shows over its unit: the note's first part ("Holds
-## its ground", "Moves out", "Mend waits").
+## What a TACTIC line shows over its unit: the note's first part, without
+## any payoff in brackets ("Holds its ground", "Moves out", "Mend waits").
 static func tactic_popup(entry: LogEntry) -> String:
-	var said: String = entry.note.get_slice(":", 0)
+	var said: String = entry.note.get_slice(":", 0).get_slice(" (", 0)
 	return said.left(1).to_upper() + said.substr(1)
 
 

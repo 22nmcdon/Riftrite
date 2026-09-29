@@ -76,10 +76,10 @@ The details and every decision are in `docs/plans/rebuild-phase1-arena-sim.md`; 
 - **Effects** (`EffectRunner`, `EffectDef`): damage, heal, shield, statuses, cleanse, mana drain, knockback, pull, leap, charge, warned areas (circle, ring, line, cone; hit by center), summons (`Summons`), and start_collapse. From 2 hexes or more, an attack is a shot that flies about a tick per hex, with its numbers fixed as it leaves.
 - **Passives** (`Passives`, `PartDef`): auras (a window, or `"while": "taunting"`), status swaps, and effects on the unit's events (read from the log), on `on_ally_below_hp` and `on_interval` (after the events each tick), or `on_fall` (in the deaths step). What they do is marked from_event, so it never sets off another event.
 - **Tactics** (`Tactics`, `TacticDef`, phase 3b): a hero's one tactic changes how it behaves, never what it can do, and a unit without one never reaches the code, so tactic-free fights are unchanged.
-  - Casters first: `Targeting.update` picks the nearest enemy of the tactic's archetypes first.
-  - Hold your ground: no walking until an enemy is within 2 hexes, then let go for good.
-  - Wait to heal: a full bar waits until the ally its signature picked is below 50%.
-  Each logs TACTIC lines sourced to the unit and the tactic.
+  - Casters first: `Targeting.update` picks the nearest enemy of the tactic's archetypes first; its own attack and signature deal 20% more to them (in `EffectRunner.deal_hit`).
+  - Hold your ground: no walking until an enemy is within 2 hexes, then let go for good; it attacks 20% faster while it holds.
+  - Wait to heal: a full bar waits until the ally its signature picked is below 60%; the heal it lets go is 30% stronger.
+  Each logs TACTIC lines sourced to the unit and the tactic. A payoff (round 2: small, and only while the behavior applies) shows on the hit or heal as the log entry's `bonus` ("+20% from Casters first").
 - **The log** (`LogEntry`): every entry names its source by the rules in `test_arena_log.gd`'s audit. A new log kind needs a rule there.
 - **Tests:** `tests/sim/sim_test_kit.gd` builds tiny fights (`K.sim(setup, true)` gives wide units, phase 1's 0.8 hex, for the few tests whose scenario needs units bulky enough to box a unit in; everything else uses the real tuning). `test_kit_pieces.gd` covers the passive pieces phase 2 added, one rule at a time. `tests/sim/chaos_fight.gd` is one seeded fight using everything; `test_determinism` checks it repeats exactly and still uses every piece, and `test_arena_log` replays it and audits its sources. A change that alters fights changes `tools/bench_sim.gd`'s fingerprints; one that shouldn't must leave them alone.
 

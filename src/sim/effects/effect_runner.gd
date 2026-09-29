@@ -49,6 +49,12 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 		if log_failure:
 			Displacement.leap_failed(sim, unit, target, source)
 		return false
+	# Wait to heal's payoff: its signature only ever fires once an ally is
+	# hurt enough (Tactics.hurt_enough), and each such fire heals more.
+	var heal_boost_bp: int = 0
+	if state == unit.signature and unit.tactic != null and unit.tactic.heal_bp > 0:
+		heal_boost_bp = unit.tactic.heal_bp
+		source = source.with_bonus(Tactics.bonus_note(heal_boost_bp, unit.tactic))
 	var fired: LogEntry = sim.new_entry(LogEntry.Kind.FIRE, source)
 	fired.target = target.id if target != null else ""
 	sim.combat_log.add(fired)
@@ -69,7 +75,7 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 			Summons.summon(sim, unit, source, effect, target)
 			continue
 		if shot != null and effect.target == EffectDef.Target.TARGET:
-			var amount: int = amount_of(effect, unit, 0, sim)
+			var amount: int = _boosted_heal(effect, amount_of(effect, unit, 0, sim), heal_boost_bp)
 			var crit: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability))
 			shot.effects.append(effect)
 			shot.amounts.append(amount)
@@ -77,10 +83,17 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 			continue
 		for victim: UnitState in _targets(sim, unit, effect.target, target, null):
 			var crit_now: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability))
-			land(sim, unit, ability, source, effect, victim, amount_of(effect, unit, 0, sim), crit_now)
+			land(sim, unit, ability, source, effect, victim, _boosted_heal(effect, amount_of(effect, unit, 0, sim), heal_boost_bp), crit_now)
 	if shot != null and not shot.effects.is_empty():
 		Shots.fire(sim, shot)
 	return true
+
+
+## A heal's amount with a payoff's `boost_bp` on top (anything else as it is).
+static func _boosted_heal(effect: EffectDef, amount: int, boost_bp: int) -> int:
+	if boost_bp == 0 or effect.type != EffectDef.Type.HEAL:
+		return amount
+	return FixedMath.apply_bp(amount, FixedMath.BP_ONE + boost_bp)
 
 
 ## One effect reaching `victim` with its number already worked out (as it
@@ -216,6 +229,11 @@ static func _targets(sim: CombatSim, unit: UnitState, target: EffectDef.Target, 
 ## Shield, then HP. Logs it and returns what got through DEF.
 static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, amount: int, crit: bool) -> int:
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.DAMAGE, source)
+	if sim.damage_payoffs:
+		var payoff: int = Tactics.damage_bonus_bp(sim, source, target)
+		if payoff > 0:
+			amount = FixedMath.apply_bp(amount, FixedMath.BP_ONE + payoff)
+			entry.bonus = Tactics.bonus_note(payoff, sim.unit_by_id(source.unit_id).tactic)
 	var marked: int = Statuses.damage_taken_bp(target) if not target.statuses.is_empty() else 0
 	var dealt: int = sim.mitigate_hit(target, FixedMath.apply_bp(amount, FixedMath.BP_ONE + marked))
 	entry.target = target.id

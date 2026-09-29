@@ -128,7 +128,8 @@ func _assert_replays(setup: FightSetup) -> void:
 
 ## What each kind of entry must name (CLAUDE.md rule 4): "unit" a source
 ## unit, "ability" a source ability, "target" a unit it's about, "status" a
-## status. COLLAPSE and COLLAPSE_RING are Rift Collapse's (or, for a ring, the
+## status. A number a payoff made bigger names the tactic it came from.
+## COLLAPSE and COLLAPSE_RING are Rift Collapse's (or, for a ring, the
 ## unit and ability that started it early); the fight's start and end name
 ## nothing. A status that just runs out ends with no note. Every kind the
 ## log can hold is listed, so a new one needs a rule.
@@ -161,8 +162,11 @@ func test_every_entry_names_its_source() -> void:
 
 func _assert_sources(result: FightResult, setup: FightSetup) -> void:
 	var ids: Array[String] = []
+	var tactic_names: Dictionary[String, String] = {}
 	for unit: UnitSetup in setup.units():
 		ids.append(unit.id)
+		if unit.tactic != null:
+			tactic_names[unit.id] = unit.tactic.name
 	for entry: LogEntry in result.combat_log.entries:
 		if entry.kind == LogEntry.Kind.SUMMON and entry.note.is_empty():
 			ids.append(entry.target)
@@ -187,6 +191,8 @@ func _assert_sources(result: FightResult, setup: FightSetup) -> void:
 			assert_false(entry.status.is_empty() or entry.status_name.is_empty(), "names its status: " + line)
 		if needs.has("note"):
 			assert_false(entry.note.is_empty(), "says why: " + line)
+		if not entry.bonus.is_empty():
+			assert_true(tactic_names.has(entry.source_unit) and entry.bonus.ends_with("from " + tactic_names[entry.source_unit]), "a payoff names its unit's tactic: " + line)
 
 
 func test_the_text_board_shows_a_fight() -> void:

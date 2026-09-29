@@ -280,6 +280,14 @@ A tactic is a JSON entry in `data/tactics.json`, loaded by `ContentDb` as a `Tac
 - The sentences say what each payoff is for ("hits them harder", "attacking faster", "the heal it saved is stronger").
 - Nothing in a fight uses a payoff yet (R2); only the threshold moved.
 
+**Built in R2 (2026-09-29):**
+- **Casters first:** `EffectRunner.deal_hit` adds `damage_vs_bp` before Mark and defense, through `Tactics.damage_bonus_bp`. Only the attacker's own basic attack or signature counts (not a passive, a status, or a summon), and only on a target of the tactic's archetypes. `CombatSim.damage_payoffs` is set only when some unit has this payoff, so other fights never ask.
+- **Hold your ground:** the attack's progress runs `atsp_bp` faster while `holding`, and stops the moment the hold lets go.
+- **Wait to heal:** the payoff is on **every** fire of the signature, not a flag set by the fire that waited. With this tactic the bar can only go once an ally in reach is below 60%, so every Mend it lets go is one it waited for; a separate flag added state and a way to get out of step. It applies only to heal effects (Mend's shield isn't boosted). A Mend that flies as a shot keeps the boosted amount it left with.
+- **The log:** `EffectSource.with_bonus(note)` copies a source with a note, and `LogEntry.bonus` carries it: "(+20% from Casters first)" after a hit's number (before its crit and defense notes), "(+30% from Wait to heal)" after a heal's. The hold line says "holds its ground (+20% attack speed while it holds)". The audit checks every non-empty `bonus` ends "from <the unit's tactic>".
+- **The board:** the TACTIC popup drops the parenthesis, so it stays short.
+- **Checks:** the bench's fingerprints are unchanged, and every mutant of the three payoffs (wrong condition, wrong scope, no note) is caught by a test.
+
 ## Decisions (2026-09-29, the playtester's answers)
 
 1. **"Casters" are the caster and support archetypes:** Cinder Moth and Gloam Witch in Act 1. (Caster only would have been just the Moth; any enemy with a signature would have taken in the Sentinel.)

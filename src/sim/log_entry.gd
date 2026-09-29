@@ -55,6 +55,9 @@ var source_ability_name: String = ""
 var source_relic_side: int = -1
 ## The source is a duo bond's own effect (see EffectSource.synergy).
 var source_synergy: bool = false
+## DAMAGE, HEAL: what made the number bigger ("+20% from Casters first": a
+## tactic's payoff), or "".
+var bonus: String = ""
 var target: String = ""
 ## DAMAGE/COLLAPSE/STATUS_DAMAGE: the hit's full damage. HEAL: HP restored.
 ## SHIELD: shield given. STATUS_APPLIED: stacks added. MANA_DRAIN: mana
@@ -100,6 +103,7 @@ func set_source(source: EffectSource) -> void:
 	source_ability_name = source.ability_name
 	source_relic_side = source.relic_side
 	source_synergy = source.synergy
+	bonus = source.bonus
 
 
 func source() -> EffectSource:
@@ -123,7 +127,7 @@ func to_text() -> String:
 		Kind.DAMAGE:
 			return line + "%s hits %s for %d%s" % [source_text(), target, amount, _damage_detail()]
 		Kind.HEAL:
-			return line + "%s heals %s for %d" % [source_text(), target, amount]
+			return line + "%s heals %s for %d%s" % [source_text(), target, amount, "" if bonus.is_empty() else " (%s)" % bonus]
 		Kind.SHIELD:
 			return line + "%s gives %s %d shield" % [source_text(), target, amount]
 		Kind.COLLAPSE:
@@ -203,6 +207,8 @@ func to_text() -> String:
 
 func _damage_detail() -> String:
 	var parts: Array[String] = []
+	if not bonus.is_empty():
+		parts.append(bonus)
 	if crit:
 		parts.append("crit")
 	if mitigated > 0:

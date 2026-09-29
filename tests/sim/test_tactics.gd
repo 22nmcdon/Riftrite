@@ -6,8 +6,9 @@ extends GutTest
 const K = preload("res://tests/sim/sim_test_kit.gd")
 
 
-## A tactic of `kind` that the kits named in `heroes` can take.
-static func tactic(kind: TacticDef.Kind, heroes: Array[String]) -> TacticDef:
+## A tactic of `kind` that the kits named in `heroes` can take, with no
+## payoff unless `payoff_bp` (round 2) is given.
+static func tactic(kind: TacticDef.Kind, heroes: Array[String], payoff_bp: int = 0) -> TacticDef:
 	var def := TacticDef.new()
 	def.id = TacticDef.KIND_NAMES[kind]
 	def.name = {TacticDef.Kind.PREFER_TARGET: "Casters first", TacticDef.Kind.HOLD_GROUND: "Hold your ground",
@@ -17,11 +18,18 @@ static func tactic(kind: TacticDef.Kind, heroes: Array[String]) -> TacticDef:
 	def.release_range = 2 * HexGrid.HEX
 	def.below_bp = 5000
 	def.heroes = heroes
+	match kind:
+		TacticDef.Kind.PREFER_TARGET:
+			def.damage_vs_bp = payoff_bp
+		TacticDef.Kind.HOLD_GROUND:
+			def.atsp_bp = payoff_bp
+		TacticDef.Kind.SIGNATURE_THRESHOLD:
+			def.heal_bp = payoff_bp
 	return def
 
 
-static func with_tactic(setup: UnitSetup, kind: TacticDef.Kind) -> UnitSetup:
-	setup.tactic = tactic(kind, [setup.def.id] as Array[String])
+static func with_tactic(setup: UnitSetup, kind: TacticDef.Kind, payoff_bp: int = 0) -> UnitSetup:
+	setup.tactic = tactic(kind, [setup.def.id] as Array[String], payoff_bp)
 	return setup
 
 
@@ -176,11 +184,12 @@ func test_a_push_moves_a_holder_and_it_holds_where_it_lands() -> void:
 
 # --- Wait to heal -------------------------------------------------------------------
 
-func _healer_fight() -> CombatSim:
+func _healer_fight(payoff_bp: int = 0) -> CombatSim:
 	var mender: UnitSetup = with_tactic(K.at(K.kit("mender", {"stats": {"hp": 1000, "range": 3, "mgk": 10},
 		"mana": {"max": 20, "start": 20, "regen_per_s": 10},
 		"signature": {"id": "mend", "name": "Mend", "trigger": {"kind": "mana"}, "targeting": "lowest_hp_ally",
-			"effects": [{"type": "heal", "amount": 30, "target": "target"}]}}), 3, 0), TacticDef.Kind.SIGNATURE_THRESHOLD)
+			"effects": [{"type": "heal", "amount": 30, "target": "target"}, {"type": "shield", "amount": 10, "target": "target"}]}}), 3, 0),
+		TacticDef.Kind.SIGNATURE_THRESHOLD, payoff_bp)
 	var tank: UnitSetup = K.at(K.kit("tank", {"stats": {"hp": 1000}}), 4, 0)
 	var dummy: UnitDef = archer("dummy", "swarm", 1, {"basic_attack": {"effects": [{"type": "damage", "amount": 0, "target": "target"}]}})
 	var fight: CombatSim = K.sim(K.fight([mender, tank], [K.foe(dummy, 3, 6)]))
@@ -216,6 +225,109 @@ func test_without_the_tactic_mend_fires_at_once() -> void:
 	K.step(fight, 2)
 	assert_eq(fires(fight, "mender", "mend"), 1)
 	assert_eq(K.entries(fight, LogEntry.Kind.TACTIC).size(), 0)
+
+
+# --- Payoffs (round 2) --------------------------------------------------------------
+
+## The ranger's first hit on `foe_id` in a fight against a pup and a moth:
+## [damage before DEF, the log line].
+func _first_hit(payoff_bp: int, foe_id: String, stop_after: int = 60) -> Array:
+	var ranger: UnitSetup = with_tactic(K.at(K.kit("ranger", {"stats": {"hp": 5000, "range": 5, "atk": 40}}), 3, 1), TacticDef.Kind.PREFER_TARGET, payoff_bp)
+	var fight: CombatSim = K.sim(K.fight([ranger], [K.foe(archer("pup", "swarm", 1), 3, 4), K.foe(archer("moth", "caster", 1), 5, 6)]))
+	K.step(fight, stop_after)
+	for entry: LogEntry in K.entries(fight, LogEntry.Kind.DAMAGE, "ranger"):
+		if entry.target == foe_id:
+			return [entry.amount + entry.mitigated + entry.absorbed, entry.to_text()]
+	return [0, ""]
+
+
+func test_casters_first_hits_casters_harder() -> void:
+	var plain: Array = _first_hit(0, "moth")
+	var paid: Array = _first_hit(2000, "moth")
+	assert_gt(plain[0], 0)
+	assert_eq(paid[0], FixedMath.apply_bp(plain[0], 12000), "+20% before DEF")
+	assert_string_contains(paid[1], "(+20% from Casters first")
+	assert_false((plain[1] as String).contains("Casters first"), "no payoff, no note")
+
+
+func test_the_damage_payoff_is_for_its_own_attack_and_signature() -> void:
+	var sting: Dictionary = {"passives": [{"id": "sting", "name": "Sting", "kind": "ability",
+		"effects": [{"trigger": "on_basic_attack", "type": "damage", "amount": 5, "target": "target"}]}]}
+	var ranger: UnitSetup = with_tactic(K.at(K.kit("ranger", sting.merged({"stats": {"hp": 5000, "range": 5, "atk": 40}})), 3, 1), TacticDef.Kind.PREFER_TARGET, 2000)
+	var fight: CombatSim = K.sim(K.fight([ranger], [K.foe(archer("moth", "caster", 1), 5, 6)]))
+	K.step(fight, 60)
+	var stings: Array[LogEntry] = K.entries(fight, LogEntry.Kind.DAMAGE, "ranger").filter(func(hit: LogEntry) -> bool: return hit.source_ability == "sting")
+	var shots: Array[LogEntry] = K.entries(fight, LogEntry.Kind.DAMAGE, "ranger").filter(func(hit: LogEntry) -> bool: return hit.source_ability != "sting")
+	assert_gt(stings.size(), 0)
+	assert_gt(shots.size(), 0)
+	for hit: LogEntry in stings:
+		assert_eq(hit.bonus, "", "a passive's hit gets no payoff")
+	for hit: LogEntry in shots:
+		assert_eq(hit.bonus, "+20% from Casters first")
+
+
+func test_the_damage_payoff_skips_other_archetypes() -> void:
+	var ranger: UnitSetup = with_tactic(K.at(K.kit("ranger", {"stats": {"hp": 5000, "range": 5, "atk": 40}}), 3, 1), TacticDef.Kind.PREFER_TARGET, 2000)
+	var fight: CombatSim = K.sim(K.fight([ranger], [K.foe(archer("pup", "swarm", 1), 3, 4)]))
+	K.step(fight, 60)
+	var hits: Array[LogEntry] = K.entries(fight, LogEntry.Kind.DAMAGE, "ranger")
+	assert_gt(hits.size(), 0)
+	for hit: LogEntry in hits:
+		assert_eq(hit.bonus, "", "a swarm unit takes no payoff")
+
+
+## The ticks its basic attack fired on, holding or not.
+static func _attack_ticks(fight: CombatSim, unit_id: String) -> Array[int]:
+	var ticks: Array[int] = []
+	var attack_id: String = fight.unit_by_id(unit_id).attack.def.id
+	for entry: LogEntry in K.entries(fight, LogEntry.Kind.FIRE, unit_id):
+		if entry.source_ability == attack_id:
+			ticks.append(entry.tick)
+	return ticks
+
+
+func test_a_holder_attacks_faster_only_while_it_holds() -> void:
+	var ranger: UnitSetup = with_tactic(K.at(K.kit("ranger", {"stats": {"hp": 5000, "range": 5}}), 3, 0), TacticDef.Kind.HOLD_GROUND, 2000)
+	var hound: UnitDef = foe_kit("hound", "flanker", {"stats": {"hp": 30000, "atk": 1, "speed": 1}})
+	var fight: CombatSim = K.sim(K.fight([ranger], [K.foe(hound, 3, 6)]))
+	var holder: UnitState = fight.unit_by_id("ranger")
+	assert_string_contains(K.entries(fight, LogEntry.Kind.TACTIC, "ranger")[0].note, "holds its ground (+20% attack speed while it holds)")
+	while holder.holding and fight.tick < 600:
+		fight.step()
+	var released: int = fight.tick
+	K.step(fight, 200)
+	var ticks: Array[int] = _attack_ticks(fight, "ranger")
+	var held_gaps: Array[int] = []
+	var free_gaps: Array[int] = []
+	for i: int in range(1, ticks.size()):
+		if ticks[i] <= released:
+			held_gaps.append(ticks[i] - ticks[i - 1])
+		elif ticks[i - 1] > released + 20:
+			free_gaps.append(ticks[i] - ticks[i - 1])
+	assert_gt(held_gaps.size(), 1, "it shot while holding")
+	assert_gt(free_gaps.size(), 1, "and after")
+	for gap: int in held_gaps:
+		assert_eq(gap, 17, "a 1s attack every 17 ticks at +20%")
+	for gap: int in free_gaps:
+		assert_eq(gap, 20, "every 20 once it lets go")
+
+
+func test_the_heal_it_lets_go_is_stronger() -> void:
+	for payoff_bp: int in [0, 3000]:
+		var fight: CombatSim = _healer_fight(payoff_bp)
+		K.step(fight, 5)
+		fight.unit_by_id("tank").hp = 450
+		K.step(fight, 8)
+		var heals: Array[LogEntry] = K.entries(fight, LogEntry.Kind.HEAL, "mender")
+		assert_eq(heals.size(), 1)
+		assert_eq(heals[0].amount, 39 if payoff_bp > 0 else 30, "30 heal, +30% with the payoff")
+		assert_eq(heals[0].to_text().ends_with("(+30% from Wait to heal)"), payoff_bp > 0, heals[0].to_text())
+		assert_eq(K.entries(fight, LogEntry.Kind.SHIELD, "mender")[0].amount, 10, "its heals only, not its shield")
+		K.step(fight, 40)
+		var hits: Array[LogEntry] = K.entries(fight, LogEntry.Kind.DAMAGE, "mender")
+		assert_gt(hits.size(), 0, "it has attacked by now")
+		for hit: LogEntry in hits:
+			assert_eq(hit.bonus, "", "and not its basic attack")
 
 
 # --- The real tactics in a real fight ---------------------------------------------
