@@ -8,7 +8,7 @@ Working title: **Riftrite** (a placeholder). This document was rewritten on 2026
 | The arena: placement, movement, tanks, areas, the collapse | `docs/plans/rebuild-arena.md` |
 | Enemies, elites, the boss | `docs/plans/rebuild-enemies.md` |
 | The run: days, camp, fights, relics, duo bonds | `docs/plans/rebuild-run.md` |
-| Decisions between fights: after-fight picks, loadout slots and the currency, wounds | `docs/plans/rebuild-between-fights.md` |
+| Decisions between fights: after-fight picks, loadout slots and the currency, wounds, the Magpie, and the screens' item language | `docs/plans/rebuild-between-fights.md` |
 | Build order, and what the rebuild removed | `docs/plans/rebuild-build-order.md` |
 | Phase 1, the arena sim (build plan) | `docs/plans/rebuild-phase1-arena-sim.md` |
 | Phase 2, base heroes, the Act 1 enemies, encounters, and the sim runner (build plan) | `docs/plans/rebuild-phase2-heroes-enemies.md` |
@@ -41,7 +41,7 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 - **You can switch a vow** between fights until the hero transforms. Transformations are permanent.
 - **Every deed is hard to fill without its taste**, and every path changes where you'd place the hero.
 - **No ranks, no buying heroes, no duplicates.** Heroes grow through deeds (transformations, apexes) and after-fight picks.
-- **Loadout slots:** each hero has 3 slots for **charms** (small kit changes), **tactics** (behavior: "target casters first"), and **sigils** (how the signature fires), chosen before each fight. None are abilities, and all are written against the slot ("your signature"), so none goes useless when a hero transforms.
+- **Loadout slots:** each hero has 3 slots for **charms** (small kit changes), **tactics** (behavior: "target casters first"), and **sigils** (how the signature fires), chosen before each fight. None are abilities, and all are written against the slot ("your signature"), so none goes useless when a hero transforms. **Any hero can hold any of them**; the Pedlar sells only what your team can use, and the rare **Magpie** sells other heroes' gear, one relic, and **grafts** (the one slotted thing that gives a hero something new to do, never a path's key mechanic).
 
 ## The arena
 
@@ -126,6 +126,7 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - **Maren's hop** shows in the log as the trait's "Hop Away", not her passive's name, "Keep Your Distance". (phase 2 plan, section 3)
 - **Loadouts:** 3 slots each, or 2 then 3? How many tactics per hero, and which are shared by role? (part 6)
 - **The currency:** its name, prices, and income; whether the Pedlar's relic turns up about 1 visit in 3 or only at certain places. (part 6)
+- **Grafts and the Magpie:** the graft list and its frame; how often the Magpie comes, and whether his gear helps unlock a hero. (part 6)
 - **Rest:** does it also keep "the next loss doesn't count"? (part 6)
 - **Wounds:** is –15% up to 3 right, and should a lost fight's falls wound? (part 6)
 - **Sigils on signatures without mana:** written by what they do, or marked with the triggers they fit? (part 6)

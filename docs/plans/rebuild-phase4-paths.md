@@ -239,7 +239,7 @@ Heartseeker's pierce, Brand Slam, Last Rites, Weave, the stat changes, and the c
 
 ## 6. Practice: the hero panel
 
-The playtester's mock (`docs/mockups/hero-panel-layout.pdf`, 2026-09-29) is the design: a **hero panel** that opens over the screen, with the hero's figure and name on the left and three tabs on the right. Phase 4 builds it for Practice, where it's how you choose a path; phase 5 fills in what needs the run.
+The playtester's mock (`docs/mockups/hero-panel-layout.pdf`, page 1; its later pages are part 6's screens, section 9 of `rebuild-between-fights.md`) is the design: a **hero panel** that opens over the screen, with the hero's figure and name on the left and three tabs on the right. Phase 4 builds it for Practice, where it's how you choose a path; phase 5 fills in what needs the run.
 
 **The panel** (opens when you click a hero while placing, instead of today's small popup; in a fight the small popup stays, with its live numbers, since the panel would cover the board):
 - **The left side:** the hero's figure (the path's figure once transformed, with a "Base form" or path tag), name, title and role, and the HP bar.
