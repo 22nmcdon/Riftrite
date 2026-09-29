@@ -7,6 +7,7 @@ extends GutTest
 const K = preload("res://tests/sim/sim_test_kit.gd")
 const Chaos = preload("res://tests/sim/chaos_fight.gd")
 const TacticFights = preload("res://tests/sim/test_tactics.gd")
+const PathFights = preload("res://tests/sim/path_fights.gd")
 
 ## The chaos fight, run once for every test here (it takes a couple of
 ## seconds).
@@ -33,6 +34,29 @@ func test_a_fight_with_tactics_repeats_exactly() -> void:
 	var first: FightResult = K.run(TacticFights.tactics_setup())
 	assert_eq(K.run(TacticFights.tactics_setup()).combat_log.to_text(), first.combat_log.to_text())
 	assert_true(first.combat_log.entries.any(func(entry: LogEntry) -> bool: return entry.kind == LogEntry.Kind.TACTIC))
+
+
+## The paths (phase 4) change fights, so the paths fights repeat exactly
+## too, and between them use the log kinds and status the chaos fight
+## leaves to them.
+func test_the_paths_fights_repeat_exactly_and_use_the_path_pieces() -> void:
+	var content: ContentDb = K.content()
+	var kinds: Dictionary[LogEntry.Kind, bool] = {}
+	var statuses: Dictionary[String, bool] = {}
+	var fights: Array[FightSetup] = PathFights.all(content)
+	var again: Array[FightSetup] = PathFights.all(content)
+	for i: int in fights.size():
+		var first: FightResult = CombatSim.run(fights[i], content)
+		assert_eq(first.errors, [] as Array[String])
+		assert_eq(CombatSim.run(again[i], content).combat_log.to_text(), first.combat_log.to_text(), "paths fight %d repeats" % i)
+		for entry: LogEntry in first.combat_log.entries:
+			kinds[entry.kind] = true
+			if entry.kind == LogEntry.Kind.STATUS_APPLIED:
+				statuses[entry.status] = true
+	for kind: LogEntry.Kind in [LogEntry.Kind.ZONE, LogEntry.Kind.SNARE, LogEntry.Kind.WALL, LogEntry.Kind.GUARD, LogEntry.Kind.SAVED]:
+		assert_true(kinds.has(kind), "a paths fight has a %s" % LogEntry.Kind.keys()[kind])
+	for status_id: String in PATH_STATUSES:
+		assert_true(statuses.has(status_id), "a paths fight applies %s" % status_id)
 
 
 func test_the_seed_matters() -> void:

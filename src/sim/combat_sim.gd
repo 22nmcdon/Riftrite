@@ -332,6 +332,12 @@ func _act(unit: UnitState) -> void:
 		if attack.progress_bp >= attack.needed and (unit.def.plant_ticks == 0 or tick - unit.moved_at >= unit.def.plant_ticks):
 			EffectRunner.basic_attack(self, unit)
 		return
+	# About to walk: a unit that would reach its target once planted (phase 4,
+	# Steady) stops there and plants instead.
+	if unit.plant_reach_sq > 0 and dx * dx + dy * dy <= unit.plant_reach_sq:
+		if unit.leg_active:
+			Movement.halt(self, unit, "planting")
+		return
 	# About to walk: a unit holding its ground (Tactics) doesn't.
 	if unit.holding:
 		Tactics.stay(self, unit)

@@ -192,7 +192,7 @@ func _check_path(path: PathDef, where: String, grid: HexGrid) -> void:
 
 
 ## A tactic's heroes must exist; a signature_threshold tactic's must have a
-## mana signature that heals the lowest ally.
+## mana signature that heals (phase 4, Decision 4: any healing signature).
 func _check_tactic(tactic: TacticDef, where: String) -> void:
 	for i: int in tactic.heroes.size():
 		var hero_id: String = tactic.heroes[i]
@@ -205,8 +205,8 @@ func _check_tactic(tactic: TacticDef, where: String) -> void:
 		if tactic.kind != TacticDef.Kind.SIGNATURE_THRESHOLD:
 			continue
 		var signature: AbilityDef = heroes[hero_id].kit.signature if heroes[hero_id].kit != null else null
-		if signature == null or signature.targeting != "lowest_hp_ally" or signature.trigger.kind != TriggerDef.Kind.MANA:
-			errors.append("%s: %s's signature doesn't heal the lowest ally on mana, so it can't wait for one" % [where, hero_id])
+		if not Tactics.can_wait(signature):
+			errors.append("%s: %s's signature doesn't heal on mana, so it can't wait for a hurt ally" % [where, hero_id])
 
 
 ## A kit's statuses must exist (and not be Engaged, which only the trait

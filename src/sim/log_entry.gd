@@ -202,7 +202,7 @@ func to_text() -> String:
 					return line + "%s sets a snare at %s" % [source_text(), _point(from_pos)]
 				"sprung":
 					return line + "%s: %s steps in the snare at %s" % [source_text(), target, _point(from_pos)]
-			return line + "%s: the snare at %s is gone (%s)" % [source_text(), _point(from_pos), note]
+			return line + "%s: the snare at %s is gone (too many standing)" % [source_text(), _point(from_pos)]
 		Kind.WALL:
 			return line + "%s raises a wall from %s to %s (falls at %s)" % [source_text(), _point(from_pos), _point(to_pos), _format_time(end_tick)]
 		Kind.GUARD:

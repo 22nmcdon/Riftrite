@@ -109,11 +109,11 @@ func test_from_ability_counts_only_those() -> void:
 	assert_eq(amount(fight, "brawler", "p1"), logged(fight, LogEntry.Kind.DAMAGE, "brawler"))
 
 
-func test_from_hexes_needs_the_distance() -> void:
-	# A still target 5 hexes away counts; one 4 hexes away doesn't.
+func test_beyond_hexes_needs_the_distance() -> void:
+	# Beyond 4 hexes: a still target 5 hexes away counts; one exactly 4 away doesn't.
 	for row: int in [5, 4]:
 		var archer: UnitDef = K.kit("archer", {"stats": {"range": 6}})
-		var hero: UnitSetup = counting(K.at(archer, 3, 0), [deed({"counts": "damage", "from_hexes": 5}), deed({"counts": "damage"})])
+		var hero: UnitSetup = counting(K.at(archer, 3, 0), [deed({"counts": "damage", "beyond_hexes": 4}), deed({"counts": "damage"})])
 		var fight: CombatSim = K.sim(K.fight([hero], [K.foe(dummy(), 3, row)]))
 		K.step(fight, 100)
 		var dealt: int = logged(fight, LogEntry.Kind.DAMAGE, "archer")
@@ -123,10 +123,10 @@ func test_from_hexes_needs_the_distance() -> void:
 
 
 func test_a_shot_counts_from_where_it_was_fired() -> void:
-	# The target walks in while the arrows fly: a shot fired from 5 hexes or
-	# more counts even if it lands nearer, and one fired from nearer doesn't.
+	# The target walks in while the arrows fly: a shot fired from beyond 4
+	# hexes counts even if it lands nearer, and one fired from nearer doesn't.
 	var archer: UnitDef = K.kit("archer", {"stats": {"range": 7, "speed": 0}, "basic_attack": {"cooldown_ms": 250}})
-	var hero: UnitSetup = counting(K.at(archer, 3, 0), [deed({"counts": "damage", "from_hexes": 5})])
+	var hero: UnitSetup = counting(K.at(archer, 3, 0), [deed({"counts": "damage", "beyond_hexes": 4})])
 	var walker: UnitDef = dummy({"stats": {"hp": 5000, "atk": 1, "speed": 1}})
 	var fight: CombatSim = K.sim(K.fight([hero], [K.foe(walker, 3, 6)]))
 	var expected: int = 0
@@ -140,13 +140,13 @@ func test_a_shot_counts_from_where_it_was_fired() -> void:
 			if entry.source_unit != "archer":
 				continue
 			if entry.kind == LogEntry.Kind.SHOT:
-				far[entry.end_tick] = ArenaPlane.length_sq(entry.to_pos - entry.from_pos) >= 5000 * 5000
+				far[entry.end_tick] = ArenaPlane.length_sq(entry.to_pos - entry.from_pos) > 4000 * 4000
 			elif entry.kind == LogEntry.Kind.DAMAGE and far.get(entry.tick, false):
 				expected += entry.amount
 				var target: UnitState = fight.unit_by_id(entry.target)
-				if ArenaPlane.length_sq(target.pos - fight.unit_by_id("archer").pos) < 5000 * 5000:
+				if ArenaPlane.length_sq(target.pos - fight.unit_by_id("archer").pos) <= 4000 * 4000:
 					landed_nearer += 1
-	assert_gt(landed_nearer, 0, "some shot left from 5 hexes and landed nearer (or the test proves nothing)")
+	assert_gt(landed_nearer, 0, "some shot left from beyond 4 hexes and landed nearer (or the test proves nothing)")
 	assert_gt(expected, 0)
 	assert_lt(expected, logged(fight, LogEntry.Kind.DAMAGE, "archer"), "and some left from nearer")
 	assert_eq(amount(fight, "archer", "p0"), expected)
@@ -180,7 +180,7 @@ func test_while_below_counts_only_low_hits() -> void:
 func test_counting_changes_nothing_and_reaches_the_result() -> void:
 	var plain: FightSetup = K.fight([K.at(K.kit("brawler"), 3, 2), K.at(K.kit("archer", {"stats": {"range": 4}}), 2, 1)], [K.foe(dummy(), 3, 4)])
 	var counted: FightSetup = K.fight([counting(K.at(K.kit("brawler"), 3, 2), [deed({"counts": "damage"}), deed({"counts": "shield"})]),
-		counting(K.at(K.kit("archer", {"stats": {"range": 4}}), 2, 1), [deed({"counts": "damage", "from_hexes": 3})])], [K.foe(dummy(), 3, 4)])
+		counting(K.at(K.kit("archer", {"stats": {"range": 4}}), 2, 1), [deed({"counts": "damage", "beyond_hexes": 3})])], [K.foe(dummy(), 3, 4)])
 	var without: FightResult = K.run(plain)
 	var with_deeds: FightResult = K.run(counted)
 	assert_eq(with_deeds.combat_log.to_text(), without.combat_log.to_text())

@@ -15,7 +15,7 @@ extends RefCounted
 ## During a fight, live_text() and recent_lines() add the unit's numbers now
 ## and its last few log lines.
 
-const TRAIT_NAMES: Dictionary[String, String] = {"engage": "Engage", "flying": "Flying", "hop_away": "Hop away"}
+const TRAIT_NAMES: Dictionary[String, String] = {"engage": "Engage", "flying": "Flying", "hop_away": "Hop away", "fires_moving": "Fires moving"}
 const EVENT_WORDS: Dictionary[int, String] = {
 	EffectDef.Trigger.ON_ABILITY: "ability", EffectDef.Trigger.ON_BASIC_ATTACK: "basic attack",
 	EffectDef.Trigger.ON_HOLDER_CRIT: "crit", EffectDef.Trigger.ON_SHIELDED: "Shield taken",
@@ -82,6 +82,8 @@ static func trait_text(trait_id: String, who: String) -> String:
 			return "%s flies over units and rocks, and lands only to attack." % who.capitalize()
 		"hop_away":
 			return "When a foe comes within 1 hex, %s hops a hex away from it." % who
+		"fires_moving":
+			return "While walking, %s shoots the nearest foe in reach without stopping." % who
 	return ""
 
 
@@ -91,6 +93,8 @@ static func trait_numbers(trait_id: String, kit: UnitDef, tuning: TuningDef) -> 
 			return "Breaking free takes %s" % seconds(tuning.break_free_ticks)
 		"hop_away":
 			return "At most once every %s" % seconds(kit.hop_cooldown_ticks)
+		"fires_moving":
+			return "Basic attack only, on its usual cooldown"
 	return ""
 
 
@@ -121,6 +125,10 @@ static func passive_numbers(part: PartDef, kit: UnitDef, content: ContentDb) -> 
 			return aura_text(part.aura)
 		PartDef.Kind.REPLACE_STATUS:
 			return "%s becomes %s" % [_status_name(part.from_status, content), _status_name(part.to_status, content)]
+		PartDef.Kind.GUARD:
+			@warning_ignore("integer_division")
+			return "Takes %s of each enemy hit on an ally %swithin %s" % [ValueBreakdown._percent(part.share_bp),
+				"behind it " if part.behind_only else "", hexes(part.guard_range / HexGrid.HEX)]
 	var parts: Array[String] = [passive_trigger_text(part.ability.effects[0])]
 	parts.append_array(effect_numbers(part.ability.effects, kit, content))
 	return " · ".join(parts)
@@ -169,7 +177,9 @@ static func trigger_text(trigger: TriggerDef, kit: UnitDef) -> String:
 static func passive_trigger_text(effect: EffectDef) -> String:
 	match effect.trigger:
 		EffectDef.Trigger.ON_INTERVAL:
-			return "Every %s" % seconds(effect.interval_ticks)
+			return ("Once, after %s" if effect.once else "Every %s") % seconds(effect.interval_ticks)
+		EffectDef.Trigger.ON_WOULD_FALL:
+			return "Once, when it would fall"
 		EffectDef.Trigger.ON_FALL:
 			return "As it falls"
 		EffectDef.Trigger.ON_ALLY_BELOW_HP:
@@ -178,11 +188,24 @@ static func passive_trigger_text(effect: EffectDef) -> String:
 
 
 static func aura_text(aura: AuraDef) -> String:
-	var text: String = "x%s %s" % [ValueBreakdown._ratio(aura.value), AuraDef.STAT_LABELS[aura.stat]]
+	var text: String
+	if aura.stat == AuraDef.Stat.RANGE:
+		text = "%+d range" % aura.value
+	elif aura.is_additive():
+		text = "%s%s %s" % ["+" if aura.value >= 0 else "", ValueBreakdown._percent(aura.value), AuraDef.STAT_LABELS[aura.stat]]
+	else:
+		text = "x%s %s" % [ValueBreakdown._ratio(aura.value), AuraDef.STAT_LABELS[aura.stat]]
 	if aura.target == AuraDef.Target.ALL_ALLIES:
 		text += " for all allies"
-	if aura.while_taunting:
-		text += " while taunting"
+	match aura.while_kind:
+		AuraDef.While.TAUNTING:
+			text += " while taunting"
+		AuraDef.While.PLANTED:
+			text += " after %s still" % seconds(aura.after_ticks)
+		AuraDef.While.BELOW_HP:
+			text += " below %s HP" % ValueBreakdown._percent(aura.below_bp)
+	if aura.per_fallen_ally:
+		text += " per fallen ally"
 	if aura.window_until_ticks >= 0:
 		text += " until %s" % seconds(aura.window_until_ticks)
 	return text
@@ -195,14 +218,51 @@ static func effect_numbers(effects: Array[EffectDef], kit: UnitDef, content: Con
 		var part: String = _effect_text(effect, kit, content)
 		if not part.is_empty():
 			parts.append(part)
-		if effect.type == EffectDef.Type.AREA:
+		if effect.type == EffectDef.Type.AREA or effect.type == EffectDef.Type.SNARE:
 			parts.append_array(effect_numbers(effect.area_effects, kit, content))
 	return parts
 
 
 static func _effect_text(effect: EffectDef, kit: UnitDef, content: ContentDb) -> String:
+	var text: String = _effect_core(effect, kit, content)
+	if text.is_empty():
+		return text
+	text += _near(effect)
+	match effect.side:
+		EffectDef.AreaSide.ENEMIES:
+			text += " to enemies"
+		EffectDef.AreaSide.ALLIES:
+			text += " to allies"
+	if effect.every > 1 and effect.trigger == EffectDef.Trigger.ON_FIRE:
+		text = "every %s: %s" % [_nth(effect.every, "fire"), text]
+	return text
+
+
+## " to the enemy nearest the target (within 1 hex)" and the like (phase 4).
+static func _near(effect: EffectDef) -> String:
+	@warning_ignore("integer_division")
+	var within: String = " (within %s)" % hexes(effect.near_range / HexGrid.HEX) if effect.near_range > 0 else ""
+	match effect.target:
+		EffectDef.Target.ENEMY_NEAR_TARGET:
+			return " to the enemy nearest the target" + within
+		EffectDef.Target.ENEMIES_NEAR_TARGET:
+			return " to every enemy near the target" + within
+		EffectDef.Target.ALLY_NEAR_TARGET:
+			return " to the ally nearest the target" + within
+		EffectDef.Target.ALLIES_NEAR_TARGET:
+			return " to every ally near the target" + within
+		EffectDef.Target.LOWEST_HP_ALLY:
+			return " to the ally lowest on HP" + within
+		EffectDef.Target.SELF:
+			return " to itself" if effect.type == EffectDef.Type.GAIN_MANA else ""
+	return ""
+
+
+static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) -> String:
 	match effect.type:
 		EffectDef.Type.DAMAGE:
+			if effect.amount_bp_of_damage > 0:
+				return "%s of the hit as damage" % ValueBreakdown._percent(effect.amount_bp_of_damage)
 			var text: String = _amount(effect, kit, "damage")
 			if effect.bonus_bp_per_ally > 0:
 				var kin: String = _unit_name(effect.bonus_kit, content) if not effect.bonus_kit.is_empty() else "ally"
@@ -211,7 +271,12 @@ static func _effect_text(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 		EffectDef.Type.HEAL:
 			if effect.amount_bp_of_max_hp > 0:
 				return "heals %s of max HP" % ValueBreakdown._percent(effect.amount_bp_of_max_hp)
-			return "heals " + _amount(effect, kit, "") + _to_all(effect)
+			if effect.amount_bp_of_damage > 0:
+				return "heals %s of the damage" % ValueBreakdown._percent(effect.amount_bp_of_damage)
+			var healed: String = "heals " + _amount(effect, kit, "") + _to_all(effect)
+			if effect.overheal_shield_bp > 0:
+				healed += ", past full HP %s as Shield" % ValueBreakdown._percent(effect.overheal_shield_bp)
+			return healed
 		EffectDef.Type.SHIELD:
 			if effect.amount_bp_of_damage > 0:
 				return "Shield of %s of the hit" % ValueBreakdown._percent(effect.amount_bp_of_damage)
@@ -226,6 +291,13 @@ static func _effect_text(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 			return "cleanses %s of damage over time" % ValueBreakdown._percent(effect.amount)
 		EffectDef.Type.MANA_DRAIN:
 			return "drains %d mana" % effect.amount
+		EffectDef.Type.GAIN_MANA:
+			return "+%d mana" % effect.amount
+		EffectDef.Type.SNARE:
+			return "a snare in the target's path" + (" (up to %d at once)" % effect.max_standing if effect.max_standing > 0 else "")
+		EffectDef.Type.WALL:
+			@warning_ignore("integer_division")
+			return "a %s-wide wall %s ahead for %s, stopping enemy shots" % [hexes(effect.width_range / HexGrid.HEX), hexes(effect.ahead_range / HexGrid.HEX), seconds(effect.zone_ticks)]
 		EffectDef.Type.KNOCKBACK:
 			return "knocks back %s" % hexes(effect.hexes)
 		EffectDef.Type.PULL:
@@ -238,6 +310,8 @@ static func _effect_text(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 			var text: String = "%d-hex %s %s" % [effect.shape.size, ShapeDef.KIND_NAMES[effect.shape.kind], "around it" if effect.anchor == EffectDef.Anchor.SELF else "at the target"]
 			if effect.warning_ticks > 0:
 				text += " (%s warning)" % seconds(effect.warning_ticks)
+			if effect.zone_ticks > 0:
+				text += " for %s, every %s" % [seconds(effect.zone_ticks), seconds(effect.pulse_ticks)]
 			return text
 		EffectDef.Type.START_COLLAPSE:
 			return "starts Rift Collapse"
@@ -335,6 +409,9 @@ static func _effect_reaches(effects: Array[EffectDef], found: Array[int]) -> voi
 			_effect_reaches(effect.area_effects, found)
 		if effect.bonus_within > 0:
 			found.append(bonus_hexes(effect))
+		if effect.near_range > 0:
+			@warning_ignore("integer_division")
+			found.append(effect.near_range / HexGrid.HEX)
 
 
 # --- during a fight ----------------------------------------------------------------

@@ -5,6 +5,9 @@ extends RefCounted
 ## (docs/plans/rebuild-phase1-arena-sim.md, sections 1 to 5).
 
 ## Where it is in the fight's order (heroes, then enemies, then summons).
+## moved_at for a unit that hasn't moved yet.
+const NEVER_MOVED: int = -1000000
+
 var index: int
 var id: String
 ## What the log credits for what the unit does itself (moving, picking a
@@ -92,11 +95,17 @@ var status_swaps: Dictionary[String, String] = {}
 ## The tick it joined the fight (0, or when it was summoned): on_interval
 ## counts from here.
 var joined_at: int = 0
-## The last tick it moved (walked, flew, hopped, leapt, or was pushed; 0 at
-## the start): phase 4's planted auras and plant delay read it.
-var moved_at: int = 0
+## The last tick it moved (walked, flew, hopped, leapt, or was pushed):
+## phase 4's planted auras and plant delay read it. A unit that hasn't moved
+## since it was placed has stood still since before the fight
+## (NEVER_MOVED), so it starts planted.
+var moved_at: int = NEVER_MOVED
 ## The fires_moving trait (phase 4), read every tick it walks.
 var fires_moving: bool = false
+## Range its planted auras add once it stands still (phase 4, Steady), and
+## the reach it stops walking at to plant (squared; 0: no such aura).
+var planted_bonus: int = 0
+var plant_reach_sq: int = 0
 ## Its conditional auras' state (Passives.condition_key), as last folded in.
 var condition_key: int = 0
 
@@ -164,6 +173,9 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 	unit.refresh_reach()
 	unit.flying = setup.def.has_trait("flying")
 	unit.fires_moving = setup.def.has_trait("fires_moving")
+	for part: PartDef in setup.def.passives:
+		if part.kind == PartDef.Kind.AURA and part.aura.stat == AuraDef.Stat.RANGE and part.aura.while_kind == AuraDef.While.PLANTED:
+			unit.planted_bonus += part.aura.value
 	unit.tactic = setup.tactic
 	unit.holding = setup.tactic != null and setup.tactic.kind == TacticDef.Kind.HOLD_GROUND
 	unit.deeds = Deeds.make_counter(setup.deed_paths)
@@ -227,6 +239,9 @@ func in_reach_of(other: UnitState) -> bool:
 func refresh_reach() -> void:
 	var reach_units: int = reach()
 	reach_sq = reach_units * reach_units
+	if planted_bonus > 0:
+		var planted: int = (base_stats.get_stat(UnitStats.Stat.RANGE) + planted_bonus) * HexGrid.HEX
+		plant_reach_sq = planted * planted
 
 
 ## Its DEF, less what damage over time has shredded (never below 0).

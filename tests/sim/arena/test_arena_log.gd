@@ -8,6 +8,7 @@ extends GutTest
 const K = preload("res://tests/sim/sim_test_kit.gd")
 const Chaos = preload("res://tests/sim/chaos_fight.gd")
 const TacticFights = preload("res://tests/sim/test_tactics.gd")
+const PathFights = preload("res://tests/sim/path_fights.gd")
 
 
 ## A busy fight: melee and ranged on both sides, a rock in the middle.
@@ -66,7 +67,13 @@ func test_the_log_replays_a_fight_of_the_content_kits() -> void:
 	_assert_replays(content_setup())
 
 
-func _assert_replays(setup: FightSetup) -> void:
+## The paths' leaps, pushes, and walls of moves replay too (phase 4).
+func test_the_log_replays_the_paths_fights() -> void:
+	for setup: FightSetup in PathFights.all(K.content()):
+		_assert_replays(setup, 1)
+
+
+func _assert_replays(setup: FightSetup, fewest_moves: int = 11) -> void:
 	var fight: CombatSim = K.sim(setup)
 	var truth: Array[Dictionary] = []
 	while not fight.finished:
@@ -79,7 +86,7 @@ func _assert_replays(setup: FightSetup) -> void:
 		if not K.no_overlaps(fight):
 			fail_test("tick %d: two units overlap\n%s" % [fight.tick, ArenaDebug.render(fight)])
 			return
-	assert_gt(K.entries(fight, LogEntry.Kind.MOVE).size(), 10, "plenty of walking")
+	assert_gte(K.entries(fight, LogEntry.Kind.MOVE).size(), fewest_moves, "plenty of walking")
 	# Replay: start on the hex centers, then follow the log.
 	var grid: HexGrid = fight.grid
 	var pos: Dictionary = {}
@@ -158,7 +165,9 @@ const NAMES: Dictionary = {
 
 
 func test_every_entry_names_its_source() -> void:
-	for setup: FightSetup in [busy_setup(), Chaos.setup(), content_setup(), TacticFights.tactics_setup()]:
+	var fights: Array[FightSetup] = [busy_setup(), Chaos.setup(), content_setup(), TacticFights.tactics_setup()]
+	fights.append_array(PathFights.all(K.content()))
+	for setup: FightSetup in fights:
 		_assert_sources(K.run(setup), setup)
 
 

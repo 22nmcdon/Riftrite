@@ -75,7 +75,7 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 		if effect.every > 1 and state.fires % effect.every != 0:
 			continue
 		if effect.type == EffectDef.Type.AREA:
-			Areas.cast(sim, unit, ability, source, effect, target)
+			Areas.cast(sim, unit, ability, source, effect, target, heal_boost_bp)
 			continue
 		if effect.type == EffectDef.Type.SNARE:
 			Snares.set_ahead(sim, unit, ability, source, effect, target)

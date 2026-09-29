@@ -94,6 +94,18 @@ func is_signature() -> bool:
 	return trigger != null
 
 
+## True if any of its effects heals (an area's or zone's own included):
+## what Wait to heal needs (phase 4, Decision 4).
+func heals() -> bool:
+	for effect: EffectDef in effects:
+		if effect.type == EffectDef.Type.HEAL:
+			return true
+		for nested: EffectDef in effect.area_effects:
+			if nested.type == EffectDef.Type.HEAL:
+				return true
+	return false
+
+
 ## True if this ability, used from `reach` hexes, fires a shot. One that
 ## leaps or charges never does: the unit closes the distance itself.
 func is_shot(reach: int) -> bool:

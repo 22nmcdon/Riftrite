@@ -20,7 +20,12 @@ extends RefCounted
 ## standing enemy's Taunt in effect is its own (Brannoc's Hold the Line;
 ## docs/plans/rebuild-phase2-heroes-enemies.md, section 4). Phase 4 adds:
 ##   "while": "planted", "after_ms": 2000   on once it hasn't moved for that
-##                                          long (Steady)
+##                                          long (Steady; a unit starts
+##                                          planted). A planted range aura
+##                                          also stops the unit walking once
+##                                          its target is within the reach
+##                                          it'll have planted, so it plants
+##                                          there (CombatSim)
 ##   "while": "below_hp", "below_pct": 30   on while its HP is below that
 ##                                          share (Last Watch)
 ##   "per": "fallen_ally"                   counts once for each of its side

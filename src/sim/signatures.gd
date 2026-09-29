@@ -15,8 +15,8 @@ extends RefCounted
 ## Everything but mana fires even while the unit is Stunned. A signature
 ## picks a fresh target each time it fires; with none in reach, it waits
 ## (a mana bar stays full, and other fires stay queued). A hero with a
-## signature_threshold tactic also waits, full, until the ally it picked is
-## hurt enough (Tactics.hurt_enough).
+## signature_threshold tactic also waits, full, until the ally lowest on HP
+## in its reach is hurt enough (Tactics.hurt_enough).
 ##   - would_fall runs in the deaths step instead: the first time the unit
 ##     would fall, it's left at 1 HP (SAVED) and the signature fires at once.
 
@@ -43,7 +43,7 @@ static func act(sim: CombatSim, unit: UnitState) -> bool:
 				var target: UnitState = pick_target(sim, unit)
 				if target == null:
 					return false
-				if unit.tactic != null and unit.tactic.kind == TacticDef.Kind.SIGNATURE_THRESHOLD and not Tactics.hurt_enough(sim, unit, target):
+				if unit.tactic != null and unit.tactic.kind == TacticDef.Kind.SIGNATURE_THRESHOLD and not Tactics.hurt_enough(sim, unit):
 					return false
 				if signature.def.cast_ticks > 0:
 					_start_cast(sim, unit, target)

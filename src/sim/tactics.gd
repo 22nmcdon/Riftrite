@@ -15,9 +15,12 @@ extends RefCounted
 ##                        target is out of reach (unless Taunted), and keeps it
 ##                        from walking. A push, pull, or leap still moves it,
 ##                        and it still leaves crumbling ground.
-##   signature_threshold  hurt_enough() gates its mana signature: the picked
-##                        ally (the lowest in reach) must be below below_bp
-##                        of max HP, or the full bar waits (logged once a bar).
+##   signature_threshold  hurt_enough() gates its mana signature: the ally
+##                        lowest on HP within the signature's reach must be
+##                        below below_bp of max HP, or the full bar waits
+##                        (logged once a bar). Any signature that heals on
+##                        mana can wait (can_wait; phase 4, Decision 4), so
+##                        Night Lantern and Sunfall wait like Mend.
 ## Every line is a TACTIC entry sourced to the unit and its tactic (rule 4).
 ## Payoffs (round 2, section 9), only while the behavior applies, each named
 ## in the log line it changes ("+20% from Casters first"):
@@ -28,8 +31,8 @@ extends RefCounted
 ##                        (CombatSim)
 ##   signature_threshold  every fire of its signature has passed
 ##                        hurt_enough(), so EffectRunner.fire heals more on
-##                        each (its heals only; a shot keeps the number it
-##                        left with)
+##                        each (its heals only, an area's or zone's
+##                        included; a shot keeps the number it left with)
 
 
 ## Logs what a unit's tactic did (`note`), about `about` if it names a unit.
@@ -94,10 +97,13 @@ static func stay(sim: CombatSim, unit: UnitState) -> void:
 			Targeting.set_target(sim, unit, near, unit.tactic.name)
 
 
-## signature_threshold: true if `ally` (the one its signature picked) is
-## hurt enough to heal now; otherwise the bar waits, logged once per bar.
-static func hurt_enough(sim: CombatSim, unit: UnitState, ally: UnitState) -> bool:
-	if ally.hp * FixedMath.BP_ONE < ally.max_hp * unit.tactic.below_bp:
+## signature_threshold: true if the ally lowest on HP within its signature's
+## reach is hurt enough to heal now; otherwise the bar waits, logged once
+## per bar.
+static func hurt_enough(sim: CombatSim, unit: UnitState) -> bool:
+	var reach: int = unit.reach_of(unit.signature.def)
+	var ally: UnitState = Targeting.pick(sim, unit, "lowest_hp_ally", reach * reach)
+	if ally != null and ally.hp * FixedMath.BP_ONE < ally.max_hp * unit.tactic.below_bp:
 		unit.tactic_waiting = false
 		return true
 	if not unit.tactic_waiting:
@@ -105,3 +111,9 @@ static func hurt_enough(sim: CombatSim, unit: UnitState, ally: UnitState) -> boo
 		log_tactic(sim, unit, "%s waits: no ally within %d hexes below %d%%" % [unit.signature.def.name,
 			unit.reach_of(unit.signature.def) / HexGrid.HEX, unit.tactic.below_bp / 100])
 	return false
+
+
+## True if a signature_threshold tactic can hold this signature: it fires on
+## mana and heals (phase 4, Decision 4).
+static func can_wait(signature: AbilityDef) -> bool:
+	return signature != null and signature.trigger != null and signature.trigger.kind == TriggerDef.Kind.MANA and signature.heals()

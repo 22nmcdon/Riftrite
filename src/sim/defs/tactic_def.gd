@@ -13,11 +13,11 @@ extends RefCounted
 ##                        first ("archetypes": EnemyDef's names)
 ##   hold_ground          doesn't walk until an enemy comes within
 ##                        "release_hexes" (whole hexes), then lets go for good
-##   signature_threshold  its mana signature (one that heals the lowest ally)
+##   signature_threshold  its mana signature (one that heals: Tactics.can_wait)
 ##                        waits, full, until an ally in its reach is below
 ##                        "below_pct" of max HP
 ## "heroes" lists who can take it (ContentDb checks they exist, and that a
-## signature_threshold hero's signature heals the lowest ally). "text" is the
+## signature_threshold hero's signature heals). "text" is the
 ## player's sentence, like every ability's.
 ## An optional "payoff" (round 2, section 9) pays for the behavior, only
 ## while it applies; each kind reads only its own key, in basis points:

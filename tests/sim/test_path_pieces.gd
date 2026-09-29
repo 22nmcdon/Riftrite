@@ -245,27 +245,28 @@ func test_a_zone_lands_every_pulse_until_it_ends() -> void:
 # --- auras -----------------------------------------------------------------------------------
 
 func test_a_planted_aura_waits_for_the_unit_to_stand_still() -> void:
-	# Range 2 can't reach 3 hexes; once planted for 1s, +1 range can.
+	# A unit that hasn't moved since it was placed starts planted: range 2
+	# plus 1 reaches the dummy 3 hexes away at once.
 	var steady: Dictionary = {"id": "steady", "name": "Steady", "kind": "aura", "aura": {"target": "holder", "stat": "range", "value": 1, "while": "planted", "after_ms": 1000}}
 	var hero: UnitDef = still("sniper", [{"type": "damage", "amount": 1, "target": "target"}], {"passives": [steady], "stats": {"range": 2}}, 250, true)
 	var fight: CombatSim = K.sim(K.fight([K.at(hero, 3, 1)], [K.foe(still("dummy"), 3, 4)]))
 	var unit: UnitState = fight.unit_by_id("sniper")
-	K.step(fight, 19)
-	assert_eq(unit.stats.get_stat(UnitStats.Stat.RANGE), 2)
-	assert_eq(K.entries(fight, LogEntry.Kind.FIRE, "sniper").size(), 0)
-	K.step(fight, 3)
-	assert_eq(unit.stats.get_stat(UnitStats.Stat.RANGE), 3, "planted from tick 20")
+	assert_eq(unit.moved_at, UnitState.NEVER_MOVED)
+	assert_eq(unit.stats.get_stat(UnitStats.Stat.RANGE), 3, "planted from the start")
 	var auras: Array[LogEntry] = K.entries(fight, LogEntry.Kind.AURA, "sniper")
 	assert_eq(auras.size(), 1)
-	assert_eq(auras[0].tick, 20)
 	assert_string_contains(auras[0].note, "+1 range for its holder once it hasn't moved for 1s")
 	K.step(fight, 10)
-	assert_gt(K.entries(fight, LogEntry.Kind.FIRE, "sniper").size(), 0, "now it reaches")
-	# Moving ends it: a push counts.
+	assert_gt(K.entries(fight, LogEntry.Kind.FIRE, "sniper").size(), 0, "it reaches")
+	# Moving ends it (a push counts), and 1s of standing still brings it back.
 	Displacement.knockback(fight, unit, Vector2i(3098, 5000), 1, 1, EffectSource.make("dummy", "shove", "Shove"))
+	var pushed: int = fight.tick
 	K.step(fight, 1)
 	assert_eq(unit.stats.get_stat(UnitStats.Stat.RANGE), 2)
 	assert_eq(K.entries(fight, LogEntry.Kind.AURA, "sniper").back().note, "ends")
+	K.step(fight, 20)
+	assert_eq(unit.stats.get_stat(UnitStats.Stat.RANGE), 3)
+	assert_eq(K.entries(fight, LogEntry.Kind.AURA, "sniper").back().tick, pushed + 20, "planted again 1s after the push")
 
 
 func test_a_below_hp_aura_holds_while_hurt() -> void:

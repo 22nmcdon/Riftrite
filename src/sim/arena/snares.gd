@@ -2,15 +2,17 @@ class_name Snares
 extends RefCounted
 ## Snares (docs/plans/rebuild-phase4-paths.md, section 5, P8; Trapper Maren):
 ## a snare lies on the plane until the first enemy of its owner walks into it.
-##   - Set by a snare effect (EffectDef: placement, max_standing, and its
-##     own effects), "in the path" of the ability's target: 1 hex ahead of it,
-##     toward whatever it's going for (its own target, or else the unit that
-##     set the snare), kept on safe ground. Or placed by the player before the
+##   - Set by a snare effect (EffectDef: max_standing, and its own effects),
+##     "in the path" of the ability's target: ahead of it toward whatever
+##     it's going for (its own target, or else the unit that set the snare),
+##     1 hex or half the way there, whichever is less (so one that has
+##     arrived is snared where it stands), kept on safe ground. Or placed by the player before the
 ##     fight (UnitSetup.snares), from the first snare effect in the unit's
 ##     kit.
 ##   - Its effects' numbers are fixed as it's set, like a shot's.
 ##   - It springs on the first standing enemy (in the fight's order) whose
-##     center comes within RADIUS of it, checked after every unit has acted
+##     center comes within RADIUS (half a hex: the snare covers its hex) of
+##     it, checked after every unit has acted
 ##     each tick; a unit in the air flies over it. It lands its effects on
 ##     that enemy and is gone.
 ##   - With max_standing, setting one more than that removes the oldest of
@@ -19,7 +21,7 @@ extends RefCounted
 ##     "gone" (replaced). It stays if its owner falls.
 
 ## How close a unit's center must come (plane units).
-const RADIUS: int = 300
+const RADIUS: int = 500
 
 
 ## One snare on the ground.
@@ -38,7 +40,9 @@ static func set_ahead(sim: CombatSim, unit: UnitState, ability: AbilityDef, sour
 		return
 	var toward: UnitState = target.target if target.target != null and target.target.alive else unit
 	var dir: Vector2i = ArenaPlane.direction(target.pos, toward.pos, Vector2i(0, ArenaPlane.DIR * target.forward()))
-	var point: Vector2i = ArenaPlane.along(target.pos, dir, HexGrid.HEX)
+	@warning_ignore("integer_division")
+	var ahead: int = mini(HexGrid.HEX, ArenaPlane.distance(target.pos, toward.pos) / 2)
+	var point: Vector2i = ArenaPlane.along(target.pos, dir, ahead)
 	place(sim, unit, ability, source, effect, sim.nearest_safe_point(point, 0))
 
 

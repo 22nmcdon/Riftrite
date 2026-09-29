@@ -123,7 +123,7 @@ func test_bad_tactics_are_reported() -> void:
 
 
 func test_only_a_healing_signature_can_wait() -> void:
-	_assert_error(_load_tactics([tactic("signature_threshold", {"heroes": ["maren"]})]), "maren's signature doesn't heal the lowest ally on mana")
+	_assert_error(_load_tactics([tactic("signature_threshold", {"heroes": ["maren"]})]), "maren's signature doesn't heal on mana")
 	_assert_error(_load_tactics([tactic("signature_threshold", {"heroes": ["brannoc"]})]), "brannoc's signature")
 	assert_true(_load_tactics([tactic("signature_threshold", {"heroes": ["vell"]})]).is_valid())
 

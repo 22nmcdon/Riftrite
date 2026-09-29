@@ -47,8 +47,8 @@ class Pending:
 
 
 ## `unit`'s ability casts the area `effect` at `target` (null for an area on
-## the unit itself).
-static func cast(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: EffectSource, effect: EffectDef, target: UnitState) -> void:
+## the unit itself). `heal_boost_bp`: a Wait to heal payoff on its heals.
+static func cast(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: EffectSource, effect: EffectDef, target: UnitState, heal_boost_bp: int = 0) -> void:
 	var area := Pending.new()
 	area.unit = unit
 	area.ability = ability
@@ -66,7 +66,10 @@ static func cast(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			area.origin = ArenaPlane.along(unit.pos, area.dir, unit.radius)
 			area.push_from = unit.pos
 	for nested: EffectDef in effect.area_effects:
-		area.amounts.append(EffectRunner.amount_of(nested, unit, 0, sim))
+		var amount: int = EffectRunner.amount_of(nested, unit, 0, sim)
+		if heal_boost_bp > 0 and nested.type == EffectDef.Type.HEAL:
+			amount = FixedMath.apply_bp(amount, FixedMath.BP_ONE + heal_boost_bp)
+		area.amounts.append(amount)
 	area.crit_bp = EffectRunner.crit_chance_bp(sim, unit, ability)
 	area.land_tick = sim.tick + effect.warning_ticks
 	if effect.zone_ticks > 0:

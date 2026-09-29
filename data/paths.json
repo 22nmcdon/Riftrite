@@ -1,1 +1,1240 @@
-[]
+[
+  {
+    "_note": "The sniper (rebuild-heroes.md, section 6, path 1). Numbers are placeholders for the paths report to tune.",
+    "id": "deadeye",
+    "hero": "maren",
+    "name": "Deadeye",
+    "title": "the sniper",
+    "fantasy": "She plants her feet and makes one shot count.",
+    "placement": "A corner with a long sightline.",
+    "vowed": {
+      "taste": "Steady: after 2s without moving, she reaches 1 hex farther.",
+      "cost": "She shoots 10% slower.",
+      "patch": {
+        "passives": [
+          {
+            "id": "steady",
+            "name": "Steady",
+            "text": "After 2s without moving, she reaches 1 hex farther.",
+            "kind": "aura",
+            "aura": {
+              "target": "holder",
+              "stat": "range",
+              "value": 1,
+              "while": "planted",
+              "after_ms": 2000
+            }
+          },
+          {
+            "id": "unsteady",
+            "name": "Unsteady",
+            "text": "She shoots 10% slower.",
+            "kind": "aura",
+            "aura": {
+              "target": "holder",
+              "stat": "cooldown_bp",
+              "value": 1000
+            }
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Planted for 1.5s, she reaches 2 hexes farther (6) and crits more. Heartseeker replaces Marking Shot: a charged shot that pierces every enemy in its line. Shots from 5 hexes or more give her double mana.",
+      "cost": "After she moves, she needs 1.5s to plant before she can shoot again.",
+      "patch": {
+        "stats_bp": {
+          "atk": 12000,
+          "atsp": 8000
+        },
+        "stats_add": {
+          "crit": 6
+        },
+        "plant_ms": 1500,
+        "mana": {
+          "max": 60,
+          "per_attack": 10,
+          "regen_per_s": 2,
+          "far_hexes": 5,
+          "per_far_attack": 20
+        },
+        "signature": {
+          "id": "heartseeker",
+          "name": "Heartseeker",
+          "text": "Charges for 0.8s, then looses a shot at the nearest enemy within 4 hexes (6 once planted) that pierces every enemy in a line 6 hexes long.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "nearest",
+          "cast_ms": 800,
+          "effects": [
+            {
+              "type": "area",
+              "shape": {
+                "kind": "line",
+                "length": 6
+              },
+              "anchor": "target_direction",
+              "hits": "enemies",
+              "effects": [
+                {
+                  "type": "damage",
+                  "amount": 20,
+                  "target": "target",
+                  "scaling": {
+                    "atk": 20000
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "planted",
+            "name": "Planted",
+            "text": "After 1.5s without moving, she reaches 2 hexes farther.",
+            "kind": "aura",
+            "aura": {
+              "target": "holder",
+              "stat": "range",
+              "value": 2,
+              "while": "planted",
+              "after_ms": 1500
+            }
+          },
+          {
+            "id": "sure_aim",
+            "name": "Sure Aim",
+            "text": "After 1.5s without moving, she crits more often.",
+            "kind": "aura",
+            "aura": {
+              "target": "holder",
+              "stat": "crit_chance_bp",
+              "value": 1500,
+              "while": "planted",
+              "after_ms": 1500
+            }
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Damage dealt from beyond 4 hexes (her reach without Steady)",
+      "counts": "damage",
+      "beyond_hexes": 4
+    }
+  },
+  {
+    "_note": "Control (rebuild-heroes.md, section 6, path 2). Transformed, you place her first 2 snares before the fight.",
+    "id": "trapper",
+    "hero": "maren",
+    "name": "Trapper",
+    "title": "the snarer",
+    "fantasy": "Enemies walk into her plan.",
+    "placement": "Near the front, where her snares go.",
+    "vowed": {
+      "taste": "Snare: once a fight, 2s in, she drops a snare in her target's path; it roots whoever steps in it.",
+      "cost": "Her shots deal 10% less.",
+      "patch": {
+        "passives": [
+          {
+            "id": "snare",
+            "name": "Snare",
+            "kind": "ability",
+            "text": "Once a fight, 2s in, she drops a snare 1 hex ahead of her target, in its path; the first enemy to step in it is rooted.",
+            "effects": [
+              {
+                "trigger": "on_interval",
+                "interval_ms": 2000,
+                "once": true,
+                "type": "snare",
+                "effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "root",
+                    "target": "target",
+                    "duration_ms": 1500
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "loose_draw",
+            "name": "Loose Draw",
+            "text": "Her shots deal 10% less.",
+            "kind": "aura",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 9000
+            }
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Her snares root for 2s and make the enemy Bleed. Bramble Field replaces Marking Shot: it drops a snare in an enemy's path, up to 3 at once. You place her first 2 snares before the fight.",
+      "cost": "She reaches only 3 hexes.",
+      "patch": {
+        "stats_bp": {
+          "def": 13000,
+          "atk": 9000
+        },
+        "stats_add": {
+          "range": -1
+        },
+        "placed_snares": 2,
+        "basic_attack": {
+          "id": "longshot",
+          "name": "Longshot",
+          "text": "Shoots her target from up to 3 hexes away.",
+          "cooldown_ms": 1000,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "atk": 10000
+              }
+            }
+          ]
+        },
+        "signature": {
+          "id": "bramble_field",
+          "name": "Bramble Field",
+          "text": "Drops a snare 1 hex ahead of the nearest enemy within 3 hexes, in its path; the first enemy in it is rooted for 2s and Bleeds. Up to 3 stand at once.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "nearest",
+          "effects": [
+            {
+              "type": "snare",
+              "max_standing": 3,
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "root",
+                  "target": "target",
+                  "duration_ms": 2000
+                },
+                {
+                  "type": "apply_status",
+                  "status": "bleed",
+                  "stacks": 4,
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "deed": {
+      "text": "Time enemies spend rooted by her",
+      "counts": "rooted_ms"
+    }
+  },
+  {
+    "_note": "Area and mobility (rebuild-heroes.md, section 6, path 3).",
+    "id": "volley",
+    "hero": "maren",
+    "name": "Volley",
+    "title": "the storm of arrows",
+    "fantasy": "Always moving, filling the air with arrows.",
+    "placement": "A loose spot with room to move.",
+    "vowed": {
+      "taste": "Split Shot: every 4th shot also hits the enemy nearest her target, within 1 hex of it.",
+      "cost": "She reaches only 3 hexes.",
+      "patch": {
+        "stats_add": {
+          "range": -1
+        },
+        "basic_attack": {
+          "id": "longshot",
+          "name": "Longshot",
+          "text": "Shoots her target from up to 3 hexes away. Every 4th shot splits: it also hits the enemy nearest her target, within 1 hex of it.",
+          "cooldown_ms": 1000,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "atk": 10000
+              }
+            },
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "enemy_near_target",
+              "scaling": {
+                "atk": 10000
+              },
+              "within_hexes": 1,
+              "every": 4
+            }
+          ]
+        },
+        "signature": {
+          "id": "marking_shot",
+          "name": "Marking Shot",
+          "text": "Marks the nearest enemy within 3 hexes, so it takes more damage from everyone for a while.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "nearest",
+          "effects": [
+            {
+              "type": "apply_status",
+              "status": "marked",
+              "target": "target"
+            }
+          ]
+        }
+      }
+    },
+    "transformed": {
+      "text": "Every shot splits to the enemy nearest her target and gives her mana, and she shoots whatever is in reach while she walks. Arrow Storm replaces Marking Shot: arrows rain on a circle for 3s.",
+      "cost": "Each arrow deals less, and she still reaches only 3 hexes.",
+      "patch": {
+        "stats_add": {
+          "range": -1
+        },
+        "stats_bp": {
+          "atsp": 15000,
+          "atk": 8500
+        },
+        "add_traits": [
+          "fires_moving"
+        ],
+        "basic_attack": {
+          "id": "longshot",
+          "name": "Longshot",
+          "text": "Shoots her target from up to 3 hexes away, even while she walks. Every shot splits: it also hits the enemy nearest her target, within 1 hex of it, and each split gives her mana.",
+          "cooldown_ms": 1000,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "atk": 10000
+              }
+            },
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "enemy_near_target",
+              "scaling": {
+                "atk": 10000
+              },
+              "within_hexes": 1
+            },
+            {
+              "type": "gain_mana",
+              "amount": 3,
+              "target": "self"
+            }
+          ]
+        },
+        "signature": {
+          "id": "arrow_storm",
+          "name": "Arrow Storm",
+          "text": "Rains arrows on a circle 1 hex around the biggest group of enemies within 3 hexes: for 3s, every enemy inside is hit twice a second.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "largest_group",
+          "effects": [
+            {
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 1
+              },
+              "anchor": "target",
+              "hits": "enemies",
+              "duration_ms": 3000,
+              "every_ms": 500,
+              "effects": [
+                {
+                  "type": "damage",
+                  "amount": 4,
+                  "target": "target",
+                  "scaling": {
+                    "atk": 3500
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "deed": {
+      "text": "Extra enemies hit by her shots",
+      "counts": "extra_hits",
+      "from_ability": [
+        "longshot"
+      ]
+    }
+  },
+  {
+    "_note": "The protector (rebuild-heroes.md, section 7, path 1). Guard's reach is provisional (Decision 6: measured, flagged).",
+    "id": "hearthwall",
+    "hero": "brannoc",
+    "name": "Hearthwall",
+    "title": "the protector",
+    "fantasy": "Nothing reaches the people behind him.",
+    "placement": "Right in front of Maren and Vell, covering the lane to them.",
+    "vowed": {
+      "taste": "Guard: an ally behind him, within 3 hexes, takes 10% less from each hit; he takes it instead.",
+      "cost": "His Shield Bash deals 10% less.",
+      "patch": {
+        "passives": [
+          {
+            "id": "guard",
+            "name": "Guard",
+            "kind": "guard",
+            "text": "An ally behind him (away from his target), within 3 hexes, takes 10% less from each enemy hit; he takes that instead.",
+            "share_pct": 10,
+            "within_hexes": 3,
+            "covers": "behind"
+          },
+          {
+            "id": "braced",
+            "name": "Braced",
+            "text": "His Shield Bash deals 10% less.",
+            "kind": "aura",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 9000
+            }
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Guard covers every ally within 2 hexes, taking 30% of each hit on them. Hearthwall replaces Hold the Line: a wall of shields 3 hexes wide, 1 hex in front of him, stops enemy shots for 4s. Damage he takes for others fills his mana faster.",
+      "cost": "He's slow, and he can't move while his wall stands.",
+      "patch": {
+        "stats_bp": {
+          "hp": 12500,
+          "def": 12000,
+          "atk": 8500
+        },
+        "stats_add": {
+          "speed": -1
+        },
+        "mana": {
+          "max": 80,
+          "start": 30,
+          "per_attack": 8,
+          "per_10_damage_taken": 2
+        },
+        "remove_passives": [
+          "hold_the_line_guard"
+        ],
+        "signature": {
+          "id": "hearthwall",
+          "name": "Hearthwall",
+          "text": "Raises a wall of shields 3 hexes wide, 1 hex toward the nearest enemy within 3 hexes, that stops enemy shots for 4s. He can't move while it stands.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "nearest",
+          "max_range": 3,
+          "effects": [
+            {
+              "type": "wall",
+              "width_hexes": 3,
+              "ahead_hexes": 1,
+              "duration_ms": 4000
+            },
+            {
+              "type": "apply_status",
+              "status": "root",
+              "duration_ms": 4000,
+              "target": "self"
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "guard",
+            "name": "Guard",
+            "kind": "guard",
+            "text": "Every ally within 2 hexes of him takes 30% less from each enemy hit; he takes that instead.",
+            "share_pct": 30,
+            "within_hexes": 2,
+            "covers": "all"
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Damage he takes in place of allies",
+      "counts": "guarded"
+    }
+  },
+  {
+    "_note": "The bruiser (rebuild-heroes.md, section 7, path 2). Its transformed cost is the DEF (Decision 5).",
+    "id": "ironbrand",
+    "hero": "brannoc",
+    "name": "Ironbrand",
+    "title": "the bruiser",
+    "fantasy": "The best defense is standing in the middle of them and swinging.",
+    "placement": "Forward, where the enemies bunch up.",
+    "vowed": {
+      "taste": "Brand: Shield Bash also hits the enemy nearest his target, within 1 hex of it, for 30%.",
+      "cost": "Hold the Line taunts for 1s less.",
+      "patch": {
+        "basic_attack": {
+          "id": "shield_bash",
+          "name": "Shield Bash",
+          "text": "Bashes the enemy in front of him, and brands the enemy nearest it, within 1 hex, for a third as much.",
+          "cooldown_ms": 1200,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "atk": 10000
+              }
+            },
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "enemy_near_target",
+              "scaling": {
+                "atk": 3000
+              },
+              "within_hexes": 1
+            }
+          ]
+        },
+        "signature": {
+          "id": "hold_the_line",
+          "name": "Hold the Line",
+          "text": "Taunts every enemy within 2 hexes of him, so they turn on him instead.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "self",
+          "effects": [
+            {
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 2
+              },
+              "anchor": "self",
+              "hits": "enemies",
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "taunt",
+                  "duration_ms": 2000,
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "transformed": {
+      "text": "Hearthbrand Mace replaces Shield Bash: it hits every enemy within 1 hex of his target too, heals him for part of the damage, and fills his mana for each enemy hit. Brand Slam replaces Hold the Line: he leaps into the biggest group and knocks them back.",
+      "cost": "His DEF drops.",
+      "patch": {
+        "stats_bp": {
+          "atk": 13000,
+          "hp": 11500,
+          "def": 7000
+        },
+        "remove_passives": [
+          "hold_the_line_guard"
+        ],
+        "basic_attack": {
+          "id": "hearthbrand_mace",
+          "name": "Hearthbrand Mace",
+          "text": "Swings at the enemy in front of him and every enemy within 1 hex of it; each hit heals him a little and gives him mana.",
+          "cooldown_ms": 1200,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "atk": 10000
+              }
+            },
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "enemies_near_target",
+              "scaling": {
+                "atk": 10000
+              },
+              "within_hexes": 1
+            },
+            {
+              "trigger": "on_hit",
+              "type": "heal",
+              "amount_bp_of_damage": 500,
+              "target": "self"
+            },
+            {
+              "trigger": "on_hit",
+              "type": "gain_mana",
+              "amount": 2,
+              "target": "self"
+            }
+          ]
+        },
+        "signature": {
+          "id": "brand_slam",
+          "name": "Brand Slam",
+          "text": "Leaps up to 2 hexes into the biggest group of enemies, then slams every enemy within 1 hex of where he lands, knocking them back 1 hex.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "largest_group",
+          "max_range": 2,
+          "effects": [
+            {
+              "type": "leap",
+              "max_hexes": 2,
+              "target": "target"
+            },
+            {
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 1
+              },
+              "anchor": "target",
+              "hits": "enemies",
+              "effects": [
+                {
+                  "type": "damage",
+                  "amount": 15,
+                  "target": "target",
+                  "scaling": {
+                    "atk": 15000
+                  }
+                },
+                {
+                  "type": "knockback",
+                  "hexes": 1,
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "deed": {
+      "text": "Extra enemies hit by one swing",
+      "counts": "extra_hits",
+      "from_ability": [
+        "shield_bash",
+        "hearthbrand_mace"
+      ]
+    }
+  },
+  {
+    "_note": "The martyr (rebuild-heroes.md, section 7, path 3). Transformed, he has no mana bar.",
+    "id": "last_watch",
+    "hero": "brannoc",
+    "name": "Last Watch",
+    "title": "the martyr",
+    "fantasy": "He's at his most dangerous when he should already be dead.",
+    "placement": "The most exposed spot, drawing fire from everyone else.",
+    "vowed": {
+      "taste": "Unyielding: once a fight, a hit that would fell him leaves him at 1 HP, and he can't fall for 1s.",
+      "cost": "5% less max HP.",
+      "patch": {
+        "stats_bp": {
+          "hp": 9500
+        },
+        "passives": [
+          {
+            "id": "unyielding",
+            "name": "Unyielding",
+            "kind": "ability",
+            "text": "Once a fight, a hit that would fell him leaves him at 1 HP, and he can't fall for 1s.",
+            "effects": [
+              {
+                "trigger": "on_would_fall",
+                "type": "apply_status",
+                "status": "undying",
+                "duration_ms": 1000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Below 30% HP he hits harder and his DEF rises, and he grows stronger for each fallen ally. Last Rites replaces Hold the Line: the first time he drops below 30% HP, he taunts every enemy within 3 hexes and can't fall for 3s. He has no mana.",
+      "cost": "Heals on him are 30% weaker, and he has 10% less max HP.",
+      "patch": {
+        "stats_bp": {
+          "hp": 9000,
+          "atk": 12500
+        },
+        "mana": null,
+        "signature": {
+          "id": "last_rites",
+          "name": "Last Rites",
+          "text": "The first time he drops below 30% HP, he taunts every enemy within 3 hexes and can't fall for 3s.",
+          "trigger": {
+            "kind": "hp_below",
+            "threshold_bp": 3000
+          },
+          "targeting": "self",
+          "effects": [
+            {
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 3
+              },
+              "anchor": "self",
+              "hits": "enemies",
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "taunt",
+                  "target": "target"
+                }
+              ]
+            },
+            {
+              "type": "apply_status",
+              "status": "undying",
+              "duration_ms": 3000,
+              "target": "self"
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "last_stand",
+            "name": "Last Stand",
+            "text": "Below 30% HP he hits a third harder.",
+            "kind": "aura",
+            "aura": {
+              "target": "holder",
+              "stat": "atk_bp",
+              "value": 13300,
+              "while": "below_hp",
+              "below_pct": 30
+            }
+          },
+          {
+            "id": "last_wall",
+            "name": "Last Wall",
+            "text": "Below 30% HP his DEF is a third higher.",
+            "kind": "aura",
+            "aura": {
+              "target": "holder",
+              "stat": "def_bp",
+              "value": 13300,
+              "while": "below_hp",
+              "below_pct": 30
+            }
+          },
+          {
+            "id": "grief",
+            "name": "Grief",
+            "text": "He hits 10% harder for each ally who has fallen.",
+            "kind": "aura",
+            "aura": {
+              "target": "holder",
+              "stat": "atk_bp",
+              "value": 11000,
+              "per": "fallen_ally"
+            }
+          },
+          {
+            "id": "scarred",
+            "name": "Scarred",
+            "text": "Heals on him are 30% weaker.",
+            "kind": "aura",
+            "aura": {
+              "target": "holder",
+              "stat": "healing_taken_bp",
+              "value": 7000
+            }
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Damage he deals while below 30% HP",
+      "counts": "damage",
+      "while_below_pct": 30
+    }
+  },
+  {
+    "_note": "The pure healer (rebuild-heroes.md, section 8, path 1). Transformed, Night Lantern is her mana signature and Mend comes every 4th Lantern Glow (Decision 7).",
+    "id": "lanternbearer",
+    "hero": "vell",
+    "name": "Lanternbearer",
+    "title": "the warm light",
+    "fantasy": "A warm light that keeps everyone standing.",
+    "placement": "In the middle, behind Brannoc, where her lantern reaches everyone.",
+    "vowed": {
+      "taste": "Kindle: Mend also heals the ally nearest its target, within 2 hexes of it, for a tenth as much.",
+      "cost": "Mend costs 5 more mana.",
+      "patch": {
+        "mana": {
+          "max": 65,
+          "start": 20,
+          "per_attack": 12,
+          "regen_per_s": 2
+        },
+        "signature": {
+          "id": "mend",
+          "name": "Mend",
+          "text": "Heals whichever ally within 3 hexes is lowest on HP, herself included, and kindles the ally nearest them, within 2 hexes, for a tenth as much.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "lowest_hp_ally",
+          "effects": [
+            {
+              "type": "heal",
+              "amount": 20,
+              "target": "target",
+              "scaling": {
+                "mgk": 10000
+              }
+            },
+            {
+              "type": "heal",
+              "amount": 2,
+              "target": "ally_near_target",
+              "scaling": {
+                "mgk": 1000
+              },
+              "within_hexes": 2
+            }
+          ]
+        }
+      }
+    },
+    "transformed": {
+      "text": "Night Lantern replaces Mend: a lantern that heals every ally near it each second and burns away their Burn and Poison. Every 4th Lantern Glow, Mend heals the ally lowest on HP, and every ally within 2 hexes of her at half as much.",
+      "cost": "Lantern Glow deals no damage (it still gives mana), and she has less HP.",
+      "patch": {
+        "stats_bp": {
+          "mgk": 12500,
+          "hp": 8500
+        },
+        "basic_attack": {
+          "id": "lantern_glow",
+          "name": "Lantern Glow",
+          "text": "Throws lantern light at her target from up to 3 hexes away. It deals no damage, but it's where most of her mana comes from.",
+          "cooldown_ms": 1500,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target"
+            }
+          ]
+        },
+        "signature": {
+          "id": "night_lantern",
+          "name": "Night Lantern",
+          "text": "Sets a lantern by the ally lowest on HP within 3 hexes: for 5s, every ally within 2 hexes of it heals each second and loses some Burn and Poison.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "lowest_hp_ally",
+          "effects": [
+            {
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 2
+              },
+              "anchor": "target",
+              "hits": "allies",
+              "duration_ms": 5000,
+              "every_ms": 1000,
+              "effects": [
+                {
+                  "type": "heal",
+                  "amount": 4,
+                  "target": "target",
+                  "scaling": {
+                    "mgk": 2500
+                  }
+                },
+                {
+                  "type": "cleanse",
+                  "amount_bp": 3000,
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "mend",
+            "name": "Mend",
+            "kind": "ability",
+            "text": "Every 4th Lantern Glow, she heals the ally lowest on HP within 3 hexes.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 4,
+                "type": "heal",
+                "amount": 20,
+                "scaling": {
+                  "mgk": 10000
+                },
+                "target": "lowest_hp_ally",
+                "within_hexes": 3
+              }
+            ]
+          },
+          {
+            "id": "kindle",
+            "name": "Kindle",
+            "kind": "ability",
+            "text": "Every 4th Lantern Glow, she also heals every other ally within 2 hexes of her, at half as much.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 4,
+                "type": "area",
+                "shape": {
+                  "kind": "circle",
+                  "radius": 2
+                },
+                "anchor": "self",
+                "hits": "other_allies",
+                "effects": [
+                  {
+                    "type": "heal",
+                    "amount": 10,
+                    "target": "target",
+                    "scaling": {
+                      "mgk": 5000
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Healing that Mend gives beside its target",
+      "counts": "healing",
+      "from_ability": [
+        "mend",
+        "kindle"
+      ],
+      "off_target": true
+    }
+  },
+  {
+    "_note": "The shielder (rebuild-heroes.md, section 8, path 2). Transformed, Warding Circle is her mana signature and Weave comes every 4th Lantern Glow (Decision 7); her signature doesn't heal, so Wait to heal can't be taken there.",
+    "id": "wardweaver",
+    "hero": "vell",
+    "name": "Wardweaver",
+    "title": "the shielder",
+    "fantasy": "Stop the damage before it lands.",
+    "placement": "Forward, next to Brannoc; where the circle goes matters.",
+    "vowed": {
+      "taste": "Ward Thread: what Mend would heal past full HP comes back as Shield, a tenth as much.",
+      "cost": "Mend heals 10% less.",
+      "patch": {
+        "signature": {
+          "id": "mend",
+          "name": "Mend",
+          "text": "Heals whichever ally within 3 hexes is lowest on HP, herself included; what it would heal past full HP comes back as a small Shield.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "lowest_hp_ally",
+          "effects": [
+            {
+              "type": "heal",
+              "amount": 18,
+              "target": "target",
+              "scaling": {
+                "mgk": 9000
+              },
+              "overheal_shield_bp": 1000
+            }
+          ]
+        }
+      }
+    },
+    "transformed": {
+      "text": "Warding Circle replaces Mend: for 4s, a circle 2 hexes around her Slows enemies inside and Wards allies inside (they take 20% less). Every 4th Lantern Glow, Weave shields the ally lowest on HP and heals them a little.",
+      "cost": "Her healing is 40% weaker.",
+      "patch": {
+        "stats_bp": {
+          "hp": 11500,
+          "def": 13000,
+          "mgk": 9000
+        },
+        "signature": {
+          "id": "warding_circle",
+          "name": "Warding Circle",
+          "text": "Draws a circle 2 hexes around herself for 4s: enemies inside are Slowed, and allies inside are Warded, taking 20% less damage.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "self",
+          "effects": [
+            {
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 2
+              },
+              "anchor": "self",
+              "hits": "all",
+              "duration_ms": 4000,
+              "every_ms": 500,
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "slow",
+                  "duration_ms": 600,
+                  "target": "target",
+                  "side": "enemies"
+                },
+                {
+                  "type": "apply_status",
+                  "status": "warded",
+                  "target": "target",
+                  "side": "allies"
+                }
+              ]
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "weave",
+            "name": "Weave",
+            "kind": "ability",
+            "text": "Every 4th Lantern Glow, she shields the ally lowest on HP within 3 hexes, and heals them a little.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 4,
+                "type": "shield",
+                "amount": 20,
+                "scaling": {
+                  "mgk": 12000
+                },
+                "target": "lowest_hp_ally",
+                "within_hexes": 3
+              },
+              {
+                "trigger": "on_basic_attack",
+                "every": 4,
+                "type": "heal",
+                "amount": 5,
+                "scaling": {
+                  "mgk": 3000
+                },
+                "target": "lowest_hp_ally",
+                "within_hexes": 3
+              }
+            ]
+          },
+          {
+            "id": "thin_light",
+            "name": "Thin Light",
+            "text": "Her healing is 40% weaker.",
+            "kind": "aura",
+            "aura": {
+              "target": "holder",
+              "stat": "heal_bp",
+              "value": 6000
+            }
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Shield she gives",
+      "counts": "shield"
+    }
+  },
+  {
+    "_note": "The battle cleric (rebuild-heroes.md, section 8, path 3). Transformed, Sunfall is her mana signature and Mend comes every 4th Lantern Glow, as the design says.",
+    "id": "vigil_keeper",
+    "hero": "vell",
+    "name": "Vigil Keeper",
+    "title": "the battle cleric",
+    "fantasy": "Her light heals friends and burns enemies.",
+    "placement": "Off to the side, with a clean line for Sunfall.",
+    "vowed": {
+      "taste": "Judgment: every 4th Mend also smites the enemy nearest its target for a tenth of the heal.",
+      "cost": "Mend reaches 1 hex less (2 hexes).",
+      "patch": {
+        "signature": {
+          "id": "mend",
+          "name": "Mend",
+          "text": "Heals whichever ally within 2 hexes is lowest on HP, herself included; every 4th Mend also smites the enemy nearest them.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "lowest_hp_ally",
+          "max_range": 2,
+          "effects": [
+            {
+              "type": "heal",
+              "amount": 20,
+              "target": "target",
+              "scaling": {
+                "mgk": 10000
+              }
+            },
+            {
+              "type": "damage",
+              "amount": 2,
+              "target": "enemy_near_target",
+              "scaling": {
+                "mgk": 1000
+              },
+              "every": 4
+            }
+          ]
+        }
+      }
+    },
+    "transformed": {
+      "text": "Sunfall replaces Mend: a beam toward her target that burns enemies and heals allies in its line. Every 4th Lantern Glow, Mend heals the ally lowest on HP and smites her target, giving her mana.",
+      "cost": "Her healing is 30% weaker.",
+      "patch": {
+        "stats_bp": {
+          "mgk": 12000,
+          "def": 8000
+        },
+        "stats_add": {
+          "crit": 10
+        },
+        "signature": {
+          "id": "sunfall",
+          "name": "Sunfall",
+          "text": "Casts a beam 4 hexes long toward the nearest enemy within 3 hexes: enemies in it are burned, allies in it healed.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "nearest",
+          "effects": [
+            {
+              "type": "area",
+              "shape": {
+                "kind": "line",
+                "length": 4
+              },
+              "anchor": "target_direction",
+              "hits": "all",
+              "effects": [
+                {
+                  "type": "damage",
+                  "amount": 15,
+                  "target": "target",
+                  "scaling": {
+                    "mgk": 10000
+                  },
+                  "side": "enemies"
+                },
+                {
+                  "type": "heal",
+                  "amount": 10,
+                  "target": "target",
+                  "scaling": {
+                    "mgk": 6000
+                  },
+                  "side": "allies"
+                }
+              ]
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "mend",
+            "name": "Mend",
+            "kind": "ability",
+            "text": "Every 4th Lantern Glow, she heals the ally lowest on HP within 3 hexes, smites her target, and gains mana.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 4,
+                "type": "heal",
+                "amount": 15,
+                "scaling": {
+                  "mgk": 7000
+                },
+                "target": "lowest_hp_ally",
+                "within_hexes": 3
+              },
+              {
+                "trigger": "on_basic_attack",
+                "every": 4,
+                "type": "damage",
+                "amount": 4,
+                "scaling": {
+                  "mgk": 2000
+                },
+                "target": "target"
+              },
+              {
+                "trigger": "on_basic_attack",
+                "every": 4,
+                "type": "gain_mana",
+                "amount": 6,
+                "target": "self"
+              }
+            ]
+          },
+          {
+            "id": "dimmed",
+            "name": "Dimmed",
+            "text": "Her healing is 30% weaker.",
+            "kind": "aura",
+            "aura": {
+              "target": "holder",
+              "stat": "heal_bp",
+              "value": 7000
+            }
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Damage dealt by her smites",
+      "counts": "damage",
+      "from_ability": [
+        "mend"
+      ]
+    }
+  }
+]

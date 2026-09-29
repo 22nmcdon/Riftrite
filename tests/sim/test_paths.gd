@@ -44,7 +44,7 @@ static func maren_path(extra: Dictionary = {}) -> Dictionary:
 				"signature": {"id": "pierce", "name": "Pierce", "trigger": {"kind": "mana"}, "targeting": "nearest",
 					"effects": [{"type": "damage", "amount": 40, "target": "target"}]},
 				"remove_passives": ["slip_away"]}},
-		"deed": {"text": "Damage from 5 or more hexes away", "counts": "damage", "from_hexes": 5},
+		"deed": {"text": "Damage from beyond 4 hexes", "counts": "damage", "beyond_hexes": 4},
 	}
 	data.merge(extra, true)
 	return data
@@ -176,12 +176,12 @@ func test_bad_deeds_are_reported() -> void:
 	for ability_id: String in ["longshot", "aim", "pierce"]:
 		var db: ContentDb = _load_paths([maren_path({"deed": {"text": "x", "counts": "damage", "from_ability": [ability_id]}})])
 		assert_true(db.is_valid(), "%s is in one of her kits: %s" % [ability_id, db.errors])
-	_assert_error(_load_paths([maren_path({"deed": {"text": "x", "counts": "healing", "from_hexes": 5}})]), "only filter damage")
+	_assert_error(_load_paths([maren_path({"deed": {"text": "x", "counts": "healing", "beyond_hexes": 5}})]), "only filter damage")
 	_assert_error(_load_paths([maren_path({"deed": {"text": "x", "counts": "shield", "while_below_pct": 30}})]), "only filter damage")
 	_assert_error(_load_paths([maren_path({"deed": {"text": "x", "counts": "damage", "while_below_pct": 100}})]), "out of range")
 	_assert_error(_load_paths([maren_path({"deed": {"text": "x", "counts": "damage", "from_ability": []}})]), "from_ability needs at least one id")
 	var deed: DeedDef = _content.paths["sharpshot"].deed
-	assert_eq([deed.text, deed.counts, deed.from_range, deed.while_below_bp], ["Damage from 5 or more hexes away", DeedDef.Counts.DAMAGE, 5 * HexGrid.HEX, 0])
+	assert_eq([deed.text, deed.counts, deed.from_range, deed.while_below_bp], ["Damage from beyond 4 hexes", DeedDef.Counts.DAMAGE, 4 * HexGrid.HEX, 0])
 	var low: DeedDef = _load_paths([maren_path({"deed": {"text": "x", "counts": "damage", "while_below_pct": 30}})]).paths["sharpshot"].deed
 	assert_eq(low.while_below_bp, 3000)
 
@@ -258,5 +258,5 @@ func test_paths_that_no_one_takes_change_nothing() -> void:
 	var with_paths: FightResult = CombatSim.run(Encounters.setup(_content, "witch_circle", GUARDED, 3, errors), _content)
 	assert_eq(errors, [] as Array[String])
 	assert_eq(with_paths.combat_log.to_text(), without.combat_log.to_text(), "counting deeds doesn't change the fight")
-	assert_eq(without.deeds.size(), 0, "no paths in data/ yet, so nothing counts")
+	assert_eq(without.deeds.size(), 9, "the real data's nine paths: three deeds for each hero")
 	assert_eq(with_paths.deeds.size(), 2, "Maren's and Vell's one test path each")

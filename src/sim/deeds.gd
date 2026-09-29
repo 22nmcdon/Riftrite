@@ -66,9 +66,11 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 			var deed: DeedDef = counter.deeds[d]
 			if not deed.counts_kind(kind, entry.source_ability):
 				continue
-			if deed.from_range > 0 and _range_sq(sim, unit, counter, entry) < deed.from_range * deed.from_range:
+			if deed.from_range > 0 and _range_sq(sim, unit, counter, entry) <= deed.from_range * deed.from_range:
 				continue
 			if deed.while_below_bp > 0 and unit.hp * FixedMath.BP_ONE >= deed.while_below_bp * unit.max_hp:
+				continue
+			if deed.off_target and counter.fired_at.get(entry.source_ability, "") == entry.target:
 				continue
 			match deed.counts:
 				DeedDef.Counts.EXTRA_HITS:
