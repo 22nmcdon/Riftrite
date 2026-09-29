@@ -191,6 +191,52 @@ Each piece is used by the paths named, and each is skipped entirely by a unit th
 
 Heartseeker's pierce, Brand Slam, Last Rites, Weave, the stat changes, and the costs that are stat or ability changes are **data**, with the existing pieces (cast times, lines, leaps, largest group, HP-threshold signatures, Undying, auras).
 
+**Built (2026-09-29), the pieces of waves 1 and 2** (each is skipped by a unit that doesn't use it; the bench's fingerprints are unchanged):
+- **An ability's own `every`** (P5's Split Shot and Judgment): an on_fire effect with `"every": N` runs on every Nth time its ability fires (`AbilityState.fires`). Not inside an area.
+- **Targets near the target** (P5):
+  - `enemy_near_target`, `enemies_near_target`, `ally_near_target`, `allies_near_target`, with an optional `within_hexes` (the plural ones need it);
+  - `lowest_hp_ally`, within `within_hexes` of the unit if given.
+  - The center is the ability's target; on_hit, the unit hit; for an event, the unit's target. Stealthed enemies aren't picked. Near-target effects land as the ability fires, not on its shot (`EffectRunner.near`).
+- **Share-of-the-hit amounts** (P6):
+  - `amount_bp_of_damage` works for damage (Brand's 30%) and heal (lifesteal), not just Shield. It needs a hit, so it's on_hit or an event.
+  - A heal's `overheal_shield_bp` turns what it would restore past full HP into Shield (Ward Thread).
+- **Mana** (P4): a `gain_mana` effect (not logged, like every mana gain: the fire that gave it is). `ManaDef.far_hexes` and `per_far_attack`: a basic attack at a target that far gives that instead of `per_attack` (Deadeye).
+- **Sides** (P13): an area's own effect can say `"side": "enemies"` or `"allies"`, so Sunfall's line hurts enemies and heals allies.
+- **Zones** (P7): an area with `duration_ms` and `every_ms` is logged once (a new log kind, ZONE: shape, where, and when it ends). It then lands at once and every pulse until it ends (each pulse an AREA_LANDED), with numbers fixed as it was cast. No warning. It outlives its caster.
+- **Aura conditions** (P3):
+  - `"while": "planted"` with `after_ms`: the unit hasn't moved for that long. `UnitState.moved_at` counts walking, flying, hops, leaps, and pushes.
+  - `"while": "below_hp"` with `below_pct`.
+  - `"per": "fallen_ally"`: counts once per fallen unit of its side.
+  - The units with these are checked at the end of every tick, and auras are folded in again when one changes, so it counts from the next tick. AURA lines log each start and end, as before.
+  - New aura stats: `range` (adds hexes to its reach) and `healing_taken_bp` (scales heals the holder gets).
+- **Attacking** (P11):
+  - A kit's `plant_ms`: after it moves, its basic attack waits that long (Deadeye's cost).
+  - The `fires_moving` trait: while it walks, a ready basic attack fires at the nearest enemy in reach without stopping, and it keeps its target (Volley).
+  - `KitPatch` gains `add_traits` and `plant_ms`.
+- **Unyielding** (P12): a passive's `on_would_fall` trigger. Once a fight, when the unit would fall (after Undying and a would_fall signature), it's left at 1 HP (SAVED, sourced to the passive) and the effect runs.
+- **Warded**: a new status kind, `warded`, which takes `damage_reduced_bp` less. The strongest Ward wins and adds to a Mark. `data/statuses.json` gains `warded` (20% less, 0.6s), for Warding Circle to reapply each pulse.
+- **Tests:** `tests/sim/test_path_pieces.gd` (one rule at a time).
+
+**Built (2026-09-29), the pieces of wave 3:**
+- **Snares** (P8, `Snares`):
+  - A `snare` effect (its own effects, an optional `max_standing`) is set 1 hex ahead of the ability's target, toward what that target is going for (or else toward the unit), on safe ground.
+  - It springs on the first standing enemy (not in the air) whose center comes within 0.3 hex, checked after every unit acts. It lands its effects, fixed when it was set, on that enemy.
+  - Past `max_standing`, the oldest goes.
+  - A kit's `placed_snares` lets the player place that many before the fight (`UnitSetup.snares`, by hex, set at tick 0 from the kit's first snare effect). `FightSetup.validate` checks the count, repeats, the board, the unit's half or the middle row, and rocks.
+  - Logged as SNARE (set, sprung, gone).
+- **Walls** (P10, `Walls`): a `wall` effect (`width_hexes`, `ahead_hexes`, `duration_ms`) stands square to the way to the target. While it stands, an enemy shot whose line from where it was fired to its target crosses the wall is stopped as it would land (SHOT_FIZZLED, "stopped by ..."). Logged as WALL.
+- **Guard** (P9, `Guards`): a passive of kind `guard` (`share_pct`, `within_hexes`, `covers`: `behind` or `all`).
+  - When an enemy's hit lands on an ally in reach, the guard takes that share of what got through the ally's DEF, into its Shield and HP, as damage taken (for mana).
+  - The ally's DAMAGE line shows what it took; a GUARD line what the guard took.
+  - Only hits (not damage over time or Rift Collapse). The first covering guard in the fight's order takes it.
+- **The rest:**
+  - `on_interval` can run `"once"` (the Snare taste).
+  - Deeds count `extra_hits` (hits on a unit that isn't the target of that ability's latest fire), `rooted_ms` (Roots as applied), and `guarded`.
+  - FightFx draws zones, snares, and walls from the sim's state (so a skip keeps them), and a brass number for GUARD.
+  - The audit has rules for ZONE, SNARE, WALL, and GUARD.
+  - The chaos fight leaves them (and Warded) to the paths fight, like TACTIC.
+- **Checks:** 527 tests pass, and the bench's fingerprints are unchanged.
+
 ## 6. Practice: the hero panel
 
 The playtester's mock (`docs/mockups/hero-panel-layout.pdf`, 2026-09-29) is the design: a **hero panel** that opens over the screen, with the hero's figure and name on the left and three tabs on the right. Phase 4 builds it for Practice, where it's how you choose a path; phase 5 fills in what needs the run.
@@ -270,7 +316,16 @@ The paths come in **three waves** of one path per hero, so a playtest can check 
 3. **How much stronger:** a vowed hero's team wins about as often as base (within about 5 points: the taste pays for its cost); a transformed hero's team wins **15–25 points more** than base across the encounters. The paths report tunes toward it.
 4. **Wait to heal works with any healing signature:** it holds a signature that heals until an ally within the signature's reach is below 60%, so it keeps working on Lanternbearer (Night Lantern) and Vigil Keeper (Sunfall), as part 6's rule asks. Built in wave 1, with Sunfall.
 5. **Ironbrand's transformed cost:** the line "Hold the Line only taunts adjacent enemies" is dropped, since Brand Slam replaces Hold the Line. His cost is the lost DEF.
-6. **Guard's "behind" is open.** Away from his target seems the right direction, but in Practice fights nobody stays 1 hex behind Brannoc: he walks forward and the others are ranged, so a 1-hex Guard would rarely fire and Hearthwall's deed couldn't fill. Step 3's report measures how often an ally is 1, 2, or 3 hexes behind him (away from his target) during fights. Guard's reach, or another rule, is decided from that before wave 3 builds Hearthwall. With the waves built together, the measurement runs first (a scratch run, later the deed report), and the reach it suggests is used provisionally and flagged for the playtester.
+6. **Guard's "behind" is open.** Away from his target seems the right direction, but in Practice fights nobody stays 1 hex behind Brannoc: he walks forward and the others are ranged, so a 1-hex Guard would rarely fire and Hearthwall's deed couldn't fill. Step 3's report measures how often an ally is 1, 2, or 3 hexes behind him (away from his target) during fights. Guard's reach, or another rule, is decided from that before wave 3 builds Hearthwall. With the waves built together, the measurement runs first (a scratch run, later the deed report), and the reach it suggests is used provisionally and flagged for the playtester. **Measured (2026-09-29)**, over every encounter's named and 20 drawn formations with base kits, on the ticks Brannoc has a target:
+
+   | An ally within | behind him (away from his target) | on any side |
+   | --- | --- | --- |
+   | 1 hex | 3% | 18% |
+   | 2 hexes | 19% | 40% |
+   | 3 hexes | 41% | 69% |
+
+   **Provisionally (flagged):** the taste's Guard covers an ally **behind him within 3 hexes** (the "behind" picture, often enough to fill the deed), and the transformation's covers **every ally within 2 hexes** at 30% (the design's "every adjacent ally", widened, since 1 hex is rarely anyone).
+7. **Vell's transformed kits hold two heals** (decided provisionally 2026-09-29, while the playtester was away; flagged for them): the design gives Lanternbearer and Wardweaver both a changed Mend (every ally next to the target; Weave) and a new signature (Night Lantern; Warding Circle), and the sim has one signature per unit. They follow Vigil Keeper's own rule from the design: **the new move is the mana signature, and the changed Mend becomes a smaller heal on every 4th basic attack.** Transformed Wardweaver's signature (Warding Circle) doesn't heal, so Wait to heal can't be taken there (Decision 4's "any healing signature"); that's the one tactic a transformation still breaks, and it's flagged too.
 
 ## Open questions
 

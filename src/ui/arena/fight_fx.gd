@@ -19,6 +19,10 @@ extends Control
 ##   TACTIC           what a hero's tactic did, over it ("Holds its ground")
 ##   AURA             a faint ring round the holder while the aura holds
 ##   COLLAPSE_RING    the ring about to crumble striped, crumbled ground dark
+##   GUARD            a brass number on the guard: what it took for an ally
+## Zones, snares, and walls (phase 4) are drawn on the ground straight from
+## the sim's state (CombatSim.zones, snares, walls) for as long as they last,
+## so a skip or seek never loses them.
 ## Target lines (for a hovered unit, or all with a toggle; brighter for a
 ## Taunt) and Engage links come from the sim's state. The ground things are
 ## drawn under the tokens by ArenaView (draw_ground); the rest over them.
@@ -170,6 +174,12 @@ func _add(entry: LogEntry, sim: CombatSim) -> void:
 			_number(entry, sim, str(entry.amount), COLLAPSE_COLOR, false)
 		LogEntry.Kind.HEAL:
 			_number(entry, sim, "+%d" % entry.amount, HEAL_COLOR, false)
+		LogEntry.Kind.GUARD:
+			var guard: UnitState = sim.unit_by_id(entry.source_unit)
+			if guard != null and entry.amount > 0:
+				var took: Fx = _new(Kind.NUMBER, entry.tick, entry.tick + NUMBER_TICKS, Vector2(guard.pos), guard.id)
+				took.text = str(entry.amount)
+				took.color = UiStyle.BRASS_300
 		LogEntry.Kind.SHIELD:
 			_number(entry, sim, "+%d" % entry.amount, UiStyle.SHIELD, false)
 		LogEntry.Kind.FIRE:
@@ -348,6 +358,7 @@ func draw_ground(canvas: CanvasItem) -> void:
 	_draw_outside(canvas, sim.safe, CRUMBLED)
 	if warned_safe.size != Vector2i.ZERO:
 		_draw_between(canvas, sim.safe, warned_safe, WARNED)
+	_draw_placed(canvas, sim)
 	for fx: Fx in effects:
 		if fx.kind == Kind.AREA or fx.kind == Kind.LANDED:
 			var t: float = clampf((now - fx.start) / float(fx.end - fx.start), 0.0, 1.0)
@@ -370,6 +381,36 @@ func draw_ground(canvas: CanvasItem) -> void:
 				var engager: UnitState = sim.unit_by_id(state.source.unit_id)
 				if engager != null and engager.alive:
 					canvas.draw_line(from, _view.to_pixel_f(_unit_point(engager.id, Vector2(engager.pos))), ENGAGE_LINK, 4.0, true)
+
+
+## Zones, snares, and walls on the ground now (phase 4), from the sim.
+func _draw_placed(canvas: CanvasItem, sim: CombatSim) -> void:
+	for zone: Areas.Pending in sim.zones:
+		if sim.tick >= zone.until_tick:
+			continue
+		var fx := Fx.new()
+		fx.shape = ShapeDef.KIND_NAMES[zone.effect.shape.kind]
+		fx.size = zone.effect.shape.size
+		fx.from = Vector2(zone.origin)
+		fx.to = Vector2(ArenaPlane.along(zone.origin, zone.dir, zone.effect.shape.size * HexGrid.HEX))
+		var color: Color = _side_color(sim, zone.unit.id)
+		var fill: Color = color
+		fill.a = 0.14
+		var line: Color = color
+		line.a = 0.7
+		_draw_shape(canvas, fx, fill, line)
+	for snare: Snares.Snare in sim.snares:
+		var at: Vector2 = _view.to_pixel_f(Vector2(snare.pos))
+		var reach: float = maxf(Snares.RADIUS * _view.scale_px, 6.0)
+		var color: Color = _side_color(sim, snare.unit.id)
+		canvas.draw_arc(at, reach, 0.0, TAU, 20, color, 2.0, true)
+		canvas.draw_line(at - Vector2(reach, reach) * 0.6, at + Vector2(reach, reach) * 0.6, color, 2.0, true)
+		canvas.draw_line(at - Vector2(reach, -reach) * 0.6, at + Vector2(reach, -reach) * 0.6, color, 2.0, true)
+	for wall: Walls.Wall in sim.walls:
+		if sim.tick >= wall.until_tick:
+			continue
+		var color: Color = HERO_AREA if wall.side == EffectSource.Team.HEROES else ENEMY_AREA
+		canvas.draw_line(_view.to_pixel_f(Vector2(wall.a)), _view.to_pixel_f(Vector2(wall.b)), color, 6.0, true)
 
 
 func _draw_shape(canvas: CanvasItem, fx: Fx, fill: Color, line: Color) -> void:

@@ -67,6 +67,30 @@ static func _path_problems(unit: UnitSetup, where: String) -> Array[String]:
 	return problems
 
 
+## What's wrong with the snares placed for a unit (phase 4): no more than its
+## kit's placed_snares, each on its own hex, on the board, in its side's zone
+## or the middle row, and not on a rock.
+static func _snare_problems(unit: UnitSetup, where: String, grid: HexGrid, rock_hexes: Array[Vector2i]) -> Array[String]:
+	var problems: Array[String] = []
+	if unit.snares.is_empty():
+		return problems
+	if unit.snares.size() > unit.def.placed_snares:
+		problems.append("%s places %d snares, but can place %d" % [where, unit.snares.size(), unit.def.placed_snares])
+	var own: HexGrid.Zone = HexGrid.Zone.HEROES if unit.side == EffectSource.Team.HEROES else HexGrid.Zone.ENEMIES
+	for i: int in unit.snares.size():
+		var hex: Vector2i = unit.snares[i]
+		var at: String = "%s's snare at (%d, %d)" % [unit.id, hex.x, hex.y]
+		if unit.snares.find(hex) < i:
+			problems.append("%s is placed twice" % at)
+		elif not grid.has(hex.x, hex.y):
+			problems.append("%s is off the board" % at)
+		elif grid.zone(hex.y) != own and grid.zone(hex.y) != HexGrid.Zone.NEUTRAL:
+			problems.append("%s is in the enemies' half" % at)
+		elif rock_hexes.has(hex):
+			problems.append("%s is on a rock" % at)
+	return problems
+
+
 ## Every problem with the setup (empty when it can be fought).
 func validate(content: ContentDb) -> Array[String]:
 	var errors: Array[String] = []
@@ -97,6 +121,7 @@ func validate(content: ContentDb) -> Array[String]:
 			if unit.tactic != null and (unit.side != EffectSource.Team.HEROES or not unit.tactic.allows(unit.def.id)):
 				errors.append("%s can't take the tactic %s" % [where, unit.tactic.name])
 			errors.append_array(_path_problems(unit, where))
+			errors.append_array(_snare_problems(unit, where, grid, rocks))
 		if not grid.has(unit.col, unit.row):
 			errors.append("%s is off the board" % where)
 			continue

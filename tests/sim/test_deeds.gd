@@ -190,3 +190,49 @@ func test_counting_changes_nothing_and_reaches_the_result() -> void:
 	assert_gt(with_deeds.deed_amount("brawler", "p0"), 0)
 	assert_eq(with_deeds.deed_amount("brawler", "p1"), 0, "no Shield given")
 	assert_eq(with_deeds.deed_amount("nobody", "p0"), 0)
+
+
+func test_extra_hits_count_hits_beyond_the_attacks_own_target() -> void:
+	var cleaver: UnitDef = K.kit("cleaver", {"stats": {"hp": 5000, "speed": 0, "range": 2},
+		"basic_attack": {"cooldown_ms": 500, "shot": false, "effects": [{"type": "damage", "amount": 2, "target": "target"},
+			{"type": "damage", "amount": 1, "target": "enemies_near_target", "within_hexes": 1}]}})
+	var hero: UnitSetup = counting(K.at(cleaver, 3, 2), [deed({"counts": "extra_hits", "from_ability": ["cleaver_attack"]}), deed({"counts": "extra_hits"})])
+	var fight: CombatSim = K.sim(K.fight([hero], [K.foe(dummy(), 3, 4), K.foe(dummy(), 3, 5)]))
+	K.step(fight, 100)
+	var fires: int = K.entries(fight, LogEntry.Kind.FIRE, "cleaver").size()
+	assert_gt(fires, 3)
+	assert_eq(amount(fight, "cleaver", "p0"), fires, "one extra enemy each swing")
+	assert_eq(amount(fight, "cleaver", "p1"), fires)
+
+
+func test_rooted_ms_counts_how_long_its_roots_last() -> void:
+	var binder: UnitDef = K.kit("binder", {"stats": {"hp": 5000, "speed": 0, "range": 2},
+		"basic_attack": {"cooldown_ms": 1000, "shot": false, "effects": [{"type": "apply_status", "status": "root", "duration_ms": 1500, "target": "target"},
+			{"type": "apply_status", "status": "slow", "target": "target"}]}})
+	var hero: UnitSetup = counting(K.at(binder, 3, 2), [deed({"counts": "rooted_ms"})])
+	var fight: CombatSim = K.sim(K.fight([hero], [K.foe(dummy(), 3, 4)]))
+	K.step(fight, 70)
+	var roots: int = K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "binder").filter(func(entry: LogEntry) -> bool: return entry.status == "root").size()
+	assert_gt(roots, 1)
+	assert_eq(amount(fight, "binder", "p0"), roots * 1500, "Slow doesn't count")
+
+
+func test_guarded_counts_what_the_guard_took() -> void:
+	var guard: Dictionary = {"id": "guard", "name": "Guard", "kind": "guard", "share_pct": 30, "within_hexes": 1, "covers": "all"}
+	var guardian: UnitSetup = counting(K.at(K.kit("guardian", {"stats": {"hp": 5000, "speed": 0}, "passives": [guard]}), 3, 1), [deed({"counts": "guarded"})])
+	var archer: UnitDef = K.kit("archer", {"stats": {"hp": 5000, "speed": 0, "range": 5}, "targeting": "nearest",
+		"basic_attack": {"cooldown_ms": 500, "effects": [{"type": "damage", "amount": 40, "target": "target"}]}})
+	var fight: CombatSim = K.sim(K.fight([K.at(K.kit("ally", {"stats": {"hp": 5000, "speed": 0}}), 3, 2), guardian], [K.foe(archer, 3, 4)]))
+	K.step(fight, 60)
+	var guarded: int = 0
+	for entry: LogEntry in K.entries(fight, LogEntry.Kind.GUARD, "guardian"):
+		guarded += entry.amount
+	assert_gt(guarded, 0)
+	assert_eq(amount(fight, "guardian", "p0"), guarded)
+
+
+func test_new_kinds_take_no_ability_filter_where_it_makes_no_sense() -> void:
+	for kind: String in ["rooted_ms", "guarded"]:
+		var errors: Array[String] = []
+		DeedDef.read(DataReader.new({"text": "x", "counts": kind, "from_ability": ["snare"]}, "deed", errors))
+		assert_eq(errors.size(), 1, kind)

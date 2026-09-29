@@ -205,6 +205,7 @@ static func hop_away(sim: CombatSim, unit: UnitState, engagers: Array[UnitState]
 ## moved out of ends.
 static func _place(sim: CombatSim, unit: UnitState, point: Vector2i) -> void:
 	unit.pos = point
+	unit.moved_at = sim.tick
 	unit.route.clear()
 	unit.leg_active = false
 	unit.replan_at = sim.tick + 1

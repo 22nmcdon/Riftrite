@@ -17,6 +17,8 @@ extends RefCounted
 ##   silence: no mana gain (mana comes in step 4).
 ##   marked:  takes damage_taken_bp more damage from hits and damage over
 ##            time; the strongest Mark wins.
+##   warded:  takes damage_reduced_bp less (phase 4); the strongest Ward
+##            wins, and a Mark and a Ward add up.
 ##   undying: its HP can't drop below 1 (CombatSim's deaths step).
 ##   engaged: held by an engager (Engage sets and clears it with hold and
 ##            release; effects can't apply it).
@@ -133,13 +135,17 @@ static func slow_bp(unit: UnitState) -> int:
 	return strongest
 
 
-## How much more damage the unit takes (the strongest Mark).
+## How much more damage the unit takes (the strongest Mark, less the
+## strongest Ward; negative: less).
 static func damage_taken_bp(unit: UnitState) -> int:
 	var strongest: int = 0
+	var ward: int = 0
 	for state: StatusState in unit.statuses:
 		if state.def.kind == StatusDef.Kind.MARKED:
 			strongest = maxi(strongest, state.def.damage_taken_bp)
-	return strongest
+		elif state.def.kind == StatusDef.Kind.WARDED:
+			ward = maxi(ward, state.def.damage_reduced_bp)
+	return strongest - ward
 
 
 ## DEF lost to damage over time (defense_shred_per_stack).

@@ -41,6 +41,10 @@ enum Kind {
 	COLLAPSE_RING,
 	SUMMON,
 	TACTIC,
+	ZONE,
+	SNARE,
+	WALL,
+	GUARD,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -91,9 +95,13 @@ var end_tick: int = 0
 ## leaves, end_tick the tick it crumbles.
 ## SUMMON: target is the new unit and to_pos where it appears; or, when a
 ## summon is dropped, target is the kit and note says why.
-## AREA_WARNING, AREA_LANDED: the shape ("circle 2"); from_pos is where it's
-## placed (a line's or cone's start), to_pos a line's or cone's far end (or
-## the center again). AREA_LANDED: amount is how many it hit.
+## AREA_WARNING, AREA_LANDED, ZONE: the shape ("circle 2"); from_pos is where
+## it's placed (a line's or cone's start), to_pos a line's or cone's far end
+## (or the center again). AREA_LANDED: amount is how many it hit. ZONE: a
+## zone appears, and end_tick is the tick it ends (phase 4).
+## SNARE (phase 4): note "set" (from_pos: where), "sprung" (target: who), or
+## "gone". WALL: from_pos and to_pos its ends, end_tick when it falls.
+## GUARD: the guard (source) takes `amount` of a hit on `target`.
 var shape: String = ""
 
 
@@ -186,6 +194,19 @@ func to_text() -> String:
 			return line + "%s marks a %s at %s (lands at %s)" % [source_text(), shape, _point(from_pos), _format_time(end_tick)]
 		Kind.AREA_LANDED:
 			return line + "%s: the %s at %s lands, hitting %d" % [source_text(), shape, _point(from_pos), amount]
+		Kind.ZONE:
+			return line + "%s: a %s stays at %s until %s" % [source_text(), shape, _point(from_pos), _format_time(end_tick)]
+		Kind.SNARE:
+			match note:
+				"set":
+					return line + "%s sets a snare at %s" % [source_text(), _point(from_pos)]
+				"sprung":
+					return line + "%s: %s steps in the snare at %s" % [source_text(), target, _point(from_pos)]
+			return line + "%s: the snare at %s is gone (%s)" % [source_text(), _point(from_pos), note]
+		Kind.WALL:
+			return line + "%s raises a wall from %s to %s (falls at %s)" % [source_text(), _point(from_pos), _point(to_pos), _format_time(end_tick)]
+		Kind.GUARD:
+			return line + "%s takes %d of the hit on %s" % [source_text(), amount, target]
 		Kind.COLLAPSE_RING:
 			if note == "warned":
 				return line + "%s: ring %d will crumble at %s" % [source_text(), amount, _format_time(end_tick)]

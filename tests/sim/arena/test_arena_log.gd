@@ -152,6 +152,8 @@ const NAMES: Dictionary = {
 	LogEntry.Kind.AREA_WARNING: ["unit", "ability"], LogEntry.Kind.AREA_LANDED: ["unit", "ability"],
 	LogEntry.Kind.SUMMON: ["unit", "ability", "target"],
 	LogEntry.Kind.TACTIC: ["unit", "ability", "note"],
+	LogEntry.Kind.ZONE: ["unit", "ability"], LogEntry.Kind.SNARE: ["unit", "ability", "note"],
+	LogEntry.Kind.WALL: ["unit", "ability"], LogEntry.Kind.GUARD: ["unit", "ability", "target"],
 }
 
 

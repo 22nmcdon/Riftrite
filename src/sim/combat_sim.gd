@@ -67,6 +67,13 @@ var shots: Array[Shots.Shot] = []
 var next_shot_tick: int = NEVER
 ## Warned areas on their way, in the order they were cast.
 var areas: Array[Areas.Pending] = []
+## Zones on the ground (phase 4), in the order they were cast.
+var zones: Array[Areas.Pending] = []
+## Snares set and walls standing (phase 4), in the order they were made.
+var snares: Array[Snares.Snare] = []
+var walls: Array[Walls.Wall] = []
+## The units with a Guard passive (phase 4), in the fight's order.
+var guards: Array[UnitState] = []
 var finished: bool = false
 var outcome: FightResult.Outcome = FightResult.Outcome.TIE
 var _nav: NavGrid
@@ -86,6 +93,9 @@ var taunt_auras: bool = false
 ## Some hero has a tactic whose payoff adds damage (Tactics), so hits check
 ## for it; otherwise they never do.
 var damage_payoffs: bool = false
+## The units with conditional auras (phase 4: planted, below_hp, per fallen
+## ally), checked every tick.
+var _conditional: Array[UnitState] = []
 ## Some hero counts deeds (Deeds), so the log is read for them each tick.
 var _counting: bool = false
 ## Log entries before this one have been counted for deeds.
@@ -136,6 +146,9 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 	start.kind = LogEntry.Kind.FIGHT_START
 	start.note = "seed %d, act %d" % [setup.seed_value, setup.act]
 	combat_log.add(start)
+	for unit_setup: UnitSetup in setup.units():
+		if not unit_setup.snares.is_empty():
+			Snares.place_setup(self, unit_by_id(unit_setup.id), unit_setup.snares)
 	for unit: UnitState in units:
 		if unit.tactic != null:
 			Tactics.start(self, unit)
@@ -159,6 +172,10 @@ func add_unit(unit: UnitState) -> void:
 	note_listeners(unit)
 	if not unit.phases.is_empty():
 		_phased = true
+	if Passives.has_conditional_aura(unit):
+		_conditional.append(unit)
+	if unit.guard != null:
+		guards.append(unit)
 
 
 ## Starts reading the log for events if `unit` listens for any (a count
@@ -179,6 +196,8 @@ func units_joined() -> void:
 		if Passives.has_taunting_aura(unit):
 			taunt_auras = true
 	_active_auras = Passives.rederive(self, _active_auras)
+	for unit: UnitState in _conditional:
+		unit.condition_key = Passives.condition_key(self, unit)
 
 
 ## Folds every aura in again (a Taunt started or ended, for auras that hold
@@ -220,6 +239,8 @@ func step() -> void:
 	for unit: UnitState in units:
 		if unit.alive:
 			_act(unit)
+	if not snares.is_empty():
+		Snares.check(self)
 	var read_to: int = combat_log.entries.size()
 	if _listening:
 		Events.dispatch(self, _events_read, read_to)
@@ -229,6 +250,8 @@ func step() -> void:
 	if _phased:
 		Phases.check(self)
 	_process_deaths()
+	if not _conditional.is_empty():
+		check_conditional_auras()
 	_check_end()
 	if _counting:
 		var counted_to: int = combat_log.entries.size()
@@ -306,7 +329,7 @@ func _act(unit: UnitState) -> void:
 			return
 		if unit.leg_active:
 			Movement.halt(self, unit, "in reach")
-		if attack.progress_bp >= attack.needed:
+		if attack.progress_bp >= attack.needed and (unit.def.plant_ticks == 0 or tick - unit.moved_at >= unit.def.plant_ticks):
 			EffectRunner.basic_attack(self, unit)
 		return
 	# About to walk: a unit holding its ground (Tactics) doesn't.
@@ -321,6 +344,32 @@ func _act(unit: UnitState) -> void:
 			Movement.halt(self, unit, "engaged")
 		return
 	Movement.walk(self, unit)
+	if unit.fires_moving and attack.progress_bp >= attack.needed:
+		_fire_on_the_move(unit)
+
+
+## A walking unit with fires_moving (phase 4) looses its basic attack at the
+## nearest enemy in reach, if any, without stopping (and keeps its target).
+func _fire_on_the_move(unit: UnitState) -> void:
+	var nearest: UnitState = Targeting.pick(self, unit, "nearest", unit.reach_sq)
+	if nearest == null:
+		return
+	EffectRunner.fire(self, unit, unit.attack, nearest, unit.stats.get_stat(UnitStats.Stat.RANGE))
+	unit.attack.spend()
+	Mana.on_attack(self, unit)
+
+
+## Folds the auras in again if a conditional aura turned on or off (phase 4;
+## Passives.condition_key), so the change counts from the next tick.
+func check_conditional_auras() -> void:
+	var changed: bool = false
+	for unit: UnitState in _conditional:
+		var key: int = Passives.condition_key(self, unit)
+		if key != unit.condition_key:
+			unit.condition_key = key
+			changed = true
+	if changed:
+		_active_auras = Passives.rederive(self, _active_auras)
 
 
 ## How fast the unit's basic attack cooldown runs before any Slow (10000 =
@@ -511,7 +560,7 @@ func _process_deaths() -> void:
 				held.note = undying.def.name
 				combat_log.add(held)
 				continue
-			if Signatures.would_fall(self, unit):
+			if Signatures.would_fall(self, unit) or (not unit.listeners.is_empty() and Passives.would_fall(self, unit)):
 				again = true
 				continue
 			_fall(unit)

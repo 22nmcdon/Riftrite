@@ -3,7 +3,8 @@ extends RefCounted
 ## Mana (docs/plans/rebuild-phase1-arena-sim.md, section 5), for units with a
 ## mana bar (UnitDef.mana). It's kept in hundredths, so "1 per 10 damage
 ## taken" stays an integer; the data gives whole mana.
-##   - It comes from each basic attack that fires (per_attack), damage taken,
+##   - It comes from each basic attack that fires (per_attack, or
+##     per_far_attack at a far enough target: phase 4), damage taken,
 ##     Shield included (per_10_damage_taken), regen (regen_per_s), and start.
 ##   - Silence blocks every source; Stun doesn't.
 ##   - The bar stops at max; a full bar fires the mana signature and empties.
@@ -17,8 +18,15 @@ const SCALE: int = 100
 
 
 static func on_attack(sim: CombatSim, unit: UnitState) -> void:
-	if unit.def.mana != null:
-		gain(sim, unit, unit.def.mana.per_attack * SCALE)
+	var mana: ManaDef = unit.def.mana
+	if mana == null:
+		return
+	var per: int = mana.per_attack
+	if mana.far_hexes > 0 and unit.target != null:
+		var far: int = mana.far_hexes * HexGrid.HEX
+		if ArenaPlane.length_sq(unit.target.pos - unit.pos) >= far * far:
+			per = mana.per_far_attack
+	gain(sim, unit, per * SCALE)
 
 
 static func on_damage_taken(sim: CombatSim, unit: UnitState, damage: int) -> void:

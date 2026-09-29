@@ -13,12 +13,19 @@ extends RefCounted
 ##       (Passives). They land at once, never as a shot.
 ##   {"id": "embers", "name": "Embers", "kind": "replace_status", "from": "burn", "to": "poison"}
 ##       statuses the unit applies as `from` land as `to`
+##   {"id": "guard", "name": "Guard", "kind": "guard",
+##    "share_pct": 10, "within_hexes": 2, "covers": "behind"}
+##       phase 4 (Hearthwall; a code change, since no effect can move damage
+##       from one unit to another): when an enemy's hit lands on an ally of
+##       the unit within reach, the unit takes that share of what got
+##       through instead (Guard). "covers": "behind" only allies on the far
+##       side of it from its target; "all" every ally in reach
 ## Adding a kind is a code change; say so when you make one. An optional
 ## "text" is the player's sentence for it; the sim never reads it.
 
-enum Kind { AURA, ABILITY, REPLACE_STATUS }
+enum Kind { AURA, ABILITY, REPLACE_STATUS, GUARD }
 
-const KIND_NAMES: Array[String] = ["aura", "ability", "replace_status"]
+const KIND_NAMES: Array[String] = ["aura", "ability", "replace_status", "guard"]
 
 var id: String
 var name: String
@@ -30,6 +37,11 @@ var aura: AuraDef = null
 var ability: AbilityDef = null
 var from_status: String = ""
 var to_status: String = ""
+## guard: the share it takes (basis points), how far it reaches (plane
+## units), and whether it covers only allies behind it.
+var share_bp: int = 0
+var guard_range: int = 0
+var behind_only: bool = false
 
 
 static func read(reader: DataReader) -> PartDef:
@@ -64,5 +76,9 @@ static func read(reader: DataReader) -> PartDef:
 		Kind.REPLACE_STATUS:
 			def.from_status = reader.req_string("from")
 			def.to_status = reader.req_string("to")
+		Kind.GUARD:
+			def.share_bp = reader.req_int("share_pct", 1, 100) * 100
+			def.guard_range = reader.req_int("within_hexes", 1, 8) * HexGrid.HEX
+			def.behind_only = reader.req_choice("covers", ["behind", "all"]) == "behind"
 	reader.finish()
 	return def

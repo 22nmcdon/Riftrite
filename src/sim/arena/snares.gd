@@ -1,0 +1,128 @@
+class_name Snares
+extends RefCounted
+## Snares (docs/plans/rebuild-phase4-paths.md, section 5, P8; Trapper Maren):
+## a snare lies on the plane until the first enemy of its owner walks into it.
+##   - Set by a snare effect (EffectDef: placement, max_standing, and its
+##     own effects), "in the path" of the ability's target: 1 hex ahead of it,
+##     toward whatever it's going for (its own target, or else the unit that
+##     set the snare), kept on safe ground. Or placed by the player before the
+##     fight (UnitSetup.snares), from the first snare effect in the unit's
+##     kit.
+##   - Its effects' numbers are fixed as it's set, like a shot's.
+##   - It springs on the first standing enemy (in the fight's order) whose
+##     center comes within RADIUS of it, checked after every unit has acted
+##     each tick; a unit in the air flies over it. It lands its effects on
+##     that enemy and is gone.
+##   - With max_standing, setting one more than that removes the oldest of
+##     that unit's snares from the same effect.
+##   - Logged (SNARE): "set" (to_pos: where), "sprung" (target: who), or
+##     "gone" (replaced). It stays if its owner falls.
+
+## How close a unit's center must come (plane units).
+const RADIUS: int = 300
+
+
+## One snare on the ground.
+class Snare:
+	var unit: UnitState
+	var ability: AbilityDef
+	var source: EffectSource
+	var effect: EffectDef
+	var pos: Vector2i
+	var amounts: Array[int] = []
+
+
+## `unit`'s ability sets a snare with `effect` in `target`'s path.
+static func set_ahead(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: EffectSource, effect: EffectDef, target: UnitState) -> void:
+	if target == null:
+		return
+	var toward: UnitState = target.target if target.target != null and target.target.alive else unit
+	var dir: Vector2i = ArenaPlane.direction(target.pos, toward.pos, Vector2i(0, ArenaPlane.DIR * target.forward()))
+	var point: Vector2i = ArenaPlane.along(target.pos, dir, HexGrid.HEX)
+	place(sim, unit, ability, source, effect, sim.nearest_safe_point(point, 0))
+
+
+## Sets a snare at `point` (logged "set"), removing the oldest of the same
+## kind first if that would go past max_standing.
+static func place(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: EffectSource, effect: EffectDef, point: Vector2i) -> void:
+	if effect.max_standing > 0:
+		var mine: Array[Snare] = sim.snares.filter(func(other: Snare) -> bool: return other.unit == unit and other.effect == effect)
+		if mine.size() >= effect.max_standing:
+			var oldest: Snare = mine[0]
+			sim.snares.erase(oldest)
+			_log(sim, oldest, "gone", "")
+	var snare := Snare.new()
+	snare.unit = unit
+	snare.ability = ability
+	snare.source = source
+	snare.effect = effect
+	snare.pos = point
+	for nested: EffectDef in effect.area_effects:
+		snare.amounts.append(EffectRunner.amount_of(nested, unit, 0, sim))
+	sim.snares.append(snare)
+	_log(sim, snare, "set", "")
+
+
+## Springs every snare an enemy has walked into, in the order they were set.
+static func check(sim: CombatSim) -> void:
+	var staying: Array[Snare] = []
+	for snare: Snare in sim.snares:
+		var caught: UnitState = null
+		for other: UnitState in sim.units:
+			if other.alive and other.side != snare.unit.side and not other.airborne \
+					and ArenaPlane.length_sq(other.pos - snare.pos) <= RADIUS * RADIUS:
+				caught = other
+				break
+		if caught == null:
+			staying.append(snare)
+			continue
+		_log(sim, snare, "sprung", caught.id)
+		for i: int in snare.effect.area_effects.size():
+			var nested: EffectDef = snare.effect.area_effects[i]
+			var crit: bool = nested.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(EffectRunner.crit_chance_bp(sim, snare.unit, snare.ability))
+			EffectRunner.land(sim, snare.unit, snare.ability, snare.source, nested, caught, snare.amounts[i], crit, snare.pos)
+	sim.snares = staying
+
+
+## The snares the player placed for `unit` before the fight, from the first
+## snare effect in its kit, one on each hex's center.
+static func place_setup(sim: CombatSim, unit: UnitState, hexes: Array[Vector2i]) -> void:
+	var effect: EffectDef = placed_effect(unit.def)
+	var ability: AbilityDef = placed_ability(unit.def)
+	if effect == null or ability == null:
+		return
+	var source: EffectSource = EffectSource.make(unit.id, ability.id, ability.name)
+	for hex: Vector2i in hexes:
+		place(sim, unit, ability, source, effect, sim.grid.center(hex.x, hex.y))
+
+
+## The first snare effect in `kit` (for the snares the player places), or null.
+static func placed_effect(kit: UnitDef) -> EffectDef:
+	for effect: EffectDef in kit.all_effects():
+		if effect.type == EffectDef.Type.SNARE:
+			return effect
+	return null
+
+
+## The ability `kit`'s placed snares are credited to: the one holding its
+## first snare effect.
+static func placed_ability(kit: UnitDef) -> AbilityDef:
+	var abilities: Array[AbilityDef] = [kit.signature, kit.basic_attack]
+	for part: PartDef in kit.passives:
+		abilities.append(part.ability)
+	for ability: AbilityDef in abilities:
+		if ability == null:
+			continue
+		for effect: EffectDef in ability.effects:
+			if effect.type == EffectDef.Type.SNARE:
+				return ability
+	return null
+
+
+static func _log(sim: CombatSim, snare: Snare, note: String, target_id: String) -> void:
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.SNARE, snare.source)
+	entry.note = note
+	entry.target = target_id
+	entry.from_pos = snare.pos
+	entry.to_pos = snare.pos
+	sim.combat_log.add(entry)

@@ -46,11 +46,15 @@ func test_the_fight_order_matters() -> void:
 	assert_ne(K.run(reordered).combat_log.to_text(), chaos.combat_log.to_text())
 
 
-## Log kinds the chaos fight doesn't make: the arena sim doesn't yet (deeds
-## come in phase 4, duo bonds in phase 5), or another fight covers them
-## (TACTIC: test_a_fight_with_tactics_repeats_exactly, since tactics would
-## change the chaos fight's seed).
-const NOT_YET: Array[LogEntry.Kind] = [LogEntry.Kind.SYNERGY, LogEntry.Kind.DEED_LEVEL, LogEntry.Kind.TACTIC]
+## Log kinds the chaos fight doesn't make: the arena sim doesn't yet (duo
+## bonds in phase 5; deeds count without logging), or another fight covers
+## them (TACTIC: test_a_fight_with_tactics_repeats_exactly, since tactics
+## would change the chaos fight's seed; phase 4's path pieces: the paths
+## fight, once the paths are data).
+const NOT_YET: Array[LogEntry.Kind] = [LogEntry.Kind.SYNERGY, LogEntry.Kind.DEED_LEVEL, LogEntry.Kind.TACTIC,
+	LogEntry.Kind.ZONE, LogEntry.Kind.SNARE, LogEntry.Kind.WALL, LogEntry.Kind.GUARD]
+## Statuses only the paths use (phase 4).
+const PATH_STATUSES: Array[String] = ["warded"]
 
 
 func test_the_chaos_fight_uses_everything() -> void:
@@ -60,7 +64,7 @@ func test_the_chaos_fight_uses_everything() -> void:
 			assert_false(log.of_kind(kind).is_empty(), "the log has a %s" % LogEntry.Kind.keys()[kind])
 	var statuses: Array = log.of_kind(LogEntry.Kind.STATUS_APPLIED).map(func(entry: LogEntry) -> String: return entry.status)
 	for status_id: String in K.content().status_ids:
-		assert_true(statuses.has(status_id), "%s is applied" % status_id)
+		assert_true(statuses.has(status_id) or PATH_STATUSES.has(status_id), "%s is applied" % status_id)
 	var shapes: Array = log.of_kind(LogEntry.Kind.AREA_LANDED).map(func(entry: LogEntry) -> String: return entry.shape.get_slice(" ", 0))
 	for shape: String in ShapeDef.KIND_NAMES:
 		assert_true(shapes.has(shape), "a %s lands" % shape)

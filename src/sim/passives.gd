@@ -21,6 +21,11 @@ extends RefCounted
 ## An aura with "while": "taunting" is on only while one of its holder's
 ## Taunts is in effect on a standing enemy; auras are folded in again when
 ## a Taunt starts or ends, or a taunted unit falls (CombatSim.taunt_auras).
+## Phase 4's conditions (planted, below_hp, per fallen ally) are checked
+## every tick for the units that have them, and auras are folded in again
+## when one changes (condition_key, CombatSim.check_conditional_auras).
+## A range aura adds hexes to its holder's reach; healing_taken_bp scales
+## the heals the unit gets (EffectRunner.heal).
 
 
 ## One event effect of one of a unit's ability passives, with its count.
@@ -93,15 +98,22 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 				continue
 			if part.aura.while_taunting and not taunting(sim, holder):
 				continue
+			var times: int = 1
+			if part.aura.is_conditional():
+				if not condition_holds(sim, holder, part.aura):
+					continue
+				if part.aura.per_fallen_ally:
+					times = fallen_allies(sim, holder)
 			now_active.append("%s:%s" % [holder.id, part.id])
 			var targets: Array[UnitState] = [holder]
 			if part.aura.target == AuraDef.Target.ALL_ALLIES:
 				targets = sim.standing_allies_of(holder)
 			for target: UnitState in targets:
-				if _is_additive(part.aura.stat):
-					target.aura_bp[part.aura.stat] += part.aura.value
-				else:
-					target.aura_bp[part.aura.stat] = FixedMath.apply_bp(target.aura_bp[part.aura.stat], part.aura.value)
+				for i: int in times:
+					if _is_additive(part.aura.stat):
+						target.aura_bp[part.aura.stat] += part.aura.value
+					else:
+						target.aura_bp[part.aura.stat] = FixedMath.apply_bp(target.aura_bp[part.aura.stat], part.aura.value)
 	for unit: UnitState in sim.units:
 		unit.stats = unit.base_stats.copy()
 		for aura_stat: int in AuraDef.Stat.size():
@@ -109,6 +121,7 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 				continue
 			var stat: int = AuraDef.UNIT_STAT_FOR[aura_stat]
 			unit.stats.values[stat] = FixedMath.apply_bp(unit.base_stats.values[stat], unit.aura_bp[aura_stat])
+		unit.stats.values[UnitStats.Stat.RANGE] = unit.base_stats.values[UnitStats.Stat.RANGE] + unit.aura_bp[AuraDef.Stat.RANGE]
 		unit.attack.set_cooldown_add(unit.aura_bp[AuraDef.Stat.COOLDOWN_BP])
 		unit.attack_rate_bp = sim.attack_rate_bp(unit)
 		unit.refresh_reach()
@@ -140,6 +153,50 @@ static func taunting(sim: CombatSim, holder: UnitState) -> bool:
 	return false
 
 
+## Whether a conditional aura's condition (planted, below_hp, a fallen
+## ally) holds for its holder now.
+static func condition_holds(sim: CombatSim, holder: UnitState, aura: AuraDef) -> bool:
+	match aura.while_kind:
+		AuraDef.While.PLANTED:
+			if sim.tick - holder.moved_at < aura.after_ticks:
+				return false
+		AuraDef.While.BELOW_HP:
+			if holder.hp * FixedMath.BP_ONE >= aura.below_bp * holder.max_hp:
+				return false
+	return not aura.per_fallen_ally or fallen_allies(sim, holder) > 0
+
+
+## How many of `holder`'s side have fallen (summons included).
+static func fallen_allies(sim: CombatSim, holder: UnitState) -> int:
+	var count: int = 0
+	for unit: UnitState in (sim.heroes if holder.side == EffectSource.Team.HEROES else sim.enemies):
+		if not unit.alive:
+			count += 1
+	return count
+
+
+## True if the unit has a conditional aura (checked every tick).
+static func has_conditional_aura(unit: UnitState) -> bool:
+	for part: PartDef in unit.def.passives:
+		if part.kind == PartDef.Kind.AURA and part.aura.is_conditional():
+			return true
+	return false
+
+
+## A number that changes whenever one of the unit's conditional auras turns
+## on or off, or a per-fallen-ally one counts differently.
+static func condition_key(sim: CombatSim, unit: UnitState) -> int:
+	var key: int = 0
+	var bit: int = 1
+	for part: PartDef in unit.def.passives:
+		if part.kind != PartDef.Kind.AURA or not part.aura.is_conditional():
+			continue
+		if unit.alive and condition_holds(sim, unit, part.aura):
+			key += bit * (1 + (fallen_allies(sim, unit) if part.aura.per_fallen_ally else 0))
+		bit *= 64
+	return key
+
+
 ## True if the unit has an aura that holds only while it's taunting.
 static func has_taunting_aura(unit: UnitState) -> bool:
 	for part: PartDef in unit.def.passives:
@@ -157,7 +214,7 @@ static func has_timed(unit: UnitState) -> bool:
 
 
 static func _is_additive(stat: int) -> bool:
-	return stat == AuraDef.Stat.CRIT_CHANCE_BP or stat == AuraDef.Stat.COOLDOWN_BP
+	return AuraDef.ADDITIVE.has(stat)
 
 
 ## The effect's number after the unit's output auras (damage, heal, shield,
@@ -210,7 +267,8 @@ static func run_timed(sim: CombatSim) -> void:
 			match effect.trigger:
 				EffectDef.Trigger.ON_INTERVAL:
 					var since: int = sim.tick - unit.joined_at
-					if since > 0 and since % effect.interval_ticks == 0:
+					if since > 0 and since % effect.interval_ticks == 0 and not (effect.once and listener.count > 0):
+						listener.count += 1
 						_run(sim, unit, listener, null, 0)
 				EffectDef.Trigger.ON_ALLY_BELOW_HP:
 					for ally: UnitState in sim.standing_allies_of(unit):
@@ -221,6 +279,24 @@ static func run_timed(sim: CombatSim) -> void:
 						if ally.hp * FixedMath.BP_ONE < ally.max_hp * effect.threshold_bp:
 							listener.allies_done.append(ally.id)
 							_run(sim, unit, listener, ally, 0)
+
+
+## The unit would fall (the deaths step, after Undying and a would_fall
+## signature): its first unspent on_would_fall passive (phase 4) leaves it at
+## 1 HP (SAVED, sourced to the passive) and runs. Returns true if one did.
+static func would_fall(sim: CombatSim, unit: UnitState) -> bool:
+	for listener: Listener in unit.listeners:
+		if listener.effect.trigger != EffectDef.Trigger.ON_WOULD_FALL or listener.count > 0 or not listener.effect.active_at(sim.tick):
+			continue
+		listener.count = 1
+		unit.hp = 1
+		var saved: LogEntry = sim.new_entry(LogEntry.Kind.SAVED, listener.source)
+		saved.target = unit.id
+		saved.note = "would fall"
+		sim.combat_log.add(saved)
+		_run(sim, unit, listener, null, 0)
+		return true
+	return false
 
 
 ## The unit has just fallen: its on_fall passives run, from where it fell.

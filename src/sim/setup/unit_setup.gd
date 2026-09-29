@@ -20,6 +20,9 @@ var stage: PathDef.Stage = PathDef.Stage.BASE
 ## The paths whose deeds it counts (a hero's three, whatever its stage;
 ## empty: it counts none).
 var deed_paths: Array[PathDef] = []
+## Snares the player placed before the fight, by hex (phase 4, a transformed
+## Trapper's; up to its kit's placed_snares).
+var snares: Array[Vector2i] = []
 
 
 static func make(unit_def: UnitDef, unit_side: EffectSource.Team, at_col: int, at_row: int, unit_id: String = "") -> UnitSetup:

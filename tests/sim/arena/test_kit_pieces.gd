@@ -73,7 +73,7 @@ func test_the_new_pieces_refuse_what_cant_work() -> void:
 	var area: Dictionary = {"type": "area", "shape": {"kind": "circle", "radius": 1}, "anchor": "self", "hits": "all", "effects": [{"type": "damage", "amount": 1, "target": "target"}]}
 	var cases: Dictionary = {
 		"while: unknown value \"raging\"": ["aura", {"target": "holder", "stat": "def_bp", "value": 15000, "while": "raging"}],
-		"heal needs exactly one of \"amount\" or \"amount_bp_of_max_hp\"": ["effect", {"type": "heal", "target": "self"}],
+		"heal needs exactly one of \"amount\", \"amount_bp_of_max_hp\", or \"amount_bp_of_damage\"": ["effect", {"type": "heal", "target": "self"}],
 		"heal needs exactly one of": ["effect", {"type": "heal", "amount": 5, "amount_bp_of_max_hp": 500, "target": "self"}],
 		"amount_bp_of_max_hp": ["effect", {"type": "heal", "amount_bp_of_max_hp": 10001, "target": "self"}],
 		"\"scaling\" can't be combined with amount_bp_of_max_hp": ["effect", {"type": "heal", "amount_bp_of_max_hp": 500, "target": "self", "scaling": {"mgk": 10000}}],

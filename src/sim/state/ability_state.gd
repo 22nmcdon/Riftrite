@@ -21,6 +21,8 @@ var once_trigger: bool = false
 # Signatures.
 ## A once-a-fight trigger has fired (or, for would_fall, saved the unit).
 var fired: bool = false
+## How many times it has fired (an on_fire effect's "every", phase 4).
+var fires: int = 0
 ## count: events seen so far.
 var count: int = 0
 ## Its last try to fire failed (a leap with no room), and that's logged.

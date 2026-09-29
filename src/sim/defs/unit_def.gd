@@ -13,16 +13,23 @@ extends RefCounted
 ## Only a unit whose signature fires on mana has a mana bar, and it must have
 ## one. The basic attack, the signature, and the passives each need their own
 ## id.
-##   "traits": ["engage", "flying", "hop_away"]
+##   "traits": ["engage", "flying", "hop_away", "fires_moving"]
 ##       code paths a unit has (sections 4 and 6); hop_away needs
-##       "hop_cooldown_ms" too
+##       "hop_cooldown_ms" too; fires_moving (phase 4, Volley): while it
+##       walks, its basic attack fires at the nearest enemy in reach
+##   "plant_ms": 1500
+##       phase 4 (Deadeye's cost): after it moves, its basic attack waits
+##       this long before it can fire
+##   "placed_snares": 2
+##       phase 4 (Trapper): the player places that many of its snares
+##       before the fight (UnitSetup.snares); its kit needs a snare effect
 ##   "phases": [...PhaseDefs...]
 ##       changes to the kit as its HP drops (PhaseDef), from the highest
 ##       threshold down
 
 ## A unit's own rule (section 4): Targeting.RULES but self.
 const TARGETING_RULES: Array[String] = ["nearest", "weakest_backliner", "largest_group", "farthest", "lowest_hp_ally", "highest_mana"]
-const TRAITS: Array[String] = ["engage", "flying", "hop_away"]
+const TRAITS: Array[String] = ["engage", "flying", "hop_away", "fires_moving"]
 
 var id: String
 var name: String
@@ -42,6 +49,12 @@ var phases: Array[PhaseDef] = []
 ## An enemy's archetype (EnemyDef.ARCHETYPE_NAMES; set from its entry, so
 ## summons have theirs); "" for a hero. Tactics that prefer targets read it.
 var archetype: String = ""
+## After it moves, how long it needs before its basic attack can fire again
+## (phase 4, Deadeye's cost; 0: none).
+var plant_ticks: int = 0
+## How many snares the player places for it before the fight (phase 4,
+## transformed Trapper; 0: none). Its kit needs a snare effect.
+var placed_snares: int = 0
 
 
 ## Reads a kit. A hero's or enemy's kit (HeroDef, EnemyDef) takes its id and
@@ -68,6 +81,8 @@ static func read(reader: DataReader, kit_id: String = "", kit_name: String = "")
 		reader.error("hop_cooldown_ms: only a unit with the hop_away trait hops")
 	for part_reader: DataReader in reader.opt_object_array("passives"):
 		def.passives.append(PartDef.read(part_reader))
+	def.plant_ticks = reader.opt_ticks("plant_ms", 0)
+	def.placed_snares = reader.opt_int("placed_snares", 0, 0, 4)
 	for problem: String in def.problems():
 		reader.error(problem)
 	var kit: UnitDef = def
@@ -128,6 +143,8 @@ func copy() -> UnitDef:
 	other.traits = traits.duplicate()
 	other.hop_cooldown_ticks = hop_cooldown_ticks
 	other.archetype = archetype
+	other.plant_ticks = plant_ticks
+	other.placed_snares = placed_snares
 	return other
 
 

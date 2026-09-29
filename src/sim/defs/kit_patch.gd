@@ -13,7 +13,10 @@ extends RefCounted
 ##                                                 takes it away
 ##    "passives": [...PartDefs...],                added; one with a base
 ##                                                 passive's id replaces it
-##    "remove_passives": ["hearthlight"]}          base passives it takes away
+##    "remove_passives": ["hearthlight"],          base passives it takes away
+##    "add_traits": ["fires_moving"],              traits it gains
+##    "plant_ms": 1500,                            UnitDef's plant_ms
+##    "placed_snares": 2}                          UnitDef's placed_snares
 ## Like a phase (PhaseDef), a new signature that doesn't fire on mana takes
 ## the bar away too. The patched kit must be sound (UnitDef.problems), with
 ## HP of at least 1, range of at least 1, and speed and CRIT of at least 0;
@@ -33,6 +36,10 @@ var mana: ManaDef = null
 var removes_mana: bool = false
 var passives: Array[PartDef] = []
 var remove_passives: Array[String] = []
+var add_traits: Array[String] = []
+## -1: unchanged.
+var plant_ticks: int = -1
+var placed_snares: int = -1
 
 
 static func make() -> KitPatch:
@@ -72,8 +79,14 @@ static func read(reader: DataReader) -> KitPatch:
 		patch.passives.append(PartDef.read(part_reader))
 	if reader.has("remove_passives"):
 		patch.remove_passives = reader.req_string_array("remove_passives")
+	if reader.has("add_traits"):
+		patch.add_traits = reader.opt_choice_array("add_traits", ["engage", "flying", "fires_moving"])
+	if reader.has("plant_ms"):
+		patch.plant_ticks = reader.req_ticks("plant_ms", 0)
+	if reader.has("placed_snares"):
+		patch.placed_snares = reader.req_int("placed_snares", 0, 4)
 	if not patch.changes_anything():
-		reader.error("a patch needs stats_bp, stats_add, a basic_attack, a signature, mana, passives, or remove_passives")
+		reader.error("a patch needs stats_bp, stats_add, a basic_attack, a signature, mana, passives, remove_passives, add_traits, or plant_ms")
 	reader.finish()
 	return patch
 
@@ -82,7 +95,8 @@ func changes_anything() -> bool:
 	for stat: int in stats_bp.size():
 		if stats_bp[stat] != FixedMath.BP_ONE or stats_add[stat] != 0:
 			return true
-	return basic_attack != null or signature != null or mana != null or removes_mana or not passives.is_empty() or not remove_passives.is_empty()
+	return basic_attack != null or signature != null or mana != null or removes_mana or not passives.is_empty() or not remove_passives.is_empty() \
+		or not add_traits.is_empty() or plant_ticks >= 0 or placed_snares >= 0
 
 
 ## `base` with the patch applied (a new UnitDef; `base` is untouched), and
@@ -119,6 +133,17 @@ func apply(base: UnitDef, problems: Array[String] = []) -> UnitDef:
 			problems.append("it has no passive \"%s\" to remove" % part_id)
 		else:
 			built.passives.remove_at(at)
+	for trait_name: String in add_traits:
+		if built.traits.has(trait_name):
+			problems.append("it already has the trait %s" % trait_name)
+		else:
+			built.traits.append(trait_name)
+	if plant_ticks >= 0:
+		built.plant_ticks = plant_ticks
+	if placed_snares >= 0:
+		built.placed_snares = placed_snares
+	if built.placed_snares > 0 and Snares.placed_effect(built) == null:
+		problems.append("it places snares, so its kit needs a snare effect")
 	for part: PartDef in passives:
 		var replaced: bool = false
 		for i: int in built.passives.size():

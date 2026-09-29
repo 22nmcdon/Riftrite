@@ -25,6 +25,8 @@ class Counter:
 	## Each shot's distance when fired, by "target@land tick@ability"
 	## (lookup only; never iterated).
 	var shot_range_sq: Dictionary[String, int] = {}
+	## Each ability's latest fire's target, for extra_hits (lookup only).
+	var fired_at: Dictionary[String, String] = {}
 
 
 static func make_counter(deed_paths: Array[PathDef]) -> Counter:
@@ -46,7 +48,8 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 		if entry.source_unit.is_empty() or entry.source_relic_side >= 0:
 			continue
 		var kind: LogEntry.Kind = entry.kind
-		if kind != LogEntry.Kind.DAMAGE and kind != LogEntry.Kind.HEAL and kind != LogEntry.Kind.SHIELD and kind != LogEntry.Kind.SHOT:
+		if kind != LogEntry.Kind.DAMAGE and kind != LogEntry.Kind.HEAL and kind != LogEntry.Kind.SHIELD and kind != LogEntry.Kind.SHOT \
+				and kind != LogEntry.Kind.FIRE and kind != LogEntry.Kind.STATUS_APPLIED and kind != LogEntry.Kind.GUARD:
 			continue
 		var unit: UnitState = sim.unit_by_id(entry.source_unit)
 		if unit == null or unit.deeds == null:
@@ -56,6 +59,9 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 			if counter.needs_shots:
 				counter.shot_range_sq["%s@%d@%s" % [entry.target, entry.end_tick, entry.source_ability]] = ArenaPlane.length_sq(entry.to_pos - entry.from_pos)
 			continue
+		if kind == LogEntry.Kind.FIRE:
+			counter.fired_at[entry.source_ability] = entry.target
+			continue
 		for d: int in counter.deeds.size():
 			var deed: DeedDef = counter.deeds[d]
 			if not deed.counts_kind(kind, entry.source_ability):
@@ -64,7 +70,16 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 				continue
 			if deed.while_below_bp > 0 and unit.hp * FixedMath.BP_ONE >= deed.while_below_bp * unit.max_hp:
 				continue
-			counter.amounts[d] += entry.amount
+			match deed.counts:
+				DeedDef.Counts.EXTRA_HITS:
+					if counter.fired_at.get(entry.source_ability, "") != entry.target:
+						counter.amounts[d] += 1
+				DeedDef.Counts.ROOTED_MS:
+					if entry.end_tick > entry.tick and sim.content.statuses.has(entry.status) \
+							and sim.content.statuses[entry.status].kind == StatusDef.Kind.ROOT:
+						counter.amounts[d] += (entry.end_tick - entry.tick) * FixedMath.MS_PER_TICK
+				_:
+					counter.amounts[d] += entry.amount
 
 
 ## How far a hit left from, squared: its shot's distance if it was one,

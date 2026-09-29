@@ -11,6 +11,12 @@ extends RefCounted
 ##            amount, Shield included
 ##   healing  HP restored
 ##   shield   Shield given
+##   extra_hits  enemies an attack hits beyond its own target: each hit
+##            (from_ability's) on a unit that isn't the target of that
+##            ability's latest fire (Split Shot, Brand, the Mace's cleave)
+##   rooted_ms   how long the Roots it applies last, in ms (as applied;
+##            Trapper)
+##   guarded  damage it takes for allies (Guard; Hearthwall)
 ## Filters (each optional):
 ##   from_ability: ["split_shot"]  only what these abilities or passives do
 ##                                 (ids in the hero's kits: base, vowed, or
@@ -22,13 +28,12 @@ extends RefCounted
 ##                                 the two stand as it lands)
 ##   while_below_pct: 30           damage only: the hero is below this share
 ##                                 of max HP (as the tick it lands ends)
-## Adding a kind or a filter is a code change; the waves add theirs
-## (extra hits, time rooted, damage taken for allies).
+## Adding a kind or a filter is a code change.
 
-enum Counts { DAMAGE, HEALING, SHIELD }
+enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED }
 
-const COUNT_NAMES: Array[String] = ["damage", "healing", "shield"]
-const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield"]
+const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded"]
+const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded"]
 
 ## The player's line: "Damage dealt from 5 or more hexes away".
 var text: String
@@ -54,6 +59,8 @@ static func read(reader: DataReader) -> DeedDef:
 		def.while_below_bp = reader.req_int("while_below_pct", 1, 99) * 100
 	if def.counts != Counts.DAMAGE and (def.from_range > 0 or def.while_below_bp > 0):
 		reader.error("from_hexes and while_below_pct only filter damage")
+	if (def.counts == Counts.ROOTED_MS or def.counts == Counts.GUARDED) and not def.from_ability.is_empty():
+		reader.error("%s counts every one, so it takes no from_ability" % COUNT_NAMES[def.counts])
 	reader.finish()
 	return def
 
@@ -71,4 +78,11 @@ func counts_kind(kind: LogEntry.Kind, ability_id: String) -> bool:
 		Counts.SHIELD:
 			if kind != LogEntry.Kind.SHIELD:
 				return false
+		Counts.EXTRA_HITS:
+			if kind != LogEntry.Kind.DAMAGE:
+				return false
+		Counts.ROOTED_MS:
+			return kind == LogEntry.Kind.STATUS_APPLIED
+		Counts.GUARDED:
+			return kind == LogEntry.Kind.GUARD
 	return from_ability.is_empty() or from_ability.has(ability_id)

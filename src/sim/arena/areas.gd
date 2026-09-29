@@ -16,6 +16,15 @@ extends RefCounted
 ##     damage effect rolls its crit then. A knockback goes straight away
 ##     from a circle's or ring's center, or from the unit for a line or
 ##     cone; a pull goes toward the unit.
+##   - Sides (phase 4): a nested effect with a "side" lands only on units
+##     of that side, relative to the caster (Sunfall harms enemies and heals
+##     allies in one line).
+##   - Zones (phase 4): an area with a duration stays where it was cast. It's
+##     logged once (ZONE: the shape, where, and the tick it ends), then lands
+##     at once and every pulse after (each an AREA_LANDED, like any area),
+##     until it ends; its numbers were fixed as it was cast. It keeps going
+##     if the unit falls. Zones pulse just before the warned areas land, in
+##     the order they were cast.
 ## Heroes never step out of a warned area (decided): placement is the answer.
 
 
@@ -33,6 +42,8 @@ class Pending:
 	var land_tick: int
 	var amounts: Array[int] = []
 	var crit_bp: int = 0
+	## A zone: the tick it ends (exclusive; -1: not a zone).
+	var until_tick: int = -1
 
 
 ## `unit`'s ability casts the area `effect` at `target` (null for an area on
@@ -58,6 +69,15 @@ static func cast(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 		area.amounts.append(EffectRunner.amount_of(nested, unit, 0, sim))
 	area.crit_bp = EffectRunner.crit_chance_bp(sim, unit, ability)
 	area.land_tick = sim.tick + effect.warning_ticks
+	if effect.zone_ticks > 0:
+		area.until_tick = sim.tick + effect.zone_ticks
+		var zone: LogEntry = _entry(sim, LogEntry.Kind.ZONE, area)
+		zone.end_tick = area.until_tick
+		sim.combat_log.add(zone)
+		sim.zones.append(area)
+		_land(sim, area)
+		area.land_tick += effect.pulse_ticks
+		return
 	if effect.warning_ticks == 0:
 		_land(sim, area)
 		return
@@ -67,8 +87,11 @@ static func cast(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 	sim.areas.append(area)
 
 
-## Lands every warned area that's due, in the order they were cast.
+## Lands every warned area that's due, in the order they were cast, then
+## pulses every zone that's due.
 static func land_due(sim: CombatSim) -> void:
+	if not sim.zones.is_empty():
+		_pulse_zones(sim)
 	if sim.areas.is_empty():
 		return
 	var waiting: Array[Pending] = []
@@ -78,6 +101,21 @@ static func land_due(sim: CombatSim) -> void:
 		else:
 			_land(sim, area)
 	sim.areas = waiting
+
+
+## Each zone lands again when its pulse is due, and goes once it ends.
+## (Before the warned areas each tick: a zone cast this tick has already
+## landed once.)
+static func _pulse_zones(sim: CombatSim) -> void:
+	var staying: Array[Pending] = []
+	for zone: Pending in sim.zones:
+		if sim.tick >= zone.until_tick:
+			continue
+		if sim.tick >= zone.land_tick:
+			_land(sim, zone)
+			zone.land_tick += zone.effect.pulse_ticks
+		staying.append(zone)
+	sim.zones = staying
 
 
 static func _land(sim: CombatSim, area: Pending) -> void:
@@ -93,6 +131,8 @@ static func _land(sim: CombatSim, area: Pending) -> void:
 	for victim: UnitState in hit:
 		for i: int in area.effect.area_effects.size():
 			var nested: EffectDef = area.effect.area_effects[i]
+			if nested.side != EffectDef.AreaSide.BOTH and (victim.side == area.unit.side) != (nested.side == EffectDef.AreaSide.ALLIES):
+				continue
 			var crit: bool = nested.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(area.crit_bp)
 			EffectRunner.land(sim, area.unit, area.ability, area.source, nested, victim, area.amounts[i], crit, area.push_from)
 

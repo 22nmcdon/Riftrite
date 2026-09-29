@@ -90,5 +90,13 @@
     "name": "Stealth",
     "kind": "stealth",
     "duration_ms": 1000
+  },
+  {
+    "_note": "Takes damage_reduced_bp less damage from hits and damage over time (Wardweaver's Warding Circle, phase 4). Wards don't stack: the strongest wins, and it adds to a Mark.",
+    "id": "warded",
+    "name": "Warded",
+    "kind": "warded",
+    "duration_ms": 600,
+    "damage_reduced_bp": 2000
   }
 ]

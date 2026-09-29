@@ -43,6 +43,10 @@ const FORMS: Dictionary[LogEntry.Kind, String] = {
 	LogEntry.Kind.COLLAPSE_RING: "the ring striped, then dark, and a banner at the first",
 	LogEntry.Kind.SUMMON: "a pulse, and a new token",
 	LogEntry.Kind.TACTIC: "what the tactic did, over the hero (\"Holds its ground\")",
+	LogEntry.Kind.ZONE: "the zone on the ground while it lasts (from the sim's zones)",
+	LogEntry.Kind.SNARE: "a snare mark on the ground until it's sprung (from the sim's snares)",
+	LogEntry.Kind.WALL: "a thick line while it stands (from the sim's walls)",
+	LogEntry.Kind.GUARD: "a brass number on the guard",
 }
 ## What the board must have shown at some frame, for each kind a fight
 ## produced (the rest are checked elsewhere, or read from the unit's state).

@@ -101,11 +101,13 @@ static func _follow(sim: CombatSim, unit: UnitState, leaving: bool) -> void:
 		# A slide is a leg of its own, one tick long.
 		_log_leg(sim, unit, next, ArenaPlane.distance(unit.pos, next) + 1)
 		unit.pos = next
+		unit.moved_at = sim.tick
 		unit.leg_active = false
 		return
 	if not unit.leg_active or unit.leg_to != corner or unit.leg_amount != amount:
 		_log_leg(sim, unit, corner, amount)
 	unit.pos = next
+	unit.moved_at = sim.tick
 	if unit.pos == corner:
 		unit.route.remove_at(0)
 		unit.leg_active = false
@@ -201,6 +203,7 @@ static func settle(sim: CombatSim, unit: UnitState, target: UnitState) -> bool:
 	if not unit.leg_active or unit.leg_to != unit.settle_spot or unit.leg_amount != amount:
 		_log_leg(sim, unit, unit.settle_spot, amount)
 	unit.pos = ArenaPlane.step_toward(unit.pos, unit.settle_spot, amount)
+	unit.moved_at = sim.tick
 	if unit.pos == unit.settle_spot:
 		unit.leg_active = false
 	return false
