@@ -86,6 +86,14 @@ The rest are *proposed* defaults, from the design and its open questions, for th
 - **"Take 3 shards instead"** (the mock).
 - Upgrades are permanent, listed on the Path tab ("Upgrades taken").
 
+**Built in step 3 (2026-09-29):** each path's deed has a `threshold` in `paths.json` (three times the vowed per-fight average in phase 4's table, section 7: Deadeye 900, Trapper 5,400 ms, Volley 6, Hearthwall 10, Ironbrand 20, Last Watch 35, Lanternbearer 25, Wardweaver 6, Vigil Keeper 100; the run report tunes them). `RunFlow.record` transforms a hero whose vowed deed reaches it, after any fight (won or lost), and lists it in `RunState.just_transformed` for the screen. `switch_vow` works between fights until the hero transforms. `data/upgrades.json` (`UpgradeDef`, loaded and checked by `RunContent`): 3 per hero and 3 per path, one of each path's a vow pick. A win draws the pick (`Offers.pick`, stream PICK/act/day/attempt/visit): one card per hero, and with the act's `wild_card_pct` (25) one card from anyone's pool. `take_pick` or `take_shards` (the act's `pick_shards`, 3); `finish_day` waits for it. `fight_setup` passes the upgrades' mods through `HeroExtras`. Tests: `tests/run/test_growth.gd`.
+
+Decisions made while building it (step 3):
+- **A vow pick can carry two mods:** `mod` for the vowed kit and `transformed_mod` for the transformed one, since the taste's piece and the transformation's are different parts (Deadeye's Steady becomes Planted). `RunContent` checks every mod against every kit it can meet: it must apply soundly and change something.
+- **A path's upgrade counts only while the hero is on that path.** A vow pick taken before a Switch vow waits, and comes back if the hero switches back.
+- **Switching into a path whose deed is already full** transforms the hero after the next fight, not at once (transformations happen after fights).
+- **A pick with nothing left to offer** has fewer cards, or none; a hero with an empty pool gives its card to anyone's.
+
 ## 6. The loadout, the currency, and wounds
 
 - **`data/items.json`** (`ItemDef`): kind (`charm`, `tactic`, `sigil`, `graft`), name, sentence, the fight it answers (the mock's "Answers flankers (Rift Hound)": written by hand), what it needs (`mana`, `heals`, `hops`, `ranged`, `melee`), its price, and what it changes (a kit modifier, or for a tactic the existing `TacticDef`). Tactics move from `tactics.json` into items as their own kind. Lean content: about 10 charms, 5 sigils, the 4 tactics, and 3 grafts.

@@ -2,13 +2,14 @@ extends RefCounted
 ## The simple run bot (docs/plans/rebuild-phase5-run.md, section 12, Decision
 ## 14): plays whole runs through RunFlow, for tests and pacing, not for a win
 ## rate (the good bot is phase 6). It vows each hero to its first path unless
-## told otherwise, leaves camp, takes today's first fight, and places the sim
-## runner's "guarded" formation.
+## told otherwise, leaves camp, takes today's first fight, places the sim
+## runner's "guarded" formation, and takes a pick's first card.
 
 const Report = preload("res://tools/sim_report.gd")
 const FORMATIONS_FILE: String = "res://tools/sim_formations.json"
 const FORMATION: String = "guarded"
-## A run has at most 7 days of at most 2 attempts; anything past this is a bug.
+## A run is at most 7 days of at most 2 attempts, a few actions each;
+## anything past this is a bug.
 const MAX_STEPS: int = 200
 
 
@@ -49,6 +50,8 @@ static func play(run: RunContent, run_seed: int, errors: Array[String], vows: Di
 
 ## One action for wherever the day is. Returns why it was refused ("": done).
 static func step_once(flow: RunFlow, hexes: Dictionary[String, Vector2i], errors: Array[String]) -> String:
+	if not flow.state.pick.is_empty():
+		return flow.take_pick(0)
 	match flow.state.phase:
 		RunState.Phase.CAMP:
 			return flow.leave_camp()

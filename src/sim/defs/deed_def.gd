@@ -34,6 +34,8 @@ extends RefCounted
 ##   while_undying: true           damage only: the hero can't fall (it has
 ##                                 an Undying status as the tick it lands
 ##                                 ends; Last Watch)
+## "threshold": 900 is what fills it in a run (phase 5, Decision 6: about
+## three fights' worth of what a vowed hero puts in); the sim never reads it.
 ## Adding a kind or a filter is a code change.
 
 enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED }
@@ -51,6 +53,8 @@ var from_range: int = 0
 var while_below_bp: int = 0
 var off_target: bool = false
 var while_undying: bool = false
+## What fills the deed in a run (0: none given; RunContent requires one).
+var threshold: int = 0
 
 
 static func read(reader: DataReader) -> DeedDef:
@@ -67,6 +71,7 @@ static func read(reader: DataReader) -> DeedDef:
 	if reader.has("while_below_pct"):
 		def.while_below_bp = reader.req_int("while_below_pct", 1, 99) * 100
 	def.while_undying = reader.opt_bool("while_undying", false)
+	def.threshold = reader.opt_int("threshold", 0, 1)
 	if def.counts != Counts.DAMAGE and (def.from_range > 0 or def.while_below_bp > 0 or def.while_undying):
 		reader.error("beyond_hexes, while_below_pct, and while_undying only filter damage")
 	if (def.counts == Counts.ROOTED_MS or def.counts == Counts.GUARDED) and not def.from_ability.is_empty():

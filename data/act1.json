@@ -1,9 +1,11 @@
 {
-  "_note": "Act 1's shape (docs/plans/rebuild-phase5-run.md, sections 2 and 3, Decisions 5 and 11). Each day is normal (an easier and a harder fight), elite (two elites), or boss. Pay is shards for a win (a tie pays like a win), by the fight's tier. All numbers are tuning values.",
+  "_note": "Act 1's shape (docs/plans/rebuild-phase5-run.md, sections 2 and 3, Decisions 5 and 11). Each day is normal (an easier and a harder fight), elite (two elites), or boss. Pay is shards for a win (a tie pays like a win), by the fight's tier. The pick: \"Take 3 shards instead\" pays pick_shards; wild_card_pct is how often one of its cards is for any hero instead of one each (part 6). All numbers are tuning values.",
   "act": 1,
   "start_shards": 3,
   "pay": {"easier": 3, "harder": 5, "elite": 6, "boss": 0, "hunt": 2},
   "days": ["normal", "normal", "elite", "normal", "elite", "normal", "boss"],
   "losses_to_end": 2,
-  "slots": 3
+  "slots": 3,
+  "pick_shards": 3,
+  "wild_card_pct": 25
 }

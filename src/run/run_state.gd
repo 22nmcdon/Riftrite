@@ -11,7 +11,7 @@ const VERSION: int = 1
 
 ## Where the day is: camp, choosing the fight, the loadout (then placement
 ## and the fight), after the fight (a pick, a transformation, a relic
-## waiting), or the run is over.
+## waiting), or the run is over. A pick can wait at camp too (Train).
 enum Phase { CAMP, ROUTE, LOADOUT, AFTER, ENDED }
 enum Outcome { NONE, WON, LOST }
 
@@ -92,6 +92,10 @@ var chosen: String = ""
 ## The last formation fought with (hero id -> hex), remembered.
 var formation: Dictionary[String, Vector2i] = {}
 var fought: Array[Fought] = []
+## An upgrade pick waiting (upgrade ids; empty: none).
+var pick: Array[String] = []
+## The heroes the last fight transformed (for the screen that shows it).
+var just_transformed: Array[String] = []
 
 
 func hero(hero_id: String) -> Hero:
@@ -119,6 +123,7 @@ func to_dict() -> Dictionary:
 		"heroes": heroes.map(func(hero_state: Hero) -> Dictionary: return hero_state.to_dict()),
 		"shards": shards, "options": options.duplicate(true), "chosen": chosen, "formation": hexes,
 		"fought": fought.map(func(entry: Fought) -> Dictionary: return entry.to_dict()),
+		"pick": pick.duplicate(), "just_transformed": just_transformed.duplicate(),
 	}
 
 
@@ -146,4 +151,6 @@ static func from_dict(data: Dictionary) -> RunState:
 		state.formation[str(hero_id)] = Vector2i(int(hex[0]), int(hex[1]))
 	for entry: Variant in data.get("fought", []):
 		state.fought.append(Fought.from_dict(entry))
+	state.pick.assign((data.get("pick", []) as Array).map(func(value: Variant) -> String: return str(value)))
+	state.just_transformed.assign((data.get("just_transformed", []) as Array).map(func(value: Variant) -> String: return str(value)))
 	return state

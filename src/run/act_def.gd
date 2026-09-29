@@ -3,7 +3,7 @@ extends RefCounted
 ## An act's shape (data/act1.json; docs/plans/rebuild-phase5-run.md, sections
 ## 2 and 3): its days (normal, elite, or boss), the shards a won fight pays by
 ## its tier, the shards a run starts with, how many losses end it, and each
-## hero's loadout slots.
+## hero's loadout slots, and the after-fight pick's shards and wild cards.
 
 const DAY_KINDS: Array[String] = ["normal", "elite", "boss"]
 
@@ -16,6 +16,10 @@ var start_shards: int = 0
 var losses_to_end: int = 2
 ## Loadout slots per hero (a relic may add one).
 var slots: int = 3
+## What "Take shards instead" pays on a pick.
+var pick_shards: int = 3
+## The chance (percent) that a pick has a wild card: one card for any hero.
+var wild_card_pct: int = 0
 
 
 static func read(reader: DataReader) -> ActDef:
@@ -24,6 +28,8 @@ static func read(reader: DataReader) -> ActDef:
 	def.start_shards = reader.req_int("start_shards", 0)
 	def.losses_to_end = reader.req_int("losses_to_end", 1)
 	def.slots = reader.req_int("slots", 0, 6)
+	def.pick_shards = reader.req_int("pick_shards", 0)
+	def.wild_card_pct = reader.req_int("wild_card_pct", 0, 100)
 	var pay_reader: DataReader = reader.req_object("pay")
 	if pay_reader != null:
 		for tier: String in EncounterDef.TIERS:

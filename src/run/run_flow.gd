@@ -11,6 +11,11 @@ extends RefCounted
 ## again, the same options), and the act's losses_to_end-th ends the run.
 ## Deeds and wounds count from every fight, won or lost; winning the boss
 ## ends the run won.
+## Growth (section 4 and 5): a hero whose vowed deed reaches its threshold
+## transforms after that fight, won or lost, for good. Until then its vow can
+## be switched between fights. A win offers a pick (Offers.pick): take one
+## upgrade, or the act's pick_shards instead; the day can't move on while it
+## waits.
 
 var run: RunContent
 var state: RunState
@@ -94,7 +99,7 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String])
 		vows[hero.id] = hero.path
 		if hero.transformed:
 			transformed.append(hero.id)
-		extras[hero.id] = HeroExtras.make([], hero.wounds)
+		extras[hero.id] = HeroExtras.make(run.upgrade_mods(hero), hero.wounds)
 	var setup: FightSetup = Encounters.setup(content, state.chosen, formation, fight_seed(), errors, {}, vows, transformed, extras)
 	if setup != null:
 		errors.append_array(setup.validate(content))
@@ -125,6 +130,7 @@ func fight(formation: Dictionary[String, Vector2i], errors: Array[String]) -> Fi
 ## it; tests call it with a result of their own.
 func record(formation: Dictionary[String, Vector2i], result: FightResult) -> void:
 	state.formation = formation.duplicate()
+	state.just_transformed.clear()
 	var fought := RunState.Fought.new()
 	fought.day = state.day
 	fought.attempt = state.attempt
@@ -141,6 +147,10 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 			var fallen: RunState.Hero = state.hero(entry.target)
 			if fallen != null:
 				fallen.wounds = mini(fallen.wounds + 1, run.content.tuning.max_wounds)
+	for hero: RunState.Hero in state.heroes:
+		if not hero.transformed and hero.deeds.get(hero.path, 0) >= run.content.paths[hero.path].deed.threshold:
+			hero.transformed = true
+			state.just_transformed.append(hero.id)
 	if result.outcome == FightResult.Outcome.DEFEAT:
 		state.losses += 1
 		state.chosen = ""
@@ -155,15 +165,58 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 		_end(RunState.Outcome.WON)
 		return
 	state.phase = RunState.Phase.AFTER
+	state.pick = Offers.pick(run, state, 0)
+
+
+## Takes card `index` of the waiting pick: the upgrade is its hero's for good.
+func take_pick(index: int) -> String:
+	if state.pick.is_empty():
+		return "there's no pick waiting"
+	if index < 0 or index >= state.pick.size():
+		return "there's no card %d" % index
+	var upgrade: UpgradeDef = run.upgrades[state.pick[index]]
+	state.hero(upgrade.hero).upgrades.append(upgrade.id)
+	state.pick.clear()
+	return ""
+
+
+## Passes on the waiting pick for the act's pick_shards.
+func take_shards() -> String:
+	if state.pick.is_empty():
+		return "there's no pick waiting"
+	state.shards += run.act.pick_shards
+	state.pick.clear()
+	return ""
+
+
+## Switches `hero_id`'s vow to another of its paths, between fights, until it
+## transforms. Every path's deed keeps what it had.
+func switch_vow(hero_id: String, path_id: String) -> String:
+	if state.phase == RunState.Phase.ENDED:
+		return _not_now("switch a vow")
+	var hero: RunState.Hero = state.hero(hero_id)
+	if hero == null:
+		return "unknown hero \"%s\"" % hero_id
+	if hero.transformed:
+		return "%s has transformed, so the vow is set" % hero_id
+	if not hero.deeds.has(path_id):
+		return "%s can't vow to \"%s\"" % [hero_id, path_id]
+	if hero.path == path_id:
+		return "%s is already vowed to %s" % [hero_id, path_id]
+	hero.path = path_id
+	return ""
 
 
 ## Moves on to the next day's camp once nothing is waiting after the fight.
 func finish_day() -> String:
 	if state.phase != RunState.Phase.AFTER:
 		return _not_now("move on to the next day")
+	if not state.pick.is_empty():
+		return "choose an upgrade or take the shards first"
 	state.day += 1
 	state.attempt = 0
 	state.chosen = ""
+	state.just_transformed.clear()
 	state.phase = RunState.Phase.CAMP
 	return ""
 

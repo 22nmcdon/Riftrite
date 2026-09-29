@@ -1,0 +1,592 @@
+[
+  {
+    "_note": "The after-fight pick's upgrades (docs/plans/rebuild-phase5-run.md, section 5; Decision 2: 3 per hero and 3 per path). Each is a kit modifier (KitMod) on the hero's slots. A hero's works on any path; a path's joins the offers once its hero has transformed, or from the vow on if it's a vow pick. Texts keep numbers out (the UI adds them from the mod). Numbers are first guesses for the run report to tune.",
+    "id": "thick_hide",
+    "name": "Thick Hide",
+    "hero": "brannoc",
+    "text": "More max HP, on any path.",
+    "mod": {
+      "stats_bp": {
+        "hp": 10800
+      }
+    }
+  },
+  {
+    "id": "heavy_hand",
+    "name": "Heavy Hand",
+    "hero": "brannoc",
+    "text": "His basic attack hits harder.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "types": [
+            "damage"
+          ],
+          "amount_bp": 11500
+        }
+      ]
+    }
+  },
+  {
+    "id": "warm_hearth",
+    "name": "Warm Hearth",
+    "hero": "brannoc",
+    "text": "Hearthguard's Shield is bigger.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:hearthguard",
+          "types": [
+            "shield"
+          ],
+          "amount_bp": 15000
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_draw",
+    "name": "Quick Draw",
+    "hero": "maren",
+    "text": "Her basic attack comes faster.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "cooldown_bp": 9200
+        }
+      ]
+    }
+  },
+  {
+    "id": "keen_eye",
+    "name": "Keen Eye",
+    "hero": "maren",
+    "text": "She crits more often.",
+    "mod": {
+      "stats_add": {
+        "crit": 5
+      }
+    }
+  },
+  {
+    "id": "hardened",
+    "name": "Hardened",
+    "hero": "maren",
+    "text": "More max HP, on any path.",
+    "mod": {
+      "stats_bp": {
+        "hp": 11000
+      }
+    }
+  },
+  {
+    "id": "steady_hands",
+    "name": "Steady Hands",
+    "hero": "vell",
+    "text": "She starts each fight with more mana.",
+    "mod": {
+      "mana": {
+        "start_add": 15
+      }
+    }
+  },
+  {
+    "id": "deep_mend",
+    "name": "Deep Mend",
+    "hero": "vell",
+    "text": "Every heal she gives is stronger.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "types": [
+            "heal"
+          ],
+          "amount_bp": 10800
+        }
+      ]
+    }
+  },
+  {
+    "id": "lantern_oil",
+    "name": "Lantern Oil",
+    "hero": "vell",
+    "text": "Each Lantern Glow gives her more mana.",
+    "mod": {
+      "mana": {
+        "per_attack_add": 2
+      }
+    }
+  },
+  {
+    "id": "quick_footing",
+    "name": "Quick Footing",
+    "path": "deadeye",
+    "vow": true,
+    "text": "She steadies sooner: her reach and aim bonuses hold after less time standing still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:steady",
+          "after_add_ms": -500
+        },
+        {
+          "slot": "passive:steady_aim",
+          "after_add_ms": -500
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:planted",
+          "after_add_ms": -500
+        },
+        {
+          "slot": "passive:sure_aim",
+          "after_add_ms": -500
+        }
+      ]
+    }
+  },
+  {
+    "id": "heartseekers_edge",
+    "name": "Heartseeker's Edge",
+    "path": "deadeye",
+    "text": "Heartseeker hits harder.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "damage"
+          ],
+          "amount_bp": 11500
+        }
+      ]
+    }
+  },
+  {
+    "id": "hunters_calm",
+    "name": "Hunter's Calm",
+    "path": "deadeye",
+    "text": "Heartseeker needs less mana.",
+    "mod": {
+      "mana": {
+        "max_add": -8
+      }
+    }
+  },
+  {
+    "id": "deep_roots",
+    "name": "Deep Roots",
+    "path": "trapper",
+    "vow": true,
+    "text": "Her snares root for longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:snare",
+          "types": [
+            "apply_status"
+          ],
+          "duration_add_ms": 500
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "apply_status"
+          ],
+          "duration_add_ms": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_brambles",
+    "name": "Quick Brambles",
+    "path": "trapper",
+    "text": "Bramble Field needs less mana.",
+    "mod": {
+      "mana": {
+        "max_add": -10
+      }
+    }
+  },
+  {
+    "id": "thorned_shafts",
+    "name": "Thorned Shafts",
+    "path": "trapper",
+    "text": "Her critical hits make the target Bleed.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "add_effects": [
+            {
+              "trigger": "on_crit",
+              "type": "apply_status",
+              "status": "bleed",
+              "stacks": 2,
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "light_fletching",
+    "name": "Light Fletching",
+    "path": "volley",
+    "vow": true,
+    "text": "Her basic attack comes faster.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "cooldown_bp": 9400
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_storm",
+    "name": "Long Storm",
+    "path": "volley",
+    "text": "Arrow Storm's rain lasts longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "area"
+          ],
+          "duration_add_ms": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "wide_storm",
+    "name": "Wide Storm",
+    "path": "volley",
+    "text": "Arrow Storm's rain covers a wider circle.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "radius_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "braced_stone",
+    "name": "Braced Stone",
+    "path": "hearthwall",
+    "vow": true,
+    "text": "His DEF is higher, which also blunts the hits he guards.",
+    "mod": {
+      "stats_bp": {
+        "def": 10600
+      }
+    }
+  },
+  {
+    "id": "unbroken_wall",
+    "name": "Unbroken Wall",
+    "path": "hearthwall",
+    "text": "Hearthwall stands longer (and he holds still behind it as long).",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "wall",
+            "apply_status"
+          ],
+          "duration_add_ms": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "banked_embers",
+    "name": "Banked Embers",
+    "path": "hearthwall",
+    "text": "Hearthwall needs less mana.",
+    "mod": {
+      "mana": {
+        "max_add": -10
+      }
+    }
+  },
+  {
+    "id": "quick_swing",
+    "name": "Quick Swing",
+    "path": "ironbrand",
+    "vow": true,
+    "text": "His basic attack comes faster.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "cooldown_bp": 9400
+        }
+      ]
+    }
+  },
+  {
+    "id": "searing_slam",
+    "name": "Searing Slam",
+    "path": "ironbrand",
+    "text": "Brand Slam hits harder.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "damage"
+          ],
+          "amount_bp": 11500
+        }
+      ]
+    }
+  },
+  {
+    "id": "drinking_mace",
+    "name": "Drinking Mace",
+    "path": "ironbrand",
+    "text": "The Hearthbrand Mace heals him more.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "types": [
+            "heal"
+          ],
+          "amount_bp": 13000
+        }
+      ]
+    }
+  },
+  {
+    "id": "stubborn",
+    "name": "Stubborn",
+    "path": "last_watch",
+    "vow": true,
+    "text": "He can't fall for longer when a hit would fell him.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:unyielding",
+          "types": [
+            "apply_status"
+          ],
+          "duration_add_ms": 500
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "apply_status"
+          ],
+          "duration_add_ms": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_rites",
+    "name": "Long Rites",
+    "path": "last_watch",
+    "text": "Last Rites keeps him standing longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "apply_status"
+          ],
+          "duration_add_ms": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "grim_resolve",
+    "name": "Grim Resolve",
+    "path": "last_watch",
+    "text": "He hits harder.",
+    "mod": {
+      "stats_bp": {
+        "atk": 10800
+      }
+    }
+  },
+  {
+    "id": "brighter_wick",
+    "name": "Brighter Wick",
+    "path": "lanternbearer",
+    "vow": true,
+    "text": "Her signature's heals are stronger (Mend, then Night Lantern).",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "heal"
+          ],
+          "amount_bp": 11000
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_night",
+    "name": "Long Night",
+    "path": "lanternbearer",
+    "text": "Night Lantern's light lasts longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "area"
+          ],
+          "duration_add_ms": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "kindling",
+    "name": "Kindling",
+    "path": "lanternbearer",
+    "text": "Kindle heals more.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:kindle",
+          "types": [
+            "heal"
+          ],
+          "amount_bp": 12500
+        }
+      ]
+    }
+  },
+  {
+    "id": "tighter_weave",
+    "name": "Tighter Weave",
+    "path": "wardweaver",
+    "vow": true,
+    "text": "Mend heals more; once she transforms, Weave gives more instead.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "heal"
+          ],
+          "amount_bp": 11000
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:weave",
+          "amount_bp": 11000
+        }
+      ]
+    }
+  },
+  {
+    "id": "lasting_circle",
+    "name": "Lasting Circle",
+    "path": "wardweaver",
+    "text": "Warding Circle lasts longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "area"
+          ],
+          "duration_add_ms": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "deep_weave",
+    "name": "Deep Weave",
+    "path": "wardweaver",
+    "text": "Weave's Shield is bigger.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:weave",
+          "types": [
+            "shield"
+          ],
+          "amount_bp": 12500
+        }
+      ]
+    }
+  },
+  {
+    "id": "hard_light",
+    "name": "Hard Light",
+    "path": "vigil_keeper",
+    "vow": true,
+    "text": "Her signature's damage is higher (Mend's smite, then Sunfall).",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "damage"
+          ],
+          "amount_bp": 11500
+        }
+      ]
+    }
+  },
+  {
+    "id": "high_noon",
+    "name": "High Noon",
+    "path": "vigil_keeper",
+    "text": "Sunfall needs less mana.",
+    "mod": {
+      "mana": {
+        "max_add": -8
+      }
+    }
+  },
+  {
+    "id": "keepers_mend",
+    "name": "Keeper's Mend",
+    "path": "vigil_keeper",
+    "text": "Her Mend heals and smites more.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:mend",
+          "amount_bp": 12000
+        }
+      ]
+    }
+  }
+]

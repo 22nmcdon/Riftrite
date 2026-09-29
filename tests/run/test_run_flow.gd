@@ -105,6 +105,8 @@ func test_a_fight_is_the_sims_own_and_a_win_pays() -> void:
 	assert_eq(state.hero("maren").deeds["deadeye"], result.deed_amount("maren", "deadeye"), "deeds add what the fight put in")
 	assert_eq(state.formation, Bot.formation(), "the formation is remembered")
 	assert_eq(state.fought.size(), 1)
+	assert_eq(state.pick.size(), 3, "a win offers a pick")
+	assert_eq(flow.take_shards(), "")
 	assert_eq(flow.finish_day(), "")
 	assert_eq([state.day, state.attempt, state.chosen, state.phase], [2, 0, "", RunState.Phase.CAMP])
 
