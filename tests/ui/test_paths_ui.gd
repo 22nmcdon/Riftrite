@@ -215,6 +215,7 @@ func test_the_fight_plays_with_paths_and_the_result_names_the_deeds() -> void:
 	var trapper: int = result.deed_amount("maren", "trapper")
 	assert_gt(trapper, 0, "her snares rooted something")
 	assert_string_contains(details, "Maren: Trapper %s · Deadeye" % UnitInfo.deed_amount_text(_content.paths["trapper"].deed, trapper), "the vowed path first")
+	assert_string_contains(details, "Brannoc: Hearthwall")
 	assert_eq(screen.session.last_deed("maren", "trapper"), trapper, "the session keeps it")
 	screen.place_again()
 	_click(screen, "maren")

@@ -575,8 +575,9 @@ func _show_result() -> void:
 ## "Seed 2 (it only changes crits)", then how each hero came out:
 ## "Brannoc 120/420 HP · Maren fell · Vell 300/300 HP", then the paths and
 ## tactics taken, if any: "Paths: Maren, Deadeye (vowed)", "Tactics: Maren,
-## Hold your ground", then what the fight put into each hero's deeds, the
-## vowed path first: "Deeds: Maren: Deadeye 1,240 · Trapper 0 · Volley 35".
+## Hold your ground", then, for each hero on a path, what the fight put into
+## its three deeds, the vowed path first: "Maren: Deadeye 1,240 · Trapper
+## 0.0s · Volley 35" (the hero panel shows every hero's).
 static func result_text(sim: CombatSim, fight_names: FightNames) -> String:
 	var heroes: Array[String] = []
 	var paths: Array[String] = []
@@ -603,7 +604,7 @@ static func result_text(sim: CombatSim, fight_names: FightNames) -> String:
 				if deed.hero == hero.id and deed.path == path.id:
 					amount = deed.amount
 			parts.append("%s %s" % [path.name, UnitInfo.deed_amount_text(path.deed, amount)])
-		if not parts.is_empty():
+		if placed.path != null and not parts.is_empty():
 			deeds.append("%s: %s" % [hero_name, " · ".join(parts)])
 	var text: String = "Seed %d (it only changes crits)\n%s" % [sim.setup.seed_value, " · ".join(heroes)]
 	text += "\nPaths: %s" % " · ".join(paths) if not paths.is_empty() else ""

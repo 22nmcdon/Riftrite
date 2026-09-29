@@ -137,9 +137,8 @@ func test_the_result_text() -> void:
 	var sim: CombatSim = arena.player.sim
 	sim.unit_by_id("maren").alive = false
 	sim.unit_by_id("brannoc").hp = 120
-	assert_eq(ArenaScreen.result_text(sim, arena.names), "Seed 1 (it only changes crits)\nBrannoc 120/420 HP · Maren fell · Vell 300/300 HP"
-		+ "\nDeeds this fight:\nBrannoc: Hearthwall 0 · Ironbrand 0 · Last Watch 0\nMaren: Deadeye 0 · Trapper 0.0s · Volley 0"
-		+ "\nVell: Lanternbearer 0 · Wardweaver 0 · Vigil Keeper 0")
+	assert_eq(ArenaScreen.result_text(sim, arena.names), "Seed 1 (it only changes crits)\nBrannoc 120/420 HP · Maren fell · Vell 300/300 HP",
+		"no paths, no deeds (the hero panel has them)")
 	await wait_process_frames(1)
 
 
