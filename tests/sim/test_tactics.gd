@@ -235,7 +235,7 @@ func test_every_tactic_shows_in_a_real_fight() -> void:
 	assert_eq(setup.validate(K.content()), [] as Array[String])
 	var text: String = K.run(setup).combat_log.to_text()
 	for line: String in ["brannoc · Hold your ground: holds its ground", "brannoc · Hold your ground: moves out:", "maren targets gloam_witch: Casters first",
-			"vell · Wait to heal: Mend waits: no ally within 3 hexes below 50%"]:
+			"vell · Wait to heal: Mend waits: no ally within 3 hexes below 60%"]:
 		assert_string_contains(text, line)
 
 

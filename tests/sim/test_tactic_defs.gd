@@ -56,7 +56,9 @@ func test_the_three_tactics() -> void:
 	assert_eq(hold.release_range, 2 * HexGrid.HEX)
 	var wait: TacticDef = _content.tactics["wait_to_heal"]
 	assert_eq(wait.kind, TacticDef.Kind.SIGNATURE_THRESHOLD)
-	assert_eq(wait.below_bp, 5000)
+	assert_eq(wait.below_bp, 6000, "below 60% (Decision 5)")
+	assert_eq([casters.damage_vs_bp, hold.atsp_bp, wait.heal_bp], [2000, 2000, 3000], "each one's payoff (round 2)")
+	assert_eq([casters.atsp_bp, casters.heal_bp, hold.damage_vs_bp, hold.heal_bp, wait.damage_vs_bp, wait.atsp_bp], [0, 0, 0, 0, 0, 0], "and only its own")
 	for tactic_id: String in ["casters_first", "hold_ground"]:
 		assert_eq(_content.tactics[tactic_id].heroes, ["brannoc", "maren", "vell"] as Array[String], "%s is for everyone (Decision 4)" % tactic_id)
 	assert_eq(wait.heroes, ["vell"] as Array[String], "Wait to heal is Vell's")
@@ -84,6 +86,22 @@ func test_each_kind_reads_its_own_numbers() -> void:
 	_assert_error(_load_tactics([tactic("hold_ground", {"archetypes": ["caster"]})]), "unknown key \"archetypes\"")
 	_assert_error(_load_tactics([tactic("prefer_target", {"release_hexes": 2})]), "unknown key \"release_hexes\"")
 	_assert_error(_load_tactics([tactic("prefer_target", {"below_pct": 50})]), "unknown key \"below_pct\"")
+
+
+func test_each_kind_reads_only_its_own_payoff() -> void:
+	var payoffs: Dictionary[String, String] = {"prefer_target": "damage_vs_bp", "hold_ground": "atsp_bp", "signature_threshold": "heal_bp"}
+	for kind: String in payoffs:
+		var db: ContentDb = _load_tactics([tactic(kind, {"payoff": {payoffs[kind]: 1500}})])
+		assert_true(db.is_valid(), "%s: %s" % [kind, db.errors])
+		for other: String in payoffs.values():
+			if other != payoffs[kind]:
+				_assert_error(_load_tactics([tactic(kind, {"payoff": {payoffs[kind]: 1500, other: 1500}})]), "unknown key \"%s\"" % other)
+	assert_true(_load_tactics([tactic("hold_ground")]).is_valid(), "a payoff is optional")
+	var none: TacticDef = _load_tactics([tactic("hold_ground")]).tactics["test"]
+	assert_eq(none.atsp_bp, 0)
+	_assert_error(_load_tactics([tactic("hold_ground", {"payoff": {"atsp_bp": 0}})]), "out of range")
+	_assert_error(_load_tactics([tactic("hold_ground", {"payoff": {}})]), "missing required key \"atsp_bp\"")
+	_assert_error(_load_tactics([tactic("hold_ground", {"payoff": 20})]), "payoff")
 
 
 func test_bad_tactics_are_reported() -> void:

@@ -274,6 +274,12 @@ A tactic is a JSON entry in `data/tactics.json`, loaded by `ContentDb` as a `Tac
 - **R4:** rerun the tactics report and tune the three payoffs toward the report's two questions (each tactic helps somewhere, none everywhere).
 - **R5:** docs and a playtest build.
 
+**Built in R1 (2026-09-29):**
+- `TacticDef` reads an optional `payoff` object with only its kind's key (`damage_vs_bp`, `atsp_bp`, `heal_bp`; 1 to 20000 bp); another kind's key is refused.
+- `tactics.json` gives each tactic its payoff, and Wait to heal waits until below 60%.
+- The sentences say what each payoff is for ("hits them harder", "attacking faster", "the heal it saved is stronger").
+- Nothing in a fight uses a payoff yet (R2); only the threshold moved.
+
 ## Decisions (2026-09-29, the playtester's answers)
 
 1. **"Casters" are the caster and support archetypes:** Cinder Moth and Gloam Witch in Act 1. (Caster only would have been just the Moth; any enemy with a signature would have taken in the Sentinel.)

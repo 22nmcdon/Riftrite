@@ -1,29 +1,32 @@
 [
   {
-    "_note": "Casters are the caster and support archetypes (phase 3b, Decision 1): Cinder Moth and Gloam Witch in Act 1.",
+    "_note": "Casters are the caster and support archetypes (phase 3b, Decision 1): Cinder Moth and Gloam Witch in Act 1. The payoff (round 2): its own hits on them deal 20% more.",
     "id": "casters_first",
     "name": "Casters first",
-    "text": "Goes for the nearest enemy caster or support first; with none standing, picks as usual.",
+    "text": "Goes for the nearest enemy caster or support first, and hits them harder; with none standing, picks as usual.",
     "kind": "prefer_target",
     "archetypes": ["caster", "support"],
+    "payoff": {"damage_vs_bp": 2000},
     "heroes": ["brannoc", "maren", "vell"]
   },
   {
-    "_note": "Lets go for good (phase 3b, Decision 2).",
+    "_note": "Lets go for good (phase 3b, Decision 2). The payoff (round 2): its attack runs 20% faster while it holds.",
     "id": "hold_ground",
     "name": "Hold your ground",
-    "text": "Stays where it's placed, fighting whatever is in reach, until an enemy comes within 2 hexes; then it moves out for the rest of the fight.",
+    "text": "Stays where it's placed, attacking faster at whatever is in reach, until an enemy comes within 2 hexes; then it moves out for the rest of the fight.",
     "kind": "hold_ground",
     "release_hexes": 2,
+    "payoff": {"atsp_bp": 2000},
     "heroes": ["brannoc", "maren", "vell"]
   },
   {
-    "_note": "The bar waits, full (phase 3b, Decision 3). Only a mana signature that heals the lowest ally can wait: Vell's Mend (Decision 4).",
+    "_note": "The bar waits, full (phase 3b, Decision 3), until an ally is below 60% (Decision 5). Only a mana signature that heals the lowest ally can wait: Vell's Mend (Decision 4). The payoff (round 2): the heal it waited for is 30% stronger.",
     "id": "wait_to_heal",
     "name": "Wait to heal",
-    "text": "Holds the healing signature, its bar full, until an ally in its reach is badly hurt.",
+    "text": "Holds the healing signature, its bar full, until an ally in its reach is badly hurt; the heal it saved is stronger.",
     "kind": "signature_threshold",
-    "below_pct": 50,
+    "below_pct": 60,
+    "payoff": {"heal_bp": 3000},
     "heroes": ["vell"]
   }
 ]

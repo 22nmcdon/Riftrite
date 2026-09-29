@@ -19,6 +19,13 @@ extends RefCounted
 ## "heroes" lists who can take it (ContentDb checks they exist, and that a
 ## signature_threshold hero's signature heals the lowest ally). "text" is the
 ## player's sentence, like every ability's.
+## An optional "payoff" (round 2, section 9) pays for the behavior, only
+## while it applies; each kind reads only its own key, in basis points:
+##   prefer_target        {"damage_vs_bp": 2000}  more damage from its own
+##                        hits on the archetypes it goes for
+##   hold_ground          {"atsp_bp": 2000}  a faster attack while it holds
+##   signature_threshold  {"heal_bp": 3000}  more healing from the fire
+##                        that waited
 
 enum Kind { PREFER_TARGET, HOLD_GROUND, SIGNATURE_THRESHOLD }
 
@@ -36,6 +43,10 @@ var release_range: int = 0
 var below_bp: int = 0
 ## Who can take it, by hero id.
 var heroes: Array[String] = []
+## The payoff, in basis points (0: none); only its kind's is ever set.
+var damage_vs_bp: int = 0
+var atsp_bp: int = 0
+var heal_bp: int = 0
 
 
 static func read(reader: DataReader) -> TacticDef:
@@ -53,6 +64,17 @@ static func read(reader: DataReader) -> TacticDef:
 			def.release_range = reader.req_int("release_hexes", 1, 10) * HexGrid.HEX
 		Kind.SIGNATURE_THRESHOLD:
 			def.below_bp = reader.req_int("below_pct", 1, 99) * 100
+	if reader.has("payoff"):
+		var payoff: DataReader = reader.req_object("payoff")
+		if payoff != null:
+			match def.kind:
+				Kind.PREFER_TARGET:
+					def.damage_vs_bp = payoff.req_int("damage_vs_bp", 1, 20000)
+				Kind.HOLD_GROUND:
+					def.atsp_bp = payoff.req_int("atsp_bp", 1, 20000)
+				Kind.SIGNATURE_THRESHOLD:
+					def.heal_bp = payoff.req_int("heal_bp", 1, 20000)
+			payoff.finish()
 	def.heroes = reader.req_string_array("heroes")
 	if def.heroes.is_empty() and reader.has("heroes"):
 		reader.error("a tactic needs at least one hero who can take it")
