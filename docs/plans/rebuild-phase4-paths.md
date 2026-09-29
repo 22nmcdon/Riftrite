@@ -1,6 +1,6 @@
 # Rebuild phase 4: paths (build plan)
 
-Status: **proposed (2026-09-29); its questions are answered (Decisions), except Guard's reach, which waits on step 2's measurements. Waiting on the go-ahead.** No code yet. Phase 4 of `docs/plans/rebuild-build-order.md`. Design source: part 1, `rebuild-heroes.md` (paths, vows, tastes and costs, deeds, transformations), changed by part 6, `rebuild-between-fights.md` (upgrade picks come after every won fight, not from deeds). It builds on the arena sim (phase 1), the content (phase 2), Practice (phase 3), and tactics (phase 3b). What playtest gate 1 and the 3b playtest find goes into this plan before its code starts.
+Status: **proposed (2026-09-29); its questions are answered (Decisions), except Guard's reach, which waits on step 3's measurements. Waiting on the go-ahead.** No code yet. Phase 4 of `docs/plans/rebuild-build-order.md`. Design source: part 1, `rebuild-heroes.md` (paths, vows, tastes and costs, deeds, transformations), changed by part 6, `rebuild-between-fights.md` (upgrade picks come after every won fight, not from deeds). It builds on the arena sim (phase 1), the content (phase 2), Practice (phase 3), and tactics (phase 3b). What playtest gate 1 and the 3b playtest find goes into this plan before its code starts.
 
 **Goal:** each of the three heroes gets their three paths. In Practice you can vow a hero to a path (the taste and its cost) or take them straight to the transformed form, and see how far each deed moved in a fight.
 
@@ -17,7 +17,7 @@ Status: **proposed (2026-09-29); its questions are answered (Decisions), except 
 - A hero's **stage** in a fight: base, vowed (taste and cost), or transformed.
 - **Deeds**, counted in every fight for all three of a hero's paths (the design: they count what the hero does, with no bonus for the vow).
 - The sim pieces the paths need that no existing effect, trigger, or part can express (section 5). Each is named as new code, per rule 3.
-- Practice: choose each hero's path and stage, the vow and transformation cards, the transformed figures (already drawn in `art/figures/heroes/`), deed progress in the result, and Trapper's two placed snares.
+- Practice: the hero panel from the playtester's mock (section 6), where you choose each hero's path and stage, the transformed figures (already drawn in `art/figures/heroes/`), deed progress in the result, and Trapper's two placed snares.
 - The sim runner: a paths report and a deed report.
 
 **Not in phase 4:**
@@ -166,12 +166,26 @@ Each piece is used by the paths named, and each is skipped entirely by a unit th
 
 Heartseeker's pierce, Brand Slam, Last Rites, Weave, the stat changes, and the costs that are stat or ability changes are **data**, with the existing pieces (cast times, lines, leaps, largest group, HP-threshold signatures, Undying, auras).
 
-## 6. Practice
+## 6. Practice: the hero panel
 
-- **Choosing a path:** the hero popup gains a **Path** row, below Tactic: None, or one of the hero's three paths. With a path, a **stage** choice: Vowed or Transformed. Remembered while the game is open (`PracticeSession.paths`), like tactics.
-- **The vow card:** choosing a path opens a card beside the popup: the fantasy, where the hero wants to stand, the taste, the cost, the deed, and what the transformation brings. In the run (phase 5) this card is the vow screen.
-- **The transformation card:** choosing Transformed shows what changes: the new signature, the stats, the full mechanic, and the cost. In the run it's the moment the deed fills.
-- **The board:** a transformed hero stands as its path's figure; the popup's ability lines come from the patched kit (`UnitInfo` already builds them from the kit), so the numbers lines stay true.
+The playtester's mock (`docs/mockups/hero-panel-layout.pdf`, 2026-09-29) is the design: a **hero panel** that opens over the screen, with the hero's figure and name on the left and three tabs on the right. Phase 4 builds it for Practice, where it's how you choose a path; phase 5 fills in what needs the run.
+
+**The panel** (opens when you click a hero while placing, instead of today's small popup; in a fight the small popup stays, with its live numbers, since the panel would cover the board):
+- **The left side:** the hero's figure (the path's figure once transformed, with a "Base form" or path tag), name, title and role, and the HP bar.
+- **Back, forward, and close** buttons at the top right: back and forward move between the three heroes.
+- **The Path tab** (it opens on this one):
+  - **The track:** Base → Vow → Transform → Upgrades → Apex, with the hero's place on it. Upgrades and Apex show as later ("Opens on transforming", "Later in the run").
+  - **The vowed path's card:** its figure, name, title ("the sniper"), and VOWED or TRANSFORMED; the taste and the cost (or, transformed, what it brings and its cost); the deed.
+  - **The other two paths' cards:** figure, name, a short line, and the deed.
+  - **Choosing, in Practice:** each path card has Vow and Transform buttons, and the vowed card has Base (no path). Remembered while the game is open (`PracticeSession.paths`), like tactics. In the run, vowing happens at the start, transforming when the deed fills, and the vowed card's button is "Switch vow" (phase 5).
+  - **The deed:** Practice has no thresholds, so each card shows what the **last fight** put into that deed ("last fight: 1,240") in place of the mock's progress bar ("1,240 / 2,000"), which comes with the run.
+- **The Kit tab:** today's ability lines from `UnitInfo` (sentence and numbers line), built from the patched kit, so they're always what the hero has at their stage.
+- **The Loadout tab:** the tactic choice (moved from today's popup). Charm and sigil slots come in phase 5.
+
+**From the mock, left for phase 5 (the run):** the hero bar along the bottom of every screen between fights (it opens the panel), the day, place, shards, and relics at the top, wounds on the HP bar, deed progress toward a threshold, "Switch vow", upgrades taken, the duo bond, and the charm and sigil slots.
+
+**Elsewhere in Practice:**
+- **The board:** a transformed hero stands as its path's figure; a vowed one keeps the base figure, with its path named under it like a tactic.
 - **Trapper's snares:** a transformed Trapper adds two snare markers to placement, dragged onto hexes like heroes, in your half; what's legal comes from the sim, like hero placement.
 - **The result:** each hero's three deeds and what this fight put into each, the vowed one first. The result's "Heroes:" line names each hero's path and stage.
 - **New log kinds** (zones, snares, Guard, the wall) each get a form on the board and a row in `test_every_encounter_plays.gd`'s table, and an audit rule.
@@ -197,7 +211,7 @@ Two reports, like the tactics report: reports, not gates.
 | `src/sim/defs/aura_def.gd`, `effect_def.gd`, `part_def.gd`, `src/sim/passives.gd`, `signatures.gd`, `mana.gd`, `effects/effect_runner.gd`, `effects/targeting.gd`, `combat_sim.gd`, `arena/shots.gd`, `arena/areas.gd`, `arena/movement.gd` | The pieces in section 5, each in its own step |
 | `src/sim/arena/zones.gd`, `snares.gd`, `walls.gd`, `guard.gd` | New, by wave |
 | `src/sim/log_entry.gd` | New kinds for zones, snares, Guard, and the wall |
-| `src/ui/practice/practice_session.gd`, `src/ui/widgets/hero_popup.gd`, a new `path_card.gd`, `src/ui/arena/unit_token.gd`, `arena_view.gd`, `fight_fx.gd`, `src/ui/screens/arena_screen.gd` | Choosing a path and stage, the cards, figures, snare placement, new forms, the result's deeds |
+| `src/ui/practice/practice_session.gd`, `src/ui/widgets/hero_popup.gd`, a new `hero_panel.gd` (and its path cards and track), `src/ui/arena/unit_token.gd`, `arena_view.gd`, `fight_fx.gd`, `src/ui/screens/arena_screen.gd` | The hero panel (choosing a path and stage), figures, snare placement, new forms, the result's deeds |
 | `tools/sim_runner.gd`, `tools/sim_report.gd` | `--deeds`, `--paths` |
 | `tests/sim/test_paths.gd`, `test_deeds.gd`, one test file per new piece, `tests/ui/test_paths_ui.gd` | New |
 | `tests/sim/chaos_fight.gd`, `test_arena_log.gd`, `test_every_encounter_plays.gd`, `tests/tools/test_sim_runner.gd` | The new pieces in the chaos fight (or its own fight, like tactics), the audit, the board's forms, the reports |
@@ -209,7 +223,7 @@ Two reports, like the tactics report: reports, not gates.
 - **Each new piece:** its rules one by one, in small fights (`sim_test_kit.gd`), and its log line and audit rule.
 - **Each path:** its taste, cost, and transformation do what the text says, in small fights, like `test_hero_kits.gd`; each path's texts name every reach (`test_unit_info.gd`).
 - **Fingerprints:** base fights, the chaos fight, and the bench fights are unchanged.
-- **Practice:** choosing a path and stage, the cards, the figure, the result's deeds, placing Trapper's snares; the fight on screen is the fight `CombatSim.run` gives.
+- **Practice:** the hero panel (its tabs, track, cards, back and forward), choosing a path and stage, the figure, the result's deeds, placing Trapper's snares; the fight on screen is the fight `CombatSim.run` gives.
 - **The runner:** both reports run small.
 - **Mutation checks** on each new piece, as in earlier phases.
 
@@ -217,11 +231,11 @@ Two reports, like the tactics report: reports, not gates.
 
 The paths come in **three waves** of one path per hero, so a playtest can check the first three before the rest are built (question 1). Each wave: its sim pieces, its three paths as data, tests, a tuning pass with the reports, and a playtest build.
 
-1. **Paths and deeds (P1, P2):** `PathDef`, `KitPatch`, stages, `DeedDef`, counting, `FightResult.deeds`, with test paths.
-2. **Practice and the reports:** the Path row and stage, the cards, figures, the result's deeds, `--deeds` (with where allies stand behind Brannoc, for Guard) and `--paths`.
-3. **Wave 1: Deadeye, Ironbrand, Vigil Keeper** (P3's planted and range, P4, P5, P6's lifesteal, P11's plant delay, P13), and Wait to heal for any healing signature (Decision 4). Three different spots: Maren in a far corner, Brannoc forward into the enemies, Vell off to the side for Sunfall's line. Tune; **playtest build.**
+1. **Paths and deeds (P1, P2):** `PathDef`, `KitPatch`, stages, `DeedDef`, counting, `FightResult.deeds`, tested with test paths. `data/paths.json` starts empty; each wave adds its three.
+2. **Wave 1: Deadeye, Ironbrand, Vigil Keeper** (P3's planted and range, P4, P5, P6's lifesteal, P11's plant delay, P13), and Wait to heal for any healing signature (Decision 4). Three different spots: Maren in a far corner, Brannoc forward into the enemies, Vell off to the side for Sunfall's line.
+3. **The hero panel and the reports:** the panel (section 6), figures, the result's deeds, `--deeds` (with where allies stand behind Brannoc, for Guard) and `--paths`. Tune wave 1 with them; **playtest build.**
 4. **Wave 2: Volley, Last Watch, Wardweaver** (P7 zones, P11's firing while walking, P3's HP and fallen-ally conditions and healing taken, P12, P6's overheal).
-5. **Wave 3: Trapper, Hearthwall, Lanternbearer** (P8 snares and their placement, P9 Guard with its reach set from step 2's measurements, P10 the wall, Night Lantern on P7).
+5. **Wave 3: Trapper, Hearthwall, Lanternbearer** (P8 snares and their placement, P9 Guard with its reach set from step 3's measurements, P10 the wall, Night Lantern on P7).
 6. **Docs** (CLAUDE.md, design.md, this plan's notes), screenshots, and the gate 2 playtest build.
 
 ## Decisions (2026-09-29, the playtester's answers)
@@ -231,8 +245,8 @@ The paths come in **three waves** of one path per hero, so a playtest can check 
 3. **How much stronger:** a vowed hero's team wins about as often as base (within about 5 points: the taste pays for its cost); a transformed hero's team wins **15–25 points more** than base across the encounters. The paths report tunes toward it.
 4. **Wait to heal works with any healing signature:** it holds a signature that heals until an ally within the signature's reach is below 60%, so it keeps working on Lanternbearer (Night Lantern) and Vigil Keeper (Sunfall), as part 6's rule asks. Built in wave 1, with Sunfall.
 5. **Ironbrand's transformed cost:** the line "Hold the Line only taunts adjacent enemies" is dropped, since Brand Slam replaces Hold the Line. His cost is the lost DEF.
-6. **Guard's "behind" is open.** Away from his target seems the right direction, but in Practice fights nobody stays 1 hex behind Brannoc: he walks forward and the others are ranged, so a 1-hex Guard would rarely fire and Hearthwall's deed couldn't fill. Step 2's report measures how often an ally is 1, 2, or 3 hexes behind him (away from his target) during fights. Guard's reach, or another rule, is decided from that before wave 3 builds Hearthwall.
+6. **Guard's "behind" is open.** Away from his target seems the right direction, but in Practice fights nobody stays 1 hex behind Brannoc: he walks forward and the others are ranged, so a 1-hex Guard would rarely fire and Hearthwall's deed couldn't fill. Step 3's report measures how often an ally is 1, 2, or 3 hexes behind him (away from his target) during fights. Guard's reach, or another rule, is decided from that before wave 3 builds Hearthwall.
 
 ## Open questions
 
-- **Guard** (Decision 6): its reach, or another rule for which ally it covers, once step 2's measurements are in.
+- **Guard** (Decision 6): its reach, or another rule for which ally it covers, once step 3's measurements are in.
