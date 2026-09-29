@@ -12,7 +12,8 @@ A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The pl
 | `rebuild-arena.md` | placement, the free-moving fight, tanks, areas, statuses, the shrinking arena |
 | `rebuild-enemies.md` | archetypes, the Act 1 roster, elites, the boss, enemy specializations |
 | `rebuild-run.md` | days, camp, fight choice, relics with costs, duo bonds, losing, pacing |
-| `rebuild-build-order.md` | the phases, and what was gutted |
+| `rebuild-between-fights.md` | part 6: after-fight picks, loadout slots (charms, tactics, sigils) bought with a currency, wounds; it changes parts 1 and 4 where they disagree |
+| `rebuild-build-order.md` | the phases (tactics come as phase 3b, before paths), and what was gutted |
 | `rebuild-phase1-arena-sim.md` | phase 1's build plan (built): the arena sim |
 | `rebuild-phase2-heroes-enemies.md` | phase 2's build plan (built): base heroes, the Act 1 enemies, encounters, the sim runner |
 | `rebuild-phase3-fight-sandbox.md` | phase 3's build plan (built; waiting on playtest gate 1): Practice mode, the hex board, placement, fight playback |
@@ -111,11 +112,12 @@ Phase 3's details are in `docs/plans/rebuild-phase3-fight-sandbox.md` (sections 
 
 These are summaries; the plans have the details and the decisions. As each phase lands, move its rules into a "how the code works" section here.
 
-- **Heroes** (`rebuild-heroes.md`): a team of 3 (Brannoc, Maren, Vell for now), kept all run. Stats (HP, ATK, MGK, DEF, CRIT, ATSP, speed, range), a basic attack, a signature, a passive, sometimes a trait. Three paths each: vow at the start (a taste and a cost), transform when the path's deed fills, then upgrade picks and later an apex. Every deed must be hard to fill without its taste. No ranks, items, or duplicates.
+- **Heroes** (`rebuild-heroes.md`): a team of 3 (Brannoc, Maren, Vell for now), kept all run. Stats (HP, ATK, MGK, DEF, CRIT, ATSP, speed, range), a basic attack, a signature, a passive, sometimes a trait. Three paths each: vow at the start (a taste and a cost), transform when the path's deed fills, and later an apex. Upgrade picks come after every won fight, not from deeds. Every deed must be hard to fill without its taste. No ranks, items, or duplicates.
+- **Between fights** (`rebuild-between-fights.md`): each hero has loadout slots for charms, tactics, and sigils (none are abilities; all are written against the slot, so they survive a transformation), bought with a currency and swapped freely. A hero who falls gets a wound (–15% max HP, up to 3); Rest clears them.
 - **Signatures and mana:** a signature fires on a trigger: mana, HP threshold, a count, a set moment, or would-fall. Only signatures use mana; a unit without a mana signature has no mana bar. Silence stops mana gain. Stun doesn't, but a stunned unit can't fire a mana signature (other triggers still fire).
 - **The arena** (`rebuild-arena.md`, `rebuild-phase1-arena-sim.md`): placement on flat-topped hexes (8 × 7, 3-row zones, a neutral middle row), then a fight on a free-moving plane. Units never overlap. Heroes come first in the fight's order. Targeting rules are data, with sticky targets. Melee lands when the attack finishes; ranged shots travel about 1 tick per hex and follow their target. Engage, Taunt, Stealth, knockback (a stopped push stuns), pulls, leaps, charges, flying, hop-away. Areas are warned and hit by center. Rift Collapse shrinks the arena one ring every 10s from 45s, and nobody can walk onto crumbled ground. Up to 30 standing units per side. A fight still running at 180s is a tie, and a tie counts as a guild victory.
 - **Enemies** (`rebuild-enemies.md`): each tests one positioning question; hand-placed formations; elites built around one mechanic; Old Mother Ash with phases. Every elite and boss says what it does and what answers it. Harder means new problems, not more HP.
-- **The run** (`rebuild-run.md`): Act 1 is about 7 days; a day is camp, a pick of 2 fights (known from the act's start), placement, the fight, then deed rewards. No currency, items, or shops. Relics are rare and each has a cost. Duo bonds link two paths. A lost fight replays the day; the second loss ends the run. The run is deterministic from its seed, like the sim.
+- **The run** (`rebuild-run.md`): Act 1 is about 7 days; a day is camp, a pick of 2 fights (known from the act's start), the loadout, placement, the fight, then the after-fight pick and deed rewards. No items or shops; a currency buys only loadout things (at the Pedlar camp option) and wound treatment. Relics are rare and each has a cost. Duo bonds link two paths. A lost fight replays the day; the second loss ends the run; a tie pays like a win. The run is deterministic from its seed, like the sim, with separate streams for shops, picks, camp, and fights.
 - "Lowest HP" (heals and targeting) means lowest HP **percentage**.
 - PvE only. Don't add networking or PvP code.
 

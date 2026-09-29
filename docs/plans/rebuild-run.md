@@ -1,6 +1,6 @@
 # Rebuild plan, part 4: the run
 
-Status: **agreed in discussion (2026-09-27), not built.** Part of the from-scratch rethink: part 1 is `docs/plans/rebuild-heroes.md`, part 2 `docs/plans/rebuild-arena.md`, part 3 `docs/plans/rebuild-enemies.md`. Numbers are placeholders to tune.
+Status: **agreed in discussion (2026-09-27), not built.** Part of the from-scratch rethink: part 1 is `docs/plans/rebuild-heroes.md`, part 2 `docs/plans/rebuild-arena.md`, part 3 `docs/plans/rebuild-enemies.md`. Numbers are placeholders to tune. **Part 6 (`docs/plans/rebuild-between-fights.md`, 2026-09-29) changes this part:** a pick after every won fight, loadout slots bought with a currency, and wounds. Where they disagree, part 6 wins; the notes below say where.
 
 **Why:** items and essences are gone, and heroes only grow through deeds. So the run has to be built around one question: **what does the player decide between fights?**
 
@@ -10,7 +10,7 @@ Status: **agreed in discussion (2026-09-27), not built.** Part of the from-scrat
 - **Relics stay, and are rarer** (about 3–5 per run), and every relic has a real cost.
 - **Duo bonds come from paths**, not from heroes or camp (section 6).
 - **The cozy side of the game is gone.** The setting is the rift: dark and dangerous, with no warm Guildhall to come home to. Names and camps follow that, and **the art gets a complete rehaul** (its own part of the build order).
-- **Items and shops are gone, and there's no currency to start with** (section 8). Camp options are free: you just pick one.
+- **Items and shops are gone.** Camp options are free: you just pick one. (Part 6 brings back a currency, but only for loadout things and wounds, spent at a Pedlar camp option; section 8.)
 
 ## Goals
 
@@ -35,7 +35,9 @@ Status: **agreed in discussion (2026-09-27), not built.** Part of the from-scrat
 1. **Camp:** pick 1 option from the camp's offer (section 4).
 2. **Choose the day's fight** from 2 options, known from the start of the act.
 3. **Place your heroes** in the arena, and fight.
-4. **After the fight:** deed progress comes from what your heroes did. Any waiting upgrade picks, transformations, or apex vows come up now.
+4. **After the fight:** deed progress comes from what your heroes did. A won fight (or a tie) gives an upgrade pick and currency (part 6); a filled deed brings a transformation or an apex vow.
+
+Part 6 adds a **loadout** step before placement (charms, tactics, and sigils in each hero's slots).
 
 ## 4. Choosing fights feeds your heroes
 
@@ -51,7 +53,7 @@ One choice before each fight. **Different places offer different menus**, so whe
 
 **Hero growth**
 
-- **Train:** extra deed progress for one hero.
+- **Train:** an upgrade pick (part 6: each camp option has one job).
 - **Spar:** two of your heroes practice against each other; both get a little deed progress.
 - **Mentor:** move some deed progress from one hero to another.
 - **Meditate:** see a hero's next upgrade choices early, so you can plan fights around them.
@@ -72,13 +74,17 @@ One choice before each fight. **Different places offer different menus**, so whe
 
 **Risk and reward**
 
-- **Hunt:** fight a small optional pack right now for extra deed progress. Losing doesn't count as a loss.
+- **Hunt:** fight a small optional pack right now for currency (no pick; part 6). Losing doesn't count as a loss.
 - **Rift Tear:** the next fight gets an enemy upgrade, but winning gives a relic choice.
 - **Dare:** accept a challenge for the next fight ("win without Vell falling") for a reward.
 
 **Safety**
 
-- **Rest:** the next loss doesn't count toward the two-loss limit.
+- **Rest:** clears every hero's wounds (part 6; it was "the next loss doesn't count toward the two-loss limit", and whether it keeps that too is open).
+
+**Spending** (part 6)
+
+- **Pedlar:** about 4 charms, tactics, and sigils for sale, drawn for your heroes and paths; treat a wound for currency.
 - **Fortify:** your heroes start the next fight with a small Shield.
 
 **Relics**
@@ -114,9 +120,11 @@ Examples:
 - **Every relic has a cost.** Example: *Ember Heart*: all Burn you apply is doubled, but your healing is 20% weaker. No pure upsides, which also helps with difficulty.
 - **About 3–5 per run.** A relic can be turned down, but once taken it stays.
 
-## 8. Currency: none, to start
+## 8. Currency: back, for loadouts and wounds only
 
-**Decided: start with no currency.** Camp options are free. If playtesting shows one free pick per camp isn't enough of a decision, these are the fallbacks:
+**Superseded by part 6 (2026-09-29):** a currency comes back, earned from fights (a tie pays like a win, and a Hunt pays currency), and spent only on charms, tactics, and sigils, treating a wound, and rerolls. Upgrade picks stay free, and nothing sells back. See `rebuild-between-fights.md`, section 4.
+
+Before part 6 the decision was **no currency to start**, with these fallbacks if one free pick per camp wasn't enough of a decision:
 
 - **Gold:** earned from fights, spent on stronger camp options.
 - **Supplies:** each camp gives a few hours, and options cost 1–3 hours (Train is cheap, Rift Tear expensive); fights earn more.
@@ -131,7 +139,7 @@ Targets for Act 1, with 3 heroes fighting about 8–9 fights:
 | --- | --- |
 | **Start** | Choose heroes, vow each one |
 | **Around days 3–4** | The first transformation (the hero whose deed you pushed hardest) |
-| **By the boss** | All three transformed, with 1–2 upgrade picks each |
+| **By the boss** | All three transformed. (This said "with 1–2 upgrade picks each"; part 6 gives a smaller pick after every won fight, about 8 in Act 1, so the number is for the run bot to measure) |
 | **Acts 2 and 3** | More upgrade picks, the apex vows, and the apexes by the Act 3 boss |
 
 Choosing fights that suit a deed, and camp options like Train, let the player control this pace.
@@ -140,7 +148,8 @@ Choosing fights that suit a deed, and camp options like Train, let the player co
 
 - **A lost fight replays the day; the second loss ends the run.**
 - **Deed progress from a lost fight still counts.**
-- **Rest** at camp buys a safety net.
+- **A hero who falls gets a wound** (part 6: –15% max HP, up to 3), won or lost; a hero saved by Undying or would-fall didn't fall. **Rest** at camp clears them.
+- **A tie counts as a win** and pays like one.
 
 ## 11. Between runs
 

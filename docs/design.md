@@ -8,9 +8,11 @@ Working title: **Riftrite** (a placeholder). This document was rewritten on 2026
 | The arena: placement, movement, tanks, areas, the collapse | `docs/plans/rebuild-arena.md` |
 | Enemies, elites, the boss | `docs/plans/rebuild-enemies.md` |
 | The run: days, camp, fights, relics, duo bonds | `docs/plans/rebuild-run.md` |
+| Decisions between fights: after-fight picks, loadout slots and the currency, wounds | `docs/plans/rebuild-between-fights.md` |
 | Build order, and what the rebuild removed | `docs/plans/rebuild-build-order.md` |
 | Phase 1, the arena sim (build plan) | `docs/plans/rebuild-phase1-arena-sim.md` |
 | Phase 2, base heroes, the Act 1 enemies, encounters, and the sim runner (build plan) | `docs/plans/rebuild-phase2-heroes-enemies.md` |
+| Phase 3, the fight sandbox (build plan) | `docs/plans/rebuild-phase3-fight-sandbox.md` |
 
 Where this summary and a plan disagree, the plan wins; fix this document.
 
@@ -33,10 +35,11 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 - **A hero is** their stats (HP, ATK, MGK, DEF, CRIT, ATSP, plus **speed** and **range**), a **basic attack**, a **signature** (their big move), a **passive**, and sometimes a **trait** (Brannoc's Engage).
 - **Signatures fire on a trigger:** usually a full mana bar, sometimes an HP threshold, a count of events, a set moment, or the hero about to fall. A hero without a mana signature has no mana bar. Only signatures use mana.
 - **Mana** comes from basic attacks (mainly), damage taken (mainly tanks), a slow regen, and starting mana. Silence stops mana gain; Stun doesn't, but a stunned hero can't fire a mana signature.
-- **Each hero has three paths.** You **vow** each hero to one when the run starts; the vow gives a small **taste** of the path and its **cost** at once. The vowed path's **deed** (a goal counted from what the hero does in fights) fills, and the hero **transforms**: a new signature, reshaped stats, the full mechanic, and an upgrade pool. After that, deed levels bring **upgrade picks** (1 of 3). Late in a run the path splits into two **apexes**, earned the same way.
+- **Each hero has three paths.** You **vow** each hero to one when the run starts; the vow gives a small **taste** of the path and its **cost** at once. The vowed path's **deed** (a goal counted from what the hero does in fights) fills, and the hero **transforms**: a new signature, reshaped stats, the full mechanic, and an upgrade pool. Late in a run the path splits into two **apexes**, earned the same way. **Upgrade picks** (1 of 3, each card naming its hero) come after every won fight, not from deeds.
 - **You can switch a vow** between fights until the hero transforms. Transformations are permanent.
 - **Every deed is hard to fill without its taste**, and every path changes where you'd place the hero.
-- **No ranks, no buying heroes, no duplicates.** Heroes only grow through deeds.
+- **No ranks, no buying heroes, no duplicates.** Heroes grow through deeds (transformations, apexes) and after-fight picks.
+- **Loadout slots:** each hero has 3 slots for **charms** (small kit changes), **tactics** (behavior: "target casters first"), and **sigils** (how the signature fires), chosen before each fight. None are abilities, and all are written against the slot ("your signature"), so none goes useless when a hero transforms.
 
 ## The arena
 
@@ -61,13 +64,15 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 
 - **3 acts, each ending in a boss.** The slice is Act 1: about 7 days, elites on 2 of them, the boss on the last.
 - **The start:** choose your three heroes, then vow each one.
-- **A day:** **camp** (pick 1 option from the place's menu: hero growth, information, the arena, risk and reward, safety, relics, or a rift event), **choose the fight** from 2 options known from the start of the act, **place** and fight, then take any deed rewards (upgrade picks, transformations, apex vows).
+- **A day:** **camp** (pick 1 option from the place's menu: hero growth, information, the arena, risk and reward, safety, spending, relics, or a rift event; Train gives a pick, Hunt currency, the Pedlar sells, Rest clears wounds), **choose the fight** from 2 options known from the start of the act, set the **loadout**, **place** and fight, then take the **after-fight pick** (on a win or a tie) and any deed rewards (transformations, apex vows).
 - **Choosing fights feeds deeds:** which enemies you fight decides which deeds fill. The fight card shows the enemies, never which paths they suit.
-- **No currency, items, or shops.** Camp options are free.
+- **No items or shops.** Camp options are free. A **currency** (placeholder: shards) comes from fights and Hunts, and buys only loadout things (at the Pedlar), wound treatment, and rerolls. Nothing sells back.
+- **Wounds:** a hero who falls gets one (–15% max HP, up to 3), won or lost; Undying and would-fall saves don't count. Rest clears them all; currency clears one.
 - **Relics** are rare (about 3–5 a run), team-wide, and **every relic has a cost**. A relic can be turned down, but once taken it stays.
 - **Duo bonds** link two paths of two different heroes; the vow shows a bonded pair as "?" until it's found.
-- **Losing:** a lost fight replays the day, and the second loss ends the run. Deed progress from a lost fight still counts.
-- **Pacing targets:** the first transformation around days 3–4, all three heroes transformed by the boss with 1–2 upgrade picks each, and apexes in Acts 2–3.
+- **Losing:** a lost fight replays the day, and the second loss ends the run. Deed progress from a lost fight still counts. A tie pays like a win.
+- **Random streams:** shop stock, picks, camp, and fight seeds each have their own stream from the run seed.
+- **Pacing targets:** the first transformation around days 3–4, all three heroes transformed by the boss, and apexes in Acts 2–3. Upgrade picks come after every win (about 8 in Act 1), so each is small.
 - **Difficulty target:** a good player clears Act 1 about half the time.
 
 ## Between runs
@@ -117,3 +122,9 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - **Brannoc falls in almost every fight,** wins included. Is the tank dying last fine, or should he usually live? (phase 2 plan, section 7)
 - **Ember Dust's size:** a radius-2 circle (the reach `largest_group` counts by) covers a lot of the board; radius 1 would be a much smaller zone. (phase 2 plan, section 5)
 - **Maren's hop** shows in the log as the trait's "Hop Away", not her passive's name, "Keep Your Distance". (phase 2 plan, section 3)
+- **Loadouts:** 3 slots each, or 2 then 3? How many tactics per hero, and which are shared by role? (part 6)
+- **The currency:** its name, prices, and income. (part 6)
+- **Rest:** does it also keep "the next loss doesn't count"? (part 6)
+- **Wounds:** is –15% up to 3 right, and should a lost fight's falls wound? (part 6)
+- **Sigils on signatures without mana:** written by what they do, or marked with the triggers they fit? (part 6)
+- **How fast heroes grow** with a pick after every win. (part 6)

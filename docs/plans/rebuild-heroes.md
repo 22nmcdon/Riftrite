@@ -11,7 +11,7 @@ Status: **agreed in discussion (2026-09-27), not built.** This is the first part
 - **Every hero has a main role** (tank, damage, support, control), and their path can bend it. **There are no shared role traits:** each hero's own passives and traits do that job (Brannoc's Engage is his, not every tank's).
 - **Vows happen when the team is chosen:** after picking your three heroes, you vow each one to a path before the first fight. You can switch a vow between fights until that hero transforms.
 - **Transformations are permanent.** Only the apex vow can still be switched, until the apex is earned.
-- **Heroes only grow through deeds.** No ranks, no buying heroes, no combining duplicates. Upgrade picks come from deeds.
+- **Heroes grow through deeds and after-fight picks.** No ranks, no buying heroes, no combining duplicates. Deeds bring the big moments (the transformation, then the apex); upgrade picks come after every won fight, not from deeds (part 6, `rebuild-between-fights.md`, 2026-09-29).
 - **Essences are removed.**
 - **Fights happen in an arena**, not two rows: heroes are placed on a hex grid, then fight on a free-moving plane. The arena gets its own part of the plan; the heroes below are designed for it.
 - **Mana is the most common way a signature fires, but not the only one** (see section 4). Some signatures fire on other triggers, and some heroes or paths have no mana at all. Only signatures ever use mana.
@@ -36,8 +36,8 @@ Each hero has **three paths**. A path is a transformation: it changes what the h
 | --- | --- | --- |
 | **Base** | Start of the run | The hero's own kit |
 | **Vow** | When the team is chosen, before the first fight | You vow the hero to one path. They get the path's **taste** and its **cost** at once |
-| **Transformation** | The vowed path's deed fills | The hero becomes the path: new signature, reshaped stats, the full mechanic, and the path's upgrade pool opens |
-| **Path upgrades** | Each deed level after the transformation | Pick 1 of 3 upgrades from the path's pool |
+| **Transformation** | The vowed path's deed fills | The hero becomes the path: new signature, reshaped stats, the full mechanic, and the path's upgrade pool joins their offers |
+| **Upgrades** | After every won fight (part 6) | Pick 1 of 3 upgrades, each card naming its hero: before the transformation from the hero and role layers (and some leaning to the vowed path), after it from the path's pool too |
 | **Apex** | Late in the run | The path splits into 2 final forms. You vow to one, earn it the same way, and the hero transforms again |
 
 ### The rules
@@ -52,7 +52,7 @@ Each hero has **three paths**. A path is a transformation: it changes what the h
 
 ### Upgrade pools
 
-Upgrade picks only mean something if the pool is big enough to vary between runs. A path offers 1 of 3 about 4–5 times a run, so each offer draws from three layers:
+Upgrade picks only mean something if the pool is big enough to vary between runs. Picks come after every won fight (part 6), shared among the three heroes, so each offer draws from three layers:
 
 | Layer | What it holds | About how many |
 | --- | --- | --- |
@@ -337,11 +337,11 @@ The fantasy: her light heals friends and burns enemies.
 
 - **Removed:** essences (and everything built on them: infusions, alloys, Awakening, spill, spread, conduits, transformations, resonance, essence shops, the Forge, kits); ranks and rank-ups; the calling deed track (replaced by path deeds); shared affinities; the team draft (until hero 4); the other 5 heroes (for now).
 - **Replaced:** the rank-B specialization pick becomes the vow; the two rows become the arena; item cooldowns on signatures become mana.
-- **Still open:** items, shops, and gold (a later part of the plan).
+- **Settled in part 6** (`rebuild-between-fights.md`): no items or shops; loadout slots (charms, tactics, sigils, none of them abilities) bought with a currency. Charms are written against the slot ("your signature"), never an ability's name, so they survive a transformation.
 
 ## Open questions
 
 - **Pacing:** how many fights should a transformation take? How many upgrade picks come before the apex vow opens? (Depends on the run's structure.)
-- **Deed thresholds after the transformation:** does the same deed keep counting, with each threshold giving an upgrade pick?
+- **Deed thresholds after the transformation:** does the same deed keep counting toward the apex? (Upgrade picks no longer come from deed thresholds: part 6.)
 - **Mana numbers:** the table in section 4 is a first pass for the sim to tune.
 - **Last Watch after Last Rites:** once his one HP-triggered signature has fired, he has no big move left in that fight. Whether that's the right feel is decided by playtesting.
