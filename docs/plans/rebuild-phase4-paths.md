@@ -137,6 +137,7 @@ The nine:
   - It never writes to the log.
   - `FightResult.deeds` (hero, path, amount) is in the fight's order; `deed_amount(hero, path)` reads one; `CombatSim.deed_amounts()` gives the same while a fight is being stepped (for the UI).
 - **Tests:** `tests/sim/test_paths.gd` (10) and `tests/sim/test_deeds.gd` (7). The bench's 20 fingerprints are unchanged, and a fight with test paths loaded but taken by no one is identical to one without.
+- **Mutation checks:** 31 on the new code, all caught, one after a test was added (a hero's kit on the enemies' side counting a deed). The full run: 497 tests, all passing.
 
 ## 4. The nine paths
 

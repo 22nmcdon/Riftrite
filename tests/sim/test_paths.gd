@@ -239,6 +239,16 @@ func test_the_setup_checks_whose_path_it_is() -> void:
 	fight = Encounters.setup(_content, "witch_circle", GUARDED, 1, errors)
 	fight.enemies[0].deed_paths = [_content.paths["sharpshot"]] as Array[PathDef]
 	assert_eq(fight.validate(_content), ["rift_worn_sentinel at (3, 4) can't count Sharpshot's deed"] as Array[String], "enemies count no deeds")
+	# Even a hero's kit fighting on the enemies' side (a made-up setup).
+	fight = Encounters.setup(_content, "witch_circle", GUARDED, 1, errors)
+	var turned: UnitSetup = UnitSetup.make(_content.heroes["maren"].kit, EffectSource.Team.ENEMIES, 1, 6, "turncoat")
+	turned.deed_paths = [_content.paths["sharpshot"]] as Array[PathDef]
+	fight.enemies.append(turned)
+	assert_eq(fight.validate(_content), ["turncoat at (1, 6) can't count Sharpshot's deed"] as Array[String])
+	turned.deed_paths.clear()
+	turned.path = _content.paths["sharpshot"]
+	turned.stage = PathDef.Stage.VOWED
+	assert_eq(fight.validate(_content), ["turncoat at (1, 6) can't take the path Sharpshot"] as Array[String])
 
 
 func test_paths_that_no_one_takes_change_nothing() -> void:
