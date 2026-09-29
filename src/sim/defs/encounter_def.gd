@@ -7,10 +7,13 @@ extends RefCounted
 ##    "act": 1, "days": [2, 3],
 ##    "enemies": [{"enemy": "rift_hound", "hex": [2, 4]}, ...],
 ##    "rocks": [[3, 3]],
-##    "scale_bp": 10000}
+##    "scale_bp": 10000, "tier": "easier"}
 ## `scale_bp` multiplies each enemy's HP and ATK (the small growth per day;
 ## 10000 = as the enemy is). ContentDb checks the enemies exist and stand in
 ## their zone, and that nothing shares a hex.
+## `tier` (phase 5, docs/plans/rebuild-phase5-run.md, section 2): where a run
+## offers it: easier (the default) or harder on a normal day, elite, boss, or
+## hunt (a camp's optional small fight).
 
 ## One enemy placed on a hex.
 class Placed:
@@ -27,6 +30,9 @@ var days: Array[int] = []
 var enemies: Array[Placed] = []
 var rocks: Array[Vector2i] = []
 var scale_bp: int = FixedMath.BP_ONE
+var tier: String = "easier"
+
+const TIERS: Array[String] = ["easier", "harder", "elite", "boss", "hunt"]
 
 
 static func read(reader: DataReader) -> EncounterDef:
@@ -56,5 +62,6 @@ static func read(reader: DataReader) -> EncounterDef:
 	if reader.has("rocks"):
 		def.rocks = reader.req_hex_array("rocks")
 	def.scale_bp = reader.opt_int("scale_bp", FixedMath.BP_ONE, 1)
+	def.tier = reader.opt_string_choice("tier", "easier", TIERS)
 	reader.finish()
 	return def

@@ -12,6 +12,16 @@ const SHOP: int = 4
 const STOPS: int = 5
 const STOP: int = 6
 const REWARDS: int = 7
+## Phase 5 (docs/plans/rebuild-phase5-run.md): the act's fight options, the
+## after-fight pick, camp menus, the Pedlar, the Magpie, relic choices, and
+## a Hunt's pack.
+const ACT_DRAW: int = 8
+const PICK: int = 9
+const CAMP: int = 10
+const PEDLAR: int = 11
+const MAGPIE: int = 12
+const RELIC: int = 13
+const HUNT: int = 14
 
 const MIX: int = 0x2545F4914F6CDD1D
 
