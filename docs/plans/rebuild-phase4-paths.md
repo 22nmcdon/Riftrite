@@ -265,12 +265,12 @@ The paths come in **three waves** of one path per hero, so a playtest can check 
 
 ## Decisions (2026-09-29, the playtester's answers)
 
-1. **Three waves**, one path per hero in each, with a playtest build after wave 1: Deadeye, Ironbrand, Vigil Keeper; then Volley, Last Watch, Wardweaver; then Trapper, Hearthwall, Lanternbearer.
+1. **All nine paths together** (changed 2026-09-29: the playtester can't test for a while, so the three waves are built back to back, with one playtest build at the end). The waves still set the order of work: Deadeye, Ironbrand, Vigil Keeper; then Volley, Last Watch, Wardweaver; then Trapper, Hearthwall, Lanternbearer.
 2. **Upgrade pools come in phase 5**, with the after-fight pick. Nothing in phase 4 could offer an upgrade, and gate 2 doesn't test them. (The build order moves them.)
 3. **How much stronger:** a vowed hero's team wins about as often as base (within about 5 points: the taste pays for its cost); a transformed hero's team wins **15–25 points more** than base across the encounters. The paths report tunes toward it.
 4. **Wait to heal works with any healing signature:** it holds a signature that heals until an ally within the signature's reach is below 60%, so it keeps working on Lanternbearer (Night Lantern) and Vigil Keeper (Sunfall), as part 6's rule asks. Built in wave 1, with Sunfall.
 5. **Ironbrand's transformed cost:** the line "Hold the Line only taunts adjacent enemies" is dropped, since Brand Slam replaces Hold the Line. His cost is the lost DEF.
-6. **Guard's "behind" is open.** Away from his target seems the right direction, but in Practice fights nobody stays 1 hex behind Brannoc: he walks forward and the others are ranged, so a 1-hex Guard would rarely fire and Hearthwall's deed couldn't fill. Step 3's report measures how often an ally is 1, 2, or 3 hexes behind him (away from his target) during fights. Guard's reach, or another rule, is decided from that before wave 3 builds Hearthwall.
+6. **Guard's "behind" is open.** Away from his target seems the right direction, but in Practice fights nobody stays 1 hex behind Brannoc: he walks forward and the others are ranged, so a 1-hex Guard would rarely fire and Hearthwall's deed couldn't fill. Step 3's report measures how often an ally is 1, 2, or 3 hexes behind him (away from his target) during fights. Guard's reach, or another rule, is decided from that before wave 3 builds Hearthwall. With the waves built together, the measurement runs first (a scratch run, later the deed report), and the reach it suggests is used provisionally and flagged for the playtester.
 
 ## Open questions
 
