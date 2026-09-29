@@ -1,6 +1,6 @@
 # Rebuild phase 3b: tactics in Practice (build plan)
 
-Status: **built (2026-09-29); waiting on its playtest** (does a tactic change how a fight plays, readably?). Its questions were answered the same day (Decisions); each section's "Built in step N" notes say what was built. Phase 3b of `docs/plans/rebuild-build-order.md`, before paths. Design source: part 6, `rebuild-between-fights.md` (tactics are one of the three kinds of loadout things, and the playtester's answers put the first three in Practice early). It builds on the arena sim (phase 1), the content (phase 2), and Practice (phase 3, now landscape).
+Status: **built (2026-09-29); round 2, payoffs (section 9), proposed the same day and waiting on the go-ahead.** Then its playtest (does a tactic change how a fight plays, readably?). Its questions were answered the same day (Decisions); each section's "Built in step N" notes say what was built. Phase 3b of `docs/plans/rebuild-build-order.md`, before paths. Design source: part 6, `rebuild-between-fights.md` (tactics are one of the three kinds of loadout things, and the playtester's answers put the first three in Practice early). It builds on the arena sim (phase 1), the content (phase 2), and Practice (phase 3, now landscape).
 
 **Goal:** give the player the first way to shape what heroes do in a fight they can't control. Before a Practice fight, each hero can take **one tactic** from three: **Casters first**, **Hold your ground**, and **Wait to heal**. The sim follows it, the log says so, and the board shows it.
 
@@ -231,9 +231,53 @@ A tactic is a JSON entry in `data/tactics.json`, loaded by `ContentDb` as a `Tac
 - The screenshots already show choosing a tactic (step 3).
 - A playtest build carries it all.
 
+## 9. Round 2: payoffs (proposed 2026-09-29)
+
+**Why:** the tactics report and the playtester agree that a tactic that is only a cost is rarely worth taking. Wait to heal never helped on the whole, and Hold your ground mostly hurt. So **every tactic becomes a trade:** its behavior is the cost, and a small payoff makes the cost worth paying in the right fight.
+
+**The rule:** the payoff applies **only while the behavior does, or to what the behavior produced**, and it's in the tactic's own sentence. A flat buff would make the choice "take the biggest number"; a payoff tied to the behavior keeps it situational. The numbers are placeholders for the tactics report to tune.
+
+| Tactic | Behavior (the cost) | Payoff |
+| --- | --- | --- |
+| Casters first | Goes for casters and supports first | **+20% damage** to casters and supports |
+| Hold your ground | Doesn't walk until an enemy comes within 2 hexes | **+20% attack speed** while it holds |
+| Wait to heal | Mend waits until an ally is **below 60%** (was 50%) | **The heal it waited for is 30% stronger** |
+
+**The data:** each tactic gains a `payoff` with its own key:
+- `"damage_vs_bp": 2000` for prefer_target: more damage from the unit's own hits (its basic attack and signature, not damage over time) on a target of the tactic's archetypes.
+- `"atsp_bp": 2000` for hold_ground: its attack cooldown runs 20% faster while `holding`.
+- `"heal_bp": 3000` for signature_threshold: the signature fire that waited heals 30% more.
+
+`below_pct` becomes 60. `TacticDef` reads the payoff each kind allows, and only that.
+
+**The sim** (still `Tactics`, and still skipped for a unit without a tactic, so tactic-free fights keep their fingerprints):
+- The damage bonus multiplies a hit before defense, in `EffectRunner`, and the attack-speed bonus multiplies the unit's attack rate while it holds.
+- The heal bonus is set when `hurt_enough` lets the bar go, applies to that fire's heals, and is cleared after. A heal that flies as a shot keeps the bonus it left with, like every shot's numbers.
+- These are the sim's first **modifiers** (part 6 asked for one shape before charms and enemy specializations). The shape: a modifier names what it changes (damage dealt, attack rate, healing), a condition (against these archetypes, while holding, on this fire), and a basis-point amount. Charms and specializations are meant to reuse it.
+
+**The log** (rule 4):
+- A hit or heal the payoff changed says so after its number: "maren · Longshot hits cinder_moth for 26 (+20% from Casters first, …)" and "vell · Mend heals brannoc for 52 (+30% from Wait to heal)".
+- The hold lines name it: "holds its ground (+20% attack speed while it holds)".
+- The audit (`test_arena_log.gd`) checks a payoff's note names the tactic.
+
+**The UI:** the hero popup's Tactic row adds a generated numbers line under the sentence ("+20% damage to casters and supports"), like every ability's. The sentences in `tactics.json` say what the payoff is for, without numbers.
+
+**Tests:**
+- Each payoff applies only under its condition: the damage bonus not on a swarm unit, the attack speed not after the hold lets go, the heal bonus only on the fire that waited.
+- The log names the payoff every time it applies.
+- Tactic-free fights and the bench's fingerprints are unchanged.
+
+**Order of work** (each step: code, tests, green run, commit):
+- **R1:** the payoff data and `TacticDef`, and the threshold at 60%.
+- **R2:** the three payoffs in the sim, their log notes and audit rule, and mutation checks.
+- **R3:** the popup's numbers line and the how-to-play text.
+- **R4:** rerun the tactics report and tune the three payoffs toward the report's two questions (each tactic helps somewhere, none everywhere).
+- **R5:** docs and a playtest build.
+
 ## Decisions (2026-09-29, the playtester's answers)
 
 1. **"Casters" are the caster and support archetypes:** Cinder Moth and Gloam Witch in Act 1. (Caster only would have been just the Moth; any enemy with a signature would have taken in the Sentinel.)
 2. **Hold your ground lets go for good** once an enemy comes within 2 hexes: one clear moment, then it fights normally. (Holding again whenever it's clear could stall and look indecisive.)
 3. **Wait to heal waits with a full bar** until an ally in reach is below 50%. The wasted mana is the tactic's cost. (Firing on schedule but only at a hurt ally would empty the bar for nothing, which is odd to watch.)
 4. **Casters first and Hold your ground are for all three heroes; Wait to heal is for Vell only**, the only healing signature.
+5. **Every tactic is a trade** (after the first tactics report, 2026-09-29): its behavior is the cost, and a small payoff tied to the behavior pays for it (section 9). Wait to heal waits until below 60% (was 50%). The playtester's example payoffs were "wait below 70%, then heal 15% more below 50%" and "heal the healthiest hero, with overheal as double shield". The first became the simpler one-threshold version above. The second changes how the signature works, so it's a **sigil** (part 6), kept for phase 5.

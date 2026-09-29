@@ -34,6 +34,7 @@ Status: **agreed in discussion (2026-09-28, answers 2026-09-29), not built.** Ad
 - **Separate random streams:** shop stock, picks, camp, and fight seeds each get their own stream from the run seed, so buying or rerolling never changes a later fight. The determinism rule already asks for this; build it in from the start.
 - **A loadout gate for the sim runner:** sample loadouts (every combination is too many) and check that the best beats the worst by a margin. It catches filler charms the way the placement gate catches filler formations.
 - **Wounds show as a greyed chunk of the HP bar.** It reads at a glance, needs no new marker, and shows what matters: how much HP is missing.
+- **A tactic may carry a small payoff** (2026-09-29, from the phase 3b tactics report), but only while its behavior applies, or to what the behavior produced ("+20% attack speed while it holds its ground"). A tactic is still a behavior first. A flat number change is a charm's job.
 - **Now and then the Pedlar carries one relic** (added 2026-09-29): about 1 visit in 3, or only at certain places (a market in the ruins, say). It's expensive, about two days of income, so buying it means skipping charms and paying for wounds yourself for a while. It **counts toward the 3–5 relics a run**, so the total stays the same; it's just another way to get one. Relics stay rare, and currency gets a second big use.
 
 ## 1. A pick after every fight
@@ -55,7 +56,7 @@ Three kinds of slotted things can share the slots:
 | --- | --- | --- |
 | **Charm** | A small passive change to the hero's kit | "Your basic attack Slows on crits", "+1 range while you haven't moved for 2s", "Your heals also cleanse Bleed" |
 | **Tactic** | Changes how the hero behaves, not what they can do | "Target casters first", "Hold your starting hex until an enemy comes within 2", "Heal only allies below 50% HP" |
-| **Sigil** | Changes how the hero's signature fires | "Your signature costs 15 less mana", "Your signature also fires when an ally falls", "Your signature's area is 1 hex larger" |
+| **Sigil** | Changes how the hero's signature fires | "Your signature costs 15 less mana", "Your signature also fires when an ally falls", "Your signature's area is 1 hex larger", "Your heal goes to the healthiest ally instead, and overheal becomes a shield twice as big" (the playtester's, for Vell) |
 
 - **Most are hero-specific** (a Maren charm can't go on Vell); some tactics are shared by every hero with the same role.
 - **Mixing kinds is the choice:** a stronger kit (charms), smarter behavior (tactics), or a different rhythm (sigils).
