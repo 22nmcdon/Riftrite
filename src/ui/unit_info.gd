@@ -173,6 +173,9 @@ static func tactic_numbers(tactic: TacticDef) -> String:
 			parts.append("Waits until an ally is below %s HP" % ValueBreakdown._percent(tactic.below_bp))
 			if tactic.heal_bp > 0:
 				parts.append("+%s healing from its signature" % ValueBreakdown._percent(tactic.heal_bp))
+		TacticDef.Kind.STOP_NEAR:
+			@warning_ignore("integer_division")
+			parts.append("Stops while an enemy is within %s" % hexes(tactic.stop_range / HexGrid.HEX))
 	return " · ".join(parts)
 
 
@@ -188,6 +191,8 @@ static func trigger_text(trigger: TriggerDef, kit: UnitDef) -> String:
 			return "Once, at %s" % seconds(trigger.at_ticks)
 		TriggerDef.Kind.COUNT:
 			return "Every %s" % _nth(trigger.every, EVENT_WORDS[trigger.event])
+		TriggerDef.Kind.ALLY_FALLS:
+			return "Each time an ally falls"
 	return "Once, when it would fall"
 
 

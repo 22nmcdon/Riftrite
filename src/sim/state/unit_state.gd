@@ -140,6 +140,8 @@ var last_attacker: String = ""
 ## signature_threshold: whether its full bar's wait has been logged.
 var tactic: TacticDef = null
 var holding: bool = false
+## Plant your feet (stop_near): it stopped for a near enemy (Tactics.planted).
+var feet_planted: bool = false
 var tactic_waiting: bool = false
 ## Its Guard passive (phase 4; null: none).
 var guard: PartDef = null

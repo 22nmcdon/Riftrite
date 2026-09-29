@@ -7,5 +7,9 @@
   "losses_to_end": 2,
   "slots": 3,
   "pick_shards": 3,
-  "wild_card_pct": 25
+  "wild_card_pct": 25,
+  "prices": {"wound": 2, "reroll": 1},
+  "pedlar_wares": 4,
+  "magpie_wares": 4,
+  "magpie_markup_pct": 150
 }

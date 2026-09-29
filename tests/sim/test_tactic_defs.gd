@@ -37,6 +37,8 @@ static func tactic(kind: String, extra: Dictionary = {}) -> Dictionary:
 		"signature_threshold":
 			data["below_pct"] = 50
 			data["heroes"] = ["vell"]
+		"stop_near":
+			data["stop_hexes"] = 2
 	data.merge(extra, true)
 	return data
 
@@ -47,7 +49,7 @@ func _assert_error(db: ContentDb, expected: String) -> void:
 
 func test_the_three_tactics() -> void:
 	assert_true(_content.is_valid(), str(_content.errors))
-	assert_eq(_content.tactic_ids, ["casters_first", "hold_ground", "wait_to_heal"] as Array[String])
+	assert_eq(_content.tactic_ids, ["casters_first", "hold_ground", "wait_to_heal", "plant_feet"] as Array[String])
 	var casters: TacticDef = _content.tactics["casters_first"]
 	assert_eq(casters.kind, TacticDef.Kind.PREFER_TARGET)
 	assert_eq(casters.archetypes, ["caster", "support"] as Array[String], "casters are casters and supports (Decision 1)")

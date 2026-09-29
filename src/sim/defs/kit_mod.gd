@@ -26,8 +26,14 @@ extends RefCounted
 ##       "add_effects": [...EffectDefs...],   appended to the ability
 ##       "after_add_ms": -500}],          the passive's aura: how long unmoved
 ##                                        (or planted) before it holds
-##    "mana": {"max_add": -15, "start_add": 20, "per_attack_add": 2}}
+##    "mana": {"max_add": -15, "start_add": 20, "per_attack_add": 2},
 ##                                        its mana bar, if it has one
+##    "also_fires": [{"kind": "ally_falls"}],   its signature also fires on
+##                                        these (hp_below or ally_falls), free
+##    "echo": {"after_ms": 2000, "share_pct": 50}}  its signature fires again
+##                                        that long after each fire, at a
+##                                        fresh target, with its numbers and
+##                                        durations at that share
 ## affects() says whether a mod changes anything on a kit (for a slot's "no
 ## effect on this hero"). The modified kit must be sound (UnitDef.problems).
 
@@ -65,6 +71,9 @@ var changes: Array[AbilityChange] = []
 var mana_max_add: int = 0
 var mana_start_add: int = 0
 var mana_per_attack_add: int = 0
+var also_fires: Array[TriggerDef] = []
+var echo_ticks: int = 0
+var echo_bp: int = 0
 
 
 static func make() -> KitMod:
@@ -100,8 +109,19 @@ static func read(reader: DataReader) -> KitMod:
 			mod.mana_start_add = mana_reader.opt_int("start_add", 0, -100, 100)
 			mod.mana_per_attack_add = mana_reader.opt_int("per_attack_add", 0, -20, 20)
 			mana_reader.finish()
+	for trigger_reader: DataReader in reader.opt_object_array("also_fires"):
+		var trigger: TriggerDef = TriggerDef.read(trigger_reader)
+		if not TriggerDef.ALSO_KINDS.has(trigger.kind):
+			reader.error("also_fires: a signature can also fire on hp_below or ally_falls, not %s" % TriggerDef.KIND_NAMES[trigger.kind])
+		mod.also_fires.append(trigger)
+	if reader.has("echo"):
+		var echo_reader: DataReader = reader.req_object("echo")
+		if echo_reader != null:
+			mod.echo_ticks = echo_reader.req_ticks("after_ms", FixedMath.MS_PER_TICK)
+			mod.echo_bp = echo_reader.req_int("share_pct", 1, 100) * 100
+			echo_reader.finish()
 	if not mod.changes_anything():
-		reader.error("a mod needs stats_bp, stats_add, passives, on, or mana")
+		reader.error("a mod needs stats_bp, stats_add, passives, on, mana, also_fires, or echo")
 	reader.finish()
 	return mod
 
@@ -140,7 +160,8 @@ func changes_anything() -> bool:
 	for stat: int in stats_bp.size():
 		if stats_bp[stat] != FixedMath.BP_ONE or stats_add[stat] != 0:
 			return true
-	return not passives.is_empty() or not changes.is_empty() or mana_max_add != 0 or mana_start_add != 0 or mana_per_attack_add != 0
+	return not passives.is_empty() or not changes.is_empty() or mana_max_add != 0 or mana_start_add != 0 or mana_per_attack_add != 0 \
+		or not also_fires.is_empty() or echo_ticks > 0
 
 
 ## True if the mod changes anything on `kit` (stats and passives always do;
@@ -153,6 +174,8 @@ func affects(kit: UnitDef) -> bool:
 	if not passives.is_empty():
 		return true
 	if kit.mana != null and (mana_max_add != 0 or mana_start_add != 0 or mana_per_attack_add != 0):
+		return true
+	if kit.signature != null and (not also_fires.is_empty() or echo_ticks > 0):
 		return true
 	for change: AbilityChange in changes:
 		for ability: AbilityDef in _slot_abilities(kit, change.slot):
@@ -189,8 +212,33 @@ func apply(kit: UnitDef, problems: Array[String] = []) -> UnitDef:
 		built.mana = mana
 	for change: AbilityChange in changes:
 		_apply_change(built, change, problems)
+	if built.signature != null and (not also_fires.is_empty() or echo_ticks > 0):
+		var signature: AbilityDef = DefCopy.shallow(built.signature) as AbilityDef
+		signature.also.append_array(also_fires)
+		if echo_ticks > 0:
+			signature.echo_ticks = echo_ticks
+			signature.echo = make_echo(signature, echo_bp)
+		built.signature = signature
 	problems.append_array(built.problems())
 	return built
+
+
+## A signature's echo: a copy without a trigger, "<id>_echo" and
+## "<name> (Echo)", its numbers and durations at `share_bp`.
+static func make_echo(signature: AbilityDef, share_bp: int) -> AbilityDef:
+	var echo: AbilityDef = DefCopy.shallow(signature) as AbilityDef
+	echo.id = signature.id + "_echo"
+	echo.name = signature.name + " (Echo)"
+	echo.trigger = null
+	echo.also = []
+	echo.echo = null
+	echo.echo_ticks = 0
+	echo.cast_ticks = 0
+	var change := AbilityChange.new()
+	change.amount_bp = share_bp
+	change.duration_bp = share_bp
+	echo.effects = _changed_effects(signature.effects, change)
+	return echo
 
 
 func _apply_change(built: UnitDef, change: AbilityChange, problems: Array[String]) -> void:

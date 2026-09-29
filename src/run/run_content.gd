@@ -1,19 +1,22 @@
 class_name RunContent
 extends RefCounted
 ## The run's data, apart from the sim's (docs/plans/rebuild-phase5-run.md):
-## the act, the upgrades, and (as later steps add them) items, relics, duo
-## bonds, and camps. It sits over the sim's ContentDb, which it cross-checks
+## the act, the upgrades, the items, and (as later steps add them) relics,
+## duo bonds, and camps. It sits over the sim's ContentDb, which it cross-checks
 ## against: every encounter a day can draw, every path and hero named.
 
 const ACT_FILE: String = "act1.json"
 const UPGRADES_FILE: String = "upgrades.json"
-const FILES: Array[String] = [ACT_FILE, UPGRADES_FILE]
+const ITEMS_FILE: String = "items.json"
+const FILES: Array[String] = [ACT_FILE, UPGRADES_FILE, ITEMS_FILE]
 
 var content: ContentDb
 var act: ActDef = null
 var upgrades: Dictionary[String, UpgradeDef] = {}
 ## In the file's order (offers draw in this order).
 var upgrade_ids: Array[String] = []
+var items: Dictionary[String, ItemDef] = {}
+var item_ids: Array[String] = []
 var errors: Array[String] = []
 
 
@@ -42,6 +45,7 @@ static func load_texts(texts: Dictionary[String, String], content_db: ContentDb)
 		if reader != null:
 			run.act = ActDef.read(reader)
 	run._read_upgrades(run._parse(texts, UPGRADES_FILE))
+	run._read_items(run._parse(texts, ITEMS_FILE))
 	run._check()
 	return run
 
@@ -96,20 +100,65 @@ func upgrade_mods(hero: RunState.Hero) -> Array[KitMod]:
 	return mods
 
 
-func _read_upgrades(data: Variant) -> void:
+## The kit `hero` fights with before its upgrades and loadout: its path's,
+## at its stage.
+func hero_kit(hero: RunState.Hero) -> UnitDef:
+	var path: PathDef = content.paths[hero.path]
+	return path.transformed_kit if hero.transformed else path.vowed_kit
+
+
+## The kit mods `hero`'s loadout gives it, in slot order (a tactic gives
+## none; an item that does nothing on it changes nothing anyway).
+func loadout_mods(hero: RunState.Hero) -> Array[KitMod]:
+	var mods: Array[KitMod] = []
+	for item_id: String in hero.slots:
+		if items.has(item_id) and items[item_id].mod != null:
+			mods.append(items[item_id].mod)
+	return mods
+
+
+## The tactic `hero`'s loadout gives it: the first tactic item it can take,
+## or null.
+func loadout_tactic(hero: RunState.Hero) -> TacticDef:
+	for item_id: String in hero.slots:
+		var item: ItemDef = items.get(item_id)
+		if item != null and item.tactic != null and item.works_on(hero_kit(hero), hero.id):
+			return item.tactic
+	return null
+
+
+func _entries(data: Variant, file_name: String) -> Array[DataReader]:
+	var readers: Array[DataReader] = []
 	if data == null:
-		return
+		return readers
 	if typeof(data) != TYPE_ARRAY:
-		errors.append("%s: expected a list of entries" % UPGRADES_FILE)
-		return
+		errors.append("%s: expected a list of entries" % file_name)
+		return readers
 	var entries: Array = data
 	for i: int in entries.size():
-		var label: String = "%s[%d]" % [UPGRADES_FILE, i]
+		var label: String = "%s[%d]" % [file_name, i]
 		if typeof(entries[i]) == TYPE_DICTIONARY and typeof(entries[i].get("id")) == TYPE_STRING:
 			label += " (%s)" % entries[i]["id"]
 		var reader: DataReader = DataReader.from_value(entries[i], label, errors)
-		if reader == null:
+		if reader != null:
+			readers.append(reader)
+	return readers
+
+
+func _read_items(data: Variant) -> void:
+	for reader: DataReader in _entries(data, ITEMS_FILE):
+		var item: ItemDef = ItemDef.read(reader)
+		if item.id.is_empty():
 			continue
+		if items.has(item.id):
+			reader.error("duplicate id \"%s\"" % item.id)
+			continue
+		items[item.id] = item
+		item_ids.append(item.id)
+
+
+func _read_upgrades(data: Variant) -> void:
+	for reader: DataReader in _entries(data, UPGRADES_FILE):
 		var upgrade: UpgradeDef = UpgradeDef.read(reader)
 		if upgrade.id.is_empty():
 			continue
@@ -134,6 +183,34 @@ func _check() -> void:
 		_check_upgrade(upgrades[id], "%s (%s)" % [UPGRADES_FILE, id])
 	for hero_id: String in content.hero_ids:
 		_check_all_upgrades(hero_id)
+	for id: String in item_ids:
+		_check_item(items[id], "%s (%s)" % [ITEMS_FILE, id])
+
+
+## A tactic item's tactic must exist; a mod must be sound on every hero kit
+## it can meet, and every item must work on some hero's kit.
+func _check_item(item: ItemDef, where: String) -> void:
+	if item.kind == ItemDef.Kind.TACTIC:
+		if not content.tactics.has(item.tactic_id):
+			errors.append("%s: unknown tactic \"%s\"" % [where, item.tactic_id])
+			return
+		item.tactic = content.tactics[item.tactic_id]
+	elif item.mod == null:
+		return
+	var works: bool = false
+	for path_id: String in content.path_ids:
+		var path: PathDef = content.paths[path_id]
+		for kit: UnitDef in [path.vowed_kit, path.transformed_kit]:
+			if kit == null:
+				continue
+			if item.mod != null:
+				var problems: Array[String] = []
+				item.mod.apply(kit, problems)
+				for problem: String in problems:
+					errors.append("%s: on %s's kit, %s" % [where, path_id, problem])
+			works = works or item.works_on(kit, path.hero)
+	if not works:
+		errors.append("%s: does nothing on any hero" % where)
 
 
 ## An upgrade's hero or path must exist, and its mod must change, soundly,

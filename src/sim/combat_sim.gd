@@ -96,6 +96,9 @@ var damage_payoffs: bool = false
 ## The units with conditional auras (phase 4: planted, below_hp, per fallen
 ## ally), checked every tick.
 var _conditional: Array[UnitState] = []
+## Some unit's signature fires when an ally falls (a sigil; Signatures), so
+## each fall is told to its side.
+var ally_fall_listeners: bool = false
 ## Some hero counts deeds (Deeds), so the log is read for them each tick.
 var _counting: bool = false
 ## Log entries before this one have been counted for deeds.
@@ -183,6 +186,8 @@ func add_unit(unit: UnitState) -> void:
 func note_listeners(unit: UnitState) -> void:
 	if (unit.signature != null and unit.signature.def.trigger.kind == TriggerDef.Kind.COUNT) or not unit.listeners.is_empty():
 		_listening = true
+	if unit.signature != null and Signatures.fires_on_ally_falls(unit.signature.def):
+		ally_fall_listeners = true
 	if Passives.has_timed(unit):
 		_timed_passives = true
 
@@ -272,7 +277,8 @@ func _act(unit: UnitState) -> void:
 	var casting: bool = false
 	var signature: AbilityState = unit.signature
 	if signature != null and (signature.pending > 0 or signature.cast_ends_at >= 0 \
-			or (signature.mana_trigger and unit.mana >= unit.mana_cap) or (signature.once_trigger and not signature.fired)):
+			or (signature.mana_trigger and unit.mana >= unit.mana_cap) or (signature.once_trigger and not signature.fired) \
+			or signature.also_waiting or signature.echo_at >= 0):
 		casting = Signatures.act(self, unit)
 		has_statuses = not unit.statuses.is_empty()
 		if tick < unit.landing_until:
@@ -341,6 +347,11 @@ func _act(unit: UnitState) -> void:
 	# About to walk: a unit holding its ground (Tactics) doesn't.
 	if unit.holding:
 		Tactics.stay(self, unit)
+		return
+	# About to walk: a unit planting its feet (Tactics) stays near an enemy.
+	if unit.tactic != null and unit.tactic.kind == TacticDef.Kind.STOP_NEAR and Tactics.planted(self, unit):
+		if unit.leg_active:
+			Movement.halt(self, unit, "planted its feet")
 		return
 	# About to walk: an engager next to it may hold it.
 	if unit.engagements.is_empty() and not engagers.is_empty():
@@ -570,6 +581,8 @@ func _process_deaths() -> void:
 				again = true
 				continue
 			_fall(unit)
+			if ally_fall_listeners:
+				Signatures.ally_fell(self, unit)
 			aura_lost = aura_lost or Passives.has_aura(unit) or (taunt_auras and Statuses.has_kind(unit, StatusDef.Kind.TAUNT))
 			Events.kill(self, unit)
 			if Passives.on_fall(self, unit):

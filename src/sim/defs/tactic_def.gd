@@ -16,6 +16,9 @@ extends RefCounted
 ##   signature_threshold  its mana signature (one that heals: Tactics.can_wait)
 ##                        waits, full, until an ally in its reach is below
 ##                        "below_pct" of max HP
+##   stop_near            doesn't walk while an enemy stands within
+##                        "stop_hexes"; closes in again when none does
+##                        (phase 5's Plant your feet)
 ## "heroes" lists who can take it (ContentDb checks they exist, and that a
 ## signature_threshold hero's signature heals). "text" is the
 ## player's sentence, like every ability's.
@@ -27,9 +30,9 @@ extends RefCounted
 ##   signature_threshold  {"heal_bp": 3000}  more healing from the fire
 ##                        that waited
 
-enum Kind { PREFER_TARGET, HOLD_GROUND, SIGNATURE_THRESHOLD }
+enum Kind { PREFER_TARGET, HOLD_GROUND, SIGNATURE_THRESHOLD, STOP_NEAR }
 
-const KIND_NAMES: Array[String] = ["prefer_target", "hold_ground", "signature_threshold"]
+const KIND_NAMES: Array[String] = ["prefer_target", "hold_ground", "signature_threshold", "stop_near"]
 
 var id: String
 var name: String
@@ -39,6 +42,8 @@ var kind: Kind
 var archetypes: Array[String] = []
 ## hold_ground: how near an enemy lets it go, on the plane (center to center).
 var release_range: int = 0
+## stop_near: how near an enemy stops its walking, on the plane.
+var stop_range: int = 0
 ## signature_threshold: the HP share (basis points) an ally must be below.
 var below_bp: int = 0
 ## Who can take it, by hero id.
@@ -64,6 +69,8 @@ static func read(reader: DataReader) -> TacticDef:
 			def.release_range = reader.req_int("release_hexes", 1, 10) * HexGrid.HEX
 		Kind.SIGNATURE_THRESHOLD:
 			def.below_bp = reader.req_int("below_pct", 1, 99) * 100
+		Kind.STOP_NEAR:
+			def.stop_range = reader.req_int("stop_hexes", 1, 10) * HexGrid.HEX
 	if reader.has("payoff"):
 		var payoff: DataReader = reader.req_object("payoff")
 		if payoff != null:
@@ -74,6 +81,8 @@ static func read(reader: DataReader) -> TacticDef:
 					def.atsp_bp = payoff.req_int("atsp_bp", 1, 20000)
 				Kind.SIGNATURE_THRESHOLD:
 					def.heal_bp = payoff.req_int("heal_bp", 1, 20000)
+				Kind.STOP_NEAR:
+					payoff.error("stop_near has no payoff")
 			payoff.finish()
 	def.heroes = reader.req_string_array("heroes")
 	if def.heroes.is_empty() and reader.has("heroes"):

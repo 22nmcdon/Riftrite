@@ -30,6 +30,17 @@ var failing: bool = false
 ## Fires waiting for the unit's next update (count, and once-a-fight triggers
 ## waiting for a target).
 var pending: int = 0
+## Why the waiting fires were queued, if an extra trigger did (the FIRE
+## entry's note).
+var pending_note: String = ""
+## Extra triggers (AbilityDef.also): which hp_below ones have fired, and
+## whether one hasn't yet (so the unit's update looks each tick).
+var also_fired: Array[bool] = []
+var also_waiting: bool = false
+## A sigil's echo (AbilityDef.echo): its own state, and the tick it fires on
+## (-1: none waiting).
+var echo: AbilityState = null
+var echo_at: int = -1
 ## A cast under way ends on this tick (-1: not casting), aimed at cast_target.
 var cast_ends_at: int = -1
 var cast_target: UnitState:
@@ -48,6 +59,11 @@ static func make(ability: AbilityDef, unit_id: String) -> AbilityState:
 	if ability.trigger != null:
 		state.mana_trigger = ability.trigger.kind == TriggerDef.Kind.MANA
 		state.once_trigger = ability.trigger.kind == TriggerDef.Kind.HP_BELOW or ability.trigger.kind == TriggerDef.Kind.FIGHT_START or ability.trigger.kind == TriggerDef.Kind.AT_TIME
+	for trigger: TriggerDef in ability.also:
+		state.also_fired.append(false)
+		state.also_waiting = state.also_waiting or trigger.kind == TriggerDef.Kind.HP_BELOW
+	if ability.echo != null:
+		state.echo = AbilityState.make(ability.echo, unit_id)
 	return state
 
 

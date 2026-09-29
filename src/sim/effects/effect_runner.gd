@@ -44,7 +44,7 @@ static func basic_attack(sim: CombatSim, unit: UnitState) -> void:
 ## it's a shot (AbilityDef.is_shot). An ability aimed at the unit itself never
 ## is. One that leaps fails whole if there's no room to land: nothing fires,
 ## and it returns false (the failure is logged unless `log_failure` is off).
-static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: UnitState, reach: int, log_failure: bool = true) -> bool:
+static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: UnitState, reach: int, log_failure: bool = true, note: String = "") -> bool:
 	var ability: AbilityDef = state.def
 	var source: EffectSource = state.source
 	var leap: EffectDef = ability.leap_effect() if target != null else null
@@ -61,6 +61,7 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 	state.fires += 1
 	var fired: LogEntry = sim.new_entry(LogEntry.Kind.FIRE, source)
 	fired.target = target.id if target != null else ""
+	fired.note = note
 	sim.combat_log.add(fired)
 	var shot: Shots.Shot = null
 	if target != null and target != unit and ability.is_shot(reach):

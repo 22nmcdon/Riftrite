@@ -21,6 +21,11 @@ extends RefCounted
 ##                        (logged once a bar). Any signature that heals on
 ##                        mana can wait (can_wait; phase 4, Decision 4), so
 ##                        Night Lantern and Sunfall wait like Mend.
+##   stop_near            planted(): about to walk, the unit stays (as
+##                        hold_ground's stay()) while an enemy stands within
+##                        stop_range, center to center; it logs when it plants
+##                        its feet (naming the enemy) and when it closes in
+##                        again.
 ## Every line is a TACTIC entry sourced to the unit and its tactic (rule 4).
 ## Payoffs (round 2, section 9), only while the behavior applies, each named
 ## in the log line it changes ("+20% from Casters first"):
@@ -95,6 +100,25 @@ static func stay(sim: CombatSim, unit: UnitState) -> void:
 		var near: UnitState = Targeting.pick(sim, unit, "nearest", unit.reach_sq)
 		if near != null and near != unit.target:
 			Targeting.set_target(sim, unit, near, unit.tactic.name)
+
+
+## stop_near, about to walk: true if an enemy stands within stop_range, so
+## the unit stays (and turns to the nearest in reach). Logs each change.
+static func planted(sim: CombatSim, unit: UnitState) -> bool:
+	var stop: int = unit.tactic.stop_range
+	var near: UnitState = null
+	for enemy: UnitState in sim.standing_enemies_of(unit):
+		if ArenaPlane.length_sq(enemy.pos - unit.pos) <= stop * stop:
+			near = enemy
+			break
+	if near != null and not unit.feet_planted:
+		log_tactic(sim, unit, "plants its feet: %s is within %d hexes" % [near.id, stop / HexGrid.HEX], near.id)
+	elif near == null and unit.feet_planted:
+		log_tactic(sim, unit, "closes in again: no enemy within %d hexes" % (stop / HexGrid.HEX))
+	unit.feet_planted = near != null
+	if near != null:
+		stay(sim, unit)
+	return near != null
 
 
 ## signature_threshold: true if the ally lowest on HP within its signature's

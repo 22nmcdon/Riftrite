@@ -16,6 +16,11 @@ extends RefCounted
 ## be switched between fights. A win offers a pick (Offers.pick): take one
 ## upgrade, or the act's pick_shards instead; the day can't move on while it
 ## waits.
+## The economy (section 6): items owned wait in the stash; any hero equips
+## any item in a free slot between fights (one tactic each). A shop opens at
+## camp (the Pedlar or the Magpie): buy its wares, treat a wound, or (the
+## Pedlar only) reroll; leaving camp closes it. A fight's kit is the path's,
+## then its upgrades, then its loadout in slot order.
 
 var run: RunContent
 var state: RunState
@@ -67,6 +72,7 @@ static func resume(run_content: RunContent, run_state: RunState) -> RunFlow:
 func leave_camp() -> String:
 	if state.phase != RunState.Phase.CAMP:
 		return _not_now("leave camp")
+	close_shop()
 	state.phase = RunState.Phase.ROUTE
 	return ""
 
@@ -93,14 +99,20 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String])
 	var vows: Dictionary[String, String] = {}
 	var transformed: Array[String] = []
 	var extras: Dictionary[String, HeroExtras] = {}
+	var tactics: Dictionary[String, String] = {}
 	for hero: RunState.Hero in state.heroes:
 		if not formation.has(hero.id):
 			continue
 		vows[hero.id] = hero.path
 		if hero.transformed:
 			transformed.append(hero.id)
-		extras[hero.id] = HeroExtras.make(run.upgrade_mods(hero), hero.wounds)
-	var setup: FightSetup = Encounters.setup(content, state.chosen, formation, fight_seed(), errors, {}, vows, transformed, extras)
+		var mods: Array[KitMod] = run.upgrade_mods(hero)
+		mods.append_array(run.loadout_mods(hero))
+		extras[hero.id] = HeroExtras.make(mods, hero.wounds)
+		var tactic: TacticDef = run.loadout_tactic(hero)
+		if tactic != null:
+			tactics[hero.id] = tactic.id
+	var setup: FightSetup = Encounters.setup(content, state.chosen, formation, fight_seed(), errors, tactics, vows, transformed, extras)
 	if setup != null:
 		errors.append_array(setup.validate(content))
 		for hero: RunState.Hero in state.heroes:
@@ -204,6 +216,122 @@ func switch_vow(hero_id: String, path_id: String) -> String:
 	if hero.path == path_id:
 		return "%s is already vowed to %s" % [hero_id, path_id]
 	hero.path = path_id
+	return ""
+
+
+# --- the loadout ------------------------------------------------------------------
+
+## Puts `item_id` from the stash into `hero_id`'s slot `slot`, between fights;
+## whatever was there goes back to the stash. A hero holds one tactic.
+func equip(hero_id: String, slot: int, item_id: String) -> String:
+	if state.phase == RunState.Phase.ENDED:
+		return _not_now("change a loadout")
+	var hero: RunState.Hero = state.hero(hero_id)
+	if hero == null:
+		return "unknown hero \"%s\"" % hero_id
+	if slot < 0 or slot >= hero.slots.size():
+		return "%s has no slot %d" % [hero_id, slot]
+	if not state.stash.has(item_id):
+		return "\"%s\" isn't in the stash" % item_id
+	if run.items[item_id].kind == ItemDef.Kind.TACTIC:
+		for i: int in hero.slots.size():
+			if i != slot and run.items.has(hero.slots[i]) and run.items[hero.slots[i]].kind == ItemDef.Kind.TACTIC:
+				return "%s already holds a tactic" % hero_id
+	state.stash.erase(item_id)
+	if not hero.slots[slot].is_empty():
+		state.stash.append(hero.slots[slot])
+	hero.slots[slot] = item_id
+	return ""
+
+
+## Takes what's in `hero_id`'s slot `slot` back to the stash.
+func unequip(hero_id: String, slot: int) -> String:
+	if state.phase == RunState.Phase.ENDED:
+		return _not_now("change a loadout")
+	var hero: RunState.Hero = state.hero(hero_id)
+	if hero == null:
+		return "unknown hero \"%s\"" % hero_id
+	if slot < 0 or slot >= hero.slots.size() or hero.slots[slot].is_empty():
+		return "%s has nothing in slot %d" % [hero_id, slot]
+	state.stash.append(hero.slots[slot])
+	hero.slots[slot] = ""
+	return ""
+
+
+# --- shops ------------------------------------------------------------------------
+
+## Opens a shop at camp ("pedlar" or "magpie"), its wares drawn now. Camp's
+## options open it (step 5).
+func open_shop(kind: String) -> String:
+	if state.phase != RunState.Phase.CAMP:
+		return _not_now("open a shop")
+	match kind:
+		"pedlar":
+			state.wares = Offers.pedlar(run, state, 0)
+		"magpie":
+			state.wares = Offers.magpie(run, state)
+		_:
+			return "there's no shop \"%s\"" % kind
+	state.shop = kind
+	state.rerolls = 0
+	return ""
+
+
+func close_shop() -> void:
+	state.shop = ""
+	state.wares.clear()
+	state.rerolls = 0
+
+
+## What ware `item_id` costs at the open shop (the Magpie's markup, rounded up).
+func price_of(item_id: String) -> int:
+	var price: int = run.items[item_id].price
+	if state.shop == "magpie":
+		@warning_ignore("integer_division")
+		return (price * run.act.magpie_markup_pct + 99) / 100
+	return price
+
+
+## Buys ware `index` into the stash.
+func buy(index: int) -> String:
+	if state.shop.is_empty():
+		return "no shop is open"
+	if index < 0 or index >= state.wares.size() or state.wares[index].is_empty():
+		return "there's no ware %d" % index
+	var price: int = price_of(state.wares[index])
+	if state.shards < price:
+		return "it costs %d shards; there are %d" % [price, state.shards]
+	state.shards -= price
+	state.stash.append(state.wares[index])
+	state.wares[index] = ""
+	return ""
+
+
+## The Pedlar lays out a fresh set, for the act's reroll price.
+func reroll() -> String:
+	if state.shop != "pedlar":
+		return "only the Pedlar rerolls"
+	if state.shards < run.act.reroll_price:
+		return "a reroll costs %d shards; there are %d" % [run.act.reroll_price, state.shards]
+	state.shards -= run.act.reroll_price
+	state.rerolls += 1
+	state.wares = Offers.pedlar(run, state, state.rerolls)
+	return ""
+
+
+## Treats one of `hero_id`'s wounds, wherever a shop is open.
+func treat_wound(hero_id: String) -> String:
+	if state.shop.is_empty():
+		return "no shop is open"
+	var hero: RunState.Hero = state.hero(hero_id)
+	if hero == null:
+		return "unknown hero \"%s\"" % hero_id
+	if hero.wounds == 0:
+		return "%s has no wounds" % hero_id
+	if state.shards < run.act.wound_price:
+		return "treating a wound costs %d shards; there are %d" % [run.act.wound_price, state.shards]
+	state.shards -= run.act.wound_price
+	hero.wounds -= 1
 	return ""
 
 

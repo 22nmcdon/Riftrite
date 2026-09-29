@@ -96,6 +96,13 @@ var fought: Array[Fought] = []
 var pick: Array[String] = []
 ## The heroes the last fight transformed (for the screen that shows it).
 var just_transformed: Array[String] = []
+## Items owned and not in a slot (item ids, in the order they came).
+var stash: Array[String] = []
+## The shop open at camp: "" (none), "pedlar", or "magpie".
+var shop: String = ""
+## Its wares (item ids; "" once bought), and how often it's been rerolled.
+var wares: Array[String] = []
+var rerolls: int = 0
 
 
 func hero(hero_id: String) -> Hero:
@@ -124,6 +131,7 @@ func to_dict() -> Dictionary:
 		"shards": shards, "options": options.duplicate(true), "chosen": chosen, "formation": hexes,
 		"fought": fought.map(func(entry: Fought) -> Dictionary: return entry.to_dict()),
 		"pick": pick.duplicate(), "just_transformed": just_transformed.duplicate(),
+		"stash": stash.duplicate(), "shop": shop, "wares": wares.duplicate(), "rerolls": rerolls,
 	}
 
 
@@ -153,4 +161,8 @@ static func from_dict(data: Dictionary) -> RunState:
 		state.fought.append(Fought.from_dict(entry))
 	state.pick.assign((data.get("pick", []) as Array).map(func(value: Variant) -> String: return str(value)))
 	state.just_transformed.assign((data.get("just_transformed", []) as Array).map(func(value: Variant) -> String: return str(value)))
+	state.stash.assign((data.get("stash", []) as Array).map(func(value: Variant) -> String: return str(value)))
+	state.shop = str(data.get("shop", ""))
+	state.wares.assign((data.get("wares", []) as Array).map(func(value: Variant) -> String: return str(value)))
+	state.rerolls = int(data.get("rerolls", 0))
 	return state

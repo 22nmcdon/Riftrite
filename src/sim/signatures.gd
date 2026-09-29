@@ -19,6 +19,16 @@ extends RefCounted
 ## in its reach is hurt enough (Tactics.hurt_enough).
 ##   - would_fall runs in the deaths step instead: the first time the unit
 ##     would fall, it's left at 1 HP (SAVED) and the signature fires at once.
+##   - ally_falls: each ally that falls (the deaths step, ally_fell) queues a
+##     fire for the unit's next update.
+## A sigil adds (phase 5, AbilityDef):
+##   - extra triggers (also): hp_below (once) and ally_falls queue fires like
+##     their own kinds, free of mana, whatever the main trigger; the FIRE
+##     entry notes why ("an ally fell").
+##   - an echo: echo_ticks after each fire, the echo (a weaker copy, its own
+##     source, "Mend (Echo)") fires at a fresh target by the same rule and
+##     reach, even while Stunned; with none, it's lost. A fire while an echo
+##     waits moves the echo later.
 
 
 ## The signature's part of the unit's update. Returns true if the unit is
@@ -27,6 +37,8 @@ static func act(sim: CombatSim, unit: UnitState) -> bool:
 	var signature: AbilityState = unit.signature
 	if signature == null:
 		return false
+	if signature.echo_at >= 0 and sim.tick >= signature.echo_at:
+		_fire_echo(sim, unit)
 	var stunned: bool = not unit.statuses.is_empty() and Statuses.has_kind(unit, StatusDef.Kind.STUN)
 	if signature.casting():
 		if stunned:
@@ -36,6 +48,8 @@ static func act(sim: CombatSim, unit: UnitState) -> bool:
 			return true
 		_land_cast(sim, unit)
 		return false
+	if signature.also_waiting:
+		_check_also(unit)
 	var trigger: TriggerDef = signature.def.trigger
 	match trigger.kind:
 		TriggerDef.Kind.MANA:
@@ -52,7 +66,6 @@ static func act(sim: CombatSim, unit: UnitState) -> bool:
 				unit.mana = 0
 				if not _fire(sim, unit, target):
 					unit.mana = bar
-			return false
 		TriggerDef.Kind.HP_BELOW:
 			if not signature.fired and unit.hp > 0 and unit.hp * FixedMath.BP_ONE < unit.max_hp * trigger.threshold_bp:
 				_queue_once(signature)
@@ -63,10 +76,56 @@ static func act(sim: CombatSim, unit: UnitState) -> bool:
 				_queue_once(signature)
 	while signature.pending > 0:
 		var target: UnitState = pick_target(sim, unit)
-		if target == null or not _fire(sim, unit, target):
+		if target == null or not _fire(sim, unit, target, signature.pending_note):
 			break
 		signature.pending -= 1
+	if signature.pending == 0:
+		signature.pending_note = ""
 	return false
+
+
+## True if the signature fires when an ally falls (its trigger or an extra).
+static func fires_on_ally_falls(ability: AbilityDef) -> bool:
+	if ability.trigger != null and ability.trigger.kind == TriggerDef.Kind.ALLY_FALLS:
+		return true
+	return ability.also.any(func(trigger: TriggerDef) -> bool: return trigger.kind == TriggerDef.Kind.ALLY_FALLS)
+
+
+## The deaths step: `fallen` fell, so each standing ally whose signature
+## fires when an ally falls queues a fire.
+static func ally_fell(sim: CombatSim, fallen: UnitState) -> void:
+	for unit: UnitState in sim.units:
+		if unit == fallen or not unit.alive or unit.side != fallen.side or unit.signature == null or not fires_on_ally_falls(unit.signature.def):
+			continue
+		unit.signature.pending += 1
+		unit.signature.pending_note = "an ally fell"
+
+
+## Extra hp_below triggers: each queues one fire, the first time the unit is
+## below its share.
+static func _check_also(unit: UnitState) -> void:
+	var signature: AbilityState = unit.signature
+	signature.also_waiting = false
+	for i: int in signature.def.also.size():
+		var trigger: TriggerDef = signature.def.also[i]
+		if trigger.kind != TriggerDef.Kind.HP_BELOW or signature.also_fired[i]:
+			continue
+		if unit.hp > 0 and unit.hp * FixedMath.BP_ONE < unit.max_hp * trigger.threshold_bp:
+			signature.also_fired[i] = true
+			signature.pending += 1
+			signature.pending_note = trigger.reason()
+		else:
+			signature.also_waiting = true
+
+
+## The echo's time: it fires at a fresh target by the signature's rule and
+## reach, or is lost with none.
+static func _fire_echo(sim: CombatSim, unit: UnitState) -> void:
+	var signature: AbilityState = unit.signature
+	signature.echo_at = -1
+	var target: UnitState = pick_target(sim, unit)
+	if target != null:
+		EffectRunner.fire(sim, unit, signature.echo, target, signature.echo.def.reach_for(unit.stats.get_stat(UnitStats.Stat.RANGE)))
 
 
 ## Events counts toward a count signature. A count that reaches its "every"
@@ -114,13 +173,15 @@ static func _queue_once(signature: AbilityState) -> void:
 
 ## Fires the signature at `target`. False if it couldn't (a leap with no room
 ## to land): it waits, and the failure is logged once until it next fires.
-static func _fire(sim: CombatSim, unit: UnitState, target: UnitState) -> bool:
+static func _fire(sim: CombatSim, unit: UnitState, target: UnitState, note: String = "") -> bool:
 	var signature: AbilityState = unit.signature
 	var ability: AbilityDef = signature.def
-	if not EffectRunner.fire(sim, unit, signature, target, ability.reach_for(unit.stats.get_stat(UnitStats.Stat.RANGE)), not signature.failing):
+	if not EffectRunner.fire(sim, unit, signature, target, ability.reach_for(unit.stats.get_stat(UnitStats.Stat.RANGE)), not signature.failing, note):
 		signature.failing = true
 		return false
 	signature.failing = false
+	if signature.echo != null:
+		signature.echo_at = sim.tick + ability.echo_ticks
 	return true
 
 

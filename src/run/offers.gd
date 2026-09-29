@@ -32,3 +32,37 @@ static func pick(run: RunContent, state: RunState, visit: int) -> Array[String]:
 			break
 		cards.append(pool[rng.range_int(pool.size())])
 	return cards
+
+
+## The Pedlar's wares: act.pedlar_wares different charms, tactics, and
+## sigils (never grafts), each one that works on someone on the team as they
+## are now (part 6, section 8). `rerolls` draws a fresh set.
+static func pedlar(run: RunContent, state: RunState, rerolls: int) -> Array[String]:
+	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.PEDLAR, state.act, state.day, state.attempt, rerolls])
+	var pool: Array[String] = []
+	for id: String in run.item_ids:
+		var item: ItemDef = run.items[id]
+		if item.kind != ItemDef.Kind.GRAFT and state.heroes.any(func(hero: RunState.Hero) -> bool: return item.works_on(run.hero_kit(hero), hero.id)):
+			pool.append(id)
+	return _draw(rng, pool, run.act.pedlar_wares)
+
+
+## The Magpie's wares (Decision 13): up to half grafts, the rest any other
+## gear, whoever it suits; one look, no rerolls.
+static func magpie(run: RunContent, state: RunState) -> Array[String]:
+	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.MAGPIE, state.act, state.day, state.attempt])
+	var grafts: Array[String] = run.item_ids.filter(func(id: String) -> bool: return run.items[id].kind == ItemDef.Kind.GRAFT)
+	var gear: Array[String] = run.item_ids.filter(func(id: String) -> bool: return run.items[id].kind != ItemDef.Kind.GRAFT)
+	@warning_ignore("integer_division")
+	var wares: Array[String] = _draw(rng, grafts, run.act.magpie_wares / 2)
+	wares.append_array(_draw(rng, gear, run.act.magpie_wares - wares.size()))
+	return wares
+
+
+## `count` different ids from `pool` (fewer if it's short), in draw order.
+static func _draw(rng: SimRng, pool: Array[String], count: int) -> Array[String]:
+	var left: Array[String] = pool.duplicate()
+	var drawn: Array[String] = []
+	while drawn.size() < count and not left.is_empty():
+		drawn.append(left.pop_at(rng.range_int(left.size())))
+	return drawn

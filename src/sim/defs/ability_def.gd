@@ -45,6 +45,13 @@ var targeting: String = "nearest"
 ## In hexes; 0: the unit's own range.
 var max_range: int = 0
 var cast_ticks: int = 0
+## Signatures, from a sigil (KitMod; phase 5): extra triggers it also fires
+## on, free of mana (TriggerDef.ALSO_KINDS).
+var also: Array[TriggerDef] = []
+## Signatures, from a sigil (KitMod's echo): after each fire it fires this
+## weaker copy echo_ticks later, at a fresh target (null: no echo).
+var echo: AbilityDef = null
+var echo_ticks: int = 0
 
 
 static func read(reader: DataReader) -> AbilityDef:

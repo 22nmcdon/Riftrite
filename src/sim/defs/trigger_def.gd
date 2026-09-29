@@ -10,11 +10,17 @@ extends RefCounted
 ##                                                   event triggers, but on_ability)
 ##   {"kind": "would_fall"}                          once, the first time it would fall: it's
 ##                                                   left at 1 HP instead
+##   {"kind": "ally_falls"}                          each time an ally falls (phase 5's
+##                                                   sigils)
+## A signature may also fire on extra triggers (AbilityDef.also, from a
+## sigil's KitMod): hp_below or ally_falls, free of mana.
 ## A stunned unit can't fire a mana signature; every other trigger still fires.
 
-enum Kind { MANA, HP_BELOW, FIGHT_START, AT_TIME, COUNT, WOULD_FALL }
+enum Kind { MANA, HP_BELOW, FIGHT_START, AT_TIME, COUNT, WOULD_FALL, ALLY_FALLS }
 
-const KIND_NAMES: Array[String] = ["mana", "hp_below", "fight_start", "at_time", "count", "would_fall"]
+const KIND_NAMES: Array[String] = ["mana", "hp_below", "fight_start", "at_time", "count", "would_fall", "ally_falls"]
+## The kinds an extra trigger (AbilityDef.also) can be.
+const ALSO_KINDS: Array[Kind] = [Kind.HP_BELOW, Kind.ALLY_FALLS]
 
 var kind: Kind
 var threshold_bp: int = 0
@@ -45,6 +51,16 @@ static func read(reader: DataReader) -> TriggerDef:
 			def.every = reader.opt_int("every", 1, 1)
 	reader.finish()
 	return def
+
+
+## What the log says fired it (a FIRE entry's note, for extra triggers).
+func reason() -> String:
+	match kind:
+		Kind.HP_BELOW:
+			return "below %d%% HP" % (threshold_bp / 100)
+		Kind.ALLY_FALLS:
+			return "an ally fell"
+	return ""
 
 
 ## Triggers that fire once a fight.

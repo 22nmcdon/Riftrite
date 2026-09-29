@@ -1,0 +1,389 @@
+[
+  {
+    "_note": "Loadout items (docs/plans/rebuild-phase5-run.md, section 6; part 6, sections 2 and 8; Decision 2's lean set): 10 charms, 4 tactics (each names its tactics.json entry), 5 sigils, and 3 grafts (only the Magpie sells grafts). Any hero can hold any; \"needs\" tags what it needs, and one that does nothing shows \"no effect on this hero\". Prices and numbers are first guesses (Decision 11).",
+    "id": "frost_tipped",
+    "kind": "charm",
+    "name": "Frost-Tipped",
+    "text": "Your basic attack's critical hits Slow the target.",
+    "answers": "Answers chargers (Cairn Guardian)",
+    "price": 3,
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "add_effects": [
+            {
+              "trigger": "on_crit",
+              "type": "apply_status",
+              "status": "slow",
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "iron_skin",
+    "kind": "charm",
+    "name": "Iron Skin",
+    "text": "Your DEF is higher.",
+    "answers": "Answers pounces (Rift Hound)",
+    "price": 3,
+    "mod": {
+      "stats_bp": {
+        "def": 11500
+      }
+    }
+  },
+  {
+    "id": "vital_stone",
+    "kind": "charm",
+    "name": "Vital Stone",
+    "text": "Your max HP is higher.",
+    "answers": "Answers burst (Ashling)",
+    "price": 2,
+    "mod": {
+      "stats_bp": {
+        "hp": 11200
+      }
+    }
+  },
+  {
+    "id": "whetstone",
+    "kind": "charm",
+    "name": "Whetstone",
+    "text": "You hit harder.",
+    "answers": "Answers anchors (Rift-Worn Sentinel)",
+    "price": 3,
+    "mod": {
+      "stats_bp": {
+        "atk": 11000
+      }
+    }
+  },
+  {
+    "id": "swift_boots",
+    "kind": "charm",
+    "name": "Swift Boots",
+    "text": "You walk faster.",
+    "answers": "Answers back lines (Hollow Archer)",
+    "price": 2,
+    "mod": {
+      "stats_add": {
+        "speed": 1
+      }
+    }
+  },
+  {
+    "id": "serrated_edge",
+    "kind": "charm",
+    "name": "Serrated Edge",
+    "text": "Your basic attack's critical hits make the target Bleed.",
+    "answers": "Answers anchors (Rift-Worn Sentinel)",
+    "price": 3,
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "add_effects": [
+            {
+              "trigger": "on_crit",
+              "type": "apply_status",
+              "status": "bleed",
+              "stacks": 2,
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "ember_charm",
+    "kind": "charm",
+    "name": "Ember Charm",
+    "text": "Your basic attack sets its target Burning.",
+    "answers": "Answers packs (Rift Pup)",
+    "price": 3,
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "add_effects": [
+            {
+              "trigger": "on_hit",
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 1,
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "mending_salve",
+    "kind": "charm",
+    "name": "Mending Salve",
+    "text": "Every heal you give is stronger.",
+    "answers": "Answers attrition (Gloam Witch)",
+    "needs": [
+      "heals"
+    ],
+    "price": 3,
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "types": [
+            "heal"
+          ],
+          "amount_bp": 11500
+        }
+      ]
+    }
+  },
+  {
+    "id": "deep_well",
+    "kind": "charm",
+    "name": "Deep Well",
+    "text": "You start each fight with more mana.",
+    "answers": "Answers silence (Gloam Witch)",
+    "needs": [
+      "mana"
+    ],
+    "price": 2,
+    "mod": {
+      "mana": {
+        "start_add": 20
+      }
+    }
+  },
+  {
+    "id": "thorned_mail",
+    "kind": "charm",
+    "name": "Thorned Mail",
+    "text": "Each enemy hit on you hurts its attacker a little.",
+    "answers": "Answers swarms (Rift Pup)",
+    "price": 3,
+    "mod": {
+      "passives": [
+        {
+          "id": "thorned_mail",
+          "name": "Thorned Mail",
+          "kind": "ability",
+          "text": "Each enemy hit on the wearer hurts its attacker a little.",
+          "effects": [
+            {
+              "trigger": "on_hit_taken",
+              "type": "damage",
+              "amount_bp_of_damage": 2000,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "casters_first_orders",
+    "kind": "tactic",
+    "name": "Casters first",
+    "text": "Goes for the nearest enemy caster or support first, and hits them harder.",
+    "answers": "Answers casters (Gloam Witch, Cinder Moth)",
+    "price": 2,
+    "tactic": "casters_first"
+  },
+  {
+    "id": "hold_ground_orders",
+    "kind": "tactic",
+    "name": "Hold your ground",
+    "text": "Stays where it's placed, attacking faster, until an enemy comes within 2 hexes.",
+    "answers": "Answers pullers (Bog Lurker)",
+    "price": 2,
+    "tactic": "hold_ground"
+  },
+  {
+    "id": "wait_to_heal_orders",
+    "kind": "tactic",
+    "name": "Wait to heal",
+    "text": "Holds a healing signature until an ally in its reach is badly hurt; that heal is stronger.",
+    "answers": "Answers wasted heals",
+    "needs": [
+      "heals",
+      "mana"
+    ],
+    "price": 2,
+    "tactic": "wait_to_heal"
+  },
+  {
+    "id": "plant_feet_orders",
+    "kind": "tactic",
+    "name": "Plant your feet",
+    "text": "Stops walking while an enemy stands within 2 hexes; closes in again when none does.",
+    "answers": "Answers flankers (Rift Hound)",
+    "price": 2,
+    "tactic": "plant_feet"
+  },
+  {
+    "id": "sigil_of_haste",
+    "kind": "sigil",
+    "name": "Sigil of Haste",
+    "text": "Your signature needs less mana.",
+    "answers": "Answers the race (Cinder Moth)",
+    "needs": [
+      "mana"
+    ],
+    "price": 4,
+    "mod": {
+      "mana": {
+        "max_add": -12
+      }
+    }
+  },
+  {
+    "id": "sigil_of_grief",
+    "kind": "sigil",
+    "name": "Sigil of Grief",
+    "text": "Your signature also fires whenever an ally falls.",
+    "answers": "Answers losing a hero",
+    "price": 4,
+    "mod": {
+      "also_fires": [
+        {
+          "kind": "ally_falls"
+        }
+      ]
+    }
+  },
+  {
+    "id": "sigil_of_the_last_breath",
+    "kind": "sigil",
+    "name": "Sigil of the Last Breath",
+    "text": "Your signature also fires, once, when you drop below 40% HP.",
+    "answers": "Answers pounces (Rift Hound)",
+    "price": 4,
+    "mod": {
+      "also_fires": [
+        {
+          "kind": "hp_below",
+          "threshold_bp": 4000
+        }
+      ]
+    }
+  },
+  {
+    "id": "sigil_of_reach",
+    "kind": "sigil",
+    "name": "Sigil of Reach",
+    "text": "Your signature's area is 1 hex larger.",
+    "answers": "Answers crowds (Rift Pup)",
+    "price": 4,
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "radius_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "sigil_of_echoes",
+    "kind": "sigil",
+    "name": "Sigil of Echoes",
+    "text": "Your signature fires again 2s later at half strength.",
+    "answers": "Answers long fights",
+    "price": 4,
+    "mod": {
+      "echo": {
+        "after_ms": 2000,
+        "share_pct": 50
+      }
+    }
+  },
+  {
+    "id": "shake_it_off",
+    "kind": "graft",
+    "name": "Shake It Off",
+    "text": "Every 6s, you shake off burns, poisons, and bleeds.",
+    "answers": "Answers burns (Cinder Moth, Ashling)",
+    "price": 5,
+    "mod": {
+      "passives": [
+        {
+          "id": "shake_it_off",
+          "name": "Shake It Off",
+          "kind": "ability",
+          "text": "Every 6s, the holder shakes off damage over time.",
+          "effects": [
+            {
+              "trigger": "on_interval",
+              "interval_ms": 6000,
+              "type": "cleanse",
+              "amount_bp": 10000,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "second_wind",
+    "kind": "graft",
+    "name": "Second Wind",
+    "text": "The first ally (you included) to drop low on HP is healed a little, once a fight.",
+    "answers": "Answers pounces (Rift Hound)",
+    "price": 5,
+    "mod": {
+      "passives": [
+        {
+          "id": "second_wind",
+          "name": "Second Wind",
+          "kind": "ability",
+          "text": "The first ally to drop low on HP is healed a little, once a fight.",
+          "effects": [
+            {
+              "trigger": "on_ally_below_hp",
+              "threshold_bp": 3000,
+              "once": true,
+              "type": "heal",
+              "amount_bp_of_max_hp": 1500,
+              "target": "trigger_ally"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "sidestep",
+    "kind": "graft",
+    "name": "Sidestep",
+    "text": "Every 8th hit you take, you slip from sight for a moment.",
+    "answers": "Answers focus fire (Hollow Archer)",
+    "price": 5,
+    "mod": {
+      "passives": [
+        {
+          "id": "sidestep",
+          "name": "Sidestep",
+          "kind": "ability",
+          "text": "Every 8th hit the holder takes, it slips from sight for a moment.",
+          "effects": [
+            {
+              "trigger": "on_hit_taken",
+              "every": 8,
+              "type": "apply_status",
+              "status": "stealth",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

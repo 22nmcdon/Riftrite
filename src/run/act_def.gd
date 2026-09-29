@@ -3,7 +3,8 @@ extends RefCounted
 ## An act's shape (data/act1.json; docs/plans/rebuild-phase5-run.md, sections
 ## 2 and 3): its days (normal, elite, or boss), the shards a won fight pays by
 ## its tier, the shards a run starts with, how many losses end it, and each
-## hero's loadout slots, and the after-fight pick's shards and wild cards.
+## hero's loadout slots, the after-fight pick's shards and wild cards, and
+## the shops' prices and sizes.
 
 const DAY_KINDS: Array[String] = ["normal", "elite", "boss"]
 
@@ -20,6 +21,14 @@ var slots: int = 3
 var pick_shards: int = 3
 ## The chance (percent) that a pick has a wild card: one card for any hero.
 var wild_card_pct: int = 0
+## Shards to treat one wound, and to reroll the Pedlar's wares.
+var wound_price: int = 2
+var reroll_price: int = 1
+## How many wares the Pedlar and the Magpie lay out; the Magpie's prices
+## are the items' times magpie_markup_pct (rounded up).
+var pedlar_wares: int = 4
+var magpie_wares: int = 4
+var magpie_markup_pct: int = 150
 
 
 static func read(reader: DataReader) -> ActDef:
@@ -30,6 +39,14 @@ static func read(reader: DataReader) -> ActDef:
 	def.slots = reader.req_int("slots", 0, 6)
 	def.pick_shards = reader.req_int("pick_shards", 0)
 	def.wild_card_pct = reader.req_int("wild_card_pct", 0, 100)
+	var prices: DataReader = reader.req_object("prices")
+	if prices != null:
+		def.wound_price = prices.req_int("wound", 0)
+		def.reroll_price = prices.req_int("reroll", 0)
+		prices.finish()
+	def.pedlar_wares = reader.req_int("pedlar_wares", 1, 8)
+	def.magpie_wares = reader.req_int("magpie_wares", 1, 8)
+	def.magpie_markup_pct = reader.req_int("magpie_markup_pct", 100, 400)
 	var pay_reader: DataReader = reader.req_object("pay")
 	if pay_reader != null:
 		for tier: String in EncounterDef.TIERS:

@@ -46,8 +46,8 @@ func _button_texts(picker: TacticPicker) -> Array[String]:
 
 func test_the_session_keeps_each_heros_tactic() -> void:
 	var session: PracticeSession = PracticeSession.make(_content)
-	assert_eq(session.tactics_for("maren").map(func(tactic: TacticDef) -> String: return tactic.id), ["casters_first", "hold_ground"])
-	assert_eq(session.tactics_for("vell").map(func(tactic: TacticDef) -> String: return tactic.id), ["casters_first", "hold_ground", "wait_to_heal"])
+	assert_eq(session.tactics_for("maren").map(func(tactic: TacticDef) -> String: return tactic.id), ["casters_first", "hold_ground", "plant_feet"])
+	assert_eq(session.tactics_for("vell").map(func(tactic: TacticDef) -> String: return tactic.id), ["casters_first", "hold_ground", "wait_to_heal", "plant_feet"])
 	session.set_tactic("maren", "hold_ground")
 	session.set_tactic("maren", "wait_to_heal")
 	assert_eq(session.tactics, {"maren": "hold_ground"} as Dictionary[String, String], "one Maren can't take is ignored")
@@ -66,7 +66,7 @@ func test_choosing_a_tactic_in_the_hero_panel() -> void:
 	var picker: TacticPicker = _loadout(screen, "maren")
 	assert_true(screen.hero_panel.visible)
 	assert_false(screen.hero_popup.visible, "the panel, not the popup, while placing")
-	assert_eq(_button_texts(picker), ["None", "Casters first", "Hold your ground"] as Array[String])
+	assert_eq(_button_texts(picker), ["None", "Casters first", "Hold your ground", "Plant your feet"] as Array[String])
 	assert_true(picker.tactic_buttons[0].button_pressed, "none to begin with")
 	assert_eq(screen.view.token("maren").tactic_label, "")
 	assert_true(U.press(picker, "Hold your ground"))
@@ -83,7 +83,7 @@ func test_choosing_a_tactic_in_the_hero_panel() -> void:
 	assert_true(picker.tactic_numbers.visible)
 	assert_eq(screen.current_setup().heroes[1].tactic, _content.tactics["hold_ground"])
 	picker = _loadout(screen, "vell")
-	assert_eq(_button_texts(picker), ["None", "Casters first", "Hold your ground", "Wait to heal"] as Array[String])
+	assert_eq(_button_texts(picker), ["None", "Casters first", "Hold your ground", "Wait to heal", "Plant your feet"] as Array[String])
 	assert_true(U.press(picker, "Wait to heal"))
 	await wait_process_frames(2)
 	assert_eq(screen.view.token("vell").tactic_label, "Wait to heal")

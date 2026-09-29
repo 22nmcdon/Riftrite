@@ -28,5 +28,14 @@
     "below_pct": 60,
     "payoff": {"heal_bp": 1500},
     "heroes": ["vell"]
+  },
+  {
+    "_note": "Phase 5 (part 6's example): stops walking while an enemy stands within 2 hexes, so a ranged hero keeps its distance and a melee one holds a line; closes in again when none does. No payoff yet.",
+    "id": "plant_feet",
+    "name": "Plant your feet",
+    "text": "Stops walking while an enemy stands within 2 hexes, fighting whatever is in reach; closes in again when none is that near.",
+    "kind": "stop_near",
+    "stop_hexes": 2,
+    "heroes": ["brannoc", "maren", "vell"]
   }
 ]
