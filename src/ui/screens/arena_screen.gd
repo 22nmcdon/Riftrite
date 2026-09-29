@@ -16,10 +16,16 @@ extends UiScreen
 ##     the outcome and length, the seed, how each hero came out, and the
 ##     fight chart; Rematch fights the same placement with the next seed, and
 ##     Watch again replays this one. Back returns to the encounter list.
-##   - The log panel (section 6), beside the controls: the fight chart and
-##     the combat log, open or hidden with its button or L (remembered in the
-##     session). Clicking a unit filters the log to it. Banners over the board
-##     for a phase, the collapse, and the end.
+##   - The layout (landscape since playtest gate 1): the board in the middle
+##     of the screen, turned sideways (ArenaView), with an empty gutter on
+##     its left as wide as the side column on its right, so it stays
+##     centered, and at the screen's full height. The side column holds the
+##     encounter's name and the hint, the enemy panel, the controls, and, in
+##     the fight, the fight chart (section 6).
+##   - The combat log is a popup over the gutter, opened and closed with its
+##     button or L (remembered in the session; closed at first). Clicking a
+##     unit filters the log to it. Banners over the board for a phase, the
+##     collapse, and the end.
 ##   - Unit details (section 7, Decision 3): hovering an enemy fills the side
 ##     panel, at any time (with its numbers now, in a fight); clicking a hero
 ##     while the fight isn't playing (placement, paused, or over) opens its
@@ -30,6 +36,8 @@ signal fight_requested(setup: FightSetup)
 signal back_requested
 
 const SIDE_WIDTH: int = 380
+## The log popup's widest (it reaches past the gutter into the board's
+## margin, but never onto the board: _fit_log_popup).
 const LOG_WIDTH: int = 480
 const FIGHT_HINT: String = "Space pauses, 1-3 set the speed, S skips to the end, L shows the log, T shows every target line. Hover an enemy to read it; click a unit to see only its lines in the log, or pause and click a hero to read them."
 
@@ -56,9 +64,10 @@ var pause_button: Button
 var speed_buttons: Array[Button] = []
 var target_lines: CheckButton
 var log_button: Button
-## The chart and the log, beside the controls during the fight.
-var log_column: VBoxContainer
+## The fight chart, in the side column during the fight.
 var chart: FightChart
+## The combat log's popup, over the gutter left of the board.
+var log_popup: PanelContainer
 var log_panel: LogPanel
 var banners: FightBanners
 var names: FightNames
@@ -77,16 +86,18 @@ static func make(practice: PracticeSession, encounter_id: String) -> ArenaScreen
 
 func build() -> void:
 	shows_backdrop = false
-	heading(encounter.name)
-	hint_label = UiStyle.label(placement_hint(), 16, UiStyle.TEXT_DIM)
-	hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	add_child(hint_label)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 16)
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(row)
+	# As wide as the side column, so the board sits in the middle of the
+	# screen; the log pops up over it.
+	var gutter := Control.new()
+	gutter.custom_minimum_size = Vector2(SIDE_WIDTH, 0)
+	gutter.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(gutter)
 	view = ArenaView.new()
-	view.custom_minimum_size = Vector2(900, 820)
+	view.custom_minimum_size = Vector2(600, 600)
 	view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	row.add_child(view)
@@ -94,6 +105,12 @@ func build() -> void:
 	side.custom_minimum_size = Vector2(SIDE_WIDTH, 0)
 	side.add_theme_constant_override("separation", 12)
 	row.add_child(side)
+	# The name and the hint go at the top of the side column, so the board
+	# has the screen's whole height.
+	side.add_child(UiStyle.heading(encounter.name, 30))
+	hint_label = UiStyle.label(placement_hint(), 15, UiStyle.TEXT_DIM)
+	hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	side.add_child(hint_label)
 	enemy_panel = EnemyPanel.make()
 	side.add_child(enemy_panel)
 	_placement_box = VBoxContainer.new()
@@ -108,15 +125,9 @@ func build() -> void:
 	_fight_box.visible = false
 	side.add_child(_fight_box)
 	side.add_child(UiStyle.button("Back", func() -> void: back_requested.emit()))
-	log_column = VBoxContainer.new()
-	log_column.custom_minimum_size = Vector2(LOG_WIDTH, 0)
-	log_column.add_theme_constant_override("separation", 12)
-	log_column.visible = false
-	row.add_child(log_column)
-	chart = FightChart.make(null)
-	log_column.add_child(chart)
-	log_panel = LogPanel.make()
-	log_column.add_child(log_panel)
+	log_popup = _build_log_popup()
+	gutter.add_child(log_popup)
+	view.resized.connect(_fit_log_popup)
 	banners = FightBanners.make()
 	banners.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	banners.grow_horizontal = Control.GROW_DIRECTION_BOTH
@@ -199,7 +210,7 @@ func open_hero(unit_id: String) -> void:
 
 
 ## Beside its hero: to the right, or to the left near the board's right
-## edge, and kept on the board.
+## edge (a hero who walked there in the fight), and kept on the board.
 func _place_popup() -> void:
 	if not hero_popup.visible:
 		return
@@ -209,6 +220,7 @@ func _place_popup() -> void:
 	var at: Vector2 = Vector2(beside.end.x + 12.0, beside.position.y)
 	if at.x + hero_popup.size.x > view.size.x:
 		at.x = beside.position.x - 12.0 - hero_popup.size.x
+	at.x = clampf(at.x, 0.0, maxf(view.size.x - hero_popup.size.x, 0.0))
 	at.y = clampf(at.y, 0.0, maxf(view.size.y - hero_popup.size.y, 0.0))
 	hero_popup.position = at
 
@@ -278,6 +290,8 @@ func _build_fight_box() -> VBoxContainer:
 	target_lines.text = "Target lines (for testing)"
 	target_lines.toggled.connect(func(on: bool) -> void: view.fx.all_targets = on)
 	_controls_box.add_child(target_lines)
+	chart = FightChart.make(null)
+	_controls_box.add_child(chart)
 	result_box = VBoxContainer.new()
 	result_box.add_theme_constant_override("separation", 10)
 	result_box.visible = false
@@ -295,12 +309,41 @@ func _build_fight_box() -> VBoxContainer:
 	result_box.add_child(again)
 	again.add_child(UiStyle.primary(UiStyle.button("Rematch", rematch)))
 	again.add_child(UiStyle.button("Watch again", restart))
-	log_button = UiStyle.button("Log", func() -> void: pass)
+	var more := HBoxContainer.new()
+	more.add_theme_constant_override("separation", 6)
+	box.add_child(more)
+	log_button = UiStyle.button("Combat log (L)", func() -> void: pass)
 	log_button.toggle_mode = true
 	log_button.toggled.connect(set_log_open)
-	box.add_child(log_button)
-	box.add_child(UiStyle.button("Place again", place_again))
+	more.add_child(log_button)
+	more.add_child(UiStyle.button("Place again", place_again))
 	return box
+
+
+## The combat log's popup: the log, and a button that closes it. It fills
+## the gutter's height.
+func _build_log_popup() -> PanelContainer:
+	var popup := PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(UiStyle.INK_900, 0.96)
+	style.border_color = UiStyle.BRASS_500
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	style.set_content_margin_all(10.0)
+	popup.add_theme_stylebox_override("panel", style)
+	popup.set_anchors_and_offsets_preset(Control.PRESET_LEFT_WIDE)
+	popup.offset_right = LOG_WIDTH
+	popup.z_index = 4
+	popup.visible = false
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 6)
+	popup.add_child(column)
+	log_panel = LogPanel.make()
+	column.add_child(log_panel)
+	var close := UiStyle.button("Close", set_log_open.bind(false))
+	close.size_flags_horizontal = Control.SIZE_SHRINK_END
+	column.add_child(close)
+	return popup
 
 
 ## "0.5x", "1x", "2x".
@@ -361,17 +404,24 @@ func _on_entries(entries: Array[LogEntry]) -> void:
 		banners.clear()
 		banners.push(last_banner)
 	log_panel.add(entries)
-	if log_column.visible:
+	if chart.is_visible_in_tree():
 		chart.refresh()
 
 
-## Opens or hides the chart and the log (remembered in the session).
+## Opens or closes the combat log's popup (remembered in the session).
 func set_log_open(open: bool) -> void:
 	session.log_open = open
-	log_column.visible = open
+	log_popup.visible = open and player != null
 	log_button.set_pressed_no_signal(open)
-	if log_column.visible:
-		chart.refresh()
+	_fit_log_popup()
+
+
+## As wide as LOG_WIDTH, or as the room left of the board if that's less
+## (never narrower than the gutter).
+func _fit_log_popup() -> void:
+	var gutter: Control = log_popup.get_parent() as Control
+	var board_left: float = view.position.x - gutter.position.x + view.to_pixel(view.drawn_rect.position).x
+	log_popup.offset_right = clampf(board_left - 8.0, gutter.size.x, LOG_WIDTH)
 
 
 func toggle_pause() -> void:
@@ -417,7 +467,7 @@ func place_again() -> void:
 	hint_label.text = placement_hint()
 	_fight_box.visible = false
 	_placement_box.visible = true
-	log_column.visible = false
+	log_popup.visible = false
 	banners.clear()
 	hero_popup.close()
 	enemy_panel.clear()
@@ -491,7 +541,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		KEY_T:
 			target_lines.button_pressed = not target_lines.button_pressed
 		KEY_L:
-			set_log_open(not log_column.visible)
+			set_log_open(not log_popup.visible)
 		_:
 			return
 	get_viewport().set_input_as_handled()

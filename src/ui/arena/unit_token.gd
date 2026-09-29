@@ -4,8 +4,9 @@ extends Control
 ## 2 and 8): its figure (FigureArt), standing where the unit is on the plane,
 ## over a small ring in its side's color, with its short name under it.
 ## Figures face right; a unit faces the side its target is on (enemies
-## face left until they have one). A kit without art is drawn as a circle
-## of the unit's own radius instead, warm for heroes and cold for enemies.
+## face left until they have one; ArenaView.faces_left). A kit without art
+## is drawn as a circle of the unit's own radius instead, warm for heroes
+## and cold for enemies.
 ## A figure is FIGURE_HEXES tall (its whole canvas), so a pup is small and
 ## a sentinel big. Units are small on the plane (0.2 hex wide since
 ## playtest gate 1), so the ring is never drawn under MIN_BODY_PX, the bars
@@ -121,15 +122,7 @@ func center() -> Vector2:
 	return position + feet
 
 
-## Which way a unit faces: toward its target's side, or as it was when its
-## target is (nearly) straight ahead or it has none.
-static func faces_left(unit: UnitState, was_left: bool) -> bool:
-	if unit.target == null or absi(unit.target.pos.x - unit.pos.x) < HexGrid.HEX / 10:
-		return was_left
-	return unit.target.pos.x < unit.pos.x
-
-
-## The radius its circle is drawn at.
+## The radius its circle (or the ring under its figure) is drawn at.
 func body_px() -> float:
 	return maxf(radius_px, MIN_BODY_PX)
 

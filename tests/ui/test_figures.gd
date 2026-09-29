@@ -72,8 +72,9 @@ func test_heroes_face_right_and_enemies_left_until_they_have_targets() -> void:
 	var turned: int = 0
 	for unit: UnitState in player.sim.units:
 		var token: UnitToken = view.token(unit.id)
-		if unit.alive and unit.target != null and absi(unit.target.pos.x - unit.pos.x) >= HexGrid.HEX / 10:
-			assert_eq(token.facing_left, unit.target.pos.x < unit.pos.x, "%s faces %s" % [unit.id, unit.target.id])
+		var across: float = view.to_pixel(unit.target.pos).x - view.to_pixel(unit.pos).x if unit.target != null else 0.0
+		if unit.alive and absf(across) >= view.hex_px() / 10.0:
+			assert_eq(token.facing_left, across < 0.0, "%s faces %s on the screen" % [unit.id, unit.target.id])
 			turned += 1
 	assert_gt(turned, 0)
 
@@ -97,8 +98,9 @@ func test_nearer_units_are_drawn_and_clicked_in_front() -> void:
 	# click where they overlap finds it.
 	var back: UnitToken = view.token("rift_pup")
 	var front: UnitToken = view.token("rift_pup#2")
-	back.place_at(view, Vector2(3000, 3000))
-	front.place_at(view, Vector2(3000, 2900))
+	# In the neutral row, clear of everyone (a column runs down the screen).
+	back.place_at(view, Vector2(6000, 3500))
+	front.place_at(view, Vector2(6100, 3500))
 	view._stack_tokens()
 	assert_gt(front.get_index(), back.get_index())
 	assert_eq(view.token_at(front.center() + Vector2(0, -2)), front)

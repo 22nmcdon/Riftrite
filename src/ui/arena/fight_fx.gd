@@ -403,5 +403,4 @@ func _draw_between(canvas: CanvasItem, outer: Rect2i, inner: Rect2i, color: Colo
 	for band: Rect2i in bands:
 		if band.size.x <= 0 or band.size.y <= 0:
 			continue
-		var top_left: Vector2 = _view.to_pixel(Vector2i(band.position.x, band.end.y))
-		canvas.draw_rect(Rect2(top_left, Vector2(band.size) * _view.scale_px), color)
+		canvas.draw_rect(_view.rect_to_pixels(band), color)

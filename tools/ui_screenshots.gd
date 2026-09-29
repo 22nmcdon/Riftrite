@@ -3,8 +3,8 @@ extends SceneTree
 ## display, e.g.:
 ##   xvfb-run godot --path . -s tools/ui_screenshots.gd -- --out=/tmp/shots
 ## The title, then Practice (phase 3): the encounter list, placement, the
-## fight with its log and chart, a hero's popup, the result, an area
-## warning, and Rift Collapse.
+## fight with its chart, a hero's popup, the result, an area warning, and
+## Rift Collapse with the combat log's popup open.
 
 var _main: Main
 var _out: String = "user://screenshots"
@@ -65,10 +65,11 @@ func _run() -> void:
 		moths._process(1.0 / 30.0)
 	await _snap("fight_moth_cloud_warning")
 	# Rift Collapse starting (Witch Circle runs past 45s): its banner, and
-	# the log showing only Maren's lines.
+	# the log's popup open, showing only Maren's lines.
 	var witches: ArenaScreen = ArenaScreen.make(PracticeSession.make(content), "witch_circle")
 	_main.show_screen(witches)
 	witches._fight()
+	witches.set_log_open(true)
 	witches.view.unit_clicked.emit("maren")
 	while not witches.player.finished() and witches.player.sim.tick < 91 * 10:
 		witches._process(1.0 / 30.0)

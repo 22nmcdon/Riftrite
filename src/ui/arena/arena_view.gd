@@ -4,12 +4,15 @@ extends Control
 ## 2): one view for placement and the fight. It maps the sim's plane to
 ## pixels, draws the board, and keeps a token per unit. It only reads the
 ## setup or the fight; it never changes them.
-##   - The board fits the view, centered, `MARGIN` pixels in. The heroes'
-##     rows are at the bottom of the screen: the plane's y grows up the
-##     screen (the sim's row 0 is the heroes' back row). A flat-top hex's
-##     corners reach past the plane's edge at the sides, so the drawn area is
-##     that much wider than the plane (`drawn_rect`), and room is kept over
-##     it for the top row's figures and bars (`TOP_ROOM_HEXES`).
+##   - The board fits the view, centered, `MARGIN` pixels in, turned
+##     sideways (landscape): the heroes are on the left and the enemies on
+##     the right. The plane's y (the sim's rows; row 0 is the heroes' back
+##     row) grows to the right, and its x (the columns) grows down the
+##     screen, so the sim's flat-top hexes are drawn point up. A hex's
+##     corners reach past the plane's edge at the columns' ends, so the
+##     drawn area is that much taller than the plane (`drawn_rect`), and room
+##     is kept over it for the top column's figures and bars
+##     (`TOP_ROOM_HEXES`).
 ##   - Placement mode shades each hex by zone (yours, no one's, theirs); fight
 ##     mode keeps the hexes faint, since distances still count in hexes.
 ##   - Hexes and rocks are drawn with `_draw()`; units are `UnitToken` nodes,
@@ -102,7 +105,7 @@ func sync_fight(player: FightPlayer) -> void:
 			_add_token(unit_token)
 		unit_token.plane_pos = unit.pos
 		unit_token.visible = unit.alive
-		unit_token.facing_left = UnitToken.faces_left(unit, unit_token.facing_left)
+		unit_token.facing_left = faces_left(unit, unit_token.facing_left)
 		unit_token.show_state(unit, player.sim.tick)
 		unit_token.place_at(self, fx.moved_position(unit.id, player.drawn_position(unit), player.drawn_time()))
 	_stack_tokens()
@@ -190,6 +193,15 @@ func token(unit_id: String) -> UnitToken:
 	return null
 
 
+## Which way a unit faces on the screen: toward its target's side, or as it
+## was when its target is (nearly) straight above or below it or it has none.
+func faces_left(unit: UnitState, was_left: bool) -> bool:
+	if unit.target == null:
+		return was_left
+	var across: float = to_pixel(unit.target.pos).x - to_pixel(unit.pos).x
+	return was_left if absf(across) < hex_px() / 10.0 else across < 0.0
+
+
 ## A unit's figure (FigureArt): a hero's base form (paths come in phase 4),
 ## or its enemy's.
 static func figure_for(kit: UnitDef, team: EffectSource.Team) -> String:
@@ -207,19 +219,26 @@ static func label_for(kit: UnitDef, content: ContentDb) -> String:
 
 # --- the plane and the screen ------------------------------------------------------
 
-## Where a point on the plane is drawn.
+## Where a point on the plane is drawn (turned sideways: the plane's y
+## across, its x down).
 func to_pixel(point: Vector2i) -> Vector2:
 	return to_pixel_f(Vector2(point))
 
 
 ## to_pixel for a point between whole units (a unit drawn mid-step).
 func to_pixel_f(point: Vector2) -> Vector2:
-	return Vector2(_origin.x + (point.x - board.position.x) * scale_px, _origin.y + (board.end.y - point.y) * scale_px)
+	return _origin + Vector2(point.y - drawn_rect.position.y, point.x - drawn_rect.position.x) * scale_px
 
 
 ## The point on the plane under a pixel (rounded to a whole unit).
 func to_plane(pixel: Vector2) -> Vector2i:
-	return Vector2i(roundi((pixel.x - _origin.x) / scale_px) + board.position.x, board.end.y - roundi((pixel.y - _origin.y) / scale_px))
+	var along: Vector2 = (pixel - _origin) / scale_px
+	return Vector2i(roundi(along.y) + drawn_rect.position.x, roundi(along.x) + drawn_rect.position.y)
+
+
+## Where a rect on the plane is drawn.
+func rect_to_pixels(rect: Rect2i) -> Rect2:
+	return Rect2(to_pixel(rect.position), Vector2(rect.size.y, rect.size.x) * scale_px)
 
 
 ## The hex under a pixel, or (-1, -1) off the board.
@@ -281,11 +300,14 @@ func _layout() -> void:
 	if grid == null:
 		return
 	var room: Vector2 = size - Vector2(MARGIN, MARGIN) * 2.0
-	var tall: float = drawn_rect.size.y + TOP_ROOM_HEXES * HexGrid.HEX
-	scale_px = maxf(minf(room.x / drawn_rect.size.x, room.y / tall), 0.001)
-	var drawn: Vector2 = Vector2(drawn_rect.size.x, tall) * scale_px
-	# _origin is where the plane's board.position.x, board.end.y lands.
-	_origin = (size - drawn) / 2.0 + Vector2(board.position.x - drawn_rect.position.x, drawn_rect.end.y - board.end.y + TOP_ROOM_HEXES * HexGrid.HEX) * scale_px
+	# Across the screen: the plane's rows; down it: its columns, and the
+	# room over them.
+	var wide: float = drawn_rect.size.y
+	var tall: float = drawn_rect.size.x + TOP_ROOM_HEXES * HexGrid.HEX
+	scale_px = maxf(minf(room.x / wide, room.y / tall), 0.001)
+	# _origin is where the drawn area's first corner (drawn_rect.position)
+	# lands: its top-left.
+	_origin = (size - Vector2(wide, tall) * scale_px) / 2.0 + Vector2(0.0, TOP_ROOM_HEXES * HexGrid.HEX * scale_px)
 	for unit_token: UnitToken in tokens:
 		unit_token.place(self)
 	_stack_tokens()
@@ -297,8 +319,7 @@ func _layout() -> void:
 func _draw() -> void:
 	if grid == null:
 		return
-	var top_left: Vector2 = to_pixel(Vector2i(drawn_rect.position.x, drawn_rect.end.y))
-	draw_rect(Rect2(top_left, Vector2(drawn_rect.size) * scale_px), UiStyle.INK_700)
+	draw_rect(rect_to_pixels(drawn_rect), UiStyle.INK_700)
 	for index: int in grid.size():
 		var col: int = grid.col_of(index)
 		var row: int = grid.row_of(index)
@@ -320,11 +341,11 @@ func _draw() -> void:
 		draw_arc(center, rock.radius * scale_px, 0.0, TAU, 32, ROCK_LINE, 2.0, true)
 
 
-## A hex's six corners in pixels, flat top and bottom.
+## A hex's six corners in pixels (flat-top on the plane, so point-up on the
+## sideways screen).
 func hex_corners(center: Vector2i) -> PackedVector2Array:
-	var middle: Vector2 = to_pixel(center)
 	var corners := PackedVector2Array()
 	for i: int in 6:
 		var angle: float = i * TAU / 6.0
-		corners.append(middle + Vector2(cos(angle), sin(angle)) * HEX_CORNER * scale_px)
+		corners.append(to_pixel_f(Vector2(center) + Vector2(cos(angle), sin(angle)) * HEX_CORNER))
 	return corners

@@ -428,3 +428,20 @@ The next playtest build carries these; gate 1 is judged again on it.
 - **The screens:**
   - The backdrop's sky is bright, so the title's lines and the encounter list's hint sit on a dark plate (`UiStyle.plate`).
   - The look-test sheets (`art/look-tests/`) stay out of the playtest builds.
+
+**Findings (2026-09-29, build 7):**
+
+5. **The fight should be centered and take up more of the screen, landscape style.** The log column squeezed the board to the left.
+
+**Decisions:**
+
+- **The board is turned sideways:** heroes on the left, enemies on the right, on the same 8 × 7 grid. No sim change: the sim's rows run across the screen, its columns down, and its flat-top hexes are drawn point up. (Widening the arena itself was the other choice; it would have changed every encounter and the balance.)
+- **The board is centered at the screen's full height.** The controls, the encounter's name and hint, the enemy panel, and the fight chart (damage, healing and shield, damage taken) are in a column on the right. An empty gutter as wide on the left keeps the board centered.
+- **The text combat log is a popup** over the left gutter, opened and closed with its button, L, or Close. It starts closed and never covers the board.
+
+**What changed:**
+
+- `ArenaView`: `to_pixel_f`, `to_plane`, and the new `rect_to_pixels` turn the plane; `hex_corners` turns the hexes; the room over the board (`TOP_ROOM_HEXES`) sits over the top column. A unit faces the side of the screen its target is on (`ArenaView.faces_left`).
+- `ArenaScreen`: the gutter, the board, and the side column; the chart moves into the controls; the log's popup (`log_popup`, `_fit_log_popup`). The hero popup is kept on the board both ways.
+- The board is about 820 × 780 pixels at 1600 × 900, from about 700 × 720.
+- Tests: the board's orientation, the log's popup (closed at first, L, its button, Close, remembered, off the board), and the hero popup near the right edge. The screenshots open the log's popup in the Rift Collapse shot.

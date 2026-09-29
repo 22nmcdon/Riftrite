@@ -20,8 +20,9 @@ var content: ContentDb
 var formation: Dictionary[String, Vector2i] = {}
 ## The fight speed last chosen (Decision 2).
 var speed: float = 1.0
-## Whether the fight's log panel (the chart and the log) is open.
-var log_open: bool = true
+## Whether the combat log's popup is open (closed at first: the board
+## comes first).
+var log_open: bool = false
 ## The seed fights are set up with.
 var seed_value: int = 1
 

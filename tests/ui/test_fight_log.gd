@@ -283,15 +283,17 @@ func _key(screen: ArenaScreen, keycode: Key) -> void:
 func test_the_log_and_chart_follow_the_fight() -> void:
 	var session: PracticeSession = PracticeSession.make(_content)
 	var screen: ArenaScreen = await _screen("the_pack", session)
-	assert_false(screen.log_column.visible, "no log while placing")
+	assert_false(screen.log_popup.visible, "no log while placing")
+	assert_false(screen.chart.is_visible_in_tree(), "no chart while placing")
 	screen._fight()
-	assert_true(screen.log_column.visible, "open by default in a fight")
-	assert_true(screen.log_button.button_pressed)
+	assert_false(screen.log_popup.visible, "the log is closed at first: the board comes first")
+	assert_false(screen.log_button.button_pressed)
+	assert_true(screen.chart.is_visible_in_tree(), "the chart is always there in a fight")
 	assert_true(screen.log_panel.shown_text().begins_with("[0.00s] Fight begins"))
 	for frame: int in 60 * 5:
 		screen._process(1.0 / 60.0)
 	var log: Array[LogEntry] = screen.player.sim.combat_log.entries
-	assert_eq(screen.log_panel.entries, log, "every entry handed out went to the log")
+	assert_eq(screen.log_panel.entries, log, "a closed log still keeps up")
 	assert_eq(screen.log_panel.shown_text(), _expected(screen.log_panel, log))
 	var whole: FightTally = FightTally.of_fight(screen.player.setup, screen.player.sim.combat_log)
 	for tab: int in FightTally.TYPES.size():
@@ -302,18 +304,25 @@ func test_the_log_and_chart_follow_the_fight() -> void:
 	assert_gt(top.total(), 0)
 	assert_eq((strips[0] as FightChart.StackedBar).amounts, top.by_type, "the chart is refreshed as it plays")
 	_key(screen, KEY_L)
-	assert_false(screen.log_column.visible)
+	assert_true(screen.log_popup.visible, "L opens the log")
+	assert_true(screen.log_button.button_pressed)
+	assert_true(session.log_open, "remembered in the session")
+	assert_lte(screen.log_popup.get_global_rect().end.x, screen.view.to_pixel(screen.view.drawn_rect.position).x + screen.view.get_global_rect().position.x,
+		"the popup keeps off the board")
+	_key(screen, KEY_L)
+	assert_false(screen.log_popup.visible)
 	assert_false(screen.log_button.button_pressed)
-	assert_false(session.log_open, "remembered in the session")
-	screen._process(1.0)
-	assert_eq(screen.log_panel.entries, screen.player.sim.combat_log.entries, "a hidden log still keeps up")
+	assert_false(session.log_open)
 	screen.log_button.button_pressed = true
-	assert_true(screen.log_column.visible)
-	assert_eq((U.find_all(screen.chart, FightChart.StackedBar)[0] as FightChart.StackedBar).amounts, screen.tally.sorted(FightTally.Tab.DAMAGE)[0].by_type, "opening it catches the chart up")
-	screen.log_button.button_pressed = false
+	assert_true(screen.log_popup.visible, "and so does its button")
+	U.press(screen.log_popup, "Close")
+	assert_false(screen.log_popup.visible, "Close closes it")
+	assert_false(screen.log_button.button_pressed)
+	screen.log_button.button_pressed = true
 	screen.place_again()
+	assert_false(screen.log_popup.visible, "no log while placing")
 	screen._fight()
-	assert_false(screen.log_column.visible, "the next fight keeps it hidden")
+	assert_true(screen.log_popup.visible, "the next fight keeps it open")
 
 
 func test_skip_restart_and_place_again() -> void:
@@ -342,7 +351,7 @@ func test_skip_restart_and_place_again() -> void:
 	assert_eq(screen.log_panel.entries, screen.player.sim.combat_log.entries)
 	screen.skip()
 	screen.place_again()
-	assert_false(screen.log_column.visible)
+	assert_false(screen.log_popup.visible)
 	assert_false(screen.banners.visible)
 
 
