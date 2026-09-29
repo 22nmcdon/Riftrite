@@ -57,7 +57,7 @@ func test_the_three_tactics() -> void:
 	var wait: TacticDef = _content.tactics["wait_to_heal"]
 	assert_eq(wait.kind, TacticDef.Kind.SIGNATURE_THRESHOLD)
 	assert_eq(wait.below_bp, 6000, "below 60% (Decision 5)")
-	assert_eq([casters.damage_vs_bp, hold.atsp_bp, wait.heal_bp], [2000, 2000, 3000], "each one's payoff (round 2)")
+	assert_eq([casters.damage_vs_bp, hold.atsp_bp, wait.heal_bp], [2000, 2000, 1500], "each one's payoff (round 2)")
 	assert_eq([casters.atsp_bp, casters.heal_bp, hold.damage_vs_bp, hold.heal_bp, wait.damage_vs_bp, wait.atsp_bp], [0, 0, 0, 0, 0, 0], "and only its own")
 	for tactic_id: String in ["casters_first", "hold_ground"]:
 		assert_eq(_content.tactics[tactic_id].heroes, ["brannoc", "maren", "vell"] as Array[String], "%s is for everyone (Decision 4)" % tactic_id)

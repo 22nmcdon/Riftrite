@@ -1,6 +1,6 @@
 # Rebuild phase 3b: tactics in Practice (build plan)
 
-Status: **built (2026-09-29); round 2, payoffs (section 9), proposed the same day and waiting on the go-ahead.** Then its playtest (does a tactic change how a fight plays, readably?). Its questions were answered the same day (Decisions); each section's "Built in step N" notes say what was built. Phase 3b of `docs/plans/rebuild-build-order.md`, before paths. Design source: part 6, `rebuild-between-fights.md` (tactics are one of the three kinds of loadout things, and the playtester's answers put the first three in Practice early). It builds on the arena sim (phase 1), the content (phase 2), and Practice (phase 3, now landscape).
+Status: **built (2026-09-29), with round 2's payoffs (section 9) built and tuned the same day.** Then its playtest (does a tactic change how a fight plays, readably?). Its questions were answered the same day (Decisions); each section's "Built in step N" notes say what was built. Phase 3b of `docs/plans/rebuild-build-order.md`, before paths. Design source: part 6, `rebuild-between-fights.md` (tactics are one of the three kinds of loadout things, and the playtester's answers put the first three in Practice early). It builds on the arena sim (phase 1), the content (phase 2), and Practice (phase 3, now landscape).
 
 **Goal:** give the player the first way to shape what heroes do in a fight they can't control. Before a Practice fight, each hero can take **one tactic** from three: **Casters first**, **Hold your ground**, and **Wait to heal**. The sim follows it, the log says so, and the board shows it.
 
@@ -231,7 +231,7 @@ A tactic is a JSON entry in `data/tactics.json`, loaded by `ContentDb` as a `Tac
 - The screenshots already show choosing a tactic (step 3).
 - A playtest build carries it all.
 
-## 9. Round 2: payoffs (proposed 2026-09-29)
+## 9. Round 2: payoffs (proposed and built 2026-09-29)
 
 **Why:** the tactics report and the playtester agree that a tactic that is only a cost is rarely worth taking. Wait to heal never helped on the whole, and Hold your ground mostly hurt. So **every tactic becomes a trade:** its behavior is the cost, and a small payoff makes the cost worth paying in the right fight.
 
@@ -292,7 +292,30 @@ A tactic is a JSON entry in `data/tactics.json`, loaded by `ContentDb` as a `Tac
 - `UnitInfo.tactic_numbers` makes the tactic's numbers line from its data: what the behavior waits for or goes after, then the payoff ("Holds until an enemy is within 2 hexes · +20% attack speed while it holds"). The hero popup shows it under the sentence, while placing and in a fight; with no tactic there's no line.
 - `HOW-TO-PLAY.txt` gives each tactic's payoff and the 60% threshold, and asks whether the payoffs make each tactic worth trying.
 
-## Decisions (2026-09-29, the playtester's answers)
+**Built in R4 (2026-09-29): the second read, and tuning.** `--tactics --seeds=5`, the same 44 formations, with the payoffs. Points against no tactics (no-tactics win rates as in the first read):
+
+| Encounter | Casters first (B / M / V) | Hold your ground (B / M / V) | Wait to heal (V): +30% / **+15%** |
+| --- | --- | --- | --- |
+| Pup Warren | 0 / 0 / 0 | −11 / −2 / +3 | +3 / **0** |
+| Ash Nest | 0 / 0 / 0 | 0 / +1 / −1 | +5 / **+2** |
+| The Pack | 0 / 0 / 0 | +5 / −2 / −3 | +9 / **+7** |
+| Moth Cloud | +24 / +33 / +3 | +1 / −11 / +1 | +3 / **−2** |
+| Hollow Line | 0 / 0 / 0 | −43 / −55 / −55 | +7 / **+1** |
+| Bog Crossing | 0 / 0 / 0 | −7 / −1 / +4 | +9 / **+3** |
+| Sentinel Gate | 0 / 0 / 0 | −26 / −34 / −37 | +18 / **+10** |
+| Cairn Road | 0 / 0 / 0 | −9 / +4 / −6 | +18 / **+12** |
+| Witch Circle | −26 / +8 / −6 | −27 / −26 / −34 | +12 / **−8** |
+
+- **Casters first** is now the answer to casters: with the Moths, Maren wins every formation (+33) and Brannoc +24; at the Witch Circle, Maren gains (+8) but Brannoc leaving the front loses (−26). Nothing changes without casters, as before. The +20% stays.
+- **Hold your ground** barely moved: the +20% attack speed helps a holder with something in reach, but against archers (Hollow Line, Sentinel Gate) the holder stands under fire and never closes, and no payoff fixes that. It helps each hero in two or three encounters (Brannoc against the Hounds, Maren at Cairn Road, Vell in Pup Warren and Bog Crossing), so it meets the bar as a choice with an answer ("not against archers"). The +20% stays; whether the trap is too harsh is for the playtest.
+- **Wait to heal** went from never helping to helping in all nine at +30%: always right, which fails the bar. A run of Wait to heal alone at +0% (60% threshold, no payoff), +10%, +15%, and +20% found:
+  - +0% helps in 2 of 9;
+  - +10% helps in 6, and Witch Circle drops to −18;
+  - **+15% helps in 6, costs a little in Moth Cloud (−2) and Witch Circle (−8), and does nothing in Pup Warren**;
+  - +20% helps in 7 and hurts only in Moth Cloud (−1), almost everywhere.
+  **It's now +15%**: worth taking against slow, grinding fights (Sentinel Gate, Cairn Road, The Pack), a mistake against the Witch (probably because her Hush silences the hero with the most mana, and a Vell sitting on a full bar is that hero; not yet checked in a log).
+- **The bar:** every tactic changes outcomes, and none helps everywhere.
+
 
 1. **"Casters" are the caster and support archetypes:** Cinder Moth and Gloam Witch in Act 1. (Caster only would have been just the Moth; any enemy with a signature would have taken in the Sentinel.)
 2. **Hold your ground lets go for good** once an enemy comes within 2 hexes: one clear moment, then it fights normally. (Holding again whenever it's clear could stall and look indecisive.)

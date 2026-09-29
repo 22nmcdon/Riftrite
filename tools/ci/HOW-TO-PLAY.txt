@@ -33,7 +33,7 @@ PLAYING
                          comes within 2 hexes; attacks 20% faster while it
                          holds
        Wait to heal      (Vell) saves Mend until an ally is below 60% HP,
-                         and the saved Mend heals 30% more
+                         and the saved Mend heals 15% more
      The tactic shows under the hero's name, and over them in the fight when
      it does something ("Holds its ground", "Moves out", "Mend waits"). The
      log notes each hit or heal a payoff made bigger ("+20% from Casters
