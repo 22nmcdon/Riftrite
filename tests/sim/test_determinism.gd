@@ -6,6 +6,7 @@ extends GutTest
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
 const Chaos = preload("res://tests/sim/chaos_fight.gd")
+const TacticFights = preload("res://tests/sim/test_tactics.gd")
 
 ## The chaos fight, run once for every test here (it takes a couple of
 ## seconds).
@@ -26,6 +27,14 @@ func test_the_chaos_fight_repeats_exactly() -> void:
 	assert_eq([fight.outcome, fight.tick], [chaos.outcome, chaos.end_tick])
 
 
+## Tactics (phase 3b) change fights, so a fight with all three repeats
+## exactly too (the chaos fight has none, so its seed keeps every piece).
+func test_a_fight_with_tactics_repeats_exactly() -> void:
+	var first: FightResult = K.run(TacticFights.tactics_setup())
+	assert_eq(K.run(TacticFights.tactics_setup()).combat_log.to_text(), first.combat_log.to_text())
+	assert_true(first.combat_log.entries.any(func(entry: LogEntry) -> bool: return entry.kind == LogEntry.Kind.TACTIC))
+
+
 func test_the_seed_matters() -> void:
 	assert_ne(K.run(Chaos.setup(22)).combat_log.to_text(), chaos.combat_log.to_text())
 
@@ -37,9 +46,11 @@ func test_the_fight_order_matters() -> void:
 	assert_ne(K.run(reordered).combat_log.to_text(), chaos.combat_log.to_text())
 
 
-## Log kinds the arena sim doesn't make (deeds come in phase 4, duo bonds in
-## phase 5).
-const NOT_YET: Array[LogEntry.Kind] = [LogEntry.Kind.SYNERGY, LogEntry.Kind.DEED_LEVEL]
+## Log kinds the chaos fight doesn't make: the arena sim doesn't yet (deeds
+## come in phase 4, duo bonds in phase 5), or another fight covers them
+## (TACTIC: test_a_fight_with_tactics_repeats_exactly, since tactics would
+## change the chaos fight's seed).
+const NOT_YET: Array[LogEntry.Kind] = [LogEntry.Kind.SYNERGY, LogEntry.Kind.DEED_LEVEL, LogEntry.Kind.TACTIC]
 
 
 func test_the_chaos_fight_uses_everything() -> void:

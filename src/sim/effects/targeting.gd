@@ -19,6 +19,9 @@ extends RefCounted
 ##   self               the unit itself (signatures only)
 ## A signature picks among units within its reach (Signatures). "HP%" is
 ## compared exactly, by cross-multiplying, with no rounding.
+## A hero with a prefer_target tactic (Tactics) picks the nearest enemy of
+## its archetypes first, logged with the tactic's name; with none, its own
+## rule.
 
 const RULES: Array[String] = ["nearest", "weakest_backliner", "largest_group", "farthest", "lowest_hp_ally", "highest_mana", "self"]
 ## How close a unit must be to count toward largest_group.
@@ -32,6 +35,11 @@ static func update(sim: CombatSim, unit: UnitState) -> void:
 	unit.target = null
 	if sim.tick < unit.look_again_at:
 		return
+	if unit.tactic != null and unit.tactic.kind == TacticDef.Kind.PREFER_TARGET:
+		var preferred: UnitState = Tactics.preferred(sim, unit)
+		if preferred != null:
+			set_target(sim, unit, preferred, unit.tactic.name)
+			return
 	var rule: String = unit.def.targeting
 	var picked: UnitState = nearest(sim, unit) if rule == "nearest" else pick(sim, unit, rule, -1)
 	if picked == null:
@@ -128,7 +136,13 @@ static func give_up(sim: CombatSim, unit: UnitState) -> void:
 ## An enemy already in reach is nearest (the earliest such one).
 ## A flier goes over everything, so its nearest is by straight line.
 static func nearest(sim: CombatSim, unit: UnitState) -> UnitState:
-	var candidates: Array[UnitState] = sim.targetable_enemies_of(unit)
+	return nearest_of(sim, unit, sim.targetable_enemies_of(unit), true)
+
+
+## nearest among `candidates` (in the fight's order). `remember`: note in
+## the unit whether the search failed, to make its next one fail faster
+## (only for its own full searches, so a tactic's search never changes them).
+static func nearest_of(sim: CombatSim, unit: UnitState, candidates: Array[UnitState], remember: bool) -> UnitState:
 	for enemy: UnitState in candidates:
 		if unit.in_reach_of(enemy):
 			return enemy
@@ -147,6 +161,7 @@ static func nearest(sim: CombatSim, unit: UnitState) -> UnitState:
 	for enemy: UnitState in candidates:
 		points.append(enemy.pos)
 	var nav: NavGrid = sim.nav_for(unit, null)
-	var found: int = nav.find_nearest(unit.pos, unit.forward(), points, unit.reach(), unit.nearest_failed)
-	unit.nearest_failed = found < 0
+	var found: int = nav.find_nearest(unit.pos, unit.forward(), points, unit.reach(), unit.nearest_failed if remember else false)
+	if remember:
+		unit.nearest_failed = found < 0
 	return candidates[found] if found >= 0 else null

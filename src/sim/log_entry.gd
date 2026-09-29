@@ -40,6 +40,7 @@ enum Kind {
 	AREA_LANDED,
 	COLLAPSE_RING,
 	SUMMON,
+	TACTIC,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -185,6 +186,8 @@ func to_text() -> String:
 			if note == "warned":
 				return line + "%s: ring %d will crumble at %s" % [source_text(), amount, _format_time(end_tick)]
 			return line + "Rift Collapse: ring %d crumbles, leaving %s to %s" % [amount, _point(from_pos), _point(to_pos)]
+		Kind.TACTIC:
+			return line + "%s: %s" % [source_text(), note]
 		Kind.SUMMON:
 			if not note.is_empty():
 				return line + "%s can't summon %s (%s)" % [source_text(), target, note]

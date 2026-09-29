@@ -1,0 +1,79 @@
+class_name Tactics
+extends RefCounted
+## What a hero's tactic does in a fight (docs/plans/rebuild-phase3b-tactics.md,
+## section 2; TacticDef is the data). A unit without one never reaches this
+## code, so a fight without tactics is exactly what it was.
+##   prefer_target        Targeting.update asks preferred() first: the
+##                        nearest enemy (by path, as nearest) of the tactic's
+##                        archetypes; with none standing or reachable, the
+##                        unit picks by its own rule. Targets stay sticky.
+##   hold_ground          from the start (logged), the unit doesn't walk. Each
+##                        update, check_release() lets it go for good once an
+##                        enemy stands within release_range (center to center,
+##                        logged, naming the enemy). While it holds, stay()
+##                        turns it to the nearest enemy in reach when its
+##                        target is out of reach (unless Taunted), and keeps it
+##                        from walking. A push, pull, or leap still moves it,
+##                        and it still leaves crumbling ground.
+##   signature_threshold  hurt_enough() gates its mana signature: the picked
+##                        ally (the lowest in reach) must be below below_bp
+##                        of max HP, or the full bar waits (logged once a bar).
+## Every line is a TACTIC entry sourced to the unit and its tactic (rule 4).
+
+
+## Logs what a unit's tactic did (`note`), about `about` if it names a unit.
+static func log_tactic(sim: CombatSim, unit: UnitState, note: String, about: String = "") -> void:
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.TACTIC, EffectSource.make(unit.id, unit.tactic.id, unit.tactic.name))
+	entry.target = about
+	entry.note = note
+	sim.combat_log.add(entry)
+
+
+## At the fight's start (and as a summon joins, though none has a tactic):
+## a unit that holds its ground says so.
+static func start(sim: CombatSim, unit: UnitState) -> void:
+	if unit.holding:
+		log_tactic(sim, unit, "holds its ground")
+
+
+## prefer_target: the nearest enemy of the tactic's archetypes, or null.
+static func preferred(sim: CombatSim, unit: UnitState) -> UnitState:
+	var wanted: Array[String] = unit.tactic.archetypes
+	var candidates: Array[UnitState] = sim.targetable_enemies_of(unit).filter(func(enemy: UnitState) -> bool: return wanted.has(enemy.def.archetype))
+	if candidates.is_empty():
+		return null
+	return Targeting.nearest_of(sim, unit, candidates, false)
+
+
+## hold_ground: lets the unit go for good once an enemy is within reach of
+## its tactic's release_range.
+static func check_release(sim: CombatSim, unit: UnitState) -> void:
+	var release: int = unit.tactic.release_range
+	for enemy: UnitState in sim.standing_enemies_of(unit):
+		if ArenaPlane.length_sq(enemy.pos - unit.pos) <= release * release:
+			unit.holding = false
+			log_tactic(sim, unit, "moves out: %s came within %d hexes" % [enemy.id, release / HexGrid.HEX], enemy.id)
+			return
+
+
+## hold_ground, when the unit's target is out of reach: it turns to the
+## nearest enemy in reach, if any (not while Taunted). CombatSim then keeps
+## it from walking (a holder never starts a walk, so it has none to stop).
+static func stay(sim: CombatSim, unit: UnitState) -> void:
+	if unit.statuses.is_empty() or Statuses.taunter(sim, unit) == null:
+		var near: UnitState = Targeting.pick(sim, unit, "nearest", unit.reach_sq)
+		if near != null and near != unit.target:
+			Targeting.set_target(sim, unit, near, unit.tactic.name)
+
+
+## signature_threshold: true if `ally` (the one its signature picked) is
+## hurt enough to heal now; otherwise the bar waits, logged once per bar.
+static func hurt_enough(sim: CombatSim, unit: UnitState, ally: UnitState) -> bool:
+	if ally.hp * FixedMath.BP_ONE < ally.max_hp * unit.tactic.below_bp:
+		unit.tactic_waiting = false
+		return true
+	if not unit.tactic_waiting:
+		unit.tactic_waiting = true
+		log_tactic(sim, unit, "%s waits: no ally within %d hexes below %d%%" % [unit.signature.def.name,
+			unit.reach_of(unit.signature.def) / HexGrid.HEX, unit.tactic.below_bp / 100])
+	return false

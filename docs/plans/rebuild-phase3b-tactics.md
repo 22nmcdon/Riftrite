@@ -96,6 +96,21 @@ A tactic is a JSON entry in `data/tactics.json`, loaded by `ContentDb` as a `Tac
 - **The log:** a TACTIC line when the full bar starts waiting ("Mend waits: no ally within 3 hexes below 50%"), and the FIRE line as usual when it goes off.
 - **What it tests:** saving the big heal for the moment it matters, at the cost of heals that would have landed early.
 
+**Built in step 2 (2026-09-29):**
+- `src/sim/tactics.gd` (`Tactics`) holds all three rules, and a unit without a tactic never reaches it.
+- **Casters first:** `Targeting.update` asks `Tactics.preferred` first. It's the path search `nearest` uses, now `Targeting.nearest_of`, over the enemies of the tactic's archetypes.
+- **Hold your ground:**
+  - `CombatSim` calls `Tactics.check_release` in the unit's update, after a cast and before targeting. It calls `Tactics.stay` where the unit would walk.
+  - `stay` turns to the nearest enemy in reach unless Taunted.
+  - A holder never starts a walk. An escape from crumbling ground walks its whole leg.
+- **Wait to heal:** `Signatures.act` asks `Tactics.hurt_enough` before a mana signature fires.
+- **The log:** the TACTIC kind reads "maren · Hold your ground: holds its ground", "…: moves out: rift_hound came within 2 hexes" (naming the enemy), and "vell · Wait to heal: Mend waits: no ally within 3 hexes below 50%". A pick reads "maren targets gloam_witch: Casters first".
+- **The audit and determinism use a Witch Circle fight with all three tactics** (`test_tactics.gd`'s `tactics_setup`), not the chaos fight as planned. A tactic would change the chaos fight's seed, which uses every piece.
+- **Without tactics nothing moves:** all 20 of the bench's fingerprints are the same.
+- **Tests:** `tests/sim/test_tactics.gd` (12). The crumbling-ground case is left to the code path it shares with every unit.
+- **Mutation checks:** 14 on the three rules, all caught. One was a dead halt in `stay`, now removed.
+- The board's form for TACTIC is step 3. `test_every_encounter_plays.gd` has its row, and the encounters, played without tactics, don't make any.
+
 ## 3. In the fight's setup
 
 - **`UnitSetup` gains `tactic`** (a `TacticDef`, or null).

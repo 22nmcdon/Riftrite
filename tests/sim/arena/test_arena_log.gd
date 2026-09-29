@@ -7,6 +7,7 @@ extends GutTest
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
 const Chaos = preload("res://tests/sim/chaos_fight.gd")
+const TacticFights = preload("res://tests/sim/test_tactics.gd")
 
 
 ## A busy fight: melee and ranged on both sides, a rock in the middle.
@@ -149,11 +150,12 @@ const NAMES: Dictionary = {
 	LogEntry.Kind.CHARGE: ["unit", "ability", "target"], LogEntry.Kind.HOP: ["unit", "ability", "target"],
 	LogEntry.Kind.AREA_WARNING: ["unit", "ability"], LogEntry.Kind.AREA_LANDED: ["unit", "ability"],
 	LogEntry.Kind.SUMMON: ["unit", "ability", "target"],
+	LogEntry.Kind.TACTIC: ["unit", "ability", "note"],
 }
 
 
 func test_every_entry_names_its_source() -> void:
-	for setup: FightSetup in [busy_setup(), Chaos.setup(), content_setup()]:
+	for setup: FightSetup in [busy_setup(), Chaos.setup(), content_setup(), TacticFights.tactics_setup()]:
 		_assert_sources(K.run(setup), setup)
 
 

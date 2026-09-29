@@ -42,6 +42,7 @@ const FORMS: Dictionary[LogEntry.Kind, String] = {
 	LogEntry.Kind.AREA_LANDED: "a flash",
 	LogEntry.Kind.COLLAPSE_RING: "the ring striped, then dark, and a banner at the first",
 	LogEntry.Kind.SUMMON: "a pulse, and a new token",
+	LogEntry.Kind.TACTIC: "the log line (a name over the unit comes in phase 3b, step 3)",
 }
 ## What the board must have shown at some frame, for each kind a fight
 ## produced (the rest are checked elsewhere, or read from the unit's state).

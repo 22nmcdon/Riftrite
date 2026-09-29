@@ -128,6 +128,9 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 	start.kind = LogEntry.Kind.FIGHT_START
 	start.note = "seed %d, act %d" % [setup.seed_value, setup.act]
 	combat_log.add(start)
+	for unit: UnitState in units:
+		if unit.tactic != null:
+			Tactics.start(self, unit)
 	units_joined()
 
 
@@ -253,6 +256,8 @@ func _act(unit: UnitState) -> void:
 		if unit.leg_active:
 			Movement.halt(self, unit, "casting")
 		return
+	if unit.holding:
+		Tactics.check_release(self, unit)
 	var target: UnitState = unit.target
 	if has_statuses:
 		var taunter: UnitState = Statuses.taunter(self, unit)
@@ -287,6 +292,10 @@ func _act(unit: UnitState) -> void:
 			Movement.halt(self, unit, "in reach")
 		if attack.progress_bp >= attack.needed:
 			EffectRunner.basic_attack(self, unit)
+		return
+	# About to walk: a unit holding its ground (Tactics) doesn't.
+	if unit.holding:
+		Tactics.stay(self, unit)
 		return
 	# About to walk: an engager next to it may hold it.
 	if unit.engagements.is_empty() and not engagers.is_empty():

@@ -120,6 +120,11 @@ var last_hit_source: EffectSource = null
 var last_hit_status: String = ""
 ## The unit that last hit it (an enemy), for on_kill.
 var last_attacker: String = ""
+## A hero's tactic (Tactics), or null. hold_ground: whether it still holds.
+## signature_threshold: whether its full bar's wait has been logged.
+var tactic: TacticDef = null
+var holding: bool = false
+var tactic_waiting: bool = false
 
 
 static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_radius: int) -> UnitState:
@@ -147,6 +152,8 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 	Mana.set_bar(unit, setup.def.mana)
 	unit.refresh_reach()
 	unit.flying = setup.def.has_trait("flying")
+	unit.tactic = setup.tactic
+	unit.holding = setup.tactic != null and setup.tactic.kind == TacticDef.Kind.HOLD_GROUND
 	Passives.set_up(unit)
 	return unit
 
