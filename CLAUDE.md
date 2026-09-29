@@ -109,7 +109,7 @@ Phase 3's details are in `docs/plans/rebuild-phase3-fight-sandbox.md` (sections 
 - **Beside the board:**
   - on the right, the side column: the encounter's name and hint, `EnemyPanel` on hover, the controls and the `FightChart` during the fight, and the result when it ends (outcome, seed, heroes, chart, Rematch, Watch again);
   - on the left, an empty gutter as wide as the side column (it keeps the board centered), where the combat log (`LogPanel`) pops up with its button or L;
-  - `HeroPopup` beside a hero clicked while the fight isn't playing. It and `EnemyPanel` are built by `UnitInfo` (the data's sentence plus a generated numbers line).
+  - `HeroPopup` beside a hero clicked while the fight isn't playing. It and `EnemyPanel` are built by `UnitInfo` (the data's sentence plus a generated numbers line). Its Tactic row (phase 3b) sets the hero's tactic while placing (`PracticeSession.tactics`; the board names it under the hero), and names it in a fight.
   `FightNames` turns ids into names ("Rift Hound 2"). `FightTally` (in `src/sim/`, shared with the sim runner) counts the chart. `FightBanners` shows a phase, the collapse, and the end.
 - **Every kind of log entry needs a form on the board:** `test_every_encounter_plays.gd` has a table of them, and checks the board showed each kind a fight produced. A new log kind needs a row there as well as its audit rule in `test_arena_log.gd`.
 - **Tests:** UI tests run headless and drive time by hand (`ArenaScreen._process(delta)`); `tests/ui/ui_test_kit.gd` finds and presses controls by text; `test_practice_flow.gd` drives a real `Main` from the title to the result. A test that replaces screens lets a frame pass before it ends, since `Main` frees the old screen on the next frame.

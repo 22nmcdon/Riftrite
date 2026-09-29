@@ -18,7 +18,8 @@ extends Control
 ## its feet while it casts; and a tag per status (with stacks for damage
 ## over time) under its name. A stealthed unit is drawn see-through.
 ## While placing, a hero's token can be dragged (drops on a token go to the
-## view, as if on the hex it stands on).
+## view, as if on the hex it stands on), and a hero's tactic is named under
+## its name (phase 3b).
 
 const HERO_FILL := UiStyle.BRASS_500
 const HERO_TEXT := UiStyle.INK_900
@@ -64,6 +65,8 @@ const LABEL_OUTLINE := Color(0.05, 0.03, 0.06, 0.9)
 
 var unit_id: String
 var label_text: String
+## While placing: the hero's tactic's name ("": none).
+var tactic_label: String = ""
 var side: EffectSource.Team
 ## Its radius on the plane, and where it stands there.
 var radius: int
@@ -276,6 +279,11 @@ func _draw() -> void:
 	draw_string_outline(font, baseline, label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE, 4, LABEL_OUTLINE)
 	draw_string(font, baseline, label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE, UiStyle.BRASS_300 if is_hero() else UiStyle.RIFT_300)
 	below = baseline.y + font.get_descent(LABEL_SIZE) + 2.0
+	if not in_fight and not tactic_label.is_empty():
+		var tag_width: float = font.get_string_size(tactic_label, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_SIZE + 1).x
+		var tag_at := Vector2(feet.x - tag_width / 2.0, below + font.get_ascent(TAG_SIZE + 1))
+		draw_string_outline(font, tag_at, tactic_label, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_SIZE + 1, 4, LABEL_OUTLINE)
+		draw_string(font, tag_at, tactic_label, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_SIZE + 1, UiStyle.PARCHMENT_300)
 	if in_fight:
 		_draw_bars(below, font)
 

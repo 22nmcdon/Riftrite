@@ -31,6 +31,10 @@ extends UiScreen
 ##     while the fight isn't playing (placement, paused, or over) opens its
 ##     popup beside it, which a click elsewhere closes, and so does the fight
 ##     playing on.
+##   - Tactics (docs/plans/rebuild-phase3b-tactics.md, section 4): while
+##     placing, the hero popup's Tactic row sets the hero's tactic in the
+##     session (the board shows it under the hero's name); in a fight it
+##     names the one taken, and so does the result.
 
 signal fight_requested(setup: FightSetup)
 signal back_requested
@@ -143,6 +147,9 @@ func build() -> void:
 	view.unit_unhovered.connect(_on_unhovered)
 	view.unit_clicked.connect(_on_clicked)
 	view.ground_clicked.connect(hero_popup.close)
+	# Deferred: choosing rebuilds the popup, buttons and all, so not while
+	# the pressed button is still sending its signal.
+	hero_popup.tactic_chosen.connect(choose_tactic, CONNECT_DEFERRED)
 	# Its wrapped lines only know their height once laid out: place it again
 	# then.
 	hero_popup.minimum_size_changed.connect(_place_popup, CONNECT_DEFERRED)
@@ -203,7 +210,10 @@ func playing() -> bool:
 
 ## Opens a hero's popup beside its token.
 func open_hero(unit_id: String) -> void:
-	hero_popup.show_hero(session.content.heroes[_kit_of(unit_id)], session.content)
+	var hero_id: String = _kit_of(unit_id)
+	hero_popup.show_hero(session.content.heroes[hero_id], session.content)
+	# The session's tactic is the fight's too: it can't change mid-fight.
+	hero_popup.show_tactics(session.tactics_for(hero_id), session.tactics.get(hero_id, ""), player == null)
 	hero_popup.set_meta("unit_id", unit_id)
 	_show_live()
 	_place_popup()
@@ -250,6 +260,16 @@ func _on_clicked(unit_id: String) -> void:
 		open_hero(unit_id)
 	else:
 		hero_popup.close()
+
+
+## Sets a hero's tactic while placing ("": none), and shows it.
+func choose_tactic(hero_id: String, tactic_id: String) -> void:
+	if player != null:
+		return
+	session.set_tactic(hero_id, tactic_id)
+	_show()
+	if hero_popup.visible and hero_popup.showing == hero_id:
+		open_hero(hero_id)
 
 
 func _fight() -> void:
@@ -505,12 +525,17 @@ func _show_result() -> void:
 
 
 ## "Seed 2 (it only changes crits)", then how each hero came out:
-## "Brannoc 120/420 HP · Maren fell · Vell 300/300 HP".
+## "Brannoc 120/420 HP · Maren fell · Vell 300/300 HP", then the tactics
+## taken, if any: "Tactics: Maren, Hold your ground".
 static func result_text(sim: CombatSim, fight_names: FightNames) -> String:
 	var heroes: Array[String] = []
+	var tactics: Array[String] = []
 	for hero: UnitState in sim.heroes:
 		heroes.append("%s %s" % [fight_names.name_of(hero.id), "%d/%d HP" % [hero.hp, hero.max_hp] if hero.alive else "fell"])
-	return "Seed %d (it only changes crits)\n%s" % [sim.setup.seed_value, " · ".join(heroes)]
+		if hero.tactic != null:
+			tactics.append("%s, %s" % [fight_names.name_of(hero.id), hero.tactic.name])
+	var text: String = "Seed %d (it only changes crits)\n%s" % [sim.setup.seed_value, " · ".join(heroes)]
+	return text + ("\nTactics: %s" % " · ".join(tactics) if not tactics.is_empty() else "")
 
 
 static func outcome_text(outcome: FightResult.Outcome, seconds: float) -> String:

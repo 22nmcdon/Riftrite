@@ -324,7 +324,9 @@ func test_clicking_a_hero_opens_the_popup_only_while_the_fight_isnt_playing() ->
 		assert_string_contains(text, line.text)
 		assert_string_contains(text, line.numbers)
 	assert_false(screen.hero_popup.live.visible, "no fight, no live numbers")
-	assert_eq([screen.hero_popup.live.get_index() + 1, screen.hero_popup.recent.get_index() - 1], [screen.hero_popup.abilities.get_index(), screen.hero_popup.abilities.get_index()], "the lines between the numbers now and the log")
+	var popup: HeroPopup = screen.hero_popup
+	assert_eq([popup.live.get_index() + 1, popup.tactic_box.get_index() - 1, popup.recent.get_index() - 2], [popup.abilities.get_index(), popup.abilities.get_index(), popup.abilities.get_index()],
+		"the lines between the numbers now and the tactic, then the log")
 	var token: UnitToken = screen.view.token("vell")
 	var rect := Rect2(screen.hero_popup.position, screen.hero_popup.size)
 	assert_true(Rect2(Vector2.ZERO, screen.view.size).encloses(rect), "inside the board")

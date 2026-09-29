@@ -129,6 +129,15 @@ A tactic is a JSON entry in `data/tactics.json`, loaded by `ContentDb` as a `Tac
 - **Remembered:** `PracticeSession` keeps each hero's tactic while the game is open, like the formation. Nothing is saved to disk.
 - **On the board:** a TACTIC entry shows as a name over the unit, like a signature's FIRE ("Holds", "Moves out", "Waits"). It gets a row in `test_every_encounter_plays.gd`'s FORMS table, and an audit rule in `test_arena_log.gd`.
 
+**Built in step 3 (2026-09-29):**
+- **The session:** `PracticeSession.tactics` (hero id -> tactic id, kept while the game is open, for every encounter). `set_tactic` takes only one the hero can take. `tactics_for` lists a hero's choices. Every setup and legality check carries the tactics of the heroes in its formation (`tactics_in`).
+- **Choosing:** the hero popup's **Tactic** row. While placing, it has None plus a button per tactic, the chosen one in the primary style, with its sentence under them. In a fight it's "Tactic: Casters first" (or "none"), with no buttons. The popup's signal is connected deferred, since choosing rebuilds its buttons.
+- **The board:** while placing, the tactic's name is under the hero's.
+- **In the fight:** a TACTIC line shows over the hero as the note's first part: "Holds its ground", "Moves out", "Mend waits". `test_every_encounter_plays.gd`'s tables have it.
+- **The result:** a line naming the tactics ("Tactics: Brannoc, Hold your ground · Maren, Casters first · Vell, Wait to heal") when any were taken.
+- **Screenshots:** a new shot of Maren's popup choosing Hold your ground.
+- **Tests:** `tests/ui/test_tactics_ui.gd` (6), including a Witch Circle fight on screen with all three tactics that matches `CombatSim.run`. Mutation checks: 10, all caught.
+
 ## 5. The sim runner
 
 - **A tactics report** (`--tactics`): for each encounter's named formations, the win rate with no tactics, then with each tactic on each hero who can take it (one at a time).

@@ -91,6 +91,7 @@ func show_setup(setup: FightSetup, content: ContentDb) -> void:
 	for unit: UnitSetup in setup.units():
 		var token: UnitToken = UnitToken.make(unit.id, label_for(unit.def, content), unit.side, content.tuning.unit_radius, unit.def.has_trait("flying"), figure_for(unit.def, unit.side))
 		token.plane_pos = grid.center(unit.col, unit.row)
+		token.tactic_label = unit.tactic.name if unit.tactic != null else ""
 		_add_token(token)
 	_layout()
 

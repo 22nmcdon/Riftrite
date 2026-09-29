@@ -16,6 +16,7 @@ extends Control
 ##   DEATH            a fading ghost where it fell
 ##   SUMMON           a pulse where the summon appears
 ##   PHASE            the phase's name over the unit
+##   TACTIC           what a hero's tactic did, over it ("Holds its ground")
 ##   AURA             a faint ring round the holder while the aura holds
 ##   COLLAPSE_RING    the ring about to crumble striped, crumbled ground dark
 ## Target lines (for a hovered unit, or all with a toggle; brighter for a
@@ -177,6 +178,12 @@ func _add(entry: LogEntry, sim: CombatSim) -> void:
 				var popup: Fx = _new(Kind.POPUP, entry.tick, entry.tick + POPUP_TICKS, Vector2(unit.pos), unit.id)
 				popup.text = entry.source_ability_name
 				popup.color = UiStyle.HIGHLIGHT
+		LogEntry.Kind.TACTIC:
+			var holder: UnitState = sim.unit_by_id(entry.source_unit)
+			if holder != null:
+				var said: Fx = _new(Kind.POPUP, entry.tick, entry.tick + POPUP_TICKS, Vector2(holder.pos), holder.id)
+				said.text = tactic_popup(entry)
+				said.color = UiStyle.BRASS_300
 		LogEntry.Kind.AREA_WARNING, LogEntry.Kind.AREA_LANDED:
 			var warning: bool = entry.kind == LogEntry.Kind.AREA_WARNING
 			var area: Fx = _new(Kind.AREA if warning else Kind.LANDED, entry.tick, entry.end_tick if warning else entry.tick + LANDED_TICKS, Vector2(entry.from_pos), "")
@@ -219,6 +226,13 @@ func _add(entry: LogEntry, sim: CombatSim) -> void:
 		LogEntry.Kind.COLLAPSE_RING:
 			if entry.note == "warned":
 				warned_safe = Rect2i(entry.from_pos, entry.to_pos - entry.from_pos)
+
+
+## What a TACTIC line shows over its unit: the note's first part ("Holds
+## its ground", "Moves out", "Mend waits").
+static func tactic_popup(entry: LogEntry) -> String:
+	var said: String = entry.note.get_slice(":", 0)
+	return said.left(1).to_upper() + said.substr(1)
 
 
 func _new(kind: Kind, start: int, end: int, from: Vector2, unit_id: String) -> Fx:

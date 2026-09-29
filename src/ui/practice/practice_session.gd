@@ -10,6 +10,9 @@ extends RefCounted
 ##   - What's legal comes from the sim: a formation is legal when
 ##     `Encounters.setup` builds it and `FightSetup.validate` finds nothing
 ##     wrong. The UI keeps no rules of its own.
+##   - Each hero's tactic (docs/plans/rebuild-phase3b-tactics.md, section 4),
+##     kept for every encounter until changed; every setup here carries the
+##     tactics of the heroes in its formation.
 
 ## The first formation, before any fight: Brannoc in front of the other two
 ## (the sim runner's "guarded").
@@ -25,6 +28,8 @@ var speed: float = 1.0
 var log_open: bool = false
 ## The seed fights are set up with.
 var seed_value: int = 1
+## Hero id -> tactic id, for the heroes who have one.
+var tactics: Dictionary[String, String] = {}
 
 
 static func make(content_db: ContentDb) -> PracticeSession:
@@ -37,13 +42,13 @@ static func make(content_db: ContentDb) -> PracticeSession:
 ## The fight for `encounter_id` from `hero_hexes`, or null (see errors()).
 func setup(encounter_id: String, hero_hexes: Dictionary[String, Vector2i], fight_seed: int = 1) -> FightSetup:
 	var errors: Array[String] = []
-	return Encounters.setup(content, encounter_id, hero_hexes, fight_seed, errors)
+	return Encounters.setup(content, encounter_id, hero_hexes, fight_seed, errors, tactics_in(hero_hexes))
 
 
 ## What's wrong with `hero_hexes` in `encounter_id` (nothing: it's legal).
 func errors(encounter_id: String, hero_hexes: Dictionary[String, Vector2i]) -> Array[String]:
 	var found: Array[String] = []
-	var fight: FightSetup = Encounters.setup(content, encounter_id, hero_hexes, 1, found)
+	var fight: FightSetup = Encounters.setup(content, encounter_id, hero_hexes, 1, found, tactics_in(hero_hexes))
 	if fight != null:
 		found.append_array(fight.validate(content))
 	return found
@@ -64,6 +69,32 @@ func formation_for(encounter_id: String) -> Dictionary[String, Vector2i]:
 				placed = trial
 				break
 	return placed
+
+
+## The tactics of the heroes in `hero_hexes`.
+func tactics_in(hero_hexes: Dictionary[String, Vector2i]) -> Dictionary[String, String]:
+	var found: Dictionary[String, String] = {}
+	for hero_id: String in content.hero_ids:
+		if hero_hexes.has(hero_id) and tactics.has(hero_id):
+			found[hero_id] = tactics[hero_id]
+	return found
+
+
+## The tactics `hero_id` can take, in tactics.json's order.
+func tactics_for(hero_id: String) -> Array[TacticDef]:
+	var found: Array[TacticDef] = []
+	for tactic_id: String in content.tactic_ids:
+		if content.tactics[tactic_id].allows(hero_id):
+			found.append(content.tactics[tactic_id])
+	return found
+
+
+## Gives `hero_id` a tactic ("": none). Only one it can take.
+func set_tactic(hero_id: String, tactic_id: String) -> void:
+	if tactic_id.is_empty():
+		tactics.erase(hero_id)
+	elif content.tactics.has(tactic_id) and content.tactics[tactic_id].allows(hero_id):
+		tactics[hero_id] = tactic_id
 
 
 ## Remembers the formation fought with.

@@ -2,8 +2,8 @@ extends SceneTree
 ## Renders each screen to PNGs (for checking the layout by eye). Needs a
 ## display, e.g.:
 ##   xvfb-run godot --path . -s tools/ui_screenshots.gd -- --out=/tmp/shots
-## The title, then Practice (phase 3): the encounter list, placement, the
-## fight with its chart, a hero's popup, the result, an area warning, and
+## The title, then Practice (phase 3): the encounter list, placement (and
+## choosing a tactic), the fight with its chart, a hero's popup, the result, an area warning, and
 ## Rift Collapse with the combat log's popup open.
 
 var _main: Main
@@ -34,6 +34,12 @@ func _run() -> void:
 	var arena: ArenaScreen = _main.screen as ArenaScreen
 	arena._on_hovered("rift_worn_sentinel")
 	await _snap("placement_sentinel_gate")
+	# Maren's popup, choosing a tactic (phase 3b); she takes Hold your ground.
+	arena.view.unit_clicked.emit("maren")
+	arena.choose_tactic("maren", "hold_ground")
+	await _snap("placement_tactic_maren")
+	arena.choose_tactic("maren", "")
+	arena.hero_popup.close()
 	arena._fight()
 	for frame: int in 8 * 30:
 		arena._process(1.0 / 30.0)
