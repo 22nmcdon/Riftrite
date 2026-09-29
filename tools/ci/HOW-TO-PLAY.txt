@@ -21,38 +21,64 @@ PLAYING
   1. Title > Practice, then pick a fight ("Place your heroes").
   2. Drag Brannoc, Maren, and Vell onto your side's hexes (the three columns
      on the left; the enemies are on the right). Hover an enemy to read what
-     it does; click a hero to read them.
-  3. Tactics: click a hero while placing and pick a tactic for them in
-     their card, or None. Each hero takes at most one. Each is a trade: a
-     way of behaving that costs something, and a small payoff while it
-     applies (new in this build):
-       Casters first     goes for the enemy casters (Cinder Moths, Gloam
-                         Witches) before anything else, and hits them 20%
-                         harder
-       Hold your ground  stays put, fighting what's in reach, until an enemy
-                         comes within 2 hexes; attacks 20% faster while it
-                         holds
-       Wait to heal      (Vell) saves Mend until an ally is below 60% HP,
-                         and the saved Mend heals 15% more
-     The tactic shows under the hero's name, and over them in the fight when
-     it does something ("Holds its ground", "Moves out", "Mend waits"). The
-     log notes each hit or heal a payoff made bigger ("+20% from Casters
-     first").
+     it does.
+  3. Click a hero while placing to open their panel (new in this build).
+     Back and forward (< >) move between the heroes; Close, Escape, or a
+     click beside it shuts it.
+       Path     each hero has three paths. Vow one to try its taste (a small
+                piece of the path, with a cost), or Transform to try the
+                whole thing: a new form, a new signature, and a new cost.
+                Base takes the path away. Each card says where the path
+                wants the hero to stand, and its deed: what the hero does
+                that the path counts (after a fight, the card shows how much
+                that fight put into it). In the full game you vow at the
+                start and transform when the deed fills; here both are free.
+       Kit      what the hero can do now, at their stage.
+       Loadout  the hero's tactic (None, Casters first, Hold your ground,
+                Wait to heal; see last build's notes). Transformed
+                Wardweaver can't take Wait to heal, since her new signature
+                doesn't heal.
+     The board names each hero's path and tactic under them; a transformed
+     hero stands as their new form. Transformed Trapper Maren places two
+     snares before the fight: drag the green markers onto your side or the
+     middle row.
+     The nine paths:
+       Maren    Deadeye (plant and shoot from far away), Trapper (snares
+                in the enemies' path), Volley (split shots, shoots on the
+                move)
+       Brannoc  Hearthwall (Guard: takes part of the hits on allies behind
+                or near him; a wall that stops shots), Ironbrand (hits the
+                enemies around his target; leaps into groups), Last Watch
+                (won't fall once; strongest when nearly dead)
+       Vell     Lanternbearer (heals spill onto nearby allies; a healing
+                lantern), Wardweaver (overhealing becomes Shield; a circle
+                that Slows enemies and Wards allies), Vigil Keeper (Mend
+                smites; a beam that burns enemies and heals allies)
   4. Fight. It plays by itself:
        Space   pause            1 2 3   speed 0.5x, 1x, 2x
        S       skip to the end  L       open or close the combat log
        T       every target line (for testing)
      The damage chart is on the right. Click a unit to see only its lines in
      the log. Pause and click a hero for their details.
-  5. At the end: Rematch (same placement, new crits), Watch again, or
-     Place again to try another formation. Back goes to the list.
+  5. At the end: the result names each hero's path and what the fight put
+     into each of their deeds. Rematch (same placement, new crits), Watch
+     again, or Place again to try another formation. Back goes to the list.
 
-  Nothing is saved: your formation, tactics, and speed last until you close
-  the game.
+  Nothing is saved: your formation, paths, snares, tactics, and speed
+  last until you close the game.
 
-WHAT WE WANT TO KNOW (playtest gate 1, and tactics)
-  Is a single fight fun to set up and watch? Can you tell who is attacking
-  whom, and why you won or lost? Which fights felt unfair or confusing?
-  Tactics: do they change how a fight plays, and can you see why? Is any of
-  them always right, or never worth taking? Do the payoffs make each one
-  worth trying in the right fight, and does Wait to heal have a use now?
+WHAT WE WANT TO KNOW (playtest gate 2: paths)
+  Does each path change where you place the hero and how the fight plays?
+  Does a vow feel like a taste of its path, and is its cost felt? Does
+  each transformation feel like a different, stronger hero? Can you tell,
+  from the board and the log, what each new thing did (snares, Guard, the
+  wall, zones, Warded)? Is the hero panel clear?
+  Some choices were made while you were away; tell us if they feel wrong:
+    - Hearthwall's Guard covers an ally behind Brannoc within 3 hexes
+      (vowed), and every ally within 2 hexes (transformed): 1 hex was
+      rarely anyone.
+    - Transformed Lanternbearer and Wardweaver keep a smaller Mend (or
+      Weave) every 4th Lantern Glow, beside their new signature.
+    - Deadeye's deed counts damage from beyond 4 hexes, and a unit that
+      reaches farther once planted stops walking to plant.
+    - Last Watch's deed (damage below 30% HP) also fills a little on base.

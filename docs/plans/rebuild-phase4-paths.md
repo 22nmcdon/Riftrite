@@ -261,6 +261,13 @@ The playtester's mock (`docs/mockups/hero-panel-layout.pdf`, 2026-09-29) is the 
 - **The result:** each hero's three deeds and what this fight put into each, the vowed one first. The result's "Heroes:" line names each hero's path and stage.
 - **New log kinds** (zones, snares, Guard, the wall) each get a form on the board and a row in `test_every_encounter_plays.gd`'s table, and an audit rule.
 
+**Built (2026-09-29):**
+- `HeroPanel` (`src/ui/widgets/hero_panel.gd`) opens over the screen when a hero is clicked while placing; the small `HeroPopup` stays for a paused or finished fight, showing the kit the hero fights with and its path. The panel's left side, track, cards, and tabs follow the mock; each card's buttons are Vow and Transform, the vowed card's Transform (or Back to vow) and Base (no path). The tactic moved to the Loadout tab (`TacticPicker`, shared with the popup). Esc, Close, or a click beside the panel closes it.
+- `PracticeSession` keeps `vows`, `transformed`, `snares` (hero id -> hexes, starting on (2, 3) and (5, 3) and fitted to each encounter's rocks), and `last_deeds`. A tactic the new kit can't take is dropped (Wait to heal on transformed Wardweaver), and the Loadout tab doesn't offer it.
+- The board: a transformed hero's token is its path's figure; while placing, "Deadeye (vow)" or "Deadeye" is named under the hero, over the tactic. A transformed Trapper's snares are green markers on their hexes, dragged like heroes (`ArenaView.snare_dropped`); a refused hex flashes. The result adds "Paths:" and "Deeds this fight:" (each hero's three, the vowed one first; Trapper's in seconds).
+- `FightTally` counts a GUARD line as damage the guard took ("Guard for Vell"), so the chart's damage-taken tab shows what Hearthwall absorbed.
+- Tests: `tests/ui/test_paths_ui.gd`; `test_tactics_ui.gd` and `test_unit_info.gd` moved to the panel and to the popup in a fight.
+
 ## 7. The sim runner
 
 Two reports, like the tactics report: reports, not gates.
@@ -268,6 +275,8 @@ Two reports, like the tactics report: reports, not gates.
 - **The deed report** (`--deeds`): for each hero, each encounter, and each stage (base, each vow, each transformation), what a fight puts into each of the three deeds, on average over the formations. It answers **"is every deed hard to fill without its taste?"** (this plan's bar: vowed at least 4 times base or another vow), and gives phase 5 the numbers to set thresholds from.
 - **The paths report** (`--paths`): each encounter fought with one hero on a path (vowed, then transformed) and the others on base, from the same formations as the placement report, plus formations drawn with that hero anywhere in the zone. For each: its win rate against base, and **where the hero stands in the best formations** (how far forward, how far to the side, how near the other heroes). It answers **"does each path move its hero?"** (this plan's bar) and **"is each transformation stronger?"** The target (Decision 3): a vowed hero's team wins about as often as base (the taste pays for its cost, within about 5 points), and a transformed hero's team wins **15–25 points more** than base across the encounters.
 - **Where allies stand around Brannoc** (for Guard, Decision 6): the deed report also measures, over each fight, how often an ally is within 1, 2, and 3 hexes of him on the side away from his target.
+
+**Built (2026-09-29):** `tools/path_report.gd`, from `tools/sim_runner.gd -- --paths` and/or `--deeds` (the same fights feed both). Variants: all base, then each path vowed and transformed on its hero (19). Where a hero stands is averaged over the formations a variant wins at least half its fights in. A transformed Trapper places her snares on (2, 3) and (5, 3), or the next middle-row hexes without a rock. Its fights are 19 times the placement report's, so tune with `--seeds=1 --sweep=20`. Tests: `tests/tools/test_path_report.gd`.
 
 ## 8. Files
 
