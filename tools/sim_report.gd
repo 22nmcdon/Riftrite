@@ -13,6 +13,12 @@ extends RefCounted
 ##     or none, so the report also counts the formations that win at least
 ##     half their fights: the gate passes when one loses, but a question
 ##     worth asking has many formations on each side.
+##   - The tactics report (docs/plans/rebuild-phase3b-tactics.md, section 5):
+##     the same formations and seeds with no tactics, then with each tactic
+##     on each hero who can take it, one at a time. Per variant, its win rate
+##     and how many formations it helps (wins more than with no tactics) or
+##     hurts. Not a gate: it answers whether a tactic ever changes an outcome,
+##     and whether one is right everywhere (tactics_summary).
 
 ## The gate, in percentage points (Decisions: 30 for now).
 const GATE_POINTS: int = 30
@@ -141,6 +147,21 @@ static func drawn_formations(content: ContentDb, rocks: Array[Vector2i], count: 
 	return formations
 
 
+## The named formations, then `drawn` drawn ones ("drawn #1", ...): their
+## names in `names`, and the formations.
+static func formations_for(content: ContentDb, encounter: EncounterDef, named: Dictionary[String, Dictionary], drawn: int, draw_seed: int, names: Array[String]) -> Array[Dictionary]:
+	var formations: Array[Dictionary] = []
+	for name: String in named:
+		names.append(name)
+		formations.append(named[name])
+	var i: int = 0
+	for formation: Dictionary in drawn_formations(content, encounter.rocks, drawn, draw_seed):
+		i += 1
+		names.append("drawn #%d" % i)
+		formations.append(formation)
+	return formations
+
+
 ## Fights `encounter_id` from each named formation and `drawn` drawn ones,
 ## `seeds` fights each (seeds 1 to `seeds`).
 static func run_encounter(content: ContentDb, encounter_id: String, named: Dictionary[String, Dictionary], drawn: int, seeds: int, draw_seed: int = 1) -> Report:
@@ -148,16 +169,8 @@ static func run_encounter(content: ContentDb, encounter_id: String, named: Dicti
 	report.encounter = content.encounters[encounter_id]
 	report.seeds = seeds
 	var names: Array[String] = []
-	var formations: Array[Dictionary] = []
-	for name: String in named:
-		names.append(name)
-		formations.append(named[name])
-	report.named = names.size()
-	var i: int = 0
-	for formation: Dictionary in drawn_formations(content, report.encounter.rocks, drawn, draw_seed):
-		i += 1
-		names.append("drawn #%d" % i)
-		formations.append(formation)
+	var formations: Array[Dictionary] = formations_for(content, report.encounter, named, drawn, draw_seed, names)
+	report.named = named.size()
 	for f: int in formations.size():
 		var row := Row.new()
 		row.name = names[f]
@@ -189,6 +202,148 @@ static func _fight(content: ContentDb, encounter_id: String, row: Row, fight_see
 	for entry: LogEntry in result.combat_log.entries:
 		if entry.kind == LogEntry.Kind.DEATH and row.formation.has(entry.target):
 			row.deaths[entry.target] = row.deaths.get(entry.target, 0) + 1
+
+
+# --- tactics ----------------------------------------------------------------------
+
+## One variant of the tactics report: a hero on a tactic ("" and "": none),
+## over every formation.
+class TacticRow:
+	var hero_id: String = ""
+	var tactic_id: String = ""
+	var fights: int = 0
+	var wins: int = 0
+	## Wins per formation, in the report's formation order.
+	var formation_wins: Array[int] = []
+
+	func win_percent() -> int:
+		@warning_ignore("integer_division")
+		return wins * 100 / maxi(fights, 1)
+
+	## Formations it wins more (helps) or fewer (hurts) fights in than `base`.
+	func helps(base: TacticRow) -> int:
+		return _count(base, 1)
+
+	func hurts(base: TacticRow) -> int:
+		return _count(base, -1)
+
+	func _count(base: TacticRow, sign: int) -> int:
+		var count: int = 0
+		for f: int in formation_wins.size():
+			if signi(formation_wins[f] - base.formation_wins[f]) == sign:
+				count += 1
+		return count
+
+
+## One encounter's tactics report: rows[0] is no tactics.
+class TacticReport:
+	var encounter: EncounterDef
+	var seeds: int
+	var formations: int = 0
+	var rows: Array[TacticRow] = []
+
+	func base() -> TacticRow:
+		return rows[0]
+
+
+## Every variant: no tactics, then each tactic (tactics.json's order) on each
+## hero who can take it (heroes.json's order).
+static func tactic_variants(content: ContentDb) -> Array[TacticRow]:
+	var variants: Array[TacticRow] = [TacticRow.new()]
+	for tactic_id: String in content.tactic_ids:
+		for hero_id: String in content.hero_ids:
+			if content.tactics[tactic_id].allows(hero_id):
+				var row := TacticRow.new()
+				row.hero_id = hero_id
+				row.tactic_id = tactic_id
+				variants.append(row)
+	return variants
+
+
+## Fights `encounter_id` from the same formations as run_encounter, once per
+## variant, `seeds` fights each.
+static func run_tactics(content: ContentDb, encounter_id: String, named: Dictionary[String, Dictionary], drawn: int, seeds: int, draw_seed: int = 1) -> TacticReport:
+	var report := TacticReport.new()
+	report.encounter = content.encounters[encounter_id]
+	report.seeds = seeds
+	var names: Array[String] = []
+	var formations: Array[Dictionary] = formations_for(content, report.encounter, named, drawn, draw_seed, names)
+	report.formations = formations.size()
+	for row: TacticRow in tactic_variants(content):
+		var tactics: Dictionary[String, String] = {}
+		if not row.hero_id.is_empty():
+			tactics[row.hero_id] = row.tactic_id
+		for formation: Dictionary in formations:
+			var hexes: Dictionary[String, Vector2i] = {}
+			hexes.assign(formation)
+			var won: int = 0
+			for fight_seed: int in range(1, seeds + 1):
+				var errors: Array[String] = []
+				var setup: FightSetup = Encounters.setup(content, encounter_id, hexes, fight_seed, errors, tactics)
+				var result: FightResult = CombatSim.run(setup, content) if setup != null else null
+				if result == null or not result.errors.is_empty():
+					push_error("sim runner: %s with %s" % [encounter_id, tactics])
+					continue
+				row.fights += 1
+				if result.outcome != FightResult.Outcome.DEFEAT:
+					won += 1
+			row.wins += won
+			row.formation_wins.append(won)
+		report.rows.append(row)
+	return report
+
+
+## "Maren on Hold your ground", or "no tactics".
+static func variant_name(content: ContentDb, row: TacticRow) -> String:
+	if row.hero_id.is_empty():
+		return "no tactics"
+	return "%s on %s" % [row.hero_id.capitalize(), content.tactics[row.tactic_id].name]
+
+
+## The tactics report as text: a line per variant, against no tactics.
+static func tactics_text(content: ContentDb, report: TacticReport) -> String:
+	var lines: Array[String] = []
+	var base: TacticRow = report.base()
+	lines.append("%s (%s), tactics: %d formations x %d seeds. No tactics win %d%% (%d/%d)" % [report.encounter.name, report.encounter.id, report.formations, report.seeds,
+		base.win_percent(), base.wins, base.fights])
+	for row: TacticRow in report.rows.slice(1):
+		lines.append("  %-30s %3d%%  %+4d   helps %2d, hurts %2d formations" % [variant_name(content, row), row.win_percent(), row.win_percent() - base.win_percent(),
+			row.helps(base), row.hurts(base)])
+	return "\n".join(lines)
+
+
+## Across encounters, a line per variant (in how many encounters it helps
+## on the whole, hurts, or changes nothing), then the plan's two questions:
+## does every tactic change an outcome somewhere, and is any variant a help
+## in every encounter?
+static func tactics_summary(content: ContentDb, reports: Array[TacticReport]) -> String:
+	var lines: Array[String] = ["Tactics across %d encounters (a variant helps in an encounter if it wins more there than no tactics):" % reports.size()]
+	var variants: int = reports[0].rows.size() if not reports.is_empty() else 0
+	var changed: Dictionary[String, bool] = {}
+	var always_right: Array[String] = []
+	for v: int in range(1, variants):
+		var helped: int = 0
+		var hurt: int = 0
+		var flips: int = 0
+		for report: TacticReport in reports:
+			var row: TacticRow = report.rows[v]
+			helped += 1 if row.wins > report.base().wins else 0
+			hurt += 1 if row.wins < report.base().wins else 0
+			flips += row.helps(report.base()) + row.hurts(report.base())
+		var row: TacticRow = reports[0].rows[v]
+		if flips > 0:
+			changed[row.tactic_id] = true
+		if helped == reports.size():
+			always_right.append(variant_name(content, row))
+		lines.append("  %-30s helps in %d, hurts in %d, no change in %d; changes %d formation outcomes" % [variant_name(content, row), helped, hurt,
+			reports.size() - helped - hurt, flips])
+	var unchanged: Array[String] = []
+	for tactic_id: String in content.tactic_ids:
+		if not changed.has(tactic_id):
+			unchanged.append(content.tactics[tactic_id].name)
+	lines.append("Every tactic changes an outcome: %s" % ("yes" if unchanged.is_empty() else "no (%s)" % ", ".join(unchanged)))
+	lines.append("None is right everywhere: %s" % ("yes" if always_right.is_empty() else "no (%s)" % ", ".join(always_right)))
+	return "\n".join(lines)
 
 
 # --- text -------------------------------------------------------------------------

@@ -2,12 +2,15 @@ extends SceneTree
 ## Fights the Act 1 encounters with placed parties and reports whether
 ## placement matters (docs/plans/rebuild-phase2-heroes-enemies.md, section 7).
 ## Usage:
-##   godot --headless --path . -s tools/sim_runner.gd -- [--encounter=id] [--seeds=50] [--sweep=40] [--draw-seed=1] [--no-boards]
+##   godot --headless --path . -s tools/sim_runner.gd -- [--encounter=id] [--seeds=50] [--sweep=40] [--draw-seed=1] [--no-boards] [--tactics]
 ##   --encounter  one encounter (default: all, in encounters.json's order)
 ##   --seeds      fights per formation, seeds 1 to N (they only change crits)
 ##   --sweep      formations drawn from --draw-seed, besides the named ones in
 ##                tools/sim_formations.json
 ##   --no-boards  leave out the best and worst formations' boards
+##   --tactics    the tactics report instead (phase 3b): the same formations
+##                with each tactic on each hero who can take it, against no
+##                tactics. It's a report, not a gate, so it exits 0.
 ## Ends with a line per encounter, and exits 1 if any fails the gate.
 
 const Report = preload("res://tools/sim_report.gd")
@@ -17,9 +20,13 @@ const FORMATIONS_FILE: String = "res://tools/sim_formations.json"
 func _init() -> void:
 	var options: Dictionary[String, String] = {"encounter": "", "seeds": "50", "sweep": "40", "draw-seed": "1"}
 	var boards: bool = true
+	var tactics: bool = false
 	for arg: String in OS.get_cmdline_user_args():
 		if arg == "--no-boards":
 			boards = false
+			continue
+		if arg == "--tactics":
+			tactics = true
 			continue
 		var parts: PackedStringArray = arg.trim_prefix("--").split("=", true, 1)
 		if parts.size() != 2 or not options.has(parts[0]):
@@ -41,6 +48,16 @@ func _init() -> void:
 			_fail("unknown encounter %s" % options["encounter"])
 			return
 		encounter_ids = [options["encounter"]]
+	if tactics:
+		var reports: Array[Report.TacticReport] = []
+		for encounter_id: String in encounter_ids:
+			var report: Report.TacticReport = Report.run_tactics(content, encounter_id, named, options["sweep"].to_int(), options["seeds"].to_int(), options["draw-seed"].to_int())
+			print(Report.tactics_text(content, report))
+			print("")
+			reports.append(report)
+		print(Report.tactics_summary(content, reports))
+		quit(0)
+		return
 	var summary: Array[String] = []
 	var failed: int = 0
 	for encounter_id: String in encounter_ids:

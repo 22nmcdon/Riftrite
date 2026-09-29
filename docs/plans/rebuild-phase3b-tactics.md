@@ -144,6 +144,32 @@ A tactic is a JSON entry in `data/tactics.json`, loaded by `ContentDb` as a `Tac
 - **It's a report, not a gate.** The loadout gate comes with phase 5. It answers whether a tactic ever changes an outcome and whether any tactic is always right; this plan's bar needs both.
 - `tools/sim_formations.json` gains nothing. Formations stay tactic-free.
 
+**Built in step 4 (2026-09-29):**
+- `--tactics` on `tools/sim_runner.gd` runs the report instead of the placement report, and always exits 0. `Report.run_tactics`, `tactics_text`, and `tactics_summary` are in `tools/sim_report.gd`.
+- **The fights:** the placement report's formations (named, then drawn; `formations_for`, shared), fought with 8 variants: no tactics, then each tactic on each hero who can take it, one at a time.
+- **Per variant:** its win rate, its change from no tactics, and how many formations it helps or hurts. **Across encounters:** where each variant helps on the whole, how many formation outcomes it changes, and the plan's two questions.
+- **Tests:** `tests/tools/test_sim_runner.gd` (4 more). Mutation checks: 6, all caught, one after a test was added.
+
+**First read** (`--tactics --seeds=5`, 44 formations, 2026-09-29; about 21 minutes). Win rate with each variant, in points against no tactics:
+
+| Encounter | No tactics | Casters first (B / M / V) | Hold your ground (B / M / V) | Wait to heal (V) |
+| --- | --- | --- | --- | --- |
+| Pup Warren | 47% | 0 / 0 / 0 | −11 / −2 / +2 | −2 |
+| Ash Nest | 55% | 0 / 0 / 0 | 0 / −1 / −4 | −1 |
+| The Pack | 34% | 0 / 0 / 0 | +5 / −2 / −3 | −8 |
+| Moth Cloud | 67% | +18 / −17 / +1 | +1 / −7 / −1 | −7 |
+| Hollow Line | 59% | 0 / 0 / 0 | −43 / −58 / −55 | −3 |
+| Bog Crossing | 49% | 0 / 0 / 0 | −8 / −3 / 0 | −5 |
+| Sentinel Gate | 71% | 0 / 0 / 0 | −26 / −35 / −36 | −17 |
+| Cairn Road | 58% | 0 / 0 / 0 | −9 / +1 / −6 | −5 |
+| Witch Circle | 54% | −32 / −14 / −14 | −27 / −28 / −35 | −29 |
+
+- **The plan's bar is met:** every tactic changes outcomes (Casters first 131 formation outcomes, Hold your ground 318, Wait to heal 74), and no variant helps in every encounter.
+- **Casters first** does nothing without casters, as it should (it falls back to the hero's own rule). With them it's a real choice: Brannoc going for the Moths wins Moth Cloud 18 points more, Maren doing the same loses 17, and every hero chasing the Witch loses Witch Circle.
+- **Hold your ground** is a trap against ranged enemies: a holder stands under the Hollow Archers' and the Sentinel Gate archers' fire and never closes (Hollow Line falls to 1–16%). It helps Brannoc against the Hounds (The Pack, +5) and Vell in Pup Warren (+2).
+- **Wait to heal** never helps on the whole (−1 to −29): the heals it saves are worth less than the ones it skips, though it wins a few formations (Ash Nest, Bog Crossing).
+- **For the playtest:** whether these read as choices with answers (Casters first, Hold) or as traps (Wait to heal). A higher threshold for Wait to heal (say 70%) is the obvious knob if it's always wrong. The numbers are left alone until the playtest says.
+
 ## 6. Files
 
 | File | Change |

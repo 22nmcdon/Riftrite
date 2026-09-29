@@ -87,3 +87,70 @@ func test_the_gate_needs_a_30_point_gap() -> void:
 	assert_eq(report.winning(), 1)
 	assert_eq(Report.Report.median([5, 1, 3] as Array[int]), 3)
 	assert_eq(Report.seconds(551), "27.5s")
+
+
+# --- the tactics report (phase 3b) ----------------------------------------------
+
+func test_the_tactic_variants() -> void:
+	var names: Array = Report.tactic_variants(_content).map(func(row: Report.TacticRow) -> String: return Report.variant_name(_content, row))
+	assert_eq(names, ["no tactics", "Brannoc on Casters first", "Maren on Casters first", "Vell on Casters first", "Brannoc on Hold your ground",
+		"Maren on Hold your ground", "Vell on Hold your ground", "Vell on Wait to heal"])
+
+
+func test_a_small_tactics_run() -> void:
+	var named: Dictionary[String, Dictionary] = _named()
+	var report: Report.TacticReport = Report.run_tactics(_content, "witch_circle", named, 1, 2)
+	assert_eq([report.formations, report.seeds, report.rows.size()], [5, 2, 8])
+	for row: Report.TacticRow in report.rows:
+		assert_eq(row.fights, 10)
+		assert_eq(row.formation_wins.size(), 5)
+		assert_eq(row.formation_wins.reduce(func(sum: int, wins: int) -> int: return sum + wins, 0), row.wins)
+	var plain: Report.Report = Report.run_encounter(_content, "witch_circle", named, 1, 2)
+	assert_eq(report.base().formation_wins, plain.rows.map(func(row: Report.Row) -> int: return row.wins), "no tactics is the placement report's own fights")
+	var maren_holds: Report.TacticRow = report.rows[5]
+	var guarded: Dictionary[String, Vector2i] = {}
+	guarded.assign(named["guarded"])
+	var errors: Array[String] = []
+	var result: FightResult = CombatSim.run(Encounters.setup(_content, "witch_circle", guarded, 1, errors, {"maren": "hold_ground"} as Dictionary[String, String]), _content)
+	var won: int = 0 if result.outcome == FightResult.Outcome.DEFEAT else 1
+	result = CombatSim.run(Encounters.setup(_content, "witch_circle", guarded, 2, errors, {"maren": "hold_ground"} as Dictionary[String, String]), _content)
+	won += 0 if result.outcome == FightResult.Outcome.DEFEAT else 1
+	assert_eq(maren_holds.formation_wins[0], won, "a variant fights with its tactic")
+	var text: String = Report.tactics_text(_content, report)
+	for expected: String in ["Witch Circle (witch_circle), tactics: 5 formations x 2 seeds. No tactics win", "  Maren on Hold your ground ", "formations"]:
+		assert_string_contains(text, expected)
+
+
+func _tactic_row(formation_wins: Array[int], hero_id: String = "maren", tactic_id: String = "hold_ground") -> Report.TacticRow:
+	var row := Report.TacticRow.new()
+	row.hero_id = hero_id
+	row.tactic_id = tactic_id
+	row.formation_wins = formation_wins
+	row.wins = formation_wins.reduce(func(sum: int, wins: int) -> int: return sum + wins, 0)
+	row.fights = formation_wins.size() * 2
+	return row
+
+
+func test_helping_and_hurting_count_formations() -> void:
+	var base: Report.TacticRow = _tactic_row([2, 0, 1, 2] as Array[int], "", "")
+	var row: Report.TacticRow = _tactic_row([2, 2, 0, 1] as Array[int])
+	assert_eq([row.helps(base), row.hurts(base)], [1, 2])
+	assert_eq([base.helps(base), base.hurts(base)], [0, 0])
+
+
+## Two encounters: Maren's hold helps in both; Brannoc's casters-first helps
+## in one and hurts in the other; Vell's wait changes nothing.
+func test_the_summary_answers_the_plans_two_questions() -> void:
+	var reports: Array[Report.TacticReport] = []
+	for e: int in 2:
+		var report := Report.TacticReport.new()
+		report.encounter = _content.encounters[_content.encounter_ids[e]]
+		report.rows = [_tactic_row([1, 0] as Array[int], "", ""), _tactic_row([2, 1] as Array[int]), _tactic_row([1, 0] as Array[int], "vell", "wait_to_heal"),
+			_tactic_row(([2, 0] as Array[int]) if e == 0 else ([0, 0] as Array[int]), "brannoc", "casters_first")] as Array[Report.TacticRow]
+		reports.append(report)
+	var text: String = Report.tactics_summary(_content, reports)
+	assert_string_contains(text, "%-30s helps in 2, hurts in 0, no change in 0; changes 4 formation outcomes" % "Maren on Hold your ground")
+	assert_string_contains(text, "%-30s helps in 0, hurts in 0, no change in 2; changes 0 formation outcomes" % "Vell on Wait to heal")
+	assert_string_contains(text, "Every tactic changes an outcome: no (Wait to heal)")
+	assert_string_contains(text, "%-30s helps in 1, hurts in 1, no change in 0" % "Brannoc on Casters first")
+	assert_true(text.ends_with("None is right everywhere: no (Maren on Hold your ground)"), "only the one that helps in both")
