@@ -1,6 +1,6 @@
 # Rebuild plan, part 6: more decisions between fights
 
-Status: **agreed in discussion (2026-09-28, answers and section 8 on 2026-09-29), not built.** The playtester's mock of the screens is `docs/mockups/hero-panel-layout.pdf` (section 9). Adds to part 1 (`rebuild-heroes.md`) and part 4 (`rebuild-run.md`); where this part changes a rule there, this part wins. Numbers are placeholders to tune.
+Status: **agreed in discussion (2026-09-28, answers and section 8 on 2026-09-29), not built.** The playtester's mock of the screens is `docs/mockups/hero-panel-layout.pdf` (section 9). Adds to part 1 (`rebuild-heroes.md`) and part 4 (`rebuild-run.md`); where this part changes a rule there, this part wins. Numbers are placeholders to tune. **Part 7 (`rebuild-combos.md`, 2026-09-30) adds to this part:** some after-fight picks are *growing* upgrades, and every card that changes a stat says the amount.
 
 **Why:** with items and currency gone, a day had about three decisions (camp, fight, placement), plus an upgrade pick now and then. Making decisions is the heart of a roguelite, so this part adds three things that feed each other:
 
@@ -44,7 +44,7 @@ Status: **agreed in discussion (2026-09-28, answers and section 8 on 2026-09-29)
 - **Every won fight offers 1 of 3 upgrades.** Each card names the hero it's for, so the choice is also *who* gets stronger. By default the three cards are one per hero; sometimes one is a wild card for any hero.
 - **Before a hero transforms,** their offers come from their hero layer and role layer, plus some that lean toward the path they've vowed to.
 - **After a hero transforms,** their path's pool joins the offers.
-- **Deeds still drive the big moments:** transformations and apexes. Picks are the steady drip in between, and the only source of upgrades.
+- **Deeds still drive the big moments:** transformations and apexes. Picks are the steady drip in between, and the only source of upgrades. **Changed by part 7:** some picks are *growing* upgrades that count what the hero does and keep growing all run (`rebuild-combos.md`, section 4).
 - **Upgrades are permanent.** They aren't slotted and can't be swapped.
 - **A lost fight gives no pick.** A tie gives one, like a win. Train at camp gives one; a Hunt pays currency, not a pick.
 - **Or take currency instead** (from the mock, section 9): the pick screen has "Take 3 shards instead", for when none of the three is worth it.

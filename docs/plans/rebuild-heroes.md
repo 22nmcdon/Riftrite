@@ -1,6 +1,6 @@
 # Rebuild plan, part 1: heroes
 
-Status: **agreed in discussion (2026-09-27), not built.** This is the first part of a from-scratch rethink of the game. Later parts (the arena, enemies, the run, and what replaces items and shops) build on it. Numbers are placeholders to tune.
+Status: **agreed in discussion (2026-09-27), not built.** This is the first part of a from-scratch rethink of the game. Later parts (the arena, enemies, the run, and what replaces items and shops) build on it. Numbers are placeholders to tune. **Part 7 (`rebuild-combos.md`, 2026-09-30) adds to this part:** shared keywords, more triggers, one damage rule, and permanent scaling.
 
 **Why:** playtests say the game is far too easy, essences aren't fun, two rows of units make tanks pointless, and items all feel the same. The rethink puts **heroes** at the center: each hero changes over a run in ways you choose and then earn by playing them well.
 

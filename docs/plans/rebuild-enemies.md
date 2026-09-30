@@ -8,7 +8,7 @@ Status: **agreed in discussion (2026-09-27), not built.** Part of the from-scrat
 
 - **Every enemy type tests one thing**, and has an answer in the heroes' paths.
 - **Fair:** you always see what's coming. Enemy positions and threats are shown before you place your heroes, and big attacks are marked before they land.
-- **Harder means new problems, not more HP.** Later days combine threats instead of inflating stats.
+- **Harder means new problems, not more HP.** Later days combine threats instead of inflating stats. (Part 7, `rebuild-combos.md`: still true in the campaign; only the endless mode scales numbers.)
 
 ## Decisions
 

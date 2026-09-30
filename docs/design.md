@@ -9,6 +9,7 @@ Working title: **Riftrite** (a placeholder). This document was rewritten on 2026
 | Enemies, elites, the boss | `docs/plans/rebuild-enemies.md` |
 | The run: days, camp, fights, relics, duo bonds | `docs/plans/rebuild-run.md` |
 | Decisions between fights: after-fight picks, loadout slots and the currency, wounds, the Magpie, and the screens' item language | `docs/plans/rebuild-between-fights.md` |
+| Combos, scaling, and breaking the game: keywords, triggers, the damage rule, permanent scaling, relic tiers, the endless mode | `docs/plans/rebuild-combos.md` |
 | Build order, and what the rebuild removed | `docs/plans/rebuild-build-order.md` |
 | Phase 1, the arena sim (build plan) | `docs/plans/rebuild-phase1-arena-sim.md` |
 | Phase 2, base heroes, the Act 1 enemies, encounters, and the sim runner (build plan) | `docs/plans/rebuild-phase2-heroes-enemies.md` |
@@ -70,12 +71,22 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 - **Choosing fights feeds deeds:** which enemies you fight decides which deeds fill. The fight card shows the enemies, never which paths they suit.
 - **No items or shops.** Camp options are free. A **currency** (placeholder: shards) comes from fights and Hunts, and buys only loadout things (at the Pedlar), wound treatment, and rerolls. Nothing sells back.
 - **Wounds:** a hero who falls gets one (–15% max HP, up to 3), won or lost; Undying and would-fall saves don't count. Rest clears them all; currency clears one.
-- **Relics** are rare (about 3–5 a run), team-wide, and **every relic has a cost**. A relic can be turned down, but once taken it stays. Now and then the Pedlar sells one, for about two days of income; it counts toward the 3–5.
+- **Relics** are team-wide, about **6–9 a run in three tiers** (part 7): **common** and **rare** ones each have a cost (a rare's cost is one some builds can dodge), and **every boss offers a choice of 3 build-defining boss relics**, which may be pure upside. A relic can be turned down, but once taken it stays. Now and then the Pedlar sells one, for about two days of income.
 - **Duo bonds** link two paths of two different heroes; the vow shows a bonded pair as "?" until it's found.
 - **Losing:** a lost fight replays the day, and the second loss ends the run. Deed progress from a lost fight still counts. A tie pays like a win.
 - **Random streams:** shop stock, picks, camp, and fight seeds each have their own stream from the run seed.
 - **Pacing targets:** the first transformation around days 3–4, all three heroes transformed by the boss, and apexes in Acts 2–3. Upgrade picks come after every win (about 8 in Act 1), so each is small.
 - **Difficulty target:** a good player clears Act 1 about half the time.
+
+## Combos and scaling (part 7)
+
+- **Keywords:** Marked, Rooted, Burning, Shielded, and Stealthed are statuses any hero can apply and any hero's charms, relics, and upgrades can pay off. They're team-wide: Maren's Mark counts for Vell's charm.
+- **Triggers** for charms, relics, and upgrades to hang on: on crit, on kill, on applying or hitting a keyword, on a Shield breaking, on a signature (the unit's or an ally's), on a heal, on a hop. A chain of triggers stops after a set depth each tick.
+- **One damage rule:** bonuses of the same kind (crit, vulnerability, power, relic) add; different kinds multiply. DEF, Shield, and healing work the same way.
+- **Permanent scaling:** some upgrades and relics count what a hero does and grow all run (their card shows "Now: +X"); they reset with the run, so meta progression still adds no stats.
+- **Every stat change says its amount** ("+10% attack speed"); ability text still leaves numbers to the numbers line.
+- **No combo readouts for players:** working a combo out is part of the fun. The combat log stays complete, and a readout exists only behind the testing toggle and in the sim runner.
+- **Endless mode** (after Act 3): a run goes on into floors where the rift scales exponentially; you always lose eventually, and the score is how deep you got. The campaign keeps "new problems, not more HP".
 
 ## Between runs
 
@@ -131,3 +142,9 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - **Wounds:** is –15% up to 3 right, and should a lost fight's falls wound? (part 6)
 - **Sigils on signatures without mana:** written by what they do, or marked with the triggers they fit? (part 6)
 - **How fast heroes grow** with a pick after every win. (part 6)
+- **Relics per run:** is 6–9 right, and how many rares against commons? (part 7)
+- **Boss relics:** the pool's size, and whether one can have a cost at all. (part 7)
+- **The trigger chain's depth limit** (8 is a guess). (part 7)
+- **Endless:** its scaling rate, how often floors offer relics, and whether it's its own mode or the end of a run. (part 7)
+- **Which statuses become keywords next** (Slow, Bleed, Stun). (part 7)
+- **Where part 7 lands in the build order.** (part 7)
