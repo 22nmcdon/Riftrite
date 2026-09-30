@@ -21,7 +21,7 @@ Status: **agreed in discussion (2026-09-30), not built.** The Magpie is a node (
 
 ## Selling items at the shop
 
-**Any shop buys items** (charms, tactics, sigils, gambits) for **half their price**, rounded down. The item's rank doesn't change what it sells for. The shop never buys relics.
+(The shop is the Pedlar.) **Any shop buys items** (charms, tactics, sigils, gambits) for **half their price**, rounded down. The item's rank doesn't change what it sells for. The shop never buys relics.
 
 ## Grafts are cut
 

@@ -16,7 +16,7 @@ Status: **agreed in discussion (2026-09-28, answers and section 8 on 2026-09-29)
 - **Wounds:** a hero who falls gets a wound. Wounds are cleared by **resting at camp** (free, but it uses the camp pick) or by **paying currency** (one wound at a time). Since playtest gate 3, **a won fight also heals one wound on each hero** before the fallen take theirs (`rebuild-phase5-run.md` Decision 17).
 - **Nothing slotted may become useless when its hero transforms** (section 3).
 - **Any hero can hold anything; the Pedlar only sells what your team can use; the Magpie sells other heroes' gear, grafts, and one relic** (section 8, 2026-09-29). This replaces the earlier "most slotted things are hero-specific". **Changed by the loadout pool (`loadout/README.md`):** any hero can still hold anything, but no shop filters by what the team can use, and grafts are removed. The shops' setup is being redone by the playtester.
-  Superseded: the Pedlar and grafts are gone, and the Magpie is a node (`magpie.md`).
+  Superseded: grafts are gone, the Pedlar is the shop (it comes every day), and the Magpie is a node (`magpie.md`).
 
 **Answers (2026-09-29):**
 
@@ -143,7 +143,7 @@ Agreed in discussion (2026-09-29). **Changed by the loadout pool (`loadout/READM
 
 **The Pedlar sells only what someone on your team can use** (by those tags). Unchanged otherwise: about 4 wares, now and then a relic (section 4: expensive, and it counts toward the 3–5 per run).
 
-**Superseded (2026-09-30): the Magpie is now a node, grafts are cut, and the Pedlar is gone (a shop comes every day). See `magpie.md` and `days-and-nodes.md`. The old design follows for reference.**
+**Superseded (2026-09-30): the Magpie is now a node, grafts are cut, and the Pedlar is the shop, which comes every day. See `magpie.md` and `days-and-nodes.md`. The old design follows for reference.**
 
 **The Magpie** (the exotic shop) is a rare event, about once per act. He sells what he took from other bands who fell in the rift.
 
