@@ -1,4 +1,4 @@
-# Legendary relics (14)
+# Legendary relics (15)
 
 **The shop before each boss · 30 shards.** An engine that spans builds, or a big structural change. Rules for all relics: `README.md`. Numbers are placeholders.
 
@@ -24,12 +24,13 @@ Each is a chain (`README.md`, rule 6), so Chain of Echoes (boss) makes it go dee
 | **Quickening** | Every hit gives the hero +1% attack speed for the rest of the fight, with no cap |
 | **Second Dawn** | The first time each hero falls in a fight, they rise 5s later at 50% HP. If every hero is down at the same moment, the fight is lost, even with a rise still waiting |
 
-## Relic collection
+## Relic collection and wealth
 
 | Relic | Effect |
 | --- | --- |
 | **Reliquary** | Every common relic you own is twice as strong |
 | **Reliquary Lamp** | Heroes gain +2% to all basic stats for every relic you own |
+| **Gilded Rift** | Heroes gain +1% ATK and MGK for every 5 shards you're holding |
 
 ## Structural
 

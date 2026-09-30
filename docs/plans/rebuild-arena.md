@@ -78,7 +78,7 @@ Enemies get their own part of the plan.
 ## 7. Rift Collapse: the arena shrinks
 
 - **At 45s, the arena's outer ring starts crumbling inward**, one ring at a time (the rings of the placement grid).
-- **Anyone standing on crumbled ground takes damage.** Nobody can walk onto it, but a push can put them there.
+- **Anyone standing on crumbled ground takes damage.** ~~Nobody can walk onto it, but a push can put them there.~~ **Changed 2026-09-30 (`relics/README.md`, Decisions): crumbled ground is walkable.** It's just crumbling tiles: standing on it deals flat damage every second (15, a placeholder) to heroes and enemies alike, and only rocks wall a target off. Not built yet (phase 5c).
 - Fights still end, but through positioning: slow, defensive teams get squeezed toward the middle, into each other's area attacks.
 - This replaces the flat damage ramp. A fight still running at **180s is a tie, and a tie counts as a win.**
 
@@ -110,7 +110,7 @@ Answers to the phase 1 plan's proposals (2026-09-27; the details are in `rebuild
 - **Leaps and pushes are instant in the sim;** only the UI animates them.
 - **Fliers pass over rocks** as well as units.
 - **Stun doesn't stop mana gain,** but a stunned unit can't fire its mana signature.
-- **Crumbled ground can't be walked into,** only pushed into.
+- ~~**Crumbled ground can't be walked into,** only pushed into.~~ **Changed 2026-09-30:** walkable, damaging whoever stands on it (above, section 7).
 - **Up to 30 standing units per side**, since summons may be small and frequent.
 - **Ranged hits travel,** about 1 tick per hex.
 - **Rocks keep their size for now** (1 hex across): one missing rock in a row is too narrow to walk through, and it takes two. You'll judge it in playtesting.

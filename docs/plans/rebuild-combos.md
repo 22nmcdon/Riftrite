@@ -10,7 +10,7 @@ Status: **agreed in discussion (2026-09-30), not built; it's phase 5c, before ph
 - **More triggers** for charms, relics, and upgrades to hang on (section 2).
 - **One damage rule:** bonuses of the same kind add; bonuses of different kinds multiply (section 3).
 - **Permanent scaling** across the run: some upgrades and relics grow every fight and never stop (section 4).
-- **More relics, in tiers,** including **really strong, build-defining relics after each boss** (section 5).
+- **More relics, in tiers,** including **really strong, build-defining relics after each boss** (section 5). **Changed by the relic pool (`relics/README.md`, 2026-09-30):** five tiers, no downsides, about 8–14 a run, bought in every shop.
 - **Every stat change says its amount:** "+10% attack speed", "+5 ATK", never "attacks faster" (section 6).
 - **No combo readouts for players.** Working out whether a combo does what you meant is part of the fun. Readouts exist only for testing (section 7).
 - **An endless mode** where the rift scales exponentially (section 8).
@@ -82,6 +82,8 @@ Some upgrades and relics **grow every fight and never reset** during a run.
 
 ## 5. Relics: more of them, in tiers
 
+**Superseded by the relic pool (`relics/README.md`, 2026-09-30), which wins where this section disagrees:** five tiers (common, rare, epic, legendary, boss), **relics have no downsides** (trade-offs live in events, Rift Tear, and Bloodied Oath), about 8–14 a run, and every shop shows one relic at a time with rerolls that climb in price. The full pool is in `relics/`, one file per tier. What follows is the first version, kept for its reasoning.
+
 Relics go from "about 3–5 per run" to **about 6–9 per run**, and they come in three tiers:
 
 | Tier | Where from | What it's like |
@@ -132,7 +134,8 @@ Relics go from "about 3–5 per run" to **about 6–9 per run**, and they come i
 
 | Plan | Rule | Now |
 | --- | --- | --- |
-| `rebuild-run.md` | "About 3–5 relics per run", "every relic has a cost" | About 6–9, in tiers; boss relics may be pure upside |
+| `rebuild-run.md` | "About 3–5 relics per run", "every relic has a cost" | About 8–14, in five tiers, with no downsides (`relics/README.md`) |
+| `rebuild-arena.md` | Crumbled ground can't be walked into | Walkable; it damages whoever stands on it (`relics/README.md`, Decisions) |
 | `rebuild-between-fights.md` | After-fight picks are the steady drip | Some picks are *growing* upgrades (section 4) |
 | `rebuild-enemies.md` | Harder means new problems, not more HP | Still true in the campaign; endless mode scales numbers |
 | CLAUDE.md, rule 5 | Meta progression never adds stats | Unchanged: scaling lasts one run only |
@@ -149,17 +152,17 @@ Relics go from "about 3–5 per run" to **about 6–9 per run**, and they come i
 
 Part 7 was agreed after phases 5 and 5b were built. It isn't built yet, and nothing below changes a decision above; it's what a build plan for part 7 has to deal with.
 
-- **Relics:** phase 5 built 8, all one tier, each with a cost, about 1.6–2.7 a run (`rebuild-phase5-run.md`, sections 8 and 16). Tiers, boss relic choices, and 6–9 a run are new work in the run layer, and the Act 1 boss (Old Mother Ash) would be the first to offer a boss relic.
-- **Ember Heart** was built simpler than section 5 describes it: every hero's basic attack Burns (a kit mod can't double a status), and healing is 20% weaker (`rebuild-phase5-run.md`, Decisions). Section 5's "Burn doubled" needs the damage rule or a keyword payoff to build.
+- **Relics:** phase 5 built 8 (plus none of the new pool), all one tier, each with a cost, about 1.6–2.7 a run (`rebuild-phase5-run.md`, sections 8 and 16). `relics/README.md` says what becomes of each: most lose their costs and join a tier, Pilgrim's Lantern and Hungry Blade are cut. Tiers, a relic in every shop with climbing rerolls, the shop before each boss, the boss relic choice, and the new income are new work in the run layer. The Act 1 boss (Old Mother Ash) would be the first to offer a boss relic.
+- **Ember Heart** becomes a rare with no cost: every hero's basic attack applies 1 Burn (`relics/README.md`), close to what's built, minus the weaker healing.
 - **Stat amounts (section 6):** many built cards name no amount ("Your DEF is higher.", "You walk faster."). Their text in `items.json`, `upgrades.json`, and `relics.json` gets rewritten; the numbers are already in each entry's mod, so the card's amount can be generated from it, the way ability numbers lines are.
 - **The damage rule (section 3):** the sim already adds bonuses in a few places (Marked, the tactics' payoffs, kit mods, Rift Tear). Each has to be sorted into a kind, and the rule applied in the one helper that lands hits (`EffectRunner.deal_hit`). That changes fights, so the bench fingerprints and every tuned number move, and the tuning of playtest gate 3 (section 16 there) is redone.
 - **Keywords and triggers** build on what exists: statuses (`StatusDef`) and the events read from the log (`Events`, `Passives`). Burning and Shielded exist as statuses; the triggers in section 2 are mostly new event kinds.
+- **Crumbled ground becomes walkable** (`relics/README.md`, Decisions): today the sim refuses to walk onto it and re-targets when it walls a target off. That changes fights too, so it lands beside the damage rule and shares its retune.
 - **Endless mode** needs Acts 2 and 3 first.
 
 ## Open questions
 
-- **Relics per run:** is 6–9 right? How many rares versus commons?
-- **Boss relic pool size**, and whether a boss relic can have a cost at all.
+- Relics' open questions (stacking, boss offers, relics per run, the harder fight's pay, chain limits) are in `relics/README.md`.
 - **The chain-depth limit** (8 is a guess).
 - **Endless:** scaling rate, how often floors offer relics, and whether it's its own mode or the end of a run.
 - **Which statuses become keywords next** (Slow, Bleed, Stun).

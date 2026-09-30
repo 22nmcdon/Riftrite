@@ -1,13 +1,13 @@
 # Rebuild plan, part 4: the run
 
-Status: **agreed in discussion (2026-09-27), not built.** Part of the from-scratch rethink: part 1 is `docs/plans/rebuild-heroes.md`, part 2 `docs/plans/rebuild-arena.md`, part 3 `docs/plans/rebuild-enemies.md`. Numbers are placeholders to tune. **Part 6 (`docs/plans/rebuild-between-fights.md`, 2026-09-29) changes this part:** a pick after every won fight, loadout slots bought with a currency, and wounds. Where they disagree, part 6 wins; the notes below say where. **Part 7 (`docs/plans/rebuild-combos.md`, 2026-09-30) changes it too:** more relics, in tiers, and a build-defining relic after every boss.
+Status: **agreed in discussion (2026-09-27), not built.** Part of the from-scratch rethink: part 1 is `docs/plans/rebuild-heroes.md`, part 2 `docs/plans/rebuild-arena.md`, part 3 `docs/plans/rebuild-enemies.md`. Numbers are placeholders to tune. **Part 6 (`docs/plans/rebuild-between-fights.md`, 2026-09-29) changes this part:** a pick after every won fight, loadout slots bought with a currency, and wounds. Where they disagree, part 6 wins; the notes below say where. **Part 7 (`docs/plans/rebuild-combos.md`, 2026-09-30) and the relic pool (`docs/plans/relics/README.md`, the same day) change it too:** relics in five tiers with no downsides, one in every shop, a build-defining relic after every boss, and new income.
 
 **Why:** items and essences are gone, and heroes only grow through deeds. So the run has to be built around one question: **what does the player decide between fights?**
 
 ## Decisions
 
 - **The fight card doesn't say which paths a fight is good for.** Players work that out from the enemies they see.
-- **Relics stay, and are rarer** (about 3–5 per run), and every relic has a real cost. **Changed by part 7 (`rebuild-combos.md`):** about 6–9 per run, in three tiers, with a build-defining relic choice after every boss.
+- **Relics stay, and are rarer** (about 3–5 per run), and every relic has a real cost. **Changed by part 7 and the relic pool (`relics/README.md`):** about 8–14 per run, in five tiers, with **no downsides**, and a build-defining relic choice after every boss.
 - **Duo bonds come from paths**, not from heroes or camp (section 6).
 - **The cozy side of the game is gone.** The setting is the rift: dark and dangerous, with no warm Guildhall to come home to. Names and camps follow that, and **the art gets a complete rehaul** (its own part of the build order).
 - **Items and shops are gone.** Camp options are free: you just pick one. (Part 6 brings back a currency, but only for loadout things and wounds, spent at a Pedlar camp option; section 8.)
@@ -84,12 +84,12 @@ One choice before each fight. **Different places offer different menus**, so whe
 
 **Spending** (part 6)
 
-- **Pedlar:** about 4 charms, tactics, and sigils for sale, drawn for your heroes and paths; treat a wound for currency. Now and then (about 1 visit in 3, or at certain places) it also carries one relic, for about two days of income.
+- **Pedlar:** about 4 charms, tactics, and sigils for sale, drawn for your heroes and paths; treat a wound for currency. ~~Now and then (about 1 visit in 3, or at certain places) it also carries one relic, for about two days of income.~~ **Changed by the relic pool (`relics/README.md`):** every shop shows 1 relic at a time (mostly common at the Pedlar), and rerolling replaces it; the first reroll costs 1 shard, each after it 1 more.
 - **Fortify:** your heroes start the next fight with a small Shield.
 
 **Relics**
 
-- **Shrine:** a relic with a real cost.
+- **Shrine:** a relic ~~with a real cost~~ (relics have no downsides now: `relics/README.md`).
 - **Temper:** swap one of your relics for a random relic of the same rarity.
 
 **Events**
@@ -117,8 +117,8 @@ Examples:
 ## 7. Relics
 
 - **Team-wide rule changers**, from elites, the boss, the Shrine, and Rift Tear.
-- **Every relic has a cost.** Example: *Ember Heart*: all Burn you apply is doubled, but your healing is 20% weaker. No pure upsides, which also helps with difficulty.
-- **About 3–5 per run.** A relic can be turned down, but once taken it stays. **Changed by part 7:** about 6–9 per run; common, rare, and boss tiers (`rebuild-combos.md`, section 5).
+- ~~**Every relic has a cost.** Example: *Ember Heart*: all Burn you apply is doubled, but your healing is 20% weaker. No pure upsides, which also helps with difficulty.~~ **Changed by the relic pool (`relics/README.md`, 2026-09-30): relics have no downsides.** Trade-offs live in events, Rift Tear, and Bloodied Oath.
+- **About 3–5 per run.** A relic can be turned down, but once taken it stays. **Changed by part 7 and the relic pool:** about 8–14 per run; common, rare, epic, legendary, and boss tiers (`relics/`). Relics are sold in every shop, the shop before each boss sells legendaries, and every boss offers 3 boss relics to choose 1 from.
 - **Now and then the Pedlar sells one** (part 6): about 1 visit in 3, or only at certain places, for about two days of income. It counts toward the 3–5; it's another way to get one, not more of them.
 
 ## 8. Currency: back, for loadouts and wounds only

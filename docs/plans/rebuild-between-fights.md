@@ -77,14 +77,14 @@ A transformation can replace a signature (Vigil Keeper's Sunfall replaces Mend) 
 
 ## 4. The currency
 
-- **Earned from fights:** a normal win pays a set amount, the harder fight pays more, and elites and the boss pay more still. A tie pays like a win. **A Hunt at camp pays currency.** (A name to pick later; placeholder: **shards**.)
+- **Earned from fights:** a normal win pays a set amount, the harder fight pays more, and elites and the boss pay more still. **Numbers set by the relic pool (`relics/README.md`, 2026-09-30):** a won fight pays 8, an elite 12, the boss 25 (placeholders; whether the harder fight pays more is open there). A tie pays like a win. **A Hunt at camp pays currency.** (A name to pick later; placeholder: **shards**.)
 - **Spent on:**
   - **Buying** charms, tactics, and sigils.
   - **Now and then, a relic** at the Pedlar (about two days of income; below).
   - **Treating one wound.**
   - **Rerolling** an offer, where rerolls exist.
 - **Where you buy:** a **Pedlar** camp option (a place's menu includes it) shows about 4 things for sale, drawn for your heroes and your paths. Some camp places also carry a smaller stall.
-- **The Pedlar's relic:** about 1 visit in 3 (or only at certain places, like a market in the ruins), the Pedlar also carries **one relic**, priced at about two days of income. Buying it means going without charms and wound treatment for a while. It counts toward the run's 3–5 relics: another way to get one, not more of them. Like every relic, it has a cost.
+- **The Pedlar's relic:** ~~about 1 visit in 3 (or only at certain places, like a market in the ruins), the Pedlar also carries one relic, priced at about two days of income. Buying it means going without charms and wound treatment for a while. It counts toward the run's 3–5 relics: another way to get one, not more of them. Like every relic, it has a cost.~~ **Changed by the relic pool (`relics/README.md`, 2026-09-30):** every shop shows 1 relic at a time, priced by tier (common 5, rare 12, epic 20, legendary 30), and rerolling replaces it: the first reroll costs 1 shard and each after it 1 more, so with enough shards a shop never runs dry. Relics have no downsides.
 - **Never** for upgrades from the after-fight pick, which stay free.
 - **Starting amount:** a little, so there's a first purchase before day 2.
 - **Nothing sells back**, except a charm a transformation broke.

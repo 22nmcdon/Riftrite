@@ -4,10 +4,10 @@ Status: **agreed in discussion (2026-09-30), not built.** The relic pool for Act
 
 | Tier | File | Where from | Price | Count |
 | --- | --- | --- | --- | --- |
-| **Common** | `relics-common.md` | Every shop | 5 shards | 20 |
-| **Rare** | `relics-rare.md` | Every shop (less often), the Magpie, elites | 12 shards | 16 |
-| **Epic** | `relics-epic.md` | Shops (rarely), elites, the Magpie | 20 shards | 12 |
-| **Legendary** | `relics-legendary.md` | The shop before each boss | 30 shards | 14 |
+| **Common** | `relics-common.md` | Every shop | 5 shards | 25 |
+| **Rare** | `relics-rare.md` | Every shop (less often), the Magpie, elites | 12 shards | 21 |
+| **Epic** | `relics-epic.md` | Shops (rarely), elites, the Magpie | 20 shards | 14 |
+| **Legendary** | `relics-legendary.md` | The shop before each boss | 30 shards | 15 |
 | **Boss** | `relics-boss.md` | After each boss: choose 1 of 3 | free | 11 |
 
 ## What each tier is for
@@ -33,14 +33,55 @@ Status: **agreed in discussion (2026-09-30), not built.** The relic pool for Act
 
 ## Shops
 
-- **The Pedlar:** 2 relics beside its 4 wares; mostly common, sometimes rare, rarely epic.
-- **The Magpie:** always 1 relic: rare or epic, rarely legendary.
-- **The shop before each boss:** 3 legendaries and 2 epics.
+- **Every shop shows 1 relic at a time.** Rerolling replaces it with a new one, so a shop has no limit: with enough shards you can keep buying. The first reroll costs 1 shard, and each reroll after it costs 1 more (Tinker's Purse makes the first free; Merchant's Covenant stops the price climbing).
+- **The Pedlar:** its 1 relic is mostly common, sometimes rare, rarely epic.
+- **The Magpie:** its 1 relic is rare or epic, rarely legendary.
+- **The shop before each boss:** 1 legendary plus 1 relic of another tier. Rerolls work the same way but start at 5 shards.
 - **After each boss:** 3 boss relics, take 1.
+
+## Income (placeholders)
+
+A won fight pays 8 shards, an elite 12, the boss 25.
+
+## Decisions (2026-09-30)
+
+These win over part 7 (`../rebuild-combos.md`), part 6 (`../rebuild-between-fights.md`), the run plan (`../rebuild-run.md`), and the arena plan (`../rebuild-arena.md`) where they disagree; those plans carry notes saying so.
+
+| Topic | Decision |
+| --- | --- |
+| **Costs** | **Relics have no downsides.** The README's rule wins over part 7 and the run plan. Trade-offs move to events, Rift Tear, and Bloodied Oath. Built relics lose their costs (section 2) |
+| **Tiers** | Five tiers: common, rare, epic, legendary, boss. Part 7 and the run plan are updated to match the README |
+| **Relics per run** | Roughly 8–14, depending on how much players reroll |
+| **Shops** | **Every shop shows 1 relic at a time.** Rerolling replaces it with a new one, so a shop has no limit: with enough shards you can keep buying. The first reroll costs **1 shard**, and each reroll after it costs **1 more** |
+| **The shop before each boss** | Shows **1 legendary plus 1 relic of another tier**. Rerolls work the same way but **start at 5 shards** |
+| **After each boss** | Choose 1 of 3 boss relics, free |
+| **Prices** | Common 5, rare 12, epic 20, legendary 30 |
+| **Income** | A won fight pays **8**, an elite **12**, the boss **25** (placeholders). This replaces part 6's and part 7's earlier numbers |
+| **Crumbled ground** | **Walkable.** Standing on it deals flat damage every second (15, a placeholder) to heroes and enemies alike. Only rocks wall a target off. Riftwalker's Soles (boss) builds on this. The arena plan and the sim change to match |
+| **Buffs** | A buff to a hero raises ATK or MGK, never "damage". "Damage" stays for bonuses tied to the target, hit multipliers, and effects scoped to one kind of attack |
+| **Lifesteal** | Its own mechanic, separate from healing (unless Blood Communion) |
+| **Chains** | Anything that repeats off its own result is a chain; Chain of Echoes (boss) affects every chain |
+
+## The relics already built
+
+Phase 5 built nine relics with costs (`../rebuild-phase5-run.md`). What becomes of each (Mirror of Ash was a boss relic in part 7's examples, not built):
+
+| Relic | Built now (boon / cost) | Decision |
+| --- | --- | --- |
+| **Ember Heart** | Basic attacks apply 1 Burn / heals 20% weaker | **Rare, no cost:** every hero's basic attack applies 1 Burn |
+| **Hollow Crown** | 4th loadout slot / wounds take 20% | **Legendary, no cost:** heroes get a 4th loadout slot |
+| **Mirror of Ash** | (a boss relic in the old part 7) | **Epic, no cost:** enemies take 60% of the damage they deal to heroes |
+| **Rift-Glass Eye** | Every fight is Scouted / enemies +10% HP | **Rare, no cost:** every fight is Scouted |
+| **Pilgrim's Lantern** | Rest +10% max HP next fight / Pedlar +1 price | **Cut** |
+| **Bloodstone** | +12% ATK / −8% max HP | **Common, no cost:** heroes gain +8% ATK |
+| **Warden's Chain** | +15% DEF / walks slower | **Common, no cost:** heroes gain +10% DEF |
+| **Gravedigger's Coin** | +2 shards per win / only 2 pick cards | **Common, no cost:** +3 shards after every won fight (replaces the planned Gravedigger's Spade; keeps the built name) |
+| **Hungry Blade** | Basic attacks heal 10% of damage / 20% less healing taken | **Cut** |
 
 ## Open questions
 
 - **Stacking:** can you buy the same common twice? If yes, pure-stat commons become a "go wide" plan (with Reliquary and Reliquary Lamp).
 - **Boss offers:** three random, or three picked to fit the team's keywords and paths?
-- **Relics per run:** with every shop selling them, roughly 8–14. To tune.
+- **Relics per run:** roughly 8–14, depending on how much players reroll. To tune.
+- **The harder fight's pay:** 8 like a normal win, or more (10)?
 - **Chain limits:** Crown of Stars' 10 links, Shared Pain's 3 steps, and the trigger chain's 8 are guesses.

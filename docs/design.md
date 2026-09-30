@@ -10,6 +10,7 @@ Working title: **Riftrite** (a placeholder). This document was rewritten on 2026
 | The run: days, camp, fights, relics, duo bonds | `docs/plans/rebuild-run.md` |
 | Decisions between fights: after-fight picks, loadout slots and the currency, wounds, the Magpie, and the screens' item language | `docs/plans/rebuild-between-fights.md` |
 | Combos, scaling, and breaking the game: keywords, triggers, the damage rule, permanent scaling, relic tiers, the endless mode | `docs/plans/rebuild-combos.md` |
+| The relic pool: its rules, shops and rerolls, income, and every relic by tier | `docs/plans/relics/README.md` (and one file per tier) |
 | Build order, and what the rebuild removed | `docs/plans/rebuild-build-order.md` |
 | Phase 1, the arena sim (build plan) | `docs/plans/rebuild-phase1-arena-sim.md` |
 | Phase 2, base heroes, the Act 1 enemies, encounters, and the sim runner (build plan) | `docs/plans/rebuild-phase2-heroes-enemies.md` |
@@ -53,7 +54,7 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 - **Tanks matter** through **blocking** (nobody walks through anyone), **Engage** (a unit next to Brannoc trying to reach someone else is held 1s), **Taunt**, and **knockback** (a push stopped by a unit, a rock, or the edge stuns).
 - **Areas** (circle, line, cone, ring) are **marked before they land**; a unit is hit if its center is inside when it lands. Heroes never step out of marked areas: placement is the answer.
 - **Statuses:** Root, Slow, Stun, Taunt, Engaged, Marked, Silence, Undying, Bleed, Burn, Poison, and Shield.
-- **Rift Collapse:** from 45s the arena crumbles inward one ring every 10s (each warned first). Standing on crumbled ground deals flat damage every second, and nobody can walk onto it. A fight still running at 180s is a tie, and a tie counts as a win.
+- **Rift Collapse:** from 45s the arena crumbles inward one ring every 10s (each warned first). Crumbled ground is walkable (decided 2026-09-30; not built yet), and standing on it deals flat damage every second to heroes and enemies alike. A fight still running at 180s is a tie, and a tie counts as a win.
 
 ## Enemies
 
@@ -69,9 +70,9 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 - **The start:** choose your three heroes, then vow each one.
 - **A day:** **camp** (pick 1 option from the place's menu: hero growth, information, the arena, risk and reward, safety, spending, relics, or a rift event; Train gives a pick, Hunt currency, the Pedlar sells, Rest clears wounds), **choose the fight** from 2 options known from the start of the act, set the **loadout**, **place** and fight, then take the **after-fight pick** (on a win or a tie) and any deed rewards (transformations, apex vows).
 - **Choosing fights feeds deeds:** which enemies you fight decides which deeds fill. The fight card shows the enemies, never which paths they suit.
-- **No items or shops.** Camp options are free. A **currency** (placeholder: shards) comes from fights and Hunts, and buys only loadout things (at the Pedlar), wound treatment, and rerolls. Nothing sells back.
+- **No items or shops.** Camp options are free. A **currency** (placeholder: shards) comes from fights (a win 8, an elite 12, the boss 25; placeholders) and Hunts, and buys loadout things, relics, wound treatment, and rerolls. Nothing sells back.
 - **Wounds:** a hero who falls gets one (–15% max HP, up to 3), won or lost; Undying and would-fall saves don't count. Rest clears them all; currency clears one.
-- **Relics** are team-wide, about **6–9 a run in three tiers** (part 7): **common** and **rare** ones each have a cost (a rare's cost is one some builds can dodge), and **every boss offers a choice of 3 build-defining boss relics**, which may be pure upside. A relic can be turned down, but once taken it stays. Now and then the Pedlar sells one, for about two days of income.
+- **Relics** (`relics/README.md`): team-wide, **no downsides**, about **8–14 a run** in five tiers: **common** (5 shards), **rare** (12), **epic** (20), **legendary** (30, sold in the shop before each boss), and **boss** (after each boss, choose 1 of 3, free; each rewrites a rule of the game). **Every shop shows 1 relic at a time**, and rerolling replaces it (the first reroll 1 shard, each after it 1 more), so with enough shards a shop never runs dry. Once taken, a relic stays.
 - **Duo bonds** link two paths of two different heroes; the vow shows a bonded pair as "?" until it's found.
 - **Losing:** a lost fight replays the day, and the second loss ends the run. Deed progress from a lost fight still counts. A tie pays like a win.
 - **Random streams:** shop stock, picks, camp, and fight seeds each have their own stream from the run seed.
@@ -142,8 +143,9 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - **Wounds:** is –15% up to 3 right, and should a lost fight's falls wound? (part 6)
 - **Sigils on signatures without mana:** written by what they do, or marked with the triggers they fit? (part 6)
 - **How fast heroes grow** with a pick after every win. (part 6)
-- **Relics per run:** is 6–9 right, and how many rares against commons? (part 7)
-- **Boss relics:** the pool's size, and whether one can have a cost at all. (part 7)
+- **Relics:** can the same common be bought twice? Are boss offers random or picked to fit the team? Is 8–14 a run right? (relic pool)
+- **The harder fight's pay:** 8 like a normal win, or more (10)? (relic pool)
+- **Chain limits:** Crown of Stars' 10 links and Shared Pain's 3 steps are guesses. (relic pool)
 - **The trigger chain's depth limit** (8 is a guess). (part 7)
 - **Endless:** its scaling rate, how often floors offer relics, and whether it's its own mode or the end of a run. (part 7)
 - **Which statuses become keywords next** (Slow, Bleed, Stun). (part 7)

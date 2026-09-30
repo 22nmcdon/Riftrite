@@ -19,5 +19,5 @@
 ## Notes
 
 - **Chain of Echoes and the chains it touches:** trigger chains, Crown of Stars, Shared Pain, The Hungering Rift, Overcharge. With Shared Pain, each echo is 10% weaker but 15% stronger from Chain of Echoes, so the echoes grow slightly instead of fading.
-- **Riftwalker's Soles** relies on the crumbled-ground rule from part 7: crumbled ground is walkable, and standing on it deals flat damage every second (`../rebuild-arena.md`).
+- **Riftwalker's Soles** relies on the crumbled-ground rule decided with the relics (`README.md`, Decisions): crumbled ground is walkable, and standing on it deals flat damage every second (`../rebuild-arena.md`).
 - **Cut ideas**, kept for later: a double transformation (a hero fills two paths and gets both), and a second placement in the middle of a fight.
