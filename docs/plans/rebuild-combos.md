@@ -103,7 +103,7 @@ Relics go from "about 3–5 per run" to **about 6–9 per run**, and they come i
 
 ## 6. Every stat change says its amount
 
-- Upgrades, charms, relics, and grafts that change a stat **name the stat and the amount**: "+10% attack speed", "+5 ATK", "+1 range", "−15% max HP".
+- Upgrades, charms, relics, and grafts (grafts are removed by the loadout pool, `loadout/README.md`) that change a stat **name the stat and the amount**: "+10% attack speed", "+5 ATK", "+1 range", "−15% max HP".
 - A percentage says what it's a percentage of when that's not obvious ("+10% of max HP as Shield").
 - Effects that aren't stats (a new trigger, a keyword) are described in words, with their numbers.
 - This is for the cards and tooltips. The kits' ability `"text"` still keeps numbers out, since the UI adds a numbers line (CLAUDE.md, "Ability text").
@@ -138,6 +138,7 @@ Relics go from "about 3–5 per run" to **about 6–9 per run**, and they come i
 | `rebuild-arena.md` | Crumbled ground can't be walked into | Walkable; it damages whoever stands on it (`relics/README.md`, Decisions) |
 | `rebuild-between-fights.md` | After-fight picks are the steady drip | Some picks are *growing* upgrades (section 4) |
 | `rebuild-enemies.md` | Harder means new problems, not more HP | Still true in the campaign; endless mode scales numbers |
+| `rebuild-between-fights.md` | Charms, tactics, sigils, and grafts; a few charms with costs; "no effect on this hero"; the Pedlar filters | Tactics, gambits, sigils, and charms, three ranks each, no downsides, no warnings, no filtering; grafts removed (`loadout/README.md`) |
 | CLAUDE.md, rule 5 | Meta progression never adds stats | Unchanged: scaling lasts one run only |
 
 ## 11. What it means for the code
@@ -158,11 +159,12 @@ Part 7 was agreed after phases 5 and 5b were built. It isn't built yet, and noth
 - **The damage rule (section 3):** the sim already adds bonuses in a few places (Marked, the tactics' payoffs, kit mods, Rift Tear). Each has to be sorted into a kind, and the rule applied in the one helper that lands hits (`EffectRunner.deal_hit`). That changes fights, so the bench fingerprints and every tuned number move, and the tuning of playtest gate 3 (section 16 there) is redone.
 - **Keywords and triggers** build on what exists: statuses (`StatusDef`) and the events read from the log (`Events`, `Passives`). Burning and Shielded exist as statuses; the triggers in section 2 are mostly new event kinds.
 - **Crumbled ground becomes walkable** (`relics/README.md`, Decisions): today the sim refuses to walk onto it and re-targets when it walls a target off. That changes fights too, so it lands beside the damage rule and shares its retune.
+- **The loadout pool** (`loadout/README.md`): 14 tactics, 6 gambits, 15 sigils, and 20 charms, many written on the keywords (Marked, Rooted, Burning, Shielded, Stealthed). Phase 5 built 22 items: the four tactics stay, eight others map into the pool, and ten are cut with the grafts. Ranks are new run state (each kind counts its own thing: time following the order, fights, casts, won fights), and gambits are new sim pieces (placement outside the zone, sharing a hex, entering late, swapping places).
 - **Endless mode** needs Acts 2 and 3 first.
 
 ## Open questions
 
-- Relics' open questions (stacking, boss offers, relics per run, the harder fight's pay, chain limits) are in `relics/README.md`.
+- Relics' open questions (stacking, boss offers, relics per run, the harder fight's pay, chain limits) are in `relics/README.md`; the loadout's (rank-up numbers, charms in relic lanes, the shop mix, gambits' frame) are in `loadout/README.md`.
 - **The chain-depth limit** (8 is a guess).
 - **Endless:** scaling rate, how often floors offer relics, and whether it's its own mode or the end of a run.
 - **Which statuses become keywords next** (Slow, Bleed, Stun).

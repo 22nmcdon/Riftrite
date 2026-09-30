@@ -11,6 +11,7 @@ Working title: **Riftrite** (a placeholder). This document was rewritten on 2026
 | Decisions between fights: after-fight picks, loadout slots and the currency, wounds, the Magpie, and the screens' item language | `docs/plans/rebuild-between-fights.md` |
 | Combos, scaling, and breaking the game: keywords, triggers, the damage rule, permanent scaling, relic tiers, the endless mode | `docs/plans/rebuild-combos.md` |
 | The relic pool: its rules, shops and rerolls, income, and every relic by tier | `docs/plans/relics/README.md` (and one file per tier) |
+| The loadout pool: its rules, ranks, prices, and every tactic, gambit, sigil, and charm | `docs/plans/loadout/README.md` (and one file per kind) |
 | Build order, and what the rebuild removed | `docs/plans/rebuild-build-order.md` |
 | Phase 1, the arena sim (build plan) | `docs/plans/rebuild-phase1-arena-sim.md` |
 | Phase 2, base heroes, the Act 1 enemies, encounters, and the sim runner (build plan) | `docs/plans/rebuild-phase2-heroes-enemies.md` |
@@ -42,8 +43,8 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 - **Each hero has three paths.** You **vow** each hero to one when the run starts; the vow gives a small **taste** of the path and its **cost** at once. The vowed path's **deed** (a goal counted from what the hero does in fights) fills, and the hero **transforms**: a new signature, reshaped stats, the full mechanic, and an upgrade pool. Late in a run the path splits into two **apexes**, earned the same way. **Upgrade picks** (1 of 3, each card naming its hero) come after every won fight, not from deeds.
 - **You can switch a vow** between fights until the hero transforms. Transformations are permanent.
 - **Every deed is hard to fill without its taste**, and every path changes where you'd place the hero.
-- **No ranks, no buying heroes, no duplicates.** Heroes grow through deeds (transformations, apexes) and after-fight picks.
-- **Loadout slots:** each hero has 3 slots for **charms** (small kit changes), **tactics** (behavior: "target casters first"), and **sigils** (how the signature fires), chosen before each fight. None are abilities, and all are written against the slot ("your signature"), so none goes useless when a hero transforms. **Any hero can hold any of them**; the Pedlar sells only what your team can use, and the rare **Magpie** sells other heroes' gear, one relic, and **grafts** (the one slotted thing that gives a hero something new to do, never a path's key mechanic).
+- **Heroes have no ranks, and there's no buying heroes and no duplicates.** Heroes grow through deeds (transformations, apexes) and after-fight picks. (Loadout items do have ranks, below.)
+- **Loadout slots** (`loadout/README.md`): each hero has 3 slots for **tactics** (behavior plus a small payoff while following it, 4 shards), **gambits** (a placement or fight-start rule, one per hero, 12), **sigils** (how the signature fires, 8), and **charms** (a change to the hero's own kit, 6), chosen before each fight. None are abilities, and all are written against the slot ("your signature"), so none goes useless when a hero transforms. **Any hero can hold any of them**, with no warning when one does nothing, and no item has a downside or grants a path's key mechanic. **Every item has three ranks:** each kind ranks up by its own count (time following the order, fights used, casts, won fights), and buying a copy skips a rank. Shops don't filter by what the team can use (their setup is being redone). Grafts are removed.
 
 ## The arena
 
@@ -136,12 +137,12 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - **Brannoc falls in almost every fight,** wins included. Is the tank dying last fine, or should he usually live? (phase 2 plan, section 7)
 - **Ember Dust's size:** a radius-2 circle (the reach `largest_group` counts by) covers a lot of the board; radius 1 would be a much smaller zone. (phase 2 plan, section 5)
 - **Maren's hop** shows in the log as the trait's "Hop Away", not her passive's name, "Keep Your Distance". (phase 2 plan, section 3)
-- **Loadouts:** 3 slots each, or 2 then 3? How many tactics per hero, and which are shared by role? (part 6)
+- **Loadouts:** 3 slots each, or 2 then 3? (part 6)
+- **Loadout ranks:** the rank-up counts are guesses; can charms stack with relics in the same lane (Leech Fang with Leech Tooth)? How often does a shop show a gambit? Gambits' frame. (loadout pool)
 - **The currency:** its name, prices, and income; whether the Pedlar's relic turns up about 1 visit in 3 or only at certain places. (part 6)
-- **Grafts and the Magpie:** the graft list and its frame; how often the Magpie comes, and whether his gear helps unlock a hero. (part 6)
+- **The Magpie:** how often he comes, and what he sells now that grafts and "other heroes' gear" are gone (the shops' setup is being redone). (part 6, loadout pool)
 - **Rest:** does it also keep "the next loss doesn't count"? (part 6)
 - **Wounds:** is –15% up to 3 right, and should a lost fight's falls wound? (part 6)
-- **Sigils on signatures without mana:** written by what they do, or marked with the triggers they fit? (part 6)
 - **How fast heroes grow** with a pick after every win. (part 6)
 - **Relics:** can the same common be bought twice? Are boss offers random or picked to fit the team? Is 8–14 a run right? (relic pool)
 - **The harder fight's pay:** 8 like a normal win, or more (10)? (relic pool)

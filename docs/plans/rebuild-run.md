@@ -1,6 +1,6 @@
 # Rebuild plan, part 4: the run
 
-Status: **agreed in discussion (2026-09-27), not built.** Part of the from-scratch rethink: part 1 is `docs/plans/rebuild-heroes.md`, part 2 `docs/plans/rebuild-arena.md`, part 3 `docs/plans/rebuild-enemies.md`. Numbers are placeholders to tune. **Part 6 (`docs/plans/rebuild-between-fights.md`, 2026-09-29) changes this part:** a pick after every won fight, loadout slots bought with a currency, and wounds. Where they disagree, part 6 wins; the notes below say where. **Part 7 (`docs/plans/rebuild-combos.md`, 2026-09-30) and the relic pool (`docs/plans/relics/README.md`, the same day) change it too:** relics in five tiers with no downsides, one in every shop, a build-defining relic after every boss, and new income.
+Status: **agreed in discussion (2026-09-27), not built.** Part of the from-scratch rethink: part 1 is `docs/plans/rebuild-heroes.md`, part 2 `docs/plans/rebuild-arena.md`, part 3 `docs/plans/rebuild-enemies.md`. Numbers are placeholders to tune. **Part 6 (`docs/plans/rebuild-between-fights.md`, 2026-09-29) changes this part:** a pick after every won fight, loadout slots bought with a currency, and wounds. Where they disagree, part 6 wins; the notes below say where. **Part 7 (`docs/plans/rebuild-combos.md`, 2026-09-30) and the relic pool (`docs/plans/relics/README.md`, the same day) change it too:** relics in five tiers with no downsides, one in every shop, a build-defining relic after every boss, and new income. **The loadout pool (`docs/plans/loadout/README.md`, the same day)** sets what the shops sell: tactics, gambits, sigils, and charms, with ranks; grafts are removed, and no shop filters by what the team can use.
 
 **Why:** items and essences are gone, and heroes only grow through deeds. So the run has to be built around one question: **what does the player decide between fights?**
 
@@ -84,7 +84,7 @@ One choice before each fight. **Different places offer different menus**, so whe
 
 **Spending** (part 6)
 
-- **Pedlar:** about 4 charms, tactics, and sigils for sale, drawn for your heroes and paths; treat a wound for currency. ~~Now and then (about 1 visit in 3, or at certain places) it also carries one relic, for about two days of income.~~ **Changed by the relic pool (`relics/README.md`):** every shop shows 1 relic at a time (mostly common at the Pedlar), and rerolling replaces it; the first reroll costs 1 shard, each after it 1 more.
+- **Pedlar:** about 4 charms, tactics, and sigils for sale, ~~drawn for your heroes and paths~~ (the loadout pool adds gambits and drops the filter; the shops' setup is being redone); treat a wound for currency. ~~Now and then (about 1 visit in 3, or at certain places) it also carries one relic, for about two days of income.~~ **Changed by the relic pool (`relics/README.md`):** every shop shows 1 relic at a time (mostly common at the Pedlar), and rerolling replaces it; the first reroll costs 1 shard, each after it 1 more.
 - **Fortify:** your heroes start the next fight with a small Shield.
 
 **Relics**

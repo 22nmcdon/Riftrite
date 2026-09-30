@@ -1,6 +1,6 @@
 # Rebuild plan, part 6: more decisions between fights
 
-Status: **agreed in discussion (2026-09-28, answers and section 8 on 2026-09-29), not built.** The playtester's mock of the screens is `docs/mockups/hero-panel-layout.pdf` (section 9). Adds to part 1 (`rebuild-heroes.md`) and part 4 (`rebuild-run.md`); where this part changes a rule there, this part wins. Numbers are placeholders to tune. **Part 7 (`rebuild-combos.md`, 2026-09-30) adds to this part:** some after-fight picks are *growing* upgrades, and every card that changes a stat says the amount.
+Status: **agreed in discussion (2026-09-28, answers and section 8 on 2026-09-29), not built.** The playtester's mock of the screens is `docs/mockups/hero-panel-layout.pdf` (section 9). Adds to part 1 (`rebuild-heroes.md`) and part 4 (`rebuild-run.md`); where this part changes a rule there, this part wins. Numbers are placeholders to tune. **Part 7 (`rebuild-combos.md`, 2026-09-30) adds to this part:** some after-fight picks are *growing* upgrades, and every card that changes a stat says the amount. **The loadout pool (`loadout/`, 2026-09-30) changes this part too:** four kinds (tactics, gambits, sigils, charms), three ranks each, prices, no "no effect" marker, no shop filtering, and grafts removed; its Decisions win, and the notes below say where.
 
 **Why:** with items and currency gone, a day had about three decisions (camp, fight, placement), plus an upgrade pick now and then. Making decisions is the heart of a roguelite, so this part adds three things that feed each other:
 
@@ -11,11 +11,11 @@ Status: **agreed in discussion (2026-09-28, answers and section 8 on 2026-09-29)
 ## Decisions
 
 - **A pick after every won fight:** 1 of 3 upgrades for your heroes.
-- **Loadout slots hold charms, tactics, and sigils. None of them are abilities.** No slotted thing adds a new move; each changes how a hero's existing kit works or behaves.
+- **Loadout slots hold charms, tactics, and sigils. None of them are abilities.** No slotted thing adds a new move; each changes how a hero's existing kit works or behaves. **Changed by the loadout pool (`loadout/README.md`):** a fourth kind, **gambits** (a placement or fight-start rule, one per hero), and every item has three ranks.
 - **A currency comes back**, earned from fights. It **buys** slotted things; **swapping what's equipped between fights is free.**
 - **Wounds:** a hero who falls gets a wound. Wounds are cleared by **resting at camp** (free, but it uses the camp pick) or by **paying currency** (one wound at a time). Since playtest gate 3, **a won fight also heals one wound on each hero** before the fallen take theirs (`rebuild-phase5-run.md` Decision 17).
 - **Nothing slotted may become useless when its hero transforms** (section 3).
-- **Any hero can hold anything; the Pedlar only sells what your team can use; the Magpie sells other heroes' gear, grafts, and one relic** (section 8, 2026-09-29). This replaces the earlier "most slotted things are hero-specific".
+- **Any hero can hold anything; the Pedlar only sells what your team can use; the Magpie sells other heroes' gear, grafts, and one relic** (section 8, 2026-09-29). This replaces the earlier "most slotted things are hero-specific". **Changed by the loadout pool (`loadout/README.md`):** any hero can still hold anything, but no shop filters by what the team can use, and grafts are removed. The shops' setup is being redone by the playtester.
 
 **Answers (2026-09-29):**
 
@@ -30,13 +30,13 @@ Status: **agreed in discussion (2026-09-28, answers and section 8 on 2026-09-29)
 - **Nothing sells** except a charm a transformation broke (section 3, rule 4). Tight currency is what makes buying a commitment.
 - **Tactics get tried early, in Practice**, as a small phase before paths (`rebuild-build-order.md`, phase 3b): target casters first, hold your hex, and a heal threshold. They're the idea most likely to change how fights feel, and the riskiest if they don't work.
 - **One modifier shape for charms and enemy specializations.** Rule 3 already pushes both toward the existing part types (auras, grants, triggers). The real work is one shared data shape for "modifies the kit's basic attack or signature"; decide it before either is built.
-- **Charms with costs: a few spiky ones, not most.** If every charm had a downside, the loadout would feel like a tax. Most of the tradeoff comes from narrowness instead: "+1 range while you haven't moved for 2s" is strong on a hero who stands still and useless on one who roams.
+- ~~**Charms with costs: a few spiky ones, not most.**~~ **Changed by the loadout pool (`loadout/README.md`): no item has a downside.** If every charm had a downside, the loadout would feel like a tax. Most of the tradeoff comes from narrowness instead: "+1 range while you haven't moved for 2s" is strong on a hero who stands still and useless on one who roams.
 - **The three cards are one per hero by default**, and sometimes one is a wild card for any hero, so there's room to double down on a carry.
 - **Separate random streams:** shop stock, picks, camp, and fight seeds each get their own stream from the run seed, so buying or rerolling never changes a later fight. The determinism rule already asks for this; build it in from the start.
 - **A loadout gate for the sim runner:** sample loadouts (every combination is too many) and check that the best beats the worst by a margin. It catches filler charms the way the placement gate catches filler formations.
 - **Wounds show as a greyed chunk of the HP bar.** It reads at a glance, needs no new marker, and shows what matters: how much HP is missing.
 - **A tactic may carry a small payoff** (2026-09-29, from the phase 3b tactics report), but only while its behavior applies, or to what the behavior produced ("+20% attack speed while it holds its ground"). A tactic is still a behavior first. A flat number change is a charm's job.
-- **A future tactic: the inverse of Hold your ground** (added 2026-09-29, the playtester's idea; working name **Plant your feet**). The hero **stops walking while any enemy is within 2 hexes**, and walks toward its target again when none is. A tank then stands still against melee instead of chasing, which keeps the fight in one place and makes it easy for Vell to stay within 1 hex of it for Hearthlight's heal. It's a behavior like the other three, so it can be written against the slot and survives a transformation. Not built; it comes with the rest of the tactics in phase 5 (or sooner, as a 3b round if the playtest asks for more tactics). Its open questions are below.
+- **A future tactic: the inverse of Hold your ground** (added 2026-09-29, the playtester's idea; working name **Plant your feet**). The hero **stops walking while any enemy is within 2 hexes**, and walks toward its target again when none is. A tank then stands still against melee instead of chasing, which keeps the fight in one place and makes it easy for Vell to stay within 1 hex of it for Hearthlight's heal. It's a behavior like the other three, so it can be written against the slot and survives a transformation. Not built; it comes with the rest of the tactics in phase 5 (or sooner, as a 3b round if the playtest asks for more tactics). Its open questions are below. **Built in phase 5 without a payoff; the loadout pool gives it +10 DEF while stopped (`loadout/tactics.md`).**
 - **Now and then the Pedlar carries one relic** (added 2026-09-29): about 1 visit in 3, or only at certain places (a market in the ruins, say). It's expensive, about two days of income, so buying it means skipping charms and paying for wounds yourself for a while. It **counts toward the 3–5 relics a run**, so the total stays the same; it's just another way to get one. Relics stay rare, and currency gets a second big use.
 
 ## 1. A pick after every fight
@@ -53,7 +53,7 @@ Status: **agreed in discussion (2026-09-28, answers and section 8 on 2026-09-29)
 
 Each hero has **3 slots** (a tuning value). Before each fight, after seeing the enemies, you choose what fills them. You'll own more than fit, so the loadout is a real choice.
 
-Three kinds of slotted things can share the slots:
+Three kinds of slotted things can share the slots (**the loadout pool, `loadout/README.md`, adds gambits, gives each item three ranks, and replaces these examples with its lists**):
 
 | Kind | What it does | Examples |
 | --- | --- | --- |
@@ -64,7 +64,7 @@ Three kinds of slotted things can share the slots:
 - **Any hero can hold any charm, tactic, or sigil** (section 8). Knowing who gets the most out of each one is the skill.
 - **Mixing kinds is the choice:** a stronger kit (charms), smarter behavior (tactics), or a different rhythm (sigils).
 - **Tactics are the arena's answer to "fights are watch-only":** they're how the player shapes what heroes do in a fight they can't control.
-- **Charms get their tradeoff mostly from narrowness**; only a few spiky ones carry a cost.
+- **Charms get their tradeoff mostly from narrowness**; ~~only a few spiky ones carry a cost~~ none carries a cost (the loadout pool).
 
 ## 3. Nothing goes useless when a hero transforms
 
@@ -79,11 +79,11 @@ A transformation can replace a signature (Vigil Keeper's Sunfall replaces Mend) 
 
 - **Earned from fights:** a normal win pays a set amount, the harder fight pays more, and elites and the boss pay more still. **Numbers set by the relic pool (`relics/README.md`, 2026-09-30):** a won fight pays 8, an elite 12, the boss 25 (placeholders; whether the harder fight pays more is open there). A tie pays like a win. **A Hunt at camp pays currency.** (A name to pick later; placeholder: **shards**.)
 - **Spent on:**
-  - **Buying** charms, tactics, and sigils.
+  - **Buying** charms, tactics, and sigils (and gambits). **Prices set by the loadout pool (`loadout/README.md`):** tactic 4, charm 6, sigil 8, gambit 12; buying a copy of an item you own ranks it up.
   - **Now and then, a relic** at the Pedlar (about two days of income; below).
   - **Treating one wound.**
   - **Rerolling** an offer, where rerolls exist.
-- **Where you buy:** a **Pedlar** camp option (a place's menu includes it) shows about 4 things for sale, drawn for your heroes and your paths. Some camp places also carry a smaller stall.
+- **Where you buy:** a **Pedlar** camp option (a place's menu includes it) shows about 4 things for sale, ~~drawn for your heroes and your paths~~ (no filtering since the loadout pool; the shops' setup is being redone). Some camp places also carry a smaller stall.
 - **The Pedlar's relic:** ~~about 1 visit in 3 (or only at certain places, like a market in the ruins), the Pedlar also carries one relic, priced at about two days of income. Buying it means going without charms and wound treatment for a while. It counts toward the run's 3–5 relics: another way to get one, not more of them. Like every relic, it has a cost.~~ **Changed by the relic pool (`relics/README.md`, 2026-09-30):** every shop shows 1 relic at a time, priced by tier (common 5, rare 12, epic 20, legendary 30), and rerolling replaces it: the first reroll costs 1 shard and each after it 1 more, so with enough shards a shop never runs dry. Relics have no downsides.
 - **Never** for upgrades from the after-fight pick, which stay free.
 - **Starting amount:** a little, so there's a first purchase before day 2.
@@ -125,14 +125,14 @@ Wounds give real stakes to close wins, make the easier fight tempting when someo
 - **Run state gains:** the currency, owned slotted things, each hero's equipped slots, and wounds.
 - **Random streams:** shop stock, picks, camp, and fight seeds each come from their own stream of the run seed (`RunRandom`).
 - **The sim gains:** tactics (targeting and behavior overrides on a unit), sigils (signature cost, trigger, and area changes), charms (the existing parts: auras, grants, triggers), and max HP lowered by wounds. Charms and enemy specializations share one modifier shape.
-- **The UI gains:** a loadout step before placement, the Pedlar, the Magpie, the after-fight pick, relic choices, the hero bar, and wound markers on heroes (a greyed chunk of the HP bar), all in the item language of section 9. A slot holding something that does nothing on its hero says "no effect on this hero".
-- **Items gain tags** for what they need (hops, mana, heals, ranged, and so on), which the Pedlar filters by and the slot's "no effect" check reads. Grafts are a fourth slotted kind.
+- **The UI gains:** a loadout step before placement, the Pedlar, the Magpie, the after-fight pick, relic choices, the hero bar, and wound markers on heroes (a greyed chunk of the HP bar), all in the item language of section 9. ~~A slot holding something that does nothing on its hero says "no effect on this hero".~~ (Dropped by the loadout pool: no warnings.)
+- ~~**Items gain tags** for what they need (hops, mana, heals, ranged, and so on), which the Pedlar filters by and the slot's "no effect" check reads. Grafts are a fourth slotted kind.~~ **Changed by the loadout pool (`loadout/README.md`):** no tags, no filter, no "no effect" check, and no grafts; gambits are the fourth kind, and run state counts each item's rank progress.
 - **The sim runner gains** a loadout gate: sampled loadouts, the best beating the worst by a margin.
 - **Build order:** the first three tactics come early, in Practice (phase 3b). The rest lands in **phase 5** (the run), with the loadout step in the placement screen.
 
 ## 8. Who can hold what, and the Magpie
 
-Agreed in discussion (2026-09-29).
+Agreed in discussion (2026-09-29). **Changed by the loadout pool (`loadout/README.md`, 2026-09-30):** any hero can still hold anything, but there are no "no effect" markers, no shop filters by what the team can use (so no "other heroes' gear" either), and **grafts are removed**. The shops' setup is being redone by the playtester; until then this section's shops stand, minus those.
 
 **Any hero can hold any charm, tactic, or sigil.** Nothing is locked to a hero. A charm made for Maren works on Brannoc if its rule applies to him; the player's job is to know where each one pays off most.
 
@@ -158,7 +158,7 @@ Agreed in discussion (2026-09-29).
 `docs/mockups/hero-panel-layout.pdf` (2026-09-29) is the design for the screens between fights. Its page 1, the hero panel, was built for Practice in phase 4 (`rebuild-phase4-paths.md`, section 6); the rest comes with the run in phase 5, in placeholder art until the art rehaul (phase 7).
 
 - **Page 1, the hero bar and the hero panel:** the day, the act and place, shards, and relics along the top; the hero bar along the bottom of every screen between fights (each hero's figure, path and stage, HP bar with wounds as a greyed chunk, deed progress, and their three slots as chips); clicking a hero opens the panel. The run adds what Practice left out: deed progress toward a threshold ("1,240 / 2,000"), Switch vow, the upgrades taken, and the duo bond ("a bond stirs; revealed when both have transformed").
-- **Page 2, the item language:** one frame shape per kind, so a kind reads without its color:
+- **Page 2, the item language:** one frame shape per kind, so a kind reads without its color (**the loadout pool adds gambits, which need a frame, and removes grafts**):
 
   | Kind | Frame | Where it comes from |
   | --- | --- | --- |
@@ -184,14 +184,14 @@ Agreed in discussion (2026-09-29).
 - **Rest:** does it also keep "the next loss doesn't count"?
 - **Wound size and cap:** is –15% up to 3 right?
 - **Wounds from a lost fight:** a loss usually means all three fell, and the day replays with every hero wounded. Should a loss's falls wound (a death spiral risk), or is the loss its own cost?
-- **Sigils on signatures without mana:** "costs 15 less mana" does nothing for a signature that fires on HP, a count, or would-fall. Write sigils by what they do ("your signature comes sooner"), or mark them with the triggers they fit?
-- **Tactics:** how many choices per hero, and which are shared by role?
+- ~~**Sigils on signatures without mana:**~~ *Answered by the loadout pool: a sigil that doesn't apply simply does nothing, with no warning.* "costs 15 less mana" does nothing for a signature that fires on HP, a count, or would-fall. Write sigils by what they do ("your signature comes sooner"), or mark them with the triggers they fit?
+- ~~**Tactics:** how many choices per hero, and which are shared by role?~~ *Answered by the loadout pool: 14 tactics, any hero can take any.*
 - **Plant your feet** (the future tactic above):
-  - **Its payoff.** Round 2's rule says a tactic's payoff applies only while its behavior does. Something while it stands still fits, such as more DEF or more healing taken, but nothing is chosen yet.
+  - ~~**Its payoff.** Round 2's rule says a tactic's payoff applies only while its behavior does. Something while it stands still fits, such as more DEF or more healing taken, but nothing is chosen yet.~~ *Answered: +10 DEF while stopped (`loadout/tactics.md`).*
   - **A target out of reach.** While it stands, it could attack only what's in reach, like a holder does. Or it could switch to the nearest enemy in reach, which would change targeting as well as movement.
   - **Who takes it.** Every hero, or tanks only? On Maren, it would keep her from walking into melee reach.
   - **Engage and pushes.** Brannoc's Engage pulls him to enemies that come close; does Engage still move him? A push moves a unit without it walking, so it isn't affected, but should the tactic say so?
-- **Grafts:** the list, and whether they need their own frame shape in the item language (a proposal: a split medallion).
+- ~~**Grafts:** the list, and whether they need their own frame shape in the item language (a proposal: a split medallion).~~ *Grafts are removed (the loadout pool). Gambits need a frame instead.*
 - **The Magpie:** exact frequency, and whether buying a locked hero's gear counts toward unlocking that hero.
 - **From the mock:**
   - **"Take 3 shards instead"** on the after-fight pick: a fixed amount, or the fight's own pay again?
