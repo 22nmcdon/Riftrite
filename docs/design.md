@@ -16,6 +16,8 @@ Working title: **Riftrite** (a placeholder). This document was rewritten on 2026
 | The after-fight pick's pools: each hero's, taste and path upgrades, stacking | `docs/plans/upgrade-pools.md` |
 | A day's loop and its nodes, Rift Tear's depths, the Shrine | `docs/plans/days-and-nodes.md` |
 | Events and the Bloodied Oath | `docs/plans/events.md` |
+| Duo bonds and their bond relics | `docs/plans/duo-bonds.md` |
+| The 18 apexes, their snowballs and upgrades | `docs/plans/apexes.md` |
 | Build order, and what the rebuild removed | `docs/plans/rebuild-build-order.md` |
 | Phase 1, the arena sim (build plan) | `docs/plans/rebuild-phase1-arena-sim.md` |
 | Phase 2, base heroes, the Act 1 enemies, encounters, and the sim runner (build plan) | `docs/plans/rebuild-phase2-heroes-enemies.md` |
@@ -44,7 +46,7 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 - **A hero is** their stats (HP, ATK, MGK, DEF, CRIT, ATSP, plus **speed** and **range**), a **basic attack**, a **signature** (their big move), a **passive**, and sometimes a **trait** (Brannoc's Engage).
 - **Signatures fire on a trigger:** usually a full mana bar, sometimes an HP threshold, a count of events, a set moment, or the hero about to fall. A hero without a mana signature has no mana bar. Only signatures use mana.
 - **Mana** comes from basic attacks (mainly), damage taken (mainly tanks), a slow regen, and starting mana. Silence stops mana gain; Stun doesn't, but a stunned hero can't fire a mana signature.
-- **Each hero has three paths.** You **vow** each hero to one when the run starts; the vow gives a small **taste** of the path and its **cost** at once. The vowed path's **deed** (a goal counted from what the hero does in fights) fills, and the hero **transforms**: a new signature, reshaped stats, the full mechanic, and an upgrade pool. Late in a run the path splits into two **apexes**, earned the same way. **Upgrade picks** (1 of 3, each card naming its hero) come after every won fight, not from deeds: from the hero's own pool (12), their vowed path's taste upgrades until they transform, and then the path's upgrades (`upgrade-pools.md`). Plain stat upgrades stack, each locked in as a flat amount of the stat when picked.
+- **Each hero has three paths.** You **vow** each hero to one when the run starts; the vow gives a small **taste** of the path and its **cost** at once. The vowed path's **deed** (a goal counted from what the hero does in fights) fills, and the hero **transforms**: a new signature, reshaped stats, the full mechanic, and an upgrade pool. After the Act 1 boss the path splits into two **apexes** (`apexes.md`), earned the same way; each has a built-in **snowball** that grows during a fight, and 2 upgrades that join the path pool. **Upgrade picks** (1 of 3, each card naming its hero) come after every won fight, not from deeds: from the hero's own pool (12), their vowed path's taste upgrades until they transform, and then the path's upgrades (`upgrade-pools.md`). Plain stat upgrades stack, each locked in as a flat amount of the stat when picked.
 - **You can switch a vow** between fights until the hero transforms. Transformations are permanent.
 - **Every deed is hard to fill without its taste**, and every path changes where you'd place the hero.
 - **Heroes have no ranks, and there's no buying heroes and no duplicates.** Heroes grow through deeds (transformations, apexes) and after-fight picks. (Loadout items do have ranks, below.)
@@ -78,7 +80,7 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 - **No items or shops.** Camp options are free. A **currency** (placeholder: shards) comes from fights (a win 8, an elite 12, the boss 25; placeholders) and Hunts, and buys loadout things, relics, wound treatment, and rerolls. Nothing sells back.
 - **Wounds:** a hero who falls gets one (–15% max HP, up to 3), won or lost; Undying and would-fall saves don't count. Rest clears them all; currency clears one.
 - **Relics** (`relics/README.md`): team-wide, **no downsides**, about **8–14 a run** in five tiers: **common** (5 shards), **rare** (12), **epic** (20), **legendary** (30, sold in the shop before each boss), and **boss** (after each boss, choose 1 of 3, free; each rewrites a rule of the game). **Every shop shows 1 relic at a time**, and rerolling replaces it (the first reroll 1 shard, each after it 1 more), so with enough shards a shop never runs dry. Once taken, a relic stays.
-- **Duo bonds** link two paths of two different heroes; the vow shows a bonded pair as "?" until it's found.
+- **Duo bonds** (`duo-bonds.md`) link two paths of two different heroes; the vow shows a bonded pair as "?" until it's found. A bond has no boost of its own: once both heroes have transformed, its **bond relic** (free, team-wide) joins the shop pool for the rest of the run, more likely than an epic. Bonds are rare: 1–2 per path across the roster (3 in the Act 1 slice).
 - **Losing:** a lost fight replays the day, and the second loss ends the run. Deed progress from a lost fight still counts. A tie pays like a win.
 - **Random streams:** shop stock, picks, camp, and fight seeds each have their own stream from the run seed.
 - **Pacing targets:** the first transformation around days 3–4, all three heroes transformed by the boss, and apexes in Acts 2–3. Upgrade picks come after every win (about 8 in Act 1), so each is small.
@@ -128,12 +130,13 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 
 - **Grid size:** is 8 × 7 right for 3 heroes against 3–6 enemies? (arena plan)
 - **Large units:** should bosses ever take more than one hex? (arena plan)
-- **Pacing:** how many fights a transformation takes, and how many upgrade picks come before the apex vow. (heroes plan)
+- **Pacing:** how many fights a transformation takes. (heroes plan)
+- **Apexes:** the apex deed's size; whether snowballs carry across fights in endless; whether a hero who transforms late gets a faster apex deed. (apexes)
 - **Deed thresholds after the transformation:** does the same deed keep counting? (heroes plan)
 - **Mana numbers** are a first pass for the sim to tune. Phase 2's first tuning pass left the heroes' numbers as designed. (heroes plan)
 - **Last Watch after Last Rites:** is having no big move left the right feel? (heroes plan)
 - **When enemy specializations arrive:** late Act 1 or from Act 2. (enemies plan)
-- **When a duo bond switches on:** once both heroes transform, or weakly once both are vowed. (run plan)
+- **Bond relics:** how much likelier than an epic; both relics at once when two bonds switch on; all three Act 1 bonds include Brannoc. (duo bonds)
 - **Camp menus:** which places offer which options, and 2 or 3 options per camp. (run plan)
 - **Art direction** for the rehaul. (run plan)
 - **Grow enemies or shrink heroes?** Phase 2's tuning grew enemies (a Rift Pup has 210 HP, most of Maren's 270) and kept heroes as designed. Lowering heroes' damage instead would keep enemies nearer the roster's first numbers. (phase 2 plan, section 7)

@@ -92,6 +92,8 @@ Relics go from "about 3–5 per run" to **about 6–9 per run**, and they come i
 | **Rare** | Elites (sometimes), the Magpie, Rift Tear | A strong rule change with a cost that some builds can dodge |
 | **Boss** | **Every boss: choose 1 of 3** | **Build-defining.** Often pure upside, or a huge twist. The kind you plan the rest of the run around |
 
+**A sixth kind, bond relics** (2026-09-30): free, found in shops only once their duo bond switches on (`duo-bonds.md`).
+
 - **Costs that builds dodge are the point of rares.** *Ember Heart* (Burn doubled, healing 20% weaker) is a real trade for most teams and free for a team with no healer. Finding that is the "I broke it" moment.
 - **Boss relic examples** (placeholders):
   - *Crown of the Hollow King:* every keyword you apply is applied twice.

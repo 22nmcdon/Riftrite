@@ -100,6 +100,8 @@ Which places offer which options, and how many options each camp shows (2 or 3),
 
 ## 6. Duo bonds come from paths
 
+**Superseded (2026-09-30):** a bond has no boost of its own; it adds a free bond relic to the run's shop pool, and bonds are rare (1–2 per path across the roster). See `duo-bonds.md`. The old design follows for reference.
+
 - **A duo bond links two paths of two different heroes.** When both heroes follow those paths, **both get a boost**, one that ties their paths together.
 - **The vow previews it:** when you vow two heroes to bonded paths, the bond shows as "?", and its name is revealed once found.
 - **It switches on when both heroes have transformed** into those paths (a proposal; see open questions).
@@ -141,7 +143,7 @@ Targets for Act 1, with 3 heroes fighting about 8–9 fights:
 | **Start** | Choose heroes, vow each one |
 | **Around days 3–4** | The first transformation (the hero whose deed you pushed hardest) |
 | **By the boss** | All three transformed. (This said "with 1–2 upgrade picks each"; part 6 gives a smaller pick after every won fight, about 8 in Act 1, so the number is for the run bot to measure) |
-| **Acts 2 and 3** | More upgrade picks, the apex vows, and the apexes by the Act 3 boss |
+| **Acts 2 and 3** | More upgrade picks; the apex vows open after the Act 1 boss, and the apexes land by the Act 3 boss (`apexes.md`) |
 
 Choosing fights that suit a deed, and camp options like Train, let the player control this pace.
 
@@ -165,6 +167,5 @@ Gold, shops and the Caravan, items, the stash, rewards picks of items, the Forge
 
 ## Open questions
 
-- **When a duo bond switches on:** when both heroes transform, or already (weakly) when both are vowed?
 - **Camp menus:** which places offer which options, and 2 or 3 options per camp?
 - **Art direction:** the rehaul starts with a new style guide (replacing the old look, now `docs/archive/ui-asset-design.md`); its direction is still to be set.
