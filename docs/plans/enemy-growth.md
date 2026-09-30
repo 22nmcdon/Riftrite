@@ -4,7 +4,7 @@ Status: **agreed in discussion (2026-09-30), not built.** How enemies change ove
 
 ## 1. When they show up
 
-- **Act 1:** specializations appear from **day 5**, only in the harder of the day's two fights.
+- **Act 1:** specializations appear from **day 5**, only in the harder of the day's two fights. **Built later, only when needed** (the playtester, 2026-09-30): Act 1 ships without them until they're wanted.
 - **Act 2:** about half of a fight's enemies are specialized.
 - **Act 3:** most are.
 - **The fight card always shows** every specialization, upgrade, and rift modifier.

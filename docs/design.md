@@ -158,7 +158,6 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - **How fast heroes grow** with a pick after every win. (part 6)
 - **Relics:** can the same common be bought twice? Are boss offers random or picked to fit the team? Is 8–14 a run right? (relic pool)
 - **The economy:** the whole shard curve needs a sim pass; a Hunt's pay. (economy)
-- **The snowball tag:** shown to players on the unit, or behind the testing toggle with the combo readouts? (UI for the new systems)
 - **Chain limits:** Crown of Stars' 10 links and Shared Pain's 3 steps are guesses. (relic pool)
 - **Upgrade pools:** how hero, taste, and path cards are weighted; one pick a day for the team, or a card per hero; a cap on stacking upgrades; and six upgrades whose "not X" numbers are the design's, not the built kits'. (upgrade pools)
 - **Nodes:** show 2 or 3, and how often each kind; income with a shop every day. (days and nodes)

@@ -36,6 +36,7 @@ Money relics add more (Gravedigger's Coin, Bounty Hunter's Tag, Loose Change, Mi
 - **Act 1 brings in about 76–86 shards before the pre-boss shop** (the start, 4 fights, and 2 elites, depending on how many harder fights you take).
 - **A modest spend** over the first five shops (2 commons, a charm, a tactic, a sigil, a wound, and a few rerolls) leaves **about 30**: enough for a legendary if you planned for it, not by default.
 - **The harder fight's +3** makes choosing it a real trade: more risk, more shards.
+- **Checked against Act 1's days (2026-09-30):** the days are normal, normal, elite, normal, elite, normal, boss, so income before the pre-boss shop is really **80–92**, and the modest spend (about 35–40) leaves **about 40–57**. The playtester's call: that's fine, and the numbers stand until the sim pass.
 
 ## Where this meets what's built
 
@@ -44,6 +45,5 @@ Phase 5 built the old economy (`data/act1.json`, `rebuild-phase5-run.md` Decisio
 ## Open questions
 
 - **A sim pass** on the whole curve, once the run exists (phase 6's run bot).
-- **The target's arithmetic:** Act 1's days are normal, normal, elite, normal, elite, normal, boss (`data/act1.json`), so income before the pre-boss shop is the start (10), 4 fights (40, or 52 taking every harder fight), and 2 elites (30): **80–92**, not 76–86. The modest spend above comes to about 35–40 (2 commons 10, a charm 6, a tactic 4, a sigil 8, a wound 4, and rerolls), leaving **about 40–57**, not about 30. Either the numbers or the target move.
 - **A Hunt's pay** at camp, beside a normal win's 10.
 - **Income in endless:** grows with the floor, or stays flat (`endless.md`)?

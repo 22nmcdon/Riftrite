@@ -33,9 +33,9 @@ Status: **agreed in discussion (2026-09-30), not built.** What the UI must show 
 | **Growth after a fight** | The result screen lists what grew ("Notched Bow: +1% ATK") |
 | **Stacking upgrades** | On the hero sheet, the upgrade shows how many times it's been taken; the hover card lists each locked-in amount ("Honed Tips ×3: +2, +3, +5 ATK") |
 | **Deeds** | The hero sheet shows the path deed bar, then the apex deed bar once the apex vow is made |
-| **Snowballs during a fight** | A status tag with a number on the unit, like Burn stacks ("Windrunner +27%") |
+| **Snowballs during a fight** | **Behind the testing toggle only** (decided 2026-09-30), with the combo readouts: a status tag with a number on the unit, like Burn stacks ("Windrunner +27%"). Players see the snowball only in what it does |
 
-- **The snowball tag isn't a combo readout:** it shows the state a unit is in, like any status, never a damage breakdown (part 7, section 7).
+- ~~**The snowball tag isn't a combo readout:** it shows the state a unit is in, like any status, never a damage breakdown (part 7, section 7).~~ Decided (2026-09-30): it goes behind the testing toggle with the combo readouts.
 
 ## 5. Vows and bonds
 
@@ -52,4 +52,3 @@ Status: **agreed in discussion (2026-09-30), not built.** What the UI must show 
 ## Open questions
 
 - All layout questions go to the overall UI redesign.
-- **The snowball tag:** shown to players (as above), or behind the testing toggle with the combo readouts?
