@@ -82,6 +82,8 @@ An elite is a **named leader plus a pack, built around one mechanic**, previewed
 
 ## 7. Later: enemy specializations and upgrades
 
+**Filled in (2026-09-30):** all 9 enemies' specializations, 11 upgrades with numbers, when they show up, rift modifiers, and how the rift learns picks counters are in `enemy-growth.md`. The examples below are kept for reference.
+
 Enemies can grow too, far more narrowly than heroes: each enemy type has **2 specializations** you run into later in a run or in later acts, plus a few **upgrades** (small modifiers, mostly on elites). The same Rift Hound you learned on day 2 shows up changed, and your answer has to change with it.
 
 **Specialization examples:**
@@ -102,7 +104,7 @@ Enemies can grow too, far more narrowly than heroes: each enemy type has **2 spe
 
 Higher difficulties stack modifiers, each unlocked by beating the one before. Modifiers the user named so far:
 
-- **The rift learns:** enemy specializations counter your team (section 7).
+- **The rift learns:** enemy specializations and upgrades counter your team (`enemy-growth.md`, section 5).
 - **Specialized enemies come sooner and more often.**
 - **Deeds take longer to fill**, so heroes transform later.
 
@@ -110,5 +112,4 @@ More come later (the list and order are tuned with playtesting). Meta progressio
 
 ## Open questions
 
-- **When do enemy specializations arrive:** late Act 1, or from Act 2?
 - **Rocks:** hand-placed per encounter, or drawn from a few layouts?

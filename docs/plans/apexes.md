@@ -57,5 +57,4 @@ Nothing of apexes is built. The build order puts them in phase 8 (Acts 2 and 3),
 ## Open questions
 
 - **Apex deed thresholds:** how big the second deed bar is, so the apex lands in Act 2 or early Act 3.
-- **Endless mode:** snowballs are per fight. Should any carry across fights in endless?
 - **A hero who never transforms** never gets an apex vow. Fine, or should a late transformation speed up the apex deed?

@@ -10,6 +10,8 @@ Working title: **Riftrite** (a placeholder). This document was rewritten on 2026
 | The run: days, camp, fights, relics, duo bonds | `docs/plans/rebuild-run.md` |
 | Decisions between fights: after-fight picks, loadout slots and the currency, wounds, the Magpie, and the screens' item language | `docs/plans/rebuild-between-fights.md` |
 | Combos, scaling, and breaking the game: keywords, triggers, the damage rule, permanent scaling, relic tiers, the endless mode | `docs/plans/rebuild-combos.md` |
+| Enemy specializations and upgrades, rift modifiers, and the rift learns | `docs/plans/enemy-growth.md` |
+| Endless mode: floors, how the rift scales, the score | `docs/plans/endless.md` |
 | The first content pool (part 7b): keyword sources, growing upgrades, and the combos the pool is built for | `docs/plans/rebuild-content-pool.md` |
 | The relic pool: its rules, shops and rerolls, income, and every relic by tier | `docs/plans/relics/README.md` (and one file per tier) |
 | The loadout pool: its rules, ranks, prices, and every tactic, gambit, sigil, and charm | `docs/plans/loadout/README.md` (and one file per kind) |
@@ -70,7 +72,7 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 - **Fair:** enemy positions and threats show before you place your heroes, and every enemy has a one-line threat and an archetype icon on the fight card.
 - **Elites** are a named leader plus a pack built around one mechanic (The Hunt, Gloam Totem, Stone Ward). **The boss**, Old Mother Ash, has phases that test the back line, then a swarm, then spreading out while the arena shrinks early.
 - **Harder means new problems, not more HP:** later days combine threats, and stats grow only a little.
-- **Later:** each enemy type gets 2 specializations and a few upgrades; "the rift learns" is a difficulty modifier.
+- **Enemy growth** (`enemy-growth.md`): each enemy type has 2 **specializations** that change how it plays (from day 5 of Act 1, only in the harder fight; about half of a fight's enemies in Act 2, most in Act 3), and elites and the boss carry 1–2 **upgrades** (Frenzied, Warded, Anchored, and so on). **Rift modifiers** are rules for the whole enemy side in one fight (Rift Tear's Deep and Abyssal depths add them). **The rift learns** is a difficulty modifier: it reads your last 3 fights and swaps up to half of a fight's specializations and upgrades for ones that blunt your top 1–2 habits, always shown on the fight card.
 
 ## The run
 
@@ -132,11 +134,11 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - **Grid size:** is 8 × 7 right for 3 heroes against 3–6 enemies? (arena plan)
 - **Large units:** should bosses ever take more than one hex? (arena plan)
 - **Pacing:** how many fights a transformation takes. (heroes plan)
-- **Apexes:** the apex deed's size; whether snowballs carry across fights in endless; whether a hero who transforms late gets a faster apex deed. (apexes)
+- **Apexes:** the apex deed's size (snowballs stay per fight, even in endless); whether a hero who transforms late gets a faster apex deed. (apexes)
 - **Deed thresholds after the transformation:** does the same deed keep counting? (heroes plan)
 - **Mana numbers** are a first pass for the sim to tune. Phase 2's first tuning pass left the heroes' numbers as designed. (heroes plan)
 - **Last Watch after Last Rites:** is having no big move left the right feel? (heroes plan)
-- **When enemy specializations arrive:** late Act 1 or from Act 2. (enemies plan)
+- **Enemy growth:** can the rift learns add a rift modifier (Blight, Thornskin) or only swap specializations and upgrades? Upgrades on normal enemies in Acts 2–3? (enemy growth)
 - **Bond relics:** how much likelier than an epic; both relics at once when two bonds switch on; all three Act 1 bonds include Brannoc. (duo bonds)
 - **Camp menus:** which places offer which options, and 2 or 3 options per camp. (run plan)
 - **Art direction** for the rehaul. (run plan)
@@ -159,5 +161,5 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - **Nodes:** show 2 or 3, and how often each kind; income with a shop every day. (days and nodes)
 - **Events:** how often an Event is a Bloodied Oath; Whispering Stones' deed progress; can the Mirror Pool swap a transformed hero? (events)
 - **The trigger chain's depth limit** (8 is a guess). (part 7)
-- **Endless:** its scaling rate, how often floors offer relics, and whether it's its own mode or the end of a run. (part 7)
+- **Endless:** is ×1.15 a floor and a rift modifier every 3 floors right? Does income grow with the floor? (endless)
 - **Which statuses become keywords next** (Slow, Bleed, Stun). (part 7)

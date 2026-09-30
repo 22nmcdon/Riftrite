@@ -49,8 +49,8 @@ Unchanged from part 4 except: the **Pedlar** leaves the menu (it's the shop, whi
 | Depth | Tomorrow's fight | Win it for |
 | --- | --- | --- |
 | **Shallow** | Enemies start with a Shield of 10% of their max HP | A choice of 2 rare relics |
-| **Deep** | That, plus one "rift learns" modifier (e.g. enemies gain +20% attack speed) | A choice of 2 epics |
-| **Abyssal** | That, plus a second modifier | A choice of 1 legendary and 1 epic |
+| **Deep** | That, plus one rift modifier (e.g. Hastened: enemies get +20% attack speed; enemy-growth.md) | A choice of 2 epics |
+| **Abyssal** | That, plus a second rift modifier | A choice of 1 legendary and 1 epic |
 
 Losing it is like losing any fight: you replay the day.
 

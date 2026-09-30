@@ -117,8 +117,10 @@ Relics go from "about 3–5 per run" to **about 6–9 per run**, and they come i
 
 ## 8. Endless mode
 
+**Filled in (2026-09-30):** `endless.md` has the structure (floors are days, elites every 5th, bosses every 10th), the scaling, and the score.
+
 - **Unlocked after beating Act 3** (a placeholder). A run continues past the final boss into floors.
-- **The rift scales exponentially:** enemy HP and ATK ×1.15 per floor (placeholder), plus a new "the rift learns" modifier every 3 floors.
+- **The rift scales exponentially:** enemy HP and ATK ×1.15 per floor (placeholder), plus a new rift modifier every 3 floors (`enemy-growth.md`), and the rift learns is always on.
 - **Your engine scales too:** permanent scaling keeps counting, and floors keep offering picks, relics, and shops.
 - **You always lose eventually.** The score is how deep you got.
 - **The campaign keeps its own rule:** harder means new problems, not more HP. Exponential numbers are only for endless.
@@ -168,5 +170,5 @@ Part 7 was agreed after phases 5 and 5b were built. It isn't built yet, and noth
 
 - Relics' open questions (stacking, boss offers, relics per run, the harder fight's pay, chain limits) are in `relics/README.md`; the loadout's (rank-up numbers, charms in relic lanes, the shop mix, gambits' frame) are in `loadout/README.md`.
 - **The chain-depth limit** (8 is a guess).
-- **Endless:** scaling rate, how often floors offer relics, and whether it's its own mode or the end of a run.
+- **Endless:** answered in `endless.md` (it continues past the Act 3 boss by choice; a floor is a day, with its shop); its own open questions (the scaling rate, income) are there.
 - **Which statuses become keywords next** (Slow, Bleed, Stun).
