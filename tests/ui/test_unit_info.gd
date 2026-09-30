@@ -365,7 +365,11 @@ func test_clicking_a_hero_on_the_board_opens_the_popup_in_a_fight() -> void:
 	_click(screen, "")
 	assert_false(screen.hero_popup.visible, "a click on the board closes it")
 	_click(screen, "maren")
-	_click(screen, "rift_hound")
+	# An enemy no figure stands in front of (a hound on a hero's heels is
+	# behind the hero's figure).
+	var clear: Array = screen.view.tokens.filter(func(each: UnitToken) -> bool: return not each.is_hero() and each.visible and screen.view.token_at(each.center()) == each)
+	assert_false(clear.is_empty())
+	_click(screen, (clear[0] as UnitToken).unit_id)
 	assert_false(screen.hero_popup.visible, "clicking an enemy closes it")
 	_click(screen, "brannoc")
 	screen.toggle_pause()
@@ -412,9 +416,8 @@ func test_the_popup_opens_on_the_left_near_the_right_edge() -> void:
 	await wait_process_frames(2)
 	var token: UnitToken = screen.view.token("vell")
 	assert_gt(screen.hero_popup.position.x, token.center().x, "to the right of a hero with room there")
-	# A hero who walked to the board's right edge (the heroes start on the
-	# left): no room to the right.
-	token.place_at(screen.view, Vector2(3500, 6900))
+	# A hero who walked to the board's right edge: no room to the right.
+	token.place_at(screen.view, Vector2(screen.view.grid.center(7, 3)))
 	screen._place_popup()
 	assert_lt(screen.hero_popup.position.x + screen.hero_popup.size.x, token.center().x, "to the left of the hero")
 	assert_gte(screen.hero_popup.position.x, 0.0, "on the board")

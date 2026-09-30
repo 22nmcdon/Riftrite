@@ -4,15 +4,15 @@ extends Control
 ## 2): one view for placement and the fight. It maps the sim's plane to
 ## pixels, draws the board, and keeps a token per unit. It only reads the
 ## setup or the fight; it never changes them.
-##   - The board fits the view, centered, `MARGIN` pixels in, turned
-##     sideways (landscape): the heroes are on the left and the enemies on
-##     the right. The plane's y (the sim's rows; row 0 is the heroes' back
-##     row) grows to the right, and its x (the columns) grows down the
-##     screen, so the sim's flat-top hexes are drawn point up. A hex's
-##     corners reach past the plane's edge at the columns' ends, so the
-##     drawn area is that much taller than the plane (`drawn_rect`), and room
-##     is kept over it for the top column's figures and bars
-##     (`TOP_ROOM_HEXES`).
+##   - The board fits the view, centered, `MARGIN` pixels in, with the
+##     heroes at the bottom and the enemies at the top
+##     (docs/plans/rebuild-phase5b-art.md, Decision 1). The plane's x (the
+##     columns) grows to the right and its y (the sim's rows; row 0 is the
+##     heroes' back row) grows up the screen, so the sim's flat-top hexes
+##     are drawn flat-top. A hex's corners reach past the plane's edge at
+##     the columns' ends, so the drawn area is that much wider than the
+##     plane (`drawn_rect`), and room is kept over it for the top row's
+##     figures and bars (`TOP_ROOM_HEXES`).
 ##   - Placement mode shades each hex by zone (yours, no one's, theirs); fight
 ##     mode keeps the hexes faint, since distances still count in hexes.
 ##   - Hexes and rocks are drawn with `_draw()`; units are `UnitToken` nodes,
@@ -274,26 +274,25 @@ static func label_for(kit: UnitDef, content: ContentDb) -> String:
 
 # --- the plane and the screen ------------------------------------------------------
 
-## Where a point on the plane is drawn (turned sideways: the plane's y
-## across, its x down).
+## Where a point on the plane is drawn (its x across, its y up).
 func to_pixel(point: Vector2i) -> Vector2:
 	return to_pixel_f(Vector2(point))
 
 
 ## to_pixel for a point between whole units (a unit drawn mid-step).
 func to_pixel_f(point: Vector2) -> Vector2:
-	return _origin + Vector2(point.y - drawn_rect.position.y, point.x - drawn_rect.position.x) * scale_px
+	return _origin + Vector2(point.x - drawn_rect.position.x, drawn_rect.end.y - point.y) * scale_px
 
 
 ## The point on the plane under a pixel (rounded to a whole unit).
 func to_plane(pixel: Vector2) -> Vector2i:
 	var along: Vector2 = (pixel - _origin) / scale_px
-	return Vector2i(roundi(along.y) + drawn_rect.position.x, roundi(along.x) + drawn_rect.position.y)
+	return Vector2i(roundi(along.x) + drawn_rect.position.x, drawn_rect.end.y - roundi(along.y))
 
 
 ## Where a rect on the plane is drawn.
 func rect_to_pixels(rect: Rect2i) -> Rect2:
-	return Rect2(to_pixel(rect.position), Vector2(rect.size.y, rect.size.x) * scale_px)
+	return Rect2(to_pixel(Vector2i(rect.position.x, rect.end.y)), Vector2(rect.size) * scale_px)
 
 
 ## The hex under a pixel, or (-1, -1) off the board.
@@ -392,13 +391,13 @@ func _layout() -> void:
 	if grid == null:
 		return
 	var room: Vector2 = size - Vector2(MARGIN, MARGIN) * 2.0
-	# Across the screen: the plane's rows; down it: its columns, and the
-	# room over them.
-	var wide: float = drawn_rect.size.y
-	var tall: float = drawn_rect.size.x + TOP_ROOM_HEXES * HexGrid.HEX
+	# Across the screen: the plane's columns; up it: its rows, and the room
+	# over them.
+	var wide: float = drawn_rect.size.x
+	var tall: float = drawn_rect.size.y + TOP_ROOM_HEXES * HexGrid.HEX
 	scale_px = maxf(minf(room.x / wide, room.y / tall), 0.001)
-	# _origin is where the drawn area's first corner (drawn_rect.position)
-	# lands: its top-left.
+	# _origin is where the drawn area's top-left corner (its first column's
+	# edge, its last row's) lands.
 	_origin = (size - Vector2(wide, tall) * scale_px) / 2.0 + Vector2(0.0, TOP_ROOM_HEXES * HexGrid.HEX * scale_px)
 	for unit_token: UnitToken in tokens:
 		unit_token.place(self)
@@ -436,8 +435,7 @@ func _draw() -> void:
 		draw_arc(center, rock.radius * scale_px, 0.0, TAU, 32, ROCK_LINE, 2.0, true)
 
 
-## A hex's six corners in pixels (flat-top on the plane, so point-up on the
-## sideways screen).
+## A hex's six corners in pixels (flat-top, on the plane and the screen).
 func hex_corners(center: Vector2i) -> PackedVector2Array:
 	var corners := PackedVector2Array()
 	for i: int in 6:

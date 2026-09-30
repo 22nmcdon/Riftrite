@@ -25,9 +25,10 @@ func test_the_plane_maps_to_pixels_and_back() -> void:
 	for point: Vector2i in [Vector2i(0, 0), Vector2i(3098, 3000), Vector2i(6562, 7500), Vector2i(1234, 5678)]:
 		var back: Vector2i = view.to_plane(view.to_pixel(point))
 		assert_lte((back - point).length(), 1.0 / view.scale_px + 1.0, "%s comes back as %s" % [point, back])
-	assert_lt(view.to_pixel(view.grid.center(3, 0)).x, view.to_pixel(view.grid.center(3, 6)).x, "the heroes' rows are on the left (landscape)")
-	assert_almost_eq(view.to_pixel(view.grid.center(2, 0)).y, view.to_pixel(view.grid.center(2, 6)).y, 0.01, "a column runs across")
-	assert_lt(view.to_pixel(view.grid.center(0, 3)).y, view.to_pixel(view.grid.center(7, 3)).y, "the first column on top")
+	assert_gt(view.to_pixel(view.grid.center(3, 0)).y, view.to_pixel(view.grid.center(3, 6)).y, "the heroes' rows are at the bottom (phase 5b)")
+	assert_almost_eq(view.to_pixel(view.grid.center(2, 0)).x, view.to_pixel(view.grid.center(2, 6)).x, 0.01, "a column runs up")
+	assert_almost_eq(view.to_pixel(view.grid.center(2, 3)).y, view.to_pixel(view.grid.center(4, 3)).y, 0.01, "a row runs across")
+	assert_lt(view.to_pixel(view.grid.center(0, 3)).x, view.to_pixel(view.grid.center(7, 3)).x, "the first column on the left")
 
 
 func test_every_hex_is_found_under_its_center_and_near_its_edge() -> void:

@@ -98,9 +98,9 @@ func test_nearer_units_are_drawn_and_clicked_in_front() -> void:
 	# click where they overlap finds it.
 	var back: UnitToken = view.token("rift_pup")
 	var front: UnitToken = view.token("rift_pup#2")
-	# In the neutral row, clear of everyone (a column runs down the screen).
-	back.place_at(view, Vector2(6000, 3500))
-	front.place_at(view, Vector2(6100, 3500))
+	# In the neutral row, clear of everyone (rows run up the screen).
+	back.place_at(view, Vector2(6000, 3600))
+	front.place_at(view, Vector2(6000, 3500))
 	view._stack_tokens()
 	assert_gt(front.get_index(), back.get_index())
 	assert_eq(view.token_at(front.center() + Vector2(0, -2)), front)

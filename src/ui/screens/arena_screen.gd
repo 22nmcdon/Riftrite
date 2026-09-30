@@ -16,8 +16,8 @@ extends UiScreen
 ##     the outcome and length, the seed, how each hero came out, and the
 ##     fight chart; Rematch fights the same placement with the next seed, and
 ##     Watch again replays this one. Back returns to the encounter list.
-##   - The layout (landscape since playtest gate 1): the board in the middle
-##     of the screen, turned sideways (ArenaView), with an empty gutter on
+##   - The layout: the board in the middle of the screen, heroes at the
+##     bottom (ArenaView; phase 5b), with an empty gutter on
 ##     its left as wide as the side column on its right, so it stays
 ##     centered, and at the screen's full height. The side column holds the
 ##     encounter's name and the hint, the enemy panel, the controls, and, in
