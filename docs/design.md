@@ -147,4 +147,3 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - **The trigger chain's depth limit** (8 is a guess). (part 7)
 - **Endless:** its scaling rate, how often floors offer relics, and whether it's its own mode or the end of a run. (part 7)
 - **Which statuses become keywords next** (Slow, Bleed, Stun). (part 7)
-- **Where part 7 lands in the build order.** (part 7)

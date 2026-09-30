@@ -13,7 +13,7 @@ A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The pl
 | `rebuild-enemies.md` | archetypes, the Act 1 roster, elites, the boss, enemy specializations |
 | `rebuild-run.md` | days, camp, fight choice, relics with costs, duo bonds, losing, pacing |
 | `rebuild-between-fights.md` | part 6: after-fight picks, loadout slots (charms, tactics, sigils) bought with a currency, wounds, who can hold what and the Magpie, and the screens from the playtester's mock; it changes parts 1 and 4 where they disagree |
-| `rebuild-combos.md` | part 7: keywords, triggers, the damage rule, permanent scaling, relic tiers (and a boss relic after every boss), stat amounts on every card, no combo readouts for players, and the endless mode; it changes parts 1, 4, and 6 where they disagree |
+| `rebuild-combos.md` | part 7 (to be built as phase 5c, before phase 6, damage rule first): keywords, triggers, the damage rule, permanent scaling, relic tiers (and a boss relic after every boss), stat amounts on every card, no combo readouts for players, and the endless mode; it changes parts 1, 4, and 6 where they disagree |
 | `rebuild-build-order.md` | the phases (tactics come as phase 3b, before paths), and what was gutted |
 | `rebuild-phase1-arena-sim.md` | phase 1's build plan (built): the arena sim |
 | `rebuild-phase2-heroes-enemies.md` | phase 2's build plan (built): base heroes, the Act 1 enemies, encounters, the sim runner |

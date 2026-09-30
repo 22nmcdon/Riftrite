@@ -1,6 +1,6 @@
 # Rebuild plan, part 7: combos, scaling, and breaking the game
 
-Status: **agreed in discussion (2026-09-30), not built.** Adds to part 1 (`rebuild-heroes.md`), part 4 (`rebuild-run.md`), and part 6 (`rebuild-between-fights.md`); where this part changes a rule there, this part wins. Numbers are placeholders to tune.
+Status: **agreed in discussion (2026-09-30), not built; it's phase 5c, before phase 6, starting with the damage rule** (`rebuild-build-order.md`). Adds to part 1 (`rebuild-heroes.md`), part 4 (`rebuild-run.md`), and part 6 (`rebuild-between-fights.md`); where this part changes a rule there, this part wins. Numbers are placeholders to tune.
 
 **Why:** a big part of the fun in games like this is finding combos, and the chance to "break" the game with them. That's what makes an endless mode work: your engine scales fast, but the rift scales faster, so you still lose eventually. The earlier plans were all about keeping things in check (every relic has a cost, no pure upsides, small tastes, narrow charms), which leaves nothing that multiplies. This part adds the pieces combos are built from.
 
