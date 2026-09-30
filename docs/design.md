@@ -12,6 +12,7 @@ Working title: **Riftrite** (a placeholder). This document was rewritten on 2026
 | Combos, scaling, and breaking the game: keywords, triggers, the damage rule, permanent scaling, relic tiers, the endless mode | `docs/plans/rebuild-combos.md` |
 | Enemy specializations and upgrades, rift modifiers, and the rift learns | `docs/plans/enemy-growth.md` |
 | Endless mode: floors, how the rift scales, the score | `docs/plans/endless.md` |
+| Every shard source and price, and the Act 1 spending target | `docs/plans/economy.md` |
 | The first content pool (part 7b): keyword sources, growing upgrades, and the combos the pool is built for | `docs/plans/rebuild-content-pool.md` |
 | The relic pool: its rules, shops and rerolls, income, and every relic by tier | `docs/plans/relics/README.md` (and one file per tier) |
 | The loadout pool: its rules, ranks, prices, and every tactic, gambit, sigil, and charm | `docs/plans/loadout/README.md` (and one file per kind) |
@@ -80,7 +81,7 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 - **The start:** choose your three heroes, then vow each one.
 - **A day** (`days-and-nodes.md`): **choose the fight** from 2 options known from the start of the act, set the **loadout**, **place** and fight, take the **after-fight pick** (on a win or a tie) and any deed rewards (transformations, apex vows), visit the **shop** (the Pedlar, every day: 1 relic at a time, the loadout wares, treating wounds), then choose **1 of 2–3 nodes**: an **Event** (a scene with a choice, or a Bloodied Oath; `events.md`), **Camp** (one option: Rest, Train, Scout, Map the Rift, Fortify, Dig In, Hunt, or the Shrine, which takes an offering for a relic), **Rift Tear** (pick a depth: tomorrow's fight is harder, and winning it pays a relic choice), or the **Magpie**.
 - **Choosing fights feeds deeds:** which enemies you fight decides which deeds fill. The fight card shows the enemies, never which paths they suit.
-- **No items or shops.** Camp options are free. A **currency** (placeholder: shards) comes from fights (a win 8, an elite 12, the boss 25; placeholders) and Hunts, and buys loadout things, relics, wound treatment, and rerolls. Nothing sells back.
+- **No items or shops.** Camp options are free. A **currency** (placeholder: shards) comes from fights (`economy.md`: start 10; a normal win 10, the harder fight 13, an elite 15, the boss 25; placeholders) and Hunts, and buys loadout things, relics, wound treatment, and rerolls. Nothing sells back.
 - **Wounds:** a hero who falls gets one (–15% max HP, up to 3), won or lost; Undying and would-fall saves don't count. Rest clears them all; currency clears one.
 - **Relics** (`relics/README.md`): team-wide, **no downsides**, about **8–14 a run** in five tiers: **common** (5 shards), **rare** (12), **epic** (20), **legendary** (30, sold in the shop before each boss), and **boss** (after each boss, choose 1 of 3, free; each rewrites a rule of the game). **Every shop shows 1 relic at a time**, and rerolling replaces it (the first reroll 1 shard, each after it 1 more), so with enough shards a shop never runs dry. Once taken, a relic stays.
 - **Duo bonds** (`duo-bonds.md`) link two paths of two different heroes; the vow shows a bonded pair as "?" until it's found. A bond has no boost of its own: once both heroes have transformed, its **bond relic** (free, team-wide) joins the shop pool for the rest of the run, more likely than an epic. Bonds are rare: 1–2 per path across the roster (3 in the Act 1 slice).
@@ -155,7 +156,7 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - **Wounds:** is –15% up to 3 right, and should a lost fight's falls wound? (part 6)
 - **How fast heroes grow** with a pick after every win. (part 6)
 - **Relics:** can the same common be bought twice? Are boss offers random or picked to fit the team? Is 8–14 a run right? (relic pool)
-- **The harder fight's pay:** 8 like a normal win, or more (10)? (relic pool)
+- **The economy:** the whole shard curve needs a sim pass; a Hunt's pay. (economy)
 - **Chain limits:** Crown of Stars' 10 links and Shared Pain's 3 steps are guesses. (relic pool)
 - **Upgrade pools:** how hero, taste, and path cards are weighted; one pick a day for the team, or a card per hero; a cap on stacking upgrades; and six upgrades whose "not X" numbers are the design's, not the built kits'. (upgrade pools)
 - **Nodes:** show 2 or 3, and how often each kind; income with a shop every day. (days and nodes)

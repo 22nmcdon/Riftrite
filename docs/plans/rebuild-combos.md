@@ -168,7 +168,7 @@ Part 7 was agreed after phases 5 and 5b were built. It isn't built yet, and noth
 
 ## Open questions
 
-- Relics' open questions (stacking, boss offers, relics per run, the harder fight's pay, chain limits) are in `relics/README.md`; the loadout's (rank-up numbers, charms in relic lanes, the shop mix, gambits' frame) are in `loadout/README.md`.
+- Relics' open questions (stacking, boss offers, relics per run, chain limits) are in `relics/README.md`; the loadout's (rank-up numbers, charms in relic lanes, the shop mix, gambits' frame) are in `loadout/README.md`.
 - **The chain-depth limit** (8 is a guess).
 - **Endless:** answered in `endless.md` (it continues past the Act 3 boss by choice; a floor is a day, with its shop); its own open questions (the scaling rate, income) are there.
 - **Which statuses become keywords next** (Slow, Bleed, Stun).

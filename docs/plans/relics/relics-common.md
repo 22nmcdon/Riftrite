@@ -50,4 +50,4 @@
 | **Mender's Purse** | Treating a wound costs 2 less |
 | **Tinker's Purse** | The first reroll in every shop is free |
 | **Bounty Hunter's Tag** | Elites pay +6 shards |
-| **Loose Change** | +2 shards at every camp |
+| **Loose Change** | +2 shards at every shop |

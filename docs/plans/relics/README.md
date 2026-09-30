@@ -43,7 +43,7 @@ Status: **agreed in discussion (2026-09-30), not built.** The relic pool for Act
 
 ## Income (placeholders)
 
-A won fight pays 8 shards, an elite 12, the boss 25.
+You start a run with 10 shards. A normal win pays 10, the harder fight 13, an elite 15, the boss 25. All shard numbers are in `../economy.md`.
 
 ## Decisions (2026-09-30)
 
@@ -58,7 +58,7 @@ These win over part 7 (`../rebuild-combos.md`), part 6 (`../rebuild-between-figh
 | **The shop before each boss** | Shows **1 legendary plus 1 relic of another tier**. Rerolls work the same way but **start at 5 shards** |
 | **After each boss** | Choose 1 of 3 boss relics, free |
 | **Prices** | Common 5, rare 12, epic 20, legendary 30 |
-| **Income** | A won fight pays **8**, an elite **12**, the boss **25** (placeholders). This replaces part 6's and part 7's earlier numbers |
+| **Income** | A won fight pays **8**, an elite **12**, the boss **25** (placeholders). This replaces part 6's and part 7's earlier numbers. **Raised the same day (`../economy.md`):** start 10; a normal win 10, the harder fight 13, an elite 15, the boss 25 |
 | **Crumbled ground** | **Walkable.** Standing on it deals flat damage every second (15, a placeholder) to heroes and enemies alike. Only rocks wall a target off. Riftwalker's Soles (boss) builds on this. The arena plan and the sim change to match |
 | **Buffs** | A buff to a hero raises ATK or MGK, never "damage". "Damage" stays for bonuses tied to the target, hit multipliers, and effects scoped to one kind of attack |
 | **Lifesteal** | Its own mechanic, separate from healing (unless Blood Communion) |
@@ -85,5 +85,4 @@ Phase 5 built nine relics with costs (`../rebuild-phase5-run.md`). What becomes 
 - **Stacking:** can you buy the same common twice? If yes, pure-stat commons become a "go wide" plan (with Reliquary and Reliquary Lamp).
 - **Boss offers:** three random, or three picked to fit the team's keywords and paths?
 - **Relics per run:** roughly 8–14, depending on how much players reroll. To tune.
-- **The harder fight's pay:** 8 like a normal win, or more (10)?
 - **Chain limits:** Crown of Stars' 10 links, Shared Pain's 3 steps, and the trigger chain's 8 are guesses.

@@ -30,7 +30,7 @@ These win over part 6 (`../rebuild-between-fights.md`) and phase 5's build plan 
 | **The kinds** | Four: **tactics, gambits, sigils, charms**. Gambits are new (a placement or fight-start rule, one per hero) |
 | **Grafts** | **Cut and merged into charms** (`../magpie.md`): Smoke Vial, Sidestep, Iron Skin, Spite Brand, Bloodletter, and Scavenger are charms now (marked * in `charms.md`). The graft frame and the "one exception to never an ability" rule go; the graft rule (no path's key mechanic, no undoing a path's cost) moves to every item (rule 8) |
 | **Ranks** | Every item has three ranks. Each kind ranks up by one rule (the table above), counted in run state, and buying a copy of an item you own skips it to the next rank. Ranks reset with the run, so rule 5 of `CLAUDE.md` holds. (Heroes still have no ranks.) |
-| **Prices** | Tactic 4, charm 6, sigil 8, gambit 12 (placeholders, beside the relic pool's income: 8 a won fight) |
+| **Prices** | Tactic 4, charm 6, sigil 8, gambit 12 (placeholders; every price and income is in `../economy.md`) |
 | **No warnings** | An item that does nothing on its hero shows nothing. The built "no effect on this hero" marker, and the `needs` tags behind it, go |
 | **Shops** | **No filtering:** a shop never checks what the team can use. Any shop buys items back for half their price (rule 9). The Magpie is a node with a fixed stall (`../magpie.md`), and the only place to sell a relic. The rest of the shops' setup is being changed (the playtester's, to come) |
 | **Wide** | Its "+1 target" is allowed: rule 8's extra targets are the basic attack's (Volley's), and a signature reaching one more target doesn't fill Volley's deed |

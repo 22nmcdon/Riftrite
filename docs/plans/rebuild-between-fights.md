@@ -79,7 +79,7 @@ A transformation can replace a signature (Vigil Keeper's Sunfall replaces Mend) 
 
 ## 4. The currency
 
-- **Earned from fights:** a normal win pays a set amount, the harder fight pays more, and elites and the boss pay more still. **Numbers set by the relic pool (`relics/README.md`, 2026-09-30):** a won fight pays 8, an elite 12, the boss 25 (placeholders; whether the harder fight pays more is open there). A tie pays like a win. **A Hunt at camp pays currency.** (A name to pick later; placeholder: **shards**.)
+- **Earned from fights:** a normal win pays a set amount, the harder fight pays more, and elites and the boss pay more still. **Rescaled again (2026-09-30):** every shard source and price is now in `economy.md` (start 10; a normal win 10, the harder fight 13, an elite 15, the boss 25; treating a wound 4; rerolls 1, then +1 each time). A tie pays like a win. **A Hunt at camp pays currency.** (A name to pick later; placeholder: **shards**.)
 - **Spent on:**
   - **Buying** charms, tactics, and sigils (and gambits). **Prices set by the loadout pool (`loadout/README.md`):** tactic 4, charm 6, sigil 8, gambit 12; buying a copy of an item you own ranks it up.
   - **Now and then, a relic** at the Pedlar (about two days of income; below).
@@ -182,7 +182,6 @@ Agreed in discussion (2026-09-29). **Changed by the loadout pool (`loadout/READM
 ## Open questions
 
 - **Slot count:** 3 each, or fewer early (2) and one more later?
-- **Prices and income:** what things cost, and what fights pay.
 - **The Pedlar's relic:** about 1 visit in 3 everywhere, or only at certain places?
 - **The currency's name.**
 - **Rest:** does it also keep "the next loss doesn't count"?

@@ -80,5 +80,4 @@ Phase 5 built the older day (`rebuild-phase5-run.md`): camp first (a place's men
 ## Open questions
 
 - **How many nodes to show:** 2 or 3, and how often each kind appears.
-- **The harder fight's pay:** 8 like a normal win, or more (10)?
-- **Income:** a shop every day means more spending; the shard numbers need a sim pass.
+- **Income:** set in `economy.md`; it still needs a sim pass.

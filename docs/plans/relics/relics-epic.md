@@ -15,6 +15,6 @@
 | **Stonebound** | Standing still | A hero who hasn't moved for 2s gains +15% ATK, +15% MGK, and +15 DEF, then another +5% ATK, +5% MGK, and +5 DEF every 2s after. All of it resets when they move |
 | **The Ninth Arrow** | Hit count | Every 9th hit by each hero deals triple damage |
 | **Mirror of Ash** | Being hit | Enemies take 60% of the damage they deal to heroes |
-| **Miser's Vault** | Saving | At every camp, gain 1 shard for every 5 you're holding (up to 6) |
+| **Miser's Vault** | Saving | At the start of every shop, gain 1 shard for every 5 you're holding (up to 6) |
 | **Merchant's Covenant** | Rerolls | Rerolls never get more expensive: every reroll costs the first price |
 | **Overkill Tithe** | Big hits | +1 shard for every 150 overkill damage |
