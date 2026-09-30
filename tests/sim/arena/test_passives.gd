@@ -122,7 +122,7 @@ func test_output_and_rate_auras() -> void:
 	var hit: LogEntry = K.entries(quick, LogEntry.Kind.DAMAGE, "hero")[0]
 	assert_eq([hit.tick, hit.crit], [10, true], "half the cooldown, and +100% crit chance")
 	var stacked: CombatSim = _duel(_hero([_aura("one", "holder", "atk_bp", 15000), _aura("two", "holder", "atk_bp", 20000)]))
-	assert_eq(stacked.units[0].stats.get_stat(UnitStats.Stat.ATK), 30, "auras on one stat multiply")
+	assert_eq(stacked.units[0].stats.get_stat(UnitStats.Stat.ATK), 25, "auras on one stat add their changes (the damage rule): +50% and +100%")
 	var added: CombatSim = _duel(_hero([_aura("one", "holder", "cooldown_bp", -2500), _aura("two", "holder", "cooldown_bp", -2500)]))
 	K.step(added, 10)
 	assert_eq(_hits(added, "hero"), [[10, 10]], "cooldown and crit chance auras add: -25% twice is -50%")

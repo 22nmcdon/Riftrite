@@ -10,8 +10,11 @@ extends RefCounted
 ## and land when it does; the rest (on the unit itself, or every ally) happen
 ## as it fires.
 ##
-## Numbers come from the unit's stats (with its auras) and its output auras
-## (Passives.boosted); statuses it applies may be swapped (replace_status).
+## Numbers come from the unit's stats (with its auras). Damage, heals, and
+## Shields then carry their power bonus (Passives.power_bp: output auras and
+## a kit mod's power_bp, plus a tactic's payoff) to where they land, and the
+## damage rule (DamageRule) applies it there with the hit's other kinds;
+## statuses it applies may be swapped (replace_status).
 ## Built so far: damage, heal, shield, apply_status, cleanse, mana_drain,
 ## knockback, pull, leap, charge (Displacement), area (Areas; an area is
 ## cast as the ability fires, never riding a shot), and start_collapse
@@ -56,7 +59,7 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 	# hurt enough (Tactics.hurt_enough), and each such fire heals more.
 	var heal_boost_bp: int = 0
 	if state == unit.signature and unit.tactic != null and unit.tactic.heal_bp > 0:
-		heal_boost_bp = unit.tactic.heal_bp
+		heal_boost_bp = unit.tactic.heal_bp  # power, like the healer's auras
 		source = source.with_bonus(Tactics.bonus_note(heal_boost_bp, unit.tactic))
 	state.fires += 1
 	var fired: LogEntry = sim.new_entry(LogEntry.Kind.FIRE, source)
@@ -87,37 +90,42 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 		if effect.type == EffectDef.Type.SUMMON:
 			Summons.summon(sim, unit, source, effect, target)
 			continue
+		var power: int = power_of(effect, unit, heal_boost_bp)
 		if shot != null and effect.target == EffectDef.Target.TARGET:
-			var amount: int = _boosted_heal(effect, amount_of(effect, unit, 0, sim), heal_boost_bp)
+			var amount: int = amount_of(effect, unit, 0, sim)
 			var crit: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability))
 			shot.effects.append(effect)
 			shot.amounts.append(amount)
+			shot.powers.append(power)
 			shot.crits.append(crit)
 			continue
 		for victim: UnitState in _targets(sim, unit, effect.target, target, null, effect):
 			var crit_now: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability))
-			land(sim, unit, ability, source, effect, victim, _boosted_heal(effect, amount_of(effect, unit, 0, sim), heal_boost_bp), crit_now)
+			land(sim, unit, ability, source, effect, victim, amount_of(effect, unit, 0, sim), crit_now, NO_POINT, power)
 	if shot != null and not shot.effects.is_empty():
 		Shots.fire(sim, shot)
 	return true
 
 
-## A heal's amount with a payoff's `boost_bp` on top (anything else as it is).
-static func _boosted_heal(effect: EffectDef, amount: int, boost_bp: int) -> int:
-	if boost_bp == 0 or effect.type != EffectDef.Type.HEAL:
-		return amount
-	return FixedMath.apply_bp(amount, FixedMath.BP_ONE + boost_bp)
+## An effect's power bonus from `unit` (Passives.power_bp), with a heal
+## payoff's `heal_boost_bp` added to its heals.
+static func power_of(effect: EffectDef, unit: UnitState, heal_boost_bp: int = 0) -> int:
+	var power: int = Passives.power_bp(unit, effect)
+	if heal_boost_bp != 0 and effect.type == EffectDef.Type.HEAL:
+		power += heal_boost_bp
+	return power
 
 
 ## One effect reaching `victim` with its number already worked out (as it
-## fired, as its shot left, or as its area was cast). A damage hit then sets
-## off the ability's on_hit (and on a crit, on_crit) effects. A knockback
-## goes away from `push_from` (an area's center), or else from the unit.
-static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: EffectSource, effect: EffectDef, victim: UnitState, amount: int, crit: bool, push_from: Vector2i = NO_POINT) -> void:
+## fired, as its shot left, or as its area was cast): for damage, heals, and
+## Shields, the base and its `power` bonus, which the damage rule applies
+## here. A damage hit then sets off the ability's on_hit (and on a crit,
+## on_crit) effects. A knockback goes away from `push_from` (an area's
+## center), or else from the unit.
+static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: EffectSource, effect: EffectDef, victim: UnitState, amount: int, crit: bool, push_from: Vector2i = NO_POINT, power: int = 0) -> void:
 	match effect.type:
 		EffectDef.Type.DAMAGE:
-			var damage: int = FixedMath.apply_bp(amount, sim.tuning.crit_damage_bp) if crit else amount
-			var dealt: int = deal_hit(sim, source, victim, damage, crit)
+			var dealt: int = deal_hit(sim, source, victim, amount, crit, power)
 			if effect.trigger == EffectDef.Trigger.ON_FIRE and ability.has_hit_effects:
 				var hit := Hit.new()
 				hit.target = victim
@@ -126,10 +134,10 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 				_on_hit(sim, unit, ability, source, hit)
 		EffectDef.Type.HEAL:
 			if effect.amount_bp_of_max_hp > 0:
-				amount = Passives.boosted(unit, effect, FixedMath.apply_bp(victim.max_hp, effect.amount_bp_of_max_hp))
-			heal(sim, victim, amount, source, effect.overheal_shield_bp)
+				amount = FixedMath.apply_bp(victim.max_hp, effect.amount_bp_of_max_hp)
+			heal(sim, victim, amount, source, effect.overheal_shield_bp, power)
 		EffectDef.Type.SHIELD:
-			give_shield(sim, victim, amount, source)
+			give_shield(sim, victim, DamageRule.apply(amount, power), source)
 		EffectDef.Type.APPLY_STATUS:
 			var status_id: String = unit.status_swaps.get(effect.status_id, effect.status_id)
 			Statuses.apply(sim, victim, status_id, amount, effect.duration_ticks, source)
@@ -161,7 +169,7 @@ static func _on_hit(sim: CombatSim, unit: UnitState, ability: AbilityDef, source
 		for victim: UnitState in _targets(sim, unit, effect.target, null, hit, effect):
 			var amount: int = amount_of(effect, unit, hit.damage, sim)
 			var crit: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability))
-			land(sim, unit, ability, source, effect, victim, amount, crit)
+			land(sim, unit, ability, source, effect, victim, amount, crit, NO_POINT, power_of(effect, unit))
 
 
 ## An ability passive's effect, set off by an event (Passives.on_event):
@@ -184,13 +192,14 @@ static func run_event(sim: CombatSim, unit: UnitState, ability: AbilityDef, sour
 		hit.damage = damage
 	for victim: UnitState in _targets(sim, unit, effect.target, unit.target, hit, effect):
 		var crit: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability))
-		land(sim, unit, ability, source, effect, victim, amount_of(effect, unit, damage, sim), crit)
+		land(sim, unit, ability, source, effect, victim, amount_of(effect, unit, damage, sim), crit, NO_POINT, power_of(effect, unit))
 
 
 ## The effect's number: base plus stat scaling from the unit's stats (or a
-## share of the hit's `damage`, for amount_bp_of_damage), then its output
-## auras. (The same number ValueBreakdown.compute gives, worked out without
-## building the breakdown.)
+## share of the hit's `damage`, for amount_bp_of_damage). A status's stacks
+## then take the unit's damage-over-time auras; damage, heals, and Shields
+## take their power where they land (power_of). (The same base
+## ValueBreakdown.compute gives, worked out without building the breakdown.)
 ## `sim` counts the allies near the unit for a damage effect's
 ## bonus_per_ally.
 static func amount_of(effect: EffectDef, unit: UnitState, damage: int = 0, sim: CombatSim = null) -> int:
@@ -283,17 +292,18 @@ static func near(sim: CombatSim, unit: UnitState, effect: EffectDef, center: Uni
 	return found
 
 
-## Lands `amount` of hit damage (after crits) on `target`: a Mark, DEF, then
-## Shield, then HP. Logs it and returns what got through DEF.
-static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, amount: int, crit: bool) -> int:
+## Lands a hit of `amount` (its base) on `target`: the damage rule (its
+## `power`, plus a tactic's payoff; the crit's; the target's Mark), then
+## DEF, then Shield, then HP. Logs it and returns what got through DEF.
+static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, amount: int, crit: bool, power: int = 0) -> int:
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.DAMAGE, source)
 	if sim.damage_payoffs:
 		var payoff: int = Tactics.damage_bonus_bp(sim, source, target)
 		if payoff > 0:
-			amount = FixedMath.apply_bp(amount, FixedMath.BP_ONE + payoff)
+			power += payoff
 			entry.bonus = Tactics.bonus_note(payoff, sim.unit_by_id(source.unit_id).tactic)
 	var marked: int = Statuses.damage_taken_bp(target) if not target.statuses.is_empty() else 0
-	var raw: int = FixedMath.apply_bp(amount, FixedMath.BP_ONE + marked)
+	var raw: int = DamageRule.apply(amount, power, sim.tuning.crit_damage_bp - FixedMath.BP_ONE if crit else 0, marked)
 	# Guard (phase 4): an ally's guard takes its share of the hit, against its
 	# own DEF.
 	var guard: UnitState = Guards.covering(sim, source, target) if not sim.guards.is_empty() else null
@@ -322,9 +332,10 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 ## (by default 10%, 5%, 2.5%, ...), so rapid small heals can't wipe it out.
 ## `overheal_shield_bp`: what the heal would have restored past full HP comes
 ## back as that share of Shield (phase 4, Ward Thread).
-static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectSource, overheal_shield_bp: int = 0) -> void:
-	if target.aura_bp[AuraDef.Stat.HEALING_TAKEN_BP] != FixedMath.BP_ONE:
-		amount = FixedMath.apply_bp(amount, target.aura_bp[AuraDef.Stat.HEALING_TAKEN_BP])
+## `amount` is the heal's base: the damage rule applies its `power` and the
+## target's healing taken (the target's side, like a Mark on damage).
+static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectSource, overheal_shield_bp: int = 0, power: int = 0) -> void:
+	amount = DamageRule.apply(amount, power, 0, target.aura_bp[AuraDef.Stat.HEALING_TAKEN_BP] - FixedMath.BP_ONE)
 	var healed: int = clampi(target.max_hp - target.hp, 0, amount)
 	target.hp += healed
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.HEAL, source)

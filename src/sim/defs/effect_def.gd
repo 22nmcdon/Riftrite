@@ -250,6 +250,10 @@ var amount: int = 0
 var amount_bp_of_damage: int = 0
 ## heal: a share of the healed unit's max HP (0: `amount` instead).
 var amount_bp_of_max_hp: int = 0
+## damage/heal/shield: a power bonus (bp, added to the unit's other power
+## bonuses by the damage rule, DamageRule). Not read from the data: kit mods
+## set it ("amount_bp" on an ability, phase 5c Decision 6).
+var power_bp: int = 0
 ## damage: more for each other standing ally near the unit as it fires
 ## (bp each, within this many plane units, of this kit if not empty).
 var bonus_bp_per_ally: int = 0

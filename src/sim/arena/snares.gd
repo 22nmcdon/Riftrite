@@ -32,6 +32,8 @@ class Snare:
 	var effect: EffectDef
 	var pos: Vector2i
 	var amounts: Array[int] = []
+	## Each effect's power bonus (EffectRunner.power_of), applied as it lands.
+	var powers: Array[int] = []
 
 
 ## `unit`'s ability sets a snare with `effect` in `target`'s path.
@@ -63,6 +65,7 @@ static func place(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: 
 	snare.pos = point
 	for nested: EffectDef in effect.area_effects:
 		snare.amounts.append(EffectRunner.amount_of(nested, unit, 0, sim))
+		snare.powers.append(EffectRunner.power_of(nested, unit))
 	sim.snares.append(snare)
 	_log(sim, snare, "set", "")
 
@@ -84,7 +87,7 @@ static func check(sim: CombatSim) -> void:
 		for i: int in snare.effect.area_effects.size():
 			var nested: EffectDef = snare.effect.area_effects[i]
 			var crit: bool = nested.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(EffectRunner.crit_chance_bp(sim, snare.unit, snare.ability))
-			EffectRunner.land(sim, snare.unit, snare.ability, snare.source, nested, caught, snare.amounts[i], crit, snare.pos)
+			EffectRunner.land(sim, snare.unit, snare.ability, snare.source, nested, caught, snare.amounts[i], crit, snare.pos, snare.powers[i])
 	sim.snares = staying
 
 

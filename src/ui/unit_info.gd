@@ -347,18 +347,20 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 
 
 ## An amount with its word and how it scales: "14 damage (100% ATK)",
-## "40 (20 + 100% MGK)", "60 Shield".
+## "40 (20 + 100% MGK)", "60 Shield", and a kit mod's power bonus after it
+## ("14 damage (100% ATK), +20%").
 static func _amount(effect: EffectDef, kit: UnitDef, word: String) -> String:
 	var value: ValueBreakdown = ValueBreakdown.compute(effect.amount, effect.scaling, kit.stats, [])
 	var amount: String = str(value.final) if word.is_empty() else "%d %s" % [value.final, word]
+	var power: String = "" if effect.power_bp == 0 else ", %s%s" % ["+" if effect.power_bp > 0 else "", ValueBreakdown._percent(effect.power_bp)]
 	if value.stat_parts.is_empty():
-		return amount
+		return amount + power
 	var sum: Array[String] = []
 	if effect.amount != 0:
 		sum.append(str(effect.amount))
 	for part: Array in value.stat_parts:
 		sum.append("%s %s" % [ValueBreakdown._percent(part[1]), UnitStats.LABELS[part[0]]])
-	return "%s (%s)" % [amount, " + ".join(sum)]
+	return "%s (%s)%s" % [amount, " + ".join(sum), power]
 
 
 ## " to all allies" or " to all enemies", for an effect on a whole side.

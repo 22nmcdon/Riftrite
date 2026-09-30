@@ -296,7 +296,7 @@ func test_a_per_fallen_ally_aura_counts_the_fallen() -> void:
 	assert_eq(unit.stats.get_stat(UnitStats.Stat.ATK), 110)
 	fight.unit_by_id("y").hp = 0
 	K.step(fight, 1)
-	assert_eq(unit.stats.get_stat(UnitStats.Stat.ATK), 121, "x1.1 twice")
+	assert_eq(unit.stats.get_stat(UnitStats.Stat.ATK), 120, "+10% twice, added (the damage rule)")
 
 
 # --- attacking -------------------------------------------------------------------------------

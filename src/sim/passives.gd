@@ -110,17 +110,16 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 				targets = sim.standing_allies_of(holder)
 			for target: UnitState in targets:
 				for i: int in times:
-					if _is_additive(part.aura.stat):
-						target.aura_bp[part.aura.stat] += part.aura.value
-					else:
-						target.aura_bp[part.aura.stat] = FixedMath.apply_bp(target.aura_bp[part.aura.stat], part.aura.value)
+					# A factor's change adds to the others' of its stat (the
+					# damage rule, phase 5c): x1.1 and x1.1 make x1.2.
+					target.aura_bp[part.aura.stat] += part.aura.value if _is_additive(part.aura.stat) else part.aura.value - FixedMath.BP_ONE
 	for unit: UnitState in sim.units:
 		unit.stats = unit.base_stats.copy()
 		for aura_stat: int in AuraDef.Stat.size():
 			if not AuraDef.UNIT_STAT_FOR.has(aura_stat):
 				continue
 			var stat: int = AuraDef.UNIT_STAT_FOR[aura_stat]
-			unit.stats.values[stat] = FixedMath.apply_bp(unit.base_stats.values[stat], unit.aura_bp[aura_stat])
+			unit.stats.values[stat] = FixedMath.apply_bp(unit.base_stats.values[stat], factor(unit, aura_stat))
 		unit.stats.values[UnitStats.Stat.RANGE] = unit.base_stats.values[UnitStats.Stat.RANGE] + unit.aura_bp[AuraDef.Stat.RANGE]
 		unit.attack.set_cooldown_add(unit.aura_bp[AuraDef.Stat.COOLDOWN_BP])
 		unit.attack_rate_bp = sim.attack_rate_bp(unit)
@@ -221,22 +220,34 @@ static func _is_additive(stat: int) -> bool:
 	return AuraDef.ADDITIVE.has(stat)
 
 
-## The effect's number after the unit's output auras (damage, heal, shield,
-## or damage-over-time stacks).
-static func boosted(unit: UnitState, effect: EffectDef, amount: int) -> int:
-	var stat: int = -1
+## A factor stat's multiplier on the unit (its auras' changes added, floored
+## by the damage rule).
+static func factor(unit: UnitState, stat: int) -> int:
+	return DamageRule.factor(unit.aura_bp[stat] - FixedMath.BP_ONE)
+
+
+## The unit's power bonus (bp) for an effect: its output aura for the
+## effect's type (damage, heal, shield) plus the effect's own power_bp (a kit
+## mod's). The damage rule adds it to the hit's other power bonuses.
+static func power_bp(unit: UnitState, effect: EffectDef) -> int:
+	var power: int = effect.power_bp
 	match effect.type:
 		EffectDef.Type.DAMAGE:
-			stat = AuraDef.Stat.DAMAGE_BP
+			power += unit.aura_bp[AuraDef.Stat.DAMAGE_BP] - FixedMath.BP_ONE
 		EffectDef.Type.HEAL:
-			stat = AuraDef.Stat.HEAL_BP
+			power += unit.aura_bp[AuraDef.Stat.HEAL_BP] - FixedMath.BP_ONE
 		EffectDef.Type.SHIELD:
-			stat = AuraDef.Stat.SHIELD_BP
-		EffectDef.Type.APPLY_STATUS:
-			stat = AuraDef.Stat.OVER_TIME_BP
-	if stat < 0 or unit.aura_bp[stat] == FixedMath.BP_ONE:
+			power += unit.aura_bp[AuraDef.Stat.SHIELD_BP] - FixedMath.BP_ONE
+	return power
+
+
+## A status's stacks after the unit's damage-over-time auras (the only
+## number still boosted as it's worked out; damage, heals, and Shields carry
+## their power to where they land).
+static func boosted(unit: UnitState, effect: EffectDef, amount: int) -> int:
+	if effect.type != EffectDef.Type.APPLY_STATUS or unit.aura_bp[AuraDef.Stat.OVER_TIME_BP] == FixedMath.BP_ONE:
 		return amount
-	return FixedMath.apply_bp(amount, unit.aura_bp[stat])
+	return FixedMath.apply_bp(amount, factor(unit, AuraDef.Stat.OVER_TIME_BP))
 
 
 # --- events ------------------------------------------------------------------------

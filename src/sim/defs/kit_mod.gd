@@ -17,8 +17,12 @@ extends RefCounted
 ##                                        every passive's ability)
 ##       "types": ["heal"],               only effects of these types (nested in
 ##                                        areas and snares too); default all
-##       "amount_bp": 12000,              their amount, scaling, and share of
-##                                        damage, times this
+##       "amount_bp": 12000,              damage, heals, and Shields: a power
+##                                        bonus of this much (+20%) added to
+##                                        the effect (EffectDef.power_bp; the
+##                                        damage rule, phase 5c); other
+##                                        effects' amount, scaling, and share
+##                                        of damage, times this
 ##       "duration_bp": 13000,            their durations (a status's, a lasting
 ##       "duration_add_ms": 2000,         area's, a wall's), times this, plus this
 ##       "radius_add": 1,                 their areas' size, in hexes
@@ -41,6 +45,8 @@ const SLOT_BASIC: String = "basic_attack"
 const SLOT_SIGNATURE: String = "signature"
 const SLOT_ABILITIES: String = "abilities"
 const PASSIVE_PREFIX: String = "passive:"
+## The effects an amount_bp gives a power bonus (phase 5c Decision 6).
+const POWER_TYPES: Array[EffectDef.Type] = [EffectDef.Type.DAMAGE, EffectDef.Type.HEAL, EffectDef.Type.SHIELD]
 
 
 ## One entry of "on": changes to the abilities in one slot.
@@ -55,6 +61,9 @@ class AbilityChange:
 	var cooldown_bp: int = FixedMath.BP_ONE
 	var add_effects: Array[EffectDef] = []
 	var after_add_ticks: int = 0
+	## amount_bp is a power bonus on damage, heals, and Shields (false: it
+	## scales their numbers, as an echo's share does).
+	var as_power: bool = true
 
 	func touches_effects() -> bool:
 		return amount_bp != FixedMath.BP_ONE or duration_bp != FixedMath.BP_ONE or duration_add_ticks != 0 or radius_add != 0
@@ -236,6 +245,7 @@ static func make_echo(signature: AbilityDef, share_bp: int) -> AbilityDef:
 	echo.cast_ticks = 0
 	var change := AbilityChange.new()
 	change.amount_bp = share_bp
+	change.as_power = false
 	change.duration_bp = share_bp
 	echo.effects = _changed_effects(signature.effects, change)
 	return echo
@@ -281,11 +291,14 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 	var result: Array[EffectDef] = []
 	for effect: EffectDef in effects:
 		var copy: EffectDef = DefCopy.shallow(effect) as EffectDef
-		if change.touches(effect):
+		if change.touches(effect) and change.amount_bp != FixedMath.BP_ONE and change.as_power and POWER_TYPES.has(effect.type):
+			copy.power_bp += change.amount_bp - FixedMath.BP_ONE
+		elif change.touches(effect):
 			copy.amount = FixedMath.apply_bp(copy.amount, change.amount_bp)
 			copy.amount_bp_of_damage = FixedMath.apply_bp(copy.amount_bp_of_damage, change.amount_bp)
 			for stat: int in copy.scaling.size():
 				copy.scaling[stat] = FixedMath.apply_bp(copy.scaling[stat], change.amount_bp)
+		if change.touches(effect):
 			if copy.duration_ticks > 0:
 				copy.duration_ticks = maxi(FixedMath.apply_bp(copy.duration_ticks, change.duration_bp) + change.duration_add_ticks, 1)
 			if copy.zone_ticks > 0:

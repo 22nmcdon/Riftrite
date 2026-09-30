@@ -23,6 +23,8 @@ class Shot:
 	## as fired.
 	var effects: Array[EffectDef] = []
 	var amounts: Array[int] = []
+	## Each effect's power bonus (EffectRunner.power_of), applied as it lands.
+	var powers: Array[int] = []
 	var crits: Array[bool] = []
 
 
@@ -72,6 +74,6 @@ static func land_due(sim: CombatSim) -> void:
 				sim.combat_log.add(stopped)
 				continue
 		for i: int in shot.effects.size():
-			EffectRunner.land(sim, shot.shooter, shot.ability, shot.source, shot.effects[i], shot.target, shot.amounts[i], shot.crits[i])
+			EffectRunner.land(sim, shot.shooter, shot.ability, shot.source, shot.effects[i], shot.target, shot.amounts[i], shot.crits[i], EffectRunner.NO_POINT, shot.powers[i])
 	sim.shots = waiting
 	sim.next_shot_tick = next

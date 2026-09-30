@@ -47,7 +47,7 @@ func test_a_signatures_heals_scale_nested_ones_too() -> void:
 	var built: UnitDef = deeper.apply(lantern)
 	var before: EffectDef = lantern.signature.effects[0].area_effects[0]
 	var after: EffectDef = built.signature.effects[0].area_effects[0]
-	assert_eq([after.amount, after.scaling[UnitStats.Stat.MGK]], [FixedMath.apply_bp(before.amount, 12000), FixedMath.apply_bp(before.scaling[UnitStats.Stat.MGK], 12000)], "the lantern's heal, inside its area")
+	assert_eq([after.amount, after.scaling[UnitStats.Stat.MGK], after.power_bp], [before.amount, before.scaling[UnitStats.Stat.MGK], before.power_bp + 2000], "the lantern's heal, inside its area, gets +20% power (the damage rule, phase 5c Decision 6)")
 	assert_eq(built.signature.effects[0].area_effects[1].type, EffectDef.Type.CLEANSE, "the cleanse beside it isn't a heal")
 	assert_eq(lantern.signature.effects[0].area_effects[0].amount, before.amount, "the path's kit is untouched")
 	assert_eq(built.basic_attack, lantern.basic_attack, "other slots are the same objects")

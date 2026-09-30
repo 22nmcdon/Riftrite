@@ -54,7 +54,8 @@ const STAT_NAMES: Array[String] = [
 	"atk_bp", "mgk_bp", "def_bp", "atsp_bp", "crit_bp", "range", "healing_taken_bp",
 ]
 const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp", "ally_standing"]
-## The stats that add rather than multiply.
+## The stats that add rather than multiply. The rest are factors (x1.1);
+## several of one stat add their changes (the damage rule, phase 5c).
 const ADDITIVE: Array[Stat] = [Stat.CRIT_CHANCE_BP, Stat.COOLDOWN_BP, Stat.RANGE]
 const STAT_LABELS: Array[String] = [
 	"damage", "healing", "shields", "damage over time", "crit chance", "cooldown",

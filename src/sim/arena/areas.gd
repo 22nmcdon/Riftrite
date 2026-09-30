@@ -41,6 +41,8 @@ class Pending:
 	var push_from: Vector2i
 	var land_tick: int
 	var amounts: Array[int] = []
+	## Each effect's power bonus (EffectRunner.power_of), applied as it lands.
+	var powers: Array[int] = []
 	var crit_bp: int = 0
 	## A zone: the tick it ends (exclusive; -1: not a zone).
 	var until_tick: int = -1
@@ -66,10 +68,8 @@ static func cast(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			area.origin = ArenaPlane.along(unit.pos, area.dir, unit.radius)
 			area.push_from = unit.pos
 	for nested: EffectDef in effect.area_effects:
-		var amount: int = EffectRunner.amount_of(nested, unit, 0, sim)
-		if heal_boost_bp > 0 and nested.type == EffectDef.Type.HEAL:
-			amount = FixedMath.apply_bp(amount, FixedMath.BP_ONE + heal_boost_bp)
-		area.amounts.append(amount)
+		area.amounts.append(EffectRunner.amount_of(nested, unit, 0, sim))
+		area.powers.append(EffectRunner.power_of(nested, unit, heal_boost_bp))
 	area.crit_bp = EffectRunner.crit_chance_bp(sim, unit, ability)
 	area.land_tick = sim.tick + effect.warning_ticks
 	if effect.zone_ticks > 0:
@@ -137,7 +137,7 @@ static func _land(sim: CombatSim, area: Pending) -> void:
 			if nested.side != EffectDef.AreaSide.BOTH and (victim.side == area.unit.side) != (nested.side == EffectDef.AreaSide.ALLIES):
 				continue
 			var crit: bool = nested.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(area.crit_bp)
-			EffectRunner.land(sim, area.unit, area.ability, area.source, nested, victim, area.amounts[i], crit, area.push_from)
+			EffectRunner.land(sim, area.unit, area.ability, area.source, nested, victim, area.amounts[i], crit, area.push_from, area.powers[i])
 
 
 static func _counts(area: Pending, other: UnitState) -> bool:
