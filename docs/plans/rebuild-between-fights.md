@@ -16,6 +16,7 @@ Status: **agreed in discussion (2026-09-28, answers and section 8 on 2026-09-29)
 - **Wounds:** a hero who falls gets a wound. Wounds are cleared by **resting at camp** (free, but it uses the camp pick) or by **paying currency** (one wound at a time). Since playtest gate 3, **a won fight also heals one wound on each hero** before the fallen take theirs (`rebuild-phase5-run.md` Decision 17).
 - **Nothing slotted may become useless when its hero transforms** (section 3).
 - **Any hero can hold anything; the Pedlar only sells what your team can use; the Magpie sells other heroes' gear, grafts, and one relic** (section 8, 2026-09-29). This replaces the earlier "most slotted things are hero-specific". **Changed by the loadout pool (`loadout/README.md`):** any hero can still hold anything, but no shop filters by what the team can use, and grafts are removed. The shops' setup is being redone by the playtester.
+  Superseded: the Pedlar and grafts are gone, and the Magpie is a node (`magpie.md`).
 
 **Answers (2026-09-29):**
 
@@ -142,6 +143,8 @@ Agreed in discussion (2026-09-29). **Changed by the loadout pool (`loadout/READM
 
 **The Pedlar sells only what someone on your team can use** (by those tags). Unchanged otherwise: about 4 wares, now and then a relic (section 4: expensive, and it counts toward the 3–5 per run).
 
+**Superseded (2026-09-30): the Magpie is now a node, grafts are cut, and the Pedlar is gone (a shop comes every day). See `magpie.md` and `days-and-nodes.md`. The old design follows for reference.**
+
 **The Magpie** (the exotic shop) is a rare event, about once per act. He sells what he took from other bands who fell in the rift.
 
 - **Always one relic.** It counts toward the 3–5 per run.
@@ -191,8 +194,6 @@ Agreed in discussion (2026-09-29). **Changed by the loadout pool (`loadout/READM
   - **A target out of reach.** While it stands, it could attack only what's in reach, like a holder does. Or it could switch to the nearest enemy in reach, which would change targeting as well as movement.
   - **Who takes it.** Every hero, or tanks only? On Maren, it would keep her from walking into melee reach.
   - **Engage and pushes.** Brannoc's Engage pulls him to enemies that come close; does Engage still move him? A push moves a unit without it walking, so it isn't affected, but should the tactic say so?
-- ~~**Grafts:** the list, and whether they need their own frame shape in the item language (a proposal: a split medallion).~~ *Grafts are removed (the loadout pool). Gambits need a frame instead.*
-- **The Magpie:** exact frequency, and whether buying a locked hero's gear counts toward unlocking that hero.
 - **From the mock:**
   - **"Take 3 shards instead"** on the after-fight pick: a fixed amount, or the fight's own pay again?
   - **A struck-out price** on one of the Pedlar's wares (Purifying Light, "2 ~~3~~"): a sale, a relic's discount, or a price for something the team already partly has?

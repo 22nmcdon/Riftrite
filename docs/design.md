@@ -12,6 +12,7 @@ Working title: **Riftrite** (a placeholder). This document was rewritten on 2026
 | Combos, scaling, and breaking the game: keywords, triggers, the damage rule, permanent scaling, relic tiers, the endless mode | `docs/plans/rebuild-combos.md` |
 | The relic pool: its rules, shops and rerolls, income, and every relic by tier | `docs/plans/relics/README.md` (and one file per tier) |
 | The loadout pool: its rules, ranks, prices, and every tactic, gambit, sigil, and charm | `docs/plans/loadout/README.md` (and one file per kind) |
+| The Magpie node, selling relics and items, and why grafts were cut | `docs/plans/magpie.md` |
 | Build order, and what the rebuild removed | `docs/plans/rebuild-build-order.md` |
 | Phase 1, the arena sim (build plan) | `docs/plans/rebuild-phase1-arena-sim.md` |
 | Phase 2, base heroes, the Act 1 enemies, encounters, and the sim runner (build plan) | `docs/plans/rebuild-phase2-heroes-enemies.md` |
@@ -44,7 +45,7 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 - **You can switch a vow** between fights until the hero transforms. Transformations are permanent.
 - **Every deed is hard to fill without its taste**, and every path changes where you'd place the hero.
 - **Heroes have no ranks, and there's no buying heroes and no duplicates.** Heroes grow through deeds (transformations, apexes) and after-fight picks. (Loadout items do have ranks, below.)
-- **Loadout slots** (`loadout/README.md`): each hero has 3 slots for **tactics** (behavior plus a small payoff while following it, 4 shards), **gambits** (a placement or fight-start rule, one per hero, 12), **sigils** (how the signature fires, 8), and **charms** (a change to the hero's own kit, 6), chosen before each fight. None are abilities, and all are written against the slot ("your signature"), so none goes useless when a hero transforms. **Any hero can hold any of them**, with no warning when one does nothing, and no item has a downside or grants a path's key mechanic. **Every item has three ranks:** each kind ranks up by its own count (time following the order, fights used, casts, won fights), and buying a copy skips a rank. Shops don't filter by what the team can use (their setup is being redone). Grafts are removed.
+- **Loadout slots** (`loadout/README.md`): each hero has 3 slots for **tactics** (behavior plus a small payoff while following it, 4 shards), **gambits** (a placement or fight-start rule, one per hero, 12), **sigils** (how the signature fires, 8), and **charms** (a change to the hero's own kit, 6), chosen before each fight. None are abilities, and all are written against the slot ("your signature"), so none goes useless when a hero transforms. **Any hero can hold any of them**, with no warning when one does nothing, and no item has a downside or grants a path's key mechanic. **Every item has three ranks:** each kind ranks up by its own count (time following the order, fights used, casts, won fights), and buying a copy skips a rank. Shops don't filter by what the team can use, and any shop buys items back for half their price. Grafts are cut, the best of them now charms. The **Magpie** (`magpie.md`) is a rare node from day 3 (at most twice an act): two charms at rank II, one epic or legendary relic at 25% off, and the only place to sell a relic or swap one for another of its tier. (The rest of the shops' setup is being redone.)
 
 ## The arena
 
@@ -140,7 +141,7 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - **Loadouts:** 3 slots each, or 2 then 3? (part 6)
 - **Loadout ranks:** the rank-up counts are guesses; can charms stack with relics in the same lane (Leech Fang with Leech Tooth)? How often does a shop show a gambit? Gambits' frame. (loadout pool)
 - **The currency:** its name, prices, and income; whether the Pedlar's relic turns up about 1 visit in 3 or only at certain places. (part 6)
-- **The Magpie:** how often he comes, and what he sells now that grafts and "other heroes' gear" are gone (the shops' setup is being redone). (part 6, loadout pool)
+- **The Magpie:** how often he's offered beyond "from day 3, at most twice an act"; is 12 shards right for a rank II charm, and half right for selling relics and items? (Magpie)
 - **Rest:** does it also keep "the next loss doesn't count"? (part 6)
 - **Wounds:** is –15% up to 3 right, and should a lost fight's falls wound? (part 6)
 - **How fast heroes grow** with a pick after every win. (part 6)

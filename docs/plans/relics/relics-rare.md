@@ -1,6 +1,6 @@
 # Rare relics (21)
 
-**Every shop (less often), the Magpie, elites · 12 shards.** Each turns a keyword or trigger into something. Rules for all relics: `README.md`. Numbers are placeholders.
+**Every shop (less often), elites · 12 shards.** Each turns a keyword or trigger into something. Rules for all relics: `README.md`. Numbers are placeholders.
 
 ## Keyword engines
 

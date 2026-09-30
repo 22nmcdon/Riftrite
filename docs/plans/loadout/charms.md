@@ -1,6 +1,6 @@
-# Charms (20)
+# Charms (27)
 
-**6 shards.** A small change to one hero's kit. Unlike a relic (which helps the whole team), a charm helps only the hero holding it, so its numbers can be bigger for the price. Rank II after 4 won fights with it equipped, rank III after 8 more; buying a copy skips a rank. Rules: `README.md`. Numbers are placeholders.
+**6 shards.** A small change to one hero's kit. Unlike a relic (which helps the whole team), a charm helps only the hero holding it, so its numbers can be bigger for the price. Rank II after 4 won fights with it equipped, rank III after 8 more; buying a copy skips a rank. The Magpie sells charms already at rank II (`../magpie.md`). Six charms were grafts before grafts were cut (marked *). Rules: `README.md`. Numbers are placeholders.
 
 ## Keywords
 
@@ -13,6 +13,8 @@
 | **Warding Thread** | Below 50% HP, gain a Shield of 15% of your max HP (once per fight) | 20% | 20%, and it can happen twice per fight |
 | **Kindling Ward** | Enemies that break one of your Shields catch 3 Burn | 5 Burn | 5 Burn, and they're Slowed 20% for 2s |
 | **Shadow Step** | Your first attack out of Stealth has +100% ATK | +150% | +150%, and it's a guaranteed crit |
+| **Bloodletter*** | Your basic attack applies 1 Bleed | 2 Bleed | 3 Bleed |
+| **Smoke Vial*** | Once per fight, when you drop below 30% HP, you're hidden for 2s | 3s | 3s, and a Shield of 10% of your max HP |
 
 ## Damage
 
@@ -34,6 +36,9 @@
 | **Last Breath** | When you fall, allies within 2 hexes get a Shield of 15% of their max HP | 20% | 20%, and they get +10% ATK and MGK for 5s |
 | **Leech Fang** | You gain +3% lifesteal | +5% | +7% |
 | **Purifying Light** | Your heals also cleanse Bleed and Poison | Also Burn | Also Burn, and the cleansed ally gets +10 DEF for 3s |
+| **Sidestep*** | Every 6s, a hit on you misses | Every 5s | Every 4s |
+| **Iron Skin*** | Your first 3 hits taken each fight deal half damage | First 4 | First 5 |
+| **Spite Brand*** | When one hit takes 15% or more of your max HP, the attacker is Stunned for 0.5s (once every 8s) | 1s | 1s, once every 5s |
 
 ## Utility
 
@@ -42,3 +47,4 @@
 | **Light Feet** | You hop away when an enemy comes within 1.5 hexes, not just adjacent | 2 hexes | 2 hexes, and the hop's cooldown is 1s shorter |
 | **Mana Leech** | Your crits give 5 mana | 8 mana | 10 mana |
 | **Fleet** | +1 speed | +1 speed, and +10% attack speed | +2 speed, and +10% attack speed |
+| **Scavenger*** | When an enemy falls within 2 hexes, gain 5 mana | 8 mana | 8 mana, and +5% ATK and MGK for the rest of the fight (stacks) |

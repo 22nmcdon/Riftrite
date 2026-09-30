@@ -5,7 +5,7 @@ Status: **agreed in discussion (2026-09-30), not built.** The relic pool for Act
 | Tier | File | Where from | Price | Count |
 | --- | --- | --- | --- | --- |
 | **Common** | `relics-common.md` | Every shop | 5 shards | 25 |
-| **Rare** | `relics-rare.md` | Every shop (less often), the Magpie, elites | 12 shards | 21 |
+| **Rare** | `relics-rare.md` | Every shop (less often), elites | 12 shards | 21 |
 | **Epic** | `relics-epic.md` | Shops (rarely), elites, the Magpie | 20 shards | 14 |
 | **Legendary** | `relics-legendary.md` | The shop before each boss | 30 shards | 15 |
 | **Boss** | `relics-boss.md` | After each boss: choose 1 of 3 | free | 11 |
@@ -35,7 +35,7 @@ Status: **agreed in discussion (2026-09-30), not built.** The relic pool for Act
 
 - **Every shop shows 1 relic at a time.** Rerolling replaces it with a new one, so a shop has no limit: with enough shards you can keep buying. The first reroll costs 1 shard, and each reroll after it costs 1 more (Tinker's Purse makes the first free; Merchant's Covenant stops the price climbing).
 - **The Pedlar:** its 1 relic is mostly common, sometimes rare, rarely epic.
-- **The Magpie:** its 1 relic is rare or epic, rarely legendary.
+- **The Magpie** (`../magpie.md`): his 1 relic is always epic or legendary, at 25% off. He's also the only place to sell a relic (for half its tier's price) or swap one for another of the same tier.
 - **The shop before each boss:** 1 legendary plus 1 relic of another tier. Rerolls work the same way but start at 5 shards.
 - **After each boss:** 3 boss relics, take 1.
 
