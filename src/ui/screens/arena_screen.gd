@@ -121,6 +121,14 @@ func build() -> void:
 	upper.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	upper.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(upper)
+	# The rift's sky behind everything above the hero bar (phase 5b).
+	var sky := TextureRect.new()
+	sky.texture = ArenaView.art(ArenaView.ART_DIR + "backdrop.svg")
+	sky.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	sky.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	sky.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	sky.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	upper.add_child(sky)
 	var upper_column := VBoxContainer.new()
 	upper_column.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	upper_column.add_theme_constant_override("separation", 0)
@@ -147,10 +155,14 @@ func build() -> void:
 	view.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	row.add_child(view)
 	# The side column scrolls if it's taller than the room above the hero bar.
+	# On a navy panel, so it reads over the sky.
+	var side_panel := PanelContainer.new()
+	side_panel.add_theme_stylebox_override("panel", UiStyle.box(Color(UiStyle.NAVY_900, 0.88), Color(UiStyle.LINE_500, 0.6), 1, 12))
+	row.add_child(side_panel)
 	var side_scroll := ScrollContainer.new()
 	side_scroll.custom_minimum_size = Vector2(SIDE_WIDTH + 12, 0)
 	side_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	row.add_child(side_scroll)
+	side_panel.add_child(side_scroll)
 	var side := VBoxContainer.new()
 	side.custom_minimum_size = Vector2(SIDE_WIDTH, 0)
 	side.add_theme_constant_override("separation", 12)

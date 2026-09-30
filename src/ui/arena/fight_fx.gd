@@ -51,8 +51,10 @@ const COLLAPSE_COLOR := UiStyle.EMBER
 ## Areas by the caster's side: enemies' hostile, heroes' their own brass.
 const ENEMY_AREA := Color(0.88, 0.36, 0.23)
 const HERO_AREA := Color(0.91, 0.78, 0.47)
-const CRUMBLED := Color(0.02, 0.01, 0.03, 0.72)
-const WARNED := Color(0.88, 0.44, 0.23, 0.22)
+## The collapse tiles' tints: the rift's glow where the ground has crumbled,
+## and embered cracks on the ring about to go.
+const CRUMBLED := Color(1.0, 1.0, 1.0, 0.95)
+const WARNED := Color(1.0, 0.62, 0.35, 0.9)
 const TARGET_LINE := Color(1, 1, 1, 0.28)
 const TAUNT_LINE := Color(0.88, 0.44, 0.23, 0.8)
 const ENGAGE_LINK := UiStyle.GOLD_300
@@ -301,7 +303,7 @@ func _draw() -> void:
 			var ring: Color = _side_color(_player.sim, holder.id)
 			ring.a = 0.45
 			draw_arc(_view.to_pixel_f(_unit_point(holder.id, Vector2(holder.pos))), maxf(holder.radius * _view.scale_px, UnitToken.MIN_BODY_PX) * 1.6, 0.0, TAU, 40, ring, 2.0, true)
-	var font: Font = get_theme_default_font()
+	var font: Font = UiStyle.font(UiStyle.BOLD_FONT)
 	var hex: float = _view.hex_px()
 	var stacked: Dictionary[String, int] = {}
 	for fx: Fx in effects:
@@ -355,9 +357,16 @@ func draw_ground(canvas: CanvasItem) -> void:
 		return
 	var sim: CombatSim = _player.sim
 	var now: float = _player.drawn_time()
-	_draw_outside(canvas, sim.safe, CRUMBLED)
+	# The hexes' corners reach past the plane's board at the columns' ends;
+	# they crumble with the edge they stand on.
+	var standing: Rect2i = sim.safe
+	if standing.position.x <= _view.board.position.x:
+		standing = standing.grow_side(SIDE_LEFT, standing.position.x - _view.drawn_rect.position.x)
+	if standing.end.x >= _view.board.end.x:
+		standing = standing.grow_side(SIDE_RIGHT, _view.drawn_rect.end.x - standing.end.x)
+	_draw_between(canvas, _view.drawn_rect, standing, CRUMBLED, "collapse_tile.svg")
 	if warned_safe.size != Vector2i.ZERO:
-		_draw_between(canvas, sim.safe, warned_safe, WARNED)
+		_draw_between(canvas, sim.safe, warned_safe, WARNED, "collapse_warn_tile.svg")
 	_draw_placed(canvas, sim)
 	for fx: Fx in effects:
 		if fx.kind == Kind.AREA or fx.kind == Kind.LANDED:
@@ -438,13 +447,10 @@ func _draw_shape(canvas: CanvasItem, fx: Fx, fill: Color, line: Color) -> void:
 			canvas.draw_polyline(outline, line, 2.0, true)
 
 
-## Fills the board outside `inside` (crumbled ground).
-func _draw_outside(canvas: CanvasItem, inside: Rect2i, color: Color) -> void:
-	_draw_between(canvas, _view.drawn_rect, inside, color)
-
-
-## Fills what's in `outer` but not in `inner` (both on the plane).
-func _draw_between(canvas: CanvasItem, outer: Rect2i, inner: Rect2i, color: Color) -> void:
+## Covers what's in `outer` but not in `inner` (both on the plane) with a
+## tile of the arena's art (Rift Collapse's crumbled ground, or the ring
+## about to crumble), tinted `color`.
+func _draw_between(canvas: CanvasItem, outer: Rect2i, inner: Rect2i, color: Color, tile: String) -> void:
 	if inner.encloses(outer):
 		return
 	var bands: Array[Rect2i] = [
@@ -455,4 +461,4 @@ func _draw_between(canvas: CanvasItem, outer: Rect2i, inner: Rect2i, color: Colo
 	for band: Rect2i in bands:
 		if band.size.x <= 0 or band.size.y <= 0:
 			continue
-		canvas.draw_rect(_view.rect_to_pixels(band), color)
+		_view.draw_tiled(canvas, ArenaView.art(ArenaView.ART_DIR + tile), _view.rect_to_pixels(band), ArenaView.COLLAPSE_TILE_HEXES * _view.hex_px(), color)

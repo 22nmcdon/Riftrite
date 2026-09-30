@@ -13,11 +13,16 @@ extends Control
 ##     the columns' ends, so the drawn area is that much wider than the
 ##     plane (`drawn_rect`), and room is kept over it for the top row's
 ##     figures and bars (`TOP_ROOM_HEXES`).
-##   - Placement mode shades each hex by zone (yours, no one's, theirs); fight
-##     mode keeps the hexes faint, since distances still count in hexes.
-##   - Hexes and rocks are drawn with `_draw()`; units are `UnitToken` nodes,
-##     each a figure standing on its point, drawn in order down the screen
-##     so the nearer stand in front (`_stack_tokens`).
+##   - The board stands on the floating island (the uploaded art,
+##     docs/plans/rebuild-phase5b-art.md, section 3): the island's frame
+##     around it, its ground tiled under the hexes, and thin pale hex lines.
+##     Placement mode tints the zones (yours gold, theirs red); fight mode
+##     leaves the ground bare, since distances still count in hexes.
+##   - The island, the ground, and the hexes are drawn with `_draw()`; units
+##     are `UnitToken` nodes, each a figure standing on its point, and rocks
+##     are `RockProp` nodes, each a ruin picked by its hex (`prop_for`), all
+##     drawn in order down the screen so the nearer stand in front
+##     (`_stack_tokens`).
 ##   - The fight: sync_fight() moves the tokens to where a FightPlayer draws
 ##     each unit (with its bars and statuses), adds a token for each summon
 ##     as it joins, and hides the fallen (section 4). The log entries the
@@ -55,12 +60,21 @@ const TOP_ROOM_HEXES: float = 0.6
 ## A flat-top hex's corner radius on the plane: rows are HEX apart, so the
 ## corners are HEX / sqrt(3) from the center.
 const HEX_CORNER: float = HexGrid.HEX / 1.7320508
-## Your side teal-tinted navy, the middle row plain, theirs violet-tinted.
-const ZONE_FILLS: Array[Color] = [Color("1c3340"), Color("1b2433"), Color("241f3a")]
-const HEX_LINE := Color("395265")
-const FIGHT_HEX_LINE := Color(0.22, 0.32, 0.4, 0.45)
-const ROCK_FILL := Color("4a5161")
-const ROCK_LINE := Color("6b7385")
+## Placement's tints over the ground: your side gold, the middle row
+## plain, theirs red.
+const ZONE_FILLS: Array[Color] = [Color(1.0, 0.84, 0.43, 0.2), Color(0, 0, 0, 0), Color(0.85, 0.3, 0.25, 0.16)]
+const HEX_LINE := Color(1.0, 0.97, 0.86, 0.45)
+const FIGHT_HEX_LINE := Color(1.0, 0.97, 0.86, 0.22)
+## The arena's art (art/ui/arena/).
+const ART_DIR: String = "res://art/ui/arena/"
+const PROPS: Array[String] = ["broken_column", "fallen_capital", "headless_statue", "rift_altar", "rift_crystal"]
+## The island frame's canvas, and the square inside it the board covers.
+const FRAME_SIZE := Vector2(1400, 1700)
+const FRAME_INNER := Rect2(150, 120, 1100, 1100)
+## How many hexes one ground tile (or collapse tile) spans.
+const PROPS_DIR: String = ART_DIR + "props/%s.svg"
+const GROUND_TILE_HEXES: float = 2.5
+const COLLAPSE_TILE_HEXES: float = 1.25
 const FLASH := Color(0.84, 0.35, 0.31, 0.7)
 ## How long a refused hex flashes, in seconds.
 const FLASH_SECONDS: float = 0.5
@@ -75,6 +89,8 @@ var board: Rect2i
 ## corners.
 var drawn_rect: Rect2i
 var rocks: Array[ArenaPlane.Circle] = []
+## One ruin per rock, in the setup's order.
+var rock_props: Array[RockProp] = []
 ## One per unit, in the fight's order.
 var tokens: Array[UnitToken] = []
 ## Shots, swipes, numbers, and names over the tokens.
@@ -96,6 +112,31 @@ class SnareMarker:
 	var hex: Vector2i
 
 
+## A rock on the board, drawn as a ruin (art/ui/arena/props/) standing on
+## the rock's point, 1.5 hexes wide so its base covers the rock. It takes no
+## clicks; the view stacks it with the units.
+class RockProp:
+	extends Control
+	## A prop's canvas, and where on it the ruin stands.
+	const CANVAS := Vector2(300, 300)
+	const FEET := Vector2(150, 246)
+	const HEXES: float = 1.5
+	var prop: String
+	var plane_pos: Vector2i
+	var texture: Texture2D
+
+	func place(view: ArenaView) -> void:
+		var side: float = HEXES * view.hex_px()
+		size = Vector2(side, side)
+		position = view.to_pixel(plane_pos) - FEET / CANVAS * side
+
+	func center() -> Vector2:
+		return position + FEET / CANVAS * size.x
+
+	func _draw() -> void:
+		draw_texture_rect(texture, Rect2(Vector2.ZERO, size), false)
+
+
 ## What's drawn under the pointer while a snare is dragged.
 class SnarePreview:
 	extends Control
@@ -112,8 +153,18 @@ func show_setup(setup: FightSetup, content: ContentDb) -> void:
 	var overhang: int = ceili(HEX_CORNER) - HexGrid.HALF_HEX
 	drawn_rect = board.grow_individual(overhang, 0, overhang, 0)
 	rocks.clear()
+	for prop: RockProp in rock_props:
+		prop.queue_free()
+	rock_props.clear()
 	for rock: Vector2i in setup.rocks:
 		rocks.append(ArenaPlane.Circle.make(grid.center(rock.x, rock.y), content.tuning.rock_radius, "rock"))
+		var prop := RockProp.new()
+		prop.prop = prop_for(rock)
+		prop.texture = art(PROPS_DIR % prop.prop)
+		prop.plane_pos = grid.center(rock.x, rock.y)
+		prop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		rock_props.append(prop)
+		add_child(prop)
 	for token: UnitToken in tokens:
 		token.queue_free()
 	tokens.clear()
@@ -132,6 +183,22 @@ func show_setup(setup: FightSetup, content: ContentDb) -> void:
 			marker.hex = unit.snares[i]
 			snare_markers.append(marker)
 	_layout()
+
+
+## The ruin a rock on `hex` is drawn as: always the same for the same hex
+## (a UI rule; the sim never sees it).
+static func prop_for(hex: Vector2i) -> String:
+	return PROPS[posmod(hex.x * 3 + hex.y * 7, PROPS.size())]
+
+
+static var _art: Dictionary[String, Texture2D] = {}
+
+
+## A texture from the art, loaded once.
+static func art(path: String) -> Texture2D:
+	if not _art.has(path):
+		_art[path] = load(path) as Texture2D
+	return _art[path]
 
 
 ## A hero's form: its path's once transformed, else "base".
@@ -183,6 +250,7 @@ func set_mode(new_mode: Mode) -> void:
 
 
 func _init() -> void:
+	texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 	fx = FightFx.make(self)
 	add_child(fx)
 
@@ -222,19 +290,23 @@ func token_at(pixel: Vector2) -> UnitToken:
 ## (nearer the viewer) is drawn over the ones behind it; ties keep the
 ## fight's order.
 func _stack_tokens() -> void:
-	var order: Array[UnitToken] = tokens.duplicate()
-	var rank: Dictionary[UnitToken, int] = {}
-	for i: int in tokens.size():
-		rank[tokens[i]] = i
-	order.sort_custom(func(a: UnitToken, b: UnitToken) -> bool:
-		var a_y: float = a.center().y
-		var b_y: float = b.center().y
+	var standing: Array[Control] = []
+	standing.append_array(tokens)
+	standing.append_array(rock_props)
+	var order: Array[Control] = standing.duplicate()
+	var rank: Dictionary[Control, int] = {}
+	for i: int in standing.size():
+		rank[standing[i]] = i
+	order.sort_custom(func(a: Control, b: Control) -> bool:
+		var a_y: float = a.call("center").y
+		var b_y: float = b.call("center").y
 		return a_y < b_y if a_y != b_y else rank[a] < rank[b])
-	# The tokens trade places among the children's slots they already hold
-	# (the view has other children: the effects, banners, and the popup).
+	# The tokens and ruins trade places among the children's slots they
+	# already hold (the view has other children: the effects, banners, and
+	# the popup).
 	var slots: Array[int] = []
-	for unit_token: UnitToken in tokens:
-		slots.append(unit_token.get_index())
+	for each: Control in standing:
+		slots.append(each.get_index())
 	slots.sort()
 	for i: int in order.size():
 		if order[i].get_index() != slots[i]:
@@ -401,6 +473,8 @@ func _layout() -> void:
 	_origin = (size - Vector2(wide, tall) * scale_px) / 2.0 + Vector2(0.0, TOP_ROOM_HEXES * HexGrid.HEX * scale_px)
 	for unit_token: UnitToken in tokens:
 		unit_token.place(self)
+	for prop: RockProp in rock_props:
+		prop.place(self)
 	_stack_tokens()
 	queue_redraw()
 
@@ -410,12 +484,14 @@ func _layout() -> void:
 func _draw() -> void:
 	if grid == null:
 		return
-	draw_rect(rect_to_pixels(drawn_rect), UiStyle.NAVY_850)
+	var board_px: Rect2 = rect_to_pixels(drawn_rect)
+	draw_texture_rect(art(ART_DIR + "island_frame.svg"), frame_rect(), false)
+	draw_tiled(self, art(ART_DIR + "ground_tile.svg"), board_px, GROUND_TILE_HEXES * hex_px())
 	for index: int in grid.size():
 		var col: int = grid.col_of(index)
 		var row: int = grid.row_of(index)
 		var corners: PackedVector2Array = hex_corners(grid.center(col, row))
-		if mode == Mode.PLACEMENT:
+		if mode == Mode.PLACEMENT and ZONE_FILLS[grid.zone(row)].a > 0.0:
 			draw_colored_polygon(corners, ZONE_FILLS[grid.zone(row)])
 		var outline: PackedVector2Array = corners.duplicate()
 		outline.append(corners[0])
@@ -429,10 +505,25 @@ func _draw() -> void:
 	else:
 		for marker: SnareMarker in snare_markers:
 			draw_snare(self, to_pixel(grid.center(marker.hex.x, marker.hex.y)), snare_px(), SNARE_COLOR)
-	for rock: ArenaPlane.Circle in rocks:
-		var center: Vector2 = to_pixel(rock.center)
-		draw_circle(center, rock.radius * scale_px, ROCK_FILL)
-		draw_arc(center, rock.radius * scale_px, 0.0, TAU, 32, ROCK_LINE, 2.0, true)
+
+
+## Where the island frame is drawn: stretched so its inner square covers the
+## board's drawn area (the island's underside hangs below, behind the hero
+## bar).
+func frame_rect() -> Rect2:
+	var board_px: Rect2 = rect_to_pixels(drawn_rect)
+	var stretch: Vector2 = board_px.size / FRAME_INNER.size
+	return Rect2(board_px.position - FRAME_INNER.position * stretch, FRAME_SIZE * stretch)
+
+
+## Tiles `texture` over `rect` at `tile_px` pixels a tile, lined up with the
+## board's top-left corner so neighboring rects' tiles meet.
+func draw_tiled(canvas: CanvasItem, texture: Texture2D, rect: Rect2, tile_px: float, modulate_color: Color = Color.WHITE) -> void:
+	if rect.size.x <= 0.0 or rect.size.y <= 0.0 or tile_px <= 0.0:
+		return
+	var per_px: Vector2 = texture.get_size() / tile_px
+	var from: Vector2 = (rect.position - rect_to_pixels(drawn_rect).position) * per_px
+	canvas.draw_texture_rect_region(texture, rect, Rect2(from, rect.size * per_px), modulate_color)
 
 
 ## A hex's six corners in pixels (flat-top, on the plane and the screen).

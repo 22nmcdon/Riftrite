@@ -114,3 +114,35 @@ func test_modes_switch() -> void:
 	assert_eq(view.mode, ArenaView.Mode.PLACEMENT)
 	view.set_mode(ArenaView.Mode.FIGHT)
 	assert_eq(view.mode, ArenaView.Mode.FIGHT)
+
+
+## The island (docs/plans/rebuild-phase5b-art.md, section 3): its frame's
+## inner square covers the board, and each rock is a ruin picked by its hex.
+func test_the_board_stands_on_the_island() -> void:
+	var view: ArenaView = _view()
+	var board_px: Rect2 = view.rect_to_pixels(view.drawn_rect)
+	var frame: Rect2 = view.frame_rect()
+	var inner := Rect2(frame.position + ArenaView.FRAME_INNER.position * frame.size / ArenaView.FRAME_SIZE, ArenaView.FRAME_INNER.size * frame.size / ArenaView.FRAME_SIZE)
+	assert_almost_eq(inner.position, board_px.position, Vector2(0.01, 0.01))
+	assert_almost_eq(inner.size, board_px.size, Vector2(0.01, 0.01))
+	for name: String in ["island_frame", "ground_tile", "collapse_tile", "collapse_warn_tile", "backdrop"]:
+		assert_not_null(ArenaView.art(ArenaView.ART_DIR + name + ".svg"), name)
+	assert_eq(view.rock_props.size(), view.rocks.size())
+	for i: int in view.rocks.size():
+		var prop: ArenaView.RockProp = view.rock_props[i]
+		assert_not_null(prop.texture, prop.prop)
+		assert_almost_eq(prop.center(), view.to_pixel(view.rocks[i].center), Vector2(0.01, 0.01), "the ruin stands on the rock's point")
+		assert_eq(prop.mouse_filter, Control.MOUSE_FILTER_IGNORE, "it takes no clicks")
+	assert_eq(ArenaView.prop_for(Vector2i(3, 3)), ArenaView.prop_for(Vector2i(3, 3)), "the same hex, the same ruin")
+	var seen: Dictionary[String, bool] = {}
+	for col: int in 8:
+		for row: int in 7:
+			seen[ArenaView.prop_for(Vector2i(col, row))] = true
+	assert_eq(seen.size(), ArenaView.PROPS.size(), "every ruin turns up")
+	# A ruin stacks with the units: a unit behind it (higher on the screen)
+	# is drawn under it.
+	var maren: UnitToken = view.token("maren")
+	var prop: ArenaView.RockProp = view.rock_props[0]
+	maren.place_at(view, Vector2(prop.plane_pos + Vector2i(0, 200)))
+	view._stack_tokens()
+	assert_lt(maren.get_index(), prop.get_index())

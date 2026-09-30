@@ -2,7 +2,8 @@ class_name UnitToken
 extends Control
 ## One unit on the board (docs/plans/rebuild-phase3-fight-sandbox.md, sections
 ## 2 and 8): its figure (FigureArt), standing where the unit is on the plane,
-## over a small ring in its side's color, with its short name under it.
+## over a small ring (gold for heroes, red for enemies; phase 5b), with its
+## short name under it.
 ## Figures face right; a unit faces the side its target is on (enemies
 ## face left until they have one; ArenaView.faces_left). A kit without art
 ## is drawn as a circle of the unit's own radius instead, warm for heroes
@@ -31,6 +32,11 @@ const BAR_BACK := Color(0.04, 0.06, 0.09, 0.85)
 const HERO_HP := UiStyle.GOOD
 const ENEMY_HP := UiStyle.BAD
 const MANA := Color("7aa7ff")
+## The ring under a figure's feet, as in the arena look test: gold for
+## heroes, red for enemies, over a soft shadow.
+const HERO_RING := Color("ffd66e")
+const ENEMY_RING := Color("e0503c")
+const RING_SHADOW := Color(0.16, 0.12, 0.06, 0.35)
 const CAST := UiStyle.GOLD_300
 ## Tags for the statuses that aren't damage over time (by StatusDef.Kind).
 const STATUS_TAGS: Dictionary = {
@@ -50,7 +56,7 @@ const STEALTH_ALPHA: float = 0.4
 ## (a flier's figure is drawn in the air already).
 const FLIGHT_LIFT: float = 0.35
 ## A figure's canvas height, in hexes.
-const FIGURE_HEXES: float = 1.1
+const FIGURE_HEXES: float = 1.35
 ## The ring under a figure's feet: how much flatter than wide it is.
 const RING_FLAT: float = 0.4
 ## The smallest circle drawn, the smallest half-width to hover or grab, and
@@ -59,9 +65,8 @@ const MIN_BODY_PX: float = 8.0
 const HIT_PX: float = 16.0
 const BAR_WIDTH: float = 36.0
 const BAR_HEIGHT: float = 4.0
-const LABEL_SIZE: int = 13
+const LABEL_SIZE: int = 14
 const TAG_SIZE: int = 10
-const LABEL_OUTLINE := Color(0.05, 0.03, 0.06, 0.9)
 
 var unit_id: String
 var label_text: String
@@ -254,10 +259,8 @@ func _draw() -> void:
 		# The ring under its feet, then the figure standing on it.
 		var ring_radius: float = maxf(body_radius, MIN_BODY_PX * 1.25)
 		draw_set_transform(feet, 0.0, Vector2(1.0, RING_FLAT))
-		var ring_fill: Color = HERO_FILL if is_hero() else ENEMY_FILL
-		ring_fill.a = 0.45
-		draw_circle(Vector2.ZERO, ring_radius, ring_fill)
-		draw_arc(Vector2.ZERO, ring_radius, 0.0, TAU, 32, HERO_FILL if is_hero() else ENEMY_FILL, 2.0 / RING_FLAT, true)
+		draw_circle(Vector2.ZERO, ring_radius, RING_SHADOW)
+		draw_arc(Vector2.ZERO, ring_radius, 0.0, TAU, 32, HERO_RING if is_hero() else ENEMY_RING, 2.5 / RING_FLAT, true)
 		draw_set_transform(feet, 0.0, Vector2(-figure_scale if facing_left else figure_scale, figure_scale))
 		draw_texture_rect(figure, Rect2(-FigureArt.FEET, FigureArt.CANVAS), false)
 		draw_set_transform_matrix(Transform2D.IDENTITY)
@@ -277,9 +280,11 @@ func _draw() -> void:
 		draw_rect(Rect2(left, below, BAR_WIDTH * cast_share, BAR_HEIGHT * 0.75), CAST)
 		below += BAR_HEIGHT + 1.0
 	var width: float = font.get_string_size(label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE).x
-	var baseline: Vector2 = Vector2(feet.x - width / 2.0, below + font.get_ascent(LABEL_SIZE))
-	draw_string_outline(font, baseline, label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE, 4, LABEL_OUTLINE)
-	draw_string(font, baseline, label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE, UiStyle.GOLD_300 if is_hero() else UiStyle.RIFT_300)
+	var baseline: Vector2 = Vector2(feet.x - width / 2.0, below + 1.0 + font.get_ascent(LABEL_SIZE))
+	# On a dark plate, so it reads over the island's sand.
+	var plate := Rect2(baseline.x - 4.0, below, width + 8.0, font.get_height(LABEL_SIZE) + 2.0)
+	draw_style_box(_name_plate(), plate)
+	draw_string(font, baseline, label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_SIZE, HERO_RING if is_hero() else UiStyle.CREAM_100)
 	below = baseline.y + font.get_descent(LABEL_SIZE) + 2.0
 	if not in_fight:
 		for tag: Array in [[path_label, UiStyle.GOLD_300], [tactic_label, UiStyle.CREAM_300]]:
@@ -288,11 +293,20 @@ func _draw() -> void:
 				continue
 			var tag_width: float = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_SIZE + 1).x
 			var tag_at := Vector2(feet.x - tag_width / 2.0, below + font.get_ascent(TAG_SIZE + 1))
-			draw_string_outline(font, tag_at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_SIZE + 1, 4, LABEL_OUTLINE)
+			draw_style_box(_name_plate(), Rect2(tag_at.x - 3.0, below, tag_width + 6.0, font.get_height(TAG_SIZE + 1)))
 			draw_string(font, tag_at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, TAG_SIZE + 1, tag[1])
 			below = tag_at.y + font.get_descent(TAG_SIZE + 1) + 1.0
 	if in_fight:
 		_draw_bars(below, font)
+
+
+static var _plate: StyleBoxFlat = null
+
+
+static func _name_plate() -> StyleBoxFlat:
+	if _plate == null:
+		_plate = UiStyle.box(Color(UiStyle.NAVY_900, 0.78), Color(0, 0, 0, 0), 0, 4)
+	return _plate
 
 
 func _draw_bars(below: float, font: Font) -> void:
