@@ -58,6 +58,7 @@ src/run/       the run: its content, state, rules (RunFlow), offers, and save
 src/ui/        scenes and UI scripts (reads sim state, never changes it)
 tests/         GUT tests, mirroring src/
 tools/         data validator, sim runner and bench, screenshots, CI scripts, placeholder art scripts
+art/           all art: figures/ (what the arena draws), fonts/, look-tests/ (style tests, left out of builds), and ui/ (arena, backgrounds, camp, characters, chrome, icons, items and their frames, map, nodes, relics, shops)
 ```
 
 ## Rules the code must never break

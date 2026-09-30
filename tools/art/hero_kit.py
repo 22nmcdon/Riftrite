@@ -2,10 +2,9 @@
 figures for the three heroes in every form (base and each path).
 
 Every figure uses the same canvas: 300 x 520, feet at y = 500, facing right,
-centered on x = 150. Writes one SVG per form to art/look-tests/heroes/ and a
-lineup sheet to art/look-tests/hero_lineup.svg. The game's copies go to
-art/figures/heroes/ (what the arena draws; the Godot import scales them to
-half size).
+centered on x = 150. Writes one SVG per form to art/figures/heroes/ (what
+the arena draws; the Godot import scales them to half size) and a lineup
+sheet to art/look-tests/hero_lineup.svg.
 
 Usage: python3 tools/art/hero_kit.py
 """
@@ -503,11 +502,6 @@ def lineup():
 
 
 if __name__ == "__main__":
-    os.makedirs(os.path.join(OUT, "heroes"), exist_ok=True)
-    for hid, _, forms in HEROES:
-        for fid, _, fn in forms:
-            with open(os.path.join(OUT, "heroes", f"{hid}_{fid}.svg"), "w") as f:
-                f.write(standalone(fn(f"{hid}_{fid}")))
     figures = os.path.join(HERE, "..", "..", "art", "figures", "heroes")
     os.makedirs(figures, exist_ok=True)
     for hid, _, forms in HEROES:
