@@ -66,3 +66,18 @@ func test_the_run_shows_the_icons() -> void:
 			assert_has(shown, "%s:%s" % [ItemDef.KIND_NAMES[flow.run.items[ware].kind], flow.run.items[ware].icon], "the Pedlar's %s" % ware)
 	RunSave.erase(main.run_save_path)
 	await wait_frames(1)
+
+
+## Section 6: every camp option and place has its icon, and each shop its
+## scene and keeper.
+func test_camp_and_the_shops() -> void:
+	for option: CampsDef.Option in _run.camps.options.values():
+		assert_true(ArenaView.art(RunContent.ART_UI + option.icon) is Texture2D, option.id)
+	for place: CampsDef.Place in _run.camps.places:
+		assert_true(ArenaView.art(RunContent.ART_UI + place.icon) is Texture2D, place.id)
+	for shop: String in ["pedlar", "magpie"]:
+		var stage: ShopStage = ShopStage.make(shop)
+		assert_not_null(stage.scene, shop)
+		assert_not_null(stage.figure, shop)
+		assert_true(ShopStage.STANDS.has(shop), shop)
+		stage.free()

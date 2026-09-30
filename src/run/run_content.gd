@@ -13,6 +13,8 @@ const BONDS_FILE: String = "bonds.json"
 const FILES: Array[String] = [ACT_FILE, UPGRADES_FILE, ITEMS_FILE, CAMPS_FILE, RELICS_FILE, BONDS_FILE]
 ## The items' and relics' glyphs (the UI draws them; phase 5b).
 const GLYPHS: String = "res://art/ui/items/glyphs/%s.svg"
+## Where camp's icons are (camps.json names a file under it).
+const ART_UI: String = "res://art/ui/"
 
 var content: ContentDb
 var act: ActDef = null
@@ -278,6 +280,12 @@ func _check() -> void:
 		_check_mod(relic.rest_mod, hero_kits, "%s (%s): rest_mod" % [RELICS_FILE, id])
 		_check_mod(relic.enemy_mod, enemy_kits, "%s (%s): enemy_mod" % [RELICS_FILE, id])
 	if camps != null:
+		for option: CampsDef.Option in camps.options.values():
+			if not ResourceLoader.exists(ART_UI + option.icon):
+				errors.append("%s (%s): no icon art/ui/%s" % [CAMPS_FILE, option.id, option.icon])
+		for place: CampsDef.Place in camps.places:
+			if not ResourceLoader.exists(ART_UI + place.icon):
+				errors.append("%s (%s): no icon art/ui/%s" % [CAMPS_FILE, place.id, place.icon])
 		_check_mod(camps.fortify_mod, hero_kits, "%s: fortify_mod" % CAMPS_FILE)
 		_check_mod(camps.rift_tear_mod, enemy_kits, "%s: rift_tear_mod" % CAMPS_FILE)
 		if act != null:

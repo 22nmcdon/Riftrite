@@ -11,12 +11,16 @@ const OPTIONS: Array[String] = ["train", "hunt", "pedlar", "rest", "scout", "map
 class Option:
 	var id: String
 	var name: String
+	## Its icon: a file under art/ui/ (phase 5b; RunContent checks it).
+	var icon: String
 	var text: String
 
 
 class Place:
 	var id: String
 	var name: String
+	## Its node on the act map and at camp: a file under art/ui/.
+	var icon: String
 	var text: String
 	var options: Array[String] = []
 
@@ -43,6 +47,7 @@ static func read(reader: DataReader) -> CampsDef:
 		var option := Option.new()
 		option.id = option_reader.req_choice("id", OPTIONS)
 		option.name = option_reader.req_string("name")
+		option.icon = option_reader.req_string("icon")
 		option.text = option_reader.req_string("text")
 		option_reader.finish()
 		if def.options.has(option.id):
@@ -55,6 +60,7 @@ static func read(reader: DataReader) -> CampsDef:
 		var place := Place.new()
 		place.id = place_reader.req_string("id")
 		place.name = place_reader.req_string("name")
+		place.icon = place_reader.req_string("icon")
 		place.text = place_reader.req_string("text")
 		place.options = place_reader.req_string_array("options")
 		for id: String in place.options:

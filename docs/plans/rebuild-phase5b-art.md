@@ -45,7 +45,7 @@ Out:
 | `items/*.svg` | split into glyphs (section 5) |
 | `fonts/Cinzel-*.ttf`, `Alegreya-*.ttf` | `UiStyle` |
 
-`shops/pedlar.svg` and `magpie.svg` are the keepers alone, and the scenes already hold them, so they aren't used yet.
+`shops/pedlar.svg` and `magpie.svg` are the keepers; the scenes are empty, so the shop draws each keeper into his scene (found in step 5).
 
 ## 2. The fonts
 
@@ -139,6 +139,8 @@ Upgrades take the upgrade frame (a vow pick the vow frame) with the cross.
 - The camp's heading shows the place's node.
 - The Magpie's day shows the Magpie node.
 - **A shop** (the Pedlar, or the Magpie's day) shows its scene behind the step. The keeper stands at the left, and the wares are cards over the scene's right side with their icons and prices. Treating wounds and the reroll stay under the wares.
+
+**Built in step 5:** `camps.json`'s options and places name their icons (`RunContent` refuses a missing one). Each camp option's card has its icon beside its name, and the camp's heading has the place's node (the Magpie's on his day). A shop is a `ShopStage`: the scene fills the stage's width with its ground at the bottom, the keeper stands where the shops look test put him (the Pedlar on his rug, the Magpie on his island), and the wares are cards in a flow over the right half. `test_art.gd` checks every icon, scene, and keeper loads.
 
 ## 7. Clean-up
 

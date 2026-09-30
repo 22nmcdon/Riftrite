@@ -30,6 +30,11 @@ signal finished
 
 ## An item's, relic's, or upgrade's icon at the head of its card.
 const CARD_ICON: float = 60.0
+## A camp option's icon, and the place's node beside the camp's heading.
+const OPTION_ICON: float = 56.0
+const PLACE_ICON: float = 64.0
+## A ware's card over the shop's scene.
+const WARE_WIDTH: float = 300.0
 
 var session: RunSession
 var hero_bar: HeroBar
@@ -130,6 +135,27 @@ static func fill_top_bar(row: HBoxContainer, run_session: RunSession, where: Str
 	var shards: Label = UiStyle.strong("%d shards" % state.shards, 20, UiStyle.HIGHLIGHT)
 	shards.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(shards)
+
+
+## A picture from art/ui/ (camp's icons and the map's nodes), `side` pixels
+## square.
+static func art_icon(path: String, side: float) -> TextureRect:
+	var rect := TextureRect.new()
+	rect.texture = ArenaView.art(RunContent.ART_UI + path)
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	rect.custom_minimum_size = Vector2(side, side)
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return rect
+
+
+## Today's camp's node: its place's, or the Magpie's on his day.
+static func place_icon(run_session: RunSession) -> String:
+	var state: RunState = run_session.state()
+	for place: CampsDef.Place in run_session.run.camps.places:
+		if place.id == state.place:
+			return place.icon
+	return run_session.run.camps.options["magpie"].icon
 
 
 ## Where the run's camp is ("the Magpie's camp" on his day).
@@ -323,13 +349,28 @@ func _fill_camp() -> void:
 	if state.attempt > 0 and state.camp_used.is_empty():
 		place_line += " The day begins again: %d of %d losses." % [state.losses, session.run.act.losses_to_end]
 	var section: VBoxContainer = _section("Camp: %s" % RunDayScreen.place_name(session), place_line)
+	# The place's node (the Magpie's on his day) beside the heading (phase 5b).
+	var heading: Control = section.get_child(0)
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 14)
+	section.add_child(head)
+	section.move_child(head, 0)
+	head.add_child(RunDayScreen.art_icon(RunDayScreen.place_icon(session), PLACE_ICON))
+	heading.reparent(head)
+	heading.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	if state.camp_used.is_empty():
 		var row: HBoxContainer = _row()
 		section.add_child(row)
 		for i: int in state.camp.size():
 			var option: CampsDef.Option = camps.options[state.camp[i]]
 			var card: VBoxContainer = _card(row)
-			card.add_child(UiStyle.heading(option.name, 26, UiStyle.TEXT))
+			var title := HBoxContainer.new()
+			title.add_theme_constant_override("separation", 12)
+			card.add_child(title)
+			title.add_child(RunDayScreen.art_icon(option.icon, OPTION_ICON))
+			var name_label: Label = UiStyle.heading(option.name, 26, UiStyle.TEXT)
+			name_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			title.add_child(name_label)
 			card.add_child(_wrapped(option.text, 17, UiStyle.TEXT))
 			card.add_child(UiStyle.primary(UiStyle.button("Choose", _do.bind(session.flow.choose_camp.bind(i)))))
 	else:
@@ -367,16 +408,20 @@ func _fill_shop() -> void:
 	var magpie: bool = state.shop == "magpie"
 	var section: VBoxContainer = _section("The Magpie" if magpie else "The Pedlar",
 		"What he took from bands who fell in the rift. One look, and dear." if magpie else "Charms, tactics, and sigils for what your heroes can use.")
-	var row: HBoxContainer = _row()
-	section.add_child(row)
+	# The keeper's scene behind the wares (phase 5b).
+	var stage: ShopStage = ShopStage.make(state.shop)
+	section.add_child(stage)
+	var row: HFlowContainer = stage.wares
 	for i: int in state.wares.size():
 		if state.wares[i].is_empty():
 			continue
 		var item: ItemDef = session.run.items[state.wares[i]]
 		var card: VBoxContainer = _item_card(row, item)
+		(card.get_parent() as Control).custom_minimum_size = Vector2(WARE_WIDTH, 0)
 		card.add_child(UiStyle.primary(UiStyle.button("Buy · %d shards" % session.flow.price_of(item.id), _do.bind(session.flow.buy.bind(i)))))
 	if not state.shop_relic.is_empty():
 		var card: VBoxContainer = _relic_card(row, session.run.relics[state.shop_relic])
+		(card.get_parent() as Control).custom_minimum_size = Vector2(WARE_WIDTH, 0)
 		card.add_child(UiStyle.primary(UiStyle.button("Buy · %d shards" % session.flow.relic_price(), _do.bind(session.flow.buy_relic))))
 	var more: HBoxContainer = _row()
 	section.add_child(more)

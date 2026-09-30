@@ -12,56 +12,67 @@
     {
       "id": "train",
       "name": "Train",
+      "icon": "camp/train.svg",
       "text": "An upgrade pick: one of three upgrades for your heroes."
     },
     {
       "id": "hunt",
       "name": "Hunt",
+      "icon": "camp/hunt.svg",
       "text": "Fight a small pack right now for shards. Losing it doesn't count as a loss."
     },
     {
       "id": "pedlar",
       "name": "Pedlar",
+      "icon": "camp/pedlar.svg",
       "text": "Buy charms, tactics, and sigils, and treat wounds; now and then a relic."
     },
     {
       "id": "rest",
       "name": "Rest",
+      "icon": "camp/rest.svg",
       "text": "Clears every wound on the team."
     },
     {
       "id": "scout",
       "name": "Scout",
+      "icon": "camp/scout.svg",
       "text": "See where the enemies of the next 2 days stand."
     },
     {
       "id": "map_the_rift",
       "name": "Map the Rift",
+      "icon": "camp/map_the_rift.svg",
       "text": "Swap one of tomorrow's two fights for a different one."
     },
     {
       "id": "fortify",
       "name": "Fortify",
+      "icon": "camp/fortify.svg",
       "text": "Your heroes start the next fight behind a small Shield."
     },
     {
       "id": "dig_in",
       "name": "Dig In",
+      "icon": "camp/dig_in.svg",
       "text": "Place a rock in your zone for the next fight."
     },
     {
       "id": "rift_tear",
       "name": "Rift Tear",
+      "icon": "camp/rift_tear.svg",
       "text": "The next fight's enemies start behind a Shield from the rift; win it for a relic choice."
     },
     {
       "id": "shrine",
       "name": "Shrine",
+      "icon": "camp/shrine.svg",
       "text": "A choice of two relics, each with a cost, or neither."
     },
     {
       "id": "magpie",
       "name": "The Magpie",
+      "icon": "nodes/magpie.svg",
       "text": "He sells what he took from bands who fell in the rift: grafts, other gear, and a relic. Dear, and one look only."
     }
   ],
@@ -69,6 +80,7 @@
     {
       "id": "waystone",
       "name": "Waystone",
+      "icon": "nodes/camp_waystone.svg",
       "text": "A standing stone the rift hasn't swallowed yet.",
       "options": [
         "train",
@@ -82,6 +94,7 @@
     {
       "id": "ruined_chapel",
       "name": "Ruined Chapel",
+      "icon": "nodes/camp_chapel.svg",
       "text": "Half a roof, and something still kneeling at the altar.",
       "options": [
         "shrine",
@@ -95,6 +108,7 @@
     {
       "id": "hunters_blind",
       "name": "Hunter's Blind",
+      "icon": "nodes/camp_hunters_blind.svg",
       "text": "A blind of bone and hide, facing the dark.",
       "options": [
         "hunt",
@@ -108,6 +122,7 @@
     {
       "id": "rift_scar",
       "name": "Rift Scar",
+      "icon": "nodes/camp_rift_scar.svg",
       "text": "The ground here is torn, and it hums.",
       "options": [
         "rift_tear",
