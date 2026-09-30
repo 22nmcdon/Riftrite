@@ -5,8 +5,9 @@ extends SceneTree
 ## The title, then Practice (phase 3): the encounter list, placement (and
 ## the hero panel's tabs, paths and snares on the board), the fight with its chart, a hero's popup, the result, an area warning, and
 ## Rift Collapse with the combat log's popup open. Then the run (phase 5):
-## vowing, camp, the Pedlar, the route, the loadout, a run's fight and its
-## result, the pick after it, a relic choice, a hero's panel, and the end.
+## vowing, camp, the Pedlar, the route (the act map), the loadout, a run's
+## fight and its result, the pick after it, a relic choice, a hero's panel,
+## the Magpie, and the end.
 
 var _main: Main
 var _out: String = "user://screenshots"
@@ -145,6 +146,17 @@ func _run_screens() -> void:
 	day.open_panel("maren")
 	await _snap("run_panel_maren")
 	day.hero_panel.close()
+	# The Magpie's stall (phase 5b's shop scenes).
+	flow.state.pick.clear()
+	flow.state.relic_choice.clear()
+	flow.state.phase = RunState.Phase.CAMP
+	flow.state.place = ""
+	flow.state.camp.assign(["magpie"])
+	flow.state.camp_used = "magpie"
+	flow.state.shop = "magpie"
+	flow.state.wares.assign(Offers.magpie(flow.run, flow.state))
+	day.refresh()
+	await _snap("run_magpie")
 	flow.state.phase = RunState.Phase.ENDED
 	flow.state.outcome = RunState.Outcome.WON
 	day.refresh()

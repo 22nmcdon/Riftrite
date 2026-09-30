@@ -1,6 +1,6 @@
 # Rebuild phase 5b: the uploaded art in the game
 
-Status: **agreed (2026-09-30); being built.** The playtester uploaded a set of art (the `22nmcdon-art` branch, gathered into `art/` in "Gather the uploaded art into art/, without duplicates"). This phase puts it on the screens that exist: the arena, the act's route, camp and the shops, and the item language. It comes before phase 6, like 3b did, and it doesn't wait on gate 3: the gate 3 build (playtest-13) stays as it is, and this phase ends in a new playtest build.
+Status: **built (2026-09-30).** Each step's "Built in step N" note says what it built. The playtester uploaded a set of art (the `22nmcdon-art` branch, gathered into `art/` in "Gather the uploaded art into art/, without duplicates"). This phase puts it on the screens that exist: the arena, the act's route, camp and the shops, and the item language. It comes before phase 6, like 3b did, and it doesn't wait on gate 3: the gate 3 build (playtest-13) stays as it is, and this phase ends in a new playtest build.
 
 It changes no fight and no run: the sim, `RunFlow`, and the data's numbers stay as they are. The bench fingerprints and the run report must not move.
 
@@ -142,11 +142,13 @@ Upgrades take the upgrade frame (a vow pick the vow frame) with the cross.
 - The Magpie's day shows the Magpie node.
 - **A shop** (the Pedlar, or the Magpie's day) shows its scene behind the step. The keeper stands at the left, and the wares are cards over the scene's right side with their icons and prices. Treating wounds and the reroll stay under the wares.
 
+**Built in steps 1-3:** Cinzel and Alegreya (with Alegreya's lining figures, so "HP 270 / 270" reads) replace Marcellus and Source Sans 3. `ArenaView`'s mapping turned (x across, y up); two tests that placed units by hand for the sideways board were moved. The island: the frame stretched so its inner square covers the board (the underside hangs behind the hero bar), the ground tiled at 2.5 hexes a tile, Rift Collapse's tiles at 1.25, the corners past the plane's board shown crumbling with their edge, ruins 1.5 hexes wide stacked with the units, gold and red rings, and names on dark plates (outlines were muddy on the sand). Figures grew from 1.1 to 1.35 hexes tall, as in the look test. The side column sits on a navy panel over the sky.
+
 **Built in step 5:** `camps.json`'s options and places name their icons (`RunContent` refuses a missing one). Each camp option's card has its icon beside its name, and the camp's heading has the place's node (the Magpie's on his day). A shop is a `ShopStage`: the scene fills the stage's width with its ground at the bottom, the keeper stands where the shops look test put him (the Pedlar on his rug, the Magpie on his island), and the wares are cards in a flow over the right half. `test_art.gd` checks every icon, scene, and keeper loads.
 
 ## 7. Clean-up
 
-These leftovers from the old game are in `art/ui/`, and nothing in the rebuild names them:
+**Built in step 7: nothing deleted.** The search found these are still loaded, by `glyph.gd`, `character_art.gd`, `figure.gd`, `frame_decor.gd`, and `UiStyle.stat_row`, which nothing on screen uses now, and `rebuild-build-order.md` keeps those files "as placeholders" until the art rehaul (phase 7). That decision wins, so they stay; the playtester can say to remove them sooner. The leftovers:
 - `characters/` for Hesk, Odo, Pell, Wren, and Ysolde;
 - the old relics in `relics/`;
 - the old stop icons in `icons/` (`stop_*`, `gold`, `key`).

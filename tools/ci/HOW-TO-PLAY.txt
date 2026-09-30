@@ -16,9 +16,15 @@ MACOS
 
 PLAYING
   The game is being rebuilt around heroes and an open arena. This build has
-  the first whole run: Act 1, seven days, with placeholder art. Practice
-  (the Act 1 fights one at a time, with every path free to try) is still
-  on the title.
+  the first whole run: Act 1, seven days. NEW IN THIS BUILD: your uploaded
+  art is in the game. The arena is turned (your heroes at the bottom, the
+  enemies at the top) and stands on the floating island, rocks are ruins,
+  and Rift Collapse eats the edge as rift-light. Items, relics, and upgrades
+  have their kind's frame with an icon, camp's options and places have
+  theirs, the Pedlar and the Magpie stand in their scenes, and the route
+  is the act map. The fonts are Cinzel and Alegreya. Practice (the Act 1
+  fights one at a time, with every path free to try) is still on the
+  title.
 
   A RUN (Title > New run)
   1. Vow each hero to one of their three paths: a small taste of it now,
@@ -38,8 +44,10 @@ PLAYING
                 it for a relic), Shrine (a relic, or neither). Once in the
                 act, the Magpie comes instead: grafts, other gear, a relic;
                 dear, one look. Then Break camp.
-       Route    today's two fights: an easier one and a harder one that pays
-                more. Days 3 and 5 are elites; day 7 is Old Mother Ash.
+       Route    the act map: an island a day, each with its two fights (an
+                easier one and a harder one that pays more). Days 3 and 5
+                are elites; day 7 is Old Mother Ash. Click one of today's
+                fights to read it, then Fight this.
        Loadout  put items from the stash into each hero's three slots (any
                 hero can hold anything; one tactic each; "no effect" says
                 where it does nothing). Then To the fight.
@@ -57,9 +65,9 @@ PLAYING
 
   PRACTICE (Title > Practice)
   1. Title > Practice, then pick a fight ("Place your heroes").
-  2. Drag Brannoc, Maren, and Vell onto your side's hexes (the three columns
-     on the left; the enemies are on the right). Hover an enemy to read what
-     it does.
+  2. Drag Brannoc, Maren, and Vell onto your side's hexes (the three rows
+     at the bottom, tinted gold; the enemies are at the top). Hover an enemy
+     to read what it does.
   3. Click a hero's card in the hero bar along the bottom to open their
      panel (new in this build; clicking the hero on the board no longer
      does). In a fight, it pauses and the panel is for reading.
@@ -106,6 +114,13 @@ PLAYING
 
   Nothing is saved: your formation, paths, snares, tactics, and speed
   last until you close the game.
+
+WHAT WE WANT TO KNOW ABOUT THE ART
+  Does the arena read well with heroes at the bottom, on the island? Are
+  the item icons clear (each kind's frame says charm, tactic, sigil, graft,
+  or relic; the glyph inside is shared until more are drawn)? Does the act
+  map make the route clearer? Grafts' rose octagon frame is a stand-in.
+  The icons each item got are in docs/plans/rebuild-phase5b-art.md.
 
 WHAT WE WANT TO KNOW (playtest gate 3: a whole run)
   Can you play Act 1 start to finish? Does each day's choice (camp, the two
