@@ -18,7 +18,7 @@ Status: **agreed in discussion (2026-09-30), not built.** What the after-fight p
 
 ### Stacking upgrades
 
-- Only the plain stat upgrades (marked **stacks**) can be picked more than once. Everything else can be taken once, except **Quick Split** (Volley), which can be taken twice: every 4th shot, then every 3rd (2026-09-30).
+- Only the plain stat upgrades (marked **stacks**) can be picked more than once. Everything else can be taken once
 - **A stacking upgrade is a percentage of the hero's stat when you pick it, locked in as a flat amount.** It never recalculates. At 15 attack speed, +10% gives +1.5; at 150, it gives +15. Picked early it's small, picked late it's big, and picks don't compound on each other.
 
 ## Maren
@@ -46,7 +46,7 @@ Status: **agreed in discussion (2026-09-30), not built.** What the after-fight p
 | --- | --- | --- |
 | **Deadeye** | **Steady Hands:** Steady kicks in after 1s, not 1.5s. **Eyes Up:** +5 CRIT while Steady | **Quick Plant:** she plants in 0.75s. **Seeker's Mark:** Heartseeker Marks everything it hits for 4s. **Heart's Refund:** Heartseeker kills refund 50% of its mana. **Bleeding Shot:** crits from 6 hexes apply 3 Bleed. Growing: **Hunter's Tally** (+1% damage per 500 damage dealt from 5+ hexes) |
 | **Trapper** | **Second Snare:** her Snare triggers twice per fight. **Tight Weave:** snares root 0.5s longer | **Tangle:** enemies next to a rooted one are Slowed 30% for 2s. **Hunter's Opening:** rooted enemies take +20% damage from her. **Guarded Ground:** at the fight's start, a snare appears under your front-most ally. **Snag:** snares root enemies that leap or charge over them. Growing: **Patient Hunter** (+1% damage to Rooted enemies per 5 seconds of root) |
-| **Volley** | **Quick Split:** Split Shot every 4th shot, not every 6th; picked a second time, every 3rd. **Restless:** +10% attack speed if she moved in the last 2s | **Chasing Storm:** Arrow Storm follows the largest group. **Ricochet:** a split arrow can split once more. **Harrying Storm:** Arrow Storm Slows 20%. **Glutton's Quiver:** kills with split arrows give 10 mana. Growing: **Arrow Glut** (+1% attack speed per 25 extra targets hit) |
+| **Volley** | **Quick Split:** Split Shot every 3rd shot, not every 4th. **Restless:** +10% attack speed if she moved in the last 2s | **Chasing Storm:** Arrow Storm follows the largest group. **Ricochet:** a split arrow can split once more. **Harrying Storm:** Arrow Storm Slows 20%. **Glutton's Quiver:** kills with split arrows give 10 mana. Growing: **Arrow Glut** (+1% attack speed per 25 extra targets hit) |
 
 ## Brannoc
 
@@ -126,11 +126,13 @@ Added when this file came in (2026-09-30); nothing here changes a decision above
   | Upgrade | First written | Built | Now |
   | --- | --- | --- | --- |
   | Steady Hands (Deadeye) | Steady after 1s, not 2s | Steady after 1.5s | after 1s, not 1.5s |
-  | Quick Split (Volley) | every 3rd attack, not every 4th | every 6th shot | every 4th, not every 6th; taken again, every 3rd |
+  | Quick Split (Volley) | every 3rd attack, not every 4th | every 6th shot | every 3rd, not every 4th: **Volley's taste goes back to every 4th** (below) |
   | Bright Kindle (Lanternbearer) | 20%, not 10% | already a fifth (20%) | 30% of Mend, not 20% |
   | Thick Thread (Wardweaver) | 20% of the heal, not 10% | already a fifth of the overheal (20%) | 40% of the overheal, not 20% |
   | Swift Judgment (Vigil Keeper) | every 3rd Mend, not every 4th | every 2nd Mend | every Mend, not every 2nd |
   | Burning Judgment (Vigil Keeper) | 20% of the heal, not 10% | the smite is its own hit (8 plus 40% of MGK), not a share of the heal | smites deal 50% more damage |
+
+  **Volley's taste changes** (the playtester, 2026-09-30): Split Shot goes back to the design's every 4th shot (`rebuild-heroes.md`), from the every 6th phase 4 tuned it to, and Quick Split makes it every 3rd. Phase 4 set every 6th because the vow already won 6 points more than base, a point past its Decision 3 cap of 5 (`rebuild-phase4-paths.md`, Open questions); every 4th makes the vow stronger again, so the paths report checks it when this is built.
 
   The rest match what's built: Guard's 10% (Hearthwall), Brand's 30% (Ironbrand), Marked's 15%, Hearthguard once a fight, and Hearthlight's 1 hex and 1% a second.
 - **Stacking upgrades** are new: the pick locks in a flat amount from the hero's stat at the time, so run state keeps each hero's taken amounts (the kit mod is a flat stat add, not a multiplier).
