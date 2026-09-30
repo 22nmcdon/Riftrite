@@ -13,6 +13,9 @@ Working title: **Riftrite** (a placeholder). This document was rewritten on 2026
 | The relic pool: its rules, shops and rerolls, income, and every relic by tier | `docs/plans/relics/README.md` (and one file per tier) |
 | The loadout pool: its rules, ranks, prices, and every tactic, gambit, sigil, and charm | `docs/plans/loadout/README.md` (and one file per kind) |
 | The Magpie node, selling relics and items, and why grafts were cut | `docs/plans/magpie.md` |
+| The after-fight pick's pools: each hero's, taste and path upgrades, stacking | `docs/plans/upgrade-pools.md` |
+| A day's loop and its nodes, Rift Tear's depths, the Shrine | `docs/plans/days-and-nodes.md` |
+| Events and the Bloodied Oath | `docs/plans/events.md` |
 | Build order, and what the rebuild removed | `docs/plans/rebuild-build-order.md` |
 | Phase 1, the arena sim (build plan) | `docs/plans/rebuild-phase1-arena-sim.md` |
 | Phase 2, base heroes, the Act 1 enemies, encounters, and the sim runner (build plan) | `docs/plans/rebuild-phase2-heroes-enemies.md` |
@@ -41,7 +44,7 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 - **A hero is** their stats (HP, ATK, MGK, DEF, CRIT, ATSP, plus **speed** and **range**), a **basic attack**, a **signature** (their big move), a **passive**, and sometimes a **trait** (Brannoc's Engage).
 - **Signatures fire on a trigger:** usually a full mana bar, sometimes an HP threshold, a count of events, a set moment, or the hero about to fall. A hero without a mana signature has no mana bar. Only signatures use mana.
 - **Mana** comes from basic attacks (mainly), damage taken (mainly tanks), a slow regen, and starting mana. Silence stops mana gain; Stun doesn't, but a stunned hero can't fire a mana signature.
-- **Each hero has three paths.** You **vow** each hero to one when the run starts; the vow gives a small **taste** of the path and its **cost** at once. The vowed path's **deed** (a goal counted from what the hero does in fights) fills, and the hero **transforms**: a new signature, reshaped stats, the full mechanic, and an upgrade pool. Late in a run the path splits into two **apexes**, earned the same way. **Upgrade picks** (1 of 3, each card naming its hero) come after every won fight, not from deeds.
+- **Each hero has three paths.** You **vow** each hero to one when the run starts; the vow gives a small **taste** of the path and its **cost** at once. The vowed path's **deed** (a goal counted from what the hero does in fights) fills, and the hero **transforms**: a new signature, reshaped stats, the full mechanic, and an upgrade pool. Late in a run the path splits into two **apexes**, earned the same way. **Upgrade picks** (1 of 3, each card naming its hero) come after every won fight, not from deeds: from the hero's own pool (12), their vowed path's taste upgrades until they transform, and then the path's upgrades (`upgrade-pools.md`). Plain stat upgrades stack, each locked in as a flat amount of the stat when picked.
 - **You can switch a vow** between fights until the hero transforms. Transformations are permanent.
 - **Every deed is hard to fill without its taste**, and every path changes where you'd place the hero.
 - **Heroes have no ranks, and there's no buying heroes and no duplicates.** Heroes grow through deeds (transformations, apexes) and after-fight picks. (Loadout items do have ranks, below.)
@@ -70,7 +73,7 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 
 - **3 acts, each ending in a boss.** The slice is Act 1: about 7 days, elites on 2 of them, the boss on the last.
 - **The start:** choose your three heroes, then vow each one.
-- **A day:** **camp** (pick 1 option from the place's menu: hero growth, information, the arena, risk and reward, safety, spending, relics, or a rift event; Train gives a pick, Hunt currency, the Pedlar sells, Rest clears wounds), **choose the fight** from 2 options known from the start of the act, set the **loadout**, **place** and fight, then take the **after-fight pick** (on a win or a tie) and any deed rewards (transformations, apex vows).
+- **A day** (`days-and-nodes.md`): **choose the fight** from 2 options known from the start of the act, set the **loadout**, **place** and fight, take the **after-fight pick** (on a win or a tie) and any deed rewards (transformations, apex vows), visit the **shop** (the Pedlar, every day: 1 relic at a time, the loadout wares, treating wounds), then choose **1 of 2–3 nodes**: an **Event** (a scene with a choice, or a Bloodied Oath; `events.md`), **Camp** (one option: Rest, Train, Scout, Map the Rift, Fortify, Dig In, Hunt, or the Shrine, which takes an offering for a relic), **Rift Tear** (pick a depth: tomorrow's fight is harder, and winning it pays a relic choice), or the **Magpie**.
 - **Choosing fights feeds deeds:** which enemies you fight decides which deeds fill. The fight card shows the enemies, never which paths they suit.
 - **No items or shops.** Camp options are free. A **currency** (placeholder: shards) comes from fights (a win 8, an elite 12, the boss 25; placeholders) and Hunts, and buys loadout things, relics, wound treatment, and rerolls. Nothing sells back.
 - **Wounds:** a hero who falls gets one (–15% max HP, up to 3), won or lost; Undying and would-fall saves don't count. Rest clears them all; currency clears one.
@@ -148,6 +151,9 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - **Relics:** can the same common be bought twice? Are boss offers random or picked to fit the team? Is 8–14 a run right? (relic pool)
 - **The harder fight's pay:** 8 like a normal win, or more (10)? (relic pool)
 - **Chain limits:** Crown of Stars' 10 links and Shared Pain's 3 steps are guesses. (relic pool)
+- **Upgrade pools:** how hero, taste, and path cards are weighted; one pick a day for the team, or a card per hero; a cap on stacking upgrades; and six upgrades whose "not X" numbers are the design's, not the built kits'. (upgrade pools)
+- **Nodes:** show 2 or 3, and how often each kind; income with a shop every day. (days and nodes)
+- **Events:** how often an Event is a Bloodied Oath; Whispering Stones' deed progress; can the Mirror Pool swap a transformed hero? (events)
 - **The trigger chain's depth limit** (8 is a guess). (part 7)
 - **Endless:** its scaling rate, how often floors offer relics, and whether it's its own mode or the end of a run. (part 7)
 - **Which statuses become keywords next** (Slow, Bleed, Stun). (part 7)

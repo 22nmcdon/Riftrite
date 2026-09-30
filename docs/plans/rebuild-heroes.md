@@ -52,6 +52,8 @@ Each hero has **three paths**. A path is a transformation: it changes what the h
 
 ### Upgrade pools
 
+> **Superseded (2026-09-30):** the pools are now a hero pool (12, merging hero and role), taste upgrades (2 per path), and path upgrades (4 per path plus the growing upgrade). See `upgrade-pools.md`. The layers below are kept for reference.
+
 Upgrade picks only mean something if the pool is big enough to vary between runs. Picks come after every won fight (part 6), shared among the three heroes, so each offer draws from three layers:
 
 | Layer | What it holds | About how many |
@@ -137,7 +139,7 @@ The fantasy: she plants her feet and makes one shot count.
 
 - **Deed:** damage dealt from 5 or more hexes away. Her base range is 4, so without Steady she can't do it at all.
 - **Where she stands:** a corner with a long sightline.
-- **Upgrade pool examples:** Heartseeker kills refund mana / she plants in 0.75s / crits from 6 hexes cause Bleed / Heartseeker also Marks / she starts each fight with half mana.
+- **Upgrade pool examples:** Heartseeker kills refund mana / she plants in 0.75s / crits from 6 hexes cause Bleed / Heartseeker also Marks / she starts each fight with half mana. (Final pool: `upgrade-pools.md`.)
 - **Apex options:**
   - **Eagle Eye:** Heartseeker executes enemies below 20% HP. *Taste:* Heartseeker deals +10% to wounded enemies. *Deed:* kills with Heartseeker.
   - **Stormline:** Heartseeker hits every enemy in a line. *Taste:* it pierces one more enemy. *Deed:* enemies hit by Heartseeker's pierce.
@@ -156,7 +158,7 @@ The fantasy: she controls the ground, and enemies walk into her plan.
 - **Deed:** seconds enemies spend rooted by her. Without the taste she has no roots.
 - **Arena hook:** once transformed, **you place her first 2 snares yourself** before the fight.
 - **Where she stands:** near the front, where her snares go.
-- **Upgrade pool examples:** snares Slow the enemies next to the rooted one / rooted enemies take +20% from her / a snare under Brannoc protects him / snares root leaping enemies / Bramble Field costs less mana.
+- **Upgrade pool examples:** snares Slow the enemies next to the rooted one / rooted enemies take +20% from her / a snare under Brannoc protects him / snares root leaping enemies / Bramble Field costs less mana. (Final pool: `upgrade-pools.md`.)
 - **Apex options:**
   - **Warden of Thorns:** sprung snares grow into briar walls that block movement. *Taste:* a sprung snare leaves a briar that blocks 1 hex for 2s. *Deed:* enemy moves blocked by briars.
   - **Huntmaster:** allies deal +30% to trapped enemies and prioritize them. *Taste:* allies deal +5% to rooted enemies. *Deed:* damage allies deal to rooted enemies.
@@ -175,7 +177,7 @@ The fantasy: she's always moving and filling the air with arrows.
 
 - **Deed:** extra enemies hit by a single shot. Without Split Shot it stays at zero.
 - **Where she stands:** a loose spot with room to move.
-- **Upgrade pool examples:** Arrow Storm follows the largest group / splits chain twice / her hop happens every 3s and she fires mid-hop / Arrow Storm Slows / kills with split arrows give mana.
+- **Upgrade pool examples:** Arrow Storm follows the largest group / splits chain twice / her hop happens every 3s and she fires mid-hop / Arrow Storm Slows / kills with split arrows give mana. (Final pool: `upgrade-pools.md`.)
 - **Apex options:**
   - **Rain of Ash:** Arrow Storm is larger and leaves burning ground. *Taste:* Arrow Storm lasts 0.5s longer. *Deed:* enemy-seconds spent inside Arrow Storm.
   - **Windrunner:** she never stops moving, hopping after every few shots. *Taste:* her hop cooldown drops by 1s. *Deed:* shots fired within 1s of hopping.
@@ -209,7 +211,7 @@ The fantasy: nothing reaches the people behind him.
 
 - **Deed:** damage he takes in place of allies. Taunted hits don't count (they're attacks on him), so without Guard it doesn't move.
 - **Where he stands:** right in front of Maren and Vell, covering the lane to them.
-- **Upgrade pool examples:** his wall reflects arrows / guarded allies recover 2% HP when he takes their hit / Hold the Line pulls enemies 1 hex toward him / Hearthguard triggers twice / his wall lasts 2s longer.
+- **Upgrade pool examples:** his wall reflects arrows / guarded allies recover 2% HP when he takes their hit / Hold the Line pulls enemies 1 hex toward him / Hearthguard triggers twice / his wall lasts 2s longer. (Final pool: `upgrade-pools.md`.)
 - **Apex options:**
   - **The Unbroken Gate:** his wall also blocks movement and stands until broken. *Taste:* the wall is 1 hex wider. *Deed:* ranged attacks blocked by his wall.
   - **The Hearthkeeper:** damage he takes for others partly heals the allies he guards. *Taste:* guarded allies heal 1% of the damage he takes for them. *Deed:* healing given to guarded allies.
@@ -228,7 +230,7 @@ The fantasy: the best defense is standing in the middle of them and swinging.
 
 - **Deed:** extra enemies hit by a single Shield Bash. Without Brand it only ever hits one.
 - **Where he stands:** forward, where the enemies will bunch up.
-- **Upgrade pool examples:** his healing grows with each enemy hit / enemies knocked into other enemies are stunned / Brand Slam aims for Marked targets / +ATK for each adjacent enemy / his cleave causes Bleed.
+- **Upgrade pool examples:** his healing grows with each enemy hit / enemies knocked into other enemies are stunned / Brand Slam aims for Marked targets / +ATK for each adjacent enemy / his cleave causes Bleed. (Final pool: `upgrade-pools.md`.)
 - **Apex options:**
   - **Forgebreaker:** each hit brands its target; at 5 brands it explodes. *Taste:* every 5th hit on the same enemy deals +20%. *Deed:* 5th hits landed.
   - **Warlord:** Brand Slam rallies the team; allies near where he lands gain ATK. *Taste:* allies within 1 hex of his landing gain +5% ATK for 2s. *Deed:* attacks allies make while rallied.
@@ -247,7 +249,7 @@ The fantasy: he's at his most dangerous when he should already be dead.
 
 - **Deed:** damage he deals while below 30% HP. Without Unyielding he rarely survives long at low HP. *(Phase 4 changed it provisionally to damage he deals while he can't fall: in the sim, Vell keeps base Brannoc fighting at low HP. See `rebuild-phase4-paths.md`, Decision 9.)*
 - **Where he stands:** the most exposed spot, to draw fire away from everyone else.
-- **Upgrade pool examples:** when he finally falls, allies gain a Shield / each second below 30% stacks DEF / Last Rites heals the allies it protected / kills while low restore 5% HP / Last Rites taunts for 1s longer.
+- **Upgrade pool examples:** when he finally falls, allies gain a Shield / each second below 30% stacks DEF / Last Rites heals the allies it protected / kills while low restore 5% HP / Last Rites taunts for 1s longer. (Final pool: `upgrade-pools.md`.)
 - **Apex options:**
   - **Undying Oath:** he returns 3s after falling, at 30% HP, fully fighting. *Taste:* **Smoldering Oath**: when he falls, he rises 8s later at 5% HP; he can't attack, but he still engages and taunts. *Deed:* damage he absorbs after rising. (Last Rites is about refusing to fall; Undying Oath is about coming back after he does.)
   - **Martyr's Pyre:** when he falls, he bursts, damaging nearby enemies and healing allies. *Taste:* when he falls, adjacent allies heal 5%. *Deed:* healing given by his fall.
@@ -281,7 +283,7 @@ The fantasy: a warm light that keeps everyone standing.
 
 - **Deed:** healing Mend gives to allies next to its target. Without Kindle, Mend heals one ally.
 - **Where she stands:** in the middle, behind Brannoc, where her lantern reaches everyone.
-- **Upgrade pool examples:** place the first lantern yourself before the fight / overhealing becomes Shield / the cleanse also removes Slow / Mend chains to a third ally / Mend refunds 20 mana if its target was below 30% HP.
+- **Upgrade pool examples:** place the first lantern yourself before the fight / overhealing becomes Shield / the cleanse also removes Slow / Mend chains to a third ally / Mend refunds 20 mana if its target was below 30% HP. (Final pool: `upgrade-pools.md`.)
 - **Apex options:**
   - **The Beacon:** her lantern's light also weakens and burns enemies inside it. *Taste:* enemies in the light deal 5% less damage. *Deed:* damage prevented by the light.
   - **Dawnbringer:** her heals also speed allies up. *Taste:* healed allies gain +5% attack speed for 2s. *Deed:* attacks allies make while sped up.
@@ -299,7 +301,7 @@ The fantasy: stop the damage before it lands, rather than fixing it afterward.
 
 - **Deed:** Shield she gives. Without Ward Thread she gives none.
 - **Where she stands:** forward, next to Brannoc; where the circle goes matters.
-- **Upgrade pool examples:** her Shields burst when broken / Shields on a tank are doubled / the circle blocks arrows / Weave also cleanses / her Shields last until broken.
+- **Upgrade pool examples:** her Shields burst when broken / Shields on a tank are doubled / the circle blocks arrows / Weave also cleanses / her Shields last until broken. (Final pool: `upgrade-pools.md`.)
 - **Apex options:**
   - **Loomwarden:** her Shields link allies, and damage is split among everyone linked. *Taste:* two allies with her Shields share 5% of the damage they take. *Deed:* damage shared through links.
   - **Thornweave:** broken Shields strike back at the attacker. *Taste:* a broken Shield deals 10% of its value to whoever broke it. *Deed:* damage dealt by broken Shields.
@@ -318,7 +320,7 @@ The fantasy: her light heals friends and burns enemies.
 
 - **Deed:** damage dealt by smites. Without Judgment she never smites.
 - **Where she stands:** off to the side, with a clean line for Sunfall.
-- **Upgrade pool examples:** smites jump to a second enemy / Sunfall is wider / her crits also heal / smitten enemies are Slowed / heals on allies below 30% HP give extra mana.
+- **Upgrade pool examples:** smites jump to a second enemy / Sunfall is wider / her crits also heal / smitten enemies are Slowed / heals on allies below 30% HP give extra mana. (Final pool: `upgrade-pools.md`.)
 - **Apex options:**
   - **Inquisitor:** smites finish off wounded enemies. *Taste:* smites deal +10% to Marked enemies. *Deed:* kills by smite.
   - **Sanctifier:** Sunfall leaves hallowed ground behind. *Taste:* Sunfall lingers for 0.5s. *Deed:* enemy-seconds spent on hallowed ground.
