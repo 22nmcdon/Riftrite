@@ -3,8 +3,9 @@ extends RefCounted
 ## The look, from the playtester's mock (docs/mockups/hero-panel-layout.pdf,
 ## sampled from its pages): deep navy panels with thin blue-grey rims, a
 ## teal accent for what's done or chosen, gold for the primary action and
-## what's current, and cream text. Marcellus for names and headings, Source
-## Sans 3 for text (both OFL, in art/fonts, from Fontsource). Panels and
+## what's current, and cream text. Cinzel for names and headings, Alegreya
+## for text (both OFL, in art/fonts; the uploaded art's fonts,
+## docs/plans/rebuild-phase5b-art.md, Decision 2). Panels and
 ## buttons are flat rounded boxes. Placeholder until the art rehaul (rebuild
 ## phase 7), but it follows the mock. The fight keeps its own colors for
 ## sides and statuses (rift violet for enemies, ember for Rift Collapse).
@@ -68,24 +69,29 @@ const STATUS_TAGS: Dictionary[String, String] = {"burn": "BRN", "poison": "PSN",
 ## Status colors for the fight view.
 const STATUS_COLORS: Dictionary[String, Color] = {"burn": Color("e0703a"), "poison": Color("7ed14f"), "bleed": Color("d14545")}
 const ICON_DIR: String = "res://art/ui/icons/%s.svg"
-const BODY_FONT: String = "res://art/fonts/SourceSans3-400.woff2"
-const SEMIBOLD_FONT: String = "res://art/fonts/SourceSans3-600.woff2"
-const BOLD_FONT: String = "res://art/fonts/SourceSans3-700.woff2"
-const HEADING_FONT: String = "res://art/fonts/Marcellus-Regular.woff2"
-## The old body font, for the few characters the mock's fonts lack.
+const BODY_FONT: String = "res://art/fonts/Alegreya-Regular.ttf"
+## Alegreya has no semibold: its bold stands in.
+const SEMIBOLD_FONT: String = "res://art/fonts/Alegreya-Bold.ttf"
+const BOLD_FONT: String = "res://art/fonts/Alegreya-Bold.ttf"
+const HEADING_FONT: String = "res://art/fonts/Cinzel-Bold.ttf"
+## The game's name on the title.
+const TITLE_FONT: String = "res://art/fonts/Cinzel-Black.ttf"
+## The old body font, for the few characters the new fonts lack.
 const FALLBACK_FONT: String = "res://art/fonts/WorkSans-Regular.ttf"
 const RADIUS: int = 8
 
 static var _fonts: Dictionary[String, Font] = {}
 
 
-## A font, with Work Sans behind it for anything it lacks.
+## A font, with Work Sans behind it for anything it lacks, and lining
+## figures (Alegreya's default old-style ones sit low in "HP 270 / 270").
 static func font(path: String) -> Font:
 	if not _fonts.has(path):
 		var base: FontFile = load(path) as FontFile
 		var fallback: Font = load(FALLBACK_FONT) as Font
 		var variation := FontVariation.new()
 		variation.base_font = base
+		variation.opentype_features = {TextServerManager.get_primary_interface().name_to_tag("lnum"): 1}
 		variation.fallbacks = [fallback]
 		_fonts[path] = variation
 	return _fonts[path]
@@ -280,14 +286,14 @@ static func icon(name: String, size: int = 24) -> TextureRect:
 	return rect
 
 
-## A heading or a name in the mock's serif (Marcellus).
+## A heading or a name in Cinzel.
 static func heading(text: String, size: int = 28, color: Color = HIGHLIGHT) -> Label:
 	var node: Label = label(text, size, color)
 	node.add_theme_font_override("font", font(HEADING_FONT))
 	return node
 
 
-## A label in bold (or semibold) Source Sans.
+## A label in bold Alegreya (`semibold` is the same, since Alegreya has none).
 static func strong(text: String, size: int = 16, color: Color = TEXT, semibold: bool = false) -> Label:
 	var node: Label = label(text, size, color)
 	node.add_theme_font_override("font", font(SEMIBOLD_FONT if semibold else BOLD_FONT))
@@ -304,7 +310,7 @@ static func caps(text: String, size: int = 13, color: Color = TEXT_DIM) -> Label
 static var _spaced: FontVariation = null
 
 
-## Bold Source Sans with a little room between letters.
+## Bold Alegreya with a little room between letters.
 static func spaced_bold() -> Font:
 	if _spaced == null:
 		_spaced = FontVariation.new()

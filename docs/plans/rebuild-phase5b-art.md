@@ -1,6 +1,6 @@
 # Rebuild phase 5b: the uploaded art in the game
 
-Status: **proposed (2026-09-30); waiting for approval.** The playtester uploaded a set of art (the `22nmcdon-art` branch, gathered into `art/` in "Gather the uploaded art into art/, without duplicates"). This phase puts it on the screens that exist: the arena, the act's route, camp and the shops, and the item language. It comes before phase 6, like 3b did, and it doesn't wait on gate 3: the gate 3 build (playtest-13) stays as it is, and this phase ends in a new playtest build.
+Status: **agreed (2026-09-30); being built.** The playtester uploaded a set of art (the `22nmcdon-art` branch, gathered into `art/` in "Gather the uploaded art into art/, without duplicates"). This phase puts it on the screens that exist: the arena, the act's route, camp and the shops, and the item language. It comes before phase 6, like 3b did, and it doesn't wait on gate 3: the gate 3 build (playtest-13) stays as it is, and this phase ends in a new playtest build.
 
 It changes no fight and no run: the sim, `RunFlow`, and the data's numbers stay as they are. The bench fingerprints and the run report must not move.
 
@@ -24,6 +24,7 @@ Out:
 2. **Cinzel and Alegreya** (the playtester, 2026-09-30). Headings use Cinzel Bold (Cinzel Black for the title). Body text uses Alegreya Regular, and the few semibold and bold spots use Alegreya Bold. Marcellus and Source Sans 3 go. Work Sans stays as the fallback for characters the new fonts lack.
 3. **Items get the closest icon** (the playtester, 2026-09-30). Each uploaded icon is its kind's frame with a glyph drawn on it. The glyphs are split out, and every item, relic, and so on takes its **kind's frame** with the **glyph that fits it best**, named in the data (`"icon"`). Glyphs are shared until more are drawn; the frame always says the kind.
 4. **The route is the act map** (the playtester, 2026-09-30). The day screen's route step shows the whole act as the map's seven islands, with each day's fights on its island.
+5. **Grafts get a rose octagon frame** (the playtester, 2026-09-30), generated in the upload's style by `tools/art/item_glyphs.py`, until one is drawn.
 
 ## 1. What's in `art/ui/` and where it goes
 
@@ -187,6 +188,6 @@ Each is checked with a search before it's deleted. Anything still loaded stays.
 6. The act map.
 7. Clean-up, docs (`CLAUDE.md`, this plan's "Built in step N" notes, the build order), HOW-TO-PLAY, the screenshots, and a playtest build.
 
-## Open questions
+## Answered
 
-1. **The graft frame:** a generated rose octagon until one is drawn (proposed), or borrow another kind's frame?
+1. **The graft frame** (the playtester, 2026-09-30): a generated rose octagon in the upload's style, until one is drawn. Decision 5.

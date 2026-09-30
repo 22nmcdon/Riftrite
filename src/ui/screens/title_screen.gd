@@ -18,6 +18,7 @@ func build() -> void:
 	alignment = BoxContainer.ALIGNMENT_CENTER
 	add_theme_constant_override("separation", 18)
 	var logo: Label = UiStyle.heading("Riftrite", 112, UiStyle.EMBER)
+	logo.add_theme_font_override("font", UiStyle.font(UiStyle.TITLE_FONT))
 	logo.add_theme_color_override("font_outline_color", UiStyle.NAVY_900)
 	logo.add_theme_constant_override("outline_size", 18)
 	logo.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.5))
