@@ -10,6 +10,7 @@ Working title: **Riftrite** (a placeholder). This document was rewritten on 2026
 | The run: days, camp, fights, relics, duo bonds | `docs/plans/rebuild-run.md` |
 | Decisions between fights: after-fight picks, loadout slots and the currency, wounds, the Magpie, and the screens' item language | `docs/plans/rebuild-between-fights.md` |
 | Combos, scaling, and breaking the game: keywords, triggers, the damage rule, permanent scaling, relic tiers, the endless mode | `docs/plans/rebuild-combos.md` |
+| The first content pool (part 7b): keyword sources, growing upgrades, and the combos the pool is built for | `docs/plans/rebuild-content-pool.md` |
 | The relic pool: its rules, shops and rerolls, income, and every relic by tier | `docs/plans/relics/README.md` (and one file per tier) |
 | The loadout pool: its rules, ranks, prices, and every tactic, gambit, sigil, and charm | `docs/plans/loadout/README.md` (and one file per kind) |
 | The Magpie node, selling relics and items, and why grafts were cut | `docs/plans/magpie.md` |
