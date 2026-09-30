@@ -204,7 +204,8 @@ static func square(button: Button, side: float = 52.0) -> Button:
 
 ## A small outlined tag (a slot chip, an upgrade taken): `color` rim and
 ## text; `filled` gives it a dark fill, else it's dim and dashed-looking.
-static func chip(text: String, color: Color, filled: bool = true, size: int = 14) -> PanelContainer:
+## `icon` (an ItemIcon, say) goes before the text.
+static func chip(text: String, color: Color, filled: bool = true, size: int = 14, icon: Control = null) -> PanelContainer:
 	var holder := PanelContainer.new()
 	var style: StyleBoxFlat = box(NAVY_800 if filled else Color(0, 0, 0, 0), color if filled else Color(LINE_500, 0.8), 1, 4)
 	style.content_margin_left = 8
@@ -214,7 +215,15 @@ static func chip(text: String, color: Color, filled: bool = true, size: int = 14
 	holder.add_theme_stylebox_override("panel", style)
 	var text_label: Label = label(text, size, color if filled else TEXT_DIM)
 	text_label.add_theme_font_override("font", font(BOLD_FONT if filled else BODY_FONT))
-	holder.add_child(text_label)
+	if icon == null:
+		holder.add_child(text_label)
+		return holder
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 4)
+	row.add_child(icon)
+	text_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(text_label)
+	holder.add_child(row)
 	return holder
 
 

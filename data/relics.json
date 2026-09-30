@@ -3,6 +3,7 @@
     "_note": "Relics (docs/plans/rebuild-phase5-run.md, section 8; part 4, section 7): each has a boon and a cost. A \"mod\" changes every hero's kit (after the loadout); an \"enemy_mod\" every enemy's; the rest are run rules (RelicDef). Sources: elites, the Shrine, a Rift Tear win (a choice of 2, or neither), the Pedlar now and then, and the Magpie. Numbers are first guesses.",
     "id": "ember_heart",
     "name": "Ember Heart",
+    "icon": "ember_heart",
     "flavor": "It still beats, and it still burns.",
     "boon": "Every hero's basic attack sets its target Burning.",
     "cost": "Every heal your heroes give is 20% weaker.",
@@ -33,6 +34,7 @@
   {
     "id": "hollow_crown",
     "name": "Hollow Crown",
+    "icon": "hollow_crown",
     "flavor": "Whoever wore it wanted more.",
     "boon": "Each hero gets a fourth loadout slot.",
     "cost": "Each wound takes 20% of max HP, not 15%.",
@@ -42,6 +44,7 @@
   {
     "id": "rift_glass_eye",
     "name": "Rift-Glass Eye",
+    "icon": "rift_glass_eye",
     "flavor": "Look through it and the rift looks back.",
     "boon": "Every fight is Scouted: you see where its enemies stand.",
     "cost": "Enemies have 10% more HP.",
@@ -55,6 +58,7 @@
   {
     "id": "pilgrims_lantern",
     "name": "Pilgrim's Lantern",
+    "icon": "pilgrims_lantern",
     "flavor": "It has walked further than you will.",
     "boon": "Rest also steadies the team: 10% more max HP in the next fight.",
     "cost": "The Pedlar charges 1 more shard for everything.",
@@ -68,6 +72,7 @@
   {
     "id": "bloodstone",
     "name": "Bloodstone",
+    "icon": "purifying_light",
     "flavor": "Warm to the touch, and thirsty.",
     "boon": "Every hero hits 12% harder.",
     "cost": "Every hero has 8% less max HP.",
@@ -81,6 +86,7 @@
   {
     "id": "wardens_chain",
     "name": "Warden's Chain",
+    "icon": "unbroken_wall",
     "flavor": "Heavy links, and heavier oaths.",
     "boon": "Every hero's DEF is 15% higher.",
     "cost": "Every hero walks slower.",
@@ -96,6 +102,7 @@
   {
     "id": "gravediggers_coin",
     "name": "Gravedigger's Coin",
+    "icon": "hollow_crown",
     "flavor": "Paid in advance.",
     "boon": "Every won fight pays 2 more shards.",
     "cost": "After-fight picks show only 2 cards.",
@@ -105,6 +112,7 @@
   {
     "id": "hungry_blade",
     "name": "Hungry Blade",
+    "icon": "casters_first",
     "flavor": "It never quite stops cutting.",
     "boon": "Every hero's basic attack heals it for a tenth of the damage.",
     "cost": "Every hero takes 20% less healing from others.",

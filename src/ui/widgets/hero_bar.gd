@@ -21,6 +21,9 @@ extends PanelContainer
 signal card_clicked(hero_id: String)
 
 const CARD_SIZE := Vector2(525, 162)
+## An item's icon on a slot's chip (ItemIcon; phase 5b): the item's own, or
+## in Practice the slot's bare frame.
+const CHIP_ICON: float = 22.0
 
 var session: PracticeSession
 var cards: Dictionary[String, Card] = {}
@@ -225,7 +228,7 @@ func _fill_chips(card: Card, hero_id: String) -> void:
 		["Tactic", UiStyle.TACTIC, tactic != null, tactic.name if tactic != null else "No tactic"],
 		["Sigil", UiStyle.SIGIL, false, "No sigil (sigils come with the run)"]]
 	for slot: Array in slots:
-		var chip: PanelContainer = UiStyle.chip(slot[0], slot[1], slot[2], 14)
+		var chip: PanelContainer = UiStyle.chip(slot[0], slot[1], slot[2], 14, ItemIcon.make(String(slot[0]).to_lower(), "", CHIP_ICON))
 		chip.tooltip_text = slot[3]
 		chip.mouse_filter = Control.MOUSE_FILTER_PASS
 		card.chips.add_child(chip)
@@ -244,7 +247,8 @@ func _fill_run_chips(card: Card, run_session: RunSession, hero_id: String) -> vo
 	var colors: Array[Color] = [UiStyle.CHARM, UiStyle.TACTIC, UiStyle.SIGIL, UiStyle.EMBER]
 	for id: String in slots:
 		var item: ItemDef = run_session.run.items.get(id, null)
-		var chip: PanelContainer = UiStyle.chip(item.name if item != null else "Empty", colors[item.kind] if item != null else UiStyle.LINE_500, item != null, 14)
+		var chip: PanelContainer = UiStyle.chip(item.name if item != null else "Empty", colors[item.kind] if item != null else UiStyle.LINE_500, item != null, 14,
+			ItemIcon.for_item(item, CHIP_ICON) if item != null else null)
 		chip.tooltip_text = item.text if item != null else "An empty slot"
 		chip.mouse_filter = Control.MOUSE_FILTER_PASS
 		card.chips.add_child(chip)

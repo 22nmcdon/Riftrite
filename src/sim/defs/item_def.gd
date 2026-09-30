@@ -3,7 +3,7 @@ extends RefCounted
 ## A thing for a hero's loadout slots (data/items.json;
 ## docs/plans/rebuild-phase5-run.md, section 6; part 6, sections 2 and 8):
 ##   {"id": "frost_tipped", "kind": "charm", "name": "Frost-Tipped",
-##    "text": "...", "answers": "Answers chargers (Cairn Guardian)",
+##    "icon": "cheaper", "text": "...", "answers": "Answers chargers (Cairn Guardian)",
 ##    "needs": ["ranged"], "price": 3, "mod": {...KitMod...}}
 ##   {"id": "plant_feet_item", "kind": "tactic", ..., "tactic": "plant_feet"}
 ## Kinds: charm (a small change to the kit), tactic (how the hero behaves: a
@@ -12,7 +12,9 @@ extends RefCounted
 ## item; one that does nothing on a hero shows "no effect on this hero"
 ## (works_on). "needs" tags what it needs: mana, heals, hops, ranged, melee.
 ## "answers" is the hand-written line on the fight it's for. Items are
-## written against slots, so they survive a transformation.
+## written against slots, so they survive a transformation. "icon" names the
+## glyph drawn in its kind's frame (art/ui/items/glyphs/; phase 5b): the UI's,
+## never read by the sim.
 
 enum Kind { CHARM, TACTIC, SIGIL, GRAFT }
 
@@ -22,6 +24,8 @@ const NEEDS: Array[String] = ["mana", "heals", "hops", "ranged", "melee"]
 var id: String
 var kind: Kind
 var name: String
+## The glyph in its icon (RunContent checks it exists).
+var icon: String
 var text: String
 var answers: String
 var needs: Array[String] = []
@@ -38,6 +42,7 @@ static func read(reader: DataReader) -> ItemDef:
 	def.id = reader.req_string("id")
 	def.kind = maxi(KIND_NAMES.find(reader.req_choice("kind", KIND_NAMES)), 0) as Kind
 	def.name = reader.req_string("name")
+	def.icon = reader.req_string("icon")
 	def.text = reader.req_string("text")
 	def.answers = reader.req_string("answers")
 	def.needs = reader.opt_choice_array("needs", NEEDS)

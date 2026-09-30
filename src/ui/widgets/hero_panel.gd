@@ -336,11 +336,11 @@ func _fill_path() -> void:
 	page.add_child(extras)
 	var run_session := session as RunSession
 	if run_session != null:
-		extras.add_child(_extra("Upgrades taken", _run_upgrades(run_session)))
-		extras.add_child(_extra("Duo bond", _run_bond(run_session)))
+		extras.add_child(_extra("Upgrades taken", _run_upgrades(run_session), "upgrade"))
+		extras.add_child(_extra("Duo bond", _run_bond(run_session), "bond"))
 		return
-	extras.add_child(_extra("Upgrades taken", "None yet: upgrades come after won fights in the run."))
-	extras.add_child(_extra("Duo bond", "None yet: bonds are found in the run."))
+	extras.add_child(_extra("Upgrades taken", "None yet: upgrades come after won fights in the run.", "upgrade"))
+	extras.add_child(_extra("Duo bond", "None yet: bonds are found in the run.", "bond"))
 
 
 ## The upgrades the hero has taken, by name (a path's that waits off its
@@ -367,11 +367,18 @@ func _run_bond(run_session: RunSession) -> String:
 	return "None: no bond links this path with another hero's vow."
 
 
-func _extra(title: String, body: String) -> VBoxContainer:
+## `kind`'s frame (ItemIcon; phase 5b) goes before the title.
+func _extra(title: String, body: String, kind: String) -> VBoxContainer:
 	var column := VBoxContainer.new()
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	column.add_theme_constant_override("separation", 10)
-	column.add_child(UiStyle.caps(title, 14))
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 8)
+	head.add_child(ItemIcon.make(kind, ItemIcon.UPGRADE_GLYPH if kind == "upgrade" else "", 28.0))
+	var caps: Label = UiStyle.caps(title, 14)
+	caps.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(caps)
+	column.add_child(head)
 	column.add_child(_wrapped(body, 16, UiStyle.TEXT_DIM))
 	return column
 

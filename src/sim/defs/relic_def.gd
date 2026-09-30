@@ -19,6 +19,9 @@ extends RefCounted
 var id: String
 var name: String
 var flavor: String
+## The glyph in its icon (art/ui/items/glyphs/; phase 5b): the UI's, never
+## read by the sim.
+var icon: String
 var boon: String
 var cost: String
 var mod: KitMod = null
@@ -37,6 +40,7 @@ static func read(reader: DataReader) -> RelicDef:
 	var def := RelicDef.new()
 	def.id = reader.req_string("id")
 	def.name = reader.req_string("name")
+	def.icon = reader.req_string("icon")
 	def.flavor = reader.req_string("flavor")
 	def.boon = reader.req_string("boon")
 	def.cost = reader.req_string("cost")

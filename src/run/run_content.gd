@@ -11,6 +11,8 @@ const CAMPS_FILE: String = "camps.json"
 const RELICS_FILE: String = "relics.json"
 const BONDS_FILE: String = "bonds.json"
 const FILES: Array[String] = [ACT_FILE, UPGRADES_FILE, ITEMS_FILE, CAMPS_FILE, RELICS_FILE, BONDS_FILE]
+## The items' and relics' glyphs (the UI draws them; phase 5b).
+const GLYPHS: String = "res://art/ui/items/glyphs/%s.svg"
 
 var content: ContentDb
 var act: ActDef = null
@@ -262,6 +264,7 @@ func _check() -> void:
 		_check_all_upgrades(hero_id)
 	for id: String in item_ids:
 		_check_item(items[id], "%s (%s)" % [ITEMS_FILE, id])
+		_check_icon(items[id].icon, "%s (%s)" % [ITEMS_FILE, id])
 	var hero_kits: Array[UnitDef] = []
 	for path_id: String in content.path_ids:
 		hero_kits.append_array([content.paths[path_id].vowed_kit, content.paths[path_id].transformed_kit])
@@ -270,6 +273,7 @@ func _check() -> void:
 		enemy_kits.append(content.enemies[enemy_id].kit)
 	for id: String in relic_ids:
 		var relic: RelicDef = relics[id]
+		_check_icon(relic.icon, "%s (%s)" % [RELICS_FILE, id])
 		_check_mod(relic.mod, hero_kits, "%s (%s)" % [RELICS_FILE, id])
 		_check_mod(relic.rest_mod, hero_kits, "%s (%s): rest_mod" % [RELICS_FILE, id])
 		_check_mod(relic.enemy_mod, enemy_kits, "%s (%s): enemy_mod" % [RELICS_FILE, id])
@@ -282,6 +286,13 @@ func _check() -> void:
 					errors.append("%s: day %d needs a hunt pack (an encounter of tier hunt)" % [CAMPS_FILE, day])
 	for id: String in bond_ids:
 		_check_bond(bonds[id], "%s (%s)" % [BONDS_FILE, id])
+
+
+## An icon's glyph must be in the art (docs/plans/rebuild-phase5b-art.md,
+## section 5).
+func _check_icon(icon: String, where: String) -> void:
+	if not ResourceLoader.exists(GLYPHS % icon):
+		errors.append("%s: no glyph \"%s\" in art/ui/items/glyphs/" % [where, icon])
 
 
 ## A mod must be sound on every kit it can meet.

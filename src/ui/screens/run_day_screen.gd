@@ -28,6 +28,9 @@ signal fight_requested
 ## The run is over and the player is done with it.
 signal finished
 
+## An item's, relic's, or upgrade's icon at the head of its card.
+const CARD_ICON: float = 60.0
+
 var session: RunSession
 var hero_bar: HeroBar
 var hero_panel: HeroPanel
@@ -120,7 +123,7 @@ static func fill_top_bar(row: HBoxContainer, run_session: RunSession, where: Str
 	row.add_child(gap)
 	for id: String in state.relics:
 		var relic: RelicDef = run_session.run.relics[id]
-		var chip: PanelContainer = UiStyle.chip(relic.name, UiStyle.RIFT_300, true, 15)
+		var chip: PanelContainer = UiStyle.chip(relic.name, UiStyle.RIFT_300, true, 15, ItemIcon.for_relic(relic, 24.0))
 		chip.tooltip_text = "%s\nBoon: %s\nCost: %s" % [relic.flavor, relic.boon, relic.cost]
 		chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(chip)
@@ -219,6 +222,20 @@ static func _card(row: Container, width: int = 0, rim: Color = UiStyle.LINE_500)
 	return column
 
 
+## A card's head: its icon (ItemIcon; phase 5b) beside its kind and name.
+static func _card_head(card: VBoxContainer, icon: Control, kind: Control, title: Control) -> void:
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 14)
+	card.add_child(head)
+	head.add_child(icon)
+	var words := VBoxContainer.new()
+	words.add_theme_constant_override("separation", 2)
+	words.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(words)
+	words.add_child(kind)
+	words.add_child(title)
+
+
 static func _row() -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 18)
@@ -259,8 +276,8 @@ func _fill_pick() -> void:
 	for i: int in state.pick.size():
 		var upgrade: UpgradeDef = session.run.upgrades[state.pick[i]]
 		var card: VBoxContainer = _card(row, 0, UiStyle.GOLD_500)
-		card.add_child(UiStyle.caps(RunDayScreen.upgrade_source(upgrade, session.content), 14, UiStyle.HIGHLIGHT))
-		card.add_child(UiStyle.heading(upgrade.name, 26, UiStyle.TEXT))
+		_card_head(card, ItemIcon.for_upgrade(upgrade, CARD_ICON), UiStyle.caps(RunDayScreen.upgrade_source(upgrade, session.content), 14, UiStyle.HIGHLIGHT),
+			UiStyle.heading(upgrade.name, 26, UiStyle.TEXT))
 		card.add_child(UiStyle.label("for %s" % _hero_name(upgrade.hero), 16, UiStyle.TEXT_DIM))
 		card.add_child(_wrapped(upgrade.text, 17, UiStyle.TEXT))
 		card.add_child(UiStyle.primary(UiStyle.button("Take", _do.bind(session.flow.take_pick.bind(i)))))
@@ -287,8 +304,7 @@ func _fill_relic_choice() -> void:
 
 func _relic_card(row: Container, relic: RelicDef) -> VBoxContainer:
 	var card: VBoxContainer = _card(row, 0, UiStyle.RIFT_300)
-	card.add_child(UiStyle.caps("RELIC", 14, UiStyle.RIFT_300))
-	card.add_child(UiStyle.heading(relic.name, 26, UiStyle.TEXT))
+	_card_head(card, ItemIcon.for_relic(relic, CARD_ICON), UiStyle.caps("RELIC", 14, UiStyle.RIFT_300), UiStyle.heading(relic.name, 26, UiStyle.TEXT))
 	card.add_child(_wrapped(relic.flavor, 16, UiStyle.TEXT_DIM))
 	card.add_child(_wrapped("Boon: " + relic.boon, 17, UiStyle.GOOD))
 	card.add_child(_wrapped("Cost: " + relic.cost, 17, UiStyle.BAD))
@@ -376,8 +392,8 @@ func _fill_shop() -> void:
 func _item_card(row: Container, item: ItemDef) -> VBoxContainer:
 	var colors: Array[Color] = [UiStyle.CHARM, UiStyle.TACTIC, UiStyle.SIGIL, UiStyle.EMBER]
 	var card: VBoxContainer = _card(row, 0, colors[item.kind])
-	card.add_child(UiStyle.caps(ItemDef.KIND_NAMES[item.kind].to_upper(), 14, colors[item.kind]))
-	card.add_child(UiStyle.heading(item.name, 24, UiStyle.TEXT))
+	_card_head(card, ItemIcon.for_item(item, CARD_ICON), UiStyle.caps(ItemDef.KIND_NAMES[item.kind].to_upper(), 14, colors[item.kind]),
+		UiStyle.heading(item.name, 24, UiStyle.TEXT))
 	card.add_child(_wrapped(item.text, 17, UiStyle.TEXT))
 	card.add_child(_wrapped(item.answers, 15, UiStyle.TEXT_DIM))
 	var idle: Array[String] = []

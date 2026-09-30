@@ -97,37 +97,41 @@ Everything else on the board (shots, areas, numbers, snares, walls, lines) is dr
 - the upgrade pick (upgrade frame, with a glyph by the upgrade's slot);
 - the hero panel: vows (vow frame), paths (path frame), and bonds (bond frame).
 
-**Proposed glyphs** (the playtester can change any; they're data):
+**The glyphs given** (built in step 4; the playtester can change any, since they're data). The plan's first guesses read three glyphs wrong: `opener` is a sun, `pilgrims_lantern` a vial, and `purifying_light` a drop.
 
 | Kind | Item | Glyph |
 | --- | --- | --- |
-| charm | Frost-Tipped | cheaper (asterisk, as frost) |
-| charm | Iron Skin | braced |
-| charm | Vital Stone | the_tank_first |
-| charm | Whetstone | casters_first |
-| charm | Swift Boots | fletched_for_wings |
-| charm | Serrated Edge | opener |
-| charm | Ember Charm | ember_heart |
-| charm | Mending Salve | deep_mend |
-| charm | Deep Well | pilgrims_lantern |
-| charm | Thorned Mail | unbroken_wall |
+| charm | Frost-Tipped | cheaper (an asterisk, as frost) |
+| charm | Iron Skin | braced (a shield) |
+| charm | Vital Stone | the_tank_first (a heart) |
+| charm | Whetstone | casters_first (a crosshair) |
+| charm | Swift Boots | fletched_for_wings (a feather) |
+| charm | Serrated Edge | purifying_light (a drop, as blood) |
+| charm | Ember Charm | ember_heart (a flame) |
+| charm | Mending Salve | pilgrims_lantern (a vial) |
+| charm | Deep Well | echo (a crescent) |
+| charm | Thorned Mail | unbroken_wall (bricks) |
 | tactic | Casters first | casters_first |
-| tactic | Hold your ground | hold_the_middle |
-| tactic | Wait to heal | the_tank_first |
+| tactic | Hold your ground | hold_the_middle (an arrow to a line) |
+| tactic | Wait to heal | deep_mend (a cross) |
 | tactic | Plant your feet | braced |
-| sigil | Sigil of Haste | cheaper |
-| sigil | Sigil of Grief | hollow_crown |
-| sigil | Sigil of the Last Breath | steady_hands |
-| sigil | Sigil of Reach | purifying_light |
+| sigil | Sigil of Haste | steady_hands (a clock) |
+| sigil | Sigil of Grief | purifying_light (a drop, as a tear) |
+| sigil | Sigil of the Last Breath | the_tank_first |
+| sigil | Sigil of Reach | opener (a sun) |
 | sigil | Sigil of Echoes | echo |
-| graft | Shake It Off | purifying_light |
+| graft | Shake It Off | cheaper |
 | graft | Second Wind | deep_mend |
-| graft | Sidestep | fletched_for_wings |
+| graft | Sidestep | light_feet (a feather) |
 | relic | Ember Heart, Hollow Crown, Rift-Glass Eye, Pilgrim's Lantern | their own |
-| relic | Bloodstone | ember_heart |
+| relic | Bloodstone | purifying_light |
 | relic | Warden's Chain | unbroken_wall |
-| relic | Gravedigger's Coin | cheaper |
-| relic | Hungry Blade | opener |
+| relic | Gravedigger's Coin | hollow_crown (a crown) |
+| relic | Hungry Blade | casters_first |
+
+Upgrades take the upgrade frame (a vow pick the vow frame) with the cross.
+
+**Built in step 4:** `tools/art/item_glyphs.py` wrote the 18 glyphs and the rose octagon. `items.json` and `relics.json` name each icon, and `RunContent` refuses a glyph that isn't in the art. `ItemIcon` draws them on the hero bar's chips (the item's own in a run, the slot's bare frame in Practice), at the head of the item, relic, and upgrade cards, on the top bar's relics, and beside the hero panel's upgrades and duo bond. The loadout's slot buttons stay text; the hero bar under them shows the icons. `test_art.gd` checks every frame, glyph, and font loads, and that a run shows them.
 
 ## 6. Camp and the shops
 

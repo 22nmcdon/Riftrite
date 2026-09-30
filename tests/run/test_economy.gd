@@ -58,9 +58,11 @@ func test_no_effect_on_this_hero() -> void:
 
 func test_bad_items_are_refused() -> void:
 	var cases: Array = [
-		[{"id": "odd", "kind": "tactic", "name": "Odd", "text": "x", "answers": "x", "price": 2, "tactic": "nothing"}, "unknown tactic \"nothing\""],
-		[{"id": "nobody", "kind": "charm", "name": "Nobody", "text": "x", "answers": "x", "price": 2, "needs": ["melee", "ranged"], "mod": {"stats_bp": {"hp": 11000}}}, "does nothing on any hero"],
-		[{"id": "bare", "kind": "charm", "name": "Bare", "text": "x", "answers": "x", "price": 2}, "mod"],
+		[{"id": "odd", "kind": "tactic", "name": "Odd", "icon": "braced", "text": "x", "answers": "x", "price": 2, "tactic": "nothing"}, "unknown tactic \"nothing\""],
+		[{"id": "nobody", "kind": "charm", "name": "Nobody", "icon": "braced", "text": "x", "answers": "x", "price": 2, "needs": ["melee", "ranged"], "mod": {"stats_bp": {"hp": 11000}}}, "does nothing on any hero"],
+		[{"id": "bare", "kind": "charm", "name": "Bare", "icon": "braced", "text": "x", "answers": "x", "price": 2}, "mod"],
+		[{"id": "blank", "kind": "charm", "name": "Blank", "icon": "no_such_glyph", "text": "x", "answers": "x", "price": 2, "mod": {"stats_bp": {"hp": 11000}}}, "no glyph \"no_such_glyph\""],
+		[{"id": "iconless", "kind": "charm", "name": "Iconless", "text": "x", "answers": "x", "price": 2, "mod": {"stats_bp": {"hp": 11000}}}, "icon"],
 	]
 	for case: Array in cases:
 		var run: RunContent = _with_items([case[0]])
