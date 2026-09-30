@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **proposed (2026-09-30), waiting for approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **step 1 approved (2026-09-30; the playtester answered its four questions and said to start), steps 2–9 outlined.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -12,12 +12,16 @@ Out: apexes (phase 8, with Acts 2 and 3), enemy specializations, upgrades, and t
 
 ## Decisions
 
-Proposed; each becomes a decision once the playtester approves it (the questions at the end).
+Decisions 1–4 were proposed with the plan; 5–8 are the playtester's answers (2026-09-30).
 
 1. **One helper lands every number.** Damage, healing, Shields, and damage over time all go through one function that sums each kind's bonuses and multiplies the kinds, rounding once at the end (`rebuild-combos.md`, section 3).
 2. **Every existing bonus gets a kind** (section 1.2's table). Nothing new is added in step 1: the only fights it changes are those where two bonuses of the same kind meet (they add instead of multiplying) and the rounding (once instead of at each step).
 3. **Crumbled ground is walkable** (the decision of 2026-09-30): nobody is kept off it or walled off by it, and only rocks wall a target off. Standing on it hurts, as now.
 4. **Act 1 is retuned once, after steps 1 and 2 together** (the build order's reason for pairing them).
+5. **Casters first's +20% is power** (the playtester): it's the attacker's own bonus, so it multiplies with Marked (+38% on a Marked caster).
+6. **Kit mods on an ability's amount are power** (the playtester): "Brand Slam hits 20% harder" is no longer baked into the ability when the kit is built; it's a power bonus of that effect, adding with the attacker's other power bonuses (the path costs' −2%, and later relics and charms). The same goes for heals and Shields (a heal's power, a Shield's power).
+7. **Walkers avoid crumbled ground when they can** (the playtester): routes cost more across crumbled cells, so a unit goes round when a safe way isn't much longer, and steps off when it has nothing else to do; it crosses when that's the only way.
+8. **The collapse's damage starts at 15 and grows as now** (the playtester): 15 a second at the first crumble (Act 1; it was 10), then +10 each second, the growth rising from the surge, so stalled fights still end.
 
 ## 1. Step 1a: the damage rule
 
@@ -39,10 +43,10 @@ So the kinds already multiply with each other. What changes is that bonuses **of
 
 | Kind | For damage | Built sources |
 | --- | --- | --- |
-| **Base** | ATK or MGK times the ability's %, plus flat | the effect's amount and scaling; kit mods' `amount_bp` on an ability; `bonus_bp_per_ally` |
+| **Base** | ATK or MGK times the ability's %, plus flat | the effect's amount and scaling; `bonus_bp_per_ally` |
 | **Crit** | only when it crits: the crit's +50%, plus crit bonuses | `crit_damage_bp` |
-| **Vulnerability** | the target's state, or what the target is | Marked; Casters first's +20% (tied to the target: question A) |
-| **Power** | the attacker's own bonuses | `damage_bp` auras (Volley's and Ironbrand's −2%) |
+| **Vulnerability** | the target's state | Marked |
+| **Power** | the attacker's own bonuses | `damage_bp` auras (Volley's and Ironbrand's −2%); Casters first's +20% (Decision 5); kit mods' `amount_bp` on an ability (Decision 6) |
 | **Relic** | relics' damage bonuses | none built (relics raise ATK or MGK) |
 
 Heals, Shields, and damage over time use the same shape: base, then power (`heal_bp`, `shield_bp`, `over_time_bp`; Wait to heal's +15% is power, the healer's own), then the target's side (`healing_taken_bp` for heals, Marked for damage over time), then relic. DEF stays where it is: after the bonuses, never a bonus kind (part 7's "DEF works the same way" is about DEF bonuses adding within a kind, which `def_bp` auras then do too).
@@ -71,8 +75,8 @@ Heals, Shields, and damage over time use the same shape: base, then power (`heal
 ### 2.2 What changes
 
 - **Walking:** crumbled ground is ordinary ground for `fits` and the nav grid. `fits_leaving`, `escape`, and `find_safe` go; `walled_off` counts only rocks.
-- **Whether walkers avoid it** is question B: either routes cost more across crumbled cells (a walker goes round when a safe way isn't much longer, and still steps off when it has nothing else to do), or it's plain ground and the damage is the only reason to leave.
-- **The damage** is question C: the decision says "flat damage every second (15, a placeholder)". Today's damage grows every second, which is what ends a stalled fight before 180s. A truly flat 15 would let a fight run to the tie much more often (a tie is a win); growth that starts at 15 keeps that pressure.
+- **Walkers avoid it when they can** (Decision 7): the nav grid's crumbled cells cost more than safe ones, so the shortest route goes round when a safe way isn't much longer; a unit with nothing to do (no target, or holding) steps off it; `fits` and `walled_off` no longer count it.
+- **The damage** (Decision 8): Act 1's `base` goes from 10 to 15; the growth stays.
 - **Knockback onto it** stays as it is (a push may end there; it hurts).
 - **The log:** COLLAPSE damage entries stay; the "no way off crumbled ground" STOP goes.
 - **The board:** nothing new to draw; units now walk across the collapse tiles.
@@ -113,9 +117,9 @@ Every fight that reaches 45s changes. After this step: the bench fingerprints, t
 2. Step 1b, walkable crumbled ground; the Act 1 retune; the run report; docs; a playtest build if the playtester wants one here.
 3. Steps 2–9, each after its full section is approved.
 
-## Questions before step 1
+## Answered (2026-09-30)
 
-- **A. Casters first's +20%:** vulnerability (it's tied to what the target is), or power (it's the attacker's tactic)? It only matters when it meets Marked: vulnerability adds them (+35%), power multiplies them (+38%).
-- **B. Walkers and crumbled ground:** do they prefer safe ground when there's a way round, and step off when idle? Or is it plain ground, with the damage the only reason to leave?
-- **C. The collapse's damage:** flat 15 a second all fight, or starting at 15 and growing as it does now, so stalled fights still end before 180s?
-- **D. Kit mods on an ability's amount** (upgrades like "Brand Slam hits 20% harder"): part of the base, as now (two such mods multiply), or power (they add with other power bonuses)?
+- **A. Casters first's +20%:** power (Decision 5).
+- **B. Walkers and crumbled ground:** avoid it when they can (Decision 7).
+- **C. The collapse's damage:** starts at 15 and grows as now (Decision 8).
+- **D. Kit mods on an ability's amount:** power (Decision 6).
