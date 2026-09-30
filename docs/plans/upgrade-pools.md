@@ -18,7 +18,7 @@ Status: **agreed in discussion (2026-09-30), not built.** What the after-fight p
 
 ### Stacking upgrades
 
-- Only the plain stat upgrades (marked **stacks**) can be picked more than once. Everything else can be taken once.
+- Only the plain stat upgrades (marked **stacks**) can be picked more than once. Everything else can be taken once, except **Quick Split** (Volley), which can be taken twice: every 4th shot, then every 3rd (2026-09-30).
 - **A stacking upgrade is a percentage of the hero's stat when you pick it, locked in as a flat amount.** It never recalculates. At 15 attack speed, +10% gives +1.5; at 150, it gives +15. Picked early it's small, picked late it's big, and picks don't compound on each other.
 
 ## Maren
@@ -44,9 +44,9 @@ Status: **agreed in discussion (2026-09-30), not built.** What the after-fight p
 
 | Path | Taste upgrades | Path upgrades |
 | --- | --- | --- |
-| **Deadeye** | **Steady Hands:** Steady kicks in after 1s, not 2s. **Eyes Up:** +5 CRIT while Steady | **Quick Plant:** she plants in 0.75s. **Seeker's Mark:** Heartseeker Marks everything it hits for 4s. **Heart's Refund:** Heartseeker kills refund 50% of its mana. **Bleeding Shot:** crits from 6 hexes apply 3 Bleed. Growing: **Hunter's Tally** (+1% damage per 500 damage dealt from 5+ hexes) |
+| **Deadeye** | **Steady Hands:** Steady kicks in after 1s, not 1.5s. **Eyes Up:** +5 CRIT while Steady | **Quick Plant:** she plants in 0.75s. **Seeker's Mark:** Heartseeker Marks everything it hits for 4s. **Heart's Refund:** Heartseeker kills refund 50% of its mana. **Bleeding Shot:** crits from 6 hexes apply 3 Bleed. Growing: **Hunter's Tally** (+1% damage per 500 damage dealt from 5+ hexes) |
 | **Trapper** | **Second Snare:** her Snare triggers twice per fight. **Tight Weave:** snares root 0.5s longer | **Tangle:** enemies next to a rooted one are Slowed 30% for 2s. **Hunter's Opening:** rooted enemies take +20% damage from her. **Guarded Ground:** at the fight's start, a snare appears under your front-most ally. **Snag:** snares root enemies that leap or charge over them. Growing: **Patient Hunter** (+1% damage to Rooted enemies per 5 seconds of root) |
-| **Volley** | **Quick Split:** Split Shot every 3rd attack, not every 4th. **Restless:** +10% attack speed if she moved in the last 2s | **Chasing Storm:** Arrow Storm follows the largest group. **Ricochet:** a split arrow can split once more. **Harrying Storm:** Arrow Storm Slows 20%. **Glutton's Quiver:** kills with split arrows give 10 mana. Growing: **Arrow Glut** (+1% attack speed per 25 extra targets hit) |
+| **Volley** | **Quick Split:** Split Shot every 4th shot, not every 6th; picked a second time, every 3rd. **Restless:** +10% attack speed if she moved in the last 2s | **Chasing Storm:** Arrow Storm follows the largest group. **Ricochet:** a split arrow can split once more. **Harrying Storm:** Arrow Storm Slows 20%. **Glutton's Quiver:** kills with split arrows give 10 mana. Growing: **Arrow Glut** (+1% attack speed per 25 extra targets hit) |
 
 ## Brannoc
 
@@ -98,9 +98,9 @@ Status: **agreed in discussion (2026-09-30), not built.** What the after-fight p
 
 | Path | Taste upgrades | Path upgrades |
 | --- | --- | --- |
-| **Lanternbearer** | **Bright Kindle:** Kindle heals for 20%, not 10%. **Steady Flame:** Mend costs 5 less mana | **First Lantern:** you place her first lantern yourself before the fight. **Wide Cleanse:** her lantern also cleanses Slow and Bleed. **Last-Minute Mercy:** Mend refunds 20 mana if its target was below 30% HP. **Long Night:** her lantern lasts 2s longer. Growing: **Kindled Flame** (+1% healing per 300 healing next to Mend's target) |
-| **Wardweaver** | **Thick Thread:** Ward Thread's Shield is 20% of the heal, not 10%. **Thread the Hurt:** Ward Thread also works on allies above 80% HP | **Front Ward:** her Shields on your front-most ally are 50% larger. **Cleansing Weave:** Weave removes one status. **Lasting Shields:** her Shields last until broken. **Wide Circle:** Warding Circle is 1 hex wider. Growing: **Woven Deep** (+1% Shield size per 300 Shield given) |
-| **Vigil Keeper** | **Swift Judgment:** every 3rd Mend smites, not every 4th. **Burning Judgment:** smites deal 20% of the heal, not 10% | **Leaping Smite:** smites jump to a second enemy at 50%. **Wide Sunfall:** Sunfall's beam is 1 hex wider. **Holy Crits:** her crits heal the lowest-HP ally for 5% of their max HP. **Searing:** smitten enemies are Slowed 20% for 2s. Growing: **Sunwrought** (+1% smite damage per 200 smite damage) |
+| **Lanternbearer** | **Bright Kindle:** Kindle heals for 30% of Mend, not 20%. **Steady Flame:** Mend costs 5 less mana | **First Lantern:** you place her first lantern yourself before the fight. **Wide Cleanse:** her lantern also cleanses Slow and Bleed. **Last-Minute Mercy:** Mend refunds 20 mana if its target was below 30% HP. **Long Night:** her lantern lasts 2s longer. Growing: **Kindled Flame** (+1% healing per 300 healing next to Mend's target) |
+| **Wardweaver** | **Thick Thread:** Ward Thread's Shield is 40% of the overheal, not 20%. **Thread the Hurt:** Ward Thread also works on allies above 80% HP | **Front Ward:** her Shields on your front-most ally are 50% larger. **Cleansing Weave:** Weave removes one status. **Lasting Shields:** her Shields last until broken. **Wide Circle:** Warding Circle is 1 hex wider. Growing: **Woven Deep** (+1% Shield size per 300 Shield given) |
+| **Vigil Keeper** | **Swift Judgment:** every Mend smites, not every 2nd. **Burning Judgment:** smites deal 50% more damage | **Leaping Smite:** smites jump to a second enemy at 50%. **Wide Sunfall:** Sunfall's beam is 1 hex wider. **Holy Crits:** her crits heal the lowest-HP ally for 5% of their max HP. **Searing:** smitten enemies are Slowed 20% for 2s. Growing: **Sunwrought** (+1% smite damage per 200 smite damage) |
 
 ## Left out on purpose
 
@@ -121,16 +121,16 @@ Status: **agreed in discussion (2026-09-30), not built.** What the after-fight p
 Added when this file came in (2026-09-30); nothing here changes a decision above.
 
 - **The built upgrades:** phase 5 built 36 (`data/upgrades.json`: 3 per hero, and 3 per path, one of them the vow pick). The pools here replace them when they're built; a few names carry over with new rules (Quick Draw, Keen Eye, Warm Hearth, Steady Hands, Long Night, Grim Resolve).
-- **Some "not X" numbers are the part 1 design's, not what phase 4 tuned** (`data/paths.json`). The upgrade's direction is clear; its number needs setting against the built kit:
+- **Six "not X" numbers were the part 1 design's, not what phase 4 tuned** (`data/paths.json`). **Decided (2026-09-30), each set against the built kit** (the tables above now say these):
 
-  | Upgrade | This file says | Built |
-  | --- | --- | --- |
-  | Steady Hands (Deadeye) | Steady after 1s, not 2s | Steady after 1.5s |
-  | Quick Split (Volley) | every 3rd attack, not every 4th | every 6th shot |
-  | Bright Kindle (Lanternbearer) | 20%, not 10% | already a fifth (20%) |
-  | Thick Thread (Wardweaver) | 20% of the heal, not 10% | already a fifth of the overheal (20%) |
-  | Swift Judgment (Vigil Keeper) | every 3rd Mend, not every 4th | every 2nd Mend |
-  | Burning Judgment (Vigil Keeper) | 20% of the heal, not 10% | the smite is its own hit (8 plus 40% of MGK), not a share of the heal |
+  | Upgrade | First written | Built | Now |
+  | --- | --- | --- | --- |
+  | Steady Hands (Deadeye) | Steady after 1s, not 2s | Steady after 1.5s | after 1s, not 1.5s |
+  | Quick Split (Volley) | every 3rd attack, not every 4th | every 6th shot | every 4th, not every 6th; taken again, every 3rd |
+  | Bright Kindle (Lanternbearer) | 20%, not 10% | already a fifth (20%) | 30% of Mend, not 20% |
+  | Thick Thread (Wardweaver) | 20% of the heal, not 10% | already a fifth of the overheal (20%) | 40% of the overheal, not 20% |
+  | Swift Judgment (Vigil Keeper) | every 3rd Mend, not every 4th | every 2nd Mend | every Mend, not every 2nd |
+  | Burning Judgment (Vigil Keeper) | 20% of the heal, not 10% | the smite is its own hit (8 plus 40% of MGK), not a share of the heal | smites deal 50% more damage |
 
   The rest match what's built: Guard's 10% (Hearthwall), Brand's 30% (Ironbrand), Marked's 15%, Hearthguard once a fight, and Hearthlight's 1 hex and 1% a second.
 - **Stacking upgrades** are new: the pick locks in a flat amount from the hero's stat at the time, so run state keeps each hero's taken amounts (the kit mod is a flat stat add, not a multiplier).
@@ -140,4 +140,3 @@ Added when this file came in (2026-09-30); nothing here changes a decision above
 - **How cards are weighted:** how often a hero-pool card shows against a taste or path card, and whether stacking upgrades show up less often.
 - **Picks per hero:** a day gives one pick for the whole team, so a hero may go several days without one. Is that fine, or should each pick offer one card per hero?
 - **Stacking with no cap:** is the lock-in rule enough, or do stacking upgrades need a limit per run?
-- **The six numbers that don't match what's built** (above): one step past the built number, or the design's numbers, with the tastes retuned to match?
