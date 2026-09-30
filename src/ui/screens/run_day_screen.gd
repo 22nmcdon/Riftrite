@@ -15,7 +15,8 @@ extends UiScreen
 ##   - camp: the place, then its options (Choose); once one is taken, what it
 ##     opened: a shop (wares, a relic, treating wounds, a reroll), Map the
 ##     Rift's swap, or the Hunt (Fight the Hunt); then Break camp;
-##   - the route: today's two fights (tier and pay, what each tests, its
+##   - the route: the act map (ActMap; phase 5b), and beside it the card of
+##     today's fight selected on it (tier and pay, what it tests, its
 ##     enemies and their threat lines, and where they stand once Scouted);
 ##   - the loadout: each hero's slots (click a filled one to take it off) and
 ##     the stash (equip each item to a hero; "no effect" where it does
@@ -35,8 +36,12 @@ const OPTION_ICON: float = 56.0
 const PLACE_ICON: float = 64.0
 ## A ware's card over the shop's scene.
 const WARE_WIDTH: float = 300.0
+## The selected fight's card beside the act map.
+const ROUTE_CARD_WIDTH: float = 420.0
 
 var session: RunSession
+## The route's act map (null off the route).
+var act_map: ActMap = null
 var hero_bar: HeroBar
 var hero_panel: HeroPanel
 var body: VBoxContainer
@@ -174,6 +179,7 @@ func refresh() -> void:
 	for child: Node in body.get_children():
 		body.remove_child(child)
 		child.queue_free()
+	act_map = null
 	message = UiStyle.label("", 17, UiStyle.BAD)
 	message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var state: RunState = session.state()
@@ -456,20 +462,41 @@ func _fill_route() -> void:
 	var state: RunState = session.state()
 	var kind: String = session.run.act.days[state.day - 1]
 	var line: String = {"normal": "An easier fight and a harder one that pays more.", "elite": "An elite day: two elites, each built around one mechanic.", "boss": "Old Mother Ash waits."}[kind]
-	var section: VBoxContainer = _section("Choose today's fight", line)
+	var section: VBoxContainer = _section("Choose today's fight", line + " Click a fight on today's island to read it.")
+	# The act map, with the selected fight's card beside it (phase 5b).
 	var row: HBoxContainer = _row()
 	section.add_child(row)
+	act_map = ActMap.make(session)
+	row.add_child(act_map)
+	var beside := VBoxContainer.new()
+	beside.custom_minimum_size = Vector2(ROUTE_CARD_WIDTH, 0)
+	row.add_child(beside)
+	act_map.node_selected.connect(_show_route_card.bind(beside))
+	_show_route_card(0, beside)
+
+
+## Today's fight `index`'s card: tier and pay, what it tests, its enemies,
+## where they stand once Scouted, and Fight this.
+func _show_route_card(index: int, holder: VBoxContainer) -> void:
+	for child: Node in holder.get_children():
+		holder.remove_child(child)
+		child.queue_free()
+	var state: RunState = session.state()
 	var options: Array[String] = state.today()
-	for i: int in options.size():
-		var encounter: EncounterDef = session.content.encounters[options[i]]
-		var card: VBoxContainer = _card(row)
-		card.add_child(UiStyle.caps("%s · %d shards" % [encounter.tier.to_upper(), session.run.act.pay[encounter.tier]], 14, UiStyle.HIGHLIGHT))
-		card.add_child(UiStyle.heading(encounter.name, 26, UiStyle.TEXT))
-		card.add_child(_wrapped("It tests %s." % encounter.tests, 16, UiStyle.TEXT_DIM))
-		card.add_child(_enemies_line(encounter))
-		if state.scouted.has(state.day) or session.run.relic_rule(state, "always_scout"):
-			card.add_child(_wrapped("Scouted: " + RunDayScreen.placements(encounter, session.content), 15, UiStyle.ACCENT_TEXT))
-		card.add_child(UiStyle.primary(UiStyle.button("Fight this", _do.bind(session.flow.choose_fight.bind(i)))))
+	if index >= options.size():
+		return
+	act_map.selected = index
+	act_map.queue_redraw()
+	var encounter: EncounterDef = session.content.encounters[options[index]]
+	var card: VBoxContainer = _card(holder)
+	var node: String = ActMap.TIER_NODES.get(encounter.tier, "fight")
+	_card_head(card, RunDayScreen.art_icon("nodes/%s.svg" % node, CARD_ICON), UiStyle.caps("%s · %d shards" % [encounter.tier.to_upper(), session.run.act.pay[encounter.tier]], 14, UiStyle.HIGHLIGHT),
+		UiStyle.heading(encounter.name, 26, UiStyle.TEXT))
+	card.add_child(_wrapped("It tests %s." % encounter.tests, 16, UiStyle.TEXT_DIM))
+	card.add_child(_enemies_line(encounter))
+	if state.scouted.has(state.day) or session.run.relic_rule(state, "always_scout"):
+		card.add_child(_wrapped("Scouted: " + RunDayScreen.placements(encounter, session.content), 15, UiStyle.ACCENT_TEXT))
+	card.add_child(UiStyle.primary(UiStyle.button("Fight this", _do.bind(session.flow.choose_fight.bind(index)))))
 
 
 ## "Rift Hound ×2: Pounces on your weakest back-liner", one line each.

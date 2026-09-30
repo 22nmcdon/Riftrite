@@ -193,3 +193,41 @@ func test_the_runs_end() -> void:
 	assert_true(main.screen is TitleScreen)
 	assert_false(RunSave.has_save(SAVE), "the save goes with the run")
 	await wait_frames(1)
+
+
+## The route is the act map (docs/plans/rebuild-phase5b-art.md, section 4):
+## an island a day with its fights, today's clickable; a click shows that
+## fight's card, and Fight this takes it.
+func test_the_route_is_the_act_map() -> void:
+	var main: Main = _started()
+	var flow: RunFlow = _flow(main)
+	U.press(main.screen, "Break camp")
+	var day: RunDayScreen = main.screen
+	var map: ActMap = day.act_map
+	assert_not_null(map, "the route shows the map")
+	assert_eq(map.fights.size(), flow.run.act.days.size(), "an island a day")
+	for each_day: int in map.fights:
+		var nodes: Array = map.fights[each_day]
+		assert_eq(nodes.size(), (flow.state.options[each_day - 1] as Array).size(), "day %d's fights" % each_day)
+		for node: TextureButton in nodes:
+			assert_eq(node.disabled, each_day != 1, "only today's can be clicked")
+	assert_eq(map.places.keys(), [1], "only the days reached show their place")
+	var second: String = flow.state.today()[1]
+	(map.fights[1][1] as TextureButton).pressed.emit()
+	assert_eq(map.selected, 1)
+	assert_string_contains(U.text_of(day), flow.run.content.encounters[second].name, "its card")
+	assert_true(U.press(day, "Fight this"))
+	assert_eq(flow.state.chosen, second)
+	await wait_frames(1)
+	# A day later: day 1's fought fight is marked, and its place still shown.
+	flow.state.fought.append(RunState.Fought.from_dict({"day": 1, "attempt": 0, "encounter": second, "outcome": int(FightResult.Outcome.VICTORY), "seconds": 30}))
+	flow.state.day = 2
+	flow.state.phase = RunState.Phase.ROUTE
+	day.refresh()
+	map = day.act_map
+	assert_eq(map._fought_there(1), 1)
+	assert_eq((map.fights[1][1] as TextureButton).modulate.a, 1.0, "the fight fought stands out")
+	assert_lt((map.fights[1][0] as TextureButton).modulate.a, 1.0, "the other is dimmed")
+	assert_eq(map.places.keys(), [1, 2])
+	assert_eq(map._place_id(1), Offers.place(flow.run, flow.state.seed_value, 1, 1, 0, flow.state.magpie_day))
+	await wait_frames(1)

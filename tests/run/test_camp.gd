@@ -66,6 +66,15 @@ func test_arriving_at_camp() -> void:
 		assert_has(place.options, option)
 	assert_eq(state.camp, _start().state.camp, "the same seed, the same camp")
 	assert_between(state.magpie_day, 3, 6)
+	# The act map draws a past day's place again (phase 5b).
+	assert_eq(Offers.place(_run, state.seed_value, state.act, state.day, state.attempt, state.magpie_day), state.place)
+	for day: int in range(2, 7):
+		state.day = day
+		for attempt: int in 2:
+			state.attempt = attempt
+			var drawn: Array = Offers.camp(_run, state)
+			var expected: String = "magpie" if day == state.magpie_day and attempt == 0 else String(drawn[0])
+			assert_eq(Offers.place(_run, state.seed_value, state.act, day, attempt, state.magpie_day), expected, "day %d, try %d" % [day, attempt])
 
 
 func test_the_magpies_day() -> void:

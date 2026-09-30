@@ -73,7 +73,7 @@ static func _draw(rng: SimRng, pool: Array[String], count: int) -> Array[String]
 ## order. Returns [place id, options].
 static func camp(run: RunContent, state: RunState) -> Array:
 	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.CAMP, state.act, state.day, state.attempt])
-	var place: CampsDef.Place = run.camps.places[rng.range_int(run.camps.places.size())]
+	var place: CampsDef.Place = _draw_place(run, rng)
 	var offered: Array[String] = place.options.filter(func(id: String) -> bool: return camp_option_open(run, state, id))
 	var picked: Array[String] = _draw(rng, offered, run.camps.shown)
 	var options: Array[String] = offered.filter(func(id: String) -> bool: return picked.has(id))
@@ -83,6 +83,20 @@ static func camp(run: RunContent, state: RunState) -> Array:
 ## Whether a camp option has anything to do today: a Hunt needs a pack
 ## allowed today; Map the Rift and Scout need days ahead (Map the Rift, one
 ## that isn't the boss's).
+## Where a day camped (or camps) on an attempt: its camp stream's first
+## draw, so the act map can show a past day's place without the state
+## keeping it (docs/plans/rebuild-phase5b-art.md, section 4). "magpie" on the
+## Magpie's day's first try.
+static func place(run: RunContent, run_seed: int, act: int, day: int, attempt: int, magpie_day: int) -> String:
+	if day == magpie_day and attempt == 0:
+		return "magpie"
+	return _draw_place(run, RunRandom.stream(run_seed, [RunRandom.CAMP, act, day, attempt])).id
+
+
+static func _draw_place(run: RunContent, rng: SimRng) -> CampsDef.Place:
+	return run.camps.places[rng.range_int(run.camps.places.size())]
+
+
 static func camp_option_open(run: RunContent, state: RunState, option: String) -> bool:
 	match option:
 		"hunt":
