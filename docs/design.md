@@ -66,7 +66,7 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 - **Tanks matter** through **blocking** (nobody walks through anyone), **Engage** (a unit next to Brannoc trying to reach someone else is held 1s), **Taunt**, and **knockback** (a push stopped by a unit, a rock, or the edge stuns).
 - **Areas** (circle, line, cone, ring) are **marked before they land**; a unit is hit if its center is inside when it lands. Heroes never step out of marked areas: placement is the answer.
 - **Statuses:** Root, Slow, Stun, Taunt, Engaged, Marked, Silence, Undying, Bleed, Burn, Poison, and Shield.
-- **Rift Collapse:** from 45s the arena crumbles inward one ring every 10s (each warned first). Crumbled ground is walkable (decided 2026-09-30; not built yet), and standing on it deals flat damage every second to heroes and enemies alike. A fight still running at 180s is a tie, and a tie counts as a win.
+- **Rift Collapse:** from 45s the arena crumbles inward one ring every 10s (each warned first). Crumbled ground is walkable (phase 5c): units fight and walk on it, prefer safe ground when there's a way round, and step off it when idle; standing on it deals flat damage every second (15 at first in Act 1, growing each second) to heroes and enemies alike. A fight still running at 180s is a tie, and a tie counts as a win.
 
 ## Enemies
 

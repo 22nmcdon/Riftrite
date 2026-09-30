@@ -9,9 +9,11 @@ extends RefCounted
 ##   - Each ring is warned collapse_warning (3s) before it crumbles. Both are
 ##     logged (COLLAPSE_RING, with the safe rectangle left afterward).
 ##   - Crumbling shrinks CombatSim.safe to HexGrid.safe_rect: whatever lies
-##     outside it is crumbled ground, and every walker plans its way again. Nobody can walk onto it (CombatSim.fits),
-##     only be pushed there; a unit whose center is on it walks back to safe
-##     ground before anything else (Movement.escape).
+##     outside it is crumbled ground, and every walker plans its way again.
+##     It's walkable (phase 5c, Decision 7): routes cost more across it
+##     (NavGrid), a unit with nothing else to do steps off it
+##     (Movement.wait), and the spots a unit picks to land on (leaps, hops,
+##     summons) stay on safe ground (CombatSim.fits).
 ##   - From the first crumble, once a second, everyone whose center is on
 ##     crumbled ground takes flat damage (Shield first, never DEF, never a
 ##     share of HP), logged as COLLAPSE. It starts at the act's `base` and

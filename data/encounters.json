@@ -54,7 +54,7 @@
     "name": "Hollow Line",
     "tests": "closing distance",
     "act": 1,
-    "scale_bp": 11250,
+    "scale_bp": 11500,
     "days": [2, 3, 4],
     "enemies": [
       {"enemy": "hollow_archer", "hex": [2, 6]}, {"enemy": "hollow_archer", "hex": [4, 6]}, {"enemy": "hollow_archer", "hex": [6, 6]}
@@ -79,7 +79,7 @@
     "name": "Sentinel Gate",
     "tests": "going around a wall",
     "act": 1,
-    "scale_bp": 11750,
+    "scale_bp": 12250,
     "days": [4, 5, 6],
     "enemies": [
       {"enemy": "rift_worn_sentinel", "hex": [3, 4]},
@@ -104,7 +104,7 @@
     "name": "Witch Circle",
     "tests": "target priority",
     "act": 1,
-    "scale_bp": 11250,
+    "scale_bp": 11500,
     "days": [5, 6],
     "enemies": [
       {"enemy": "rift_worn_sentinel", "hex": [3, 4]}, {"enemy": "gloam_witch", "hex": [3, 6]}, {"enemy": "cinder_moth", "hex": [5, 5]}
@@ -135,7 +135,7 @@
   {"id": "witch_and_pups", "name": "Witch's Brood", "tests": "reaching the witch through a swarm", "tier": "harder", "act": 1, "scale_bp": 8750, "days": [4, 6], "enemies": [{"enemy": "gloam_witch", "hex": [3, 6]}, {"enemy": "rift_pup", "hex": [1, 4]}, {"enemy": "rift_pup", "hex": [3, 4]}, {"enemy": "rift_pup", "hex": [4, 4]}, {"enemy": "rift_pup", "hex": [6, 4]}]},
   {"id": "guardian_and_witch", "name": "The Warded Charge", "tests": "a charging tank the witch keeps Shielded", "tier": "harder", "act": 1, "scale_bp": 14800, "days": [6], "enemies": [{"enemy": "cairn_guardian", "hex": [3, 4]}, {"enemy": "gloam_witch", "hex": [3, 6]}]},
   {"_note": "Phase 5's elites (rebuild-enemies.md, section 3): each built around one mechanic, and its tests line says what answers it.", "id": "the_hunt", "name": "The Hunt", "tests": "an elite: when the Alpha pounces, the pack pounces on the same hero; guard your weakest back-liner, or bait it", "tier": "elite", "act": 1, "scale_bp": 9750, "days": [3, 5], "enemies": [{"enemy": "hound_alpha", "hex": [3, 6]}, {"enemy": "hunt_hound", "hex": [1, 5]}, {"enemy": "hunt_hound", "hex": [6, 5]}]},
-  {"id": "witch_coven", "name": "Witch Coven", "tests": "an elite: the Gloam Totem Shields everything near it until it's broken; get past the Sentinel and break it first", "tier": "elite", "act": 1, "scale_bp": 5750, "days": [3, 5], "enemies": [{"enemy": "gloam_totem", "hex": [3, 6]}, {"enemy": "gloam_witch", "hex": [2, 6]}, {"enemy": "gloam_witch", "hex": [5, 6]}, {"enemy": "rift_worn_sentinel", "hex": [3, 4]}]},
-  {"id": "cairn_watch", "name": "Cairn Watch", "tests": "an elite: a Cairn Guardian charges while two Archers fire from behind rocks; leave room behind your tank, and reach the Archers", "tier": "elite", "act": 1, "scale_bp": 12750, "days": [3, 5], "enemies": [{"enemy": "cairn_guardian", "hex": [3, 4]}, {"enemy": "hollow_archer", "hex": [1, 6]}, {"enemy": "hollow_archer", "hex": [6, 6]}], "rocks": [[1, 5], [6, 5]]},
+  {"id": "witch_coven", "name": "Witch Coven", "tests": "an elite: the Gloam Totem Shields everything near it until it's broken; get past the Sentinel and break it first", "tier": "elite", "act": 1, "scale_bp": 7250, "days": [3, 5], "enemies": [{"enemy": "gloam_totem", "hex": [3, 6]}, {"enemy": "gloam_witch", "hex": [2, 6]}, {"enemy": "gloam_witch", "hex": [5, 6]}, {"enemy": "rift_worn_sentinel", "hex": [3, 4]}]},
+  {"id": "cairn_watch", "name": "Cairn Watch", "tests": "an elite: a Cairn Guardian charges while two Archers fire from behind rocks; leave room behind your tank, and reach the Archers", "tier": "elite", "act": 1, "scale_bp": 13000, "days": [3, 5], "enemies": [{"enemy": "cairn_guardian", "hex": [3, 4]}, {"enemy": "hollow_archer", "hex": [1, 6]}, {"enemy": "hollow_archer", "hex": [6, 6]}], "rocks": [[1, 5], [6, 5]]},
   {"_note": "Act 1's boss (rebuild-enemies.md, section 4).", "id": "old_mother_ash", "name": "Old Mother Ash", "tests": "the boss: guard the back line from her hounds, weather her brood, then spread out as the rift closes", "tier": "boss", "act": 1, "scale_bp": 7500, "days": [7], "enemies": [{"enemy": "old_mother_ash", "hex": [3, 6]}, {"enemy": "ash_hound", "hex": [2, 5]}, {"enemy": "ash_hound", "hex": [5, 5]}]}
 ]

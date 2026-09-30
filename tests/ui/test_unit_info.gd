@@ -80,7 +80,7 @@ func test_what_counts_as_a_reach() -> void:
 	assert_eq(UnitInfo.reaches(kits["brannoc"].passives[1].ability, kits["brannoc"]), [] as Array[int])
 	var brute: UnitDef = Chaos.setup().enemies[4].def
 	var ring: UnitDef = Chaos.setup().heroes[0].def
-	assert_eq(UnitInfo.reaches(ring.signature, ring), [2] as Array[int], "an area's own effects add nothing")
+	assert_eq(UnitInfo.reaches(ring.signature, ring), [1] as Array[int], "an area's own effects add nothing")
 	assert_eq(UnitInfo.reaches(brute.signature, brute), [1] as Array[int], "farthest, with no max_range: its range")
 	var nested := EffectDef.new()
 	nested.type = EffectDef.Type.DAMAGE
@@ -91,7 +91,7 @@ func test_what_counts_as_a_reach() -> void:
 	area.area_effects.append(nested)
 	var wide := AbilityDef.new()
 	wide.effects.append(area)
-	assert_eq(UnitInfo.reaches(wide, ring), [2, 3] as Array[int], "an area's own effects' bonuses too")
+	assert_eq(UnitInfo.reaches(wide, ring), [1, 3] as Array[int], "an area's own effects' bonuses too")
 
 
 # --- the numbers ------------------------------------------------------------------
@@ -133,7 +133,7 @@ func test_the_numbers_of_every_other_piece() -> void:
 			all.append("%s: %s" % [line.name, line.numbers])
 	assert_eq(all, [
 		"Strike: Every 1s · melee · 15 damage (8 + 50% ATK) · Marked 4s · Stun 1s",
-		"Hold the Line: Once, below 50% HP · 2-hex ring around it · Taunt 3s · 10 damage",
+		"Hold the Line: Once, below 50% HP · 1-hex ring around it · Taunt 3s · 10 damage",
 		"Engage: Breaking free takes 1s",
 		"Strike: Every 1.1s · reach 4 hexes · 6 damage · 2 Burn",
 		"Mend: At 40 mana · 0.5s cast · reach 6 hexes · heals 60 (40 + 100% MGK) · 20 Shield · cleanses 50% of damage over time",

@@ -18,11 +18,12 @@ extends RefCounted
 ##      is met (Signatures; a unit casting does nothing else). Stunned, it
 ##      stops there. Otherwise its attack's cooldown runs (slower when
 ##      Slowed); a Taunt makes the taunter its target, or it keeps or picks
-##      a target (Targeting). On crumbled ground, it walks back to safe
-##      ground (Movement.escape). With the target in reach it stands and
+##      a target (Targeting). With the target in reach it stands and
 ##      attacks when ready, otherwise it walks (Movement; not when Rooted,
 ##      or while an engager holds it: Engage, checked as it's about to walk,
-##      and every tick while it's engaged).
+##      and every tick while it's engaged). Crumbled ground is walkable
+##      (phase 5c); a unit with nothing to do (no target, holding, planted)
+##      steps off it (Movement.wait).
 ##   6. Events: this tick's log is read for count signatures and ability
 ##      passives (Events). Then on_interval and on_ally_below_hp passives
 ##      run (Passives.run_timed), and units below a phase's threshold enter
@@ -334,12 +335,8 @@ func _act(unit: UnitState) -> void:
 	var engagers: Array[UnitState] = _enemy_engagers if unit.side == EffectSource.Team.HEROES else _hero_engagers
 	if not unit.engagements.is_empty():
 		Engage.update(self, unit, engagers)
-	if collapse_rings > 0 and not unit.airborne and on_crumbled(unit.pos):
-		Movement.escape(self, unit)
-		return
 	if target == null:
-		if unit.leg_active:
-			Movement.halt(self, unit, "no target")
+		Movement.wait(self, unit, "no target")
 		return
 	if unit.def.hop_cooldown_ticks > 0 and tick >= unit.hop_ready_at and Displacement.hop_away(self, unit, engagers):
 		return
@@ -357,17 +354,16 @@ func _act(unit: UnitState) -> void:
 	# About to walk: a unit that would reach its target once planted (phase 4,
 	# Steady) stops there and plants instead.
 	if unit.plant_reach_sq > 0 and dx * dx + dy * dy <= unit.plant_reach_sq:
-		if unit.leg_active:
-			Movement.halt(self, unit, "planting")
+		Movement.wait(self, unit, "planting")
 		return
 	# About to walk: a unit holding its ground (Tactics) doesn't.
 	if unit.holding:
 		Tactics.stay(self, unit)
+		Movement.wait(self, unit, "")
 		return
 	# About to walk: a unit planting its feet (Tactics) stays near an enemy.
 	if unit.tactic != null and unit.tactic.kind == TacticDef.Kind.STOP_NEAR and Tactics.planted(self, unit):
-		if unit.leg_active:
-			Movement.halt(self, unit, "planted its feet")
+		Movement.wait(self, unit, "planted its feet")
 		return
 	# About to walk: an engager next to it may hold it.
 	if unit.engagements.is_empty() and not engagers.is_empty():
@@ -424,18 +420,17 @@ func obstacles_for(unit: UnitState, except: UnitState) -> Array[ArenaPlane.Circl
 	return found
 
 
-## True if `unit` fits at `point`: inside the safe ground and overlapping no
-## other standing unit (fliers in the air aside) and no rock.
+## True if `unit` fits at `point` as a spot it picks to land or be placed on
+## (a leap's, a hop's, a flier's, a summon's): inside the safe ground and
+## overlapping no other standing unit (fliers in the air aside) and no rock.
 func fits(unit: UnitState, point: Vector2i) -> bool:
 	return ArenaPlane.inside(safe, point, unit.radius) and _clear(unit, point)
 
 
-## Like fits, for a unit not wholly on safe ground walking back to it: it
-## may step anywhere in the arena that reaches no further past the safe
-## ground than where it stands.
-func fits_leaving(unit: UnitState, point: Vector2i) -> bool:
-	return ArenaPlane.inside(grid.bounds(), point, unit.radius) \
-		and crumbled_depth(point, unit.radius) <= crumbled_depth(unit.pos, unit.radius) and _clear(unit, point)
+## True if `unit` may walk to `point`: anywhere in the arena, crumbled ground
+## too (phase 5c, Decision 7), overlapping nothing.
+func fits_ground(unit: UnitState, point: Vector2i) -> bool:
+	return ArenaPlane.inside(grid.bounds(), point, unit.radius) and _clear(unit, point)
 
 
 ## True if `point` is on crumbled ground (outside the safe rectangle).

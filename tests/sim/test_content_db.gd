@@ -78,7 +78,7 @@ func test_real_tuning_converted_to_ticks() -> void:
 	assert_eq(tuning.crit_damage_bp, 15000)
 	var act1: CollapseDef = tuning.collapse_for_act(1)
 	var act2: CollapseDef = tuning.collapse_for_act(2)
-	assert_eq([act1.base, act1.growth, act1.accel], [10, 10, 2])
+	assert_eq([act1.base, act1.growth, act1.accel], [15, 10, 2], "Act 1 starts at 15 (phase 5c, Decision 8)")
 	assert_eq([act2.base, act2.growth, act2.accel], [20, 20, 4], "Act 2 doubles Act 1")
 	assert_null(tuning.collapse_for_act(3), "Act 3 is not decided yet")
 

@@ -13,8 +13,8 @@ extends RefCounted
 ##     if that fails too, it waits and plans again next tick;
 ##   - with no way to its target, it waits and looks again every repath_ms.
 ##     After repath_give_up_ms it gives up on it only if the target is walled
-##     off (no way even with every unit out of the way: rocks or crumbled
-##     ground). Blocked only by units, it keeps its target and waits for an
+##     off (no way even with every unit out of the way: rocks only, since
+##     crumbled ground is walkable). Blocked only by units, it keeps its target and waits for an
 ##     opening (playtest gate 1, decided 2026-09-28);
 ##   - Rooted, it stands where it is; Slowed, its steps are shorter.
 ## A flier (the flying trait) goes straight at its target over units and
@@ -24,13 +24,12 @@ extends RefCounted
 ## (settle). Landed, it blocks like anyone.
 ## Units move one at a time, in the fight's order, each against where the
 ## others already stand, so no two ever overlap.
-## Nobody walks onto crumbled ground (Collapse). A unit whose center is on
-## it walks back to safe ground before anything else (escape), and so does
-## one only partly on it that's about to walk: straight to the nearest safe
-## spot when the way is clear, otherwise the shortest way round
-## (NavGrid.find_safe). On the way, a step may cross crumbled ground but
-## never reach further past the safe ground than it did (fits_leaving).
-## A flier takes off and flies straight back.
+## Crumbled ground is walkable (phase 5c, Decision 7): it hurts to stand on
+## (Collapse), so routes go round it when a safe way isn't much longer
+## (NavGrid), and a unit with nothing else to do (no target, holding, or
+## planted: wait) steps off it, straight to the nearest safe spot when the
+## way is clear, otherwise the shortest way round (NavGrid.find_safe). A
+## flier takes off and flies straight back.
 ##
 ## Every leg goes in the log (MOVE), and so does every stop (STOP), so the
 ## board can be replayed from the log alone: while a leg is active, the unit
@@ -41,9 +40,6 @@ extends RefCounted
 static func walk(sim: CombatSim, unit: UnitState) -> void:
 	if not unit.statuses.is_empty() and Statuses.has_kind(unit, StatusDef.Kind.ROOT):
 		halt(sim, unit, "rooted")
-		return
-	if not unit.airborne and sim.collapse_rings > 0 and not ArenaPlane.inside(sim.safe, unit.pos, unit.radius):
-		escape(sim, unit)
 		return
 	var target: UnitState = unit.target
 	if unit.flying:
@@ -63,12 +59,22 @@ static func walk(sim: CombatSim, unit: UnitState) -> void:
 				unit.no_path_since = sim.tick
 		return
 	unit.no_path_since = -1
-	_follow(sim, unit, false)
+	_follow(sim, unit)
+
+
+## The unit has nothing to walk to this tick (`reason` goes in the log if it
+## stops): it stands still, unless it's on crumbled ground, when it steps
+## off (see the top).
+static func wait(sim: CombatSim, unit: UnitState, reason: String) -> void:
+	if sim.collapse_rings > 0 and not unit.airborne and not ArenaPlane.inside(sim.safe, unit.pos, unit.radius):
+		step_off(sim, unit)
+		return
+	halt(sim, unit, reason)
 
 
 ## One tick of walking back to safe ground, for a unit not wholly on it (see
 ## the top). Waits where it is if there's no way back.
-static func escape(sim: CombatSim, unit: UnitState) -> void:
+static func step_off(sim: CombatSim, unit: UnitState) -> void:
 	if not unit.statuses.is_empty() and Statuses.has_kind(unit, StatusDef.Kind.ROOT):
 		halt(sim, unit, "rooted")
 		return
@@ -81,19 +87,18 @@ static func escape(sim: CombatSim, unit: UnitState) -> void:
 	if unit.route.is_empty():
 		halt(sim, unit, "no way off crumbled ground")
 		return
-	_follow(sim, unit, true)
+	_follow(sim, unit)
 
 
-## Steps along the unit's route. `leaving`: it's walking back to safe ground
-## (CombatSim.fits_leaving).
-static func _follow(sim: CombatSim, unit: UnitState, leaving: bool) -> void:
+## Steps along the unit's route (anywhere it fits: CombatSim.fits_ground).
+static func _follow(sim: CombatSim, unit: UnitState) -> void:
 	var corner: Vector2i = unit.route[0]
 	var amount: int = unit.step_length()
 	if amount <= 0:
 		return
 	var next: Vector2i = ArenaPlane.step_toward(unit.pos, corner, amount)
-	if not unit.flying and not _fits(sim, unit, next, leaving):
-		next = _slide(sim, unit, next, leaving)
+	if not unit.flying and not sim.fits_ground(unit, next):
+		next = _slide(sim, unit, next)
 		if next == unit.pos:
 			halt(sim, unit, "blocked")
 			unit.replan_at = sim.tick + 1
@@ -125,8 +130,9 @@ static func halt(sim: CombatSim, unit: UnitState, reason: String = "") -> void:
 	sim.combat_log.add(entry)
 
 
-## True if nothing but rocks and crumbled ground keeps `unit` from reaching
-## `target`: no way to its reach even with every unit out of the way.
+## True if nothing but rocks keeps `unit` from reaching `target`: no way to
+## its reach even with every unit out of the way (crumbled ground is
+## walkable, phase 5c).
 static func walled_off(sim: CombatSim, unit: UnitState, target: UnitState) -> bool:
 	return sim.ground_nav_for(unit).find_path(unit.pos, unit.forward(), target.pos, unit.reach()) < 0
 
@@ -176,10 +182,6 @@ static func _plan_escape(sim: CombatSim, unit: UnitState) -> void:
 	unit.route = nav.corners(nav.path_to(goal))
 
 
-static func _fits(sim: CombatSim, unit: UnitState, point: Vector2i, leaving: bool) -> bool:
-	return sim.fits_leaving(unit, point) if leaving else sim.fits(unit, point)
-
-
 ## A flier in the air, in reach of `target`: it lands where it is if that's
 ## free, or flies on toward the nearest free spot still in reach. Returns true
 ## once it has landed (it may attack); with no free spot anywhere in reach, it
@@ -212,7 +214,7 @@ static func settle(sim: CombatSim, unit: UnitState, target: UnitState) -> bool:
 ## A step that would overlap something, tried again along the edge of the
 ## first circle it hits: the part of the step heading into that circle is
 ## dropped. Returns the unit's own position if that doesn't fit either.
-static func _slide(sim: CombatSim, unit: UnitState, wanted: Vector2i, leaving: bool) -> Vector2i:
+static func _slide(sim: CombatSim, unit: UnitState, wanted: Vector2i) -> Vector2i:
 	var step: Vector2i = wanted - unit.pos
 	for circle: ArenaPlane.Circle in sim.obstacles_for(unit, null):
 		if not ArenaPlane.overlaps(wanted, unit.radius, circle.center, circle.radius):
@@ -225,7 +227,7 @@ static func _slide(sim: CombatSim, unit: UnitState, wanted: Vector2i, leaving: b
 		var sq: int = ArenaPlane.DIR * ArenaPlane.DIR
 		var along: Vector2i = step - Vector2i(FixedMath.mul_div(away.x, into, sq), FixedMath.mul_div(away.y, into, sq))
 		var slid: Vector2i = unit.pos + along
-		if along != Vector2i.ZERO and _fits(sim, unit, slid, leaving):
+		if along != Vector2i.ZERO and sim.fits_ground(unit, slid):
 			return slid
 		return unit.pos
 	return unit.pos

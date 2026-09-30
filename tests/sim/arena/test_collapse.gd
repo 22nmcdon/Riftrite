@@ -1,8 +1,9 @@
 extends GutTest
 ## Rift Collapse (docs/plans/rebuild-phase1-arena-sim.md, section 9): ring
 ## timing and warnings, the safe rectangle shrinking, damage only on crumbled
-## ground (flat, Shield first), walking back to safe ground and never onto
-## crumbled ground, and start_collapse. The 180s tie is in test_fight_end.
+## ground (flat, Shield first), and start_collapse. Crumbled ground is
+## walkable (phase 5c, Decision 7): units fight and walk on it, and one with
+## nothing to do steps off it. The 180s tie is in test_fight_end.
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
 
@@ -88,9 +89,9 @@ func test_damage_hits_only_those_on_crumbled_ground_once_a_second() -> void:
 	var fight: CombatSim = K.sim(K.fight([K.at(_post(), 0, 0, "edge"), K.at(_post(), 1, 1, "inner"), K.at(_post(), 3, 2, "middle")] as Array[UnitSetup],
 		[K.foe(_post(), 4, 4)] as Array[UnitSetup]))
 	K.step(fight, START + RING + 20)
-	assert_eq(_hits(fight, "edge").slice(0, 3), [[START, 10], [START + 20, 20], [START + 40, 30]], "base 10, then 10 more each second")
+	assert_eq(_hits(fight, "edge").slice(0, 3), [[START, 15], [START + 20, 25], [START + 40, 35]], "base 15, then 10 more each second")
 	assert_eq(_hits(fight, "edge").size(), 12)
-	assert_eq(_hits(fight, "inner"), [[START + RING, 110], [START + RING + 20, 120]], "ring 1 from 55s")
+	assert_eq(_hits(fight, "inner"), [[START + RING, 115], [START + RING + 20, 125]], "ring 1 from 55s")
 	assert_eq(_hits(fight, "middle"), [], "ring 2 still stands")
 	var edge: UnitState = fight.unit_by_id("edge")
 	var total: int = 0
@@ -98,18 +99,18 @@ func test_damage_hits_only_those_on_crumbled_ground_once_a_second() -> void:
 		total += hit[1]
 	assert_eq(edge.hp, 100000 - total)
 	var entry: LogEntry = K.entries(fight, LogEntry.Kind.COLLAPSE)[0]
-	assert_eq([entry.source_ability, entry.to_text()], [LogEntry.COLLAPSE_SOURCE, "[45.00s] Rift Collapse hits edge for 10"])
+	assert_eq([entry.source_ability, entry.to_text()], [LogEntry.COLLAPSE_SOURCE, "[45.00s] Rift Collapse hits edge for 15"])
 
 
 func test_damage_is_flat_and_hits_shield_first() -> void:
 	var fight: CombatSim = K.sim(K.fight([K.at(_post({"def": 200}), 0, 0, "armored")] as Array[UnitSetup], [K.foe(_post(), 4, 4)] as Array[UnitSetup]))
 	var armored: UnitState = fight.unit_by_id("armored")
 	K.step(fight, START - 1)
-	armored.shield = 15
+	armored.shield = 20
 	fight.step()
 	assert_eq([armored.hp, armored.shield], [100000, 5], "DEF doesn't soften it; Shield takes it first")
 	K.step(fight, 20)
-	assert_eq([armored.hp, armored.shield], [100000 - 15, 0])
+	assert_eq([armored.hp, armored.shield], [100000 - 20, 0])
 	assert_eq(K.entries(fight, LogEntry.Kind.COLLAPSE)[1].absorbed, 5)
 
 
@@ -123,12 +124,12 @@ func test_a_unit_felled_by_the_collapse_says_so() -> void:
 
 func test_damage_grows_faster_from_the_surge() -> void:
 	var fight: CombatSim = K.sim(K.fight([K.at(_post(), 3, 2)] as Array[UnitSetup], [K.foe(_post(), 4, 4)] as Array[UnitSetup]))
-	# Act 1: base 10, growth 10, accel 2; the surge is 45s after the first
-	# ring crumbles.
-	assert_eq(Collapse.damage_at(fight, START), 10)
-	assert_eq(Collapse.damage_at(fight, START + 45 * 20), 460)
-	assert_eq(Collapse.damage_at(fight, START + 46 * 20), 470 + 2)
-	assert_eq(Collapse.damage_at(fight, START + 48 * 20), 490 + 2 * 6)
+	# Act 1: base 15 (phase 5c, Decision 8), growth 10, accel 2; the surge is
+	# 45s after the first ring crumbles.
+	assert_eq(Collapse.damage_at(fight, START), 15)
+	assert_eq(Collapse.damage_at(fight, START + 45 * 20), 465)
+	assert_eq(Collapse.damage_at(fight, START + 46 * 20), 475 + 2)
+	assert_eq(Collapse.damage_at(fight, START + 48 * 20), 495 + 2 * 6)
 
 
 func test_damage_uses_the_fights_act() -> void:
@@ -143,77 +144,79 @@ func test_a_fight_in_an_act_without_collapse_numbers_is_refused() -> void:
 	assert_eq(setup.validate(K.content()), ["tuning has no Rift Collapse numbers for act 3"] as Array[String])
 
 
-func test_a_unit_on_crumbled_ground_walks_back_before_it_attacks() -> void:
+## Hides every enemy of the fight (a long Stealth), so the heroes have no
+## target: nothing to do.
+func _hide_enemies(fight: CombatSim) -> void:
+	for enemy: UnitState in fight.enemies:
+		Statuses.apply(fight, enemy, "stealth", 1, 100000, EffectSource.make(enemy.id, "test", "Test"))
+
+
+func test_a_unit_in_reach_fights_on_crumbled_ground() -> void:
 	var fight: CombatSim = K.sim(K.fight([K.at(_shooter(), 0, 1, "shooter")] as Array[UnitSetup], [K.foe(_post(), 3, 4)] as Array[UnitSetup]))
 	var shooter: UnitState = fight.unit_by_id("shooter")
 	K.step(fight, START - 1)
 	var shots_before: int = K.entries(fight, LogEntry.Kind.FIRE, "shooter").size()
-	assert_gt(shots_before, 0, "it stood and shot until the ring fell")
 	var start: Vector2i = shooter.pos
-	fight.step()
-	var move: LogEntry = K.entries(fight, LogEntry.Kind.MOVE, "shooter").back()
-	assert_eq([move.tick, move.from_pos, move.to_pos], [START, start, fight.nearest_safe_point(start, shooter.radius)], "straight to the nearest spot wholly on safe ground")
-	while fight.on_crumbled(shooter.pos):
-		fight.step()
-	assert_eq(K.entries(fight, LogEntry.Kind.FIRE, "shooter").size(), shots_before, "it didn't shoot on the way")
-	assert_between(fight.tick, START + 1, START + 5)
-	fight.step()
-	assert_eq(K.entries(fight, LogEntry.Kind.FIRE, "shooter").size(), shots_before + 1, "its center clear, it stops and shoots")
-	assert_eq(K.entries(fight, LogEntry.Kind.STOP, "shooter").back().note, "in reach")
-	K.step(fight, 20)
-	assert_eq(_hits(fight, "shooter"), [[START, 10]], "one hit before it got clear")
+	K.step(fight, 41)
+	assert_true(fight.on_crumbled(shooter.pos))
+	assert_eq(shooter.pos, start, "it stays where it stands")
+	assert_gt(K.entries(fight, LogEntry.Kind.FIRE, "shooter").size(), shots_before, "and keeps shooting")
+	assert_eq(_hits(fight, "shooter"), [[START, 15], [START + 20, 25], [START + 40, 35]], "and the ground hurts it")
 
 
-func test_a_unit_only_partly_on_crumbled_ground_steps_clear_before_it_walks() -> void:
-	# A melee hero stands half over the edge of what will be ring 0's line; its
-	# target is out of reach, so it walks.
-	var fight: CombatSim = K.sim(K.fight([K.at(K.kit("walker", {"stats": {"hp": 100000}}), 1, 1, "walker")] as Array[UnitSetup], [K.foe(_post(), 6, 5)] as Array[UnitSetup]), true)
-	var walker: UnitState = fight.unit_by_id("walker")
-	fight.collapse_start = 1
-	fight.step()
-	fight.step()
-	assert_false(fight.on_crumbled(walker.pos), "its center stands on safe ground")
-	walker.pos = Vector2i(fight.safe.position.x + 300, walker.pos.y)
-	walker.route.clear()
-	fight.step()
-	var move: LogEntry = K.entries(fight, LogEntry.Kind.MOVE, "walker").back()
-	assert_eq([move.tick, move.to_pos], [3, fight.nearest_safe_point(Vector2i(fight.safe.position.x + 300, move.from_pos.y), walker.radius)])
-	K.step(fight, 3)
-	assert_true(ArenaPlane.inside(fight.safe, walker.pos, walker.radius))
-	fight.step()
-	assert_eq(K.entries(fight, LogEntry.Kind.MOVE, "walker").back().to_pos, fight.unit_by_id("post").pos, "then on toward its target")
-
-
-func test_nobody_walks_onto_crumbled_ground() -> void:
-	# The hero's target stands in the corner, which crumbles: it can't be
-	# reached from safe ground. The hero fights on half over the edge until
-	# ring 1 crumbles under its center, then walks clear and waits.
+func test_a_cornered_target_is_reached_over_crumbled_ground() -> void:
+	# The hero's target stands in the corner, which crumbles: the hero walks
+	# onto the crumbled ground to reach it, and never gives up on it.
 	var hero: UnitDef = K.kit("walker", {"stats": {"hp": 100000, "speed": 3}, "basic_attack": {"effects": [{"type": "damage", "amount": 1, "target": "target"}]}})
 	var fight: CombatSim = K.sim(K.fight([K.at(hero, 4, 2, "walker")] as Array[UnitSetup], [K.foe(_post(), 7, 6, "cornered")] as Array[UnitSetup]), true)
 	var walker: UnitState = fight.unit_by_id("walker")
-	K.step(fight, START)
-	var clear_since: int = -1
-	for i: int in 400:
-		var before: int = fight.crumbled_depth(walker.pos, walker.radius)
-		var rings: int = fight.collapse_rings
+	K.step(fight, START + 2 * RING)
+	assert_true(fight.on_crumbled(walker.pos), "it stands on crumbled ground by its target")
+	assert_eq(walker.target, fight.unit_by_id("cornered"))
+	assert_gt(K.entries(fight, LogEntry.Kind.DAMAGE, "walker").filter(func(entry: LogEntry) -> bool: return entry.tick > START).size(), 0, "fighting it there")
+
+
+func test_a_route_goes_round_crumbled_ground_when_it_can() -> void:
+	# Hero and target both stand in ring 0 on the left edge, far apart: the
+	# way between them runs over safe ground, a step in from the edge.
+	var hero: UnitDef = K.kit("walker", {"stats": {"hp": 100000, "speed": 2}})
+	var fight: CombatSim = K.sim(K.fight([K.at(hero, 0, 0, "walker")] as Array[UnitSetup], [K.foe(_post(), 0, 6, "far")] as Array[UnitSetup]))
+	var walker: UnitState = fight.unit_by_id("walker")
+	fight.safe = fight.grid.safe_rect(1)
+	fight.collapse_rings = 1
+	var on_safe: int = 0
+	var steps: int = 0
+	for i: int in 120:
 		fight.step()
-		var depth: int = fight.crumbled_depth(walker.pos, walker.radius)
-		if depth == 0 and clear_since < 0:
-			clear_since = fight.tick
-		if rings == fight.collapse_rings and depth > before:
-			fail_test("tick %d: it stepped further onto crumbled ground" % fight.tick)
-			return
-	assert_between(clear_since, START + RING + 1, START + RING + 20)
-	assert_true(fight.unit_by_id("cornered").alive)
+		steps += 1
+		if ArenaPlane.inside(fight.safe, walker.pos, walker.radius):
+			on_safe += 1
+		if ArenaPlane.length_sq(walker.pos - fight.unit_by_id("far").pos) <= walker.reach_sq:
+			break
+	assert_gt(on_safe, steps / 2, "most of the way on safe ground (%d of %d ticks)" % [on_safe, steps])
 
 
-func test_the_way_back_goes_round_what_blocks_it() -> void:
-	# A rock sits right inward of the hero; the way back goes round it.
+func test_a_unit_with_nothing_to_do_steps_off_crumbled_ground() -> void:
+	var fight: CombatSim = K.sim(K.fight([K.at(_shooter(), 0, 1, "shooter")] as Array[UnitSetup], [K.foe(_post(), 3, 4)] as Array[UnitSetup]))
+	var shooter: UnitState = fight.unit_by_id("shooter")
+	_hide_enemies(fight)
+	var start: Vector2i = shooter.pos
+	fight.collapse_start = 1
+	K.step(fight, 1 + WARNING)
+	var move: LogEntry = K.entries(fight, LogEntry.Kind.MOVE, "shooter").back()
+	assert_eq([move.from_pos, move.to_pos], [start, fight.nearest_safe_point(start, shooter.radius)], "straight to the nearest spot wholly on safe ground")
+	K.step(fight, 10)
+	assert_true(ArenaPlane.inside(fight.safe, shooter.pos, shooter.radius))
+
+
+func test_the_way_off_goes_round_what_blocks_it() -> void:
+	# A rock sits right inward of the hero; the way off goes round it.
 	var fight: CombatSim = K.sim(K.fight([K.at(_shooter({"range": 1}), 0, 2, "hero")] as Array[UnitSetup], [K.foe(_post(), 7, 6)] as Array[UnitSetup], [Vector2i(1, 2)] as Array[Vector2i]), true)
 	var hero: UnitState = fight.unit_by_id("hero")
+	_hide_enemies(fight)
 	fight.collapse_start = 1
 	var route_start: Vector2i = hero.pos
-	fight.step()
+	K.step(fight, 1 + WARNING)
 	assert_true(fight.on_crumbled(route_start))
 	K.step(fight, 40)
 	assert_true(ArenaPlane.inside(fight.safe, hero.pos, hero.radius), "it found its way round")
@@ -223,28 +226,30 @@ func test_the_way_back_goes_round_what_blocks_it() -> void:
 	assert_true(K.no_overlaps(fight))
 
 
-func test_a_unit_with_no_way_back_waits() -> void:
+func test_a_unit_with_no_way_off_waits() -> void:
 	var hero: UnitDef = _shooter({"range": 1})
 	# Boxed in against the edge by rocks.
 	var fight: CombatSim = K.sim(K.fight([K.at(hero, 0, 2, "hero")] as Array[UnitSetup], [K.foe(_post(), 7, 6)] as Array[UnitSetup], [Vector2i(0, 1), Vector2i(1, 1), Vector2i(1, 2), Vector2i(0, 3)] as Array[Vector2i]), true)
 	var hero_state: UnitState = fight.unit_by_id("hero")
+	_hide_enemies(fight)
 	var start: Vector2i = hero_state.pos
 	fight.collapse_start = 1
-	K.step(fight, 30)
+	K.step(fight, 30 + WARNING)
 	assert_eq(hero_state.pos, start)
 	assert_eq(K.entries(fight, LogEntry.Kind.MOVE, "hero"), [] as Array[LogEntry])
 
 
-func test_a_flier_flies_back() -> void:
+func test_a_flier_with_nothing_to_do_flies_off() -> void:
 	var flier: UnitDef = K.kit("flier", {"traits": ["flying"], "stats": {"hp": 100000, "range": 8}})
 	var fight: CombatSim = K.sim(K.fight([K.at(flier, 0, 2, "flier")] as Array[UnitSetup], [K.foe(_post(), 3, 4)] as Array[UnitSetup], [Vector2i(1, 2)] as Array[Vector2i]))
 	var unit: UnitState = fight.unit_by_id("flier")
+	_hide_enemies(fight)
 	fight.collapse_start = 1
 	var start: Vector2i = unit.pos
-	fight.step()
+	K.step(fight, 1 + WARNING)
 	assert_true(unit.airborne, "it takes off")
 	var move: LogEntry = K.entries(fight, LogEntry.Kind.MOVE, "flier")[0]
-	assert_eq(move.to_pos, fight.nearest_safe_point(start, unit.radius), "straight back, over the rock")
+	assert_eq(move.to_pos, fight.nearest_safe_point(start, unit.radius), "straight off, over the rock")
 
 
 func test_start_collapse_warns_the_first_ring_now() -> void:
@@ -258,7 +263,7 @@ func test_start_collapse_warns_the_first_ring_now() -> void:
 		[200, 0, "warned", 200 + WARNING], [200 + WARNING, 0, "crumbled", 200 + WARNING],
 		[200 + RING, 1, "warned", 200 + WARNING + RING], [200 + WARNING + RING, 1, "crumbled", 200 + WARNING + RING],
 	], "the rest keep the same spacing")
-	assert_eq(Collapse.damage_at(fight, 200 + WARNING + 20), 20, "the damage counts from the first crumble")
+	assert_eq(Collapse.damage_at(fight, 200 + WARNING + 20), 25, "the damage counts from the first crumble")
 
 
 func test_start_collapse_does_nothing_once_it_has_started() -> void:
@@ -300,18 +305,13 @@ func test_crumbled_ground_starts_past_the_safe_edge() -> void:
 		assert_true(fight.on_crumbled(point), "just past it isn't: %s" % point)
 
 
-func test_walking_back_never_goes_further_out_or_off_the_arena() -> void:
+func test_walking_may_cross_crumbled_ground_but_landing_spots_stay_safe() -> void:
 	var fight: CombatSim = K.sim(K.fight([K.at(_post(), 3, 2, "hero")] as Array[UnitSetup], [K.foe(_post(), 4, 4)] as Array[UnitSetup]), true)
 	var hero: UnitState = fight.unit_by_id("hero")
 	fight.safe = fight.grid.safe_rect(2)
-	# 1632 past the left edge and 2150 past the top: the top counts.
-	hero.pos = Vector2i(500, 500)
-	assert_eq(fight.crumbled_depth(hero.pos, hero.radius), 2150)
-	assert_true(fight.fits_leaving(hero, Vector2i(600, 600)), "back toward safe ground")
-	assert_true(fight.fits_leaving(hero, Vector2i(420, 500)), "further out on the left, but no further out than it was")
-	assert_false(fight.fits_leaving(hero, Vector2i(500, 480)), "further out at the top")
-	assert_false(fight.fits_leaving(hero, Vector2i(399, 500)), "off the arena")
-	assert_false(fight.fits(hero, Vector2i(600, 600)), "an ordinary step can't be on crumbled ground at all")
+	assert_true(fight.fits_ground(hero, Vector2i(600, 600)), "a step onto crumbled ground")
+	assert_false(fight.fits_ground(hero, Vector2i(399, 500)), "off the arena")
+	assert_false(fight.fits(hero, Vector2i(600, 600)), "a spot it picks to land on stays on safe ground")
 
 
 func test_a_flier_in_the_air_crosses_crumbled_ground() -> void:
@@ -335,7 +335,7 @@ func test_a_rooted_unit_stays_on_crumbled_ground() -> void:
 	_fast_collapse(fight, 10000)
 	K.step(fight, 20)
 	assert_eq(hero.pos, start)
-	assert_eq(K.entries(fight, LogEntry.Kind.FIRE, "hero"), [] as Array[LogEntry], "nor does it shoot")
+	assert_gt(K.entries(fight, LogEntry.Kind.FIRE, "hero").size(), 0, "Root stops walking, not shooting")
 
 
 func test_a_unit_with_no_way_looks_again_every_half_second() -> void:
@@ -357,13 +357,14 @@ func test_a_unit_with_no_way_looks_again_every_half_second() -> void:
 	assert_eq(K.entries(fight, LogEntry.Kind.MOVE, "hero")[0].tick, 11)
 
 
-func test_a_unit_with_no_way_back_looks_again_every_half_second() -> void:
+func test_a_unit_with_no_way_off_looks_again_every_half_second() -> void:
 	# Two rocks and two allies box the hero in; one ally is moved away.
 	var fight: CombatSim = K.sim(K.fight([K.at(_shooter({"range": 1}), 0, 1, "hero"), K.at(_post(), 1, 1), K.at(_post(), 0, 2, "ally")] as Array[UnitSetup],
 		[K.foe(_post(), 7, 6)] as Array[UnitSetup], [Vector2i(0, 0), Vector2i(1, 0)] as Array[Vector2i]), true)
-	_fast_collapse(fight, 10000)
+	_hide_enemies(fight)
+	_fast_collapse(fight, 10000, 0)
 	K.step(fight, 5)
-	assert_eq(K.entries(fight, LogEntry.Kind.MOVE, "hero"), [] as Array[LogEntry], "no way back yet")
+	assert_eq(K.entries(fight, LogEntry.Kind.MOVE, "hero"), [] as Array[LogEntry], "no way off yet")
 	fight.unit_by_id("ally").pos = fight.grid.center(3, 2)
 	K.step(fight, 5)
 	assert_eq(K.entries(fight, LogEntry.Kind.MOVE, "hero"), [] as Array[LogEntry], "not until it looks again")
@@ -371,34 +372,14 @@ func test_a_unit_with_no_way_back_looks_again_every_half_second() -> void:
 	assert_eq(K.entries(fight, LogEntry.Kind.MOVE, "hero")[0].tick, 11)
 
 
-func test_a_new_ring_sends_everyone_on_a_fresh_way_back() -> void:
-	# Ring 0 falls on tick 1, and the hero walks back until its center is
-	# safe, by tick 5; ring 1 falls on tick 10, before its half-second look
-	# again.
-	var fight: CombatSim = K.sim(K.fight([K.at(_shooter(), 0, 2, "hero")] as Array[UnitSetup], [K.foe(_post(), 3, 4)] as Array[UnitSetup]))
-	var hero: UnitState = fight.unit_by_id("hero")
-	_fast_collapse(fight, 9, 0)
-	K.step(fight, 9)
-	assert_false(fight.on_crumbled(hero.pos))
-	fight.step()
-	assert_true(fight.on_crumbled(hero.pos))
-	var move: LogEntry = K.entries(fight, LogEntry.Kind.MOVE, "hero").back()
-	assert_eq([move.tick, move.to_pos], [10, fight.nearest_safe_point(move.from_pos, hero.radius)])
-
-
-func test_after_walking_the_way_back_is_planned_fresh() -> void:
-	# The hero walks back from ring 0, then walks toward its target; ring 1
-	# falls under it as it goes.
+func test_a_walker_keeps_on_toward_its_target_when_a_ring_falls_under_it() -> void:
 	var fight: CombatSim = K.sim(K.fight([K.at(K.kit("walker", {"stats": {"hp": 100000, "speed": 1}}), 0, 2, "hero")] as Array[UnitSetup],
 		[K.foe(_post(), 7, 5)] as Array[UnitSetup]))
 	var hero: UnitState = fight.unit_by_id("hero")
 	_fast_collapse(fight, 30, 0)
-	K.step(fight, 30)
-	assert_eq(hero.route_for, fight.unit_by_id("post"), "walking to its target")
-	fight.step()
-	assert_false(ArenaPlane.inside(fight.safe, hero.pos, hero.radius), "ring 1 is under it")
-	var move: LogEntry = K.entries(fight, LogEntry.Kind.MOVE, "hero").back()
-	assert_eq([move.tick, move.to_pos], [31, fight.nearest_safe_point(move.from_pos, hero.radius)])
+	K.step(fight, 31)
+	assert_eq(hero.route_for, fight.unit_by_id("post"), "still walking to its target")
+	assert_eq(K.entries(fight, LogEntry.Kind.STOP, "hero").filter(func(entry: LogEntry) -> bool: return entry.note == "no way off crumbled ground"), [] as Array[LogEntry])
 
 
 func test_a_route_back_is_never_walked_as_a_route_to_the_target() -> void:

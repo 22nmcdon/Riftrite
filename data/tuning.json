@@ -33,13 +33,13 @@
   "collapse_start_ms": 45000,
   "collapse_ring_ms": 10000,
   "collapse_warning_ms": 3000,
-  "_collapse_note": "Rift Collapse: the outer ring crumbles at collapse_start_ms, then one ring inward every collapse_ring_ms (the middle ring never does); each is warned collapse_warning_ms before. Anyone whose center is on crumbled ground takes flat damage every second (collapse_by_act); the growth speeds up collapse_surge_ms - collapse_start_ms after the first ring crumbles.",
+  "_collapse_note": "Rift Collapse: the outer ring crumbles at collapse_start_ms, then one ring inward every collapse_ring_ms (the middle ring never does); each is warned collapse_warning_ms before. Crumbled ground is walkable (phase 5c); anyone whose center is on it takes flat damage every second (collapse_by_act); the growth speeds up collapse_surge_ms - collapse_start_ms after the first ring crumbles.",
   "collapse_surge_ms": 90000,
   "tie_ms": 180000,
   "collapse_by_act": {
-    "_note": "Damage per second starts at base and grows by growth each second; from collapse_surge_ms the growth itself rises by accel each second. Act 3 is not decided yet.",
+    "_note": "Damage per second starts at base (Act 1: 15, phase 5c Decision 8) and grows by growth each second; from collapse_surge_ms the growth itself rises by accel each second. Act 3 is not decided yet.",
     "1": {
-      "base": 10,
+      "base": 15,
       "growth": 10,
       "accel": 2
     },

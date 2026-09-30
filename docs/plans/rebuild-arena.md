@@ -78,7 +78,7 @@ Enemies get their own part of the plan.
 ## 7. Rift Collapse: the arena shrinks
 
 - **At 45s, the arena's outer ring starts crumbling inward**, one ring at a time (the rings of the placement grid).
-- **Anyone standing on crumbled ground takes damage.** ~~Nobody can walk onto it, but a push can put them there.~~ **Changed 2026-09-30 (`relics/README.md`, Decisions): crumbled ground is walkable.** It's just crumbling tiles: standing on it deals flat damage every second (15, a placeholder) to heroes and enemies alike, and only rocks wall a target off. Not built yet (phase 5c).
+- **Anyone standing on crumbled ground takes damage.** ~~Nobody can walk onto it, but a push can put them there.~~ **Changed 2026-09-30 (`relics/README.md`, Decisions): crumbled ground is walkable.** It's just crumbling tiles: standing on it deals flat damage every second to heroes and enemies alike, and only rocks wall a target off. **Built in phase 5c, step 1b** (`rebuild-phase5c-combos.md`, Decisions 7 and 8): routes go round it when a safe way isn't much longer, a unit with nothing to do steps off it, spots a unit picks to land on stay on safe ground, and the damage starts at 15 a second in Act 1 and grows as before, so stalled fights still end.
 - Fights still end, but through positioning: slow, defensive teams get squeezed toward the middle, into each other's area attacks.
 - This replaces the flat damage ramp. A fight still running at **180s is a tie, and a tie counts as a win.**
 

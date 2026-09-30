@@ -4,7 +4,8 @@ extends RefCounted
 ## tests and the log audit. test_determinism checks it uses them all.
 ##
 ## Heroes: a warden (Engage; a hit that marks and, on a crit, stuns; below
-## half HP a ring that taunts), a mender (a cast that heals, shields, and
+## half HP a ring a hex out that taunts; a hex, not two, since phase 5c's
+## walkable crumbled ground no longer herds enemies inward), a mender (a cast that heals, shields, and
 ## cleanses the most hurt ally; an attack aura for a while; Burn it applies
 ## lands as Poison), a brand (burning strikes that stun on a crit; every
 ## third attack a charge that knocks back), and a hook (hops away; Bleed; a
@@ -36,7 +37,7 @@ static func setup(fight_seed: int = 21) -> FightSetup:
 			{"trigger": "on_hit", "type": "apply_status", "status": "marked", "target": "hit_target"},
 			{"trigger": "on_crit", "type": "apply_status", "status": "stun", "target": "hit_target"}]},
 		"signature": {"id": "hold", "name": "Hold the Line", "trigger": {"kind": "hp_below", "threshold_bp": 5000}, "targeting": "self",
-			"effects": [{"type": "area", "shape": {"kind": "ring", "radius": 2}, "anchor": "self", "hits": "enemies",
+			"effects": [{"type": "area", "shape": {"kind": "ring", "radius": 1}, "anchor": "self", "hits": "enemies",
 				"effects": [{"type": "apply_status", "status": "taunt", "target": "target"}, {"type": "damage", "amount": 10, "target": "target"}]}]}})
 	var mender: UnitDef = K.kit("mender", {"stats": {"hp": 700, "atk": 10, "mgk": 20, "speed": 2, "range": 4},
 		"mana": {"max": 40, "per_attack": 10, "per_10_damage_taken": 2, "regen_per_s": 3},

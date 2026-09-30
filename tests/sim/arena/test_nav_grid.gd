@@ -134,14 +134,15 @@ func test_no_route() -> void:
 	assert_ne(walled.find_path(_hex(4, 1), 1, target, 2000), -1, "a longer reach can still get there")
 
 
-func test_a_walker_on_crumbled_ground_can_leave() -> void:
+func test_crumbled_ground_is_walkable_but_costs_more() -> void:
 	var nav: NavGrid = _nav([], [], grid.safe_rect(1))
 	var start: Vector2i = _hex(0, 3)
-	assert_false(nav.is_free(nav.cell_at(start)), "it stands on crumbled ground")
+	assert_true(nav.is_free(nav.cell_at(start)), "crumbled ground is walkable (phase 5c)")
 	var goal: int = nav.find_path(start, 1, _hex(3, 3), MELEE)
-	assert_ne(goal, -1, "the start cell is always free")
-	for at: int in nav.path_to(goal):
-		assert_true(nav.is_free(at), "every step after the first is on safe ground")
+	assert_ne(goal, -1)
+	var open: NavGrid = _nav([], [], grid.bounds())
+	var open_goal: int = open.find_path(start, 1, _hex(3, 3), MELEE)
+	assert_gt(nav.distance_to(goal), open.distance_to(open_goal), "the steps on crumbled ground cost more")
 
 
 ## True if a walker at `point` stands wholly on `safe` ground.
@@ -150,20 +151,21 @@ func _wholly_safe(point: Vector2i, safe: Rect2i) -> bool:
 
 
 func test_the_way_back_to_safe_ground() -> void:
+	# Every step but the last is on crumbled ground (NavGrid.CRUMBLED_COST_BP),
+	# so the way back is the one with the fewest steps.
 	var safe: Rect2i = grid.safe_rect(1)
 	var nav: NavGrid = _nav([], [], safe)
 	for start: Vector2i in [_hex(0, 3), _hex(3, 0), _hex(4, 6), _hex(0, 0), _hex(7, 6)]:
 		var goal: int = nav.find_safe(start, 1)
 		assert_true(_wholly_safe(nav.center(goal), safe), "from %s to %s" % [start, nav.center(goal)])
-		assert_lt(nav.settled_count(), 60, "guided (%d cells)" % nav.settled_count())
-		var cheapest: int = -1
+		assert_lt(nav.settled_count(), 200, "guided (%d cells)" % nav.settled_count())
+		var fewest: int = -1
 		for at: int in nav.size():
 			if _wholly_safe(nav.center(at), safe):
 				var d: Vector2i = (nav.center(at) - nav.center(nav.cell_at(start))).abs() / nav.cell
-				var cost: int = maxi(d.x, d.y) * 125 + mini(d.x, d.y) * (177 - 125)
-				if cheapest < 0 or cost < cheapest:
-					cheapest = cost
-		assert_eq(nav.distance_to(goal), cheapest, "the shortest way, from %s" % start)
+				if fewest < 0 or maxi(d.x, d.y) < fewest:
+					fewest = maxi(d.x, d.y)
+		assert_eq(nav.path_to(goal).size(), fewest, "the fewest steps, from %s" % start)
 
 
 func test_the_way_back_never_ends_where_it_starts() -> void:

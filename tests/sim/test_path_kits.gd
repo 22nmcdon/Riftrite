@@ -131,7 +131,7 @@ const TASTE_FIGHTS: Dictionary[String, Array] = {
 	"hearthwall": ["the_pack", Vector2i(3, 0)],
 	"ironbrand": ["the_pack", Vector2i(3, 0)],
 	"lanternbearer": ["the_pack", Vector2i(3, 0)],
-	"wardweaver": ["sentinel_gate", Vector2i(3, 0)],
+	"wardweaver": ["hollow_line", Vector2i(3, 0)],
 	"vigil_keeper": ["hollow_line", Vector2i(3, 0)],
 }
 

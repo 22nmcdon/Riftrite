@@ -415,6 +415,8 @@ func test_banners_as_the_fight_plays() -> void:
 	screen.set_speed(2.0)
 	assert_eq(screen.banners.speed, 2.0, "banners keep up with the speed")
 	screen.skip()
-	screen._process(1.0)
+	# The banners still waiting (the phase's, the end's) each go in turn.
+	for i: int in 3:
+		screen._process(1.0)
 	assert_false(screen.banners.visible, "the end's banner goes too")
 	assert_ne(screen.outcome_label.text, "", "the outcome stays at the side")

@@ -10,11 +10,14 @@ extends RefCounted
 ## Then path_to and corners turn the result into straight legs.
 ##
 ## A cell is free when the walker standing on its center would fit inside the
-## safe rectangle and overlap no obstacle (exact, never optimistic, so a path
-## never leads into a gap the walker can't fit through). Cells are checked
-## lazily, only when a search reaches them. The start cell is always free,
-## and a walker starting on crumbled ground may cross crumbled cells, so it
-## can always walk back to safe ground.
+## arena and overlap no obstacle (exact, never optimistic, so a path never
+## leads into a gap the walker can't fit through). Cells are checked lazily,
+## only when a search reaches them. The start cell is always free.
+##
+## Crumbled ground is walkable (phase 5c, Decision 7), but a step onto a cell
+## where the walker wouldn't stand wholly on the safe rectangle costs
+## CRUMBLED_COST_BP as much, so a route goes round crumbled ground when a
+## safe way isn't much longer, and crosses it when it's the only way.
 ##
 ## Costs are integers (a cell straight, about 1.414 cells diagonally, never
 ## cutting past a blocked cell). Neighbors are tried in a fixed order,
@@ -23,6 +26,8 @@ extends RefCounted
 
 ## Diagonal cost per straight cost, in basis points.
 const DIAGONAL_BP: int = 14142
+## A step onto crumbled ground costs this much more (3x), in basis points.
+const CRUMBLED_COST_BP: int = 30000
 ## The search's estimate counts the shorter of the x and y distances at this
 ## share extra (a diagonal step's extra, rounded down), and takes off the
 ## reach times OCTILE_REACH_BP (the most the estimate's measure can exceed a
@@ -63,16 +68,14 @@ var _diagonal: int
 
 # What blocks the current walker.
 var _safe: Rect2i
-## The walker started on crumbled ground: crumbled cells are free for it.
-var _leaving: bool = false
 var _radius: int
 ## Each obstacle's center, and how close the walker's center may come
 ## (squared): plain arrays, since every cell check reads them.
 var _obstacle_xs: PackedInt32Array = PackedInt32Array()
 var _obstacle_ys: PackedInt32Array = PackedInt32Array()
 var _obstacle_reach_sq: PackedInt32Array = PackedInt32Array()
-## Where the walker's center must stay (inside the safe ground, or the whole
-## arena when it's leaving crumbled ground), and the first cell's center.
+## Where the walker's center must stay (inside the arena), and the first
+## cell's center.
 var _min_x: int
 var _min_y: int
 var _max_x: int
@@ -203,10 +206,10 @@ func _work_out(at_cell: int) -> int:
 	return result
 
 
-## Where the walker's center may be: inside the safe ground (or the whole
-## arena while it's leaving crumbled ground), a radius in from the edge.
+## Where the walker's center may be: inside the arena, a radius in from the
+## edge.
 func _set_limits() -> void:
-	var area: Rect2i = bounds if _leaving else _safe
+	var area: Rect2i = bounds
 	_min_x = area.position.x + _radius
 	_min_y = area.position.y + _radius
 	_max_x = area.end.x - _radius
@@ -245,8 +248,8 @@ func find_nearest(start: Vector2i, forward: int, targets: Array[Vector2i], reach
 
 
 ## A* from `start`, on crumbled ground, to the nearest free cell (not the
-## one it starts in, which may not be free) where the walker stands wholly on
-## safe ground again. Returns that cell, or -1 if there's none.
+## one it starts in) where the walker stands wholly on safe ground again.
+## Returns that cell, or -1 if there's none.
 func find_safe(start: Vector2i, forward: int) -> int:
 	var targets: Array[Vector2i] = []
 	return _search(start, forward, targets, 0, true, true).x
@@ -269,11 +272,6 @@ func find_safe(start: Vector2i, forward: int) -> int:
 ## queue inline, and a cell's blocking looked up before it's worked out.
 func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int, first: bool, to_safe: bool = false, suspect: bool = false) -> Vector2i:
 	_start = cell_at(start)
-	var leaving: bool = not ArenaPlane.inside(_safe, start, _radius)
-	if leaving != _leaving:
-		_leaving = leaving
-		_set_limits()
-		_free.fill(0)
 	_distance.fill(UNREACHED)
 	_previous.fill(-1)
 	_settled.fill(0)
@@ -398,6 +396,11 @@ func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int
 				if (_free[side_b] if _free[side_b] != 0 else _work_out(side_b)) != 1:
 					continue
 				cost = _diagonal
+			var nx: int = x0 + next_col * cell
+			var ny: int = y0 + next_row * cell
+			if nx < safe_x0 or nx > safe_x1 or ny < safe_y0 or ny > safe_y1:
+				@warning_ignore("integer_division")
+				cost = cost * CRUMBLED_COST_BP / FixedMath.BP_ONE
 			var reached_at: int = here + cost
 			if _distance[next] != UNREACHED and reached_at >= _distance[next]:
 				continue
@@ -405,8 +408,6 @@ func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int
 			_previous[next] = at
 			# Its estimate (as _estimate works it out, written out here since
 			# it runs for every cell queued).
-			var nx: int = x0 + next_col * cell
-			var ny: int = y0 + next_row * cell
 			var guess: int = -1
 			if to_safe:
 				guess = _estimate_safe(Vector2i(nx, ny))
