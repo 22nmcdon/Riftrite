@@ -13,7 +13,7 @@ Status: **agreed in discussion (2026-09-28, answers and section 8 on 2026-09-29)
 - **A pick after every won fight:** 1 of 3 upgrades for your heroes.
 - **Loadout slots hold charms, tactics, and sigils. None of them are abilities.** No slotted thing adds a new move; each changes how a hero's existing kit works or behaves.
 - **A currency comes back**, earned from fights. It **buys** slotted things; **swapping what's equipped between fights is free.**
-- **Wounds:** a hero who falls gets a wound. Wounds are cleared by **resting at camp** (free, but it uses the camp pick) or by **paying currency** (one wound at a time).
+- **Wounds:** a hero who falls gets a wound. Wounds are cleared by **resting at camp** (free, but it uses the camp pick) or by **paying currency** (one wound at a time). Since playtest gate 3, **a won fight also heals one wound on each hero** before the fallen take theirs (`rebuild-phase5-run.md` Decision 17).
 - **Nothing slotted may become useless when its hero transforms** (section 3).
 - **Any hero can hold anything; the Pedlar only sells what your team can use; the Magpie sells other heroes' gear, grafts, and one relic** (section 8, 2026-09-29). This replaces the earlier "most slotted things are hero-specific".
 

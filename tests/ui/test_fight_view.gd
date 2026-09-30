@@ -48,8 +48,8 @@ func test_bars_come_from_the_units_state() -> void:
 	var player: FightPlayer = _player()
 	var view: ArenaView = _view(player)
 	var brannoc: UnitState = player.sim.unit_by_id("brannoc")
-	brannoc.hp = 210
-	brannoc.shield = 42
+	brannoc.hp = 315
+	brannoc.shield = 63
 	brannoc.mana = brannoc.mana_cap / 4
 	view.sync_fight(player)
 	var token: UnitToken = view.token("brannoc")

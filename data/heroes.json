@@ -6,7 +6,7 @@
     "title": "the warden",
     "role": "tank",
     "kit": {
-      "stats": {"hp": 420, "atk": 14, "def": 30, "speed": 2, "range": 1},
+      "stats": {"hp": 630, "atk": 14, "def": 50, "speed": 2, "range": 1},
       "traits": ["engage"],
       "mana": {"max": 80, "start": 30, "per_attack": 8, "per_10_damage_taken": 1},
       "basic_attack": {

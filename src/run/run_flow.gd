@@ -9,8 +9,10 @@ extends RefCounted
 ## fight_setup()'s setup), then after it. A win or a tie pays shards by the
 ## fight's tier and moves on to after the fight; a loss replays the day (camp
 ## again, the same options), and the act's losses_to_end-th ends the run.
-## Deeds and wounds count from every fight, won or lost; winning the boss
-## ends the run won.
+## Deeds and wounds count from every fight, won or lost; a won fight (a tie,
+## or a Hunt won, too) first heals one wound on each hero (the playtester,
+## after gate 3: wounds should hurt a bad streak, not a run of wins).
+## Winning the boss ends the run won.
 ## Growth (section 4 and 5): a hero whose vowed deed reaches its threshold
 ## transforms after that fight, won or lost, for good. Until then its vow can
 ## be switched between fights. A win offers a pick (Offers.pick): take one
@@ -328,7 +330,8 @@ func fight(formation: Dictionary[String, Vector2i], errors: Array[String], snare
 	return result
 
 
-## Records a fought fight: the formation, deeds, wounds, transformations
+## Records a fought fight: the formation, deeds, wounds (a win heals one
+## on each hero first, then each hero who fell takes one), transformations
 ## (and bonds found), then the outcome. A Hunt pays its shards on a win and
 ## is done, won or lost (its loss isn't a loss). The day's fight: a win pays
 ## by its tier (plus relics), offers the pick, and (an elite, or a Rift
@@ -352,6 +355,9 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 	for hero: RunState.Hero in state.heroes:
 		for path_id: String in hero.deeds:
 			hero.deeds[path_id] += result.deed_amount(hero.id, path_id)
+	if won:
+		for hero: RunState.Hero in state.heroes:
+			hero.wounds = maxi(hero.wounds - 1, 0)
 	for entry: LogEntry in result.combat_log.entries:
 		if entry.kind == LogEntry.Kind.DEATH:
 			var fallen: RunState.Hero = state.hero(entry.target)

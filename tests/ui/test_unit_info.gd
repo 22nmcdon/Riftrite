@@ -236,11 +236,11 @@ func test_live_numbers_and_recent_lines() -> void:
 	var errors: Array[String] = []
 	var player: FightPlayer = FightPlayer.make(Encounters.setup(_content, "the_pack", PracticeSession.DEFAULT_FORMATION, 3, errors), _content)
 	var brannoc: UnitState = player.sim.unit_by_id("brannoc")
-	assert_eq(UnitInfo.live_text(brannoc), "HP 420/420 · Mana 30/80")
+	assert_eq(UnitInfo.live_text(brannoc), "HP 630/630 · Mana 30/80")
 	player.advance(3.0)
 	brannoc.shield = 25
 	var text: String = UnitInfo.live_text(brannoc)
-	assert_true(text.begins_with("HP %d/420 · Shield 25 · Mana %d/80" % [brannoc.hp, brannoc.mana / Mana.SCALE]), text)
+	assert_true(text.begins_with("HP %d/630 · Shield 25 · Mana %d/80" % [brannoc.hp, brannoc.mana / Mana.SCALE]), text)
 	var hound: UnitState = player.sim.unit_by_id("rift_hound")
 	assert_eq(UnitInfo.live_text(hound), "HP %d/%d" % [hound.hp, hound.max_hp], "no mana bar, no mana")
 	var marked: bool = false

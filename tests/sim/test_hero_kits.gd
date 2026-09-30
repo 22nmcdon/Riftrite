@@ -51,7 +51,7 @@ func test_the_kits_read_as_designed() -> void:
 	var roles: Array = _content.hero_ids.map(func(hero_id: String) -> int: return (_content.heroes[hero_id] as HeroDef).role)
 	assert_eq(roles, [HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT])
 	var stats: Array = _content.hero_ids.map(func(hero_id: String) -> Array: return _kit(hero_id).stats.values)
-	assert_eq(stats, [[420, 14, 0, 30, 0, 0, 2, 1], [270, 22, 0, 8, 8, 10, 2, 4], [300, 6, 20, 10, 0, 0, 2, 3]], "HP, ATK, MGK, DEF, CRIT, ATSP, speed, range")
+	assert_eq(stats, [[630, 14, 0, 50, 0, 0, 2, 1], [270, 22, 0, 8, 8, 10, 2, 4], [300, 6, 20, 10, 0, 0, 2, 3]], "HP, ATK, MGK, DEF, CRIT, ATSP, speed, range")
 	var mana: Array = _content.hero_ids.map(func(hero_id: String) -> Array:
 		var bar: ManaDef = _kit(hero_id).mana
 		return [bar.max, bar.start, bar.per_attack, bar.per_10_damage_taken, bar.regen_per_s])
@@ -69,27 +69,27 @@ func test_hold_the_line_taunts_within_2_hexes_and_his_def_follows_his_taunts() -
 		[K.foe(_dummy("near_a"), 3, 4), K.foe(_dummy("near_b"), 4, 4), K.foe(_dummy("far"), 3, 5)] as Array[UnitSetup])
 	var brannoc: UnitState = fight.unit_by_id("brannoc")
 	_root_all(fight, fight.heroes)
-	assert_eq(_def(brannoc), 30)
+	assert_eq(_def(brannoc), 50)
 	_fill_mana(brannoc)
 	K.step(fight, 1)
 	var taunts: Array = K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "brannoc").filter(func(entry: LogEntry) -> bool: return entry.status == "taunt") \
 		.map(func(entry: LogEntry) -> Array: return [entry.target, entry.end_tick])
 	assert_eq(taunts, [["near_a", 61], ["near_b", 61]], "enemies within 2 hexes, for Taunt's 3s")
-	assert_eq(_def(brannoc), 45, "x1.5 DEF while they're taunted")
+	assert_eq(_def(brannoc), 75, "x1.5 DEF while they're taunted")
 	K.step(fight, 59)
-	assert_eq(_def(brannoc), 45)
+	assert_eq(_def(brannoc), 75)
 	K.step(fight, 1)
-	assert_eq(_def(brannoc), 30, "back as the Taunts run out")
+	assert_eq(_def(brannoc), 50, "back as the Taunts run out")
 	assert_eq(K.entries(fight, LogEntry.Kind.AURA, "brannoc").map(func(entry: LogEntry) -> Array: return [entry.tick, entry.source_ability_name]),
 		[[1, "Hold the Line"], [61, "Hold the Line"]])
 
 	var from_brannoc: EffectSource = EffectSource.make("brannoc", "hold_the_line", "Hold the Line")
 	Statuses.apply(fight, fight.unit_by_id("near_a"), "taunt", 0, 60, from_brannoc)
 	Statuses.apply(fight, fight.unit_by_id("near_a"), "taunt", 0, 60, EffectSource.make("maren", "jeer", "Jeer"))
-	assert_eq(_def(brannoc), 30, "not once another unit's newer Taunt takes the enemy over")
+	assert_eq(_def(brannoc), 50, "not once another unit's newer Taunt takes the enemy over")
 	Statuses.apply(fight, fight.unit_by_id("near_b"), "taunt", 0, 200, from_brannoc)
 	K.step(fight, 150)
-	assert_eq(_def(brannoc), 45, "for as long as a longer Taunt lasts")
+	assert_eq(_def(brannoc), 75, "for as long as a longer Taunt lasts")
 
 
 func test_hearthguard_shields_the_first_ally_below_40_percent_once() -> void:
@@ -152,7 +152,7 @@ func test_mend_heals_the_ally_lowest_on_hp_within_3_hexes() -> void:
 	var fight: CombatSim = _sim([K.at(_kit("brannoc"), 3, 2), K.at(_kit("maren"), 1, 1), K.at(_kit("vell"), 3, 1),
 		K.at(K.kit("straggler", {"stats": {"hp": 100, "speed": 0}}), 7, 0)] as Array[UnitSetup], [K.foe(_dummy(), 3, 6)] as Array[UnitSetup])
 	_root_all(fight, fight.heroes)
-	fight.unit_by_id("brannoc").hp = 300
+	fight.unit_by_id("brannoc").hp = 500
 	fight.unit_by_id("maren").hp = 150
 	fight.unit_by_id("straggler").hp = 10
 	_fill_mana(fight.unit_by_id("vell"))
@@ -167,8 +167,8 @@ func test_hearthlight_heals_allies_within_1_hex_by_1_percent_a_second_not_vell()
 	for unit: UnitState in fight.heroes:
 		unit.hp = 100
 	K.step(fight, 40)
-	assert_eq(_rows(fight, LogEntry.Kind.HEAL, "vell", "hearthlight"), [["brannoc", 4], ["maren", 3], ["brannoc", 4], ["maren", 3]],
-		"1% of each ally's max HP (4.2 and 2.7, rounded); the straggler is 2 hexes off")
+	assert_eq(_rows(fight, LogEntry.Kind.HEAL, "vell", "hearthlight"), [["brannoc", 6], ["maren", 3], ["brannoc", 6], ["maren", 3]],
+		"1% of each ally's max HP (6.3 and 2.7, rounded); the straggler is 2 hexes off")
 	assert_eq(fight.unit_by_id("vell").hp, 100)
 
 

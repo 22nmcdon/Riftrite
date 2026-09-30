@@ -243,6 +243,26 @@ Flagged for the playtest (not changed): Old Mother Ash falls to 25 of the 26 tea
 - **Content:** every upgrade, item, relic, and bond names its reaches and has a numbers line (as abilities do); every encounter passes the placement gate.
 - **The screens:** each screen driven by a test through `RunFlow`, and a run played from the title to its end in the UI with fake time.
 
+## 16. Playtest gate 3, first findings (2026-09-30)
+
+The playtester's first read of the run: **wounds were much too hard to deal with; basic fights were too hard, sometimes harder than the elites; and Brannoc fell in every fight however he was placed.** Measured before changing anything (each encounter from the 4 named and 40 drawn formations, base heroes, `tools/sim_report.gd`): the nine basic fights were at full strength (scale 10000, phase 2's puzzle tuning, where a third to two thirds of formations win), while phase 5 had scaled the harder fights to 8000 and the elites to 5500–7500. So a basic fight could be harder than a harder one or an elite. Brannoc fell in 80–100% of the formations that won most basic fights, and in no winning formation at all in Ash Nest, The Pack, and Cairn Road.
+
+**Decisions** (the playtester, 2026-09-30):
+17. **A won fight heals a wound.** A win (a tie, or a Hunt won, too) first heals one wound on each hero; then each hero who fell takes one. Wounds hurt a bad streak, not a run of wins. Rest and a shop's treatment still clear them.
+18. **A tougher Brannoc:** HP 420 → 630, DEF 30 → 50 (he takes 67% of a hit, not 77%). The other heroes are unchanged. (560/80 and 700/60 were tried too: once the fights are retuned, how often he stands barely moves, so the smallest change that got there was kept.)
+19. **Difficulty climbs by tier.** Every fight's `scale_bp` was retuned so the share of formations that win is about: basic 70–80%, harder 55–65%, elites 40–50%, Old Mother Ash 35–45%. The fights are races that flip at sharp steps (Guardian and Witch goes from 81% to 40% between 14750 and 14800), so where a target falls between steps the harder step is taken, keeping harder above basic. Paths' thresholds that the new Brannoc slowed are reset by phase 5's rule (about 3.5 fights of the vowed deed): Hearthwall 7 → 6, Last Watch 52 → 25 (a tougher Brannoc spends less time low).
+
+**The result** (the sim runner, `--seeds=5`; the gate passes on all 18):
+
+| Tier | Fight: scale, formations that win of 44 |
+| --- | --- |
+| basic | Pup Warren 10750, 30; Ash Nest 11250, 34; The Pack 10750, 33; Moth Cloud 11250, 34; Hollow Line 11250, 32; Bog Crossing 11250, 32; Sentinel Gate 11750, 35; Cairn Road 11500, 34; Witch Circle 11250, 33 |
+| harder | Hounds and Archers 9250, 31; Lurker and Ashlings 9000, 27; Sentinel and Moths 18150, 17; Witch and Pups 8750, 32; Guardian and Witch 14800, 22 |
+| elite | The Hunt 9750, 20; Witch Coven 5750, 19; Cairn Watch 12750, 21 |
+| boss | Old Mother Ash 7500, 14 |
+
+The run report (54 runs, the simple bot): 83% of runs won (was 46%), the first transformation at a median of day 2, every path transforming in 72–100% of the runs vowed to it (Last Watch was 33%), 4.2 wounds a run, most healed by the next win. **Still to watch:** at 70–80% of formations winning, Brannoc stands in about four in ten of the won basic fights on average (from three in four in Bog Crossing to about one in ten in Ash Nest and Witch Circle; before, none to one in five), and in Guardian and Witch and Cairn Watch hardly ever: those fights are built to reach him. Whether that still feels bad is for the playtest; the next lever would be his kit (more of Hold the Line's DEF, or Hearthguard shielding himself), not his stats.
+
 ## Open questions
 
 - Everything marked *proposed* above (Decisions 5–14).

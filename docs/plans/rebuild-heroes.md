@@ -188,7 +188,7 @@ The fantasy: she's always moving and filling the air with arrows.
 
 | | |
 | --- | --- |
-| **Stats** | HP 420, ATK 14, DEF 30 |
+| **Stats** | HP 630, ATK 14, DEF 50 (was HP 420, DEF 30; raised after playtest gate 3, `rebuild-phase5-run.md` Decision 18) |
 | **Speed / range** | speed 2, melee (1) |
 | **Basic attack: Shield Bash** | a blow on an adjacent enemy |
 | **Signature: Hold the Line** (80 mana) | taunts enemies within 2 hexes for 3s; he gains DEF while they're taunted |

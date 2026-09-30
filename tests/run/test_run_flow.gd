@@ -137,12 +137,16 @@ func test_a_tie_pays_like_a_win_and_wounds_stop_at_three() -> void:
 	var flow: RunFlow = _start()
 	flow.leave_camp()
 	flow.choose_fight(0)
-	for i: int in 4:
-		flow.state.phase = RunState.Phase.LOADOUT
-		flow.record(Bot.formation(), _result(FightResult.Outcome.TIE, ["brannoc"] as Array[String]))
-	assert_eq(flow.state.hero("brannoc").wounds, 3)
+	flow.state.hero("brannoc").wounds = 3
+	flow.state.hero("maren").wounds = 2
+	flow.record(Bot.formation(), _result(FightResult.Outcome.TIE, ["brannoc"] as Array[String]))
+	assert_eq([flow.state.hero("brannoc").wounds, flow.state.hero("maren").wounds, flow.state.hero("vell").wounds], [3, 1, 0],
+		"a win (a tie too) heals one wound on each hero, then the fallen take one")
 	assert_eq(flow.state.phase, RunState.Phase.AFTER)
 	assert_gt(flow.state.shards, 3)
+	flow.state.phase = RunState.Phase.LOADOUT
+	flow.record(Bot.formation(), _result(FightResult.Outcome.DEFEAT, ["brannoc"] as Array[String]))
+	assert_eq([flow.state.hero("brannoc").wounds, flow.state.hero("maren").wounds], [3, 1], "a loss heals none, and wounds stop at three")
 
 
 func test_winning_the_boss_ends_the_run() -> void:

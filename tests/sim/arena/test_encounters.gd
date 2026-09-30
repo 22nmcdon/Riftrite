@@ -131,12 +131,14 @@ const ROSTERS: Dictionary = {
 	"old_mother_ash": {"old_mother_ash": 1, "ash_hound": 2},
 }
 ## Phase 2's nine, tuned by their enemies' numbers rather than a scale.
-const UNSCALED: Array[String] = ["pup_warren", "ash_nest", "the_pack", "moth_cloud", "hollow_line", "bog_crossing", "sentinel_gate", "cairn_road", "witch_circle"]
+## Phase 2's nine (the easier tier since phase 5; scaled since playtest
+## gate 3, rebuild-phase5-run.md).
+const BASIC: Array[String] = ["pup_warren", "ash_nest", "the_pack", "moth_cloud", "hollow_line", "bog_crossing", "sentinel_gate", "cairn_road", "witch_circle"]
 
 
 func test_the_act_1_encounters_are_the_plans() -> void:
 	var content: ContentDb = ContentDb.load_dir("res://data")
-	assert_eq(content.encounter_ids, UNSCALED + ["stray_pups", "lone_hounds", "hounds_and_archers", "lurker_and_ashlings", "sentinel_and_moths", "witch_and_pups",
+	assert_eq(content.encounter_ids, BASIC + ["stray_pups", "lone_hounds", "hounds_and_archers", "lurker_and_ashlings", "sentinel_and_moths", "witch_and_pups",
 		"guardian_and_witch", "the_hunt", "witch_coven", "cairn_watch", "old_mother_ash"])
 	for encounter_id: String in content.encounter_ids:
 		var encounter: EncounterDef = content.encounters[encounter_id]
@@ -145,8 +147,9 @@ func test_the_act_1_encounters_are_the_plans() -> void:
 			counts[placed.enemy] = counts.get(placed.enemy, 0) + 1
 		assert_eq(counts, ROSTERS[encounter_id], encounter_id)
 		assert_eq(encounter.act, 1, encounter_id)
-		if UNSCALED.has(encounter_id):
-			assert_eq(encounter.scale_bp, 10000, encounter_id)
+		if BASIC.has(encounter_id):
+			assert_eq(encounter.tier, "easier", encounter_id)
+		assert_between(encounter.scale_bp, 5000, 20000, "%s: a scale the sim runner tuned" % encounter_id)
 		assert_false(encounter.tests.is_empty(), encounter_id)
 	assert_eq((content.encounters["hollow_line"] as EncounterDef).rocks.size(), 2, "archers behind 2 rocks")
 

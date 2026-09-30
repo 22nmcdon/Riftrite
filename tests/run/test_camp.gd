@@ -220,7 +220,7 @@ func test_relics_that_change_the_run() -> void:
 	var setup: FightSetup = _setup(flow)
 	assert_eq(setup.heroes[1].max_hp_bp, 8000, "a wound takes 20%")
 	var enemy: UnitSetup = setup.enemies[0]
-	var plain: UnitDef = _run.content.enemies[enemy.def.id].kit
+	var plain: UnitDef = Encounters.scaled(_run.content.enemies[enemy.def.id].kit, _run.content.encounters[state.chosen].scale_bp)
 	assert_eq(enemy.def.stats.get_stat(UnitStats.Stat.HP), FixedMath.apply_bp(plain.stats.get_stat(UnitStats.Stat.HP), 11000))
 
 

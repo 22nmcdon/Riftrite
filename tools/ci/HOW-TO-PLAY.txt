@@ -56,7 +56,8 @@ PLAYING
                 per hero, now and then a wild card), or take 3 shards
                 instead. An elite or a Rift Tear win offers a relic, or
                 neither. A filled deed transforms the hero.
-  3. A hero who falls gets a wound (less max HP, up to 3). A lost fight
+  3. A hero who falls gets a wound (less max HP, up to 3); each won fight
+     heals one wound on every hero first. A lost fight
      replays the day; the second loss ends the run. Winning against Old
      Mother Ash wins it.
   4. The run is saved after everything you do: Title > Continue the run.
@@ -114,6 +115,15 @@ PLAYING
 
   Nothing is saved: your formation, paths, snares, tactics, and speed
   last until you close the game.
+
+CHANGED AFTER YOUR FIRST RUN
+  - Wounds: every won fight now heals one wound on each hero (before
+    anyone who fell there takes a new one).
+  - Brannoc is tougher: HP 630 (was 420), DEF 50 (was 30).
+  - Every fight's strength was retuned so difficulty climbs: basic fights
+    are the easiest, then harder ones, then elites, then Old Mother Ash.
+  - Last Watch and Hearthwall need a little less to transform.
+  Tell us if Brannoc still falls too often, and in which fights.
 
 WHAT WE WANT TO KNOW ABOUT THE ART
   Does the arena read well with heroes at the bottom, on the island? Are
