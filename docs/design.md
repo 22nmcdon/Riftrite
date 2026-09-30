@@ -13,6 +13,7 @@ Working title: **Riftrite** (a placeholder). This document was rewritten on 2026
 | Enemy specializations and upgrades, rift modifiers, and the rift learns | `docs/plans/enemy-growth.md` |
 | Endless mode: floors, how the rift scales, the score | `docs/plans/endless.md` |
 | Every shard source and price, and the Act 1 spending target | `docs/plans/economy.md` |
+| What the UI must show for the new systems (input for the UI redesign) | `docs/plans/ui-new-systems.md` |
 | The first content pool (part 7b): keyword sources, growing upgrades, and the combos the pool is built for | `docs/plans/rebuild-content-pool.md` |
 | The relic pool: its rules, shops and rerolls, income, and every relic by tier | `docs/plans/relics/README.md` (and one file per tier) |
 | The loadout pool: its rules, ranks, prices, and every tactic, gambit, sigil, and charm | `docs/plans/loadout/README.md` (and one file per kind) |
@@ -157,6 +158,7 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - **How fast heroes grow** with a pick after every win. (part 6)
 - **Relics:** can the same common be bought twice? Are boss offers random or picked to fit the team? Is 8–14 a run right? (relic pool)
 - **The economy:** the whole shard curve needs a sim pass; a Hunt's pay. (economy)
+- **The snowball tag:** shown to players on the unit, or behind the testing toggle with the combo readouts? (UI for the new systems)
 - **Chain limits:** Crown of Stars' 10 links and Shared Pain's 3 steps are guesses. (relic pool)
 - **Upgrade pools:** how hero, taste, and path cards are weighted; one pick a day for the team, or a card per hero; a cap on stacking upgrades; and six upgrades whose "not X" numbers are the design's, not the built kits'. (upgrade pools)
 - **Nodes:** show 2 or 3, and how often each kind; income with a shop every day. (days and nodes)

@@ -24,7 +24,7 @@ Out:
 2. **Cinzel and Alegreya** (the playtester, 2026-09-30). Headings use Cinzel Bold (Cinzel Black for the title). Body text uses Alegreya Regular, and the few semibold and bold spots use Alegreya Bold. Marcellus and Source Sans 3 go. Work Sans stays as the fallback for characters the new fonts lack.
 3. **Items get the closest icon** (the playtester, 2026-09-30). Each uploaded icon is its kind's frame with a glyph drawn on it. The glyphs are split out, and every item, relic, and so on takes its **kind's frame** with the **glyph that fits it best**, named in the data (`"icon"`). Glyphs are shared until more are drawn; the frame always says the kind.
 4. **The route is the act map** (the playtester, 2026-09-30). The day screen's route step shows the whole act as the map's seven islands, with each day's fights on its island.
-5. **Grafts get a rose octagon frame** (the playtester, 2026-09-30), generated in the upload's style by `tools/art/item_glyphs.py`, until one is drawn.
+5. **Grafts get a rose octagon frame** (the playtester, 2026-09-30), generated in the upload's style by `tools/art/item_glyphs.py`, until one is drawn. *(Retired 2026-09-30: grafts are cut, `magpie.md`. Remove the frame, or leave it unused.)*
 
 ## 1. What's in `art/ui/` and where it goes
 
@@ -162,7 +162,7 @@ Each is checked with a search before it's deleted. Anything still loaded stays.
   - `src/ui/widgets/item_icon.gd`;
   - `tools/art/item_glyphs.py`;
   - `art/ui/items/glyphs/`;
-  - `art/ui/items/frames/graft.svg`.
+  - `art/ui/items/frames/graft.svg`. *(Retired 2026-09-30: grafts are cut, `magpie.md`. Remove the frame, or leave it unused.)*
 - Changed:
   - `src/ui/ui_style.gd` (the fonts, and the icon and frame loaders);
   - `src/ui/arena/arena_view.gd`, `unit_token.gd`, `fight_fx.gd`;
@@ -193,11 +193,11 @@ Each is checked with a search before it's deleted. Anything still loaded stays.
 1. Fonts.
 2. The arena turned (mapping, layout, the side column), with no new art yet.
 3. The arena's art: backdrop, island, ground, zones, collapse tiles, ruins, rings.
-4. The item language: glyphs, the graft frame, `icon` in the data, `ItemIcon`, and where it shows.
+4. The item language: glyphs, the graft frame, `icon` in the data, `ItemIcon`, and where it shows. *(Retired 2026-09-30: grafts are cut, `magpie.md`. Remove the frame, or leave it unused.)*
 5. Camp and the shops.
 6. The act map.
 7. Clean-up, docs (`CLAUDE.md`, this plan's "Built in step N" notes, the build order), HOW-TO-PLAY, the screenshots, and a playtest build.
 
 ## Answered
 
-1. **The graft frame** (the playtester, 2026-09-30): a generated rose octagon in the upload's style, until one is drawn. Decision 5.
+1. **The graft frame** (the playtester, 2026-09-30): a generated rose octagon in the upload's style, until one is drawn. Decision 5. *(Retired 2026-09-30: grafts are cut, `magpie.md`. Remove the frame, or leave it unused.)*

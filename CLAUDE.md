@@ -24,6 +24,7 @@ A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The pl
 | `enemy-growth.md` | enemy specializations and upgrades, rift modifiers, and how the rift learns counters your team (agreed, not built) |
 | `endless.md` | endless mode: floors, how the rift scales, and the score (agreed, not built) |
 | `economy.md` | every shard source and price, and the Act 1 spending target (agreed, not built) |
+| `ui-new-systems.md` | what the UI must show for ranks, selling, gambits, rerolls, growth, deeds, bonds, and the fight card; input for the overall UI redesign (agreed, not built) |
 | `days-and-nodes.md` | a day's loop (fight, pick, shop, node), Rift Tear's depths, the Shrine (agreed, not built) |
 | `events.md` | the Event node's scenes and the Bloodied Oath (agreed, not built) |
 | `rebuild-build-order.md` | the phases (tactics come as phase 3b, before paths), and what was gutted |
