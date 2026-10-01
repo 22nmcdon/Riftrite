@@ -80,6 +80,8 @@ const FLASH := Color(0.84, 0.35, 0.31, 0.7)
 const FLASH_SECONDS: float = 0.5
 ## A placed snare's marker.
 const SNARE_COLOR := Color("8fbf5a")
+## A placed lantern's marker (phase 5c step 7d).
+const LANTERN_COLOR := Color("f2c14e")
 
 var mode: Mode = Mode.PLACEMENT
 var grid: HexGrid
@@ -110,6 +112,8 @@ class SnareMarker:
 	var hero_id: String
 	var index: int
 	var hex: Vector2i
+	## A placed lantern's (First Lantern, phase 5c step 7d), drawn as one.
+	var lantern: bool = false
 
 
 ## A rock on the board, drawn as a ruin (art/ui/arena/props/) standing on
@@ -182,6 +186,13 @@ func show_setup(setup: FightSetup, content: ContentDb) -> void:
 			marker.index = i
 			marker.hex = unit.snares[i]
 			snare_markers.append(marker)
+		if unit.lantern.x >= 0:
+			var lantern := SnareMarker.new()
+			lantern.hero_id = unit.id
+			lantern.index = 0
+			lantern.hex = unit.lantern
+			lantern.lantern = true
+			snare_markers.append(lantern)
 	_layout()
 
 
@@ -429,6 +440,12 @@ func snare_px() -> float:
 	return maxf(Snares.RADIUS * scale_px * 0.7, 6.0)
 
 
+## A placed lantern's mark (phase 5c step 7d): a warm ring with a dot.
+static func draw_lantern(canvas: CanvasItem, at: Vector2, reach: float) -> void:
+	canvas.draw_arc(at, reach, 0.0, TAU, 32, LANTERN_COLOR, 2.5, true)
+	canvas.draw_circle(at, reach * 0.35, LANTERN_COLOR)
+
+
 ## A snare's mark: a ring with a cross in it.
 static func draw_snare(canvas: CanvasItem, at: Vector2, reach: float, color: Color) -> void:
 	canvas.draw_arc(at, reach, 0.0, TAU, 20, color, 2.0, true)
@@ -504,7 +521,10 @@ func _draw() -> void:
 		fx.draw_ground(self)
 	else:
 		for marker: SnareMarker in snare_markers:
-			draw_snare(self, to_pixel(grid.center(marker.hex.x, marker.hex.y)), snare_px(), SNARE_COLOR)
+			if marker.lantern:
+				draw_lantern(self, to_pixel(grid.center(marker.hex.x, marker.hex.y)), snare_px())
+			else:
+				draw_snare(self, to_pixel(grid.center(marker.hex.x, marker.hex.y)), snare_px(), SNARE_COLOR)
 
 
 ## Where the island frame is drawn: stretched so its inner square covers the

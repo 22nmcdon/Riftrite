@@ -80,6 +80,8 @@ static func mod_parts(mod: KitMod, kit: UnitDef, content: ContentDb) -> Array[St
 		parts.append("plants %s %s" % [UnitInfo.seconds(absi(mod.plant_add_ticks)), "sooner" if mod.plant_add_ticks < 0 else "later"])
 	if mod.break_free_add_ticks != 0:
 		parts.append("enemies it engages take %s longer to break free" % UnitInfo.seconds(mod.break_free_add_ticks))
+	if mod.places_lantern:
+		parts.append("you place its first signature area before the fight")
 	for trigger: TriggerDef in mod.also_fires:
 		var when: String = UnitInfo.trigger_text(trigger, shown)
 		parts.append("Signature also fires: %s%s" % [when.left(1).to_lower(), when.substr(1)])
@@ -131,6 +133,15 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 		bits.append("goes for enemies that are %s first" % change.prefer.describe())
 	if change.strength_add_bp != 0:
 		bits.append("+%s stronger" % ValueBreakdown._percent(change.strength_add_bp))
+	# Phase 5c step 7d.
+	if change.follows:
+		bits.append("its area follows the biggest group, 1 hex a pulse")
+	if change.ricochet_add != 0:
+		bits.append("hits ricochet %d more time%s" % [change.ricochet_add, "" if change.ricochet_add == 1 else "s"])
+	if change.reflect_bp != 0:
+		bits.append("sends stopped shots back at %s" % ValueBreakdown._percent(change.reflect_bp))
+	if change.snags:
+		bits.append("its snares catch leaps and charges")
 	for effect: EffectDef in change.add_to_areas:
 		bits.append("in its area: " + " · ".join(UnitInfo.effect_numbers([effect] as Array[EffectDef], kit, content)))
 	for effect: EffectDef in change.add_effects:

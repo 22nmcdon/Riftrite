@@ -25,6 +25,11 @@ extends RefCounted
 ##     until it ends; its numbers were fixed as it was cast. It keeps going
 ##     if the unit falls. Zones pulse just before the warned areas land, in
 ##     the order they were cast.
+##   - A zone that follows (phase 5c step 7d, Chasing Storm) moves its center
+##     up to 1 hex toward the biggest group of its caster's enemies before
+##     each pulse after the first; that pulse's AREA_LANDED is noted "moved".
+##   - A placed lantern (phase 5c step 7d, First Lantern) is a zone cast at
+##     a point the player chose (cast_at), at the fight's start.
 ## Heroes never step out of a warned area (decided): placement is the answer.
 
 
@@ -50,7 +55,8 @@ class Pending:
 
 ## `unit`'s ability casts the area `effect` at `target` (null for an area on
 ## the unit itself). `heal_boost_bp`: a Wait to heal payoff on its heals.
-static func cast(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: EffectSource, effect: EffectDef, target: UnitState, heal_boost_bp: int = 0) -> void:
+static func cast(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: EffectSource, effect: EffectDef, target: UnitState, heal_boost_bp: int = 0,
+		at: Vector2i = EffectRunner.NO_POINT) -> void:
 	var area := Pending.new()
 	area.unit = unit
 	area.ability = ability
@@ -67,6 +73,9 @@ static func cast(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 		EffectDef.Anchor.TARGET_DIRECTION:
 			area.origin = ArenaPlane.along(unit.pos, area.dir, unit.radius)
 			area.push_from = unit.pos
+	if at != EffectRunner.NO_POINT:
+		area.origin = at
+		area.push_from = at
 	for nested: EffectDef in effect.area_effects:
 		area.amounts.append(EffectRunner.amount_of(nested, unit, 0, sim))
 		area.powers.append(EffectRunner.power_of(nested, unit, heal_boost_bp))
@@ -115,19 +124,33 @@ static func _pulse_zones(sim: CombatSim) -> void:
 		if sim.tick >= zone.until_tick:
 			continue
 		if sim.tick >= zone.land_tick:
-			_land(sim, zone)
+			var moved: bool = zone.effect.follows and _follow(sim, zone)
+			_land(sim, zone, "moved" if moved else "")
 			zone.land_tick += zone.effect.pulse_ticks
 		staying.append(zone)
 	sim.zones = staying
 
 
-static func _land(sim: CombatSim, area: Pending) -> void:
+## Moves a following zone up to 1 hex toward the biggest group of its
+## caster's enemies (Chasing Storm). Returns true if it moved.
+static func _follow(sim: CombatSim, zone: Pending) -> bool:
+	var group: UnitState = Targeting.pick(sim, zone.unit, "largest_group", -1)
+	if group == null or group.pos == zone.origin:
+		return false
+	var step: int = mini(HexGrid.HEX, ArenaPlane.distance(zone.origin, group.pos))
+	zone.origin = ArenaPlane.along(zone.origin, ArenaPlane.direction(zone.origin, group.pos, Vector2i(0, ArenaPlane.DIR)), step)
+	zone.push_from = zone.origin
+	return true
+
+
+static func _land(sim: CombatSim, area: Pending, note: String = "") -> void:
 	var hit: Array[UnitState] = []
 	for other: UnitState in sim.units:
 		if other.alive and _counts(area, other) and area.effect.shape.contains(area.origin, area.dir, other.pos):
 			hit.append(other)
 	var landed: LogEntry = _entry(sim, LogEntry.Kind.AREA_LANDED, area)
 	landed.amount = hit.size()
+	landed.note = note
 	# Salt Circle (a relic; phase 5c step 5b): the first enemy areas each
 	# fight (not zones) land on nothing.
 	if sim.salt_circles > 0 and area.unit.side == EffectSource.Team.ENEMIES and area.effect.zone_ticks == 0:

@@ -83,6 +83,18 @@ static func _path_problems(unit: UnitSetup, where: String) -> Array[String]:
 ## or the middle row, and not on a rock.
 static func _snare_problems(unit: UnitSetup, where: String, grid: HexGrid, rock_hexes: Array[Vector2i]) -> Array[String]:
 	var problems: Array[String] = []
+	if unit.lantern.x >= 0:
+		# First Lantern (phase 5c step 7d): by the snares' rules.
+		var lantern: Vector2i = unit.lantern
+		var own_zone: HexGrid.Zone = HexGrid.Zone.HEROES if unit.side == EffectSource.Team.HEROES else HexGrid.Zone.ENEMIES
+		if not unit.def.placed_lantern:
+			problems.append("%s can't place a lantern" % where)
+		elif not grid.has(lantern.x, lantern.y):
+			problems.append("%s's lantern is off the board" % where)
+		elif grid.zone(lantern.y) != own_zone and grid.zone(lantern.y) != HexGrid.Zone.NEUTRAL:
+			problems.append("%s's lantern is in the enemies' half" % where)
+		elif rock_hexes.has(lantern):
+			problems.append("%s's lantern is on a rock" % where)
 	if unit.snares.is_empty():
 		return problems
 	if unit.snares.size() > unit.def.placed_snares:

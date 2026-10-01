@@ -19,6 +19,10 @@ extends RefCounted
 ##     that unit's snares from the same effect.
 ##   - Logged (SNARE): "set" (to_pos: where), "sprung" (target: who), or
 ##     "gone" (replaced). It stays if its owner falls.
+##   - Phase 5c step 7d: a snare that snags (Snag) also springs on an enemy
+##     whose leap or charge passes over it, once it lands; a snare effect
+##     "under" the front ally (Guarded Ground) sets one of the kit's placed
+##     kind under its side's front-most unit.
 
 ## How close a unit's center must come (plane units).
 const RADIUS: int = 500
@@ -83,12 +87,50 @@ static func check(sim: CombatSim) -> void:
 		if caught == null:
 			staying.append(snare)
 			continue
-		_log(sim, snare, "sprung", caught.id)
-		for i: int in snare.effect.area_effects.size():
-			var nested: EffectDef = snare.effect.area_effects[i]
-			var crit: bool = nested.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(EffectRunner.crit_chance_bp(sim, snare.unit, snare.ability))
-			EffectRunner.land(sim, snare.unit, snare.ability, snare.source, nested, caught, snare.amounts[i], crit, snare.pos, snare.powers[i])
+		_spring(sim, snare, caught)
 	sim.snares = staying
+
+
+static func _spring(sim: CombatSim, snare: Snare, caught: UnitState) -> void:
+	_log(sim, snare, "sprung", caught.id)
+	for i: int in snare.effect.area_effects.size():
+		var nested: EffectDef = snare.effect.area_effects[i]
+		var crit: bool = nested.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(EffectRunner.crit_chance_bp(sim, snare.unit, snare.ability))
+		EffectRunner.land(sim, snare.unit, snare.ability, snare.source, nested, caught, snare.amounts[i], crit, snare.pos, snare.powers[i])
+
+
+## `unit` leapt or charged from `from` to `to` (phase 5c step 7d, Snag):
+## each enemy snare that snags whose spot the way passed over springs on it.
+static func snag(sim: CombatSim, unit: UnitState, from: Vector2i, to: Vector2i) -> void:
+	for snare: Snare in sim.snares.duplicate():
+		if snare.effect.snags and snare.unit.side != unit.side and unit.alive and _over(snare.pos, from, to):
+			sim.snares.erase(snare)
+			_spring(sim, snare, unit)
+
+
+## True if `point` is within RADIUS of the way from `from` to `to`.
+static func _over(point: Vector2i, from: Vector2i, to: Vector2i) -> bool:
+	if from == to:
+		return ArenaPlane.length_sq(point - from) <= RADIUS * RADIUS
+	var dir: Vector2i = ArenaPlane.direction(from, to, Vector2i(0, ArenaPlane.DIR))
+	var along: int = ArenaPlane.dot(point - from, dir)
+	if along <= 0:
+		return ArenaPlane.length_sq(point - from) <= RADIUS * RADIUS
+	if along >= ArenaPlane.distance(from, to) * ArenaPlane.DIR:
+		return ArenaPlane.length_sq(point - to) <= RADIUS * RADIUS
+	return absi(ArenaPlane.cross(dir, point - from)) <= RADIUS * ArenaPlane.DIR
+
+
+## Guarded Ground (phase 5c step 7d): one of `unit`'s placed snares, set
+## under its side's front-most standing unit (it counts toward their most
+## standing).
+static func under_front(sim: CombatSim, unit: UnitState) -> void:
+	var effect: EffectDef = placed_effect(unit.def)
+	var ability: AbilityDef = placed_ability(unit.def)
+	var front: UnitState = sim.front_of(sim.heroes if unit.side == EffectSource.Team.HEROES else sim.enemies)
+	if effect == null or ability == null or front == null:
+		return
+	place(sim, unit, ability, EffectSource.make(unit.id, ability.id, ability.name), effect, front.pos)
 
 
 ## The snares the player placed for `unit` before the fight, from the first
@@ -106,7 +148,7 @@ static func place_setup(sim: CombatSim, unit: UnitState, hexes: Array[Vector2i])
 ## The first snare effect in `kit` (for the snares the player places), or null.
 static func placed_effect(kit: UnitDef) -> EffectDef:
 	for effect: EffectDef in kit.all_effects():
-		if effect.type == EffectDef.Type.SNARE:
+		if effect.type == EffectDef.Type.SNARE and not effect.under_front:
 			return effect
 	return null
 
@@ -121,7 +163,7 @@ static func placed_ability(kit: UnitDef) -> AbilityDef:
 		if ability == null:
 			continue
 		for effect: EffectDef in ability.effects:
-			if effect.type == EffectDef.Type.SNARE:
+			if effect.type == EffectDef.Type.SNARE and not effect.under_front:
 				return ability
 	return null
 

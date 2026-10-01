@@ -1,6 +1,6 @@
 # Upgrade pools
 
-Status: **agreed in discussion (2026-09-30); being built as phase 5c step 7** (`rebuild-phase5c-combos.md`, section 15, Decisions 34–38: taste cards carry on after the transformation, four cards replaced, cards that change nothing never offered, the pick keeps its shape). 7a is built: the layers, stacking, and the cards the built pieces write; 7b too: the small knobs, and Two Behind as Wide Guard (Decision 39); and 7c, the conditions and filters. What the after-fight pick (part 6, `rebuild-between-fights.md`, section 1) offers, for each hero. Replaces part 1's three layers (`rebuild-heroes.md`, "Upgrade pools"). The growing upgrades are from part 7b (`rebuild-content-pool.md`, section 7). **Numbers and names are placeholders.**
+Status: **agreed in discussion (2026-09-30); built as phase 5c step 7 (2026-10-01)** (`rebuild-phase5c-combos.md`, section 15, Decisions 34–39: taste cards carry on after the transformation, five cards replaced (Thread the Hurt, Drawing Wall, Crushing Blow, Lasting Circle, Wide Guard), cards that change nothing never offered, the pick keeps its shape). What the after-fight pick (part 6, `rebuild-between-fights.md`, section 1) offers, for each hero. Replaces part 1's three layers (`rebuild-heroes.md`, "Upgrade pools"). The growing upgrades are from part 7b (`rebuild-content-pool.md`, section 7). **Numbers and names are placeholders.**
 
 ## How the pools work
 
@@ -138,6 +138,9 @@ Added when this file came in (2026-09-30); nothing here changes a decision above
 - **Stacking upgrades** are new: the pick locks in a flat amount from the hero's stat at the time, so run state keeps each hero's taken amounts (the kit mod is a flat stat add, not a multiplier).
 
 ## Open questions
+
+Answered for now (2026-10-01, `rebuild-phase5c-combos.md` Decision 38): the pick keeps its shape (one card per hero and the wild card), every card a hero can be offered equally likely, stacking cards without a cap; the run report counts each layer's picks, and phase 5c step 9 retunes.
+
 
 - **How cards are weighted:** how often a hero-pool card shows against a taste or path card, and whether stacking upgrades show up less often.
 - **Picks per hero:** a day gives one pick for the whole team, so a hero may go several days without one. Is that fine, or should each pick offer one card per hero?

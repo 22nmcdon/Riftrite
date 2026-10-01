@@ -203,6 +203,8 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 	for unit_setup: UnitSetup in setup.units():
 		if not unit_setup.snares.is_empty():
 			Snares.place_setup(self, unit_by_id(unit_setup.id), unit_setup.snares)
+		if unit_setup.lantern.x >= 0 and unit_setup.def.placed_lantern:
+			_light_lantern(unit_by_id(unit_setup.id), unit_setup.lantern)
 	for unit: UnitState in units:
 		if unit.tactic != null:
 			Tactics.start(self, unit)
@@ -299,20 +301,39 @@ func units_joined() -> void:
 		unit.condition_key = Passives.condition_key(self, unit)
 
 
+## First Lantern (phase 5c step 7d): `unit`'s signature's first zone, lit
+## at the fight's start on `hex` where the player placed it; its bar starts
+## empty, as if it had just cast it.
+func _light_lantern(unit: UnitState, hex: Vector2i) -> void:
+	var ability: AbilityDef = unit.def.signature
+	var effect: EffectDef = KitMod.lantern_area(unit.def)
+	if effect == null:
+		return
+	Areas.cast(self, unit, ability, EffectSource.make(unit.id, ability.id, ability.name), effect, null, 0, grid.center(hex.x, hex.y))
+	unit.mana = 0
+
+
 ## Marks each side's front-most standing unit (phase 5c step 7c): the hero
 ## farthest up the board (toward the enemies), the enemy farthest down; ties
 ## go to the first in the fight's order.
 func mark_front() -> void:
 	for side: Array[UnitState] in [heroes, enemies]:
-		var front: UnitState = null
 		for unit: UnitState in side:
 			unit.front_most = false
-			if not unit.alive:
-				continue
-			if front == null or (unit.pos.y > front.pos.y if unit.side == EffectSource.Team.HEROES else unit.pos.y < front.pos.y):
-				front = unit
+		var front: UnitState = front_of(side)
 		if front != null:
 			front.front_most = true
+
+
+## `side`'s front-most standing unit (see mark_front), or null.
+func front_of(side: Array[UnitState]) -> UnitState:
+	var front: UnitState = null
+	for unit: UnitState in side:
+		if not unit.alive:
+			continue
+		if front == null or (unit.pos.y > front.pos.y if unit.side == EffectSource.Team.HEROES else unit.pos.y < front.pos.y):
+			front = unit
+	return front
 
 
 ## Folds every aura in again (a Taunt started or ended, for auras that hold

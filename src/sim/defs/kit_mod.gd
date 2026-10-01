@@ -54,6 +54,12 @@ extends RefCounted
 ##                                        that meet it first
 ##       "strength_add_bp": 500           (step 7c) a Mark it applies is that
 ##                                        much stronger
+##       "follows": "largest_group",      (step 7d) its zones move toward the
+##       "ricochet_add": 1,               biggest group; its hits ricochet;
+##       "reflect_bp": 5000,              its walls send shots back; its
+##       "snags": true                    snares catch leaps and charges
+## and (step 7d) "places_lantern": true at the top: the player places its
+## signature's first area before the fight (UnitSetup.lantern).
 ## and at the top: "plant_add_ms" (how long it plants after moving),
 ## "engage": {"break_free_add_ms": 1000} (enemies it engages take that
 ## much longer to break free), and "mana": {"taken_bp": 15000} (the mana
@@ -123,11 +129,19 @@ class AbilityChange:
 	var prefer: UnitCondition = null
 	## Phase 5c step 7c: a Mark it applies is this much stronger (Heavy Mark).
 	var strength_add_bp: int = 0
+	## Phase 5c step 7d: its zones follow the biggest group (Chasing Storm),
+	## its near-target hits ricochet this many more times (Ricochet), its
+	## walls send stopped shots back at this share (Reflecting Wall), and its
+	## snares spring on leaps and charges (Snag).
+	var follows: bool = false
+	var ricochet_add: int = 0
+	var reflect_bp: int = 0
+	var snags: bool = false
 
 	func touches_effects() -> bool:
 		return amount_bp != FixedMath.BP_ONE or duration_bp != FixedMath.BP_ONE or duration_add_ticks != 0 or radius_add != 0 \
 			or every_add != 0 or times_add != 0 or max_standing_add != 0 or overheal_add_bp != 0 or width_add != 0 or not add_to_areas.is_empty() \
-			or strength_add_bp != 0
+			or strength_add_bp != 0 or follows or ricochet_add != 0 or reflect_bp != 0 or snags
 
 	func touches(effect: EffectDef) -> bool:
 		if not at.is_empty() and not at.has(effect.target):
@@ -177,6 +191,9 @@ var hop_cooldown_add_ticks: int = 0
 var plant_add_ticks: int = 0
 var break_free_add_ticks: int = 0
 var mana_taken_bp: int = FixedMath.BP_ONE
+## Phase 5c step 7d: the player places its signature's first area before
+## the fight (First Lantern).
+var places_lantern: bool = false
 ## A gambit's rule (phase 5c step 6d; Gambits): its name, where else it may
 ## start, when it arrives, and when it swaps places (and the Shield then).
 var gambit_label: String = ""
@@ -225,6 +242,7 @@ static func read(reader: DataReader) -> KitMod:
 			mod.mana_taken_bp = mana_reader.opt_int("taken_bp", FixedMath.BP_ONE, 1000, 50000)
 			mana_reader.finish()
 	mod.plant_add_ticks = _signed_ticks(reader, "plant_add_ms")
+	mod.places_lantern = reader.opt_bool("places_lantern", false)
 	if reader.has("engage"):
 		var engage_reader: DataReader = reader.req_object("engage")
 		if engage_reader != null:
@@ -305,6 +323,10 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 		change.add_to_areas.append(EffectDef.read(effect_reader))
 	change.value_add = reader.opt_int("value_add", 0, -100000, 100000)
 	change.strength_add_bp = reader.opt_int("strength_add_bp", 0, 0, FixedMath.BP_ONE)
+	change.follows = reader.opt_string_choice("follows", "", ["largest_group"]) == "largest_group"
+	change.ricochet_add = reader.opt_int("ricochet_add", 0, 0, 5)
+	change.reflect_bp = reader.opt_int("reflect_bp", 0, 0, FixedMath.BP_ONE)
+	change.snags = reader.opt_bool("snags", false)
 	if reader.has("guard"):
 		var guard: DataReader = reader.req_object("guard")
 		if guard != null:
@@ -338,7 +360,7 @@ static func _signed_ticks(reader: DataReader, key: String) -> int:
 ## since those are what scale cleanly (phase 5c step 4, section 9.3).
 func step_problem() -> String:
 	if _changes_mana() or not also_fires.is_empty() or echo_ticks > 0 or prefer != null or hop_within_add != 0 or hop_cooldown_add_ticks != 0 \
-			or not gambit_label.is_empty() or plant_add_ticks != 0 or break_free_add_ticks != 0:
+			or not gambit_label.is_empty() or plant_add_ticks != 0 or break_free_add_ticks != 0 or places_lantern:
 		return "a growing card's step can't change mana, add triggers, echo, targeting, or hops"
 	for part: PartDef in passives:
 		if part.kind != PartDef.Kind.AURA:
@@ -348,7 +370,8 @@ func step_problem() -> String:
 				or change.cooldown_bp != FixedMath.BP_ONE or not change.add_effects.is_empty() or change.after_add_ticks != 0 \
 				or change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0 or change.every_add != 0 or change.times_add != 0 \
 				or change.max_standing_add != 0 or change.overheal_add_bp != 0 or change.width_add != 0 or not change.add_to_areas.is_empty() \
-				or change.changes_part() or change.prefer != null or not change.at.is_empty() or change.strength_add_bp != 0:
+				or change.changes_part() or change.prefer != null or not change.at.is_empty() or change.strength_add_bp != 0 \
+				or change.follows or change.ricochet_add != 0 or change.reflect_bp != 0 or change.snags:
 			return "a growing card's step can only change an ability's amount_bp"
 	return ""
 
@@ -386,7 +409,7 @@ func changes_anything() -> bool:
 			return true
 	return not passives.is_empty() or not changes.is_empty() or _changes_mana() or not also_fires.is_empty() or echo_ticks > 0 \
 		or prefer != null or hop_within_add != 0 or hop_cooldown_add_ticks != 0 or not gambit_label.is_empty() or plant_add_ticks != 0 \
-		or break_free_add_ticks != 0
+		or break_free_add_ticks != 0 or places_lantern
 
 
 func _changes_mana() -> bool:
@@ -414,6 +437,8 @@ func affects_besides_passives(kit: UnitDef) -> bool:
 	if prefer != null or (kit.hop_cooldown_ticks > 0 and (hop_within_add != 0 or hop_cooldown_add_ticks != 0)) or not gambit_label.is_empty():
 		return true
 	if plant_add_ticks != 0 and kit.plant_ticks > 0 or break_free_add_ticks != 0 and kit.has_trait("engage"):
+		return true
+	if places_lantern and lantern_area(kit) != null:
 		return true
 	for change: AbilityChange in changes:
 		if change.changes_part():
@@ -465,6 +490,8 @@ func apply(kit: UnitDef, problems: Array[String] = []) -> UnitDef:
 		built.plant_ticks = maxi(built.plant_ticks + plant_add_ticks, 0)
 	if built.has_trait("engage"):
 		built.break_free_add_ticks += break_free_add_ticks
+	if places_lantern and lantern_area(built) != null:
+		built.placed_lantern = true
 	for change: AbilityChange in changes:
 		_apply_change(built, change, problems)
 	if prefer != null:
@@ -489,6 +516,17 @@ func apply(kit: UnitDef, problems: Array[String] = []) -> UnitDef:
 		built.signature = signature
 	problems.append_array(built.problems())
 	return built
+
+
+## The area a placed lantern lights (phase 5c step 7d): its signature's
+## first zone, or null.
+static func lantern_area(kit: UnitDef) -> EffectDef:
+	if kit.signature == null:
+		return null
+	for effect: EffectDef in kit.signature.effects:
+		if effect.type == EffectDef.Type.AREA and effect.zone_ticks > 0:
+			return effect
+	return null
 
 
 ## A signature's echo: a copy without a trigger, "<id>_echo" and
@@ -615,6 +653,14 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 				copy.overheal_shield_bp = effect.overheal_shield_bp + change.overheal_add_bp
 			if change.strength_add_bp != 0 and effect.type == EffectDef.Type.APPLY_STATUS:
 				copy.strength_add_bp = effect.strength_add_bp + change.strength_add_bp
+			if change.follows and effect.zone_ticks > 0:
+				copy.follows = true
+			if change.ricochet_add != 0 and effect.type == EffectDef.Type.DAMAGE:
+				copy.ricochet = effect.ricochet + change.ricochet_add
+			if change.reflect_bp != 0 and effect.type == EffectDef.Type.WALL:
+				copy.reflect_bp = effect.reflect_bp + change.reflect_bp
+			if change.snags and effect.type == EffectDef.Type.SNARE:
+				copy.snags = true
 			if change.width_add != 0 and copy.shape != null and copy.shape.kind == ShapeDef.Kind.LINE:
 				copy.shape = DefCopy.shallow(copy.shape) as ShapeDef
 				copy.shape.width += change.width_add
@@ -639,7 +685,9 @@ static func _any_effect(effects: Array[EffectDef], change: AbilityChange) -> boo
 				or change.overheal_add_bp != 0 and effect.overheal_shield_bp > 0
 				or change.width_add != 0 and effect.shape != null and effect.shape.kind == ShapeDef.Kind.LINE
 				or not change.add_to_areas.is_empty() and effect.type == EffectDef.Type.AREA
-				or change.strength_add_bp != 0 and effect.type == EffectDef.Type.APPLY_STATUS):
+				or change.strength_add_bp != 0 and effect.type == EffectDef.Type.APPLY_STATUS
+				or change.follows and effect.zone_ticks > 0 or change.ricochet_add != 0 and effect.type == EffectDef.Type.DAMAGE
+				or change.reflect_bp != 0 and effect.type == EffectDef.Type.WALL or change.snags and effect.type == EffectDef.Type.SNARE):
 			return true
 		if change.touches(effect) and (change.amount_bp != FixedMath.BP_ONE and (effect.amount != 0 or effect.amount_bp_of_damage != 0 or effect.scaling.any(func(value: int) -> bool: return value != 0) or effect.amount_bp_of_max_hp != 0 or change.moves(effect))
 				or (change.duration_bp != FixedMath.BP_ONE or change.duration_add_ticks != 0) and (effect.duration_ticks > 0 or effect.zone_ticks > 0)

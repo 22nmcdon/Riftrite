@@ -225,7 +225,8 @@ func fight_encounter() -> String:
 ## relics, the day's camp modifiers (Fortify, a steadying Rest), and its duo
 ## bonds. Enemies take the relics' enemy mods and a Rift Tear's; Dig In's
 ## rock joins the encounter's. A Hunt takes no camp modifiers. `snares`:
-## hero id -> the hexes of the snares it places (a transformed Trapper).
+## hero id -> the hexes of the snares it places (a transformed Trapper), or
+## of its lantern (First Lantern, phase 5c step 7d).
 func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String], snares: Dictionary[String, Array] = {}) -> FightSetup:
 	var encounter_id: String = fight_encounter()
 	if encounter_id.is_empty():
@@ -276,7 +277,10 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 	var setup: FightSetup = Encounters.setup(content, encounter_id, formation, fight_seed(), errors, tactics, vows, transformed, extras)
 	if setup != null:
 		for hero: UnitSetup in setup.heroes:
-			if hero.def.placed_snares > 0 and snares.has(hero.id):
+			if hero.def.placed_lantern and not snares.get(hero.id, []).is_empty():
+				# First Lantern (phase 5c step 7d): its one marker.
+				hero.lantern = snares[hero.id][0]
+			elif hero.def.placed_snares > 0 and snares.has(hero.id):
 				hero.snares.assign(snares[hero.id])
 			# A tactic at its item's rank (phase 5c step 6c).
 			if ranked_tactics.has(hero.id):

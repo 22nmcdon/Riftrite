@@ -72,6 +72,12 @@ static func land_due(sim: CombatSim) -> void:
 				stopped.target = shot.target.id
 				stopped.note = "stopped by %s" % wall.source.describe()
 				sim.combat_log.add(stopped)
+				if wall.reflect_bp > 0 and shot.shooter.alive:
+					# Reflecting Wall (phase 5c step 7d): its damage goes back
+					# at the shooter at the wall's share, as the wall's hit.
+					for i: int in shot.effects.size():
+						if shot.effects[i].type == EffectDef.Type.DAMAGE:
+							EffectRunner.deal_hit(sim, wall.source, shot.shooter, FixedMath.apply_bp(shot.amounts[i], wall.reflect_bp), false, shot.powers[i], false, "reflected")
 				continue
 		for i: int in shot.effects.size():
 			EffectRunner.land(sim, shot.shooter, shot.ability, shot.source, shot.effects[i], shot.target, shot.amounts[i], shot.crits[i], EffectRunner.NO_POINT, shot.powers[i])

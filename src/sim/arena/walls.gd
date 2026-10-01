@@ -25,6 +25,9 @@ class Wall:
 	## Where its raiser stood: its side of the wall's line is behind it
 	## (phase 5c step 5d, The Watchtower Stone).
 	var back: Vector2i
+	## A stopped shot's share it sends back at the shooter (phase 5c step
+	## 7d, Reflecting Wall; 0: none).
+	var reflect_bp: int = 0
 
 
 ## True if `unit` stands behind one of its side's standing walls (phase 5c
@@ -67,6 +70,7 @@ static func raise(sim: CombatSim, unit: UnitState, source: EffectSource, effect:
 	wall.b = ArenaPlane.along(center, -across, half)
 	wall.until_tick = sim.tick + effect.zone_ticks
 	wall.back = unit.pos
+	wall.reflect_bp = effect.reflect_bp
 	sim.walls.append(wall)
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.WALL, source)
 	entry.target = target.id if target != null else ""

@@ -78,6 +78,10 @@ var plant_ticks: int = 0
 ## How many snares the player places for it before the fight (phase 4,
 ## transformed Trapper; 0: none). Its kit needs a snare effect.
 var placed_snares: int = 0
+## The player places its signature's first zone before the fight (phase 5c
+## step 7d: a kit mod's places_lantern, First Lantern; the data never sets
+## it).
+var placed_lantern: bool = false
 
 
 ## Reads a kit. A hero's or enemy's kit (HeroDef, EnemyDef) takes its id and
@@ -178,6 +182,7 @@ func copy() -> UnitDef:
 	other.archetype = archetype
 	other.plant_ticks = plant_ticks
 	other.placed_snares = placed_snares
+	other.placed_lantern = placed_lantern
 	return other
 
 
@@ -218,6 +223,12 @@ func condition_status_ids() -> Array[String]:
 			found.append(effect.stacks_of)
 		found.append_array(effect.cleanse_statuses)
 	return found
+
+
+## How many markers the player places for it before a fight: its snares,
+## and its lantern (phase 5c step 7d; no kit has both).
+func placed_markers() -> int:
+	return placed_snares + (1 if placed_lantern else 0)
 
 
 ## True if any of its conditions asks for the front-most unit (phase 5c

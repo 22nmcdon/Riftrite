@@ -159,7 +159,7 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - **Relics:** can the same common be bought twice? Are boss offers random or picked to fit the team? Is 8–14 a run right? (relic pool)
 - **The economy:** the whole shard curve needs a sim pass; a Hunt's pay. (economy)
 - **Chain limits:** Crown of Stars' 10 links and Shared Pain's 3 steps are guesses. (relic pool)
-- **Upgrade pools:** how hero, taste, and path cards are weighted; one pick a day for the team, or a card per hero; a cap on stacking upgrades. (upgrade pools)
+- ~~**Upgrade pools:** how hero, taste, and path cards are weighted; one pick a day for the team, or a card per hero; a cap on stacking upgrades.~~ Answered for now (2026-10-01, `rebuild-phase5c-combos.md` Decision 38): the pick keeps its shape (a card per hero, the wild card), every card equally likely, no cap; step 9 retunes. (upgrade pools)
 - **Nodes:** show 2 or 3, and how often each kind; income with a shop every day. (days and nodes)
 - **Events:** how often an Event is a Bloodied Oath; Whispering Stones' deed progress; can the Mirror Pool swap a transformed hero? (events)
 - **The trigger chain's depth limit** (8 is a guess). (part 7)

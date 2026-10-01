@@ -42,7 +42,8 @@ var tactics: Dictionary[String, String] = {}
 var vows: Dictionary[String, String] = {}
 ## The vowed heroes who've transformed.
 var transformed: Array[String] = []
-## Hero id -> the hexes (Vector2i) of the snares it places before a fight.
+## Hero id -> the hexes (Vector2i) of the snares it places before a fight
+## (or its lantern's: First Lantern, phase 5c step 7d).
 var snares: Dictionary[String, Array] = {}
 ## Hero id -> path id -> what the last fight put into that deed (empty
 ## before the first fight).
@@ -83,7 +84,9 @@ func _build(encounter_id: String, hero_hexes: Dictionary[String, Vector2i], figh
 	var fight: FightSetup = Encounters.setup(content, encounter_id, hero_hexes, fight_seed, errors_out, tactics_in(hero_hexes), hero_vows, hero_transformed)
 	if fight != null:
 		for hero: UnitSetup in fight.heroes:
-			if hero.def.placed_snares > 0:
+			if hero.def.placed_lantern and not snares.get(hero.id, []).is_empty():
+				hero.lantern = snares[hero.id][0]
+			elif hero.def.placed_snares > 0:
 				hero.snares.assign(snares.get(hero.id, []))
 	return fight
 
@@ -172,7 +175,7 @@ func set_path(hero_id: String, path_id: String, stage: PathDef.Stage) -> void:
 			transformed.erase(hero_id)
 	if tactics.has(hero_id) and not _can_take(hero_id, content.tactics[tactics[hero_id]]):
 		tactics.erase(hero_id)
-	var can_place: int = kit_of(hero_id).placed_snares
+	var can_place: int = kit_of(hero_id).placed_markers()
 	if can_place == 0:
 		snares.erase(hero_id)
 	elif not snares.has(hero_id):

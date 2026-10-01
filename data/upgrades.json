@@ -863,6 +863,46 @@
     }
   },
   {
+    "id": "snag",
+    "name": "Snag",
+    "path": "trapper",
+    "text": "Her snares catch enemies that leap or charge over them.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "snare"
+          ],
+          "snags": true
+        }
+      ]
+    }
+  },
+  {
+    "id": "guarded_ground",
+    "name": "Guarded Ground",
+    "path": "trapper",
+    "text": "As the fight starts, a snare waits under your front-most ally.",
+    "mod": {
+      "passives": [
+        {
+          "id": "guarded_ground",
+          "name": "Guarded Ground",
+          "kind": "ability",
+          "text": "As the fight starts, she sets one of her snares under your front-most ally (it counts toward Bramble Field's).",
+          "effects": [
+            {
+              "trigger": "on_fight_start",
+              "type": "snare",
+              "under": "front_ally"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
     "id": "patient_hunter",
     "name": "Patient Hunter",
     "path": "trapper",
@@ -991,6 +1031,43 @@
               "target": "self"
             }
           ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "chasing_storm",
+    "name": "Chasing Storm",
+    "path": "volley",
+    "text": "Arrow Storm drifts toward the biggest group of enemies.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "area"
+          ],
+          "follows": "largest_group"
+        }
+      ]
+    }
+  },
+  {
+    "id": "ricochet",
+    "name": "Ricochet",
+    "path": "volley",
+    "text": "A split arrow splits once more, to the enemy nearest the one it hit.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "types": [
+            "damage"
+          ],
+          "at": [
+            "enemy_near_target"
+          ],
+          "ricochet_add": 1
         }
       ]
     }
@@ -1128,6 +1205,23 @@
             "apply_status"
           ],
           "duration_add_ms": 2000
+        }
+      ]
+    }
+  },
+  {
+    "id": "reflecting_wall",
+    "name": "Reflecting Wall",
+    "path": "hearthwall",
+    "text": "His wall sends the arrows it stops back at their archers.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "wall"
+          ],
+          "reflect_bp": 5000
         }
       ]
     }
@@ -1612,6 +1706,15 @@
           ]
         }
       ]
+    }
+  },
+  {
+    "id": "first_lantern",
+    "name": "First Lantern",
+    "path": "lanternbearer",
+    "text": "You place her first Night Lantern yourself, lit as the fight starts.",
+    "mod": {
+      "places_lantern": true
     }
   },
   {

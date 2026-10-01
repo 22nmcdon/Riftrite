@@ -449,6 +449,18 @@ var side: AreaSide = AreaSide.BOTH
 var zone_ticks: int = 0
 ## snare: how many of its kind the unit may have set at once (0: any).
 var max_standing: int = 0
+## Phase 5c step 7d (the upgrade pools' big pieces): a zone that moves
+## toward the biggest group of enemies before each pulse (Chasing Storm); a
+## near-target hit that hits again that many times, each at the enemy
+## nearest the last one hit (Ricochet); a wall that sends a stopped shot
+## back at its shooter at this share (Reflecting Wall); a snare a leap or
+## charge over it springs (Snag); and a snare set under its side's
+## front-most unit, of the kit's placed snares' kind (Guarded Ground).
+var follows: bool = false
+var ricochet: int = 0
+var reflect_bp: int = 0
+var snags: bool = false
+var under_front: bool = false
 ## wall: how wide, and how far ahead of the unit its middle is (plane units).
 var width_range: int = 0
 var ahead_range: int = 0
@@ -480,6 +492,7 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				def.amount_bp_of_damage = reader.opt_int("amount_bp_of_damage", 0, 0)
 				if reader.has("bonus_per_ally"):
 					_read_bonus(def, reader.req_object("bonus_per_ally"))
+				def.ricochet = reader.opt_int("ricochet", 0, 0, 5)
 			Type.HEAL:
 				var kinds: int = int(reader.has("amount")) + int(reader.has("amount_bp_of_max_hp")) + int(reader.has("amount_bp_of_damage"))
 				if kinds != 1:
@@ -510,11 +523,15 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				_read_summon(def, reader)
 			Type.SNARE:
 				def.max_standing = reader.opt_int("max_standing", 0, 0)
-				_read_nested(def, reader, "a snare")
+				def.snags = reader.opt_bool("snags", false)
+				def.under_front = reader.opt_string_choice("under", "", ["front_ally"]) == "front_ally"
+				if not def.under_front:
+					_read_nested(def, reader, "a snare")
 			Type.WALL:
 				def.width_range = reader.req_int("width_hexes", 1, 8) * HexGrid.HEX
 				def.ahead_range = reader.req_int("ahead_hexes", 0, 4) * HexGrid.HEX
 				def.zone_ticks = reader.req_ticks("duration_ms", FixedMath.MS_PER_TICK)
+				def.reflect_bp = reader.opt_int("reflect_bp", 0, 0, FixedMath.BP_ONE)
 			Type.SHIELD:
 				if int(reader.has("amount")) + int(reader.has("amount_bp_of_damage")) + int(reader.has("amount_bp_of_max_hp")) != 1:
 					reader.error("shield needs exactly one of \"amount\", \"amount_bp_of_damage\", or \"amount_bp_of_max_hp\"")
@@ -608,6 +625,9 @@ static func _read_area(def: EffectDef, reader: DataReader) -> void:
 	def.warning_ticks = reader.opt_ticks("warning_ms", 0)
 	if def.zone_ticks > 0 and def.warning_ticks > 0:
 		reader.error("a zone lands from the moment it's cast, so it takes no warning_ms")
+	def.follows = reader.opt_string_choice("follows", "", ["largest_group"]) == "largest_group"
+	if def.follows and def.zone_ticks == 0:
+		reader.error("only a zone (an area with a duration) follows")
 	def.hits = maxi(HITS_NAMES.find(reader.req_choice("hits", HITS_NAMES)), 0) as Hits
 	if not anchor_name.is_empty() and def.shape.is_aimed() != (def.anchor == Anchor.TARGET_DIRECTION):
 		reader.error("anchor: a %s takes %s" % [ShapeDef.KIND_NAMES[def.shape.kind], "target_direction" if def.shape.is_aimed() else "target or self"])

@@ -113,9 +113,34 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 		for victim: UnitState in _targets(sim, unit, effect.target, target, null, effect):
 			var crit_now: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability, victim))
 			land(sim, unit, ability, source, effect, victim, amount_of(effect, unit, 0, sim), crit_now, NO_POINT, power)
+			if effect.ricochet > 0 and effect.type == EffectDef.Type.DAMAGE:
+				_ricochet(sim, unit, ability, source, effect, [target, victim] as Array[UnitState], amount_of(effect, unit, 0, sim), power)
 	if shot != null and not shot.effects.is_empty():
 		Shots.fire(sim, shot)
 	return true
+
+
+## Ricochet (phase 5c step 7d): a near-target hit hits again, up to its
+## `ricochet` times, each at the standing enemy nearest the last one hit
+## (within its reach, never one already hit), with the same numbers; each a
+## DAMAGE line noted "ricochet".
+static func _ricochet(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: EffectSource, effect: EffectDef, hit: Array[UnitState], amount: int, power: int) -> void:
+	var reach: int = effect.near_range if effect.near_range > 0 else HexGrid.HEX
+	for i: int in effect.ricochet:
+		var from: UnitState = hit[hit.size() - 1]
+		var next: UnitState = null
+		var best: int = 0
+		for enemy: UnitState in sim.standing_enemies_of(unit):
+			if hit.has(enemy):
+				continue
+			var distance: int = ArenaPlane.length_sq(enemy.pos - from.pos)
+			if distance <= reach * reach and (next == null or distance < best):
+				next = enemy
+				best = distance
+		if next == null:
+			return
+		deal_hit(sim, source, next, amount, sim.rng.roll_bp(crit_chance_bp(sim, unit, ability, next)), power, true, "ricochet")
+		hit.append(next)
 
 
 ## An effect's power bonus from `unit` (Passives.power_bp), with a heal
@@ -211,7 +236,10 @@ static func run_event(sim: CombatSim, unit: UnitState, ability: AbilityDef, sour
 		Areas.cast(sim, unit, ability, source, effect, other if other != null else unit.target)
 		return
 	if effect.type == EffectDef.Type.SNARE:
-		Snares.set_ahead(sim, unit, ability, source, effect, other if other != null else unit.target)
+		if effect.under_front:
+			Snares.under_front(sim, unit)
+		else:
+			Snares.set_ahead(sim, unit, ability, source, effect, other if other != null else unit.target)
 		return
 	if effect.type == EffectDef.Type.WALL:
 		Walls.raise(sim, unit, source, effect, other if other != null else unit.target)

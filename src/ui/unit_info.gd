@@ -555,7 +555,10 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 				return "+%s of its mana" % ValueBreakdown._percent(effect.mana_bp)
 			return "+%d mana" % effect.amount
 		EffectDef.Type.SNARE:
-			return "a snare in the target's path" + (" (up to %d at once)" % effect.max_standing if effect.max_standing > 0 else "")
+			if effect.under_front:
+				return "one of its snares under its front-most ally"
+			return "a snare in the target's path" + (" (up to %d at once)" % effect.max_standing if effect.max_standing > 0 else "") \
+				+ (", sprung by leaps and charges over it" if effect.snags else "")
 		EffectDef.Type.WALL:
 			@warning_ignore("integer_division")
 			return "a %s-wide wall %s ahead for %s, stopping enemy shots" % [hexes(effect.width_range / HexGrid.HEX), hexes(effect.ahead_range / HexGrid.HEX), seconds(effect.zone_ticks)]

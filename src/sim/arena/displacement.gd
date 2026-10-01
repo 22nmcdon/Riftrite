@@ -134,6 +134,8 @@ static func leap(sim: CombatSim, unit: UnitState, target: UnitState, effect: Eff
 	entry.end_tick = sim.tick + land_ticks
 	_place(sim, unit, spot)
 	unit.landing_until = sim.tick + land_ticks
+	if not sim.snares.is_empty():
+		Snares.snag(sim, unit, from, spot)
 	return true
 
 
@@ -164,6 +166,8 @@ static func charge(sim: CombatSim, unit: UnitState, target: UnitState, effect: E
 				note = "reached %s" % target.id
 	_log(sim, LogEntry.Kind.CHARGE, source, target, from, sweep.point, note)
 	_place(sim, unit, sweep.point)
+	if not sim.snares.is_empty():
+		Snares.snag(sim, unit, from, sweep.point)
 	if hit_unit != null and hit_unit.side != unit.side and effect.knockback_hexes > 0:
 		knockback(sim, hit_unit, unit.pos, unit.forward(), effect.knockback_hexes, source)
 

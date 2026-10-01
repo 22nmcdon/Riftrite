@@ -52,7 +52,7 @@ func sync() -> void:
 		var tactic: TacticDef = run.loadout_tactic(hero, flow.state)
 		if tactic != null:
 			tactics[hero.id] = tactic.id
-		var can_place: int = kit_of(hero.id).placed_snares
+		var can_place: int = kit_of(hero.id).placed_markers()
 		if can_place == 0:
 			snares.erase(hero.id)
 		elif not snares.has(hero.id):
