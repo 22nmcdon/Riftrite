@@ -125,6 +125,8 @@ func validate(content: ContentDb) -> Array[String]:
 		else:
 			taken[grid.index(rock.x, rock.y)] = "a rock"
 	var ids: Array[String] = []
+	var by_hex: Dictionary[int, UnitSetup] = {}
+	var shared: Dictionary[int, bool] = {}
 	for unit: UnitSetup in units():
 		var where: String = "%s at (%d, %d)" % [unit.id, unit.col, unit.row]
 		if ids.has(unit.id):
@@ -146,13 +148,23 @@ func validate(content: ContentDb) -> Array[String]:
 			continue
 		var zone: HexGrid.Zone = grid.zone(unit.row)
 		var own: HexGrid.Zone = HexGrid.Zone.HEROES if unit.side == EffectSource.Team.HEROES else HexGrid.Zone.ENEMIES
-		if zone != own:
+		# A hero's gambit may let it start elsewhere too (phase 5c step 6d).
+		var placed_by_gambit: bool = unit.side == EffectSource.Team.HEROES and unit.def != null and Gambits.may_place(grid, unit.def.place_rule, unit.col, unit.row)
+		if zone != own and not placed_by_gambit:
 			errors.append("%s is outside its side's zone" % where)
 		var hex: int = grid.index(unit.col, unit.row)
 		if taken.has(hex):
-			errors.append("%s shares its hex with %s" % [where, taken[hex]])
+			# Stand Together: two heroes, one of them holding it, share a hex.
+			var other: UnitSetup = by_hex.get(hex, null)
+			var sharing: bool = other != null and other.side == EffectSource.Team.HEROES and unit.side == EffectSource.Team.HEROES \
+				and not shared.has(hex) and (other.def.place_rule == "share" or (unit.def != null and unit.def.place_rule == "share"))
+			if sharing:
+				shared[hex] = true
+			else:
+				errors.append("%s shares its hex with %s" % [where, taken[hex]])
 		else:
 			taken[hex] = unit.id
+			by_hex[hex] = unit
 	var kit_ids: Array[String] = []
 	for kit: UnitDef in summon_kits:
 		if kit_ids.has(kit.id):

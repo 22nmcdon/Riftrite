@@ -239,6 +239,16 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 	var tactics: Dictionary[String, String] = {}
 	var ranked_tactics: Dictionary[String, TacticDef] = {}
 	var wound_bp: int = content.tuning.wound_bp
+	# Stand Together (phase 5c step 6d): the hero sharing its holder's hex
+	# gets its gambit's mod too.
+	var shared_mods: Dictionary[String, KitMod] = {}
+	for hero: RunState.Hero in state.heroes:
+		var gambit: KitMod = run.loadout_gambit(hero, state)
+		if gambit == null or gambit.place_rule != "share" or not formation.has(hero.id):
+			continue
+		for other: RunState.Hero in state.heroes:
+			if other != hero and formation.has(other.id) and formation[other.id] == formation[hero.id]:
+				shared_mods[other.id] = gambit
 	for hero: RunState.Hero in state.heroes:
 		if not formation.has(hero.id):
 			continue
@@ -248,6 +258,8 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 		var mods: Array[KitMod] = run.upgrade_mods(hero)
 		mods.append_array(run.loadout_mods(state, hero))
 		mods.append_array(run.relic_mods(state, run.hero_kit(hero)))
+		if shared_mods.has(hero.id):
+			mods.append(shared_mods[hero.id])
 		if not hunting and state.fortify:
 			mods.append(run.camps.fortify_mod)
 		var covenant: KitMod = _covenant_mod(hero, formation)
@@ -269,6 +281,10 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 			# A tactic at its item's rank (phase 5c step 6c).
 			if ranked_tactics.has(hero.id):
 				hero.tactic = ranked_tactics[hero.id]
+			# Switch Places at the moment the player chose (phase 5c step 6d).
+			var chosen: int = state.hero(hero.id).gambit_at if state.hero(hero.id) != null else 0
+			if chosen > 0 and hero.def.swap_choice:
+				hero.swap_at = chosen * FixedMath.TICKS_PER_SECOND
 		_modify_enemies(setup, hunting, errors)
 		_relic_rules(setup)
 		if not hunting and state.dig_in and state.rock.size() == 2:
@@ -709,6 +725,24 @@ func equip(hero_id: String, slot: int, item_id: String) -> String:
 		state.stash.append(hero.slots[slot])
 	hero.slots[slot] = item_id
 	return ""
+
+
+## Switch Places at rank II (phase 5c step 6d): when `hero_id` swaps, 5, 10,
+## or 15 seconds in.
+func set_gambit_at(hero_id: String, seconds: int) -> String:
+	var hero: RunState.Hero = state.hero(hero_id)
+	if hero == null:
+		return "unknown hero \"%s\"" % hero_id
+	var gambit: KitMod = run.loadout_gambit(hero, state)
+	if gambit == null or not gambit.swap_choice:
+		return "%s holds no gambit whose moment it can choose" % hero_id
+	if not GAMBIT_MOMENTS.has(seconds):
+		return "it swaps at 5, 10, or 15 seconds"
+	hero.gambit_at = seconds
+	return ""
+
+
+const GAMBIT_MOMENTS: Array[int] = [5, 10, 15]
 
 
 ## Takes what's in `hero_id`'s slot `slot` back to the stash.

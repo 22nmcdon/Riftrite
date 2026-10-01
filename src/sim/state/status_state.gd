@@ -30,6 +30,9 @@ var stacks: int = 1
 ## Everflame (phase 5c step 5c): a keyword a hero put on an enemy never ends,
 ## fades, or is cleansed by the enemies.
 var lasting: bool = false
+## It ends once an enemy stands this near its holder (phase 5c step 6d, Rear
+## Guard; 0: as it is).
+var until_near: int = 0
 
 const NEVER: int = 1 << 60
 

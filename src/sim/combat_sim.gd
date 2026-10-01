@@ -106,6 +106,9 @@ var status_end_listeners: bool = false
 var enemy_fell_listeners: bool = false
 ## Some unit's tactic does something on its kills (phase 5c step 6c).
 var tactic_kills: bool = false
+## Some hero arrives later, or swaps places (Gambits; phase 5c step 6d).
+var arrivals: bool = false
+var swaps: bool = false
 ## The last hit dealt missed (Sidestep; phase 5c step 6b), so its on_hit
 ## effects don't run.
 var last_dodged: bool = false
@@ -207,6 +210,7 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 		if unit.deeds != null:
 			tallies_on_target = tallies_on_target or unit.deeds.needs_taken or unit.deeds.needs_kills
 			_counting_time = _counting_time or unit.deeds.needs_time
+	Gambits.set_up(self)
 	units_joined()
 	salt_circles = setup.salt_circles
 	hero_rules = setup.hero_rules
@@ -217,6 +221,10 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 				unit.mana_store = unit.mana_cap * (1 + hero_rules.overcharge_steps + hero_rules.deeper_steps)
 	for r: int in setup.relic_effects.size():
 		EffectRunner.run_relic(self, setup.relic_sources[r], setup.relic_effects[r], setup.relic_scales[r])
+	# Passives that run as the fight starts (phase 5c step 6d: gambits).
+	for unit: UnitState in units:
+		if unit.alive and not unit.listeners.is_empty():
+			Passives.fight_start(self, unit)
 
 
 ## Adds a unit at the end of the fight's order (at the start, or a summon:
@@ -321,6 +329,8 @@ func step() -> void:
 	Statuses.tick_all(self)
 	if hero_rules.rise_ticks > 0:
 		_rise_due()
+	if arrivals or swaps:
+		Gambits.tick(self)
 	if hero_rules.watch_every_ticks > 0 and tick >= hero_rules.watch_from_ticks and (tick - hero_rules.watch_from_ticks) % hero_rules.watch_every_ticks == 0:
 		_keep_watch()
 	Shots.land_due(self)
@@ -599,7 +609,8 @@ func unit_by_id(unit_id: String) -> UnitState:
 
 static func _any_standing(side_units: Array[UnitState]) -> bool:
 	for unit: UnitState in side_units:
-		if unit.alive:
+		# One still to arrive (Late Arrival) isn't down.
+		if unit.alive or unit.arriving:
 			return true
 	return false
 

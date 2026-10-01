@@ -35,7 +35,7 @@ extends RefCounted
 ## The log kinds that raise events (the rest are skipped at once).
 const _RAISES: Array[LogEntry.Kind] = [LogEntry.Kind.FIRE, LogEntry.Kind.DAMAGE, LogEntry.Kind.SHIELD, LogEntry.Kind.HEAL,
 	LogEntry.Kind.STATUS_APPLIED, LogEntry.Kind.HOP, LogEntry.Kind.STATUS_DAMAGE, LogEntry.Kind.STATUS_ENDED, LogEntry.Kind.LIFESTEAL,
-	LogEntry.Kind.PUSH, LogEntry.Kind.GUARD]
+	LogEntry.Kind.PUSH, LogEntry.Kind.GUARD, LogEntry.Kind.ARRIVE]
 
 
 ## Raises the events in the log from entry `from` on, including those the
@@ -117,6 +117,8 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> int:
 					_raise(sim, source, EffectDef.Trigger.ON_STATUS, chain, target, 0, entry.status)
 			LogEntry.Kind.HOP:
 				_raise(sim, source, EffectDef.Trigger.ON_HOP, chain)
+			LogEntry.Kind.ARRIVE:
+				_raise(sim, source, EffectDef.Trigger.ON_ARRIVE, chain)
 	return i
 
 

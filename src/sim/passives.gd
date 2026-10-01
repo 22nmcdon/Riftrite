@@ -242,11 +242,12 @@ static func condition_holds(sim: CombatSim, holder: UnitState, aura: AuraDef) ->
 	return not aura.per_fallen_ally or fallen_allies(sim, holder) > 0
 
 
-## How many of `holder`'s side have fallen (summons included).
+## How many of `holder`'s side have fallen (summons included; one still to
+## arrive hasn't).
 static func fallen_allies(sim: CombatSim, holder: UnitState) -> int:
 	var count: int = 0
 	for unit: UnitState in (sim.heroes if holder.side == EffectSource.Team.HEROES else sim.enemies):
-		if not unit.alive:
+		if not unit.alive and not unit.arriving:
 			count += 1
 	return count
 
@@ -466,6 +467,15 @@ static func would_fall(sim: CombatSim, unit: UnitState) -> bool:
 		_run(sim, unit, listener, null, 0)
 		return true
 	return false
+
+
+## The fight starts: the unit's on_fight_start passives run (phase 5c step
+## 6d: a gambit's Stealth, Shield, or boost at the start).
+static func fight_start(sim: CombatSim, unit: UnitState) -> void:
+	for listener: Listener in unit.listeners:
+		if listener.effect.trigger == EffectDef.Trigger.ON_FIGHT_START and listener.effect.active_at(sim.tick):
+			listener.count += 1
+			_run(sim, unit, listener, null, 0)
 
 
 ## The unit has just fallen: its on_fall passives run, from where it fell.

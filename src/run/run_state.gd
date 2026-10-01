@@ -33,13 +33,16 @@ class Hero:
 	var wounds: int = 0
 	## Item ids in its loadout slots ("": empty).
 	var slots: Array[String] = []
+	## When its Switch Places swaps, if the player chose (seconds; 0: its
+	## kit's moment; phase 5c step 6d).
+	var gambit_at: int = 0
 	## Its growing upgrades (phase 5c step 4): upgrade id -> what it has
 	## counted since it was taken (a lookup; read in `upgrades`' order).
 	var growth: Dictionary[String, int] = {}
 
 	func to_dict() -> Dictionary:
 		return {"id": id, "path": path, "transformed": transformed, "deeds": deeds.duplicate(), "upgrades": upgrades.duplicate(),
-			"wounds": wounds, "slots": slots.duplicate(), "growth": growth.duplicate()}
+			"wounds": wounds, "slots": slots.duplicate(), "growth": growth.duplicate(), "gambit_at": gambit_at}
 
 	static func from_dict(data: Dictionary) -> Hero:
 		var hero := Hero.new()
@@ -52,6 +55,7 @@ class Hero:
 		hero.upgrades.assign((data.get("upgrades", []) as Array).map(func(value: Variant) -> String: return str(value)))
 		hero.wounds = int(data.get("wounds", 0))
 		hero.slots.assign((data.get("slots", []) as Array).map(func(value: Variant) -> String: return str(value)))
+		hero.gambit_at = int(data.get("gambit_at", 0))
 		var growth: Dictionary = data.get("growth", {})
 		for card_id: Variant in growth:
 			hero.growth[str(card_id)] = int(growth[card_id])

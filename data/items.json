@@ -2629,5 +2629,471 @@
         ]
       }
     ]
+  },
+  {
+    "id": "infiltrate",
+    "kind": "gambit",
+    "name": "Infiltrate",
+    "icon": "hold_the_middle",
+    "text": "You may start on the middle row; from rank II, on the enemies' front row too.",
+    "ranks": [
+      {
+        "gambit": {
+          "label": "Infiltrate",
+          "place": "neutral"
+        }
+      },
+      {
+        "gambit": {
+          "label": "Infiltrate",
+          "place": "front"
+        }
+      },
+      {
+        "gambit": {
+          "label": "Infiltrate",
+          "place": "front"
+        },
+        "passives": [
+          {
+            "id": "infiltrate",
+            "name": "Infiltrate",
+            "kind": "ability",
+            "text": "It starts Shielded.",
+            "effects": [
+              {
+                "trigger": "on_fight_start",
+                "type": "shield",
+                "amount_bp_of_max_hp": 1500,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ambush",
+    "kind": "gambit",
+    "name": "Ambush",
+    "icon": "light_feet",
+    "text": "You start the fight hidden, and your first attack is a crit.",
+    "ranks": [
+      {
+        "gambit": {
+          "label": "Ambush"
+        },
+        "passives": [
+          {
+            "id": "ambush",
+            "name": "Ambush",
+            "kind": "ability",
+            "text": "It starts hidden, and its first attack crits.",
+            "effects": [
+              {
+                "trigger": "on_fight_start",
+                "type": "apply_status",
+                "status": "stealth",
+                "duration_ms": 3000,
+                "target": "self"
+              },
+              {
+                "trigger": "on_fight_start",
+                "type": "apply_status",
+                "status": "ambush",
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "gambit": {
+          "label": "Ambush"
+        },
+        "passives": [
+          {
+            "id": "ambush",
+            "name": "Ambush",
+            "kind": "ability",
+            "text": "It starts hidden, and its first attack crits.",
+            "effects": [
+              {
+                "trigger": "on_fight_start",
+                "type": "apply_status",
+                "status": "stealth",
+                "duration_ms": 4000,
+                "target": "self"
+              },
+              {
+                "trigger": "on_fight_start",
+                "type": "apply_status",
+                "status": "ambush_2",
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "gambit": {
+          "label": "Ambush"
+        },
+        "passives": [
+          {
+            "id": "ambush",
+            "name": "Ambush",
+            "kind": "ability",
+            "text": "It starts hidden, and its first attack crits.",
+            "effects": [
+              {
+                "trigger": "on_fight_start",
+                "type": "apply_status",
+                "status": "stealth",
+                "duration_ms": 4000,
+                "target": "self"
+              },
+              {
+                "trigger": "on_fight_start",
+                "type": "apply_status",
+                "status": "ambush_2",
+                "target": "self"
+              },
+              {
+                "trigger": "on_holder_hit",
+                "once": true,
+                "type": "apply_status",
+                "status": "marked",
+                "duration_ms": 4000,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rear_guard",
+    "kind": "gambit",
+    "name": "Rear Guard",
+    "icon": "unbroken_wall",
+    "text": "You start hidden and stay hidden until an enemy comes within 2 hexes.",
+    "ranks": [
+      {
+        "gambit": {
+          "label": "Rear Guard"
+        },
+        "passives": [
+          {
+            "id": "rear_guard",
+            "name": "Rear Guard",
+            "kind": "ability",
+            "text": "It stays hidden until an enemy comes near.",
+            "effects": [
+              {
+                "trigger": "on_fight_start",
+                "type": "apply_status",
+                "status": "stealth",
+                "duration_ms": 180000,
+                "until_enemy_within_hexes": 2,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "gambit": {
+          "label": "Rear Guard"
+        },
+        "passives": [
+          {
+            "id": "rear_guard",
+            "name": "Rear Guard",
+            "kind": "ability",
+            "text": "It stays hidden until an enemy comes near.",
+            "effects": [
+              {
+                "trigger": "on_fight_start",
+                "type": "apply_status",
+                "status": "stealth",
+                "duration_ms": 180000,
+                "until_enemy_within_hexes": 2,
+                "target": "self"
+              },
+              {
+                "trigger": "on_status_ended",
+                "statuses": [
+                  "stealth"
+                ],
+                "once": true,
+                "type": "apply_status",
+                "status": "rear_guard",
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "gambit": {
+          "label": "Rear Guard"
+        },
+        "passives": [
+          {
+            "id": "rear_guard",
+            "name": "Rear Guard",
+            "kind": "ability",
+            "text": "It stays hidden until an enemy comes near.",
+            "effects": [
+              {
+                "trigger": "on_fight_start",
+                "type": "apply_status",
+                "status": "stealth",
+                "duration_ms": 180000,
+                "until_enemy_within_hexes": 2,
+                "target": "self"
+              },
+              {
+                "trigger": "on_status_ended",
+                "statuses": [
+                  "stealth"
+                ],
+                "once": true,
+                "type": "apply_status",
+                "status": "rear_guard",
+                "target": "self"
+              },
+              {
+                "trigger": "on_holder_hit",
+                "once": true,
+                "type": "apply_status",
+                "status": "root",
+                "duration_ms": 1000,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "late_arrival",
+    "kind": "gambit",
+    "name": "Late Arrival",
+    "icon": "opener",
+    "text": "You start off the board and enter a few seconds in, hidden, on the edge hex you were placed on.",
+    "ranks": [
+      {
+        "gambit": {
+          "label": "Late Arrival",
+          "place": "edge",
+          "arrive_ms": 5000
+        },
+        "passives": [
+          {
+            "id": "late_arrival",
+            "name": "Late Arrival",
+            "kind": "ability",
+            "text": "It enters late, hidden.",
+            "effects": [
+              {
+                "trigger": "on_arrive",
+                "type": "apply_status",
+                "status": "stealth",
+                "duration_ms": 2000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "gambit": {
+          "label": "Late Arrival",
+          "place": "edge",
+          "arrive_ms": 4000
+        },
+        "passives": [
+          {
+            "id": "late_arrival",
+            "name": "Late Arrival",
+            "kind": "ability",
+            "text": "It enters late, hidden.",
+            "effects": [
+              {
+                "trigger": "on_arrive",
+                "type": "apply_status",
+                "status": "stealth",
+                "duration_ms": 2000,
+                "target": "self"
+              },
+              {
+                "trigger": "on_arrive",
+                "type": "apply_status",
+                "status": "late_surge",
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "gambit": {
+          "label": "Late Arrival",
+          "place": "edge",
+          "arrive_ms": 4000
+        },
+        "passives": [
+          {
+            "id": "late_arrival",
+            "name": "Late Arrival",
+            "kind": "ability",
+            "text": "It enters late, hidden.",
+            "effects": [
+              {
+                "trigger": "on_arrive",
+                "type": "apply_status",
+                "status": "stealth",
+                "duration_ms": 2000,
+                "target": "self"
+              },
+              {
+                "trigger": "on_arrive",
+                "type": "apply_status",
+                "status": "late_surge",
+                "target": "self"
+              },
+              {
+                "trigger": "on_holder_hit",
+                "once": true,
+                "type": "apply_status",
+                "status": "stun",
+                "duration_ms": 1000,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "stand_together",
+    "kind": "gambit",
+    "name": "Stand Together",
+    "icon": "hollow_crown",
+    "text": "You may share a hex with another hero; you start side by side, and from rank II both of you gain from it.",
+    "ranks": [
+      {
+        "gambit": {
+          "label": "Stand Together",
+          "place": "share"
+        }
+      },
+      {
+        "gambit": {
+          "label": "Stand Together",
+          "place": "share"
+        },
+        "passives": [
+          {
+            "id": "stand_together",
+            "name": "Stand Together",
+            "kind": "aura",
+            "text": "More DEF at the start.",
+            "aura": {
+              "target": "holder",
+              "stat": "def",
+              "value": 10,
+              "window": {
+                "until_ms": 5000
+              }
+            }
+          }
+        ]
+      },
+      {
+        "gambit": {
+          "label": "Stand Together",
+          "place": "share"
+        },
+        "passives": [
+          {
+            "id": "stand_together",
+            "name": "Stand Together",
+            "kind": "aura",
+            "text": "More DEF at the start.",
+            "aura": {
+              "target": "holder",
+              "stat": "def",
+              "value": 10,
+              "window": {
+                "until_ms": 5000
+              }
+            }
+          },
+          {
+            "id": "stand_together_near",
+            "name": "Stand Together",
+            "kind": "aura",
+            "text": "More ATK near an ally.",
+            "aura": {
+              "target": "holder",
+              "stat": "atk_bp",
+              "value": 11000,
+              "while": "ally_near",
+              "within_hexes": 1
+            }
+          },
+          {
+            "id": "stand_together_near_mgk",
+            "name": "Stand Together",
+            "kind": "aura",
+            "text": "More MGK near an ally.",
+            "aura": {
+              "target": "holder",
+              "stat": "mgk_bp",
+              "value": 11000,
+              "while": "ally_near",
+              "within_hexes": 1
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "switch_places",
+    "kind": "gambit",
+    "name": "Switch Places",
+    "icon": "echo",
+    "text": "At 10s you swap places with your ally farthest from you; from rank II you choose the moment.",
+    "ranks": [
+      {
+        "gambit": {
+          "label": "Switch Places",
+          "swap_ms": 10000
+        }
+      },
+      {
+        "gambit": {
+          "label": "Switch Places",
+          "swap_ms": 10000,
+          "swap_choice": true
+        }
+      },
+      {
+        "gambit": {
+          "label": "Switch Places",
+          "swap_ms": 10000,
+          "swap_choice": true,
+          "swap_shield_bp": 1000
+        }
+      }
+    ]
   }
 ]

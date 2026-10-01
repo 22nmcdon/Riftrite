@@ -49,6 +49,16 @@ var traits: Array[String] = []
 ## enemy comes before it hops (plane units; Light Feet adds to it).
 var hop_cooldown_ticks: int = 0
 var hop_within: int = HexGrid.HEX
+## Its gambit (a kit mod's; phase 5c step 6d, Gambits): its name, where
+## else it may start (Gambits.PLACES), when it arrives (0: at the start),
+## and when it swaps places (0: never), each Shielded by a share of max HP;
+## swap_choice: the player picks when (5, 10, or 15s).
+var gambit_label: String = ""
+var place_rule: String = ""
+var arrive_ticks: int = 0
+var swap_ticks: int = 0
+var swap_shield_bp: int = 0
+var swap_choice: bool = false
 ## The enemies it picks first, whatever its rule (a kit mod's; phase 5c step
 ## 6b, Bloodhound; null: none), and the name its picks are logged with.
 var prefer: UnitCondition = null
@@ -154,6 +164,12 @@ func copy() -> UnitDef:
 	other.hop_within = hop_within
 	other.prefer = prefer
 	other.prefer_label = prefer_label
+	other.gambit_label = gambit_label
+	other.place_rule = place_rule
+	other.arrive_ticks = arrive_ticks
+	other.swap_ticks = swap_ticks
+	other.swap_shield_bp = swap_shield_bp
+	other.swap_choice = swap_choice
 	other.archetype = archetype
 	other.plant_ticks = plant_ticks
 	other.placed_snares = placed_snares

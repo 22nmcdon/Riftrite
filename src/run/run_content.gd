@@ -199,6 +199,16 @@ func loadout_mods(state: RunState, hero: RunState.Hero) -> Array[KitMod]:
 	return mods
 
 
+## The mod of the gambit `hero` holds, at its rank, or null (phase 5c step
+## 6d).
+func loadout_gambit(hero: RunState.Hero, state: RunState) -> KitMod:
+	for item_id: String in hero.slots:
+		var item: ItemDef = items.get(item_id)
+		if item != null and item.kind == ItemDef.Kind.GAMBIT:
+			return item.mod_at(state.item_ranks.get(item_id, 1))
+	return null
+
+
 ## The tactic `hero`'s loadout gives it: the first tactic item it can
 ## follow, or null. One it can't (Wait to heal without a signature that
 ## waits) does nothing, with no warning (loadout rule 2).

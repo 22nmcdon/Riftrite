@@ -611,6 +611,16 @@ func _fill_loadout() -> void:
 			if not id.is_empty():
 				slot.tooltip_text = _rank_progress(session.run.items[id])
 			row.add_child(slot)
+		# Switch Places from rank II: the player picks the moment (phase 5c
+		# step 6d).
+		var gambit: KitMod = session.run.loadout_gambit(hero, state)
+		if gambit != null and gambit.swap_choice:
+			@warning_ignore("integer_division")
+			var moment: int = hero.gambit_at if hero.gambit_at > 0 else gambit.swap_ticks / FixedMath.TICKS_PER_SECOND
+			for seconds: int in RunFlow.GAMBIT_MOMENTS:
+				var button: Button = UiStyle.button("Switch at %ds" % seconds, _do.bind(session.flow.set_gambit_at.bind(hero.id, seconds)))
+				button.disabled = seconds == moment
+				row.add_child(button)
 		section.add_child(row)
 	var stash: VBoxContainer = _section("Stash", "" if not state.stash.is_empty() else "Nothing yet: the Pedlar sells charms, tactics, and sigils.")
 	var cards: HFlowContainer = HFlowContainer.new()

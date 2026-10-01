@@ -119,6 +119,14 @@ var prefer_label: String = ""
 ## (plane units), and its cooldown's change (Light Feet).
 var hop_within_add: int = 0
 var hop_cooldown_add_ticks: int = 0
+## A gambit's rule (phase 5c step 6d; Gambits): its name, where else it may
+## start, when it arrives, and when it swaps places (and the Shield then).
+var gambit_label: String = ""
+var place_rule: String = ""
+var arrive_ticks: int = 0
+var swap_ticks: int = 0
+var swap_shield_bp: int = 0
+var swap_choice: bool = false
 
 
 static func make() -> KitMod:
@@ -163,6 +171,16 @@ static func read(reader: DataReader) -> KitMod:
 			mod.prefer_label = prefer_reader.req_string("label")
 			mod.prefer = UnitCondition.read(prefer_reader.req_object("vs"))
 			prefer_reader.finish()
+	if reader.has("gambit"):
+		var gambit: DataReader = reader.req_object("gambit")
+		if gambit != null:
+			mod.gambit_label = gambit.req_string("label")
+			mod.place_rule = gambit.opt_string_choice("place", "", Gambits.PLACES)
+			mod.arrive_ticks = gambit.opt_ticks("arrive_ms", 0)
+			mod.swap_ticks = gambit.opt_ticks("swap_ms", 0)
+			mod.swap_shield_bp = gambit.opt_int("swap_shield_bp", 0, 0, FixedMath.BP_ONE)
+			mod.swap_choice = gambit.opt_bool("swap_choice", false)
+			gambit.finish()
 	if reader.has("hop"):
 		var hop_reader: DataReader = reader.req_object("hop")
 		if hop_reader != null:
@@ -232,7 +250,8 @@ static func _signed_ticks(reader: DataReader, key: String) -> int:
 ## only multiply or add stats, change abilities' amount_bp, or add auras,
 ## since those are what scale cleanly (phase 5c step 4, section 9.3).
 func step_problem() -> String:
-	if _changes_mana() or not also_fires.is_empty() or echo_ticks > 0 or prefer != null or hop_within_add != 0 or hop_cooldown_add_ticks != 0:
+	if _changes_mana() or not also_fires.is_empty() or echo_ticks > 0 or prefer != null or hop_within_add != 0 or hop_cooldown_add_ticks != 0 \
+			or not gambit_label.is_empty():
 		return "a growing card's step can't change mana, add triggers, echo, targeting, or hops"
 	for part: PartDef in passives:
 		if part.kind != PartDef.Kind.AURA:
@@ -277,7 +296,7 @@ func changes_anything() -> bool:
 		if stats_bp[stat] != FixedMath.BP_ONE or stats_add[stat] != 0:
 			return true
 	return not passives.is_empty() or not changes.is_empty() or _changes_mana() or not also_fires.is_empty() or echo_ticks > 0 \
-		or prefer != null or hop_within_add != 0 or hop_cooldown_add_ticks != 0
+		or prefer != null or hop_within_add != 0 or hop_cooldown_add_ticks != 0 or not gambit_label.is_empty()
 
 
 func _changes_mana() -> bool:
@@ -298,7 +317,7 @@ func affects(kit: UnitDef) -> bool:
 		return true
 	if kit.signature != null and (not also_fires.is_empty() or echo_ticks > 0):
 		return true
-	if prefer != null or (kit.hop_cooldown_ticks > 0 and (hop_within_add != 0 or hop_cooldown_add_ticks != 0)):
+	if prefer != null or (kit.hop_cooldown_ticks > 0 and (hop_within_add != 0 or hop_cooldown_add_ticks != 0)) or not gambit_label.is_empty():
 		return true
 	for change: AbilityChange in changes:
 		for ability: AbilityDef in _slot_abilities(kit, change.slot):
@@ -345,6 +364,13 @@ func apply(kit: UnitDef, problems: Array[String] = []) -> UnitDef:
 	if prefer != null:
 		built.prefer = prefer
 		built.prefer_label = prefer_label
+	if not gambit_label.is_empty():
+		built.gambit_label = gambit_label
+		built.place_rule = place_rule
+		built.arrive_ticks = arrive_ticks
+		built.swap_ticks = swap_ticks
+		built.swap_shield_bp = swap_shield_bp
+		built.swap_choice = swap_choice
 	if built.hop_cooldown_ticks > 0:
 		built.hop_within += hop_within_add
 		built.hop_cooldown_ticks = maxi(built.hop_cooldown_ticks + hop_cooldown_add_ticks, 1)

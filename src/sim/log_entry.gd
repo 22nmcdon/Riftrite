@@ -50,6 +50,7 @@ enum Kind {
 	RISE,
 	RESISTED,
 	DODGED,
+	ARRIVE,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -236,6 +237,8 @@ func to_text() -> String:
 			return line + "%s resists %s from %s (%s)" % [target, status_name, source_text(), note]
 		Kind.DODGED:
 			return line + "%s's hit misses %s (Sidestep)" % [source_text(), target]
+		Kind.ARRIVE:
+			return line + "%s: %s arrives at %s" % [source_text(), target, _point(to_pos)]
 		Kind.LIFESTEAL:
 			return line + "%s: %s steals back %d HP" % [source_text(), target, amount]
 		Kind.STATUS_EXTENDED:

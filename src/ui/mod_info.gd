@@ -50,6 +50,22 @@ static func mod_parts(mod: KitMod, kit: UnitDef, content: ContentDb) -> Array[St
 		parts.append("%s starting mana" % signed(mod.mana_start_add))
 	if mod.mana_start_bp > 0:
 		parts.append("starts with %s mana" % ValueBreakdown._percent(mod.mana_start_bp))
+	if not mod.gambit_label.is_empty():
+		match mod.place_rule:
+			"neutral":
+				parts.append("may start on the middle row")
+			"front":
+				parts.append("may start on the middle row or the enemies' front row")
+			"edge":
+				parts.append("may start on any edge hex")
+			"share":
+				parts.append("may share a hex with another hero")
+		if mod.arrive_ticks > 0:
+			parts.append("enters at %s" % UnitInfo.seconds(mod.arrive_ticks))
+		if mod.swap_ticks > 0:
+			parts.append("swaps with its farthest ally at %s%s" % [UnitInfo.seconds(mod.swap_ticks), " (or 5s or 15s, as you choose)" if mod.swap_choice else ""])
+		if mod.swap_shield_bp > 0:
+			parts.append("both Shielded %s of max HP" % ValueBreakdown._percent(mod.swap_shield_bp))
 	if mod.prefer != null:
 		parts.append("its attacks go for enemies that are %s first" % mod.prefer.describe())
 	if mod.hop_within_add != 0:

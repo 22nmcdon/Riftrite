@@ -31,7 +31,9 @@ extends RefCounted
 
 ## `marks_stack`: a Mark that stacks as it refreshes, as under Hunter's
 ## Engine (the effect's own, phase 5c step 6b: Hunter's Chalk).
-static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: int, duration_ticks: int, source: EffectSource, marks_stack: bool = false) -> void:
+## `until_near`: it ends once an enemy stands that near (Rear Guard).
+static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: int, duration_ticks: int, source: EffectSource, marks_stack: bool = false,
+		until_near: int = 0) -> void:
 	if not sim.content.statuses.has(status_id):
 		push_error("Statuses: unknown status \"%s\"" % status_id)
 		return
@@ -81,6 +83,7 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: 
 	elif def.is_timed():
 		state.source = source
 		state.lasting = state.lasting or lasting
+		state.until_near = until_near
 		state.ends_at = StatusState.NEVER if state.lasting else sim.tick + (duration_ticks if duration_ticks > 0 else def.duration_ticks)
 		entry.end_tick = state.ends_at if not state.lasting else -1
 		if def.kind == StatusDef.Kind.MARKED and (marks_stack or sim.hero_rules.marks_stack and _by_heroes(sim, source)):
@@ -199,11 +202,20 @@ static func tick_all(sim: CombatSim) -> void:
 			if state.def.is_timed():
 				if sim.tick >= state.ends_at:
 					_end(sim, unit, state)
+				elif state.until_near > 0 and _enemy_within(sim, unit, state.until_near):
+					_end(sim, unit, state, "an enemy came near")
 				continue
 			state.interval_left -= 1
 			if state.interval_left <= 0:
 				state.interval_left = state.def.interval_ticks
 				_deal_damage_over_time(sim, unit, state)
+
+
+static func _enemy_within(sim: CombatSim, unit: UnitState, reach: int) -> bool:
+	for enemy: UnitState in sim.standing_enemies_of(unit):
+		if ArenaPlane.length_sq(enemy.pos - unit.pos) <= reach * reach:
+			return true
+	return false
 
 
 ## A stacking boost's stacks whose time is up go; the last one ends it.

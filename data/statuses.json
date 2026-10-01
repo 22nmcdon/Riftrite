@@ -248,5 +248,38 @@
     "kind": "boost",
     "duration_ms": 1050,
     "auras": [{"stat": "def", "value": 10}]
+  },
+  {
+    "_note": "Its first attack crits; it ends as it attacks (Ambush, a gambit; phase 5c step 6d). ambush_2 adds +50% crit damage.",
+    "id": "ambush",
+    "name": "Ambush",
+    "kind": "boost",
+    "duration_ms": 60000,
+    "until_attack": true,
+    "auras": [{"stat": "crit_chance_bp", "value": 10000}]
+  },
+  {
+    "id": "ambush_2",
+    "name": "Ambush",
+    "kind": "boost",
+    "duration_ms": 60000,
+    "until_attack": true,
+    "auras": [{"stat": "crit_chance_bp", "value": 10000}, {"stat": "crit_damage_bp", "value": 5000}]
+  },
+  {
+    "_note": "Attacks faster for its first 5s out of hiding (Rear Guard at rank II; phase 5c step 6d).",
+    "id": "rear_guard",
+    "name": "Rear Guard",
+    "kind": "boost",
+    "duration_ms": 5000,
+    "auras": [{"stat": "atsp", "value": 20}]
+  },
+  {
+    "_note": "More ATK and MGK for 5s after it arrives (Late Arrival at rank II; phase 5c step 6d).",
+    "id": "late_surge",
+    "name": "Late Surge",
+    "kind": "boost",
+    "duration_ms": 5000,
+    "auras": [{"stat": "atk_bp", "value": 12000}, {"stat": "mgk_bp", "value": 12000}]
   }
 ]

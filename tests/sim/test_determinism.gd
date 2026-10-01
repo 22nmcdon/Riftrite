@@ -91,17 +91,19 @@ func test_the_fight_order_matters() -> void:
 ## would change the chaos fight's seed; phase 4's path pieces: the paths
 ## fight, once the paths are data).
 ## The heroes' rules (RISE, RESISTED): the rules fight. A charm's miss
-## (DODGED, phase 5c step 6b): tests/sim/test_loadout_pieces.gd.
+## (DODGED, phase 5c step 6b): tests/sim/test_loadout_pieces.gd. A gambit's
+## arrival (ARRIVE, step 6d): tests/sim/test_gambits.gd.
 const NOT_YET: Array[LogEntry.Kind] = [LogEntry.Kind.SYNERGY, LogEntry.Kind.DEED_LEVEL, LogEntry.Kind.TACTIC,
 	LogEntry.Kind.ZONE, LogEntry.Kind.SNARE, LogEntry.Kind.WALL, LogEntry.Kind.GUARD, LogEntry.Kind.RISE, LogEntry.Kind.RESISTED,
-	LogEntry.Kind.DODGED]
+	LogEntry.Kind.DODGED, LogEntry.Kind.ARRIVE]
 ## Statuses only the paths use (phase 4), and only relics (phase 5c step 5a;
 ## Sunder, covered by tests/run/test_relics.gd).
 const PATH_STATUSES: Array[String] = ["warded"]
 const RELIC_STATUSES: Array[String] = ["sunder", "quickened", "unbending", "long_watch"]
 ## Boosts only loadout items apply (phase 5c step 6; tests/run/test_loadout.gd).
 const ITEM_STATUSES: Array[String] = ["surge", "surge_2", "last_breath", "purified",
-	"grounded", "shadow_step", "shadow_step_2", "shadow_step_3", "bloodhound", "scavenged", "watched_over"]
+	"grounded", "shadow_step", "shadow_step_2", "shadow_step_3", "bloodhound", "scavenged", "watched_over",
+	"ambush", "ambush_2", "rear_guard", "late_surge"]
 ## The statuses the heroes' rules apply (phase 5c step 5c).
 const RULE_STATUSES: Array[String] = ["unbending", "long_watch"]
 

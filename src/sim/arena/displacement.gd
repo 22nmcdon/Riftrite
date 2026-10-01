@@ -211,6 +211,11 @@ static func hop_away(sim: CombatSim, unit: UnitState, engagers: Array[UnitState]
 	return true
 
 
+## Moves `unit` to `point` (Gambits' swap; phase 5c step 6d).
+static func place(sim: CombatSim, unit: UnitState, point: Vector2i) -> void:
+	_place(sim, unit, point)
+
+
 ## Moves `unit` to `point`: its path is dropped, and an engagement it's been
 ## moved out of ends.
 static func _place(sim: CombatSim, unit: UnitState, point: Vector2i) -> void:

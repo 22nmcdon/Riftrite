@@ -29,6 +29,9 @@ var tally_counts: Array[DeedDef] = []
 var snares: Array[Vector2i] = []
 ## Its max HP, as a share of its kit's (phase 5: wounds lower it).
 var max_hp_bp: int = FixedMath.BP_ONE
+## When it swaps places, if the player chose (Switch Places at rank II;
+## phase 5c step 6d; 0: its kit's moment).
+var swap_at: int = 0
 ## The kit modifiers already applied to `def` (phase 5: upgrades, the
 ## loadout, relics), kept so the UI can list them.
 var mods: Array[KitMod] = []

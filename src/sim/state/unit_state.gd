@@ -187,6 +187,10 @@ var sure_crit: bool = false
 var tactic_wait_since: int = -1
 ## Kiting or walking back to its tank (logged once each time it starts).
 var tactic_backing: bool = false
+## Gambits (phase 5c step 6d): away until it arrives (Late Arrival), and
+## when it swaps places, if the player chose (0: its kit's).
+var arriving: bool = false
+var swap_at: int = 0
 ## The deeds it counts (Deeds; null: none).
 var deeds: Deeds.Counter = null
 
@@ -224,6 +228,7 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 		if part.kind == PartDef.Kind.AURA and part.aura.stat == AuraDef.Stat.RANGE and part.aura.while_kind == AuraDef.While.PLANTED:
 			unit.planted_bonus += part.aura.value
 	unit.tactic = setup.tactic
+	unit.swap_at = setup.swap_at
 	unit.holding = setup.tactic != null and setup.tactic.kind == TacticDef.Kind.HOLD_GROUND
 	unit.inert = setup.def.has_trait("inert")
 	unit.deeds = Deeds.make_counter(setup.deed_paths, setup.tally_keys, setup.tally_counts)

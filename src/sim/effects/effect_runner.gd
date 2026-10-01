@@ -157,7 +157,7 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			var status_id: String = unit.status_swaps.get(effect.status_id, effect.status_id)
 			# fresh_only: never on a unit that has it already (Snaring Shot).
 			if not effect.fresh_only or Statuses.find(victim, status_id) == null:
-				Statuses.apply(sim, victim, status_id, amount, effect.duration_ticks, source, effect.marks_stack)
+				Statuses.apply(sim, victim, status_id, amount, effect.duration_ticks, source, effect.marks_stack, effect.until_near)
 		EffectDef.Type.CLEANSE:
 			Statuses.cleanse_over_time(sim, victim, mini(amount, FixedMath.BP_ONE), source, false, effect.cleanse_statuses)
 		EffectDef.Type.MANA_DRAIN:

@@ -75,7 +75,8 @@ func test_relic_rules() -> void:
 	_assert_error(_errors({"trigger": "on_fire", "type": "damage", "amount": 5, "target": "self"}, true), "\"self\" needs a unit on the field")
 	_assert_error(_errors({"trigger": "on_fire", "type": "damage", "amount": 5, "target": "target"}, true), "\"target\" needs a unit on the field")
 	_assert_error(_errors({"trigger": "on_fire", "type": "damage", "amount": 5, "target": "all_enemies", "scaling": {"atk": 5000}}, true), "relic numbers are flat")
-	_assert_error(_errors({"trigger": "on_fight_start", "type": "damage", "amount": 5, "target": "all_enemies"}), "ability effects can't use the trigger \"on_fight_start\"")
+	_assert_error(_errors({"trigger": "at_time", "at_ms": 1000, "type": "damage", "amount": 5, "target": "all_enemies"}), "ability effects can't use the trigger \"at_time\"")
+	assert_eq(_errors({"trigger": "on_fight_start", "type": "shield", "amount": 5, "target": "self"}), [] as Array[String], "a passive's on_fight_start (phase 5c step 6d)")
 	_assert_error(_errors({"trigger": "on_fire", "type": "heal", "amount": 5, "target": "trigger_ally"}), "\"trigger_ally\" only works with the on_ally_below_hp trigger")
 
 

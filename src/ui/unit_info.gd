@@ -30,6 +30,7 @@ const EVENT_WORDS: Dictionary[int, String] = {
 	EffectDef.Trigger.ON_GUARD: "hit taken for an ally",
 	EffectDef.Trigger.ON_CHARGED: "charge or leap that hits it",
 	EffectDef.Trigger.ON_ENEMY_FELL: "enemy falling",
+	EffectDef.Trigger.ON_ARRIVE: "arrival",
 }
 const ORDINALS: Array[String] = ["th", "st", "nd", "rd"]
 const CHATTER: Array[LogEntry.Kind] = [LogEntry.Kind.MOVE, LogEntry.Kind.STOP, LogEntry.Kind.TARGET]
@@ -282,6 +283,8 @@ static func passive_trigger_text(effect: EffectDef) -> String:
 			return "Once, when it would fall"
 		EffectDef.Trigger.ON_FALL:
 			return "As it falls"
+		EffectDef.Trigger.ON_FIGHT_START:
+			return "As the fight starts"
 		EffectDef.Trigger.ON_ALLY_BELOW_HP:
 			return "When an ally drops below %s HP (%s)" % [ValueBreakdown._percent(effect.threshold_bp), "once a fight" if effect.once else "once per ally"]
 		EffectDef.Trigger.ON_BELOW_HP:
@@ -503,6 +506,9 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 				named += " (%s)" % boost_text(status)
 			if effect.marks_stack:
 				named += ", stacking as it refreshes"
+			if effect.until_near > 0:
+				@warning_ignore("integer_division")
+				named = "%s until an enemy comes within %s" % [status.name, hexes(effect.until_near / HexGrid.HEX)]
 			return named + _to_all(effect)
 		EffectDef.Type.EXTEND_STATUS:
 			return "its %s lasts %s longer" % [_status_name(effect.status_id, content), seconds(effect.duration_ticks)]

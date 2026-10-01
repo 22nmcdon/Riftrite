@@ -188,6 +188,7 @@ extends RefCounted
 ##                     Unyielding: a would-fall save that isn't a signature)
 ## Phase 5c step 6b (the loadout's charms) adds events: on_charged (a charge
 ## or leap's hit lands on the unit; hit_target: the one that did it; Braced)
+## and on_arrive (step 6d: the unit enters the fight late; Late Arrival),
 ## and on_enemy_fell (an enemy falls, within "fell_within_hexes" of the unit
 ## if given; it names the fallen; Scavenger); on_kill's "from_signature"
 ## (only its signature's kills; Execution); an event effect's "cooldown_ms"
@@ -195,6 +196,8 @@ extends RefCounted
 ## "min_bp_of_max_hp" (only hits that big); apply_status's "marks_stack" (a
 ## Mark it applies stacks as it refreshes; Hunter's Chalk); and gain_mana's
 ## "amount_bp_of_max_mana" (a share of the bar).
+##   on_fight_start    once, as the fight starts (phase 5c step 6d: a
+##                     gambit's; a passive's, like a relic's)
 ##   on_below_hp       the unit itself drops below "threshold_bp" of its max
 ##                     HP while standing (each time it drops back below,
 ##                     up to "times" a fight; default 1; phase 5c step 6,
@@ -213,7 +216,7 @@ enum Trigger {
 	ON_ABILITY, ON_BASIC_ATTACK, ON_HOLDER_CRIT, ON_SHIELDED, ON_HIT_TAKEN, ON_HEAL, ON_STATUS, ON_KILL,
 	ON_INTERVAL, ON_FALL, ON_HOP, ON_WOULD_FALL,
 	ON_HOLDER_HIT, ON_SHIELD_BROKEN, ON_ALLY_ABILITY, ON_STATUS_ENDED, ON_LIFESTEAL, ON_KNOCKBACK, ON_GUARD,
-	ON_BELOW_HP, ON_CHARGED, ON_ENEMY_FELL,
+	ON_BELOW_HP, ON_CHARGED, ON_ENEMY_FELL, ON_ARRIVE,
 }
 enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS }
 enum Placement { EDGES, ADJACENT, HEXES }
@@ -245,14 +248,14 @@ const TRIGGER_NAMES: Array[String] = [
 	"on_ability", "on_basic_attack", "on_holder_crit", "on_shielded", "on_hit_taken", "on_heal", "on_status", "on_kill",
 	"on_interval", "on_fall", "on_hop", "on_would_fall",
 	"on_holder_hit", "on_shield_broken", "on_ally_ability", "on_status_ended", "on_lifesteal", "on_knockback", "on_guard",
-	"on_below_hp", "on_charged", "on_enemy_fell",
+	"on_below_hp", "on_charged", "on_enemy_fell", "on_arrive",
 ]
 ## The unit's events (see the top).
 const EVENT_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
-	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL,
+	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE,
 ]
 ## Event triggers that name a unit (hit_target) and those that name a hit
 ## (amount_bp_of_damage).
@@ -269,7 +272,7 @@ const ABILITY_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
-	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL,
+	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START,
 ]
 ## What a passive's effects may run on (PartDef).
 const PASSIVE_TRIGGERS: Array[Trigger] = [
@@ -277,11 +280,11 @@ const PASSIVE_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
-	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL,
+	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START,
 ]
 ## The passive triggers that aren't events (Passives.run_timed, on_fall,
 ## would_fall).
-const UNIT_TRIGGERS: Array[Trigger] = [Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL, Trigger.ON_BELOW_HP]
+const UNIT_TRIGGERS: Array[Trigger] = [Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL, Trigger.ON_BELOW_HP, Trigger.ON_FIGHT_START]
 const RELIC_TRIGGERS: Array[Trigger] = [Trigger.ON_FIRE, Trigger.ON_FIGHT_START, Trigger.AT_TIME, Trigger.ON_ALLY_BELOW_HP]
 ## Targets that need the effect's unit to stand on the field.
 const FIELD_ONLY_TARGETS: Array[Target] = [Target.TARGET, Target.HIT_TARGET, Target.SELF,
@@ -411,6 +414,9 @@ var times: int = 1
 ## anywhere). on_kill: only a kill by its signature (Execution). gain_mana:
 ## this share of its bar instead of a flat amount.
 var marks_stack: bool = false
+## apply_status (phase 5c step 6d, Rear Guard): it ends once an enemy stands
+## this near its holder (plane units; 0: as it is).
+var until_near: int = 0
 var cooldown_ticks: int = 0
 var min_hit_bp: int = 0
 var fell_range: int = 0
@@ -508,6 +514,8 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 					reader.error("stacks_share_bp is a share of stacks_of")
 				def.fresh_only = reader.opt_bool("fresh_only", false)
 				def.marks_stack = reader.opt_bool("marks_stack", false)
+				if reader.has("until_enemy_within_hexes"):
+					def.until_near = reader.req_int("until_enemy_within_hexes", 1, 10) * HexGrid.HEX
 			Type.EXTEND_STATUS:
 				def.status_id = reader.req_string("status")
 				def.duration_ticks = reader.req_ticks("duration_ms", FixedMath.MS_PER_TICK)
