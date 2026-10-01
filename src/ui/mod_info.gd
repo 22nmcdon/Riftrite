@@ -134,15 +134,14 @@ static func _power_word(change: KitMod.AbilityChange) -> String:
 ## An item's numbers line at `rank` (1 to 3): its mod's, or its tactic's.
 static func item_numbers(item: ItemDef, kit: UnitDef, content: ContentDb, rank: int = 1) -> String:
 	if item.tactic != null:
-		return UnitInfo.tactic_numbers(item.tactic)
+		return UnitInfo.tactic_numbers(item.tactic.at_rank(rank))
 	var mod: KitMod = item.mod_at(rank)
 	return mod_numbers(mod, kit, content) if mod != null else ""
 
 
-## What an item's next rank brings, as "Rank II: ..." ("" at rank III, or
-## for a tactic until its ranks are built).
+## What an item's next rank brings, as "Rank II: ..." ("" at rank III).
 static func next_rank_line(item: ItemDef, content: ContentDb, rank: int) -> String:
-	if rank >= ItemDef.RANKS or item.tactic != null:
+	if rank >= ItemDef.RANKS:
 		return ""
 	return "Rank %s: %s" % [ItemDef.RANK_NAMES[rank], item_numbers(item, null, content, rank + 1)]
 

@@ -39,6 +39,14 @@ static func tactic(kind: String, extra: Dictionary = {}) -> Dictionary:
 			data["heroes"] = ["vell"]
 		"stop_near":
 			data["stop_hexes"] = 2
+		"leash":
+			data["leash_hexes"] = 2
+		"signature_crowd":
+			data["crowd"] = 3
+			data["max_wait_ms"] = 4000
+			data["heroes"] = ["brannoc"]
+		"signature_finish":
+			data["below_pct"] = 50
 	data.merge(extra, true)
 	return data
 
@@ -47,9 +55,10 @@ func _assert_error(db: ContentDb, expected: String) -> void:
 	assert_true(db.errors.any(func(message: String) -> bool: return message.contains(expected)), "expected '%s' in %s" % [expected, db.errors])
 
 
-func test_the_three_tactics() -> void:
+func test_the_tactics() -> void:
 	assert_true(_content.is_valid(), str(_content.errors))
-	assert_eq(_content.tactic_ids, ["casters_first", "hold_ground", "wait_to_heal", "plant_feet"] as Array[String])
+	assert_eq(_content.tactic_ids, ["casters_first", "hold_ground", "wait_to_heal", "plant_feet", "fliers_first", "marked_first", "finish_them",
+		"break_the_line", "guard_the_weakest", "keep_your_distance", "stay_with_the_tank", "dive", "wait_for_a_crowd", "save_it_for_the_kill"] as Array[String])
 	var casters: TacticDef = _content.tactics["casters_first"]
 	assert_eq(casters.kind, TacticDef.Kind.PREFER_TARGET)
 	assert_eq(casters.archetypes, ["caster", "support"] as Array[String], "casters are casters and supports (Decision 1)")
@@ -61,13 +70,35 @@ func test_the_three_tactics() -> void:
 	assert_eq(wait.below_bp, 6000, "below 60% (Decision 5)")
 	assert_eq([casters.damage_vs_bp, hold.atsp_bp, wait.heal_bp], [2000, 2000, 1500], "each one's payoff (round 2)")
 	assert_eq([casters.atsp_bp, casters.heal_bp, hold.damage_vs_bp, hold.heal_bp, wait.damage_vs_bp, wait.atsp_bp], [0, 0, 0, 0, 0, 0], "and only its own")
-	for tactic_id: String in ["casters_first", "hold_ground"]:
-		assert_eq(_content.tactics[tactic_id].heroes, ["brannoc", "maren", "vell"] as Array[String], "%s is for everyone (Decision 4)" % tactic_id)
-	assert_eq(wait.heroes, ["vell"] as Array[String], "Wait to heal is Vell's")
-	assert_true(wait.allows("vell"))
-	assert_false(wait.allows("maren"))
+	assert_eq(_content.tactics["plant_feet"].def_add, 10, "Plant your feet gains its payoff (loadout/tactics.md)")
 	for tactic_id: String in _content.tactic_ids:
-		assert_false(_content.tactics[tactic_id].text.is_empty())
+		var tactic: TacticDef = _content.tactics[tactic_id]
+		assert_false(tactic.text.is_empty())
+		assert_eq(tactic.heroes, [] as Array[String], "%s is anyone's (the loadout's rule 1)" % tactic_id)
+		assert_eq([tactic.at_rank(1).rank, tactic.at_rank(2).rank, tactic.at_rank(3).rank], [1, 2, 3], "%s has three ranks" % tactic_id)
+	assert_true(wait.allows("maren"), "anyone may take it; Tactics.can_follow says who can follow it")
+
+
+func test_ranks_build_on_each_other() -> void:
+	var wait: TacticDef = _content.tactics["wait_to_heal"]
+	assert_eq([wait.at_rank(2).below_bp, wait.at_rank(2).heal_bp, wait.at_rank(2).cleanse_one], [7000, 2500, false])
+	assert_eq([wait.at_rank(3).below_bp, wait.at_rank(3).heal_bp, wait.at_rank(3).cleanse_one], [7000, 2500, true], "rank III keeps rank II's and adds its twist")
+	assert_eq([wait.below_bp, wait.heal_bp], [6000, 1500], "rank I is untouched")
+	var casters: TacticDef = _content.tactics["casters_first"].at_rank(3)
+	assert_eq([casters.damage_vs_bp, casters.first_hit_status, casters.first_hit_ticks], [3500, "silence", 20])
+	_assert_error(_load_tactics([tactic("hold_ground", {"ranks": [{"atsp_bp": 3000}]})]), "ranks II and III")
+	_assert_error(_load_tactics([tactic("prefer_target", {"ranks": [{}, {"first_hit": {"status": "nonsense"}}]})]), "unknown status \"nonsense\"")
+
+
+func test_can_follow() -> void:
+	var brannoc: UnitDef = _content.heroes["brannoc"].kit
+	var maren: UnitDef = _content.heroes["maren"].kit
+	var vell: UnitDef = _content.heroes["vell"].kit
+	var follows: Callable = func(tactic_id: String, kit: UnitDef) -> bool: return Tactics.can_follow(_content.tactics[tactic_id], kit)
+	assert_eq([follows.call("wait_to_heal", brannoc), follows.call("wait_to_heal", maren), follows.call("wait_to_heal", vell)], [false, false, true], "a heal")
+	assert_eq([follows.call("wait_for_a_crowd", brannoc), follows.call("wait_for_a_crowd", maren), follows.call("wait_for_a_crowd", vell)], [true, false, false], "an area")
+	assert_eq([follows.call("save_it_for_the_kill", brannoc), follows.call("save_it_for_the_kill", maren)], [false, false], "damage")
+	assert_true(follows.call("dive", maren))
 
 
 func test_enemy_kits_carry_their_archetype() -> void:
@@ -90,19 +121,16 @@ func test_each_kind_reads_its_own_numbers() -> void:
 	_assert_error(_load_tactics([tactic("prefer_target", {"below_pct": 50})]), "unknown key \"below_pct\"")
 
 
-func test_each_kind_reads_only_its_own_payoff() -> void:
-	var payoffs: Dictionary[String, String] = {"prefer_target": "damage_vs_bp", "hold_ground": "atsp_bp", "signature_threshold": "heal_bp"}
-	for kind: String in payoffs:
-		var db: ContentDb = _load_tactics([tactic(kind, {"payoff": {payoffs[kind]: 1500}})])
-		assert_true(db.is_valid(), "%s: %s" % [kind, db.errors])
-		for other: String in payoffs.values():
-			if other != payoffs[kind]:
-				_assert_error(_load_tactics([tactic(kind, {"payoff": {payoffs[kind]: 1500, other: 1500}})]), "unknown key \"%s\"" % other)
+func test_payoffs_are_optional_and_checked() -> void:
+	for key: String in ["damage_vs_bp", "atsp_bp", "heal_bp", "def_add", "power_bp"]:
+		var db: ContentDb = _load_tactics([tactic("hold_ground", {"payoff": {key: 1500 if key != "def_add" else 10}})])
+		assert_true(db.is_valid(), "%s: %s" % [key, db.errors])
 	assert_true(_load_tactics([tactic("hold_ground")]).is_valid(), "a payoff is optional")
 	var none: TacticDef = _load_tactics([tactic("hold_ground")]).tactics["test"]
 	assert_eq(none.atsp_bp, 0)
-	_assert_error(_load_tactics([tactic("hold_ground", {"payoff": {"atsp_bp": 0}})]), "out of range")
-	_assert_error(_load_tactics([tactic("hold_ground", {"payoff": {}})]), "missing required key \"atsp_bp\"")
+	assert_true(_load_tactics([tactic("hold_ground", {"payoff": {}})]).is_valid(), "and so is each key")
+	_assert_error(_load_tactics([tactic("hold_ground", {"payoff": {"atsp_bp": 30000}})]), "out of range")
+	_assert_error(_load_tactics([tactic("hold_ground", {"payoff": {"nonsense": 1}})]), "unknown key \"nonsense\"")
 	_assert_error(_load_tactics([tactic("hold_ground", {"payoff": 20})]), "payoff")
 
 
@@ -117,8 +145,8 @@ func test_bad_tactics_are_reported() -> void:
 	_assert_error(_load_tactics([no_text]), "missing required key \"text\"")
 	var no_heroes: Dictionary = tactic("hold_ground")
 	no_heroes.erase("heroes")
-	_assert_error(_load_tactics([no_heroes]), "missing required key \"heroes\"")
-	_assert_error(_load_tactics([tactic("hold_ground", {"heroes": []})]), "at least one hero")
+	assert_true(_load_tactics([no_heroes]).is_valid(), "no heroes: anyone")
+	_assert_error(_load_tactics([tactic("hold_ground", {"heroes": []})]), "name at least one")
 	_assert_error(_load_tactics([tactic("hold_ground", {"heroes": ["nobody"]})]), "unknown hero \"nobody\"")
 	_assert_error(_load_tactics([tactic("hold_ground", {"heroes": ["maren", "maren"]})]), "lists \"maren\" twice")
 	_assert_error(_load_tactics([tactic("hold_ground"), tactic("hold_ground")]), "duplicate id \"test\"")

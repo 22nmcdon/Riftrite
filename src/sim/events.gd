@@ -131,6 +131,8 @@ static func kill(sim: CombatSim, fallen: UnitState) -> void:
 		# from_signature, phase 5c step 6b).
 		_raise(sim, killer, EffectDef.Trigger.ON_KILL, fallen.last_hit_chain, fallen, 0,
 			fallen.last_hit_source.ability_id if fallen.last_hit_source != null else "")
+		if sim.tactic_kills and killer.tactic != null:
+			Tactics.on_kill(sim, killer, fallen)
 
 
 ## on_enemy_fell (phase 5c step 6b, Scavenger): each standing enemy of the

@@ -62,6 +62,8 @@ func test_every_stat_change_names_its_amount() -> void:
 			for stat: int in mod.stats_bp.size():
 				if mod.stats_bp[stat] != FixedMath.BP_ONE:
 					assert_string_contains(numbers, "%s %s" % [UnitInfo.signed_percent(mod.stats_bp[stat] - FixedMath.BP_ONE), UnitStats.LABELS[stat]], id)
+				if mod.stats_add[stat] != 0:
+					assert_string_contains(numbers, "%s %s" % [ModInfo.signed(mod.stats_add[stat]), UnitStats.LABELS[stat]], id)
 
 
 func test_a_relics_run_rules_and_who_its_mods_are_for() -> void:

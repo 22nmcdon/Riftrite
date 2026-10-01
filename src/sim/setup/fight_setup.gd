@@ -135,7 +135,7 @@ func validate(content: ContentDb) -> Array[String]:
 		else:
 			_check_kit(unit.def, where, content, grid, errors)
 			if unit.tactic != null and (unit.side != EffectSource.Team.HEROES or not unit.tactic.allows(unit.def.id)
-					or (unit.tactic.kind == TacticDef.Kind.SIGNATURE_THRESHOLD and not Tactics.can_wait(unit.def.signature))):
+					or not Tactics.can_follow(unit.tactic, unit.def)):
 				errors.append("%s can't take the tactic %s" % [where, unit.tactic.name])
 			errors.append_array(_path_problems(unit, where))
 			if unit.max_hp_bp < 1000 or unit.max_hp_bp > FixedMath.BP_ONE:

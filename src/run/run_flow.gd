@@ -237,6 +237,7 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 	var transformed: Array[String] = []
 	var extras: Dictionary[String, HeroExtras] = {}
 	var tactics: Dictionary[String, String] = {}
+	var ranked_tactics: Dictionary[String, TacticDef] = {}
 	var wound_bp: int = content.tuning.wound_bp
 	for hero: RunState.Hero in state.heroes:
 		if not formation.has(hero.id):
@@ -256,14 +257,18 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 		var tallies: Array = run.growth_tallies(state, hero)
 		extras[hero.id].tally_keys.assign(tallies[0])
 		extras[hero.id].tally_counts.assign(tallies[1])
-		var tactic: TacticDef = run.loadout_tactic(hero)
+		var tactic: TacticDef = run.loadout_tactic(hero, state)
 		if tactic != null:
 			tactics[hero.id] = tactic.id
+			ranked_tactics[hero.id] = tactic
 	var setup: FightSetup = Encounters.setup(content, encounter_id, formation, fight_seed(), errors, tactics, vows, transformed, extras)
 	if setup != null:
 		for hero: UnitSetup in setup.heroes:
 			if hero.def.placed_snares > 0 and snares.has(hero.id):
 				hero.snares.assign(snares[hero.id])
+			# A tactic at its item's rank (phase 5c step 6c).
+			if ranked_tactics.has(hero.id):
+				hero.tactic = ranked_tactics[hero.id]
 		_modify_enemies(setup, hunting, errors)
 		_relic_rules(setup)
 		if not hunting and state.dig_in and state.rock.size() == 2:

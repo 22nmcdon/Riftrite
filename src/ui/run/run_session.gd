@@ -49,7 +49,7 @@ func sync() -> void:
 		vows[hero.id] = hero.path
 		if hero.transformed:
 			transformed.append(hero.id)
-		var tactic: TacticDef = run.loadout_tactic(hero)
+		var tactic: TacticDef = run.loadout_tactic(hero, flow.state)
 		if tactic != null:
 			tactics[hero.id] = tactic.id
 		var can_place: int = kit_of(hero.id).placed_snares

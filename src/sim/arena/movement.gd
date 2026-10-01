@@ -62,6 +62,40 @@ static func walk(sim: CombatSim, unit: UnitState) -> void:
 	_follow(sim, unit)
 
 
+## One tick of walking straight toward `point` (a tactic's step: backing
+## away, or back to its tank; phase 5c step 6c), sliding along what's in the
+## way. Its route is dropped, so walking plans again. False if it couldn't
+## move (Rooted, or boxed in).
+static func step_to(sim: CombatSim, unit: UnitState, point: Vector2i) -> bool:
+	if not unit.statuses.is_empty() and Statuses.has_kind(unit, StatusDef.Kind.ROOT):
+		halt(sim, unit, "rooted")
+		return false
+	var amount: int = unit.step_length()
+	if amount <= 0 or point == unit.pos:
+		return false
+	unit.route.clear()
+	unit.route_for = null
+	unit.replan_at = sim.tick + 1
+	var next: Vector2i = ArenaPlane.step_toward(unit.pos, point, amount)
+	if not sim.fits_ground(unit, next):
+		next = _slide(sim, unit, next)
+		if next == unit.pos:
+			halt(sim, unit, "blocked")
+			return false
+		_log_leg(sim, unit, next, ArenaPlane.distance(unit.pos, next) + 1)
+		unit.pos = next
+		unit.moved_at = sim.tick
+		unit.leg_active = false
+		return true
+	if not unit.leg_active or unit.leg_to != point or unit.leg_amount != amount:
+		_log_leg(sim, unit, point, amount)
+	unit.pos = next
+	unit.moved_at = sim.tick
+	if unit.pos == point:
+		unit.leg_active = false
+	return true
+
+
 ## The unit has nothing to walk to this tick (`reason` goes in the log if it
 ## stops): it stands still, unless it's on crumbled ground, when it steps
 ## off (see the top).

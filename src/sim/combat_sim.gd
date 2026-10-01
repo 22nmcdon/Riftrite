@@ -104,6 +104,8 @@ var ally_ability_listeners: bool = false
 var status_end_listeners: bool = false
 ## Some unit has an on_enemy_fell passive (phase 5c step 6b).
 var enemy_fell_listeners: bool = false
+## Some unit's tactic does something on its kills (phase 5c step 6c).
+var tactic_kills: bool = false
 ## The last hit dealt missed (Sidestep; phase 5c step 6b), so its on_hit
 ## effects don't run.
 var last_dodged: bool = false
@@ -198,7 +200,9 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 	for unit: UnitState in units:
 		if unit.tactic != null:
 			Tactics.start(self, unit)
-			damage_payoffs = damage_payoffs or unit.tactic.damage_vs_bp > 0
+			damage_payoffs = damage_payoffs or unit.tactic.damage_vs_bp > 0 or unit.tactic.def_ignore_bp > 0 \
+				or not unit.tactic.first_hit_status.is_empty() or unit.tactic.crit_extends_mark_ticks > 0
+			tactic_kills = tactic_kills or unit.tactic.kill_mana > 0 or unit.tactic.restart_on_kill or unit.tactic.refund_bp > 0
 		_counting = _counting or unit.deeds != null
 		if unit.deeds != null:
 			tallies_on_target = tallies_on_target or unit.deeds.needs_taken or unit.deeds.needs_kills
@@ -351,6 +355,8 @@ func step() -> void:
 ## One unit's update this tick. It runs for every unit every tick, so it's
 ## written for speed: the common checks are inlined.
 func _act(unit: UnitState) -> void:
+	if unit.tactic != null and (unit.tactic.regen_bp > 0 or unit.tactic.ally_def_add > 0):
+		Tactics.tick(self, unit)
 	var has_statuses: bool = not unit.statuses.is_empty()
 	# Mana regen (Mana), unless Silenced.
 	if unit.mana_regen > 0 and unit.mana < maxi(unit.mana_cap, unit.mana_store) and not (has_statuses and Statuses.has_kind(unit, StatusDef.Kind.SILENCE)):
@@ -379,6 +385,9 @@ func _act(unit: UnitState) -> void:
 		var rate: int = unit.attack_rate_bp
 		if unit.holding and unit.tactic.atsp_bp > 0:
 			rate = FixedMath.apply_bp(rate, FixedMath.BP_ONE + unit.tactic.atsp_bp)
+		elif unit.tactic != null and unit.tactic.keep_bp > 0 and unit.tactic.kind == TacticDef.Kind.HOLD_GROUND:
+			# Hold your ground's twist: part of it stays after letting go.
+			rate = FixedMath.apply_bp(rate, FixedMath.BP_ONE + FixedMath.apply_bp(unit.tactic.atsp_bp, unit.tactic.keep_bp))
 		if has_statuses:
 			var slow: int = Statuses.slow_bp(unit)
 			if slow != 0:
@@ -416,6 +425,9 @@ func _act(unit: UnitState) -> void:
 		# A flier in the air lands on a free spot before it attacks.
 		if unit.airborne and not Movement.settle(self, unit, target):
 			return
+		# Keep your distance (phase 5c step 6c): between attacks, it backs off.
+		if unit.tactic != null and unit.tactic.kind == TacticDef.Kind.KITE and attack.progress_bp < attack.needed and Tactics.kite(self, unit, target):
+			return
 		if unit.leg_active:
 			Movement.halt(self, unit, "in reach")
 		if attack.progress_bp >= attack.needed and (unit.def.plant_ticks == 0 or tick - unit.moved_at >= unit.def.plant_ticks):
@@ -434,6 +446,9 @@ func _act(unit: UnitState) -> void:
 	# About to walk: a unit planting its feet (Tactics) stays near an enemy.
 	if unit.tactic != null and unit.tactic.kind == TacticDef.Kind.STOP_NEAR and Tactics.planted(self, unit):
 		Movement.wait(self, unit, "planted its feet")
+		return
+	# About to walk: a unit staying with its tank (Tactics) may go to it instead.
+	if unit.tactic != null and unit.tactic.kind == TacticDef.Kind.LEASH and Tactics.leash(self, unit, target):
 		return
 	# About to walk: an engager next to it may hold it.
 	if unit.engagements.is_empty() and not engagers.is_empty():

@@ -36,7 +36,7 @@ static func update(sim: CombatSim, unit: UnitState) -> void:
 	unit.target = null
 	if sim.tick < unit.look_again_at:
 		return
-	if unit.tactic != null and unit.tactic.kind == TacticDef.Kind.PREFER_TARGET:
+	if unit.tactic != null and (unit.tactic.kind == TacticDef.Kind.PREFER_TARGET or unit.tactic.kind == TacticDef.Kind.GUARD_ALLY):
 		var preferred: UnitState = Tactics.preferred(sim, unit)
 		if preferred != null:
 			set_target(sim, unit, preferred, unit.tactic.name)
@@ -78,7 +78,7 @@ static func pick(sim: CombatSim, unit: UnitState, rule: String, reach_sq: int) -
 					best = other
 			if best == null:
 				best = _lowest_share(pool)
-		"lowest_hp_ally":
+		"lowest_hp_ally", "weakest_in_reach":
 			best = _lowest_share(pool)
 		"largest_group":
 			var best_count: int = -1

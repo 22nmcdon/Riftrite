@@ -230,6 +230,9 @@ static func condition_holds(sim: CombatSim, holder: UnitState, aura: AuraDef) ->
 		AuraDef.While.BEHIND_WALL:
 			if sim.walls.is_empty() or not Walls.behind(sim, holder, aura.near_range):
 				return false
+		AuraDef.While.TACTIC:
+			if holder.tactic == null or not Tactics.applies(sim, holder):
+				return false
 		AuraDef.While.ALLY_STANDING:
 			if not (sim.heroes if holder.side == EffectSource.Team.HEROES else sim.enemies).any(
 					func(unit: UnitState) -> bool: return unit != holder and unit.alive and unit.def.id == aura.ally_kit):

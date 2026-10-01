@@ -93,15 +93,21 @@ func test_the_gate_needs_a_30_point_gap() -> void:
 
 func test_the_tactic_variants() -> void:
 	var names: Array = Report.tactic_variants(_content).map(func(row: Report.TacticRow) -> String: return Report.variant_name(_content, row))
-	assert_eq(names, ["no tactics", "Brannoc on Casters first", "Maren on Casters first", "Vell on Casters first", "Brannoc on Hold your ground",
-		"Maren on Hold your ground", "Vell on Hold your ground", "Vell on Wait to heal",
-		"Brannoc on Plant your feet", "Maren on Plant your feet", "Vell on Plant your feet"])
+	var expected: Array[String] = ["no tactics"]
+	for tactic_id: String in _content.tactic_ids:
+		for hero_id: String in _content.hero_ids:
+			if Tactics.can_follow(_content.tactics[tactic_id], _content.heroes[hero_id].kit):
+				expected.append("%s on %s" % [hero_id.capitalize(), _content.tactics[tactic_id].name])
+	assert_eq(names, expected)
+	assert_eq(names.slice(0, 8), ["no tactics", "Brannoc on Casters first", "Maren on Casters first", "Vell on Casters first", "Brannoc on Hold your ground",
+		"Maren on Hold your ground", "Vell on Hold your ground", "Vell on Wait to heal"], "each hero on each tactic it can follow")
+	assert_true(names.has("Brannoc on Wait for a crowd") and not names.has("Maren on Wait for a crowd"), "an area signature waits for a crowd")
 
 
 func test_a_small_tactics_run() -> void:
 	var named: Dictionary[String, Dictionary] = _named()
 	var report: Report.TacticReport = Report.run_tactics(_content, "witch_circle", named, 1, 2)
-	assert_eq([report.formations, report.seeds, report.rows.size()], [5, 2, 11])
+	assert_eq([report.formations, report.seeds, report.rows.size()], [5, 2, Report.tactic_variants(_content).size()])
 	for row: Report.TacticRow in report.rows:
 		assert_eq(row.fights, 10)
 		assert_eq(row.formation_wins.size(), 5)
@@ -152,6 +158,6 @@ func test_the_summary_answers_the_plans_two_questions() -> void:
 	var text: String = Report.tactics_summary(_content, reports)
 	assert_string_contains(text, "%-30s helps in 2, hurts in 0, no change in 0; changes 4 formation outcomes" % "Maren on Hold your ground")
 	assert_string_contains(text, "%-30s helps in 0, hurts in 0, no change in 2; changes 0 formation outcomes" % "Vell on Wait to heal")
-	assert_string_contains(text, "Every tactic changes an outcome: no (Wait to heal, Plant your feet)")
+	assert_string_contains(text, "Every tactic changes an outcome: no (Wait to heal, Plant your feet, Fliers first")
 	assert_string_contains(text, "%-30s helps in 1, hurts in 1, no change in 0" % "Brannoc on Casters first")
 	assert_true(text.ends_with("None is right everywhere: no (Maren on Hold your ground)"), "only the one that helps in both")

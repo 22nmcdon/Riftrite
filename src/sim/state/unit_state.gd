@@ -178,6 +178,15 @@ var inert: bool = false
 var tactic_waiting: bool = false
 ## Its Guard passive (phase 4; null: none).
 var guard: PartDef = null
+## Tactics (phase 5c step 6c): the enemies it has hit once (first_hit; a
+## lookup), Dive's window's end, a sure crit owed (Keep your distance), and
+## when its bar first waited (Wait for a crowd; -1: not waiting).
+var tactic_hit: Dictionary[String, bool] = {}
+var dive_until: int = 0
+var sure_crit: bool = false
+var tactic_wait_since: int = -1
+## Kiting or walking back to its tank (logged once each time it starts).
+var tactic_backing: bool = false
 ## The deeds it counts (Deeds; null: none).
 var deeds: Deeds.Counter = null
 
@@ -186,7 +195,7 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 	var unit := UnitState.new()
 	unit.index = fight_index
 	unit.id = setup.id
-	unit.def = setup.def
+	unit.def = Tactics.kit_with_payoff(setup.def, setup.tactic)
 	unit.phases = setup.def.phases
 	unit.own_source = EffectSource.make(setup.id, "", "")
 	unit.side = setup.side

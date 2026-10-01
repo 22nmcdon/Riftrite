@@ -62,6 +62,11 @@ static func act(sim: CombatSim, unit: UnitState) -> bool:
 					return false
 				if unit.tactic != null and unit.tactic.kind == TacticDef.Kind.SIGNATURE_THRESHOLD and not Tactics.hurt_enough(sim, unit):
 					return false
+				# Wait for a crowd and Save it for the kill (phase 5c step 6c).
+				if unit.tactic != null and unit.tactic.kind == TacticDef.Kind.SIGNATURE_CROWD and not Tactics.crowd_ready(sim, unit, target):
+					return false
+				if unit.tactic != null and unit.tactic.kind == TacticDef.Kind.SIGNATURE_FINISH and not Tactics.finish_ready(sim, unit, target):
+					return false
 				if signature.def.cast_ticks > 0:
 					_start_cast(sim, unit, target)
 					return true
@@ -205,6 +210,9 @@ static func _fire(sim: CombatSim, unit: UnitState, target: UnitState, note: Stri
 	signature.failing = false
 	if signature.echo != null:
 		signature.echo_at = sim.tick + ability.echo_ticks
+	# Wait to heal's twist (phase 5c step 6c): the heal that waited cleanses.
+	if unit.tactic != null and unit.tactic.cleanse_one and unit.tactic.kind == TacticDef.Kind.SIGNATURE_THRESHOLD:
+		Tactics.cleanse_one(sim, unit, target)
 	return true
 
 

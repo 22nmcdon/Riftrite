@@ -191,9 +191,14 @@ func _check_path(path: PathDef, where: String, grid: HexGrid) -> void:
 			errors.append("%s: the deed counts \"%s\", which isn't in %s's kits on this path" % [where, ability_id, path.hero])
 
 
-## A tactic's heroes must exist; a signature_threshold tactic's must have a
-## mana signature that heals (phase 4, Decision 4: any healing signature).
+## A tactic's heroes (if it names any) must exist; a signature_threshold
+## tactic's must have a mana signature that heals (phase 4, Decision 4: any
+## healing signature); a first_hit's status must exist, at every rank.
 func _check_tactic(tactic: TacticDef, where: String) -> void:
+	for rank: int in range(1, 4):
+		var ranked: TacticDef = tactic.at_rank(rank)
+		if not ranked.first_hit_status.is_empty() and not statuses.has(ranked.first_hit_status):
+			errors.append("%s: rank %d's first hit puts on an unknown status \"%s\"" % [where, rank, ranked.first_hit_status])
 	for i: int in tactic.heroes.size():
 		var hero_id: String = tactic.heroes[i]
 		if tactic.heroes.find(hero_id) < i:

@@ -101,7 +101,7 @@ const PATH_STATUSES: Array[String] = ["warded"]
 const RELIC_STATUSES: Array[String] = ["sunder", "quickened", "unbending", "long_watch"]
 ## Boosts only loadout items apply (phase 5c step 6; tests/run/test_loadout.gd).
 const ITEM_STATUSES: Array[String] = ["surge", "surge_2", "last_breath", "purified",
-	"grounded", "shadow_step", "shadow_step_2", "shadow_step_3", "bloodhound", "scavenged"]
+	"grounded", "shadow_step", "shadow_step_2", "shadow_step_3", "bloodhound", "scavenged", "watched_over"]
 ## The statuses the heroes' rules apply (phase 5c step 5c).
 const RULE_STATUSES: Array[String] = ["unbending", "long_watch"]
 

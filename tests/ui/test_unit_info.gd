@@ -197,7 +197,11 @@ func test_the_tactics_numbers_lines() -> void:
 	assert_eq(UnitInfo.tactic_numbers(_content.tactics["casters_first"]), "Casters and supports first · +20% damage to them from its basic attack and signature")
 	assert_eq(UnitInfo.tactic_numbers(_content.tactics["hold_ground"]), "Holds until an enemy is within 2 hexes · +20% attack speed while it holds")
 	assert_eq(UnitInfo.tactic_numbers(_content.tactics["wait_to_heal"]), "Waits until an ally is below 60% HP · +15% healing from its signature")
-	assert_eq(UnitInfo.tactic_numbers(_content.tactics["plant_feet"]), "Stops while an enemy is within 2 hexes")
+	assert_eq(UnitInfo.tactic_numbers(_content.tactics["plant_feet"]), "Stops while an enemy is within 2 hexes · +10 DEF while it does")
+	assert_eq(UnitInfo.tactic_numbers(_content.tactics["plant_feet"].at_rank(3)), "Stops while an enemy is within 2 hexes · +20 DEF while it does · +10% ATK and MGK while it does")
+	assert_eq(UnitInfo.tactic_numbers(_content.tactics["dive"]), "The farthest enemy first · +20% ATK and MGK for its first 5s")
+	assert_eq(UnitInfo.tactic_numbers(_content.tactics["save_it_for_the_kill"].at_rank(3)),
+		"Waits until its target is below 50% HP · +40% damage from the signature that waited · a kill with it gives back 30% of its bar")
 	# Made-up tactics: other numbers, and no payoff.
 	var odd := TacticDef.new()
 	odd.kind = TacticDef.Kind.PREFER_TARGET

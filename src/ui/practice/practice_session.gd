@@ -126,7 +126,7 @@ func tactics_for(hero_id: String) -> Array[TacticDef]:
 
 
 func _can_take(hero_id: String, tactic: TacticDef) -> bool:
-	return tactic.allows(hero_id) and (tactic.kind != TacticDef.Kind.SIGNATURE_THRESHOLD or Tactics.can_wait(kit_of(hero_id).signature))
+	return tactic.allows(hero_id) and Tactics.can_follow(tactic, kit_of(hero_id))
 
 
 ## Gives `hero_id` a tactic ("": none). Only one it can take.

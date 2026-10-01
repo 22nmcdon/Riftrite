@@ -202,19 +202,18 @@ func loadout_mods(state: RunState, hero: RunState.Hero) -> Array[KitMod]:
 ## The tactic `hero`'s loadout gives it: the first tactic item it can
 ## follow, or null. One it can't (Wait to heal without a signature that
 ## waits) does nothing, with no warning (loadout rule 2).
-func loadout_tactic(hero: RunState.Hero) -> TacticDef:
+## At the item's rank (phase 5c step 6c).
+func loadout_tactic(hero: RunState.Hero, state: RunState = null) -> TacticDef:
 	for item_id: String in hero.slots:
 		var item: ItemDef = items.get(item_id)
 		if item != null and item.tactic != null and can_follow(item.tactic, hero_kit(hero), hero.id):
-			return item.tactic
+			return item.tactic.at_rank(state.item_ranks.get(item_id, 1) if state != null else 1)
 	return null
 
 
 ## Whether a hero `hero_id` with `kit` can follow `tactic`.
 static func can_follow(tactic: TacticDef, kit: UnitDef, hero_id: String) -> bool:
-	if not tactic.allows(hero_id):
-		return false
-	return tactic.kind != TacticDef.Kind.SIGNATURE_THRESHOLD or Tactics.can_wait(kit.signature)
+	return tactic.allows(hero_id) and Tactics.can_follow(tactic, kit)
 
 
 ## The kit mods the run's relics give every hero, in the order taken; a

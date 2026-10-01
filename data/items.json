@@ -1113,6 +1113,86 @@
     "tactic": "plant_feet"
   },
   {
+    "id": "fliers_first_orders",
+    "kind": "tactic",
+    "name": "Fliers first",
+    "icon": "fliers_first",
+    "text": "Goes for flying enemies first, and hits them harder.",
+    "tactic": "fliers_first"
+  },
+  {
+    "id": "marked_first_orders",
+    "kind": "tactic",
+    "name": "Marked first",
+    "icon": "rift_glass_eye",
+    "text": "Goes for Marked enemies first, and crits them more often.",
+    "tactic": "marked_first"
+  },
+  {
+    "id": "finish_them_orders",
+    "kind": "tactic",
+    "name": "Finish them",
+    "icon": "the_tank_first",
+    "text": "Goes for the weakest enemy in reach, and hits enemies near death harder.",
+    "tactic": "finish_them"
+  },
+  {
+    "id": "break_the_line_orders",
+    "kind": "tactic",
+    "name": "Break the line",
+    "icon": "casters_first",
+    "text": "Goes for the toughest enemy first, and its hits ignore part of its DEF.",
+    "tactic": "break_the_line"
+  },
+  {
+    "id": "guard_the_weakest_orders",
+    "kind": "tactic",
+    "name": "Guard the weakest",
+    "icon": "unbroken_wall",
+    "text": "Goes for whoever is attacking its weakest ally, and is tougher while it does.",
+    "tactic": "guard_the_weakest"
+  },
+  {
+    "id": "keep_your_distance_orders",
+    "kind": "tactic",
+    "name": "Keep your distance",
+    "icon": "light_feet",
+    "text": "Backs away to keep its target at the edge of its reach, attacking faster there.",
+    "tactic": "keep_your_distance"
+  },
+  {
+    "id": "stay_with_the_tank_orders",
+    "kind": "tactic",
+    "name": "Stay with the tank",
+    "icon": "the_tank_first",
+    "text": "Stays near its ally with the most DEF, and is tougher there.",
+    "tactic": "stay_with_the_tank"
+  },
+  {
+    "id": "dive_orders",
+    "kind": "tactic",
+    "name": "Dive",
+    "icon": "fletched_for_wings",
+    "text": "Goes for the farthest enemy, hitting harder for the first few seconds.",
+    "tactic": "dive"
+  },
+  {
+    "id": "wait_for_a_crowd_orders",
+    "kind": "tactic",
+    "name": "Wait for a crowd",
+    "icon": "hold_the_middle",
+    "text": "Holds an area signature until enough enemies stand in it; then it hits harder.",
+    "tactic": "wait_for_a_crowd"
+  },
+  {
+    "id": "save_it_for_the_kill_orders",
+    "kind": "tactic",
+    "name": "Save it for the kill",
+    "icon": "steady_hands",
+    "text": "Holds a damaging signature until its target is below half HP; then it hits harder.",
+    "tactic": "save_it_for_the_kill"
+  },
+  {
     "id": "echo",
     "kind": "sigil",
     "name": "Echo",

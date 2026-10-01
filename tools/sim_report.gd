@@ -247,12 +247,12 @@ class TacticReport:
 
 
 ## Every variant: no tactics, then each tactic (tactics.json's order) on each
-## hero who can take it (heroes.json's order).
+## hero who can follow it (heroes.json's order).
 static func tactic_variants(content: ContentDb) -> Array[TacticRow]:
 	var variants: Array[TacticRow] = [TacticRow.new()]
 	for tactic_id: String in content.tactic_ids:
 		for hero_id: String in content.hero_ids:
-			if content.tactics[tactic_id].allows(hero_id):
+			if content.tactics[tactic_id].allows(hero_id) and Tactics.can_follow(content.tactics[tactic_id], content.heroes[hero_id].kit):
 				var row := TacticRow.new()
 				row.hero_id = hero_id
 				row.tactic_id = tactic_id

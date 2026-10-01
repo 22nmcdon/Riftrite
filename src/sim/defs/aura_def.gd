@@ -91,7 +91,7 @@ enum Stat { DAMAGE_BP, HEAL_BP, SHIELD_BP, OVER_TIME_BP, CRIT_CHANCE_BP, COOLDOW
 	OVERHEAL_SHIELD_BP, LIFESTEAL_HEALS, CRIT_OVERFLOW_BP, DEF, OVERHEAL_STRIKE_BP, MAX_HP_BP,
 	DEF_IGNORE_BP, UNPUSHABLE, DODGE_EVERY_MS, HALVED_HITS }
 ## What turns an aura on, beyond its window.
-enum While { ALWAYS, TAUNTING, PLANTED, BELOW_HP, ALLY_STANDING, STATE, ALLY_NEAR, BEHIND_WALL }
+enum While { ALWAYS, TAUNTING, PLANTED, BELOW_HP, ALLY_STANDING, STATE, ALLY_NEAR, BEHIND_WALL, TACTIC }
 
 const TARGET_NAMES: Array[String] = ["holder", "all_allies"]
 const TARGET_LABELS: Array[String] = ["its holder", "all allies"]
@@ -103,7 +103,7 @@ const STAT_NAMES: Array[String] = [
 	"overheal_shield_bp", "lifesteal_heals", "crit_overflow_bp", "def", "overheal_strike_bp", "max_hp_bp",
 	"def_ignore_bp", "unpushable", "dodge_every_ms", "halved_hits",
 ]
-const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp", "ally_standing", "state", "ally_near", "behind_wall"]
+const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp", "ally_standing", "state", "ally_near", "behind_wall", "tactic"]
 ## The stats that add rather than multiply. The rest are factors (x1.1);
 ## several of one stat add their changes (the damage rule, phase 5c).
 const ADDITIVE: Array[Stat] = [Stat.CRIT_CHANCE_BP, Stat.COOLDOWN_BP, Stat.RANGE, Stat.LIFESTEAL_BP, Stat.CRIT_DAMAGE_BP, Stat.ATSP, Stat.DAMAGE_REDUCED_BP,
@@ -184,7 +184,7 @@ static func read(reader: DataReader) -> AuraDef:
 	if reader.has("label"):
 		def.label = reader.req_string("label")
 	if reader.has("while"):
-		def.while_kind = maxi(WHILE_NAMES.find(reader.req_choice("while", WHILE_NAMES.slice(1))), 0) as While
+		def.while_kind = maxi(WHILE_NAMES.find(reader.req_choice("while", WHILE_NAMES.slice(1, WHILE_NAMES.size() - 1))), 0) as While
 		def.while_taunting = def.while_kind == While.TAUNTING
 		match def.while_kind:
 			While.PLANTED:
@@ -240,7 +240,7 @@ func is_additive() -> bool:
 ## Checked each tick, not just when a window opens or closes.
 func is_conditional() -> bool:
 	return while_kind == While.PLANTED or while_kind == While.BELOW_HP or while_kind == While.ALLY_STANDING or while_kind == While.STATE \
-		or while_kind == While.ALLY_NEAR or while_kind == While.BEHIND_WALL or per_fallen_ally or per_shield_bp > 0
+		or while_kind == While.ALLY_NEAR or while_kind == While.BEHIND_WALL or while_kind == While.TACTIC or per_fallen_ally or per_shield_bp > 0
 
 
 ## Worked out per hit (EffectRunner), not folded into the unit's stats.
@@ -282,6 +282,8 @@ func describe() -> String:
 		While.ALLY_NEAR:
 			@warning_ignore("integer_division")
 			condition = " while an ally is within %d hex%s" % [near_range / HexGrid.HEX, "" if near_range == HexGrid.HEX else "es"]
+		While.TACTIC:
+			condition = " while it follows its tactic"
 		While.BEHIND_WALL:
 			@warning_ignore("integer_division")
 			condition = " while behind an allied wall (within %d hex%s)" % [near_range / HexGrid.HEX, "" if near_range == HexGrid.HEX else "es"]

@@ -39,6 +39,8 @@ class Hit:
 ## The unit's basic attack fires at its target, and gives it mana.
 static func basic_attack(sim: CombatSim, unit: UnitState) -> void:
 	fire(sim, unit, unit.attack, unit.target, unit.stats.get_stat(UnitStats.Stat.RANGE))
+	unit.sure_crit = false
+	unit.tactic_backing = false if unit.tactic != null and unit.tactic.kind == TacticDef.Kind.KITE else unit.tactic_backing
 	unit.attack.spend()
 	Mana.on_attack(sim, unit)
 
@@ -61,6 +63,13 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 	if state == unit.signature and unit.tactic != null and unit.tactic.heal_bp > 0:
 		heal_boost_bp = unit.tactic.heal_bp  # power, like the healer's auras
 		source = source.with_bonus(Tactics.bonus_note(heal_boost_bp, unit.tactic))
+	# Wait for a crowd's and Save it for the kill's payoff (phase 5c step 6c):
+	# the signature that waited deals more.
+	var tactic_power_bp: int = 0
+	if state == unit.signature and unit.tactic != null and (unit.tactic.power_bp > 0 or unit.tactic.per_extra_bp > 0):
+		tactic_power_bp = Tactics.signature_power_bp(sim, unit, target)
+		if tactic_power_bp > 0:
+			source = source.with_bonus(Tactics.bonus_note(tactic_power_bp, unit.tactic))
 	state.fires += 1
 	var fired: LogEntry = sim.new_entry(LogEntry.Kind.FIRE, source)
 	fired.target = target.id if target != null else ""
@@ -91,6 +100,8 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 			Summons.summon(sim, unit, source, effect, target)
 			continue
 		var power: int = power_of(effect, unit, heal_boost_bp)
+		if tactic_power_bp > 0 and effect.type == EffectDef.Type.DAMAGE:
+			power += tactic_power_bp
 		if shot != null and effect.target == EffectDef.Target.TARGET:
 			var amount: int = amount_of(effect, unit, 0, sim)
 			var crit: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability, target))
@@ -254,6 +265,12 @@ static func crit_chance_bp(sim: CombatSim, unit: UnitState, ability: AbilityDef,
 	var chance: int = ability.crit_chance_bp + unit.stats.get_stat(UnitStats.Stat.CRIT) * sim.tuning.crit_bp_per_point + unit.aura_bp[AuraDef.Stat.CRIT_CHANCE_BP]
 	if target != null and not unit.vs_conditions.is_empty():
 		chance += Passives.vs_bonus_bp(unit, target, AuraDef.Stat.CRIT_CHANCE_BP, ability.id)
+	if unit.tactic != null:
+		# Marked first's payoff, and Keep your distance's sure crit (phase 5c
+		# step 6c).
+		chance += Tactics.crit_bonus_bp(unit, target)
+		if unit.sure_crit and ability == unit.def.basic_attack:
+			chance += 2 * FixedMath.BP_ONE
 	return chance
 
 
@@ -420,7 +437,10 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 	# own DEF.
 	var guard: UnitState = Guards.covering(sim, source, target) if not sim.guards.is_empty() else null
 	var guarded_raw: int = FixedMath.apply_bp(raw, guard.guard.share_bp) if guard != null else 0
-	var dealt: int = sim.mitigate_hit(target, raw - guarded_raw, attacker.aura_bp[AuraDef.Stat.DEF_IGNORE_BP] if attacker != null else 0)
+	var ignore_bp: int = 0
+	if attacker != null:
+		ignore_bp = attacker.aura_bp[AuraDef.Stat.DEF_IGNORE_BP] + (Tactics.def_ignore_bp(attacker, target) if attacker.tactic != null else 0)
+	var dealt: int = sim.mitigate_hit(target, raw - guarded_raw, ignore_bp)
 	var guarded: int = sim.mitigate_hit(guard, guarded_raw) if guard != null else 0
 	entry.target = target.id
 	entry.mitigated = maxi(raw - guarded_raw - dealt, 0)
@@ -441,6 +461,10 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 	sim.combat_log.add(entry)
 	if guarded > 0:
 		Guards.take(sim, guard, target, guarded, source)
+	# A tactic's first hit on each enemy, and a crit stretching a Mark (phase
+	# 5c step 6c).
+	if sim.damage_payoffs and attacker != null and attacker.tactic != null and Tactics.own_hit(attacker, source):
+		Tactics.on_hit(sim, attacker, target, crit)
 	if steals and attacker != null and sim.lifesteal and dealt > 0 and attacker.side != target.side:
 		lifesteal(sim, attacker, target, dealt, source)
 	if heroes_hit and not ruled:

@@ -173,27 +173,85 @@ static func passive_numbers(part: PartDef, kit: UnitDef, content: ContentDb) -> 
 ## or goes after, then its payoff.
 static func tactic_numbers(tactic: TacticDef) -> String:
 	var parts: Array[String] = []
+	var pct: Callable = func(bp: int) -> String: return ValueBreakdown._percent(bp)
 	match tactic.kind:
 		TacticDef.Kind.PREFER_TARGET:
-			var kinds: Array[String] = []
-			for archetype: String in tactic.archetypes:
-				kinds.append(archetype + "s")
-			var named: String = " and ".join(kinds)
-			parts.append("%s%s first" % [named.left(1).to_upper(), named.substr(1)])
+			if not tactic.archetypes.is_empty():
+				var kinds: Array[String] = []
+				for archetype: String in tactic.archetypes:
+					kinds.append(archetype + "s")
+				var named: String = " and ".join(kinds)
+				parts.append("%s%s first" % [named.left(1).to_upper(), named.substr(1)])
+			elif tactic.prefers != null:
+				parts.append("Enemies that are %s first" % tactic.prefers.describe())
+			else:
+				parts.append({"lowest_hp_in_reach": "The enemy lowest on HP in reach first", "most_def": "The enemy with the most DEF first",
+					"farthest": "The farthest enemy first"}[tactic.pick])
 			if tactic.damage_vs_bp > 0:
-				parts.append("+%s damage to them from its basic attack and signature" % ValueBreakdown._percent(tactic.damage_vs_bp))
+				var vs: String = "enemies that are %s" % tactic.payoff_vs.describe() if tactic.payoff_vs != null else "them"
+				parts.append("+%s damage to %s from its basic attack and signature" % [pct.call(tactic.damage_vs_bp), vs])
 		TacticDef.Kind.HOLD_GROUND:
 			@warning_ignore("integer_division")
 			parts.append("Holds until an enemy is within %s" % hexes(tactic.release_range / HexGrid.HEX))
 			if tactic.atsp_bp > 0:
-				parts.append("+%s attack speed while it holds" % ValueBreakdown._percent(tactic.atsp_bp))
+				parts.append("+%s attack speed while it holds" % pct.call(tactic.atsp_bp))
+			if tactic.keep_bp > 0:
+				parts.append("%s of that after it moves out" % pct.call(tactic.keep_bp))
 		TacticDef.Kind.SIGNATURE_THRESHOLD:
-			parts.append("Waits until an ally is below %s HP" % ValueBreakdown._percent(tactic.below_bp))
+			parts.append("Waits until an ally is below %s HP" % pct.call(tactic.below_bp))
 			if tactic.heal_bp > 0:
-				parts.append("+%s healing from its signature" % ValueBreakdown._percent(tactic.heal_bp))
+				parts.append("+%s healing from its signature" % pct.call(tactic.heal_bp))
 		TacticDef.Kind.STOP_NEAR:
 			@warning_ignore("integer_division")
 			parts.append("Stops while an enemy is within %s" % hexes(tactic.stop_range / HexGrid.HEX))
+		TacticDef.Kind.GUARD_ALLY:
+			parts.append("The enemy attacking its weakest ally first")
+		TacticDef.Kind.KITE:
+			parts.append("Backs away to keep its target at full reach")
+		TacticDef.Kind.LEASH:
+			@warning_ignore("integer_division")
+			parts.append("Stays within %s of its ally with the most DEF" % hexes(tactic.leash_range / HexGrid.HEX))
+		TacticDef.Kind.SIGNATURE_CROWD:
+			parts.append("Waits for %d enemies in its signature's area, %s at most" % [tactic.crowd, seconds(tactic.max_wait_ticks)])
+		TacticDef.Kind.SIGNATURE_FINISH:
+			parts.append("Waits until its target is below %s HP" % pct.call(tactic.below_bp))
+	var applying: String = " for its first %s" % seconds(tactic.window_ticks) if tactic.window_ticks > 0 else " while it does"
+	if tactic.crit_vs_bp > 0:
+		parts.append("+%s crit chance on them" % pct.call(tactic.crit_vs_bp))
+	if tactic.def_ignore_bp > 0:
+		parts.append("its hits on its target ignore %s of its DEF" % pct.call(tactic.def_ignore_bp))
+	if tactic.def_add > 0:
+		parts.append("+%d DEF%s" % [tactic.def_add, applying])
+	if tactic.def_bp > 0:
+		parts.append("+%s DEF%s" % [pct.call(tactic.def_bp), applying])
+	if tactic.atk_mgk_bp > 0:
+		parts.append("+%s ATK and MGK%s" % [pct.call(tactic.atk_mgk_bp), applying])
+	if tactic.atsp_add > 0:
+		parts.append("+%d ATSP at full reach" % tactic.atsp_add)
+	if tactic.power_bp > 0:
+		parts.append("+%s damage from the signature that waited" % pct.call(tactic.power_bp))
+	if tactic.regen_bp > 0:
+		parts.append("%s of max HP a second%s" % [pct.call(tactic.regen_bp), applying])
+	if not tactic.first_hit_status.is_empty():
+		var lasts: String = " %s" % seconds(tactic.first_hit_ticks) if tactic.first_hit_ticks > 0 else ""
+		var stacks: String = "%d " % tactic.first_hit_stacks if tactic.first_hit_stacks > 1 else ""
+		parts.append("its first hit on each puts on %s%s%s" % [stacks, tactic.first_hit_status.replace("_", " ").capitalize(), lasts])
+	if tactic.crit_extends_mark_ticks > 0:
+		parts.append("its crits on Marked enemies make the Mark last %s longer" % seconds(tactic.crit_extends_mark_ticks))
+	if tactic.kill_mana > 0:
+		parts.append("+%d mana on a kill" % tactic.kill_mana)
+	if tactic.restart_on_kill:
+		parts.append("a kill in that time starts it again")
+	if tactic.cleanse_one:
+		parts.append("the heal that waited cleanses one harmful status")
+	if tactic.ally_def_add > 0:
+		parts.append("the ally it guards gets +%d DEF" % tactic.ally_def_add)
+	if tactic.crit_after_back:
+		parts.append("its first attack after backing away crits")
+	if tactic.per_extra_bp > 0:
+		parts.append("+%s more for each enemy past %d" % [pct.call(tactic.per_extra_bp), tactic.crowd])
+	if tactic.refund_bp > 0:
+		parts.append("a kill with it gives back %s of its bar" % pct.call(tactic.refund_bp))
 	return " · ".join(parts)
 
 
@@ -300,6 +358,8 @@ static func aura_text(aura: AuraDef) -> String:
 		AuraDef.While.ALLY_NEAR:
 			@warning_ignore("integer_division")
 			text += " while an ally is within %s" % hexes(aura.near_range / HexGrid.HEX)
+		AuraDef.While.TACTIC:
+			text += " while it follows its tactic"
 		AuraDef.While.BEHIND_WALL:
 			@warning_ignore("integer_division")
 			text += " while behind an allied wall (within %s of it)" % hexes(aura.near_range / HexGrid.HEX)

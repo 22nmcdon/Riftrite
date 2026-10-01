@@ -361,6 +361,11 @@ static func cleanse_over_time(sim: CombatSim, unit: UnitState, share_bp: int, so
 			_end(sim, unit, state)
 
 
+## Ends `state` on `unit` now (Wait to heal's cleanse; phase 5c step 6c).
+static func end_now(sim: CombatSim, unit: UnitState, state: StatusState, why: String) -> void:
+	_end(sim, unit, state, why)
+
+
 static func _end(sim: CombatSim, unit: UnitState, state: StatusState, why: String = "") -> void:
 	unit.statuses.erase(state)
 	var entry := LogEntry.new()

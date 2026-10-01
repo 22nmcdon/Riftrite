@@ -240,5 +240,13 @@
     "kind": "boost",
     "stacking": true,
     "auras": [{"stat": "atk_bp", "value": 10500}, {"stat": "mgk_bp", "value": 10500}]
+  },
+  {
+    "_note": "More DEF while it lasts (Guard the weakest at rank III: the ally it guards, renewed every second; phase 5c step 6c).",
+    "id": "watched_over",
+    "name": "Watched Over",
+    "kind": "boost",
+    "duration_ms": 1050,
+    "auras": [{"stat": "def", "value": 10}]
   }
 ]

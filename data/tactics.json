@@ -1,41 +1,281 @@
 [
   {
-    "_note": "Casters are the caster and support archetypes (phase 3b, Decision 1): Cinder Moth and Gloam Witch in Act 1. The payoff (round 2): its own hits on them deal 20% more.",
+    "_note": "Casters are the caster and support archetypes (phase 3b, Decision 1): Cinder Moth and Gloam Witch in Act 1. The payoff (round 2): its own hits on them deal 20% more. Phase 5c step 6c: ranks (+35%; then its first hit on each Silences it 1s), and any hero takes it.",
     "id": "casters_first",
     "name": "Casters first",
     "text": "Goes for the nearest enemy caster or support first, and hits them harder; with none standing, picks as usual.",
     "kind": "prefer_target",
-    "archetypes": ["caster", "support"],
-    "payoff": {"damage_vs_bp": 2000},
-    "heroes": ["brannoc", "maren", "vell"]
+    "archetypes": [
+      "caster",
+      "support"
+    ],
+    "payoff": {
+      "damage_vs_bp": 2000
+    },
+    "ranks": [
+      {
+        "damage_vs_bp": 3500
+      },
+      {
+        "first_hit": {
+          "status": "silence",
+          "duration_ms": 1000
+        }
+      }
+    ]
   },
   {
-    "_note": "Lets go for good (phase 3b, Decision 2). The payoff (round 2): its attack runs 20% faster while it holds.",
+    "_note": "Lets go for good (phase 3b, Decision 2). The payoff (round 2): its attack runs 20% faster while it holds. Phase 5c step 6c: ranks (+35%; then half of it stays after letting go).",
     "id": "hold_ground",
     "name": "Hold your ground",
     "text": "Stays where it's placed, attacking faster at whatever is in reach, until an enemy comes within 2 hexes; then it moves out for the rest of the fight.",
     "kind": "hold_ground",
     "release_hexes": 2,
-    "payoff": {"atsp_bp": 2000},
-    "heroes": ["brannoc", "maren", "vell"]
+    "payoff": {
+      "atsp_bp": 2000
+    },
+    "ranks": [
+      {
+        "atsp_bp": 3500
+      },
+      {
+        "keep_bp": 5000
+      }
+    ]
   },
   {
-    "_note": "The bar waits, full (phase 3b, Decision 3), until an ally is below 60% (Decision 5). Only a mana signature that heals the lowest ally can wait: Vell's Mend (Decision 4). The payoff (round 2): the heal it waited for is 15% stronger (R4 tuned it from 30%).",
+    "_note": "The bar waits, full (phase 3b, Decision 3), until an ally is below 60% (Decision 5). Only a mana signature that heals the lowest ally can wait: Vell's Mend (Decision 4). The payoff (round 2): the heal it waited for is 15% stronger (R4 tuned it from 30%). Phase 5c step 6c: any hero with a healing signature; ranks (+25% at 70%; then it cleanses one harmful status).",
     "id": "wait_to_heal",
     "name": "Wait to heal",
     "text": "Holds the healing signature, its bar full, until an ally in its reach is badly hurt; the heal it saved is stronger.",
     "kind": "signature_threshold",
     "below_pct": 60,
-    "payoff": {"heal_bp": 1500},
-    "heroes": ["vell"]
+    "payoff": {
+      "heal_bp": 1500
+    },
+    "ranks": [
+      {
+        "below_pct": 70,
+        "heal_bp": 2500
+      },
+      {
+        "cleanse_one": true
+      }
+    ]
   },
   {
-    "_note": "Phase 5 (part 6's example): stops walking while an enemy stands within 2 hexes, so a ranged hero keeps its distance and a melee one holds a line; closes in again when none does. No payoff yet.",
+    "_note": "Phase 5 (part 6's example): stops walking while an enemy stands within 2 hexes, so a ranged hero keeps its distance and a melee one holds a line; closes in again when none does. Phase 5c step 6c (loadout/tactics.md): its payoff, +10 DEF while stopped (+20; then +10% ATK and MGK too).",
     "id": "plant_feet",
     "name": "Plant your feet",
     "text": "Stops walking while an enemy stands within 2 hexes, fighting whatever is in reach; closes in again when none is that near.",
     "kind": "stop_near",
     "stop_hexes": 2,
-    "heroes": ["brannoc", "maren", "vell"]
+    "payoff": {
+      "def_add": 10
+    },
+    "ranks": [
+      {
+        "def_add": 20
+      },
+      {
+        "atk_mgk_bp": 1000
+      }
+    ]
+  },
+  {
+    "id": "fliers_first",
+    "name": "Fliers first",
+    "text": "Goes for the nearest flying enemy first, and hits fliers harder; with none standing, picks as usual.",
+    "kind": "prefer_target",
+    "prefers": {
+      "flying": true
+    },
+    "payoff": {
+      "damage_vs_bp": 2000
+    },
+    "ranks": [
+      {
+        "damage_vs_bp": 3500
+      },
+      {
+        "first_hit": {
+          "status": "grounded",
+          "duration_ms": 2000
+        }
+      }
+    ]
+  },
+  {
+    "id": "marked_first",
+    "name": "Marked first",
+    "text": "Goes for the nearest Marked enemy first, and crits them more often; with none Marked, picks as usual.",
+    "kind": "prefer_target",
+    "prefers": {
+      "keywords": [
+        "marked"
+      ]
+    },
+    "payoff": {
+      "crit_vs_bp": 1000
+    },
+    "ranks": [
+      {
+        "crit_vs_bp": 2000
+      },
+      {
+        "crit_extends_mark_ms": 500
+      }
+    ]
+  },
+  {
+    "id": "finish_them",
+    "name": "Finish them",
+    "text": "Goes for the enemy lowest on HP within its reach, and hits enemies near death harder.",
+    "kind": "prefer_target",
+    "pick": "lowest_hp_in_reach",
+    "payoff": {
+      "damage_vs_bp": 1500,
+      "payoff_vs": {
+        "below_hp_pct": 50
+      }
+    },
+    "ranks": [
+      {
+        "damage_vs_bp": 2500
+      },
+      {
+        "kill_mana": 10
+      }
+    ]
+  },
+  {
+    "id": "break_the_line",
+    "name": "Break the line",
+    "text": "Goes for the enemy with the most DEF first, and its hits on its target ignore part of its DEF.",
+    "kind": "prefer_target",
+    "pick": "most_def",
+    "payoff": {
+      "def_ignore_bp": 2000
+    },
+    "ranks": [
+      {
+        "def_ignore_bp": 3500
+      },
+      {
+        "first_hit": {
+          "status": "sunder",
+          "stacks": 10
+        }
+      }
+    ]
+  },
+  {
+    "id": "guard_the_weakest",
+    "name": "Guard the weakest",
+    "text": "Goes for whoever is attacking its ally lowest on HP, and is tougher while it does.",
+    "kind": "guard_ally",
+    "payoff": {
+      "def_add": 10
+    },
+    "ranks": [
+      {
+        "def_add": 20
+      },
+      {
+        "ally_def_add": 10
+      }
+    ]
+  },
+  {
+    "id": "keep_your_distance",
+    "name": "Keep your distance",
+    "text": "Backs away between attacks to keep its target at the edge of its reach, attacking faster from there.",
+    "kind": "kite",
+    "payoff": {
+      "atsp_add": 10
+    },
+    "ranks": [
+      {
+        "atsp_add": 20
+      },
+      {
+        "crit_after_back": true
+      }
+    ]
+  },
+  {
+    "id": "stay_with_the_tank",
+    "name": "Stay with the tank",
+    "text": "Stays within 2 hexes of its ally with the most DEF, and is tougher while it does.",
+    "kind": "leash",
+    "leash_hexes": 2,
+    "payoff": {
+      "def_bp": 1000
+    },
+    "ranks": [
+      {
+        "def_bp": 2000
+      },
+      {
+        "regen_bp": 100
+      }
+    ]
+  },
+  {
+    "id": "dive",
+    "name": "Dive",
+    "text": "Goes for the farthest enemy, past the front line, hitting harder for the first few seconds.",
+    "kind": "prefer_target",
+    "pick": "farthest",
+    "payoff": {
+      "atk_mgk_bp": 2000,
+      "window_ms": 5000
+    },
+    "ranks": [
+      {
+        "window_ms": 8000
+      },
+      {
+        "restart_on_kill": true
+      }
+    ]
+  },
+  {
+    "id": "wait_for_a_crowd",
+    "name": "Wait for a crowd",
+    "text": "Holds an area signature, its bar full, until 3 enemies stand in its area (or every enemy left), a few seconds at most; then it hits harder.",
+    "kind": "signature_crowd",
+    "crowd": 3,
+    "max_wait_ms": 4000,
+    "payoff": {
+      "power_bp": 2000
+    },
+    "ranks": [
+      {
+        "power_bp": 3000,
+        "max_wait_ms": 3000
+      },
+      {
+        "per_extra_bp": 1000
+      }
+    ]
+  },
+  {
+    "id": "save_it_for_the_kill",
+    "name": "Save it for the kill",
+    "text": "Holds a damaging signature, its bar full, until its target is below half HP; then it hits harder.",
+    "kind": "signature_finish",
+    "below_pct": 50,
+    "payoff": {
+      "power_bp": 2500
+    },
+    "ranks": [
+      {
+        "power_bp": 4000
+      },
+      {
+        "refund_bp": 3000
+      }
+    ]
   }
 ]
