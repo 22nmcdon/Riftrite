@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); steps 4–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) written and up for approval; steps 4–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -107,7 +107,7 @@ The rest are as gate 3 left them (basic 30–35, harder 16–33, The Hunt 18, Ol
 | --- | --- | --- | --- |
 | **2. Stat amounts** (section 7; built) | Every card's stat change says its amount (part 7, section 6): a numbers line generated from the mod, like abilities' (`UnitInfo`), on items, upgrades, and relics; their `text` loses vague words | `src/ui/unit_info.gd`, a `ModInfo` for kit mods, `data/*.json` texts | every card with a stat mod shows its amount |
 | **3. Keywords and triggers** (section 8) | Keyword flag on `StatusDef` (Marked, Rooted, Burning, Shielded, Stealthed; Bleeding joins with its sources); the new triggers (`on_crit`, `on_kill`, `on_apply`, `on_hit_keyword`, `on_shield_broken`, `on_ally_signature`, `on_heal`, `on_hop`) read from the log in `Events`; the chain guard (8 a tick) | `status_def.gd`, `events.gd`, `passives.gd`, `test_arena_log.gd`'s audit | each trigger, the guard, determinism with long chains, the chaos fight uses them |
-| **4. Permanent scaling** | Counters in run state, per hero and per run, fed from `FightResult` like deeds; growing mods take the counter into the fight's setup as a bonus; "Now: +X" on cards | `run_state.gd`, `run_flow.gd`, `HeroExtras` | counters survive a save; a growing card's value |
+| **4. Permanent scaling** (section 9) | Counters in run state, per hero and per run, fed from `FightResult` like deeds; growing mods take the counter into the fight's setup as a bonus; "Now: +X" on cards | `run_state.gd`, `run_flow.gd`, `HeroExtras` | counters survive a save; a growing card's value |
 | **5. The relic pool** | Five tiers plus bond relics, the pool's relics as data (built ones changed or cut, `relics/README.md`), one relic per shop with climbing rerolls, the pre-boss shop, boss relics after the boss, the Shrine's offerings, the income in `economy.md` | `relics.json`, `relic_def.gd`, `offers.gd`, `run_flow.gd`, `act1.json` | shop draws by tier, rerolls' prices, bond relics only with their bond, every relic's effect in a small fight |
 | **6. The loadout pool** | Tactics, gambits, sigils, and charms from `loadout/`, three ranks with each kind's counter, a bought copy skips a rank, selling at half, no "no effect" marker, grafts removed; gambits' placement rules (in `FightSetup.validate` and `Encounters.setup`); the Magpie as a node with his stall | `items.json`, `item_def.gd`, `run_flow.gd`, `tactics.gd`, `fight_setup.gd`, `magpie` offers | ranks and their counters, selling, each gambit's placement, the Magpie's stall |
 | **7. The upgrade pools** | `upgrade-pools.md`: each hero's 12, two taste upgrades per path until the hero transforms, four path upgrades and a growing one after; stacking stat upgrades locked in as a flat amount; Volley's taste back to every 4th | `upgrades.json`, `offers.gd`, `run_state.gd`, `paths.json` | the draw by stage, stacking's lock-in, the paths report for Volley |
@@ -280,6 +280,95 @@ Part 7: "an effect caused by a trigger can set off other triggers, but one chain
 - **The UI:** numbers lines name the new triggers and conditions ("Every 3rd hit on a unit that's Burning", "Once, on its first hit", "+20% damage against Marked", "+30% ATSP while Stealthed"), and a passive that answers more than one event names each trigger where it changes.
 - **Tests:** `tests/sim/test_keywords.gd` (11) and `tests/sim/test_triggers.gd` (13). Two tests in `test_passives.gd` changed on purpose: what a passive does now sets off events (Spite's hits count for a count signature; a passive's own crits count as crits). The chaos fight gained a passive on each new trigger, a keyword filter, a `vs` aura, a state aura, and a two-link chain, and moved to seed 23 (21 lost its Taunt); `test_determinism` checks each. `test_unit_info.gd` has the new lines.
 - **What moved:** nothing that's built. The bench's fingerprints are all unchanged, and the sim runner's gate passes on all 18 encounters with the same counts of formations that win as after step 1 (Hollow Line 32, Sentinel Gate 40, Witch Coven 31, Cairn Watch 25, The Hunt 18, Old Mother Ash 19, ...): no built kit has passives that set each other off in these fights. The bench gained a **chains** fight (steady with every unit hitting back on every hit taken, so every hit runs a chain to the limit): about 320–360 ms per 60s on this machine, against 150–200 for steady.
+
+## 9. Step 4: permanent scaling
+
+Part 7, section 4: some upgrades and relics **grow every fight for the rest of the run**, counting something the hero does the way deeds do, and the card shows its current value. **Up for approval.** Step 4 builds the machinery and the counters the agreed growing cards need; which cards it adds is Question H.
+
+### 9.1 What's there now
+
+- **Deeds** are the model: every hero counts its three paths' deeds in every fight (`Deeds`, kinds and filters in `DeedDef`), the totals come back on `FightResult.deeds`, and `RunFlow.record` adds them to `RunState.Hero.deeds`. Counting never changes a fight.
+- **Cards** are kit mods: `RunFlow.fight_setup` gathers each hero's upgrade, loadout, relic, camp, and bond mods into `HeroExtras`; nothing in a mod depends on the run's history.
+
+### 9.2 The growing cards (agreed)
+
+| Card | Where (built in) | Grows by | Counts |
+| --- | --- | --- | --- |
+| **Notched Bow** (Maren) | hero pool (step 7) | +1% ATK | per 10 enemies she Marks |
+| **Weathered** (Brannoc) | hero pool (step 7) | +1% max HP | per 1,000 damage he takes |
+| **Lamp Oil** (Vell) | hero pool (step 7) | +1% MGK | per 500 healing she gives |
+| **Hunter's Tally** (Deadeye) | path pool (step 7) | +1% damage | per 500 damage dealt from 5+ hexes |
+| **Patient Hunter** (Trapper) | path pool (step 7) | +1% damage to Rooted enemies | per 5s of root |
+| **Arrow Glut** (Volley) | path pool (step 7) | +1% attack speed | per 25 extra targets hit |
+| **Old Scars** (Hearthwall) | path pool (step 7) | +1 DEF | per 200 damage taken for allies |
+| **Brandmarks** (Ironbrand) | path pool (step 7) | +1 ATK | per 30 extra enemies cleaved |
+| **Borrowed Time** (Last Watch) | path pool (step 7) | +1% damage below 30% HP | per 3s spent below 30% HP |
+| **Kindled Flame** (Lanternbearer) | path pool (step 7) | +1% healing | per 300 healing next to Mend's target |
+| **Woven Deep** (Wardweaver) | path pool (step 7) | +1% Shield size | per 300 Shield given |
+| **Sunwrought** (Vigil Keeper) | path pool (step 7) | +1% smite damage | per 200 smite damage |
+| **Collector's Chain** | rare relic (step 5) | heroes +1 ATK | per 10 enemies the team kills |
+| **Tally of the Dead** | rare relic (step 5) | heroes +2% max HP | per elite fight won |
+| **Rift-Fed Blades** | legendary relic (step 5) | heroes +1% ATK | per 1,000 basic-attack damage the team deals |
+| **Chalk Ledger** (a quest) | rare relic (step 5) | Marked enemies take +10% more damage, once | 40 enemies the team Marks |
+
+Rift-Bound Heart (boss: "every growing upgrade and relic grows twice as fast") is step 5's; it doubles what's counted while it's held.
+
+### 9.3 A growing card
+
+A card gets `"grows"` beside (or instead of) its `"mod"`:
+
+```
+"grows": {"counts": {"counts": "damage", "beyond_hexes": 5}, "per": 500,
+          "each": {"on": [{"slot": "abilities", "types": ["damage"], "amount_bp": 10100}]}}
+```
+
+- **`counts`:** a `DeedDef`'s counting (its kind and filters), so a growth counts exactly as a deed does.
+- **`per`:** how much of it makes one step. Steps are whole (`count / per`, rounded down); **no cap** unless `"max_steps"` says so (a quest is `"max_steps": 1`).
+- **`each`:** what one step gives, a kit mod limited to what scales cleanly: `stats_bp`, `stats_add`, an ability's `amount_bp`, and added auras. The fight gets that mod **times the steps** (`KitMod.times(n)`: each change n times, and by the damage rule changes of one kind add, so ten +1% steps are +10%, not x1.01¹⁰). A growth's mod goes in with the card's other mods, in the same place.
+- **Who counts:** a hero's card counts its holder; a relic counts the whole team (each hero's count, added up). Tally of the Dead counts won elite fights in the run layer, not in the sim.
+
+### 9.4 Counting in the fight
+
+- **`UnitSetup.tallies`:** the growths a hero counts this fight (each a key and a `DeedDef`), beside `deed_paths`. `Deeds.Counter` counts them with the deeds, by the same rules; `FightResult.tallies` carries the totals (hero, key, amount). Counting never changes a fight (the bench fingerprints stay).
+- **New kinds and filters** the agreed cards need (`DeedDef`; each a code change, skipped by a counter that doesn't use it):
+  - `applied`: statuses the hero applies to enemies (with `keywords`: only those; Notched Bow, Chalk Ledger);
+  - `taken`: damage the hero takes (Weathered);
+  - `ms_below`: time the hero spends below `while_below_pct`, checked as each tick ends (Borrowed Time);
+  - `kills`: enemies the hero is credited with felling (Decision 13's credit; Collector's Chain);
+  - `from_basic: true`: only what the hero's basic attack does (Rift-Fed Blades).
+
+### 9.5 The run
+
+- **`RunState.Hero.growth`** (card id -> counted since it was taken) for upgrades and a held item, and **`RunState.growth`** for relics (relic id -> the team's count). `RunFlow.record` adds each fight's tallies; a lost fight counts too (it was fought). Saved with the run; old saves load with nothing counted (no version bump: the fields default to empty).
+- **`RunFlow.fight_setup`** and **`kit_of`** add each growth's `each.times(steps)`.
+- **When counting starts:** from when the card is taken (Question G).
+- **The run report** gains what each growing card reached by the run's end (mean steps, and the most), so tuning can see how far they grow.
+
+### 9.6 The UI (`ui-new-systems.md`, section 4)
+
+- **The card's numbers line** (`ModInfo`): "Grows: +1% damage per 500 damage dealt from 5+ hexes" on a card not yet taken.
+- **Once held:** "Now: +12% damage (412 / 500 damage to the next)" in the hero panel's upgrade row and the top bar's relic tooltip; a small "grows" mark on the card.
+- **After a fight:** the after-fight screen lists what grew ("Notched Bow: +1% ATK"), only for cards that stepped up.
+- Nothing during a fight (part 7, section 7).
+
+### 9.7 Files
+
+- New: `tests/run/test_growth_cards.gd`, `tests/sim/test_tallies.gd`.
+- Changed: `deed_def.gd` (the kinds and filters), `deeds.gd` (tallies, the new kinds), `unit_setup.gd`, `encounters.gd` (`tallies` in `extras`), `fight_result.gd` (`tallies`), `kit_mod.gd` (`times`, the `each` limits), `upgrade_def.gd`, `relic_def.gd`, `item_def.gd` (`grows`), `run_content.gd` (checks), `run_state.gd`, `run_flow.gd`, `mod_info.gd`, `hero_panel.gd`, `run_day_screen.gd` (after the fight; the top bar), `tools/run_report.gd`, and `data/upgrades.json` if Question H says so.
+- Docs: this section's "Built in step 4" note; CLAUDE.md ("How the run works").
+
+### 9.8 Tests
+
+- **Counting:** each new kind and filter in a small fight; tallies come back on the result; a fight with tallies is the same fight as without (log equality).
+- **`KitMod.times`:** each part scaled n times; 0 steps changes nothing; a mod outside the limits is refused at load.
+- **The run:** a growing card's count rises fight by fight, its steps reach the next fight's kit, a relic's team count adds every hero's, a quest stops at one step, counting starts when the card is taken, and the counts survive a save and a load.
+- **The UI:** the "Grows" and "Now" lines; the after-fight list.
+- **Unchanged:** the bench's fingerprints; the sim runner's gate (no fight changes until a card grows).
+
+### 9.9 Questions for this step
+
+- **G. When does a growing card start counting?** From when it's taken (recommended: the card starts at +0% and grows from there, so a late pick is a smaller engine), or over the whole run so far (the relics' text says "this run": a late Collector's Chain arrives already grown, which needs every possible counter counted from the start).
+- **H. Which cards come now?** (a) the twelve growing upgrades join `upgrades.json` now (three hero, nine path), so growth is in the game and the playtest can feel it, and step 7 keeps them in its pools (recommended); or (b) none now: the machinery waits, tested on cards made in the tests, for steps 5 and 7's data.
 
 ## Answered (2026-09-30)
 
