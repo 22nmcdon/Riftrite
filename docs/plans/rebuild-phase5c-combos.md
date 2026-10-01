@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a, 5b (section 11), and 5c (section 12) built (10-01), 5d (section 13) built (10-01): the relic pool is complete; step 6 (the loadout pool, section 14) built in five parts, 6a–6e (10-01); step 7 (the upgrade pools, section 15) built in four parts, 7a–7d (10-01); step 8 (the new day, section 16) built in three parts, 8a–8c (10-01); step 9 (section 17) proposed.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a, 5b (section 11), and 5c (section 12) built (10-01), 5d (section 13) built (10-01): the relic pool is complete; step 6 (the loadout pool, section 14) built in five parts, 6a–6e (10-01); step 7 (the upgrade pools, section 15) built in four parts, 7a–7d (10-01); step 8 (the new day, section 16) built in three parts, 8a–8c (10-01); step 9 (section 17) approved, building in four parts, 9a–9d.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -1425,7 +1425,7 @@ A choice that can't be done (no shards, no item, no hero it fits) is shown greye
 
 ## 17. Step 9: the combo readout, the engine report, the retune, and a build
 
-Status: **proposed (2026-10-01); waiting for approval (17.9).** Builds part 7, section 7 (`rebuild-combos.md`): no combo readout for players, one for testing behind the testing toggle, and a report so tuning can see which engines work; then the retune the earlier steps left for here, and a playtest build.
+Status: **approved (2026-10-01, Decisions 44–47); building in four parts, 9a–9d.** Builds part 7, section 7 (`rebuild-combos.md`): no combo readout for players, one for testing behind the testing toggle, and a report so tuning can see which engines work; then the retune the earlier steps left for here, and a playtest build.
 
 ### 17.1 What's there now
 
@@ -1487,6 +1487,21 @@ Status: **proposed (2026-10-01); waiting for approval (17.9).** Builds part 7, s
 - **AH. The engine report in the run report** (17.5), since the sim runner's heroes hold no engines?
 - **AI. The retune's targets** (17.6): first transformations on days 3–4 and 80% by the boss, vowed Volley within 5 of base, and nothing else until phase 6?
 - **AJ. A playtest build at the end** (17.7)?
+
+### 17.10 Decisions (the playtester, 2026-10-01)
+
+44. **Step 9 is built as this section says, in four parts** (Question AG): 9a the rule's notes and the readout, 9b the engine report, 9c the retune, 9d docs and a playtest build.
+45. **The engine report goes in the run report** (Question AH, `--engines`), since the sim runner's heroes hold no engines; part 7's "sim runner's report" means the tools, not that runner.
+46. **The retune's targets** (Question AI): each path's median first transformation on days 3–4 and at least 80% by the boss, by deed thresholds; vowed Volley within 5 points of base; nothing else until phase 6.
+47. **A playtest build at the end of step 9** (Question AJ).
+
+### 17.11 Built in step 9a (2026-10-01)
+
+- **The rule's notes** (`LogEntry.rule_base`, `rule_power`, `rule_crit`, `rule_vulnerability`, `rule_relic`; `set_rule`, `ruled_amount`): set where the damage rule makes a number (`EffectRunner.deal_hit`, `heal`, an ability's Shield in `land`, `Statuses`' damage over time); -1 where none applied (an overheal's Shield, a relic's, a swap's). Plain ints, not the array 17.3 named, so a hit allocates nothing: an array cost about a quarter of the bench's time, the ints nothing measurable (the bench's sum 8,183 ms against 8,036 for the commit before, run back to back). `LogEntry.starts_fire` marks the first entry of each passive firing (`Passives._run`). Neither is in the log's text: the bench's 24 fingerprints are unchanged.
+- **`ComboTally`** (`src/sim/combo_tally.gd`; its class is `EngineRow`, since `Engine` is Godot's): per source, fires (FIRE lines and passive firings), from chains (a firing at chain 2 or more: chain 1 is one set off by what a unit did on its own, so 17.4's "depth 1 or more" is chain 2 here), deepest, and damage, healing, and Shield added; the fight's entries at the chain limit; `rule_note` ("40 · power +35% · crit +50% · vulnerability +20%").
+- **On screen** (`ArenaScreen`): "Combo readout (for testing)" under the target lines, off by default and not remembered; on, the side column shows the heroes' engines (most added first) and the chains at the limit, and once the fight ends each growing card's count this fight with its step size (a run's; Practice holds none); the log's DAMAGE, HEAL, SHIELD, and damage-over-time lines get the rule's note with DEF's cut and a Shield's share (`LogPanel.show_rule`, `rule_note`). Off, the log reads exactly as before.
+- **Checked:** 926 tests pass; the bench's 24 fingerprints are unchanged.
+- **Tests:** `tests/sim/test_combo_tally.gd` (5: every number of the chaos fight keeps its rule and it adds up, a plain hit's base and power, the rule out of the log's text, the chaos fight's tally against its log, the notes' wording) and a screen test in `test_fight_log.gd` (hidden by default, shown with the toggle, the log unchanged when off, the screen's counts the log's).
 
 ## Answered (2026-09-30)
 

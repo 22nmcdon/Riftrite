@@ -101,6 +101,32 @@ var lifesteal: bool = false
 ## DAMAGE: how many times it crit in a row (Crown of Stars; 1 for a plain
 ## crit, 0 for none).
 var crits: int = 0
+## For testing only (phase 5c step 9a, the combo readout; never in the
+## log's text): how the damage rule made a DAMAGE, HEAL, SHIELD, or
+## STATUS_DAMAGE number: its base (-1 where no rule was applied: an
+## overheal's Shield, a relic's) and each kind's bonus (basis points; plain
+## ints, so a hit allocates nothing); and whether this is the first entry of
+## a passive's firing (Passives._run), so engines' fires can be counted.
+var rule_base: int = -1
+var rule_power: int = 0
+var rule_crit: int = 0
+var rule_vulnerability: int = 0
+var rule_relic: int = 0
+var starts_fire: bool = false
+
+
+## Sets the damage rule's note (see rule_base).
+func set_rule(base: int, power_bp: int, crit_bp: int, vulnerability_bp: int, relic_bp: int) -> void:
+	rule_base = base
+	rule_power = power_bp
+	rule_crit = crit_bp
+	rule_vulnerability = vulnerability_bp
+	rule_relic = relic_bp
+
+
+## The number the rule made (-1 without one).
+func ruled_amount() -> int:
+	return DamageRule.apply(rule_base, rule_power, rule_crit, rule_vulnerability, rule_relic) if rule_base >= 0 else -1
 ## MOVE: where the leg starts and the point it heads for; the unit moves
 ## `amount` a tick straight at it (FixedMath / ArenaPlane.step_toward) until it
 ## gets there or its next MOVE or STOP. STOP: to_pos is where it stands.

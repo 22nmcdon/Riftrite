@@ -320,10 +320,12 @@ static func taunter(sim: CombatSim, unit: UnitState) -> UnitState:
 static func _deal_damage_over_time(sim: CombatSim, unit: UnitState, state: StatusState) -> void:
 	for group: StatusState.StackGroup in state.groups:
 		# The damage rule: a Mark is the target's side (vulnerability).
-		var damage: int = DamageRule.apply(group.stacks * state.def.damage_per_stack, 0, 0, damage_taken_bp(unit))
+		var vulnerability: int = damage_taken_bp(unit)
+		var damage: int = DamageRule.apply(group.stacks * state.def.damage_per_stack, 0, 0, vulnerability)
 		if damage <= 0:
 			continue
 		var entry: LogEntry = sim.new_entry(LogEntry.Kind.STATUS_DAMAGE, group.source)
+		entry.set_rule(group.stacks * state.def.damage_per_stack, 0, 0, vulnerability, 0)
 		entry.target = unit.id
 		entry.status = state.def.id
 		entry.status_name = state.def.name

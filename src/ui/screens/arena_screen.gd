@@ -85,6 +85,11 @@ var _result_shown: bool = false
 var pause_button: Button
 var speed_buttons: Array[Button] = []
 var target_lines: CheckButton
+## The combo readout (for testing only, phase 5c step 9a; part 7, section
+## 7): its toggle, what it shows under the chart, and its counts.
+var combo_toggle: CheckButton
+var combo_readout: Label
+var combo: ComboTally
 var log_button: Button
 ## The fight chart, in the side column during the fight.
 var chart: FightChart
@@ -470,8 +475,16 @@ func _build_fight_box() -> VBoxContainer:
 	target_lines.text = "Target lines (for testing)"
 	target_lines.toggled.connect(func(on: bool) -> void: view.fx.all_targets = on)
 	_controls_box.add_child(target_lines)
+	combo_toggle = CheckButton.new()
+	combo_toggle.text = "Combo readout (for testing)"
+	combo_toggle.toggled.connect(set_combo_readout)
+	_controls_box.add_child(combo_toggle)
 	chart = FightChart.make(null)
 	_controls_box.add_child(chart)
+	combo_readout = UiStyle.label("", 14, UiStyle.TEXT_DIM)
+	combo_readout.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	combo_readout.visible = false
+	_controls_box.add_child(combo_readout)
 	result_box = VBoxContainer.new()
 	result_box.add_theme_constant_override("separation", 10)
 	result_box.visible = false
@@ -561,6 +574,10 @@ func _begin() -> void:
 	names = FightNames.make(player.sim, session.content)
 	tally = FightTally.make(player.setup, names.names)
 	chart.set_tally(tally)
+	var hero_ids: Array[String] = []
+	for unit: UnitSetup in player.setup.heroes:
+		hero_ids.append(unit.id)
+	combo = ComboTally.of_log(CombatLog.new(), session.content.tuning.chain_limit, hero_ids)
 	log_panel.start(names)
 	banners.clear()
 	banners.speed = player.speed
@@ -583,6 +600,7 @@ func _on_entries(entries: Array[LogEntry]) -> void:
 	view.fx.add_entries(entries, player)
 	var skipped: bool = entries.size() > FightFx.MAX_ANIMATED
 	var last_banner: String = ""
+	combo.add_all(entries)
 	for entry: LogEntry in entries:
 		tally.add(entry)
 		var banner: String = FightBanners.text_for(entry, names)
@@ -596,6 +614,65 @@ func _on_entries(entries: Array[LogEntry]) -> void:
 	log_panel.add(entries)
 	if chart.is_visible_in_tree():
 		chart.refresh()
+	if combo_readout.visible:
+		_refresh_combo()
+
+
+## Shows or hides the combo readout (for testing): the engines under the
+## chart, and the damage rule's notes in the log.
+func set_combo_readout(on: bool) -> void:
+	combo_toggle.set_pressed_no_signal(on)
+	combo_readout.visible = on
+	log_panel.set_show_rule(on)
+	if on and combo != null:
+		_refresh_combo()
+
+
+func _refresh_combo() -> void:
+	var tallies: Array[FightResult.Deed] = []
+	if player.sim.finished:
+		tallies = CombatSim.result_of(player.sim).tallies
+	combo_readout.text = combo_text(combo, names, tallies, _growth_label)
+
+
+## A growing card's name and step size from its tally key ("upgrade:<id>",
+## "relic:<id>"), or "" for one that isn't a growing card (a run's).
+func _growth_label(key: String) -> String:
+	var run_session := session as RunSession
+	if run_session == null:
+		return ""
+	var id: String = key.get_slice(":", 1)
+	var grows: GrowthDef = null
+	var label: String = ""
+	if key.begins_with("upgrade:") and run_session.run.upgrades.has(id):
+		grows = run_session.run.upgrades[id].grows
+		label = run_session.run.upgrades[id].name
+	elif key.begins_with("relic:") and run_session.run.relics.has(id):
+		grows = run_session.run.relics[id].grows
+		label = run_session.run.relics[id].name
+	return "" if grows == null else "%s (a step is %d)" % [label, grows.per]
+
+
+## The readout's text: the fight's chains at the limit; each hero's engines
+## (fires, from chains, deepest, what they added), the most first; then,
+## once it's over, each growing card's count this fight (snowball tags).
+static func combo_text(combo_tally: ComboTally, fight_names: FightNames, tallies: Array[FightResult.Deed], growth_label: Callable) -> String:
+	var lines: Array[String] = ["Combos (for testing): %d at the chain limit" % combo_tally.at_limit]
+	for engine: ComboTally.EngineRow in combo_tally.hero_engines():
+		var engine_name: String = engine.name
+		if not engine.unit_id.is_empty():
+			engine_name = engine_name.replace(engine.unit_id, fight_names.name_of(engine.unit_id))
+		var added: Array[String] = []
+		for part: Array in [[engine.damage, "dmg"], [engine.healing, "heal"], [engine.shield, "shield"]]:
+			if int(part[0]) > 0:
+				added.append("%d %s" % [part[0], part[1]])
+		lines.append("%s: %d fires, %d from chains, deepest %d%s" % [engine_name, engine.fires, engine.from_chains, engine.deepest,
+			(" · " + ", ".join(added)) if not added.is_empty() else ""])
+	for tally: FightResult.Deed in tallies:
+		var label: String = growth_label.call(tally.path)
+		if not label.is_empty():
+			lines.append("Snowball: %s, %s +%d this fight" % [fight_names.name_of(tally.hero), label, tally.amount])
+	return "\n".join(lines)
 
 
 ## Opens or closes the combat log's popup (remembered in the session).

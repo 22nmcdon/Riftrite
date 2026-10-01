@@ -545,6 +545,8 @@ static func _run(sim: CombatSim, unit: UnitState, listener: Listener, other: Uni
 	if grows:
 		unit.relic_bonus_bp = 0
 	sim.chain_depth = outer
+	if first < sim.combat_log.entries.size():
+		sim.combat_log.entries[first].starts_fire = true
 	for i: int in range(first, sim.combat_log.entries.size()):
 		var entry: LogEntry = sim.combat_log.entries[i]
 		entry.from_event = true

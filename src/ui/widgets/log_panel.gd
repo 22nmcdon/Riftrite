@@ -17,6 +17,9 @@ var names: FightNames
 ## Every entry so far, shown or not.
 var entries: Array[LogEntry] = []
 var show_chatter: bool = false
+## The combo readout's notes (for testing, phase 5c step 9a): each DAMAGE,
+## HEAL, SHIELD, and STATUS_DAMAGE line gets how the damage rule made it.
+var show_rule: bool = false
 ## The unit the lines are about ("": everyone).
 var only_unit: String = ""
 var lines: RichTextLabel
@@ -64,7 +67,8 @@ func add(new_entries: Array[LogEntry]) -> void:
 	for entry: LogEntry in new_entries:
 		entries.append(entry)
 		if shows(entry):
-			lines.append_text(names.bbcode(entry) + "\n")
+			var note: String = rule_note(entry) if show_rule else ""
+			lines.append_text(names.bbcode(entry) + ("  [color=#8a8fa3](%s)[/color]" % note if not note.is_empty() else "") + "\n")
 
 
 ## Whether an entry's line is shown under the current toggle and filter.
@@ -72,6 +76,24 @@ func shows(entry: LogEntry) -> bool:
 	if not show_chatter and CHATTER.has(entry.kind):
 		return false
 	return only_unit.is_empty() or entry.source_unit == only_unit or entry.target == only_unit
+
+
+## The rule's note on an entry: the damage rule's parts, then what DEF took
+## and a Shield absorbed ("" without one).
+static func rule_note(entry: LogEntry) -> String:
+	var note: String = ComboTally.rule_note(entry)
+	if note.is_empty():
+		return ""
+	if entry.mitigated > 0:
+		note += " · DEF −%d" % entry.mitigated
+	if entry.absorbed > 0:
+		note += " · Shield took %d" % entry.absorbed
+	return note
+
+
+func set_show_rule(on: bool) -> void:
+	show_rule = on
+	_rewrite()
 
 
 func set_show_chatter(on: bool) -> void:

@@ -420,3 +420,29 @@ func test_banners_as_the_fight_plays() -> void:
 		screen._process(1.0)
 	assert_false(screen.banners.visible, "the end's banner goes too")
 	assert_ne(screen.outcome_label.text, "", "the outcome stays at the side")
+
+
+## The combo readout (phase 5c step 9a): hidden until its testing toggle is
+## on; then the engines under the chart and the damage rule's notes in the
+## log; off again, the log reads as before.
+func test_the_combo_readout_is_for_testing_only() -> void:
+	var screen: ArenaScreen = await _screen("the_pack")
+	screen._fight()
+	for frame: int in 60 * 6:
+		screen._process(1.0 / 60.0)
+	var plain: String = screen.log_panel.shown_text()
+	assert_false(screen.combo_readout.visible, "hidden by default")
+	assert_false(plain.contains("· power") or plain.contains("no bonuses"), "no notes in the player's log")
+	assert_string_contains(screen.combo_toggle.text, "for testing")
+	screen.combo_toggle.button_pressed = true
+	assert_true(screen.combo_readout.visible)
+	assert_string_starts_with(screen.combo_readout.text, "Combos (for testing)")
+	var noted: String = screen.log_panel.shown_text()
+	assert_true(noted.contains("no bonuses") or noted.contains("· power"), "the rule's notes")
+	screen.combo_toggle.button_pressed = false
+	assert_eq(screen.log_panel.shown_text(), plain, "off again, as before")
+	screen.skip()
+	screen.combo_toggle.button_pressed = true
+	var whole: ComboTally = ComboTally.of_log(screen.player.sim.combat_log, _content.tuning.chain_limit, ["brannoc", "maren", "vell"] as Array[String])
+	assert_eq(screen.combo.at_limit, whole.at_limit, "the screen's counts are the log's")
+	assert_eq(screen.combo.engines.size(), whole.engines.size())

@@ -181,7 +181,8 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			if not unit.vs_conditions.is_empty():
 				# A Shield's bonus on some allies (phase 5c step 7c, Front Ward).
 				power += Passives.vs_bonus_bp(unit, victim, AuraDef.Stat.SHIELD_BP, source.ability_id)
-			give_shield(sim, victim, DamageRule.apply(amount, power, 0, 0, unit.relic_bonus_bp), source)
+			var shield_entry: LogEntry = give_shield(sim, victim, DamageRule.apply(amount, power, 0, 0, unit.relic_bonus_bp), source)
+			shield_entry.set_rule(amount, power, 0, 0, unit.relic_bonus_bp)
 		EffectDef.Type.EXTEND_STATUS:
 			Statuses.extend(sim, victim, effect.status_id, effect.duration_ticks, source)
 		EffectDef.Type.APPLY_STATUS:
@@ -465,6 +466,7 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 	if crit and heroes_hit and sim.hero_rules.crit_steps > 0:
 		crit_bp = _crit_chain(sim, attacker, target, source, crit_bp, entry)
 	var raw: int = DamageRule.apply(amount, power, crit_bp, marked, attacker.relic_bonus_bp if attacker != null else 0)
+	entry.set_rule(amount, power, crit_bp, marked, attacker.relic_bonus_bp if attacker != null else 0)
 	# Iron Skin (phase 5c step 6b): its first hits taken land at half.
 	if target.hits_halved < target.aura_bp[AuraDef.Stat.HALVED_HITS]:
 		target.hits_halved += 1
@@ -664,10 +666,13 @@ static func lifesteal(sim: CombatSim, attacker: UnitState, target: UnitState, de
 ## (Blood Communion). Returns what it would have restored past full HP.
 ## `relic_bp`: the relic kind's bonus (Chain of Echoes' growth).
 static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectSource, overheal_shield_bp: int = 0, power: int = 0, by_lifesteal: bool = false, relic_bp: int = 0) -> int:
-	amount = DamageRule.apply(amount, power, 0, target.aura_bp[AuraDef.Stat.HEALING_TAKEN_BP] - FixedMath.BP_ONE, relic_bp)
+	var base: int = amount
+	var taken_bp: int = target.aura_bp[AuraDef.Stat.HEALING_TAKEN_BP] - FixedMath.BP_ONE
+	amount = DamageRule.apply(amount, power, 0, taken_bp, relic_bp)
 	var healed: int = clampi(target.max_hp - target.hp, 0, amount)
 	target.hp += healed
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.HEAL, source)
+	entry.set_rule(base, power, 0, taken_bp, relic_bp)
 	entry.target = target.id
 	entry.amount = healed
 	entry.lifesteal = by_lifesteal
@@ -694,9 +699,10 @@ static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectS
 	return amount - healed
 
 
-static func give_shield(sim: CombatSim, target: UnitState, amount: int, source: EffectSource) -> void:
+static func give_shield(sim: CombatSim, target: UnitState, amount: int, source: EffectSource) -> LogEntry:
 	target.shield += amount
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.SHIELD, source)
 	entry.target = target.id
 	entry.amount = amount
 	sim.combat_log.add(entry)
+	return entry
