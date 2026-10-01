@@ -166,6 +166,8 @@ func test_winning_the_boss_ends_the_run() -> void:
 	assert_eq(flow.take_relic(0), "")
 	assert_true(flow.state.relics.has(taken))
 	assert_eq(flow.finish_day(), "")
+	assert_eq([flow.state.phase, flow.state.shop], [RunState.Phase.SHOP, "pedlar"], "then the boss shop (phase 5c Decision 48)")
+	assert_eq(flow.leave_shop(), "")
 	assert_eq([flow.state.phase, flow.state.outcome], [RunState.Phase.ENDED, RunState.Outcome.WON])
 
 

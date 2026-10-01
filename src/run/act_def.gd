@@ -25,7 +25,7 @@ var pick_shards: int = 3
 ## The chance (percent) that a pick has a wild card: one card for any hero.
 var wild_card_pct: int = 0
 ## Shards to treat one wound, and a shop's first reroll (each after it costs
-## 1 more); the pre-boss shop's first reroll.
+## 1 more); the boss shop's first reroll.
 var wound_price: int = 4
 var reroll_price: int = 1
 var boss_reroll_price: int = 5

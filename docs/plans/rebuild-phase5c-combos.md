@@ -1535,6 +1535,23 @@ The run's first transformation now comes on day 3 (median; day 2 before). **The 
 
 **Step 9 is built, and with it phase 5c.**
 
+## 18. After step 9: the boss shop and the boss's pay
+
+The playtester, after phase 5c's build (2026-10-01): "the boss shop needs to be after the boss instead of before, and the boss fight needs to give like 60 shards instead of 25. You still get the choice of the relics before the boss" (that is, before the boss shop). Then tuning (phase 6).
+
+### 18.1 Decisions (the playtester, 2026-10-01)
+
+48. **The boss shop is after the boss.** The day before the boss's has a plain Pedlar (one relic by the shop's odds, rerolls from 1). On the boss's day a won fight offers the boss relics first (Decision 18), then the boss shop (the Pedlar: a legendary first plus one of another tier, rerolls from 5), and leaving it is the run's end. A lost boss fight replays the day as before. There's no pick and no node after the boss.
+49. **The boss pays 60 shards** (`act1.json` pay; 25 before), so the boss shop is spent with what the act saved plus the boss's 60. A lost boss fight pays half, as every lost fight does.
+
+### 18.2 Built (2026-10-01)
+
+- **The flow:** `RunFlow.boss_shop()` (was `pre_boss_shop()`, the day before the boss's) is the Pedlar of the boss's day; `finish_day` opens the Pedlar on every day, the boss's too, and `leave_shop` from the boss shop ends the run won. A won boss fight with no boss relic left to offer still goes to the boss shop. `Offers.shop_relics`' last argument is `boss`.
+- **The screens:** after the boss, "To the Pedlar"; the boss shop says "After the boss: a legendary is on offer." and its button is "Leave the Pedlar: the run's end". `tools/ci/HOW-TO-PLAY.txt` says so.
+- **Tests:** `test_new_day.gd` (a plain Pedlar every day before the boss's; the boss pays 60, its relics, then the boss shop with its legendary, then the end), `test_relics.gd` (the boss shop's legendary and rerolls from 5), and `test_run_flow.gd` (winning the boss: its relics, the boss shop, the end).
+- **Docs:** `economy.md`, `days-and-nodes.md`, `relics/README.md`, `ui-new-systems.md`, `duo-bonds.md`, `design.md`, and CLAUDE.md.
+- **What moved:** no fight. **The run report** (54 runs): 75% of runs won, as before (the boss won 41 of 43, so the legendary before it wasn't carrying the bot); **109.6 shards earned a run** (82.9 before), 101.7 spent; **6.2 relics a run** (4.6), legendary 0.8; no errors. What's bought after the boss carries nothing yet: Act 1 is the whole run until Act 2 exists.
+
 ## Answered (2026-09-30)
 
 - **A. Casters first's +20%:** power (Decision 5).

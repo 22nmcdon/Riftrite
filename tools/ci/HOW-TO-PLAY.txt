@@ -47,7 +47,7 @@ PLAYING
                 neither. A filled deed transforms the hero.
        Pedlar   after every fight: buy charms, tactics, sigils, and
                 gambits, a relic, treat wounds, reroll, or sell an item
-                back for half. The day before the boss he has a legendary.
+                back for half. After the boss he has a legendary.
        Node     then one of the day's nodes, for tomorrow:
                 Camp (always): a place with three options; take one: Train
                 (an upgrade pick), Hunt (a small fight now for shards;

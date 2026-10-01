@@ -116,7 +116,7 @@ func _skip_sealed() -> void:
 
 
 ## Moves on from after the fight once nothing there is waiting: to the shop
-## (the Pedlar), or, on the boss's day, to the run's end.
+## (the Pedlar; on the boss's day, the boss shop, after its relic choice).
 func finish_day() -> String:
 	if state.phase != RunState.Phase.AFTER:
 		return _not_now("move on from the fight")
@@ -126,19 +126,21 @@ func finish_day() -> String:
 		return "choose a relic or neither first"
 	state.just_transformed.clear()
 	state.grew.clear()
-	if run.act.days[state.day - 1] == "boss":
-		_end(RunState.Outcome.WON)
-		return ""
 	state.phase = RunState.Phase.SHOP
 	open_shop("pedlar")
 	return ""
 
 
-## Leaves the shop for the day's nodes.
+## Leaves the shop for the day's nodes, or, from the boss shop, for the
+## run's end.
 func leave_shop() -> String:
 	if state.phase != RunState.Phase.SHOP:
 		return _not_now("leave the shop")
+	var boss: bool = boss_shop()
 	close_shop()
+	if boss:
+		_end(RunState.Outcome.WON)
+		return ""
 	state.nodes = Offers.nodes(run, state)
 	state.node = ""
 	state.phase = RunState.Phase.NODES
@@ -884,10 +886,9 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 	state.phase = RunState.Phase.AFTER
 	state.relic_choice_price = 0
 	if run.act.days[state.day - 1] == "boss":
-		# The boss relic choice (Decision 18), then the run's end (finish_day).
+		# The boss relic choice (Decision 18), then the boss shop (finish_day;
+		# Decision 48), then the run's end (leave_shop).
 		state.relic_choice = Offers.relics(run, state, RELIC_AFTER_FIGHT, run.act.boss_relics, "boss")
-		if state.relic_choice.is_empty():
-			_end(RunState.Outcome.WON)
 		return
 	state.pick = _pick_cards(0)
 	if tier == "elite":
@@ -1291,8 +1292,8 @@ func unequip(hero_id: String, slot: int) -> String:
 ## Opens a shop ("pedlar" after the fight, "magpie" as his node), its wares
 ## and relics drawn now (the day opens it; tests open one directly). Phase 5c step 5a:
 ## every shop shows a relic (more with shop_relics_add); the boss day's
-## Pedlar is the pre-boss shop (a legendary first, rerolls from
-## boss_reroll); the Magpie's are epic or legendary, one look. As a shop
+## Pedlar, after the boss, is the boss shop (a legendary first, rerolls from
+## boss_reroll; Decision 48); the Magpie's are epic or legendary, one look. As a shop
 ## opens, the relics' shop_shards and miser pay.
 func open_shop(kind: String) -> String:
 	if state.phase != RunState.Phase.SHOP and state.phase != RunState.Phase.NODE:
@@ -1318,14 +1319,15 @@ func open_shop(kind: String) -> String:
 
 
 func _draw_shop_relics() -> Array[String]:
-	var count: int = 1 + run.relic_sum(state, "shop_relics_add") + (1 if pre_boss_shop() else 0)
-	return Offers.shop_relics(run, state, state.rerolls, count, state.shop == "magpie", pre_boss_shop())
+	var count: int = 1 + run.relic_sum(state, "shop_relics_add") + (1 if boss_shop() else 0)
+	return Offers.shop_relics(run, state, state.rerolls, count, state.shop == "magpie", boss_shop())
 
 
-## True if the open shop is the pre-boss shop: the Pedlar of the day before
-## the boss's (the shop before the boss fight; phase 5c step 8).
-func pre_boss_shop() -> bool:
-	return state.shop == "pedlar" and state.day >= 1 and state.day < run.act.days.size() and run.act.days[state.day] == "boss"
+## True if the open shop is the boss shop: the Pedlar of the boss's day,
+## after the boss fight and its relic choice (Decision 48; it was the day
+## before the boss's until then).
+func boss_shop() -> bool:
+	return state.shop == "pedlar" and state.day >= 1 and state.day <= run.act.days.size() and run.act.days[state.day - 1] == "boss"
 
 
 func close_shop() -> void:
@@ -1408,12 +1410,12 @@ func buy(index: int) -> String:
 
 
 ## What the open shop's next reroll costs (phase 5c step 5a): the first
-## reroll_price (boss_reroll_price in the pre-boss shop), each after it 1
+## reroll_price (boss_reroll_price in the boss shop), each after it 1
 ## more (flat_rerolls: never more); free_reroll makes the first free.
 func reroll_price() -> int:
 	if state.rerolls == 0 and run.relic_rule(state, "free_reroll"):
 		return 0
-	var base: int = run.act.boss_reroll_price if pre_boss_shop() else run.act.reroll_price
+	var base: int = run.act.boss_reroll_price if boss_shop() else run.act.reroll_price
 	return base + (0 if run.relic_rule(state, "flat_rerolls") else state.rerolls)
 
 

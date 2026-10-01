@@ -10,7 +10,7 @@ Status: **agreed in discussion (2026-09-30), not built.** Every shard source and
 | **Normal fight** (won) | 10 |
 | **Harder fight** (won) | 13 |
 | **Elite** (won) | 15 |
-| **Boss** (won) | 25 |
+| **Boss** (won) | 60 (25 until 2026-10-01: `rebuild-phase5c-combos.md` Decision 49) |
 | **Selling an item** at any shop | Half its price, rounded down, whatever its rank |
 | **Selling a relic** to the Magpie | Half its tier's price (common 2, rare 6, epic 10, legendary 15, boss 15) |
 
@@ -27,7 +27,7 @@ Money relics add more (Gravedigger's Coin, Bounty Hunter's Tag, Loose Change, Mi
 | **Sigils** | 8 |
 | **Gambits** | 12 |
 | **Treating one wound** | 4 |
-| **Rerolling a shop's relic** | 1, then +1 each time; starts at 5 in the pre-boss shop |
+| **Rerolling a shop's relic** | 1, then +1 each time; starts at 5 in the boss shop (after the boss since 2026-10-01) |
 | **The Magpie's relic** | 25% off (epic 15, legendary 22) |
 | **The Shrine** | 15 shards for a rare (one of three offerings) |
 
@@ -37,6 +37,7 @@ Money relics add more (Gravedigger's Coin, Bounty Hunter's Tag, Loose Change, Mi
 - **A modest spend** over the first five shops (2 commons, a charm, a tactic, a sigil, a wound, and a few rerolls) leaves **about 30**: enough for a legendary if you planned for it, not by default.
 - **The harder fight's +3** makes choosing it a real trade: more risk, more shards.
 - **Checked against Act 1's days (2026-09-30):** the days are normal, normal, elite, normal, elite, normal, boss, so income before the pre-boss shop is really **80–92**, and the modest spend (about 35–40) leaves **about 40–57**. The playtester's call: that's fine, and the numbers stand until the sim pass.
+- **Changed (2026-10-01, `rebuild-phase5c-combos.md` Decisions 48 and 49):** the legendary shop moved to after the boss (the day before the boss's is a plain Pedlar), and the boss pays **60**, so that shop is spent with what the act saved plus the boss's 60. The targets above were for a shop before the boss; phase 6's tuning revisits them.
 
 ## Where this meets what's built
 

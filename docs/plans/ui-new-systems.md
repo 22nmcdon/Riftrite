@@ -21,7 +21,7 @@ Status: **agreed in discussion (2026-09-30), not built.** What the UI must show 
 
 ## 3. Shop and rerolls
 
-- **Reroll** is a lever with a price tag showing the next reroll's cost; the tag goes up after each pull. In the pre-boss shop it starts at 5.
+- **Reroll** is a lever with a price tag showing the next reroll's cost; the tag goes up after each pull. In the boss shop (after the boss) it starts at 5.
 - **The relic slot** has a frame for each tier. A bond relic has its own frame and a "Free" tag.
 - **The Magpie's stall** shows "One look" in place of a reroll lever.
 

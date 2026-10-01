@@ -234,16 +234,16 @@ static func rift_modifiers(run: RunContent, state: RunState) -> Array[String]:
 
 
 ## A shop's relics (phase 5c step 5a): `count` of them, each of a tier drawn
-## by the shop's odds (the Magpie's: epic or legendary); the pre-boss shop's
+## by the shop's odds (the Magpie's: epic or legendary); the boss shop's
 ## first is a legendary. `rerolls` draws a fresh set.
-static func shop_relics(run: RunContent, state: RunState, rerolls: int, count: int, magpie: bool, pre_boss: bool) -> Array[String]:
+static func shop_relics(run: RunContent, state: RunState, rerolls: int, count: int, magpie: bool, boss: bool) -> Array[String]:
 	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.RELIC, state.act, state.day, state.attempt, -1 - rerolls])
 	var drawn: Array[String] = []
 	for i: int in count:
-		var tier: String = "legendary" if pre_boss and i == 0 else (_weighted(rng, run.act.magpie_odds, run.act.magpie_weights) if magpie \
+		var tier: String = "legendary" if boss and i == 0 else (_weighted(rng, run.act.magpie_odds, run.act.magpie_weights) if magpie \
 			else _weighted(rng, run.act.relic_odds, run.act.relic_weights))
 		var id: String = ""
-		if not magpie and not (pre_boss and i == 0):
+		if not magpie and not (boss and i == 0):
 			id = _bond_relic(run, state, rng, drawn)
 		if id.is_empty():
 			id = _relic_of(run, state, rng, tier, drawn)

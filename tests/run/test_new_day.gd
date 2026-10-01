@@ -1,8 +1,8 @@
 extends GutTest
 ## The new day (docs/plans/rebuild-phase5c-combos.md, step 8a, section 16;
 ## days-and-nodes.md): the route, the fight, after it, the Pedlar after every
-## fight, then a node (Camp always, Rift Tear, the Magpie); the pre-boss
-## shop; the boss's day; a loss replaying the day with the node's setup held
+## fight, then a node (Camp always, Rift Tear, the Magpie); the boss's day
+## (its pay, its relics, then the boss shop: Decision 48); a loss replaying the day with the node's setup held
 ## (Decision 42); the node draw (Decision 41); and the save.
 
 const Bot = preload("res://tools/run_bot.gd")
@@ -39,7 +39,7 @@ func _win_today(flow: RunFlow) -> void:
 		flow.decline_relic()
 
 
-func test_the_pedlar_after_every_fight_and_the_pre_boss_shop() -> void:
+func test_the_pedlar_after_every_fight_and_the_boss_shop() -> void:
 	var flow: RunFlow = _start()
 	var state: RunState = flow.state
 	for day: int in range(1, 7):
@@ -47,18 +47,26 @@ func test_the_pedlar_after_every_fight_and_the_pre_boss_shop() -> void:
 		_win_today(flow)
 		assert_eq(flow.finish_day(), "")
 		assert_eq([state.phase, state.shop], [RunState.Phase.SHOP, "pedlar"], "day %d's shop" % day)
-		assert_eq(flow.pre_boss_shop(), day == 6, "the pre-boss shop is the day before the boss's (day %d)" % day)
-		if day == 6:
-			assert_eq(_run.relics[state.shop_relics[0]].tier, RelicDef.Tier.LEGENDARY)
+		assert_false(flow.boss_shop(), "a plain Pedlar the day before the boss's too (Decision 48; day %d)" % day)
 		assert_eq(flow.leave_shop(), "")
 		assert_eq(flow.choose_node(state.nodes.find("camp")), "")
 		assert_eq(flow.leave_node(), "")
 	assert_eq(state.taken_nodes.size(), 6, "a node a day before the boss's")
 	assert_true(state.taken_nodes.all(func(node: String) -> bool: return node.begins_with("camp:")))
-	# The boss's day: the fight and its relic choice, then the run's end; no shop.
-	_win_today(flow)
-	assert_eq(state.phase, RunState.Phase.AFTER)
+	# The boss's day: the fight, its pay, and its relic choice, then the boss
+	# shop, then the run's end (Decision 48).
+	var shards: int = state.shards
+	assert_eq(flow.choose_fight(0), "")
+	flow.record(Bot.formation(), _result(FightResult.Outcome.VICTORY))
+	assert_eq(state.shards - shards, 60, "the boss pays 60")
+	assert_eq([state.phase, state.relic_choice.size()], [RunState.Phase.AFTER, _run.act.boss_relics])
+	assert_eq(flow.finish_day(), "choose a relic or neither first", "the boss relics before the shop")
+	assert_eq(flow.take_relic(0), "")
 	assert_eq(flow.finish_day(), "")
+	assert_eq([state.phase, state.shop], [RunState.Phase.SHOP, "pedlar"])
+	assert_true(flow.boss_shop())
+	assert_eq(_run.relics[state.shop_relics[0]].tier, RelicDef.Tier.LEGENDARY)
+	assert_eq(flow.leave_shop(), "")
 	assert_eq([state.phase, state.outcome, state.shop], [RunState.Phase.ENDED, RunState.Outcome.WON, ""])
 
 

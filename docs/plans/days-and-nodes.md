@@ -23,7 +23,7 @@ Day N+1
 - **A shop comes every day,** right after the after-fight pick. The Pedlar is that shop, no longer a camp option.
 - **Then a node:** 2–3 are shown, and you take one. Its effect happens now, or applies to the next day's fight (Rift Tear).
 - **Losing a fight replays the day** (you fight it again); a second loss ends the run.
-- **The boss day:** the shop before the boss fight is the special one (1 legendary plus 1 relic of another tier; rerolls start at 5 shards). After the boss, choose 1 of 3 boss relics.
+- **The boss day:** after the boss, choose 1 of 3 boss relics, then the special shop (1 legendary plus 1 relic of another tier; rerolls start at 5 shards). **Changed (2026-10-01, `rebuild-phase5c-combos.md` Decision 48):** that shop was the day before the boss's; it is now after the boss, and the day before the boss's has a plain Pedlar.
 
 ## 2. The shop
 

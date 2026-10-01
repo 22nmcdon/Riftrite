@@ -2,7 +2,7 @@ extends GutTest
 ## The relic pool's first part (docs/plans/rebuild-phase5c-combos.md, step
 ## 5a, section 10): the tiers, every 5a relic's effect (in a small fight, on
 ## a kit, or on the run), the run rules, the shops' relics and rerolls, the
-## pre-boss shop, and the boss relic choice. And its second (step 5b,
+## boss shop, and the boss relic choice. And its second (step 5b,
 ## section 11): the 5b relics, their effects at a fight's start and Salt
 ## Circle in the run's fight setups, and Reliquary's doubling. And step 5c's
 ## engines (section 12.1).
@@ -310,14 +310,14 @@ func test_the_hollow_covenant_shares_the_best_stats() -> void:
 
 # --- where relics come from -------------------------------------------------------------
 
-func test_the_pre_boss_shop() -> void:
+func test_the_boss_shop() -> void:
 	var flow: RunFlow = _start()
 	var state: RunState = flow.state
-	state.day = 6
+	state.day = 7
 	state.phase = RunState.Phase.AFTER
 	assert_eq(flow.finish_day(), "")
-	assert_eq(state.shop, "pedlar", "the shop after the fight the day before the boss's (phase 5c step 8)")
-	assert_true(flow.pre_boss_shop())
+	assert_eq(state.shop, "pedlar", "the shop after the boss fight (Decision 48)")
+	assert_true(flow.boss_shop())
 	assert_eq(state.shop_relics.size(), 2)
 	assert_eq(_run.relics[state.shop_relics[0]].tier, RelicDef.Tier.LEGENDARY, "a legendary first")
 	assert_ne(_run.relics[state.shop_relics[1]].tier, RelicDef.Tier.LEGENDARY, "and one of another tier")
@@ -577,14 +577,14 @@ func _bonded() -> RunFlow:
 	return flow
 
 
-func _bond_draws(flow: RunFlow, magpie: bool = false, pre_boss: bool = false) -> int:
+func _bond_draws(flow: RunFlow, magpie: bool = false, boss: bool = false) -> int:
 	var found: int = 0
 	for rerolls: int in 400:
-		var drawn: Array[String] = Offers.shop_relics(_run, flow.state, rerolls, 2 if pre_boss else 1, magpie, pre_boss)
+		var drawn: Array[String] = Offers.shop_relics(_run, flow.state, rerolls, 2 if boss else 1, magpie, boss)
 		if drawn.has("the_watchtower_stone"):
 			found += 1
-			if pre_boss:
-				assert_eq(drawn.find("the_watchtower_stone"), 1, "beside the pre-boss shop's legendary, never in its place")
+			if boss:
+				assert_eq(drawn.find("the_watchtower_stone"), 1, "beside the boss shop's legendary, never in its place")
 	return found
 
 
@@ -594,7 +594,7 @@ func test_an_on_bonds_relic_shows_up_in_the_shops() -> void:
 	var shown: int = _bond_draws(flow)
 	assert_between(shown, 50, 110, "about 20%% of the Pedlar's draws (Decision 27): %d of 400" % shown)
 	assert_eq(_bond_draws(flow, true), 0, "never at the Magpie")
-	assert_gt(_bond_draws(flow, false, true), 0, "in the pre-boss shop too")
+	assert_gt(_bond_draws(flow, false, true), 0, "in the boss shop too")
 	assert_eq(_bond_draws(_start()), 0, "no bond on, no bond relic")
 
 

@@ -8,7 +8,7 @@ Status: **agreed in discussion (2026-09-30); built in phase 5c step 5d (2026-10-
 - **It switches on when both heroes have transformed** into the bonded paths.
 - **Once it's on, its bond relic joins the shop pool for the rest of the run.** It isn't guaranteed in the next shop; it's just more likely to show up than an epic (about twice as likely, to tune). You may have to reroll or wait for it.
 - **The bond relic is free** when it shows up in a shop. It takes the shop's relic spot, like any relic.
-- **It can show up in any shop,** including the pre-boss shop (as the relic next to the legendary). The Magpie doesn't sell it.
+- **It can show up in any shop,** including the boss shop (as the relic next to the legendary). The Magpie doesn't sell it.
 - **The only way to get a bond relic is to have its bond.** A bond relic is still team-wide and follows every relic rule (`relics/README.md`); only who can *get* it depends on the heroes. Its effect should play off both paths' mechanics.
 - **The vow previews it:** vowing two heroes to bonded paths shows the bond as "?". Its name and relic are revealed once it switches on.
 - **Found bonds and their relics go in the Codex.**

@@ -19,10 +19,10 @@ extends UiScreen
 ##   - the loadout: each hero's slots (click a filled one to take it off) and
 ##     the stash (equip each item to a hero; "no effect" where it does
 ##     nothing); then To the fight;
-##   - after the fight: how it went, then To the Pedlar (the run's end after
-##     the boss);
+##   - after the fight: how it went, then To the Pedlar;
 ##   - the shop: the Pedlar's wares, a relic, treating wounds, selling, a
-##     reroll; then Leave the Pedlar;
+##     reroll; then Leave the Pedlar (after the boss, the boss shop, and
+##     leaving it is the run's end);
 ##   - the nodes: a card each (Camp, Rift Tear, the Magpie; Go to);
 ##   - a node: camp (the place, its options (Choose), then what one opened:
 ##     Map the Rift's swap, or the Hunt (Fight the Hunt)), the Magpie's
@@ -237,7 +237,8 @@ func refresh() -> void:
 				_fill_after()
 			RunState.Phase.SHOP:
 				_fill_shop()
-				body.add_child(UiStyle.primary(UiStyle.button("Leave the Pedlar", _do.bind(session.flow.leave_shop))))
+				var label: String = "Leave the Pedlar: the run's end" if session.flow.boss_shop() else "Leave the Pedlar"
+				body.add_child(UiStyle.primary(UiStyle.button(label, _do.bind(session.flow.leave_shop))))
 			RunState.Phase.NODES:
 				_fill_nodes()
 			RunState.Phase.NODE:
@@ -719,8 +720,8 @@ func _fill_shop() -> void:
 	else:
 		var price: int = session.flow.reroll_price()
 		more.add_child(UiStyle.button("Reroll · %d shard%s" % [price, "" if price == 1 else "s"], _do.bind(session.flow.reroll)))
-		if session.flow.pre_boss_shop():
-			more.add_child(UiStyle.label("Before the boss: a legendary is on offer.", 17, UiStyle.HIGHLIGHT))
+		if session.flow.boss_shop():
+			more.add_child(UiStyle.label("After the boss: a legendary is on offer.", 17, UiStyle.HIGHLIGHT))
 
 
 ## A card's numbers line (ModInfo; phase 5c, step 2: every stat change says
@@ -901,8 +902,7 @@ func _fill_after() -> void:
 		var last: RunState.Fought = state.fought.back()
 		var encounter: EncounterDef = session.content.encounters[last.encounter]
 		_section("%s: %s" % [encounter.name, RunDayScreen.outcome_word(last.outcome)], "In %ds. It paid %d shards." % [last.seconds, session.run.act.pay[encounter.tier] + session.run.relic_sum(state, "pay_add") + (session.run.relic_sum(state, "elite_pay_add") if encounter.tier == "elite" else 0)])
-	var boss: bool = session.run.act.days[state.day - 1] == "boss"
-	body.add_child(UiStyle.primary(UiStyle.button("The run's end" if boss else "To the Pedlar", _do.bind(session.flow.finish_day))))
+	body.add_child(UiStyle.primary(UiStyle.button("To the Pedlar", _do.bind(session.flow.finish_day))))
 
 
 static func outcome_word(outcome: FightResult.Outcome) -> String:

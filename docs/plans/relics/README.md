@@ -7,7 +7,7 @@ Status: **agreed in discussion (2026-09-30), not built.** The relic pool for Act
 | **Common** | `relics-common.md` | Every shop | 5 shards | 25 |
 | **Rare** | `relics-rare.md` | Every shop (less often), elites | 12 shards | 21 |
 | **Epic** | `relics-epic.md` | Shops (rarely), elites, the Magpie | 20 shards | 14 |
-| **Legendary** | `relics-legendary.md` | The shop before each boss | 30 shards | 15 |
+| **Legendary** | `relics-legendary.md` | The shop after each boss (before it until 2026-10-01) | 30 shards | 15 |
 | **Boss** | `relics-boss.md` | After each boss: choose 1 of 3 | free | 11 |
 | **Bond** | `../duo-bonds.md` | Shops, once its duo bond switches on (more likely than an epic) | Free | 3 (Act 1) |
 
@@ -38,12 +38,12 @@ Status: **agreed in discussion (2026-09-30), not built.** The relic pool for Act
 - **Every shop shows 1 relic at a time.** Rerolling replaces it with a new one, so a shop has no limit: with enough shards you can keep buying. The first reroll costs 1 shard, and each reroll after it costs 1 more (Tinker's Purse makes the first free; Merchant's Covenant stops the price climbing).
 - **The Pedlar:** its 1 relic is mostly common, sometimes rare, rarely epic.
 - **The Magpie** (`../magpie.md`): his 1 relic is always epic or legendary, at 25% off. He's also the only place to sell a relic (for half its tier's price) or swap one for another of the same tier.
-- **The shop before each boss:** 1 legendary plus 1 relic of another tier. Rerolls work the same way but start at 5 shards.
+- **The shop after each boss** (before it until 2026-10-01, `../rebuild-phase5c-combos.md` Decision 48; after the boss relic choice): 1 legendary plus 1 relic of another tier. Rerolls work the same way but start at 5 shards.
 - **After each boss:** 3 boss relics, take 1.
 
 ## Income (placeholders)
 
-You start a run with 10 shards. A normal win pays 10, the harder fight 13, an elite 15, the boss 25. All shard numbers are in `../economy.md`.
+You start a run with 10 shards. A normal win pays 10, the harder fight 13, an elite 15, the boss 60 (25 until 2026-10-01). All shard numbers are in `../economy.md`.
 
 ## Decisions (2026-09-30)
 
@@ -55,7 +55,7 @@ These win over part 7 (`../rebuild-combos.md`), part 6 (`../rebuild-between-figh
 | **Tiers** | Five tiers: common, rare, epic, legendary, boss. Part 7 and the run plan are updated to match the README |
 | **Relics per run** | Roughly 8–14, depending on how much players reroll |
 | **Shops** | **Every shop shows 1 relic at a time.** Rerolling replaces it with a new one, so a shop has no limit: with enough shards you can keep buying. The first reroll costs **1 shard**, and each reroll after it costs **1 more** |
-| **The shop before each boss** | Shows **1 legendary plus 1 relic of another tier**. Rerolls work the same way but **start at 5 shards** |
+| **The shop after each boss** (before it until 2026-10-01) | Shows **1 legendary plus 1 relic of another tier**. Rerolls work the same way but **start at 5 shards** |
 | **After each boss** | Choose 1 of 3 boss relics, free |
 | **Prices** | Common 5, rare 12, epic 20, legendary 30 |
 | **Income** | A won fight pays **8**, an elite **12**, the boss **25** (placeholders). This replaces part 6's and part 7's earlier numbers. **Raised the same day (`../economy.md`):** start 10; a normal win 10, the harder fight 13, an elite 15, the boss 25 |
