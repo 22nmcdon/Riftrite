@@ -545,7 +545,7 @@ With these, commons are complete (25 of 25), rares 21 of 21, epics 8 of 14, lege
 
 ## 12. Step 5c: the engines, the chains, and the rules boss relics rewrite
 
-The third part of the relic pool (Decision 17): the 22 relics left that aren't bond relics, each its own piece. After 5c the epic, legendary, and boss tiers are complete (14, 15, 11). **Up for approval.**
+The third part of the relic pool (Decision 17): the 22 relics left that aren't bond relics, each its own piece. After 5c the epic, legendary, and boss tiers are complete (14, 15, 11). **Approved 2026-10-01** (12.8).
 
 Two kinds of piece:
 
@@ -587,7 +587,7 @@ Two notes on reading them:
 | `keywords_last` | **Everflame** (boss) | A keyword status a hero applies to an enemy never ends that fight: timed ones don't run out, Burn's stacks don't fade, and enemies' heals and cleanses don't remove them (`StatusState.lasting`). Stealth on heroes still ends |
 | `unbending` `{"def_bp": 100, "max_hp_bp": 100}` | **The Unbending** (boss) | A status an enemy applies to a hero is blocked, and logged as RESISTED (a new kind: "Resisted" over the hero). Each block gives the hero a stack of `unbending` (a stacking boost with no duration: +1% DEF, +1% max HP). Max HP rises by the share and HP by as much, through a new aura stat `max_hp_bp`. Engaged isn't blocked: it's the Engage trait, not an applied status |
 | `collapse` `{"immune": true, "enemy_max_hp_bp": 500}` | **Riftwalker's Soles** (boss) | Heroes take no damage from crumbled ground. Enemies on it take 5% of their max HP a second on top, on the same COLLAPSE line (noted "Riftwalker's Soles") |
-| `long_watch` `{"from_ms": 60000, "every_ms": 10000}` | **The Long Watch** (boss) | No 180s tie (see Question Q for the safety limit). At 60s and every 10s after, every standing hero gains a stack of `long_watch` (a stacking boost, no duration: +10% HP, ATK, MGK, DEF, CRIT, and attack speed), sourced to the relic |
+| `long_watch` `{"from_ms": 60000, "every_ms": 10000, "tie_ms": 300000}` | **The Long Watch** (boss) | No 180s tie: the fight runs to 300s, then ends as a tie (Decision 25). At 60s and every 10s after, every standing hero gains a stack of `long_watch` (a stacking boost, no duration: +10% HP, ATK, MGK, DEF, CRIT, and attack speed), sourced to the relic |
 | `marks_stack` | **Hunter's Engine** (legendary, with its mod) | Marked applied by a hero stacks instead of only refreshing: each application adds a stack and refreshes the timer (`StatusState.stacks` for a timed status). Marked's vulnerability stays one Mark's; the stacks count for Hunter's Engine's crit damage |
 
 ### 12.3 The log and the board
@@ -658,11 +658,18 @@ The chaos fight takes the new pieces part by part (its seed rescanned if it must
   - the bench fingerprints unchanged
   - the run report runs
 
-### 12.7 Questions
+### 12.7 Questions (answered in 12.8)
 
-- **L. Second Dawn and wounds:** does a hero who rose get a wound for that fall? Recommended: no, if it's standing at the fight's end (a wound for being down at the end, or for its second fall).
-- **M. Everflame's reach:** only keywords heroes put on enemies (recommended: so Stealth on heroes still ends), or every keyword heroes apply as written?
-- **Q. The Long Watch's limit:** a sim must end. Recommended: at 600s a fight under The Long Watch ends as a tie (a guild win, as at 180s now).
+- **L. Second Dawn and wounds:** does a hero who rose get a wound for that fall?
+- **M. Everflame's reach:** only keywords heroes put on enemies, or every keyword heroes apply as written?
+- **Q. The Long Watch's limit:** a sim must end; when?
+
+### 12.8 Decisions (the playtester, 2026-10-01)
+
+22. **Step 5c is built as this section says**, in two parts (5c-1, the engines; 5c-2, the rules), each committed on its own.
+23. **Wounds count only for heroes who are down at the end of the fight** (Question L). Without a rise that's every hero who fell, as now; a hero Second Dawn raised and who is standing at the end takes no wound.
+24. **Everflame reaches only the keywords heroes put on enemies** (Question M): Stealth on heroes still ends.
+25. **Under The Long Watch a fight ends as a tie at 300s** (Question Q), a guild win like the 180s tie.
 
 ## Answered (2026-09-30)
 
