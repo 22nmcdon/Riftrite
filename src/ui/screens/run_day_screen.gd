@@ -398,7 +398,12 @@ func _fill_relic_choice() -> void:
 	section.add_child(row)
 	for i: int in state.relic_choice.size():
 		var relic: RelicDef = session.run.relics[state.relic_choice[i]]
-		_relic_card(row, relic).add_child(UiStyle.primary(UiStyle.button("Take · %d shards" % price if price > 0 else "Take", _do.bind(session.flow.take_relic.bind(i)))))
+		var label: String = "Take · %d shards" % price if price > 0 else "Take"
+		if state.shrine.begins_with("wound:"):
+			label = "Take · a wound on %s" % _hero_name(state.shrine.trim_prefix("wound:"))
+		elif state.shrine.begins_with("relic:"):
+			label = "Take · give up %s" % session.run.relics[state.shrine.trim_prefix("relic:")].name
+		_relic_card(row, relic).add_child(UiStyle.primary(UiStyle.button(label, _do.bind(session.flow.take_relic.bind(i)))))
 	section.add_child(UiStyle.button("Take neither", _do.bind(session.flow.decline_relic)))
 
 
@@ -444,9 +449,61 @@ func _fill_node() -> void:
 		"magpie":
 			_fill_shop()
 		"rift_tear":
-			var node: CampsDef.Option = session.run.camps.nodes["rift_tear"]
-			_section(node.name, "Tomorrow's enemies come through the tear, warded by the rift. Win that fight for a choice of relics.")
+			_fill_depths()
 	body.add_child(UiStyle.primary(UiStyle.button("On to day %d" % (state.day + 1), _do.bind(session.flow.leave_node))))
+
+
+## A Rift Tear's depths (phase 5c step 8b): a card each, with the rift
+## modifiers it adds (the day's, shown before one's chosen); then the one
+## chosen.
+func _fill_depths() -> void:
+	var state: RunState = session.state()
+	var run: RunContent = session.run
+	if not state.rift_depth.is_empty():
+		_section("Rift Tear: %s" % run.camps.depth(state.rift_depth).name, RunDayScreen.rift_line(run, state))
+		return
+	var section: VBoxContainer = _section("Rift Tear: how deep?", "Tomorrow's fight comes through the tear. The deeper, the harder, and the better the relics for winning it.")
+	var row: HBoxContainer = _row()
+	section.add_child(row)
+	var drawn: Array[String] = Offers.rift_modifiers(run, state)
+	for i: int in run.camps.depths.size():
+		var depth: CampsDef.Depth = run.camps.depths[i]
+		var card: VBoxContainer = _card(row, 0, UiStyle.RIFT_300)
+		card.add_child(UiStyle.heading(depth.name, 26, UiStyle.TEXT))
+		card.add_child(_wrapped(depth.text, 17, UiStyle.TEXT))
+		for id: String in drawn.slice(0, depth.modifiers):
+			var modifier: CampsDef.Modifier = run.camps.modifiers[id]
+			card.add_child(_wrapped("%s: %s" % [modifier.name, modifier.text], 16, UiStyle.RIFT_300))
+		card.add_child(UiStyle.primary(UiStyle.button("Go %s" % depth.name.to_lower(), _do.bind(session.flow.choose_depth.bind(i)))))
+
+
+## The Shrine's offerings (phase 5c step 8b): shards, a wound on a hero, or a
+## relic for one a tier higher.
+func _fill_shrine() -> void:
+	var state: RunState = session.state()
+	var run: RunContent = session.run
+	var section: VBoxContainer = _section("The Shrine asks an offering", "Offer something for a relic. Nothing is given up unless you take the relic.")
+	var row: HBoxContainer = _row()
+	section.add_child(row)
+	var shards: VBoxContainer = _card(row)
+	shards.add_child(UiStyle.heading("Shards", 24, UiStyle.TEXT))
+	shards.add_child(_wrapped("For a rare relic.", 16, UiStyle.TEXT_DIM))
+	var pay: Button = UiStyle.button("Offer %d shards" % run.act.shrine_price, _do.bind(session.flow.shrine_offer.bind("shards", "")))
+	pay.disabled = state.shards < run.act.shrine_price
+	shards.add_child(pay)
+	var blood: VBoxContainer = _card(row)
+	blood.add_child(UiStyle.heading("Blood", 24, UiStyle.TEXT))
+	blood.add_child(_wrapped("A wound on a hero, for a rare relic.", 16, UiStyle.TEXT_DIM))
+	for hero: RunState.Hero in state.heroes:
+		if hero.wounds < session.content.tuning.max_wounds:
+			blood.add_child(UiStyle.button("Offer a wound on %s" % _hero_name(hero.id), _do.bind(session.flow.shrine_offer.bind("wound", hero.id))))
+	var relics: VBoxContainer = _card(row)
+	relics.add_child(UiStyle.heading("A relic", 24, UiStyle.TEXT))
+	relics.add_child(_wrapped("One you hold, for a relic a tier higher.", 16, UiStyle.TEXT_DIM))
+	for id: String in state.relics:
+		var tier: String = session.flow.shrine_tier(id)
+		if not tier.is_empty():
+			relics.add_child(UiStyle.button("Offer %s (for %s)" % [run.relics[id].name, "an " + tier if tier == "epic" else "a " + tier], _do.bind(session.flow.shrine_offer.bind("relic", id))))
 
 
 # --- camp -------------------------------------------------------------------------
@@ -492,6 +549,8 @@ func _fill_camp() -> void:
 		hunt_section.add_child(UiStyle.primary(UiStyle.button("Fight the Hunt", func() -> void: fight_requested.emit())))
 	if state.mapping:
 		_fill_mapping()
+	if state.shrine == "open":
+		_fill_shrine()
 	if state.dig_in and state.rock.is_empty():
 		body.add_child(_wrapped("Dig In: you'll set your rock on the board before the fight (click a hex of your zone).", 17, UiStyle.TEXT_DIM))
 
@@ -649,7 +708,22 @@ func _show_route_card(index: int, holder: VBoxContainer) -> void:
 	card.add_child(_enemies_line(encounter))
 	if state.scouted.has(state.day) or session.run.relic_rule(state, "always_scout"):
 		card.add_child(_wrapped("Scouted: " + RunDayScreen.placements(encounter, session.content), 15, UiStyle.ACCENT_TEXT))
+	if not state.rift_depth.is_empty():
+		card.add_child(_wrapped(RunDayScreen.rift_line(session.run, state), 15, UiStyle.RIFT_300))
 	card.add_child(UiStyle.primary(UiStyle.button("Fight this", _do.bind(session.flow.choose_fight.bind(index)))))
+
+
+## The next day fight's Rift Tear (phase 5c step 8b): "Through a Deep rift
+## tear: a Shield of a tenth of their max HP; Hastened: ...".
+static func rift_line(run: RunContent, state: RunState) -> String:
+	var depth: CampsDef.Depth = run.camps.depth(state.rift_depth)
+	if depth == null:
+		return ""
+	var parts: Array[String] = ["a Shield of a tenth of their max HP"]
+	for id: String in state.rift_mods:
+		var modifier: CampsDef.Modifier = run.camps.modifiers[id]
+		parts.append("%s (%s)" % [modifier.name, modifier.text])
+	return "Through a %s rift tear: %s." % [depth.name, "; ".join(parts)]
 
 
 ## "Rift Hound ×2: Pounces on your weakest back-liner", one line each.

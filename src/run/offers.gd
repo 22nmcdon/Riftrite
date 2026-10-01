@@ -155,6 +155,33 @@ static func relics(run: RunContent, state: RunState, visit: int, count: int, tie
 	return drawn
 
 
+## A relic of each of `tiers` (a Rift Tear's depth, phase 5c step 8b; the
+## Shrine's offering of a relic for one a tier higher), all different.
+static func relics_of_tiers(run: RunContent, state: RunState, visit: int, tiers: Array[String]) -> Array[String]:
+	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.RELIC, state.act, state.day, state.attempt, visit])
+	var drawn: Array[String] = []
+	for tier: String in tiers:
+		var id: String = _relic_of(run, state, rng, tier, drawn)
+		if not id.is_empty():
+			drawn.append(id)
+	return drawn
+
+
+## The day's two rift modifiers, in order (phase 5c step 8b): a Deep tear
+## takes the first, an Abyssal one both, so the depths' cards can show them
+## before one's chosen.
+static func rift_modifiers(run: RunContent, state: RunState) -> Array[String]:
+	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.NODE, state.act, state.day, 1])
+	var pool: Array[String] = run.camps.modifier_ids.duplicate()
+	var drawn: Array[String] = []
+	var most: int = 0
+	for depth: CampsDef.Depth in run.camps.depths:
+		most = maxi(most, depth.modifiers)
+	while drawn.size() < most and not pool.is_empty():
+		drawn.append(pool.pop_at(rng.range_int(pool.size())))
+	return drawn
+
+
 ## A shop's relics (phase 5c step 5a): `count` of them, each of a tier drawn
 ## by the shop's odds (the Magpie's: epic or legendary); the pre-boss shop's
 ## first is a legendary. `rerolls` draws a fresh set.

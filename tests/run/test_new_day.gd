@@ -101,11 +101,14 @@ func test_a_loss_replays_the_day_with_the_nodes_setup_held() -> void:
 	flow.leave_shop()
 	state.nodes.assign(["camp", "rift_tear"])
 	flow.choose_node(1)
+	assert_eq(flow.leave_node(), "choose a depth first")
+	flow.choose_depth(1)
+	var mods: Array[String] = state.rift_mods.duplicate()
 	flow.leave_node()
 	flow.choose_fight(0)
 	state.losses = 0
 	flow.record(Bot.formation(), _result(FightResult.Outcome.DEFEAT))
-	assert_true(state.rift_tear, "still torn for the replay")
+	assert_eq([state.rift_depth, state.rift_mods], ["deep", mods], "still torn, as deep, for the replay")
 
 
 func test_the_node_draw() -> void:

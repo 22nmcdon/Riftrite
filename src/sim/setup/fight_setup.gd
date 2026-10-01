@@ -22,6 +22,13 @@ var relic_scales: Array[int] = []
 var salt_circles: int = 0
 ## The rules the heroes' side plays by (phase 5c step 5c; their relics').
 var hero_rules: SideRules = SideRules.new()
+## A Rift Tear's (phase 5c step 8b): when Rift Collapse starts (ticks; 0 is
+## tuning's), and the rift's own effects at a time (Reinforcements: a summon
+## on the enemies' side), each with its source and tick.
+var collapse_start_ticks: int = 0
+var rift_effects: Array[EffectDef] = []
+var rift_sources: Array[EffectSource] = []
+var rift_ticks: Array[int] = []
 
 
 static func make(hero_setups: Array[UnitSetup], enemy_setups: Array[UnitSetup], rock_hexes: Array[Vector2i] = [], fight_seed: int = 1, fight_act: int = 1) -> FightSetup:
@@ -130,6 +137,15 @@ func validate(content: ContentDb) -> Array[String]:
 	for effect: EffectDef in relic_effects:
 		if effect.type == EffectDef.Type.APPLY_STATUS and not content.statuses.has(effect.status_id):
 			errors.append("a relic's effect at the start names an unknown status \"%s\"" % effect.status_id)
+	if collapse_start_ticks < 0:
+		errors.append("Rift Collapse can't start before the fight")
+	if rift_sources.size() != rift_effects.size() or rift_ticks.size() != rift_effects.size():
+		errors.append("each rift effect needs its source and tick")
+	for effect: EffectDef in rift_effects:
+		if effect.type != EffectDef.Type.SUMMON:
+			errors.append("a rift effect is a summon")
+		elif summon_kit(effect.summon_kit) == null:
+			errors.append("a rift effect summons \"%s\", which isn't among the fight's summon kits" % effect.summon_kit)
 	var taken: Dictionary[int, String] = {}
 	for rock: Vector2i in rocks:
 		if not grid.has(rock.x, rock.y):

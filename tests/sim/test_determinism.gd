@@ -106,6 +106,8 @@ const ITEM_STATUSES: Array[String] = ["surge", "surge_2", "last_breath", "purifi
 	"ambush", "ambush_2", "rear_guard", "late_surge"]
 ## Statuses only upgrades apply (phase 5c step 7; tests/run/test_upgrade_pools.gd).
 const UPGRADE_STATUSES: Array[String] = ["hobbled", "cowed", "parting_shot", "first_blood", "scarred"]
+## Statuses only rift modifiers apply (phase 5c step 8b; tests/run/test_rift_tear.gd).
+const RIFT_STATUSES: Array[String] = ["blood_frenzy"]
 ## The statuses the heroes' rules apply (phase 5c step 5c).
 const RULE_STATUSES: Array[String] = ["unbending", "long_watch"]
 
@@ -117,7 +119,7 @@ func test_the_chaos_fight_uses_everything() -> void:
 			assert_false(log.of_kind(kind).is_empty(), "the log has a %s" % LogEntry.Kind.keys()[kind])
 	var statuses: Array = log.of_kind(LogEntry.Kind.STATUS_APPLIED).map(func(entry: LogEntry) -> String: return entry.status)
 	for status_id: String in K.content().status_ids:
-		assert_true(statuses.has(status_id) or PATH_STATUSES.has(status_id) or RELIC_STATUSES.has(status_id) or ITEM_STATUSES.has(status_id) or UPGRADE_STATUSES.has(status_id), "%s is applied" % status_id)
+		assert_true(statuses.has(status_id) or PATH_STATUSES.has(status_id) or RELIC_STATUSES.has(status_id) or ITEM_STATUSES.has(status_id) or UPGRADE_STATUSES.has(status_id) or RIFT_STATUSES.has(status_id), "%s is applied" % status_id)
 	var shapes: Array = log.of_kind(LogEntry.Kind.AREA_LANDED).map(func(entry: LogEntry) -> String: return entry.shape.get_slice(" ", 0))
 	for shape: String in ShapeDef.KIND_NAMES:
 		assert_true(shapes.has(shape), "a %s lands" % shape)

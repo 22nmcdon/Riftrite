@@ -38,6 +38,9 @@ class RunLine:
 	## Node kind -> the days it was shown, and taken (phase 5c step 8).
 	var nodes_shown: Dictionary[String, int] = {}
 	var nodes_taken: Dictionary[String, int] = {}
+	## Rift Tear fights (phase 5c step 8b): fought, and won (each attempt).
+	var rift_fights: int = 0
+	var rift_wins: int = 0
 	var errors: Array[String] = []
 	## [encounter id, won?] for each fight.
 	var fights: Array[Array] = []
@@ -97,6 +100,7 @@ static func play(run: RunContent, run_seed: int, look_ahead: bool = true) -> Run
 		if state.phase == RunState.Phase.NODES:
 			for node: String in state.nodes:
 				line.nodes_shown[node] = line.nodes_shown.get(node, 0) + 1
+		var torn: bool = not state.rift_depth.is_empty() and state.phase == RunState.Phase.LOADOUT
 		var refused: String = Bot.step_once(flow, hexes, line.errors, look_ahead)
 		if not refused.is_empty():
 			line.errors.append("day %d (%s): %s" % [state.day, RunState.PHASE_NAMES[state.phase], refused])
@@ -113,6 +117,9 @@ static func play(run: RunContent, run_seed: int, look_ahead: bool = true) -> Run
 			fought = state.fought.size()
 			var last: RunState.Fought = state.fought.back()
 			line.fights.append([last.encounter, last.outcome != FightResult.Outcome.DEFEAT])
+			if torn:
+				line.rift_fights += 1
+				line.rift_wins += 1 if last.outcome != FightResult.Outcome.DEFEAT else 0
 			for hero: RunState.Hero in state.heroes:
 				for upgrade: UpgradeDef in run.held_upgrades(hero):
 					if upgrade.grows != null:
@@ -236,6 +243,9 @@ static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 		var taken: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.nodes_taken.get(node, 0), 0)
 		by_node.append("%s shown %.1f, taken %.1f" % [run.camps.nodes[node].name, float(shown) / maxi(n, 1), float(taken) / maxi(n, 1)])
 	out.append("Nodes per run: %s" % ", ".join(by_node))
+	var rift_fights: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.rift_fights, 0)
+	var rift_wins: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.rift_wins, 0)
+	out.append("Rift Tear fights (the bot goes Shallow): %d of %d won (%d%%)" % [rift_wins, rift_fights, _pct(rift_wins, rift_fights)])
 	out.append("")
 	out.append("Encounters (fights won of fought):")
 	for encounter_id: String in content.encounter_ids:

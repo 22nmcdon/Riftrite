@@ -3,8 +3,11 @@ extends RefCounted
 ## 14): plays whole runs through RunFlow, for tests and pacing, not for a win
 ## rate (the good bot is phase 6). It vows each hero to its first path unless
 ## told otherwise, takes today's first fight, buys what it can use at the
-## shop and equips it, takes a node by a fixed order (the Magpie, else Camp)
-## and a camp option by a fixed order (Rest when someone has 2 wounds),
+## shop and equips it, takes a node by a fixed order (the Magpie; a Rift
+## Tear at Shallow when no hero is wounded and tomorrow is a normal day;
+## else Camp) and a camp option by
+## a fixed order (Rest when someone has 2 wounds; at the Shrine it offers
+## shards when it has them),
 ## places the sim runner's "guarded" formation, takes the pick's card for
 ## the hero with the fewest upgrades, and the first relic of a choice.
 
@@ -18,8 +21,9 @@ const FORMATIONS: Array[String] = ["guarded", "exposed", "spread", "clumped"]
 const MAX_STEPS: int = 400
 ## Camp options, first the bot likes best (Rest only when someone's hurt).
 const CAMP_ORDER: Array[String] = ["train", "shrine", "fortify", "hunt", "scout", "dig_in", "map_the_rift", "rest"]
-## Nodes, first the bot likes best.
-const NODE_ORDER: Array[String] = ["magpie", "camp", "rift_tear"]
+## Nodes, first the bot likes best (a Rift Tear only with no hero wounded
+## and a normal day tomorrow).
+const NODE_ORDER: Array[String] = ["magpie", "rift_tear", "camp"]
 ## Where Dig In's rock goes: a corner of the heroes' zone, out of the way.
 const ROCK: Vector2i = Vector2i(0, 0)
 
@@ -86,10 +90,14 @@ static func step_once(flow: RunFlow, hexes: Dictionary[String, Vector2i], errors
 				return ""
 			return flow.leave_shop()
 		RunState.Phase.NODES:
-			return flow.choose_node(node_choice(state))
+			return flow.choose_node(node_choice(flow))
 		RunState.Phase.NODE:
 			if state.node == "camp" and state.camp_used.is_empty():
 				return flow.choose_camp(camp_choice(state))
+			if state.node == "rift_tear" and state.rift_depth.is_empty():
+				return flow.choose_depth(0)
+			if state.shrine == "open" and state.shards >= flow.run.act.shrine_price:
+				return flow.shrine_offer("shards")
 			if not state.hunt.is_empty():
 				var hunt_errors: Array[String] = []
 				var hunt_hexes: Dictionary[String, Vector2i] = hexes
@@ -134,9 +142,15 @@ static func pick_choice(flow: RunFlow) -> int:
 	return best
 
 
-## The node the bot takes: the first of NODE_ORDER shown.
-static func node_choice(state: RunState) -> int:
+## The node the bot takes: the first of NODE_ORDER shown (no Rift Tear
+## while a hero is wounded or before an elite or the boss).
+static func node_choice(flow: RunFlow) -> int:
+	var state: RunState = flow.state
+	var hurt: bool = state.heroes.any(func(hero: RunState.Hero) -> bool: return hero.wounds > 0)
+	var normal: bool = state.day < flow.run.act.days.size() and flow.run.act.days[state.day] == "normal"
 	for node: String in NODE_ORDER:
+		if node == "rift_tear" and (hurt or not normal):
+			continue
 		if state.nodes.has(node):
 			return state.nodes.find(node)
 	return 0

@@ -65,6 +65,8 @@ var source_ability_name: String = ""
 var source_relic_side: int = -1
 ## The source is a duo bond's own effect (see EffectSource.synergy).
 var source_synergy: bool = false
+## The source is a Rift Tear's own effect (see EffectSource.rift).
+var source_rift: bool = false
 ## DAMAGE, HEAL: what made the number bigger ("+20% from Casters first": a
 ## tactic's payoff), or "".
 var bonus: String = ""
@@ -130,6 +132,7 @@ func set_source(source: EffectSource) -> void:
 	source_ability_name = source.ability_name
 	source_relic_side = source.relic_side
 	source_synergy = source.synergy
+	source_rift = source.rift
 	bonus = source.bonus
 
 
@@ -137,6 +140,7 @@ func source() -> EffectSource:
 	var result: EffectSource = EffectSource.make(source_unit, source_ability, source_ability_name)
 	result.relic_side = source_relic_side
 	result.synergy = source_synergy
+	result.rift = source_rift
 	return result
 
 

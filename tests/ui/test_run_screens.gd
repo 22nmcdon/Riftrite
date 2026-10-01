@@ -259,3 +259,37 @@ func test_what_grew_shows_after_a_fight_and_now_in_the_panel() -> void:
 	assert_string_contains(text, "What grew")
 	assert_string_contains(text, "Notched Bow (Maren): Now: +7% ATK (2 / 3 enemies Marked to the next)")
 	await wait_frames(1)
+
+
+## A Rift Tear's depths and the Shrine's offerings on screen (phase 5c
+## step 8b).
+func test_a_rift_tear_and_the_shrine() -> void:
+	var main: Main = _started()
+	var flow: RunFlow = _flow(main)
+	var day: RunDayScreen = main.screen
+	flow.state.phase = RunState.Phase.NODES
+	flow.state.nodes.assign(["camp", "rift_tear"])
+	day.refresh()
+	assert_true(U.press(day, "Go to Rift Tear"))
+	for name: String in ["Go shallow", "Go deep", "Go abyssal"]:
+		assert_not_null(U.button(day, name), name)
+	var first: CampsDef.Modifier = flow.run.camps.modifiers[Offers.rift_modifiers(flow.run, flow.state)[0]]
+	assert_string_contains(U.text_of(day), first.name, "the depths' cards show the day's modifiers")
+	assert_false(U.press(day, "On to day 2") and flow.state.day == 2, "not before a depth")
+	assert_true(U.press(day, "Go deep"))
+	assert_eq(flow.state.rift_depth, "deep")
+	assert_true(U.press(day, "On to day 2"))
+	assert_string_contains(U.text_of(day), "Through a Deep rift tear", "tomorrow's fight names the tear")
+	# The Shrine.
+	flow.state.phase = RunState.Phase.NODES
+	flow.state.nodes.assign(["camp"])
+	flow.choose_node(0)
+	flow.state.camp.assign(["shrine"])
+	flow.state.shards = 20
+	day.refresh()
+	assert_true(U.press(day, "Choose"))
+	assert_not_null(U.button(day, "Offer 15 shards"))
+	assert_true(U.press(day, "Offer a wound on Maren"))
+	assert_true(U.press(day, "Take · a wound on Maren"))
+	assert_eq([flow.state.hero("maren").wounds, flow.state.relics.size()], [1, 1])
+	await wait_frames(1)

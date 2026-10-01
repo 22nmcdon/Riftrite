@@ -172,12 +172,14 @@ func test_a_rift_tear_upgrades_the_enemies_and_a_win_offers_a_relic() -> void:
 	flow.state.phase = RunState.Phase.NODES
 	flow.state.nodes.assign(["camp", "rift_tear"])
 	assert_eq(flow.choose_node(1), "")
-	assert_true(flow.state.rift_tear, "a node now (phase 5c step 8)")
+	assert_eq(flow.choose_depth(0), "", "Shallow (phase 5c step 8b)")
+	assert_eq(flow.state.rift_depth, "shallow")
 	_to_fight(flow)
 	assert_true(_setup(flow).enemies.all(func(enemy: UnitSetup) -> bool: return _has_passive(enemy.def, "rift_warded")))
 	flow.record(Bot.formation(), _result(FightResult.Outcome.VICTORY))
 	var state: RunState = flow.state
 	assert_eq(state.relic_choice.size(), 2)
+	assert_true(state.relic_choice.all(func(id: String) -> bool: return _run.relics[id].tier == RelicDef.Tier.RARE), "Shallow: 2 rares")
 	flow.take_shards()
 	assert_eq(flow.finish_day(), "choose a relic or neither first")
 	assert_eq(flow.take_relic(2), "there's no relic 2")
@@ -185,7 +187,7 @@ func test_a_rift_tear_upgrades_the_enemies_and_a_win_offers_a_relic() -> void:
 	assert_eq(flow.take_relic(1), "")
 	assert_eq(state.relics, [chosen] as Array[String])
 	assert_eq(flow.finish_day(), "")
-	assert_false(state.rift_tear)
+	assert_eq([state.rift_depth, state.rift_mods], ["", [] as Array[String]])
 	assert_eq(R.next_day(flow), "can't move on from the fight now (the day is at shop)")
 	flow.leave_shop()
 	flow.choose_node(0)
@@ -193,23 +195,12 @@ func test_a_rift_tear_upgrades_the_enemies_and_a_win_offers_a_relic() -> void:
 	assert_eq([state.day, state.taken_nodes[0]], [3, "rift_tear"])
 
 
-func test_the_shrine_and_turning_a_relic_down() -> void:
+func test_the_shrine_asks_an_offering() -> void:
 	var flow: RunFlow = _camp_with("shrine")
 	flow.choose_camp(0)
-	assert_eq(flow.state.relic_choice.size(), 1, "one rare, for 15 shards (phase 5c step 5a)")
-	assert_eq(_run.relics[flow.state.relic_choice[0]].tier, RelicDef.Tier.RARE)
-	assert_eq(flow.state.relic_choice_price, 15)
-	flow.state.shards = 14
-	assert_eq(flow.take_relic(0), "it costs 15 shards; there are 14")
-	assert_eq(flow.leave_node(), "choose a relic or neither first")
-	assert_eq(flow.decline_relic(), "")
-	assert_eq(flow.state.relics, [] as Array[String])
-	assert_eq(flow.decline_relic(), "there's no relic choice waiting")
-	flow.state.relic_choice.assign(["bone_dice"])
-	flow.state.relic_choice_price = 15
-	flow.state.shards = 20
-	assert_eq(flow.take_relic(0), "")
-	assert_eq([flow.state.shards, flow.state.relics], [5, ["bone_dice"]])
+	assert_eq(flow.state.shrine, "open", "an offering first (phase 5c step 8b)")
+	assert_eq(flow.state.relic_choice, [] as Array[String])
+	assert_eq(flow.leave_node(), "", "and none is needed")
 
 
 func test_a_hunt() -> void:

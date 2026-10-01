@@ -1,5 +1,5 @@
 {
-  "_note": "Camp (docs/plans/rebuild-phase5-run.md, section 9; Decisions 8, 9, 13) and the day's nodes (phase 5c step 8, docs/plans/days-and-nodes.md; rebuild-phase5c-combos.md, section 16): each option has one job, and what it does is code (RunFlow); this file names them, says which places offer which, and gives their numbers. A camp shows `shown` options drawn from its place's menu. Camp is one of the day's nodes (`nodes`: their names, lines, and icons); the Magpie's node comes from magpie_from_day, at most magpie_per_act times an act. The Pedlar is the day's shop, and Rift Tear and the Magpie are nodes, so no place offers them. All numbers are first guesses.",
+  "_note": "Camp (docs/plans/rebuild-phase5-run.md, section 9; Decisions 8, 9, 13) and the day's nodes (phase 5c step 8, docs/plans/days-and-nodes.md; rebuild-phase5c-combos.md, section 16): each option has one job, and what it does is code (RunFlow); this file names them, says which places offer which, and gives their numbers. A camp shows `shown` options drawn from its place's menu. Camp is one of the day's nodes (`nodes`: their names, lines, and icons); the Magpie's node comes from magpie_from_day, at most magpie_per_act times an act. The Pedlar is the day's shop, and Rift Tear and the Magpie are nodes, so no place offers them. All numbers are first guesses. A Rift Tear (phase 5c step 8b) asks for a depth (`rift_depths`): every depth's enemies take rift_tear_mod, and Deep and Abyssal add rift modifiers (`rift_modifiers`, drawn for the day): each a kit mod on every enemy and summon kit (`mod`), on the heroes (`hero_mod`), a start for Rift Collapse (`collapse_from_ms`), or Reinforcements (`reinforcements`: that many of the encounter's first enemy that isn't its elite or boss join from the edge at `at_ms`). Winning that fight offers a relic of each of the depth's `relics` tiers.",
   "shown": 3,
   "magpie_from_day": 3,
   "magpie_per_act": 2,
@@ -154,18 +154,218 @@
         "id": "rift_warded",
         "name": "Rift-Warded",
         "kind": "ability",
-        "text": "Starts the fight behind a Shield from the rift (Rift Tear).",
+        "text": "Starts the fight behind a Shield of a tenth of its max HP (a Rift Tear).",
         "effects": [
           {
             "trigger": "on_interval",
             "interval_ms": 50,
             "once": true,
             "type": "shield",
-            "amount": 30,
-            "target": "self"
+            "target": "self",
+            "amount_bp_of_max_hp": 1000
           }
         ]
       }
     ]
-  }
+  },
+  "rift_depths": [
+    {
+      "id": "shallow",
+      "name": "Shallow",
+      "modifiers": 0,
+      "relics": [
+        "rare",
+        "rare"
+      ],
+      "text": "Tomorrow's enemies start behind a Shield of a tenth of their max HP. Win for a choice of 2 rare relics."
+    },
+    {
+      "id": "deep",
+      "name": "Deep",
+      "modifiers": 1,
+      "relics": [
+        "epic",
+        "epic"
+      ],
+      "text": "The Shield, and one rift modifier. Win for a choice of 2 epic relics."
+    },
+    {
+      "id": "abyssal",
+      "name": "Abyssal",
+      "modifiers": 2,
+      "relics": [
+        "legendary",
+        "epic"
+      ],
+      "text": "The Shield, and two rift modifiers. Win for a choice of a legendary relic and an epic one."
+    }
+  ],
+  "rift_modifiers": [
+    {
+      "id": "hastened",
+      "name": "Hastened",
+      "text": "Tomorrow's enemies attack faster.",
+      "mod": {
+        "passives": [
+          {
+            "id": "rift_hastened",
+            "name": "Hastened",
+            "kind": "aura",
+            "text": "Attacks faster (a rift modifier).",
+            "aura": {
+              "stat": "atsp",
+              "value": 20,
+              "target": "holder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "hardened",
+      "name": "Hardened",
+      "text": "Tomorrow's enemies are harder to hurt.",
+      "mod": {
+        "stats_bp": {
+          "def": 12000
+        }
+      }
+    },
+    {
+      "id": "rift_charged",
+      "name": "Rift-Charged",
+      "text": "Tomorrow's enemies start with their signature half charged.",
+      "mod": {
+        "mana": {
+          "start_bp": 5000
+        }
+      }
+    },
+    {
+      "id": "bloodthirst",
+      "name": "Bloodthirst",
+      "text": "Tomorrow's enemies heal by part of the damage they deal.",
+      "mod": {
+        "passives": [
+          {
+            "id": "rift_bloodthirst",
+            "name": "Bloodthirst",
+            "kind": "aura",
+            "text": "Heals by part of the damage it deals (a rift modifier).",
+            "aura": {
+              "stat": "lifesteal_bp",
+              "value": 1000,
+              "target": "holder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "thornskin",
+      "name": "Thornskin",
+      "text": "Tomorrow's enemies send part of each hit back at whoever struck them.",
+      "mod": {
+        "passives": [
+          {
+            "id": "rift_thornskin",
+            "name": "Thornskin",
+            "kind": "ability",
+            "text": "Sends part of each hit it takes back at the attacker (a rift modifier).",
+            "effects": [
+              {
+                "trigger": "on_hit_taken",
+                "type": "damage",
+                "amount_bp_of_damage": 1000,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "nightfall",
+      "name": "Nightfall",
+      "text": "Tomorrow's enemies start hidden, so nothing can pick them for the first moments.",
+      "mod": {
+        "passives": [
+          {
+            "id": "rift_nightfall",
+            "name": "Nightfall",
+            "kind": "ability",
+            "text": "Starts the fight hidden for a moment (a rift modifier).",
+            "effects": [
+              {
+                "trigger": "on_fight_start",
+                "type": "apply_status",
+                "status": "stealth",
+                "duration_ms": 3000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "blood_frenzy",
+      "name": "Blood Frenzy",
+      "text": "Each of tomorrow's enemies that falls makes the rest stronger.",
+      "mod": {
+        "passives": [
+          {
+            "id": "rift_blood_frenzy",
+            "name": "Blood Frenzy",
+            "kind": "ability",
+            "text": "As it falls, its allies hit harder for the rest of the fight (a rift modifier).",
+            "effects": [
+              {
+                "trigger": "on_fall",
+                "type": "apply_status",
+                "status": "blood_frenzy",
+                "target": "allies_near_self",
+                "within_hexes": 9
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "blight",
+      "name": "Blight",
+      "text": "Your heroes take less healing tomorrow.",
+      "hero_mod": {
+        "passives": [
+          {
+            "id": "rift_blight",
+            "name": "Blight",
+            "kind": "aura",
+            "text": "Takes less healing (a rift modifier).",
+            "aura": {
+              "stat": "healing_taken_bp",
+              "value": 7500,
+              "target": "holder"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "early_collapse",
+      "name": "Early Collapse",
+      "text": "Tomorrow the rift starts closing in early.",
+      "collapse_from_ms": 30000
+    },
+    {
+      "id": "reinforcements",
+      "name": "Reinforcements",
+      "text": "Tomorrow, two more of the enemies' kind join the fight from the edge.",
+      "reinforcements": {
+        "at_ms": 15000,
+        "count": 2
+      }
+    }
+  ]
 }

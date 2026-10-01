@@ -190,7 +190,7 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 	rng = SimRng.new(setup.seed_value)
 	safe = grid.bounds()
 	collapse = tuning.collapse_for_act(setup.act)
-	collapse_start = tuning.collapse_start_ticks
+	collapse_start = setup.collapse_start_ticks if setup.collapse_start_ticks > 0 else tuning.collapse_start_ticks
 	_nav = NavGrid.make(grid.bounds(), tuning.nav_cell)
 	for rock: Vector2i in setup.rocks:
 		rocks.append(ArenaPlane.Circle.make(grid.center(rock.x, rock.y), tuning.rock_radius, "rock"))
@@ -230,6 +230,22 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 	for unit: UnitState in units:
 		if unit.alive and not unit.listeners.is_empty():
 			Passives.fight_start(self, unit)
+
+
+## A Rift Tear's effects due this tick (phase 5c step 8b): Reinforcements
+## summon from the edge nearest the enemies' first standing unit, sourced to
+## the rift.
+func _rift_due() -> void:
+	for r: int in setup.rift_effects.size():
+		if setup.rift_ticks[r] != tick:
+			continue
+		var first: UnitState = null
+		for unit: UnitState in enemies:
+			if unit.alive:
+				first = unit
+				break
+		if first != null:
+			Summons.summon(self, first, setup.rift_sources[r], setup.rift_effects[r], null)
 
 
 ## Adds a unit at the end of the fight's order (at the start, or a summon:
@@ -376,6 +392,8 @@ func step() -> void:
 		_rise_due()
 	if arrivals or swaps:
 		Gambits.tick(self)
+	if not setup.rift_effects.is_empty():
+		_rift_due()
 	if hero_rules.watch_every_ticks > 0 and tick >= hero_rules.watch_from_ticks and (tick - hero_rules.watch_from_ticks) % hero_rules.watch_every_ticks == 0:
 		_keep_watch()
 	Shots.land_due(self)

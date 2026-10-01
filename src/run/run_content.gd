@@ -518,6 +518,16 @@ func _check() -> void:
 				errors.append("%s (%s): no icon art/ui/%s" % [CAMPS_FILE, place.id, place.icon])
 		_check_mod(camps.fortify_mod, hero_kits, "%s: fortify_mod" % CAMPS_FILE)
 		_check_mod(camps.rift_tear_mod, enemy_kits, "%s: rift_tear_mod" % CAMPS_FILE)
+		for modifier_id: String in camps.modifier_ids:
+			var modifier: CampsDef.Modifier = camps.modifiers[modifier_id]
+			_check_mod(modifier.mod, enemy_kits, "%s: rift modifier %s" % [CAMPS_FILE, modifier_id])
+			_check_mod(modifier.hero_mod, hero_kits, "%s: rift modifier %s" % [CAMPS_FILE, modifier_id])
+			for mod: KitMod in [modifier.mod, modifier.hero_mod]:
+				if mod == null or hero_kits.is_empty() or hero_kits[0] == null:
+					continue
+				for status_id: String in mod.apply(hero_kits[0]).status_ids():
+					if not content.statuses.has(status_id):
+						errors.append("%s: rift modifier %s: unknown status \"%s\"" % [CAMPS_FILE, modifier_id, status_id])
 		if act != null:
 			for day: int in range(1, act.days.size()):
 				if act.days[day - 1] == "normal" and encounters_for("hunt", day).is_empty():

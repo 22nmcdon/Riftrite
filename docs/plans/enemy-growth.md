@@ -1,6 +1,6 @@
 # Enemy growth
 
-Status: **agreed in discussion (2026-09-30), not built.** How enemies change over a run: specializations, upgrades, rift modifiers, and the rift learns. Fills in part 3, sections 7 and 8 (`rebuild-enemies.md`); where they disagree, this file wins. **Numbers and names are placeholders.**
+Status: **agreed in discussion (2026-09-30); the rift modifiers (section 4) built in phase 5c step 8b (`rebuild-phase5c-combos.md`, section 16.13), the rest not built.** How enemies change over a run: specializations, upgrades, rift modifiers, and the rift learns. Fills in part 3, sections 7 and 8 (`rebuild-enemies.md`); where they disagree, this file wins. **Numbers and names are placeholders.**
 
 ## 1. When they show up
 

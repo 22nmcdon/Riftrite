@@ -55,9 +55,13 @@ PLAYING
                 the next two days' enemies placed), Map the Rift (swap one
                 of tomorrow's fights), Fortify (a small Shield next fight),
                 Dig In (a rock in your zone next fight: click a hex while
-                placing), Shrine (a relic, or neither).
-                Rift Tear: tomorrow's enemies are Shielded; win that fight
-                for a relic.
+                placing), Shrine (offer 15 shards or a wound for a rare
+                relic, or a relic for one a tier higher; nothing is given
+                up unless you take it).
+                Rift Tear: pick a depth. Tomorrow's enemies start Shielded;
+                Deep adds a rift modifier and Abyssal two (shown on the
+                cards); win that fight for relics: 2 rares, 2 epics, or a
+                legendary and an epic.
                 The Magpie (from day 3, at most twice): charms at rank II
                 and a relic, cheap; one look. He buys and swaps relics.
                 Then On to the next day. Whatever a node set up for

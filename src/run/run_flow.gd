@@ -7,9 +7,9 @@ extends RefCounted
 ## A day (phase 5c step 8, docs/plans/days-and-nodes.md): the route (choose
 ## one of today's two fights), the loadout and placement, the fight (fight()
 ## runs it, CombatSim.run on fight_setup()'s setup), after it (the pick, a
-## relic choice), the shop (the Pedlar), then a node (Camp, Rift Tear, the
-## Magpie), whose setup for tomorrow's fight holds through that fight's
-## replays (Decision 42). A win or a tie pays shards by the fight's tier and
+## relic choice), the shop (the Pedlar), then a node (Camp, Rift Tear at a
+## depth, the Magpie), whose setup for tomorrow's fight holds through that
+## fight's replays (Decision 42). A win or a tie pays shards by the fight's tier and
 ## moves on to after the fight; a loss replays the day from the route, and
 ## the act's losses_to_end-th ends the run. The boss's day ends with the
 ## fight and its relic choice.
@@ -120,7 +120,8 @@ func leave_shop() -> String:
 
 
 ## Takes the day's node `index`: Camp (a place and its options), Rift Tear
-## (tomorrow's fight comes through a tear), or the Magpie (his stall).
+## (tomorrow's fight comes through a tear, at a depth: choose_depth), or the
+## Magpie (his stall).
 func choose_node(index: int) -> String:
 	if state.phase != RunState.Phase.NODES:
 		return _not_now("choose a node")
@@ -136,11 +137,25 @@ func choose_node(index: int) -> String:
 			var drawn: Array = Offers.camp(run, state)
 			state.place = drawn[0]
 			state.camp.assign(drawn[1])
-		"rift_tear":
-			state.rift_tear = true
 		"magpie":
 			state.magpie_visits += 1
 			open_shop("magpie")
+	return ""
+
+
+## A Rift Tear's depth `index` (phase 5c step 8b): tomorrow's enemies take
+## rift_tear_mod and the depth's share of the day's rift modifiers
+## (Offers.rift_modifiers), and winning that fight offers its relics.
+func choose_depth(index: int) -> String:
+	if state.phase != RunState.Phase.NODE or state.node != "rift_tear":
+		return _not_now("choose a depth")
+	if not state.rift_depth.is_empty():
+		return "the depth is chosen (%s)" % state.rift_depth
+	if index < 0 or index >= run.camps.depths.size():
+		return "there's no depth %d" % index
+	var depth: CampsDef.Depth = run.camps.depths[index]
+	state.rift_depth = depth.id
+	state.rift_mods.assign(Offers.rift_modifiers(run, state).slice(0, depth.modifiers))
 	return ""
 
 
@@ -152,6 +167,7 @@ func leave_node() -> String:
 	if not waiting.is_empty():
 		return waiting
 	close_shop()
+	state.shrine = ""
 	while state.taken_nodes.size() < state.day - 1:
 		state.taken_nodes.append("")
 	state.taken_nodes.append("camp:" + state.place if state.node == "camp" else state.node)
@@ -169,8 +185,8 @@ func leave_node() -> String:
 ## Takes camp option `index` (in a Camp node). What it does is its one job:
 ## train (a pick), hunt (a pack to fight now), rest (clears wounds), scout
 ## (the next 2 days), map_the_rift (then swap_fight), fortify, dig_in (then
-## place_rock), shrine (a relic choice); the last four are for tomorrow's
-## fight.
+## place_rock), shrine (an offering for a relic: shrine_offer); scout,
+## map_the_rift, fortify, and dig_in are for tomorrow's fight.
 func choose_camp(index: int) -> String:
 	if state.phase != RunState.Phase.NODE or state.node != "camp":
 		return _not_now("choose a camp option")
@@ -203,8 +219,7 @@ func choose_camp(index: int) -> String:
 		"dig_in":
 			state.dig_in = true
 		"shrine":
-			state.relic_choice = Offers.relics(run, state, RELIC_SHRINE, 1, "rare")
-			state.relic_choice_price = run.act.shrine_price
+			state.shrine = "open"
 	state.camp_used = option
 	return ""
 
@@ -238,6 +253,8 @@ func place_rock(hex: Vector2i) -> String:
 
 
 func _node_waiting() -> String:
+	if state.node == "rift_tear" and state.rift_depth.is_empty():
+		return "choose a depth first"
 	if not state.pick.is_empty():
 		return "choose an upgrade or take the shards first"
 	if not state.relic_choice.is_empty():
@@ -317,6 +334,10 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 			mods.append(shared_mods[hero.id])
 		if not hunting and state.fortify:
 			mods.append(run.camps.fortify_mod)
+		if not hunting:
+			for modifier: CampsDef.Modifier in _rift_modifiers():
+				if modifier.hero_mod != null:
+					mods.append(modifier.hero_mod)
 		var covenant: KitMod = _covenant_mod(hero, formation)
 		if covenant != null:
 			mods.append(covenant)
@@ -343,6 +364,8 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 			var chosen: int = state.hero(hero.id).gambit_at if state.hero(hero.id) != null else 0
 			if chosen > 0 and hero.def.swap_choice:
 				hero.swap_at = chosen * FixedMath.TICKS_PER_SECOND
+		if not hunting and not state.rift_depth.is_empty():
+			_rift_rules(setup, encounter_id)
 		_modify_enemies(setup, hunting, errors)
 		_relic_rules(setup)
 		if not hunting and state.dig_in and state.rock.size() == 2:
@@ -421,8 +444,11 @@ func _modify_enemies(setup: FightSetup, hunting: bool, errors: Array[String]) ->
 	for id: String in state.relics:
 		if run.relics[id].enemy_mod != null:
 			mods.append(run.relics[id].enemy_mod)
-	if state.rift_tear and not hunting:
+	if not state.rift_depth.is_empty() and not hunting:
 		mods.append(run.camps.rift_tear_mod)
+		for modifier: CampsDef.Modifier in _rift_modifiers():
+			if modifier.mod != null:
+				mods.append(modifier.mod)
 	if mods.is_empty():
 		return
 	var problems: Array[String] = []
@@ -434,6 +460,41 @@ func _modify_enemies(setup: FightSetup, hunting: bool, errors: Array[String]) ->
 			setup.summon_kits[i] = mod.apply(setup.summon_kits[i], problems)
 	for problem: String in problems:
 		errors.append("an enemy upgrade leaves a kit unsound: %s" % problem)
+
+
+## The rift modifiers on the next day fight (phase 5c step 8b).
+func _rift_modifiers() -> Array[CampsDef.Modifier]:
+	var found: Array[CampsDef.Modifier] = []
+	for id: String in state.rift_mods:
+		if run.camps.modifiers.has(id):
+			found.append(run.camps.modifiers[id])
+	return found
+
+
+## A Rift Tear's rules for the sim (phase 5c step 8b): Early Collapse's
+## start, and Reinforcements: that many of the encounter's first enemy that
+## isn't its elite or boss (the first listed, or the second in an elite or
+## boss fight), summoned from the edge as the rift's own effect, its kit
+## added to the summon kits (scaled like the encounter's, and modified with
+## them).
+func _rift_rules(setup: FightSetup, encounter_id: String) -> void:
+	var encounter: EncounterDef = run.content.encounters[encounter_id]
+	for modifier: CampsDef.Modifier in _rift_modifiers():
+		if modifier.collapse_from_ticks > 0:
+			setup.collapse_start_ticks = modifier.collapse_from_ticks if setup.collapse_start_ticks == 0 else mini(setup.collapse_start_ticks, modifier.collapse_from_ticks)
+		if modifier.reinforce_count <= 0:
+			continue
+		var first: int = 1 if encounter.tier == "elite" or encounter.tier == "boss" else 0
+		if first >= encounter.enemies.size():
+			continue
+		var kind: String = encounter.enemies[first].enemy
+		if setup.summon_kit(kind) == null:
+			setup.summon_kits.append(Encounters.scaled(run.content.enemies[kind].kit, encounter.scale_bp))
+		var errors: Array[String] = []
+		var effect: EffectDef = EffectDef.read(DataReader.new({"type": "summon", "kit": kind, "count": modifier.reinforce_count, "placement": "edges"}, "reinforcements", errors))
+		setup.rift_effects.append(effect)
+		setup.rift_sources.append(EffectSource.rift_effect(modifier.id, modifier.name))
+		setup.rift_ticks.append(modifier.reinforce_ticks)
 
 
 ## The seed of the waiting fight (this attempt's; a Hunt has its own).
@@ -513,11 +574,12 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 			state.attempt += 1
 			_start_day()
 		return
-	var torn: bool = state.rift_tear
+	var depth: CampsDef.Depth = run.camps.depth(state.rift_depth)
 	state.fortify = false
 	state.dig_in = false
 	state.rock.clear()
-	state.rift_tear = false
+	state.rift_depth = ""
+	state.rift_mods.clear()
 	state.rested = false
 	var tier: String = run.content.encounters[state.chosen].tier
 	state.shards += run.act.pay[tier] + run.relic_sum(state, "pay_add") + (run.relic_sum(state, "elite_pay_add") if tier == "elite" else 0)
@@ -535,8 +597,8 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 	state.pick = _pick_cards(0)
 	if tier == "elite":
 		state.relic_choice = Offers.relics(run, state, RELIC_AFTER_FIGHT, 2, "rare", run.act.elite_epic_pct)
-	elif torn:
-		state.relic_choice = Offers.relics(run, state, RELIC_AFTER_FIGHT, 2, "rare")
+	elif depth != null:
+		state.relic_choice = Offers.relics_of_tiers(run, state, RELIC_AFTER_FIGHT, depth.relics)
 
 
 ## Bounty Board (phase 5c step 5a): a won day fight with no hero falling adds
@@ -582,9 +644,17 @@ func take_relic(index: int) -> String:
 	if state.shards < state.relic_choice_price:
 		return "it costs %d shards; there are %d" % [state.relic_choice_price, state.shards]
 	state.shards -= state.relic_choice_price
+	# The Shrine's offering is spent only now (phase 5c step 8b).
+	if state.shrine.begins_with("wound:"):
+		var hero: RunState.Hero = state.hero(state.shrine.trim_prefix("wound:"))
+		hero.wounds = mini(hero.wounds + 1, run.content.tuning.max_wounds)
+	elif state.shrine.begins_with("relic:"):
+		_lose_relic(state.shrine.trim_prefix("relic:"))
 	_gain_relic(state.relic_choice[index])
 	state.relic_choice.clear()
 	state.relic_choice_price = 0
+	if not state.shrine.is_empty() and state.shrine != "open":
+		state.shrine = ""
 	return ""
 
 
@@ -594,7 +664,54 @@ func decline_relic() -> String:
 		return "there's no relic choice waiting"
 	state.relic_choice.clear()
 	state.relic_choice_price = 0
+	if not state.shrine.is_empty() and state.shrine != "open":
+		state.shrine = ""
 	return ""
+
+
+## The Shrine's offering (phase 5c step 8b): "shards" (the act's
+## shrine_price) or "wound" (on hero `what`, not one at the most wounds)
+## for a rare relic; "relic" (relic `what`, not a boss, bond, or legendary
+## one) for a relic a tier higher. It draws the relic now; the offering is
+## spent only if it's taken (take_relic), and either way the Shrine is done.
+func shrine_offer(kind: String, what: String = "") -> String:
+	if state.shrine != "open":
+		return "the Shrine isn't waiting for an offering"
+	var tier: String = "rare"
+	match kind:
+		"shards":
+			if state.shards < run.act.shrine_price:
+				return "it asks %d shards; there are %d" % [run.act.shrine_price, state.shards]
+		"wound":
+			var hero: RunState.Hero = state.hero(what)
+			if hero == null:
+				return "unknown hero \"%s\"" % what
+			if hero.wounds >= run.content.tuning.max_wounds:
+				return "%s can't take another wound" % what
+		"relic":
+			if not state.relics.has(what):
+				return "the run doesn't hold \"%s\"" % what
+			tier = shrine_tier(what)
+			if tier.is_empty():
+				return "the Shrine has nothing higher for %s" % what
+		_:
+			return "there's no offering \"%s\"" % kind
+	var drawn: Array[String] = Offers.relics_of_tiers(run, state, RELIC_SHRINE, [tier] as Array[String])
+	if drawn.is_empty():
+		return "the Shrine has no relic left to give"
+	state.relic_choice = drawn
+	state.relic_choice_price = run.act.shrine_price if kind == "shards" else 0
+	state.shrine = kind if kind == "shards" else "%s:%s" % [kind, what]
+	return ""
+
+
+## The tier the Shrine gives for relic `relic_id` ("": none; a boss, bond,
+## or legendary relic has nothing above it to give).
+func shrine_tier(relic_id: String) -> String:
+	var tier: RelicDef.Tier = run.relics[relic_id].tier
+	if tier >= RelicDef.Tier.LEGENDARY:
+		return ""
+	return RelicDef.TIER_NAMES[tier + 1]
 
 
 ## Buys the open shop's relic `index`.

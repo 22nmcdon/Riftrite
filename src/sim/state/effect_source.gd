@@ -15,6 +15,9 @@ var ability_name: String = ""
 var relic_side: int = -1
 ## A duo bond's own effect (credited like a relic, as "bond · Name").
 var synergy: bool = false
+## A Rift Tear's own effect (phase 5c step 8b: Reinforcements; credited like
+## an enemy relic, as "rift · Name").
+var rift: bool = false
 ## What made its numbers bigger, for the log ("+30% from Wait to heal"; a
 ## tactic's payoff), or "".
 var bonus: String = ""
@@ -37,18 +40,26 @@ static func relic(relic_id: String, relic_name: String, side: Team) -> EffectSou
 	return source
 
 
+## A Rift Tear's own effect (phase 5c step 8b), on the enemies' side.
+static func rift_effect(modifier_id: String, modifier_name: String) -> EffectSource:
+	var source: EffectSource = relic(modifier_id, modifier_name, Team.ENEMIES)
+	source.rift = true
+	return source
+
+
 ## A copy with `note` as its bonus (Tactics: a payoff on one fire).
 func with_bonus(note: String) -> EffectSource:
 	var copy: EffectSource = EffectSource.make(unit_id, ability_id, ability_name)
 	copy.relic_side = relic_side
 	copy.synergy = synergy
+	copy.rift = rift
 	copy.bonus = note
 	return copy
 
 
 func same_as(other: EffectSource) -> bool:
 	return unit_id == other.unit_id and ability_id == other.ability_id \
-		and relic_side == other.relic_side and synergy == other.synergy
+		and relic_side == other.relic_side and synergy == other.synergy and rift == other.rift
 
 
 ## "brannoc · Hold the Line", "relic · Warding Knot",
@@ -59,5 +70,7 @@ func describe() -> String:
 		var kind: String = "relic" if relic_side == Team.HEROES else "enemy relic"
 		if synergy:
 			kind = "bond"
+		elif rift:
+			kind = "rift"
 		text = "%s · %s" % [kind, ability_name]
 	return text

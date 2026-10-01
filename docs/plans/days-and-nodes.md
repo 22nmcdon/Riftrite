@@ -1,6 +1,6 @@
 # Days and nodes
 
-Status: **agreed in discussion (2026-09-30); the day's loop and the nodes built in phase 5c step 8a** (`rebuild-phase5c-combos.md`, section 16: the fight, the pick, the Pedlar after every fight, then Camp, Rift Tear as built, or the Magpie; Decisions 40–43). Rift Tear's depths and the Shrine's offerings are 8b's, the Event node 8c's. How a day runs, and the nodes you choose between. Changes part 4 (`rebuild-run.md`) and part 6 (`rebuild-between-fights.md`); where this file and those disagree, this file wins. Events are in `events.md`; the Magpie in `magpie.md`; relics in `relics/`; the loadout in `loadout/`. **Numbers are placeholders.**
+Status: **agreed in discussion (2026-09-30); the day's loop and the nodes built in phase 5c step 8a** (`rebuild-phase5c-combos.md`, section 16: the fight, the pick, the Pedlar after every fight, then Camp, Rift Tear as built, or the Magpie; Decisions 40–43). Rift Tear's depths, the rift modifiers, and the Shrine's offerings built in 8b (section 16.13); the Event node is 8c's. How a day runs, and the nodes you choose between. Changes part 4 (`rebuild-run.md`) and part 6 (`rebuild-between-fights.md`); where this file and those disagree, this file wins. Events are in `events.md`; the Magpie in `magpie.md`; relics in `relics/`; the loadout in `loadout/`. **Numbers are placeholders.**
 
 ## 1. A day
 

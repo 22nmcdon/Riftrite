@@ -158,12 +158,13 @@ var hunt: String = ""
 var mapping: bool = false
 ## For the next day fight (not a Hunt), kept through its replays and spent
 ## once it's won (Decision 42): Fortify, Dig In (and the rock's hex once
-## placed; empty: not yet), Rift Tear, and a Rest with a relic that
-## steadies.
+## placed; empty: not yet), a Rift Tear (its depth, "" for none; and its
+## rift modifiers, phase 5c step 8b), and a Rest with a relic that steadies.
 var fortify: bool = false
 var dig_in: bool = false
 var rock: Array[int] = []
-var rift_tear: bool = false
+var rift_depth: String = ""
+var rift_mods: Array[String] = []
 var rested: bool = false
 ## Days whose fights are Scouted.
 var scouted: Array[int] = []
@@ -174,6 +175,10 @@ var relics: Array[String] = []
 ## costs (the Shrine's; 0: free).
 var relic_choice: Array[String] = []
 var relic_choice_price: int = 0
+## The Shrine (phase 5c step 8b): "" (not taken, or done), "open" (waiting
+## for an offering), or the offering its relic choice waits on ("shards",
+## "wound:<hero id>", "relic:<relic id>"), spent only if the relic's taken.
+var shrine: String = ""
 ## Cards still to take from the waiting pick (The Hollow Throne: 2).
 var picks_left: int = 1
 ## Won day fights in a row with no hero falling, and the streak relics
@@ -218,9 +223,9 @@ func to_dict() -> Dictionary:
 		"pick": pick.duplicate(), "just_transformed": just_transformed.duplicate(),
 		"stash": stash.duplicate(), "shop": shop, "wares": wares.duplicate(), "rerolls": rerolls, "shop_relics": shop_relics.duplicate(), "magpie_swapped": magpie_swapped,
 		"place": place, "camp": camp.duplicate(), "camp_used": camp_used, "hunt": hunt, "mapping": mapping,
-		"fortify": fortify, "dig_in": dig_in, "rock": rock.duplicate(), "rift_tear": rift_tear, "rested": rested,
+		"fortify": fortify, "dig_in": dig_in, "rock": rock.duplicate(), "rift_depth": rift_depth, "rift_mods": rift_mods.duplicate(), "rested": rested,
 		"scouted": scouted.duplicate(), "nodes": nodes.duplicate(), "node": node, "taken_nodes": taken_nodes.duplicate(), "magpie_visits": magpie_visits,
-		"relics": relics.duplicate(), "relic_choice": relic_choice.duplicate(), "relic_choice_price": relic_choice_price, "picks_left": picks_left,
+		"relics": relics.duplicate(), "relic_choice": relic_choice.duplicate(), "relic_choice_price": relic_choice_price, "shrine": shrine, "picks_left": picks_left,
 		"streak": streak, "streaks_paid": streaks_paid.duplicate(), "bonds_found": bonds_found.duplicate(),
 		"growth": growth.duplicate(), "grew": grew.duplicate(),
 		"item_ranks": item_ranks.duplicate(), "item_counts": item_counts.duplicate(), "ranked": ranked.duplicate(),
@@ -267,7 +272,8 @@ static func from_dict(data: Dictionary) -> RunState:
 	state.fortify = bool(data.get("fortify", false))
 	state.dig_in = bool(data.get("dig_in", false))
 	state.rock.assign((data.get("rock", []) as Array).map(func(value: Variant) -> int: return int(value)))
-	state.rift_tear = bool(data.get("rift_tear", false))
+	state.rift_depth = str(data.get("rift_depth", ""))
+	state.rift_mods = _strings(data.get("rift_mods", []))
 	state.rested = bool(data.get("rested", false))
 	state.scouted.assign((data.get("scouted", []) as Array).map(func(value: Variant) -> int: return int(value)))
 	var growth: Dictionary = data.get("growth", {})
@@ -288,6 +294,7 @@ static func from_dict(data: Dictionary) -> RunState:
 	state.relics = _strings(data.get("relics", []))
 	state.relic_choice = _strings(data.get("relic_choice", []))
 	state.relic_choice_price = int(data.get("relic_choice_price", 0))
+	state.shrine = str(data.get("shrine", ""))
 	state.picks_left = int(data.get("picks_left", 1))
 	state.streak = int(data.get("streak", 0))
 	state.streaks_paid = _strings(data.get("streaks_paid", []))
