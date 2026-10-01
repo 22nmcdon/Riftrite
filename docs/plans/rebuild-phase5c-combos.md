@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) approved and being built; steps 4–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); steps 4–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -165,7 +165,7 @@ A tactic item takes its tactic's numbers line (`UnitInfo.tactic_numbers`). A rel
 
 ## 8. Step 3: keywords and triggers
 
-Part 7, sections 1 and 2: shared keywords, more triggers, and the chain guard. **Approved 2026-10-01** (8.9). Step 3 builds the vocabulary that steps 5–7 write the relic, loadout, and upgrade pools in; it adds **no content** (no item, relic, or upgrade changes), so the only fights it can change are those where a built event passive now sets off another (8.4).
+Part 7, sections 1 and 2: shared keywords, more triggers, and the chain guard. **Approved and built 2026-10-01** (8.9, 8.10). Step 3 builds the vocabulary that steps 5–7 write the relic, loadout, and upgrade pools in; it adds **no content** (no item, relic, or upgrade changes), so the only fights it can change are those where a built event passive now sets off another (8.4).
 
 ### 8.1 What the sim does now
 
@@ -270,6 +270,16 @@ Part 7: "an effect caused by a trigger can set off other triggers, but one chain
 11. **Step 3 is built as this section says.**
 12. **Every bonus against some enemies is power** (Question E: "all power"): a hero's "+X% damage to Rooted enemies" and a relic's "Rooted enemies take +X% damage" alike. Only Marked (and later statuses that make a unit take more damage) is vulnerability; Casters first stays power (Decision 5).
 13. **A death counts for the hero credited with the kill** (Question F): the last to hit it, damage over time included. An enemy no hero hit sets off nothing, and team-wide cards stay passives on each hero.
+
+### 8.10 Built in step 3 (2026-10-01)
+
+- **Keywords:** `Keywords` (`src/sim/keywords.gd`) and `"keyword"` on Marked, Root, Burn, and Stealth (`data/statuses.json`); Shielded is a Shield above 0, and a status can't claim it.
+- **Conditions:** `UnitCondition` (`src/sim/defs/unit_condition.gd`), with `describe()` for the log and cards ("Rooted or Stun, below 30% HP"). A `damage_bp` aura's `"vs"` isn't folded into the unit's multiplier: `Passives.rederive` keeps each one on the unit (`vs_conditions`, `vs_bonus_bp`) and `EffectRunner.deal_hit` adds the matching ones to the hit's power (only when some unit has one, `CombatSim.vs_auras`). `"while": "state"` is a conditional aura, checked each tick with the others. Status ids a condition names are checked like any the kit names.
+- **Triggers:** `on_holder_hit`, `on_shield_broken`, and `on_ally_ability` in `EffectDef` and `Events`; `keywords` on `on_status`; `vs` and `once` on event effects (`vs` refused on events that name no unit); `on_kill` names the fallen. A hit or damage over time that takes the last of a Shield sets `broke_shield` on its entry; a Guard's share doesn't (its GUARD entry raises no events).
+- **Chains:** `LogEntry.chain`, set by `CombatSim.new_entry` from `chain_depth` while a passive's effect runs (`Passives._run`), and checked against `chain_limit` (`tuning.json`, 8) in `Events.dispatch`, which now reads on while the log grows and returns where it stopped. Timed passives' and on_fall's effects are a chain's first link too (they were marked from_event before and raised nothing). A kill carries its hit's depth (`UnitState.last_hit_chain`).
+- **The UI:** numbers lines name the new triggers and conditions ("Every 3rd hit on a unit that's Burning", "Once, on its first hit", "+20% damage against Marked", "+30% ATSP while Stealthed"), and a passive that answers more than one event names each trigger where it changes.
+- **Tests:** `tests/sim/test_keywords.gd` (11) and `tests/sim/test_triggers.gd` (13). Two tests in `test_passives.gd` changed on purpose: what a passive does now sets off events (Spite's hits count for a count signature; a passive's own crits count as crits). The chaos fight gained a passive on each new trigger, a keyword filter, a `vs` aura, a state aura, and a two-link chain, and moved to seed 23 (21 lost its Taunt); `test_determinism` checks each. `test_unit_info.gd` has the new lines.
+- **What moved:** nothing that's built. The bench's fingerprints are all unchanged, and the sim runner's gate passes on all 18 encounters with the same counts of formations that win as after step 1 (Hollow Line 32, Sentinel Gate 40, Witch Coven 31, Cairn Watch 25, The Hunt 18, Old Mother Ash 19, ...): no built kit has passives that set each other off in these fights. The bench gained a **chains** fight (steady with every unit hitting back on every hit taken, so every hit runs a chain to the limit): about 320–360 ms per 60s on this machine, against 150–200 for steady.
 
 ## Answered (2026-09-30)
 
