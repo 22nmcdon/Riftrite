@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); steps 5–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) written and up for approval; steps 5–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -108,7 +108,7 @@ The rest are as gate 3 left them (basic 30–35, harder 16–33, The Hunt 18, Ol
 | **2. Stat amounts** (section 7; built) | Every card's stat change says its amount (part 7, section 6): a numbers line generated from the mod, like abilities' (`UnitInfo`), on items, upgrades, and relics; their `text` loses vague words | `src/ui/unit_info.gd`, a `ModInfo` for kit mods, `data/*.json` texts | every card with a stat mod shows its amount |
 | **3. Keywords and triggers** (section 8) | Keyword flag on `StatusDef` (Marked, Rooted, Burning, Shielded, Stealthed; Bleeding joins with its sources); the new triggers (`on_crit`, `on_kill`, `on_apply`, `on_hit_keyword`, `on_shield_broken`, `on_ally_signature`, `on_heal`, `on_hop`) read from the log in `Events`; the chain guard (8 a tick) | `status_def.gd`, `events.gd`, `passives.gd`, `test_arena_log.gd`'s audit | each trigger, the guard, determinism with long chains, the chaos fight uses them |
 | **4. Permanent scaling** (section 9) | Counters in run state, per hero and per run, fed from `FightResult` like deeds; growing mods take the counter into the fight's setup as a bonus; "Now: +X" on cards | `run_state.gd`, `run_flow.gd`, `HeroExtras` | counters survive a save; a growing card's value |
-| **5. The relic pool** | Five tiers plus bond relics, the pool's relics as data (built ones changed or cut, `relics/README.md`), one relic per shop with climbing rerolls, the pre-boss shop, boss relics after the boss, the Shrine's offerings, the income in `economy.md` | `relics.json`, `relic_def.gd`, `offers.gd`, `run_flow.gd`, `act1.json` | shop draws by tier, rerolls' prices, bond relics only with their bond, every relic's effect in a small fight |
+| **5. The relic pool** (section 10) | Five tiers plus bond relics, the pool's relics as data (built ones changed or cut, `relics/README.md`), one relic per shop with climbing rerolls, the pre-boss shop, boss relics after the boss, the Shrine's offerings, the income in `economy.md` | `relics.json`, `relic_def.gd`, `offers.gd`, `run_flow.gd`, `act1.json` | shop draws by tier, rerolls' prices, bond relics only with their bond, every relic's effect in a small fight |
 | **6. The loadout pool** | Tactics, gambits, sigils, and charms from `loadout/`, three ranks with each kind's counter, a bought copy skips a rank, selling at half, no "no effect" marker, grafts removed; gambits' placement rules (in `FightSetup.validate` and `Encounters.setup`); the Magpie as a node with his stall | `items.json`, `item_def.gd`, `run_flow.gd`, `tactics.gd`, `fight_setup.gd`, `magpie` offers | ranks and their counters, selling, each gambit's placement, the Magpie's stall |
 | **7. The upgrade pools** | `upgrade-pools.md`: each hero's 12, two taste upgrades per path until the hero transforms, four path upgrades and a growing one after; stacking stat upgrades locked in as a flat amount; Volley's taste back to every 4th | `upgrades.json`, `offers.gd`, `run_state.gd`, `paths.json` | the draw by stage, stacking's lock-in, the paths report for Volley |
 | **8. The new day** | Fight, pick, shop, then a node (Event, Camp, Rift Tear, the Magpie); camp as a node with its options; Rift Tear's three depths with rift modifiers; events and the Bloodied Oath; the day screen follows | `act_def.gd`, `run_flow.gd`, `offers.gd`, `camps.json`, `events.json` (new), `run_day_screen.gd`, `run_bot.gd` | the day's order, each node, each event, the bot plays whole runs |
@@ -380,6 +380,76 @@ A card gets `"grows"` beside (or instead of) its `"mod"`:
 - **The twelve upgrades** (`data/upgrades.json`), each tuned with the run report to about one step a fight held: Notched Bow (3 Marks), Weathered (600 taken), Lamp Oil (200 healing), Hunter's Tally (300 damage from beyond 4 hexes), Patient Hunter (15s of Root), Arrow Glut (15 extra hits; +1% faster cooldowns, since Maren's ATSP of 10 is too small for a share of it to show), Old Scars (100 guarded), Brandmarks (15 extra hits by the mace), Borrowed Time (8s below 30% HP), Kindled Flame (300 healing beside the target), Woven Deep (200 Shield), Sunwrought (50 smite damage). Path kits count far more once transformed than while vowed, so the deeds' thresholds were no guide.
 - **Tests:** `tests/sim/test_tallies.gd` (8), `tests/run/test_growth_cards.gd` (9), a "What grew" test in `test_run_screens.gd`, and `test_growth.gd`'s pool counts and offers (each hero and path has one growing upgrade more).
 - **What moved:** no fight (tallies only count). **The run report fell from 83% to 72% of runs won** with the growing upgrades in the pools, and back to 83% with them taken out, at either tuning: the simple bot takes a pick's card blind, and a growing card at about a step a fight gives +4–5% by the boss where the stat card it displaced gives +8–10% at once. Growing cards are an engine for a run that takes them early and builds on them; whether Act 1's are too slow (or the bot too blind to pick them) is flagged for the playtester. Step 7 rebuilds the pools and step 9 retunes.
+
+## 10. Step 5: the relic pool
+
+`relics/` (86 relics in five tiers, with the rules every relic follows), the three bond relics (`duo-bonds.md`), and `economy.md`. **Up for approval:** the split below, and step 5a in full.
+
+### 10.1 Why it's split
+
+Of the 86, about 40 can be written with what's built (kit mods, keywords and triggers, growth) plus small run rules. The rest need new sim pieces, and a dozen of those (the chains, Second Dawn, the engines) are each a piece of their own. One approval for all of it would be too big to check, so step 5 comes in four parts, each approved before it's built:
+
+| Part | What | Relics |
+| --- | --- | --- |
+| **5a** (below, in full) | The tiers, the shop's relic with climbing rerolls, the pre-boss shop, where relics come from, the economy, the built relics changed or cut, and every relic the built pieces can write | 40 |
+| **5b** | The pieces many relics share: lifesteal from every source, crit damage bonuses, timed boosts ("+30% attack speed for 3s"), the team's effects at a fight's start, lengthening a status, Shields of a share of max HP, taking less damage near an ally, and a few counters (overkill) | about 20 (Bramble Seed, Ember Bauble, Tithe of Iron, Smoke Pouch, Leech Tooth, Red Thirst, Moth-Eaten Banner, Salt Circle, Executioner's Mark, Hunter's Ledger, Pyre Ash, Grasping Mire, Shattered Aegis, Veil of the Lost, Keen Edge, Glutton's Chalice, Thicket Engine, Stormcaller's Bell, Overkill Tithe, Reliquary) |
+| **5c** | The engines and chains, each its own piece: Crown of Stars, Shared Pain, The Hungering Rift, Overcharge, Second Dawn, Quickening, Stonebound, Hunter's, Warden's, Shadow, and Ashen Engines, Overflow Chalice, Blood Communion, Sanguine Frenzy, Knife's Edge | about 15 |
+| **5d** | Duo bonds become keys to bond relics (the built boosts go), with the three bond relics and their shop odds | 3 |
+
+**Boss relics** (11) are left out of all four: Act 1 is the only act, so a run that beats Old Mother Ash is over, and a boss relic would have no fight to change (Question I).
+
+### 10.2 What's there now (phase 5)
+
+- **Relics:** eight, one tier, each with a boon and a cost (`RelicDef`: `mod`, `enemy_mod`, `rest_mod`, and run rules). Sources: an elite's win and a Rift Tear's (a choice of 2), the Shrine (a choice of 2), and one relic in the Pedlar's and the Magpie's shops (`shop_relic`, 9 shards; the Magpie's at 150%).
+- **The economy** (`act1.json`): start 3; a win pays 3, harder 5, elite 6, boss 0, a Hunt 2; a wound costs 2, a reroll 1 (it rerolls the wares), a relic 9; items 2–5 by kind.
+- **The day** is still phase 5's (camp, the route, the loadout, the fight, after it); the new day (fight, pick, shop, node) is step 8, so 5a's shops are the camp's Pedlar and Magpie.
+
+### 10.3 Step 5a: tiers, shops, and the economy
+
+- **`RelicDef`** gains `"tier"` (common, rare, epic, legendary; boss and bond later) and loses `"cost"` (no downsides); `"boon"` becomes `"text"`. `rest_mod` goes (only Pilgrim's Lantern used it).
+- **The shop's relic:** each shop shows **1 relic** (2 with The Magpie's Scale). The Pedlar's is common 70%, rare 25%, epic 5% (placeholders). **A reroll replaces the relic** (Question J for the wares): the first costs 1 shard, each after it 1 more in that shop (Tinker's Purse: the first is free; Merchant's Covenant: the price never climbs). The Magpie's relic is epic or legendary, 25% off, no reroll (his node, selling, and swapping are step 6).
+- **The pre-boss shop:** the boss day's camp always has the Pedlar, and its relics are **1 legendary plus 1 relic of another tier**, rerolls starting at 5.
+- **Where else relics come from** (until step 8's nodes): an elite's win, a choice of 2 rares (1 in 3 chance that one is an epic); a Rift Tear's win, 2 rares; the Shrine, one rare for 15 shards (its other offerings are step 8's).
+- **Prices** (`economy.md`): common 5, rare 12, epic 20, legendary 30; the Magpie's epic 15, legendary 22.
+- **The economy** (`economy.md`): start 10; a win pays 10, the harder fight 13, an elite 15, the boss 25; a Hunt 5 (not set there; a placeholder); a wound costs 4; items by kind: tactics 4, charms 6, sigils 8, grafts 8 (until step 6 cuts them); taking shards instead of a pick pays 5 (scaled with the rest).
+- **Run rules** the 5a relics need (`RelicDef`, read by `RunFlow`): `wound_price_add`, `free_reroll`, `flat_rerolls`, `elite_pay_add`, `shop_shards` (paid as a shop opens), `miser` (1 per 5 held, up to 6, as a shop opens), `shop_relics_add` and `wares_add`, `pick_cards_add`, a streak quest (`streak`: win 3 fights in a row with no hero falling, for 25 shards, once), and growth that pays shards instead of a mod (`"each_shards"`: Bloodied Coin, Lucky Strike). Two relics are worked out at setup from the run: Reliquary Lamp (+2% to HP, ATK, MGK, DEF, CRIT, and attack speed per relic held) and Gilded Rift (+1% ATK and MGK per 5 shards held).
+- **Small sim and mod pieces:** `KitMod` `mana.regen_add` (Rift Candle) and `mana.max_bp` (Hollow Drum); `stats_add` takes ATSP (each point is 1% faster, so "+8% attack speed" is +8 ATSP; Arrow Glut moves to +1 ATSP a step); a `crits` tally kind (Lucky Strike); a growth counted by the run rather than the sim (`"run_counts": "elite_wins"`, Tally of the Dead); and a status, **Sunder** (no damage, never fades, each stack 1 DEF off; the `bleed` kind's shred with no damage), for the epic.
+- **The built relics:** Ember Heart (rare: basic attacks apply 1 Burn), Hollow Crown (legendary: a 4th slot), Rift-Glass Eye (rare: Scouted), Bloodstone (common: +8% ATK), Warden's Chain (common: +10% DEF), and Gravedigger's Coin (common: +3 shards a win) lose their costs; Pilgrim's Lantern and Hungry Blade are cut.
+
+The 5a relics (40):
+
+| Tier | Relics |
+| --- | --- |
+| **Common** (17) | Whetstone of the Fallen, Bloodstone, Iron Filings, Warden's Chain, Hearthstone Shard, Quickened Pulse, Bone Dice, Rift Candle, Brand of Guilt, Headsman's Coin, Rusted Fetter, Hollow Drum, Gravedigger's Coin, Mender's Purse, Tinker's Purse, Bounty Hunter's Tag, Loose Change |
+| **Rare** (13) | Ember Heart, Ashen Censer, Thornwoven Cloak, Echoing Bell, Collector's Chain, Tally of the Dead, Chalk Ledger (a quest: growth with one step), Bounty Board, Bloodied Coin, The Magpie's Scale, Rift-Glass Eye, Haggler's Charm, Lucky Strike |
+| **Epic** (5) | Mirror of Ash, The Ninth Arrow, Sunder, Miser's Vault, Merchant's Covenant |
+| **Legendary** (5) | Rift-Fed Blades, Reliquary Lamp, Gilded Rift, Hollow Crown, Widened Offering |
+
+With 13 rares, 5 epics, and 5 legendaries, the tiers are thin until 5b and 5c; the pre-boss shop's legendary comes from 5.
+
+### 10.4 The UI
+
+- A relic's card and tooltip show its tier (a word and the tier's color; the frames per tier are the UI redesign's), its text, and its numbers line (`ModInfo`, step 2), with growth's "Grows"/"Now" (step 4).
+- The shop's relic slot (one or two) with **Reroll (N shards)** beside it; the pre-boss shop says so; the Magpie's says "One look".
+- Run rules show in the numbers line ("+2 shards at every shop", "the first reroll in every shop is free").
+
+### 10.5 Files
+
+- Changed: `relic_def.gd`, `relics.json` (the 40), `act1.json` (the economy, tier odds, prices), `act_def.gd`, `run_state.gd` (shop relics as a list, rerolls this shop, the streak), `run_flow.gd`, `offers.gd` (draws by tier), `run_content.gd`, `kit_mod.gd`, `deed_def.gd`/`deeds.gd` (`crits`), `growth_def.gd` (`run_counts`, `each_shards`), `data/statuses.json` (Sunder), `data/upgrades.json` (Arrow Glut), `mod_info.gd`, `run_day_screen.gd` (shop and relic cards), `tools/run_bot.gd` (buys the shop's relic when it can, never rerolls), `tools/run_report.gd` (relics by tier).
+- Docs: this section's "Built in step 5a" note; `relics/README.md` (what's built); CLAUDE.md.
+
+### 10.6 Tests
+
+- Every 5a relic's effect, in a small fight or on run state (one test per relic or per kind of relic).
+- The shop's draw by tier (seeded), rerolls' climbing price, Tinker's Purse and Merchant's Covenant, the pre-boss shop's legendary and rerolls from 5, the Magpie's tier and discount, the elite's and Rift Tear's choices.
+- The economy's numbers; each run rule; the streak quest; growth that pays shards.
+- Saves keep the shop's relics and rerolls; the run report runs (runs won will move: the economy changes, and relics lose their costs).
+
+### 10.7 Questions for this step
+
+- **I. Boss relics:** wait until there's a fight after a boss (Act 2, or endless), and write them then (recommended), or build the choice of 3 after Old Mother Ash now, though nothing comes after it in Act 1?
+- **J. What a shop reroll replaces:** only the relic, with the wares fixed for the visit (recommended; `relics/README.md` says rerolling replaces the relic), or the relic and the wares together?
+- **K. The split:** 5a now as written, then 5b, 5c, and 5d each with their own section (recommended)?
 
 ## Answered (2026-09-30)
 
