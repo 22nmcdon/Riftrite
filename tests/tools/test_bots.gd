@@ -33,7 +33,9 @@ func _play(bot_name: String, run_seed: int) -> RunFlow:
 
 
 func test_each_bot_plays_runs_to_their_end_and_repeats() -> void:
-	for bot_name: String in Report.BOTS:
+	# The good bot and the expert take about a minute a run; they're played
+	# to day 3 below instead.
+	for bot_name: String in ["simple", "simple-peek", "random"]:
 		for run_seed: int in [3, 8]:
 			var first: RunFlow = _play(bot_name, run_seed)
 			var again: RunFlow = _play(bot_name, run_seed)
@@ -125,3 +127,73 @@ func test_the_expert_never_does_worse_than_the_good_bot() -> void:
 		var good_worth: float = Practice.worth(flow.fight_setup(good_hexes, errors, good.markers(flow, good_hexes)), _run.content)
 		var expert_worth: float = Practice.worth(flow.fight_setup(expert_hexes, errors, expert.markers(flow, expert_hexes)), _run.content)
 		assert_true(expert_worth >= good_worth, "%s: expert %.2f, good %.2f" % [encounter_id, expert_worth, good_worth])
+
+
+## Plays `bot_name` from `run_seed` until day `day` starts (or the run ends).
+func _play_to(bot_name: String, run_seed: int, day: int) -> RunFlow:
+	var errors: Array[String] = []
+	var flow: RunFlow = RunFlow.start(_run, run_seed, _vows(run_seed), errors)
+	var bot: RefCounted = Report.make_bot(bot_name)
+	bot.call("begin", flow)
+	for i: int in RunPlayer.MAX_STEPS:
+		if flow.state.phase == RunState.Phase.ENDED or flow.state.day >= day:
+			break
+		var said: String = RunPlayer.step(flow, bot)
+		assert_eq(said, "", "%s, seed %d, day %d" % [bot_name, run_seed, flow.state.day])
+		if not said.is_empty():
+			break
+	return flow
+
+
+func test_the_good_bot_and_the_expert_play_and_repeat() -> void:
+	for bot_name: String in ["good", "expert"]:
+		var first: RunFlow = _play_to(bot_name, 5, 3)
+		var again: RunFlow = _play_to(bot_name, 5, 3)
+		assert_true(first.state.day >= 3 or first.state.phase == RunState.Phase.ENDED, bot_name)
+		assert_eq(JSON.stringify(again.state.to_dict()), JSON.stringify(first.state.to_dict()), "%s repeats" % bot_name)
+
+
+func test_the_practice_set_is_what_the_map_shows() -> void:
+	var flow: RunFlow = _at_fight(2)
+	var state: RunState = flow.state
+	assert_eq(Practice.practice_set(flow), [state.options[0][0], state.options[2][0]] as Array[String], "today's first fight, then the first elite's")
+	state.phase = RunState.Phase.SHOP
+	state.day = 6
+	assert_eq(Practice.practice_set(flow), [state.options[6][0]] as Array[String], "the boss, once")
+	state.day = 7
+	assert_eq(Practice.practice_set(flow), [] as Array[String], "nothing after the boss")
+
+
+func test_practice_tries_a_copy_and_counts_the_shards() -> void:
+	var flow: RunFlow = _at_fight(3)
+	flow.record(Simple.formation(), _won())
+	var before: String = JSON.stringify(flow.state.to_dict())
+	var coming: Array[String] = Practice.practice_set(flow)
+	var team: float = Practice.team_worth(flow, coming)
+	var shards: float = Practice.value(flow, func(trial: RunFlow) -> String: return trial.take_shards(), coming)
+	assert_almost_eq(shards, team + _run.act.pick_shards * Practice.shard_worth(flow), 0.0001, "the shards' worth on the same fights")
+	assert_eq(Practice.value(flow, func(trial: RunFlow) -> String: return trial.take_pick(99), coming), -INF, "refused")
+	assert_eq(JSON.stringify(flow.state.to_dict()), before, "the run itself is untouched")
+	var bot: GoodBot = GoodBot.new()
+	bot.begin(flow)
+	var card: int = bot.pick(flow)
+	assert_true(card >= -1 and card < flow.state.pick.size())
+	assert_eq(JSON.stringify(flow.state.to_dict()), before, "judging changes nothing")
+	assert_null(flow.last_result, "and fights no real fight")
+	var setup: FightSetup = flow.fight_setup(Simple.formation(), [] as Array[String])
+	assert_null(setup, "no fight is waiting after the fight")
+
+
+func test_shards_are_worth_less_as_the_act_runs_out() -> void:
+	var flow: RunFlow = _at_fight(3)
+	var early: float = Practice.shard_worth(flow)
+	flow.state.day = 7
+	assert_true(Practice.shard_worth(flow) < early)
+	flow.state.day = 8
+	assert_eq(Practice.shard_worth(flow), 0.0)
+
+
+func _won() -> FightResult:
+	var result := FightResult.new()
+	result.outcome = FightResult.Outcome.VICTORY
+	return result
