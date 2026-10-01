@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a built (10-01), 5b–5d to come; steps 5–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a built (10-01), 5b (section 11) written and up for approval, 5c–5d to come; steps 5–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -464,6 +464,54 @@ With 13 rares, 5 epics, and 5 legendaries, the tiers are thin until 5b and 5c; t
 - **The UI:** relic cards and tooltips show the tier (a word in the tier's color), the text, and the numbers line, which now names every run rule; the shop shows its relics (one or two), "Reroll · N shards", the pre-boss shop's note, and the Magpie's "One look"; a priced relic choice says its price.
 - **Tests:** `tests/run/test_relics.gd` (25: the tiers, every kind of 5a relic, the run rules, rerolls, the pre-boss shop, the elite's epic, saves, Rusted Fetter in a fight); `test_camp.gd`, `test_economy.gd`, `test_run_flow.gd` (the boss relic choice), `test_mod_info.gd`, and the status lists changed on purpose.
 - **What moved:** no fight. **The run report** (54 runs): **66% of runs won** (72% after step 4); losses gather on day 3's elite (10 of 18), the bot buys few shop relics (it buys wares first and never rerolls: 0.2 commons and no legendaries a run; 1.7 rares, mostly from elites; 0.7 boss relics), and earns about 77 shards a run (the target before the pre-boss shop was 76–86). The bot's spending is simple on purpose (phase 6 is the good bot); the economy and the elites wait for step 9's retune.
+
+## 11. Step 5b: the pieces relics share
+
+The second part of the relic pool (Decision 17): twelve sim and run pieces that about twenty relics need, and those relics as data. **Up for approval.** The boss relics left (Chain of Echoes, Crown of the Hollow King, Everflame, The Unbending, Riftwalker's Soles, The Long Watch, Snaring Shot) each rewrite a rule of their own, so they go with 5c's engines and chains.
+
+### 11.1 The pieces
+
+| # | Piece | What it is | For |
+| --- | --- | --- | --- |
+| 1 | **Relic effects at a fight's start** | `RelicDef "at_start": [effects]`, run by the sim at tick 0, sourced to the relic (`EffectSource.relic`, already in the log's rules); a new target, `nearest_enemies` with a `count` (nearest to any hero); `shield` takes `amount_bp_of_max_hp` (as `heal` does) | Bramble Seed, Ember Bauble, Tithe of Iron, Smoke Pouch |
+| 2 | **Lifesteal from every source** | an aura stat, `lifesteal_bp` (adds): the holder heals that share of the damage its hits deal (`deal_hit`), its own kind of line in the log (`LIFESTEAL`, not HEAL: relics/README rule 5, so healing triggers and bonuses ignore it); `"vs"` allowed on it | Leech Tooth, Glutton's Chalice, Red Thirst |
+| 3 | **Crit bonuses** | an aura stat, `crit_damage_bp` (adds to the crit kind of the damage rule), and `"vs"` allowed on `crit_chance_bp` (rolled against the target as the attack fires) | Keen Edge, Executioner's Mark |
+| 4 | **Timed boosts** | a status kind, `boost`: timed, carrying aura changes (`"auras": [{stat, value}]`) that count while it lasts (folded in like auras); a new aura stat, `atsp` (adds ATSP points, so "+30% attack speed" is +30) | Veil of the Lost, Stormcaller's Bell |
+| 5 | **A status ending** | a new event, `on_status_ended` (the unit whose status ran out; `statuses` and `keywords` filters), from the STATUS_ENDED entries already logged | Veil of the Lost ("leaving Stealth") |
+| 6 | **Lengthening some statuses** | a kit mod's ability change takes `"statuses"` (only apply_status effects of those) | Veil of the Lost (Stealth 1s longer) |
+| 7 | **Extending a status** | a new effect, `extend_status` (`status`, `duration_ms`): a timed status already on the target lasts that much longer; nothing if it isn't there | Hunter's Ledger, Thicket Engine |
+| 8 | **Around the unit, or the one the event names** | targets `enemies_near_self` and `enemies_near_named` / `enemy_near_named` (`within_hexes`), and `apply_status`'s `"stacks_of": "burn"` (as many stacks as the unit the event names has, read as the effect runs) | Shattered Aegis, Pyre Ash, Grasping Mire |
+| 9 | **Close to an ally** | an aura `"while": "ally_near", "within_hexes": 1`, and a stat `damage_reduced_bp` (takes less damage, like Warded; adds with it) | Moth-Eaten Banner |
+| 10 | **Salt Circle** | a rule the setup carries (`FightSetup.hero_rules`): the first enemy area each fight lands on nothing, logged ("broken by Salt Circle") | Salt Circle |
+| 11 | **Overkill** | DAMAGE entries record the overkill (damage past the target's last HP); a tally kind, `overkill` | Overkill Tithe (1 shard per 150) |
+| 12 | **Reliquary** | common relics count twice: their mods `times(2)` where a step could scale them (stats, amounts, auras), their numbers in run rules doubled; a common with an ability passive (Brand of Guilt) is unchanged | Reliquary |
+
+### 11.2 The relics (20)
+
+| Tier | Relics |
+| --- | --- |
+| **Common** (8) | Bramble Seed, Ember Bauble, Tithe of Iron, Smoke Pouch, Leech Tooth, Red Thirst, Moth-Eaten Banner, Salt Circle |
+| **Rare** (8) | Executioner's Mark, Hunter's Ledger, Pyre Ash, Grasping Mire, Shattered Aegis, Veil of the Lost, Keen Edge, Glutton's Chalice |
+| **Epic** (3) | Thicket Engine, Stormcaller's Bell, Overkill Tithe |
+| **Legendary** (1) | Reliquary |
+
+With these, commons are complete (25 of 25), rares 21 of 21, epics 8 of 14, legendaries 6 of 15.
+
+### 11.3 The log and the board
+
+- New log kinds: `LIFESTEAL` (source: the unit and what dealt the hit) and, for Salt Circle, an AREA_LANDED entry's note. Each new kind gets its audit rule (`test_arena_log.gd`) and its board form (`test_every_encounter_plays.gd`: a heal number in the lifesteal colour).
+- Relic effects at the start show as the relic's name on the board's lines, like any relic source.
+
+### 11.4 Files
+
+- New: `tests/sim/test_relic_pieces.gd`.
+- Changed: `relic_def.gd` (`at_start`), `combat_sim.gd` (running them; `hero_rules`), `effect_def.gd` (the targets, `extend_status`, `stacks_of`, `on_status_ended`, shield's share of max HP), `effect_runner.gd`, `targeting.gd`, `aura_def.gd` and `passives.gd` (the stats, `ally_near`, `vs` on more stats), `status_def.gd` and `statuses.gd` (`boost`), `events.gd`, `kit_mod.gd` (`statuses` on a change), `areas.gd` (Salt Circle), `deed_def.gd`/`deeds.gd` (`overkill`), `log_entry.gd`, `run_content.gd` and `run_flow.gd` (Reliquary, passing relic effects and rules into the setup), `data/relics.json`, `data/statuses.json` (the two boosts), `unit_info.gd`/`mod_info.gd` (the words), `fight_fx.gd` (lifesteal), the chaos fight.
+
+### 11.5 Tests
+
+- Each piece in a small fight (`test_relic_pieces.gd`): start effects with their source, nearest enemies, lifesteal (and that it isn't healing), crit damage and a sure crit, a boost's stats while it lasts, `on_status_ended`, a status lengthened by a mod and by `extend_status`, the near targets and `stacks_of`, `ally_near`, Salt Circle once, overkill.
+- Each 5b relic's effect (`test_relics.gd`), Reliquary's doubling.
+- Determinism, the log audit, every encounter on the screen, the chaos fight using the new pieces; the bench fingerprints unchanged (no built kit uses them).
 
 ## Answered (2026-09-30)
 
