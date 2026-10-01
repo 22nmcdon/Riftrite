@@ -48,11 +48,14 @@ var bond_relic_pct: int = 0
 var boss_relics: int = 3
 ## The Shrine's rare relic.
 var shrine_price: int = 15
-## How many wares the Pedlar and the Magpie lay out; the Magpie's prices
-## are the items' times magpie_markup_pct (rounded up).
+## How many wares the Pedlar lays out, and how many charms the Magpie does
+## (at rank II, for magpie_charm_price each; phase 5c step 6e, magpie.md).
 var pedlar_wares: int = 4
-var magpie_wares: int = 4
-var magpie_markup_pct: int = 150
+var magpie_wares: int = 2
+var magpie_charm_price: int = 12
+## What the Magpie pays for a relic, by tier (RelicDef.TIER_NAMES; a bond
+## relic: nothing).
+var relic_sell: Dictionary[String, int] = {}
 ## The loadout pool (phase 5c step 6, docs/plans/loadout/): an item's price
 ## by its kind (ItemDef.KIND_NAMES), and what ranks it up: for each kind,
 ## how much it must count to reach rank II, then how much more for rank III
@@ -93,7 +96,14 @@ static func read(reader: DataReader) -> ActDef:
 	def.boss_relics = reader.req_int("boss_relics", 0, 5)
 	def.pedlar_wares = reader.req_int("pedlar_wares", 1, 8)
 	def.magpie_wares = reader.req_int("magpie_wares", 1, 8)
-	def.magpie_markup_pct = reader.req_int("magpie_markup_pct", 100, 400)
+	def.magpie_charm_price = reader.req_int("magpie_charm_price", 0)
+	var sell: DataReader = reader.req_object("relic_sell")
+	if sell != null:
+		for tier: String in RelicDef.TIER_NAMES:
+			if tier != "bond":
+				def.relic_sell[tier] = sell.req_int(tier, 0)
+		def.relic_sell["bond"] = 0
+		sell.finish()
 	var items: DataReader = reader.req_object("items")
 	if items != null:
 		var item_prices: DataReader = items.req_object("prices")

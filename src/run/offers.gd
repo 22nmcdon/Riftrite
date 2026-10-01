@@ -48,10 +48,27 @@ static func pedlar(run: RunContent, state: RunState, rerolls: int) -> Array[Stri
 	return _draw(rng, _for_sale(run, state), run.act.pedlar_wares + run.relic_sum(state, "wares_add"))
 
 
-## The Magpie's wares: any items (not at rank III); one look, no rerolls.
+## The Magpie's wares (phase 5c step 6e, magpie.md): act.magpie_wares
+## charms, sold at rank II (never one the run holds at rank III); one look,
+## no rerolls.
 static func magpie(run: RunContent, state: RunState) -> Array[String]:
 	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.MAGPIE, state.act, state.day, state.attempt])
-	return _draw(rng, _for_sale(run, state), run.act.magpie_wares)
+	var charms: Array[String] = _for_sale(run, state).filter(func(id: String) -> bool: return run.items[id].kind == ItemDef.Kind.CHARM)
+	return _draw(rng, charms, run.act.magpie_wares)
+
+
+## The Magpie's swap for `relic_id`: a relic of the same tier the run
+## doesn't hold (a boss relic for a boss relic), or "" if there's none. A
+## bond relic doesn't swap.
+static func magpie_swap(run: RunContent, state: RunState, relic_id: String) -> String:
+	var tier: RelicDef.Tier = run.relics[relic_id].tier
+	if tier == RelicDef.Tier.BOND:
+		return ""
+	var pool: Array[String] = run.relic_ids.filter(func(id: String) -> bool: return run.relics[id].tier == tier and not state.relics.has(id))
+	if pool.is_empty():
+		return ""
+	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.MAGPIE, state.act, state.day, state.attempt, 1 + run.relic_ids.find(relic_id)])
+	return pool[rng.range_int(pool.size())]
 
 
 ## Every item a shop can lay out: all but those the run holds at rank III.

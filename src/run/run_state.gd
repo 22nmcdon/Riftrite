@@ -120,6 +120,8 @@ var shop: String = ""
 ## Its wares (item ids; "" once bought), and how often it's been rerolled.
 var wares: Array[String] = []
 var rerolls: int = 0
+## The Magpie's swap is used this visit (phase 5c step 6e).
+var magpie_swapped: bool = false
 ## The relics the open shop sells (phase 5c step 5a: one, or more with The
 ## Magpie's Scale; "" once bought).
 var shop_relics: Array[String] = []
@@ -195,7 +197,7 @@ func to_dict() -> Dictionary:
 		"shards": shards, "options": options.duplicate(true), "chosen": chosen, "formation": hexes,
 		"fought": fought.map(func(entry: Fought) -> Dictionary: return entry.to_dict()),
 		"pick": pick.duplicate(), "just_transformed": just_transformed.duplicate(),
-		"stash": stash.duplicate(), "shop": shop, "wares": wares.duplicate(), "rerolls": rerolls, "shop_relics": shop_relics.duplicate(),
+		"stash": stash.duplicate(), "shop": shop, "wares": wares.duplicate(), "rerolls": rerolls, "shop_relics": shop_relics.duplicate(), "magpie_swapped": magpie_swapped,
 		"place": place, "camp": camp.duplicate(), "camp_used": camp_used, "hunt": hunt, "mapping": mapping,
 		"fortify": fortify, "dig_in": dig_in, "rock": rock.duplicate(), "rift_tear": rift_tear, "rested": rested,
 		"scouted": scouted.duplicate(), "magpie_day": magpie_day,
@@ -236,6 +238,7 @@ static func from_dict(data: Dictionary) -> RunState:
 	state.shop = str(data.get("shop", ""))
 	state.wares.assign((data.get("wares", []) as Array).map(func(value: Variant) -> String: return str(value)))
 	state.rerolls = int(data.get("rerolls", 0))
+	state.magpie_swapped = bool(data.get("magpie_swapped", false))
 	state.shop_relics = _strings(data.get("shop_relics", []))
 	state.place = str(data.get("place", ""))
 	state.camp = _strings(data.get("camp", []))

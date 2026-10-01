@@ -138,8 +138,8 @@ func test_the_magpie() -> void:
 	var flow: RunFlow = _start()
 	var state: RunState = flow.state
 	assert_eq(flow.open_shop("magpie"), "")
-	assert_eq(state.wares.size(), 4)
-	assert_eq(flow.price_of("fleet"), 9, "6 shards at the Pedlar (a charm), half again, rounded up")
+	assert_eq(state.wares.size(), 2, "two charms (phase 5c step 6e)")
+	assert_eq(flow.price_of("fleet"), 12, "12 shards each")
 	assert_eq(flow.reroll(), "only the Pedlar rerolls")
 
 

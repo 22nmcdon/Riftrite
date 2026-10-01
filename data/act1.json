@@ -36,8 +36,9 @@
     }
   },
   "pedlar_wares": 4,
-  "magpie_wares": 4,
-  "magpie_markup_pct": 150,
+  "magpie_wares": 2,
+  "magpie_charm_price": 12,
+  "relic_sell": {"common": 2, "rare": 6, "epic": 10, "legendary": 15, "boss": 15},
   "items": {
     "prices": {"charm": 6, "tactic": 4, "sigil": 8, "gambit": 12},
     "ranks": {"charm": [4, 8], "tactic": [60000, 180000], "sigil": [10, 25], "gambit": [3, 6]}

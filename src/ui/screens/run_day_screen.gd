@@ -450,7 +450,8 @@ func _fill_shop() -> void:
 	var state: RunState = session.state()
 	var magpie: bool = state.shop == "magpie"
 	var section: VBoxContainer = _section("The Magpie" if magpie else "The Pedlar",
-		"What he took from bands who fell in the rift. One look, and dear." if magpie else "Charms, tactics, and sigils; one you own comes a rank up. He buys yours back for half.")
+		"What he took from bands who fell in the rift: charms already at rank II, a relic cheap. One look. He buys relics, and swaps one a visit." if magpie
+			else "Charms, tactics, sigils, and gambits; one you own comes a rank up. He buys yours back for half.")
 	# The keeper's scene behind the wares (phase 5b).
 	var stage: ShopStage = ShopStage.make(state.shop)
 	section.add_child(stage)
@@ -459,8 +460,11 @@ func _fill_shop() -> void:
 		if state.wares[i].is_empty():
 			continue
 		var item: ItemDef = session.run.items[state.wares[i]]
-		# Owned, buying it is its next rank.
-		var card: VBoxContainer = _item_card(row, item, mini(state.item_ranks.get(item.id, 0) + 1, ItemDef.RANKS))
+		# Owned, buying it is its next rank; the Magpie's are rank II at least.
+		var rank: int = mini(state.item_ranks.get(item.id, 0) + 1, ItemDef.RANKS)
+		if magpie:
+			rank = mini(maxi(rank, 2), ItemDef.RANKS)
+		var card: VBoxContainer = _item_card(row, item, rank)
 		(card.get_parent() as Control).custom_minimum_size = Vector2(WARE_WIDTH, 0)
 		card.add_child(UiStyle.primary(UiStyle.button("Buy · %d shards" % session.flow.price_of(item.id), _do.bind(session.flow.buy.bind(i)))))
 	for i: int in state.shop_relics.size():
@@ -482,6 +486,17 @@ func _fill_shop() -> void:
 				_do.bind(session.flow.sell.bind(id))))
 	if magpie:
 		more.add_child(UiStyle.label("One look", 17, UiStyle.TEXT_DIM))
+		# He buys relics, and swaps one a visit (phase 5c step 6e).
+		var dealing: HFlowContainer = HFlowContainer.new()
+		dealing.add_theme_constant_override("h_separation", 12)
+		dealing.add_theme_constant_override("v_separation", 8)
+		section.add_child(dealing)
+		for id: String in state.relics:
+			var relic: RelicDef = session.run.relics[id]
+			dealing.add_child(UiStyle.button("Sell %s · %d shards" % [relic.name, session.flow.relic_sell_price(id)], _do.bind(session.flow.sell_relic.bind(id))))
+			var swap: Button = UiStyle.button("Swap %s" % relic.name, _do.bind(session.flow.swap_relic.bind(id)))
+			swap.disabled = state.magpie_swapped or relic.tier == RelicDef.Tier.BOND
+			dealing.add_child(swap)
 	else:
 		var price: int = session.flow.reroll_price()
 		more.add_child(UiStyle.button("Reroll · %d shard%s" % [price, "" if price == 1 else "s"], _do.bind(session.flow.reroll)))

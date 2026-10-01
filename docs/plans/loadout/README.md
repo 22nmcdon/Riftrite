@@ -1,6 +1,6 @@
 # Loadout: tactics, gambits, sigils, and charms
 
-Status: **agreed in discussion (2026-09-30); being built as phase 5c step 6** (`../rebuild-phase5c-combos.md`, section 14): the frame (ranks, counters, selling, prices), every charm, sigil, tactic, and gambit built in 6a–6d (2026-10-01); the Magpie's stall to come (6e). What a hero can slot, one file per kind. Replaces the first drafts in `../rebuild-content-pool.md` (part 7b, sections 3–5) and part 6's examples, and builds on part 6 (`../rebuild-between-fights.md`, sections 2 and 8); where they disagree, this folder wins, and part 6 carries notes saying so. **Numbers and names are placeholders** until the sim runner has had a pass at them.
+Status: **agreed in discussion (2026-09-30); built as phase 5c step 6** (`../rebuild-phase5c-combos.md`, section 14, 2026-10-01): the frame (ranks, counters, selling, prices), every charm, sigil, tactic, and gambit, and the Magpie's stall. Its numbers are placeholders for step 9's retune. What a hero can slot, one file per kind. Replaces the first drafts in `../rebuild-content-pool.md` (part 7b, sections 3–5) and part 6's examples, and builds on part 6 (`../rebuild-between-fights.md`, sections 2 and 8); where they disagree, this folder wins, and part 6 carries notes saying so. **Numbers and names are placeholders** until the sim runner has had a pass at them.
 
 | Kind | File | What it changes | Price | Ranks up |
 | --- | --- | --- | --- | --- |

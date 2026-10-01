@@ -21,8 +21,8 @@ extends RefCounted
 ## The economy (section 6): items owned wait in the stash; any hero equips
 ## any item in a free slot between fights (one tactic and one gambit each).
 ## A shop opens at camp (the Pedlar or the Magpie): buy its wares, treat a
-## wound, or (the Pedlar only) reroll or sell an item back; leaving camp
-## closes it. Phase 5c step 6: a run owns one of each item, at a rank; a
+## wound, or (the Pedlar only) reroll or sell an item back, or (the Magpie
+## only) sell or swap a relic; leaving camp closes it. Phase 5c step 6: a run owns one of each item, at a rank; a
 ## bought copy is a rank up, and fights rank items up by their kind. A fight's kit is the path's,
 ## then its upgrades, then its loadout in slot order.
 
@@ -563,6 +563,53 @@ func relic_price(index: int = 0) -> int:
 	return 0 if price == 0 else _marked_up(price)
 
 
+## What the Magpie pays for `relic_id` (its tier's relic_sell).
+func relic_sell_price(relic_id: String) -> int:
+	return run.act.relic_sell.get(RelicDef.TIER_NAMES[run.relics[relic_id].tier], 0)
+
+
+## Sells a relic the run holds to the Magpie, the only one who buys them
+## (phase 5c step 6e, magpie.md). What it counted is lost with it.
+func sell_relic(relic_id: String) -> String:
+	if state.shop != "magpie":
+		return "only the Magpie buys relics"
+	if not state.relics.has(relic_id):
+		return "the run doesn't hold \"%s\"" % relic_id
+	_lose_relic(relic_id)
+	state.shards += relic_sell_price(relic_id)
+	return ""
+
+
+## The Magpie's swap, once a visit: `relic_id` for a relic of its tier the
+## run doesn't hold, free.
+func swap_relic(relic_id: String) -> String:
+	if state.shop != "magpie":
+		return "only the Magpie swaps relics"
+	if state.magpie_swapped:
+		return "he swaps once a visit"
+	if not state.relics.has(relic_id):
+		return "the run doesn't hold \"%s\"" % relic_id
+	var other: String = Offers.magpie_swap(run, state, relic_id)
+	if other.is_empty():
+		return "he has nothing to swap for %s" % run.relics[relic_id].name
+	_lose_relic(relic_id)
+	_gain_relic(other)
+	state.magpie_swapped = true
+	return ""
+
+
+## The run lets go of a relic: its growth goes, and a loadout slot it gave
+## goes from each hero (what was in it back to the stash).
+func _lose_relic(relic_id: String) -> void:
+	state.relics.erase(relic_id)
+	state.growth.erase(relic_id)
+	for i: int in run.relics[relic_id].slots_add:
+		for hero: RunState.Hero in state.heroes:
+			var last: String = hero.slots.pop_back()
+			if not last.is_empty():
+				state.stash.append(last)
+
+
 func _gain_relic(relic_id: String) -> void:
 	state.relics.append(relic_id)
 	if run.relics[relic_id].grows != null:
@@ -779,6 +826,7 @@ func open_shop(kind: String) -> String:
 			return "there's no shop \"%s\"" % kind
 	state.shop = kind
 	state.rerolls = 0
+	state.magpie_swapped = false
 	state.shop_relics = _draw_shop_relics()
 	state.shards += run.relic_sum(state, "shop_shards")
 	if run.relic_rule(state, "miser"):
@@ -804,9 +852,11 @@ func close_shop() -> void:
 	state.shop_relics.clear()
 
 
-## What ware `item_id` costs at the open shop: its kind's price (the
-## Magpie's markup, rounded up).
+## What ware `item_id` costs at the open shop: its kind's price at the
+## Pedlar (with relics' price_add), the Magpie's charm price at his stall.
 func price_of(item_id: String) -> int:
+	if state.shop == "magpie":
+		return run.act.magpie_charm_price
 	return _marked_up(run.act.item_prices[ItemDef.KIND_NAMES[run.items[item_id].kind]])
 
 
@@ -849,12 +899,8 @@ func _gain_item(item_id: String, rank: int = 1) -> void:
 	state.item_counts[item_id] = 0
 
 
-## A price at the open shop: the Magpie's markup (rounded up), or the
-## Pedlar's, with the relics' price_add (never below 1).
+## A price at the Pedlar, with the relics' price_add (never below 1).
 func _marked_up(price: int) -> int:
-	if state.shop == "magpie":
-		@warning_ignore("integer_division")
-		return (price * run.act.magpie_markup_pct + 99) / 100
 	return maxi(price + run.relic_sum(state, "price_add"), 1)
 
 
@@ -869,7 +915,8 @@ func buy(index: int) -> String:
 	if state.shards < price:
 		return "it costs %d shards; there are %d" % [price, state.shards]
 	state.shards -= price
-	_gain_item(state.wares[index])
+	# The Magpie's charms come at rank II (phase 5c step 6e).
+	_gain_item(state.wares[index], 2 if state.shop == "magpie" else 1)
 	state.wares[index] = ""
 	return ""
 
