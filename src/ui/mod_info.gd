@@ -82,6 +82,8 @@ static func mod_parts(mod: KitMod, kit: UnitDef, content: ContentDb) -> Array[St
 		parts.append("enemies it engages take %s longer to break free" % UnitInfo.seconds(mod.break_free_add_ticks))
 	if mod.places_lantern:
 		parts.append("you place its first signature area before the fight")
+	if mod.drops_signature:
+		parts.append("no signature")
 	for trigger: TriggerDef in mod.also_fires:
 		var when: String = UnitInfo.trigger_text(trigger, shown)
 		parts.append("Signature also fires: %s%s" % [when.left(1).to_lower(), when.substr(1)])

@@ -45,11 +45,19 @@ class Hero:
 	## Its growing upgrades (phase 5c step 4): upgrade id -> what it has
 	## counted since it was taken (a lookup; read in `upgrades`' order).
 	var growth: Dictionary[String, int] = {}
+	## Events (phase 5c step 8c): how many times The Old Well cut its max HP
+	## this act; the event mods on its next day fight (EventDef's
+	## next_fight_mods), spent once one is won; and its oath ("": none) with
+	## the day fights it has left.
+	var weakened: int = 0
+	var next_fight: Array[String] = []
+	var oath: String = ""
+	var oath_fights: int = 0
 
 	func to_dict() -> Dictionary:
 		return {"id": id, "path": path, "transformed": transformed, "deeds": deeds.duplicate(), "upgrades": upgrades.duplicate(),
 			"wounds": wounds, "slots": slots.duplicate(), "growth": growth.duplicate(), "gambit_at": gambit_at,
-			"locked": locked.duplicate(true)}
+			"locked": locked.duplicate(true), "weakened": weakened, "next_fight": next_fight.duplicate(), "oath": oath, "oath_fights": oath_fights}
 
 	static func from_dict(data: Dictionary) -> Hero:
 		var hero := Hero.new()
@@ -69,6 +77,10 @@ class Hero:
 		var locked: Dictionary = data.get("locked", {})
 		for card_id: Variant in locked:
 			hero.locked[str(card_id)] = (locked[card_id] as Array).map(func(value: Variant) -> int: return int(value))
+		hero.weakened = int(data.get("weakened", 0))
+		hero.next_fight.assign((data.get("next_fight", []) as Array).map(func(value: Variant) -> String: return str(value)))
+		hero.oath = str(data.get("oath", ""))
+		hero.oath_fights = int(data.get("oath_fights", 0))
 		return hero
 
 
@@ -137,9 +149,9 @@ var magpie_swapped: bool = false
 var shop_relics: Array[String] = []
 
 # The nodes (phase 5c step 8).
-## The nodes shown at the day's end ("camp", "rift_tear", "magpie"), the one
-## taken ("": none yet), and each past day's (by day: "camp:<place>",
-## "rift_tear", "magpie"; "" for a day without one).
+## The nodes shown at the day's end ("camp", "rift_tear", "magpie",
+## "event:<scene id>", "oath"), the one taken ("": none yet), and each past
+## day's (by day: "camp:<place>", or the node; "" for a day without one).
 var nodes: Array[String] = []
 var node: String = ""
 var taken_nodes: Array[String] = []
@@ -179,6 +191,18 @@ var relic_choice_price: int = 0
 ## for an offering), or the offering its relic choice waits on ("shards",
 ## "wound:<hero id>", "relic:<relic id>"), spent only if the relic's taken.
 var shrine: String = ""
+
+# Events (phase 5c step 8c).
+## The event node's choice is made (one an event).
+var event_done: bool = false
+## A Bloodied Oath's two oaths, each "<oath id>:<hero id>".
+var oath_offer: Array[String] = []
+## The Rift Merchant: the next shop's prices times this (0: none), and the
+## open shop's.
+var dear_shop_bp: int = 0
+var shop_dear_bp: int = 0
+## A Bleeding Tear sealed: the next day's fight is won without fighting.
+var sealed: bool = false
 ## Cards still to take from the waiting pick (The Hollow Throne: 2).
 var picks_left: int = 1
 ## Won day fights in a row with no hero falling, and the streak relics
@@ -225,7 +249,8 @@ func to_dict() -> Dictionary:
 		"place": place, "camp": camp.duplicate(), "camp_used": camp_used, "hunt": hunt, "mapping": mapping,
 		"fortify": fortify, "dig_in": dig_in, "rock": rock.duplicate(), "rift_depth": rift_depth, "rift_mods": rift_mods.duplicate(), "rested": rested,
 		"scouted": scouted.duplicate(), "nodes": nodes.duplicate(), "node": node, "taken_nodes": taken_nodes.duplicate(), "magpie_visits": magpie_visits,
-		"relics": relics.duplicate(), "relic_choice": relic_choice.duplicate(), "relic_choice_price": relic_choice_price, "shrine": shrine, "picks_left": picks_left,
+		"relics": relics.duplicate(), "relic_choice": relic_choice.duplicate(), "relic_choice_price": relic_choice_price, "shrine": shrine,
+		"event_done": event_done, "oath_offer": oath_offer.duplicate(), "dear_shop_bp": dear_shop_bp, "shop_dear_bp": shop_dear_bp, "sealed": sealed, "picks_left": picks_left,
 		"streak": streak, "streaks_paid": streaks_paid.duplicate(), "bonds_found": bonds_found.duplicate(),
 		"growth": growth.duplicate(), "grew": grew.duplicate(),
 		"item_ranks": item_ranks.duplicate(), "item_counts": item_counts.duplicate(), "ranked": ranked.duplicate(),
@@ -295,6 +320,11 @@ static func from_dict(data: Dictionary) -> RunState:
 	state.relic_choice = _strings(data.get("relic_choice", []))
 	state.relic_choice_price = int(data.get("relic_choice_price", 0))
 	state.shrine = str(data.get("shrine", ""))
+	state.event_done = bool(data.get("event_done", false))
+	state.oath_offer = _strings(data.get("oath_offer", []))
+	state.dear_shop_bp = int(data.get("dear_shop_bp", 0))
+	state.shop_dear_bp = int(data.get("shop_dear_bp", 0))
+	state.sealed = bool(data.get("sealed", false))
 	state.picks_left = int(data.get("picks_left", 1))
 	state.streak = int(data.get("streak", 0))
 	state.streaks_paid = _strings(data.get("streaks_paid", []))

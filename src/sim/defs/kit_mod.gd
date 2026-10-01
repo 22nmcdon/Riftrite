@@ -60,6 +60,9 @@ extends RefCounted
 ##       "snags": true                    snares catch leaps and charges
 ## and (step 7d) "places_lantern": true at the top: the player places its
 ## signature's first area before the fight (UnitSetup.lantern).
+## and (step 8c) "drops_signature": true at the top: the kit's signature and
+## its mana bar go (an Oath of Silence, Whispering Stones); a mod that does
+## this goes last, after any that change the signature.
 ## and at the top: "plant_add_ms" (how long it plants after moving),
 ## "engage": {"break_free_add_ms": 1000} (enemies it engages take that
 ## much longer to break free), and "mana": {"taken_bp": 15000} (the mana
@@ -194,6 +197,7 @@ var mana_taken_bp: int = FixedMath.BP_ONE
 ## Phase 5c step 7d: the player places its signature's first area before
 ## the fight (First Lantern).
 var places_lantern: bool = false
+var drops_signature: bool = false
 ## A gambit's rule (phase 5c step 6d; Gambits): its name, where else it may
 ## start, when it arrives, and when it swaps places (and the Shield then).
 var gambit_label: String = ""
@@ -243,6 +247,7 @@ static func read(reader: DataReader) -> KitMod:
 			mana_reader.finish()
 	mod.plant_add_ticks = _signed_ticks(reader, "plant_add_ms")
 	mod.places_lantern = reader.opt_bool("places_lantern", false)
+	mod.drops_signature = reader.opt_bool("drops_signature", false)
 	if reader.has("engage"):
 		var engage_reader: DataReader = reader.req_object("engage")
 		if engage_reader != null:
@@ -360,7 +365,7 @@ static func _signed_ticks(reader: DataReader, key: String) -> int:
 ## since those are what scale cleanly (phase 5c step 4, section 9.3).
 func step_problem() -> String:
 	if _changes_mana() or not also_fires.is_empty() or echo_ticks > 0 or prefer != null or hop_within_add != 0 or hop_cooldown_add_ticks != 0 \
-			or not gambit_label.is_empty() or plant_add_ticks != 0 or break_free_add_ticks != 0 or places_lantern:
+			or not gambit_label.is_empty() or plant_add_ticks != 0 or break_free_add_ticks != 0 or places_lantern or drops_signature:
 		return "a growing card's step can't change mana, add triggers, echo, targeting, or hops"
 	for part: PartDef in passives:
 		if part.kind != PartDef.Kind.AURA:
@@ -409,7 +414,7 @@ func changes_anything() -> bool:
 			return true
 	return not passives.is_empty() or not changes.is_empty() or _changes_mana() or not also_fires.is_empty() or echo_ticks > 0 \
 		or prefer != null or hop_within_add != 0 or hop_cooldown_add_ticks != 0 or not gambit_label.is_empty() or plant_add_ticks != 0 \
-		or break_free_add_ticks != 0 or places_lantern
+		or break_free_add_ticks != 0 or places_lantern or drops_signature
 
 
 func _changes_mana() -> bool:
@@ -438,7 +443,7 @@ func affects_besides_passives(kit: UnitDef) -> bool:
 		return true
 	if plant_add_ticks != 0 and kit.plant_ticks > 0 or break_free_add_ticks != 0 and kit.has_trait("engage"):
 		return true
-	if places_lantern and lantern_area(kit) != null:
+	if places_lantern and lantern_area(kit) != null or drops_signature and kit.signature != null:
 		return true
 	for change: AbilityChange in changes:
 		if change.changes_part():
@@ -514,6 +519,9 @@ func apply(kit: UnitDef, problems: Array[String] = []) -> UnitDef:
 			signature.echo_ticks = echo_ticks
 			signature.echo = make_echo(signature, echo_bp)
 		built.signature = signature
+	if drops_signature:
+		built.signature = null
+		built.mana = null
 	problems.append_array(built.problems())
 	return built
 

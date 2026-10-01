@@ -113,7 +113,6 @@ func test_a_loss_replays_the_day_with_the_nodes_setup_held() -> void:
 
 func test_the_node_draw() -> void:
 	var seen: Dictionary[String, int] = {}
-	var doubled: int = 0
 	for run_seed: int in range(1, 41):
 		var flow: RunFlow = _start(run_seed)
 		var state: RunState = flow.state
@@ -121,11 +120,10 @@ func test_the_node_draw() -> void:
 			state.day = day
 			var nodes: Array[String] = Offers.nodes(_run, state)
 			assert_eq(nodes[0], "camp", "Camp always (Decision 41)")
-			assert_between(nodes.size(), 2, 3)
+			assert_eq(nodes.size(), 3, "Camp and two more (an Event takes a repeat's place, step 8c)")
 			for node: String in nodes:
 				seen[node] = seen.get(node, 0) + 1
-				assert_eq(nodes.count(node), 1, "no node twice (until 8c's Events)")
-			doubled += 1 if nodes.size() == 2 else 0
+				assert_eq(nodes.count(node), 1, "no node twice")
 			if day < _run.camps.magpie_from_day:
 				assert_false(nodes.has("magpie"), "no Magpie before day %d" % _run.camps.magpie_from_day)
 			assert_eq(Offers.nodes(_run, state), nodes, "the same state, the same nodes")
@@ -136,7 +134,6 @@ func test_the_node_draw() -> void:
 			assert_false(Offers.nodes(_run, state).has("magpie"), "at most %d Magpies an act" % _run.camps.magpie_per_act)
 	assert_gt(seen.get("rift_tear", 0), 0)
 	assert_gt(seen.get("magpie", 0), 0)
-	assert_gt(doubled, 0, "a repeat is skipped for now")
 
 
 func test_the_magpie_counts_his_visits() -> void:

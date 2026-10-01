@@ -41,6 +41,8 @@ class RunLine:
 	## Rift Tear fights (phase 5c step 8b): fought, and won (each attempt).
 	var rift_fights: int = 0
 	var rift_wins: int = 0
+	## Event scenes taken (phase 5c step 8c): scene id -> times.
+	var scenes: Dictionary[String, int] = {}
 	var errors: Array[String] = []
 	## [encounter id, won?] for each fight.
 	var fights: Array[Array] = []
@@ -99,7 +101,7 @@ static func play(run: RunContent, run_seed: int, look_ahead: bool = true) -> Run
 			break
 		if state.phase == RunState.Phase.NODES:
 			for node: String in state.nodes:
-				line.nodes_shown[node] = line.nodes_shown.get(node, 0) + 1
+				line.nodes_shown[node.get_slice(":", 0)] = line.nodes_shown.get(node.get_slice(":", 0), 0) + 1
 		var torn: bool = not state.rift_depth.is_empty() and state.phase == RunState.Phase.LOADOUT
 		var refused: String = Bot.step_once(flow, hexes, line.errors, look_ahead)
 		if not refused.is_empty():
@@ -148,6 +150,8 @@ static func play(run: RunContent, run_seed: int, look_ahead: bool = true) -> Run
 		if not node.is_empty():
 			var kind: String = node.get_slice(":", 0)
 			line.nodes_taken[kind] = line.nodes_taken.get(kind, 0) + 1
+			if kind == "event":
+				line.scenes[node.get_slice(":", 1)] = line.scenes.get(node.get_slice(":", 1), 0) + 1
 	line.relics = state.relics.size()
 	for id: String in state.relics:
 		line.relic_tiers[run.relics[id].tier] += 1
@@ -246,6 +250,11 @@ static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 	var rift_fights: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.rift_fights, 0)
 	var rift_wins: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.rift_wins, 0)
 	out.append("Rift Tear fights (the bot goes Shallow): %d of %d won (%d%%)" % [rift_wins, rift_fights, _pct(rift_wins, rift_fights)])
+	var by_scene: Array[String] = []
+	for scene: EventDef.Scene in run.events.scenes:
+		var taken: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.scenes.get(scene.id, 0), 0)
+		by_scene.append("%s %d" % [scene.name, taken])
+	out.append("Event scenes taken (the bot makes the first choice without a cost it can, and never swears an oath): %s" % ", ".join(by_scene))
 	out.append("")
 	out.append("Encounters (fights won of fought):")
 	for encounter_id: String in content.encounter_ids:

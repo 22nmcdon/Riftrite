@@ -10,7 +10,8 @@ const ITEMS_FILE: String = "items.json"
 const CAMPS_FILE: String = "camps.json"
 const RELICS_FILE: String = "relics.json"
 const BONDS_FILE: String = "bonds.json"
-const FILES: Array[String] = [ACT_FILE, UPGRADES_FILE, ITEMS_FILE, CAMPS_FILE, RELICS_FILE, BONDS_FILE]
+const EVENTS_FILE: String = "events.json"
+const FILES: Array[String] = [ACT_FILE, UPGRADES_FILE, ITEMS_FILE, CAMPS_FILE, RELICS_FILE, BONDS_FILE, EVENTS_FILE]
 ## The items' and relics' glyphs (the UI draws them; phase 5b).
 const GLYPHS: String = "res://art/ui/items/glyphs/%s.svg"
 ## Where camp's icons are (camps.json names a file under it).
@@ -28,6 +29,8 @@ var relics: Dictionary[String, RelicDef] = {}
 var relic_ids: Array[String] = []
 var bonds: Dictionary[String, BondDef] = {}
 var bond_ids: Array[String] = []
+## The Event node's scenes and oaths (phase 5c step 8c).
+var events: EventDef = null
 var errors: Array[String] = []
 
 
@@ -70,6 +73,11 @@ static func load_texts(texts: Dictionary[String, String], content_db: ContentDb)
 		var bond: BondDef = BondDef.read(reader)
 		if run._claim(bond.id, reader, run.bond_ids):
 			run.bonds[bond.id] = bond
+	var events_data: Variant = run._parse(texts, EVENTS_FILE)
+	if events_data != null:
+		var events_reader: DataReader = DataReader.from_value(events_data, EVENTS_FILE, run.errors)
+		if events_reader != null:
+			run.events = EventDef.read(events_reader)
 	run._check()
 	return run
 
@@ -532,6 +540,11 @@ func _check() -> void:
 			for day: int in range(1, act.days.size()):
 				if act.days[day - 1] == "normal" and encounters_for("hunt", day).is_empty():
 					errors.append("%s: day %d needs a hunt pack (an encounter of tier hunt)" % [CAMPS_FILE, day])
+	if events != null:
+		for key: String in events.next_fight_mods:
+			_check_mod(events.next_fight_mods[key], hero_kits, "%s: next_fight_mods %s" % [EVENTS_FILE, key])
+		for oath: EventDef.Oath in events.oaths:
+			_check_mod(oath.mod, hero_kits, "%s (%s)" % [EVENTS_FILE, oath.id])
 	for id: String in bond_ids:
 		_check_bond(bonds[id], "%s (%s)" % [BONDS_FILE, id])
 	for id: String in relic_ids:

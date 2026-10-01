@@ -293,3 +293,33 @@ func test_a_rift_tear_and_the_shrine() -> void:
 	assert_true(U.press(day, "Take · a wound on Maren"))
 	assert_eq([flow.state.hero("maren").wounds, flow.state.relics.size()], [1, 1])
 	await wait_frames(1)
+
+
+## An event's scene and a Bloodied Oath on screen (phase 5c step 8c).
+func test_an_event_and_an_oath() -> void:
+	var main: Main = _started()
+	var flow: RunFlow = _flow(main)
+	var day: RunDayScreen = main.screen
+	flow.state.phase = RunState.Phase.NODES
+	flow.state.nodes.assign(["camp", "event:kneeling_knight", "oath"])
+	day.refresh()
+	assert_string_contains(U.text_of(day), "The Kneeling Knight", "the event's card names its scene")
+	assert_true(U.press(day, "Go to The Kneeling Knight"))
+	assert_not_null(U.button(day, "Walk away · on to day 2"), "walking away is always there")
+	flow.state.hero("vell").wounds = 3
+	day.refresh()
+	assert_true(U.button(day, "Take his blade · Vell").disabled, "greyed where it can't be done")
+	assert_true(U.press(day, "Take his blade · Maren"))
+	assert_eq(flow.state.hero("maren").wounds, 1)
+	assert_not_null(U.button(day, "On to day 2"))
+	# A Bloodied Oath.
+	flow.state.phase = RunState.Phase.NODES
+	flow.state.node = ""
+	flow.state.event_done = false
+	day.refresh()
+	assert_true(U.press(day, "Go to A Bloodied Oath"))
+	var sworn: String = flow.state.oath_offer[0].get_slice(":", 1)
+	assert_true(U.press(day, "Swear %s to it" % ArenaView.label_for(flow.run.content.heroes[sworn].kit, flow.run.content)))
+	assert_ne(flow.state.hero(sworn).oath, "")
+	assert_string_contains(day.hero_bar.cards[sworn].wounds_text.text, "(2 fights)", "the hero bar shows the oath")
+	await wait_frames(1)

@@ -98,21 +98,72 @@ static func camp(run: RunContent, state: RunState) -> Array:
 
 
 ## The nodes shown at the end of the day (phase 5c step 8, Decision 41):
-## Camp, then two each drawn from Rift Tear and the Magpie (from
+## Camp, then two each drawn from Event, Rift Tear, and the Magpie (from
 ## magpie_from_day, while he's come fewer than magpie_per_act times this
-## act), each equally likely; the same node twice is drawn once (an Event
-## takes a repeat's place once events come, step 8c).
+## act), each equally likely; a Rift Tear or Magpie drawn again is an Event
+## instead. An Event is a Bloodied Oath oath_pct in 100 ("oath", once a
+## day), else a scene not already shown ("event:<scene id>").
 static func nodes(run: RunContent, state: RunState) -> Array[String]:
 	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.NODE, state.act, state.day])
-	var kinds: Array[String] = ["rift_tear"]
+	var kinds: Array[String] = ["event", "rift_tear"]
 	if state.day >= run.camps.magpie_from_day and state.magpie_visits < run.camps.magpie_per_act:
 		kinds.append("magpie")
 	var shown: Array[String] = ["camp"]
 	for i: int in 2:
 		var kind: String = kinds[rng.range_int(kinds.size())]
-		if not shown.has(kind):
+		if kind == "event" or shown.has(kind):
+			kind = _event(run, rng, shown)
+		if not kind.is_empty():
 			shown.append(kind)
 	return shown
+
+
+static func _event(run: RunContent, rng: SimRng, shown: Array[String]) -> String:
+	if not shown.has("oath") and rng.range_int(100) < run.events.oath_pct:
+		return "oath"
+	var scenes: Array[String] = []
+	for scene: EventDef.Scene in run.events.scenes:
+		if not shown.has("event:" + scene.id):
+			scenes.append("event:" + scene.id)
+	return scenes[rng.range_int(scenes.size())] if not scenes.is_empty() else ""
+
+
+## An event's random relic (phase 5c step 8c): one of `tier`, or with
+## "shop_odds" a tier drawn by the shops' odds.
+static func event_relic(run: RunContent, state: RunState, tier: String) -> String:
+	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.EVENT, state.act, state.day, 2])
+	if tier == "shop_odds":
+		tier = _weighted(rng, run.act.relic_odds, run.act.relic_weights)
+	return _relic_of(run, state, rng, tier, [] as Array[String])
+
+
+## An event's random picks (phase 5c step 8c): `count` different ones of
+## `pool`, on the event's stream (`what` keeps one result's draws apart).
+static func event_picks(state: RunState, pool: Array[String], count: int, what: int) -> Array[String]:
+	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.EVENT, state.act, state.day, 3, what])
+	var left: Array[String] = pool.duplicate()
+	var picked: Array[String] = []
+	while picked.size() < count and not left.is_empty():
+		picked.append(left.pop_at(rng.range_int(left.size())))
+	return picked
+
+
+## A Bloodied Oath's two oaths (phase 5c step 8c): two different oaths, each
+## on a random hero, two different heroes ("<oath id>:<hero id>").
+static func oaths(run: RunContent, state: RunState) -> Array[String]:
+	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.EVENT, state.act, state.day, 0])
+	var pool: Array[String] = []
+	for oath: EventDef.Oath in run.events.oaths:
+		pool.append(oath.id)
+	var heroes: Array[String] = []
+	for hero: RunState.Hero in state.heroes:
+		heroes.append(hero.id)
+	var offer: Array[String] = []
+	for i: int in mini(2, heroes.size()):
+		var oath: String = pool.pop_at(rng.range_int(pool.size()))
+		var hero: String = heroes.pop_at(rng.range_int(heroes.size()))
+		offer.append("%s:%s" % [oath, hero])
+	return offer
 
 
 ## Whether a camp option has anything to do today: a Hunt needs a pack

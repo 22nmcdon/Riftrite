@@ -184,6 +184,12 @@ func refresh(sim: CombatSim = null) -> void:
 			max_hp = FixedMath.apply_bp(max_hp, FixedMath.BP_ONE - int(round(card.hp_bar.lost * FixedMath.BP_ONE)))
 			hp = max_hp
 			card.wounds_text.text = "No wounds" if wounds == 0 else ("1 wound" if wounds == 1 else "%d wounds" % wounds)
+			# An oath's burden and the fights it has left (phase 5c step 8c).
+			var run_hero: RunState.Hero = run_session.state().hero(hero_id)
+			var oath: EventDef.Oath = run_session.flow.oath_of(run_hero)
+			if oath != null:
+				card.wounds_text.text += " · %s (%d fight%s)" % [oath.name, run_hero.oath_fights, "" if run_hero.oath_fights == 1 else "s"]
+				card.wounds_text.tooltip_text = "%s %s" % [oath.burden, oath.reward]
 		card.hp_bar.set_share(float(hp) / maxf(max_hp, 1))
 		card.portrait_holder.modulate = Color(0.45, 0.45, 0.5) if hp <= 0 else Color.WHITE
 		card.hp_text.text = "HP %d / %d" % [hp, max_hp]

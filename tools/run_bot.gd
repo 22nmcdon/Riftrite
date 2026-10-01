@@ -4,8 +4,9 @@ extends RefCounted
 ## rate (the good bot is phase 6). It vows each hero to its first path unless
 ## told otherwise, takes today's first fight, buys what it can use at the
 ## shop and equips it, takes a node by a fixed order (the Magpie; a Rift
-## Tear at Shallow when no hero is wounded and tomorrow is a normal day;
-## else Camp) and a camp option by
+## Tear at Shallow when no hero is wounded and tomorrow is a normal day; an
+## Event's scene, making the first choice without a cost it can; else Camp;
+## never an oath) and a camp option by
 ## a fixed order (Rest when someone has 2 wounds; at the Shrine it offers
 ## shards when it has them),
 ## places the sim runner's "guarded" formation, takes the pick's card for
@@ -22,8 +23,8 @@ const MAX_STEPS: int = 400
 ## Camp options, first the bot likes best (Rest only when someone's hurt).
 const CAMP_ORDER: Array[String] = ["train", "shrine", "fortify", "hunt", "scout", "dig_in", "map_the_rift", "rest"]
 ## Nodes, first the bot likes best (a Rift Tear only with no hero wounded
-## and a normal day tomorrow).
-const NODE_ORDER: Array[String] = ["magpie", "rift_tear", "camp"]
+## and a normal day tomorrow; "event" is any scene; never an oath).
+const NODE_ORDER: Array[String] = ["magpie", "rift_tear", "event", "camp"]
 ## Where Dig In's rock goes: a corner of the heroes' zone, out of the way.
 const ROCK: Vector2i = Vector2i(0, 0)
 
@@ -98,6 +99,10 @@ static func step_once(flow: RunFlow, hexes: Dictionary[String, Vector2i], errors
 				return flow.choose_depth(0)
 			if state.shrine == "open" and state.shards >= flow.run.act.shrine_price:
 				return flow.shrine_offer("shards")
+			if state.node.begins_with("event:") and not state.event_done:
+				var chosen: Array = event_choice(flow)
+				if not chosen.is_empty():
+					return flow.choose_event(chosen[0], chosen[1])
 			if not state.hunt.is_empty():
 				var hunt_errors: Array[String] = []
 				var hunt_hexes: Dictionary[String, Vector2i] = hexes
@@ -151,9 +156,31 @@ static func node_choice(flow: RunFlow) -> int:
 	for node: String in NODE_ORDER:
 		if node == "rift_tear" and (hurt or not normal):
 			continue
-		if state.nodes.has(node):
-			return state.nodes.find(node)
+		for i: int in state.nodes.size():
+			if state.nodes[i] == node or node == "event" and state.nodes[i].begins_with("event:"):
+				return i
 	return 0
+
+
+## The event choice the bot makes (phase 5c step 8c): the first it can that
+## costs nothing (no wound, HP cut, vow swap, toll on the next shop, or lost
+## signature), at its first target that fits ([index, target]; empty: none,
+## so it walks away).
+static func event_choice(flow: RunFlow) -> Array:
+	var scene: EventDef.Scene = flow.event_scene()
+	for i: int in scene.choices.size():
+		var choice: EventDef.Choice = scene.choices[i]
+		if choice.results.any(func(result: EventDef.Result) -> bool:
+				return ["wound", "weaken", "mirror", "dear_shop"].has(result.kind) or result.kind == "next_fight" and result.mod == "silenced"):
+			continue
+		if choice.needs() == EventDef.Needs.NOTHING:
+			if flow.event_problem(i).is_empty():
+				return [i, ""]
+			continue
+		for target: String in flow.event_targets(choice):
+			if flow.event_problem(i, target).is_empty():
+				return [i, target]
+	return []
 
 
 ## The camp option the bot takes: Rest if someone has 2 wounds or more,

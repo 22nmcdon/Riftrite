@@ -9,7 +9,9 @@ extends RefCounted
 ## and the rift modifiers (phase 5c step 8b) are data here too.
 
 const OPTIONS: Array[String] = ["train", "hunt", "rest", "scout", "map_the_rift", "fortify", "dig_in", "shrine"]
-const NODES: Array[String] = ["camp", "rift_tear", "magpie"]
+## "event" and "oath" (phase 5c step 8c) name the Event node's two forms:
+## a scene (shown as "event:<scene id>") or a Bloodied Oath.
+const NODES: Array[String] = ["camp", "rift_tear", "magpie", "event", "oath"]
 
 
 class Option:

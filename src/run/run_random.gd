@@ -24,6 +24,8 @@ const RELIC: int = 13
 const HUNT: int = 14
 ## The day's nodes (phase 5c step 8).
 const NODE: int = 15
+## Events (phase 5c step 8c): an oath's heroes, and what a choice draws.
+const EVENT: int = 16
 
 const MIX: int = 0x2545F4914F6CDD1D
 

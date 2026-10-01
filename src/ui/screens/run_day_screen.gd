@@ -172,6 +172,8 @@ static func node_icon(run: RunContent, id: String) -> String:
 			if place.id == id.trim_prefix("camp:"):
 				return place.icon
 		return run.camps.nodes["camp"].icon
+	if id.begins_with("event:"):
+		return run.camps.nodes["event"].icon
 	return run.camps.nodes[id].icon if run.camps.nodes.has(id) else ""
 
 
@@ -182,7 +184,18 @@ static func node_name(run: RunContent, id: String) -> String:
 			if place.id == id.trim_prefix("camp:"):
 				return place.name
 		return run.camps.nodes["camp"].name
+	if id.begins_with("event:"):
+		var scene: EventDef.Scene = run.events.scene(id.trim_prefix("event:"))
+		return scene.name if scene != null else run.camps.nodes["event"].name
 	return run.camps.nodes[id].name if run.camps.nodes.has(id) else ""
+
+
+## A node's line on its card: an event's scene, or the node's.
+static func node_text(run: RunContent, id: String) -> String:
+	if id.begins_with("event:"):
+		var scene: EventDef.Scene = run.events.scene(id.trim_prefix("event:"))
+		return scene.text if scene != null else ""
+	return run.camps.nodes[id].text if run.camps.nodes.has(id) else ""
 
 
 ## Today's camp's picture (its place's).
@@ -426,17 +439,20 @@ func _fill_nodes() -> void:
 	var row: HBoxContainer = _row()
 	section.add_child(row)
 	for i: int in state.nodes.size():
-		var node: CampsDef.Option = session.run.camps.nodes[state.nodes[i]]
+		var id: String = state.nodes[i]
+		var node_name: String = RunDayScreen.node_name(session.run, id)
 		var card: VBoxContainer = _card(row)
 		var title := HBoxContainer.new()
 		title.add_theme_constant_override("separation", 12)
 		card.add_child(title)
-		title.add_child(RunDayScreen.art_icon(node.icon, OPTION_ICON))
-		var name_label: Label = UiStyle.heading(node.name, 26, UiStyle.TEXT)
+		title.add_child(RunDayScreen.art_icon(RunDayScreen.node_icon(session.run, id), OPTION_ICON))
+		var name_label: Label = UiStyle.heading(node_name, 26, UiStyle.TEXT)
 		name_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		title.add_child(name_label)
-		card.add_child(_wrapped(node.text, 17, UiStyle.TEXT))
-		card.add_child(UiStyle.primary(UiStyle.button("Go to %s" % node.name, _do.bind(session.flow.choose_node.bind(i)))))
+		if id.begins_with("event:"):
+			card.add_child(UiStyle.caps("EVENT", 14, UiStyle.HIGHLIGHT))
+		card.add_child(_wrapped(RunDayScreen.node_text(session.run, id), 17, UiStyle.TEXT))
+		card.add_child(UiStyle.primary(UiStyle.button("Go to %s" % node_name, _do.bind(session.flow.choose_node.bind(i)))))
 
 
 ## In a node: camp's options, the Magpie's stall, or a Rift Tear taken;
@@ -450,7 +466,82 @@ func _fill_node() -> void:
 			_fill_shop()
 		"rift_tear":
 			_fill_depths()
-	body.add_child(UiStyle.primary(UiStyle.button("On to day %d" % (state.day + 1), _do.bind(session.flow.leave_node))))
+		"oath":
+			_fill_oath()
+		_:
+			if state.node.begins_with("event:"):
+				_fill_event()
+	var walking_away: bool = (state.node.begins_with("event:") or state.node == "oath") and not state.event_done
+	var leave: String = ("Walk away · on to day %d" if walking_away else "On to day %d") % (state.day + 1)
+	body.add_child(UiStyle.primary(UiStyle.button(leave, _do.bind(session.flow.leave_node))))
+
+
+## An event's scene (phase 5c step 8c): its text, then a card per choice
+## (its label, what it does, and a button, or one per hero, item, or path
+## it can be for; greyed where it can't be done). Walking away is the
+## node's leave button.
+func _fill_event() -> void:
+	var state: RunState = session.state()
+	var flow: RunFlow = session.flow
+	var scene: EventDef.Scene = flow.event_scene()
+	var section: VBoxContainer = _section(scene.name, scene.text)
+	if state.event_done:
+		section.add_child(UiStyle.label("Chosen.", 17, UiStyle.ACCENT_TEXT))
+		if not state.hunt.is_empty():
+			_fill_hunt()
+		return
+	var row: HBoxContainer = _row()
+	section.add_child(row)
+	for i: int in scene.choices.size():
+		var choice: EventDef.Choice = scene.choices[i]
+		var card: VBoxContainer = _card(row)
+		card.add_child(UiStyle.heading(choice.label, 24, UiStyle.TEXT))
+		card.add_child(_wrapped(choice.text, 16, UiStyle.TEXT))
+		if choice.needs() == EventDef.Needs.NOTHING:
+			var button: Button = UiStyle.primary(UiStyle.button(choice.label, _do.bind(flow.choose_event.bind(i, ""))))
+			var why: String = flow.event_problem(i)
+			button.disabled = not why.is_empty()
+			button.tooltip_text = why
+			card.add_child(button)
+			continue
+		for target: String in flow.event_targets(choice):
+			var why: String = flow.event_problem(i, target)
+			var button: Button = UiStyle.button("%s · %s" % [choice.label, _target_name(target)], _do.bind(flow.choose_event.bind(i, target)))
+			button.disabled = not why.is_empty()
+			button.tooltip_text = why
+			card.add_child(button)
+
+
+## A choice's target as the player reads it: a hero's name, an item's, or
+## "Maren to Trapper".
+func _target_name(target: String) -> String:
+	if target.contains(":"):
+		return "%s to %s" % [_hero_name(target.get_slice(":", 0)), session.content.paths[target.get_slice(":", 1)].name]
+	if session.run.items.has(target):
+		return session.run.items[target].name
+	return _hero_name(target)
+
+
+## A Bloodied Oath (phase 5c step 8c): its two oaths, each on its hero
+## (burden and reward); take one, or walk away.
+func _fill_oath() -> void:
+	var state: RunState = session.state()
+	var events: EventDef = session.run.events
+	var section: VBoxContainer = _section("A Bloodied Oath", "Each oath binds the hero named on it for their next %d fights. Take one, or pass." % events.oath_fights)
+	if state.event_done:
+		section.add_child(UiStyle.label("Sworn.", 17, UiStyle.ACCENT_TEXT))
+		return
+	var row: HBoxContainer = _row()
+	section.add_child(row)
+	for i: int in state.oath_offer.size():
+		var oath: EventDef.Oath = events.oath(state.oath_offer[i].get_slice(":", 0))
+		var hero_id: String = state.oath_offer[i].get_slice(":", 1)
+		var card: VBoxContainer = _card(row, 0, UiStyle.RIFT_300)
+		card.add_child(UiStyle.caps(_hero_name(hero_id).to_upper(), 14, UiStyle.HIGHLIGHT))
+		card.add_child(UiStyle.heading(oath.name, 24, UiStyle.TEXT))
+		card.add_child(_wrapped("Burden: " + oath.burden, 16, UiStyle.TEXT))
+		card.add_child(_wrapped("Reward: " + oath.reward, 16, UiStyle.ACCENT_TEXT))
+		card.add_child(UiStyle.primary(UiStyle.button("Swear %s to it" % _hero_name(hero_id), _do.bind(session.flow.take_oath.bind(i)))))
 
 
 ## A Rift Tear's depths (phase 5c step 8b): a card each, with the rift
@@ -543,16 +634,21 @@ func _fill_camp() -> void:
 	else:
 		section.add_child(UiStyle.label("Taken: %s" % camps.options[state.camp_used].name, 17, UiStyle.ACCENT_TEXT))
 	if not state.hunt.is_empty():
-		var hunt: EncounterDef = session.content.encounters[state.hunt]
-		var hunt_section: VBoxContainer = _section("The Hunt: %s" % hunt.name, "A small pack, fought now for %d shards. Losing it isn't a loss." % session.run.act.pay["hunt"])
-		hunt_section.add_child(_enemies_line(hunt))
-		hunt_section.add_child(UiStyle.primary(UiStyle.button("Fight the Hunt", func() -> void: fight_requested.emit())))
+		_fill_hunt()
 	if state.mapping:
 		_fill_mapping()
 	if state.shrine == "open":
 		_fill_shrine()
 	if state.dig_in and state.rock.is_empty():
 		body.add_child(_wrapped("Dig In: you'll set your rock on the board before the fight (click a hex of your zone).", 17, UiStyle.TEXT_DIM))
+
+
+## A Hunt's pack waiting (camp's Hunt, or Carrion Birds): Fight the Hunt.
+func _fill_hunt() -> void:
+	var hunt: EncounterDef = session.content.encounters[session.state().hunt]
+	var hunt_section: VBoxContainer = _section("The Hunt: %s" % hunt.name, "A small pack, fought now for %d shards. Losing it isn't a loss." % session.run.act.pay["hunt"])
+	hunt_section.add_child(_enemies_line(hunt))
+	hunt_section.add_child(UiStyle.primary(UiStyle.button("Fight the Hunt", func() -> void: fight_requested.emit())))
 
 
 func _fill_mapping() -> void:

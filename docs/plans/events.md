@@ -1,6 +1,6 @@
 # Events
 
-Status: **agreed in discussion (2026-09-30), not built.** The scenes behind the Event node (`days-and-nodes.md`). Relics have no downsides (`relics/README.md`), so the game's trade-offs live here. **Numbers are placeholders.**
+Status: **agreed in discussion (2026-09-30); built in phase 5c step 8c** (`rebuild-phase5c-combos.md`, section 16.14; the open questions below answered by Decision 43). The scenes behind the Event node (`days-and-nodes.md`). Relics have no downsides (`relics/README.md`), so the game's trade-offs live here. **Numbers are placeholders.**
 
 ## Rules
 
@@ -32,9 +32,13 @@ An Event node can be a **Bloodied Oath**: it offers **2 oaths, each already assi
 | **The Mirror Pool** | **Look in:** swap one hero's vow to another path, keeping half its deed progress. **Look away:** nothing |
 | **Ashes of a Band** | **Search the ashes:** 2 random items (charms, tactics, or sigils). **Say their names:** clears every wound on the team, and +5% max HP next fight |
 
+## Answered (Decision 43, 2026-10-01)
+
+- An Event node is a Bloodied Oath **1 time in 4**.
+- Whispering Stones gives **a third of the vowed path's deed threshold**, never past it.
+- The Mirror Pool **can't take a transformed hero.**
+- A Bleeding Tear's seal **isn't offered when tomorrow is an elite or the boss.**
+
 ## Open questions
 
-- **How often** an Event node is a Bloodied Oath rather than a scene.
-- **"A large chunk of deed progress"** (Whispering Stones) needs a number once deeds are tuned.
-- **The Mirror Pool** can't swap a hero who has already transformed. Is that right?
 - More scenes as the acts grow; every act could have its own set.

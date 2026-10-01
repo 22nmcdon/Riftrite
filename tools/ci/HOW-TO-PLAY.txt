@@ -64,6 +64,11 @@ PLAYING
                 legendary and an epic.
                 The Magpie (from day 3, at most twice): charms at rank II
                 and a relic, cheap; one look. He buys and swaps relics.
+                Event: a scene with two choices, each giving something
+                (some at a cost: a wound, a lost signature next fight);
+                you can always walk away. Sometimes it's a Bloodied Oath:
+                two oaths, each on a hero; take one for 2 fights of a
+                burden with the hero's deeds counting double, or pass.
                 Then On to the next day. Whatever a node set up for
                 tomorrow's fight holds if you lose it and replay the day.
   3. A hero who falls gets a wound (less max HP, up to 3); each won fight

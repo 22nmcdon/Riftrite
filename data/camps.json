@@ -21,6 +21,18 @@
       "name": "The Magpie",
       "icon": "nodes/magpie.svg",
       "text": "He sells what he took from bands who fell in the rift: charms at rank II and a relic, cheap. One look. He buys relics, and swaps one a visit."
+    },
+    {
+      "id": "event",
+      "name": "Event",
+      "icon": "nodes/event.svg",
+      "text": "Something waits off the path. Every choice gives something; you can always walk away."
+    },
+    {
+      "id": "oath",
+      "name": "A Bloodied Oath",
+      "icon": "nodes/event.svg",
+      "text": "Two oaths, each already on a hero: a burden for two fights, and their deeds count double. Take one, or pass."
     }
   ],
   "options": [

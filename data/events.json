@@ -1,0 +1,327 @@
+{
+  "_note": "The Event node's scenes and the Bloodied Oath (phase 5c step 8c; docs/plans/events.md, rebuild-phase5c-combos.md section 16.7, Decision 43). Each scene's choices carry their results: named run actions (RunFlow, one job each; EventDef.RESULTS): item (a random item of `kinds` at `rank`, `count` of them), wound (a hero you choose), clear_wounds, relic (a random relic of `tier`, or by the shops' odds), dear_shop (the next shop's prices times `bp`), pay and gain (shards), deed (a hero you choose gains `share_bp` of its vowed path's threshold, never past it), next_fight (one of next_fight_mods on a hero you choose, or the team, for the next day fight), seal (tomorrow's fight is a win at half pay with its pick; not when tomorrow is an elite or the boss), rank_up_random and rank_up_chosen (an item a rank up), weaken (a random hero's max HP times `bp` for the rest of the act), hunt (a Hunt's pack now), mirror (a hero you choose, not transformed, switches its vow to a path you choose, the new path gaining half its share of the old one's progress). Leaving the node without a choice is walking away, always free. An Event node is a Bloodied Oath oath_pct in 100: 2 oaths, each on a random hero, for that hero's next oath_fights day fights. All numbers are first guesses.",
+  "oath_pct": 25,
+  "oath_fights": 2,
+  "next_fight_mods": {
+    "silenced": {
+      "drops_signature": true
+    },
+    "remembered": {
+      "stats_bp": {
+        "hp": 10500
+      }
+    }
+  },
+  "scenes": [
+    {
+      "id": "kneeling_knight",
+      "name": "The Kneeling Knight",
+      "text": "A hero of another band, dead where they knelt, sword still across their knees.",
+      "choices": [
+        {
+          "id": "take_blade",
+          "label": "Take his blade",
+          "text": "A random charm at rank II; a hero you choose takes a wound.",
+          "results": [
+            {
+              "do": "item",
+              "kinds": [
+                "charm"
+              ],
+              "rank": 2
+            },
+            {
+              "do": "wound"
+            }
+          ]
+        },
+        {
+          "id": "bury",
+          "label": "Bury him",
+          "text": "Every wound on the team is cleared.",
+          "results": [
+            {
+              "do": "clear_wounds"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rift_merchant",
+      "name": "The Rift Merchant",
+      "text": "A stall with no keeper. The goods hum. Something is keeping count.",
+      "choices": [
+        {
+          "id": "take_relic",
+          "label": "Take a relic",
+          "text": "A random epic relic; the next shop's wares and relic cost 50% more.",
+          "results": [
+            {
+              "do": "relic",
+              "tier": "epic"
+            },
+            {
+              "do": "dear_shop",
+              "bp": 15000
+            }
+          ]
+        },
+        {
+          "id": "leave_coin",
+          "label": "Leave coin",
+          "text": "Pay 10 shards for a random rare relic.",
+          "results": [
+            {
+              "do": "pay",
+              "shards": 10
+            },
+            {
+              "do": "relic",
+              "tier": "rare"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "whispering_stones",
+      "name": "Whispering Stones",
+      "text": "A ring of stones that speak of what a hero might become, if they would only listen.",
+      "choices": [
+        {
+          "id": "listen",
+          "label": "Listen",
+          "text": "A hero you choose gains a third of its path's deed; it has no signature in its next fight.",
+          "results": [
+            {
+              "do": "deed",
+              "share_bp": 3333
+            },
+            {
+              "do": "next_fight",
+              "mod": "silenced"
+            }
+          ]
+        },
+        {
+          "id": "smash",
+          "label": "Smash them",
+          "text": "+8 shards from what's inside.",
+          "results": [
+            {
+              "do": "gain",
+              "shards": 8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bleeding_tear",
+      "name": "A Bleeding Tear",
+      "text": "A wound in the air, weeping light. Something on the other side is reaching too.",
+      "choices": [
+        {
+          "id": "reach_in",
+          "label": "Reach in",
+          "text": "A random relic of a random tier.",
+          "results": [
+            {
+              "do": "relic",
+              "tier": "shop_odds"
+            }
+          ]
+        },
+        {
+          "id": "seal",
+          "label": "Seal it",
+          "text": "Tomorrow's fight is won without fighting: half its pay, and its pick. Not before an elite or the boss.",
+          "results": [
+            {
+              "do": "seal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "old_well",
+      "name": "The Old Well",
+      "text": "Black water, very still. It remembers every coin.",
+      "choices": [
+        {
+          "id": "drink",
+          "label": "Drink",
+          "text": "A random item you own goes a rank up; a random hero loses 10% max HP for the rest of the act.",
+          "results": [
+            {
+              "do": "rank_up_random"
+            },
+            {
+              "do": "weaken",
+              "bp": 9000
+            }
+          ]
+        },
+        {
+          "id": "coin",
+          "label": "Throw in a coin",
+          "text": "Pay 5 shards: an item you choose goes a rank up.",
+          "results": [
+            {
+              "do": "pay",
+              "shards": 5
+            },
+            {
+              "do": "rank_up_chosen"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "carrion_birds",
+      "name": "Carrion Birds",
+      "text": "They circle something that isn't quite dead. They'd circle you too.",
+      "choices": [
+        {
+          "id": "drive_off",
+          "label": "Drive them off",
+          "text": "Fight a small pack now for shards; losing it isn't a loss.",
+          "results": [
+            {
+              "do": "hunt"
+            }
+          ]
+        },
+        {
+          "id": "let_feed",
+          "label": "Let them feed",
+          "text": "Nothing.",
+          "results": [
+            {
+              "do": "nothing"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mirror_pool",
+      "name": "The Mirror Pool",
+      "text": "The water shows a hero as they might have been, sworn to another way.",
+      "choices": [
+        {
+          "id": "look_in",
+          "label": "Look in",
+          "text": "A hero you choose, not yet transformed, takes another of its paths, keeping half its progress.",
+          "results": [
+            {
+              "do": "mirror"
+            }
+          ]
+        },
+        {
+          "id": "look_away",
+          "label": "Look away",
+          "text": "Nothing.",
+          "results": [
+            {
+              "do": "nothing"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ashes_of_a_band",
+      "name": "Ashes of a Band",
+      "text": "A camp burned out long ago. Their packs lie where they dropped them.",
+      "choices": [
+        {
+          "id": "search",
+          "label": "Search the ashes",
+          "text": "2 random items (charms, tactics, or sigils).",
+          "results": [
+            {
+              "do": "item",
+              "kinds": [
+                "charm",
+                "tactic",
+                "sigil"
+              ],
+              "rank": 1,
+              "count": 2
+            }
+          ]
+        },
+        {
+          "id": "names",
+          "label": "Say their names",
+          "text": "Every wound on the team is cleared, and every hero has +5% max HP in the next fight.",
+          "results": [
+            {
+              "do": "clear_wounds"
+            },
+            {
+              "do": "next_fight",
+              "mod": "remembered",
+              "team": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "oaths": [
+    {
+      "id": "blood",
+      "name": "Oath of Blood",
+      "burden": "25% less max HP.",
+      "reward": "Its deeds count double.",
+      "deed_bp": 20000,
+      "mod": {
+        "stats_bp": {
+          "hp": 7500
+        }
+      }
+    },
+    {
+      "id": "silence",
+      "name": "Oath of Silence",
+      "burden": "Its signature never fires.",
+      "reward": "Its deeds count double, and +20% ATK and MGK.",
+      "deed_bp": 20000,
+      "mod": {
+        "drops_signature": true,
+        "stats_bp": {
+          "atk": 12000,
+          "mgk": 12000
+        }
+      }
+    },
+    {
+      "id": "vanguard",
+      "name": "Oath of the Vanguard",
+      "burden": "It stands on the front row, and its tactic is set aside.",
+      "reward": "Its deeds count double, and +20 DEF.",
+      "deed_bp": 20000,
+      "front_row": true,
+      "no_tactic": true,
+      "mod": {
+        "stats_add": {
+          "def": 20
+        }
+      }
+    },
+    {
+      "id": "blood_price",
+      "name": "Oath of Blood Price",
+      "burden": "A fall costs 2 wounds.",
+      "reward": "Its deeds count double.",
+      "deed_bp": 20000,
+      "fall_wounds": 2
+    }
+  ]
+}

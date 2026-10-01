@@ -161,6 +161,17 @@ func _run_screens() -> void:
 	flow.choose_node(2)
 	day.refresh()
 	await _snap("run_magpie")
+	# An event's scene, and a Bloodied Oath (phase 5c step 8c).
+	flow.close_shop()
+	flow.state.phase = RunState.Phase.NODES
+	flow.state.nodes.assign(["event:kneeling_knight", "oath"])
+	flow.choose_node(0)
+	day.refresh()
+	await _snap("run_event")
+	flow.state.phase = RunState.Phase.NODES
+	flow.choose_node(1)
+	day.refresh()
+	await _snap("run_oath")
 	flow.state.phase = RunState.Phase.ENDED
 	flow.state.outcome = RunState.Outcome.WON
 	day.refresh()
