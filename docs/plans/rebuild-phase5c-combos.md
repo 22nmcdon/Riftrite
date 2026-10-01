@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) written and up for approval; steps 5–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a approved and being built; steps 5–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -383,7 +383,7 @@ A card gets `"grows"` beside (or instead of) its `"mod"`:
 
 ## 10. Step 5: the relic pool
 
-`relics/` (86 relics in five tiers, with the rules every relic follows), the three bond relics (`duo-bonds.md`), and `economy.md`. **Up for approval:** the split below, and step 5a in full.
+`relics/` (86 relics in five tiers, with the rules every relic follows), the three bond relics (`duo-bonds.md`), and `economy.md`. **Approved 2026-10-01** (10.7): the split below, and step 5a in full.
 
 ### 10.1 Why it's split
 
@@ -396,7 +396,7 @@ Of the 86, about 40 can be written with what's built (kit mods, keywords and tri
 | **5c** | The engines and chains, each its own piece: Crown of Stars, Shared Pain, The Hungering Rift, Overcharge, Second Dawn, Quickening, Stonebound, Hunter's, Warden's, Shadow, and Ashen Engines, Overflow Chalice, Blood Communion, Sanguine Frenzy, Knife's Edge | about 15 |
 | **5d** | Duo bonds become keys to bond relics (the built boosts go), with the three bond relics and their shop odds | 3 |
 
-**Boss relics** (11) are left out of all four: Act 1 is the only act, so a run that beats Old Mother Ash is over, and a boss relic would have no fight to change (Question I).
+**Boss relics** (11) come with the parts that build their pieces (Decision 18): 5a builds the choice of 3 after Old Mother Ash and the four the built pieces can write; the rest join in 5b and 5c.
 
 ### 10.2 What's there now (phase 5)
 
@@ -407,7 +407,7 @@ Of the 86, about 40 can be written with what's built (kit mods, keywords and tri
 ### 10.3 Step 5a: tiers, shops, and the economy
 
 - **`RelicDef`** gains `"tier"` (common, rare, epic, legendary; boss and bond later) and loses `"cost"` (no downsides); `"boon"` becomes `"text"`. `rest_mod` goes (only Pilgrim's Lantern used it).
-- **The shop's relic:** each shop shows **1 relic** (2 with The Magpie's Scale). The Pedlar's is common 70%, rare 25%, epic 5% (placeholders). **A reroll replaces the relic** (Question J for the wares): the first costs 1 shard, each after it 1 more in that shop (Tinker's Purse: the first is free; Merchant's Covenant: the price never climbs). The Magpie's relic is epic or legendary, 25% off, no reroll (his node, selling, and swapping are step 6).
+- **The shop's relic:** each shop shows **1 relic** (2 with The Magpie's Scale). The Pedlar's is common 70%, rare 25%, epic 5% (placeholders). **A reroll replaces the relic and the wares** (Decision 19): the first costs 1 shard, each after it 1 more in that shop (Tinker's Purse: the first is free; Merchant's Covenant: the price never climbs). The Magpie's relic is epic or legendary, 25% off, no reroll (his node, selling, and swapping are step 6).
 - **The pre-boss shop:** the boss day's camp always has the Pedlar, and its relics are **1 legendary plus 1 relic of another tier**, rerolls starting at 5.
 - **Where else relics come from** (until step 8's nodes): an elite's win, a choice of 2 rares (1 in 3 chance that one is an epic); a Rift Tear's win, 2 rares; the Shrine, one rare for 15 shards (its other offerings are step 8's).
 - **Prices** (`economy.md`): common 5, rare 12, epic 20, legendary 30; the Magpie's epic 15, legendary 22.
@@ -416,7 +416,9 @@ Of the 86, about 40 can be written with what's built (kit mods, keywords and tri
 - **Small sim and mod pieces:** `KitMod` `mana.regen_add` (Rift Candle) and `mana.max_bp` (Hollow Drum); `stats_add` takes ATSP (each point is 1% faster, so "+8% attack speed" is +8 ATSP; Arrow Glut moves to +1 ATSP a step); a `crits` tally kind (Lucky Strike); a growth counted by the run rather than the sim (`"run_counts": "elite_wins"`, Tally of the Dead); and a status, **Sunder** (no damage, never fades, each stack 1 DEF off; the `bleed` kind's shred with no damage), for the epic.
 - **The built relics:** Ember Heart (rare: basic attacks apply 1 Burn), Hollow Crown (legendary: a 4th slot), Rift-Glass Eye (rare: Scouted), Bloodstone (common: +8% ATK), Warden's Chain (common: +10% DEF), and Gravedigger's Coin (common: +3 shards a win) lose their costs; Pilgrim's Lantern and Hungry Blade are cut.
 
-The 5a relics (40):
+- **After the boss** (Decision 18): a won fight against Old Mother Ash offers 3 boss relics (free, take one or none) before the run's end; the one taken is the run's, shown at its end. Act 1's run still ends there; the relic is for the acts to come. The 5a boss relics: **The Second Sun** (signatures fire twice: an echo at full strength 0.5s later, the built Echo piece), **Rift-Bound Heart** (growing cards count double while it's held), **The Hollow Throne** (take 2 cards from every pick), **The Hollow Covenant** (each hero uses the team's highest HP, ATK, MGK, DEF, CRIT, and attack speed, worked out at setup).
+
+The 5a relics (44):
 
 | Tier | Relics |
 | --- | --- |
@@ -424,6 +426,7 @@ The 5a relics (40):
 | **Rare** (13) | Ember Heart, Ashen Censer, Thornwoven Cloak, Echoing Bell, Collector's Chain, Tally of the Dead, Chalk Ledger (a quest: growth with one step), Bounty Board, Bloodied Coin, The Magpie's Scale, Rift-Glass Eye, Haggler's Charm, Lucky Strike |
 | **Epic** (5) | Mirror of Ash, The Ninth Arrow, Sunder, Miser's Vault, Merchant's Covenant |
 | **Legendary** (5) | Rift-Fed Blades, Reliquary Lamp, Gilded Rift, Hollow Crown, Widened Offering |
+| **Boss** (4) | The Second Sun, Rift-Bound Heart, The Hollow Throne, The Hollow Covenant |
 
 With 13 rares, 5 epics, and 5 legendaries, the tiers are thin until 5b and 5c; the pre-boss shop's legendary comes from 5.
 
@@ -445,11 +448,11 @@ With 13 rares, 5 epics, and 5 legendaries, the tiers are thin until 5b and 5c; t
 - The economy's numbers; each run rule; the streak quest; growth that pays shards.
 - Saves keep the shop's relics and rerolls; the run report runs (runs won will move: the economy changes, and relics lose their costs).
 
-### 10.7 Questions for this step
+### 10.7 Decisions (the playtester, 2026-10-01)
 
-- **I. Boss relics:** wait until there's a fight after a boss (Act 2, or endless), and write them then (recommended), or build the choice of 3 after Old Mother Ash now, though nothing comes after it in Act 1?
-- **J. What a shop reroll replaces:** only the relic, with the wares fixed for the visit (recommended; `relics/README.md` says rerolling replaces the relic), or the relic and the wares together?
-- **K. The split:** 5a now as written, then 5b, 5c, and 5d each with their own section (recommended)?
+17. **Step 5 is split into 5a, 5b, 5c, and 5d** (Question K), each approved before it's built; 5a is built as this section says.
+18. **Boss relics come now** (Question I: "build the choice now"): 1 of 3 after Old Mother Ash, from the boss relics the built pieces can write (four in 5a); the rest join with their pieces.
+19. **A shop reroll replaces the relic and the wares together** (Question J).
 
 ## Answered (2026-09-30)
 
