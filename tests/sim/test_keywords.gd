@@ -156,5 +156,5 @@ func test_an_aura_while_its_holder_is_in_a_state() -> void:
 func test_a_condition_names_only_known_statuses() -> void:
 	var content: ContentDb = K.content()
 	var kit: UnitDef = _hero([_aura("odd", {"stat": "damage_bp", "value": 11000, "vs": {"statuses": ["dazed"]}})])
-	assert_true(kit.status_ids().has("dazed"), "a kit's conditions name statuses ContentDb checks")
+	assert_true(kit.condition_status_ids().has("dazed"), "a kit's conditions name statuses ContentDb and FightSetup check")
 	assert_false(content.statuses.has("dazed"))

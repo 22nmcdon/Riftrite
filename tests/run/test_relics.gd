@@ -339,3 +339,12 @@ func test_shop_relics_save() -> void:
 	flow.reroll()
 	var loaded: RunState = RunState.from_dict(JSON.parse_string(JSON.stringify(flow.state.to_dict())))
 	assert_eq([loaded.shop_relics, loaded.rerolls], [flow.state.shop_relics, 1])
+
+
+func test_a_relic_that_looks_for_engaged_enemies_can_be_fought() -> void:
+	var flow: RunFlow = _start()
+	_hold(flow, ["rusted_fetter"])
+	_to_fight(flow)
+	var errors: Array[String] = []
+	assert_not_null(flow.fight_setup(Bot.formation(), errors))
+	assert_eq(errors, [] as Array[String], "it names Engaged only in a condition")

@@ -29,7 +29,7 @@ const TYPES: Array[Array] = [
 ]
 ## Which damage type each damage-over-time status counts as. A test checks
 ## every such status in the data has one, so none is left out of the chart.
-const STATUS_TYPES: Dictionary[String, String] = {"burn": "Burn", "poison": "Poison", "bleed": "Bleed"}
+const STATUS_TYPES: Dictionary[String, String] = {"burn": "Burn", "poison": "Poison", "bleed": "Bleed", "sunder": "Sunder"}
 const COLLAPSE_SOURCE: String = "Rift Collapse"
 
 

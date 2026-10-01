@@ -160,14 +160,28 @@ func status_ids() -> Array[String]:
 	for part: PartDef in parts:
 		if part.kind == PartDef.Kind.REPLACE_STATUS:
 			found.append_array([part.from_status, part.to_status])
-		elif part.kind == PartDef.Kind.AURA:
-			for condition: UnitCondition in [part.aura.vs, part.aura.state]:
-				if condition != null:
-					found.append_array(condition.statuses)
+
 	for effect: EffectDef in all_effects():
 		if effect.type == EffectDef.Type.APPLY_STATUS:
 			found.append(effect.status_id)
 		found.append_array(effect.statuses)
+	return found
+
+
+## Every status its conditions look for (UnitCondition; phase 5c step 3):
+## they must exist, but may be any status (an aura "vs" Engaged enemies is
+## fine, though only the Engage trait sets it).
+func condition_status_ids() -> Array[String]:
+	var found: Array[String] = []
+	var parts: Array[PartDef] = passives.duplicate()
+	for phase: PhaseDef in phases:
+		parts.append_array(phase.passives)
+	for part: PartDef in parts:
+		if part.kind == PartDef.Kind.AURA:
+			for condition: UnitCondition in [part.aura.vs, part.aura.state]:
+				if condition != null:
+					found.append_array(condition.statuses)
+	for effect: EffectDef in all_effects():
 		if effect.vs != null:
 			found.append_array(effect.vs.statuses)
 	return found

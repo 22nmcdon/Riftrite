@@ -219,6 +219,9 @@ func _check_kit(kit: UnitDef, where: String, grid: HexGrid) -> void:
 			errors.append("%s: unknown status \"%s\"" % [where, status_id])
 		elif statuses[status_id].kind == StatusDef.Kind.ENGAGED:
 			errors.append("%s: names \"%s\", which only the Engage trait sets" % [where, status_id])
+	for status_id: String in kit.condition_status_ids():
+		if not statuses.has(status_id):
+			errors.append("%s: unknown status \"%s\"" % [where, status_id])
 	for effect: EffectDef in kit.all_effects():
 		if effect.type != EffectDef.Type.SUMMON:
 			continue
