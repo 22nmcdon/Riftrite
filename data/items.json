@@ -1,201 +1,1084 @@
 [
   {
-    "_note": "Loadout items (docs/plans/rebuild-phase5-run.md, section 6; part 6, sections 2 and 8; Decision 2's lean set): 10 charms, 4 tactics (each names its tactics.json entry), 5 sigils, and 3 grafts (only the Magpie sells grafts). Any hero can hold any; \"needs\" tags what it needs, and one that does nothing shows \"no effect on this hero\". Prices and numbers are first guesses (Decision 11).",
-    "id": "frost_tipped",
+    "_note": "The loadout pool (docs/plans/loadout/, docs/plans/rebuild-phase5c-combos.md, section 14): charms, tactics, sigils, and gambits, each with three ranks (charms', sigils', and gambits' are whole kit mods; a tactic's are its tactics.json entry's). Any hero can hold any; one that does nothing on its hero shows nothing. Prices and what ranks an item up are act1.json's (items). Numbers are placeholders.",
+    "id": "ember_tipped",
     "kind": "charm",
-    "name": "Frost-Tipped",
-    "icon": "cheaper",
-    "text": "Your basic attack's critical hits Slow the target.",
-    "answers": "Answers chargers (Cairn Guardian)",
-    "price": 6,
-    "mod": {
-      "on": [
-        {
-          "slot": "basic_attack",
-          "add_effects": [
-            {
-              "trigger": "on_crit",
-              "type": "apply_status",
-              "status": "slow",
-              "target": "target"
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "id": "iron_skin",
-    "kind": "charm",
-    "name": "Iron Skin",
-    "icon": "braced",
-    "text": "Your DEF is higher.",
-    "answers": "Answers pounces (Rift Hound)",
-    "price": 6,
-    "mod": {
-      "stats_bp": {
-        "def": 11500
-      }
-    }
-  },
-  {
-    "id": "vital_stone",
-    "kind": "charm",
-    "name": "Vital Stone",
-    "icon": "the_tank_first",
-    "text": "Your max HP is higher.",
-    "answers": "Answers burst (Ashling)",
-    "price": 6,
-    "mod": {
-      "stats_bp": {
-        "hp": 11200
-      }
-    }
-  },
-  {
-    "id": "whetstone",
-    "kind": "charm",
-    "name": "Whetstone",
-    "icon": "casters_first",
-    "text": "You hit harder.",
-    "answers": "Answers anchors (Rift-Worn Sentinel)",
-    "price": 6,
-    "mod": {
-      "stats_bp": {
-        "atk": 11000
-      }
-    }
-  },
-  {
-    "id": "swift_boots",
-    "kind": "charm",
-    "name": "Swift Boots",
-    "icon": "fletched_for_wings",
-    "text": "You walk faster.",
-    "answers": "Answers back lines (Hollow Archer)",
-    "price": 6,
-    "mod": {
-      "stats_add": {
-        "speed": 1
-      }
-    }
-  },
-  {
-    "id": "serrated_edge",
-    "kind": "charm",
-    "name": "Serrated Edge",
-    "icon": "purifying_light",
-    "text": "Your basic attack's critical hits make the target Bleed.",
-    "answers": "Answers anchors (Rift-Worn Sentinel)",
-    "price": 6,
-    "mod": {
-      "on": [
-        {
-          "slot": "basic_attack",
-          "add_effects": [
-            {
-              "trigger": "on_crit",
-              "type": "apply_status",
-              "status": "bleed",
-              "stacks": 2,
-              "target": "target"
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "id": "ember_charm",
-    "kind": "charm",
-    "name": "Ember Charm",
+    "name": "Ember-Tipped",
     "icon": "ember_heart",
     "text": "Your basic attack sets its target Burning.",
-    "answers": "Answers packs (Rift Pup)",
-    "price": 6,
-    "mod": {
-      "on": [
-        {
-          "slot": "basic_attack",
-          "add_effects": [
-            {
-              "trigger": "on_hit",
-              "type": "apply_status",
-              "status": "burn",
-              "stacks": 1,
-              "target": "target"
-            }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    "id": "mending_salve",
-    "kind": "charm",
-    "name": "Mending Salve",
-    "icon": "pilgrims_lantern",
-    "text": "Every heal you give is stronger.",
-    "answers": "Answers attrition (Gloam Witch)",
-    "needs": [
-      "heals"
-    ],
-    "price": 6,
-    "mod": {
-      "on": [
-        {
-          "slot": "abilities",
-          "types": [
-            "heal"
-          ],
-          "amount_bp": 11500
-        }
-      ]
-    }
-  },
-  {
-    "id": "deep_well",
-    "kind": "charm",
-    "name": "Deep Well",
-    "icon": "echo",
-    "text": "You start each fight with more mana.",
-    "answers": "Answers silence (Gloam Witch)",
-    "needs": [
-      "mana"
-    ],
-    "price": 6,
-    "mod": {
-      "mana": {
-        "start_add": 20
+    "ranks": [
+      {
+        "on": [
+          {
+            "slot": "basic_attack",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "burn",
+                "stacks": 1,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "basic_attack",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "burn",
+                "stacks": 2,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "basic_attack",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "burn",
+                "stacks": 3,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
       }
-    }
+    ]
   },
   {
-    "id": "thorned_mail",
+    "id": "bloodletter",
     "kind": "charm",
-    "name": "Thorned Mail",
+    "name": "Bloodletter",
+    "icon": "purifying_light",
+    "text": "Your basic attack makes its target Bleed.",
+    "ranks": [
+      {
+        "on": [
+          {
+            "slot": "basic_attack",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "bleed",
+                "stacks": 1,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "basic_attack",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "bleed",
+                "stacks": 2,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "basic_attack",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "bleed",
+                "stacks": 3,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bramble_knot",
+    "kind": "charm",
+    "name": "Bramble Knot",
+    "icon": "braced",
+    "text": "Every few basic attacks, yours Roots its target.",
+    "ranks": [
+      {
+        "on": [
+          {
+            "slot": "basic_attack",
+            "add_effects": [
+              {
+                "type": "apply_status",
+                "status": "root",
+                "duration_ms": 1000,
+                "target": "target",
+                "every": 5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "basic_attack",
+            "add_effects": [
+              {
+                "type": "apply_status",
+                "status": "root",
+                "duration_ms": 1000,
+                "target": "target",
+                "every": 4
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "basic_attack",
+            "add_effects": [
+              {
+                "type": "apply_status",
+                "status": "root",
+                "duration_ms": 1500,
+                "target": "target",
+                "every": 4
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "flint_and_tinder",
+    "kind": "charm",
+    "name": "Flint and Tinder",
+    "icon": "ember_heart",
+    "text": "Your crits on Burning enemies add more Burn; at rank III it spreads to an enemy near them.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "flint_and_tinder",
+            "name": "Flint and Tinder",
+            "kind": "ability",
+            "text": "Its crits on Burning enemies add Burn.",
+            "effects": [
+              {
+                "trigger": "on_holder_crit",
+                "vs": {
+                  "keywords": [
+                    "burning"
+                  ]
+                },
+                "type": "apply_status",
+                "status": "burn",
+                "stacks": 2,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "flint_and_tinder",
+            "name": "Flint and Tinder",
+            "kind": "ability",
+            "text": "Its crits on Burning enemies add Burn.",
+            "effects": [
+              {
+                "trigger": "on_holder_crit",
+                "vs": {
+                  "keywords": [
+                    "burning"
+                  ]
+                },
+                "type": "apply_status",
+                "status": "burn",
+                "stacks": 3,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "flint_and_tinder",
+            "name": "Flint and Tinder",
+            "kind": "ability",
+            "text": "Its crits on Burning enemies add Burn.",
+            "effects": [
+              {
+                "trigger": "on_holder_crit",
+                "vs": {
+                  "keywords": [
+                    "burning"
+                  ]
+                },
+                "type": "apply_status",
+                "status": "burn",
+                "stacks": 3,
+                "target": "hit_target"
+              },
+              {
+                "trigger": "on_holder_crit",
+                "vs": {
+                  "keywords": [
+                    "burning"
+                  ]
+                },
+                "type": "apply_status",
+                "status": "burn",
+                "stacks": 3,
+                "target": "enemy_near_named",
+                "within_hexes": 2
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "kindling_ward",
+    "kind": "charm",
+    "name": "Kindling Ward",
     "icon": "unbroken_wall",
-    "text": "Each enemy hit on you hurts its attacker a little.",
-    "answers": "Answers swarms (Rift Pup)",
-    "price": 6,
-    "mod": {
-      "passives": [
-        {
-          "id": "thorned_mail",
-          "name": "Thorned Mail",
-          "kind": "ability",
-          "text": "Each enemy hit on the wearer hurts its attacker a little.",
-          "effects": [
-            {
-              "trigger": "on_hit_taken",
-              "type": "damage",
-              "amount_bp_of_damage": 2000,
-              "target": "hit_target"
+    "text": "Enemies that break your Shield catch fire; at rank III they're Slowed too.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "kindling_ward",
+            "name": "Kindling Ward",
+            "kind": "ability",
+            "text": "Enemies that break its Shield catch fire.",
+            "effects": [
+              {
+                "trigger": "on_shield_broken",
+                "type": "apply_status",
+                "status": "burn",
+                "stacks": 3,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "kindling_ward",
+            "name": "Kindling Ward",
+            "kind": "ability",
+            "text": "Enemies that break its Shield catch fire.",
+            "effects": [
+              {
+                "trigger": "on_shield_broken",
+                "type": "apply_status",
+                "status": "burn",
+                "stacks": 5,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "kindling_ward",
+            "name": "Kindling Ward",
+            "kind": "ability",
+            "text": "Enemies that break its Shield catch fire.",
+            "effects": [
+              {
+                "trigger": "on_shield_broken",
+                "type": "apply_status",
+                "status": "burn",
+                "stacks": 5,
+                "target": "hit_target"
+              },
+              {
+                "trigger": "on_shield_broken",
+                "type": "apply_status",
+                "status": "slow",
+                "duration_ms": 2000,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "mana_leech",
+    "kind": "charm",
+    "name": "Mana Leech",
+    "icon": "echo",
+    "text": "Your crits give you mana.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "mana_leech",
+            "name": "Mana Leech",
+            "kind": "ability",
+            "text": "Its crits give it mana.",
+            "effects": [
+              {
+                "trigger": "on_holder_crit",
+                "type": "gain_mana",
+                "amount": 5,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "mana_leech",
+            "name": "Mana Leech",
+            "kind": "ability",
+            "text": "Its crits give it mana.",
+            "effects": [
+              {
+                "trigger": "on_holder_crit",
+                "type": "gain_mana",
+                "amount": 8,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "mana_leech",
+            "name": "Mana Leech",
+            "kind": "ability",
+            "text": "Its crits give it mana.",
+            "effects": [
+              {
+                "trigger": "on_holder_crit",
+                "type": "gain_mana",
+                "amount": 10,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "leech_fang",
+    "kind": "charm",
+    "name": "Leech Fang",
+    "icon": "deep_mend",
+    "text": "Your hits heal you for a share of their damage.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "leech_fang",
+            "name": "Leech Fang",
+            "kind": "aura",
+            "text": "Lifesteal.",
+            "aura": {
+              "target": "holder",
+              "stat": "lifesteal_bp",
+              "value": 300
             }
-          ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "leech_fang",
+            "name": "Leech Fang",
+            "kind": "aura",
+            "text": "Lifesteal.",
+            "aura": {
+              "target": "holder",
+              "stat": "lifesteal_bp",
+              "value": 500
+            }
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "leech_fang",
+            "name": "Leech Fang",
+            "kind": "aura",
+            "text": "Lifesteal.",
+            "aura": {
+              "target": "holder",
+              "stat": "lifesteal_bp",
+              "value": 700
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "opportunist",
+    "kind": "charm",
+    "name": "Opportunist",
+    "icon": "casters_first",
+    "text": "You deal more damage to Rooted or Stunned enemies; at rank III, to Slowed ones too.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "opportunist",
+            "name": "Opportunist",
+            "kind": "aura",
+            "text": "More damage to enemies that can't get away.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 12500,
+              "vs": {
+                "statuses": [
+                  "root",
+                  "stun"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "opportunist",
+            "name": "Opportunist",
+            "kind": "aura",
+            "text": "More damage to enemies that can't get away.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 13500,
+              "vs": {
+                "statuses": [
+                  "root",
+                  "stun"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "opportunist",
+            "name": "Opportunist",
+            "kind": "aura",
+            "text": "More damage to enemies that can't get away.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 13500,
+              "vs": {
+                "statuses": [
+                  "root",
+                  "stun",
+                  "slow"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "headsmans_patience",
+    "kind": "charm",
+    "name": "Headsman's Patience",
+    "icon": "rift_glass_eye",
+    "text": "You deal more damage to enemies near death.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "headsmans_patience",
+            "name": "Headsman's Patience",
+            "kind": "aura",
+            "text": "More damage to enemies near death.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 12000,
+              "vs": {
+                "below_hp_pct": 30
+              }
+            }
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "headsmans_patience",
+            "name": "Headsman's Patience",
+            "kind": "aura",
+            "text": "More damage to enemies near death.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 13000,
+              "vs": {
+                "below_hp_pct": 30
+              }
+            }
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "headsmans_patience",
+            "name": "Headsman's Patience",
+            "kind": "aura",
+            "text": "More damage to enemies near death.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 13000,
+              "vs": {
+                "below_hp_pct": 40
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "steady_stance",
+    "kind": "charm",
+    "name": "Steady Stance",
+    "icon": "steady_hands",
+    "text": "Your ATK and MGK are higher once you've stood still a while.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "steady_stance",
+            "name": "Steady Stance",
+            "kind": "aura",
+            "text": "More ATK while it stands still.",
+            "aura": {
+              "target": "holder",
+              "stat": "atk_bp",
+              "value": 11000,
+              "while": "planted",
+              "after_ms": 2000
+            }
+          },
+          {
+            "id": "steady_stance_mgk",
+            "name": "Steady Stance",
+            "kind": "aura",
+            "text": "More MGK while it stands still.",
+            "aura": {
+              "target": "holder",
+              "stat": "mgk_bp",
+              "value": 11000,
+              "while": "planted",
+              "after_ms": 2000
+            }
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "steady_stance",
+            "name": "Steady Stance",
+            "kind": "aura",
+            "text": "More ATK while it stands still.",
+            "aura": {
+              "target": "holder",
+              "stat": "atk_bp",
+              "value": 11500,
+              "while": "planted",
+              "after_ms": 2000
+            }
+          },
+          {
+            "id": "steady_stance_mgk",
+            "name": "Steady Stance",
+            "kind": "aura",
+            "text": "More MGK while it stands still.",
+            "aura": {
+              "target": "holder",
+              "stat": "mgk_bp",
+              "value": 11500,
+              "while": "planted",
+              "after_ms": 2000
+            }
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "steady_stance",
+            "name": "Steady Stance",
+            "kind": "aura",
+            "text": "More ATK while it stands still.",
+            "aura": {
+              "target": "holder",
+              "stat": "atk_bp",
+              "value": 11500,
+              "while": "planted",
+              "after_ms": 1000
+            }
+          },
+          {
+            "id": "steady_stance_mgk",
+            "name": "Steady Stance",
+            "kind": "aura",
+            "text": "More MGK while it stands still.",
+            "aura": {
+              "target": "holder",
+              "stat": "mgk_bp",
+              "value": 11500,
+              "while": "planted",
+              "after_ms": 1000
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "spiteful_blood",
+    "kind": "charm",
+    "name": "Spiteful Blood",
+    "icon": "unbroken_wall",
+    "text": "A share of every enemy hit on you goes back to its attacker.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "spiteful_blood",
+            "name": "Spiteful Blood",
+            "kind": "ability",
+            "text": "A share of each enemy hit on it goes back to the attacker.",
+            "effects": [
+              {
+                "trigger": "on_hit_taken",
+                "type": "damage",
+                "amount_bp_of_damage": 1000,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "spiteful_blood",
+            "name": "Spiteful Blood",
+            "kind": "ability",
+            "text": "A share of each enemy hit on it goes back to the attacker.",
+            "effects": [
+              {
+                "trigger": "on_hit_taken",
+                "type": "damage",
+                "amount_bp_of_damage": 1500,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "spiteful_blood",
+            "name": "Spiteful Blood",
+            "kind": "ability",
+            "text": "A share of each enemy hit on it goes back to the attacker.",
+            "effects": [
+              {
+                "trigger": "on_hit_taken",
+                "type": "damage",
+                "amount_bp_of_damage": 2000,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "fleet",
+    "kind": "charm",
+    "name": "Fleet",
+    "icon": "fletched_for_wings",
+    "text": "You walk faster; from rank II you attack faster too.",
+    "ranks": [
+      {
+        "stats_add": {
+          "speed": 1
         }
-      ]
-    }
+      },
+      {
+        "stats_add": {
+          "speed": 1,
+          "atsp": 10
+        }
+      },
+      {
+        "stats_add": {
+          "speed": 2,
+          "atsp": 10
+        }
+      }
+    ]
+  },
+  {
+    "id": "smoke_vial",
+    "kind": "charm",
+    "name": "Smoke Vial",
+    "icon": "light_feet",
+    "text": "Once a fight, when you drop low on HP, you slip from sight; at rank III you're Shielded too.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "smoke_vial",
+            "name": "Smoke Vial",
+            "kind": "ability",
+            "text": "Low on HP, it slips from sight.",
+            "effects": [
+              {
+                "trigger": "on_below_hp",
+                "threshold_bp": 3000,
+                "type": "apply_status",
+                "status": "stealth",
+                "duration_ms": 2000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "smoke_vial",
+            "name": "Smoke Vial",
+            "kind": "ability",
+            "text": "Low on HP, it slips from sight.",
+            "effects": [
+              {
+                "trigger": "on_below_hp",
+                "threshold_bp": 3000,
+                "type": "apply_status",
+                "status": "stealth",
+                "duration_ms": 3000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "smoke_vial",
+            "name": "Smoke Vial",
+            "kind": "ability",
+            "text": "Low on HP, it slips from sight.",
+            "effects": [
+              {
+                "trigger": "on_below_hp",
+                "threshold_bp": 3000,
+                "type": "apply_status",
+                "status": "stealth",
+                "duration_ms": 3000,
+                "target": "self"
+              },
+              {
+                "trigger": "on_below_hp",
+                "threshold_bp": 3000,
+                "type": "shield",
+                "amount_bp_of_max_hp": 1000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "warding_thread",
+    "kind": "charm",
+    "name": "Warding Thread",
+    "icon": "unbroken_wall",
+    "text": "When you drop below half HP, you gain a Shield; at rank III, up to twice a fight.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "warding_thread",
+            "name": "Warding Thread",
+            "kind": "ability",
+            "text": "Below half HP, a Shield.",
+            "effects": [
+              {
+                "trigger": "on_below_hp",
+                "threshold_bp": 5000,
+                "times": 1,
+                "type": "shield",
+                "amount_bp_of_max_hp": 1500,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "warding_thread",
+            "name": "Warding Thread",
+            "kind": "ability",
+            "text": "Below half HP, a Shield.",
+            "effects": [
+              {
+                "trigger": "on_below_hp",
+                "threshold_bp": 5000,
+                "times": 1,
+                "type": "shield",
+                "amount_bp_of_max_hp": 2000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "warding_thread",
+            "name": "Warding Thread",
+            "kind": "ability",
+            "text": "Below half HP, a Shield.",
+            "effects": [
+              {
+                "trigger": "on_below_hp",
+                "threshold_bp": 5000,
+                "times": 2,
+                "type": "shield",
+                "amount_bp_of_max_hp": 2000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "last_breath",
+    "kind": "charm",
+    "name": "Last Breath",
+    "icon": "hollow_crown",
+    "text": "When you fall, the allies near you gain a Shield; at rank III they hit harder for a while.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "last_breath",
+            "name": "Last Breath",
+            "kind": "ability",
+            "text": "As it falls, it Shields the allies near it.",
+            "effects": [
+              {
+                "trigger": "on_fall",
+                "type": "shield",
+                "amount_bp_of_max_hp": 1500,
+                "target": "allies_near_self",
+                "within_hexes": 2
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "last_breath",
+            "name": "Last Breath",
+            "kind": "ability",
+            "text": "As it falls, it Shields the allies near it.",
+            "effects": [
+              {
+                "trigger": "on_fall",
+                "type": "shield",
+                "amount_bp_of_max_hp": 2000,
+                "target": "allies_near_self",
+                "within_hexes": 2
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "last_breath",
+            "name": "Last Breath",
+            "kind": "ability",
+            "text": "As it falls, it Shields the allies near it.",
+            "effects": [
+              {
+                "trigger": "on_fall",
+                "type": "shield",
+                "amount_bp_of_max_hp": 2000,
+                "target": "allies_near_self",
+                "within_hexes": 2
+              },
+              {
+                "trigger": "on_fall",
+                "type": "apply_status",
+                "status": "last_breath",
+                "target": "allies_near_self",
+                "within_hexes": 2
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "purifying_light",
+    "kind": "charm",
+    "name": "Purifying Light",
+    "icon": "purifying_light",
+    "text": "Your heals also cleanse damage over time; at rank III the ally you heal gains DEF for a while.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "purifying_light",
+            "name": "Purifying Light",
+            "kind": "ability",
+            "text": "Its heals cleanse.",
+            "effects": [
+              {
+                "trigger": "on_heal",
+                "type": "cleanse",
+                "amount_bp": 10000,
+                "statuses": [
+                  "bleed",
+                  "poison"
+                ],
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "purifying_light",
+            "name": "Purifying Light",
+            "kind": "ability",
+            "text": "Its heals cleanse.",
+            "effects": [
+              {
+                "trigger": "on_heal",
+                "type": "cleanse",
+                "amount_bp": 10000,
+                "statuses": [
+                  "bleed",
+                  "poison",
+                  "burn"
+                ],
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "purifying_light",
+            "name": "Purifying Light",
+            "kind": "ability",
+            "text": "Its heals cleanse.",
+            "effects": [
+              {
+                "trigger": "on_heal",
+                "type": "cleanse",
+                "amount_bp": 10000,
+                "statuses": [
+                  "bleed",
+                  "poison",
+                  "burn"
+                ],
+                "target": "hit_target"
+              },
+              {
+                "trigger": "on_heal",
+                "type": "apply_status",
+                "status": "purified",
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "casters_first_orders",
@@ -203,8 +1086,6 @@
     "name": "Casters first",
     "icon": "casters_first",
     "text": "Goes for the nearest enemy caster or support first, and hits them harder.",
-    "answers": "Answers casters (Gloam Witch, Cinder Moth)",
-    "price": 4,
     "tactic": "casters_first"
   },
   {
@@ -213,8 +1094,6 @@
     "name": "Hold your ground",
     "icon": "hold_the_middle",
     "text": "Stays where it's placed, attacking faster, until an enemy comes within 2 hexes.",
-    "answers": "Answers pullers (Bog Lurker)",
-    "price": 4,
     "tactic": "hold_ground"
   },
   {
@@ -223,12 +1102,6 @@
     "name": "Wait to heal",
     "icon": "deep_mend",
     "text": "Holds a healing signature until an ally in its reach is badly hurt; that heal is stronger.",
-    "answers": "Answers wasted heals",
-    "needs": [
-      "heals",
-      "mana"
-    ],
-    "price": 4,
     "tactic": "wait_to_heal"
   },
   {
@@ -237,176 +1110,488 @@
     "name": "Plant your feet",
     "icon": "braced",
     "text": "Stops walking while an enemy stands within 2 hexes; closes in again when none does.",
-    "answers": "Answers flankers (Rift Hound)",
-    "price": 4,
     "tactic": "plant_feet"
   },
   {
-    "id": "sigil_of_haste",
+    "id": "echo",
     "kind": "sigil",
-    "name": "Sigil of Haste",
-    "icon": "steady_hands",
-    "text": "Your signature needs less mana.",
-    "answers": "Answers the race (Cinder Moth)",
-    "needs": [
-      "mana"
-    ],
-    "price": 8,
-    "mod": {
-      "mana": {
-        "max_add": -12
-      }
-    }
-  },
-  {
-    "id": "sigil_of_grief",
-    "kind": "sigil",
-    "name": "Sigil of Grief",
-    "icon": "purifying_light",
-    "text": "Your signature also fires whenever an ally falls.",
-    "answers": "Answers losing a hero",
-    "price": 8,
-    "mod": {
-      "also_fires": [
-        {
-          "kind": "ally_falls"
-        }
-      ]
-    }
-  },
-  {
-    "id": "sigil_of_the_last_breath",
-    "kind": "sigil",
-    "name": "Sigil of the Last Breath",
-    "icon": "the_tank_first",
-    "text": "Your signature also fires, once, when you drop below 40% HP.",
-    "answers": "Answers pounces (Rift Hound)",
-    "price": 8,
-    "mod": {
-      "also_fires": [
-        {
-          "kind": "hp_below",
-          "threshold_bp": 4000
-        }
-      ]
-    }
-  },
-  {
-    "id": "sigil_of_reach",
-    "kind": "sigil",
-    "name": "Sigil of Reach",
-    "icon": "opener",
-    "text": "Your signature's area is 1 hex larger.",
-    "answers": "Answers crowds (Rift Pup)",
-    "price": 8,
-    "mod": {
-      "on": [
-        {
-          "slot": "signature",
-          "radius_add": 1
-        }
-      ]
-    }
-  },
-  {
-    "id": "sigil_of_echoes",
-    "kind": "sigil",
-    "name": "Sigil of Echoes",
+    "name": "Echo",
     "icon": "echo",
-    "text": "Your signature fires again 2s later at half strength.",
-    "answers": "Answers long fights",
-    "price": 8,
-    "mod": {
-      "echo": {
-        "after_ms": 2000,
-        "share_pct": 50
+    "text": "Your signature fires again a moment later, weaker.",
+    "ranks": [
+      {
+        "echo": {
+          "after_ms": 2000,
+          "share_pct": 40
+        }
+      },
+      {
+        "echo": {
+          "after_ms": 2000,
+          "share_pct": 60
+        }
+      },
+      {
+        "echo": {
+          "after_ms": 1000,
+          "share_pct": 60
+        }
       }
-    }
+    ]
   },
   {
-    "id": "shake_it_off",
-    "kind": "graft",
-    "name": "Shake It Off",
+    "id": "thrift",
+    "kind": "sigil",
+    "name": "Thrift",
     "icon": "cheaper",
-    "text": "Every 6s, you shake off burns, poisons, and bleeds.",
-    "answers": "Answers burns (Cinder Moth, Ashling)",
-    "price": 8,
-    "mod": {
-      "passives": [
-        {
-          "id": "shake_it_off",
-          "name": "Shake It Off",
-          "kind": "ability",
-          "text": "Every 6s, the holder shakes off damage over time.",
-          "effects": [
-            {
-              "trigger": "on_interval",
-              "interval_ms": 6000,
-              "type": "cleanse",
-              "amount_bp": 10000,
-              "target": "self"
-            }
-          ]
+    "text": "Your signature costs less mana.",
+    "ranks": [
+      {
+        "mana": {
+          "max_bp": 8500
         }
-      ]
-    }
+      },
+      {
+        "mana": {
+          "max_bp": 7500
+        }
+      },
+      {
+        "mana": {
+          "max_bp": 6500
+        }
+      }
+    ]
   },
   {
-    "id": "second_wind",
-    "kind": "graft",
-    "name": "Second Wind",
-    "icon": "deep_mend",
-    "text": "The first ally (you included) to drop low on HP is healed a little, once a fight.",
-    "answers": "Answers pounces (Rift Hound)",
-    "price": 8,
-    "mod": {
-      "passives": [
-        {
-          "id": "second_wind",
-          "name": "Second Wind",
-          "kind": "ability",
-          "text": "The first ally to drop low on HP is healed a little, once a fight.",
-          "effects": [
-            {
-              "trigger": "on_ally_below_hp",
-              "threshold_bp": 3000,
-              "once": true,
-              "type": "heal",
-              "amount_bp_of_max_hp": 1500,
-              "target": "trigger_ally"
-            }
-          ]
-        }
-      ]
-    }
+    "id": "desperate",
+    "kind": "sigil",
+    "name": "Desperate",
+    "icon": "the_tank_first",
+    "text": "Your signature also fires, once, when you drop low on HP; at rank III you gain a Shield then too.",
+    "ranks": [
+      {
+        "also_fires": [
+          {
+            "kind": "hp_below",
+            "threshold_bp": 4000
+          }
+        ]
+      },
+      {
+        "also_fires": [
+          {
+            "kind": "hp_below",
+            "threshold_bp": 5000
+          }
+        ]
+      },
+      {
+        "also_fires": [
+          {
+            "kind": "hp_below",
+            "threshold_bp": 5000
+          }
+        ],
+        "passives": [
+          {
+            "id": "desperate",
+            "name": "Desperate",
+            "kind": "ability",
+            "text": "Low on HP, a Shield.",
+            "effects": [
+              {
+                "trigger": "on_below_hp",
+                "threshold_bp": 5000,
+                "type": "shield",
+                "amount_bp_of_max_hp": 1000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    ]
   },
   {
-    "id": "sidestep",
-    "kind": "graft",
-    "name": "Sidestep",
+    "id": "lingering",
+    "kind": "sigil",
+    "name": "Lingering",
+    "icon": "pilgrims_lantern",
+    "text": "Your signature's areas and statuses last longer.",
+    "ranks": [
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "duration_add_ms": 1000
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "duration_add_ms": 2000
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "duration_add_ms": 3000
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tolling",
+    "kind": "sigil",
+    "name": "Tolling",
+    "icon": "rift_glass_eye",
+    "text": "Your signature Marks everything it hits.",
+    "ranks": [
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "marked",
+                "duration_ms": 3000,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "marked",
+                "duration_ms": 4000,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "marked",
+                "duration_ms": 5000,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "kindled",
+    "kind": "sigil",
+    "name": "Kindled",
+    "icon": "ember_heart",
+    "text": "Your signature sets everything it hits Burning.",
+    "ranks": [
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "burn",
+                "stacks": 3,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "burn",
+                "stacks": 5,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "burn",
+                "stacks": 8,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "grasping",
+    "kind": "sigil",
+    "name": "Grasping",
+    "icon": "braced",
+    "text": "Your signature Roots everything it hits.",
+    "ranks": [
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "root",
+                "duration_ms": 500,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "root",
+                "duration_ms": 1000,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "trigger": "on_hit",
+                "type": "apply_status",
+                "status": "root",
+                "duration_ms": 1500,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "veiled",
+    "kind": "sigil",
+    "name": "Veiled",
     "icon": "light_feet",
-    "text": "Every 8th hit you take, you slip from sight for a moment.",
-    "answers": "Answers focus fire (Hollow Archer)",
-    "price": 8,
-    "mod": {
-      "passives": [
-        {
-          "id": "sidestep",
-          "name": "Sidestep",
-          "kind": "ability",
-          "text": "Every 8th hit the holder takes, it slips from sight for a moment.",
-          "effects": [
-            {
-              "trigger": "on_hit_taken",
-              "every": 8,
-              "type": "apply_status",
-              "status": "stealth",
-              "duration_ms": 1000,
-              "target": "self"
-            }
-          ]
-        }
-      ]
-    }
+    "text": "Your signature hides you for a moment after it fires.",
+    "ranks": [
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "type": "apply_status",
+                "status": "stealth",
+                "duration_ms": 1000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "type": "apply_status",
+                "status": "stealth",
+                "duration_ms": 1500,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "type": "apply_status",
+                "status": "stealth",
+                "duration_ms": 2000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bulwark",
+    "kind": "sigil",
+    "name": "Bulwark",
+    "icon": "unbroken_wall",
+    "text": "Your signature Shields you; at rank III, the allies beside you too.",
+    "ranks": [
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "type": "shield",
+                "amount_bp_of_max_hp": 1000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "type": "shield",
+                "amount_bp_of_max_hp": 1500,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "add_effects": [
+              {
+                "type": "shield",
+                "amount_bp_of_max_hp": 1500,
+                "target": "self"
+              },
+              {
+                "type": "shield",
+                "amount_bp_of_max_hp": 1500,
+                "target": "allies_near_self",
+                "within_hexes": 1
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "surge",
+    "kind": "sigil",
+    "name": "Surge",
+    "icon": "steady_hands",
+    "text": "After your signature fires, you attack faster for a while.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "surge",
+            "name": "Surge",
+            "kind": "ability",
+            "text": "After its signature, faster attacks.",
+            "effects": [
+              {
+                "trigger": "on_ability",
+                "type": "apply_status",
+                "status": "surge",
+                "duration_ms": 3000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "surge",
+            "name": "Surge",
+            "kind": "ability",
+            "text": "After its signature, faster attacks.",
+            "effects": [
+              {
+                "trigger": "on_ability",
+                "type": "apply_status",
+                "status": "surge_2",
+                "duration_ms": 3000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "surge",
+            "name": "Surge",
+            "kind": "ability",
+            "text": "After its signature, faster attacks.",
+            "effects": [
+              {
+                "trigger": "on_ability",
+                "type": "apply_status",
+                "status": "surge_2",
+                "duration_ms": 5000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 ]

@@ -40,6 +40,9 @@ class Listener:
 	var count: int = 0
 	## on_ally_below_hp: the allies it has run for.
 	var allies_done: Array[String] = []
+	## on_below_hp: its unit is below the threshold now (it runs again only
+	## after climbing back above).
+	var below: bool = false
 	## cooldown_per_unit_ms: the tick it last ran for each unit named (a
 	## lookup, never iterated).
 	var last_for: Dictionary[String, int] = {}
@@ -318,7 +321,8 @@ static func listens_for(unit: UnitState, trigger: EffectDef.Trigger) -> bool:
 ## True if the unit has passive effects on on_interval or on_ally_below_hp.
 static func has_timed(unit: UnitState) -> bool:
 	for listener: Listener in unit.listeners:
-		if listener.effect.trigger == EffectDef.Trigger.ON_INTERVAL or listener.effect.trigger == EffectDef.Trigger.ON_ALLY_BELOW_HP:
+		if listener.effect.trigger == EffectDef.Trigger.ON_INTERVAL or listener.effect.trigger == EffectDef.Trigger.ON_ALLY_BELOW_HP \
+				or listener.effect.trigger == EffectDef.Trigger.ON_BELOW_HP:
 			return true
 	return false
 
@@ -391,8 +395,9 @@ static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, 
 		_run(sim, unit, listener, other, damage, chain)
 
 
-## Runs the on_interval passives that are due and the on_ally_below_hp ones
-## an ally has just set off, for every standing unit in the fight's order
+## Runs the on_interval passives that are due, the on_ally_below_hp ones
+## an ally has just set off, and the on_below_hp ones the unit has (phase 5c
+## step 6), for every standing unit in the fight's order
 ## (the allies, too, in the fight's order).
 static func run_timed(sim: CombatSim) -> void:
 	for unit: UnitState in sim.units:
@@ -417,6 +422,12 @@ static func run_timed(sim: CombatSim) -> void:
 						if ally.hp * FixedMath.BP_ONE < ally.max_hp * effect.threshold_bp:
 							listener.allies_done.append(ally.id)
 							_run(sim, unit, listener, ally, 0)
+				EffectDef.Trigger.ON_BELOW_HP:
+					var below: bool = unit.hp * FixedMath.BP_ONE < unit.max_hp * effect.threshold_bp
+					if below and not listener.below and listener.count < effect.times:
+						listener.count += 1
+						_run(sim, unit, listener, null, 0)
+					listener.below = below
 
 
 ## The unit would fall (the deaths step, after Undying and a would_fall

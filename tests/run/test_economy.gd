@@ -1,7 +1,8 @@
 extends GutTest
-## The economy in a run (docs/plans/rebuild-phase5-run.md, section 6): items
-## as data, "no effect on this hero", the loadout, the Pedlar and the Magpie,
-## treating wounds, and items reaching the fight.
+## The economy in a run (docs/plans/rebuild-phase5-run.md, section 6; the
+## loadout pool, phase 5c step 6): items as data, the loadout, the Pedlar and
+## the Magpie, treating wounds, and items reaching the fight. Ranks and
+## selling are test_loadout.gd's.
 
 const Bot = preload("res://tools/run_bot.gd")
 
@@ -40,29 +41,27 @@ func test_the_items_load() -> void:
 		counts[_run.items[id].kind] += 1
 		if _run.items[id].kind == ItemDef.Kind.TACTIC:
 			assert_not_null(_run.items[id].tactic, "%s has its tactic" % id)
-	assert_eq(counts, [10, 4, 5, 3] as Array[int], "10 charms, 4 tactics, 5 sigils, 3 grafts")
+	assert_eq(counts, [16, 4, 10, 0] as Array[int], "16 charms, 4 tactics, 10 sigils (phase 5c step 6a)")
+	for id: String in _run.item_ids:
+		if _run.items[id].kind != ItemDef.Kind.TACTIC:
+			assert_eq(_run.items[id].ranks.size(), 3, "%s has three ranks" % id)
 
 
-func test_no_effect_on_this_hero() -> void:
-	var salve: ItemDef = _run.items["mending_salve"]
-	assert_false(salve.works_on(_kit("deadeye"), "maren"), "Maren doesn't heal")
-	assert_true(salve.works_on(_kit("lanternbearer"), "vell"))
-	assert_false(_run.items["deep_well"].works_on(_kit("last_watch", true), "brannoc"), "no mana after Last Watch")
-	assert_true(_run.items["deep_well"].works_on(_kit("last_watch"), "brannoc"))
-	assert_false(_run.items["wait_to_heal_orders"].works_on(_kit("hearthwall"), "brannoc"))
-	assert_true(_run.items["plant_feet_orders"].works_on(_kit("hearthwall"), "brannoc"))
-	var reach: ItemDef = _run.items["sigil_of_reach"]
-	assert_false(reach.works_on(_kit("deadeye"), "maren"), "Marking Shot has no area")
-	assert_true(reach.works_on(_kit("lanternbearer", true), "vell"), "Night Lantern does")
+func test_a_tactic_a_hero_cant_follow_does_nothing() -> void:
+	assert_false(RunContent.can_follow(_run.items["wait_to_heal_orders"].tactic, _kit("hearthwall"), "brannoc"))
+	assert_true(RunContent.can_follow(_run.items["wait_to_heal_orders"].tactic, _kit("lanternbearer"), "vell"))
+	assert_true(RunContent.can_follow(_run.items["plant_feet_orders"].tactic, _kit("hearthwall"), "brannoc"))
 
 
 func test_bad_items_are_refused() -> void:
 	var cases: Array = [
-		[{"id": "odd", "kind": "tactic", "name": "Odd", "icon": "braced", "text": "x", "answers": "x", "price": 2, "tactic": "nothing"}, "unknown tactic \"nothing\""],
-		[{"id": "nobody", "kind": "charm", "name": "Nobody", "icon": "braced", "text": "x", "answers": "x", "price": 2, "needs": ["melee", "ranged"], "mod": {"stats_bp": {"hp": 11000}}}, "does nothing on any hero"],
-		[{"id": "bare", "kind": "charm", "name": "Bare", "icon": "braced", "text": "x", "answers": "x", "price": 2}, "mod"],
-		[{"id": "blank", "kind": "charm", "name": "Blank", "icon": "no_such_glyph", "text": "x", "answers": "x", "price": 2, "mod": {"stats_bp": {"hp": 11000}}}, "no glyph \"no_such_glyph\""],
-		[{"id": "iconless", "kind": "charm", "name": "Iconless", "text": "x", "answers": "x", "price": 2, "mod": {"stats_bp": {"hp": 11000}}}, "icon"],
+		[{"id": "odd", "kind": "tactic", "name": "Odd", "icon": "braced", "text": "x", "tactic": "nothing"}, "unknown tactic \"nothing\""],
+		[{"id": "nobody", "kind": "charm", "name": "Nobody", "icon": "braced", "text": "x", "ranks": [{"stats_bp": {"hp": 11000}}, {"stats_bp": {"hp": 11000}}, {"on": [{"slot": "signature", "types": ["summon"], "duration_bp": 12000}]}]}, "rank III does nothing on any hero"],
+		[{"id": "bare", "kind": "charm", "name": "Bare", "icon": "braced", "text": "x"}, "three ranks"],
+		[{"id": "two", "kind": "sigil", "name": "Two", "icon": "braced", "text": "x", "ranks": [{"stats_bp": {"hp": 11000}}, {"stats_bp": {"hp": 11000}}]}, "three ranks"],
+		[{"id": "blank", "kind": "charm", "name": "Blank", "icon": "no_such_glyph", "text": "x", "ranks": [{"stats_bp": {"hp": 11000}}, {"stats_bp": {"hp": 11000}}, {"stats_bp": {"hp": 11000}}]}, "no glyph \"no_such_glyph\""],
+		[{"id": "iconless", "kind": "charm", "name": "Iconless", "text": "x", "ranks": [{"stats_bp": {"hp": 11000}}, {"stats_bp": {"hp": 11000}}, {"stats_bp": {"hp": 11000}}]}, "icon"],
+		[{"id": "priced", "kind": "charm", "name": "Priced", "icon": "braced", "text": "x", "price": 3, "ranks": [{"stats_bp": {"hp": 11000}}, {"stats_bp": {"hp": 11000}}, {"stats_bp": {"hp": 11000}}]}, "price"],
 	]
 	for case: Array in cases:
 		var run: RunContent = _with_items([case[0]])
@@ -72,27 +71,27 @@ func test_bad_items_are_refused() -> void:
 func test_equipping_and_swapping() -> void:
 	var flow: RunFlow = _start()
 	var state: RunState = flow.state
-	state.stash.assign(["vital_stone", "iron_skin", "plant_feet_orders", "hold_ground_orders"])
-	assert_eq(flow.equip("brannoc", 0, "vital_stone"), "")
-	assert_eq(state.hero("brannoc").slots, ["vital_stone", "", ""] as Array[String])
-	assert_eq(flow.equip("brannoc", 0, "iron_skin"), "", "a swap")
-	assert_eq(state.hero("brannoc").slots[0], "iron_skin")
-	assert_eq(state.stash, ["plant_feet_orders", "hold_ground_orders", "vital_stone"] as Array[String], "the old one back in the stash")
+	state.stash.assign(["fleet", "leech_fang", "plant_feet_orders", "hold_ground_orders"])
+	assert_eq(flow.equip("brannoc", 0, "fleet"), "")
+	assert_eq(state.hero("brannoc").slots, ["fleet", "", ""] as Array[String])
+	assert_eq(flow.equip("brannoc", 0, "leech_fang"), "", "a swap")
+	assert_eq(state.hero("brannoc").slots[0], "leech_fang")
+	assert_eq(state.stash, ["plant_feet_orders", "hold_ground_orders", "fleet"] as Array[String], "the old one back in the stash")
 	assert_eq(flow.equip("brannoc", 1, "plant_feet_orders"), "")
 	assert_eq(flow.equip("brannoc", 2, "hold_ground_orders"), "brannoc already holds a tactic")
 	assert_eq(flow.equip("brannoc", 1, "hold_ground_orders"), "", "a tactic swaps for a tactic")
-	assert_eq(flow.equip("brannoc", 3, "vital_stone"), "brannoc has no slot 3")
-	assert_eq(flow.equip("brannoc", 2, "whetstone"), "\"whetstone\" isn't in the stash")
+	assert_eq(flow.equip("brannoc", 3, "fleet"), "brannoc has no slot 3")
+	assert_eq(flow.equip("brannoc", 2, "echo"), "\"echo\" isn't in the stash")
 	assert_eq(flow.unequip("brannoc", 2), "brannoc has nothing in slot 2")
 	assert_eq(flow.unequip("brannoc", 0), "")
-	assert_has(state.stash, "iron_skin")
+	assert_has(state.stash, "leech_fang")
 
 
 func test_the_loadout_reaches_the_fight() -> void:
 	var flow: RunFlow = _start()
 	var state: RunState = flow.state
-	state.stash.assign(["vital_stone", "plant_feet_orders", "wait_to_heal_orders"])
-	flow.equip("brannoc", 0, "vital_stone")
+	state.stash.assign(["fleet", "plant_feet_orders", "wait_to_heal_orders"])
+	flow.equip("brannoc", 0, "fleet")
 	flow.equip("brannoc", 1, "wait_to_heal_orders")
 	flow.equip("maren", 0, "plant_feet_orders")
 	flow.leave_camp()
@@ -100,7 +99,7 @@ func test_the_loadout_reaches_the_fight() -> void:
 	var errors: Array[String] = []
 	var setup: FightSetup = flow.fight_setup(Bot.formation(), errors)
 	assert_eq(errors, [] as Array[String])
-	assert_eq(setup.heroes[0].def.stats.get_stat(UnitStats.Stat.HP), FixedMath.apply_bp(_kit("hearthwall").stats.get_stat(UnitStats.Stat.HP), 11200))
+	assert_eq(setup.heroes[0].def.stats.get_stat(UnitStats.Stat.SPEED), _kit("hearthwall").stats.get_stat(UnitStats.Stat.SPEED) + 1, "Fleet at rank I")
 	assert_null(setup.heroes[0].tactic, "Wait to heal does nothing on Brannoc")
 	assert_eq(setup.heroes[1].tactic.id, "plant_feet")
 
@@ -112,15 +111,12 @@ func test_the_pedlar() -> void:
 	assert_eq(flow.open_shop("tinker"), "there's no shop \"tinker\"")
 	assert_eq(flow.open_shop("pedlar"), "")
 	assert_eq(state.wares.size(), _run.act.pedlar_wares)
-	for id: String in state.wares:
-		var item: ItemDef = _run.items[id]
-		assert_ne(item.kind, ItemDef.Kind.GRAFT, "no grafts at the Pedlar")
-		assert_true(state.heroes.any(func(hero: RunState.Hero) -> bool: return item.works_on(_run.hero_kit(hero), hero.id)), "%s suits someone" % id)
 	assert_eq(state.wares, Offers.pedlar(_run, state, 0), "the same state, the same wares")
 	state.shards = 10
 	var first: String = state.wares[0]
 	assert_eq(flow.buy(0), "")
-	assert_eq([state.shards, state.stash, state.wares[0]], [10 - _run.items[first].price, [first], ""])
+	assert_eq([state.shards, state.stash, state.wares[0]], [10 - _run.act.item_prices[ItemDef.KIND_NAMES[_run.items[first].kind]], [first], ""])
+	assert_eq(state.item_ranks, {first: 1}, "owned at rank I")
 	assert_eq(flow.buy(0), "there's no ware 0")
 	var before: Array[String] = state.wares.duplicate()
 	var relics_before: Array[String] = state.shop_relics.duplicate()
@@ -142,10 +138,8 @@ func test_the_magpie() -> void:
 	var flow: RunFlow = _start()
 	var state: RunState = flow.state
 	assert_eq(flow.open_shop("magpie"), "")
-	var kinds: Array = state.wares.map(func(id: String) -> ItemDef.Kind: return _run.items[id].kind)
-	assert_eq(kinds.filter(func(kind: ItemDef.Kind) -> bool: return kind == ItemDef.Kind.GRAFT).size(), 2, "half grafts")
 	assert_eq(state.wares.size(), 4)
-	assert_eq(flow.price_of("whetstone"), 9, "6 shards at the Pedlar (a charm), half again, rounded up")
+	assert_eq(flow.price_of("fleet"), 9, "6 shards at the Pedlar (a charm), half again, rounded up")
 	assert_eq(flow.reroll(), "only the Pedlar rerolls")
 
 

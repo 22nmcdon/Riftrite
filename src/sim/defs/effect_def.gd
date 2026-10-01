@@ -186,6 +186,13 @@ extends RefCounted
 ##   on_would_fall     once a fight, the first time it would fall: it's
 ##                     left at 1 HP (SAVED), and the effect runs (phase 4,
 ##                     Unyielding: a would-fall save that isn't a signature)
+##   on_below_hp       the unit itself drops below "threshold_bp" of its max
+##                     HP while standing (each time it drops back below,
+##                     up to "times" a fight; default 1; phase 5c step 6,
+##                     Warding Thread and Smoke Vial)
+## Phase 5c step 6 also adds the target allies_near_self (every ally within
+## "within_hexes" of the unit, as it falls too: Last Breath) and cleanse's
+## "statuses" (only those).
 ## None of them names a hit, so none can use hit_target or
 ## amount_bp_of_damage.
 ## A passive's effects may cast an area on any of these, or on an event
@@ -197,6 +204,7 @@ enum Trigger {
 	ON_ABILITY, ON_BASIC_ATTACK, ON_HOLDER_CRIT, ON_SHIELDED, ON_HIT_TAKEN, ON_HEAL, ON_STATUS, ON_KILL,
 	ON_INTERVAL, ON_FALL, ON_HOP, ON_WOULD_FALL,
 	ON_HOLDER_HIT, ON_SHIELD_BROKEN, ON_ALLY_ABILITY, ON_STATUS_ENDED, ON_LIFESTEAL, ON_KNOCKBACK, ON_GUARD,
+	ON_BELOW_HP,
 }
 enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS }
 enum Placement { EDGES, ADJACENT, HEXES }
@@ -218,6 +226,7 @@ enum Target {
 	ENEMIES_NEAR_NAMED,
 	ENEMY_NEAR_NAMED,
 	NEAREST_ENEMIES,
+	ALLIES_NEAR_SELF,
 }
 ## A nested area effect's side (phase 4): both, or only one.
 enum AreaSide { BOTH, ENEMIES, ALLIES }
@@ -227,12 +236,14 @@ const TRIGGER_NAMES: Array[String] = [
 	"on_ability", "on_basic_attack", "on_holder_crit", "on_shielded", "on_hit_taken", "on_heal", "on_status", "on_kill",
 	"on_interval", "on_fall", "on_hop", "on_would_fall",
 	"on_holder_hit", "on_shield_broken", "on_ally_ability", "on_status_ended", "on_lifesteal", "on_knockback", "on_guard",
+	"on_below_hp",
 ]
 ## The unit's events (see the top).
 const EVENT_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
+	Trigger.ON_BELOW_HP,
 ]
 ## Event triggers that name a unit (hit_target) and those that name a hit
 ## (amount_bp_of_damage).
@@ -248,6 +259,7 @@ const ABILITY_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
+	Trigger.ON_BELOW_HP,
 ]
 ## What a passive's effects may run on (PartDef).
 const PASSIVE_TRIGGERS: Array[Trigger] = [
@@ -255,18 +267,20 @@ const PASSIVE_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
+	Trigger.ON_BELOW_HP,
 ]
 ## The passive triggers that aren't events (Passives.run_timed, on_fall,
 ## would_fall).
-const UNIT_TRIGGERS: Array[Trigger] = [Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL]
+const UNIT_TRIGGERS: Array[Trigger] = [Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL, Trigger.ON_BELOW_HP]
 const RELIC_TRIGGERS: Array[Trigger] = [Trigger.ON_FIRE, Trigger.ON_FIGHT_START, Trigger.AT_TIME, Trigger.ON_ALLY_BELOW_HP]
 ## Targets that need the effect's unit to stand on the field.
 const FIELD_ONLY_TARGETS: Array[Target] = [Target.TARGET, Target.HIT_TARGET, Target.SELF,
 	Target.ENEMY_NEAR_TARGET, Target.ENEMIES_NEAR_TARGET, Target.ALLY_NEAR_TARGET, Target.ALLIES_NEAR_TARGET, Target.LOWEST_HP_ALLY]
 ## Targets near the ability's target (phase 4), and those that need a reach.
 const NEAR_TARGETS: Array[Target] = [Target.ENEMY_NEAR_TARGET, Target.ENEMIES_NEAR_TARGET, Target.ALLY_NEAR_TARGET, Target.ALLIES_NEAR_TARGET,
-	Target.ENEMIES_NEAR_SELF, Target.ENEMIES_NEAR_NAMED, Target.ENEMY_NEAR_NAMED]
-const REACH_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_TARGET, Target.ALLIES_NEAR_TARGET, Target.ENEMIES_NEAR_SELF, Target.ENEMIES_NEAR_NAMED]
+	Target.ENEMIES_NEAR_SELF, Target.ENEMIES_NEAR_NAMED, Target.ENEMY_NEAR_NAMED, Target.ALLIES_NEAR_SELF]
+const REACH_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_TARGET, Target.ALLIES_NEAR_TARGET, Target.ENEMIES_NEAR_SELF, Target.ENEMIES_NEAR_NAMED,
+	Target.ALLIES_NEAR_SELF]
 ## The targets around the unit an event names (they need one).
 const NAMED_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_NAMED, Target.ENEMY_NEAR_NAMED]
 const SIDE_NAMES: Array[String] = ["both", "enemies", "allies"]
@@ -298,6 +312,7 @@ const TARGET_NAMES: Array[String] = [
 	"enemies_near_named",
 	"enemy_near_named",
 	"nearest_enemies",
+	"allies_near_self",
 ]
 
 var trigger: Trigger
@@ -377,6 +392,11 @@ var fresh_only: bool = false
 ## An event effect: at most once this many ticks for each unit its event
 ## names (0: no limit; phase 5c step 5d).
 var cooldown_per_unit_ticks: int = 0
+## on_below_hp: how many times a fight it may run (phase 5c step 6).
+var times: int = 1
+## cleanse: only these statuses (empty: all damage over time; phase 5c step
+## 6, Purifying Light).
+var cleanse_statuses: Array[String] = []
 ## In an area: which side it's for.
 var side: AreaSide = AreaSide.BOTH
 ## A zone: how long it stays and how often it lands (0: an ordinary area).
@@ -465,6 +485,8 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				def.duration_ticks = reader.req_ticks("duration_ms", FixedMath.MS_PER_TICK)
 			Type.CLEANSE:
 				def.amount = reader.req_int("amount_bp", 1, FixedMath.BP_ONE)
+				if reader.has("statuses"):
+					def.cleanse_statuses = reader.req_string_array("statuses")
 		if reader.has("scaling"):
 			if def.amount_bp_of_damage > 0 or def.amount_bp_of_max_hp > 0:
 				reader.error("\"scaling\" can't be combined with %s" % ("amount_bp_of_damage" if def.amount_bp_of_damage > 0 else "amount_bp_of_max_hp"))
@@ -580,6 +602,9 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 		Trigger.ON_INTERVAL:
 			def.interval_ticks = reader.req_ticks("interval_ms", FixedMath.MS_PER_TICK)
 			def.once = reader.opt_bool("once", false)
+		Trigger.ON_BELOW_HP:
+			def.threshold_bp = reader.req_int("threshold_bp", 1, FixedMath.BP_ONE - 1)
+			def.times = reader.opt_int("times", 1, 1, 10)
 		Trigger.ON_STATUS, Trigger.ON_STATUS_ENDED:
 			if reader.has("statuses"):
 				def.statuses = reader.req_string_array("statuses")

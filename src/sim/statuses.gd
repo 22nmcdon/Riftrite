@@ -299,9 +299,11 @@ static func _deal_damage_over_time(sim: CombatSim, unit: UnitState, state: Statu
 ## this (`by_heal`), and so does a cleanse effect; either way the line names
 ## its source (rule 4). Timed statuses have no stacks, so they're never
 ## touched.
-static func cleanse_over_time(sim: CombatSim, unit: UnitState, share_bp: int, source: EffectSource, by_heal: bool = false) -> void:
+static func cleanse_over_time(sim: CombatSim, unit: UnitState, share_bp: int, source: EffectSource, by_heal: bool = false, only: Array[String] = []) -> void:
 	for state: StatusState in unit.statuses.duplicate():
 		if state.lasting and not _by_heroes(sim, source):
+			continue
+		if not only.is_empty() and not only.has(state.def.id):
 			continue
 		var removed: int = FixedMath.apply_bp(state.total_stacks(), FixedMath.apply_bp(share_bp, state.def.cleanse_effectiveness_bp))
 		if removed <= 0:

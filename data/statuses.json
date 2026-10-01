@@ -160,5 +160,37 @@
     "kind": "boost",
     "stacking": true,
     "auras": [{"stat": "max_hp_bp", "value": 11000}, {"stat": "atk_bp", "value": 11000}, {"stat": "mgk_bp", "value": 11000}, {"stat": "def_bp", "value": 11000}, {"stat": "crit_bp", "value": 11000}, {"stat": "atsp_bp", "value": 11000}]
+  },
+  {
+    "_note": "Attacks faster while it lasts (Surge, a sigil: after its holder's signature fires; phase 5c step 6). Rank II and III are surge_2.",
+    "id": "surge",
+    "name": "Surge",
+    "kind": "boost",
+    "duration_ms": 3000,
+    "auras": [{"stat": "atsp", "value": 20}]
+  },
+  {
+    "_note": "Surge at ranks II and III (rank III lasts 5s, set by the sigil).",
+    "id": "surge_2",
+    "name": "Surge",
+    "kind": "boost",
+    "duration_ms": 3000,
+    "auras": [{"stat": "atsp", "value": 30}]
+  },
+  {
+    "_note": "More ATK and MGK while it lasts (Last Breath, a charm at rank III: the allies near its holder as it falls; phase 5c step 6).",
+    "id": "last_breath",
+    "name": "Last Breath",
+    "kind": "boost",
+    "duration_ms": 5000,
+    "auras": [{"stat": "atk_bp", "value": 11000}, {"stat": "mgk_bp", "value": 11000}]
+  },
+  {
+    "_note": "More DEF while it lasts (Purifying Light, a charm at rank III: the ally its holder heals; phase 5c step 6).",
+    "id": "purified",
+    "name": "Purified",
+    "kind": "boost",
+    "duration_ms": 3000,
+    "auras": [{"stat": "def", "value": 10}]
   }
 ]

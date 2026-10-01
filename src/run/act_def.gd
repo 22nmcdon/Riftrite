@@ -7,7 +7,7 @@ extends RefCounted
 ## the shops' prices and sizes. Phase 5c step 5a (economy.md, relics/):
 ## relics by tier, the shops' odds for each tier, the rerolls' climb, the
 ## Magpie's discount, the elite's chance of an epic, the boss relics offered,
-## and the Shrine's price.
+## and the Shrine's price. Phase 5c step 6: the loadout's prices and ranks.
 
 const DAY_KINDS: Array[String] = ["normal", "elite", "boss"]
 
@@ -53,6 +53,14 @@ var shrine_price: int = 15
 var pedlar_wares: int = 4
 var magpie_wares: int = 4
 var magpie_markup_pct: int = 150
+## The loadout pool (phase 5c step 6, docs/plans/loadout/): an item's price
+## by its kind (ItemDef.KIND_NAMES), and what ranks it up: for each kind,
+## how much it must count to reach rank II, then how much more for rank III
+## (the count starts again at each rank). Tactics count ms its hero stands
+## in a fight with it (Decision 32), gambits fights, sigils casts of the
+## signature, charms won fights; all only while it's equipped.
+var item_prices: Dictionary[String, int] = {}
+var item_ranks: Dictionary[String, Array] = {}
 
 
 static func read(reader: DataReader) -> ActDef:
@@ -86,6 +94,25 @@ static func read(reader: DataReader) -> ActDef:
 	def.pedlar_wares = reader.req_int("pedlar_wares", 1, 8)
 	def.magpie_wares = reader.req_int("magpie_wares", 1, 8)
 	def.magpie_markup_pct = reader.req_int("magpie_markup_pct", 100, 400)
+	var items: DataReader = reader.req_object("items")
+	if items != null:
+		var item_prices: DataReader = items.req_object("prices")
+		var item_ranks: DataReader = items.req_object("ranks")
+		for kind: String in ItemDef.KIND_NAMES:
+			if item_prices != null:
+				def.item_prices[kind] = item_prices.req_int(kind, 0)
+			if item_ranks != null:
+				var needs: Array[int] = item_ranks.req_int_array(kind)
+				if needs.any(func(need: int) -> bool: return need < 1):
+					item_ranks.error("%s: each count is at least 1" % kind)
+				if needs.size() != ItemDef.RANKS - 1:
+					item_ranks.error("%s: what reaches rank II and rank III" % kind)
+				def.item_ranks[kind] = needs
+		if item_prices != null:
+			item_prices.finish()
+		if item_ranks != null:
+			item_ranks.finish()
+		items.finish()
 	var pay_reader: DataReader = reader.req_object("pay")
 	if pay_reader != null:
 		for tier: String in EncounterDef.TIERS:

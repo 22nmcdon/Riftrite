@@ -30,6 +30,11 @@ extends RefCounted
 ##   crits    its hits that crit, one each (phase 5c step 5a; Lucky Strike)
 ##   overkill its hits' damage past their target's last HP (phase 5c step
 ##            5b; Overkill Tithe)
+## Phase 5c step 6 (the loadout's ranks, section 14.3):
+##   casts    its signature's fires, one each (an echo is its own ability,
+##            so it doesn't count; a sigil's)
+##   ms_standing  how long it stands in the fight, in ms, checked as each
+##            tick ends (a tactic's, Decision 32)
 ## Filters (each optional):
 ##   from_ability: ["split_shot"]  only what these abilities or passives do
 ##                                 (ids in the hero's kits: base, vowed, or
@@ -54,13 +59,13 @@ extends RefCounted
 ## three fights' worth of what a vowed hero puts in); the sim never reads it.
 ## Adding a kind or a filter is a code change.
 
-enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL }
+enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING }
 
-const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill"]
-const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill"]
+const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing"]
+const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill", "casts", "ms standing"]
 ## The kinds read from where the hero is the target, or from the tick, not
 ## from what the hero does.
-const NOT_ITS_OWN: Array[Counts] = [Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS]
+const NOT_ITS_OWN: Array[Counts] = [Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING]
 
 ## The player's line: "Damage dealt from 5 or more hexes away".
 var text: String
@@ -137,6 +142,6 @@ func counts_kind(kind: LogEntry.Kind, ability_id: String) -> bool:
 		Counts.APPLIED:
 			if kind != LogEntry.Kind.STATUS_APPLIED:
 				return false
-		Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS:
+		Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING:
 			return false
 	return from_ability.is_empty() or from_ability.has(ability_id)

@@ -1,6 +1,6 @@
 # Loadout: tactics, gambits, sigils, and charms
 
-Status: **agreed in discussion (2026-09-30), not built.** What a hero can slot, one file per kind. Replaces the first drafts in `../rebuild-content-pool.md` (part 7b, sections 3–5) and part 6's examples, and builds on part 6 (`../rebuild-between-fights.md`, sections 2 and 8); where they disagree, this folder wins, and part 6 carries notes saying so. **Numbers and names are placeholders** until the sim runner has had a pass at them.
+Status: **agreed in discussion (2026-09-30); being built as phase 5c step 6** (`../rebuild-phase5c-combos.md`, section 14): the frame (ranks, counters, selling, prices) and 30 items built in 6a (2026-10-01); the rest of the charms and sigils, the tactics, the gambits, and the Magpie's stall to come. What a hero can slot, one file per kind. Replaces the first drafts in `../rebuild-content-pool.md` (part 7b, sections 3–5) and part 6's examples, and builds on part 6 (`../rebuild-between-fights.md`, sections 2 and 8); where they disagree, this folder wins, and part 6 carries notes saying so. **Numbers and names are placeholders** until the sim runner has had a pass at them.
 
 | Kind | File | What it changes | Price | Ranks up |
 | --- | --- | --- | --- | --- |

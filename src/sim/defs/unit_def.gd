@@ -186,6 +186,7 @@ func condition_status_ids() -> Array[String]:
 			found.append_array(effect.vs.statuses)
 		if not effect.stacks_of.is_empty():
 			found.append(effect.stacks_of)
+		found.append_array(effect.cleanse_statuses)
 	return found
 
 

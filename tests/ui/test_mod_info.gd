@@ -42,7 +42,8 @@ func test_an_added_effect_that_scales_uses_the_heros_numbers() -> void:
 ## Part 7, section 6: no card with a mod goes without its amounts.
 func test_every_card_in_the_data_has_a_numbers_line() -> void:
 	for id: String in _run.item_ids:
-		assert_false(ModInfo.item_numbers(_run.items[id], null, _content).is_empty(), id)
+		for rank: int in range(1, ItemDef.RANKS + 1):
+			assert_false(ModInfo.item_numbers(_run.items[id], null, _content, rank).is_empty(), "%s rank %d" % [id, rank])
 	for id: String in _run.upgrade_ids:
 		assert_false(ModInfo.upgrade_numbers(_run.upgrades[id], null, _content).is_empty(), id)
 	for id: String in _run.relic_ids:
@@ -55,12 +56,12 @@ func test_every_card_in_the_data_has_a_numbers_line() -> void:
 func test_every_stat_change_names_its_amount() -> void:
 	for id: String in _run.item_ids:
 		var item: ItemDef = _run.items[id]
-		if item.mod == null:
-			continue
-		var numbers: String = ModInfo.item_numbers(item, null, _content)
-		for stat: int in item.mod.stats_bp.size():
-			if item.mod.stats_bp[stat] != FixedMath.BP_ONE:
-				assert_string_contains(numbers, "%s %s" % [UnitInfo.signed_percent(item.mod.stats_bp[stat] - FixedMath.BP_ONE), UnitStats.LABELS[stat]], id)
+		for rank: int in range(1, item.ranks.size() + 1):
+			var mod: KitMod = item.mod_at(rank)
+			var numbers: String = ModInfo.item_numbers(item, null, _content, rank)
+			for stat: int in mod.stats_bp.size():
+				if mod.stats_bp[stat] != FixedMath.BP_ONE:
+					assert_string_contains(numbers, "%s %s" % [UnitInfo.signed_percent(mod.stats_bp[stat] - FixedMath.BP_ONE), UnitStats.LABELS[stat]], id)
 
 
 func test_a_relics_run_rules_and_who_its_mods_are_for() -> void:

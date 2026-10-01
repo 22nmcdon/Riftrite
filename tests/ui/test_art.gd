@@ -20,7 +20,7 @@ func test_the_fonts_load() -> void:
 ## glyph loads.
 func test_every_icon_loads() -> void:
 	for kind: String in ItemIcon.KINDS:
-		assert_true(ArenaView.art(ItemIcon.FRAMES % kind) is Texture2D, kind)
+		assert_true(ArenaView.art(ItemIcon.FRAMES % ItemIcon.FRAME_OF.get(kind, kind)) is Texture2D, kind)
 		assert_true(ItemIcon.TINTS.has(kind), kind)
 	for kind: String in ItemDef.KIND_NAMES:
 		assert_has(ItemIcon.KINDS, kind)
@@ -47,7 +47,7 @@ func test_the_run_shows_the_icons() -> void:
 	main.show_run_start(7)
 	(main.screen as RunStartScreen).run_started.emit((main.screen as RunStartScreen).vows, 7)
 	var flow: RunFlow = main.run_session.flow
-	flow.state.hero("maren").slots[0] = "ember_charm"
+	flow.state.hero("maren").slots[0] = "ember_tipped"
 	flow.state.relics.append("hollow_crown")
 	flow.state.camp.assign(["pedlar"])
 	flow.state.shards = 20

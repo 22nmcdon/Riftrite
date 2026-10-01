@@ -148,7 +148,7 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			if not effect.fresh_only or Statuses.find(victim, status_id) == null:
 				Statuses.apply(sim, victim, status_id, amount, effect.duration_ticks, source)
 		EffectDef.Type.CLEANSE:
-			Statuses.cleanse_over_time(sim, victim, mini(amount, FixedMath.BP_ONE), source)
+			Statuses.cleanse_over_time(sim, victim, mini(amount, FixedMath.BP_ONE), source, false, effect.cleanse_statuses)
 		EffectDef.Type.MANA_DRAIN:
 			Mana.drain(sim, victim, amount, source)
 		EffectDef.Type.GAIN_MANA:
@@ -257,7 +257,7 @@ static func crit_chance_bp(sim: CombatSim, unit: UnitState, ability: AbilityDef,
 ## near the target (phase 4: near the ability's target, or the unit hit).
 static func _targets(sim: CombatSim, unit: UnitState, target: EffectDef.Target, aimed_at: UnitState, hit: Hit, effect: EffectDef = null) -> Array[UnitState]:
 	var found: Array[UnitState] = []
-	if effect != null and target == EffectDef.Target.ENEMIES_NEAR_SELF:
+	if effect != null and (target == EffectDef.Target.ENEMIES_NEAR_SELF or target == EffectDef.Target.ALLIES_NEAR_SELF):
 		return near(sim, unit, effect, unit)
 	if effect != null and EffectDef.NAMED_TARGETS.has(target):
 		return near(sim, unit, effect, hit.target if hit != null else null)
@@ -296,7 +296,8 @@ static func near(sim: CombatSim, unit: UnitState, effect: EffectDef, center: Uni
 		return found
 	if center == null:
 		return found
-	var enemies: bool = effect.target != EffectDef.Target.ALLY_NEAR_TARGET and effect.target != EffectDef.Target.ALLIES_NEAR_TARGET
+	var enemies: bool = effect.target != EffectDef.Target.ALLY_NEAR_TARGET and effect.target != EffectDef.Target.ALLIES_NEAR_TARGET \
+		and effect.target != EffectDef.Target.ALLIES_NEAR_SELF
 	var pool: Array[UnitState] = sim.targetable_enemies_of(unit) if enemies else sim.standing_allies_of(unit)
 	var single: bool = effect.target == EffectDef.Target.ENEMY_NEAR_TARGET or effect.target == EffectDef.Target.ALLY_NEAR_TARGET \
 		or effect.target == EffectDef.Target.ENEMY_NEAR_NAMED

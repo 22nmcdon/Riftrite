@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a, 5b (section 11), and 5c (section 12) built (10-01), 5d (section 13) built (10-01): the relic pool is complete; step 6 (the loadout pool, section 14) approved, being built; steps 7–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a, 5b (section 11), and 5c (section 12) built (10-01), 5d (section 13) built (10-01): the relic pool is complete; step 6 (the loadout pool, section 14) approved, 6a built (10-01); steps 7–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -826,7 +826,7 @@ Each is a passive on every hero (a relic's mod). Each plays off both paths: Hear
 
 ## 14. Step 6: the loadout pool
 
-Status: **approved (2026-10-01, Decisions 30–33); being built in five parts.** Builds `loadout/` (its README's nine rules and its decisions; `tactics.md`, `gambits.md`, `sigils.md`, `charms.md`) and the Magpie's stall (`magpie.md`). The Magpie as a node (when he's offered, from day 3, at most twice an act) is step 8's; until then he keeps today's camp place, with the new stall.
+Status: **approved (2026-10-01, Decisions 30–33); being built in five parts: 6a built (10-01).** Builds `loadout/` (its README's nine rules and its decisions; `tactics.md`, `gambits.md`, `sigils.md`, `charms.md`) and the Magpie's stall (`magpie.md`). The Magpie as a node (when he's offered, from day 3, at most twice an act) is step 8's; until then he keeps today's camp place, with the new stall.
 
 ### 14.1 What's there now (phase 5)
 
@@ -855,9 +855,9 @@ Status: **approved (2026-10-01, Decisions 30–33); being built in five parts.**
 
 | Kind | Rank II after | Rank III after | Counted as |
 | --- | --- | --- | --- |
-| Tactic | 60s | 180s more | a new tally, `standing`: ticks its hero stands in the fight (Decision 32) |
+| Tactic | 60s | 180s more | a new tally, `ms_standing`: how long its hero stands in the fight (Decision 32) |
 | Gambit | 3 fights | 6 more | fights it was equipped in, its hero placed |
-| Sigil | 10 casts | 25 more | the `casts` its signature fired (a new tally kind; echoes and the sigil's extra fires don't count) |
+| Sigil | 10 casts | 25 more | the `casts` its signature fired (a new tally kind; an echo is its own ability, so it doesn't count) |
 | Charm | 4 won fights | 8 more | won fights (a tie pays like a win, so counts) |
 
   The numbers are `act1.json`'s (`item_ranks`), so tuning moves them without code. After a fight the day screen lists what ranked up, beside what grew.
@@ -952,7 +952,7 @@ On his day (today's camp place, until step 8 makes him a node):
 
 ### 14.9 Files, tests, and the bot
 
-- **Changed:** `item_def.gd` (ranks, gambit, no needs or price), `tactic_def.gd` and `tactics.gd` (ranks, the new kinds, no heroes), `data/items.json` (62), `data/tactics.json` (14), `data/statuses.json` (Grounded, Iron Skin, the next-hit boost, surges, Scavenger's), `act_def.gd`/`data/act1.json` (item prices and ranks, the Magpie's prices), `run_state.gd` and `run_save.gd` (items' ranks and counts, `gambit_at`), `run_flow.gd` (buy, sell, rank-ups, sell and swap relics), `offers.gd`, `run_content.gd`, the sim pieces in 14.5–14.7 with their log kinds (DODGED, ARRIVE), `fight_setup.gd`/`encounters.gd` (gambits), `deed_def.gd`/`deeds.gd` (`standing`, `casts`), `mod_info.gd`/`unit_info.gd` (ranks, the words), `hero_panel.gd`, `hero_bar.gd`, and `run_day_screen.gd` (rank on chips and cards, Sell, the Magpie's stall), `item_icon.gd` (the gambit frame), `tools/run_bot.gd` (buys as before, never sells), `tools/run_report.gd` (items ranked up per run), the chaos fight.
+- **Changed:** `item_def.gd` (ranks, gambit, no needs or price), `tactic_def.gd` and `tactics.gd` (ranks, the new kinds, no heroes), `data/items.json` (62), `data/tactics.json` (14), `data/statuses.json` (Grounded, Iron Skin, the next-hit boost, surges, Scavenger's), `act_def.gd`/`data/act1.json` (item prices and ranks, the Magpie's prices), `run_state.gd` and `run_save.gd` (items' ranks and counts, `gambit_at`), `run_flow.gd` (buy, sell, rank-ups, sell and swap relics), `offers.gd`, `run_content.gd`, the sim pieces in 14.5–14.7 with their log kinds (DODGED, ARRIVE), `fight_setup.gd`/`encounters.gd` (gambits), `deed_def.gd`/`deeds.gd` (`ms_standing`, `casts`), `mod_info.gd`/`unit_info.gd` (ranks, the words), `hero_panel.gd`, `hero_bar.gd`, and `run_day_screen.gd` (rank on chips and cards, Sell, the Magpie's stall), `item_icon.gd` (the gambit frame), `tools/run_bot.gd` (buys as before, never sells), `tools/run_report.gd` (items ranked up per run), the chaos fight.
 - **Tests:** `tests/run/test_loadout.gd` (new: ranks from each counter, a copy skips a rank, rank III never drawn, selling at half from a slot or the stash, prices by kind, one gambit per hero, an old save loads at rank I); `tests/sim/test_loadout_pieces.gd` (each 6b piece and tactic kind and gambit rule in a small fight); `test_magpie` (the stall, selling, the swap); the item and tactic lists, `test_mod_info`, and `test_unit_info` changed on purpose; determinism, the log audit, every encounter on the screen (DODGED and ARRIVE get rows), the bench's fingerprints unchanged; the run report runs.
 
 ### 14.10 Questions (answered in 14.11)
@@ -968,6 +968,31 @@ On his day (today's camp place, until step 8 makes him a node):
 31. **Rear Guard stays on the board** (Question V): rank I starts it hidden until an enemy comes within 2 hexes, II gives +20% attack speed for its first 5s out of hiding, III Roots the target of its first attack out of hiding for 1s. The board gains no row.
 32. **A tactic ranks up by every second its hero stands in a fight with it equipped** (Question W), not only while its order applies: 60s, then 180s more (about 2 fights, then 6).
 33. **Charms stack with relics in the same lane** (Question X), like any two bonuses of one kind.
+
+### 14.12 Built in step 6a (2026-10-01)
+
+- **Items** (`ItemDef`): four kinds (charm, tactic, sigil, gambit; graft is gone), each charm, sigil, and gambit with three whole kit mods in `"ranks"` (`mod_at(rank)`), a tactic naming `tactics.json`'s. `price`, `needs`, `answers`, `works_on`, and the "no effect on this hero" marker are gone. `RunContent` checks each rank's mod is sound on every kit and changes something on some hero's (a data check, never shown to players).
+- **Prices and ranks** are `act1.json`'s `items` (`ActDef.item_prices`, `item_ranks`): tactic 4, charm 6, sigil 8, gambit 12; rank II after 60s / 3 fights / 10 casts / 4 won fights, rank III after 180s / 6 / 25 / 8 more.
+- **The run** (`RunState.item_ranks`, `item_counts`, `ranked`; the save's version is 2, so a save from before the pool doesn't load: its items are gone):
+  - A run owns one of each item. Buying one it owns puts it a rank up (`RunFlow._gain_item`; a rank II copy lands one above, or on II); its count starts again.
+  - `_rank_items` (in `record`, Hunts too) counts each equipped item on a placed hero: charms won fights (a tie is a win), gambits fights, tactics `ms_standing` and sigils `casts` from the fight's tallies (`RunContent.growth_tallies` adds them under `item:<id>`). Reaching the need ranks it up; what's over carries on. `rank_progress` says how far.
+  - `sell` at the Pedlar pays half the kind's price, rounded down, from a slot or the stash; the Magpie doesn't buy items.
+  - One tactic and one gambit per hero (`equip`).
+  - The Pedlar and the Magpie draw from every item not held at rank III, unfiltered (`Offers._for_sale`). `RunContent.loadout_tactic` hands the fight a tactic only if its hero can follow it (`can_follow`), silently.
+- **New tally kinds** (`DeedDef`): `casts` (its signature's FIRE entries; an echo has its own id) and `ms_standing` (each tick it stands).
+- **Small sim pieces:** a trigger `on_below_hp` (the unit itself drops below a share of its max HP; again after climbing back above, up to `"times"` a fight, default 1), the target `allies_near_self` (from where it falls too), and cleanse's `"statuses"`. Four boost statuses: `surge`, `surge_2`, `last_breath`, `purified`.
+- **Items** (30 in `data/items.json`): 16 charms (Ember-Tipped, Bloodletter, Bramble Knot, Flint and Tinder, Kindling Ward, Mana Leech, Leech Fang, Opportunist, Headsman's Patience, Steady Stance, Spiteful Blood, Fleet, Smoke Vial, Warding Thread, Last Breath, Purifying Light), the four built tactics, and 10 sigils (Echo, Thrift, Desperate, Lingering, Tolling, Kindled, Grasping, Veiled, Bulwark, Surge). Hunter's Chalk moved to 6b with its rank III (its Marks stack). The cut items are gone. Kindling Ward's rank III Slow is the built Slow (30%, not the pool's 20%: a placeholder).
+- **The UI:**
+  - Item cards say the kind and rank ("CHARM · RANK II"), the rank's numbers, and the next rank's ("Rank III: ...").
+  - The stash cards say how far each is ("3 of 4 won fights to rank II"), and so do the loadout slots' tooltips; slots, the hero bar's chips, and the hero panel name the rank.
+  - A ware the run owns shows the rank buying it makes.
+  - The Pedlar has a Sell button for each owned item.
+  - After a fight, "Ranked up" lists what ranked up.
+  - Mana changes by a share (Thrift, Hollow Drum) and regen now show in numbers lines.
+  - Gambits take the rose frame grafts had, until theirs is drawn (`ItemIcon.FRAME_OF`).
+- **The bot** buys a ware it owns (a rank up), else one that changes a hero's kit with a free slot (its own judgment, `RunBot.suits`); it never sells. **The run report** adds the items held at the end, by rank.
+- **Tests:** `tests/run/test_loadout.gd` (11: prices and ranks by kind, a charm by won fights and a tie, sigils' and tactics' tallies with the carry-over, a real fight's casts and standing time, a bought copy, rank III never in a shop, the Pedlar unfiltered, selling, ranks reaching the fight, one gambit per hero, the save); `tests/sim/test_loadout_pieces.gd` (4: reading, on_below_hp, allies_near_self as it falls, a cleanse of some statuses); `test_economy.gd`, `test_mod_info.gd`, `test_art.gd`, `test_camp.gd`, and the status lists changed on purpose.
+- **What moved:** no built kit's fight; the bench's fingerprints are unchanged. **The run report** (54 runs): **87% of runs won** (66% before), with 3.4 items held at the end (rank I 2.0, II 3.0, III 0.4). The new charms and sigils are stronger than the cut ones, and the bot now buys items it owns to rank them up. Their numbers are placeholders for step 9's retune.
 
 ## Answered (2026-09-30)
 

@@ -50,7 +50,7 @@ func test_every_data_file_is_loaded() -> void:
 
 func test_real_statuses() -> void:
 	var db: ContentDb = ContentDb.load_dir("res://data")
-	assert_eq(db.status_ids, ["burn", "poison", "bleed", "root", "stun", "slow", "taunt", "silence", "marked", "undying", "engaged", "stealth", "warded", "sunder", "veiled_haste", "storm_call", "frenzy", "quickened", "unbending", "long_watch"] as Array[String])
+	assert_eq(db.status_ids, ["burn", "poison", "bleed", "root", "stun", "slow", "taunt", "silence", "marked", "undying", "engaged", "stealth", "warded", "sunder", "veiled_haste", "storm_call", "frenzy", "quickened", "unbending", "long_watch", "surge", "surge_2", "last_breath", "purified"] as Array[String])
 	assert_eq(db.statuses["burn"].interval_ticks, 10, "Burn ticks twice a second")
 	assert_eq(db.statuses["burn"].stacks_lost_bp, 500)
 	assert_eq(db.statuses["burn"].vs_shield_bp, 5000, "Burn is half as effective against shields")

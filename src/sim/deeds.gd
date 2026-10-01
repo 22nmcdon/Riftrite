@@ -32,6 +32,8 @@ class Counter:
 	var needs_taken: bool = false
 	var needs_kills: bool = false
 	var needs_time: bool = false
+	## Some count reads its signature's fires (casts).
+	var needs_casts: bool = false
 	## Some deed filters on distance, so its shots' are kept.
 	var needs_shots: bool = false
 	## Each shot's distance when fired, by "target@land tick@ability"
@@ -60,7 +62,8 @@ static func _add(counter: Counter, key: String, deed: DeedDef) -> void:
 	counter.needs_shots = counter.needs_shots or deed.from_range > 0
 	counter.needs_taken = counter.needs_taken or deed.counts == DeedDef.Counts.TAKEN
 	counter.needs_kills = counter.needs_kills or deed.counts == DeedDef.Counts.KILLS
-	counter.needs_time = counter.needs_time or deed.counts == DeedDef.Counts.MS_BELOW
+	counter.needs_time = counter.needs_time or deed.counts == DeedDef.Counts.MS_BELOW or deed.counts == DeedDef.Counts.MS_STANDING
+	counter.needs_casts = counter.needs_casts or deed.counts == DeedDef.Counts.CASTS
 
 
 ## Counts log entries [from, to).
@@ -85,6 +88,8 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 			continue
 		if kind == LogEntry.Kind.FIRE:
 			counter.fired_at[entry.source_ability] = entry.target
+			if counter.needs_casts and unit.def.signature != null and entry.source_ability == unit.def.signature.id:
+				_add_to(counter, DeedDef.Counts.CASTS, 1)
 			continue
 		for d: int in counter.deeds.size():
 			var deed: DeedDef = counter.deeds[d]
@@ -152,7 +157,7 @@ static func _add_to(counter: Counter, counts: DeedDef.Counts, amount: int) -> vo
 
 
 ## As each tick ends: the time each counting unit spends below a share of
-## its max HP (ms_below).
+## its max HP (ms_below), or standing (ms_standing).
 static func count_time(sim: CombatSim) -> void:
 	for unit: UnitState in sim.units:
 		if unit.deeds == null or not unit.deeds.needs_time or not unit.alive:
@@ -160,6 +165,8 @@ static func count_time(sim: CombatSim) -> void:
 		for d: int in unit.deeds.deeds.size():
 			var deed: DeedDef = unit.deeds.deeds[d]
 			if deed.counts == DeedDef.Counts.MS_BELOW and unit.hp * FixedMath.BP_ONE < deed.while_below_bp * unit.max_hp:
+				unit.deeds.amounts[d] += FixedMath.MS_PER_TICK
+			elif deed.counts == DeedDef.Counts.MS_STANDING:
 				unit.deeds.amounts[d] += FixedMath.MS_PER_TICK
 
 

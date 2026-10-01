@@ -40,29 +40,23 @@ static func pick(run: RunContent, state: RunState, visit: int, extra: int = 0) -
 	return cards
 
 
-## The Pedlar's wares: act.pedlar_wares different charms, tactics, and
-## sigils (never grafts), each one that works on someone on the team as they
-## are now (part 6, section 8). `rerolls` draws a fresh set.
+## The Pedlar's wares: act.pedlar_wares different items of any kind, never
+## one the run holds at rank III, and never filtered by what the team can
+## use (loadout rule 2; phase 5c step 6). `rerolls` draws a fresh set.
 static func pedlar(run: RunContent, state: RunState, rerolls: int) -> Array[String]:
 	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.PEDLAR, state.act, state.day, state.attempt, rerolls])
-	var pool: Array[String] = []
-	for id: String in run.item_ids:
-		var item: ItemDef = run.items[id]
-		if item.kind != ItemDef.Kind.GRAFT and state.heroes.any(func(hero: RunState.Hero) -> bool: return item.works_on(run.hero_kit(hero), hero.id)):
-			pool.append(id)
-	return _draw(rng, pool, run.act.pedlar_wares + run.relic_sum(state, "wares_add"))
+	return _draw(rng, _for_sale(run, state), run.act.pedlar_wares + run.relic_sum(state, "wares_add"))
 
 
-## The Magpie's wares (Decision 13): up to half grafts, the rest any other
-## gear, whoever it suits; one look, no rerolls.
+## The Magpie's wares: any items (not at rank III); one look, no rerolls.
 static func magpie(run: RunContent, state: RunState) -> Array[String]:
 	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.MAGPIE, state.act, state.day, state.attempt])
-	var grafts: Array[String] = run.item_ids.filter(func(id: String) -> bool: return run.items[id].kind == ItemDef.Kind.GRAFT)
-	var gear: Array[String] = run.item_ids.filter(func(id: String) -> bool: return run.items[id].kind != ItemDef.Kind.GRAFT)
-	@warning_ignore("integer_division")
-	var wares: Array[String] = _draw(rng, grafts, run.act.magpie_wares / 2)
-	wares.append_array(_draw(rng, gear, run.act.magpie_wares - wares.size()))
-	return wares
+	return _draw(rng, _for_sale(run, state), run.act.magpie_wares)
+
+
+## Every item a shop can lay out: all but those the run holds at rank III.
+static func _for_sale(run: RunContent, state: RunState) -> Array[String]:
+	return run.item_ids.filter(func(id: String) -> bool: return state.item_ranks.get(id, 0) < ItemDef.RANKS)
 
 
 ## `count` different ids from `pool` (fewer if it's short), in draw order.

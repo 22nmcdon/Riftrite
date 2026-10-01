@@ -9,10 +9,13 @@ extends Control
 ## An empty glyph draws the bare frame (an empty slot's kind).
 
 const FRAMES: String = "res://art/ui/items/frames/%s.svg"
-const KINDS: Array[String] = ["charm", "tactic", "sigil", "graft", "relic", "upgrade", "vow", "path", "bond"]
-## Each kind's glyph color, from the uploaded icons (graft: the rose frame's).
+const KINDS: Array[String] = ["charm", "tactic", "sigil", "gambit", "relic", "upgrade", "vow", "path", "bond"]
+## A kind drawn in another kind's frame: gambits (phase 5c step 6) take the
+## rose frame grafts had, until theirs is drawn.
+const FRAME_OF: Dictionary[String, String] = {"gambit": "graft"}
+## Each kind's glyph color, from the uploaded icons (gambit: the rose frame's).
 const TINTS: Dictionary[String, Color] = {
-	"charm": Color("ffd66e"), "tactic": Color("f1e6c8"), "sigil": Color("8ff5e8"), "graft": Color("ffb3c1"),
+	"charm": Color("ffd66e"), "tactic": Color("f1e6c8"), "sigil": Color("8ff5e8"), "gambit": Color("ffb3c1"),
 	"relic": Color("ffd66e"), "upgrade": Color("ffd66e"), "vow": Color("ffd66e"), "path": Color("8ff5e8"), "bond": Color("ffd66e"),
 }
 ## An upgrade's glyph.
@@ -31,7 +34,7 @@ static func make(icon_kind: String, glyph_name: String, side: float = 48.0) -> I
 	var icon := ItemIcon.new()
 	icon.kind = icon_kind
 	icon.glyph = glyph_name
-	icon.frame_texture = ArenaView.art(FRAMES % icon_kind)
+	icon.frame_texture = ArenaView.art(FRAMES % FRAME_OF.get(icon_kind, icon_kind))
 	if not glyph_name.is_empty():
 		icon.glyph_texture = ArenaView.art(RunContent.GLYPHS % glyph_name)
 	icon.custom_minimum_size = Vector2(side, side)

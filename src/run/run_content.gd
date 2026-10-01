@@ -153,7 +153,31 @@ func growth_tallies(state: RunState, hero: RunState.Hero) -> Array:
 		if relics.has(id) and relics[id].grows != null and relics[id].grows.counted_in_fights():
 			keys.append("relic:" + id)
 			counts.append(relics[id].grows.counts)
+	# Its tactic's and sigils' ranks count in the fight (phase 5c step 6):
+	# the time it stands, and its signature's casts. Charms and gambits count
+	# fights, which the run does.
+	for item_id: String in hero.slots:
+		var item: ItemDef = items.get(item_id)
+		if item == null or state.item_ranks.get(item_id, ItemDef.RANKS) >= ItemDef.RANKS:
+			continue
+		if item.kind == ItemDef.Kind.TACTIC:
+			keys.append("item:" + item_id)
+			counts.append(ITEM_STANDING)
+		elif item.kind == ItemDef.Kind.SIGIL:
+			keys.append("item:" + item_id)
+			counts.append(ITEM_CASTS)
 	return [keys, counts]
+
+
+## What a tactic's and a sigil's ranks count (built once).
+static var ITEM_STANDING: DeedDef = _count_of(DeedDef.Counts.MS_STANDING)
+static var ITEM_CASTS: DeedDef = _count_of(DeedDef.Counts.CASTS)
+
+
+static func _count_of(counts: DeedDef.Counts) -> DeedDef:
+	var deed := DeedDef.new()
+	deed.counts = counts
+	return deed
 
 
 ## The kit `hero` fights with before its upgrades and loadout: its path's,
@@ -163,24 +187,34 @@ func hero_kit(hero: RunState.Hero) -> UnitDef:
 	return path.transformed_kit if hero.transformed else path.vowed_kit
 
 
-## The kit mods `hero`'s loadout gives it, in slot order (a tactic gives
-## none; an item that does nothing on it changes nothing anyway).
-func loadout_mods(hero: RunState.Hero) -> Array[KitMod]:
+## The kit mods `hero`'s loadout gives it, in slot order, each at the
+## item's rank (a tactic gives none; an item that does nothing on it changes
+## nothing anyway).
+func loadout_mods(state: RunState, hero: RunState.Hero) -> Array[KitMod]:
 	var mods: Array[KitMod] = []
 	for item_id: String in hero.slots:
-		if items.has(item_id) and items[item_id].mod != null:
-			mods.append(items[item_id].mod)
+		var mod: KitMod = items[item_id].mod_at(state.item_ranks.get(item_id, 1)) if items.has(item_id) else null
+		if mod != null:
+			mods.append(mod)
 	return mods
 
 
-## The tactic `hero`'s loadout gives it: the first tactic item it can take,
-## or null.
+## The tactic `hero`'s loadout gives it: the first tactic item it can
+## follow, or null. One it can't (Wait to heal without a signature that
+## waits) does nothing, with no warning (loadout rule 2).
 func loadout_tactic(hero: RunState.Hero) -> TacticDef:
 	for item_id: String in hero.slots:
 		var item: ItemDef = items.get(item_id)
-		if item != null and item.tactic != null and item.works_on(hero_kit(hero), hero.id):
+		if item != null and item.tactic != null and can_follow(item.tactic, hero_kit(hero), hero.id):
 			return item.tactic
 	return null
+
+
+## Whether a hero `hero_id` with `kit` can follow `tactic`.
+static func can_follow(tactic: TacticDef, kit: UnitDef, hero_id: String) -> bool:
+	if not tactic.allows(hero_id):
+		return false
+	return tactic.kind != TacticDef.Kind.SIGNATURE_THRESHOLD or Tactics.can_wait(kit.signature)
 
 
 ## The kit mods the run's relics give every hero, in the order taken; a
@@ -454,30 +488,31 @@ func _check_bond(bond: BondDef, where: String) -> void:
 		errors.append("%s: a bond links two different heroes' paths" % where)
 
 
-## A tactic item's tactic must exist; a mod must be sound on every hero kit
-## it can meet, and every item must work on some hero's kit.
+## A tactic item's tactic must exist; each rank's mod must be sound on every
+## hero kit it can meet, and change something on some hero's (a check on the
+## data, never shown to players).
 func _check_item(item: ItemDef, where: String) -> void:
 	if item.kind == ItemDef.Kind.TACTIC:
 		if not content.tactics.has(item.tactic_id):
 			errors.append("%s: unknown tactic \"%s\"" % [where, item.tactic_id])
 			return
 		item.tactic = content.tactics[item.tactic_id]
-	elif item.mod == null:
 		return
-	var works: bool = false
-	for path_id: String in content.path_ids:
-		var path: PathDef = content.paths[path_id]
-		for kit: UnitDef in [path.vowed_kit, path.transformed_kit]:
-			if kit == null:
-				continue
-			if item.mod != null:
+	for rank: int in item.ranks.size():
+		var mod: KitMod = item.ranks[rank]
+		var works: bool = false
+		for path_id: String in content.path_ids:
+			var path: PathDef = content.paths[path_id]
+			for kit: UnitDef in [path.vowed_kit, path.transformed_kit]:
+				if kit == null:
+					continue
 				var problems: Array[String] = []
-				item.mod.apply(kit, problems)
+				mod.apply(kit, problems)
 				for problem: String in problems:
-					errors.append("%s: on %s's kit, %s" % [where, path_id, problem])
-			works = works or item.works_on(kit, path.hero)
-	if not works:
-		errors.append("%s: does nothing on any hero" % where)
+					errors.append("%s: rank %s on %s's kit, %s" % [where, ItemDef.RANK_NAMES[rank], path_id, problem])
+				works = works or mod.affects(kit)
+		if not works:
+			errors.append("%s: rank %s does nothing on any hero" % [where, ItemDef.RANK_NAMES[rank]])
 
 
 ## An upgrade's hero or path must exist, and its mod must change, soundly,

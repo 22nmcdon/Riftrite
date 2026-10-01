@@ -7,7 +7,7 @@ extends RefCounted
 ## (to_dict, from_dict).
 
 ## A save from another version can't be loaded.
-const VERSION: int = 1
+const VERSION: int = 2
 
 ## Where the day is: camp, choosing the fight, the loadout (then placement
 ## and the fight), after the fight (a pick, a transformation, a relic
@@ -104,6 +104,13 @@ var pick: Array[String] = []
 var just_transformed: Array[String] = []
 ## Items owned and not in a slot (item ids, in the order they came).
 var stash: Array[String] = []
+## Every item owned, in a slot or the stash (a run holds one of each; phase
+## 5c step 6): its rank (1 to 3), and what it has counted toward the next
+## since it reached this one (lookups; read in slot or stash order).
+var item_ranks: Dictionary[String, int] = {}
+var item_counts: Dictionary[String, int] = {}
+## The items the last fight ranked up, for the screen after it.
+var ranked: Array[String] = []
 ## The shop open at camp: "" (none), "pedlar", or "magpie".
 var shop: String = ""
 ## Its wares (item ids; "" once bought), and how often it's been rerolled.
@@ -191,6 +198,7 @@ func to_dict() -> Dictionary:
 		"relics": relics.duplicate(), "relic_choice": relic_choice.duplicate(), "relic_choice_price": relic_choice_price, "picks_left": picks_left,
 		"streak": streak, "streaks_paid": streaks_paid.duplicate(), "bonds_found": bonds_found.duplicate(),
 		"growth": growth.duplicate(), "grew": grew.duplicate(),
+		"item_ranks": item_ranks.duplicate(), "item_counts": item_counts.duplicate(), "ranked": ranked.duplicate(),
 	}
 
 
@@ -240,6 +248,13 @@ static func from_dict(data: Dictionary) -> RunState:
 	for relic_id: Variant in growth:
 		state.growth[str(relic_id)] = int(growth[relic_id])
 	state.grew = _strings(data.get("grew", []))
+	var ranks: Dictionary = data.get("item_ranks", {})
+	for item_id: Variant in ranks:
+		state.item_ranks[str(item_id)] = int(ranks[item_id])
+	var counts: Dictionary = data.get("item_counts", {})
+	for item_id: Variant in counts:
+		state.item_counts[str(item_id)] = int(counts[item_id])
+	state.ranked = _strings(data.get("ranked", []))
 	state.magpie_day = int(data.get("magpie_day", 0))
 	state.relics = _strings(data.get("relics", []))
 	state.relic_choice = _strings(data.get("relic_choice", []))

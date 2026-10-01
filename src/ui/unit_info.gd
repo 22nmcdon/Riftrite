@@ -224,6 +224,8 @@ static func passive_trigger_text(effect: EffectDef) -> String:
 			return "As it falls"
 		EffectDef.Trigger.ON_ALLY_BELOW_HP:
 			return "When an ally drops below %s HP (%s)" % [ValueBreakdown._percent(effect.threshold_bp), "once a fight" if effect.once else "once per ally"]
+		EffectDef.Trigger.ON_BELOW_HP:
+			return "When it drops below %s HP (%s)" % [ValueBreakdown._percent(effect.threshold_bp), "once a fight" if effect.times == 1 else "up to %d times a fight" % effect.times]
 	var word: String = EVENT_WORDS.get(effect.trigger, EffectDef.TRIGGER_NAMES[effect.trigger])
 	if effect.trigger == EffectDef.Trigger.ON_STATUS_ENDED and not effect.statuses.is_empty():
 		var ended: Array[String] = []
@@ -364,6 +366,8 @@ static func _near(effect: EffectDef) -> String:
 			return " to itself" if effect.type == EffectDef.Type.GAIN_MANA else ""
 		EffectDef.Target.ENEMIES_NEAR_SELF:
 			return " to every enemy near it" + within
+		EffectDef.Target.ALLIES_NEAR_SELF:
+			return " to every ally near it" + within
 		EffectDef.Target.ENEMIES_NEAR_NAMED:
 			return " to every enemy near that unit" + within
 		EffectDef.Target.ENEMY_NEAR_NAMED:
@@ -418,6 +422,11 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 		EffectDef.Type.EXTEND_STATUS:
 			return "its %s lasts %s longer" % [_status_name(effect.status_id, content), seconds(effect.duration_ticks)]
 		EffectDef.Type.CLEANSE:
+			if not effect.cleanse_statuses.is_empty():
+				var names: Array[String] = []
+				for status_id: String in effect.cleanse_statuses:
+					names.append(_status_name(status_id, content))
+				return "cleanses %s of %s" % [ValueBreakdown._percent(effect.amount), " and ".join(names)]
 			return "cleanses %s of damage over time" % ValueBreakdown._percent(effect.amount)
 		EffectDef.Type.MANA_DRAIN:
 			return "drains %d mana" % effect.amount

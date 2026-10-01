@@ -40,8 +40,12 @@ static func mod_parts(mod: KitMod, kit: UnitDef, content: ContentDb) -> Array[St
 			parts.append(change_text)
 	for part: PartDef in mod.passives:
 		parts.append("%s: %s" % [part.name, UnitInfo.passive_numbers(part, shown, content)])
+	if mod.mana_max_bp != FixedMath.BP_ONE:
+		parts.append("%s max mana" % UnitInfo.signed_percent(mod.mana_max_bp - FixedMath.BP_ONE))
 	if mod.mana_max_add != 0:
 		parts.append("%s max mana" % signed(mod.mana_max_add))
+	if mod.mana_regen_add != 0:
+		parts.append("%s mana a second" % signed(mod.mana_regen_add))
 	if mod.mana_start_add != 0:
 		parts.append("%s starting mana" % signed(mod.mana_start_add))
 	if mod.mana_per_attack_add != 0:
@@ -106,11 +110,20 @@ static func _power_word(change: KitMod.AbilityChange) -> String:
 	return " and ".join(words)
 
 
-## An item's numbers line: its mod's, or its tactic's.
-static func item_numbers(item: ItemDef, kit: UnitDef, content: ContentDb) -> String:
+## An item's numbers line at `rank` (1 to 3): its mod's, or its tactic's.
+static func item_numbers(item: ItemDef, kit: UnitDef, content: ContentDb, rank: int = 1) -> String:
 	if item.tactic != null:
 		return UnitInfo.tactic_numbers(item.tactic)
-	return mod_numbers(item.mod, kit, content) if item.mod != null else ""
+	var mod: KitMod = item.mod_at(rank)
+	return mod_numbers(mod, kit, content) if mod != null else ""
+
+
+## What an item's next rank brings, as "Rank II: ..." ("" at rank III, or
+## for a tactic until its ranks are built).
+static func next_rank_line(item: ItemDef, content: ContentDb, rank: int) -> String:
+	if rank >= ItemDef.RANKS or item.tactic != null:
+		return ""
+	return "Rank %s: %s" % [ItemDef.RANK_NAMES[rank], item_numbers(item, null, content, rank + 1)]
 
 
 ## An upgrade's: its mod's, what changes once the hero transforms, and how

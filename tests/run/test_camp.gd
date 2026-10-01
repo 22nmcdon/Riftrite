@@ -241,7 +241,7 @@ func test_relics_on_pay_picks_and_prices() -> void:
 	var before: int = state.shards
 	flow.open_shop("pedlar")
 	assert_eq(state.shards, before + 2, "Loose Change pays as a shop opens")
-	assert_eq(flow.price_of("whetstone"), 5, "Haggler's Charm: 1 less at the Pedlar")
+	assert_eq(flow.price_of("fleet"), 5, "Haggler's Charm: 1 less at the Pedlar")
 	flow.close_shop()
 	_to_fight(flow)
 	before = state.shards

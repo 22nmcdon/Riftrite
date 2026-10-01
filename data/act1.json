@@ -38,6 +38,10 @@
   "pedlar_wares": 4,
   "magpie_wares": 4,
   "magpie_markup_pct": 150,
+  "items": {
+    "prices": {"charm": 6, "tactic": 4, "sigil": 8, "gambit": 12},
+    "ranks": {"charm": [4, 8], "tactic": [60000, 180000], "sigil": [10, 25], "gambit": [3, 6]}
+  },
   "relic_odds": {
     "common": 70,
     "rare": 25,

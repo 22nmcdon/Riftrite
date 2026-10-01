@@ -237,7 +237,7 @@ func _fill_chips(card: Card, hero_id: String) -> void:
 ## A run's slots: each item by name in its kind's color, or "Empty".
 func _fill_run_chips(card: Card, run_session: RunSession, hero_id: String) -> void:
 	var slots: Array[String] = run_session.state().hero(hero_id).slots
-	var key: String = ",".join(slots)
+	var key: String = ",".join(slots.map(func(id: String) -> String: return "%s%d" % [id, run_session.state().item_ranks.get(id, 0)]))
 	if card.chips.get_child_count() > 0 and card.chips.get_meta("slots", "") == key:
 		return
 	card.chips.set_meta("slots", key)
@@ -249,6 +249,7 @@ func _fill_run_chips(card: Card, run_session: RunSession, hero_id: String) -> vo
 		var item: ItemDef = run_session.run.items.get(id, null)
 		var chip: PanelContainer = UiStyle.chip(item.name if item != null else "Empty", colors[item.kind] if item != null else UiStyle.LINE_500, item != null, 14,
 			ItemIcon.for_item(item, CHIP_ICON) if item != null else null)
-		chip.tooltip_text = ("%s\n%s" % [item.text, ModInfo.item_numbers(item, null, run_session.content)]).strip_edges() if item != null else "An empty slot"
+		var rank: int = run_session.state().item_ranks.get(id, 1)
+		chip.tooltip_text = ("%s · rank %s\n%s\n%s" % [item.name, ItemDef.RANK_NAMES[rank - 1], item.text, ModInfo.item_numbers(item, null, run_session.content, rank)]).strip_edges() if item != null else "An empty slot"
 		chip.mouse_filter = Control.MOUSE_FILTER_PASS
 		card.chips.add_child(chip)

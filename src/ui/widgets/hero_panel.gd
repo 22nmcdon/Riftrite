@@ -616,9 +616,9 @@ func _fill_run_loadout(run_session: RunSession) -> void:
 			continue
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 12)
-		row.add_child(UiStyle.chip("%s · %s" % [ItemDef.KIND_NAMES[item.kind].capitalize(), item.name], colors[item.kind], true, 16))
-		var works: bool = item.works_on(run_session.run.hero_kit(hero), hero.id)
-		var numbers: String = ModInfo.item_numbers(item, run_session.run.hero_kit(hero), run_session.content)
-		row.add_child(_wrapped(item.text + ("" if numbers.is_empty() else " (%s)" % numbers) + ("" if works else " (no effect on this hero)"), 16, UiStyle.TEXT if works else UiStyle.BAD))
+		var rank: int = run_session.state().item_ranks.get(id, 1)
+		row.add_child(UiStyle.chip("%s · %s %s" % [ItemDef.KIND_NAMES[item.kind].capitalize(), item.name, ItemDef.RANK_NAMES[rank - 1]], colors[item.kind], true, 16))
+		var numbers: String = ModInfo.item_numbers(item, run_session.run.hero_kit(hero), run_session.content, rank)
+		row.add_child(_wrapped(item.text + ("" if numbers.is_empty() else " (%s)" % numbers), 16, UiStyle.TEXT))
 		page.add_child(row)
 	page.add_child(_wrapped("Change the loadout before each fight, from the stash.", 16, UiStyle.TEXT_DIM))

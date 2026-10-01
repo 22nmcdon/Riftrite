@@ -318,6 +318,12 @@ func _fill_waiting() -> void:
 		var section: VBoxContainer = _section("What grew", "Growing cards step up with what the heroes do, for the rest of the run.")
 		for line: String in grew_lines(session):
 			section.add_child(_wrapped(line, 17, UiStyle.HIGHLIGHT))
+	if not state.ranked.is_empty():
+		var section: VBoxContainer = _section("Ranked up", "Items rank up with use, for the rest of the run.")
+		for id: String in state.ranked:
+			var item: ItemDef = session.run.items[id]
+			var rank: int = state.item_ranks.get(id, 1)
+			section.add_child(_wrapped("%s: rank %s · %s" % [item.name, ItemDef.RANK_NAMES[rank - 1], ModInfo.item_numbers(item, null, session.content, rank)], 17, UiStyle.HIGHLIGHT))
 	for hero_id: String in state.just_transformed:
 		var path: PathDef = session.path_of(hero_id)
 		var section: VBoxContainer = _section("%s transforms: %s" % [_hero_name(hero_id), path.name], path.transformed_text)
@@ -444,7 +450,7 @@ func _fill_shop() -> void:
 	var state: RunState = session.state()
 	var magpie: bool = state.shop == "magpie"
 	var section: VBoxContainer = _section("The Magpie" if magpie else "The Pedlar",
-		"What he took from bands who fell in the rift. One look, and dear." if magpie else "Charms, tactics, and sigils for what your heroes can use.")
+		"What he took from bands who fell in the rift. One look, and dear." if magpie else "Charms, tactics, and sigils; one you own comes a rank up. He buys yours back for half.")
 	# The keeper's scene behind the wares (phase 5b).
 	var stage: ShopStage = ShopStage.make(state.shop)
 	section.add_child(stage)
@@ -453,7 +459,8 @@ func _fill_shop() -> void:
 		if state.wares[i].is_empty():
 			continue
 		var item: ItemDef = session.run.items[state.wares[i]]
-		var card: VBoxContainer = _item_card(row, item)
+		# Owned, buying it is its next rank.
+		var card: VBoxContainer = _item_card(row, item, mini(state.item_ranks.get(item.id, 0) + 1, ItemDef.RANKS))
 		(card.get_parent() as Control).custom_minimum_size = Vector2(WARE_WIDTH, 0)
 		card.add_child(UiStyle.primary(UiStyle.button("Buy · %d shards" % session.flow.price_of(item.id), _do.bind(session.flow.buy.bind(i)))))
 	for i: int in state.shop_relics.size():
@@ -468,6 +475,11 @@ func _fill_shop() -> void:
 	for hero: RunState.Hero in state.heroes:
 		if hero.wounds > 0:
 			more.add_child(UiStyle.button("Treat a wound on %s · %d shards" % [_hero_name(hero.id), session.flow.wound_price()], _do.bind(session.flow.treat_wound.bind(hero.id))))
+	if not magpie:
+		# The Pedlar buys back what the run owns, for half (loadout rule 9).
+		for id: String in state.item_ranks:
+			more.add_child(UiStyle.button("Sell %s · %d shard%s" % [session.run.items[id].name, session.flow.sell_price(id), "" if session.flow.sell_price(id) == 1 else "s"],
+				_do.bind(session.flow.sell.bind(id))))
 	if magpie:
 		more.add_child(UiStyle.label("One look", 17, UiStyle.TEXT_DIM))
 	else:
@@ -484,23 +496,38 @@ static func _add_numbers(card: Container, numbers: String) -> void:
 		card.add_child(_wrapped(numbers, 16, UiStyle.HIGHLIGHT))
 
 
-## An item's card: its kind, name, rule, its numbers, what it answers, and
-## who it does nothing on.
-func _item_card(row: Container, item: ItemDef) -> VBoxContainer:
+## An item's card at `rank` (phase 5c step 6): its kind and rank, name,
+## rule, that rank's numbers, and the next rank's. Nothing says who it does
+## nothing on (loadout rule 2).
+func _item_card(row: Container, item: ItemDef, rank: int = 1) -> VBoxContainer:
 	var colors: Array[Color] = [UiStyle.CHARM, UiStyle.TACTIC, UiStyle.SIGIL, UiStyle.EMBER]
 	var card: VBoxContainer = _card(row, 0, colors[item.kind])
-	_card_head(card, ItemIcon.for_item(item, CARD_ICON), UiStyle.caps(ItemDef.KIND_NAMES[item.kind].to_upper(), 14, colors[item.kind]),
+	_card_head(card, ItemIcon.for_item(item, CARD_ICON),
+		UiStyle.caps("%s · RANK %s" % [ItemDef.KIND_NAMES[item.kind].to_upper(), ItemDef.RANK_NAMES[rank - 1]], 14, colors[item.kind]),
 		UiStyle.heading(item.name, 24, UiStyle.TEXT))
 	card.add_child(_wrapped(item.text, 17, UiStyle.TEXT))
-	_add_numbers(card, ModInfo.item_numbers(item, null, session.content))
-	card.add_child(_wrapped(item.answers, 15, UiStyle.TEXT_DIM))
-	var idle: Array[String] = []
-	for hero: RunState.Hero in session.state().heroes:
-		if not item.works_on(session.run.hero_kit(hero), hero.id):
-			idle.append(_hero_name(hero.id))
-	if not idle.is_empty():
-		card.add_child(_wrapped("No effect on %s" % ", ".join(idle), 15, UiStyle.BAD))
+	_add_numbers(card, ModInfo.item_numbers(item, null, session.content, rank))
+	var next: String = ModInfo.next_rank_line(item, session.content, rank)
+	if not next.is_empty():
+		card.add_child(_wrapped(next, 15, UiStyle.TEXT_DIM))
 	return card
+
+
+## What an item has counted toward its next rank: "2 of 4 won fights to
+## rank II" ("" at rank III).
+func _rank_progress(item: ItemDef) -> String:
+	var progress: Vector2i = session.flow.rank_progress(item.id)
+	if progress.y == 0:
+		return ""
+	var rank: int = session.state().item_ranks.get(item.id, 1)
+	match item.kind:
+		ItemDef.Kind.TACTIC:
+			return "%ds of %ds fought to rank %s" % [progress.x / 1000, progress.y / 1000, ItemDef.RANK_NAMES[rank]]
+		ItemDef.Kind.SIGIL:
+			return "%d of %d casts to rank %s" % [progress.x, progress.y, ItemDef.RANK_NAMES[rank]]
+		ItemDef.Kind.GAMBIT:
+			return "%d of %d fights to rank %s" % [progress.x, progress.y, ItemDef.RANK_NAMES[rank]]
+	return "%d of %d won fights to rank %s" % [progress.x, progress.y, ItemDef.RANK_NAMES[rank]]
 
 
 # --- the route and the loadout --------------------------------------------------------
@@ -572,17 +599,17 @@ static func placements(encounter: EncounterDef, content: ContentDb) -> String:
 func _fill_loadout() -> void:
 	var state: RunState = session.state()
 	var encounter: EncounterDef = session.content.encounters[state.chosen]
-	var section: VBoxContainer = _section("Loadout for %s" % encounter.name, "Any hero can hold any item; one slot holds one thing, and a hero holds one tactic. Click a filled slot to take it off.")
+	var section: VBoxContainer = _section("Loadout for %s" % encounter.name, "Any hero can hold any item; one slot holds one thing, and a hero holds one tactic and one gambit. Click a filled slot to take it off.")
 	for hero: RunState.Hero in state.heroes:
 		var row: HBoxContainer = _row()
 		row.add_child(UiStyle.strong(_hero_name(hero.id), 20, UiStyle.TEXT))
 		for i: int in hero.slots.size():
 			var id: String = hero.slots[i]
-			var text: String = "Empty" if id.is_empty() else session.run.items[id].name
+			var text: String = "Empty" if id.is_empty() else "%s %s" % [session.run.items[id].name, ItemDef.RANK_NAMES[state.item_ranks.get(id, 1) - 1]]
 			var slot: Button = UiStyle.button(text, _do.bind(session.flow.unequip.bind(hero.id, i)))
 			slot.disabled = id.is_empty()
-			if not id.is_empty() and not session.run.items[id].works_on(session.run.hero_kit(hero), hero.id):
-				slot.text += " (no effect on this hero)"
+			if not id.is_empty():
+				slot.tooltip_text = _rank_progress(session.run.items[id])
 			row.add_child(slot)
 		section.add_child(row)
 	var stash: VBoxContainer = _section("Stash", "" if not state.stash.is_empty() else "Nothing yet: the Pedlar sells charms, tactics, and sigils.")
@@ -592,7 +619,10 @@ func _fill_loadout() -> void:
 	stash.add_child(cards)
 	for id: String in state.stash:
 		var item: ItemDef = session.run.items[id]
-		var card: VBoxContainer = _item_card(cards, item)
+		var card: VBoxContainer = _item_card(cards, item, state.item_ranks.get(id, 1))
+		var progress: String = _rank_progress(item)
+		if not progress.is_empty():
+			card.add_child(_wrapped(progress, 15, UiStyle.TEXT_DIM))
 		(card.get_parent() as Control).custom_minimum_size = Vector2(360, 0)
 		var buttons: HBoxContainer = _row()
 		card.add_child(buttons)

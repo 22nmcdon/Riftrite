@@ -136,9 +136,9 @@ static func camp_choice(state: RunState) -> int:
 	return 0
 
 
-## One purchase at the open shop: the first ware it can afford that suits a
-## hero with a free slot (equipped there), else a relic, else a wound. It
-## never rerolls.
+## One purchase at the open shop: the first ware it can afford that it owns
+## (a rank up) or that suits a hero with a free slot (equipped there), else
+## a relic, else a wound. It never rerolls or sells.
 ## False if there's nothing left to do.
 static func shop_once(flow: RunFlow) -> bool:
 	var state: RunState = flow.state
@@ -146,9 +146,11 @@ static func shop_once(flow: RunFlow) -> bool:
 		var id: String = state.wares[i]
 		if id.is_empty() or flow.price_of(id) > state.shards:
 			continue
+		if state.item_ranks.has(id):
+			return flow.buy(i) == ""
 		for hero: RunState.Hero in state.heroes:
-			if hero.slots.has("") and flow.run.items[id].works_on(flow.run.hero_kit(hero), hero.id):
-				# A second tactic can't be equipped; it waits in the stash.
+			if hero.slots.has("") and suits(flow, flow.run.items[id], hero):
+				# A second tactic or gambit can't be equipped; it waits in the stash.
 				if flow.buy(i) == "":
 					flow.equip(hero.id, hero.slots.find(""), id)
 				return true
@@ -159,3 +161,14 @@ static func shop_once(flow: RunFlow) -> bool:
 		if hero.wounds > 0 and state.shards >= flow.wound_price():
 			return flow.treat_wound(hero.id) == ""
 	return false
+
+
+## The bot's own judgment of an item for a hero (players get no such
+## warning, loadout rule 2): a mod that changes its kit, or a tactic it can
+## follow.
+static func suits(flow: RunFlow, item: ItemDef, hero: RunState.Hero) -> bool:
+	var kit: UnitDef = flow.run.hero_kit(hero)
+	if item.tactic != null:
+		return RunContent.can_follow(item.tactic, kit, hero.id)
+	var mod: KitMod = item.mod_at(1)
+	return mod != null and mod.affects(kit)

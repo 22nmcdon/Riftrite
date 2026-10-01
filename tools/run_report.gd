@@ -27,6 +27,8 @@ class RunLine:
 	var relics: int = 0
 	## Relics held at the end, by tier (RelicDef.Tier; phase 5c step 5a).
 	var relic_tiers: Array[int] = [0, 0, 0, 0, 0, 0]
+	## Items owned at the end, by rank (phase 5c step 6: I, II, III).
+	var item_ranks: Array[int] = [0, 0, 0]
 	var errors: Array[String] = []
 	## [encounter id, won?] for each fight.
 	var fights: Array[Array] = []
@@ -120,6 +122,8 @@ static func play(run: RunContent, run_seed: int, look_ahead: bool = true) -> Run
 	line.relics = state.relics.size()
 	for id: String in state.relics:
 		line.relic_tiers[run.relics[id].tier] += 1
+	for id: String in state.item_ranks:
+		line.item_ranks[state.item_ranks[id] - 1] += 1
 	for hero: RunState.Hero in state.heroes:
 		for upgrade_id: String in hero.growth:
 			line.grown[upgrade_id] = hero.growth[upgrade_id]
@@ -192,6 +196,11 @@ static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 		var total: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.relic_tiers[tier], 0)
 		by_tier.append("%s %.1f" % [RelicDef.TIER_NAMES[tier], float(total) / maxi(n, 1)])
 	out.append("Relics per run by tier: %s" % ", ".join(by_tier))
+	var by_rank: Array[String] = []
+	for rank: int in ItemDef.RANKS:
+		var total: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.item_ranks[rank], 0)
+		by_rank.append("rank %s %.1f" % [ItemDef.RANK_NAMES[rank], float(total) / maxi(n, 1)])
+	out.append("Items held at the end per run: %s" % ", ".join(by_rank))
 	out.append("")
 	out.append("Encounters (fights won of fought):")
 	for encounter_id: String in content.encounter_ids:

@@ -19,9 +19,11 @@ extends RefCounted
 ## upgrade, or the act's pick_shards instead; the day can't move on while it
 ## waits.
 ## The economy (section 6): items owned wait in the stash; any hero equips
-## any item in a free slot between fights (one tactic each). A shop opens at
-## camp (the Pedlar or the Magpie): buy its wares, treat a wound, or (the
-## Pedlar only) reroll; leaving camp closes it. A fight's kit is the path's,
+## any item in a free slot between fights (one tactic and one gambit each).
+## A shop opens at camp (the Pedlar or the Magpie): buy its wares, treat a
+## wound, or (the Pedlar only) reroll or sell an item back; leaving camp
+## closes it. Phase 5c step 6: a run owns one of each item, at a rank; a
+## bought copy is a rank up, and fights rank items up by their kind. A fight's kit is the path's,
 ## then its upgrades, then its loadout in slot order.
 
 ## Where a relic choice happens (its stream's visit).
@@ -243,7 +245,7 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 		if hero.transformed:
 			transformed.append(hero.id)
 		var mods: Array[KitMod] = run.upgrade_mods(hero)
-		mods.append_array(run.loadout_mods(hero))
+		mods.append_array(run.loadout_mods(state, hero))
 		mods.append_array(run.relic_mods(state, run.hero_kit(hero)))
 		if not hunting and state.fortify:
 			mods.append(run.camps.fortify_mod)
@@ -319,7 +321,7 @@ func kit_of(hero_id: String, with_covenant: bool = true) -> UnitDef:
 	var hero: RunState.Hero = state.hero(hero_id)
 	var kit: UnitDef = run.hero_kit(hero)
 	var mods: Array[KitMod] = run.upgrade_mods(hero)
-	mods.append_array(run.loadout_mods(hero))
+	mods.append_array(run.loadout_mods(state, hero))
 	mods.append_array(run.relic_mods(state, kit))
 	if with_covenant:
 		var formation: Dictionary[String, Vector2i] = {}
@@ -398,6 +400,7 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 		for path_id: String in hero.deeds:
 			hero.deeds[path_id] += result.deed_amount(hero.id, path_id)
 	_grow(result)
+	_rank_items(formation, result, won)
 	if won:
 		for hero: RunState.Hero in state.heroes:
 			hero.wounds = maxi(hero.wounds - 1, 0)
@@ -575,6 +578,54 @@ func _grow(result: FightResult) -> void:
 			state.shards += stepped * relic.grows.each_shards
 
 
+## The loadout's ranks (phase 5c step 6): each item equipped on a hero who
+## fought counts toward its next rank by its kind (ActDef.item_ranks):
+## charms won fights, gambits fights, tactics the ms its hero stood, sigils
+## its signature's casts (the last two from the fight's tallies). Reaching
+## the need ranks it up; the count goes on from what's left over.
+func _rank_items(formation: Dictionary[String, Vector2i], result: FightResult, won: bool) -> void:
+	state.ranked.clear()
+	for hero: RunState.Hero in state.heroes:
+		if not formation.has(hero.id):
+			continue
+		for item_id: String in hero.slots:
+			var item: ItemDef = run.items.get(item_id)
+			if item == null or state.item_ranks.get(item_id, 1) >= ItemDef.RANKS:
+				continue
+			var counted: int = 0
+			match item.kind:
+				ItemDef.Kind.CHARM:
+					counted = 1 if won else 0
+				ItemDef.Kind.GAMBIT:
+					counted = 1
+				_:
+					counted = result.tally_amount(hero.id, "item:" + item_id)
+			if counted > 0:
+				_count_item(item, counted)
+
+
+func _count_item(item: ItemDef, counted: int) -> void:
+	var needs: Array = run.act.item_ranks[ItemDef.KIND_NAMES[item.kind]]
+	state.item_counts[item.id] = state.item_counts.get(item.id, 0) + counted
+	while state.item_ranks.get(item.id, 1) < ItemDef.RANKS and state.item_counts[item.id] >= int(needs[state.item_ranks.get(item.id, 1) - 1]):
+		state.item_counts[item.id] -= int(needs[state.item_ranks[item.id] - 1])
+		state.item_ranks[item.id] += 1
+		if not state.ranked.has(item.id):
+			state.ranked.append(item.id)
+	if state.item_ranks[item.id] >= ItemDef.RANKS:
+		state.item_counts[item.id] = 0
+
+
+## What `item_id` has counted toward its next rank, and what that rank needs
+## (0 at rank III).
+func rank_progress(item_id: String) -> Vector2i:
+	var rank: int = state.item_ranks.get(item_id, 1)
+	if rank >= ItemDef.RANKS or not run.items.has(item_id):
+		return Vector2i(0, 0)
+	var needs: Array = run.act.item_ranks[ItemDef.KIND_NAMES[run.items[item_id].kind]]
+	return Vector2i(state.item_counts.get(item_id, 0), int(needs[rank - 1]))
+
+
 ## What's counted, made faster by Rift-Bound Heart's growth_bp while held.
 func _faster(counted: int) -> int:
 	for id: String in state.relics:
@@ -631,7 +682,8 @@ func switch_vow(hero_id: String, path_id: String) -> String:
 # --- the loadout ------------------------------------------------------------------
 
 ## Puts `item_id` from the stash into `hero_id`'s slot `slot`, between fights;
-## whatever was there goes back to the stash. A hero holds one tactic.
+## whatever was there goes back to the stash. A hero holds one tactic and
+## one gambit.
 func equip(hero_id: String, slot: int, item_id: String) -> String:
 	if state.phase == RunState.Phase.ENDED:
 		return _not_now("change a loadout")
@@ -642,10 +694,11 @@ func equip(hero_id: String, slot: int, item_id: String) -> String:
 		return "%s has no slot %d" % [hero_id, slot]
 	if not state.stash.has(item_id):
 		return "\"%s\" isn't in the stash" % item_id
-	if run.items[item_id].kind == ItemDef.Kind.TACTIC:
+	var kind: ItemDef.Kind = run.items[item_id].kind
+	if kind == ItemDef.Kind.TACTIC or kind == ItemDef.Kind.GAMBIT:
 		for i: int in hero.slots.size():
-			if i != slot and run.items.has(hero.slots[i]) and run.items[hero.slots[i]].kind == ItemDef.Kind.TACTIC:
-				return "%s already holds a tactic" % hero_id
+			if i != slot and run.items.has(hero.slots[i]) and run.items[hero.slots[i]].kind == kind:
+				return "%s already holds a %s" % [hero_id, ItemDef.KIND_NAMES[kind]]
 	state.stash.erase(item_id)
 	if not hero.slots[slot].is_empty():
 		state.stash.append(hero.slots[slot])
@@ -712,9 +765,49 @@ func close_shop() -> void:
 	state.shop_relics.clear()
 
 
-## What ware `item_id` costs at the open shop (the Magpie's markup, rounded up).
+## What ware `item_id` costs at the open shop: its kind's price (the
+## Magpie's markup, rounded up).
 func price_of(item_id: String) -> int:
-	return _marked_up(run.items[item_id].price)
+	return _marked_up(run.act.item_prices[ItemDef.KIND_NAMES[run.items[item_id].kind]])
+
+
+## What the Pedlar pays for `item_id`: half its kind's price, rounded down,
+## whatever its rank (loadout rule 9).
+func sell_price(item_id: String) -> int:
+	@warning_ignore("integer_division")
+	return run.act.item_prices[ItemDef.KIND_NAMES[run.items[item_id].kind]] / 2
+
+
+## Sells an item the run owns to the Pedlar, from the stash or a slot. Its
+## rank goes with it.
+func sell(item_id: String) -> String:
+	if state.shop != "pedlar":
+		return "only the Pedlar buys items"
+	if not state.item_ranks.has(item_id):
+		return "the run doesn't own \"%s\"" % item_id
+	if state.stash.has(item_id):
+		state.stash.erase(item_id)
+	else:
+		for hero: RunState.Hero in state.heroes:
+			var slot: int = hero.slots.find(item_id)
+			if slot >= 0:
+				hero.slots[slot] = ""
+	state.item_ranks.erase(item_id)
+	state.item_counts.erase(item_id)
+	state.shards += sell_price(item_id)
+	return ""
+
+
+## Gives the run `item_id` at `rank` (1 to 3): into the stash if it's new,
+## else its owned copy a rank up (or to `rank`, if that's higher), its count
+## starting again.
+func _gain_item(item_id: String, rank: int = 1) -> void:
+	if not state.item_ranks.has(item_id):
+		state.stash.append(item_id)
+		state.item_ranks[item_id] = rank
+	else:
+		state.item_ranks[item_id] = mini(maxi(state.item_ranks[item_id] + 1, rank), ItemDef.RANKS)
+	state.item_counts[item_id] = 0
 
 
 ## A price at the open shop: the Magpie's markup (rounded up), or the
@@ -726,7 +819,8 @@ func _marked_up(price: int) -> int:
 	return maxi(price + run.relic_sum(state, "price_add"), 1)
 
 
-## Buys ware `index` into the stash.
+## Buys ware `index` into the stash, or, owned, a rank up (a bought copy
+## skips a rank).
 func buy(index: int) -> String:
 	if state.shop.is_empty():
 		return "no shop is open"
@@ -736,7 +830,7 @@ func buy(index: int) -> String:
 	if state.shards < price:
 		return "it costs %d shards; there are %d" % [price, state.shards]
 	state.shards -= price
-	state.stash.append(state.wares[index])
+	_gain_item(state.wares[index])
 	state.wares[index] = ""
 	return ""
 
