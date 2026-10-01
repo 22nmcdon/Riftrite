@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a and 5b (section 11) built (10-01), 5c (section 12) approved, 5c-1 built (10-01), 5c-2 next, 5d to come; steps 5–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a, 5b (section 11), and 5c (section 12) built (10-01), 5d to come; steps 5–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -545,7 +545,7 @@ With these, commons are complete (25 of 25), rares 21 of 21, epics 8 of 14, lege
 
 ## 12. Step 5c: the engines, the chains, and the rules boss relics rewrite
 
-The third part of the relic pool (Decision 17): the 22 relics left that aren't bond relics, each its own piece. After 5c the epic, legendary, and boss tiers are complete (14, 15, 11). **Approved 2026-10-01** (12.8).
+The third part of the relic pool (Decision 17): the 22 relics left that aren't bond relics, each its own piece. After 5c the epic, legendary, and boss tiers are complete (14, 15, 11). **Approved and built 2026-10-01** (12.8, 12.9, 12.10).
 
 Two kinds of piece:
 
@@ -689,6 +689,40 @@ The chaos fight takes the new pieces part by part (its seed rescanned if it must
   - `test_relics.gd` (5 more: the engines on a kit, Knife's Edge and Quickening in a fight, Blood Communion with Sanguine Frenzy, Hunter's Engine's rule, Snaring Shot only on Maren and Vell).
   - The chaos fight takes four pieces: stacking Marks, Frenzy on lifesteal, an aura per Shield, and a stepping planted aura. Its seed moved from 26 to 37, the first that still has every piece.
 - **What moved:** no built kit's fight; the bench's fingerprints are unchanged. **The run report** (54 runs): **66% of runs won**, as after 5b; losses still gather on day 3's elite (10 of 18), with 2.9 relics a run (0.2 common, 1.7 rare, 0.3 epic, 0.7 boss), since the simple bot still buys wares first and rarely meets an epic.
+
+### 12.10 Built in step 5c-2 (2026-10-01)
+
+- **The rules, as 12.2 says**, in `SideRules` (every rule with its numbers from the relic) and where each lives:
+  - **Crown of Stars:** `EffectRunner._crit_chain`, as the hit lands. The extra rolls use CRIT, crit-chance auras, and per-hit crit chance (not an ability's own), and the DAMAGE line counts them ("crit x11").
+  - **Shared Pain:** `_echo`. Echoes are DAMAGE lines noted "Shared Pain", one chain step deeper each, and `ruled` so they start no echo of their own.
+  - **The Hungering Rift:** `_carry`, reading each carry's overkill through `CombatSim.last_overkill`.
+  - **Overcharge:** `UnitState.mana_store`. `mana_cap` stays the full bar, so the UI and the trigger are unchanged.
+    - `Signatures._spend_bar` takes one bar; `_overcharge` fires again with `UnitState.fire_power_bp` (added in `Passives.power_bp`).
+    - Each extra FIRE is noted "Overcharge N".
+  - **Second Dawn:** `CombatSim._fall` sets `rise_at`, and `_rise_due` stands the hero again at the nearest free safe spot to where it fell (RISE, sourced to the relic). It's for the heroes of the setup, not their summons.
+  - **Chain of Echoes:**
+    - `CombatSim.chain_limit_of` deepens the heroes' event chains, read by `Events.dispatch` and `Events.kill`.
+    - A hero's event effect at depth d carries `growth_bp(d)` in the relic kind (`UnitState.relic_bonus_bp`, set in `Passives._run` for damage, heals, and Shields that land at once). An event effect's shot or area that lands later doesn't carry it.
+    - Crown of Stars, Shared Pain, The Hungering Rift, and Overcharge go 4 steps deeper and grow ×1.15 a step (`SideRules.growth_bp`).
+  - **Crown of the Hollow King and Everflame:** in `Statuses.apply`, for keywords a hero (or its relic) applies.
+    - Doubled: stacks, a timed status's duration, and stacking Marks get 2 a time.
+    - Everflame (`StatusState.lasting`) applies on enemies only (Decision 24). A lasting status never ends, its Burn never fades, it can't be extended further, and the enemies' heals and cleanses skip it.
+  - **The Unbending:** any status an enemy applies to a hero is blocked (RESISTED, sourced to the enemy's ability and noted "The Unbending"), and gives a stack of `unbending` (+1% DEF, +1% max HP). The new aura stat `max_hp_bp` raises max HP from `UnitState.base_max_hp`, and HP by as much.
+  - **Riftwalker's Soles:** `Collapse._damage` skips heroes and adds 5% of an enemy's max HP to its COLLAPSE line (noted).
+  - **The Long Watch:** `CombatSim._check_end` ties at 300s instead of 180s (Decision 25), and `_keep_watch` gives every standing hero a `long_watch` stack (+10% max HP, ATK, MGK, DEF, CRIT, and attack speed) at 60s and every 10s after.
+- **Wounds** (Decision 23): `FightResult.down_at_end()` (a DEATH not followed by a RISE) decides them in `RunFlow.record`. Bounty Board's streak still breaks on any fall.
+- **Relics:** 11 more, 86 in all (25 common, 21 rare, 14 epic, 15 legendary, 11 boss): every relic but the bond relics. There are two new stacking statuses, `unbending` and `long_watch`.
+- **The UI:**
+  - A rule relic's card says its rule with its numbers, the boosts' read from the statuses ("statuses enemies apply to heroes are blocked; each gives that hero +1% DEF, +1% max HP for the fight").
+  - RISE shows as a pulse and "Rises" over the hero (whose token returns); RESISTED shows as "Resisted".
+  - The mana bar stops drawing at full under Overcharge.
+- **Tests:**
+  - `tests/sim/test_hero_rules.gd` (14: each rule, and each without it).
+  - The **rules fight**: the three heroes at 20% max HP against Old Mother Ash with every rule on, seed 6, where a hero falls and rises and The Unbending blocks. It repeats exactly (`test_determinism`), replays (`test_arena_log`), and passes the log audit. RISE and RESISTED are left to it, out of the chaos fight.
+  - `test_relics.gd` (2 more: the rule relics in the setup and on cards, and no wound for a hero who rose).
+  - The tier counts are now 25, 21, 14, 15, 11.
+- **What moved:** no built kit's fight; the bench's fingerprints are unchanged. The run report: (being measured).
+
 
 ## Answered (2026-09-30)
 

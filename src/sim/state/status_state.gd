@@ -27,6 +27,9 @@ var stack_ends: Array[int] = []
 ## A timed status that stacks (Marks under Hunter's Engine, phase 5c step
 ## 5c): its stacks, all ending at ends_at.
 var stacks: int = 1
+## Everflame (phase 5c step 5c): a keyword a hero put on an enemy never ends,
+## fades, or is cleansed by the enemies.
+var lasting: bool = false
 
 const NEVER: int = 1 << 60
 

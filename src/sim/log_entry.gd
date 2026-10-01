@@ -47,6 +47,8 @@ enum Kind {
 	GUARD,
 	LIFESTEAL,
 	STATUS_EXTENDED,
+	RISE,
+	RESISTED,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -92,6 +94,9 @@ var broke_shield: bool = false
 var overkill: int = 0
 ## HEAL: lifesteal that heals (Blood Communion; phase 5c step 5c).
 var lifesteal: bool = false
+## DAMAGE: how many times it crit in a row (Crown of Stars; 1 for a plain
+## crit, 0 for none).
+var crits: int = 0
 ## MOVE: where the leg starts and the point it heads for; the unit moves
 ## `amount` a tick straight at it (FixedMath / ArenaPlane.step_toward) until it
 ## gets there or its next MOVE or STOP. STOP: to_pos is where it stands.
@@ -224,6 +229,10 @@ func to_text() -> String:
 			return line + "%s raises a wall from %s to %s (falls at %s)" % [source_text(), _point(from_pos), _point(to_pos), _format_time(end_tick)]
 		Kind.GUARD:
 			return line + "%s takes %d of the hit on %s" % [source_text(), amount, target]
+		Kind.RISE:
+			return line + "%s: %s rises at %s with %d HP" % [source_text(), target, _point(to_pos), amount]
+		Kind.RESISTED:
+			return line + "%s resists %s from %s (%s)" % [target, status_name, source_text(), note]
 		Kind.LIFESTEAL:
 			return line + "%s: %s steals back %d HP" % [source_text(), target, amount]
 		Kind.STATUS_EXTENDED:
@@ -249,12 +258,12 @@ func to_text() -> String:
 
 func _damage_detail() -> String:
 	var parts: Array[String] = []
-	if kind == Kind.DAMAGE and not note.is_empty():
+	if (kind == Kind.DAMAGE or kind == Kind.COLLAPSE) and not note.is_empty():
 		parts.append(note)
 	if not bonus.is_empty():
 		parts.append(bonus)
 	if crit:
-		parts.append("crit")
+		parts.append("crit" if crits <= 1 else "crit x%d" % crits)
 	if mitigated > 0:
 		parts.append("%d blocked by defense" % mitigated)
 	if absorbed > 0:

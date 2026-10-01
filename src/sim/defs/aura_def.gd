@@ -51,7 +51,9 @@ extends RefCounted
 ## Communion), crit_overflow_bp (a crit's chance past 100% adds this share of
 ## itself to crit damage; Knife's Edge), def (DEF points), and
 ## overheal_strike_bp (what its lifesteal would heal past full HP hits its
-## target for this share; Shadow Engine). And:
+## target for this share; Shadow Engine), and max_hp_bp (multiplies its max
+## HP from the fight's start; HP rises by what max HP gains; The Unbending,
+## The Long Watch). And:
 ##   "step": {"every_ms": 2000, "value": 500}   a planted aura grows by
 ##                                          `value` for every `every_ms` more
 ##                                          it stays planted (Stonebound)
@@ -76,7 +78,7 @@ extends RefCounted
 enum Target { HOLDER, ALL_ALLIES }
 enum Stat { DAMAGE_BP, HEAL_BP, SHIELD_BP, OVER_TIME_BP, CRIT_CHANCE_BP, COOLDOWN_BP, ATK_BP, MGK_BP, DEF_BP, ATSP_BP, CRIT_BP, RANGE, HEALING_TAKEN_BP,
 	LIFESTEAL_BP, CRIT_DAMAGE_BP, ATSP, DAMAGE_REDUCED_BP,
-	OVERHEAL_SHIELD_BP, LIFESTEAL_HEALS, CRIT_OVERFLOW_BP, DEF, OVERHEAL_STRIKE_BP }
+	OVERHEAL_SHIELD_BP, LIFESTEAL_HEALS, CRIT_OVERFLOW_BP, DEF, OVERHEAL_STRIKE_BP, MAX_HP_BP }
 ## What turns an aura on, beyond its window.
 enum While { ALWAYS, TAUNTING, PLANTED, BELOW_HP, ALLY_STANDING, STATE, ALLY_NEAR }
 
@@ -87,7 +89,7 @@ const STAT_NAMES: Array[String] = [
 	"damage_bp", "heal_bp", "shield_bp", "over_time_bp", "crit_chance_bp", "cooldown_bp",
 	"atk_bp", "mgk_bp", "def_bp", "atsp_bp", "crit_bp", "range", "healing_taken_bp",
 	"lifesteal_bp", "crit_damage_bp", "atsp", "damage_reduced_bp",
-	"overheal_shield_bp", "lifesteal_heals", "crit_overflow_bp", "def", "overheal_strike_bp",
+	"overheal_shield_bp", "lifesteal_heals", "crit_overflow_bp", "def", "overheal_strike_bp", "max_hp_bp",
 ]
 const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp", "ally_standing", "state", "ally_near"]
 ## The stats that add rather than multiply. The rest are factors (x1.1);
@@ -101,7 +103,7 @@ const STAT_LABELS: Array[String] = [
 	"damage", "healing", "shields", "damage over time", "crit chance", "cooldown",
 	"ATK", "MGK", "DEF", "ATSP", "CRIT", "range", "healing taken",
 	"lifesteal", "crit damage", "ATSP", "damage taken",
-	"of overheal as Shield", "lifesteal heals", "of crit chance past 100% as crit damage", "DEF", "of lifesteal overheal as damage to its target",
+	"of overheal as Shield", "lifesteal heals", "of crit chance past 100% as crit damage", "DEF", "of lifesteal overheal as damage to its target", "max HP",
 ]
 ## Unit stat for each unit-stat aura stat (ATK_BP -> Stat.ATK, ...).
 const UNIT_STAT_FOR: Dictionary[int, int] = {

@@ -9,6 +9,7 @@ const K = preload("res://tests/sim/sim_test_kit.gd")
 const Chaos = preload("res://tests/sim/chaos_fight.gd")
 const TacticFights = preload("res://tests/sim/test_tactics.gd")
 const PathFights = preload("res://tests/sim/path_fights.gd")
+const RuleFights = preload("res://tests/sim/test_hero_rules.gd")
 
 
 ## A busy fight: melee and ranged on both sides, a rock in the middle.
@@ -70,6 +71,11 @@ func test_the_log_replays_the_chaos_fight() -> void:
 	_assert_replays(Chaos.setup())
 
 
+func test_the_log_replays_the_rules_fight() -> void:
+	# A hero rising (Second Dawn) stands where the RISE says.
+	_assert_replays(RuleFights.rules_setup())
+
+
 ## Runs the fight, noting where every standing unit is on every tick (and
 ## that no two overlap), then replays the log from the hex centers alone and
 ## checks it lands every unit in the same place on every tick.
@@ -127,6 +133,10 @@ func _assert_replays(setup: FightSetup, fewest_moves: int = 11) -> void:
 				LogEntry.Kind.SUMMON:
 					if entry.note.is_empty():
 						pos[entry.target] = entry.to_pos
+				# Second Dawn (phase 5c step 5c): a hero stands again.
+				LogEntry.Kind.RISE:
+					pos[entry.target] = entry.to_pos
+					legs.erase(entry.target)
 				LogEntry.Kind.LEAP, LogEntry.Kind.CHARGE, LogEntry.Kind.HOP:
 					assert_eq(entry.from_pos, pos[entry.source_unit], "it leaps or charges from where it is (%s)" % entry.to_text())
 					pos[entry.source_unit] = entry.to_pos
@@ -173,11 +183,12 @@ const NAMES: Dictionary = {
 	LogEntry.Kind.ZONE: ["unit", "ability"], LogEntry.Kind.SNARE: ["unit", "ability", "note"],
 	LogEntry.Kind.WALL: ["unit", "ability"], LogEntry.Kind.GUARD: ["unit", "ability", "target"],
 	LogEntry.Kind.LIFESTEAL: ["unit", "ability", "target"], LogEntry.Kind.STATUS_EXTENDED: ["unit", "ability", "target", "status"],
+	LogEntry.Kind.RISE: ["target"], LogEntry.Kind.RESISTED: ["unit", "ability", "target", "status", "note"],
 }
 
 
 func test_every_entry_names_its_source() -> void:
-	var fights: Array[FightSetup] = [busy_setup(), Chaos.setup(), content_setup(), TacticFights.tactics_setup(), elite_setup()]
+	var fights: Array[FightSetup] = [busy_setup(), Chaos.setup(), content_setup(), TacticFights.tactics_setup(), elite_setup(), RuleFights.rules_setup()]
 	fights.append_array(PathFights.all(K.content()))
 	for setup: FightSetup in fights:
 		_assert_sources(K.run(setup), setup)

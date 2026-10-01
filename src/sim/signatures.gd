@@ -66,9 +66,11 @@ static func act(sim: CombatSim, unit: UnitState) -> bool:
 					_start_cast(sim, unit, target)
 					return true
 				var bar: int = unit.mana
-				unit.mana = 0
+				_spend_bar(sim, unit)
 				if not _fire(sim, unit, target):
 					unit.mana = bar
+				elif unit.mana_store > 0:
+					_overcharge(sim, unit)
 		TriggerDef.Kind.HP_BELOW:
 			if not signature.fired and unit.hp > 0 and unit.hp * FixedMath.BP_ONE < unit.max_hp * trigger.threshold_bp:
 				_queue_once(signature)
@@ -229,9 +231,37 @@ static func _land_cast(sim: CombatSim, unit: UnitState) -> void:
 	signature.cast_ends_at = -1
 	signature.cast_target = null
 	var bar: int = unit.mana
-	unit.mana = 0
+	_spend_bar(sim, unit)
 	if not _fire(sim, unit, target):
 		unit.mana = bar
+	elif unit.mana_store > 0:
+		_overcharge(sim, unit)
+
+
+## A mana signature fires: the bar empties, or under Overcharge (phase 5c
+## step 5c) loses one full bar.
+static func _spend_bar(_sim: CombatSim, unit: UnitState) -> void:
+	unit.mana = maxi(unit.mana - unit.mana_cap, 0) if unit.mana_store > 0 else 0
+
+
+## Overcharge: each further full bar fires the signature again at once (a
+## fresh target, no cast), each power_bp more than the last (and Chain of
+## Echoes' growth), up to its steps.
+static func _overcharge(sim: CombatSim, unit: UnitState) -> void:
+	var rules: SideRules = sim.hero_rules
+	for step: int in range(1, rules.overcharge_steps + rules.deeper_steps + 1):
+		if unit.mana < unit.mana_cap:
+			return
+		var target: UnitState = pick_target(sim, unit)
+		if target == null:
+			return
+		unit.mana -= unit.mana_cap
+		unit.fire_power_bp = rules.overcharge_power_bp * step + (rules.growth_bp(step) - FixedMath.BP_ONE)
+		var fired: bool = _fire(sim, unit, target, "Overcharge %d" % step)
+		unit.fire_power_bp = 0
+		if not fired:
+			unit.mana += unit.mana_cap
+			return
 
 
 static func cancel_cast(sim: CombatSim, unit: UnitState, reason: String) -> void:

@@ -114,6 +114,8 @@ var overheal_auras: bool = false
 var salt_circles: int = 0
 ## The rules the heroes' side plays by (phase 5c step 5c).
 var hero_rules: SideRules = SideRules.new()
+## The last hit's overkill (The Hungering Rift reads it as it carries).
+var last_overkill: int = 0
 ## The units with conditional auras (phase 4: planted, below_hp, per fallen
 ## ally), checked every tick.
 var _conditional: Array[UnitState] = []
@@ -199,6 +201,11 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 	units_joined()
 	salt_circles = setup.salt_circles
 	hero_rules = setup.hero_rules
+	if hero_rules.overcharge_steps > 0:
+		# Overcharge: the heroes' bars hold that many more full bars.
+		for unit: UnitState in heroes:
+			if unit.def.mana != null:
+				unit.mana_store = unit.mana_cap * (1 + hero_rules.overcharge_steps + hero_rules.deeper_steps)
 	for r: int in setup.relic_effects.size():
 		EffectRunner.run_relic(self, setup.relic_sources[r], setup.relic_effects[r], setup.relic_scales[r])
 
@@ -295,6 +302,10 @@ func step() -> void:
 		_active_auras = Passives.rederive(self, _active_auras)
 	Collapse.tick(self)
 	Statuses.tick_all(self)
+	if hero_rules.rise_ticks > 0:
+		_rise_due()
+	if hero_rules.watch_every_ticks > 0 and tick >= hero_rules.watch_from_ticks and (tick - hero_rules.watch_from_ticks) % hero_rules.watch_every_ticks == 0:
+		_keep_watch()
 	Shots.land_due(self)
 	Areas.land_due(self)
 	for unit: UnitState in units:
@@ -329,8 +340,8 @@ func step() -> void:
 func _act(unit: UnitState) -> void:
 	var has_statuses: bool = not unit.statuses.is_empty()
 	# Mana regen (Mana), unless Silenced.
-	if unit.mana_regen > 0 and unit.mana < unit.mana_cap and not (has_statuses and Statuses.has_kind(unit, StatusDef.Kind.SILENCE)):
-		unit.mana = mini(unit.mana + unit.mana_regen, unit.mana_cap)
+	if unit.mana_regen > 0 and unit.mana < maxi(unit.mana_cap, unit.mana_store) and not (has_statuses and Statuses.has_kind(unit, StatusDef.Kind.SILENCE)):
+		unit.mana = mini(unit.mana + unit.mana_regen, maxi(unit.mana_cap, unit.mana_store))
 	# Landing from a leap: it can't act.
 	if tick < unit.landing_until:
 		return
@@ -650,6 +661,60 @@ func _process_deaths() -> void:
 		_active_auras = Passives.rederive(self, _active_auras)
 
 
+## Second Dawn (phase 5c step 5c): each fallen hero whose rise is due stands
+## again where it fell (or the nearest free safe spot), at a share of its max
+## HP, its statuses and Shield gone, logged as RISE.
+func _rise_due() -> void:
+	var rose_any: bool = false
+	for unit: UnitState in heroes:
+		if unit.alive or unit.rise_at < 0 or tick < unit.rise_at:
+			continue
+		unit.rise_at = -1
+		unit.rose = true
+		var spot: Vector2i = Displacement.free_spot_near(self, unit, nearest_safe_point(unit.pos, unit.radius), null, 0)
+		if spot.x < 0:
+			continue
+		unit.alive = true
+		unit.pos = spot
+		unit.hp = maxi(FixedMath.apply_bp(unit.max_hp, hero_rules.rise_hp_bp), 1)
+		unit.shield = 0
+		unit.statuses.clear()
+		unit.target = null
+		unit.last_attacker = ""
+		unit.moved_at = tick
+		unit.route.clear()
+		unit.leg_active = false
+		unit.replan_at = tick + 1
+		var entry: LogEntry = new_entry(LogEntry.Kind.RISE, EffectSource.relic("second_dawn", "Second Dawn", EffectSource.Team.HEROES))
+		entry.target = unit.id
+		entry.to_pos = spot
+		entry.amount = unit.hp
+		combat_log.add(entry)
+		rose_any = true
+	if rose_any:
+		refold_auras()
+
+
+## The Long Watch: every standing hero gains a stack of `long_watch`.
+func _keep_watch() -> void:
+	var source: EffectSource = EffectSource.relic("the_long_watch", "The Long Watch", EffectSource.Team.HEROES)
+	for unit: UnitState in heroes:
+		if unit.alive and content.statuses.has("long_watch"):
+			Statuses.apply(self, unit, "long_watch", 1, 0, source)
+
+
+## The chain limit for an entry from `source_unit` (or a relic of
+## `relic_side`): Chain of Echoes takes the heroes' deeper (phase 5c step 5c).
+func chain_limit_of(source_unit: String, relic_side: int) -> int:
+	if hero_rules.deeper_steps == 0:
+		return tuning.chain_limit
+	var heroes_side: bool = relic_side == EffectSource.Team.HEROES
+	if relic_side < 0:
+		var unit: UnitState = unit_by_id(source_unit)
+		heroes_side = unit != null and unit.side == EffectSource.Team.HEROES
+	return tuning.chain_limit + (hero_rules.deeper_steps if heroes_side else 0)
+
+
 func _undying(unit: UnitState) -> StatusState:
 	for state: StatusState in unit.statuses:
 		if state.def.kind == StatusDef.Kind.UNDYING:
@@ -659,6 +724,8 @@ func _undying(unit: UnitState) -> StatusState:
 
 func _fall(unit: UnitState) -> void:
 	unit.alive = false
+	if hero_rules.rise_ticks > 0 and unit.side == EffectSource.Team.HEROES and not unit.rose and unit.index < setup.heroes.size():
+		unit.rise_at = tick + hero_rules.rise_ticks
 	unit.target = null
 	unit.route.clear()
 	unit.leg_active = false
@@ -674,7 +741,9 @@ func _fall(unit: UnitState) -> void:
 func _check_end() -> void:
 	var heroes_up: bool = _any_standing(heroes)
 	var enemies_up: bool = _any_standing(enemies)
-	if heroes_up and enemies_up and tick < tuning.tie_ticks:
+	# The Long Watch (phase 5c step 5c): no tie until its own limit.
+	var tie_at: int = hero_rules.watch_tie_ticks if hero_rules.watch_every_ticks > 0 else tuning.tie_ticks
+	if heroes_up and enemies_up and tick < tie_at:
 		return
 	finished = true
 	var note: String

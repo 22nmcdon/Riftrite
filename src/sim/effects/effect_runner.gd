@@ -135,11 +135,11 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 		EffectDef.Type.HEAL:
 			if effect.amount_bp_of_max_hp > 0:
 				amount = FixedMath.apply_bp(victim.max_hp, effect.amount_bp_of_max_hp)
-			heal(sim, victim, amount, source, effect.overheal_shield_bp, power)
+			heal(sim, victim, amount, source, effect.overheal_shield_bp, power, false, unit.relic_bonus_bp)
 		EffectDef.Type.SHIELD:
 			if effect.amount_bp_of_max_hp > 0:
 				amount = FixedMath.apply_bp(victim.max_hp, effect.amount_bp_of_max_hp)
-			give_shield(sim, victim, DamageRule.apply(amount, power), source)
+			give_shield(sim, victim, DamageRule.apply(amount, power, 0, 0, unit.relic_bonus_bp), source)
 		EffectDef.Type.EXTEND_STATUS:
 			Statuses.extend(sim, victim, effect.status_id, effect.duration_ticks, source)
 		EffectDef.Type.APPLY_STATUS:
@@ -371,7 +371,9 @@ static func nearest_to(pool: Array[UnitState], others: Array[UnitState], count: 
 ## DEF, then Shield, then HP. Logs it and returns what got through DEF.
 ## `steals`: false for a hit that never lifesteals (Shadow Engine's strike,
 ## which comes from lifesteal). `note` says what made it, if not an ability.
-static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, amount: int, crit: bool, power: int = 0, steals: bool = true, note: String = "") -> int:
+## `ruled`: a hit a hero rule made (an echo, a carry), which starts no echo
+## or carry of its own (phase 5c step 5c).
+static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, amount: int, crit: bool, power: int = 0, steals: bool = true, note: String = "", ruled: bool = false) -> int:
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.DAMAGE, source)
 	entry.note = note
 	if sim.damage_payoffs:
@@ -388,7 +390,11 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 	var crit_bp: int = sim.tuning.crit_damage_bp - FixedMath.BP_ONE + (attacker.aura_bp[AuraDef.Stat.CRIT_DAMAGE_BP] if attacker != null else 0) if crit else 0
 	if crit and attacker != null:
 		crit_bp += _more_crit_damage(sim, attacker, target, source, per_hit)
-	var raw: int = DamageRule.apply(amount, power, crit_bp, marked)
+	var heroes_hit: bool = attacker != null and attacker.side == EffectSource.Team.HEROES and target.side != EffectSource.Team.HEROES
+	entry.crits = 1 if crit else 0
+	if crit and heroes_hit and sim.hero_rules.crit_steps > 0:
+		crit_bp = _crit_chain(sim, attacker, target, source, crit_bp, entry)
+	var raw: int = DamageRule.apply(amount, power, crit_bp, marked, attacker.relic_bonus_bp if attacker != null else 0)
 	# Guard (phase 4): an ally's guard takes its share of the hit, against its
 	# own DEF.
 	var guard: UnitState = Guards.covering(sim, source, target) if not sim.guards.is_empty() else null
@@ -405,6 +411,7 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 	entry.broke_shield = had_shield and target.shield == 0
 	# What went past the target's last HP (phase 5c step 5b; Overkill Tithe).
 	entry.overkill = maxi(dealt - entry.absorbed - hp_before, 0)
+	sim.last_overkill = entry.overkill
 	target.last_hit_chain = entry.chain
 	target.last_hit_source = source
 	target.last_hit_status = ""
@@ -415,7 +422,103 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 		Guards.take(sim, guard, target, guarded, source)
 	if steals and attacker != null and sim.lifesteal and dealt > 0 and attacker.side != target.side:
 		lifesteal(sim, attacker, target, dealt, source)
+	if heroes_hit and not ruled:
+		var overkill: int = entry.overkill
+		if sim.hero_rules.echo_steps > 0 and dealt > 0:
+			_echo(sim, attacker, target, dealt, source)
+		if sim.hero_rules.carry_steps > 0 and overkill > 0:
+			_carry(sim, attacker, target, overkill, source)
 	return dealt
+
+
+## Crown of Stars (the heroes' rule crit_chain; phase 5c step 5c): a crit
+## rolls again, the k-th extra roll at the crit chance times (100% − fade·k)
+## and adding the crit bonus times as much (under Chain of Echoes, times
+## growth_bp(k) instead), until one misses or the steps run out. Returns the
+## crit kind's bonus with the extra crits; the entry counts them.
+static func _crit_chain(sim: CombatSim, attacker: UnitState, target: UnitState, source: EffectSource, crit_bp: int, entry: LogEntry) -> int:
+	var rules: SideRules = sim.hero_rules
+	var chance: int = attacker.stats.get_stat(UnitStats.Stat.CRIT) * sim.tuning.crit_bp_per_point + attacker.aura_bp[AuraDef.Stat.CRIT_CHANCE_BP]
+	if not attacker.vs_conditions.is_empty():
+		chance += Passives.vs_bonus_bp(attacker, target, AuraDef.Stat.CRIT_CHANCE_BP, source.ability_id)
+	var total: int = crit_bp
+	for k: int in range(1, rules.crit_steps + rules.deeper_steps + 1):
+		var factor: int = rules.growth_bp(k) if rules.deeper_steps > 0 else FixedMath.BP_ONE - rules.crit_fade_bp * k
+		if factor <= 0 or not sim.rng.roll_bp(FixedMath.apply_bp(chance, factor)):
+			break
+		total += FixedMath.apply_bp(crit_bp, factor)
+		entry.crits += 1
+	return total
+
+
+## Shared Pain (echo_keywords): `dealt` on `target` echoes to every other
+## standing enemy with the keyword the most of them share with it (ties to
+## Keywords' order), at share_bp (compounded each step; under Chain of
+## Echoes, growth_bp instead), and each echo echoes on, each enemy hit once a
+## step, one chain step deeper each.
+static func _echo(sim: CombatSim, attacker: UnitState, target: UnitState, dealt: int, source: EffectSource) -> void:
+	var rules: SideRules = sim.hero_rules
+	var foes: Array[UnitState] = []
+	foes.assign(sim.standing_enemies_of(attacker).filter(func(unit: UnitState) -> bool: return unit.hp > 0))
+	var keyword: String = ""
+	var most: int = 0
+	for name: String in Keywords.NAMES:
+		if not Keywords.has(target, name):
+			continue
+		var sharing: int = foes.filter(func(unit: UnitState) -> bool: return unit != target and Keywords.has(unit, name)).size()
+		if sharing > most:
+			most = sharing
+			keyword = name
+	if keyword.is_empty():
+		return
+	var outer: int = sim.chain_depth
+	var share: int = FixedMath.BP_ONE
+	var last: Array[UnitState] = [target]
+	for step: int in range(1, rules.echo_steps + rules.deeper_steps + 1):
+		share = rules.growth_bp(step) if rules.deeper_steps > 0 else FixedMath.apply_bp(share, rules.echo_share_bp)
+		var amount: int = FixedMath.apply_bp(dealt, share)
+		if amount <= 0:
+			break
+		var hit: Array[UnitState] = []
+		for foe: UnitState in sim.standing_enemies_of(attacker):
+			if foe.hp > 0 and Keywords.has(foe, keyword) and last.any(func(echoer: UnitState) -> bool: return echoer != foe):
+				hit.append(foe)
+		if hit.is_empty():
+			break
+		sim.chain_depth = outer + step
+		for foe: UnitState in hit:
+			deal_hit(sim, source, foe, amount, false, 0, true, "Shared Pain", true)
+		last = hit
+	sim.chain_depth = outer
+
+
+## The Hungering Rift (carry_overkill): `overkill` past `fallen`'s last HP
+## hits the standing enemy nearest it, and that hit's overkill carries on,
+## up to the steps (each carry ×growth_bp(1) under Chain of Echoes).
+static func _carry(sim: CombatSim, attacker: UnitState, fallen: UnitState, overkill: int, source: EffectSource) -> void:
+	var rules: SideRules = sim.hero_rules
+	var outer: int = sim.chain_depth
+	var from: UnitState = fallen
+	var amount: int = overkill
+	for step: int in range(1, rules.carry_steps + rules.deeper_steps + 1):
+		var next: UnitState = null
+		var best: int = -1
+		for foe: UnitState in sim.standing_enemies_of(attacker):
+			if foe == from or foe.hp <= 0:
+				continue
+			var distance_sq: int = ArenaPlane.length_sq(foe.pos - from.pos)
+			if best < 0 or distance_sq < best:
+				best = distance_sq
+				next = foe
+		if next == null or amount <= 0:
+			break
+		if rules.deeper_steps > 0:
+			amount = FixedMath.apply_bp(amount, rules.growth_bp(1))
+		sim.chain_depth = outer + step
+		deal_hit(sim, source, next, amount, false, 0, true, "carried (The Hungering Rift)", true)
+		amount = sim.last_overkill
+		from = next
+	sim.chain_depth = outer
 
 
 ## What a crit by `attacker` adds to crit damage beyond its auras (phase 5c
@@ -477,8 +580,9 @@ static func lifesteal(sim: CombatSim, attacker: UnitState, target: UnitState, de
 ## The healer's overheal_shield_bp aura (Overflow Chalice; phase 5c step 5c)
 ## adds to the heal's own share. `by_lifesteal` marks lifesteal that heals
 ## (Blood Communion). Returns what it would have restored past full HP.
-static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectSource, overheal_shield_bp: int = 0, power: int = 0, by_lifesteal: bool = false) -> int:
-	amount = DamageRule.apply(amount, power, 0, target.aura_bp[AuraDef.Stat.HEALING_TAKEN_BP] - FixedMath.BP_ONE)
+## `relic_bp`: the relic kind's bonus (Chain of Echoes' growth).
+static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectSource, overheal_shield_bp: int = 0, power: int = 0, by_lifesteal: bool = false, relic_bp: int = 0) -> int:
+	amount = DamageRule.apply(amount, power, 0, target.aura_bp[AuraDef.Stat.HEALING_TAKEN_BP] - FixedMath.BP_ONE, relic_bp)
 	var healed: int = clampi(target.max_hp - target.hp, 0, amount)
 	target.hp += healed
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.HEAL, source)

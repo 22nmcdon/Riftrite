@@ -225,7 +225,7 @@ static func relic_numbers(relic: RelicDef, content: ContentDb) -> String:
 	if relic.mod != null:
 		parts.append(("Ranged heroes: " if relic.mod_for_ranged else "Heroes: ") + mod_numbers(relic.mod, null, content))
 	if relic.rules != null:
-		parts.append_array(rules_numbers(relic.rules))
+		parts.append_array(rules_numbers(relic.rules, content))
 	if relic.enemy_mod != null:
 		parts.append("Enemies: " + mod_numbers(relic.enemy_mod, null, content))
 	if relic.slots_add != 0:
@@ -276,11 +276,50 @@ static func relic_numbers(relic: RelicDef, content: ContentDb) -> String:
 
 
 ## A relic's hero rules, each as a line (phase 5c step 5c).
-static func rules_numbers(rules: SideRules) -> Array[String]:
+static func rules_numbers(rules: SideRules, content: ContentDb) -> Array[String]:
 	var parts: Array[String] = []
 	if rules.marks_stack:
 		parts.append("Marks heroes apply stack")
+	if rules.crit_steps > 0:
+		parts.append("a crit rolls again up to %d times, each step %s less likely and weaker" % [rules.crit_steps, ValueBreakdown._percent(rules.crit_fade_bp)])
+	if rules.echo_steps > 0:
+		parts.append("damage echoes to enemies sharing a keyword at %s, %d steps deep" % [ValueBreakdown._percent(rules.echo_share_bp), rules.echo_steps])
+	if rules.carry_steps > 0:
+		parts.append("overkill carries to the nearest enemy, up to %d times" % rules.carry_steps)
+	if rules.overcharge_steps > 0:
+		parts.append("each full bar past the first fires the signature again, %s more power each time, up to %d more" % [UnitInfo.signed_percent(rules.overcharge_power_bp), rules.overcharge_steps])
+	if rules.rise_ticks > 0:
+		parts.append("a hero's first fall: it rises after %s at %s HP" % [UnitInfo.seconds(rules.rise_ticks), ValueBreakdown._percent(rules.rise_hp_bp)])
+	if rules.deeper_steps > 0:
+		parts.append("every chain the heroes start goes %d steps deeper, each step %s stronger than the last" % [rules.deeper_steps, UnitInfo.signed_percent(rules.deeper_grow_bp)])
+	if rules.keywords_twice:
+		parts.append("keywords heroes apply: double stacks or double duration")
+	if rules.keywords_last:
+		parts.append("keywords heroes put on enemies last the whole fight and can't be removed")
+	if rules.unbending:
+		parts.append("statuses enemies apply to heroes are blocked; each gives that hero %s for the fight" % _boost(content, "unbending"))
+	if rules.collapse_immune:
+		parts.append("heroes take no damage from crumbled ground")
+	if rules.collapse_enemy_bp > 0:
+		parts.append("enemies on crumbled ground take %s of max HP a second more" % ValueBreakdown._percent(rules.collapse_enemy_bp))
+	if rules.watch_every_ticks > 0:
+		parts.append("no tie until %s; from %s, every hero %s every %s" % [UnitInfo.seconds(rules.watch_tie_ticks), UnitInfo.seconds(rules.watch_from_ticks),
+			_boost(content, "long_watch"), UnitInfo.seconds(rules.watch_every_ticks)])
 	return parts
+
+
+## A boost status's numbers, without "a stack" ("+1% DEF, +1% max HP").
+static func _boost(content: ContentDb, status_id: String) -> String:
+	if not content.statuses.has(status_id):
+		return status_id
+	var status: StatusDef = content.statuses[status_id]
+	var parts: Array[String] = []
+	for i: int in status.boost_stats.size():
+		var aura := AuraDef.new()
+		aura.stat = status.boost_stats[i] as AuraDef.Stat
+		aura.value = status.boost_values[i]
+		parts.append(UnitInfo.aura_text(aura))
+	return ", ".join(parts)
 
 
 ## A duo bond's, for the hero on `path_id`.

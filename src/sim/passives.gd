@@ -147,6 +147,12 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 		unit.stats.values[UnitStats.Stat.RANGE] = unit.base_stats.values[UnitStats.Stat.RANGE] + unit.aura_bp[AuraDef.Stat.RANGE]
 		unit.stats.values[UnitStats.Stat.ATSP] += unit.aura_bp[AuraDef.Stat.ATSP]
 		unit.stats.values[UnitStats.Stat.DEF] += unit.aura_bp[AuraDef.Stat.DEF]
+		if unit.aura_bp[AuraDef.Stat.MAX_HP_BP] != FixedMath.BP_ONE or unit.max_hp != unit.base_max_hp:
+			# Max HP boosts (phase 5c step 5c): HP rises by what it gains.
+			var new_max: int = maxi(FixedMath.apply_bp(unit.base_max_hp, factor(unit, AuraDef.Stat.MAX_HP_BP)), 1)
+			if unit.alive:
+				unit.hp = mini(unit.hp + maxi(new_max - unit.max_hp, 0), new_max)
+			unit.max_hp = new_max
 		unit.attack.set_cooldown_add(unit.aura_bp[AuraDef.Stat.COOLDOWN_BP])
 		unit.attack_rate_bp = sim.attack_rate_bp(unit)
 		unit.refresh_reach()
@@ -326,6 +332,9 @@ static func factor(unit: UnitState, stat: int) -> int:
 ## mod's). The damage rule adds it to the hit's other power bonuses.
 static func power_bp(unit: UnitState, effect: EffectDef) -> int:
 	var power: int = effect.power_bp
+	if unit.fire_power_bp != 0 and (effect.type == EffectDef.Type.DAMAGE or effect.type == EffectDef.Type.HEAL or effect.type == EffectDef.Type.SHIELD):
+		# Overcharge's extra fires (phase 5c step 5c).
+		power += unit.fire_power_bp
 	match effect.type:
 		EffectDef.Type.DAMAGE:
 			power += unit.aura_bp[AuraDef.Stat.DAMAGE_BP] - FixedMath.BP_ONE
@@ -435,7 +444,14 @@ static func _run(sim: CombatSim, unit: UnitState, listener: Listener, other: Uni
 	var first: int = sim.combat_log.entries.size()
 	var outer: int = sim.chain_depth
 	sim.chain_depth = chain + 1
+	# Chain of Echoes (phase 5c step 5c): a hero's event effect at depth d is
+	# growth_bp(d) as strong, in the relic kind of the damage rule.
+	var grows: bool = sim.hero_rules.deeper_steps > 0 and unit.side == EffectSource.Team.HEROES
+	if grows:
+		unit.relic_bonus_bp = sim.hero_rules.growth_bp(chain + 1) - FixedMath.BP_ONE
 	EffectRunner.run_event(sim, unit, listener.part.ability, listener.source, listener.effect, other, damage)
+	if grows:
+		unit.relic_bonus_bp = 0
 	sim.chain_depth = outer
 	for i: int in range(first, sim.combat_log.entries.size()):
 		var entry: LogEntry = sim.combat_log.entries[i]

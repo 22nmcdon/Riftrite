@@ -44,7 +44,9 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> int:
 	while i < maxi(to, sim.combat_log.entries.size()):
 		var entry: LogEntry = sim.combat_log.entries[i]
 		i += 1
-		if not _RAISES.has(entry.kind) or entry.chain >= limit:
+		if not _RAISES.has(entry.kind):
+			continue
+		if entry.chain >= (limit if sim.hero_rules.deeper_steps == 0 else sim.chain_limit_of(entry.source_unit, entry.source_relic_side)):
 			continue
 		if entry.kind == LogEntry.Kind.STATUS_ENDED:
 			# Its holder's event, whoever put the status there (a relic too).
@@ -102,7 +104,7 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> int:
 ## on_kill for a unit that just fell, credited to whoever hit it last (an
 ## enemy of it that still stands), naming the fallen (Decision 13).
 static func kill(sim: CombatSim, fallen: UnitState) -> void:
-	if fallen.last_attacker.is_empty() or fallen.last_hit_chain >= sim.tuning.chain_limit:
+	if fallen.last_attacker.is_empty() or fallen.last_hit_chain >= sim.chain_limit_of(fallen.last_attacker, -1):
 		return
 	var killer: UnitState = sim.unit_by_id(fallen.last_attacker)
 	if killer != null and killer.alive and killer.side != fallen.side:

@@ -104,10 +104,22 @@ static func _damage(sim: CombatSim, amount: int) -> void:
 	for unit: UnitState in sim.units:
 		if not unit.alive or not sim.on_crumbled(unit.pos):
 			continue
+		# Riftwalker's Soles (the heroes' rule collapse; phase 5c step 5c):
+		# heroes take none, enemies a share of their max HP more.
+		var hurt: int = amount
+		var note: String = ""
+		if sim.hero_rules.collapse_immune or sim.hero_rules.collapse_enemy_bp > 0:
+			if unit.side == EffectSource.Team.HEROES:
+				if sim.hero_rules.collapse_immune:
+					continue
+			elif sim.hero_rules.collapse_enemy_bp > 0:
+				hurt += FixedMath.apply_bp(unit.max_hp, sim.hero_rules.collapse_enemy_bp)
+				note = "Riftwalker's Soles"
 		var entry: LogEntry = sim.new_entry(LogEntry.Kind.COLLAPSE, source)
 		entry.target = unit.id
-		entry.amount = amount
-		entry.absorbed = sim.apply_damage(unit, amount)
+		entry.amount = hurt
+		entry.note = note
+		entry.absorbed = sim.apply_damage(unit, hurt)
 		unit.last_hit_source = source
 		unit.last_hit_status = ""
 		sim.combat_log.add(entry)

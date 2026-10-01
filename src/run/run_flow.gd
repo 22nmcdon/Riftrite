@@ -408,11 +408,12 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 	if won:
 		for hero: RunState.Hero in state.heroes:
 			hero.wounds = maxi(hero.wounds - 1, 0)
-	for entry: LogEntry in result.combat_log.entries:
-		if entry.kind == LogEntry.Kind.DEATH:
-			var fallen: RunState.Hero = state.hero(entry.target)
-			if fallen != null:
-				fallen.wounds = mini(fallen.wounds + 1, run.content.tuning.max_wounds)
+	# A wound for each hero down at the fight's end (Decision 23: one Second
+	# Dawn raised, standing at the end, takes none).
+	for hero_id: String in result.down_at_end():
+		var fallen: RunState.Hero = state.hero(hero_id)
+		if fallen != null:
+			fallen.wounds = mini(fallen.wounds + 1, run.content.tuning.max_wounds)
 	for hero: RunState.Hero in state.heroes:
 		if not hero.transformed and hero.deeds.get(hero.path, 0) >= run.content.paths[hero.path].deed.threshold:
 			hero.transformed = true

@@ -222,6 +222,18 @@ func _add(entry: LogEntry, sim: CombatSim) -> void:
 		LogEntry.Kind.DEATH:
 			var ghost: Fx = _new(Kind.GHOST, entry.tick, entry.tick + GHOST_TICKS, Vector2(entry.to_pos), entry.target)
 			ghost.color = _side_color(sim, entry.target)
+		LogEntry.Kind.RISE:
+			var risen: Fx = _new(Kind.PULSE, entry.tick, entry.tick + PULSE_TICKS, Vector2(entry.to_pos), entry.target)
+			risen.color = UiStyle.GOLD_300
+			var rises: Fx = _new(Kind.POPUP, entry.tick, entry.tick + POPUP_TICKS, Vector2(entry.to_pos), entry.target)
+			rises.text = "Rises"
+			rises.color = UiStyle.GOLD_300
+		LogEntry.Kind.RESISTED:
+			var hero: UnitState = sim.unit_by_id(entry.target)
+			if hero != null:
+				var resisted: Fx = _new(Kind.POPUP, entry.tick, entry.tick + POPUP_TICKS, Vector2(hero.pos), hero.id)
+				resisted.text = "Resisted"
+				resisted.color = UiStyle.TEXT
 		LogEntry.Kind.SUMMON:
 			if entry.note.is_empty():
 				var pulse: Fx = _new(Kind.PULSE, entry.tick, entry.tick + PULSE_TICKS, Vector2(entry.to_pos), entry.target)

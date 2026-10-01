@@ -72,7 +72,7 @@ func test_the_tiers() -> void:
 	var counts: Array[int] = [0, 0, 0, 0, 0]
 	for id: String in _run.relic_ids:
 		counts[_run.relics[id].tier] += 1
-	assert_eq(counts, [25, 21, 14, 10, 5] as Array[int], "common, rare, epic, legendary, boss")
+	assert_eq(counts, [25, 21, 14, 15, 11] as Array[int], "common, rare, epic, legendary, boss")
 	for id: String in ["pilgrims_lantern", "hungry_blade"]:
 		assert_false(_run.relics.has(id), "%s is cut" % id)
 	assert_eq(_run.act.relic_prices, {"common": 5, "rare": 12, "epic": 20, "legendary": 30, "boss": 0} as Dictionary[String, int])
@@ -536,3 +536,27 @@ func test_snaring_shot_is_for_ranged_heroes_only() -> void:
 	assert_false(_passive_ids(flow.kit_of("brannoc")).has("snaring_shot"), "Brannoc is melee")
 	assert_true(ModInfo.relic_numbers(_run.relics["snaring_shot"], _run.content).begins_with("Ranged heroes: "))
 
+
+
+# --- step 5c-2: the hero rules ---------------------------------------------------------
+
+func test_rule_relics_go_into_the_setup() -> void:
+	var rules: SideRules = _setup_holding(["crown_of_stars", "second_dawn", "everflame", "the_long_watch"]).hero_rules
+	assert_eq([rules.crit_steps, rules.rise_ticks, rules.keywords_last, rules.watch_tie_ticks], [10, 100, true, 6000])
+	assert_false(rules.keywords_twice, "only what's held")
+	for id: String in ["crown_of_stars", "shared_pain", "the_hungering_rift", "overcharge", "second_dawn", "chain_of_echoes", "crown_of_the_hollow_king",
+			"everflame", "the_unbending", "riftwalkers_soles", "the_long_watch"]:
+		assert_false(ModInfo.rules_numbers(_run.relics[id].rules, _run.content).is_empty(), "%s says its rule" % id)
+	assert_string_contains(ModInfo.relic_numbers(_run.relics["the_long_watch"], _run.content), "+10% max HP, +10% ATK")
+
+
+func test_a_hero_who_rose_takes_no_wound() -> void:
+	var flow: RunFlow = _start()
+	_to_fight(flow)
+	var result: FightResult = _won(["maren", "vell"])
+	var rise := LogEntry.new()
+	rise.kind = LogEntry.Kind.RISE
+	rise.target = "maren"
+	result.combat_log.add(rise)
+	flow.record(Bot.formation(), result)
+	assert_eq([flow.state.hero("maren").wounds, flow.state.hero("vell").wounds], [0, 1], "wounds only for heroes down at the end (Decision 23)")

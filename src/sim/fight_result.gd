@@ -49,5 +49,18 @@ func tally_amount(hero_id: String, key: String) -> int:
 	return 0
 
 
+## The units down at the fight's end, in the order they last fell: each that
+## fell (DEATH) and didn't rise after (Second Dawn's RISE; phase 5c step 5c).
+func down_at_end() -> Array[String]:
+	var down: Array[String] = []
+	for entry: LogEntry in combat_log.entries:
+		if entry.kind == LogEntry.Kind.DEATH:
+			down.erase(entry.target)
+			down.append(entry.target)
+		elif entry.kind == LogEntry.Kind.RISE:
+			down.erase(entry.target)
+	return down
+
+
 func guild_won() -> bool:
 	return errors.is_empty() and outcome != Outcome.DEFEAT

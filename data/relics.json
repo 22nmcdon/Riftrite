@@ -1,6 +1,6 @@
 [
   {
-    "_note": "Relics (docs/plans/relics/, phase 5c step 5a; docs/plans/rebuild-phase5c-combos.md, section 10): team-wide, no downsides, in tiers (common, rare, epic, legendary, boss). The 75 the built pieces can write (44 from step 5a, 20 from 5b, 11 from 5c-1); the rest come with steps 5c-2 and 5d. Texts keep numbers out (the UI adds them from the mod and run rules). Icons reuse the placeholder glyphs until the art rehaul. Numbers are placeholders.",
+    "_note": "Relics (docs/plans/relics/, phase 5c step 5a; docs/plans/rebuild-phase5c-combos.md, section 10): team-wide, no downsides, in tiers (common, rare, epic, legendary, boss). The 86 of the pool (44 from step 5a, 20 from 5b, 11 from 5c-1, 11 from 5c-2); the bond relics come with step 5d. Texts keep numbers out (the UI adds them from the mod and run rules). Icons reuse the placeholder glyphs until the art rehaul. Numbers are placeholders.",
     "id": "whetstone_of_the_fallen",
     "name": "Whetstone of the Fallen",
     "tier": "common",
@@ -1539,6 +1539,75 @@
     }
   },
   {
+    "id": "crown_of_stars",
+    "name": "Crown of Stars",
+    "tier": "legendary",
+    "icon": "hollow_crown",
+    "flavor": "Each point of light a wound.",
+    "text": "Heroes' crits can crit again, many times in a row, each roll a little less likely and a little weaker.",
+    "rules": {
+      "crit_chain": {
+        "steps": 10,
+        "fade_bp": 500
+      }
+    }
+  },
+  {
+    "id": "shared_pain",
+    "name": "Shared Pain",
+    "tier": "legendary",
+    "icon": "casters_first",
+    "flavor": "What one feels, all feel.",
+    "text": "Damage heroes deal to an enemy echoes to the other enemies sharing its keyword, weaker each step.",
+    "rules": {
+      "echo_keywords": {
+        "share_bp": 9000,
+        "steps": 3
+      }
+    }
+  },
+  {
+    "id": "the_hungering_rift",
+    "name": "The Hungering Rift",
+    "tier": "legendary",
+    "icon": "echo",
+    "flavor": "Nothing it takes is wasted.",
+    "text": "Damage past an enemy's last HP carries to the nearest enemy, and keeps carrying until it runs out.",
+    "rules": {
+      "carry_overkill": {
+        "steps": 8
+      }
+    }
+  },
+  {
+    "id": "overcharge",
+    "name": "Overcharge",
+    "tier": "legendary",
+    "icon": "purifying_light",
+    "flavor": "The vessel cracks. The light keeps pouring.",
+    "text": "Heroes' mana keeps filling past a full bar, and each extra bar fires the signature again, stronger each time.",
+    "rules": {
+      "overcharge": {
+        "power_bp": 2500,
+        "steps": 8
+      }
+    }
+  },
+  {
+    "id": "second_dawn",
+    "name": "Second Dawn",
+    "tier": "legendary",
+    "icon": "pilgrims_lantern",
+    "flavor": "The rift is not the end. Not yet.",
+    "text": "The first time each hero falls in a fight, it rises again a little later; if every hero is down at once, the fight is lost.",
+    "rules": {
+      "second_dawn": {
+        "after_ms": 5000,
+        "hp_bp": 5000
+      }
+    }
+  },
+  {
     "id": "the_second_sun",
     "name": "The Second Sun",
     "tier": "boss",
@@ -1607,6 +1676,85 @@
           ]
         }
       ]
+    }
+  },
+  {
+    "id": "chain_of_echoes",
+    "name": "Chain of Echoes",
+    "tier": "boss",
+    "icon": "echo",
+    "flavor": "Every link rings louder than the last.",
+    "text": "Every chain the heroes start goes deeper, and each step is stronger than the one before.",
+    "rules": {
+      "deeper_chains": {
+        "steps": 4,
+        "grow_bp": 1500
+      }
+    }
+  },
+  {
+    "id": "crown_of_the_hollow_king",
+    "name": "Crown of the Hollow King",
+    "tier": "boss",
+    "icon": "hollow_crown",
+    "flavor": "He gave twice what he was asked. So does his crown.",
+    "text": "Every keyword heroes apply goes on twice: double stacks, or double duration.",
+    "rules": {
+      "keywords_twice": true
+    }
+  },
+  {
+    "id": "everflame",
+    "name": "Everflame",
+    "tier": "boss",
+    "icon": "ember_heart",
+    "flavor": "It was lit before the rift. It will burn after.",
+    "text": "Keywords heroes put on enemies never wear off during a fight, and enemies can't remove them.",
+    "rules": {
+      "keywords_last": true
+    }
+  },
+  {
+    "id": "the_unbending",
+    "name": "The Unbending",
+    "tier": "boss",
+    "icon": "unbroken_wall",
+    "flavor": "Bend, and the rift breaks you. Stand.",
+    "text": "Heroes are immune to every status enemies apply, and each one blocked makes that hero sturdier for the fight.",
+    "rules": {
+      "unbending": {
+        "def_bp": 100,
+        "max_hp_bp": 100
+      }
+    }
+  },
+  {
+    "id": "riftwalkers_soles",
+    "name": "Riftwalker's Soles",
+    "tier": "boss",
+    "icon": "light_feet",
+    "flavor": "Worn by one who walked the edge and came back.",
+    "text": "Heroes take no damage from crumbled ground, and enemies on it take a share of their max HP every second.",
+    "rules": {
+      "collapse": {
+        "immune": true,
+        "enemy_max_hp_bp": 500
+      }
+    }
+  },
+  {
+    "id": "the_long_watch",
+    "name": "The Long Watch",
+    "tier": "boss",
+    "icon": "pilgrims_lantern",
+    "flavor": "The night is long. So is the watch.",
+    "text": "Fights don't time out at 180s, and from a minute in, every hero grows stronger every few seconds.",
+    "rules": {
+      "long_watch": {
+        "from_ms": 60000,
+        "every_ms": 10000,
+        "tie_ms": 300000
+      }
     }
   }
 ]

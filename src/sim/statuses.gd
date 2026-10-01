@@ -39,6 +39,21 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: 
 		return
 	if not target.alive or (not def.is_timed() and stacks <= 0):
 		return
+	# The heroes' rules (phase 5c step 5c): The Unbending blocks what enemies
+	# put on heroes; Crown of the Hollow King doubles the keywords heroes
+	# apply; Everflame makes those on enemies last.
+	var rules: SideRules = sim.hero_rules
+	var lasting: bool = false
+	if rules.any():
+		var by_heroes: bool = _by_heroes(sim, source)
+		if rules.unbending and target.side == EffectSource.Team.HEROES and not by_heroes:
+			_resist(sim, target, def, source)
+			return
+		if by_heroes and not def.keyword.is_empty():
+			if rules.keywords_twice:
+				stacks *= 2
+				duration_ticks = 2 * (duration_ticks if duration_ticks > 0 else def.duration_ticks)
+			lasting = rules.keywords_last and target.side != EffectSource.Team.HEROES
 	var state: StatusState = find(target, status_id)
 	var fresh: bool = state == null
 	if state == null:
@@ -63,12 +78,15 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: 
 		entry.amount = 1
 	elif def.is_timed():
 		state.source = source
-		state.ends_at = sim.tick + (duration_ticks if duration_ticks > 0 else def.duration_ticks)
-		entry.end_tick = state.ends_at
-		if not fresh and def.kind == StatusDef.Kind.MARKED and sim.hero_rules.marks_stack and _by_heroes(sim, source):
-			state.stacks += 1
+		state.lasting = state.lasting or lasting
+		state.ends_at = StatusState.NEVER if state.lasting else sim.tick + (duration_ticks if duration_ticks > 0 else def.duration_ticks)
+		entry.end_tick = state.ends_at if not state.lasting else -1
+		if def.kind == StatusDef.Kind.MARKED and sim.hero_rules.marks_stack and _by_heroes(sim, source):
+			var added: int = 2 if sim.hero_rules.keywords_twice else 1
+			state.stacks = added if fresh else state.stacks + added
 			entry.stacks = state.stacks
 	else:
+		state.lasting = state.lasting or lasting
 		state.add_stacks(source, stacks)
 		if def.max_stacks > 0 and state.total_stacks() > def.max_stacks:
 			state.remove_oldest(state.total_stacks() - def.max_stacks)
@@ -79,6 +97,19 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: 
 		sim.refold_auras()
 	elif def.kind == StatusDef.Kind.BOOST and (fresh or def.stacking):
 		sim.refold_auras()
+
+
+## The Unbending: `def` from `source` doesn't land on the hero; it's logged
+## (RESISTED) and the hero gains a stack of `unbending`.
+static func _resist(sim: CombatSim, hero: UnitState, def: StatusDef, source: EffectSource) -> void:
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.RESISTED, source)
+	entry.target = hero.id
+	entry.status = def.id
+	entry.status_name = def.name
+	entry.note = "The Unbending"
+	sim.combat_log.add(entry)
+	if sim.content.statuses.has("unbending"):
+		apply(sim, hero, "unbending", 1, 0, EffectSource.relic("the_unbending", "The Unbending", EffectSource.Team.HEROES))
 
 
 ## True if `source` is the heroes' side: a hero (or its summon), or the
@@ -103,7 +134,7 @@ static func stacks_on(unit: UnitState, status_id: String) -> int:
 ## extend_status): logged (STATUS_EXTENDED). Nothing if it isn't there.
 static func extend(sim: CombatSim, target: UnitState, status_id: String, ticks: int, source: EffectSource) -> void:
 	var state: StatusState = find(target, status_id)
-	if state == null or not state.def.is_timed() or not target.alive:
+	if state == null or not state.def.is_timed() or not target.alive or state.lasting:
 		return
 	state.ends_at += ticks
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.STATUS_EXTENDED, source)
@@ -252,6 +283,8 @@ static func _deal_damage_over_time(sim: CombatSim, unit: UnitState, state: Statu
 		if group.source.relic_side < 0 and group.source.unit_id != unit.id:
 			unit.last_attacker = group.source.unit_id
 		sim.combat_log.add(entry)
+	if state.lasting:
+		return
 	var lost: int = state.def.stacks_lost_per_interval
 	if state.def.stacks_lost_bp > 0:
 		@warning_ignore("integer_division")
@@ -268,6 +301,8 @@ static func _deal_damage_over_time(sim: CombatSim, unit: UnitState, state: Statu
 ## touched.
 static func cleanse_over_time(sim: CombatSim, unit: UnitState, share_bp: int, source: EffectSource, by_heal: bool = false) -> void:
 	for state: StatusState in unit.statuses.duplicate():
+		if state.lasting and not _by_heroes(sim, source):
+			continue
 		var removed: int = FixedMath.apply_bp(state.total_stacks(), FixedMath.apply_bp(share_bp, state.def.cleanse_effectiveness_bp))
 		if removed <= 0:
 			continue

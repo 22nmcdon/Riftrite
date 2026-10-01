@@ -41,7 +41,7 @@ static func gain(sim: CombatSim, unit: UnitState, hundredths: int) -> void:
 		return
 	if not unit.statuses.is_empty() and Statuses.has_kind(unit, StatusDef.Kind.SILENCE):
 		return
-	unit.mana = mini(unit.mana + hundredths, unit.def.mana.max * SCALE)
+	unit.mana = mini(unit.mana + hundredths, maxi(unit.def.mana.max * SCALE, unit.mana_store))
 
 
 ## Gives the unit the bar `mana` describes, at its start (null: no bar).

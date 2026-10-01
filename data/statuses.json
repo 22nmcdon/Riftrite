@@ -144,5 +144,21 @@
     "kind": "boost",
     "stacking": true,
     "auras": [{"stat": "atsp", "value": 1}]
+  },
+  {
+    "_note": "A stack for each status The Unbending (a boss relic) blocked: more DEF and max HP for the rest of the fight (phase 5c step 5c).",
+    "id": "unbending",
+    "name": "Unbending",
+    "kind": "boost",
+    "stacking": true,
+    "auras": [{"stat": "def_bp", "value": 10100}, {"stat": "max_hp_bp", "value": 10100}]
+  },
+  {
+    "_note": "A stack every 10s from 60s under The Long Watch (a boss relic): every basic stat higher for the rest of the fight (phase 5c step 5c).",
+    "id": "long_watch",
+    "name": "Long Watch",
+    "kind": "boost",
+    "stacking": true,
+    "auras": [{"stat": "max_hp_bp", "value": 11000}, {"stat": "atk_bp", "value": 11000}, {"stat": "mgk_bp", "value": 11000}, {"stat": "def_bp", "value": 11000}, {"stat": "crit_bp", "value": 11000}, {"stat": "atsp_bp", "value": 11000}]
   }
 ]

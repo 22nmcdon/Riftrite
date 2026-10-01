@@ -8,6 +8,7 @@ const K = preload("res://tests/sim/sim_test_kit.gd")
 const Chaos = preload("res://tests/sim/chaos_fight.gd")
 const TacticFights = preload("res://tests/sim/test_tactics.gd")
 const PathFights = preload("res://tests/sim/path_fights.gd")
+const RuleFights = preload("res://tests/sim/test_hero_rules.gd")
 
 ## The chaos fight, run once for every test here (it takes a couple of
 ## seconds).
@@ -59,6 +60,20 @@ func test_the_paths_fights_repeat_exactly_and_use_the_path_pieces() -> void:
 		assert_true(statuses.has(status_id), "a paths fight applies %s" % status_id)
 
 
+## The heroes' rules (phase 5c step 5c) change fights, so the rules fight
+## repeats exactly too, and has the log kinds and statuses the chaos fight
+## leaves to it (a rise and a block; The Unbending's and The Long Watch's
+## stacks).
+func test_the_rules_fight_repeats_exactly() -> void:
+	var first: FightResult = K.run(RuleFights.rules_setup())
+	assert_eq(K.run(RuleFights.rules_setup()).combat_log.to_text(), first.combat_log.to_text())
+	for kind: LogEntry.Kind in [LogEntry.Kind.RISE, LogEntry.Kind.RESISTED]:
+		assert_false(first.combat_log.of_kind(kind).is_empty(), "the rules fight has a %s" % LogEntry.Kind.keys()[kind])
+	var statuses: Array = first.combat_log.of_kind(LogEntry.Kind.STATUS_APPLIED).map(func(entry: LogEntry) -> String: return entry.status)
+	for status_id: String in RULE_STATUSES:
+		assert_true(statuses.has(status_id), "the rules fight applies %s" % status_id)
+
+
 func test_the_seed_matters() -> void:
 	assert_ne(K.run(Chaos.setup(22)).combat_log.to_text(), chaos.combat_log.to_text())
 
@@ -75,12 +90,15 @@ func test_the_fight_order_matters() -> void:
 ## them (TACTIC: test_a_fight_with_tactics_repeats_exactly, since tactics
 ## would change the chaos fight's seed; phase 4's path pieces: the paths
 ## fight, once the paths are data).
+## The heroes' rules (RISE, RESISTED): the rules fight.
 const NOT_YET: Array[LogEntry.Kind] = [LogEntry.Kind.SYNERGY, LogEntry.Kind.DEED_LEVEL, LogEntry.Kind.TACTIC,
-	LogEntry.Kind.ZONE, LogEntry.Kind.SNARE, LogEntry.Kind.WALL, LogEntry.Kind.GUARD]
+	LogEntry.Kind.ZONE, LogEntry.Kind.SNARE, LogEntry.Kind.WALL, LogEntry.Kind.GUARD, LogEntry.Kind.RISE, LogEntry.Kind.RESISTED]
 ## Statuses only the paths use (phase 4), and only relics (phase 5c step 5a;
 ## Sunder, covered by tests/run/test_relics.gd).
 const PATH_STATUSES: Array[String] = ["warded"]
-const RELIC_STATUSES: Array[String] = ["sunder", "quickened"]
+const RELIC_STATUSES: Array[String] = ["sunder", "quickened", "unbending", "long_watch"]
+## The statuses the heroes' rules apply (phase 5c step 5c).
+const RULE_STATUSES: Array[String] = ["unbending", "long_watch"]
 
 
 func test_the_chaos_fight_uses_everything() -> void:

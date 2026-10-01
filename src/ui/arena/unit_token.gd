@@ -198,7 +198,7 @@ func show_state(unit: UnitState, tick: int) -> void:
 	in_fight = true
 	hp_share = float(unit.hp) / maxf(unit.max_hp, 1.0)
 	shield_share = float(unit.shield) / maxf(unit.max_hp, 1.0)
-	mana_share = float(unit.mana) / unit.mana_cap if unit.mana_cap > 0 else -1.0
+	mana_share = minf(float(unit.mana) / unit.mana_cap, 1.0) if unit.mana_cap > 0 else -1.0
 	cast_share = -1.0
 	var signature: AbilityState = unit.signature
 	if signature != null and signature.casting() and signature.def.cast_ticks > 0:

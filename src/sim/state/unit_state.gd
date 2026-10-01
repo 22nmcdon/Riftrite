@@ -37,8 +37,19 @@ var vs_bonus_bp: Array[int] = []
 var vs_basic: Array[bool] = []
 var vs_per_stacks: Array[String] = []
 var max_hp: int
+## Its max HP as the fight began (wounds counted), for max_hp_bp boosts
+## (phase 5c step 5c).
+var base_max_hp: int
 var hp: int
 var shield: int = 0
+## Phase 5c step 5c's hero rules: a power bonus on the signature fire under
+## way (Overcharge), a relic-kind bonus on the event effect under way (Chain
+## of Echoes), and Second Dawn's rise (the tick it rises, -1: none; whether
+## it has risen this fight).
+var fire_power_bp: int = 0
+var relic_bonus_bp: int = 0
+var rise_at: int = -1
+var rose: bool = false
 ## False once it has fallen (deaths are settled at the end of a tick).
 var alive: bool = true
 var pos: Vector2i
@@ -50,6 +61,9 @@ var signature: AbilityState = null
 ## full bar and its regen a tick, in hundredths (0 without a bar).
 var mana: int = 0
 var mana_cap: int = 0
+## Overcharge (phase 5c step 5c): how much mana the bar can hold past full
+## (0: none; the bar stops at mana_cap).
+var mana_store: int = 0
 var mana_regen: int = 0
 ## Its basic attack's reach, squared (plane units).
 var reach_sq: int = 0
@@ -180,6 +194,7 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 	unit.max_hp = unit.stats.get_stat(UnitStats.Stat.HP)
 	if setup.max_hp_bp != FixedMath.BP_ONE:
 		unit.max_hp = maxi(FixedMath.apply_bp(unit.max_hp, setup.max_hp_bp), 1)
+	unit.base_max_hp = unit.max_hp
 	unit.hp = unit.max_hp
 	if grid != null:
 		unit.pos = grid.center(setup.col, setup.row)
