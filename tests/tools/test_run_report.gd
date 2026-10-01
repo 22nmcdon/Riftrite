@@ -36,3 +36,17 @@ func test_a_small_report() -> void:
 	assert_string_contains(text, "Runs with errors: 0")
 	assert_string_contains(text, "Picks per run by layer: hero")
 	assert_string_contains(text, "Nodes per run: Camp shown")
+
+
+func test_the_engine_report() -> void:
+	var lines: Array[Report.RunLine] = []
+	lines.assign(Report.play_many(_run, [4, 5] as Array[int], false))
+	for line: Report.RunLine in lines:
+		assert_false(line.engines.is_empty(), "seed %d's fights had engines" % line.seed_value)
+		for name: String in line.engines:
+			var stats: Array = line.engines[name]
+			assert_lte(stats[4], stats[5], "%s added no more than its team" % name)
+			assert_lte(stats[2], stats[1], "%s: chained fires are fires" % name)
+	var text: String = Report.engines_summary(lines)
+	assert_string_starts_with(text, "Engines (the heroes' sources")
+	assert_string_contains(text, "Held but never fired")

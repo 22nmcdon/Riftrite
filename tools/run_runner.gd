@@ -3,7 +3,9 @@ extends SceneTree
 ## runs with the simple run bot and prints how they pace (tools/run_report.gd
 ## does the work). A report, not a gate: it exits 0 unless a run hit an
 ## error.
-## Usage: godot --headless --path . -s tools/run_runner.gd -- [--runs=54] [--first-seed=1]
+## Usage: godot --headless --path . -s tools/run_runner.gd -- [--runs=54] [--first-seed=1] [--engines]
+## --engines adds the engine report (phase 5c step 9b): every hero engine
+## over the runs' day fights.
 
 const Report = preload("res://tools/run_report.gd")
 
@@ -25,6 +27,11 @@ func _init() -> void:
 		seeds.append(options["first-seed"].to_int() + i)
 	var lines: Array = Report.play_many(run, seeds)
 	print(Report.summary(run, lines))
+	if OS.get_cmdline_user_args().has("--engines"):
+		var typed: Array[Report.RunLine] = []
+		typed.assign(lines)
+		print("")
+		print(Report.engines_summary(typed))
 	for line: Report.RunLine in lines:
 		if not line.errors.is_empty():
 			printerr("seed %d: %s" % [line.seed_value, "; ".join(line.errors)])

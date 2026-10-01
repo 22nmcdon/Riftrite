@@ -43,6 +43,12 @@ class RunLine:
 	var rift_wins: int = 0
 	## Event scenes taken (phase 5c step 8c): scene id -> times.
 	var scenes: Dictionary[String, int] = {}
+	## The heroes' engines over the day fights (phase 5c step 9b, --engines):
+	## engine name -> [fights it fired or added in, fires, fires from chains,
+	## deepest chain, what it added, its team's output in those fights], and
+	## each event passive held -> the fights it was held in.
+	var engines: Dictionary[String, Array] = {}
+	var held: Dictionary[String, int] = {}
 	var errors: Array[String] = []
 	## [encounter id, won?] for each fight.
 	var fights: Array[Array] = []
@@ -87,6 +93,7 @@ static func play(run: RunContent, run_seed: int, look_ahead: bool = true) -> Run
 	var shards: int = state.shards
 	var wounds: int = 0
 	var fought: int = 0
+	var counted: FightResult = null
 	var before: Dictionary[String, int] = {}
 	for hero: RunState.Hero in state.heroes:
 		before[hero.id] = hero.deeds[hero.path]
@@ -118,6 +125,10 @@ static func play(run: RunContent, run_seed: int, look_ahead: bool = true) -> Run
 		if state.fought.size() > fought:
 			fought = state.fought.size()
 			var last: RunState.Fought = state.fought.back()
+			# A sealed fight (phase 5c step 8c) wasn't fought, so it has no new result.
+			if flow.last_result != null and flow.last_result != counted and run.content.encounters[last.encounter].tier != "hunt":
+				counted = flow.last_result
+				_count_engines(line, flow.last_setup, flow.last_result, run.content.tuning.chain_limit)
 			line.fights.append([last.encounter, last.outcome != FightResult.Outcome.DEFEAT])
 			if torn:
 				line.rift_fights += 1
@@ -161,6 +172,72 @@ static func play(run: RunContent, run_seed: int, look_ahead: bool = true) -> Run
 		for upgrade_id: String in hero.growth:
 			line.grown[upgrade_id] = hero.growth[upgrade_id]
 	return line
+
+
+## Adds a day fight's engines to `line` (ComboTally over its log), and the
+## event passives its heroes held.
+static func _count_engines(line: RunLine, setup: FightSetup, result: FightResult, chain_limit: int) -> void:
+	var hero_ids: Array[String] = []
+	for unit: UnitSetup in setup.heroes:
+		hero_ids.append(unit.id)
+		for part: PartDef in unit.def.passives:
+			if part.kind == PartDef.Kind.ABILITY:
+				var held_name: String = "%s · %s" % [unit.id, part.name]
+				line.held[held_name] = line.held.get(held_name, 0) + 1
+	var tally: ComboTally = ComboTally.of_log(result.combat_log, chain_limit, hero_ids)
+	var team: int = 0
+	var rows: Array[ComboTally.EngineRow] = tally.engines.filter(func(row: ComboTally.EngineRow) -> bool: return row.side == EffectSource.Team.HEROES)
+	for row: ComboTally.EngineRow in rows:
+		team += row.total()
+	for row: ComboTally.EngineRow in rows:
+		if row.fires == 0 and row.total() == 0:
+			continue
+		var stats: Array = line.engines.get(row.name, [0, 0, 0, 0, 0, 0])
+		stats[0] += 1
+		stats[1] += row.fires
+		stats[2] += row.from_chains
+		stats[3] = maxi(stats[3], row.deepest)
+		stats[4] += row.total()
+		stats[5] += team
+		line.engines[row.name] = stats
+
+
+## The engine report (phase 5c step 9b, `--engines`): every hero engine
+## over the runs' day fights, most of its team's output first (fights, fires
+## a fight, the share from chains, the deepest chain, its share of what its
+## team dealt, healed, and Shielded in those fights), then the event
+## passives held that never fired.
+static func engines_summary(lines: Array[RunLine], shown: int = 40) -> String:
+	var merged: Dictionary[String, Array] = {}
+	var held: Dictionary[String, int] = {}
+	for line: RunLine in lines:
+		for name: String in line.engines:
+			var stats: Array = merged.get(name, [0, 0, 0, 0, 0, 0])
+			var more: Array = line.engines[name]
+			for i: int in 6:
+				stats[i] = maxi(stats[i], more[i]) if i == 3 else stats[i] + more[i]
+			merged[name] = stats
+		for name: String in line.held:
+			held[name] = held.get(name, 0) + line.held[name]
+	var names: Array[String] = []
+	names.assign(merged.keys())
+	names.sort_custom(func(a: String, b: String) -> bool:
+		var share_a: int = _pct(merged[a][4], merged[a][5])
+		var share_b: int = _pct(merged[b][4], merged[b][5])
+		return share_a > share_b if share_a != share_b else a < b)
+	var out: PackedStringArray = PackedStringArray()
+	out.append("Engines (the heroes' sources over the bot's day fights: fights, fires a fight, from chains, deepest chain, share of the team's output in them):")
+	for i: int in mini(shown, names.size()):
+		var stats: Array = merged[names[i]]
+		out.append("  %-40s %4d fights, %5.1f fires, %3d%% chained, deepest %d, %3d%% of output" % [names[i], stats[0], float(stats[1]) / maxi(stats[0], 1),
+			_pct(stats[2], stats[1]), stats[3], _pct(stats[4], stats[5])])
+	var silent: Array[String] = []
+	for name: String in held:
+		if not merged.has(name) or merged[name][1] == 0:
+			silent.append("%s (%d)" % [name, held[name]])
+	silent.sort()
+	out.append("Held but never fired (fights held): %s" % (", ".join(silent) if not silent.is_empty() else "none"))
+	return "\n".join(out)
 
 
 static func play_many(run: RunContent, seeds: Array[int], look_ahead: bool = true) -> Array[RunLine]:

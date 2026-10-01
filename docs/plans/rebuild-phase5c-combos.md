@@ -1503,6 +1503,11 @@ Status: **approved (2026-10-01, Decisions 44–47); building in four parts, 9a�
 - **Checked:** 926 tests pass; the bench's 24 fingerprints are unchanged.
 - **Tests:** `tests/sim/test_combo_tally.gd` (5: every number of the chaos fight keeps its rule and it adds up, a plain hit's base and power, the rule out of the log's text, the chaos fight's tally against its log, the notes' wording) and a screen test in `test_fight_log.gd` (hidden by default, shown with the toggle, the log unchanged when off, the screen's counts the log's).
 
+### 17.12 Built in step 9b (2026-10-01)
+
+- **The engine report** (`tools/run_runner.gd -- --engines`, `run_report.gd`'s `_count_engines` and `engines_summary`): `RunFlow.last_setup` and `last_result` (not saved) hold the last fight; the report runs `ComboTally` on each day fight (not a Hunt, not a sealed fight) and keeps, per hero engine, the fights it fired or added in, its fires, the fires from chains, its deepest chain, and its share of its team's damage, healing, and Shield in those fights; and, per event passive held, the fights held. It prints the 40 most-adding engines and every passive held that never fired. A report, not a gate. A test runs it small (`tests/tools/test_run_report.gd`).
+- **The first read** (54 runs, the simple bot, 74% won): the heroes' own abilities carry the runs (Longshot 43% of Maren's team's output, Arrow Storm 22%, Shield Bash 20%, Hearthbrand Mace 17%); the strongest bought engines are Mirror of Ash (13% in its 4 fights) and Ashen Censer (10%); **chains barely happen** in the bot's runs (Ashen Censer and The Ninth Arrow are the only engines with chained fires, at 9–28%, and nothing goes deeper than 2); and **40 held passives never fired**, among them Mana Leech (34 fights on Brannoc), Veil of the Lost (26 on each of Brannoc and Vell), Vigilant (22), Hunter's Chalk (18), and Grasping Mire (15 on each hero). Many are items held by a hero they do nothing for (loadout rule 2: no warnings), which the simple bot doesn't judge well; flagged for phase 6's bot and the playtester, not changed (Decision 46).
+
 ## Answered (2026-09-30)
 
 - **A. Casters first's +20%:** power (Decision 5).

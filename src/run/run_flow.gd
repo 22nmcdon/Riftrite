@@ -38,6 +38,10 @@ const RELIC_SHOP: int = 2
 
 var run: RunContent
 var state: RunState
+## The last fight fight() ran, its setup and result (not saved; the run
+## report's engines read them, phase 5c step 9b).
+var last_setup: FightSetup = null
+var last_result: FightResult = null
 
 
 ## A new run from `run_seed`, each hero vowed to one of its own paths
@@ -786,6 +790,8 @@ func fight(formation: Dictionary[String, Vector2i], errors: Array[String], snare
 	if setup == null:
 		return null
 	var result: FightResult = CombatSim.run(setup, run.content)
+	last_setup = setup
+	last_result = result
 	record(formation, result)
 	return result
 
