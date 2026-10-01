@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a, 5b (section 11), and 5c (section 12) built (10-01), 5d (section 13) built (10-01): the relic pool is complete; step 6 (the loadout pool, section 14) written and up for approval; steps 7–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a, 5b (section 11), and 5c (section 12) built (10-01), 5d (section 13) built (10-01): the relic pool is complete; step 6 (the loadout pool, section 14) approved, being built; steps 7–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -826,7 +826,7 @@ Each is a passive on every hero (a relic's mod). Each plays off both paths: Hear
 
 ## 14. Step 6: the loadout pool
 
-Status: **written and up for approval (2026-10-01).** Builds `loadout/` (its README's nine rules and its decisions; `tactics.md`, `gambits.md`, `sigils.md`, `charms.md`) and the Magpie's stall (`magpie.md`). The Magpie as a node (when he's offered, from day 3, at most twice an act) is step 8's; until then he keeps today's camp place, with the new stall.
+Status: **approved (2026-10-01, Decisions 30–33); being built in five parts.** Builds `loadout/` (its README's nine rules and its decisions; `tactics.md`, `gambits.md`, `sigils.md`, `charms.md`) and the Magpie's stall (`magpie.md`). The Magpie as a node (when he's offered, from day 3, at most twice an act) is step 8's; until then he keeps today's camp place, with the new stall.
 
 ### 14.1 What's there now (phase 5)
 
@@ -855,7 +855,7 @@ Status: **written and up for approval (2026-10-01).** Builds `loadout/` (its REA
 
 | Kind | Rank II after | Rank III after | Counted as |
 | --- | --- | --- | --- |
-| Tactic | 60s | 180s more | a new tally, `ordered`: ticks its order applies (14.6) |
+| Tactic | 60s | 180s more | a new tally, `standing`: ticks its hero stands in the fight (Decision 32) |
 | Gambit | 3 fights | 6 more | fights it was equipped in, its hero placed |
 | Sigil | 10 casts | 25 more | the `casts` its signature fired (a new tally kind; echoes and the sigil's extra fires don't count) |
 | Charm | 4 won fights | 8 more | won fights (a tie pays like a win, so counts) |
@@ -907,7 +907,7 @@ Bulwark III's "allies within 1 hex" is the built `allies_near_target` from the h
 
 Each tactic's ranks are its numbers and payoff (`TacticDef.ranks`); rank III's twist is code in `Tactics`, said here. `heroes` goes (rule 1): any hero takes any tactic.
 
-| Tactic | Order (kind) | What's new | `ordered` counts while |
+| Tactic | Order (kind) | What's new | (proposed rank count, not taken: Decision 32) |
 | --- | --- | --- | --- |
 | Casters first | prefer_target (built) | III: its first hit on each caster Silences it 1s | an enemy it prefers stands |
 | Fliers first | prefer_target, by a `UnitCondition` (`{"flying": true}`) instead of only archetypes | payoff `vs` fliers; III Grounds (6b's status) on the first hit on each | the same |
@@ -934,7 +934,7 @@ A gambit is an item of the new kind `gambit`: a **rule** (code, named in the dat
 | --- | --- | --- |
 | **Infiltrate** | placement: also the neutral row (II: and the enemy zone's front row) | `UnitSetup.zone_rows`; III's Shield is a start effect in its mod |
 | **Ambush** | none (fight start) | Stealth 3s at the start (`on_fight_start`, built) and 6b's next-hit boost (a sure crit; II +50% damage; III Marks) |
-| **Rear Guard** | placement: one row behind the back row | **Question V** (14.10): the board has no such row |
+| **Rear Guard** | none (fight start; Decision 31: it stays on the board) | I: starts hidden until an enemy comes within 2 hexes (a Stealth that lasts until then: a new `"until_enemy_within"` on apply_status); II: +20% attack speed for its first 5s out of hiding; III: its first attack out of hiding Roots the target for 1s |
 | **Late Arrival** | fight start: off the board until 5s (II 4s), then enters on the edge hex it was placed on (any of the board's edge hexes), or the nearest free safe spot, hidden 2s | built on Second Dawn's rise: a unit away from the plane, logged ARRIVE (a new kind: the token appears with a pulse); II's boost and III's Stun on its first attack are its mod |
 | **Stand Together** | placement: may share a hex with another hero; both start side by side across it | `validate` allows the pair; `Encounters.setup` sets them a third of a hex apart; II/III are auras (a window; III `ally_near`, built) given to both |
 | **Switch Places** | fight time: at 10s, swaps places with the ally farthest from it | a new effect, `swap` (both move, logged as two MOVE lines noted "swapped"); II lets the player pick 5, 10, or 15s (`RunState.Hero.gambit_at`, chosen in the loadout, like a snare's hex); III Shields both |
@@ -952,15 +952,22 @@ On his day (today's camp place, until step 8 makes him a node):
 
 ### 14.9 Files, tests, and the bot
 
-- **Changed:** `item_def.gd` (ranks, gambit, no needs or price), `tactic_def.gd` and `tactics.gd` (ranks, the new kinds, no heroes), `data/items.json` (62), `data/tactics.json` (14), `data/statuses.json` (Grounded, Iron Skin, the next-hit boost, surges, Scavenger's), `act_def.gd`/`data/act1.json` (item prices and ranks, the Magpie's prices), `run_state.gd` and `run_save.gd` (items' ranks and counts, `gambit_at`), `run_flow.gd` (buy, sell, rank-ups, sell and swap relics), `offers.gd`, `run_content.gd`, the sim pieces in 14.5–14.7 with their log kinds (DODGED, ARRIVE), `fight_setup.gd`/`encounters.gd` (gambits), `deed_def.gd`/`deeds.gd` (`ordered`, `casts`), `mod_info.gd`/`unit_info.gd` (ranks, the words), `hero_panel.gd`, `hero_bar.gd`, and `run_day_screen.gd` (rank on chips and cards, Sell, the Magpie's stall), `item_icon.gd` (the gambit frame), `tools/run_bot.gd` (buys as before, never sells), `tools/run_report.gd` (items ranked up per run), the chaos fight.
+- **Changed:** `item_def.gd` (ranks, gambit, no needs or price), `tactic_def.gd` and `tactics.gd` (ranks, the new kinds, no heroes), `data/items.json` (62), `data/tactics.json` (14), `data/statuses.json` (Grounded, Iron Skin, the next-hit boost, surges, Scavenger's), `act_def.gd`/`data/act1.json` (item prices and ranks, the Magpie's prices), `run_state.gd` and `run_save.gd` (items' ranks and counts, `gambit_at`), `run_flow.gd` (buy, sell, rank-ups, sell and swap relics), `offers.gd`, `run_content.gd`, the sim pieces in 14.5–14.7 with their log kinds (DODGED, ARRIVE), `fight_setup.gd`/`encounters.gd` (gambits), `deed_def.gd`/`deeds.gd` (`standing`, `casts`), `mod_info.gd`/`unit_info.gd` (ranks, the words), `hero_panel.gd`, `hero_bar.gd`, and `run_day_screen.gd` (rank on chips and cards, Sell, the Magpie's stall), `item_icon.gd` (the gambit frame), `tools/run_bot.gd` (buys as before, never sells), `tools/run_report.gd` (items ranked up per run), the chaos fight.
 - **Tests:** `tests/run/test_loadout.gd` (new: ranks from each counter, a copy skips a rank, rank III never drawn, selling at half from a slot or the stash, prices by kind, one gambit per hero, an old save loads at rank I); `tests/sim/test_loadout_pieces.gd` (each 6b piece and tactic kind and gambit rule in a small fight); `test_magpie` (the stall, selling, the swap); the item and tactic lists, `test_mod_info`, and `test_unit_info` changed on purpose; determinism, the log audit, every encounter on the screen (DODGED and ARRIVE get rows), the bench's fingerprints unchanged; the run report runs.
 
-### 14.10 Questions
+### 14.10 Questions (answered in 14.11)
 
 - **U. Approve this section, split as 14.2** (6a–6e, a commit each)?
 - **V. Rear Guard** stands one row behind the heroes' back row, but the board has no row there. (a) Add a strip one hex deep behind the back row to the plane, open to anyone and crumbling with the first ring (the plane, the routes, the collapse, and the board's drawing all change); (b) keep it on the board: rank I starts it hidden until an enemy comes within 2 hexes (today's rank III), II +20% attack speed for 5s, and III a new twist; or (c) cut Rear Guard for now and build five gambits.
 - **W. What counts toward a tactic's rank:** the time its order applies, kind by kind (14.6's last column), or every second its hero stands in a fight with it equipped?
 - **X. Charms in a relic's lane** (Leech Fang with Leech Tooth, Armor Breaker with Sunder): they stack, as the damage rule adds bonuses of one kind. Keep it?
+
+### 14.11 Decisions (the playtester, 2026-10-01)
+
+30. **Step 6 is built as this section says, in five parts** (Question U): 6a the frame, 6b the charms' and sigils' pieces, 6c the tactics, 6d the gambits, 6e the Magpie's stall.
+31. **Rear Guard stays on the board** (Question V): rank I starts it hidden until an enemy comes within 2 hexes, II gives +20% attack speed for its first 5s out of hiding, III Roots the target of its first attack out of hiding for 1s. The board gains no row.
+32. **A tactic ranks up by every second its hero stands in a fight with it equipped** (Question W), not only while its order applies: 60s, then 180s more (about 2 fights, then 6).
+33. **Charms stack with relics in the same lane** (Question X), like any two bonuses of one kind.
 
 ## Answered (2026-09-30)
 
