@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a, 5b (section 11), and 5c (section 12) built (10-01), 5d (section 13) built (10-01): the relic pool is complete; step 6 (the loadout pool, section 14) built in five parts, 6a–6e (10-01); step 7 (the upgrade pools, section 15) built in four parts, 7a–7d (10-01); step 8 (the new day, section 16) approved, building in three parts: built in three parts, 8a–8c (10-01); step 9 outlined.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a, 5b (section 11), and 5c (section 12) built (10-01), 5d (section 13) built (10-01): the relic pool is complete; step 6 (the loadout pool, section 14) built in five parts, 6a–6e (10-01); step 7 (the upgrade pools, section 15) built in four parts, 7a–7d (10-01); step 8 (the new day, section 16) built in three parts, 8a–8c (10-01); step 9 (section 17) proposed.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -1422,6 +1422,71 @@ A choice that can't be done (no shards, no item, no hero it fits) is shown greye
 - **Checked:** 920 tests pass; the data validates; the bench's 24 fingerprints are unchanged; a run's error the report found (a Silenced hero holding a signature tactic) is fixed by setting such a tactic aside. **The run report** (54 runs): **74% of runs won** (72% after 8b); Event shown 4.1 times a run and taken 2.5, the Bloodied Oath shown 1.2; Camp now taken 0.5 times a run; 4.4 relics a run.
 
 **Step 8 is built.** A day is the route, the fight, the pick, the Pedlar, then one of three nodes: Camp, a Rift Tear at a depth (its modifiers shown before you choose), the Magpie, an Event's scene, or a Bloodied Oath.
+
+## 17. Step 9: the combo readout, the engine report, the retune, and a build
+
+Status: **proposed (2026-10-01); waiting for approval (17.9).** Builds part 7, section 7 (`rebuild-combos.md`): no combo readout for players, one for testing behind the testing toggle, and a report so tuning can see which engines work; then the retune the earlier steps left for here, and a playtest build.
+
+### 17.1 What's there now
+
+- **The testing toggle:** the arena's side column has "Target lines (for testing)" (`ArenaScreen.target_lines`, `FightFx.all_targets`). Nothing else is behind it.
+- **What a hit carries:** a DAMAGE or HEAL entry's `amount`, `absorbed`, `mitigated`, `crit`, `bonus` (a tactic's payoff), `chain` (its depth), `from_event`, `overkill`. The damage rule's four kinds (`DamageRule.apply`: power, crit, vulnerability, relic) are worked out where a number lands and then thrown away, so nothing can say why a hit was 98.
+- **Counting:** `FightTally` (the fight chart: damage dealt, healing and Shield given, damage taken, by source) reads only the log. `FightResult.tallies` carries what growing cards counted this fight.
+- **Reports:** the sim runner fights base heroes (no upgrades, items, or relics); the run report (the simple bot over 54 runs) measures pacing, picks, the economy, nodes, and each growing card's steps. Nothing measures how often an engine fires or how much it adds.
+- **Left for this step's retune** (the built notes of sections 9–16): vowed Volley wins 10 points over base (Decision 3 of phase 4 caps a vow at about 5); the first transformation's median day is 2 (the design: days 3–4), with Lanternbearer at day 1 and Volley and Wardweaver at day 2, while Hearthwall's is day 7; and every number from steps 5–8 is a first guess. The simple bot wins 74% of runs, but it isn't a player (phase 6 is the good bot).
+
+### 17.2 Why it's split
+
+| Part | What |
+| --- | --- |
+| **9a** | **The rule's notes and the readout:** each number keeps how the damage rule made it (sim, never shown to players); `ComboTally` counts engines from the log; the readout behind the testing toggle. |
+| **9b** | **The engine report** (the trigger report): the run report's `--engines`, over the bot's runs. |
+| **9c** | **The retune** to 17.6's targets. |
+| **9d** | **Docs and a playtest build.** |
+
+### 17.3 The rule's notes (9a)
+
+- **`LogEntry.rule`** (new, an `Array[int]` or empty): on DAMAGE, HEAL, SHIELD, and STATUS_DAMAGE entries, `[base, power_bp, crit_bp, vulnerability_bp, relic_bp]` as `DamageRule.apply` used them (`EffectRunner.deal_hit`, `heal`, `land`'s Shield, `Statuses`' damage over time). DEF's cut is already `mitigated`.
+- **Not in the log's text** (`LogEntry.to_text` and `CombatLog.to_lines` are unchanged), so the bench's fingerprints and every log test hold, and the player's log shows nothing new (part 7, section 7). Setting it is a few ints a hit; the bench must stay under its budget.
+- A hit that skips the rule (all bonuses 0) still gets `[base, 0, 0, 0, 0]`, so the readout can say "no bonuses".
+
+### 17.4 `ComboTally` and the readout (9a)
+
+- **`ComboTally`** (`src/sim/combo_tally.gd`, like `FightTally`: it only reads the log, so it can't disagree with it; the sim never uses it). For each source (a unit and its ability or passive, a relic, a bond relic, the rift): **fires** (entries it sourced that came from an event, `from_event`, or its FIRE lines), **from chains** (of those, how many at depth 1 or more), **its deepest chain**, and **what it added**: damage, healing, and Shield. For the fight: how many chains reached the limit (`chain_limit`).
+- **Snowball tags:** each growing card held in the fight (`UnitSetup.tally_keys`) with what it counted (`FightResult.tallies`) and its steps before and after ("Notched Bow: +5, step 3 → 4"; the run's numbers through `RunSession`, Practice shows none).
+- **On screen, only with "Combo readout (for testing)" on** (a second check box beside the target lines; off by default, not saved):
+  - the side column shows the readout under the chart: per hero, its engines sorted by what they added (fires, from chains, deepest, damage/healing/Shield), the fight's chains at the limit, and the snowball tags once the fight ends;
+  - the combat log's DAMAGE, HEAL, and SHIELD lines get the rule's note: "40 · power +35% · crit +50% · Marked +20% → 98 · DEF −12".
+- **Off, nothing changes:** the log's lines, the chart, and the result are as now (a UI test checks the readout and the notes are absent until the toggle is on).
+
+### 17.5 The engine report (9b)
+
+- **`tools/run_runner.gd -- --engines`** (`tools/run_report.gd`): the bot's runs as now, plus `ComboTally` on every day fight (`RunFlow.last_result`, a field that isn't saved, holds the last fight's result). For every relic, item, upgrade, and bond relic held in a fight: fights held, fires a fight, the share from chains, the deepest chain, and its share of the team's damage, healing, and Shield; sorted by share. Then the ones held that never fired. A report, not a gate.
+- **Why the run report and not the sim runner:** part 7 says "in the sim runner's report", but the sim runner fights base heroes, who hold no relics, items, or upgrades; the engines only exist in runs (Question AH).
+
+### 17.6 The retune (9c)
+
+**Targets** (Question AI):
+1. **The first transformation:** each path's median first-transformation day, among runs vowed to it, lands on **days 3–4** (the design, `rebuild-phase5-run.md`), and **every path transforms by the boss in at least 80% of runs that reach it**, moved with deed thresholds (`paths.json` `deed.threshold`) by the run report.
+2. **Vowed Volley within 5 points of base** (phase 4's Decision 3), by the paths report (`--paths --seeds=1 --sweep=20`), moved with its taste's numbers.
+3. **Nothing else.** The win rate isn't a target (the simple bot plays blind); the economy, the items', relics', and upgrades' numbers, and the events' wait for the good bot (phase 6) and the playtester. The engine report's read goes in the built notes, with anything that looks broken (an engine adding over half its team's damage, or one that never fires) flagged, not changed.
+
+### 17.7 Docs and the build (9d)
+
+- CLAUDE.md, this plan's built notes and status, `rebuild-combos.md` (section 7 built), `tools/ci/HOW-TO-PLAY.txt` (the testing toggles), and `rebuild-build-order.md` (phase 5c done).
+- **A playtest build** (the "Playtest build" workflow) at the end, for playtest gate 3 with everything phase 5c built (Question AJ).
+
+### 17.8 Files and tests
+
+- **Changed:** `log_entry.gd` (`rule`), `effect_runner.gd` and `statuses.gd` (setting it), `combo_tally.gd` (new), `arena_screen.gd` and `log_panel.gd` (the toggle, the readout, the notes), `run_flow.gd` (`last_result`), `tools/run_report.gd` and `run_runner.gd` (`--engines`), `paths.json` (thresholds, Volley's taste).
+- **Tests:** `tests/sim/test_combo_tally.gd` (the notes on each kind of number and their sum matching the amount; fires, chains, and deepest from a chain fight; the chaos fight's tally adds up to its `FightTally`), a UI test (hidden by default, shown with the toggle, the log's text unchanged without it), `tests/tools/test_run_report.gd` (`--engines` runs small); the bench's fingerprints unchanged; changed numbers move the path and run tests on purpose.
+
+### 17.9 Questions
+
+- **AG. Approve this section, split as 17.2** (9a–9d, a commit each)?
+- **AH. The engine report in the run report** (17.5), since the sim runner's heroes hold no engines?
+- **AI. The retune's targets** (17.6): first transformations on days 3–4 and 80% by the boss, vowed Volley within 5 of base, and nothing else until phase 6?
+- **AJ. A playtest build at the end** (17.7)?
 
 ## Answered (2026-09-30)
 
