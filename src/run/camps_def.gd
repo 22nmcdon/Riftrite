@@ -2,10 +2,13 @@ class_name CampsDef
 extends RefCounted
 ## Camp's data (data/camps.json; docs/plans/rebuild-phase5-run.md, section 9,
 ## Decisions 8, 9, 13): the options' names and lines, the places and their
-## menus, and camp's numbers. What each option does is RunFlow's (one job
-## each), so an option's id must be one of OPTIONS.
+## menus, and camp's numbers; and the day's nodes (phase 5c step 8,
+## docs/plans/days-and-nodes.md): their names, lines, and icons, and when
+## the Magpie comes. What each option and node does is RunFlow's (one job
+## each), so an id must be one of OPTIONS or NODES.
 
-const OPTIONS: Array[String] = ["train", "hunt", "pedlar", "rest", "scout", "map_the_rift", "fortify", "dig_in", "rift_tear", "shrine", "magpie"]
+const OPTIONS: Array[String] = ["train", "hunt", "rest", "scout", "map_the_rift", "fortify", "dig_in", "shrine"]
+const NODES: Array[String] = ["camp", "rift_tear", "magpie"]
 
 
 class Option:
@@ -27,10 +30,12 @@ class Place:
 
 ## How many options a camp shows.
 var shown: int = 3
-## The days the Magpie may come on (one of them, drawn at the run's start).
-var magpie_days: Array[int] = []
-## How often (percent) the Pedlar also carries a relic.
+## The Magpie's node: from this day, at most this many times an act.
+var magpie_from_day: int = 3
+var magpie_per_act: int = 2
 var options: Dictionary[String, Option] = {}
+## The nodes' cards (an Option each: id, name, icon, line).
+var nodes: Dictionary[String, Option] = {}
 var places: Array[Place] = []
 ## Fortify's Shield on each hero, and a Rift Tear's upgrade on each enemy.
 var fortify_mod: KitMod = null
@@ -40,7 +45,19 @@ var rift_tear_mod: KitMod = null
 static func read(reader: DataReader) -> CampsDef:
 	var def := CampsDef.new()
 	def.shown = reader.req_int("shown", 1, 6)
-	def.magpie_days = reader.req_int_array("magpie_days")
+	def.magpie_from_day = reader.req_int("magpie_from_day", 1)
+	def.magpie_per_act = reader.req_int("magpie_per_act", 0)
+	for node_reader: DataReader in reader.opt_object_array("nodes"):
+		var node := Option.new()
+		node.id = node_reader.req_choice("id", NODES)
+		node.name = node_reader.req_string("name")
+		node.icon = node_reader.req_string("icon")
+		node.text = node_reader.req_string("text")
+		node_reader.finish()
+		def.nodes[node.id] = node
+	for id: String in NODES:
+		if not def.nodes.has(id):
+			reader.error("nodes: \"%s\" needs a name and a line" % id)
 	for option_reader: DataReader in reader.opt_object_array("options"):
 		var option := Option.new()
 		option.id = option_reader.req_choice("id", OPTIONS)
@@ -62,7 +79,7 @@ static func read(reader: DataReader) -> CampsDef:
 		place.text = place_reader.req_string("text")
 		place.options = place_reader.req_string_array("options")
 		for id: String in place.options:
-			if not OPTIONS.has(id) or id == "magpie":
+			if not OPTIONS.has(id):
 				place_reader.error("options: \"%s\" isn't a camp option a place can offer" % id)
 		if place.options.size() < def.shown:
 			place_reader.error("a place needs at least %d options" % def.shown)

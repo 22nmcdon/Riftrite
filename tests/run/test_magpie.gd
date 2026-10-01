@@ -4,6 +4,7 @@ extends GutTest
 ## buying relics, and one swap a visit.
 
 const Bot = preload("res://tools/run_bot.gd")
+const R = preload("res://tests/run/run_test_kit.gd")
 
 var _run: RunContent
 
@@ -17,7 +18,8 @@ func _magpie() -> RunFlow:
 	var flow: RunFlow = RunFlow.start(_run, 7, Bot.first_vows(_run.content), errors)
 	assert_eq(errors, [] as Array[String])
 	flow.state.shards = 100
-	assert_eq(flow.open_shop("magpie"), "")
+	R.to_magpie(flow)
+	assert_eq(flow.state.shop, "magpie")
 	return flow
 
 
@@ -60,9 +62,7 @@ func test_he_buys_relics() -> void:
 	assert_eq(flow.sell_relic("hollow_crown"), "")
 	assert_eq(state.hero("maren").slots.size(), _run.act.slots, "the slot it gave goes")
 	assert_has(state.stash, "fleet", "and what was in it goes back to the stash")
-	flow.close_shop()
-	flow.state.camp.assign(["pedlar"])
-	flow.open_shop("pedlar")
+	R.to_pedlar(flow)
 	_hold(flow, ["bloodstone"])
 	assert_eq(flow.sell_relic("bloodstone"), "only the Magpie buys relics")
 

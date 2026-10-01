@@ -49,9 +49,9 @@ func test_the_run_shows_the_icons() -> void:
 	var flow: RunFlow = main.run_session.flow
 	flow.state.hero("maren").slots[0] = "ember_tipped"
 	flow.state.relics.append("hollow_crown")
-	flow.state.camp.assign(["pedlar"])
 	flow.state.shards = 20
-	flow.choose_camp(0)
+	flow.state.phase = RunState.Phase.SHOP
+	flow.open_shop("pedlar")
 	var day: RunDayScreen = main.screen as RunDayScreen
 	day.refresh()
 	var chip_icons: Array = day.hero_bar.cards["maren"].chips.find_children("*", "ItemIcon", true, false)
@@ -68,10 +68,10 @@ func test_the_run_shows_the_icons() -> void:
 	await wait_frames(1)
 
 
-## Section 6: every camp option and place has its icon, and each shop its
+## Section 6: every camp option, node (phase 5c step 8), and place has its icon, and each shop its
 ## scene and keeper.
 func test_camp_and_the_shops() -> void:
-	for option: CampsDef.Option in _run.camps.options.values():
+	for option: CampsDef.Option in _run.camps.options.values() + _run.camps.nodes.values():
 		assert_true(ArenaView.art(RunContent.ART_UI + option.icon) is Texture2D, option.id)
 	for place: CampsDef.Place in _run.camps.places:
 		assert_true(ArenaView.art(RunContent.ART_UI + place.icon) is Texture2D, place.id)

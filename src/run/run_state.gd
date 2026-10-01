@@ -6,17 +6,19 @@ extends RefCounted
 ## what's waiting, never a random stream; a save is this state as JSON
 ## (to_dict, from_dict).
 
-## A save from another version can't be loaded (3: phase 5c step 7's upgrade
-## pools, new upgrade ids and stacking locks).
-const VERSION: int = 3
+## A save from another version can't be loaded (4: phase 5c step 8's new
+## day).
+const VERSION: int = 4
 
-## Where the day is: camp, choosing the fight, the loadout (then placement
-## and the fight), after the fight (a pick, a transformation, a relic
-## waiting), or the run is over. A pick can wait at camp too (Train).
-enum Phase { CAMP, ROUTE, LOADOUT, AFTER, ENDED }
+## Where the day is (phase 5c step 8, docs/plans/days-and-nodes.md):
+## choosing the fight, the loadout (then placement and the fight), after the
+## fight (a pick, a transformation, a relic waiting), the shop, choosing a
+## node, in a node (camp's options, the Magpie's stall, ...), or the run is
+## over. A pick can wait in a node too (Train).
+enum Phase { ROUTE, LOADOUT, AFTER, SHOP, NODES, NODE, ENDED }
 enum Outcome { NONE, WON, LOST }
 
-const PHASE_NAMES: Array[String] = ["camp", "route", "loadout", "after", "ended"]
+const PHASE_NAMES: Array[String] = ["route", "loadout", "after", "shop", "nodes", "node", "ended"]
 const OUTCOME_NAMES: Array[String] = ["none", "won", "lost"]
 
 
@@ -98,7 +100,7 @@ var day: int = 1
 ## How many times this day has been replayed after a loss (0 the first time).
 var attempt: int = 0
 var losses: int = 0
-var phase: Phase = Phase.CAMP
+var phase: Phase = Phase.ROUTE
 var outcome: Outcome = Outcome.NONE
 ## In heroes.json's order.
 var heroes: Array[Hero] = []
@@ -123,7 +125,7 @@ var item_ranks: Dictionary[String, int] = {}
 var item_counts: Dictionary[String, int] = {}
 ## The items the last fight ranked up, for the screen after it.
 var ranked: Array[String] = []
-## The shop open at camp: "" (none), "pedlar", or "magpie".
+## The shop open: "" (none), "pedlar" (the day's shop), or "magpie" (his node).
 var shop: String = ""
 ## Its wares (item ids; "" once bought), and how often it's been rerolled.
 var wares: Array[String] = []
@@ -134,9 +136,19 @@ var magpie_swapped: bool = false
 ## Magpie's Scale; "" once bought).
 var shop_relics: Array[String] = []
 
-# Camp.
-## Where today's camp is (a place id; "" on the Magpie's day), its options,
-## and the one taken ("": none yet).
+# The nodes (phase 5c step 8).
+## The nodes shown at the day's end ("camp", "rift_tear", "magpie"), the one
+## taken ("": none yet), and each past day's (by day: "camp:<place>",
+## "rift_tear", "magpie"; "" for a day without one).
+var nodes: Array[String] = []
+var node: String = ""
+var taken_nodes: Array[String] = []
+## How often the Magpie's node has been taken this act.
+var magpie_visits: int = 0
+
+# Camp (a node).
+## Where the camp is (a place id), its options, and the one taken ("": none
+## yet).
 var place: String = ""
 var camp: Array[String] = []
 var camp_used: String = ""
@@ -144,9 +156,10 @@ var camp_used: String = ""
 var hunt: String = ""
 ## Map the Rift waits for which of tomorrow's fights to swap.
 var mapping: bool = false
-## For the next fight (the day's, not a Hunt): Fortify, Dig In (and the
-## rock's hex once placed; empty: not yet), Rift Tear, and a Rest with a
-## relic that steadies.
+## For the next day fight (not a Hunt), kept through its replays and spent
+## once it's won (Decision 42): Fortify, Dig In (and the rock's hex once
+## placed; empty: not yet), Rift Tear, and a Rest with a relic that
+## steadies.
 var fortify: bool = false
 var dig_in: bool = false
 var rock: Array[int] = []
@@ -154,8 +167,6 @@ var rift_tear: bool = false
 var rested: bool = false
 ## Days whose fights are Scouted.
 var scouted: Array[int] = []
-## The day the Magpie comes (drawn at the start).
-var magpie_day: int = 0
 
 # Relics and bonds.
 var relics: Array[String] = []
@@ -208,7 +219,7 @@ func to_dict() -> Dictionary:
 		"stash": stash.duplicate(), "shop": shop, "wares": wares.duplicate(), "rerolls": rerolls, "shop_relics": shop_relics.duplicate(), "magpie_swapped": magpie_swapped,
 		"place": place, "camp": camp.duplicate(), "camp_used": camp_used, "hunt": hunt, "mapping": mapping,
 		"fortify": fortify, "dig_in": dig_in, "rock": rock.duplicate(), "rift_tear": rift_tear, "rested": rested,
-		"scouted": scouted.duplicate(), "magpie_day": magpie_day,
+		"scouted": scouted.duplicate(), "nodes": nodes.duplicate(), "node": node, "taken_nodes": taken_nodes.duplicate(), "magpie_visits": magpie_visits,
 		"relics": relics.duplicate(), "relic_choice": relic_choice.duplicate(), "relic_choice_price": relic_choice_price, "picks_left": picks_left,
 		"streak": streak, "streaks_paid": streaks_paid.duplicate(), "bonds_found": bonds_found.duplicate(),
 		"growth": growth.duplicate(), "grew": grew.duplicate(),
@@ -226,7 +237,7 @@ static func from_dict(data: Dictionary) -> RunState:
 	state.day = int(data.get("day", 1))
 	state.attempt = int(data.get("attempt", 0))
 	state.losses = int(data.get("losses", 0))
-	state.phase = maxi(PHASE_NAMES.find(str(data.get("phase", "camp"))), 0) as Phase
+	state.phase = maxi(PHASE_NAMES.find(str(data.get("phase", "route"))), 0) as Phase
 	state.outcome = maxi(OUTCOME_NAMES.find(str(data.get("outcome", "none"))), 0) as Outcome
 	for hero_data: Variant in data.get("heroes", []):
 		state.heroes.append(Hero.from_dict(hero_data))
@@ -270,7 +281,10 @@ static func from_dict(data: Dictionary) -> RunState:
 	for item_id: Variant in counts:
 		state.item_counts[str(item_id)] = int(counts[item_id])
 	state.ranked = _strings(data.get("ranked", []))
-	state.magpie_day = int(data.get("magpie_day", 0))
+	state.nodes = _strings(data.get("nodes", []))
+	state.node = str(data.get("node", ""))
+	state.taken_nodes = _strings(data.get("taken_nodes", []))
+	state.magpie_visits = int(data.get("magpie_visits", 0))
 	state.relics = _strings(data.get("relics", []))
 	state.relic_choice = _strings(data.get("relic_choice", []))
 	state.relic_choice_price = int(data.get("relic_choice_price", 0))

@@ -4,6 +4,7 @@ extends GutTest
 ## and replays, wounds and deeds, saving and loading, and the simple run bot.
 
 const Bot = preload("res://tools/run_bot.gd")
+const R = preload("res://tests/run/run_test_kit.gd")
 const SAVE_PATH: String = "user://test_rift_run.json"
 
 var _run: RunContent
@@ -67,17 +68,17 @@ func test_starting_needs_a_vow_for_every_hero() -> void:
 	assert_eq(state.heroes.map(func(hero: RunState.Hero) -> String: return hero.path), ["hearthwall", "deadeye", "lanternbearer"])
 	assert_eq(state.hero("maren").deeds, {"deadeye": 0, "trapper": 0, "volley": 0} as Dictionary[String, int])
 	assert_eq(state.hero("maren").slots, ["", "", ""] as Array[String])
-	assert_eq([state.day, state.phase, state.shards], [1, RunState.Phase.CAMP, 10])
+	assert_eq([state.day, state.phase, state.shards], [1, RunState.Phase.ROUTE, 10], "day 1 starts at the route (phase 5c step 8)")
 
 
 func test_the_day_goes_in_order() -> void:
 	var flow: RunFlow = _start()
 	var errors: Array[String] = []
-	assert_eq(flow.choose_fight(0), "can't choose a fight now (the day is at camp)")
-	assert_eq(flow.finish_day(), "can't move on to the next day now (the day is at camp)")
+	assert_eq(flow.finish_day(), "can't move on from the fight now (the day is at route)")
+	assert_eq(flow.leave_shop(), "can't leave the shop now (the day is at route)")
+	assert_eq(flow.choose_node(0), "can't choose a node now (the day is at route)")
 	assert_null(flow.fight(Bot.formation(), errors))
-	assert_eq(errors, ["can't fight now (the day is at camp)"] as Array[String])
-	assert_eq(flow.leave_camp(), "")
+	assert_eq(errors, ["can't fight now (the day is at route)"] as Array[String])
 	assert_eq(flow.choose_fight(2), "there's no fight 2 today")
 	assert_eq(flow.choose_fight(1), "")
 	assert_eq(flow.state.chosen, flow.state.today()[1])
@@ -89,7 +90,6 @@ func test_the_day_goes_in_order() -> void:
 
 func test_a_fight_is_the_sims_own_and_a_win_pays() -> void:
 	var flow: RunFlow = _start()
-	flow.leave_camp()
 	flow.choose_fight(0)
 	var errors: Array[String] = []
 	var setup: FightSetup = flow.fight_setup(Bot.formation(), errors)
@@ -98,7 +98,7 @@ func test_a_fight_is_the_sims_own_and_a_win_pays() -> void:
 	assert_eq(result.combat_log.to_text(), expected.combat_log.to_text(), "the fight is CombatSim.run of its setup")
 	var state: RunState = flow.state
 	if result.outcome == FightResult.Outcome.DEFEAT:
-		assert_eq([state.losses, state.attempt, state.phase], [1, 1, RunState.Phase.CAMP])
+		assert_eq([state.losses, state.attempt, state.phase], [1, 1, RunState.Phase.ROUTE])
 		return
 	assert_eq(state.shards, _run.act.start_shards + _run.act.pay[_run.content.encounters[state.chosen].tier])
 	assert_eq(state.phase, RunState.Phase.AFTER)
@@ -108,34 +108,37 @@ func test_a_fight_is_the_sims_own_and_a_win_pays() -> void:
 	assert_eq(state.pick.size(), 3, "a win offers a pick")
 	assert_eq(flow.take_shards(), "")
 	assert_eq(flow.finish_day(), "")
-	assert_eq([state.day, state.attempt, state.chosen, state.phase], [2, 0, "", RunState.Phase.CAMP])
+	assert_eq([state.day, state.phase, state.shop], [1, RunState.Phase.SHOP, "pedlar"], "then the Pedlar")
+	assert_eq(R.next_day(flow), "can't move on from the fight now (the day is at shop)")
+	assert_eq(flow.leave_shop(), "")
+	assert_eq([state.phase, state.shop, state.nodes[0]], [RunState.Phase.NODES, "", "camp"], "then the nodes")
+	assert_eq(flow.choose_node(0), "")
+	assert_eq(flow.leave_node(), "")
+	assert_eq([state.day, state.attempt, state.chosen, state.phase], [2, 0, "", RunState.Phase.ROUTE])
 
 
 func test_a_loss_replays_the_day_and_the_second_ends_the_run() -> void:
 	var flow: RunFlow = _start()
-	flow.leave_camp()
 	flow.choose_fight(0)
 	var options: Array[String] = flow.state.today()
 	var deed := FightResult.Deed.make("maren", "trapper", 900)
 	flow.record(Bot.formation(), _result(FightResult.Outcome.DEFEAT, ["maren", "vell"] as Array[String], [deed] as Array[FightResult.Deed]))
 	var state: RunState = flow.state
-	assert_eq([state.losses, state.attempt, state.day, state.phase, state.shards], [1, 1, 1, RunState.Phase.CAMP, 10], "no pay; the day again")
+	assert_eq([state.losses, state.attempt, state.day, state.phase, state.shards], [1, 1, 1, RunState.Phase.ROUTE, 10], "no pay; the day again, from the route")
 	assert_eq(state.today(), options, "with the same options")
 	assert_eq([state.hero("maren").wounds, state.hero("vell").wounds, state.hero("brannoc").wounds], [1, 1, 0], "those who fell are wounded")
 	assert_eq(state.hero("maren").deeds["trapper"], 900, "a lost fight's deeds still count")
 	var errors: Array[String] = []
-	flow.leave_camp()
 	flow.choose_fight(0)
 	var setup: FightSetup = flow.fight_setup(Bot.formation(), errors)
 	assert_eq(setup.heroes[1].max_hp_bp, FixedMath.BP_ONE - _run.content.tuning.wound_bp, "the next fight knows her wound")
 	flow.record(Bot.formation(), _result(FightResult.Outcome.DEFEAT))
 	assert_eq([state.phase, state.outcome], [RunState.Phase.ENDED, RunState.Outcome.LOST])
-	assert_eq(flow.leave_camp(), "can't leave camp now (the day is at ended)")
+	assert_eq(flow.leave_node(), "can't leave the node now (the day is at ended)")
 
 
 func test_a_tie_pays_like_a_win_and_wounds_stop_at_three() -> void:
 	var flow: RunFlow = _start()
-	flow.leave_camp()
 	flow.choose_fight(0)
 	flow.state.hero("brannoc").wounds = 3
 	flow.state.hero("maren").wounds = 2

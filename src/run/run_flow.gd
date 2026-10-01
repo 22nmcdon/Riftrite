@@ -4,11 +4,15 @@ extends RefCounted
 ## only thing that changes a RunState, one action at a time. Each action
 ## checks it's legal now and returns "" if it happened, or why it didn't
 ## (the state is then untouched). The UI and the run bot both drive it.
-## A day: camp, then the route (choose one of today's two fights), then the
-## loadout and placement, then the fight (fight() runs it, CombatSim.run on
-## fight_setup()'s setup), then after it. A win or a tie pays shards by the
-## fight's tier and moves on to after the fight; a loss replays the day (camp
-## again, the same options), and the act's losses_to_end-th ends the run.
+## A day (phase 5c step 8, docs/plans/days-and-nodes.md): the route (choose
+## one of today's two fights), the loadout and placement, the fight (fight()
+## runs it, CombatSim.run on fight_setup()'s setup), after it (the pick, a
+## relic choice), the shop (the Pedlar), then a node (Camp, Rift Tear, the
+## Magpie), whose setup for tomorrow's fight holds through that fight's
+## replays (Decision 42). A win or a tie pays shards by the fight's tier and
+## moves on to after the fight; a loss replays the day from the route, and
+## the act's losses_to_end-th ends the run. The boss's day ends with the
+## fight and its relic choice.
 ## Deeds and wounds count from every fight, won or lost; a won fight (a tie,
 ## or a Hunt won, too) first heals one wound on each hero (the playtester,
 ## after gate 3: wounds should hurt a bad streak, not a run of wins).
@@ -20,9 +24,9 @@ extends RefCounted
 ## waits.
 ## The economy (section 6): items owned wait in the stash; any hero equips
 ## any item in a free slot between fights (one tactic and one gambit each).
-## A shop opens at camp (the Pedlar or the Magpie): buy its wares, treat a
-## wound, or (the Pedlar only) reroll or sell an item back, or (the Magpie
-## only) sell or swap a relic; leaving camp closes it. Phase 5c step 6: a run owns one of each item, at a rank; a
+## A shop opens after the fight (the Pedlar) or as a node (the Magpie): buy
+## its wares, treat a wound, or (the Pedlar only) reroll or sell an item
+## back, or (the Magpie only) sell or swap a relic; leaving closes it. Phase 5c step 6: a run owns one of each item, at a rank; a
 ## bought copy is a rank up, and fights rank items up by their kind. A fight's kit is the path's,
 ## then its upgrades, then its loadout in slot order.
 
@@ -64,9 +68,8 @@ static func start(run_content: RunContent, run_seed: int, vows: Dictionary[Strin
 			hero.slots.append("")
 		state.heroes.append(hero)
 	state.options = ActDraw.draw(run_content, run_seed)
-	state.magpie_day = Offers.magpie_day(run_content, run_seed, state.act)
 	var flow: RunFlow = resume(run_content, state)
-	flow._arrive()
+	flow._start_day()
 	return flow
 
 
@@ -78,31 +81,98 @@ static func resume(run_content: RunContent, run_state: RunState) -> RunFlow:
 	return flow
 
 
-# --- camp -------------------------------------------------------------------------
+# --- the day's start, the shop, and the nodes --------------------------------------
 
-## Arrives at camp (a new day, or a day replayed): the place and its options
-## are drawn; on the Magpie's day (its first try), he's the only option.
-func _arrive() -> void:
-	state.phase = RunState.Phase.CAMP
+## A day begins (a new one, or one replayed after a loss): the route.
+func _start_day() -> void:
+	state.phase = RunState.Phase.ROUTE
+	state.chosen = ""
+
+
+## Moves on from after the fight once nothing there is waiting: to the shop
+## (the Pedlar), or, on the boss's day, to the run's end.
+func finish_day() -> String:
+	if state.phase != RunState.Phase.AFTER:
+		return _not_now("move on from the fight")
+	if not state.pick.is_empty():
+		return "choose an upgrade or take the shards first"
+	if not state.relic_choice.is_empty():
+		return "choose a relic or neither first"
+	state.just_transformed.clear()
+	state.grew.clear()
+	if run.act.days[state.day - 1] == "boss":
+		_end(RunState.Outcome.WON)
+		return ""
+	state.phase = RunState.Phase.SHOP
+	open_shop("pedlar")
+	return ""
+
+
+## Leaves the shop for the day's nodes.
+func leave_shop() -> String:
+	if state.phase != RunState.Phase.SHOP:
+		return _not_now("leave the shop")
+	close_shop()
+	state.nodes = Offers.nodes(run, state)
+	state.node = ""
+	state.phase = RunState.Phase.NODES
+	return ""
+
+
+## Takes the day's node `index`: Camp (a place and its options), Rift Tear
+## (tomorrow's fight comes through a tear), or the Magpie (his stall).
+func choose_node(index: int) -> String:
+	if state.phase != RunState.Phase.NODES:
+		return _not_now("choose a node")
+	if index < 0 or index >= state.nodes.size():
+		return "there's no node %d" % index
+	state.node = state.nodes[index]
+	state.phase = RunState.Phase.NODE
+	match state.node:
+		"camp":
+			state.camp_used = ""
+			state.hunt = ""
+			state.mapping = false
+			var drawn: Array = Offers.camp(run, state)
+			state.place = drawn[0]
+			state.camp.assign(drawn[1])
+		"rift_tear":
+			state.rift_tear = true
+		"magpie":
+			state.magpie_visits += 1
+			open_shop("magpie")
+	return ""
+
+
+## Leaves the node, once nothing there is waiting, for the next day.
+func leave_node() -> String:
+	if state.phase != RunState.Phase.NODE:
+		return _not_now("leave the node")
+	var waiting: String = _node_waiting()
+	if not waiting.is_empty():
+		return waiting
+	close_shop()
+	while state.taken_nodes.size() < state.day - 1:
+		state.taken_nodes.append("")
+	state.taken_nodes.append("camp:" + state.place if state.node == "camp" else state.node)
+	state.node = ""
+	state.nodes.clear()
+	state.place = ""
+	state.camp.clear()
 	state.camp_used = ""
-	state.hunt = ""
-	state.mapping = false
-	if state.day == state.magpie_day and state.attempt == 0:
-		state.place = ""
-		state.camp.assign(["magpie"])
-		return
-	var drawn: Array = Offers.camp(run, state)
-	state.place = drawn[0]
-	state.camp.assign(drawn[1])
+	state.day += 1
+	state.attempt = 0
+	_start_day()
+	return ""
 
 
-## Takes camp option `index` (one a camp). What it does is its one job:
-## train (a pick), hunt (a pack to fight now), pedlar and magpie (a shop),
-## rest (clears wounds), scout (the next 2 days), map_the_rift (then
-## swap_fight), fortify, dig_in (then place_rock), rift_tear (for the next
-## fight), shrine (a relic choice).
+## Takes camp option `index` (in a Camp node). What it does is its one job:
+## train (a pick), hunt (a pack to fight now), rest (clears wounds), scout
+## (the next 2 days), map_the_rift (then swap_fight), fortify, dig_in (then
+## place_rock), shrine (a relic choice); the last four are for tomorrow's
+## fight.
 func choose_camp(index: int) -> String:
-	if state.phase != RunState.Phase.CAMP:
+	if state.phase != RunState.Phase.NODE or state.node != "camp":
 		return _not_now("choose a camp option")
 	if not state.camp_used.is_empty():
 		return "camp's option is already taken today (%s)" % state.camp_used
@@ -116,8 +186,6 @@ func choose_camp(index: int) -> String:
 			state.hunt = Offers.hunt(run, state)
 			if state.hunt.is_empty():
 				return "there's no pack to hunt today"
-		"pedlar", "magpie":
-			open_shop(option)
 		"rest":
 			for hero: RunState.Hero in state.heroes:
 				hero.wounds = 0
@@ -134,8 +202,6 @@ func choose_camp(index: int) -> String:
 			state.fortify = true
 		"dig_in":
 			state.dig_in = true
-		"rift_tear":
-			state.rift_tear = true
 		"shrine":
 			state.relic_choice = Offers.relics(run, state, RELIC_SHRINE, 1, "rare")
 			state.relic_choice_price = run.act.shrine_price
@@ -171,19 +237,7 @@ func place_rock(hex: Vector2i) -> String:
 	return ""
 
 
-## Leaves camp, once nothing there is waiting.
-func leave_camp() -> String:
-	if state.phase != RunState.Phase.CAMP:
-		return _not_now("leave camp")
-	var waiting: String = _camp_waiting()
-	if not waiting.is_empty():
-		return waiting
-	close_shop()
-	state.phase = RunState.Phase.ROUTE
-	return ""
-
-
-func _camp_waiting() -> String:
+func _node_waiting() -> String:
 	if not state.pick.is_empty():
 		return "choose an upgrade or take the shards first"
 	if not state.relic_choice.is_empty():
@@ -212,7 +266,7 @@ func choose_fight(index: int) -> String:
 ## The fight waiting now: a Hunt's pack at camp, or the day's chosen fight
 ## at the loadout ("" if neither).
 func fight_encounter() -> String:
-	if state.phase == RunState.Phase.CAMP and not state.hunt.is_empty():
+	if state.phase == RunState.Phase.NODE and not state.hunt.is_empty():
 		return state.hunt
 	if state.phase == RunState.Phase.LOADOUT:
 		return state.chosen
@@ -447,13 +501,9 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 		if won:
 			state.shards += run.act.pay["hunt"]
 		return
-	var torn: bool = state.rift_tear
-	state.fortify = false
-	state.dig_in = false
-	state.rock.clear()
-	state.rift_tear = false
-	state.rested = false
 	if not won:
+		# What the last node set up for this fight holds for its replay
+		# (Decision 42).
 		state.streak = 0
 		state.losses += 1
 		state.chosen = ""
@@ -461,8 +511,14 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 			_end(RunState.Outcome.LOST)
 		else:
 			state.attempt += 1
-			_arrive()
+			_start_day()
 		return
+	var torn: bool = state.rift_tear
+	state.fortify = false
+	state.dig_in = false
+	state.rock.clear()
+	state.rift_tear = false
+	state.rested = false
 	var tier: String = run.content.encounters[state.chosen].tier
 	state.shards += run.act.pay[tier] + run.relic_sum(state, "pay_add") + (run.relic_sum(state, "elite_pay_add") if tier == "elite" else 0)
 	_streak(result)
@@ -820,14 +876,14 @@ func unequip(hero_id: String, slot: int) -> String:
 
 # --- shops ------------------------------------------------------------------------
 
-## Opens a shop at camp ("pedlar" or "magpie"), its wares and relics drawn
-## now (camp's option opens it; tests open one directly). Phase 5c step 5a:
+## Opens a shop ("pedlar" after the fight, "magpie" as his node), its wares
+## and relics drawn now (the day opens it; tests open one directly). Phase 5c step 5a:
 ## every shop shows a relic (more with shop_relics_add); the boss day's
 ## Pedlar is the pre-boss shop (a legendary first, rerolls from
 ## boss_reroll); the Magpie's are epic or legendary, one look. As a shop
 ## opens, the relics' shop_shards and miser pay.
 func open_shop(kind: String) -> String:
-	if state.phase != RunState.Phase.CAMP:
+	if state.phase != RunState.Phase.SHOP and state.phase != RunState.Phase.NODE:
 		return _not_now("open a shop")
 	match kind:
 		"pedlar":
@@ -852,9 +908,10 @@ func _draw_shop_relics() -> Array[String]:
 	return Offers.shop_relics(run, state, state.rerolls, count, state.shop == "magpie", pre_boss_shop())
 
 
-## True if the open shop is the pre-boss shop: the boss day's Pedlar.
+## True if the open shop is the pre-boss shop: the Pedlar of the day before
+## the boss's (the shop before the boss fight; phase 5c step 8).
 func pre_boss_shop() -> bool:
-	return state.shop == "pedlar" and state.day >= 1 and state.day <= run.act.days.size() and run.act.days[state.day - 1] == "boss"
+	return state.shop == "pedlar" and state.day >= 1 and state.day < run.act.days.size() and run.act.days[state.day] == "boss"
 
 
 func close_shop() -> void:
@@ -976,26 +1033,6 @@ func treat_wound(hero_id: String) -> String:
 		return "treating a wound costs %d shards; there are %d" % [wound_price(), state.shards]
 	state.shards -= wound_price()
 	hero.wounds -= 1
-	return ""
-
-
-## Moves on to the next day's camp once nothing is waiting after the fight.
-func finish_day() -> String:
-	if state.phase != RunState.Phase.AFTER:
-		return _not_now("move on to the next day")
-	if not state.pick.is_empty():
-		return "choose an upgrade or take the shards first"
-	if not state.relic_choice.is_empty():
-		return "choose a relic or neither first"
-	if run.act.days[state.day - 1] == "boss":
-		_end(RunState.Outcome.WON)
-		return ""
-	state.day += 1
-	state.attempt = 0
-	state.chosen = ""
-	state.just_transformed.clear()
-	state.grew.clear()
-	_arrive()
 	return ""
 
 

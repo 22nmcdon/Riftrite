@@ -1,6 +1,6 @@
 # The Magpie
 
-Status: **agreed in discussion (2026-09-30); his stall built in phase 5c step 6e** (`rebuild-phase5c-combos.md`, section 14.16: two rank II charms, a relic at 25% off, buying relics, one swap a visit). When he's offered as a node is step 8's; until then he keeps his camp day. The Magpie is a node (`days-and-nodes.md`): a rare stall run by a scavenger who takes what fell bands left behind in the rift. Replaces part 6, section 8's Magpie (`rebuild-between-fights.md`). **Grafts are cut**; see the bottom of this file. **Numbers are placeholders.**
+Status: **agreed in discussion (2026-09-30); his stall built in phase 5c step 6e** (`rebuild-phase5c-combos.md`, section 14.16: two rank II charms, a relic at 25% off, buying relics, one swap a visit). He's a node since step 8a (section 16.4): from day 3, at most twice an act. The Magpie is a node (`days-and-nodes.md`): a rare stall run by a scavenger who takes what fell bands left behind in the rift. Replaces part 6, section 8's Magpie (`rebuild-between-fights.md`). **Grafts are cut**; see the bottom of this file. **Numbers are placeholders.**
 
 ## When he shows up
 

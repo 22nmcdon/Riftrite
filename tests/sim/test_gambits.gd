@@ -141,7 +141,6 @@ func test_the_run_shares_and_chooses() -> void:
 	assert_eq(flow.set_gambit_at("maren", 15), "")
 	assert_eq(flow.set_gambit_at("maren", 7), "it swaps at 5, 10, or 15 seconds")
 	assert_eq(flow.set_gambit_at("vell", 5), "vell holds no gambit whose moment it can choose")
-	flow.leave_camp()
 	flow.choose_fight(0)
 	var formation: Dictionary[String, Vector2i] = Bot.formation()
 	formation["vell"] = formation["brannoc"]

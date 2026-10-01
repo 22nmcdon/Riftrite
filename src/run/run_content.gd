@@ -510,7 +510,7 @@ func _check() -> void:
 			if not relic.grows.counts.from_ability.is_empty():
 				errors.append("%s (%s): a relic grows by what the whole team does, so it counts no hero's ability" % [RELICS_FILE, id])
 	if camps != null:
-		for option: CampsDef.Option in camps.options.values():
+		for option: CampsDef.Option in camps.options.values() + camps.nodes.values():
 			if not ResourceLoader.exists(ART_UI + option.icon):
 				errors.append("%s (%s): no icon art/ui/%s" % [CAMPS_FILE, option.id, option.icon])
 		for place: CampsDef.Place in camps.places:

@@ -1,9 +1,12 @@
 extends GutTest
 ## Camp, relics, and duo bonds in a run (docs/plans/rebuild-phase5-run.md,
 ## sections 8 and 9): places and their options, each option's one job, the
-## next fight's modifiers, relic choices and relics' rules, and bonds.
+## next fight's modifiers, relic choices and relics' rules, and bonds. Since
+## phase 5c step 8 Camp is a node after the day's shop, and its modifiers are
+## for tomorrow's fight.
 
 const Bot = preload("res://tools/run_bot.gd")
+const R = preload("res://tests/run/run_test_kit.gd")
 
 var _run: RunContent
 
@@ -19,10 +22,10 @@ func _start(run_seed: int = 7, vows: Dictionary[String, String] = {}) -> RunFlow
 	return flow
 
 
-## A flow at camp with `option` offered first (camp's options set by hand).
+## A flow in day 1's Camp node with `option` its one option (set by hand).
 func _camp_with(option: String, run_seed: int = 7) -> RunFlow:
 	var flow: RunFlow = _start(run_seed)
-	flow.state.camp.assign([option])
+	R.to_camp(flow, [option] as Array[String])
 	return flow
 
 
@@ -33,9 +36,14 @@ func _result(outcome: FightResult.Outcome) -> FightResult:
 	return result
 
 
+## On to the next fight: from a node, the next day's; from a shop opened
+## by hand, today's.
 func _to_fight(flow: RunFlow) -> void:
-	if flow.state.phase == RunState.Phase.CAMP:
-		assert_eq(flow.leave_camp(), "")
+	if flow.state.phase == RunState.Phase.NODE:
+		assert_eq(flow.leave_node(), "")
+	elif flow.state.phase == RunState.Phase.SHOP:
+		flow.close_shop()
+		flow.state.phase = RunState.Phase.ROUTE
 	assert_eq(flow.choose_fight(0), "")
 
 
@@ -60,36 +68,32 @@ func test_the_camp_content_loads() -> void:
 func test_arriving_at_camp() -> void:
 	var flow: RunFlow = _start()
 	var state: RunState = flow.state
+	R.to_camp(flow)
 	var place: CampsDef.Place = _run.camps.places.filter(func(found: CampsDef.Place) -> bool: return found.id == state.place)[0]
 	assert_eq(state.camp.size(), _run.camps.shown)
 	for option: String in state.camp:
 		assert_has(place.options, option)
-	assert_eq(state.camp, _start().state.camp, "the same seed, the same camp")
-	assert_between(state.magpie_day, 3, 6)
-	# The act map draws a past day's place again (phase 5b).
-	assert_eq(Offers.place(_run, state.seed_value, state.act, state.day, state.attempt, state.magpie_day), state.place)
-	for day: int in range(2, 7):
-		state.day = day
-		for attempt: int in 2:
-			state.attempt = attempt
-			var drawn: Array = Offers.camp(_run, state)
-			var expected: String = "magpie" if day == state.magpie_day and attempt == 0 else String(drawn[0])
-			assert_eq(Offers.place(_run, state.seed_value, state.act, day, attempt, state.magpie_day), expected, "day %d, try %d" % [day, attempt])
+		assert_false(["pedlar", "magpie", "rift_tear"].has(option), "the shop and the other nodes aren't camp's options (phase 5c step 8)")
+	var twin: RunFlow = _start()
+	R.to_camp(twin)
+	assert_eq([state.place, state.camp], [twin.state.place, twin.state.camp], "the same seed, the same camp")
+	assert_eq(flow.leave_node(), "")
+	assert_eq(state.taken_nodes, ["camp:" + twin.state.place] as Array[String], "the act map draws a past day's place again")
+	assert_eq([state.place, state.camp, state.node], ["", [] as Array[String], ""])
 
 
-func test_the_magpies_day() -> void:
+func test_the_magpies_node() -> void:
 	var flow: RunFlow = _start()
 	var state: RunState = flow.state
-	state.day = state.magpie_day - 1
-	state.phase = RunState.Phase.AFTER
-	assert_eq(flow.finish_day(), "")
-	assert_eq([state.place, state.camp], ["", ["magpie"] as Array[String]], "he's the only option")
-	assert_eq(flow.choose_camp(0), "")
-	assert_eq(state.shop, "magpie")
+	R.to_magpie(flow)
+	assert_eq([state.shop, state.magpie_visits], ["magpie", 1])
 	assert_eq(state.shop_relics.size(), 1, "the Magpie always has a relic")
 	var tier: RelicDef.Tier = _run.relics[state.shop_relics[0]].tier
 	assert_true(tier == RelicDef.Tier.EPIC or tier == RelicDef.Tier.LEGENDARY, "an epic or a legendary")
 	assert_eq(flow.relic_price(), _run.act.relic_prices[RelicDef.TIER_NAMES[tier]] * 75 / 100, "at 25% off, rounded down")
+	assert_eq(flow.choose_camp(0), "can't choose a camp option now (the day is at node)")
+	assert_eq(flow.leave_node(), "")
+	assert_eq([state.shop, state.taken_nodes], ["", ["magpie"] as Array[String]])
 
 
 func test_one_option_a_camp() -> void:
@@ -104,9 +108,9 @@ func test_train_gives_a_pick() -> void:
 	var flow: RunFlow = _camp_with("train")
 	flow.choose_camp(0)
 	assert_eq(flow.state.pick.size(), 3)
-	assert_eq(flow.leave_camp(), "choose an upgrade or take the shards first")
+	assert_eq(flow.leave_node(), "choose an upgrade or take the shards first")
 	flow.take_pick(0)
-	assert_eq(flow.leave_camp(), "")
+	assert_eq(flow.leave_node(), "")
 
 
 func test_rest_clears_wounds() -> void:
@@ -122,14 +126,14 @@ func test_map_the_rift_swaps_one_of_tomorrows_fights() -> void:
 	var tomorrow: Array = flow.state.options[1].duplicate()
 	assert_eq(flow.swap_fight(0), "Map the Rift isn't waiting")
 	flow.choose_camp(0)
-	assert_eq(flow.leave_camp(), "choose which fight to swap first")
+	assert_eq(flow.leave_node(), "choose which fight to swap first")
 	assert_eq(flow.swap_fight(1), "")
 	var now: Array = flow.state.options[1]
 	assert_eq(now[0], tomorrow[0])
 	assert_ne(now[1], tomorrow[1])
 	assert_eq(_run.content.encounters[now[1]].tier, _run.content.encounters[tomorrow[1]].tier, "the same tier")
 	assert_true(_run.content.encounters[now[1]].days.has(2))
-	assert_eq(flow.leave_camp(), "")
+	assert_eq(flow.leave_node(), "")
 
 
 func test_fortify_shields_the_next_fight_only() -> void:
@@ -143,7 +147,10 @@ func test_fortify_shields_the_next_fight_only() -> void:
 	sim.step()
 	assert_eq(sim.unit_by_id("maren").shield, 40, "a small Shield at the start")
 	flow.record(Bot.formation(), _result(FightResult.Outcome.DEFEAT))
-	assert_false(flow.state.fortify, "spent, win or lose")
+	assert_true(flow.state.fortify, "held for the replay (phase 5c Decision 42)")
+	_to_fight(flow)
+	flow.record(Bot.formation(), _result(FightResult.Outcome.VICTORY))
+	assert_false(flow.state.fortify, "spent once won")
 
 
 func test_dig_in_places_a_rock() -> void:
@@ -161,8 +168,11 @@ func test_dig_in_places_a_rock() -> void:
 
 
 func test_a_rift_tear_upgrades_the_enemies_and_a_win_offers_a_relic() -> void:
-	var flow: RunFlow = _camp_with("rift_tear")
-	flow.choose_camp(0)
+	var flow: RunFlow = _start()
+	flow.state.phase = RunState.Phase.NODES
+	flow.state.nodes.assign(["camp", "rift_tear"])
+	assert_eq(flow.choose_node(1), "")
+	assert_true(flow.state.rift_tear, "a node now (phase 5c step 8)")
 	_to_fight(flow)
 	assert_true(_setup(flow).enemies.all(func(enemy: UnitSetup) -> bool: return _has_passive(enemy.def, "rift_warded")))
 	flow.record(Bot.formation(), _result(FightResult.Outcome.VICTORY))
@@ -176,6 +186,11 @@ func test_a_rift_tear_upgrades_the_enemies_and_a_win_offers_a_relic() -> void:
 	assert_eq(state.relics, [chosen] as Array[String])
 	assert_eq(flow.finish_day(), "")
 	assert_false(state.rift_tear)
+	assert_eq(R.next_day(flow), "can't move on from the fight now (the day is at shop)")
+	flow.leave_shop()
+	flow.choose_node(0)
+	flow.leave_node()
+	assert_eq([state.day, state.taken_nodes[0]], [3, "rift_tear"])
 
 
 func test_the_shrine_and_turning_a_relic_down() -> void:
@@ -186,7 +201,7 @@ func test_the_shrine_and_turning_a_relic_down() -> void:
 	assert_eq(flow.state.relic_choice_price, 15)
 	flow.state.shards = 14
 	assert_eq(flow.take_relic(0), "it costs 15 shards; there are 14")
-	assert_eq(flow.leave_camp(), "choose a relic or neither first")
+	assert_eq(flow.leave_node(), "choose a relic or neither first")
 	assert_eq(flow.decline_relic(), "")
 	assert_eq(flow.state.relics, [] as Array[String])
 	assert_eq(flow.decline_relic(), "there's no relic choice waiting")
@@ -203,18 +218,18 @@ func test_a_hunt() -> void:
 	var state: RunState = flow.state
 	assert_eq(_run.content.encounters[state.hunt].tier, "hunt")
 	assert_eq(flow.fight_encounter(), state.hunt)
-	assert_eq(flow.leave_camp(), "fight the Hunt first")
+	assert_eq(flow.leave_node(), "fight the Hunt first")
 	var errors: Array[String] = []
 	var setup: FightSetup = flow.fight_setup(Bot.formation(), errors)
 	assert_eq(setup.enemies.size(), _run.content.encounters[state.hunt].enemies.size())
 	flow.record(Bot.formation(), _result(FightResult.Outcome.DEFEAT))
-	assert_eq([state.hunt, state.losses, state.phase, state.shards], ["", 0, RunState.Phase.CAMP, _run.act.start_shards], "a lost Hunt isn't a loss")
+	assert_eq([state.hunt, state.losses, state.phase, state.shards], ["", 0, RunState.Phase.NODE, _run.act.start_shards], "a lost Hunt isn't a loss")
 	assert_eq(_run.content.encounters[state.fought.back().encounter].tier, "hunt", "recorded as fought")
 	flow.state.camp_used = ""
 	flow.choose_camp(0)
 	flow.record(Bot.formation(), _result(FightResult.Outcome.VICTORY))
 	assert_eq([state.shards, state.pick], [_run.act.start_shards + _run.act.pay["hunt"], [] as Array[String]], "shards, no pick")
-	assert_eq(flow.leave_camp(), "")
+	assert_eq(flow.leave_node(), "")
 
 
 func test_relics_that_change_the_run() -> void:
@@ -239,10 +254,9 @@ func test_relics_on_pay_picks_and_prices() -> void:
 		state.relic_choice.assign([id])
 		flow.take_relic(0)
 	var before: int = state.shards
-	flow.open_shop("pedlar")
+	R.to_pedlar(flow)
 	assert_eq(state.shards, before + 2, "Loose Change pays as a shop opens")
 	assert_eq(flow.price_of("fleet"), 5, "Haggler's Charm: 1 less at the Pedlar")
-	flow.close_shop()
 	_to_fight(flow)
 	before = state.shards
 	flow.record(Bot.formation(), _result(FightResult.Outcome.VICTORY))
@@ -266,7 +280,7 @@ func test_the_pedlar_always_has_a_relic_mostly_common() -> void:
 	var tiers: Array[int] = [0, 0, 0, 0, 0]
 	for run_seed: int in range(1, 41):
 		var flow: RunFlow = _start(run_seed)
-		flow.open_shop("pedlar")
+		R.to_pedlar(flow)
 		assert_eq(flow.state.shop_relics.size(), 1)
 		var relic: String = flow.state.shop_relics[0]
 		tiers[_run.relics[relic].tier] += 1
@@ -297,7 +311,7 @@ func test_a_duo_bond_stirs_then_switches_on() -> void:
 	assert_eq(_run.stirring_bonds(state), [] as Array[BondDef])
 	assert_eq(_run.bond_relics(state), ["the_watchtower_stone"] as Array[String], "its relic can show up in shops now")
 	flow.take_shards()
-	flow.finish_day()
+	assert_eq(R.next_day(flow), "")
 	_to_fight(flow)
 	var setup: FightSetup = _setup(flow)
 	assert_eq(setup.heroes[0].def.mana.per_attack, _run.content.paths["hearthwall"].transformed_kit.mana.per_attack, "a bond gives no boost of its own (phase 5c step 5d)")

@@ -1,11 +1,27 @@
 {
-  "_note": "Camp (docs/plans/rebuild-phase5-run.md, section 9; Decisions 8, 9, 13): each option has one job, and what it does is code (RunFlow); this file names them, says which places offer which, and gives their numbers. A camp shows `shown` options drawn from its place's menu. The Magpie is no place's: once an act, on a day drawn from magpie_days, it's the camp's only option. All numbers are first guesses.",
+  "_note": "Camp (docs/plans/rebuild-phase5-run.md, section 9; Decisions 8, 9, 13) and the day's nodes (phase 5c step 8, docs/plans/days-and-nodes.md; rebuild-phase5c-combos.md, section 16): each option has one job, and what it does is code (RunFlow); this file names them, says which places offer which, and gives their numbers. A camp shows `shown` options drawn from its place's menu. Camp is one of the day's nodes (`nodes`: their names, lines, and icons); the Magpie's node comes from magpie_from_day, at most magpie_per_act times an act. The Pedlar is the day's shop, and Rift Tear and the Magpie are nodes, so no place offers them. All numbers are first guesses.",
   "shown": 3,
-  "magpie_days": [
-    3,
-    4,
-    5,
-    6
+  "magpie_from_day": 3,
+  "magpie_per_act": 2,
+  "nodes": [
+    {
+      "id": "camp",
+      "name": "Camp",
+      "icon": "nodes/camp_waystone.svg",
+      "text": "Make camp somewhere the rift hasn't swallowed: one of its options."
+    },
+    {
+      "id": "rift_tear",
+      "name": "Rift Tear",
+      "icon": "nodes/rift_tear.svg",
+      "text": "Tomorrow's enemies come through a tear, warded by the rift; win that fight for a relic choice."
+    },
+    {
+      "id": "magpie",
+      "name": "The Magpie",
+      "icon": "nodes/magpie.svg",
+      "text": "He sells what he took from bands who fell in the rift: charms at rank II and a relic, cheap. One look. He buys relics, and swaps one a visit."
+    }
   ],
   "options": [
     {
@@ -19,12 +35,6 @@
       "name": "Hunt",
       "icon": "camp/hunt.svg",
       "text": "Fight a small pack right now for shards. Losing it doesn't count as a loss."
-    },
-    {
-      "id": "pedlar",
-      "name": "Pedlar",
-      "icon": "camp/pedlar.svg",
-      "text": "Buy charms, tactics, and sigils, and treat wounds; now and then a relic."
     },
     {
       "id": "rest",
@@ -57,22 +67,10 @@
       "text": "Place a rock in your zone for the next fight."
     },
     {
-      "id": "rift_tear",
-      "name": "Rift Tear",
-      "icon": "camp/rift_tear.svg",
-      "text": "The next fight's enemies start behind a Shield from the rift; win it for a relic choice."
-    },
-    {
       "id": "shrine",
       "name": "Shrine",
       "icon": "camp/shrine.svg",
       "text": "A choice of two relics, each with a cost, or neither."
-    },
-    {
-      "id": "magpie",
-      "name": "The Magpie",
-      "icon": "nodes/magpie.svg",
-      "text": "He sells what he took from bands who fell in the rift: grafts, other gear, and a relic. Dear, and one look only."
     }
   ],
   "places": [
@@ -84,7 +82,6 @@
       "options": [
         "train",
         "rest",
-        "pedlar",
         "scout",
         "fortify",
         "map_the_rift"
@@ -100,8 +97,7 @@
         "rest",
         "train",
         "fortify",
-        "dig_in",
-        "pedlar"
+        "dig_in"
       ]
     },
     {
@@ -114,8 +110,7 @@
         "scout",
         "dig_in",
         "train",
-        "map_the_rift",
-        "pedlar"
+        "map_the_rift"
       ]
     },
     {
@@ -124,12 +119,12 @@
       "icon": "nodes/camp_rift_scar.svg",
       "text": "The ground here is torn, and it hums.",
       "options": [
-        "rift_tear",
         "hunt",
         "shrine",
         "fortify",
         "dig_in",
-        "rest"
+        "rest",
+        "scout"
       ]
     }
   ],

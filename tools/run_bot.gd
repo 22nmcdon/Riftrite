@@ -2,8 +2,9 @@ extends RefCounted
 ## The simple run bot (docs/plans/rebuild-phase5-run.md, section 12, Decision
 ## 14): plays whole runs through RunFlow, for tests and pacing, not for a win
 ## rate (the good bot is phase 6). It vows each hero to its first path unless
-## told otherwise, takes a camp option by a fixed order (Rest when someone has
-## 2 wounds), buys what it can use and equips it, takes today's first fight,
+## told otherwise, takes today's first fight, buys what it can use at the
+## shop and equips it, takes a node by a fixed order (the Magpie, else Camp)
+## and a camp option by a fixed order (Rest when someone has 2 wounds),
 ## places the sim runner's "guarded" formation, takes the pick's card for
 ## the hero with the fewest upgrades, and the first relic of a choice.
 
@@ -16,7 +17,9 @@ const FORMATIONS: Array[String] = ["guarded", "exposed", "spread", "clumped"]
 ## anything past this is a bug.
 const MAX_STEPS: int = 400
 ## Camp options, first the bot likes best (Rest only when someone's hurt).
-const CAMP_ORDER: Array[String] = ["magpie", "train", "pedlar", "shrine", "fortify", "hunt", "scout", "dig_in", "map_the_rift", "rift_tear", "rest"]
+const CAMP_ORDER: Array[String] = ["train", "shrine", "fortify", "hunt", "scout", "dig_in", "map_the_rift", "rest"]
+## Nodes, first the bot likes best.
+const NODE_ORDER: Array[String] = ["magpie", "camp", "rift_tear"]
 ## Where Dig In's rock goes: a corner of the heroes' zone, out of the way.
 const ROCK: Vector2i = Vector2i(0, 0)
 
@@ -78,8 +81,14 @@ static func step_once(flow: RunFlow, hexes: Dictionary[String, Vector2i], errors
 	if not state.relic_choice.is_empty():
 		return flow.take_relic(0) if state.shards >= state.relic_choice_price else flow.decline_relic()
 	match state.phase:
-		RunState.Phase.CAMP:
-			if state.camp_used.is_empty():
+		RunState.Phase.SHOP:
+			if shop_once(flow):
+				return ""
+			return flow.leave_shop()
+		RunState.Phase.NODES:
+			return flow.choose_node(node_choice(state))
+		RunState.Phase.NODE:
+			if state.node == "camp" and state.camp_used.is_empty():
 				return flow.choose_camp(camp_choice(state))
 			if not state.hunt.is_empty():
 				var hunt_errors: Array[String] = []
@@ -95,7 +104,7 @@ static func step_once(flow: RunFlow, hexes: Dictionary[String, Vector2i], errors
 				return ""
 			if state.dig_in and state.rock.is_empty():
 				return flow.place_rock(ROCK)
-			return flow.leave_camp()
+			return flow.leave_node()
 		RunState.Phase.ROUTE:
 			return flow.choose_fight(0)
 		RunState.Phase.LOADOUT:
@@ -123,6 +132,14 @@ static func pick_choice(flow: RunFlow) -> int:
 			fewest = taken
 			best = i
 	return best
+
+
+## The node the bot takes: the first of NODE_ORDER shown.
+static func node_choice(state: RunState) -> int:
+	for node: String in NODE_ORDER:
+		if state.nodes.has(node):
+			return state.nodes.find(node)
+	return 0
 
 
 ## The camp option the bot takes: Rest if someone has 2 wounds or more,

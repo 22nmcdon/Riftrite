@@ -11,17 +11,22 @@ extends UiScreen
 ##   - an upgrade pick (a card per upgrade: who it's for, its kind and
 ##     source, its name and rule; Take), or "Take 3 shards instead";
 ##   - a relic choice (each relic's flavor, boon, and cost; Take), or neither.
-## Then the day's step:
-##   - camp: the place, then its options (Choose); once one is taken, what it
-##     opened: a shop (wares, a relic, treating wounds, a reroll), Map the
-##     Rift's swap, or the Hunt (Fight the Hunt); then Break camp;
+## Then the day's step (phase 5c step 8: route, loadout, fight, after it,
+## the shop, a node):
 ##   - the route: the act map (ActMap; phase 5b), and beside it the card of
 ##     today's fight selected on it (tier and pay, what it tests, its
 ##     enemies and their threat lines, and where they stand once Scouted);
 ##   - the loadout: each hero's slots (click a filled one to take it off) and
 ##     the stash (equip each item to a hero; "no effect" where it does
 ##     nothing); then To the fight;
-##   - after the fight: how it went, then Next day;
+##   - after the fight: how it went, then To the Pedlar (the run's end after
+##     the boss);
+##   - the shop: the Pedlar's wares, a relic, treating wounds, selling, a
+##     reroll; then Leave the Pedlar;
+##   - the nodes: a card each (Camp, Rift Tear, the Magpie; Go to);
+##   - a node: camp (the place, its options (Choose), then what one opened:
+##     Map the Rift's swap, or the Hunt (Fight the Hunt)), the Magpie's
+##     stall, or the Rift Tear taken; then On to day N;
 ##   - the run's end: won or lost, and every fight fought.
 
 ## To the arena for the waiting fight (the day's, or a Hunt).
@@ -159,22 +164,40 @@ static func art_icon(path: String, side: float) -> TextureRect:
 	return rect
 
 
-## Today's camp's node: its place's, or the Magpie's on his day.
+## A node's picture (phase 5c step 8): "camp:<place>" is its place's;
+## "rift_tear" and "magpie" their nodes' ("" for none).
+static func node_icon(run: RunContent, id: String) -> String:
+	if id.begins_with("camp:"):
+		for place: CampsDef.Place in run.camps.places:
+			if place.id == id.trim_prefix("camp:"):
+				return place.icon
+		return run.camps.nodes["camp"].icon
+	return run.camps.nodes[id].icon if run.camps.nodes.has(id) else ""
+
+
+## A node's name: a camp's place's, or the node's.
+static func node_name(run: RunContent, id: String) -> String:
+	if id.begins_with("camp:"):
+		for place: CampsDef.Place in run.camps.places:
+			if place.id == id.trim_prefix("camp:"):
+				return place.name
+		return run.camps.nodes["camp"].name
+	return run.camps.nodes[id].name if run.camps.nodes.has(id) else ""
+
+
+## Today's camp's picture (its place's).
 static func place_icon(run_session: RunSession) -> String:
-	var state: RunState = run_session.state()
-	for place: CampsDef.Place in run_session.run.camps.places:
-		if place.id == state.place:
-			return place.icon
-	return run_session.run.camps.options["magpie"].icon
+	return RunDayScreen.node_icon(run_session.run, "camp:" + run_session.state().place)
 
 
-## Where the run's camp is ("the Magpie's camp" on his day).
+## Where the run is: the node it's in (its camp's place), or "The rift".
 static func place_name(run_session: RunSession) -> String:
 	var state: RunState = run_session.state()
-	for place: CampsDef.Place in run_session.run.camps.places:
-		if place.id == state.place:
-			return place.name
-	return "The Magpie's camp" if state.camp.has("magpie") else "The rift"
+	if state.phase == RunState.Phase.SHOP:
+		return "The Pedlar"
+	if state.phase == RunState.Phase.NODE:
+		return RunDayScreen.node_name(run_session.run, "camp:" + state.place if state.node == "camp" else state.node)
+	return "The rift"
 
 
 ## Shows the run as it stands.
@@ -193,14 +216,19 @@ func refresh() -> void:
 	else:
 		_fill_waiting()
 		match state.phase:
-			RunState.Phase.CAMP:
-				_fill_camp()
 			RunState.Phase.ROUTE:
 				_fill_route()
 			RunState.Phase.LOADOUT:
 				_fill_loadout()
 			RunState.Phase.AFTER:
 				_fill_after()
+			RunState.Phase.SHOP:
+				_fill_shop()
+				body.add_child(UiStyle.primary(UiStyle.button("Leave the Pedlar", _do.bind(session.flow.leave_shop))))
+			RunState.Phase.NODES:
+				_fill_nodes()
+			RunState.Phase.NODE:
+				_fill_node()
 	body.add_child(message)
 	hero_bar.refresh()
 
@@ -384,6 +412,43 @@ func _relic_card(row: Container, relic: RelicDef) -> VBoxContainer:
 	return card
 
 
+# --- the nodes (phase 5c step 8) ---------------------------------------------------
+
+## The day's nodes: a card each (Camp, Rift Tear, the Magpie), one taken.
+func _fill_nodes() -> void:
+	var state: RunState = session.state()
+	var section: VBoxContainer = _section("Where to, before day %d" % (state.day + 1), "Take one. Camp's options and the Magpie happen now; a Rift Tear is for tomorrow's fight.")
+	var row: HBoxContainer = _row()
+	section.add_child(row)
+	for i: int in state.nodes.size():
+		var node: CampsDef.Option = session.run.camps.nodes[state.nodes[i]]
+		var card: VBoxContainer = _card(row)
+		var title := HBoxContainer.new()
+		title.add_theme_constant_override("separation", 12)
+		card.add_child(title)
+		title.add_child(RunDayScreen.art_icon(node.icon, OPTION_ICON))
+		var name_label: Label = UiStyle.heading(node.name, 26, UiStyle.TEXT)
+		name_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		title.add_child(name_label)
+		card.add_child(_wrapped(node.text, 17, UiStyle.TEXT))
+		card.add_child(UiStyle.primary(UiStyle.button("Go to %s" % node.name, _do.bind(session.flow.choose_node.bind(i)))))
+
+
+## In a node: camp's options, the Magpie's stall, or a Rift Tear taken;
+## then on to the next day.
+func _fill_node() -> void:
+	var state: RunState = session.state()
+	match state.node:
+		"camp":
+			_fill_camp()
+		"magpie":
+			_fill_shop()
+		"rift_tear":
+			var node: CampsDef.Option = session.run.camps.nodes["rift_tear"]
+			_section(node.name, "Tomorrow's enemies come through the tear, warded by the rift. Win that fight for a choice of relics.")
+	body.add_child(UiStyle.primary(UiStyle.button("On to day %d" % (state.day + 1), _do.bind(session.flow.leave_node))))
+
+
 # --- camp -------------------------------------------------------------------------
 
 func _fill_camp() -> void:
@@ -393,8 +458,6 @@ func _fill_camp() -> void:
 	for place: CampsDef.Place in camps.places:
 		if place.id == state.place:
 			place_line = place.text
-	if state.attempt > 0 and state.camp_used.is_empty():
-		place_line += " The day begins again: %d of %d losses." % [state.losses, session.run.act.losses_to_end]
 	var section: VBoxContainer = _section("Camp: %s" % RunDayScreen.place_name(session), place_line)
 	# The place's node (the Magpie's on his day) beside the heading (phase 5b).
 	var heading: Control = section.get_child(0)
@@ -429,11 +492,8 @@ func _fill_camp() -> void:
 		hunt_section.add_child(UiStyle.primary(UiStyle.button("Fight the Hunt", func() -> void: fight_requested.emit())))
 	if state.mapping:
 		_fill_mapping()
-	if not state.shop.is_empty():
-		_fill_shop()
 	if state.dig_in and state.rock.is_empty():
 		body.add_child(_wrapped("Dig In: you'll set your rock on the board before the fight (click a hex of your zone).", 17, UiStyle.TEXT_DIM))
-	body.add_child(UiStyle.primary(UiStyle.button("Break camp", _do.bind(session.flow.leave_camp))))
 
 
 func _fill_mapping() -> void:
@@ -671,7 +731,8 @@ func _fill_after() -> void:
 		var last: RunState.Fought = state.fought.back()
 		var encounter: EncounterDef = session.content.encounters[last.encounter]
 		_section("%s: %s" % [encounter.name, RunDayScreen.outcome_word(last.outcome)], "In %ds. It paid %d shards." % [last.seconds, session.run.act.pay[encounter.tier] + session.run.relic_sum(state, "pay_add") + (session.run.relic_sum(state, "elite_pay_add") if encounter.tier == "elite" else 0)])
-	body.add_child(UiStyle.primary(UiStyle.button("Next day", _do.bind(session.flow.finish_day))))
+	var boss: bool = session.run.act.days[state.day - 1] == "boss"
+	body.add_child(UiStyle.primary(UiStyle.button("The run's end" if boss else "To the Pedlar", _do.bind(session.flow.finish_day))))
 
 
 static func outcome_word(outcome: FightResult.Outcome) -> String:

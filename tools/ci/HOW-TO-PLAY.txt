@@ -33,17 +33,6 @@ PLAYING
      fights (the hero's panel: Switch vow). If two vowed paths are bonded,
      "a bond stirs": it wakes when both heroes have transformed.
   2. Each day:
-       Camp     a place with three options; take one: Train (an upgrade
-                pick), Hunt (a small fight now for shards; losing it isn't a
-                loss), Pedlar (buy charms, tactics, sigils; treat wounds;
-                now and then a relic), Rest (clears wounds), Scout (see the
-                next two days' enemies placed), Map the Rift (swap one of
-                tomorrow's fights), Fortify (a small Shield next fight), Dig
-                In (a rock in your zone next fight: click a hex while
-                placing), Rift Tear (next fight's enemies are Shielded; win
-                it for a relic), Shrine (a relic, or neither). Once in the
-                act, the Magpie comes instead: grafts, other gear, a relic;
-                dear, one look. Then Break camp.
        Route    the act map: an island a day, each with its two fights (an
                 easier one and a harder one that pays more). Days 3 and 5
                 are elites; day 7 is Old Mother Ash. Click one of today's
@@ -56,6 +45,23 @@ PLAYING
                 per hero, now and then a wild card), or take 3 shards
                 instead. An elite or a Rift Tear win offers a relic, or
                 neither. A filled deed transforms the hero.
+       Pedlar   after every fight: buy charms, tactics, sigils, and
+                gambits, a relic, treat wounds, reroll, or sell an item
+                back for half. The day before the boss he has a legendary.
+       Node     then one of the day's nodes, for tomorrow:
+                Camp (always): a place with three options; take one: Train
+                (an upgrade pick), Hunt (a small fight now for shards;
+                losing it isn't a loss), Rest (clears wounds), Scout (see
+                the next two days' enemies placed), Map the Rift (swap one
+                of tomorrow's fights), Fortify (a small Shield next fight),
+                Dig In (a rock in your zone next fight: click a hex while
+                placing), Shrine (a relic, or neither).
+                Rift Tear: tomorrow's enemies are Shielded; win that fight
+                for a relic.
+                The Magpie (from day 3, at most twice): charms at rank II
+                and a relic, cheap; one look. He buys and swaps relics.
+                Then On to the next day. Whatever a node set up for
+                tomorrow's fight holds if you lose it and replay the day.
   3. A hero who falls gets a wound (less max HP, up to 3); each won fight
      heals one wound on every hero first. A lost fight
      replays the day; the second loss ends the run. Winning against Old

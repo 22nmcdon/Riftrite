@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a, 5b (section 11), and 5c (section 12) built (10-01), 5d (section 13) built (10-01): the relic pool is complete; step 6 (the loadout pool, section 14) built in five parts, 6a–6e (10-01); step 7 (the upgrade pools, section 15) built in four parts, 7a–7d (10-01); steps 8–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a, 5b (section 11), and 5c (section 12) built (10-01), 5d (section 13) built (10-01): the relic pool is complete; step 6 (the loadout pool, section 14) built in five parts, 6a–6e (10-01); step 7 (the upgrade pools, section 15) built in four parts, 7a–7d (10-01); step 8 (the new day, section 16) approved, building in three parts: 8a built (10-01), 8b and 8c next; step 9 outlined.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -111,7 +111,7 @@ The rest are as gate 3 left them (basic 30–35, harder 16–33, The Hunt 18, Ol
 | **5. The relic pool** (section 10) | Five tiers plus bond relics, the pool's relics as data (built ones changed or cut, `relics/README.md`), one relic per shop with climbing rerolls, the pre-boss shop, boss relics after the boss, the Shrine's offerings, the income in `economy.md` | `relics.json`, `relic_def.gd`, `offers.gd`, `run_flow.gd`, `act1.json` | shop draws by tier, rerolls' prices, bond relics only with their bond, every relic's effect in a small fight |
 | **6. The loadout pool** (section 14; built) | Tactics, gambits, sigils, and charms from `loadout/`, three ranks with each kind's counter, a bought copy skips a rank, selling at half, no "no effect" marker, grafts removed; gambits' placement rules (in `FightSetup.validate` and `Encounters.setup`); the Magpie as a node with his stall | `items.json`, `item_def.gd`, `run_flow.gd`, `tactics.gd`, `fight_setup.gd`, `magpie` offers | ranks and their counters, selling, each gambit's placement, the Magpie's stall |
 | **7. The upgrade pools** (section 15) | `upgrade-pools.md`: each hero's 12, two taste upgrades per path until the hero transforms, four path upgrades and a growing one after; stacking stat upgrades locked in as a flat amount; Volley's taste back to every 4th | `upgrades.json`, `offers.gd`, `run_state.gd`, `paths.json` | the draw by stage, stacking's lock-in, the paths report for Volley |
-| **8. The new day** | Fight, pick, shop, then a node (Event, Camp, Rift Tear, the Magpie); camp as a node with its options; Rift Tear's three depths with rift modifiers; events and the Bloodied Oath; the day screen follows | `act_def.gd`, `run_flow.gd`, `offers.gd`, `camps.json`, `events.json` (new), `run_day_screen.gd`, `run_bot.gd` | the day's order, each node, each event, the bot plays whole runs |
+| **8. The new day** (section 16) | Fight, pick, shop, then a node (Event, Camp, Rift Tear, the Magpie); camp as a node with its options; Rift Tear's three depths with rift modifiers; events and the Bloodied Oath; the day screen follows | `act_def.gd`, `run_flow.gd`, `offers.gd`, `camps.json`, `events.json` (new), `run_day_screen.gd`, `run_bot.gd` | the day's order, each node, each event, the bot plays whole runs |
 | **9. The combo readout, the retune, and a build** | A readout behind the testing toggle (the rule's notes per hit, snowball tags); the sim runner's trigger report; the run report on the new run; tuning; docs; a playtest build | `log_panel.gd`, `tools/`, docs | the readout stays hidden without the toggle |
 
 ## 4. Files for step 1
@@ -1262,6 +1262,141 @@ Numbers are `upgrade-pools.md`'s (placeholders); a card's `text` says what it's 
 - **What moved:** no fight without these cards. **The run report** (54 runs): **81% of runs won** (83% after 7c, 90% after step 6); picks per run by layer: hero 5.9, taste 0.7, path 1.2; stacking cards 1.7 a run, 17.4 points each.
 
 **Step 7 is built.** The after-fight pick offers each hero its own 12 cards, its vowed path's two taste cards until it transforms (and they carry on after), and its path's four cards and growing card once transformed; stacking cards lock in a share of the stat; nothing that changes nothing is offered. Runs are won less often as the pools fill (92% after 7a to 81%): the simple bot takes a card for whichever hero has the fewest, and the new cards are more often conditional (taunts, Marks, low HP, crowds) than the flat bonuses they replaced. The numbers are placeholders for step 9's retune.
+
+## 16. Step 8: the new day
+
+Status: **approved (2026-10-01, Decisions 40–43); building in three parts: 8a built (16.12), 8b and 8c next.** Builds `days-and-nodes.md` (a day is the fight, the pick, the shop, then a node), the Magpie as a node (`magpie.md`), Rift Tear's three depths with the rift modifiers (`enemy-growth.md`, section 4), the Shrine's offerings, and the Event node with its scenes and the Bloodied Oath (`events.md`).
+
+### 16.1 What's there now (phase 5)
+
+- **A day** (`RunFlow`, `RunState.Phase`: CAMP, ROUTE, LOADOUT, AFTER): camp first (a place drawn from `camps.json`, 3 of its menu's options, one taken), then the route (today's two fights), the loadout, the fight, then after it (transformations, the pick, a relic choice). A loss replays the day from camp.
+- **Camp's options:** Train, Hunt, Pedlar, Rest, Scout, Map the Rift, Fortify, Dig In, Rift Tear (one flat Shield on the next fight's enemies; a win offers 2 rares), and the Shrine (one rare for 15 shards). On one drawn day (`magpie_days` 3–6) the Magpie is the camp's only option. The boss day's camp always has the Pedlar, as the pre-boss shop.
+- **No Event node**, no Bloodied Oath, no rift modifiers.
+
+### 16.2 Why it's split
+
+| Part | What |
+| --- | --- |
+| **8a** | **The day's new order and the nodes:** the fight, the pick, the shop (the Pedlar every day; the pre-boss shop the day before the boss), then a node: Camp (a place and its options), Rift Tear (as built, until 8b), or the Magpie (from day 3, at most twice an act). The Pedlar, Rift Tear, and the Magpie leave camp's menus. The day screen, the act map, the bot, and the report follow. |
+| **8b** | **Rift Tear's depths and the rift modifiers, and the Shrine's offerings.** |
+| **8c** | **The Event node:** the eight scenes and the Bloodied Oath. |
+
+Each is a commit with the suite green and the bench's fingerprints unchanged (only 8b adds sim pieces, each skipped by a fight that doesn't use it).
+
+### 16.3 The day (8a)
+
+```
+Day N:  choose the fight (1 of 2) → loadout and placement → the fight
+        → won: transformations, the pick, a relic choice (elite, Rift Tear)
+        → the shop (the Pedlar)
+        → choose a node, and do it
+Day N+1
+```
+
+- **Phases** (`RunState.Phase`): ROUTE, LOADOUT, AFTER (the pick and relic choices), SHOP, NODES (choosing), NODE (in one: camp's options, a depth, an event, the Magpie's stall), ENDED. CAMP goes. The save's version goes up to 4.
+- **Day 1 starts at the route**; there's no node before the first fight.
+- **The shop** opens itself after the after-fight choices: the Pedlar's wares, its relic, rerolls, selling, treating wounds, as built. **The pre-boss shop** is the shop of the day before the boss (its legendary first, rerolls from 5), since that's the shop before the boss fight.
+- **The boss day** is the fight and the boss relic choice; the run ends (no shop, no node).
+- **A lost fight** replays the day from the route (the same two fights); no shop or node in between. What the last node set up for that fight (Fortify, Dig In's rock, a Rift Tear) **holds for the replay** (Question AE); it's spent once the day's fight is won.
+- **A node's effect is now or for tomorrow's fight:** Rest, Train, Hunt, the Shrine, an event, and the Magpie now; Fortify, Dig In, Scout, Map the Rift, and Rift Tear for tomorrow (as built, since tomorrow's fight is the next one fought).
+
+### 16.4 The nodes (8a, 8c)
+
+- **Each day shows 3 nodes** (Decision 41): **Camp always**, and 2 each drawn from **Event** (from 8c), **Rift Tear**, and **the Magpie** (only from day 3, at most twice an act), each equally likely, on the node stream (`RunRandom.NODE`, by act and day); a second Rift Tear or Magpie is an Event instead, so two Events can show. Until 8c, with no Event, the two are Rift Tear and the Magpie when he can come, else Rift Tear alone (2 nodes).
+- **Camp:** a place drawn as now, its menu's options (3 shown), one taken. The menus lose Pedlar, Rift Tear, and the Magpie (`camps.json`); Rift Scar's menu takes Rest and Scout in their place. Hunt pays 5 (`act1.json`, as built; economy.md leaves it open).
+- **The Magpie:** his stall as built (14.16). `magpie_day` goes; `RunState.magpie_visits` counts.
+- **Rift Tear:** as built until 8b.
+
+### 16.5 Rift Tear's depths (8b)
+
+Choosing Rift Tear asks for a depth; tomorrow's fight carries it, and winning that fight offers its relic choice:
+
+| Depth | Tomorrow's enemies | Win it for |
+| --- | --- | --- |
+| Shallow | each starts with a Shield of 10% of its max HP | 2 rares |
+| Deep | that, and one rift modifier | 2 epics |
+| Abyssal | that, and two different rift modifiers | 1 legendary and 1 epic |
+
+The modifiers are drawn as the depth is chosen (the node stream), shown on the route's card for tomorrow, and kept in `RunState.rift` (depth and modifier ids). **The ten modifiers** (`camps.json` `rift_modifiers`, each a kit mod on every enemy and summon kit, or a rule):
+
+| Modifier | As data | New in code |
+| --- | --- | --- |
+| Hastened (+20% attack speed) | `stats_add` atsp 20 | — |
+| Hardened (+20% DEF) | `stats_bp` def | — |
+| Rift-Charged (start with 50% mana) | `mana.start_bp` | — |
+| Bloodthirst (10% lifesteal) | an aura, `lifesteal_bp` | — |
+| Thornskin (send 10% of damage taken back) | `on_hit_taken` damage, `amount_bp_of_damage` at the attacker | — |
+| Nightfall (hidden the first 3s) | `on_fight_start` Stealth 3s | — |
+| Blood Frenzy (+5% ATK for each that falls, stacking) | `on_fall` a stacking whole-fight boost on its allies (a new status) | — |
+| Blight (heroes' healing taken −25%) | a kit mod on the **heroes** (`healing_taken_bp`) | the run applies it to heroes |
+| Early Collapse (shrinks from 30s) | — | `FightSetup.collapse_start_ticks` (0: tuning's) |
+| Reinforcements (at 15s, 2 more of a kind already in the fight join from the edge) | a summon effect at the edges | `FightSetup.rift_effects`: effects at a time, sourced to the Rift Tear (like a relic's start effects, the enemies' side); the kind is the encounter's first non-elite enemy, as its summon kit |
+
+### 16.6 The Shrine's offerings (8b)
+
+The Shrine (a camp option) offers a relic for an offering, one of: **a wound** on a hero you choose (not one at 3), for a rare; **15 shards**, for a rare; **a relic you own** (not a boss or bond relic), for a relic one tier higher (never boss; a legendary has nothing higher, so it isn't offered). Each draws one relic as you choose it (`RunFlow.shrine_offer(kind, hero_id or relic_id)`); you take it or keep your offering (nothing is spent until you take it).
+
+### 16.7 Events (8c)
+
+`data/events.json` (new, `EventDef`): each scene has a text and choices; each choice has a label, a text, and its **results**, a small set of named run actions (code in `RunFlow`, said here, like camp's options), some needing a hero, an item, or a relic you pick. **Every scene has a free "Walk away"** (events rule 1).
+
+| Scene | Choices and their results |
+| --- | --- |
+| The Kneeling Knight | Take his blade: a random charm at rank II, and a wound on a hero you choose. Bury him: every wound cleared |
+| The Rift Merchant | Take a relic: a random epic, and the next shop's wares and relic cost 50% more. Leave coin: pay 10 for a random rare |
+| Whispering Stones | Listen: a hero you choose gains deed progress (Question AF), and has no signature next fight. Smash them: +8 shards |
+| A Bleeding Tear | Reach in: a random relic of a random tier (common to legendary, by the shops' odds). Seal it: tomorrow's fight is skipped as a win at half pay, with its pick (no deeds, no ranks); not drawn when tomorrow is an elite or the boss |
+| The Old Well | Drink: a random item you own a rank up (one below III), and a random hero −10% max HP for the rest of the act. Throw in a coin (5): an item you choose ranks up now |
+| Carrion Birds | Drive them off: fight a Hunt's pack now (a Hunt: shards on a win, a loss isn't one). Let them feed: nothing |
+| The Mirror Pool | Look in: a hero you choose (not transformed) switches its vow, keeping half its deed progress on the new path. Look away: nothing |
+| Ashes of a Band | Search the ashes: 2 random items (charms, tactics, or sigils). Say their names: every wound cleared, and +5% max HP next fight |
+
+A choice that can't be done (no shards, no item, no hero it fits) is shown greyed. **The pieces they need** (run-level, no sim change): an act-long max HP cut (`RunState.Hero.weakened_bp`, applied like wounds), "no signature next fight" and "+5% max HP next fight" (kit mods for tomorrow's fight, `RunState.Hero.next_fight`), "the next shop costs 50% more" (`RunState.dear_shop`), a skipped fight, and an item ranked up at once.
+
+**The Bloodied Oath** (an Event node that's an oath, Question AF): 2 oaths, each already on a random hero (2 different heroes); take one or pass. Its burden and reward last the hero's next **2 day fights** (won or lost; Hunts don't count), kept in `RunState.Hero.oath` (id, fights left):
+
+| Oath | Burden | Reward |
+| --- | --- | --- |
+| Blood | −25% max HP | its deed progress ×2 |
+| Silence | no signature (a kit mod, `drops_signature`, new: the kit's signature and mana go) | deed ×2, +20% ATK and MGK |
+| the Vanguard | must stand on the front row (a placement rule in `RunFlow.fight_setup`), and its tactic is set aside | deed ×2, +20 DEF |
+| Blood Price | a fall is 2 wounds | deed ×2 |
+
+### 16.8 The UI
+
+- **The day screen** follows the phases: the route, the loadout, after the fight, **the shop** (the Pedlar's stage as built, now with Leave), **the nodes** (three cards: Camp names its place; Rift Tear and the Magpie), and **in a node** (camp's options as built; a depth's three cards with their modifiers; the Magpie's stall as built; an event's scene and its choices, with a hero, item, or relic chooser where a choice needs one).
+- **The act map** marks each past day's node (its icon), and the route's card for tomorrow names a Rift Tear's depth and modifiers.
+- **The hero bar** shows an oath's burden and fights left.
+
+### 16.9 Files, tests, the bot, and the report
+
+- **Changed:** `run_state.gd`/`run_save.gd` (the phases, `node`, `nodes`, `magpie_visits`, `rift`, `oath`, `next_fight`, `weakened_bp`, `dear_shop`; version 4), `run_flow.gd` (the order; `choose_node`, `leave_node`, `close_shop`/`leave_shop`, `choose_depth`, `shrine_offer`, `choose_event`), `offers.gd` (nodes, depths' modifiers, events, oaths), `act_def.gd`/`data/act1.json`, `camps_def.gd`/`data/camps.json` (menus, depths, modifiers), `event_def.gd` and `data/events.json` (new), `run_content.gd`; the sim pieces in 16.5 and `drops_signature` (`fight_setup.gd`, `combat_sim.gd`, `kit_mod.gd`); `run_day_screen.gd`, `act_map.gd`, `hero_bar.gd`, `run_session.gd`; `tools/run_bot.gd` (takes the shop as now, then Camp, and in camp its options as now; a Rift Tear at Shallow when it's shown and the team is healthy; an event's first choice it can do; an oath never), `tools/run_report.gd` (nodes taken, depths, events and choices, oaths).
+- **Tests:** `tests/run/test_new_day.gd` (the order, day 1, the shop every day and the pre-boss shop, the boss day, a loss replaying with the node's setup kept, the node draw: Camp always, the Magpie from day 3 and at most twice, the save), `tests/run/test_rift_tear.gd` (depths, modifiers drawn and applied, each pays its choice; Early Collapse and Reinforcements in a fight), `tests/run/test_shrine.gd`, `tests/run/test_events.gd` (every scene's every choice, greyed ones, Walk away; each oath's burden, reward, and end); `test_camp.gd`, `test_economy.gd`, `test_magpie.gd`, `test_run_screens.gd`, and the run report's test changed on purpose; the bench's fingerprints unchanged; the run report runs.
+
+### 16.10 Questions (answered in 16.11)
+
+- **AC. Approve this section, split as 16.2** (8a–8c, a commit each)?
+- **AD. The nodes a day shows** (`days-and-nodes.md` leaves 2 or 3 open): Camp always plus 2 drawn from Event, Rift Tear, and the Magpie (from day 3, at most twice), each equally likely?
+- **AE. A lost fight's replay:** what the last node set up for it (Fortify, Dig In, a Rift Tear's depth and modifiers) holds for the replay, or is spent by the loss?
+- **AF. The events' open questions:** an Event node is a Bloodied Oath 1 time in 4; Whispering Stones gives a third of the vowed path's deed threshold (never past it); the Mirror Pool can't take a transformed hero; A Bleeding Tear's seal isn't offered when tomorrow is an elite or the boss?
+
+### 16.11 Decisions (the playtester, 2026-10-01)
+
+40. **Step 8 is built as this section says, in three parts** (Question AC): 8a the day's new order and the nodes, 8b Rift Tear's depths, the rift modifiers, and the Shrine's offerings, 8c the Event node and the Bloodied Oath.
+41. **Each day shows Camp and two more nodes** (Question AD): each of the two is drawn from Event, Rift Tear, and the Magpie (he only from day 3, at most twice an act), so a day can show two Events (two different scenes, or a scene and an oath). A second Rift Tear or Magpie in one day is drawn as an Event instead, since the same node twice would be no choice.
+42. **What a node set up for tomorrow's fight holds for its replay** (Question AE): Fortify, Dig In's rock, and a Rift Tear's depth and modifiers stay through a lost fight's replay and are spent once the fight is won.
+43. **The events' open questions** (Question AF): an Event node is a Bloodied Oath 1 time in 4; Whispering Stones gives a third of the vowed path's deed threshold, never past it; the Mirror Pool can't take a transformed hero; A Bleeding Tear's seal isn't offered when tomorrow is an elite or the boss.
+
+### 16.12 Built in step 8a (2026-10-01)
+
+- **The phases** (`RunState.Phase`): ROUTE, LOADOUT, AFTER, SHOP, NODES, NODE, ENDED; CAMP is gone, and the save is version 4. `RunState` keeps `nodes` (today's), `node` (the one taken), `taken_nodes` (each day's, "camp:<place>", "rift_tear", or "magpie", for the act map), and `magpie_visits`; `magpie_day` is gone.
+- **The order** (`RunFlow`): a day starts at the route (`_start_day`), day 1 included. `finish_day` moves on from after the fight to the Pedlar (`open_shop("pedlar")`), or on the boss's day ends the run; `leave_shop` draws the nodes (`Offers.nodes`); `choose_node` takes one (Camp draws its place and options with `Offers.camp`, as built; Rift Tear sets `rift_tear`; the Magpie opens his stall and counts the visit); `leave_node` waits for what the node opened (a pick, a relic choice, a Hunt, Map the Rift's swap), keeps the node in `taken_nodes`, and starts the next day. `choose_camp` works only in a Camp node; `leave_camp` is gone. **The pre-boss shop** is the Pedlar of the day before the boss's (`pre_boss_shop`).
+- **A loss** replays the day from the route; Fortify, Dig In's rock, a Rift Tear, and a steadying Rest hold until the day's fight is won (Decision 42).
+- **The nodes** (`Offers.nodes`, on `RunRandom.NODE` by act and day): Camp, then two draws from Rift Tear and the Magpie (he from `magpie_from_day` 3 while `magpie_visits` < `magpie_per_act` 2); a repeat is skipped until 8c's Events, so a day shows 2 or 3. `camps.json`'s `nodes` name each (name, icon, text; `CampsDef.nodes`), and the Pedlar, Rift Tear, and the Magpie left the options and menus (Rift Scar's takes Rest and Scout).
+- **The screens:** the day screen's shop (the Pedlar's stage, then Leave the Pedlar), the nodes (a card each, "Go to Camp"), and a node (camp's options, the Magpie's stall, or the Rift Tear taken; then "On to day N"); after the fight's button reads "To the Pedlar". The act map shows each past day's node (`taken_nodes`) and today's once taken. `HOW-TO-PLAY.txt` follows.
+- **The bot** takes the Pedlar's wares as before, then the Magpie when he's shown, else Camp (and its options as before, without the Pedlar, the Magpie, and Rift Tear). **The run report** counts the nodes shown and taken.
+- **Tests:** `tests/run/test_new_day.gd` (6: the Pedlar after every fight and the pre-boss shop, the boss's day, a node waiting for what it opened, a loss replaying with Fortify and a Rift Tear held, the node draw, the Magpie's visits, the save), with `tests/run/run_test_kit.gd` to drive a day; the run, camp, economy, growth, loadout, Magpie, relic, screen, and art tests follow the new order on purpose.
+- **Checked:** 889 tests pass; the data validates; the bench's 24 fingerprints are unchanged (no fight changed). **The run report** (54 runs): **81% of runs won** (as after 7d); a run is shown Camp 5.4 times, Rift Tear 4.8, and the Magpie 1.7, and the bot takes Camp 3.6 and the Magpie 1.7 (never Rift Tear); 86.1 shards earned and 70.3 spent a run (the Pedlar every day: 57.8 spent after step 6), 3.5 relics.
 
 ## Answered (2026-09-30)
 

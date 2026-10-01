@@ -4,6 +4,7 @@ extends GutTest
 ## after-fight pick.
 
 const Bot = preload("res://tools/run_bot.gd")
+const R = preload("res://tests/run/run_test_kit.gd")
 
 var _run: RunContent
 
@@ -22,7 +23,6 @@ func _start(run_seed: int = 7) -> RunFlow:
 ## A flow at today's fight (the first option), ready to record a result.
 func _at_fight(run_seed: int = 7) -> RunFlow:
 	var flow: RunFlow = _start(run_seed)
-	flow.leave_camp()
 	flow.choose_fight(0)
 	return flow
 
@@ -115,13 +115,11 @@ func test_a_filled_deed_transforms_after_the_fight() -> void:
 	assert_false(flow.state.hero("maren").transformed, "one short")
 	assert_eq(flow.state.just_transformed, [] as Array[String])
 	flow.take_shards()
-	flow.finish_day()
-	flow.leave_camp()
+	assert_eq(R.next_day(flow), "")
 	flow.choose_fight(0)
 	flow.record(Bot.formation(), _result(FightResult.Outcome.DEFEAT, _deed("maren", "deadeye", 1)))
 	assert_true(flow.state.hero("maren").transformed, "a lost fight's deeds transform too")
 	assert_eq(flow.state.just_transformed, ["maren"] as Array[String])
-	flow.leave_camp()
 	flow.choose_fight(0)
 	var errors: Array[String] = []
 	var setup: FightSetup = flow.fight_setup(Bot.formation(), errors)
@@ -138,8 +136,7 @@ func test_only_the_vowed_deed_transforms() -> void:
 	assert_eq(flow.switch_vow("maren", "trapper"), "", "switching between fights")
 	assert_eq(flow.state.hero("maren").deeds["trapper"], 999999, "the new path's deed keeps what it had")
 	flow.take_shards()
-	flow.finish_day()
-	flow.leave_camp()
+	assert_eq(R.next_day(flow), "")
 	flow.choose_fight(0)
 	flow.record(Bot.formation(), _result(FightResult.Outcome.VICTORY))
 	assert_true(flow.state.hero("maren").transformed, "it fills after the next fight")
@@ -217,13 +214,11 @@ func test_picks_run_out_gracefully() -> void:
 	assert_true(run.is_valid(), str(run.errors))
 	var errors: Array[String] = []
 	var flow: RunFlow = RunFlow.start(run, 7, Bot.first_vows(run.content), errors)
-	flow.leave_camp()
 	flow.choose_fight(0)
 	flow.record(Bot.formation(), _result(FightResult.Outcome.VICTORY))
 	assert_eq(flow.state.pick, ["glow"] as Array[String], "one card left, whoever's it is")
 	flow.take_pick(0)
-	flow.finish_day()
-	flow.leave_camp()
+	assert_eq(R.next_day(flow), "")
 	flow.choose_fight(0)
 	flow.record(Bot.formation(), _result(FightResult.Outcome.VICTORY))
 	assert_eq(flow.state.pick, [] as Array[String], "nothing left: no pick")

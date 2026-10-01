@@ -22,6 +22,8 @@ const PEDLAR: int = 11
 const MAGPIE: int = 12
 const RELIC: int = 13
 const HUNT: int = 14
+## The day's nodes (phase 5c step 8).
+const NODE: int = 15
 
 const MIX: int = 0x2545F4914F6CDD1D
 

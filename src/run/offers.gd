@@ -94,25 +94,30 @@ static func camp(run: RunContent, state: RunState) -> Array:
 	var offered: Array[String] = place.options.filter(func(id: String) -> bool: return camp_option_open(run, state, id))
 	var picked: Array[String] = _draw(rng, offered, run.camps.shown)
 	var options: Array[String] = offered.filter(func(id: String) -> bool: return picked.has(id))
-	# The boss day's camp always has the pre-boss shop (phase 5c step 5a).
-	if state.day >= 1 and state.day <= run.act.days.size() and run.act.days[state.day - 1] == "boss" and not options.has("pedlar"):
-		options.append("pedlar")
 	return [place.id, options]
+
+
+## The nodes shown at the end of the day (phase 5c step 8, Decision 41):
+## Camp, then two each drawn from Rift Tear and the Magpie (from
+## magpie_from_day, while he's come fewer than magpie_per_act times this
+## act), each equally likely; the same node twice is drawn once (an Event
+## takes a repeat's place once events come, step 8c).
+static func nodes(run: RunContent, state: RunState) -> Array[String]:
+	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.NODE, state.act, state.day])
+	var kinds: Array[String] = ["rift_tear"]
+	if state.day >= run.camps.magpie_from_day and state.magpie_visits < run.camps.magpie_per_act:
+		kinds.append("magpie")
+	var shown: Array[String] = ["camp"]
+	for i: int in 2:
+		var kind: String = kinds[rng.range_int(kinds.size())]
+		if not shown.has(kind):
+			shown.append(kind)
+	return shown
 
 
 ## Whether a camp option has anything to do today: a Hunt needs a pack
 ## allowed today; Map the Rift and Scout need days ahead (Map the Rift, one
 ## that isn't the boss's).
-## Where a day camped (or camps) on an attempt: its camp stream's first
-## draw, so the act map can show a past day's place without the state
-## keeping it (docs/plans/rebuild-phase5b-art.md, section 4). "magpie" on the
-## Magpie's day's first try.
-static func place(run: RunContent, run_seed: int, act: int, day: int, attempt: int, magpie_day: int) -> String:
-	if day == magpie_day and attempt == 0:
-		return "magpie"
-	return _draw_place(run, RunRandom.stream(run_seed, [RunRandom.CAMP, act, day, attempt])).id
-
-
 static func _draw_place(run: RunContent, rng: SimRng) -> CampsDef.Place:
 	return run.camps.places[rng.range_int(run.camps.places.size())]
 
@@ -126,14 +131,6 @@ static func camp_option_open(run: RunContent, state: RunState, option: String) -
 		"scout":
 			return state.day < run.act.days.size()
 	return true
-
-
-## The day the Magpie comes: one of camps.magpie_days, drawn once a run.
-static func magpie_day(run: RunContent, run_seed: int, act: int) -> int:
-	var days: Array[int] = run.camps.magpie_days
-	if days.is_empty():
-		return 0
-	return days[RunRandom.stream(run_seed, [RunRandom.MAGPIE, act, 0]).range_int(days.size())]
 
 
 ## A Hunt's pack: one of the hunt encounters allowed today ("" if none).

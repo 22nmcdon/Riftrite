@@ -3,7 +3,8 @@ extends RefCounted
 ## run bot plays many runs, and this measures pacing: runs won and where the
 ## rest end, when each hero first transforms (the design: the first around
 ## days 3-4, all three by the boss), picks per hero, shards earned and
-## spent, wounds taken, relics found, and how each encounter goes. A report,
+## spent, wounds taken, relics found, the nodes shown and taken (phase 5c
+## step 8), and how each encounter goes. A report,
 ## not a gate. tools/run_runner.gd prints it.
 ## Each run's vows cycle through every combination of paths (seed n takes
 ## combination n mod 27), so every path is measured.
@@ -34,6 +35,9 @@ class RunLine:
 	var relic_tiers: Array[int] = [0, 0, 0, 0, 0, 0]
 	## Items owned at the end, by rank (phase 5c step 6: I, II, III).
 	var item_ranks: Array[int] = [0, 0, 0]
+	## Node kind -> the days it was shown, and taken (phase 5c step 8).
+	var nodes_shown: Dictionary[String, int] = {}
+	var nodes_taken: Dictionary[String, int] = {}
 	var errors: Array[String] = []
 	## [encounter id, won?] for each fight.
 	var fights: Array[Array] = []
@@ -90,6 +94,9 @@ static func play(run: RunContent, run_seed: int, look_ahead: bool = true) -> Run
 			before[hero.id] = hero.deeds[hero.path]
 		if state.phase == RunState.Phase.ENDED:
 			break
+		if state.phase == RunState.Phase.NODES:
+			for node: String in state.nodes:
+				line.nodes_shown[node] = line.nodes_shown.get(node, 0) + 1
 		var refused: String = Bot.step_once(flow, hexes, line.errors, look_ahead)
 		if not refused.is_empty():
 			line.errors.append("day %d (%s): %s" % [state.day, RunState.PHASE_NAMES[state.phase], refused])
@@ -130,6 +137,10 @@ static func play(run: RunContent, run_seed: int, look_ahead: bool = true) -> Run
 				line.stack_points += int(amount)
 		if not line.transformed_on.has(hero.id):
 			line.transformed_on[hero.id] = 0
+	for node: String in state.taken_nodes:
+		if not node.is_empty():
+			var kind: String = node.get_slice(":", 0)
+			line.nodes_taken[kind] = line.nodes_taken.get(kind, 0) + 1
 	line.relics = state.relics.size()
 	for id: String in state.relics:
 		line.relic_tiers[run.relics[id].tier] += 1
@@ -219,6 +230,12 @@ static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 		var total: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.item_ranks[rank], 0)
 		by_rank.append("rank %s %.1f" % [ItemDef.RANK_NAMES[rank], float(total) / maxi(n, 1)])
 	out.append("Items held at the end per run: %s" % ", ".join(by_rank))
+	var by_node: Array[String] = []
+	for node: String in CampsDef.NODES:
+		var shown: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.nodes_shown.get(node, 0), 0)
+		var taken: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.nodes_taken.get(node, 0), 0)
+		by_node.append("%s shown %.1f, taken %.1f" % [run.camps.nodes[node].name, float(shown) / maxi(n, 1), float(taken) / maxi(n, 1)])
+	out.append("Nodes per run: %s" % ", ".join(by_node))
 	out.append("")
 	out.append("Encounters (fights won of fought):")
 	for encounter_id: String in content.encounter_ids:

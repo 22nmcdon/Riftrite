@@ -1,7 +1,7 @@
 extends GutTest
 ## The run on screen (docs/plans/rebuild-phase5-run.md, section 11), driven
 ## headless through a real Main: the title's New run and Continue, vowing,
-## a day (camp, route, loadout), the fight on the arena (exactly RunFlow's),
+## a day (route, loadout, the fight, the Pedlar, a node), the fight on the arena (exactly RunFlow's),
 ## the pick after it, a Hunt, the hero bar and panel in a run, and the run's
 ## end. Every action is saved.
 
@@ -26,7 +26,7 @@ func _main() -> Main:
 	return main
 
 
-## A Main at day 1's camp of a new run from seed 7, vowed to each hero's
+## A Main at day 1's route of a new run from seed 7, vowed to each hero's
 ## first path.
 func _started() -> Main:
 	var main: Main = _main()
@@ -70,19 +70,14 @@ func test_vowing_and_starting() -> void:
 	await wait_frames(1)
 
 
-func test_a_day_from_camp_to_the_next() -> void:
+func test_a_day_from_the_route_to_the_next() -> void:
 	var main: Main = _started()
 	var flow: RunFlow = _flow(main)
-	flow.state.camp.assign(["scout"])
-	(main.screen as RunDayScreen).refresh()
-	assert_true(U.press(main.screen, "Choose"))
-	assert_eq(flow.state.scouted, [2, 3] as Array[int])
-	assert_eq(_saved(), JSON.stringify(flow.state.to_dict()), "each action is saved")
-	assert_true(U.press(main.screen, "Break camp"))
-	assert_eq(flow.state.phase, RunState.Phase.ROUTE)
+	assert_eq(flow.state.phase, RunState.Phase.ROUTE, "day 1 starts at the route (phase 5c step 8)")
 	assert_string_contains(U.text_of(main.screen), "Choose today's fight")
 	assert_true(U.press(main.screen, "Fight this"))
 	assert_eq(flow.state.phase, RunState.Phase.LOADOUT)
+	assert_eq(_saved(), JSON.stringify(flow.state.to_dict()), "each action is saved")
 	assert_true(U.press(main.screen, "To the fight"))
 	assert_true(main.screen is ArenaScreen)
 	var arena: ArenaScreen = main.screen
@@ -98,12 +93,22 @@ func test_a_day_from_camp_to_the_next() -> void:
 	assert_eq(flow.state.fought.size(), 1)
 	assert_eq(flow.state.fought[0].outcome, expected.outcome)
 	if expected.outcome == FightResult.Outcome.DEFEAT:
-		assert_eq([flow.state.phase, flow.state.attempt], [RunState.Phase.CAMP, 1], "the day again")
+		assert_eq([flow.state.phase, flow.state.attempt], [RunState.Phase.ROUTE, 1], "the day again")
 	else:
 		assert_string_contains(U.text_of(main.screen), "Choose an upgrade")
 		assert_true(U.press(main.screen, "shards instead"))
-		assert_true(U.press(main.screen, "Next day"))
-		assert_eq([flow.state.day, flow.state.phase], [2, RunState.Phase.CAMP])
+		assert_true(U.press(main.screen, "To the Pedlar"))
+		assert_eq([flow.state.phase, flow.state.shop], [RunState.Phase.SHOP, "pedlar"])
+		assert_string_contains(U.text_of(main.screen), "The Pedlar")
+		assert_true(U.press(main.screen, "Leave the Pedlar"))
+		assert_eq(flow.state.phase, RunState.Phase.NODES)
+		assert_true(U.press(main.screen, "Go to Camp"))
+		flow.state.camp.assign(["scout"])
+		(main.screen as RunDayScreen).refresh()
+		assert_true(U.press(main.screen, "Choose"))
+		assert_eq(flow.state.scouted, [2, 3] as Array[int])
+		assert_true(U.press(main.screen, "On to day 2"))
+		assert_eq([flow.state.day, flow.state.phase], [2, RunState.Phase.ROUTE])
 	assert_eq(_saved(), JSON.stringify(flow.state.to_dict()))
 	await wait_frames(1)
 
@@ -121,29 +126,32 @@ func test_continuing_a_saved_run() -> void:
 func test_a_hunt_at_camp() -> void:
 	var main: Main = _started()
 	var flow: RunFlow = _flow(main)
+	flow.state.phase = RunState.Phase.NODES
+	flow.state.nodes.assign(["camp"])
+	flow.choose_node(0)
 	flow.state.camp.assign(["hunt"])
 	(main.screen as RunDayScreen).refresh()
 	U.press(main.screen, "Choose")
 	assert_ne(flow.state.hunt, "")
-	assert_false(U.press(main.screen, "Break camp") and flow.state.phase != RunState.Phase.CAMP, "not before the Hunt")
+	assert_false(U.press(main.screen, "On to day") and flow.state.phase != RunState.Phase.NODE, "not before the Hunt")
 	assert_true(U.press(main.screen, "Fight the Hunt"))
 	var arena: ArenaScreen = main.screen
 	assert_eq(arena.encounter.tier, "hunt")
 	U.press(arena, "Fight")
 	arena.skip()
 	U.press(arena, "Continue")
-	assert_eq([flow.state.hunt, flow.state.losses, flow.state.phase], ["", 0, RunState.Phase.CAMP], "a Hunt is never a loss")
-	assert_true(U.press(main.screen, "Break camp"))
+	assert_eq([flow.state.hunt, flow.state.losses, flow.state.phase], ["", 0, RunState.Phase.NODE], "a Hunt is never a loss")
+	assert_true(U.press(main.screen, "On to day 2"))
 	await wait_frames(1)
 
 
 func test_the_shop_and_the_loadout() -> void:
 	var main: Main = _started()
 	var flow: RunFlow = _flow(main)
-	flow.state.camp.assign(["pedlar"])
 	flow.state.shards = 20
+	flow.state.phase = RunState.Phase.SHOP
+	flow.open_shop("pedlar")
 	(main.screen as RunDayScreen).refresh()
-	U.press(main.screen, "Choose")
 	assert_string_contains(U.text_of(main.screen), "The Pedlar")
 	var ware: String = flow.state.wares[0]
 	var numbers: String = ModInfo.item_numbers(flow.run.items[ware], null, flow.run.content)
@@ -151,8 +159,10 @@ func test_the_shop_and_the_loadout() -> void:
 	assert_string_contains(U.text_of(main.screen), numbers, "a ware's card shows its amounts (phase 5c, step 2)")
 	assert_true(U.press(main.screen, "Buy"))
 	assert_eq(flow.state.stash, [ware] as Array[String])
-	U.press(main.screen, "Break camp")
-	U.press(main.screen, "Fight this")
+	assert_true(U.press(main.screen, "Leave the Pedlar"))
+	assert_true(U.press(main.screen, "Go to Camp"))
+	assert_true(U.press(main.screen, "On to day 2"))
+	assert_true(U.press(main.screen, "Fight this"))
 	assert_string_contains(U.text_of(main.screen), "Stash")
 	assert_true(U.press(main.screen, "To Vell"))
 	assert_eq(flow.state.hero("vell").slots[0], ware)
@@ -204,7 +214,6 @@ func test_the_runs_end() -> void:
 func test_the_route_is_the_act_map() -> void:
 	var main: Main = _started()
 	var flow: RunFlow = _flow(main)
-	U.press(main.screen, "Break camp")
 	var day: RunDayScreen = main.screen
 	var map: ActMap = day.act_map
 	assert_not_null(map, "the route shows the map")
@@ -214,7 +223,7 @@ func test_the_route_is_the_act_map() -> void:
 		assert_eq(nodes.size(), (flow.state.options[each_day - 1] as Array).size(), "day %d's fights" % each_day)
 		for node: TextureButton in nodes:
 			assert_eq(node.disabled, each_day != 1, "only today's can be clicked")
-	assert_eq(map.places.keys(), [1], "only the days reached show their place")
+	assert_eq(map.places.keys(), [] as Array, "a day shows its node once one is taken (phase 5c step 8)")
 	var second: String = flow.state.today()[1]
 	(map.fights[1][1] as TextureButton).pressed.emit()
 	assert_eq(map.selected, 1)
@@ -226,13 +235,15 @@ func test_the_route_is_the_act_map() -> void:
 	flow.state.fought.append(RunState.Fought.from_dict({"day": 1, "attempt": 0, "encounter": second, "outcome": int(FightResult.Outcome.VICTORY), "seconds": 30}))
 	flow.state.day = 2
 	flow.state.phase = RunState.Phase.ROUTE
+	flow.state.taken_nodes.assign(["camp:hunters_blind"])
 	day.refresh()
 	map = day.act_map
 	assert_eq(map._fought_there(1), 1)
 	assert_eq((map.fights[1][1] as TextureButton).modulate.a, 1.0, "the fight fought stands out")
 	assert_lt((map.fights[1][0] as TextureButton).modulate.a, 1.0, "the other is dimmed")
-	assert_eq(map.places.keys(), [1, 2])
-	assert_eq(map._place_id(1), Offers.place(flow.run, flow.state.seed_value, 1, 1, 0, flow.state.magpie_day))
+	assert_eq(map.places.keys(), [1])
+	assert_eq(map._place_id(1), "camp:hunters_blind")
+	assert_eq(map.places[1].tooltip_text, "Day 1 · %s" % RunDayScreen.node_name(flow.run, "camp:hunters_blind"))
 	await wait_frames(1)
 
 

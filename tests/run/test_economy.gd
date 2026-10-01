@@ -5,6 +5,7 @@ extends GutTest
 ## selling are test_loadout.gd's.
 
 const Bot = preload("res://tools/run_bot.gd")
+const R = preload("res://tests/run/run_test_kit.gd")
 
 var _run: RunContent
 
@@ -94,7 +95,6 @@ func test_the_loadout_reaches_the_fight() -> void:
 	flow.equip("brannoc", 0, "fleet")
 	flow.equip("brannoc", 1, "wait_to_heal_orders")
 	flow.equip("maren", 0, "plant_feet_orders")
-	flow.leave_camp()
 	flow.choose_fight(0)
 	var errors: Array[String] = []
 	var setup: FightSetup = flow.fight_setup(Bot.formation(), errors)
@@ -108,6 +108,8 @@ func test_the_pedlar() -> void:
 	var flow: RunFlow = _start()
 	var state: RunState = flow.state
 	assert_eq(flow.buy(0), "no shop is open")
+	assert_eq(flow.open_shop("pedlar"), "can't open a shop now (the day is at route)")
+	state.phase = RunState.Phase.SHOP
 	assert_eq(flow.open_shop("tinker"), "there's no shop \"tinker\"")
 	assert_eq(flow.open_shop("pedlar"), "")
 	assert_eq(state.wares.size(), _run.act.pedlar_wares)
@@ -129,15 +131,16 @@ func test_the_pedlar() -> void:
 	state.shards = 0
 	assert_eq(flow.reroll(), "a reroll costs 2 shards; there are 0")
 	assert_string_starts_with(flow.buy(1), "it costs")
-	flow.leave_camp()
-	assert_eq([state.shop, state.wares], ["", [] as Array[String]], "leaving camp closes it")
-	assert_eq(flow.open_shop("pedlar"), "can't open a shop now (the day is at route)")
+	assert_eq(flow.leave_shop(), "")
+	assert_eq([state.shop, state.wares, state.phase], ["", [] as Array[String], RunState.Phase.NODES], "leaving closes it, for the nodes")
+	assert_eq(flow.open_shop("pedlar"), "can't open a shop now (the day is at nodes)")
 
 
 func test_the_magpie() -> void:
 	var flow: RunFlow = _start()
 	var state: RunState = flow.state
-	assert_eq(flow.open_shop("magpie"), "")
+	R.to_magpie(flow)
+	assert_eq(state.shop, "magpie")
 	assert_eq(state.wares.size(), 2, "two charms (phase 5c step 6e)")
 	assert_eq(flow.price_of("fleet"), 12, "12 shards each")
 	assert_eq(flow.reroll(), "only the Pedlar rerolls")
@@ -148,7 +151,7 @@ func test_treating_a_wound() -> void:
 	var state: RunState = flow.state
 	state.hero("vell").wounds = 2
 	assert_eq(flow.treat_wound("vell"), "no shop is open")
-	flow.open_shop("pedlar")
+	R.to_pedlar(flow)
 	assert_eq(flow.treat_wound("vell"), "")
 	assert_eq([state.hero("vell").wounds, state.shards], [1, _run.act.start_shards - _run.act.wound_price])
 	assert_eq(flow.treat_wound("maren"), "maren has no wounds")
@@ -158,7 +161,7 @@ func test_treating_a_wound() -> void:
 
 func test_the_shop_and_stash_save() -> void:
 	var flow: RunFlow = _start()
-	flow.open_shop("pedlar")
+	R.to_pedlar(flow)
 	flow.state.shards = 20
 	flow.buy(2)
 	flow.reroll()

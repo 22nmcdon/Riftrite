@@ -154,7 +154,6 @@ func test_the_run_carries_the_lantern() -> void:
 	var vell: RunState.Hero = flow.state.hero("vell")
 	vell.transformed = true
 	vell.upgrades.append("first_lantern")
-	flow.leave_camp()
 	flow.choose_fight(0)
 	var rocks: Array[Vector2i] = flow.fight_setup(Bot.formation(), errors).rocks
 	var spot: Vector2i = Vector2i(-1, -1)

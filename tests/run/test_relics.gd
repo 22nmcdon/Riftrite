@@ -9,6 +9,7 @@ extends GutTest
 
 const Bot = preload("res://tools/run_bot.gd")
 const K = preload("res://tests/sim/sim_test_kit.gd")
+const R = preload("res://tests/run/run_test_kit.gd")
 
 var _run: RunContent
 
@@ -43,8 +44,9 @@ func _won(fallen: Array[String] = []) -> FightResult:
 
 
 func _to_fight(flow: RunFlow) -> void:
-	if flow.state.phase == RunState.Phase.CAMP:
-		assert_eq(flow.leave_camp(), "")
+	if flow.state.phase == RunState.Phase.SHOP:
+		flow.close_shop()
+		flow.state.phase = RunState.Phase.ROUTE
 	assert_eq(flow.choose_fight(0), "")
 
 
@@ -178,14 +180,14 @@ func test_prices_and_rerolls() -> void:
 	var flow: RunFlow = _start()
 	var state: RunState = flow.state
 	state.shards = 100
-	flow.open_shop("pedlar")
+	R.to_pedlar(flow)
 	assert_eq([flow.reroll_price(), flow.wound_price()], [1, 4])
 	flow.reroll()
 	flow.reroll()
 	assert_eq(flow.reroll_price(), 3, "1, then 2, then 3")
 	flow.close_shop()
 	_hold(flow, ["tinkers_purse", "merchants_covenant", "menders_purse"])
-	flow.open_shop("pedlar")
+	R.to_pedlar(flow)
 	assert_eq([flow.reroll_price(), flow.wound_price()], [0, 2], "the first reroll free; a wound 2 less")
 	flow.reroll()
 	flow.reroll()
@@ -197,7 +199,7 @@ func test_shop_rules() -> void:
 	var state: RunState = flow.state
 	_hold(flow, ["the_magpies_scale", "misers_vault"])
 	state.shards = 30
-	flow.open_shop("pedlar")
+	R.to_pedlar(flow)
 	assert_eq(state.shards, 36, "Miser's Vault: 1 per 5 held, at most 6")
 	assert_eq([state.shop_relics.size(), state.wares.size()], [2, _run.act.pedlar_wares + 1], "one more relic and one more ware")
 
@@ -228,7 +230,7 @@ func test_bounty_board_pays_once_for_a_streak() -> void:
 		flow.record(Bot.formation(), _won(fallen))
 		flow.take_shards()
 		flow.state.relic_choice.clear()
-		flow.finish_day()
+		assert_eq(R.next_day(flow), "")
 	assert_eq(state.streak, 2, "the fall reset it")
 	var before: int = state.shards
 	_to_fight(flow)
@@ -311,10 +313,10 @@ func test_the_hollow_covenant_shares_the_best_stats() -> void:
 func test_the_pre_boss_shop() -> void:
 	var flow: RunFlow = _start()
 	var state: RunState = flow.state
-	state.day = 7
-	flow.state.camp = Offers.camp(_run, state)[1]
-	assert_true(state.camp.has("pedlar"), "the boss day's camp always has the Pedlar")
-	assert_eq(flow.open_shop("pedlar"), "")
+	state.day = 6
+	state.phase = RunState.Phase.AFTER
+	assert_eq(flow.finish_day(), "")
+	assert_eq(state.shop, "pedlar", "the shop after the fight the day before the boss's (phase 5c step 8)")
 	assert_true(flow.pre_boss_shop())
 	assert_eq(state.shop_relics.size(), 2)
 	assert_eq(_run.relics[state.shop_relics[0]].tier, RelicDef.Tier.LEGENDARY, "a legendary first")
@@ -339,7 +341,7 @@ func test_an_elite_sometimes_offers_an_epic() -> void:
 
 func test_shop_relics_save() -> void:
 	var flow: RunFlow = _start()
-	flow.open_shop("pedlar")
+	R.to_pedlar(flow)
 	flow.state.shards = 5
 	flow.reroll()
 	var loaded: RunState = RunState.from_dict(JSON.parse_string(JSON.stringify(flow.state.to_dict())))
@@ -601,7 +603,7 @@ func test_a_bond_relic_is_free_and_found_once() -> void:
 	var state: RunState = flow.state
 	_hold(flow, ["hagglers_charm"])
 	state.shards = 0
-	flow.open_shop("pedlar")
+	R.to_pedlar(flow)
 	state.shop_relics.assign(["the_watchtower_stone"])
 	assert_eq(flow.relic_price(0), 0, "free, whatever the prices")
 	assert_eq(flow.buy_relic(0), "")

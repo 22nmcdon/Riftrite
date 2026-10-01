@@ -6,6 +6,7 @@ extends GutTest
 ## counts for a tactic and a sigil.
 
 const Bot = preload("res://tools/run_bot.gd")
+const R = preload("res://tests/run/run_test_kit.gd")
 
 var _run: RunContent
 
@@ -43,7 +44,6 @@ func _result(outcome: FightResult.Outcome, tallies: Dictionary = {}) -> FightRes
 
 
 func _to_fight(flow: RunFlow) -> void:
-	assert_eq(flow.leave_camp(), "")
 	assert_eq(flow.choose_fight(0), "")
 
 
@@ -54,7 +54,7 @@ func test_prices_and_ranks_by_kind() -> void:
 	assert_eq(_run.act.item_ranks["sigil"], [10, 25])
 	assert_eq(_run.act.item_ranks["gambit"], [3, 6])
 	var flow: RunFlow = _start()
-	flow.open_shop("pedlar")
+	R.to_pedlar(flow)
 	assert_eq([flow.price_of("fleet"), flow.price_of("echo"), flow.price_of("plant_feet_orders")], [6, 8, 4])
 	assert_eq([flow.sell_price("fleet"), flow.sell_price("echo"), flow.sell_price("plant_feet_orders")], [3, 4, 2], "half, rounded down")
 
@@ -69,7 +69,7 @@ func test_a_charm_ranks_up_with_won_fights() -> void:
 		assert_eq(flow.state.item_ranks["ember_tipped"], 1)
 		flow.state.pick.clear()
 		flow.state.relic_choice.clear()
-		assert_eq(flow.finish_day(), "")
+		assert_eq(R.next_day(flow), "")
 	assert_eq(flow.rank_progress("ember_tipped"), Vector2i(3, 4))
 	_to_fight(flow)
 	flow.record(Bot.formation(), _result(FightResult.Outcome.DEFEAT))
@@ -118,7 +118,7 @@ func test_the_fight_tallies_casts_and_standing() -> void:
 
 func test_a_bought_copy_is_a_rank_up() -> void:
 	var flow: RunFlow = _start()
-	flow.open_shop("pedlar")
+	R.to_pedlar(flow)
 	flow.state.shards = 100
 	var ware: String = flow.state.wares[0]
 	assert_eq(flow.buy(0), "")
@@ -167,7 +167,7 @@ func test_selling() -> void:
 	flow.state.item_ranks["fleet"] = 3
 	var shards: int = flow.state.shards
 	assert_eq(flow.sell("fleet"), "only the Pedlar buys items")
-	flow.open_shop("pedlar")
+	R.to_pedlar(flow)
 	shards = flow.state.shards
 	assert_eq(flow.sell("fleet"), "")
 	assert_eq([flow.state.shards, flow.state.hero("maren").slots[0], flow.state.item_ranks.has("fleet")], [shards + 3, "", false],
@@ -175,10 +175,8 @@ func test_selling() -> void:
 	assert_eq(flow.sell("echo"), "")
 	assert_eq([flow.state.shards, flow.state.stash.has("echo")], [shards + 7, false], "and from the stash")
 	assert_eq(flow.sell("echo"), "the run doesn't own \"echo\"")
-	flow.close_shop()
-	flow.state.camp.assign(["magpie"])
 	_own(flow, "echo")
-	flow.open_shop("magpie")
+	R.to_magpie(flow)
 	assert_eq(flow.sell("echo"), "only the Pedlar buys items", "the Magpie doesn't buy items")
 
 

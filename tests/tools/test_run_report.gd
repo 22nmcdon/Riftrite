@@ -27,6 +27,7 @@ func test_a_small_report() -> void:
 		assert_eq(line.vows, Report.vow_combinations(_run.content)[line.seed_value % 27])
 		assert_false(line.fights.is_empty())
 		assert_eq(line.transformed_on.size(), 3)
+		assert_eq(line.nodes_shown.get("camp", 0), line.nodes_taken.values().reduce(func(sum: int, taken: int) -> int: return sum + taken, 0), "Camp shown every day a node was taken")
 	var again: Report.RunLine = Report.play(_run, 2, false)
 	assert_eq([again.outcome, again.day, again.fights], [lines[1].outcome, lines[1].day, lines[1].fights], "a run is its seed's")
 	var text: String = Report.summary(_run, lines)
@@ -34,3 +35,4 @@ func test_a_small_report() -> void:
 	assert_string_contains(text, "First transformation")
 	assert_string_contains(text, "Runs with errors: 0")
 	assert_string_contains(text, "Picks per run by layer: hero")
+	assert_string_contains(text, "Nodes per run: Camp shown")

@@ -25,7 +25,6 @@ func _at_fight(run_seed: int = 7) -> RunFlow:
 	var errors: Array[String] = []
 	var flow: RunFlow = RunFlow.start(_run, run_seed, Bot.first_vows(_run.content), errors)
 	assert_eq(errors, [] as Array[String])
-	flow.leave_camp()
 	flow.choose_fight(0)
 	return flow
 

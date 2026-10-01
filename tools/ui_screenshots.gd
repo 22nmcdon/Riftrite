@@ -111,19 +111,9 @@ func _run_screens() -> void:
 	await _snap("run_vows")
 	start.run_started.emit(start.vows, start.run_seed)
 	var flow: RunFlow = _main.run_session.flow
-	await _snap("run_camp")
-	flow.state.camp.assign(["pedlar", "rest", "train"])
-	flow.state.shards = 12
-	flow.choose_camp(0)
-	_main.show_day()
-	await _snap("run_pedlar")
-	flow.buy(0)
-	flow.buy(1)
-	flow.leave_camp()
-	_main.show_day()
 	await _snap("run_route")
 	flow.choose_fight(0)
-	flow.equip("maren", 0, flow.state.stash[0])
+	flow.state.shards = 12
 	_main.show_day()
 	await _snap("run_loadout")
 	_main.show_run_fight()
@@ -146,15 +136,29 @@ func _run_screens() -> void:
 	day.open_panel("maren")
 	await _snap("run_panel_maren")
 	day.hero_panel.close()
-	# The Magpie's stall (phase 5b's shop scenes).
+	# After the fight, the Pedlar; then the day's nodes.
 	flow.state.pick.clear()
 	flow.state.relic_choice.clear()
-	flow.state.phase = RunState.Phase.CAMP
-	flow.state.place = ""
-	flow.state.camp.assign(["magpie"])
-	flow.state.camp_used = "magpie"
-	flow.state.shop = "magpie"
-	flow.state.wares.assign(Offers.magpie(flow.run, flow.state))
+	flow.state.phase = RunState.Phase.AFTER
+	flow.finish_day()
+	day.refresh()
+	await _snap("run_pedlar")
+	flow.buy(0)
+	flow.buy(1)
+	if not flow.state.stash.is_empty():
+		flow.equip("maren", 0, flow.state.stash[0])
+	flow.leave_shop()
+	flow.state.nodes.assign(["camp", "rift_tear", "magpie"])
+	day.refresh()
+	await _snap("run_nodes")
+	flow.choose_node(0)
+	flow.state.camp.assign(["rest", "train", "fortify"])
+	day.refresh()
+	await _snap("run_camp")
+	# The Magpie's stall (phase 5b's shop scenes).
+	flow.state.phase = RunState.Phase.NODES
+	flow.state.node = ""
+	flow.choose_node(2)
 	day.refresh()
 	await _snap("run_magpie")
 	flow.state.phase = RunState.Phase.ENDED

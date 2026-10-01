@@ -5,9 +5,9 @@ extends Control
 ## and the boss's last. It only reads the run.
 ##   - Each day's island holds that day's fights as nodes by tier
 ##     (art/ui/nodes/: fight, fight_harder, elite, boss), known from the
-##     act's start. Over them, once the day is reached, its place's node
-##     (Offers.place draws a past day's again; a future day's isn't shown,
-##     since a lost day is drawn again on a new try).
+##     act's start. Over them, the node taken at that day's end (phase 5c
+##     step 8: a camp's place, Rift Tear, or the Magpie; RunState.taken_nodes),
+##     and today's once it's taken.
 ##   - Past days are dimmed, with the fight fought there ringed (gold won,
 ##     red lost). Today's nodes glow and can be clicked: a click selects one
 ##     (`selected`, reported by `node_selected`), and whoever shows the map
@@ -78,7 +78,7 @@ func _build() -> void:
 			add_child(node)
 			nodes.append(node)
 		fights[day] = nodes
-		if day <= state.day:
+		if not _place_id(day).is_empty():
 			var place := TextureRect.new()
 			place.texture = ArenaView.art(RunContent.ART_UI + _place_icon(day))
 			place.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -120,27 +120,21 @@ func _attempt(day: int) -> int:
 	return last
 
 
+## The node taken at the end of `day` ("camp:<place>", "rift_tear",
+## "magpie"; "" if none yet).
 func _place_id(day: int) -> String:
 	var state: RunState = session.state()
-	if day == state.day:
-		return state.place if not state.place.is_empty() else "magpie"
-	return Offers.place(session.run, state.seed_value, state.act, day, _attempt(day), state.magpie_day)
+	if day == state.day and not state.node.is_empty():
+		return "camp:" + state.place if state.node == "camp" else state.node
+	return state.taken_nodes[day - 1] if day - 1 < state.taken_nodes.size() else ""
 
 
 func _place_icon(day: int) -> String:
-	var id: String = _place_id(day)
-	for place: CampsDef.Place in session.run.camps.places:
-		if place.id == id:
-			return place.icon
-	return session.run.camps.options["magpie"].icon
+	return RunDayScreen.node_icon(session.run, _place_id(day))
 
 
 func _place_name(day: int) -> String:
-	var id: String = _place_id(day)
-	for place: CampsDef.Place in session.run.camps.places:
-		if place.id == id:
-			return place.name
-	return "the Magpie's camp"
+	return RunDayScreen.node_name(session.run, _place_id(day))
 
 
 ## Where a point of the map (its pixels) is drawn.
