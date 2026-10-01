@@ -5,6 +5,11 @@ extends GutTest
 
 const RunPlayer = preload("res://tools/bots/run_player.gd")
 const Report = preload("res://tools/run_report.gd")
+const Placement = preload("res://tools/bots/placement.gd")
+const Practice = preload("res://tools/bots/practice.gd")
+const GoodBot = preload("res://tools/bots/good_bot.gd")
+const ExpertBot = preload("res://tools/bots/expert_bot.gd")
+const Simple = preload("res://tools/run_bot.gd")
 
 var _run: RunContent
 
@@ -61,3 +66,62 @@ func test_a_run_line_survives_jobs() -> void:
 	assert_eq(Report.summary(_run, read), Report.summary(_run, lines), "the report from a line read back is the same")
 	assert_eq(Report.engines_summary(read), Report.engines_summary(lines))
 	assert_eq(back.bot, "random")
+
+
+## A flow at day `day`'s loadout, its first fight chosen.
+func _at_fight(run_seed: int, encounter_id: String = "") -> RunFlow:
+	var errors: Array[String] = []
+	var flow: RunFlow = RunFlow.start(_run, run_seed, _vows(run_seed), errors)
+	if not encounter_id.is_empty():
+		flow.state.options[0][0] = encounter_id
+	flow.choose_fight(0)
+	return flow
+
+
+func test_the_quick_score_is_the_features_score() -> void:
+	var grid: HexGrid = _run.content.tuning.make_grid()
+	for encounter_id: String in ["pup_warren", "hollow_line", "cairn_watch", "old_mother_ash"]:
+		var errors: Array[String] = []
+		var setup: FightSetup = Encounters.setup(_run.content, encounter_id, Simple.formation(), 1, errors)
+		var scores: Array[float] = []
+		var found: Array[Dictionary] = Placement.best_formations(setup, grid, 4, scores)
+		assert_eq(found.size(), 4, encounter_id)
+		for i: int in found.size():
+			assert_almost_eq(Placement.formation_score(setup, grid, found[i]), scores[i], 0.0001, "%s, formation %d" % [encounter_id, i])
+			if i > 0:
+				assert_true(scores[i] <= scores[i - 1], "best first")
+		assert_eq(setup.heroes.map(func(unit: UnitSetup) -> Vector2i: return Vector2i(unit.col, unit.row)),
+			Simple.formation().values(), "the setup is put back")
+
+
+func test_roles_come_from_the_kits() -> void:
+	var errors: Array[String] = []
+	var setup: FightSetup = Encounters.setup(_run.content, "the_pack", Simple.formation(), 1, errors)
+	assert_eq(Placement.roles_of(setup).map(func(unit: UnitSetup) -> String: return unit.id), ["brannoc", "maren", "vell"], "tank, far, mid")
+
+
+func test_the_good_bot_places_a_legal_formation_without_fighting() -> void:
+	var flow: RunFlow = _at_fight(4)
+	var before: String = JSON.stringify(flow.state.to_dict())
+	var bot: GoodBot = GoodBot.new()
+	bot.begin(flow)
+	var hexes: Dictionary[String, Vector2i] = bot.formation(flow)
+	var again: Dictionary[String, Vector2i] = bot.formation(flow)
+	assert_eq(again, hexes, "the same reading twice")
+	var errors: Array[String] = []
+	assert_not_null(flow.fight_setup(hexes, errors), ", ".join(errors))
+	assert_eq(JSON.stringify(flow.state.to_dict()), before, "reading changes nothing")
+	assert_null(flow.last_result, "and fights nothing")
+
+
+func test_the_expert_never_does_worse_than_the_good_bot() -> void:
+	for encounter_id: String in ["hollow_line", "cairn_watch"]:
+		var flow: RunFlow = _at_fight(6, encounter_id)
+		var good: GoodBot = GoodBot.new()
+		var expert: ExpertBot = ExpertBot.new()
+		var errors: Array[String] = []
+		var good_hexes: Dictionary[String, Vector2i] = good.formation(flow)
+		var expert_hexes: Dictionary[String, Vector2i] = expert.formation(flow)
+		var good_worth: float = Practice.worth(flow.fight_setup(good_hexes, errors, good.markers(flow, good_hexes)), _run.content)
+		var expert_worth: float = Practice.worth(flow.fight_setup(expert_hexes, errors, expert.markers(flow, expert_hexes)), _run.content)
+		assert_true(expert_worth >= good_worth, "%s: expert %.2f, good %.2f" % [encounter_id, expert_worth, good_worth])

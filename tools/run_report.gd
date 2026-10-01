@@ -14,9 +14,11 @@ const Bot = preload("res://tools/run_bot.gd")
 const RunPlayer = preload("res://tools/bots/run_player.gd")
 const BaseBot = preload("res://tools/bots/bot.gd")
 const RandomBot = preload("res://tools/bots/random_bot.gd")
+const GoodBot = preload("res://tools/bots/good_bot.gd")
+const ExpertBot = preload("res://tools/bots/expert_bot.gd")
 ## The bots by name (--bot): "simple-peek" is the report's bot before phase
 ## 6 (the simple bot, trying the named formations in the real fight).
-const BOTS: Array[String] = ["simple", "simple-peek", "random"]
+const BOTS: Array[String] = ["simple", "simple-peek", "random", "good", "expert"]
 
 
 ## One run, as measured.
@@ -106,6 +108,10 @@ static func make_bot(bot_name: String) -> BaseBot:
 	match bot_name:
 		"random":
 			return RandomBot.new()
+		"good":
+			return GoodBot.new()
+		"expert":
+			return ExpertBot.new()
 		"simple-peek":
 			var peeking: BaseBot = BaseBot.new()
 			peeking.label = "simple-peek"
