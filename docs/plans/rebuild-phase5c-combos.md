@@ -721,7 +721,7 @@ The chaos fight takes the new pieces part by part (its seed rescanned if it must
   - The **rules fight**: the three heroes at 20% max HP against Old Mother Ash with every rule on, seed 6, where a hero falls and rises and The Unbending blocks. It repeats exactly (`test_determinism`), replays (`test_arena_log`), and passes the log audit. RISE and RESISTED are left to it, out of the chaos fight.
   - `test_relics.gd` (2 more: the rule relics in the setup and on cards, and no wound for a hero who rose).
   - The tier counts are now 25, 21, 14, 15, 11.
-- **What moved:** no built kit's fight; the bench's fingerprints are unchanged. The run report: (being measured).
+- **What moved:** no built kit's fight; the bench's fingerprints are unchanged. **The run report** (54 runs): **66% of runs won**, as after 5c-1; losses still gather on day 3's elite (10 of 18), and no run errs. The simple bot rarely meets the legendaries and boss relics the rules come on (the pre-boss shop's legendary is the only sure one), so the rules barely show in its runs; the good bot and the retune are phase 6 and step 9.
 
 
 ## Answered (2026-09-30)
