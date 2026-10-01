@@ -588,5 +588,301 @@
         }
       ]
     }
+  },
+  {
+    "id": "notched_bow",
+    "name": "Notched Bow",
+    "hero": "maren",
+    "text": "Every enemy she Marks notches her bow: her ATK grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "applied",
+        "keywords": [
+          "marked"
+        ]
+      },
+      "per": 3,
+      "each": {
+        "stats_bp": {
+          "atk": 10100
+        }
+      }
+    }
+  },
+  {
+    "id": "weathered",
+    "name": "Weathered",
+    "hero": "brannoc",
+    "text": "Every blow he weathers hardens him: his max HP grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "taken"
+      },
+      "per": 600,
+      "each": {
+        "stats_bp": {
+          "hp": 10100
+        }
+      }
+    }
+  },
+  {
+    "id": "lamp_oil",
+    "name": "Lamp Oil",
+    "hero": "vell",
+    "text": "Every heal she gives feeds the lamp: her MGK grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "healing"
+      },
+      "per": 200,
+      "each": {
+        "stats_bp": {
+          "mgk": 10100
+        }
+      }
+    }
+  },
+  {
+    "id": "hunters_tally",
+    "name": "Hunter's Tally",
+    "path": "deadeye",
+    "text": "Every shot from far off adds to her tally: her damage grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "damage",
+        "beyond_hexes": 4
+      },
+      "per": 300,
+      "each": {
+        "passives": [
+          {
+            "id": "hunters_tally",
+            "name": "Hunter's Tally",
+            "kind": "aura",
+            "text": "Grows every fight.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 10100
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "patient_hunter",
+    "name": "Patient Hunter",
+    "path": "trapper",
+    "text": "Every moment an enemy spends in her snares teaches her: her damage to Rooted enemies grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "rooted_ms"
+      },
+      "per": 15000,
+      "each": {
+        "passives": [
+          {
+            "id": "patient_hunter",
+            "name": "Patient Hunter",
+            "kind": "aura",
+            "text": "Grows every fight.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 10100,
+              "vs": {
+                "keywords": [
+                  "rooted"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "arrow_glut",
+    "name": "Arrow Glut",
+    "path": "volley",
+    "text": "Every extra enemy her arrows find quickens her draw: her attacks speed up for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "extra_hits",
+        "from_ability": [
+          "longshot"
+        ]
+      },
+      "per": 15,
+      "each": {
+        "passives": [
+          {
+            "id": "arrow_glut",
+            "name": "Arrow Glut",
+            "kind": "aura",
+            "text": "Grows every fight.",
+            "aura": {
+              "target": "holder",
+              "stat": "cooldown_bp",
+              "value": -100
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "old_scars",
+    "name": "Old Scars",
+    "path": "hearthwall",
+    "text": "Every blow he takes for an ally leaves a scar: his DEF grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "guarded"
+      },
+      "per": 100,
+      "each": {
+        "stats_add": {
+          "def": 1
+        }
+      }
+    }
+  },
+  {
+    "id": "brandmarks",
+    "name": "Brandmarks",
+    "path": "ironbrand",
+    "text": "Every extra enemy his swings catch brands his arm: his ATK grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "extra_hits",
+        "from_ability": [
+          "hearthbrand_mace"
+        ]
+      },
+      "per": 15,
+      "each": {
+        "stats_add": {
+          "atk": 1
+        }
+      }
+    }
+  },
+  {
+    "id": "borrowed_time",
+    "name": "Borrowed Time",
+    "path": "last_watch",
+    "text": "Every moment he fights near death is borrowed: his damage while low grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "ms_below",
+        "while_below_pct": 30
+      },
+      "per": 8000,
+      "each": {
+        "passives": [
+          {
+            "id": "borrowed_time",
+            "name": "Borrowed Time",
+            "kind": "aura",
+            "text": "Grows every fight.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 10100,
+              "while": "below_hp",
+              "below_pct": 30
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "kindled_flame",
+    "name": "Kindled Flame",
+    "path": "lanternbearer",
+    "text": "Every heal Mend spills beside its target feeds the flame: her healing grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "healing",
+        "from_ability": [
+          "mend",
+          "kindle"
+        ],
+        "off_target": true
+      },
+      "per": 300,
+      "each": {
+        "passives": [
+          {
+            "id": "kindled_flame",
+            "name": "Kindled Flame",
+            "kind": "aura",
+            "text": "Grows every fight.",
+            "aura": {
+              "target": "holder",
+              "stat": "heal_bp",
+              "value": 10100
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "woven_deep",
+    "name": "Woven Deep",
+    "path": "wardweaver",
+    "text": "Every Shield she weaves goes deeper: her Shields grow for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "shield"
+      },
+      "per": 200,
+      "each": {
+        "passives": [
+          {
+            "id": "woven_deep",
+            "name": "Woven Deep",
+            "kind": "aura",
+            "text": "Grows every fight.",
+            "aura": {
+              "target": "holder",
+              "stat": "shield_bp",
+              "value": 10100
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "sunwrought",
+    "name": "Sunwrought",
+    "path": "vigil_keeper",
+    "text": "Every smite burns brighter: her smites grow for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "damage",
+        "from_ability": [
+          "mend"
+        ]
+      },
+      "per": 50,
+      "each": {
+        "on": [
+          {
+            "slot": "passive:mend",
+            "types": [
+              "damage"
+            ],
+            "amount_bp": 10100
+          }
+        ]
+      }
+    }
   }
 ]

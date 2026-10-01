@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) written and up for approval; steps 4–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) approved and being built; steps 5–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -283,7 +283,7 @@ Part 7: "an effect caused by a trigger can set off other triggers, but one chain
 
 ## 9. Step 4: permanent scaling
 
-Part 7, section 4: some upgrades and relics **grow every fight for the rest of the run**, counting something the hero does the way deeds do, and the card shows its current value. **Up for approval.** Step 4 builds the machinery and the counters the agreed growing cards need; which cards it adds is Question H.
+Part 7, section 4: some upgrades and relics **grow every fight for the rest of the run**, counting something the hero does the way deeds do, and the card shows its current value. **Approved 2026-10-01** (9.9). Step 4 builds the machinery, the counters the agreed growing cards need, and the twelve growing upgrades (Decision 16).
 
 ### 9.1 What's there now
 
@@ -341,7 +341,7 @@ A card gets `"grows"` beside (or instead of) its `"mod"`:
 
 - **`RunState.Hero.growth`** (card id -> counted since it was taken) for upgrades and a held item, and **`RunState.growth`** for relics (relic id -> the team's count). `RunFlow.record` adds each fight's tallies; a lost fight counts too (it was fought). Saved with the run; old saves load with nothing counted (no version bump: the fields default to empty).
 - **`RunFlow.fight_setup`** and **`kit_of`** add each growth's `each.times(steps)`.
-- **When counting starts:** from when the card is taken (Question G).
+- **When counting starts:** from when the card is taken (Decision 15).
 - **The run report** gains what each growing card reached by the run's end (mean steps, and the most), so tuning can see how far they grow.
 
 ### 9.6 The UI (`ui-new-systems.md`, section 4)
@@ -354,7 +354,7 @@ A card gets `"grows"` beside (or instead of) its `"mod"`:
 ### 9.7 Files
 
 - New: `tests/run/test_growth_cards.gd`, `tests/sim/test_tallies.gd`.
-- Changed: `deed_def.gd` (the kinds and filters), `deeds.gd` (tallies, the new kinds), `unit_setup.gd`, `encounters.gd` (`tallies` in `extras`), `fight_result.gd` (`tallies`), `kit_mod.gd` (`times`, the `each` limits), `upgrade_def.gd`, `relic_def.gd`, `item_def.gd` (`grows`), `run_content.gd` (checks), `run_state.gd`, `run_flow.gd`, `mod_info.gd`, `hero_panel.gd`, `run_day_screen.gd` (after the fight; the top bar), `tools/run_report.gd`, and `data/upgrades.json` if Question H says so.
+- Changed: `deed_def.gd` (the kinds and filters), `deeds.gd` (tallies, the new kinds), `unit_setup.gd`, `encounters.gd` (`tallies` in `extras`), `fight_result.gd` (`tallies`), `kit_mod.gd` (`times`, the `each` limits), `upgrade_def.gd`, `relic_def.gd`, `item_def.gd` (`grows`), `run_content.gd` (checks), `run_state.gd`, `run_flow.gd`, `mod_info.gd`, `hero_panel.gd`, `run_day_screen.gd` (after the fight; the top bar), `tools/run_report.gd`, and `data/upgrades.json` (the twelve growing upgrades).
 - Docs: this section's "Built in step 4" note; CLAUDE.md ("How the run works").
 
 ### 9.8 Tests
@@ -365,10 +365,11 @@ A card gets `"grows"` beside (or instead of) its `"mod"`:
 - **The UI:** the "Grows" and "Now" lines; the after-fight list.
 - **Unchanged:** the bench's fingerprints; the sim runner's gate (no fight changes until a card grows).
 
-### 9.9 Questions for this step
+### 9.9 Decisions (the playtester, 2026-10-01: "approve, build it")
 
-- **G. When does a growing card start counting?** From when it's taken (recommended: the card starts at +0% and grows from there, so a late pick is a smaller engine), or over the whole run so far (the relics' text says "this run": a late Collector's Chain arrives already grown, which needs every possible counter counted from the start).
-- **H. Which cards come now?** (a) the twelve growing upgrades join `upgrades.json` now (three hero, nine path), so growth is in the game and the playtest can feel it, and step 7 keeps them in its pools (recommended); or (b) none now: the machinery waits, tested on cards made in the tests, for steps 5 and 7's data.
+14. **Step 4 is built as this section says.**
+15. **A growing card counts from when it's taken** (Question G): it starts at +0% and grows from there; only owned cards are counted.
+16. **The twelve growing upgrades come now** (Question H): Notched Bow, Weathered, Lamp Oil, and the nine paths' growing upgrades join `upgrades.json`; step 7 keeps them in its pools. Growing relics come with step 5.
 
 ## Answered (2026-09-30)
 

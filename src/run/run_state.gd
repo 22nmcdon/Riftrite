@@ -33,10 +33,13 @@ class Hero:
 	var wounds: int = 0
 	## Item ids in its loadout slots ("": empty).
 	var slots: Array[String] = []
+	## Its growing upgrades (phase 5c step 4): upgrade id -> what it has
+	## counted since it was taken (a lookup; read in `upgrades`' order).
+	var growth: Dictionary[String, int] = {}
 
 	func to_dict() -> Dictionary:
 		return {"id": id, "path": path, "transformed": transformed, "deeds": deeds.duplicate(), "upgrades": upgrades.duplicate(),
-			"wounds": wounds, "slots": slots.duplicate()}
+			"wounds": wounds, "slots": slots.duplicate(), "growth": growth.duplicate()}
 
 	static func from_dict(data: Dictionary) -> Hero:
 		var hero := Hero.new()
@@ -49,6 +52,9 @@ class Hero:
 		hero.upgrades.assign((data.get("upgrades", []) as Array).map(func(value: Variant) -> String: return str(value)))
 		hero.wounds = int(data.get("wounds", 0))
 		hero.slots.assign((data.get("slots", []) as Array).map(func(value: Variant) -> String: return str(value)))
+		var growth: Dictionary = data.get("growth", {})
+		for card_id: Variant in growth:
+			hero.growth[str(card_id)] = int(growth[card_id])
 		return hero
 
 
@@ -135,6 +141,12 @@ var relics: Array[String] = []
 var relic_choice: Array[String] = []
 ## Duo bonds found (on at least once), in the order found.
 var bonds_found: Array[String] = []
+## Growing relics (phase 5c step 4): relic id -> what the team has counted
+## since it was taken (a lookup; read in `relics`' order).
+var growth: Dictionary[String, int] = {}
+## The growing cards the last fight stepped up ("hero id:upgrade id", or
+## ":relic id"), for the screen after it.
+var grew: Array[String] = []
 
 
 func hero(hero_id: String) -> Hero:
@@ -168,6 +180,7 @@ func to_dict() -> Dictionary:
 		"fortify": fortify, "dig_in": dig_in, "rock": rock.duplicate(), "rift_tear": rift_tear, "rested": rested,
 		"scouted": scouted.duplicate(), "magpie_day": magpie_day,
 		"relics": relics.duplicate(), "relic_choice": relic_choice.duplicate(), "bonds_found": bonds_found.duplicate(),
+		"growth": growth.duplicate(), "grew": grew.duplicate(),
 	}
 
 
@@ -213,6 +226,10 @@ static func from_dict(data: Dictionary) -> RunState:
 	state.rift_tear = bool(data.get("rift_tear", false))
 	state.rested = bool(data.get("rested", false))
 	state.scouted.assign((data.get("scouted", []) as Array).map(func(value: Variant) -> int: return int(value)))
+	var growth: Dictionary = data.get("growth", {})
+	for relic_id: Variant in growth:
+		state.growth[str(relic_id)] = int(growth[relic_id])
+	state.grew = _strings(data.get("grew", []))
 	state.magpie_day = int(data.get("magpie_day", 0))
 	state.relics = _strings(data.get("relics", []))
 	state.relic_choice = _strings(data.get("relic_choice", []))

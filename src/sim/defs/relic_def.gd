@@ -13,6 +13,8 @@ extends RefCounted
 ##   "price_add": 1               the Pedlar's prices
 ##   "pay_add": 2                 shards for each won fight
 ##   "pick_cards": 2              at most this many cards on a pick
+##   "grows": {...GrowthDef...}   every hero's kit, growing with what the
+##                                team does (phase 5c step 4)
 ## The run rules are RunFlow's; the mods are applied at setup, so a fight is
 ## still a pure function of its setup.
 
@@ -34,6 +36,7 @@ var price_add: int = 0
 var pay_add: int = 0
 ## 0: no limit.
 var pick_cards: int = 0
+var grows: GrowthDef = null
 
 
 static func read(reader: DataReader) -> RelicDef:
@@ -53,7 +56,11 @@ static func read(reader: DataReader) -> RelicDef:
 	def.price_add = reader.opt_int("price_add", 0, -3, 5)
 	def.pay_add = reader.opt_int("pay_add", 0, -5, 10)
 	def.pick_cards = reader.opt_int("pick_cards", 0, 0, 3)
-	if def.mod == null and def.enemy_mod == null and def.rest_mod == null and def.slots_add == 0 and def.wound_bp_add == 0 \
+	if reader.has("grows"):
+		var grows_reader: DataReader = reader.req_object("grows")
+		if grows_reader != null:
+			def.grows = GrowthDef.read(grows_reader)
+	if def.grows == null and def.mod == null and def.enemy_mod == null and def.rest_mod == null and def.slots_add == 0 and def.wound_bp_add == 0 \
 			and not def.always_scout and def.price_add == 0 and def.pay_add == 0 and def.pick_cards == 0:
 		reader.error("a relic needs to do something")
 	reader.finish()

@@ -52,10 +52,12 @@ func test_the_upgrades_load() -> void:
 	assert_true(_run.is_valid(), "\n".join(_run.errors))
 	for hero_id: String in _run.content.hero_ids:
 		var own: Array[String] = _run.upgrade_ids.filter(func(id: String) -> bool: return _run.upgrades[id].hero == hero_id and _run.upgrades[id].layer == UpgradeDef.Layer.HERO)
-		assert_eq(own.size(), 3, "%s has 3 hero upgrades" % hero_id)
+		assert_eq(own.filter(func(id: String) -> bool: return _run.upgrades[id].grows == null).size(), 3, "%s has 3 hero upgrades" % hero_id)
+		assert_eq(own.filter(func(id: String) -> bool: return _run.upgrades[id].grows != null).size(), 1, "and one that grows (phase 5c step 4)")
 	for path_id: String in _run.content.path_ids:
-		var own: Array[String] = _run.upgrade_ids.filter(func(id: String) -> bool: return _run.upgrades[id].path == path_id)
+		var own: Array[String] = _run.upgrade_ids.filter(func(id: String) -> bool: return _run.upgrades[id].path == path_id and _run.upgrades[id].grows == null)
 		assert_eq(own.size(), 3, "%s has 3 upgrades" % path_id)
+		assert_eq(_run.upgrade_ids.filter(func(id: String) -> bool: return _run.upgrades[id].path == path_id and _run.upgrades[id].grows != null).size(), 1, "and one that grows")
 		assert_eq(own.filter(func(id: String) -> bool: return _run.upgrades[id].vow).size(), 1, "%s has one vow pick" % path_id)
 		assert_eq(_run.upgrades[own[0]].hero, _run.content.paths[path_id].hero, "a path's upgrade is its hero's")
 		assert_gt(_run.content.paths[path_id].deed.threshold, 0, "%s's deed has a threshold" % path_id)
@@ -81,10 +83,10 @@ func test_what_a_hero_can_be_offered() -> void:
 	var maren := RunState.Hero.new()
 	maren.id = "maren"
 	maren.path = "deadeye"
-	assert_eq(_run.upgrades_for(maren), ["quick_draw", "keen_eye", "hardened", "quick_footing"] as Array[String], "her own and the vow pick")
+	assert_eq(_run.upgrades_for(maren), ["quick_draw", "keen_eye", "hardened", "quick_footing", "notched_bow"] as Array[String], "her own and the vow pick (and her growing upgrade, phase 5c step 4)")
 	maren.transformed = true
 	maren.upgrades.append("keen_eye")
-	assert_eq(_run.upgrades_for(maren), ["quick_draw", "hardened", "quick_footing", "heartseekers_edge", "hunters_calm"] as Array[String], "the path's pool joins; nothing taken twice")
+	assert_eq(_run.upgrades_for(maren), ["quick_draw", "hardened", "quick_footing", "heartseekers_edge", "hunters_calm", "notched_bow", "hunters_tally"] as Array[String], "the path's pool joins; nothing taken twice")
 
 
 func test_a_vow_pick_changes_with_the_stage_and_waits_off_its_path() -> void:

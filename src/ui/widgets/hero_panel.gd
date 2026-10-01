@@ -352,6 +352,8 @@ func _run_upgrades(run_session: RunSession) -> String:
 		var upgrade: UpgradeDef = run_session.run.upgrades[id]
 		var waiting: bool = upgrade.layer == UpgradeDef.Layer.PATH and upgrade.path != hero.path
 		var numbers: String = ModInfo.upgrade_numbers(upgrade, run_session.run.hero_kit(hero), run_session.content)
+		if upgrade.grows != null:
+			numbers += " · " + ModInfo.growth_now(upgrade.grows, hero.growth.get(upgrade.id, 0), run_session.run.hero_kit(hero), run_session.content)
 		names.append("%s%s: %s%s" % [upgrade.name, " (waits for %s)" % run_session.content.paths[upgrade.path].name if waiting else "", upgrade.text,
 			"" if numbers.is_empty() else " (%s)" % numbers])
 	return "None yet: a pick comes after each won fight." if names.is_empty() else "\n".join(names)

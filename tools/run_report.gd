@@ -32,6 +32,10 @@ class RunLine:
 	## to it and not yet transformed, and how many fights that was.
 	var vowed_gain: Dictionary[String, int] = {}
 	var vowed_fights: Dictionary[String, int] = {}
+	## Growing upgrade id -> what it counted by the run's end, and the
+	## fights it was held for (phase 5c step 4).
+	var grown: Dictionary[String, int] = {}
+	var grown_fights: Dictionary[String, int] = {}
 
 
 ## Every combination of one path per hero, in heroes.json's and paths.json's
@@ -94,6 +98,10 @@ static func play(run: RunContent, run_seed: int, look_ahead: bool = true) -> Run
 			var last: RunState.Fought = state.fought.back()
 			line.fights.append([last.encounter, last.outcome != FightResult.Outcome.DEFEAT])
 			for hero: RunState.Hero in state.heroes:
+				for upgrade: UpgradeDef in run.held_upgrades(hero):
+					if upgrade.grows != null:
+						line.grown_fights[upgrade.id] = line.grown_fights.get(upgrade.id, 0) + 1
+			for hero: RunState.Hero in state.heroes:
 				var path_id: String = vowed_to[hero.id]
 				if not was_transformed[hero.id]:
 					line.vowed_gain[path_id] = line.vowed_gain.get(path_id, 0) + hero.deeds[path_id] - before[hero.id]
@@ -108,6 +116,9 @@ static func play(run: RunContent, run_seed: int, look_ahead: bool = true) -> Run
 		if not line.transformed_on.has(hero.id):
 			line.transformed_on[hero.id] = 0
 	line.relics = state.relics.size()
+	for hero: RunState.Hero in state.heroes:
+		for upgrade_id: String in hero.growth:
+			line.grown[upgrade_id] = hero.growth[upgrade_id]
 	return line
 
 
@@ -184,6 +195,22 @@ static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 					wins += 1 if fight[1] else 0
 		if fought > 0:
 			out.append("  %-22s %3d of %3d (%d%%)" % [content.encounters[encounter_id].name, wins, fought, _pct(wins, fought)])
+	out.append("")
+	out.append("Growing upgrades (runs that took it: fights held, steps by the run's end, and what a fight counts):")
+	for upgrade_id: String in run.upgrade_ids:
+		var upgrade: UpgradeDef = run.upgrades[upgrade_id]
+		if upgrade.grows == null:
+			continue
+		var took: Array[RunLine] = lines.filter(func(line: RunLine) -> bool: return line.grown.has(upgrade_id))
+		var steps: Array[int] = []
+		var counted: int = 0
+		var held: int = 0
+		for line: RunLine in took:
+			steps.append(upgrade.grows.steps(line.grown[upgrade_id]))
+			counted += line.grown[upgrade_id]
+			held += line.grown_fights.get(upgrade_id, 0)
+		out.append("  %-16s %3d runs, %.1f fights held, steps: median %s, most %d; %.1f a fight (a step is %d)" % [upgrade.name, took.size(),
+			float(held) / maxi(took.size(), 1), _median(steps), steps.max() if not steps.is_empty() else 0, float(counted) / maxi(held, 1), upgrade.grows.per])
 	var errors: int = lines.filter(func(line: RunLine) -> bool: return not line.errors.is_empty()).size()
 	out.append("")
 	out.append("Runs with errors: %d" % errors)

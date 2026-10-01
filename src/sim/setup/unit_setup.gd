@@ -20,6 +20,10 @@ var stage: PathDef.Stage = PathDef.Stage.BASE
 ## The paths whose deeds it counts (a hero's three, whatever its stage;
 ## empty: it counts none).
 var deed_paths: Array[PathDef] = []
+## What its growing cards count this fight (phase 5c step 4): each key (a
+## card's id) and how it counts, counted like a deed (Deeds).
+var tally_keys: Array[String] = []
+var tally_counts: Array[DeedDef] = []
 ## Snares the player placed before the fight, by hex (phase 4, a transformed
 ## Trapper's; up to its kit's placed_snares).
 var snares: Array[Vector2i] = []

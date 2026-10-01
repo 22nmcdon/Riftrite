@@ -8,7 +8,9 @@ extends RefCounted
 ## modifiers is the kit itself. Every key is optional, but a mod changes
 ## something:
 ##   {"stats_bp": {"hp": 11000},          multiplies HP, ATK, MGK, DEF, or ATSP
-##    "stats_add": {"crit": 5},           adds to CRIT, speed, or range
+##    "stats_add": {"crit": 5},           adds to CRIT, speed, or range, and
+##                                        (phase 5c step 4: growing cards'
+##                                        "+1 DEF") HP, ATK, MGK, or DEF
 ##    "passives": [...PartDefs...],       added (their ids must be new to the kit)
 ##    "on": [{                            changes to abilities, one entry per slot
 ##       "slot": "signature",             basic_attack, signature, passive:<id>
@@ -47,6 +49,10 @@ const SLOT_ABILITIES: String = "abilities"
 const PASSIVE_PREFIX: String = "passive:"
 ## The effects an amount_bp gives a power bonus (phase 5c Decision 6).
 const POWER_TYPES: Array[EffectDef.Type] = [EffectDef.Type.DAMAGE, EffectDef.Type.HEAL, EffectDef.Type.SHIELD]
+## The stats stats_add can add to (KitPatch's, and flat HP, ATK, MGK, and
+## DEF for growing cards, phase 5c step 4).
+const ADD_STATS: Array[UnitStats.Stat] = [UnitStats.Stat.HP, UnitStats.Stat.ATK, UnitStats.Stat.MGK, UnitStats.Stat.DEF,
+	UnitStats.Stat.CRIT, UnitStats.Stat.SPEED, UnitStats.Stat.RANGE]
 
 
 ## One entry of "on": changes to the abilities in one slot.
@@ -104,8 +110,8 @@ static func read(reader: DataReader) -> KitMod:
 	if reader.has("stats_add"):
 		var add_reader: DataReader = reader.req_object("stats_add")
 		if add_reader != null:
-			for stat: UnitStats.Stat in KitPatch.ADD_STATS:
-				mod.stats_add[stat] = add_reader.opt_int(UnitStats.STAT_NAMES[stat], 0, -10, 100)
+			for stat: UnitStats.Stat in ADD_STATS:
+				mod.stats_add[stat] = add_reader.opt_int(UnitStats.STAT_NAMES[stat], 0, -100, 1000)
 			add_reader.finish()
 	for part_reader: DataReader in reader.opt_object_array("passives"):
 		mod.passives.append(PartDef.read(part_reader))
@@ -163,6 +169,48 @@ static func _signed_ticks(reader: DataReader, key: String) -> int:
 	if ms % FixedMath.MS_PER_TICK != 0:
 		reader.error("%s: must be a multiple of %d ms (one tick)" % [key, FixedMath.MS_PER_TICK])
 	return FixedMath.ms_to_ticks(ms)
+
+
+## Why this mod can't be a growing card's step ("" if it can): a step may
+## only multiply or add stats, change abilities' amount_bp, or add auras,
+## since those are what scale cleanly (phase 5c step 4, section 9.3).
+func step_problem() -> String:
+	if mana_max_add != 0 or mana_start_add != 0 or mana_per_attack_add != 0 or not also_fires.is_empty() or echo_ticks > 0:
+		return "a growing card's step can't change mana, add triggers, or echo"
+	for part: PartDef in passives:
+		if part.kind != PartDef.Kind.AURA:
+			return "a growing card's step can only add auras (\"%s\" isn't one)" % part.id
+	for change: AbilityChange in changes:
+		if change.duration_bp != FixedMath.BP_ONE or change.duration_add_ticks != 0 or change.radius_add != 0 \
+				or change.cooldown_bp != FixedMath.BP_ONE or not change.add_effects.is_empty() or change.after_add_ticks != 0:
+			return "a growing card's step can only change an ability's amount_bp"
+	return ""
+
+
+## This mod `steps` times over (phase 5c step 4: a growing card's bonus): each
+## change n times, added (by the damage rule, ten +1% steps are +10%). Only
+## for a mod with no step_problem(). Null for 0 steps.
+func times(steps: int) -> KitMod:
+	if steps <= 0:
+		return null
+	var scaled: KitMod = make()
+	for stat: int in stats_bp.size():
+		scaled.stats_bp[stat] = FixedMath.BP_ONE + steps * (stats_bp[stat] - FixedMath.BP_ONE)
+		scaled.stats_add[stat] = steps * stats_add[stat]
+	for part: PartDef in passives:
+		var copy: PartDef = DefCopy.shallow(part) as PartDef
+		var aura: AuraDef = DefCopy.shallow(part.aura) as AuraDef
+		aura.value = steps * aura.value if aura.is_additive() else FixedMath.BP_ONE + steps * (aura.value - FixedMath.BP_ONE)
+		copy.aura = aura
+		scaled.passives.append(copy)
+	for change: AbilityChange in changes:
+		var copy := AbilityChange.new()
+		copy.slot = change.slot
+		copy.types = change.types.duplicate()
+		copy.as_power = change.as_power
+		copy.amount_bp = FixedMath.BP_ONE + steps * (change.amount_bp - FixedMath.BP_ONE)
+		scaled.changes.append(copy)
+	return scaled
 
 
 func changes_anything() -> bool:

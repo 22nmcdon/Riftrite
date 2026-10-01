@@ -135,6 +135,8 @@ static func fill_top_bar(row: HBoxContainer, run_session: RunSession, where: Str
 		var relic: RelicDef = run_session.run.relics[id]
 		var chip: PanelContainer = UiStyle.chip(relic.name, UiStyle.RIFT_300, true, 15, ItemIcon.for_relic(relic, 24.0))
 		chip.tooltip_text = "%s\nBoon: %s\nCost: %s\n%s" % [relic.flavor, relic.boon, relic.cost, ModInfo.relic_numbers(relic, run_session.content)]
+		if relic.grows != null:
+			chip.tooltip_text += "\n" + ModInfo.growth_now(relic.grows, state.growth.get(id, 0), null, run_session.content)
 		chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(chip)
 	var shards: Label = UiStyle.strong("%d shards" % state.shards, 20, UiStyle.HIGHLIGHT)
@@ -281,6 +283,25 @@ static func _wrapped(text: String, size: int, color: Color) -> Label:
 	return label
 
 
+## A line for each growing card the last fight stepped up (phase 5c step 4):
+## "Notched Bow (Maren): now +3% ATK".
+static func grew_lines(run_session: RunSession) -> Array[String]:
+	var state: RunState = run_session.state()
+	var lines: Array[String] = []
+	for key: String in state.grew:
+		var hero_id: String = key.get_slice(":", 0)
+		var card_id: String = key.get_slice(":", 1)
+		if hero_id.is_empty():
+			var relic: RelicDef = run_session.run.relics[card_id]
+			lines.append("%s: %s" % [relic.name, ModInfo.growth_now(relic.grows, state.growth.get(card_id, 0), null, run_session.content)])
+		else:
+			var upgrade: UpgradeDef = run_session.run.upgrades[card_id]
+			var hero: RunState.Hero = state.hero(hero_id)
+			var name: String = ArenaView.label_for(run_session.content.heroes[hero_id].kit, run_session.content)
+			lines.append("%s (%s): %s" % [upgrade.name, name, ModInfo.growth_now(upgrade.grows, hero.growth.get(card_id, 0), run_session.run.hero_kit(hero), run_session.content)])
+	return lines
+
+
 ## A hero's short name ("Vell"), as the board and the hero bar call them.
 func _hero_name(hero_id: String) -> String:
 	return ArenaView.label_for(session.content.heroes[hero_id].kit, session.content)
@@ -290,6 +311,10 @@ func _hero_name(hero_id: String) -> String:
 
 func _fill_waiting() -> void:
 	var state: RunState = session.state()
+	if not state.grew.is_empty():
+		var section: VBoxContainer = _section("What grew", "Growing cards step up with what the heroes do, for the rest of the run.")
+		for line: String in grew_lines(session):
+			section.add_child(_wrapped(line, 17, UiStyle.HIGHLIGHT))
 	for hero_id: String in state.just_transformed:
 		var path: PathDef = session.path_of(hero_id)
 		var section: VBoxContainer = _section("%s transforms: %s" % [_hero_name(hero_id), path.name], path.transformed_text)

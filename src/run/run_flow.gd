@@ -256,6 +256,9 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 			if bond.mods.has(hero.path):
 				mods.append(bond.mods[hero.path])
 		extras[hero.id] = HeroExtras.make(mods, hero.wounds, wound_bp)
+		var tallies: Array = run.growth_tallies(state, hero)
+		extras[hero.id].tally_keys.assign(tallies[0])
+		extras[hero.id].tally_counts.assign(tallies[1])
 		var tactic: TacticDef = run.loadout_tactic(hero)
 		if tactic != null:
 			tactics[hero.id] = tactic.id
@@ -355,6 +358,7 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 	for hero: RunState.Hero in state.heroes:
 		for path_id: String in hero.deeds:
 			hero.deeds[path_id] += result.deed_amount(hero.id, path_id)
+	_grow(result)
 	if won:
 		for hero: RunState.Hero in state.heroes:
 			hero.wounds = maxi(hero.wounds - 1, 0)
@@ -452,9 +456,36 @@ func relic_price() -> int:
 
 func _gain_relic(relic_id: String) -> void:
 	state.relics.append(relic_id)
+	if run.relics[relic_id].grows != null:
+		state.growth[relic_id] = 0
 	for i: int in run.relics[relic_id].slots_add:
 		for hero: RunState.Hero in state.heroes:
 			hero.slots.append("")
+
+
+## Adds what a fight counted to the growing cards (phase 5c step 4; won or
+## lost, a Hunt too), and notes the ones that stepped up (`grew`).
+func _grow(result: FightResult) -> void:
+	state.grew.clear()
+	for hero: RunState.Hero in state.heroes:
+		for upgrade: UpgradeDef in run.held_upgrades(hero):
+			if upgrade.grows == null:
+				continue
+			var before: int = hero.growth.get(upgrade.id, 0)
+			hero.growth[upgrade.id] = before + result.tally_amount(hero.id, "upgrade:" + upgrade.id)
+			if upgrade.grows.steps(hero.growth[upgrade.id]) > upgrade.grows.steps(before):
+				state.grew.append("%s:%s" % [hero.id, upgrade.id])
+	for id: String in state.relics:
+		var relic: RelicDef = run.relics.get(id)
+		if relic == null or relic.grows == null:
+			continue
+		var before: int = state.growth.get(id, 0)
+		var counted: int = 0
+		for hero: RunState.Hero in state.heroes:
+			counted += result.tally_amount(hero.id, "relic:" + id)
+		state.growth[id] = before + counted
+		if relic.grows.steps(state.growth[id]) > relic.grows.steps(before):
+			state.grew.append(":" + id)
 
 
 ## Takes card `index` of the waiting pick: the upgrade is its hero's for good.
@@ -465,6 +496,8 @@ func take_pick(index: int) -> String:
 		return "there's no card %d" % index
 	var upgrade: UpgradeDef = run.upgrades[state.pick[index]]
 	state.hero(upgrade.hero).upgrades.append(upgrade.id)
+	if upgrade.grows != null:
+		state.hero(upgrade.hero).growth[upgrade.id] = 0
 	state.pick.clear()
 	return ""
 
@@ -639,6 +672,7 @@ func finish_day() -> String:
 	state.attempt = 0
 	state.chosen = ""
 	state.just_transformed.clear()
+	state.grew.clear()
 	_arrive()
 	return ""
 

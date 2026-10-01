@@ -114,6 +114,10 @@ var ally_fall_listeners: bool = false
 var ally_fire_listeners: bool = false
 ## Some hero counts deeds (Deeds), so the log is read for them each tick.
 var _counting: bool = false
+## Some hero counts damage it takes or its kills (Deeds._count_on_target),
+## or its time below an HP share (Deeds.count_time; phase 5c step 4).
+var tallies_on_target: bool = false
+var _counting_time: bool = false
 ## Log entries before this one have been counted for deeds.
 var _deeds_read: int = 0
 var _hero_engagers: Array[UnitState] = []
@@ -146,6 +150,7 @@ static func result_of(sim: CombatSim) -> FightResult:
 	result.end_tick = sim.tick
 	result.combat_log = sim.combat_log
 	result.deeds = sim.deed_amounts()
+	result.tallies = sim.deed_amounts(true)
 	return result
 
 
@@ -177,6 +182,9 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 			Tactics.start(self, unit)
 			damage_payoffs = damage_payoffs or unit.tactic.damage_vs_bp > 0
 		_counting = _counting or unit.deeds != null
+		if unit.deeds != null:
+			tallies_on_target = tallies_on_target or unit.deeds.needs_taken or unit.deeds.needs_kills
+			_counting_time = _counting_time or unit.deeds.needs_time
 	units_joined()
 
 
@@ -291,6 +299,8 @@ func step() -> void:
 		var counted_to: int = combat_log.entries.size()
 		Deeds.count(self, _deeds_read, counted_to)
 		_deeds_read = counted_to
+		if _counting_time:
+			Deeds.count_time(self)
 
 
 ## One unit's update this tick. It runs for every unit every tick, so it's
@@ -512,12 +522,13 @@ func standing_enemies_of(unit: UnitState) -> Array[UnitState]:
 
 ## What each hero's deeds have added up to so far, in the fight's order and
 ## each hero's path order.
-func deed_amounts() -> Array[FightResult.Deed]:
+## `tallies`: its growing cards' counts instead (phase 5c step 4).
+func deed_amounts(tallies: bool = false) -> Array[FightResult.Deed]:
 	var found: Array[FightResult.Deed] = []
 	for unit: UnitState in units:
 		if unit.deeds == null:
 			continue
-		for d: int in unit.deeds.deeds.size():
+		for d: int in (range(unit.deeds.tallies_from, unit.deeds.deeds.size()) if tallies else range(unit.deeds.tallies_from)):
 			found.append(FightResult.Deed.make(unit.id, unit.deeds.paths[d], unit.deeds.amounts[d]))
 	return found
 

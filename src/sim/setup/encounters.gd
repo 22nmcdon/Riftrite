@@ -72,6 +72,8 @@ static func setup(content: ContentDb, encounter_id: String, formation: Dictionar
 				hero.mods = extras[hero_id].mods.duplicate()
 				var each_wound: int = extras[hero_id].wound_bp if extras[hero_id].wound_bp > 0 else content.tuning.wound_bp
 				hero.max_hp_bp = FixedMath.BP_ONE - extras[hero_id].wounds * each_wound
+				hero.tally_keys = extras[hero_id].tally_keys.duplicate()
+				hero.tally_counts = extras[hero_id].tally_counts.duplicate()
 			hero.path = path
 			hero.stage = stage
 			hero.deed_paths = hero_def.paths.duplicate()

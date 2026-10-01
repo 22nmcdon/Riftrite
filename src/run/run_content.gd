@@ -113,15 +113,47 @@ func upgrades_for(hero: RunState.Hero) -> Array[String]:
 
 
 ## The kit mods `hero`'s upgrades give it now, in the order taken (a path's
-## upgrade only while the hero is on that path).
+## upgrade only while the hero is on that path); a growing one's, its steps
+## so far (phase 5c step 4).
 func upgrade_mods(hero: RunState.Hero) -> Array[KitMod]:
 	var mods: Array[KitMod] = []
+	for upgrade: UpgradeDef in held_upgrades(hero):
+		var mod: KitMod = upgrade.mod_for(hero.transformed)
+		if mod != null:
+			mods.append(mod)
+		if upgrade.grows != null:
+			var grown: KitMod = upgrade.grows.mod_for(hero.growth.get(upgrade.id, 0))
+			if grown != null:
+				mods.append(grown)
+	return mods
+
+
+## The upgrades that count for `hero` now, in the order taken (a path's
+## only while the hero is on that path).
+func held_upgrades(hero: RunState.Hero) -> Array[UpgradeDef]:
+	var found: Array[UpgradeDef] = []
 	for id: String in hero.upgrades:
 		var upgrade: UpgradeDef = upgrades.get(id)
-		if upgrade == null or (upgrade.layer == UpgradeDef.Layer.PATH and upgrade.path != hero.path):
-			continue
-		mods.append(upgrade.mod_for(hero.transformed))
-	return mods
+		if upgrade != null and not (upgrade.layer == UpgradeDef.Layer.PATH and upgrade.path != hero.path):
+			found.append(upgrade)
+	return found
+
+
+## What `hero` counts for the growing cards in a fight (phase 5c step 4):
+## "upgrade:<id>" for its own, "relic:<id>" for the team's relics, each with
+## how it counts. Returns [keys, counts].
+func growth_tallies(state: RunState, hero: RunState.Hero) -> Array:
+	var keys: Array[String] = []
+	var counts: Array[DeedDef] = []
+	for upgrade: UpgradeDef in held_upgrades(hero):
+		if upgrade.grows != null:
+			keys.append("upgrade:" + upgrade.id)
+			counts.append(upgrade.grows.counts)
+	for id: String in state.relics:
+		if relics.has(id) and relics[id].grows != null:
+			keys.append("relic:" + id)
+			counts.append(relics[id].grows.counts)
+	return [keys, counts]
 
 
 ## The kit `hero` fights with before its upgrades and loadout: its path's,
@@ -151,12 +183,19 @@ func loadout_tactic(hero: RunState.Hero) -> TacticDef:
 	return null
 
 
-## The kit mods the run's relics give every hero, in the order taken.
+## The kit mods the run's relics give every hero, in the order taken; a
+## growing one's, its steps so far (phase 5c step 4).
 func relic_mods(state: RunState) -> Array[KitMod]:
 	var mods: Array[KitMod] = []
 	for id: String in state.relics:
-		if relics.has(id) and relics[id].mod != null:
+		if not relics.has(id):
+			continue
+		if relics[id].mod != null:
 			mods.append(relics[id].mod)
+		if relics[id].grows != null:
+			var grown: KitMod = relics[id].grows.mod_for(state.growth.get(id, 0))
+			if grown != null:
+				mods.append(grown)
 	return mods
 
 
@@ -279,6 +318,10 @@ func _check() -> void:
 		_check_mod(relic.mod, hero_kits, "%s (%s)" % [RELICS_FILE, id])
 		_check_mod(relic.rest_mod, hero_kits, "%s (%s): rest_mod" % [RELICS_FILE, id])
 		_check_mod(relic.enemy_mod, enemy_kits, "%s (%s): enemy_mod" % [RELICS_FILE, id])
+		if relic.grows != null:
+			_check_mod(relic.grows.each.times(50), hero_kits, "%s (%s): grows" % [RELICS_FILE, id])
+			if not relic.grows.counts.from_ability.is_empty():
+				errors.append("%s (%s): a relic grows by what the whole team does, so it counts no hero's ability" % [RELICS_FILE, id])
 	if camps != null:
 		for option: CampsDef.Option in camps.options.values():
 			if not ResourceLoader.exists(ART_UI + option.icon):
@@ -370,7 +413,7 @@ func _check_item(item: ItemDef, where: String) -> void:
 ## every kit it can meet: a hero's, the vowed and transformed kits of every
 ## path; a path's, the transformed kit (a vow pick's, the vowed one too).
 func _check_upgrade(upgrade: UpgradeDef, where: String) -> void:
-	if upgrade.mod == null:
+	if upgrade.mod == null and upgrade.grows == null:
 		return
 	var meets: Array[Array] = []
 	if upgrade.layer == UpgradeDef.Layer.HERO:
@@ -380,6 +423,7 @@ func _check_upgrade(upgrade: UpgradeDef, where: String) -> void:
 		for path: PathDef in content.heroes[upgrade.hero].paths:
 			meets.append([path.id + " vowed", path.vowed_kit, upgrade.mod])
 			meets.append([path.id + " transformed", path.transformed_kit, upgrade.mod])
+			_check_growth_counts(upgrade.grows, [path.vowed_kit, path.transformed_kit], where)
 	else:
 		if not content.paths.has(upgrade.path):
 			errors.append("%s: unknown path \"%s\"" % [where, upgrade.path])
@@ -389,10 +433,15 @@ func _check_upgrade(upgrade: UpgradeDef, where: String) -> void:
 		if upgrade.vow:
 			meets.append([path.id + " vowed", path.vowed_kit, upgrade.mod_for(false)])
 		meets.append([path.id + " transformed", path.transformed_kit, upgrade.mod_for(true)])
+		_check_growth_counts(upgrade.grows, [path.vowed_kit, path.transformed_kit] if upgrade.vow else [path.transformed_kit], where)
+	if upgrade.grows != null:
+		# A growing card's step, many times over, on every kit it meets.
+		for meet: Array in meets.duplicate():
+			meets.append([meet[0] + " (grown)", meet[1], upgrade.grows.each.times(50)])
 	for meet: Array in meets:
 		var kit: UnitDef = meet[1]
 		var mod: KitMod = meet[2]
-		if kit == null:
+		if kit == null or mod == null:
 			continue
 		var problems: Array[String] = []
 		mod.apply(kit, problems)
@@ -400,6 +449,20 @@ func _check_upgrade(upgrade: UpgradeDef, where: String) -> void:
 			errors.append("%s: on %s, %s" % [where, meet[0], problem])
 		if not mod.affects(kit):
 			errors.append("%s: does nothing on %s" % [where, meet[0]])
+
+
+## A growing card's counting names abilities its holder has (in one of
+## `kits`).
+func _check_growth_counts(growth: GrowthDef, kits: Array, where: String) -> void:
+	if growth == null:
+		return
+	for ability_id: String in growth.counts.from_ability:
+		var found: bool = false
+		for kit: Variant in kits:
+			if kit != null and (kit as UnitDef).ability_ids().has(ability_id):
+				found = true
+		if not found:
+			errors.append("%s: grows by what \"%s\" does, which its hero doesn't have" % [where, ability_id])
 
 
 ## Every upgrade a hero could hold at once, on each path and stage, together.

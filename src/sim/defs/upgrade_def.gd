@@ -13,7 +13,8 @@ extends RefCounted
 ## transformed kit takes ("transformed_mod"), since the taste's piece and the
 ## transformation's are different parts. A path's upgrade only counts while
 ## its hero is on that path. RunContent checks every mod against every kit it
-## can meet.
+## can meet. A growing upgrade (phase 5c step 4) has "grows" (GrowthDef),
+## with or without a "mod".
 
 enum Layer { HERO, PATH }
 
@@ -30,6 +31,8 @@ var vow: bool = false
 var mod: KitMod
 ## A vow pick's mod once transformed (null: `mod`).
 var transformed_mod: KitMod = null
+## Null: it doesn't grow.
+var grows: GrowthDef = null
 
 
 static func read(reader: DataReader) -> UpgradeDef:
@@ -48,9 +51,14 @@ static func read(reader: DataReader) -> UpgradeDef:
 	def.vow = reader.opt_bool("vow", false)
 	if def.vow and def.layer != Layer.PATH:
 		reader.error("only a path's upgrade can be a vow pick")
-	var mod_reader: DataReader = reader.req_object("mod")
-	if mod_reader != null:
-		def.mod = KitMod.read(mod_reader)
+	if reader.has("grows"):
+		var grows_reader: DataReader = reader.req_object("grows")
+		if grows_reader != null:
+			def.grows = GrowthDef.read(grows_reader)
+	if def.grows == null or reader.has("mod"):
+		var mod_reader: DataReader = reader.req_object("mod")
+		if mod_reader != null:
+			def.mod = KitMod.read(mod_reader)
 	if reader.has("transformed_mod"):
 		if not def.vow:
 			reader.error("only a vow pick has a transformed_mod")

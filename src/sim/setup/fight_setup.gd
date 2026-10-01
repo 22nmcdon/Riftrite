@@ -64,6 +64,8 @@ static func _path_problems(unit: UnitSetup, where: String) -> Array[String]:
 	for path: PathDef in unit.deed_paths:
 		if not hero or path.hero != unit.def.id:
 			problems.append("%s can't count %s's deed" % [where, path.name])
+	if unit.tally_keys.size() != unit.tally_counts.size():
+		problems.append("%s has %d tally keys for %d counts" % [where, unit.tally_keys.size(), unit.tally_counts.size()])
 	return problems
 
 

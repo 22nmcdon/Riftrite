@@ -10,6 +10,10 @@ var wounds: int = 0
 ## What each wound takes, in basis points of max HP (0: tuning's wound_bp;
 ## a relic can change it).
 var wound_bp: int = 0
+## What its growing cards count (phase 5c step 4): keys and how each counts
+## (UnitSetup.tally_keys, tally_counts).
+var tally_keys: Array[String] = []
+var tally_counts: Array[DeedDef] = []
 
 
 static func make(kit_mods: Array[KitMod] = [], wound_count: int = 0, each_wound_bp: int = 0) -> HeroExtras:

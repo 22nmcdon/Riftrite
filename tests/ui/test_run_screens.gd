@@ -234,3 +234,17 @@ func test_the_route_is_the_act_map() -> void:
 	assert_eq(map.places.keys(), [1, 2])
 	assert_eq(map._place_id(1), Offers.place(flow.run, flow.state.seed_value, 1, 1, 0, flow.state.magpie_day))
 	await wait_frames(1)
+
+
+func test_what_grew_shows_after_a_fight_and_now_in_the_panel() -> void:
+	var main: Main = _started()
+	var flow: RunFlow = _flow(main)
+	var maren: RunState.Hero = flow.state.hero("maren")
+	maren.upgrades.append("notched_bow")
+	maren.growth["notched_bow"] = 23
+	flow.state.grew.assign(["maren:notched_bow"])
+	(main.screen as RunDayScreen).refresh()
+	var text: String = U.text_of(main.screen)
+	assert_string_contains(text, "What grew")
+	assert_string_contains(text, "Notched Bow (Maren): Now: +7% ATK (2 / 3 enemies Marked to the next)")
+	await wait_frames(1)

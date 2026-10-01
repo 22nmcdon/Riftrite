@@ -105,12 +105,99 @@ static func item_numbers(item: ItemDef, kit: UnitDef, content: ContentDb) -> Str
 	return mod_numbers(item.mod, kit, content) if item.mod != null else ""
 
 
-## An upgrade's: its mod's, and what changes once the hero transforms.
+## An upgrade's: its mod's, what changes once the hero transforms, and how
+## it grows.
 static func upgrade_numbers(upgrade: UpgradeDef, kit: UnitDef, content: ContentDb) -> String:
-	var parts: Array[String] = mod_parts(upgrade.mod, kit, content)
+	var parts: Array[String] = []
+	if upgrade.mod != null:
+		parts = mod_parts(upgrade.mod, kit, content)
 	if upgrade.transformed_mod != null:
 		parts.append("transformed: " + mod_numbers(upgrade.transformed_mod, kit, content))
+	if upgrade.grows != null:
+		parts.append(growth_numbers(upgrade.grows, kit, content))
 	return " · ".join(parts)
+
+
+## How a growing card grows (phase 5c step 4): "Grows: +1% ATK per 10
+## enemies Marked".
+static func growth_numbers(growth: GrowthDef, kit: UnitDef, content: ContentDb) -> String:
+	var text: String = "Grows: %s per %s" % [step_text(growth.each, kit, content), counted(growth.counts, growth.per)]
+	if growth.max_steps > 0:
+		text += " (at most %d time%s)" % [growth.max_steps, "" if growth.max_steps == 1 else "s"]
+	return text
+
+
+## Where a held growing card is: "Now: +3% ATK (4 / 10 enemies Marked to
+## the next)", or "Now: nothing yet (...)".
+static func growth_now(growth: GrowthDef, count: int, kit: UnitDef, content: ContentDb) -> String:
+	var steps: int = growth.steps(count)
+	var now: String = step_text(growth.each.times(steps), kit, content) if steps > 0 else "nothing yet"
+	if growth.max_steps > 0 and steps >= growth.max_steps:
+		return "Now: %s (done)" % now
+	return "Now: %s (%s / %s to the next)" % [now, _amount(growth.counts, count % growth.per), counted(growth.counts, growth.per)]
+
+
+## One step's (or several steps') change, the way a card says it: an added
+## aura's amount, without its name.
+static func step_text(mod: KitMod, kit: UnitDef, content: ContentDb) -> String:
+	var bare: KitMod = KitMod.make()
+	bare.stats_bp = mod.stats_bp
+	bare.stats_add = mod.stats_add
+	bare.changes = mod.changes
+	var parts: Array[String] = mod_parts(bare, kit, content)
+	for part: PartDef in mod.passives:
+		if part.kind == PartDef.Kind.AURA:
+			parts.append(UnitInfo.aura_text(part.aura))
+	return ", ".join(parts)
+
+
+## What a growing card counts, `per` of it: "10 enemies Marked", "300
+## damage dealt from beyond 4 hexes", "3s below 30% HP".
+static func counted(counts: DeedDef, per: int) -> String:
+	var amount: String = _amount(counts, per)
+	match counts.counts:
+		DeedDef.Counts.DAMAGE:
+			var what: String = "%s damage dealt" % amount
+			if counts.from_range > 0:
+				@warning_ignore("integer_division")
+				what += " from beyond %s" % UnitInfo.hexes(counts.from_range / HexGrid.HEX)
+			if counts.from_basic:
+				what += " by basic attacks"
+			if not counts.from_ability.is_empty():
+				what += " by " + ", ".join(counts.from_ability).replace("_", " ")
+			return what
+		DeedDef.Counts.HEALING:
+			return "%s healing given%s" % [amount, " beside the target" if counts.off_target else ""]
+		DeedDef.Counts.SHIELD:
+			return "%s Shield given" % amount
+		DeedDef.Counts.EXTRA_HITS:
+			return "%s extra enemies hit" % amount
+		DeedDef.Counts.ROOTED_MS:
+			return "%s of Root" % amount
+		DeedDef.Counts.GUARDED:
+			return "%s damage taken for allies" % amount
+		DeedDef.Counts.APPLIED:
+			if counts.keywords.is_empty():
+				return "%s statuses put on enemies" % amount
+			var names: Array[String] = []
+			for keyword: String in counts.keywords:
+				names.append(Keywords.label(keyword))
+			return "%s enemies %s" % [amount, " or ".join(names)]
+		DeedDef.Counts.TAKEN:
+			return "%s damage taken" % amount
+		DeedDef.Counts.MS_BELOW:
+			return "%s below %s HP" % [amount, ValueBreakdown._percent(counts.while_below_bp)]
+		DeedDef.Counts.KILLS:
+			return "%s kills" % amount
+	return amount
+
+
+## An amount of what's counted: time kinds in seconds.
+static func _amount(counts: DeedDef, value: int) -> String:
+	if counts.counts == DeedDef.Counts.ROOTED_MS or counts.counts == DeedDef.Counts.MS_BELOW:
+		@warning_ignore("integer_division")
+		return UnitInfo.seconds(value / FixedMath.MS_PER_TICK)
+	return str(value)
 
 
 ## A relic's: its mods, each for whom it's for, then its run rules.
@@ -134,6 +221,8 @@ static func relic_numbers(relic: RelicDef, content: ContentDb) -> String:
 		parts.append("%s shards per won fight" % signed(relic.pay_add))
 	if relic.pick_cards > 0:
 		parts.append("%d cards on each pick" % relic.pick_cards)
+	if relic.grows != null:
+		parts.append("Heroes: %s, counted for the whole team" % growth_numbers(relic.grows, null, content))
 	return " · ".join(parts)
 
 

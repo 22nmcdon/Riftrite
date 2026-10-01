@@ -14,6 +14,9 @@ var combat_log: CombatLog = CombatLog.new()
 var errors: Array[String] = []
 ## Each hero's deeds (Deeds), in the fight's order and each hero's path order.
 var deeds: Array[Deed] = []
+## What its growing cards counted (phase 5c step 4): each hero's tallies, a
+## Deed whose `path` is the card's key.
+var tallies: Array[Deed] = []
 
 
 ## What a fight put into one deed.
@@ -35,6 +38,14 @@ func deed_amount(hero_id: String, path_id: String) -> int:
 	for deed: Deed in deeds:
 		if deed.hero == hero_id and deed.path == path_id:
 			return deed.amount
+	return 0
+
+
+## What the fight counted for `hero_id`'s growing card `key` (0 if none).
+func tally_amount(hero_id: String, key: String) -> int:
+	for tally: Deed in tallies:
+		if tally.hero == hero_id and tally.path == key:
+			return tally.amount
 	return 0
 
 
