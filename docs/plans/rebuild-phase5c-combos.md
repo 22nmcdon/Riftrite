@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a, 5b (section 11), and 5c (section 12) built (10-01), 5d (section 13) built (10-01): the relic pool is complete; step 6 (the loadout pool, section 14) built in five parts, 6a–6e (10-01); step 7 (the upgrade pools, section 15) built in four parts, 7a–7d (10-01); step 8 (the new day, section 16) built in three parts, 8a–8c (10-01); step 9 (section 17) approved, building in four parts, 9a–9d.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a, 5b (section 11), and 5c (section 12) built (10-01), 5d (section 13) built (10-01): the relic pool is complete; step 6 (the loadout pool, section 14) built in five parts, 6a–6e (10-01); step 7 (the upgrade pools, section 15) built in four parts, 7a–7d (10-01); step 8 (the new day, section 16) built in three parts, 8a–8c (10-01); step 9 (section 17) built in four parts, 9a–9d (10-01): phase 5c is built.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -1425,7 +1425,7 @@ A choice that can't be done (no shards, no item, no hero it fits) is shown greye
 
 ## 17. Step 9: the combo readout, the engine report, the retune, and a build
 
-Status: **approved (2026-10-01, Decisions 44–47); building in four parts, 9a–9d.** Builds part 7, section 7 (`rebuild-combos.md`): no combo readout for players, one for testing behind the testing toggle, and a report so tuning can see which engines work; then the retune the earlier steps left for here, and a playtest build.
+Status: **approved (2026-10-01, Decisions 44–47); built in four parts, 9a–9d (17.11–17.14).** Builds part 7, section 7 (`rebuild-combos.md`): no combo readout for players, one for testing behind the testing toggle, and a report so tuning can see which engines work; then the retune the earlier steps left for here, and a playtest build.
 
 ### 17.1 What's there now
 
@@ -1527,6 +1527,13 @@ Status: **approved (2026-10-01, Decisions 44–47); building in four parts, 9a�
 The run's first transformation now comes on day 3 (median; day 2 before). **The run report** (54 runs): 75% of runs won, 82.9 shards earned a run, 4.6 relics, no errors.
 
 **Vowed Volley stays at +10 over base** (the paths report, `--paths --seeds=1 --sweep=20`; Decision 3 of phase 4 caps a vow at about +5). Its taste's numbers can't move it: with the split arrow at a fifth (+10) or **off entirely** it gains the same (+29 in Sentinel Under Moths, +21 in Witch Circle, both with the split off). The gain is her vow's **cost**: reaching 3 hexes instead of 4 helps her in those fights. Changing a vow's cost is a design question (Decision 46 limited this step to the taste's numbers), so the split is back at a third and the question goes to the playtester. The paths report also shows vowed Vigil Keeper at −7 ("too weak") and most transformations at +5 to +13, below phase 4's 15–25 band: the upgrade and loadout pools have changed fights since; left for phase 6.
+
+### 17.14 Built in step 9d (2026-10-01)
+
+- **Docs:** CLAUDE.md (phase 5c built; the combo readout's notes, the testing toggles, `--engines`), `rebuild-combos.md` (section 7 built), `rebuild-build-order.md` (phase 5c done), `design.md`'s open questions (the nodes and events answered; vowed Volley's cost, Wardweaver's and Hearthwall's deeds, and the engines that never fire added), and `tools/ci/HOW-TO-PLAY.txt` (the combo readout).
+- **A playtest build** ("Playtest build" workflow, Decision 47) for playtest gate 3 with all of phase 5c.
+
+**Step 9 is built, and with it phase 5c.**
 
 ## Answered (2026-09-30)
 
