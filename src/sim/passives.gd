@@ -94,6 +94,7 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 	for unit: UnitState in sim.units:
 		unit.aura_bp = no_auras()
 		unit.vs_conditions.clear()
+		unit.vs_stats.clear()
 		unit.vs_bonus_bp.clear()
 	var now_active: Array[String] = []
 	for holder: UnitState in sim.units:
@@ -116,15 +117,23 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 				targets = sim.standing_allies_of(holder)
 			for target: UnitState in targets:
 				if part.aura.vs != null:
-					# Power only against targets that meet it (phase 5c step 3);
-					# EffectRunner.deal_hit adds it per hit.
+					# Only against targets that meet it (phase 5c steps 3 and 5b);
+					# worked out per hit (EffectRunner).
 					target.vs_conditions.append(part.aura.vs)
-					target.vs_bonus_bp.append(times * (part.aura.value - FixedMath.BP_ONE))
+					target.vs_stats.append(part.aura.stat)
+					target.vs_bonus_bp.append(times * (part.aura.value if _is_additive(part.aura.stat) else part.aura.value - FixedMath.BP_ONE))
 					continue
 				for i: int in times:
 					# A factor's change adds to the others' of its stat (the
 					# damage rule, phase 5c): x1.1 and x1.1 make x1.2.
 					target.aura_bp[part.aura.stat] += part.aura.value if _is_additive(part.aura.stat) else part.aura.value - FixedMath.BP_ONE
+	# Timed boosts (phase 5c step 5b) count like the unit's own auras.
+	for unit: UnitState in sim.units:
+		for state: StatusState in unit.statuses:
+			if state.def.kind == StatusDef.Kind.BOOST:
+				for i: int in state.def.boost_stats.size():
+					var stat: int = state.def.boost_stats[i]
+					unit.aura_bp[stat] += state.def.boost_values[i] if _is_additive(stat) else state.def.boost_values[i] - FixedMath.BP_ONE
 	for unit: UnitState in sim.units:
 		unit.stats = unit.base_stats.copy()
 		for aura_stat: int in AuraDef.Stat.size():
@@ -133,6 +142,7 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 			var stat: int = AuraDef.UNIT_STAT_FOR[aura_stat]
 			unit.stats.values[stat] = FixedMath.apply_bp(unit.base_stats.values[stat], factor(unit, aura_stat))
 		unit.stats.values[UnitStats.Stat.RANGE] = unit.base_stats.values[UnitStats.Stat.RANGE] + unit.aura_bp[AuraDef.Stat.RANGE]
+		unit.stats.values[UnitStats.Stat.ATSP] += unit.aura_bp[AuraDef.Stat.ATSP]
 		unit.attack.set_cooldown_add(unit.aura_bp[AuraDef.Stat.COOLDOWN_BP])
 		unit.attack_rate_bp = sim.attack_rate_bp(unit)
 		unit.refresh_reach()
@@ -177,6 +187,11 @@ static func condition_holds(sim: CombatSim, holder: UnitState, aura: AuraDef) ->
 		AuraDef.While.STATE:
 			if not aura.state.holds(holder):
 				return false
+		AuraDef.While.ALLY_NEAR:
+			var reach_sq: int = aura.near_range * aura.near_range
+			if not (sim.heroes if holder.side == EffectSource.Team.HEROES else sim.enemies).any(func(ally: UnitState) -> bool:
+					return ally != holder and ally.alive and ArenaPlane.length_sq(ally.pos - holder.pos) <= reach_sq):
+				return false
 		AuraDef.While.ALLY_STANDING:
 			if not (sim.heroes if holder.side == EffectSource.Team.HEROES else sim.enemies).any(
 					func(unit: UnitState) -> bool: return unit != holder and unit.alive and unit.def.id == aura.ally_kit):
@@ -215,6 +230,14 @@ static func condition_key(sim: CombatSim, unit: UnitState) -> int:
 	return key
 
 
+## True if the unit has an aura of `stat` (any target).
+static func has_aura_of(unit: UnitState, stat: AuraDef.Stat) -> bool:
+	for part: PartDef in unit.def.passives:
+		if part.kind == PartDef.Kind.AURA and part.aura.stat == stat:
+			return true
+	return false
+
+
 ## True if the unit has a damage aura against some targets ("vs").
 static func has_vs_aura(unit: UnitState) -> bool:
 	for part: PartDef in unit.def.passives:
@@ -223,11 +246,12 @@ static func has_vs_aura(unit: UnitState) -> bool:
 	return false
 
 
-## The power bonus (bp) `attacker`'s "vs" auras give a hit on `target`.
-static func vs_bonus_bp(attacker: UnitState, target: UnitState) -> int:
+## What `attacker`'s "vs" auras of `stat` give against `target` (bp): a
+## damage_bp aura's power, a crit_chance_bp or lifesteal_bp aura's amount.
+static func vs_bonus_bp(attacker: UnitState, target: UnitState, stat: int = AuraDef.Stat.DAMAGE_BP) -> int:
 	var bonus: int = 0
 	for i: int in attacker.vs_conditions.size():
-		if attacker.vs_conditions[i].holds(target):
+		if attacker.vs_stats[i] == stat and attacker.vs_conditions[i].holds(target):
 			bonus += attacker.vs_bonus_bp[i]
 	return bonus
 
@@ -301,7 +325,7 @@ static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, 
 		var effect: EffectDef = listener.effect
 		if effect.trigger != event or not effect.active_at(sim.tick):
 			continue
-		if event == EffectDef.Trigger.ON_STATUS:
+		if event == EffectDef.Trigger.ON_STATUS or event == EffectDef.Trigger.ON_STATUS_ENDED:
 			if not effect.statuses.is_empty() and not effect.statuses.has(status):
 				continue
 			if not effect.keywords.is_empty() and not effect.keywords.has(sim.content.statuses[status].keyword):

@@ -1,6 +1,6 @@
 [
   {
-    "_note": "Relics (docs/plans/relics/, phase 5c step 5a; docs/plans/rebuild-phase5c-combos.md, section 10): team-wide, no downsides, in tiers (common, rare, epic, legendary, boss). The 44 the built pieces can write; the rest come with steps 5b-5d. Texts keep numbers out (the UI adds them from the mod and run rules). Icons reuse the placeholder glyphs until the art rehaul. Numbers are placeholders.",
+    "_note": "Relics (docs/plans/relics/, phase 5c step 5a; docs/plans/rebuild-phase5c-combos.md, section 10): team-wide, no downsides, in tiers (common, rare, epic, legendary, boss). The 64 the built pieces can write (44 from step 5a, 20 from 5b); the rest come with steps 5c-5d. Texts keep numbers out (the UI adds them from the mod and run rules). Icons reuse the placeholder glyphs until the art rehaul. Numbers are placeholders.",
     "id": "whetstone_of_the_fallen",
     "name": "Whetstone of the Fallen",
     "tier": "common",
@@ -243,6 +243,153 @@
     "flavor": "It finds its way into your hand.",
     "text": "Shards at every shop.",
     "shop_shards": 2
+  },
+  {
+    "id": "bramble_seed",
+    "name": "Bramble Seed",
+    "tier": "common",
+    "icon": "braced",
+    "flavor": "It sprouts in blood.",
+    "text": "As a fight starts, the enemies nearest your heroes are Rooted.",
+    "at_start": [
+      {
+        "type": "apply_status",
+        "status": "root",
+        "duration_ms": 1500,
+        "target": "nearest_enemies",
+        "count": 2
+      }
+    ]
+  },
+  {
+    "id": "ember_bauble",
+    "name": "Ember Bauble",
+    "tier": "common",
+    "icon": "ember_heart",
+    "flavor": "Still warm from a pyre nobody lit.",
+    "text": "As a fight starts, every enemy catches Burn.",
+    "at_start": [
+      {
+        "type": "apply_status",
+        "status": "burn",
+        "stacks": 3,
+        "target": "all_enemies"
+      }
+    ]
+  },
+  {
+    "id": "tithe_of_iron",
+    "name": "Tithe of Iron",
+    "tier": "common",
+    "icon": "unbroken_wall",
+    "flavor": "Paid in rivets.",
+    "text": "Heroes start every fight with a Shield of a share of their max HP.",
+    "at_start": [
+      {
+        "type": "shield",
+        "amount_bp_of_max_hp": 800,
+        "target": "all_allies"
+      }
+    ]
+  },
+  {
+    "id": "smoke_pouch",
+    "name": "Smoke Pouch",
+    "tier": "common",
+    "icon": "light_feet",
+    "flavor": "Smells of burnt hair.",
+    "text": "Heroes are hidden by Stealth as every fight starts.",
+    "at_start": [
+      {
+        "type": "apply_status",
+        "status": "stealth",
+        "duration_ms": 1000,
+        "target": "all_allies"
+      }
+    ]
+  },
+  {
+    "id": "leech_tooth",
+    "name": "Leech Tooth",
+    "tier": "common",
+    "icon": "deep_mend",
+    "flavor": "Pulled from something that was still feeding.",
+    "text": "Heroes heal a share of the damage their hits deal.",
+    "mod": {
+      "passives": [
+        {
+          "id": "leech_tooth",
+          "name": "Leech Tooth",
+          "kind": "aura",
+          "text": "Heals a share of the damage its hits deal.",
+          "aura": {
+            "target": "holder",
+            "stat": "lifesteal_bp",
+            "value": 100
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "red_thirst",
+    "name": "Red Thirst",
+    "tier": "common",
+    "icon": "ember_heart",
+    "flavor": "The weaker they get, the sweeter.",
+    "text": "Heroes heal a share of the damage their hits deal to enemies below half HP.",
+    "mod": {
+      "passives": [
+        {
+          "id": "red_thirst",
+          "name": "Red Thirst",
+          "kind": "aura",
+          "text": "Heals a share of the damage its hits deal to enemies below half HP.",
+          "aura": {
+            "target": "holder",
+            "stat": "lifesteal_bp",
+            "value": 200,
+            "vs": {
+              "below_hp_pct": 50
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "moth_eaten_banner",
+    "name": "Moth-Eaten Banner",
+    "tier": "common",
+    "icon": "hold_the_middle",
+    "flavor": "Nobody remembers the house. They still stand under it.",
+    "text": "Heroes standing close to another hero take less damage.",
+    "mod": {
+      "passives": [
+        {
+          "id": "moth_eaten_banner",
+          "name": "Moth-Eaten Banner",
+          "kind": "aura",
+          "text": "Takes less damage while an ally is within 1 hex.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_reduced_bp",
+            "value": 800,
+            "while": "ally_near",
+            "within_hexes": 1
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "salt_circle",
+    "name": "Salt Circle",
+    "tier": "common",
+    "icon": "purifying_light",
+    "flavor": "Poured in a hurry, still unbroken.",
+    "text": "The first enemy area each fight lands on nothing.",
+    "salt_circle": true
   },
   {
     "id": "ember_heart",
@@ -499,6 +646,243 @@
     }
   },
   {
+    "id": "executioners_mark",
+    "name": "Executioner's Mark",
+    "tier": "rare",
+    "icon": "casters_first",
+    "flavor": "The axe knows the neck.",
+    "text": "Hits on Marked enemies near death always crit.",
+    "mod": {
+      "passives": [
+        {
+          "id": "executioners_mark",
+          "name": "Executioner's Mark",
+          "kind": "aura",
+          "text": "Its hits on Marked enemies near death always crit.",
+          "aura": {
+            "target": "holder",
+            "stat": "crit_chance_bp",
+            "value": 10000,
+            "vs": {
+              "keywords": [
+                "marked"
+              ],
+              "below_hp_pct": 30
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "hunters_ledger",
+    "name": "Hunter's Ledger",
+    "tier": "rare",
+    "icon": "rift_glass_eye",
+    "flavor": "Every name crossed out in red.",
+    "text": "Crits on Marked enemies make their Mark last longer.",
+    "mod": {
+      "passives": [
+        {
+          "id": "hunters_ledger",
+          "name": "Hunter's Ledger",
+          "kind": "ability",
+          "text": "A crit on a Marked enemy makes its Mark last longer.",
+          "effects": [
+            {
+              "trigger": "on_holder_crit",
+              "vs": {
+                "keywords": [
+                  "marked"
+                ]
+              },
+              "type": "extend_status",
+              "status": "marked",
+              "duration_ms": 1000,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "pyre_ash",
+    "name": "Pyre Ash",
+    "tier": "rare",
+    "icon": "ember_heart",
+    "flavor": "Some of it is still burning.",
+    "text": "When a Burning enemy a hero fells dies, its Burn spreads to the enemies around it.",
+    "mod": {
+      "passives": [
+        {
+          "id": "pyre_ash",
+          "name": "Pyre Ash",
+          "kind": "ability",
+          "text": "When a Burning enemy it fells dies, its Burn spreads to the enemies within 1 hex of it.",
+          "effects": [
+            {
+              "trigger": "on_kill",
+              "vs": {
+                "keywords": [
+                  "burning"
+                ]
+              },
+              "type": "apply_status",
+              "status": "burn",
+              "stacks_of": "burn",
+              "target": "enemies_near_named",
+              "within_hexes": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "grasping_mire",
+    "name": "Grasping Mire",
+    "tier": "rare",
+    "icon": "braced",
+    "flavor": "The ground remembers who it held.",
+    "text": "When a Rooted enemy a hero fells dies, the enemy nearest it is Rooted.",
+    "mod": {
+      "passives": [
+        {
+          "id": "grasping_mire",
+          "name": "Grasping Mire",
+          "kind": "ability",
+          "text": "When a Rooted enemy it fells dies, the enemy nearest it is Rooted.",
+          "effects": [
+            {
+              "trigger": "on_kill",
+              "vs": {
+                "keywords": [
+                  "rooted"
+                ]
+              },
+              "type": "apply_status",
+              "status": "root",
+              "duration_ms": 1000,
+              "target": "enemy_near_named"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "shattered_aegis",
+    "name": "Shattered Aegis",
+    "tier": "rare",
+    "icon": "unbroken_wall",
+    "flavor": "The pieces are sharper than the shield ever was.",
+    "text": "When a hero's Shield breaks, the enemies around it take the Shield the blow broke as damage.",
+    "mod": {
+      "passives": [
+        {
+          "id": "shattered_aegis",
+          "name": "Shattered Aegis",
+          "kind": "ability",
+          "text": "When its Shield breaks, the enemies within 1 hex take the Shield the blow broke as damage.",
+          "effects": [
+            {
+              "trigger": "on_shield_broken",
+              "type": "damage",
+              "amount_bp_of_damage": 10000,
+              "target": "enemies_near_self",
+              "within_hexes": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "veil_of_the_lost",
+    "name": "Veil of the Lost",
+    "tier": "rare",
+    "icon": "light_feet",
+    "flavor": "Stitched from the cloaks of those who never came back.",
+    "text": "Heroes' Stealth lasts longer, and a hero leaving Stealth attacks faster for a while.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "statuses": [
+            "stealth"
+          ],
+          "duration_add_ms": 1000
+        }
+      ],
+      "passives": [
+        {
+          "id": "veil_of_the_lost",
+          "name": "Veil of the Lost",
+          "kind": "ability",
+          "text": "Leaving Stealth, it attacks faster for a while.",
+          "effects": [
+            {
+              "trigger": "on_status_ended",
+              "statuses": [
+                "stealth"
+              ],
+              "type": "apply_status",
+              "status": "veiled_haste",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "keen_edge",
+    "name": "Keen Edge",
+    "tier": "rare",
+    "icon": "steady_hands",
+    "flavor": "Sharpened on bone.",
+    "text": "Heroes' crits deal more damage.",
+    "mod": {
+      "passives": [
+        {
+          "id": "keen_edge",
+          "name": "Keen Edge",
+          "kind": "aura",
+          "text": "Its crits deal more damage.",
+          "aura": {
+            "target": "holder",
+            "stat": "crit_damage_bp",
+            "value": 3000
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "gluttons_chalice",
+    "name": "Glutton's Chalice",
+    "tier": "rare",
+    "icon": "deep_mend",
+    "flavor": "Never empty. Never enough.",
+    "text": "Heroes heal a share of the damage their hits deal.",
+    "mod": {
+      "passives": [
+        {
+          "id": "gluttons_chalice",
+          "name": "Glutton's Chalice",
+          "kind": "aura",
+          "text": "Heals a share of the damage its hits deal.",
+          "aura": {
+            "target": "holder",
+            "stat": "lifesteal_bp",
+            "value": 500
+          }
+        }
+      ]
+    }
+  },
+  {
     "id": "mirror_of_ash",
     "name": "Mirror of Ash",
     "tier": "epic",
@@ -597,6 +981,96 @@
     "flat_rerolls": true
   },
   {
+    "id": "thicket_engine",
+    "name": "Thicket Engine",
+    "tier": "epic",
+    "icon": "braced",
+    "flavor": "Gears of root and thorn, turning.",
+    "text": "Rooted enemies take more damage, and every few hits on a Rooted enemy keep it Rooted a little longer.",
+    "mod": {
+      "passives": [
+        {
+          "id": "thicket_engine",
+          "name": "Thicket Engine",
+          "kind": "aura",
+          "text": "More damage to Rooted enemies.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 13000,
+            "vs": {
+              "keywords": [
+                "rooted"
+              ]
+            }
+          }
+        },
+        {
+          "id": "thicket_engine_roots",
+          "name": "Thicket Engine",
+          "kind": "ability",
+          "text": "Every few hits on a Rooted enemy keep it Rooted a little longer.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "vs": {
+                "keywords": [
+                  "rooted"
+                ]
+              },
+              "every": 4,
+              "type": "extend_status",
+              "status": "root",
+              "duration_ms": 100,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "stormcallers_bell",
+    "name": "Stormcaller's Bell",
+    "tier": "epic",
+    "icon": "echo",
+    "flavor": "It rings before the thunder.",
+    "text": "When any hero fires a signature, every hero's ATK and MGK rise for a while.",
+    "mod": {
+      "passives": [
+        {
+          "id": "stormcallers_bell",
+          "name": "Stormcaller's Bell",
+          "kind": "ability",
+          "text": "When it fires its signature, every ally's ATK and MGK rise for a while.",
+          "effects": [
+            {
+              "trigger": "on_ability",
+              "type": "apply_status",
+              "status": "storm_call",
+              "target": "all_allies"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "overkill_tithe",
+    "name": "Overkill Tithe",
+    "tier": "epic",
+    "icon": "cheaper",
+    "flavor": "The rift collects what spills over.",
+    "text": "Shards for the team's damage past an enemy's last HP.",
+    "grows": {
+      "counts": {
+        "counts": "overkill"
+      },
+      "per": 150,
+      "each_shards": 1
+    }
+  },
+  {
     "id": "rift_fed_blades",
     "name": "Rift-Fed Blades",
     "tier": "legendary",
@@ -654,6 +1128,15 @@
     "flavor": "Take what's given.",
     "text": "The after-fight pick shows one more card.",
     "pick_cards_add": 1
+  },
+  {
+    "id": "reliquary",
+    "name": "Reliquary",
+    "tier": "legendary",
+    "icon": "hollow_crown",
+    "flavor": "Small things, kept well, grow heavy.",
+    "text": "Every common relic you hold counts twice.",
+    "doubles_commons": true
   },
   {
     "id": "the_second_sun",

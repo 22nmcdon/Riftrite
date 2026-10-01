@@ -24,15 +24,18 @@ extends RefCounted
 ##             still hit it, and it keeps attacking. Added at playtest
 ##             gate 1 for Maren's hop: a code change, since no other kind
 ##             can hide a unit)
+##   boost:    duration_ms, "auras": [{"stat": "atsp", "value": 30}] (AuraDef
+##             stats; counted like auras while it lasts; phase 5c step 5b,
+##             timed boosts)
 ## Any kind may carry a "keyword" (Keywords.NAMES; phase 5c step 3): the
 ## name cards use for a unit with this status (Marked, Rooted, Burning,
 ## Stealthed). It changes nothing in a fight by itself.
 ## A timed status's duration_ms is its default; an apply_status effect can
 ## give its own. A new application refreshes the timer.
 
-enum Kind { DAMAGE_OVER_TIME, ROOT, STUN, SLOW, TAUNT, SILENCE, MARKED, UNDYING, ENGAGED, STEALTH, WARDED }
+enum Kind { DAMAGE_OVER_TIME, ROOT, STUN, SLOW, TAUNT, SILENCE, MARKED, UNDYING, ENGAGED, STEALTH, WARDED, BOOST }
 
-const KIND_NAMES: Array[String] = ["damage_over_time", "root", "stun", "slow", "taunt", "silence", "marked", "undying", "engaged", "stealth", "warded"]
+const KIND_NAMES: Array[String] = ["damage_over_time", "root", "stun", "slow", "taunt", "silence", "marked", "undying", "engaged", "stealth", "warded", "boost"]
 
 var id: String
 var name: String
@@ -55,6 +58,9 @@ var duration_ticks: int = 0
 var slow_bp: int = 0
 var damage_taken_bp: int = 0
 var damage_reduced_bp: int = 0
+## boost: the aura stats it changes, and by how much (AuraDef values).
+var boost_stats: Array[int] = []
+var boost_values: Array[int] = []
 ## The keyword a unit with it has ("": none).
 var keyword: String = ""
 
@@ -91,6 +97,14 @@ static func read(reader: DataReader) -> StatusDef:
 				def.damage_taken_bp = reader.req_int("damage_taken_bp", 1)
 			Kind.WARDED:
 				def.damage_reduced_bp = reader.req_int("damage_reduced_bp", 1, FixedMath.BP_ONE)
+			Kind.BOOST:
+				for aura: DataReader in reader.opt_object_array("auras"):
+					var stat: int = AuraDef.STAT_NAMES.find(aura.req_choice("stat", AuraDef.STAT_NAMES))
+					def.boost_stats.append(maxi(stat, 0))
+					def.boost_values.append(aura.req_int("value", -50000, 50000))
+					aura.finish()
+				if def.boost_stats.is_empty():
+					reader.error("a boost needs auras")
 	reader.finish()
 	return def
 

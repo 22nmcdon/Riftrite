@@ -128,6 +128,14 @@ static func _land(sim: CombatSim, area: Pending) -> void:
 			hit.append(other)
 	var landed: LogEntry = _entry(sim, LogEntry.Kind.AREA_LANDED, area)
 	landed.amount = hit.size()
+	# Salt Circle (a relic; phase 5c step 5b): the first enemy areas each
+	# fight (not zones) land on nothing.
+	if sim.salt_circles > 0 and area.unit.side == EffectSource.Team.ENEMIES and area.effect.zone_ticks == 0:
+		sim.salt_circles -= 1
+		landed.amount = 0
+		landed.note = "broken by Salt Circle"
+		sim.combat_log.add(landed)
+		return
 	sim.combat_log.add(landed)
 	# (A unit knocked to 0 by one effect still takes the rest: it falls in
 	# the tick's deaths step, like any other.)

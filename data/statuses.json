@@ -111,5 +111,21 @@
     "interval_ms": 1000,
     "damage_per_stack": 0,
     "defense_shred_per_stack": 1
+  },
+  {
+    "_note": "Attacks faster while it lasts (Veil of the Lost, a rare relic: a hero leaving Stealth; phase 5c step 5b).",
+    "id": "veiled_haste",
+    "name": "Veiled Haste",
+    "kind": "boost",
+    "duration_ms": 3000,
+    "auras": [{"stat": "atsp", "value": 30}]
+  },
+  {
+    "_note": "More ATK and MGK while it lasts (Stormcaller's Bell, an epic relic: any hero firing a signature; phase 5c step 5b).",
+    "id": "storm_call",
+    "name": "Storm Call",
+    "kind": "boost",
+    "duration_ms": 3000,
+    "auras": [{"stat": "atk_bp", "value": 12000}, {"stat": "mgk_bp", "value": 12000}]
   }
 ]

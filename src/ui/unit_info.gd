@@ -24,6 +24,7 @@ const EVENT_WORDS: Dictionary[int, String] = {
 	EffectDef.Trigger.ON_HOP: "hop",
 	EffectDef.Trigger.ON_HOLDER_HIT: "hit", EffectDef.Trigger.ON_SHIELD_BROKEN: "Shield broken",
 	EffectDef.Trigger.ON_ALLY_ABILITY: "ally's signature",
+	EffectDef.Trigger.ON_STATUS_ENDED: "status running out",
 }
 const ORDINALS: Array[String] = ["th", "st", "nd", "rd"]
 const CHATTER: Array[LogEntry.Kind] = [LogEntry.Kind.MOVE, LogEntry.Kind.STOP, LogEntry.Kind.TARGET]
@@ -221,7 +222,12 @@ static func passive_trigger_text(effect: EffectDef) -> String:
 		EffectDef.Trigger.ON_ALLY_BELOW_HP:
 			return "When an ally drops below %s HP (%s)" % [ValueBreakdown._percent(effect.threshold_bp), "once a fight" if effect.once else "once per ally"]
 	var word: String = EVENT_WORDS.get(effect.trigger, EffectDef.TRIGGER_NAMES[effect.trigger])
-	if not effect.keywords.is_empty():
+	if effect.trigger == EffectDef.Trigger.ON_STATUS_ENDED and not effect.statuses.is_empty():
+		var ended: Array[String] = []
+		for status_id: String in effect.statuses:
+			ended.append(status_id.replace("_", " ").capitalize())
+		word = "time its %s runs out" % " or ".join(ended)
+	elif not effect.keywords.is_empty():
 		var names: Array[String] = []
 		for keyword: String in effect.keywords:
 			names.append(Keywords.label(keyword))
@@ -236,6 +242,10 @@ static func aura_text(aura: AuraDef) -> String:
 	var text: String
 	if aura.stat == AuraDef.Stat.RANGE:
 		text = "%+d range" % aura.value
+	elif aura.stat == AuraDef.Stat.ATSP:
+		text = "%+d ATSP" % aura.value
+	elif aura.stat == AuraDef.Stat.DAMAGE_REDUCED_BP:
+		text = "%s damage taken" % signed_percent(-aura.value)
 	elif aura.is_additive():
 		text = "%s %s" % [signed_percent(aura.value), AuraDef.STAT_LABELS[aura.stat]]
 	else:
@@ -252,8 +262,13 @@ static func aura_text(aura: AuraDef) -> String:
 			text += " below %s HP" % ValueBreakdown._percent(aura.below_bp)
 		AuraDef.While.STATE:
 			text += " while %s" % aura.state.describe()
-	if aura.vs != null:
+		AuraDef.While.ALLY_NEAR:
+			@warning_ignore("integer_division")
+			text += " while an ally is within %s" % hexes(aura.near_range / HexGrid.HEX)
+	if aura.vs != null and aura.stat == AuraDef.Stat.DAMAGE_BP:
 		text = text.replace(" damage", " damage against %s" % aura.vs.describe())
+	elif aura.vs != null:
+		text += " against enemies that are %s" % aura.vs.describe()
 	if aura.per_fallen_ally:
 		text += " per fallen ally"
 	if aura.window_until_ticks >= 0:
@@ -311,6 +326,14 @@ static func _near(effect: EffectDef) -> String:
 			return " to the ally lowest on HP" + within
 		EffectDef.Target.SELF:
 			return " to itself" if effect.type == EffectDef.Type.GAIN_MANA else ""
+		EffectDef.Target.ENEMIES_NEAR_SELF:
+			return " to every enemy near it" + within
+		EffectDef.Target.ENEMIES_NEAR_NAMED:
+			return " to every enemy near that unit" + within
+		EffectDef.Target.ENEMY_NEAR_NAMED:
+			return " to the enemy nearest that unit" + within
+		EffectDef.Target.NEAREST_ENEMIES:
+			return " to the %s nearest the heroes" % ("enemy" if effect.count == 1 else "%d enemies" % effect.count)
 	return ""
 
 
@@ -318,7 +341,8 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 	match effect.type:
 		EffectDef.Type.DAMAGE:
 			if effect.amount_bp_of_damage > 0:
-				return "%s of the hit as damage" % ValueBreakdown._percent(effect.amount_bp_of_damage)
+				return "%s of the %s as damage" % [ValueBreakdown._percent(effect.amount_bp_of_damage),
+					"Shield it broke" if effect.trigger == EffectDef.Trigger.ON_SHIELD_BROKEN else "hit"]
 			var text: String = _amount(effect, kit, "damage")
 			if effect.bonus_bp_per_ally > 0:
 				var kin: String = _unit_name(effect.bonus_kit, content) if not effect.bonus_kit.is_empty() else "ally"
@@ -336,13 +360,19 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 		EffectDef.Type.SHIELD:
 			if effect.amount_bp_of_damage > 0:
 				return "Shield of %s of the hit" % ValueBreakdown._percent(effect.amount_bp_of_damage)
+			if effect.amount_bp_of_max_hp > 0:
+				return "Shield of %s of max HP%s" % [ValueBreakdown._percent(effect.amount_bp_of_max_hp), _to_all(effect)]
 			return _amount(effect, kit, "Shield") + _to_all(effect)
 		EffectDef.Type.APPLY_STATUS:
 			var status: StatusDef = content.statuses[effect.status_id]
+			if not effect.stacks_of.is_empty():
+				return "as much %s as that unit had" % _status_name(effect.stacks_of, content)
 			if status.kind == StatusDef.Kind.DAMAGE_OVER_TIME:
-				return "%d %s" % [effect.stacks, status.name]
+				return "%d %s%s" % [effect.stacks, status.name, _to_all(effect)]
 			var ticks: int = effect.duration_ticks if effect.duration_ticks > 0 else status.duration_ticks
-			return "%s %s" % [status.name, seconds(ticks)] if ticks > 0 else status.name
+			return ("%s %s" % [status.name, seconds(ticks)] if ticks > 0 else status.name) + _to_all(effect)
+		EffectDef.Type.EXTEND_STATUS:
+			return "its %s lasts %s longer" % [_status_name(effect.status_id, content), seconds(effect.duration_ticks)]
 		EffectDef.Type.CLEANSE:
 			return "cleanses %s of damage over time" % ValueBreakdown._percent(effect.amount)
 		EffectDef.Type.MANA_DRAIN:

@@ -30,6 +30,7 @@ var aura_bp: Array[int] = []
 ## Its damage auras against some targets (AuraDef.vs; phase 5c step 3): each
 ## condition and its power bonus (bp), folded in with the other auras.
 var vs_conditions: Array[UnitCondition] = []
+var vs_stats: Array[int] = []
 var vs_bonus_bp: Array[int] = []
 var max_hp: int
 var hp: int

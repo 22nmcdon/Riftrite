@@ -9,6 +9,13 @@ extends RefCounted
 ##   "grows": {...GrowthDef...}   every hero's kit, growing with what the
 ##                                team does (phase 5c step 4); a growth that
 ##                                pays shards ("each_shards") pays them instead
+##   "at_start": [...EffectDefs...]   run by the sim as each fight starts,
+##                                sourced to the relic (phase 5c step 5b): no
+##                                trigger; apply_status, shield, heal, or
+##                                damage, at all_allies, all_enemies, or
+##                                nearest_enemies (with a "count")
+##   "salt_circle": true          the first enemy area each fight lands on
+##                                nothing
 ## Run rules (RunFlow and RunContent read them):
 ##   "slots_add": 1               loadout slots for each hero
 ##   "always_scout": true         every fight is Scouted
@@ -34,6 +41,10 @@ extends RefCounted
 ##                                shards held
 ##   "covenant": true             each hero takes the team's highest basic
 ##                                stats (RunFlow.fight_setup)
+##   "doubles_commons": true      every common relic held counts twice: its
+##                                mod times(2) where a step could scale it,
+##                                its at_start effects' numbers doubled, its
+##                                run rules' numbers doubled (Reliquary)
 ## The run rules are RunFlow's; the mods are applied at setup, so a fight is
 ## still a pure function of its setup.
 
@@ -41,6 +52,9 @@ enum Tier { COMMON, RARE, EPIC, LEGENDARY, BOSS }
 
 const TIER_NAMES: Array[String] = ["common", "rare", "epic", "legendary", "boss"]
 const TIER_LABELS: Array[String] = ["Common", "Rare", "Epic", "Legendary", "Boss"]
+## What a relic's at_start effects may do, and at whom.
+const START_TYPES: Array[EffectDef.Type] = [EffectDef.Type.APPLY_STATUS, EffectDef.Type.SHIELD, EffectDef.Type.HEAL, EffectDef.Type.DAMAGE]
+const START_TARGETS: Array[EffectDef.Target] = [EffectDef.Target.ALL_ALLIES, EffectDef.Target.ALL_ENEMIES, EffectDef.Target.NEAREST_ENEMIES]
 
 var id: String
 var name: String
@@ -76,6 +90,9 @@ var per_relic_bp: int = 0
 var per_shards: int = 0
 var per_shards_bp: int = 0
 var covenant: bool = false
+var at_start: Array[EffectDef] = []
+var salt_circle: bool = false
+var doubles_commons: bool = false
 
 
 static func read(reader: DataReader) -> RelicDef:
@@ -121,6 +138,15 @@ static func read(reader: DataReader) -> RelicDef:
 			def.per_shards_bp = shards.req_int("bp", 1, FixedMath.BP_ONE)
 			shards.finish()
 	def.covenant = reader.opt_bool("covenant", false)
+	for effect_reader: DataReader in reader.opt_object_array("at_start"):
+		if effect_reader.has("trigger"):
+			effect_reader.error("a relic's at_start effects run as the fight starts, so they take no trigger")
+		var effect: EffectDef = EffectDef.read(effect_reader, true)
+		if not START_TYPES.has(effect.type) or not START_TARGETS.has(effect.target):
+			effect_reader.error("at_start: apply_status, shield, heal, or damage, at all_allies, all_enemies, or nearest_enemies")
+		def.at_start.append(effect)
+	def.salt_circle = reader.opt_bool("salt_circle", false)
+	def.doubles_commons = reader.opt_bool("doubles_commons", false)
 	if not def.does_something():
 		reader.error("a relic needs to do something")
 	reader.finish()
@@ -131,7 +157,7 @@ func does_something() -> bool:
 	return grows != null or mod != null or enemy_mod != null or slots_add != 0 or always_scout or price_add != 0 or pay_add != 0 \
 		or elite_pay_add != 0 or wound_price_add != 0 or shop_shards != 0 or miser or free_reroll or flat_rerolls or shop_relics_add != 0 \
 		or wares_add != 0 or pick_cards_add != 0 or take_picks_add != 0 or streak_wins > 0 or growth_bp > 0 or per_relic_bp > 0 \
-		or per_shards > 0 or covenant
+		or per_shards > 0 or covenant or not at_start.is_empty() or salt_circle or doubles_commons
 
 
 static func _opt_mod(reader: DataReader, key: String) -> KitMod:

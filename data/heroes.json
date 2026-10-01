@@ -50,7 +50,7 @@
       "passives": [
         {"id": "slip_away", "name": "Slip Away", "kind": "ability",
           "text": "Each time she hops away, she slips from sight for a moment: no enemy can target her.",
-          "effects": [{"trigger": "on_hop", "type": "apply_status", "status": "stealth", "target": "self"}]}
+          "effects": [{"trigger": "on_hop", "type": "apply_status", "status": "stealth", "duration_ms": 1000, "target": "self"}]}
       ]
     }
   },

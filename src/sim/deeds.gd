@@ -104,6 +104,8 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 				DeedDef.Counts.CRITS:
 					if entry.crit:
 						counter.amounts[d] += 1
+				DeedDef.Counts.OVERKILL:
+					counter.amounts[d] += entry.overkill
 				DeedDef.Counts.APPLIED:
 					var target: UnitState = sim.unit_by_id(entry.target)
 					var status: StatusDef = sim.content.statuses.get(entry.status, null)

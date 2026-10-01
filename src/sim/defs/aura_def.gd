@@ -39,7 +39,14 @@ extends RefCounted
 ##                                          UnitCondition ("Shielded allies
 ##                                          deal +15%"; phase 5c step 3)
 ## These are checked every tick (CombatSim.check_conditional_auras).
-## "vs": {...} (a UnitCondition; damage_bp only; phase 5c step 3): the bonus
+## Phase 5c step 5b adds stats that add: lifesteal_bp (heals that share of
+## the damage its hits deal; LIFESTEAL, not healing), crit_damage_bp (to the
+## crit kind of the damage rule), atsp (ATSP points: +30 is +30% attack
+## speed), and damage_reduced_bp (takes that much less damage, like Warded);
+## and "while": "ally_near", "within_hexes": 1 (on while another standing
+## ally is that close).
+## "vs": {...} (a UnitCondition; damage_bp, crit_chance_bp, and lifesteal_bp;
+## phase 5c steps 3 and 5b): the bonus
 ## counts only on hits against targets that meet it, as power (Decision 12:
 ## "+25% damage to Rooted enemies"). It isn't folded into the unit's damage
 ## multiplier; EffectRunner.deal_hit adds it per hit.
@@ -49,9 +56,10 @@ extends RefCounted
 ## arena sim, phase 1, adds what abilities need.)
 
 enum Target { HOLDER, ALL_ALLIES }
-enum Stat { DAMAGE_BP, HEAL_BP, SHIELD_BP, OVER_TIME_BP, CRIT_CHANCE_BP, COOLDOWN_BP, ATK_BP, MGK_BP, DEF_BP, ATSP_BP, CRIT_BP, RANGE, HEALING_TAKEN_BP }
+enum Stat { DAMAGE_BP, HEAL_BP, SHIELD_BP, OVER_TIME_BP, CRIT_CHANCE_BP, COOLDOWN_BP, ATK_BP, MGK_BP, DEF_BP, ATSP_BP, CRIT_BP, RANGE, HEALING_TAKEN_BP,
+	LIFESTEAL_BP, CRIT_DAMAGE_BP, ATSP, DAMAGE_REDUCED_BP }
 ## What turns an aura on, beyond its window.
-enum While { ALWAYS, TAUNTING, PLANTED, BELOW_HP, ALLY_STANDING, STATE }
+enum While { ALWAYS, TAUNTING, PLANTED, BELOW_HP, ALLY_STANDING, STATE, ALLY_NEAR }
 
 const TARGET_NAMES: Array[String] = ["holder", "all_allies"]
 const TARGET_LABELS: Array[String] = ["its holder", "all allies"]
@@ -59,14 +67,18 @@ const TARGET_LABELS: Array[String] = ["its holder", "all allies"]
 const STAT_NAMES: Array[String] = [
 	"damage_bp", "heal_bp", "shield_bp", "over_time_bp", "crit_chance_bp", "cooldown_bp",
 	"atk_bp", "mgk_bp", "def_bp", "atsp_bp", "crit_bp", "range", "healing_taken_bp",
+	"lifesteal_bp", "crit_damage_bp", "atsp", "damage_reduced_bp",
 ]
-const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp", "ally_standing", "state"]
+const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp", "ally_standing", "state", "ally_near"]
 ## The stats that add rather than multiply. The rest are factors (x1.1);
 ## several of one stat add their changes (the damage rule, phase 5c).
-const ADDITIVE: Array[Stat] = [Stat.CRIT_CHANCE_BP, Stat.COOLDOWN_BP, Stat.RANGE]
+const ADDITIVE: Array[Stat] = [Stat.CRIT_CHANCE_BP, Stat.COOLDOWN_BP, Stat.RANGE, Stat.LIFESTEAL_BP, Stat.CRIT_DAMAGE_BP, Stat.ATSP, Stat.DAMAGE_REDUCED_BP]
+## The stats a "vs" may hold for.
+const VS_STATS: Array[Stat] = [Stat.DAMAGE_BP, Stat.CRIT_CHANCE_BP, Stat.LIFESTEAL_BP]
 const STAT_LABELS: Array[String] = [
 	"damage", "healing", "shields", "damage over time", "crit chance", "cooldown",
 	"ATK", "MGK", "DEF", "ATSP", "CRIT", "range", "healing taken",
+	"lifesteal", "crit damage", "ATSP", "damage taken",
 ]
 ## Unit stat for each unit-stat aura stat (ATK_BP -> Stat.ATK, ...).
 const UNIT_STAT_FOR: Dictionary[int, int] = {
@@ -97,8 +109,11 @@ var ally_kit: String = ""
 var per_fallen_ally: bool = false
 ## state: the condition its holder must meet.
 var state: UnitCondition = null
-## damage_bp only: the targets it counts against (null: every hit).
+## damage_bp, crit_chance_bp, lifesteal_bp: the targets it counts against
+## (null: every hit).
 var vs: UnitCondition = null
+## ally_near: how close (plane units).
+var near_range: int = 0
 
 
 static func read(reader: DataReader) -> AuraDef:
@@ -125,10 +140,12 @@ static func read(reader: DataReader) -> AuraDef:
 				def.ally_kit = reader.req_string("kit")
 			While.STATE:
 				def.state = UnitCondition.read(reader.req_object("state"))
+			While.ALLY_NEAR:
+				def.near_range = reader.req_int("within_hexes", 1, 8) * HexGrid.HEX
 	if reader.has("vs"):
 		def.vs = UnitCondition.read(reader.req_object("vs"))
-		if def.stat != Stat.DAMAGE_BP:
-			reader.error("only a damage_bp aura can be \"vs\" some targets")
+		if not VS_STATS.has(def.stat):
+			reader.error("only a damage_bp, crit_chance_bp, or lifesteal_bp aura can be \"vs\" some targets")
 	if reader.has("per"):
 		def.per_fallen_ally = reader.req_choice("per", ["fallen_ally"]) == "fallen_ally"
 	EffectDef.read_window(reader, def)
@@ -150,7 +167,7 @@ func is_additive() -> bool:
 
 ## Checked each tick, not just when a window opens or closes.
 func is_conditional() -> bool:
-	return while_kind == While.PLANTED or while_kind == While.BELOW_HP or while_kind == While.ALLY_STANDING or while_kind == While.STATE or per_fallen_ally
+	return while_kind == While.PLANTED or while_kind == While.BELOW_HP or while_kind == While.ALLY_STANDING or while_kind == While.STATE or while_kind == While.ALLY_NEAR or per_fallen_ally
 
 
 ## For the log, e.g. "x2 damage for its holder" or "+20% crit chance for all allies".
@@ -174,6 +191,9 @@ func describe() -> String:
 			condition = " while a %s stands" % ally_kit.replace("_", " ")
 		While.STATE:
 			condition = " while %s" % state.describe()
+		While.ALLY_NEAR:
+			@warning_ignore("integer_division")
+			condition = " while an ally is within %d hex%s" % [near_range / HexGrid.HEX, "" if near_range == HexGrid.HEX else "es"]
 	if vs != null:
 		condition = " against %s%s" % [vs.describe(), condition]
 	if per_fallen_ally:

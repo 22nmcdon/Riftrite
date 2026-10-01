@@ -2,7 +2,9 @@ extends GutTest
 ## The relic pool's first part (docs/plans/rebuild-phase5c-combos.md, step
 ## 5a, section 10): the tiers, every 5a relic's effect (in a small fight, on
 ## a kit, or on the run), the run rules, the shops' relics and rerolls, the
-## pre-boss shop, and the boss relic choice.
+## pre-boss shop, and the boss relic choice. And its second (step 5b,
+## section 11): the 5b relics, their effects at a fight's start and Salt
+## Circle in the run's fight setups, and Reliquary's doubling.
 
 const Bot = preload("res://tools/run_bot.gd")
 const K = preload("res://tests/sim/sim_test_kit.gd")
@@ -67,7 +69,7 @@ func test_the_tiers() -> void:
 	var counts: Array[int] = [0, 0, 0, 0, 0]
 	for id: String in _run.relic_ids:
 		counts[_run.relics[id].tier] += 1
-	assert_eq(counts, [17, 13, 5, 5, 4] as Array[int], "common, rare, epic, legendary, boss")
+	assert_eq(counts, [25, 21, 8, 6, 4] as Array[int], "common, rare, epic, legendary, boss")
 	for id: String in ["pilgrims_lantern", "hungry_blade"]:
 		assert_false(_run.relics.has(id), "%s is cut" % id)
 	assert_eq(_run.act.relic_prices, {"common": 5, "rare": 12, "epic": 20, "legendary": 30, "boss": 0} as Dictionary[String, int])
@@ -348,3 +350,126 @@ func test_a_relic_that_looks_for_engaged_enemies_can_be_fought() -> void:
 	var errors: Array[String] = []
 	assert_not_null(flow.fight_setup(Bot.formation(), errors))
 	assert_eq(errors, [] as Array[String], "it names Engaged only in a condition")
+
+
+# --- step 5b ----------------------------------------------------------------------------
+
+func _setup_holding(ids: Array) -> FightSetup:
+	var flow: RunFlow = _start()
+	_hold(flow, ids)
+	_to_fight(flow)
+	var errors: Array[String] = []
+	var setup: FightSetup = flow.fight_setup(Bot.formation(), errors)
+	assert_eq(errors, [] as Array[String])
+	return setup
+
+
+func test_relics_at_a_fights_start_go_into_the_setup() -> void:
+	var setup: FightSetup = _setup_holding(["bramble_seed", "tithe_of_iron", "salt_circle"])
+	assert_eq(setup.relic_sources.map(func(source: EffectSource) -> String: return source.ability_name), ["Bramble Seed", "Tithe of Iron"])
+	assert_eq(setup.relic_scales, [FixedMath.BP_ONE, FixedMath.BP_ONE] as Array[int])
+	assert_eq(setup.salt_circles, 1)
+	var fight: CombatSim = CombatSim.new(setup, _run.content)
+	var shields: Array[LogEntry] = K.entries(fight, LogEntry.Kind.SHIELD)
+	assert_eq(shields.size(), 3, "every hero, as the fight starts")
+	for entry: LogEntry in shields:
+		var hero: UnitState = fight.unit_by_id(entry.target)
+		assert_eq([entry.tick, entry.source_ability, entry.amount], [0, "tithe_of_iron", FixedMath.apply_bp(hero.max_hp, 800)])
+	assert_eq(K.entries(fight, LogEntry.Kind.STATUS_APPLIED).filter(func(entry: LogEntry) -> bool: return entry.status == "root").size(), 2, "the two enemies nearest")
+
+
+func test_ember_bauble_and_smoke_pouch() -> void:
+	var fight: CombatSim = CombatSim.new(_setup_holding(["ember_bauble", "smoke_pouch"]), _run.content)
+	for enemy: UnitState in fight.enemies:
+		assert_eq(Statuses.find(enemy, "burn").total_stacks(), 3, enemy.id)
+	for hero: UnitState in fight.heroes:
+		assert_eq(Statuses.find(hero, "stealth").ends_at, 20, "hidden for 1s: " + hero.id)
+
+
+func test_reliquary_doubles_the_commons() -> void:
+	var flow: RunFlow = _start()
+	var atk: int = flow.kit_of("maren").stats.get_stat(UnitStats.Stat.ATK)
+	var crit: int = flow.kit_of("maren").stats.get_stat(UnitStats.Stat.CRIT)
+	_hold(flow, ["bloodstone", "bone_dice", "gravediggers_coin", "brand_of_guilt", "keen_edge", "reliquary"])
+	var kit: UnitDef = flow.kit_of("maren")
+	assert_eq(kit.stats.get_stat(UnitStats.Stat.ATK), FixedMath.apply_bp(atk, 11600), "+8% twice")
+	assert_eq(kit.stats.get_stat(UnitStats.Stat.CRIT), crit + 12, "+6 twice")
+	assert_eq(_run.relic_sum(flow.state, "pay_add"), 6, "a run rule's number, doubled")
+	assert_eq(kit.passives.filter(func(part: PartDef) -> bool: return part.id == "brand_of_guilt").size(), 1, "an ability is unchanged")
+	var keen: PartDef = kit.passives.filter(func(part: PartDef) -> bool: return part.id == "keen_edge")[0]
+	assert_eq(keen.aura.value, 3000, "a rare is unchanged")
+	_hold(flow, ["tithe_of_iron", "salt_circle"])
+	_to_fight(flow)
+	var setup: FightSetup = flow.fight_setup(Bot.formation(), [] as Array[String])
+	assert_eq([setup.relic_scales, setup.salt_circles], [[2 * FixedMath.BP_ONE] as Array[int], 2], "a start effect twice as strong, two areas broken")
+
+
+func test_lifesteal_relics() -> void:
+	for id: String in ["leech_tooth", "gluttons_chalice"]:
+		var fight: CombatSim = _duel(id, {"effects": [{"type": "damage", "amount": 100, "target": "target"}]})
+		fight.units[0].hp = 500
+		K.step(fight, 1)
+		var stolen: Array = K.entries(fight, LogEntry.Kind.LIFESTEAL).map(func(entry: LogEntry) -> int: return entry.amount)
+		assert_eq(stolen, [1 if id == "leech_tooth" else 5], id)
+	var thirst: CombatSim = _duel("red_thirst", {"effects": [{"type": "damage", "amount": 100, "target": "target"}]}, 1000)
+	thirst.units[0].hp = 500
+	K.step(thirst, 6)
+	var amounts: Array = K.entries(thirst, LogEntry.Kind.LIFESTEAL).map(func(entry: LogEntry) -> int: return entry.amount)
+	assert_eq(amounts, [2], "only once the dummy is below half HP")
+
+
+func test_crit_relics() -> void:
+	var keen: CombatSim = _duel("keen_edge", {"crit_chance_bp": 10000})
+	K.step(keen, 1)
+	assert_eq(_hits(keen), [18], "x1.5 +30%")
+	var mark: CombatSim = _duel("executioners_mark", {}, 100)
+	Statuses.apply(mark, mark.units[1], "marked", 0, 200, EffectSource.make("hero", "x", "X"))
+	K.step(mark, 8)
+	var crits: Array = K.entries(mark, LogEntry.Kind.DAMAGE, "hero").map(func(entry: LogEntry) -> bool: return entry.crit)
+	assert_eq(crits.slice(0, 2), [false, false], "not yet near death")
+	assert_true(crits.slice(crits.size() - 1).all(func(crit: bool) -> bool: return crit), "below 30% HP and Marked: a sure crit")
+
+
+func test_hunters_ledger_and_thicket_engine() -> void:
+	var ledger: CombatSim = _duel("hunters_ledger", {"crit_chance_bp": 10000})
+	Statuses.apply(ledger, ledger.units[1], "marked", 0, 60, EffectSource.make("hero", "x", "X"))
+	K.step(ledger, 2)
+	assert_eq(K.entries(ledger, LogEntry.Kind.STATUS_EXTENDED).size(), 2, "each crit on the Marked enemy")
+	assert_eq(Statuses.find(ledger.units[1], "marked").ends_at, 60 + 2 * 20)
+	var thicket: CombatSim = _duel("thicket_engine")
+	Statuses.apply(thicket, thicket.units[1], "root", 0, 200, EffectSource.make("hero", "x", "X"))
+	K.step(thicket, 8)
+	assert_eq(_hits(thicket)[0], 13, "+30% on the Rooted")
+	assert_eq(K.entries(thicket, LogEntry.Kind.STATUS_EXTENDED).size(), 2, "every 4th hit")
+	assert_eq(Statuses.find(thicket.units[1], "root").ends_at, 200 + 2 * 2, "0.1s each")
+
+
+func test_veil_of_the_lost_on_marens_stealth() -> void:
+	var flow: RunFlow = _start()
+	var before: UnitDef = flow.kit_of("maren")
+	_hold(flow, ["veil_of_the_lost"])
+	var after: UnitDef = flow.kit_of("maren")
+	var stealth: Callable = func(kit: UnitDef) -> int:
+		for part: PartDef in kit.passives:
+			if part.ability != null:
+				for effect: EffectDef in part.ability.effects:
+					if effect.type == EffectDef.Type.APPLY_STATUS and effect.status_id == "stealth":
+						return effect.duration_ticks if effect.duration_ticks > 0 else _run.content.statuses["stealth"].duration_ticks
+		return -1
+	assert_eq(stealth.call(after), stealth.call(before) + 20, "1s longer")
+	var veil: PartDef = after.passives.filter(func(part: PartDef) -> bool: return part.id == "veil_of_the_lost")[0]
+	assert_eq([veil.ability.effects[0].trigger, veil.ability.effects[0].status_id], [EffectDef.Trigger.ON_STATUS_ENDED, "veiled_haste"])
+
+
+func test_overkill_tithe_pays_for_overkill() -> void:
+	var flow: RunFlow = _start()
+	_hold(flow, ["overkill_tithe"])
+	_to_fight(flow)
+	var setup: FightSetup = flow.fight_setup(Bot.formation(), [] as Array[String])
+	assert_true(setup.heroes[0].tally_keys.has("relic:overkill_tithe"))
+	var result: FightResult = _won()
+	result.tallies.append(FightResult.Deed.make("maren", "relic:overkill_tithe", 200))
+	result.tallies.append(FightResult.Deed.make("vell", "relic:overkill_tithe", 120))
+	var before: int = flow.state.shards
+	flow.record(Bot.formation(), result)
+	assert_eq(flow.state.shards - before, _run.act.pay[_run.content.encounters[flow.state.chosen].tier] + 2, "320 overkill: 2 shards")

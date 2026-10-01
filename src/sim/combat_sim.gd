@@ -100,9 +100,15 @@ var chain_depth: int = 0
 ## Some unit has an on_ally_ability passive, so signatures' FIRE entries are
 ## told to their side (Events).
 var ally_ability_listeners: bool = false
+## Some unit has an on_status_ended passive (phase 5c step 5b).
+var status_end_listeners: bool = false
 ## Some unit has a damage aura against some targets (AuraDef.vs), so hits
 ## check for it; otherwise they never do.
 var vs_auras: bool = false
+## Some unit has lifesteal (phase 5c step 5b), so hits check for it.
+var lifesteal: bool = false
+## Enemy areas Salt Circle still breaks this fight.
+var salt_circles: int = 0
 ## The units with conditional auras (phase 4: planted, below_hp, per fallen
 ## ally), checked every tick.
 var _conditional: Array[UnitState] = []
@@ -186,6 +192,9 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 			tallies_on_target = tallies_on_target or unit.deeds.needs_taken or unit.deeds.needs_kills
 			_counting_time = _counting_time or unit.deeds.needs_time
 	units_joined()
+	salt_circles = setup.salt_circles
+	for r: int in setup.relic_effects.size():
+		EffectRunner.run_relic(self, setup.relic_sources[r], setup.relic_effects[r], setup.relic_scales[r])
 
 
 ## Adds a unit at the end of the fight's order (at the start, or a summon:
@@ -207,6 +216,8 @@ func add_unit(unit: UnitState) -> void:
 		_conditional.append(unit)
 	if Passives.has_vs_aura(unit):
 		vs_auras = true
+	if Passives.has_aura_of(unit, AuraDef.Stat.LIFESTEAL_BP):
+		lifesteal = true
 	if unit.guard != null:
 		guards.append(unit)
 
@@ -225,6 +236,8 @@ func note_listeners(unit: UnitState) -> void:
 		_timed_passives = true
 	if Passives.listens_for(unit, EffectDef.Trigger.ON_ALLY_ABILITY):
 		ally_ability_listeners = true
+	if Passives.listens_for(unit, EffectDef.Trigger.ON_STATUS_ENDED):
+		status_end_listeners = true
 
 
 ## After units join (at the start, or summons) or enter a phase: auras are

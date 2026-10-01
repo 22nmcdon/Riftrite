@@ -47,6 +47,8 @@ const FORMS: Dictionary[LogEntry.Kind, String] = {
 	LogEntry.Kind.SNARE: "a snare mark on the ground until it's sprung (from the sim's snares)",
 	LogEntry.Kind.WALL: "a thick line while it stands (from the sim's walls)",
 	LogEntry.Kind.GUARD: "a brass number on the guard",
+	LogEntry.Kind.LIFESTEAL: "a number in the lifesteal colour",
+	LogEntry.Kind.STATUS_EXTENDED: "the tag stays longer",
 }
 ## What the board must have shown at some frame, for each kind a fight
 ## produced (the rest are checked elsewhere, or read from the unit's state).
@@ -54,6 +56,7 @@ const EVIDENCE: Dictionary[LogEntry.Kind, String] = {
 	LogEntry.Kind.SHOT: "shot",
 	LogEntry.Kind.DAMAGE: "number",
 	LogEntry.Kind.HEAL: "number",
+	LogEntry.Kind.LIFESTEAL: "number",
 	LogEntry.Kind.SHIELD: "number",
 	LogEntry.Kind.STATUS_DAMAGE: "number",
 	LogEntry.Kind.COLLAPSE: "number",

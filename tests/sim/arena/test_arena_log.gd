@@ -172,6 +172,7 @@ const NAMES: Dictionary = {
 	LogEntry.Kind.TACTIC: ["unit", "ability", "note"],
 	LogEntry.Kind.ZONE: ["unit", "ability"], LogEntry.Kind.SNARE: ["unit", "ability", "note"],
 	LogEntry.Kind.WALL: ["unit", "ability"], LogEntry.Kind.GUARD: ["unit", "ability", "target"],
+	LogEntry.Kind.LIFESTEAL: ["unit", "ability", "target"], LogEntry.Kind.STATUS_EXTENDED: ["unit", "ability", "target", "status"],
 }
 
 
@@ -202,7 +203,12 @@ func _assert_sources(result: FightResult, setup: FightSetup) -> void:
 		var by_collapse: bool = entry.source_ability == LogEntry.COLLAPSE_SOURCE and entry.source_unit.is_empty()
 		if needs.has("collapse") and not by_collapse:
 			assert_true(entry.kind == LogEntry.Kind.COLLAPSE_RING and ids.has(entry.source_unit) and not entry.source_ability.is_empty(), "Rift Collapse's, or who started it: " + line)
-		if needs.has("unit"):
+		# A relic's own effect (phase 5c step 5b: at the fight's start) names
+		# the relic, not a unit.
+		var by_relic: bool = entry.source_relic_side >= 0
+		if by_relic:
+			assert_true(entry.source_unit.is_empty() and not entry.source_ability.is_empty() and not entry.source_ability_name.is_empty(), "names its relic: " + line)
+		elif needs.has("unit"):
 			assert_true(ids.has(entry.source_unit), "names its unit: " + line)
 		if needs.has("ability"):
 			assert_false(entry.source_ability.is_empty() or entry.source_ability_name.is_empty(), "names its ability: " + line)

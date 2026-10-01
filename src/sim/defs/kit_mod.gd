@@ -19,6 +19,9 @@ extends RefCounted
 ##                                        every passive's ability)
 ##       "types": ["heal"],               only effects of these types (nested in
 ##                                        areas and snares too); default all
+##       "statuses": ["stealth"],         only apply_status effects of these
+##                                        statuses (phase 5c step 5b; Veil of
+##                                        the Lost)
 ##       "amount_bp": 12000,              damage, heals, and Shields: a power
 ##                                        bonus of this much (+20%) added to
 ##                                        the effect (EffectDef.power_bp; the
@@ -62,6 +65,9 @@ class AbilityChange:
 	var slot: String
 	## Effect types it touches (empty: all).
 	var types: Array[EffectDef.Type] = []
+	## Statuses it touches (empty: any; non-empty: only apply_status effects
+	## of these).
+	var statuses: Array[String] = []
 	var amount_bp: int = FixedMath.BP_ONE
 	var duration_bp: int = FixedMath.BP_ONE
 	var duration_add_ticks: int = 0
@@ -77,6 +83,8 @@ class AbilityChange:
 		return amount_bp != FixedMath.BP_ONE or duration_bp != FixedMath.BP_ONE or duration_add_ticks != 0 or radius_add != 0
 
 	func touches(effect: EffectDef) -> bool:
+		if not statuses.is_empty():
+			return effect.type == EffectDef.Type.APPLY_STATUS and statuses.has(effect.status_id)
 		return types.is_empty() or types.has(effect.type)
 
 
@@ -155,6 +163,12 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 	if reader.has("types"):
 		for type_name: String in reader.opt_choice_array("types", EffectDef.TYPE_NAMES):
 			change.types.append(EffectDef.TYPE_NAMES.find(type_name) as EffectDef.Type)
+	if reader.has("statuses"):
+		change.statuses = reader.req_string_array("statuses")
+		if change.statuses.is_empty():
+			reader.error("statuses: name at least one")
+		if not change.types.is_empty():
+			reader.error("an \"on\" entry takes types or statuses, not both")
 	change.amount_bp = reader.opt_int("amount_bp", FixedMath.BP_ONE, 1000, 50000)
 	change.duration_bp = reader.opt_int("duration_bp", FixedMath.BP_ONE, 1000, 50000)
 	change.duration_add_ticks = _signed_ticks(reader, "duration_add_ms")
@@ -213,6 +227,7 @@ func times(steps: int) -> KitMod:
 		var copy := AbilityChange.new()
 		copy.slot = change.slot
 		copy.types = change.types.duplicate()
+		copy.statuses = change.statuses.duplicate()
 		copy.as_power = change.as_power
 		copy.amount_bp = FixedMath.BP_ONE + steps * (change.amount_bp - FixedMath.BP_ONE)
 		scaled.changes.append(copy)

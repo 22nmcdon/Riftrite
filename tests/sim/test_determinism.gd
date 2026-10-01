@@ -119,3 +119,8 @@ func test_the_chaos_fight_uses_everything() -> void:
 	assert_true(auras.has("hunt") and auras.has("shade"), "a vs aura and a state aura start")
 	assert_true(log.of_kind(LogEntry.Kind.AURA).any(func(entry: LogEntry) -> bool: return entry.source_ability == "shade" and entry.note == "ends"), "the state aura ends with the Stealth")
 	assert_true(log.entries.any(func(entry: LogEntry) -> bool: return entry.chain >= 2), "a chain two links deep")
+	# Phase 5c step 5b: the pieces relics share.
+	assert_true(log.of_kind(LogEntry.Kind.SHIELD).any(func(entry: LogEntry) -> bool: return entry.tick == 0 and entry.source_ability == "tithe"), "a relic's Shield as the fight starts")
+	assert_eq(log.of_kind(LogEntry.Kind.AREA_LANDED).filter(func(entry: LogEntry) -> bool: return entry.note == "broken by Salt Circle").size(), 1, "Salt Circle breaks one area")
+	assert_true(passive_sources.has("pyre") and passive_sources.has("veil") and passive_sources.has("toll"), "on_kill's Burn spreads, a status ending, a signature's boost")
+	assert_true(log.of_kind(LogEntry.Kind.DAMAGE).any(func(entry: LogEntry) -> bool: return entry.overkill > 0), "a hit's overkill")

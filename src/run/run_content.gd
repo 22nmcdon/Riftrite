@@ -191,7 +191,7 @@ func relic_mods(state: RunState) -> Array[KitMod]:
 		if not relics.has(id):
 			continue
 		if relics[id].mod != null:
-			mods.append(relics[id].mod)
+			mods.append(_doubled(relics[id].mod) if counts_twice(state, relics[id]) else relics[id].mod)
 		if relics[id].grows != null:
 			var grown: KitMod = relics[id].grows.mod_for(state.growth.get(id, 0))
 			if grown != null:
@@ -200,6 +200,33 @@ func relic_mods(state: RunState) -> Array[KitMod]:
 		if worked_out != null:
 			mods.append(worked_out)
 	return mods
+
+
+## Whether a relic counts twice (phase 5c step 5b): a common, while
+## Reliquary is held.
+func counts_twice(state: RunState, relic: RelicDef) -> bool:
+	return relic.tier == RelicDef.Tier.COMMON and relic_rule(state, "doubles_commons")
+
+
+## A common's mod under Reliquary: twice over where a step could scale it
+## (stats, amounts, auras); unchanged where it couldn't (Brand of Guilt's
+## ability, Rift Candle's mana).
+static func _doubled(mod: KitMod) -> KitMod:
+	return mod.times(2) if mod.step_problem().is_empty() else mod
+
+
+## The relics' effects as each fight starts (phase 5c step 5b), in the order
+## taken, with the share each runs at (doubled for a common under
+## Reliquary): [relic, scale_bp] pairs for each effect.
+func relic_starts(state: RunState) -> Array[Array]:
+	var starts: Array[Array] = []
+	for id: String in state.relics:
+		if not relics.has(id):
+			continue
+		var scale: int = 2 * FixedMath.BP_ONE if counts_twice(state, relics[id]) else FixedMath.BP_ONE
+		for effect: EffectDef in relics[id].at_start:
+			starts.append([relics[id], effect, scale])
+	return starts
 
 
 ## The stats a relic gives from the run as it stands (phase 5c step 5a):
@@ -245,12 +272,13 @@ func _bonds_where(state: RunState, transformed: bool) -> Array[BondDef]:
 	return found
 
 
-## The run's rules from its relics: the sum of one of RelicDef's numbers.
+## The run's rules from its relics: the sum of one of RelicDef's numbers (a
+## common's twice under Reliquary).
 func relic_sum(state: RunState, key: String) -> int:
 	var total: int = 0
 	for id: String in state.relics:
 		if relics.has(id):
-			total += int(relics[id].get(key))
+			total += int(relics[id].get(key)) * (2 if counts_twice(state, relics[id]) else 1)
 	return total
 
 
@@ -338,6 +366,9 @@ func _check() -> void:
 		_check_icon(relic.icon, "%s (%s)" % [RELICS_FILE, id])
 		_check_mod(relic.mod, hero_kits, "%s (%s)" % [RELICS_FILE, id])
 		_check_mod(relic.enemy_mod, enemy_kits, "%s (%s): enemy_mod" % [RELICS_FILE, id])
+		for effect: EffectDef in relic.at_start:
+			if effect.type == EffectDef.Type.APPLY_STATUS and not content.statuses.has(effect.status_id):
+				errors.append("%s (%s): at_start: unknown status \"%s\"" % [RELICS_FILE, id, effect.status_id])
 		if relic.grows != null and relic.grows.each.changes_anything():
 			_check_mod(relic.grows.each.times(50), hero_kits, "%s (%s): grows" % [RELICS_FILE, id])
 			if not relic.grows.counts.from_ability.is_empty():
@@ -370,6 +401,10 @@ func _check_icon(icon: String, where: String) -> void:
 func _check_mod(mod: KitMod, kits: Array[UnitDef], where: String) -> void:
 	if mod == null:
 		return
+	for change: KitMod.AbilityChange in mod.changes:
+		for status_id: String in change.statuses:
+			if not content.statuses.has(status_id):
+				errors.append("%s: unknown status \"%s\" in an \"on\" entry" % [where, status_id])
 	for kit: UnitDef in kits:
 		if kit == null:
 			continue

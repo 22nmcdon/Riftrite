@@ -162,7 +162,7 @@ func status_ids() -> Array[String]:
 			found.append_array([part.from_status, part.to_status])
 
 	for effect: EffectDef in all_effects():
-		if effect.type == EffectDef.Type.APPLY_STATUS:
+		if effect.type == EffectDef.Type.APPLY_STATUS or effect.type == EffectDef.Type.EXTEND_STATUS:
 			found.append(effect.status_id)
 		found.append_array(effect.statuses)
 	return found
@@ -184,6 +184,8 @@ func condition_status_ids() -> Array[String]:
 	for effect: EffectDef in all_effects():
 		if effect.vs != null:
 			found.append_array(effect.vs.statuses)
+		if not effect.stacks_of.is_empty():
+			found.append(effect.stacks_of)
 	return found
 
 

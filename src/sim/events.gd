@@ -15,6 +15,7 @@ extends RefCounted
 ##   on_holder_hit    one of its hits lands on an enemy
 ##   on_shield_broken a hit or damage over time takes the last of its Shield
 ##   on_ally_ability  an ally's signature fires
+##   on_status_ended  a status on it runs out (phase 5c step 5b)
 ## After every unit has acted, CombatSim hands over the entries logged since
 ## the last read, in log order (so what happens in the deaths step is read
 ## on the next tick); kills are raised as deaths are settled. Relic effects
@@ -31,7 +32,7 @@ extends RefCounted
 
 ## The log kinds that raise events (the rest are skipped at once).
 const _RAISES: Array[LogEntry.Kind] = [LogEntry.Kind.FIRE, LogEntry.Kind.DAMAGE, LogEntry.Kind.SHIELD, LogEntry.Kind.HEAL,
-	LogEntry.Kind.STATUS_APPLIED, LogEntry.Kind.HOP, LogEntry.Kind.STATUS_DAMAGE]
+	LogEntry.Kind.STATUS_APPLIED, LogEntry.Kind.HOP, LogEntry.Kind.STATUS_DAMAGE, LogEntry.Kind.STATUS_ENDED]
 
 
 ## Raises the events in the log from entry `from` on, including those the
@@ -43,7 +44,14 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> int:
 	while i < maxi(to, sim.combat_log.entries.size()):
 		var entry: LogEntry = sim.combat_log.entries[i]
 		i += 1
-		if not _RAISES.has(entry.kind) or entry.source_relic_side >= 0 or entry.chain >= limit or entry.source_unit.is_empty():
+		if not _RAISES.has(entry.kind) or entry.chain >= limit:
+			continue
+		if entry.kind == LogEntry.Kind.STATUS_ENDED:
+			# Its holder's event, whoever put the status there (a relic too).
+			if sim.status_end_listeners:
+				_raise(sim, sim.unit_by_id(entry.target), EffectDef.Trigger.ON_STATUS_ENDED, entry.chain, sim.unit_by_id(entry.target), 0, entry.status)
+			continue
+		if entry.source_relic_side >= 0 or entry.source_unit.is_empty():
 			continue
 		var source: UnitState = sim.unit_by_id(entry.source_unit)
 		var target: UnitState = sim.unit_by_id(entry.target) if not entry.target.is_empty() else null

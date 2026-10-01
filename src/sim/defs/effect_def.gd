@@ -138,6 +138,15 @@ extends RefCounted
 ##                    amount_bp_of_damage: of the Shield that hit took). A
 ##                    Guard's share of a hit doesn't count
 ##   on_ally_ability  an ally's signature fires (hit_target: that ally)
+##   on_status_ended  a status on the unit runs out ("statuses", "keywords":
+##                    only those; phase 5c step 5b, "leaving Stealth")
+## Phase 5c step 5b adds: extend_status ("status", "duration_ms": a timed
+## status already on the target lasts that much longer); the targets
+## enemies_near_self (within_hexes of the unit), enemies_near_named and
+## enemy_near_named (around the unit the event names: on_kill's fallen too),
+## and, for a relic, nearest_enemies ("count" of the enemies nearest any of
+## its side); a Shield's amount_bp_of_max_hp; and apply_status's
+## "stacks_of": "burn" (as many stacks as the unit the event names has).
 ## on_kill names the enemy that fell (for "vs" and an area's anchor; it
 ## can't be hit_target, since it's gone).
 ## "every": N runs it on every Nth time; "once": true only the first time.
@@ -175,9 +184,9 @@ enum Trigger {
 	ON_FIRE, ON_HIT, ON_CRIT, ON_FIGHT_START, AT_TIME, ON_ALLY_BELOW_HP,
 	ON_ABILITY, ON_BASIC_ATTACK, ON_HOLDER_CRIT, ON_SHIELDED, ON_HIT_TAKEN, ON_HEAL, ON_STATUS, ON_KILL,
 	ON_INTERVAL, ON_FALL, ON_HOP, ON_WOULD_FALL,
-	ON_HOLDER_HIT, ON_SHIELD_BROKEN, ON_ALLY_ABILITY,
+	ON_HOLDER_HIT, ON_SHIELD_BROKEN, ON_ALLY_ABILITY, ON_STATUS_ENDED,
 }
-enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL }
+enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS }
 enum Placement { EDGES, ADJACENT, HEXES }
 enum Anchor { TARGET, SELF, TARGET_DIRECTION }
 enum Hits { ENEMIES, ALLIES, ALL, OTHER_ALLIES }
@@ -193,6 +202,10 @@ enum Target {
 	ALLY_NEAR_TARGET,
 	ALLIES_NEAR_TARGET,
 	LOWEST_HP_ALLY,
+	ENEMIES_NEAR_SELF,
+	ENEMIES_NEAR_NAMED,
+	ENEMY_NEAR_NAMED,
+	NEAREST_ENEMIES,
 }
 ## A nested area effect's side (phase 4): both, or only one.
 enum AreaSide { BOTH, ENEMIES, ALLIES }
@@ -201,13 +214,13 @@ const TRIGGER_NAMES: Array[String] = [
 	"on_fire", "on_hit", "on_crit", "on_fight_start", "at_time", "on_ally_below_hp",
 	"on_ability", "on_basic_attack", "on_holder_crit", "on_shielded", "on_hit_taken", "on_heal", "on_status", "on_kill",
 	"on_interval", "on_fall", "on_hop", "on_would_fall",
-	"on_holder_hit", "on_shield_broken", "on_ally_ability",
+	"on_holder_hit", "on_shield_broken", "on_ally_ability", "on_status_ended",
 ]
 ## The unit's events (see the top).
 const EVENT_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
-	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY,
+	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED,
 ]
 ## Event triggers that name a unit (hit_target) and those that name a hit
 ## (amount_bp_of_damage).
@@ -222,14 +235,14 @@ const ABILITY_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL,
-	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY,
+	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED,
 ]
 ## What a passive's effects may run on (PartDef).
 const PASSIVE_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL,
-	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY,
+	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED,
 ]
 ## The passive triggers that aren't events (Passives.run_timed, on_fall,
 ## would_fall).
@@ -239,10 +252,13 @@ const RELIC_TRIGGERS: Array[Trigger] = [Trigger.ON_FIRE, Trigger.ON_FIGHT_START,
 const FIELD_ONLY_TARGETS: Array[Target] = [Target.TARGET, Target.HIT_TARGET, Target.SELF,
 	Target.ENEMY_NEAR_TARGET, Target.ENEMIES_NEAR_TARGET, Target.ALLY_NEAR_TARGET, Target.ALLIES_NEAR_TARGET, Target.LOWEST_HP_ALLY]
 ## Targets near the ability's target (phase 4), and those that need a reach.
-const NEAR_TARGETS: Array[Target] = [Target.ENEMY_NEAR_TARGET, Target.ENEMIES_NEAR_TARGET, Target.ALLY_NEAR_TARGET, Target.ALLIES_NEAR_TARGET]
-const REACH_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_TARGET, Target.ALLIES_NEAR_TARGET]
+const NEAR_TARGETS: Array[Target] = [Target.ENEMY_NEAR_TARGET, Target.ENEMIES_NEAR_TARGET, Target.ALLY_NEAR_TARGET, Target.ALLIES_NEAR_TARGET,
+	Target.ENEMIES_NEAR_SELF, Target.ENEMIES_NEAR_NAMED, Target.ENEMY_NEAR_NAMED]
+const REACH_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_TARGET, Target.ALLIES_NEAR_TARGET, Target.ENEMIES_NEAR_SELF, Target.ENEMIES_NEAR_NAMED]
+## The targets around the unit an event names (they need one).
+const NAMED_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_NAMED, Target.ENEMY_NEAR_NAMED]
 const SIDE_NAMES: Array[String] = ["both", "enemies", "allies"]
-const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain", "knockback", "pull", "leap", "charge", "area", "start_collapse", "summon", "gain_mana", "snare", "wall"]
+const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain", "knockback", "pull", "leap", "charge", "area", "start_collapse", "summon", "gain_mana", "snare", "wall", "extend_status"]
 ## The types placed at the ability's target without a "target" key of their
 ## own (an area, a snare, a wall).
 const PLACED: Array[Type] = [Type.AREA, Type.SNARE, Type.WALL]
@@ -266,6 +282,10 @@ const TARGET_NAMES: Array[String] = [
 	"ally_near_target",
 	"allies_near_target",
 	"lowest_hp_ally",
+	"enemies_near_self",
+	"enemies_near_named",
+	"enemy_near_named",
+	"nearest_enemies",
 ]
 
 var trigger: Trigger
@@ -334,6 +354,9 @@ var vs: UnitCondition = null
 var near_range: int = 0
 ## heal: the share of what it heals past full HP that comes back as Shield.
 var overheal_shield_bp: int = 0
+## apply_status: as many stacks as the unit the event names has of this
+## status ("": stacks as given).
+var stacks_of: String = ""
 ## In an area: which side it's for.
 var side: AreaSide = AreaSide.BOTH
 ## A zone: how long it stays and how often it lands (0: an ordinary area).
@@ -403,14 +426,19 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				def.ahead_range = reader.req_int("ahead_hexes", 0, 4) * HexGrid.HEX
 				def.zone_ticks = reader.req_ticks("duration_ms", FixedMath.MS_PER_TICK)
 			Type.SHIELD:
-				if reader.has("amount") == reader.has("amount_bp_of_damage"):
-					reader.error("shield needs exactly one of \"amount\" or \"amount_bp_of_damage\"")
+				if int(reader.has("amount")) + int(reader.has("amount_bp_of_damage")) + int(reader.has("amount_bp_of_max_hp")) != 1:
+					reader.error("shield needs exactly one of \"amount\", \"amount_bp_of_damage\", or \"amount_bp_of_max_hp\"")
 				def.amount = reader.opt_int("amount", 0, 0)
 				def.amount_bp_of_damage = reader.opt_int("amount_bp_of_damage", 0, 0)
+				def.amount_bp_of_max_hp = reader.opt_int("amount_bp_of_max_hp", 0, 0, FixedMath.BP_ONE)
 			Type.APPLY_STATUS:
 				def.status_id = reader.req_string("status")
 				def.stacks = reader.opt_int("stacks", 1, 1)
 				def.duration_ticks = reader.opt_ticks("duration_ms", 0)
+				def.stacks_of = reader.opt_string("stacks_of", "")
+			Type.EXTEND_STATUS:
+				def.status_id = reader.req_string("status")
+				def.duration_ticks = reader.req_ticks("duration_ms", FixedMath.MS_PER_TICK)
 			Type.CLEANSE:
 				def.amount = reader.req_int("amount_bp", 1, FixedMath.BP_ONE)
 		if reader.has("scaling"):
@@ -418,6 +446,10 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				reader.error("\"scaling\" can't be combined with %s" % ("amount_bp_of_damage" if def.amount_bp_of_damage > 0 else "amount_bp_of_max_hp"))
 			_read_scaling(def, reader.req_object("scaling"))
 
+	if def.target == Target.NEAREST_ENEMIES:
+		def.count = reader.req_int("count", 1, 30)
+		if not relic:
+			reader.error("nearest_enemies is a relic's target (nearest any of its side)")
 	if NEAR_TARGETS.has(def.target) or def.target == Target.LOWEST_HP_ALLY:
 		if REACH_TARGETS.has(def.target) or reader.has("within_hexes"):
 			def.near_range = reader.req_int("within_hexes", 1, 20) * HexGrid.HEX
@@ -447,6 +479,10 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 			reader.error("%s names no unit, so it can't use hit_target" % trigger_name)
 		if def.amount_bp_of_damage > 0 and not EVENT_HIT_TRIGGERS.has(def.trigger):
 			reader.error("%s names no hit, so it can't use amount_bp_of_damage" % trigger_name)
+	if NAMED_TARGETS.has(def.target) and not EVENT_VS_TRIGGERS.has(def.trigger):
+		reader.error("%s needs an event that names a unit" % TARGET_NAMES[def.target])
+	if not def.stacks_of.is_empty() and not EVENT_VS_TRIGGERS.has(def.trigger):
+		reader.error("stacks_of needs an event that names a unit")
 	if def.trigger == Trigger.ON_FALL and not type_name.is_empty():
 		if def.type == Type.AREA and def.anchor != Anchor.SELF:
 			reader.error("on_fall runs once the unit has fallen, so its area is anchored on it (\"anchor\": \"self\")")
@@ -520,7 +556,7 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 		Trigger.ON_INTERVAL:
 			def.interval_ticks = reader.req_ticks("interval_ms", FixedMath.MS_PER_TICK)
 			def.once = reader.opt_bool("once", false)
-		Trigger.ON_STATUS:
+		Trigger.ON_STATUS, Trigger.ON_STATUS_ENDED:
 			if reader.has("statuses"):
 				def.statuses = reader.req_string_array("statuses")
 			def.keywords = reader.opt_choice_array("keywords", Keywords.NAMES)

@@ -13,6 +13,13 @@ var seed_value: int = 1
 var act: int = 1
 ## The kits summon effects may use (looked up by id; each id once).
 var summon_kits: Array[UnitDef] = []
+## The heroes' relics' effects at the fight's start (phase 5c step 5b), each
+## with its relic as source and a scale (Reliquary's 20000), in the order
+## the relics were taken; and how many enemy areas Salt Circle breaks.
+var relic_effects: Array[EffectDef] = []
+var relic_sources: Array[EffectSource] = []
+var relic_scales: Array[int] = []
+var salt_circles: int = 0
 
 
 static func make(hero_setups: Array[UnitSetup], enemy_setups: Array[UnitSetup], rock_hexes: Array[Vector2i] = [], fight_seed: int = 1, fight_act: int = 1) -> FightSetup:
@@ -104,6 +111,11 @@ func validate(content: ContentDb) -> Array[String]:
 	for side: Array[UnitSetup] in [heroes, enemies]:
 		if side.size() > content.tuning.max_units_per_side:
 			errors.append("at most %d units per side" % content.tuning.max_units_per_side)
+	if relic_sources.size() != relic_effects.size() or relic_scales.size() != relic_effects.size():
+		errors.append("each relic effect at the start needs its source and scale")
+	for effect: EffectDef in relic_effects:
+		if effect.type == EffectDef.Type.APPLY_STATUS and not content.statuses.has(effect.status_id):
+			errors.append("a relic's effect at the start names an unknown status \"%s\"" % effect.status_id)
 	var taken: Dictionary[int, String] = {}
 	for rock: Vector2i in rocks:
 		if not grid.has(rock.x, rock.y):

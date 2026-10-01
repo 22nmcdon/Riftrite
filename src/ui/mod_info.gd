@@ -60,9 +60,9 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 	if change.amount_bp != FixedMath.BP_ONE:
 		bits.append("%s %s" % [UnitInfo.signed_percent(change.amount_bp - FixedMath.BP_ONE), _power_word(change)])
 	if change.duration_bp != FixedMath.BP_ONE:
-		bits.append("%s duration" % UnitInfo.signed_percent(change.duration_bp - FixedMath.BP_ONE))
+		bits.append("%s%s duration" % [UnitInfo.signed_percent(change.duration_bp - FixedMath.BP_ONE), _statuses_word(change, content)])
 	if change.duration_add_ticks != 0:
-		bits.append("%s%s duration" % ["+" if change.duration_add_ticks > 0 else "−", UnitInfo.seconds(absi(change.duration_add_ticks))])
+		bits.append("%s%s%s duration" % ["+" if change.duration_add_ticks > 0 else "−", UnitInfo.seconds(absi(change.duration_add_ticks)), _statuses_word(change, content)])
 	if change.radius_add != 0:
 		bits.append("%s hex area" % signed(change.radius_add))
 	if change.cooldown_bp != FixedMath.BP_ONE:
@@ -80,6 +80,14 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 	if bits.is_empty():
 		return ""
 	return "%s: %s" % [_slot_name(change.slot), ", ".join(bits)]
+
+
+## " Stealth" for a change only to some statuses (phase 5c step 5b), else "".
+static func _statuses_word(change: KitMod.AbilityChange, content: ContentDb) -> String:
+	var names: Array[String] = []
+	for status_id: String in change.statuses:
+		names.append(content.statuses[status_id].name if content.statuses.has(status_id) else status_id)
+	return "" if names.is_empty() else " " + " and ".join(names)
 
 
 static func _slot_name(slot: String) -> String:
@@ -198,6 +206,8 @@ static func counted(counts: DeedDef, per: int) -> String:
 			return "%s kills" % amount
 		DeedDef.Counts.CRITS:
 			return "%s crits" % amount
+		DeedDef.Counts.OVERKILL:
+			return "%s overkill damage" % amount
 	return amount
 
 
@@ -252,6 +262,12 @@ static func relic_numbers(relic: RelicDef, content: ContentDb) -> String:
 		parts.append("Heroes: %s ATK and MGK per %d shards held" % [UnitInfo.signed_percent(relic.per_shards_bp), relic.per_shards])
 	if relic.covenant:
 		parts.append("each hero has the team's highest HP, ATK, MGK, DEF, CRIT, and ATSP")
+	if not relic.at_start.is_empty():
+		parts.append("As a fight starts: " + ", ".join(UnitInfo.effect_numbers(relic.at_start, _any_hero(), content)))
+	if relic.salt_circle:
+		parts.append("the first enemy area each fight lands on nothing")
+	if relic.doubles_commons:
+		parts.append("every common relic held counts twice: its numbers doubled (not an ability's)")
 	if relic.grows != null:
 		parts.append("%s, counted for the whole team" % growth_numbers(relic.grows, null, content))
 	return " · ".join(parts)

@@ -45,6 +45,8 @@ enum Kind {
 	SNARE,
 	WALL,
 	GUARD,
+	LIFESTEAL,
+	STATUS_EXTENDED,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -86,6 +88,8 @@ var from_event: bool = false
 var chain: int = 0
 ## DAMAGE, STATUS_DAMAGE: it took the last of the target's Shield.
 var broke_shield: bool = false
+## DAMAGE: what went past the target's last HP (phase 5c step 5b).
+var overkill: int = 0
 ## MOVE: where the leg starts and the point it heads for; the unit moves
 ## `amount` a tick straight at it (FixedMath / ArenaPlane.step_toward) until it
 ## gets there or its next MOVE or STOP. STOP: to_pos is where it stands.
@@ -199,7 +203,7 @@ func to_text() -> String:
 		Kind.AREA_WARNING:
 			return line + "%s marks a %s at %s (lands at %s)" % [source_text(), shape, _point(from_pos), _format_time(end_tick)]
 		Kind.AREA_LANDED:
-			return line + "%s: the %s at %s lands, hitting %d" % [source_text(), shape, _point(from_pos), amount]
+			return line + "%s: the %s at %s lands, hitting %d%s" % [source_text(), shape, _point(from_pos), amount, "" if note.is_empty() else " (%s)" % note]
 		Kind.ZONE:
 			return line + "%s: a %s stays at %s until %s" % [source_text(), shape, _point(from_pos), _format_time(end_tick)]
 		Kind.SNARE:
@@ -213,6 +217,10 @@ func to_text() -> String:
 			return line + "%s raises a wall from %s to %s (falls at %s)" % [source_text(), _point(from_pos), _point(to_pos), _format_time(end_tick)]
 		Kind.GUARD:
 			return line + "%s takes %d of the hit on %s" % [source_text(), amount, target]
+		Kind.LIFESTEAL:
+			return line + "%s: %s steals back %d HP" % [source_text(), target, amount]
+		Kind.STATUS_EXTENDED:
+			return line + "%s makes %s on %s last until %s" % [source_text(), status_name, target, _format_time(end_tick)]
 		Kind.COLLAPSE_RING:
 			if note == "warned":
 				return line + "%s: ring %d will crumble at %s" % [source_text(), amount, _format_time(end_tick)]

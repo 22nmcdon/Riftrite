@@ -47,6 +47,8 @@ const MAX_ANIMATED: int = 60
 const DAMAGE_COLOR := Color("f1e6cc")
 const CRIT_COLOR := Color("ffd166")
 const HEAL_COLOR := UiStyle.GOOD
+## Lifesteal's heal (phase 5c step 5b): its own colour, since it isn't healing.
+const LIFESTEAL_COLOR := Color("e06a8a")
 const COLLAPSE_COLOR := UiStyle.EMBER
 ## Areas by the caster's side: enemies' hostile, heroes' their own brass.
 const ENEMY_AREA := Color(0.88, 0.36, 0.23)
@@ -176,6 +178,8 @@ func _add(entry: LogEntry, sim: CombatSim) -> void:
 			_number(entry, sim, str(entry.amount), COLLAPSE_COLOR, false)
 		LogEntry.Kind.HEAL:
 			_number(entry, sim, "+%d" % entry.amount, HEAL_COLOR, false)
+		LogEntry.Kind.LIFESTEAL:
+			_number(entry, sim, "+%d" % entry.amount, LIFESTEAL_COLOR, false)
 		LogEntry.Kind.GUARD:
 			var guard: UnitState = sim.unit_by_id(entry.source_unit)
 			if guard != null and entry.amount > 0:

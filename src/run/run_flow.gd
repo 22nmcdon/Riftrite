@@ -267,6 +267,7 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 			if hero.def.placed_snares > 0 and snares.has(hero.id):
 				hero.snares.assign(snares[hero.id])
 		_modify_enemies(setup, hunting, errors)
+		_relic_rules(setup)
 		if not hunting and state.dig_in and state.rock.size() == 2:
 			setup.rocks.append(Vector2i(state.rock[0], state.rock[1]))
 		errors.append_array(setup.validate(content))
@@ -274,6 +275,19 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 			if not formation.has(hero.id):
 				errors.append("%s isn't placed" % hero.id)
 	return setup if errors.is_empty() else null
+
+
+## The relics' effects at the fight's start and Salt Circle (phase 5c step
+## 5b), for the sim to run.
+func _relic_rules(setup: FightSetup) -> void:
+	for start: Array in run.relic_starts(state):
+		var relic: RelicDef = start[0]
+		setup.relic_effects.append(start[1])
+		setup.relic_sources.append(EffectSource.relic(relic.id, relic.name, EffectSource.Team.HEROES))
+		setup.relic_scales.append(start[2])
+	for id: String in state.relics:
+		if run.relics.has(id) and run.relics[id].salt_circle:
+			setup.salt_circles += 2 if run.counts_twice(state, run.relics[id]) else 1
 
 
 ## The Hollow Covenant (phase 5c step 5a): what `hero` needs added to reach

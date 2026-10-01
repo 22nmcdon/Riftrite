@@ -37,6 +37,7 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: 
 	if not target.alive or (not def.is_timed() and stacks <= 0):
 		return
 	var state: StatusState = find(target, status_id)
+	var fresh: bool = state == null
 	if state == null:
 		state = StatusState.new()
 		state.def = def
@@ -60,6 +61,24 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: 
 	sim.combat_log.add(entry)
 	if def.kind == StatusDef.Kind.TAUNT and sim.taunt_auras:
 		sim.refold_auras()
+	elif def.kind == StatusDef.Kind.BOOST and fresh:
+		sim.refold_auras()
+
+
+## A timed status already on `target` lasts `ticks` longer (phase 5c step 5b,
+## extend_status): logged (STATUS_EXTENDED). Nothing if it isn't there.
+static func extend(sim: CombatSim, target: UnitState, status_id: String, ticks: int, source: EffectSource) -> void:
+	var state: StatusState = find(target, status_id)
+	if state == null or not state.def.is_timed() or not target.alive:
+		return
+	state.ends_at += ticks
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.STATUS_EXTENDED, source)
+	entry.target = target.id
+	entry.status = state.def.id
+	entry.status_name = state.def.name
+	entry.end_tick = state.ends_at
+	entry.amount = ticks
+	sim.combat_log.add(entry)
 
 
 ## Runs one tick of every status on every standing unit, in the fight's
@@ -145,7 +164,7 @@ static func damage_taken_bp(unit: UnitState) -> int:
 			strongest = maxi(strongest, state.def.damage_taken_bp)
 		elif state.def.kind == StatusDef.Kind.WARDED:
 			ward = maxi(ward, state.def.damage_reduced_bp)
-	return strongest - ward
+	return strongest - ward - unit.aura_bp[AuraDef.Stat.DAMAGE_REDUCED_BP]
 
 
 ## DEF lost to damage over time (defense_shred_per_stack).
@@ -231,6 +250,8 @@ static func _end(sim: CombatSim, unit: UnitState, state: StatusState, why: Strin
 	entry.note = why
 	sim.combat_log.add(entry)
 	if state.def.kind == StatusDef.Kind.TAUNT and sim.taunt_auras:
+		sim.refold_auras()
+	elif state.def.kind == StatusDef.Kind.BOOST:
 		sim.refold_auras()
 
 

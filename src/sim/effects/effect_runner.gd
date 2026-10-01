@@ -93,14 +93,14 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 		var power: int = power_of(effect, unit, heal_boost_bp)
 		if shot != null and effect.target == EffectDef.Target.TARGET:
 			var amount: int = amount_of(effect, unit, 0, sim)
-			var crit: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability))
+			var crit: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability, target))
 			shot.effects.append(effect)
 			shot.amounts.append(amount)
 			shot.powers.append(power)
 			shot.crits.append(crit)
 			continue
 		for victim: UnitState in _targets(sim, unit, effect.target, target, null, effect):
-			var crit_now: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability))
+			var crit_now: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability, victim))
 			land(sim, unit, ability, source, effect, victim, amount_of(effect, unit, 0, sim), crit_now, NO_POINT, power)
 	if shot != null and not shot.effects.is_empty():
 		Shots.fire(sim, shot)
@@ -137,7 +137,11 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 				amount = FixedMath.apply_bp(victim.max_hp, effect.amount_bp_of_max_hp)
 			heal(sim, victim, amount, source, effect.overheal_shield_bp, power)
 		EffectDef.Type.SHIELD:
+			if effect.amount_bp_of_max_hp > 0:
+				amount = FixedMath.apply_bp(victim.max_hp, effect.amount_bp_of_max_hp)
 			give_shield(sim, victim, DamageRule.apply(amount, power), source)
+		EffectDef.Type.EXTEND_STATUS:
+			Statuses.extend(sim, victim, effect.status_id, effect.duration_ticks, source)
 		EffectDef.Type.APPLY_STATUS:
 			var status_id: String = unit.status_swaps.get(effect.status_id, effect.status_id)
 			Statuses.apply(sim, victim, status_id, amount, effect.duration_ticks, source)
@@ -168,7 +172,7 @@ static func _on_hit(sim: CombatSim, unit: UnitState, ability: AbilityDef, source
 			continue
 		for victim: UnitState in _targets(sim, unit, effect.target, null, hit, effect):
 			var amount: int = amount_of(effect, unit, hit.damage, sim)
-			var crit: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability))
+			var crit: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability, victim))
 			land(sim, unit, ability, source, effect, victim, amount, crit, NO_POINT, power_of(effect, unit))
 
 
@@ -190,9 +194,16 @@ static func run_event(sim: CombatSim, unit: UnitState, ability: AbilityDef, sour
 		hit = Hit.new()
 		hit.target = other
 		hit.damage = damage
+	var amount: int = amount_of(effect, unit, damage, sim)
+	if not effect.stacks_of.is_empty():
+		# As many stacks as the unit the event names has (Pyre Ash).
+		var state: StatusState = Statuses.find(other, effect.stacks_of) if other != null else null
+		amount = state.total_stacks() if state != null and not state.def.is_timed() else 0
+		if amount <= 0:
+			return
 	for victim: UnitState in _targets(sim, unit, effect.target, unit.target, hit, effect):
-		var crit: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability))
-		land(sim, unit, ability, source, effect, victim, amount_of(effect, unit, damage, sim), crit, NO_POINT, power_of(effect, unit))
+		var crit: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability, victim))
+		land(sim, unit, ability, source, effect, victim, amount, crit, NO_POINT, power_of(effect, unit))
 
 
 ## The effect's number: base plus stat scaling from the unit's stats (or a
@@ -227,8 +238,13 @@ static func allies_near(sim: CombatSim, unit: UnitState, effect: EffectDef) -> i
 	return count
 
 
-static func crit_chance_bp(sim: CombatSim, unit: UnitState, ability: AbilityDef) -> int:
-	return ability.crit_chance_bp + unit.stats.get_stat(UnitStats.Stat.CRIT) * sim.tuning.crit_bp_per_point + unit.aura_bp[AuraDef.Stat.CRIT_CHANCE_BP]
+## `target`: what the attack is aimed at, for crit chance "vs" some targets
+## (phase 5c step 5b; Executioner's Mark).
+static func crit_chance_bp(sim: CombatSim, unit: UnitState, ability: AbilityDef, target: UnitState = null) -> int:
+	var chance: int = ability.crit_chance_bp + unit.stats.get_stat(UnitStats.Stat.CRIT) * sim.tuning.crit_bp_per_point + unit.aura_bp[AuraDef.Stat.CRIT_CHANCE_BP]
+	if target != null and not unit.vs_conditions.is_empty():
+		chance += Passives.vs_bonus_bp(unit, target, AuraDef.Stat.CRIT_CHANCE_BP)
+	return chance
 
 
 ## Who an effect reaches: its ability's target, the unit hit, the unit
@@ -236,6 +252,10 @@ static func crit_chance_bp(sim: CombatSim, unit: UnitState, ability: AbilityDef)
 ## near the target (phase 4: near the ability's target, or the unit hit).
 static func _targets(sim: CombatSim, unit: UnitState, target: EffectDef.Target, aimed_at: UnitState, hit: Hit, effect: EffectDef = null) -> Array[UnitState]:
 	var found: Array[UnitState] = []
+	if effect != null and target == EffectDef.Target.ENEMIES_NEAR_SELF:
+		return near(sim, unit, effect, unit)
+	if effect != null and EffectDef.NAMED_TARGETS.has(target):
+		return near(sim, unit, effect, hit.target if hit != null else null)
 	if effect != null and (EffectDef.NEAR_TARGETS.has(target) or target == EffectDef.Target.LOWEST_HP_ALLY):
 		return near(sim, unit, effect, aimed_at if aimed_at != null else (hit.target if hit != null else null))
 	match target:
@@ -271,9 +291,10 @@ static func near(sim: CombatSim, unit: UnitState, effect: EffectDef, center: Uni
 		return found
 	if center == null:
 		return found
-	var enemies: bool = effect.target == EffectDef.Target.ENEMY_NEAR_TARGET or effect.target == EffectDef.Target.ENEMIES_NEAR_TARGET
+	var enemies: bool = effect.target != EffectDef.Target.ALLY_NEAR_TARGET and effect.target != EffectDef.Target.ALLIES_NEAR_TARGET
 	var pool: Array[UnitState] = sim.targetable_enemies_of(unit) if enemies else sim.standing_allies_of(unit)
-	var single: bool = effect.target == EffectDef.Target.ENEMY_NEAR_TARGET or effect.target == EffectDef.Target.ALLY_NEAR_TARGET
+	var single: bool = effect.target == EffectDef.Target.ENEMY_NEAR_TARGET or effect.target == EffectDef.Target.ALLY_NEAR_TARGET \
+		or effect.target == EffectDef.Target.ENEMY_NEAR_NAMED
 	var best: UnitState = null
 	var best_sq: int = 0
 	for other: UnitState in pool:
@@ -292,6 +313,54 @@ static func near(sim: CombatSim, unit: UnitState, effect: EffectDef, center: Uni
 	return found
 
 
+## A relic's effect at the fight's start (phase 5c step 5b; RelicDef
+## "at_start"), sourced to the relic: on all of a side, or the enemies
+## nearest its side. Its numbers are flat, times `scale_bp` (Reliquary's
+## doubling for a common), and so are timed statuses' durations.
+static func run_relic(sim: CombatSim, source: EffectSource, effect: EffectDef, scale_bp: int = FixedMath.BP_ONE) -> void:
+	var side: EffectSource.Team = source.relic_side as EffectSource.Team
+	var own: Array[UnitState] = (sim.heroes if side == EffectSource.Team.HEROES else sim.enemies).filter(func(unit: UnitState) -> bool: return unit.alive)
+	var foes: Array[UnitState] = (sim.enemies if side == EffectSource.Team.HEROES else sim.heroes).filter(func(unit: UnitState) -> bool: return unit.alive)
+	var victims: Array[UnitState] = []
+	match effect.target:
+		EffectDef.Target.ALL_ALLIES:
+			victims = own
+		EffectDef.Target.ALL_ENEMIES:
+			victims = foes
+		EffectDef.Target.NEAREST_ENEMIES:
+			victims = nearest_to(foes, own, effect.count)
+	for victim: UnitState in victims:
+		match effect.type:
+			EffectDef.Type.APPLY_STATUS:
+				var duration: int = effect.duration_ticks if effect.duration_ticks > 0 else sim.content.statuses[effect.status_id].duration_ticks
+				Statuses.apply(sim, victim, effect.status_id, FixedMath.apply_bp(effect.stacks, scale_bp), FixedMath.apply_bp(duration, scale_bp), source)
+			EffectDef.Type.SHIELD:
+				var amount: int = FixedMath.apply_bp(victim.max_hp, effect.amount_bp_of_max_hp) if effect.amount_bp_of_max_hp > 0 else effect.amount
+				give_shield(sim, victim, FixedMath.apply_bp(amount, scale_bp), source)
+			EffectDef.Type.HEAL:
+				heal(sim, victim, FixedMath.apply_bp(effect.amount, scale_bp), source)
+			EffectDef.Type.DAMAGE:
+				deal_hit(sim, source, victim, FixedMath.apply_bp(effect.amount, scale_bp), false)
+
+
+## The `count` of `pool` nearest any of `others` (ties to the earlier in the
+## fight's order).
+static func nearest_to(pool: Array[UnitState], others: Array[UnitState], count: int) -> Array[UnitState]:
+	var picked: Array[UnitState] = []
+	var left: Array[UnitState] = pool.duplicate()
+	while picked.size() < count and not left.is_empty():
+		var best: int = 0
+		var best_sq: int = -1
+		for i: int in left.size():
+			for other: UnitState in others:
+				var distance_sq: int = ArenaPlane.length_sq(left[i].pos - other.pos)
+				if best_sq < 0 or distance_sq < best_sq:
+					best_sq = distance_sq
+					best = i
+		picked.append(left.pop_at(best))
+	return picked
+
+
 ## Lands a hit of `amount` (its base) on `target`: the damage rule (its
 ## `power`, plus a tactic's payoff; the crit's; the target's Mark), then
 ## DEF, then Shield, then HP. Logs it and returns what got through DEF.
@@ -302,12 +371,13 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 		if payoff > 0:
 			power += payoff
 			entry.bonus = Tactics.bonus_note(payoff, sim.unit_by_id(source.unit_id).tactic)
-	if sim.vs_auras and source.relic_side < 0:
-		var attacker: UnitState = sim.unit_by_id(source.unit_id)
-		if attacker != null and not attacker.vs_conditions.is_empty():
-			power += Passives.vs_bonus_bp(attacker, target)
-	var marked: int = Statuses.damage_taken_bp(target) if not target.statuses.is_empty() else 0
-	var raw: int = DamageRule.apply(amount, power, sim.tuning.crit_damage_bp - FixedMath.BP_ONE if crit else 0, marked)
+	var attacker: UnitState = sim.unit_by_id(source.unit_id) if source.relic_side < 0 else null
+	if sim.vs_auras and attacker != null and not attacker.vs_conditions.is_empty():
+		power += Passives.vs_bonus_bp(attacker, target)
+	var marked: int = Statuses.damage_taken_bp(target)
+	# Crit damage bonuses (phase 5c step 5b) add to the crit's own +50%.
+	var crit_bp: int = sim.tuning.crit_damage_bp - FixedMath.BP_ONE + (attacker.aura_bp[AuraDef.Stat.CRIT_DAMAGE_BP] if attacker != null else 0) if crit else 0
+	var raw: int = DamageRule.apply(amount, power, crit_bp, marked)
 	# Guard (phase 4): an ally's guard takes its share of the hit, against its
 	# own DEF.
 	var guard: UnitState = Guards.covering(sim, source, target) if not sim.guards.is_empty() else null
@@ -319,8 +389,11 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 	entry.amount = dealt
 	entry.crit = crit
 	var had_shield: bool = target.shield > 0
+	var hp_before: int = target.hp
 	entry.absorbed = sim.apply_damage(target, dealt)
 	entry.broke_shield = had_shield and target.shield == 0
+	# What went past the target's last HP (phase 5c step 5b; Overkill Tithe).
+	entry.overkill = maxi(dealt - entry.absorbed - hp_before, 0)
 	target.last_hit_chain = entry.chain
 	target.last_hit_source = source
 	target.last_hit_status = ""
@@ -329,7 +402,28 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 	sim.combat_log.add(entry)
 	if guarded > 0:
 		Guards.take(sim, guard, target, guarded, source)
+	if attacker != null and sim.lifesteal and dealt > 0 and attacker.side != target.side:
+		lifesteal(sim, attacker, target, dealt, source)
 	return dealt
+
+
+## The attacker heals its lifesteal's share of a hit's `dealt` damage (phase
+## 5c step 5b): its own line (LIFESTEAL), not a heal, so nothing that reacts
+## to healing sees it (relics/README rule 5; Decision 21).
+static func lifesteal(sim: CombatSim, attacker: UnitState, target: UnitState, dealt: int, source: EffectSource) -> void:
+	var share: int = attacker.aura_bp[AuraDef.Stat.LIFESTEAL_BP]
+	if not attacker.vs_conditions.is_empty():
+		share += Passives.vs_bonus_bp(attacker, target, AuraDef.Stat.LIFESTEAL_BP)
+	if share <= 0 or not attacker.alive:
+		return
+	var healed: int = clampi(FixedMath.apply_bp(dealt, share), 0, attacker.max_hp - attacker.hp)
+	if healed <= 0:
+		return
+	attacker.hp += healed
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.LIFESTEAL, source)
+	entry.target = attacker.id
+	entry.amount = healed
+	sim.combat_log.add(entry)
 
 
 ## Heals `target` (capped at its max HP), logs it, and if any HP came back,

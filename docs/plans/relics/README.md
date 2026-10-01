@@ -84,6 +84,10 @@ Phase 5 built nine relics with costs (`../rebuild-phase5-run.md`). What becomes 
 
 `docs/plans/rebuild-phase5c-combos.md`, section 10: the five tiers, the prices, every shop's relic with climbing rerolls (a reroll replaces the relic and the wares), the pre-boss shop, the Magpie's relic at 25% off, an elite's and a Rift Tear's relic choices, the Shrine's rare for 15 shards, a choice of 3 boss relics after Old Mother Ash, and `economy.md`'s income. **44 relics are built** (17 common, 13 rare, 5 epic, 5 legendary, 4 boss); the rest need new sim pieces and come with steps 5b (shared pieces), 5c (engines and chains), and 5d (bond relics). The built relics lost their costs as the table above says; Pilgrim's Lantern and Hungry Blade are cut. Icons reuse the placeholder glyphs until the art rehaul.
 
+## What's built (phase 5c step 5b, 2026-10-01)
+
+Section 11 of the same plan: the twelve pieces relics share (effects at a fight's start, lifesteal on its own log line, crit damage and sure crits, timed boosts, a status ending, lengthening and extending statuses, the targets around a unit, an ally close by, Salt Circle, overkill, Reliquary) and the 20 relics they make possible. **64 relics are built** (25 common, 21 rare, 8 epic, 6 legendary, 4 boss): commons and rares are complete. The rest (6 epics, 9 legendaries, and the boss relics that each rewrite a rule) come with 5c (engines and chains) and 5d (bond relics).
+
 ## Open questions
 
 - **Stacking:** can you buy the same common twice? If yes, pure-stat commons become a "go wide" plan (with Reliquary and Reliquary Lamp).

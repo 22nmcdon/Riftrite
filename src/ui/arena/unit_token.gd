@@ -42,13 +42,13 @@ const CAST := UiStyle.GOLD_300
 const STATUS_TAGS: Dictionary = {
 	StatusDef.Kind.ROOT: "ROOT", StatusDef.Kind.STUN: "STUN", StatusDef.Kind.SLOW: "SLOW", StatusDef.Kind.TAUNT: "TAUNT",
 	StatusDef.Kind.SILENCE: "SIL", StatusDef.Kind.MARKED: "MARK", StatusDef.Kind.UNDYING: "UNDY", StatusDef.Kind.ENGAGED: "ENG",
-	StatusDef.Kind.STEALTH: "HID", StatusDef.Kind.WARDED: "WARD",
+	StatusDef.Kind.STEALTH: "HID", StatusDef.Kind.WARDED: "WARD", StatusDef.Kind.BOOST: "UP",
 }
 const STATUS_COLORS: Dictionary = {
 	StatusDef.Kind.ROOT: Color("8fbf5a"), StatusDef.Kind.STUN: Color("f0d060"), StatusDef.Kind.SLOW: Color("7fb8d8"),
 	StatusDef.Kind.TAUNT: Color("e07050"), StatusDef.Kind.SILENCE: Color("b79cf0"), StatusDef.Kind.MARKED: Color("ff8a80"),
 	StatusDef.Kind.UNDYING: Color("f1e6cc"), StatusDef.Kind.ENGAGED: Color("c9993b"),
-	StatusDef.Kind.STEALTH: Color("9aa7b8"), StatusDef.Kind.WARDED: Color("8fd0c8"),
+	StatusDef.Kind.STEALTH: Color("9aa7b8"), StatusDef.Kind.WARDED: Color("8fd0c8"), StatusDef.Kind.BOOST: Color("ffd27f"),
 }
 ## How see-through a stealthed unit is drawn.
 const STEALTH_ALPHA: float = 0.4

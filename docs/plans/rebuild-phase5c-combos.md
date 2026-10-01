@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a built (10-01), 5b (section 11) written and up for approval, 5c–5d to come; steps 5–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a and 5b (section 11) built (10-01), 5c–5d to come; steps 5–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -467,7 +467,7 @@ With 13 rares, 5 epics, and 5 legendaries, the tiers are thin until 5b and 5c; t
 
 ## 11. Step 5b: the pieces relics share
 
-The second part of the relic pool (Decision 17): twelve sim and run pieces that about twenty relics need, and those relics as data. **Up for approval.** The boss relics left (Chain of Echoes, Crown of the Hollow King, Everflame, The Unbending, Riftwalker's Soles, The Long Watch, Snaring Shot) each rewrite a rule of their own, so they go with 5c's engines and chains.
+The second part of the relic pool (Decision 17): twelve sim and run pieces that about twenty relics need, and those relics as data. **Approved and built 2026-10-01** (11.6, 11.7). The boss relics left (Chain of Echoes, Crown of the Hollow King, Everflame, The Unbending, Riftwalker's Soles, The Long Watch, Snaring Shot) each rewrite a rule of their own, so they go with 5c's engines and chains.
 
 ### 11.1 The pieces
 
@@ -512,6 +512,36 @@ With these, commons are complete (25 of 25), rares 21 of 21, epics 8 of 14, lege
 - Each piece in a small fight (`test_relic_pieces.gd`): start effects with their source, nearest enemies, lifesteal (and that it isn't healing), crit damage and a sure crit, a boost's stats while it lasts, `on_status_ended`, a status lengthened by a mod and by `extend_status`, the near targets and `stacks_of`, `ally_near`, Salt Circle once, overkill.
 - Each 5b relic's effect (`test_relics.gd`), Reliquary's doubling.
 - Determinism, the log audit, every encounter on the screen, the chaos fight using the new pieces; the bench fingerprints unchanged (no built kit uses them).
+
+### 11.6 Decisions (the playtester, 2026-10-01)
+
+20. **Step 5b is built as this section says.**
+21. **Lifesteal has its own log line** (`LIFESTEAL`) and board colour; healing triggers, heal power, and healing taken ignore it (until Blood Communion, 5c).
+
+### 11.7 Built in step 5b (2026-10-01)
+
+- **The pieces, as 11.1 says**, with these details:
+  - Start effects are `RelicDef.at_start` (no trigger; apply_status, shield, heal, or damage at all_allies, all_enemies, or nearest_enemies), passed to the sim as `FightSetup.relic_effects` with their sources and scales and run in `CombatSim._init` once the units have joined. The log audit names a relic's entry by its relic.
+  - Salt Circle is a count, `FightSetup.salt_circles`, rather than 11.1's `hero_rules`. Reliquary makes it 2.
+  - Lifesteal heals the attacker after the hit lands (never past full HP), logged as `LIFESTEAL` with the hit's source; a pink number on the board.
+  - Boosts fold into `aura_bp` in `Passives.rederive`, and applying or ending one refolds.
+  - `on_status_ended` comes from the STATUS_ENDED entries, so it hears statuses a relic put there too.
+  - `extend_status` logs `STATUS_EXTENDED`; the board's tag simply lasts longer.
+  - `enemy_near_named` with no reach is the nearest enemy at any distance.
+  - DAMAGE entries carry `overkill` (past the target's last HP, after Shield), and `DeedDef` counts `overkill`.
+- **Reliquary:** `RunContent.counts_twice` (a common, while Reliquary is held). Its mod is `times(2)` when it has no `step_problem`: stats, auras, and amounts double; Brand of Guilt's ability, Rift Candle's mana, and Hollow Drum's mana are unchanged. Its run rules (`relic_sum`) and its start effects (scale 20000) double too.
+- **Relics:** 20 more in `data/relics.json` (64: 25 common, 21 rare, 8 epic, 6 legendary, 4 boss), and two boost statuses (`veiled_haste`, `storm_call`). Some notes on how they read:
+  - Shattered Aegis deals the Shield the breaking blow took (`on_shield_broken`'s amount), not the Shield's full first value.
+  - Veil of the Lost lengthens the Stealth a hero's own abilities give (Maren's hop, Sidestep), not Smoke Pouch's. Maren's Slip Away and Sidestep now name their 1s, since a kit mod only changes durations an effect gives (the same 1s; no fight changed).
+  - Stormcaller's Bell is on every hero (`on_ability`, which is the hero's signature).
+- **The UI:** card and kit lines for every new piece ("As a fight starts: Root 1.5s to the 2 enemies nearest the heroes", "−8% damage taken while an ally is within 1 hex", "+2% lifesteal against enemies that are below 50% HP", "Every time its Stealth runs out · Veiled Haste 3s"), Reliquary's line, the boost's status tag ("UP"), and the log's lines for both new kinds.
+- **Tests:**
+  - `tests/sim/test_relic_pieces.gd` (17: each piece in a small fight).
+  - `test_relics.gd` (8 more: start effects and Salt Circle in the run's setup, Ember Bauble and Smoke Pouch, Reliquary, lifesteal, crit relics, Hunter's Ledger and Thicket Engine, Veil of the Lost on Maren, Overkill Tithe).
+  - The chaos fight uses the new pieces (a relic's start Shield, Salt Circle, lifesteal, a boost on leaving Stealth, an extended Mark, crit damage, Burn spreading from the fallen, an ally-near aura, a signature's boost to all). Its seed moved from 23 to 26, the first that still has every piece.
+  - The log audit and the board's forms cover `LIFESTEAL` and `STATUS_EXTENDED`.
+  - `test_unit_info`, `test_camp`, and `test_content_db` changed on purpose.
+- **What moved:** no built kit's fight; the bench's fingerprints are unchanged. **The run report** (54 runs): **66% of runs won**, as after 5a. Losses still gather on day 3's elite (10 of 18), and there are 2.9 relics a run (0.2 common, 1.7 rare, 0.3 epic, 0.7 boss), since the simple bot still buys wares first.
 
 ## Answered (2026-09-30)
 
