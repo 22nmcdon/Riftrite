@@ -322,11 +322,6 @@ static func _boost(content: ContentDb, status_id: String) -> String:
 	return ", ".join(parts)
 
 
-## A duo bond's, for the hero on `path_id`.
-static func bond_numbers(bond: BondDef, path_id: String, kit: UnitDef, content: ContentDb) -> String:
-	return mod_numbers(bond.mods[path_id], kit, content) if bond.mods.has(path_id) else ""
-
-
 ## A whole number with its sign: "+2", "−12" (the minus UnitInfo's percents use).
 static func signed(value: int) -> String:
 	return ("+" if value >= 0 else "−") + str(absi(value))

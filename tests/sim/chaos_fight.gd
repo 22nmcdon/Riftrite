@@ -37,6 +37,8 @@ extends RefCounted
 ## the hook's lifesteal frenzies it (a stacking boost, each stack its own
 ## timer), the warden's ATK rises with its Shield, and the mender's MGK
 ## steps up while it stands still.
+## Phase 5c step 5d adds a bond relic's trigger: an enemy the brand knocks
+## back is Rooted where it lands.
 ##
 ## Some pieces (a shot fizzling, a cleanse cutting stacks, a cast cancelled
 ## by a stun, a target lost to Stealth, a Taunt) happen only in some seeds;
@@ -82,6 +84,7 @@ static func setup(fight_seed: int = 37) -> FightSetup:
 				{"trigger": "on_holder_hit", "every": 3, "vs": {"keywords": ["burning"]}, "type": "shield", "amount": 5, "target": "self"},
 				{"trigger": "on_status", "keywords": ["burning"], "every": 4, "type": "shield", "amount": 2, "target": "self"}]},
 			{"id": "keen", "name": "Keen", "kind": "aura", "aura": {"target": "holder", "stat": "crit_damage_bp", "value": 5000}},
+			{"id": "anvil", "name": "Anvil", "kind": "ability", "effects": [{"trigger": "on_knockback", "type": "apply_status", "status": "root", "duration_ms": 500, "target": "hit_target"}]},
 			{"id": "pyre", "name": "Pyre", "kind": "ability", "effects": [
 				{"trigger": "on_kill", "vs": {"keywords": ["burning"]}, "type": "apply_status", "status": "burn", "stacks_of": "burn", "target": "enemies_near_named", "within_hexes": 2}]}]})
 	var hook: UnitDef = K.kit("hook", {"stats": {"hp": 600, "atk": 12, "speed": 2, "range": 5}, "traits": ["hop_away"], "hop_cooldown_ms": 3000,

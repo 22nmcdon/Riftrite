@@ -32,7 +32,7 @@ signal finished
 ## An item's, relic's, or upgrade's icon at the head of its card.
 ## Each relic tier's color on its card (phase 5c step 5a; the frames per tier
 ## are the UI redesign's).
-const TIER_COLORS: Array[Color] = [UiStyle.TEXT_DIM, UiStyle.TEAL_400, UiStyle.RIFT_300, UiStyle.GOLD_500, UiStyle.HIGHLIGHT]
+const TIER_COLORS: Array[Color] = [UiStyle.TEXT_DIM, UiStyle.TEAL_400, UiStyle.RIFT_300, UiStyle.GOLD_500, UiStyle.HIGHLIGHT, UiStyle.GOOD]
 const CARD_ICON: float = 60.0
 ## A camp option's icon, and the place's node beside the camp's heading.
 const OPTION_ICON: float = 56.0
@@ -461,7 +461,8 @@ func _fill_shop() -> void:
 			continue
 		var card: VBoxContainer = _relic_card(row, session.run.relics[state.shop_relics[i]])
 		(card.get_parent() as Control).custom_minimum_size = Vector2(WARE_WIDTH, 0)
-		card.add_child(UiStyle.primary(UiStyle.button("Buy · %d shards" % session.flow.relic_price(i), _do.bind(session.flow.buy_relic.bind(i)))))
+		var price: int = session.flow.relic_price(i)
+		card.add_child(UiStyle.primary(UiStyle.button("Take · free" if price == 0 else "Buy · %d shards" % price, _do.bind(session.flow.buy_relic.bind(i)))))
 	var more: HBoxContainer = _row()
 	section.add_child(more)
 	for hero: RunState.Hero in state.heroes:

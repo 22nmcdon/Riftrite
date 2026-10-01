@@ -359,13 +359,16 @@ func _run_upgrades(run_session: RunSession) -> String:
 	return "None yet: a pick comes after each won fight." if names.is_empty() else "\n".join(names)
 
 
-## The hero's duo bond: on (and what it gives), stirring, or none.
+## The hero's duo bond: on (and its relic, held or to find), stirring, or
+## none (phase 5c step 5d: a bond is the key to its relic).
 func _run_bond(run_session: RunSession) -> String:
 	var path_id: String = run_session.state().hero(showing).path
 	for bond: BondDef in run_session.run.active_bonds(run_session.state()):
 		if bond.paths.has(path_id):
-			var numbers: String = ModInfo.bond_numbers(bond, path_id, run_session.run.hero_kit(run_session.state().hero(showing)), run_session.content)
-			return "%s: %s%s" % [bond.name, bond.texts[path_id], "" if numbers.is_empty() else " (%s)" % numbers]
+			var relic: String = run_session.run.relics[bond.relic].name if run_session.run.relics.has(bond.relic) else bond.relic
+			if run_session.state().relics.has(bond.relic):
+				return "%s is on: %s is yours." % [bond.name, relic]
+			return "%s is on: %s can show up in shops, free." % [bond.name, relic]
 	for bond: BondDef in run_session.run.stirring_bonds(run_session.state()):
 		if bond.paths.has(path_id):
 			return "A bond stirs with %s: it wakes when both have transformed." % run_session.content.paths[bond.partner(path_id)].name

@@ -141,6 +141,7 @@ func test_the_chaos_fight_uses_everything() -> void:
 	assert_true(log.of_kind(LogEntry.Kind.SHIELD).any(func(entry: LogEntry) -> bool: return entry.tick == 0 and entry.source_ability == "tithe"), "a relic's Shield as the fight starts")
 	assert_eq(log.of_kind(LogEntry.Kind.AREA_LANDED).filter(func(entry: LogEntry) -> bool: return entry.note == "broken by Salt Circle").size(), 1, "Salt Circle breaks one area")
 	assert_true(passive_sources.has("pyre") and passive_sources.has("veil") and passive_sources.has("toll"), "on_kill's Burn spreads, a status ending, a signature's boost")
+	assert_true(passive_sources.has("anvil"), "a knockback Roots (phase 5c step 5d)")
 	assert_true(log.of_kind(LogEntry.Kind.DAMAGE).any(func(entry: LogEntry) -> bool: return entry.overkill > 0), "a hit's overkill")
 	# Phase 5c step 5c: the engines.
 	var applied: Array[LogEntry] = log.of_kind(LogEntry.Kind.STATUS_APPLIED)

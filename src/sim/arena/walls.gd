@@ -22,6 +22,35 @@ class Wall:
 	var a: Vector2i
 	var b: Vector2i
 	var until_tick: int
+	## Where its raiser stood: its side of the wall's line is behind it
+	## (phase 5c step 5d, The Watchtower Stone).
+	var back: Vector2i
+
+
+## True if `unit` stands behind one of its side's standing walls (phase 5c
+## step 5d): on its raiser's side of the wall's line, between its ends (half
+## a hex either way), and within `reach` of the line.
+static func behind(sim: CombatSim, unit: UnitState, reach: int) -> bool:
+	for wall: Wall in sim.walls:
+		if wall.side != unit.side or sim.tick >= wall.until_tick:
+			continue
+		var along: Vector2i = wall.b - wall.a
+		var length_sq: int = ArenaPlane.length_sq(along)
+		if length_sq == 0:
+			continue
+		var offset: Vector2i = unit.pos - wall.a
+		var back_cross: int = along.x * (wall.back.y - wall.a.y) - along.y * (wall.back.x - wall.a.x)
+		var cross: int = along.x * offset.y - along.y * offset.x
+		if cross == 0 or (cross > 0) != (back_cross > 0):
+			continue
+		var length: int = FixedMath.isqrt(length_sq)
+		@warning_ignore("integer_division")
+		var t: int = (offset.x * along.x + offset.y * along.y) / length
+		@warning_ignore("integer_division")
+		var away: int = absi(cross) / length
+		if t >= -HexGrid.HEX / 2 and t <= length + HexGrid.HEX / 2 and away <= reach:
+			return true
+	return false
 
 
 ## `unit` puts up the wall `effect` toward `target`.
@@ -37,6 +66,7 @@ static func raise(sim: CombatSim, unit: UnitState, source: EffectSource, effect:
 	wall.a = ArenaPlane.along(center, across, half)
 	wall.b = ArenaPlane.along(center, -across, half)
 	wall.until_tick = sim.tick + effect.zone_ticks
+	wall.back = unit.pos
 	sim.walls.append(wall)
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.WALL, source)
 	entry.target = target.id if target != null else ""

@@ -1,6 +1,6 @@
 [
   {
-    "_note": "Relics (docs/plans/relics/, phase 5c step 5a; docs/plans/rebuild-phase5c-combos.md, section 10): team-wide, no downsides, in tiers (common, rare, epic, legendary, boss). The 86 of the pool (44 from step 5a, 20 from 5b, 11 from 5c-1, 11 from 5c-2); the bond relics come with step 5d. Texts keep numbers out (the UI adds them from the mod and run rules). Icons reuse the placeholder glyphs until the art rehaul. Numbers are placeholders.",
+    "_note": "Relics (docs/plans/relics/, phase 5c step 5a; docs/plans/rebuild-phase5c-combos.md, section 10): team-wide, no downsides, in tiers (common, rare, epic, legendary, boss). The whole pool: 44 from step 5a, 20 from 5b, 11 from 5c-1, 11 from 5c-2, and the 3 bond relics from 5d (tier bond: free, only in shops once their duo bond is on). Texts keep numbers out (the UI adds them from the mod and run rules). Icons reuse the placeholder glyphs until the art rehaul. Numbers are placeholders.",
     "id": "whetstone_of_the_fallen",
     "name": "Whetstone of the Fallen",
     "tier": "common",
@@ -1755,6 +1755,85 @@
         "every_ms": 10000,
         "tie_ms": 300000
       }
+    }
+  },
+  {
+    "id": "the_watchtower_stone",
+    "name": "The Watchtower Stone",
+    "tier": "bond",
+    "icon": "unbroken_wall",
+    "flavor": "Sentry and Sniper: from behind the wall, the eye sees farther.",
+    "text": "Heroes standing behind an allied wall reach farther.",
+    "mod": {
+      "passives": [
+        {
+          "id": "the_watchtower_stone",
+          "name": "The Watchtower Stone",
+          "kind": "aura",
+          "text": "Behind an allied wall (within 3 hexes of it), it reaches farther.",
+          "aura": {
+            "target": "holder",
+            "stat": "range",
+            "value": 1,
+            "while": "behind_wall",
+            "within_hexes": 3
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_hunters_anvil",
+    "name": "The Hunter's Anvil",
+    "tier": "bond",
+    "icon": "braced",
+    "flavor": "Snare and Cleave: where he sends them, they stay.",
+    "text": "Enemies a hero knocks back are Rooted when they land.",
+    "mod": {
+      "passives": [
+        {
+          "id": "the_hunters_anvil",
+          "name": "The Hunter's Anvil",
+          "kind": "ability",
+          "text": "An enemy it knocks back is Rooted where it lands.",
+          "effects": [
+            {
+              "trigger": "on_knockback",
+              "type": "apply_status",
+              "status": "root",
+              "duration_ms": 1000,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_hearth_woven_mail",
+    "name": "The Hearth-Woven Mail",
+    "tier": "bond",
+    "icon": "deep_mend",
+    "flavor": "Light and Iron: the ward follows the blow it turned.",
+    "text": "When a hero takes a hit for an ally, that ally gains a Shield of a share of its max HP.",
+    "mod": {
+      "passives": [
+        {
+          "id": "the_hearth_woven_mail",
+          "name": "The Hearth-Woven Mail",
+          "kind": "ability",
+          "text": "When it takes a hit for an ally, that ally gains a Shield of a share of its max HP.",
+          "effects": [
+            {
+              "trigger": "on_guard",
+              "cooldown_per_unit_ms": 2000,
+              "type": "shield",
+              "amount_bp_of_max_hp": 500,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
     }
   }
 ]

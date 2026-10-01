@@ -44,7 +44,9 @@ extends RefCounted
 ## crit kind of the damage rule), atsp (ATSP points: +30 is +30% attack
 ## speed), and damage_reduced_bp (takes that much less damage, like Warded);
 ## and "while": "ally_near", "within_hexes": 1 (on while another standing
-## ally is that close).
+## ally is that close). Phase 5c step 5d: "while": "behind_wall",
+## "within_hexes": 3 (on while its holder stands behind one of its side's
+## walls, within that far of it; Walls.behind).
 ## Phase 5c step 5c adds stats that add: overheal_shield_bp (what its heals
 ## would restore past full HP comes back as that share of Shield; Overflow
 ## Chalice), lifesteal_heals (above 0: its lifesteal is a heal; Blood
@@ -80,7 +82,7 @@ enum Stat { DAMAGE_BP, HEAL_BP, SHIELD_BP, OVER_TIME_BP, CRIT_CHANCE_BP, COOLDOW
 	LIFESTEAL_BP, CRIT_DAMAGE_BP, ATSP, DAMAGE_REDUCED_BP,
 	OVERHEAL_SHIELD_BP, LIFESTEAL_HEALS, CRIT_OVERFLOW_BP, DEF, OVERHEAL_STRIKE_BP, MAX_HP_BP }
 ## What turns an aura on, beyond its window.
-enum While { ALWAYS, TAUNTING, PLANTED, BELOW_HP, ALLY_STANDING, STATE, ALLY_NEAR }
+enum While { ALWAYS, TAUNTING, PLANTED, BELOW_HP, ALLY_STANDING, STATE, ALLY_NEAR, BEHIND_WALL }
 
 const TARGET_NAMES: Array[String] = ["holder", "all_allies"]
 const TARGET_LABELS: Array[String] = ["its holder", "all allies"]
@@ -91,7 +93,7 @@ const STAT_NAMES: Array[String] = [
 	"lifesteal_bp", "crit_damage_bp", "atsp", "damage_reduced_bp",
 	"overheal_shield_bp", "lifesteal_heals", "crit_overflow_bp", "def", "overheal_strike_bp", "max_hp_bp",
 ]
-const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp", "ally_standing", "state", "ally_near"]
+const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp", "ally_standing", "state", "ally_near", "behind_wall"]
 ## The stats that add rather than multiply. The rest are factors (x1.1);
 ## several of one stat add their changes (the damage rule, phase 5c).
 const ADDITIVE: Array[Stat] = [Stat.CRIT_CHANCE_BP, Stat.COOLDOWN_BP, Stat.RANGE, Stat.LIFESTEAL_BP, Stat.CRIT_DAMAGE_BP, Stat.ATSP, Stat.DAMAGE_REDUCED_BP,
@@ -178,7 +180,7 @@ static func read(reader: DataReader) -> AuraDef:
 				def.ally_kit = reader.req_string("kit")
 			While.STATE:
 				def.state = UnitCondition.read(reader.req_object("state"))
-			While.ALLY_NEAR:
+			While.ALLY_NEAR, While.BEHIND_WALL:
 				def.near_range = reader.req_int("within_hexes", 1, 8) * HexGrid.HEX
 	if reader.has("vs"):
 		def.vs = UnitCondition.read(reader.req_object("vs"))
@@ -220,7 +222,7 @@ func is_additive() -> bool:
 ## Checked each tick, not just when a window opens or closes.
 func is_conditional() -> bool:
 	return while_kind == While.PLANTED or while_kind == While.BELOW_HP or while_kind == While.ALLY_STANDING or while_kind == While.STATE \
-		or while_kind == While.ALLY_NEAR or per_fallen_ally or per_shield_bp > 0
+		or while_kind == While.ALLY_NEAR or while_kind == While.BEHIND_WALL or per_fallen_ally or per_shield_bp > 0
 
 
 ## Worked out per hit (EffectRunner), not folded into the unit's stats.
@@ -256,6 +258,9 @@ func describe() -> String:
 		While.ALLY_NEAR:
 			@warning_ignore("integer_division")
 			condition = " while an ally is within %d hex%s" % [near_range / HexGrid.HEX, "" if near_range == HexGrid.HEX else "es"]
+		While.BEHIND_WALL:
+			@warning_ignore("integer_division")
+			condition = " while behind an allied wall (within %d hex%s)" % [near_range / HexGrid.HEX, "" if near_range == HexGrid.HEX else "es"]
 	if vs != null:
 		condition = " against %s%s" % [vs.describe(), condition]
 	if per_fallen_ally:

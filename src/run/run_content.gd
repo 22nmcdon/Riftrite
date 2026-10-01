@@ -262,6 +262,16 @@ func active_bonds(state: RunState) -> Array[BondDef]:
 	return _bonds_where(state, true)
 
 
+## The bond relics the shops may show (phase 5c step 5d): those of the bonds
+## on, not yet held, in the bonds' order.
+func bond_relics(state: RunState) -> Array[String]:
+	var found: Array[String] = []
+	for bond: BondDef in active_bonds(state):
+		if not state.relics.has(bond.relic):
+			found.append(bond.relic)
+	return found
+
+
 ## The bonds that stir: both paths vowed, not both transformed (shown as "?").
 func stirring_bonds(state: RunState) -> Array[BondDef]:
 	var stirring: Array[BondDef] = _bonds_where(state, false)
@@ -398,6 +408,9 @@ func _check() -> void:
 					errors.append("%s: day %d needs a hunt pack (an encounter of tier hunt)" % [CAMPS_FILE, day])
 	for id: String in bond_ids:
 		_check_bond(bonds[id], "%s (%s)" % [BONDS_FILE, id])
+	for id: String in relic_ids:
+		if relics[id].tier == RelicDef.Tier.BOND and not bond_ids.any(func(bond_id: String) -> bool: return bonds[bond_id].relic == id):
+			errors.append("%s (%s): a bond relic needs its bond" % [RELICS_FILE, id])
 
 
 ## An icon's glyph must be in the art (docs/plans/rebuild-phase5b-art.md,
@@ -424,9 +437,13 @@ func _check_mod(mod: KitMod, kits: Array[UnitDef], where: String) -> void:
 			errors.append("%s: on %s, %s" % [where, kit.id, problem])
 
 
-## A bond's two paths must exist and belong to two different heroes; each
-## mod must change its path's transformed kit, soundly.
+## A bond's two paths must exist and belong to two different heroes, and its
+## relic must be a bond relic (phase 5c step 5d).
 func _check_bond(bond: BondDef, where: String) -> void:
+	if not relics.has(bond.relic):
+		errors.append("%s: unknown relic \"%s\"" % [where, bond.relic])
+	elif relics[bond.relic].tier != RelicDef.Tier.BOND:
+		errors.append("%s: its relic \"%s\" must be of the bond tier" % [where, bond.relic])
 	if bond.paths.size() != 2:
 		return
 	for path_id: String in bond.paths:
@@ -435,17 +452,6 @@ func _check_bond(bond: BondDef, where: String) -> void:
 			return
 	if content.paths[bond.paths[0]].hero == content.paths[bond.paths[1]].hero:
 		errors.append("%s: a bond links two different heroes' paths" % where)
-	for path_id: String in bond.paths:
-		var kit: UnitDef = content.paths[path_id].transformed_kit
-		var mod: KitMod = bond.mods.get(path_id)
-		if kit == null or mod == null:
-			continue
-		var problems: Array[String] = []
-		mod.apply(kit, problems)
-		for problem: String in problems:
-			errors.append("%s: on %s transformed, %s" % [where, path_id, problem])
-		if not mod.affects(kit):
-			errors.append("%s: does nothing on %s transformed" % [where, path_id])
 
 
 ## A tactic item's tactic must exist; a mod must be sound on every hero kit

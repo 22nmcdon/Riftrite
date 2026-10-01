@@ -149,6 +149,7 @@ func test_the_numbers_of_every_other_piece() -> void:
 		"Feast: Every kill · heals 60",
 		"Kindle: Every 3rd hit on a unit that's Burning · 5 Shield · Every 4th status applied that makes a unit Burning · 2 Shield",
 		"Keen: +50% crit damage",
+		"Anvil: Every enemy knocked back · Root 0.5s",
 		"Pyre: Every kill on a unit that's Burning · as much Burn as that unit had to every enemy near that unit (within 2 hexes)",
 		"Strike: Every 1s · reach 5 hexes · 15 damage (9 + 50% ATK) · 1 Bleed",
 		"Last Rites: Once, when it would fall · Undying 2s",

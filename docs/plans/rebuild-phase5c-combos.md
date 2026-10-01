@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a, 5b (section 11), and 5c (section 12) built (10-01), 5d (section 13) approved and being built; steps 5–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a, 5b (section 11), and 5c (section 12) built (10-01), 5d (section 13) built (10-01): the relic pool is complete; steps 5–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -726,7 +726,7 @@ The chaos fight takes the new pieces part by part (its seed rescanned if it must
 
 ## 13. Step 5d: duo bonds as keys to bond relics
 
-The last part of the relic pool (Decision 17), from `duo-bonds.md`: a duo bond has no boost of its own any more; it's the key to a **bond relic**, which joins the shops once the bond is on. **Approved 2026-10-01** (13.6).
+The last part of the relic pool (Decision 17), from `duo-bonds.md`: a duo bond has no boost of its own any more; it's the key to a **bond relic**, which joins the shops once the bond is on. **Approved and built 2026-10-01** (13.6, 13.7).
 
 ### 13.1 The bonds
 
@@ -793,6 +793,36 @@ Each is a passive on every hero (a relic's mod). Each plays off both paths: Hear
 27. **A bond relic shows up 20% of a shop's relic draws** while its bond is on (Question R), four times the Pedlar's epic chance.
 28. **Two bonds on at once both join** (Question S): each draw picks one of their relics.
 29. **The three Act 1 bonds stay** (Question T); a Maren–Vell bond is written when the roster grows.
+
+### 13.7 Built in step 5d (2026-10-01)
+
+- **The bonds:**
+  - `BondDef` is two paths, a name, a line, and its `relic`. `RunContent` checks the relic is of the bond tier, and that every bond relic has its bond.
+  - Fights take no bond mods (the built boosts are gone).
+  - `RunContent.bond_relics(state)` is the on bonds' relics not yet held.
+- **The tier** `bond` (`RelicDef.Tier.BOND`) costs 0 (`relic_prices.bond`). `RunFlow.relic_price` keeps 0 at 0 whatever the run's price rules (Haggler's Charm can't make it cost 1).
+- **The draw** (`Offers._bond_relic`):
+  - Each Pedlar relic draw, and the pre-boss shop's slot beside the legendary, is an on bond's relic `bond_relic_pct` (20) of the time, one of them at random with two on.
+  - It rolls only when there's one to find, so a run without an on bond draws exactly as before.
+  - Never at the Magpie or in an elite's, Rift Tear's, or the Shrine's choice.
+- **The pieces:**
+  - **Behind a wall:** `"while": "behind_wall"` (`Walls.behind`; each wall keeps where its raiser stood, `Wall.back`).
+  - **`on_knockback`:** from PUSH lines noted "knocked back" on an enemy, so a pull or a charge's own move doesn't count.
+  - **`on_guard`:** from GUARD lines.
+  - **`cooldown_per_unit_ms`:** `Listener.last_for`, a lookup by the unit named.
+- **Relics:** the three bond relics, 89 in all.
+- **The UI:**
+  - The hero panel's bond line: "Sentry and Sniper is on: The Watchtower Stone can show up in shops, free." Once held, "... is yours."
+  - A bond relic's card says "BOND RELIC" in green.
+  - The shop's button for a free relic reads "Take · free".
+  - The Codex isn't built yet.
+- **Tests:**
+  - `tests/sim/test_bond_pieces.gd` (4).
+  - `test_relics.gd` (3 more: about 20% of draws once on, never at the Magpie, beside the pre-boss legendary, none without a bond; free even with Haggler's Charm, and drawn no more once held; two bonds both join).
+  - `test_camp.gd`'s bond test: the bond's relic joins and no boost.
+  - The chaos fight's brand Roots an enemy it knocks back (`on_knockback`, seed 37 still has every piece).
+  - `test_mod_info`, `test_unit_info`, and the tier counts changed on purpose.
+- **What moved:** no built kit's fight; the bench's fingerprints are unchanged. The run report: (being measured).
 
 ## Answered (2026-09-30)
 

@@ -1,21 +1,21 @@
 class_name BondDef
 extends RefCounted
-## A duo bond (data/bonds.json; docs/plans/rebuild-phase5-run.md, section 8;
-## Decision 4): two paths of two different heroes. Once both heroes have
-## transformed into them, each gets its path's mod (after relics). Vowing
-## both shows it as "?" (a bond stirs); it's found the first time it's on.
+## A duo bond (data/bonds.json; docs/plans/duo-bonds.md; phase 5c step 5d,
+## docs/plans/rebuild-phase5c-combos.md, section 13): two paths of two
+## different heroes. It has no boost of its own: it's the key to a bond
+## relic. Once both heroes have transformed into its paths it's on, and its
+## relic can show up in the shops (Offers.shop_relics). Vowing both shows it
+## as "?" (a bond stirs); it's found the first time it's on.
 ##   {"id": "light_and_iron", "name": "Light and Iron", "text": "...",
-##    "paths": {"wardweaver": {"text": "...", "mod": {...KitMod...}},
-##              "hearthwall": {"text": "...", "mod": {...}}}}
+##    "paths": ["hearthwall", "wardweaver"], "relic": "the_hearth_woven_mail"}
 
 var id: String
 var name: String
 var text: String
 ## The two path ids, in the file's order.
 var paths: Array[String] = []
-## Path id -> what that path's hero gets, and the player's line for it.
-var mods: Dictionary[String, KitMod] = {}
-var texts: Dictionary[String, String] = {}
+## The bond relic it's the key to (a relic of the bond tier).
+var relic: String
 
 
 static func read(reader: DataReader) -> BondDef:
@@ -23,21 +23,10 @@ static func read(reader: DataReader) -> BondDef:
 	def.id = reader.req_string("id")
 	def.name = reader.req_string("name")
 	def.text = reader.req_string("text")
-	var paths_reader: DataReader = reader.req_object("paths")
-	if paths_reader != null:
-		for path_id: String in paths_reader.map_keys():
-			var side: DataReader = paths_reader.req_object(path_id)
-			if side == null:
-				continue
-			def.paths.append(path_id)
-			def.texts[path_id] = side.req_string("text")
-			var mod_reader: DataReader = side.req_object("mod")
-			if mod_reader != null:
-				def.mods[path_id] = KitMod.read(mod_reader)
-			side.finish()
-		if def.paths.size() != 2:
-			paths_reader.error("a bond links exactly two paths")
-		paths_reader.finish()
+	def.paths = reader.req_string_array("paths")
+	if def.paths.size() != 2:
+		reader.error("a bond links exactly two paths")
+	def.relic = reader.req_string("relic")
 	reader.finish()
 	return def
 

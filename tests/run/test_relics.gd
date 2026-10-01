@@ -69,13 +69,13 @@ func _hits(fight: CombatSim) -> Array:
 
 func test_the_tiers() -> void:
 	assert_true(_run.is_valid(), "\n".join(_run.errors))
-	var counts: Array[int] = [0, 0, 0, 0, 0]
+	var counts: Array[int] = [0, 0, 0, 0, 0, 0]
 	for id: String in _run.relic_ids:
 		counts[_run.relics[id].tier] += 1
-	assert_eq(counts, [25, 21, 14, 15, 11] as Array[int], "common, rare, epic, legendary, boss")
+	assert_eq(counts, [25, 21, 14, 15, 11, 3] as Array[int], "common, rare, epic, legendary, boss, bond")
 	for id: String in ["pilgrims_lantern", "hungry_blade"]:
 		assert_false(_run.relics.has(id), "%s is cut" % id)
-	assert_eq(_run.act.relic_prices, {"common": 5, "rare": 12, "epic": 20, "legendary": 30, "boss": 0} as Dictionary[String, int])
+	assert_eq(_run.act.relic_prices, {"common": 5, "rare": 12, "epic": 20, "legendary": 30, "boss": 0, "bond": 0} as Dictionary[String, int])
 
 
 func test_every_relic_says_what_it_does_with_its_numbers() -> void:
@@ -560,3 +560,65 @@ func test_a_hero_who_rose_takes_no_wound() -> void:
 	result.combat_log.add(rise)
 	flow.record(Bot.formation(), result)
 	assert_eq([flow.state.hero("maren").wounds, flow.state.hero("vell").wounds], [0, 1], "wounds only for heroes down at the end (Decision 23)")
+
+
+# --- step 5d: bond relics --------------------------------------------------------------
+
+## A run with Sentry and Sniper on: Brannoc transformed into Hearthwall, Maren
+## into Deadeye.
+func _bonded() -> RunFlow:
+	var flow: RunFlow = _start()
+	for pair: Array in [["brannoc", "hearthwall"], ["maren", "deadeye"]]:
+		var hero: RunState.Hero = flow.state.hero(pair[0])
+		hero.path = pair[1]
+		hero.transformed = true
+	return flow
+
+
+func _bond_draws(flow: RunFlow, magpie: bool = false, pre_boss: bool = false) -> int:
+	var found: int = 0
+	for rerolls: int in 400:
+		var drawn: Array[String] = Offers.shop_relics(_run, flow.state, rerolls, 2 if pre_boss else 1, magpie, pre_boss)
+		if drawn.has("the_watchtower_stone"):
+			found += 1
+			if pre_boss:
+				assert_eq(drawn.find("the_watchtower_stone"), 1, "beside the pre-boss shop's legendary, never in its place")
+	return found
+
+
+func test_an_on_bonds_relic_shows_up_in_the_shops() -> void:
+	var flow: RunFlow = _bonded()
+	assert_eq(_run.bond_relics(flow.state), ["the_watchtower_stone"] as Array[String])
+	var shown: int = _bond_draws(flow)
+	assert_between(shown, 50, 110, "about 20%% of the Pedlar's draws (Decision 27): %d of 400" % shown)
+	assert_eq(_bond_draws(flow, true), 0, "never at the Magpie")
+	assert_gt(_bond_draws(flow, false, true), 0, "in the pre-boss shop too")
+	assert_eq(_bond_draws(_start()), 0, "no bond on, no bond relic")
+
+
+func test_a_bond_relic_is_free_and_found_once() -> void:
+	var flow: RunFlow = _bonded()
+	var state: RunState = flow.state
+	_hold(flow, ["hagglers_charm"])
+	state.shards = 0
+	flow.open_shop("pedlar")
+	state.shop_relics.assign(["the_watchtower_stone"])
+	assert_eq(flow.relic_price(0), 0, "free, whatever the prices")
+	assert_eq(flow.buy_relic(0), "")
+	assert_true(state.relics.has("the_watchtower_stone"))
+	assert_eq(_run.bond_relics(state), [] as Array[String], "held: drawn no more")
+	assert_eq(_bond_draws(flow), 0)
+
+
+func test_two_bonds_both_join() -> void:
+	var flow: RunFlow = _bonded()
+	var vell: RunState.Hero = flow.state.hero("vell")
+	vell.path = "wardweaver"
+	vell.transformed = true
+	assert_eq(_run.bond_relics(flow.state), ["the_watchtower_stone", "the_hearth_woven_mail"] as Array[String], "Decision 28")
+	var both: Dictionary = {}
+	for rerolls: int in 400:
+		for id: String in Offers.shop_relics(_run, flow.state, rerolls, 1, false, false):
+			if _run.relics[id].tier == RelicDef.Tier.BOND:
+				both[id] = true
+	assert_eq(both.size(), 2, "either can show up")

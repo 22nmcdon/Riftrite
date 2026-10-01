@@ -48,8 +48,8 @@ func test_every_card_in_the_data_has_a_numbers_line() -> void:
 	for id: String in _run.relic_ids:
 		assert_false(ModInfo.relic_numbers(_run.relics[id], _content).is_empty(), id)
 	for id: String in _run.bond_ids:
-		for path_id: String in _run.bonds[id].paths:
-			assert_false(ModInfo.bond_numbers(_run.bonds[id], path_id, null, _content).is_empty(), "%s %s" % [id, path_id])
+		# A bond is the key to its relic (phase 5c step 5d), which says its numbers.
+		assert_false(ModInfo.relic_numbers(_run.relics[_run.bonds[id].relic], _content).is_empty(), id)
 
 
 func test_every_stat_change_names_its_amount() -> void:

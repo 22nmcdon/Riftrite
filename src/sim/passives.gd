@@ -40,6 +40,9 @@ class Listener:
 	var count: int = 0
 	## on_ally_below_hp: the allies it has run for.
 	var allies_done: Array[String] = []
+	## cooldown_per_unit_ms: the tick it last ran for each unit named (a
+	## lookup, never iterated).
+	var last_for: Dictionary[String, int] = {}
 
 
 ## AuraDef stats with no aura: x1 multipliers, +0 additions.
@@ -217,6 +220,9 @@ static func condition_holds(sim: CombatSim, holder: UnitState, aura: AuraDef) ->
 			if not (sim.heroes if holder.side == EffectSource.Team.HEROES else sim.enemies).any(func(ally: UnitState) -> bool:
 					return ally != holder and ally.alive and ArenaPlane.length_sq(ally.pos - holder.pos) <= reach_sq):
 				return false
+		AuraDef.While.BEHIND_WALL:
+			if sim.walls.is_empty() or not Walls.behind(sim, holder, aura.near_range):
+				return false
 		AuraDef.While.ALLY_STANDING:
 			if not (sim.heroes if holder.side == EffectSource.Team.HEROES else sim.enemies).any(
 					func(unit: UnitState) -> bool: return unit != holder and unit.alive and unit.def.id == aura.ally_kit):
@@ -374,9 +380,14 @@ static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, 
 			continue
 		if effect.once and listener.count >= effect.every:
 			continue
+		if effect.cooldown_per_unit_ticks > 0 and other != null:
+			if listener.last_for.has(other.id) and sim.tick - listener.last_for[other.id] < effect.cooldown_per_unit_ticks:
+				continue
 		listener.count += 1
 		if listener.count % effect.every != 0:
 			continue
+		if effect.cooldown_per_unit_ticks > 0 and other != null:
+			listener.last_for[other.id] = sim.tick
 		_run(sim, unit, listener, other, damage, chain)
 
 

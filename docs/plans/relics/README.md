@@ -96,6 +96,10 @@ Section 12.1 of the same plan: the engines, as kit mods with small new pieces (a
 
 Section 12.2 of the same plan: the heroes' rules (`SideRules`), each a relic's `"rules"`. **86 relics are built**: every tier is complete (25 common, 21 rare, 14 epic, 15 legendary, 11 boss). Only the bond relics are left, for step 5d.
 
+## What's built (phase 5c step 5d, 2026-10-01)
+
+Section 13 of the same plan: duo bonds are keys. Once a bond is on, its free bond relic is 20% of the shops' relic draws (both join with two on; never at the Magpie). **The whole pool is built: 89 relics** (25 common, 21 rare, 14 epic, 15 legendary, 11 boss, 3 bond).
+
 ## Open questions
 
 - **Stacking:** can you buy the same common twice? If yes, pure-stat commons become a "go wide" plan (with Reliquary and Reliquary Lamp).

@@ -26,7 +26,7 @@ class RunLine:
 	var wounds: int = 0
 	var relics: int = 0
 	## Relics held at the end, by tier (RelicDef.Tier; phase 5c step 5a).
-	var relic_tiers: Array[int] = [0, 0, 0, 0, 0]
+	var relic_tiers: Array[int] = [0, 0, 0, 0, 0, 0]
 	var errors: Array[String] = []
 	## [encounter id, won?] for each fight.
 	var fights: Array[Array] = []

@@ -235,7 +235,6 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 	var transformed: Array[String] = []
 	var extras: Dictionary[String, HeroExtras] = {}
 	var tactics: Dictionary[String, String] = {}
-	var bonds: Array[BondDef] = run.active_bonds(state)
 	var wound_bp: int = content.tuning.wound_bp
 	for hero: RunState.Hero in state.heroes:
 		if not formation.has(hero.id):
@@ -248,9 +247,6 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 		mods.append_array(run.relic_mods(state, run.hero_kit(hero)))
 		if not hunting and state.fortify:
 			mods.append(run.camps.fortify_mod)
-		for bond: BondDef in bonds:
-			if bond.mods.has(hero.path):
-				mods.append(bond.mods[hero.path])
 		var covenant: KitMod = _covenant_mod(hero, formation)
 		if covenant != null:
 			mods.append(covenant)
@@ -325,9 +321,6 @@ func kit_of(hero_id: String, with_covenant: bool = true) -> UnitDef:
 	var mods: Array[KitMod] = run.upgrade_mods(hero)
 	mods.append_array(run.loadout_mods(hero))
 	mods.append_array(run.relic_mods(state, kit))
-	for bond: BondDef in run.active_bonds(state):
-		if bond.mods.has(hero.path):
-			mods.append(bond.mods[hero.path])
 	if with_covenant:
 		var formation: Dictionary[String, Vector2i] = {}
 		for other: RunState.Hero in state.heroes:
@@ -542,7 +535,8 @@ func relic_price(index: int = 0) -> int:
 	if state.shop == "magpie":
 		@warning_ignore("integer_division")
 		return price * run.act.magpie_relic_pct / 100
-	return _marked_up(price)
+	# A bond relic is free (phase 5c step 5d), whatever the prices.
+	return 0 if price == 0 else _marked_up(price)
 
 
 func _gain_relic(relic_id: String) -> void:

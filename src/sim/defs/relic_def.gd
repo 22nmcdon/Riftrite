@@ -3,7 +3,7 @@ extends RefCounted
 ## A relic (data/relics.json; docs/plans/relics/README.md; phase 5c step 5a,
 ## docs/plans/rebuild-phase5c-combos.md, section 10): team-wide, kept for the
 ## run, with no downsides. "text" is the player's line; "flavor" its line of
-## flavor; "tier" one of common, rare, epic, legendary, boss. What it does:
+## flavor; "tier" one of common, rare, epic, legendary, boss, bond. What it does:
 ##   "mod": {...KitMod...}        every hero's kit (after the loadout)
 ##   "enemy_mod": {...KitMod...}  every enemy's kit
 ##   "grows": {...GrowthDef...}   every hero's kit, growing with what the
@@ -52,10 +52,12 @@ extends RefCounted
 ## The run rules are RunFlow's; the mods are applied at setup, so a fight is
 ## still a pure function of its setup.
 
-enum Tier { COMMON, RARE, EPIC, LEGENDARY, BOSS }
+## Bond (phase 5c step 5d): a duo bond's relic, free, found only in the
+## shops once its bond is on (BondDef).
+enum Tier { COMMON, RARE, EPIC, LEGENDARY, BOSS, BOND }
 
-const TIER_NAMES: Array[String] = ["common", "rare", "epic", "legendary", "boss"]
-const TIER_LABELS: Array[String] = ["Common", "Rare", "Epic", "Legendary", "Boss"]
+const TIER_NAMES: Array[String] = ["common", "rare", "epic", "legendary", "boss", "bond"]
+const TIER_LABELS: Array[String] = ["Common", "Rare", "Epic", "Legendary", "Boss", "Bond"]
 ## What a relic's at_start effects may do, and at whom.
 const START_TYPES: Array[EffectDef.Type] = [EffectDef.Type.APPLY_STATUS, EffectDef.Type.SHIELD, EffectDef.Type.HEAL, EffectDef.Type.DAMAGE]
 const START_TARGETS: Array[EffectDef.Target] = [EffectDef.Target.ALL_ALLIES, EffectDef.Target.ALL_ENEMIES, EffectDef.Target.NEAREST_ENEMIES]

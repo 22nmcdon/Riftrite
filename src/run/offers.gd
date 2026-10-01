@@ -156,10 +156,26 @@ static func shop_relics(run: RunContent, state: RunState, rerolls: int, count: i
 	for i: int in count:
 		var tier: String = "legendary" if pre_boss and i == 0 else (_weighted(rng, run.act.magpie_odds, run.act.magpie_weights) if magpie \
 			else _weighted(rng, run.act.relic_odds, run.act.relic_weights))
-		var id: String = _relic_of(run, state, rng, tier, drawn)
+		var id: String = ""
+		if not magpie and not (pre_boss and i == 0):
+			id = _bond_relic(run, state, rng, drawn)
+		if id.is_empty():
+			id = _relic_of(run, state, rng, tier, drawn)
 		if not id.is_empty():
 			drawn.append(id)
 	return drawn
+
+
+## An on bond's relic for a shop's relic draw (phase 5c step 5d): with
+## bond_relic_pct, one of the bond relics the run may find (Decision 28: any
+## of them) that isn't in `taken`; "" otherwise. No roll without one, so a
+## run without bonds draws as it did.
+static func _bond_relic(run: RunContent, state: RunState, rng: SimRng, taken: Array[String]) -> String:
+	var pool: Array[String] = []
+	pool.assign(run.bond_relics(state).filter(func(id: String) -> bool: return not taken.has(id)))
+	if pool.is_empty() or rng.range_int(100) >= run.act.bond_relic_pct:
+		return ""
+	return pool[rng.range_int(pool.size())]
 
 
 ## One relic of `tier` the run doesn't hold and that isn't in `taken`; if the

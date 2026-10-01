@@ -54,7 +54,7 @@ func test_the_camp_content_loads() -> void:
 	assert_true(_run.is_valid(), "\n".join(_run.errors))
 	assert_eq(_run.camps.places.map(func(place: CampsDef.Place) -> String: return place.id), ["waystone", "ruined_chapel", "hunters_blind", "rift_scar"])
 	assert_eq(_run.camps.options.size(), CampsDef.OPTIONS.size())
-	assert_eq([_run.relic_ids.size(), _run.bond_ids.size()], [86, 3])
+	assert_eq([_run.relic_ids.size(), _run.bond_ids.size()], [89, 3])
 
 
 func test_arriving_at_camp() -> void:
@@ -288,19 +288,19 @@ func test_a_duo_bond_stirs_then_switches_on() -> void:
 	assert_eq(_run.active_bonds(state), [] as Array[BondDef])
 	state.hero("brannoc").transformed = true
 	_to_fight(flow)
-	assert_false(_has_passive(_setup(flow).heroes[1].def, "sentry_sight"), "not until both transform")
+	assert_eq(_run.bond_relics(state), [] as Array[String], "not until both transform")
 	var deed := FightResult.Deed.make("maren", "deadeye", 99999)
 	var result: FightResult = _result(FightResult.Outcome.VICTORY)
 	result.deeds = [deed] as Array[FightResult.Deed]
 	flow.record(Bot.formation(), result)
 	assert_eq(state.bonds_found, ["sentry_and_sniper"] as Array[String], "found as it switches on")
 	assert_eq(_run.stirring_bonds(state), [] as Array[BondDef])
+	assert_eq(_run.bond_relics(state), ["the_watchtower_stone"] as Array[String], "its relic can show up in shops now")
 	flow.take_shards()
 	flow.finish_day()
 	_to_fight(flow)
 	var setup: FightSetup = _setup(flow)
-	assert_true(_has_passive(setup.heroes[1].def, "sentry_sight"))
-	assert_eq(setup.heroes[0].def.mana.per_attack, _run.content.paths["hearthwall"].transformed_kit.mana.per_attack + 2)
+	assert_eq(setup.heroes[0].def.mana.per_attack, _run.content.paths["hearthwall"].transformed_kit.mana.per_attack, "a bond gives no boost of its own (phase 5c step 5d)")
 
 
 func test_the_bot_plays_camps_to_the_end() -> void:

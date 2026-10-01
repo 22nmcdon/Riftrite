@@ -32,7 +32,8 @@ extends RefCounted
 
 ## The log kinds that raise events (the rest are skipped at once).
 const _RAISES: Array[LogEntry.Kind] = [LogEntry.Kind.FIRE, LogEntry.Kind.DAMAGE, LogEntry.Kind.SHIELD, LogEntry.Kind.HEAL,
-	LogEntry.Kind.STATUS_APPLIED, LogEntry.Kind.HOP, LogEntry.Kind.STATUS_DAMAGE, LogEntry.Kind.STATUS_ENDED, LogEntry.Kind.LIFESTEAL]
+	LogEntry.Kind.STATUS_APPLIED, LogEntry.Kind.HOP, LogEntry.Kind.STATUS_DAMAGE, LogEntry.Kind.STATUS_ENDED, LogEntry.Kind.LIFESTEAL,
+	LogEntry.Kind.PUSH, LogEntry.Kind.GUARD]
 
 
 ## Raises the events in the log from entry `from` on, including those the
@@ -92,6 +93,14 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> int:
 			LogEntry.Kind.LIFESTEAL:
 				if entry.amount > 0:
 					_raise(sim, source, EffectDef.Trigger.ON_LIFESTEAL, chain)
+			# Phase 5c step 5d: knocking an enemy back, and a Guard taking its
+			# share of a hit on an ally.
+			LogEntry.Kind.PUSH:
+				if target != null and target.side != source.side and entry.note.begins_with("knocked back"):
+					_raise(sim, source, EffectDef.Trigger.ON_KNOCKBACK, chain, target)
+			LogEntry.Kind.GUARD:
+				if target != null and entry.amount > 0:
+					_raise(sim, source, EffectDef.Trigger.ON_GUARD, chain, target)
 			LogEntry.Kind.STATUS_APPLIED:
 				# Engaged comes from the Engage trait, not an effect.
 				if target != null and entry.status != sim.content.engaged_status.id:

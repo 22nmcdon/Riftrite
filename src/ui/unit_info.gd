@@ -26,6 +26,8 @@ const EVENT_WORDS: Dictionary[int, String] = {
 	EffectDef.Trigger.ON_ALLY_ABILITY: "ally's signature",
 	EffectDef.Trigger.ON_STATUS_ENDED: "status running out",
 	EffectDef.Trigger.ON_LIFESTEAL: "lifesteal heal",
+	EffectDef.Trigger.ON_KNOCKBACK: "enemy knocked back",
+	EffectDef.Trigger.ON_GUARD: "hit taken for an ally",
 }
 const ORDINALS: Array[String] = ["th", "st", "nd", "rd"]
 const CHATTER: Array[LogEntry.Kind] = [LogEntry.Kind.MOVE, LogEntry.Kind.STOP, LogEntry.Kind.TARGET]
@@ -236,6 +238,8 @@ static func passive_trigger_text(effect: EffectDef) -> String:
 	var text: String = ("Once, on its %s" if effect.once else "Every %s") % (_nth(effect.every, word) if effect.every > 1 or not effect.once else "first " + word)
 	if effect.vs != null:
 		text += " on a unit that's %s" % effect.vs.describe()
+	if effect.cooldown_per_unit_ticks > 0:
+		text += " (at most once every %s for each)" % seconds(effect.cooldown_per_unit_ticks)
 	return text
 
 
@@ -275,6 +279,9 @@ static func aura_text(aura: AuraDef) -> String:
 		AuraDef.While.ALLY_NEAR:
 			@warning_ignore("integer_division")
 			text += " while an ally is within %s" % hexes(aura.near_range / HexGrid.HEX)
+		AuraDef.While.BEHIND_WALL:
+			@warning_ignore("integer_division")
+			text += " while behind an allied wall (within %s of it)" % hexes(aura.near_range / HexGrid.HEX)
 	if aura.vs != null and aura.stat == AuraDef.Stat.DAMAGE_BP:
 		text = text.replace(" damage", " damage against %s" % aura.vs.describe())
 	elif aura.vs != null:

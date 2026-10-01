@@ -41,6 +41,9 @@ var magpie_odds: Array[String] = []
 var magpie_weights: Array[int] = []
 ## The chance (percent) that one of an elite's 2 relics is an epic.
 var elite_epic_pct: int = 0
+## The chance a shop's relic draw is an on bond's relic (phase 5c step 5d,
+## Decision 27).
+var bond_relic_pct: int = 0
 ## How many boss relics a won boss fight offers.
 var boss_relics: int = 3
 ## The Shrine's rare relic.
@@ -72,11 +75,13 @@ static func read(reader: DataReader) -> ActDef:
 			for tier: String in RelicDef.TIER_NAMES.slice(0, RelicDef.Tier.BOSS):
 				def.relic_prices[tier] = relics.req_int(tier, 0)
 			def.relic_prices["boss"] = 0
+			def.relic_prices["bond"] = 0
 			relics.finish()
 		prices.finish()
 	_read_odds(reader, "relic_odds", def.relic_odds, def.relic_weights)
 	_read_odds(reader, "magpie_odds", def.magpie_odds, def.magpie_weights)
 	def.elite_epic_pct = reader.req_int("elite_epic_pct", 0, 100)
+	def.bond_relic_pct = reader.req_int("bond_relic_pct", 0, 100)
 	def.boss_relics = reader.req_int("boss_relics", 0, 5)
 	def.pedlar_wares = reader.req_int("pedlar_wares", 1, 8)
 	def.magpie_wares = reader.req_int("magpie_wares", 1, 8)
