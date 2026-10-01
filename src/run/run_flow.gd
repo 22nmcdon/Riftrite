@@ -119,7 +119,7 @@ func choose_camp(index: int) -> String:
 		"rest":
 			for hero: RunState.Hero in state.heroes:
 				hero.wounds = 0
-			state.rested = state.relics.any(func(id: String) -> bool: return run.relics.has(id) and run.relics[id].rest_mod != null)
+			state.rested = true
 		"scout":
 			for day: int in [state.day + 1, state.day + 2]:
 				if day <= run.act.days.size() and not state.scouted.has(day):
@@ -135,7 +135,8 @@ func choose_camp(index: int) -> String:
 		"rift_tear":
 			state.rift_tear = true
 		"shrine":
-			state.relic_choice = Offers.relics(run, state, RELIC_SHRINE, 2)
+			state.relic_choice = Offers.relics(run, state, RELIC_SHRINE, 1, "rare")
+			state.relic_choice_price = run.act.shrine_price
 	state.camp_used = option
 	return ""
 
@@ -235,7 +236,7 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 	var extras: Dictionary[String, HeroExtras] = {}
 	var tactics: Dictionary[String, String] = {}
 	var bonds: Array[BondDef] = run.active_bonds(state)
-	var wound_bp: int = content.tuning.wound_bp + run.relic_sum(state, "wound_bp_add")
+	var wound_bp: int = content.tuning.wound_bp
 	for hero: RunState.Hero in state.heroes:
 		if not formation.has(hero.id):
 			continue
@@ -245,16 +246,14 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 		var mods: Array[KitMod] = run.upgrade_mods(hero)
 		mods.append_array(run.loadout_mods(hero))
 		mods.append_array(run.relic_mods(state))
-		if not hunting:
-			if state.fortify:
-				mods.append(run.camps.fortify_mod)
-			if state.rested:
-				for id: String in state.relics:
-					if run.relics[id].rest_mod != null:
-						mods.append(run.relics[id].rest_mod)
+		if not hunting and state.fortify:
+			mods.append(run.camps.fortify_mod)
 		for bond: BondDef in bonds:
 			if bond.mods.has(hero.path):
 				mods.append(bond.mods[hero.path])
+		var covenant: KitMod = _covenant_mod(hero, formation)
+		if covenant != null:
+			mods.append(covenant)
 		extras[hero.id] = HeroExtras.make(mods, hero.wounds, wound_bp)
 		var tallies: Array = run.growth_tallies(state, hero)
 		extras[hero.id].tally_keys.assign(tallies[0])
@@ -277,10 +276,35 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 	return setup if errors.is_empty() else null
 
 
+## The Hollow Covenant (phase 5c step 5a): what `hero` needs added to reach
+## the team's highest HP, ATK, MGK, DEF, CRIT, and attack speed (among the
+## heroes placed), worked out from each kit as it stands between fights.
+## Null without the relic, or with nothing to add.
+func _covenant_mod(hero: RunState.Hero, formation: Dictionary[String, Vector2i]) -> KitMod:
+	if not run.relic_rule(state, "covenant"):
+		return null
+	var mine: UnitStats = _kit_without_covenant(hero.id).stats
+	var mod: KitMod = KitMod.make()
+	for other: RunState.Hero in state.heroes:
+		if not formation.has(other.id) or other == hero:
+			continue
+		var theirs: UnitStats = _kit_without_covenant(other.id).stats
+		for stat: UnitStats.Stat in COVENANT_STATS:
+			mod.stats_add[stat] = maxi(mod.stats_add[stat], theirs.get_stat(stat) - mine.get_stat(stat))
+	return mod if mod.changes_anything() else null
+
+
+const COVENANT_STATS: Array[UnitStats.Stat] = [UnitStats.Stat.HP, UnitStats.Stat.ATK, UnitStats.Stat.MGK, UnitStats.Stat.DEF, UnitStats.Stat.CRIT, UnitStats.Stat.ATSP]
+
+
+func _kit_without_covenant(hero_id: String) -> UnitDef:
+	return kit_of(hero_id, false)
+
+
 ## The kit `hero_id` fights with as things stand between fights: its path's
 ## at its stage, then its upgrades, loadout, relics, and bonds (camp's
 ## modifiers for the next fight aside). For showing, not for fights.
-func kit_of(hero_id: String) -> UnitDef:
+func kit_of(hero_id: String, with_covenant: bool = true) -> UnitDef:
 	var hero: RunState.Hero = state.hero(hero_id)
 	var kit: UnitDef = run.hero_kit(hero)
 	var mods: Array[KitMod] = run.upgrade_mods(hero)
@@ -289,6 +313,13 @@ func kit_of(hero_id: String) -> UnitDef:
 	for bond: BondDef in run.active_bonds(state):
 		if bond.mods.has(hero.path):
 			mods.append(bond.mods[hero.path])
+	if with_covenant:
+		var formation: Dictionary[String, Vector2i] = {}
+		for other: RunState.Hero in state.heroes:
+			formation[other.id] = Vector2i.ZERO
+		var covenant: KitMod = _covenant_mod(hero, formation)
+		if covenant != null:
+			mods.append(covenant)
 	for mod: KitMod in mods:
 		kit = mod.apply(kit)
 	return kit
@@ -386,6 +417,7 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 	state.rift_tear = false
 	state.rested = false
 	if not won:
+		state.streak = 0
 		state.losses += 1
 		state.chosen = ""
 		if state.losses >= run.act.losses_to_end:
@@ -395,24 +427,55 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 			_arrive()
 		return
 	var tier: String = run.content.encounters[state.chosen].tier
-	state.shards += run.act.pay[tier] + run.relic_sum(state, "pay_add")
-	if run.act.days[state.day - 1] == "boss":
-		_end(RunState.Outcome.WON)
-		return
+	state.shards += run.act.pay[tier] + run.relic_sum(state, "pay_add") + (run.relic_sum(state, "elite_pay_add") if tier == "elite" else 0)
+	_streak(result)
+	if tier == "elite":
+		_grow_by_run("elite_wins")
 	state.phase = RunState.Phase.AFTER
+	state.relic_choice_price = 0
+	if run.act.days[state.day - 1] == "boss":
+		# The boss relic choice (Decision 18), then the run's end (finish_day).
+		state.relic_choice = Offers.relics(run, state, RELIC_AFTER_FIGHT, run.act.boss_relics, "boss")
+		if state.relic_choice.is_empty():
+			_end(RunState.Outcome.WON)
+		return
 	state.pick = _pick_cards(0)
-	if tier == "elite" or torn:
-		state.relic_choice = Offers.relics(run, state, RELIC_AFTER_FIGHT, 2)
+	if tier == "elite":
+		state.relic_choice = Offers.relics(run, state, RELIC_AFTER_FIGHT, 2, "rare", run.act.elite_epic_pct)
+	elif torn:
+		state.relic_choice = Offers.relics(run, state, RELIC_AFTER_FIGHT, 2, "rare")
 
 
-## A pick's cards at `visit`, as many as the relics allow.
-func _pick_cards(visit: int) -> Array[String]:
-	var cards: Array[String] = Offers.pick(run, state, visit)
+## Bounty Board (phase 5c step 5a): a won day fight with no hero falling adds
+## to the streak, anything else ends it; a streak relic pays once.
+func _streak(result: FightResult) -> void:
+	var fell: bool = result.combat_log.entries.any(func(entry: LogEntry) -> bool: return entry.kind == LogEntry.Kind.DEATH and state.hero(entry.target) != null)
+	state.streak = 0 if fell else state.streak + 1
 	for id: String in state.relics:
-		var most: int = run.relics[id].pick_cards
-		if most > 0 and cards.size() > most:
-			cards.resize(most)
-	return cards
+		var relic: RelicDef = run.relics.get(id)
+		if relic != null and relic.streak_wins > 0 and state.streak >= relic.streak_wins and not state.streaks_paid.has(id):
+			state.shards += relic.streak_shards
+			state.streaks_paid.append(id)
+
+
+## Adds one to every held relic that grows with what the run counts as
+## `what` (Tally of the Dead: "elite_wins").
+func _grow_by_run(what: String) -> void:
+	for id: String in state.relics:
+		var relic: RelicDef = run.relics.get(id)
+		if relic == null or relic.grows == null or relic.grows.run_counts != what:
+			continue
+		var before: int = state.growth.get(id, 0)
+		state.growth[id] = before + 1
+		if relic.grows.steps(state.growth[id]) > relic.grows.steps(before) and not state.grew.has(":" + id):
+			state.grew.append(":" + id)
+
+
+## A pick's cards at `visit` (Widened Offering adds some), and how many of
+## them to take (The Hollow Throne: 2).
+func _pick_cards(visit: int) -> Array[String]:
+	state.picks_left = 1 + run.relic_sum(state, "take_picks_add")
+	return Offers.pick(run, state, visit, run.relic_sum(state, "pick_cards_add"))
 
 
 # --- relics -----------------------------------------------------------------------
@@ -423,8 +486,12 @@ func take_relic(index: int) -> String:
 		return "there's no relic choice waiting"
 	if index < 0 or index >= state.relic_choice.size():
 		return "there's no relic %d" % index
+	if state.shards < state.relic_choice_price:
+		return "it costs %d shards; there are %d" % [state.relic_choice_price, state.shards]
+	state.shards -= state.relic_choice_price
 	_gain_relic(state.relic_choice[index])
 	state.relic_choice.clear()
+	state.relic_choice_price = 0
 	return ""
 
 
@@ -433,25 +500,33 @@ func decline_relic() -> String:
 	if state.relic_choice.is_empty():
 		return "there's no relic choice waiting"
 	state.relic_choice.clear()
+	state.relic_choice_price = 0
 	return ""
 
 
-## Buys the open shop's relic.
-func buy_relic() -> String:
-	if state.shop.is_empty() or state.shop_relic.is_empty():
+## Buys the open shop's relic `index`.
+func buy_relic(index: int = 0) -> String:
+	if state.shop.is_empty() or index < 0 or index >= state.shop_relics.size() or state.shop_relics[index].is_empty():
 		return "there's no relic for sale"
-	var price: int = relic_price()
+	var price: int = relic_price(index)
 	if state.shards < price:
 		return "it costs %d shards; there are %d" % [price, state.shards]
 	state.shards -= price
-	_gain_relic(state.shop_relic)
-	state.shop_relic = ""
+	_gain_relic(state.shop_relics[index])
+	state.shop_relics[index] = ""
 	return ""
 
 
-## What the open shop's relic costs.
-func relic_price() -> int:
-	return _marked_up(run.act.relic_price)
+## What the open shop's relic `index` costs: its tier's price (the Magpie's
+## at his discount, rounded down), with the Pedlar's price_add.
+func relic_price(index: int = 0) -> int:
+	if index < 0 or index >= state.shop_relics.size() or state.shop_relics[index].is_empty():
+		return 0
+	var price: int = run.act.relic_prices[RelicDef.TIER_NAMES[run.relics[state.shop_relics[index]].tier]]
+	if state.shop == "magpie":
+		@warning_ignore("integer_division")
+		return price * run.act.magpie_relic_pct / 100
+	return _marked_up(price)
 
 
 func _gain_relic(relic_id: String) -> void:
@@ -472,20 +547,30 @@ func _grow(result: FightResult) -> void:
 			if upgrade.grows == null:
 				continue
 			var before: int = hero.growth.get(upgrade.id, 0)
-			hero.growth[upgrade.id] = before + result.tally_amount(hero.id, "upgrade:" + upgrade.id)
+			hero.growth[upgrade.id] = before + _faster(result.tally_amount(hero.id, "upgrade:" + upgrade.id))
 			if upgrade.grows.steps(hero.growth[upgrade.id]) > upgrade.grows.steps(before):
 				state.grew.append("%s:%s" % [hero.id, upgrade.id])
 	for id: String in state.relics:
 		var relic: RelicDef = run.relics.get(id)
-		if relic == null or relic.grows == null:
+		if relic == null or relic.grows == null or not relic.grows.counted_in_fights():
 			continue
 		var before: int = state.growth.get(id, 0)
 		var counted: int = 0
 		for hero: RunState.Hero in state.heroes:
 			counted += result.tally_amount(hero.id, "relic:" + id)
-		state.growth[id] = before + counted
-		if relic.grows.steps(state.growth[id]) > relic.grows.steps(before):
+		state.growth[id] = before + _faster(counted)
+		var stepped: int = relic.grows.steps(state.growth[id]) - relic.grows.steps(before)
+		if stepped > 0:
 			state.grew.append(":" + id)
+			state.shards += stepped * relic.grows.each_shards
+
+
+## What's counted, made faster by Rift-Bound Heart's growth_bp while held.
+func _faster(counted: int) -> int:
+	for id: String in state.relics:
+		if run.relics.has(id) and run.relics[id].growth_bp > 0:
+			counted = FixedMath.apply_bp(counted, run.relics[id].growth_bp)
+	return counted
 
 
 ## Takes card `index` of the waiting pick: the upgrade is its hero's for good.
@@ -498,7 +583,10 @@ func take_pick(index: int) -> String:
 	state.hero(upgrade.hero).upgrades.append(upgrade.id)
 	if upgrade.grows != null:
 		state.hero(upgrade.hero).growth[upgrade.id] = 0
-	state.pick.clear()
+	state.pick.remove_at(index)
+	state.picks_left -= 1
+	if state.picks_left <= 0:
+		state.pick.clear()
 	return ""
 
 
@@ -508,6 +596,7 @@ func take_shards() -> String:
 		return "there's no pick waiting"
 	state.shards += run.act.pick_shards
 	state.pick.clear()
+	state.picks_left = 1
 	return ""
 
 
@@ -570,37 +659,47 @@ func unequip(hero_id: String, slot: int) -> String:
 
 # --- shops ------------------------------------------------------------------------
 
-## Opens a shop at camp ("pedlar" or "magpie"), its wares drawn now (camp's
-## option opens it; tests open one directly). The Pedlar now and then, and
-## the Magpie always, also sells a relic.
+## Opens a shop at camp ("pedlar" or "magpie"), its wares and relics drawn
+## now (camp's option opens it; tests open one directly). Phase 5c step 5a:
+## every shop shows a relic (more with shop_relics_add); the boss day's
+## Pedlar is the pre-boss shop (a legendary first, rerolls from
+## boss_reroll); the Magpie's are epic or legendary, one look. As a shop
+## opens, the relics' shop_shards and miser pay.
 func open_shop(kind: String) -> String:
 	if state.phase != RunState.Phase.CAMP:
 		return _not_now("open a shop")
-	state.shop_relic = ""
 	match kind:
 		"pedlar":
 			state.wares = Offers.pedlar(run, state, 0)
-			if RunRandom.stream(state.seed_value, [RunRandom.PEDLAR, state.act, state.day, state.attempt, -1]).range_int(100) < run.camps.pedlar_relic_pct:
-				state.shop_relic = _first(Offers.relics(run, state, RELIC_SHOP, 1))
 		"magpie":
 			state.wares = Offers.magpie(run, state)
-			state.shop_relic = _first(Offers.relics(run, state, RELIC_SHOP, 1))
 		_:
 			return "there's no shop \"%s\"" % kind
 	state.shop = kind
 	state.rerolls = 0
+	state.shop_relics = _draw_shop_relics()
+	state.shards += run.relic_sum(state, "shop_shards")
+	if run.relic_rule(state, "miser"):
+		@warning_ignore("integer_division")
+		state.shards += mini(state.shards / 5, 6)
 	return ""
 
 
-static func _first(ids: Array[String]) -> String:
-	return ids[0] if not ids.is_empty() else ""
+func _draw_shop_relics() -> Array[String]:
+	var count: int = 1 + run.relic_sum(state, "shop_relics_add") + (1 if pre_boss_shop() else 0)
+	return Offers.shop_relics(run, state, state.rerolls, count, state.shop == "magpie", pre_boss_shop())
+
+
+## True if the open shop is the pre-boss shop: the boss day's Pedlar.
+func pre_boss_shop() -> bool:
+	return state.shop == "pedlar" and state.day >= 1 and state.day <= run.act.days.size() and run.act.days[state.day - 1] == "boss"
 
 
 func close_shop() -> void:
 	state.shop = ""
 	state.wares.clear()
 	state.rerolls = 0
-	state.shop_relic = ""
+	state.shop_relics.clear()
 
 
 ## What ware `item_id` costs at the open shop (the Magpie's markup, rounded up).
@@ -609,12 +708,12 @@ func price_of(item_id: String) -> int:
 
 
 ## A price at the open shop: the Magpie's markup (rounded up), or the
-## Pedlar's, with the relics' price_add.
+## Pedlar's, with the relics' price_add (never below 1).
 func _marked_up(price: int) -> int:
 	if state.shop == "magpie":
 		@warning_ignore("integer_division")
 		return (price * run.act.magpie_markup_pct + 99) / 100
-	return price + run.relic_sum(state, "price_add")
+	return maxi(price + run.relic_sum(state, "price_add"), 1)
 
 
 ## Buys ware `index` into the stash.
@@ -632,16 +731,34 @@ func buy(index: int) -> String:
 	return ""
 
 
-## The Pedlar lays out a fresh set, for the act's reroll price.
+## What the open shop's next reroll costs (phase 5c step 5a): the first
+## reroll_price (boss_reroll_price in the pre-boss shop), each after it 1
+## more (flat_rerolls: never more); free_reroll makes the first free.
+func reroll_price() -> int:
+	if state.rerolls == 0 and run.relic_rule(state, "free_reroll"):
+		return 0
+	var base: int = run.act.boss_reroll_price if pre_boss_shop() else run.act.reroll_price
+	return base + (0 if run.relic_rule(state, "flat_rerolls") else state.rerolls)
+
+
+## The Pedlar lays out fresh wares and relics (Decision 19), for the next
+## reroll's price. The Magpie is one look.
 func reroll() -> String:
 	if state.shop != "pedlar":
 		return "only the Pedlar rerolls"
-	if state.shards < run.act.reroll_price:
-		return "a reroll costs %d shards; there are %d" % [run.act.reroll_price, state.shards]
-	state.shards -= run.act.reroll_price
+	var price: int = reroll_price()
+	if state.shards < price:
+		return "a reroll costs %d shards; there are %d" % [price, state.shards]
+	state.shards -= price
 	state.rerolls += 1
 	state.wares = Offers.pedlar(run, state, state.rerolls)
+	state.shop_relics = _draw_shop_relics()
 	return ""
+
+
+## What treating a wound costs (with wound_price_add, never below 0).
+func wound_price() -> int:
+	return maxi(run.act.wound_price + run.relic_sum(state, "wound_price_add"), 0)
 
 
 ## Treats one of `hero_id`'s wounds, wherever a shop is open.
@@ -653,9 +770,9 @@ func treat_wound(hero_id: String) -> String:
 		return "unknown hero \"%s\"" % hero_id
 	if hero.wounds == 0:
 		return "%s has no wounds" % hero_id
-	if state.shards < run.act.wound_price:
-		return "treating a wound costs %d shards; there are %d" % [run.act.wound_price, state.shards]
-	state.shards -= run.act.wound_price
+	if state.shards < wound_price():
+		return "treating a wound costs %d shards; there are %d" % [wound_price(), state.shards]
+	state.shards -= wound_price()
 	hero.wounds -= 1
 	return ""
 
@@ -668,6 +785,9 @@ func finish_day() -> String:
 		return "choose an upgrade or take the shards first"
 	if not state.relic_choice.is_empty():
 		return "choose a relic or neither first"
+	if run.act.days[state.day - 1] == "boss":
+		_end(RunState.Outcome.WON)
+		return ""
 	state.day += 1
 	state.attempt = 0
 	state.chosen = ""

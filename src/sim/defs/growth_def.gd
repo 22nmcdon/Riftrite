@@ -8,7 +8,11 @@ extends RefCounted
 ##             "each": {"passives": [...an aura...]}, "max_steps": 1}
 ## counts: a DeedDef's counting (no text); per: how much makes a step;
 ## each: one step's mod (KitMod.step_problem says what it may change);
-## max_steps: a cap (0: none; a quest is 1). A hero's card counts its holder,
+## max_steps: a cap (0: none; a quest is 1). Instead of "each", a relic may
+## pay shards for each step ("each_shards": Bloodied Coin), and instead of
+## "counts", a relic may grow with what the run counts ("run_counts":
+## "elite_wins", one for each elite won; Tally of the Dead; phase 5c step 5a).
+## A hero's card counts its holder,
 ## a relic the whole team (RunContent). It counts from when it's taken
 ## (Decision 15).
 
@@ -16,21 +20,32 @@ var counts: DeedDef
 var per: int = 1
 var each: KitMod
 var max_steps: int = 0
+## Shards each step pays (0: none; then `each` may be empty).
+var each_shards: int = 0
+## "" (the sim counts it, `counts`) or "elite_wins".
+var run_counts: String = ""
+
+const RUN_COUNTS: Array[String] = ["elite_wins"]
 
 
 static func read(reader: DataReader) -> GrowthDef:
 	var def := GrowthDef.new()
-	var counts_reader: DataReader = reader.req_object("counts")
-	def.counts = DeedDef.read(counts_reader, false) if counts_reader != null else DeedDef.new()
-	def.per = reader.req_int("per", 1)
-	var each_reader: DataReader = reader.req_object("each")
-	if each_reader != null:
-		def.each = KitMod.read(each_reader)
-		var problem: String = def.each.step_problem()
-		if not problem.is_empty():
-			reader.error(problem)
+	if reader.has("run_counts"):
+		def.run_counts = reader.req_choice("run_counts", RUN_COUNTS)
+		def.counts = DeedDef.new()
 	else:
-		def.each = KitMod.make()
+		var counts_reader: DataReader = reader.req_object("counts")
+		def.counts = DeedDef.read(counts_reader, false) if counts_reader != null else DeedDef.new()
+	def.per = reader.req_int("per", 1)
+	def.each_shards = reader.opt_int("each_shards", 0, 0, 100)
+	def.each = KitMod.make()
+	if def.each_shards == 0 or reader.has("each"):
+		var each_reader: DataReader = reader.req_object("each")
+		if each_reader != null:
+			def.each = KitMod.read(each_reader)
+			var problem: String = def.each.step_problem()
+			if not problem.is_empty():
+				reader.error(problem)
 	def.max_steps = reader.opt_int("max_steps", 0, 0)
 	reader.finish()
 	return def
@@ -43,6 +58,12 @@ func steps(count: int) -> int:
 	return mini(whole, max_steps) if max_steps > 0 else whole
 
 
-## The mod the next fight gets from `count` (null: no step yet).
+## The mod the next fight gets from `count` (null: no step yet, or a growth
+## that pays shards).
 func mod_for(count: int) -> KitMod:
-	return each.times(steps(count))
+	return each.times(steps(count)) if each.changes_anything() else null
+
+
+## True if the sim counts it (a fight's tally), not the run.
+func counted_in_fights() -> bool:
+	return run_counts.is_empty()

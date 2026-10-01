@@ -76,7 +76,7 @@ static func step_once(flow: RunFlow, hexes: Dictionary[String, Vector2i], errors
 	if not state.pick.is_empty():
 		return flow.take_pick(pick_choice(flow))
 	if not state.relic_choice.is_empty():
-		return flow.take_relic(0)
+		return flow.take_relic(0) if state.shards >= state.relic_choice_price else flow.decline_relic()
 	match state.phase:
 		RunState.Phase.CAMP:
 			if state.camp_used.is_empty():
@@ -137,7 +137,8 @@ static func camp_choice(state: RunState) -> int:
 
 
 ## One purchase at the open shop: the first ware it can afford that suits a
-## hero with a free slot (equipped there), else the relic, else a wound.
+## hero with a free slot (equipped there), else a relic, else a wound. It
+## never rerolls.
 ## False if there's nothing left to do.
 static func shop_once(flow: RunFlow) -> bool:
 	var state: RunState = flow.state
@@ -151,9 +152,10 @@ static func shop_once(flow: RunFlow) -> bool:
 				if flow.buy(i) == "":
 					flow.equip(hero.id, hero.slots.find(""), id)
 				return true
-	if not state.shop_relic.is_empty() and flow.relic_price() <= state.shards:
-		return flow.buy_relic() == ""
+	for i: int in state.shop_relics.size():
+		if not state.shop_relics[i].is_empty() and flow.relic_price(i) <= state.shards:
+			return flow.buy_relic(i) == ""
 	for hero: RunState.Hero in state.heroes:
-		if hero.wounds > 0 and state.shards >= flow.run.act.wound_price:
+		if hero.wounds > 0 and state.shards >= flow.wound_price():
 			return flow.treat_wound(hero.id) == ""
 	return false

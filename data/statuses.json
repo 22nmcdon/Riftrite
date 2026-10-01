@@ -102,5 +102,14 @@
     "kind": "warded",
     "duration_ms": 600,
     "damage_reduced_bp": 1500
+  },
+  {
+    "_note": "Each stack takes 1 DEF off, never fades, and deals no damage (Sunder, an epic relic; phase 5c step 5a).",
+    "id": "sunder",
+    "name": "Sunder",
+    "kind": "damage_over_time",
+    "interval_ms": 1000,
+    "damage_per_stack": 0,
+    "defense_shred_per_stack": 1
   }
 ]

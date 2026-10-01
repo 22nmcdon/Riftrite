@@ -7,7 +7,7 @@
     "icon": "cheaper",
     "text": "Your basic attack's critical hits Slow the target.",
     "answers": "Answers chargers (Cairn Guardian)",
-    "price": 3,
+    "price": 6,
     "mod": {
       "on": [
         {
@@ -31,7 +31,7 @@
     "icon": "braced",
     "text": "Your DEF is higher.",
     "answers": "Answers pounces (Rift Hound)",
-    "price": 3,
+    "price": 6,
     "mod": {
       "stats_bp": {
         "def": 11500
@@ -45,7 +45,7 @@
     "icon": "the_tank_first",
     "text": "Your max HP is higher.",
     "answers": "Answers burst (Ashling)",
-    "price": 2,
+    "price": 6,
     "mod": {
       "stats_bp": {
         "hp": 11200
@@ -59,7 +59,7 @@
     "icon": "casters_first",
     "text": "You hit harder.",
     "answers": "Answers anchors (Rift-Worn Sentinel)",
-    "price": 3,
+    "price": 6,
     "mod": {
       "stats_bp": {
         "atk": 11000
@@ -73,7 +73,7 @@
     "icon": "fletched_for_wings",
     "text": "You walk faster.",
     "answers": "Answers back lines (Hollow Archer)",
-    "price": 2,
+    "price": 6,
     "mod": {
       "stats_add": {
         "speed": 1
@@ -87,7 +87,7 @@
     "icon": "purifying_light",
     "text": "Your basic attack's critical hits make the target Bleed.",
     "answers": "Answers anchors (Rift-Worn Sentinel)",
-    "price": 3,
+    "price": 6,
     "mod": {
       "on": [
         {
@@ -112,7 +112,7 @@
     "icon": "ember_heart",
     "text": "Your basic attack sets its target Burning.",
     "answers": "Answers packs (Rift Pup)",
-    "price": 3,
+    "price": 6,
     "mod": {
       "on": [
         {
@@ -140,7 +140,7 @@
     "needs": [
       "heals"
     ],
-    "price": 3,
+    "price": 6,
     "mod": {
       "on": [
         {
@@ -163,7 +163,7 @@
     "needs": [
       "mana"
     ],
-    "price": 2,
+    "price": 6,
     "mod": {
       "mana": {
         "start_add": 20
@@ -177,7 +177,7 @@
     "icon": "unbroken_wall",
     "text": "Each enemy hit on you hurts its attacker a little.",
     "answers": "Answers swarms (Rift Pup)",
-    "price": 3,
+    "price": 6,
     "mod": {
       "passives": [
         {
@@ -204,7 +204,7 @@
     "icon": "casters_first",
     "text": "Goes for the nearest enemy caster or support first, and hits them harder.",
     "answers": "Answers casters (Gloam Witch, Cinder Moth)",
-    "price": 2,
+    "price": 4,
     "tactic": "casters_first"
   },
   {
@@ -214,7 +214,7 @@
     "icon": "hold_the_middle",
     "text": "Stays where it's placed, attacking faster, until an enemy comes within 2 hexes.",
     "answers": "Answers pullers (Bog Lurker)",
-    "price": 2,
+    "price": 4,
     "tactic": "hold_ground"
   },
   {
@@ -228,7 +228,7 @@
       "heals",
       "mana"
     ],
-    "price": 2,
+    "price": 4,
     "tactic": "wait_to_heal"
   },
   {
@@ -238,7 +238,7 @@
     "icon": "braced",
     "text": "Stops walking while an enemy stands within 2 hexes; closes in again when none does.",
     "answers": "Answers flankers (Rift Hound)",
-    "price": 2,
+    "price": 4,
     "tactic": "plant_feet"
   },
   {
@@ -251,7 +251,7 @@
     "needs": [
       "mana"
     ],
-    "price": 4,
+    "price": 8,
     "mod": {
       "mana": {
         "max_add": -12
@@ -265,7 +265,7 @@
     "icon": "purifying_light",
     "text": "Your signature also fires whenever an ally falls.",
     "answers": "Answers losing a hero",
-    "price": 4,
+    "price": 8,
     "mod": {
       "also_fires": [
         {
@@ -281,7 +281,7 @@
     "icon": "the_tank_first",
     "text": "Your signature also fires, once, when you drop below 40% HP.",
     "answers": "Answers pounces (Rift Hound)",
-    "price": 4,
+    "price": 8,
     "mod": {
       "also_fires": [
         {
@@ -298,7 +298,7 @@
     "icon": "opener",
     "text": "Your signature's area is 1 hex larger.",
     "answers": "Answers crowds (Rift Pup)",
-    "price": 4,
+    "price": 8,
     "mod": {
       "on": [
         {
@@ -315,7 +315,7 @@
     "icon": "echo",
     "text": "Your signature fires again 2s later at half strength.",
     "answers": "Answers long fights",
-    "price": 4,
+    "price": 8,
     "mod": {
       "echo": {
         "after_ms": 2000,
@@ -330,7 +330,7 @@
     "icon": "cheaper",
     "text": "Every 6s, you shake off burns, poisons, and bleeds.",
     "answers": "Answers burns (Cinder Moth, Ashling)",
-    "price": 5,
+    "price": 8,
     "mod": {
       "passives": [
         {
@@ -358,7 +358,7 @@
     "icon": "deep_mend",
     "text": "The first ally (you included) to drop low on HP is healed a little, once a fight.",
     "answers": "Answers pounces (Rift Hound)",
-    "price": 5,
+    "price": 8,
     "mod": {
       "passives": [
         {
@@ -387,7 +387,7 @@
     "icon": "light_feet",
     "text": "Every 8th hit you take, you slip from sight for a moment.",
     "answers": "Answers focus fire (Hollow Archer)",
-    "price": 5,
+    "price": 8,
     "mod": {
       "passives": [
         {

@@ -1,12 +1,256 @@
 [
   {
-    "_note": "Relics (docs/plans/rebuild-phase5-run.md, section 8; part 4, section 7): each has a boon and a cost. A \"mod\" changes every hero's kit (after the loadout); an \"enemy_mod\" every enemy's; the rest are run rules (RelicDef). Sources: elites, the Shrine, a Rift Tear win (a choice of 2, or neither), the Pedlar now and then, and the Magpie. Numbers are first guesses.",
+    "_note": "Relics (docs/plans/relics/, phase 5c step 5a; docs/plans/rebuild-phase5c-combos.md, section 10): team-wide, no downsides, in tiers (common, rare, epic, legendary, boss). The 44 the built pieces can write; the rest come with steps 5b-5d. Texts keep numbers out (the UI adds them from the mod and run rules). Icons reuse the placeholder glyphs until the art rehaul. Numbers are placeholders.",
+    "id": "whetstone_of_the_fallen",
+    "name": "Whetstone of the Fallen",
+    "tier": "common",
+    "icon": "steady_hands",
+    "flavor": "Worn hollow by blades that didn't come back.",
+    "text": "Every hero hits harder.",
+    "mod": {
+      "stats_add": {
+        "atk": 6
+      }
+    }
+  },
+  {
+    "id": "bloodstone",
+    "name": "Bloodstone",
+    "tier": "common",
+    "icon": "ember_heart",
+    "flavor": "It drinks the light around it.",
+    "text": "Every hero's ATK rises.",
+    "mod": {
+      "stats_bp": {
+        "atk": 10800
+      }
+    }
+  },
+  {
+    "id": "iron_filings",
+    "name": "Iron Filings",
+    "tier": "common",
+    "icon": "unbroken_wall",
+    "flavor": "A pouch of what was left of a shield wall.",
+    "text": "Every hero's DEF rises.",
+    "mod": {
+      "stats_add": {
+        "def": 6
+      }
+    }
+  },
+  {
+    "id": "wardens_chain",
+    "name": "Warden's Chain",
+    "tier": "common",
+    "icon": "unbroken_wall",
+    "flavor": "Each link was someone's oath.",
+    "text": "Every hero's DEF rises.",
+    "mod": {
+      "stats_bp": {
+        "def": 11000
+      }
+    }
+  },
+  {
+    "id": "hearthstone_shard",
+    "name": "Hearthstone Shard",
+    "tier": "common",
+    "icon": "purifying_light",
+    "flavor": "Still warm from a hearth that isn't there.",
+    "text": "Every hero's max HP rises.",
+    "mod": {
+      "stats_bp": {
+        "hp": 11000
+      }
+    }
+  },
+  {
+    "id": "quickened_pulse",
+    "name": "Quickened Pulse",
+    "tier": "common",
+    "icon": "light_feet",
+    "flavor": "It beats a little faster than you'd like.",
+    "text": "Every hero attacks faster.",
+    "mod": {
+      "stats_add": {
+        "atsp": 8
+      }
+    }
+  },
+  {
+    "id": "bone_dice",
+    "name": "Bone Dice",
+    "tier": "common",
+    "icon": "fletched_for_wings",
+    "flavor": "They always land the way the rift wants.",
+    "text": "Every hero crits more often.",
+    "mod": {
+      "stats_add": {
+        "crit": 6
+      }
+    }
+  },
+  {
+    "id": "rift_candle",
+    "name": "Rift Candle",
+    "tier": "common",
+    "icon": "opener",
+    "flavor": "It burns down, never out.",
+    "text": "Heroes with mana fill their bars faster.",
+    "mod": {
+      "mana": {
+        "regen_add": 1
+      }
+    }
+  },
+  {
+    "id": "brand_of_guilt",
+    "name": "Brand of Guilt",
+    "tier": "common",
+    "icon": "casters_first",
+    "flavor": "It knows who struck first.",
+    "text": "The first enemy each hero hits in a fight is Marked.",
+    "mod": {
+      "passives": [
+        {
+          "id": "brand_of_guilt",
+          "name": "Brand of Guilt",
+          "kind": "ability",
+          "text": "The first enemy it hits in a fight is Marked.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "once": true,
+              "type": "apply_status",
+              "status": "marked",
+              "duration_ms": 3000,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "headsmans_coin",
+    "name": "Headsman's Coin",
+    "tier": "common",
+    "icon": "cheaper",
+    "flavor": "Paid in advance.",
+    "text": "Heroes deal more damage to enemies near death.",
+    "mod": {
+      "passives": [
+        {
+          "id": "headsmans_coin",
+          "name": "Headsman's Coin",
+          "kind": "aura",
+          "text": "More damage to enemies near death.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 11000,
+            "vs": {
+              "below_hp_pct": 30
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "rusted_fetter",
+    "name": "Rusted Fetter",
+    "tier": "common",
+    "icon": "braced",
+    "flavor": "It still remembers how to hold.",
+    "text": "Heroes deal more damage to Engaged enemies.",
+    "mod": {
+      "passives": [
+        {
+          "id": "rusted_fetter",
+          "name": "Rusted Fetter",
+          "kind": "aura",
+          "text": "More damage to Engaged enemies.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 11000,
+            "vs": {
+              "statuses": [
+                "engaged"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "hollow_drum",
+    "name": "Hollow Drum",
+    "tier": "common",
+    "icon": "echo",
+    "flavor": "Beat it once and something answers.",
+    "text": "Signatures cost less mana.",
+    "mod": {
+      "mana": {
+        "max_bp": 9200
+      }
+    }
+  },
+  {
+    "id": "gravediggers_coin",
+    "name": "Gravedigger's Coin",
+    "tier": "common",
+    "icon": "cheaper",
+    "flavor": "For the next one to dig.",
+    "text": "More shards for every won fight.",
+    "pay_add": 3
+  },
+  {
+    "id": "menders_purse",
+    "name": "Mender's Purse",
+    "tier": "common",
+    "icon": "deep_mend",
+    "flavor": "Thread, salve, and a little coin.",
+    "text": "Treating a wound costs less.",
+    "wound_price_add": -2
+  },
+  {
+    "id": "tinkers_purse",
+    "name": "Tinker's Purse",
+    "tier": "common",
+    "icon": "cheaper",
+    "flavor": "Always one more coin than you remember.",
+    "text": "The first reroll in every shop is free.",
+    "free_reroll": true
+  },
+  {
+    "id": "bounty_hunters_tag",
+    "name": "Bounty Hunter's Tag",
+    "tier": "common",
+    "icon": "the_tank_first",
+    "flavor": "Someone paid for every notch.",
+    "text": "Elites pay more shards.",
+    "elite_pay_add": 6
+  },
+  {
+    "id": "loose_change",
+    "name": "Loose Change",
+    "tier": "common",
+    "icon": "cheaper",
+    "flavor": "It finds its way into your hand.",
+    "text": "Shards at every shop.",
+    "shop_shards": 2
+  },
+  {
     "id": "ember_heart",
     "name": "Ember Heart",
+    "tier": "rare",
     "icon": "ember_heart",
     "flavor": "It still beats, and it still burns.",
-    "boon": "Every hero's basic attack sets its target Burning.",
-    "cost": "Every heal your heroes give is 20% weaker.",
+    "text": "Every hero's basic attack sets its target Burning.",
     "mod": {
       "on": [
         {
@@ -20,129 +264,436 @@
               "target": "target"
             }
           ]
-        },
-        {
-          "slot": "abilities",
-          "types": [
-            "heal"
-          ],
-          "amount_bp": 8000
         }
       ]
+    }
+  },
+  {
+    "id": "ashen_censer",
+    "name": "Ashen Censer",
+    "tier": "rare",
+    "icon": "ember_heart",
+    "flavor": "The smoke never thins.",
+    "text": "Every hit on a Burning enemy adds Burn.",
+    "mod": {
+      "passives": [
+        {
+          "id": "ashen_censer",
+          "name": "Ashen Censer",
+          "kind": "ability",
+          "text": "Its hits on Burning enemies add Burn.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "vs": {
+                "keywords": [
+                  "burning"
+                ]
+              },
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 1,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "thornwoven_cloak",
+    "name": "Thornwoven Cloak",
+    "tier": "rare",
+    "icon": "braced",
+    "flavor": "Woven from what grows over the fallen.",
+    "text": "Heroes deal more damage to Rooted enemies.",
+    "mod": {
+      "passives": [
+        {
+          "id": "thornwoven_cloak",
+          "name": "Thornwoven Cloak",
+          "kind": "aura",
+          "text": "More damage to Rooted enemies.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 12500,
+            "vs": {
+              "keywords": [
+                "rooted"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "echoing_bell",
+    "name": "Echoing Bell",
+    "tier": "rare",
+    "icon": "echo",
+    "flavor": "One rings, and the rest answer.",
+    "text": "When a hero fires a signature, the others gain mana.",
+    "mod": {
+      "passives": [
+        {
+          "id": "echoing_bell",
+          "name": "Echoing Bell",
+          "kind": "ability",
+          "text": "When an ally fires a signature, it gains mana.",
+          "effects": [
+            {
+              "trigger": "on_ally_ability",
+              "type": "gain_mana",
+              "amount": 6,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "collectors_chain",
+    "name": "Collector's Chain",
+    "tier": "rare",
+    "icon": "hollow_crown",
+    "flavor": "A link for every fallen foe.",
+    "text": "Heroes grow stronger with every enemy the team kills this run.",
+    "grows": {
+      "counts": {
+        "counts": "kills"
+      },
+      "per": 10,
+      "each": {
+        "stats_add": {
+          "atk": 1
+        }
+      }
+    }
+  },
+  {
+    "id": "tally_of_the_dead",
+    "name": "Tally of the Dead",
+    "tier": "rare",
+    "icon": "pilgrims_lantern",
+    "flavor": "The marks run down the haft.",
+    "text": "Heroes grow hardier with every elite the team beats this run.",
+    "grows": {
+      "run_counts": "elite_wins",
+      "per": 1,
+      "each": {
+        "stats_bp": {
+          "hp": 10200
+        }
+      }
+    }
+  },
+  {
+    "id": "chalk_ledger",
+    "name": "Chalk Ledger",
+    "tier": "rare",
+    "icon": "casters_first",
+    "flavor": "Every mark a debt.",
+    "text": "Quest: Mark enough enemies, and Marked enemies take more damage for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "applied",
+        "keywords": [
+          "marked"
+        ]
+      },
+      "per": 40,
+      "max_steps": 1,
+      "each": {
+        "passives": [
+          {
+            "id": "chalk_ledger",
+            "name": "Chalk Ledger",
+            "kind": "aura",
+            "text": "More damage to Marked enemies.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 11000,
+              "vs": {
+                "keywords": [
+                  "marked"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "bounty_board",
+    "name": "Bounty Board",
+    "tier": "rare",
+    "icon": "the_tank_first",
+    "flavor": "Names, crossed out.",
+    "text": "Quest: win fights in a row with no hero falling, for shards.",
+    "streak": {
+      "wins": 3,
+      "shards": 25
+    }
+  },
+  {
+    "id": "bloodied_coin",
+    "name": "Bloodied Coin",
+    "tier": "rare",
+    "icon": "cheaper",
+    "flavor": "Taken from the hands that held it.",
+    "text": "A shard for every enemy the team kills.",
+    "grows": {
+      "counts": {
+        "counts": "kills"
+      },
+      "per": 1,
+      "each_shards": 1
+    }
+  },
+  {
+    "id": "the_magpies_scale",
+    "name": "The Magpie's Scale",
+    "tier": "rare",
+    "icon": "cheaper",
+    "flavor": "He'd want it back.",
+    "text": "Every shop shows one more ware and one more relic.",
+    "shop_relics_add": 1,
+    "wares_add": 1
+  },
+  {
+    "id": "rift_glass_eye",
+    "name": "Rift-Glass Eye",
+    "tier": "rare",
+    "icon": "rift_glass_eye",
+    "flavor": "Look through it and the rift looks back.",
+    "text": "Every fight is Scouted: you see where its enemies stand.",
+    "always_scout": true
+  },
+  {
+    "id": "hagglers_charm",
+    "name": "Haggler's Charm",
+    "tier": "rare",
+    "icon": "cheaper",
+    "flavor": "It never pays full price.",
+    "text": "Everything at the Pedlar costs less.",
+    "price_add": -1
+  },
+  {
+    "id": "lucky_strike",
+    "name": "Lucky Strike",
+    "tier": "rare",
+    "icon": "fletched_for_wings",
+    "flavor": "Heads, you win.",
+    "text": "Shards for the team's crits.",
+    "grows": {
+      "counts": {
+        "counts": "crits"
+      },
+      "per": 15,
+      "each_shards": 1
+    }
+  },
+  {
+    "id": "mirror_of_ash",
+    "name": "Mirror of Ash",
+    "tier": "epic",
+    "icon": "rift_glass_eye",
+    "flavor": "What it shows, it gives back.",
+    "text": "Enemies take part of the damage they deal to heroes.",
+    "mod": {
+      "passives": [
+        {
+          "id": "mirror_of_ash",
+          "name": "Mirror of Ash",
+          "kind": "ability",
+          "text": "An enemy's hit on it hurts the enemy too.",
+          "effects": [
+            {
+              "trigger": "on_hit_taken",
+              "type": "damage",
+              "amount_bp_of_damage": 6000,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_ninth_arrow",
+    "name": "The Ninth Arrow",
+    "tier": "epic",
+    "icon": "fletched_for_wings",
+    "flavor": "Eight to find the way, one to end it.",
+    "text": "Every 9th hit by each hero deals triple damage.",
+    "mod": {
+      "passives": [
+        {
+          "id": "the_ninth_arrow",
+          "name": "The Ninth Arrow",
+          "kind": "ability",
+          "text": "Every 9th hit strikes again for twice its damage.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "every": 9,
+              "type": "damage",
+              "amount_bp_of_damage": 20000,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "sunder",
+    "name": "Sunder",
+    "tier": "epic",
+    "icon": "braced",
+    "flavor": "Nothing stays whole.",
+    "text": "Every hit lowers the target's DEF for the rest of the fight.",
+    "mod": {
+      "passives": [
+        {
+          "id": "sunder",
+          "name": "Sunder",
+          "kind": "ability",
+          "text": "Its hits wear down the target's DEF.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "type": "apply_status",
+              "status": "sunder",
+              "stacks": 1,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "misers_vault",
+    "name": "Miser's Vault",
+    "tier": "epic",
+    "icon": "hollow_crown",
+    "flavor": "It grows heavier the less you spend.",
+    "text": "Shards at every shop for the shards you're holding.",
+    "miser": true
+  },
+  {
+    "id": "merchants_covenant",
+    "name": "Merchant's Covenant",
+    "tier": "epic",
+    "icon": "cheaper",
+    "flavor": "Signed in something darker than ink.",
+    "text": "Rerolls never get more expensive.",
+    "flat_rerolls": true
+  },
+  {
+    "id": "rift_fed_blades",
+    "name": "Rift-Fed Blades",
+    "tier": "legendary",
+    "icon": "steady_hands",
+    "flavor": "They're never full.",
+    "text": "Heroes' ATK grows with all the basic-attack damage the team deals this run.",
+    "grows": {
+      "counts": {
+        "counts": "damage",
+        "from_basic": true
+      },
+      "per": 1000,
+      "each": {
+        "stats_bp": {
+          "atk": 10100
+        }
+      }
+    }
+  },
+  {
+    "id": "reliquary_lamp",
+    "name": "Reliquary Lamp",
+    "tier": "legendary",
+    "icon": "pilgrims_lantern",
+    "flavor": "Each relic feeds the flame.",
+    "text": "Heroes' basic stats rise for every relic you hold.",
+    "per_relic_bp": 200
+  },
+  {
+    "id": "gilded_rift",
+    "name": "Gilded Rift",
+    "tier": "legendary",
+    "icon": "hollow_crown",
+    "flavor": "Gold calls to gold.",
+    "text": "Heroes' ATK and MGK rise with the shards you hold.",
+    "per_shards": {
+      "per": 5,
+      "bp": 100
     }
   },
   {
     "id": "hollow_crown",
     "name": "Hollow Crown",
+    "tier": "legendary",
     "icon": "hollow_crown",
     "flavor": "Whoever wore it wanted more.",
-    "boon": "Each hero gets a fourth loadout slot.",
-    "cost": "Each wound takes 20% of max HP, not 15%.",
-    "slots_add": 1,
-    "wound_bp_add": 500
+    "text": "Each hero gets a fourth loadout slot.",
+    "slots_add": 1
   },
   {
-    "id": "rift_glass_eye",
-    "name": "Rift-Glass Eye",
-    "icon": "rift_glass_eye",
-    "flavor": "Look through it and the rift looks back.",
-    "boon": "Every fight is Scouted: you see where its enemies stand.",
-    "cost": "Enemies have 10% more HP.",
-    "always_scout": true,
-    "enemy_mod": {
-      "stats_bp": {
-        "hp": 11000
-      }
-    }
+    "id": "widened_offering",
+    "name": "Widened Offering",
+    "tier": "legendary",
+    "icon": "opener",
+    "flavor": "Take what's given.",
+    "text": "The after-fight pick shows one more card.",
+    "pick_cards_add": 1
   },
   {
-    "id": "pilgrims_lantern",
-    "name": "Pilgrim's Lantern",
-    "icon": "pilgrims_lantern",
-    "flavor": "It has walked further than you will.",
-    "boon": "Rest also steadies the team: 10% more max HP in the next fight.",
-    "cost": "The Pedlar charges 1 more shard for everything.",
-    "rest_mod": {
-      "stats_bp": {
-        "hp": 11000
-      }
-    },
-    "price_add": 1
-  },
-  {
-    "id": "bloodstone",
-    "name": "Bloodstone",
+    "id": "the_second_sun",
+    "name": "The Second Sun",
+    "tier": "boss",
     "icon": "purifying_light",
-    "flavor": "Warm to the touch, and thirsty.",
-    "boon": "Every hero hits 12% harder.",
-    "cost": "Every hero has 8% less max HP.",
+    "flavor": "It rose where the first one fell.",
+    "text": "Signatures fire twice.",
     "mod": {
-      "stats_bp": {
-        "atk": 11200,
-        "hp": 9200
+      "echo": {
+        "after_ms": 500,
+        "share_pct": 100
       }
     }
   },
   {
-    "id": "wardens_chain",
-    "name": "Warden's Chain",
-    "icon": "unbroken_wall",
-    "flavor": "Heavy links, and heavier oaths.",
-    "boon": "Every hero's DEF is 15% higher.",
-    "cost": "Every hero walks slower.",
-    "mod": {
-      "stats_bp": {
-        "def": 11500
-      },
-      "stats_add": {
-        "speed": -1
-      }
-    }
+    "id": "rift_bound_heart",
+    "name": "Rift-Bound Heart",
+    "tier": "boss",
+    "icon": "ember_heart",
+    "flavor": "It beats in time with the rift.",
+    "text": "Every growing upgrade and relic grows twice as fast.",
+    "growth_bp": 20000
   },
   {
-    "id": "gravediggers_coin",
-    "name": "Gravedigger's Coin",
+    "id": "the_hollow_throne",
+    "name": "The Hollow Throne",
+    "tier": "boss",
     "icon": "hollow_crown",
-    "flavor": "Paid in advance.",
-    "boon": "Every won fight pays 2 more shards.",
-    "cost": "After-fight picks show only 2 cards.",
-    "pay_add": 2,
-    "pick_cards": 2
+    "flavor": "Room for one more.",
+    "text": "Take two cards from every after-fight pick.",
+    "take_picks_add": 1
   },
   {
-    "id": "hungry_blade",
-    "name": "Hungry Blade",
-    "icon": "casters_first",
-    "flavor": "It never quite stops cutting.",
-    "boon": "Every hero's basic attack heals it for a tenth of the damage.",
-    "cost": "Every hero takes 20% less healing from others.",
-    "mod": {
-      "on": [
-        {
-          "slot": "basic_attack",
-          "add_effects": [
-            {
-              "trigger": "on_hit",
-              "type": "heal",
-              "amount_bp_of_damage": 1000,
-              "target": "self"
-            }
-          ]
-        }
-      ],
-      "passives": [
-        {
-          "id": "hungry_blade",
-          "name": "Hungry Blade",
-          "kind": "aura",
-          "text": "Heals on the holder are 20% weaker.",
-          "aura": {
-            "target": "holder",
-            "stat": "healing_taken_bp",
-            "value": 8000
-          }
-        }
-      ]
-    }
+    "id": "the_hollow_covenant",
+    "name": "The Hollow Covenant",
+    "tier": "boss",
+    "icon": "unbroken_wall",
+    "flavor": "What one has, all have.",
+    "text": "Each hero uses the team's highest HP, ATK, MGK, DEF, CRIT, and attack speed.",
+    "covenant": true
   }
 ]

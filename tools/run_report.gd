@@ -25,6 +25,8 @@ class RunLine:
 	var shards_spent: int = 0
 	var wounds: int = 0
 	var relics: int = 0
+	## Relics held at the end, by tier (RelicDef.Tier; phase 5c step 5a).
+	var relic_tiers: Array[int] = [0, 0, 0, 0, 0]
 	var errors: Array[String] = []
 	## [encounter id, won?] for each fight.
 	var fights: Array[Array] = []
@@ -116,6 +118,8 @@ static func play(run: RunContent, run_seed: int, look_ahead: bool = true) -> Run
 		if not line.transformed_on.has(hero.id):
 			line.transformed_on[hero.id] = 0
 	line.relics = state.relics.size()
+	for id: String in state.relics:
+		line.relic_tiers[run.relics[id].tier] += 1
 	for hero: RunState.Hero in state.heroes:
 		for upgrade_id: String in hero.growth:
 			line.grown[upgrade_id] = hero.growth[upgrade_id]
@@ -183,6 +187,11 @@ static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 		per_hero.append("%s %.1f" % [content.heroes[hero_id].kit.id.capitalize(), float(total) / maxi(n, 1)])
 	out.append("Picks taken per run: %s" % ", ".join(per_hero))
 	out.append("Per run: %.1f shards earned, %.1f spent, %.1f wounds, %.1f relics" % [_mean(lines, "shards_earned"), _mean(lines, "shards_spent"), _mean(lines, "wounds"), _mean(lines, "relics")])
+	var by_tier: PackedStringArray = PackedStringArray()
+	for tier: int in RelicDef.TIER_NAMES.size():
+		var total: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.relic_tiers[tier], 0)
+		by_tier.append("%s %.1f" % [RelicDef.TIER_NAMES[tier], float(total) / maxi(n, 1)])
+	out.append("Relics per run by tier: %s" % ", ".join(by_tier))
 	out.append("")
 	out.append("Encounters (fights won of fought):")
 	for encounter_id: String in content.encounter_ids:

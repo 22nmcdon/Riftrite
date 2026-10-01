@@ -30,6 +30,9 @@ signal fight_requested
 signal finished
 
 ## An item's, relic's, or upgrade's icon at the head of its card.
+## Each relic tier's color on its card (phase 5c step 5a; the frames per tier
+## are the UI redesign's).
+const TIER_COLORS: Array[Color] = [UiStyle.TEXT_DIM, UiStyle.TEAL_400, UiStyle.RIFT_300, UiStyle.GOLD_500, UiStyle.HIGHLIGHT]
 const CARD_ICON: float = 60.0
 ## A camp option's icon, and the place's node beside the camp's heading.
 const OPTION_ICON: float = 56.0
@@ -134,7 +137,7 @@ static func fill_top_bar(row: HBoxContainer, run_session: RunSession, where: Str
 	for id: String in state.relics:
 		var relic: RelicDef = run_session.run.relics[id]
 		var chip: PanelContainer = UiStyle.chip(relic.name, UiStyle.RIFT_300, true, 15, ItemIcon.for_relic(relic, 24.0))
-		chip.tooltip_text = "%s\nBoon: %s\nCost: %s\n%s" % [relic.flavor, relic.boon, relic.cost, ModInfo.relic_numbers(relic, run_session.content)]
+		chip.tooltip_text = "%s · %s\n%s\n%s\n%s" % [relic.name, RelicDef.TIER_LABELS[relic.tier], relic.flavor, relic.text, ModInfo.relic_numbers(relic, run_session.content)]
 		if relic.grows != null:
 			chip.tooltip_text += "\n" + ModInfo.growth_now(relic.grows, state.growth.get(id, 0), null, run_session.content)
 		chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -351,21 +354,22 @@ static func upgrade_source(upgrade: UpgradeDef, content: ContentDb) -> String:
 
 func _fill_relic_choice() -> void:
 	var state: RunState = session.state()
-	var section: VBoxContainer = _section("Choose a relic, or neither", "Every relic has a cost, and once taken it stays (%d so far; about 3 to 5 a run)." % state.relics.size())
+	var price: int = state.relic_choice_price
+	var section: VBoxContainer = _section("Choose a relic, or neither", "Once taken, a relic stays for the run (%d so far)." % state.relics.size())
 	var row: HBoxContainer = _row()
 	section.add_child(row)
 	for i: int in state.relic_choice.size():
 		var relic: RelicDef = session.run.relics[state.relic_choice[i]]
-		_relic_card(row, relic).add_child(UiStyle.primary(UiStyle.button("Take", _do.bind(session.flow.take_relic.bind(i)))))
+		_relic_card(row, relic).add_child(UiStyle.primary(UiStyle.button("Take · %d shards" % price if price > 0 else "Take", _do.bind(session.flow.take_relic.bind(i)))))
 	section.add_child(UiStyle.button("Take neither", _do.bind(session.flow.decline_relic)))
 
 
 func _relic_card(row: Container, relic: RelicDef) -> VBoxContainer:
 	var card: VBoxContainer = _card(row, 0, UiStyle.RIFT_300)
-	_card_head(card, ItemIcon.for_relic(relic, CARD_ICON), UiStyle.caps("RELIC", 14, UiStyle.RIFT_300), UiStyle.heading(relic.name, 26, UiStyle.TEXT))
+	_card_head(card, ItemIcon.for_relic(relic, CARD_ICON), UiStyle.caps("%s RELIC" % RelicDef.TIER_LABELS[relic.tier].to_upper(), 14, TIER_COLORS[relic.tier]),
+		UiStyle.heading(relic.name, 26, UiStyle.TEXT))
 	card.add_child(_wrapped(relic.flavor, 16, UiStyle.TEXT_DIM))
-	card.add_child(_wrapped("Boon: " + relic.boon, 17, UiStyle.GOOD))
-	card.add_child(_wrapped("Cost: " + relic.cost, 17, UiStyle.BAD))
+	card.add_child(_wrapped(relic.text, 17, UiStyle.TEXT))
 	_add_numbers(card, ModInfo.relic_numbers(relic, session.content))
 	return card
 
@@ -452,17 +456,24 @@ func _fill_shop() -> void:
 		var card: VBoxContainer = _item_card(row, item)
 		(card.get_parent() as Control).custom_minimum_size = Vector2(WARE_WIDTH, 0)
 		card.add_child(UiStyle.primary(UiStyle.button("Buy · %d shards" % session.flow.price_of(item.id), _do.bind(session.flow.buy.bind(i)))))
-	if not state.shop_relic.is_empty():
-		var card: VBoxContainer = _relic_card(row, session.run.relics[state.shop_relic])
+	for i: int in state.shop_relics.size():
+		if state.shop_relics[i].is_empty():
+			continue
+		var card: VBoxContainer = _relic_card(row, session.run.relics[state.shop_relics[i]])
 		(card.get_parent() as Control).custom_minimum_size = Vector2(WARE_WIDTH, 0)
-		card.add_child(UiStyle.primary(UiStyle.button("Buy · %d shards" % session.flow.relic_price(), _do.bind(session.flow.buy_relic))))
+		card.add_child(UiStyle.primary(UiStyle.button("Buy · %d shards" % session.flow.relic_price(i), _do.bind(session.flow.buy_relic.bind(i)))))
 	var more: HBoxContainer = _row()
 	section.add_child(more)
 	for hero: RunState.Hero in state.heroes:
 		if hero.wounds > 0:
-			more.add_child(UiStyle.button("Treat a wound on %s · %d shards" % [_hero_name(hero.id), session.run.act.wound_price], _do.bind(session.flow.treat_wound.bind(hero.id))))
-	if not magpie:
-		more.add_child(UiStyle.button("Reroll · %d shard" % session.run.act.reroll_price, _do.bind(session.flow.reroll)))
+			more.add_child(UiStyle.button("Treat a wound on %s · %d shards" % [_hero_name(hero.id), session.flow.wound_price()], _do.bind(session.flow.treat_wound.bind(hero.id))))
+	if magpie:
+		more.add_child(UiStyle.label("One look", 17, UiStyle.TEXT_DIM))
+	else:
+		var price: int = session.flow.reroll_price()
+		more.add_child(UiStyle.button("Reroll · %d shard%s" % [price, "" if price == 1 else "s"], _do.bind(session.flow.reroll)))
+		if session.flow.pre_boss_shop():
+			more.add_child(UiStyle.label("Before the boss: a legendary is on offer.", 17, UiStyle.HIGHLIGHT))
 
 
 ## A card's numbers line (ModInfo; phase 5c, step 2: every stat change says
@@ -599,7 +610,7 @@ func _fill_after() -> void:
 	if not state.fought.is_empty():
 		var last: RunState.Fought = state.fought.back()
 		var encounter: EncounterDef = session.content.encounters[last.encounter]
-		_section("%s: %s" % [encounter.name, RunDayScreen.outcome_word(last.outcome)], "In %ds. It paid %d shards." % [last.seconds, session.run.act.pay[encounter.tier] + session.run.relic_sum(state, "pay_add")])
+		_section("%s: %s" % [encounter.name, RunDayScreen.outcome_word(last.outcome)], "In %ds. It paid %d shards." % [last.seconds, session.run.act.pay[encounter.tier] + session.run.relic_sum(state, "pay_add") + (session.run.relic_sum(state, "elite_pay_add") if encounter.tier == "elite" else 0)])
 	body.add_child(UiStyle.primary(UiStyle.button("Next day", _do.bind(session.flow.finish_day))))
 
 

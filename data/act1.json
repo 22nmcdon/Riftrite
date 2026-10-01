@@ -1,15 +1,52 @@
 {
-  "_note": "Act 1's shape (docs/plans/rebuild-phase5-run.md, sections 2 and 3, Decisions 5 and 11). Each day is normal (an easier and a harder fight), elite (two elites), or boss. Pay is shards for a win (a tie pays like a win), by the fight's tier. The pick: \"Take 3 shards instead\" pays pick_shards; wild_card_pct is how often one of its cards is for any hero instead of one each (part 6). All numbers are tuning values.",
+  "_note": "Act 1's shape (docs/plans/rebuild-phase5-run.md, sections 2 and 3, Decisions 5 and 11). Each day is normal (an easier and a harder fight), elite (two elites), or boss. Pay is shards for a win (a tie pays like a win), by the fight's tier. The pick: \"Take 3 shards instead\" pays pick_shards; wild_card_pct is how often one of its cards is for any hero instead of one each (part 6). All numbers are tuning values. Phase 5c step 5a (docs/plans/economy.md, relics/README.md): the economy's numbers, relics by tier, the shops' tier odds, rerolls that climb from reroll (boss_reroll in the pre-boss shop), the Magpie's relics at magpie_relic_pct of the price, an elite's chance of an epic, and the boss relics offered. A Hunt's pay and pick_shards aren't set in economy.md (placeholders).",
   "act": 1,
-  "start_shards": 3,
-  "pay": {"easier": 3, "harder": 5, "elite": 6, "boss": 0, "hunt": 2},
-  "days": ["normal", "normal", "elite", "normal", "elite", "normal", "boss"],
+  "start_shards": 10,
+  "pay": {
+    "easier": 10,
+    "harder": 13,
+    "elite": 15,
+    "boss": 25,
+    "hunt": 5
+  },
+  "days": [
+    "normal",
+    "normal",
+    "elite",
+    "normal",
+    "elite",
+    "normal",
+    "boss"
+  ],
   "losses_to_end": 2,
   "slots": 3,
-  "pick_shards": 3,
+  "pick_shards": 5,
   "wild_card_pct": 25,
-  "prices": {"wound": 2, "reroll": 1, "relic": 9},
+  "prices": {
+    "wound": 4,
+    "reroll": 1,
+    "boss_reroll": 5,
+    "shrine": 15,
+    "magpie_relic_pct": 75,
+    "relics": {
+      "common": 5,
+      "rare": 12,
+      "epic": 20,
+      "legendary": 30
+    }
+  },
   "pedlar_wares": 4,
   "magpie_wares": 4,
-  "magpie_markup_pct": 150
+  "magpie_markup_pct": 150,
+  "relic_odds": {
+    "common": 70,
+    "rare": 25,
+    "epic": 5
+  },
+  "magpie_odds": {
+    "epic": 75,
+    "legendary": 25
+  },
+  "elite_epic_pct": 33,
+  "boss_relics": 3
 }

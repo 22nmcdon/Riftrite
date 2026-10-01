@@ -12,7 +12,8 @@ extends RefCounted
 ## its card to the others; with nothing left at all, fewer cards.
 ## `visit` tells apart picks on the same attempt (0: after the fight; camp's
 ## Train uses its own).
-static func pick(run: RunContent, state: RunState, visit: int) -> Array[String]:
+## `extra` more cards from anyone's (Widened Offering, phase 5c step 5a).
+static func pick(run: RunContent, state: RunState, visit: int, extra: int = 0) -> Array[String]:
 	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.PICK, state.act, state.day, state.attempt, visit])
 	var wild_at: int = -1
 	if rng.range_int(100) < run.act.wild_card_pct:
@@ -31,6 +32,11 @@ static func pick(run: RunContent, state: RunState, visit: int) -> Array[String]:
 		if pool.is_empty():
 			break
 		cards.append(pool[rng.range_int(pool.size())])
+	for i: int in extra:
+		var rest: Array[String] = everyone.filter(func(id: String) -> bool: return not cards.has(id))
+		if rest.is_empty():
+			break
+		cards.append(rest[rng.range_int(rest.size())])
 	return cards
 
 
@@ -44,7 +50,7 @@ static func pedlar(run: RunContent, state: RunState, rerolls: int) -> Array[Stri
 		var item: ItemDef = run.items[id]
 		if item.kind != ItemDef.Kind.GRAFT and state.heroes.any(func(hero: RunState.Hero) -> bool: return item.works_on(run.hero_kit(hero), hero.id)):
 			pool.append(id)
-	return _draw(rng, pool, run.act.pedlar_wares)
+	return _draw(rng, pool, run.act.pedlar_wares + run.relic_sum(state, "wares_add"))
 
 
 ## The Magpie's wares (Decision 13): up to half grafts, the rest any other
@@ -77,6 +83,9 @@ static func camp(run: RunContent, state: RunState) -> Array:
 	var offered: Array[String] = place.options.filter(func(id: String) -> bool: return camp_option_open(run, state, id))
 	var picked: Array[String] = _draw(rng, offered, run.camps.shown)
 	var options: Array[String] = offered.filter(func(id: String) -> bool: return picked.has(id))
+	# The boss day's camp always has the pre-boss shop (phase 5c step 5a).
+	if state.day >= 1 and state.day <= run.act.days.size() and run.act.days[state.day - 1] == "boss" and not options.has("pedlar"):
+		options.append("pedlar")
 	return [place.id, options]
 
 
@@ -124,12 +133,64 @@ static func hunt(run: RunContent, state: RunState) -> String:
 	return packs[RunRandom.stream(state.seed_value, [RunRandom.HUNT, state.act, state.day, state.attempt]).range_int(packs.size())]
 
 
-## `count` different relics the run doesn't hold, from the relic stream at
-## `visit` (where the choice happens: see RunFlow).
-static func relics(run: RunContent, state: RunState, visit: int, count: int) -> Array[String]:
+## `count` different relics of `tier` the run doesn't hold, from the relic
+## stream at `visit` (where the choice happens: see RunFlow). An elite's
+## choice (`epic_pct` > 0) may make one of them an epic.
+static func relics(run: RunContent, state: RunState, visit: int, count: int, tier: String = "rare", epic_pct: int = 0) -> Array[String]:
 	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.RELIC, state.act, state.day, state.attempt, visit])
-	var pool: Array[String] = run.relic_ids.filter(func(id: String) -> bool: return not state.relics.has(id))
-	return _draw(rng, pool, count)
+	var drawn: Array[String] = []
+	var epic_at: int = rng.range_int(count) if epic_pct > 0 and rng.range_int(100) < epic_pct else -1
+	for i: int in count:
+		var id: String = _relic_of(run, state, rng, "epic" if i == epic_at else tier, drawn)
+		if not id.is_empty():
+			drawn.append(id)
+	return drawn
+
+
+## A shop's relics (phase 5c step 5a): `count` of them, each of a tier drawn
+## by the shop's odds (the Magpie's: epic or legendary); the pre-boss shop's
+## first is a legendary. `rerolls` draws a fresh set.
+static func shop_relics(run: RunContent, state: RunState, rerolls: int, count: int, magpie: bool, pre_boss: bool) -> Array[String]:
+	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.RELIC, state.act, state.day, state.attempt, -1 - rerolls])
+	var drawn: Array[String] = []
+	for i: int in count:
+		var tier: String = "legendary" if pre_boss and i == 0 else (_weighted(rng, run.act.magpie_odds, run.act.magpie_weights) if magpie \
+			else _weighted(rng, run.act.relic_odds, run.act.relic_weights))
+		var id: String = _relic_of(run, state, rng, tier, drawn)
+		if not id.is_empty():
+			drawn.append(id)
+	return drawn
+
+
+## One relic of `tier` the run doesn't hold and that isn't in `taken`; if the
+## tier has none left, the nearest tier that does (lower first), never a boss
+## relic unless `tier` is boss.
+static func _relic_of(run: RunContent, state: RunState, rng: SimRng, tier: String, taken: Array[String]) -> String:
+	var wanted: int = RelicDef.TIER_NAMES.find(tier)
+	var order: Array[int] = [wanted]
+	if wanted != RelicDef.Tier.BOSS:
+		for step: int in range(1, RelicDef.Tier.BOSS):
+			for other: int in [wanted - step, wanted + step]:
+				if other >= 0 and other < RelicDef.Tier.BOSS:
+					order.append(other)
+	for tier_index: int in order:
+		var pool: Array[String] = run.relic_ids.filter(func(id: String) -> bool:
+			return run.relics[id].tier == tier_index and not state.relics.has(id) and not taken.has(id))
+		if not pool.is_empty():
+			return pool[rng.range_int(pool.size())]
+	return ""
+
+
+static func _weighted(rng: SimRng, tiers: Array[String], weights: Array[int]) -> String:
+	var total: int = 0
+	for weight: int in weights:
+		total += weight
+	var roll: int = rng.range_int(maxi(total, 1))
+	for i: int in tiers.size():
+		roll -= weights[i]
+		if roll < 0:
+			return tiers[i]
+	return tiers.back() if not tiers.is_empty() else "common"
 
 
 ## Map the Rift: a fight to swap in for tomorrow's option `index`, of the

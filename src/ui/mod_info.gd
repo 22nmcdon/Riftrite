@@ -121,7 +121,11 @@ static func upgrade_numbers(upgrade: UpgradeDef, kit: UnitDef, content: ContentD
 ## How a growing card grows (phase 5c step 4): "Grows: +1% ATK per 10
 ## enemies Marked".
 static func growth_numbers(growth: GrowthDef, kit: UnitDef, content: ContentDb) -> String:
-	var text: String = "Grows: %s per %s" % [step_text(growth.each, kit, content), counted(growth.counts, growth.per)]
+	var step: String = step_text(growth.each, kit, content) if growth.each.changes_anything() else ""
+	if growth.each_shards > 0:
+		step = ("%s, " % step if not step.is_empty() else "") + "+%d shard%s" % [growth.each_shards, "" if growth.each_shards == 1 else "s"]
+	var what: String = "%d elites won" % growth.per if growth.run_counts == "elite_wins" else counted(growth.counts, growth.per)
+	var text: String = "Grows: %s per %s" % [step, what]
 	if growth.max_steps > 0:
 		text += " (at most %d time%s)" % [growth.max_steps, "" if growth.max_steps == 1 else "s"]
 	return text
@@ -131,10 +135,13 @@ static func growth_numbers(growth: GrowthDef, kit: UnitDef, content: ContentDb) 
 ## the next)", or "Now: nothing yet (...)".
 static func growth_now(growth: GrowthDef, count: int, kit: UnitDef, content: ContentDb) -> String:
 	var steps: int = growth.steps(count)
-	var now: String = step_text(growth.each.times(steps), kit, content) if steps > 0 else "nothing yet"
+	var now: String = "nothing yet"
+	if steps > 0:
+		now = step_text(growth.each.times(steps), kit, content) if growth.each.changes_anything() else "+%d shards so far" % (steps * growth.each_shards)
 	if growth.max_steps > 0 and steps >= growth.max_steps:
 		return "Now: %s (done)" % now
-	return "Now: %s (%s / %s to the next)" % [now, _amount(growth.counts, count % growth.per), counted(growth.counts, growth.per)]
+	var what: String = "%d elites won" % growth.per if growth.run_counts == "elite_wins" else counted(growth.counts, growth.per)
+	return "Now: %s (%s / %s to the next)" % [now, str(count % growth.per) if growth.run_counts != "" else _amount(growth.counts, count % growth.per), what]
 
 
 ## One step's (or several steps') change, the way a card says it: an added
@@ -189,6 +196,8 @@ static func counted(counts: DeedDef, per: int) -> String:
 			return "%s below %s HP" % [amount, ValueBreakdown._percent(counts.while_below_bp)]
 		DeedDef.Counts.KILLS:
 			return "%s kills" % amount
+		DeedDef.Counts.CRITS:
+			return "%s crits" % amount
 	return amount
 
 
@@ -207,22 +216,44 @@ static func relic_numbers(relic: RelicDef, content: ContentDb) -> String:
 		parts.append("Heroes: " + mod_numbers(relic.mod, null, content))
 	if relic.enemy_mod != null:
 		parts.append("Enemies: " + mod_numbers(relic.enemy_mod, null, content))
-	if relic.rest_mod != null:
-		parts.append("After a Rest: " + mod_numbers(relic.rest_mod, null, content))
 	if relic.slots_add != 0:
 		parts.append("%s loadout slot%s" % [signed(relic.slots_add), "" if absi(relic.slots_add) == 1 else "s"])
-	if relic.wound_bp_add != 0:
-		parts.append("%s HP lost per wound" % UnitInfo.signed_percent(relic.wound_bp_add))
 	if relic.always_scout:
 		parts.append("every fight Scouted")
 	if relic.price_add != 0:
-		parts.append("%s shard on every price" % signed(relic.price_add))
+		parts.append("%s shard on every price at the Pedlar (at least 1)" % signed(relic.price_add))
 	if relic.pay_add != 0:
 		parts.append("%s shards per won fight" % signed(relic.pay_add))
-	if relic.pick_cards > 0:
-		parts.append("%d cards on each pick" % relic.pick_cards)
+	if relic.elite_pay_add != 0:
+		parts.append("%s shards per won elite" % signed(relic.elite_pay_add))
+	if relic.wound_price_add != 0:
+		parts.append("%s shards to treat a wound" % signed(relic.wound_price_add))
+	if relic.shop_shards != 0:
+		parts.append("%s shards at every shop" % signed(relic.shop_shards))
+	if relic.miser:
+		parts.append("at every shop, +1 shard per 5 held (at most 6)")
+	if relic.free_reroll:
+		parts.append("the first reroll in every shop is free")
+	if relic.flat_rerolls:
+		parts.append("rerolls never cost more")
+	if relic.shop_relics_add != 0 or relic.wares_add != 0:
+		parts.append("%s relic and %s ware in every shop" % [signed(relic.shop_relics_add), signed(relic.wares_add)])
+	if relic.pick_cards_add != 0:
+		parts.append("%s card on each pick" % signed(relic.pick_cards_add))
+	if relic.take_picks_add != 0:
+		parts.append("take %d cards from each pick" % (1 + relic.take_picks_add))
+	if relic.streak_wins > 0:
+		parts.append("%s shards, once, for %d won fights in a row with no hero falling" % [signed(relic.streak_shards), relic.streak_wins])
+	if relic.growth_bp > 0:
+		parts.append("growing cards count x%s as fast" % ValueBreakdown._ratio(relic.growth_bp))
+	if relic.per_relic_bp > 0:
+		parts.append("Heroes: %s HP, ATK, MGK, DEF, CRIT, and ATSP per relic held" % UnitInfo.signed_percent(relic.per_relic_bp))
+	if relic.per_shards > 0:
+		parts.append("Heroes: %s ATK and MGK per %d shards held" % [UnitInfo.signed_percent(relic.per_shards_bp), relic.per_shards])
+	if relic.covenant:
+		parts.append("each hero has the team's highest HP, ATK, MGK, DEF, CRIT, and ATSP")
 	if relic.grows != null:
-		parts.append("Heroes: %s, counted for the whole team" % growth_numbers(relic.grows, null, content))
+		parts.append("%s, counted for the whole team" % growth_numbers(relic.grows, null, content))
 	return " · ".join(parts)
 
 

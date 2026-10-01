@@ -4,7 +4,10 @@ extends RefCounted
 ## 2 and 3): its days (normal, elite, or boss), the shards a won fight pays by
 ## its tier, the shards a run starts with, how many losses end it, and each
 ## hero's loadout slots, the after-fight pick's shards and wild cards, and
-## the shops' prices and sizes.
+## the shops' prices and sizes. Phase 5c step 5a (economy.md, relics/):
+## relics by tier, the shops' odds for each tier, the rerolls' climb, the
+## Magpie's discount, the elite's chance of an epic, the boss relics offered,
+## and the Shrine's price.
 
 const DAY_KINDS: Array[String] = ["normal", "elite", "boss"]
 
@@ -21,11 +24,27 @@ var slots: int = 3
 var pick_shards: int = 3
 ## The chance (percent) that a pick has a wild card: one card for any hero.
 var wild_card_pct: int = 0
-## Shards to treat one wound, and to reroll the Pedlar's wares.
-var wound_price: int = 2
+## Shards to treat one wound, and a shop's first reroll (each after it costs
+## 1 more); the pre-boss shop's first reroll.
+var wound_price: int = 4
 var reroll_price: int = 1
-## A relic's price at the Pedlar (the Magpie's markup on top).
-var relic_price: int = 9
+var boss_reroll_price: int = 5
+## Relic tier name -> its price (RelicDef.TIER_NAMES; boss relics are free).
+var relic_prices: Dictionary[String, int] = {}
+## The Magpie's relics, as a share of their price (75: 25% off, rounded down).
+var magpie_relic_pct: int = 75
+## The Pedlar's relic and the Magpie's: tier names and their weights, in
+## order.
+var relic_odds: Array[String] = []
+var relic_weights: Array[int] = []
+var magpie_odds: Array[String] = []
+var magpie_weights: Array[int] = []
+## The chance (percent) that one of an elite's 2 relics is an epic.
+var elite_epic_pct: int = 0
+## How many boss relics a won boss fight offers.
+var boss_relics: int = 3
+## The Shrine's rare relic.
+var shrine_price: int = 15
 ## How many wares the Pedlar and the Magpie lay out; the Magpie's prices
 ## are the items' times magpie_markup_pct (rounded up).
 var pedlar_wares: int = 4
@@ -45,8 +64,20 @@ static func read(reader: DataReader) -> ActDef:
 	if prices != null:
 		def.wound_price = prices.req_int("wound", 0)
 		def.reroll_price = prices.req_int("reroll", 0)
-		def.relic_price = prices.req_int("relic", 0)
+		def.boss_reroll_price = prices.req_int("boss_reroll", 0)
+		def.shrine_price = prices.req_int("shrine", 0)
+		def.magpie_relic_pct = prices.req_int("magpie_relic_pct", 1, 100)
+		var relics: DataReader = prices.req_object("relics")
+		if relics != null:
+			for tier: String in RelicDef.TIER_NAMES.slice(0, RelicDef.Tier.BOSS):
+				def.relic_prices[tier] = relics.req_int(tier, 0)
+			def.relic_prices["boss"] = 0
+			relics.finish()
 		prices.finish()
+	_read_odds(reader, "relic_odds", def.relic_odds, def.relic_weights)
+	_read_odds(reader, "magpie_odds", def.magpie_odds, def.magpie_weights)
+	def.elite_epic_pct = reader.req_int("elite_epic_pct", 0, 100)
+	def.boss_relics = reader.req_int("boss_relics", 0, 5)
 	def.pedlar_wares = reader.req_int("pedlar_wares", 1, 8)
 	def.magpie_wares = reader.req_int("magpie_wares", 1, 8)
 	def.magpie_markup_pct = reader.req_int("magpie_markup_pct", 100, 400)
@@ -65,3 +96,18 @@ static func read(reader: DataReader) -> ActDef:
 		reader.error("an act's last day is its boss")
 	reader.finish()
 	return def
+
+
+## Tier name -> weight, in RelicDef's tier order (never boss).
+static func _read_odds(reader: DataReader, key: String, tiers: Array[String], weights: Array[int]) -> void:
+	var odds: DataReader = reader.req_object(key)
+	if odds == null:
+		return
+	for tier: String in RelicDef.TIER_NAMES.slice(0, RelicDef.Tier.BOSS):
+		var weight: int = odds.opt_int(tier, 0, 0, 1000)
+		if weight > 0:
+			tiers.append(tier)
+			weights.append(weight)
+	odds.finish()
+	if tiers.is_empty():
+		reader.error("%s needs a tier with a weight" % key)

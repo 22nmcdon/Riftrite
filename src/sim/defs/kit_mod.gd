@@ -32,7 +32,9 @@ extends RefCounted
 ##       "add_effects": [...EffectDefs...],   appended to the ability
 ##       "after_add_ms": -500}],          the passive's aura: how long unmoved
 ##                                        (or planted) before it holds
-##    "mana": {"max_add": -15, "start_add": 20, "per_attack_add": 2},
+##    "mana": {"max_add": -15, "start_add": 20, "per_attack_add": 2,
+##             "regen_add": 1, "max_bp": 9200},  (regen and max_bp: phase 5c
+##                                        step 5a, Rift Candle and Hollow Drum)
 ##                                        its mana bar, if it has one
 ##    "also_fires": [{"kind": "ally_falls"}],   its signature also fires on
 ##                                        these (hp_below or ally_falls), free
@@ -52,7 +54,7 @@ const POWER_TYPES: Array[EffectDef.Type] = [EffectDef.Type.DAMAGE, EffectDef.Typ
 ## The stats stats_add can add to (KitPatch's, and flat HP, ATK, MGK, and
 ## DEF for growing cards, phase 5c step 4).
 const ADD_STATS: Array[UnitStats.Stat] = [UnitStats.Stat.HP, UnitStats.Stat.ATK, UnitStats.Stat.MGK, UnitStats.Stat.DEF,
-	UnitStats.Stat.CRIT, UnitStats.Stat.SPEED, UnitStats.Stat.RANGE]
+	UnitStats.Stat.ATSP, UnitStats.Stat.CRIT, UnitStats.Stat.SPEED, UnitStats.Stat.RANGE]
 
 
 ## One entry of "on": changes to the abilities in one slot.
@@ -86,6 +88,8 @@ var changes: Array[AbilityChange] = []
 var mana_max_add: int = 0
 var mana_start_add: int = 0
 var mana_per_attack_add: int = 0
+var mana_regen_add: int = 0
+var mana_max_bp: int = FixedMath.BP_ONE
 var also_fires: Array[TriggerDef] = []
 var echo_ticks: int = 0
 var echo_bp: int = 0
@@ -123,6 +127,8 @@ static func read(reader: DataReader) -> KitMod:
 			mod.mana_max_add = mana_reader.opt_int("max_add", 0, -100, 100)
 			mod.mana_start_add = mana_reader.opt_int("start_add", 0, -100, 100)
 			mod.mana_per_attack_add = mana_reader.opt_int("per_attack_add", 0, -20, 20)
+			mod.mana_regen_add = mana_reader.opt_int("regen_add", 0, -20, 20)
+			mod.mana_max_bp = mana_reader.opt_int("max_bp", FixedMath.BP_ONE, 5000, 20000)
 			mana_reader.finish()
 	for trigger_reader: DataReader in reader.opt_object_array("also_fires"):
 		var trigger: TriggerDef = TriggerDef.read(trigger_reader)
@@ -175,7 +181,7 @@ static func _signed_ticks(reader: DataReader, key: String) -> int:
 ## only multiply or add stats, change abilities' amount_bp, or add auras,
 ## since those are what scale cleanly (phase 5c step 4, section 9.3).
 func step_problem() -> String:
-	if mana_max_add != 0 or mana_start_add != 0 or mana_per_attack_add != 0 or not also_fires.is_empty() or echo_ticks > 0:
+	if _changes_mana() or not also_fires.is_empty() or echo_ticks > 0:
 		return "a growing card's step can't change mana, add triggers, or echo"
 	for part: PartDef in passives:
 		if part.kind != PartDef.Kind.AURA:
@@ -217,8 +223,11 @@ func changes_anything() -> bool:
 	for stat: int in stats_bp.size():
 		if stats_bp[stat] != FixedMath.BP_ONE or stats_add[stat] != 0:
 			return true
-	return not passives.is_empty() or not changes.is_empty() or mana_max_add != 0 or mana_start_add != 0 or mana_per_attack_add != 0 \
-		or not also_fires.is_empty() or echo_ticks > 0
+	return not passives.is_empty() or not changes.is_empty() or _changes_mana() or not also_fires.is_empty() or echo_ticks > 0
+
+
+func _changes_mana() -> bool:
+	return mana_max_add != 0 or mana_start_add != 0 or mana_per_attack_add != 0 or mana_regen_add != 0 or mana_max_bp != FixedMath.BP_ONE
 
 
 ## True if the mod changes anything on `kit` (stats and passives always do;
@@ -230,7 +239,7 @@ func affects(kit: UnitDef) -> bool:
 			return true
 	if not passives.is_empty():
 		return true
-	if kit.mana != null and (mana_max_add != 0 or mana_start_add != 0 or mana_per_attack_add != 0):
+	if kit.mana != null and _changes_mana():
 		return true
 	if kit.signature != null and (not also_fires.is_empty() or echo_ticks > 0):
 		return true
@@ -261,9 +270,10 @@ func apply(kit: UnitDef, problems: Array[String] = []) -> UnitDef:
 		if built.passives.any(func(other: PartDef) -> bool: return other.id == part.id):
 			problems.append("it already has a passive \"%s\"" % part.id)
 		built.passives.append(part)
-	if built.mana != null and (mana_max_add != 0 or mana_start_add != 0 or mana_per_attack_add != 0):
+	if built.mana != null and _changes_mana():
 		var mana: ManaDef = DefCopy.shallow(built.mana) as ManaDef
-		mana.max = maxi(mana.max + mana_max_add, 1)
+		mana.max = maxi(FixedMath.apply_bp(mana.max, mana_max_bp) + mana_max_add, 1)
+		mana.regen_per_s = maxi(mana.regen_per_s + mana_regen_add, 0)
 		mana.start = clampi(mana.start + mana_start_add, 0, mana.max)
 		mana.per_attack = maxi(mana.per_attack + mana_per_attack_add, 0)
 		built.mana = mana

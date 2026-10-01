@@ -717,19 +717,9 @@
       },
       "per": 15,
       "each": {
-        "passives": [
-          {
-            "id": "arrow_glut",
-            "name": "Arrow Glut",
-            "kind": "aura",
-            "text": "Grows every fight.",
-            "aura": {
-              "target": "holder",
-              "stat": "cooldown_bp",
-              "value": -100
-            }
-          }
-        ]
+        "stats_add": {
+          "atsp": 1
+        }
       }
     }
   },

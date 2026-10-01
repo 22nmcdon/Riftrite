@@ -123,11 +123,15 @@ func test_the_pedlar() -> void:
 	assert_eq([state.shards, state.stash, state.wares[0]], [10 - _run.items[first].price, [first], ""])
 	assert_eq(flow.buy(0), "there's no ware 0")
 	var before: Array[String] = state.wares.duplicate()
+	var relics_before: Array[String] = state.shop_relics.duplicate()
+	assert_eq(flow.reroll_price(), 1)
 	assert_eq(flow.reroll(), "")
 	assert_eq(state.rerolls, 1)
 	assert_ne(state.wares, before, "a fresh set")
+	assert_ne(state.shop_relics, relics_before, "a reroll replaces the relic too (phase 5c Decision 19)")
+	assert_eq(flow.reroll_price(), 2, "each reroll costs 1 more")
 	state.shards = 0
-	assert_eq(flow.reroll(), "a reroll costs 1 shards; there are 0")
+	assert_eq(flow.reroll(), "a reroll costs 2 shards; there are 0")
 	assert_string_starts_with(flow.buy(1), "it costs")
 	flow.leave_camp()
 	assert_eq([state.shop, state.wares], ["", [] as Array[String]], "leaving camp closes it")
@@ -141,7 +145,7 @@ func test_the_magpie() -> void:
 	var kinds: Array = state.wares.map(func(id: String) -> ItemDef.Kind: return _run.items[id].kind)
 	assert_eq(kinds.filter(func(kind: ItemDef.Kind) -> bool: return kind == ItemDef.Kind.GRAFT).size(), 2, "half grafts")
 	assert_eq(state.wares.size(), 4)
-	assert_eq(flow.price_of("whetstone"), 5, "3 shards at the Pedlar, half again, rounded up")
+	assert_eq(flow.price_of("whetstone"), 9, "6 shards at the Pedlar (a charm), half again, rounded up")
 	assert_eq(flow.reroll(), "only the Pedlar rerolls")
 
 
@@ -152,10 +156,10 @@ func test_treating_a_wound() -> void:
 	assert_eq(flow.treat_wound("vell"), "no shop is open")
 	flow.open_shop("pedlar")
 	assert_eq(flow.treat_wound("vell"), "")
-	assert_eq([state.hero("vell").wounds, state.shards], [1, 3 - _run.act.wound_price])
+	assert_eq([state.hero("vell").wounds, state.shards], [1, _run.act.start_shards - _run.act.wound_price])
 	assert_eq(flow.treat_wound("maren"), "maren has no wounds")
 	state.shards = 0
-	assert_eq(flow.treat_wound("vell"), "treating a wound costs 2 shards; there are 0")
+	assert_eq(flow.treat_wound("vell"), "treating a wound costs 4 shards; there are 0")
 
 
 func test_the_shop_and_stash_save() -> void:

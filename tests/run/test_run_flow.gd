@@ -41,7 +41,7 @@ func _result(outcome: FightResult.Outcome, fallen: Array[String] = [], deeds: Ar
 func test_the_run_content_loads() -> void:
 	assert_true(_run.is_valid(), "\n".join(_run.errors))
 	assert_eq(_run.act.days, ["normal", "normal", "elite", "normal", "elite", "normal", "boss"] as Array[String])
-	assert_eq([_run.act.start_shards, _run.act.slots, _run.act.losses_to_end, _run.act.pay["easier"]], [3, 3, 2, 3])
+	assert_eq([_run.act.start_shards, _run.act.slots, _run.act.losses_to_end, _run.act.pay["easier"]], [10, 3, 2, 10], "economy.md (phase 5c step 5a)")
 
 
 func test_the_act_draw() -> void:
@@ -67,7 +67,7 @@ func test_starting_needs_a_vow_for_every_hero() -> void:
 	assert_eq(state.heroes.map(func(hero: RunState.Hero) -> String: return hero.path), ["hearthwall", "deadeye", "lanternbearer"])
 	assert_eq(state.hero("maren").deeds, {"deadeye": 0, "trapper": 0, "volley": 0} as Dictionary[String, int])
 	assert_eq(state.hero("maren").slots, ["", "", ""] as Array[String])
-	assert_eq([state.day, state.phase, state.shards], [1, RunState.Phase.CAMP, 3])
+	assert_eq([state.day, state.phase, state.shards], [1, RunState.Phase.CAMP, 10])
 
 
 func test_the_day_goes_in_order() -> void:
@@ -100,7 +100,7 @@ func test_a_fight_is_the_sims_own_and_a_win_pays() -> void:
 	if result.outcome == FightResult.Outcome.DEFEAT:
 		assert_eq([state.losses, state.attempt, state.phase], [1, 1, RunState.Phase.CAMP])
 		return
-	assert_eq(state.shards, 3 + _run.act.pay[_run.content.encounters[state.chosen].tier])
+	assert_eq(state.shards, _run.act.start_shards + _run.act.pay[_run.content.encounters[state.chosen].tier])
 	assert_eq(state.phase, RunState.Phase.AFTER)
 	assert_eq(state.hero("maren").deeds["deadeye"], result.deed_amount("maren", "deadeye"), "deeds add what the fight put in")
 	assert_eq(state.formation, Bot.formation(), "the formation is remembered")
@@ -119,7 +119,7 @@ func test_a_loss_replays_the_day_and_the_second_ends_the_run() -> void:
 	var deed := FightResult.Deed.make("maren", "trapper", 900)
 	flow.record(Bot.formation(), _result(FightResult.Outcome.DEFEAT, ["maren", "vell"] as Array[String], [deed] as Array[FightResult.Deed]))
 	var state: RunState = flow.state
-	assert_eq([state.losses, state.attempt, state.day, state.phase, state.shards], [1, 1, 1, RunState.Phase.CAMP, 3], "no pay; the day again")
+	assert_eq([state.losses, state.attempt, state.day, state.phase, state.shards], [1, 1, 1, RunState.Phase.CAMP, 10], "no pay; the day again")
 	assert_eq(state.today(), options, "with the same options")
 	assert_eq([state.hero("maren").wounds, state.hero("vell").wounds, state.hero("brannoc").wounds], [1, 1, 0], "those who fell are wounded")
 	assert_eq(state.hero("maren").deeds["trapper"], 900, "a lost fight's deeds still count")
@@ -143,7 +143,7 @@ func test_a_tie_pays_like_a_win_and_wounds_stop_at_three() -> void:
 	assert_eq([flow.state.hero("brannoc").wounds, flow.state.hero("maren").wounds, flow.state.hero("vell").wounds], [3, 1, 0],
 		"a win (a tie too) heals one wound on each hero, then the fallen take one")
 	assert_eq(flow.state.phase, RunState.Phase.AFTER)
-	assert_gt(flow.state.shards, 3)
+	assert_gt(flow.state.shards, 10)
 	flow.state.phase = RunState.Phase.LOADOUT
 	flow.record(Bot.formation(), _result(FightResult.Outcome.DEFEAT, ["brannoc"] as Array[String]))
 	assert_eq([flow.state.hero("brannoc").wounds, flow.state.hero("maren").wounds], [3, 1], "a loss heals none, and wounds stop at three")
@@ -155,6 +155,14 @@ func test_winning_the_boss_ends_the_run() -> void:
 	flow.state.phase = RunState.Phase.ROUTE
 	flow.choose_fight(0)
 	flow.record(Bot.formation(), _result(FightResult.Outcome.VICTORY))
+	assert_eq(flow.state.relic_choice.size(), 3, "a choice of boss relics first (phase 5c Decision 18)")
+	for id: String in flow.state.relic_choice:
+		assert_eq(_run.relics[id].tier, RelicDef.Tier.BOSS)
+	assert_eq(flow.state.pick, [] as Array[String], "no pick after the boss")
+	var taken: String = flow.state.relic_choice[0]
+	assert_eq(flow.take_relic(0), "")
+	assert_true(flow.state.relics.has(taken))
+	assert_eq(flow.finish_day(), "")
 	assert_eq([flow.state.phase, flow.state.outcome], [RunState.Phase.ENDED, RunState.Outcome.WON])
 
 

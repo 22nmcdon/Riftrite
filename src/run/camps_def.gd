@@ -30,7 +30,6 @@ var shown: int = 3
 ## The days the Magpie may come on (one of them, drawn at the run's start).
 var magpie_days: Array[int] = []
 ## How often (percent) the Pedlar also carries a relic.
-var pedlar_relic_pct: int = 0
 var options: Dictionary[String, Option] = {}
 var places: Array[Place] = []
 ## Fortify's Shield on each hero, and a Rift Tear's upgrade on each enemy.
@@ -42,7 +41,6 @@ static func read(reader: DataReader) -> CampsDef:
 	var def := CampsDef.new()
 	def.shown = reader.req_int("shown", 1, 6)
 	def.magpie_days = reader.req_int_array("magpie_days")
-	def.pedlar_relic_pct = reader.req_int("pedlar_relic_pct", 0, 100)
 	for option_reader: DataReader in reader.opt_object_array("options"):
 		var option := Option.new()
 		option.id = option_reader.req_choice("id", OPTIONS)

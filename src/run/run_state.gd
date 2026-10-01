@@ -109,8 +109,9 @@ var shop: String = ""
 ## Its wares (item ids; "" once bought), and how often it's been rerolled.
 var wares: Array[String] = []
 var rerolls: int = 0
-## A relic the open shop sells ("": none, or bought).
-var shop_relic: String = ""
+## The relics the open shop sells (phase 5c step 5a: one, or more with The
+## Magpie's Scale; "" once bought).
+var shop_relics: Array[String] = []
 
 # Camp.
 ## Where today's camp is (a place id; "" on the Magpie's day), its options,
@@ -137,8 +138,16 @@ var magpie_day: int = 0
 
 # Relics and bonds.
 var relics: Array[String] = []
-## A relic choice waiting (relic ids; empty: none).
+## A relic choice waiting (relic ids; empty: none), and what taking one
+## costs (the Shrine's; 0: free).
 var relic_choice: Array[String] = []
+var relic_choice_price: int = 0
+## Cards still to take from the waiting pick (The Hollow Throne: 2).
+var picks_left: int = 1
+## Won day fights in a row with no hero falling, and the streak relics
+## already paid (phase 5c step 5a; Bounty Board).
+var streak: int = 0
+var streaks_paid: Array[String] = []
 ## Duo bonds found (on at least once), in the order found.
 var bonds_found: Array[String] = []
 ## Growing relics (phase 5c step 4): relic id -> what the team has counted
@@ -175,11 +184,12 @@ func to_dict() -> Dictionary:
 		"shards": shards, "options": options.duplicate(true), "chosen": chosen, "formation": hexes,
 		"fought": fought.map(func(entry: Fought) -> Dictionary: return entry.to_dict()),
 		"pick": pick.duplicate(), "just_transformed": just_transformed.duplicate(),
-		"stash": stash.duplicate(), "shop": shop, "wares": wares.duplicate(), "rerolls": rerolls, "shop_relic": shop_relic,
+		"stash": stash.duplicate(), "shop": shop, "wares": wares.duplicate(), "rerolls": rerolls, "shop_relics": shop_relics.duplicate(),
 		"place": place, "camp": camp.duplicate(), "camp_used": camp_used, "hunt": hunt, "mapping": mapping,
 		"fortify": fortify, "dig_in": dig_in, "rock": rock.duplicate(), "rift_tear": rift_tear, "rested": rested,
 		"scouted": scouted.duplicate(), "magpie_day": magpie_day,
-		"relics": relics.duplicate(), "relic_choice": relic_choice.duplicate(), "bonds_found": bonds_found.duplicate(),
+		"relics": relics.duplicate(), "relic_choice": relic_choice.duplicate(), "relic_choice_price": relic_choice_price, "picks_left": picks_left,
+		"streak": streak, "streaks_paid": streaks_paid.duplicate(), "bonds_found": bonds_found.duplicate(),
 		"growth": growth.duplicate(), "grew": grew.duplicate(),
 	}
 
@@ -214,7 +224,7 @@ static func from_dict(data: Dictionary) -> RunState:
 	state.shop = str(data.get("shop", ""))
 	state.wares.assign((data.get("wares", []) as Array).map(func(value: Variant) -> String: return str(value)))
 	state.rerolls = int(data.get("rerolls", 0))
-	state.shop_relic = str(data.get("shop_relic", ""))
+	state.shop_relics = _strings(data.get("shop_relics", []))
 	state.place = str(data.get("place", ""))
 	state.camp = _strings(data.get("camp", []))
 	state.camp_used = str(data.get("camp_used", ""))
@@ -233,6 +243,10 @@ static func from_dict(data: Dictionary) -> RunState:
 	state.magpie_day = int(data.get("magpie_day", 0))
 	state.relics = _strings(data.get("relics", []))
 	state.relic_choice = _strings(data.get("relic_choice", []))
+	state.relic_choice_price = int(data.get("relic_choice_price", 0))
+	state.picks_left = int(data.get("picks_left", 1))
+	state.streak = int(data.get("streak", 0))
+	state.streaks_paid = _strings(data.get("streaks_paid", []))
 	state.bonds_found = _strings(data.get("bonds_found", []))
 	return state
 

@@ -150,7 +150,7 @@ func growth_tallies(state: RunState, hero: RunState.Hero) -> Array:
 			keys.append("upgrade:" + upgrade.id)
 			counts.append(upgrade.grows.counts)
 	for id: String in state.relics:
-		if relics.has(id) and relics[id].grows != null:
+		if relics.has(id) and relics[id].grows != null and relics[id].grows.counted_in_fights():
 			keys.append("relic:" + id)
 			counts.append(relics[id].grows.counts)
 	return [keys, counts]
@@ -196,7 +196,28 @@ func relic_mods(state: RunState) -> Array[KitMod]:
 			var grown: KitMod = relics[id].grows.mod_for(state.growth.get(id, 0))
 			if grown != null:
 				mods.append(grown)
+		var worked_out: KitMod = _worked_out(relics[id], state)
+		if worked_out != null:
+			mods.append(worked_out)
 	return mods
+
+
+## The stats a relic gives from the run as it stands (phase 5c step 5a):
+## Reliquary Lamp's per relic held, Gilded Rift's per shards held.
+func _worked_out(relic: RelicDef, state: RunState) -> KitMod:
+	var mod: KitMod = null
+	if relic.per_relic_bp > 0:
+		mod = KitMod.make()
+		for stat: UnitStats.Stat in [UnitStats.Stat.HP, UnitStats.Stat.ATK, UnitStats.Stat.MGK, UnitStats.Stat.DEF, UnitStats.Stat.CRIT, UnitStats.Stat.ATSP]:
+			mod.stats_bp[stat] = FixedMath.BP_ONE + relic.per_relic_bp * state.relics.size()
+	if relic.per_shards > 0:
+		@warning_ignore("integer_division")
+		var steps: int = state.shards / relic.per_shards
+		if steps > 0:
+			mod = KitMod.make() if mod == null else mod
+			for stat: UnitStats.Stat in [UnitStats.Stat.ATK, UnitStats.Stat.MGK]:
+				mod.stats_bp[stat] += relic.per_shards_bp * steps
+	return mod
 
 
 ## The bonds on for the run's heroes: both paths vowed and transformed.
@@ -316,9 +337,8 @@ func _check() -> void:
 		var relic: RelicDef = relics[id]
 		_check_icon(relic.icon, "%s (%s)" % [RELICS_FILE, id])
 		_check_mod(relic.mod, hero_kits, "%s (%s)" % [RELICS_FILE, id])
-		_check_mod(relic.rest_mod, hero_kits, "%s (%s): rest_mod" % [RELICS_FILE, id])
 		_check_mod(relic.enemy_mod, enemy_kits, "%s (%s): enemy_mod" % [RELICS_FILE, id])
-		if relic.grows != null:
+		if relic.grows != null and relic.grows.each.changes_anything():
 			_check_mod(relic.grows.each.times(50), hero_kits, "%s (%s): grows" % [RELICS_FILE, id])
 			if not relic.grows.counts.from_ability.is_empty():
 				errors.append("%s (%s): a relic grows by what the whole team does, so it counts no hero's ability" % [RELICS_FILE, id])

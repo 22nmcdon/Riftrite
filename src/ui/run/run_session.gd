@@ -127,5 +127,5 @@ func deed_progress(hero_id: String) -> Array:
 
 ## The share of max HP the hero's wounds take now (for the greyed chunk).
 func wound_share(hero_id: String) -> float:
-	var each: int = content.tuning.wound_bp + run.relic_sum(flow.state, "wound_bp_add")
+	var each: int = content.tuning.wound_bp
 	return float(flow.state.hero(hero_id).wounds * each) / FixedMath.BP_ONE

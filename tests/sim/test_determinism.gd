@@ -77,8 +77,10 @@ func test_the_fight_order_matters() -> void:
 ## fight, once the paths are data).
 const NOT_YET: Array[LogEntry.Kind] = [LogEntry.Kind.SYNERGY, LogEntry.Kind.DEED_LEVEL, LogEntry.Kind.TACTIC,
 	LogEntry.Kind.ZONE, LogEntry.Kind.SNARE, LogEntry.Kind.WALL, LogEntry.Kind.GUARD]
-## Statuses only the paths use (phase 4).
+## Statuses only the paths use (phase 4), and only relics (phase 5c step 5a;
+## Sunder, covered by tests/run/test_relics.gd).
 const PATH_STATUSES: Array[String] = ["warded"]
+const RELIC_STATUSES: Array[String] = ["sunder"]
 
 
 func test_the_chaos_fight_uses_everything() -> void:
@@ -88,7 +90,7 @@ func test_the_chaos_fight_uses_everything() -> void:
 			assert_false(log.of_kind(kind).is_empty(), "the log has a %s" % LogEntry.Kind.keys()[kind])
 	var statuses: Array = log.of_kind(LogEntry.Kind.STATUS_APPLIED).map(func(entry: LogEntry) -> String: return entry.status)
 	for status_id: String in K.content().status_ids:
-		assert_true(statuses.has(status_id) or PATH_STATUSES.has(status_id), "%s is applied" % status_id)
+		assert_true(statuses.has(status_id) or PATH_STATUSES.has(status_id) or RELIC_STATUSES.has(status_id), "%s is applied" % status_id)
 	var shapes: Array = log.of_kind(LogEntry.Kind.AREA_LANDED).map(func(entry: LogEntry) -> String: return entry.shape.get_slice(" ", 0))
 	for shape: String in ShapeDef.KIND_NAMES:
 		assert_true(shapes.has(shape), "a %s lands" % shape)

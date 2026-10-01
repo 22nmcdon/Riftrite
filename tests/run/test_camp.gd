@@ -54,7 +54,7 @@ func test_the_camp_content_loads() -> void:
 	assert_true(_run.is_valid(), "\n".join(_run.errors))
 	assert_eq(_run.camps.places.map(func(place: CampsDef.Place) -> String: return place.id), ["waystone", "ruined_chapel", "hunters_blind", "rift_scar"])
 	assert_eq(_run.camps.options.size(), CampsDef.OPTIONS.size())
-	assert_eq([_run.relic_ids.size(), _run.bond_ids.size()], [8, 3])
+	assert_eq([_run.relic_ids.size(), _run.bond_ids.size()], [44, 3])
 
 
 func test_arriving_at_camp() -> void:
@@ -86,8 +86,10 @@ func test_the_magpies_day() -> void:
 	assert_eq([state.place, state.camp], ["", ["magpie"] as Array[String]], "he's the only option")
 	assert_eq(flow.choose_camp(0), "")
 	assert_eq(state.shop, "magpie")
-	assert_ne(state.shop_relic, "", "the Magpie always has a relic")
-	assert_eq(flow.relic_price(), 14, "9 shards, half again, rounded up")
+	assert_eq(state.shop_relics.size(), 1, "the Magpie always has a relic")
+	var tier: RelicDef.Tier = _run.relics[state.shop_relics[0]].tier
+	assert_true(tier == RelicDef.Tier.EPIC or tier == RelicDef.Tier.LEGENDARY, "an epic or a legendary")
+	assert_eq(flow.relic_price(), _run.act.relic_prices[RelicDef.TIER_NAMES[tier]] * 75 / 100, "at 25% off, rounded down")
 
 
 func test_one_option_a_camp() -> void:
@@ -113,7 +115,6 @@ func test_rest_clears_wounds() -> void:
 	flow.state.hero("maren").wounds = 1
 	flow.choose_camp(0)
 	assert_true(flow.state.heroes.all(func(hero: RunState.Hero) -> bool: return hero.wounds == 0))
-	assert_false(flow.state.rested, "no relic to steady them")
 
 
 func test_map_the_rift_swaps_one_of_tomorrows_fights() -> void:
@@ -180,11 +181,20 @@ func test_a_rift_tear_upgrades_the_enemies_and_a_win_offers_a_relic() -> void:
 func test_the_shrine_and_turning_a_relic_down() -> void:
 	var flow: RunFlow = _camp_with("shrine")
 	flow.choose_camp(0)
-	assert_eq(flow.state.relic_choice.size(), 2)
+	assert_eq(flow.state.relic_choice.size(), 1, "one rare, for 15 shards (phase 5c step 5a)")
+	assert_eq(_run.relics[flow.state.relic_choice[0]].tier, RelicDef.Tier.RARE)
+	assert_eq(flow.state.relic_choice_price, 15)
+	flow.state.shards = 14
+	assert_eq(flow.take_relic(0), "it costs 15 shards; there are 14")
 	assert_eq(flow.leave_camp(), "choose a relic or neither first")
 	assert_eq(flow.decline_relic(), "")
 	assert_eq(flow.state.relics, [] as Array[String])
 	assert_eq(flow.decline_relic(), "there's no relic choice waiting")
+	flow.state.relic_choice.assign(["bone_dice"])
+	flow.state.relic_choice_price = 15
+	flow.state.shards = 20
+	assert_eq(flow.take_relic(0), "")
+	assert_eq([flow.state.shards, flow.state.relics], [5, ["bone_dice"]])
 
 
 func test_a_hunt() -> void:
@@ -198,12 +208,12 @@ func test_a_hunt() -> void:
 	var setup: FightSetup = flow.fight_setup(Bot.formation(), errors)
 	assert_eq(setup.enemies.size(), _run.content.encounters[state.hunt].enemies.size())
 	flow.record(Bot.formation(), _result(FightResult.Outcome.DEFEAT))
-	assert_eq([state.hunt, state.losses, state.phase, state.shards], ["", 0, RunState.Phase.CAMP, 3], "a lost Hunt isn't a loss")
+	assert_eq([state.hunt, state.losses, state.phase, state.shards], ["", 0, RunState.Phase.CAMP, _run.act.start_shards], "a lost Hunt isn't a loss")
 	assert_eq(_run.content.encounters[state.fought.back().encounter].tier, "hunt", "recorded as fought")
 	flow.state.camp_used = ""
 	flow.choose_camp(0)
 	flow.record(Bot.formation(), _result(FightResult.Outcome.VICTORY))
-	assert_eq([state.shards, state.pick], [3 + _run.act.pay["hunt"], [] as Array[String]], "shards, no pick")
+	assert_eq([state.shards, state.pick], [_run.act.start_shards + _run.act.pay["hunt"], [] as Array[String]], "shards, no pick")
 	assert_eq(flow.leave_camp(), "")
 
 
@@ -213,38 +223,31 @@ func test_relics_that_change_the_run() -> void:
 	state.relic_choice.assign(["hollow_crown"])
 	flow.take_relic(0)
 	assert_eq(state.hero("maren").slots.size(), 4, "a fourth slot")
-	state.hero("maren").wounds = 1
 	state.relic_choice.assign(["rift_glass_eye"])
 	flow.take_relic(0)
 	_to_fight(flow)
 	var setup: FightSetup = _setup(flow)
-	assert_eq(setup.heroes[1].max_hp_bp, 8000, "a wound takes 20%")
 	var enemy: UnitSetup = setup.enemies[0]
 	var plain: UnitDef = Encounters.scaled(_run.content.enemies[enemy.def.id].kit, _run.content.encounters[state.chosen].scale_bp)
-	assert_eq(enemy.def.stats.get_stat(UnitStats.Stat.HP), FixedMath.apply_bp(plain.stats.get_stat(UnitStats.Stat.HP), 11000))
+	assert_eq(enemy.def.stats.get_stat(UnitStats.Stat.HP), plain.stats.get_stat(UnitStats.Stat.HP), "no cost: enemies are as they were")
 
 
 func test_relics_on_pay_picks_and_prices() -> void:
 	var flow: RunFlow = _start()
 	var state: RunState = flow.state
-	state.relic_choice.assign(["gravediggers_coin"])
-	flow.take_relic(0)
-	state.relic_choice.assign(["pilgrims_lantern"])
-	flow.take_relic(0)
+	for id: String in ["gravediggers_coin", "hagglers_charm", "widened_offering", "loose_change"]:
+		state.relic_choice.assign([id])
+		flow.take_relic(0)
+	var before: int = state.shards
 	flow.open_shop("pedlar")
-	assert_eq(flow.price_of("whetstone"), 4, "the Pedlar charges 1 more")
+	assert_eq(state.shards, before + 2, "Loose Change pays as a shop opens")
+	assert_eq(flow.price_of("whetstone"), 5, "Haggler's Charm: 1 less at the Pedlar")
 	flow.close_shop()
-	state.camp.assign(["rest"])
-	flow.choose_camp(0)
-	assert_true(state.rested)
 	_to_fight(flow)
-	var setup: FightSetup = _setup(flow)
-	var kit: UnitDef = _run.content.paths["hearthwall"].vowed_kit
-	assert_eq(setup.heroes[0].def.stats.get_stat(UnitStats.Stat.HP), FixedMath.apply_bp(kit.stats.get_stat(UnitStats.Stat.HP), 11000), "steadied by the Rest")
+	before = state.shards
 	flow.record(Bot.formation(), _result(FightResult.Outcome.VICTORY))
-	assert_eq(state.shards, 3 + _run.act.pay[_run.content.encounters[state.chosen].tier] + 2)
-	assert_eq(state.pick.size(), 2, "only 2 cards")
-	assert_false(state.rested)
+	assert_eq(state.shards, before + _run.act.pay[_run.content.encounters[state.chosen].tier] + 3, "Gravedigger's Coin: +3 a win")
+	assert_eq(state.pick.size(), 4, "Widened Offering: one more card")
 
 
 func test_a_team_relic_changes_every_hero() -> void:
@@ -256,23 +259,25 @@ func test_a_team_relic_changes_every_hero() -> void:
 	for i: int in 3:
 		var hero: RunState.Hero = flow.state.heroes[i]
 		var kit: UnitDef = _run.content.paths[hero.path].vowed_kit
-		assert_eq(setup.heroes[i].def.stats.get_stat(UnitStats.Stat.ATK), FixedMath.apply_bp(kit.stats.get_stat(UnitStats.Stat.ATK), 11200))
+		assert_eq(setup.heroes[i].def.stats.get_stat(UnitStats.Stat.ATK), FixedMath.apply_bp(kit.stats.get_stat(UnitStats.Stat.ATK), 10800), "Bloodstone: +8% ATK")
 
 
-func test_the_pedlar_sometimes_has_a_relic() -> void:
-	var found: int = 0
-	for run_seed: int in range(1, 31):
+func test_the_pedlar_always_has_a_relic_mostly_common() -> void:
+	var tiers: Array[int] = [0, 0, 0, 0, 0]
+	for run_seed: int in range(1, 41):
 		var flow: RunFlow = _start(run_seed)
 		flow.open_shop("pedlar")
-		if flow.state.shop_relic.is_empty():
-			assert_eq(flow.buy_relic(), "there's no relic for sale")
-			continue
-		found += 1
-		flow.state.shards = 9
-		var relic: String = flow.state.shop_relic
+		assert_eq(flow.state.shop_relics.size(), 1)
+		var relic: String = flow.state.shop_relics[0]
+		tiers[_run.relics[relic].tier] += 1
+		flow.state.shards = 40
+		var price: int = flow.relic_price()
+		assert_eq(price, _run.act.relic_prices[RelicDef.TIER_NAMES[_run.relics[relic].tier]])
 		assert_eq(flow.buy_relic(), "")
-		assert_eq([flow.state.relics, flow.state.shards, flow.state.shop_relic], [[relic], 0, ""])
-	assert_between(found, 3, 20, "about 1 visit in 3 (%d of 30)" % found)
+		assert_eq([flow.state.relics, flow.state.shards, flow.state.shop_relics], [[relic], 40 - price, [""]])
+		assert_eq(flow.buy_relic(), "there's no relic for sale")
+	assert_gt(tiers[RelicDef.Tier.COMMON], tiers[RelicDef.Tier.RARE], "mostly common: %s" % [tiers])
+	assert_eq(tiers[RelicDef.Tier.LEGENDARY] + tiers[RelicDef.Tier.BOSS], 0, "never a legendary or a boss relic")
 
 
 func test_a_duo_bond_stirs_then_switches_on() -> void:
