@@ -688,7 +688,7 @@ The chaos fight takes the new pieces part by part (its seed rescanned if it must
   - `tests/sim/test_engine_pieces.gd` (14: each piece).
   - `test_relics.gd` (5 more: the engines on a kit, Knife's Edge and Quickening in a fight, Blood Communion with Sanguine Frenzy, Hunter's Engine's rule, Snaring Shot only on Maren and Vell).
   - The chaos fight takes four pieces: stacking Marks, Frenzy on lifesteal, an aura per Shield, and a stepping planted aura. Its seed moved from 26 to 37, the first that still has every piece.
-- **What moved:** no built kit's fight; the bench's fingerprints are unchanged. The run report: (being measured).
+- **What moved:** no built kit's fight; the bench's fingerprints are unchanged. **The run report** (54 runs): **66% of runs won**, as after 5b; losses still gather on day 3's elite (10 of 18), with 2.9 relics a run (0.2 common, 1.7 rare, 0.3 epic, 0.7 boss), since the simple bot still buys wares first and rarely meets an epic.
 
 ## Answered (2026-09-30)
 
