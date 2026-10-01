@@ -74,6 +74,12 @@ static func mod_parts(mod: KitMod, kit: UnitDef, content: ContentDb) -> Array[St
 		parts.append("hop cooldown %s%s" % ["+" if mod.hop_cooldown_add_ticks > 0 else "−", UnitInfo.seconds(absi(mod.hop_cooldown_add_ticks))])
 	if mod.mana_per_attack_add != 0:
 		parts.append("%s mana per attack" % signed(mod.mana_per_attack_add))
+	if mod.mana_taken_bp != FixedMath.BP_ONE:
+		parts.append("%s mana from damage taken" % UnitInfo.signed_percent(mod.mana_taken_bp - FixedMath.BP_ONE))
+	if mod.plant_add_ticks != 0:
+		parts.append("plants %s %s" % [UnitInfo.seconds(absi(mod.plant_add_ticks)), "sooner" if mod.plant_add_ticks < 0 else "later"])
+	if mod.break_free_add_ticks != 0:
+		parts.append("enemies it engages take %s longer to break free" % UnitInfo.seconds(mod.break_free_add_ticks))
 	for trigger: TriggerDef in mod.also_fires:
 		var when: String = UnitInfo.trigger_text(trigger, shown)
 		parts.append("Signature also fires: %s%s" % [when.left(1).to_lower(), when.substr(1)])
@@ -101,6 +107,30 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 		bits.append("instant cast" if change.cast_bp == 0 else "%s cast time" % UnitInfo.signed_percent(change.cast_bp - FixedMath.BP_ONE))
 	if change.targets_add > 0:
 		bits.append("+%d target%s%s" % [change.targets_add, "" if change.targets_add == 1 else "s", " (without an area)" if change.one_of else ""])
+	# Phase 5c step 7b's knobs.
+	if change.every_add != 0:
+		bits.append("%s sooner in its count" % _count_word(-change.every_add) if change.every_add < 0 else "%s later in its count" % _count_word(change.every_add))
+	if change.times_add != 0:
+		bits.append("+%d time%s a fight" % [change.times_add, "" if change.times_add == 1 else "s"])
+	if change.max_standing_add != 0:
+		bits.append("+%d standing at once" % change.max_standing_add)
+	if change.overheal_add_bp != 0:
+		bits.append("+%s of overheal as Shield" % ValueBreakdown._percent(change.overheal_add_bp))
+	if change.width_add != 0:
+		bits.append("+%d hex wider" % change.width_add)
+	if change.value_add != 0:
+		var aura: AuraDef = KitMod._slot_aura(kit, change.slot) if kit != null else null
+		bits.append("%s %s" % [UnitInfo.signed_percent(change.value_add), AuraDef.STAT_LABELS[aura.stat]] if aura != null else signed(change.value_add))
+	if change.guard_share_add != 0:
+		bits.append("%s%% of each hit" % signed(change.guard_share_add / 100))
+	if change.guard_within_add != 0:
+		bits.append("%s hex reach" % signed(change.guard_within_add / HexGrid.HEX))
+	if change.guard_covers_all:
+		bits.append("covers every ally in reach, not only those behind")
+	if change.prefer != null:
+		bits.append("goes for enemies that are %s first" % change.prefer.describe())
+	for effect: EffectDef in change.add_to_areas:
+		bits.append("in its area: " + " · ".join(UnitInfo.effect_numbers([effect] as Array[EffectDef], kit, content)))
 	for effect: EffectDef in change.add_effects:
 		var effect_text: String = " · ".join(UnitInfo.effect_numbers([effect] as Array[EffectDef], kit, content))
 		match effect.trigger:
@@ -112,6 +142,11 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 	if bits.is_empty():
 		return ""
 	return "%s: %s" % [_slot_name(change.slot), ", ".join(bits)]
+
+
+## "1 step" or "2 steps" (an "every" count's change).
+static func _count_word(steps: int) -> String:
+	return "%d step%s" % [steps, "" if steps == 1 else "s"]
 
 
 ## " Stealth" for a change only to some statuses (phase 5c step 5b), else "".

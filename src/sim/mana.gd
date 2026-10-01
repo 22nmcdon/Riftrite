@@ -32,7 +32,7 @@ static func on_attack(sim: CombatSim, unit: UnitState) -> void:
 static func on_damage_taken(sim: CombatSim, unit: UnitState, damage: int) -> void:
 	if unit.def.mana != null and unit.def.mana.per_10_damage_taken > 0:
 		@warning_ignore("integer_division")
-		gain(sim, unit, damage * unit.def.mana.per_10_damage_taken * SCALE / 10)
+		gain(sim, unit, FixedMath.apply_bp(damage * unit.def.mana.per_10_damage_taken * SCALE / 10, unit.def.mana.taken_bp))
 
 
 ## Adds `hundredths` of mana, up to a full bar, unless the unit is Silenced.

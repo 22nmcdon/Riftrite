@@ -49,6 +49,10 @@ var traits: Array[String] = []
 ## enemy comes before it hops (plane units; Light Feet adds to it).
 var hop_cooldown_ticks: int = 0
 var hop_within: int = HexGrid.HEX
+## The engage trait: how much longer than tuning's break_free_ms an enemy it
+## engages takes to break free (phase 5c step 7b: an upgrade's mod, Hard to
+## Pass; the data never sets it).
+var break_free_add_ticks: int = 0
 ## Its gambit (a kit mod's; phase 5c step 6d, Gambits): its name, where
 ## else it may start (Gambits.PLACES), when it arrives (0: at the start),
 ## and when it swaps places (0: never), each Shielded by a share of max HP;
@@ -162,6 +166,7 @@ func copy() -> UnitDef:
 	other.traits = traits.duplicate()
 	other.hop_cooldown_ticks = hop_cooldown_ticks
 	other.hop_within = hop_within
+	other.break_free_add_ticks = break_free_add_ticks
 	other.prefer = prefer
 	other.prefer_label = prefer_label
 	other.gambit_label = gambit_label

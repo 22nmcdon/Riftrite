@@ -58,7 +58,7 @@ static func update(sim: CombatSim, unit: UnitState, engagers: Array[UnitState]) 
 		if engagement.free_at < 0:
 			if unit.target == engager:
 				continue
-			engagement.free_at = sim.tick + sim.tuning.break_free_ticks
+			engagement.free_at = sim.tick + sim.tuning.break_free_ticks + engager.def.break_free_add_ticks
 			Statuses.hold(sim, unit, EffectSource.make(engager.id, "engage", "Engage"))
 		if sim.tick >= engagement.free_at:
 			engagement.free = true

@@ -18,6 +18,9 @@ var regen_per_s: int = 0
 ## instead of per_attack (phase 4, Deadeye; 0: no such bonus).
 var far_hexes: int = 0
 var per_far_attack: int = 0
+## The mana from damage taken, times this (phase 5c step 7b: an upgrade's
+## mod, Grudge; the data never sets it).
+var taken_bp: int = FixedMath.BP_ONE
 
 
 static func read(reader: DataReader) -> ManaDef:

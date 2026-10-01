@@ -290,6 +290,42 @@
     }
   },
   {
+    "id": "twice_guarded",
+    "name": "Twice Guarded",
+    "hero": "brannoc",
+    "text": "Hearthguard can Shield a second ally who falls low.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:hearthguard",
+          "times_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "hard_to_pass",
+    "name": "Hard to Pass",
+    "hero": "brannoc",
+    "text": "Enemies he engages take longer to break free.",
+    "mod": {
+      "engage": {
+        "break_free_add_ms": 1000
+      }
+    }
+  },
+  {
+    "id": "grudge",
+    "name": "Grudge",
+    "hero": "brannoc",
+    "text": "He gains more mana from the damage he takes.",
+    "mod": {
+      "mana": {
+        "taken_bp": 15000
+      }
+    }
+  },
+  {
     "id": "weathered",
     "name": "Weathered",
     "hero": "brannoc",
@@ -448,6 +484,29 @@
     }
   },
   {
+    "id": "eyes_up",
+    "name": "Eyes Up",
+    "path": "deadeye",
+    "taste": true,
+    "text": "She crits more often while Steady (once transformed, while planted).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:steady_aim",
+          "value_add": 500
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:sure_aim",
+          "value_add": 500
+        }
+      ]
+    }
+  },
+  {
     "id": "hearts_refund",
     "name": "Heart's Refund",
     "path": "deadeye",
@@ -466,6 +525,36 @@
               "type": "gain_mana",
               "amount_bp_of_max_mana": 5000,
               "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_plant",
+    "name": "Quick Plant",
+    "path": "deadeye",
+    "text": "She plants sooner after she moves.",
+    "mod": {
+      "plant_add_ms": -750
+    }
+  },
+  {
+    "id": "seekers_mark",
+    "name": "Seeker's Mark",
+    "path": "deadeye",
+    "text": "Heartseeker Marks everything it pierces.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_to_areas": [
+            {
+              "type": "apply_status",
+              "status": "marked",
+              "duration_ms": 4000,
+              "target": "target"
             }
           ]
         }
@@ -525,6 +614,29 @@
             "root"
           ],
           "duration_add_ms": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "second_snare",
+    "name": "Second Snare",
+    "path": "trapper",
+    "taste": true,
+    "text": "Her Snare comes twice a fight (once transformed, Bramble Field keeps one more standing).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:snare",
+          "times_add": 1
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "max_standing_add": 1
         }
       ]
     }
@@ -617,6 +729,58 @@
     }
   },
   {
+    "id": "quick_split",
+    "name": "Quick Split",
+    "path": "volley",
+    "taste": true,
+    "text": "Split Shot comes sooner (once transformed, every shot splits already, so the split arrow hits harder).",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "at": [
+            "enemy_near_target"
+          ],
+          "every_add": -1
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "types": [
+            "damage"
+          ],
+          "at": [
+            "enemy_near_target"
+          ],
+          "amount_bp": 12500
+        }
+      ]
+    }
+  },
+  {
+    "id": "harrying_storm",
+    "name": "Harrying Storm",
+    "path": "volley",
+    "text": "Arrow Storm Hobbles what it rains on.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_to_areas": [
+            {
+              "type": "apply_status",
+              "status": "hobbled",
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
     "id": "arrow_glut",
     "name": "Arrow Glut",
     "path": "volley",
@@ -634,6 +798,50 @@
           "atsp": 1
         }
       }
+    }
+  },
+  {
+    "id": "broad_guard",
+    "name": "Broad Guard",
+    "path": "hearthwall",
+    "taste": true,
+    "text": "Guard takes a bigger share of each hit.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:guard",
+          "guard": {
+            "share_add": 5
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "wide_guard",
+    "name": "Wide Guard",
+    "path": "hearthwall",
+    "taste": true,
+    "text": "Guard covers the allies beside him too, not only those behind (once transformed, it reaches farther).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:guard",
+          "guard": {
+            "covers_all": true
+          }
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:guard",
+          "guard": {
+            "within_add": 1
+          }
+        }
+      ]
     }
   },
   {
@@ -727,6 +935,41 @@
     }
   },
   {
+    "id": "heavy_brand",
+    "name": "Heavy Brand",
+    "path": "ironbrand",
+    "taste": true,
+    "text": "Brand hits harder (once transformed, the Mace's other hits).",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "types": [
+            "damage"
+          ],
+          "at": [
+            "enemy_near_target"
+          ],
+          "amount_bp": 16700
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "types": [
+            "damage"
+          ],
+          "at": [
+            "enemies_near_target"
+          ],
+          "amount_bp": 16700
+        }
+      ]
+    }
+  },
+  {
     "id": "hungry_mace",
     "name": "Hungry Mace",
     "path": "ironbrand",
@@ -784,6 +1027,24 @@
               "within_hexes": 1
             }
           ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "brand_the_marked",
+    "name": "Brand the Marked",
+    "path": "ironbrand",
+    "text": "Brand Slam leaps toward Marked enemies first.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "prefer": {
+            "keywords": [
+              "marked"
+            ]
+          }
         }
       ]
     }
@@ -957,6 +1218,38 @@
     }
   },
   {
+    "id": "bright_kindle",
+    "name": "Bright Kindle",
+    "path": "lanternbearer",
+    "taste": true,
+    "text": "Kindle heals more (Mend's spill, then the heal on the allies near her).",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "heal"
+          ],
+          "at": [
+            "ally_near_target"
+          ],
+          "amount_bp": 15000
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:kindle",
+          "types": [
+            "heal"
+          ],
+          "amount_bp": 15000
+        }
+      ]
+    }
+  },
+  {
     "id": "long_night",
     "name": "Long Night",
     "path": "lanternbearer",
@@ -969,6 +1262,31 @@
             "area"
           ],
           "duration_add_ms": 2000
+        }
+      ]
+    }
+  },
+  {
+    "id": "wide_cleanse",
+    "name": "Wide Cleanse",
+    "path": "lanternbearer",
+    "text": "Night Lantern's light also clears Slows and Bleeding.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_to_areas": [
+            {
+              "type": "cleanse",
+              "amount_bp": 10000,
+              "statuses": [
+                "slow",
+                "hobbled",
+                "bleed"
+              ],
+              "target": "target"
+            }
+          ]
         }
       ]
     }
@@ -1041,6 +1359,32 @@
               "within_hexes": 3
             }
           ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "thick_thread",
+    "name": "Thick Thread",
+    "path": "wardweaver",
+    "taste": true,
+    "text": "Ward Thread turns more of Mend's overheal into Shield (once transformed, Weave's Shield is bigger).",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "overheal_shield_add_bp": 2000
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:weave",
+          "types": [
+            "shield"
+          ],
+          "amount_bp": 13000
         }
       ]
     }
@@ -1133,6 +1477,32 @@
     }
   },
   {
+    "id": "swift_judgment",
+    "name": "Swift Judgment",
+    "path": "vigil_keeper",
+    "taste": true,
+    "text": "Mend smites more often (once transformed, Mend comes sooner).",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "damage"
+          ],
+          "every_add": -1
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:mend",
+          "every_add": -1
+        }
+      ]
+    }
+  },
+  {
     "id": "leaping_smite",
     "name": "Leaping Smite",
     "path": "vigil_keeper",
@@ -1201,6 +1571,20 @@
               "target": "target"
             }
           ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "wide_sunfall",
+    "name": "Wide Sunfall",
+    "path": "vigil_keeper",
+    "text": "Sunfall's beam is wider.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "width_add": 1
         }
       ]
     }

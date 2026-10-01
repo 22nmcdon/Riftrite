@@ -190,7 +190,7 @@ static func would_fall(sim: CombatSim, unit: UnitState) -> bool:
 static func pick_target(sim: CombatSim, unit: UnitState) -> UnitState:
 	var ability: AbilityDef = unit.signature.def
 	var reach: int = unit.reach_of(ability)
-	return Targeting.pick(sim, unit, ability.targeting, reach * reach)
+	return Targeting.pick(sim, unit, ability.targeting, reach * reach, ability.prefer)
 
 
 static func _queue_once(signature: AbilityState) -> void:

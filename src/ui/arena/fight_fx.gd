@@ -82,6 +82,8 @@ class Fx:
 	## Areas: the shape's kind and size (hexes), and where an aimed one ends.
 	var shape: String = ""
 	var size: int = 0
+	## A line's width, in hexes (phase 5c step 7b: Wide Sunfall).
+	var width: int = 1
 	var to: Vector2 = Vector2.ZERO
 
 
@@ -206,6 +208,7 @@ func _add(entry: LogEntry, sim: CombatSim) -> void:
 			var parts: PackedStringArray = entry.shape.split(" ")
 			area.shape = parts[0]
 			area.size = parts[1].to_int() if parts.size() > 1 else 1
+			area.width = parts[2].to_int() if parts.size() > 2 else 1
 			area.to = Vector2(entry.to_pos)
 			var caster: UnitState = sim.unit_by_id(entry.source_unit)
 			area.color = HERO_AREA if caster != null and caster.side == EffectSource.Team.HEROES else ENEMY_AREA
@@ -428,6 +431,7 @@ func _draw_placed(canvas: CanvasItem, sim: CombatSim) -> void:
 		var fx := Fx.new()
 		fx.shape = ShapeDef.KIND_NAMES[zone.effect.shape.kind]
 		fx.size = zone.effect.shape.size
+		fx.width = zone.effect.shape.width
 		fx.from = Vector2(zone.origin)
 		fx.to = Vector2(ArenaPlane.along(zone.origin, zone.dir, zone.effect.shape.size * HexGrid.HEX))
 		var color: Color = _side_color(sim, zone.unit.id)
@@ -465,10 +469,11 @@ func _draw_shape(canvas: CanvasItem, fx: Fx, fill: Color, line: Color) -> void:
 		_:
 			var along: Vector2 = (fx.to - fx.from).normalized()
 			var across := Vector2(-along.y, along.x)
-			var far_half: float = (HexGrid.HALF_HEX if fx.shape == "line" else 3.0 * HexGrid.HALF_HEX)
+			var near_half: float = HexGrid.HALF_HEX * (fx.width if fx.shape == "line" else 1)
+			var far_half: float = (near_half if fx.shape == "line" else 3.0 * HexGrid.HALF_HEX)
 			var corners := PackedVector2Array([
-				_view.to_pixel_f(fx.from + across * HexGrid.HALF_HEX), _view.to_pixel_f(fx.to + across * far_half),
-				_view.to_pixel_f(fx.to - across * far_half), _view.to_pixel_f(fx.from - across * HexGrid.HALF_HEX)])
+				_view.to_pixel_f(fx.from + across * near_half), _view.to_pixel_f(fx.to + across * far_half),
+				_view.to_pixel_f(fx.to - across * far_half), _view.to_pixel_f(fx.from - across * near_half)])
 			canvas.draw_colored_polygon(corners, fill)
 			var outline: PackedVector2Array = corners.duplicate()
 			outline.append(corners[0])

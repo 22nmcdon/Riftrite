@@ -402,7 +402,7 @@ static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, 
 			continue
 		if effect.cooldown_ticks > 0 and listener.ran_at >= 0 and sim.tick - listener.ran_at < effect.cooldown_ticks:
 			continue
-		if effect.once and listener.count >= effect.every:
+		if effect.once and listener.count >= effect.every * effect.times:
 			continue
 		if effect.cooldown_per_unit_ticks > 0 and other != null:
 			if listener.last_for.has(other.id) and sim.tick - listener.last_for[other.id] < effect.cooldown_per_unit_ticks:
@@ -431,12 +431,12 @@ static func run_timed(sim: CombatSim) -> void:
 			match effect.trigger:
 				EffectDef.Trigger.ON_INTERVAL:
 					var since: int = sim.tick - unit.joined_at
-					if since > 0 and since % effect.interval_ticks == 0 and not (effect.once and listener.count > 0):
+					if since > 0 and since % effect.interval_ticks == 0 and not (effect.once and listener.count >= effect.times):
 						listener.count += 1
 						_run(sim, unit, listener, null, 0)
 				EffectDef.Trigger.ON_ALLY_BELOW_HP:
 					for ally: UnitState in sim.standing_allies_of(unit):
-						if effect.once and not listener.allies_done.is_empty():
+						if effect.once and listener.allies_done.size() >= effect.times:
 							break
 						if ally == unit or ally.hp <= 0 or listener.allies_done.has(ally.id):
 							continue

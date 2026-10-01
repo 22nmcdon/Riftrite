@@ -57,12 +57,18 @@ static func update(sim: CombatSim, unit: UnitState) -> void:
 
 ## The unit `rule` picks for `unit`, among those within `reach_sq` of it
 ## (-1: anywhere), or null. Here nearest is by straight line.
-static func pick(sim: CombatSim, unit: UnitState, rule: String, reach_sq: int) -> UnitState:
+static func pick(sim: CombatSim, unit: UnitState, rule: String, reach_sq: int, prefer: UnitCondition = null) -> UnitState:
 	if rule == "self":
 		return unit
 	var pool: Array[UnitState] = sim.standing_allies_of(unit) if rule == "lowest_hp_ally" else sim.targetable_enemies_of(unit)
 	if reach_sq >= 0:
 		pool = pool.filter(func(other: UnitState) -> bool: return ArenaPlane.length_sq(other.pos - unit.pos) <= reach_sq)
+	# A signature's "prefer" (phase 5c step 7b): its rule runs over those
+	# that meet it, if any is in reach.
+	if prefer != null:
+		var wanted: Array[UnitState] = pool.filter(func(other: UnitState) -> bool: return prefer.holds(other))
+		if not wanted.is_empty():
+			pool = wanted
 	var best: UnitState = null
 	match rule:
 		"nearest", "farthest":

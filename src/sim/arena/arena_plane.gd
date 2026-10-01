@@ -113,12 +113,12 @@ static func in_ring(center: Vector2i, radius: int, point: Vector2i) -> bool:
 
 ## A line `length` long and one hex wide, starting at `origin` and running
 ## along `dir` (length DIR).
-static func in_line(origin: Vector2i, dir: Vector2i, line_length: int, point: Vector2i) -> bool:
+static func in_line(origin: Vector2i, dir: Vector2i, line_length: int, point: Vector2i, half_width: int = HexGrid.HALF_HEX) -> bool:
 	var v: Vector2i = point - origin
 	# Both are in plane units x DIR, so no division is needed.
 	var along_scaled: int = dot(v, dir)
 	var across_scaled: int = absi(cross(dir, v))
-	return along_scaled >= 0 and along_scaled <= line_length * DIR and across_scaled <= HexGrid.HALF_HEX * DIR
+	return along_scaled >= 0 and along_scaled <= line_length * DIR and across_scaled <= half_width * DIR
 
 
 ## A cone `depth` long from `origin` along `dir`, widening evenly from

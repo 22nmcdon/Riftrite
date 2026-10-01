@@ -4,8 +4,10 @@ extends RefCounted
 ## measured in hexes:
 ##   {"kind": "circle", "radius": 2}   within 2 hexes of its center
 ##   {"kind": "ring", "radius": 2}     between 1.5 and 2.5 hexes from it
-##   {"kind": "line", "length": 4}     4 hexes long and 1 wide, from the
-##                                     caster's edge along its aim
+##   {"kind": "line", "length": 4}     4 hexes long and 1 wide (or
+##                                     "width": 2), from the caster's edge
+##                                     along its aim (a kit mod's width_add
+##                                     widens it: phase 5c step 7b)
 ##   {"kind": "cone", "depth": 3}      from the caster's edge along its aim,
 ##                                     widening from 1 hex to 3 (depth 3 by
 ##                                     default)
@@ -18,6 +20,8 @@ const KIND_NAMES: Array[String] = ["circle", "ring", "line", "cone"]
 var kind: Kind
 ## circle and ring: the radius; line: the length; cone: the depth (hexes).
 var size: int = 0
+## A line's width (hexes).
+var width: int = 1
 
 
 static func read(reader: DataReader) -> ShapeDef:
@@ -30,6 +34,7 @@ static func read(reader: DataReader) -> ShapeDef:
 				def.size = reader.req_int("radius", 1)
 			Kind.LINE:
 				def.size = reader.req_int("length", 1)
+				def.width = reader.opt_int("width", 1, 1, 8)
 			Kind.CONE:
 				def.size = reader.opt_int("depth", 3, 1)
 	reader.finish()
@@ -51,10 +56,12 @@ func contains(origin: Vector2i, dir: Vector2i, point: Vector2i) -> bool:
 		Kind.RING:
 			return ArenaPlane.in_ring(origin, size * HexGrid.HEX, point)
 		Kind.LINE:
-			return ArenaPlane.in_line(origin, dir, size * HexGrid.HEX, point)
+			return ArenaPlane.in_line(origin, dir, size * HexGrid.HEX, point, width * HexGrid.HALF_HEX)
 	return ArenaPlane.in_cone(origin, dir, size * HexGrid.HEX, point)
 
 
-## For the log: "circle 2", "line 4".
+## For the log: "circle 2", "line 4" (a wider line: "line 4 2").
 func describe() -> String:
+	if kind == Kind.LINE and width > 1:
+		return "%s %d %d" % [KIND_NAMES[kind], size, width]
 	return "%s %d" % [KIND_NAMES[kind], size]

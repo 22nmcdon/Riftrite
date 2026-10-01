@@ -52,6 +52,10 @@ var also: Array[TriggerDef] = []
 ## weaker copy echo_ticks later, at a fresh target (null: no echo).
 var echo: AbilityDef = null
 var echo_ticks: int = 0
+## A signature's: the enemies it picks among first, when any is in reach
+## (phase 5c step 7b: an upgrade's mod, Brand the Marked; null: its rule
+## alone).
+var prefer: UnitCondition = null
 
 
 static func read(reader: DataReader) -> AbilityDef:

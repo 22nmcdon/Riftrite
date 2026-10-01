@@ -405,7 +405,8 @@ var fresh_only: bool = false
 ## An event effect: at most once this many ticks for each unit its event
 ## names (0: no limit; phase 5c step 5d).
 var cooldown_per_unit_ticks: int = 0
-## on_below_hp: how many times a fight it may run (phase 5c step 6).
+## on_below_hp: how many times a fight it may run (phase 5c step 6); and a
+## "once" effect's (phase 5c step 7b: a kit mod's times_add, Second Snare).
 var times: int = 1
 ## Phase 5c step 6b. apply_status: a Mark it applies stacks as it refreshes
 ## (Hunter's Chalk). An event effect: at most once this long, whoever it

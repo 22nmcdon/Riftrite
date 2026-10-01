@@ -37,6 +37,25 @@ extends RefCounted
 ##       "add_effects": [...EffectDefs...],   appended to the ability
 ##       "after_add_ms": -500}],          the passive's aura: how long unmoved
 ##                                        (or planted) before it holds
+## Phase 5c step 7b (the upgrade pools' small knobs) adds, per "on" entry:
+##       "at": ["enemy_near_target"],     only effects aimed at these targets
+##       "every_add": -1,                 an "every" N effect's N (at least 1)
+##       "times_add": 1,                  how many times a "once" effect (or
+##                                        on_below_hp's) runs a fight
+##       "max_standing_add": 1,           a snare's most standing at once
+##       "overheal_shield_add_bp": 2000,  a heal's overheal-to-Shield share
+##       "width_add": 1,                  a line's width, in hexes
+##       "add_to_areas": [...EffectDefs...],  added inside its areas (on each
+##                                        unit an area hits), not after them
+##       "value_add": 500,                the named passive's aura's value
+##       "guard": {"share_add": 5, "within_add": 1, "covers_all": true}
+##                                        the named Guard passive
+##       "prefer": {...UnitCondition...}  the signature picks among enemies
+##                                        that meet it first
+## and at the top: "plant_add_ms" (how long it plants after moving),
+## "engage": {"break_free_add_ms": 1000} (enemies it engages take that
+## much longer to break free), and "mana": {"taken_bp": 15000} (the mana
+## it gains from damage taken, times this).
 ##    "mana": {"max_add": -15, "start_add": 20, "per_attack_add": 2,
 ##             "regen_add": 1, "max_bp": 9200},  (regen and max_bp: phase 5c
 ##                                        step 5a, Rift Candle and Hollow Drum)
@@ -87,14 +106,34 @@ class AbilityChange:
 	var cast_bp: int = FixedMath.BP_ONE
 	var targets_add: int = 0
 	var one_of: bool = false
+	## Phase 5c step 7b (the upgrade pools' small knobs; see the header).
+	var at: Array[EffectDef.Target] = []
+	var every_add: int = 0
+	var times_add: int = 0
+	var max_standing_add: int = 0
+	var overheal_add_bp: int = 0
+	var width_add: int = 0
+	var add_to_areas: Array[EffectDef] = []
+	var value_add: int = 0
+	var guard_share_add: int = 0
+	var guard_within_add: int = 0
+	var guard_covers_all: bool = false
+	var prefer: UnitCondition = null
 
 	func touches_effects() -> bool:
-		return amount_bp != FixedMath.BP_ONE or duration_bp != FixedMath.BP_ONE or duration_add_ticks != 0 or radius_add != 0
+		return amount_bp != FixedMath.BP_ONE or duration_bp != FixedMath.BP_ONE or duration_add_ticks != 0 or radius_add != 0 \
+			or every_add != 0 or times_add != 0 or max_standing_add != 0 or overheal_add_bp != 0 or width_add != 0 or not add_to_areas.is_empty()
 
 	func touches(effect: EffectDef) -> bool:
+		if not at.is_empty() and not at.has(effect.target):
+			return false
 		if not statuses.is_empty():
 			return effect.type == EffectDef.Type.APPLY_STATUS and statuses.has(effect.status_id)
 		return types.is_empty() or types.has(effect.type)
+
+	## True if it changes the named passive itself (its aura or its Guard).
+	func changes_part() -> bool:
+		return value_add != 0 or guard_share_add != 0 or guard_within_add != 0 or guard_covers_all
 
 	## A knockback's or pull's distance scales with amount_bp only when the
 	## change names that type (phase 5c step 7: Crushing Blow), so a mod on
@@ -127,6 +166,12 @@ var prefer_label: String = ""
 ## (plane units), and its cooldown's change (Light Feet).
 var hop_within_add: int = 0
 var hop_cooldown_add_ticks: int = 0
+## Phase 5c step 7b: how long it plants after moving (Quick Plant), how
+## much longer enemies it engages take to break free (Hard to Pass), and
+## its mana from damage taken, times this (Grudge).
+var plant_add_ticks: int = 0
+var break_free_add_ticks: int = 0
+var mana_taken_bp: int = FixedMath.BP_ONE
 ## A gambit's rule (phase 5c step 6d; Gambits): its name, where else it may
 ## start, when it arrives, and when it swaps places (and the Shield then).
 var gambit_label: String = ""
@@ -172,7 +217,14 @@ static func read(reader: DataReader) -> KitMod:
 			mod.mana_regen_add = mana_reader.opt_int("regen_add", 0, -20, 20)
 			mod.mana_max_bp = mana_reader.opt_int("max_bp", FixedMath.BP_ONE, 5000, 20000)
 			mod.mana_start_bp = mana_reader.opt_int("start_bp", 0, 0, FixedMath.BP_ONE)
+			mod.mana_taken_bp = mana_reader.opt_int("taken_bp", FixedMath.BP_ONE, 1000, 50000)
 			mana_reader.finish()
+	mod.plant_add_ticks = _signed_ticks(reader, "plant_add_ms")
+	if reader.has("engage"):
+		var engage_reader: DataReader = reader.req_object("engage")
+		if engage_reader != null:
+			mod.break_free_add_ticks = _signed_ticks(engage_reader, "break_free_add_ms")
+			engage_reader.finish()
 	if reader.has("prefer"):
 		var prefer_reader: DataReader = reader.req_object("prefer")
 		if prefer_reader != null:
@@ -237,11 +289,32 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 	change.cast_bp = reader.opt_int("cast_bp", FixedMath.BP_ONE, 0, FixedMath.BP_ONE)
 	change.targets_add = reader.opt_int("targets_add", 0, 0, 5)
 	change.one_of = reader.opt_bool("one_of", false)
-	if (change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0) and change.slot != SLOT_SIGNATURE:
-		reader.error("cast_bp and targets_add change a signature (\"slot\": \"signature\")")
+	for target_name: String in reader.opt_choice_array("at", EffectDef.TARGET_NAMES):
+		change.at.append(EffectDef.TARGET_NAMES.find(target_name) as EffectDef.Target)
+	change.every_add = reader.opt_int("every_add", 0, -10, 10)
+	change.times_add = reader.opt_int("times_add", 0, 0, 5)
+	change.max_standing_add = reader.opt_int("max_standing_add", 0, 0, 5)
+	change.overheal_add_bp = reader.opt_int("overheal_shield_add_bp", 0, 0, FixedMath.BP_ONE)
+	change.width_add = reader.opt_int("width_add", 0, 0, 3)
+	for effect_reader: DataReader in reader.opt_object_array("add_to_areas"):
+		change.add_to_areas.append(EffectDef.read(effect_reader))
+	change.value_add = reader.opt_int("value_add", 0, -100000, 100000)
+	if reader.has("guard"):
+		var guard: DataReader = reader.req_object("guard")
+		if guard != null:
+			change.guard_share_add = guard.opt_int("share_add", 0, -100, 100) * 100
+			change.guard_within_add = guard.opt_int("within_add", 0, -3, 3) * HexGrid.HEX
+			change.guard_covers_all = guard.opt_bool("covers_all", false)
+			guard.finish()
+	if reader.has("prefer"):
+		change.prefer = UnitCondition.read(reader.req_object("prefer"))
+	if (change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0 or change.prefer != null) and change.slot != SLOT_SIGNATURE:
+		reader.error("cast_bp, targets_add, and prefer change a signature (\"slot\": \"signature\")")
+	if (change.changes_part() or change.after_add_ticks != 0) and not change.slot.begins_with(PASSIVE_PREFIX):
+		reader.error("after_add_ms, value_add, and guard change a named passive (\"slot\": \"passive:<id>\")")
 	if not (change.touches_effects() or change.cooldown_bp != FixedMath.BP_ONE or not change.add_effects.is_empty() or change.after_add_ticks != 0
-			or change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0):
-		reader.error("an \"on\" entry needs amount_bp, duration_bp, duration_add_ms, radius_add, cooldown_bp, add_effects, after_add_ms, cast_bp, or targets_add")
+			or change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0 or change.changes_part() or change.prefer != null):
+		reader.error("an \"on\" entry needs amount_bp, duration_bp, duration_add_ms, radius_add, cooldown_bp, add_effects, after_add_ms, cast_bp, targets_add, or one of step 7b's knobs")
 	reader.finish()
 	return change
 
@@ -259,7 +332,7 @@ static func _signed_ticks(reader: DataReader, key: String) -> int:
 ## since those are what scale cleanly (phase 5c step 4, section 9.3).
 func step_problem() -> String:
 	if _changes_mana() or not also_fires.is_empty() or echo_ticks > 0 or prefer != null or hop_within_add != 0 or hop_cooldown_add_ticks != 0 \
-			or not gambit_label.is_empty():
+			or not gambit_label.is_empty() or plant_add_ticks != 0 or break_free_add_ticks != 0:
 		return "a growing card's step can't change mana, add triggers, echo, targeting, or hops"
 	for part: PartDef in passives:
 		if part.kind != PartDef.Kind.AURA:
@@ -267,7 +340,9 @@ func step_problem() -> String:
 	for change: AbilityChange in changes:
 		if change.duration_bp != FixedMath.BP_ONE or change.duration_add_ticks != 0 or change.radius_add != 0 \
 				or change.cooldown_bp != FixedMath.BP_ONE or not change.add_effects.is_empty() or change.after_add_ticks != 0 \
-				or change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0:
+				or change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0 or change.every_add != 0 or change.times_add != 0 \
+				or change.max_standing_add != 0 or change.overheal_add_bp != 0 or change.width_add != 0 or not change.add_to_areas.is_empty() \
+				or change.changes_part() or change.prefer != null or not change.at.is_empty():
 			return "a growing card's step can only change an ability's amount_bp"
 	return ""
 
@@ -304,12 +379,13 @@ func changes_anything() -> bool:
 		if stats_bp[stat] != FixedMath.BP_ONE or stats_add[stat] != 0:
 			return true
 	return not passives.is_empty() or not changes.is_empty() or _changes_mana() or not also_fires.is_empty() or echo_ticks > 0 \
-		or prefer != null or hop_within_add != 0 or hop_cooldown_add_ticks != 0 or not gambit_label.is_empty()
+		or prefer != null or hop_within_add != 0 or hop_cooldown_add_ticks != 0 or not gambit_label.is_empty() or plant_add_ticks != 0 \
+		or break_free_add_ticks != 0
 
 
 func _changes_mana() -> bool:
 	return mana_max_add != 0 or mana_start_add != 0 or mana_per_attack_add != 0 or mana_regen_add != 0 or mana_max_bp != FixedMath.BP_ONE \
-		or mana_start_bp > 0
+		or mana_start_bp > 0 or mana_taken_bp != FixedMath.BP_ONE
 
 
 ## True if the mod changes anything on `kit` (stats and passives always do;
@@ -331,9 +407,16 @@ func affects_besides_passives(kit: UnitDef) -> bool:
 		return true
 	if prefer != null or (kit.hop_cooldown_ticks > 0 and (hop_within_add != 0 or hop_cooldown_add_ticks != 0)) or not gambit_label.is_empty():
 		return true
+	if plant_add_ticks != 0 and kit.plant_ticks > 0 or break_free_add_ticks != 0 and kit.has_trait("engage"):
+		return true
 	for change: AbilityChange in changes:
+		if change.changes_part():
+			var at: int = _passive_index(kit, change.slot)
+			if at >= 0 and (change.value_add != 0 and kit.passives[at].aura != null or kit.passives[at].kind == PartDef.Kind.GUARD and
+					(change.guard_share_add != 0 or change.guard_within_add != 0 or change.guard_covers_all and kit.passives[at].behind_only)):
+				return true
 		for ability: AbilityDef in _slot_abilities(kit, change.slot):
-			if not change.add_effects.is_empty() or change.cooldown_bp != FixedMath.BP_ONE:
+			if not change.add_effects.is_empty() or change.cooldown_bp != FixedMath.BP_ONE or change.prefer != null:
 				return true
 			if change.cast_bp != FixedMath.BP_ONE and ability.cast_ticks > 0:
 				return true
@@ -370,7 +453,12 @@ func apply(kit: UnitDef, problems: Array[String] = []) -> UnitDef:
 		if mana_start_bp > 0:
 			mana.start = maxi(mana.start, FixedMath.apply_bp(mana.max, mana_start_bp))
 		mana.per_attack = maxi(mana.per_attack + mana_per_attack_add, 0)
+		mana.taken_bp = FixedMath.apply_bp(mana.taken_bp, mana_taken_bp)
 		built.mana = mana
+	if built.plant_ticks > 0:
+		built.plant_ticks = maxi(built.plant_ticks + plant_add_ticks, 0)
+	if built.has_trait("engage"):
+		built.break_free_add_ticks += break_free_add_ticks
 	for change: AbilityChange in changes:
 		_apply_change(built, change, problems)
 	if prefer != null:
@@ -429,14 +517,19 @@ func _apply_change(built: UnitDef, change: AbilityChange, problems: Array[String
 		var named: bool = change.slot == PASSIVE_PREFIX + part.id
 		if not named and change.slot != SLOT_ABILITIES:
 			continue
-		if part.ability == null and not (named and change.after_add_ticks != 0 and part.aura != null):
+		if part.ability == null and not (named and (change.after_add_ticks != 0 or change.changes_part())):
 			continue
 		var copy: PartDef = DefCopy.shallow(part) as PartDef
 		if part.ability != null:
 			copy.ability = _changed_ability(part.ability, change)
-		if named and change.after_add_ticks != 0 and part.aura != null:
+		if named and (change.after_add_ticks != 0 or change.value_add != 0) and part.aura != null:
 			copy.aura = DefCopy.shallow(part.aura) as AuraDef
 			copy.aura.after_ticks = maxi(copy.aura.after_ticks + change.after_add_ticks, 0)
+			copy.aura.value += change.value_add
+		if named and part.kind == PartDef.Kind.GUARD:
+			copy.share_bp = clampi(copy.share_bp + change.guard_share_add, 100, FixedMath.BP_ONE)
+			copy.guard_range = maxi(copy.guard_range + change.guard_within_add, HexGrid.HEX)
+			copy.behind_only = copy.behind_only and not change.guard_covers_all
 		built.passives[i] = copy
 
 
@@ -446,6 +539,8 @@ static func _changed_ability(ability: AbilityDef, change: AbilityChange) -> Abil
 		copy.cooldown_ticks = maxi(FixedMath.apply_bp(copy.cooldown_ticks, change.cooldown_bp), 1)
 	if change.cast_bp != FixedMath.BP_ONE:
 		copy.cast_ticks = FixedMath.apply_bp(copy.cast_ticks, change.cast_bp)
+	if change.prefer != null:
+		copy.prefer = change.prefer
 	if change.touches_effects():
 		copy.effects = _changed_effects(ability.effects, change)
 	else:
@@ -503,14 +598,40 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 			if copy.shape != null and change.radius_add != 0:
 				copy.shape = DefCopy.shallow(copy.shape) as ShapeDef
 				copy.shape.size = maxi(copy.shape.size + change.radius_add, 1)
+			# Step 7b's knobs.
+			if change.every_add != 0 and effect.every > 1:
+				copy.every = maxi(effect.every + change.every_add, 1)
+			if change.times_add != 0 and _runs_times(effect):
+				copy.times = effect.times + change.times_add
+			if change.max_standing_add != 0 and effect.type == EffectDef.Type.SNARE and effect.max_standing > 0:
+				copy.max_standing = effect.max_standing + change.max_standing_add
+			if change.overheal_add_bp != 0 and effect.overheal_shield_bp > 0:
+				copy.overheal_shield_bp = effect.overheal_shield_bp + change.overheal_add_bp
+			if change.width_add != 0 and copy.shape != null and copy.shape.kind == ShapeDef.Kind.LINE:
+				copy.shape = DefCopy.shallow(copy.shape) as ShapeDef
+				copy.shape.width += change.width_add
 		if not effect.area_effects.is_empty():
 			copy.area_effects = _changed_effects(effect.area_effects, change)
+		if not change.add_to_areas.is_empty() and effect.type == EffectDef.Type.AREA and change.touches(effect):
+			copy.area_effects = copy.area_effects.duplicate()
+			copy.area_effects.append_array(change.add_to_areas)
 		result.append(copy)
 	return result
 
 
+## A "once" effect, or on_below_hp's: it runs `times` a fight (times_add).
+static func _runs_times(effect: EffectDef) -> bool:
+	return effect.once or effect.trigger == EffectDef.Trigger.ON_BELOW_HP
+
+
 static func _any_effect(effects: Array[EffectDef], change: AbilityChange) -> bool:
 	for effect: EffectDef in effects:
+		if change.touches(effect) and (change.every_add != 0 and effect.every > 1 or change.times_add != 0 and _runs_times(effect)
+				or change.max_standing_add != 0 and effect.type == EffectDef.Type.SNARE and effect.max_standing > 0
+				or change.overheal_add_bp != 0 and effect.overheal_shield_bp > 0
+				or change.width_add != 0 and effect.shape != null and effect.shape.kind == ShapeDef.Kind.LINE
+				or not change.add_to_areas.is_empty() and effect.type == EffectDef.Type.AREA):
+			return true
 		if change.touches(effect) and (change.amount_bp != FixedMath.BP_ONE and (effect.amount != 0 or effect.amount_bp_of_damage != 0 or effect.scaling.any(func(value: int) -> bool: return value != 0) or effect.amount_bp_of_max_hp != 0 or change.moves(effect))
 				or (change.duration_bp != FixedMath.BP_ONE or change.duration_add_ticks != 0) and (effect.duration_ticks > 0 or effect.zone_ticks > 0)
 				or change.radius_add != 0 and effect.shape != null):

@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a, 5b (section 11), and 5c (section 12) built (10-01), 5d (section 13) built (10-01): the relic pool is complete; step 6 (the loadout pool, section 14) built in five parts, 6a–6e (10-01); step 7 (the upgrade pools, section 15) approved, building in four parts, 7a built (10-01); steps 8–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a, 5b (section 11), and 5c (section 12) built (10-01), 5d (section 13) built (10-01): the relic pool is complete; step 6 (the loadout pool, section 14) built in five parts, 6a–6e (10-01); step 7 (the upgrade pools, section 15) approved, building in four parts, 7a and 7b built (10-01); steps 8–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -1050,7 +1050,7 @@ On his day (today's camp place, until step 8 makes him a node):
 
 ## 15. Step 7: the upgrade pools
 
-Status: **approved (2026-10-01, Decisions 34–38); building in four parts, 7a–7d: 7a built (15.13).** Builds `upgrade-pools.md`: what the after-fight pick offers each hero (a hero pool of 12, two taste upgrades per path from the vow until the hero transforms, then four path upgrades and the path's growing one), stacking stat upgrades locked in as a flat amount, and Volley's taste back to every 4th shot. Apex upgrades wait for apexes (`apexes.md`).
+Status: **approved (2026-10-01, Decisions 34–39); building in four parts, 7a–7d: 7a and 7b built (15.13, 15.14).** Builds `upgrade-pools.md`: what the after-fight pick offers each hero (a hero pool of 12, two taste upgrades per path from the vow until the hero transforms, then four path upgrades and the path's growing one), stacking stat upgrades locked in as a flat amount, and Volley's taste back to every 4th shot. Apex upgrades wait for apexes (`apexes.md`).
 
 ### 15.1 What's there now (phases 5 and 5c step 4)
 
@@ -1099,7 +1099,7 @@ The transformation replaces the taste's piece (Steady becomes Planted, Mend beco
 | Volley | Quick Split (Split Shot every 3rd shot) | every shot already splits: the split arrow deals 50%, not 40% |
 | | Restless (+10% attack speed if she moved in the last 2s) | the same |
 | Hearthwall | Broad Guard (Guard takes 15%, not 10%) | Guard takes 35%, not 30% |
-| | Two Behind (Guard covers the 2 allies behind him) | Guard reaches 3 hexes, not 2 |
+| | Wide Guard (was Two Behind; Decision 39: Guard covers every ally within 3 hexes, not only those behind him) | Guard reaches 3 hexes, not 2 |
 | Ironbrand | Heavy Brand (Brand's hit is 50%, not 30%) | the Mace's other hits are 50%, not 30% |
 | | Crowd Sense (+10% ATK with 2 or more enemies adjacent) | the same |
 | Last Watch | Grim Resolve (Unyielding also Shields him 10% of max HP) | Last Rites also Shields him 10% of max HP |
@@ -1142,7 +1142,7 @@ Numbers are `upgrade-pools.md`'s (placeholders); a card's `text` says what it's 
 | `max_standing_add` | a snare's most standing at once | Second Snare's transformed mod |
 | `value_add` | a passive's aura's value | Eyes Up |
 | `overheal_shield_add_bp` | a heal's overheal-to-Shield share | Thick Thread |
-| `guard` | Guard's `share_add`, `within_add`, and `covers_count` (how many allies behind it covers) | Broad Guard, Two Behind |
+| `guard` | Guard's `share_add`, `within_add`, and `covers_all` (every ally in reach, not only those behind; Decision 39) | Broad Guard, Wide Guard (was Two Behind) |
 | `add_to_areas` | effects added inside the ability's areas (each unit the area hits), not after it | Seeker's Mark, Harrying Storm, Wide Cleanse |
 | `width_add` | a line's width (lines gain a width; 1 hex now) | Wide Sunfall |
 | `plant_add_ms` | how long it needs to plant after moving | Quick Plant |
@@ -1206,6 +1206,7 @@ Numbers are `upgrade-pools.md`'s (placeholders); a card's `text` says what it's 
 36. **The four cards that don't fit are replaced** (Question Z): Thread the Hurt (Mend also Wards its target for 2s), Drawing Wall, Crushing Blow (Brand Slam knocks back 2 hexes), and Lasting Circle (15.6).
 37. **The pick never offers a card that changes nothing on the hero's kit as it is now** (Question AA); a held one stays held.
 38. **The pick keeps its shape** (Question AB): one card per hero and the wild card, every card a hero can be offered equally likely, stacking cards without a cap; the run report counts each layer's picks, and step 9 retunes.
+39. **Two Behind becomes Wide Guard** (asked while building 7b, 2026-10-01): vowed Hearthwall's Guard already covers every ally behind him within 3 hexes, so "covers the 2 allies behind him" would change nothing. Wide Guard: Guard covers every ally within 3 hexes, not only those behind him; once transformed, Guard reaches 3 hexes, not 2.
 
 ### 15.13 Built in step 7a (2026-10-01)
 
@@ -1221,6 +1222,15 @@ Numbers are `upgrade-pools.md`'s (placeholders); a card's `text` says what it's 
 - **The UI:** the pick's cards say "TASTE · DEADEYE" or "PATH · DEADEYE" (taste cards wear the vow frame), and a stacking card what it would lock in now ("+2 ATK now · stacks"); the hero panel lists a stacking card once with each amount ("Honed Tips ×2: +2, +2 ATK").
 - **Tests:** `tests/run/test_upgrade_pools.gd` (8: the pools by stage and Switch vow, cards that change nothing never offered and a held one kept, the lock-in from the stat now with ATSP's and the rounding, a lock unchanged by a transformation, at least 1, the save, the card labels, Crushing Blow's knockback); `tests/sim/test_upgrade_cards.gd` (5: First Blood, Parting Shot, Stubborn Taunt's Cowed, Staggering Bash's Hobbled, and a taste card's transformed mod on its new piece); `test_growth`'s upgrade tests rewritten for the layers (picks running out now use a one-card pool, since stacking cards never run out); the status lists, `test_path_kits`, and the run report's test changed on purpose. 857 tests pass; the data validates; the bench's 24 fingerprints are unchanged.
 - **What moved:** no fight the bench or the gate fights (vowed Volley's every 4th moves fights with vowed Volley, on purpose). **The run report** (54 runs): **92% of runs won** (90% after step 6). Picks per run by layer: hero 6.9, taste 0.2, path 1.1; stacking cards taken 2.7 a run, 15.2 points each (mostly HP). Taste cards are rare for now: only 7 of the 18 are in the data until 7b and 7c.
+
+### 15.14 Built in step 7b (2026-10-01)
+
+- **The knobs** (`KitMod`, its header lists them): per "on" entry `at`, `every_add`, `times_add`, `max_standing_add`, `overheal_shield_add_bp`, `width_add`, `add_to_areas`, `value_add`, `guard` (`share_add`, `within_add`, `covers_all`), and `prefer` (a signature's); at the top `plant_add_ms`, `engage.break_free_add_ms`, and `mana.taken_bp`. Each is skipped by a kit no mod touches, so no built fight changed.
+- **What they reach in the sim:** a "once" effect now runs `times` a fight (on an interval, on an ally below, and on events; `times_add` raises it; Second Snare, Twice Guarded); `UnitDef.break_free_add_ticks` (read by `Engage` from the engager), `ManaDef.taken_bp` (read by `Mana.on_damage_taken`), `AbilityDef.prefer` (`Targeting.pick` runs a signature's rule over the enemies in reach that meet it, if any; `Signatures.pick_target`), and `ShapeDef.width` (a line's; `ArenaPlane.in_line` takes a half width; logged "line 4 2" and drawn that wide by `FightFx`).
+- **The cards:** 18, as 15.7's table, with **Two Behind as Wide Guard** (Decision 39, asked while building: vowed Hearthwall's Guard already covers every ally behind him). Heavy Brand's "50%, not 30%" is a power bonus of +67% on Brand's hit (the damage rule's kind for a kit mod, Decision 6), and Bright Kindle's +50% on Kindle's. Wide Cleanse clears Slow, Hobbled, and Bleed (the built cleanse's `statuses`, at full strength).
+- **The cards' words:** `ModInfo` says each knob ("1 step sooner in its count", "+1 time a fight", "+1 standing at once", "+20% of overheal as Shield", "+1 hex wider", "+5% crit chance", "+5% of each hit", "covers every ally in reach, not only those behind", "goes for enemies that are Marked first", "in its area: ...", "plants 0.75s sooner", "enemies it engages take 1s longer to break free", "+50% mana from damage taken").
+- **Tests:** `tests/sim/test_upgrade_pieces.gd` (8: `every_add` only where `at` says, `times_add` on an interval and on allies below, the snares and auras, the Guard knobs with an ally beside him, `add_to_areas` and a wider line in a fight, a signature's prefer, Hard to Pass breaking free 1s later, Grudge's mana). 865 tests pass; the data validates; the bench's 24 fingerprints are unchanged.
+- **What moved:** no fight without these cards. **The run report** (54 runs): **87% of runs won** (92% after 7a); picks per run by layer: hero 6.4, taste 0.6, path 1.0; stacking cards 2.3 a run.
 
 ## Answered (2026-09-30)
 
