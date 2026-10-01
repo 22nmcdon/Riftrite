@@ -822,7 +822,7 @@ Each is a passive on every hero (a relic's mod). Each plays off both paths: Hear
   - `test_camp.gd`'s bond test: the bond's relic joins and no boost.
   - The chaos fight's brand Roots an enemy it knocks back (`on_knockback`, seed 37 still has every piece).
   - `test_mod_info`, `test_unit_info`, and the tier counts changed on purpose.
-- **What moved:** no built kit's fight; the bench's fingerprints are unchanged. The run report: (being measured).
+- **What moved:** no built kit's fight; the bench's fingerprints are unchanged. **The run report** (54 runs): **66% of runs won**, the same to the decimal as after 5c-2. A bond switched on in 8 runs (all Sentry and Sniper), but late: on day 7 in seven of them and day 5 in one, with few shop draws left. The bot took no bond relic (0.0 a run), and losing the old boosts that late changed no outcome. How often a run meets its bond relic is for the playtest and phase 6's bot.
 
 ## Answered (2026-09-30)
 
