@@ -101,7 +101,7 @@ func test_the_numbers_lines_of_the_act_1_kits() -> void:
 	assert_eq(_numbers(kits["brannoc"], "Brannoc"), [
 		"Every 1.2s · melee · 14 damage (100% ATK)",
 		"At 80 mana · 2-hex circle around it · Taunt 3s",
-		"x1.5 DEF while taunting",
+		"+50% DEF while taunting",
 		"When an ally drops below 40% HP (once a fight) · 60 Shield",
 		"Breaking free takes 1s",
 	] as Array[String])
@@ -137,7 +137,7 @@ func test_the_numbers_of_every_other_piece() -> void:
 		"Engage: Breaking free takes 1s",
 		"Strike: Every 1.1s · reach 4 hexes · 6 damage · 2 Burn",
 		"Mend: At 40 mana · 0.5s cast · reach 6 hexes · heals 60 (40 + 100% MGK) · 20 Shield · cleanses 50% of damage over time",
-		"Rally: x1.2 ATK for all allies until 20s",
+		"Rally: +20% ATK for all allies until 20s",
 		"Venom: Burn becomes Poison",
 		"Strike: Every 0.9s · melee · 21 damage (10 + 60% ATK) · 1 Burn · Stun 1s",
 		"Rush: Every 3rd basic attack · reach 3 hexes · charges 3 hexes, knocking back 1 hex · 15 damage",
@@ -149,7 +149,7 @@ func test_the_numbers_of_every_other_piece() -> void:
 		"Hop away: At most once every 3s",
 		"Strike: Every 1s · melee · 10 damage",
 		"Pounce: Once, as the fight starts · reach 5 hexes · leaps up to 5 hexes · 12 damage",
-		"Pack: x1.1 ATSP for all allies",
+		"Pack: +10% ATSP for all allies",
 		"Snap: Every 3rd hit taken · knocks back 1 hex",
 		"Engage: Breaking free takes 1s",
 		"Flying: ",

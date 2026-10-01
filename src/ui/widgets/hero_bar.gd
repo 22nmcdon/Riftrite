@@ -249,6 +249,6 @@ func _fill_run_chips(card: Card, run_session: RunSession, hero_id: String) -> vo
 		var item: ItemDef = run_session.run.items.get(id, null)
 		var chip: PanelContainer = UiStyle.chip(item.name if item != null else "Empty", colors[item.kind] if item != null else UiStyle.LINE_500, item != null, 14,
 			ItemIcon.for_item(item, CHIP_ICON) if item != null else null)
-		chip.tooltip_text = item.text if item != null else "An empty slot"
+		chip.tooltip_text = ("%s\n%s" % [item.text, ModInfo.item_numbers(item, null, run_session.content)]).strip_edges() if item != null else "An empty slot"
 		chip.mouse_filter = Control.MOUSE_FILTER_PASS
 		card.chips.add_child(chip)

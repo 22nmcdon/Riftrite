@@ -351,7 +351,9 @@ func _run_upgrades(run_session: RunSession) -> String:
 	for id: String in hero.upgrades:
 		var upgrade: UpgradeDef = run_session.run.upgrades[id]
 		var waiting: bool = upgrade.layer == UpgradeDef.Layer.PATH and upgrade.path != hero.path
-		names.append("%s%s: %s" % [upgrade.name, " (waits for %s)" % run_session.content.paths[upgrade.path].name if waiting else "", upgrade.text])
+		var numbers: String = ModInfo.upgrade_numbers(upgrade, run_session.run.hero_kit(hero), run_session.content)
+		names.append("%s%s: %s%s" % [upgrade.name, " (waits for %s)" % run_session.content.paths[upgrade.path].name if waiting else "", upgrade.text,
+			"" if numbers.is_empty() else " (%s)" % numbers])
 	return "None yet: a pick comes after each won fight." if names.is_empty() else "\n".join(names)
 
 
@@ -360,7 +362,8 @@ func _run_bond(run_session: RunSession) -> String:
 	var path_id: String = run_session.state().hero(showing).path
 	for bond: BondDef in run_session.run.active_bonds(run_session.state()):
 		if bond.paths.has(path_id):
-			return "%s: %s" % [bond.name, bond.texts[path_id]]
+			var numbers: String = ModInfo.bond_numbers(bond, path_id, run_session.run.hero_kit(run_session.state().hero(showing)), run_session.content)
+			return "%s: %s%s" % [bond.name, bond.texts[path_id], "" if numbers.is_empty() else " (%s)" % numbers]
 	for bond: BondDef in run_session.run.stirring_bonds(run_session.state()):
 		if bond.paths.has(path_id):
 			return "A bond stirs with %s: it wakes when both have transformed." % run_session.content.paths[bond.partner(path_id)].name
@@ -610,6 +613,7 @@ func _fill_run_loadout(run_session: RunSession) -> void:
 		row.add_theme_constant_override("separation", 12)
 		row.add_child(UiStyle.chip("%s · %s" % [ItemDef.KIND_NAMES[item.kind].capitalize(), item.name], colors[item.kind], true, 16))
 		var works: bool = item.works_on(run_session.run.hero_kit(hero), hero.id)
-		row.add_child(_wrapped(item.text + ("" if works else " (no effect on this hero)"), 16, UiStyle.TEXT if works else UiStyle.BAD))
+		var numbers: String = ModInfo.item_numbers(item, run_session.run.hero_kit(hero), run_session.content)
+		row.add_child(_wrapped(item.text + ("" if numbers.is_empty() else " (%s)" % numbers) + ("" if works else " (no effect on this hero)"), 16, UiStyle.TEXT if works else UiStyle.BAD))
 		page.add_child(row)
 	page.add_child(_wrapped("Change the loadout before each fight, from the stash.", 16, UiStyle.TEXT_DIM))

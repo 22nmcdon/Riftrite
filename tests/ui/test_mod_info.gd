@@ -1,0 +1,75 @@
+extends GutTest
+## Every card's stat change says its amount (docs/plans/rebuild-phase5c-combos.md,
+## step 2): ModInfo's numbers line for kit mods, items, upgrades, relics, and
+## duo bonds.
+
+const K = preload("res://tests/sim/sim_test_kit.gd")
+
+var _content: ContentDb
+var _run: RunContent
+
+
+func before_all() -> void:
+	_content = ContentDb.load_dir("res://data")
+	_run = RunContent.load_dir("res://data", _content)
+
+
+func _mod(data: Dictionary) -> KitMod:
+	var errors: Array[String] = []
+	var made: KitMod = KitMod.read(DataReader.new(data, "mod", errors))
+	assert_eq(errors, [] as Array[String])
+	return made
+
+
+func test_each_part_of_a_mod() -> void:
+	assert_eq(ModInfo.mod_numbers(_mod({"stats_bp": {"def": 11500, "hp": 9200}}), null, _content), "−8% HP · +15% DEF")
+	assert_eq(ModInfo.mod_numbers(_mod({"stats_add": {"speed": -1, "crit": 5}}), null, _content), "+5 CRIT · −1 Speed")
+	assert_eq(ModInfo.mod_numbers(_mod({"on": [{"slot": "signature", "types": ["damage"], "amount_bp": 12000, "duration_add_ms": 2000, "radius_add": 1, "cooldown_bp": 9000}]}), null, _content),
+		"Signature: +20% damage, +2s duration, +1 hex area, −10% cooldown")
+	assert_eq(ModInfo.mod_numbers(_mod({"on": [{"slot": "basic_attack", "add_effects": [{"trigger": "on_crit", "type": "apply_status", "status": "slow", "target": "target"}]}]}), null, _content),
+		"Basic attack: on crit: Slow 2s")
+	assert_eq(ModInfo.mod_numbers(_mod({"mana": {"max_add": -15, "start_add": 20, "per_attack_add": 2}}), null, _content), "−15 max mana · +20 starting mana · +2 mana per attack")
+	assert_eq(ModInfo.mod_numbers(_mod({"also_fires": [{"kind": "hp_below", "threshold_bp": 4000}]}), null, _content), "Signature also fires: once, below 40% HP")
+	assert_eq(ModInfo.mod_numbers(_mod({"echo": {"after_ms": 2000, "share_pct": 50}}), null, _content), "Signature fires again 2s later at 50%")
+
+
+func test_an_added_effect_that_scales_uses_the_heros_numbers() -> void:
+	var mod: KitMod = _mod({"on": [{"slot": "basic_attack", "add_effects": [{"trigger": "on_hit", "type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 5000}}]}]})
+	var kit: UnitDef = K.kit("hero", {"stats": {"hp": 100, "atk": 40}})
+	assert_eq(ModInfo.mod_numbers(mod, kit, _content), "Basic attack: on hit: 20 damage (50% ATK)", "worked out from the hero's ATK")
+
+
+## Part 7, section 6: no card with a mod goes without its amounts.
+func test_every_card_in_the_data_has_a_numbers_line() -> void:
+	for id: String in _run.item_ids:
+		assert_false(ModInfo.item_numbers(_run.items[id], null, _content).is_empty(), id)
+	for id: String in _run.upgrade_ids:
+		assert_false(ModInfo.upgrade_numbers(_run.upgrades[id], null, _content).is_empty(), id)
+	for id: String in _run.relic_ids:
+		assert_false(ModInfo.relic_numbers(_run.relics[id], _content).is_empty(), id)
+	for id: String in _run.bond_ids:
+		for path_id: String in _run.bonds[id].paths:
+			assert_false(ModInfo.bond_numbers(_run.bonds[id], path_id, null, _content).is_empty(), "%s %s" % [id, path_id])
+
+
+func test_every_stat_change_names_its_amount() -> void:
+	for id: String in _run.item_ids:
+		var item: ItemDef = _run.items[id]
+		if item.mod == null:
+			continue
+		var numbers: String = ModInfo.item_numbers(item, null, _content)
+		for stat: int in item.mod.stats_bp.size():
+			if item.mod.stats_bp[stat] != FixedMath.BP_ONE:
+				assert_string_contains(numbers, "%s %s" % [UnitInfo.signed_percent(item.mod.stats_bp[stat] - FixedMath.BP_ONE), UnitStats.LABELS[stat]], id)
+
+
+func test_a_relics_run_rules_and_who_its_mods_are_for() -> void:
+	assert_eq(ModInfo.relic_numbers(_run.relics["bloodstone"], _content), "Heroes: −8% HP · +12% ATK")
+	assert_eq(ModInfo.relic_numbers(_run.relics["hollow_crown"], _content), "+1 loadout slot · +5% HP lost per wound")
+	assert_eq(ModInfo.relic_numbers(_run.relics["rift_glass_eye"], _content), "Enemies: +10% HP · every fight Scouted")
+	assert_eq(ModInfo.relic_numbers(_run.relics["gravediggers_coin"], _content), "+2 shards per won fight · 2 cards on each pick")
+
+
+func test_a_tactic_item_takes_its_tactics_line() -> void:
+	var item: ItemDef = _run.items["hold_ground_orders"]
+	assert_eq(ModInfo.item_numbers(item, null, _content), UnitInfo.tactic_numbers(item.tactic))

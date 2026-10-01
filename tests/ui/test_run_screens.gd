@@ -146,6 +146,9 @@ func test_the_shop_and_the_loadout() -> void:
 	U.press(main.screen, "Choose")
 	assert_string_contains(U.text_of(main.screen), "The Pedlar")
 	var ware: String = flow.state.wares[0]
+	var numbers: String = ModInfo.item_numbers(flow.run.items[ware], null, flow.run.content)
+	assert_false(numbers.is_empty())
+	assert_string_contains(U.text_of(main.screen), numbers, "a ware's card shows its amounts (phase 5c, step 2)")
 	assert_true(U.press(main.screen, "Buy"))
 	assert_eq(flow.state.stash, [ware] as Array[String])
 	U.press(main.screen, "Break camp")

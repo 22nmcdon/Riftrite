@@ -218,9 +218,10 @@ static func aura_text(aura: AuraDef) -> String:
 	if aura.stat == AuraDef.Stat.RANGE:
 		text = "%+d range" % aura.value
 	elif aura.is_additive():
-		text = "%s%s %s" % ["+" if aura.value >= 0 else "", ValueBreakdown._percent(aura.value), AuraDef.STAT_LABELS[aura.stat]]
+		text = "%s %s" % [signed_percent(aura.value), AuraDef.STAT_LABELS[aura.stat]]
 	else:
-		text = "x%s %s" % [ValueBreakdown._ratio(aura.value), AuraDef.STAT_LABELS[aura.stat]]
+		# A factor's change, as the damage rule adds it (phase 5c): x1.5 is +50%.
+		text = "%s %s" % [signed_percent(aura.value - FixedMath.BP_ONE), AuraDef.STAT_LABELS[aura.stat]]
 	if aura.target == AuraDef.Target.ALL_ALLIES:
 		text += " for all allies"
 	match aura.while_kind:
@@ -235,6 +236,12 @@ static func aura_text(aura: AuraDef) -> String:
 	if aura.window_until_ticks >= 0:
 		text += " until %s" % seconds(aura.window_until_ticks)
 	return text
+
+
+## A share with its sign: "+15%", "−2%" (phase 5c, step 2: every stat change
+## says its amount).
+static func signed_percent(bp: int) -> String:
+	return ("+" if bp >= 0 else "−") + ValueBreakdown._percent(absi(bp))
 
 
 ## What the effects do, in order, areas' own effects after the area.
@@ -352,7 +359,7 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 static func _amount(effect: EffectDef, kit: UnitDef, word: String) -> String:
 	var value: ValueBreakdown = ValueBreakdown.compute(effect.amount, effect.scaling, kit.stats, [])
 	var amount: String = str(value.final) if word.is_empty() else "%d %s" % [value.final, word]
-	var power: String = "" if effect.power_bp == 0 else ", %s%s" % ["+" if effect.power_bp > 0 else "", ValueBreakdown._percent(effect.power_bp)]
+	var power: String = "" if effect.power_bp == 0 else ", %s" % signed_percent(effect.power_bp)
 	if value.stat_parts.is_empty():
 		return amount + power
 	var sum: Array[String] = []

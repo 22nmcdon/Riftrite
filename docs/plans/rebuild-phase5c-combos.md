@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **step 1 built (2026-09-30): the damage rule, walkable crumbled ground, and the Act 1 retune; steps 2–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; steps 3–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -105,7 +105,7 @@ The rest are as gate 3 left them (basic 30–35, harder 16–33, The Hunt 18, Ol
 
 | Step | What | Files (mostly) | Tests |
 | --- | --- | --- | --- |
-| **2. Stat amounts** | Every card's stat change says its amount (part 7, section 6): a numbers line generated from the mod, like abilities' (`UnitInfo`), on items, upgrades, and relics; their `text` loses vague words | `src/ui/unit_info.gd`, a `ModInfo` for kit mods, `data/*.json` texts | every card with a stat mod shows its amount |
+| **2. Stat amounts** (section 7; built) | Every card's stat change says its amount (part 7, section 6): a numbers line generated from the mod, like abilities' (`UnitInfo`), on items, upgrades, and relics; their `text` loses vague words | `src/ui/unit_info.gd`, a `ModInfo` for kit mods, `data/*.json` texts | every card with a stat mod shows its amount |
 | **3. Keywords and triggers** | Keyword flag on `StatusDef` (Marked, Rooted, Burning, Shielded, Stealthed; Bleeding joins with its sources); the new triggers (`on_crit`, `on_kill`, `on_apply`, `on_hit_keyword`, `on_shield_broken`, `on_ally_signature`, `on_heal`, `on_hop`) read from the log in `Events`; the chain guard (8 a tick) | `status_def.gd`, `events.gd`, `passives.gd`, `test_arena_log.gd`'s audit | each trigger, the guard, determinism with long chains, the chaos fight uses them |
 | **4. Permanent scaling** | Counters in run state, per hero and per run, fed from `FightResult` like deeds; growing mods take the counter into the fight's setup as a bonus; "Now: +X" on cards | `run_state.gd`, `run_flow.gd`, `HeroExtras` | counters survive a save; a growing card's value |
 | **5. The relic pool** | Five tiers plus bond relics, the pool's relics as data (built ones changed or cut, `relics/README.md`), one relic per shop with climbing rerolls, the pre-boss shop, boss relics after the boss, the Shrine's offerings, the income in `economy.md` | `relics.json`, `relic_def.gd`, `offers.gd`, `run_flow.gd`, `act1.json` | shop draws by tier, rerolls' prices, bond relics only with their bond, every relic's effect in a small fight |
@@ -132,6 +132,36 @@ The rest are as gate 3 left them (basic 30–35, harder 16–33, The Hunt 18, Ol
 1. Step 1a, the damage rule; record the new fingerprints; the gate still passes.
 2. Step 1b, walkable crumbled ground; the Act 1 retune; the run report; docs; a playtest build if the playtester wants one here.
 3. Steps 2–9, each after its full section is approved.
+
+## 7. Step 2: stat amounts on every card
+
+Part 7, section 6: every card that changes a stat says the amount ("+15% DEF", never "your DEF is higher"). Approved 2026-10-01 (the playtester: "let's do step 2").
+
+**What's there now:** items, upgrades, relics, and duo bonds each carry a sentence (`text`, or a relic's `boon` and `cost`) and a kit mod (`KitMod`) with the actual numbers; many sentences name no amount ("You walk faster.", "Hearthwall needs less mana."). Abilities already solve this: the sentence says what it's for, and `UnitInfo` adds a numbers line generated from the kit.
+
+**What step 2 builds:** the same for kit mods. `ModInfo` (`src/ui/mod_info.gd`) turns a mod into a numbers line, one part per change, joined by " · ":
+
+| Mod part | Numbers line |
+| --- | --- |
+| `stats_bp` | "+15% DEF", "−8% HP" |
+| `stats_add` | "+1 Speed", "+5 CRIT" |
+| `on` (a slot's change) | the slot, then each change: "Signature: +20% damage, +2s duration, +1 hex area, −10% cooldown"; an added effect as the ability numbers line writes it ("on crit: Slow 2s"); a passive's delay ("Steady: 1s sooner") |
+| `passives` | each added passive's name and numbers line, as the hero panel shows a passive |
+| `mana` | "−15 max mana", "+20 starting mana", "+2 mana per attack" |
+| `also_fires` | "Signature also fires: once, below 40% HP" (the trigger as `UnitInfo` writes it) |
+| `echo` | "Signature fires again 2s later at 50%" |
+
+A tactic item takes its tactic's numbers line (`UnitInfo.tactic_numbers`). A relic's line adds its run rules too: "+1 loadout slot", "+5% HP lost per wound", "every fight Scouted", "+1 shard on every price", "+2 shards per won fight", "2 cards on each pick", and says who each mod is for ("Heroes: …", "Enemies: …", "After a Rest: …"). A duo bond's line is its mod for that path's hero.
+
+**Where it shows:** under the sentence on every card (shop and Magpie wares, the loadout, the after-fight pick, a relic choice), in the hero panel's item, upgrade, and bond rows, and in the tooltips of the hero bar's chips and the top bar's relics. Where a card is for one hero (an upgrade, a slotted item), amounts that scale with a stat are worked out from that hero's kit; a ware for anyone shows the formula ("50% ATK").
+
+**Decisions:**
+9. **The sentence stays; the amounts are generated** (as for abilities: the data's `text` says what it's for, the UI adds the numbers). The vague sentences aren't rewritten now: steps 5–7 replace nearly every item, upgrade, and relic with the pools', which are written with their amounts.
+10. **Players see these lines** (they're the card's own numbers, not a combo readout; part 7, section 7).
+
+**Built in step 2 (2026-10-01):** `ModInfo` (`src/ui/mod_info.gd`) as above; every item, upgrade, relic, and bond in the data gets a line (Sigil of Haste: "−12 max mana"; Bloodstone: "Heroes: −8% HP · +12% ATK"; Quick Footing: "Steady: 0.5s sooner · Steady Aim: 0.5s sooner · transformed: …"). It shows under the sentence on the shop's and the Magpie's wares, the after-fight pick, and relic choices; after the sentence in the hero panel's item, upgrade, and bond rows; and in the hero bar's chips' and the top bar's relics' tooltips. `UnitInfo`'s aura amounts now read as the damage rule adds them ("+50% DEF", not "x1.5 DEF"; `signed_percent`), and a kit mod's power on an ability shows after its amount (step 1a). Tests: `tests/ui/test_mod_info.gd` (each part's words, a scaled effect from the hero's kit, a line for every card in the data, every stat change named, relics' run rules, a tactic item), `test_run_screens.gd` (a ware's card shows its line), `test_unit_info.gd` (the aura amounts). No fight changed.
+
+**Files:** `src/ui/mod_info.gd` (new); `run_day_screen.gd` (item, upgrade, relic cards), `hero_panel.gd` (items, upgrades, bonds), `hero_bar.gd` (chip tooltips), the top bar's relic tooltips. **Tests:** `tests/ui/test_mod_info.gd`: each mod part's words; every item, upgrade, relic, and bond in the data has a numbers line naming each of its stat changes; the cards show it (`test_run_screens.gd`). No fight changes: the bench fingerprints and the run report stay as they are.
 
 ## Answered (2026-09-30)
 

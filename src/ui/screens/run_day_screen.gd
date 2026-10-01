@@ -134,7 +134,7 @@ static func fill_top_bar(row: HBoxContainer, run_session: RunSession, where: Str
 	for id: String in state.relics:
 		var relic: RelicDef = run_session.run.relics[id]
 		var chip: PanelContainer = UiStyle.chip(relic.name, UiStyle.RIFT_300, true, 15, ItemIcon.for_relic(relic, 24.0))
-		chip.tooltip_text = "%s\nBoon: %s\nCost: %s" % [relic.flavor, relic.boon, relic.cost]
+		chip.tooltip_text = "%s\nBoon: %s\nCost: %s\n%s" % [relic.flavor, relic.boon, relic.cost, ModInfo.relic_numbers(relic, run_session.content)]
 		chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(chip)
 	var shards: Label = UiStyle.strong("%d shards" % state.shards, 20, UiStyle.HIGHLIGHT)
@@ -312,6 +312,7 @@ func _fill_pick() -> void:
 			UiStyle.heading(upgrade.name, 26, UiStyle.TEXT))
 		card.add_child(UiStyle.label("for %s" % _hero_name(upgrade.hero), 16, UiStyle.TEXT_DIM))
 		card.add_child(_wrapped(upgrade.text, 17, UiStyle.TEXT))
+		_add_numbers(card, ModInfo.upgrade_numbers(upgrade, session.run.hero_kit(state.hero(upgrade.hero)), session.content))
 		card.add_child(UiStyle.primary(UiStyle.button("Take", _do.bind(session.flow.take_pick.bind(i)))))
 	section.add_child(UiStyle.button("Take %d shards instead" % session.run.act.pick_shards, _do.bind(session.flow.take_shards)))
 
@@ -340,6 +341,7 @@ func _relic_card(row: Container, relic: RelicDef) -> VBoxContainer:
 	card.add_child(_wrapped(relic.flavor, 16, UiStyle.TEXT_DIM))
 	card.add_child(_wrapped("Boon: " + relic.boon, 17, UiStyle.GOOD))
 	card.add_child(_wrapped("Cost: " + relic.cost, 17, UiStyle.BAD))
+	_add_numbers(card, ModInfo.relic_numbers(relic, session.content))
 	return card
 
 
@@ -438,14 +440,22 @@ func _fill_shop() -> void:
 		more.add_child(UiStyle.button("Reroll · %d shard" % session.run.act.reroll_price, _do.bind(session.flow.reroll)))
 
 
-## An item's card: its kind, name, rule, what it answers, and who it does
-## nothing on.
+## A card's numbers line (ModInfo; phase 5c, step 2: every stat change says
+## its amount), under its sentence.
+static func _add_numbers(card: Container, numbers: String) -> void:
+	if not numbers.is_empty():
+		card.add_child(_wrapped(numbers, 16, UiStyle.HIGHLIGHT))
+
+
+## An item's card: its kind, name, rule, its numbers, what it answers, and
+## who it does nothing on.
 func _item_card(row: Container, item: ItemDef) -> VBoxContainer:
 	var colors: Array[Color] = [UiStyle.CHARM, UiStyle.TACTIC, UiStyle.SIGIL, UiStyle.EMBER]
 	var card: VBoxContainer = _card(row, 0, colors[item.kind])
 	_card_head(card, ItemIcon.for_item(item, CARD_ICON), UiStyle.caps(ItemDef.KIND_NAMES[item.kind].to_upper(), 14, colors[item.kind]),
 		UiStyle.heading(item.name, 24, UiStyle.TEXT))
 	card.add_child(_wrapped(item.text, 17, UiStyle.TEXT))
+	_add_numbers(card, ModInfo.item_numbers(item, null, session.content))
 	card.add_child(_wrapped(item.answers, 15, UiStyle.TEXT_DIM))
 	var idle: Array[String] = []
 	for hero: RunState.Hero in session.state().heroes:
