@@ -1,6 +1,6 @@
 # Upgrade pools
 
-Status: **agreed in discussion (2026-09-30), not built.** What the after-fight pick (part 6, `rebuild-between-fights.md`, section 1) offers, for each hero. Replaces part 1's three layers (`rebuild-heroes.md`, "Upgrade pools"). The growing upgrades are from part 7b (`rebuild-content-pool.md`, section 7). **Numbers and names are placeholders.**
+Status: **agreed in discussion (2026-09-30); being built as phase 5c step 7** (`rebuild-phase5c-combos.md`, section 15, Decisions 34–38: taste cards carry on after the transformation, four cards replaced, cards that change nothing never offered, the pick keeps its shape). 7a is built: the layers, stacking, and the cards the built pieces write. What the after-fight pick (part 6, `rebuild-between-fights.md`, section 1) offers, for each hero. Replaces part 1's three layers (`rebuild-heroes.md`, "Upgrade pools"). The growing upgrades are from part 7b (`rebuild-content-pool.md`, section 7). **Numbers and names are placeholders.**
 
 ## How the pools work
 

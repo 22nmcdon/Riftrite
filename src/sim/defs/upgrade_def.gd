@@ -1,22 +1,33 @@
 class_name UpgradeDef
 extends RefCounted
 ## One upgrade from the after-fight pick (data/upgrades.json;
-## docs/plans/rebuild-phase5-run.md, section 5): permanent, and a kit
-## modifier written against the hero's slots, so it survives a
-## transformation. Either a hero's (any path) or a path's:
-##   {"id": "keen_eye", "name": "Keen Eye", "hero": "maren",
-##    "text": "She crits a little more often.", "mod": {...KitMod...}}
-##   {"id": "quick_footing", "name": "Quick Footing", "path": "deadeye",
-##    "vow": true, "text": "...", "mod": {...}, "transformed_mod": {...}}
-## A path's upgrade is offered once its hero has transformed, or from the vow
-## on if it's a vow pick ("vow": true). A vow pick may give the mod its
-## transformed kit takes ("transformed_mod"), since the taste's piece and the
-## transformation's are different parts. A path's upgrade only counts while
-## its hero is on that path. RunContent checks every mod against every kit it
-## can meet. A growing upgrade (phase 5c step 4) has "grows" (GrowthDef),
-## with or without a "mod".
+## docs/plans/upgrade-pools.md, built in phase 5c step 7): permanent, and a
+## kit modifier written against the hero's slots, so it survives a
+## transformation. Three layers (docs/plans/rebuild-phase5c-combos.md,
+## section 15.3):
+##   {"id": "deep_mark", "name": "Deep Mark", "hero": "maren",
+##    "text": "...", "mod": {...KitMod...}}                 her pool, always
+##   {"id": "steady_hands", "name": "Steady Hands", "path": "deadeye",
+##    "taste": true, "text": "...", "mod": {...}, "transformed_mod": {...}}
+##                     offered while vowed to the path, until it transforms
+##   {"id": "quick_plant", "name": "Quick Plant", "path": "deadeye", ...}
+##                     offered once transformed on the path
+## A taste card carries on after the transformation with its
+## "transformed_mod" (Decision 35), since the taste's piece and the
+## transformation's are different parts. A taste or path card only counts
+## while its hero is on that path. A stacking card (section 15.4) has no
+## mod but "stacks": {"stat": "atk", "pct": 10}: each take locks in that
+## share of the hero's stat at the time, as a flat amount (RunContent
+## .stack_amount), and it can be taken again. A growing upgrade (phase 5c
+## step 4) has "grows" (GrowthDef), with or without a "mod". RunContent
+## checks every mod against every kit it can meet.
 
-enum Layer { HERO, PATH }
+enum Layer { HERO, TASTE, PATH }
+
+const LAYER_NAMES: Array[String] = ["hero", "taste", "path"]
+## The stats a stacking card can lock in.
+const STACK_STATS: Array[UnitStats.Stat] = [UnitStats.Stat.HP, UnitStats.Stat.ATK, UnitStats.Stat.MGK, UnitStats.Stat.DEF,
+	UnitStats.Stat.CRIT, UnitStats.Stat.ATSP]
 
 var id: String
 var name: String
@@ -25,14 +36,18 @@ var text: String
 var layer: Layer
 ## The hero it's for (a path's upgrade: the path's hero, set by RunContent).
 var hero: String = ""
-## A path's upgrade: the path's id.
+## A taste or path card: the path's id.
 var path: String = ""
-var vow: bool = false
+## Null for a stacking card.
 var mod: KitMod
-## A vow pick's mod once transformed (null: `mod`).
+## A taste card's mod once transformed (null: `mod`).
 var transformed_mod: KitMod = null
 ## Null: it doesn't grow.
 var grows: GrowthDef = null
+## A stacking card: the stat it locks in (-1: not one) and its share
+## (percent) of the hero's stat at the time.
+var stack_stat: int = -1
+var stack_pct: int = 0
 
 
 static func read(reader: DataReader) -> UpgradeDef:
@@ -46,22 +61,33 @@ static func read(reader: DataReader) -> UpgradeDef:
 		def.layer = Layer.HERO
 		def.hero = reader.req_string("hero")
 	else:
-		def.layer = Layer.PATH
 		def.path = reader.opt_string("path", "")
-	def.vow = reader.opt_bool("vow", false)
-	if def.vow and def.layer != Layer.PATH:
-		reader.error("only a path's upgrade can be a vow pick")
+		def.layer = Layer.TASTE if reader.opt_bool("taste", false) else Layer.PATH
+	if reader.has("taste") and def.layer == Layer.HERO:
+		reader.error("only a path's card can be a taste card")
+	if reader.has("stacks"):
+		var stacks: DataReader = reader.req_object("stacks")
+		if stacks != null:
+			var names: Array[String] = []
+			for stat: UnitStats.Stat in STACK_STATS:
+				names.append(UnitStats.STAT_NAMES[stat])
+			var stat_name: String = stacks.req_choice("stat", names)
+			def.stack_stat = UnitStats.STAT_NAMES.find(stat_name)
+			def.stack_pct = stacks.req_int("pct", 1, 100)
+			stacks.finish()
+		if def.layer != Layer.HERO or reader.has("mod") or reader.has("grows"):
+			reader.error("a stacking card is a hero's, with no mod and no growth")
 	if reader.has("grows"):
 		var grows_reader: DataReader = reader.req_object("grows")
 		if grows_reader != null:
 			def.grows = GrowthDef.read(grows_reader)
-	if def.grows == null or reader.has("mod"):
+	if (def.grows == null and def.stack_stat < 0) or reader.has("mod"):
 		var mod_reader: DataReader = reader.req_object("mod")
 		if mod_reader != null:
 			def.mod = KitMod.read(mod_reader)
 	if reader.has("transformed_mod"):
-		if not def.vow:
-			reader.error("only a vow pick has a transformed_mod")
+		if def.layer != Layer.TASTE:
+			reader.error("only a taste card has a transformed_mod")
 		var transformed_reader: DataReader = reader.req_object("transformed_mod")
 		if transformed_reader != null:
 			def.transformed_mod = KitMod.read(transformed_reader)
@@ -74,3 +100,15 @@ func mod_for(stage_transformed: bool) -> KitMod:
 	if stage_transformed and transformed_mod != null:
 		return transformed_mod
 	return mod
+
+
+## True for a stacking card (taken again and again, each take locked in).
+func stacks() -> bool:
+	return stack_stat >= 0
+
+
+## The mod that locks in `amount` of its stat.
+func locked_mod(amount: int) -> KitMod:
+	var locked: KitMod = KitMod.make()
+	locked.stats_add[stack_stat] = amount
+	return locked

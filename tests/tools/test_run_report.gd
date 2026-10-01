@@ -33,3 +33,4 @@ func test_a_small_report() -> void:
 	assert_string_contains(text, "Runs: 3 (the simple bot")
 	assert_string_contains(text, "First transformation")
 	assert_string_contains(text, "Runs with errors: 0")
+	assert_string_contains(text, "Picks per run by layer: hero")

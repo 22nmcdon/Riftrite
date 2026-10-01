@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a, 5b (section 11), and 5c (section 12) built (10-01), 5d (section 13) built (10-01): the relic pool is complete; step 6 (the loadout pool, section 14) built in five parts, 6a–6e (10-01); steps 7–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a, 5b (section 11), and 5c (section 12) built (10-01), 5d (section 13) built (10-01): the relic pool is complete; step 6 (the loadout pool, section 14) built in five parts, 6a–6e (10-01); step 7 (the upgrade pools, section 15) approved, building in four parts, 7a built (10-01); steps 8–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -110,7 +110,7 @@ The rest are as gate 3 left them (basic 30–35, harder 16–33, The Hunt 18, Ol
 | **4. Permanent scaling** (section 9) | Counters in run state, per hero and per run, fed from `FightResult` like deeds; growing mods take the counter into the fight's setup as a bonus; "Now: +X" on cards | `run_state.gd`, `run_flow.gd`, `HeroExtras` | counters survive a save; a growing card's value |
 | **5. The relic pool** (section 10) | Five tiers plus bond relics, the pool's relics as data (built ones changed or cut, `relics/README.md`), one relic per shop with climbing rerolls, the pre-boss shop, boss relics after the boss, the Shrine's offerings, the income in `economy.md` | `relics.json`, `relic_def.gd`, `offers.gd`, `run_flow.gd`, `act1.json` | shop draws by tier, rerolls' prices, bond relics only with their bond, every relic's effect in a small fight |
 | **6. The loadout pool** (section 14; built) | Tactics, gambits, sigils, and charms from `loadout/`, three ranks with each kind's counter, a bought copy skips a rank, selling at half, no "no effect" marker, grafts removed; gambits' placement rules (in `FightSetup.validate` and `Encounters.setup`); the Magpie as a node with his stall | `items.json`, `item_def.gd`, `run_flow.gd`, `tactics.gd`, `fight_setup.gd`, `magpie` offers | ranks and their counters, selling, each gambit's placement, the Magpie's stall |
-| **7. The upgrade pools** | `upgrade-pools.md`: each hero's 12, two taste upgrades per path until the hero transforms, four path upgrades and a growing one after; stacking stat upgrades locked in as a flat amount; Volley's taste back to every 4th | `upgrades.json`, `offers.gd`, `run_state.gd`, `paths.json` | the draw by stage, stacking's lock-in, the paths report for Volley |
+| **7. The upgrade pools** (section 15) | `upgrade-pools.md`: each hero's 12, two taste upgrades per path until the hero transforms, four path upgrades and a growing one after; stacking stat upgrades locked in as a flat amount; Volley's taste back to every 4th | `upgrades.json`, `offers.gd`, `run_state.gd`, `paths.json` | the draw by stage, stacking's lock-in, the paths report for Volley |
 | **8. The new day** | Fight, pick, shop, then a node (Event, Camp, Rift Tear, the Magpie); camp as a node with its options; Rift Tear's three depths with rift modifiers; events and the Bloodied Oath; the day screen follows | `act_def.gd`, `run_flow.gd`, `offers.gd`, `camps.json`, `events.json` (new), `run_day_screen.gd`, `run_bot.gd` | the day's order, each node, each event, the bot plays whole runs |
 | **9. The combo readout, the retune, and a build** | A readout behind the testing toggle (the rule's notes per hit, snowball tags); the sim runner's trigger report; the run report on the new run; tuning; docs; a playtest build | `log_panel.gd`, `tools/`, docs | the readout stays hidden without the toggle |
 
@@ -1047,6 +1047,180 @@ On his day (today's camp place, until step 8 makes him a node):
 - **What moved:** no fight. **The run report** (54 runs): **90% of runs won**, 4.0 relics and 4.7 items held at the end (rank I 1.3, II 3.0, III 0.4). The bot buys the Magpie's charms like the Pedlar's, and never sells or swaps.
 
 **Step 6 is built.** The loadout pool is whole: 62 items in four kinds with three ranks each, the Pedlar's selling back, and the Magpie's stall. Runs are won far more often than before step 6 (66% to 90%): every new item is stronger than the cut ones, and their numbers are placeholders for step 9's retune.
+
+## 15. Step 7: the upgrade pools
+
+Status: **approved (2026-10-01, Decisions 34–38); building in four parts, 7a–7d: 7a built (15.13).** Builds `upgrade-pools.md`: what the after-fight pick offers each hero (a hero pool of 12, two taste upgrades per path from the vow until the hero transforms, then four path upgrades and the path's growing one), stacking stat upgrades locked in as a flat amount, and Volley's taste back to every 4th shot. Apex upgrades wait for apexes (`apexes.md`).
+
+### 15.1 What's there now (phases 5 and 5c step 4)
+
+- **The upgrades** (`UpgradeDef`, `data/upgrades.json`): 48. Phase 5's 36 (3 per hero, any path; 3 per path, one of them a **vow pick** offered from the vow, with a `transformed_mod` for after the transformation; the other two once transformed), and step 4's 12 growing ones (one per hero, one per path).
+- **The pick** (`Offers.pick`): one card per hero from what that hero can be offered (`RunContent.upgrades_for`: its own cards it doesn't hold, every card equally likely), and at `wild_card_pct` (25%) one card from anyone's instead. Take one, or `pick_shards` (5). Relics add cards and takes. Nothing can be taken twice.
+- **The bot** takes the card for the hero with the fewest upgrades.
+
+### 15.2 Why it's split
+
+87 new cards (36 cut, the 12 growing ones kept), and about half need something the sim can't do yet. Like step 6, it's built in parts, each a commit with the suite green and the bench's fingerprints unchanged:
+
+| Part | What | New cards |
+| --- | --- | --- |
+| **7a** | **The frame:** the three layers and the draw by stage (15.3), stacking with its lock-in (15.4), taste cards after the transformation (15.5), the 36 built cards cut, Volley's every 4th (15.8), the save's version; and every card the built pieces already write | 48 |
+| **7b** | **The small knobs** on kit mods (one number or one filter each) and the cards they write | 18 |
+| **7c** | **The new conditions and filters** (who a bonus counts against, when an effect runs) and their cards | 15 |
+| **7d** | **The six big pieces:** a storm that follows, arrows that split again, a wall that sends arrows back, snares that catch leaps, a snare under an ally, and a lantern placed before the fight | 6 |
+
+Until 7b–7d land, their cards aren't in the data, so the pools are smaller for a while (no card waits on a later part's piece).
+
+### 15.3 The pools and the draw (7a)
+
+- **Three layers** (`UpgradeDef.layer`): `hero` (`"hero": "maren"`), `taste` (`"path": "deadeye", "taste": true`), and `path` (`"path": "deadeye"`; its growing card too). The vow pick and `"vow"` go; a taste card has a `transformed_mod` instead (15.5).
+- **What a hero can be offered** (`upgrades_for`, by stage): its hero cards always; its vowed path's taste cards while vowed and not transformed; its path's cards once transformed. Switch vow (before transforming) swaps which taste cards it's offered, as now.
+- **What counts:** hero cards always; taste and path cards while the hero is on their path (as now).
+- **Proposed, for the design's open questions** (Question AB): the pick keeps its shape (one card per hero, the wild card, Take 5 shards); every card a hero can be offered is equally likely, so a vowed hero sees a taste card about 1 pick in 7, and a transformed one a path card about 1 in 3; stacking cards show as often as any other and have no cap. The run report counts each layer's picks, and step 9 retunes the odds if they feel wrong.
+- **Cards that would change nothing** (Question AA): a hero card can stop doing anything once its hero transforms: Maren's Mark cards (Deep Mark, Heavy Mark, and the built Notched Bow) on all three of her transformed paths, Brannoc's taunt cards (Long Hold, Stubborn Taunt) once Hearthwall or Ironbrand, and Grudge once Last Watch (no mana). Proposed: **the pick never offers a card that changes nothing on the hero's kit as it is now** (`KitMod.affects`, built for 6a's marker and kept), and a held one stays held. A pick is the day's reward, not a shop item you can sell, so a dead card costs more here than a dead charm does.
+
+### 15.4 Stacking upgrades (7a)
+
+- **The ten stacking cards** (Maren: Honed Tips, Keen Eye, Quick Draw, Fletcher's Leathers; Brannoc: Hearthblood, Iron Hide, Heavy Arm; Vell: Bright Soul, Pilgrim's Cloak, Quick Glow) have no mod but `"stacks": {"stat": "atk", "pct": 10}`. They can be offered again after they're taken.
+- **The lock-in:** taking one adds the stat's share **of the hero's stat now**, rounded to the nearest whole point and at least 1, as a flat amount (a `stats_add` mod) that never changes again. "Now" is the hero's kit stat with its path's stage and the upgrades it holds (earlier locks included), before wounds, items, relics, and fight auras, which come and go. Keen Eye at 8 CRIT locks in +2; Heavy Arm at 14 ATK, +1; after a transformation that raises ATK, the next one locks in more.
+- **Attack speed** (Quick Draw, Quick Glow): the built ATSP is a bonus in points (+10 is 10% faster), not a rate, so "10% of her attack speed" reads as **10% of 100 + ATSP**: Maren at 10 ATSP locks in +11, Vell at 0 locks in +10. Proposed; the design's "+1.5 at 15" assumed a rate.
+- **State:** `RunState.Hero.upgrades` lists a stacking card once per take, and `RunState.Hero.locked` (upgrade id -> its locked amounts, in order) keeps the amounts; the save's version goes up to 3 (as 6a did, old saves don't load: the upgrade ids change).
+
+### 15.5 Taste cards once the hero transforms (7a; Question Y)
+
+The transformation replaces the taste's piece (Steady becomes Planted, Mend becomes Night Lantern or Weave or Sunfall), so a taste card's mod would land on the wrong ability or nothing. Proposed: **each taste card carries on after the transformation, as a `transformed_mod` that does the same job for the transformed kit**, as the built vow picks did. Those whose piece the transformation keeps (Restless, Crowd Sense, Hard to Kill, Steady Flame's mana) keep their mod.
+
+| Path | Taste card | Once transformed |
+| --- | --- | --- |
+| Deadeye | Steady Hands (Steady after 1s, not 1.5s) | Planted and Sure Aim hold after 1s, not 1.5s |
+| | Eyes Up (+5 CRIT while Steady) | +5 CRIT while planted (Sure Aim) |
+| Trapper | Second Snare (Snare twice a fight) | Bramble Field: up to 4 snares at once, not 3 |
+| | Tight Weave (snares root 0.5s longer) | Bramble Field's snares root 0.5s longer |
+| Volley | Quick Split (Split Shot every 3rd shot) | every shot already splits: the split arrow deals 50%, not 40% |
+| | Restless (+10% attack speed if she moved in the last 2s) | the same |
+| Hearthwall | Broad Guard (Guard takes 15%, not 10%) | Guard takes 35%, not 30% |
+| | Two Behind (Guard covers the 2 allies behind him) | Guard reaches 3 hexes, not 2 |
+| Ironbrand | Heavy Brand (Brand's hit is 50%, not 30%) | the Mace's other hits are 50%, not 30% |
+| | Crowd Sense (+10% ATK with 2 or more enemies adjacent) | the same |
+| Last Watch | Grim Resolve (Unyielding also Shields him 10% of max HP) | Last Rites also Shields him 10% of max HP |
+| | Hard to Kill (+20% DEF below 30% HP) | the same |
+| Lanternbearer | Bright Kindle (Kindle heals 30% of Mend, not 20%) | Kindle (the spill to allies near her) heals 50% more |
+| | Steady Flame (Mend costs 5 less mana) | Night Lantern costs 5 less mana |
+| Wardweaver | Thick Thread (Ward Thread's Shield is 40% of the overheal, not 20%) | Weave's Shield is 30% larger |
+| | Thread the Hurt (replaced, 15.6) | Weave also Wards its ally for 2s |
+| Vigil Keeper | Swift Judgment (every Mend smites, not every 2nd) | Mend comes every 3rd Lantern Glow, not 4th |
+| | Burning Judgment (smites deal 50% more) | Mend's smite deals 50% more |
+
+### 15.6 Cards that don't fit the built kits (Question Z)
+
+Four cards do nothing, or the same as what's built, against the kits as phases 4 and 5 tuned them. Proposed replacements, each in its path's spirit and from built pieces:
+
+| Card | Why it doesn't fit | Proposed |
+| --- | --- | --- |
+| **Thread the Hurt** (Wardweaver taste: "Ward Thread also works on allies above 80% HP") | the built Ward Thread works on anyone Mend overheals; there's no 80% limit to lift | **Thread the Hurt:** Mend also Wards its target for 2s (15% less damage; the transformation's status) |
+| **Drawing Hold** (Hearthwall: "his taunts pull enemies 1 hex toward him") | transformed Hearthwall has no taunt (Hearthwall replaces Hold the Line) | **Drawing Wall:** when his wall rises, enemies within 2 hexes of him are pulled 1 hex toward him |
+| **Crushing Blow** (Ironbrand: "enemies knocked into other enemies are Stunned for 1s") | every push stopped by a unit already stuns for 1s (phase 1) | **Crushing Blow:** Brand Slam knocks enemies back 2 hexes, not 1 (more of them crash into something) |
+| **Lasting Shields** (Wardweaver: "her Shields last until broken") | every Shield already lasts until broken | **Lasting Circle:** Warding Circle lasts 2s longer |
+
+### 15.7 The cards by part
+
+Numbers are `upgrade-pools.md`'s (placeholders); a card's `text` says what it's for, and `ModInfo` adds its amounts as for every card. "Slows 20%" is a new status, **Hobbled** (a 20% Slow, data only), beside the built 30% Slow.
+
+**7a: the built pieces write 48.**
+- **Stacking (10):** 15.4's.
+- **Hero cards (14):** Maren's Deep Mark (her Marks, `statuses`), Light Step (the built `hop.cooldown_add_ms`), Long Vanish, Parting Shot (a next-hit boost on `on_hop`: a sure crit), First Blood (a next-hit boost at the fight's start: +100%); Brannoc's Long Hold, Stubborn Taunt (`on_status` taunt applies **Cowed**, a new boost status on the enemy: −10% damage for 3s), Deep Hearth, Staggering Bash (`every` 4, Hobbled), Opening Stand (an aura with a 5s window); Vell's Wide Hearth (`radius_add`), Warm Hearth, Deep Well (`per_attack_add`), Ember Glow.
+- **Taste cards (7)** whose mods and transformed mods are both built: Steady Hands, Tight Weave, Grim Resolve, Hard to Kill, Steady Flame, Thread the Hurt, Burning Judgment.
+- **Path cards (17):** Heart's Refund (`on_kill` `from_signature`, 6b), Tangle (`on_status` root, `enemies_near_named`), Hunter's Opening (`vs` Rooted), Shared Strength (`on_guard`), Drawing Wall, Lasting Wall, Hungry Mace, Crushing Blow, Cleaving Wounds, Final Gift (`on_fall`, Shields by max HP), Rites of Mercy, Long Night, Lasting Circle, Wide Circle, Leaping Smite (a second smite at `enemy_near_target`), Holy Crits (`on_holder_crit`), Searing.
+
+**7b: the small knobs (18 cards).** Each is one more key in a kit mod's `on` entry (or its `mana`), read where the built ones are:
+
+| Knob | What it changes | Cards |
+| --- | --- | --- |
+| `every_add` | an `every` N effect's N | Quick Split, Swift Judgment (and their transformed mods) |
+| `times_add` | how many times a `once` effect runs a fight | Second Snare, Twice Guarded |
+| `at` | only the effects aimed at these targets (`enemy_near_target`, `enemies_near_target`, `ally_near_target`) | Heavy Brand, Bright Kindle, Quick Split's transformed mod |
+| `max_standing_add` | a snare's most standing at once | Second Snare's transformed mod |
+| `value_add` | a passive's aura's value | Eyes Up |
+| `overheal_shield_add_bp` | a heal's overheal-to-Shield share | Thick Thread |
+| `guard` | Guard's `share_add`, `within_add`, and `covers_count` (how many allies behind it covers) | Broad Guard, Two Behind |
+| `add_to_areas` | effects added inside the ability's areas (each unit the area hits), not after it | Seeker's Mark, Harrying Storm, Wide Cleanse |
+| `width_add` | a line's width (lines gain a width; 1 hex now) | Wide Sunfall |
+| `plant_add_ms` | how long it needs to plant after moving | Quick Plant |
+| `prefer` on the signature | 6b's `prefer`, for a signature's own targeting | Brand the Marked |
+| `engage.break_free_add_ms` | how long enemies it engages take to break free | Hard to Pass |
+| `mana.taken_bp` | the mana it gains from damage taken, times this | Grudge |
+
+**7c: the new conditions and filters (15 cards).**
+
+| Piece | What | Cards |
+| --- | --- | --- |
+| `vs` on `heal_bp` and `shield_bp` auras | a heal's or Shield's bonus against allies who meet a condition | Urgent Mercy (below 30%), Front Ward |
+| `front_most` (a `UnitCondition`) | the standing ally nearest the enemies' edge | Front Ward |
+| `within_hexes` (a `UnitCondition`, from the holder) | targets that close | Close Quarters |
+| `while: "moved"`, `"within_ms"` (an aura) | on while it moved in the last that long (Steady's opposite) | Restless |
+| `while: "crowded"`, `"enemies"`, `"within_hexes"` (an aura) | on while that many enemies are that close | Crowd Sense |
+| `holder` on an event effect (a `UnitCondition`) | runs only while its holder meets it | Scar Tissue (with a whole-fight stacking boost of +2 DEF), Bloody Kills |
+| `target_was` on an ability's effect | runs only if the ability's target met it as the ability fired | Last-Minute Mercy |
+| `beyond_hexes` on `on_holder_crit` | only hits from farther than that | Bleeding Shot |
+| `from_split` on `on_kill` | only kills by an effect aimed at an enemy near the target | Glutton's Quiver |
+| `once_per_ally` on `on_ally_below_hp` | once for each ally, not once a fight | Vigilant |
+| cleanse `count` | removes that many harmful statuses (the newest first) | Cleansing Touch (on her signature's and Mend's heals), Cleansing Weave |
+| apply_status `strength_add_bp` | a Mark it applies is that much stronger (`StatusState` carries it; a stronger Mark replaces a weaker one) | Heavy Mark |
+| aura target `allies_near` | the other allies within `within_hexes` of the holder | Sanctuary |
+
+**7d: the big pieces (6 cards).** Each is its own code, said here:
+- **Chasing Storm** (Volley): a lasting area with `"follows": "largest_group"` moves its center toward the biggest group of enemies within its reach before each pulse, up to 1 hex a pulse; each move is logged (an AREA line noted "moves"), and the board slides the circle.
+- **Ricochet** (Volley): a split arrow splits once more, to the enemy nearest the one it hit (not one already hit), at the same share; logged as its own DAMAGE line noted "ricochet".
+- **Reflecting Wall** (Hearthwall): a shot his wall stops hits its shooter for half its damage, as a hit from his Hearthwall (a DAMAGE line noted "reflected"; the board's shot flies back).
+- **Snag** (Trapper): a leap or a charge that passes over her snare springs it, and the leaper is rooted where it lands.
+- **Guarded Ground** (Trapper): at the fight's start, a snare under the front-most ally (`front_most`, 7c), counted against Bramble Field's 3.
+- **First Lantern** (Lanternbearer): you place her first Night Lantern before the fight, like transformed Trapper's snares (`UnitSetup.lantern`, a marker dragged on the board, kept in the session and the run); it's lit at 0s and its mana is spent at 0.
+
+### 15.8 Volley's taste back to every 4th (7a)
+
+`paths.json`: vowed Volley's Split Shot goes from every 6th shot to every 4th (`upgrade-pools.md`, the playtester's 2026-09-30 decision), and its texts say so. Phase 4 had set every 6th to hold the vow within its Decision 3 cap (5 points over base); the paths report (`--paths`) measures it again, and the number goes in the built notes for step 9's retune, not fixed here. The bench and the sim runner's gate use no vowed Volley, so their numbers don't move.
+
+### 15.9 The UI
+
+- **The pick's cards** say their layer under the name ("Maren · Taste: Deadeye"), and a stacking card says what it would lock in now ("+2 ATK now"; `ModInfo`).
+- **The hero panel's upgrades** list a stacking card once, with how many times and each locked amount ("Honed Tips ×3: +2, +3, +5 ATK"; `ui-new-systems.md`, section 4), and a taste card says which mod it's using.
+- First Lantern's marker in placement (7d). Nothing else on the board is new beyond 7d's moving circle and returning shot.
+
+### 15.10 Files, tests, the bot, and the report
+
+- **Changed:** `upgrade_def.gd` (layers, `stacks`, no `vow`), `data/upgrades.json` (99: 36 hero, 18 taste, 45 path), `data/statuses.json` (Hobbled, Cowed, the boosts), `data/paths.json` (Volley), `run_content.gd` (`upgrades_for` by stage and what changes something, the locked mods), `run_state.gd`/`run_save.gd` (`locked`, version 3), `run_flow.gd` (`take_pick` locks in), `offers.gd`; the sim pieces in 15.7 (`kit_mod.gd`, `effect_def.gd`, `aura_def.gd`, `unit_condition.gd`, `shape_def.gd`, `passives.gd`, `events.gd`, `effect_runner.gd`, `targeting.gd`, `statuses.gd`, `guards.gd`, `engage.gd`, `snares.gd`, `walls.gd`, `areas.gd`, `shots.gd`, `fight_setup.gd`, `unit_setup.gd`); `mod_info.gd`, `hero_panel.gd`, `run_day_screen.gd` (the pick), the arena (7d's board forms, First Lantern's marker), `practice_session.gd`/`run_session.gd` (the lantern's hex); `tools/run_bot.gd` (takes as now), `tools/run_report.gd` (picks per layer, stacking locks per run).
+- **Tests:** `tests/run/test_upgrade_pools.gd` (new: the draw by stage, taste cards only while vowed, path cards once transformed, Switch vow, a dead card never offered, a stacking card's lock-in from the stat now and at least 1, ATSP's, a lock never recalculating after a transformation, a taste card's transformed mod, the save); `tests/sim/test_upgrade_pieces.gd` (new: each 7b–7d piece in a small fight); every card builds on every kit it can meet and changes it (a data test over all 99); `test_mod_info` and the upgrade lists changed on purpose; determinism, the log audit, every encounter on the screen (no new log kinds: 7d's lines are notes on AREA and DAMAGE), the bench's fingerprints unchanged; the run report runs.
+
+### 15.11 Questions (answered in 15.12)
+
+- **Y. Taste cards after the transformation:** carry on with a transformed mod that does the same job (15.5's table), or end when the hero transforms?
+- **Z. The four cards that don't fit** (15.6): use the proposed replacements?
+- **AA. Cards that would change nothing on the hero's kit now:** never offered (a held one stays held), or offered anyway, as items are?
+- **AB. The design's open questions** (15.3): keep the pick's shape, every card equally likely, stacking without a cap, and retune in step 9?
+- And: **approve this section, split as 15.2** (7a–7d, a commit each)?
+
+### 15.12 Decisions (the playtester, 2026-10-01)
+
+34. **Step 7 is built as this section says, in four parts** (the approval): 7a the frame and the 48 cards the built pieces write, 7b the small knobs, 7c the new conditions and filters, 7d the six big pieces.
+35. **Taste cards carry on after the transformation** (Question Y), each with a transformed mod that does the same job (15.5's table).
+36. **The four cards that don't fit are replaced** (Question Z): Thread the Hurt (Mend also Wards its target for 2s), Drawing Wall, Crushing Blow (Brand Slam knocks back 2 hexes), and Lasting Circle (15.6).
+37. **The pick never offers a card that changes nothing on the hero's kit as it is now** (Question AA); a held one stays held.
+38. **The pick keeps its shape** (Question AB): one card per hero and the wild card, every card a hero can be offered equally likely, stacking cards without a cap; the run report counts each layer's picks, and step 9 retunes.
+
+### 15.13 Built in step 7a (2026-10-01)
+
+- **The layers** (`UpgradeDef.layer`: hero, taste, path; `"taste": true`, no `vow`): `RunContent.upgrades_for` offers a hero's own cards always, its vowed path's taste cards until it transforms, and its path's cards (its growing one too) once it has. A taste card carries on after with its `transformed_mod` (Decision 35); a taste or path card counts only while its hero is on that path.
+- **Cards that change nothing** (Decision 37): `RunContent.changes_something` is the mod touching the kit as it is now (`KitMod.affects_besides_passives`), an added passive that can fire there (one waiting `on_status` on statuses the kit never applies, or `on_hop` without the hop, can't), or a growing card that can count there (its abilities, and for Marks the keyword among the statuses the kit applies). The data check now asks a hero card to change at least one of its hero's kits (a taste card both of its kits, a path card the transformed one).
+- **Stacking** (section 15.4): `"stacks": {"stat", "pct"}`; `RunContent.stack_amount` reads the stat from the hero's kit at its stage with its upgrades' mods, rounds half up, at least 1 (ATSP's share of 100 + ATSP); `RunFlow.take_pick` stores it in `RunState.Hero.locked`, and `upgrade_mods` gives a flat `stats_add` per take. The save is version 3; an older one doesn't load.
+- **The cards:** 60 (48 new, the 12 growing ones kept, phase 5's 36 cut). New statuses: Hobbled (a 20% Slow), Cowed (−10% damage for 3s, a boost on the enemy), and two next-hit boosts, Parting Shot and First Blood.
+- **Where the built pieces fell short, and what was added:**
+  - **Durations named:** Marking Shot's Mark (4s) and Hold the Line's and Last Rites' Taunts (3s) now name their status's own duration in the data, so "lasts longer" cards (Deep Mark, Long Hold) can see them. No fight changes.
+  - **A share of max HP counts as changed:** `KitMod`'s check now sees a power bonus on a heal or Shield by a share of max HP (Warm Hearth on Hearthlight).
+  - **Crushing Blow's 2 hexes:** a mod's `amount_bp` now scales a knockback's or pull's `hexes` when its `types` names that type (`AbilityChange.moves`), so a mod on every effect never moves a push. It's the one new rule in code in 7a.
+- **Volley's taste** goes back to every 4th shot (`paths.json`, its texts; `test_path_kits` changed on purpose). **The paths report** (`--paths --seeds=1 --sweep=20`): vowed Volley wins **10 points more than base** over every encounter, "too strong" against Decision 3's cap of 5 (it was +6 at every 6th in phase 4; the damage rule and the retunes have moved fights since); transformed Volley +13. Left for step 9's retune, as 15.8 says.
+- **The UI:** the pick's cards say "TASTE · DEADEYE" or "PATH · DEADEYE" (taste cards wear the vow frame), and a stacking card what it would lock in now ("+2 ATK now · stacks"); the hero panel lists a stacking card once with each amount ("Honed Tips ×2: +2, +2 ATK").
+- **Tests:** `tests/run/test_upgrade_pools.gd` (8: the pools by stage and Switch vow, cards that change nothing never offered and a held one kept, the lock-in from the stat now with ATSP's and the rounding, a lock unchanged by a transformation, at least 1, the save, the card labels, Crushing Blow's knockback); `tests/sim/test_upgrade_cards.gd` (5: First Blood, Parting Shot, Stubborn Taunt's Cowed, Staggering Bash's Hobbled, and a taste card's transformed mod on its new piece); `test_growth`'s upgrade tests rewritten for the layers (picks running out now use a one-card pool, since stacking cards never run out); the status lists, `test_path_kits`, and the run report's test changed on purpose. 857 tests pass; the data validates; the bench's 24 fingerprints are unchanged.
+- **What moved:** no fight the bench or the gate fights (vowed Volley's every 4th moves fights with vowed Volley, on purpose). **The run report** (54 runs): **92% of runs won** (90% after step 6). Picks per run by layer: hero 6.9, taste 0.2, path 1.1; stacking cards taken 2.7 a run, 15.2 points each (mostly HP). Taste cards are rare for now: only 7 of the 18 are in the data until 7b and 7c.
 
 ## Answered (2026-09-30)
 

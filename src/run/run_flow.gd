@@ -702,14 +702,22 @@ func _faster(counted: int) -> int:
 	return counted
 
 
-## Takes card `index` of the waiting pick: the upgrade is its hero's for good.
+## Takes card `index` of the waiting pick: the upgrade is its hero's for good
+## (a stacking card locks in its amount now).
 func take_pick(index: int) -> String:
 	if state.pick.is_empty():
 		return "there's no pick waiting"
 	if index < 0 or index >= state.pick.size():
 		return "there's no card %d" % index
 	var upgrade: UpgradeDef = run.upgrades[state.pick[index]]
-	state.hero(upgrade.hero).upgrades.append(upgrade.id)
+	var hero: RunState.Hero = state.hero(upgrade.hero)
+	if upgrade.stacks():
+		# Locked in from the hero's stat now (section 15.4).
+		var amount: int = run.stack_amount(hero, upgrade)
+		if not hero.locked.has(upgrade.id):
+			hero.locked[upgrade.id] = []
+		hero.locked[upgrade.id].append(amount)
+	hero.upgrades.append(upgrade.id)
 	if upgrade.grows != null:
 		state.hero(upgrade.hero).growth[upgrade.id] = 0
 	state.pick.remove_at(index)

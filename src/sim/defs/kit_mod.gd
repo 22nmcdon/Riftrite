@@ -27,7 +27,9 @@ extends RefCounted
 ##                                        the effect (EffectDef.power_bp; the
 ##                                        damage rule, phase 5c); other
 ##                                        effects' amount, scaling, and share
-##                                        of damage, times this
+##                                        of damage, times this (and a
+##                                        knockback's or pull's hexes, when
+##                                        "types" names it; phase 5c step 7)
 ##       "duration_bp": 13000,            their durations (a status's, a lasting
 ##       "duration_add_ms": 2000,         area's, a wall's), times this, plus this
 ##       "radius_add": 1,                 their areas' size, in hexes
@@ -93,6 +95,12 @@ class AbilityChange:
 		if not statuses.is_empty():
 			return effect.type == EffectDef.Type.APPLY_STATUS and statuses.has(effect.status_id)
 		return types.is_empty() or types.has(effect.type)
+
+	## A knockback's or pull's distance scales with amount_bp only when the
+	## change names that type (phase 5c step 7: Crushing Blow), so a mod on
+	## every effect never moves a push.
+	func moves(effect: EffectDef) -> bool:
+		return (effect.type == EffectDef.Type.KNOCKBACK or effect.type == EffectDef.Type.PULL) and types.has(effect.type)
 
 
 ## Indexed by UnitStats.Stat, as in KitPatch.
@@ -308,11 +316,15 @@ func _changes_mana() -> bool:
 ## a change to abilities only if the slot is there and has effects of its
 ## types; mana only on a kit with a mana bar).
 func affects(kit: UnitDef) -> bool:
+	return not passives.is_empty() or affects_besides_passives(kit)
+
+
+## affects() without its added passives (whether those can ever fire is the
+## caller's to judge: the upgrade pools' "changes nothing", phase 5c step 7).
+func affects_besides_passives(kit: UnitDef) -> bool:
 	for stat: int in stats_bp.size():
 		if stats_bp[stat] != FixedMath.BP_ONE or stats_add[stat] != 0:
 			return true
-	if not passives.is_empty():
-		return true
 	if kit.mana != null and _changes_mana():
 		return true
 	if kit.signature != null and (not also_fires.is_empty() or echo_ticks > 0):
@@ -478,6 +490,8 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 			copy.power_bp += change.amount_bp - FixedMath.BP_ONE
 		elif change.touches(effect):
 			copy.amount = FixedMath.apply_bp(copy.amount, change.amount_bp)
+			if change.moves(effect):
+				copy.hexes = FixedMath.apply_bp(copy.hexes, change.amount_bp)
 			copy.amount_bp_of_damage = FixedMath.apply_bp(copy.amount_bp_of_damage, change.amount_bp)
 			for stat: int in copy.scaling.size():
 				copy.scaling[stat] = FixedMath.apply_bp(copy.scaling[stat], change.amount_bp)
@@ -497,7 +511,7 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 
 static func _any_effect(effects: Array[EffectDef], change: AbilityChange) -> bool:
 	for effect: EffectDef in effects:
-		if change.touches(effect) and (change.amount_bp != FixedMath.BP_ONE and (effect.amount != 0 or effect.amount_bp_of_damage != 0 or effect.scaling.any(func(value: int) -> bool: return value != 0))
+		if change.touches(effect) and (change.amount_bp != FixedMath.BP_ONE and (effect.amount != 0 or effect.amount_bp_of_damage != 0 or effect.scaling.any(func(value: int) -> bool: return value != 0) or effect.amount_bp_of_max_hp != 0 or change.moves(effect))
 				or (change.duration_bp != FixedMath.BP_ONE or change.duration_add_ticks != 0) and (effect.duration_ticks > 0 or effect.zone_ticks > 0)
 				or change.radius_add != 0 and effect.shape != null):
 			return true

@@ -163,8 +163,10 @@ static func next_rank_line(item: ItemDef, content: ContentDb, rank: int) -> Stri
 
 
 ## An upgrade's: its mod's, what changes once the hero transforms, and how
-## it grows.
+## it grows (a stacking card's share: "+10% of ATK when taken").
 static func upgrade_numbers(upgrade: UpgradeDef, kit: UnitDef, content: ContentDb) -> String:
+	if upgrade.stacks():
+		return "+%d%% of %s when taken (stacks)" % [upgrade.stack_pct, _stat_word(upgrade.stack_stat)]
 	var parts: Array[String] = []
 	if upgrade.mod != null:
 		parts = mod_parts(upgrade.mod, kit, content)
@@ -173,6 +175,36 @@ static func upgrade_numbers(upgrade: UpgradeDef, kit: UnitDef, content: ContentD
 	if upgrade.grows != null:
 		parts.append(growth_numbers(upgrade.grows, kit, content))
 	return " · ".join(parts)
+
+
+## A stacking card on the pick: what it would lock in now ("+2 ATK now ·
+## stacks").
+static func stack_now(upgrade: UpgradeDef, amount: int) -> String:
+	return "%s now · stacks" % _locked_amount(upgrade, amount)
+
+
+## A stacking card held: each take's locked amount ("+2, +3, +5 ATK").
+static func stack_locked(upgrade: UpgradeDef, locked: Array) -> String:
+	var amounts: Array[String] = []
+	var unit: String = "%" if upgrade.stack_stat == UnitStats.Stat.ATSP else ""
+	for amount: Variant in locked:
+		amounts.append("+%d%s" % [int(amount), unit])
+	return "%s %s" % [", ".join(amounts), _stat_word(upgrade.stack_stat)]
+
+
+## "+2 ATK", or "+11% attack speed" (ATSP points are percents).
+static func _locked_amount(upgrade: UpgradeDef, amount: int) -> String:
+	return "+%d%s %s" % [amount, "%" if upgrade.stack_stat == UnitStats.Stat.ATSP else "", _stat_word(upgrade.stack_stat)]
+
+
+## A stat's name on a card: "ATK", "max HP", "attack speed".
+static func _stat_word(stat: int) -> String:
+	match stat:
+		UnitStats.Stat.HP:
+			return "max HP"
+		UnitStats.Stat.ATSP:
+			return "attack speed"
+	return UnitStats.STAT_NAMES[stat].to_upper()
 
 
 ## How a growing card grows (phase 5c step 4): "Grows: +1% ATK per 10

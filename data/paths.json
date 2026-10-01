@@ -262,7 +262,7 @@
     "fantasy": "Always moving, filling the air with arrows.",
     "placement": "A loose spot with room to move.",
     "vowed": {
-      "taste": "Split Shot: every 6th shot also hits the enemy nearest her target, within 1 hex of it, for a third as much.",
+      "taste": "Split Shot: every 4th shot also hits the enemy nearest her target, within 1 hex of it, for a third as much.",
       "cost": "She reaches only 3 hexes.",
       "patch": {
         "stats_add": {
@@ -271,7 +271,7 @@
         "basic_attack": {
           "id": "longshot",
           "name": "Longshot",
-          "text": "Shoots her target from up to 3 hexes away. Every 6th shot splits: it also hits the enemy nearest her target, within 1 hex of it, for a third as much.",
+          "text": "Shoots her target from up to 3 hexes away. Every 4th shot splits: it also hits the enemy nearest her target, within 1 hex of it, for a third as much.",
           "cooldown_ms": 1000,
           "effects": [
             {
@@ -290,7 +290,7 @@
                 "atk": 3000
               },
               "within_hexes": 1,
-              "every": 6
+              "every": 4
             }
           ]
         },
@@ -306,6 +306,7 @@
             {
               "type": "apply_status",
               "status": "marked",
+              "duration_ms": 4000,
               "target": "target"
             }
           ]
@@ -733,6 +734,7 @@
                 {
                   "type": "apply_status",
                   "status": "taunt",
+                  "duration_ms": 3000,
                   "target": "target"
                 }
               ]

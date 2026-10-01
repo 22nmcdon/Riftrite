@@ -98,26 +98,83 @@ func normal_encounters() -> Array[String]:
 	return found
 
 
-## The upgrades `hero` can be offered now: its hero layer, its vowed path's
-## vow picks, and once transformed the rest of that path's; none it has taken.
+## The upgrades `hero` can be offered now (phase 5c step 7, section 15.3):
+## its hero cards always, its vowed path's taste cards until it transforms,
+## and that path's cards once it has; none it has taken but a stacking card,
+## and none that would change nothing on its kit now (Decision 37).
 func upgrades_for(hero: RunState.Hero) -> Array[String]:
 	var found: Array[String] = []
 	for id: String in upgrade_ids:
 		var upgrade: UpgradeDef = upgrades[id]
-		if upgrade.hero != hero.id or hero.upgrades.has(id):
+		if upgrade.hero != hero.id or (hero.upgrades.has(id) and not upgrade.stacks()):
 			continue
-		if upgrade.layer == UpgradeDef.Layer.PATH and (upgrade.path != hero.path or not (upgrade.vow or hero.transformed)):
+		if upgrade.layer == UpgradeDef.Layer.TASTE and (upgrade.path != hero.path or hero.transformed):
+			continue
+		if upgrade.layer == UpgradeDef.Layer.PATH and (upgrade.path != hero.path or not hero.transformed):
+			continue
+		if not changes_something(upgrade, hero.transformed, hero_kit(hero)):
 			continue
 		found.append(id)
 	return found
 
 
-## The kit mods `hero`'s upgrades give it now, in the order taken (a path's
-## upgrade only while the hero is on that path); a growing one's, its steps
-## so far (phase 5c step 4).
+## True if `upgrade` changes something on `kit` (a hero `transformed` or
+## not): its mod touches it, and an added passive can fire on it; a growing
+## card's counting can count there; a stacking card always does.
+func changes_something(upgrade: UpgradeDef, transformed: bool, kit: UnitDef) -> bool:
+	if upgrade.stacks():
+		return true
+	var mod: KitMod = upgrade.mod_for(transformed)
+	if mod != null and (mod.affects_besides_passives(kit) or mod.passives.any(func(part: PartDef) -> bool: return _passive_can_fire(part, kit))):
+		return true
+	return upgrade.grows != null and _can_count(upgrade.grows.counts, kit)
+
+
+## An added passive's events must be able to happen on `kit`: one that waits
+## on statuses the kit applies (on_status), or on hopping (on_hop). Auras and
+## other events always can.
+func _passive_can_fire(part: PartDef, kit: UnitDef) -> bool:
+	if part.kind != PartDef.Kind.ABILITY:
+		return true
+	var applied: Array[String] = kit.status_ids()
+	for effect: EffectDef in part.ability.effects:
+		if effect.trigger == EffectDef.Trigger.ON_HOP and kit.hop_cooldown_ticks <= 0:
+			continue
+		if effect.trigger == EffectDef.Trigger.ON_STATUS and not effect.statuses.is_empty() \
+				and not effect.statuses.any(func(status_id: String) -> bool: return applied.has(status_id)):
+			continue
+		return true
+	return false
+
+
+## A growing card's counting can count on `kit`: what it names is there (its
+## abilities, the keywords of the statuses it applies).
+func _can_count(counts: DeedDef, kit: UnitDef) -> bool:
+	if not counts.from_ability.is_empty() and not counts.from_ability.any(func(ability_id: String) -> bool: return kit.ability_ids().has(ability_id)):
+		return false
+	if counts.counts == DeedDef.Counts.APPLIED and not counts.keywords.is_empty():
+		for status_id: String in kit.status_ids():
+			if content.statuses.has(status_id) and counts.keywords.has(content.statuses[status_id].keyword):
+				return true
+		return false
+	return true
+
+
+## The kit mods `hero`'s upgrades give it now, in the order taken (a taste
+## or path card only while the hero is on that path); a growing one's, its
+## steps so far (phase 5c step 4); a stacking one's, each take's locked
+## amount (step 7).
 func upgrade_mods(hero: RunState.Hero) -> Array[KitMod]:
 	var mods: Array[KitMod] = []
+	var takes: Dictionary[String, int] = {}
 	for upgrade: UpgradeDef in held_upgrades(hero):
+		if upgrade.stacks():
+			var take: int = takes.get(upgrade.id, 0)
+			takes[upgrade.id] = take + 1
+			var locked: Array = hero.locked.get(upgrade.id, [])
+			if take < locked.size():
+				mods.append(upgrade.locked_mod(int(locked[take])))
+			continue
 		var mod: KitMod = upgrade.mod_for(hero.transformed)
 		if mod != null:
 			mods.append(mod)
@@ -128,13 +185,29 @@ func upgrade_mods(hero: RunState.Hero) -> Array[KitMod]:
 	return mods
 
 
-## The upgrades that count for `hero` now, in the order taken (a path's
-## only while the hero is on that path).
+## What taking stacking card `upgrade` now locks in for `hero` (section
+## 15.4): its share of the hero's stat now (its kit at its stage with the
+## upgrades it holds; not wounds, items, relics, or auras), rounded to the
+## nearest point, at least 1. Attack speed's share is of 100 + ATSP, since
+## ATSP is a bonus in points, not a rate.
+func stack_amount(hero: RunState.Hero, upgrade: UpgradeDef) -> int:
+	var kit: UnitDef = hero_kit(hero)
+	for mod: KitMod in upgrade_mods(hero):
+		kit = mod.apply(kit)
+	var stat: int = kit.stats.values[upgrade.stack_stat]
+	if upgrade.stack_stat == UnitStats.Stat.ATSP:
+		stat += 100
+	return maxi(1, (stat * upgrade.stack_pct + 50) / 100)
+
+
+## The upgrades that count for `hero` now, in the order taken (a taste or
+## path card only while the hero is on that path; a stacking card once per
+## take).
 func held_upgrades(hero: RunState.Hero) -> Array[UpgradeDef]:
 	var found: Array[UpgradeDef] = []
 	for id: String in hero.upgrades:
 		var upgrade: UpgradeDef = upgrades.get(id)
-		if upgrade != null and not (upgrade.layer == UpgradeDef.Layer.PATH and upgrade.path != hero.path):
+		if upgrade != null and (upgrade.layer == UpgradeDef.Layer.HERO or upgrade.path == hero.path):
 			found.append(upgrade)
 	return found
 
@@ -524,20 +597,23 @@ func _check_item(item: ItemDef, where: String) -> void:
 			errors.append("%s: rank %s does nothing on any hero" % [where, ItemDef.RANK_NAMES[rank]])
 
 
-## An upgrade's hero or path must exist, and its mod must change, soundly,
-## every kit it can meet: a hero's, the vowed and transformed kits of every
-## path; a path's, the transformed kit (a vow pick's, the vowed one too).
+## An upgrade's hero or path must exist, and its mod must apply soundly to
+## every kit it can meet: a hero card's, the vowed and transformed kits of
+## every path (it must change at least one; Decision 37 keeps it from the
+## pick where it changes nothing); a taste card's, its path's vowed kit and,
+## with its transformed mod, the transformed one, changing both (Decision
+## 35); a path card's, the transformed kit, changing it.
 func _check_upgrade(upgrade: UpgradeDef, where: String) -> void:
-	if upgrade.mod == null and upgrade.grows == null:
-		return
 	var meets: Array[Array] = []
+	var must_change: bool = true
 	if upgrade.layer == UpgradeDef.Layer.HERO:
 		if not content.heroes.has(upgrade.hero):
 			errors.append("%s: unknown hero \"%s\"" % [where, upgrade.hero])
 			return
+		must_change = false
 		for path: PathDef in content.heroes[upgrade.hero].paths:
-			meets.append([path.id + " vowed", path.vowed_kit, upgrade.mod])
-			meets.append([path.id + " transformed", path.transformed_kit, upgrade.mod])
+			meets.append([path.id + " vowed", path.vowed_kit, false])
+			meets.append([path.id + " transformed", path.transformed_kit, true])
 			_check_growth_counts(upgrade.grows, [path.vowed_kit, path.transformed_kit], where)
 	else:
 		if not content.paths.has(upgrade.path):
@@ -545,25 +621,35 @@ func _check_upgrade(upgrade: UpgradeDef, where: String) -> void:
 			return
 		var path: PathDef = content.paths[upgrade.path]
 		upgrade.hero = path.hero
-		if upgrade.vow:
-			meets.append([path.id + " vowed", path.vowed_kit, upgrade.mod_for(false)])
-		meets.append([path.id + " transformed", path.transformed_kit, upgrade.mod_for(true)])
-		_check_growth_counts(upgrade.grows, [path.vowed_kit, path.transformed_kit] if upgrade.vow else [path.transformed_kit], where)
-	if upgrade.grows != null:
-		# A growing card's step, many times over, on every kit it meets.
-		for meet: Array in meets.duplicate():
-			meets.append([meet[0] + " (grown)", meet[1], upgrade.grows.each.times(50)])
+		if upgrade.layer == UpgradeDef.Layer.TASTE:
+			meets.append([path.id + " vowed", path.vowed_kit, false])
+		meets.append([path.id + " transformed", path.transformed_kit, true])
+		_check_growth_counts(upgrade.grows, [path.vowed_kit, path.transformed_kit] if upgrade.layer == UpgradeDef.Layer.TASTE else [path.transformed_kit], where)
+	if upgrade.stacks():
+		return
+	var changes_any: bool = false
 	for meet: Array in meets:
 		var kit: UnitDef = meet[1]
-		var mod: KitMod = meet[2]
-		if kit == null or mod == null:
+		if kit == null:
 			continue
-		var problems: Array[String] = []
-		mod.apply(kit, problems)
-		for problem: String in problems:
-			errors.append("%s: on %s, %s" % [where, meet[0], problem])
-		if not mod.affects(kit):
+		var transformed: bool = meet[2]
+		var mods: Array[KitMod] = [upgrade.mod_for(transformed)]
+		if upgrade.grows != null:
+			# A growing card's step, many times over, on every kit it meets.
+			mods.append(upgrade.grows.each.times(50))
+		for mod: KitMod in mods:
+			if mod == null:
+				continue
+			var problems: Array[String] = []
+			mod.apply(kit, problems)
+			for problem: String in problems:
+				errors.append("%s: on %s, %s" % [where, meet[0], problem])
+		var changes: bool = changes_something(upgrade, transformed, kit)
+		changes_any = changes_any or changes
+		if must_change and not changes:
 			errors.append("%s: does nothing on %s" % [where, meet[0]])
+	if not changes_any:
+		errors.append("%s: does nothing on any of its hero's kits" % where)
 
 
 ## A growing card's counting names abilities its holder has (in one of
@@ -588,7 +674,17 @@ func _check_all_upgrades(hero_id: String) -> void:
 			hero.id = hero_id
 			hero.path = path.id
 			hero.transformed = transformed
-			hero.upgrades = upgrades_for(hero)
+			# Every card it could hold here: its own, and the path's taste
+			# and path cards (a taste card carries on once transformed), a
+			# stacking card taken twice.
+			for id: String in upgrade_ids:
+				var upgrade: UpgradeDef = upgrades[id]
+				if upgrade.hero == hero_id and (upgrade.layer == UpgradeDef.Layer.HERO or upgrade.layer == UpgradeDef.Layer.TASTE and upgrade.path == path.id
+						or upgrade.path == path.id and transformed):
+					hero.upgrades.append(id)
+					if upgrade.stacks():
+						hero.upgrades.append(id)
+						hero.locked[id] = [1, 1]
 			var kit: UnitDef = path.transformed_kit if transformed else path.vowed_kit
 			if kit == null:
 				continue

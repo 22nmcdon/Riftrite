@@ -39,39 +39,39 @@ func _deed(hero_id: String, path_id: String, amount: int) -> Array[FightResult.D
 	return [FightResult.Deed.make(hero_id, path_id, amount)] as Array[FightResult.Deed]
 
 
-## A RunContent over the real ContentDb with `upgrades` as upgrades.json.
+## A RunContent over the real data with `upgrades` as upgrades.json.
 func _with_upgrades(upgrades: Array) -> RunContent:
-	var texts: Dictionary[String, String] = {
-		RunContent.ACT_FILE: FileAccess.get_file_as_string("res://data/act1.json"),
-		RunContent.UPGRADES_FILE: JSON.stringify(upgrades),
-	}
+	var texts: Dictionary[String, String] = {}
+	for file_name: String in RunContent.FILES:
+		texts[file_name] = FileAccess.get_file_as_string("res://data/" + file_name)
+	texts[RunContent.UPGRADES_FILE] = JSON.stringify(upgrades)
 	return RunContent.load_texts(texts, _run.content)
 
 
 func test_the_upgrades_load() -> void:
 	assert_true(_run.is_valid(), "\n".join(_run.errors))
+	for path_id: String in _run.content.path_ids:
+		var cards: Array[String] = _run.upgrade_ids.filter(func(id: String) -> bool: return _run.upgrades[id].path == path_id)
+		assert_eq(cards.filter(func(id: String) -> bool: return _run.upgrades[id].grows != null).size(), 1, "%s has one card that grows" % path_id)
+		assert_eq(_run.upgrades[cards[0]].hero, _run.content.paths[path_id].hero, "a path's card is its hero's")
+		assert_gt(_run.content.paths[path_id].deed.threshold, 0, "%s's deed has a threshold" % path_id)
 	for hero_id: String in _run.content.hero_ids:
 		var own: Array[String] = _run.upgrade_ids.filter(func(id: String) -> bool: return _run.upgrades[id].hero == hero_id and _run.upgrades[id].layer == UpgradeDef.Layer.HERO)
-		assert_eq(own.filter(func(id: String) -> bool: return _run.upgrades[id].grows == null).size(), 3, "%s has 3 hero upgrades" % hero_id)
-		assert_eq(own.filter(func(id: String) -> bool: return _run.upgrades[id].grows != null).size(), 1, "and one that grows (phase 5c step 4)")
-	for path_id: String in _run.content.path_ids:
-		var own: Array[String] = _run.upgrade_ids.filter(func(id: String) -> bool: return _run.upgrades[id].path == path_id and _run.upgrades[id].grows == null)
-		assert_eq(own.size(), 3, "%s has 3 upgrades" % path_id)
-		assert_eq(_run.upgrade_ids.filter(func(id: String) -> bool: return _run.upgrades[id].path == path_id and _run.upgrades[id].grows != null).size(), 1, "and one that grows")
-		assert_eq(own.filter(func(id: String) -> bool: return _run.upgrades[id].vow).size(), 1, "%s has one vow pick" % path_id)
-		assert_eq(_run.upgrades[own[0]].hero, _run.content.paths[path_id].hero, "a path's upgrade is its hero's")
-		assert_gt(_run.content.paths[path_id].deed.threshold, 0, "%s's deed has a threshold" % path_id)
+		assert_eq(own.filter(func(id: String) -> bool: return _run.upgrades[id].grows != null).size(), 1, "%s has one hero card that grows (phase 5c step 4)" % hero_id)
 
 
 func test_bad_upgrades_are_refused() -> void:
 	var tough: Dictionary = {"stats_bp": {"hp": 11000}}
 	var cases: Array = [
 		[{"id": "both", "name": "Both", "text": "x", "hero": "maren", "path": "deadeye", "mod": tough}, "give one of hero and path"],
-		[{"id": "odd", "name": "Odd", "text": "x", "hero": "maren", "vow": true, "mod": tough}, "only a path's upgrade can be a vow pick"],
-		[{"id": "later", "name": "Later", "text": "x", "path": "deadeye", "mod": tough, "transformed_mod": tough}, "only a vow pick has a transformed_mod"],
+		[{"id": "odd", "name": "Odd", "text": "x", "hero": "maren", "taste": true, "mod": tough}, "only a path's card can be a taste card"],
+		[{"id": "later", "name": "Later", "text": "x", "path": "deadeye", "mod": tough, "transformed_mod": tough}, "only a taste card has a transformed_mod"],
 		[{"id": "who", "name": "Who", "text": "x", "path": "nowhere", "mod": tough}, "unknown path \"nowhere\""],
-		[{"id": "idle", "name": "Idle", "text": "x", "hero": "brannoc", "mod": {"mana": {"max_add": -5}}}, "does nothing on last_watch transformed"],
-		[{"id": "gone", "name": "Gone", "text": "x", "path": "deadeye", "vow": true, "mod": {"on": [{"slot": "passive:steady", "after_add_ms": -500}]}}, "on deadeye transformed, it has no passive \"steady\""],
+		[{"id": "idle", "name": "Idle", "text": "x", "path": "last_watch", "mod": {"mana": {"max_add": -5}}}, "does nothing on last_watch transformed"],
+		[{"id": "never", "name": "Never", "text": "x", "hero": "brannoc", "mod": {"on": [{"slot": "abilities", "statuses": ["burn"], "duration_add_ms": 500}]}}, "does nothing on any of its hero's kits"],
+		[{"id": "gone", "name": "Gone", "text": "x", "path": "deadeye", "taste": true, "mod": {"on": [{"slot": "passive:steady", "after_add_ms": -500}]}}, "on deadeye transformed, it has no passive \"steady\""],
+		[{"id": "heap", "name": "Heap", "text": "x", "path": "deadeye", "stacks": {"stat": "atk", "pct": 10}}, "a stacking card is a hero's"],
+		[{"id": "fast", "name": "Fast", "text": "x", "hero": "maren", "stacks": {"stat": "speed", "pct": 10}}, "stat"],
 	]
 	for case: Array in cases:
 		var run: RunContent = _with_upgrades([case[0]])
@@ -83,24 +83,29 @@ func test_what_a_hero_can_be_offered() -> void:
 	var maren := RunState.Hero.new()
 	maren.id = "maren"
 	maren.path = "deadeye"
-	assert_eq(_run.upgrades_for(maren), ["quick_draw", "keen_eye", "hardened", "quick_footing", "notched_bow"] as Array[String], "her own and the vow pick (and her growing upgrade, phase 5c step 4)")
+	var offered: Array[String] = _run.upgrades_for(maren)
+	assert_true(offered.has("steady_hands") and offered.has("deep_mark") and offered.has("notched_bow"), "her own cards and Deadeye's taste: %s" % [offered])
+	assert_false(offered.has("hearts_refund"), "not Deadeye's path cards before she transforms")
 	maren.transformed = true
-	maren.upgrades.append("keen_eye")
-	assert_eq(_run.upgrades_for(maren), ["quick_draw", "hardened", "quick_footing", "heartseekers_edge", "hunters_calm", "notched_bow", "hunters_tally"] as Array[String], "the path's pool joins; nothing taken twice")
+	maren.upgrades.append("hearts_refund")
+	offered = _run.upgrades_for(maren)
+	assert_false(offered.has("steady_hands"), "no taste cards once transformed")
+	assert_false(offered.has("hearts_refund"), "nothing taken twice")
+	assert_true(offered.has("hunters_tally"), "the path's cards join")
 
 
-func test_a_vow_pick_changes_with_the_stage_and_waits_off_its_path() -> void:
+func test_a_taste_card_changes_with_the_stage_and_waits_off_its_path() -> void:
 	var maren := RunState.Hero.new()
 	maren.id = "maren"
 	maren.path = "deadeye"
-	maren.upgrades.assign(["quick_footing", "keen_eye"])
-	var footing: UpgradeDef = _run.upgrades["quick_footing"]
-	assert_eq(_run.upgrade_mods(maren), [footing.mod, _run.upgrades["keen_eye"].mod] as Array[KitMod])
+	maren.upgrades.assign(["steady_hands", "deep_mark"])
+	var hands: UpgradeDef = _run.upgrades["steady_hands"]
+	assert_eq(_run.upgrade_mods(maren), [hands.mod, _run.upgrades["deep_mark"].mod] as Array[KitMod])
 	maren.transformed = true
-	assert_eq(_run.upgrade_mods(maren)[0], footing.transformed_mod, "once transformed, the other mod")
+	assert_eq(_run.upgrade_mods(maren)[0], hands.transformed_mod, "once transformed, its transformed mod (Decision 35)")
 	maren.transformed = false
 	maren.path = "trapper"
-	assert_eq(_run.upgrade_mods(maren), [_run.upgrades["keen_eye"].mod] as Array[KitMod], "off Deadeye, its pick waits")
+	assert_eq(_run.upgrade_mods(maren), [_run.upgrades["deep_mark"].mod] as Array[KitMod], "off Deadeye, it waits")
 
 
 func test_a_filled_deed_transforms_after_the_fight() -> void:
@@ -195,20 +200,27 @@ func test_cards_are_one_per_hero_unless_wild() -> void:
 
 func test_a_taken_upgrade_reaches_the_fight() -> void:
 	var flow: RunFlow = _at_fight()
-	flow.state.hero("brannoc").upgrades.append("thick_hide")
+	flow.state.hero("brannoc").upgrades.append("opening_stand")
+	flow.state.hero("brannoc").upgrades.append("hearthblood")
+	flow.state.hero("brannoc").locked["hearthblood"] = [63]
 	var errors: Array[String] = []
 	var setup: FightSetup = flow.fight_setup(Bot.formation(), errors)
 	var kit: UnitDef = _run.content.paths["hearthwall"].vowed_kit
-	assert_eq(setup.heroes[0].def.stats.get_stat(UnitStats.Stat.HP), FixedMath.apply_bp(kit.stats.get_stat(UnitStats.Stat.HP), 10800))
+	assert_eq(setup.heroes[0].def.stats.get_stat(UnitStats.Stat.HP), kit.stats.get_stat(UnitStats.Stat.HP) + 63, "a stacking card's locked amount")
+	assert_true(setup.heroes[0].def.passives.any(func(part: PartDef) -> bool: return part.id == "opening_stand"), "and a card's passive")
 
 
 func test_picks_run_out_gracefully() -> void:
-	var flow: RunFlow = _at_fight()
-	for hero: RunState.Hero in flow.state.heroes:
-		hero.upgrades = _run.upgrades_for(hero)
-	flow.state.hero("vell").upgrades.erase("lantern_oil")
+	# The real pools never run dry (stacking cards come back, phase 5c step
+	# 7), so a pool of one card: whoever's it is, then nothing.
+	var run: RunContent = _with_upgrades([{"id": "glow", "name": "Glow", "text": "x", "hero": "vell", "mod": {"stats_bp": {"mgk": 11000}}}])
+	assert_true(run.is_valid(), str(run.errors))
+	var errors: Array[String] = []
+	var flow: RunFlow = RunFlow.start(run, 7, Bot.first_vows(run.content), errors)
+	flow.leave_camp()
+	flow.choose_fight(0)
 	flow.record(Bot.formation(), _result(FightResult.Outcome.VICTORY))
-	assert_eq(flow.state.pick, ["lantern_oil"] as Array[String], "one card left, whoever's it is")
+	assert_eq(flow.state.pick, ["glow"] as Array[String], "one card left, whoever's it is")
 	flow.take_pick(0)
 	flow.finish_day()
 	flow.leave_camp()

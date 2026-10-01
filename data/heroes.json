@@ -17,7 +17,7 @@
         "_note": "Taunts enemies within 2 hexes for Taunt's own 3s. The DEF is the passive of the same name below: it holds while any enemy is taunted by him.",
         "id": "hold_the_line", "name": "Hold the Line", "text": "Taunts every enemy within 2 hexes of him, so they turn on him instead.", "trigger": {"kind": "mana"}, "targeting": "self",
         "effects": [{"type": "area", "shape": {"kind": "circle", "radius": 2}, "anchor": "self", "hits": "enemies",
-          "effects": [{"type": "apply_status", "status": "taunt", "target": "target"}]}]
+          "effects": [{"type": "apply_status", "status": "taunt", "duration_ms": 3000, "target": "target"}]}]
       },
       "passives": [
         {"id": "hold_the_line_guard", "name": "Hold the Line", "text": "His DEF is 1.5 times as high while any enemy is taunted by him.", "kind": "aura",
@@ -45,7 +45,7 @@
       "signature": {
         "_note": "Marked for its own 4s: +15% damage taken from everyone.",
         "id": "marking_shot", "name": "Marking Shot", "text": "Marks the nearest enemy within 4 hexes, so it takes more damage from everyone for a while.", "trigger": {"kind": "mana"}, "targeting": "nearest",
-        "effects": [{"type": "apply_status", "status": "marked", "target": "target"}]
+        "effects": [{"type": "apply_status", "status": "marked", "duration_ms": 4000, "target": "target"}]
       },
       "passives": [
         {"id": "slip_away", "name": "Slip Away", "kind": "ability",

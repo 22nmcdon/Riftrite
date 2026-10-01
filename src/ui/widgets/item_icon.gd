@@ -51,7 +51,7 @@ static func for_relic(relic: RelicDef, side: float = 48.0) -> ItemIcon:
 
 
 static func for_upgrade(upgrade: UpgradeDef, side: float = 48.0) -> ItemIcon:
-	return make("vow" if upgrade.vow else "upgrade", UPGRADE_GLYPH, side)
+	return make("vow" if upgrade.layer == UpgradeDef.Layer.TASTE else "upgrade", UPGRADE_GLYPH, side)
 
 
 func _draw() -> void:

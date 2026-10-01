@@ -21,6 +21,11 @@ class RunLine:
 	## Hero id -> the day it first transformed (0: never).
 	var transformed_on: Dictionary[String, int] = {}
 	var picks: Dictionary[String, int] = {}
+	## Picks taken by layer (UpgradeDef.Layer: hero, taste, path; phase 5c
+	## step 7), and the stacking cards' takes and what they locked in.
+	var layer_picks: Array[int] = [0, 0, 0]
+	var stack_takes: int = 0
+	var stack_points: int = 0
 	var shards_earned: int = 0
 	var shards_spent: int = 0
 	var wounds: int = 0
@@ -117,6 +122,12 @@ static func play(run: RunContent, run_seed: int, look_ahead: bool = true) -> Run
 	line.day = state.day
 	for hero: RunState.Hero in state.heroes:
 		line.picks[hero.id] = hero.upgrades.size()
+		for id: String in hero.upgrades:
+			line.layer_picks[run.upgrades[id].layer] += 1
+		for id: String in hero.locked:
+			line.stack_takes += hero.locked[id].size()
+			for amount: Variant in hero.locked[id]:
+				line.stack_points += int(amount)
 		if not line.transformed_on.has(hero.id):
 			line.transformed_on[hero.id] = 0
 	line.relics = state.relics.size()
@@ -190,6 +201,13 @@ static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 		var total: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.picks.get(hero_id, 0), 0)
 		per_hero.append("%s %.1f" % [content.heroes[hero_id].kit.id.capitalize(), float(total) / maxi(n, 1)])
 	out.append("Picks taken per run: %s" % ", ".join(per_hero))
+	var by_layer: PackedStringArray = PackedStringArray()
+	for layer: int in UpgradeDef.LAYER_NAMES.size():
+		var total: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.layer_picks[layer], 0)
+		by_layer.append("%s %.1f" % [UpgradeDef.LAYER_NAMES[layer], float(total) / maxi(n, 1)])
+	var takes: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.stack_takes, 0)
+	var points: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.stack_points, 0)
+	out.append("Picks per run by layer: %s; stacking cards taken %.1f a run, %.1f points each" % [", ".join(by_layer), float(takes) / maxi(n, 1), float(points) / maxi(takes, 1)])
 	out.append("Per run: %.1f shards earned, %.1f spent, %.1f wounds, %.1f relics" % [_mean(lines, "shards_earned"), _mean(lines, "shards_spent"), _mean(lines, "wounds"), _mean(lines, "relics")])
 	var by_tier: PackedStringArray = PackedStringArray()
 	for tier: int in RelicDef.TIER_NAMES.size():

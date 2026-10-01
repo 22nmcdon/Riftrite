@@ -281,5 +281,39 @@
     "kind": "boost",
     "duration_ms": 5000,
     "auras": [{"stat": "atk_bp", "value": 12000}, {"stat": "mgk_bp", "value": 12000}]
+  },
+  {
+    "_note": "Moves and attacks 20% slower: a lighter Slow (the upgrade pools' Staggering Bash and Searing; phase 5c step 7). Slows don't stack: the strongest wins.",
+    "id": "hobbled",
+    "name": "Hobbled",
+    "kind": "slow",
+    "duration_ms": 2000,
+    "slow_bp": 2000
+  },
+  {
+    "_note": "Deals less damage while it lasts (Stubborn Taunt, Brannoc's upgrade: the enemies he taunts; phase 5c step 7).",
+    "id": "cowed",
+    "name": "Cowed",
+    "kind": "boost",
+    "duration_ms": 3000,
+    "auras": [{"stat": "damage_bp", "value": 9000}]
+  },
+  {
+    "_note": "Its holder's next attack crits; it ends as it attacks (Parting Shot, Maren's upgrade: after a hop; phase 5c step 7).",
+    "id": "parting_shot",
+    "name": "Parting Shot",
+    "kind": "boost",
+    "duration_ms": 10000,
+    "until_attack": true,
+    "auras": [{"stat": "crit_chance_bp", "value": 10000}]
+  },
+  {
+    "_note": "Its holder's first attack hits twice as hard; it ends as it attacks (First Blood, Maren's upgrade: from the fight's start; phase 5c step 7).",
+    "id": "first_blood",
+    "name": "First Blood",
+    "kind": "boost",
+    "duration_ms": 60000,
+    "until_attack": true,
+    "auras": [{"stat": "damage_bp", "value": 20000}]
   }
 ]

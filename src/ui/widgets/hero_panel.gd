@@ -343,14 +343,23 @@ func _fill_path() -> void:
 	extras.add_child(_extra("Duo bond", "None yet: bonds are found in the run.", "bond"))
 
 
-## The upgrades the hero has taken, by name (a path's that waits off its
-## path says so).
+## The upgrades the hero has taken, by name (a taste or path card that waits
+## off its path says so; a stacking card once, with each locked amount:
+## "Honed Tips ×3: +2, +3, +5 ATK", phase 5c step 7).
 func _run_upgrades(run_session: RunSession) -> String:
 	var hero: RunState.Hero = run_session.state().hero(showing)
 	var names: Array[String] = []
+	var listed: Array[String] = []
 	for id: String in hero.upgrades:
+		if listed.has(id):
+			continue
+		listed.append(id)
 		var upgrade: UpgradeDef = run_session.run.upgrades[id]
-		var waiting: bool = upgrade.layer == UpgradeDef.Layer.PATH and upgrade.path != hero.path
+		if upgrade.stacks():
+			var locked: Array = hero.locked.get(id, [])
+			names.append("%s%s: %s" % [upgrade.name, " ×%d" % locked.size() if locked.size() > 1 else "", ModInfo.stack_locked(upgrade, locked)])
+			continue
+		var waiting: bool = upgrade.layer != UpgradeDef.Layer.HERO and upgrade.path != hero.path
 		var numbers: String = ModInfo.upgrade_numbers(upgrade, run_session.run.hero_kit(hero), run_session.content)
 		if upgrade.grows != null:
 			numbers += " · " + ModInfo.growth_now(upgrade.grows, hero.growth.get(upgrade.id, 0), run_session.run.hero_kit(hero), run_session.content)

@@ -6,8 +6,9 @@ extends RefCounted
 ## what's waiting, never a random stream; a save is this state as JSON
 ## (to_dict, from_dict).
 
-## A save from another version can't be loaded.
-const VERSION: int = 2
+## A save from another version can't be loaded (3: phase 5c step 7's upgrade
+## pools, new upgrade ids and stacking locks).
+const VERSION: int = 3
 
 ## Where the day is: camp, choosing the fight, the loadout (then placement
 ## and the fight), after the fight (a pick, a transformation, a relic
@@ -28,8 +29,11 @@ class Hero:
 	## Path id -> what fights have put into that path's deed (all three
 	## count, whatever the vow).
 	var deeds: Dictionary[String, int] = {}
-	## Upgrade ids taken, in order.
+	## Upgrade ids taken, in order (a stacking card once per take).
 	var upgrades: Array[String] = []
+	## Its stacking cards' locked amounts (phase 5c step 7): upgrade id ->
+	## each take's amount, in order (ints).
+	var locked: Dictionary[String, Array] = {}
 	var wounds: int = 0
 	## Item ids in its loadout slots ("": empty).
 	var slots: Array[String] = []
@@ -42,7 +46,8 @@ class Hero:
 
 	func to_dict() -> Dictionary:
 		return {"id": id, "path": path, "transformed": transformed, "deeds": deeds.duplicate(), "upgrades": upgrades.duplicate(),
-			"wounds": wounds, "slots": slots.duplicate(), "growth": growth.duplicate(), "gambit_at": gambit_at}
+			"wounds": wounds, "slots": slots.duplicate(), "growth": growth.duplicate(), "gambit_at": gambit_at,
+			"locked": locked.duplicate(true)}
 
 	static func from_dict(data: Dictionary) -> Hero:
 		var hero := Hero.new()
@@ -59,6 +64,9 @@ class Hero:
 		var growth: Dictionary = data.get("growth", {})
 		for card_id: Variant in growth:
 			hero.growth[str(card_id)] = int(growth[card_id])
+		var locked: Dictionary = data.get("locked", {})
+		for card_id: Variant in locked:
+			hero.locked[str(card_id)] = (locked[card_id] as Array).map(func(value: Variant) -> int: return int(value))
 		return hero
 
 

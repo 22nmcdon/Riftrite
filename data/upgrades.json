@@ -1,36 +1,235 @@
 [
   {
-    "_note": "The after-fight pick's upgrades (docs/plans/rebuild-phase5-run.md, section 5; Decision 2: 3 per hero and 3 per path). Each is a kit modifier (KitMod) on the hero's slots. A hero's works on any path; a path's joins the offers once its hero has transformed, or from the vow on if it's a vow pick. Texts keep numbers out (the UI adds them from the mod). Numbers are first guesses for the run report to tune.",
-    "id": "thick_hide",
-    "name": "Thick Hide",
-    "hero": "brannoc",
-    "text": "More max HP, on any path.",
-    "mod": {
-      "stats_bp": {
-        "hp": 10800
-      }
+    "_note": "The after-fight pick's upgrades (docs/plans/upgrade-pools.md; built in phase 5c step 7, docs/plans/rebuild-phase5c-combos.md, section 15). Three layers: a hero's own cards (\"hero\"), always offered; a path's taste cards (\"path\" with \"taste\": true), offered while vowed to it until the hero transforms, and carried on after with their \"transformed_mod\" (Decision 35); and a path's cards (\"path\"), offered once transformed. Each is a kit modifier (KitMod) on the hero's slots; a stacking card (\"stacks\") locks in a share of the hero's stat when taken and can be taken again; a growing card (\"grows\") grows all run. The pick never offers a card that changes nothing on the hero's kit now (Decision 37). Numbers are placeholders.",
+    "id": "honed_tips",
+    "name": "Honed Tips",
+    "hero": "maren",
+    "text": "Her ATK rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "atk",
+      "pct": 10
     }
   },
   {
-    "id": "heavy_hand",
-    "name": "Heavy Hand",
-    "hero": "brannoc",
-    "text": "His basic attack hits harder.",
+    "id": "keen_eye",
+    "name": "Keen Eye",
+    "hero": "maren",
+    "text": "Her CRIT rises by a quarter of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "crit",
+      "pct": 25
+    }
+  },
+  {
+    "id": "quick_draw",
+    "name": "Quick Draw",
+    "hero": "maren",
+    "text": "She attacks faster by a tenth of her attack speed when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "atsp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "fletchers_leathers",
+    "name": "Fletcher's Leathers",
+    "hero": "maren",
+    "text": "Her max HP rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "hp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "deep_mark",
+    "name": "Deep Mark",
+    "hero": "maren",
+    "text": "Her Marks last longer.",
     "mod": {
       "on": [
         {
-          "slot": "basic_attack",
-          "types": [
-            "damage"
+          "slot": "abilities",
+          "statuses": [
+            "marked"
           ],
-          "amount_bp": 11500
+          "duration_add_ms": 2000
         }
       ]
     }
   },
   {
-    "id": "warm_hearth",
-    "name": "Warm Hearth",
+    "id": "light_step",
+    "name": "Light Step",
+    "hero": "maren",
+    "text": "She can hop away again sooner.",
+    "mod": {
+      "hop": {
+        "cooldown_add_ms": -2000
+      }
+    }
+  },
+  {
+    "id": "long_vanish",
+    "name": "Long Vanish",
+    "hero": "maren",
+    "text": "Her hop hides her for longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:slip_away",
+          "types": [
+            "apply_status"
+          ],
+          "duration_add_ms": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "parting_shot",
+    "name": "Parting Shot",
+    "hero": "maren",
+    "text": "Her first attack after a hop is a crit.",
+    "mod": {
+      "passives": [
+        {
+          "id": "parting_shot",
+          "name": "Parting Shot",
+          "kind": "ability",
+          "text": "Her first attack after a hop is a crit.",
+          "effects": [
+            {
+              "trigger": "on_hop",
+              "type": "apply_status",
+              "status": "parting_shot",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "first_blood",
+    "name": "First Blood",
+    "hero": "maren",
+    "text": "Her first attack each fight hits twice as hard.",
+    "mod": {
+      "passives": [
+        {
+          "id": "first_blood",
+          "name": "First Blood",
+          "kind": "ability",
+          "text": "Her first attack each fight hits twice as hard.",
+          "effects": [
+            {
+              "trigger": "on_fight_start",
+              "type": "apply_status",
+              "status": "first_blood",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "notched_bow",
+    "name": "Notched Bow",
+    "hero": "maren",
+    "text": "Every enemy she Marks notches her bow: her ATK grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "applied",
+        "keywords": [
+          "marked"
+        ]
+      },
+      "per": 3,
+      "each": {
+        "stats_bp": {
+          "atk": 10100
+        }
+      }
+    }
+  },
+  {
+    "id": "hearthblood",
+    "name": "Hearthblood",
+    "hero": "brannoc",
+    "text": "His max HP rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "hp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "iron_hide",
+    "name": "Iron Hide",
+    "hero": "brannoc",
+    "text": "His DEF rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "def",
+      "pct": 10
+    }
+  },
+  {
+    "id": "heavy_arm",
+    "name": "Heavy Arm",
+    "hero": "brannoc",
+    "text": "His ATK rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "atk",
+      "pct": 10
+    }
+  },
+  {
+    "id": "long_hold",
+    "name": "Long Hold",
+    "hero": "brannoc",
+    "text": "His taunts last longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "statuses": [
+            "taunt"
+          ],
+          "duration_add_ms": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "stubborn_taunt",
+    "name": "Stubborn Taunt",
+    "hero": "brannoc",
+    "text": "Enemies he taunts are Cowed: they deal less damage for a while.",
+    "mod": {
+      "passives": [
+        {
+          "id": "stubborn_taunt",
+          "name": "Stubborn Taunt",
+          "kind": "ability",
+          "text": "Enemies he taunts are Cowed: they deal less damage for a while.",
+          "effects": [
+            {
+              "trigger": "on_status",
+              "statuses": [
+                "taunt"
+              ],
+              "type": "apply_status",
+              "status": "cowed",
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "deep_hearth",
+    "name": "Deep Hearth",
     "hero": "brannoc",
     "text": "Hearthguard's Shield is bigger.",
     "mod": {
@@ -46,86 +245,183 @@
     }
   },
   {
-    "id": "quick_draw",
-    "name": "Quick Draw",
-    "hero": "maren",
-    "text": "Her basic attack comes faster.",
+    "id": "staggering_bash",
+    "name": "Staggering Bash",
+    "hero": "brannoc",
+    "text": "Every 4th basic attack Hobbles its target.",
     "mod": {
       "on": [
         {
           "slot": "basic_attack",
-          "cooldown_bp": 9200
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "hobbled",
+              "target": "target",
+              "every": 4
+            }
+          ]
         }
       ]
     }
   },
   {
-    "id": "keen_eye",
-    "name": "Keen Eye",
-    "hero": "maren",
-    "text": "She crits more often.",
+    "id": "opening_stand",
+    "name": "Opening Stand",
+    "hero": "brannoc",
+    "text": "His DEF is higher for the first moments of each fight.",
     "mod": {
-      "stats_add": {
-        "crit": 5
+      "passives": [
+        {
+          "id": "opening_stand",
+          "name": "Opening Stand",
+          "kind": "aura",
+          "text": "His DEF is higher for the first 5s of each fight.",
+          "aura": {
+            "target": "holder",
+            "stat": "def_bp",
+            "value": 13000,
+            "window": {
+              "until_ms": 5000
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "weathered",
+    "name": "Weathered",
+    "hero": "brannoc",
+    "text": "Every blow he weathers hardens him: his max HP grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "taken"
+      },
+      "per": 600,
+      "each": {
+        "stats_bp": {
+          "hp": 10100
+        }
       }
     }
   },
   {
-    "id": "hardened",
-    "name": "Hardened",
-    "hero": "maren",
-    "text": "More max HP, on any path.",
+    "id": "bright_soul",
+    "name": "Bright Soul",
+    "hero": "vell",
+    "text": "Her MGK rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "mgk",
+      "pct": 10
+    }
+  },
+  {
+    "id": "pilgrims_cloak",
+    "name": "Pilgrim's Cloak",
+    "hero": "vell",
+    "text": "Her max HP rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "hp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "quick_glow",
+    "name": "Quick Glow",
+    "hero": "vell",
+    "text": "She attacks faster by a tenth of her attack speed when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "atsp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "wide_hearth",
+    "name": "Wide Hearth",
+    "hero": "vell",
+    "text": "Hearthlight reaches allies farther from her.",
     "mod": {
-      "stats_bp": {
-        "hp": 11000
+      "on": [
+        {
+          "slot": "passive:hearthlight",
+          "radius_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "warm_hearth",
+    "name": "Warm Hearth",
+    "hero": "vell",
+    "text": "Hearthlight heals more.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:hearthlight",
+          "types": [
+            "heal"
+          ],
+          "amount_bp": 20000
+        }
+      ]
+    }
+  },
+  {
+    "id": "deep_well",
+    "name": "Deep Well",
+    "hero": "vell",
+    "text": "Lantern Glow gives her more mana.",
+    "mod": {
+      "mana": {
+        "per_attack_add": 3
+      }
+    }
+  },
+  {
+    "id": "ember_glow",
+    "name": "Ember Glow",
+    "hero": "vell",
+    "text": "Lantern Glow sets its target Burning.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 1,
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "lamp_oil",
+    "name": "Lamp Oil",
+    "hero": "vell",
+    "text": "Every heal she gives feeds the lamp: her MGK grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "healing"
+      },
+      "per": 200,
+      "each": {
+        "stats_bp": {
+          "mgk": 10100
+        }
       }
     }
   },
   {
     "id": "steady_hands",
     "name": "Steady Hands",
-    "hero": "vell",
-    "text": "She starts each fight with more mana.",
-    "mod": {
-      "mana": {
-        "start_add": 15
-      }
-    }
-  },
-  {
-    "id": "deep_mend",
-    "name": "Deep Mend",
-    "hero": "vell",
-    "text": "Every heal she gives is stronger.",
-    "mod": {
-      "on": [
-        {
-          "slot": "abilities",
-          "types": [
-            "heal"
-          ],
-          "amount_bp": 10800
-        }
-      ]
-    }
-  },
-  {
-    "id": "lantern_oil",
-    "name": "Lantern Oil",
-    "hero": "vell",
-    "text": "Each Lantern Glow gives her more mana.",
-    "mod": {
-      "mana": {
-        "per_attack_add": 2
-      }
-    }
-  },
-  {
-    "id": "quick_footing",
-    "name": "Quick Footing",
     "path": "deadeye",
-    "vow": true,
-    "text": "She steadies sooner: her reach and aim bonuses hold after less time standing still.",
+    "taste": true,
+    "text": "She steadies sooner: Steady holds after less time standing still (once transformed, Planted and Sure Aim).",
     "mod": {
       "on": [
         {
@@ -152,495 +448,28 @@
     }
   },
   {
-    "id": "heartseekers_edge",
-    "name": "Heartseeker's Edge",
+    "id": "hearts_refund",
+    "name": "Heart's Refund",
     "path": "deadeye",
-    "text": "Heartseeker hits harder.",
+    "text": "A kill with Heartseeker gives back mana.",
     "mod": {
-      "on": [
+      "passives": [
         {
-          "slot": "signature",
-          "types": [
-            "damage"
-          ],
-          "amount_bp": 11500
-        }
-      ]
-    }
-  },
-  {
-    "id": "hunters_calm",
-    "name": "Hunter's Calm",
-    "path": "deadeye",
-    "text": "Heartseeker needs less mana.",
-    "mod": {
-      "mana": {
-        "max_add": -8
-      }
-    }
-  },
-  {
-    "id": "deep_roots",
-    "name": "Deep Roots",
-    "path": "trapper",
-    "vow": true,
-    "text": "Her snares root for longer.",
-    "mod": {
-      "on": [
-        {
-          "slot": "passive:snare",
-          "types": [
-            "apply_status"
-          ],
-          "duration_add_ms": 500
-        }
-      ]
-    },
-    "transformed_mod": {
-      "on": [
-        {
-          "slot": "signature",
-          "types": [
-            "apply_status"
-          ],
-          "duration_add_ms": 500
-        }
-      ]
-    }
-  },
-  {
-    "id": "quick_brambles",
-    "name": "Quick Brambles",
-    "path": "trapper",
-    "text": "Bramble Field needs less mana.",
-    "mod": {
-      "mana": {
-        "max_add": -10
-      }
-    }
-  },
-  {
-    "id": "thorned_shafts",
-    "name": "Thorned Shafts",
-    "path": "trapper",
-    "text": "Her critical hits make the target Bleed.",
-    "mod": {
-      "on": [
-        {
-          "slot": "basic_attack",
-          "add_effects": [
+          "id": "hearts_refund",
+          "name": "Heart's Refund",
+          "kind": "ability",
+          "text": "A kill with Heartseeker gives back mana.",
+          "effects": [
             {
-              "trigger": "on_crit",
-              "type": "apply_status",
-              "status": "bleed",
-              "stacks": 2,
-              "target": "target"
+              "trigger": "on_kill",
+              "from_signature": true,
+              "type": "gain_mana",
+              "amount_bp_of_max_mana": 5000,
+              "target": "self"
             }
           ]
         }
       ]
-    }
-  },
-  {
-    "id": "light_fletching",
-    "name": "Light Fletching",
-    "path": "volley",
-    "vow": true,
-    "text": "Her basic attack comes faster.",
-    "mod": {
-      "on": [
-        {
-          "slot": "basic_attack",
-          "cooldown_bp": 9400
-        }
-      ]
-    }
-  },
-  {
-    "id": "long_storm",
-    "name": "Long Storm",
-    "path": "volley",
-    "text": "Arrow Storm's rain lasts longer.",
-    "mod": {
-      "on": [
-        {
-          "slot": "signature",
-          "types": [
-            "area"
-          ],
-          "duration_add_ms": 1000
-        }
-      ]
-    }
-  },
-  {
-    "id": "wide_storm",
-    "name": "Wide Storm",
-    "path": "volley",
-    "text": "Arrow Storm's rain covers a wider circle.",
-    "mod": {
-      "on": [
-        {
-          "slot": "signature",
-          "radius_add": 1
-        }
-      ]
-    }
-  },
-  {
-    "id": "braced_stone",
-    "name": "Braced Stone",
-    "path": "hearthwall",
-    "vow": true,
-    "text": "His DEF is higher, which also blunts the hits he guards.",
-    "mod": {
-      "stats_bp": {
-        "def": 10600
-      }
-    }
-  },
-  {
-    "id": "unbroken_wall",
-    "name": "Unbroken Wall",
-    "path": "hearthwall",
-    "text": "Hearthwall stands longer (and he holds still behind it as long).",
-    "mod": {
-      "on": [
-        {
-          "slot": "signature",
-          "types": [
-            "wall",
-            "apply_status"
-          ],
-          "duration_add_ms": 1000
-        }
-      ]
-    }
-  },
-  {
-    "id": "banked_embers",
-    "name": "Banked Embers",
-    "path": "hearthwall",
-    "text": "Hearthwall needs less mana.",
-    "mod": {
-      "mana": {
-        "max_add": -10
-      }
-    }
-  },
-  {
-    "id": "quick_swing",
-    "name": "Quick Swing",
-    "path": "ironbrand",
-    "vow": true,
-    "text": "His basic attack comes faster.",
-    "mod": {
-      "on": [
-        {
-          "slot": "basic_attack",
-          "cooldown_bp": 9400
-        }
-      ]
-    }
-  },
-  {
-    "id": "searing_slam",
-    "name": "Searing Slam",
-    "path": "ironbrand",
-    "text": "Brand Slam hits harder.",
-    "mod": {
-      "on": [
-        {
-          "slot": "signature",
-          "types": [
-            "damage"
-          ],
-          "amount_bp": 11500
-        }
-      ]
-    }
-  },
-  {
-    "id": "drinking_mace",
-    "name": "Drinking Mace",
-    "path": "ironbrand",
-    "text": "The Hearthbrand Mace heals him more.",
-    "mod": {
-      "on": [
-        {
-          "slot": "basic_attack",
-          "types": [
-            "heal"
-          ],
-          "amount_bp": 13000
-        }
-      ]
-    }
-  },
-  {
-    "id": "stubborn",
-    "name": "Stubborn",
-    "path": "last_watch",
-    "vow": true,
-    "text": "He can't fall for longer when a hit would fell him.",
-    "mod": {
-      "on": [
-        {
-          "slot": "passive:unyielding",
-          "types": [
-            "apply_status"
-          ],
-          "duration_add_ms": 500
-        }
-      ]
-    },
-    "transformed_mod": {
-      "on": [
-        {
-          "slot": "signature",
-          "types": [
-            "apply_status"
-          ],
-          "duration_add_ms": 500
-        }
-      ]
-    }
-  },
-  {
-    "id": "long_rites",
-    "name": "Long Rites",
-    "path": "last_watch",
-    "text": "Last Rites keeps him standing longer.",
-    "mod": {
-      "on": [
-        {
-          "slot": "signature",
-          "types": [
-            "apply_status"
-          ],
-          "duration_add_ms": 1000
-        }
-      ]
-    }
-  },
-  {
-    "id": "grim_resolve",
-    "name": "Grim Resolve",
-    "path": "last_watch",
-    "text": "He hits harder.",
-    "mod": {
-      "stats_bp": {
-        "atk": 10800
-      }
-    }
-  },
-  {
-    "id": "brighter_wick",
-    "name": "Brighter Wick",
-    "path": "lanternbearer",
-    "vow": true,
-    "text": "Her signature's heals are stronger (Mend, then Night Lantern).",
-    "mod": {
-      "on": [
-        {
-          "slot": "signature",
-          "types": [
-            "heal"
-          ],
-          "amount_bp": 11000
-        }
-      ]
-    }
-  },
-  {
-    "id": "long_night",
-    "name": "Long Night",
-    "path": "lanternbearer",
-    "text": "Night Lantern's light lasts longer.",
-    "mod": {
-      "on": [
-        {
-          "slot": "signature",
-          "types": [
-            "area"
-          ],
-          "duration_add_ms": 1000
-        }
-      ]
-    }
-  },
-  {
-    "id": "kindling",
-    "name": "Kindling",
-    "path": "lanternbearer",
-    "text": "Kindle heals more.",
-    "mod": {
-      "on": [
-        {
-          "slot": "passive:kindle",
-          "types": [
-            "heal"
-          ],
-          "amount_bp": 12500
-        }
-      ]
-    }
-  },
-  {
-    "id": "tighter_weave",
-    "name": "Tighter Weave",
-    "path": "wardweaver",
-    "vow": true,
-    "text": "Mend heals more; once she transforms, Weave gives more instead.",
-    "mod": {
-      "on": [
-        {
-          "slot": "signature",
-          "types": [
-            "heal"
-          ],
-          "amount_bp": 11000
-        }
-      ]
-    },
-    "transformed_mod": {
-      "on": [
-        {
-          "slot": "passive:weave",
-          "amount_bp": 11000
-        }
-      ]
-    }
-  },
-  {
-    "id": "lasting_circle",
-    "name": "Lasting Circle",
-    "path": "wardweaver",
-    "text": "Warding Circle lasts longer.",
-    "mod": {
-      "on": [
-        {
-          "slot": "signature",
-          "types": [
-            "area"
-          ],
-          "duration_add_ms": 1000
-        }
-      ]
-    }
-  },
-  {
-    "id": "deep_weave",
-    "name": "Deep Weave",
-    "path": "wardweaver",
-    "text": "Weave's Shield is bigger.",
-    "mod": {
-      "on": [
-        {
-          "slot": "passive:weave",
-          "types": [
-            "shield"
-          ],
-          "amount_bp": 12500
-        }
-      ]
-    }
-  },
-  {
-    "id": "hard_light",
-    "name": "Hard Light",
-    "path": "vigil_keeper",
-    "vow": true,
-    "text": "Her signature's damage is higher (Mend's smite, then Sunfall).",
-    "mod": {
-      "on": [
-        {
-          "slot": "signature",
-          "types": [
-            "damage"
-          ],
-          "amount_bp": 11500
-        }
-      ]
-    }
-  },
-  {
-    "id": "high_noon",
-    "name": "High Noon",
-    "path": "vigil_keeper",
-    "text": "Sunfall needs less mana.",
-    "mod": {
-      "mana": {
-        "max_add": -8
-      }
-    }
-  },
-  {
-    "id": "keepers_mend",
-    "name": "Keeper's Mend",
-    "path": "vigil_keeper",
-    "text": "Her Mend heals and smites more.",
-    "mod": {
-      "on": [
-        {
-          "slot": "passive:mend",
-          "amount_bp": 12000
-        }
-      ]
-    }
-  },
-  {
-    "id": "notched_bow",
-    "name": "Notched Bow",
-    "hero": "maren",
-    "text": "Every enemy she Marks notches her bow: her ATK grows for the rest of the run.",
-    "grows": {
-      "counts": {
-        "counts": "applied",
-        "keywords": [
-          "marked"
-        ]
-      },
-      "per": 3,
-      "each": {
-        "stats_bp": {
-          "atk": 10100
-        }
-      }
-    }
-  },
-  {
-    "id": "weathered",
-    "name": "Weathered",
-    "hero": "brannoc",
-    "text": "Every blow he weathers hardens him: his max HP grows for the rest of the run.",
-    "grows": {
-      "counts": {
-        "counts": "taken"
-      },
-      "per": 600,
-      "each": {
-        "stats_bp": {
-          "hp": 10100
-        }
-      }
-    }
-  },
-  {
-    "id": "lamp_oil",
-    "name": "Lamp Oil",
-    "hero": "vell",
-    "text": "Every heal she gives feeds the lamp: her MGK grows for the rest of the run.",
-    "grows": {
-      "counts": {
-        "counts": "healing"
-      },
-      "per": 200,
-      "each": {
-        "stats_bp": {
-          "mgk": 10100
-        }
-      }
     }
   },
   {
@@ -669,6 +498,90 @@
           }
         ]
       }
+    }
+  },
+  {
+    "id": "tight_weave",
+    "name": "Tight Weave",
+    "path": "trapper",
+    "taste": true,
+    "text": "Her snares root for longer (once transformed, Bramble Field's).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:snare",
+          "types": [
+            "apply_status"
+          ],
+          "duration_add_ms": 500
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "statuses": [
+            "root"
+          ],
+          "duration_add_ms": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "tangle",
+    "name": "Tangle",
+    "path": "trapper",
+    "text": "Enemies next to one she roots are Slowed.",
+    "mod": {
+      "passives": [
+        {
+          "id": "tangle",
+          "name": "Tangle",
+          "kind": "ability",
+          "text": "Enemies within 1 hex of one she roots are Slowed.",
+          "effects": [
+            {
+              "trigger": "on_status",
+              "statuses": [
+                "root"
+              ],
+              "type": "apply_status",
+              "status": "slow",
+              "duration_ms": 2000,
+              "target": "enemies_near_named",
+              "within_hexes": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "hunters_opening",
+    "name": "Hunter's Opening",
+    "path": "trapper",
+    "text": "She hits Rooted enemies harder.",
+    "mod": {
+      "passives": [
+        {
+          "id": "hunters_opening",
+          "name": "Hunter's Opening",
+          "kind": "aura",
+          "text": "She hits Rooted enemies harder.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 12000,
+            "vs": {
+              "keywords": [
+                "rooted"
+              ]
+            }
+          }
+        }
+      ]
     }
   },
   {
@@ -724,6 +637,79 @@
     }
   },
   {
+    "id": "shared_strength",
+    "name": "Shared Strength",
+    "path": "hearthwall",
+    "text": "When he takes a hit for an ally, that ally heals a little.",
+    "mod": {
+      "passives": [
+        {
+          "id": "shared_strength",
+          "name": "Shared Strength",
+          "kind": "ability",
+          "text": "When his Guard takes a hit for an ally, that ally heals a little.",
+          "effects": [
+            {
+              "trigger": "on_guard",
+              "type": "heal",
+              "amount_bp_of_max_hp": 200,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "drawing_wall",
+    "name": "Drawing Wall",
+    "path": "hearthwall",
+    "text": "When his wall rises, it drags nearby enemies toward him.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_effects": [
+            {
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 2
+              },
+              "anchor": "self",
+              "hits": "enemies",
+              "effects": [
+                {
+                  "type": "pull",
+                  "hexes": 1,
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "lasting_wall",
+    "name": "Lasting Wall",
+    "path": "hearthwall",
+    "text": "His wall stands longer (and he holds still behind it as long).",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "wall",
+            "apply_status"
+          ],
+          "duration_add_ms": 2000
+        }
+      ]
+    }
+  },
+  {
     "id": "old_scars",
     "name": "Old Scars",
     "path": "hearthwall",
@@ -738,6 +724,68 @@
           "def": 1
         }
       }
+    }
+  },
+  {
+    "id": "hungry_mace",
+    "name": "Hungry Mace",
+    "path": "ironbrand",
+    "text": "The Hearthbrand Mace heals him more.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "types": [
+            "heal"
+          ],
+          "amount_bp": 12500
+        }
+      ]
+    }
+  },
+  {
+    "id": "crushing_blow",
+    "name": "Crushing Blow",
+    "path": "ironbrand",
+    "text": "Brand Slam knocks enemies farther, so more of them crash into something.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "knockback"
+          ],
+          "amount_bp": 20000
+        }
+      ]
+    }
+  },
+  {
+    "id": "cleaving_wounds",
+    "name": "Cleaving Wounds",
+    "path": "ironbrand",
+    "text": "His Mace makes everything it hits Bleed.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "bleed",
+              "stacks": 2,
+              "target": "target"
+            },
+            {
+              "type": "apply_status",
+              "status": "bleed",
+              "stacks": 2,
+              "target": "enemies_near_target",
+              "within_hexes": 1
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -758,6 +806,112 @@
           "atk": 1
         }
       }
+    }
+  },
+  {
+    "id": "grim_resolve",
+    "name": "Grim Resolve",
+    "path": "last_watch",
+    "taste": true,
+    "text": "When Unyielding saves him, it Shields him too (once transformed, Last Rites does).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:unyielding",
+          "add_effects": [
+            {
+              "trigger": "on_would_fall",
+              "type": "shield",
+              "amount_bp_of_max_hp": 1000,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_effects": [
+            {
+              "type": "shield",
+              "amount_bp_of_max_hp": 1000,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "hard_to_kill",
+    "name": "Hard to Kill",
+    "path": "last_watch",
+    "taste": true,
+    "text": "His DEF is higher while he's low on HP.",
+    "mod": {
+      "passives": [
+        {
+          "id": "hard_to_kill",
+          "name": "Hard to Kill",
+          "kind": "aura",
+          "text": "Below 30% HP his DEF is higher.",
+          "aura": {
+            "target": "holder",
+            "stat": "def_bp",
+            "value": 12000,
+            "while": "below_hp",
+            "below_pct": 30
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "final_gift",
+    "name": "Final Gift",
+    "path": "last_watch",
+    "text": "When he falls, every ally gets a Shield.",
+    "mod": {
+      "passives": [
+        {
+          "id": "final_gift",
+          "name": "Final Gift",
+          "kind": "ability",
+          "text": "When he falls, every ally gets a Shield.",
+          "effects": [
+            {
+              "trigger": "on_fall",
+              "type": "shield",
+              "amount_bp_of_max_hp": 1500,
+              "target": "allies_near_self",
+              "within_hexes": 9
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "rites_of_mercy",
+    "name": "Rites of Mercy",
+    "path": "last_watch",
+    "text": "Last Rites also heals the allies near him.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_effects": [
+            {
+              "type": "heal",
+              "amount_bp_of_max_hp": 1000,
+              "target": "allies_near_self",
+              "within_hexes": 3
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -788,6 +942,35 @@
           }
         ]
       }
+    }
+  },
+  {
+    "id": "steady_flame",
+    "name": "Steady Flame",
+    "path": "lanternbearer",
+    "taste": true,
+    "text": "Her signature needs less mana (Mend, then Night Lantern).",
+    "mod": {
+      "mana": {
+        "max_add": -5
+      }
+    }
+  },
+  {
+    "id": "long_night",
+    "name": "Long Night",
+    "path": "lanternbearer",
+    "text": "Night Lantern's light lasts longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "area"
+          ],
+          "duration_add_ms": 2000
+        }
+      ]
     }
   },
   {
@@ -823,6 +1006,77 @@
     }
   },
   {
+    "id": "thread_the_hurt",
+    "name": "Thread the Hurt",
+    "path": "wardweaver",
+    "taste": true,
+    "text": "Mend also Wards its target for a moment (once transformed, Weave does).",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "warded",
+              "duration_ms": 2000,
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:weave",
+          "add_effects": [
+            {
+              "trigger": "on_basic_attack",
+              "every": 4,
+              "type": "apply_status",
+              "status": "warded",
+              "duration_ms": 2000,
+              "target": "lowest_hp_ally",
+              "within_hexes": 3
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "lasting_circle",
+    "name": "Lasting Circle",
+    "path": "wardweaver",
+    "text": "Warding Circle lasts longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "area"
+          ],
+          "duration_add_ms": 2000
+        }
+      ]
+    }
+  },
+  {
+    "id": "wide_circle",
+    "name": "Wide Circle",
+    "path": "wardweaver",
+    "text": "Warding Circle covers a wider circle.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "radius_add": 1
+        }
+      ]
+    }
+  },
+  {
     "id": "woven_deep",
     "name": "Woven Deep",
     "path": "wardweaver",
@@ -847,6 +1101,108 @@
           }
         ]
       }
+    }
+  },
+  {
+    "id": "burning_judgment",
+    "name": "Burning Judgment",
+    "path": "vigil_keeper",
+    "taste": true,
+    "text": "Her smites hit harder (Mend's, before and after she transforms).",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "damage"
+          ],
+          "amount_bp": 15000
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:mend",
+          "types": [
+            "damage"
+          ],
+          "amount_bp": 15000
+        }
+      ]
+    }
+  },
+  {
+    "id": "leaping_smite",
+    "name": "Leaping Smite",
+    "path": "vigil_keeper",
+    "text": "Mend's smite leaps to a second enemy, weaker.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:mend",
+          "add_effects": [
+            {
+              "trigger": "on_basic_attack",
+              "every": 4,
+              "type": "damage",
+              "amount": 2,
+              "scaling": {
+                "mgk": 1000
+              },
+              "target": "enemy_near_target",
+              "within_hexes": 2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "holy_crits",
+    "name": "Holy Crits",
+    "path": "vigil_keeper",
+    "text": "Her crits heal the ally lowest on HP.",
+    "mod": {
+      "passives": [
+        {
+          "id": "holy_crits",
+          "name": "Holy Crits",
+          "kind": "ability",
+          "text": "Her crits heal the ally lowest on HP within 3 hexes.",
+          "effects": [
+            {
+              "trigger": "on_holder_crit",
+              "type": "heal",
+              "amount_bp_of_max_hp": 500,
+              "target": "lowest_hp_ally",
+              "within_hexes": 3
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "searing",
+    "name": "Searing",
+    "path": "vigil_keeper",
+    "text": "Mend's smite Hobbles what it hits.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:mend",
+          "add_effects": [
+            {
+              "trigger": "on_basic_attack",
+              "every": 4,
+              "type": "apply_status",
+              "status": "hobbled",
+              "target": "target"
+            }
+          ]
+        }
+      ]
     }
   },
   {

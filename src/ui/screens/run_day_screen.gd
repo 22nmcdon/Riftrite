@@ -346,16 +346,20 @@ func _fill_pick() -> void:
 			UiStyle.heading(upgrade.name, 26, UiStyle.TEXT))
 		card.add_child(UiStyle.label("for %s" % _hero_name(upgrade.hero), 16, UiStyle.TEXT_DIM))
 		card.add_child(_wrapped(upgrade.text, 17, UiStyle.TEXT))
-		_add_numbers(card, ModInfo.upgrade_numbers(upgrade, session.run.hero_kit(state.hero(upgrade.hero)), session.content))
+		var numbers: String = ModInfo.upgrade_numbers(upgrade, session.run.hero_kit(state.hero(upgrade.hero)), session.content)
+		if upgrade.stacks():
+			numbers = ModInfo.stack_now(upgrade, session.run.stack_amount(state.hero(upgrade.hero), upgrade))
+		_add_numbers(card, numbers)
 		card.add_child(UiStyle.primary(UiStyle.button("Take", _do.bind(session.flow.take_pick.bind(i)))))
 	section.add_child(UiStyle.button("Take %d shards instead" % session.run.act.pick_shards, _do.bind(session.flow.take_shards)))
 
 
-## "HERO · MAREN", "VOW · DEADEYE", or "PATH · DEADEYE" (the mock's).
+## "HERO · MAREN", "TASTE · DEADEYE", or "PATH · DEADEYE" (the mock's;
+## phase 5c step 7's layers).
 static func upgrade_source(upgrade: UpgradeDef, content: ContentDb) -> String:
 	if upgrade.layer == UpgradeDef.Layer.HERO:
 		return "HERO · %s" % ArenaView.label_for(content.heroes[upgrade.hero].kit, content).to_upper()
-	return "%s · %s" % ["VOW" if upgrade.vow else "PATH", content.paths[upgrade.path].name.to_upper()]
+	return "%s · %s" % [UpgradeDef.LAYER_NAMES[upgrade.layer].to_upper(), content.paths[upgrade.path].name.to_upper()]
 
 
 func _fill_relic_choice() -> void:
