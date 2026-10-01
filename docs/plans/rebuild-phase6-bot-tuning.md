@@ -1,6 +1,6 @@
 # Rebuild phase 6: the good bot and tuning Act 1
 
-Status: **proposed (2026-10-01), waiting on the playtester's answers (section 9).** Phase 6 of `rebuild-build-order.md`: "A good-player bot (placement heuristics, vows, fight and camp picks); tune Act 1. **The good bot clears about 45–50%; a random bot clears far less.**" The old design's reason for the number still holds: a person usually beats a bot, so a good person should land a little above half (`docs/archive/plans/items-and-clarity.md`).
+Status: **agreed (2026-10-01), Decisions 1–4 in section 10; being built in six parts (section 5).** Phase 6 of `rebuild-build-order.md`: "A good-player bot (placement heuristics, vows, fight and camp picks); tune Act 1. **The good bot clears about 45–50%; a random bot clears far less.**" The old design's reason for the number still holds: a person usually beats a bot, so a good person should land a little above half (`docs/archive/plans/items-and-clarity.md`).
 
 ## 1. Where things stand
 
@@ -77,13 +77,13 @@ The good bot, except that at the real fight it tries its candidate formations an
 4. **The economy:** the good bot's spending matches `economy.md`'s shape (a modest spend over the act, enough for a legendary in the boss shop if it saved for one).
 5. **The choices report has no outliers:** no card, item, or relic the good bot never takes when offered, or that wins more than 15 points above its kind's average (each looked at and fixed or noted).
 
-**Levers** (Question AL picks which):
+**Levers** (all four, Decision 2; every change is reported with what it was and why):
 - the enemies' numbers: each encounter's `scale_bp`, the elites' and the boss's kits;
 - the economy and prices (`act1.json`);
 - content numbers: cards, items, and relics the choices report flags;
 - Rift Collapse's timing (`tuning.json`).
 
-**The paths flagged in phase 5c** (Question AM): measured again with the good bot, then each change brought to the playtester before it's made.
+**The paths flagged in phase 5c** (Decision 3): measured again with the good bot and fixed in step 6e as the numbers say (vows' costs, deeds, transformations), each change reported with what it was and why.
 
 ## 5. Steps
 
@@ -113,13 +113,16 @@ Each step: its commit, the full suite, the bench's fingerprints unchanged (no st
 
 New content, new rules, Acts 2–3, enemy specializations (phase 8), and the art (phase 7). A tuning need that only a new rule could meet goes to the playtester as a question.
 
-## 9. Questions
+## 9. Questions (answered in section 10)
 
 - **AK. What the good bot may know** (2.2–2.4): it places without seeing the fight's outcome, judges choices by practice fights against the act's known fights, and the peeking expert is reported as the ceiling; the 45–50% target is the good bot's?
 - **AL. The levers** (section 4): which may tuning move?
 - **AM. The paths flagged in phase 5c:** measure them with the good bot and bring each change to the playtester?
 - **AN. The plan:** six parts as in section 5, ending in a playtest build?
 
-## 10. Decisions
+## 10. Decisions (the playtester, 2026-10-01)
 
-(None yet.)
+1. **The good bot plays honestly** (Question AK): it places by reading the fight and never sees the real fight's outcome first; it judges choices by practice fights against the act's known fights, on practice seeds; the peeking expert is reported as the ceiling. The 45–50% target is the good bot's.
+2. **Tuning may move all four levers** (Question AL): the enemies' numbers, the economy and prices, content outliers, and Rift Collapse's timing. **Every change is reported after: exactly what changed, from what to what, and why.**
+3. **The paths flagged in phase 5c are fixed as the numbers say** (Question AM): vowed Volley's cost, Wardweaver's deed, Hearthwall's lumps, and transformations under the 15–25 band, changed in step 6e and reported like any other change.
+4. **Six parts as in section 5, ending in a playtest build** (Question AN).
