@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a and 5b (section 11) built (10-01), 5c–5d to come; steps 5–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a and 5b (section 11) built (10-01), 5c (section 12) written and up for approval, 5d to come; steps 5–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -542,6 +542,127 @@ With these, commons are complete (25 of 25), rares 21 of 21, epics 8 of 14, lege
   - The log audit and the board's forms cover `LIFESTEAL` and `STATUS_EXTENDED`.
   - `test_unit_info`, `test_camp`, and `test_content_db` changed on purpose.
 - **What moved:** no built kit's fight; the bench's fingerprints are unchanged. **The run report** (54 runs): **66% of runs won**, as after 5a. Losses still gather on day 3's elite (10 of 18), and there are 2.9 relics a run (0.2 common, 1.7 rare, 0.3 epic, 0.7 boss), since the simple bot still buys wares first.
+
+## 12. Step 5c: the engines, the chains, and the rules boss relics rewrite
+
+The third part of the relic pool (Decision 17): the 22 relics left that aren't bond relics, each its own piece. After 5c the epic, legendary, and boss tiers are complete (14, 15, 11). **Up for approval.**
+
+Two kinds of piece:
+
+- **Small pieces in kit mods.** These relics are passives on every hero, like 5b's, and need a new stat, filter, or status kind.
+- **Hero rules** (new: `SideRules`, `src/sim/defs/side_rules.gd`). These relics rewrite a rule of the fight for the heroes' side: how crits roll, how damage carries, how mana and chains work, falling, statuses, the collapse, the time-out. A relic names its rules (`RelicDef "rules": {...}`, each with its numbers in the data). `RunContent` merges the run's rules into `FightSetup.hero_rules`, and the sim reads them where the rule lives. Each rule is code, the way a new effect type is (CLAUDE.md rule 3): it's said here, and its numbers are data. A fight without the rules never reaches that code, so no built kit's fight changes.
+
+### 12.1 The engines (kit mods and their small pieces)
+
+| Relic | Tier | What it is in the sim | New piece |
+| --- | --- | --- | --- |
+| **Ashen Engine** | epic | +20% ATK and MGK; a passive: on a hit on a Burning enemy, apply `burn` to the enemy nearest it (`enemy_near_named`) with `"stacks_of": "burn", "stacks_share_bp": 500` (5% of its stacks, at least 1) | `stacks_share_bp` |
+| **Overflow Chalice** | epic | an aura `overheal_shield_bp` 5000: half of what its heals would restore past full HP comes back as Shield, added to the heal's own (Ward Thread's), no cap; lifesteal isn't a heal, so it doesn't count (unless Blood Communion) | aura stat `overheal_shield_bp` |
+| **Blood Communion** | epic | an aura `lifesteal_heals`: its lifesteal is a heal (a HEAL line noted "lifesteal": heal power, healing taken, `on_heal`, and Overflow Chalice all see it); +10% `heal_bp` and +10% `healing_taken_bp` | aura stat `lifesteal_heals` |
+| **Sanguine Frenzy** | epic | a passive: on its lifesteal, apply `frenzy` to itself (+2 ATSP a stack, each stack its own 3s) | event `on_lifesteal`; **stacking boosts** (a boost with `"stacking": true`: each application adds a stack with its own timer, or none if it has no duration; its auras count per stack) |
+| **Knife's Edge** | epic | an aura `crit_overflow_bp` 20000: on a crit, its crit chance past 100% (CRIT and crit-chance auras, not an ability's own or a `vs`) adds twice over to crit damage | aura stat `crit_overflow_bp` |
+| **Stonebound** | epic | three auras `"while": "planted", "after_ms": 2000` (+15% ATK, +15% MGK, +15 DEF), each with `"step": {"every_ms": 2000, "value": ...}` (+5%, +5%, +5 more every 2s still); moving resets them, as planted auras do now | a planted aura's `step`; aura stat `def` (DEF points) |
+| **Warden's Engine** | legendary | +30% `shield_bp`; auras `atk_bp` and `mgk_bp` `"per_shield_bp": 5` (+0.05% per point of the holder's Shield: 400 Shield is +20%), checked every tick | an aura's `per_shield_bp` |
+| **Hunter's Engine** | legendary | the rule `marks_stack` (see 12.2); an aura `crit_damage_bp` 2000 `"per_target_stacks": "marked"` (per stack on the unit hit); a passive: a crit on a Marked enemy Marks every enemy within 1 hex (`enemies_near_named`, built) | an aura's `per_target_stacks` |
+| **Shadow Engine** | legendary | while Stealthed: auras `damage_bp` 20000 and `lifesteal_bp` 500 `"from_basic": true` (only on its basic attack's hits), and `overheal_strike_bp` 50000 (what its lifesteal would heal past full HP hits its target for 500%, a DAMAGE line noted "Shadow Engine") | an aura's `from_basic`; aura stat `overheal_strike_bp` |
+| **Quickening** | legendary | a passive: on each of its hits, apply `quickened` to itself (+1 ATSP a stack, stacking, no duration: the rest of the fight) | stacking boosts (above) |
+| **Snaring Shot** | boss | a mod only for ranged heroes (`RelicDef "mod_for": "ranged"`: range 2 or more, checked at setup): every 3rd basic attack Roots its target for 1s with `"fresh_only": true` (nothing if it's already Rooted, so never stacked or extended) | `mod_for`; apply_status's `fresh_only` |
+
+Two notes on reading them:
+
+- **Rule 7** (two relics can use the same thing) holds: the same overheal feeds Overflow Chalice and Shadow Engine in full.
+- **Shadow Engine's "basic attacks deal +100% damage"** is scoped to one kind of attack, so it's damage (rule 3), as power.
+
+### 12.2 The hero rules
+
+| Rule | Relic (tier) | What the sim does |
+| --- | --- | --- |
+| `crit_chain` `{"steps": 10, "fade_bp": 500}` | **Crown of Stars** (legendary) | A crit rolls again, as the hit lands (`deal_hit`, on the sim's RNG). The k-th extra roll's chance is the crit chance × (100% − 5%·k), and each extra crit adds the crit bonus × (100% − 5%·k) to the crit kind. CRIT past 100% keeps the chain going longer. Up to 10 extra. The DAMAGE line carries the count ("crit ×3"; `LogEntry.crits`) |
+| `echo_keywords` `{"share_bp": 9000, "steps": 3}` | **Shared Pain** (legendary) | Damage a hero's hit deals to an enemy with a keyword echoes to every other enemy with that keyword at 90%. Only one keyword is used: the one the most other enemies share (ties go to Keywords' order). Then each echo echoes the same way (81%, 73%), each enemy hit at most once a step, 3 steps deep. Echoes are DAMAGE lines from the hero, noted "Shared Pain", mitigated by each target's DEF, never crits, one chain step deeper each. They don't echo outside the rule's own steps |
+| `carry_overkill` `{"steps": 8}` | **The Hungering Rift** (legendary) | A hero's hit's overkill hits the standing enemy nearest the fallen (a DAMAGE line noted "carried", mitigated), and its overkill carries on, up to 8 times |
+| `overcharge` `{"power_bp": 2500, "steps": 8}` | **Overcharge** (legendary) | A hero's mana isn't capped at a full bar. When its signature fires on mana, the bar loses one full bar, not all. Each further full bar left fires it again at once (no cast), each fire +25% power more than the last, up to 8. So mana gained while the bar is held (casting, Stunned, Wait to heal) is stored |
+| `second_dawn` `{"after_ms": 5000, "hp_bp": 5000}` | **Second Dawn** (legendary) | The first time each hero falls in a fight, it rises 5s later at 50% HP where it fell (or the nearest free safe spot), its statuses gone and its mana as it was, and its auras and passives back. It's logged as RISE (a new kind: the token returns with a pulse). Heroes all down at once is still a defeat, a rise waiting or not |
+| `deeper_chains` `{"steps": 4, "grow_bp": 1500}` | **Chain of Echoes** (boss) | Every chain the heroes start goes 4 steps deeper: event chains (the chain limit, for hero-sourced entries: 8 → 12), Crown of Stars, Shared Pain, The Hungering Rift, and Overcharge. Each step is 15% stronger than the one before, instead of fading: Crown of Stars' and Shared Pain's steps grow ×1.15 instead of shrinking, a carry is ×1.15 of the overkill, Overcharge's fires +15% on top, and an event effect at depth d is ×1.15^d (the relic kind of the damage rule) |
+| `keywords_twice` | **Crown of the Hollow King** (boss) | A keyword status a hero (or a hero's relic) applies goes on twice: double stacks, or double duration |
+| `keywords_last` | **Everflame** (boss) | A keyword status a hero applies to an enemy never ends that fight: timed ones don't run out, Burn's stacks don't fade, and enemies' heals and cleanses don't remove them (`StatusState.lasting`). Stealth on heroes still ends |
+| `unbending` `{"def_bp": 100, "max_hp_bp": 100}` | **The Unbending** (boss) | A status an enemy applies to a hero is blocked, and logged as RESISTED (a new kind: "Resisted" over the hero). Each block gives the hero a stack of `unbending` (a stacking boost with no duration: +1% DEF, +1% max HP). Max HP rises by the share and HP by as much, through a new aura stat `max_hp_bp`. Engaged isn't blocked: it's the Engage trait, not an applied status |
+| `collapse` `{"immune": true, "enemy_max_hp_bp": 500}` | **Riftwalker's Soles** (boss) | Heroes take no damage from crumbled ground. Enemies on it take 5% of their max HP a second on top, on the same COLLAPSE line (noted "Riftwalker's Soles") |
+| `long_watch` `{"from_ms": 60000, "every_ms": 10000}` | **The Long Watch** (boss) | No 180s tie (see Question Q for the safety limit). At 60s and every 10s after, every standing hero gains a stack of `long_watch` (a stacking boost, no duration: +10% HP, ATK, MGK, DEF, CRIT, and attack speed), sourced to the relic |
+| `marks_stack` | **Hunter's Engine** (legendary, with its mod) | Marked applied by a hero stacks instead of only refreshing: each application adds a stack and refreshes the timer (`StatusState.stacks` for a timed status). Marked's vulnerability stays one Mark's; the stacks count for Hunter's Engine's crit damage |
+
+### 12.3 The log and the board
+
+- **New log kinds:** RISE (source: the relic Second Dawn, target the hero; board: the token returns with a pulse) and RESISTED (source: the enemy and ability whose status was blocked, target the hero, the status named; board: "Resisted" over the hero). Each gets its audit rule and its form.
+- **DAMAGE lines gain** `crits` (Crown of Stars) and notes for echoes, carries, and Shadow Engine's strike. Boosts with stacks show their count on the tag ("UP 3").
+
+### 12.4 Building it
+
+One approval, built and committed in two parts:
+
+- **5c-1, the engines:** 12.1's eleven relics and their pieces, with `marks_stack`, the one rule Hunter's Engine needs.
+- **5c-2, the rules:** 12.2's other eleven rules and relics.
+
+The chaos fight takes the new pieces part by part (its seed rescanned if it must be). The bench gets no new fight, but its fingerprints must stay the same.
+
+### 12.5 Files
+
+- **New:**
+  - `src/sim/defs/side_rules.gd`
+  - `tests/sim/test_engine_pieces.gd` (5c-1)
+  - `tests/sim/test_hero_rules.gd` (5c-2)
+- **Changed:**
+  - `relic_def.gd` (`rules`, `mod_for`)
+  - `aura_def.gd` and `passives.gd` (the new stats, `step`, `per_shield_bp`, `per_target_stacks`, `from_basic`)
+  - `status_def.gd`, `status_state.gd`, and `statuses.gd` (stacking boosts, `stacks` on a timed status, `lasting`, blocking)
+  - `effect_def.gd` (`on_lifesteal`, `stacks_share_bp`, `fresh_only`)
+  - `effect_runner.gd` (crit chains, echoes, carries, the lifesteal routes, Knife's Edge)
+  - `signatures.gd` and `mana.gd` (Overcharge)
+  - `combat_sim.gd` (rises, the time-out, the Long Watch's stacks, chain depth by side)
+  - `collapse.gd`, `events.gd`, `log_entry.gd`, `fight_setup.gd`
+  - `run_content.gd` and `run_flow.gd` (merging rules, `mod_for`)
+  - `data/relics.json`, `data/statuses.json` (`frenzy`, `quickened`, `unbending`, `long_watch`)
+  - `unit_info.gd` and `mod_info.gd` (the words: a relic's rules get a numbers line)
+  - `fight_fx.gd` and `unit_token.gd` (RISE, RESISTED, stack counts)
+  - the chaos fight
+
+### 12.6 Tests
+
+- **Each engine piece in a small fight** (`test_engine_pieces.gd`):
+  - the share of Burn spread
+  - overheal to Shield from an aura
+  - lifesteal as healing
+  - a stacking boost with its own timers, and one with none
+  - Knife's Edge's overflow
+  - Stonebound's steps and reset
+  - Warden's per-Shield aura
+  - Marks stacking and crit damage per stack
+  - Shadow Engine's scoped auras and strike
+  - Snaring Shot only on ranged heroes, never extending a Root
+- **Each rule in a small fight** (`test_hero_rules.gd`), each also shown changing nothing without its rule:
+  - a crit chain and its fade
+  - Shared Pain's keyword choice and steps
+  - a carry running out
+  - Overcharge storing and refiring
+  - a rise, and defeat with every hero down
+  - Chain of Echoes on each chain
+  - doubled and lasting keywords
+  - a block and its stacks
+  - the collapse both ways
+  - the Long Watch's stacks
+- **Each of the 22 relics' effects** (`test_relics.gd`). The tier counts become 25, 21, 14, 15, 11.
+- **Fight-wide checks:**
+  - determinism
+  - the log audit
+  - every encounter on the screen
+  - the chaos fight
+  - the bench fingerprints unchanged
+  - the run report runs
+
+### 12.7 Questions
+
+- **L. Second Dawn and wounds:** does a hero who rose get a wound for that fall? Recommended: no, if it's standing at the fight's end (a wound for being down at the end, or for its second fall).
+- **M. Everflame's reach:** only keywords heroes put on enemies (recommended: so Stealth on heroes still ends), or every keyword heroes apply as written?
+- **Q. The Long Watch's limit:** a sim must end. Recommended: at 600s a fight under The Long Watch ends as a tie (a guild win, as at 180s now).
 
 ## Answered (2026-09-30)
 
