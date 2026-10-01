@@ -97,7 +97,9 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> int:
 					_raise(sim, target, EffectDef.Trigger.ON_SHIELDED, chain, target)
 			LogEntry.Kind.HEAL:
 				if target != null and entry.amount > 0:
-					_raise(sim, source, EffectDef.Trigger.ON_HEAL, chain, target)
+					# The HP healed and the ability ride along (on_heal's
+					# was_below_pct and from_ability, phase 5c step 7c).
+					_raise(sim, source, EffectDef.Trigger.ON_HEAL, chain, target, entry.amount, entry.source_ability)
 					if entry.lifesteal:
 						_raise(sim, source, EffectDef.Trigger.ON_LIFESTEAL, chain)
 			LogEntry.Kind.LIFESTEAL:

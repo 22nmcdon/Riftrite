@@ -220,6 +220,24 @@ func condition_status_ids() -> Array[String]:
 	return found
 
 
+## True if any of its conditions asks for the front-most unit (phase 5c
+## step 7c; CombatSim keeps UnitState.front_most only then).
+func uses_front_most() -> bool:
+	var conditions: Array[UnitCondition] = [prefer]
+	var parts: Array[PartDef] = passives.duplicate()
+	for phase: PhaseDef in phases:
+		parts.append_array(phase.passives)
+	for part: PartDef in parts:
+		if part.kind == PartDef.Kind.AURA:
+			conditions.append_array([part.aura.vs, part.aura.state])
+	for effect: EffectDef in all_effects():
+		conditions.append_array([effect.vs, effect.holder])
+	for ability: AbilityDef in [basic_attack, signature]:
+		if ability != null:
+			conditions.append(ability.prefer)
+	return conditions.any(func(condition: UnitCondition) -> bool: return condition != null and condition.front_most)
+
+
 ## The effects in its abilities and passives (an area's own effects
 ## included), and in those its phases bring.
 func all_effects() -> Array[EffectDef]:

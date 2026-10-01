@@ -146,10 +146,16 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 		EffectDef.Type.HEAL:
 			if effect.amount_bp_of_max_hp > 0:
 				amount = FixedMath.apply_bp(victim.max_hp, effect.amount_bp_of_max_hp)
+			if not unit.vs_conditions.is_empty():
+				# A heal's bonus on some allies (phase 5c step 7c, Urgent Mercy).
+				power += Passives.vs_bonus_bp(unit, victim, AuraDef.Stat.HEAL_BP, source.ability_id)
 			heal(sim, victim, amount, source, effect.overheal_shield_bp, power, false, unit.relic_bonus_bp)
 		EffectDef.Type.SHIELD:
 			if effect.amount_bp_of_max_hp > 0:
 				amount = FixedMath.apply_bp(victim.max_hp, effect.amount_bp_of_max_hp)
+			if not unit.vs_conditions.is_empty():
+				# A Shield's bonus on some allies (phase 5c step 7c, Front Ward).
+				power += Passives.vs_bonus_bp(unit, victim, AuraDef.Stat.SHIELD_BP, source.ability_id)
 			give_shield(sim, victim, DamageRule.apply(amount, power, 0, 0, unit.relic_bonus_bp), source)
 		EffectDef.Type.EXTEND_STATUS:
 			Statuses.extend(sim, victim, effect.status_id, effect.duration_ticks, source)
@@ -157,9 +163,12 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			var status_id: String = unit.status_swaps.get(effect.status_id, effect.status_id)
 			# fresh_only: never on a unit that has it already (Snaring Shot).
 			if not effect.fresh_only or Statuses.find(victim, status_id) == null:
-				Statuses.apply(sim, victim, status_id, amount, effect.duration_ticks, source, effect.marks_stack, effect.until_near)
+				Statuses.apply(sim, victim, status_id, amount, effect.duration_ticks, source, effect.marks_stack, effect.until_near, effect.strength_add_bp)
 		EffectDef.Type.CLEANSE:
-			Statuses.cleanse_over_time(sim, victim, mini(amount, FixedMath.BP_ONE), source, false, effect.cleanse_statuses)
+			if effect.cleanse_count > 0:
+				Statuses.cleanse_newest(sim, victim, effect.cleanse_count, source)
+			else:
+				Statuses.cleanse_over_time(sim, victim, mini(amount, FixedMath.BP_ONE), source, false, effect.cleanse_statuses)
 		EffectDef.Type.MANA_DRAIN:
 			Mana.drain(sim, victim, amount, source)
 		EffectDef.Type.GAIN_MANA:

@@ -33,7 +33,7 @@ extends RefCounted
 ## Engine (the effect's own, phase 5c step 6b: Hunter's Chalk).
 ## `until_near`: it ends once an enemy stands that near (Rear Guard).
 static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: int, duration_ticks: int, source: EffectSource, marks_stack: bool = false,
-		until_near: int = 0) -> void:
+		until_near: int = 0, strength_add_bp: int = 0) -> void:
 	if not sim.content.statuses.has(status_id):
 		push_error("Statuses: unknown status \"%s\"" % status_id)
 		return
@@ -70,6 +70,10 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: 
 	entry.target = target.id
 	entry.status = def.id
 	entry.status_name = def.name
+	state.applied_at = sim.tick
+	if strength_add_bp > 0:
+		# A stronger Mark (phase 5c step 7c, Heavy Mark): the strongest holds.
+		state.strength_add_bp = maxi(state.strength_add_bp, strength_add_bp)
 	if def.stacking:
 		state.source = source
 		var lasts: int = duration_ticks if duration_ticks > 0 else def.duration_ticks
@@ -289,7 +293,7 @@ static func damage_taken_bp(unit: UnitState) -> int:
 	var ward: int = 0
 	for state: StatusState in unit.statuses:
 		if state.def.kind == StatusDef.Kind.MARKED:
-			strongest = maxi(strongest, state.def.damage_taken_bp)
+			strongest = maxi(strongest, state.def.damage_taken_bp + state.strength_add_bp)
 		elif state.def.kind == StatusDef.Kind.WARDED:
 			ward = maxi(ward, state.def.damage_reduced_bp)
 	return strongest - ward - unit.aura_bp[AuraDef.Stat.DAMAGE_REDUCED_BP]
@@ -371,6 +375,28 @@ static func cleanse_over_time(sim: CombatSim, unit: UnitState, share_bp: int, so
 		sim.combat_log.add(entry)
 		if state.total_stacks() == 0:
 			_end(sim, unit, state)
+
+
+## The status kinds a cleanse's "count" may take (phase 5c step 7c):
+## what hurts or hinders the unit.
+const HARMFUL: Array[StatusDef.Kind] = [StatusDef.Kind.DAMAGE_OVER_TIME, StatusDef.Kind.ROOT, StatusDef.Kind.STUN, StatusDef.Kind.SLOW,
+	StatusDef.Kind.TAUNT, StatusDef.Kind.SILENCE, StatusDef.Kind.MARKED, StatusDef.Kind.GROUNDED]
+
+
+## Ends the `count` newest harmful statuses on `unit` (a cleanse's "count";
+## phase 5c step 7c, Cleansing Touch and Cleansing Weave); ties go by the
+## statuses' order. Lasting ones a hero put on stay, as for any cleanse.
+static func cleanse_newest(sim: CombatSim, unit: UnitState, count: int, source: EffectSource) -> void:
+	for i: int in count:
+		var newest: StatusState = null
+		for state: StatusState in unit.statuses:
+			if not HARMFUL.has(state.def.kind) or state.lasting and not _by_heroes(sim, source):
+				continue
+			if newest == null or state.applied_at > newest.applied_at:
+				newest = state
+		if newest == null:
+			return
+		end_now(sim, unit, newest, "cleansed by %s" % source.describe())
 
 
 ## Ends `state` on `unit` now (Wait to heal's cleanse; phase 5c step 6c).

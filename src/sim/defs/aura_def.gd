@@ -85,16 +85,16 @@ extends RefCounted
 ## (The rebuild's gut, phase 0, removed the item targets and filters; the
 ## arena sim, phase 1, adds what abilities need.)
 
-enum Target { HOLDER, ALL_ALLIES }
+enum Target { HOLDER, ALL_ALLIES, ALLIES_NEAR }
 enum Stat { DAMAGE_BP, HEAL_BP, SHIELD_BP, OVER_TIME_BP, CRIT_CHANCE_BP, COOLDOWN_BP, ATK_BP, MGK_BP, DEF_BP, ATSP_BP, CRIT_BP, RANGE, HEALING_TAKEN_BP,
 	LIFESTEAL_BP, CRIT_DAMAGE_BP, ATSP, DAMAGE_REDUCED_BP,
 	OVERHEAL_SHIELD_BP, LIFESTEAL_HEALS, CRIT_OVERFLOW_BP, DEF, OVERHEAL_STRIKE_BP, MAX_HP_BP,
 	DEF_IGNORE_BP, UNPUSHABLE, DODGE_EVERY_MS, HALVED_HITS }
 ## What turns an aura on, beyond its window.
-enum While { ALWAYS, TAUNTING, PLANTED, BELOW_HP, ALLY_STANDING, STATE, ALLY_NEAR, BEHIND_WALL, TACTIC }
+enum While { ALWAYS, TAUNTING, PLANTED, BELOW_HP, ALLY_STANDING, STATE, ALLY_NEAR, BEHIND_WALL, MOVED, CROWDED, TACTIC }
 
-const TARGET_NAMES: Array[String] = ["holder", "all_allies"]
-const TARGET_LABELS: Array[String] = ["its holder", "all allies"]
+const TARGET_NAMES: Array[String] = ["holder", "all_allies", "allies_near"]
+const TARGET_LABELS: Array[String] = ["its holder", "all allies", "the allies near it"]
 
 const STAT_NAMES: Array[String] = [
 	"damage_bp", "heal_bp", "shield_bp", "over_time_bp", "crit_chance_bp", "cooldown_bp",
@@ -103,7 +103,7 @@ const STAT_NAMES: Array[String] = [
 	"overheal_shield_bp", "lifesteal_heals", "crit_overflow_bp", "def", "overheal_strike_bp", "max_hp_bp",
 	"def_ignore_bp", "unpushable", "dodge_every_ms", "halved_hits",
 ]
-const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp", "ally_standing", "state", "ally_near", "behind_wall", "tactic"]
+const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp", "ally_standing", "state", "ally_near", "behind_wall", "moved", "crowded", "tactic"]
 ## The stats that add rather than multiply. The rest are factors (x1.1);
 ## several of one stat add their changes (the damage rule, phase 5c).
 const ADDITIVE: Array[Stat] = [Stat.CRIT_CHANCE_BP, Stat.COOLDOWN_BP, Stat.RANGE, Stat.LIFESTEAL_BP, Stat.CRIT_DAMAGE_BP, Stat.ATSP, Stat.DAMAGE_REDUCED_BP,
@@ -111,7 +111,7 @@ const ADDITIVE: Array[Stat] = [Stat.CRIT_CHANCE_BP, Stat.COOLDOWN_BP, Stat.RANGE
 	Stat.DEF_IGNORE_BP, Stat.UNPUSHABLE, Stat.DODGE_EVERY_MS, Stat.HALVED_HITS]
 ## The stats an aura worked out per hit may hold ("vs", "from_basic",
 ## "per_target_stacks").
-const VS_STATS: Array[Stat] = [Stat.DAMAGE_BP, Stat.CRIT_CHANCE_BP, Stat.LIFESTEAL_BP, Stat.CRIT_DAMAGE_BP]
+const VS_STATS: Array[Stat] = [Stat.DAMAGE_BP, Stat.CRIT_CHANCE_BP, Stat.LIFESTEAL_BP, Stat.CRIT_DAMAGE_BP, Stat.HEAL_BP, Stat.SHIELD_BP]
 const STAT_LABELS: Array[String] = [
 	"damage", "healing", "shields", "damage over time", "crit chance", "cooldown",
 	"ATK", "MGK", "DEF", "ATSP", "CRIT", "range", "healing taken",
@@ -165,6 +165,14 @@ var from_basic: bool = false
 ## Per hit: only its holder's signature's hits (phase 5c step 6b; Siphon,
 ## Execution).
 var from_signature: bool = false
+## Phase 5c step 7c (the upgrade pools): per hit, only on targets this near
+## its holder (plane units; 0: any; Close Quarters); "moved": how recently
+## it moved (Restless); "crowded": how many enemies, within near_range
+## (Crowd Sense); the target allies_near's reach (Sanctuary).
+var hit_range: int = 0
+var moved_ticks: int = 0
+var crowd: int = 0
+var target_range: int = 0
 
 
 static func read(reader: DataReader) -> AuraDef:
@@ -172,6 +180,8 @@ static func read(reader: DataReader) -> AuraDef:
 	var target_name: String = reader.req_choice("target", TARGET_NAMES)
 	var stat_name: String = reader.req_choice("stat", STAT_NAMES)
 	def.target = maxi(TARGET_NAMES.find(target_name), 0) as Target
+	if def.target == Target.ALLIES_NEAR:
+		def.target_range = reader.req_int("target_within_hexes", 1, 8) * HexGrid.HEX
 	def.stat = maxi(STAT_NAMES.find(stat_name), 0) as Stat
 	if reader.has("per_shield_bp"):
 		def.per_shield_bp = reader.req_int("per_shield_bp", 1, FixedMath.BP_ONE)
@@ -197,10 +207,19 @@ static func read(reader: DataReader) -> AuraDef:
 				def.state = UnitCondition.read(reader.req_object("state"))
 			While.ALLY_NEAR, While.BEHIND_WALL:
 				def.near_range = reader.req_int("within_hexes", 1, 8) * HexGrid.HEX
+			While.MOVED:
+				def.moved_ticks = reader.req_ticks("within_ms", FixedMath.MS_PER_TICK)
+			While.CROWDED:
+				def.crowd = reader.req_int("enemies", 1, 30)
+				def.near_range = reader.req_int("within_hexes", 1, 8) * HexGrid.HEX
 	if reader.has("vs"):
 		def.vs = UnitCondition.read(reader.req_object("vs"))
 		if not VS_STATS.has(def.stat):
-			reader.error("only a damage_bp, crit_chance_bp, lifesteal_bp, or crit_damage_bp aura can be \"vs\" some targets")
+			reader.error("only a damage_bp, crit_chance_bp, lifesteal_bp, crit_damage_bp, heal_bp, or shield_bp aura can be \"vs\" some targets")
+	if reader.has("vs_within_hexes"):
+		def.hit_range = reader.req_int("vs_within_hexes", 1, 8) * HexGrid.HEX
+		if not VS_STATS.has(def.stat):
+			reader.error("only an aura worked out per hit can be \"vs_within_hexes\"")
 	if reader.has("per"):
 		def.per_fallen_ally = reader.req_choice("per", ["fallen_ally"]) == "fallen_ally"
 	if reader.has("step"):
@@ -240,12 +259,13 @@ func is_additive() -> bool:
 ## Checked each tick, not just when a window opens or closes.
 func is_conditional() -> bool:
 	return while_kind == While.PLANTED or while_kind == While.BELOW_HP or while_kind == While.ALLY_STANDING or while_kind == While.STATE \
-		or while_kind == While.ALLY_NEAR or while_kind == While.BEHIND_WALL or while_kind == While.TACTIC or per_fallen_ally or per_shield_bp > 0
+		or while_kind == While.ALLY_NEAR or while_kind == While.BEHIND_WALL or while_kind == While.TACTIC or per_fallen_ally or per_shield_bp > 0 \
+		or while_kind == While.MOVED or while_kind == While.CROWDED or target == Target.ALLIES_NEAR
 
 
 ## Worked out per hit (EffectRunner), not folded into the unit's stats.
 func is_per_hit() -> bool:
-	return vs != null or from_basic or from_signature or not per_target_stacks.is_empty()
+	return vs != null or from_basic or from_signature or not per_target_stacks.is_empty() or hit_range > 0
 
 
 ## For the log, e.g. "x2 damage for its holder" or "+20% crit chance for all allies".

@@ -134,6 +134,45 @@
     }
   },
   {
+    "id": "heavy_mark",
+    "name": "Heavy Mark",
+    "hero": "maren",
+    "text": "Enemies she Marks take more damage than others' Marks give.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "statuses": [
+            "marked"
+          ],
+          "strength_add_bp": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "close_quarters",
+    "name": "Close Quarters",
+    "hero": "maren",
+    "text": "She hits enemies right next to her harder.",
+    "mod": {
+      "passives": [
+        {
+          "id": "close_quarters",
+          "name": "Close Quarters",
+          "kind": "aura",
+          "text": "She hits enemies within 1 hex of her harder.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 12000,
+            "vs_within_hexes": 1
+          }
+        }
+      ]
+    }
+  },
+  {
     "id": "notched_bow",
     "name": "Notched Bow",
     "hero": "maren",
@@ -436,6 +475,107 @@
     }
   },
   {
+    "id": "urgent_mercy",
+    "name": "Urgent Mercy",
+    "hero": "vell",
+    "text": "Her heals on allies near death heal more.",
+    "mod": {
+      "passives": [
+        {
+          "id": "urgent_mercy",
+          "name": "Urgent Mercy",
+          "kind": "aura",
+          "text": "Her heals on allies below 30% HP heal more.",
+          "aura": {
+            "target": "holder",
+            "stat": "heal_bp",
+            "value": 12500,
+            "vs": {
+              "below_hp_pct": 30
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "cleansing_touch",
+    "name": "Cleansing Touch",
+    "hero": "vell",
+    "text": "Her heals take a harmful status off whoever they heal (not Hearthlight's).",
+    "mod": {
+      "passives": [
+        {
+          "id": "cleansing_touch",
+          "name": "Cleansing Touch",
+          "kind": "ability",
+          "text": "Mend's, Weave's, and her signature's heals remove the newest harmful status from whoever they heal.",
+          "effects": [
+            {
+              "trigger": "on_heal",
+              "from_ability": [
+                "mend",
+                "weave",
+                "night_lantern",
+                "sunfall"
+              ],
+              "type": "cleanse",
+              "count": 1,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "sanctuary",
+    "name": "Sanctuary",
+    "hero": "vell",
+    "text": "Allies right next to her take less damage.",
+    "mod": {
+      "passives": [
+        {
+          "id": "sanctuary",
+          "name": "Sanctuary",
+          "kind": "aura",
+          "text": "The allies within 1 hex of her take less damage.",
+          "aura": {
+            "target": "allies_near",
+            "target_within_hexes": 1,
+            "stat": "damage_reduced_bp",
+            "value": 500
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "vigilant",
+    "name": "Vigilant",
+    "hero": "vell",
+    "text": "When an ally first falls below half HP, she gains mana.",
+    "mod": {
+      "passives": [
+        {
+          "id": "vigilant",
+          "name": "Vigilant",
+          "kind": "ability",
+          "text": "When an ally first drops below half HP, she gains mana (once per ally).",
+          "effects": [
+            {
+              "trigger": "on_ally_below_hp",
+              "threshold_bp": 5000,
+              "type": "gain_mana",
+              "amount": 20,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
     "id": "lamp_oil",
     "name": "Lamp Oil",
     "hero": "vell",
@@ -555,6 +695,32 @@
               "status": "marked",
               "duration_ms": 4000,
               "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "bleeding_shot",
+    "name": "Bleeding Shot",
+    "path": "deadeye",
+    "text": "Her crits from the far edge of her reach make the target Bleed.",
+    "mod": {
+      "passives": [
+        {
+          "id": "bleeding_shot",
+          "name": "Bleeding Shot",
+          "kind": "ability",
+          "text": "Her crits from more than 5 hexes away make the target Bleed.",
+          "effects": [
+            {
+              "trigger": "on_holder_crit",
+              "beyond_hexes": 5,
+              "type": "apply_status",
+              "status": "bleed",
+              "stacks": 3,
+              "target": "hit_target"
             }
           ]
         }
@@ -761,6 +927,30 @@
     }
   },
   {
+    "id": "restless",
+    "name": "Restless",
+    "path": "volley",
+    "taste": true,
+    "text": "She shoots faster for a moment after she moves.",
+    "mod": {
+      "passives": [
+        {
+          "id": "restless",
+          "name": "Restless",
+          "kind": "aura",
+          "text": "For 2s after she moves, she shoots faster.",
+          "aura": {
+            "target": "holder",
+            "stat": "atsp",
+            "value": 10,
+            "while": "moved",
+            "within_ms": 2000
+          }
+        }
+      ]
+    }
+  },
+  {
     "id": "harrying_storm",
     "name": "Harrying Storm",
     "path": "volley",
@@ -774,6 +964,31 @@
               "type": "apply_status",
               "status": "hobbled",
               "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "gluttons_quiver",
+    "name": "Glutton's Quiver",
+    "path": "volley",
+    "text": "A kill by a split arrow gives her mana.",
+    "mod": {
+      "passives": [
+        {
+          "id": "gluttons_quiver",
+          "name": "Glutton's Quiver",
+          "kind": "ability",
+          "text": "A kill by a split arrow (an enemy she wasn't aiming at) gives her mana.",
+          "effects": [
+            {
+              "trigger": "on_kill",
+              "off_target": true,
+              "type": "gain_mana",
+              "amount": 10,
+              "target": "self"
             }
           ]
         }
@@ -965,6 +1180,31 @@
             "enemies_near_target"
           ],
           "amount_bp": 16700
+        }
+      ]
+    }
+  },
+  {
+    "id": "crowd_sense",
+    "name": "Crowd Sense",
+    "path": "ironbrand",
+    "taste": true,
+    "text": "He hits harder with enemies pressing around him.",
+    "mod": {
+      "passives": [
+        {
+          "id": "crowd_sense",
+          "name": "Crowd Sense",
+          "kind": "aura",
+          "text": "With 2 or more enemies within 1 hex, he hits harder.",
+          "aura": {
+            "target": "holder",
+            "stat": "atk_bp",
+            "value": 11000,
+            "while": "crowded",
+            "enemies": 2,
+            "within_hexes": 1
+          }
         }
       ]
     }
@@ -1176,6 +1416,61 @@
     }
   },
   {
+    "id": "scar_tissue",
+    "name": "Scar Tissue",
+    "path": "last_watch",
+    "text": "Every second near death hardens him for the rest of the fight.",
+    "mod": {
+      "passives": [
+        {
+          "id": "scar_tissue",
+          "name": "Scar Tissue",
+          "kind": "ability",
+          "text": "Each second below 30% HP gives him DEF for the rest of the fight.",
+          "effects": [
+            {
+              "trigger": "on_interval",
+              "interval_ms": 1000,
+              "holder": {
+                "below_hp_pct": 30
+              },
+              "type": "apply_status",
+              "status": "scarred",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "bloody_kills",
+    "name": "Bloody Kills",
+    "path": "last_watch",
+    "text": "A kill while he's near death heals him.",
+    "mod": {
+      "passives": [
+        {
+          "id": "bloody_kills",
+          "name": "Bloody Kills",
+          "kind": "ability",
+          "text": "A kill while he's below 30% HP heals him.",
+          "effects": [
+            {
+              "trigger": "on_kill",
+              "holder": {
+                "below_hp_pct": 30
+              },
+              "type": "heal",
+              "amount_bp_of_max_hp": 500,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
     "id": "borrowed_time",
     "name": "Borrowed Time",
     "path": "last_watch",
@@ -1285,6 +1580,34 @@
                 "bleed"
               ],
               "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "last_minute_mercy",
+    "name": "Last-Minute Mercy",
+    "path": "lanternbearer",
+    "text": "When Mend heals an ally near death, she gains mana.",
+    "mod": {
+      "passives": [
+        {
+          "id": "last_minute_mercy",
+          "name": "Last-Minute Mercy",
+          "kind": "ability",
+          "text": "When Mend heals an ally who was below 30% HP, she gains mana.",
+          "effects": [
+            {
+              "trigger": "on_heal",
+              "from_ability": [
+                "mend"
+              ],
+              "was_below_pct": 30,
+              "type": "gain_mana",
+              "amount": 20,
+              "target": "self"
             }
           ]
         }
@@ -1416,6 +1739,53 @@
         {
           "slot": "signature",
           "radius_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "front_ward",
+    "name": "Front Ward",
+    "path": "wardweaver",
+    "text": "Her Shields on the front-most ally are bigger.",
+    "mod": {
+      "passives": [
+        {
+          "id": "front_ward",
+          "name": "Front Ward",
+          "kind": "aura",
+          "text": "Her Shields on your front-most ally are bigger.",
+          "aura": {
+            "target": "holder",
+            "stat": "shield_bp",
+            "value": 15000,
+            "vs": {
+              "front_most": true
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "cleansing_weave",
+    "name": "Cleansing Weave",
+    "path": "wardweaver",
+    "text": "Weave also takes a harmful status off its ally.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:weave",
+          "add_effects": [
+            {
+              "trigger": "on_basic_attack",
+              "every": 4,
+              "type": "cleanse",
+              "count": 1,
+              "target": "lowest_hp_ally",
+              "within_hexes": 3
+            }
+          ]
         }
       ]
     }

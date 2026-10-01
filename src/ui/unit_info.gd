@@ -278,6 +278,8 @@ static func trigger_text(trigger: TriggerDef, kit: UnitDef) -> String:
 static func passive_trigger_text(effect: EffectDef) -> String:
 	match effect.trigger:
 		EffectDef.Trigger.ON_INTERVAL:
+			if effect.once and effect.times > 1:
+				return "%d times, every %s" % [effect.times, seconds(effect.interval_ticks)]
 			return ("Once, after %s" if effect.once else "Every %s") % seconds(effect.interval_ticks)
 		EffectDef.Trigger.ON_WOULD_FALL:
 			return "Once, when it would fall"
@@ -286,7 +288,10 @@ static func passive_trigger_text(effect: EffectDef) -> String:
 		EffectDef.Trigger.ON_FIGHT_START:
 			return "As the fight starts"
 		EffectDef.Trigger.ON_ALLY_BELOW_HP:
-			return "When an ally drops below %s HP (%s)" % [ValueBreakdown._percent(effect.threshold_bp), "once a fight" if effect.once else "once per ally"]
+			var how: String = "once per ally"
+			if effect.once:
+				how = "once a fight" if effect.times == 1 else "for the first %d allies" % effect.times
+			return "When an ally drops below %s HP (%s)" % [ValueBreakdown._percent(effect.threshold_bp), how]
 		EffectDef.Trigger.ON_BELOW_HP:
 			return "When it drops below %s HP (%s)" % [ValueBreakdown._percent(effect.threshold_bp), "once a fight" if effect.times == 1 else "up to %d times a fight" % effect.times]
 	var word: String = EVENT_WORDS.get(effect.trigger, EffectDef.TRIGGER_NAMES[effect.trigger])
@@ -308,6 +313,17 @@ static func passive_trigger_text(effect: EffectDef) -> String:
 		text += " of at least %s of its max HP" % ValueBreakdown._percent(effect.min_hit_bp)
 	if effect.from_signature:
 		text += " by its signature"
+	if not effect.from_abilities.is_empty():
+		text += " from %s" % " or ".join(effect.from_abilities.map(func(ability_id: String) -> String: return ability_id.replace("_", " ").capitalize()))
+	if effect.was_below_bp > 0:
+		text += " on an ally below %s HP" % ValueBreakdown._percent(effect.was_below_bp)
+	if effect.beyond_range > 0:
+		@warning_ignore("integer_division")
+		text += " from more than %s away" % hexes(effect.beyond_range / HexGrid.HEX)
+	if effect.off_target:
+		text += " of an enemy it wasn't aiming at"
+	if effect.holder != null:
+		text += " while it's %s" % effect.holder.describe()
 	if effect.vs != null:
 		text += " on a unit that's %s" % effect.vs.describe()
 	if effect.cooldown_per_unit_ticks > 0:
@@ -366,6 +382,17 @@ static func aura_text(aura: AuraDef) -> String:
 		AuraDef.While.BEHIND_WALL:
 			@warning_ignore("integer_division")
 			text += " while behind an allied wall (within %s of it)" % hexes(aura.near_range / HexGrid.HEX)
+		AuraDef.While.MOVED:
+			text += " for %s after it moves" % seconds(aura.moved_ticks)
+		AuraDef.While.CROWDED:
+			@warning_ignore("integer_division")
+			text += " while %d or more enemies are within %s" % [aura.crowd, hexes(aura.near_range / HexGrid.HEX)]
+	if aura.target == AuraDef.Target.ALLIES_NEAR:
+		@warning_ignore("integer_division")
+		text += " for the other allies within %s" % hexes(aura.target_range / HexGrid.HEX)
+	if aura.hit_range > 0:
+		@warning_ignore("integer_division")
+		text += " on targets within %s" % hexes(aura.hit_range / HexGrid.HEX)
 	if aura.vs != null and aura.stat == AuraDef.Stat.DAMAGE_BP:
 		text = text.replace(" damage", " damage against %s" % aura.vs.describe())
 	elif aura.vs != null:
@@ -513,6 +540,8 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 		EffectDef.Type.EXTEND_STATUS:
 			return "its %s lasts %s longer" % [_status_name(effect.status_id, content), seconds(effect.duration_ticks)]
 		EffectDef.Type.CLEANSE:
+			if effect.cleanse_count > 0:
+				return "removes its %s newest harmful status%s" % ["" if effect.cleanse_count == 1 else str(effect.cleanse_count), "" if effect.cleanse_count == 1 else "es"]
 			if not effect.cleanse_statuses.is_empty():
 				var names: Array[String] = []
 				for status_id: String in effect.cleanse_statuses:

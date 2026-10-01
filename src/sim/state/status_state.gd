@@ -21,6 +21,12 @@ var interval_left: int = 0
 ## Timed: who applied it last (for Taunt, the taunter) and the tick it ends.
 var source: EffectSource = null
 var ends_at: int = 0
+## The tick it was last applied (a cleanse's "count" takes the newest first;
+## phase 5c step 7c).
+var applied_at: int = 0
+## A Mark's strength past its status's own (Heavy Mark; the strongest
+## applied holds; phase 5c step 7c).
+var strength_add_bp: int = 0
 ## A stacking boost (phase 5c step 5c): each stack's last tick (NEVER: the
 ## fight's end), oldest first.
 var stack_ends: Array[int] = []

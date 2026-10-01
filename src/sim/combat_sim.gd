@@ -108,6 +108,9 @@ var enemy_fell_listeners: bool = false
 var tactic_kills: bool = false
 ## Some hero arrives later, or swaps places (Gambits; phase 5c step 6d).
 var arrivals: bool = false
+## Some condition asks for the front-most unit (phase 5c step 7c, Front
+## Ward): UnitState.front_most is kept each tick.
+var track_front: bool = false
 var swaps: bool = false
 ## The last hit dealt missed (Sidestep; phase 5c step 6b), so its on_hit
 ## effects don't run.
@@ -283,6 +286,9 @@ func note_listeners(unit: UnitState) -> void:
 ## After units join (at the start, or summons) or enter a phase: auras are
 ## folded in again, so theirs count and they get their side's.
 func units_joined() -> void:
+	track_front = track_front or units.any(func(unit: UnitState) -> bool: return unit.def.uses_front_most())
+	if track_front:
+		mark_front()
 	_aura_ticks = Passives.aura_boundaries(self)
 	taunt_auras = false
 	for unit: UnitState in units:
@@ -291,6 +297,22 @@ func units_joined() -> void:
 	_active_auras = Passives.rederive(self, _active_auras)
 	for unit: UnitState in _conditional:
 		unit.condition_key = Passives.condition_key(self, unit)
+
+
+## Marks each side's front-most standing unit (phase 5c step 7c): the hero
+## farthest up the board (toward the enemies), the enemy farthest down; ties
+## go to the first in the fight's order.
+func mark_front() -> void:
+	for side: Array[UnitState] in [heroes, enemies]:
+		var front: UnitState = null
+		for unit: UnitState in side:
+			unit.front_most = false
+			if not unit.alive:
+				continue
+			if front == null or (unit.pos.y > front.pos.y if unit.side == EffectSource.Team.HEROES else unit.pos.y < front.pos.y):
+				front = unit
+		if front != null:
+			front.front_most = true
 
 
 ## Folds every aura in again (a Taunt started or ended, for auras that hold
@@ -323,6 +345,8 @@ func step() -> void:
 	if finished:
 		return
 	tick += 1
+	if track_front:
+		mark_front()
 	if _aura_ticks.has(tick):
 		_active_auras = Passives.rederive(self, _active_auras)
 	Collapse.tick(self)

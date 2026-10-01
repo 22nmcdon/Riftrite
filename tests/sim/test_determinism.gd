@@ -105,7 +105,7 @@ const ITEM_STATUSES: Array[String] = ["surge", "surge_2", "last_breath", "purifi
 	"grounded", "shadow_step", "shadow_step_2", "shadow_step_3", "bloodhound", "scavenged", "watched_over",
 	"ambush", "ambush_2", "rear_guard", "late_surge"]
 ## Statuses only upgrades apply (phase 5c step 7; tests/run/test_upgrade_pools.gd).
-const UPGRADE_STATUSES: Array[String] = ["hobbled", "cowed", "parting_shot", "first_blood"]
+const UPGRADE_STATUSES: Array[String] = ["hobbled", "cowed", "parting_shot", "first_blood", "scarred"]
 ## The statuses the heroes' rules apply (phase 5c step 5c).
 const RULE_STATUSES: Array[String] = ["unbending", "long_watch"]
 

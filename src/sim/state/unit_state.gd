@@ -37,6 +37,12 @@ var vs_bonus_bp: Array[int] = []
 var vs_basic: Array[bool] = []
 var vs_signature: Array[bool] = []
 var vs_per_stacks: Array[String] = []
+## Per hit: how near the target must be (plane units; 0: any; phase 5c step
+## 7c, Close Quarters).
+var vs_within: Array[int] = []
+## Its side's standing unit nearest the other side, this tick (only kept
+## when a condition asks: CombatSim.track_front; phase 5c step 7c).
+var front_most: bool = false
 var max_hp: int
 ## Its max HP as the fight began (wounds counted), for max_hp_bp boosts
 ## (phase 5c step 5c).

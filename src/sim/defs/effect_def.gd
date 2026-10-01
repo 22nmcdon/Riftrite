@@ -426,6 +426,22 @@ var mana_bp: int = 0
 ## cleanse: only these statuses (empty: all damage over time; phase 5c step
 ## 6, Purifying Light).
 var cleanse_statuses: Array[String] = []
+## Phase 5c step 7c (the upgrade pools). cleanse: removes this many harmful
+## statuses, the newest first (0: by amount_bp; Cleansing Touch).
+## apply_status: a Mark it applies is this much stronger (Heavy Mark). An
+## event or timed effect: only while its holder meets `holder` (Scar Tissue,
+## Bloody Kills). on_holder_crit: only on a unit farther than beyond_range
+## (Bleeding Shot). on_kill: only one off its target by its basic attack (a
+## split arrow's; Glutton's Quiver). on_heal: only from these abilities, and
+## only on an ally that was below was_below_bp before it (Cleansing Touch,
+## Last-Minute Mercy).
+var cleanse_count: int = 0
+var strength_add_bp: int = 0
+var holder: UnitCondition = null
+var beyond_range: int = 0
+var off_target: bool = false
+var from_abilities: Array[String] = []
+var was_below_bp: int = 0
 ## In an area: which side it's for.
 var side: AreaSide = AreaSide.BOTH
 ## A zone: how long it stays and how often it lands (0: an ordinary area).
@@ -517,11 +533,15 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				def.marks_stack = reader.opt_bool("marks_stack", false)
 				if reader.has("until_enemy_within_hexes"):
 					def.until_near = reader.req_int("until_enemy_within_hexes", 1, 10) * HexGrid.HEX
+				def.strength_add_bp = reader.opt_int("strength_add_bp", 0, 0, FixedMath.BP_ONE)
 			Type.EXTEND_STATUS:
 				def.status_id = reader.req_string("status")
 				def.duration_ticks = reader.req_ticks("duration_ms", FixedMath.MS_PER_TICK)
 			Type.CLEANSE:
-				def.amount = reader.req_int("amount_bp", 1, FixedMath.BP_ONE)
+				if reader.has("count"):
+					def.cleanse_count = reader.req_int("count", 1, 10)
+				else:
+					def.amount = reader.req_int("amount_bp", 1, FixedMath.BP_ONE)
 				if reader.has("statuses"):
 					def.cleanse_statuses = reader.req_string_array("statuses")
 		if reader.has("scaling"):
@@ -649,6 +669,15 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 				def.fell_range = reader.req_int("fell_within_hexes", 1, 20) * HexGrid.HEX
 		Trigger.ON_KILL:
 			def.from_signature = reader.opt_bool("from_signature", false)
+			def.off_target = reader.opt_bool("off_target", false)
+		Trigger.ON_HOLDER_CRIT:
+			if reader.has("beyond_hexes"):
+				def.beyond_range = reader.req_int("beyond_hexes", 1, 10) * HexGrid.HEX
+		Trigger.ON_HEAL:
+			if reader.has("from_ability"):
+				def.from_abilities = reader.req_string_array("from_ability")
+			if reader.has("was_below_pct"):
+				def.was_below_bp = reader.req_int("was_below_pct", 1, 99) * 100
 		Trigger.ON_STATUS, Trigger.ON_STATUS_ENDED:
 			if reader.has("statuses"):
 				def.statuses = reader.req_string_array("statuses")
@@ -667,6 +696,10 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 			def.vs = UnitCondition.read(reader.req_object("vs"))
 			if not EVENT_VS_TRIGGERS.has(def.trigger):
 				reader.error("%s names no unit, so it can't take \"vs\"" % TRIGGER_NAMES[def.trigger])
+	if reader.has("holder"):
+		def.holder = UnitCondition.read(reader.req_object("holder"))
+		if not (EVENT_TRIGGERS.has(def.trigger) or UNIT_TRIGGERS.has(def.trigger)):
+			reader.error("only an event's or a timed effect can take \"holder\"")
 	if def.target == Target.TRIGGER_ALLY and def.trigger != Trigger.ON_ALLY_BELOW_HP:
 		reader.error("\"trigger_ally\" only works with the on_ally_below_hp trigger")
 	if not relic:

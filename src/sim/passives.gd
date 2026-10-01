@@ -107,6 +107,7 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 		unit.vs_basic.clear()
 		unit.vs_signature.clear()
 		unit.vs_per_stacks.clear()
+		unit.vs_within.clear()
 	var now_active: Array[String] = []
 	for holder: UnitState in sim.units:
 		if not holder.alive:
@@ -125,6 +126,11 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 			var targets: Array[UnitState] = [holder]
 			if part.aura.target == AuraDef.Target.ALL_ALLIES:
 				targets = sim.standing_allies_of(holder)
+			elif part.aura.target == AuraDef.Target.ALLIES_NEAR:
+				# The other allies near it now (phase 5c step 7c, Sanctuary).
+				var reach_sq: int = part.aura.target_range * part.aura.target_range
+				targets = sim.standing_allies_of(holder).filter(func(ally: UnitState) -> bool:
+					return ally != holder and ArenaPlane.length_sq(ally.pos - holder.pos) <= reach_sq)
 			for target: UnitState in targets:
 				if part.aura.is_per_hit():
 					# Only on some hits (phase 5c steps 3, 5b, 5c: against
@@ -136,6 +142,7 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 					target.vs_basic.append(part.aura.from_basic)
 					target.vs_signature.append(part.aura.from_signature)
 					target.vs_per_stacks.append(part.aura.per_target_stacks)
+					target.vs_within.append(part.aura.hit_range)
 					continue
 				target.aura_bp[part.aura.stat] += change
 	# Timed boosts (phase 5c step 5b) count like the unit's own auras, once
@@ -233,6 +240,16 @@ static func condition_holds(sim: CombatSim, holder: UnitState, aura: AuraDef) ->
 		AuraDef.While.TACTIC:
 			if holder.tactic == null or not Tactics.applies(sim, holder):
 				return false
+		AuraDef.While.MOVED:
+			# Moved within that long (phase 5c step 7c, Restless).
+			if holder.moved_at == UnitState.NEVER_MOVED or sim.tick - holder.moved_at > aura.moved_ticks:
+				return false
+		AuraDef.While.CROWDED:
+			# That many enemies that close (phase 5c step 7c, Crowd Sense).
+			var crowd_sq: int = aura.near_range * aura.near_range
+			if sim.standing_enemies_of(holder).filter(func(enemy: UnitState) -> bool:
+					return ArenaPlane.length_sq(enemy.pos - holder.pos) <= crowd_sq).size() < aura.crowd:
+				return false
 		AuraDef.While.ALLY_STANDING:
 			if not (sim.heroes if holder.side == EffectSource.Team.HEROES else sim.enemies).any(
 					func(unit: UnitState) -> bool: return unit != holder and unit.alive and unit.def.id == aura.ally_kit):
@@ -271,6 +288,11 @@ static func condition_key(sim: CombatSim, unit: UnitState) -> int:
 		key = key * 1000003
 		if unit.alive and condition_holds(sim, unit, part.aura):
 			key += 1 + aura_change(sim, unit, part.aura)
+			if part.aura.target == AuraDef.Target.ALLIES_NEAR:
+				# Who's near changes it too (phase 5c step 7c, Sanctuary).
+				var reach_sq: int = part.aura.target_range * part.aura.target_range
+				for ally: UnitState in sim.standing_allies_of(unit):
+					key = key * 31 + int(ally != unit and ArenaPlane.length_sq(ally.pos - unit.pos) <= reach_sq)
 	return key
 
 
@@ -306,6 +328,8 @@ static func vs_bonus_bp(attacker: UnitState, target: UnitState, stat: int = Aura
 		if attacker.vs_basic[i] and ability_id != attacker.def.basic_attack.id:
 			continue
 		if attacker.vs_signature[i] and (attacker.def.signature == null or ability_id != attacker.def.signature.id):
+			continue
+		if attacker.vs_within[i] > 0 and ArenaPlane.length_sq(target.pos - attacker.pos) > attacker.vs_within[i] * attacker.vs_within[i]:
 			continue
 		var times: int = 1 if attacker.vs_per_stacks[i].is_empty() else Statuses.stacks_on(target, attacker.vs_per_stacks[i])
 		bonus += times * attacker.vs_bonus_bp[i]
@@ -400,6 +424,20 @@ static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, 
 			continue
 		if effect.from_signature and (unit.def.signature == null or status != unit.def.signature.id):
 			continue
+		# Phase 5c step 7c: the holder's own state, how far the unit hit
+		# stands, a kill off its target, and a heal's ability and the HP it
+		# healed from (on_heal carries the ability as `status`, the HP healed
+		# as `damage`).
+		if effect.holder != null and not effect.holder.holds(unit):
+			continue
+		if effect.beyond_range > 0 and (other == null or ArenaPlane.length_sq(other.pos - unit.pos) <= effect.beyond_range * effect.beyond_range):
+			continue
+		if effect.off_target and (other == null or other == unit.target or status != unit.def.basic_attack.id):
+			continue
+		if not effect.from_abilities.is_empty() and not effect.from_abilities.has(status):
+			continue
+		if effect.was_below_bp > 0 and (other == null or (other.hp - damage) * FixedMath.BP_ONE >= effect.was_below_bp * other.max_hp):
+			continue
 		if effect.cooldown_ticks > 0 and listener.ran_at >= 0 and sim.tick - listener.ran_at < effect.cooldown_ticks:
 			continue
 		if effect.once and listener.count >= effect.every * effect.times:
@@ -427,6 +465,8 @@ static func run_timed(sim: CombatSim) -> void:
 		for listener: Listener in unit.listeners:
 			var effect: EffectDef = listener.effect
 			if not effect.active_at(sim.tick):
+				continue
+			if effect.holder != null and not effect.holder.holds(unit):
 				continue
 			match effect.trigger:
 				EffectDef.Trigger.ON_INTERVAL:

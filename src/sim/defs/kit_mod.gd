@@ -52,6 +52,8 @@ extends RefCounted
 ##                                        the named Guard passive
 ##       "prefer": {...UnitCondition...}  the signature picks among enemies
 ##                                        that meet it first
+##       "strength_add_bp": 500           (step 7c) a Mark it applies is that
+##                                        much stronger
 ## and at the top: "plant_add_ms" (how long it plants after moving),
 ## "engage": {"break_free_add_ms": 1000} (enemies it engages take that
 ## much longer to break free), and "mana": {"taken_bp": 15000} (the mana
@@ -119,10 +121,13 @@ class AbilityChange:
 	var guard_within_add: int = 0
 	var guard_covers_all: bool = false
 	var prefer: UnitCondition = null
+	## Phase 5c step 7c: a Mark it applies is this much stronger (Heavy Mark).
+	var strength_add_bp: int = 0
 
 	func touches_effects() -> bool:
 		return amount_bp != FixedMath.BP_ONE or duration_bp != FixedMath.BP_ONE or duration_add_ticks != 0 or radius_add != 0 \
-			or every_add != 0 or times_add != 0 or max_standing_add != 0 or overheal_add_bp != 0 or width_add != 0 or not add_to_areas.is_empty()
+			or every_add != 0 or times_add != 0 or max_standing_add != 0 or overheal_add_bp != 0 or width_add != 0 or not add_to_areas.is_empty() \
+			or strength_add_bp != 0
 
 	func touches(effect: EffectDef) -> bool:
 		if not at.is_empty() and not at.has(effect.target):
@@ -299,6 +304,7 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 	for effect_reader: DataReader in reader.opt_object_array("add_to_areas"):
 		change.add_to_areas.append(EffectDef.read(effect_reader))
 	change.value_add = reader.opt_int("value_add", 0, -100000, 100000)
+	change.strength_add_bp = reader.opt_int("strength_add_bp", 0, 0, FixedMath.BP_ONE)
 	if reader.has("guard"):
 		var guard: DataReader = reader.req_object("guard")
 		if guard != null:
@@ -342,7 +348,7 @@ func step_problem() -> String:
 				or change.cooldown_bp != FixedMath.BP_ONE or not change.add_effects.is_empty() or change.after_add_ticks != 0 \
 				or change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0 or change.every_add != 0 or change.times_add != 0 \
 				or change.max_standing_add != 0 or change.overheal_add_bp != 0 or change.width_add != 0 or not change.add_to_areas.is_empty() \
-				or change.changes_part() or change.prefer != null or not change.at.is_empty():
+				or change.changes_part() or change.prefer != null or not change.at.is_empty() or change.strength_add_bp != 0:
 			return "a growing card's step can only change an ability's amount_bp"
 	return ""
 
@@ -607,6 +613,8 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 				copy.max_standing = effect.max_standing + change.max_standing_add
 			if change.overheal_add_bp != 0 and effect.overheal_shield_bp > 0:
 				copy.overheal_shield_bp = effect.overheal_shield_bp + change.overheal_add_bp
+			if change.strength_add_bp != 0 and effect.type == EffectDef.Type.APPLY_STATUS:
+				copy.strength_add_bp = effect.strength_add_bp + change.strength_add_bp
 			if change.width_add != 0 and copy.shape != null and copy.shape.kind == ShapeDef.Kind.LINE:
 				copy.shape = DefCopy.shallow(copy.shape) as ShapeDef
 				copy.shape.width += change.width_add
@@ -630,7 +638,8 @@ static func _any_effect(effects: Array[EffectDef], change: AbilityChange) -> boo
 				or change.max_standing_add != 0 and effect.type == EffectDef.Type.SNARE and effect.max_standing > 0
 				or change.overheal_add_bp != 0 and effect.overheal_shield_bp > 0
 				or change.width_add != 0 and effect.shape != null and effect.shape.kind == ShapeDef.Kind.LINE
-				or not change.add_to_areas.is_empty() and effect.type == EffectDef.Type.AREA):
+				or not change.add_to_areas.is_empty() and effect.type == EffectDef.Type.AREA
+				or change.strength_add_bp != 0 and effect.type == EffectDef.Type.APPLY_STATUS):
 			return true
 		if change.touches(effect) and (change.amount_bp != FixedMath.BP_ONE and (effect.amount != 0 or effect.amount_bp_of_damage != 0 or effect.scaling.any(func(value: int) -> bool: return value != 0) or effect.amount_bp_of_max_hp != 0 or change.moves(effect))
 				or (change.duration_bp != FixedMath.BP_ONE or change.duration_add_ticks != 0) and (effect.duration_ticks > 0 or effect.zone_ticks > 0)

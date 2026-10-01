@@ -129,6 +129,8 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 		bits.append("covers every ally in reach, not only those behind")
 	if change.prefer != null:
 		bits.append("goes for enemies that are %s first" % change.prefer.describe())
+	if change.strength_add_bp != 0:
+		bits.append("+%s stronger" % ValueBreakdown._percent(change.strength_add_bp))
 	for effect: EffectDef in change.add_to_areas:
 		bits.append("in its area: " + " · ".join(UnitInfo.effect_numbers([effect] as Array[EffectDef], kit, content)))
 	for effect: EffectDef in change.add_effects:

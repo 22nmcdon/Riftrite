@@ -315,5 +315,13 @@
     "duration_ms": 60000,
     "until_attack": true,
     "auras": [{"stat": "damage_bp", "value": 20000}]
+  },
+  {
+    "_note": "More DEF for the rest of the fight, a stack each second its holder spends below 30% HP (Scar Tissue, Last Watch's path upgrade; phase 5c step 7c).",
+    "id": "scarred",
+    "name": "Scarred",
+    "kind": "boost",
+    "stacking": true,
+    "auras": [{"stat": "def", "value": 2}]
   }
 ]
