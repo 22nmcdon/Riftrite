@@ -113,7 +113,7 @@ Relics go from "about 3–5 per run" to **about 6–9 per run**, and they come i
 ## 7. No combo readouts for players
 
 - **The player never sees counts like "Heartseeker fired 14 times, 9 from refunds".** Working out whether a combo is doing what you meant is part of the fun. The combat log stays as it is (every effect with its source, rule 4), so a curious player can still dig.
-- **For testing only:** a combo readout behind the same testing toggle as target lines, and in the sim runner's report, so tuning can see which engines work.
+- **For testing only:** a combo readout behind the same testing toggle as target lines, and in the sim runner's report, so tuning can see which engines work. **Built in phase 5c step 9** (`rebuild-phase5c-combos.md`, sections 17.11–17.12): "Combo readout (for testing)" beside the target lines, and the engine report in the run report (`--engines`, Decision 45: the sim runner's heroes hold no engines).
 
 ## 8. Endless mode
 

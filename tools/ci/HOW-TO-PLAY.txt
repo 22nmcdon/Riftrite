@@ -122,6 +122,10 @@ PLAYING
        Space   pause            1 2 3   speed 0.5x, 1x, 2x
        S       skip to the end  L       open or close the combat log
        T       every target line (for testing)
+     "Combo readout (for testing)", beside the target lines, lists each
+     hero's engines (how often each fired, how much it added) and adds how
+     each number was made to the log's lines. It's for testing, off by
+     default; working combos out is meant to be part of the game.
      The damage chart is on the right. Click a unit to see only its lines in
      the log. Pause and click a hero for their details.
   5. At the end: the result names each hero's path and what the fight put

@@ -1508,6 +1508,26 @@ Status: **approved (2026-10-01, Decisions 44–47); building in four parts, 9a�
 - **The engine report** (`tools/run_runner.gd -- --engines`, `run_report.gd`'s `_count_engines` and `engines_summary`): `RunFlow.last_setup` and `last_result` (not saved) hold the last fight; the report runs `ComboTally` on each day fight (not a Hunt, not a sealed fight) and keeps, per hero engine, the fights it fired or added in, its fires, the fires from chains, its deepest chain, and its share of its team's damage, healing, and Shield in those fights; and, per event passive held, the fights held. It prints the 40 most-adding engines and every passive held that never fired. A report, not a gate. A test runs it small (`tests/tools/test_run_report.gd`).
 - **The first read** (54 runs, the simple bot, 74% won): the heroes' own abilities carry the runs (Longshot 43% of Maren's team's output, Arrow Storm 22%, Shield Bash 20%, Hearthbrand Mace 17%); the strongest bought engines are Mirror of Ash (13% in its 4 fights) and Ashen Censer (10%); **chains barely happen** in the bot's runs (Ashen Censer and The Ninth Arrow are the only engines with chained fires, at 9–28%, and nothing goes deeper than 2); and **40 held passives never fired**, among them Mana Leech (34 fights on Brannoc), Veil of the Lost (26 on each of Brannoc and Vell), Vigilant (22), Hunter's Chalk (18), and Grasping Mire (15 on each hero). Many are items held by a hero they do nothing for (loadout rule 2: no warnings), which the simple bot doesn't judge well; flagged for phase 6's bot and the playtester, not changed (Decision 46).
 
+### 17.13 Built in step 9c (2026-10-01)
+
+**The thresholds** (`paths.json`, Decision 46), by the run report (54 runs each try):
+
+| Path | Threshold | Median first transformation | By the boss | Note |
+| --- | --- | --- | --- | --- |
+| Deadeye | 900 (as was) | day 4 | 100% | on target |
+| Trapper | 8s (as was) | day 4 | 100% | on target |
+| Volley | 10 → **16** | day 2 → **4** | 100% | on target |
+| Hearthwall | 6 → **2** | day 7 → **2** | 84% → **100%** | its Guard deed comes in lumps: at 3 the median is day 7, at 2 day 2; 2 is nearer the target and every run gets there |
+| Ironbrand | 36 (as was) | day 3 | 100% | on target |
+| Last Watch | 25 (as was) | day 4 | 75–83% between runs of the report | on target, at the edge |
+| Lanternbearer | 25 → **45** | day 1 → **3** | 86% | on target |
+| Wardweaver | 9 → **12** | day 2 | 71–76% | **can't meet both targets by its threshold**: its Shield comes only from Mend's overheal, so a run either gains about 15 a fight from the first fight (when Mend lands on allies near full HP) or almost nothing all run (when it doesn't; a Vell holding Wait to heal is one such case, but not the only one). A higher threshold moves the median no later and only costs runs (25 gave day 2 and 64%). Flagged for the playtester: the deed may need another source. |
+| Vigil Keeper | 140 (as was) | day 4 | 100% | on target |
+
+The run's first transformation now comes on day 3 (median; day 2 before). **The run report** (54 runs): 75% of runs won, 82.9 shards earned a run, 4.6 relics, no errors.
+
+**Vowed Volley stays at +10 over base** (the paths report, `--paths --seeds=1 --sweep=20`; Decision 3 of phase 4 caps a vow at about +5). Its taste's numbers can't move it: with the split arrow at a fifth (+10) or **off entirely** it gains the same (+29 in Sentinel Under Moths, +21 in Witch Circle, both with the split off). The gain is her vow's **cost**: reaching 3 hexes instead of 4 helps her in those fights. Changing a vow's cost is a design question (Decision 46 limited this step to the taste's numbers), so the split is back at a third and the question goes to the playtester. The paths report also shows vowed Vigil Keeper at −7 ("too weak") and most transformations at +5 to +13, below phase 4's 15–25 band: the upgrade and loadout pools have changed fights since; left for phase 6.
+
 ## Answered (2026-09-30)
 
 - **A. Casters first's +20%:** power (Decision 5).
