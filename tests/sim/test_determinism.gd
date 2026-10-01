@@ -108,3 +108,12 @@ func test_the_chaos_fight_uses_everything() -> void:
 	assert_true(log.of_kind(LogEntry.Kind.AURA).any(func(entry: LogEntry) -> bool: return entry.note == "ends"), "an aura's window closes")
 	assert_true(log.of_kind(LogEntry.Kind.TARGET).any(func(entry: LogEntry) -> bool: return entry.note == "hook is stealthed"), "an enemy loses its target to Stealth")
 	assert_true(log.of_kind(LogEntry.Kind.MOVE).any(func(entry: LogEntry) -> bool: return entry.tick > log.of_kind(LogEntry.Kind.COLLAPSE_RING)[1].tick), "units walk on the crumbling arena")
+	# Phase 5c step 3: each new trigger, a keyword filter, a vs aura, a state
+	# aura, and a chain more than one link deep.
+	var passive_sources: Array = log.entries.filter(func(entry: LogEntry) -> bool: return entry.from_event).map(func(entry: LogEntry) -> String: return entry.source_ability)
+	for part: String in ["kindle", "coven", "spite"]:
+		assert_true(passive_sources.has(part), "%s answers its trigger" % part)
+	var auras: Array = log.of_kind(LogEntry.Kind.AURA).map(func(entry: LogEntry) -> String: return entry.source_ability)
+	assert_true(auras.has("hunt") and auras.has("shade"), "a vs aura and a state aura start")
+	assert_true(log.of_kind(LogEntry.Kind.AURA).any(func(entry: LogEntry) -> bool: return entry.source_ability == "shade" and entry.note == "ends"), "the state aura ends with the Stealth")
+	assert_true(log.entries.any(func(entry: LogEntry) -> bool: return entry.chain >= 2), "a chain two links deep")

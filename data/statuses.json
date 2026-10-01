@@ -4,6 +4,7 @@
     "id": "burn",
     "name": "Burn",
     "kind": "damage_over_time",
+    "keyword": "burning",
     "interval_ms": 500,
     "damage_per_stack": 1,
     "stacks_lost_bp": 500,
@@ -32,6 +33,7 @@
     "id": "root",
     "name": "Root",
     "kind": "root",
+    "keyword": "rooted",
     "duration_ms": 1500
   },
   {
@@ -68,6 +70,7 @@
     "id": "marked",
     "name": "Marked",
     "kind": "marked",
+    "keyword": "marked",
     "duration_ms": 4000,
     "damage_taken_bp": 1500
   },
@@ -89,6 +92,7 @@
     "id": "stealth",
     "name": "Stealth",
     "kind": "stealth",
+    "keyword": "stealthed",
     "duration_ms": 1000
   },
   {

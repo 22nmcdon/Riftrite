@@ -35,7 +35,14 @@ extends RefCounted
 ##                                          that has fallen (added up, or
 ##                                          multiplied that many times);
 ##                                          off while none has
+##   "while": "state", "state": {...}       on while its holder meets a
+##                                          UnitCondition ("Shielded allies
+##                                          deal +15%"; phase 5c step 3)
 ## These are checked every tick (CombatSim.check_conditional_auras).
+## "vs": {...} (a UnitCondition; damage_bp only; phase 5c step 3): the bonus
+## counts only on hits against targets that meet it, as power (Decision 12:
+## "+25% damage to Rooted enemies"). It isn't folded into the unit's damage
+## multiplier; EffectRunner.deal_hit adds it per hit.
 ## Adding a target, stat, or condition is a code change; say so when you
 ## make one.
 ## (The rebuild's gut, phase 0, removed the item targets and filters; the
@@ -44,7 +51,7 @@ extends RefCounted
 enum Target { HOLDER, ALL_ALLIES }
 enum Stat { DAMAGE_BP, HEAL_BP, SHIELD_BP, OVER_TIME_BP, CRIT_CHANCE_BP, COOLDOWN_BP, ATK_BP, MGK_BP, DEF_BP, ATSP_BP, CRIT_BP, RANGE, HEALING_TAKEN_BP }
 ## What turns an aura on, beyond its window.
-enum While { ALWAYS, TAUNTING, PLANTED, BELOW_HP, ALLY_STANDING }
+enum While { ALWAYS, TAUNTING, PLANTED, BELOW_HP, ALLY_STANDING, STATE }
 
 const TARGET_NAMES: Array[String] = ["holder", "all_allies"]
 const TARGET_LABELS: Array[String] = ["its holder", "all allies"]
@@ -53,7 +60,7 @@ const STAT_NAMES: Array[String] = [
 	"damage_bp", "heal_bp", "shield_bp", "over_time_bp", "crit_chance_bp", "cooldown_bp",
 	"atk_bp", "mgk_bp", "def_bp", "atsp_bp", "crit_bp", "range", "healing_taken_bp",
 ]
-const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp", "ally_standing"]
+const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp", "ally_standing", "state"]
 ## The stats that add rather than multiply. The rest are factors (x1.1);
 ## several of one stat add their changes (the damage rule, phase 5c).
 const ADDITIVE: Array[Stat] = [Stat.CRIT_CHANCE_BP, Stat.COOLDOWN_BP, Stat.RANGE]
@@ -88,6 +95,10 @@ var below_bp: int = 0
 var ally_kit: String = ""
 ## Counts once per fallen ally.
 var per_fallen_ally: bool = false
+## state: the condition its holder must meet.
+var state: UnitCondition = null
+## damage_bp only: the targets it counts against (null: every hit).
+var vs: UnitCondition = null
 
 
 static func read(reader: DataReader) -> AuraDef:
@@ -112,6 +123,12 @@ static func read(reader: DataReader) -> AuraDef:
 				def.below_bp = reader.req_int("below_pct", 1, 99) * 100
 			While.ALLY_STANDING:
 				def.ally_kit = reader.req_string("kit")
+			While.STATE:
+				def.state = UnitCondition.read(reader.req_object("state"))
+	if reader.has("vs"):
+		def.vs = UnitCondition.read(reader.req_object("vs"))
+		if def.stat != Stat.DAMAGE_BP:
+			reader.error("only a damage_bp aura can be \"vs\" some targets")
 	if reader.has("per"):
 		def.per_fallen_ally = reader.req_choice("per", ["fallen_ally"]) == "fallen_ally"
 	EffectDef.read_window(reader, def)
@@ -133,7 +150,7 @@ func is_additive() -> bool:
 
 ## Checked each tick, not just when a window opens or closes.
 func is_conditional() -> bool:
-	return while_kind == While.PLANTED or while_kind == While.BELOW_HP or while_kind == While.ALLY_STANDING or per_fallen_ally
+	return while_kind == While.PLANTED or while_kind == While.BELOW_HP or while_kind == While.ALLY_STANDING or while_kind == While.STATE or per_fallen_ally
 
 
 ## For the log, e.g. "x2 damage for its holder" or "+20% crit chance for all allies".
@@ -155,6 +172,10 @@ func describe() -> String:
 			condition = " while below %s HP" % ValueBreakdown._percent(below_bp)
 		While.ALLY_STANDING:
 			condition = " while a %s stands" % ally_kit.replace("_", " ")
+		While.STATE:
+			condition = " while %s" % state.describe()
+	if vs != null:
+		condition = " against %s%s" % [vs.describe(), condition]
 	if per_fallen_ally:
 		condition += " for each fallen ally"
 	return "%s for %s%s" % [amount, TARGET_LABELS[target], condition]

@@ -78,8 +78,14 @@ var status_name: String = ""
 ## STATUS_APPLIED: the status's total stacks afterward.
 var stacks: int = 0
 var note: String = ""
-## Made by an event effect: never sets off another one.
+## Made by a passive's effect (an event's, a timed one's, on_fall's).
 var from_event: bool = false
+## How deep in a chain of event effects it was made (phase 5c step 3): 0 for
+## what a unit does on its own, one more than the entry that set off the
+## effect that made it. One at the fight's chain_limit sets off nothing.
+var chain: int = 0
+## DAMAGE, STATUS_DAMAGE: it took the last of the target's Shield.
+var broke_shield: bool = false
 ## MOVE: where the leg starts and the point it heads for; the unit moves
 ## `amount` a tick straight at it (FixedMath / ArenaPlane.step_toward) until it
 ## gets there or its next MOVE or STOP. STOP: to_pos is where it stands.

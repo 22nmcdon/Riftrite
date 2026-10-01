@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) written and up for approval; steps 4–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) approved and being built; steps 4–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -165,7 +165,7 @@ A tactic item takes its tactic's numbers line (`UnitInfo.tactic_numbers`). A rel
 
 ## 8. Step 3: keywords and triggers
 
-Part 7, sections 1 and 2: shared keywords, more triggers, and the chain guard. **Up for approval.** Step 3 builds the vocabulary that steps 5–7 write the relic, loadout, and upgrade pools in; it adds **no content** (no item, relic, or upgrade changes), so the only fights it can change are those where a built event passive now sets off another (8.4).
+Part 7, sections 1 and 2: shared keywords, more triggers, and the chain guard. **Approved 2026-10-01** (8.9). Step 3 builds the vocabulary that steps 5–7 write the relic, loadout, and upgrade pools in; it adds **no content** (no item, relic, or upgrade changes), so the only fights it can change are those where a built event passive now sets off another (8.4).
 
 ### 8.1 What the sim does now
 
@@ -207,11 +207,10 @@ Where it's used:
 | Where | Data | What it does | For (steps 5–7) |
 | --- | --- | --- | --- |
 | **An event's other unit** | `"vs": {...}` on an event effect | runs only if the unit the event names meets it (the enemy hit, the one that fell, the one the status went on) | "crits on Marked enemies …", "when a Rooted enemy dies …" |
-| **An attacker's bonus** | `"vs": {...}` on a `damage_bp` aura | power against targets that meet it, added in `deal_hit` (Casters first's shape, for any card) | "+25% damage to Rooted or Stunned enemies" (Opportunist), "+20% damage to enemies below 30% HP" |
-| **The holder's own state** | `"while": "state", "state": {...}` on an aura | on while its holder meets it (checked each tick, like the other conditions) | "Shielded allies deal +15%", Rooted enemies taking more |
-| **Damage taken** | a new aura stat, `damage_taken_bp` | the holder takes more (or less) damage: **vulnerability**, like a Mark | "Rooted enemies take +25% damage" as every enemy's aura while Rooted (a relic's `enemy_mod`) |
+| **An attacker's bonus** | `"vs": {...}` on a `damage_bp` aura | power against targets that meet it, added in `deal_hit` (Casters first's shape, for any card) | "+25% damage to Rooted or Stunned enemies" (Opportunist), "Rooted enemies take +25% damage" (Thornwoven Cloak) |
+| **The holder's own state** | `"while": "state", "state": {...}` on an aura | on while its holder meets it (checked each tick, like the other conditions) | "Shielded allies deal +15%", "+15% ATK while Stealthed" |
 
-So "+X% damage to [some enemies]" on a hero's own card is **power** (the attacker's bonus, as Casters first is, Decision 5), and "[some enemies] take +X% damage" on a relic is **vulnerability** (the target's side, as a Mark is). Question E asks you to confirm.
+**Every "+X% damage to [some enemies]" bonus is power** (Decision 12), whether a hero's card or a relic says it ("Rooted enemies take +25% damage" is a `vs` aura on every hero, through the relic's `mod`). Only Marked, and later statuses that make a unit take more damage, are vulnerability. So no "damage taken" aura stat is added.
 
 ### 8.4 Triggers
 
@@ -230,7 +229,7 @@ Part 7's list, against what's built. Each names the unit it's about (`hit_target
 | `on_hop` | `on_hop` | — | — |
 
 - **`once`** on an event effect (it exists for timed ones): only the first time in a fight ("the first enemy each hero hits is Marked").
-- **Team-wide cards are passives on every hero.** Relics are already kit mods applied to every hero (`RelicDef.mod`), so "when a hero fires a signature, the other heroes gain 6 mana" is an `on_ability` passive on each hero; only the caster's copy runs. "When a Burning enemy dies …" is an `on_kill` passive with `"vs": {"keywords": ["burning"]}` on each hero, so it runs once, for the hero credited with the kill (Question F).
+- **Team-wide cards are passives on every hero.** Relics are already kit mods applied to every hero (`RelicDef.mod`), so "when a hero fires a signature, the other heroes gain 6 mana" is an `on_ability` passive on each hero; only the caster's copy runs. "When a Burning enemy dies …" is an `on_kill` passive with `"vs": {"keywords": ["burning"]}` on each hero, so it runs once, for the hero credited with the kill (Decision 13).
 - **A Shield isn't tracked by who gave it**, so `on_shield_broken` is the holder's (part 7's "or one it gave" is left out: Shields from several givers are one pool).
 - **The log** gains no kinds: DAMAGE and STATUS_DAMAGE entries get `broke_shield`, set where the Shield runs out; every trigger is read from entries already logged (rule 4 holds as it does).
 - **Not in step 3:** the pieces the pools need that come with their content: timed boosts ("+30% attack speed for 3s"), lifesteal from every source, crit damage bonuses, ignoring DEF, leaving Stealth, and each relic chain's own steps (Crown of Stars, Shared Pain, The Hungering Rift, Overcharge). Each step that brings a card needing one says so in its section.
@@ -254,7 +253,7 @@ Part 7: "an effect caused by a trigger can set off other triggers, but one chain
 ### 8.7 Files
 
 - New: `src/sim/keywords.gd`, `src/sim/defs/unit_condition.gd`; `tests/sim/test_keywords.gd`, `tests/sim/test_triggers.gd`.
-- Changed: `status_def.gd` (`keyword`), `content_db.gd` (checks), `data/statuses.json` (four keywords), `effect_def.gd` (the three triggers, `vs`, `keywords`, `once` on events), `aura_def.gd` (`vs`, `"while": "state"`, `damage_taken_bp`), `events.gd` (the new events, the chain), `passives.gd` (filters, chain depth), `effect_runner.gd` (`vs` power, `damage_taken_bp`, `broke_shield`), `statuses.gd` (`broke_shield`, Burning), `log_entry.gd` (`chain`, `broke_shield`), `unit_state.gd` (`last_hit_chain`), `tuning_def.gd` and `data/tuning.json` (`chain_limit`), `unit_info.gd` and `mod_info.gd` (the words), `tests/sim/chaos_fight.gd`.
+- Changed: `status_def.gd` (`keyword`), `content_db.gd` (checks), `data/statuses.json` (four keywords), `effect_def.gd` (the three triggers, `vs`, `keywords`, `once` on events), `aura_def.gd` (`vs`, `"while": "state"`), `events.gd` (the new events, the chain), `passives.gd` (filters, chain depth), `effect_runner.gd` (`vs` power, `broke_shield`), `statuses.gd` (`broke_shield`, Burning), `log_entry.gd` (`chain`, `broke_shield`), `unit_state.gd` (`last_hit_chain`), `tuning_def.gd` and `data/tuning.json` (`chain_limit`), `unit_info.gd` and `mod_info.gd` (the words), `tests/sim/chaos_fight.gd`.
 - Docs: this section's "Built in step 3" note, CLAUDE.md's "How the arena sim works" (keywords, conditions, the triggers, chains), `rebuild-combos.md` (where part 7's names meet the sim's).
 
 ### 8.8 Tests
@@ -262,14 +261,15 @@ Part 7: "an effect caused by a trigger can set off other triggers, but one chain
 - **Keywords:** each of the five holds exactly while its state does (Burning ends with the last stack; Shielded ends when the Shield runs out); `ContentDb` refuses an unknown keyword.
 - **Conditions:** each field, a list as any-of, all fields together.
 - **Each trigger:** fires on its event, names the right unit and number, honors `vs`, `keywords`, `every`, and `once`; `on_shield_broken` from a hit and from damage over time, and not when a hit leaves Shield standing; `on_ally_ability` never for the caster itself; `on_kill` with `vs` reads the fallen's keywords.
-- **Bonuses:** a `vs` aura is power (adds with the attacker's others, multiplies with a Mark); `damage_taken_bp` is vulnerability (adds with a Mark); an aura `while` its holder is Rooted turns on and off with the Root.
+- **Bonuses:** a `vs` aura is power (adds with the attacker's others, multiplies with a Mark) and counts only against targets that meet it; an aura `while` its holder is Rooted turns on and off with the Root.
 - **The chain guard:** two units whose passives set each other off stop at the limit, in one tick, every time (determinism); a chain one step short of it runs in full; `chain_limit` from tuning; kills carry the chain.
 - **Unchanged:** determinism, the log's audit (no new kinds, so no new rules), every encounter on the screen as `CombatSim.run` gives it, and the chaos fight, which gains a passive on each new trigger and a keyword condition and must still use every piece.
 
-### 8.9 Questions for this step
+### 8.9 Decisions (the playtester, 2026-10-01: "approve, build it")
 
-- **E. Bonuses against some enemies:** a hero's "+X% damage to Rooted enemies" is power and a relic's "Rooted enemies take +X% damage" is vulnerability (8.3)? (Recommended: yes, by who holds it, as Decision 5 did for Casters first.)
-- **F. "When a Burning enemy dies":** counted for the hero credited with the kill (the last to hit it, damage over time included), so an enemy no hero hit (one felled only by the collapse) sets off nothing? (Recommended: yes; it keeps team-wide cards as passives on each hero, with no team-level listener.)
+11. **Step 3 is built as this section says.**
+12. **Every bonus against some enemies is power** (Question E: "all power"): a hero's "+X% damage to Rooted enemies" and a relic's "Rooted enemies take +X% damage" alike. Only Marked (and later statuses that make a unit take more damage) is vulnerability; Casters first stays power (Decision 5).
+13. **A death counts for the hero credited with the kill** (Question F): the last to hit it, damage over time included. An enemy no hero hit sets off nothing, and team-wide cards stay passives on each hero.
 
 ## Answered (2026-09-30)
 

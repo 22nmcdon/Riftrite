@@ -147,7 +147,7 @@ func test_an_ability_passive_answers_its_events() -> void:
 	assert_eq(spite.target, "dummy")
 	assert_true(spite.from_event)
 	assert_eq(fight.units[0].shield, 6 * 5 - 5 * 6 + 5, "half of each 10-damage hit as Shield (each soaked by the next)")
-	assert_eq(K.entries(fight, LogEntry.Kind.FIRE, "dummy").filter(func(entry: LogEntry) -> bool: return entry.source_ability == "grudge").size(), 0, "what an event effect does sets off no events")
+	assert_eq(K.entries(fight, LogEntry.Kind.FIRE, "dummy").filter(func(entry: LogEntry) -> bool: return entry.source_ability == "grudge").size(), 2, "what an event effect does sets off events too (a chain; phase 5c step 3): Spite's hits count for Grudge")
 
 
 func test_an_event_effect_keeps_to_its_window() -> void:
@@ -172,10 +172,10 @@ func test_the_other_events() -> void:
 	K.step(fight, 20)
 	assert_eq(K.entries(fight, LogEntry.Kind.HEAL, "hero").size(), 1, "every 2nd basic attack")
 	assert_eq(_hits(fight, "hero", "kit"), [[10, 5], [20, 5]], "on Slow, not on Burn (and it crits: 3 x1.5)")
-	assert_eq(fight.units[0].shield, 2, "each crit")
+	assert_eq(fight.units[0].shield, 4, "each crit: the attack's two and, since what a passive does sets off events too (phase 5c step 3), the Kit's own two")
 	fight.units[1].hp = 1
 	K.step(fight, 10)
-	assert_eq(fight.units[0].shield, 3 + 100, "and a kill")
+	assert_eq(fight.units[0].shield, 6 + 100, "and a kill")
 
 
 func test_on_heal_on_shielded_and_on_ability() -> void:

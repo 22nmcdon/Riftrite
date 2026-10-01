@@ -20,18 +20,24 @@ extends RefCounted
 ## first call starts Rift Collapse early; below 50% it breathes a warned cone
 ## at the largest group and hits back on every fifth hit taken. Rocks sit in
 ## the middle.
+## Phase 5c step 3 adds keywords and triggers: the brand's every third hit
+## on a Burning enemy shields it, and each Burn it applies counts too; the
+## hook deals more to Marked enemies and attacks faster while Stealthed; the
+## witch shields herself when an ally's signature fires, and lashes out
+## when she's shielded (a chain two links deep); a pup whose Shield breaks
+## bites back.
 ##
 ## Some pieces (a shot fizzling, a cleanse cutting stacks, a cast cancelled
-## by a stun, a target lost to Stealth) happen only in some seeds; 21 has them
-## all (17, then 18, did before playtest gate 1 shrank units and added
-## Stealth). If a change to the
+## by a stun, a target lost to Stealth, a Taunt) happen only in some seeds;
+## 23 has them all (17, 18, then 21 did before playtest gate 1 shrank units
+## and added Stealth, and phase 5c's keywords and triggers changed the fight). If a change to the
 ## sim moves them, test_the_chaos_fight_uses_everything says which, and the
 ## seed or the kits need adjusting.
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
 
 
-static func setup(fight_seed: int = 21) -> FightSetup:
+static func setup(fight_seed: int = 23) -> FightSetup:
 	var warden: UnitDef = K.kit("warden", {"stats": {"hp": 1400, "atk": 14, "def": 30, "crit": 15, "speed": 2}, "traits": ["engage"],
 		"basic_attack": {"effects": [{"type": "damage", "amount": 8, "target": "target", "scaling": {"atk": 5000}},
 			{"trigger": "on_hit", "type": "apply_status", "status": "marked", "target": "hit_target"},
@@ -53,13 +59,18 @@ static func setup(fight_seed: int = 21) -> FightSetup:
 			{"trigger": "on_crit", "type": "apply_status", "status": "stun", "target": "hit_target"}]},
 		"signature": {"id": "rush", "name": "Rush", "trigger": {"kind": "count", "event": "on_basic_attack", "every": 3}, "max_range": 3,
 			"effects": [{"type": "charge", "hexes": 3, "knockback": 1, "target": "target"}, {"type": "damage", "amount": 15, "target": "target"}]},
-		"passives": [{"id": "feast", "name": "Feast", "kind": "ability", "effects": [{"trigger": "on_kill", "type": "heal", "amount": 60, "target": "self"}]}]})
+		"passives": [{"id": "feast", "name": "Feast", "kind": "ability", "effects": [{"trigger": "on_kill", "type": "heal", "amount": 60, "target": "self"}]},
+			{"id": "kindle", "name": "Kindle", "kind": "ability", "effects": [
+				{"trigger": "on_holder_hit", "every": 3, "vs": {"keywords": ["burning"]}, "type": "shield", "amount": 5, "target": "self"},
+				{"trigger": "on_status", "keywords": ["burning"], "every": 4, "type": "shield", "amount": 2, "target": "self"}]}]})
 	var hook: UnitDef = K.kit("hook", {"stats": {"hp": 600, "atk": 12, "speed": 2, "range": 5}, "traits": ["hop_away"], "hop_cooldown_ms": 3000,
 		"basic_attack": {"effects": [{"type": "damage", "amount": 9, "target": "target", "scaling": {"atk": 5000}}, {"type": "apply_status", "status": "bleed", "target": "target"}]},
 		"signature": {"id": "last_rites", "name": "Last Rites", "trigger": {"kind": "would_fall"}, "targeting": "self",
 			"effects": [{"type": "apply_status", "status": "undying", "duration_ms": 2000, "target": "self"}]},
 		"passives": [{"id": "snare", "name": "Snare", "kind": "ability", "effects": [{"trigger": "on_basic_attack", "every": 4, "type": "pull", "hexes": 2, "target": "target"}]},
-			{"id": "vanish", "name": "Vanish", "kind": "ability", "effects": [{"trigger": "on_hop", "type": "apply_status", "status": "stealth", "target": "self"}]}]})
+			{"id": "vanish", "name": "Vanish", "kind": "ability", "effects": [{"trigger": "on_hop", "type": "apply_status", "status": "stealth", "target": "self"}]},
+			{"id": "hunt", "name": "Hunt", "kind": "aura", "aura": {"target": "holder", "stat": "damage_bp", "value": 12000, "vs": {"keywords": ["marked"]}}},
+			{"id": "shade", "name": "Shade", "kind": "aura", "aura": {"target": "holder", "stat": "atsp_bp", "value": 13000, "while": "state", "state": {"keywords": ["stealthed"]}}}]})
 
 	var hound: UnitDef = K.kit("hound", {"stats": {"hp": 500, "atk": 14, "speed": 3, "crit": 10}, "traits": ["engage", "flying"],
 		"passives": [{"id": "pack", "name": "Pack", "kind": "aura", "aura": {"target": "all_allies", "stat": "atsp_bp", "value": 11000}},
@@ -69,6 +80,8 @@ static func setup(fight_seed: int = 21) -> FightSetup:
 	var witch: UnitDef = K.kit("witch", {"stats": {"hp": 600, "atk": 10, "speed": 2, "range": 4},
 		"mana": {"max": 30, "per_attack": 10, "regen_per_s": 2},
 		"basic_attack": {"effects": [{"type": "damage", "amount": 7, "target": "target"}, {"type": "apply_status", "status": "slow", "target": "target"}]},
+		"passives": [{"id": "coven", "name": "Coven", "kind": "ability", "effects": [{"trigger": "on_ally_ability", "type": "shield", "amount": 8, "target": "self"},
+			{"trigger": "on_shielded", "type": "damage", "amount": 3, "target": "target"}]}],
 		"signature": {"id": "hush", "name": "Hush", "trigger": {"kind": "mana"}, "targeting": "highest_mana", "max_range": 6, "cast_ms": 1000,
 			"effects": [{"type": "area", "shape": {"kind": "circle", "radius": 1}, "anchor": "target", "warning_ms": 500, "hits": "enemies",
 				"effects": [{"type": "apply_status", "status": "silence", "target": "target"}, {"type": "mana_drain", "amount": 20, "target": "target"}]}]}})
@@ -93,7 +106,8 @@ static func setup(fight_seed: int = 21) -> FightSetup:
 				"passives": [{"id": "cinders", "name": "Cinders", "kind": "ability", "effects": [{"trigger": "on_hit_taken", "every": 5, "type": "damage", "amount": 6, "target": "hit_target"}]}]},
 		]})
 	var pup: UnitDef = K.kit("pup", {"stats": {"hp": 90, "atk": 8, "speed": 3}, "basic_attack": {"cooldown_ms": 800, "effects": [{"type": "damage", "amount": 5, "target": "target"}]},
-		"signature": {"id": "yelp", "name": "Yelp", "trigger": {"kind": "fight_start"}, "targeting": "self", "effects": [{"type": "shield", "amount": 10, "target": "self"}]}})
+		"signature": {"id": "yelp", "name": "Yelp", "trigger": {"kind": "fight_start"}, "targeting": "self", "effects": [{"type": "shield", "amount": 10, "target": "self"}]},
+		"passives": [{"id": "spite", "name": "Spite", "kind": "ability", "effects": [{"trigger": "on_shield_broken", "type": "damage", "amount_bp_of_damage": 10000, "target": "hit_target"}]}]})
 
 	var fight: FightSetup = K.fight(
 		[K.at(warden, 3, 2), K.at(mender, 2, 0), K.at(brand, 5, 2), K.at(hook, 6, 1)] as Array[UnitSetup],

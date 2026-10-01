@@ -10,9 +10,13 @@ extends RefCounted
 ##                   (AURA). Several on one stat multiply, in the fight's
 ##                   order, then each passive's.
 ##   ability         its effects run on the unit's events (Events). Each
-##                   effect counts its own events and runs on every Nth. What
-##                   they do is marked from_event, so it never sets off
-##                   another event. Three triggers aren't events
+##                   effect counts its own events and runs on every Nth
+##                   ("once": only the first time), and only for statuses of
+##                   its keywords and units that meet its "vs". What they do
+##                   is marked from_event and one link deeper in a chain
+##                   (LogEntry.chain; phase 5c step 3), so it can set off
+##                   more events, down to the chain limit. Three triggers
+##                   aren't events
 ##                   (docs/plans/rebuild-phase2-heroes-enemies.md, section 4):
 ##                   on_interval and on_ally_below_hp are checked after the
 ##                   events each tick (run_timed), and on_fall as the unit
@@ -89,6 +93,8 @@ static func has_aura(unit: UnitState) -> bool:
 static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]:
 	for unit: UnitState in sim.units:
 		unit.aura_bp = no_auras()
+		unit.vs_conditions.clear()
+		unit.vs_bonus_bp.clear()
 	var now_active: Array[String] = []
 	for holder: UnitState in sim.units:
 		if not holder.alive:
@@ -109,6 +115,12 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 			if part.aura.target == AuraDef.Target.ALL_ALLIES:
 				targets = sim.standing_allies_of(holder)
 			for target: UnitState in targets:
+				if part.aura.vs != null:
+					# Power only against targets that meet it (phase 5c step 3);
+					# EffectRunner.deal_hit adds it per hit.
+					target.vs_conditions.append(part.aura.vs)
+					target.vs_bonus_bp.append(times * (part.aura.value - FixedMath.BP_ONE))
+					continue
 				for i: int in times:
 					# A factor's change adds to the others' of its stat (the
 					# damage rule, phase 5c): x1.1 and x1.1 make x1.2.
@@ -162,6 +174,9 @@ static func condition_holds(sim: CombatSim, holder: UnitState, aura: AuraDef) ->
 		AuraDef.While.BELOW_HP:
 			if holder.hp * FixedMath.BP_ONE >= aura.below_bp * holder.max_hp:
 				return false
+		AuraDef.While.STATE:
+			if not aura.state.holds(holder):
+				return false
 		AuraDef.While.ALLY_STANDING:
 			if not (sim.heroes if holder.side == EffectSource.Team.HEROES else sim.enemies).any(
 					func(unit: UnitState) -> bool: return unit != holder and unit.alive and unit.def.id == aura.ally_kit):
@@ -200,10 +215,35 @@ static func condition_key(sim: CombatSim, unit: UnitState) -> int:
 	return key
 
 
+## True if the unit has a damage aura against some targets ("vs").
+static func has_vs_aura(unit: UnitState) -> bool:
+	for part: PartDef in unit.def.passives:
+		if part.kind == PartDef.Kind.AURA and part.aura.vs != null:
+			return true
+	return false
+
+
+## The power bonus (bp) `attacker`'s "vs" auras give a hit on `target`.
+static func vs_bonus_bp(attacker: UnitState, target: UnitState) -> int:
+	var bonus: int = 0
+	for i: int in attacker.vs_conditions.size():
+		if attacker.vs_conditions[i].holds(target):
+			bonus += attacker.vs_bonus_bp[i]
+	return bonus
+
+
 ## True if the unit has an aura that holds only while it's taunting.
 static func has_taunting_aura(unit: UnitState) -> bool:
 	for part: PartDef in unit.def.passives:
 		if part.kind == PartDef.Kind.AURA and part.aura.while_taunting:
+			return true
+	return false
+
+
+## True if one of the unit's passive effects runs on `trigger`.
+static func listens_for(unit: UnitState, trigger: EffectDef.Trigger) -> bool:
+	for listener: Listener in unit.listeners:
+		if listener.effect.trigger == trigger:
 			return true
 	return false
 
@@ -254,18 +294,26 @@ static func boosted(unit: UnitState, effect: EffectDef, amount: int) -> int:
 
 ## Runs the unit's event effects for `event`. `other` is the unit the event
 ## names (hit_target), `damage` the hit it's about (amount_bp_of_damage),
-## `status` the status applied (on_status).
-static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, other: UnitState, damage: int, status: String) -> void:
+## `status` the status applied (on_status), `chain` the depth of the entry
+## that raised it.
+static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, other: UnitState, damage: int, status: String, chain: int = 0) -> void:
 	for listener: Listener in unit.listeners:
 		var effect: EffectDef = listener.effect
 		if effect.trigger != event or not effect.active_at(sim.tick):
 			continue
-		if event == EffectDef.Trigger.ON_STATUS and not effect.statuses.is_empty() and not effect.statuses.has(status):
+		if event == EffectDef.Trigger.ON_STATUS:
+			if not effect.statuses.is_empty() and not effect.statuses.has(status):
+				continue
+			if not effect.keywords.is_empty() and not effect.keywords.has(sim.content.statuses[status].keyword):
+				continue
+		if effect.vs != null and (other == null or not effect.vs.holds(other)):
+			continue
+		if effect.once and listener.count >= effect.every:
 			continue
 		listener.count += 1
 		if listener.count % effect.every != 0:
 			continue
-		_run(sim, unit, listener, other, damage)
+		_run(sim, unit, listener, other, damage, chain)
 
 
 ## Runs the on_interval passives that are due and the on_ally_below_hp ones
@@ -325,9 +373,16 @@ static func on_fall(sim: CombatSim, unit: UnitState) -> bool:
 	return ran
 
 
-## Runs one listener's effect; what it does is marked from_event.
-static func _run(sim: CombatSim, unit: UnitState, listener: Listener, other: UnitState, damage: int) -> void:
+## Runs one listener's effect; what it does is marked from_event, one link
+## deeper than `chain` (the depth of what set it off; 0 for the triggers
+## that aren't events).
+static func _run(sim: CombatSim, unit: UnitState, listener: Listener, other: UnitState, damage: int, chain: int = 0) -> void:
 	var first: int = sim.combat_log.entries.size()
+	var outer: int = sim.chain_depth
+	sim.chain_depth = chain + 1
 	EffectRunner.run_event(sim, unit, listener.part.ability, listener.source, listener.effect, other, damage)
+	sim.chain_depth = outer
 	for i: int in range(first, sim.combat_log.entries.size()):
-		sim.combat_log.entries[i].from_event = true
+		var entry: LogEntry = sim.combat_log.entries[i]
+		entry.from_event = true
+		entry.chain = maxi(entry.chain, chain + 1)

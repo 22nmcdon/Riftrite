@@ -24,6 +24,8 @@
   "max_wounds": 3,
   "_wound_note": "Wounds (docs/plans/rebuild-between-fights.md, section 5): a hero who falls takes one, each wound_bp of max HP off, up to max_wounds.",
   "crit_damage_bp": 15000,
+  "chain_limit": 8,
+  "_chain_note": "Chains (docs/plans/rebuild-phase5c-combos.md, step 3): what an event effect does can set off more events, down to this many links in one tick. 8 is part 7's guess.",
   "crit_bp_per_point": 100,
   "atsp_bp_per_point": 100,
   "defense_constant": 100,

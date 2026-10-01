@@ -45,6 +45,7 @@ static func take(sim: CombatSim, guard: UnitState, ally: UnitState, amount: int,
 	entry.target = ally.id
 	entry.amount = amount
 	entry.absorbed = sim.apply_damage(guard, amount)
+	guard.last_hit_chain = entry.chain
 	guard.last_hit_source = source
 	guard.last_hit_status = ""
 	guard.last_attacker = source.unit_id

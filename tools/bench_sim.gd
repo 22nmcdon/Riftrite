@@ -15,6 +15,9 @@ extends SceneTree
 ##             edges every 5s, at 1x and 2x its HP (docs/plans/
 ##             rebuild-phase2-heroes-enemies.md, section 1: under 300 ms per
 ##             60s)
+##   chains    steady at 1x and 1.5x HP, but every unit hits back for 1 each
+##             time it's hit, so every hit starts a chain that runs to the
+##             chain limit (docs/plans/rebuild-phase5c-combos.md, step 3)
 ## The kits are fixed here, so the numbers compare across changes.
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
@@ -24,13 +27,13 @@ const RUNS: int = 3
 func _init() -> void:
 	var total_ms: int = 0
 	var total_ticks: int = 0
-	for kind: String in ["steady", "crowded", "swarm"]:
-		for hp_bp: int in ([10000, 20000] if kind == "swarm" else [10000, 15000, 20000, 30000]):
+	for kind: String in ["steady", "crowded", "swarm", "chains"]:
+		for hp_bp: int in ([10000, 20000] if kind == "swarm" else [10000, 15000] if kind == "chains" else [10000, 15000, 20000, 30000]):
 			for fight_seed: int in [5, 11]:
 				var best_usec: int = 0
 				var result: FightResult = null
 				for run: int in RUNS:
-					var setup: FightSetup = _swarm_setup(fight_seed, hp_bp) if kind == "swarm" else _setup(fight_seed, hp_bp, kind == "crowded")
+					var setup: FightSetup = _swarm_setup(fight_seed, hp_bp) if kind == "swarm" else _chain_setup(fight_seed, hp_bp) if kind == "chains" else _setup(fight_seed, hp_bp, kind == "crowded")
 					var started: int = Time.get_ticks_usec()
 					result = K.run(setup)
 					var usec: int = Time.get_ticks_usec() - started
@@ -68,6 +71,21 @@ static func _swarm_setup(fight_seed: int, hp_bp: int) -> FightSetup:
 		[K.foe(caller, 3, 6), K.foe(pup, 1, 4), K.foe(pup, 2, 4), K.foe(pup, 5, 4), K.foe(pup, 6, 4)] as Array[UnitSetup],
 		[Vector2i(2, 5), Vector2i(3, 5), Vector2i(4, 5)] as Array[Vector2i], fight_seed)
 	setup.summon_kits.append(pup)
+	return setup
+
+
+## Steady, with every unit hitting back for 1 each time it's hit: each hit
+## starts a chain of hits back and forth that only the chain limit stops.
+static func _chain_setup(fight_seed: int, hp_bp: int) -> FightSetup:
+	var setup: FightSetup = _setup(fight_seed, hp_bp)
+	var errors: Array[String] = []
+	var thorns: PartDef = PartDef.read(DataReader.new({"id": "thorns", "name": "Thorns", "kind": "ability",
+		"effects": [{"trigger": "on_hit_taken", "type": "damage", "amount": 1, "target": "hit_target"}]}, "thorns", errors))
+	var kits: Array[UnitDef] = []
+	for unit: UnitSetup in setup.units():
+		if not kits.has(unit.def):
+			kits.append(unit.def)
+			unit.def.passives.append(thorns)
 	return setup
 
 

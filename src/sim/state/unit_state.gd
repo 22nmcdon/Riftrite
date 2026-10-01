@@ -27,6 +27,10 @@ var stats: UnitStats
 ## What auras do to it, indexed by AuraDef.Stat: multipliers (10000 = x1)
 ## for the output and unit stats, additions for crit chance and cooldown.
 var aura_bp: Array[int] = []
+## Its damage auras against some targets (AuraDef.vs; phase 5c step 3): each
+## condition and its power bonus (bp), folded in with the other auras.
+var vs_conditions: Array[UnitCondition] = []
+var vs_bonus_bp: Array[int] = []
 var max_hp: int
 var hp: int
 var shield: int = 0
@@ -136,6 +140,9 @@ var last_hit_source: EffectSource = null
 var last_hit_status: String = ""
 ## The unit that last hit it (an enemy), for on_kill.
 var last_attacker: String = ""
+## The chain depth of the entry that hit it last (LogEntry.chain), which a
+## kill carries on (Events.kill; phase 5c step 3).
+var last_hit_chain: int = 0
 ## A hero's tactic (Tactics), or null. hold_ground: whether it still holds.
 ## signature_threshold: whether its full bar's wait has been logged.
 var tactic: TacticDef = null

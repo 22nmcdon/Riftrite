@@ -160,10 +160,16 @@ func status_ids() -> Array[String]:
 	for part: PartDef in parts:
 		if part.kind == PartDef.Kind.REPLACE_STATUS:
 			found.append_array([part.from_status, part.to_status])
+		elif part.kind == PartDef.Kind.AURA:
+			for condition: UnitCondition in [part.aura.vs, part.aura.state]:
+				if condition != null:
+					found.append_array(condition.statuses)
 	for effect: EffectDef in all_effects():
 		if effect.type == EffectDef.Type.APPLY_STATUS:
 			found.append(effect.status_id)
 		found.append_array(effect.statuses)
+		if effect.vs != null:
+			found.append_array(effect.vs.statuses)
 	return found
 
 

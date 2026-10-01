@@ -129,8 +129,25 @@ extends RefCounted
 ##   on_kill          an enemy the unit hit last falls
 ##   on_hop           the unit hops away (the hop_away trait; added at
 ##                    playtest gate 1, a code change, for Maren's stealth)
-## "every": N runs it on every Nth time. What an event effect does never sets
-## off another event effect. An ability's own on_fire effect can have
+## Phase 5c step 3 (keywords and triggers; a code change, for the pools):
+##   on_holder_hit    one of the unit's hits lands on an enemy (a DAMAGE
+##                    entry, not damage over time; hit_target: the enemy;
+##                    amount_bp_of_damage: of that hit)
+##   on_shield_broken a hit or damage over time takes the last of the
+##                    unit's Shield (hit_target: whoever broke it;
+##                    amount_bp_of_damage: of the Shield that hit took). A
+##                    Guard's share of a hit doesn't count
+##   on_ally_ability  an ally's signature fires (hit_target: that ally)
+## on_kill names the enemy that fell (for "vs" and an area's anchor; it
+## can't be hit_target, since it's gone).
+## "every": N runs it on every Nth time; "once": true only the first time.
+## "vs": {...} (a UnitCondition; phase 5c step 3) runs it only when the unit
+## the event names meets it ("a crit on a Marked enemy", "a Burning enemy
+## you felled"), read when the event is. on_status also takes "keywords"
+## (only statuses carrying one of them).
+## What an event effect does can set off other events (a chain); each log
+## entry carries its depth (LogEntry.chain), and one at the fight's
+## chain_limit (tuning.json) sets off nothing (Events). An ability's own on_fire effect can have
 ## "every" too (phase 4): it runs on every Nth time the ability fires
 ## (Split Shot, Judgment).
 ##
@@ -158,6 +175,7 @@ enum Trigger {
 	ON_FIRE, ON_HIT, ON_CRIT, ON_FIGHT_START, AT_TIME, ON_ALLY_BELOW_HP,
 	ON_ABILITY, ON_BASIC_ATTACK, ON_HOLDER_CRIT, ON_SHIELDED, ON_HIT_TAKEN, ON_HEAL, ON_STATUS, ON_KILL,
 	ON_INTERVAL, ON_FALL, ON_HOP, ON_WOULD_FALL,
+	ON_HOLDER_HIT, ON_SHIELD_BROKEN, ON_ALLY_ABILITY,
 }
 enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL }
 enum Placement { EDGES, ADJACENT, HEXES }
@@ -183,27 +201,35 @@ const TRIGGER_NAMES: Array[String] = [
 	"on_fire", "on_hit", "on_crit", "on_fight_start", "at_time", "on_ally_below_hp",
 	"on_ability", "on_basic_attack", "on_holder_crit", "on_shielded", "on_hit_taken", "on_heal", "on_status", "on_kill",
 	"on_interval", "on_fall", "on_hop", "on_would_fall",
+	"on_holder_hit", "on_shield_broken", "on_ally_ability",
 ]
 ## The unit's events (see the top).
 const EVENT_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
+	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY,
 ]
 ## Event triggers that name a unit (hit_target) and those that name a hit
 ## (amount_bp_of_damage).
-const EVENT_UNIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED, Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS]
-const EVENT_HIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_HIT_TAKEN]
+const EVENT_UNIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED, Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS,
+	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY]
+const EVENT_HIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_HIT_TAKEN, Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN]
+## Event triggers that can take "vs": those that name a unit, and on_kill.
+const EVENT_VS_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED, Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS,
+	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_KILL]
 const ABILITY_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_FIRE, Trigger.ON_HIT, Trigger.ON_CRIT,
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL,
+	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY,
 ]
 ## What a passive's effects may run on (PartDef).
 const PASSIVE_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL,
+	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY,
 ]
 ## The passive triggers that aren't events (Passives.run_timed, on_fall,
 ## would_fall).
@@ -298,8 +324,12 @@ var threshold_bp: int = 0
 var once: bool = false
 ## Event triggers: runs on every Nth event.
 var every: int = 1
-## on_status: only these statuses (empty = any).
+## on_status: only these statuses (empty = any), and only statuses carrying
+## one of these keywords (empty = any).
 var statuses: Array[String] = []
+var keywords: Array[String] = []
+## Event triggers: only when the unit the event names meets it (null: any).
+var vs: UnitCondition = null
 ## Near-target targets and lowest_hp_ally: how far (plane units; 0: any).
 var near_range: int = 0
 ## heal: the share of what it heals past full HP that comes back as Shield.
@@ -493,8 +523,17 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 		Trigger.ON_STATUS:
 			if reader.has("statuses"):
 				def.statuses = reader.req_string_array("statuses")
+			def.keywords = reader.opt_choice_array("keywords", Keywords.NAMES)
+			if def.keywords.has(Keywords.SHIELDED):
+				reader.error("Shielded isn't a status; on_shielded is when a unit gains Shield")
 	if EVENT_TRIGGERS.has(def.trigger) or (def.trigger == Trigger.ON_FIRE and not relic and not in_area):
 		def.every = reader.opt_int("every", 1, 1)
+	if EVENT_TRIGGERS.has(def.trigger):
+		def.once = reader.opt_bool("once", false)
+		if reader.has("vs"):
+			def.vs = UnitCondition.read(reader.req_object("vs"))
+			if not EVENT_VS_TRIGGERS.has(def.trigger):
+				reader.error("%s names no unit, so it can't take \"vs\"" % TRIGGER_NAMES[def.trigger])
 	if def.target == Target.TRIGGER_ALLY and def.trigger != Trigger.ON_ALLY_BELOW_HP:
 		reader.error("\"trigger_ally\" only works with the on_ally_below_hp trigger")
 	if not relic:

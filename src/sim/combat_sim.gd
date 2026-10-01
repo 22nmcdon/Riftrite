@@ -94,6 +94,15 @@ var taunt_auras: bool = false
 ## Some hero has a tactic whose payoff adds damage (Tactics), so hits check
 ## for it; otherwise they never do.
 var damage_payoffs: bool = false
+## The chain depth of the event effect running now (0: none; Passives._run),
+## given to every entry it makes (LogEntry.chain).
+var chain_depth: int = 0
+## Some unit has an on_ally_ability passive, so signatures' FIRE entries are
+## told to their side (Events).
+var ally_ability_listeners: bool = false
+## Some unit has a damage aura against some targets (AuraDef.vs), so hits
+## check for it; otherwise they never do.
+var vs_auras: bool = false
 ## The units with conditional auras (phase 4: planted, below_hp, per fallen
 ## ally), checked every tick.
 var _conditional: Array[UnitState] = []
@@ -188,6 +197,8 @@ func add_unit(unit: UnitState) -> void:
 		_phased = true
 	if Passives.has_conditional_aura(unit):
 		_conditional.append(unit)
+	if Passives.has_vs_aura(unit):
+		vs_auras = true
 	if unit.guard != null:
 		guards.append(unit)
 
@@ -204,6 +215,8 @@ func note_listeners(unit: UnitState) -> void:
 		_listening = true
 	if Passives.has_timed(unit):
 		_timed_passives = true
+	if Passives.listens_for(unit, EffectDef.Trigger.ON_ALLY_ABILITY):
+		ally_ability_listeners = true
 
 
 ## After units join (at the start, or summons) or enter a phase: auras are
@@ -262,7 +275,9 @@ func step() -> void:
 		Snares.check(self)
 	var read_to: int = combat_log.entries.size()
 	if _listening:
-		Events.dispatch(self, _events_read, read_to)
+		# A chain resolves in the tick it starts, so what the events do is
+		# read too (Events.dispatch returns where it stopped).
+		read_to = Events.dispatch(self, _events_read, read_to)
 	_events_read = read_to
 	if _timed_passives:
 		Passives.run_timed(self)
@@ -534,6 +549,7 @@ func new_entry(kind: LogEntry.Kind, source: EffectSource) -> LogEntry:
 	entry.tick = tick
 	entry.kind = kind
 	entry.set_source(source)
+	entry.chain = chain_depth
 	return entry
 
 

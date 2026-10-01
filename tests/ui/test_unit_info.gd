@@ -142,10 +142,13 @@ func test_the_numbers_of_every_other_piece() -> void:
 		"Strike: Every 0.9s · melee · 21 damage (10 + 60% ATK) · 1 Burn · Stun 1s",
 		"Rush: Every 3rd basic attack · reach 3 hexes · charges 3 hexes, knocking back 1 hex · 15 damage",
 		"Feast: Every kill · heals 60",
+		"Kindle: Every 3rd hit on a unit that's Burning · 5 Shield · Every 4th status applied that makes a unit Burning · 2 Shield",
 		"Strike: Every 1s · reach 5 hexes · 15 damage (9 + 50% ATK) · 1 Bleed",
 		"Last Rites: Once, when it would fall · Undying 2s",
 		"Snare: Every 4th basic attack · pulls 2 hexes",
 		"Vanish: Every hop · Stealth 1s",
+		"Hunt: +20% damage against Marked",
+		"Shade: +30% ATSP while Stealthed",
 		"Hop away: At most once every 3s",
 		"Strike: Every 1s · melee · 10 damage",
 		"Pounce: Once, as the fight starts · reach 5 hexes · leaps up to 5 hexes · 12 damage",
@@ -155,6 +158,7 @@ func test_the_numbers_of_every_other_piece() -> void:
 		"Flying: ",
 		"Strike: Every 1s · reach 4 hexes · 7 damage · Slow 2s",
 		"Hush: At 30 mana · 1s cast · reach 6 hexes · 1-hex circle at the target (0.5s warning) · Silence 3s · drains 20 mana",
+		"Coven: Every ally's signature · 8 Shield · Every Shield taken · 3 damage",
 		"Strike: Every 1.5s · reach 3 hexes · 3-hex line at the target · 8 damage · 1 Poison",
 		"Brood: Every 4th hit taken · summons 2 pup",
 		"Strike: Every 1.4s · melee · 26 damage (16 + 50% ATK)",
@@ -166,6 +170,13 @@ func test_the_numbers_of_every_other_piece() -> void:
 	guard.trigger = EffectDef.Trigger.ON_ALLY_BELOW_HP
 	guard.threshold_bp = 3000
 	assert_eq(UnitInfo.passive_trigger_text(guard), "When an ally drops below 30% HP (once per ally)")
+	var first := EffectDef.new()
+	first.trigger = EffectDef.Trigger.ON_HOLDER_HIT
+	first.once = true
+	assert_eq(UnitInfo.passive_trigger_text(first), "Once, on its first hit")
+	var broken := EffectDef.new()
+	broken.trigger = EffectDef.Trigger.ON_SHIELD_BROKEN
+	assert_eq(UnitInfo.passive_trigger_text(broken), "Every Shield broken")
 	var molt: PhaseDef = Chaos.setup().enemies[4].def.phases[0]
 	molt.basic_attack = Chaos.setup().heroes[0].def.basic_attack
 	assert_eq(UnitInfo.phase_numbers(molt), "Below 80% HP · new signature: Call the Brood · new basic attack: Strike")

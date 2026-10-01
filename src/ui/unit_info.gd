@@ -22,6 +22,8 @@ const EVENT_WORDS: Dictionary[int, String] = {
 	EffectDef.Trigger.ON_HIT_TAKEN: "hit taken", EffectDef.Trigger.ON_HEAL: "heal",
 	EffectDef.Trigger.ON_STATUS: "status applied", EffectDef.Trigger.ON_KILL: "kill",
 	EffectDef.Trigger.ON_HOP: "hop",
+	EffectDef.Trigger.ON_HOLDER_HIT: "hit", EffectDef.Trigger.ON_SHIELD_BROKEN: "Shield broken",
+	EffectDef.Trigger.ON_ALLY_ABILITY: "ally's signature",
 }
 const ORDINALS: Array[String] = ["th", "st", "nd", "rd"]
 const CHATTER: Array[LogEntry.Kind] = [LogEntry.Kind.MOVE, LogEntry.Kind.STOP, LogEntry.Kind.TARGET]
@@ -148,8 +150,16 @@ static func passive_numbers(part: PartDef, kit: UnitDef, content: ContentDb) -> 
 			@warning_ignore("integer_division")
 			return "Takes %s of each enemy hit on an ally %swithin %s" % [ValueBreakdown._percent(part.share_bp),
 				"behind it " if part.behind_only else "", hexes(part.guard_range / HexGrid.HEX)]
-	var parts: Array[String] = [passive_trigger_text(part.ability.effects[0])]
-	parts.append_array(effect_numbers(part.ability.effects, kit, content))
+	# Each effect's trigger, where it differs from the one before (a passive
+	# may answer more than one event).
+	var parts: Array[String] = []
+	var said: String = ""
+	for effect: EffectDef in part.ability.effects:
+		var when: String = passive_trigger_text(effect)
+		if when != said:
+			parts.append(when)
+			said = when
+		parts.append_array(effect_numbers([effect] as Array[EffectDef], kit, content))
 	return " · ".join(parts)
 
 
@@ -210,7 +220,16 @@ static func passive_trigger_text(effect: EffectDef) -> String:
 			return "As it falls"
 		EffectDef.Trigger.ON_ALLY_BELOW_HP:
 			return "When an ally drops below %s HP (%s)" % [ValueBreakdown._percent(effect.threshold_bp), "once a fight" if effect.once else "once per ally"]
-	return "Every %s" % _nth(effect.every, EVENT_WORDS.get(effect.trigger, EffectDef.TRIGGER_NAMES[effect.trigger]))
+	var word: String = EVENT_WORDS.get(effect.trigger, EffectDef.TRIGGER_NAMES[effect.trigger])
+	if not effect.keywords.is_empty():
+		var names: Array[String] = []
+		for keyword: String in effect.keywords:
+			names.append(Keywords.label(keyword))
+		word = "status applied that makes a unit %s" % " or ".join(names)
+	var text: String = ("Once, on its %s" if effect.once else "Every %s") % (_nth(effect.every, word) if effect.every > 1 or not effect.once else "first " + word)
+	if effect.vs != null:
+		text += " on a unit that's %s" % effect.vs.describe()
+	return text
 
 
 static func aura_text(aura: AuraDef) -> String:
@@ -231,6 +250,10 @@ static func aura_text(aura: AuraDef) -> String:
 			text += " after %s still" % seconds(aura.after_ticks)
 		AuraDef.While.BELOW_HP:
 			text += " below %s HP" % ValueBreakdown._percent(aura.below_bp)
+		AuraDef.While.STATE:
+			text += " while %s" % aura.state.describe()
+	if aura.vs != null:
+		text = text.replace(" damage", " damage against %s" % aura.vs.describe())
 	if aura.per_fallen_ally:
 		text += " per fallen ally"
 	if aura.window_until_ticks >= 0:

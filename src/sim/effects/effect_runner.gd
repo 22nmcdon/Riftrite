@@ -302,6 +302,10 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 		if payoff > 0:
 			power += payoff
 			entry.bonus = Tactics.bonus_note(payoff, sim.unit_by_id(source.unit_id).tactic)
+	if sim.vs_auras and source.relic_side < 0:
+		var attacker: UnitState = sim.unit_by_id(source.unit_id)
+		if attacker != null and not attacker.vs_conditions.is_empty():
+			power += Passives.vs_bonus_bp(attacker, target)
 	var marked: int = Statuses.damage_taken_bp(target) if not target.statuses.is_empty() else 0
 	var raw: int = DamageRule.apply(amount, power, sim.tuning.crit_damage_bp - FixedMath.BP_ONE if crit else 0, marked)
 	# Guard (phase 4): an ally's guard takes its share of the hit, against its
@@ -314,7 +318,10 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 	entry.mitigated = maxi(raw - guarded_raw - dealt, 0)
 	entry.amount = dealt
 	entry.crit = crit
+	var had_shield: bool = target.shield > 0
 	entry.absorbed = sim.apply_damage(target, dealt)
+	entry.broke_shield = had_shield and target.shield == 0
+	target.last_hit_chain = entry.chain
 	target.last_hit_source = source
 	target.last_hit_status = ""
 	if source.relic_side < 0 and source.unit_id != target.id:

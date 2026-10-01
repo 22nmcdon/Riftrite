@@ -24,6 +24,9 @@ extends RefCounted
 ##             still hit it, and it keeps attacking. Added at playtest
 ##             gate 1 for Maren's hop: a code change, since no other kind
 ##             can hide a unit)
+## Any kind may carry a "keyword" (Keywords.NAMES; phase 5c step 3): the
+## name cards use for a unit with this status (Marked, Rooted, Burning,
+## Stealthed). It changes nothing in a fight by itself.
 ## A timed status's duration_ms is its default; an apply_status effect can
 ## give its own. A new application refreshes the timer.
 
@@ -52,6 +55,8 @@ var duration_ticks: int = 0
 var slow_bp: int = 0
 var damage_taken_bp: int = 0
 var damage_reduced_bp: int = 0
+## The keyword a unit with it has ("": none).
+var keyword: String = ""
 
 
 static func read(reader: DataReader) -> StatusDef:
@@ -60,6 +65,9 @@ static func read(reader: DataReader) -> StatusDef:
 	def.name = reader.req_string("name")
 	var kind_name: String = reader.req_choice("kind", KIND_NAMES)
 	def.kind = maxi(KIND_NAMES.find(kind_name), 0) as Kind
+	def.keyword = reader.opt_string_choice("keyword", "", Keywords.NAMES)
+	if def.keyword == Keywords.SHIELDED:
+		reader.error("Shielded is a Shield above 0, not a status")
 	if kind_name.is_empty():
 		reader.finish()
 		return def

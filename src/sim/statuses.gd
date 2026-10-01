@@ -177,7 +177,10 @@ static func _deal_damage_over_time(sim: CombatSim, unit: UnitState, state: Statu
 		entry.status = state.def.id
 		entry.status_name = state.def.name
 		entry.amount = damage
+		var had_shield: bool = unit.shield > 0
 		entry.absorbed = sim.apply_damage_vs_shield(unit, damage, state.def.vs_shield_bp)
+		entry.broke_shield = had_shield and unit.shield == 0
+		unit.last_hit_chain = entry.chain
 		unit.last_hit_source = group.source
 		unit.last_hit_status = state.def.name
 		if group.source.relic_side < 0 and group.source.unit_id != unit.id:

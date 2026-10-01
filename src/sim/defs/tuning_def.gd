@@ -32,6 +32,9 @@ var max_units_per_side: int = 30
 var wound_bp: int = 1500
 var max_wounds: int = 3
 var crit_damage_bp: int
+## Chains (phase 5c step 3): a log entry this deep in a chain of event
+## effects sets off nothing more (Events).
+var chain_limit: int = 8
 ## Rift Collapse: the first ring crumbles at collapse_start, then one more
 ## every collapse_ring; each is warned collapse_warning before it crumbles.
 ## Its damage's growth speeds up collapse_surge - collapse_start after the
@@ -81,6 +84,7 @@ static func read(reader: DataReader) -> TuningDef:
 	def.wound_bp = reader.opt_int("wound_bp", 1500, 0, 3000)
 	def.max_wounds = reader.opt_int("max_wounds", 3, 0, 5)
 	def.crit_damage_bp = reader.req_int("crit_damage_bp", FixedMath.BP_ONE)
+	def.chain_limit = reader.req_int("chain_limit", 1, 64)
 	def.crit_bp_per_point = reader.req_int("crit_bp_per_point", 0)
 	def.atsp_bp_per_point = reader.req_int("atsp_bp_per_point", 0)
 	def.defense_constant = reader.req_int("defense_constant", 1)
