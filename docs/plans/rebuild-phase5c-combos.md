@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a, 5b (section 11), and 5c (section 12) built (10-01), 5d to come; steps 5–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a, 5b (section 11), and 5c (section 12) built (10-01), 5d (section 13) written and up for approval; steps 5–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -723,6 +723,69 @@ The chaos fight takes the new pieces part by part (its seed rescanned if it must
   - The tier counts are now 25, 21, 14, 15, 11.
 - **What moved:** no built kit's fight; the bench's fingerprints are unchanged. **The run report** (54 runs): **66% of runs won**, as after 5c-1; losses still gather on day 3's elite (10 of 18), and no run errs. The simple bot rarely meets the legendaries and boss relics the rules come on (the pre-boss shop's legendary is the only sure one), so the rules barely show in its runs; the good bot and the retune are phase 6 and step 9.
 
+
+## 13. Step 5d: duo bonds as keys to bond relics
+
+The last part of the relic pool (Decision 17), from `duo-bonds.md`: a duo bond has no boost of its own any more; it's the key to a **bond relic**, which joins the shops once the bond is on. **Up for approval.**
+
+### 13.1 The bonds
+
+- **`BondDef`** keeps its two paths, name, and line, and loses its per-path mods. It names its relic (`"relic": "the_watchtower_stone"`).
+- **Switching on is as built:** both heroes transformed into the bonded paths. So are the "?" on the vow while it stirs, being found (`RunState.bonds_found`), and the reveal.
+- **The built boosts go:** fights no longer take a bond's mods (`RunFlow.fight_setup`, `kit_of`).
+- **The hero panel's bond line** becomes "Sentry and Sniper is on: The Watchtower Stone can show up in shops" (or "is yours", once held). The stirring line stays.
+- **The Codex isn't built yet**, so a found bond goes in it when it is.
+
+### 13.2 The bond relics in the shops
+
+- **A new tier, `bond`:** free, never drawn by the tier odds, never at the Magpie, and never in an elite's, Rift Tear's, or the Shrine's choice.
+- **The draw:** each time a shop draws its relic slot (the Pedlar's, and the pre-boss shop's slot beside the legendary), and a bond is on whose relic the run doesn't hold or the shop isn't already showing, there's a `bond_relic_pct` chance the slot is that bond relic.
+  - Placeholder: 10, twice the Pedlar's epic odds, as `duo-bonds.md` asks (Question R).
+  - With two bonds on, one of their relics is drawn (Question S).
+  - A reroll draws again, so it can come and go.
+- **Taking it costs nothing**; it takes the relic's spot like any relic.
+
+### 13.3 The three bond relics
+
+| Bond | Bond relic | In the sim |
+| --- | --- | --- |
+| **Sentry and Sniper** (Hearthwall + Deadeye) | **The Watchtower Stone:** allies standing behind a wall gain +1 range | an aura `"while": "behind_wall"`, `range` +1. It holds while one of its side's walls stands with the holder behind it: on its raiser's side of the wall's line, between its ends (half a hex either way), and within 3 hexes of it. Each `Walls.Wall` keeps which side is behind |
+| **Snare and Cleave** (Ironbrand + Trapper) | **The Hunter's Anvil:** enemies that are knocked back are Rooted for 1s when they land | a new trigger, `on_knockback` (the unit knocked an enemy back, from its PUSH lines noted "knocked back"; it names the enemy): apply `root` 1s to it |
+| **Light and Iron** (Hearthwall + Wardweaver) | **The Hearth-Woven Mail:** when an ally takes a hit for another ally, the protected ally gains a Shield of 5% of their max HP (once every 2s per ally) | a new trigger, `on_guard` (the unit's Guard took a share of a hit on an ally, from its GUARD lines; it names the ally): a Shield of 5% of max HP (built) to it, with a new event effect field `"cooldown_per_unit_ms": 2000` (once per that long for each unit named) |
+
+Each is a passive on every hero (a relic's mod). Each plays off both paths: Hearthwall raises the walls and the Guard, Ironbrand knocks back, Trapper roots, Deadeye shoots from behind, and Wardweaver shields.
+
+### 13.4 Files and tests
+
+- **Changed:**
+  - `bond_def.gd` (`relic`, no mods)
+  - `data/bonds.json` (the three bonds, now keys)
+  - `relic_def.gd` (the `bond` tier)
+  - `data/relics.json` (the three bond relics)
+  - `act_def.gd` and `data/act1.json` (`bond_relic_pct`; `relic_prices.bond` 0)
+  - `offers.gd` (the draw)
+  - `run_flow.gd` and `run_content.gd` (no bond mods; `bond_relics(state)`, the on bonds' relics not yet held)
+  - `aura_def.gd` and `passives.gd` (`behind_wall`)
+  - `walls.gd` (the back side)
+  - `effect_def.gd`, `events.gd`, and `passives.gd` (`on_knockback`, `on_guard`, `cooldown_per_unit_ms`)
+  - `hero_panel.gd`, `mod_info.gd`, and `unit_info.gd` (the words); the run day screen's relic card (the tier, "Free")
+  - the chaos fight (the two triggers, the aura behind a wall)
+- **Tests:**
+  - **`tests/sim/test_bond_pieces.gd`:** behind a wall, on and off; `on_knockback`; `on_guard` and its cooldown per unit.
+  - **`tests/run/test_bonds.gd`, or the bond tests where they live:**
+    - a bond on adds its relic to the shops' draw and never to the Magpie;
+    - a bond relic is free;
+    - held, it's drawn no more;
+    - no bond, no bond relic;
+    - fights no longer take the old boosts;
+    - the tier counts (bond 3).
+  - Fight-wide: determinism, the log audit, every encounter on the screen, the bench fingerprints unchanged; the run report runs.
+
+### 13.5 Questions
+
+- **R. How much more likely than an epic** a bond relic is: recommended 10% a shop draw (twice the Pedlar's epic), a placeholder for phase 6.
+- **S. Two bonds on at once:** recommended both relics join the draw (one of them per slot), as `duo-bonds.md` leans.
+- **T. A Maren–Vell bond:** all three Act 1 bonds include Brannoc. Recommended: keep the three for now, and write one for Maren and Vell when the roster grows (as `duo-bonds.md` plans, at about 6 heroes). Or I draft one now for your approval.
 
 ## Answered (2026-09-30)
 
