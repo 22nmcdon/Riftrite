@@ -46,6 +46,8 @@ class Listener:
 	## cooldown_per_unit_ms: the tick it last ran for each unit named (a
 	## lookup, never iterated).
 	var last_for: Dictionary[String, int] = {}
+	## cooldown_ms: the tick it last ran (-1: never).
+	var ran_at: int = -1
 
 
 ## AuraDef stats with no aura: x1 multipliers, +0 additions.
@@ -103,6 +105,7 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 		unit.vs_stats.clear()
 		unit.vs_bonus_bp.clear()
 		unit.vs_basic.clear()
+		unit.vs_signature.clear()
 		unit.vs_per_stacks.clear()
 	var now_active: Array[String] = []
 	for holder: UnitState in sim.units:
@@ -131,6 +134,7 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 					target.vs_stats.append(part.aura.stat)
 					target.vs_bonus_bp.append(change)
 					target.vs_basic.append(part.aura.from_basic)
+					target.vs_signature.append(part.aura.from_signature)
 					target.vs_per_stacks.append(part.aura.per_target_stacks)
 					continue
 				target.aura_bp[part.aura.stat] += change
@@ -297,6 +301,8 @@ static func vs_bonus_bp(attacker: UnitState, target: UnitState, stat: int = Aura
 			continue
 		if attacker.vs_basic[i] and ability_id != attacker.def.basic_attack.id:
 			continue
+		if attacker.vs_signature[i] and (attacker.def.signature == null or ability_id != attacker.def.signature.id):
+			continue
 		var times: int = 1 if attacker.vs_per_stacks[i].is_empty() else Statuses.stacks_on(target, attacker.vs_per_stacks[i])
 		bonus += times * attacker.vs_bonus_bp[i]
 	return bonus
@@ -382,6 +388,16 @@ static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, 
 				continue
 		if effect.vs != null and (other == null or not effect.vs.holds(other)):
 			continue
+		# Phase 5c step 6b: a hit big enough, an enemy that fell near enough,
+		# a kill by the signature (`status` names the ability), and a cooldown.
+		if effect.min_hit_bp > 0 and damage * FixedMath.BP_ONE < unit.max_hp * effect.min_hit_bp:
+			continue
+		if effect.fell_range > 0 and (other == null or ArenaPlane.length_sq(other.pos - unit.pos) > effect.fell_range * effect.fell_range):
+			continue
+		if effect.from_signature and (unit.def.signature == null or status != unit.def.signature.id):
+			continue
+		if effect.cooldown_ticks > 0 and listener.ran_at >= 0 and sim.tick - listener.ran_at < effect.cooldown_ticks:
+			continue
 		if effect.once and listener.count >= effect.every:
 			continue
 		if effect.cooldown_per_unit_ticks > 0 and other != null:
@@ -392,6 +408,7 @@ static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, 
 			continue
 		if effect.cooldown_per_unit_ticks > 0 and other != null:
 			listener.last_for[other.id] = sim.tick
+		listener.ran_at = sim.tick
 		_run(sim, unit, listener, other, damage, chain)
 
 

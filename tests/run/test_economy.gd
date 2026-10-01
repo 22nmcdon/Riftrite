@@ -41,7 +41,7 @@ func test_the_items_load() -> void:
 		counts[_run.items[id].kind] += 1
 		if _run.items[id].kind == ItemDef.Kind.TACTIC:
 			assert_not_null(_run.items[id].tactic, "%s has its tactic" % id)
-	assert_eq(counts, [16, 4, 10, 0] as Array[int], "16 charms, 4 tactics, 10 sigils (phase 5c step 6a)")
+	assert_eq(counts, [27, 4, 15, 0] as Array[int], "27 charms, 4 tactics, 15 sigils (phase 5c steps 6a and 6b)")
 	for id: String in _run.item_ids:
 		if _run.items[id].kind != ItemDef.Kind.TACTIC:
 			assert_eq(_run.items[id].ranks.size(), 3, "%s has three ranks" % id)

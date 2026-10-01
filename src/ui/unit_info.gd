@@ -28,6 +28,8 @@ const EVENT_WORDS: Dictionary[int, String] = {
 	EffectDef.Trigger.ON_LIFESTEAL: "lifesteal heal",
 	EffectDef.Trigger.ON_KNOCKBACK: "enemy knocked back",
 	EffectDef.Trigger.ON_GUARD: "hit taken for an ally",
+	EffectDef.Trigger.ON_CHARGED: "charge or leap that hits it",
+	EffectDef.Trigger.ON_ENEMY_FELL: "enemy falling",
 }
 const ORDINALS: Array[String] = ["th", "st", "nd", "rd"]
 const CHATTER: Array[LogEntry.Kind] = [LogEntry.Kind.MOVE, LogEntry.Kind.STOP, LogEntry.Kind.TARGET]
@@ -238,10 +240,19 @@ static func passive_trigger_text(effect: EffectDef) -> String:
 			names.append(Keywords.label(keyword))
 		word = "status applied that makes a unit %s" % " or ".join(names)
 	var text: String = ("Once, on its %s" if effect.once else "Every %s") % (_nth(effect.every, word) if effect.every > 1 or not effect.once else "first " + word)
+	if effect.fell_range > 0:
+		@warning_ignore("integer_division")
+		text += " within %d hexes" % (effect.fell_range / HexGrid.HEX)
+	if effect.min_hit_bp > 0:
+		text += " of at least %s of its max HP" % ValueBreakdown._percent(effect.min_hit_bp)
+	if effect.from_signature:
+		text += " by its signature"
 	if effect.vs != null:
 		text += " on a unit that's %s" % effect.vs.describe()
 	if effect.cooldown_per_unit_ticks > 0:
 		text += " (at most once every %s for each)" % seconds(effect.cooldown_per_unit_ticks)
+	if effect.cooldown_ticks > 0:
+		text += " (at most once every %s)" % seconds(effect.cooldown_ticks)
 	return text
 
 
@@ -259,6 +270,14 @@ static func aura_text(aura: AuraDef) -> String:
 		text = "lifesteal counts as healing"
 	elif aura.stat == AuraDef.Stat.DAMAGE_REDUCED_BP:
 		text = "%s damage taken" % signed_percent(-aura.value)
+	elif aura.stat == AuraDef.Stat.UNPUSHABLE:
+		text = "can't be knocked back or pulled"
+	elif aura.stat == AuraDef.Stat.DODGE_EVERY_MS:
+		text = "a hit on it misses, then not again for %s" % seconds(FixedMath.ms_to_ticks(aura.value))
+	elif aura.stat == AuraDef.Stat.HALVED_HITS:
+		text = "its first %d hits taken each fight deal half damage" % aura.value
+	elif aura.stat == AuraDef.Stat.DEF_IGNORE_BP:
+		text = "its hits ignore %s of the target's DEF" % ValueBreakdown._percent(aura.value)
 	elif aura.is_additive():
 		text = "%s %s" % [signed_percent(aura.value), AuraDef.STAT_LABELS[aura.stat]]
 	else:
@@ -292,6 +311,8 @@ static func aura_text(aura: AuraDef) -> String:
 		text += " per fallen ally"
 	if aura.from_basic:
 		text += " on its basic attacks"
+	if aura.from_signature:
+		text += " on its signature's hits"
 	if not aura.per_target_stacks.is_empty():
 		text += " per %s stack on the enemy hit" % aura.per_target_stacks.replace("_", " ").capitalize()
 	if aura.window_until_ticks >= 0:
@@ -311,6 +332,8 @@ static func boost_text(status: StatusDef) -> String:
 	var text: String = ", ".join(parts)
 	if status.stacking:
 		text += " a stack" + ("" if status.duration_ticks > 0 else ", the whole fight")
+	if status.until_attack:
+		text += ", until its next attack"
 	return text
 
 
@@ -418,6 +441,8 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 			var named: String = "%s %s" % [status.name, seconds(ticks)] if ticks > 0 else status.name
 			if status.kind == StatusDef.Kind.BOOST:
 				named += " (%s)" % boost_text(status)
+			if effect.marks_stack:
+				named += ", stacking as it refreshes"
 			return named + _to_all(effect)
 		EffectDef.Type.EXTEND_STATUS:
 			return "its %s lasts %s longer" % [_status_name(effect.status_id, content), seconds(effect.duration_ticks)]
@@ -431,6 +456,8 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 		EffectDef.Type.MANA_DRAIN:
 			return "drains %d mana" % effect.amount
 		EffectDef.Type.GAIN_MANA:
+			if effect.mana_bp > 0:
+				return "+%s of its mana" % ValueBreakdown._percent(effect.mana_bp)
 			return "+%d mana" % effect.amount
 		EffectDef.Type.SNARE:
 			return "a snare in the target's path" + (" (up to %d at once)" % effect.max_standing if effect.max_standing > 0 else "")

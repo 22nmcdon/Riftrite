@@ -234,6 +234,12 @@ func _add(entry: LogEntry, sim: CombatSim) -> void:
 				var resisted: Fx = _new(Kind.POPUP, entry.tick, entry.tick + POPUP_TICKS, Vector2(hero.pos), hero.id)
 				resisted.text = "Resisted"
 				resisted.color = UiStyle.TEXT
+		LogEntry.Kind.DODGED:
+			var dodger: UnitState = sim.unit_by_id(entry.target)
+			if dodger != null:
+				var miss: Fx = _new(Kind.POPUP, entry.tick, entry.tick + POPUP_TICKS, Vector2(dodger.pos), dodger.id)
+				miss.text = "Miss"
+				miss.color = UiStyle.TEXT
 		LogEntry.Kind.SUMMON:
 			if entry.note.is_empty():
 				var pulse: Fx = _new(Kind.PULSE, entry.tick, entry.tick + PULSE_TICKS, Vector2(entry.to_pos), entry.target)

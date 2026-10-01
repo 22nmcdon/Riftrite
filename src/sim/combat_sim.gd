@@ -102,6 +102,11 @@ var chain_depth: int = 0
 var ally_ability_listeners: bool = false
 ## Some unit has an on_status_ended passive (phase 5c step 5b).
 var status_end_listeners: bool = false
+## Some unit has an on_enemy_fell passive (phase 5c step 6b).
+var enemy_fell_listeners: bool = false
+## The last hit dealt missed (Sidestep; phase 5c step 6b), so its on_hit
+## effects don't run.
+var last_dodged: bool = false
 ## Some unit has a damage aura against some targets (AuraDef.vs), so hits
 ## check for it; otherwise they never do.
 var vs_auras: bool = false
@@ -237,6 +242,12 @@ func add_unit(unit: UnitState) -> void:
 		guards.append(unit)
 
 
+## Starts reading the log for events from now on (a boost that ends as its
+## holder attacks; phase 5c step 6b).
+func listen() -> void:
+	_listening = true
+
+
 ## Starts reading the log for events if `unit` listens for any (a count
 ## signature or an ability passive).
 func note_listeners(unit: UnitState) -> void:
@@ -253,6 +264,8 @@ func note_listeners(unit: UnitState) -> void:
 		ally_ability_listeners = true
 	if Passives.listens_for(unit, EffectDef.Trigger.ON_STATUS_ENDED):
 		status_end_listeners = true
+	if Passives.listens_for(unit, EffectDef.Trigger.ON_ENEMY_FELL):
+		enemy_fell_listeners = true
 
 
 ## After units join (at the start, or summons) or enter a phase: auras are
@@ -596,9 +609,13 @@ func new_entry(kind: LogEntry.Kind, source: EffectSource) -> LogEntry:
 	return entry
 
 
-## Hit damage after the target's DEF: amount x C / (C + DEF).
-func mitigate_hit(target: UnitState, amount: int) -> int:
-	return FixedMath.mul_div(amount, tuning.defense_constant, tuning.defense_constant + maxi(target.defense(), 0))
+## Hit damage after the target's DEF: amount x C / (C + DEF). `ignore_bp`:
+## the share of its DEF the hit ignores (phase 5c step 6b, Armor Breaker).
+func mitigate_hit(target: UnitState, amount: int, ignore_bp: int = 0) -> int:
+	var defense: int = maxi(target.defense(), 0)
+	if ignore_bp > 0:
+		defense -= FixedMath.apply_bp(defense, mini(ignore_bp, FixedMath.BP_ONE))
+	return FixedMath.mul_div(amount, tuning.defense_constant, tuning.defense_constant + defense)
 
 
 ## Shield takes damage first, then HP (HP stops at 0). Returns how much the
@@ -655,6 +672,8 @@ func _process_deaths() -> void:
 				Signatures.ally_fell(self, unit)
 			aura_lost = aura_lost or Passives.has_aura(unit) or (taunt_auras and Statuses.has_kind(unit, StatusDef.Kind.TAUNT))
 			Events.kill(self, unit)
+			if enemy_fell_listeners:
+				Events.enemy_fell(self, unit)
 			if Passives.on_fall(self, unit):
 				again = true
 	if aura_lost:

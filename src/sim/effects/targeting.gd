@@ -21,7 +21,8 @@ extends RefCounted
 ## compared exactly, by cross-multiplying, with no rounding.
 ## A hero with a prefer_target tactic (Tactics) picks the nearest enemy of
 ## its archetypes first, logged with the tactic's name; with none, its own
-## rule.
+## rule. A kit's "prefer" (a kit mod's; phase 5c step 6b, Bloodhound) picks
+## the nearest enemy that meets it next, logged with its label.
 
 const RULES: Array[String] = ["nearest", "weakest_backliner", "largest_group", "farthest", "lowest_hp_ally", "highest_mana", "self"]
 ## How close a unit must be to count toward largest_group.
@@ -39,6 +40,12 @@ static func update(sim: CombatSim, unit: UnitState) -> void:
 		var preferred: UnitState = Tactics.preferred(sim, unit)
 		if preferred != null:
 			set_target(sim, unit, preferred, unit.tactic.name)
+			return
+	if unit.def.prefer != null:
+		var wanted: Array[UnitState] = sim.targetable_enemies_of(unit).filter(func(enemy: UnitState) -> bool: return unit.def.prefer.holds(enemy))
+		var preferred_kit: UnitState = nearest_of(sim, unit, wanted, false) if not wanted.is_empty() else null
+		if preferred_kit != null:
+			set_target(sim, unit, preferred_kit, unit.def.prefer_label)
 			return
 	var rule: String = unit.def.targeting
 	var picked: UnitState = nearest(sim, unit) if rule == "nearest" else pick(sim, unit, rule, -1)

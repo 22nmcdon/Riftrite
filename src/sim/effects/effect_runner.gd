@@ -126,7 +126,7 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 	match effect.type:
 		EffectDef.Type.DAMAGE:
 			var dealt: int = deal_hit(sim, source, victim, amount, crit, power)
-			if effect.trigger == EffectDef.Trigger.ON_FIRE and ability.has_hit_effects:
+			if effect.trigger == EffectDef.Trigger.ON_FIRE and ability.has_hit_effects and not sim.last_dodged:
 				var hit := Hit.new()
 				hit.target = victim
 				hit.crit = crit
@@ -146,13 +146,18 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			var status_id: String = unit.status_swaps.get(effect.status_id, effect.status_id)
 			# fresh_only: never on a unit that has it already (Snaring Shot).
 			if not effect.fresh_only or Statuses.find(victim, status_id) == null:
-				Statuses.apply(sim, victim, status_id, amount, effect.duration_ticks, source)
+				Statuses.apply(sim, victim, status_id, amount, effect.duration_ticks, source, effect.marks_stack)
 		EffectDef.Type.CLEANSE:
 			Statuses.cleanse_over_time(sim, victim, mini(amount, FixedMath.BP_ONE), source, false, effect.cleanse_statuses)
 		EffectDef.Type.MANA_DRAIN:
 			Mana.drain(sim, victim, amount, source)
 		EffectDef.Type.GAIN_MANA:
-			Mana.gain(sim, victim, amount * Mana.SCALE)
+			if effect.mana_bp > 0:
+				# A share of its bar (phase 5c step 6b; Execution's refund).
+				if victim.def.mana != null:
+					Mana.gain(sim, victim, FixedMath.apply_bp(victim.def.mana.max * Mana.SCALE, effect.mana_bp))
+			else:
+				Mana.gain(sim, victim, amount * Mana.SCALE)
 		EffectDef.Type.KNOCKBACK:
 			Displacement.knockback(sim, victim, unit.pos if push_from == NO_POINT else push_from, unit.forward(), effect.hexes, source)
 		EffectDef.Type.PULL:
@@ -375,6 +380,16 @@ static func nearest_to(pool: Array[UnitState], others: Array[UnitState], count: 
 ## `ruled`: a hit a hero rule made (an echo, a carry), which starts no echo
 ## or carry of its own (phase 5c step 5c).
 static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, amount: int, crit: bool, power: int = 0, steals: bool = true, note: String = "", ruled: bool = false) -> int:
+	sim.last_dodged = false
+	# Sidestep (phase 5c step 6b): a hit on it misses, then not again for a
+	# while. Logged as DODGED; nothing else of the hit happens.
+	if target.aura_bp[AuraDef.Stat.DODGE_EVERY_MS] > 0 and sim.tick >= target.dodge_ready_at:
+		target.dodge_ready_at = sim.tick + maxi(FixedMath.ms_to_ticks(target.aura_bp[AuraDef.Stat.DODGE_EVERY_MS]), 1)
+		var dodged: LogEntry = sim.new_entry(LogEntry.Kind.DODGED, source)
+		dodged.target = target.id
+		sim.combat_log.add(dodged)
+		sim.last_dodged = true
+		return 0
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.DAMAGE, source)
 	entry.note = note
 	if sim.damage_payoffs:
@@ -396,11 +411,16 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 	if crit and heroes_hit and sim.hero_rules.crit_steps > 0:
 		crit_bp = _crit_chain(sim, attacker, target, source, crit_bp, entry)
 	var raw: int = DamageRule.apply(amount, power, crit_bp, marked, attacker.relic_bonus_bp if attacker != null else 0)
+	# Iron Skin (phase 5c step 6b): its first hits taken land at half.
+	if target.hits_halved < target.aura_bp[AuraDef.Stat.HALVED_HITS]:
+		target.hits_halved += 1
+		raw = FixedMath.apply_bp(raw, 5000)
+		entry.note = ("%s, " % entry.note if not entry.note.is_empty() else "") + "halved"
 	# Guard (phase 4): an ally's guard takes its share of the hit, against its
 	# own DEF.
 	var guard: UnitState = Guards.covering(sim, source, target) if not sim.guards.is_empty() else null
 	var guarded_raw: int = FixedMath.apply_bp(raw, guard.guard.share_bp) if guard != null else 0
-	var dealt: int = sim.mitigate_hit(target, raw - guarded_raw)
+	var dealt: int = sim.mitigate_hit(target, raw - guarded_raw, attacker.aura_bp[AuraDef.Stat.DEF_IGNORE_BP] if attacker != null else 0)
 	var guarded: int = sim.mitigate_hit(guard, guarded_raw) if guard != null else 0
 	entry.target = target.id
 	entry.mitigated = maxi(raw - guarded_raw - dealt, 0)

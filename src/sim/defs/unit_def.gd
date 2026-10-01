@@ -45,8 +45,14 @@ var basic_attack: AbilityDef
 var signature: AbilityDef = null
 var passives: Array[PartDef] = []
 var traits: Array[String] = []
-## hop_away: how long between hops (0 without the trait).
+## hop_away: how long between hops (0 without the trait), and how near an
+## enemy comes before it hops (plane units; Light Feet adds to it).
 var hop_cooldown_ticks: int = 0
+var hop_within: int = HexGrid.HEX
+## The enemies it picks first, whatever its rule (a kit mod's; phase 5c step
+## 6b, Bloodhound; null: none), and the name its picks are logged with.
+var prefer: UnitCondition = null
+var prefer_label: String = ""
 ## Its phases, highest threshold first (a phase's own kit has none).
 var phases: Array[PhaseDef] = []
 ## An enemy's archetype (EnemyDef.ARCHETYPE_NAMES; set from its entry, so
@@ -145,6 +151,9 @@ func copy() -> UnitDef:
 	other.passives = passives.duplicate()
 	other.traits = traits.duplicate()
 	other.hop_cooldown_ticks = hop_cooldown_ticks
+	other.hop_within = hop_within
+	other.prefer = prefer
+	other.prefer_label = prefer_label
 	other.archetype = archetype
 	other.plant_ticks = plant_ticks
 	other.placed_snares = placed_snares

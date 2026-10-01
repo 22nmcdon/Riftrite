@@ -30,7 +30,8 @@ extends RefCounted
 ## (only the edge stops it); left over someone, it drops to the nearest free
 ## spot.
 ##
-## hop_away (a trait): when an enemy is within a hex, the unit hops a hex
+## hop_away (a trait): when an enemy is within a hex (hop_within: Light Feet
+## makes it farther), the unit hops a hex
 ## straight away from the nearest one, stopping early at anything in the way
 ## (no stun: it's its own move), then waits hop_cooldown_ms. A unit an
 ## engager holds has to break free first. Logged as HOP.
@@ -61,6 +62,15 @@ static func pull(sim: CombatSim, target: UnitState, puller: UnitState, hexes: in
 ## the last clear point; stopped early, it (and a unit it hit) is Stunned.
 ## `how` goes in the log ("knocked back", "pulled").
 static func push(sim: CombatSim, unit: UnitState, dir: Vector2i, distance: int, source: EffectSource, how: String) -> void:
+	# Braced (phase 5c step 6b): an unpushable unit isn't moved, and says so.
+	if unit.aura_bp[AuraDef.Stat.UNPUSHABLE] > 0:
+		var resisted: LogEntry = sim.new_entry(LogEntry.Kind.RESISTED, source)
+		resisted.target = unit.id
+		resisted.status = "push"
+		resisted.status_name = "being " + how
+		resisted.note = "can't be moved"
+		sim.combat_log.add(resisted)
+		return
 	var from: Vector2i = unit.pos
 	var circles: Array[ArenaPlane.Circle] = []
 	if not unit.flying:
@@ -175,7 +185,7 @@ static func free_spot_near(sim: CombatSim, unit: UnitState, around: Vector2i, ta
 
 ## The hop_away trait (see the top). Returns true if it hopped.
 static func hop_away(sim: CombatSim, unit: UnitState, engagers: Array[UnitState]) -> bool:
-	var hex_sq: int = HexGrid.HEX * HexGrid.HEX
+	var hex_sq: int = unit.def.hop_within * unit.def.hop_within
 	var near: UnitState = null
 	var near_distance: int = 0
 	for enemy: UnitState in sim.standing_enemies_of(unit):

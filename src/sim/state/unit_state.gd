@@ -35,6 +35,7 @@ var vs_conditions: Array[UnitCondition] = []
 var vs_stats: Array[int] = []
 var vs_bonus_bp: Array[int] = []
 var vs_basic: Array[bool] = []
+var vs_signature: Array[bool] = []
 var vs_per_stacks: Array[String] = []
 var max_hp: int
 ## Its max HP as the fight began (wounds counted), for max_hp_bp boosts
@@ -139,6 +140,10 @@ var flying: bool = false
 ## A flier in the air: others move as if it weren't there. It's in the air
 ## while it moves, and lands on a free spot to attack (Movement.settle).
 var airborne: bool = false
+## Sidestep (phase 5c step 6b, dodge_every_ms): when a hit on it may miss
+## next; and Iron Skin (halved_hits): how many hits it has taken at half.
+var dodge_ready_at: int = 0
+var hits_halved: int = 0
 ## Where a flier over someone is heading to land (valid while has_spot).
 var settle_spot: Vector2i
 var has_settle_spot: bool = false

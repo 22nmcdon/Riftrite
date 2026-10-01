@@ -30,15 +30,21 @@ extends RefCounted
 ##             adds a stack with its own timer (no duration_ms: it lasts the
 ##             fight), the auras count once per stack, and "max_stacks"
 ##             (optional) drops the oldest past it
+##             "until_attack": true (phase 5c step 6b; Shadow Step): it
+##             ends as its holder next attacks (that attack still has it)
+##   grounded: duration_ms (a flier can't fly while it lasts: it walks, and
+##             rocks and walls stop it; set down on the nearest free safe
+##             spot if it's over something; phase 5c step 6b, Fletched for
+##             Wings: a code change, since no other kind takes flight away)
 ## Any kind may carry a "keyword" (Keywords.NAMES; phase 5c step 3): the
 ## name cards use for a unit with this status (Marked, Rooted, Burning,
 ## Stealthed). It changes nothing in a fight by itself.
 ## A timed status's duration_ms is its default; an apply_status effect can
 ## give its own. A new application refreshes the timer.
 
-enum Kind { DAMAGE_OVER_TIME, ROOT, STUN, SLOW, TAUNT, SILENCE, MARKED, UNDYING, ENGAGED, STEALTH, WARDED, BOOST }
+enum Kind { DAMAGE_OVER_TIME, ROOT, STUN, SLOW, TAUNT, SILENCE, MARKED, UNDYING, ENGAGED, STEALTH, WARDED, BOOST, GROUNDED }
 
-const KIND_NAMES: Array[String] = ["damage_over_time", "root", "stun", "slow", "taunt", "silence", "marked", "undying", "engaged", "stealth", "warded", "boost"]
+const KIND_NAMES: Array[String] = ["damage_over_time", "root", "stun", "slow", "taunt", "silence", "marked", "undying", "engaged", "stealth", "warded", "boost", "grounded"]
 
 var id: String
 var name: String
@@ -68,6 +74,8 @@ var boost_values: Array[int] = []
 var keyword: String = ""
 ## boost: each application adds a stack with its own timer (phase 5c step 5c).
 var stacking: bool = false
+## boost: it ends as its holder next attacks (phase 5c step 6b).
+var until_attack: bool = false
 
 
 static func read(reader: DataReader) -> StatusDef:
@@ -96,6 +104,7 @@ static func read(reader: DataReader) -> StatusDef:
 	else:
 		if def.kind == Kind.BOOST:
 			def.stacking = reader.opt_bool("stacking", false)
+			def.until_attack = reader.opt_bool("until_attack", false)
 		if def.stacking:
 			def.duration_ticks = reader.opt_ticks("duration_ms", 0, FixedMath.MS_PER_TICK)
 			def.max_stacks = reader.opt_int("max_stacks", 0, 0)

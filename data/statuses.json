@@ -192,5 +192,53 @@
     "kind": "boost",
     "duration_ms": 3000,
     "auras": [{"stat": "def", "value": 10}]
+  },
+  {
+    "_note": "A flier can't fly while it lasts: it walks, and rocks and walls stop it (Fletched for Wings at rank III, and Fliers first; phase 5c step 6b).",
+    "id": "grounded",
+    "name": "Grounded",
+    "kind": "grounded",
+    "duration_ms": 2000
+  },
+  {
+    "_note": "Its holder's next attack is stronger; it ends as it attacks (Shadow Step, a charm: leaving Stealth; phase 5c step 6b). shadow_step_2 and _3 are ranks II and III.",
+    "id": "shadow_step",
+    "name": "Shadow Step",
+    "kind": "boost",
+    "duration_ms": 5000,
+    "until_attack": true,
+    "auras": [{"stat": "atk_bp", "value": 20000}]
+  },
+  {
+    "id": "shadow_step_2",
+    "name": "Shadow Step",
+    "kind": "boost",
+    "duration_ms": 5000,
+    "until_attack": true,
+    "auras": [{"stat": "atk_bp", "value": 25000}]
+  },
+  {
+    "id": "shadow_step_3",
+    "name": "Shadow Step",
+    "kind": "boost",
+    "duration_ms": 5000,
+    "until_attack": true,
+    "auras": [{"stat": "atk_bp", "value": 25000}, {"stat": "crit_chance_bp", "value": 10000}]
+  },
+  {
+    "_note": "Attacks faster while it lasts (Bloodhound, a charm at rank III: on a kill; phase 5c step 6b).",
+    "id": "bloodhound",
+    "name": "Bloodhound",
+    "kind": "boost",
+    "duration_ms": 3000,
+    "auras": [{"stat": "atsp", "value": 10}]
+  },
+  {
+    "_note": "More ATK and MGK for the rest of the fight, a stack for each enemy that falls near its holder (Scavenger, a charm at rank III; phase 5c step 6b).",
+    "id": "scavenged",
+    "name": "Scavenged",
+    "kind": "boost",
+    "stacking": true,
+    "auras": [{"stat": "atk_bp", "value": 10500}, {"stat": "mgk_bp", "value": 10500}]
   }
 ]

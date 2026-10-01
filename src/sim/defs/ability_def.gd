@@ -130,6 +130,12 @@ func moves_self() -> bool:
 
 
 ## Its leap effect, or null.
+## True if it moves its unit to its target (a leap or a charge; phase 5c
+## step 6b, Braced's on_charged).
+func moves_itself() -> bool:
+	return effects.any(func(effect: EffectDef) -> bool: return effect.type == EffectDef.Type.LEAP or effect.type == EffectDef.Type.CHARGE)
+
+
 func leap_effect() -> EffectDef:
 	for effect: EffectDef in effects:
 		if effect.type == EffectDef.Type.LEAP:

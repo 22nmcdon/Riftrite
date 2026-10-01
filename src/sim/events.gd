@@ -16,6 +16,8 @@ extends RefCounted
 ##   on_shield_broken a hit or damage over time takes the last of its Shield
 ##   on_ally_ability  an ally's signature fires
 ##   on_status_ended  a status on it runs out (phase 5c step 5b)
+## Phase 5c step 6b: on_charged (a charge or leap's hit lands on it) and
+## on_enemy_fell (an enemy falls; raised beside on_kill).
 ## After every unit has acted, CombatSim hands over the entries logged since
 ## the last read, in log order (so what happens in the deaths step is read
 ## on the next tick); kills are raised as deaths are settled. Relic effects
@@ -61,6 +63,10 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> int:
 		var chain: int = entry.chain
 		match entry.kind:
 			LogEntry.Kind.FIRE:
+				# A boost that lasts until its holder attacks (phase 5c step 6b,
+				# Shadow Step) ends: that attack had it.
+				if not source.statuses.is_empty():
+					Statuses.end_on_attack(sim, source)
 				var basic: bool = entry.source_ability == source.def.basic_attack.id
 				_raise(sim, source, EffectDef.Trigger.ON_BASIC_ATTACK if basic else EffectDef.Trigger.ON_ABILITY, chain)
 				if not basic and sim.ally_ability_listeners:
@@ -77,6 +83,10 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> int:
 				if source.side != target.side:
 					_raise(sim, source, EffectDef.Trigger.ON_HOLDER_HIT, chain, target, entry.amount)
 					_raise(sim, target, EffectDef.Trigger.ON_HIT_TAKEN, chain, source, entry.amount)
+					# A charge or a leap's hit (phase 5c step 6b, Braced).
+					if not target.listeners.is_empty() and source.def.signature != null and entry.source_ability == source.def.signature.id \
+							and source.def.signature.moves_itself():
+						_raise(sim, target, EffectDef.Trigger.ON_CHARGED, chain, source, entry.amount)
 				if entry.broke_shield:
 					_raise(sim, target, EffectDef.Trigger.ON_SHIELD_BROKEN, chain, source, entry.absorbed)
 			LogEntry.Kind.STATUS_DAMAGE:
@@ -117,7 +127,20 @@ static func kill(sim: CombatSim, fallen: UnitState) -> void:
 		return
 	var killer: UnitState = sim.unit_by_id(fallen.last_attacker)
 	if killer != null and killer.alive and killer.side != fallen.side:
-		_raise(sim, killer, EffectDef.Trigger.ON_KILL, fallen.last_hit_chain, fallen)
+		# The ability that felled it rides as `status` (on_kill's
+		# from_signature, phase 5c step 6b).
+		_raise(sim, killer, EffectDef.Trigger.ON_KILL, fallen.last_hit_chain, fallen, 0,
+			fallen.last_hit_source.ability_id if fallen.last_hit_source != null else "")
+
+
+## on_enemy_fell (phase 5c step 6b, Scavenger): each standing enemy of the
+## fallen with a passive on it hears it, naming the fallen.
+static func enemy_fell(sim: CombatSim, fallen: UnitState) -> void:
+	if fallen.last_hit_chain >= sim.tuning.chain_limit:
+		return
+	for unit: UnitState in (sim.enemies if fallen.side == EffectSource.Team.HEROES else sim.heroes):
+		if unit.alive and not unit.listeners.is_empty():
+			_raise(sim, unit, EffectDef.Trigger.ON_ENEMY_FELL, fallen.last_hit_chain, fallen)
 
 
 ## `chain`: the depth of the entry that raised it; `other`: the unit the

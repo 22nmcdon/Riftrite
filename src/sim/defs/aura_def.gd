@@ -67,6 +67,14 @@ extends RefCounted
 ##                                          Engine)
 ##   "from_basic": true                     per hit: only its basic attack's
 ##                                          hits (Shadow Engine)
+##   "from_signature": true                 per hit: only its signature's
+##                                          hits (phase 5c step 6b; Siphon)
+## Phase 5c step 6b (the loadout's charms) adds stats that add:
+## def_ignore_bp (its hits ignore that share of the target's DEF; Armor
+## Breaker), unpushable (above 0: knockbacks and pulls don't move it, logged
+## RESISTED; Braced), dodge_every_ms (a hit on it misses, then not again
+## until that long has passed; logged DODGED; Sidestep), and halved_hits
+## (its first that many hits taken each fight deal half damage; Iron Skin).
 ## "vs": {...} (a UnitCondition; damage_bp, crit_chance_bp, and lifesteal_bp;
 ## phase 5c steps 3 and 5b): the bonus
 ## counts only on hits against targets that meet it, as power (Decision 12:
@@ -80,7 +88,8 @@ extends RefCounted
 enum Target { HOLDER, ALL_ALLIES }
 enum Stat { DAMAGE_BP, HEAL_BP, SHIELD_BP, OVER_TIME_BP, CRIT_CHANCE_BP, COOLDOWN_BP, ATK_BP, MGK_BP, DEF_BP, ATSP_BP, CRIT_BP, RANGE, HEALING_TAKEN_BP,
 	LIFESTEAL_BP, CRIT_DAMAGE_BP, ATSP, DAMAGE_REDUCED_BP,
-	OVERHEAL_SHIELD_BP, LIFESTEAL_HEALS, CRIT_OVERFLOW_BP, DEF, OVERHEAL_STRIKE_BP, MAX_HP_BP }
+	OVERHEAL_SHIELD_BP, LIFESTEAL_HEALS, CRIT_OVERFLOW_BP, DEF, OVERHEAL_STRIKE_BP, MAX_HP_BP,
+	DEF_IGNORE_BP, UNPUSHABLE, DODGE_EVERY_MS, HALVED_HITS }
 ## What turns an aura on, beyond its window.
 enum While { ALWAYS, TAUNTING, PLANTED, BELOW_HP, ALLY_STANDING, STATE, ALLY_NEAR, BEHIND_WALL }
 
@@ -92,12 +101,14 @@ const STAT_NAMES: Array[String] = [
 	"atk_bp", "mgk_bp", "def_bp", "atsp_bp", "crit_bp", "range", "healing_taken_bp",
 	"lifesteal_bp", "crit_damage_bp", "atsp", "damage_reduced_bp",
 	"overheal_shield_bp", "lifesteal_heals", "crit_overflow_bp", "def", "overheal_strike_bp", "max_hp_bp",
+	"def_ignore_bp", "unpushable", "dodge_every_ms", "halved_hits",
 ]
 const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp", "ally_standing", "state", "ally_near", "behind_wall"]
 ## The stats that add rather than multiply. The rest are factors (x1.1);
 ## several of one stat add their changes (the damage rule, phase 5c).
 const ADDITIVE: Array[Stat] = [Stat.CRIT_CHANCE_BP, Stat.COOLDOWN_BP, Stat.RANGE, Stat.LIFESTEAL_BP, Stat.CRIT_DAMAGE_BP, Stat.ATSP, Stat.DAMAGE_REDUCED_BP,
-	Stat.OVERHEAL_SHIELD_BP, Stat.LIFESTEAL_HEALS, Stat.CRIT_OVERFLOW_BP, Stat.DEF, Stat.OVERHEAL_STRIKE_BP]
+	Stat.OVERHEAL_SHIELD_BP, Stat.LIFESTEAL_HEALS, Stat.CRIT_OVERFLOW_BP, Stat.DEF, Stat.OVERHEAL_STRIKE_BP,
+	Stat.DEF_IGNORE_BP, Stat.UNPUSHABLE, Stat.DODGE_EVERY_MS, Stat.HALVED_HITS]
 ## The stats an aura worked out per hit may hold ("vs", "from_basic",
 ## "per_target_stacks").
 const VS_STATS: Array[Stat] = [Stat.DAMAGE_BP, Stat.CRIT_CHANCE_BP, Stat.LIFESTEAL_BP, Stat.CRIT_DAMAGE_BP]
@@ -106,6 +117,7 @@ const STAT_LABELS: Array[String] = [
 	"ATK", "MGK", "DEF", "ATSP", "CRIT", "range", "healing taken",
 	"lifesteal", "crit damage", "ATSP", "damage taken",
 	"of overheal as Shield", "lifesteal heals", "of crit chance past 100% as crit damage", "DEF", "of lifesteal overheal as damage to its target", "max HP",
+	"of the target's DEF ignored", "can't be knocked back", "a hit misses every", "hits taken at half damage",
 ]
 ## Unit stat for each unit-stat aura stat (ATK_BP -> Stat.ATK, ...).
 const UNIT_STAT_FOR: Dictionary[int, int] = {
@@ -150,6 +162,9 @@ var per_shield_bp: int = 0
 var per_target_stacks: String = ""
 ## Per hit: only its holder's basic attack's hits.
 var from_basic: bool = false
+## Per hit: only its holder's signature's hits (phase 5c step 6b; Siphon,
+## Execution).
+var from_signature: bool = false
 
 
 static func read(reader: DataReader) -> AuraDef:
@@ -198,7 +213,10 @@ static func read(reader: DataReader) -> AuraDef:
 			reader.error("only a planted aura has a \"step\"")
 	def.per_target_stacks = reader.opt_string("per_target_stacks", "")
 	def.from_basic = reader.opt_bool("from_basic", false)
-	if (def.from_basic or not def.per_target_stacks.is_empty()) and not VS_STATS.has(def.stat):
+	def.from_signature = reader.opt_bool("from_signature", false)
+	if def.from_basic and def.from_signature:
+		reader.error("an aura is from its basic attack or its signature, not both")
+	if (def.from_basic or def.from_signature or not def.per_target_stacks.is_empty()) and not VS_STATS.has(def.stat):
 		reader.error("only a damage_bp, crit_chance_bp, lifesteal_bp, or crit_damage_bp aura is worked out per hit")
 	if def.per_shield_bp > 0 and def.is_per_hit():
 		reader.error("an aura per Shield can't also be worked out per hit")
@@ -227,7 +245,7 @@ func is_conditional() -> bool:
 
 ## Worked out per hit (EffectRunner), not folded into the unit's stats.
 func is_per_hit() -> bool:
-	return vs != null or from_basic or not per_target_stacks.is_empty()
+	return vs != null or from_basic or from_signature or not per_target_stacks.is_empty()
 
 
 ## For the log, e.g. "x2 damage for its holder" or "+20% crit chance for all allies".
@@ -237,6 +255,12 @@ func describe() -> String:
 		amount = "+%s %s per point of Shield" % [ValueBreakdown._percent(per_shield_bp), STAT_LABELS[stat]]
 	elif stat == Stat.RANGE or stat == Stat.ATSP or stat == Stat.DEF:
 		amount = "%s%d %s" % ["+" if value >= 0 else "", value, STAT_LABELS[stat]]
+	elif stat == Stat.UNPUSHABLE:
+		amount = STAT_LABELS[stat]
+	elif stat == Stat.DODGE_EVERY_MS:
+		amount = "a hit misses every %s" % _seconds_ms(value)
+	elif stat == Stat.HALVED_HITS:
+		amount = "its first %d hits taken at half damage" % value
 	elif is_additive():
 		amount = "%s%s %s" % ["+" if value >= 0 else "", ValueBreakdown._percent(value), STAT_LABELS[stat]]
 	else:
@@ -270,6 +294,11 @@ func describe() -> String:
 	if from_basic:
 		condition += " on its basic attack's hits"
 	return "%s for %s%s" % [amount, TARGET_LABELS[target], condition]
+
+
+static func _seconds_ms(ms: int) -> String:
+	@warning_ignore("integer_division")
+	return _seconds(ms / FixedMath.MS_PER_TICK)
 
 
 static func _seconds(ticks: int) -> String:

@@ -29,7 +29,9 @@ extends RefCounted
 ## stack as it refreshes.
 
 
-static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: int, duration_ticks: int, source: EffectSource) -> void:
+## `marks_stack`: a Mark that stacks as it refreshes, as under Hunter's
+## Engine (the effect's own, phase 5c step 6b: Hunter's Chalk).
+static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: int, duration_ticks: int, source: EffectSource, marks_stack: bool = false) -> void:
 	if not sim.content.statuses.has(status_id):
 		push_error("Statuses: unknown status \"%s\"" % status_id)
 		return
@@ -81,7 +83,7 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: 
 		state.lasting = state.lasting or lasting
 		state.ends_at = StatusState.NEVER if state.lasting else sim.tick + (duration_ticks if duration_ticks > 0 else def.duration_ticks)
 		entry.end_tick = state.ends_at if not state.lasting else -1
-		if def.kind == StatusDef.Kind.MARKED and sim.hero_rules.marks_stack and _by_heroes(sim, source):
+		if def.kind == StatusDef.Kind.MARKED and (marks_stack or sim.hero_rules.marks_stack and _by_heroes(sim, source)):
 			var added: int = 2 if sim.hero_rules.keywords_twice else 1
 			state.stacks = added if fresh else state.stacks + added
 			entry.stacks = state.stacks
@@ -97,6 +99,42 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: 
 		sim.refold_auras()
 	elif def.kind == StatusDef.Kind.BOOST and (fresh or def.stacking):
 		sim.refold_auras()
+		if def.until_attack:
+			sim.listen()
+	elif def.kind == StatusDef.Kind.GROUNDED and fresh and target.flying:
+		_ground(sim, target, source)
+
+
+## Grounded (phase 5c step 6b): a flier walks while it lasts. Over a rock
+## or a unit, it's set down on the nearest free safe spot (logged as a PUSH
+## noted "grounded").
+static func _ground(sim: CombatSim, unit: UnitState, source: EffectSource) -> void:
+	unit.flying = false
+	unit.airborne = false
+	if sim.fits_ground(unit, unit.pos):
+		return
+	var spot: Vector2i = Displacement.free_spot_near(sim, unit, sim.nearest_safe_point(unit.pos, unit.radius), null, 0)
+	if spot.x < 0:
+		return
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.PUSH, source)
+	entry.target = unit.id
+	entry.from_pos = unit.pos
+	entry.to_pos = spot
+	entry.note = "grounded, set down clear"
+	sim.combat_log.add(entry)
+	unit.pos = spot
+	unit.moved_at = sim.tick
+	unit.route.clear()
+	unit.leg_active = false
+	unit.replan_at = sim.tick + 1
+
+
+## Ends `unit`'s boosts that last until it attacks (phase 5c step 6b): the
+## attack that just fired had them.
+static func end_on_attack(sim: CombatSim, unit: UnitState) -> void:
+	for state: StatusState in unit.statuses.duplicate():
+		if state.def.until_attack:
+			_end(sim, unit, state, "it attacked")
 
 
 ## The Unbending: `def` from `source` doesn't land on the hero; it's logged
@@ -337,6 +375,8 @@ static func _end(sim: CombatSim, unit: UnitState, state: StatusState, why: Strin
 		sim.refold_auras()
 	elif state.def.kind == StatusDef.Kind.BOOST:
 		sim.refold_auras()
+	elif state.def.kind == StatusDef.Kind.GROUNDED:
+		unit.flying = unit.def.has_trait("flying") and not has_kind(unit, StatusDef.Kind.GROUNDED)
 
 
 static func _insert_in_order(unit: UnitState, state: StatusState) -> void:

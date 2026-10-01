@@ -184,6 +184,7 @@ const NAMES: Dictionary = {
 	LogEntry.Kind.WALL: ["unit", "ability"], LogEntry.Kind.GUARD: ["unit", "ability", "target"],
 	LogEntry.Kind.LIFESTEAL: ["unit", "ability", "target"], LogEntry.Kind.STATUS_EXTENDED: ["unit", "ability", "target", "status"],
 	LogEntry.Kind.RISE: ["target"], LogEntry.Kind.RESISTED: ["unit", "ability", "target", "status", "note"],
+	LogEntry.Kind.DODGED: ["unit", "ability", "target"],
 }
 
 

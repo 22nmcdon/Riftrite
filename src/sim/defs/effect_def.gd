@@ -186,6 +186,15 @@ extends RefCounted
 ##   on_would_fall     once a fight, the first time it would fall: it's
 ##                     left at 1 HP (SAVED), and the effect runs (phase 4,
 ##                     Unyielding: a would-fall save that isn't a signature)
+## Phase 5c step 6b (the loadout's charms) adds events: on_charged (a charge
+## or leap's hit lands on the unit; hit_target: the one that did it; Braced)
+## and on_enemy_fell (an enemy falls, within "fell_within_hexes" of the unit
+## if given; it names the fallen; Scavenger); on_kill's "from_signature"
+## (only its signature's kills; Execution); an event effect's "cooldown_ms"
+## (at most once that long, whoever it names; Spite Brand); on_hit_taken's
+## "min_bp_of_max_hp" (only hits that big); apply_status's "marks_stack" (a
+## Mark it applies stacks as it refreshes; Hunter's Chalk); and gain_mana's
+## "amount_bp_of_max_mana" (a share of the bar).
 ##   on_below_hp       the unit itself drops below "threshold_bp" of its max
 ##                     HP while standing (each time it drops back below,
 ##                     up to "times" a fight; default 1; phase 5c step 6,
@@ -204,7 +213,7 @@ enum Trigger {
 	ON_ABILITY, ON_BASIC_ATTACK, ON_HOLDER_CRIT, ON_SHIELDED, ON_HIT_TAKEN, ON_HEAL, ON_STATUS, ON_KILL,
 	ON_INTERVAL, ON_FALL, ON_HOP, ON_WOULD_FALL,
 	ON_HOLDER_HIT, ON_SHIELD_BROKEN, ON_ALLY_ABILITY, ON_STATUS_ENDED, ON_LIFESTEAL, ON_KNOCKBACK, ON_GUARD,
-	ON_BELOW_HP,
+	ON_BELOW_HP, ON_CHARGED, ON_ENEMY_FELL,
 }
 enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS }
 enum Placement { EDGES, ADJACENT, HEXES }
@@ -236,30 +245,31 @@ const TRIGGER_NAMES: Array[String] = [
 	"on_ability", "on_basic_attack", "on_holder_crit", "on_shielded", "on_hit_taken", "on_heal", "on_status", "on_kill",
 	"on_interval", "on_fall", "on_hop", "on_would_fall",
 	"on_holder_hit", "on_shield_broken", "on_ally_ability", "on_status_ended", "on_lifesteal", "on_knockback", "on_guard",
-	"on_below_hp",
+	"on_below_hp", "on_charged", "on_enemy_fell",
 ]
 ## The unit's events (see the top).
 const EVENT_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
-	Trigger.ON_BELOW_HP,
+	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL,
 ]
 ## Event triggers that name a unit (hit_target) and those that name a hit
 ## (amount_bp_of_damage).
 const EVENT_UNIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED, Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS,
-	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD]
+	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD, Trigger.ON_CHARGED]
 const EVENT_HIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_HIT_TAKEN, Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN]
 ## Event triggers that can take "vs": those that name a unit, and on_kill.
 const EVENT_VS_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED, Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS,
-	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_KILL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD]
+	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_KILL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
+	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL]
 const ABILITY_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_FIRE, Trigger.ON_HIT, Trigger.ON_CRIT,
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
-	Trigger.ON_BELOW_HP,
+	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL,
 ]
 ## What a passive's effects may run on (PartDef).
 const PASSIVE_TRIGGERS: Array[Trigger] = [
@@ -267,7 +277,7 @@ const PASSIVE_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
-	Trigger.ON_BELOW_HP,
+	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL,
 ]
 ## The passive triggers that aren't events (Passives.run_timed, on_fall,
 ## would_fall).
@@ -394,6 +404,18 @@ var fresh_only: bool = false
 var cooldown_per_unit_ticks: int = 0
 ## on_below_hp: how many times a fight it may run (phase 5c step 6).
 var times: int = 1
+## Phase 5c step 6b. apply_status: a Mark it applies stacks as it refreshes
+## (Hunter's Chalk). An event effect: at most once this long, whoever it
+## names (Spite Brand). on_hit_taken: only a hit of at least this share of
+## the unit's max HP. on_enemy_fell: how near the unit the enemy fell (0:
+## anywhere). on_kill: only a kill by its signature (Execution). gain_mana:
+## this share of its bar instead of a flat amount.
+var marks_stack: bool = false
+var cooldown_ticks: int = 0
+var min_hit_bp: int = 0
+var fell_range: int = 0
+var from_signature: bool = false
+var mana_bp: int = 0
 ## cleanse: only these statuses (empty: all damage over time; phase 5c step
 ## 6, Purifying Light).
 var cleanse_statuses: Array[String] = []
@@ -443,8 +465,13 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				def.amount_bp_of_max_hp = reader.opt_int("amount_bp_of_max_hp", 0, 0, FixedMath.BP_ONE)
 				def.amount_bp_of_damage = reader.opt_int("amount_bp_of_damage", 0, 0)
 				def.overheal_shield_bp = reader.opt_int("overheal_shield_bp", 0, 0, 5 * FixedMath.BP_ONE)
-			Type.MANA_DRAIN, Type.GAIN_MANA:
+			Type.MANA_DRAIN:
 				def.amount = reader.req_int("amount", 1)
+			Type.GAIN_MANA:
+				if reader.has("amount_bp_of_max_mana"):
+					def.mana_bp = reader.req_int("amount_bp_of_max_mana", 1, FixedMath.BP_ONE)
+				else:
+					def.amount = reader.req_int("amount", 1)
 			Type.KNOCKBACK, Type.PULL:
 				def.hexes = reader.req_int("hexes", 1)
 			Type.LEAP:
@@ -480,6 +507,7 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				if def.stacks_share_bp > 0 and def.stacks_of.is_empty():
 					reader.error("stacks_share_bp is a share of stacks_of")
 				def.fresh_only = reader.opt_bool("fresh_only", false)
+				def.marks_stack = reader.opt_bool("marks_stack", false)
 			Type.EXTEND_STATUS:
 				def.status_id = reader.req_string("status")
 				def.duration_ticks = reader.req_ticks("duration_ms", FixedMath.MS_PER_TICK)
@@ -605,6 +633,13 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 		Trigger.ON_BELOW_HP:
 			def.threshold_bp = reader.req_int("threshold_bp", 1, FixedMath.BP_ONE - 1)
 			def.times = reader.opt_int("times", 1, 1, 10)
+		Trigger.ON_HIT_TAKEN:
+			def.min_hit_bp = reader.opt_int("min_bp_of_max_hp", 0, 0, FixedMath.BP_ONE)
+		Trigger.ON_ENEMY_FELL:
+			if reader.has("fell_within_hexes"):
+				def.fell_range = reader.req_int("fell_within_hexes", 1, 20) * HexGrid.HEX
+		Trigger.ON_KILL:
+			def.from_signature = reader.opt_bool("from_signature", false)
 		Trigger.ON_STATUS, Trigger.ON_STATUS_ENDED:
 			if reader.has("statuses"):
 				def.statuses = reader.req_string_array("statuses")
@@ -616,6 +651,7 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 	if EVENT_TRIGGERS.has(def.trigger):
 		def.once = reader.opt_bool("once", false)
 		def.cooldown_per_unit_ticks = reader.opt_ticks("cooldown_per_unit_ms", 0, FixedMath.MS_PER_TICK)
+		def.cooldown_ticks = reader.opt_ticks("cooldown_ms", 0, FixedMath.MS_PER_TICK)
 		if def.cooldown_per_unit_ticks > 0 and not EVENT_VS_TRIGGERS.has(def.trigger):
 			reader.error("%s names no unit, so it can't take cooldown_per_unit_ms" % TRIGGER_NAMES[def.trigger])
 		if reader.has("vs"):

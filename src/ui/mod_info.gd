@@ -48,6 +48,14 @@ static func mod_parts(mod: KitMod, kit: UnitDef, content: ContentDb) -> Array[St
 		parts.append("%s mana a second" % signed(mod.mana_regen_add))
 	if mod.mana_start_add != 0:
 		parts.append("%s starting mana" % signed(mod.mana_start_add))
+	if mod.mana_start_bp > 0:
+		parts.append("starts with %s mana" % ValueBreakdown._percent(mod.mana_start_bp))
+	if mod.prefer != null:
+		parts.append("its attacks go for enemies that are %s first" % mod.prefer.describe())
+	if mod.hop_within_add != 0:
+		parts.append("hops away from %s hexes, not 1" % _hexes_text(HexGrid.HEX + mod.hop_within_add))
+	if mod.hop_cooldown_add_ticks != 0:
+		parts.append("hop cooldown %s%s" % ["+" if mod.hop_cooldown_add_ticks > 0 else "−", UnitInfo.seconds(absi(mod.hop_cooldown_add_ticks))])
 	if mod.mana_per_attack_add != 0:
 		parts.append("%s mana per attack" % signed(mod.mana_per_attack_add))
 	for trigger: TriggerDef in mod.also_fires:
@@ -73,6 +81,10 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 		bits.append("%s cooldown" % UnitInfo.signed_percent(change.cooldown_bp - FixedMath.BP_ONE))
 	if change.after_add_ticks != 0:
 		bits.append("%s %s" % [UnitInfo.seconds(absi(change.after_add_ticks)), "sooner" if change.after_add_ticks < 0 else "later"])
+	if change.cast_bp != FixedMath.BP_ONE:
+		bits.append("instant cast" if change.cast_bp == 0 else "%s cast time" % UnitInfo.signed_percent(change.cast_bp - FixedMath.BP_ONE))
+	if change.targets_add > 0:
+		bits.append("+%d target%s%s" % [change.targets_add, "" if change.targets_add == 1 else "s", " (without an area)" if change.one_of else ""])
 	for effect: EffectDef in change.add_effects:
 		var effect_text: String = " · ".join(UnitInfo.effect_numbers([effect] as Array[EffectDef], kit, content))
 		match effect.trigger:
@@ -92,6 +104,15 @@ static func _statuses_word(change: KitMod.AbilityChange, content: ContentDb) -> 
 	for status_id: String in change.statuses:
 		names.append(content.statuses[status_id].name if content.statuses.has(status_id) else status_id)
 	return "" if names.is_empty() else " " + " and ".join(names)
+
+
+## "1.5" for 1500 plane units.
+static func _hexes_text(units: int) -> String:
+	@warning_ignore("integer_division")
+	var whole: int = units / HexGrid.HEX
+	@warning_ignore("integer_division")
+	var tenths: int = (units % HexGrid.HEX) / 100
+	return "%d" % whole if tenths == 0 else "%d.%d" % [whole, tenths]
 
 
 static func _slot_name(slot: String) -> String:

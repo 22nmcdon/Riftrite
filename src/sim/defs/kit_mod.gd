@@ -78,6 +78,13 @@ class AbilityChange:
 	## amount_bp is a power bonus on damage, heals, and Shields (false: it
 	## scales their numbers, as an echo's share does).
 	var as_power: bool = true
+	## Phase 5c step 6b (Quickcast, Wide): the ability's cast, times this
+	## (0: instant), and how many more units its effects on its target reach
+	## (the nearest others to it, of the target's side); `one_of`: not on an
+	## ability with an area (its radius_add grows that instead).
+	var cast_bp: int = FixedMath.BP_ONE
+	var targets_add: int = 0
+	var one_of: bool = false
 
 	func touches_effects() -> bool:
 		return amount_bp != FixedMath.BP_ONE or duration_bp != FixedMath.BP_ONE or duration_add_ticks != 0 or radius_add != 0
@@ -101,6 +108,17 @@ var mana_max_bp: int = FixedMath.BP_ONE
 var also_fires: Array[TriggerDef] = []
 var echo_ticks: int = 0
 var echo_bp: int = 0
+## Phase 5c step 6b: the bar's share it starts each fight with, at least
+## (Opener; 0: as it is).
+var mana_start_bp: int = 0
+## The enemies its targeting picks first (Bloodhound; null: none), and the
+## name its picks are logged with.
+var prefer: UnitCondition = null
+var prefer_label: String = ""
+## The hop_away trait: how much nearer an enemy may come before it hops
+## (plane units), and its cooldown's change (Light Feet).
+var hop_within_add: int = 0
+var hop_cooldown_add_ticks: int = 0
 
 
 static func make() -> KitMod:
@@ -137,7 +155,20 @@ static func read(reader: DataReader) -> KitMod:
 			mod.mana_per_attack_add = mana_reader.opt_int("per_attack_add", 0, -20, 20)
 			mod.mana_regen_add = mana_reader.opt_int("regen_add", 0, -20, 20)
 			mod.mana_max_bp = mana_reader.opt_int("max_bp", FixedMath.BP_ONE, 5000, 20000)
+			mod.mana_start_bp = mana_reader.opt_int("start_bp", 0, 0, FixedMath.BP_ONE)
 			mana_reader.finish()
+	if reader.has("prefer"):
+		var prefer_reader: DataReader = reader.req_object("prefer")
+		if prefer_reader != null:
+			mod.prefer_label = prefer_reader.req_string("label")
+			mod.prefer = UnitCondition.read(prefer_reader.req_object("vs"))
+			prefer_reader.finish()
+	if reader.has("hop"):
+		var hop_reader: DataReader = reader.req_object("hop")
+		if hop_reader != null:
+			mod.hop_within_add = hop_reader.opt_int("within_add", 0, 0, 2 * HexGrid.HEX)
+			mod.hop_cooldown_add_ticks = _signed_ticks(hop_reader, "cooldown_add_ms")
+			hop_reader.finish()
 	for trigger_reader: DataReader in reader.opt_object_array("also_fires"):
 		var trigger: TriggerDef = TriggerDef.read(trigger_reader)
 		if not TriggerDef.ALSO_KINDS.has(trigger.kind):
@@ -177,8 +208,14 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 	for effect_reader: DataReader in reader.opt_object_array("add_effects"):
 		change.add_effects.append(EffectDef.read(effect_reader))
 	change.after_add_ticks = _signed_ticks(reader, "after_add_ms")
-	if not (change.touches_effects() or change.cooldown_bp != FixedMath.BP_ONE or not change.add_effects.is_empty() or change.after_add_ticks != 0):
-		reader.error("an \"on\" entry needs amount_bp, duration_bp, duration_add_ms, radius_add, cooldown_bp, add_effects, or after_add_ms")
+	change.cast_bp = reader.opt_int("cast_bp", FixedMath.BP_ONE, 0, FixedMath.BP_ONE)
+	change.targets_add = reader.opt_int("targets_add", 0, 0, 5)
+	change.one_of = reader.opt_bool("one_of", false)
+	if (change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0) and change.slot != SLOT_SIGNATURE:
+		reader.error("cast_bp and targets_add change a signature (\"slot\": \"signature\")")
+	if not (change.touches_effects() or change.cooldown_bp != FixedMath.BP_ONE or not change.add_effects.is_empty() or change.after_add_ticks != 0
+			or change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0):
+		reader.error("an \"on\" entry needs amount_bp, duration_bp, duration_add_ms, radius_add, cooldown_bp, add_effects, after_add_ms, cast_bp, or targets_add")
 	reader.finish()
 	return change
 
@@ -195,14 +232,15 @@ static func _signed_ticks(reader: DataReader, key: String) -> int:
 ## only multiply or add stats, change abilities' amount_bp, or add auras,
 ## since those are what scale cleanly (phase 5c step 4, section 9.3).
 func step_problem() -> String:
-	if _changes_mana() or not also_fires.is_empty() or echo_ticks > 0:
-		return "a growing card's step can't change mana, add triggers, or echo"
+	if _changes_mana() or not also_fires.is_empty() or echo_ticks > 0 or prefer != null or hop_within_add != 0 or hop_cooldown_add_ticks != 0:
+		return "a growing card's step can't change mana, add triggers, echo, targeting, or hops"
 	for part: PartDef in passives:
 		if part.kind != PartDef.Kind.AURA:
 			return "a growing card's step can only add auras (\"%s\" isn't one)" % part.id
 	for change: AbilityChange in changes:
 		if change.duration_bp != FixedMath.BP_ONE or change.duration_add_ticks != 0 or change.radius_add != 0 \
-				or change.cooldown_bp != FixedMath.BP_ONE or not change.add_effects.is_empty() or change.after_add_ticks != 0:
+				or change.cooldown_bp != FixedMath.BP_ONE or not change.add_effects.is_empty() or change.after_add_ticks != 0 \
+				or change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0:
 			return "a growing card's step can only change an ability's amount_bp"
 	return ""
 
@@ -238,11 +276,13 @@ func changes_anything() -> bool:
 	for stat: int in stats_bp.size():
 		if stats_bp[stat] != FixedMath.BP_ONE or stats_add[stat] != 0:
 			return true
-	return not passives.is_empty() or not changes.is_empty() or _changes_mana() or not also_fires.is_empty() or echo_ticks > 0
+	return not passives.is_empty() or not changes.is_empty() or _changes_mana() or not also_fires.is_empty() or echo_ticks > 0 \
+		or prefer != null or hop_within_add != 0 or hop_cooldown_add_ticks != 0
 
 
 func _changes_mana() -> bool:
-	return mana_max_add != 0 or mana_start_add != 0 or mana_per_attack_add != 0 or mana_regen_add != 0 or mana_max_bp != FixedMath.BP_ONE
+	return mana_max_add != 0 or mana_start_add != 0 or mana_per_attack_add != 0 or mana_regen_add != 0 or mana_max_bp != FixedMath.BP_ONE \
+		or mana_start_bp > 0
 
 
 ## True if the mod changes anything on `kit` (stats and passives always do;
@@ -258,9 +298,15 @@ func affects(kit: UnitDef) -> bool:
 		return true
 	if kit.signature != null and (not also_fires.is_empty() or echo_ticks > 0):
 		return true
+	if prefer != null or (kit.hop_cooldown_ticks > 0 and (hop_within_add != 0 or hop_cooldown_add_ticks != 0)):
+		return true
 	for change: AbilityChange in changes:
 		for ability: AbilityDef in _slot_abilities(kit, change.slot):
 			if not change.add_effects.is_empty() or change.cooldown_bp != FixedMath.BP_ONE:
+				return true
+			if change.cast_bp != FixedMath.BP_ONE and ability.cast_ticks > 0:
+				return true
+			if change.targets_add > 0 and not _extra_targets(ability, change).is_empty():
 				return true
 			if change.touches_effects() and _any_effect(ability.effects, change):
 				return true
@@ -290,10 +336,18 @@ func apply(kit: UnitDef, problems: Array[String] = []) -> UnitDef:
 		mana.max = maxi(FixedMath.apply_bp(mana.max, mana_max_bp) + mana_max_add, 1)
 		mana.regen_per_s = maxi(mana.regen_per_s + mana_regen_add, 0)
 		mana.start = clampi(mana.start + mana_start_add, 0, mana.max)
+		if mana_start_bp > 0:
+			mana.start = maxi(mana.start, FixedMath.apply_bp(mana.max, mana_start_bp))
 		mana.per_attack = maxi(mana.per_attack + mana_per_attack_add, 0)
 		built.mana = mana
 	for change: AbilityChange in changes:
 		_apply_change(built, change, problems)
+	if prefer != null:
+		built.prefer = prefer
+		built.prefer_label = prefer_label
+	if built.hop_cooldown_ticks > 0:
+		built.hop_within += hop_within_add
+		built.hop_cooldown_ticks = maxi(built.hop_cooldown_ticks + hop_cooldown_add_ticks, 1)
 	if built.signature != null and (not also_fires.is_empty() or echo_ticks > 0):
 		var signature: AbilityDef = DefCopy.shallow(built.signature) as AbilityDef
 		signature.also.append_array(also_fires)
@@ -352,12 +406,42 @@ static func _changed_ability(ability: AbilityDef, change: AbilityChange) -> Abil
 	var copy: AbilityDef = DefCopy.shallow(ability) as AbilityDef
 	if change.cooldown_bp != FixedMath.BP_ONE:
 		copy.cooldown_ticks = maxi(FixedMath.apply_bp(copy.cooldown_ticks, change.cooldown_bp), 1)
+	if change.cast_bp != FixedMath.BP_ONE:
+		copy.cast_ticks = FixedMath.apply_bp(copy.cast_ticks, change.cast_bp)
 	if change.touches_effects():
 		copy.effects = _changed_effects(ability.effects, change)
+	else:
+		copy.effects = copy.effects.duplicate()
+	if change.targets_add > 0:
+		copy.effects.append_array(_extra_targets(ability, change))
 	copy.effects.append_array(change.add_effects)
 	for effect: EffectDef in change.add_effects:
 		copy.has_hit_effects = copy.has_hit_effects or effect.trigger != EffectDef.Trigger.ON_FIRE
 	return copy
+
+
+## Wide's extra targets (phase 5c step 6b): a copy of each of `ability`'s
+## effects on its target, reaching the `targets_add` units nearest that
+## target of its side (an ally for a signature that picks allies). None for
+## one aimed at itself, or (`one_of`) one with an area.
+static func _extra_targets(ability: AbilityDef, change: AbilityChange) -> Array[EffectDef]:
+	var extra: Array[EffectDef] = []
+	if ability.targeting == "self" or (change.one_of and ability.effects.any(func(effect: EffectDef) -> bool: return effect.type == EffectDef.Type.AREA)):
+		return extra
+	for effect: EffectDef in ability.effects:
+		if effect.trigger != EffectDef.Trigger.ON_FIRE or effect.target != EffectDef.Target.TARGET or not COPIED_TYPES.has(effect.type):
+			continue
+		var copy: EffectDef = DefCopy.shallow(effect) as EffectDef
+		copy.target = EffectDef.Target.ALLY_NEAR_TARGET if ability.targeting == "lowest_hp_ally" else EffectDef.Target.ENEMY_NEAR_TARGET
+		copy.count = change.targets_add
+		copy.near_range = 0
+		extra.append(copy)
+	return extra
+
+
+## The effects Wide copies onto more targets.
+const COPIED_TYPES: Array[EffectDef.Type] = [EffectDef.Type.DAMAGE, EffectDef.Type.HEAL, EffectDef.Type.SHIELD, EffectDef.Type.APPLY_STATUS,
+	EffectDef.Type.CLEANSE, EffectDef.Type.MANA_DRAIN, EffectDef.Type.KNOCKBACK, EffectDef.Type.PULL, EffectDef.Type.EXTEND_STATUS]
 
 
 static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -> Array[EffectDef]:

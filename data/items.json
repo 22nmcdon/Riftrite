@@ -1593,5 +1593,961 @@
         ]
       }
     ]
+  },
+  {
+    "id": "hunters_chalk",
+    "kind": "charm",
+    "name": "Hunter's Chalk",
+    "icon": "rift_glass_eye",
+    "text": "Your crits Mark the target; at rank III, those Marks stack.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "hunters_chalk",
+            "name": "Hunter's Chalk",
+            "kind": "ability",
+            "text": "Its crits Mark the target.",
+            "effects": [
+              {
+                "trigger": "on_holder_crit",
+                "type": "apply_status",
+                "status": "marked",
+                "duration_ms": 2000,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "hunters_chalk",
+            "name": "Hunter's Chalk",
+            "kind": "ability",
+            "text": "Its crits Mark the target.",
+            "effects": [
+              {
+                "trigger": "on_holder_crit",
+                "type": "apply_status",
+                "status": "marked",
+                "duration_ms": 3000,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "hunters_chalk",
+            "name": "Hunter's Chalk",
+            "kind": "ability",
+            "text": "Its crits Mark the target.",
+            "effects": [
+              {
+                "trigger": "on_holder_crit",
+                "type": "apply_status",
+                "status": "marked",
+                "duration_ms": 3000,
+                "target": "hit_target",
+                "marks_stack": true
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "fletched_for_wings",
+    "kind": "charm",
+    "name": "Fletched for Wings",
+    "icon": "fletched_for_wings",
+    "text": "Your basic attack hits fliers harder; at rank III your hits bring them down for a moment.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "fletched_for_wings",
+            "name": "Fletched for Wings",
+            "kind": "aura",
+            "text": "Its basic attack hits fliers harder.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 14000,
+              "from_basic": true,
+              "vs": {
+                "flying": true
+              }
+            }
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "fletched_for_wings",
+            "name": "Fletched for Wings",
+            "kind": "aura",
+            "text": "Its basic attack hits fliers harder.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 16000,
+              "from_basic": true,
+              "vs": {
+                "flying": true
+              }
+            }
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "fletched_for_wings",
+            "name": "Fletched for Wings",
+            "kind": "aura",
+            "text": "Its basic attack hits fliers harder.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 16000,
+              "from_basic": true,
+              "vs": {
+                "flying": true
+              }
+            }
+          },
+          {
+            "id": "fletched_grounding",
+            "name": "Fletched for Wings",
+            "kind": "ability",
+            "text": "Its hits ground fliers.",
+            "effects": [
+              {
+                "trigger": "on_holder_hit",
+                "vs": {
+                  "flying": true
+                },
+                "type": "apply_status",
+                "status": "grounded",
+                "duration_ms": 1000,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "shadow_step",
+    "kind": "charm",
+    "name": "Shadow Step",
+    "icon": "light_feet",
+    "text": "Your first attack out of Stealth hits much harder; at rank III it's a sure crit.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "shadow_step",
+            "name": "Shadow Step",
+            "kind": "ability",
+            "text": "Leaving Stealth, its next attack is stronger.",
+            "effects": [
+              {
+                "trigger": "on_status_ended",
+                "statuses": [
+                  "stealth"
+                ],
+                "type": "apply_status",
+                "status": "shadow_step",
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "shadow_step",
+            "name": "Shadow Step",
+            "kind": "ability",
+            "text": "Leaving Stealth, its next attack is stronger.",
+            "effects": [
+              {
+                "trigger": "on_status_ended",
+                "statuses": [
+                  "stealth"
+                ],
+                "type": "apply_status",
+                "status": "shadow_step_2",
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "shadow_step",
+            "name": "Shadow Step",
+            "kind": "ability",
+            "text": "Leaving Stealth, its next attack is stronger.",
+            "effects": [
+              {
+                "trigger": "on_status_ended",
+                "statuses": [
+                  "stealth"
+                ],
+                "type": "apply_status",
+                "status": "shadow_step_3",
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bloodhound",
+    "kind": "charm",
+    "name": "Bloodhound",
+    "icon": "rift_glass_eye",
+    "text": "You go for wounded enemies first and hit them harder; at rank III, kills quicken you.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "bloodhound",
+            "name": "Bloodhound",
+            "kind": "aura",
+            "text": "More damage to wounded enemies.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 11500,
+              "vs": {
+                "below_hp_pct": 50
+              }
+            }
+          }
+        ],
+        "prefer": {
+          "label": "Bloodhound",
+          "vs": {
+            "below_hp_pct": 50
+          }
+        }
+      },
+      {
+        "passives": [
+          {
+            "id": "bloodhound",
+            "name": "Bloodhound",
+            "kind": "aura",
+            "text": "More damage to wounded enemies.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 12500,
+              "vs": {
+                "below_hp_pct": 50
+              }
+            }
+          }
+        ],
+        "prefer": {
+          "label": "Bloodhound",
+          "vs": {
+            "below_hp_pct": 50
+          }
+        }
+      },
+      {
+        "passives": [
+          {
+            "id": "bloodhound",
+            "name": "Bloodhound",
+            "kind": "aura",
+            "text": "More damage to wounded enemies.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 12500,
+              "vs": {
+                "below_hp_pct": 50
+              }
+            }
+          },
+          {
+            "id": "bloodhound_kill",
+            "name": "Bloodhound",
+            "kind": "ability",
+            "text": "Kills quicken it.",
+            "effects": [
+              {
+                "trigger": "on_kill",
+                "type": "apply_status",
+                "status": "bloodhound",
+                "target": "self"
+              }
+            ]
+          }
+        ],
+        "prefer": {
+          "label": "Bloodhound",
+          "vs": {
+            "below_hp_pct": 50
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "armor_breaker",
+    "kind": "charm",
+    "name": "Armor Breaker",
+    "icon": "casters_first",
+    "text": "Your hits ignore part of the target's DEF.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "armor_breaker",
+            "name": "Armor Breaker",
+            "kind": "aura",
+            "text": "Its hits ignore some DEF.",
+            "aura": {
+              "target": "holder",
+              "stat": "def_ignore_bp",
+              "value": 1000
+            }
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "armor_breaker",
+            "name": "Armor Breaker",
+            "kind": "aura",
+            "text": "Its hits ignore some DEF.",
+            "aura": {
+              "target": "holder",
+              "stat": "def_ignore_bp",
+              "value": 2000
+            }
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "armor_breaker",
+            "name": "Armor Breaker",
+            "kind": "aura",
+            "text": "Its hits ignore some DEF.",
+            "aura": {
+              "target": "holder",
+              "stat": "def_ignore_bp",
+              "value": 3000
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "braced",
+    "kind": "charm",
+    "name": "Braced",
+    "icon": "braced",
+    "text": "A charge or leap that hits you gives you a Shield; at rank III you can't be knocked back.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "braced_charm",
+            "name": "Braced",
+            "kind": "ability",
+            "text": "A charge or leap on it gives it a Shield.",
+            "effects": [
+              {
+                "trigger": "on_charged",
+                "type": "shield",
+                "amount_bp_of_max_hp": 1000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "braced_charm",
+            "name": "Braced",
+            "kind": "ability",
+            "text": "A charge or leap on it gives it a Shield.",
+            "effects": [
+              {
+                "trigger": "on_charged",
+                "type": "shield",
+                "amount_bp_of_max_hp": 1500,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "braced_charm",
+            "name": "Braced",
+            "kind": "ability",
+            "text": "A charge or leap on it gives it a Shield.",
+            "effects": [
+              {
+                "trigger": "on_charged",
+                "type": "shield",
+                "amount_bp_of_max_hp": 1500,
+                "target": "self"
+              }
+            ]
+          },
+          {
+            "id": "braced_firm",
+            "name": "Braced",
+            "kind": "aura",
+            "text": "It can't be moved.",
+            "aura": {
+              "target": "holder",
+              "stat": "unpushable",
+              "value": 1
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sidestep",
+    "kind": "charm",
+    "name": "Sidestep",
+    "icon": "light_feet",
+    "text": "Every few seconds, a hit on you misses.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "sidestep",
+            "name": "Sidestep",
+            "kind": "aura",
+            "text": "A hit misses it now and then.",
+            "aura": {
+              "target": "holder",
+              "stat": "dodge_every_ms",
+              "value": 6000
+            }
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "sidestep",
+            "name": "Sidestep",
+            "kind": "aura",
+            "text": "A hit misses it now and then.",
+            "aura": {
+              "target": "holder",
+              "stat": "dodge_every_ms",
+              "value": 5000
+            }
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "sidestep",
+            "name": "Sidestep",
+            "kind": "aura",
+            "text": "A hit misses it now and then.",
+            "aura": {
+              "target": "holder",
+              "stat": "dodge_every_ms",
+              "value": 4000
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "iron_skin",
+    "kind": "charm",
+    "name": "Iron Skin",
+    "icon": "braced",
+    "text": "The first hits you take each fight deal half damage.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "iron_skin",
+            "name": "Iron Skin",
+            "kind": "aura",
+            "text": "Its first hits taken land at half.",
+            "aura": {
+              "target": "holder",
+              "stat": "halved_hits",
+              "value": 3
+            }
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "iron_skin",
+            "name": "Iron Skin",
+            "kind": "aura",
+            "text": "Its first hits taken land at half.",
+            "aura": {
+              "target": "holder",
+              "stat": "halved_hits",
+              "value": 4
+            }
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "iron_skin",
+            "name": "Iron Skin",
+            "kind": "aura",
+            "text": "Its first hits taken land at half.",
+            "aura": {
+              "target": "holder",
+              "stat": "halved_hits",
+              "value": 5
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "spite_brand",
+    "kind": "charm",
+    "name": "Spite Brand",
+    "icon": "the_tank_first",
+    "text": "When one hit takes a big share of your HP, its attacker is Stunned.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "spite_brand",
+            "name": "Spite Brand",
+            "kind": "ability",
+            "text": "A heavy hit Stuns its attacker.",
+            "effects": [
+              {
+                "trigger": "on_hit_taken",
+                "min_bp_of_max_hp": 1500,
+                "cooldown_ms": 8000,
+                "type": "apply_status",
+                "status": "stun",
+                "duration_ms": 500,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "spite_brand",
+            "name": "Spite Brand",
+            "kind": "ability",
+            "text": "A heavy hit Stuns its attacker.",
+            "effects": [
+              {
+                "trigger": "on_hit_taken",
+                "min_bp_of_max_hp": 1500,
+                "cooldown_ms": 8000,
+                "type": "apply_status",
+                "status": "stun",
+                "duration_ms": 1000,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "spite_brand",
+            "name": "Spite Brand",
+            "kind": "ability",
+            "text": "A heavy hit Stuns its attacker.",
+            "effects": [
+              {
+                "trigger": "on_hit_taken",
+                "min_bp_of_max_hp": 1500,
+                "cooldown_ms": 5000,
+                "type": "apply_status",
+                "status": "stun",
+                "duration_ms": 1000,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "light_feet",
+    "kind": "charm",
+    "name": "Light Feet",
+    "icon": "light_feet",
+    "text": "If you hop away, you hop before enemies get as close; at rank III, more often.",
+    "ranks": [
+      {
+        "hop": {
+          "within_add": 500
+        }
+      },
+      {
+        "hop": {
+          "within_add": 1000
+        }
+      },
+      {
+        "hop": {
+          "within_add": 1000,
+          "cooldown_add_ms": -1000
+        }
+      }
+    ]
+  },
+  {
+    "id": "scavenger",
+    "kind": "charm",
+    "name": "Scavenger",
+    "icon": "hollow_crown",
+    "text": "When an enemy falls near you, you gain mana; at rank III, ATK and MGK for the fight too.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "scavenger",
+            "name": "Scavenger",
+            "kind": "ability",
+            "text": "An enemy falling near it feeds it.",
+            "effects": [
+              {
+                "trigger": "on_enemy_fell",
+                "fell_within_hexes": 2,
+                "type": "gain_mana",
+                "amount": 5,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "scavenger",
+            "name": "Scavenger",
+            "kind": "ability",
+            "text": "An enemy falling near it feeds it.",
+            "effects": [
+              {
+                "trigger": "on_enemy_fell",
+                "fell_within_hexes": 2,
+                "type": "gain_mana",
+                "amount": 8,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "scavenger",
+            "name": "Scavenger",
+            "kind": "ability",
+            "text": "An enemy falling near it feeds it.",
+            "effects": [
+              {
+                "trigger": "on_enemy_fell",
+                "fell_within_hexes": 2,
+                "type": "gain_mana",
+                "amount": 8,
+                "target": "self"
+              },
+              {
+                "trigger": "on_enemy_fell",
+                "fell_within_hexes": 2,
+                "type": "apply_status",
+                "status": "scavenged",
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "opener",
+    "kind": "sigil",
+    "name": "Opener",
+    "icon": "opener",
+    "text": "You start every fight with your signature's bar partly full.",
+    "ranks": [
+      {
+        "mana": {
+          "start_bp": 5000
+        }
+      },
+      {
+        "mana": {
+          "start_bp": 7500
+        }
+      },
+      {
+        "mana": {
+          "start_bp": 10000
+        }
+      }
+    ]
+  },
+  {
+    "id": "quickcast",
+    "kind": "sigil",
+    "name": "Quickcast",
+    "icon": "steady_hands",
+    "text": "Your signature casts faster; at rank III, at once.",
+    "ranks": [
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "cast_bp": 7000
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "cast_bp": 5000
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "cast_bp": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "wide",
+    "kind": "sigil",
+    "name": "Wide",
+    "icon": "pilgrims_lantern",
+    "text": "Your signature's area is larger, or it reaches more units; from rank II, both.",
+    "ranks": [
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "radius_add": 1,
+            "targets_add": 1,
+            "one_of": true
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "radius_add": 1,
+            "targets_add": 1
+          }
+        ]
+      },
+      {
+        "on": [
+          {
+            "slot": "signature",
+            "radius_add": 2,
+            "targets_add": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "siphon",
+    "kind": "sigil",
+    "name": "Siphon",
+    "icon": "deep_mend",
+    "text": "Your signature's hits heal you for a share of their damage.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "siphon",
+            "name": "Siphon",
+            "kind": "aura",
+            "text": "Lifesteal on its signature.",
+            "aura": {
+              "target": "holder",
+              "stat": "lifesteal_bp",
+              "value": 1500,
+              "from_signature": true
+            }
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "siphon",
+            "name": "Siphon",
+            "kind": "aura",
+            "text": "Lifesteal on its signature.",
+            "aura": {
+              "target": "holder",
+              "stat": "lifesteal_bp",
+              "value": 2500,
+              "from_signature": true
+            }
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "siphon",
+            "name": "Siphon",
+            "kind": "aura",
+            "text": "Lifesteal on its signature.",
+            "aura": {
+              "target": "holder",
+              "stat": "lifesteal_bp",
+              "value": 3500,
+              "from_signature": true
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "execution",
+    "kind": "sigil",
+    "name": "Execution",
+    "icon": "the_tank_first",
+    "text": "Your signature hits enemies near death harder; at rank III, a kill with it gives mana back.",
+    "ranks": [
+      {
+        "passives": [
+          {
+            "id": "execution",
+            "name": "Execution",
+            "kind": "aura",
+            "text": "Its signature hits enemies near death harder.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 13000,
+              "from_signature": true,
+              "vs": {
+                "below_hp_pct": 30
+              }
+            }
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "execution",
+            "name": "Execution",
+            "kind": "aura",
+            "text": "Its signature hits enemies near death harder.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 14500,
+              "from_signature": true,
+              "vs": {
+                "below_hp_pct": 30
+              }
+            }
+          }
+        ]
+      },
+      {
+        "passives": [
+          {
+            "id": "execution",
+            "name": "Execution",
+            "kind": "aura",
+            "text": "Its signature hits enemies near death harder.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 14500,
+              "from_signature": true,
+              "vs": {
+                "below_hp_pct": 30
+              }
+            }
+          },
+          {
+            "id": "execution_refund",
+            "name": "Execution",
+            "kind": "ability",
+            "text": "A kill with its signature refunds mana.",
+            "effects": [
+              {
+                "trigger": "on_kill",
+                "from_signature": true,
+                "type": "gain_mana",
+                "amount_bp_of_max_mana": 2500,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 ]

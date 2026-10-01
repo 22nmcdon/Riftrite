@@ -51,6 +51,7 @@ const FORMS: Dictionary[LogEntry.Kind, String] = {
 	LogEntry.Kind.STATUS_EXTENDED: "the tag stays longer",
 	LogEntry.Kind.RISE: "the token returns, with a pulse and \"Rises\"",
 	LogEntry.Kind.RESISTED: "\"Resisted\" over the hero",
+	LogEntry.Kind.DODGED: "\"Miss\" over the unit",
 }
 ## What the board must have shown at some frame, for each kind a fight
 ## produced (the rest are checked elsewhere, or read from the unit's state).
