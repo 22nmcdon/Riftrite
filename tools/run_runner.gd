@@ -1,22 +1,30 @@
 extends SceneTree
-## The run report (docs/plans/rebuild-phase5-run.md, section 12): plays many
-## runs with the simple run bot and prints how they pace (tools/run_report.gd
-## does the work). A report, not a gate: it exits 0 unless a run hit an
-## error.
-## Usage: godot --headless --path . -s tools/run_runner.gd -- [--runs=54] [--first-seed=1] [--engines]
-## --engines adds the engine report (phase 5c step 9b): every hero engine
-## over the runs' day fights.
+## The run report (docs/plans/rebuild-phase5-run.md, section 12; phase 6's
+## bots, docs/plans/rebuild-phase6-bot-tuning.md): plays many runs with a
+## bot and prints how they pace (tools/run_report.gd does the work). A
+## report, not a gate: it exits 0 unless a run hit an error.
+## Usage: godot --headless --path . -s tools/run_runner.gd -- [--runs=54] [--first-seed=1] [--bot=simple-peek] [--jobs=1] [--engines]
+## --bot: one of run_report.gd's BOTS. --engines adds the engine report
+## (phase 5c step 9b): every hero engine over the runs' day fights.
+## --jobs=N plays the seeds in N Godot processes (each takes every Nth seed
+## and writes its runs with --part=k/N --out=file), then merges them: the
+## report is the same as one process's.
 
 const Report = preload("res://tools/run_report.gd")
+const PARTS_DIR: String = "user://run_parts"
 
 
 func _init() -> void:
-	var options: Dictionary[String, String] = {"runs": "54", "first-seed": "1"}
+	var options: Dictionary[String, String] = {"runs": "54", "first-seed": "1", "bot": "simple-peek", "jobs": "1", "part": "", "out": ""}
 	for arg: String in OS.get_cmdline_user_args():
 		if arg.begins_with("--") and arg.contains("="):
 			var pair: PackedStringArray = arg.trim_prefix("--").split("=", true, 1)
 			if options.has(pair[0]):
 				options[pair[0]] = pair[1]
+	if not Report.BOTS.has(options["bot"]):
+		printerr("unknown bot \"%s\" (%s)" % [options["bot"], ", ".join(Report.BOTS)])
+		quit(1)
+		return
 	var run: RunContent = RunContent.load_dir("res://data", ContentDb.load_dir("res://data"))
 	if not run.is_valid():
 		printerr("\n".join(run.errors))
@@ -25,14 +33,69 @@ func _init() -> void:
 	var seeds: Array[int] = []
 	for i: int in options["runs"].to_int():
 		seeds.append(options["first-seed"].to_int() + i)
-	var lines: Array = Report.play_many(run, seeds)
+	if not options["part"].is_empty():
+		_play_part(run, seeds, options)
+		return
+	var lines: Array[Report.RunLine] = []
+	var jobs: int = clampi(options["jobs"].to_int(), 1, 32)
+	if jobs > 1:
+		lines = _play_in_processes(seeds, jobs, options)
+	else:
+		lines.assign(Report.play_many(run, seeds, options["bot"]))
 	print(Report.summary(run, lines))
 	if OS.get_cmdline_user_args().has("--engines"):
-		var typed: Array[Report.RunLine] = []
-		typed.assign(lines)
 		print("")
-		print(Report.engines_summary(typed))
+		print(Report.engines_summary(lines))
 	for line: Report.RunLine in lines:
 		if not line.errors.is_empty():
 			printerr("seed %d: %s" % [line.seed_value, "; ".join(line.errors)])
 	quit(1 if lines.any(func(line: Report.RunLine) -> bool: return not line.errors.is_empty()) else 0)
+
+
+## A child process (--part=k/N): plays every Nth seed from the kth, and
+## writes the runs to --out.
+func _play_part(run: RunContent, seeds: Array[int], options: Dictionary[String, String]) -> void:
+	var part: PackedStringArray = options["part"].split("/")
+	var mine: Array[int] = []
+	for i: int in seeds.size():
+		if i % part[1].to_int() == part[0].to_int():
+			mine.append(seeds[i])
+	var dicts: Array[Dictionary] = []
+	for line: Report.RunLine in Report.play_many(run, mine, options["bot"]):
+		dicts.append(line.to_dict())
+	var file: FileAccess = FileAccess.open(options["out"], FileAccess.WRITE)
+	file.store_var(dicts)
+	file.close()
+	quit(0)
+
+
+## Starts `jobs` child processes on slices of `seeds`, waits for them, and
+## reads their runs back in seed order.
+func _play_in_processes(seeds: Array[int], jobs: int, options: Dictionary[String, String]) -> Array[Report.RunLine]:
+	DirAccess.make_dir_recursive_absolute(PARTS_DIR)
+	var pids: Array[int] = []
+	var outs: Array[String] = []
+	for k: int in jobs:
+		var out: String = ProjectSettings.globalize_path("%s/part_%d_%d.bin" % [PARTS_DIR, OS.get_process_id(), k])
+		outs.append(out)
+		var args: PackedStringArray = ["--headless", "--path", ProjectSettings.globalize_path("res://"), "-s", "tools/run_runner.gd", "--",
+			"--runs=%d" % seeds.size(), "--first-seed=%d" % seeds[0], "--bot=%s" % options["bot"], "--part=%d/%d" % [k, jobs], "--out=%s" % out]
+		pids.append(OS.create_process(OS.get_executable_path(), args))
+	for pid: int in pids:
+		while OS.is_process_running(pid):
+			OS.delay_msec(200)
+	var lines: Array[Report.RunLine] = []
+	for out: String in outs:
+		var file: FileAccess = FileAccess.open(out, FileAccess.READ)
+		if file == null:
+			var missing := Report.RunLine.new()
+			missing.errors.append("a --jobs process wrote nothing (%s)" % out)
+			lines.append(missing)
+			continue
+		var dicts: Array = file.get_var()
+		file.close()
+		DirAccess.remove_absolute(out)
+		for data: Dictionary in dicts:
+			lines.append(Report.RunLine.from_dict(data))
+	lines.sort_custom(func(a: Report.RunLine, b: Report.RunLine) -> bool: return a.seed_value < b.seed_value)
+	return lines

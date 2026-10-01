@@ -1,6 +1,7 @@
 extends RefCounted
-## The run report (docs/plans/rebuild-phase5-run.md, section 12): the simple
-## run bot plays many runs, and this measures pacing: runs won and where the
+## The run report (docs/plans/rebuild-phase5-run.md, section 12; phase 6
+## plays it with any bot, tools/bots/): a bot plays many runs, and this
+## measures pacing: runs won and where the
 ## rest end, when each hero first transforms (the design: the first around
 ## days 3-4, all three by the boss), picks per hero, shards earned and
 ## spent, wounds taken, relics found, the nodes shown and taken (phase 5c
@@ -10,6 +11,12 @@ extends RefCounted
 ## combination n mod 27), so every path is measured.
 
 const Bot = preload("res://tools/run_bot.gd")
+const RunPlayer = preload("res://tools/bots/run_player.gd")
+const BaseBot = preload("res://tools/bots/bot.gd")
+const RandomBot = preload("res://tools/bots/random_bot.gd")
+## The bots by name (--bot): "simple-peek" is the report's bot before phase
+## 6 (the simple bot, trying the named formations in the real fight).
+const BOTS: Array[String] = ["simple", "simple-peek", "random"]
 
 
 ## One run, as measured.
@@ -50,6 +57,8 @@ class RunLine:
 	var engines: Dictionary[String, Array] = {}
 	var held: Dictionary[String, int] = {}
 	var errors: Array[String] = []
+	## The bot that played it.
+	var bot: String = ""
 	## [encounter id, won?] for each fight.
 	var fights: Array[Array] = []
 	## Path id -> what the run's fights put into it while its hero was vowed
@@ -60,6 +69,21 @@ class RunLine:
 	## fights it was held for (phase 5c step 4).
 	var grown: Dictionary[String, int] = {}
 	var grown_fights: Dictionary[String, int] = {}
+
+	## Its measures as a Dictionary (what --jobs passes between processes,
+	## with FileAccess.store_var, so types survive).
+	func to_dict() -> Dictionary:
+		var data: Dictionary = {}
+		for property: Dictionary in get_property_list():
+			if property.usage & PROPERTY_USAGE_SCRIPT_VARIABLE:
+				data[property.name] = get(property.name)
+		return data
+
+	static func from_dict(data: Dictionary) -> RunLine:
+		var line := RunLine.new()
+		for key: String in data:
+			line.set(key, data[key])
+		return line
 
 
 ## Every combination of one path per hero, in heroes.json's and paths.json's
@@ -77,19 +101,33 @@ static func vow_combinations(content: ContentDb) -> Array[Dictionary]:
 	return combos
 
 
-## Plays run `run_seed` to its end with the bot, measuring it (`look_ahead`:
-## the bot tries the named formations and keeps the first that doesn't
-## lose, as a player who places well would).
-static func play(run: RunContent, run_seed: int, look_ahead: bool = true) -> RunLine:
+## A fresh bot by name (BOTS).
+static func make_bot(bot_name: String) -> BaseBot:
+	match bot_name:
+		"random":
+			return RandomBot.new()
+		"simple-peek":
+			var peeking: BaseBot = BaseBot.new()
+			peeking.label = "simple-peek"
+			peeking.peek = true
+			return peeking
+	return BaseBot.new()
+
+
+## Plays run `run_seed` to its end with the bot named `bot_name`, measuring
+## it.
+static func play(run: RunContent, run_seed: int, bot_name: String = "simple-peek") -> RunLine:
 	var line := RunLine.new()
 	line.seed_value = run_seed
+	line.bot = bot_name
+	var bot: BaseBot = make_bot(bot_name)
 	var combos: Array[Dictionary] = vow_combinations(run.content)
 	line.vows.assign(combos[run_seed % combos.size()])
 	var flow: RunFlow = RunFlow.start(run, run_seed, line.vows, line.errors)
 	if flow == null:
 		return line
 	var state: RunState = flow.state
-	var hexes: Dictionary[String, Vector2i] = Bot.formation()
+	bot.begin(flow)
 	var shards: int = state.shards
 	var wounds: int = 0
 	var fought: int = 0
@@ -97,7 +135,7 @@ static func play(run: RunContent, run_seed: int, look_ahead: bool = true) -> Run
 	var before: Dictionary[String, int] = {}
 	for hero: RunState.Hero in state.heroes:
 		before[hero.id] = hero.deeds[hero.path]
-	for step: int in Bot.MAX_STEPS:
+	for step: int in RunPlayer.MAX_STEPS:
 		var vowed_to: Dictionary[String, String] = {}
 		var was_transformed: Dictionary[String, bool] = {}
 		for hero: RunState.Hero in state.heroes:
@@ -110,7 +148,7 @@ static func play(run: RunContent, run_seed: int, look_ahead: bool = true) -> Run
 			for node: String in state.nodes:
 				line.nodes_shown[node.get_slice(":", 0)] = line.nodes_shown.get(node.get_slice(":", 0), 0) + 1
 		var torn: bool = not state.rift_depth.is_empty() and state.phase == RunState.Phase.LOADOUT
-		var refused: String = Bot.step_once(flow, hexes, line.errors, look_ahead)
+		var refused: String = RunPlayer.step(flow, bot)
 		if not refused.is_empty():
 			line.errors.append("day %d (%s): %s" % [state.day, RunState.PHASE_NAMES[state.phase], refused])
 			break
@@ -240,10 +278,10 @@ static func engines_summary(lines: Array[RunLine], shown: int = 40) -> String:
 	return "\n".join(out)
 
 
-static func play_many(run: RunContent, seeds: Array[int], look_ahead: bool = true) -> Array[RunLine]:
+static func play_many(run: RunContent, seeds: Array[int], bot_name: String = "simple-peek") -> Array[RunLine]:
 	var lines: Array[RunLine] = []
 	for run_seed: int in seeds:
-		lines.append(play(run, run_seed, look_ahead))
+		lines.append(play(run, run_seed, bot_name))
 	return lines
 
 
@@ -253,7 +291,7 @@ static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 	var out: PackedStringArray = PackedStringArray()
 	var n: int = lines.size()
 	var won: int = lines.filter(func(line: RunLine) -> bool: return line.outcome == RunState.Outcome.WON).size()
-	out.append("Runs: %d (the simple bot, trying the four named formations each fight), won %d (%d%%)" % [n, won, _pct(won, n)])
+	out.append("Runs: %d (the %s bot), won %d (%d%%)" % [n, lines[0].bot if n > 0 else "-", won, _pct(won, n)])
 	var ended: Array[int] = []
 	for day: int in run.act.days.size() + 1:
 		ended.append(0)
@@ -326,12 +364,12 @@ static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 	out.append("Nodes per run: %s" % ", ".join(by_node))
 	var rift_fights: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.rift_fights, 0)
 	var rift_wins: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.rift_wins, 0)
-	out.append("Rift Tear fights (the bot goes Shallow): %d of %d won (%d%%)" % [rift_wins, rift_fights, _pct(rift_wins, rift_fights)])
+	out.append("Rift Tear fights: %d of %d won (%d%%)" % [rift_wins, rift_fights, _pct(rift_wins, rift_fights)])
 	var by_scene: Array[String] = []
 	for scene: EventDef.Scene in run.events.scenes:
 		var taken: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.scenes.get(scene.id, 0), 0)
 		by_scene.append("%s %d" % [scene.name, taken])
-	out.append("Event scenes taken (the bot makes the first choice without a cost it can, and never swears an oath): %s" % ", ".join(by_scene))
+	out.append("Event scenes taken: %s" % ", ".join(by_scene))
 	out.append("")
 	out.append("Encounters (fights won of fought):")
 	for encounter_id: String in content.encounter_ids:

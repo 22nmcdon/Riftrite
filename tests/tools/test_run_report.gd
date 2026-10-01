@@ -19,7 +19,7 @@ func test_every_combination_of_vows() -> void:
 
 func test_a_small_report() -> void:
 	var seeds: Array[int] = [1, 2, 3]
-	var lines: Array = Report.play_many(_run, seeds, false)
+	var lines: Array = Report.play_many(_run, seeds, "simple")
 	assert_eq(lines.size(), 3)
 	for line: Report.RunLine in lines:
 		assert_eq(line.errors, [] as Array[String], "seed %d" % line.seed_value)
@@ -28,7 +28,7 @@ func test_a_small_report() -> void:
 		assert_false(line.fights.is_empty())
 		assert_eq(line.transformed_on.size(), 3)
 		assert_eq(line.nodes_shown.get("camp", 0), line.nodes_taken.values().reduce(func(sum: int, taken: int) -> int: return sum + taken, 0), "Camp shown every day a node was taken")
-	var again: Report.RunLine = Report.play(_run, 2, false)
+	var again: Report.RunLine = Report.play(_run, 2, "simple")
 	assert_eq([again.outcome, again.day, again.fights], [lines[1].outcome, lines[1].day, lines[1].fights], "a run is its seed's")
 	var text: String = Report.summary(_run, lines)
 	assert_string_contains(text, "Runs: 3 (the simple bot")
@@ -40,7 +40,7 @@ func test_a_small_report() -> void:
 
 func test_the_engine_report() -> void:
 	var lines: Array[Report.RunLine] = []
-	lines.assign(Report.play_many(_run, [4, 5] as Array[int], false))
+	lines.assign(Report.play_many(_run, [4, 5] as Array[int], "simple"))
 	for line: Report.RunLine in lines:
 		assert_false(line.engines.is_empty(), "seed %d's fights had engines" % line.seed_value)
 		for name: String in line.engines:

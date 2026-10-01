@@ -98,6 +98,14 @@ The good bot, except that at the real fight it tries its candidate formations an
 
 Each step: its commit, the full suite, the bench's fingerprints unchanged (no step changes a fight's rules), the run report, and its built note here.
 
+### 5.1 Built in step 6a (2026-10-01)
+
+- **The frame:** `tools/bots/bot.gd` is a bot: one function per decision (vows come from the report), answering as the simple bot does; `tools/bots/run_player.gd` plays a run, one `RunFlow` action at a time, each the bot's answer (`RunPlayer.play`, `step`). The simple bot stays in `tools/run_bot.gd` (its static rules are what `bot.gd` answers with, and 15 run test files use them), instead of moving to `tools/bots/simple_bot.gd` as section 6 planned. A bot now places markers too (snares, a lantern: Practice's starting hexes, moved to the nearest legal ones), which `run_bot.gd`'s own `play` never did.
+- **The random bot** (`tools/bots/random_bot.gd`): a random legal answer to everything from its own `SimRng` (seeded by the run's seed): today's fight, the formation (any legal hexes in the heroes' zone), markers, the loadout, the pick or the shards, a relic or none, up to 6 shop actions (a buy, a relic, a wound, a reroll; it never sells), the node, camp's option, a Rift Tear's depth, an event's choice and target or walking away, an oath, the Shrine's offering, Map the Rift's swap, and Dig In's rock.
+- **The report:** `--bot=simple|simple-peek|random` (default `simple-peek`, the report's bot until now, until the good bot lands), and `--jobs=N`: N Godot processes each play every Nth seed and write their run lines (`RunLine.to_dict`, `FileAccess.store_var`), and the parent merges them; 12 runs in 4 processes give the same report, engines included, as one.
+- **Tests:** `tests/tools/test_bots.gd` (3: each bot plays runs to their end and repeats, the random bot's answers aren't the simple bot's, a run line read back gives the same report).
+- **The first read** (108 runs each, cycled vows): **the simple bot without its peek wins 16%** (35 runs lost on day 1), **the random bot 24%**, and **the simple bot with its peek 70%**. A fixed formation does worse than a random one, and trying four formations in the real fight lifts the same bot by 54 points: where the good bot places (6b) decides most of what it wins.
+
 ## 6. Files
 
 - `tools/bots/run_player.gd`, `random_bot.gd`, `simple_bot.gd` (today's `run_bot.gd`, moved; `tools/run_bot.gd` stays as a thin alias so tests that preload it keep working), `good_bot.gd`, `placement.gd` (2.2), `practice.gd` (2.3), `expert_bot.gd`.
