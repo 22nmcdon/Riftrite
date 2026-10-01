@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) approved and being built; steps 5–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); steps 5–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -283,7 +283,7 @@ Part 7: "an effect caused by a trigger can set off other triggers, but one chain
 
 ## 9. Step 4: permanent scaling
 
-Part 7, section 4: some upgrades and relics **grow every fight for the rest of the run**, counting something the hero does the way deeds do, and the card shows its current value. **Approved 2026-10-01** (9.9). Step 4 builds the machinery, the counters the agreed growing cards need, and the twelve growing upgrades (Decision 16).
+Part 7, section 4: some upgrades and relics **grow every fight for the rest of the run**, counting something the hero does the way deeds do, and the card shows its current value. **Approved and built 2026-10-01** (9.9, 9.10). Step 4 builds the machinery, the counters the agreed growing cards need, and the twelve growing upgrades (Decision 16).
 
 ### 9.1 What's there now
 
@@ -370,6 +370,16 @@ A card gets `"grows"` beside (or instead of) its `"mod"`:
 14. **Step 4 is built as this section says.**
 15. **A growing card counts from when it's taken** (Question G): it starts at +0% and grows from there; only owned cards are counted.
 16. **The twelve growing upgrades come now** (Question H): Notched Bow, Weathered, Lamp Oil, and the nine paths' growing upgrades join `upgrades.json`; step 7 keeps them in its pools. Growing relics come with step 5.
+
+### 9.10 Built in step 4 (2026-10-01)
+
+- **The sim:** `DeedDef` gained `applied` (with `keywords`), `taken`, `ms_below`, `kills`, and the `from_basic` filter; `UnitSetup.tally_keys` and `tally_counts` (from `HeroExtras`) are counted by `Deeds` after the deeds (`_count_on_target` for taken and kills, `count_time` for time below an HP share), and come back as `FightResult.tallies` (`tally_amount`). Counting never changes a fight.
+- **The cards:** `GrowthDef` (`src/sim/defs/growth_def.gd`) on `UpgradeDef` and `RelicDef` (`"grows"`; an upgrade may grow with no `"mod"`). `KitMod.times(n)` and `step_problem()` (a step may only change stats, an ability's `amount_bp`, or add auras); `stats_add` now also takes HP, ATK, MGK, and DEF (Old Scars' +1 DEF, Brandmarks' +1 ATK). No item grows (none in the agreed pools does), so `item_def.gd` is unchanged.
+- **The run:** `RunState.Hero.growth`, `RunState.growth` (relics), and `RunState.grew`; `RunContent.held_upgrades`, `growth_tallies`, and growth folded into `upgrade_mods` and `relic_mods` (so `fight_setup`, `kit_of`, and the content checks all see it); `RunFlow._grow` after every fight (won or lost, a Hunt too), and a card starts at 0 when taken (Decision 15). RunContent checks a step 50 times over on every kit the card can meet, and that a growing card's `from_ability` names its hero's abilities.
+- **The UI:** "Grows: +1% ATK per 3 enemies Marked" on cards, "Now: +7% ATK (2 / 3 enemies Marked to the next)" in the hero panel and the relic tooltip, and "What grew" on the day screen after a fight.
+- **The twelve upgrades** (`data/upgrades.json`), each tuned with the run report to about one step a fight held: Notched Bow (3 Marks), Weathered (600 taken), Lamp Oil (200 healing), Hunter's Tally (300 damage from beyond 4 hexes), Patient Hunter (15s of Root), Arrow Glut (15 extra hits; +1% faster cooldowns, since Maren's ATSP of 10 is too small for a share of it to show), Old Scars (100 guarded), Brandmarks (15 extra hits by the mace), Borrowed Time (8s below 30% HP), Kindled Flame (300 healing beside the target), Woven Deep (200 Shield), Sunwrought (50 smite damage). Path kits count far more once transformed than while vowed, so the deeds' thresholds were no guide.
+- **Tests:** `tests/sim/test_tallies.gd` (8), `tests/run/test_growth_cards.gd` (9), a "What grew" test in `test_run_screens.gd`, and `test_growth.gd`'s pool counts and offers (each hero and path has one growing upgrade more).
+- **What moved:** no fight (tallies only count). **The run report fell from 83% to 72% of runs won** with the growing upgrades in the pools, and back to 83% with them taken out, at either tuning: the simple bot takes a pick's card blind, and a growing card at about a step a fight gives +4–5% by the boss where the stat card it displaced gives +8–10% at once. Growing cards are an engine for a run that takes them early and builds on them; whether Act 1's are too slow (or the bot too blind to pick them) is flagged for the playtester. Step 7 rebuilds the pools and step 9 retunes.
 
 ## Answered (2026-09-30)
 
