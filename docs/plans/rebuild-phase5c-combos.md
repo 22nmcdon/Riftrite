@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a, 5b (section 11), and 5c (section 12) built (10-01), 5d (section 13) written and up for approval; steps 5–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a, 5b (section 11), and 5c (section 12) built (10-01), 5d (section 13) approved and being built; steps 5–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -726,7 +726,7 @@ The chaos fight takes the new pieces part by part (its seed rescanned if it must
 
 ## 13. Step 5d: duo bonds as keys to bond relics
 
-The last part of the relic pool (Decision 17), from `duo-bonds.md`: a duo bond has no boost of its own any more; it's the key to a **bond relic**, which joins the shops once the bond is on. **Up for approval.**
+The last part of the relic pool (Decision 17), from `duo-bonds.md`: a duo bond has no boost of its own any more; it's the key to a **bond relic**, which joins the shops once the bond is on. **Approved 2026-10-01** (13.6).
 
 ### 13.1 The bonds
 
@@ -740,8 +740,8 @@ The last part of the relic pool (Decision 17), from `duo-bonds.md`: a duo bond h
 
 - **A new tier, `bond`:** free, never drawn by the tier odds, never at the Magpie, and never in an elite's, Rift Tear's, or the Shrine's choice.
 - **The draw:** each time a shop draws its relic slot (the Pedlar's, and the pre-boss shop's slot beside the legendary), and a bond is on whose relic the run doesn't hold or the shop isn't already showing, there's a `bond_relic_pct` chance the slot is that bond relic.
-  - Placeholder: 10, twice the Pedlar's epic odds, as `duo-bonds.md` asks (Question R).
-  - With two bonds on, one of their relics is drawn (Question S).
+  - 20: four times the Pedlar's epic odds (Decision 27), a placeholder.
+  - With two bonds on, both relics join the draw, one of them per slot (Decision 28).
   - A reroll draws again, so it can come and go.
 - **Taking it costs nothing**; it takes the relic's spot like any relic.
 
@@ -762,7 +762,7 @@ Each is a passive on every hero (a relic's mod). Each plays off both paths: Hear
   - `data/bonds.json` (the three bonds, now keys)
   - `relic_def.gd` (the `bond` tier)
   - `data/relics.json` (the three bond relics)
-  - `act_def.gd` and `data/act1.json` (`bond_relic_pct`; `relic_prices.bond` 0)
+  - `act_def.gd` and `data/act1.json` (`bond_relic_pct` 20; `relic_prices.bond` 0)
   - `offers.gd` (the draw)
   - `run_flow.gd` and `run_content.gd` (no bond mods; `bond_relics(state)`, the on bonds' relics not yet held)
   - `aura_def.gd` and `passives.gd` (`behind_wall`)
@@ -781,11 +781,18 @@ Each is a passive on every hero (a relic's mod). Each plays off both paths: Hear
     - the tier counts (bond 3).
   - Fight-wide: determinism, the log audit, every encounter on the screen, the bench fingerprints unchanged; the run report runs.
 
-### 13.5 Questions
+### 13.5 Questions (answered in 13.6)
 
-- **R. How much more likely than an epic** a bond relic is: recommended 10% a shop draw (twice the Pedlar's epic), a placeholder for phase 6.
-- **S. Two bonds on at once:** recommended both relics join the draw (one of them per slot), as `duo-bonds.md` leans.
-- **T. A Maren–Vell bond:** all three Act 1 bonds include Brannoc. Recommended: keep the three for now, and write one for Maren and Vell when the roster grows (as `duo-bonds.md` plans, at about 6 heroes). Or I draft one now for your approval.
+- **R.** How much more likely than an epic is a bond relic to show up?
+- **S.** With two bonds on at once, do both relics join?
+- **T.** All three Act 1 bonds include Brannoc: should Maren and Vell get one now?
+
+### 13.6 Decisions (the playtester, 2026-10-01)
+
+26. **Step 5d is built as this section says.**
+27. **A bond relic shows up 20% of a shop's relic draws** while its bond is on (Question R), four times the Pedlar's epic chance.
+28. **Two bonds on at once both join** (Question S): each draw picks one of their relics.
+29. **The three Act 1 bonds stay** (Question T); a Maren–Vell bond is written when the roster grows.
 
 ## Answered (2026-09-30)
 
