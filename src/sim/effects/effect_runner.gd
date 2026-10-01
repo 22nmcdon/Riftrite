@@ -144,7 +144,9 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			Statuses.extend(sim, victim, effect.status_id, effect.duration_ticks, source)
 		EffectDef.Type.APPLY_STATUS:
 			var status_id: String = unit.status_swaps.get(effect.status_id, effect.status_id)
-			Statuses.apply(sim, victim, status_id, amount, effect.duration_ticks, source)
+			# fresh_only: never on a unit that has it already (Snaring Shot).
+			if not effect.fresh_only or Statuses.find(victim, status_id) == null:
+				Statuses.apply(sim, victim, status_id, amount, effect.duration_ticks, source)
 		EffectDef.Type.CLEANSE:
 			Statuses.cleanse_over_time(sim, victim, mini(amount, FixedMath.BP_ONE), source)
 		EffectDef.Type.MANA_DRAIN:
@@ -201,6 +203,9 @@ static func run_event(sim: CombatSim, unit: UnitState, ability: AbilityDef, sour
 		amount = state.total_stacks() if state != null and not state.def.is_timed() else 0
 		if amount <= 0:
 			return
+		if effect.stacks_share_bp > 0:
+			# A share of them, at least 1 (Ashen Engine; phase 5c step 5c).
+			amount = maxi(FixedMath.apply_bp(amount, effect.stacks_share_bp), 1)
 	for victim: UnitState in _targets(sim, unit, effect.target, unit.target, hit, effect):
 		var crit: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability, victim))
 		land(sim, unit, ability, source, effect, victim, amount, crit, NO_POINT, power_of(effect, unit))
@@ -243,7 +248,7 @@ static func allies_near(sim: CombatSim, unit: UnitState, effect: EffectDef) -> i
 static func crit_chance_bp(sim: CombatSim, unit: UnitState, ability: AbilityDef, target: UnitState = null) -> int:
 	var chance: int = ability.crit_chance_bp + unit.stats.get_stat(UnitStats.Stat.CRIT) * sim.tuning.crit_bp_per_point + unit.aura_bp[AuraDef.Stat.CRIT_CHANCE_BP]
 	if target != null and not unit.vs_conditions.is_empty():
-		chance += Passives.vs_bonus_bp(unit, target, AuraDef.Stat.CRIT_CHANCE_BP)
+		chance += Passives.vs_bonus_bp(unit, target, AuraDef.Stat.CRIT_CHANCE_BP, ability.id)
 	return chance
 
 
@@ -364,19 +369,25 @@ static func nearest_to(pool: Array[UnitState], others: Array[UnitState], count: 
 ## Lands a hit of `amount` (its base) on `target`: the damage rule (its
 ## `power`, plus a tactic's payoff; the crit's; the target's Mark), then
 ## DEF, then Shield, then HP. Logs it and returns what got through DEF.
-static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, amount: int, crit: bool, power: int = 0) -> int:
+## `steals`: false for a hit that never lifesteals (Shadow Engine's strike,
+## which comes from lifesteal). `note` says what made it, if not an ability.
+static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, amount: int, crit: bool, power: int = 0, steals: bool = true, note: String = "") -> int:
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.DAMAGE, source)
+	entry.note = note
 	if sim.damage_payoffs:
 		var payoff: int = Tactics.damage_bonus_bp(sim, source, target)
 		if payoff > 0:
 			power += payoff
 			entry.bonus = Tactics.bonus_note(payoff, sim.unit_by_id(source.unit_id).tactic)
 	var attacker: UnitState = sim.unit_by_id(source.unit_id) if source.relic_side < 0 else null
-	if sim.vs_auras and attacker != null and not attacker.vs_conditions.is_empty():
-		power += Passives.vs_bonus_bp(attacker, target)
+	var per_hit: bool = sim.vs_auras and attacker != null and not attacker.vs_conditions.is_empty()
+	if per_hit:
+		power += Passives.vs_bonus_bp(attacker, target, AuraDef.Stat.DAMAGE_BP, source.ability_id)
 	var marked: int = Statuses.damage_taken_bp(target)
 	# Crit damage bonuses (phase 5c step 5b) add to the crit's own +50%.
 	var crit_bp: int = sim.tuning.crit_damage_bp - FixedMath.BP_ONE + (attacker.aura_bp[AuraDef.Stat.CRIT_DAMAGE_BP] if attacker != null else 0) if crit else 0
+	if crit and attacker != null:
+		crit_bp += _more_crit_damage(sim, attacker, target, source, per_hit)
 	var raw: int = DamageRule.apply(amount, power, crit_bp, marked)
 	# Guard (phase 4): an ally's guard takes its share of the hit, against its
 	# own DEF.
@@ -402,28 +413,56 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 	sim.combat_log.add(entry)
 	if guarded > 0:
 		Guards.take(sim, guard, target, guarded, source)
-	if attacker != null and sim.lifesteal and dealt > 0 and attacker.side != target.side:
+	if steals and attacker != null and sim.lifesteal and dealt > 0 and attacker.side != target.side:
 		lifesteal(sim, attacker, target, dealt, source)
 	return dealt
 
 
+## What a crit by `attacker` adds to crit damage beyond its auras (phase 5c
+## step 5c): per-hit crit damage (Hunter's Engine, per Mark stack), and its
+## crit chance past 100% times its crit_overflow_bp (Knife's Edge; the
+## chance from CRIT and its crit-chance auras).
+static func _more_crit_damage(sim: CombatSim, attacker: UnitState, target: UnitState, source: EffectSource, per_hit: bool) -> int:
+	var more: int = Passives.vs_bonus_bp(attacker, target, AuraDef.Stat.CRIT_DAMAGE_BP, source.ability_id) if per_hit else 0
+	var overflow: int = attacker.aura_bp[AuraDef.Stat.CRIT_OVERFLOW_BP]
+	if overflow > 0:
+		var chance: int = attacker.stats.get_stat(UnitStats.Stat.CRIT) * sim.tuning.crit_bp_per_point + attacker.aura_bp[AuraDef.Stat.CRIT_CHANCE_BP]
+		if chance > FixedMath.BP_ONE:
+			more += FixedMath.apply_bp(chance - FixedMath.BP_ONE, overflow)
+	return more
+
+
 ## The attacker heals its lifesteal's share of a hit's `dealt` damage (phase
 ## 5c step 5b): its own line (LIFESTEAL), not a heal, so nothing that reacts
-## to healing sees it (relics/README rule 5; Decision 21).
+## to healing sees it (relics/README rule 5; Decision 21). Phase 5c step 5c:
+## with lifesteal_heals (Blood Communion) it's a heal instead (a HEAL line
+## marked lifesteal: heal power, healing taken, on_heal, and overheal to
+## Shield all see it); and with overheal_strike_bp (Shadow Engine) what it
+## would heal past full HP hits the attacker's target for that share.
 static func lifesteal(sim: CombatSim, attacker: UnitState, target: UnitState, dealt: int, source: EffectSource) -> void:
 	var share: int = attacker.aura_bp[AuraDef.Stat.LIFESTEAL_BP]
 	if not attacker.vs_conditions.is_empty():
-		share += Passives.vs_bonus_bp(attacker, target, AuraDef.Stat.LIFESTEAL_BP)
+		share += Passives.vs_bonus_bp(attacker, target, AuraDef.Stat.LIFESTEAL_BP, source.ability_id)
 	if share <= 0 or not attacker.alive:
 		return
-	var healed: int = clampi(FixedMath.apply_bp(dealt, share), 0, attacker.max_hp - attacker.hp)
-	if healed <= 0:
+	var wanted: int = FixedMath.apply_bp(dealt, share)
+	if wanted <= 0:
 		return
-	attacker.hp += healed
-	var entry: LogEntry = sim.new_entry(LogEntry.Kind.LIFESTEAL, source)
-	entry.target = attacker.id
-	entry.amount = healed
-	sim.combat_log.add(entry)
+	var overheal: int
+	if attacker.aura_bp[AuraDef.Stat.LIFESTEAL_HEALS] > 0:
+		overheal = heal(sim, attacker, wanted, source, 0, attacker.aura_bp[AuraDef.Stat.HEAL_BP] - FixedMath.BP_ONE, true)
+	else:
+		var healed: int = clampi(wanted, 0, attacker.max_hp - attacker.hp)
+		overheal = wanted - healed
+		if healed > 0:
+			attacker.hp += healed
+			var entry: LogEntry = sim.new_entry(LogEntry.Kind.LIFESTEAL, source)
+			entry.target = attacker.id
+			entry.amount = healed
+			sim.combat_log.add(entry)
+	var strike: int = attacker.aura_bp[AuraDef.Stat.OVERHEAL_STRIKE_BP]
+	if strike > 0 and overheal > 0 and attacker.target != null and attacker.target.alive and attacker.target.side != attacker.side:
+		deal_hit(sim, source, attacker.target, FixedMath.apply_bp(overheal, strike), false, 0, false, "overheal from lifesteal")
 
 
 ## Heals `target` (capped at its max HP), logs it, and if any HP came back,
@@ -435,20 +474,28 @@ static func lifesteal(sim: CombatSim, attacker: UnitState, target: UnitState, de
 ## back as that share of Shield (phase 4, Ward Thread).
 ## `amount` is the heal's base: the damage rule applies its `power` and the
 ## target's healing taken (the target's side, like a Mark on damage).
-static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectSource, overheal_shield_bp: int = 0, power: int = 0) -> void:
+## The healer's overheal_shield_bp aura (Overflow Chalice; phase 5c step 5c)
+## adds to the heal's own share. `by_lifesteal` marks lifesteal that heals
+## (Blood Communion). Returns what it would have restored past full HP.
+static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectSource, overheal_shield_bp: int = 0, power: int = 0, by_lifesteal: bool = false) -> int:
 	amount = DamageRule.apply(amount, power, 0, target.aura_bp[AuraDef.Stat.HEALING_TAKEN_BP] - FixedMath.BP_ONE)
 	var healed: int = clampi(target.max_hp - target.hp, 0, amount)
 	target.hp += healed
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.HEAL, source)
 	entry.target = target.id
 	entry.amount = healed
+	entry.lifesteal = by_lifesteal
 	sim.combat_log.add(entry)
+	if sim.overheal_auras and source.relic_side < 0:
+		var healer: UnitState = sim.unit_by_id(source.unit_id)
+		if healer != null:
+			overheal_shield_bp += healer.aura_bp[AuraDef.Stat.OVERHEAL_SHIELD_BP]
 	if overheal_shield_bp > 0 and amount > healed:
 		var shield: int = FixedMath.apply_bp(amount - healed, overheal_shield_bp)
 		if shield > 0:
 			give_shield(sim, target, shield, source)
 	if healed <= 0:
-		return
+		return amount - healed
 	var window_start: int = sim.tick - sim.tuning.heal_cleanse_window_ticks
 	while not target.recent_heal_ticks.is_empty() and target.recent_heal_ticks[0] <= window_start:
 		target.recent_heal_ticks.remove_at(0)
@@ -458,6 +505,7 @@ static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectS
 	target.recent_heal_ticks.append(sim.tick)
 	if not target.statuses.is_empty():
 		Statuses.cleanse_over_time(sim, target, share_bp, source, true)
+	return amount - healed
 
 
 static func give_shield(sim: CombatSim, target: UnitState, amount: int, source: EffectSource) -> void:

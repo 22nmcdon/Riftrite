@@ -21,6 +21,19 @@ var interval_left: int = 0
 ## Timed: who applied it last (for Taunt, the taunter) and the tick it ends.
 var source: EffectSource = null
 var ends_at: int = 0
+## A stacking boost (phase 5c step 5c): each stack's last tick (NEVER: the
+## fight's end), oldest first.
+var stack_ends: Array[int] = []
+## A timed status that stacks (Marks under Hunter's Engine, phase 5c step
+## 5c): its stacks, all ending at ends_at.
+var stacks: int = 1
+
+const NEVER: int = 1 << 60
+
+
+## A timed status's stacks: a stacking boost's count, or `stacks`.
+func timed_stacks() -> int:
+	return stack_ends.size() if def.stacking else stacks
 
 
 func total_stacks() -> int:

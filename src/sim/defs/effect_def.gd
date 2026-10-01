@@ -140,6 +140,8 @@ extends RefCounted
 ##   on_ally_ability  an ally's signature fires (hit_target: that ally)
 ##   on_status_ended  a status on the unit runs out ("statuses", "keywords":
 ##                    only those; phase 5c step 5b, "leaving Stealth")
+##   on_lifesteal     the unit's lifesteal heals it (phase 5c step 5c;
+##                    Sanguine Frenzy)
 ## Phase 5c step 5b adds: extend_status ("status", "duration_ms": a timed
 ## status already on the target lasts that much longer); the targets
 ## enemies_near_self (within_hexes of the unit), enemies_near_named and
@@ -147,6 +149,8 @@ extends RefCounted
 ## and, for a relic, nearest_enemies ("count" of the enemies nearest any of
 ## its side); a Shield's amount_bp_of_max_hp; and apply_status's
 ## "stacks_of": "burn" (as many stacks as the unit the event names has).
+## Phase 5c step 5c adds stacks_of's "stacks_share_bp" (a share of them, at
+## least 1) and apply_status's "fresh_only" (nothing if the target has it).
 ## on_kill names the enemy that fell (for "vs" and an area's anchor; it
 ## can't be hit_target, since it's gone).
 ## "every": N runs it on every Nth time; "once": true only the first time.
@@ -184,7 +188,7 @@ enum Trigger {
 	ON_FIRE, ON_HIT, ON_CRIT, ON_FIGHT_START, AT_TIME, ON_ALLY_BELOW_HP,
 	ON_ABILITY, ON_BASIC_ATTACK, ON_HOLDER_CRIT, ON_SHIELDED, ON_HIT_TAKEN, ON_HEAL, ON_STATUS, ON_KILL,
 	ON_INTERVAL, ON_FALL, ON_HOP, ON_WOULD_FALL,
-	ON_HOLDER_HIT, ON_SHIELD_BROKEN, ON_ALLY_ABILITY, ON_STATUS_ENDED,
+	ON_HOLDER_HIT, ON_SHIELD_BROKEN, ON_ALLY_ABILITY, ON_STATUS_ENDED, ON_LIFESTEAL,
 }
 enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS }
 enum Placement { EDGES, ADJACENT, HEXES }
@@ -214,13 +218,13 @@ const TRIGGER_NAMES: Array[String] = [
 	"on_fire", "on_hit", "on_crit", "on_fight_start", "at_time", "on_ally_below_hp",
 	"on_ability", "on_basic_attack", "on_holder_crit", "on_shielded", "on_hit_taken", "on_heal", "on_status", "on_kill",
 	"on_interval", "on_fall", "on_hop", "on_would_fall",
-	"on_holder_hit", "on_shield_broken", "on_ally_ability", "on_status_ended",
+	"on_holder_hit", "on_shield_broken", "on_ally_ability", "on_status_ended", "on_lifesteal",
 ]
 ## The unit's events (see the top).
 const EVENT_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
-	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED,
+	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL,
 ]
 ## Event triggers that name a unit (hit_target) and those that name a hit
 ## (amount_bp_of_damage).
@@ -235,14 +239,14 @@ const ABILITY_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL,
-	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED,
+	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL,
 ]
 ## What a passive's effects may run on (PartDef).
 const PASSIVE_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL,
-	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED,
+	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL,
 ]
 ## The passive triggers that aren't events (Passives.run_timed, on_fall,
 ## would_fall).
@@ -357,6 +361,11 @@ var overheal_shield_bp: int = 0
 ## apply_status: as many stacks as the unit the event names has of this
 ## status ("": stacks as given).
 var stacks_of: String = ""
+## stacks_of: only this share of them, at least 1 (0: all; Ashen Engine).
+var stacks_share_bp: int = 0
+## apply_status: nothing if the target already has the status (Snaring
+## Shot: never stacked or extended).
+var fresh_only: bool = false
 ## In an area: which side it's for.
 var side: AreaSide = AreaSide.BOTH
 ## A zone: how long it stays and how often it lands (0: an ordinary area).
@@ -436,6 +445,10 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				def.stacks = reader.opt_int("stacks", 1, 1)
 				def.duration_ticks = reader.opt_ticks("duration_ms", 0)
 				def.stacks_of = reader.opt_string("stacks_of", "")
+				def.stacks_share_bp = reader.opt_int("stacks_share_bp", 0, 1, FixedMath.BP_ONE)
+				if def.stacks_share_bp > 0 and def.stacks_of.is_empty():
+					reader.error("stacks_share_bp is a share of stacks_of")
+				def.fresh_only = reader.opt_bool("fresh_only", false)
 			Type.EXTEND_STATUS:
 				def.status_id = reader.req_string("status")
 				def.duration_ticks = reader.req_ticks("duration_ms", FixedMath.MS_PER_TICK)

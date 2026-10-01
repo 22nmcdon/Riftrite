@@ -223,7 +223,9 @@ static func _amount(counts: DeedDef, value: int) -> String:
 static func relic_numbers(relic: RelicDef, content: ContentDb) -> String:
 	var parts: Array[String] = []
 	if relic.mod != null:
-		parts.append("Heroes: " + mod_numbers(relic.mod, null, content))
+		parts.append(("Ranged heroes: " if relic.mod_for_ranged else "Heroes: ") + mod_numbers(relic.mod, null, content))
+	if relic.rules != null:
+		parts.append_array(rules_numbers(relic.rules))
 	if relic.enemy_mod != null:
 		parts.append("Enemies: " + mod_numbers(relic.enemy_mod, null, content))
 	if relic.slots_add != 0:
@@ -271,6 +273,14 @@ static func relic_numbers(relic: RelicDef, content: ContentDb) -> String:
 	if relic.grows != null:
 		parts.append("%s, counted for the whole team" % growth_numbers(relic.grows, null, content))
 	return " · ".join(parts)
+
+
+## A relic's hero rules, each as a line (phase 5c step 5c).
+static func rules_numbers(rules: SideRules) -> Array[String]:
+	var parts: Array[String] = []
+	if rules.marks_stack:
+		parts.append("Marks heroes apply stack")
+	return parts
 
 
 ## A duo bond's, for the hero on `path_id`.

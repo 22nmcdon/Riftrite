@@ -127,5 +127,22 @@
     "kind": "boost",
     "duration_ms": 3000,
     "auras": [{"stat": "atk_bp", "value": 12000}, {"stat": "mgk_bp", "value": 12000}]
+  },
+  {
+    "_note": "Attacks faster; each stack its own 3s (Sanguine Frenzy, an epic relic: each time lifesteal heals the hero; phase 5c step 5c).",
+    "id": "frenzy",
+    "name": "Frenzy",
+    "kind": "boost",
+    "stacking": true,
+    "duration_ms": 3000,
+    "auras": [{"stat": "atsp", "value": 2}]
+  },
+  {
+    "_note": "Attacks faster for the rest of the fight, a stack for every hit, no cap (Quickening, a legendary relic; phase 5c step 5c).",
+    "id": "quickened",
+    "name": "Quickened",
+    "kind": "boost",
+    "stacking": true,
+    "auras": [{"stat": "atsp", "value": 1}]
   }
 ]

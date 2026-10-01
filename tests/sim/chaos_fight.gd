@@ -33,26 +33,31 @@ extends RefCounted
 ## and it takes less damage beside an ally; the brand's crits hit harder,
 ## and a Burning enemy it fells spreads its Burn around; the mender's
 ## signature gives every ally a boost.
+## Phase 5c step 5c adds the engines: the heroes' Marks stack (a hero rule),
+## the hook's lifesteal frenzies it (a stacking boost, each stack its own
+## timer), the warden's ATK rises with its Shield, and the mender's MGK
+## steps up while it stands still.
 ##
 ## Some pieces (a shot fizzling, a cleanse cutting stacks, a cast cancelled
 ## by a stun, a target lost to Stealth, a Taunt) happen only in some seeds;
-## 26 has them all (17, 18, then 21 did before playtest gate 1 shrank units
+## 37 has them all (17, 18, then 21 did before playtest gate 1 shrank units
 ## and added Stealth, then 23 until phase 5c step 5b's pieces changed the
-## fight). If a change to the
+## fight, then 26 until step 5c's engines did). If a change to the
 ## sim moves them, test_the_chaos_fight_uses_everything says which, and the
 ## seed or the kits need adjusting.
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
 
 
-static func setup(fight_seed: int = 26) -> FightSetup:
+static func setup(fight_seed: int = 37) -> FightSetup:
 	var warden: UnitDef = K.kit("warden", {"stats": {"hp": 1400, "atk": 14, "def": 30, "crit": 15, "speed": 2}, "traits": ["engage"],
 		"basic_attack": {"effects": [{"type": "damage", "amount": 8, "target": "target", "scaling": {"atk": 5000}},
 			{"trigger": "on_hit", "type": "apply_status", "status": "marked", "target": "hit_target"},
 			{"trigger": "on_crit", "type": "apply_status", "status": "stun", "target": "hit_target"}]},
 		"passives": [{"id": "ledger", "name": "Ledger", "kind": "ability", "effects": [
 				{"trigger": "on_holder_crit", "vs": {"keywords": ["marked"]}, "type": "extend_status", "status": "marked", "duration_ms": 500, "target": "hit_target"}]},
-			{"id": "banner", "name": "Banner", "kind": "aura", "aura": {"target": "holder", "stat": "damage_reduced_bp", "value": 1000, "while": "ally_near", "within_hexes": 2}}],
+			{"id": "banner", "name": "Banner", "kind": "aura", "aura": {"target": "holder", "stat": "damage_reduced_bp", "value": 1000, "while": "ally_near", "within_hexes": 2}},
+			{"id": "bulwark", "name": "Bulwark", "kind": "aura", "aura": {"target": "holder", "stat": "atk_bp", "per_shield_bp": 10}}],
 		"signature": {"id": "hold", "name": "Hold the Line", "trigger": {"kind": "hp_below", "threshold_bp": 5000}, "targeting": "self",
 			"effects": [{"type": "area", "shape": {"kind": "ring", "radius": 1}, "anchor": "self", "hits": "enemies",
 				"effects": [{"type": "apply_status", "status": "taunt", "target": "target"}, {"type": "damage", "amount": 10, "target": "target"}]}]}})
@@ -64,7 +69,8 @@ static func setup(fight_seed: int = 26) -> FightSetup:
 				{"type": "cleanse", "amount_bp": 5000, "target": "target"}]},
 		"passives": [{"id": "rally", "name": "Rally", "kind": "aura", "aura": {"target": "all_allies", "stat": "atk_bp", "value": 12000, "window": {"until_ms": 20000}}},
 			{"id": "venom", "name": "Venom", "kind": "replace_status", "from": "burn", "to": "poison"},
-			{"id": "toll", "name": "Toll", "kind": "ability", "effects": [{"trigger": "on_ability", "type": "apply_status", "status": "storm_call", "target": "all_allies"}]}]})
+			{"id": "toll", "name": "Toll", "kind": "ability", "effects": [{"trigger": "on_ability", "type": "apply_status", "status": "storm_call", "target": "all_allies"}]},
+			{"id": "still", "name": "Still", "kind": "aura", "aura": {"target": "holder", "stat": "mgk_bp", "value": 11000, "while": "planted", "after_ms": 1000, "step": {"every_ms": 1000, "value": 500}}}]})
 	var brand: UnitDef = K.kit("brand", {"stats": {"hp": 900, "atk": 18, "crit": 25, "speed": 3},
 		"basic_attack": {"cooldown_ms": 900, "effects": [{"type": "damage", "amount": 10, "target": "target", "scaling": {"atk": 6000}},
 			{"trigger": "on_hit", "type": "apply_status", "status": "burn", "target": "hit_target"},
@@ -87,7 +93,8 @@ static func setup(fight_seed: int = 26) -> FightSetup:
 			{"id": "hunt", "name": "Hunt", "kind": "aura", "aura": {"target": "holder", "stat": "damage_bp", "value": 12000, "vs": {"keywords": ["marked"]}}},
 			{"id": "shade", "name": "Shade", "kind": "aura", "aura": {"target": "holder", "stat": "atsp_bp", "value": 13000, "while": "state", "state": {"keywords": ["stealthed"]}}},
 			{"id": "leech", "name": "Leech", "kind": "aura", "aura": {"target": "holder", "stat": "lifesteal_bp", "value": 1500}},
-			{"id": "veil", "name": "Veil", "kind": "ability", "effects": [{"trigger": "on_status_ended", "statuses": ["stealth"], "type": "apply_status", "status": "veiled_haste", "target": "self"}]}]})
+			{"id": "veil", "name": "Veil", "kind": "ability", "effects": [{"trigger": "on_status_ended", "statuses": ["stealth"], "type": "apply_status", "status": "veiled_haste", "target": "self"}]},
+			{"id": "frenzy", "name": "Frenzy", "kind": "ability", "effects": [{"trigger": "on_lifesteal", "type": "apply_status", "status": "frenzy", "target": "self"}]}]})
 
 	var hound: UnitDef = K.kit("hound", {"stats": {"hp": 500, "atk": 14, "speed": 3, "crit": 10}, "traits": ["engage", "flying"],
 		"passives": [{"id": "pack", "name": "Pack", "kind": "aura", "aura": {"target": "all_allies", "stat": "atsp_bp", "value": 11000}},
@@ -139,4 +146,5 @@ static func setup(fight_seed: int = 26) -> FightSetup:
 	fight.relic_sources.append(EffectSource.relic("tithe", "Tithe", EffectSource.Team.HEROES))
 	fight.relic_scales.append(FixedMath.BP_ONE)
 	fight.salt_circles = 1
+	fight.hero_rules.marks_stack = true
 	return fight

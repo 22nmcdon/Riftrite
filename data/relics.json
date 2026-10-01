@@ -1,6 +1,6 @@
 [
   {
-    "_note": "Relics (docs/plans/relics/, phase 5c step 5a; docs/plans/rebuild-phase5c-combos.md, section 10): team-wide, no downsides, in tiers (common, rare, epic, legendary, boss). The 64 the built pieces can write (44 from step 5a, 20 from 5b); the rest come with steps 5c-5d. Texts keep numbers out (the UI adds them from the mod and run rules). Icons reuse the placeholder glyphs until the art rehaul. Numbers are placeholders.",
+    "_note": "Relics (docs/plans/relics/, phase 5c step 5a; docs/plans/rebuild-phase5c-combos.md, section 10): team-wide, no downsides, in tiers (common, rare, epic, legendary, boss). The 75 the built pieces can write (44 from step 5a, 20 from 5b, 11 from 5c-1); the rest come with steps 5c-2 and 5d. Texts keep numbers out (the UI adds them from the mod and run rules). Icons reuse the placeholder glyphs until the art rehaul. Numbers are placeholders.",
     "id": "whetstone_of_the_fallen",
     "name": "Whetstone of the Fallen",
     "tier": "common",
@@ -1071,6 +1071,223 @@
     }
   },
   {
+    "id": "ashen_engine",
+    "name": "Ashen Engine",
+    "tier": "epic",
+    "icon": "ember_heart",
+    "flavor": "It runs on what burns.",
+    "text": "Heroes' ATK and MGK rise, and every hit on a Burning enemy spreads some of its Burn to the enemy nearest it.",
+    "mod": {
+      "stats_bp": {
+        "atk": 12000,
+        "mgk": 12000
+      },
+      "passives": [
+        {
+          "id": "ashen_engine",
+          "name": "Ashen Engine",
+          "kind": "ability",
+          "text": "A hit on a Burning enemy spreads some of its Burn to the enemy nearest it.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "vs": {
+                "keywords": [
+                  "burning"
+                ]
+              },
+              "type": "apply_status",
+              "status": "burn",
+              "stacks_of": "burn",
+              "stacks_share_bp": 500,
+              "target": "enemy_near_named"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "overflow_chalice",
+    "name": "Overflow Chalice",
+    "tier": "epic",
+    "icon": "deep_mend",
+    "flavor": "It never spills. It keeps.",
+    "text": "Healing past full HP from heroes' heals comes back as Shield.",
+    "mod": {
+      "passives": [
+        {
+          "id": "overflow_chalice",
+          "name": "Overflow Chalice",
+          "kind": "aura",
+          "text": "Healing past full HP from its heals comes back as Shield.",
+          "aura": {
+            "target": "holder",
+            "stat": "overheal_shield_bp",
+            "value": 5000
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "blood_communion",
+    "name": "Blood Communion",
+    "tier": "epic",
+    "icon": "ember_heart",
+    "flavor": "Drink, and be made whole.",
+    "text": "Heroes' lifesteal counts as healing, and all healing heroes give or receive is stronger.",
+    "mod": {
+      "passives": [
+        {
+          "id": "blood_communion",
+          "name": "Blood Communion",
+          "kind": "aura",
+          "text": "Its lifesteal counts as healing.",
+          "aura": {
+            "target": "holder",
+            "stat": "lifesteal_heals",
+            "value": 1
+          }
+        },
+        {
+          "id": "blood_communion_given",
+          "name": "Blood Communion",
+          "kind": "aura",
+          "text": "Its heals are stronger.",
+          "aura": {
+            "target": "holder",
+            "stat": "heal_bp",
+            "value": 11000
+          }
+        },
+        {
+          "id": "blood_communion_taken",
+          "name": "Blood Communion",
+          "kind": "aura",
+          "text": "Healing it receives is stronger.",
+          "aura": {
+            "target": "holder",
+            "stat": "healing_taken_bp",
+            "value": 11000
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "sanguine_frenzy",
+    "name": "Sanguine Frenzy",
+    "tier": "epic",
+    "icon": "opener",
+    "flavor": "The taste only makes it hungrier.",
+    "text": "Each time lifesteal heals a hero, it attacks faster for a while; it stacks.",
+    "mod": {
+      "passives": [
+        {
+          "id": "sanguine_frenzy",
+          "name": "Sanguine Frenzy",
+          "kind": "ability",
+          "text": "Each time its lifesteal heals it, it attacks faster for a while; it stacks.",
+          "effects": [
+            {
+              "trigger": "on_lifesteal",
+              "type": "apply_status",
+              "status": "frenzy",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "knifes_edge",
+    "name": "Knife's Edge",
+    "tier": "epic",
+    "icon": "steady_hands",
+    "flavor": "Sharper than certain.",
+    "text": "Heroes' crit chance past 100% turns into crit damage.",
+    "mod": {
+      "passives": [
+        {
+          "id": "knifes_edge",
+          "name": "Knife's Edge",
+          "kind": "aura",
+          "text": "Its crit chance past 100% turns into crit damage.",
+          "aura": {
+            "target": "holder",
+            "stat": "crit_overflow_bp",
+            "value": 20000
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "stonebound",
+    "name": "Stonebound",
+    "tier": "epic",
+    "icon": "unbroken_wall",
+    "flavor": "The longer it stands, the harder it is to move.",
+    "text": "A hero who stands still grows stronger the longer it stays put; moving resets it.",
+    "mod": {
+      "passives": [
+        {
+          "id": "stonebound",
+          "name": "Stonebound",
+          "kind": "aura",
+          "text": "Standing still, its ATK grows; moving resets it.",
+          "aura": {
+            "target": "holder",
+            "stat": "atk_bp",
+            "value": 11500,
+            "while": "planted",
+            "after_ms": 2000,
+            "step": {
+              "every_ms": 2000,
+              "value": 500
+            }
+          }
+        },
+        {
+          "id": "stonebound_mgk",
+          "name": "Stonebound",
+          "kind": "aura",
+          "text": "Standing still, its MGK grows; moving resets it.",
+          "aura": {
+            "target": "holder",
+            "stat": "mgk_bp",
+            "value": 11500,
+            "while": "planted",
+            "after_ms": 2000,
+            "step": {
+              "every_ms": 2000,
+              "value": 500
+            }
+          }
+        },
+        {
+          "id": "stonebound_def",
+          "name": "Stonebound",
+          "kind": "aura",
+          "text": "Standing still, its DEF grows; moving resets it.",
+          "aura": {
+            "target": "holder",
+            "stat": "def",
+            "value": 15,
+            "while": "planted",
+            "after_ms": 2000,
+            "step": {
+              "every_ms": 2000,
+              "value": 5
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
     "id": "rift_fed_blades",
     "name": "Rift-Fed Blades",
     "tier": "legendary",
@@ -1139,6 +1356,189 @@
     "doubles_commons": true
   },
   {
+    "id": "wardens_engine",
+    "name": "Warden's Engine",
+    "tier": "legendary",
+    "icon": "unbroken_wall",
+    "flavor": "The wall remembers every blow it turned.",
+    "text": "Shields heroes give are larger, and Shielded heroes' ATK and MGK rise with their Shield.",
+    "mod": {
+      "passives": [
+        {
+          "id": "wardens_engine",
+          "name": "Warden's Engine",
+          "kind": "aura",
+          "text": "Its Shields are larger.",
+          "aura": {
+            "target": "holder",
+            "stat": "shield_bp",
+            "value": 13000
+          }
+        },
+        {
+          "id": "wardens_engine_atk",
+          "name": "Warden's Engine",
+          "kind": "aura",
+          "text": "Its ATK rises with its Shield.",
+          "aura": {
+            "target": "holder",
+            "stat": "atk_bp",
+            "per_shield_bp": 5
+          }
+        },
+        {
+          "id": "wardens_engine_mgk",
+          "name": "Warden's Engine",
+          "kind": "aura",
+          "text": "Its MGK rises with its Shield.",
+          "aura": {
+            "target": "holder",
+            "stat": "mgk_bp",
+            "per_shield_bp": 5
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "hunters_engine",
+    "name": "Hunter's Engine",
+    "tier": "legendary",
+    "icon": "rift_glass_eye",
+    "flavor": "The mark deepens with every look.",
+    "text": "Marks heroes apply stack, crits hit harder for each Mark on the enemy, and a crit on a Marked enemy Marks the enemies around it.",
+    "rules": {
+      "marks_stack": true
+    },
+    "mod": {
+      "passives": [
+        {
+          "id": "hunters_engine",
+          "name": "Hunter's Engine",
+          "kind": "aura",
+          "text": "Its crits hit harder for each Mark on the enemy.",
+          "aura": {
+            "target": "holder",
+            "stat": "crit_damage_bp",
+            "value": 2000,
+            "per_target_stacks": "marked"
+          }
+        },
+        {
+          "id": "hunters_engine_spread",
+          "name": "Hunter's Engine",
+          "kind": "ability",
+          "text": "A crit on a Marked enemy Marks every enemy within 1 hex of it.",
+          "effects": [
+            {
+              "trigger": "on_holder_crit",
+              "vs": {
+                "keywords": [
+                  "marked"
+                ]
+              },
+              "type": "apply_status",
+              "status": "marked",
+              "target": "enemies_near_named",
+              "within_hexes": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "shadow_engine",
+    "name": "Shadow Engine",
+    "tier": "legendary",
+    "icon": "light_feet",
+    "flavor": "What the dark takes, it gives back sharpened.",
+    "text": "While hidden, heroes' basic attacks hit far harder and steal life, and lifesteal past full HP strikes their target.",
+    "mod": {
+      "passives": [
+        {
+          "id": "shadow_engine",
+          "name": "Shadow Engine",
+          "kind": "aura",
+          "text": "While Stealthed, its basic attacks deal more damage.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 20000,
+            "from_basic": true,
+            "while": "state",
+            "state": {
+              "keywords": [
+                "stealthed"
+              ]
+            }
+          }
+        },
+        {
+          "id": "shadow_engine_leech",
+          "name": "Shadow Engine",
+          "kind": "aura",
+          "text": "While Stealthed, its basic attacks steal life.",
+          "aura": {
+            "target": "holder",
+            "stat": "lifesteal_bp",
+            "value": 500,
+            "from_basic": true,
+            "while": "state",
+            "state": {
+              "keywords": [
+                "stealthed"
+              ]
+            }
+          }
+        },
+        {
+          "id": "shadow_engine_strike",
+          "name": "Shadow Engine",
+          "kind": "aura",
+          "text": "While Stealthed, lifesteal past full HP hits its target.",
+          "aura": {
+            "target": "holder",
+            "stat": "overheal_strike_bp",
+            "value": 50000,
+            "while": "state",
+            "state": {
+              "keywords": [
+                "stealthed"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "quickening",
+    "name": "Quickening",
+    "tier": "legendary",
+    "icon": "fletched_for_wings",
+    "flavor": "Every blow comes sooner than the last.",
+    "text": "Every hit makes the hero attack faster for the rest of the fight, with no cap.",
+    "mod": {
+      "passives": [
+        {
+          "id": "quickening",
+          "name": "Quickening",
+          "kind": "ability",
+          "text": "Every hit makes it attack faster for the rest of the fight.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "type": "apply_status",
+              "status": "quickened",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
     "id": "the_second_sun",
     "name": "The Second Sun",
     "tier": "boss",
@@ -1178,5 +1578,35 @@
     "flavor": "What one has, all have.",
     "text": "Each hero uses the team's highest HP, ATK, MGK, DEF, CRIT, and attack speed.",
     "covenant": true
+  },
+  {
+    "id": "snaring_shot",
+    "name": "Snaring Shot",
+    "tier": "boss",
+    "icon": "braced",
+    "flavor": "The arrow holds what it hits.",
+    "text": "Every 3rd basic attack by a ranged hero Roots its target, never stacking or lengthening a Root.",
+    "mod_for": "ranged",
+    "mod": {
+      "passives": [
+        {
+          "id": "snaring_shot",
+          "name": "Snaring Shot",
+          "kind": "ability",
+          "text": "Every 3rd basic attack Roots its target, if it isn't Rooted already.",
+          "effects": [
+            {
+              "trigger": "on_basic_attack",
+              "every": 3,
+              "type": "apply_status",
+              "status": "root",
+              "duration_ms": 1000,
+              "fresh_only": true,
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
   }
 ]

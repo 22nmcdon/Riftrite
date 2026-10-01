@@ -245,7 +245,7 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 			transformed.append(hero.id)
 		var mods: Array[KitMod] = run.upgrade_mods(hero)
 		mods.append_array(run.loadout_mods(hero))
-		mods.append_array(run.relic_mods(state))
+		mods.append_array(run.relic_mods(state, run.hero_kit(hero)))
 		if not hunting and state.fortify:
 			mods.append(run.camps.fortify_mod)
 		for bond: BondDef in bonds:
@@ -288,6 +288,7 @@ func _relic_rules(setup: FightSetup) -> void:
 	for id: String in state.relics:
 		if run.relics.has(id) and run.relics[id].salt_circle:
 			setup.salt_circles += 2 if run.counts_twice(state, run.relics[id]) else 1
+	setup.hero_rules = run.hero_rules(state)
 
 
 ## The Hollow Covenant (phase 5c step 5a): what `hero` needs added to reach
@@ -323,7 +324,7 @@ func kit_of(hero_id: String, with_covenant: bool = true) -> UnitDef:
 	var kit: UnitDef = run.hero_kit(hero)
 	var mods: Array[KitMod] = run.upgrade_mods(hero)
 	mods.append_array(run.loadout_mods(hero))
-	mods.append_array(run.relic_mods(state))
+	mods.append_array(run.relic_mods(state, kit))
 	for bond: BondDef in run.active_bonds(state):
 		if bond.mods.has(hero.path):
 			mods.append(bond.mods[hero.path])

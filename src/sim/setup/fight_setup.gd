@@ -20,6 +20,8 @@ var relic_effects: Array[EffectDef] = []
 var relic_sources: Array[EffectSource] = []
 var relic_scales: Array[int] = []
 var salt_circles: int = 0
+## The rules the heroes' side plays by (phase 5c step 5c; their relics').
+var hero_rules: SideRules = SideRules.new()
 
 
 static func make(hero_setups: Array[UnitSetup], enemy_setups: Array[UnitSetup], rock_hexes: Array[Vector2i] = [], fight_seed: int = 1, fight_act: int = 1) -> FightSetup:

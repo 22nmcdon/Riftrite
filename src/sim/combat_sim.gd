@@ -107,8 +107,13 @@ var status_end_listeners: bool = false
 var vs_auras: bool = false
 ## Some unit has lifesteal (phase 5c step 5b), so hits check for it.
 var lifesteal: bool = false
+## Some unit's heals turn overheal into Shield by an aura (phase 5c step 5c),
+## so heals look up their healer.
+var overheal_auras: bool = false
 ## Enemy areas Salt Circle still breaks this fight.
 var salt_circles: int = 0
+## The rules the heroes' side plays by (phase 5c step 5c).
+var hero_rules: SideRules = SideRules.new()
 ## The units with conditional auras (phase 4: planted, below_hp, per fallen
 ## ally), checked every tick.
 var _conditional: Array[UnitState] = []
@@ -193,6 +198,7 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 			_counting_time = _counting_time or unit.deeds.needs_time
 	units_joined()
 	salt_circles = setup.salt_circles
+	hero_rules = setup.hero_rules
 	for r: int in setup.relic_effects.size():
 		EffectRunner.run_relic(self, setup.relic_sources[r], setup.relic_effects[r], setup.relic_scales[r])
 
@@ -218,6 +224,8 @@ func add_unit(unit: UnitState) -> void:
 		vs_auras = true
 	if Passives.has_aura_of(unit, AuraDef.Stat.LIFESTEAL_BP):
 		lifesteal = true
+	if Passives.has_aura_of(unit, AuraDef.Stat.OVERHEAL_SHIELD_BP):
+		overheal_auras = true
 	if unit.guard != null:
 		guards.append(unit)
 

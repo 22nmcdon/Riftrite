@@ -16,6 +16,10 @@ extends RefCounted
 ##                                nearest_enemies (with a "count")
 ##   "salt_circle": true          the first enemy area each fight lands on
 ##                                nothing
+##   "rules": {...SideRules...}   rules of the fight the heroes' side plays by
+##                                (phase 5c step 5c)
+##   "mod_for": "ranged"          its mod is only for heroes of range 2 or
+##                                more (their path's kit; Snaring Shot)
 ## Run rules (RunFlow and RunContent read them):
 ##   "slots_add": 1               loadout slots for each hero
 ##   "always_scout": true         every fight is Scouted
@@ -93,6 +97,9 @@ var covenant: bool = false
 var at_start: Array[EffectDef] = []
 var salt_circle: bool = false
 var doubles_commons: bool = false
+var rules: SideRules = null
+## Its mod only for ranged heroes (phase 5c step 5c).
+var mod_for_ranged: bool = false
 
 
 static func read(reader: DataReader) -> RelicDef:
@@ -147,6 +154,16 @@ static func read(reader: DataReader) -> RelicDef:
 		def.at_start.append(effect)
 	def.salt_circle = reader.opt_bool("salt_circle", false)
 	def.doubles_commons = reader.opt_bool("doubles_commons", false)
+	if reader.has("rules"):
+		var rules_reader: DataReader = reader.req_object("rules")
+		if rules_reader != null:
+			def.rules = SideRules.read(rules_reader)
+			if not def.rules.any():
+				reader.error("rules: name at least one")
+	if reader.has("mod_for"):
+		def.mod_for_ranged = reader.req_choice("mod_for", ["ranged"]) == "ranged"
+		if def.mod == null:
+			reader.error("mod_for says who its mod is for, so it needs a mod")
 	if not def.does_something():
 		reader.error("a relic needs to do something")
 	reader.finish()
@@ -157,7 +174,12 @@ func does_something() -> bool:
 	return grows != null or mod != null or enemy_mod != null or slots_add != 0 or always_scout or price_add != 0 or pay_add != 0 \
 		or elite_pay_add != 0 or wound_price_add != 0 or shop_shards != 0 or miser or free_reroll or flat_rerolls or shop_relics_add != 0 \
 		or wares_add != 0 or pick_cards_add != 0 or take_picks_add != 0 or streak_wins > 0 or growth_bp > 0 or per_relic_bp > 0 \
-		or per_shards > 0 or covenant or not at_start.is_empty() or salt_circle or doubles_commons
+		or per_shards > 0 or covenant or not at_start.is_empty() or salt_circle or doubles_commons or rules != null
+
+
+## Whether its mod is for a hero whose path's kit is `kit` (null: any).
+func mod_fits(kit: UnitDef) -> bool:
+	return not mod_for_ranged or kit == null or kit.stats.get_stat(UnitStats.Stat.RANGE) >= 2
 
 
 static func _opt_mod(reader: DataReader, key: String) -> KitMod:

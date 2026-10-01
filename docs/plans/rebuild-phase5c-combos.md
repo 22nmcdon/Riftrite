@@ -1,6 +1,6 @@
 # Rebuild phase 5c: combos, the pools, and the new day
 
-Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a and 5b (section 11) built (10-01), 5c (section 12) written and up for approval, 5d to come; steps 5–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
+Status: **steps 1 and 2 built (2026-09-30 and 10-01): the damage rule, walkable crumbled ground, the Act 1 retune, and stat amounts on every card; step 3 (keywords and triggers, section 8) built (10-01); step 4 (permanent scaling, section 9) built (10-01); step 5 (the relic pool, section 10) split in four, 5a and 5b (section 11) built (10-01), 5c (section 12) approved, 5c-1 built (10-01), 5c-2 next, 5d to come; steps 5–9 outlined, each waiting for its full section and approval.** Builds part 7 (`rebuild-combos.md`) and the plans agreed with it on 2026-09-30: the relic pool (`relics/`), the loadout pool (`loadout/`), the Magpie (`magpie.md`), the upgrade pools (`upgrade-pools.md`), duo bonds as keys to bond relics (`duo-bonds.md`), the economy (`economy.md`), the new day and its nodes (`days-and-nodes.md`), events (`events.md`), rift modifiers (`enemy-growth.md`, section 4), and what the UI must show for them (`ui-new-systems.md`). It comes before phase 6 (the good bot and tuning), starting with the damage rule (`rebuild-build-order.md`).
 
 **How this plan works:** step 1 (the damage rule and walkable crumbled ground) is written in full below and is what's up for approval now. Steps 2–9 are outlined (what they build, the files, the tests); each gets its full section, like step 1's, added and approved before it's built. That keeps each approval to something small enough to check.
 
@@ -670,6 +670,25 @@ The chaos fight takes the new pieces part by part (its seed rescanned if it must
 23. **Wounds count only for heroes who are down at the end of the fight** (Question L). Without a rise that's every hero who fell, as now; a hero Second Dawn raised and who is standing at the end takes no wound.
 24. **Everflame reaches only the keywords heroes put on enemies** (Question M): Stealth on heroes still ends.
 25. **Under The Long Watch a fight ends as a tie at 300s** (Question Q), a guild win like the 180s tie.
+
+### 12.9 Built in step 5c-1 (2026-10-01)
+
+- **The pieces, as 12.1 says**, with these details:
+  - Per-hit auras: `vs`, `from_basic`, and `per_target_stacks` are worked out per hit (`AuraDef.is_per_hit`), and `Passives.vs_bonus_bp` takes the hit's ability, for `from_basic`. `crit_damage_bp` joined the stats they may hold.
+  - Conditional auras give their change through `Passives.aura_change`: per fallen ally, planted steps, or per point of Shield. `condition_key` became a running hash, so a planted step or a new Shield refolds them.
+  - A stacking boost keeps each stack's last tick (`StatusState.stack_ends`) and counts per stack. A Mark under `marks_stack` keeps `StatusState.stacks`. `Statuses.stacks_on` reads either, and both tags show the count ("UP 3").
+  - Lifesteal that heals goes through `EffectRunner.heal` (`by_lifesteal`; heal power from the attacker's `heal_bp`). `heal` now returns its overheal, which feeds Shadow Engine's strike. The strike is a DAMAGE line noted "overheal from lifesteal" that never lifesteals itself (`deal_hit`'s `steals`).
+  - A lifesteal that rounds to nothing now does nothing at all (it had logged a heal of 0 under Blood Communion).
+  - A heal's Shield from overheal adds the healer's `overheal_shield_bp` (`CombatSim.overheal_auras`).
+  - `SideRules` (`src/sim/defs/side_rules.gd`) holds the heroes' rules, read from a relic's `"rules"` and merged by `RunContent.hero_rules` into `FightSetup.hero_rules`. 5c-1's one rule is `marks_stack`.
+  - `RelicDef.mod_fits`: a `"mod_for": "ranged"` mod goes only to heroes whose path's kit has range 2 or more (`relic_mods(state, kit)`).
+- **Relics:** 11 more (75: 25 common, 21 rare, 14 epic, 10 legendary, 5 boss). Two statuses join them: `frenzy` (stacking, 3s) and `quickened` (stacking, the whole fight).
+- **The UI:** card lines for every piece ("+15% ATK after 2s still, +5% more every 2s after", "+0.05% ATK per point of Shield", "+20% crit damage per Marked stack on the enemy hit", "Ranged heroes: ...", "Marks heroes apply stack"), a boost's numbers wherever a card applies it ("Frenzy 3s (+2 ATSP a stack)"), and a lifesteal heal's "(lifesteal)" in the log.
+- **Tests:**
+  - `tests/sim/test_engine_pieces.gd` (14: each piece).
+  - `test_relics.gd` (5 more: the engines on a kit, Knife's Edge and Quickening in a fight, Blood Communion with Sanguine Frenzy, Hunter's Engine's rule, Snaring Shot only on Maren and Vell).
+  - The chaos fight takes four pieces: stacking Marks, Frenzy on lifesteal, an aura per Shield, and a stepping planted aura. Its seed moved from 26 to 37, the first that still has every piece.
+- **What moved:** no built kit's fight; the bench's fingerprints are unchanged. The run report: (being measured).
 
 ## Answered (2026-09-30)
 

@@ -80,7 +80,7 @@ const NOT_YET: Array[LogEntry.Kind] = [LogEntry.Kind.SYNERGY, LogEntry.Kind.DEED
 ## Statuses only the paths use (phase 4), and only relics (phase 5c step 5a;
 ## Sunder, covered by tests/run/test_relics.gd).
 const PATH_STATUSES: Array[String] = ["warded"]
-const RELIC_STATUSES: Array[String] = ["sunder"]
+const RELIC_STATUSES: Array[String] = ["sunder", "quickened"]
 
 
 func test_the_chaos_fight_uses_everything() -> void:
@@ -124,3 +124,8 @@ func test_the_chaos_fight_uses_everything() -> void:
 	assert_eq(log.of_kind(LogEntry.Kind.AREA_LANDED).filter(func(entry: LogEntry) -> bool: return entry.note == "broken by Salt Circle").size(), 1, "Salt Circle breaks one area")
 	assert_true(passive_sources.has("pyre") and passive_sources.has("veil") and passive_sources.has("toll"), "on_kill's Burn spreads, a status ending, a signature's boost")
 	assert_true(log.of_kind(LogEntry.Kind.DAMAGE).any(func(entry: LogEntry) -> bool: return entry.overkill > 0), "a hit's overkill")
+	# Phase 5c step 5c: the engines.
+	var applied: Array[LogEntry] = log.of_kind(LogEntry.Kind.STATUS_APPLIED)
+	assert_true(applied.any(func(entry: LogEntry) -> bool: return entry.status == "frenzy" and entry.stacks >= 2), "a stacking boost, two stacks at once")
+	assert_true(applied.any(func(entry: LogEntry) -> bool: return entry.status == "marked" and entry.stacks >= 2), "the heroes' Marks stack")
+	assert_true(auras.has("bulwark") and auras.has("still"), "an aura per Shield, and a planted one")

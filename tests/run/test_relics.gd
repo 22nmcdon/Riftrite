@@ -4,7 +4,8 @@ extends GutTest
 ## a kit, or on the run), the run rules, the shops' relics and rerolls, the
 ## pre-boss shop, and the boss relic choice. And its second (step 5b,
 ## section 11): the 5b relics, their effects at a fight's start and Salt
-## Circle in the run's fight setups, and Reliquary's doubling.
+## Circle in the run's fight setups, and Reliquary's doubling. And step 5c's
+## engines (section 12.1).
 
 const Bot = preload("res://tools/run_bot.gd")
 const K = preload("res://tests/sim/sim_test_kit.gd")
@@ -49,10 +50,12 @@ func _to_fight(flow: RunFlow) -> void:
 
 ## A standing hero (speed 0, range 2) hitting every tick for 10, with `relic`'s
 ## mod, against a sturdy dummy.
-func _duel(relic: String, attack: Dictionary = {}, dummy_hp: int = 100000) -> CombatSim:
+func _duel(relic: String, attack: Dictionary = {}, dummy_hp: int = 100000, stats: Dictionary = {}) -> CombatSim:
 	var basic: Dictionary = {"cooldown_ms": 50, "shot": false, "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]}
 	basic.merge(attack, true)
-	var hero: UnitDef = _run.relics[relic].mod.apply(K.kit("hero", {"stats": {"hp": 1000, "atk": 10, "speed": 0, "range": 2}, "basic_attack": basic}))
+	var all_stats: Dictionary = {"hp": 1000, "atk": 10, "speed": 0, "range": 2}
+	all_stats.merge(stats, true)
+	var hero: UnitDef = _run.relics[relic].mod.apply(K.kit("hero", {"stats": all_stats, "basic_attack": basic}))
 	var dummy: UnitDef = K.kit("dummy", {"stats": {"hp": dummy_hp, "speed": 0, "range": 2},
 		"basic_attack": {"cooldown_ms": 60000, "shot": false, "effects": [{"type": "damage", "amount": 0, "target": "target"}]}})
 	return K.sim(K.fight([K.at(hero, 3, 2)] as Array[UnitSetup], [K.foe(dummy, 3, 4)] as Array[UnitSetup]))
@@ -69,7 +72,7 @@ func test_the_tiers() -> void:
 	var counts: Array[int] = [0, 0, 0, 0, 0]
 	for id: String in _run.relic_ids:
 		counts[_run.relics[id].tier] += 1
-	assert_eq(counts, [25, 21, 8, 6, 4] as Array[int], "common, rare, epic, legendary, boss")
+	assert_eq(counts, [25, 21, 14, 10, 5] as Array[int], "common, rare, epic, legendary, boss")
 	for id: String in ["pilgrims_lantern", "hungry_blade"]:
 		assert_false(_run.relics.has(id), "%s is cut" % id)
 	assert_eq(_run.act.relic_prices, {"common": 5, "rare": 12, "epic": 20, "legendary": 30, "boss": 0} as Dictionary[String, int])
@@ -473,3 +476,63 @@ func test_overkill_tithe_pays_for_overkill() -> void:
 	var before: int = flow.state.shards
 	flow.record(Bot.formation(), result)
 	assert_eq(flow.state.shards - before, _run.act.pay[_run.content.encounters[flow.state.chosen].tier] + 2, "320 overkill: 2 shards")
+
+
+# --- step 5c: the engines ------------------------------------------------------------
+
+func _passive_ids(kit: UnitDef) -> Array:
+	return kit.passives.map(func(part: PartDef) -> String: return part.id)
+
+
+func test_the_engines_on_every_heros_kit() -> void:
+	var flow: RunFlow = _start()
+	var atk: int = flow.kit_of("maren").stats.get_stat(UnitStats.Stat.ATK)
+	_hold(flow, ["ashen_engine", "overflow_chalice", "blood_communion", "sanguine_frenzy", "knifes_edge", "stonebound", "wardens_engine", "shadow_engine", "quickening"])
+	var kit: UnitDef = flow.kit_of("maren")
+	assert_eq(kit.stats.get_stat(UnitStats.Stat.ATK), FixedMath.apply_bp(atk, 12000), "Ashen Engine: +20% ATK")
+	for id: String in ["ashen_engine", "overflow_chalice", "blood_communion", "blood_communion_given", "blood_communion_taken", "sanguine_frenzy", "knifes_edge",
+			"stonebound", "stonebound_mgk", "stonebound_def", "wardens_engine", "wardens_engine_atk", "wardens_engine_mgk", "shadow_engine", "shadow_engine_leech",
+			"shadow_engine_strike", "quickening"]:
+		assert_true(_passive_ids(kit).has(id), id)
+
+
+func test_knifes_edge_and_quickening_in_a_fight() -> void:
+	var edge: CombatSim = _duel("knifes_edge", {}, 100000, {"crit": 130})
+	K.step(edge, 1)
+	assert_eq(_hits(edge), [21], "x1.5, +2 x 30% past 100%")
+	var quick: CombatSim = _duel("quickening")
+	var atsp: int = quick.units[0].stats.get_stat(UnitStats.Stat.ATSP)
+	K.step(quick, 5)
+	assert_eq(quick.units[0].stats.get_stat(UnitStats.Stat.ATSP), atsp + 5, "+1 a hit")
+
+
+func test_blood_communion_and_sanguine_frenzy() -> void:
+	var flow: RunFlow = _start()
+	_hold(flow, ["gluttons_chalice", "blood_communion", "sanguine_frenzy"])
+	var kit: UnitDef = flow.kit_of("maren")
+	var setup: FightSetup = K.fight([K.at(kit, 3, 2)] as Array[UnitSetup], [K.foe(K.kit("dummy", {"stats": {"hp": 100000, "speed": 0, "range": 2},
+		"basic_attack": {"cooldown_ms": 60000, "shot": false, "effects": [{"type": "damage", "amount": 0, "target": "target"}]}}), 3, 4)] as Array[UnitSetup])
+	var fight: CombatSim = CombatSim.new(setup, _run.content)
+	fight.units[0].hp = 100
+	K.step(fight, 60)
+	var heals: Array[LogEntry] = K.entries(fight, LogEntry.Kind.HEAL).filter(func(entry: LogEntry) -> bool: return entry.lifesteal)
+	assert_false(heals.is_empty(), "lifesteal heals")
+	assert_true(heals.all(func(entry: LogEntry) -> bool: return entry.amount > 0), "never a heal of nothing")
+	assert_true(K.entries(fight, LogEntry.Kind.STATUS_APPLIED).any(func(entry: LogEntry) -> bool: return entry.status == "frenzy"), "and each heal frenzies")
+
+
+func test_hunters_engine_makes_marks_stack() -> void:
+	var setup: FightSetup = _setup_holding(["hunters_engine"])
+	assert_true(setup.hero_rules.marks_stack)
+	assert_false(_setup_holding(["keen_edge"]).hero_rules.marks_stack, "only with it")
+	assert_true(ModInfo.relic_numbers(_run.relics["hunters_engine"], _run.content).contains("Marks heroes apply stack"))
+
+
+func test_snaring_shot_is_for_ranged_heroes_only() -> void:
+	var flow: RunFlow = _start()
+	_hold(flow, ["snaring_shot"])
+	assert_true(_passive_ids(flow.kit_of("maren")).has("snaring_shot"), "Maren shoots from range")
+	assert_true(_passive_ids(flow.kit_of("vell")).has("snaring_shot"), "so does Vell")
+	assert_false(_passive_ids(flow.kit_of("brannoc")).has("snaring_shot"), "Brannoc is melee")
+	assert_true(ModInfo.relic_numbers(_run.relics["snaring_shot"], _run.content).begins_with("Ranged heroes: "))
+

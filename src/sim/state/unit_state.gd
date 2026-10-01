@@ -27,11 +27,15 @@ var stats: UnitStats
 ## What auras do to it, indexed by AuraDef.Stat: multipliers (10000 = x1)
 ## for the output and unit stats, additions for crit chance and cooldown.
 var aura_bp: Array[int] = []
-## Its damage auras against some targets (AuraDef.vs; phase 5c step 3): each
-## condition and its power bonus (bp), folded in with the other auras.
+## Its auras worked out per hit (AuraDef.is_per_hit; phase 5c steps 3, 5b,
+## 5c): each one's condition (null: any target), stat, amount (bp), whether
+## only its basic attack's hits count, and the status whose stacks on the
+## target multiply it (""), folded in with the other auras.
 var vs_conditions: Array[UnitCondition] = []
 var vs_stats: Array[int] = []
 var vs_bonus_bp: Array[int] = []
+var vs_basic: Array[bool] = []
+var vs_per_stacks: Array[String] = []
 var max_hp: int
 var hp: int
 var shield: int = 0

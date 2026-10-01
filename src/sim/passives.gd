@@ -96,6 +96,8 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 		unit.vs_conditions.clear()
 		unit.vs_stats.clear()
 		unit.vs_bonus_bp.clear()
+		unit.vs_basic.clear()
+		unit.vs_per_stacks.clear()
 	var now_active: Array[String] = []
 	for holder: UnitState in sim.units:
 		if not holder.alive:
@@ -105,35 +107,36 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 				continue
 			if part.aura.while_taunting and not taunting(sim, holder):
 				continue
-			var times: int = 1
-			if part.aura.is_conditional():
-				if not condition_holds(sim, holder, part.aura):
-					continue
-				if part.aura.per_fallen_ally:
-					times = fallen_allies(sim, holder)
+			if part.aura.is_conditional() and not condition_holds(sim, holder, part.aura):
+				continue
 			now_active.append("%s:%s" % [holder.id, part.id])
+			# A factor's change adds to the others' of its stat (the damage
+			# rule, phase 5c): x1.1 and x1.1 make x1.2.
+			var change: int = aura_change(sim, holder, part.aura)
 			var targets: Array[UnitState] = [holder]
 			if part.aura.target == AuraDef.Target.ALL_ALLIES:
 				targets = sim.standing_allies_of(holder)
 			for target: UnitState in targets:
-				if part.aura.vs != null:
-					# Only against targets that meet it (phase 5c steps 3 and 5b);
-					# worked out per hit (EffectRunner).
+				if part.aura.is_per_hit():
+					# Only on some hits (phase 5c steps 3, 5b, 5c: against
+					# targets that meet it, its basic attack's, per stack on the
+					# unit hit); worked out per hit (EffectRunner).
 					target.vs_conditions.append(part.aura.vs)
 					target.vs_stats.append(part.aura.stat)
-					target.vs_bonus_bp.append(times * (part.aura.value if _is_additive(part.aura.stat) else part.aura.value - FixedMath.BP_ONE))
+					target.vs_bonus_bp.append(change)
+					target.vs_basic.append(part.aura.from_basic)
+					target.vs_per_stacks.append(part.aura.per_target_stacks)
 					continue
-				for i: int in times:
-					# A factor's change adds to the others' of its stat (the
-					# damage rule, phase 5c): x1.1 and x1.1 make x1.2.
-					target.aura_bp[part.aura.stat] += part.aura.value if _is_additive(part.aura.stat) else part.aura.value - FixedMath.BP_ONE
-	# Timed boosts (phase 5c step 5b) count like the unit's own auras.
+				target.aura_bp[part.aura.stat] += change
+	# Timed boosts (phase 5c step 5b) count like the unit's own auras, once
+	# per stack (step 5c).
 	for unit: UnitState in sim.units:
 		for state: StatusState in unit.statuses:
 			if state.def.kind == StatusDef.Kind.BOOST:
+				var stacks: int = state.timed_stacks()
 				for i: int in state.def.boost_stats.size():
 					var stat: int = state.def.boost_stats[i]
-					unit.aura_bp[stat] += state.def.boost_values[i] if _is_additive(stat) else state.def.boost_values[i] - FixedMath.BP_ONE
+					unit.aura_bp[stat] += stacks * (state.def.boost_values[i] if _is_additive(stat) else state.def.boost_values[i] - FixedMath.BP_ONE)
 	for unit: UnitState in sim.units:
 		unit.stats = unit.base_stats.copy()
 		for aura_stat: int in AuraDef.Stat.size():
@@ -143,6 +146,7 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 			unit.stats.values[stat] = FixedMath.apply_bp(unit.base_stats.values[stat], factor(unit, aura_stat))
 		unit.stats.values[UnitStats.Stat.RANGE] = unit.base_stats.values[UnitStats.Stat.RANGE] + unit.aura_bp[AuraDef.Stat.RANGE]
 		unit.stats.values[UnitStats.Stat.ATSP] += unit.aura_bp[AuraDef.Stat.ATSP]
+		unit.stats.values[UnitStats.Stat.DEF] += unit.aura_bp[AuraDef.Stat.DEF]
 		unit.attack.set_cooldown_add(unit.aura_bp[AuraDef.Stat.COOLDOWN_BP])
 		unit.attack_rate_bp = sim.attack_rate_bp(unit)
 		unit.refresh_reach()
@@ -163,6 +167,21 @@ static func _log_changes(sim: CombatSim, was_active: Array[String], now_active: 
 			var entry: LogEntry = sim.new_entry(LogEntry.Kind.AURA, EffectSource.make(holder.id, part.id, part.name))
 			entry.note = ("starts: %s" % part.aura.describe()) if not was else "ends"
 			sim.combat_log.add(entry)
+
+
+## An active aura's change (bp, or points for an additive stat) on
+## `holder`: its value's change, once per fallen ally, grown by its planted
+## steps (phase 5c step 5c), or worked out from the holder's Shield.
+static func aura_change(sim: CombatSim, holder: UnitState, aura: AuraDef) -> int:
+	if aura.per_shield_bp > 0:
+		return holder.shield * aura.per_shield_bp
+	var change: int = aura.value if _is_additive(aura.stat) else aura.value - FixedMath.BP_ONE
+	if aura.per_fallen_ally:
+		change *= fallen_allies(sim, holder)
+	if aura.step_ticks > 0:
+		@warning_ignore("integer_division")
+		change += aura.step_value * ((sim.tick - holder.moved_at - aura.after_ticks) / aura.step_ticks)
+	return change
 
 
 ## True if one of `holder`'s Taunts is in effect on a standing enemy.
@@ -196,6 +215,8 @@ static func condition_holds(sim: CombatSim, holder: UnitState, aura: AuraDef) ->
 			if not (sim.heroes if holder.side == EffectSource.Team.HEROES else sim.enemies).any(
 					func(unit: UnitState) -> bool: return unit != holder and unit.alive and unit.def.id == aura.ally_kit):
 				return false
+	if aura.per_shield_bp > 0 and holder.shield <= 0:
+		return false
 	return not aura.per_fallen_ally or fallen_allies(sim, holder) > 0
 
 
@@ -217,16 +238,16 @@ static func has_conditional_aura(unit: UnitState) -> bool:
 
 
 ## A number that changes whenever one of the unit's conditional auras turns
-## on or off, or a per-fallen-ally one counts differently.
+## on or off, or changes how much it gives (per fallen ally, a planted
+## step, per Shield).
 static func condition_key(sim: CombatSim, unit: UnitState) -> int:
 	var key: int = 0
-	var bit: int = 1
 	for part: PartDef in unit.def.passives:
 		if part.kind != PartDef.Kind.AURA or not part.aura.is_conditional():
 			continue
+		key = key * 1000003
 		if unit.alive and condition_holds(sim, unit, part.aura):
-			key += bit * (1 + (fallen_allies(sim, unit) if part.aura.per_fallen_ally else 0))
-		bit *= 64
+			key += 1 + aura_change(sim, unit, part.aura)
 	return key
 
 
@@ -238,21 +259,31 @@ static func has_aura_of(unit: UnitState, stat: AuraDef.Stat) -> bool:
 	return false
 
 
-## True if the unit has a damage aura against some targets ("vs").
+## True if the unit has an aura worked out per hit ("vs", "from_basic",
+## "per_target_stacks").
 static func has_vs_aura(unit: UnitState) -> bool:
 	for part: PartDef in unit.def.passives:
-		if part.kind == PartDef.Kind.AURA and part.aura.vs != null:
+		if part.kind == PartDef.Kind.AURA and part.aura.is_per_hit():
 			return true
 	return false
 
 
-## What `attacker`'s "vs" auras of `stat` give against `target` (bp): a
-## damage_bp aura's power, a crit_chance_bp or lifesteal_bp aura's amount.
-static func vs_bonus_bp(attacker: UnitState, target: UnitState, stat: int = AuraDef.Stat.DAMAGE_BP) -> int:
+## What `attacker`'s per-hit auras of `stat` give on a hit on `target` by
+## `ability_id` (bp): a damage_bp aura's power, a crit_chance_bp,
+## lifesteal_bp, or crit_damage_bp aura's amount. Each counts if the target
+## meets its "vs", the hit is its basic attack's ("from_basic"), and times
+## the target's stacks of its "per_target_stacks".
+static func vs_bonus_bp(attacker: UnitState, target: UnitState, stat: int = AuraDef.Stat.DAMAGE_BP, ability_id: String = "") -> int:
 	var bonus: int = 0
 	for i: int in attacker.vs_conditions.size():
-		if attacker.vs_stats[i] == stat and attacker.vs_conditions[i].holds(target):
-			bonus += attacker.vs_bonus_bp[i]
+		if attacker.vs_stats[i] != stat:
+			continue
+		if attacker.vs_conditions[i] != null and not attacker.vs_conditions[i].holds(target):
+			continue
+		if attacker.vs_basic[i] and ability_id != attacker.def.basic_attack.id:
+			continue
+		var times: int = 1 if attacker.vs_per_stacks[i].is_empty() else Statuses.stacks_on(target, attacker.vs_per_stacks[i])
+		bonus += times * attacker.vs_bonus_bp[i]
 	return bonus
 
 

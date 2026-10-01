@@ -88,6 +88,10 @@ Phase 5 built nine relics with costs (`../rebuild-phase5-run.md`). What becomes 
 
 Section 11 of the same plan: the twelve pieces relics share (effects at a fight's start, lifesteal on its own log line, crit damage and sure crits, timed boosts, a status ending, lengthening and extending statuses, the targets around a unit, an ally close by, Salt Circle, overkill, Reliquary) and the 20 relics they make possible. **64 relics are built** (25 common, 21 rare, 8 epic, 6 legendary, 4 boss): commons and rares are complete. The rest (6 epics, 9 legendaries, and the boss relics that each rewrite a rule) come with 5c (engines and chains) and 5d (bond relics).
 
+## What's built (phase 5c step 5c-1, 2026-10-01)
+
+Section 12.1 of the same plan: the engines, as kit mods with small new pieces (and Hunter's Engine's one hero rule, Marks stacking). **75 relics are built** (25 common, 21 rare, 14 epic, 10 legendary, 5 boss): commons, rares, and epics are complete. Step 5c-2 builds the hero rules (Crown of Stars, Shared Pain, The Hungering Rift, Overcharge, Second Dawn, and six boss relics); 5d the bond relics.
+
 ## Open questions
 
 - **Stacking:** can you buy the same common twice? If yes, pure-stat commons become a "go wide" plan (with Reliquary and Reliquary Lamp).

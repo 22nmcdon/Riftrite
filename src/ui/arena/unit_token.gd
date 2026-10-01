@@ -216,6 +216,9 @@ static func status_tag(state: StatusState) -> Array:
 	if state.def.kind == StatusDef.Kind.DAMAGE_OVER_TIME:
 		tag = "%s %d" % [UiStyle.STATUS_TAGS.get(state.def.id, state.def.name.left(3).to_upper()), state.total_stacks()]
 		return [tag, UiStyle.STATUS_COLORS.get(state.def.id, UiStyle.EMBER)]
+	if state.timed_stacks() > 1:
+		# A stacking boost, or stacked Marks (phase 5c step 5c): "UP 3".
+		tag = "%s %d" % [tag, state.timed_stacks()]
 	return [tag, STATUS_COLORS.get(state.def.kind, UiStyle.TEXT)]
 
 

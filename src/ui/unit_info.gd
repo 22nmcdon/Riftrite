@@ -25,6 +25,7 @@ const EVENT_WORDS: Dictionary[int, String] = {
 	EffectDef.Trigger.ON_HOLDER_HIT: "hit", EffectDef.Trigger.ON_SHIELD_BROKEN: "Shield broken",
 	EffectDef.Trigger.ON_ALLY_ABILITY: "ally's signature",
 	EffectDef.Trigger.ON_STATUS_ENDED: "status running out",
+	EffectDef.Trigger.ON_LIFESTEAL: "lifesteal heal",
 }
 const ORDINALS: Array[String] = ["th", "st", "nd", "rd"]
 const CHATTER: Array[LogEntry.Kind] = [LogEntry.Kind.MOVE, LogEntry.Kind.STOP, LogEntry.Kind.TARGET]
@@ -240,10 +241,16 @@ static func passive_trigger_text(effect: EffectDef) -> String:
 
 static func aura_text(aura: AuraDef) -> String:
 	var text: String
-	if aura.stat == AuraDef.Stat.RANGE:
+	if aura.per_shield_bp > 0:
+		text = "+%s %s per point of Shield" % [ValueBreakdown._percent(aura.per_shield_bp), AuraDef.STAT_LABELS[aura.stat]]
+	elif aura.stat == AuraDef.Stat.RANGE:
 		text = "%+d range" % aura.value
 	elif aura.stat == AuraDef.Stat.ATSP:
 		text = "%+d ATSP" % aura.value
+	elif aura.stat == AuraDef.Stat.DEF:
+		text = "%+d DEF" % aura.value
+	elif aura.stat == AuraDef.Stat.LIFESTEAL_HEALS:
+		text = "lifesteal counts as healing"
 	elif aura.stat == AuraDef.Stat.DAMAGE_REDUCED_BP:
 		text = "%s damage taken" % signed_percent(-aura.value)
 	elif aura.is_additive():
@@ -258,6 +265,9 @@ static func aura_text(aura: AuraDef) -> String:
 			text += " while taunting"
 		AuraDef.While.PLANTED:
 			text += " after %s still" % seconds(aura.after_ticks)
+			if aura.step_ticks > 0:
+				var step: String = "%+d" % aura.step_value if aura.is_additive() else signed_percent(aura.step_value)
+				text += ", %s more every %s after" % [step, seconds(aura.step_ticks)]
 		AuraDef.While.BELOW_HP:
 			text += " below %s HP" % ValueBreakdown._percent(aura.below_bp)
 		AuraDef.While.STATE:
@@ -271,8 +281,27 @@ static func aura_text(aura: AuraDef) -> String:
 		text += " against enemies that are %s" % aura.vs.describe()
 	if aura.per_fallen_ally:
 		text += " per fallen ally"
+	if aura.from_basic:
+		text += " on its basic attacks"
+	if not aura.per_target_stacks.is_empty():
+		text += " per %s stack on the enemy hit" % aura.per_target_stacks.replace("_", " ").capitalize()
 	if aura.window_until_ticks >= 0:
 		text += " until %s" % seconds(aura.window_until_ticks)
+	return text
+
+
+## What a boost status gives: "+20% ATK, +20% MGK", and for a stacking one
+## "+2 ATSP a stack" ("..., the whole fight" with no duration).
+static func boost_text(status: StatusDef) -> String:
+	var parts: Array[String] = []
+	for i: int in status.boost_stats.size():
+		var aura := AuraDef.new()
+		aura.stat = status.boost_stats[i] as AuraDef.Stat
+		aura.value = status.boost_values[i]
+		parts.append(aura_text(aura))
+	var text: String = ", ".join(parts)
+	if status.stacking:
+		text += " a stack" + ("" if status.duration_ticks > 0 else ", the whole fight")
 	return text
 
 
@@ -365,12 +394,20 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 			return _amount(effect, kit, "Shield") + _to_all(effect)
 		EffectDef.Type.APPLY_STATUS:
 			var status: StatusDef = content.statuses[effect.status_id]
+			if not effect.stacks_of.is_empty() and effect.stacks_share_bp > 0:
+				return "%s of that unit's %s (at least 1)" % [ValueBreakdown._percent(effect.stacks_share_bp), _status_name(effect.stacks_of, content)]
 			if not effect.stacks_of.is_empty():
 				return "as much %s as that unit had" % _status_name(effect.stacks_of, content)
+			if effect.fresh_only:
+				var lasts: int = effect.duration_ticks if effect.duration_ticks > 0 else status.duration_ticks
+				return "%s %s, if it isn't %s already" % [status.name, seconds(lasts), Keywords.label(status.keyword) if not status.keyword.is_empty() else "under it"]
 			if status.kind == StatusDef.Kind.DAMAGE_OVER_TIME:
 				return "%d %s%s" % [effect.stacks, status.name, _to_all(effect)]
 			var ticks: int = effect.duration_ticks if effect.duration_ticks > 0 else status.duration_ticks
-			return ("%s %s" % [status.name, seconds(ticks)] if ticks > 0 else status.name) + _to_all(effect)
+			var named: String = "%s %s" % [status.name, seconds(ticks)] if ticks > 0 else status.name
+			if status.kind == StatusDef.Kind.BOOST:
+				named += " (%s)" % boost_text(status)
+			return named + _to_all(effect)
 		EffectDef.Type.EXTEND_STATUS:
 			return "its %s lasts %s longer" % [_status_name(effect.status_id, content), seconds(effect.duration_ticks)]
 		EffectDef.Type.CLEANSE:

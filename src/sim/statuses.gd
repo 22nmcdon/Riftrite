@@ -23,7 +23,10 @@ extends RefCounted
 ##   engaged: held by an engager (Engage sets and clears it with hold and
 ##            release; effects can't apply it).
 ## A timed status lasts its duration from the moment it lands; a new
-## application refreshes it (and takes over as its source).
+## application refreshes it (and takes over as its source). Phase 5c step
+## 5c: a stacking boost adds a stack with its own timer instead, and under
+## the heroes' rule marks_stack (Hunter's Engine) a hero's Mark adds a
+## stack as it refreshes.
 
 
 static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: int, duration_ticks: int, source: EffectSource) -> void:
@@ -48,10 +51,23 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: 
 	entry.target = target.id
 	entry.status = def.id
 	entry.status_name = def.name
-	if def.is_timed():
+	if def.stacking:
+		state.source = source
+		var lasts: int = duration_ticks if duration_ticks > 0 else def.duration_ticks
+		state.stack_ends.append(sim.tick + lasts if lasts > 0 else StatusState.NEVER)
+		if def.max_stacks > 0 and state.stack_ends.size() > def.max_stacks:
+			state.stack_ends.remove_at(0)
+		state.ends_at = int(state.stack_ends.max())
+		entry.end_tick = state.ends_at if state.ends_at < StatusState.NEVER else -1
+		entry.stacks = state.stack_ends.size()
+		entry.amount = 1
+	elif def.is_timed():
 		state.source = source
 		state.ends_at = sim.tick + (duration_ticks if duration_ticks > 0 else def.duration_ticks)
 		entry.end_tick = state.ends_at
+		if not fresh and def.kind == StatusDef.Kind.MARKED and sim.hero_rules.marks_stack and _by_heroes(sim, source):
+			state.stacks += 1
+			entry.stacks = state.stacks
 	else:
 		state.add_stacks(source, stacks)
 		if def.max_stacks > 0 and state.total_stacks() > def.max_stacks:
@@ -61,8 +77,26 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: 
 	sim.combat_log.add(entry)
 	if def.kind == StatusDef.Kind.TAUNT and sim.taunt_auras:
 		sim.refold_auras()
-	elif def.kind == StatusDef.Kind.BOOST and fresh:
+	elif def.kind == StatusDef.Kind.BOOST and (fresh or def.stacking):
 		sim.refold_auras()
+
+
+## True if `source` is the heroes' side: a hero (or its summon), or the
+## heroes' relic.
+static func _by_heroes(sim: CombatSim, source: EffectSource) -> bool:
+	if source.relic_side >= 0:
+		return source.relic_side == EffectSource.Team.HEROES
+	var unit: UnitState = sim.unit_by_id(source.unit_id)
+	return unit != null and unit.side == EffectSource.Team.HEROES
+
+
+## The stacks of `status_id` on `unit`: damage over time's, a timed status's
+## (1, or more when it stacks), or 0 if it isn't there.
+static func stacks_on(unit: UnitState, status_id: String) -> int:
+	var state: StatusState = find(unit, status_id)
+	if state == null:
+		return 0
+	return state.timed_stacks() if state.def.is_timed() else state.total_stacks()
 
 
 ## A timed status already on `target` lasts `ticks` longer (phase 5c step 5b,
@@ -90,6 +124,9 @@ static func tick_all(sim: CombatSim) -> void:
 		for state: StatusState in unit.statuses.duplicate():
 			if state.def.kind == StatusDef.Kind.ENGAGED:
 				continue
+			if state.def.stacking:
+				_drop_stacks(sim, unit, state)
+				continue
 			if state.def.is_timed():
 				if sim.tick >= state.ends_at:
 					_end(sim, unit, state)
@@ -98,6 +135,16 @@ static func tick_all(sim: CombatSim) -> void:
 			if state.interval_left <= 0:
 				state.interval_left = state.def.interval_ticks
 				_deal_damage_over_time(sim, unit, state)
+
+
+## A stacking boost's stacks whose time is up go; the last one ends it.
+static func _drop_stacks(sim: CombatSim, unit: UnitState, state: StatusState) -> void:
+	var before: int = state.stack_ends.size()
+	state.stack_ends.assign(state.stack_ends.filter(func(end: int) -> bool: return sim.tick < end))
+	if state.stack_ends.is_empty():
+		_end(sim, unit, state)
+	elif state.stack_ends.size() != before:
+		sim.refold_auras()
 
 
 ## Puts the Engaged status on `unit`, credited to `source` (the engager's

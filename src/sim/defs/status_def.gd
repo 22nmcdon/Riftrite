@@ -26,7 +26,10 @@ extends RefCounted
 ##             can hide a unit)
 ##   boost:    duration_ms, "auras": [{"stat": "atsp", "value": 30}] (AuraDef
 ##             stats; counted like auras while it lasts; phase 5c step 5b,
-##             timed boosts)
+##             timed boosts). "stacking": true (step 5c): each application
+##             adds a stack with its own timer (no duration_ms: it lasts the
+##             fight), the auras count once per stack, and "max_stacks"
+##             (optional) drops the oldest past it
 ## Any kind may carry a "keyword" (Keywords.NAMES; phase 5c step 3): the
 ## name cards use for a unit with this status (Marked, Rooted, Burning,
 ## Stealthed). It changes nothing in a fight by itself.
@@ -63,6 +66,8 @@ var boost_stats: Array[int] = []
 var boost_values: Array[int] = []
 ## The keyword a unit with it has ("": none).
 var keyword: String = ""
+## boost: each application adds a stack with its own timer (phase 5c step 5c).
+var stacking: bool = false
 
 
 static func read(reader: DataReader) -> StatusDef:
@@ -89,7 +94,13 @@ static func read(reader: DataReader) -> StatusDef:
 	elif def.kind == Kind.ENGAGED:
 		pass
 	else:
-		def.duration_ticks = reader.req_ticks("duration_ms", FixedMath.MS_PER_TICK)
+		if def.kind == Kind.BOOST:
+			def.stacking = reader.opt_bool("stacking", false)
+		if def.stacking:
+			def.duration_ticks = reader.opt_ticks("duration_ms", 0, FixedMath.MS_PER_TICK)
+			def.max_stacks = reader.opt_int("max_stacks", 0, 0)
+		else:
+			def.duration_ticks = reader.req_ticks("duration_ms", FixedMath.MS_PER_TICK)
 		match def.kind:
 			Kind.SLOW:
 				def.slow_bp = reader.req_int("slow_bp", 1, FixedMath.BP_ONE)

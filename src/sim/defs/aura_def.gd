@@ -45,6 +45,24 @@ extends RefCounted
 ## speed), and damage_reduced_bp (takes that much less damage, like Warded);
 ## and "while": "ally_near", "within_hexes": 1 (on while another standing
 ## ally is that close).
+## Phase 5c step 5c adds stats that add: overheal_shield_bp (what its heals
+## would restore past full HP comes back as that share of Shield; Overflow
+## Chalice), lifesteal_heals (above 0: its lifesteal is a heal; Blood
+## Communion), crit_overflow_bp (a crit's chance past 100% adds this share of
+## itself to crit damage; Knife's Edge), def (DEF points), and
+## overheal_strike_bp (what its lifesteal would heal past full HP hits its
+## target for this share; Shadow Engine). And:
+##   "step": {"every_ms": 2000, "value": 500}   a planted aura grows by
+##                                          `value` for every `every_ms` more
+##                                          it stays planted (Stonebound)
+##   "per_shield_bp": 5                     its change is the holder's Shield
+##                                          times this (no "value"; on while
+##                                          it has Shield; Warden's Engine)
+##   "per_target_stacks": "marked"          per hit: times the stacks of that
+##                                          status on the unit hit (Hunter's
+##                                          Engine)
+##   "from_basic": true                     per hit: only its basic attack's
+##                                          hits (Shadow Engine)
 ## "vs": {...} (a UnitCondition; damage_bp, crit_chance_bp, and lifesteal_bp;
 ## phase 5c steps 3 and 5b): the bonus
 ## counts only on hits against targets that meet it, as power (Decision 12:
@@ -57,7 +75,8 @@ extends RefCounted
 
 enum Target { HOLDER, ALL_ALLIES }
 enum Stat { DAMAGE_BP, HEAL_BP, SHIELD_BP, OVER_TIME_BP, CRIT_CHANCE_BP, COOLDOWN_BP, ATK_BP, MGK_BP, DEF_BP, ATSP_BP, CRIT_BP, RANGE, HEALING_TAKEN_BP,
-	LIFESTEAL_BP, CRIT_DAMAGE_BP, ATSP, DAMAGE_REDUCED_BP }
+	LIFESTEAL_BP, CRIT_DAMAGE_BP, ATSP, DAMAGE_REDUCED_BP,
+	OVERHEAL_SHIELD_BP, LIFESTEAL_HEALS, CRIT_OVERFLOW_BP, DEF, OVERHEAL_STRIKE_BP }
 ## What turns an aura on, beyond its window.
 enum While { ALWAYS, TAUNTING, PLANTED, BELOW_HP, ALLY_STANDING, STATE, ALLY_NEAR }
 
@@ -68,17 +87,21 @@ const STAT_NAMES: Array[String] = [
 	"damage_bp", "heal_bp", "shield_bp", "over_time_bp", "crit_chance_bp", "cooldown_bp",
 	"atk_bp", "mgk_bp", "def_bp", "atsp_bp", "crit_bp", "range", "healing_taken_bp",
 	"lifesteal_bp", "crit_damage_bp", "atsp", "damage_reduced_bp",
+	"overheal_shield_bp", "lifesteal_heals", "crit_overflow_bp", "def", "overheal_strike_bp",
 ]
 const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp", "ally_standing", "state", "ally_near"]
 ## The stats that add rather than multiply. The rest are factors (x1.1);
 ## several of one stat add their changes (the damage rule, phase 5c).
-const ADDITIVE: Array[Stat] = [Stat.CRIT_CHANCE_BP, Stat.COOLDOWN_BP, Stat.RANGE, Stat.LIFESTEAL_BP, Stat.CRIT_DAMAGE_BP, Stat.ATSP, Stat.DAMAGE_REDUCED_BP]
-## The stats a "vs" may hold for.
-const VS_STATS: Array[Stat] = [Stat.DAMAGE_BP, Stat.CRIT_CHANCE_BP, Stat.LIFESTEAL_BP]
+const ADDITIVE: Array[Stat] = [Stat.CRIT_CHANCE_BP, Stat.COOLDOWN_BP, Stat.RANGE, Stat.LIFESTEAL_BP, Stat.CRIT_DAMAGE_BP, Stat.ATSP, Stat.DAMAGE_REDUCED_BP,
+	Stat.OVERHEAL_SHIELD_BP, Stat.LIFESTEAL_HEALS, Stat.CRIT_OVERFLOW_BP, Stat.DEF, Stat.OVERHEAL_STRIKE_BP]
+## The stats an aura worked out per hit may hold ("vs", "from_basic",
+## "per_target_stacks").
+const VS_STATS: Array[Stat] = [Stat.DAMAGE_BP, Stat.CRIT_CHANCE_BP, Stat.LIFESTEAL_BP, Stat.CRIT_DAMAGE_BP]
 const STAT_LABELS: Array[String] = [
 	"damage", "healing", "shields", "damage over time", "crit chance", "cooldown",
 	"ATK", "MGK", "DEF", "ATSP", "CRIT", "range", "healing taken",
 	"lifesteal", "crit damage", "ATSP", "damage taken",
+	"of overheal as Shield", "lifesteal heals", "of crit chance past 100% as crit damage", "DEF", "of lifesteal overheal as damage to its target",
 ]
 ## Unit stat for each unit-stat aura stat (ATK_BP -> Stat.ATK, ...).
 const UNIT_STAT_FOR: Dictionary[int, int] = {
@@ -114,6 +137,15 @@ var state: UnitCondition = null
 var vs: UnitCondition = null
 ## ally_near: how close (plane units).
 var near_range: int = 0
+## planted: every this many ticks more, it grows by step_value (0: never).
+var step_ticks: int = 0
+var step_value: int = 0
+## Its change is the holder's Shield times this (0: its value).
+var per_shield_bp: int = 0
+## Per hit: times the stacks of this status on the unit hit ("": once).
+var per_target_stacks: String = ""
+## Per hit: only its holder's basic attack's hits.
+var from_basic: bool = false
 
 
 static func read(reader: DataReader) -> AuraDef:
@@ -122,8 +154,12 @@ static func read(reader: DataReader) -> AuraDef:
 	var stat_name: String = reader.req_choice("stat", STAT_NAMES)
 	def.target = maxi(TARGET_NAMES.find(target_name), 0) as Target
 	def.stat = maxi(STAT_NAMES.find(stat_name), 0) as Stat
-	if def.is_additive():
-		def.value = reader.req_int("value", -FixedMath.BP_ONE, FixedMath.BP_ONE)
+	if reader.has("per_shield_bp"):
+		def.per_shield_bp = reader.req_int("per_shield_bp", 1, FixedMath.BP_ONE)
+		if reader.has("value"):
+			reader.error("an aura per Shield takes its change from the Shield, so it has no \"value\"")
+	elif def.is_additive():
+		def.value = reader.req_int("value", -FixedMath.BP_ONE, 10 * FixedMath.BP_ONE)
 	else:
 		def.value = reader.req_int("value", 0)
 	if reader.has("label"):
@@ -145,9 +181,23 @@ static func read(reader: DataReader) -> AuraDef:
 	if reader.has("vs"):
 		def.vs = UnitCondition.read(reader.req_object("vs"))
 		if not VS_STATS.has(def.stat):
-			reader.error("only a damage_bp, crit_chance_bp, or lifesteal_bp aura can be \"vs\" some targets")
+			reader.error("only a damage_bp, crit_chance_bp, lifesteal_bp, or crit_damage_bp aura can be \"vs\" some targets")
 	if reader.has("per"):
 		def.per_fallen_ally = reader.req_choice("per", ["fallen_ally"]) == "fallen_ally"
+	if reader.has("step"):
+		var step: DataReader = reader.req_object("step")
+		if step != null:
+			def.step_ticks = step.req_ticks("every_ms", FixedMath.MS_PER_TICK)
+			def.step_value = step.req_int("value")
+			step.finish()
+		if def.while_kind != While.PLANTED:
+			reader.error("only a planted aura has a \"step\"")
+	def.per_target_stacks = reader.opt_string("per_target_stacks", "")
+	def.from_basic = reader.opt_bool("from_basic", false)
+	if (def.from_basic or not def.per_target_stacks.is_empty()) and not VS_STATS.has(def.stat):
+		reader.error("only a damage_bp, crit_chance_bp, lifesteal_bp, or crit_damage_bp aura is worked out per hit")
+	if def.per_shield_bp > 0 and def.is_per_hit():
+		reader.error("an aura per Shield can't also be worked out per hit")
 	EffectDef.read_window(reader, def)
 	reader.finish()
 	return def
@@ -167,13 +217,21 @@ func is_additive() -> bool:
 
 ## Checked each tick, not just when a window opens or closes.
 func is_conditional() -> bool:
-	return while_kind == While.PLANTED or while_kind == While.BELOW_HP or while_kind == While.ALLY_STANDING or while_kind == While.STATE or while_kind == While.ALLY_NEAR or per_fallen_ally
+	return while_kind == While.PLANTED or while_kind == While.BELOW_HP or while_kind == While.ALLY_STANDING or while_kind == While.STATE \
+		or while_kind == While.ALLY_NEAR or per_fallen_ally or per_shield_bp > 0
+
+
+## Worked out per hit (EffectRunner), not folded into the unit's stats.
+func is_per_hit() -> bool:
+	return vs != null or from_basic or not per_target_stacks.is_empty()
 
 
 ## For the log, e.g. "x2 damage for its holder" or "+20% crit chance for all allies".
 func describe() -> String:
 	var amount: String
-	if stat == Stat.RANGE:
+	if per_shield_bp > 0:
+		amount = "+%s %s per point of Shield" % [ValueBreakdown._percent(per_shield_bp), STAT_LABELS[stat]]
+	elif stat == Stat.RANGE or stat == Stat.ATSP or stat == Stat.DEF:
 		amount = "%s%d %s" % ["+" if value >= 0 else "", value, STAT_LABELS[stat]]
 	elif is_additive():
 		amount = "%s%s %s" % ["+" if value >= 0 else "", ValueBreakdown._percent(value), STAT_LABELS[stat]]
@@ -185,6 +243,8 @@ func describe() -> String:
 			condition = " while taunting"
 		While.PLANTED:
 			condition = " once it hasn't moved for %s" % _seconds(after_ticks)
+			if step_ticks > 0:
+				condition += ", %s%d more every %s" % ["+" if step_value >= 0 else "", step_value, _seconds(step_ticks)]
 		While.BELOW_HP:
 			condition = " while below %s HP" % ValueBreakdown._percent(below_bp)
 		While.ALLY_STANDING:
@@ -198,6 +258,10 @@ func describe() -> String:
 		condition = " against %s%s" % [vs.describe(), condition]
 	if per_fallen_ally:
 		condition += " for each fallen ally"
+	if not per_target_stacks.is_empty():
+		condition += " per %s stack on the unit hit" % per_target_stacks.replace("_", " ")
+	if from_basic:
+		condition += " on its basic attack's hits"
 	return "%s for %s%s" % [amount, TARGET_LABELS[target], condition]
 
 

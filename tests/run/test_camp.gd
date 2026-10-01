@@ -54,7 +54,7 @@ func test_the_camp_content_loads() -> void:
 	assert_true(_run.is_valid(), "\n".join(_run.errors))
 	assert_eq(_run.camps.places.map(func(place: CampsDef.Place) -> String: return place.id), ["waystone", "ruined_chapel", "hunters_blind", "rift_scar"])
 	assert_eq(_run.camps.options.size(), CampsDef.OPTIONS.size())
-	assert_eq([_run.relic_ids.size(), _run.bond_ids.size()], [64, 3])
+	assert_eq([_run.relic_ids.size(), _run.bond_ids.size()], [75, 3])
 
 
 func test_arriving_at_camp() -> void:

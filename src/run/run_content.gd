@@ -184,13 +184,14 @@ func loadout_tactic(hero: RunState.Hero) -> TacticDef:
 
 
 ## The kit mods the run's relics give every hero, in the order taken; a
-## growing one's, its steps so far (phase 5c step 4).
-func relic_mods(state: RunState) -> Array[KitMod]:
+## growing one's, its steps so far (phase 5c step 4). `kit`: the hero's
+## path's kit, for a mod only for some heroes (phase 5c step 5c, mod_for).
+func relic_mods(state: RunState, kit: UnitDef = null) -> Array[KitMod]:
 	var mods: Array[KitMod] = []
 	for id: String in state.relics:
 		if not relics.has(id):
 			continue
-		if relics[id].mod != null:
+		if relics[id].mod != null and relics[id].mod_fits(kit):
 			mods.append(_doubled(relics[id].mod) if counts_twice(state, relics[id]) else relics[id].mod)
 		if relics[id].grows != null:
 			var grown: KitMod = relics[id].grows.mod_for(state.growth.get(id, 0))
@@ -227,6 +228,15 @@ func relic_starts(state: RunState) -> Array[Array]:
 		for effect: EffectDef in relics[id].at_start:
 			starts.append([relics[id], effect, scale])
 	return starts
+
+
+## The rules the run's relics give the heroes' side (phase 5c step 5c).
+func hero_rules(state: RunState) -> SideRules:
+	var rules := SideRules.new()
+	for id: String in state.relics:
+		if relics.has(id) and relics[id].rules != null:
+			rules = rules.merged(relics[id].rules)
+	return rules
 
 
 ## The stats a relic gives from the run as it stands (phase 5c step 5a):

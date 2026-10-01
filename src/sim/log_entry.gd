@@ -90,6 +90,8 @@ var chain: int = 0
 var broke_shield: bool = false
 ## DAMAGE: what went past the target's last HP (phase 5c step 5b).
 var overkill: int = 0
+## HEAL: lifesteal that heals (Blood Communion; phase 5c step 5c).
+var lifesteal: bool = false
 ## MOVE: where the leg starts and the point it heads for; the unit moves
 ## `amount` a tick straight at it (FixedMath / ArenaPlane.step_toward) until it
 ## gets there or its next MOVE or STOP. STOP: to_pos is where it stands.
@@ -145,7 +147,12 @@ func to_text() -> String:
 		Kind.DAMAGE:
 			return line + "%s hits %s for %d%s" % [source_text(), target, amount, _damage_detail()]
 		Kind.HEAL:
-			return line + "%s heals %s for %d%s" % [source_text(), target, amount, "" if bonus.is_empty() else " (%s)" % bonus]
+			var why: Array[String] = []
+			if not bonus.is_empty():
+				why.append(bonus)
+			if lifesteal:
+				why.append("lifesteal")
+			return line + "%s heals %s for %d%s" % [source_text(), target, amount, "" if why.is_empty() else " (%s)" % ", ".join(why)]
 		Kind.SHIELD:
 			return line + "%s gives %s %d shield" % [source_text(), target, amount]
 		Kind.COLLAPSE:
@@ -242,6 +249,8 @@ func to_text() -> String:
 
 func _damage_detail() -> String:
 	var parts: Array[String] = []
+	if kind == Kind.DAMAGE and not note.is_empty():
+		parts.append(note)
 	if not bonus.is_empty():
 		parts.append(bonus)
 	if crit:

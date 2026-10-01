@@ -32,7 +32,7 @@ extends RefCounted
 
 ## The log kinds that raise events (the rest are skipped at once).
 const _RAISES: Array[LogEntry.Kind] = [LogEntry.Kind.FIRE, LogEntry.Kind.DAMAGE, LogEntry.Kind.SHIELD, LogEntry.Kind.HEAL,
-	LogEntry.Kind.STATUS_APPLIED, LogEntry.Kind.HOP, LogEntry.Kind.STATUS_DAMAGE, LogEntry.Kind.STATUS_ENDED]
+	LogEntry.Kind.STATUS_APPLIED, LogEntry.Kind.HOP, LogEntry.Kind.STATUS_DAMAGE, LogEntry.Kind.STATUS_ENDED, LogEntry.Kind.LIFESTEAL]
 
 
 ## Raises the events in the log from entry `from` on, including those the
@@ -85,6 +85,11 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> int:
 			LogEntry.Kind.HEAL:
 				if target != null and entry.amount > 0:
 					_raise(sim, source, EffectDef.Trigger.ON_HEAL, chain, target)
+					if entry.lifesteal:
+						_raise(sim, source, EffectDef.Trigger.ON_LIFESTEAL, chain)
+			LogEntry.Kind.LIFESTEAL:
+				if entry.amount > 0:
+					_raise(sim, source, EffectDef.Trigger.ON_LIFESTEAL, chain)
 			LogEntry.Kind.STATUS_APPLIED:
 				# Engaged comes from the Engage trait, not an effect.
 				if target != null and entry.status != sim.content.engaged_status.id:
