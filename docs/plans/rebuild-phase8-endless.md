@@ -1,6 +1,6 @@
 # Rebuild phase 8, part 1: endless after Act 1
 
-Status: **proposed (2026-10-02), waiting on its questions.** Phase 8 comes before phase 7 (the playtester, 2026-10-02: `rebuild-build-order.md`), and starts with endless mode, so long runs can be tested before Acts 2 and 3 exist. The design is `endless.md` (agreed 2026-09-30); this plan builds it on Act 1, and says what waits for the pieces phase 8 builds later (apexes, enemy specializations, the rift learns, Acts 2 and 3). **Numbers are placeholders** until the bots measure them (part 8a-3).
+Status: **proposed (2026-10-02); Questions AQ–AT answered (Decisions 1–4), AU open, and the playtester has more to add before anything is built.** Phase 8 comes before phase 7 (the playtester, 2026-10-02: `rebuild-build-order.md`), and starts with endless mode, so long runs can be tested before Acts 2 and 3 exist. The design is `endless.md` (agreed 2026-09-30); this plan builds it on Act 1, and says what waits for the pieces phase 8 builds later (apexes, enemy specializations, the rift learns, Acts 2 and 3). **Numbers are placeholders** until the bots measure them (part 8a-3).
 
 ## 1. What it builds
 
@@ -93,4 +93,11 @@ Everything else is `endless.md`'s: ×1.15 enemy HP and ATK a floor, a rift modif
 
 ## Decisions
 
-(none yet)
+The playtester, 2026-10-02:
+
+1. **A floor draws from Act 1's fights from day 4 on, for now** (Question AQ): the day 4–7 fights and the harder fights on normal floors, the elites on elite floors, and Old Mother Ash on boss floors, each at its own `scale_bp` times 1.15^floor.
+2. **A floor offers one fight** (Question AR), not two: the fight, the pick, the Pedlar, and a node.
+3. **Crumbled ground's damage grows ×1.15 a floor** (Question AS), like the enemies (`crumble_growth_bp` 11500).
+4. **Pay stays flat** (Question AT): Act 1's pay by tier on every floor (`pay_growth_bp` 10000).
+
+Still open: Question AU (where the good bot should fall). **Nothing is built until the playtester's further notes are in** (2026-10-02: "before building anything I have some markdown information I need to give you").
