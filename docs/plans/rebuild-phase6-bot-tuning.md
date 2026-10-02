@@ -200,6 +200,14 @@ Why it's shaped this way:
 - **The paths report after** (`--paths --seeds=1 --sweep=20`, the mean gain over all base across the 18 encounters): **every vow is within 5 points of base** (Decision 3 of phase 4): vowed Volley −0.4 (it was +10), Wardweaver +3.2, Ironbrand +2.1, Vigil Keeper −0.9 (it was −7), the rest within a point. **The transformations are +5 to +15, still under phase 4's 15–25 band:** Hearthwall +14.8, Lanternbearer +12.7, Trapper +10.7, Volley +8.5, Vigil Keeper +7.8, Last Watch +6.8, Wardweaver +6.4, Deadeye +5.3, Ironbrand +5.1. Raising them makes the good bot stronger, so the enemies would be retuned after: the next tuning pass, not done here.
 - **Not refitted:** the placement weights (`placement_weights.json`) read positions and enemy kinds, not their HP and ATK, so the scale doesn't touch what they read; refitting would also change the bot the numbers above measured.
 
+### 5.6 Built in step 6f (2026-10-02)
+
+- **Docs:** CLAUDE.md (phase 6 built; "How the bots work"; the plan's row), `design.md`'s open questions (vowed Volley's cost and Wardweaver's deed answered; Hearthwall's lumps, the transformations' band, the good bot's blind spot for shards and growth, and the 53% added), `rebuild-build-order.md`, and `tools/ci/HOW-TO-PLAY.txt` (what was tuned, and the question for the playtester: does Act 1 feel hard but fair, and which fight ends your runs?).
+- **The full suite:** 940 tests pass.
+- **A playtest build** ("Playtest build" workflow, run 17, Decision 4).
+
+**Phase 6 is built.**
+
 ## 6. Files
 
 - `tools/bots/bot.gd`, `run_player.gd`, `random_bot.gd`, `good_bot.gd`, `placement.gd` (2.2) with `placement_data.gd`, `fit_placement.py`, `placement_weights.json`, and `placement_check.gd`, `practice.gd` (2.3), `expert_bot.gd`. The simple bot stays in `tools/run_bot.gd` (6a).
