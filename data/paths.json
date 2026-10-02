@@ -263,15 +263,21 @@
     "placement": "A loose spot with room to move.",
     "vowed": {
       "taste": "Split Shot: every 4th shot also hits the enemy nearest her target, within 1 hex of it, for a third as much.",
-      "cost": "She reaches only 3 hexes.",
+      "cost": "Her shots deal 5% less.",
       "patch": {
-        "stats_add": {
-          "range": -1
-        },
+        "passives": [
+          {
+            "id": "light_draw",
+            "name": "Light Draw",
+            "text": "Her shots deal 5% less.",
+            "kind": "aura",
+            "aura": {"target": "holder", "stat": "damage_bp", "value": 9500}
+          }
+        ],
         "basic_attack": {
           "id": "longshot",
           "name": "Longshot",
-          "text": "Shoots her target from up to 3 hexes away. Every 4th shot splits: it also hits the enemy nearest her target, within 1 hex of it, for a third as much.",
+          "text": "Shoots her target from up to 4 hexes away. Every 4th shot splits: it also hits the enemy nearest her target, within 1 hex of it, for a third as much.",
           "cooldown_ms": 1000,
           "effects": [
             {
@@ -297,7 +303,7 @@
         "signature": {
           "id": "marking_shot",
           "name": "Marking Shot",
-          "text": "Marks the nearest enemy within 3 hexes, so it takes more damage from everyone for a while.",
+          "text": "Marks the nearest enemy within 4 hexes, so it takes more damage from everyone for a while.",
           "trigger": {
             "kind": "mana"
           },
@@ -315,11 +321,8 @@
     },
     "transformed": {
       "text": "Every shot splits to the enemy nearest her target and gives her mana, and she shoots whatever is in reach while she walks. Arrow Storm replaces Marking Shot: arrows rain on a circle for 3s.",
-      "cost": "Each arrow deals less, and she still reaches only 3 hexes.",
+      "cost": "Each arrow deals less.",
       "patch": {
-        "stats_add": {
-          "range": -1
-        },
         "stats_bp": {
           "atsp": 11000,
           "atk": 6500
@@ -330,7 +333,7 @@
         "basic_attack": {
           "id": "longshot",
           "name": "Longshot",
-          "text": "Shoots her target from up to 3 hexes away, even while she walks. Every shot splits: it also hits the enemy nearest her target, within 1 hex of it, for less, and each split gives her mana.",
+          "text": "Shoots her target from up to 4 hexes away, even while she walks. Every shot splits: it also hits the enemy nearest her target, within 1 hex of it, for less, and each split gives her mana.",
           "cooldown_ms": 1000,
           "effects": [
             {
@@ -360,7 +363,7 @@
         "signature": {
           "id": "arrow_storm",
           "name": "Arrow Storm",
-          "text": "Rains arrows on a circle 1 hex around the biggest group of enemies within 3 hexes: for 3s, every enemy inside is hit twice a second.",
+          "text": "Rains arrows on a circle 1 hex around the biggest group of enemies within 4 hexes: for 3s, every enemy inside is hit twice a second.",
           "trigger": {
             "kind": "mana"
           },
@@ -497,7 +500,7 @@
     "deed": {
       "text": "Damage he takes in place of allies",
       "counts": "guarded",
-      "threshold": 2
+      "threshold": 4
     }
   },
   {
@@ -973,7 +976,7 @@
         "kindle"
       ],
       "off_target": true,
-      "threshold": 45
+      "threshold": 35
     }
   },
   {
@@ -985,13 +988,13 @@
     "fantasy": "Stop the damage before it lands.",
     "placement": "Forward, next to Brannoc; where the circle goes matters.",
     "vowed": {
-      "taste": "Ward Thread: what Mend would heal past full HP comes back as Shield, a fifth as much.",
+      "taste": "Ward Thread: Mend also gives its target a small Shield, and what it would heal past full HP comes back as Shield, a fifth as much.",
       "cost": "Mend heals 5% less.",
       "patch": {
         "signature": {
           "id": "mend",
           "name": "Mend",
-          "text": "Heals whichever ally within 3 hexes is lowest on HP, herself included; what it would heal past full HP comes back as a small Shield.",
+          "text": "Heals whichever ally within 3 hexes is lowest on HP, herself included, and gives it a small Shield; what it would heal past full HP comes back as Shield too.",
           "trigger": {
             "kind": "mana"
           },
@@ -1005,6 +1008,14 @@
                 "mgk": 9500
               },
               "overheal_shield_bp": 2000
+            },
+            {
+              "type": "shield",
+              "amount": 4,
+              "target": "target",
+              "scaling": {
+                "mgk": 2000
+              }
             }
           ]
         }

@@ -79,7 +79,8 @@ func test_the_kits_carry_what_the_texts_say() -> void:
 	# Volley: every 4th shot splits (back from every 6th, phase 5c step 7),
 	# range 3; every shot, fires moving, Arrow Storm.
 	assert_eq(_kit("volley", vowed).basic_attack.effects[1].every, 4)
-	assert_eq(_kit("volley", vowed).stats.get_stat(UnitStats.Stat.RANGE), 3)
+	assert_eq(_kit("volley", vowed).stats.get_stat(UnitStats.Stat.RANGE), 4, "her cost is a damage cut, not her reach (phase 6 step 6e)")
+	assert_true(_kit("volley", vowed).passives.any(func(part: PartDef) -> bool: return part.id == "light_draw"))
 	var volley: UnitDef = _kit("volley", done)
 	assert_eq([volley.basic_attack.effects[1].every, volley.has_trait("fires_moving"), volley.signature.id], [1, true, "arrow_storm"])
 	assert_gt(volley.signature.effects[0].zone_ticks, 0)
