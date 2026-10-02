@@ -138,6 +138,66 @@ Each step: its commit, the full suite, the bench's fingerprints unchanged (no st
 
 - **What it says:** Act 1 is too easy for a player who places and chooses well (79% against a 45–50% target), and too kind to a random one (25% against under 15%). The good bot wins its practice fights with most of its HP to spare, so it buys little (47 of 134 shards). The choices report is too thin at 54 runs to judge single cards; it does show things never taken when offered (Armor Breaker 35 times, Kindling Ward 32, Close Quarters 19 among the cards), for 6e to look at.
 
+### 5.5 Built in step 6e (2026-10-02)
+
+Every change, from what to what, and why (Decision 2). Thirteen trials, each committed ("trial C" to "trial M"); the numbers below are trial M's, measured over 216 good-bot runs (seeds 1–216) and 108 runs of the random bot and the expert (seeds 1–108).
+
+**The enemies' scale** (`data/encounters.json`, `scale_bp`, which multiplies each enemy's HP and ATK):
+
+| Encounter | First day | Was | Now | × |
+| --- | --- | --- | --- | --- |
+| Pup Warren | 1 | 10750 | 11050 | 1.03 |
+| The Pack | 1 | 10750 | 11050 | 1.03 |
+| Hollow Line | 2 | 11500 | 11750 | 1.02 |
+| Moth Cloud | 2 | 11250 | 12600 | 1.12 |
+| Lurker's Kindling (harder) | 2 | 9000 | 11250 | 1.25 |
+| Bog Crossing | 3 | 11250 | 13700 | 1.22 |
+| The Hunt (elite) | 3 | 9750 | 11200 | 1.15 |
+| Witch Coven (elite) | 3 | 7250 | 8000 | 1.10 |
+| Cairn Watch (elite) | 3 | 13000 | 13400 | 1.03 |
+| Sentinel Gate | 4 | 12250 | 15450 | 1.26 |
+| Cairn Road | 4 | 11500 | 15700 | 1.37 |
+| Sentinel Under Moths (harder) | 4 | 18150 | 28950 | 1.60 |
+| Witch's Brood (harder) | 4 | 8750 | 13300 | 1.52 |
+| Witch Circle | 5 | 11500 | 16400 | 1.43 |
+| The Warded Charge (harder) | 6 | 14800 | 22700 | 1.53 |
+| Old Mother Ash (boss) | 7 | 7500 | 11200 | 1.49 |
+
+Why it's shaped this way:
+- **The first try, every encounter ×1.15, dropped the good bot from 79% to 3%:** 43 of 54 runs lost on day 1. A fight is close to all or nothing for a given team and formation, and day 1's team has nothing yet, so day 1 sits at the cliff. Day 1's fights moved 3%, Ash Nest not at all.
+- **The elites stay light.** One `scale_bp` serves an elite on both day 3 and day 5, and the team is much weaker on day 3: raising them past about ×1.10 made day 3 end over a third of the lost runs (trial L: 43%). So the elites are tuned for day 3, and days 4–7 and the boss carry the rest.
+- **Small steps did little:** trials G to K moved single fights and stayed at 55–58%; a lost day is replayed (often won), and harder fights make the good bot buy more. Trial L's step on days 3–7 (×1.05 more) overshot to 37%; M keeps L's numbers on days 4–7 and K's on day 3.
+
+**The paths** (`data/paths.json`, Decision 3):
+
+| Path | Change | Why |
+| --- | --- | --- |
+| Volley | Vowed and transformed: reach back to 4 hexes (the −1 range is gone, and the texts say 4). Vowed cost: Light Draw, "her shots deal 5% less" (a `damage_bp` aura at 9500, like Trapper's and Deadeye's costs). Transformed cost: "each arrow deals less" (its ATK cut, unchanged). Threshold 16 → 15 | Losing a hex helped her (phase 5c's report: +29 and +21 with her split arrow off entirely), so it wasn't a cost. 15: she transformed on day 2 at 13 and on day 5 at 16 |
+| Wardweaver | Vowed Mend also gives its target a Shield (4 + 20% MGK), and the taste and Mend's text say so. Threshold 12 → 120 | Her deed (Shield she gives) came only from Mend's overheal, so a run filled it in a fight or two or almost never. Now about 55–60 a fight in every run; 120 is about three fights |
+| Hearthwall | Threshold 2 → 3 | He transformed on day 2; at 4, only 72% did by the boss |
+| Lanternbearer | Threshold 45 → 28 | 55% transformed, median day 5 |
+| Last Watch | Threshold 25 → 15 | 63% transformed by the boss |
+
+**Not changed, and why:**
+- **The economy and prices:** the good bot spends about 46 of 108 shards a run, near `economy.md`'s modest spend; earning less wouldn't change what it wins.
+- **Rift Collapse's timing:** no fight called for it.
+- **Cards, items, and relics:** the choices report's flags are mostly the good bot's blind spots. It never takes the money relics (coins, purses, ledgers, Bounty Board, Miser's Vault) or the growing cards (Weathered, Lamp Oil, Notched Bow, Hunter's Tally, Woven Deep), because shards and growth don't show in a practice fight. Its "wins far above its kind" flags are small samples taken in runs already doing well; only Staggering Bash is flagged on both seed sets. Teaching the bot what shards and growth are worth comes first.
+
+**Where it stands** (the targets of section 4):
+
+| Target | Now |
+| --- | --- |
+| The good bot wins 45–50% | **53%** of 216 runs (59 of 108, then 56 of 108 on fresh seeds; ±3.4): a point above the band, within one standard error. Left there rather than two more hours a half-point step |
+| No encounter ends more than a third of the lost runs | Lost runs spread over days 2–7; no day ends more than 30% (day 3: 15 of 49 and 15 of 52) |
+| The random bot far less (under 15%) | **0%** of 108 (24 lost on day 1, 58 on day 2) |
+| The expert more | **62%** of 108 (the good bot 54% on the same seeds) |
+| Each path's first transformation on days 3–4, 80% by the boss | Most paths: median day 3–4 and 84%+ by the boss. Still off: Hearthwall (day 1–2: his deed fills in lumps, so no threshold lands it on day 3–4), Lanternbearer (day 1 on the fresh seeds), Last Watch (68–82% by the boss) |
+| The economy's shape | About 46 shards spent of 108 a run; no legendary bought (the bot buys nothing after the boss) |
+| No choices outliers | Not met: see above |
+
+- **Tests that pinned the old numbers changed on purpose:** `test_encounters.gd` (an encounter's scale up to 30000), `test_hero_rules.gd`'s rules fight (the heroes at three tenths of their HP, so seed 6 still rises, resists, and uses every rule against the stronger boss), `test_fight_log.gd`'s banners (the Witch Coven, which still reaches the collapse at 45s), and `test_path_kits.gd` (Volley reaches 4 hexes and holds Light Draw). The good bot keeps a hero sworn to the front row there (`Placement.best_formations`' rows; a run hit that refusal in trial D).
+- **The bench's 24 fingerprints are unchanged** (its fights don't read the tuned data).
+
 ## 6. Files
 
 - `tools/bots/bot.gd`, `run_player.gd`, `random_bot.gd`, `good_bot.gd`, `placement.gd` (2.2) with `placement_data.gd`, `fit_placement.py`, `placement_weights.json`, and `placement_check.gd`, `practice.gd` (2.3), `expert_bot.gd`. The simple bot stays in `tools/run_bot.gd` (6a).
