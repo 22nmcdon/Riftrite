@@ -99,6 +99,6 @@ The playtester, 2026-10-02:
 2. **A floor offers one fight** (Question AR), not two: the fight, the pick, the Pedlar, and a node.
 3. **Crumbled ground's damage grows ×1.15 a floor** (Question AS), like the enemies (`crumble_growth_bp` 11500).
 4. **Pay stays flat** (Question AT): Act 1's pay by tier on every floor (`pay_growth_bp` 10000).
-
 5. **Endless isn't tuned yet** (Question AU): the bots' report only says how far each run gets.
- **Nothing is built until the playtester's further notes are in** (2026-10-02: "before building anything I have some markdown information I need to give you").
+
+**Nothing is built until the playtester's further notes are in** (2026-10-02: "before building anything I have some markdown information I need to give you").
