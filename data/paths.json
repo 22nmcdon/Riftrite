@@ -511,7 +511,7 @@
     "deed": {
       "text": "Damage he takes in place of allies",
       "counts": "guarded",
-      "threshold": 14
+      "threshold": 20
     }
   },
   {
