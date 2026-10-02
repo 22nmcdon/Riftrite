@@ -66,7 +66,7 @@
     "name": "Bog Crossing",
     "tests": "back-line safety",
     "act": 1,
-    "scale_bp": 12400,
+    "scale_bp": 12950,
     "days": [3, 4],
     "enemies": [
       {"enemy": "bog_lurker", "hex": [3, 5]},
@@ -79,7 +79,7 @@
     "name": "Sentinel Gate",
     "tests": "going around a wall",
     "act": 1,
-    "scale_bp": 16150,
+    "scale_bp": 14950,
     "days": [4, 5, 6],
     "enemies": [
       {"enemy": "rift_worn_sentinel", "hex": [3, 4]},
@@ -104,7 +104,7 @@
     "name": "Witch Circle",
     "tests": "target priority",
     "act": 1,
-    "scale_bp": 14400,
+    "scale_bp": 15200,
     "days": [5, 6],
     "enemies": [
       {"enemy": "rift_worn_sentinel", "hex": [3, 4]}, {"enemy": "gloam_witch", "hex": [3, 6]}, {"enemy": "cinder_moth", "hex": [5, 5]}
@@ -131,11 +131,11 @@
   },
   {"_note": "Phase 5's harder fights (Decision 3): each combines two threats, and pays more. First placements, for the sim runner's gate.", "id": "hounds_and_archers", "name": "Hounds and Archers", "tests": "the back line, from two sides at once", "tier": "harder", "act": 1, "scale_bp": 9250, "days": [1, 2], "enemies": [{"enemy": "rift_hound", "hex": [1, 4]}, {"enemy": "rift_hound", "hex": [6, 4]}, {"enemy": "hollow_archer", "hex": [2, 6]}, {"enemy": "hollow_archer", "hex": [5, 6]}]},
   {"id": "lurker_and_ashlings", "name": "Lurker's Kindling", "tests": "being dragged into a crowd that burns", "tier": "harder", "act": 1, "scale_bp": 10350, "days": [2, 4], "enemies": [{"enemy": "bog_lurker", "hex": [3, 5]}, {"enemy": "ashling", "hex": [2, 4]}, {"enemy": "ashling", "hex": [4, 4]}, {"enemy": "ashling", "hex": [5, 4]}]},
-  {"id": "sentinel_and_moths", "name": "Sentinel Under Moths", "tests": "going around a wall without bunching up", "tier": "harder", "act": 1, "scale_bp": 23950, "days": [4, 6], "enemies": [{"enemy": "rift_worn_sentinel", "hex": [3, 4]}, {"enemy": "cinder_moth", "hex": [2, 6]}, {"enemy": "cinder_moth", "hex": [5, 6]}], "rocks": [[2, 4], [4, 4]]},
+  {"id": "sentinel_and_moths", "name": "Sentinel Under Moths", "tests": "going around a wall without bunching up", "tier": "harder", "act": 1, "scale_bp": 25750, "days": [4, 6], "enemies": [{"enemy": "rift_worn_sentinel", "hex": [3, 4]}, {"enemy": "cinder_moth", "hex": [2, 6]}, {"enemy": "cinder_moth", "hex": [5, 6]}], "rocks": [[2, 4], [4, 4]]},
   {"id": "witch_and_pups", "name": "Witch's Brood", "tests": "reaching the witch through a swarm", "tier": "harder", "act": 1, "scale_bp": 11550, "days": [4, 6], "enemies": [{"enemy": "gloam_witch", "hex": [3, 6]}, {"enemy": "rift_pup", "hex": [1, 4]}, {"enemy": "rift_pup", "hex": [3, 4]}, {"enemy": "rift_pup", "hex": [4, 4]}, {"enemy": "rift_pup", "hex": [6, 4]}]},
-  {"id": "guardian_and_witch", "name": "The Warded Charge", "tests": "a charging tank the witch keeps Shielded", "tier": "harder", "act": 1, "scale_bp": 19550, "days": [6], "enemies": [{"enemy": "cairn_guardian", "hex": [3, 4]}, {"enemy": "gloam_witch", "hex": [3, 6]}]},
-  {"_note": "Phase 5's elites (rebuild-enemies.md, section 3): each built around one mechanic, and its tests line says what answers it.", "id": "the_hunt", "name": "The Hunt", "tests": "an elite: when the Alpha pounces, the pack pounces on the same hero; guard your weakest back-liner, or bait it", "tier": "elite", "act": 1, "scale_bp": 10250, "days": [3, 5], "enemies": [{"enemy": "hound_alpha", "hex": [3, 6]}, {"enemy": "hunt_hound", "hex": [1, 5]}, {"enemy": "hunt_hound", "hex": [6, 5]}]},
+  {"id": "guardian_and_witch", "name": "The Warded Charge", "tests": "a charging tank the witch keeps Shielded", "tier": "harder", "act": 1, "scale_bp": 21000, "days": [6], "enemies": [{"enemy": "cairn_guardian", "hex": [3, 4]}, {"enemy": "gloam_witch", "hex": [3, 6]}]},
+  {"_note": "Phase 5's elites (rebuild-enemies.md, section 3): each built around one mechanic, and its tests line says what answers it.", "id": "the_hunt", "name": "The Hunt", "tests": "an elite: when the Alpha pounces, the pack pounces on the same hero; guard your weakest back-liner, or bait it", "tier": "elite", "act": 1, "scale_bp": 10700, "days": [3, 5], "enemies": [{"enemy": "hound_alpha", "hex": [3, 6]}, {"enemy": "hunt_hound", "hex": [1, 5]}, {"enemy": "hunt_hound", "hex": [6, 5]}]},
   {"id": "witch_coven", "name": "Witch Coven", "tests": "an elite: the Gloam Totem Shields everything near it until it's broken; get past the Sentinel and break it first", "tier": "elite", "act": 1, "scale_bp": 7600, "days": [3, 5], "enemies": [{"enemy": "gloam_totem", "hex": [3, 6]}, {"enemy": "gloam_witch", "hex": [2, 6]}, {"enemy": "gloam_witch", "hex": [5, 6]}, {"enemy": "rift_worn_sentinel", "hex": [3, 4]}]},
   {"id": "cairn_watch", "name": "Cairn Watch", "tests": "an elite: a Cairn Guardian charges while two Archers fire from behind rocks; leave room behind your tank, and reach the Archers", "tier": "elite", "act": 1, "scale_bp": 13000, "days": [3, 5], "enemies": [{"enemy": "cairn_guardian", "hex": [3, 4]}, {"enemy": "hollow_archer", "hex": [1, 6]}, {"enemy": "hollow_archer", "hex": [6, 6]}], "rocks": [[1, 5], [6, 5]]},
-  {"_note": "Act 1's boss (rebuild-enemies.md, section 4).", "id": "old_mother_ash", "name": "Old Mother Ash", "tests": "the boss: guard the back line from her hounds, weather her brood, then spread out as the rift closes", "tier": "boss", "act": 1, "scale_bp": 9750, "days": [7], "enemies": [{"enemy": "old_mother_ash", "hex": [3, 6]}, {"enemy": "ash_hound", "hex": [2, 5]}, {"enemy": "ash_hound", "hex": [5, 5]}]}
+  {"_note": "Act 1's boss (rebuild-enemies.md, section 4).", "id": "old_mother_ash", "name": "Old Mother Ash", "tests": "the boss: guard the back line from her hounds, weather her brood, then spread out as the rift closes", "tier": "boss", "act": 1, "scale_bp": 10500, "days": [7], "enemies": [{"enemy": "old_mother_ash", "hex": [3, 6]}, {"enemy": "ash_hound", "hex": [2, 5]}, {"enemy": "ash_hound", "hex": [5, 5]}]}
 ]

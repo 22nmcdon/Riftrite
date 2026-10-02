@@ -141,7 +141,13 @@ static func candidates(flow: RunFlow, count: int = 6) -> Array[Dictionary]:
 	if setup == null:
 		return legal
 	var grid: HexGrid = flow.run.content.tuning.make_grid()
-	for placed: Dictionary in Placement.best_formations(setup, grid, count):
+	# A hero sworn to the front row (the Oath of the Vanguard) stands there.
+	var rows: Dictionary = {}
+	for hero: RunState.Hero in flow.state.heroes:
+		var oath: EventDef.Oath = flow.oath_of(hero)
+		if oath != null and oath.front_row:
+			rows[hero.id] = flow.front_row()
+	for placed: Dictionary in Placement.best_formations(setup, grid, count, [] as Array[float], rows):
 		var hexes: Dictionary[String, Vector2i] = {}
 		hexes.assign(placed)
 		var problems: Array[String] = []

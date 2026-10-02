@@ -68,7 +68,9 @@ static func score(f: PackedFloat64Array, context: PackedFloat64Array) -> float:
 const SHORTLIST: int = 12
 
 
-static func best_formations(setup: FightSetup, grid: HexGrid, count: int = 6, scores: Array[float] = []) -> Array[Dictionary]:
+## `fixed_rows`: hero id -> the only row that hero may stand on (a
+## Bloodied Oath's front row).
+static func best_formations(setup: FightSetup, grid: HexGrid, count: int = 6, scores: Array[float] = [], fixed_rows: Dictionary = {}) -> Array[Dictionary]:
 	var roles: Array[UnitSetup] = roles_of(setup)
 	if roles.size() != 3:
 		return []
@@ -133,6 +135,9 @@ static func best_formations(setup: FightSetup, grid: HexGrid, count: int = 6, sc
 	var lists: Array[PackedInt32Array] = []
 	for role: int in 3:
 		var ranked: Array = own[role]
+		if fixed_rows.has(roles[role].id):
+			var wanted: int = fixed_rows[roles[role].id]
+			ranked = ranked.filter(func(entry: Array) -> bool: return zone[entry[1]].y == wanted)
 		ranked.sort_custom(func(x: Array, y: Array) -> bool: return x[0] > y[0] if x[0] != y[0] else x[1] < y[1])
 		var picked: PackedInt32Array = PackedInt32Array()
 		for entry: Array in ranked.slice(0, mini(SHORTLIST, n)):

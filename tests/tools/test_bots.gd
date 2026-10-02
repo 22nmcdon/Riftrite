@@ -219,3 +219,18 @@ func test_the_choices_and_compare_reports() -> void:
 	var compared: String = Report.compare_summary(_run, by_bot)
 	assert_string_contains(compared, "  random ")
 	assert_string_contains(compared, "  simple ")
+
+
+func test_a_hero_sworn_to_the_front_row_is_placed_there() -> void:
+	var flow: RunFlow = _at_fight(4)
+	var vanguard: int = -1
+	for i: int in _run.events.oaths.size():
+		if _run.events.oaths[i].front_row:
+			vanguard = i
+	assert_true(vanguard >= 0, "an oath asks for the front row")
+	flow.state.hero("vell").oath = _run.events.oaths[vanguard].id
+	flow.state.hero("vell").oath_fights = 2
+	var hexes: Dictionary[String, Vector2i] = GoodBot.new().formation(flow)
+	assert_eq(hexes["vell"].y, flow.front_row())
+	var errors: Array[String] = []
+	assert_not_null(flow.fight_setup(hexes, errors), ", ".join(errors))
