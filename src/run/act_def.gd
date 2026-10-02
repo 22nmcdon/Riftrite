@@ -64,6 +64,63 @@ var relic_sell: Dictionary[String, int] = {}
 ## signature, charms won fights; all only while it's equipped.
 var item_prices: Dictionary[String, int] = {}
 var item_ranks: Dictionary[String, Array] = {}
+## Endless after the act's boss (phase 8 part 1), or null if the act has none.
+var endless: Endless = null
+
+
+## Endless's numbers (docs/plans/rebuild-phase8-endless.md, section 3): a
+## floor is a day after the act's last. Enemies' HP and ATK grow growth_bp a
+## floor (compounded), a rift modifier joins every modifier_every floors for
+## good, Rift Collapse starts collapse_step_ms earlier a floor (never before
+## collapse_floor_ms) and crumbled ground hits crumble_growth_bp harder a
+## floor; every boss_every-th floor is the boss, every other elite_every-th
+## an elite, the rest normal, drawn from the act's fights allowed from
+## from_day on; from legendary_from_floor the shops' relic odds add
+## legendary_weight for a legendary.
+class Endless:
+	var growth_bp: int = 11500
+	var modifier_every: int = 3
+	var collapse_step_ms: int = 1000
+	var collapse_floor_ms: int = 10000
+	var crumble_growth_bp: int = 11500
+	var elite_every: int = 5
+	var boss_every: int = 10
+	var from_day: int = 4
+	var legendary_from_floor: int = 10
+	var legendary_weight: int = 5
+
+	static func read(reader: DataReader) -> Endless:
+		var def := Endless.new()
+		def.growth_bp = reader.req_int("growth_bp", FixedMath.BP_ONE, 100000)
+		def.modifier_every = reader.req_int("modifier_every", 1)
+		def.collapse_step_ms = reader.req_int("collapse_step_ms", 0)
+		def.collapse_floor_ms = reader.req_int("collapse_floor_ms", 0)
+		def.crumble_growth_bp = reader.req_int("crumble_growth_bp", FixedMath.BP_ONE, 100000)
+		def.elite_every = reader.req_int("elite_every", 1)
+		def.boss_every = reader.req_int("boss_every", 1)
+		def.from_day = reader.req_int("from_day", 1)
+		def.legendary_from_floor = reader.req_int("legendary_from_floor", 1)
+		def.legendary_weight = reader.req_int("legendary_weight", 0, 1000)
+		for key: String in ["collapse_step_ms", "collapse_floor_ms"]:
+			if not FixedMath.is_whole_ticks(reader.opt_int(key, 0)):
+				reader.error("%s: a whole number of ticks" % key)
+		reader.finish()
+		return def
+
+	## A floor's kind: "boss", "elite", or "normal".
+	func kind(floor_number: int) -> String:
+		if floor_number % boss_every == 0:
+			return "boss"
+		if floor_number % elite_every == 0:
+			return "elite"
+		return "normal"
+
+	## `per_floor_bp` compounded over `floor_number` floors (10000 at 0).
+	static func compound(per_floor_bp: int, floor_number: int) -> int:
+		var bp: int = FixedMath.BP_ONE
+		for i: int in floor_number:
+			bp = FixedMath.apply_bp(bp, per_floor_bp)
+		return bp
 
 
 static func read(reader: DataReader) -> ActDef:
@@ -94,6 +151,10 @@ static func read(reader: DataReader) -> ActDef:
 	def.elite_epic_pct = reader.req_int("elite_epic_pct", 0, 100)
 	def.bond_relic_pct = reader.req_int("bond_relic_pct", 0, 100)
 	def.boss_relics = reader.req_int("boss_relics", 0, 5)
+	if reader.has("endless"):
+		var endless_reader: DataReader = reader.req_object("endless")
+		if endless_reader != null:
+			def.endless = Endless.read(endless_reader)
 	def.pedlar_wares = reader.req_int("pedlar_wares", 1, 8)
 	def.magpie_wares = reader.req_int("magpie_wares", 1, 8)
 	def.magpie_charm_price = reader.req_int("magpie_charm_price", 0)

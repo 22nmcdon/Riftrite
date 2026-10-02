@@ -178,9 +178,9 @@ static func camp_option_open(run: RunContent, state: RunState, option: String) -
 		"hunt":
 			return not run.encounters_for("hunt", state.day).is_empty()
 		"map_the_rift":
-			return state.day < run.act.days.size() and run.act.days[state.day] != "boss"
+			return not ["", "boss"].has(run.day_kind(state, state.day + 1))
 		"scout":
-			return state.day < run.act.days.size()
+			return not run.day_kind(state, state.day + 1).is_empty()
 	return true
 
 
@@ -239,9 +239,10 @@ static func rift_modifiers(run: RunContent, state: RunState) -> Array[String]:
 static func shop_relics(run: RunContent, state: RunState, rerolls: int, count: int, magpie: bool, boss: bool) -> Array[String]:
 	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.RELIC, state.act, state.day, state.attempt, -1 - rerolls])
 	var drawn: Array[String] = []
+	var odds: Array = shop_odds(run, state)
 	for i: int in count:
 		var tier: String = "legendary" if boss and i == 0 else (_weighted(rng, run.act.magpie_odds, run.act.magpie_weights) if magpie \
-			else _weighted(rng, run.act.relic_odds, run.act.relic_weights))
+			else _weighted(rng, odds[0], odds[1]))
 		var id: String = ""
 		if not magpie and not (boss and i == 0):
 			id = _bond_relic(run, state, rng, drawn)
@@ -250,6 +251,46 @@ static func shop_relics(run: RunContent, state: RunState, rerolls: int, count: i
 		if not id.is_empty():
 			drawn.append(id)
 	return drawn
+
+
+## The Pedlar's relic odds (tiers and weights): the act's, with a
+## legendary added from endless.legendary_from_floor (phase 8 part 1).
+static func shop_odds(run: RunContent, state: RunState) -> Array:
+	var tiers: Array[String] = run.act.relic_odds.duplicate()
+	var weights: Array[int] = run.act.relic_weights.duplicate()
+	var endless: ActDef.Endless = run.act.endless
+	if endless != null and run.floor_of(state, state.day) >= endless.legendary_from_floor and endless.legendary_weight > 0:
+		var at: int = tiers.find("legendary")
+		if at >= 0:
+			weights[at] += endless.legendary_weight
+		else:
+			tiers.append("legendary")
+			weights.append(endless.legendary_weight)
+	return [tiers, weights]
+
+
+## An endless floor's fight (phase 8 part 1, Decision 2: one a floor): one of
+## the floor's kind's pool (RunContent.floor_pool), not the floor before's
+## if anything else is left, from the floor's own stream.
+static func endless_floor(run: RunContent, state: RunState, day: int) -> Array[String]:
+	var pool: Array[String] = run.floor_pool(run.day_kind(state, day))
+	var before: Array = state.options[day - 2] if day >= 2 and day - 2 < state.options.size() else []
+	var fresh: Array[String] = pool.filter(func(id: String) -> bool: return not before.has(id))
+	if not fresh.is_empty():
+		pool = fresh
+	var drawn: Array[String] = []
+	if not pool.is_empty():
+		drawn.append(pool[RunRandom.stream(state.seed_value, [RunRandom.ENDLESS, day]).range_int(pool.size())])
+	return drawn
+
+
+## The rift modifier an endless floor adds (phase 8 part 1): one the run
+## hasn't gathered, from the floor's stream ("" once every one is on).
+static func endless_modifier(run: RunContent, state: RunState, day: int) -> String:
+	var pool: Array[String] = run.camps.modifier_ids.filter(func(id: String) -> bool: return not state.endless_mods.has(id))
+	if pool.is_empty():
+		return ""
+	return pool[RunRandom.stream(state.seed_value, [RunRandom.ENDLESS, day, 1]).range_int(pool.size())]
 
 
 ## An on bond's relic for a shop's relic draw (phase 5c step 5d): with
@@ -301,7 +342,10 @@ static func swap(run: RunContent, state: RunState, index: int) -> String:
 	var tomorrow: int = state.day + 1
 	var offered: Array = state.options[tomorrow - 1]
 	var tier: String = run.content.encounters[offered[index]].tier
-	var pool: Array[String] = run.encounters_for(tier, tomorrow).filter(func(id: String) -> bool: return not offered.has(id))
+	var allowed: Array[String] = run.encounters_for(tier, tomorrow)
+	if run.floor_of(state, tomorrow) > 0:
+		allowed.assign(run.floor_pool(run.day_kind(state, tomorrow)).filter(func(id: String) -> bool: return run.content.encounters[id].tier == tier))
+	var pool: Array[String] = allowed.filter(func(id: String) -> bool: return not offered.has(id))
 	if pool.is_empty():
 		return ""
 	return pool[RunRandom.stream(state.seed_value, [RunRandom.ACT_DRAW, state.act, tomorrow, index, 1]).range_int(pool.size())]

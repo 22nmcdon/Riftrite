@@ -54,6 +54,8 @@ static func step(flow: RunFlow, bot: Bot) -> String:
 			return flow.choose_node(bot.node(flow))
 		RunState.Phase.NODE:
 			return _at_node(flow, bot)
+		RunState.Phase.CHOICE:
+			return flow.go_deeper() if bot.go_deeper(flow) else flow.end_run()
 	return "nothing to do"
 
 

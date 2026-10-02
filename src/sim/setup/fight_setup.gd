@@ -26,6 +26,9 @@ var hero_rules: SideRules = SideRules.new()
 ## tuning's), and the rift's own effects at a time (Reinforcements: a summon
 ## on the enemies' side), each with its source and tick.
 var collapse_start_ticks: int = 0
+## Endless (phase 8 part 1): crumbled ground's damage times this (basis
+## points; 0 leaves it as the act's).
+var crumble_bp: int = 0
 var rift_effects: Array[EffectDef] = []
 var rift_sources: Array[EffectSource] = []
 var rift_ticks: Array[int] = []
@@ -139,6 +142,8 @@ func validate(content: ContentDb) -> Array[String]:
 			errors.append("a relic's effect at the start names an unknown status \"%s\"" % effect.status_id)
 	if collapse_start_ticks < 0:
 		errors.append("Rift Collapse can't start before the fight")
+	if crumble_bp < 0:
+		errors.append("crumbled ground's damage can't be scaled below nothing")
 	if rift_sources.size() != rift_effects.size() or rift_ticks.size() != rift_effects.size():
 		errors.append("each rift effect needs its source and tick")
 	for effect: EffectDef in rift_effects:

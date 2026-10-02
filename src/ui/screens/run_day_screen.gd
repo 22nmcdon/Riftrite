@@ -769,7 +769,7 @@ func _rank_progress(item: ItemDef) -> String:
 
 func _fill_route() -> void:
 	var state: RunState = session.state()
-	var kind: String = session.run.act.days[state.day - 1]
+	var kind: String = session.run.day_kind(state, state.day)
 	var line: String = {"normal": "An easier fight and a harder one that pays more.", "elite": "An elite day: two elites, each built around one mechanic.", "boss": "Old Mother Ash waits."}[kind]
 	var section: VBoxContainer = _section("Choose today's fight", line + " Click a fight on today's island to read it.")
 	# The act map, with the selected fight's card beside it (phase 5b).

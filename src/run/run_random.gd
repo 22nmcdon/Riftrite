@@ -26,6 +26,8 @@ const HUNT: int = 14
 const NODE: int = 15
 ## Events (phase 5c step 8c): an oath's heroes, and what a choice draws.
 const EVENT: int = 16
+## Endless (phase 8 part 1): a floor's fight, and the rift modifiers it adds.
+const ENDLESS: int = 17
 
 const MIX: int = 0x2545F4914F6CDD1D
 

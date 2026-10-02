@@ -64,6 +64,9 @@ static func damage_at(sim: CombatSim, at_tick: int) -> int:
 	if surge_seconds > 0:
 		@warning_ignore("integer_division")
 		damage += numbers.accel * surge_seconds * (surge_seconds + 1) / 2
+	# Endless (phase 8 part 1): a floor's crumbled ground hits harder.
+	if sim.setup.crumble_bp > 0:
+		damage = FixedMath.apply_bp(damage, sim.setup.crumble_bp)
 	return damage
 
 

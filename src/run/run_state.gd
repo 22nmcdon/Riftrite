@@ -7,18 +7,20 @@ extends RefCounted
 ## (to_dict, from_dict).
 
 ## A save from another version can't be loaded (4: phase 5c step 8's new
-## day).
-const VERSION: int = 4
+## day; 5: endless, phase 8 part 1, which still loads a 4 with endless off).
+const VERSION: int = 5
+const OLDEST_VERSION: int = 4
 
 ## Where the day is (phase 5c step 8, docs/plans/days-and-nodes.md):
 ## choosing the fight, the loadout (then placement and the fight), after the
 ## fight (a pick, a transformation, a relic waiting), the shop, choosing a
 ## node, in a node (camp's options, the Magpie's stall, ...), or the run is
-## over. A pick can wait in a node too (Train).
-enum Phase { ROUTE, LOADOUT, AFTER, SHOP, NODES, NODE, ENDED }
+## over. A pick can wait in a node too (Train). After the act's boss shop,
+## the choice: end the run won, or go deeper into endless (phase 8 part 1).
+enum Phase { ROUTE, LOADOUT, AFTER, SHOP, NODES, NODE, ENDED, CHOICE }
 enum Outcome { NONE, WON, LOST }
 
-const PHASE_NAMES: Array[String] = ["route", "loadout", "after", "shop", "nodes", "node", "ended"]
+const PHASE_NAMES: Array[String] = ["route", "loadout", "after", "shop", "nodes", "node", "ended", "choice"]
 const OUTCOME_NAMES: Array[String] = ["none", "won", "lost"]
 
 
@@ -218,6 +220,12 @@ var growth: Dictionary[String, int] = {}
 ## ":relic id"), for the screen after it.
 var grew: Array[String] = []
 
+# Endless (phase 8 part 1): the run went deeper after the act's boss, so a
+# day past the act's last is a floor (RunContent.floor_of), and the rift
+# modifiers it has gathered so far, for good, in order.
+var endless: bool = false
+var endless_mods: Array[String] = []
+
 
 func hero(hero_id: String) -> Hero:
 	for found: Hero in heroes:
@@ -254,12 +262,14 @@ func to_dict() -> Dictionary:
 		"streak": streak, "streaks_paid": streaks_paid.duplicate(), "bonds_found": bonds_found.duplicate(),
 		"growth": growth.duplicate(), "grew": grew.duplicate(),
 		"item_ranks": item_ranks.duplicate(), "item_counts": item_counts.duplicate(), "ranked": ranked.duplicate(),
+		"endless": endless, "endless_mods": endless_mods.duplicate(),
 	}
 
 
 ## The state `data` holds, or null if it isn't a save of this version.
 static func from_dict(data: Dictionary) -> RunState:
-	if int(data.get("version", 0)) != VERSION:
+	var version: int = int(data.get("version", 0))
+	if version < OLDEST_VERSION or version > VERSION:
 		return null
 	var state := RunState.new()
 	state.seed_value = int(data.get("seed", 1))
@@ -329,6 +339,8 @@ static func from_dict(data: Dictionary) -> RunState:
 	state.streak = int(data.get("streak", 0))
 	state.streaks_paid = _strings(data.get("streaks_paid", []))
 	state.bonds_found = _strings(data.get("bonds_found", []))
+	state.endless = bool(data.get("endless", false))
+	state.endless_mods = _strings(data.get("endless_mods", []))
 	return state
 
 

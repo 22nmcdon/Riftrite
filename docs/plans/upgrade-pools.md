@@ -11,7 +11,7 @@ Status: **agreed in discussion (2026-09-30); built as phase 5c step 7 (2026-10-0
 | **Path** | Once the hero has transformed | 4 per path, plus the path's growing upgrade |
 
 - **Apex upgrades:** once a hero earns an apex, its 2 upgrades join their path pool (`apexes.md`).
-- **Hero and role are one pool for now.** Each of the three heroes has a different role, so a role layer would hold the same things as the hero layer. Split a role pool out when a second hero shares a role.
+- **Hero and role are one pool for now.** A role layer would mostly hold the same things as the hero layer. Split a role pool out when a third hero shares a role (the next bullet).
 - **Hero upgrades are written against slots** ("her Marks", "his taunts", "her heals"), so they survive a transformation that replaces a signature.
 - **Hero upgrades never give a path's key mechanic** (range, roots, extra targets, Guard, cleave, surviving a fall, Shields, Kindle's extra heal, smites), so no deed fills without its vow.
 - **The relic rules apply:** no downsides, ATK and MGK rather than "damage", and every amount stated.

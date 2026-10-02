@@ -88,12 +88,89 @@ static func resume(run_content: RunContent, run_state: RunState) -> RunFlow:
 
 # --- the day's start, the shop, and the nodes --------------------------------------
 
-## A day begins (a new one, or one replayed after a loss): the route.
+## A day begins (a new one, or one replayed after a loss): the route. An
+## endless floor (phase 8 part 1) first draws its fight (and the next two
+## floors', for Scout, Map the Rift, and a Bleeding Tear), and every
+## modifier_every-th floor gathers a rift modifier for good.
 func _start_day() -> void:
 	state.phase = RunState.Phase.ROUTE
 	state.chosen = ""
+	if state.endless:
+		_draw_floors()
+		var endless: ActDef.Endless = run.act.endless
+		@warning_ignore("integer_division")
+		var due: int = run.floor_of(state, state.day) / endless.modifier_every
+		while state.endless_mods.size() < due:
+			var modifier: String = Offers.endless_modifier(run, state, state.day)
+			if modifier.is_empty():
+				break
+			state.endless_mods.append(modifier)
 	if state.sealed:
 		_skip_sealed()
+
+
+## Draws the endless floors' fights up to two days ahead.
+func _draw_floors() -> void:
+	while state.options.size() < state.day + 2:
+		state.options.append(Offers.endless_floor(run, state, state.options.size() + 1))
+
+
+# --- endless (phase 8 part 1) -----------------------------------------------------
+
+## The floor the run is on (0 before endless).
+func floor_number() -> int:
+	return run.floor_of(state, state.day)
+
+
+## After the act's boss shop: ends the run won.
+func end_run() -> String:
+	if state.phase != RunState.Phase.CHOICE:
+		return _not_now("end the run")
+	_end(RunState.Outcome.WON)
+	return ""
+
+
+## After the act's boss shop: goes deeper, into endless's floor 1, keeping
+## everything the run holds. From here the first loss ends the run.
+func go_deeper() -> String:
+	if state.phase != RunState.Phase.CHOICE:
+		return _not_now("go deeper")
+	state.endless = true
+	state.magpie_visits = 0
+	while state.taken_nodes.size() < state.day:
+		state.taken_nodes.append("")
+	state.day += 1
+	state.attempt = 0
+	_start_day()
+	return ""
+
+
+## An endless floor's enemies' growth: HP and ATK times growth_bp per floor,
+## compounded (null before endless).
+func _floor_growth_mod() -> KitMod:
+	var floor_now: int = floor_number()
+	if floor_now <= 0:
+		return null
+	var mod: KitMod = KitMod.make()
+	var bp: int = ActDef.Endless.compound(run.act.endless.growth_bp, floor_now)
+	mod.stats_bp[UnitStats.Stat.HP] = bp
+	mod.stats_bp[UnitStats.Stat.ATK] = bp
+	return mod
+
+
+## An endless floor's Rift Collapse: collapse_step_ms earlier a floor, never
+## before collapse_floor_ms (the earlier of it and Early Collapse), and its
+## crumbled ground crumble_growth_bp harder a floor, compounded.
+func _endless_rules(setup: FightSetup) -> void:
+	var floor_now: int = floor_number()
+	if floor_now <= 0:
+		return
+	var endless: ActDef.Endless = run.act.endless
+	@warning_ignore("integer_division")
+	var start_ms: int = maxi(run.content.tuning.collapse_start_ticks * 1000 / FixedMath.TICKS_PER_SECOND - endless.collapse_step_ms * floor_now, endless.collapse_floor_ms)
+	var start: int = FixedMath.ms_to_ticks(start_ms)
+	setup.collapse_start_ticks = start if setup.collapse_start_ticks == 0 else mini(setup.collapse_start_ticks, start)
+	setup.crumble_bp = ActDef.Endless.compound(endless.crumble_growth_bp, floor_now)
 
 
 ## A Bleeding Tear sealed (phase 5c step 8c): today's fight is won without
@@ -138,9 +215,16 @@ func leave_shop() -> String:
 		return _not_now("leave the shop")
 	var boss: bool = boss_shop()
 	close_shop()
-	if boss:
-		_end(RunState.Outcome.WON)
+	if boss and not state.endless:
+		# Endless (phase 8 part 1): the act's boss shop leads to the choice.
+		if run.act.endless != null:
+			state.phase = RunState.Phase.CHOICE
+		else:
+			_end(RunState.Outcome.WON)
 		return ""
+	if boss:
+		# An endless boss floor: the Magpie's visits count afresh.
+		state.magpie_visits = 0
 	state.nodes = Offers.nodes(run, state)
 	state.node = ""
 	state.phase = RunState.Phase.NODES
@@ -252,7 +336,7 @@ func _choice_problem(choice: EventDef.Choice, target: String) -> String:
 				if not result.team and state.hero(target) == null:
 					return "unknown hero \"%s\"" % target
 			"seal":
-				if state.day >= run.act.days.size() or run.act.days[state.day] != "normal":
+				if run.day_kind(state, state.day + 1) != "normal":
 					return "not before an elite or the boss"
 			"rank_up_random":
 				if _rankable().is_empty():
@@ -464,10 +548,10 @@ func choose_camp(index: int) -> String:
 			state.rested = true
 		"scout":
 			for day: int in [state.day + 1, state.day + 2]:
-				if day <= run.act.days.size() and not state.scouted.has(day):
+				if not run.day_kind(state, day).is_empty() and not state.scouted.has(day):
 					state.scouted.append(day)
 		"map_the_rift":
-			if state.day >= run.act.days.size() or run.act.days[state.day] == "boss":
+			if ["", "boss"].has(run.day_kind(state, state.day + 1)):
 				return "there's no fight tomorrow to swap"
 			state.mapping = true
 		"fortify":
@@ -638,8 +722,10 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 			var chosen: int = state.hero(hero.id).gambit_at if state.hero(hero.id) != null else 0
 			if chosen > 0 and hero.def.swap_choice:
 				hero.swap_at = chosen * FixedMath.TICKS_PER_SECOND
-		if not hunting and not state.rift_depth.is_empty():
+		if not hunting and (not state.rift_depth.is_empty() or not state.endless_mods.is_empty()):
 			_rift_rules(setup, encounter_id)
+		if not hunting:
+			_endless_rules(setup)
 		_modify_enemies(setup, hunting, errors)
 		_relic_rules(setup)
 		if not hunting and state.dig_in and state.rock.size() == 2:
@@ -718,11 +804,15 @@ func _modify_enemies(setup: FightSetup, hunting: bool, errors: Array[String]) ->
 	for id: String in state.relics:
 		if run.relics[id].enemy_mod != null:
 			mods.append(run.relics[id].enemy_mod)
-	if not state.rift_depth.is_empty() and not hunting:
-		mods.append(run.camps.rift_tear_mod)
+	if not hunting:
+		if not state.rift_depth.is_empty():
+			mods.append(run.camps.rift_tear_mod)
 		for modifier: CampsDef.Modifier in _rift_modifiers():
 			if modifier.mod != null:
 				mods.append(modifier.mod)
+		var growth: KitMod = _floor_growth_mod()
+		if growth != null:
+			mods.append(growth)
 	if mods.is_empty():
 		return
 	var problems: Array[String] = []
@@ -747,7 +837,7 @@ func _weaken_mod() -> KitMod:
 ## The rift modifiers on the next day fight (phase 5c step 8b).
 func _rift_modifiers() -> Array[CampsDef.Modifier]:
 	var found: Array[CampsDef.Modifier] = []
-	for id: String in state.rift_mods:
+	for id: String in state.endless_mods + state.rift_mods:
 		if run.camps.modifiers.has(id):
 			found.append(run.camps.modifiers[id])
 	return found
@@ -863,7 +953,10 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 		state.streak = 0
 		state.losses += 1
 		state.chosen = ""
-		if state.losses >= run.act.losses_to_end:
+		# Endless (phase 8 part 1): the first loss ends the run; the act was won.
+		if state.endless:
+			_end(RunState.Outcome.WON)
+		elif state.losses >= run.act.losses_to_end:
 			_end(RunState.Outcome.LOST)
 		else:
 			state.attempt += 1
@@ -885,10 +978,12 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 		_grow_by_run("elite_wins")
 	state.phase = RunState.Phase.AFTER
 	state.relic_choice_price = 0
-	if run.act.days[state.day - 1] == "boss":
+	if run.day_kind(state, state.day) == "boss":
 		# The boss relic choice (Decision 18), then the boss shop (finish_day;
-		# Decision 48), then the run's end (leave_shop).
-		state.relic_choice = Offers.relics(run, state, RELIC_AFTER_FIGHT, run.act.boss_relics, "boss")
+		# Decision 48), then the run's end or the endless choice (leave_shop).
+		# Once every boss relic is held, legendaries (endless.md).
+		var boss_tier: String = "boss" if _boss_relic_left() else "legendary"
+		state.relic_choice = Offers.relics(run, state, RELIC_AFTER_FIGHT, run.act.boss_relics, boss_tier)
 		return
 	state.pick = _pick_cards(0)
 	if tier == "elite":
@@ -1327,7 +1422,7 @@ func _draw_shop_relics() -> Array[String]:
 ## after the boss fight and its relic choice (Decision 48; it was the day
 ## before the boss's until then).
 func boss_shop() -> bool:
-	return state.shop == "pedlar" and state.day >= 1 and state.day <= run.act.days.size() and run.act.days[state.day - 1] == "boss"
+	return state.shop == "pedlar" and run.day_kind(state, state.day) == "boss"
 
 
 func close_shop() -> void:
@@ -1453,6 +1548,11 @@ func treat_wound(hero_id: String) -> String:
 	state.shards -= wound_price()
 	hero.wounds -= 1
 	return ""
+
+
+## True while some boss relic isn't held.
+func _boss_relic_left() -> bool:
+	return run.relic_ids.any(func(id: String) -> bool: return run.relics[id].tier == RelicDef.Tier.BOSS and not state.relics.has(id))
 
 
 func _end(outcome: RunState.Outcome) -> void:

@@ -132,6 +132,19 @@ func test_damage_grows_faster_from_the_surge() -> void:
 	assert_eq(Collapse.damage_at(fight, START + 48 * 20), 495 + 2 * 6)
 
 
+## Endless (phase 8 part 1): a floor's crumbled ground hits harder, every
+## second's number times the setup's crumble_bp.
+func test_an_endless_floor_scales_the_crumbled_grounds_damage() -> void:
+	var setup: FightSetup = K.fight([K.at(_post(), 3, 2)] as Array[UnitSetup], [K.foe(_post(), 4, 4)] as Array[UnitSetup])
+	setup.crumble_bp = 15000
+	var fight: CombatSim = K.sim(setup)
+	assert_eq(Collapse.damage_at(fight, START), 23, "15 x1.5, rounded once")
+	assert_eq(Collapse.damage_at(fight, START + 46 * 20), (475 + 2) * 3 / 2 + 1)
+	setup.crumble_bp = -1
+	var errors: Array[String] = setup.validate(K.content())
+	assert_true(errors.any(func(error: String) -> bool: return error.contains("crumbled ground")))
+
+
 func test_damage_uses_the_fights_act() -> void:
 	var setup: FightSetup = FightSetup.make([K.at(_post(), 0, 0, "edge")] as Array[UnitSetup], [K.foe(_post(), 4, 4)] as Array[UnitSetup], [], 1, 2)
 	var fight: CombatSim = K.sim(setup)

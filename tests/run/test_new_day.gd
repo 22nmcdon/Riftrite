@@ -67,7 +67,10 @@ func test_the_pedlar_after_every_fight_and_the_boss_shop() -> void:
 	assert_true(flow.boss_shop())
 	assert_eq(_run.relics[state.shop_relics[0]].tier, RelicDef.Tier.LEGENDARY)
 	assert_eq(flow.leave_shop(), "")
-	assert_eq([state.phase, state.outcome, state.shop], [RunState.Phase.ENDED, RunState.Outcome.WON, ""])
+	# Endless (phase 8 part 1): the boss shop leads to the choice; ending the run wins it.
+	assert_eq([state.phase, state.outcome, state.shop], [RunState.Phase.CHOICE, RunState.Outcome.NONE, ""])
+	assert_eq(flow.end_run(), "")
+	assert_eq([state.phase, state.outcome], [RunState.Phase.ENDED, RunState.Outcome.WON])
 
 
 func test_a_node_waits_for_what_it_opened() -> void:

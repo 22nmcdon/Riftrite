@@ -16,6 +16,9 @@ var label: String = "simple"
 ## The simple bot's peek (the run report's line until phase 6): it tries the
 ## named formations in the real fight and keeps the first that doesn't lose.
 var peek: bool = false
+## Endless (phase 8 part 1): after the act's boss shop, go deeper (the
+## runner's --endless) or end the run.
+var deeper: bool = false
 
 
 ## Called once, before the run's first decision.
@@ -24,6 +27,11 @@ func begin(_flow: RunFlow) -> void:
 
 
 ## Today's fight on the route: an index into state.today().
+## After the act's boss shop: true goes deeper into endless.
+func go_deeper(_flow: RunFlow) -> bool:
+	return deeper
+
+
 func route(_flow: RunFlow) -> int:
 	return 0
 

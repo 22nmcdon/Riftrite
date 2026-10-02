@@ -1,6 +1,6 @@
 # Rebuild phase 8, part 1: endless after Act 1
 
-Status: **proposed (2026-10-02); Questions AQ–AU answered (Decisions 1–5), and the playtester has more to add before anything is built.** Phase 8 comes before phase 7 (the playtester, 2026-10-02: `rebuild-build-order.md`), and starts with endless mode, so long runs can be tested before Acts 2 and 3 exist. The design is `endless.md` (agreed 2026-09-30); this plan builds it on Act 1, and says what waits for the pieces phase 8 builds later (apexes, enemy specializations, the rift learns, Acts 2 and 3). **Numbers are placeholders** until the bots measure them (part 8a-3).
+Status: **agreed (2026-10-02, Decisions 1–5); 8a-1 (the rules) built.** Phase 8 comes before phase 7 (the playtester, 2026-10-02: `rebuild-build-order.md`), and starts with endless mode, so long runs can be tested before Acts 2 and 3 exist. The design is `endless.md` (agreed 2026-09-30); this plan builds it on Act 1, and says what waits for the pieces phase 8 builds later (apexes, enemy specializations, the rift learns, Acts 2 and 3). **Numbers are placeholders** until the bots measure them (part 8a-3).
 
 ## 1. What it builds
 
@@ -21,12 +21,11 @@ Everything else is `endless.md`'s: ×1.15 enemy HP and ATK a floor, a rift modif
 ## 2. The floors
 
 - **A floor's kind:** every 10th a boss, every other 5th an elite, the rest normal.
-- **Its fights** (Question AQ): drawn when the floor starts (not at the act's start, since there's no end), on the run's seed and the floor (a new `RunRandom.ENDLESS` stream), avoiding the floor before's, from Act 1's encounters by kind.
-- **Its route** (Question AR): the campaign's two fights to choose between, or one.
+- **Its fight** (Decisions 1 and 2): one a floor, drawn as the floors come (two ahead, so Scout, Map the Rift, and a Bleeding Tear still see tomorrow), on the run's seed and the floor (a new `RunRandom.ENDLESS` stream), avoiding the floor before's, from Act 1's fights by kind: the easier and harder fights allowed from day 4 on, the elites, or the boss.
 - **Its strength:** each enemy's HP and ATK are its encounter's `scale_bp` (as in the campaign) times **1.15^floor** (`growth_bp` 11500 a floor, compounded in basis points with the shared rounding helper; 64-bit ints hold it far past any floor a team reaches). Applied as an enemy kit mod in `RunFlow._modify_enemies`, beside the relics' and Rift Tear's.
 - **Rift modifiers:** floor 3 adds one of the ten, floor 6 another, and so on, drawn without repeats on the endless stream until all ten are on, then none more. They are the built ones (`camps.json`, `CampsDef.Modifier`), so Early Collapse and Reinforcements work as at a Rift Tear. A Rift Tear node in endless still adds its depth's modifiers for its fight, on top.
 - **Rift Collapse:** starts at 45s less 1s a floor, never before 10s (`FightSetup.collapse_start_ticks`, built for Early Collapse; the earlier of the two wins). **Crumbled ground's damage** grows with the floor (Question AS): a new `FightSetup.crumble_bp` multiplies `collapse_by_act`'s base and growth (the one sim change: integer, and a fight that doesn't set it is unchanged, so every built fingerprint holds).
-- **Pay** (Question AT): flat (the act's pay by tier), or growing with the floor.
+- **Pay** (Decision 4): flat, the act's pay by tier.
 - **Shops:** the Pedlar's relic odds gain a legendary weight from floor 10 (`endless.legendary_from_floor`, `endless.legendary_weight` in `act1.json`); the boss shop comes after every 10th floor's boss, as after the act's.
 - **Losing:** the first loss ends the run (`losses_to_end` is ignored in endless). A tie still wins, as in the campaign; the faster collapse is what keeps a defensive team from stalling forever.
 
@@ -43,9 +42,9 @@ Everything else is `endless.md`'s: ×1.15 enemy HP and ATK a floor, a rift modif
   "crumble_growth_bp": 11500,
   "elite_every": 5,
   "boss_every": 10,
+  "from_day": 4,
   "legendary_from_floor": 10,
-  "legendary_weight": 5,
-  "pay_growth_bp": 10000
+  "legendary_weight": 5
 }
 ```
 
@@ -102,3 +101,19 @@ The playtester, 2026-10-02:
 5. **Endless isn't tuned yet** (Question AU): the bots' report only says how far each run gets.
 
 **Nothing is built until the playtester's further notes are in** (2026-10-02: "before building anything I have some markdown information I need to give you").
+
+## Built in 8a-1: the rules (2026-10-02)
+
+- **Data:** `act1.json`'s `endless` block (`ActDef.Endless`: section 3's numbers, `from_day` for Decision 1, no pay growth for Decision 4), read and checked with the act; `kind(floor)` and `compound(bp, floors)` (basis points compounded with the shared rounding helper: 11500, 13225, 15209, ...).
+- **A floor is a day after the act's last** (day 8 is floor 1), so the day's loop, the nodes, and the save carry on unchanged. `RunContent.day_kind` answers what a day is (the act's days, then the floors') and replaced every direct read of the act's days (the boss's relic choice and shop, Map the Rift, Scout, a Bleeding Tear, the route's line, the simple bot's Rift Tear rule); `floor_of` and `floor_pool` (Decision 1) beside it.
+- **The choice:** `Phase.CHOICE` after the act's boss shop; `RunFlow.end_run()` (won) and `go_deeper()` (floor 1, everything kept). An act without an `endless` block ends at its boss shop as before. An endless boss floor's shop leads on to the nodes.
+- **Floors:** `_start_day` draws the fights two floors ahead (`Offers.endless_floor`) and gathers a rift modifier every 3rd floor (`Offers.endless_modifier`, `RunState.endless_mods`, no repeats, then none). A floor's fight takes the growth as an enemy kit mod (HP and ATK only), the gathered modifiers with a Rift Tear's (`_rift_modifiers`), and `_endless_rules`: Rift Collapse 1s earlier a floor, never before 10s (the earlier of it and Early Collapse), and `FightSetup.crumble_bp`.
+- **The one sim change:** `FightSetup.crumble_bp` multiplies crumbled ground's damage (`Collapse.damage_at`, rounded once); a fight that doesn't set it is unchanged, and the bench's fingerprints are.
+- **Shops and relics:** `Offers.shop_odds` adds a legendary from floor 10; a boss floor offers boss relics, or legendaries once every boss relic is held.
+- **Losing:** the first loss ends an endless run, its outcome still **won** (the act was won; the floor it fell on is the score). A tie wins.
+- **Save:** version 5 (`endless`, `endless_mods`); a version 4 save still loads, with endless off.
+- **Records:** `RunRecords` (`user://records.json`: the deepest floor, its seed and vows); the screens write it (8a-2).
+- **Bots:** the simple bot ends the run at the choice; `Bot.go_deeper` (the `deeper` flag) is the hook 8a-3's `--endless` sets.
+- **Calls made while building** (small, flagged for the playtester): the Magpie's two visits an act count afresh when the run goes deeper and after each endless boss floor; a Hunt has no packs on a floor (Act 1's Hunts list days 1–6), so camp doesn't offer it there; Map the Rift on a floor swaps within the floor's pool.
+- **Tests:** `tests/run/test_endless.gd` (11: the choice, floors' kinds and fights, growth, modifiers, the collapse and ground, legendary odds, boss relics then legendaries, the first loss, the save, the records), a crumble test in `test_collapse.gd`, and the boss tests in `test_new_day.gd` and `test_run_flow.gd` now take the choice.
+

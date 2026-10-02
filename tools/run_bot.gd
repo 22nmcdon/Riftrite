@@ -86,6 +86,8 @@ static func step_once(flow: RunFlow, hexes: Dictionary[String, Vector2i], errors
 	if not state.relic_choice.is_empty():
 		return flow.take_relic(0) if state.shards >= state.relic_choice_price else flow.decline_relic()
 	match state.phase:
+		RunState.Phase.CHOICE:
+			return flow.end_run()
 		RunState.Phase.SHOP:
 			if shop_once(flow):
 				return ""
@@ -152,7 +154,7 @@ static func pick_choice(flow: RunFlow) -> int:
 static func node_choice(flow: RunFlow) -> int:
 	var state: RunState = flow.state
 	var hurt: bool = state.heroes.any(func(hero: RunState.Hero) -> bool: return hero.wounds > 0)
-	var normal: bool = state.day < flow.run.act.days.size() and flow.run.act.days[state.day] == "normal"
+	var normal: bool = flow.run.day_kind(state, state.day + 1) == "normal"
 	for node: String in NODE_ORDER:
 		if node == "rift_tear" and (hurt or not normal):
 			continue

@@ -96,6 +96,39 @@ func encounters_for(tier: String, day: int) -> Array[String]:
 	return found
 
 
+## A day's kind ("normal", "elite", or "boss"): the act's days, then, in an
+## endless run (phase 8 part 1), the floor's; "" for a day there's none of.
+func day_kind(state: RunState, day: int) -> String:
+	if day >= 1 and day <= act.days.size():
+		return act.days[day - 1]
+	if state.endless and act.endless != null and day > act.days.size():
+		return act.endless.kind(day - act.days.size())
+	return ""
+
+
+## The floor `day` is in an endless run (0 for the act's days).
+func floor_of(state: RunState, day: int) -> int:
+	return maxi(day - act.days.size(), 0) if state.endless else 0
+
+
+## The fights an endless floor of `kind` draws from (Decision 1): the act's
+## easier and harder fights allowed from endless.from_day on for a normal
+## floor, its elites, or its boss.
+func floor_pool(kind: String) -> Array[String]:
+	var found: Array[String] = []
+	var tiers: Array[String] = [kind]
+	if kind == "normal":
+		tiers.assign(["easier", "harder"])
+	for id: String in content.encounter_ids:
+		var encounter: EncounterDef = content.encounters[id]
+		if encounter.act != act.act or not tiers.has(encounter.tier):
+			continue
+		if kind == "normal" and act.endless != null and not encounter.days.any(func(d: int) -> bool: return d >= act.endless.from_day):
+			continue
+		found.append(id)
+	return found
+
+
 ## Every easier and harder encounter of this act, whatever its days.
 func normal_encounters() -> Array[String]:
 	var found: Array[String] = []
