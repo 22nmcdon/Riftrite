@@ -61,6 +61,11 @@ class RunLine:
 	var errors: Array[String] = []
 	## The bot that played it.
 	var bot: String = ""
+	## Every card, item, and relic offered in the run, and every one it held
+	## at some point ("card:", "item:", "relic:" ids; --choices, phase 6
+	## step 6d).
+	var offered: Dictionary[String, bool] = {}
+	var taken: Dictionary[String, bool] = {}
 	## [encounter id, won?] for each fight.
 	var fights: Array[Array] = []
 	## Path id -> what the run's fights put into it while its hero was vowed
@@ -153,8 +158,26 @@ static func play(run: RunContent, run_seed: int, bot_name: String = "simple-peek
 		if state.phase == RunState.Phase.NODES:
 			for node: String in state.nodes:
 				line.nodes_shown[node.get_slice(":", 0)] = line.nodes_shown.get(node.get_slice(":", 0), 0) + 1
+		for id: String in state.pick:
+			line.offered["card:" + id] = true
+		for id: String in state.relic_choice:
+			line.offered["relic:" + id] = true
+		if not state.shop.is_empty():
+			for id: String in state.wares:
+				if not id.is_empty():
+					line.offered["item:" + id] = true
+			for id: String in state.shop_relics:
+				if not id.is_empty():
+					line.offered["relic:" + id] = true
 		var torn: bool = not state.rift_depth.is_empty() and state.phase == RunState.Phase.LOADOUT
 		var refused: String = RunPlayer.step(flow, bot)
+		for hero: RunState.Hero in state.heroes:
+			for id: String in hero.upgrades:
+				line.taken["card:" + id] = true
+		for id: String in state.relics:
+			line.taken["relic:" + id] = true
+		for id: String in state.item_ranks:
+			line.taken["item:" + id] = true
 		if not refused.is_empty():
 			line.errors.append("day %d (%s): %s" % [state.day, RunState.PHASE_NAMES[state.phase], refused])
 			break
@@ -282,6 +305,92 @@ static func engines_summary(lines: Array[RunLine], shown: int = 40) -> String:
 	silent.sort()
 	out.append("Held but never fired (fights held): %s" % (", ".join(silent) if not silent.is_empty() else "none"))
 	return "\n".join(out)
+
+
+## The bots side by side (--compare): runs won, the day lost runs end, and
+## the encounters that end them most.
+static func compare_summary(run: RunContent, by_bot: Dictionary[String, Array]) -> String:
+	var out: PackedStringArray = PackedStringArray()
+	out.append("Bots on the same seeds (runs won; lost runs by the day they end; the encounters that end the most):")
+	for bot_name: String in by_bot:
+		var lines: Array = by_bot[bot_name]
+		var won: int = lines.filter(func(line: RunLine) -> bool: return line.outcome == RunState.Outcome.WON).size()
+		var days: PackedStringArray = PackedStringArray()
+		var ended: Dictionary[String, int] = {}
+		for day: int in range(1, run.act.days.size() + 1):
+			days.append(str(lines.filter(func(line: RunLine) -> bool: return line.outcome == RunState.Outcome.LOST and line.day == day).size()))
+		for line: RunLine in lines:
+			if line.outcome == RunState.Outcome.LOST and not line.fights.is_empty():
+				var last: String = line.fights.back()[0]
+				ended[last] = ended.get(last, 0) + 1
+		var worst: Array = ended.keys()
+		worst.sort_custom(func(a: String, b: String) -> bool: return ended[a] > ended[b] if ended[a] != ended[b] else a < b)
+		var named: PackedStringArray = PackedStringArray()
+		for id: String in worst.slice(0, 3):
+			named.append("%s %d" % [run.content.encounters[id].name, ended[id]])
+		out.append("  %-12s won %3d%% (%d of %d); lost on days 1-7: %s; ended by %s" % [bot_name, _pct(won, lines.size()), won, lines.size(),
+			" ".join(days), ", ".join(named) if not named.is_empty() else "-"])
+	return "\n".join(out)
+
+
+## The choices report (--choices, phase 6 step 6d): each card, item, and
+## relic offered in at least `least` runs: how often it was offered and
+## taken, and the runs won when it was taken against when it was offered and
+## not. Flags what's never taken and what wins far above its kind.
+static func choices_summary(run: RunContent, lines: Array[RunLine], least: int = 5) -> String:
+	var out: PackedStringArray = PackedStringArray()
+	for kind: String in ["card", "item", "relic"]:
+		var rows: Array = []
+		var ids: Dictionary[String, bool] = {}
+		for line: RunLine in lines:
+			for key: String in line.offered:
+				if key.begins_with(kind + ":"):
+					ids[key] = true
+		var kind_won: int = 0
+		var kind_taken: int = 0
+		for key: String in ids:
+			var offered: int = 0
+			var taken: int = 0
+			var won_taken: int = 0
+			var passed: int = 0
+			var won_passed: int = 0
+			for line: RunLine in lines:
+				if not line.offered.has(key):
+					continue
+				offered += 1
+				var won: bool = line.outcome == RunState.Outcome.WON
+				if line.taken.has(key):
+					taken += 1
+					won_taken += 1 if won else 0
+				else:
+					passed += 1
+					won_passed += 1 if won else 0
+			kind_won += won_taken
+			kind_taken += taken
+			if offered >= least:
+				rows.append([key.get_slice(":", 1), offered, taken, won_taken, passed, won_passed])
+		var average: int = _pct(kind_won, kind_taken)
+		rows.sort_custom(func(a: Array, b: Array) -> bool: return _pct(a[3], a[2]) > _pct(b[3], b[2]) if _pct(a[3], a[2]) != _pct(b[3], b[2]) else a[0] < b[0])
+		out.append("%ss (offered in %d+ runs; won when taken against offered and passed; the kind's runs won when taken: %d%%):" % [kind.capitalize(), least, average])
+		var never: PackedStringArray = PackedStringArray()
+		for row: Array in rows:
+			if row[2] == 0:
+				never.append("%s (%d)" % [_choice_name(run, kind, row[0]), row[1]])
+				continue
+			var flag: String = "  << wins far above its kind" if _pct(row[3], row[2]) > average + 15 and row[2] >= least else ""
+			out.append("  %-26s offered %3d, taken %3d%%, won %3d%% taken / %s passed%s" % [_choice_name(run, kind, row[0]), row[1], _pct(row[2], row[1]),
+				_pct(row[3], row[2]), "%3d%%" % _pct(row[5], row[4]) if row[4] > 0 else "   -", flag])
+		out.append("  never taken when offered: %s" % (", ".join(never) if not never.is_empty() else "none"))
+	return "\n".join(out)
+
+
+static func _choice_name(run: RunContent, kind: String, id: String) -> String:
+	match kind:
+		"card":
+			return run.upgrades[id].name if run.upgrades.has(id) else id
+		"item":
+			return run.items[id].name if run.items.has(id) else id
+	return run.relics[id].name if run.relics.has(id) else id
 
 
 static func play_many(run: RunContent, seeds: Array[int], bot_name: String = "simple-peek") -> Array[RunLine]:

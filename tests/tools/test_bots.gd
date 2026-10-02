@@ -202,3 +202,20 @@ func _won() -> FightResult:
 	var result := FightResult.new()
 	result.outcome = FightResult.Outcome.VICTORY
 	return result
+
+
+func test_the_choices_and_compare_reports() -> void:
+	var lines: Array[Report.RunLine] = []
+	lines.assign(Report.play_many(_run, [2, 3, 4] as Array[int], "random"))
+	assert_true(lines.any(func(line: Report.RunLine) -> bool: return not line.offered.is_empty()), "offers were seen")
+	for line: Report.RunLine in lines:
+		for key: String in line.taken:
+			if key.begins_with("card:"):
+				assert_true(line.offered.has(key), "%s was taken from an offer" % key)
+	var text: String = Report.choices_summary(_run, lines, 1)
+	for heading: String in ["Cards (", "Items (", "Relics ("]:
+		assert_string_contains(text, heading)
+	var by_bot: Dictionary[String, Array] = {"random": lines, "simple": Report.play_many(_run, [2, 3, 4] as Array[int], "simple")}
+	var compared: String = Report.compare_summary(_run, by_bot)
+	assert_string_contains(compared, "  random ")
+	assert_string_contains(compared, "  simple ")

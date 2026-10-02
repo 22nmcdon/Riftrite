@@ -4,7 +4,11 @@ extends SceneTree
 ## bot and prints how they pace (tools/run_report.gd does the work). A
 ## report, not a gate: it exits 0 unless a run hit an error.
 ## Usage: godot --headless --path . -s tools/run_runner.gd -- [--runs=54] [--first-seed=1] [--bot=simple-peek] [--jobs=1] [--engines]
-## --bot: one of run_report.gd's BOTS. --engines adds the engine report
+## --bot: one of run_report.gd's BOTS. --compare plays the random bot,
+## the good bot, and the expert on the same seeds and prints them side by
+## side before the --bot's report (phase 6 step 6d). --choices adds the
+## choices report: each card, item, and relic offered, taken, and the runs
+## won with it. --engines adds the engine report
 ## (phase 5c step 9b): every hero engine over the runs' day fights.
 ## --jobs=N plays the seeds in N Godot processes (each takes every Nth seed
 ## and writes its runs with --part=k/N --out=file), then merges them: the
@@ -36,13 +40,18 @@ func _init() -> void:
 	if not options["part"].is_empty():
 		_play_part(run, seeds, options)
 		return
-	var lines: Array[Report.RunLine] = []
 	var jobs: int = clampi(options["jobs"].to_int(), 1, 32)
-	if jobs > 1:
-		lines = _play_in_processes(seeds, jobs, options)
-	else:
-		lines.assign(Report.play_many(run, seeds, options["bot"]))
+	var lines: Array[Report.RunLine] = _play(run, seeds, jobs, options, options["bot"])
+	if OS.get_cmdline_user_args().has("--compare"):
+		var by_bot: Dictionary[String, Array] = {}
+		for bot_name: String in ["random", "good", "expert"]:
+			by_bot[bot_name] = lines if bot_name == options["bot"] else _play(run, seeds, jobs, options, bot_name)
+		print(Report.compare_summary(run, by_bot))
+		print("")
 	print(Report.summary(run, lines))
+	if OS.get_cmdline_user_args().has("--choices"):
+		print("")
+		print(Report.choices_summary(run, lines))
 	if OS.get_cmdline_user_args().has("--engines"):
 		print("")
 		print(Report.engines_summary(lines))
@@ -50,6 +59,16 @@ func _init() -> void:
 		if not line.errors.is_empty():
 			printerr("seed %d: %s" % [line.seed_value, "; ".join(line.errors)])
 	quit(1 if lines.any(func(line: Report.RunLine) -> bool: return not line.errors.is_empty()) else 0)
+
+
+func _play(run: RunContent, seeds: Array[int], jobs: int, options: Dictionary[String, String], bot_name: String) -> Array[Report.RunLine]:
+	var lines: Array[Report.RunLine] = []
+	if jobs > 1:
+		var for_bot: Dictionary[String, String] = options.duplicate()
+		for_bot["bot"] = bot_name
+		return _play_in_processes(seeds, jobs, for_bot)
+	lines.assign(Report.play_many(run, seeds, bot_name))
+	return lines
 
 
 ## A child process (--part=k/N): plays every Nth seed from the kth, and
