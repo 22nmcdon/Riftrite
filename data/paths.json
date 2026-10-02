@@ -191,7 +191,7 @@
       }
     },
     "transformed": {
-      "text": "Her snares root for 2s and make the enemy Bleed. Bramble Field replaces Marking Shot: it drops a snare in an enemy's path, up to 3 at once. You place her first 2 snares before the fight.",
+      "text": "Her snares root for 2.5s and make the enemy Bleed. Bramble Field replaces Marking Shot: it drops a snare in an enemy's path, up to 3 at once. You place her first 2 snares before the fight.",
       "cost": "She reaches only 3 hexes.",
       "patch": {
         "stats_bp": {
@@ -223,7 +223,7 @@
         "signature": {
           "id": "bramble_field",
           "name": "Bramble Field",
-          "text": "Drops a snare 1 hex ahead of the nearest enemy within 3 hexes, in its path; the first enemy in it is rooted for 2s and Bleeds. Up to 3 stand at once.",
+          "text": "Drops a snare 1 hex ahead of the nearest enemy within 3 hexes, in its path; the first enemy in it is rooted for 2.5s and Bleeds. Up to 3 stand at once.",
           "trigger": {
             "kind": "mana"
           },
@@ -511,7 +511,7 @@
     "deed": {
       "text": "Damage he takes in place of allies",
       "counts": "guarded",
-      "threshold": 3
+      "threshold": 25
     }
   },
   {
@@ -719,7 +719,7 @@
       }
     },
     "transformed": {
-      "text": "Below 30% HP he hits harder and his DEF rises, and he grows stronger for each fallen ally. Last Rites replaces Hold the Line: the first time he drops below 30% HP, he taunts every enemy within 3 hexes and can't fall for 3s. He has no mana.",
+      "text": "Below 30% HP he hits harder and his DEF rises, and he grows stronger for each fallen ally. Last Rites replaces Hold the Line: the first time he drops below 30% HP, he taunts every enemy within 3 hexes and can't fall for 5s. He has no mana.",
       "cost": "Heals on him are 20% weaker, and he has 5% less max HP.",
       "patch": {
         "stats_bp": {
@@ -731,7 +731,7 @@
         "signature": {
           "id": "last_rites",
           "name": "Last Rites",
-          "text": "The first time he drops below 30% HP, he taunts every enemy within 3 hexes and can't fall for 3s.",
+          "text": "The first time he drops below 30% HP, he taunts every enemy within 3 hexes and can't fall for 5s.",
           "trigger": {
             "kind": "hp_below",
             "threshold_bp": 3000
@@ -767,7 +767,7 @@
           {
             "id": "last_stand",
             "name": "Last Stand",
-            "text": "Below 30% HP he hits half again as hard.",
+            "text": "Below 30% HP he hits more than twice as hard.",
             "kind": "aura",
             "aura": {
               "target": "holder",
@@ -793,7 +793,7 @@
           {
             "id": "grief",
             "name": "Grief",
-            "text": "He hits 10% harder for each ally who has fallen.",
+            "text": "He hits 20% harder for each ally who has fallen.",
             "kind": "aura",
             "aura": {
               "target": "holder",
@@ -1036,7 +1036,7 @@
       }
     },
     "transformed": {
-      "text": "Warding Circle replaces Mend: for 3s, a circle 2 hexes around her Slows enemies inside and Wards allies inside (they take 15% less). Every 4th Lantern Glow, Weave shields the ally lowest on HP and heals them a little.",
+      "text": "Warding Circle replaces Mend: for 4s, a circle 2 hexes around her Slows enemies inside and Wards allies inside (they take 15% less). Every 4th Lantern Glow, Weave shields the ally lowest on HP and heals them a little.",
       "cost": "Her healing is 40% weaker.",
       "patch": {
         "stats_bp": {
@@ -1048,7 +1048,7 @@
         "signature": {
           "id": "warding_circle",
           "name": "Warding Circle",
-          "text": "Draws a circle 2 hexes around herself for 3s: enemies inside are Slowed, and allies inside are Warded, taking 15% less damage.",
+          "text": "Draws a circle 2 hexes around herself for 4s: enemies inside are Slowed, and allies inside are Warded, taking 15% less damage.",
           "trigger": {
             "kind": "mana"
           },

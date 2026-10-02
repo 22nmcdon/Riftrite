@@ -264,3 +264,27 @@ New content, new rules, Acts 2–3, enemy specializations (phase 8), and the art
 7. **The transformations get stronger mostly through their own abilities, with a small shared lift** (Question AO): every transformation also lifts the hero's HP, ATK, and MGK a little (about 5%), and the rest of each path's way to +15 to +25 comes from the numbers in what makes it that path.
 8. **Hearthwall's vowed Guard covers any ally within 2 hexes** (Question AP), like his transformed Guard but at 10%, so most fights guard something and his deed fills steadily; his threshold is set again from what it gives a fight.
 
+
+### 11.3 Built in 11a: the transformations and Hearthwall's deed (2026-10-02)
+
+Measured with the paths report (`--paths --seeds=1 --sweep=20`) over Act 1's 18 encounters (the Hunt packs left out, as the gate does), split by encounter over 4 processes. Every vow stays within ±3 of all base.
+
+**The shared lift (Decision 7):** every transformed kit's HP, ATK, and MGK x1.05 (a path whose transformation already changed one keeps its change times 1.05: Deadeye ATK 10500 → 11000, Trapper ATK 9000 → 9450, Volley ATK 6500 → 6800, Hearthwall HP 12500 → 13100 and ATK 8500 → 8900, Last Watch ATK 13500 → 14200 and HP 9500 → 10000, Lanternbearer MGK 10500 → 11000 and HP 8500 → 8900, Wardweaver HP and MGK 9000 → 9450, Vigil Keeper MGK 11000 → 11550; the rest 10000 → 10500). Alone it moved the transformations +1 to +2.
+
+**Hearthwall's Guard (Decision 8):** the vowed Guard covers every ally within 2 hexes at 10% (was: an ally behind him within 3). Wide Guard, whose job that was, now makes Guard reach 3 hexes vowed and transformed (`rebuild-phase5c-combos.md`, Decision 39's note). A vowed fight now puts 7 into his deed on average (the paths report), so his threshold goes **3 → 25**, about 3.5 fights, like the other deeds (checked in the run report in 11b).
+
+**Each transformation's own numbers** (Decision 7), from what they were to what they are, and the paths report's gain before (after the lift) → after:
+
+| Path | Changed | Gain |
+| --- | --- | --- |
+| Deadeye | Heartseeker 10 + 75% ATK → 20 + 160% ATK; Sure Aim +5% crit → +10% | +8.3 → +16.4 |
+| Trapper | Bramble Field's root 2s → 2.5s, its Bleed 4 stacks → 6 | +13.4 → +20.8 |
+| Volley | the split 40% ATK → 50%; Arrow Storm's hits 3 + 25% ATK → 3 + 35% | +12.7 → +21.1 |
+| Hearthwall | (the lift only) | +17.4 |
+| Ironbrand | the mace's splash 30% ATK → 60%, its heal 4% of damage → 6%; Brand Slam 10 + 100% ATK → 15 + 160% | +9.3 → +17.8 |
+| Last Watch | Last Rites' Undying 3s → 5s; Last Stand x1.5 ATK → x2.2; Grief +10% a fallen ally → +20% | +11.1 → +16.0 |
+| Lanternbearer | (the lift only) | +16.9 |
+| Wardweaver | Warding Circle 3s → 4s; Weave's Shield 15 + 90% MGK → 25 + 140% | +9.3 → +18.5 |
+| Vigil Keeper | Sunfall's burn 80% MGK → 140%, its heal 60% → 100%; Mend's heal 70% MGK → 100%, its smite 4 + 20% MGK → 8 + 40%, its mana 6 → 10 | +9.3 → +16.9 |
+
+Why these: each is what makes the path that path (Decision 7), and the cost stays (Light Draw, Thin Light, Dimmed, Scarred, the plant delay). Last Watch tried a 40% line for his last stand (+16.7), but his upgrade cards say "below 30% HP", so the line stays at 30% and the strength is in Last Stand and Grief. Tests changed with them: Hearthwall's Guard (`test_path_kits`, `test_upgrade_pieces`), Deadeye's ATK lock (`test_upgrade_pools`), and Sure Aim with Eyes Up (`test_upgrade_pieces`).

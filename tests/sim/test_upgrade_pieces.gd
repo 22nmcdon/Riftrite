@@ -81,7 +81,7 @@ func test_the_snares_and_the_aura() -> void:
 	assert_eq(Snares.placed_effect(_kit("trapper", "second_snare", true)).max_standing, 4, "Bramble Field: 4 at once")
 	assert_eq(_part(_kit("trapper", "second_snare"), "snare").ability.effects[0].times, 2, "the vowed Snare twice")
 	assert_eq(_part(_kit("deadeye", "eyes_up"), "steady_aim").aura.value, 1500, "Steady Aim +5 more")
-	assert_eq(_part(_kit("deadeye", "eyes_up", true), "sure_aim").aura.value, 1000, "Sure Aim +5 more")
+	assert_eq(_part(_kit("deadeye", "eyes_up", true), "sure_aim").aura.value, 1500, "Sure Aim +5 more")
 	assert_eq(_kit("wardweaver", "thick_thread").signature.effects[0].overheal_shield_bp, 4000)
 	assert_eq(_kit("deadeye", "quick_plant", true).plant_ticks, 15, "planted in 0.75s")
 
