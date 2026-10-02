@@ -89,19 +89,20 @@ func test_the_snares_and_the_aura() -> void:
 func test_the_guard_knobs() -> void:
 	assert_eq(_part(_kit("hearthwall", "broad_guard"), "guard").share_bp, 1500)
 	assert_eq(_part(_kit("hearthwall", "broad_guard", true), "guard").share_bp, 3500)
+	# Wide Guard: 3 hexes, not 2, vowed and transformed (phase 6 section 11:
+	# the vowed Guard already covers every ally within 2 hexes).
+	assert_eq(_part(_kit("hearthwall", "wide_guard"), "guard").guard_range, 3 * HexGrid.HEX)
 	assert_eq(_part(_kit("hearthwall", "wide_guard", true), "guard").guard_range, 3 * HexGrid.HEX)
-	# Wide Guard: an ally beside him is covered, not only one behind.
-	for card: String in ["", "wide_guard"]:
-		var brannoc: UnitDef = _run.content.paths["hearthwall"].vowed_kit if card.is_empty() else _kit("hearthwall", card)
-		var fight: CombatSim = K.sim(K.fight([UnitSetup.make(brannoc, K.HEROES, 3, 2, "brannoc"), K.at(_dummy("ally"), 5, 2, "ally")] as Array[UnitSetup],
-			[K.foe(_dummy("foe"), 3, 4, "foe")] as Array[UnitSetup]))
-		fight.step()
-		var at: Vector2i = fight.unit_by_id("brannoc").pos
-		fight.unit_by_id("foe").pos = at + Vector2i(0, 2000)
-		fight.unit_by_id("ally").pos = at + Vector2i(1500, 0)
-		fight.unit_by_id("brannoc").target = fight.unit_by_id("foe")
-		var guard: UnitState = Guards.covering(fight, EffectSource.make("foe", "foe_attack", "Strike"), fight.unit_by_id("ally"))
-		assert_eq(guard != null, not card.is_empty(), "beside him: covered only with Wide Guard")
+	# The vowed Guard covers an ally beside him, not only one behind.
+	var brannoc: UnitDef = _run.content.paths["hearthwall"].vowed_kit
+	var fight: CombatSim = K.sim(K.fight([UnitSetup.make(brannoc, K.HEROES, 3, 2, "brannoc"), K.at(_dummy("ally"), 5, 2, "ally")] as Array[UnitSetup],
+		[K.foe(_dummy("foe"), 3, 4, "foe")] as Array[UnitSetup]))
+	fight.step()
+	var at: Vector2i = fight.unit_by_id("brannoc").pos
+	fight.unit_by_id("foe").pos = at + Vector2i(0, 2000)
+	fight.unit_by_id("ally").pos = at + Vector2i(1500, 0)
+	fight.unit_by_id("brannoc").target = fight.unit_by_id("foe")
+	assert_not_null(Guards.covering(fight, EffectSource.make("foe", "foe_attack", "Strike"), fight.unit_by_id("ally")), "beside him: covered")
 
 
 func test_add_to_areas_and_a_wider_line() -> void:

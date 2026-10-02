@@ -57,8 +57,10 @@
       "cost": "After she moves, she needs 1.5s to plant before she can shoot again.",
       "patch": {
         "stats_bp": {
-          "atk": 10500,
-          "atsp": 7000
+          "atk": 11000,
+          "atsp": 7000,
+          "hp": 10500,
+          "mgk": 10500
         },
         "stats_add": {
           "crit": 2
@@ -194,7 +196,9 @@
       "patch": {
         "stats_bp": {
           "def": 13000,
-          "atk": 9000
+          "atk": 9450,
+          "hp": 10500,
+          "mgk": 10500
         },
         "stats_add": {
           "range": -1
@@ -325,7 +329,9 @@
       "patch": {
         "stats_bp": {
           "atsp": 11000,
-          "atk": 6500
+          "atk": 6800,
+          "hp": 10500,
+          "mgk": 10500
         },
         "add_traits": [
           "fires_moving"
@@ -412,7 +418,7 @@
     "fantasy": "Nothing reaches the people behind him.",
     "placement": "Right in front of Maren and Vell, covering the lane to them.",
     "vowed": {
-      "taste": "Guard: an ally behind him, within 3 hexes, takes 10% less from each hit; he takes it instead.",
+      "taste": "Guard: every ally within 2 hexes of him takes 10% less from each hit; he takes it instead.",
       "cost": "His Shield Bash deals 2% less.",
       "patch": {
         "passives": [
@@ -420,10 +426,10 @@
             "id": "guard",
             "name": "Guard",
             "kind": "guard",
-            "text": "An ally behind him (away from his target), within 3 hexes, takes 10% less from each enemy hit; he takes that instead.",
+            "text": "Every ally within 2 hexes of him takes 10% less from each enemy hit; he takes that instead.",
             "share_pct": 10,
-            "within_hexes": 3,
-            "covers": "behind"
+            "within_hexes": 2,
+            "covers": "all"
           },
           {
             "id": "braced",
@@ -444,9 +450,10 @@
       "cost": "He's slow, and he can't move while his wall stands.",
       "patch": {
         "stats_bp": {
-          "hp": 12500,
+          "hp": 13100,
           "def": 12000,
-          "atk": 8500
+          "atk": 8900,
+          "mgk": 10500
         },
         "stats_add": {
           "speed": -1
@@ -575,9 +582,10 @@
       "cost": "His DEF drops.",
       "patch": {
         "stats_bp": {
-          "atk": 10000,
-          "hp": 10000,
-          "def": 7000
+          "atk": 10500,
+          "hp": 10500,
+          "def": 7000,
+          "mgk": 10500
         },
         "remove_passives": [
           "hold_the_line_guard"
@@ -711,8 +719,9 @@
       "cost": "Heals on him are 20% weaker, and he has 5% less max HP.",
       "patch": {
         "stats_bp": {
-          "hp": 9500,
-          "atk": 13500
+          "hp": 10000,
+          "atk": 14200,
+          "mgk": 10500
         },
         "mana": null,
         "signature": {
@@ -863,8 +872,9 @@
       "cost": "Lantern Glow deals no damage (it still gives mana), and she has less HP.",
       "patch": {
         "stats_bp": {
-          "mgk": 10500,
-          "hp": 8500
+          "mgk": 11000,
+          "hp": 8900,
+          "atk": 10500
         },
         "basic_attack": {
           "id": "lantern_glow",
@@ -1026,9 +1036,10 @@
       "cost": "Her healing is 40% weaker.",
       "patch": {
         "stats_bp": {
-          "hp": 9000,
+          "hp": 9450,
           "def": 10000,
-          "mgk": 9000
+          "mgk": 9450,
+          "atk": 10500
         },
         "signature": {
           "id": "warding_circle",
@@ -1166,8 +1177,10 @@
       "cost": "Her healing is 30% weaker.",
       "patch": {
         "stats_bp": {
-          "mgk": 11000,
-          "def": 8000
+          "mgk": 11550,
+          "def": 8000,
+          "hp": 10500,
+          "atk": 10500
         },
         "stats_add": {
           "crit": 10

@@ -1099,7 +1099,7 @@ The transformation replaces the taste's piece (Steady becomes Planted, Mend beco
 | Volley | Quick Split (Split Shot every 3rd shot) | every shot already splits: the split arrow deals 50%, not 40% |
 | | Restless (+10% attack speed if she moved in the last 2s) | the same |
 | Hearthwall | Broad Guard (Guard takes 15%, not 10%) | Guard takes 35%, not 30% |
-| | Wide Guard (was Two Behind; Decision 39: Guard covers every ally within 3 hexes, not only those behind him) | Guard reaches 3 hexes, not 2 |
+| | Wide Guard (was Two Behind; Decision 39; since phase 6 section 11, Guard reaches 3 hexes, vowed and transformed) | Guard reaches 3 hexes, not 2 |
 | Ironbrand | Heavy Brand (Brand's hit is 50%, not 30%) | the Mace's other hits are 50%, not 30% |
 | | Crowd Sense (+10% ATK with 2 or more enemies adjacent) | the same |
 | Last Watch | Grim Resolve (Unyielding also Shields him 10% of max HP) | Last Rites also Shields him 10% of max HP |
@@ -1206,7 +1206,7 @@ Numbers are `upgrade-pools.md`'s (placeholders); a card's `text` says what it's 
 36. **The four cards that don't fit are replaced** (Question Z): Thread the Hurt (Mend also Wards its target for 2s), Drawing Wall, Crushing Blow (Brand Slam knocks back 2 hexes), and Lasting Circle (15.6).
 37. **The pick never offers a card that changes nothing on the hero's kit as it is now** (Question AA); a held one stays held.
 38. **The pick keeps its shape** (Question AB): one card per hero and the wild card, every card a hero can be offered equally likely, stacking cards without a cap; the run report counts each layer's picks, and step 9 retunes.
-39. **Two Behind becomes Wide Guard** (asked while building 7b, 2026-10-01): vowed Hearthwall's Guard already covers every ally behind him within 3 hexes, so "covers the 2 allies behind him" would change nothing. Wide Guard: Guard covers every ally within 3 hexes, not only those behind him; once transformed, Guard reaches 3 hexes, not 2.
+39. **Two Behind becomes Wide Guard** (asked while building 7b, 2026-10-01): vowed Hearthwall's Guard already covers every ally behind him within 3 hexes, so "covers the 2 allies behind him" would change nothing. Wide Guard: Guard covers every ally within 3 hexes, not only those behind him; once transformed, Guard reaches 3 hexes, not 2. (Phase 6 section 11, Decision 8, made the vowed Guard cover every ally within 2 hexes, so Wide Guard is now "Guard reaches 3 hexes, not 2" at both stages.)
 
 ### 15.13 Built in step 7a (2026-10-01)
 

@@ -100,9 +100,9 @@ func test_the_lock_never_changes_after_a_transformation() -> void:
 	assert_eq(_take(flow, "honed_tips"), 2)
 	flow.state.hero("maren").transformed = true
 	assert_eq(flow.state.hero("maren").locked["honed_tips"], [2], "still +2")
-	# Deadeye transformed: ATK x1.05 (23), plus the locked 2.
-	assert_eq(_stat(flow, "maren", UnitStats.Stat.ATK), 25)
-	assert_eq(_take(flow, "honed_tips"), 3, "the next locks in 10% of 25, rounded up")
+	# Deadeye transformed: ATK x1.1 (24), plus the locked 2.
+	assert_eq(_stat(flow, "maren", UnitStats.Stat.ATK), 26)
+	assert_eq(_take(flow, "honed_tips"), 3, "the next locks in 10% of 26, rounded up")
 
 
 func test_at_least_one_point() -> void:

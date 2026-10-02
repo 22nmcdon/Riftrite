@@ -84,9 +84,9 @@ func test_the_kits_carry_what_the_texts_say() -> void:
 	var volley: UnitDef = _kit("volley", done)
 	assert_eq([volley.basic_attack.effects[1].every, volley.has_trait("fires_moving"), volley.signature.id], [1, true, "arrow_storm"])
 	assert_gt(volley.signature.effects[0].zone_ticks, 0)
-	# Hearthwall: Guard behind; Guard all round, the wall, slower, no taunting DEF.
+	# Hearthwall: Guard all round at 10%; at 30%, the wall, slower, no taunting DEF.
 	var guard: PartDef = _kit("hearthwall", vowed).passives.filter(func(part: PartDef) -> bool: return part.kind == PartDef.Kind.GUARD)[0]
-	assert_eq([guard.share_bp, guard.guard_range, guard.behind_only], [1000, 3000, true])
+	assert_eq([guard.share_bp, guard.guard_range, guard.behind_only], [1000, 2000, false])
 	var hearthwall: UnitDef = _kit("hearthwall", done)
 	assert_eq([hearthwall.signature.id, hearthwall.stats.get_stat(UnitStats.Stat.SPEED), _has_part(hearthwall, "hold_the_line_guard")], ["hearthwall", 1, false])
 	# Ironbrand: Brand; the Mace and Brand Slam.

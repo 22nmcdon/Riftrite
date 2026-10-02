@@ -1114,18 +1114,8 @@
     "name": "Wide Guard",
     "path": "hearthwall",
     "taste": true,
-    "text": "Guard covers the allies beside him too, not only those behind (once transformed, it reaches farther).",
+    "text": "Guard reaches farther.",
     "mod": {
-      "on": [
-        {
-          "slot": "passive:guard",
-          "guard": {
-            "covers_all": true
-          }
-        }
-      ]
-    },
-    "transformed_mod": {
       "on": [
         {
           "slot": "passive:guard",
