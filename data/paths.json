@@ -400,7 +400,7 @@
       "from_ability": [
         "longshot"
       ],
-      "threshold": 13
+      "threshold": 15
     }
   },
   {
@@ -807,7 +807,7 @@
       "text": "Damage he deals while he can't fall (when he should already be dead)",
       "counts": "damage",
       "while_undying": true,
-      "threshold": 20
+      "threshold": 15
     }
   },
   {
