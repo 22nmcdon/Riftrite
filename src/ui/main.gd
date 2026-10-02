@@ -26,6 +26,8 @@ var practice: PracticeSession = null
 var run_session: RunSession = null
 ## Where the run is saved (tests point it somewhere harmless).
 var run_save_path: String = RunSave.PATH
+## Endless's records (phase 8 part 1; tests point it elsewhere).
+var records_path: String = RunRecords.PATH
 var _run_content: RunContent = null
 var hover_card: HoverCard
 var backdrop: TextureRect
@@ -103,6 +105,8 @@ func show_run_start(run_seed: int = 0) -> void:
 func start_run(vows: Dictionary[String, String], run_seed: int) -> void:
 	var errors: Array[String] = []
 	run_session = RunSession.begin(run_content(), run_seed, vows, errors, run_save_path)
+	if run_session != null:
+		run_session.records_path = records_path
 	if run_session == null:
 		toast(errors[0] if not errors.is_empty() else "The run couldn't start", UiStyle.BAD)
 		return
@@ -119,6 +123,7 @@ func continue_run() -> void:
 		show_title()
 		return
 	run_session = RunSession.over(run_content(), RunFlow.resume(run_content(), state), run_save_path)
+	run_session.records_path = records_path
 	show_day()
 
 

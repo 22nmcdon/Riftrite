@@ -10,10 +10,13 @@ const U = preload("res://tests/ui/ui_test_kit.gd")
 const Bot = preload("res://tools/run_bot.gd")
 const SAVE: String = "user://test_run_screens.json"
 const OLD_SAVE: String = "user://test_run_screens_old.json"
+const RECORDS: String = "user://test_run_screens_records.json"
 
 
 func after_each() -> void:
 	RunSave.erase(SAVE)
+	if FileAccess.file_exists(RECORDS):
+		DirAccess.remove_absolute(RECORDS)
 
 
 ## Main frees a screen it replaces on the next frame, so each test lets one
@@ -22,6 +25,7 @@ func _main() -> Main:
 	var main: Main = MainScript.new()
 	main.old_save_path = OLD_SAVE
 	main.run_save_path = SAVE
+	main.records_path = RECORDS
 	add_child_autofree(main)
 	return main
 
@@ -206,6 +210,41 @@ func test_the_runs_end() -> void:
 	assert_true(main.screen is TitleScreen)
 	assert_false(RunSave.has_save(SAVE), "the save goes with the run")
 	await wait_frames(1)
+
+
+## Endless (phase 8 part 1): the choice after the act's boss shop, a
+## floor's top bar and route, and the end, with the deepest floor kept.
+func test_going_deeper_and_falling_on_a_floor() -> void:
+	var main: Main = _started()
+	var flow: RunFlow = _flow(main)
+	flow.state.day = main.run_session.run.act.days.size()
+	flow.state.phase = RunState.Phase.CHOICE
+	main.run_session.save()
+	main.show_day()
+	var text: String = U.text_of(main.screen)
+	assert_string_contains(text, "Old Mother Ash is beaten")
+	assert_not_null(U.button(main.screen, "End the run"))
+	assert_true(U.press(main.screen, "Go deeper"))
+	text = U.text_of(main.screen)
+	assert_string_contains(text, "Floor 1")
+	assert_string_contains(text, "Endless")
+	assert_string_contains(text, "The first loss ends the run")
+	assert_string_contains(text, "enemies ×1.15 HP and ATK, Rift Collapse from 44s")
+	assert_true(U.press(main.screen, "Fight this"))
+	var lost := FightResult.new()
+	lost.outcome = FightResult.Outcome.DEFEAT
+	lost.end_tick = 400
+	main.finish_run_fight(Bot.formation(), lost)
+	text = U.text_of(main.screen)
+	assert_string_contains(text, "The rift takes them on floor 1")
+	assert_string_contains(text, "A new deepest: floor 1.")
+	assert_eq(int(RunRecords.best(RECORDS)["floor"]), 1, "the records keep it")
+	await wait_frames(1)
+
+
+func test_big_numbers_are_short() -> void:
+	assert_eq([UiStyle.short_number(9999), UiStyle.short_number(12400), UiStyle.short_number(3150000), UiStyle.short_number(-25000)], ["9999", "12.4k", "3.1M", "-25.0k"])
+	assert_eq([RunDayScreen.times(15209), RunDayScreen.times(662118), RunDayScreen.times(120000000)], ["1.52", "66.2", "12.0k"])
 
 
 ## The route is the act map (docs/plans/rebuild-phase5b-art.md, section 4):

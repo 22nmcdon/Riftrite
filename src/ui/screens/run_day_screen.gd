@@ -129,11 +129,13 @@ static func fill_top_bar(row: HBoxContainer, run_session: RunSession, where: Str
 		row.remove_child(child)
 		child.queue_free()
 	var state: RunState = run_session.state()
-	row.add_child(UiStyle.heading("Day %d of %d" % [state.day, run_session.run.act.days.size()], 34, UiStyle.HIGHLIGHT))
+	var floor_now: int = run_session.flow.floor_number()
+	var title: String = "Floor %d" % floor_now if floor_now > 0 else "Day %d of %d" % [state.day, run_session.run.act.days.size()]
+	row.add_child(UiStyle.heading(title, 34, UiStyle.HIGHLIGHT))
 	var place: String = where
 	if place.is_empty():
 		place = RunDayScreen.place_name(run_session)
-	var at: Label = UiStyle.label("Act %d · %s" % [state.act, place], 20, UiStyle.TEXT_DIM)
+	var at: Label = UiStyle.label("%s · %s" % ["Endless" if floor_now > 0 else "Act %d" % state.act, place], 20, UiStyle.TEXT_DIM)
 	at.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(at)
 	var gap := Control.new()
@@ -237,12 +239,16 @@ func refresh() -> void:
 				_fill_after()
 			RunState.Phase.SHOP:
 				_fill_shop()
-				var label: String = "Leave the Pedlar: the run's end" if session.flow.boss_shop() else "Leave the Pedlar"
+				var label: String = "Leave the Pedlar"
+				if session.flow.boss_shop() and not state.endless:
+					label = "Leave the Pedlar: end the run, or go deeper" if session.run.act.endless != null else "Leave the Pedlar: the run's end"
 				body.add_child(UiStyle.primary(UiStyle.button(label, _do.bind(session.flow.leave_shop))))
 			RunState.Phase.NODES:
 				_fill_nodes()
 			RunState.Phase.NODE:
 				_fill_node()
+			RunState.Phase.CHOICE:
+				_fill_choice()
 	body.add_child(message)
 	hero_bar.refresh()
 
@@ -770,6 +776,9 @@ func _rank_progress(item: ItemDef) -> String:
 func _fill_route() -> void:
 	var state: RunState = session.state()
 	var kind: String = session.run.day_kind(state, state.day)
+	if session.flow.floor_number() > 0:
+		_fill_floor(kind)
+		return
 	var line: String = {"normal": "An easier fight and a harder one that pays more.", "elite": "An elite day: two elites, each built around one mechanic.", "boss": "Old Mother Ash waits."}[kind]
 	var section: VBoxContainer = _section("Choose today's fight", line + " Click a fight on today's island to read it.")
 	# The act map, with the selected fight's card beside it (phase 5b).
@@ -794,8 +803,9 @@ func _show_route_card(index: int, holder: VBoxContainer) -> void:
 	var options: Array[String] = state.today()
 	if index >= options.size():
 		return
-	act_map.selected = index
-	act_map.queue_redraw()
+	if act_map != null:
+		act_map.selected = index
+		act_map.queue_redraw()
 	var encounter: EncounterDef = session.content.encounters[options[index]]
 	var card: VBoxContainer = _card(holder)
 	var node: String = ActMap.TIER_NODES.get(encounter.tier, "fight")
@@ -807,7 +817,62 @@ func _show_route_card(index: int, holder: VBoxContainer) -> void:
 		card.add_child(_wrapped("Scouted: " + RunDayScreen.placements(encounter, session.content), 15, UiStyle.ACCENT_TEXT))
 	if not state.rift_depth.is_empty():
 		card.add_child(_wrapped(RunDayScreen.rift_line(session.run, state), 15, UiStyle.RIFT_300))
+	if session.flow.floor_number() > 0:
+		card.add_child(_wrapped(RunDayScreen.floor_line(session.flow), 15, UiStyle.RIFT_300))
 	card.add_child(UiStyle.primary(UiStyle.button("Fight this", _do.bind(session.flow.choose_fight.bind(index)))))
+
+
+## An endless floor's route (phase 8 part 1, Decision 2): its one fight's
+## card, after a line on the floor and the rift modifiers gathered so far.
+func _fill_floor(kind: String) -> void:
+	var line: String = {"normal": "The rift grows deeper.", "elite": "An elite floor.", "boss": "Old Mother Ash waits again, stronger."}[kind]
+	var section: VBoxContainer = _section("Floor %d" % session.flow.floor_number(), line + " The first loss ends the run.")
+	var gathered: Array[String] = []
+	for id: String in session.state().endless_mods:
+		var modifier: CampsDef.Modifier = session.run.camps.modifiers[id]
+		gathered.append("%s: %s" % [modifier.name, modifier.text])
+	if not gathered.is_empty():
+		section.add_child(_wrapped("The rift's modifiers, for good:\n" + "\n".join(gathered), 15, UiStyle.RIFT_300))
+	var beside := VBoxContainer.new()
+	beside.custom_minimum_size = Vector2(ROUTE_CARD_WIDTH, 0)
+	section.add_child(beside)
+	_show_route_card(0, beside)
+
+
+## An endless floor's numbers (phase 8 part 1): "Floor 4: enemies ×1.74 HP
+## and ATK, Rift Collapse from 41s, crumbled ground ×1.74."
+static func floor_line(flow: RunFlow) -> String:
+	var floor_now: int = flow.floor_number()
+	var endless: ActDef.Endless = flow.run.act.endless
+	@warning_ignore("integer_division")
+	var start_s: int = maxi(flow.run.content.tuning.collapse_start_ticks / FixedMath.TICKS_PER_SECOND - endless.collapse_step_ms * floor_now / 1000, endless.collapse_floor_ms / 1000)
+	return "Floor %d: enemies ×%s HP and ATK, Rift Collapse from %ds, crumbled ground ×%s." % [floor_now,
+		RunDayScreen.times(ActDef.Endless.compound(endless.growth_bp, floor_now)), start_s, RunDayScreen.times(ActDef.Endless.compound(endless.crumble_growth_bp, floor_now))]
+
+
+## Basis points as a multiplier: 15209 is "1.52", 662118 is "66.2", larger
+## shortened ("1.2k").
+static func times(bp: int) -> String:
+	if bp >= 10000000:
+		@warning_ignore("integer_division")
+		return UiStyle.short_number(bp / 10000)
+	if bp >= 100000:
+		@warning_ignore("integer_division")
+		return "%d.%d" % [bp / 10000, bp % 10000 / 1000]
+	@warning_ignore("integer_division")
+	return "%d.%02d" % [bp / 10000, bp % 10000 / 100]
+
+
+## After the act's boss shop (phase 8 part 1): end the run won, or go deeper.
+func _fill_choice() -> void:
+	var section: VBoxContainer = _section("Old Mother Ash is beaten", "The act is won. End the run here, or go deeper into the rift: every floor's enemies are stronger, a rift modifier joins every third floor for good, Rift Collapse comes sooner, and the first loss ends the run. Your heroes, relics, loadout, and shards go with you.")
+	var best: Dictionary = RunRecords.best(session.records_path)
+	if not best.is_empty():
+		section.add_child(_wrapped("Your deepest so far: floor %d." % int(best["floor"]), 16, UiStyle.HIGHLIGHT))
+	var row: HBoxContainer = _row()
+	section.add_child(row)
+	row.add_child(UiStyle.button("End the run", _do.bind(session.flow.end_run)))
+	row.add_child(UiStyle.primary(UiStyle.button("Go deeper", _do.bind(session.flow.go_deeper))))
 
 
 ## The next day fight's Rift Tear (phase 5c step 8b): "Through a Deep rift
@@ -917,8 +982,17 @@ static func outcome_word(outcome: FightResult.Outcome) -> String:
 func _fill_end() -> void:
 	var state: RunState = session.state()
 	var won: bool = state.outcome == RunState.Outcome.WON
-	var section: VBoxContainer = _section("The rift is quiet: the run is won" if won else "The rift keeps them: the run is lost",
-		"Day %d of %d, with %d relics and %d duo bonds found." % [state.day, session.run.act.days.size(), state.relics.size(), state.bonds_found.size()])
+	var section: VBoxContainer
+	if state.endless:
+		# Endless (phase 8 part 1): the floor it fell on is the score.
+		var floor_now: int = session.flow.floor_number()
+		section = _section("The rift takes them on floor %d" % floor_now, "Act %d won, then %d floors deep, with %d relics and %d duo bonds found." % [state.act, floor_now, state.relics.size(), state.bonds_found.size()])
+		var best: Dictionary = RunRecords.best(session.records_path)
+		var said: String = "A new deepest: floor %d." % floor_now if session.new_best else "Your deepest: floor %d." % int(best.get("floor", floor_now))
+		section.add_child(_wrapped(said, 20, UiStyle.HIGHLIGHT))
+	else:
+		section = _section("The rift is quiet: the run is won" if won else "The rift keeps them: the run is lost",
+			"Day %d of %d, with %d relics and %d duo bonds found." % [state.day, session.run.act.days.size(), state.relics.size(), state.bonds_found.size()])
 	var lines: Array[String] = []
 	for fought: RunState.Fought in state.fought:
 		lines.append("Day %d%s: %s, %s in %ds" % [fought.day, " (again)" if fought.attempt > 0 else "", session.content.encounters[fought.encounter].name,

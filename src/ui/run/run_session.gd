@@ -14,6 +14,11 @@ var run: RunContent
 var flow: RunFlow
 ## Where the run is saved (tests point it elsewhere).
 var save_path: String = RunSave.PATH
+## Endless (phase 8 part 1): where the records are kept, and whether the run
+## that just ended went deeper than any before.
+var records_path: String = RunRecords.PATH
+var new_best: bool = false
+var _noted: bool = false
 
 
 static func begin(run_content: RunContent, run_seed: int, hero_vows: Dictionary[String, String], errors_out: Array[String], path: String = RunSave.PATH) -> RunSession:
@@ -63,6 +68,10 @@ func sync() -> void:
 func save() -> void:
 	sync()
 	RunSave.save(flow.state, save_path)
+	# An endless run's end goes in the records, once.
+	if flow.state.phase == RunState.Phase.ENDED and flow.state.endless and not _noted:
+		_noted = true
+		new_best = RunRecords.note(flow.state, flow.floor_number(), records_path)
 
 
 ## Does a RunFlow action (a Callable returning "" or why not), saves if it

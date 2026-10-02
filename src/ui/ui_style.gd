@@ -296,6 +296,22 @@ static func icon(name: String, size: int = 24) -> TextureRect:
 
 
 ## A heading or a name in Cinzel.
+## A number shortened past 9,999 (phase 8 part 1: endless's enemies grow
+## large): 12.4k, 3.1M, 2.0B.
+static func short_number(value: int) -> String:
+	var size: int = absi(value)
+	if size < 10000:
+		return str(value)
+	var sign: String = "-" if value < 0 else ""
+	for unit: Array in [[1000000000, "B"], [1000000, "M"], [1000, "k"]]:
+		if size >= unit[0]:
+			@warning_ignore("integer_division")
+			var tenths: int = size * 10 / int(unit[0])
+			@warning_ignore("integer_division")
+			return "%s%d.%d%s" % [sign, tenths / 10, tenths % 10, unit[1]]
+	return str(value)
+
+
 static func heading(text: String, size: int = 28, color: Color = HIGHLIGHT) -> Label:
 	var node: Label = label(text, size, color)
 	node.add_theme_font_override("font", font(HEADING_FONT))

@@ -173,23 +173,23 @@ func _add(entry: LogEntry, sim: CombatSim) -> void:
 			if source != null and target != null and _in_melee(source, target):
 				var swipe: Fx = _new(Kind.SWIPE, entry.tick, entry.tick + SWIPE_TICKS, Vector2(source.pos), entry.target)
 				swipe.color = _side_color(sim, entry.source_unit)
-			_number(entry, sim, str(entry.amount) + ("!" if entry.crit else ""), CRIT_COLOR if entry.crit else DAMAGE_COLOR, entry.crit)
+			_number(entry, sim, UiStyle.short_number(entry.amount) + ("!" if entry.crit else ""), CRIT_COLOR if entry.crit else DAMAGE_COLOR, entry.crit)
 		LogEntry.Kind.STATUS_DAMAGE:
-			_number(entry, sim, str(entry.amount), UiStyle.STATUS_COLORS.get(entry.status, UiStyle.EMBER), false)
+			_number(entry, sim, UiStyle.short_number(entry.amount), UiStyle.STATUS_COLORS.get(entry.status, UiStyle.EMBER), false)
 		LogEntry.Kind.COLLAPSE:
-			_number(entry, sim, str(entry.amount), COLLAPSE_COLOR, false)
+			_number(entry, sim, UiStyle.short_number(entry.amount), COLLAPSE_COLOR, false)
 		LogEntry.Kind.HEAL:
-			_number(entry, sim, "+%d" % entry.amount, HEAL_COLOR, false)
+			_number(entry, sim, "+" + UiStyle.short_number(entry.amount), HEAL_COLOR, false)
 		LogEntry.Kind.LIFESTEAL:
-			_number(entry, sim, "+%d" % entry.amount, LIFESTEAL_COLOR, false)
+			_number(entry, sim, "+" + UiStyle.short_number(entry.amount), LIFESTEAL_COLOR, false)
 		LogEntry.Kind.GUARD:
 			var guard: UnitState = sim.unit_by_id(entry.source_unit)
 			if guard != null and entry.amount > 0:
 				var took: Fx = _new(Kind.NUMBER, entry.tick, entry.tick + NUMBER_TICKS, Vector2(guard.pos), guard.id)
-				took.text = str(entry.amount)
+				took.text = UiStyle.short_number(entry.amount)
 				took.color = UiStyle.GOLD_300
 		LogEntry.Kind.SHIELD:
-			_number(entry, sim, "+%d" % entry.amount, UiStyle.SHIELD, false)
+			_number(entry, sim, "+" + UiStyle.short_number(entry.amount), UiStyle.SHIELD, false)
 		LogEntry.Kind.FIRE:
 			var unit: UnitState = sim.unit_by_id(entry.source_unit)
 			if unit != null and unit.def.signature != null and unit.def.signature.id == entry.source_ability:

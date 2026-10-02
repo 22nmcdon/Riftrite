@@ -1,6 +1,6 @@
 # Rebuild phase 8, part 1: endless after Act 1
 
-Status: **agreed (2026-10-02, Decisions 1–5); 8a-1 (the rules) built.** Phase 8 comes before phase 7 (the playtester, 2026-10-02: `rebuild-build-order.md`), and starts with endless mode, so long runs can be tested before Acts 2 and 3 exist. The design is `endless.md` (agreed 2026-09-30); this plan builds it on Act 1, and says what waits for the pieces phase 8 builds later (apexes, enemy specializations, the rift learns, Acts 2 and 3). **Numbers are placeholders** until the bots measure them (part 8a-3).
+Status: **agreed (2026-10-02, Decisions 1–5); 8a-1 (the rules) and 8a-2 (the screens) built.** Phase 8 comes before phase 7 (the playtester, 2026-10-02: `rebuild-build-order.md`), and starts with endless mode, so long runs can be tested before Acts 2 and 3 exist. The design is `endless.md` (agreed 2026-09-30); this plan builds it on Act 1, and says what waits for the pieces phase 8 builds later (apexes, enemy specializations, the rift learns, Acts 2 and 3). **Numbers are placeholders** until the bots measure them (part 8a-3).
 
 ## 1. What it builds
 
@@ -116,4 +116,12 @@ The playtester, 2026-10-02:
 - **Bots:** the simple bot ends the run at the choice; `Bot.go_deeper` (the `deeper` flag) is the hook 8a-3's `--endless` sets.
 - **Calls made while building** (small, flagged for the playtester): the Magpie's two visits an act count afresh when the run goes deeper and after each endless boss floor; a Hunt has no packs on a floor (Act 1's Hunts list days 1–6), so camp doesn't offer it there; Map the Rift on a floor swaps within the floor's pool.
 - **Tests:** `tests/run/test_endless.gd` (11: the choice, floors' kinds and fights, growth, modifiers, the collapse and ground, legendary odds, boss relics then legendaries, the first loss, the save, the records), a crumble test in `test_collapse.gd`, and the boss tests in `test_new_day.gd` and `test_run_flow.gd` now take the choice.
+
+## Built in 8a-2: the screens (2026-10-02)
+
+- **The choice** (`RunDayScreen._fill_choice`): after the act's boss shop, "Old Mother Ash is beaten", what endless is, the deepest floor so far, and End the run or Go deeper. The boss shop's leave button says what follows.
+- **A floor:** the top bar reads "Floor N · Endless" (here and in the arena's run mode); the route is the floor's one fight's card, without the act map, after a line on the floor and the rift's modifiers gathered so far (each with its sentence), and the card says the floor's numbers ("Floor 4: enemies ×1.74 HP and ATK, Rift Collapse from 41s, crumbled ground ×1.74").
+- **The end:** "The rift takes them on floor N", and "A new deepest: floor N." or "Your deepest: floor M."; `RunSession` notes the run in the records once, when it's saved ended (`records_path`, set by `Main`).
+- **Big numbers:** `UiStyle.short_number` (12.4k, 3.1M) on the fight's floating numbers; `RunDayScreen.times` for multipliers.
+- **Tests:** `test_run_screens.gd`: the choice, Go deeper to floor 1, its route and numbers, falling there with the record kept; and the short numbers.
 
