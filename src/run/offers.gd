@@ -220,10 +220,11 @@ static func relics_of_tiers(run: RunContent, state: RunState, visit: int, tiers:
 
 ## The day's two rift modifiers, in order (phase 5c step 8b): a Deep tear
 ## takes the first, an Abyssal one both, so the depths' cards can show them
-## before one's chosen.
+## before one's chosen. In endless, never one the run has gathered (phase
+## 8 part 1), so none is on twice.
 static func rift_modifiers(run: RunContent, state: RunState) -> Array[String]:
 	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.NODE, state.act, state.day, 1])
-	var pool: Array[String] = run.camps.modifier_ids.duplicate()
+	var pool: Array[String] = run.camps.modifier_ids.filter(func(id: String) -> bool: return not state.endless_mods.has(id))
 	var drawn: Array[String] = []
 	var most: int = 0
 	for depth: CampsDef.Depth in run.camps.depths:
@@ -285,9 +286,10 @@ static func endless_floor(run: RunContent, state: RunState, day: int) -> Array[S
 
 
 ## The rift modifier an endless floor adds (phase 8 part 1): one the run
-## hasn't gathered, from the floor's stream ("" once every one is on).
+## hasn't gathered and that a Rift Tear hasn't set up for the floor's
+## fight, from the floor's stream ("" once every one is on).
 static func endless_modifier(run: RunContent, state: RunState, day: int) -> String:
-	var pool: Array[String] = run.camps.modifier_ids.filter(func(id: String) -> bool: return not state.endless_mods.has(id))
+	var pool: Array[String] = run.camps.modifier_ids.filter(func(id: String) -> bool: return not state.endless_mods.has(id) and not state.rift_mods.has(id))
 	if pool.is_empty():
 		return ""
 	return pool[RunRandom.stream(state.seed_value, [RunRandom.ENDLESS, day, 1]).range_int(pool.size())]

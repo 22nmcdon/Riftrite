@@ -838,7 +838,7 @@ func _weaken_mod() -> KitMod:
 func _rift_modifiers() -> Array[CampsDef.Modifier]:
 	var found: Array[CampsDef.Modifier] = []
 	for id: String in state.endless_mods + state.rift_mods:
-		if run.camps.modifiers.has(id):
+		if run.camps.modifiers.has(id) and not found.has(run.camps.modifiers[id]):
 			found.append(run.camps.modifiers[id])
 	return found
 

@@ -135,6 +135,28 @@ func test_a_rift_modifier_every_third_floor_for_good() -> void:
 	assert_eq(unique.size(), _run.camps.modifier_ids.size(), "every modifier once, then no more")
 
 
+func test_a_rift_tear_on_a_floor_never_doubles_a_modifier() -> void:
+	var flow: RunFlow = _to_floor(5)
+	var state: RunState = flow.state
+	var all: Array[String] = _run.camps.modifier_ids
+	state.endless_mods.assign(all.slice(0, all.size() - 3))
+	var drawn: Array[String] = Offers.rift_modifiers(_run, state)
+	assert_false(drawn.any(func(id: String) -> bool: return state.endless_mods.has(id)), "a tear draws none the run has gathered")
+	# A tear set up for floor 6, a gathering floor: the floor gathers another.
+	state.endless_mods.assign(all.slice(0, 1))
+	state.rift_mods.assign(drawn.slice(0, 2))
+	state.day += 1
+	flow._start_day()
+	assert_eq(state.endless_mods.size(), 2)
+	assert_false(state.rift_mods.has(state.endless_mods[1]), "not one the tear brings")
+	# And if one were on twice, the fight is still sound.
+	state.rift_mods.append(state.endless_mods[0])
+	assert_eq(flow.choose_fight(0), "")
+	var errors: Array[String] = []
+	assert_not_null(flow.fight_setup(Bot.formation(), errors))
+	assert_eq(errors, [] as Array[String])
+
+
 func test_the_collapse_comes_sooner_and_the_ground_burns_hotter() -> void:
 	var flow: RunFlow = _to_floor(1)
 	assert_eq(flow.choose_fight(0), "")
