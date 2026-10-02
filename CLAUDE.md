@@ -25,6 +25,9 @@ A PvE roguelite auto-battler (working title **Riftrite**, a placeholder). The pl
 | `endless.md` | endless mode: floors, how the rift scales, and the score (agreed, not built) |
 | `economy.md` | every shard source and price, and the Act 1 spending target (agreed, not built) |
 | `ui-new-systems.md` | what the UI must show for ranks, selling, gambits, rerolls, growth, deeds, bonds, and the fight card; input for the overall UI redesign (agreed, not built) |
+| `asset-contract.md` | what every art file must look like (sizes, anchors, names, layers, manifest), so commissioned art drops in (agreed, not built; its edits to `art-style-guide.md` wait for that file) |
+| `build-map.md` | the team builds (root, burn, shield, and so on), what each needs, the roster's gaps, and the plan for future heroes |
+| `test-teams.md` | teams for the bots to play, to check that builds work and synergy matters: 17 synergy teams (each with its bond), 5 bad teams, and what to measure (first draft, not built) |
 | `days-and-nodes.md` | a day's loop (fight, pick, shop, node), Rift Tear's depths, the Shrine (agreed; built in phase 5c step 8) |
 | `events.md` | the Event node's scenes and the Bloodied Oath (agreed; built in phase 5c step 8c) |
 | `rebuild-build-order.md` | the phases (tactics come as phase 3b, before paths), and what was gutted |
@@ -212,4 +215,4 @@ These are summaries; the plans have the details and the decisions. As each phase
 
 ## Tone and naming
 
-The setting is the rift: dark and dangerous, with no warm hub to come home to. Content names should fit that. All art is placeholder until the art rehaul (rebuild phase 7). Don't use names, characters, or items from Guildrun, The Bazaar, or Enter the Gungeon.
+The setting is the rift: dark and dangerous, with no warm hub to come home to. Content names should fit that. All art is placeholder until the art rehaul (rebuild phase 7). The game is asset-driven: new art follows `docs/plans/asset-contract.md`, and any asset not made for the game goes in `CREDITS.md` with its license. Don't use names, characters, or items from Guildrun, The Bazaar, or Enter the Gungeon.

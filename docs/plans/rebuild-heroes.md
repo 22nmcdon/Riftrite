@@ -73,6 +73,7 @@ That gives each path about 18 options. **Hero and role upgrades must never give 
 4. **Every path has a real cost**, so choices aren't pure upside.
 5. **Every cost should have an answer somewhere in the team.**
 6. **Paths can change how the hero earns mana, or what triggers their signature at all.** It's one of the strongest ways to make a path feel different.
+- **New heroes are designed against the build map** (`build-map.md`): each of a new hero's three paths makes or pays off a different team build, and the map's table is updated.
 
 ## 4. Signature triggers and mana
 
