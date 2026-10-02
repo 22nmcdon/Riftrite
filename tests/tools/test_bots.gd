@@ -221,6 +221,70 @@ func test_the_choices_and_compare_reports() -> void:
 	assert_string_contains(compared, "  simple ")
 
 
+## Plays the act through its boss shop to endless's choice, every fight won
+## on paper.
+func _to_choice(run_seed: int) -> RunFlow:
+	var errors: Array[String] = []
+	var flow: RunFlow = RunFlow.start(_run, run_seed, _vows(run_seed), errors)
+	for day: int in _run.act.days.size():
+		flow.choose_fight(0)
+		flow.record(Simple.formation(), _won())
+		if not flow.state.pick.is_empty():
+			flow.take_shards()
+		if not flow.state.relic_choice.is_empty():
+			flow.decline_relic()
+		flow.finish_day()
+		flow.leave_shop()
+		if flow.state.phase == RunState.Phase.NODES:
+			flow.choose_node(flow.state.nodes.find("camp"))
+			flow.leave_node()
+	assert_eq(flow.state.phase, RunState.Phase.CHOICE)
+	return flow
+
+
+func test_a_bot_that_goes_deeper_plays_floors_to_its_first_loss() -> void:
+	var states: Array[String] = []
+	for deeper: bool in [true, true, false]:
+		var flow: RunFlow = _to_choice(6)
+		var bot: RefCounted = Report.make_bot("simple")
+		bot.set("deeper", deeper)
+		bot.call("begin", flow)
+		for i: int in RunPlayer.MAX_STEPS:
+			if flow.state.phase == RunState.Phase.ENDED:
+				break
+			var said: String = RunPlayer.step(flow, bot)
+			assert_eq(said, "", "day %d" % flow.state.day)
+			if not said.is_empty():
+				break
+		assert_eq([flow.state.phase, flow.state.outcome, flow.state.endless], [RunState.Phase.ENDED, RunState.Outcome.WON, deeper])
+		if deeper:
+			assert_gt(flow.floor_number(), 0, "it reached a floor")
+			assert_eq(flow.state.fought.back().outcome, FightResult.Outcome.DEFEAT, "and fell there")
+		states.append(JSON.stringify(flow.state.to_dict()))
+	assert_eq(states[1], states[0], "it repeats")
+
+
+func test_the_endless_report() -> void:
+	var lines: Array[Report.RunLine] = []
+	for floor_reached: int in [0, 3, 7, 12]:
+		var line := Report.RunLine.new()
+		line.vows.assign(_vows(floor_reached))
+		line.floor_reached = floor_reached
+		if floor_reached > 0:
+			line.fell_to = _run.floor_pool("normal")[0]
+			@warning_ignore("integer_division")
+			line.endless_mods.assign(_run.camps.modifier_ids.slice(0, floor_reached / 3))
+		lines.append(line)
+	var text: String = Report.endless_summary(_run, lines)
+	assert_string_starts_with(text, "Endless: 3 of 4 runs won the act and went deeper")
+	assert_string_contains(text, "median 7, quartiles 3-12, deepest 12, shallowest 3")
+	assert_string_contains(text, "Runs falling by floors: 1-5: 1, 6-10: 1, 11-15: 1")
+	assert_string_contains(text, "Rift modifiers on at the end: 2.3 a run")
+	assert_string_contains(text, "Median floor by vow: ")
+	var none: Array[Report.RunLine] = [lines[0]]
+	assert_eq(Report.endless_summary(_run, none), "Endless: 0 of 1 runs won the act and went deeper")
+
+
 func test_a_hero_sworn_to_the_front_row_is_placed_there() -> void:
 	var flow: RunFlow = _at_fight(4)
 	var vanguard: int = -1

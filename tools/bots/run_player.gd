@@ -8,7 +8,8 @@ const Bot = preload("res://tools/bots/bot.gd")
 
 ## A run is at most 7 days of at most 2 attempts, a few dozen actions each;
 ## anything past this is a bug.
-const MAX_STEPS: int = 1000
+## Endless runs (phase 8 part 1) go on for many floors.
+const MAX_STEPS: int = 8000
 
 
 ## Plays a run from `run_seed` to its end with `bot`. A refused action goes

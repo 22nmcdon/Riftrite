@@ -76,6 +76,12 @@ class RunLine:
 	## fights it was held for (phase 5c step 4).
 	var grown: Dictionary[String, int] = {}
 	var grown_fights: Dictionary[String, int] = {}
+	## Endless (phase 8 part 1, --endless): the floor the run reached (0: it
+	## didn't go deeper), the fight it fell to there, and the rift modifiers
+	## it had gathered.
+	var floor_reached: int = 0
+	var fell_to: String = ""
+	var endless_mods: Array[String] = []
 
 	## Its measures as a Dictionary (what --jobs passes between processes,
 	## with FileAccess.store_var, so types survive).
@@ -127,11 +133,12 @@ static func make_bot(bot_name: String) -> BaseBot:
 
 ## Plays run `run_seed` to its end with the bot named `bot_name`, measuring
 ## it.
-static func play(run: RunContent, run_seed: int, bot_name: String = "simple-peek") -> RunLine:
+static func play(run: RunContent, run_seed: int, bot_name: String = "simple-peek", endless: bool = false) -> RunLine:
 	var line := RunLine.new()
 	line.seed_value = run_seed
 	line.bot = bot_name
 	var bot: BaseBot = make_bot(bot_name)
+	bot.deeper = endless
 	var combos: Array[Dictionary] = vow_combinations(run.content)
 	line.vows.assign(combos[run_seed % combos.size()])
 	var flow: RunFlow = RunFlow.start(run, run_seed, line.vows, line.errors)
@@ -214,6 +221,12 @@ static func play(run: RunContent, run_seed: int, bot_name: String = "simple-peek
 					line.transformed_on[hero_id] = last.day
 	line.outcome = state.outcome
 	line.day = state.day
+	if state.endless:
+		line.floor_reached = flow.floor_number()
+		line.endless_mods = state.endless_mods.duplicate()
+		var last: RunState.Fought = state.fought.back() if not state.fought.is_empty() else null
+		if last != null and last.outcome == FightResult.Outcome.DEFEAT and last.day == state.day:
+			line.fell_to = last.encounter
 	for hero: RunState.Hero in state.heroes:
 		line.picks[hero.id] = hero.upgrades.size()
 		for id: String in hero.upgrades:
@@ -393,11 +406,79 @@ static func _choice_name(run: RunContent, kind: String, id: String) -> String:
 	return run.relics[id].name if run.relics.has(id) else id
 
 
-static func play_many(run: RunContent, seeds: Array[int], bot_name: String = "simple-peek") -> Array[RunLine]:
+static func play_many(run: RunContent, seeds: Array[int], bot_name: String = "simple-peek", endless: bool = false) -> Array[RunLine]:
 	var lines: Array[RunLine] = []
 	for run_seed: int in seeds:
-		lines.append(play(run, run_seed, bot_name))
+		lines.append(play(run, run_seed, bot_name, endless))
 	return lines
+
+
+## Endless's report (phase 8 part 1, --endless; Decision 5: a report, not
+## tuned): how deep the runs that won the act went, what floor kinds and
+## fights ended them, and the rift modifiers on at the end.
+static func endless_summary(run: RunContent, lines: Array[RunLine]) -> String:
+	var out: PackedStringArray = PackedStringArray()
+	var deeper: Array[RunLine] = []
+	deeper.assign(lines.filter(func(line: RunLine) -> bool: return line.floor_reached > 0))
+	out.append("Endless: %d of %d runs won the act and went deeper" % [deeper.size(), lines.size()])
+	if deeper.is_empty():
+		return "\n".join(out)
+	var floors: Array[int] = []
+	for line: RunLine in deeper:
+		floors.append(line.floor_reached)
+	floors.sort()
+	@warning_ignore("integer_division")
+	out.append("  Floor reached: median %d, quartiles %d-%d, deepest %d, shallowest %d" % [floors[floors.size() / 2], floors[floors.size() / 4], floors[floors.size() * 3 / 4], floors.back(), floors.front()])
+	var buckets: Dictionary[int, int] = {}
+	for f: int in floors:
+		@warning_ignore("integer_division")
+		var bucket: int = (f - 1) / 5
+		buckets[bucket] = buckets.get(bucket, 0) + 1
+	var bucket_text: PackedStringArray = PackedStringArray()
+	for bucket: int in range(0, buckets.keys().max() + 1):
+		bucket_text.append("%d-%d: %d" % [bucket * 5 + 1, bucket * 5 + 5, buckets.get(bucket, 0)])
+	out.append("  Runs falling by floors: " + ", ".join(bucket_text))
+	var kinds: Dictionary[String, int] = {}
+	var fights: Dictionary[String, int] = {}
+	for line: RunLine in deeper:
+		if line.fell_to.is_empty():
+			continue
+		var kind: String = run.act.endless.kind(line.floor_reached) if run.act.endless != null else "?"
+		kinds[kind] = kinds.get(kind, 0) + 1
+		fights[line.fell_to] = fights.get(line.fell_to, 0) + 1
+	out.append("  Fell on a floor that was: normal %d, elite %d, boss %d" % [kinds.get("normal", 0), kinds.get("elite", 0), kinds.get("boss", 0)])
+	var worst: Array = fights.keys()
+	worst.sort_custom(func(a: String, b: String) -> bool: return fights[a] > fights[b] if fights[a] != fights[b] else a < b)
+	var named: PackedStringArray = PackedStringArray()
+	for id: String in worst:
+		named.append("%s %d" % [run.content.encounters[id].name, fights[id]])
+	out.append("  Fell to: " + ", ".join(named))
+	var mods: Dictionary[String, int] = {}
+	var mod_total: int = 0
+	for line: RunLine in deeper:
+		mod_total += line.endless_mods.size()
+		for id: String in line.endless_mods:
+			mods[id] = mods.get(id, 0) + 1
+	var mod_text: PackedStringArray = PackedStringArray()
+	for id: String in run.camps.modifier_ids:
+		if mods.has(id):
+			mod_text.append("%s %d" % [run.camps.modifiers[id].name, mods[id]])
+	out.append("  Rift modifiers on at the end: %.1f a run (%s)" % [float(mod_total) / deeper.size(), ", ".join(mod_text) if not mod_text.is_empty() else "none"])
+	var by_vow: Dictionary[String, Array] = {}
+	for line: RunLine in deeper:
+		for hero_id: String in line.vows:
+			var path_id: String = line.vows[hero_id]
+			if not by_vow.has(path_id):
+				by_vow[path_id] = []
+			by_vow[path_id].append(line.floor_reached)
+	var vow_text: PackedStringArray = PackedStringArray()
+	for path_id: String in run.content.path_ids:
+		if by_vow.has(path_id):
+			var values: Array[int] = []
+			values.assign(by_vow[path_id])
+			vow_text.append("%s %s" % [run.content.paths[path_id].name, _median(values)])
+	out.append("  Median floor by vow: " + ", ".join(vow_text))
+	return "\n".join(out)
 
 
 ## The report's text.
@@ -438,7 +519,8 @@ static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 				days.append(day)
 			if line.day >= run.act.days.size():
 				reached += 1
-				by_boss += 1 if day > 0 else 0
+				# A transformation on an endless floor came after the boss.
+				by_boss += 1 if day > 0 and day <= run.act.days.size() else 0
 		var gain: int = 0
 		var fights: int = 0
 		for line: RunLine in lines:

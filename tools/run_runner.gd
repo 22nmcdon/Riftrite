@@ -3,13 +3,15 @@ extends SceneTree
 ## bots, docs/plans/rebuild-phase6-bot-tuning.md): plays many runs with a
 ## bot and prints how they pace (tools/run_report.gd does the work). A
 ## report, not a gate: it exits 0 unless a run hit an error.
-## Usage: godot --headless --path . -s tools/run_runner.gd -- [--runs=54] [--first-seed=1] [--bot=simple-peek] [--jobs=1] [--engines]
+## Usage: godot --headless --path . -s tools/run_runner.gd -- [--runs=54] [--first-seed=1] [--bot=simple-peek] [--jobs=1] [--engines] [--endless]
 ## --bot: one of run_report.gd's BOTS. --compare plays the random bot,
 ## the good bot, and the expert on the same seeds and prints them side by
 ## side before the --bot's report (phase 6 step 6d). --choices adds the
 ## choices report: each card, item, and relic offered, taken, and the runs
 ## won with it. --engines adds the engine report
 ## (phase 5c step 9b): every hero engine over the runs' day fights.
+## --endless (phase 8 part 1): bots go deeper after the act's boss shop,
+## and the endless report follows (how far runs get; not tuned).
 ## --jobs=N plays the seeds in N Godot processes (each takes every Nth seed
 ## and writes its runs with --part=k/N --out=file), then merges them: the
 ## report is the same as one process's.
@@ -19,12 +21,14 @@ const PARTS_DIR: String = "user://run_parts"
 
 
 func _init() -> void:
-	var options: Dictionary[String, String] = {"runs": "54", "first-seed": "1", "bot": "simple-peek", "jobs": "1", "part": "", "out": ""}
+	var options: Dictionary[String, String] = {"runs": "54", "first-seed": "1", "bot": "simple-peek", "jobs": "1", "part": "", "out": "", "endless": ""}
 	for arg: String in OS.get_cmdline_user_args():
 		if arg.begins_with("--") and arg.contains("="):
 			var pair: PackedStringArray = arg.trim_prefix("--").split("=", true, 1)
 			if options.has(pair[0]):
 				options[pair[0]] = pair[1]
+	if OS.get_cmdline_user_args().has("--endless"):
+		options["endless"] = "yes"
 	if not Report.BOTS.has(options["bot"]):
 		printerr("unknown bot \"%s\" (%s)" % [options["bot"], ", ".join(Report.BOTS)])
 		quit(1)
@@ -55,6 +59,9 @@ func _init() -> void:
 	if OS.get_cmdline_user_args().has("--engines"):
 		print("")
 		print(Report.engines_summary(lines))
+	if not options["endless"].is_empty():
+		print("")
+		print(Report.endless_summary(run, lines))
 	for line: Report.RunLine in lines:
 		if not line.errors.is_empty():
 			printerr("seed %d: %s" % [line.seed_value, "; ".join(line.errors)])
@@ -67,7 +74,7 @@ func _play(run: RunContent, seeds: Array[int], jobs: int, options: Dictionary[St
 		var for_bot: Dictionary[String, String] = options.duplicate()
 		for_bot["bot"] = bot_name
 		return _play_in_processes(seeds, jobs, for_bot)
-	lines.assign(Report.play_many(run, seeds, bot_name))
+	lines.assign(Report.play_many(run, seeds, bot_name, not options["endless"].is_empty()))
 	return lines
 
 
@@ -80,7 +87,7 @@ func _play_part(run: RunContent, seeds: Array[int], options: Dictionary[String, 
 		if i % part[1].to_int() == part[0].to_int():
 			mine.append(seeds[i])
 	var dicts: Array[Dictionary] = []
-	for line: Report.RunLine in Report.play_many(run, mine, options["bot"]):
+	for line: Report.RunLine in Report.play_many(run, mine, options["bot"], not options["endless"].is_empty()):
 		dicts.append(line.to_dict())
 	var file: FileAccess = FileAccess.open(options["out"], FileAccess.WRITE)
 	file.store_var(dicts)
@@ -99,6 +106,8 @@ func _play_in_processes(seeds: Array[int], jobs: int, options: Dictionary[String
 		outs.append(out)
 		var args: PackedStringArray = ["--headless", "--path", ProjectSettings.globalize_path("res://"), "-s", "tools/run_runner.gd", "--",
 			"--runs=%d" % seeds.size(), "--first-seed=%d" % seeds[0], "--bot=%s" % options["bot"], "--part=%d/%d" % [k, jobs], "--out=%s" % out]
+		if not options["endless"].is_empty():
+			args.append("--endless")
 		pids.append(OS.create_process(OS.get_executable_path(), args))
 	for pid: int in pids:
 		while OS.is_process_running(pid):

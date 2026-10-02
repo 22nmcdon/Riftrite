@@ -73,16 +73,17 @@ static func copy(flow: RunFlow) -> RunFlow:
 ## first. Empty after the boss (nothing left to prepare for).
 static func practice_set(flow: RunFlow) -> Array[String]:
 	var state: RunState = flow.state
-	var days: Array[String] = flow.run.act.days
+	# Endless (phase 8 part 1): the floors drawn so far count as the act's days.
+	var last: int = state.options.size() if state.endless else flow.run.act.days.size()
 	var first: int = state.day if state.phase == RunState.Phase.ROUTE or state.phase == RunState.Phase.LOADOUT else state.day + 1
 	var found: Array[String] = []
-	if first > days.size():
+	if first > last:
 		return found
-	for day: int in range(first + 1, mini(first + 2, days.size()) + 1):
+	for day: int in range(first + 1, mini(first + 2, last) + 1):
 		if not found.has(state.options[day - 1][0]):
 			found.append(state.options[day - 1][0])
-	for day: int in range(first + 3, days.size() + 1):
-		if days[day - 1] != "normal":
+	for day: int in range(first + 3, last + 1):
+		if flow.run.day_kind(state, day) != "normal":
 			if not found.has(state.options[day - 1][0]):
 				found.append(state.options[day - 1][0])
 			break
