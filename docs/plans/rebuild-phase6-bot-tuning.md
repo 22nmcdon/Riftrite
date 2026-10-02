@@ -239,7 +239,7 @@ New content, new rules, Acts 2–3, enemy specializations (phase 8), and the art
 5. **Practice never includes the next day fight** (the playtester, 2026-10-02, after step 6c's first read): practicing the coming fights showed the good bot their outcome (a fight's seed only changes crits), and it won 108 of 108 runs. Its choices are judged against the act's fights more than a day away, then fights already fought; today's fight, a Rift Tear's depth, and a Hunt are chosen by the team's strength in that practice, not by practicing them; the elites and the boss are practiced only while they're more than a day away.
 6. **What comes after phase 6** (the playtester, 2026-10-02): a second, quick tuning pass first (section 11: the transformations up to phase 4's 15–25 band, and Hearthwall's deed); then **phase 8 before phase 7**, so the game's systems settle before the art goes on them. Phase 8 starts with **endless after Act 1** (`endless.md`'s floors on Act 1's encounters, until Acts 2 and 3 exist and endless moves behind them), then apexes, enemy specializations and the rift learns, Acts 2 and 3, and the rest; each piece gets its own plan.
 
-## 11. The second tuning pass (proposed)
+## 11. The second tuning pass (agreed, Decisions 7 and 8)
 
 **Why:** phase 6 left two things off target (section 5.5): the transformations are +5 to +15 over all base, under phase 4's 15–25 band, and Hearthwall's deed comes in lumps (no threshold lands him on day 3–4).
 
@@ -254,8 +254,13 @@ New content, new rules, Acts 2–3, enemy specializations (phase 8), and the art
 
 **Parts:** 11a the transformations (and Hearthwall's deed), 11b the enemies retuned, 11c docs and a playtest build. Each committed and reported like phase 6's steps.
 
-### 11.1 Questions
+### 11.1 Questions (answered in Decisions 7 and 8)
 
 - **AO. How the transformations get stronger:** their own abilities' numbers, or a flat stat lift?
 - **AP. Hearthwall's deed:** a cap per fight, a wider vowed Guard, or counting hits?
+
+### 11.2 Decisions (the playtester, 2026-10-02)
+
+7. **The transformations get stronger mostly through their own abilities, with a small shared lift** (Question AO): every transformation also lifts the hero's HP, ATK, and MGK a little (about 5%), and the rest of each path's way to +15 to +25 comes from the numbers in what makes it that path.
+8. **Hearthwall's vowed Guard covers any ally within 2 hexes** (Question AP), like his transformed Guard but at 10%, so most fights guard something and his deed fills steadily; his threshold is set again from what it gives a fight.
 
