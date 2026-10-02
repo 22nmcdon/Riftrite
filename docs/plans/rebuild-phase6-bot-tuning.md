@@ -237,3 +237,25 @@ New content, new rules, Acts 2–3, enemy specializations (phase 8), and the art
 3. **The paths flagged in phase 5c are fixed as the numbers say** (Question AM): vowed Volley's cost, Wardweaver's deed, Hearthwall's lumps, and transformations under the 15–25 band, changed in step 6e and reported like any other change.
 4. **Six parts as in section 5, ending in a playtest build** (Question AN).
 5. **Practice never includes the next day fight** (the playtester, 2026-10-02, after step 6c's first read): practicing the coming fights showed the good bot their outcome (a fight's seed only changes crits), and it won 108 of 108 runs. Its choices are judged against the act's fights more than a day away, then fights already fought; today's fight, a Rift Tear's depth, and a Hunt are chosen by the team's strength in that practice, not by practicing them; the elites and the boss are practiced only while they're more than a day away.
+6. **What comes after phase 6** (the playtester, 2026-10-02): a second, quick tuning pass first (section 11: the transformations up to phase 4's 15–25 band, and Hearthwall's deed); then **phase 8 before phase 7**, so the game's systems settle before the art goes on them. Phase 8 starts with **endless after Act 1** (`endless.md`'s floors on Act 1's encounters, until Acts 2 and 3 exist and endless moves behind them), then apexes, enemy specializations and the rift learns, Acts 2 and 3, and the rest; each piece gets its own plan.
+
+## 11. The second tuning pass (proposed)
+
+**Why:** phase 6 left two things off target (section 5.5): the transformations are +5 to +15 over all base, under phase 4's 15–25 band, and Hearthwall's deed comes in lumps (no threshold lands him on day 3–4).
+
+**The transformations:** each path's transformed kit gets stronger until the paths report (`--paths --seeds=1 --sweep=20`) puts it at +15 to +25 over all base, averaged over Act 1's encounters. How (Question AO): in its own abilities' numbers (what makes it that path), or a flat stat lift on every transformation. Then Act 1's enemies are retuned (the good bot gets stronger) back to section 4's targets, with the same tools and the same report of every change.
+
+**Hearthwall's deed** ("damage he takes in place of allies"): his vowed Guard covers only an ally behind him, away from his target, so a fight gives a lot or nothing. Options (Question AP):
+- **A cap per fight:** the deed counts at most a set amount each fight (a new `fight_cap` on a deed), and the threshold rises, so he needs several fights that guard. A small new rule; any lumpy deed can use it.
+- **A wider vowed Guard:** his taste covers any ally within 2 hexes (as his transformed Guard does, at 10% instead of 30%), so most fights guard something.
+- **Counting hits, not damage:** each hit he takes for an ally counts 1, however big.
+
+**Measured by:** the paths report (the band), the run report with the good bot (each path's first transformation on days 3–4 and 80% by the boss; the good bot at 45–50%; the random bot under 15%; the expert above).
+
+**Parts:** 11a the transformations (and Hearthwall's deed), 11b the enemies retuned, 11c docs and a playtest build. Each committed and reported like phase 6's steps.
+
+### 11.1 Questions
+
+- **AO. How the transformations get stronger:** their own abilities' numbers, or a flat stat lift?
+- **AP. Hearthwall's deed:** a cap per fight, a wider vowed Guard, or counting hits?
+
