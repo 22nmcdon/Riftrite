@@ -197,6 +197,8 @@ Why it's shaped this way:
 
 - **Tests that pinned the old numbers changed on purpose:** `test_encounters.gd` (an encounter's scale up to 30000), `test_hero_rules.gd`'s rules fight (the heroes at three tenths of their HP, so seed 6 still rises, resists, and uses every rule against the stronger boss), `test_fight_log.gd`'s banners (the Witch Coven, which still reaches the collapse at 45s), and `test_path_kits.gd` (Volley reaches 4 hexes and holds Light Draw). The good bot keeps a hero sworn to the front row there (`Placement.best_formations`' rows; a run hit that refusal in trial D).
 - **The bench's 24 fingerprints are unchanged** (its fights don't read the tuned data).
+- **The paths report after** (`--paths --seeds=1 --sweep=20`, the mean gain over all base across the 18 encounters): **every vow is within 5 points of base** (Decision 3 of phase 4): vowed Volley −0.4 (it was +10), Wardweaver +3.2, Ironbrand +2.1, Vigil Keeper −0.9 (it was −7), the rest within a point. **The transformations are +5 to +15, still under phase 4's 15–25 band:** Hearthwall +14.8, Lanternbearer +12.7, Trapper +10.7, Volley +8.5, Vigil Keeper +7.8, Last Watch +6.8, Wardweaver +6.4, Deadeye +5.3, Ironbrand +5.1. Raising them makes the good bot stronger, so the enemies would be retuned after: the next tuning pass, not done here.
+- **Not refitted:** the placement weights (`placement_weights.json`) read positions and enemy kinds, not their HP and ATK, so the scale doesn't touch what they read; refitting would also change the bot the numbers above measured.
 
 ## 6. Files
 
