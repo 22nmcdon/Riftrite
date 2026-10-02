@@ -144,6 +144,20 @@ CHANGED AFTER YOUR FIRST RUN
   - Last Watch and Hearthwall need a little less to transform.
   Tell us if Brannoc still falls too often, and in which fights.
 
+TUNED IN THIS BUILD (phase 6: a bot that plays well, then Act 1 tuned to it)
+  - Act 1 is harder, most of all from day 4 on and Old Mother Ash: enemies
+    have up to 60% more HP and attack. A bot that places by reading the
+    fight (never trying it first) wins about half its runs; one that
+    places at random wins none.
+  - The boss shop is after the boss, and the boss pays 60 shards.
+  - Volley reaches 4 hexes again; her vow's cost is now that her shots
+    deal 5% less.
+  - Wardweaver's Mend also gives its target a small Shield, so her deed
+    fills every run (and needs more: 120).
+  - Hearthwall, Lanternbearer, and Last Watch need less to transform;
+    Volley a little less.
+  Tell us: does Act 1 feel hard but fair? Which fight ends your runs?
+
 WHAT WE WANT TO KNOW ABOUT THE ART
   Does the arena read well with heroes at the bottom, on the island? Are
   the item icons clear (each kind's frame says charm, tactic, sigil, graft,

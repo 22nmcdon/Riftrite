@@ -1,6 +1,6 @@
 # Rebuild phase 6: the good bot and tuning Act 1
 
-Status: **agreed (2026-10-01), Decisions 1–4 in section 10; being built in six parts (section 5).** Phase 6 of `rebuild-build-order.md`: "A good-player bot (placement heuristics, vows, fight and camp picks); tune Act 1. **The good bot clears about 45–50%; a random bot clears far less.**" The old design's reason for the number still holds: a person usually beats a bot, so a good person should land a little above half (`docs/archive/plans/items-and-clarity.md`).
+Status: **built (2026-10-02), all six parts** (section 5's built notes; Decisions 1–5 in section 10). The good bot wins 53% of Act 1's runs, the random bot 0%, the expert 62%. Phase 6 of `rebuild-build-order.md`: "A good-player bot (placement heuristics, vows, fight and camp picks); tune Act 1. **The good bot clears about 45–50%; a random bot clears far less.**" The old design's reason for the number still holds: a person usually beats a bot, so a good person should land a little above half (`docs/archive/plans/items-and-clarity.md`).
 
 ## 1. Where things stand
 
