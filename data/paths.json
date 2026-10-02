@@ -511,7 +511,7 @@
     "deed": {
       "text": "Damage he takes in place of allies",
       "counts": "guarded",
-      "threshold": 20
+      "threshold": 16
     }
   },
   {
@@ -820,7 +820,7 @@
       "text": "Damage he deals while he can't fall (when he should already be dead)",
       "counts": "damage",
       "while_undying": true,
-      "threshold": 15
+      "threshold": 12
     }
   },
   {
