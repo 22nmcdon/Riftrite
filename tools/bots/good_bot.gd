@@ -29,6 +29,10 @@ const SHOP_TRIES: int = 8
 ## Rerolls a shop visit, at most, and the shards it keeps back.
 const REROLLS: int = 1
 const REROLL_KEEP: int = 20
+## The team's practice worth a Rift Tear's depths ask (Shallow, Deep,
+## Abyssal): its practice is a sure win, then wins with more and more HP
+## to spare.
+const DEPTH_BARS: Array[float] = [1.45, 1.65, 1.85]
 
 var _rerolled: String = ""
 
@@ -55,26 +59,19 @@ func candidates(flow: RunFlow) -> Array[Dictionary]:
 	return Practice.candidates(flow, CANDIDATES)
 
 
-## Today's fight: each option in practice, plus its pay when it's won
-## surely; the harder fight only when it's a sure win.
+## Today's fight (Decision 5: never practiced): the harder one when the
+## team's practice (the act's other fights) is a sure win, else the easier;
+## on an elite day, the first.
 func route(flow: RunFlow) -> int:
 	var options: Array[String] = flow.state.today()
-	if options.size() < 2:
-		return 0
-	var best: int = 0
-	var best_value: float = -INF
+	var harder: int = -1
 	for i: int in options.size():
-		var trial: RunFlow = Practice.copy(flow)
-		trial.choose_fight(i)
-		var fight: float = Practice.fight_worth(trial, options[i])
-		var tier: String = flow.run.content.encounters[options[i]].tier
-		var value: float = fight + (flow.run.act.pay.get(tier, 0) * Practice.shard_worth(flow) if fight >= Practice.SURE else 0.0)
-		if tier == "harder" and fight < Practice.SURE:
-			value -= 1.0
-		if value > best_value:
-			best_value = value
-			best = i
-	return best
+		if flow.run.content.encounters[options[i]].tier == "harder":
+			harder = i
+	if harder < 0:
+		return 0
+	var strong: bool = Practice.team_worth(flow, Practice.practice_set(flow)) >= Practice.SURE
+	return harder if strong else (1 - harder if options.size() == 2 else 0)
 
 
 ## Equips what waits in the stash on a hero with a free slot that it
@@ -234,22 +231,21 @@ func shrine(flow: RunFlow) -> Array:
 	return ["relic", lowest] if not lowest.is_empty() else []
 
 
-## Map the Rift: swaps tomorrow's fight that does worst in practice.
+## Map the Rift (Decision 5: tomorrow's fights aren't practiced): swaps
+## the one its encounter scales up most.
 func swap(flow: RunFlow) -> int:
 	var tomorrow: Array = flow.state.options[flow.state.day]
 	var worst: int = 0
-	var worst_value: float = INF
 	for i: int in tomorrow.size():
-		var value: float = Practice.team_worth(flow, [tomorrow[i]] as Array[String])
-		if value < worst_value:
-			worst_value = value
+		if flow.run.content.encounters[tomorrow[i]].scale_bp > flow.run.content.encounters[tomorrow[worst]].scale_bp:
 			worst = i
 	return worst
 
 
 ## [option index, worth] of the camp's best option: Rest, Fortify, and Dig
-## In by practice; Train a pick's worth; a Hunt its pay when it's a sure
-## win; the Shrine a rare relic's when it has the shards; the rest nothing.
+## In by practice; Train a pick's worth; a Hunt its pay when the team's
+## practice is a sure win; the Shrine a rare relic's when it has the shards;
+## the rest nothing.
 func _best_camp(flow: RunFlow, coming: Array[String]) -> Array:
 	var state: RunState = flow.state
 	var baseline: float = Practice.team_worth(flow, coming)
@@ -267,10 +263,8 @@ func _best_camp(flow: RunFlow, coming: Array[String]) -> Array:
 			"train":
 				value = baseline + PICK_WORTH
 			"hunt":
-				var trial: RunFlow = Practice.copy(flow)
-				if trial.choose_camp(i).is_empty():
-					var hunt: float = Practice.fight_worth(trial, trial.state.hunt)
-					value = baseline + (flow.run.act.pay.get("hunt", 0) * Practice.shard_worth(flow) if hunt >= Practice.SURE else -0.01)
+				# Decision 5: the Hunt's pack isn't practiced; the team's practice is.
+				value = baseline + (flow.run.act.pay.get("hunt", 0) * Practice.shard_worth(flow) if baseline >= Practice.SURE else -0.01)
 			"shrine":
 				value = baseline + (RELIC_WORTH["rare"] - flow.run.act.shrine_price * Practice.shard_worth(flow) if state.shards >= flow.run.act.shrine_price else 0.0)
 		if value > best_value:
@@ -279,20 +273,15 @@ func _best_camp(flow: RunFlow, coming: Array[String]) -> Array:
 	return [best, best_value]
 
 
-## [depth index, worth] of a Rift Tear's best depth: the deepest whose
-## fight tomorrow is a sure win in practice, worth its relics; -1 and a
-## loss's worth when none is.
+## [depth index, worth] of a Rift Tear's best depth (Decision 5: tomorrow's
+## fight isn't practiced): the deepest whose bar the team's practice
+## clears (DEPTH_BARS), worth its relics; -1 and a loss's worth when it
+## clears none.
 func _best_depth(flow: RunFlow) -> Array:
-	var tomorrow: Array[String] = []
-	if flow.state.day < flow.run.act.days.size():
-		tomorrow.assign(flow.state.options[flow.state.day])
+	var team: float = Practice.team_worth(flow, Practice.practice_set(flow))
 	var best: Array = [-1, -0.5]
-	for d: int in flow.run.camps.depths.size():
-		var trial: RunFlow = Practice.copy(flow)
-		if not trial.choose_depth(d).is_empty():
-			continue
-		var fight: float = Practice.team_worth(trial, tomorrow.slice(0, 1))
-		if fight < Practice.SURE:
+	for d: int in mini(flow.run.camps.depths.size(), DEPTH_BARS.size()):
+		if team < DEPTH_BARS[d]:
 			break
 		var relics: float = 0.0
 		for tier: String in flow.run.camps.depths[d].relics:

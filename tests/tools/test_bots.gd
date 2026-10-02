@@ -156,10 +156,15 @@ func test_the_good_bot_and_the_expert_play_and_repeat() -> void:
 func test_the_practice_set_is_what_the_map_shows() -> void:
 	var flow: RunFlow = _at_fight(2)
 	var state: RunState = flow.state
-	assert_eq(Practice.practice_set(flow), [state.options[0][0], state.options[2][0]] as Array[String], "today's first fight, then the first elite's")
+	assert_eq(Practice.practice_set(flow), [state.options[1][0], state.options[2][0], state.options[4][0]] as Array[String],
+		"never today's fight (Decision 5): days 2 and 3, then the next elite after them")
+	assert_false(Practice.practice_set(flow).has(state.options[0][0]) and state.options[0][0] != state.options[1][0])
 	state.phase = RunState.Phase.SHOP
+	state.day = 5
+	assert_eq(Practice.practice_set(flow), [state.options[6][0], state.options[4][0]] as Array[String],
+		"the boss (two days off), then the latest fight already behind; never day 6's")
 	state.day = 6
-	assert_eq(Practice.practice_set(flow), [state.options[6][0]] as Array[String], "the boss, once")
+	assert_eq(Practice.practice_set(flow), [state.options[5][0], state.options[4][0]] as Array[String], "with the boss next, fights behind")
 	state.day = 7
 	assert_eq(Practice.practice_set(flow), [] as Array[String], "nothing after the boss")
 

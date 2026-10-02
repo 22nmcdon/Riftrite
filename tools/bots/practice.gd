@@ -6,10 +6,14 @@ extends RefCounted
 ##     1 to 2), or that share minus 1 for a loss (-1 to 0): any win beats any
 ##     loss, and a closer loss beats a rout.
 ##   - A choice is tried on a copy of the run (RunFlow.resume over the state
-##     read back from its dict), and is worth the mean worth of the coming
-##     fights the act map shows (practice_set) fought on practice seeds,
-##     never a real fight's, plus what it did to the shards (SHARD_WORTH
-##     each). Placement in a practice fight is the good bot's reading.
+##     read back from its dict), and is worth the mean worth of practice
+##     fights (practice_set) fought on practice seeds, plus what it did to
+##     the shards (shard_worth each). Placement in a practice fight is the
+##     good bot's reading.
+##   - Practice never includes the next day fight (Decision 5): a fight's
+##     seed only changes crits, so practicing it would be seeing its
+##     outcome. It's the act's fights more than a day away, then fights
+##     already fought.
 
 const Placement = preload("res://tools/bots/placement.gd")
 const Simple = preload("res://tools/run_bot.gd")
@@ -62,9 +66,11 @@ static func copy(flow: RunFlow) -> RunFlow:
 	return RunFlow.resume(flow.run, RunState.from_dict(flow.state.to_dict()))
 
 
-## The coming fights a player sees on the act map: the next day fight's
-## first option (today's while it's still to be fought) and the next
-## elite's or the boss's after it. Empty after the boss.
+## The practice fights (Decision 5): never the next day fight (today's
+## while it's still to be fought). The first fights of the two days after
+## it, and the next elite's or the boss's after those; then, while that's
+## fewer than two, the first fights of the days already behind, latest
+## first. Empty after the boss (nothing left to prepare for).
 static func practice_set(flow: RunFlow) -> Array[String]:
 	var state: RunState = flow.state
 	var days: Array[String] = flow.run.act.days
@@ -72,11 +78,19 @@ static func practice_set(flow: RunFlow) -> Array[String]:
 	var found: Array[String] = []
 	if first > days.size():
 		return found
-	found.append(state.options[first - 1][0])
-	for day: int in range(first + 1, days.size() + 1):
-		if days[day - 1] != "normal" and not found.has(state.options[day - 1][0]):
+	for day: int in range(first + 1, mini(first + 2, days.size()) + 1):
+		if not found.has(state.options[day - 1][0]):
 			found.append(state.options[day - 1][0])
+	for day: int in range(first + 3, days.size() + 1):
+		if days[day - 1] != "normal":
+			if not found.has(state.options[day - 1][0]):
+				found.append(state.options[day - 1][0])
 			break
+	var back: int = first - 1
+	while found.size() < 2 and back >= 1:
+		if not found.has(state.options[back - 1][0]):
+			found.append(state.options[back - 1][0])
+		back -= 1
 	return found
 
 
