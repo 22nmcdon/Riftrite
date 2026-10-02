@@ -94,10 +94,10 @@
               "effects": [
                 {
                   "type": "damage",
-                  "amount": 10,
+                  "amount": 15,
                   "target": "target",
                   "scaling": {
-                    "atk": 7500
+                    "atk": 12000
                   }
                 }
               ]
@@ -126,7 +126,7 @@
             "aura": {
               "target": "holder",
               "stat": "crit_chance_bp",
-              "value": 500,
+              "value": 1000,
               "while": "planted",
               "after_ms": 1500
             }
@@ -237,12 +237,12 @@
                   "type": "apply_status",
                   "status": "root",
                   "target": "target",
-                  "duration_ms": 2000
+                  "duration_ms": 2500
                 },
                 {
                   "type": "apply_status",
                   "status": "bleed",
-                  "stacks": 4,
+                  "stacks": 6,
                   "target": "target"
                 }
               ]
@@ -275,7 +275,11 @@
             "name": "Light Draw",
             "text": "Her shots deal 5% less.",
             "kind": "aura",
-            "aura": {"target": "holder", "stat": "damage_bp", "value": 9500}
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 9500
+            }
           }
         ],
         "basic_attack": {
@@ -355,7 +359,7 @@
               "amount": 0,
               "target": "enemy_near_target",
               "scaling": {
-                "atk": 4000
+                "atk": 5000
               },
               "within_hexes": 1
             },
@@ -391,7 +395,7 @@
                   "amount": 3,
                   "target": "target",
                   "scaling": {
-                    "atk": 2500
+                    "atk": 3500
                   }
                 }
               ]
@@ -609,14 +613,14 @@
               "amount": 0,
               "target": "enemies_near_target",
               "scaling": {
-                "atk": 3000
+                "atk": 5000
               },
               "within_hexes": 1
             },
             {
               "trigger": "on_hit",
               "type": "heal",
-              "amount_bp_of_damage": 400,
+              "amount_bp_of_damage": 600,
               "target": "self"
             },
             {
@@ -653,10 +657,10 @@
               "effects": [
                 {
                   "type": "damage",
-                  "amount": 10,
+                  "amount": 15,
                   "target": "target",
                   "scaling": {
-                    "atk": 10000
+                    "atk": 14000
                   }
                 },
                 {
@@ -754,7 +758,7 @@
             {
               "type": "apply_status",
               "status": "undying",
-              "duration_ms": 3000,
+              "duration_ms": 4000,
               "target": "self"
             }
           ]
@@ -768,7 +772,7 @@
             "aura": {
               "target": "holder",
               "stat": "atk_bp",
-              "value": 15000,
+              "value": 16500,
               "while": "below_hp",
               "below_pct": 30
             }
@@ -1058,7 +1062,7 @@
               },
               "anchor": "self",
               "hits": "all",
-              "duration_ms": 3000,
+              "duration_ms": 4000,
               "every_ms": 500,
               "effects": [
                 {
@@ -1089,9 +1093,9 @@
                 "trigger": "on_basic_attack",
                 "every": 4,
                 "type": "shield",
-                "amount": 15,
+                "amount": 20,
                 "scaling": {
-                  "mgk": 9000
+                  "mgk": 12000
                 },
                 "target": "lowest_hp_ally",
                 "within_hexes": 3
@@ -1208,7 +1212,7 @@
                   "amount": 10,
                   "target": "target",
                   "scaling": {
-                    "mgk": 8000
+                    "mgk": 11000
                   },
                   "side": "enemies"
                 },
@@ -1217,7 +1221,7 @@
                   "amount": 10,
                   "target": "target",
                   "scaling": {
-                    "mgk": 6000
+                    "mgk": 8000
                   },
                   "side": "allies"
                 }
