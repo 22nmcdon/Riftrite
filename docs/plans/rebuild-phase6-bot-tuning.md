@@ -125,6 +125,19 @@ Each step: its commit, the full suite, the bench's fingerprints unchanged (no st
 - **Tests:** `test_bots.gd` (12 now: the good bot and the expert play to day 3 and repeat; the practice set never holds the next fight; practice tries a copy, counts the shards, and changes and fights nothing real; shards are worth less as the act runs out; and 6d's reports).
 - **The read** (54 runs): **the good bot wins 79%** (losses on days 2–7; Sentinel Gate 1 of 5 fights, the Witch Coven 77%, Hollow Line 84%), spending 47 of 134 shards a run: its practice fights are mostly won with most HP to spare, so few buys show a gain beyond their price. Act 1 is too easy for it; 6e's tuning is what makes its buys matter. About a minute a run.
 
+### 5.4 Built in step 6d (2026-10-02)
+
+- **The reports:** `--compare` plays the random bot, the good bot, and the expert on the same seeds and prints them side by side (runs won, the day lost runs end, the encounters that end the most); `--choices` lists each card, item, and relic offered in 5 runs or more: how often it was offered and taken, and the runs won when taken against offered and passed, flagging what's never taken and what wins 15 points above its kind. `RunLine.offered` and `taken` carry them (also through `--jobs`).
+- **The first read, before any tuning** (54 runs each, the same seeds, cycled vows):
+
+| Bot | Won | Lost runs end on days 1–7 | Where it loses most |
+| --- | --- | --- | --- |
+| random | 25% | 11, 12, 10, 4, 1, 1, 1 | early, everywhere |
+| good | 79% | 0, 2, 3, 0, 3, 2, 1 | Sentinel Gate (1 of 5 fights), the Witch Coven (77%), Hollow Line (84%) |
+| expert | 90% | 0, 0, 1, 1, 3, 0, 0 | the Witch Coven (84%), Bog Crossing (2 of 4) |
+
+- **What it says:** Act 1 is too easy for a player who places and chooses well (79% against a 45–50% target), and too kind to a random one (25% against under 15%). The good bot wins its practice fights with most of its HP to spare, so it buys little (47 of 134 shards). The choices report is too thin at 54 runs to judge single cards; it does show things never taken when offered (Armor Breaker 35 times, Kindling Ward 32, Close Quarters 19 among the cards), for 6e to look at.
+
 ## 6. Files
 
 - `tools/bots/bot.gd`, `run_player.gd`, `random_bot.gd`, `good_bot.gd`, `placement.gd` (2.2) with `placement_data.gd`, `fit_placement.py`, `placement_weights.json`, and `placement_check.gd`, `practice.gd` (2.3), `expert_bot.gd`. The simple bot stays in `tools/run_bot.gd` (6a).
