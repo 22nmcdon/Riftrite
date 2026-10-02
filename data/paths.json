@@ -719,7 +719,7 @@
       }
     },
     "transformed": {
-      "text": "Below 30% HP he hits harder and his DEF rises, and he grows stronger for each fallen ally. Last Rites replaces Hold the Line: the first time he drops below 30% HP, he taunts every enemy within 3 hexes and can't fall for 5s. He has no mana.",
+      "text": "Below 30% HP he hits harder and his DEF rises, and he grows stronger for each fallen ally. Last Rites replaces Hold the Line: the first time he drops below 30% HP, he taunts every enemy within 3 hexes and can't fall for 6s. He has no mana.",
       "cost": "Heals on him are 20% weaker, and he has 5% less max HP.",
       "patch": {
         "stats_bp": {
@@ -731,7 +731,7 @@
         "signature": {
           "id": "last_rites",
           "name": "Last Rites",
-          "text": "The first time he drops below 30% HP, he taunts every enemy within 3 hexes and can't fall for 5s.",
+          "text": "The first time he drops below 30% HP, he taunts every enemy within 3 hexes and can't fall for 6s.",
           "trigger": {
             "kind": "hp_below",
             "threshold_bp": 3000
@@ -767,7 +767,7 @@
           {
             "id": "last_stand",
             "name": "Last Stand",
-            "text": "Below 30% HP he hits more than twice as hard.",
+            "text": "Below 30% HP he hits nearly three times as hard.",
             "kind": "aura",
             "aura": {
               "target": "holder",
@@ -780,7 +780,7 @@
           {
             "id": "last_wall",
             "name": "Last Wall",
-            "text": "Below 30% HP his DEF is a third higher.",
+            "text": "Below 30% HP his DEF is half again as high.",
             "kind": "aura",
             "aura": {
               "target": "holder",
@@ -793,7 +793,7 @@
           {
             "id": "grief",
             "name": "Grief",
-            "text": "He hits 20% harder for each ally who has fallen.",
+            "text": "He hits 30% harder for each ally who has fallen.",
             "kind": "aura",
             "aura": {
               "target": "holder",
