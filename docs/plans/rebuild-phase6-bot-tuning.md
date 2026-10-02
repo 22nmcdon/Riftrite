@@ -288,3 +288,33 @@ Measured with the paths report (`--paths --seeds=1 --sweep=20`) over Act 1's 18 
 | Vigil Keeper | Sunfall's burn 80% MGK → 140%, its heal 60% → 100%; Mend's heal 70% MGK → 100%, its smite 4 + 20% MGK → 8 + 40%, its mana 6 → 10 | +9.3 → +16.9 |
 
 Why these: each is what makes the path that path (Decision 7), and the cost stays (Light Draw, Thin Light, Dimmed, Scarred, the plant delay). Last Watch tried a 40% line for his last stand (+16.7), but his upgrade cards say "below 30% HP", so the line stays at 30% and the strength is in Last Stand, Last Wall, and Grief. His HP keeps its cost ("5% less max HP": 9500, not lifted), which cost him about 3.5 points, made up the same way. Tests changed with them: Hearthwall's Guard (`test_path_kits`, `test_upgrade_pieces`), Deadeye's ATK lock (`test_upgrade_pools`), and Sure Aim with Eyes Up (`test_upgrade_pieces`).
+
+### 11.4 Built in 11b: Act 1's enemies retuned to the stronger transformations (2026-10-02)
+
+With 11a's transformations the good bot won 66% of 54 runs (target 45–50%). Seven trials (N to U), most on 108 runs with `--jobs=4` (54 runs proved too noisy: an untouched encounter moved 18 points between two trials), found the numbers below; every change is to an encounter's `scale_bp` (its enemies' HP and ATK), from phase 6's numbers (section 5.5) to these, and why:
+
+| Encounter | Days | Scale | Why |
+| --- | --- | --- | --- |
+| Pup Warren, Ash Nest, The Pack | 1–3 | 11050 → 11250, 11250 → 11500, 11050 → 11250 (x1.02) | the stronger heroes; still won 96–100% |
+| Hounds and Archers (harder) | 1–2 | 9250 → 9450 (x1.02) | as day 1's |
+| Moth Cloud, Hollow Line | 2–4 | 12600 → 12300, 11750 → 11450 (x0.97) | raised x1.04 first, they ended too many runs on days 2–3 (54–56% won), so eased below phase 6's |
+| Lurker's Kindling (harder) | 2, 4 | 11250 → 11700 (x1.04) | the stronger heroes |
+| Bog Crossing | 3–4 | 13700 → 14400 (x1.05) | the stronger heroes |
+| The Hunt, Witch Coven, Cairn Watch (elites) | 3, 5 | 11200 → 11100, 8000 → 8200, 13400 → 13650 | day 3's elite ended 40% of lost runs at x1.05; at x0.95 the good bot won 59% (a won elite snowballs); these sit between |
+| Sentinel Gate, Cairn Road | 4–6 | 15450 → 16150, 15700 → 16500 (x1.05) | with the later fights, so losses spread to days 4–6 |
+| Sentinel Under Moths, Witch's Brood (harder) | 4, 6 | 28950 → 31600, 13300 → 14500 (x1.09) | won 89–94%; day 6 ended almost no runs |
+| Witch Circle | 5–6 | 16400 → 18050 (x1.10) | as above |
+| The Warded Charge (harder) | 6 | 22700 → 25050 (x1.10) | as above |
+| Old Mother Ash | 7 | 11200 → 12450 (x1.11) | won 85%; she should end some runs |
+
+**Hearthwall's threshold** (11a set 25 from the paths report): in runs his deed gets 3.3 a fight, not 7, so 25 transformed him in 38% of runs; 14 transformed him after day 1's fight (his deed still comes in lumps); **16** gives median day 4 and 86% by the boss. **Last Watch's threshold 15 → 12**: at 15 only 65% transformed by the boss.
+
+**The result** (`--compare`, 108 runs, seeds 1–108):
+
+| Bot | Won | Lost runs end on days 1–7 |
+| --- | --- | --- |
+| random | 1% | 21 55 13 12 1 4 0 |
+| good | **49%** | 0 9 16 12 1 8 9 (day 3 the most: 29%) |
+| expert | 75% | 0 0 2 12 0 7 5 |
+
+Every path transforms by the boss in 86–100% of runs that reach it, at a median of day 3–4, except Last Watch (median day 2: his deed is damage while he can't fall, and one fight where Last Rites fires can fill it). The good bot's encounters: day 1–2's 96–100%, Moth Cloud 64%, Sentinel Gate 53%, the elites 77–80%, Old Mother Ash 76%. Tests changed with it: the scale bound in `test_encounters` (30000 → 35000, for Sentinel Under Moths), and the rules fight (`test_hero_rules`: the heroes at 35% max HP, seed 1, so a hero still falls and rises and The Unbending still blocks a status against the stronger boss). The placement weights weren't refitted: scales don't change a formation's features.
