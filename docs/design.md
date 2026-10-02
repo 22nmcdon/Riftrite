@@ -99,7 +99,7 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 - **Permanent scaling:** some upgrades and relics count what a hero does and grow all run (their card shows "Now: +X"); they reset with the run, so meta progression still adds no stats.
 - **Every stat change says its amount** ("+10% attack speed"); ability text still leaves numbers to the numbers line.
 - **No combo readouts for players:** working a combo out is part of the fun. The combat log stays complete, and a readout exists only behind the testing toggle and in the sim runner.
-- **Endless mode** (after Act 3): a run goes on into floors where the rift scales exponentially; you always lose eventually, and the score is how deep you got. The campaign keeps "new problems, not more HP".
+- **Endless mode** (after Act 3; built after Act 1 for now, phase 8 part 1): a run goes on into floors where the rift scales exponentially; you always lose eventually, and the score is how deep you got. The campaign keeps "new problems, not more HP".
 
 ## Between runs
 

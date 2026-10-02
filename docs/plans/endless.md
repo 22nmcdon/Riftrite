@@ -1,6 +1,6 @@
 # Endless mode
 
-Status: **agreed in discussion (2026-09-30), not built.** Fills in part 7, section 8 (`rebuild-combos.md`); where they disagree, this file wins. Uses the day loop (`days-and-nodes.md`), rift modifiers and the rift learns (`enemy-growth.md`), and apexes (`apexes.md`). **Numbers are placeholders.**
+Status: **agreed in discussion (2026-09-30); built after Act 1 (on Act 1's fights) in phase 8 part 1** (`rebuild-phase8-endless.md`, whose Decisions win where they differ; apexes, the rift learns, and Acts 2 and 3 come later in phase 8). Fills in part 7, section 8 (`rebuild-combos.md`); where they disagree, this file wins. Uses the day loop (`days-and-nodes.md`), rift modifiers and the rift learns (`enemy-growth.md`), and apexes (`apexes.md`). **Numbers are placeholders.**
 
 ## 1. Structure
 

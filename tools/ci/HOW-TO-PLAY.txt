@@ -16,15 +16,15 @@ MACOS
 
 PLAYING
   The game is being rebuilt around heroes and an open arena. This build has
-  the first whole run: Act 1, seven days. NEW IN THIS BUILD: your uploaded
-  art is in the game. The arena is turned (your heroes at the bottom, the
-  enemies at the top) and stands on the floating island, rocks are ruins,
-  and Rift Collapse eats the edge as rift-light. Items, relics, and upgrades
-  have their kind's frame with an icon, camp's options and places have
-  theirs, the Pedlar and the Magpie stand in their scenes, and the route
-  is the act map. The fonts are Cinzel and Alegreya. Practice (the Act 1
-  fights one at a time, with every path free to try) is still on the
-  title.
+  the first whole run: Act 1, seven days, and NEW IN THIS BUILD: endless
+  after it (see ENDLESS below). Your uploaded art is in the game. The arena
+  is turned (your heroes at the bottom, the enemies at the top) and stands
+  on the floating island, rocks are ruins, and Rift Collapse eats the edge
+  as rift-light. Items, relics, and upgrades have their kind's frame with an
+  icon, camp's options and places have theirs, the Pedlar and the Magpie
+  stand in their scenes, and the route is the act map. The fonts are Cinzel
+  and Alegreya. Practice (the Act 1 fights one at a time, with every path
+  free to try) is still on the title.
 
   A RUN (Title > New run)
   1. Vow each hero to one of their three paths: a small taste of it now,
@@ -74,10 +74,25 @@ PLAYING
   3. A hero who falls gets a wound (less max HP, up to 3); each won fight
      heals one wound on every hero first. A lost fight
      replays the day; the second loss ends the run. Winning against Old
-     Mother Ash wins it.
+     Mother Ash wins it; after the boss shop you can end the run there,
+     or go deeper into endless.
   4. The run is saved after everything you do: Title > Continue the run.
      The hero bar along the bottom shows each hero's wounds, deed progress,
      and items; click a card for the hero's panel.
+
+  ENDLESS (new in this build: after Old Mother Ash and her shop)
+  End the run (a win), or Go deeper with the same heroes, items, relics,
+  and shards. Each floor is a day with one fight, then the pick, the
+  Pedlar, and a node, as before. Every floor the rift grows: enemies have
+  15% more HP and attack than the floor before (it compounds), Rift
+  Collapse starts a second sooner, and crumbled ground burns 15% hotter.
+  Every 3rd floor a rift modifier joins for good (they're listed on the
+  route). Every 5th floor is an elite, every 10th is Old Mother Ash
+  (she offers boss relics again). From floor 10 the Pedlar can show
+  legendaries. Pay stays the same, so prices bite harder. There are no
+  replays: the first loss ends the run, and the floor you fell on is your
+  score (the end screen keeps your deepest). Big numbers shorten (12.4k).
+  Endless isn't tuned yet: we only measured how far a bot gets.
 
   PRACTICE (Title > Practice)
   1. Title > Practice, then pick a fight ("Place your heroes").
@@ -167,6 +182,16 @@ TUNED IN THIS BUILD (phase 6: a bot that plays well, then Act 1 tuned to it)
     makes Guard reach 3 hexes.
   Tell us: does Act 1 feel hard but fair? Which fight ends your runs?
   Does transforming feel like a real step up?
+
+WHAT WE WANT TO KNOW ABOUT ENDLESS
+  How deep do you get, and what ends your run? Does going deeper feel
+  worth it, or does it turn into a wall? Is one fight a floor right? Do
+  the gathered rift modifiers feel like new problems, or only harder ones?
+  Some choices were made while you were away; tell us if they feel wrong:
+    - The Magpie's two visits count afresh when you go deeper and after
+      each boss floor.
+    - Camp offers no Hunt on a floor; Map the Rift swaps within the
+      floor's fights.
 
 WHAT WE WANT TO KNOW ABOUT THE ART
   Does the arena read well with heroes at the bottom, on the island? Are

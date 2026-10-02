@@ -66,7 +66,7 @@ Everything else is `endless.md`'s: ×1.15 enemy HP and ATK a floor, a rift modif
 
 - The bots answer the new choice (a `go_deeper` hook: the simple and random bots end the run unless told to go on; `--endless` makes every bot go deeper).
 - **`run_runner.gd --endless`:** plays each run on into endless and reports the floors reached (median, quartiles, the deepest), the floor kinds and encounters that end runs, the modifiers on at the end, and how far growing cards grew. A report, not a gate.
-- **Tuning** (Question AU): where the good bot should fall.
+- **No tuning yet** (Decision 5): the report says how far runs get.
 
 ## 7. Tests
 
@@ -79,7 +79,7 @@ Everything else is `endless.md`'s: ×1.15 enemy HP and ATK a floor, a rift modif
 
 - **8a-1, the rules:** the data block, `RunState`, `day_kind()`, the choice, floors, growth, modifiers, collapse and crumble (the sim piece), pay, shops, boss relics, losing, records; their tests.
 - **8a-2, the screens:** the choice, the floor's top bar and route, the modifiers, the end and the record, big numbers; their tests and screenshots.
-- **8a-3, the bots and the report:** `--endless`, a first read, and tuning to Question AU's target; every change reported.
+- **8a-3, the bots and the report:** `--endless` and a first read (no tuning: Decision 5).
 - **8a-4, docs and a playtest build.**
 
 ## 9. Questions
