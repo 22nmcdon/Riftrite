@@ -170,5 +170,5 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - **Act 1 sits at 49% for the good bot** after the second tuning pass (the target is 45–50%; 108 runs). Last Watch transforms early (median day 2: one fight where Last Rites fires can fill his deed). The placement gate (`sim_runner.gd`) fights bare heroes (no upgrades, items, or relics), so Act 1's later fights, scaled for a run's team, fail it: 9 of 18 after phase 6's first tuning, 11 after the second (Bog Crossing and Cairn Watch too). Should the gate measure run-strength teams? (phase 6 plan, 11.4)
 - **Bought engines rarely chain, and many held passives never fire** in the simple bot's runs (the engine report). The good bot now plays; its engine report is still to be read. (phase 5c plan, 17.12)
 - **The trigger chain's depth limit** (8 is a guess). (part 7)
-- **Endless:** is ×1.15 a floor and a rift modifier every 3 floors right? Does income grow with the floor? (endless)
+- **Endless:** is ×1.15 a floor and a rift modifier every 3 floors right? Built on Act 1 with flat pay (phase 8 part 1), the good bot's runs that win the act reach a median floor of 4 (deepest 18). Where should it fall? (phase 8 plan, 8a-3)
 - **Which statuses become keywords next** (Slow, Bleed, Stun). (part 7)

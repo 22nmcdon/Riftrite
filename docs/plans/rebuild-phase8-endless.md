@@ -1,6 +1,6 @@
 # Rebuild phase 8, part 1: endless after Act 1
 
-Status: **agreed (2026-10-02, Decisions 1–5); 8a-1 (the rules) and 8a-2 (the screens) built.** Phase 8 comes before phase 7 (the playtester, 2026-10-02: `rebuild-build-order.md`), and starts with endless mode, so long runs can be tested before Acts 2 and 3 exist. The design is `endless.md` (agreed 2026-09-30); this plan builds it on Act 1, and says what waits for the pieces phase 8 builds later (apexes, enemy specializations, the rift learns, Acts 2 and 3). **Numbers are placeholders** until the bots measure them (part 8a-3).
+Status: **agreed (2026-10-02, Decisions 1–5); part 1 built: 8a-1 (the rules), 8a-2 (the screens), 8a-3 (the bots and the report), and 8a-4 (docs and a playtest build).** Phase 8 comes before phase 7 (the playtester, 2026-10-02: `rebuild-build-order.md`), and starts with endless mode, so long runs can be tested before Acts 2 and 3 exist. The design is `endless.md` (agreed 2026-09-30); this plan builds it on Act 1, and says what waits for the pieces phase 8 builds later (apexes, enemy specializations, the rift learns, Acts 2 and 3). **Numbers are placeholders**; 8a-3's report says how far runs get, and nothing is tuned yet (Decision 5).
 
 ## 1. What it builds
 
@@ -125,3 +125,21 @@ The playtester, 2026-10-02:
 - **Big numbers:** `UiStyle.short_number` (12.4k, 3.1M) on the fight's floating numbers; `RunDayScreen.times` for multipliers.
 - **Tests:** `test_run_screens.gd`: the choice, Go deeper to floor 1, its route and numbers, falling there with the record kept; and the short numbers.
 
+
+## Built in 8a-3: the bots and the report (2026-10-02)
+
+- **The bots:** `Bot.deeper` and `go_deeper` answer the choice (`RunPlayer` handles `Phase.CHOICE`; `MAX_STEPS` is 8000 for long runs); the simple bot ends the run there. The good bot's practice set reaches the floors drawn ahead in endless (`Practice.practice_set`, through `day_kind`); its shards are worth nothing past the act, as before.
+- **`run_runner.gd --endless`** (`Report.endless_summary`, passed to `--jobs`' processes): every bot goes deeper; the report gives the runs that went deeper, the floor reached (median, quartiles, deepest, shallowest), runs falling by 5 floors, the floor kind and fight each fell to, the rift modifiers gathered, and the median floor by vow. `RunLine` keeps `floor_reached`, `fell_to`, and `endless_mods`. A transformation on a floor no longer counts as "by the boss" in the paths line.
+- **A bug the report found:** a Deep or Abyssal Rift Tear on a floor could draw a modifier the run had gathered, and the enemies took it twice (their kits refused: 4 runs in 54). A tear's draw now skips gathered modifiers, a floor's gathering skips one a tear brings for its fight, and the fight's list drops repeats. Act 1 is unchanged.
+- **The first read** (the good bot, 54 runs, seeds 1–54; not tuned, Decision 5): Act 1 won 26 (48%), and all 26 went deeper.
+  - Floor reached: **median 4**, quartiles 3–8, deepest 18, shallowest 1; by 5 floors: 1–5: 15, 6–10: 9, 11–15: 1, 16–20: 1.
+  - Fell on a normal floor 23 times, on Old Mother Ash's (floor 10) 3, on an elite floor never (Act 1's elites are the good bot's surest fights, 75–94% won).
+  - Fell to: Sentinel Under Moths 5, Witch's Brood 5, Witch Circle 4, Cairn Road 3, Old Mother Ash 3, Bog Crossing 2, The Warded Charge 2, Hollow Line 1, Sentinel Gate 1.
+  - Rift modifiers on at the end: 1.6 a run (Early Collapse the most often, 7).
+  - Median floor by vow: Volley and Hearthwall 7, every other path 4.
+  - Read: with enemies ×1.15 a floor (×1.75 by floor 4, ×4.05 by floor 10) and flat pay, a team that just beat the act lasts about four floors; a few runs reach the teens. Whether that's the curve wanted is the playtester's call (Question AU stays open).
+- **Tests:** `test_bots.gd`: a bot that goes deeper plays floors to its first loss and repeats, and one that doesn't ends at the choice; the endless report's text. `test_endless.gd`: a Rift Tear on a floor never doubles a modifier.
+
+## Built in 8a-4: docs and a playtest build (2026-10-02)
+
+- `CLAUDE.md` (the plan's row, where the rebuild is, `--endless`, the run's endless section, `Phase.CHOICE`), `rebuild-build-order.md`, `design.md`, `endless.md`'s status, and `HOW-TO-PLAY.txt` (an ENDLESS section and what we want to know about it).
