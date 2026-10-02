@@ -156,7 +156,17 @@ TUNED IN THIS BUILD (phase 6: a bot that plays well, then Act 1 tuned to it)
     fills every run (and needs more: 120).
   - Hearthwall, Lanternbearer, and Last Watch need less to transform;
     Volley a little less.
+  - Second pass: every transformation is a bigger step up. Each lifts
+    HP, ATK, and MGK a little, and what makes each path itself is
+    stronger (Heartseeker, Bramble Field, the split shot and Arrow Storm,
+    the Hearthbrand Mace and Brand Slam, Last Stand and Grief, Warding
+    Circle and Weave, Sunfall and Mend). Act 1's enemies rose to match,
+    most from day 4 on and Old Mother Ash.
+  - Hearthwall's vowed Guard covers every ally within 2 hexes (not only
+    one behind him), so his deed fills in most fights; Wide Guard now
+    makes Guard reach 3 hexes.
   Tell us: does Act 1 feel hard but fair? Which fight ends your runs?
+  Does transforming feel like a real step up?
 
 WHAT WE WANT TO KNOW ABOUT THE ART
   Does the arena read well with heroes at the bottom, on the island? Are
