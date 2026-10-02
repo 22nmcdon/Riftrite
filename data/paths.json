@@ -94,10 +94,10 @@
               "effects": [
                 {
                   "type": "damage",
-                  "amount": 15,
+                  "amount": 20,
                   "target": "target",
                   "scaling": {
-                    "atk": 12000
+                    "atk": 16000
                   }
                 }
               ]
@@ -613,7 +613,7 @@
               "amount": 0,
               "target": "enemies_near_target",
               "scaling": {
-                "atk": 5000
+                "atk": 6000
               },
               "within_hexes": 1
             },
@@ -660,7 +660,7 @@
                   "amount": 15,
                   "target": "target",
                   "scaling": {
-                    "atk": 14000
+                    "atk": 16000
                   }
                 },
                 {
@@ -758,7 +758,7 @@
             {
               "type": "apply_status",
               "status": "undying",
-              "duration_ms": 4000,
+              "duration_ms": 5000,
               "target": "self"
             }
           ]
@@ -772,7 +772,7 @@
             "aura": {
               "target": "holder",
               "stat": "atk_bp",
-              "value": 16500,
+              "value": 18000,
               "while": "below_hp",
               "below_pct": 30
             }
@@ -1093,9 +1093,9 @@
                 "trigger": "on_basic_attack",
                 "every": 4,
                 "type": "shield",
-                "amount": 20,
+                "amount": 25,
                 "scaling": {
-                  "mgk": 12000
+                  "mgk": 14000
                 },
                 "target": "lowest_hp_ally",
                 "within_hexes": 3
@@ -1212,7 +1212,7 @@
                   "amount": 10,
                   "target": "target",
                   "scaling": {
-                    "mgk": 11000
+                    "mgk": 14000
                   },
                   "side": "enemies"
                 },
@@ -1221,7 +1221,7 @@
                   "amount": 10,
                   "target": "target",
                   "scaling": {
-                    "mgk": 8000
+                    "mgk": 10000
                   },
                   "side": "allies"
                 }
