@@ -13,6 +13,9 @@ Status: **agreed in discussion (2026-09-30), not built.** Every shard source and
 | **Boss** (won) | 60 (25 until 2026-10-01: `rebuild-phase5c-combos.md` Decision 49) |
 | **Selling an item** at any shop | Half its price, rounded down, whatever its rank |
 | **Selling a relic** to the Magpie | Half its tier's price (common 2, rare 6, epic 10, legendary 15, boss 15) |
+| **Hob** (the scavenger) | Pickings, Cut Purse, and Bounties; capped at 8 per fight (12–15 with some apexes) |
+| **Edric** (Tithe-Collector) | Tithe after won fights (per hero standing), and Collection during fights (up to 3 per cast) |
+| **Ottilie** (Transmuter) | Gilded Death (enemies dying while both Burning and Poisoned), Philosopher's Flask kills, and transmuting an item at full price once per shop |
 
 Money relics add more (Gravedigger's Coin, Bounty Hunter's Tag, Loose Change, Miser's Vault, Bloodied Coin, Lucky Strike, Overkill Tithe, Bounty Board, and Gilded Rift pays in power for holding shards).
 
@@ -38,6 +41,7 @@ Money relics add more (Gravedigger's Coin, Bounty Hunter's Tag, Loose Change, Mi
 - **The harder fight's +3** makes choosing it a real trade: more risk, more shards.
 - **Checked against Act 1's days (2026-09-30):** the days are normal, normal, elite, normal, elite, normal, boss, so income before the pre-boss shop is really **80–92**, and the modest spend (about 35–40) leaves **about 40–57**. The playtester's call: that's fine, and the numbers stand until the sim pass.
 - **Changed (2026-10-01, `rebuild-phase5c-combos.md` Decisions 48 and 49):** the legendary shop moved to after the boss (the day before the boss's is a plain Pedlar), and the boss pays **60**, so that shop is spent with what the act saved plus the boss's 60. The targets above were for a shop before the boss; phase 6's tuning revisits them.
+- **With Hob on the team,** income rises and so does spending power; his paths trade fight strength for it. The run bot's report should show runs with and without him.
 
 ## Where this meets what's built
 

@@ -16,7 +16,7 @@ A keyword with no way to apply it is dead. After this pool, every keyword has at
 | --- | --- | --- |
 | **Marked** | Maren (Marking Shot), Deadeye (Heartseeker Marks, an upgrade) | Hunter's Chalk (charm), Tolling Sigil (sigil), Brand of Guilt and Hunter's Engine (relics) |
 | **Rooted** | Trapper (snares) | Bramble Knot (charm), Grasping (sigil), Bramble Seed and Grasping Mire (relics) |
-| **Burning** | Vell (Ember Glow, an upgrade) | Ember-Tipped (charm), Kindled Sigil (sigil), Ember Bauble and Ashen Engine (relics) |
+| **Burning** | Ilse (every path), Vell (Ember Glow, an upgrade) | Ember-Tipped (charm), Kindled Sigil (sigil), Ember Bauble and Ashen Engine (relics) |
 | **Shielded** | Vell (Wardweaver), Brannoc (Hearthguard) | Warding Thread (charm), Bulwark Sigil (sigil), Tithe of Iron (relic) |
 | **Bleeding** | Deadeye (Bleeding Shot), Ironbrand (Cleaving Wounds), both upgrades | Bloodletter (charm) |
 | **Stealthed** | Maren (Slip Away) | Smoke Vial (charm), Veiled (sigil), Smoke Pouch (relic) |

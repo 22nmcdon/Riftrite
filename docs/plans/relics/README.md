@@ -9,7 +9,7 @@ Status: **agreed in discussion (2026-09-30), not built.** The relic pool for Act
 | **Epic** | `relics-epic.md` | Shops (rarely), elites, the Magpie | 20 shards | 14 |
 | **Legendary** | `relics-legendary.md` | The shop after each boss (before it until 2026-10-01) | 30 shards | 15 |
 | **Boss** | `relics-boss.md` | After each boss: choose 1 of 3 | free | 11 |
-| **Bond** | `../duo-bonds.md` | Shops, once its duo bond switches on (more likely than an epic) | Free | 3 (Act 1) |
+| **Bond** | `../duo-bonds.md` | Shops, once its duo bond switches on (more likely than an epic) | Free | 24 |
 
 ## What each tier is for
 
@@ -31,7 +31,7 @@ Status: **agreed in discussion (2026-09-30), not built.** The relic pool for Act
 5. **Lifesteal is its own mechanic.** A hero heals for a percent of the damage they deal, from any source. It isn't healing: healing bonuses and healing triggers ignore it, unless Blood Communion (epic) says otherwise. Lifesteal from several sources adds up.
 6. **Chains.** Anything that repeats off its own result is a chain: triggered effects setting off triggers, Crown of Stars' crit rolls, Shared Pain's echoes, The Hungering Rift's carried overkill, Overcharge's extra casts. Every chain has a step limit, and Chain of Echoes (boss) affects every chain in the game.
 7. **Two relics can use the same thing.** The same overheal can feed Overflow Chalice and Shadow Engine at full value; nothing is split between relics.
-8. **Bond relics** are the one kind whose availability depends on the heroes: only a run with that duo bond can find one. What they do is still team-wide.
+8. **Bond relics** are the one kind tied to heroes: only a run with that duo bond can find one, and a bond relic may name the bonded paths' mechanics (`../duo-bonds.md`). Every other relic stays team-wide and never names a hero.
 
 ## Shops
 

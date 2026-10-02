@@ -49,6 +49,7 @@ Each hero has **three paths**. A path is a transformation: it changes what the h
 - **Only the vowed path can complete.** Switching vows keeps whatever the other paths have built, which is usually very little.
 - **Every deed must be hard to fill without its taste.** A deed that counts something the hero does anyway ("deal damage") makes the vow meaningless.
 - **Apexes work the same way**: vow, taste, earn, transform.
+- **A deed can be a feat:** one hard thing done once (Bounty Hunter: collect 1 Bounty), instead of a running total. A feat must still need the taste, and must be something the player plans for (placement, fight choice).
 
 ### Upgrade pools
 
@@ -102,6 +103,16 @@ That gives each path about 18 options. **Hero and role upgrades must never give 
 | Maren | 50 | +10 (fast attacks) | none | 2/s | 0 |
 | Brannoc | 80 | +8 | +1 per 10 damage taken | none | 30 |
 | Vell | 60 | +12 (slow attacks) | none | 2/s | 20 |
+| Ilse | 60 | none | none | none: **Heat**, 1 per Burn tick on any enemy within 3 hexes | 0 |
+| Tamsin | 50 | +8 (fast attacks) | none | 2/s | 0 |
+| Garrow | 70 | +6 | +1 per 10 damage taken | none | 0 |
+| Aldous | 60 | +10 | none | 2/s | 0 |
+| Hob | 50 | +8 | none | 2/s | 0 |
+| Severine | 60 | +8 | none | 2/s | 0 (Hemomancer: none; she casts with HP) |
+| Edric | 70 | +8 | none | 2/s | 0 |
+| Ottilie | 60 | +10 | none | 2/s | 0 |
+| Lucan | 60 | +10 | none | 2/s | 0 |
+| Kestra | 50 | +8 | none | 2/s | 0 |
 
 Example: if Vell attacks, she earns about 10 mana a second and Mends every 6s. If she can't attack, she only has regen and Mends every 30s. Her attack matters, and placing her where she can attack safely is part of the puzzle.
 
@@ -109,6 +120,8 @@ Example: if Vell attacks, she earns about 10 mana a second and Mends every 6s. I
 
 - **Marked:** a single team-wide status. Maren's Marking Shot applies it; Vell's Inquisitor and Brannoc's Brand Slam build on it. Later heroes should build on it too, rather than inventing their own marks.
 - **Engaged:** set by Brannoc's Engage trait (later tanks may have their own version). An engaged enemy can't walk past the tank without spending time breaking free.
+- **Damage over time (Burn, Bleed, Poison) is one shared pile of stacks** on an enemy. **Nothing may depend on who applied it,** only on how much is there, or on how much a hero *applied* at the moment they applied it. (No per-source tracking in the sim.)
+- **A Shield is one pool per unit, with no owner and no duration** (as the sim stores it). **Nothing may depend on who gave a Shield,** only on whether a unit has one, how big it is, or the moment a Shield is given or breaks. Shields last until broken.
 - Others used below: Root, Slow, Bleed, Taunt, Shield, Silence. The full status list is part of the arena plan.
 
 ---
@@ -327,12 +340,600 @@ The fantasy: her light heals friends and burns enemies.
 
 ---
 
-## 9. How the three fit together
+## 8b. Ilse Cinderhand: the fire-speaker (caster damage)
+
+*Added 2026-10-02.* **Role:** back-line magic damage. She shares the damage role with Maren: Maren hits hard right away, while Ilse's damage builds up over a fight. Fragile up close, like Maren.
+
+| | |
+| --- | --- |
+| **Stats** | HP 260, ATK 6, MGK 22, DEF 8, CRIT 5 |
+| **Speed / range** | speed 2, casts at up to 3 hexes |
+| **Basic attack: Cinder Flick** | a mote of fire at the nearest enemy in range: damage from her MGK, plus Burn equal to 10% of her MGK. **It gives no mana** |
+| **Signature: Flare** (60 mana) | a fireball that bursts on a 1-hex circle around her target, applying Burn equal to 60% of her MGK to each enemy in it |
+| **Passive: Heat** | **her only source of mana:** each Burn tick on any enemy within 3 hexes gives her 1 mana (Burn ticks twice a second) |
+
+Heat is her hook: she starts slow, and the more of the field is on fire, the faster she casts. Burn from allies, relics, and charms is her fuel. **All her Burn scales with her MGK**, never a flat number, because a hero must scale all run.
+
+### Path 1: Furnace (one target, built up)
+
+The fantasy: one enemy burns hotter and hotter until nothing's left.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Stoke:** every 4th basic attack adds 5% of the target's current Burn | Every 3rd basic attack stokes, adding 8%; and Burn on any enemy she has hit in the last 3s decays half as fast |
+| **Signature** | Flare | **Immolate:** sets off all the target's Burn at once (5× its stacks as damage); enemies within 1 hex catch half the Burn it removed |
+| **Cost** | –10% MGK | Immolate hits one target, with no area |
+
+- **Deed:** Burn added by Stoke. Without Stoke it stays at zero.
+- **Attack speed is her scaling:** Burn decays about 10% a second, about 5% on her targets once she's transformed. Stoke outpaces that at about 2 attacks a second, and past it, Burn on her target grows on its own. Putting attack speed on a mage is the point.
+- **Stoke works on all Burn on the target**, whoever applied it.
+- **Where she stands:** where she can keep hitting one target.
+
+### Path 2: Wildfire (fire on the ground)
+
+The fantasy: the ground itself catches, and the fire spreads where enemies stand.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Kindling:** Flare leaves burning ground on its circle for 3s | Her burning ground spreads 1 hex every 2s (up to 3 hexes from where it started) and lasts 6s. Enemies standing on it gain Burn equal to 10% of her MGK per second |
+| **Signature** | Flare | **Firestorm:** starts a fire under each of the 3 largest groups of enemies |
+| **Cost** | Flare's circle is smaller | Her basic attack applies no Burn; the ground does the work |
+
+- **Deed:** Burn applied by her burning ground. Without Kindling she makes none.
+- **Where she stands:** where enemies will gather, with room for the fire to spread.
+
+### Path 3: Ember Choir (fire on every ally's weapon; gains a second role, Support)
+
+The fantasy: she sings fire into her allies' weapons.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Blessing:** every 8s, the ally nearest her has their next 3 basic attacks apply 1 Burn | Every ally's basic attack applies Burn equal to 5% of her MGK |
+| **Signature** | Flare | **Hymn of Cinders:** for 5s, allies' basic attacks apply Burn equal to 20% of her MGK and gain +15% attack speed |
+| **Cost** | –1 range | Her own Burn is 30% weaker |
+
+- **Deed:** Burn applied by allies. Without Blessing they apply none.
+- **The taste stays at 1 Burn on purpose:** it's there to fill the deed, not to be strong.
+- **With Heat,** allies setting enemies on fire is what fills her mana.
+- **Where she stands:** behind the team, in range of every ally (once transformed, range doesn't matter for the blessing).
+
+- **Upgrade pool:** `upgrade-pools.md`. **Apexes:** `apexes.md`.
+
+---
+
+## 8c. Tamsin Gloamstep: the knife (melee damage)
+
+*Added 2026-10-02.* **Role:** a flanker who goes after weak or held targets in the back line; very fragile if caught. The first melee damage hero (Maren and Ilse are ranged; Brannoc tanks). Builds (`build-map.md`): Stealth, Mark, and Root.
+
+| | |
+| --- | --- |
+| **Stats** | HP 280, ATK 24, DEF 10, CRIT 15, fast attacks |
+| **Speed / range** | speed 3, melee (1) |
+| **Targeting** | the lowest-HP (by %) enemy within 3 hexes, otherwise the nearest |
+| **Basic attack: Knife** | a quick stab; her main source of mana |
+| **Signature: Shadowstep** (50 mana) | she's hidden for 2s and slips behind her target |
+| **Passive: Ambusher** | she starts every fight hidden for 2s, and attacks from Stealth always crit |
+
+### Path 1: Nightblade (Stealth: maker and payoff)
+
+The fantasy: she's never where you look.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Fade:** a kill hides her for 1s | Kills hide her for 2s and refund 30% of her mana; attacks from Stealth deal +50% damage |
+| **Signature** | Shadowstep | **Shadow Dance:** hidden for 3s, and her next 3 attacks don't break Stealth |
+| **Cost** | –10% max HP | Healing on her is 30% weaker while she's hidden |
+
+- **Deed:** Stealth gained from kills. Only Fade hides her after a kill; Stealth from Ambusher and Shadowstep doesn't count.
+
+### Path 2: Headhunter (Mark: payoff)
+
+The fantasy: once she has your scent, you're already dead.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Scent:** she goes after Marked enemies first (within 4 hexes), and her hits extend a Mark by 0.5s | +30% damage to Marked enemies. Killing a Marked enemy lets her step to the next Marked enemy within 4 hexes, and her attack resets |
+| **Signature** | Shadowstep | **Sentence:** a strike on a Marked enemy for 250% of her ATK; if it kills, it fires again for free (once) |
+| **Cost** | –10% ATK against unmarked enemies | Nothing special against an enemy with no Mark |
+
+- **Deed:** seconds of Mark she extended. Only Scent extends Marks.
+- **Plays off:** Mark makers (Maren's Marking Shot, Brand of Guilt, Hunter's Chalk, later the scavenger's Bounty Hunter).
+
+### Path 3: Garrote (Root: payoff)
+
+The fantasy: hold still, and it's over.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Choke:** her crits on Rooted or Stunned enemies extend the hold by 0.3s | Her attacks on Rooted or Stunned enemies always crit, with +25% crit damage, and extend the hold by 0.5s |
+| **Signature** | Shadowstep | **Garrote:** she grabs her target, Rooting it for 2s, hitting it for 30% of her ATK every 0.5s, and staying hidden while she holds it |
+| **Cost** | –1 speed | She can't move while garroting |
+
+- **Deed:** seconds of hold she extended. Only Choke extends holds.
+- **Plays off:** Root and Stun makers (Trapper, Ironbrand's knock-into-stun, Bramble Knot). Garrote also makes Roots, which feeds other Root payoffs.
+
+- **The counter:** the Watchful enemy upgrade (`enemy-growth.md`) lets enemies target stealthed heroes.
+- **Upgrade pool:** `upgrade-pools.md`. **Apexes:** `apexes.md`.
+
+---
+
+## 8d. Garrow of the Chains: the anchor (bruiser)
+
+*Added 2026-10-02.* **Role:** front line, like Brannoc, but he trades protecting allies for hitting back and dragging enemies in. Shares the tank role with Brannoc. Builds (`build-map.md`): Shield (payoff), Clump (maker), Sustain (thorns payoff).
+
+| | |
+| --- | --- |
+| **Stats** | HP 380, ATK 18, DEF 22 |
+| **Speed / range** | speed 2, melee (1) |
+| **Basic attack: Chain Fist** | a heavy blow on an adjacent enemy |
+| **Signature: Haul** (70 mana) | throws a chain at the farthest enemy within 4 hexes and pulls it next to him |
+| **Passive: Stand Fast** | the first time each fight he drops below 50% HP, he gains a Shield of 15% of his max HP |
+| **Trait: Heavy** | he can't be knocked back or pulled |
+
+### Path 1: Aegisfang (Shield: makes his own, then cashes it in)
+
+The fantasy: every blow thickens his armor, and the armor is the weapon.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Plated Blows:** each basic attack gives him a Shield of 1% of his max HP | Each basic attack gives him a Shield of 3% of his max HP, up to a Shield of 50% of his max HP |
+| **Signature** | Haul | **Bulwark Burst:** his whole Shield bursts, dealing 150% of its value as damage to enemies within 1 hex |
+| **Cost** | –10% max HP | –15% DEF |
+
+- **Deed:** Shield he gives himself from his attacks. Only Plated Blows does that.
+- **Bulwark Burst uses his whole Shield, including Shields from allies** (Wardweaver, Hearthguard, Tithe of Iron): other heroes' Shields become his damage. That's what makes him the Shield payoff.
+- **Attack speed matters:** faster attacks build the Shield faster.
+
+### Path 2: Chainwarden (Clump: drags enemies in, grows stronger with them close)
+
+The fantasy: the chains bring them to him, and every one in reach makes him stronger.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Barbed Chain:** Haul applies Bleed equal to 20% of his ATK to the enemy it pulls | Haul pulls up to 3 enemies, Bleeding each. **Crowd Strength:** +5% ATK and +2 DEF for each enemy within 1 hex |
+| **Signature** | Haul | **Maelstrom:** pulls every enemy within 3 hexes next to him, Roots them for 1s, and applies Bleed equal to 30% of his ATK to each. He can attack again at once |
+| **Cost** | –10% ATK | –1 speed |
+
+- **Deed:** Bleed applied by his chains. Only Barbed Chain applies it. (It counts Bleed *applied*, never Bleed damage; see section 5.)
+- **No taunting:** enemies come to him because he drags them, not because he forces their attention. That keeps him apart from Brannoc.
+- **Plays off:** clump payoffs (Volley, Wildfire, Arrow Storm, Sunfall, Ironbrand's cleave); Maelstrom's Roots feed Garrote and Deadeye.
+
+### Path 3: Spitemail (Sustain: thorns)
+
+The fantasy: every blow on him costs the one who struck it.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Spikes:** enemies hitting him take 5% of the damage back | Enemies hitting him take 25% of the damage back, and he heals for half of what he sends back |
+| **Signature** | Haul | **Iron Maiden:** for 4s, he taunts enemies within 2 hexes and sends back 100% of the damage |
+| **Cost** | –10% ATK | Healing from others on him is 20% weaker |
+
+- **Deed:** damage sent back by Spikes. Only Spikes sends damage back.
+- **Unlike Last Watch:** both taunt, but Last Watch wants to be near death, and Spitemail wants to be hit a lot at any HP.
+
+- **Upgrade pool:** `upgrade-pools.md`. **Apexes:** `apexes.md`.
+
+---
+
+## 8e. Aldous Vesper: the bell-ringer (support)
+
+*Added 2026-10-02.* **Role:** back-line support who powers the team up rather than healing it. Shares the support role with Vell. Builds (`build-map.md`): Mana (maker), Rangers (support), Mark (maker).
+
+| | |
+| --- | --- |
+| **Stats** | HP 290, ATK 10, MGK 16, DEF 10 |
+| **Speed / range** | speed 2, up to 3 hexes |
+| **Basic attack: Toll** | a ringing note at the nearest enemy in range (MGK damage); his main source of mana |
+| **Signature: Peal** (60 mana) | allies within 3 hexes gain +15% attack speed for 4s |
+| **Passive: Resonance** | allies within 2 hexes of him get +5% attack speed |
+
+His base kit gives no mana to allies, has no ranged-ally bonus, and never Marks: each path's deed needs its taste.
+
+### Path 1: Chorister (Mana: maker)
+
+The fantasy: his breath becomes the whole band's breath.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Shared Breath:** when he fires his signature, the ally with the least mana gains 15 mana | Each time he gains mana, allies within 3 hexes gain half as much |
+| **Signature** | Peal | **Crescendo:** allies within 3 hexes gain 40 mana |
+| **Cost** | –10% max HP | His own signature costs 20 more mana |
+
+- **Deed:** mana given to allies.
+- **Gives mana, never cheaper signatures** (that's the Thrift sigil's job).
+- **Plays off:** heroes with strong mana signatures: Ilse (a second fuel beside Heat), Vell, Tamsin's Sentence, and anyone holding Echo or The Second Sun.
+
+### Path 2: Windcaller (Rangers: support)
+
+The fantasy: the wind carries his allies' shots and keeps the enemy off them.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Tailwind:** allies attacking from 3 or more hexes away get +5% attack speed | Allies attacking from 3+ hexes deal +20% damage, and their shots fly 50% faster |
+| **Signature** | Peal | **Gale:** knocks back every enemy within 2 hexes of each ranged ally |
+| **Cost** | –1 range | Peal and Resonance no longer reach melee allies |
+
+- **Deed:** attacks allies make under Tailwind.
+- **No range and no pierce:** extra range would let base Maren fill Deadeye's deed without the vow, and pierce belongs to Volley and Stormline. Windcaller buffs damage and shot speed, and protects the back line.
+- **Plays off:** ranged heroes (Maren, Ilse, Vell), and Ember Choir (faster attacks, more Burn).
+
+### Path 3: Bellwarden (Mark: maker)
+
+The fantasy: the bell names who dies next.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Toll the Hour:** every 4th Toll Marks its target for 2s | Every Toll Marks its target for 3s, and enemies he Marks take an extra +5% damage |
+| **Signature** | Peal | **Death Knell:** Marks every enemy within 3 hexes of his target for 5s |
+| **Cost** | –10% MGK | Toll deals 20% less damage |
+
+- **Deed:** Marks he applies.
+- **Plays off:** Mark payoffs: Tamsin's Headhunter, Inquisitor (Vigil Keeper), Brand the Marked (Ironbrand), and the Mark relics.
+
+- **Upgrade pool:** `upgrade-pools.md`. **Apexes:** `apexes.md`.
+
+---
+
+## 8f. Hob Gleaner: the scavenger (skirmisher)
+
+*Added 2026-10-02.* **Role:** a light mid-line skirmisher who picks at weak enemies and pockets what drops. **Deliberately weaker in a fight than the other heroes:** you give up power now for a richer run. Builds (`build-map.md`): Economy (maker and payoff), Mark (maker).
+
+| | |
+| --- | --- |
+| **Stats** | HP 300, ATK 16, DEF 12, CRIT 10 |
+| **Speed / range** | speed 3, sling at up to 2 hexes |
+| **Basic attack: Sling Stone** | a stone at the nearest enemy in range; his main source of mana |
+| **Signature: Grab** (50 mana) | darts to the lowest-HP enemy within 3 hexes and hits it for 150% of his ATK |
+| **Passive: Pickings** | when an enemy dies within 2 hexes of him, +1 shard |
+
+- **The cap:** everything Hob earns in one fight, from any source in his kit, is capped at **8 shards** (raised by some apexes). Without it, endless mode becomes infinite money.
+- **Shards from the sim:** shards he earns in a fight are combat log entries (with their source, rule 4), and the run reads them after the fight. That's a new log kind: it needs an audit rule in `test_arena_log.gd` and a form on the board (a coin popping from the enemy).
+
+### Path 1: Hoarder (Economy: payoff for saving)
+
+The fantasy: the heavier the purse, the harder he hits.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Nest Egg:** +1% ATK and DEF per 10 shards held (up to +10%) | +1% ATK and DEF per 5 shards held, with no cap; allies get half as much |
+| **Signature** | Grab | **Heavy Purse:** slams his target for his ATK plus 2 damage per shard held |
+| **Cost** | –10% max HP | Rerolls cost him 1 more shard |
+
+- **Deed:** extra damage from Nest Egg. Only Nest Egg turns held shards into damage.
+- **The gamble:** every relic you buy makes him weaker.
+
+### Path 2: Fence (Economy: payoff for spending)
+
+The fantasy: everything has a price, and he always gets a better one.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Haggle:** the first reroll in each shop is free | Rerolls cost half (rounded down). **Every shard spent in a shop gives the team +0.1% ATK, MGK, and max HP for the rest of the run** |
+| **Signature** | Grab | **Cut Purse:** a hit that makes the target drop 1 shard (once per enemy) and lowers its ATK by 15% for 4s |
+| **Cost** | –10% ATK | Shops buy items back from him for a quarter of their price, not half |
+
+- **Deed:** shards saved by Haggle. (Counting shards *spent* wouldn't need the taste: everyone spends.)
+
+### Path 3: Bounty Hunter (Mark: maker; Economy)
+
+The fantasy: every fight has a price on one head.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Bounty:** at the fight's start, the toughest enemy (most max HP) is a Bounty, Marked for 8s. Killing it while it's still Marked pays 2 shards | The toughest enemy is a Bounty, Marked for as long as it lives; when it dies, the next toughest becomes the Bounty. Each Bounty pays 3 shards |
+| **Signature** | Grab | **Collect:** strikes the Bounty for 200% of his ATK, from anywhere within 4 hexes |
+| **Cost** | –1 speed | –10% damage to enemies that aren't the Bounty |
+
+- **Deed: collect 1 Bounty.** The first **feat deed**: one kill transforms him, but it needs planning (place your damage next to the toughest enemy, pick a fight where the kill is realistic, burst it within 8s).
+- **Plays off:** Mark payoffs (Tamsin's Headhunter, Inquisitor, Aldous's Requiem, Brand the Marked): a Mark that never drops on the toughest enemy.
+
+- **Upgrade pool:** `upgrade-pools.md`. **Apexes:** `apexes.md`.
+
+---
+
+## 8g. Severine Hollowell: the bloodwitch (melee; two paths become casters)
+
+*Added 2026-10-02.* **Role:** a melee blood hunter in the thick of the fight. **She never heals: all her sustain is lifesteal.** Builds (`build-map.md`): Sustain (lifesteal payoff, Bloodglut), Poison (Plaguebearer), and blood-for-power (Hemomancer). Bloodglut and Plaguebearer stay melee on ATK; Hemomancer becomes a caster on MGK.
+
+| | |
+| --- | --- |
+| **Stats** | HP 330, ATK 20, MGK 12, DEF 12 |
+| **Speed / range** | speed 2, melee (1) |
+| **Basic attack: Rend** | a clawing strike with 15% lifesteal; her main source of mana |
+| **Signature: Drain** (60 mana) | strikes her target for 200% of her ATK, with 50% lifesteal |
+| **Passive: Hemophage** | her lifesteal is doubled against enemies below 50% HP |
+
+Being melee is the point: she's in the fight taking hits, so lifesteal matters to her.
+
+### Path 1: Bloodglut (melee; grows on lifesteal past full)
+
+The fantasy: she drinks past full and keeps swelling.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Engorge:** lifesteal past full HP raises her max HP by that much, for the rest of the fight (up to +5%) | Engorge has no cap, and Rend deals extra damage equal to 3% of her max HP |
+| **Signature** | Drain | **Gorge:** strikes her target for 100% of her ATK plus 10% of her max HP, with 50% lifesteal |
+| **Cost** | –10% ATK | –1 speed |
+
+- **Deed:** max HP gained from Engorge.
+- **The loop:** lifesteal past full → more max HP → more damage → more lifesteal.
+
+### Path 2: Plaguebearer (melee; Poison)
+
+The fantasy: every wound she opens festers, and she feeds on the sick.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Blight:** Rend applies Poison equal to 10% of her ATK | Rend applies Poison equal to 20% of her ATK, and her lifesteal is doubled against Poisoned enemies (direct hits only) |
+| **Signature** | Drain | **Plague Burst:** a 2-hex cloud around her for 4s; enemies inside gain Poison equal to 30% of her ATK each second |
+| **Cost** | –10% max HP | –10% ATK |
+
+- **Deed:** Poison applied by Blight.
+- **Poison never counts toward lifesteal;** only her direct hits on Poisoned enemies do (`rebuild-combos.md`, section 2b).
+
+### Path 3: Hemomancer (becomes a caster; blood for power)
+
+The fantasy: every drop above the line is a spell.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Blood Price:** Drain costs 30 mana plus 5% of her max HP, instead of 60 mana | She becomes a caster and **starts every fight at 50% HP**. Her basic attack is **Blood Bolt**: up to 3 hexes, 150% of her MGK, 25% lifesteal. Her signature costs 10% of her max HP and no mana, and she casts it whenever she's above 50% HP, with no cooldown |
+| **Signature** | Drain | **Exsanguinate:** instant (no cast time, doesn't delay her attacks); hits her target and enemies within 1 hex for 400% of her MGK plus twice the HP she spent. No lifesteal |
+| **Cost** | –10% DEF | Starting at 50% HP is the cost |
+
+- **Deed:** HP spent on spells.
+- **The flow:** lifestealing Blood Bolts push her above 50%; everything above the line becomes Exsanguinates. Lifesteal and attack speed set her cast rate.
+
+- **Upgrade pool:** `upgrade-pools.md`. **Apexes:** `apexes.md`.
+
+---
+
+## 8h. Edric Tithewell: the tithe-warden (support)
+
+*Added 2026-10-02.* **Role:** a back-line support who wards the whole team. Wardweaver shields one ally at a time through her heals; Edric covers everyone, and each path asks what Shields pay out. Shares the support role with Vell and Aldous. Builds (`build-map.md`): Shield (maker; Bastion of Saints is also a payoff), Economy (maker and payoff), Mana (maker).
+
+| | |
+| --- | --- |
+| **Stats** | HP 320, ATK 10, MGK 16, DEF 16 |
+| **Speed / range** | speed 2, up to 3 hexes |
+| **Basic attack: Seal** | a stamped seal at the nearest enemy in range (MGK damage); his main source of mana |
+| **Signature: Ward** (70 mana) | every ally gains a Shield of 8% of their max HP |
+| **Passive: Vigil** | Shielded allies within 2 hexes of him take 5% less damage |
+
+**His paths count any Shield, never "his" Shields** (section 5: a Shield has no owner). His deeds count only what his own effect gives at that moment.
+
+### Path 1: Aegis (Shield: maker)
+
+The fantasy: no one under his watch goes unwarded.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Hallow:** every 6s, the lowest-HP ally gets a Shield of 4% of their max HP | Hallow every 3s, at 6% of their max HP |
+| **Signature** | Ward | **Sanctuary:** every ally gains a Shield of 20% of their max HP |
+| **Cost** | –10% MGK | None |
+
+- **Deed:** Shield given by Hallow.
+
+### Path 2: Tithe-Collector (Economy: maker)
+
+The fantasy: the rift takes its toll, and he collects his share.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Tithe:** after a won fight, +1 shard for each hero still standing | +2 shards per hero still standing |
+| **Signature** | Ward | **Collection:** every ally gains a Shield of 8% of their max HP, and each enemy that dies in the next 5s pays 1 shard (up to 3 per cast) |
+| **Cost** | –10% DEF | –15% max HP |
+
+- **Deed:** shards from Tithe.
+- **Unlike Hob:** Hob earns by killing and pays in fight power; Edric earns by keeping everyone standing.
+
+### Path 3: Psalmist (Mana: maker)
+
+The fantasy: every ward that shatters becomes a breath of power.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Offering:** when any Shield on an ally breaks, that ally gains 5 mana | When any Shield on an ally breaks, they gain 10 mana, and allies gain mana 10% faster while they have any Shield |
+| **Signature** | Ward | **Vesper Ward:** every ally gains a Shield of 10% of their max HP and 25 mana |
+| **Cost** | –10% MGK | Vesper Ward's Shields are 25% smaller |
+
+- **Deed:** mana given by Offering.
+- **Unlike Aldous:** Aldous shares his own mana income; Edric gives mana when Shields break, so front-liners who take hits (Brannoc, Garrow, Severine) fill fastest.
+
+- **Upgrade pool:** `upgrade-pools.md`. **Apexes:** `apexes.md`.
+
+---
+
+## 8i. Ottilie Brack: the alchemist (caster)
+
+*Added 2026-10-02.* **Role:** back-line caster who throws vials of fire and venom. Shares the damage role. Builds (`build-map.md`): Burn and Poison (payoff, Catalyst), Economy (maker, Transmuter), Mana (maker, Apothecary).
+
+| | |
+| --- | --- |
+| **Stats** | HP 280, ATK 8, MGK 18, DEF 10 |
+| **Speed / range** | speed 2, up to 3 hexes |
+| **Basic attack: Toss** | a vial at the nearest enemy in range (MGK damage); her main source of mana |
+| **Signature: Volatile Flask** (60 mana) | bursts on a 1-hex circle around her target: 120% of her MGK, plus Burn and Poison each equal to 20% of her MGK |
+| **Passive: Brewing** | every 4s, her next Toss is a fire vial (Burn equal to 20% of her MGK) or a venom vial (Poison, the same amount), alternating |
+
+**Her vials ride on her attacks:** Brewing, and Apothecary's mana vials, trigger on her *next Toss* after their timer, never on a free timer. With nothing in range, no vials fly.
+
+### Path 1: Catalyst (Burn and Poison: payoff)
+
+The fantasy: two poisons are worse than one, and she knows exactly how much worse.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Reaction:** +1% damage per 5 Burn and Poison on her target, combined (up to +10%) | +1% damage per 2 Burn and Poison on the target, with no cap, and +25% damage against enemies with both |
+| **Signature** | Volatile Flask | **Reaction Flask:** hits her target and enemies within 1 hex for 100% of her MGK plus 3 per Burn and Poison on each. It reads them without using them up |
+| **Cost** | –10% max HP | Brewing stops |
+
+- **Deed:** extra damage from Reaction.
+- **Reads totals, never sources** (section 5).
+- **Plays off:** teams applying both Burn and Poison (Ilse with Severine, Tamsin's Poisoned Blades, the Burn relics). The only payoff for mixing the two.
+
+### Path 2: Transmuter (Economy: maker)
+
+The fantasy: lead into gold, and the dead into coin.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Gilded Death:** an enemy that dies while both Burning and Poisoned pays 1 shard (up to 3 per fight) | It pays 2 shards (up to 8 per fight), and once per shop she can turn an item you own into shards at its full price |
+| **Signature** | Volatile Flask | **Philosopher's Flask:** hits her target and enemies within 1 hex for 120% of her MGK, plus Burn and Poison each equal to 20% of her MGK; enemies it kills pay 2 shards |
+| **Cost** | –10% max HP | Brewing slows to every 6s |
+
+- **Deed:** shards from Gilded Death.
+- **Unlike Hob and Edric:** she earns from enemies dying while both Burning and Poisoned, and by transmuting items at full price (shops normally pay half).
+
+### Path 3: Apothecary (Mana: maker)
+
+The fantasy: a vial for the foe, and a tonic for the friend.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Tonic:** every 8s, her next Toss also throws a mana vial to the ally with the least mana (+10 mana) | Every 4s, her next Toss also throws a mana vial to the ally with the lowest mana (by %): +20 mana and +10% attack speed for 3s. Brewing stays |
+| **Signature** | Volatile Flask | **Elixir:** every ally gains 30 mana, plus +10% ATK and MGK for 4s |
+| **Cost** | –10% MGK | Toss deals 15% less damage |
+
+- **Deed:** mana given by Tonic.
+- **Unlike Aldous and Edric:** Aldous shares his own mana income, Edric gives mana when Shields break; Ottilie delivers it with her attacks, to whoever needs it most.
+
+- **Upgrade pool:** `upgrade-pools.md`. **Apexes:** `apexes.md`.
+
+---
+
+## 8j. Lucan Merrow: the illusionist (caster)
+
+*Added 2026-10-02.* **Role:** back-line caster who fills the field with copies; most of his damage comes from what he summons. Shares the damage role. Builds (`build-map.md`): Summons (maker, Mirrorwright; payoff, Puppeteer), Stealth (maker and payoff, Veilweaver).
+
+| | |
+| --- | --- |
+| **Stats** | HP 270, ATK 8, MGK 18, DEF 8 |
+| **Speed / range** | speed 2, up to 3 hexes |
+| **Basic attack: Glimmer** | a shard of light at the nearest enemy in range (MGK damage); his main source of mana |
+| **Signature: Mirror** (60 mana) | a copy of himself appears beside him for 6s, with 30% of his stats; it attacks with Glimmer but has no signature |
+| **Passive: Unreal** | enemies attacking him miss 15% of the time |
+
+- **Hero-side summons:** copies use the existing summon pieces, count toward the 30-units-per-side cap, and are logged as summons with their source (shared with Severine's Gravecaller).
+- **"Allied unit"** means anything on your side of the field: heroes, copies, thralls, controlled enemies, any summon.
+
+### Path 1: Mirrorwright (Summons: maker)
+
+The fantasy: which one is real? All of them hit.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Reflection:** every 12s, a copy of him appears for 4s, at 20% of his stats | Reflection every 6s, copies at 40% of his stats, up to 3 at once; copies carry his basic-attack upgrades |
+| **Signature** | Mirror | **Hall of Mirrors:** every ally gets a copy for 6s, at 30% of their stats (basic attack only) |
+| **Cost** | –10% max HP | –15% MGK; his power is in the copies |
+
+- **Deed:** copies made by Reflection (his base Mirror's copies don't count).
+- **Plays off:** on-hit effects ride on copies (Ember Choir's Burn, Volley's split arrows doubled by Hall of Mirrors).
+
+### Path 2: Veilweaver (Stealth: maker and payoff)
+
+The fantasy: the one they aim at simply isn't there.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Shroud:** every 10s, the lowest-HP ally is hidden for 1s | Every 5s, the ally targeted by the most enemies is hidden for 1.5s, and an ally's first attack out of Stealth deals +40% damage and Silences for 0.5s |
+| **Signature** | Mirror | **Vanishing Act:** every ally is hidden for 2s, and their next attack is a crit |
+| **Cost** | –10% MGK | Mirror's copy lasts only 3s |
+
+- **Deed:** Stealth given by Shroud.
+- **Unlike Tamsin:** Tamsin hides herself to strike; Veilweaver hides whoever is in danger, and pays off Stealth for the whole team.
+
+### Path 3: Puppeteer (Summons: payoff)
+
+The fantasy: every body on the field is a string in his hand.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Strings:** +2% MGK for each allied unit on the field | +5% MGK and +3% attack speed per allied unit, and allied summons get +10% ATK and MGK |
+| **Signature** | Mirror | **Dance of Strings:** for 5s, every allied summon gets +50% attack speed and attacks his target |
+| **Cost** | –10% max HP | –1 range |
+
+- **Deed:** extra damage from Strings.
+- **Plays off:** his own copies, Severine's Gravecaller thralls, and the heroes themselves (3 at minimum).
+
+- **Upgrade pool:** `upgrade-pools.md`. **Apexes:** `apexes.md`.
+
+---
+
+## 8k. Kestra Fenn: the beastwarden (skirmisher with a companion)
+
+*Added 2026-10-02.* **Role:** a mid-line spear fighter who fights beside her rift-hound. Builds (`build-map.md`): Burn (maker, Cinderhound), Poison (maker, Serpent-Keeper), Summons (payoff, Packleader; and a maker, through her pets).
+
+| | |
+| --- | --- |
+| **Stats** | HP 300, ATK 18, DEF 12, CRIT 8 |
+| **Speed / range** | speed 2, spear at up to 2 hexes |
+| **Basic attack: Spear Jab** | a thrust at the nearest enemy in range; her main source of mana |
+| **Companion: Grit** | a rift-hound that starts every fight beside her: 40% of her max HP, 60% of her ATK, fast melee. If Grit falls, he returns 10s later. He counts as an allied summon |
+| **Signature: Sic 'Em** (50 mana) | Grit leaps to her target and bites for 200% of his ATK |
+| **Passive: Bond** | while Grit is up, both get +10% attack speed |
+
+- **Grit is a new kind of summon:** permanent for the fight, and he returns after falling. He uses the hero-side summon pieces (shared with Severine's thralls and Lucan's copies), counts toward the 30-units-per-side cap, and is logged with his source.
+
+### Path 1: Cinderhound (Burn: maker)
+
+The fantasy: her hound runs hot, and everything it bites catches.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Smoldering Fangs:** every 3rd bite from Grit applies Burn equal to 20% of her ATK | Grit is ember-wreathed: every bite applies Burn equal to 15% of her ATK, and enemies that hit him gain Burn equal to 10% of her ATK |
+| **Signature** | Sic 'Em | **Firebrand Pounce:** Grit leaps to her target and bursts, applying Burn equal to 60% of her ATK to enemies within 1 hex |
+| **Cost** | –10% ATK | Grit has 20% less HP |
+
+- **Deed:** Burn applied by Smoldering Fangs.
+- **Unlike Ilse:** Ilse's Burn scales with MGK and her own casting; Kestra's rides on her hound and scales with ATK.
+
+### Path 2: Serpent-Keeper (Poison: maker)
+
+The fantasy: the rift's vipers answer to her.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Venomed Jab:** every 3rd Spear Jab applies Poison equal to 15% of her ATK | Grit is replaced by a rift viper that spits from up to 3 hexes, applying Poison equal to 20% of her ATK; her jabs apply Poison equal to 10% of her ATK |
+| **Signature** | Sic 'Em | **Nest:** releases 3 small vipers for 6s, whose bites apply Poison equal to 10% of her ATK |
+| **Cost** | –10% max HP | The viper has 20% less HP than Grit |
+
+- **Deed:** Poison applied by Venomed Jab.
+- **Unlike Severine:** Severine's Poison comes from her own melee claws and pays off with lifesteal; Kestra's comes from her spear and ranged pets.
+
+### Path 3: Packleader (Summons: payoff)
+
+The fantasy: the pack is the weapon, and she runs it.
+
+| | Taste (vowed) | Transformed |
+| --- | --- | --- |
+| **Mechanic** | **Pack Call:** Grit gets +3% ATK for each allied summon on the field | Two hounds (Grit and a second). Every allied summon gets +5% ATK and attack speed per allied summon. **Pack Fury:** when an allied summon falls, the others get +15% attack speed for 4s |
+| **Signature** | Sic 'Em | **Howl:** every allied summon gets +40% ATK and a Shield of 20% of its max HP for 5s |
+| **Cost** | –10% ATK | –1 range |
+
+- **Deed:** extra damage from Pack Call.
+- **Unlike Lucan's Puppeteer:** Lucan counts every allied unit (heroes too) and powers himself; Kestra counts summons only and powers the summons.
+
+- **Upgrade pool:** `upgrade-pools.md`. **Apexes:** `apexes.md`.
+
+---
+
+## 9. How the heroes fit together
 
 - **Maren's weakness is flankers.** Hearthwall's Guard and wall, Brannoc's Engage, and Trapper's snares all answer it.
 - **Last Watch Brannoc and a healer Vell pull against each other.** His cost is weaker healing, which hurts with Lanternbearer but not with Wardweaver. That's a real decision.
 - **Wardweaver + Hearthwall** make a nearly unbreakable but slow front line.
 - **Marked** ties Maren, Ironbrand's Brand Slam, and Vigil Keeper's Inquisitor together.
+- **Ilse turns any team's Burn into tempo:** every Burn source on the team feeds Heat. Furnace wants attack speed, Wildfire wants enemies bunched (Last Watch's taunts, Ironbrand's knockback), and Ember Choir wants allies who hit often or hit many (Volley, Ironbrand).
+- **Tamsin cashes in what others set up:** Marks (Headhunter), Roots and Stuns (Garrote), or her own kills (Nightblade). Hearthwall and Last Watch keep enemies busy while she's out of Stealth.
+- **Garrow turns other heroes' work into his:** Shields from Vell and Brannoc into Bulwark Burst, clumps into Crowd Strength, and enemy attention into damage sent back. Chainwarden's pulls set up Volley, Wildfire, Tamsin, and Ironbrand.
+- **Aldous makes everyone else better at what they already do:** more signatures (Chorister), stronger ranged allies (Windcaller), or Marks for the payoff heroes (Bellwarden).
+- **Hob trades fight power for run power:** Hoarder pays off saving, Fence pays off spending, and Bounty Hunter gives the Mark heroes a permanent target.
+- **Severine is the lifesteal payoff the relics needed:** Aldous's attack speed and the lifesteal relics (Shadow Engine, Blood Communion) feed Bloodglut and Hemomancer; Tamsin's Poisoned Blades feeds Plaguebearer.
+- **Edric turns Shields into whatever the team lacks:** more protection (Aegis), money (Tithe-Collector), or mana (Psalmist). Every Shield maker on the team (Wardweaver, Hearthguard, Garrow's Aegisfang, Tithe of Iron) feeds his paths.
+- **Ottilie bridges the damage-over-time heroes:** Brewing adds both Burn and Poison to any team, and Catalyst cashes in Ilse's Burn and Severine's Poison together. Transmuter and Apothecary give every team a third choice for shards and mana.
+- **Lucan multiplies whatever the team already does:** copies carry allies' on-hit effects, Veilweaver keeps the threatened hidden, and Puppeteer grows with every unit on your side (Severine's thralls included).
+- **Kestra completes the summons team** with Lucan and Severine, and gives Burn and Poison teams a second maker that isn't a caster.
 - These pairings are what duo bonds could be built on later.
 
 ## 10. What this removes from the current game

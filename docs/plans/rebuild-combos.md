@@ -48,6 +48,10 @@ Things charms, relics, and upgrades can react to. Most are read from the combat 
 
 **Loop guard:** an effect caused by a trigger can set off other triggers, but one chain stops after a set depth (say 8 steps) per tick. Chains are the point, but they can't be infinite.
 
+### 2b. Lifesteal
+
+- **Lifesteal is its own mechanic:** a hero heals for a percent of the direct damage they deal (basic attacks and signatures). **Burn and other damage over time never count toward lifesteal,** since a pile of Burn has no single owner. Lifesteal from several sources adds up.
+
 ## 3. The damage rule
 
 A hit's damage is its base (ATK or MGK times the ability's %), plus flat bonuses, **times one factor per bonus kind**:
