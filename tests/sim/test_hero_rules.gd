@@ -17,16 +17,16 @@ const ALL_RULES: Dictionary = {"marks_stack": true, "crit_chain": {"steps": 10, 
 	"collapse": {"immune": true, "enemy_max_hp_bp": 500}, "long_watch": {"from_ms": 4000, "every_ms": 2000, "tie_ms": 300000}}
 
 
-## The rules fight: the three heroes at a fifth of their max HP against Old
-## Mother Ash with every rule on (seed 6: a hero falls and rises, and The
-## Unbending blocks a status).
+## The rules fight: the three heroes at three tenths of their max HP against
+## Old Mother Ash with every rule on (seed 6: a hero falls and rises, and
+## The Unbending blocks a status; a fifth until phase 6 made her stronger).
 static func rules_setup(fight_seed: int = 6) -> FightSetup:
 	var errors: Array[String] = []
 	var formation: Dictionary[String, Vector2i] = {"brannoc": Vector2i(3, 2), "maren": Vector2i(3, 0), "vell": Vector2i(4, 0)}
 	var setup: FightSetup = Encounters.setup(K.content(), "old_mother_ash", formation, fight_seed, errors)
 	setup.hero_rules = rules(ALL_RULES)
 	for hero: UnitSetup in setup.heroes:
-		hero.max_hp_bp = 2000
+		hero.max_hp_bp = 3000
 	return setup
 
 

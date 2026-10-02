@@ -394,7 +394,7 @@ func test_a_summon_is_named_as_it_joins() -> void:
 func test_banners_as_the_fight_plays() -> void:
 	var session: PracticeSession = PracticeSession.make(_content)
 	session.speed = 0.5
-	var screen: ArenaScreen = await _screen("witch_circle", session)
+	var screen: ArenaScreen = await _screen("witch_coven", session)
 	screen._fight()
 	assert_eq(screen.banners.speed, 0.5, "banners start at the remembered speed")
 	screen.set_speed(1.0)
@@ -410,8 +410,8 @@ func test_banners_as_the_fight_plays() -> void:
 	assert_false(screen.banners.visible)
 	var phase: LogEntry = _entry(LogEntry.Kind.PHASE, "", "gloam_witch", 0, {"note": "Molt"})
 	screen._on_entries([phase] as Array[LogEntry])
-	assert_eq(screen.banners.label.text, "Gloam Witch: Molt")
-	assert_string_contains(screen.log_panel.shown_text(), "Gloam Witch enters Molt")
+	assert_eq(screen.banners.label.text, "Gloam Witch 1: Molt", "the coven has two witches")
+	assert_string_contains(screen.log_panel.shown_text(), "Gloam Witch 1 enters Molt")
 	screen.set_speed(2.0)
 	assert_eq(screen.banners.speed, 2.0, "banners keep up with the speed")
 	screen.skip()

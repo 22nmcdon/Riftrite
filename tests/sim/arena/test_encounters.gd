@@ -149,7 +149,7 @@ func test_the_act_1_encounters_are_the_plans() -> void:
 		assert_eq(encounter.act, 1, encounter_id)
 		if BASIC.has(encounter_id):
 			assert_eq(encounter.tier, "easier", encounter_id)
-		assert_between(encounter.scale_bp, 5000, 20000, "%s: a scale the sim runner tuned" % encounter_id)
+		assert_between(encounter.scale_bp, 5000, 30000, "%s: a scale the tuning set (phase 6 raised the later fights to x1.6 of phase 2's)" % encounter_id)
 		assert_false(encounter.tests.is_empty(), encounter_id)
 	assert_eq((content.encounters["hollow_line"] as EncounterDef).rocks.size(), 2, "archers behind 2 rocks")
 
