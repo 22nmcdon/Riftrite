@@ -723,7 +723,7 @@
       "cost": "Heals on him are 20% weaker, and he has 5% less max HP.",
       "patch": {
         "stats_bp": {
-          "hp": 10000,
+          "hp": 9500,
           "atk": 14200,
           "mgk": 10500
         },
