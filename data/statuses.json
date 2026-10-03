@@ -347,5 +347,13 @@
     "kind": "boost",
     "stacking": true,
     "auras": [{"stat": "atsp_bp", "value": 10300}]
-  }
+  },
+  {"_note": "Stronger MGK for the rest of the fight, a stack for each enemy her smite kills (Inquisitor; phase 8 part 2).", "id": "zeal", "name": "Zeal", "kind": "boost", "stacking": true, "auras": [{"stat": "mgk_bp", "value": 11500}]},
+  {"_note": "Attacks a little faster for a moment, from Mend or Kindle (Dawnbringer's taste; phase 8 part 2).", "id": "morning_haste", "name": "Morning Haste", "kind": "boost", "duration_ms": 2000, "auras": [{"stat": "atsp_bp", "value": 10500}]},
+  {"_note": "Attacks much faster for a while, from Mend or Kindle (Dawnbringer; phase 8 part 2).", "id": "dawnlight", "name": "Dawnlight", "kind": "boost", "duration_ms": 4000, "auras": [{"stat": "atsp_bp", "value": 12500}]},
+  {"_note": "Attacks faster for the rest of the fight, a stack for each heal while Dawnlight holds (Dawnbringer; phase 8 part 2).", "id": "first_light", "name": "First Light", "kind": "boost", "stacking": true, "auras": [{"stat": "atsp_bp", "value": 10500}]},
+  {"_note": "Deals a little less damage while in her lantern's light (The Beacon's taste; phase 8 part 2).", "id": "glare", "name": "Glare", "kind": "boost", "duration_ms": 1200, "auras": [{"stat": "damage_bp", "value": 9500}]},
+  {"_note": "Deals much less damage while in her lantern's light (The Beacon; phase 8 part 2).", "id": "dazzled", "name": "Dazzled", "kind": "boost", "duration_ms": 1200, "auras": [{"stat": "damage_bp", "value": 7500}]},
+  {"_note": "Her Shields are larger for the rest of the fight, a stack for each Shield broken (Thornweave; phase 8 part 2).", "id": "woven_thorns", "name": "Woven Thorns", "kind": "boost", "stacking": true, "auras": [{"stat": "shield_bp", "value": 10500}]},
+  {"_note": "More DEF for the rest of the fight, a stack for every 500 damage her link shares (Loomwarden; phase 8 part 2).", "id": "iron_loom", "name": "Iron Loom", "kind": "boost", "stacking": true, "auras": [{"stat": "def", "value": 2}]}
 ]

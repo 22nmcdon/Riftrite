@@ -204,7 +204,12 @@ static func _queue_once(signature: AbilityState) -> void:
 static func _fire(sim: CombatSim, unit: UnitState, target: UnitState, note: String = "") -> bool:
 	var signature: AbilityState = unit.signature
 	var ability: AbilityDef = signature.def
-	if not EffectRunner.fire(sim, unit, signature, target, ability.reach_for(unit.stats.get_stat(UnitStats.Stat.RANGE)), not signature.failing, note):
+	# Growing with each cast (phase 8 part 2): the fires before this one.
+	var power_before: int = unit.fire_power_bp
+	unit.fire_power_bp += ability.grows_bp * signature.fires
+	var fired: bool = EffectRunner.fire(sim, unit, signature, target, ability.reach_for(unit.stats.get_stat(UnitStats.Stat.RANGE)), not signature.failing, note)
+	unit.fire_power_bp = power_before
+	if not fired:
 		signature.failing = true
 		return false
 	signature.failing = false

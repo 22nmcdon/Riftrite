@@ -20,12 +20,19 @@ extends RefCounted
 ##       the unit within reach, the unit takes that share of what got
 ##       through instead (Guard). "covers": "behind" only allies on the far
 ##       side of it from its target; "all" every ally in reach
+##   {"id": "loom", "name": "Loom", "kind": "link", "share_pct": 100,
+##    "per_shared": 500, "status": "iron_loom"}
+##       phase 8 part 2 (Loomwarden; a code change, like Guard): every ally
+##       holding one of the unit's Shields is linked, and a hit on one while
+##       its Shield holds spreads that share of what got through evenly over
+##       them all (Links); "per_shared" and "status" (optional): a stack of
+##       that status on each for every so much moved
 ## Adding a kind is a code change; say so when you make one. An optional
 ## "text" is the player's sentence for it; the sim never reads it.
 
-enum Kind { AURA, ABILITY, REPLACE_STATUS, GUARD }
+enum Kind { AURA, ABILITY, REPLACE_STATUS, GUARD, LINK }
 
-const KIND_NAMES: Array[String] = ["aura", "ability", "replace_status", "guard"]
+const KIND_NAMES: Array[String] = ["aura", "ability", "replace_status", "guard", "link"]
 
 var id: String
 var name: String
@@ -42,6 +49,10 @@ var to_status: String = ""
 var share_bp: int = 0
 var guard_range: int = 0
 var behind_only: bool = false
+## link (phase 8 part 2): how much has to move before each stack of
+## `link_status` (0: none); its share is `share_bp`.
+var per_shared: int = 0
+var link_status: String = ""
 
 
 static func read(reader: DataReader) -> PartDef:
@@ -80,5 +91,11 @@ static func read(reader: DataReader) -> PartDef:
 			def.share_bp = reader.req_int("share_pct", 1, 100) * 100
 			def.guard_range = reader.req_int("within_hexes", 1, 8) * HexGrid.HEX
 			def.behind_only = reader.req_choice("covers", ["behind", "all"]) == "behind"
+		Kind.LINK:
+			def.share_bp = reader.req_int("share_pct", 1, 100) * 100
+			def.per_shared = reader.opt_int("per_shared", 0, 0)
+			def.link_status = reader.opt_string("status", "")
+			if (def.per_shared > 0) != (not def.link_status.is_empty()):
+				reader.error("a link's per_shared and status come together")
 	reader.finish()
 	return def

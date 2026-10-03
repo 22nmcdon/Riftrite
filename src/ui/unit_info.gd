@@ -157,6 +157,11 @@ static func passive_numbers(part: PartDef, kit: UnitDef, content: ContentDb) -> 
 			@warning_ignore("integer_division")
 			return "Takes %s of each enemy hit on an ally %swithin %s" % [ValueBreakdown._percent(part.share_bp),
 				"behind it " if part.behind_only else "", hexes(part.guard_range / HexGrid.HEX)]
+		PartDef.Kind.LINK:
+			var linked: String = "Allies with its Shields share %s of each hit on one, evenly" % ValueBreakdown._percent(part.share_bp)
+			if part.per_shared > 0:
+				linked += "; every %d shared: %s on each" % [part.per_shared, _status_name(part.link_status, content)]
+			return linked
 	# Each effect's trigger, where it differs from the one before (a passive
 	# may answer more than one event).
 	var parts: Array[String] = []

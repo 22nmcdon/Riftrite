@@ -51,6 +51,9 @@ enum Kind {
 	RESISTED,
 	DODGED,
 	ARRIVE,
+	## Phase 8 part 2 (Links): a linked ally's part of a hit on another;
+	## target: the ally; note: the unit first hit; source: the link.
+	SHARED,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -261,6 +264,8 @@ func to_text() -> String:
 			return line + "%s raises a wall from %s to %s (falls at %s)" % [source_text(), _point(from_pos), _point(to_pos), _format_time(end_tick)]
 		Kind.GUARD:
 			return line + "%s takes %d of the hit on %s" % [source_text(), amount, target]
+		Kind.SHARED:
+			return line + "%s: %s takes %d of the hit on %s" % [source_text(), target, amount, note]
 		Kind.RISE:
 			return line + "%s: %s rises at %s with %d HP" % [source_text(), target, _point(to_pos), amount]
 		Kind.RESISTED:

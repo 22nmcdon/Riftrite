@@ -52,7 +52,7 @@ func test_real_statuses() -> void:
 	var db: ContentDb = ContentDb.load_dir("res://data")
 	assert_eq(db.status_ids, ["burn", "poison", "bleed", "root", "stun", "slow", "taunt", "silence", "marked", "undying", "engaged", "stealth", "warded", "sunder", "veiled_haste", "storm_call", "frenzy", "quickened", "unbending", "long_watch", "surge", "surge_2", "last_breath", "purified",
 		"grounded", "shadow_step", "shadow_step_2", "shadow_step_3", "bloodhound", "scavenged", "blood_frenzy", "watched_over",
-		"ambush", "ambush_2", "rear_guard", "late_surge", "hobbled", "cowed", "parting_shot", "first_blood", "scarred", "hailstorm", "tailwind"] as Array[String])
+		"ambush", "ambush_2", "rear_guard", "late_surge", "hobbled", "cowed", "parting_shot", "first_blood", "scarred", "hailstorm", "tailwind", "zeal", "morning_haste", "dawnlight", "first_light", "glare", "dazzled", "woven_thorns", "iron_loom"] as Array[String])
 	assert_eq(db.statuses["burn"].interval_ticks, 10, "Burn ticks twice a second")
 	assert_eq(db.statuses["burn"].stacks_lost_bp, 500)
 	assert_eq(db.statuses["burn"].vs_shield_bp, 5000, "Burn is half as effective against shields")

@@ -1414,7 +1414,214 @@
       ],
       "off_target": true,
       "threshold": 28
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md). Numbers are placeholders for the --apexes report to tune.",
+        "id": "the_beacon",
+        "name": "The Beacon",
+        "title": "the light that burns",
+        "fantasy": "Her lantern is a mercy to friends and a fire to foes.",
+        "vowed": {
+          "taste": "Enemies in her lantern's light deal 5% less damage.",
+          "patch": {
+            "signature": {
+              "id": "night_lantern",
+              "name": "Night Lantern",
+              "text": "Sets a lantern by the ally lowest on HP within 3 hexes: for 5s, every ally within 2 hexes of it heals each second and loses some Burn and Poison, and every enemy within 2 hexes of it deals a little less damage.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "lowest_hp_ally",
+              "effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 2
+                  },
+                  "anchor": "target",
+                  "hits": "all",
+                  "duration_ms": 5000,
+                  "every_ms": 1000,
+                  "effects": [
+                    {
+                      "type": "heal",
+                      "amount": 4,
+                      "target": "target",
+                      "scaling": {
+                        "mgk": 2500
+                      },
+                      "side": "allies"
+                    },
+                    {
+                      "type": "cleanse",
+                      "amount_bp": 3000,
+                      "target": "target",
+                      "side": "allies"
+                    },
+                    {
+                      "type": "apply_status",
+                      "status": "glare",
+                      "target": "target",
+                      "side": "enemies"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "apex": {
+          "text": "Enemies in her lantern's light deal 25% less damage and Burn each second, and each lantern she sets is 10% stronger than the last, for the rest of the fight.",
+          "patch": {
+            "signature": {
+              "id": "night_lantern",
+              "name": "Night Lantern",
+              "text": "Sets a lantern by the ally lowest on HP within 3 hexes: for 5s, every ally within 2 hexes of it heals each second and loses some Burn and Poison, and every enemy within 2 hexes of it deals much less damage and burns. Each lantern is stronger than the last.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "lowest_hp_ally",
+              "effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 2
+                  },
+                  "anchor": "target",
+                  "hits": "all",
+                  "duration_ms": 5000,
+                  "every_ms": 1000,
+                  "effects": [
+                    {
+                      "type": "heal",
+                      "amount": 4,
+                      "target": "target",
+                      "scaling": {
+                        "mgk": 2500
+                      },
+                      "side": "allies"
+                    },
+                    {
+                      "type": "cleanse",
+                      "amount_bp": 3000,
+                      "target": "target",
+                      "side": "allies"
+                    },
+                    {
+                      "type": "apply_status",
+                      "status": "dazzled",
+                      "target": "target",
+                      "side": "enemies"
+                    },
+                    {
+                      "type": "apply_status",
+                      "status": "burn",
+                      "stacks": 5,
+                      "target": "target",
+                      "side": "enemies"
+                    }
+                  ]
+                }
+              ],
+              "grows_bp": 1000
+            }
+          }
+        },
+        "deed": {
+          "text": "Enemies caught in her lantern's light",
+          "counts": "applied",
+          "statuses": [
+            "glare",
+            "dazzled"
+          ],
+          "threshold": 100
+        }
+      },
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md). Numbers are placeholders for the --apexes report to tune.",
+        "id": "dawnbringer",
+        "name": "Dawnbringer",
+        "title": "the first light",
+        "fantasy": "Where she heals, the fight speeds up.",
+        "vowed": {
+          "taste": "Allies Mend and Kindle heal attack 5% faster for 2s.",
+          "patch": {
+            "passives": [
+              {
+                "id": "morning",
+                "name": "Morning",
+                "kind": "ability",
+                "text": "Allies her Mend and Kindle heal attack a little faster for a moment.",
+                "effects": [
+                  {
+                    "trigger": "on_heal",
+                    "from_ability": [
+                      "mend",
+                      "kindle"
+                    ],
+                    "type": "apply_status",
+                    "status": "morning_haste",
+                    "target": "hit_target"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Allies Mend and Kindle heal attack 25% faster for 4s, and healing an ally who's already sped up makes them 5% faster for the rest of the fight.",
+          "patch": {
+            "passives": [
+              {
+                "id": "dawnbringer",
+                "name": "Dawnbringer",
+                "kind": "ability",
+                "text": "Allies her Mend and Kindle heal attack much faster for a while; healing one already sped up makes them faster for the rest of the fight.",
+                "effects": [
+                  {
+                    "trigger": "on_heal",
+                    "from_ability": [
+                      "mend",
+                      "kindle"
+                    ],
+                    "vs": {
+                      "statuses": [
+                        "dawnlight"
+                      ]
+                    },
+                    "type": "apply_status",
+                    "status": "first_light",
+                    "target": "hit_target"
+                  },
+                  {
+                    "trigger": "on_heal",
+                    "from_ability": [
+                      "mend",
+                      "kindle"
+                    ],
+                    "type": "apply_status",
+                    "status": "dawnlight",
+                    "target": "hit_target"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Allies sped up by her healing",
+          "counts": "applied",
+          "statuses": [
+            "morning_haste",
+            "dawnlight"
+          ],
+          "threshold": 20
+        }
+      }
+    ]
   },
   {
     "_note": "The shielder (rebuild-heroes.md, section 8, path 2). Transformed, Warding Circle is her mana signature and Weave comes every 4th Lantern Glow (Decision 7); her signature doesn't heal, so Wait to heal can't be taken there.",
@@ -1554,7 +1761,121 @@
       "text": "Shield she gives",
       "counts": "shield",
       "threshold": 120
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md). Numbers are placeholders for the --apexes report to tune.",
+        "id": "loomwarden",
+        "name": "Loomwarden",
+        "title": "the weaver of links",
+        "fantasy": "What strikes one of hers strikes them all, and none alone.",
+        "vowed": {
+          "taste": "Allies holding her Shields share 20% of each hit on one of them.",
+          "patch": {
+            "passives": [
+              {
+                "id": "loom",
+                "name": "Loom",
+                "kind": "link",
+                "text": "Allies holding her Shields share a little of each hit on one of them.",
+                "share_pct": 20
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Allies holding her Shields are linked: each hit on one is split evenly between them all. Every 500 damage shared gives each linked ally +2 DEF for the rest of the fight.",
+          "patch": {
+            "passives": [
+              {
+                "id": "loom",
+                "name": "Loom",
+                "kind": "link",
+                "text": "Allies holding her Shields split each hit on one of them evenly; every so much shared makes each of them sturdier for the rest of the fight.",
+                "share_pct": 100,
+                "per_shared": 500,
+                "status": "iron_loom"
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Damage shared through her links",
+          "counts": "shared",
+          "threshold": 12
+        }
+      },
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md). Numbers are placeholders for the --apexes report to tune.",
+        "id": "thornweave",
+        "name": "Thornweave",
+        "title": "the shield with thorns",
+        "fantasy": "Every ward she weaves bites back.",
+        "vowed": {
+          "taste": "When an ally's Shield breaks, whoever broke it takes 10% of what the Shield held.",
+          "patch": {
+            "passives": [
+              {
+                "id": "thornweave",
+                "name": "Thornweave",
+                "kind": "ability",
+                "text": "When an ally's Shield breaks, whoever broke it takes some of what it held.",
+                "effects": [
+                  {
+                    "trigger": "on_ally_shield_broken",
+                    "type": "damage",
+                    "amount_bp_of_damage": 1000,
+                    "target": "hit_target"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "When an ally's Shield breaks, whoever broke it takes all of what it held, and enemies within 1 hex of them half as much. Each Shield broken makes her Shields 5% larger for the rest of the fight.",
+          "patch": {
+            "passives": [
+              {
+                "id": "thornweave",
+                "name": "Thornweave",
+                "kind": "ability",
+                "text": "When an ally's Shield breaks, whoever broke it takes what it held, and enemies within 1 hex of them half as much; each break makes her Shields larger for the rest of the fight.",
+                "effects": [
+                  {
+                    "trigger": "on_ally_shield_broken",
+                    "type": "damage",
+                    "amount_bp_of_damage": 10000,
+                    "target": "hit_target"
+                  },
+                  {
+                    "trigger": "on_ally_shield_broken",
+                    "type": "damage",
+                    "amount_bp_of_damage": 5000,
+                    "target": "enemies_near_named",
+                    "within_hexes": 1
+                  },
+                  {
+                    "trigger": "on_ally_shield_broken",
+                    "type": "apply_status",
+                    "status": "woven_thorns",
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Damage dealt by broken Shields",
+          "counts": "damage",
+          "from_ability": [
+            "thornweave"
+          ],
+          "threshold": 6
+        }
+      }
+    ]
   },
   {
     "_note": "The battle cleric (rebuild-heroes.md, section 8, path 3). Transformed, Sunfall is her mana signature and Mend comes every 4th Lantern Glow, as the design says.",
@@ -1710,6 +2031,285 @@
         "mend"
       ],
       "threshold": 140
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md). Numbers are placeholders for the --apexes report to tune.",
+        "id": "inquisitor",
+        "name": "Inquisitor",
+        "title": "the judgement",
+        "fantasy": "The marked do not get up again.",
+        "vowed": {
+          "taste": "Her damage is 10% stronger against Marked enemies.",
+          "patch": {
+            "passives": [
+              {
+                "id": "zealous_eye",
+                "name": "Zealous Eye",
+                "kind": "aura",
+                "text": "Her damage is stronger against Marked enemies.",
+                "aura": {
+                  "target": "holder",
+                  "stat": "damage_bp",
+                  "value": 11000,
+                  "vs": {
+                    "keywords": [
+                      "marked"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Her smites finish enemies below 15% HP, and her damage is 30% stronger against Marked enemies. Each enemy a smite kills gives her 15% more MGK for the rest of the fight.",
+          "patch": {
+            "passives": [
+              {
+                "id": "mend",
+                "name": "Mend",
+                "kind": "ability",
+                "text": "Every 4th Lantern Glow, she heals the ally lowest on HP within 3 hexes, smites her target, finishing it below 15% HP, and gains mana.",
+                "effects": [
+                  {
+                    "trigger": "on_basic_attack",
+                    "every": 4,
+                    "type": "heal",
+                    "amount": 15,
+                    "scaling": {
+                      "mgk": 10000
+                    },
+                    "target": "lowest_hp_ally",
+                    "within_hexes": 3
+                  },
+                  {
+                    "trigger": "on_basic_attack",
+                    "every": 4,
+                    "type": "damage",
+                    "amount": 8,
+                    "scaling": {
+                      "mgk": 4000
+                    },
+                    "target": "target",
+                    "execute_below_pct": 15
+                  },
+                  {
+                    "trigger": "on_basic_attack",
+                    "every": 4,
+                    "type": "gain_mana",
+                    "amount": 10,
+                    "target": "self"
+                  }
+                ]
+              },
+              {
+                "id": "inquisition",
+                "name": "Inquisition",
+                "kind": "aura",
+                "text": "Her damage is much stronger against Marked enemies.",
+                "aura": {
+                  "target": "holder",
+                  "stat": "damage_bp",
+                  "value": 13000,
+                  "vs": {
+                    "keywords": [
+                      "marked"
+                    ]
+                  }
+                }
+              },
+              {
+                "id": "zeal",
+                "name": "Zeal",
+                "kind": "ability",
+                "text": "Each enemy her smite kills makes her MGK stronger for the rest of the fight.",
+                "effects": [
+                  {
+                    "trigger": "on_kill",
+                    "from_ability": [
+                      "mend"
+                    ],
+                    "type": "apply_status",
+                    "status": "zeal",
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Kills by her smites",
+          "counts": "kills",
+          "from_ability": [
+            "mend"
+          ],
+          "threshold": 1
+        }
+      },
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md). Numbers are placeholders for the --apexes report to tune.",
+        "id": "sanctifier",
+        "name": "Sanctifier",
+        "title": "the hallowed ground",
+        "fantasy": "Where her light falls, the ground remembers.",
+        "vowed": {
+          "taste": "Sunfall leaves hallowed ground along its line for 2s.",
+          "patch": {
+            "signature": {
+              "id": "sunfall",
+              "name": "Sunfall",
+              "text": "Casts a beam 4 hexes long toward the nearest enemy within 3 hexes: enemies in it are burned, allies in it healed, and its line stays hallowed for 2s, burning enemies and healing allies on it each second.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "nearest",
+              "effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "line",
+                    "length": 4
+                  },
+                  "anchor": "target_direction",
+                  "hits": "all",
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount": 10,
+                      "target": "target",
+                      "scaling": {
+                        "mgk": 14000
+                      },
+                      "side": "enemies"
+                    },
+                    {
+                      "type": "heal",
+                      "amount": 10,
+                      "target": "target",
+                      "scaling": {
+                        "mgk": 10000
+                      },
+                      "side": "allies"
+                    }
+                  ]
+                },
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "line",
+                    "length": 4
+                  },
+                  "anchor": "target_direction",
+                  "hits": "all",
+                  "duration_ms": 2000,
+                  "every_ms": 1000,
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount": 0,
+                      "target": "target",
+                      "scaling": {
+                        "mgk": 1000
+                      },
+                      "side": "enemies"
+                    },
+                    {
+                      "type": "heal",
+                      "amount_bp_of_max_hp": 50,
+                      "target": "target",
+                      "side": "allies"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "apex": {
+          "text": "Sunfall leaves hallowed ground along its line for the rest of the fight, up to 4 lines: each second, enemies on it are burned and allies on it heal 1% of their max HP.",
+          "patch": {
+            "signature": {
+              "id": "sunfall",
+              "name": "Sunfall",
+              "text": "Casts a beam 4 hexes long toward the nearest enemy within 3 hexes: enemies in it are burned, allies in it healed, and its line stays hallowed for the rest of the fight (up to 4 lines), burning enemies and healing allies on it each second.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "nearest",
+              "effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "line",
+                    "length": 4
+                  },
+                  "anchor": "target_direction",
+                  "hits": "all",
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount": 10,
+                      "target": "target",
+                      "scaling": {
+                        "mgk": 14000
+                      },
+                      "side": "enemies"
+                    },
+                    {
+                      "type": "heal",
+                      "amount": 10,
+                      "target": "target",
+                      "scaling": {
+                        "mgk": 10000
+                      },
+                      "side": "allies"
+                    }
+                  ]
+                },
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "line",
+                    "length": 4
+                  },
+                  "anchor": "target_direction",
+                  "hits": "all",
+                  "duration_ms": 180000,
+                  "every_ms": 1000,
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount": 0,
+                      "target": "target",
+                      "scaling": {
+                        "mgk": 2000
+                      },
+                      "side": "enemies"
+                    },
+                    {
+                      "type": "heal",
+                      "amount_bp_of_max_hp": 100,
+                      "target": "target",
+                      "side": "allies"
+                    }
+                  ],
+                  "max_standing": 4
+                }
+              ]
+            }
+          }
+        },
+        "deed": {
+          "text": "Enemies hit by Sunfall and its hallowed ground",
+          "counts": "hits",
+          "from_ability": [
+            "sunfall"
+          ],
+          "threshold": 40
+        }
+      }
+    ]
   }
 ]

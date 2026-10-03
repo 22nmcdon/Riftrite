@@ -52,6 +52,10 @@ var also: Array[TriggerDef] = []
 ## weaker copy echo_ticks later, at a fresh target (null: no echo).
 var echo: AbilityDef = null
 var echo_ticks: int = 0
+## A signature that grows with each cast (phase 8 part 2, The Beacon): every
+## fire's damage, heals, and Shields this much stronger than the one before
+## ("grows_bp"; 1000: +10% a cast), for the fight. 0: none.
+var grows_bp: int = 0
 ## A signature's: the enemies it picks among first, when any is in reach
 ## (phase 5c step 7b: an upgrade's mod, Brand the Marked; null: its rule
 ## alone).
@@ -76,6 +80,7 @@ static func read_signature(reader: DataReader) -> AbilityDef:
 	def.targeting = reader.opt_string_choice("targeting", "nearest", Targeting.RULES)
 	def.max_range = reader.opt_int("max_range", 0, 1)
 	def.cast_ticks = reader.opt_ticks("cast_ms", 0)
+	def.grows_bp = reader.opt_int("grows_bp", 0, 0, FixedMath.BP_ONE)
 	if def.cast_ticks > 0 and def.trigger.kind != TriggerDef.Kind.MANA:
 		reader.error("cast_ms: only a mana signature can have a cast")
 	reader.finish()

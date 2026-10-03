@@ -137,3 +137,133 @@ func test_a_patch_sets_a_hoppers_cooldown() -> void:
 	var problems: Array[String] = []
 	patch.apply(_content.heroes["brannoc"].kit, problems)
 	assert_eq(problems, ["only a unit that hops away has a hop cooldown"] as Array[String])
+
+
+## A sim of `encounter_id` with Vell transformed into `path_id` and at
+## `apex_id`'s apex, stepped to its end.
+func _vell_fight(encounter_id: String, path_id: String, apex_id: String) -> CombatSim:
+	var errors: Array[String] = []
+	var formation: Dictionary[String, Vector2i] = {"brannoc": Vector2i(3, 2), "maren": Vector2i(4, 0), "vell": Vector2i(3, 1)}
+	var setup: FightSetup = Encounters.setup(_content, encounter_id, formation, 7, errors, {}, {"vell": path_id} as Dictionary[String, String],
+		["vell"] as Array[String], {}, {"vell": apex_id} as Dictionary[String, String], ["vell"] as Array[String])
+	assert_eq(errors, [] as Array[String])
+	return _run(CombatSim.new(setup, _content))
+
+
+func _of(sim: CombatSim, kind: LogEntry.Kind, unit_id: String, ability_id: String = "") -> Array[LogEntry]:
+	var found: Array[LogEntry] = []
+	for entry: LogEntry in sim.combat_log.of_kind(kind):
+		if entry.source_unit == unit_id and (ability_id.is_empty() or entry.source_ability == ability_id):
+			found.append(entry)
+	return found
+
+
+func test_a_zone_stands_only_so_many_at_once() -> void:
+	var checked: int = 0
+	for encounter_id: String in _content.encounter_ids:
+		var sim: CombatSim = _vell_fight(encounter_id, "vigil_keeper", "sanctifier")
+		var casts: int = _of(sim, LogEntry.Kind.FIRE, "vell", "sunfall").size()
+		var grounds: int = _of(sim, LogEntry.Kind.ZONE, "vell", "sunfall").size()
+		assert_eq(grounds, mini(casts, 4), "a line of hallowed ground a cast, up to 4 (%s)" % encounter_id)
+		if casts > 4:
+			checked += 1
+	assert_gt(checked, 0, "some fight cast Sunfall more than 4 times")
+
+
+func test_a_signature_grows_with_each_cast() -> void:
+	var sim: CombatSim = _vell_fight("bog_crossing", "lanternbearer", "the_beacon")
+	var powers: Array[int] = []
+	for entry: LogEntry in _of(sim, LogEntry.Kind.HEAL, "vell", "night_lantern"):
+		if not powers.has(entry.rule_power):
+			powers.append(entry.rule_power)
+	powers.sort()
+	assert_gt(powers.size(), 2, "several lanterns")
+	for i: int in powers.size():
+		assert_eq(powers[i] - powers[0], 1000 * i, "each lantern 10%% stronger than the last")
+
+
+func test_every_ally_hears_a_shield_break() -> void:
+	var heard: int = 0
+	for encounter_id: String in _content.encounter_ids:
+		var sim: CombatSim = _vell_fight(encounter_id, "wardweaver", "thornweave")
+		var breaks: int = 0
+		for entry: LogEntry in sim.combat_log.entries:
+			var hit: bool = entry.kind == LogEntry.Kind.DAMAGE or entry.kind == LogEntry.Kind.STATUS_DAMAGE
+			if hit and entry.broke_shield and sim.unit_by_id(entry.target).side == EffectSource.Team.HEROES:
+				breaks += 1
+		var stacks: int = 0
+		for entry: LogEntry in _of(sim, LogEntry.Kind.STATUS_APPLIED, "vell"):
+			if entry.status == "woven_thorns":
+				stacks += 1
+		assert_true(stacks <= breaks, "a stack a break heard (%s)" % encounter_id)
+		heard += stacks
+		if breaks > 0:
+			assert_gt(_of(sim, LogEntry.Kind.DAMAGE, "vell", "thornweave").size(), 0, "the breaker is hit back (%s)" % encounter_id)
+	assert_gt(heard, 0)
+
+
+func test_a_link_splits_a_hit_over_the_linked() -> void:
+	var shared_total: int = 0
+	for encounter_id: String in _content.encounter_ids:
+		var sim: CombatSim = _vell_fight(encounter_id, "wardweaver", "loomwarden")
+		var shared: Array[LogEntry] = _of(sim, LogEntry.Kind.SHARED, "vell", "loom")
+		var total: int = 0
+		for entry: LogEntry in shared:
+			total += entry.amount
+			assert_ne(entry.target, entry.note, "the part goes to another ally")
+			var first: UnitState = sim.unit_by_id(entry.note)
+			assert_eq(first.side, EffectSource.Team.HEROES)
+		assert_eq(CombatSim.result_of(sim).deed_amount("vell", "loomwarden"), total, "the deed counts what's shared (%s)" % encounter_id)
+		shared_total += total
+	assert_gt(shared_total, 0)
+
+
+func test_a_links_shared_damage_buys_iron_loom() -> void:
+	# Loomwarden's link with a smaller step, so a fight reaches it.
+	var link: PartDef = null
+	for part: PartDef in _content.apexes["loomwarden"].apex_kit.passives:
+		if part.kind == PartDef.Kind.LINK:
+			link = part
+	var per_shared: int = link.per_shared
+	link.per_shared = 10
+	var stacks: int = 0
+	var shared: int = 0
+	for encounter_id: String in _content.encounter_ids:
+		var sim: CombatSim = _vell_fight(encounter_id, "wardweaver", "loomwarden")
+		shared += sim.unit_by_id("vell").link_shared
+		for entry: LogEntry in _of(sim, LogEntry.Kind.STATUS_APPLIED, "vell", "loom"):
+			if entry.status == "iron_loom":
+				stacks += 1
+	link.per_shared = per_shared
+	assert_gt(shared, 10)
+	assert_gt(stacks, 0, "Iron Loom stacks as the link shares")
+
+
+func test_an_applied_deed_can_count_its_statuses_on_allies() -> void:
+	var sim: CombatSim = _vell_fight("bog_crossing", "lanternbearer", "dawnbringer")
+	var applied: int = 0
+	var first_light: int = 0
+	for entry: LogEntry in _of(sim, LogEntry.Kind.STATUS_APPLIED, "vell"):
+		if entry.status == "dawnlight" or entry.status == "morning_haste":
+			applied += 1
+		if entry.status == "first_light":
+			first_light += 1
+	assert_gt(applied, 0)
+	assert_eq(CombatSim.result_of(sim).deed_amount("vell", "dawnbringer"), applied)
+	assert_gt(first_light, 0, "healing a sped-up ally makes them faster for the fight")
+
+
+func test_a_smite_kill_feeds_zeal() -> void:
+	var zeal: int = 0
+	var smite_kills: int = 0
+	for encounter_id: String in _content.encounter_ids:
+		var sim: CombatSim = _vell_fight(encounter_id, "vigil_keeper", "inquisitor")
+		for entry: LogEntry in sim.combat_log.of_kind(LogEntry.Kind.DEATH):
+			var fallen: UnitState = sim.unit_by_id(entry.target)
+			if fallen.last_attacker == "vell" and fallen.last_hit_source.ability_id == "mend":
+				smite_kills += 1
+		for entry: LogEntry in _of(sim, LogEntry.Kind.STATUS_APPLIED, "vell"):
+			if entry.status == "zeal":
+				zeal += 1
+	assert_gt(smite_kills, 0)
+	assert_eq(zeal, smite_kills, "a Zeal stack for each smite kill")

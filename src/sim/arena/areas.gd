@@ -82,6 +82,8 @@ static func cast(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 	area.crit_bp = EffectRunner.crit_chance_bp(sim, unit, ability)
 	area.land_tick = sim.tick + effect.warning_ticks
 	if effect.zone_ticks > 0:
+		if effect.max_standing > 0 and _standing(sim, unit, effect) >= effect.max_standing:
+			return
 		area.until_tick = sim.tick + effect.zone_ticks
 		var zone: LogEntry = _entry(sim, LogEntry.Kind.ZONE, area)
 		zone.end_tick = area.until_tick
@@ -180,6 +182,15 @@ static func _land(sim: CombatSim, area: Pending, note: String = "") -> void:
 			EffectRunner.land(sim, area.unit, area.ability, area.source, nested, victim, area.amounts[i], crit, area.push_from, power)
 		if victim.side != area.unit.side:
 			passed += 1
+
+
+## How many of `unit`'s zones from `effect` stand now.
+static func _standing(sim: CombatSim, unit: UnitState, effect: EffectDef) -> int:
+	var count: int = 0
+	for zone: Pending in sim.zones:
+		if zone.unit == unit and zone.effect == effect:
+			count += 1
+	return count
 
 
 static func _nearer(a: UnitState, b: UnitState, origin: Vector2i) -> bool:

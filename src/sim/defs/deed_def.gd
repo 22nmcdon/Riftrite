@@ -37,6 +37,7 @@ extends RefCounted
 ##            tick ends (a tactic's, Decision 32)
 ## Phase 8 part 2 (apexes):
 ##   hits     its hits on enemies, one each (Hailstorm)
+##   shared   damage its link spread over linked allies (Loomwarden)
 ##   kills takes from_ability too: only kills by those abilities (Eagle
 ##            Eye, Inquisitor)
 ##   within_ms_of_hop: 1000        a filter: only what lands within this long
@@ -65,10 +66,10 @@ extends RefCounted
 ## three fights' worth of what a vowed hero puts in); the sim never reads it.
 ## Adding a kind or a filter is a code change.
 
-enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING, HITS }
+enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING, HITS, SHARED }
 
-const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing", "hits"]
-const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill", "casts", "ms standing", "enemies hit"]
+const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing", "hits", "shared"]
+const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill", "casts", "ms standing", "enemies hit", "damage shared"]
 ## The kinds read from where the hero is the target, or from the tick, not
 ## from what the hero does.
 const NOT_ITS_OWN: Array[Counts] = [Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING]
@@ -89,6 +90,9 @@ var from_basic: bool = false
 var after_hop_ticks: int = 0
 ## applied: only statuses carrying one of these keywords (empty: any).
 var keywords: Array[String] = []
+## applied (phase 8 part 2): only these statuses, on any unit (an ally's
+## boost too; "statuses"). Empty: any status on an enemy.
+var statuses: Array[String] = []
 ## What fills the deed in a run (0: none given; RunContent requires one).
 var threshold: int = 0
 
@@ -112,6 +116,10 @@ static func read(reader: DataReader, needs_text: bool = true) -> DeedDef:
 	def.from_basic = reader.opt_bool("from_basic", false)
 	def.after_hop_ticks = reader.opt_ticks("within_ms_of_hop", 0)
 	def.keywords = reader.opt_choice_array("keywords", Keywords.NAMES)
+	if reader.has("statuses"):
+		def.statuses = reader.req_string_array("statuses")
+		if def.counts != Counts.APPLIED:
+			reader.error("statuses only filter applied")
 	def.threshold = reader.opt_int("threshold", 0, 1)
 	if def.counts != Counts.DAMAGE and (def.from_range > 0 or def.while_undying):
 		reader.error("beyond_hexes and while_undying only filter damage")
@@ -151,6 +159,8 @@ func counts_kind(kind: LogEntry.Kind, ability_id: String) -> bool:
 			return kind == LogEntry.Kind.STATUS_APPLIED
 		Counts.GUARDED:
 			return kind == LogEntry.Kind.GUARD
+		Counts.SHARED:
+			return kind == LogEntry.Kind.SHARED
 		Counts.APPLIED:
 			if kind != LogEntry.Kind.STATUS_APPLIED:
 				return false

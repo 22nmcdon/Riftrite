@@ -39,12 +39,12 @@ func _tally(fight: CombatSim, key: String) -> int:
 
 func test_reading_the_new_kinds_and_filters() -> void:
 	for good: Dictionary in [{"counts": "applied", "keywords": ["marked"]}, {"counts": "taken"}, {"counts": "ms_below", "while_below_pct": 30},
-			{"counts": "kills"}, {"counts": "damage", "from_basic": true}]:
+			{"counts": "kills"}, {"counts": "kills", "from_ability": ["x"]}, {"counts": "damage", "from_basic": true}]:
 		var errors: Array[String] = []
 		_count(good, errors)
 		assert_eq(errors, [] as Array[String], str(good))
 	for bad: Dictionary in [{"counts": "ms_below"}, {"counts": "damage", "keywords": ["marked"]}, {"counts": "taken", "from_basic": true},
-			{"counts": "kills", "from_ability": ["x"]}, {"counts": "healing", "while_below_pct": 30}]:
+			{"counts": "kills", "while_below_pct": 30}, {"counts": "healing", "while_below_pct": 30}]:
 		var errors: Array[String] = []
 		_count(bad, errors)
 		assert_false(errors.is_empty(), "refused: %s" % bad)

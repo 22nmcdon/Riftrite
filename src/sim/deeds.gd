@@ -90,7 +90,7 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 				hopper.deeds.hopped_at = entry.tick
 			continue
 		if kind != LogEntry.Kind.DAMAGE and kind != LogEntry.Kind.HEAL and kind != LogEntry.Kind.SHIELD and kind != LogEntry.Kind.SHOT \
-				and kind != LogEntry.Kind.FIRE and kind != LogEntry.Kind.STATUS_APPLIED and kind != LogEntry.Kind.GUARD:
+				and kind != LogEntry.Kind.FIRE and kind != LogEntry.Kind.STATUS_APPLIED and kind != LogEntry.Kind.GUARD and kind != LogEntry.Kind.SHARED:
 			continue
 		var unit: UnitState = sim.unit_by_id(entry.source_unit)
 		if unit == null or unit.deeds == null:
@@ -130,7 +130,10 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 				DeedDef.Counts.APPLIED:
 					var target: UnitState = sim.unit_by_id(entry.target)
 					var status: StatusDef = sim.content.statuses.get(entry.status, null)
-					if target != null and target.side != unit.side and status != null and status.kind != StatusDef.Kind.ENGAGED \
+					if not deed.statuses.is_empty():
+						if target != null and deed.statuses.has(entry.status):
+							counter.amounts[d] += 1
+					elif target != null and target.side != unit.side and status != null and status.kind != StatusDef.Kind.ENGAGED \
 							and (deed.keywords.is_empty() or deed.keywords.has(status.keyword)):
 						counter.amounts[d] += 1
 				DeedDef.Counts.EXTRA_HITS:

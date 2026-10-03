@@ -190,6 +190,10 @@ func _add(entry: LogEntry, sim: CombatSim) -> void:
 				took.color = UiStyle.GOLD_300
 		LogEntry.Kind.SHIELD:
 			_number(entry, sim, "+" + UiStyle.short_number(entry.amount), UiStyle.SHIELD, false)
+		LogEntry.Kind.SHARED:
+			# A linked ally's part of a hit (phase 8 part 2): a Shield-blue
+			# number on it.
+			_number(entry, sim, UiStyle.short_number(entry.amount), UiStyle.SHIELD, false)
 		LogEntry.Kind.FIRE:
 			var unit: UnitState = sim.unit_by_id(entry.source_unit)
 			if unit != null and unit.def.signature != null and unit.def.signature.id == entry.source_ability:

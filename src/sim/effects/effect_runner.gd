@@ -513,6 +513,14 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 	entry.crit = crit
 	var had_shield: bool = target.shield > 0
 	var hp_before: int = target.hp
+	# Linked Shields (phase 8 part 2): its link spreads part of the hit over
+	# its other linked allies first (SHARED lines, logged before this one's).
+	if not sim.linkers.is_empty() and target.woven_by != null:
+		var kept: int = Links.split(sim, target, dealt, source)
+		if kept != dealt:
+			entry.note = ("%s, " % entry.note if not entry.note.is_empty() else "") + "shared"
+			dealt = kept
+			entry.amount = dealt
 	entry.absorbed = sim.apply_damage(target, dealt)
 	entry.broke_shield = had_shield and target.shield == 0
 	# What went past the target's last HP (phase 5c step 5b; Overkill Tithe).
@@ -727,6 +735,11 @@ static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectS
 
 static func give_shield(sim: CombatSim, target: UnitState, amount: int, source: EffectSource) -> LogEntry:
 	target.shield += amount
+	# A Shield from a unit with a link links its holder (phase 8 part 2).
+	if not sim.linkers.is_empty() and amount > 0 and source.relic_side < 0:
+		var giver: UnitState = sim.unit_by_id(source.unit_id)
+		if giver != null and giver.link != null and giver.side == target.side:
+			target.woven_by = giver
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.SHIELD, source)
 	entry.target = target.id
 	entry.amount = amount

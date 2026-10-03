@@ -47,6 +47,7 @@ const FORMS: Dictionary[LogEntry.Kind, String] = {
 	LogEntry.Kind.SNARE: "a snare mark on the ground until it's sprung (from the sim's snares)",
 	LogEntry.Kind.WALL: "a thick line while it stands (from the sim's walls)",
 	LogEntry.Kind.GUARD: "a brass number on the guard",
+	LogEntry.Kind.SHARED: "a Shield-blue number on the linked ally",
 	LogEntry.Kind.LIFESTEAL: "a number in the lifesteal colour",
 	LogEntry.Kind.STATUS_EXTENDED: "the tag stays longer",
 	LogEntry.Kind.RISE: "the token returns, with a pulse and \"Rises\"",

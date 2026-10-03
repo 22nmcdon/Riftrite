@@ -95,7 +95,7 @@ func test_the_fight_order_matters() -> void:
 ## arrival (ARRIVE, step 6d): tests/sim/test_gambits.gd.
 const NOT_YET: Array[LogEntry.Kind] = [LogEntry.Kind.SYNERGY, LogEntry.Kind.DEED_LEVEL, LogEntry.Kind.TACTIC,
 	LogEntry.Kind.ZONE, LogEntry.Kind.SNARE, LogEntry.Kind.WALL, LogEntry.Kind.GUARD, LogEntry.Kind.RISE, LogEntry.Kind.RESISTED,
-	LogEntry.Kind.DODGED, LogEntry.Kind.ARRIVE]
+	LogEntry.Kind.DODGED, LogEntry.Kind.ARRIVE, LogEntry.Kind.SHARED]
 ## Statuses only the paths use (phase 4), and only relics (phase 5c step 5a;
 ## Sunder, covered by tests/run/test_relics.gd).
 const PATH_STATUSES: Array[String] = ["warded"]
@@ -109,7 +109,7 @@ const UPGRADE_STATUSES: Array[String] = ["hobbled", "cowed", "parting_shot", "fi
 ## Statuses only rift modifiers apply (phase 5c step 8b; tests/run/test_rift_tear.gd).
 const RIFT_STATUSES: Array[String] = ["blood_frenzy"]
 ## Statuses only apexes apply (phase 8 part 2; tests/sim/test_apex_kits.gd).
-const APEX_STATUSES: Array[String] = ["hailstorm", "tailwind"]
+const APEX_STATUSES: Array[String] = ["hailstorm", "tailwind", "zeal", "morning_haste", "dawnlight", "first_light", "glare", "dazzled", "woven_thorns", "iron_loom"]
 ## The statuses the heroes' rules apply (phase 5c step 5c).
 const RULE_STATUSES: Array[String] = ["unbending", "long_watch"]
 

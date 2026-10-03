@@ -90,9 +90,13 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> int:
 						_raise(sim, target, EffectDef.Trigger.ON_CHARGED, chain, source, entry.amount)
 				if entry.broke_shield:
 					_raise(sim, target, EffectDef.Trigger.ON_SHIELD_BROKEN, chain, source, entry.absorbed)
+					if sim.ally_shield_listeners:
+						_shield_broke_near(sim, target, source, entry.absorbed, chain)
 			LogEntry.Kind.STATUS_DAMAGE:
 				if target != null and entry.broke_shield:
 					_raise(sim, target, EffectDef.Trigger.ON_SHIELD_BROKEN, chain, source, entry.absorbed)
+					if sim.ally_shield_listeners:
+						_shield_broke_near(sim, target, source, entry.absorbed, chain)
 			LogEntry.Kind.SHIELD:
 				if target != null and entry.amount > 0:
 					_raise(sim, target, EffectDef.Trigger.ON_SHIELDED, chain, target)
@@ -153,6 +157,13 @@ static func enemy_fell(sim: CombatSim, fallen: UnitState) -> void:
 ## `chain`: the depth of the entry that raised it; `other`: the unit the
 ## event names; `damage`: the hit (or Shield) it's about; `status`: the
 ## status applied (on_status).
+## A Shield on `holder` broke (phase 8 part 2, Thornweave): every standing
+## unit of its side hears it, in the fight's order.
+static func _shield_broke_near(sim: CombatSim, holder: UnitState, breaker: UnitState, absorbed: int, chain: int) -> void:
+	for ally: UnitState in (sim.heroes if holder.side == EffectSource.Team.HEROES else sim.enemies):
+		_raise(sim, ally, EffectDef.Trigger.ON_ALLY_SHIELD_BROKEN, chain, breaker, absorbed)
+
+
 static func _raise(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, chain: int, other: UnitState = null, damage: int = 0, status: String = "") -> void:
 	if unit == null or not unit.alive:
 		return

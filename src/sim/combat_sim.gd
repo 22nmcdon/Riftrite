@@ -75,6 +75,9 @@ var snares: Array[Snares.Snare] = []
 var walls: Array[Walls.Wall] = []
 ## The units with a Guard passive (phase 4), in the fight's order.
 var guards: Array[UnitState] = []
+## The units with a link passive (phase 8 part 2, Links; empty: no fight
+## reaches the split).
+var linkers: Array[UnitState] = []
 var finished: bool = false
 var outcome: FightResult.Outcome = FightResult.Outcome.TIE
 var _nav: NavGrid
@@ -100,6 +103,8 @@ var chain_depth: int = 0
 ## Some unit has an on_ally_ability passive, so signatures' FIRE entries are
 ## told to their side (Events).
 var ally_ability_listeners: bool = false
+## Some unit hears its side's Shields break (phase 8 part 2, Thornweave).
+var ally_shield_listeners: bool = false
 ## Some unit has an on_status_ended passive (phase 5c step 5b).
 var status_end_listeners: bool = false
 ## Some unit has an on_enemy_fell passive (phase 5c step 6b).
@@ -273,6 +278,8 @@ func add_unit(unit: UnitState) -> void:
 		overheal_auras = true
 	if unit.guard != null:
 		guards.append(unit)
+	if unit.link != null:
+		linkers.append(unit)
 
 
 ## Starts reading the log for events from now on (a boost that ends as its
@@ -295,6 +302,8 @@ func note_listeners(unit: UnitState) -> void:
 		_timed_passives = true
 	if Passives.listens_for(unit, EffectDef.Trigger.ON_ALLY_ABILITY):
 		ally_ability_listeners = true
+	if Passives.listens_for(unit, EffectDef.Trigger.ON_ALLY_SHIELD_BROKEN):
+		ally_shield_listeners = true
 	if Passives.listens_for(unit, EffectDef.Trigger.ON_STATUS_ENDED):
 		status_end_listeners = true
 	if Passives.listens_for(unit, EffectDef.Trigger.ON_ENEMY_FELL):

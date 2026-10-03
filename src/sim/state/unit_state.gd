@@ -186,6 +186,13 @@ var inert: bool = false
 var tactic_waiting: bool = false
 ## Its Guard passive (phase 4; null: none).
 var guard: PartDef = null
+## Linked Shields (phase 8 part 2, Links): its link passive (null: none),
+## what it has moved and the stacks that bought; and, on an ally, the unit
+## whose Shield it last took (null: none).
+var link: PartDef = null
+var link_shared: int = 0
+var link_steps: int = 0
+var woven_by: UnitState = null
 ## Tactics (phase 5c step 6c): the enemies it has hit once (first_hit; a
 ## lookup), Dive's window's end, a sure crit owed (Keep your distance), and
 ## when its bar first waited (Wait for a crowd; -1: not waiting).
@@ -243,6 +250,8 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 	for part: PartDef in setup.def.passives:
 		if part.kind == PartDef.Kind.GUARD and unit.guard == null:
 			unit.guard = part
+		if part.kind == PartDef.Kind.LINK and unit.link == null:
+			unit.link = part
 	Passives.set_up(unit)
 	return unit
 

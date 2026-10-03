@@ -327,6 +327,8 @@ static func counted(counts: DeedDef, per: int) -> String:
 			return "%s of Root" % amount
 		DeedDef.Counts.GUARDED:
 			return "%s damage taken for allies" % amount
+		DeedDef.Counts.SHARED:
+			return "%s damage shared through links" % amount
 		DeedDef.Counts.APPLIED:
 			if counts.keywords.is_empty():
 				return "%s statuses put on enemies" % amount
