@@ -18,6 +18,9 @@ var save_path: String = RunSave.PATH
 ## that just ended went deeper than any before.
 var records_path: String = RunRecords.PATH
 var new_best: bool = false
+## And whether it went further through the acts than any before (phase 8
+## part 3).
+var new_furthest: bool = false
 var _noted: bool = false
 
 
@@ -74,10 +77,13 @@ func sync() -> void:
 func save() -> void:
 	sync()
 	RunSave.save(flow.state, save_path)
-	# An endless run's end goes in the records, once.
-	if flow.state.phase == RunState.Phase.ENDED and flow.state.endless and not _noted:
+	# A run's end goes in the records, once: how far it went through the
+	# acts, and an endless run's floor.
+	if flow.state.phase == RunState.Phase.ENDED and not _noted:
 		_noted = true
-		new_best = RunRecords.note(flow.state, flow.floor_number(), records_path)
+		new_furthest = RunRecords.note_furthest(flow.state, records_path)
+		if flow.state.endless:
+			new_best = RunRecords.note(flow.state, flow.floor_number(), records_path)
 
 
 ## Does a RunFlow action (a Callable returning "" or why not), saves if it

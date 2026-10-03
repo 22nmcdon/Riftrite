@@ -1046,6 +1046,12 @@ func _fill_end() -> void:
 	else:
 		section = _section("The rift is quiet: the run is won" if won else "The rift keeps them: the run is lost",
 			"Act %d, day %d of %d, with %d relics and %d duo bonds found." % [state.act, state.day, session.flow.act.days.size(), state.relics.size(), state.bonds_found.size()])
+	if session.run.acts.size() > 1 and not state.endless:
+		var furthest: Dictionary = RunRecords.furthest(session.records_path)
+		if session.new_furthest:
+			section.add_child(_wrapped("Your furthest yet: Act %d, day %d." % [state.act, state.day], 20, UiStyle.HIGHLIGHT))
+		elif not furthest.is_empty():
+			section.add_child(_wrapped("Your furthest: Act %d, day %d." % [int(furthest["act"]), int(furthest["day"])], 16, UiStyle.TEXT_DIM))
 	var lines: Array[String] = []
 	for fought: RunState.Fought in state.fought:
 		lines.append("%sDay %d%s: %s, %s in %ds" % ["Act %d, " % fought.act if state.act > 1 else "", fought.day, " (again)" if fought.attempt > 0 else "", session.content.encounters[fought.encounter].name,

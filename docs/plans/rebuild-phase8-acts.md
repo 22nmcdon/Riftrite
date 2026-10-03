@@ -1,6 +1,6 @@
 # Phase 8 part 3: Acts 2 and 3
 
-Status: **the run's shape is agreed (Decisions 1–18); 8c-1, the frame, is built (2026-10-03).** Each act's enemies, elites, and boss are drafted with the playtester next, as the heroes were. The playtester chose Acts 2 and 3 as phase 8's next step (2026-10-03), ahead of enemy growth, the heroes' tuning, and more heroes. Numbers are placeholders.
+Status: **the run's shape is agreed (Decisions 1–18); 8c-1 and 8c-2, the frame and the report by act, are built (2026-10-03).** Each act's enemies, elites, and boss are drafted with the playtester next, as the heroes were. The playtester chose Acts 2 and 3 as phase 8's next step (2026-10-03), ahead of enemy growth, the heroes' tuning, and more heroes. Numbers are placeholders.
 
 ## 1. What it builds
 
@@ -79,7 +79,12 @@ The good bot plays the whole run; each act is tuned to section 2a's targets (Dec
 - **Save:** version 7 (`testing`, and each fight's `act`, since days start again each act); an older save that went deeper, or waits at the choice, loads as a testing run.
 - **Screens:** the choice names the act's boss and offers "On to Act N" and "Go deeper (testing)"; the boss shop's leave button says where it leads; the act map shows only this act's fights; the end names the act.
 - **Tests:** `tests/run/test_acts.gd` (on stand-in Acts 2 and 3 drawing Act 1's fights: loading, moving on, what carries, two losses across acts, the testing option, endless after Act 3, the save, the records, and the simple bot through all three acts on seed 38) and a screen test for the testing option and On to Act 2. Mutation checks: resetting losses at a new act, or not opening the apex vow at the act's end, each fail a test.
-- **Not yet** (8c-2): the run report by act, and records of the furthest act.
+
+## Built in 8c-2: the report by act and the furthest act (2026-10-03)
+
+- **The run report** (`run_runner.gd`): each run's line keeps the act it ended in and the act each first transformation and apex came in. With more than one act, the report adds **By act**: each act's runs reaching it, winning it, losing in it by day, and the apexes earned in it (median day); "Lost runs end on" and `--compare` count Act 1's days and the later acts apart; the endless report reads each run's own act's floors. With Act 1 only, the report reads as before.
+- **The furthest act:** `RunRecords.furthest` and `note_furthest` keep the furthest act and day any run has reached, beside the floors (`"furthest"` in the records file); every finished run notes it (`RunSession.new_furthest`), and the end screen shows it once there's more than one act.
+- **Tests:** `test_acts.gd` adds the furthest record and the by-act summary.
 
 ## 7. Questions
 

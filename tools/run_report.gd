@@ -29,10 +29,12 @@ class RunLine:
 	var seed_value: int
 	var vows: Dictionary[String, String] = {}
 	var outcome: RunState.Outcome
-	## The day it ended (or the boss's, won).
+	## The act and day it ended (or the last boss's, won).
+	var act: int = 1
 	var day: int
-	## Hero id -> the day it first transformed (0: never).
+	## Hero id -> the day it first transformed (0: never), and its act.
 	var transformed_on: Dictionary[String, int] = {}
+	var transformed_act: Dictionary[String, int] = {}
 	var picks: Dictionary[String, int] = {}
 	## Picks taken by layer (UpgradeDef.Layer: hero, taste, path; phase 5c
 	## step 7), and the stacking cards' takes and what they locked in.
@@ -89,6 +91,9 @@ class RunLine:
 	## it earned it on.
 	var apexes: Dictionary[String, String] = {}
 	var apexed_on: Dictionary[String, int] = {}
+	## And the act and day it was earned in (phase 8 part 3).
+	var apexed_act: Dictionary[String, int] = {}
+	var apexed_day: Dictionary[String, int] = {}
 
 	## Its measures as a Dictionary (what --jobs passes between processes,
 	## with FileAccess.store_var, so types survive).
@@ -230,11 +235,15 @@ static func play(run: RunContent, run_seed: int, bot_name: String = "simple-peek
 			for hero_id: String in state.just_transformed:
 				if not line.transformed_on.has(hero_id):
 					line.transformed_on[hero_id] = last.day
+					line.transformed_act[hero_id] = last.act
 			for hero_id: String in state.just_apexed:
 				if not line.apexed_on.has(hero_id):
 					line.apexed_on[hero_id] = run.floor_of(state, last.day)
 					line.apexes[hero_id] = state.hero(hero_id).apex
+					line.apexed_act[hero_id] = last.act
+					line.apexed_day[hero_id] = last.day
 	line.outcome = state.outcome
+	line.act = state.act
 	line.day = state.day
 	if state.endless:
 		line.floor_reached = flow.floor_number()
@@ -346,7 +355,9 @@ static func compare_summary(run: RunContent, by_bot: Dictionary[String, Array]) 
 		var days: PackedStringArray = PackedStringArray()
 		var ended: Dictionary[String, int] = {}
 		for day: int in range(1, run.acts[0].days.size() + 1):
-			days.append(str(lines.filter(func(line: RunLine) -> bool: return line.outcome == RunState.Outcome.LOST and line.day == day).size()))
+			days.append(str(lines.filter(func(line: RunLine) -> bool: return line.outcome == RunState.Outcome.LOST and line.act == 1 and line.day == day).size()))
+		if run.acts.size() > 1:
+			days.append("later acts %d" % lines.filter(func(line: RunLine) -> bool: return line.outcome == RunState.Outcome.LOST and line.act > 1).size())
 		for line: RunLine in lines:
 			if line.outcome == RunState.Outcome.LOST and not line.fights.is_empty():
 				var last: String = line.fights.back()[0]
@@ -461,7 +472,8 @@ static func endless_summary(run: RunContent, lines: Array[RunLine]) -> String:
 	for line: RunLine in deeper:
 		if line.fell_to.is_empty():
 			continue
-		var kind: String = run.acts[0].endless.kind(line.floor_reached) if run.acts[0].endless != null else "?"
+		var floor_act: ActDef = run.acts[clampi(line.act, 1, run.acts.size()) - 1]
+		var kind: String = floor_act.endless.kind(line.floor_reached) if floor_act.endless != null else "?"
 		kinds[kind] = kinds.get(kind, 0) + 1
 		fights[line.fell_to] = fights.get(line.fell_to, 0) + 1
 	out.append("  Fell on a floor that was: normal %d, elite %d, boss %d" % [kinds.get("normal", 0), kinds.get("elite", 0), kinds.get("boss", 0)])
@@ -521,6 +533,34 @@ static func endless_summary(run: RunContent, lines: Array[RunLine]) -> String:
 
 
 ## The report's text.
+## Each act (phase 8 part 3): the runs that reached it, won it, and lost in
+## it (by day), and the apexes earned in it (median day).
+static func acts_summary(run: RunContent, lines: Array[RunLine]) -> String:
+	var out: PackedStringArray = PackedStringArray()
+	out.append("By act (runs reaching it, winning it, losing in it by day; apexes earned in it):")
+	for act_def: ActDef in run.acts:
+		var number: int = act_def.act
+		var reached: Array[RunLine] = []
+		reached.assign(lines.filter(func(line: RunLine) -> bool: return line.act >= number))
+		var won: int = reached.filter(func(line: RunLine) -> bool: return line.act > number or line.outcome == RunState.Outcome.WON).size()
+		var lost_on: Array[int] = []
+		lost_on.resize(act_def.days.size() + 1)
+		for line: RunLine in reached:
+			if line.act == number and line.outcome == RunState.Outcome.LOST and line.day <= act_def.days.size():
+				lost_on[line.day] += 1
+		var where: PackedStringArray = PackedStringArray()
+		for day: int in range(1, lost_on.size()):
+			where.append("%d" % lost_on[day])
+		var apex_days: Array[int] = []
+		for line: RunLine in lines:
+			for hero_id: String in line.apexed_act:
+				if line.apexed_act[hero_id] == number and line.apexed_on.get(hero_id, 0) == 0:
+					apex_days.append(line.apexed_day[hero_id])
+		out.append("  Act %d: %d reached, %d won (%d%%); lost on days 1-%d: %s; apexes earned %d (median day %s)" % [number, reached.size(), won, _pct(won, reached.size()),
+			act_def.days.size(), " ".join(where), apex_days.size(), _median(apex_days)])
+	return "\n".join(out)
+
+
 static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 	var content: ContentDb = run.content
 	var out: PackedStringArray = PackedStringArray()
@@ -531,12 +571,14 @@ static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 	for day: int in run.acts[0].days.size() + 1:
 		ended.append(0)
 	for line: RunLine in lines:
-		if line.outcome == RunState.Outcome.LOST:
+		if line.outcome == RunState.Outcome.LOST and line.act == 1:
 			ended[line.day] += 1
 	var where: PackedStringArray = PackedStringArray()
 	for day: int in range(1, ended.size()):
 		where.append("day %d: %d" % [day, ended[day]])
-	out.append("Lost runs end on %s" % ", ".join(where))
+	out.append("Lost runs end on %s%s" % [", ".join(where), " (in Act 1; the others by act below)" if run.acts.size() > 1 else ""])
+	if run.acts.size() > 1:
+		out.append(acts_summary(run, lines))
 	out.append("")
 	out.append("First transformation (a run's first hero; the design: around days 3-4):")
 	var firsts: Array[int] = []
@@ -556,10 +598,11 @@ static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 			var day: int = line.transformed_on.get(path.hero, 0)
 			if day > 0:
 				days.append(day)
-			if line.day >= run.acts[0].days.size():
+			if line.act > 1 or line.day >= run.acts[0].days.size():
 				reached += 1
-				# A transformation on an endless floor came after the boss.
-				by_boss += 1 if day > 0 and day <= run.acts[0].days.size() else 0
+				# A transformation on an endless floor, or in a later act, came
+				# after Act 1's boss.
+				by_boss += 1 if day > 0 and line.transformed_act.get(path.hero, 1) == 1 and day <= run.acts[0].days.size() else 0
 		var gain: int = 0
 		var fights: int = 0
 		for line: RunLine in lines:

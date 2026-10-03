@@ -7,6 +7,7 @@ extends GutTest
 ## records by act.
 
 const Bot = preload("res://tools/run_bot.gd")
+const RunReport = preload("res://tools/run_report.gd")
 const RECORDS_PATH: String = "user://test_act_records.json"
 
 var _run: RunContent
@@ -217,3 +218,47 @@ func test_a_bot_plays_through_the_acts() -> void:
 	assert_eq(errors, [] as Array[String])
 	assert_eq([flow.state.act, flow.state.phase, flow.state.outcome], [3, RunState.Phase.ENDED, RunState.Outcome.WON], "won Act 3, and ended at the endless choice")
 	assert_true(flow.state.fought.any(func(fought: RunState.Fought) -> bool: return fought.act == 2))
+
+
+func test_the_records_keep_the_furthest_act() -> void:
+	var state := RunState.new()
+	state.act = 2
+	state.day = 3
+	assert_eq(RunRecords.furthest(RECORDS_PATH), {})
+	assert_true(RunRecords.note_furthest(state, RECORDS_PATH))
+	state.day = 2
+	assert_false(RunRecords.note_furthest(state, RECORDS_PATH), "not as far")
+	state.act = 1
+	state.day = 7
+	assert_false(RunRecords.note_furthest(state, RECORDS_PATH), "an earlier act")
+	state.act = 3
+	state.day = 1
+	assert_true(RunRecords.note(state, 4, RECORDS_PATH), "an endless record beside it")
+	assert_true(RunRecords.note_furthest(state, RECORDS_PATH))
+	assert_eq([int(RunRecords.furthest(RECORDS_PATH)["act"]), int(RunRecords.furthest(RECORDS_PATH)["day"])], [3, 1])
+	assert_eq(int(RunRecords.best(RECORDS_PATH, 3)["floor"]), 4, "the furthest doesn't touch the floors")
+
+
+func test_the_run_report_by_act() -> void:
+	var lines: Array[RunReport.RunLine] = []
+	for i: int in 3:
+		var line := RunReport.RunLine.new()
+		line.bot = "simple"
+		lines.append(line)
+	lines[0].act = 1
+	lines[0].day = 4
+	lines[0].outcome = RunState.Outcome.LOST
+	lines[1].act = 2
+	lines[1].day = 6
+	lines[1].outcome = RunState.Outcome.LOST
+	lines[1].apexed_act["maren"] = 2
+	lines[1].apexed_day["maren"] = 5
+	lines[1].apexed_on["maren"] = 0
+	lines[2].act = 3
+	lines[2].day = 7
+	lines[2].outcome = RunState.Outcome.WON
+	var text: String = RunReport.acts_summary(_run, lines)
+	assert_string_contains(text, "Act 1: 3 reached, 2 won (66%); lost on days 1-7: 0 0 0 1 0 0 0; apexes earned 0")
+	assert_string_contains(text, "Act 2: 2 reached, 1 won (50%); lost on days 1-7: 0 0 0 0 0 1 0; apexes earned 1 (median day 5)")
+	assert_string_contains(text, "Act 3: 1 reached, 1 won (100%)")
+	assert_string_contains(RunReport.summary(_run, lines), "By act")
