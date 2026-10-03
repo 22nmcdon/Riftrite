@@ -94,6 +94,16 @@ PLAYING
   score (the end screen keeps your deepest). Big numbers shorten (12.4k).
   Endless isn't tuned yet: we only measured how far a bot gets.
 
+  APEXES (new in this build; one so far)
+  Going deeper opens the apex vow: a hero who has transformed can vow to
+  one of their path's apexes (its taste comes at once), and when the apex
+  deed fills, they transform again. Switch the apex vow for free until
+  then (the day screen or the hero's panel). Only Volley has an apex yet:
+  Hailstorm (Arrow Storm fires one more volley; the apex makes it wider,
+  drops a volley every 4th shot, and each enemy it hits adds 1% damage
+  for the rest of the fight). In Practice, transform Maren into Volley and
+  her panel offers Vow apex and Reach apex. The other apexes are next.
+
   PRACTICE (Title > Practice)
   1. Title > Practice, then pick a fight ("Place your heroes").
   2. Drag Brannoc, Maren, and Vell onto your side's hexes (the three rows
@@ -182,6 +192,11 @@ TUNED IN THIS BUILD (phase 6: a bot that plays well, then Act 1 tuned to it)
     makes Guard reach 3 hexes.
   Tell us: does Act 1 feel hard but fair? Which fight ends your runs?
   Does transforming feel like a real step up?
+
+WHAT WE WANT TO KNOW ABOUT APEXES
+  Does Hailstorm feel like a real step past Volley? Is the apex vow clear
+  on the day screen and in the panel? Does the apex land at a good time
+  (the aim: around floor 2-3)?
 
 WHAT WE WANT TO KNOW ABOUT ENDLESS
   How deep do you get, and what ends your run? Does going deeper feel
