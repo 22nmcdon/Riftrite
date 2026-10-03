@@ -197,7 +197,8 @@ func _skip_sealed() -> void:
 
 
 ## Moves on from after the fight once nothing there is waiting: to the shop
-## (the Pedlar; on the boss's day, the boss shop, after its relic choice).
+## (the Pedlar; on the boss's day, the boss shop, after its relic choice), or
+## on an endless floor, which has no shops, to the nodes.
 func finish_day() -> String:
 	if state.phase != RunState.Phase.AFTER:
 		return _not_now("move on from the fight")
@@ -208,6 +209,14 @@ func finish_day() -> String:
 	state.just_transformed.clear()
 	state.just_apexed.clear()
 	state.grew.clear()
+	if state.endless:
+		# No shops on endless floors (rebuild-phase8-apexes.md, Decision
+		# 11): straight to the nodes; a boss floor counts the Magpie's
+		# visits afresh.
+		if run.day_kind(state, state.day) == "boss":
+			state.magpie_visits = 0
+		_to_nodes()
+		return ""
 	state.phase = RunState.Phase.SHOP
 	open_shop("pedlar")
 	return ""
@@ -227,13 +236,14 @@ func leave_shop() -> String:
 		else:
 			_end(RunState.Outcome.WON)
 		return ""
-	if boss:
-		# An endless boss floor: the Magpie's visits count afresh.
-		state.magpie_visits = 0
+	_to_nodes()
+	return ""
+
+
+func _to_nodes() -> void:
 	state.nodes = Offers.nodes(run, state)
 	state.node = ""
 	state.phase = RunState.Phase.NODES
-	return ""
 
 
 ## Takes the day's node `index`: Camp (a place and its options), Rift Tear

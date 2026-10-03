@@ -82,14 +82,14 @@ PLAYING
 
   ENDLESS (new in this build: after Old Mother Ash and her shop)
   End the run (a win), or Go deeper with the same heroes, items, relics,
-  and shards. Each floor is a day with one fight, then the pick, the
-  Pedlar, and a node, as before. Every floor the rift grows: enemies have
+  and shards. Each floor is a day with one fight, then a node (new in
+  this build: no Pedlar and no upgrades on floors; the pick after a fight
+  offers only apex cards, once a hero reaches an apex). Every floor the rift grows: enemies have
   15% more HP and attack than the floor before (it compounds), Rift
   Collapse starts a second sooner, and crumbled ground burns 15% hotter.
   Every 3rd floor a rift modifier joins for good (they're listed on the
   route). Every 5th floor is an elite, every 10th is Old Mother Ash
-  (she offers boss relics again). From floor 10 the Pedlar can show
-  legendaries. Pay stays the same, so prices bite harder. There are no
+  (she offers boss relics again). The Magpie can still turn up. There are no
   replays: the first loss ends the run, and the floor you fell on is your
   score (the end screen keeps your deepest). Big numbers shorten (12.4k).
   Endless isn't tuned yet: we only measured how far a bot gets.

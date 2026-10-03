@@ -199,12 +199,35 @@ func test_a_boss_floor_offers_boss_relics_then_legendaries() -> void:
 	_win_choice(flow)
 	assert_eq(flow.state.relic_choice.size(), _run.act.boss_relics)
 	assert_true(flow.state.relic_choice.all(func(id: String) -> bool: return _run.relics[id].tier == RelicDef.Tier.LEGENDARY), "every boss relic held: legendaries")
-	# Its boss shop leads on to the nodes, not to the choice.
+	# No shop on a floor (Decision 11 of rebuild-phase8-apexes.md): on to
+	# the nodes, not to the choice, with the Magpie's visits counted afresh.
 	flow.decline_relic()
+	flow.state.magpie_visits = 2
 	assert_eq(flow.finish_day(), "")
-	assert_true(flow.boss_shop())
-	assert_eq(flow.leave_shop(), "")
 	assert_eq(flow.state.phase, RunState.Phase.NODES)
+	assert_eq(flow.state.magpie_visits, 0)
+
+
+func test_a_floor_has_no_shop_and_its_pick_offers_only_apex_cards() -> void:
+	var flow: RunFlow = _to_floor(2)
+	for hero: RunState.Hero in flow.state.heroes:
+		hero.transformed = true
+	var maren: RunState.Hero = flow.state.hero("maren")
+	maren.path = "volley"
+	maren.apex = "hailstorm"
+	assert_eq(flow.choose_fight(0), "")
+	flow.record(Bot.formation(), _result(FightResult.Outcome.VICTORY))
+	assert_eq(flow.state.pick, [] as Array[String], "no apex earned: no cards")
+	flow.state.relic_choice.clear()
+	assert_eq(flow.finish_day(), "")
+	assert_eq(flow.state.phase, RunState.Phase.NODES, "no Pedlar")
+	assert_true(flow.state.shop.is_empty())
+	maren.apex_earned = true
+	var cards: Array[String] = Offers.pick(_run, flow.state, 0, 2)
+	assert_false(cards.is_empty())
+	assert_true(cards.all(func(id: String) -> bool: return _run.upgrades[id].apex == "hailstorm"), "only Hailstorm's cards: %s" % [cards])
+	flow.state.endless = false
+	assert_true(Offers.pick(_run, flow.state, 0).any(func(id: String) -> bool: return _run.upgrades[id].layer != UpgradeDef.Layer.APEX), "in the act, every layer")
 
 
 func _win_choice(flow: RunFlow) -> void:

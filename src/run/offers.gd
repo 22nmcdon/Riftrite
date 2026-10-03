@@ -13,6 +13,8 @@ extends RefCounted
 ## `visit` tells apart picks on the same attempt (0: after the fight; camp's
 ## Train uses its own).
 ## `extra` more cards from anyone's (Widened Offering, phase 5c step 5a).
+## On endless floors only apex cards are offered (rebuild-phase8-apexes.md,
+## Decision 11): no hero, taste, or path cards.
 static func pick(run: RunContent, state: RunState, visit: int, extra: int = 0) -> Array[String]:
 	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.PICK, state.act, state.day, state.attempt, visit])
 	var wild_at: int = -1
@@ -20,12 +22,12 @@ static func pick(run: RunContent, state: RunState, visit: int, extra: int = 0) -
 		wild_at = rng.range_int(state.heroes.size())
 	var everyone: Array[String] = []
 	for hero: RunState.Hero in state.heroes:
-		everyone.append_array(run.upgrades_for(hero))
+		everyone.append_array(_offered(run, state, hero))
 	var cards: Array[String] = []
 	for i: int in state.heroes.size():
 		var pool: Array[String] = []
 		if i != wild_at:
-			pool = run.upgrades_for(state.heroes[i])
+			pool = _offered(run, state, state.heroes[i])
 		pool = pool.filter(func(id: String) -> bool: return not cards.has(id))
 		if pool.is_empty():
 			pool = everyone.filter(func(id: String) -> bool: return not cards.has(id))
@@ -38,6 +40,15 @@ static func pick(run: RunContent, state: RunState, visit: int, extra: int = 0) -
 			break
 		cards.append(rest[rng.range_int(rest.size())])
 	return cards
+
+
+## The cards the pick can offer `hero` now: on endless floors, only its
+## apex's.
+static func _offered(run: RunContent, state: RunState, hero: RunState.Hero) -> Array[String]:
+	var ids: Array[String] = run.upgrades_for(hero)
+	if state.endless:
+		return ids.filter(func(id: String) -> bool: return run.upgrades[id].layer == UpgradeDef.Layer.APEX)
+	return ids
 
 
 ## The Pedlar's wares: act.pedlar_wares different items of any kind, never

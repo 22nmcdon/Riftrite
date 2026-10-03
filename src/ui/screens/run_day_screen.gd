@@ -1007,7 +1007,7 @@ func _fill_after() -> void:
 		var last: RunState.Fought = state.fought.back()
 		var encounter: EncounterDef = session.content.encounters[last.encounter]
 		_section("%s: %s" % [encounter.name, RunDayScreen.outcome_word(last.outcome)], "In %ds. It paid %d shards." % [last.seconds, session.run.act.pay[encounter.tier] + session.run.relic_sum(state, "pay_add") + (session.run.relic_sum(state, "elite_pay_add") if encounter.tier == "elite" else 0)])
-	body.add_child(UiStyle.primary(UiStyle.button("To the Pedlar", _do.bind(session.flow.finish_day))))
+	body.add_child(UiStyle.primary(UiStyle.button("Move on" if state.endless else "To the Pedlar", _do.bind(session.flow.finish_day))))
 
 
 static func outcome_word(outcome: FightResult.Outcome) -> String:
