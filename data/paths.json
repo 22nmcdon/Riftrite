@@ -173,7 +173,7 @@
           "text": "Heartseeker finishes any enemy it leaves below 20% HP, and she crits more. Each enemy Heartseeker finishes refills her mana, so one kill can lead straight into the next.",
           "patch": {
             "stats_add": {
-              "crit": 5
+              "crit": 10
             },
             "signature": {
               "id": "heartseeker",
@@ -199,7 +199,7 @@
                       "amount": 20,
                       "target": "target",
                       "scaling": {
-                        "atk": 16000
+                        "atk": 22000
                       },
                       "execute_below_pct": 20
                     }
@@ -224,7 +224,12 @@
                   }
                 ]
               }
-            ]
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            }
           }
         },
         "deed": {
@@ -305,13 +310,18 @@
                       "amount": 20,
                       "target": "target",
                       "scaling": {
-                        "atk": 16000
+                        "atk": 22000
                       }
                     }
                   ],
-                  "per_enemy_bp": 1000
+                  "per_enemy_bp": 2000
                 }
               ]
+            },
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
             }
           }
         },
@@ -546,6 +556,11 @@
                   ]
                 }
               ]
+            },
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
             }
           }
         },
@@ -599,7 +614,7 @@
                 "aura": {
                   "target": "all_allies",
                   "stat": "damage_bp",
-                  "value": 13000,
+                  "value": 15000,
                   "vs": {
                     "keywords": [
                       "rooted"
@@ -640,7 +655,12 @@
                   }
                 ]
               }
-            ]
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            }
           }
         },
         "deed": {
@@ -957,7 +977,12 @@
                   }
                 ]
               }
-            ]
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            }
           }
         },
         "deed": {
@@ -1034,7 +1059,12 @@
                   }
                 ]
               }
-            ]
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 12650,
+              "mgk": 11500
+            }
           }
         },
         "deed": {
@@ -1230,7 +1260,12 @@
                   }
                 ]
               }
-            ]
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            }
           }
         },
         "deed": {
@@ -1285,7 +1320,12 @@
                   }
                 ]
               }
-            ]
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            }
           }
         },
         "deed": {
@@ -1543,7 +1583,7 @@
                         "type": "damage",
                         "amount": 0,
                         "scaling": {
-                          "atk": 15000
+                          "atk": 22000
                         },
                         "target": "target"
                       }
@@ -1551,7 +1591,12 @@
                   }
                 ]
               }
-            ]
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            }
           }
         },
         "deed": {
@@ -1691,6 +1736,11 @@
                 }
               ],
               "grows_boosts_bp": 2500
+            },
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
             }
           }
         },
@@ -1877,11 +1927,16 @@
                 "kind": "rise",
                 "times": 3,
                 "after_ms": 3000,
-                "hp_pct": 30,
+                "hp_pct": 25,
                 "status": "oathbound",
                 "text": "When he falls, he rises again soon after, up to 3 times a fight, stronger each time."
               }
-            ]
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            }
           }
         },
         "deed": {
@@ -1986,7 +2041,12 @@
                   }
                 ]
               }
-            ]
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            }
           }
         },
         "deed": {
@@ -2273,7 +2333,7 @@
                     {
                       "type": "apply_status",
                       "status": "burn",
-                      "stacks": 5,
+                      "stacks": 3,
                       "target": "target",
                       "side": "enemies"
                     }
@@ -2281,6 +2341,11 @@
                 }
               ],
               "grows_bp": 1000
+            },
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
             }
           }
         },
@@ -2362,7 +2427,12 @@
                   }
                 ]
               }
-            ]
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            }
           }
         },
         "deed": {
@@ -2547,10 +2617,15 @@
                 "kind": "link",
                 "text": "Allies holding her Shields split each hit on one of them evenly; every so much shared makes each of them sturdier for the rest of the fight.",
                 "share_pct": 100,
-                "per_shared": 500,
+                "per_shared": 250,
                 "status": "iron_loom"
               }
-            ]
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            }
           }
         },
         "deed": {
@@ -2599,13 +2674,13 @@
                   {
                     "trigger": "on_ally_shield_broken",
                     "type": "damage",
-                    "amount_bp_of_damage": 10000,
+                    "amount_bp_of_damage": 15000,
                     "target": "hit_target"
                   },
                   {
                     "trigger": "on_ally_shield_broken",
                     "type": "damage",
-                    "amount_bp_of_damage": 5000,
+                    "amount_bp_of_damage": 7500,
                     "target": "enemies_near_named",
                     "within_hexes": 1
                   },
@@ -2617,7 +2692,12 @@
                   }
                 ]
               }
-            ]
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            }
           }
         },
         "deed": {
@@ -2828,7 +2908,7 @@
                 "effects": [
                   {
                     "trigger": "on_basic_attack",
-                    "every": 4,
+                    "every": 3,
                     "type": "heal",
                     "amount": 15,
                     "scaling": {
@@ -2839,18 +2919,18 @@
                   },
                   {
                     "trigger": "on_basic_attack",
-                    "every": 4,
+                    "every": 3,
                     "type": "damage",
-                    "amount": 8,
+                    "amount": 15,
                     "scaling": {
-                      "mgk": 4000
+                      "mgk": 16000
                     },
                     "target": "target",
-                    "execute_below_pct": 15
+                    "execute_below_pct": 20
                   },
                   {
                     "trigger": "on_basic_attack",
-                    "every": 4,
+                    "every": 3,
                     "type": "gain_mana",
                     "amount": 10,
                     "target": "self"
@@ -2890,7 +2970,12 @@
                   }
                 ]
               }
-            ]
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            }
           }
         },
         "deed": {
@@ -3052,6 +3137,11 @@
                   "max_standing": 4
                 }
               ]
+            },
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
             }
           }
         },
