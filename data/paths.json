@@ -2631,7 +2631,7 @@
         "deed": {
           "text": "Damage shared through her links",
           "counts": "shared",
-          "threshold": 8
+          "threshold": 24
         }
       },
       {
