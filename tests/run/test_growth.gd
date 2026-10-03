@@ -173,7 +173,7 @@ func test_the_shards_instead() -> void:
 	flow.record(Bot.formation(), _result(FightResult.Outcome.TIE))
 	var before: int = flow.state.shards
 	assert_eq(flow.take_shards(), "")
-	assert_eq(flow.state.shards, before + _run.act.pick_shards)
+	assert_eq(flow.state.shards, before + _run.acts[0].pick_shards)
 	assert_true(flow.state.heroes.all(func(hero: RunState.Hero) -> bool: return hero.upgrades.is_empty()))
 
 

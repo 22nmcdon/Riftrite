@@ -12,8 +12,9 @@ func _init() -> void:
 		errors.append_array(run.errors)
 	if errors.is_empty():
 		print("data/ OK: tuning, %d statuses, %d heroes, %d enemies, %d encounters, %d tactics, %d paths, %d apexes" % [db.status_ids.size(), db.hero_ids.size(), db.enemy_ids.size(), db.encounter_ids.size(), db.tactic_ids.size(), db.path_ids.size(), db.apex_ids.size()])
-		print("run OK: act %d, %d days (%s), %d upgrades, %d items, %d camp places, %d relics, %d bonds, %d events, %d oaths" % [run.act.act, run.act.days.size(),
-			", ".join(run.act.days), run.upgrade_ids.size(), run.item_ids.size(), run.camps.places.size(), run.relic_ids.size(), run.bond_ids.size(),
+		for act_def: ActDef in run.acts:
+			print("act %d OK: %d days (%s)%s" % [act_def.act, act_def.days.size(), ", ".join(act_def.days), "" if act_def.fights_act == act_def.act else ", fights from act %d" % act_def.fights_act])
+		print("run OK: %d acts, %d upgrades, %d items, %d camp places, %d relics, %d bonds, %d events, %d oaths" % [run.acts.size(), run.upgrade_ids.size(), run.item_ids.size(), run.camps.places.size(), run.relic_ids.size(), run.bond_ids.size(),
 			run.events.scenes.size(), run.events.oaths.size()])
 		quit(0)
 		return

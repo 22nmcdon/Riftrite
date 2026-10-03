@@ -38,6 +38,10 @@ const RELIC_SHOP: int = 2
 
 var run: RunContent
 var state: RunState
+## The act the run is in (phase 8 part 3).
+var act: ActDef:
+	get:
+		return run.act_of(state)
 ## The last fight fight() ran, its setup and result (not saved; the run
 ## report's engines read them, phase 5c step 9b).
 var last_setup: FightSetup = null
@@ -61,15 +65,15 @@ static func start(run_content: RunContent, run_seed: int, vows: Dictionary[Strin
 		return null
 	var state := RunState.new()
 	state.seed_value = run_seed
-	state.act = run_content.act.act
-	state.shards = run_content.act.start_shards
+	state.act = run_content.acts[0].act
+	state.shards = run_content.acts[0].start_shards
 	for hero_id: String in content.hero_ids:
 		var hero := RunState.Hero.new()
 		hero.id = hero_id
 		hero.path = vows[hero_id]
 		for path: PathDef in content.heroes[hero_id].paths:
 			hero.deeds[path.id] = 0
-		for i: int in run_content.act.slots:
+		for i: int in run_content.acts[0].slots:
 			hero.slots.append("")
 		state.heroes.append(hero)
 	state.options = ActDraw.draw(run_content, run_seed)
@@ -97,7 +101,7 @@ func _start_day() -> void:
 	state.chosen = ""
 	if state.endless:
 		_draw_floors()
-		var endless: ActDef.Endless = run.act.endless
+		var endless: ActDef.Endless = act.endless
 		@warning_ignore("integer_division")
 		var due: int = run.floor_of(state, state.day) / endless.modifier_every
 		while state.endless_mods.size() < due:
@@ -156,7 +160,7 @@ func _floor_growth_mod() -> KitMod:
 	if floor_now <= 0:
 		return null
 	var mod: KitMod = KitMod.make()
-	var bp: int = ActDef.Endless.compound(run.act.endless.growth_bp, floor_now)
+	var bp: int = ActDef.Endless.compound(act.endless.growth_bp, floor_now)
 	mod.stats_bp[UnitStats.Stat.HP] = bp
 	mod.stats_bp[UnitStats.Stat.ATK] = bp
 	return mod
@@ -169,7 +173,7 @@ func _endless_rules(setup: FightSetup) -> void:
 	var floor_now: int = floor_number()
 	if floor_now <= 0:
 		return
-	var endless: ActDef.Endless = run.act.endless
+	var endless: ActDef.Endless = act.endless
 	@warning_ignore("integer_division")
 	var start_ms: int = maxi(run.content.tuning.collapse_start_ticks * 1000 / FixedMath.TICKS_PER_SECOND - endless.collapse_step_ms * floor_now, endless.collapse_floor_ms)
 	var start: int = FixedMath.ms_to_ticks(start_ms)
@@ -190,7 +194,7 @@ func _skip_sealed() -> void:
 	fought.outcome = FightResult.Outcome.VICTORY
 	state.fought.append(fought)
 	@warning_ignore("integer_division")
-	state.shards += run.act.pay[run.content.encounters[encounter_id].tier] / 2
+	state.shards += act.pay[run.content.encounters[encounter_id].tier] / 2
 	state.chosen = encounter_id
 	state.phase = RunState.Phase.AFTER
 	state.pick = _pick_cards(0)
@@ -231,7 +235,7 @@ func leave_shop() -> String:
 	close_shop()
 	if boss and not state.endless:
 		# Endless (phase 8 part 1): the act's boss shop leads to the choice.
-		if run.act.endless != null:
+		if act.endless != null:
 			state.phase = RunState.Phase.CHOICE
 		else:
 			_end(RunState.Outcome.WON)
@@ -964,7 +968,7 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 	if hunting:
 		state.hunt = ""
 		if won:
-			state.shards += run.act.pay["hunt"]
+			state.shards += act.pay["hunt"]
 		return
 	# An oath lasts its hero's next day fights, won or lost.
 	for hero: RunState.Hero in state.heroes:
@@ -982,7 +986,7 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 		# Endless (phase 8 part 1): the first loss ends the run; the act was won.
 		if state.endless:
 			_end(RunState.Outcome.WON)
-		elif state.losses >= run.act.losses_to_end:
+		elif state.losses >= act.losses_to_end:
 			_end(RunState.Outcome.LOST)
 		else:
 			state.attempt += 1
@@ -998,7 +1002,7 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 		hero.next_fight.clear()
 	state.rested = false
 	var tier: String = run.content.encounters[state.chosen].tier
-	state.shards += run.act.pay[tier] + run.relic_sum(state, "pay_add") + (run.relic_sum(state, "elite_pay_add") if tier == "elite" else 0)
+	state.shards += act.pay[tier] + run.relic_sum(state, "pay_add") + (run.relic_sum(state, "elite_pay_add") if tier == "elite" else 0)
 	_streak(result)
 	if tier == "elite":
 		_grow_by_run("elite_wins")
@@ -1009,11 +1013,11 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 		# Decision 48), then the run's end or the endless choice (leave_shop).
 		# Once every boss relic is held, legendaries (endless.md).
 		var boss_tier: String = "boss" if _boss_relic_left() else "legendary"
-		state.relic_choice = Offers.relics(run, state, RELIC_AFTER_FIGHT, run.act.boss_relics, boss_tier)
+		state.relic_choice = Offers.relics(run, state, RELIC_AFTER_FIGHT, act.boss_relics, boss_tier)
 		return
 	state.pick = _pick_cards(0)
 	if tier == "elite":
-		state.relic_choice = Offers.relics(run, state, RELIC_AFTER_FIGHT, 2, "rare", run.act.elite_epic_pct)
+		state.relic_choice = Offers.relics(run, state, RELIC_AFTER_FIGHT, 2, "rare", act.elite_epic_pct)
 	elif depth != null:
 		state.relic_choice = Offers.relics_of_tiers(run, state, RELIC_AFTER_FIGHT, depth.relics)
 
@@ -1097,8 +1101,8 @@ func shrine_offer(kind: String, what: String = "") -> String:
 	var tier: String = "rare"
 	match kind:
 		"shards":
-			if state.shards < run.act.shrine_price:
-				return "it asks %d shards; there are %d" % [run.act.shrine_price, state.shards]
+			if state.shards < act.shrine_price:
+				return "it asks %d shards; there are %d" % [act.shrine_price, state.shards]
 		"wound":
 			var hero: RunState.Hero = state.hero(what)
 			if hero == null:
@@ -1117,7 +1121,7 @@ func shrine_offer(kind: String, what: String = "") -> String:
 	if drawn.is_empty():
 		return "the Shrine has no relic left to give"
 	state.relic_choice = drawn
-	state.relic_choice_price = run.act.shrine_price if kind == "shards" else 0
+	state.relic_choice_price = act.shrine_price if kind == "shards" else 0
 	state.shrine = kind if kind == "shards" else "%s:%s" % [kind, what]
 	return ""
 
@@ -1149,17 +1153,17 @@ func buy_relic(index: int = 0) -> String:
 func relic_price(index: int = 0) -> int:
 	if index < 0 or index >= state.shop_relics.size() or state.shop_relics[index].is_empty():
 		return 0
-	var price: int = run.act.relic_prices[RelicDef.TIER_NAMES[run.relics[state.shop_relics[index]].tier]]
+	var price: int = act.relic_prices[RelicDef.TIER_NAMES[run.relics[state.shop_relics[index]].tier]]
 	if state.shop == "magpie":
 		@warning_ignore("integer_division")
-		return price * run.act.magpie_relic_pct / 100
+		return price * act.magpie_relic_pct / 100
 	# A bond relic is free (phase 5c step 5d), whatever the prices.
 	return 0 if price == 0 else _marked_up(price)
 
 
 ## What the Magpie pays for `relic_id` (its tier's relic_sell).
 func relic_sell_price(relic_id: String) -> int:
-	return run.act.relic_sell.get(RelicDef.TIER_NAMES[run.relics[relic_id].tier], 0)
+	return act.relic_sell.get(RelicDef.TIER_NAMES[run.relics[relic_id].tier], 0)
 
 
 ## Sells a relic the run holds to the Magpie, the only one who buys them
@@ -1267,7 +1271,7 @@ func _rank_items(formation: Dictionary[String, Vector2i], result: FightResult, w
 
 
 func _count_item(item: ItemDef, counted: int) -> void:
-	var needs: Array = run.act.item_ranks[ItemDef.KIND_NAMES[item.kind]]
+	var needs: Array = act.item_ranks[ItemDef.KIND_NAMES[item.kind]]
 	state.item_counts[item.id] = state.item_counts.get(item.id, 0) + counted
 	while state.item_ranks.get(item.id, 1) < ItemDef.RANKS and state.item_counts[item.id] >= int(needs[state.item_ranks.get(item.id, 1) - 1]):
 		state.item_counts[item.id] -= int(needs[state.item_ranks[item.id] - 1])
@@ -1284,7 +1288,7 @@ func rank_progress(item_id: String) -> Vector2i:
 	var rank: int = state.item_ranks.get(item_id, 1)
 	if rank >= ItemDef.RANKS or not run.items.has(item_id):
 		return Vector2i(0, 0)
-	var needs: Array = run.act.item_ranks[ItemDef.KIND_NAMES[run.items[item_id].kind]]
+	var needs: Array = act.item_ranks[ItemDef.KIND_NAMES[run.items[item_id].kind]]
 	return Vector2i(state.item_counts.get(item_id, 0), int(needs[rank - 1]))
 
 
@@ -1325,7 +1329,7 @@ func take_pick(index: int) -> String:
 func take_shards() -> String:
 	if state.pick.is_empty():
 		return "there's no pick waiting"
-	state.shards += run.act.pick_shards
+	state.shards += act.pick_shards
 	state.pick.clear()
 	state.picks_left = 1
 	return ""
@@ -1511,15 +1515,15 @@ func close_shop() -> void:
 ## Pedlar (with relics' price_add), the Magpie's charm price at his stall.
 func price_of(item_id: String) -> int:
 	if state.shop == "magpie":
-		return run.act.magpie_charm_price
-	return _marked_up(run.act.item_prices[ItemDef.KIND_NAMES[run.items[item_id].kind]])
+		return act.magpie_charm_price
+	return _marked_up(act.item_prices[ItemDef.KIND_NAMES[run.items[item_id].kind]])
 
 
 ## What the Pedlar pays for `item_id`: half its kind's price, rounded down,
 ## whatever its rank (loadout rule 9).
 func sell_price(item_id: String) -> int:
 	@warning_ignore("integer_division")
-	return run.act.item_prices[ItemDef.KIND_NAMES[run.items[item_id].kind]] / 2
+	return act.item_prices[ItemDef.KIND_NAMES[run.items[item_id].kind]] / 2
 
 
 ## Sells an item the run owns to the Pedlar, from the stash or a slot. Its
@@ -1584,7 +1588,7 @@ func buy(index: int) -> String:
 func reroll_price() -> int:
 	if state.rerolls == 0 and run.relic_rule(state, "free_reroll"):
 		return 0
-	var base: int = run.act.boss_reroll_price if boss_shop() else run.act.reroll_price
+	var base: int = act.boss_reroll_price if boss_shop() else act.reroll_price
 	return base + (0 if run.relic_rule(state, "flat_rerolls") else state.rerolls)
 
 
@@ -1605,7 +1609,7 @@ func reroll() -> String:
 
 ## What treating a wound costs (with wound_price_add, never below 0).
 func wound_price() -> int:
-	return maxi(run.act.wound_price + run.relic_sum(state, "wound_price_add"), 0)
+	return maxi(act.wound_price + run.relic_sum(state, "wound_price_add"), 0)
 
 
 ## Treats one of `hero_id`'s wounds, wherever a shop is open.

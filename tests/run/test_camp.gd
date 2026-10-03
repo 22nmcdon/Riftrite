@@ -90,7 +90,7 @@ func test_the_magpies_node() -> void:
 	assert_eq(state.shop_relics.size(), 1, "the Magpie always has a relic")
 	var tier: RelicDef.Tier = _run.relics[state.shop_relics[0]].tier
 	assert_true(tier == RelicDef.Tier.EPIC or tier == RelicDef.Tier.LEGENDARY, "an epic or a legendary")
-	assert_eq(flow.relic_price(), _run.act.relic_prices[RelicDef.TIER_NAMES[tier]] * 75 / 100, "at 25% off, rounded down")
+	assert_eq(flow.relic_price(), _run.acts[0].relic_prices[RelicDef.TIER_NAMES[tier]] * 75 / 100, "at 25% off, rounded down")
 	assert_eq(flow.choose_camp(0), "can't choose a camp option now (the day is at node)")
 	assert_eq(flow.leave_node(), "")
 	assert_eq([state.shop, state.taken_nodes], ["", ["magpie"] as Array[String]])
@@ -214,12 +214,12 @@ func test_a_hunt() -> void:
 	var setup: FightSetup = flow.fight_setup(Bot.formation(), errors)
 	assert_eq(setup.enemies.size(), _run.content.encounters[state.hunt].enemies.size())
 	flow.record(Bot.formation(), _result(FightResult.Outcome.DEFEAT))
-	assert_eq([state.hunt, state.losses, state.phase, state.shards], ["", 0, RunState.Phase.NODE, _run.act.start_shards], "a lost Hunt isn't a loss")
+	assert_eq([state.hunt, state.losses, state.phase, state.shards], ["", 0, RunState.Phase.NODE, _run.acts[0].start_shards], "a lost Hunt isn't a loss")
 	assert_eq(_run.content.encounters[state.fought.back().encounter].tier, "hunt", "recorded as fought")
 	flow.state.camp_used = ""
 	flow.choose_camp(0)
 	flow.record(Bot.formation(), _result(FightResult.Outcome.VICTORY))
-	assert_eq([state.shards, state.pick], [_run.act.start_shards + _run.act.pay["hunt"], [] as Array[String]], "shards, no pick")
+	assert_eq([state.shards, state.pick], [_run.acts[0].start_shards + _run.acts[0].pay["hunt"], [] as Array[String]], "shards, no pick")
 	assert_eq(flow.leave_node(), "")
 
 
@@ -251,7 +251,7 @@ func test_relics_on_pay_picks_and_prices() -> void:
 	_to_fight(flow)
 	before = state.shards
 	flow.record(Bot.formation(), _result(FightResult.Outcome.VICTORY))
-	assert_eq(state.shards, before + _run.act.pay[_run.content.encounters[state.chosen].tier] + 3, "Gravedigger's Coin: +3 a win")
+	assert_eq(state.shards, before + _run.acts[0].pay[_run.content.encounters[state.chosen].tier] + 3, "Gravedigger's Coin: +3 a win")
 	assert_eq(state.pick.size(), 4, "Widened Offering: one more card")
 
 
@@ -277,7 +277,7 @@ func test_the_pedlar_always_has_a_relic_mostly_common() -> void:
 		tiers[_run.relics[relic].tier] += 1
 		flow.state.shards = 40
 		var price: int = flow.relic_price()
-		assert_eq(price, _run.act.relic_prices[RelicDef.TIER_NAMES[_run.relics[relic].tier]])
+		assert_eq(price, _run.acts[0].relic_prices[RelicDef.TIER_NAMES[_run.relics[relic].tier]])
 		assert_eq(flow.buy_relic(), "")
 		assert_eq([flow.state.relics, flow.state.shards, flow.state.shop_relics], [[relic], 40 - price, [""]])
 		assert_eq(flow.buy_relic(), "there's no relic for sale")

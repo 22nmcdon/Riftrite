@@ -154,7 +154,7 @@ func test_a_bleeding_tear() -> void:
 	var state: RunState = flow.state
 	var sealed: String = state.options[1][0]
 	assert_eq([state.day, state.phase, state.fought.back().encounter, state.fought.back().seconds], [2, RunState.Phase.AFTER, sealed, 0], "tomorrow's fight, won without fighting")
-	assert_eq(state.shards, shards + _run.act.pay[_run.content.encounters[sealed].tier] / 2, "half its pay")
+	assert_eq(state.shards, shards + _run.acts[0].pay[_run.content.encounters[sealed].tier] / 2, "half its pay")
 	assert_false(state.pick.is_empty(), "and its pick")
 	assert_eq(_at("event:bleeding_tear", 2).event_problem(1), "not before an elite or the boss", "day 3 is an elite day")
 

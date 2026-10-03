@@ -41,8 +41,8 @@ func _result(outcome: FightResult.Outcome, fallen: Array[String] = [], deeds: Ar
 
 func test_the_run_content_loads() -> void:
 	assert_true(_run.is_valid(), "\n".join(_run.errors))
-	assert_eq(_run.act.days, ["normal", "normal", "elite", "normal", "elite", "normal", "boss"] as Array[String])
-	assert_eq([_run.act.start_shards, _run.act.slots, _run.act.losses_to_end, _run.act.pay["easier"]], [10, 3, 2, 10], "economy.md (phase 5c step 5a)")
+	assert_eq(_run.acts[0].days, ["normal", "normal", "elite", "normal", "elite", "normal", "boss"] as Array[String])
+	assert_eq([_run.acts[0].start_shards, _run.acts[0].slots, _run.acts[0].losses_to_end, _run.acts[0].pay["easier"]], [10, 3, 2, 10], "economy.md (phase 5c step 5a)")
 
 
 func test_the_act_draw() -> void:
@@ -54,7 +54,7 @@ func test_the_act_draw() -> void:
 		if options.size() == 2:
 			assert_ne(options[0], options[1], "day %d offers two different fights" % day)
 		for id: String in options:
-			assert_true(_run.content.encounters[id].days.has(day) or _run.act.days[day - 1] != "normal", "%s can come on day %d" % [id, day])
+			assert_true(_run.content.encounters[id].days.has(day) or _run.acts[0].days[day - 1] != "normal", "%s can come on day %d" % [id, day])
 	assert_eq(ActDraw.draw(_run, 7), days, "the same seed, the same act")
 	assert_ne(ActDraw.draw(_run, 8), days, "another seed, another act")
 
@@ -100,7 +100,7 @@ func test_a_fight_is_the_sims_own_and_a_win_pays() -> void:
 	if result.outcome == FightResult.Outcome.DEFEAT:
 		assert_eq([state.losses, state.attempt, state.phase], [1, 1, RunState.Phase.ROUTE])
 		return
-	assert_eq(state.shards, _run.act.start_shards + _run.act.pay[_run.content.encounters[state.chosen].tier])
+	assert_eq(state.shards, _run.acts[0].start_shards + _run.acts[0].pay[_run.content.encounters[state.chosen].tier])
 	assert_eq(state.phase, RunState.Phase.AFTER)
 	assert_eq(state.hero("maren").deeds["deadeye"], result.deed_amount("maren", "deadeye"), "deeds add what the fight put in")
 	assert_eq(state.formation, Bot.formation(), "the formation is remembered")

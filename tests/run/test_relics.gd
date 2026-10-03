@@ -77,7 +77,7 @@ func test_the_tiers() -> void:
 	assert_eq(counts, [25, 21, 14, 15, 11, 3] as Array[int], "common, rare, epic, legendary, boss, bond")
 	for id: String in ["pilgrims_lantern", "hungry_blade"]:
 		assert_false(_run.relics.has(id), "%s is cut" % id)
-	assert_eq(_run.act.relic_prices, {"common": 5, "rare": 12, "epic": 20, "legendary": 30, "boss": 0, "bond": 0} as Dictionary[String, int])
+	assert_eq(_run.acts[0].relic_prices, {"common": 5, "rare": 12, "epic": 20, "legendary": 30, "boss": 0, "bond": 0} as Dictionary[String, int])
 
 
 func test_every_relic_says_what_it_does_with_its_numbers() -> void:
@@ -201,7 +201,7 @@ func test_shop_rules() -> void:
 	state.shards = 30
 	R.to_pedlar(flow)
 	assert_eq(state.shards, 36, "Miser's Vault: 1 per 5 held, at most 6")
-	assert_eq([state.shop_relics.size(), state.wares.size()], [2, _run.act.pedlar_wares + 1], "one more relic and one more ware")
+	assert_eq([state.shop_relics.size(), state.wares.size()], [2, _run.acts[0].pedlar_wares + 1], "one more relic and one more ware")
 
 
 func test_elites_pay_more_and_tally_of_the_dead_grows() -> void:
@@ -215,7 +215,7 @@ func test_elites_pay_more_and_tally_of_the_dead_grows() -> void:
 	var before: int = state.shards
 	var hp: int = flow.kit_of("maren").stats.get_stat(UnitStats.Stat.HP)
 	flow.record(Bot.formation(), _won())
-	assert_eq(state.shards, before + _run.act.pay["elite"] + 6)
+	assert_eq(state.shards, before + _run.acts[0].pay["elite"] + 6)
 	assert_eq(state.growth["tally_of_the_dead"], 1)
 	assert_eq(flow.kit_of("maren").stats.get_stat(UnitStats.Stat.HP), FixedMath.apply_bp(hp, 10200), "+2% max HP an elite")
 	assert_eq(state.relic_choice.size(), 2, "an elite's relic choice")
@@ -235,7 +235,7 @@ func test_bounty_board_pays_once_for_a_streak() -> void:
 	var before: int = state.shards
 	_to_fight(flow)
 	flow.record(Bot.formation(), _won())
-	assert_eq(state.shards - before, _run.act.pay[_run.content.encounters[state.chosen].tier] + 25, "3 in a row: +25")
+	assert_eq(state.shards - before, _run.acts[0].pay[_run.content.encounters[state.chosen].tier] + 25, "3 in a row: +25")
 	assert_eq(state.streaks_paid, ["bounty_board"] as Array[String])
 
 
@@ -254,7 +254,7 @@ func test_relics_that_pay_with_what_the_team_does() -> void:
 	var before: int = state.shards
 	var atk: int = flow.kit_of("maren").stats.get_stat(UnitStats.Stat.ATK)
 	flow.record(Bot.formation(), result)
-	assert_eq(state.shards - before, _run.act.pay[_run.content.encounters[state.chosen].tier] + 6 + 1, "6 kills, and 15 crits")
+	assert_eq(state.shards - before, _run.acts[0].pay[_run.content.encounters[state.chosen].tier] + 6 + 1, "6 kills, and 15 crits")
 	assert_eq(flow.kit_of("maren").stats.get_stat(UnitStats.Stat.ATK), atk + 1, "12 kills: one step of Collector's Chain")
 
 
@@ -331,7 +331,7 @@ func test_an_elite_sometimes_offers_an_epic() -> void:
 	var epics: int = 0
 	for run_seed: int in range(1, 31):
 		var flow: RunFlow = _start(run_seed)
-		var choice: Array[String] = Offers.relics(_run, flow.state, RunFlow.RELIC_AFTER_FIGHT, 2, "rare", _run.act.elite_epic_pct)
+		var choice: Array[String] = Offers.relics(_run, flow.state, RunFlow.RELIC_AFTER_FIGHT, 2, "rare", _run.acts[0].elite_epic_pct)
 		assert_eq(choice.size(), 2)
 		for id: String in choice:
 			assert_true(_run.relics[id].tier == RelicDef.Tier.RARE or _run.relics[id].tier == RelicDef.Tier.EPIC)
@@ -477,7 +477,7 @@ func test_overkill_tithe_pays_for_overkill() -> void:
 	result.tallies.append(FightResult.Deed.make("vell", "relic:overkill_tithe", 120))
 	var before: int = flow.state.shards
 	flow.record(Bot.formation(), result)
-	assert_eq(flow.state.shards - before, _run.act.pay[_run.content.encounters[flow.state.chosen].tier] + 2, "320 overkill: 2 shards")
+	assert_eq(flow.state.shards - before, _run.acts[0].pay[_run.content.encounters[flow.state.chosen].tier] + 2, "320 overkill: 2 shards")
 
 
 # --- step 5c: the engines ------------------------------------------------------------

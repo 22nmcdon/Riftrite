@@ -345,7 +345,7 @@ static func compare_summary(run: RunContent, by_bot: Dictionary[String, Array]) 
 		var won: int = lines.filter(func(line: RunLine) -> bool: return line.outcome == RunState.Outcome.WON).size()
 		var days: PackedStringArray = PackedStringArray()
 		var ended: Dictionary[String, int] = {}
-		for day: int in range(1, run.act.days.size() + 1):
+		for day: int in range(1, run.acts[0].days.size() + 1):
 			days.append(str(lines.filter(func(line: RunLine) -> bool: return line.outcome == RunState.Outcome.LOST and line.day == day).size()))
 		for line: RunLine in lines:
 			if line.outcome == RunState.Outcome.LOST and not line.fights.is_empty():
@@ -461,7 +461,7 @@ static func endless_summary(run: RunContent, lines: Array[RunLine]) -> String:
 	for line: RunLine in deeper:
 		if line.fell_to.is_empty():
 			continue
-		var kind: String = run.act.endless.kind(line.floor_reached) if run.act.endless != null else "?"
+		var kind: String = run.acts[0].endless.kind(line.floor_reached) if run.acts[0].endless != null else "?"
 		kinds[kind] = kinds.get(kind, 0) + 1
 		fights[line.fell_to] = fights.get(line.fell_to, 0) + 1
 	out.append("  Fell on a floor that was: normal %d, elite %d, boss %d" % [kinds.get("normal", 0), kinds.get("elite", 0), kinds.get("boss", 0)])
@@ -528,7 +528,7 @@ static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 	var won: int = lines.filter(func(line: RunLine) -> bool: return line.outcome == RunState.Outcome.WON).size()
 	out.append("Runs: %d (the %s bot), won %d (%d%%)" % [n, lines[0].bot if n > 0 else "-", won, _pct(won, n)])
 	var ended: Array[int] = []
-	for day: int in run.act.days.size() + 1:
+	for day: int in run.acts[0].days.size() + 1:
 		ended.append(0)
 	for line: RunLine in lines:
 		if line.outcome == RunState.Outcome.LOST:
@@ -556,10 +556,10 @@ static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 			var day: int = line.transformed_on.get(path.hero, 0)
 			if day > 0:
 				days.append(day)
-			if line.day >= run.act.days.size():
+			if line.day >= run.acts[0].days.size():
 				reached += 1
 				# A transformation on an endless floor came after the boss.
-				by_boss += 1 if day > 0 and day <= run.act.days.size() else 0
+				by_boss += 1 if day > 0 and day <= run.acts[0].days.size() else 0
 		var gain: int = 0
 		var fights: int = 0
 		for line: RunLine in lines:

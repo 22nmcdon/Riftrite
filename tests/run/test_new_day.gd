@@ -59,7 +59,7 @@ func test_the_pedlar_after_every_fight_and_the_boss_shop() -> void:
 	assert_eq(flow.choose_fight(0), "")
 	flow.record(Bot.formation(), _result(FightResult.Outcome.VICTORY))
 	assert_eq(state.shards - shards, 60, "the boss pays 60")
-	assert_eq([state.phase, state.relic_choice.size()], [RunState.Phase.AFTER, _run.act.boss_relics])
+	assert_eq([state.phase, state.relic_choice.size()], [RunState.Phase.AFTER, _run.acts[0].boss_relics])
 	assert_eq(flow.finish_day(), "choose a relic or neither first", "the boss relics before the shop")
 	assert_eq(flow.take_relic(0), "")
 	assert_eq(flow.finish_day(), "")

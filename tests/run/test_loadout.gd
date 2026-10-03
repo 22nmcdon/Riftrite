@@ -48,11 +48,11 @@ func _to_fight(flow: RunFlow) -> void:
 
 
 func test_prices_and_ranks_by_kind() -> void:
-	assert_eq(_run.act.item_prices, {"charm": 6, "tactic": 4, "sigil": 8, "gambit": 12})
-	assert_eq(_run.act.item_ranks["charm"], [4, 8])
-	assert_eq(_run.act.item_ranks["tactic"], [60000, 180000], "60s, then 180s more (Decision 32)")
-	assert_eq(_run.act.item_ranks["sigil"], [10, 25])
-	assert_eq(_run.act.item_ranks["gambit"], [3, 6])
+	assert_eq(_run.acts[0].item_prices, {"charm": 6, "tactic": 4, "sigil": 8, "gambit": 12})
+	assert_eq(_run.acts[0].item_ranks["charm"], [4, 8])
+	assert_eq(_run.acts[0].item_ranks["tactic"], [60000, 180000], "60s, then 180s more (Decision 32)")
+	assert_eq(_run.acts[0].item_ranks["sigil"], [10, 25])
+	assert_eq(_run.acts[0].item_ranks["gambit"], [3, 6])
 	var flow: RunFlow = _start()
 	R.to_pedlar(flow)
 	assert_eq([flow.price_of("fleet"), flow.price_of("echo"), flow.price_of("plant_feet_orders")], [6, 8, 4])

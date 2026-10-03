@@ -170,7 +170,7 @@ func oath(flow: RunFlow) -> int:
 
 func shrine(flow: RunFlow) -> Array:
 	var options: Array = []
-	if flow.state.shards >= flow.run.act.shrine_price:
+	if flow.state.shards >= flow.act.shrine_price:
 		options.append(["shards", ""])
 	for hero: RunState.Hero in flow.state.heroes:
 		if hero.wounds < flow.run.content.tuning.max_wounds:

@@ -173,7 +173,7 @@ func test_a_hunt_takes_no_rift() -> void:
 	var flow: RunFlow = _at_tear()
 	flow.choose_depth(2)
 	flow.state.node = "camp"
-	flow.state.hunt = _run.encounters_for("hunt", 1)[0]
+	flow.state.hunt = _run.encounters_for(_run.acts[0], "hunt", 1)[0]
 	var errors: Array[String] = []
 	var setup: FightSetup = flow.fight_setup(Bot.formation(), errors)
 	assert_eq(errors, [] as Array[String])

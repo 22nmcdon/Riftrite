@@ -176,7 +176,7 @@ func test_practice_tries_a_copy_and_counts_the_shards() -> void:
 	var coming: Array[String] = Practice.practice_set(flow)
 	var team: float = Practice.team_worth(flow, coming)
 	var shards: float = Practice.value(flow, func(trial: RunFlow) -> String: return trial.take_shards(), coming)
-	assert_almost_eq(shards, team + _run.act.pick_shards * Practice.shard_worth(flow), 0.0001, "the shards' worth on the same fights")
+	assert_almost_eq(shards, team + _run.acts[0].pick_shards * Practice.shard_worth(flow), 0.0001, "the shards' worth on the same fights")
 	assert_eq(Practice.value(flow, func(trial: RunFlow) -> String: return trial.take_pick(99), coming), -INF, "refused")
 	assert_eq(JSON.stringify(flow.state.to_dict()), before, "the run itself is untouched")
 	var bot: GoodBot = GoodBot.new()
@@ -226,7 +226,7 @@ func test_the_choices_and_compare_reports() -> void:
 func _to_choice(run_seed: int) -> RunFlow:
 	var errors: Array[String] = []
 	var flow: RunFlow = RunFlow.start(_run, run_seed, _vows(run_seed), errors)
-	for day: int in _run.act.days.size():
+	for day: int in _run.acts[0].days.size():
 		flow.choose_fight(0)
 		flow.record(Simple.formation(), _won())
 		if not flow.state.pick.is_empty():
@@ -277,7 +277,7 @@ func test_the_endless_report() -> void:
 		line.vows.assign(_vows(floor_reached))
 		line.floor_reached = floor_reached
 		if floor_reached > 0:
-			line.fell_to = _run.floor_pool("normal")[0]
+			line.fell_to = _run.floor_pool(RunState.new(), "normal")[0]
 			@warning_ignore("integer_division")
 			line.endless_mods.assign(_run.camps.modifier_ids.slice(0, floor_reached / 3))
 		lines.append(line)

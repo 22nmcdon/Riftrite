@@ -44,7 +44,7 @@ func _to_choice(transformed: bool = true) -> RunFlow:
 	var flow: RunFlow = RunFlow.start(_run, 7, _vows(), errors)
 	assert_eq(errors, [] as Array[String])
 	flow.state.hero("maren").transformed = transformed
-	for day: int in range(1, _run.act.days.size()):
+	for day: int in range(1, _run.acts[0].days.size()):
 		_win_today(flow)
 		flow.finish_day()
 		flow.leave_shop()

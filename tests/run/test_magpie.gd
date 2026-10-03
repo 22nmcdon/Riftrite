@@ -52,15 +52,15 @@ func test_he_buys_relics() -> void:
 	var flow: RunFlow = _magpie()
 	var state: RunState = flow.state
 	_hold(flow, ["bloodstone", "hollow_crown"])
-	assert_eq(flow.relic_sell_price("bloodstone"), _run.act.relic_sell[RelicDef.TIER_NAMES[_run.relics["bloodstone"].tier]])
-	assert_eq(_run.act.relic_sell, {"common": 2, "rare": 6, "epic": 10, "legendary": 15, "boss": 15, "bond": 0})
+	assert_eq(flow.relic_sell_price("bloodstone"), _run.acts[0].relic_sell[RelicDef.TIER_NAMES[_run.relics["bloodstone"].tier]])
+	assert_eq(_run.acts[0].relic_sell, {"common": 2, "rare": 6, "epic": 10, "legendary": 15, "boss": 15, "bond": 0})
 	var shards: int = state.shards
 	assert_eq(flow.sell_relic("bloodstone"), "")
 	assert_eq([state.relics.has("bloodstone"), state.shards], [false, shards + flow.relic_sell_price("bloodstone")])
 	assert_eq(flow.sell_relic("bloodstone"), "the run doesn't hold \"bloodstone\"")
 	state.hero("maren").slots[3] = "fleet"
 	assert_eq(flow.sell_relic("hollow_crown"), "")
-	assert_eq(state.hero("maren").slots.size(), _run.act.slots, "the slot it gave goes")
+	assert_eq(state.hero("maren").slots.size(), _run.acts[0].slots, "the slot it gave goes")
 	assert_has(state.stash, "fleet", "and what was in it goes back to the stash")
 	R.to_pedlar(flow)
 	_hold(flow, ["bloodstone"])

@@ -12,6 +12,9 @@ extends RefCounted
 const DAY_KINDS: Array[String] = ["normal", "elite", "boss"]
 
 var act: int
+## The act whose encounters this act's days draw from (its own unless set):
+## a stand-in act for tests reuses another act's fights (phase 8 part 3).
+var fights_act: int
 ## One per day: "normal", "elite", or "boss".
 var days: Array[String] = []
 ## Tier -> shards for a win or a tie.
@@ -88,6 +91,9 @@ class Endless:
 	var from_day: int = 4
 	var legendary_from_floor: int = 10
 	var legendary_weight: int = 5
+	## Offered only in a testing run (phase 8 part 3, Decision 15): Act 1's
+	## endless stays as a testing option once real endless follows Act 3.
+	var testing: bool = false
 
 	static func read(reader: DataReader) -> Endless:
 		var def := Endless.new()
@@ -101,6 +107,7 @@ class Endless:
 		def.from_day = reader.req_int("from_day", 1)
 		def.legendary_from_floor = reader.req_int("legendary_from_floor", 1)
 		def.legendary_weight = reader.req_int("legendary_weight", 0, 1000)
+		def.testing = reader.opt_bool("testing", false)
 		for key: String in ["collapse_step_ms", "collapse_floor_ms"]:
 			if not FixedMath.is_whole_ticks(reader.opt_int(key, 0)):
 				reader.error("%s: a whole number of ticks" % key)
@@ -126,6 +133,7 @@ class Endless:
 static func read(reader: DataReader) -> ActDef:
 	var def := ActDef.new()
 	def.act = reader.req_int("act", 1)
+	def.fights_act = reader.opt_int("fights_act", def.act, 1)
 	def.start_shards = reader.req_int("start_shards", 0)
 	def.losses_to_end = reader.req_int("losses_to_end", 1)
 	def.slots = reader.req_int("slots", 0, 6)

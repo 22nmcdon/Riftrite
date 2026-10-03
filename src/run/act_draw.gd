@@ -12,26 +12,29 @@ extends RefCounted
 ##     lists that day.
 
 
-static func draw(run: RunContent, run_seed: int) -> Array[Array]:
+## `act_def` is the act to draw (null: Act 1).
+static func draw(run: RunContent, run_seed: int, act_def: ActDef = null) -> Array[Array]:
+	if act_def == null:
+		act_def = run.acts[0]
 	var days: Array[Array] = []
 	var previous: Array[String] = []
-	for day: int in range(1, run.act.days.size() + 1):
-		var rng: SimRng = RunRandom.stream(run_seed, [RunRandom.ACT_DRAW, run.act.act, day])
-		var kind: String = run.act.days[day - 1]
+	for day: int in range(1, act_def.days.size() + 1):
+		var rng: SimRng = RunRandom.stream(run_seed, [RunRandom.ACT_DRAW, act_def.act, day])
+		var kind: String = act_def.days[day - 1]
 		var picked: Array[String] = []
 		if kind == "elite":
-			picked = _pick(rng, run.encounters_for("elite", day), 2, previous)
+			picked = _pick(rng, run.encounters_for(act_def, "elite", day), 2, previous)
 		elif kind == "boss":
-			picked = _pick(rng, run.encounters_for("boss", day), 1, previous)
+			picked = _pick(rng, run.encounters_for(act_def, "boss", day), 1, previous)
 		if picked.is_empty():
-			picked = _pick(rng, run.encounters_for("easier", day), 1, previous)
-			var harder: Array[String] = _pick(rng, run.encounters_for("harder", day), 1, previous)
+			picked = _pick(rng, run.encounters_for(act_def, "easier", day), 1, previous)
+			var harder: Array[String] = _pick(rng, run.encounters_for(act_def, "harder", day), 1, previous)
 			if harder.is_empty():
-				var others: Array[String] = run.encounters_for("easier", day).filter(func(id: String) -> bool: return not picked.has(id))
+				var others: Array[String] = run.encounters_for(act_def, "easier", day).filter(func(id: String) -> bool: return not picked.has(id))
 				harder = _pick(rng, others, 1, previous)
 			picked.append_array(harder)
 		if picked.is_empty():
-			picked = _pick(rng, run.normal_encounters(), 2, previous)
+			picked = _pick(rng, run.normal_encounters(act_def), 2, previous)
 		days.append(picked)
 		previous = picked
 	return days

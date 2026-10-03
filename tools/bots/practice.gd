@@ -41,7 +41,7 @@ static func clear_cache() -> void:
 
 ## A shard's worth on `flow`'s day.
 static func shard_worth(flow: RunFlow) -> float:
-	var days: int = flow.run.act.days.size()
+	var days: int = flow.act.days.size()
 	return SHARD_WORTH * maxf(days + 1 - flow.state.day, 0) / days
 
 
@@ -74,7 +74,7 @@ static func copy(flow: RunFlow) -> RunFlow:
 static func practice_set(flow: RunFlow) -> Array[String]:
 	var state: RunState = flow.state
 	# Endless (phase 8 part 1): the floors drawn so far count as the act's days.
-	var last: int = state.options.size() if state.endless else flow.run.act.days.size()
+	var last: int = state.options.size() if state.endless else flow.act.days.size()
 	var first: int = state.day if state.phase == RunState.Phase.ROUTE or state.phase == RunState.Phase.LOADOUT else state.day + 1
 	var found: Array[String] = []
 	if first > last:

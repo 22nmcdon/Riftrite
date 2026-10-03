@@ -112,12 +112,12 @@ func test_the_pedlar() -> void:
 	state.phase = RunState.Phase.SHOP
 	assert_eq(flow.open_shop("tinker"), "there's no shop \"tinker\"")
 	assert_eq(flow.open_shop("pedlar"), "")
-	assert_eq(state.wares.size(), _run.act.pedlar_wares)
+	assert_eq(state.wares.size(), _run.acts[0].pedlar_wares)
 	assert_eq(state.wares, Offers.pedlar(_run, state, 0), "the same state, the same wares")
 	state.shards = 10
 	var first: String = state.wares[0]
 	assert_eq(flow.buy(0), "")
-	assert_eq([state.shards, state.stash, state.wares[0]], [10 - _run.act.item_prices[ItemDef.KIND_NAMES[_run.items[first].kind]], [first], ""])
+	assert_eq([state.shards, state.stash, state.wares[0]], [10 - _run.acts[0].item_prices[ItemDef.KIND_NAMES[_run.items[first].kind]], [first], ""])
 	assert_eq(state.item_ranks, {first: 1}, "owned at rank I")
 	assert_eq(flow.buy(0), "there's no ware 0")
 	var before: Array[String] = state.wares.duplicate()
@@ -153,7 +153,7 @@ func test_treating_a_wound() -> void:
 	assert_eq(flow.treat_wound("vell"), "no shop is open")
 	R.to_pedlar(flow)
 	assert_eq(flow.treat_wound("vell"), "")
-	assert_eq([state.hero("vell").wounds, state.shards], [1, _run.act.start_shards - _run.act.wound_price])
+	assert_eq([state.hero("vell").wounds, state.shards], [1, _run.acts[0].start_shards - _run.acts[0].wound_price])
 	assert_eq(flow.treat_wound("maren"), "maren has no wounds")
 	state.shards = 0
 	assert_eq(flow.treat_wound("vell"), "treating a wound costs 4 shards; there are 0")

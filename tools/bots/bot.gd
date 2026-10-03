@@ -104,7 +104,7 @@ func oath(_flow: RunFlow) -> int:
 
 ## The Shrine's offering: [kind, what] (RunFlow.shrine_offer), or [] for none.
 func shrine(flow: RunFlow) -> Array:
-	return ["shards", ""] if flow.state.shards >= flow.run.act.shrine_price else []
+	return ["shards", ""] if flow.state.shards >= flow.act.shrine_price else []
 
 
 ## Map the Rift: which of tomorrow's fights to swap.

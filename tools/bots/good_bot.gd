@@ -236,7 +236,7 @@ func oath(flow: RunFlow) -> int:
 ## else its lowest-tier relic; the relic it's shown is then judged like any
 ## relic choice (a wound or a relic given up shows in practice).
 func shrine(flow: RunFlow) -> Array:
-	if flow.state.shards >= flow.run.act.shrine_price:
+	if flow.state.shards >= flow.act.shrine_price:
 		return ["shards", ""]
 	for hero: RunState.Hero in flow.state.heroes:
 		if hero.wounds == 0:
@@ -281,9 +281,9 @@ func _best_camp(flow: RunFlow, coming: Array[String]) -> Array:
 				value = baseline + PICK_WORTH
 			"hunt":
 				# Decision 5: the Hunt's pack isn't practiced; the team's practice is.
-				value = baseline + (flow.run.act.pay.get("hunt", 0) * Practice.shard_worth(flow) if baseline >= Practice.SURE else -0.01)
+				value = baseline + (flow.act.pay.get("hunt", 0) * Practice.shard_worth(flow) if baseline >= Practice.SURE else -0.01)
 			"shrine":
-				value = baseline + (RELIC_WORTH["rare"] - flow.run.act.shrine_price * Practice.shard_worth(flow) if state.shards >= flow.run.act.shrine_price else 0.0)
+				value = baseline + (RELIC_WORTH["rare"] - flow.act.shrine_price * Practice.shard_worth(flow) if state.shards >= flow.act.shrine_price else 0.0)
 		if value > best_value:
 			best_value = value
 			best = i

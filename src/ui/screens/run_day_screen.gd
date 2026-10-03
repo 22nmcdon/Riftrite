@@ -131,7 +131,7 @@ static func fill_top_bar(row: HBoxContainer, run_session: RunSession, where: Str
 		child.queue_free()
 	var state: RunState = run_session.state()
 	var floor_now: int = run_session.flow.floor_number()
-	var title: String = "Floor %d" % floor_now if floor_now > 0 else "Day %d of %d" % [state.day, run_session.run.act.days.size()]
+	var title: String = "Floor %d" % floor_now if floor_now > 0 else "Day %d of %d" % [state.day, run_session.flow.act.days.size()]
 	row.add_child(UiStyle.heading(title, 34, UiStyle.HIGHLIGHT))
 	var place: String = where
 	if place.is_empty():
@@ -242,7 +242,7 @@ func refresh() -> void:
 				_fill_shop()
 				var label: String = "Leave the Pedlar"
 				if session.flow.boss_shop() and not state.endless:
-					label = "Leave the Pedlar: end the run, or go deeper" if session.run.act.endless != null else "Leave the Pedlar: the run's end"
+					label = "Leave the Pedlar: end the run, or go deeper" if session.flow.act.endless != null else "Leave the Pedlar: the run's end"
 				body.add_child(UiStyle.primary(UiStyle.button(label, _do.bind(session.flow.leave_shop))))
 			RunState.Phase.NODES:
 				_fill_nodes()
@@ -437,7 +437,7 @@ func _fill_pick() -> void:
 			numbers = ModInfo.stack_now(upgrade, session.run.stack_amount(state.hero(upgrade.hero), upgrade))
 		_add_numbers(card, numbers)
 		card.add_child(UiStyle.primary(UiStyle.button("Take", _do.bind(session.flow.take_pick.bind(i)))))
-	section.add_child(UiStyle.button("Take %d shards instead" % session.run.act.pick_shards, _do.bind(session.flow.take_shards)))
+	section.add_child(UiStyle.button("Take %d shards instead" % session.flow.act.pick_shards, _do.bind(session.flow.take_shards)))
 
 
 ## "HERO · MAREN", "TASTE · DEADEYE", or "PATH · DEADEYE" (the mock's;
@@ -626,8 +626,8 @@ func _fill_shrine() -> void:
 	var shards: VBoxContainer = _card(row)
 	shards.add_child(UiStyle.heading("Shards", 24, UiStyle.TEXT))
 	shards.add_child(_wrapped("For a rare relic.", 16, UiStyle.TEXT_DIM))
-	var pay: Button = UiStyle.button("Offer %d shards" % run.act.shrine_price, _do.bind(session.flow.shrine_offer.bind("shards", "")))
-	pay.disabled = state.shards < run.act.shrine_price
+	var pay: Button = UiStyle.button("Offer %d shards" % session.flow.act.shrine_price, _do.bind(session.flow.shrine_offer.bind("shards", "")))
+	pay.disabled = state.shards < session.flow.act.shrine_price
 	shards.add_child(pay)
 	var blood: VBoxContainer = _card(row)
 	blood.add_child(UiStyle.heading("Blood", 24, UiStyle.TEXT))
@@ -693,7 +693,7 @@ func _fill_camp() -> void:
 ## A Hunt's pack waiting (camp's Hunt, or Carrion Birds): Fight the Hunt.
 func _fill_hunt() -> void:
 	var hunt: EncounterDef = session.content.encounters[session.state().hunt]
-	var hunt_section: VBoxContainer = _section("The Hunt: %s" % hunt.name, "A small pack, fought now for %d shards. Losing it isn't a loss." % session.run.act.pay["hunt"])
+	var hunt_section: VBoxContainer = _section("The Hunt: %s" % hunt.name, "A small pack, fought now for %d shards. Losing it isn't a loss." % session.flow.act.pay["hunt"])
 	hunt_section.add_child(_enemies_line(hunt))
 	hunt_section.add_child(UiStyle.primary(UiStyle.button("Fight the Hunt", func() -> void: fight_requested.emit())))
 
@@ -849,7 +849,7 @@ func _show_route_card(index: int, holder: VBoxContainer) -> void:
 	var encounter: EncounterDef = session.content.encounters[options[index]]
 	var card: VBoxContainer = _card(holder)
 	var node: String = ActMap.TIER_NODES.get(encounter.tier, "fight")
-	_card_head(card, RunDayScreen.art_icon("nodes/%s.svg" % node, CARD_ICON), UiStyle.caps("%s · %d shards" % [encounter.tier.to_upper(), session.run.act.pay[encounter.tier]], 14, UiStyle.HIGHLIGHT),
+	_card_head(card, RunDayScreen.art_icon("nodes/%s.svg" % node, CARD_ICON), UiStyle.caps("%s · %d shards" % [encounter.tier.to_upper(), session.flow.act.pay[encounter.tier]], 14, UiStyle.HIGHLIGHT),
 		UiStyle.heading(encounter.name, 26, UiStyle.TEXT))
 	card.add_child(_wrapped("It tests %s." % encounter.tests, 16, UiStyle.TEXT_DIM))
 	card.add_child(_enemies_line(encounter))
@@ -883,7 +883,7 @@ func _fill_floor(kind: String) -> void:
 ## and ATK, Rift Collapse from 41s, crumbled ground ×1.74."
 static func floor_line(flow: RunFlow) -> String:
 	var floor_now: int = flow.floor_number()
-	var endless: ActDef.Endless = flow.run.act.endless
+	var endless: ActDef.Endless = flow.act.endless
 	@warning_ignore("integer_division")
 	var start_s: int = maxi(flow.run.content.tuning.collapse_start_ticks / FixedMath.TICKS_PER_SECOND - endless.collapse_step_ms * floor_now / 1000, endless.collapse_floor_ms / 1000)
 	return "Floor %d: enemies ×%s HP and ATK, Rift Collapse from %ds, crumbled ground ×%s." % [floor_now,
@@ -1006,7 +1006,7 @@ func _fill_after() -> void:
 	if not state.fought.is_empty():
 		var last: RunState.Fought = state.fought.back()
 		var encounter: EncounterDef = session.content.encounters[last.encounter]
-		_section("%s: %s" % [encounter.name, RunDayScreen.outcome_word(last.outcome)], "In %ds. It paid %d shards." % [last.seconds, session.run.act.pay[encounter.tier] + session.run.relic_sum(state, "pay_add") + (session.run.relic_sum(state, "elite_pay_add") if encounter.tier == "elite" else 0)])
+		_section("%s: %s" % [encounter.name, RunDayScreen.outcome_word(last.outcome)], "In %ds. It paid %d shards." % [last.seconds, session.flow.act.pay[encounter.tier] + session.run.relic_sum(state, "pay_add") + (session.run.relic_sum(state, "elite_pay_add") if encounter.tier == "elite" else 0)])
 	body.add_child(UiStyle.primary(UiStyle.button("Move on" if state.endless else "To the Pedlar", _do.bind(session.flow.finish_day))))
 
 
@@ -1032,7 +1032,7 @@ func _fill_end() -> void:
 		section.add_child(_wrapped(said, 20, UiStyle.HIGHLIGHT))
 	else:
 		section = _section("The rift is quiet: the run is won" if won else "The rift keeps them: the run is lost",
-			"Day %d of %d, with %d relics and %d duo bonds found." % [state.day, session.run.act.days.size(), state.relics.size(), state.bonds_found.size()])
+			"Day %d of %d, with %d relics and %d duo bonds found." % [state.day, session.flow.act.days.size(), state.relics.size(), state.bonds_found.size()])
 	var lines: Array[String] = []
 	for fought: RunState.Fought in state.fought:
 		lines.append("Day %d%s: %s, %s in %ds" % [fought.day, " (again)" if fought.attempt > 0 else "", session.content.encounters[fought.encounter].name,

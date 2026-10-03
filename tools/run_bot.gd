@@ -104,7 +104,7 @@ static func step_once(flow: RunFlow, hexes: Dictionary[String, Vector2i], errors
 				return flow.choose_camp(camp_choice(state))
 			if state.node == "rift_tear" and state.rift_depth.is_empty():
 				return flow.choose_depth(0)
-			if state.shrine == "open" and state.shards >= flow.run.act.shrine_price:
+			if state.shrine == "open" and state.shards >= flow.act.shrine_price:
 				return flow.shrine_offer("shards")
 			if state.node.begins_with("event:") and not state.event_done:
 				var chosen: Array = event_choice(flow)

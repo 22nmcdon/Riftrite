@@ -1,10 +1,14 @@
 class_name RunContent
 extends RefCounted
 ## The run's data, apart from the sim's (docs/plans/rebuild-phase5-run.md):
-## the act, the upgrades, the items, camp, the relics, and the duo bonds. It sits over the sim's ContentDb, which it cross-checks
+## the acts (act1.json, then act2.json and act3.json where they exist; phase
+## 8 part 3), the upgrades, the items, camp, the relics, and the duo bonds. It sits over the sim's ContentDb, which it cross-checks
 ## against: every encounter a day can draw, every path and hero named.
 
 const ACT_FILE: String = "act1.json"
+## Every act after the first is optional, read in order until one is missing.
+const LATER_ACT_FILE: String = "act%d.json"
+const MAX_ACTS: int = 3
 const UPGRADES_FILE: String = "upgrades.json"
 const ITEMS_FILE: String = "items.json"
 const CAMPS_FILE: String = "camps.json"
@@ -18,7 +22,8 @@ const GLYPHS: String = "res://art/ui/items/glyphs/%s.svg"
 const ART_UI: String = "res://art/ui/"
 
 var content: ContentDb
-var act: ActDef = null
+## In order: Act 1 first (act_of picks the run's).
+var acts: Array[ActDef] = []
 var upgrades: Dictionary[String, UpgradeDef] = {}
 ## In the file's order (offers draw in this order).
 var upgrade_ids: Array[String] = []
@@ -44,6 +49,11 @@ static func load_dir(dir: String, content_db: ContentDb) -> RunContent:
 			texts[file_name] = FileAccess.get_file_as_string(file_path)
 		else:
 			missing.append("%s: file not found" % file_path)
+	for number: int in range(2, MAX_ACTS + 1):
+		var act_path: String = dir.path_join(LATER_ACT_FILE % number)
+		if not FileAccess.file_exists(act_path):
+			break
+		texts[LATER_ACT_FILE % number] = FileAccess.get_file_as_string(act_path)
 	var run: RunContent = load_texts(texts, content_db)
 	missing.append_array(run.errors)
 	run.errors = missing
@@ -53,11 +63,20 @@ static func load_dir(dir: String, content_db: ContentDb) -> RunContent:
 static func load_texts(texts: Dictionary[String, String], content_db: ContentDb) -> RunContent:
 	var run := RunContent.new()
 	run.content = content_db
-	var act_data: Variant = run._parse(texts, ACT_FILE)
-	if act_data != null:
-		var reader: DataReader = DataReader.from_value(act_data, ACT_FILE, run.errors)
-		if reader != null:
-			run.act = ActDef.read(reader)
+	for number: int in range(1, MAX_ACTS + 1):
+		var file_name: String = LATER_ACT_FILE % number
+		if number > 1 and not texts.has(file_name):
+			break
+		var act_data: Variant = run._parse(texts, file_name)
+		if act_data == null:
+			break
+		var reader: DataReader = DataReader.from_value(act_data, file_name, run.errors)
+		if reader == null:
+			break
+		var act_def: ActDef = ActDef.read(reader)
+		if act_def.act != number:
+			run.errors.append("%s: \"act\" must be %d" % [file_name, number])
+		run.acts.append(act_def)
 	run._read_upgrades(run._parse(texts, UPGRADES_FILE))
 	run._read_items(run._parse(texts, ITEMS_FILE))
 	var camps_data: Variant = run._parse(texts, CAMPS_FILE)
@@ -86,12 +105,22 @@ func is_valid() -> bool:
 	return errors.is_empty() and content != null and content.is_valid()
 
 
-## The encounters of `tier` in this act that day `day` can draw.
-func encounters_for(tier: String, day: int) -> Array[String]:
+## The act the run is in (phase 8 part 3).
+func act_of(state: RunState) -> ActDef:
+	return acts[clampi(state.act, 1, acts.size()) - 1]
+
+
+## The act after the run's, or null if it's in the last.
+func next_act(state: RunState) -> ActDef:
+	return acts[state.act] if state.act < acts.size() else null
+
+
+## The encounters of `tier` that day `day` of `act_def` can draw.
+func encounters_for(act_def: ActDef, tier: String, day: int) -> Array[String]:
 	var found: Array[String] = []
 	for id: String in content.encounter_ids:
 		var encounter: EncounterDef = content.encounters[id]
-		if encounter.act == act.act and encounter.tier == tier and encounter.days.has(day):
+		if encounter.act == act_def.fights_act and encounter.tier == tier and encounter.days.has(day):
 			found.append(id)
 	return found
 
@@ -99,42 +128,44 @@ func encounters_for(tier: String, day: int) -> Array[String]:
 ## A day's kind ("normal", "elite", or "boss"): the act's days, then, in an
 ## endless run (phase 8 part 1), the floor's; "" for a day there's none of.
 func day_kind(state: RunState, day: int) -> String:
-	if day >= 1 and day <= act.days.size():
-		return act.days[day - 1]
-	if state.endless and act.endless != null and day > act.days.size():
-		return act.endless.kind(day - act.days.size())
+	var act_def: ActDef = act_of(state)
+	if day >= 1 and day <= act_def.days.size():
+		return act_def.days[day - 1]
+	if state.endless and act_def.endless != null and day > act_def.days.size():
+		return act_def.endless.kind(day - act_def.days.size())
 	return ""
 
 
 ## The floor `day` is in an endless run (0 for the act's days).
 func floor_of(state: RunState, day: int) -> int:
-	return maxi(day - act.days.size(), 0) if state.endless else 0
+	return maxi(day - act_of(state).days.size(), 0) if state.endless else 0
 
 
-## The fights an endless floor of `kind` draws from (Decision 1): the act's
-## easier and harder fights allowed from endless.from_day on for a normal
-## floor, its elites, or its boss.
-func floor_pool(kind: String) -> Array[String]:
+## The fights an endless floor of `kind` draws from (Decision 1): the run's
+## act's easier and harder fights allowed from endless.from_day on for a
+## normal floor, its elites, or its boss.
+func floor_pool(state: RunState, kind: String) -> Array[String]:
+	var act_def: ActDef = act_of(state)
 	var found: Array[String] = []
 	var tiers: Array[String] = [kind]
 	if kind == "normal":
 		tiers.assign(["easier", "harder"])
 	for id: String in content.encounter_ids:
 		var encounter: EncounterDef = content.encounters[id]
-		if encounter.act != act.act or not tiers.has(encounter.tier):
+		if encounter.act != act_def.fights_act or not tiers.has(encounter.tier):
 			continue
-		if kind == "normal" and act.endless != null and not encounter.days.any(func(d: int) -> bool: return d >= act.endless.from_day):
+		if kind == "normal" and act_def.endless != null and not encounter.days.any(func(d: int) -> bool: return d >= act_def.endless.from_day):
 			continue
 		found.append(id)
 	return found
 
 
-## Every easier and harder encounter of this act, whatever its days.
-func normal_encounters() -> Array[String]:
+## Every easier and harder encounter of `act_def`, whatever its days.
+func normal_encounters(act_def: ActDef) -> Array[String]:
 	var found: Array[String] = []
 	for id: String in content.encounter_ids:
 		var encounter: EncounterDef = content.encounters[id]
-		if encounter.act == act.act and encounter.tier in ["easier", "harder"]:
+		if encounter.act == act_def.fights_act and encounter.tier in ["easier", "harder"]:
 			found.append(id)
 	return found
 
@@ -528,10 +559,15 @@ func _read_upgrades(data: Variant) -> void:
 func _check() -> void:
 	if content == null:
 		return
-	if act != null:
-		for day: int in range(1, act.days.size() + 1):
-			if act.days[day - 1] == "normal" and encounters_for("easier", day).size() + encounters_for("harder", day).size() < 2:
-				errors.append("%s: day %d needs at least two fights to offer" % [ACT_FILE, day])
+	if acts.is_empty():
+		errors.append("%s: the run needs Act 1" % ACT_FILE)
+	for act_def: ActDef in acts:
+		if act_def.fights_act < 1 or act_def.fights_act > acts.size():
+			errors.append("%s: fights_act %d isn't an act" % [LATER_ACT_FILE % act_def.act, act_def.fights_act])
+			continue
+		for day: int in range(1, act_def.days.size() + 1):
+			if act_def.days[day - 1] == "normal" and encounters_for(act_def, "easier", day).size() + encounters_for(act_def, "harder", day).size() < 2:
+				errors.append("%s: day %d needs at least two fights to offer" % [LATER_ACT_FILE % act_def.act, day])
 	for path_id: String in content.path_ids:
 		if content.paths[path_id].deed.threshold <= 0:
 			errors.append("paths.json (%s): a run needs the deed's threshold" % path_id)
@@ -580,10 +616,12 @@ func _check() -> void:
 				for status_id: String in mod.apply(hero_kits[0]).status_ids():
 					if not content.statuses.has(status_id):
 						errors.append("%s: rift modifier %s: unknown status \"%s\"" % [CAMPS_FILE, modifier_id, status_id])
-		if act != null:
-			for day: int in range(1, act.days.size()):
-				if act.days[day - 1] == "normal" and encounters_for("hunt", day).is_empty():
-					errors.append("%s: day %d needs a hunt pack (an encounter of tier hunt)" % [CAMPS_FILE, day])
+		for act_def: ActDef in acts:
+			if act_def.fights_act < 1 or act_def.fights_act > acts.size():
+				continue
+			for day: int in range(1, act_def.days.size()):
+				if act_def.days[day - 1] == "normal" and encounters_for(act_def, "hunt", day).is_empty():
+					errors.append("%s: act %d day %d needs a hunt pack (an encounter of tier hunt)" % [CAMPS_FILE, act_def.act, day])
 	if events != null:
 		for key: String in events.next_fight_mods:
 			_check_mod(events.next_fight_mods[key], hero_kits, "%s: next_fight_mods %s" % [EVENTS_FILE, key])

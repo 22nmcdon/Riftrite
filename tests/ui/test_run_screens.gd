@@ -217,7 +217,7 @@ func test_the_runs_end() -> void:
 func test_going_deeper_and_falling_on_a_floor() -> void:
 	var main: Main = _started()
 	var flow: RunFlow = _flow(main)
-	flow.state.day = main.run_session.run.act.days.size()
+	flow.state.day = main.run_session.run.acts[0].days.size()
 	flow.state.phase = RunState.Phase.CHOICE
 	main.run_session.save()
 	main.show_day()
@@ -250,7 +250,7 @@ func test_the_apex_vow_after_going_deeper() -> void:
 	var maren: RunState.Hero = flow.state.hero("maren")
 	maren.path = "volley"
 	maren.transformed = true
-	flow.state.day = main.run_session.run.act.days.size()
+	flow.state.day = main.run_session.run.acts[0].days.size()
 	flow.state.phase = RunState.Phase.CHOICE
 	main.run_session.save()
 	main.show_day()
@@ -292,7 +292,7 @@ func test_the_route_is_the_act_map() -> void:
 	var day: RunDayScreen = main.screen
 	var map: ActMap = day.act_map
 	assert_not_null(map, "the route shows the map")
-	assert_eq(map.fights.size(), flow.run.act.days.size(), "an island a day")
+	assert_eq(map.fights.size(), flow.run.acts[0].days.size(), "an island a day")
 	for each_day: int in map.fights:
 		var nodes: Array = map.fights[each_day]
 		assert_eq(nodes.size(), (flow.state.options[each_day - 1] as Array).size(), "day %d's fights" % each_day)

@@ -47,7 +47,7 @@ func _win_today(flow: RunFlow) -> void:
 ## Plays the act through its boss shop to the choice.
 func _to_choice(run_seed: int = 7) -> RunFlow:
 	var flow: RunFlow = _start(run_seed)
-	for day: int in range(1, _run.act.days.size()):
+	for day: int in range(1, _run.acts[0].days.size()):
 		_win_today(flow)
 		assert_eq(flow.finish_day(), "")
 		assert_eq(flow.leave_shop(), "")
@@ -79,27 +79,27 @@ func test_the_choice_comes_after_the_boss_shop_and_going_deeper_keeps_the_run() 
 	var state: RunState = flow.state
 	var held: String = JSON.stringify([state.shards, state.relics, state.stash, state.item_ranks, state.heroes.map(func(hero: RunState.Hero) -> Dictionary: return hero.to_dict())])
 	assert_eq(flow.go_deeper(), "")
-	assert_eq([state.endless, state.day, flow.floor_number(), state.phase], [true, _run.act.days.size() + 1, 1, RunState.Phase.ROUTE])
+	assert_eq([state.endless, state.day, flow.floor_number(), state.phase], [true, _run.acts[0].days.size() + 1, 1, RunState.Phase.ROUTE])
 	assert_eq(JSON.stringify([state.shards, state.relics, state.stash, state.item_ranks, state.heroes.map(func(hero: RunState.Hero) -> Dictionary: return hero.to_dict())]), held, "the heroes, relics, loadout, and shards go deeper")
 	assert_eq(state.today().size(), 1, "one fight a floor (Decision 2)")
-	assert_true(_run.floor_pool("normal").has(state.today()[0]))
+	assert_true(_run.floor_pool(RunState.new(), "normal").has(state.today()[0]))
 	assert_eq(state.options.size(), state.day + 2, "drawn two floors ahead, for Scout and Map the Rift")
 
 
 func test_a_floors_kind_and_its_fights() -> void:
-	var endless: ActDef.Endless = _run.act.endless
+	var endless: ActDef.Endless = _run.acts[0].endless
 	assert_eq([endless.kind(1), endless.kind(4), endless.kind(5), endless.kind(10), endless.kind(15), endless.kind(20)], ["normal", "normal", "elite", "boss", "elite", "boss"])
-	for id: String in _run.floor_pool("normal"):
+	for id: String in _run.floor_pool(RunState.new(), "normal"):
 		var encounter: EncounterDef = _run.content.encounters[id]
 		assert_true(["easier", "harder"].has(encounter.tier) and encounter.days.any(func(d: int) -> bool: return d >= 4), "%s: from day 4 on (Decision 1)" % id)
-	assert_false(_run.floor_pool("normal").is_empty())
-	assert_eq(_run.floor_pool("boss"), ["old_mother_ash"] as Array[String])
+	assert_false(_run.floor_pool(RunState.new(), "normal").is_empty())
+	assert_eq(_run.floor_pool(RunState.new(), "boss"), ["old_mother_ash"] as Array[String])
 	var flow: RunFlow = _to_floor(12)
 	var twin: RunFlow = _to_floor(12)
 	assert_eq(flow.state.options, twin.state.options, "a floor's fight comes from the seed")
-	for day: int in range(_run.act.days.size() + 1, flow.state.options.size() + 1):
+	for day: int in range(_run.acts[0].days.size() + 1, flow.state.options.size() + 1):
 		var kind: String = _run.day_kind(flow.state, day)
-		assert_true(_run.floor_pool(kind).has(flow.state.options[day - 1][0]), "day %d's fight is a %s floor's" % [day, kind])
+		assert_true(_run.floor_pool(RunState.new(), kind).has(flow.state.options[day - 1][0]), "day %d's fight is a %s floor's" % [day, kind])
 		if kind == "normal" and _run.day_kind(flow.state, day - 1) == "normal":
 			assert_ne(flow.state.options[day - 1], flow.state.options[day - 2], "not the floor before's")
 
@@ -180,10 +180,10 @@ func test_the_collapse_comes_sooner_and_the_ground_burns_hotter() -> void:
 func test_the_shops_show_legendaries_from_floor_ten() -> void:
 	var flow: RunFlow = _to_floor(9)
 	var odds: Array = Offers.shop_odds(_run, flow.state)
-	assert_eq(odds[0], _run.act.relic_odds, "the act's odds on floor 9")
+	assert_eq(odds[0], _run.acts[0].relic_odds, "the act's odds on floor 9")
 	flow = _to_floor(10)
 	odds = Offers.shop_odds(_run, flow.state)
-	assert_eq(odds[1][(odds[0] as Array).find("legendary")], _run.act.endless.legendary_weight)
+	assert_eq(odds[1][(odds[0] as Array).find("legendary")], _run.acts[0].endless.legendary_weight)
 
 
 func test_a_boss_floor_offers_boss_relics_then_legendaries() -> void:
@@ -197,7 +197,7 @@ func test_a_boss_floor_offers_boss_relics_then_legendaries() -> void:
 		if _run.relics[id].tier == RelicDef.Tier.BOSS and not flow.state.relics.has(id):
 			flow.state.relics.append(id)
 	_win_choice(flow)
-	assert_eq(flow.state.relic_choice.size(), _run.act.boss_relics)
+	assert_eq(flow.state.relic_choice.size(), _run.acts[0].boss_relics)
 	assert_true(flow.state.relic_choice.all(func(id: String) -> bool: return _run.relics[id].tier == RelicDef.Tier.LEGENDARY), "every boss relic held: legendaries")
 	# No shop on a floor (Decision 11 of rebuild-phase8-apexes.md): on to
 	# the nodes, not to the choice, with the Magpie's visits counted afresh.
