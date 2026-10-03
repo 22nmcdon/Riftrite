@@ -1,6 +1,6 @@
 # Apexes
 
-Status: **agreed in discussion (2026-09-30), not built.** The final forms of each path. Fills in part 1's apex options (`rebuild-heroes.md`); where they disagree, this file wins. **Numbers and names are placeholders.**
+Status: **agreed in discussion (2026-09-30); being built for Maren, Brannoc, and Vell in phase 8 part 2** (`rebuild-phase8-apexes.md`, whose Decisions win where they differ). The final forms of each path. Fills in part 1's apex options (`rebuild-heroes.md`); where they disagree, this file wins. **Numbers and names are placeholders.**
 
 ## How apexes work
 
@@ -21,7 +21,7 @@ Status: **agreed in discussion (2026-09-30), not built.** The final forms of eac
 | **Stormline** (Deadeye) | Heartseeker pierces 1 more enemy | Enemies hit by Heartseeker's pierce | Heartseeker hits every enemy in a line across the board. **Snowball:** each enemy it passes through adds +10% damage to the shot | **Gathering Line:** +15% per enemy. **Thunderline:** enemies it hits are Slowed 20% for 2s |
 | **Warden of Thorns** (Trapper) | A sprung snare leaves a briar that blocks 1 hex for 2s | Enemy moves blocked by briars | A sprung snare grows a briar wall 3 hexes long for 4s that blocks movement; enemies touching it take 2 Bleed. **Snowball:** up to 6 briars can stand at once, so she can wall enemies in | **Thicket:** up to 9 briars. **Barbed Walls:** briars apply 4 Bleed |
 | **Huntmaster** (Trapper) | Allies deal +5% damage to rooted enemies | Damage allies deal to rooted enemies | Allies deal +30% damage to rooted enemies and target them first. **Snowball:** a rooted enemy that falls leaves a snare where it fell | **Pack Snares:** it leaves 2 snares. **Called Quarry:** +40% damage to rooted enemies |
-| **Rain of Ash** (Volley) | Arrow Storm lasts 0.5s longer | Enemy-seconds spent inside Arrow Storm | Arrow Storm covers a 4-hex circle and leaves burning ground for 3s (3 Burn per second). **Snowball:** it works with every Burn relic and charm | **Long Ember:** burning ground lasts 5s. **Ash Wind:** Arrow Storm follows the largest group |
+| **Hailstorm** (Volley; replaced Rain of Ash, 2026-10-03: burning ground is Ilse's) | Arrow Storm fires 1 more volley | Enemies hit by Arrow Storm | Arrow Storm covers a 3-hex circle, and every 4th shot she fires drops one Arrow Storm volley on her target. **Snowball:** each enemy Arrow Storm hits gives her +1% damage for the rest of the fight, with no cap | **Endless Hail:** +2% per enemy hit. **Pinning Hail:** Arrow Storm Roots each enemy it hits for 0.5s, once per cast |
 | **Windrunner** (Volley) | Her hop cooldown is 1s shorter | Shots fired within 1s of hopping | She hops after every 3rd shot and fires mid-hop. **Snowball:** each hop gives +3% attack speed for the rest of the fight, with no cap | **Gale:** +5% per hop. **Vanishing Step:** each hop hides her for 0.5s |
 
 ## Brannoc
@@ -195,4 +195,4 @@ Nothing of apexes is built. The build order puts them in phase 8 (Acts 2 and 3),
 
 - **Apex deed thresholds:** how big the second deed bar is, so the apex lands in Act 2 or early Act 3.
 - **A hero who never transforms** never gets an apex vow. Fine, or should a late transformation speed up the apex deed?
-- **Maren's Rain of Ash apex** leaves burning ground, which overlaps with Ilse's Wildfire. It needs a new idea (`changes-ilse.md`, "Still to do").
+- ~~Maren's Rain of Ash apex~~ overlapped Ilse's Wildfire; replaced by **Hailstorm** (2026-10-03, `rebuild-phase8-apexes.md` Decision 6).

@@ -193,7 +193,7 @@ The fantasy: she's always moving and filling the air with arrows.
 - **Where she stands:** a loose spot with room to move.
 - **Upgrade pool examples:** Arrow Storm follows the largest group / splits chain twice / her hop happens every 3s and she fires mid-hop / Arrow Storm Slows / kills with split arrows give mana. (Final pool: `upgrade-pools.md`.)
 - **Apex options:** (Final versions, with numbers and upgrades: `apexes.md`.)
-  - **Rain of Ash:** Arrow Storm is larger and leaves burning ground. *Taste:* Arrow Storm lasts 0.5s longer. *Deed:* enemy-seconds spent inside Arrow Storm.
+  - **Hailstorm** (replaced Rain of Ash, 2026-10-03; `apexes.md`): Arrow Storm is larger, her shots drop volleys of it, and its hits grow her damage for the fight. *Taste:* Arrow Storm fires 1 more volley. *Deed:* enemies hit by Arrow Storm.
   - **Windrunner:** she never stops moving, hopping after every few shots. *Taste:* her hop cooldown drops by 1s. *Deed:* shots fired within 1s of hopping.
 
 ---

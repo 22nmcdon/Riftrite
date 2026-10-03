@@ -1,6 +1,6 @@
 # Rebuild phase 8, part 2: apexes
 
-Status: **a draft for the playtester (2026-10-03); nothing built.** Phase 8's second part, after endless (`rebuild-phase8-endless.md`). The design is `apexes.md` (agreed 2026-09-30); this plan builds it for the three heroes the game has (Maren, Brannoc, Vell: their 18 apexes). The other ten heroes' apexes wait for those heroes. **Numbers are `apexes.md`'s placeholders** until the bots measure them.
+Status: **agreed (2026-10-03, Decisions 1–6); nothing built.** Phase 8's second part, after endless (`rebuild-phase8-endless.md`). The design is `apexes.md` (agreed 2026-09-30); this plan builds it for the three heroes the game has (Maren, Brannoc, Vell: their 18 apexes). The other ten heroes' apexes wait for those heroes. **Numbers are `apexes.md`'s placeholders** until the bots measure them.
 
 ## 1. What it builds
 
@@ -36,7 +36,7 @@ Each piece is skipped by a unit that doesn't use it, like phase 4's, so no built
 | **Linked Shields** | Loomwarden | every ally with the holder's Shield is linked; damage to one is split evenly between them (logged as SHARED lines, sourced to the link); the deed counts what's shared |
 | **Lasting ground** | Sanctifier | a zone whose duration is the fight, up to `max_standing` (zones and `max_standing` exist; the piece is the fight-long duration) |
 
-Most of the rest is data on built pieces: stacking boosts for the fight (Windrunner, Warlord, Inquisitor, Undying Oath, Dawnbringer, Thornweave's next Shields), `vs` auras and `prefer` (Huntmaster), zones that follow (Rain of Ash), Bleed, Burn, Slow, Mark, Stealth, taunts, and the hop.
+Most of the rest is data on built pieces: stacking boosts for the fight (Windrunner, Warlord, Inquisitor, Undying Oath, Dawnbringer, Thornweave's next Shields), `vs` auras and `prefer` (Huntmaster), an area's size and every Nth shot (Hailstorm), Bleed, Burn, Slow, Mark, Stealth, taunts, and the hop.
 
 ## 4. The run
 
@@ -71,7 +71,7 @@ Most of the rest is data on built pieces: stacking boosts for the fight (Windrun
 
 ## 8. Parts
 
-- **8b-1, the frame:** `ApexDef`, the data shape, the run's vow and deed and transformation, the save, the bots' answer, the vow screen and the panel's stage, Practice's stage; with Maren's six apexes on built pieces where they can be (Rain of Ash, Windrunner, Huntmaster's aura half) to prove it.
+- **8b-1, the frame:** `ApexDef`, the data shape, the run's vow and deed and transformation, the save, the bots' answer, the vow screen and the panel's stage, Practice's stage; with Maren's apexes on built pieces where they can be (Windrunner, Hailstorm, Huntmaster's aura half) to prove it.
 - **8b-2, the pieces for Maren and Vell:** execute, kills by an ability, growth per enemy passed, growth per cast, lasting ground, effects scaled by a value, linked Shields; the rest of their apexes.
 - **8b-3, the pieces for Brannoc:** walls that block movement with HP, the wall's block trigger, explode at N stacks, rising from the kit, overheal into max HP, the snare where an enemy fell; Brannoc's six and Warden of Thorns, Huntmaster's snares.
 - **8b-4, the cards and the reports:** the 36 apex cards, `--apexes`, the endless report's apex lines, a first tuning pass to Question AY's band, docs, and a playtest build.
@@ -86,4 +86,21 @@ Most of the rest is data on built pieces: stacking boosts for the fight (Windrun
 
 ## Decisions
 
-None yet: waiting on the playtester's answers.
+The playtester, 2026-10-03:
+
+1. **An apex lands around floor 2–3** (Question AV): the apex deeds are sized so most runs that go deeper earn one; they're resized when Act 2 exists.
+2. **An apex is +25 to +35 over its path's transformed kit** (Question AY), on the `--apexes` report, bigger than a transformation's step (+15 to +25): apexes are the long run's big payoff.
+3. **Volley gets a new apex in place of Rain of Ash** (Question AX), since Ilse's Wildfire owns burning ground. Its design is in section 10.
+4. **A late transformer's apex deed is the same size** (Question AW): a hero who transforms on a floor gets the apex vow then, and simply earns it later.
+5. **The vow is offered on the choice stage after Go deeper, and from the hero panel** (Question AZ, not asked; the plan's default, flagged for the playtester).
+6. **Hailstorm replaces Rain of Ash** as drafted in section 10 (the playtester approved it, 2026-10-03).
+
+## 10. Volley's new apex: Hailstorm (approved)
+
+Rain of Ash is cut: burning ground is Ilse's (Wildfire). **Hailstorm** keeps Arrow Storm at the center of Volley's second apex (Windrunner is her mobility apex) and makes her a **Root maker**, which the build map lists as a gap (`build-map.md`: Root has one maker, Trapper), so it pairs with Huntmaster and the Root relics.
+
+| Apex | Taste (on vow) | Deed | The apex | Upgrades |
+| --- | --- | --- | --- | --- |
+| **Hailstorm** (Volley) | Arrow Storm fires 1 more volley | Enemies hit by Arrow Storm | Arrow Storm covers a 3-hex circle, and every 4th shot she fires drops one Arrow Storm volley on her target. **Snowball:** each enemy Arrow Storm hits gives her +1% damage for the rest of the fight, with no cap | **Endless Hail:** +2% per enemy hit. **Pinning Hail:** Arrow Storm Roots each enemy it hits for 0.5s, once per cast |
+
+It's built on pieces that exist (an area's size, an on_fire effect's `every`, stacking boosts for the fight, Root), so it needs no new sim piece.
