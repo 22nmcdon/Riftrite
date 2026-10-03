@@ -570,7 +570,7 @@
           "statuses": [
             "briar_torn"
           ],
-          "threshold": 30
+          "threshold": 3
         }
       },
       {
@@ -1334,7 +1334,7 @@
           "from_ability": [
             "hearthkeeper"
           ],
-          "threshold": 300
+          "threshold": 10
         }
       }
     ]
@@ -1751,7 +1751,7 @@
             "war_call",
             "rally"
           ],
-          "threshold": 20
+          "threshold": 10
         }
       }
     ]
@@ -2055,7 +2055,7 @@
           "from_ability": [
             "martyrs_pyre"
           ],
-          "threshold": 300
+          "threshold": 30
         }
       }
     ]
