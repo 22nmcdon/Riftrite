@@ -72,12 +72,12 @@ The good bot plays the whole run; each act is tuned to section 2a's targets (Dec
 
 ## 7. Questions
 
-- **BA. (answered: Decision 1)** Who designs Act 2 and Act 3's enemies, elites, and bosses?** The plans have none of them. Options: the playtester sends design notes (as for apexes and endless), or a draft of both rosters is written for approval before any is built.
-- **BB. (answered: Decision 4)** Specializations with Act 2?** The plans put them in Act 2 (half the enemies) and Act 3 (most). Build enemy growth (`enemy-growth.md` sections 2–3) before Act 2's content, or ship Acts 2 and 3 without them first and add them later?
-- **BC. (answered: Decision 1)** An act's length:** 7 days and the boss, like Act 1?
+- **BA. Who designs Act 2 and Act 3's enemies, elites, and bosses?** *(Answered: Decision 1.)* The plans have none of them. Options: the playtester sends design notes (as for apexes and endless), or a draft of both rosters is written for approval before any is built.
+- **BB. Specializations with Act 2?** *(Answered: Decision 4.)* The plans put them in Act 2 (half the enemies) and Act 3 (most). Build enemy growth (`enemy-growth.md` sections 2–3) before Act 2's content, or ship Acts 2 and 3 without them first and add them later?
+- **BC. An act's length:** *(Answered: Decision 1.)* 7 days and the boss, like Act 1?
 - **BD. What resets between acts:** losses (the second loss ends the run: per act, or per run?), wounds, the Magpie's two visits (per act, already), anything else?
 - **BE. Between acts:** anything special (a full rest, a choice of reward), or straight to the next act's route after the boss shop?
-- **BF. (answered: Decision 3)** Targets:** the good bot wins Act 1 about half the time. What should it be for Act 2 and Act 3 (given it reached them), or for the whole run?
+- **BF. Targets:** *(Answered: Decision 3.)* the good bot wins Act 1 about half the time. What should it be for Act 2 and Act 3 (given it reached them), or for the whole run?
 - **BG. Pay and prices in later acts:** the same as Act 1, or growing? (`economy.md` covers Act 1 only.)
 - **BH. Act 3's crumbled ground:** `collapse_by_act` has no Act 3. A placeholder of base 25, growth 30, accel 6?
 - **BI. Endless while Acts 2 and 3 are built:** keep it after Act 1 until Act 3 exists, or move it once the frame is in?
