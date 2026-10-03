@@ -16,6 +16,9 @@ const BaseBot = preload("res://tools/bots/bot.gd")
 const RandomBot = preload("res://tools/bots/random_bot.gd")
 const GoodBot = preload("res://tools/bots/good_bot.gd")
 const ExpertBot = preload("res://tools/bots/expert_bot.gd")
+## Endless runs still standing on this floor are stopped and reported as
+## such (a report, not the game: the game has no last floor).
+const ENDLESS_STOP: int = 40
 ## The bots by name (--bot): "simple-peek" is the report's bot before phase
 ## 6 (the simple bot, trying the named formations in the real fight).
 const BOTS: Array[String] = ["simple", "simple-peek", "random", "good", "expert"]
@@ -191,6 +194,10 @@ static func play(run: RunContent, run_seed: int, bot_name: String = "simple-peek
 			line.taken["item:" + id] = true
 		if not refused.is_empty():
 			line.errors.append("day %d (%s): %s" % [state.day, RunState.PHASE_NAMES[state.phase], refused])
+			break
+		# A run still standing this deep is stopped (it's counted as such):
+		# without it, a run whose heroes have outgrown the rift never ends.
+		if state.endless and flow.floor_number() >= ENDLESS_STOP and state.phase != RunState.Phase.ENDED:
 			break
 		if state.shards > shards:
 			line.shards_earned += state.shards - shards
@@ -446,6 +453,9 @@ static func endless_summary(run: RunContent, lines: Array[RunLine]) -> String:
 	for bucket: int in range(0, buckets.keys().max() + 1):
 		bucket_text.append("%d-%d: %d" % [bucket * 5 + 1, bucket * 5 + 5, buckets.get(bucket, 0)])
 	out.append("  Runs falling by floors: " + ", ".join(bucket_text))
+	var stopped: int = deeper.filter(func(line: RunLine) -> bool: return line.floor_reached >= ENDLESS_STOP and line.fell_to.is_empty()).size()
+	if stopped > 0:
+		out.append("  Stopped on floor %d, still standing: %d (their floor counts as %d above)" % [ENDLESS_STOP, stopped, ENDLESS_STOP])
 	var kinds: Dictionary[String, int] = {}
 	var fights: Dictionary[String, int] = {}
 	for line: RunLine in deeper:
