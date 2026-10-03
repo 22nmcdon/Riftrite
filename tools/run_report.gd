@@ -33,7 +33,7 @@ class RunLine:
 	var picks: Dictionary[String, int] = {}
 	## Picks taken by layer (UpgradeDef.Layer: hero, taste, path; phase 5c
 	## step 7), and the stacking cards' takes and what they locked in.
-	var layer_picks: Array[int] = [0, 0, 0]
+	var layer_picks: Array[int] = [0, 0, 0, 0]
 	var stack_takes: int = 0
 	var stack_points: int = 0
 	var shards_earned: int = 0
@@ -82,6 +82,10 @@ class RunLine:
 	var floor_reached: int = 0
 	var fell_to: String = ""
 	var endless_mods: Array[String] = []
+	## Apexes (phase 8 part 2): hero id -> the apex it earned, and the floor
+	## it earned it on.
+	var apexes: Dictionary[String, String] = {}
+	var apexed_on: Dictionary[String, int] = {}
 
 	## Its measures as a Dictionary (what --jobs passes between processes,
 	## with FileAccess.store_var, so types survive).
@@ -219,6 +223,10 @@ static func play(run: RunContent, run_seed: int, bot_name: String = "simple-peek
 			for hero_id: String in state.just_transformed:
 				if not line.transformed_on.has(hero_id):
 					line.transformed_on[hero_id] = last.day
+			for hero_id: String in state.just_apexed:
+				if not line.apexed_on.has(hero_id):
+					line.apexed_on[hero_id] = run.floor_of(state, last.day)
+					line.apexes[hero_id] = state.hero(hero_id).apex
 	line.outcome = state.outcome
 	line.day = state.day
 	if state.endless:
@@ -478,6 +486,27 @@ static func endless_summary(run: RunContent, lines: Array[RunLine]) -> String:
 			values.assign(by_vow[path_id])
 			vow_text.append("%s %s" % [run.content.paths[path_id].name, _median(values)])
 	out.append("  Median floor by vow: " + ", ".join(vow_text))
+	# Apexes (phase 8 part 2): when each is earned, and how far runs get with
+	# and without one.
+	var earned: Dictionary[String, Array] = {}
+	var with_apex: Array[int] = []
+	var without: Array[int] = []
+	for line: RunLine in deeper:
+		(with_apex if not line.apexed_on.is_empty() else without).append(line.floor_reached)
+		for hero_id: String in line.apexed_on:
+			var apex_id: String = line.apexes[hero_id]
+			if not earned.has(apex_id):
+				earned[apex_id] = []
+			earned[apex_id].append(line.apexed_on[hero_id])
+	out.append("  Runs with an apex: %d (median floor %s), without: %d (median floor %s)" % [with_apex.size(), _median(with_apex) if not with_apex.is_empty() else "-",
+		without.size(), _median(without) if not without.is_empty() else "-"])
+	var apex_text: PackedStringArray = PackedStringArray()
+	for apex_id: String in run.content.apex_ids:
+		if earned.has(apex_id):
+			var values: Array[int] = []
+			values.assign(earned[apex_id])
+			apex_text.append("%s %d (floor %s)" % [run.content.apexes[apex_id].name, values.size(), _median(values)])
+	out.append("  Apexes earned (times, median floor): " + (", ".join(apex_text) if not apex_text.is_empty() else "none"))
 	return "\n".join(out)
 
 

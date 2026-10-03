@@ -445,6 +445,8 @@ func _fill_pick() -> void:
 static func upgrade_source(upgrade: UpgradeDef, content: ContentDb) -> String:
 	if upgrade.layer == UpgradeDef.Layer.HERO:
 		return "HERO · %s" % ArenaView.label_for(content.heroes[upgrade.hero].kit, content).to_upper()
+	if upgrade.layer == UpgradeDef.Layer.APEX:
+		return "APEX · %s" % content.apexes[upgrade.apex].name.to_upper()
 	return "%s · %s" % [UpgradeDef.LAYER_NAMES[upgrade.layer].to_upper(), content.paths[upgrade.path].name.to_upper()]
 
 

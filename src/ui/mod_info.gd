@@ -144,6 +144,23 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 		bits.append("sends stopped shots back at %s" % ValueBreakdown._percent(change.reflect_bp))
 	if change.snags:
 		bits.append("its snares catch leaps and charges")
+	# Phase 8 part 2 (the apex cards' knobs).
+	if change.per_enemy_add_bp != 0:
+		bits.append("%s for each enemy passed" % UnitInfo.signed_percent(change.per_enemy_add_bp))
+	if change.overheal_max_hp_add != 0:
+		bits.append("+1 max HP every %s overheal" % ("%d less" % -change.overheal_max_hp_add if change.overheal_max_hp_add < 0 else "%d more" % change.overheal_max_hp_add))
+	if change.at_stacks_add != 0:
+		bits.append("%s stacks to go off" % signed(change.at_stacks_add))
+	if change.per_taken_add_bp != 0:
+		bits.append("%s for every 1,000 damage taken" % UnitInfo.signed_percent(change.per_taken_add_bp))
+	if change.grows_add_bp != 0:
+		bits.append("%s stronger each cast" % UnitInfo.signed_percent(change.grows_add_bp))
+	if change.grows_boosts_add_bp != 0:
+		bits.append("its boosts %s stronger each cast" % UnitInfo.signed_percent(change.grows_boosts_add_bp))
+	if change.rise_add_bp != 0:
+		bits.append("rises with %s more of max HP" % ValueBreakdown._percent(change.rise_add_bp))
+	if change.per_shared_bp != FixedMath.BP_ONE:
+		bits.append("its link's stacks every %s as much shared" % ValueBreakdown._percent(change.per_shared_bp))
 	for effect: EffectDef in change.add_to_areas:
 		bits.append("in its area: " + " · ".join(UnitInfo.effect_numbers([effect] as Array[EffectDef], kit, content)))
 	for effect: EffectDef in change.add_effects:

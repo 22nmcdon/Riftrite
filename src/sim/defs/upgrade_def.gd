@@ -12,6 +12,8 @@ extends RefCounted
 ##                     offered while vowed to the path, until it transforms
 ##   {"id": "quick_plant", "name": "Quick Plant", "path": "deadeye", ...}
 ##                     offered once transformed on the path
+##   {"id": "keen_talons", "name": "Keen Talons", "apex": "eagle_eye", ...}
+##                     offered once its apex is earned (phase 8 part 2)
 ## A taste card carries on after the transformation with its
 ## "transformed_mod" (Decision 35), since the taste's piece and the
 ## transformation's are different parts. A taste or path card only counts
@@ -22,9 +24,9 @@ extends RefCounted
 ## step 4) has "grows" (GrowthDef), with or without a "mod". RunContent
 ## checks every mod against every kit it can meet.
 
-enum Layer { HERO, TASTE, PATH }
+enum Layer { HERO, TASTE, PATH, APEX }
 
-const LAYER_NAMES: Array[String] = ["hero", "taste", "path"]
+const LAYER_NAMES: Array[String] = ["hero", "taste", "path", "apex"]
 ## The stats a stacking card can lock in.
 const STACK_STATS: Array[UnitStats.Stat] = [UnitStats.Stat.HP, UnitStats.Stat.ATK, UnitStats.Stat.MGK, UnitStats.Stat.DEF,
 	UnitStats.Stat.CRIT, UnitStats.Stat.ATSP]
@@ -36,8 +38,11 @@ var text: String
 var layer: Layer
 ## The hero it's for (a path's upgrade: the path's hero, set by RunContent).
 var hero: String = ""
-## A taste or path card: the path's id.
+## A taste or path card: the path's id (an apex card: its apex's path, set
+## by RunContent).
 var path: String = ""
+## An apex card: its apex's id (phase 8 part 2).
+var apex: String = ""
 ## Null for a stacking card.
 var mod: KitMod
 ## A taste card's mod once transformed (null: `mod`).
@@ -55,11 +60,14 @@ static func read(reader: DataReader) -> UpgradeDef:
 	def.id = reader.req_string("id")
 	def.name = reader.req_string("name")
 	def.text = reader.req_string("text")
-	if reader.has("hero") == reader.has("path"):
-		reader.error("an upgrade is for a hero or for a path: give one of hero and path")
+	if int(reader.has("hero")) + int(reader.has("path")) + int(reader.has("apex")) != 1:
+		reader.error("an upgrade is for a hero, a path, or an apex: give one of hero, path, and apex")
 	if reader.has("hero"):
 		def.layer = Layer.HERO
 		def.hero = reader.req_string("hero")
+	elif reader.has("apex"):
+		def.layer = Layer.APEX
+		def.apex = reader.req_string("apex")
 	else:
 		def.path = reader.opt_string("path", "")
 		def.layer = Layer.TASTE if reader.opt_bool("taste", false) else Layer.PATH

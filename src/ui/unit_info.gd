@@ -33,6 +33,7 @@ const EVENT_WORDS: Dictionary[int, String] = {
 	EffectDef.Trigger.ON_ARRIVE: "arrival",
 	EffectDef.Trigger.ON_ALLY_SHIELD_BROKEN: "ally's Shield breaking",
 	EffectDef.Trigger.ON_WALL_BLOCK: "attack its wall blocks",
+	EffectDef.Trigger.ON_RISE: "rise from a fall",
 }
 const ORDINALS: Array[String] = ["th", "st", "nd", "rd"]
 const CHATTER: Array[LogEntry.Kind] = [LogEntry.Kind.MOVE, LogEntry.Kind.STOP, LogEntry.Kind.TARGET]

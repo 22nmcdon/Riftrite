@@ -375,11 +375,12 @@ func _run_upgrades(run_session: RunSession) -> String:
 			var locked: Array = hero.locked.get(id, [])
 			names.append("%s%s: %s" % [upgrade.name, " ×%d" % locked.size() if locked.size() > 1 else "", ModInfo.stack_locked(upgrade, locked)])
 			continue
-		var waiting: bool = upgrade.layer != UpgradeDef.Layer.HERO and upgrade.path != hero.path
+		var waiting: bool = upgrade.layer != UpgradeDef.Layer.HERO and upgrade.path != hero.path or upgrade.layer == UpgradeDef.Layer.APEX and upgrade.apex != hero.apex
 		var numbers: String = ModInfo.upgrade_numbers(upgrade, run_session.run.hero_kit(hero), run_session.content)
 		if upgrade.grows != null:
 			numbers += " · " + ModInfo.growth_now(upgrade.grows, hero.growth.get(upgrade.id, 0), run_session.run.hero_kit(hero), run_session.content)
-		names.append("%s%s: %s%s" % [upgrade.name, " (waits for %s)" % run_session.content.paths[upgrade.path].name if waiting else "", upgrade.text,
+		var waits_for: String = run_session.content.apexes[upgrade.apex].name if upgrade.layer == UpgradeDef.Layer.APEX else run_session.content.paths[upgrade.path].name
+		names.append("%s%s: %s%s" % [upgrade.name, " (waits for %s)" % waits_for if waiting else "", upgrade.text,
 			"" if numbers.is_empty() else " (%s)" % numbers])
 	return "None yet: a pick comes after each won fight." if names.is_empty() else "\n".join(names)
 

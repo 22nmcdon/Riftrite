@@ -2077,5 +2077,793 @@
         ]
       }
     }
+  },
+  {
+    "id": "keen_talons",
+    "name": "Keen Talons",
+    "apex": "eagle_eye",
+    "text": "Heartseeker finishes enemies it leaves below 25% HP.",
+    "mod": {
+      "passives": [
+        {
+          "id": "keen_talons",
+          "name": "Keen Talons",
+          "kind": "ability",
+          "text": "Heartseeker finishes enemies it leaves a little higher.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "heartseeker"
+              ],
+              "type": "damage",
+              "amount": 1,
+              "execute_below_pct": 25,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "deaths_eye",
+    "name": "Death's Eye",
+    "apex": "eagle_eye",
+    "text": "Each enemy Heartseeker finishes Marks every enemy within 2 hexes of it for 3s.",
+    "mod": {
+      "passives": [
+        {
+          "id": "deaths_eye",
+          "name": "Death's Eye",
+          "kind": "ability",
+          "text": "An execution Marks the enemies within 2 hexes of the fallen.",
+          "effects": [
+            {
+              "trigger": "on_kill",
+              "from_signature": true,
+              "executed": true,
+              "type": "apply_status",
+              "status": "marked",
+              "duration_ms": 3000,
+              "target": "enemies_near_named",
+              "within_hexes": 2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "gathering_line",
+    "name": "Gathering Line",
+    "apex": "stormline",
+    "text": "Each enemy Heartseeker passes through makes it hit the next harder still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "per_enemy_add_bp": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "thunderline",
+    "name": "Thunderline",
+    "apex": "stormline",
+    "text": "Enemies Heartseeker hits are slowed for a moment.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_to_areas": [
+            {
+              "type": "apply_status",
+              "status": "hobbled",
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "endless_hail",
+    "name": "Endless Hail",
+    "apex": "hailstorm",
+    "text": "Each enemy Arrow Storm hits makes her grow twice as fast.",
+    "mod": {
+      "passives": [
+        {
+          "id": "endless_hail",
+          "name": "Endless Hail",
+          "kind": "ability",
+          "text": "Each enemy Arrow Storm hits gives her another stack of Hailstorm.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "arrow_storm"
+              ],
+              "type": "apply_status",
+              "status": "hailstorm",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "pinning_hail",
+    "name": "Pinning Hail",
+    "apex": "hailstorm",
+    "text": "Arrow Storm roots the enemies it hits for a moment.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_to_areas": [
+            {
+              "type": "apply_status",
+              "status": "root",
+              "duration_ms": 500,
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "gale",
+    "name": "Gale",
+    "apex": "windrunner",
+    "text": "Each hop makes her attack faster still.",
+    "mod": {
+      "passives": [
+        {
+          "id": "gale",
+          "name": "Gale",
+          "kind": "ability",
+          "text": "Each hop makes her attack a little faster for the rest of the fight.",
+          "effects": [
+            {
+              "trigger": "on_hop",
+              "type": "apply_status",
+              "status": "gale",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "vanishing_step",
+    "name": "Vanishing Step",
+    "apex": "windrunner",
+    "text": "Each hop hides her for a moment.",
+    "mod": {
+      "passives": [
+        {
+          "id": "vanishing_step",
+          "name": "Vanishing Step",
+          "kind": "ability",
+          "text": "Each hop hides her for a moment.",
+          "effects": [
+            {
+              "trigger": "on_hop",
+              "type": "apply_status",
+              "status": "stealth",
+              "duration_ms": 500,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "thicket",
+    "name": "Thicket",
+    "apex": "warden_of_thorns",
+    "text": "More of her briars can stand at once.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "wall"
+          ],
+          "max_standing_add": 3
+        }
+      ]
+    }
+  },
+  {
+    "id": "barbed_walls",
+    "name": "Barbed Walls",
+    "apex": "warden_of_thorns",
+    "text": "Her briars stand longer, tearing at whoever touches them.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "wall"
+          ],
+          "duration_add_ms": 2000
+        }
+      ]
+    }
+  },
+  {
+    "id": "pack_snares",
+    "name": "Pack Snares",
+    "apex": "huntmaster",
+    "text": "A Rooted enemy that falls leaves two snares, not one.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:pack_snares",
+          "add_effects": [
+            {
+              "trigger": "on_enemy_fell",
+              "vs": {
+                "keywords": [
+                  "rooted"
+                ]
+              },
+              "type": "snare",
+              "at": "named",
+              "max_standing": 3,
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "root",
+                  "target": "target",
+                  "duration_ms": 2500
+                },
+                {
+                  "type": "apply_status",
+                  "status": "bleed",
+                  "stacks": 6,
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "called_quarry",
+    "name": "Called Quarry",
+    "apex": "huntmaster",
+    "text": "Her allies hit Rooted enemies harder still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:quarry",
+          "value_add": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "iron_gate",
+    "name": "Iron Gate",
+    "apex": "unbroken_gate",
+    "text": "Each attack his wall blocks makes him twice as tough.",
+    "mod": {
+      "passives": [
+        {
+          "id": "iron_gate",
+          "name": "Iron Gate",
+          "kind": "ability",
+          "text": "Each attack his wall blocks gives him another stack of Gatekeeper.",
+          "effects": [
+            {
+              "trigger": "on_wall_block",
+              "type": "apply_status",
+              "status": "gatekeeper",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "gatehouse",
+    "name": "Gatehouse",
+    "apex": "unbroken_gate",
+    "text": "His wall is a hex wider.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "wall"
+          ],
+          "width_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "deeper_hearth",
+    "name": "Deeper Hearth",
+    "apex": "hearthkeeper",
+    "text": "Less overheal raises his max HP.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:hearthkeeper",
+          "overheal_max_hp_add": -5
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_arms",
+    "name": "Long Arms",
+    "apex": "hearthkeeper",
+    "text": "Guard reaches a hex farther.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:guard",
+          "guard": {
+            "within_add": 1
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "hot_iron",
+    "name": "Hot Iron",
+    "apex": "forgebreaker",
+    "text": "Brands explode at 4, not 5.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:forge_blast",
+          "at_stacks_add": -1
+        }
+      ]
+    }
+  },
+  {
+    "id": "shockwave",
+    "name": "Shockwave",
+    "apex": "forgebreaker",
+    "text": "His brands' blasts knock enemies back.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:forge_blast",
+          "add_to_areas": [
+            {
+              "type": "knockback",
+              "hexes": 1,
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "war_cry",
+    "name": "War Cry",
+    "apex": "warlord",
+    "text": "Each Brand Slam makes the rally grow faster.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "grows_boosts_add_bp": 2500
+        }
+      ]
+    }
+  },
+  {
+    "id": "shield_wall",
+    "name": "Shield Wall",
+    "apex": "warlord",
+    "text": "Rallied allies take less damage while the rally lasts.",
+    "mod": {
+      "passives": [
+        {
+          "id": "shield_wall",
+          "name": "Shield Wall",
+          "kind": "ability",
+          "text": "Allies he rallies take less damage for a while.",
+          "effects": [
+            {
+              "trigger": "on_status",
+              "statuses": [
+                "rally"
+              ],
+              "type": "apply_status",
+              "status": "shield_wall",
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "stubborn_flame",
+    "name": "Stubborn Flame",
+    "apex": "undying_oath",
+    "text": "He rises with more of his HP.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:undying_oath",
+          "rise_add_pct": 20
+        }
+      ]
+    }
+  },
+  {
+    "id": "dread_return",
+    "name": "Dread Return",
+    "apex": "undying_oath",
+    "text": "Each time he rises, he taunts every enemy within 3 hexes for 2s.",
+    "mod": {
+      "passives": [
+        {
+          "id": "dread_return",
+          "name": "Dread Return",
+          "kind": "ability",
+          "text": "As he rises, enemies within 3 hexes turn on him.",
+          "effects": [
+            {
+              "trigger": "on_rise",
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 3
+              },
+              "anchor": "self",
+              "hits": "enemies",
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "taunt",
+                  "duration_ms": 2000,
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "bonfire",
+    "name": "Bonfire",
+    "apex": "martyrs_pyre",
+    "text": "His burst grows faster with the damage he takes.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:martyrs_pyre",
+          "per_taken_add_bp": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "cinders",
+    "name": "Cinders",
+    "apex": "martyrs_pyre",
+    "text": "His burst sets enemies within 2 hexes Burning.",
+    "mod": {
+      "passives": [
+        {
+          "id": "cinders",
+          "name": "Cinders",
+          "kind": "ability",
+          "text": "As he falls, enemies within 2 hexes catch fire.",
+          "effects": [
+            {
+              "trigger": "on_fall",
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 5,
+              "target": "enemies_near_self",
+              "within_hexes": 2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "rising_light",
+    "name": "Rising Light",
+    "apex": "the_beacon",
+    "text": "Each lantern grows twice as much as the last.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "grows_add_bp": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "blinding_light",
+    "name": "Blinding Light",
+    "apex": "the_beacon",
+    "text": "Enemies in her lantern's light are slowed.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_to_areas": [
+            {
+              "type": "apply_status",
+              "status": "hobbled",
+              "target": "target",
+              "side": "enemies"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "kindled_dawn",
+    "name": "First Light",
+    "apex": "dawnbringer",
+    "text": "Healing an ally who's already sped up makes them faster still.",
+    "mod": {
+      "passives": [
+        {
+          "id": "kindled_dawn",
+          "name": "First Light",
+          "kind": "ability",
+          "text": "Healing a sped-up ally speeds them up more for the rest of the fight.",
+          "effects": [
+            {
+              "trigger": "on_heal",
+              "from_ability": [
+                "mend",
+                "kindle"
+              ],
+              "vs": {
+                "statuses": [
+                  "dawnlight"
+                ]
+              },
+              "type": "apply_status",
+              "status": "first_light_more",
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "morning_ward",
+    "name": "Morning Ward",
+    "apex": "dawnbringer",
+    "text": "Allies she heals take less damage for a while.",
+    "mod": {
+      "passives": [
+        {
+          "id": "morning_ward",
+          "name": "Morning Ward",
+          "kind": "ability",
+          "text": "Allies she heals with Mend and Kindle take less damage for a while.",
+          "effects": [
+            {
+              "trigger": "on_heal",
+              "from_ability": [
+                "mend",
+                "kindle"
+              ],
+              "type": "apply_status",
+              "status": "dawn_ward",
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "iron_loom",
+    "name": "Iron Loom",
+    "apex": "loomwarden",
+    "text": "Shared damage toughens her linked allies twice as fast.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:loom",
+          "per_shared_bp": 5000
+        }
+      ]
+    }
+  },
+  {
+    "id": "taut_threads",
+    "name": "Taut Threads",
+    "apex": "loomwarden",
+    "text": "Every ally regains a little Shield each second.",
+    "mod": {
+      "passives": [
+        {
+          "id": "taut_threads",
+          "name": "Taut Threads",
+          "kind": "ability",
+          "text": "Each second, every ally gains a little Shield, linking them.",
+          "effects": [
+            {
+              "trigger": "on_interval",
+              "interval_ms": 1000,
+              "type": "shield",
+              "amount_bp_of_max_hp": 100,
+              "target": "all_allies"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "bramble_weave",
+    "name": "Bramble Weave",
+    "apex": "thornweave",
+    "text": "Each Shield broken makes her Shields grow twice as fast.",
+    "mod": {
+      "passives": [
+        {
+          "id": "bramble_weave",
+          "name": "Bramble Weave",
+          "kind": "ability",
+          "text": "Each Shield broken gives her another stack of Woven Thorns.",
+          "effects": [
+            {
+              "trigger": "on_ally_shield_broken",
+              "type": "apply_status",
+              "status": "woven_thorns",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "thorn_burst",
+    "name": "Thorn Burst",
+    "apex": "thornweave",
+    "text": "A broken Shield makes whoever broke it Bleed.",
+    "mod": {
+      "passives": [
+        {
+          "id": "thorn_burst",
+          "name": "Thorn Burst",
+          "kind": "ability",
+          "text": "Whoever breaks an ally's Shield Bleeds.",
+          "effects": [
+            {
+              "trigger": "on_ally_shield_broken",
+              "type": "apply_status",
+              "status": "bleed",
+              "stacks": 3,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "burning_zeal",
+    "name": "Zeal",
+    "apex": "inquisitor",
+    "text": "Each smite kill gives her more MGK still.",
+    "mod": {
+      "passives": [
+        {
+          "id": "burning_zeal",
+          "name": "Burning Zeal",
+          "kind": "ability",
+          "text": "Each smite kill makes her MGK grow more for the rest of the fight.",
+          "effects": [
+            {
+              "trigger": "on_kill",
+              "from_ability": [
+                "mend"
+              ],
+              "type": "apply_status",
+              "status": "zeal_more",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "brand_of_heresy",
+    "name": "Brand of Heresy",
+    "apex": "inquisitor",
+    "text": "Her smites Mark the enemy they hit for 3s.",
+    "mod": {
+      "passives": [
+        {
+          "id": "brand_of_heresy",
+          "name": "Brand of Heresy",
+          "kind": "ability",
+          "text": "Her smites Mark the enemy they hit for a while.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "mend"
+              ],
+              "type": "apply_status",
+              "status": "marked",
+              "duration_ms": 3000,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "holy_land",
+    "name": "Holy Land",
+    "apex": "sanctifier",
+    "text": "More lines of hallowed ground can stand at once.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "area"
+          ],
+          "max_standing_add": 2
+        }
+      ]
+    }
+  },
+  {
+    "id": "consecrated",
+    "name": "Consecrated",
+    "apex": "sanctifier",
+    "text": "Enemies on hallowed ground are slowed.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_to_areas": [
+            {
+              "type": "apply_status",
+              "status": "hobbled",
+              "target": "target",
+              "side": "enemies"
+            }
+          ]
+        }
+      ]
+    }
   }
 ]

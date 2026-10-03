@@ -1,0 +1,16 @@
+{
+  "_note": "Teams for the --apexes report (docs/plans/rebuild-phase8-apexes.md, Decisions 9 and 10): each names an apex per hero. A good team has a carry and apexes that fit it (bonded paths first); a poor one has none, or apexes that pull apart. Every apex is in at least one team.",
+  "teams": [
+    {"name": "Gallery", "kind": "good", "carry": "maren", "apexes": {"brannoc": "unbroken_gate", "maren": "eagle_eye", "vell": "dawnbringer"}},
+    {"name": "Stormwall", "kind": "good", "carry": "maren", "apexes": {"brannoc": "unbroken_gate", "maren": "stormline", "vell": "the_beacon"}},
+    {"name": "Hearth and Hail", "kind": "good", "carry": "maren", "apexes": {"brannoc": "hearthkeeper", "maren": "hailstorm", "vell": "loomwarden"}},
+    {"name": "Snare and Cleave", "kind": "good", "carry": "brannoc", "apexes": {"brannoc": "forgebreaker", "maren": "huntmaster", "vell": "dawnbringer"}},
+    {"name": "Warband", "kind": "good", "carry": "maren", "apexes": {"brannoc": "warlord", "maren": "windrunner", "vell": "inquisitor"}},
+    {"name": "Last Stand", "kind": "good", "carry": "maren", "apexes": {"brannoc": "martyrs_pyre", "maren": "hailstorm", "vell": "the_beacon"}},
+    {"name": "Hallowed Thicket", "kind": "good", "carry": "vell", "apexes": {"brannoc": "unbroken_gate", "maren": "warden_of_thorns", "vell": "sanctifier"}},
+    {"name": "Oathbreaker", "kind": "good", "carry": "brannoc", "apexes": {"brannoc": "undying_oath", "maren": "huntmaster", "vell": "thornweave"}},
+    {"name": "Smiting Hour", "kind": "good", "carry": "vell", "apexes": {"brannoc": "warlord", "maren": "eagle_eye", "vell": "inquisitor"}},
+    {"name": "No Edge", "kind": "poor", "apexes": {"brannoc": "hearthkeeper", "maren": "warden_of_thorns", "vell": "loomwarden"}},
+    {"name": "Crossed Purposes", "kind": "poor", "apexes": {"brannoc": "martyrs_pyre", "maren": "huntmaster", "vell": "thornweave"}}
+  ]
+}

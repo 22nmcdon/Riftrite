@@ -18,15 +18,25 @@ extends SceneTree
 ##                each deed at each stage, the taste bar, and where allies
 ##                stand around Brannoc. With --paths, both from the same
 ##                fights. Reports, not gates: they exit 0.
+##   --apexes     the apexes report instead (phase 8 part 2,
+##                tools/apex_report.gd): each team in tools/apex_teams.json
+##                transformed and at apex, over enemies scaled up step by
+##                step; --singles adds each apex alone, --team=<name> one
+##                team, --apex-deeds what a fight puts into each apex's deed
+##                with its taste. Use --sweep=4 or so: it fights a lot.
 ## Ends with a line per encounter, and exits 1 if any fails the gate.
 
 const Report = preload("res://tools/sim_report.gd")
 const PathReport = preload("res://tools/path_report.gd")
+const ApexReport = preload("res://tools/apex_report.gd")
 const FORMATIONS_FILE: String = "res://tools/sim_formations.json"
 
 
 func _init() -> void:
-	var options: Dictionary[String, String] = {"encounter": "", "seeds": "50", "sweep": "40", "draw-seed": "1"}
+	var options: Dictionary[String, String] = {"encounter": "", "seeds": "50", "sweep": "40", "draw-seed": "1", "team": ""}
+	var apexes: bool = false
+	var singles: bool = false
+	var apex_deeds: bool = false
 	var boards: bool = true
 	var tactics: bool = false
 	var paths: bool = false
@@ -43,6 +53,15 @@ func _init() -> void:
 			continue
 		if arg == "--deeds":
 			deeds = true
+			continue
+		if arg == "--apexes":
+			apexes = true
+			continue
+		if arg == "--singles":
+			singles = true
+			continue
+		if arg == "--apex-deeds":
+			apex_deeds = true
 			continue
 		var parts: PackedStringArray = arg.trim_prefix("--").split("=", true, 1)
 		if parts.size() != 2 or not options.has(parts[0]):
@@ -66,6 +85,28 @@ func _init() -> void:
 			_fail("unknown encounter %s" % options["encounter"])
 			return
 		encounter_ids = [options["encounter"]]
+	if apexes or apex_deeds:
+		var teams: Array[ApexReport.Team] = ApexReport.read_teams(errors)
+		if not errors.is_empty():
+			_fail("\n".join(errors))
+			return
+		if not options["team"].is_empty():
+			var picked: Array[ApexReport.Team] = []
+			for team: ApexReport.Team in teams:
+				if team.name == options["team"]:
+					picked.append(team)
+			teams = picked
+		if apex_deeds:
+			print(ApexReport.deeds_text(content, teams, encounter_ids, named, options["sweep"].to_int()))
+		if apexes:
+			for team: ApexReport.Team in teams:
+				var variants: Array[ApexReport.Lineup] = ApexReport.variants_for(content, team, singles)
+				for variant: ApexReport.Lineup in variants:
+					ApexReport.run_variant(content, variant, encounter_ids, named, options["sweep"].to_int(), ApexReport.SCALES)
+				print(ApexReport.team_text(content, team, variants, ApexReport.SCALES))
+				print("")
+		quit(0)
+		return
 	if paths or deeds:
 		var path_reports: Array[PathReport.PathReport] = []
 		for encounter_id: String in encounter_ids:

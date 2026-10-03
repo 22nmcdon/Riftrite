@@ -153,6 +153,9 @@ func upgrades_for(hero: RunState.Hero) -> Array[String]:
 			continue
 		if upgrade.layer == UpgradeDef.Layer.PATH and (upgrade.path != hero.path or not hero.transformed):
 			continue
+		# An apex card once that apex is earned (phase 8 part 2).
+		if upgrade.layer == UpgradeDef.Layer.APEX and (upgrade.apex != hero.apex or not hero.apex_earned):
+			continue
 		if not changes_something(upgrade, hero.transformed, hero_kit(hero)):
 			continue
 		found.append(id)
@@ -248,7 +251,12 @@ func held_upgrades(hero: RunState.Hero) -> Array[UpgradeDef]:
 	var found: Array[UpgradeDef] = []
 	for id: String in hero.upgrades:
 		var upgrade: UpgradeDef = upgrades.get(id)
-		if upgrade != null and (upgrade.layer == UpgradeDef.Layer.HERO or upgrade.path == hero.path):
+		if upgrade == null:
+			continue
+		if upgrade.layer == UpgradeDef.Layer.APEX:
+			if upgrade.apex == hero.apex and hero.apex_earned:
+				found.append(upgrade)
+		elif upgrade.layer == UpgradeDef.Layer.HERO or upgrade.path == hero.path:
 			found.append(upgrade)
 	return found
 
@@ -678,6 +686,14 @@ func _check_upgrade(upgrade: UpgradeDef, where: String) -> void:
 			for kit: UnitDef in path.apex_kits():
 				meets.append([path.id + " apex", kit, true])
 			_check_growth_counts(upgrade.grows, [path.vowed_kit, path.transformed_kit], where)
+	elif upgrade.layer == UpgradeDef.Layer.APEX:
+		if not content.apexes.has(upgrade.apex):
+			errors.append("%s: unknown apex \"%s\"" % [where, upgrade.apex])
+			return
+		var apex: ApexDef = content.apexes[upgrade.apex]
+		upgrade.path = apex.path
+		upgrade.hero = content.paths[apex.path].hero
+		meets.append([apex.id + " apex", apex.apex_kit, true])
 	else:
 		if not content.paths.has(upgrade.path):
 			errors.append("%s: unknown path \"%s\"" % [where, upgrade.path])
@@ -745,7 +761,7 @@ func _check_all_upgrades(hero_id: String) -> void:
 			for id: String in upgrade_ids:
 				var upgrade: UpgradeDef = upgrades[id]
 				if upgrade.hero == hero_id and (upgrade.layer == UpgradeDef.Layer.HERO or upgrade.layer == UpgradeDef.Layer.TASTE and upgrade.path == path.id
-						or upgrade.path == path.id and transformed):
+						or upgrade.path == path.id and transformed and upgrade.layer != UpgradeDef.Layer.APEX):
 					hero.upgrades.append(id)
 					if upgrade.stacks():
 						hero.upgrades.append(id)
@@ -758,6 +774,27 @@ func _check_all_upgrades(hero_id: String) -> void:
 				kit = mod.apply(kit, problems)
 			for problem: String in problems:
 				errors.append("%s: %s's upgrades together on %s %s: %s" % [UPGRADES_FILE, hero_id, path.id, "transformed" if transformed else "vowed", problem])
+		# At each apex (phase 8 part 2): the transformed set and its apex's cards.
+		for apex: ApexDef in path.apexes:
+			var at_apex := RunState.Hero.new()
+			at_apex.id = hero_id
+			at_apex.path = path.id
+			at_apex.transformed = true
+			at_apex.apex = apex.id
+			at_apex.apex_earned = true
+			for id: String in upgrade_ids:
+				var upgrade: UpgradeDef = upgrades[id]
+				if upgrade.hero == hero_id and (upgrade.layer == UpgradeDef.Layer.HERO or upgrade.path == path.id and upgrade.layer != UpgradeDef.Layer.APEX
+						or upgrade.layer == UpgradeDef.Layer.APEX and upgrade.apex == apex.id):
+					at_apex.upgrades.append(id)
+					if upgrade.stacks():
+						at_apex.locked[id] = [1]
+			var apex_kit: UnitDef = apex.apex_kit
+			var apex_problems: Array[String] = []
+			for mod: KitMod in upgrade_mods(at_apex):
+				apex_kit = mod.apply(apex_kit, apex_problems)
+			for problem: String in apex_problems:
+				errors.append("%s: %s's upgrades together at %s: %s" % [UPGRADES_FILE, hero_id, apex.id, problem])
 
 
 func _parse(texts: Dictionary[String, String], file_name: String) -> Variant:

@@ -58,6 +58,24 @@ extends RefCounted
 ##       "ricochet_add": 1,               biggest group; its hits ricochet;
 ##       "reflect_bp": 5000,              its walls send shots back; its
 ##       "snags": true                    snares catch leaps and charges
+## Phase 8 part 2 (the apex cards' knobs), per "on" entry:
+##       "per_enemy_add_bp": 500,         an area's per_enemy_bp (Gathering
+##                                        Line)
+##       (max_standing_add also reaches walls and zones, and width_add a
+##       wall's width, in hexes: Thicket, Holy Land, Gatehouse)
+##       "overheal_max_hp_add": -5,       a heal's overheal_max_hp_per (at
+##                                        least 1; Deep Hearth)
+##       "at_stacks_add": -1,             on_status's at_stacks (at least 2;
+##                                        Hot Iron)
+##       "per_taken_add_bp": 500,         grows_per_damage_taken's bp
+##                                        (Bonfire)
+##       "grows_add_bp": 1000,            a signature's grows_bp, and
+##       "grows_boosts_add_bp": 1000      grows_boosts_bp (Rising Light, War
+##                                        Cry)
+##       "rise_add_pct": 20,              the named rise passive's HP share
+##                                        (Stubborn Flame)
+##       "per_shared_bp": 5000            the named link's per_shared, times
+##                                        this (Iron Loom)
 ## and (step 7d) "places_lantern": true at the top: the player places its
 ## signature's first area before the fight (UnitSetup.lantern).
 ## and (step 8c) "drops_signature": true at the top: the kit's signature and
@@ -140,11 +158,21 @@ class AbilityChange:
 	var ricochet_add: int = 0
 	var reflect_bp: int = 0
 	var snags: bool = false
+	## Phase 8 part 2 (the apex cards' knobs; see the header).
+	var per_enemy_add_bp: int = 0
+	var overheal_max_hp_add: int = 0
+	var at_stacks_add: int = 0
+	var per_taken_add_bp: int = 0
+	var grows_add_bp: int = 0
+	var grows_boosts_add_bp: int = 0
+	var rise_add_bp: int = 0
+	var per_shared_bp: int = FixedMath.BP_ONE
 
 	func touches_effects() -> bool:
 		return amount_bp != FixedMath.BP_ONE or duration_bp != FixedMath.BP_ONE or duration_add_ticks != 0 or radius_add != 0 \
 			or every_add != 0 or times_add != 0 or max_standing_add != 0 or overheal_add_bp != 0 or width_add != 0 or not add_to_areas.is_empty() \
-			or strength_add_bp != 0 or follows or ricochet_add != 0 or reflect_bp != 0 or snags
+			or strength_add_bp != 0 or follows or ricochet_add != 0 or reflect_bp != 0 or snags \
+			or per_enemy_add_bp != 0 or overheal_max_hp_add != 0 or at_stacks_add != 0 or per_taken_add_bp != 0
 
 	func touches(effect: EffectDef) -> bool:
 		if not at.is_empty() and not at.has(effect.target):
@@ -155,7 +183,7 @@ class AbilityChange:
 
 	## True if it changes the named passive itself (its aura or its Guard).
 	func changes_part() -> bool:
-		return value_add != 0 or guard_share_add != 0 or guard_within_add != 0 or guard_covers_all
+		return value_add != 0 or guard_share_add != 0 or guard_within_add != 0 or guard_covers_all or rise_add_bp != 0 or per_shared_bp != FixedMath.BP_ONE
 
 	## A knockback's or pull's distance scales with amount_bp only when the
 	## change names that type (phase 5c step 7: Crushing Blow), so a mod on
@@ -325,13 +353,23 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 	change.overheal_add_bp = reader.opt_int("overheal_shield_add_bp", 0, 0, FixedMath.BP_ONE)
 	change.width_add = reader.opt_int("width_add", 0, 0, 3)
 	for effect_reader: DataReader in reader.opt_object_array("add_to_areas"):
-		change.add_to_areas.append(EffectDef.read(effect_reader))
+		change.add_to_areas.append(EffectDef.read(effect_reader, false, true))
 	change.value_add = reader.opt_int("value_add", 0, -100000, 100000)
 	change.strength_add_bp = reader.opt_int("strength_add_bp", 0, 0, FixedMath.BP_ONE)
 	change.follows = reader.opt_string_choice("follows", "", ["largest_group"]) == "largest_group"
 	change.ricochet_add = reader.opt_int("ricochet_add", 0, 0, 5)
 	change.reflect_bp = reader.opt_int("reflect_bp", 0, 0, FixedMath.BP_ONE)
 	change.snags = reader.opt_bool("snags", false)
+	change.per_enemy_add_bp = reader.opt_int("per_enemy_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
+	change.overheal_max_hp_add = reader.opt_int("overheal_max_hp_add", 0, -100, 100)
+	change.at_stacks_add = reader.opt_int("at_stacks_add", 0, -10, 10)
+	change.per_taken_add_bp = reader.opt_int("per_taken_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
+	change.grows_add_bp = reader.opt_int("grows_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
+	change.grows_boosts_add_bp = reader.opt_int("grows_boosts_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
+	change.rise_add_bp = reader.opt_int("rise_add_pct", 0, -99, 99) * 100
+	change.per_shared_bp = reader.opt_int("per_shared_bp", FixedMath.BP_ONE, 1000, 50000)
+	if (change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0) and change.slot != SLOT_SIGNATURE:
+		reader.error("grows_add_bp and grows_boosts_add_bp change a signature (\"slot\": \"signature\")")
 	if reader.has("guard"):
 		var guard: DataReader = reader.req_object("guard")
 		if guard != null:
@@ -344,9 +382,10 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 	if (change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0 or change.prefer != null) and change.slot != SLOT_SIGNATURE:
 		reader.error("cast_bp, targets_add, and prefer change a signature (\"slot\": \"signature\")")
 	if (change.changes_part() or change.after_add_ticks != 0) and not change.slot.begins_with(PASSIVE_PREFIX):
-		reader.error("after_add_ms, value_add, and guard change a named passive (\"slot\": \"passive:<id>\")")
+		reader.error("after_add_ms, value_add, guard, rise_add_pct, and per_shared_bp change a named passive (\"slot\": \"passive:<id>\")")
 	if not (change.touches_effects() or change.cooldown_bp != FixedMath.BP_ONE or not change.add_effects.is_empty() or change.after_add_ticks != 0
-			or change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0 or change.changes_part() or change.prefer != null):
+			or change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0 or change.changes_part() or change.prefer != null
+			or change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0):
 		reader.error("an \"on\" entry needs amount_bp, duration_bp, duration_add_ms, radius_add, cooldown_bp, add_effects, after_add_ms, cast_bp, targets_add, or one of step 7b's knobs")
 	reader.finish()
 	return change
@@ -376,7 +415,9 @@ func step_problem() -> String:
 				or change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0 or change.every_add != 0 or change.times_add != 0 \
 				or change.max_standing_add != 0 or change.overheal_add_bp != 0 or change.width_add != 0 or not change.add_to_areas.is_empty() \
 				or change.changes_part() or change.prefer != null or not change.at.is_empty() or change.strength_add_bp != 0 \
-				or change.follows or change.ricochet_add != 0 or change.reflect_bp != 0 or change.snags:
+				or change.follows or change.ricochet_add != 0 or change.reflect_bp != 0 or change.snags \
+				or change.per_enemy_add_bp != 0 or change.overheal_max_hp_add != 0 or change.at_stacks_add != 0 or change.per_taken_add_bp != 0 \
+				or change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0:
 			return "a growing card's step can only change an ability's amount_bp"
 	return ""
 
@@ -449,10 +490,14 @@ func affects_besides_passives(kit: UnitDef) -> bool:
 		if change.changes_part():
 			var at: int = _passive_index(kit, change.slot)
 			if at >= 0 and (change.value_add != 0 and kit.passives[at].aura != null or kit.passives[at].kind == PartDef.Kind.GUARD and
-					(change.guard_share_add != 0 or change.guard_within_add != 0 or change.guard_covers_all and kit.passives[at].behind_only)):
+					(change.guard_share_add != 0 or change.guard_within_add != 0 or change.guard_covers_all and kit.passives[at].behind_only)
+					or change.rise_add_bp != 0 and kit.passives[at].kind == PartDef.Kind.RISE
+					or change.per_shared_bp != FixedMath.BP_ONE and kit.passives[at].kind == PartDef.Kind.LINK and kit.passives[at].per_shared > 0):
 				return true
 		for ability: AbilityDef in _slot_abilities(kit, change.slot):
 			if not change.add_effects.is_empty() or change.cooldown_bp != FixedMath.BP_ONE or change.prefer != null:
+				return true
+			if change.grows_add_bp != 0 and ability.grows_bp > 0 or change.grows_boosts_add_bp != 0 and ability.grows_boosts_bp > 0:
 				return true
 			if change.cast_bp != FixedMath.BP_ONE and ability.cast_ticks > 0:
 				return true
@@ -578,6 +623,10 @@ func _apply_change(built: UnitDef, change: AbilityChange, problems: Array[String
 			copy.aura = DefCopy.shallow(part.aura) as AuraDef
 			copy.aura.after_ticks = maxi(copy.aura.after_ticks + change.after_add_ticks, 0)
 			copy.aura.value += change.value_add
+		if named and part.kind == PartDef.Kind.RISE and change.rise_add_bp != 0:
+			copy.rise_hp_bp = clampi(copy.rise_hp_bp + change.rise_add_bp, 100, FixedMath.BP_ONE)
+		if named and part.kind == PartDef.Kind.LINK and change.per_shared_bp != FixedMath.BP_ONE and part.per_shared > 0:
+			copy.per_shared = maxi(FixedMath.apply_bp(part.per_shared, change.per_shared_bp), 1)
 		if named and part.kind == PartDef.Kind.GUARD:
 			copy.share_bp = clampi(copy.share_bp + change.guard_share_add, 100, FixedMath.BP_ONE)
 			copy.guard_range = maxi(copy.guard_range + change.guard_within_add, HexGrid.HEX)
@@ -593,6 +642,10 @@ static func _changed_ability(ability: AbilityDef, change: AbilityChange) -> Abil
 		copy.cast_ticks = FixedMath.apply_bp(copy.cast_ticks, change.cast_bp)
 	if change.prefer != null:
 		copy.prefer = change.prefer
+	if change.grows_add_bp != 0 and ability.grows_bp > 0:
+		copy.grows_bp = maxi(ability.grows_bp + change.grows_add_bp, 0)
+	if change.grows_boosts_add_bp != 0 and ability.grows_boosts_bp > 0:
+		copy.grows_boosts_bp = maxi(ability.grows_boosts_bp + change.grows_boosts_add_bp, 0)
 	if change.touches_effects():
 		copy.effects = _changed_effects(ability.effects, change)
 	else:
@@ -655,8 +708,19 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 				copy.every = maxi(effect.every + change.every_add, 1)
 			if change.times_add != 0 and _runs_times(effect):
 				copy.times = effect.times + change.times_add
-			if change.max_standing_add != 0 and effect.type == EffectDef.Type.SNARE and effect.max_standing > 0:
+			if change.max_standing_add != 0 and effect.max_standing > 0:
 				copy.max_standing = effect.max_standing + change.max_standing_add
+			# The apex cards' knobs (phase 8 part 2).
+			if change.width_add != 0 and effect.type == EffectDef.Type.WALL:
+				copy.width_range = effect.width_range + change.width_add * HexGrid.HEX
+			if change.per_enemy_add_bp != 0 and effect.per_enemy_bp > 0:
+				copy.per_enemy_bp = maxi(effect.per_enemy_bp + change.per_enemy_add_bp, 0)
+			if change.overheal_max_hp_add != 0 and effect.overheal_max_hp_per > 0:
+				copy.overheal_max_hp_per = maxi(effect.overheal_max_hp_per + change.overheal_max_hp_add, 1)
+			if change.at_stacks_add != 0 and effect.at_stacks > 0:
+				copy.at_stacks = maxi(effect.at_stacks + change.at_stacks_add, 2)
+			if change.per_taken_add_bp != 0 and effect.power_per_taken_bp > 0:
+				copy.power_per_taken_bp = maxi(effect.power_per_taken_bp + change.per_taken_add_bp, 0)
 			if change.overheal_add_bp != 0 and effect.overheal_shield_bp > 0:
 				copy.overheal_shield_bp = effect.overheal_shield_bp + change.overheal_add_bp
 			if change.strength_add_bp != 0 and effect.type == EffectDef.Type.APPLY_STATUS:
@@ -689,8 +753,13 @@ static func _runs_times(effect: EffectDef) -> bool:
 static func _any_effect(effects: Array[EffectDef], change: AbilityChange) -> bool:
 	for effect: EffectDef in effects:
 		if change.touches(effect) and (change.every_add != 0 and effect.every > 1 or change.times_add != 0 and _runs_times(effect)
-				or change.max_standing_add != 0 and effect.type == EffectDef.Type.SNARE and effect.max_standing > 0
+				or change.max_standing_add != 0 and effect.max_standing > 0
 				or change.overheal_add_bp != 0 and effect.overheal_shield_bp > 0
+				or change.width_add != 0 and effect.type == EffectDef.Type.WALL
+				or change.per_enemy_add_bp != 0 and effect.per_enemy_bp > 0
+				or change.overheal_max_hp_add != 0 and effect.overheal_max_hp_per > 0
+				or change.at_stacks_add != 0 and effect.at_stacks > 0
+				or change.per_taken_add_bp != 0 and effect.power_per_taken_bp > 0
 				or change.width_add != 0 and effect.shape != null and effect.shape.kind == ShapeDef.Kind.LINE
 				or not change.add_to_areas.is_empty() and effect.type == EffectDef.Type.AREA
 				or change.strength_add_bp != 0 and effect.type == EffectDef.Type.APPLY_STATUS

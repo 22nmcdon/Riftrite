@@ -19,8 +19,9 @@ extends RefCounted
 ## Phase 5c step 6b: on_charged (a charge or leap's hit lands on it) and
 ## on_enemy_fell (an enemy falls; raised beside on_kill).
 ## Phase 8 part 2: on_ally_shield_broken (a Shield on one of its side breaks;
-## Thornweave) and on_wall_block (its wall stops a shot or takes a strike;
-## The Unbroken Gate), naming the shooter or striker.
+## Thornweave), on_wall_block (its wall stops a shot or takes a strike;
+## The Unbroken Gate), naming the shooter or striker, and on_rise (it rises:
+## Second Dawn or its own rise passive; Dread Return).
 ## After every unit has acted, CombatSim hands over the entries logged since
 ## the last read, in log order (so what happens in the deaths step is read
 ## on the next tick); kills are raised as deaths are settled. Relic effects
@@ -38,7 +39,7 @@ extends RefCounted
 ## The log kinds that raise events (the rest are skipped at once).
 const _RAISES: Array[LogEntry.Kind] = [LogEntry.Kind.FIRE, LogEntry.Kind.DAMAGE, LogEntry.Kind.SHIELD, LogEntry.Kind.HEAL,
 	LogEntry.Kind.STATUS_APPLIED, LogEntry.Kind.HOP, LogEntry.Kind.STATUS_DAMAGE, LogEntry.Kind.STATUS_ENDED, LogEntry.Kind.LIFESTEAL,
-	LogEntry.Kind.PUSH, LogEntry.Kind.GUARD, LogEntry.Kind.ARRIVE, LogEntry.Kind.SHOT_FIZZLED, LogEntry.Kind.WALL_HIT]
+	LogEntry.Kind.PUSH, LogEntry.Kind.GUARD, LogEntry.Kind.ARRIVE, LogEntry.Kind.SHOT_FIZZLED, LogEntry.Kind.WALL_HIT, LogEntry.Kind.RISE]
 
 
 ## Raises the events in the log from entry `from` on, including those the
@@ -58,6 +59,12 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> int:
 			# Its holder's event, whoever put the status there (a relic too).
 			if sim.status_end_listeners:
 				_raise(sim, sim.unit_by_id(entry.target), EffectDef.Trigger.ON_STATUS_ENDED, entry.chain, sim.unit_by_id(entry.target), 0, entry.status)
+			continue
+		if entry.kind == LogEntry.Kind.RISE:
+			# The risen unit's event, whatever raised it (phase 8 part 2,
+			# Dread Return).
+			var risen: UnitState = sim.unit_by_id(entry.target)
+			_raise(sim, risen, EffectDef.Trigger.ON_RISE, entry.chain, risen)
 			continue
 		if entry.source_relic_side >= 0 or entry.source_unit.is_empty():
 			continue
