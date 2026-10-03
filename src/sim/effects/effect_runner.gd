@@ -685,9 +685,16 @@ static func lifesteal(sim: CombatSim, attacker: UnitState, target: UnitState, de
 			entry.target = attacker.id
 			entry.amount = healed
 			sim.combat_log.add(entry)
+	# The strike is one chain step deeper, and none comes at the chain limit:
+	# a strike's hit can echo (Shared Pain), and the echo's lifesteal strike
+	# again, so without the guard the two would call each other forever.
 	var strike: int = attacker.aura_bp[AuraDef.Stat.OVERHEAL_STRIKE_BP]
-	if strike > 0 and overheal > 0 and attacker.target != null and attacker.target.alive and attacker.target.side != attacker.side:
+	if strike > 0 and overheal > 0 and attacker.target != null and attacker.target.alive and attacker.target.side != attacker.side \
+			and sim.chain_depth < sim.chain_limit_of(attacker.id, -1):
+		var outer: int = sim.chain_depth
+		sim.chain_depth = outer + 1
 		deal_hit(sim, source, attacker.target, FixedMath.apply_bp(overheal, strike), false, 0, false, "overheal from lifesteal")
+		sim.chain_depth = outer
 
 
 ## Heals `target` (capped at its max HP), logs it, and if any HP came back,

@@ -133,6 +133,26 @@ func test_damage_echoes_through_the_most_shared_keyword() -> void:
 	assert_eq(K.entries(plain, LogEntry.Kind.DAMAGE).size(), 1, "without it, no echo")
 
 
+func test_an_echo_and_the_overheal_strike_stop_at_the_chain_limit() -> void:
+	# The strike's hit echoes, the echo's lifesteal strikes again: found by
+	# an endless run, where it recursed until the stack ran out. Here each
+	# round is about as big as the last (50% stolen, x2.23 struck, 90%
+	# echoed), and the enemies don't fall, so only the limit stops it.
+	var leech: Dictionary = {"id": "leech", "name": "Leech", "kind": "aura", "aura": {"target": "holder", "stat": "lifesteal_bp", "value": 5000}}
+	var strike: Dictionary = {"id": "strike", "name": "Strike", "kind": "aura", "aura": {"target": "holder", "stat": "overheal_strike_bp", "value": 22300}}
+	var fight: CombatSim = _fight([K.at(_hero([leech, strike], {"cooldown_ms": 60000}), 3, 2)] as Array[UnitSetup],
+		[K.foe(_dummy("a", 100000000), 3, 4, "a"), K.foe(_dummy("b", 100000000), 2, 5, "b")] as Array[UnitSetup], {"echo_keywords": {"share_bp": 9000, "steps": 1}})
+	fight.unit_by_id("hero").target = fight.unit_by_id("a")
+	for id: String in ["a", "b"]:
+		Statuses.apply(fight, fight.unit_by_id(id), "root", 0, 2000, _from("dummy"))
+	EffectRunner.deal_hit(fight, _from("hero"), fight.unit_by_id("a"), 1000, false)
+	var hits: Array[LogEntry] = K.entries(fight, LogEntry.Kind.DAMAGE, "hero")
+	assert_gt(_noted(fight, "overheal from lifesteal").size(), 1, "strikes, and strikes from echoes")
+	assert_true(hits.all(func(entry: LogEntry) -> bool: return entry.chain <= fight.tuning.chain_limit + 1), "no deeper than the limit and an echo's step")
+	assert_lt(hits.size(), 40, "it stops")
+	assert_eq(fight.chain_depth, 0, "the depth comes back")
+
+
 # --- The Hungering Rift ------------------------------------------------------------------
 
 func test_overkill_carries_to_the_nearest_until_it_runs_out() -> void:
