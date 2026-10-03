@@ -15,7 +15,7 @@ A run of three acts: Act 1 as built, then Act 2 and Act 3, each with its own day
 - **Enemy growth** (`enemy-growth.md`, section 1): about half of an Act 2 fight's enemies are specialized, most of an Act 3 fight's. New faces each need their own 2 specializations (its open question).
 - **Apexes** (`apexes.md`; `rebuild-phase8-apexes.md`, Decisions 7 and 8): the apex vow opens **after the Act 1 boss**, and the apex lands **after the Act 2 boss** on an average run. Today it opens on Go deeper, with stand-in deed sizes landing it around floor 3–4.
 - **Endless** (`endless.md`): after the Act 3 boss you choose to end the run or go deeper; it unlocks after beating Act 3 the first time. Today it comes after Act 1, on Act 1's fights.
-- **Pacing** (`rebuild-run.md`, section 7): more upgrade picks in Acts 2 and 3.
+- **Pacing** (`rebuild-run.md`, section 9): more upgrade picks in Acts 2 and 3.
 - **Already built for more acts:** `RunState.act`; every offer's stream is keyed by the act (`RunRandom`); `ActDef.act`; `EncounterDef.act`; `tuning.json`'s `collapse_by_act` has Act 2's crumbled ground (base 20, growth 20, accel 4; Act 3 isn't set); the Magpie's "at most twice per act"; boss relics after every boss (then legendaries once all are held).
 
 ## 3. The frame
