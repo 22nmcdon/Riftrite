@@ -16,7 +16,9 @@ extends RefCounted
 ##    "remove_passives": ["hearthlight"],          base passives it takes away
 ##    "add_traits": ["fires_moving"],              traits it gains
 ##    "plant_ms": 1500,                            UnitDef's plant_ms
-##    "placed_snares": 2}                          UnitDef's placed_snares
+##    "placed_snares": 2,                          UnitDef's placed_snares
+##    "hop_cooldown_ms": 5000}                     a hop_away unit's
+##                                                 hop_cooldown_ms (phase 8)
 ## Like a phase (PhaseDef), a new signature that doesn't fire on mana takes
 ## the bar away too. The patched kit must be sound (UnitDef.problems), with
 ## HP of at least 1, range of at least 1, and speed and CRIT of at least 0;
@@ -40,6 +42,8 @@ var add_traits: Array[String] = []
 ## -1: unchanged.
 var plant_ticks: int = -1
 var placed_snares: int = -1
+## A hop_away unit's cooldown (-1: unchanged; phase 8 part 2, Windrunner).
+var hop_cooldown_ticks: int = -1
 
 
 static func make() -> KitPatch:
@@ -85,6 +89,8 @@ static func read(reader: DataReader) -> KitPatch:
 		patch.plant_ticks = reader.req_ticks("plant_ms", 0)
 	if reader.has("placed_snares"):
 		patch.placed_snares = reader.req_int("placed_snares", 0, 4)
+	if reader.has("hop_cooldown_ms"):
+		patch.hop_cooldown_ticks = reader.req_ticks("hop_cooldown_ms", FixedMath.MS_PER_TICK)
 	if not patch.changes_anything():
 		reader.error("a patch needs stats_bp, stats_add, a basic_attack, a signature, mana, passives, remove_passives, add_traits, or plant_ms")
 	reader.finish()
@@ -96,7 +102,7 @@ func changes_anything() -> bool:
 		if stats_bp[stat] != FixedMath.BP_ONE or stats_add[stat] != 0:
 			return true
 	return basic_attack != null or signature != null or mana != null or removes_mana or not passives.is_empty() or not remove_passives.is_empty() \
-		or not add_traits.is_empty() or plant_ticks >= 0 or placed_snares >= 0
+		or not add_traits.is_empty() or plant_ticks >= 0 or placed_snares >= 0 or hop_cooldown_ticks >= 0
 
 
 ## `base` with the patch applied (a new UnitDef; `base` is untouched), and
@@ -142,6 +148,11 @@ func apply(base: UnitDef, problems: Array[String] = []) -> UnitDef:
 		built.plant_ticks = plant_ticks
 	if placed_snares >= 0:
 		built.placed_snares = placed_snares
+	if hop_cooldown_ticks >= 0:
+		if built.hop_cooldown_ticks <= 0:
+			problems.append("only a unit that hops away has a hop cooldown")
+		else:
+			built.hop_cooldown_ticks = hop_cooldown_ticks
 	if built.placed_snares > 0 and Snares.placed_effect(built) == null:
 		problems.append("it places snares, so its kit needs a snare effect")
 	for part: PartDef in passives:

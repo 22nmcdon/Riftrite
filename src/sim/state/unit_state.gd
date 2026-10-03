@@ -170,6 +170,8 @@ var last_hit_source: EffectSource = null
 var last_hit_status: String = ""
 ## The unit that last hit it (an enemy), for on_kill.
 var last_attacker: String = ""
+## An execution finished it (phase 8 part 2; on_kill's "executed").
+var executed: bool = false
 ## The chain depth of the entry that hit it last (LogEntry.chain), which a
 ## kill carries on (Events.kill; phase 5c step 3).
 var last_hit_chain: int = 0

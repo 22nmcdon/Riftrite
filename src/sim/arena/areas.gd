@@ -160,15 +160,32 @@ static func _land(sim: CombatSim, area: Pending, note: String = "") -> void:
 		sim.combat_log.add(landed)
 		return
 	sim.combat_log.add(landed)
+	# Stormline (phase 8 part 2): enemies from the origin out, each one more
+	# step of damage than the last (ties by id, so the order is the same every
+	# time).
+	var growth: int = area.effect.per_enemy_bp
+	var passed: int = 0
+	if growth > 0:
+		hit.sort_custom(_nearer.bind(area.origin))
 	# (A unit knocked to 0 by one effect still takes the rest: it falls in
 	# the tick's deaths step, like any other.)
 	for victim: UnitState in hit:
+		var more: int = growth * passed if victim.side != area.unit.side else 0
 		for i: int in area.effect.area_effects.size():
 			var nested: EffectDef = area.effect.area_effects[i]
 			if nested.side != EffectDef.AreaSide.BOTH and (victim.side == area.unit.side) != (nested.side == EffectDef.AreaSide.ALLIES):
 				continue
 			var crit: bool = nested.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(area.crit_bp)
-			EffectRunner.land(sim, area.unit, area.ability, area.source, nested, victim, area.amounts[i], crit, area.push_from, area.powers[i])
+			var power: int = area.powers[i] + (more if nested.type == EffectDef.Type.DAMAGE else 0)
+			EffectRunner.land(sim, area.unit, area.ability, area.source, nested, victim, area.amounts[i], crit, area.push_from, power)
+		if victim.side != area.unit.side:
+			passed += 1
+
+
+static func _nearer(a: UnitState, b: UnitState, origin: Vector2i) -> bool:
+	var a_sq: int = ArenaPlane.length_sq(a.pos - origin)
+	var b_sq: int = ArenaPlane.length_sq(b.pos - origin)
+	return a_sq < b_sq if a_sq != b_sq else a.id < b.id
 
 
 static func _counts(area: Pending, other: UnitState) -> bool:

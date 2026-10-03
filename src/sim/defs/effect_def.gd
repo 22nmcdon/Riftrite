@@ -219,7 +219,7 @@ enum Trigger {
 	ON_HOLDER_HIT, ON_SHIELD_BROKEN, ON_ALLY_ABILITY, ON_STATUS_ENDED, ON_LIFESTEAL, ON_KNOCKBACK, ON_GUARD,
 	ON_BELOW_HP, ON_CHARGED, ON_ENEMY_FELL, ON_ARRIVE,
 }
-enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS }
+enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS, HOP }
 enum Placement { EDGES, ADJACENT, HEXES }
 enum Anchor { TARGET, SELF, TARGET_DIRECTION }
 enum Hits { ENEMIES, ALLIES, ALL, OTHER_ALLIES }
@@ -298,7 +298,7 @@ const REACH_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_TARGET, Target.ALLIES_
 ## The targets around the unit an event names (they need one).
 const NAMED_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_NAMED, Target.ENEMY_NEAR_NAMED]
 const SIDE_NAMES: Array[String] = ["both", "enemies", "allies"]
-const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain", "knockback", "pull", "leap", "charge", "area", "start_collapse", "summon", "gain_mana", "snare", "wall", "extend_status"]
+const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain", "knockback", "pull", "leap", "charge", "area", "start_collapse", "summon", "gain_mana", "snare", "wall", "extend_status", "hop"]
 ## The types placed at the ability's target without a "target" key of their
 ## own (an area, a snare, a wall).
 const PLACED: Array[Type] = [Type.AREA, Type.SNARE, Type.WALL]
@@ -458,7 +458,17 @@ var max_standing: int = 0
 ## charge over it springs (Snag); and a snare set under its side's
 ## front-most unit, of the kit's placed snares' kind (Guarded Ground).
 var follows: bool = false
+## An area (phase 8 part 2, Stormline): each enemy it hits after the first,
+## nearest its origin first, deals this much more damage than the one
+## before ("per_enemy_bp": +10% a step is 1000). 0: none.
+var per_enemy_bp: int = 0
 var ricochet: int = 0
+## Damage (phase 8 part 2, Eagle Eye and Inquisitor): a hit that leaves its
+## target alive below this share of max HP finishes it ("execute_below_pct";
+## a DAMAGE line noted "executed"). 0: none.
+var execute_below_bp: int = 0
+## on_kill (phase 8 part 2): only a kill an execution made ("executed").
+var executed: bool = false
 var reflect_bp: int = 0
 var snags: bool = false
 var under_front: bool = false
@@ -494,6 +504,7 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				if reader.has("bonus_per_ally"):
 					_read_bonus(def, reader.req_object("bonus_per_ally"))
 				def.ricochet = reader.opt_int("ricochet", 0, 0, 5)
+				def.execute_below_bp = reader.opt_int("execute_below_pct", 0, 0, 50) * 100
 			Type.HEAL:
 				var kinds: int = int(reader.has("amount")) + int(reader.has("amount_bp_of_max_hp")) + int(reader.has("amount_bp_of_damage"))
 				if kinds != 1:
@@ -587,6 +598,10 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 		_read_trigger_fields(def, reader, relic, in_area)
 	if PLACED.has(def.type) and (def.trigger == Trigger.ON_HIT or def.trigger == Trigger.ON_CRIT):
 		reader.error("%s is %s as its ability fires or on a passive's trigger, never on_hit or on_crit" % ["an area" if def.type == Type.AREA else "a " + type_name, "cast" if def.type == Type.AREA else "placed"])
+	# A hop (phase 8 part 2, Windrunner): the unit hops a hex away from its
+	# nearest enemy, as the hop_away trait does; it aims at the unit itself.
+	if def.type == Type.HOP and not target_name.is_empty() and def.target != Target.SELF:
+		reader.error("a hop moves the unit itself, so it needs \"target\": \"self\"")
 	if MOVES_SELF.has(def.type) and not type_name.is_empty() and not target_name.is_empty():
 		if def.target != Target.TARGET or def.trigger != Trigger.ON_FIRE:
 			reader.error("%s moves the unit itself to its target, so it needs \"target\": \"target\" and the on_fire trigger" % type_name)
@@ -630,6 +645,7 @@ static func _read_area(def: EffectDef, reader: DataReader) -> void:
 	if def.follows and def.zone_ticks == 0:
 		reader.error("only a zone (an area with a duration) follows")
 	def.hits = maxi(HITS_NAMES.find(reader.req_choice("hits", HITS_NAMES)), 0) as Hits
+	def.per_enemy_bp = reader.opt_int("per_enemy_bp", 0, 0, FixedMath.BP_ONE)
 	if not anchor_name.is_empty() and def.shape.is_aimed() != (def.anchor == Anchor.TARGET_DIRECTION):
 		reader.error("anchor: a %s takes %s" % [ShapeDef.KIND_NAMES[def.shape.kind], "target_direction" if def.shape.is_aimed() else "target or self"])
 	_read_nested(def, reader, "an area")
@@ -691,6 +707,9 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 		Trigger.ON_KILL:
 			def.from_signature = reader.opt_bool("from_signature", false)
 			def.off_target = reader.opt_bool("off_target", false)
+			def.executed = reader.opt_bool("executed", false)
+			if reader.has("from_ability"):
+				def.from_abilities = reader.req_string_array("from_ability")
 		Trigger.ON_HOLDER_CRIT:
 			if reader.has("beyond_hexes"):
 				def.beyond_range = reader.req_int("beyond_hexes", 1, 10) * HexGrid.HEX

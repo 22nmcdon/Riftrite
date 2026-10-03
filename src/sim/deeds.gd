@@ -41,6 +41,11 @@ class Counter:
 	var shot_range_sq: Dictionary[String, int] = {}
 	## Each ability's latest fire's target, for extra_hits (lookup only).
 	var fired_at: Dictionary[String, String] = {}
+	## Some deed filters on the time since a hop (within_ms_of_hop; phase 8
+	## part 2): the tick of the unit's last HOP, read in the log's order (-1:
+	## none yet).
+	var needs_hops: bool = false
+	var hopped_at: int = -1
 
 
 static func make_counter(deed_paths: Array[PathDef], tally_keys: Array[String] = [], tally_counts: Array[DeedDef] = [],
@@ -67,6 +72,7 @@ static func _add(counter: Counter, key: String, deed: DeedDef) -> void:
 	counter.needs_kills = counter.needs_kills or deed.counts == DeedDef.Counts.KILLS
 	counter.needs_time = counter.needs_time or deed.counts == DeedDef.Counts.MS_BELOW or deed.counts == DeedDef.Counts.MS_STANDING
 	counter.needs_casts = counter.needs_casts or deed.counts == DeedDef.Counts.CASTS
+	counter.needs_hops = counter.needs_hops or deed.after_hop_ticks > 0
 
 
 ## Counts log entries [from, to).
@@ -78,6 +84,11 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 		if entry.source_unit.is_empty() or entry.source_relic_side >= 0:
 			continue
 		var kind: LogEntry.Kind = entry.kind
+		if kind == LogEntry.Kind.HOP:
+			var hopper: UnitState = sim.unit_by_id(entry.source_unit)
+			if hopper != null and hopper.deeds != null and hopper.deeds.needs_hops:
+				hopper.deeds.hopped_at = entry.tick
+			continue
 		if kind != LogEntry.Kind.DAMAGE and kind != LogEntry.Kind.HEAL and kind != LogEntry.Kind.SHIELD and kind != LogEntry.Kind.SHOT \
 				and kind != LogEntry.Kind.FIRE and kind != LogEntry.Kind.STATUS_APPLIED and kind != LogEntry.Kind.GUARD:
 			continue
@@ -107,6 +118,8 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 			if deed.off_target and counter.fired_at.get(entry.source_ability, "") == entry.target:
 				continue
 			if deed.from_basic and entry.source_ability != unit.def.basic_attack.id:
+				continue
+			if deed.after_hop_ticks > 0 and (counter.hopped_at < 0 or entry.tick - counter.hopped_at > deed.after_hop_ticks):
 				continue
 			match deed.counts:
 				DeedDef.Counts.CRITS:
@@ -155,7 +168,13 @@ static func _count_on_target(sim: CombatSim, entry: LogEntry) -> void:
 				return
 			var killer: UnitState = sim.unit_by_id(fallen.last_attacker)
 			if killer != null and killer.deeds != null and killer.deeds.needs_kills and killer.side != fallen.side:
-				_add_to(killer.deeds, DeedDef.Counts.KILLS, 1)
+				# A kills deed may count only kills by some abilities (phase 8
+				# part 2: Eagle Eye's, Inquisitor's).
+				var by: String = fallen.last_hit_source.ability_id if fallen.last_hit_source != null else ""
+				for d: int in killer.deeds.deeds.size():
+					var deed: DeedDef = killer.deeds.deeds[d]
+					if deed.counts == DeedDef.Counts.KILLS and (deed.from_ability.is_empty() or deed.from_ability.has(by)):
+						killer.deeds.amounts[d] += 1
 
 
 static func _add_to(counter: Counter, counts: DeedDef.Counts, amount: int) -> void:

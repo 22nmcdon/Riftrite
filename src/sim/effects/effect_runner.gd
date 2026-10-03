@@ -162,6 +162,8 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 	match effect.type:
 		EffectDef.Type.DAMAGE:
 			var dealt: int = deal_hit(sim, source, victim, amount, crit, power)
+			if effect.execute_below_bp > 0 and not sim.last_dodged:
+				execute(sim, source, victim, effect.execute_below_bp)
 			if effect.trigger == EffectDef.Trigger.ON_FIRE and ability.has_hit_effects and not sim.last_dodged:
 				var hit := Hit.new()
 				hit.target = victim
@@ -210,6 +212,8 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			Displacement.pull(sim, victim, unit, effect.hexes, source)
 		EffectDef.Type.LEAP:
 			Displacement.leap(sim, unit, victim, effect, source)
+		EffectDef.Type.HOP:
+			Displacement.hop(sim, victim, source)
 		EffectDef.Type.CHARGE:
 			Displacement.charge(sim, unit, victim, effect, source)
 		EffectDef.Type.START_COLLAPSE:
@@ -434,6 +438,28 @@ static func nearest_to(pool: Array[UnitState], others: Array[UnitState], count: 
 ## which comes from lifesteal). `note` says what made it, if not an ability.
 ## `ruled`: a hit a hero rule made (an echo, a carry), which starts no echo
 ## or carry of its own (phase 5c step 5c).
+## An execution (phase 8 part 2): a target the hit left standing below
+## `below_bp` of its max HP loses the rest of its HP, past any Shield or
+## DEF, logged as a DAMAGE line noted "executed" from the same source. The
+## fall itself is the deaths step's, as for any other hit.
+static func execute(sim: CombatSim, source: EffectSource, victim: UnitState, below_bp: int) -> void:
+	if victim.hp <= 0 or victim.hp * FixedMath.BP_ONE >= below_bp * victim.max_hp:
+		return
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.DAMAGE, source)
+	entry.note = "executed"
+	entry.target = victim.id
+	entry.amount = victim.hp
+	entry.set_rule(victim.hp, 0, 0, 0, 0)
+	victim.hp = 0
+	victim.executed = true
+	victim.last_hit_chain = entry.chain
+	victim.last_hit_source = source
+	victim.last_hit_status = ""
+	if source.relic_side < 0 and source.unit_id != victim.id:
+		victim.last_attacker = source.unit_id
+	sim.combat_log.add(entry)
+
+
 static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, amount: int, crit: bool, power: int = 0, steals: bool = true, note: String = "", ruled: bool = false) -> int:
 	sim.last_dodged = false
 	# Sidestep (phase 5c step 6b): a hit on it misses, then not again for a

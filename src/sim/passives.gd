@@ -436,6 +436,8 @@ static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, 
 			continue
 		if not effect.from_abilities.is_empty() and not effect.from_abilities.has(status):
 			continue
+		if effect.executed and (other == null or not other.executed):
+			continue
 		if effect.was_below_bp > 0 and (other == null or (other.hp - damage) * FixedMath.BP_ONE >= effect.was_below_bp * other.max_hp):
 			continue
 		if effect.cooldown_ticks > 0 and listener.ran_at >= 0 and sim.tick - listener.ran_at < effect.cooldown_ticks:

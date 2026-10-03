@@ -37,6 +37,10 @@ extends RefCounted
 ##            tick ends (a tactic's, Decision 32)
 ## Phase 8 part 2 (apexes):
 ##   hits     its hits on enemies, one each (Hailstorm)
+##   kills takes from_ability too: only kills by those abilities (Eagle
+##            Eye, Inquisitor)
+##   within_ms_of_hop: 1000        a filter: only what lands within this long
+##                                 after the hero's last hop (Windrunner)
 ## Filters (each optional):
 ##   from_ability: ["split_shot"]  only what these abilities or passives do
 ##                                 (ids in the hero's kits: base, vowed, or
@@ -80,6 +84,9 @@ var while_below_bp: int = 0
 var off_target: bool = false
 var while_undying: bool = false
 var from_basic: bool = false
+## Only what lands within this long after the hero's last hop (phase 8 part
+## 2, Windrunner; "within_ms_of_hop"). 0: any time.
+var after_hop_ticks: int = 0
 ## applied: only statuses carrying one of these keywords (empty: any).
 var keywords: Array[String] = []
 ## What fills the deed in a run (0: none given; RunContent requires one).
@@ -103,6 +110,7 @@ static func read(reader: DataReader, needs_text: bool = true) -> DeedDef:
 		def.while_below_bp = reader.req_int("while_below_pct", 1, 99) * 100
 	def.while_undying = reader.opt_bool("while_undying", false)
 	def.from_basic = reader.opt_bool("from_basic", false)
+	def.after_hop_ticks = reader.opt_ticks("within_ms_of_hop", 0)
 	def.keywords = reader.opt_choice_array("keywords", Keywords.NAMES)
 	def.threshold = reader.opt_int("threshold", 0, 1)
 	if def.counts != Counts.DAMAGE and (def.from_range > 0 or def.while_undying):
@@ -113,7 +121,9 @@ static func read(reader: DataReader, needs_text: bool = true) -> DeedDef:
 		reader.error("ms_below needs while_below_pct")
 	if def.counts != Counts.APPLIED and not def.keywords.is_empty():
 		reader.error("keywords only filter applied")
-	if NOT_ITS_OWN.has(def.counts) and (def.from_basic or not def.from_ability.is_empty() or def.off_target):
+	# Kills may name the abilities that land them (phase 8 part 2): the
+	# fallen's last hit says which.
+	if NOT_ITS_OWN.has(def.counts) and (def.from_basic or (not def.from_ability.is_empty() and def.counts != Counts.KILLS) or def.off_target):
 		reader.error("%s isn't something an ability does, so it takes no from_ability, from_basic, or off_target" % COUNT_NAMES[def.counts])
 	if (def.counts == Counts.ROOTED_MS or def.counts == Counts.GUARDED) and not def.from_ability.is_empty():
 		reader.error("%s counts every one, so it takes no from_ability" % COUNT_NAMES[def.counts])

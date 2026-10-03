@@ -311,6 +311,8 @@ static func passive_trigger_text(effect: EffectDef) -> String:
 		text += " within %d hexes" % (effect.fell_range / HexGrid.HEX)
 	if effect.min_hit_bp > 0:
 		text += " of at least %s of its max HP" % ValueBreakdown._percent(effect.min_hit_bp)
+	if effect.executed:
+		text = text.replace("kill", "execution")
 	if effect.from_signature:
 		text += " by its signature"
 	if not effect.from_abilities.is_empty():
@@ -500,6 +502,8 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 			if effect.bonus_bp_per_ally > 0:
 				var kin: String = _unit_name(effect.bonus_kit, content) if not effect.bonus_kit.is_empty() else "ally"
 				text += ", +%s per other %s within %s" % [ValueBreakdown._percent(effect.bonus_bp_per_ally), kin, hexes(bonus_hexes(effect))]
+			if effect.execute_below_bp > 0:
+				text += ", finishing it below %s HP" % ValueBreakdown._percent(effect.execute_below_bp)
 			return text + _to_all(effect)
 		EffectDef.Type.HEAL:
 			if effect.amount_bp_of_max_hp > 0:
@@ -568,6 +572,8 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 			return "pulls %s" % hexes(effect.hexes)
 		EffectDef.Type.LEAP:
 			return "leaps up to %s" % hexes(effect.hexes)
+		EffectDef.Type.HOP:
+			return "hops %s away from the nearest enemy" % hexes(1)
 		EffectDef.Type.CHARGE:
 			return "charges %s, knocking back %s" % [hexes(effect.hexes), hexes(effect.knockback_hexes)]
 		EffectDef.Type.AREA:
@@ -576,6 +582,8 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 				text += " (%s warning)" % seconds(effect.warning_ticks)
 			if effect.zone_ticks > 0:
 				text += " for %s, every %s" % [seconds(effect.zone_ticks), seconds(effect.pulse_ticks)]
+			if effect.per_enemy_bp > 0:
+				text += ", +%s for each enemy it passes" % ValueBreakdown._percent(effect.per_enemy_bp)
 			return text
 		EffectDef.Type.START_COLLAPSE:
 			return "starts Rift Collapse"

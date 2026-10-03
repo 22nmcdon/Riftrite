@@ -109,7 +109,7 @@ const UPGRADE_STATUSES: Array[String] = ["hobbled", "cowed", "parting_shot", "fi
 ## Statuses only rift modifiers apply (phase 5c step 8b; tests/run/test_rift_tear.gd).
 const RIFT_STATUSES: Array[String] = ["blood_frenzy"]
 ## Statuses only apexes apply (phase 8 part 2; tests/sim/test_apex_kits.gd).
-const APEX_STATUSES: Array[String] = ["hailstorm"]
+const APEX_STATUSES: Array[String] = ["hailstorm", "tailwind"]
 ## The statuses the heroes' rules apply (phase 5c step 5c).
 const RULE_STATUSES: Array[String] = ["unbending", "long_watch"]
 

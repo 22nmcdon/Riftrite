@@ -339,5 +339,13 @@
     "kind": "boost",
     "stacking": true,
     "auras": [{"stat": "damage_bp", "value": 10100}]
+  },
+  {
+    "_note": "Attacks faster for the rest of the fight, a stack for each hop (Windrunner, Volley's apex; phase 8 part 2).",
+    "id": "tailwind",
+    "name": "Tailwind",
+    "kind": "boost",
+    "stacking": true,
+    "auras": [{"stat": "atsp_bp", "value": 10300}]
   }
 ]

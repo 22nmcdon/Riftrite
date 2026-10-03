@@ -31,7 +31,7 @@ func _maren(setup: FightSetup) -> UnitSetup:
 
 func test_a_paths_apexes_load_on_its_transformed_kit() -> void:
 	var volley: PathDef = _content.paths["volley"]
-	assert_eq(volley.apexes.map(func(apex: ApexDef) -> String: return apex.id), ["hailstorm"])
+	assert_eq(volley.apexes.map(func(apex: ApexDef) -> String: return apex.id), ["hailstorm", "windrunner"])
 	var hailstorm: ApexDef = _content.apexes["hailstorm"]
 	assert_eq(hailstorm.path, "volley")
 	assert_true(_content.apex_ids.has("hailstorm"))
@@ -49,7 +49,7 @@ func test_a_paths_apexes_load_on_its_transformed_kit() -> void:
 	assert_true(hailstorm.apex_kit.passives.any(func(part: PartDef) -> bool: return part.id == "gathering_hail"))
 	assert_eq(volley.kit(PathDef.Stage.APEX_VOWED, _content.heroes["maren"].kit, "hailstorm"), hailstorm.vowed_kit)
 	assert_eq(volley.kit(PathDef.Stage.APEX, _content.heroes["maren"].kit, "hailstorm"), hailstorm.apex_kit)
-	assert_eq(volley.apex_kits(), [hailstorm.vowed_kit, hailstorm.apex_kit] as Array[UnitDef])
+	assert_eq(volley.apex_kits().slice(0, 2), [hailstorm.vowed_kit, hailstorm.apex_kit] as Array[UnitDef])
 	assert_eq(PathDef.STAGE_NAMES[PathDef.Stage.APEX], "apex")
 
 
@@ -59,13 +59,13 @@ func test_a_hero_takes_an_apex_through_the_setup() -> void:
 	assert_eq(errors, [] as Array[String])
 	var maren: UnitSetup = _maren(setup)
 	assert_eq([maren.stage, maren.apex.id, maren.def], [PathDef.Stage.APEX_VOWED, "hailstorm", _content.apexes["hailstorm"].vowed_kit])
-	assert_eq(maren.deed_apexes.map(func(apex: ApexDef) -> String: return apex.id), ["hailstorm"])
+	assert_eq(maren.deed_apexes.map(func(apex: ApexDef) -> String: return apex.id), ["hailstorm", "windrunner"])
 	assert_eq(setup.validate(_content), [] as Array[String])
 	setup = _setup({"maren": "hailstorm"} as Dictionary[String, String], ["maren"] as Array[String], errors)
 	assert_eq([_maren(setup).stage, _maren(setup).def], [PathDef.Stage.APEX, _content.apexes["hailstorm"].apex_kit])
 	# A transformed hero without an apex vow still counts its path's apexes.
 	setup = _setup({} as Dictionary[String, String], [] as Array[String], errors)
-	assert_eq([_maren(setup).stage, _maren(setup).apex, _maren(setup).deed_apexes.size()], [PathDef.Stage.TRANSFORMED, null, 1])
+	assert_eq([_maren(setup).stage, _maren(setup).apex, _maren(setup).deed_apexes.size()], [PathDef.Stage.TRANSFORMED, null, 2])
 	# Only vowed: no apex deeds yet.
 	setup = _setup({} as Dictionary[String, String], [] as Array[String], errors, [] as Array[String])
 	assert_eq(_maren(setup).deed_apexes.size(), 0)

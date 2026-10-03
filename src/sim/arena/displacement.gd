@@ -203,15 +203,39 @@ static func hop_away(sim: CombatSim, unit: UnitState, engagers: Array[UnitState]
 		Engage.update(sim, unit, engagers)
 	if not unit.engagements.is_empty() and Engage.holds(unit):
 		return false
+	if not _hop_from(sim, unit, near, EffectSource.make(unit.id, "hop_away", "Hop Away")):
+		return false
+	unit.hop_ready_at = sim.tick + unit.def.hop_cooldown_ticks
+	return true
+
+
+## A hop effect (phase 8 part 2, Windrunner): a hex away from the nearest
+## standing enemy, wherever it is, unless an engagement holds the unit;
+## logged as HOP from `source`. It doesn't touch the hop_away trait's
+## cooldown. Returns true if it hopped.
+static func hop(sim: CombatSim, unit: UnitState, source: EffectSource) -> bool:
+	var near: UnitState = null
+	var near_distance: int = 0
+	for enemy: UnitState in sim.standing_enemies_of(unit):
+		var distance: int = ArenaPlane.length_sq(enemy.pos - unit.pos)
+		if near == null or distance < near_distance:
+			near = enemy
+			near_distance = distance
+	if near == null or (not unit.engagements.is_empty() and Engage.holds(unit)):
+		return false
+	return _hop_from(sim, unit, near, source)
+
+
+## Hops `unit` a hex straight away from `near` (as far as it fits), logged.
+static func _hop_from(sim: CombatSim, unit: UnitState, near: UnitState, source: EffectSource) -> bool:
 	var dir: Vector2i = ArenaPlane.direction(near.pos, unit.pos, Vector2i(0, -ArenaPlane.DIR * unit.forward()))
 	var sweep: ArenaPlane.Sweep = ArenaPlane.sweep(unit.pos, ArenaPlane.along(unit.pos, dir, HexGrid.HEX), unit.radius, sim.obstacles_for(unit, null), sim.safe)
 	if sweep.point == unit.pos:
 		return false
-	var entry: LogEntry = _log(sim, LogEntry.Kind.HOP, EffectSource.make(unit.id, "hop_away", "Hop Away"), near, unit.pos, sweep.point, "")
+	var entry: LogEntry = _log(sim, LogEntry.Kind.HOP, source, near, unit.pos, sweep.point, "")
 	if sweep.hit != ArenaPlane.Hit.NONE:
 		entry.note = "cut short"
 	_place(sim, unit, sweep.point)
-	unit.hop_ready_at = sim.tick + unit.def.hop_cooldown_ticks
 	return true
 
 

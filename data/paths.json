@@ -139,7 +139,192 @@
       "counts": "damage",
       "beyond_hexes": 4,
       "threshold": 900
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md). Numbers are placeholders for the --apexes report to tune.",
+        "id": "eagle_eye",
+        "name": "Eagle Eye",
+        "title": "the finisher",
+        "fantasy": "Nothing she sights walks away.",
+        "vowed": {
+          "taste": "Heartseeker deals 10% more damage to enemies below half their HP.",
+          "patch": {
+            "passives": [
+              {
+                "id": "keen_eye",
+                "name": "Keen Eye",
+                "kind": "aura",
+                "text": "Heartseeker deals more damage to enemies below half their HP.",
+                "aura": {
+                  "target": "holder",
+                  "stat": "damage_bp",
+                  "value": 11000,
+                  "vs": {
+                    "below_hp_pct": 50
+                  },
+                  "from_signature": true
+                }
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Heartseeker finishes any enemy it leaves below 20% HP, and she crits more. Each enemy Heartseeker finishes refills her mana, so one kill can lead straight into the next.",
+          "patch": {
+            "stats_add": {
+              "crit": 5
+            },
+            "signature": {
+              "id": "heartseeker",
+              "name": "Heartseeker",
+              "text": "Charges for 0.8s, then looses a shot at the nearest enemy within 4 hexes (6 once planted) that pierces every enemy in a line 6 hexes long, and finishes any it leaves below 20% HP.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "nearest",
+              "cast_ms": 800,
+              "effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "line",
+                    "length": 6
+                  },
+                  "anchor": "target_direction",
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount": 20,
+                      "target": "target",
+                      "scaling": {
+                        "atk": 16000
+                      },
+                      "execute_below_pct": 20
+                    }
+                  ]
+                }
+              ]
+            },
+            "passives": [
+              {
+                "id": "hunters_return",
+                "name": "Hunter's Return",
+                "kind": "ability",
+                "text": "Each enemy Heartseeker finishes refills her mana.",
+                "effects": [
+                  {
+                    "trigger": "on_kill",
+                    "from_signature": true,
+                    "executed": true,
+                    "type": "gain_mana",
+                    "amount_bp_of_max_mana": 10000,
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Kills with Heartseeker",
+          "counts": "kills",
+          "from_ability": [
+            "heartseeker"
+          ],
+          "threshold": 2
+        }
+      },
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md). Numbers are placeholders for the --apexes report to tune.",
+        "id": "stormline",
+        "name": "Stormline",
+        "title": "the line across the field",
+        "fantasy": "One shot, and the whole line falls.",
+        "vowed": {
+          "taste": "Heartseeker's line reaches 2 hexes farther.",
+          "patch": {
+            "signature": {
+              "id": "heartseeker",
+              "name": "Heartseeker",
+              "text": "Charges for 0.8s, then looses a shot at the nearest enemy within 4 hexes (6 once planted) that pierces every enemy in a line 8 hexes long.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "nearest",
+              "cast_ms": 800,
+              "effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "line",
+                    "length": 8
+                  },
+                  "anchor": "target_direction",
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount": 20,
+                      "target": "target",
+                      "scaling": {
+                        "atk": 16000
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "apex": {
+          "text": "Heartseeker's line crosses the whole board, and each enemy it passes through makes it hit the next one 10% harder.",
+          "patch": {
+            "signature": {
+              "id": "heartseeker",
+              "name": "Heartseeker",
+              "text": "Charges for 0.8s, then looses a shot at the nearest enemy within 4 hexes (6 once planted) that pierces every enemy in a line 10 hexes long; each enemy it passes through makes it hit the next harder.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "nearest",
+              "cast_ms": 800,
+              "effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "line",
+                    "length": 10
+                  },
+                  "anchor": "target_direction",
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount": 20,
+                      "target": "target",
+                      "scaling": {
+                        "atk": 16000
+                      }
+                    }
+                  ],
+                  "per_enemy_bp": 1000
+                }
+              ]
+            }
+          }
+        },
+        "deed": {
+          "text": "Enemies hit by Heartseeker",
+          "counts": "hits",
+          "from_ability": [
+            "heartseeker"
+          ],
+          "threshold": 16
+        }
+      }
+    ]
   },
   {
     "_note": "Control (rebuild-heroes.md, section 6, path 2). Transformed, you place her first 2 snares before the fight.",
@@ -569,6 +754,84 @@
             "arrow_storm"
           ],
           "threshold": 120
+        }
+      },
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md). Numbers are placeholders for the --apexes report to tune.",
+        "id": "windrunner",
+        "name": "Windrunner",
+        "title": "the one you can't pin down",
+        "fantasy": "Always a step ahead, and never still.",
+        "vowed": {
+          "taste": "Her hop away comes back 1s sooner.",
+          "patch": {
+            "hop_cooldown_ms": 5000
+          }
+        },
+        "apex": {
+          "text": "Every 3rd shot she hops a hex away from the nearest enemy, still shooting. Each hop makes her attack 3% faster for the rest of the fight, with no cap.",
+          "patch": {
+            "basic_attack": {
+              "id": "longshot",
+              "name": "Longshot",
+              "text": "Shoots her target from up to 4 hexes away, even while she walks. Every shot splits: it also hits the enemy nearest her target, within 1 hex of it, for less, and each split gives her mana. Every 3rd shot, she hops a hex away from the nearest enemy.",
+              "cooldown_ms": 1000,
+              "effects": [
+                {
+                  "type": "damage",
+                  "amount": 0,
+                  "target": "target",
+                  "scaling": {
+                    "atk": 10000
+                  }
+                },
+                {
+                  "type": "damage",
+                  "amount": 0,
+                  "target": "enemy_near_target",
+                  "scaling": {
+                    "atk": 5000
+                  },
+                  "within_hexes": 1
+                },
+                {
+                  "type": "gain_mana",
+                  "amount": 3,
+                  "target": "self"
+                },
+                {
+                  "type": "hop",
+                  "target": "self",
+                  "every": 3
+                }
+              ]
+            },
+            "passives": [
+              {
+                "id": "tailwind",
+                "name": "Tailwind",
+                "kind": "ability",
+                "text": "Each hop makes her attack a little faster for the rest of the fight, with no cap.",
+                "effects": [
+                  {
+                    "trigger": "on_hop",
+                    "type": "apply_status",
+                    "status": "tailwind",
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Hits from her shots within 1s of a hop",
+          "counts": "hits",
+          "from_ability": [
+            "longshot"
+          ],
+          "within_ms_of_hop": 1000,
+          "threshold": 2
         }
       }
     ]
