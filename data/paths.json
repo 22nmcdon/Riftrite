@@ -614,7 +614,7 @@
                 "aura": {
                   "target": "all_allies",
                   "stat": "damage_bp",
-                  "value": 15000,
+                  "value": 16000,
                   "vs": {
                     "keywords": [
                       "rooted"
@@ -2923,7 +2923,7 @@
                     "type": "damage",
                     "amount": 15,
                     "scaling": {
-                      "mgk": 24000
+                      "mgk": 36000
                     },
                     "target": "target",
                     "execute_below_pct": 20

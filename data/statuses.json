@@ -346,7 +346,7 @@
     "name": "Tailwind",
     "kind": "boost",
     "stacking": true,
-    "auras": [{"stat": "atsp", "value": 5}]
+    "auras": [{"stat": "atsp", "value": 7}]
   },
   {"_note": "Stronger MGK for the rest of the fight, a stack for each enemy her smite kills (Inquisitor; phase 8 part 2).", "id": "zeal", "name": "Zeal", "kind": "boost", "stacking": true, "auras": [{"stat": "mgk_bp", "value": 12000}]},
   {"_note": "Attacks a little faster for a moment, from Mend or Kindle (Dawnbringer's taste; phase 8 part 2).", "id": "morning_haste", "name": "Morning Haste", "kind": "boost", "duration_ms": 2000, "auras": [{"stat": "atsp", "value": 5}]},
