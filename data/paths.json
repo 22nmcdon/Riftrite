@@ -331,7 +331,7 @@
           "from_ability": [
             "heartseeker"
           ],
-          "threshold": 16
+          "threshold": 28
         }
       }
     ]
@@ -459,12 +459,12 @@
         "title": "the thicket's keeper",
         "fantasy": "Every snare she sets grows a hedge of thorns.",
         "vowed": {
-          "taste": "A sprung snare grows a briar 1 hex wide in the enemy's way for 2s; enemies touching it are torn.",
+          "taste": "A sprung snare grows a briar 2 hexes wide in the enemy's way for 3s; enemies touching it are torn.",
           "patch": {
             "signature": {
               "id": "bramble_field",
               "name": "Bramble Field",
-              "text": "Drops a snare 1 hex ahead of the nearest enemy within 3 hexes, in its path; the first enemy in it is rooted for 2.5s and Bleeds, and a briar 1 hex wide grows 1 hex ahead of it, in its way, for 2s. Up to 3 snares stand at once.",
+              "text": "Drops a snare 1 hex ahead of the nearest enemy within 3 hexes, in its path; the first enemy in it is rooted for 2.5s and Bleeds, and a briar 2 hexes wide grows 1 hex ahead of it, in its way, for 3s. Up to 3 snares stand at once.",
               "trigger": {
                 "kind": "mana"
               },
@@ -489,10 +489,10 @@
                     {
                       "type": "wall",
                       "at": "target",
-                      "width_hexes": 1,
+                      "width_hexes": 2,
                       "ahead_hexes": 1,
                       "blocks_movement": true,
-                      "duration_ms": 2000,
+                      "duration_ms": 3000,
                       "effects": [
                         {
                           "type": "apply_status",
@@ -670,7 +670,7 @@
           "vs_keywords": [
             "rooted"
           ],
-          "threshold": 600
+          "threshold": 1200
         }
       }
     ]
@@ -991,7 +991,7 @@
           "from_ability": [
             "arrow_storm"
           ],
-          "threshold": 120
+          "threshold": 240
         }
       },
       {
@@ -1074,7 +1074,7 @@
             "longshot"
           ],
           "within_ms_of_hop": 1000,
-          "threshold": 2
+          "threshold": 6
         }
       }
     ]
@@ -1271,7 +1271,7 @@
         "deed": {
           "text": "Enemy shots stopped by his wall",
           "counts": "blocked",
-          "threshold": 30
+          "threshold": 22
         }
       },
       {
@@ -1281,7 +1281,7 @@
         "title": "the warm wall",
         "fantasy": "What he takes for them comes back as warmth.",
         "vowed": {
-          "taste": "Guarded allies heal 1% of the damage he takes for them.",
+          "taste": "Guarded allies heal 10% of the damage he takes for them.",
           "patch": {
             "passives": [
               {
@@ -1293,7 +1293,7 @@
                   {
                     "trigger": "on_guard",
                     "type": "heal",
-                    "amount_bp_of_damage": 100,
+                    "amount_bp_of_damage": 1000,
                     "target": "hit_target"
                   }
                 ]
@@ -1605,7 +1605,7 @@
           "from_ability": [
             "forge_blast"
           ],
-          "threshold": 40
+          "threshold": 20
         }
       },
       {
@@ -1615,12 +1615,12 @@
         "title": "the banner in the fray",
         "fantasy": "Where he lands, his allies find their courage.",
         "vowed": {
-          "taste": "Allies within 1 hex of where Brand Slam lands gain +5% ATK for 2s.",
+          "taste": "Allies within 2 hexes of where Brand Slam lands gain +5% ATK for 2s.",
           "patch": {
             "signature": {
               "id": "brand_slam",
               "name": "Brand Slam",
-              "text": "Leaps up to 2 hexes into the biggest group of enemies, then slams every enemy within 1 hex of where he lands, knocking them back 1 hex; allies within 1 hex of it hit a little harder for a moment.",
+              "text": "Leaps up to 2 hexes into the biggest group of enemies, then slams every enemy within 1 hex of where he lands, knocking them back 1 hex; allies within 2 hexes of it hit a little harder for a moment.",
               "trigger": {
                 "kind": "mana"
               },
@@ -1660,7 +1660,7 @@
                   "type": "area",
                   "shape": {
                     "kind": "circle",
-                    "radius": 1
+                    "radius": 2
                   },
                   "anchor": "target",
                   "hits": "allies",
@@ -1943,7 +1943,7 @@
           "text": "Damage he takes after rising",
           "counts": "taken",
           "after_rising": true,
-          "threshold": 300
+          "threshold": 90
         }
       },
       {
@@ -1953,28 +1953,28 @@
         "title": "the last fire",
         "fantasy": "When he finally falls, he takes them with him and lifts his allies up.",
         "vowed": {
-          "taste": "When he falls, allies within 1 hex of him heal 5% of their max HP.",
+          "taste": "When he falls, allies within 2 hexes of him heal 10% of their max HP.",
           "patch": {
             "passives": [
               {
                 "id": "martyrs_pyre",
                 "name": "Martyr's Pyre",
                 "kind": "ability",
-                "text": "When he falls, allies within 1 hex of him heal a little.",
+                "text": "When he falls, allies within 2 hexes of him heal a little.",
                 "effects": [
                   {
                     "trigger": "on_fall",
                     "type": "area",
                     "shape": {
                       "kind": "circle",
-                      "radius": 1
+                      "radius": 2
                     },
                     "anchor": "self",
                     "hits": "allies",
                     "effects": [
                       {
                         "type": "heal",
-                        "amount_bp_of_max_hp": 500,
+                        "amount_bp_of_max_hp": 1000,
                         "target": "target"
                       }
                     ]
@@ -2631,7 +2631,7 @@
         "deed": {
           "text": "Damage shared through her links",
           "counts": "shared",
-          "threshold": 12
+          "threshold": 8
         }
       },
       {
@@ -2706,7 +2706,7 @@
           "from_ability": [
             "thornweave"
           ],
-          "threshold": 6
+          "threshold": 10
         }
       }
     ]
@@ -2874,9 +2874,46 @@
         "title": "the judgement",
         "fantasy": "The marked do not get up again.",
         "vowed": {
-          "taste": "Her damage is 10% stronger against Marked enemies.",
+          "taste": "Her smites finish enemies below 10% HP, and her damage is 10% stronger against Marked enemies.",
           "patch": {
             "passives": [
+              {
+                "id": "mend",
+                "name": "Mend",
+                "kind": "ability",
+                "text": "Every 4th Lantern Glow, she heals the ally lowest on HP within 3 hexes, smites her target, finishing it below 10% HP, and gains mana.",
+                "effects": [
+                  {
+                    "trigger": "on_basic_attack",
+                    "every": 4,
+                    "type": "heal",
+                    "amount": 15,
+                    "scaling": {
+                      "mgk": 10000
+                    },
+                    "target": "lowest_hp_ally",
+                    "within_hexes": 3
+                  },
+                  {
+                    "trigger": "on_basic_attack",
+                    "every": 4,
+                    "type": "damage",
+                    "amount": 8,
+                    "scaling": {
+                      "mgk": 4000
+                    },
+                    "target": "target",
+                    "execute_below_pct": 10
+                  },
+                  {
+                    "trigger": "on_basic_attack",
+                    "every": 4,
+                    "type": "gain_mana",
+                    "amount": 10,
+                    "target": "self"
+                  }
+                ]
+              },
               {
                 "id": "zealous_eye",
                 "name": "Zealous Eye",
@@ -3151,7 +3188,7 @@
           "from_ability": [
             "sunfall"
           ],
-          "threshold": 40
+          "threshold": 60
         }
       }
     ]
