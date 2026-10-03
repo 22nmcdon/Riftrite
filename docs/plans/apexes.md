@@ -4,7 +4,7 @@ Status: **agreed in discussion (2026-09-30); built for Maren, Brannoc, and Vell 
 
 ## How apexes work
 
-- **When:** the apex vow opens **after the Act 1 boss**, for each hero who has transformed. A hero who hasn't transformed yet gets the vow once they do. **The apex lands after the Act 2 boss on an average run:** it's the team's peak and takes longer than the transformation (`rebuild-phase8-apexes.md`, Decisions 7 and 8; until Act 2 exists, a stand-in deed lands it around endless floor 3–4).
+- **When:** the apex vow opens **after the Act 1 boss**, for each hero who has transformed. A hero who hasn't transformed yet gets the vow once they do. **Changed (2026-10-03, `rebuild-phase8-acts.md` Decision 2): at least one apex per team lands before the Act 2 boss.** Earlier: **the apex lands after the Act 2 boss on an average run:** it's the team's peak and takes longer than the transformation (`rebuild-phase8-apexes.md`, Decisions 7 and 8; until Act 2 exists, a stand-in deed lands it around endless floor 3–4).
 - **How strong:** a fight the transformed team wins about half the time, the apex team wins almost always; a fight the transformed team almost never wins, the apex team wins about half the time (Decision 9, measured over enemy strength).
 - **Roles:** some apexes carry, some support, some tank, some control; **every hero has at least 1–2 apexes that can carry the team with the right setup** (Decision 10, which lists the roles). The strength above is for a good combination; a poor one has no target.
 - **Vow, taste, deed:** vowing gives the apex's taste at once and starts a second deed bar. When it fills, the hero transforms again. **The apex vow can be switched, at no cost, until the apex is earned.**

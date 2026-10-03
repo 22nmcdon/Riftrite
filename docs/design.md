@@ -74,7 +74,7 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 - **Fair:** enemy positions and threats show before you place your heroes, and every enemy has a one-line threat and an archetype icon on the fight card.
 - **Elites** are a named leader plus a pack built around one mechanic (The Hunt, Gloam Totem, Stone Ward). **The boss**, Old Mother Ash, has phases that test the back line, then a swarm, then spreading out while the arena shrinks early.
 - **Harder means new problems, not more HP:** later days combine threats, and stats grow only a little.
-- **Enemy growth** (`enemy-growth.md`): each enemy type has 2 **specializations** that change how it plays (from day 5 of Act 1, only in the harder fight; about half of a fight's enemies in Act 2, most in Act 3), and elites and the boss carry 1–2 **upgrades** (Frenzied, Warded, Anchored, and so on). **Rift modifiers** are rules for the whole enemy side in one fight (Rift Tear's Deep and Abyssal depths add them). **The rift learns** is a difficulty modifier: it reads your last 3 fights and swaps up to half of a fight's specializations and upgrades for ones that blunt your top 1–2 habits, always shown on the fight card.
+- **Enemy growth** (`enemy-growth.md`): each enemy type has 2 **specializations** that change how it plays (from day 3 of Act 2, none in Act 1; about half of a fight's enemies in Act 2, most in Act 3: `rebuild-phase8-acts.md`), and elites and the boss carry 1–2 **upgrades** (Frenzied, Warded, Anchored, and so on). **Rift modifiers** are rules for the whole enemy side in one fight (Rift Tear's Deep and Abyssal depths add them). **The rift learns** is a difficulty modifier: it reads your last 3 fights and swaps up to half of a fight's specializations and upgrades for ones that blunt your top 1–2 habits, always shown on the fight card.
 
 ## The run
 
@@ -88,7 +88,7 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 - **Duo bonds** (`duo-bonds.md`) link two paths of two different heroes; the vow shows a bonded pair as "?" until it's found. A bond has no boost of its own: once both heroes have transformed, its **bond relic** (free, team-wide) joins the shop pool for the rest of the run, more likely than an epic. Bonds are rare: 1–2 per path across the roster (3 in the Act 1 slice).
 - **Losing:** a lost fight replays the day, and the second loss ends the run. Deed progress from a lost fight still counts. A tie pays like a win.
 - **Random streams:** shop stock, picks, camp, and fight seeds each have their own stream from the run seed.
-- **Pacing targets:** the first transformation around days 3–4, all three heroes transformed by the boss, and apexes after the Act 2 boss (the apex vow opens after Act 1's; `rebuild-phase8-apexes.md`, Decision 7). Upgrade picks come after every win (about 8 in Act 1), so each is small.
+- **Pacing targets:** the first transformation around days 3–4, all three heroes transformed by the boss, and at least one apex per team before the Act 2 boss (the apex vow opens after Act 1's; `rebuild-phase8-acts.md`, Decision 2). Upgrade picks come after every win (about 8 in Act 1), so each is small.
 - **Difficulty target:** a good player clears Act 1 about half the time.
 
 ## Combos and scaling (part 7)

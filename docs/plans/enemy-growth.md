@@ -4,6 +4,8 @@ Status: **agreed in discussion (2026-09-30); the rift modifiers (section 4) buil
 
 ## 1. When they show up
 
+**Changed (the playtester, 2026-10-03; `rebuild-phase8-acts.md`, Decisions 4 and 10):** specializations start in **Act 2, from day 3**, not Act 1's day 5 (Act 1 has none); most of Act 3's enemies are specialized, with upgrades on its elites; and the rift learns (section 5) is on in Act 3 on normal difficulty, for the boss's adds only. The lines below are the earlier plan.
+
 - **Act 1:** specializations appear from **day 5**, only in the harder of the day's two fights. **Built later, only when needed** (the playtester, 2026-09-30): Act 1 ships without them until they're wanted.
 - **Act 2:** about half of a fight's enemies are specialized.
 - **Act 3:** most are.
