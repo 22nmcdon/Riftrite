@@ -79,6 +79,8 @@ func test_a_kills_deed_counts_only_its_abilitys_kills() -> void:
 
 func test_a_line_hits_each_enemy_it_passes_harder() -> void:
 	var checked: int = 0
+	var step: int = _content.apexes["stormline"].apex_kit.signature.effects[0].per_enemy_bp
+	assert_gt(step, 0)
 	for encounter_id: String in _content.encounter_ids:
 		var sim: CombatSim = _run(_apex_fight(encounter_id, "deadeye", "stormline", Vector2i(0, 0)))
 		for landed: LogEntry in sim.combat_log.of_kind(LogEntry.Kind.AREA_LANDED):
@@ -90,7 +92,7 @@ func test_a_line_hits_each_enemy_it_passes_harder() -> void:
 					powers.append(entry.rule_power)
 			powers.sort()
 			for i: int in powers.size():
-				assert_eq(powers[i] - powers[0], 1000 * i, "+10%% for each enemy passed (%s)" % encounter_id)
+				assert_eq(powers[i] - powers[0], step * i, "more for each enemy passed (%s)" % encounter_id)
 			checked += 1
 		if checked >= 3:
 			break
@@ -436,6 +438,11 @@ func test_a_rally_grows_with_each_slam_but_the_slam_doesnt() -> void:
 func test_a_rise_passive_brings_him_back_up_to_its_times_stronger_each_time() -> void:
 	var rises_total: int = 0
 	var after_total: int = 0
+	var rise_ticks: int = 0
+	for part: PartDef in _content.apexes["undying_oath"].apex_kit.passives:
+		if part.kind == PartDef.Kind.RISE:
+			rise_ticks = part.rise_ticks
+	assert_gt(rise_ticks, 0)
 	for encounter_id: String in _content.encounter_ids:
 		var sim: CombatSim = _hero_fight(encounter_id, "brannoc", "last_watch", "undying_oath")
 		# Second Dawn's rise counts toward his own: he never takes it.
@@ -450,7 +457,7 @@ func test_a_rise_passive_brings_him_back_up_to_its_times_stronger_each_time() ->
 				fell_at = entry.tick
 			elif entry.kind == LogEntry.Kind.RISE and entry.target == "brannoc":
 				assert_eq([entry.source_unit, entry.source_ability], ["brannoc", "undying_oath"], "his own rise (%s)" % encounter_id)
-				assert_eq(entry.tick - fell_at, 60, "3s after he fell (%s)" % encounter_id)
+				assert_eq(entry.tick - fell_at, rise_ticks, "his rise's wait after he fell (%s)" % encounter_id)
 				rises += 1
 			elif rises > 0 and (entry.kind == LogEntry.Kind.DAMAGE or entry.kind == LogEntry.Kind.STATUS_DAMAGE) and entry.target == "brannoc" \
 					and entry.source_relic_side < 0 and sim.unit_by_id(entry.source_unit) != null and sim.unit_by_id(entry.source_unit).side == EffectSource.Team.ENEMIES:

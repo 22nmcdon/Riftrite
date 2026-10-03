@@ -16,8 +16,10 @@ extends RefCounted
 ## the apex team's half point is the transformed team's zero point. The carry's
 ## share of its team's damage in the apex fights (Decision 10).
 ## With --apex-deeds, what a fight puts into each apex's deed with its taste
-## (the hero vowed to it, the others transformed) at DEED_SCALE: the numbers
-## the stand-in thresholds are set from (Decision 8).
+## (the hero vowed to it, the others transformed) at each of DEED_SCALES: the
+## numbers the stand-in thresholds are set from (Decision 8). A run's team
+## carries its upgrades, items, and relics, so at endless floor 3 (x1.52) it
+## wins about as often as the bare team does at x1.0; both are shown.
 
 const Placement = preload("res://tools/sim_report.gd")
 const PathReport = preload("res://tools/path_report.gd")
@@ -25,8 +27,9 @@ const PathReport = preload("res://tools/path_report.gd")
 const TEAMS_FILE: String = "res://tools/apex_teams.json"
 const SCALES: Array[int] = [10000, 12500, 15000, 17500, 20000, 25000, 30000, 40000, 50000]
 const ZERO_PERCENT: int = 5
-## About endless floor 3 (1.15^3).
-const DEED_SCALE: int = 15000
+## The bare team as strong as a run's at the first floors, and endless floor 3
+## (1.15^3) as written.
+const DEED_SCALES: Array[int] = [10000, 15000]
 
 
 class Team:
@@ -240,7 +243,8 @@ static func _x(multiplier: float) -> String:
 ## What a fight puts into each apex's deed, its hero vowed to it (the taste)
 ## and the others transformed on their team's paths, at DEED_SCALE.
 static func deeds_text(content: ContentDb, teams: Array[Team], encounter_ids: Array[String], named: Dictionary[String, Dictionary], drawn: int) -> String:
-	var lines: Array[String] = ["Apex deeds with the taste, a fight's worth at x%s (the stand-in thresholds: Decision 8):" % str(DEED_SCALE / 10000.0)]
+	var lines: Array[String] = ["Apex deeds with the taste, a fight's worth (and its wins) at %s (the stand-in thresholds: Decision 8):"
+		% " and ".join(DEED_SCALES.map(func(scale: int) -> String: return "x" + str(scale / 10000.0)))]
 	var done: Array[String] = []
 	for team: Team in teams:
 		for hero_id: String in team.apexes:
@@ -248,11 +252,16 @@ static func deeds_text(content: ContentDb, teams: Array[Team], encounter_ids: Ar
 			if done.has(apex_id):
 				continue
 			done.append(apex_id)
-			var variant: Lineup = _variant(content, team, "taste", [])
-			variant.apex_vows[hero_id] = apex_id
-			run_variant(content, variant, encounter_ids, named, drawn, [DEED_SCALE] as Array[int])
 			var apex: ApexDef = content.apexes[apex_id]
-			@warning_ignore("integer_division")
-			var mean: int = variant.deeds.get(apex_id, 0) / maxi(variant.fights[0], 1)
-			lines.append("  %-18s %-40s %6d a fight   threshold %6d (%.1f fights)" % [apex.name, apex.deed.text, mean, apex.deed.threshold, apex.deed.threshold / maxf(mean, 1.0)])
+			var cells: Array[String] = []
+			var first_mean: float = 0.0
+			for scale: int in DEED_SCALES:
+				var variant: Lineup = _variant(content, team, "taste", [])
+				variant.apex_vows[hero_id] = apex_id
+				run_variant(content, variant, encounter_ids, named, drawn, [scale] as Array[int])
+				var mean: float = variant.deeds.get(apex_id, 0) / maxf(variant.fights[0], 1.0)
+				if cells.is_empty():
+					first_mean = mean
+				cells.append("%7.1f (%3.0f%%)" % [mean, variant.percent(0)])
+			lines.append("  %-18s %-48s %s   threshold %5d (%.1f fights at x1)" % [apex.name, apex.deed.text, "  ".join(cells), apex.deed.threshold, apex.deed.threshold / maxf(first_mean, 0.1)])
 	return "\n".join(lines)

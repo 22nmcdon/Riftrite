@@ -170,7 +170,7 @@
           }
         },
         "apex": {
-          "text": "Heartseeker finishes any enemy it leaves below 20% HP, and she crits more. Each enemy Heartseeker finishes refills her mana, so one kill can lead straight into the next.",
+          "text": "Heartseeker finishes any enemy it leaves below 20% HP, and she crits more. Each enemy Heartseeker finishes refills her mana, so one kill can lead straight into the next. The apex also gives +15% HP, ATK, and MGK.",
           "patch": {
             "stats_add": {
               "crit": 10
@@ -284,7 +284,7 @@
           }
         },
         "apex": {
-          "text": "Heartseeker's line crosses the whole board, and each enemy it passes through makes it hit the next one 10% harder.",
+          "text": "Heartseeker's line crosses the whole board, and each enemy it passes through makes it hit the next one 20% harder. The apex also gives +15% HP, ATK, and MGK.",
           "patch": {
             "signature": {
               "id": "heartseeker",
@@ -509,7 +509,7 @@
           }
         },
         "apex": {
-          "text": "A sprung snare grows a briar wall 3 hexes wide for 4s that blocks enemies' way; enemies touching it are torn by thorns. Up to 6 briars stand at once, so she can wall enemies in.",
+          "text": "A sprung snare grows a briar wall 3 hexes wide for 4s that blocks enemies' way; enemies touching it are torn by thorns. Up to 6 briars stand at once, so she can wall enemies in. The apex also gives +15% HP, ATK, and MGK.",
           "patch": {
             "signature": {
               "id": "bramble_field",
@@ -603,7 +603,7 @@
           }
         },
         "apex": {
-          "text": "Allies deal 30% more damage to Rooted enemies. A Rooted enemy that falls leaves a snare where it fell.",
+          "text": "Allies deal 60% more damage to Rooted enemies. A Rooted enemy that falls leaves a snare where it fell. The apex also gives +15% HP, ATK, and MGK.",
           "patch": {
             "passives": [
               {
@@ -875,7 +875,7 @@
           }
         },
         "apex": {
-          "text": "Arrow Storm covers a circle 2 hexes around, and every 4th shot she fires drops a volley of it on her target. Each enemy Arrow Storm hits makes her deal 1% more damage for the rest of the fight, with no cap.",
+          "text": "Arrow Storm covers a circle 2 hexes around, and every 4th shot she fires drops a volley of it on her target. Each enemy Arrow Storm hits makes her deal 1% more damage for the rest of the fight, with no cap. The apex also gives +15% HP, ATK, and MGK.",
           "patch": {
             "basic_attack": {
               "id": "longshot",
@@ -1007,7 +1007,7 @@
           }
         },
         "apex": {
-          "text": "Every 3rd shot she hops a hex away from the nearest enemy, still shooting. Each hop makes her attack 3% faster for the rest of the fight, with no cap.",
+          "text": "Every 3rd shot she hops a hex away from the nearest enemy, still shooting. Each hop makes her attack 7% faster for the rest of the fight, with no cap. The apex also gives +15% HP, ATK, and MGK.",
           "patch": {
             "basic_attack": {
               "id": "longshot",
@@ -1216,7 +1216,7 @@
           }
         },
         "apex": {
-          "text": "His wall also blocks enemies' way, and stands until it's broken (its HP is half his max HP). Each attack it blocks gives him +1 DEF for the rest of the fight.",
+          "text": "His wall also blocks enemies' way, and stands until it's broken (its HP is half his max HP). Each attack it blocks gives him +1 DEF for the rest of the fight. The apex also gives +15% HP, ATK, and MGK.",
           "patch": {
             "signature": {
               "id": "hearthwall",
@@ -1302,7 +1302,7 @@
           }
         },
         "apex": {
-          "text": "Guarded allies heal 25% of the damage he takes for them. Overhealing from this gives him +1 max HP per 10 overheal, for the rest of the fight.",
+          "text": "Guarded allies heal 25% of the damage he takes for them. Overhealing from this gives him +1 max HP per 10 overheal, for the rest of the fight. The apex also gives +15% HP, ATK, and MGK.",
           "patch": {
             "passives": [
               {
@@ -1550,7 +1550,7 @@
           }
         },
         "apex": {
-          "text": "Each hit brands its target; at 5 brands they explode, dealing 150% of his ATK to it and every enemy within 1 hex. The explosion's hits brand too, so blasts can set off more blasts.",
+          "text": "Each hit brands its target; at 5 brands they explode, dealing 220% of his ATK to it and every enemy within 1 hex. The explosion's hits brand too, so blasts can set off more blasts. The apex also gives +15% HP, ATK, and MGK.",
           "patch": {
             "passives": [
               {
@@ -1677,7 +1677,7 @@
           }
         },
         "apex": {
-          "text": "Brand Slam rallies allies within 2 hexes of where it lands: +20% ATK, MGK, and attack speed for 4s. Each Brand Slam makes the rally a quarter stronger again (+5% at first), for the rest of the fight.",
+          "text": "Brand Slam rallies allies within 2 hexes of where it lands: +20% ATK, MGK, and attack speed for 4s. Each Brand Slam makes the rally a quarter stronger again (+5% at first), for the rest of the fight. The apex also gives +15% HP, ATK, and MGK.",
           "patch": {
             "signature": {
               "id": "brand_slam",
@@ -1918,7 +1918,7 @@
           }
         },
         "apex": {
-          "text": "He rises 3s after falling, at 30% HP, fully fighting, up to 3 times a fight. Each rise gives him +20% ATK and DEF for the rest of the fight.",
+          "text": "He rises 5s after falling, at 20% HP, fully fighting, up to 3 times a fight. Each rise gives him +10% ATK and DEF for the rest of the fight. The apex also gives +15% HP, ATK, and MGK.",
           "patch": {
             "passives": [
               {
@@ -1985,7 +1985,7 @@
           }
         },
         "apex": {
-          "text": "When he falls, he bursts: 300% of his ATK to enemies within 2 hexes, and allies within 2 hexes heal 30% of their max HP. The burst grows +10% for every 1,000 damage he took that fight.",
+          "text": "When he falls, he bursts: 300% of his ATK to enemies within 2 hexes, and allies within 2 hexes heal 30% of their max HP. The burst grows +10% for every 1,000 damage he took that fight. The apex also gives +15% HP, ATK, and MGK.",
           "patch": {
             "passives": [
               {
@@ -2287,7 +2287,7 @@
           }
         },
         "apex": {
-          "text": "Enemies in her lantern's light deal 25% less damage and Burn each second, and each lantern she sets is 10% stronger than the last, for the rest of the fight.",
+          "text": "Enemies in her lantern's light deal 15% less damage and Burn each second, and each lantern she sets is 10% stronger than the last, for the rest of the fight. The apex also gives +15% HP, ATK, and MGK.",
           "patch": {
             "signature": {
               "id": "night_lantern",
@@ -2391,7 +2391,7 @@
           }
         },
         "apex": {
-          "text": "Allies Mend and Kindle heal attack 25% faster for 4s, and healing an ally who's already sped up makes them 5% faster for the rest of the fight.",
+          "text": "Allies Mend and Kindle heal attack 60% faster for 5s, and healing an ally who's already sped up makes them 8% faster for the rest of the fight. The apex also gives +15% HP, ATK, and MGK.",
           "patch": {
             "passives": [
               {
@@ -2608,7 +2608,7 @@
           }
         },
         "apex": {
-          "text": "Allies holding her Shields are linked: each hit on one is split evenly between them all. Every 500 damage shared gives each linked ally +2 DEF for the rest of the fight.",
+          "text": "Allies holding her Shields are linked: each hit on one is split evenly between them all. Every 250 damage shared gives each linked ally +6 DEF for the rest of the fight. The apex also gives +15% HP, ATK, and MGK.",
           "patch": {
             "passives": [
               {
@@ -2662,7 +2662,7 @@
           }
         },
         "apex": {
-          "text": "When an ally's Shield breaks, whoever broke it takes all of what it held, and enemies within 1 hex of them half as much. Each Shield broken makes her Shields 5% larger for the rest of the fight.",
+          "text": "When an ally's Shield breaks, whoever broke it takes one and a half times what it held, and enemies within 1 hex of them three quarters as much. Each Shield broken makes her Shields 8% larger for the rest of the fight. The apex also gives +15% HP, ATK, and MGK.",
           "patch": {
             "passives": [
               {
@@ -2897,14 +2897,14 @@
           }
         },
         "apex": {
-          "text": "Her smites finish enemies below 15% HP, and her damage is 30% stronger against Marked enemies. Each enemy a smite kills gives her 15% more MGK for the rest of the fight.",
+          "text": "Her smites finish enemies below 20% HP, and her damage is 30% stronger against Marked enemies. Each enemy a smite kills gives her 20% more MGK for the rest of the fight. The apex also gives +15% HP, ATK, and MGK.",
           "patch": {
             "passives": [
               {
                 "id": "mend",
                 "name": "Mend",
                 "kind": "ability",
-                "text": "Every 4th Lantern Glow, she heals the ally lowest on HP within 3 hexes, smites her target, finishing it below 15% HP, and gains mana.",
+                "text": "Every 3rd Lantern Glow, she heals the ally lowest on HP within 3 hexes, smites her target, finishing it below 20% HP, and gains mana.",
                 "effects": [
                   {
                     "trigger": "on_basic_attack",
@@ -3067,7 +3067,7 @@
           }
         },
         "apex": {
-          "text": "Sunfall leaves hallowed ground along its line for the rest of the fight, up to 4 lines: each second, enemies on it are burned and allies on it heal 1% of their max HP.",
+          "text": "Sunfall leaves hallowed ground along its line for the rest of the fight, up to 4 lines: each second, enemies on it are burned and allies on it heal 1% of their max HP. The apex also gives +15% HP, ATK, and MGK.",
           "patch": {
             "signature": {
               "id": "sunfall",

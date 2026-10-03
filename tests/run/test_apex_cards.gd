@@ -64,11 +64,14 @@ func test_the_apex_cards_knobs() -> void:
 	assert_eq(_part(_on_apex("hot_iron"), "forge_blast").ability.effects[1].at_stacks, 4, "Hot Iron: 4 brands")
 	assert_eq(_on_apex("gatehouse").signature.effects[0].width_range, 5 * HexGrid.HEX, "Gatehouse: a hex wider")
 	assert_eq(_part(_on_apex("deeper_hearth"), "hearthkeeper").ability.effects[0].overheal_max_hp_per, 5, "Deeper Hearth: every 5 overheal")
-	assert_eq(_on_apex("gathering_line").signature.effects[0].per_enemy_bp, 1500, "Gathering Line: +15% an enemy")
+	var stormline: UnitDef = _run.content.apexes["stormline"].apex_kit
+	assert_eq(_on_apex("gathering_line").signature.effects[0].per_enemy_bp, stormline.signature.effects[0].per_enemy_bp + 500, "Gathering Line: +5% more an enemy")
 	assert_eq(_on_apex("war_cry").signature.grows_boosts_bp, 5000, "War Cry: the rally grows faster")
 	assert_eq(_on_apex("rising_light").signature.grows_bp, 2000, "Rising Light: each lantern +20%")
-	assert_eq(_part(_on_apex("stubborn_flame"), "undying_oath").rise_hp_bp, 5000, "Stubborn Flame: rises at 50%")
-	assert_eq(_part(_on_apex("iron_loom"), "loom").per_shared, 250, "Iron Loom: twice as often")
+	var undying: UnitDef = _run.content.apexes["undying_oath"].apex_kit
+	assert_eq(_part(_on_apex("stubborn_flame"), "undying_oath").rise_hp_bp, _part(undying, "undying_oath").rise_hp_bp + 2000, "Stubborn Flame: rises with 20% more")
+	var loom: UnitDef = _run.content.apexes["loomwarden"].apex_kit
+	assert_eq(_part(_on_apex("iron_loom"), "loom").per_shared, _part(loom, "loom").per_shared / 2, "Iron Loom: twice as often")
 	var bonfire: EffectDef = _part(_on_apex("bonfire"), "martyrs_pyre").ability.effects[0].area_effects[0]
 	assert_eq(bonfire.power_per_taken_bp, 1500, "Bonfire: +15% per 1,000")
 	var thicket: EffectDef = _on_apex("thicket").signature.effects[0]
