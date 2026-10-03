@@ -103,6 +103,7 @@ The playtester, 2026-10-02:
 The playtester, 2026-10-03 (after the apexes' endless report; recorded as Decision 11 in `rebuild-phase8-apexes.md`):
 
 6. **No shops and no upgrades on floors** (changes Decision 2; "this might be slightly changed later"): a floor is the fight, a pick that offers only apex cards (once a hero's apex is earned), and a node. The Pedlar is gone from floors (so are its legendaries from floor 10); the Magpie stays among the nodes. Why: the bots' runs went on without end, their hero, taste, and path cards (stacking ones above all) and growing cards having outgrown the rift.
+7. **Endless's tuning waits until after the heroes are tuned** (2026-10-03), Overkill Tithe's runaway with it (Decision 12 of `rebuild-phase8-apexes.md`).
 
 **Nothing is built until the playtester's further notes are in** (2026-10-02: "before building anything I have some markdown information I need to give you").
 

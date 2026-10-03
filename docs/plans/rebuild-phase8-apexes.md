@@ -107,6 +107,10 @@ The playtester, 2026-10-03, after 8b-4's endless report:
 
 11. **After the act, on endless floors, no shops and no upgrades** ("this might be slightly changed later"; it changes part 1's Decision 2): no Pedlar after a floor's fight, and the after-fight pick (and Camp's Train) offers only the heroes' apex cards, once their apex is earned, so the 36 cards can still be played until Acts 2 and 3 exist. The Magpie stays among a floor's nodes. Relic choices after elites, boss floors, and Rift Tears stay. Why: in the bots' endless runs the team outgrew the rift without end (stacking cards and growing cards counting damage that grows ×1.15 a floor), and runs never ended.
 
+The playtester, 2026-10-03, after reading 8b-4's endless report:
+
+12. **Endless and Overkill Tithe wait** ("that stuff will get tweaked after all of the heroes are tweaked"): the endless runaway (the 4 runs on floor 40, Overkill Tithe's uncapped shards) is left as is for now and comes back after the heroes are tuned. Phase 8 part 2 is done; move on.
+
 ## 10. Volley's new apex: Hailstorm (approved)
 
 Rain of Ash is cut: burning ground is Ilse's (Wildfire). **Hailstorm** keeps Arrow Storm at the center of Volley's second apex (Windrunner is her mobility apex) and makes her a **Root maker**, which the build map lists as a gap (`build-map.md`: Root has one maker, Trapper), so it pairs with Huntmaster and the Root relics.
