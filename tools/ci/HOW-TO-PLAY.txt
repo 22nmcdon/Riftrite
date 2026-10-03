@@ -94,15 +94,17 @@ PLAYING
   score (the end screen keeps your deepest). Big numbers shorten (12.4k).
   Endless isn't tuned yet: we only measured how far a bot gets.
 
-  APEXES (new in this build; one so far)
+  APEXES (new in this build: all 18)
   Going deeper opens the apex vow: a hero who has transformed can vow to
-  one of their path's apexes (its taste comes at once), and when the apex
-  deed fills, they transform again. Switch the apex vow for free until
-  then (the day screen or the hero's panel). Only Volley has an apex yet:
-  Hailstorm (Arrow Storm fires one more volley; the apex makes it wider,
-  drops a volley every 4th shot, and each enemy it hits adds 1% damage
-  for the rest of the fight). In Practice, transform Maren into Volley and
-  her panel offers Vow apex and Reach apex. The other apexes are next.
+  one of their path's two apexes (its taste comes at once), and when the
+  apex deed fills, they transform again. Switch the apex vow for free
+  until then (the day screen or the hero's panel). Every path has two
+  apexes, six a hero; some carry the team, some guard it, some help the
+  carry. Each apex has a snowball (it grows through the fight) and two
+  cards of its own, offered in the after-fight pick once it's reached.
+  The apex deeds are a stand-in size for now (aimed at floor 3-4; in the
+  full game an apex should land after Act 2's boss). In Practice,
+  transform a hero and their panel offers Vow apex and Reach apex.
 
   PRACTICE (Title > Practice)
   1. Title > Practice, then pick a fight ("Place your heroes").
@@ -194,9 +196,11 @@ TUNED IN THIS BUILD (phase 6: a bot that plays well, then Act 1 tuned to it)
   Does transforming feel like a real step up?
 
 WHAT WE WANT TO KNOW ABOUT APEXES
-  Does Hailstorm feel like a real step past Volley? Is the apex vow clear
-  on the day screen and in the panel? Does the apex land at a good time
-  (the aim for now: around floor 3-4; in the full game, after Act 2)?
+  Does reaching an apex feel like the team's peak, a big step past the
+  transformation? Which apexes feel like a carry, and which feel weak?
+  Does the right team of three apexes feel much stronger than a mixed
+  one? Is the apex vow clear on the day screen and in the panel? Does
+  the apex land at a good time (for now: around floor 3-4)?
 
 WHAT WE WANT TO KNOW ABOUT ENDLESS
   How deep do you get, and what ends your run? Does going deeper feel
