@@ -15,7 +15,9 @@ const MAX_STEPS: int = 8000
 ## Plays a run from `run_seed` to its end with `bot`. A refused action goes
 ## in `errors` and stops it.
 static func play(run: RunContent, run_seed: int, bot: Bot, vows: Dictionary[String, String], errors: Array[String]) -> RunFlow:
-	var flow: RunFlow = RunFlow.start(run, run_seed, vows, errors)
+	# A bot that goes deeper plays a testing run (phase 8 part 3): Act 1's
+	# endless is offered.
+	var flow: RunFlow = RunFlow.start(run, run_seed, vows, errors, bot.deeper)
 	if flow == null:
 		return null
 	bot.begin(flow)
@@ -60,7 +62,9 @@ static func step(flow: RunFlow, bot: Bot) -> String:
 		RunState.Phase.NODE:
 			return _at_node(flow, bot)
 		RunState.Phase.CHOICE:
-			return flow.go_deeper() if bot.go_deeper(flow) else flow.end_run()
+			if bot.go_deeper(flow) and flow.can_go_deeper():
+				return flow.go_deeper()
+			return flow.next_act() if flow.run.next_act(flow.state) != null else flow.end_run()
 	return "nothing to do"
 
 

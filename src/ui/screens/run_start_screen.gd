@@ -6,12 +6,14 @@ extends UiScreen
 ## stirs". The run's seed is drawn when the screen opens (shown, so a run
 ## can be played again).
 
-signal run_started(vows: Dictionary[String, String], run_seed: int)
+signal run_started(vows: Dictionary[String, String], run_seed: int, testing: bool)
 signal back_requested
 
 var run: RunContent
 var vows: Dictionary[String, String] = {}
 var run_seed: int = 1
+## Offer Act 1's endless (phase 8 part 3: a testing option, off by default).
+var testing: bool = false
 var _cards: VBoxContainer
 var _stirring: Label
 
@@ -36,12 +38,18 @@ func build() -> void:
 	add_child(_stirring)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
-	row.add_child(primary_button("Into the rift", func() -> void: run_started.emit(vows, run_seed)))
+	row.add_child(primary_button("Into the rift", func() -> void: run_started.emit(vows, run_seed, testing)))
 	row.add_child(UiStyle.button("Back", func() -> void: back_requested.emit()))
 	var seed_label: Label = UiStyle.label("Seed %d" % run_seed, 16, UiStyle.TEXT_DIM)
 	seed_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(seed_label)
 	add_child(row)
+	# The testing option (phase 8 part 3, Decision 15): Act 1's endless.
+	var check := CheckBox.new()
+	check.text = "Endless after Act 1 (for testing)"
+	check.button_pressed = testing
+	check.toggled.connect(func(on: bool) -> void: testing = on)
+	add_child(check)
 	_fill()
 
 

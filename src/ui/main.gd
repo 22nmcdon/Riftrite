@@ -102,9 +102,9 @@ func show_run_start(run_seed: int = 0) -> void:
 	show_screen(start)
 
 
-func start_run(vows: Dictionary[String, String], run_seed: int) -> void:
+func start_run(vows: Dictionary[String, String], run_seed: int, testing: bool = false) -> void:
 	var errors: Array[String] = []
-	run_session = RunSession.begin(run_content(), run_seed, vows, errors, run_save_path)
+	run_session = RunSession.begin(run_content(), run_seed, vows, errors, run_save_path, testing)
 	if run_session != null:
 		run_session.records_path = records_path
 	if run_session == null:

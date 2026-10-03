@@ -22,7 +22,7 @@ func after_each() -> void:
 
 func _start(run_seed: int = 7) -> RunFlow:
 	var errors: Array[String] = []
-	var flow: RunFlow = RunFlow.start(_run, run_seed, Bot.first_vows(_run.content), errors)
+	var flow: RunFlow = RunFlow.start(_run, run_seed, Bot.first_vows(_run.content), errors, true)
 	assert_eq(errors, [] as Array[String])
 	return flow
 

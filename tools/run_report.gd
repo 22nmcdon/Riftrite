@@ -148,7 +148,7 @@ static func play(run: RunContent, run_seed: int, bot_name: String = "simple-peek
 	bot.deeper = endless
 	var combos: Array[Dictionary] = vow_combinations(run.content)
 	line.vows.assign(combos[run_seed % combos.size()])
-	var flow: RunFlow = RunFlow.start(run, run_seed, line.vows, line.errors)
+	var flow: RunFlow = RunFlow.start(run, run_seed, line.vows, line.errors, endless)
 	if flow == null:
 		return line
 	var state: RunState = flow.state
@@ -240,7 +240,7 @@ static func play(run: RunContent, run_seed: int, bot_name: String = "simple-peek
 		line.floor_reached = flow.floor_number()
 		line.endless_mods = state.endless_mods.duplicate()
 		var last: RunState.Fought = state.fought.back() if not state.fought.is_empty() else null
-		if last != null and last.outcome == FightResult.Outcome.DEFEAT and last.day == state.day:
+		if last != null and last.outcome == FightResult.Outcome.DEFEAT and last.act == state.act and last.day == state.day:
 			line.fell_to = last.encounter
 	for hero: RunState.Hero in state.heroes:
 		line.picks[hero.id] = hero.upgrades.size()

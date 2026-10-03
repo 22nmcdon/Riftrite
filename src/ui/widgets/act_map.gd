@@ -103,7 +103,7 @@ func _fought_there(day: int) -> int:
 	var state: RunState = session.state()
 	for i: int in range(state.fought.size() - 1, -1, -1):
 		var fought: RunState.Fought = state.fought[i]
-		if fought.day == day:
+		if fought.day == day and fought.act == state.act:
 			return (state.options[day - 1] as Array).find(fought.encounter)
 	return -1
 
@@ -115,7 +115,7 @@ func _attempt(day: int) -> int:
 		return state.attempt
 	var last: int = 0
 	for fought: RunState.Fought in state.fought:
-		if fought.day == day:
+		if fought.day == day and fought.act == state.act:
 			last = maxi(last, fought.attempt)
 	return last
 
@@ -191,6 +191,6 @@ func _draw() -> void:
 			continue
 		var won: bool = false
 		for fought: RunState.Fought in state.fought:
-			if fought.day == day and fought.attempt == _attempt(day):
+			if fought.day == day and fought.act == state.act and fought.attempt == _attempt(day):
 				won = fought.outcome != FightResult.Outcome.DEFEAT
 		draw_arc(to_view(fight_point(day, index, (fights[day] as Array).size())), radius, 0.0, TAU, 40, WON_RING if won else LOST_RING, 3.0, true)

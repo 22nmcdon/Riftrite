@@ -56,6 +56,7 @@
   "bond_relic_pct": 20,
   "boss_relics": 3,
   "endless": {
+    "testing": true,
     "_note": "Endless after the boss (phase 8 part 1, docs/plans/rebuild-phase8-endless.md): a floor is a day; enemies x1.15 HP and ATK a floor, a rift modifier every 3 floors for good, Rift Collapse 1s earlier a floor (never before 10s) and crumbled ground x1.15 a floor, the boss every 10th floor and an elite every other 5th, fights from day 4 on (Decision 1), a legendary in the shops from floor 10.",
     "growth_bp": 11500, "modifier_every": 3, "collapse_step_ms": 1000, "collapse_floor_ms": 10000, "crumble_growth_bp": 11500,
     "elite_every": 5, "boss_every": 10, "from_day": 4, "legendary_from_floor": 10, "legendary_weight": 5

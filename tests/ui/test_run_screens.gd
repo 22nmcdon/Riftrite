@@ -5,6 +5,7 @@ extends GutTest
 ## the pick after it, a Hunt, the hero bar and panel in a run, and the run's
 ## end. Every action is saved.
 
+const ActsTest = preload("res://tests/run/test_acts.gd")
 const MainScript = preload("res://src/ui/main.gd")
 const U = preload("res://tests/ui/ui_test_kit.gd")
 const Bot = preload("res://tools/run_bot.gd")
@@ -219,6 +220,7 @@ func test_going_deeper_and_falling_on_a_floor() -> void:
 	var flow: RunFlow = _flow(main)
 	flow.state.day = main.run_session.run.acts[0].days.size()
 	flow.state.phase = RunState.Phase.CHOICE
+	flow.state.testing = true
 	main.run_session.save()
 	main.show_day()
 	var text: String = U.text_of(main.screen)
@@ -242,8 +244,9 @@ func test_going_deeper_and_falling_on_a_floor() -> void:
 	await wait_frames(1)
 
 
-## Apexes (phase 8 part 2): going deeper opens the apex vow; the day shows
-## each waiting hero's apexes, Vow takes one, and the hero bar fills its deed.
+## Apexes (phase 8 part 2): the apex vow is open from the act's end (phase 8
+## part 3); the day shows each waiting hero's apexes, Vow takes one, and the
+## hero bar fills its deed.
 func test_the_apex_vow_after_going_deeper() -> void:
 	var main: Main = _started()
 	var flow: RunFlow = _flow(main)
@@ -252,9 +255,12 @@ func test_the_apex_vow_after_going_deeper() -> void:
 	maren.transformed = true
 	flow.state.day = main.run_session.run.acts[0].days.size()
 	flow.state.phase = RunState.Phase.CHOICE
+	flow.state.testing = true
+	# As leaving Act 1's boss shop leaves it (phase 8 part 3, Decision 2).
+	flow.state.apex_open = true
 	main.run_session.save()
 	main.show_day()
-	assert_false(U.text_of(main.screen).contains("The apex vow is open"), "not before going deeper")
+	assert_string_contains(U.text_of(main.screen), "The apex vow is open", "at the choice already")
 	assert_true(U.press(main.screen, "Go deeper"))
 	var text: String = U.text_of(main.screen)
 	assert_string_contains(text, "The apex vow is open")
@@ -397,4 +403,34 @@ func test_an_event_and_an_oath() -> void:
 	assert_true(U.press(day, "Swear %s to it" % ArenaView.label_for(flow.run.content.heroes[sworn].kit, flow.run.content)))
 	assert_ne(flow.state.hero(sworn).oath, "")
 	assert_string_contains(day.hero_bar.cards[sworn].wounds_text.text, "(2 fights)", "the hero bar shows the oath")
+	await wait_frames(1)
+
+
+## Acts (phase 8 part 3), on the stand-in acts: the start screen's testing
+## option, the choice after Act 1 in a testing run, and on to Act 2.
+func test_the_testing_option_and_on_to_act_2() -> void:
+	var main: Main = _main()
+	main._run_content = ActsTest.stand_in_acts()
+	assert_true(U.press(main.screen, "New run"))
+	(main.screen as RunStartScreen).run_seed = 7
+	var box: Button = U.button(main.screen, "Endless after Act 1 (for testing)")
+	assert_false(box.button_pressed, "off by default")
+	box.button_pressed = true
+	assert_true(U.press(main.screen, "Into the rift"))
+	var flow: RunFlow = _flow(main)
+	assert_true(flow.state.testing, "the start screen's testing option")
+	flow.state.day = flow.act.days.size()
+	flow.state.phase = RunState.Phase.SHOP
+	flow.open_shop("pedlar")
+	main.run_session.save()
+	main.show_day()
+	assert_true(U.press(main.screen, "Leave the Pedlar: on to Act 2, or go deeper"))
+	var text: String = U.text_of(main.screen)
+	assert_string_contains(text, "Act 1 is won")
+	assert_not_null(U.button(main.screen, "Go deeper (testing)"))
+	assert_true(U.press(main.screen, "On to Act 2"))
+	text = U.text_of(main.screen)
+	assert_string_contains(text, "Day 1 of 7")
+	assert_string_contains(text, "Act 2")
+	assert_eq([flow.state.act, flow.state.phase], [2, RunState.Phase.ROUTE])
 	await wait_frames(1)

@@ -92,7 +92,7 @@ static func step_once(flow: RunFlow, hexes: Dictionary[String, Vector2i], errors
 		return flow.vow_apex(vowing.id, flow.run.content.paths[vowing.path].apexes[0].id)
 	match state.phase:
 		RunState.Phase.CHOICE:
-			return flow.end_run()
+			return flow.next_act() if flow.run.next_act(state) != null else flow.end_run()
 		RunState.Phase.SHOP:
 			if shop_once(flow):
 				return ""

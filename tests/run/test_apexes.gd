@@ -41,7 +41,7 @@ func _win_today(flow: RunFlow, deeds: Dictionary = {}) -> void:
 ## transformed (`transformed`) and the others not.
 func _to_choice(transformed: bool = true) -> RunFlow:
 	var errors: Array[String] = []
-	var flow: RunFlow = RunFlow.start(_run, 7, _vows(), errors)
+	var flow: RunFlow = RunFlow.start(_run, 7, _vows(), errors, true)
 	assert_eq(errors, [] as Array[String])
 	flow.state.hero("maren").transformed = transformed
 	for day: int in range(1, _run.acts[0].days.size()):
@@ -52,18 +52,20 @@ func _to_choice(transformed: bool = true) -> RunFlow:
 		flow.leave_node()
 	_win_today(flow)
 	flow.finish_day()
+	assert_false(flow.state.apex_open, "not before the act's boss shop is left")
+	assert_eq(flow.vow_apex("maren", "hailstorm"), "the apex vow opens after the act's boss")
 	flow.leave_shop()
 	assert_eq(flow.state.phase, RunState.Phase.CHOICE)
 	return flow
 
 
-func test_the_apex_vow_opens_going_deeper_for_transformed_heroes() -> void:
+## Phase 8 part 3 (rebuild-phase8-acts.md, Decision 2): the vow opens as
+## Act 1's boss shop is left, before the choice (and before Act 2).
+func test_the_apex_vow_opens_after_the_acts_boss_for_transformed_heroes() -> void:
 	var flow: RunFlow = _to_choice()
 	var maren: RunState.Hero = flow.state.hero("maren")
-	assert_eq(flow.apex_waiting(), [] as Array[String], "not before the choice")
-	assert_eq(flow.vow_apex("maren", "hailstorm"), "the apex vow opens after the act's boss")
-	assert_eq(flow.go_deeper(), "")
 	assert_true(flow.state.apex_open)
+	assert_eq(flow.go_deeper(), "")
 	assert_eq(flow.apex_waiting(), ["maren"] as Array[String], "Brannoc and Vell haven't transformed (and their paths have no apexes yet)")
 	assert_eq(maren.deeds.get("hailstorm", -1), 0, "its path's apexes' deeds count from now")
 	assert_false(flow.state.hero("brannoc").deeds.has("hailstorm"))
@@ -75,10 +77,10 @@ func test_the_apex_vow_opens_going_deeper_for_transformed_heroes() -> void:
 	assert_eq(_run.hero_kit(maren), _run.content.apexes["hailstorm"].vowed_kit, "its taste from the next fight")
 
 
-func test_ending_the_run_doesnt_open_it() -> void:
+func test_an_ended_run_has_no_apex_vow_waiting() -> void:
 	var flow: RunFlow = _to_choice()
+	assert_eq(flow.apex_waiting(), ["maren"] as Array[String])
 	assert_eq(flow.end_run(), "")
-	assert_false(flow.state.apex_open)
 	assert_eq(flow.apex_waiting(), [] as Array[String])
 
 
@@ -128,7 +130,7 @@ func test_the_save_keeps_the_apex_and_an_older_save_still_loads() -> void:
 	flow.go_deeper()
 	flow.vow_apex("maren", "hailstorm")
 	var data: Dictionary = JSON.parse_string(JSON.stringify(flow.state.to_dict()))
-	assert_eq(int(data["version"]), 6)
+	assert_eq(int(data["version"]), RunState.VERSION)
 	var loaded: RunState = RunState.from_dict(data)
 	assert_eq(JSON.stringify(loaded.to_dict()), JSON.stringify(flow.state.to_dict()))
 	assert_eq([loaded.apex_open, loaded.hero("maren").apex, loaded.hero("maren").apex_earned], [true, "hailstorm", false])

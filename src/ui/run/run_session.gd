@@ -21,8 +21,8 @@ var new_best: bool = false
 var _noted: bool = false
 
 
-static func begin(run_content: RunContent, run_seed: int, hero_vows: Dictionary[String, String], errors_out: Array[String], path: String = RunSave.PATH) -> RunSession:
-	var started: RunFlow = RunFlow.start(run_content, run_seed, hero_vows, errors_out)
+static func begin(run_content: RunContent, run_seed: int, hero_vows: Dictionary[String, String], errors_out: Array[String], path: String = RunSave.PATH, testing: bool = false) -> RunSession:
+	var started: RunFlow = RunFlow.start(run_content, run_seed, hero_vows, errors_out, testing)
 	if started == null:
 		return null
 	return over(run_content, started, path)

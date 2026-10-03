@@ -242,7 +242,11 @@ func refresh() -> void:
 				_fill_shop()
 				var label: String = "Leave the Pedlar"
 				if session.flow.boss_shop() and not state.endless:
-					label = "Leave the Pedlar: end the run, or go deeper" if session.flow.act.endless != null else "Leave the Pedlar: the run's end"
+					var next: ActDef = session.run.next_act(state)
+					if session.flow.can_go_deeper():
+						label = "Leave the Pedlar: on to Act %d, or go deeper" % next.act if next != null else "Leave the Pedlar: end the run, or go deeper"
+					else:
+						label = "Leave the Pedlar: on to Act %d" % next.act if next != null else "Leave the Pedlar: the run's end"
 				body.add_child(UiStyle.primary(UiStyle.button(label, _do.bind(session.flow.leave_shop))))
 			RunState.Phase.NODES:
 				_fill_nodes()
@@ -903,16 +907,25 @@ static func times(bp: int) -> String:
 	return "%d.%02d" % [bp / 10000, bp % 10000 / 100]
 
 
-## After the act's boss shop (phase 8 part 1): end the run won, or go deeper.
+## After the act's boss shop (phase 8 part 1): end the run won, or go
+## deeper; after Act 1 in a testing run (phase 8 part 3), on to Act 2 too.
 func _fill_choice() -> void:
-	var section: VBoxContainer = _section("Old Mother Ash is beaten", "The act is won. End the run here, or go deeper into the rift: every floor's enemies are stronger, a rift modifier joins every third floor for good, Rift Collapse comes sooner, and the first loss ends the run. Your heroes, relics, loadout, and shards go with you.")
-	var best: Dictionary = RunRecords.best(session.records_path)
+	var state: RunState = session.state()
+	var boss: String = session.content.encounters[state.options.back()[0]].name if not state.options.is_empty() and not (state.options.back() as Array).is_empty() else "The boss"
+	var next: ActDef = session.run.next_act(state)
+	var testing: bool = session.flow.act.endless != null and session.flow.act.endless.testing
+	var section: VBoxContainer = _section("%s is beaten" % boss, "Act %d is won. %sGo deeper into the rift%s: every floor's enemies are stronger, a rift modifier joins every third floor for good, Rift Collapse comes sooner, and the first loss ends the run. Your heroes, relics, loadout, and shards go with you." % [state.act,
+		"Go on to Act %d, or " % next.act if next != null else "End the run here, or ", " (a testing option)" if testing else ""])
+	var best: Dictionary = RunRecords.best(session.records_path, state.act)
 	if not best.is_empty():
-		section.add_child(_wrapped("Your deepest so far: floor %d." % int(best["floor"]), 16, UiStyle.HIGHLIGHT))
+		section.add_child(_wrapped("Your deepest after Act %d so far: floor %d." % [state.act, int(best["floor"])], 16, UiStyle.HIGHLIGHT))
 	var row: HBoxContainer = _row()
 	section.add_child(row)
 	row.add_child(UiStyle.button("End the run", _do.bind(session.flow.end_run)))
-	row.add_child(UiStyle.primary(UiStyle.button("Go deeper", _do.bind(session.flow.go_deeper))))
+	if next != null:
+		row.add_child(UiStyle.primary(UiStyle.button("On to Act %d" % next.act, _do.bind(session.flow.next_act))))
+	var deeper: Button = UiStyle.button("Go deeper (testing)" if testing else "Go deeper", _do.bind(session.flow.go_deeper))
+	row.add_child(deeper if next != null else UiStyle.primary(deeper))
 
 
 ## The next day fight's Rift Tear (phase 5c step 8b): "Through a Deep rift
@@ -1027,15 +1040,15 @@ func _fill_end() -> void:
 		# Endless (phase 8 part 1): the floor it fell on is the score.
 		var floor_now: int = session.flow.floor_number()
 		section = _section("The rift takes them on floor %d" % floor_now, "Act %d won, then %d floors deep, with %d relics and %d duo bonds found." % [state.act, floor_now, state.relics.size(), state.bonds_found.size()])
-		var best: Dictionary = RunRecords.best(session.records_path)
+		var best: Dictionary = RunRecords.best(session.records_path, state.act)
 		var said: String = "A new deepest: floor %d." % floor_now if session.new_best else "Your deepest: floor %d." % int(best.get("floor", floor_now))
 		section.add_child(_wrapped(said, 20, UiStyle.HIGHLIGHT))
 	else:
 		section = _section("The rift is quiet: the run is won" if won else "The rift keeps them: the run is lost",
-			"Day %d of %d, with %d relics and %d duo bonds found." % [state.day, session.flow.act.days.size(), state.relics.size(), state.bonds_found.size()])
+			"Act %d, day %d of %d, with %d relics and %d duo bonds found." % [state.act, state.day, session.flow.act.days.size(), state.relics.size(), state.bonds_found.size()])
 	var lines: Array[String] = []
 	for fought: RunState.Fought in state.fought:
-		lines.append("Day %d%s: %s, %s in %ds" % [fought.day, " (again)" if fought.attempt > 0 else "", session.content.encounters[fought.encounter].name,
+		lines.append("%sDay %d%s: %s, %s in %ds" % ["Act %d, " % fought.act if state.act > 1 else "", fought.day, " (again)" if fought.attempt > 0 else "", session.content.encounters[fought.encounter].name,
 			RunDayScreen.outcome_word(fought.outcome).to_lower(), fought.seconds])
 	section.add_child(_wrapped("\n".join(lines), 16, UiStyle.TEXT))
 	body.add_child(UiStyle.primary(UiStyle.button("Back to the title", func() -> void: finished.emit())))

@@ -50,8 +50,9 @@ var last_result: FightResult = null
 
 ## A new run from `run_seed`, each hero vowed to one of its own paths
 ## (`vows`: hero id -> path id, every hero). Null with the reasons in
-## `errors` if the vows aren't right.
-static func start(run_content: RunContent, run_seed: int, vows: Dictionary[String, String], errors: Array[String]) -> RunFlow:
+## `errors` if the vows aren't right. A `testing` run is offered Act 1's
+## endless (phase 8 part 3, Decision 15).
+static func start(run_content: RunContent, run_seed: int, vows: Dictionary[String, String], errors: Array[String], testing: bool = false) -> RunFlow:
 	var content: ContentDb = run_content.content
 	for hero_id: String in content.hero_ids:
 		if not vows.has(hero_id):
@@ -65,6 +66,7 @@ static func start(run_content: RunContent, run_seed: int, vows: Dictionary[Strin
 		return null
 	var state := RunState.new()
 	state.seed_value = run_seed
+	state.testing = testing
 	state.act = run_content.acts[0].act
 	state.shards = run_content.acts[0].start_shards
 	for hero_id: String in content.hero_ids:
@@ -126,6 +128,17 @@ func floor_number() -> int:
 	return run.floor_of(state, state.day)
 
 
+## At the choice after an act's boss shop, when there's a next act and the
+## run may also go deeper (the testing option): on to the next act.
+func next_act() -> String:
+	if state.phase != RunState.Phase.CHOICE:
+		return _not_now("go on to the next act")
+	if run.next_act(state) == null:
+		return "this is the last act"
+	_next_act()
+	return ""
+
+
 ## After the act's boss shop: ends the run won.
 func end_run() -> String:
 	if state.phase != RunState.Phase.CHOICE:
@@ -139,12 +152,10 @@ func end_run() -> String:
 func go_deeper() -> String:
 	if state.phase != RunState.Phase.CHOICE:
 		return _not_now("go deeper")
+	if not can_go_deeper():
+		return "this act has no endless to go deeper into"
 	state.endless = true
 	state.magpie_visits = 0
-	# The apex vow opens after the act's boss (phase 8 part 2).
-	state.apex_open = true
-	for hero: RunState.Hero in state.heroes:
-		_open_apex(hero)
 	while state.taken_nodes.size() < state.day:
 		state.taken_nodes.append("")
 	state.day += 1
@@ -188,6 +199,7 @@ func _skip_sealed() -> void:
 	state.sealed = false
 	var encounter_id: String = state.today()[0]
 	var fought := RunState.Fought.new()
+	fought.act = state.act
 	fought.day = state.day
 	fought.attempt = state.attempt
 	fought.encounter = encounter_id
@@ -234,14 +246,53 @@ func leave_shop() -> String:
 	var boss: bool = boss_shop()
 	close_shop()
 	if boss and not state.endless:
-		# Endless (phase 8 part 1): the act's boss shop leads to the choice.
-		if act.endless != null:
-			state.phase = RunState.Phase.CHOICE
-		else:
-			_end(RunState.Outcome.WON)
+		_end_of_act()
 		return ""
 	_to_nodes()
 	return ""
+
+
+## The act's boss shop is left (phase 8 part 3): the apex vow opens (after
+## Act 1's boss: rebuild-phase8-acts.md, Decision 2), then the next act
+## starts, or, where the run may go deeper (endless after the last act, or
+## the testing option after Act 1: Decision 15), the choice waits; with
+## neither, the run ends won.
+func _end_of_act() -> void:
+	state.apex_open = true
+	for hero: RunState.Hero in state.heroes:
+		_open_apex(hero)
+	if can_go_deeper():
+		state.phase = RunState.Phase.CHOICE
+	elif run.next_act(state) != null:
+		_next_act()
+	else:
+		_end(RunState.Outcome.WON)
+
+
+## Whether this act's end may lead into endless: it has endless, and it's
+## not the testing option or the run is a testing one.
+func can_go_deeper() -> bool:
+	return not state.endless and act.endless != null and (not act.endless.testing or state.testing)
+
+
+## Starts the next act at its day 1 route: its fights drawn, and what lasts
+## an act (each day's node and Scout, the Magpie's visits, The Old Well's
+## cut) begun afresh. Everything else carries on, the run's losses too
+## (Decision 11).
+func _next_act() -> void:
+	var next: ActDef = run.next_act(state)
+	state.act = next.act
+	state.day = 1
+	state.attempt = 0
+	state.options = ActDraw.draw(run, state.seed_value, next)
+	state.taken_nodes.clear()
+	state.scouted.clear()
+	state.nodes.clear()
+	state.node = ""
+	state.magpie_visits = 0
+	for hero: RunState.Hero in state.heroes:
+		hero.weakened = 0
+	_start_day()
 
 
 func _to_nodes() -> void:
@@ -929,6 +980,7 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 	state.just_transformed.clear()
 	state.just_apexed.clear()
 	var fought := RunState.Fought.new()
+	fought.act = state.act
 	fought.day = state.day
 	fought.attempt = state.attempt
 	fought.encounter = encounter_id

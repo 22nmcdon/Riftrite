@@ -223,9 +223,14 @@ func test_the_choices_and_compare_reports() -> void:
 
 ## Plays the act through its boss shop to endless's choice, every fight won
 ## on paper.
+## A testing run (phase 8 part 3: Act 1's endless is the testing option),
+## with Maren on Volley, transformed, so the apex vow that opens as the act
+## ends waits on her.
 func _to_choice(run_seed: int) -> RunFlow:
 	var errors: Array[String] = []
-	var flow: RunFlow = RunFlow.start(_run, run_seed, _vows(run_seed), errors)
+	var flow: RunFlow = RunFlow.start(_run, run_seed, _vows(run_seed), errors, true)
+	flow.state.hero("maren").path = "volley"
+	flow.state.hero("maren").transformed = true
 	for day: int in _run.acts[0].days.size():
 		flow.choose_fight(0)
 		flow.record(Simple.formation(), _won())
@@ -246,9 +251,6 @@ func test_a_bot_that_goes_deeper_plays_floors_to_its_first_loss() -> void:
 	var states: Array[String] = []
 	for deeper: bool in [true, true, false]:
 		var flow: RunFlow = _to_choice(6)
-		# Maren on Volley, transformed: she waits on the apex vow once deeper.
-		flow.state.hero("maren").path = "volley"
-		flow.state.hero("maren").transformed = true
 		var bot: RefCounted = Report.make_bot("simple")
 		bot.set("deeper", deeper)
 		bot.call("begin", flow)
@@ -265,7 +267,7 @@ func test_a_bot_that_goes_deeper_plays_floors_to_its_first_loss() -> void:
 			assert_eq(flow.state.fought.back().outcome, FightResult.Outcome.DEFEAT, "and fell there")
 			assert_eq(flow.state.hero("maren").apex, "hailstorm", "the bot vowed her to an apex (phase 8 part 2)")
 		else:
-			assert_eq(flow.state.hero("maren").apex, "", "no apex vow without going deeper")
+			assert_eq(flow.state.hero("maren").apex, "hailstorm", "the vow opens as the act ends (phase 8 part 3), so the bot vows her at the choice either way")
 		states.append(JSON.stringify(flow.state.to_dict()))
 	assert_eq(states[1], states[0], "it repeats")
 

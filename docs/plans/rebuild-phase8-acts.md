@@ -1,6 +1,6 @@
 # Phase 8 part 3: Acts 2 and 3
 
-Status: **a draft build plan (2026-10-03); the run's shape is agreed (Decisions 1–10), Decisions 11–18 answer the rest of section 7, and each act's enemies, elites, and boss are drafted with the playtester next, as the heroes were.** Nothing is built. The playtester chose Acts 2 and 3 as phase 8's next step (2026-10-03), ahead of enemy growth, the heroes' tuning, and more heroes. Numbers are placeholders.
+Status: **the run's shape is agreed (Decisions 1–18); 8c-1, the frame, is built (2026-10-03).** Each act's enemies, elites, and boss are drafted with the playtester next, as the heroes were. The playtester chose Acts 2 and 3 as phase 8's next step (2026-10-03), ahead of enemy growth, the heroes' tuning, and more heroes. Numbers are placeholders.
 
 ## 1. What it builds
 
@@ -69,6 +69,17 @@ The good bot plays the whole run; each act is tuned to section 2a's targets (Dec
 - **8c-3, enemy growth:** the specializations and upgrades of `enemy-growth.md` (Decision 4).
 - **8c-4 and 8c-5, Act 2's and Act 3's content**, each with its board rule, tuned, with a playtest build.
 - **8c-6, apex timing and endless retuned on three acts; docs, a playtest build.**
+
+## Built in 8c-1: the frame (2026-10-03)
+
+- **Acts as data:** `RunContent.acts` (act1.json, then act2.json and act3.json where they exist; each must say its number), `act_of(state)` and `next_act(state)`, and `RunFlow.act` (the run's act). Every read of the one act (the run, the offers, the screens, the bots, the report) now reads the run's; `encounters_for`, `floor_pool`, `normal_encounters`, and `ActDraw.draw` take the act. `ActDef.fights_act` lets a stand-in act draw another act's fights (the tests' stand-ins; the game has only Act 1, so nothing in it changes).
+- **Moving on** (`RunFlow._end_of_act`, after the boss shop is left): the apex vow opens (Decision 2; it was on Go deeper), then the choice if the run may go deeper (`can_go_deeper`), else the next act (`_next_act`: day 1's route, its fights drawn by `ActDraw` on the act's stream, and each day's node, Scout, the Magpie's visits, and The Old Well's cut begun afresh; losses, wounds, and the rest carry: Decisions 11 and 12), else the run's end. At the choice, `next_act()` beside `end_run()` and `go_deeper()`.
+- **The testing option** (Decision 15): `act1.json`'s endless is `"testing": true`, offered only in a testing run (`RunState.testing`, from `RunFlow.start(..., testing)`; the start screen's "Endless after Act 1 (for testing)", off by default). The bots' `--endless` runs are testing runs. Endless after the last act needs no testing run.
+- **Records by act:** `RunRecords` files each best under the act its endless follows; an older file's one record reads as Act 1's.
+- **Save:** version 7 (`testing`, and each fight's `act`, since days start again each act); an older save that went deeper, or waits at the choice, loads as a testing run.
+- **Screens:** the choice names the act's boss and offers "On to Act N" and "Go deeper (testing)"; the boss shop's leave button says where it leads; the act map shows only this act's fights; the end names the act.
+- **Tests:** `tests/run/test_acts.gd` (on stand-in Acts 2 and 3 drawing Act 1's fights: loading, moving on, what carries, two losses across acts, the testing option, endless after Act 3, the save, the records, and the simple bot through all three acts on seed 38) and a screen test for the testing option and On to Act 2. Mutation checks: resetting losses at a new act, or not opening the apex vow at the act's end, each fail a test.
+- **Not yet** (8c-2): the run report by act, and records of the furthest act.
 
 ## 7. Questions
 

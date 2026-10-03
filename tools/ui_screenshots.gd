@@ -109,7 +109,7 @@ func _run_screens() -> void:
 	start.choose("brannoc", "hearthwall")
 	start.choose("maren", "deadeye")
 	await _snap("run_vows")
-	start.run_started.emit(start.vows, start.run_seed)
+	start.run_started.emit(start.vows, start.run_seed, false)
 	var flow: RunFlow = _main.run_session.flow
 	await _snap("run_route")
 	flow.choose_fight(0)

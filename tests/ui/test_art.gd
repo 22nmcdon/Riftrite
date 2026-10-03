@@ -45,7 +45,7 @@ func test_the_run_shows_the_icons() -> void:
 	main.run_save_path = "user://test_art.json"
 	add_child_autofree(main)
 	main.show_run_start(7)
-	(main.screen as RunStartScreen).run_started.emit((main.screen as RunStartScreen).vows, 7)
+	(main.screen as RunStartScreen).run_started.emit((main.screen as RunStartScreen).vows, 7, false)
 	var flow: RunFlow = main.run_session.flow
 	flow.state.hero("maren").slots[0] = "ember_tipped"
 	flow.state.relics.append("hollow_crown")

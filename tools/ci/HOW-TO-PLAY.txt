@@ -16,8 +16,8 @@ MACOS
 
 PLAYING
   The game is being rebuilt around heroes and an open arena. This build has
-  the first whole run: Act 1, seven days, and NEW IN THIS BUILD: endless
-  after it (see ENDLESS below). Your uploaded art is in the game. The arena
+  the first whole run: Act 1, seven days, and endless after it as a
+  testing option (NEW IN THIS BUILD: see ENDLESS below). Your uploaded art is in the game. The arena
   is turned (your heroes at the bottom, the enemies at the top) and stands
   on the floating island, rocks are ruins, and Rift Collapse eats the edge
   as rift-light. Items, relics, and upgrades have their kind's frame with an
@@ -74,15 +74,19 @@ PLAYING
   3. A hero who falls gets a wound (less max HP, up to 3); each won fight
      heals one wound on every hero first. A lost fight
      replays the day; the second loss ends the run. Winning against Old
-     Mother Ash wins it; after the boss shop you can end the run there,
-     or go deeper into endless.
+     Mother Ash wins it; after the boss shop, in a testing run, you can
+     end the run there or go deeper into endless (see ENDLESS).
   4. The run is saved after everything you do: Title > Continue the run.
      The hero bar along the bottom shows each hero's wounds, deed progress,
      and items; click a card for the hero's panel.
 
-  ENDLESS (new in this build: after Old Mother Ash and her shop)
-  End the run (a win), or Go deeper with the same heroes, items, relics,
-  and shards. Each floor is a day with one fight, then a node (new in
+  ENDLESS (after Old Mother Ash and her shop; a testing option)
+  New in this build: the game is getting Acts 2 and 3, and real endless
+  will come after Act 3. Until then, endless after Act 1 is a testing
+  option: tick "Endless after Act 1 (for testing)" on the New run screen
+  (it's off by default; without it, the run ends after Act 1's boss shop).
+  With it on, after the boss shop: End the run (a win), or Go deeper
+  (testing) with the same heroes, items, relics, and shards. Each floor is a day with one fight, then a node (new in
   this build: no Pedlar and no upgrades on floors; the pick after a fight
   offers only apex cards, once a hero reaches an apex). Every floor the rift grows: enemies have
   15% more HP and attack than the floor before (it compounds), Rift
@@ -95,8 +99,9 @@ PLAYING
   Endless isn't tuned yet: we only measured how far a bot gets.
 
   APEXES (new in this build: all 18)
-  Going deeper opens the apex vow: a hero who has transformed can vow to
-  one of their path's two apexes (its taste comes at once), and when the
+  The apex vow opens as you leave Act 1's boss shop (new in this build:
+  it was on Go deeper), so in a testing run it's open at the choice: a
+  hero who has transformed can vow to one of their path's two apexes (its taste comes at once), and when the
   apex deed fills, they transform again. Switch the apex vow for free
   until then (the day screen or the hero's panel). Every path has two
   apexes, six a hero; some carry the team, some guard it, some help the

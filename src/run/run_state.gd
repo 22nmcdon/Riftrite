@@ -8,8 +8,10 @@ extends RefCounted
 
 ## A save from another version can't be loaded (4: phase 5c step 8's new
 ## day; 5: endless, phase 8 part 1, which still loads a 4 with endless off;
-## 6: apexes, phase 8 part 2, which still loads a 4 or 5 with no apex).
-const VERSION: int = 6
+## 6: apexes, phase 8 part 2, which still loads a 4 or 5 with no apex; 7:
+## acts, phase 8 part 3, which loads an older save as a testing run once it
+## has gone deeper or waits at the choice, since its endless followed Act 1).
+const VERSION: int = 7
 const OLDEST_VERSION: int = 4
 
 ## Where the day is (phase 5c step 8, docs/plans/days-and-nodes.md):
@@ -101,12 +103,15 @@ class Fought:
 	var encounter: String
 	var outcome: FightResult.Outcome
 	var seconds: int
+	## The act it was fought in (phase 8 part 3; days start again each act).
+	var act: int = 1
 
 	func to_dict() -> Dictionary:
-		return {"day": day, "attempt": attempt, "encounter": encounter, "outcome": int(outcome), "seconds": seconds}
+		return {"act": act, "day": day, "attempt": attempt, "encounter": encounter, "outcome": int(outcome), "seconds": seconds}
 
 	static func from_dict(data: Dictionary) -> Fought:
 		var fought := Fought.new()
+		fought.act = int(data.get("act", 1))
 		fought.day = int(data.get("day", 0))
 		fought.attempt = int(data.get("attempt", 0))
 		fought.encounter = str(data.get("encounter", ""))
@@ -138,8 +143,9 @@ var fought: Array[Fought] = []
 var pick: Array[String] = []
 ## The heroes the last fight transformed (for the screen that shows it).
 var just_transformed: Array[String] = []
-## Apexes (phase 8 part 2): whether the apex vow is open (after the act's
-## boss, going deeper), and the heroes the last fight raised to their apex.
+## Apexes (phase 8 part 2): whether the apex vow is open (once Act 1's boss
+## shop is left; phase 8 part 3), and the heroes the last fight raised to
+## their apex.
 var apex_open: bool = false
 var just_apexed: Array[String] = []
 ## Items owned and not in a slot (item ids, in the order they came).
@@ -237,6 +243,8 @@ var grew: Array[String] = []
 # modifiers it has gathered so far, for good, in order.
 var endless: bool = false
 var endless_mods: Array[String] = []
+## A testing run (phase 8 part 3, Decision 15): Act 1's endless is offered.
+var testing: bool = false
 
 
 func hero(hero_id: String) -> Hero:
@@ -275,7 +283,7 @@ func to_dict() -> Dictionary:
 		"growth": growth.duplicate(), "grew": grew.duplicate(),
 		"item_ranks": item_ranks.duplicate(), "item_counts": item_counts.duplicate(), "ranked": ranked.duplicate(),
 		"endless": endless, "endless_mods": endless_mods.duplicate(),
-		"apex_open": apex_open, "just_apexed": just_apexed.duplicate(),
+		"apex_open": apex_open, "just_apexed": just_apexed.duplicate(), "testing": testing,
 	}
 
 
@@ -307,6 +315,7 @@ static func from_dict(data: Dictionary) -> RunState:
 	state.pick.assign((data.get("pick", []) as Array).map(func(value: Variant) -> String: return str(value)))
 	state.just_transformed.assign((data.get("just_transformed", []) as Array).map(func(value: Variant) -> String: return str(value)))
 	state.apex_open = bool(data.get("apex_open", false))
+	state.testing = bool(data.get("testing", version < 7 and (bool(data.get("endless", false)) or state.phase == Phase.CHOICE)))
 	state.just_apexed.assign((data.get("just_apexed", []) as Array).map(func(value: Variant) -> String: return str(value)))
 	state.stash.assign((data.get("stash", []) as Array).map(func(value: Variant) -> String: return str(value)))
 	state.shop = str(data.get("shop", ""))
