@@ -164,7 +164,7 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			var dealt: int = deal_hit(sim, source, victim, amount, crit, power)
 			if effect.execute_below_bp > 0 and not sim.last_dodged:
 				execute(sim, source, victim, effect.execute_below_bp)
-			if effect.trigger == EffectDef.Trigger.ON_FIRE and ability.has_hit_effects and not sim.last_dodged:
+			if effect.trigger == EffectDef.Trigger.ON_FIRE and ability != null and ability.has_hit_effects and not sim.last_dodged:
 				var hit := Hit.new()
 				hit.target = victim
 				hit.crit = crit
@@ -176,7 +176,9 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			if not unit.vs_conditions.is_empty():
 				# A heal's bonus on some allies (phase 5c step 7c, Urgent Mercy).
 				power += Passives.vs_bonus_bp(unit, victim, AuraDef.Stat.HEAL_BP, source.ability_id)
-			heal(sim, victim, amount, source, effect.overheal_shield_bp, power, false, unit.relic_bonus_bp)
+			var overheal: int = heal(sim, victim, amount, source, effect.overheal_shield_bp, power, false, unit.relic_bonus_bp)
+			if effect.overheal_max_hp_per > 0 and overheal > 0:
+				_grow_max_hp(sim, unit, overheal, effect.overheal_max_hp_per, source)
 		EffectDef.Type.SHIELD:
 			if effect.amount_bp_of_max_hp > 0:
 				amount = FixedMath.apply_bp(victim.max_hp, effect.amount_bp_of_max_hp)
@@ -191,7 +193,7 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			var status_id: String = unit.status_swaps.get(effect.status_id, effect.status_id)
 			# fresh_only: never on a unit that has it already (Snaring Shot).
 			if not effect.fresh_only or Statuses.find(victim, status_id) == null:
-				Statuses.apply(sim, victim, status_id, amount, effect.duration_ticks, source, effect.marks_stack, effect.until_near, effect.strength_add_bp)
+				Statuses.apply(sim, victim, status_id, amount, effect.duration_ticks, source, effect.marks_stack, effect.until_near, effect.strength_add_bp, power)
 		EffectDef.Type.CLEANSE:
 			if effect.cleanse_count > 0:
 				Statuses.cleanse_newest(sim, victim, effect.cleanse_count, source)
@@ -243,6 +245,8 @@ static func run_event(sim: CombatSim, unit: UnitState, ability: AbilityDef, sour
 	if effect.type == EffectDef.Type.SNARE:
 		if effect.under_front:
 			Snares.under_front(sim, unit)
+		elif effect.snare_at_named and other != null:
+			Snares.place(sim, unit, ability, source, effect, sim.nearest_safe_point(other.pos, 0))
 		else:
 			Snares.set_ahead(sim, unit, ability, source, effect, other if other != null else unit.target)
 		return
@@ -731,6 +735,24 @@ static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectS
 	if not target.statuses.is_empty():
 		Statuses.cleanse_over_time(sim, target, share_bp, source, true)
 	return amount - healed
+
+
+## `unit` banks `overheal` and gains +1 max HP (and HP) for every `per` of
+## it, for the fight (phase 8 part 2, The Hearthkeeper; MAX_HP_UP).
+static func _grow_max_hp(sim: CombatSim, unit: UnitState, overheal: int, per: int, source: EffectSource) -> void:
+	unit.overheal_bank += overheal
+	@warning_ignore("integer_division")
+	var gain: int = unit.overheal_bank / per
+	if gain <= 0 or not unit.alive:
+		return
+	unit.overheal_bank -= gain * per
+	unit.base_max_hp += gain
+	unit.max_hp += gain
+	unit.hp += gain
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.MAX_HP_UP, source)
+	entry.target = unit.id
+	entry.amount = gain
+	sim.combat_log.add(entry)
 
 
 static func give_shield(sim: CombatSim, target: UnitState, amount: int, source: EffectSource) -> LogEntry:

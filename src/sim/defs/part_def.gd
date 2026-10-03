@@ -27,12 +27,21 @@ extends RefCounted
 ##       its Shield holds spreads that share of what got through evenly over
 ##       them all (Links); "per_shared" and "status" (optional): a stack of
 ##       that status on each for every so much moved
+##   {"id": "undying_oath", "name": "Undying Oath", "kind": "rise",
+##    "times": 3, "after_ms": 3000, "hp_pct": 30, "status": "oathbound"}
+##       phase 8 part 2 (Undying Oath; a code change, since nothing could
+##       bring a unit back but Second Dawn): when the unit falls, it rises
+##       after_ms later where it fell (or the nearest free safe spot), at
+##       hp_pct of its max HP, up to `times` a fight; "status" (optional, a
+##       stacking boost): a stack each time it rises, kept through its rises.
+##       A unit with one never takes Second Dawn's rise (that rise counts
+##       toward its own).
 ## Adding a kind is a code change; say so when you make one. An optional
 ## "text" is the player's sentence for it; the sim never reads it.
 
-enum Kind { AURA, ABILITY, REPLACE_STATUS, GUARD, LINK }
+enum Kind { AURA, ABILITY, REPLACE_STATUS, GUARD, LINK, RISE }
 
-const KIND_NAMES: Array[String] = ["aura", "ability", "replace_status", "guard", "link"]
+const KIND_NAMES: Array[String] = ["aura", "ability", "replace_status", "guard", "link", "rise"]
 
 var id: String
 var name: String
@@ -53,6 +62,12 @@ var behind_only: bool = false
 ## `link_status` (0: none); its share is `share_bp`.
 var per_shared: int = 0
 var link_status: String = ""
+## rise (phase 8 part 2): how many times, how long after falling, at what
+## share of max HP, and the boost it stacks each time (optional).
+var rise_times: int = 0
+var rise_ticks: int = 0
+var rise_hp_bp: int = 0
+var rise_status: String = ""
 
 
 static func read(reader: DataReader) -> PartDef:
@@ -97,5 +112,10 @@ static func read(reader: DataReader) -> PartDef:
 			def.link_status = reader.opt_string("status", "")
 			if (def.per_shared > 0) != (not def.link_status.is_empty()):
 				reader.error("a link's per_shared and status come together")
+		Kind.RISE:
+			def.rise_times = reader.req_int("times", 1, 9)
+			def.rise_ticks = reader.req_ticks("after_ms", FixedMath.MS_PER_TICK)
+			def.rise_hp_bp = reader.req_int("hp_pct", 1, 100) * 100
+			def.rise_status = reader.opt_string("status", "")
 	reader.finish()
 	return def

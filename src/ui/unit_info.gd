@@ -31,6 +31,8 @@ const EVENT_WORDS: Dictionary[int, String] = {
 	EffectDef.Trigger.ON_CHARGED: "charge or leap that hits it",
 	EffectDef.Trigger.ON_ENEMY_FELL: "enemy falling",
 	EffectDef.Trigger.ON_ARRIVE: "arrival",
+	EffectDef.Trigger.ON_ALLY_SHIELD_BROKEN: "ally's Shield breaking",
+	EffectDef.Trigger.ON_WALL_BLOCK: "attack its wall blocks",
 }
 const ORDINALS: Array[String] = ["th", "st", "nd", "rd"]
 const CHATTER: Array[LogEntry.Kind] = [LogEntry.Kind.MOVE, LogEntry.Kind.STOP, LogEntry.Kind.TARGET]
@@ -144,6 +146,11 @@ static func signature_numbers(kit: UnitDef, content: ContentDb) -> String:
 	if signature.targeting != "self":
 		parts.append("reach %s" % hexes(signature.reach_for(kit.stats.get_stat(UnitStats.Stat.RANGE))))
 	parts.append_array(effect_numbers(signature.effects, kit, content))
+	# Growing with each cast (phase 8 part 2).
+	if signature.grows_bp > 0:
+		parts.append("%s stronger each cast" % signed_percent(signature.grows_bp))
+	if signature.grows_boosts_bp > 0:
+		parts.append("its boosts %s stronger each cast" % signed_percent(signature.grows_boosts_bp))
 	return " · ".join(parts)
 
 
@@ -157,6 +164,12 @@ static func passive_numbers(part: PartDef, kit: UnitDef, content: ContentDb) -> 
 			@warning_ignore("integer_division")
 			return "Takes %s of each enemy hit on an ally %swithin %s" % [ValueBreakdown._percent(part.share_bp),
 				"behind it " if part.behind_only else "", hexes(part.guard_range / HexGrid.HEX)]
+		PartDef.Kind.RISE:
+			var rises: String = "Rises %s after falling, at %s of max HP, %s a fight" % [seconds(part.rise_ticks), ValueBreakdown._percent(part.rise_hp_bp),
+				"once" if part.rise_times == 1 else "up to %d times" % part.rise_times]
+			if not part.rise_status.is_empty():
+				rises += "; each rise: %s" % _status_name(part.rise_status, content)
+			return rises
 		PartDef.Kind.LINK:
 			var linked: String = "Allies with its Shields share %s of each hit on one, evenly" % ValueBreakdown._percent(part.share_bp)
 			if part.per_shared > 0:
@@ -318,6 +331,8 @@ static func passive_trigger_text(effect: EffectDef) -> String:
 		text += " of at least %s of its max HP" % ValueBreakdown._percent(effect.min_hit_bp)
 	if effect.executed:
 		text = text.replace("kill", "execution")
+	if effect.at_stacks > 0:
+		text = "When %s reaches %d stacks on a unit (spent)" % [" or ".join(effect.statuses.map(func(status_id: String) -> String: return status_id.replace("_", " ").capitalize())), effect.at_stacks]
 	if effect.from_signature:
 		text += " by its signature"
 	if not effect.from_abilities.is_empty():
@@ -453,6 +468,13 @@ static func effect_numbers(effects: Array[EffectDef], kit: UnitDef, content: Con
 
 
 static func _effect_text(effect: EffectDef, kit: UnitDef, content: ContentDb) -> String:
+	if effect.power_per_taken_bp > 0:
+		# Growing with the damage taken (phase 8 part 2, Martyr's Pyre).
+		return _effect_text_plain(effect, kit, content) + " (%s for every %d damage it has taken)" % [signed_percent(effect.power_per_taken_bp), effect.taken_per]
+	return _effect_text_plain(effect, kit, content)
+
+
+static func _effect_text_plain(effect: EffectDef, kit: UnitDef, content: ContentDb) -> String:
 	var text: String = _effect_core(effect, kit, content)
 	if text.is_empty():
 		return text
@@ -514,7 +536,10 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 			if effect.amount_bp_of_max_hp > 0:
 				return "heals %s of max HP" % ValueBreakdown._percent(effect.amount_bp_of_max_hp)
 			if effect.amount_bp_of_damage > 0:
-				return "heals %s of the damage" % ValueBreakdown._percent(effect.amount_bp_of_damage)
+				var of_damage: String = "heals %s of the damage" % ValueBreakdown._percent(effect.amount_bp_of_damage)
+				if effect.overheal_max_hp_per > 0:
+					of_damage += ", and every %d past full HP gives it +1 max HP" % effect.overheal_max_hp_per
+				return of_damage
 			var healed: String = "heals " + _amount(effect, kit, "") + _to_all(effect)
 			if effect.overheal_shield_bp > 0:
 				healed += ", past full HP %s as Shield" % ValueBreakdown._percent(effect.overheal_shield_bp)
@@ -570,7 +595,15 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 				+ (", sprung by leaps and charges over it" if effect.snags else "")
 		EffectDef.Type.WALL:
 			@warning_ignore("integer_division")
-			return "a %s-wide wall %s ahead for %s, stopping enemy shots" % [hexes(effect.width_range / HexGrid.HEX), hexes(effect.ahead_range / HexGrid.HEX), seconds(effect.zone_ticks)]
+			var wall: String = "a %s-wide wall %s ahead%s %s, stopping enemy shots" % [hexes(effect.width_range / HexGrid.HEX), hexes(effect.ahead_range / HexGrid.HEX),
+				" of the target" if effect.at_target else "", "until broken" if effect.until_broken else "for " + seconds(effect.zone_ticks)]
+			if effect.blocks_movement:
+				wall += " and enemies' way"
+			if effect.wall_hp_bp > 0:
+				wall += " (HP %s of max HP)" % ValueBreakdown._percent(effect.wall_hp_bp)
+			if effect.max_standing > 0:
+				wall += ", up to %d at once" % effect.max_standing
+			return wall
 		EffectDef.Type.KNOCKBACK:
 			return "knocks back %s" % hexes(effect.hexes)
 		EffectDef.Type.PULL:

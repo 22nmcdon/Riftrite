@@ -71,7 +71,10 @@ static func land_due(sim: CombatSim) -> void:
 				var stopped: LogEntry = sim.new_entry(LogEntry.Kind.SHOT_FIZZLED, shot.source)
 				stopped.target = shot.target.id
 				stopped.note = "stopped by %s" % wall.source.describe()
+				stopped.wall_of = wall.source.unit_id
 				sim.combat_log.add(stopped)
+				if wall.max_hp > 0:
+					Walls.take_shot(sim, wall, shot)
 				if wall.reflect_bp > 0 and shot.shooter.alive:
 					# Reflecting Wall (phase 5c step 7d): its damage goes back
 					# at the shooter at the wall's share, as the wall's hit.

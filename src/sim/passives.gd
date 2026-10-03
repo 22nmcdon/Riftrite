@@ -153,7 +153,10 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 				var stacks: int = state.timed_stacks()
 				for i: int in state.def.boost_stats.size():
 					var stat: int = state.def.boost_stats[i]
-					unit.aura_bp[stat] += stacks * (state.def.boost_values[i] if _is_additive(stat) else state.def.boost_values[i] - FixedMath.BP_ONE)
+					var change: int = stacks * (state.def.boost_values[i] if _is_additive(stat) else state.def.boost_values[i] - FixedMath.BP_ONE)
+					if state.boost_strength_bp != 0:
+						change = FixedMath.apply_bp(change, FixedMath.BP_ONE + state.boost_strength_bp)
+					unit.aura_bp[stat] += change
 	for unit: UnitState in sim.units:
 		unit.stats = unit.base_stats.copy()
 		for aura_stat: int in AuraDef.Stat.size():
@@ -375,10 +378,18 @@ static func factor(unit: UnitState, stat: int) -> int:
 ## effect's type (damage, heal, shield) plus the effect's own power_bp (a kit
 ## mod's). The damage rule adds it to the hit's other power bonuses.
 static func power_bp(unit: UnitState, effect: EffectDef) -> int:
+	if effect.type == EffectDef.Type.APPLY_STATUS:
+		# A boost from a signature that grows with each cast (phase 8 part 2):
+		# its growth so far (0 otherwise; a status has no other power).
+		return unit.grow_power_bp
 	var power: int = effect.power_bp
 	if unit.fire_power_bp != 0 and (effect.type == EffectDef.Type.DAMAGE or effect.type == EffectDef.Type.HEAL or effect.type == EffectDef.Type.SHIELD):
 		# Overcharge's extra fires (phase 5c step 5c).
 		power += unit.fire_power_bp
+	if effect.power_per_taken_bp > 0:
+		# Growing with the damage its unit has taken (phase 8 part 2).
+		@warning_ignore("integer_division")
+		power += effect.power_per_taken_bp * (unit.taken_total / effect.taken_per)
 	match effect.type:
 		EffectDef.Type.DAMAGE:
 			power += unit.aura_bp[AuraDef.Stat.DAMAGE_BP] - FixedMath.BP_ONE
@@ -414,6 +425,13 @@ static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, 
 				continue
 			if not effect.keywords.is_empty() and not effect.keywords.has(sim.content.statuses[status].keyword):
 				continue
+			if effect.at_stacks > 0:
+				# Spent at so many stacks (phase 8 part 2, Forgebreaker): the
+				# stacks come off before its effects run.
+				var state: StatusState = Statuses.find(other, status) if other != null else null
+				if state == null or Statuses.stacks_on(other, status) < effect.at_stacks:
+					continue
+				Statuses.end_now(sim, other, state, "spent by %s" % unit.id)
 		if effect.vs != null and (other == null or not effect.vs.holds(other)):
 			continue
 		# Phase 5c step 6b: a hit big enough, an enemy that fell near enough,

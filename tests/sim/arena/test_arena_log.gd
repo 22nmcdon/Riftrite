@@ -181,7 +181,7 @@ const NAMES: Dictionary = {
 	LogEntry.Kind.SUMMON: ["unit", "ability", "target"],
 	LogEntry.Kind.TACTIC: ["unit", "ability", "note"],
 	LogEntry.Kind.ZONE: ["unit", "ability"], LogEntry.Kind.SNARE: ["unit", "ability", "note"],
-	LogEntry.Kind.WALL: ["unit", "ability"], LogEntry.Kind.GUARD: ["unit", "ability", "target"], LogEntry.Kind.SHARED: ["unit", "ability", "target"],
+	LogEntry.Kind.WALL: ["unit", "ability"], LogEntry.Kind.GUARD: ["unit", "ability", "target"], LogEntry.Kind.SHARED: ["unit", "ability", "target"], LogEntry.Kind.WALL_HIT: ["unit", "ability"], LogEntry.Kind.MAX_HP_UP: ["unit", "ability", "target"],
 	LogEntry.Kind.LIFESTEAL: ["unit", "ability", "target"], LogEntry.Kind.STATUS_EXTENDED: ["unit", "ability", "target", "status"],
 	LogEntry.Kind.RISE: ["target"], LogEntry.Kind.RESISTED: ["unit", "ability", "target", "status", "note"],
 	LogEntry.Kind.DODGED: ["unit", "ability", "target"],

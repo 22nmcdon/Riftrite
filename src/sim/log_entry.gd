@@ -54,6 +54,15 @@ enum Kind {
 	## Phase 8 part 2 (Links): a linked ally's part of a hit on another;
 	## target: the ally; note: the unit first hit; source: the link.
 	SHARED,
+	## Phase 8 part 2 (Walls): a wall with HP is worn down (note "shot" or
+	## "struck", ", broken" when it breaks; source: the shot's or attack's,
+	## amount: what it took) or taken down by a newer one ("gone", amount 0,
+	## source: the wall's); wall_of: the wall's unit; from_pos and to_pos
+	## its ends.
+	WALL_HIT,
+	## Phase 8 part 2 (The Hearthkeeper): target gains `amount` max HP (and
+	## HP) for the fight; source: what gave it.
+	MAX_HP_UP,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -101,6 +110,8 @@ var broke_shield: bool = false
 var overkill: int = 0
 ## HEAL: lifesteal that heals (Blood Communion; phase 5c step 5c).
 var lifesteal: bool = false
+## SHOT_FIZZLED stopped by a wall, WALL_HIT: the wall's unit (phase 8 part 2).
+var wall_of: String = ""
 ## DAMAGE: how many times it crit in a row (Crown of Stars; 1 for a plain
 ## crit, 0 for none).
 var crits: int = 0
@@ -261,7 +272,15 @@ func to_text() -> String:
 					return line + "%s: %s steps in the snare at %s" % [source_text(), target, _point(from_pos)]
 			return line + "%s: the snare at %s is gone (too many standing)" % [source_text(), _point(from_pos)]
 		Kind.WALL:
+			if end_tick >= CombatSim.NEVER:
+				return line + "%s raises a wall from %s to %s (it stands until broken)" % [source_text(), _point(from_pos), _point(to_pos)]
 			return line + "%s raises a wall from %s to %s (falls at %s)" % [source_text(), _point(from_pos), _point(to_pos), _format_time(end_tick)]
+		Kind.MAX_HP_UP:
+			return line + "%s: %s's max HP rises by %d" % [source_text(), target, amount]
+		Kind.WALL_HIT:
+			if note == "gone":
+				return line + "%s: the wall from %s to %s comes down (too many standing)" % [source_text(), _point(from_pos), _point(to_pos)]
+			return line + "%s %s %s's wall for %d%s" % [source_text(), "strikes" if note.begins_with("struck") else "shoots", wall_of, amount, ", and it breaks" if note.ends_with("broken") else ""]
 		Kind.GUARD:
 			return line + "%s takes %d of the hit on %s" % [source_text(), amount, target]
 		Kind.SHARED:

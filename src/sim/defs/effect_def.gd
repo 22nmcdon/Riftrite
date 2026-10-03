@@ -32,7 +32,17 @@ extends RefCounted
 ##                 the path of the ability's target (Snares; phase 4)
 ##   wall:         "width_hexes", "ahead_hexes", "duration_ms", and no
 ##                 "target" key: a wall across the way to the ability's
-##                 target that stops enemy shots (Walls; phase 4)
+##                 target that stops enemy shots (Walls; phase 4). Phase 8
+##                 part 2 (The Unbroken Gate, Warden of Thorns): optional
+##                 "blocks_movement" (its enemies can't walk through it),
+##                 "hp_bp_of_max_hp" (it has that share of its unit's max HP,
+##                 and the shots it stops and the enemies it walls in wear
+##                 it down), "until_broken" (no "duration_ms": it stands
+##                 until its HP runs out; needs HP), "max_standing" (setting
+##                 one more than that takes down the oldest), "at": "target"
+##                 (ahead of the target, across its way, rather than ahead
+##                 of the unit; a snare's wall: where the snare springs), and
+##                 "effects" (each second, on every enemy touching it)
 ##   gain_mana:    amount (whole mana added to the target's bar, if it has
 ##                 one; phase 4). Not logged, like every mana gain: the fire
 ##                 that gave it is
@@ -221,7 +231,7 @@ enum Trigger {
 	ON_ABILITY, ON_BASIC_ATTACK, ON_HOLDER_CRIT, ON_SHIELDED, ON_HIT_TAKEN, ON_HEAL, ON_STATUS, ON_KILL,
 	ON_INTERVAL, ON_FALL, ON_HOP, ON_WOULD_FALL,
 	ON_HOLDER_HIT, ON_SHIELD_BROKEN, ON_ALLY_ABILITY, ON_STATUS_ENDED, ON_LIFESTEAL, ON_KNOCKBACK, ON_GUARD,
-	ON_BELOW_HP, ON_CHARGED, ON_ENEMY_FELL, ON_ARRIVE, ON_ALLY_SHIELD_BROKEN,
+	ON_BELOW_HP, ON_CHARGED, ON_ENEMY_FELL, ON_ARRIVE, ON_ALLY_SHIELD_BROKEN, ON_WALL_BLOCK,
 }
 enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS, HOP }
 enum Placement { EDGES, ADJACENT, HEXES }
@@ -253,33 +263,33 @@ const TRIGGER_NAMES: Array[String] = [
 	"on_ability", "on_basic_attack", "on_holder_crit", "on_shielded", "on_hit_taken", "on_heal", "on_status", "on_kill",
 	"on_interval", "on_fall", "on_hop", "on_would_fall",
 	"on_holder_hit", "on_shield_broken", "on_ally_ability", "on_status_ended", "on_lifesteal", "on_knockback", "on_guard",
-	"on_below_hp", "on_charged", "on_enemy_fell", "on_arrive", "on_ally_shield_broken",
+	"on_below_hp", "on_charged", "on_enemy_fell", "on_arrive", "on_ally_shield_broken", "on_wall_block",
 ]
 ## The unit's events (see the top).
 const EVENT_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
-	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_ALLY_SHIELD_BROKEN,
+	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK,
 ]
 ## Event triggers that name a unit (hit_target) and those that name a hit
 ## (amount_bp_of_damage).
 const EVENT_UNIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED, Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD, Trigger.ON_CHARGED,
-	Trigger.ON_ALLY_SHIELD_BROKEN]
+	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK]
 const EVENT_HIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_HIT_TAKEN, Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN,
-	Trigger.ON_ALLY_SHIELD_BROKEN]
+	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_GUARD]
 ## Event triggers that can take "vs": those that name a unit, and on_kill.
 const EVENT_VS_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED, Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_KILL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
-	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ALLY_SHIELD_BROKEN]
+	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK]
 const ABILITY_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_FIRE, Trigger.ON_HIT, Trigger.ON_CRIT,
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
-	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START, Trigger.ON_ALLY_SHIELD_BROKEN,
+	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK,
 ]
 ## What a passive's effects may run on (PartDef).
 const PASSIVE_TRIGGERS: Array[Trigger] = [
@@ -287,7 +297,7 @@ const PASSIVE_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
-	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START, Trigger.ON_ALLY_SHIELD_BROKEN,
+	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK,
 ]
 ## The passive triggers that aren't events (Passives.run_timed, on_fall,
 ## would_fall).
@@ -395,12 +405,23 @@ var every: int = 1
 ## one of these keywords (empty = any).
 var statuses: Array[String] = []
 var keywords: Array[String] = []
+## on_status (phase 8 part 2, Forgebreaker): only once the unit it went on
+## has this many stacks of it; they're spent (the status ends) first.
+var at_stacks: int = 0
 ## Event triggers: only when the unit the event names meets it (null: any).
 var vs: UnitCondition = null
 ## Near-target targets and lowest_hp_ally: how far (plane units; 0: any).
 var near_range: int = 0
 ## heal: the share of what it heals past full HP that comes back as Shield.
 var overheal_shield_bp: int = 0
+## heal (phase 8 part 2, The Hearthkeeper): every so much it heals past full
+## HP gives its unit +1 max HP for the fight ("overheal_max_hp_per"; 0: none).
+var overheal_max_hp_per: int = 0
+## damage, heal, shield (phase 8 part 2, Martyr's Pyre): this much more
+## power for every `taken_per` damage its unit has taken this fight
+## ("grows_per_damage_taken": {"per": 1000, "bp": 1000}; 0: none).
+var power_per_taken_bp: int = 0
+var taken_per: int = 0
 ## apply_status: as many stacks as the unit the event names has of this
 ## status ("": stacks as given).
 var stacks_of: String = ""
@@ -478,9 +499,20 @@ var executed: bool = false
 var reflect_bp: int = 0
 var snags: bool = false
 var under_front: bool = false
+## A snare set where the unit an event names stands ("at": "named"; phase 8
+## part 2, Huntmaster: where a Rooted enemy fell), not in a target's path.
+var snare_at_named: bool = false
 ## wall: how wide, and how far ahead of the unit its middle is (plane units).
 var width_range: int = 0
 var ahead_range: int = 0
+## wall (phase 8 part 2; Walls): its enemies can't walk through it; its HP
+## as a share of its unit's max HP (0: none, it can't be worn down); it
+## stands until broken (zone_ticks 0); it's raised ahead of the target
+## rather than the unit. Its own effects land on enemies touching it.
+var blocks_movement: bool = false
+var wall_hp_bp: int = 0
+var until_broken: bool = false
+var at_target: bool = false
 var pulse_ticks: int = 0
 
 ## `relic`: read a relic's effect (relic triggers and targets, flat numbers).
@@ -519,6 +551,7 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				def.amount_bp_of_max_hp = reader.opt_int("amount_bp_of_max_hp", 0, 0, FixedMath.BP_ONE)
 				def.amount_bp_of_damage = reader.opt_int("amount_bp_of_damage", 0, 0)
 				def.overheal_shield_bp = reader.opt_int("overheal_shield_bp", 0, 0, 5 * FixedMath.BP_ONE)
+				def.overheal_max_hp_per = reader.opt_int("overheal_max_hp_per", 0, 0, 1000)
 			Type.MANA_DRAIN:
 				def.amount = reader.req_int("amount", 1)
 			Type.GAIN_MANA:
@@ -543,13 +576,29 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				def.max_standing = reader.opt_int("max_standing", 0, 0)
 				def.snags = reader.opt_bool("snags", false)
 				def.under_front = reader.opt_string_choice("under", "", ["front_ally"]) == "front_ally"
+				def.snare_at_named = reader.opt_string_choice("at", "", ["named"]) == "named"
+				if def.snare_at_named and not EVENT_VS_TRIGGERS.has(def.trigger):
+					reader.error("a snare \"at\": \"named\" needs an event that names a unit")
 				if not def.under_front:
 					_read_nested(def, reader, "a snare")
 			Type.WALL:
 				def.width_range = reader.req_int("width_hexes", 1, 8) * HexGrid.HEX
 				def.ahead_range = reader.req_int("ahead_hexes", 0, 4) * HexGrid.HEX
-				def.zone_ticks = reader.req_ticks("duration_ms", FixedMath.MS_PER_TICK)
 				def.reflect_bp = reader.opt_int("reflect_bp", 0, 0, FixedMath.BP_ONE)
+				def.blocks_movement = reader.opt_bool("blocks_movement", false)
+				def.wall_hp_bp = reader.opt_int("hp_bp_of_max_hp", 0, 0, 5 * FixedMath.BP_ONE)
+				def.until_broken = reader.opt_bool("until_broken", false)
+				def.max_standing = reader.opt_int("max_standing", 0, 0)
+				def.at_target = reader.opt_string_choice("at", "", ["target"]) == "target"
+				if def.until_broken:
+					if def.wall_hp_bp == 0:
+						reader.error("a wall that stands until broken needs \"hp_bp_of_max_hp\"")
+					if reader.has("duration_ms"):
+						reader.error("a wall that stands until broken has no \"duration_ms\"")
+				else:
+					def.zone_ticks = reader.req_ticks("duration_ms", FixedMath.MS_PER_TICK)
+				if reader.has("effects"):
+					_read_nested(def, reader, "a wall")
 			Type.SHIELD:
 				if int(reader.has("amount")) + int(reader.has("amount_bp_of_damage")) + int(reader.has("amount_bp_of_max_hp")) != 1:
 					reader.error("shield needs exactly one of \"amount\", \"amount_bp_of_damage\", or \"amount_bp_of_max_hp\"")
@@ -670,10 +719,13 @@ static func _read_nested(def: EffectDef, reader: DataReader, what: String) -> vo
 		reader.error("%s needs effects" % what)
 	for effect_reader: DataReader in effect_readers:
 		var effect: EffectDef = EffectDef.read(effect_reader, false, def.type == Type.AREA)
-		if PLACED.has(effect.type) or MOVES_SELF.has(effect.type) or UNTARGETED.has(effect.type):
+		# A snare may grow a wall where it springs (phase 8 part 2, Warden
+		# of Thorns).
+		var snare_wall: bool = def.type == Type.SNARE and effect.type == Type.WALL and effect.at_target
+		if (PLACED.has(effect.type) and not snare_wall) or MOVES_SELF.has(effect.type) or UNTARGETED.has(effect.type):
 			effect_reader.error("%s's effects can't be an area, a leap, or a charge (nor a snare, a wall, a summon, or start_collapse)" % what)
 		elif effect.target != Target.TARGET or effect.trigger != Trigger.ON_FIRE:
-			effect_reader.error("%s's effects aim at \"target\" (%s), on_fire" % [what, "each unit hit" if def.type == Type.AREA else "the enemy that springs it"])
+			effect_reader.error("%s's effects aim at \"target\" (%s), on_fire" % [what, "each unit hit" if def.type == Type.AREA else ("each enemy touching it" if def.type == Type.WALL else "the enemy that springs it")])
 		def.area_effects.append(effect)
 
 
@@ -733,8 +785,20 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 			if reader.has("statuses"):
 				def.statuses = reader.req_string_array("statuses")
 			def.keywords = reader.opt_choice_array("keywords", Keywords.NAMES)
+			if reader.has("at_stacks"):
+				def.at_stacks = reader.req_int("at_stacks", 2, 50)
+				if def.trigger != Trigger.ON_STATUS or def.statuses.size() != 1:
+					reader.error("at_stacks goes on on_status with one status in \"statuses\"")
 			if def.keywords.has(Keywords.SHIELDED):
 				reader.error("Shielded isn't a status; on_shielded is when a unit gains Shield")
+	if reader.has("grows_per_damage_taken"):
+		var grows: DataReader = reader.req_object("grows_per_damage_taken")
+		if grows != null:
+			def.taken_per = grows.req_int("per", 1)
+			def.power_per_taken_bp = grows.req_int("bp", 1, FixedMath.BP_ONE)
+			grows.finish()
+		if def.type != Type.DAMAGE and def.type != Type.HEAL and def.type != Type.SHIELD:
+			reader.error("only damage, heals, and Shields grow with damage taken")
 	if EVENT_TRIGGERS.has(def.trigger) or (def.trigger == Trigger.ON_FIRE and not relic and not in_area):
 		def.every = reader.opt_int("every", 1, 1)
 	if EVENT_TRIGGERS.has(def.trigger):

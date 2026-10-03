@@ -54,9 +54,19 @@ var shield: int = 0
 ## of Echoes), and Second Dawn's rise (the tick it rises, -1: none; whether
 ## it has risen this fight).
 var fire_power_bp: int = 0
+## While its signature fires (phase 8 part 2): how much that signature has
+## grown (grows_bp times the fires before), for the boosts it gives.
+var grow_power_bp: int = 0
 var relic_bonus_bp: int = 0
 var rise_at: int = -1
 var rose: bool = false
+## Phase 8 part 2: its rise passive (null: none) and how often it has risen
+## by it; all the damage it has taken this fight (Martyr's Pyre); and
+## overheal not yet turned into max HP (The Hearthkeeper).
+var rise_part: PartDef = null
+var rises_done: int = 0
+var taken_total: int = 0
+var overheal_bank: int = 0
 ## False once it has fallen (deaths are settled at the end of a tick).
 var alive: bool = true
 var pos: Vector2i
@@ -252,6 +262,8 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 			unit.guard = part
 		if part.kind == PartDef.Kind.LINK and unit.link == null:
 			unit.link = part
+		if part.kind == PartDef.Kind.RISE and unit.rise_part == null:
+			unit.rise_part = part
 	Passives.set_up(unit)
 	return unit
 

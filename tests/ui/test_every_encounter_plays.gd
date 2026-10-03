@@ -48,6 +48,8 @@ const FORMS: Dictionary[LogEntry.Kind, String] = {
 	LogEntry.Kind.WALL: "a thick line while it stands (from the sim's walls)",
 	LogEntry.Kind.GUARD: "a brass number on the guard",
 	LogEntry.Kind.SHARED: "a Shield-blue number on the linked ally",
+	LogEntry.Kind.MAX_HP_UP: "a heal-green \"+N max\" number on the unit",
+	LogEntry.Kind.WALL_HIT: "a gold number at the wall's middle (it comes down when the sim's wall falls)",
 	LogEntry.Kind.LIFESTEAL: "a number in the lifesteal colour",
 	LogEntry.Kind.STATUS_EXTENDED: "the tag stays longer",
 	LogEntry.Kind.RISE: "the token returns, with a pulse and \"Rises\"",

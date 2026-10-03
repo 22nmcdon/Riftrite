@@ -27,6 +27,9 @@ var applied_at: int = 0
 ## A Mark's strength past its status's own (Heavy Mark; the strongest
 ## applied holds; phase 5c step 7c).
 var strength_add_bp: int = 0
+## A boost from a signature that grows with each cast (phase 8 part 2,
+## Warlord's rally, The Beacon's light): its changes are this much larger.
+var boost_strength_bp: int = 0
 ## A stacking boost (phase 5c step 5c): each stack's last tick (NEVER: the
 ## fight's end), oldest first.
 var stack_ends: Array[int] = []

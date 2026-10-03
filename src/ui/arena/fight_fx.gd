@@ -190,6 +190,16 @@ func _add(entry: LogEntry, sim: CombatSim) -> void:
 				took.color = UiStyle.GOLD_300
 		LogEntry.Kind.SHIELD:
 			_number(entry, sim, "+" + UiStyle.short_number(entry.amount), UiStyle.SHIELD, false)
+		LogEntry.Kind.MAX_HP_UP:
+			# Max HP grown (phase 8 part 2): a heal-green number on the unit.
+			_number(entry, sim, "+%s max" % UiStyle.short_number(entry.amount), HEAL_COLOR, false)
+		LogEntry.Kind.WALL_HIT:
+			# A wall worn down (phase 8 part 2): its number at the wall's middle.
+			if entry.amount > 0:
+				var mid: Vector2 = (Vector2(entry.from_pos) + Vector2(entry.to_pos)) / 2.0
+				var worn: Fx = _new(Kind.NUMBER, entry.tick, entry.tick + NUMBER_TICKS, mid, "")
+				worn.text = UiStyle.short_number(entry.amount)
+				worn.color = UiStyle.GOLD_300
 		LogEntry.Kind.SHARED:
 			# A linked ally's part of a hit (phase 8 part 2): a Shield-blue
 			# number on it.

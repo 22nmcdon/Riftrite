@@ -45,6 +45,10 @@ class Counter:
 	## part 2): the tick of the unit's last HOP, read in the log's order (-1:
 	## none yet).
 	var needs_hops: bool = false
+	## A blocked deed (phase 8 part 2): shots its walls stop.
+	var needs_blocks: bool = false
+	## A deed counting its allies' hits too (phase 8 part 2, by_allies).
+	var needs_team: bool = false
 	var hopped_at: int = -1
 
 
@@ -73,14 +77,24 @@ static func _add(counter: Counter, key: String, deed: DeedDef) -> void:
 	counter.needs_time = counter.needs_time or deed.counts == DeedDef.Counts.MS_BELOW or deed.counts == DeedDef.Counts.MS_STANDING
 	counter.needs_casts = counter.needs_casts or deed.counts == DeedDef.Counts.CASTS
 	counter.needs_hops = counter.needs_hops or deed.after_hop_ticks > 0
+	counter.needs_blocks = counter.needs_blocks or deed.counts == DeedDef.Counts.BLOCKED
+	counter.needs_team = counter.needs_team or deed.by_allies
 
 
 ## Counts log entries [from, to).
 static func count(sim: CombatSim, from: int, to: int) -> void:
 	for i: int in range(from, to):
 		var entry: LogEntry = sim.combat_log.entries[i]
+		if entry.kind == LogEntry.Kind.SHOT_FIZZLED and not entry.wall_of.is_empty():
+			# A shot a wall stopped counts for the wall's unit (blocked).
+			var raiser: UnitState = sim.unit_by_id(entry.wall_of)
+			if raiser != null and raiser.deeds != null and raiser.deeds.needs_blocks:
+				_add_to(raiser.deeds, DeedDef.Counts.BLOCKED, 1)
+			continue
 		if sim.tallies_on_target:
 			_count_on_target(sim, entry)
+		if not sim.team_counters.is_empty() and entry.kind == LogEntry.Kind.DAMAGE and entry.source_relic_side < 0:
+			_count_for_team(sim, entry)
 		if entry.source_unit.is_empty() or entry.source_relic_side >= 0:
 			continue
 		var kind: LogEntry.Kind = entry.kind
@@ -120,6 +134,11 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 			if deed.from_basic and entry.source_ability != unit.def.basic_attack.id:
 				continue
 			if deed.after_hop_ticks > 0 and (counter.hopped_at < 0 or entry.tick - counter.hopped_at > deed.after_hop_ticks):
+				continue
+			# Allies' hits are counted for the whole side (_count_for_team).
+			if deed.by_allies:
+				continue
+			if not deed.vs_keywords.is_empty() and not _has_keyword(sim.unit_by_id(entry.target), deed.vs_keywords):
 				continue
 			match deed.counts:
 				DeedDef.Counts.CRITS:
@@ -164,7 +183,10 @@ static func _count_on_target(sim: CombatSim, entry: LogEntry) -> void:
 			var by: UnitState = sim.unit_by_id(entry.source_unit)
 			if by == null or by.side == hurt.side:
 				return
-			_add_to(hurt.deeds, DeedDef.Counts.TAKEN, entry.amount)
+			for d: int in hurt.deeds.deeds.size():
+				var deed: DeedDef = hurt.deeds.deeds[d]
+				if deed.counts == DeedDef.Counts.TAKEN and (not deed.after_rising or hurt.rises_done > 0):
+					hurt.deeds.amounts[d] += entry.amount
 		LogEntry.Kind.DEATH:
 			var fallen: UnitState = sim.unit_by_id(entry.target)
 			if fallen == null or fallen.last_attacker.is_empty():
@@ -178,6 +200,31 @@ static func _count_on_target(sim: CombatSim, entry: LogEntry) -> void:
 					var deed: DeedDef = killer.deeds.deeds[d]
 					if deed.counts == DeedDef.Counts.KILLS and (deed.from_ability.is_empty() or deed.from_ability.has(by)):
 						killer.deeds.amounts[d] += 1
+
+
+## A hit by anyone on a side counts for each of its units with a by_allies
+## deed (phase 8 part 2, Huntmaster), if it lands on what the deed asks.
+static func _count_for_team(sim: CombatSim, entry: LogEntry) -> void:
+	var by: UnitState = sim.unit_by_id(entry.source_unit)
+	var hit: UnitState = sim.unit_by_id(entry.target)
+	if by == null or hit == null or by.side == hit.side:
+		return
+	for unit: UnitState in sim.team_counters:
+		if unit.side != by.side:
+			continue
+		for d: int in unit.deeds.deeds.size():
+			var deed: DeedDef = unit.deeds.deeds[d]
+			if deed.by_allies and (deed.vs_keywords.is_empty() or _has_keyword(hit, deed.vs_keywords)):
+				unit.deeds.amounts[d] += entry.amount
+
+
+static func _has_keyword(unit: UnitState, keywords: Array[String]) -> bool:
+	if unit == null:
+		return false
+	for keyword: String in keywords:
+		if Keywords.has(unit, keyword):
+			return true
+	return false
 
 
 static func _add_to(counter: Counter, counts: DeedDef.Counts, amount: int) -> void:

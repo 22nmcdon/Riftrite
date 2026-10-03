@@ -65,9 +65,9 @@ const SIGIL := SIGIL_300
 const RARITIES: Array[String] = ["common", "uncommon", "rare", "epic", "legendary"]
 const RARITY: Array[Color] = [LINE_500, GOLD_500, Color("8fc7c9"), Color("9b6fe0"), Color("f0c040")]
 ## Short status tags for the fight view.
-const STATUS_TAGS: Dictionary[String, String] = {"burn": "BRN", "poison": "PSN", "bleed": "BLD"}
+const STATUS_TAGS: Dictionary[String, String] = {"burn": "BRN", "poison": "PSN", "bleed": "BLD", "briar_torn": "BRR"}
 ## Status colors for the fight view.
-const STATUS_COLORS: Dictionary[String, Color] = {"burn": Color("e0703a"), "poison": Color("7ed14f"), "bleed": Color("d14545")}
+const STATUS_COLORS: Dictionary[String, Color] = {"burn": Color("e0703a"), "poison": Color("7ed14f"), "bleed": Color("d14545"), "briar_torn": Color("d14545")}
 const ICON_DIR: String = "res://art/ui/icons/%s.svg"
 const BODY_FONT: String = "res://art/fonts/Alegreya-Regular.ttf"
 ## Alegreya has no semibold: its bold stands in.

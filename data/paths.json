@@ -440,7 +440,220 @@
       "text": "Time enemies spend rooted by her",
       "counts": "rooted_ms",
       "threshold": 8000
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md). Numbers are placeholders for the --apexes report to tune.",
+        "id": "warden_of_thorns",
+        "name": "Warden of Thorns",
+        "title": "the thicket's keeper",
+        "fantasy": "Every snare she sets grows a hedge of thorns.",
+        "vowed": {
+          "taste": "A sprung snare grows a briar 1 hex wide in the enemy's way for 2s; enemies touching it are torn.",
+          "patch": {
+            "signature": {
+              "id": "bramble_field",
+              "name": "Bramble Field",
+              "text": "Drops a snare 1 hex ahead of the nearest enemy within 3 hexes, in its path; the first enemy in it is rooted for 2.5s and Bleeds, and a briar 1 hex wide grows 1 hex ahead of it, in its way, for 2s. Up to 3 snares stand at once.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "nearest",
+              "effects": [
+                {
+                  "type": "snare",
+                  "max_standing": 3,
+                  "effects": [
+                    {
+                      "type": "apply_status",
+                      "status": "root",
+                      "target": "target",
+                      "duration_ms": 2500
+                    },
+                    {
+                      "type": "apply_status",
+                      "status": "bleed",
+                      "stacks": 6,
+                      "target": "target"
+                    },
+                    {
+                      "type": "wall",
+                      "at": "target",
+                      "width_hexes": 1,
+                      "ahead_hexes": 1,
+                      "blocks_movement": true,
+                      "duration_ms": 2000,
+                      "effects": [
+                        {
+                          "type": "apply_status",
+                          "status": "briar_torn",
+                          "stacks": 1,
+                          "target": "target"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "apex": {
+          "text": "A sprung snare grows a briar wall 3 hexes wide for 4s that blocks enemies' way; enemies touching it are torn by thorns. Up to 6 briars stand at once, so she can wall enemies in.",
+          "patch": {
+            "signature": {
+              "id": "bramble_field",
+              "name": "Bramble Field",
+              "text": "Drops a snare 1 hex ahead of the nearest enemy within 3 hexes, in its path; the first enemy in it is rooted for 2.5s and Bleeds, and a briar wall 3 hexes wide grows 1 hex ahead of it, across its way, for 4s, tearing at enemies touching it. Up to 3 snares and 6 briars stand at once.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "nearest",
+              "effects": [
+                {
+                  "type": "snare",
+                  "max_standing": 3,
+                  "effects": [
+                    {
+                      "type": "apply_status",
+                      "status": "root",
+                      "target": "target",
+                      "duration_ms": 2500
+                    },
+                    {
+                      "type": "apply_status",
+                      "status": "bleed",
+                      "stacks": 6,
+                      "target": "target"
+                    },
+                    {
+                      "type": "wall",
+                      "at": "target",
+                      "width_hexes": 3,
+                      "ahead_hexes": 1,
+                      "blocks_movement": true,
+                      "duration_ms": 4000,
+                      "max_standing": 6,
+                      "effects": [
+                        {
+                          "type": "apply_status",
+                          "status": "briar_torn",
+                          "stacks": 2,
+                          "target": "target"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "deed": {
+          "text": "Enemies torn by her briars",
+          "counts": "applied",
+          "statuses": [
+            "briar_torn"
+          ],
+          "threshold": 30
+        }
+      },
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md). Numbers are placeholders for the --apexes report to tune.",
+        "id": "huntmaster",
+        "name": "Huntmaster",
+        "title": "the one who calls the kill",
+        "fantasy": "What she pins down, the pack tears apart.",
+        "vowed": {
+          "taste": "Allies deal 5% more damage to Rooted enemies.",
+          "patch": {
+            "passives": [
+              {
+                "id": "quarry",
+                "name": "Quarry",
+                "kind": "aura",
+                "text": "Her allies hit Rooted enemies a little harder.",
+                "aura": {
+                  "target": "all_allies",
+                  "stat": "damage_bp",
+                  "value": 10500,
+                  "vs": {
+                    "keywords": [
+                      "rooted"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Allies deal 30% more damage to Rooted enemies. A Rooted enemy that falls leaves a snare where it fell.",
+          "patch": {
+            "passives": [
+              {
+                "id": "quarry",
+                "name": "Quarry",
+                "kind": "aura",
+                "text": "Her allies hit Rooted enemies much harder.",
+                "aura": {
+                  "target": "all_allies",
+                  "stat": "damage_bp",
+                  "value": 13000,
+                  "vs": {
+                    "keywords": [
+                      "rooted"
+                    ]
+                  }
+                }
+              },
+              {
+                "id": "pack_snares",
+                "name": "Pack Snares",
+                "kind": "ability",
+                "text": "A Rooted enemy that falls leaves one of her snares where it fell.",
+                "effects": [
+                  {
+                    "trigger": "on_enemy_fell",
+                    "vs": {
+                      "keywords": [
+                        "rooted"
+                      ]
+                    },
+                    "type": "snare",
+                    "at": "named",
+                    "max_standing": 3,
+                    "effects": [
+                      {
+                        "type": "apply_status",
+                        "status": "root",
+                        "target": "target",
+                        "duration_ms": 2500
+                      },
+                      {
+                        "type": "apply_status",
+                        "status": "bleed",
+                        "stacks": 6,
+                        "target": "target"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Damage her team deals to Rooted enemies",
+          "counts": "damage",
+          "by_allies": true,
+          "vs_keywords": [
+            "rooted"
+          ],
+          "threshold": 600
+        }
+      }
+    ]
   },
   {
     "_note": "Area and mobility (rebuild-heroes.md, section 6, path 3).",
@@ -935,7 +1148,156 @@
       "text": "Damage he takes in place of allies",
       "counts": "guarded",
       "threshold": 16
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md). Numbers are placeholders for the --apexes report to tune.",
+        "id": "unbroken_gate",
+        "name": "The Unbroken Gate",
+        "title": "the gate that holds",
+        "fantasy": "What he walls off stays walled off.",
+        "vowed": {
+          "taste": "His wall is 1 hex wider.",
+          "patch": {
+            "signature": {
+              "id": "hearthwall",
+              "name": "Hearthwall",
+              "text": "Raises a wall of shields 4 hexes wide, 1 hex toward the nearest enemy within 3 hexes, that stops enemy shots for 4s. He can't move while it stands.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "nearest",
+              "max_range": 3,
+              "effects": [
+                {
+                  "type": "wall",
+                  "width_hexes": 4,
+                  "ahead_hexes": 1,
+                  "duration_ms": 4000
+                },
+                {
+                  "type": "apply_status",
+                  "status": "root",
+                  "duration_ms": 4000,
+                  "target": "self"
+                }
+              ]
+            }
+          }
+        },
+        "apex": {
+          "text": "His wall also blocks enemies' way, and stands until it's broken (its HP is half his max HP). Each attack it blocks gives him +1 DEF for the rest of the fight.",
+          "patch": {
+            "signature": {
+              "id": "hearthwall",
+              "name": "Hearthwall",
+              "text": "Raises a wall of shields 4 hexes wide, 1 hex toward the nearest enemy within 3 hexes, that stops enemy shots and enemies' way until it's broken; raising a new one takes down the old. He can't move for 4s after.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "nearest",
+              "max_range": 3,
+              "effects": [
+                {
+                  "type": "wall",
+                  "width_hexes": 4,
+                  "ahead_hexes": 1,
+                  "blocks_movement": true,
+                  "hp_bp_of_max_hp": 5000,
+                  "until_broken": true,
+                  "max_standing": 1
+                },
+                {
+                  "type": "apply_status",
+                  "status": "root",
+                  "duration_ms": 4000,
+                  "target": "self"
+                }
+              ]
+            },
+            "passives": [
+              {
+                "id": "gatekeeper",
+                "name": "Gatekeeper",
+                "kind": "ability",
+                "text": "Each attack his wall blocks makes him a little tougher for the rest of the fight.",
+                "effects": [
+                  {
+                    "trigger": "on_wall_block",
+                    "type": "apply_status",
+                    "status": "gatekeeper",
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Enemy shots stopped by his wall",
+          "counts": "blocked",
+          "threshold": 30
+        }
+      },
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md). Numbers are placeholders for the --apexes report to tune.",
+        "id": "hearthkeeper",
+        "name": "The Hearthkeeper",
+        "title": "the warm wall",
+        "fantasy": "What he takes for them comes back as warmth.",
+        "vowed": {
+          "taste": "Guarded allies heal 1% of the damage he takes for them.",
+          "patch": {
+            "passives": [
+              {
+                "id": "hearthkeeper",
+                "name": "Hearthkeeper",
+                "kind": "ability",
+                "text": "Allies he guards heal a little of what he takes for them.",
+                "effects": [
+                  {
+                    "trigger": "on_guard",
+                    "type": "heal",
+                    "amount_bp_of_damage": 100,
+                    "target": "hit_target"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Guarded allies heal 25% of the damage he takes for them. Overhealing from this gives him +1 max HP per 10 overheal, for the rest of the fight.",
+          "patch": {
+            "passives": [
+              {
+                "id": "hearthkeeper",
+                "name": "Hearthkeeper",
+                "kind": "ability",
+                "text": "Allies he guards heal part of what he takes for them; what they can't take makes him sturdier.",
+                "effects": [
+                  {
+                    "trigger": "on_guard",
+                    "type": "heal",
+                    "amount_bp_of_damage": 2500,
+                    "overheal_max_hp_per": 10,
+                    "target": "hit_target"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Healing given to guarded allies",
+          "counts": "healing",
+          "from_ability": [
+            "hearthkeeper"
+          ],
+          "threshold": 300
+        }
+      }
+    ]
   },
   {
     "_note": "The bruiser (rebuild-heroes.md, section 7, path 2). Its transformed cost is the DEF (Decision 5).",
@@ -1105,7 +1467,244 @@
         "hearthbrand_mace"
       ],
       "threshold": 36
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md). Numbers are placeholders for the --apexes report to tune.",
+        "id": "forgebreaker",
+        "name": "Forgebreaker",
+        "title": "the hammer that burns",
+        "fantasy": "Every blow leaves a brand, and brands don't stay quiet.",
+        "vowed": {
+          "taste": "Each of his hits brands its target; at 5 brands they flare, dealing extra damage to it.",
+          "patch": {
+            "passives": [
+              {
+                "id": "forge_blast",
+                "name": "Forge Blast",
+                "kind": "ability",
+                "text": "Each of his hits brands the enemy it lands on; at 5 brands they flare, hurting it.",
+                "effects": [
+                  {
+                    "trigger": "on_holder_hit",
+                    "type": "apply_status",
+                    "status": "brand",
+                    "target": "hit_target"
+                  },
+                  {
+                    "trigger": "on_status",
+                    "statuses": [
+                      "brand"
+                    ],
+                    "at_stacks": 5,
+                    "type": "damage",
+                    "amount": 0,
+                    "scaling": {
+                      "atk": 2000
+                    },
+                    "target": "hit_target"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Each hit brands its target; at 5 brands they explode, dealing 150% of his ATK to it and every enemy within 1 hex. The explosion's hits brand too, so blasts can set off more blasts.",
+          "patch": {
+            "passives": [
+              {
+                "id": "forge_blast",
+                "name": "Forge Blast",
+                "kind": "ability",
+                "text": "Each of his hits brands the enemy it lands on; at 5 brands they explode, hurting it and every enemy within 1 hex of it, and the blast's hits brand too.",
+                "effects": [
+                  {
+                    "trigger": "on_holder_hit",
+                    "type": "apply_status",
+                    "status": "brand",
+                    "target": "hit_target"
+                  },
+                  {
+                    "trigger": "on_status",
+                    "statuses": [
+                      "brand"
+                    ],
+                    "at_stacks": 5,
+                    "type": "area",
+                    "shape": {
+                      "kind": "circle",
+                      "radius": 1
+                    },
+                    "anchor": "target",
+                    "hits": "enemies",
+                    "effects": [
+                      {
+                        "type": "damage",
+                        "amount": 0,
+                        "scaling": {
+                          "atk": 15000
+                        },
+                        "target": "target"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Hits from his brands' blasts",
+          "counts": "hits",
+          "from_ability": [
+            "forge_blast"
+          ],
+          "threshold": 40
+        }
+      },
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md). Numbers are placeholders for the --apexes report to tune.",
+        "id": "warlord",
+        "name": "Warlord",
+        "title": "the banner in the fray",
+        "fantasy": "Where he lands, his allies find their courage.",
+        "vowed": {
+          "taste": "Allies within 1 hex of where Brand Slam lands gain +5% ATK for 2s.",
+          "patch": {
+            "signature": {
+              "id": "brand_slam",
+              "name": "Brand Slam",
+              "text": "Leaps up to 2 hexes into the biggest group of enemies, then slams every enemy within 1 hex of where he lands, knocking them back 1 hex; allies within 1 hex of it hit a little harder for a moment.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "largest_group",
+              "max_range": 2,
+              "effects": [
+                {
+                  "type": "leap",
+                  "max_hexes": 2,
+                  "target": "target"
+                },
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 1
+                  },
+                  "anchor": "target",
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount": 15,
+                      "target": "target",
+                      "scaling": {
+                        "atk": 16000
+                      }
+                    },
+                    {
+                      "type": "knockback",
+                      "hexes": 1,
+                      "target": "target"
+                    }
+                  ]
+                },
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 1
+                  },
+                  "anchor": "target",
+                  "hits": "allies",
+                  "effects": [
+                    {
+                      "type": "apply_status",
+                      "status": "war_call",
+                      "target": "target"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "apex": {
+          "text": "Brand Slam rallies allies within 2 hexes of where it lands: +20% ATK, MGK, and attack speed for 4s. Each Brand Slam makes the rally a quarter stronger again (+5% at first), for the rest of the fight.",
+          "patch": {
+            "signature": {
+              "id": "brand_slam",
+              "name": "Brand Slam",
+              "text": "Leaps up to 2 hexes into the biggest group of enemies, then slams every enemy within 1 hex of where he lands, knocking them back 1 hex, and rallies every ally within 2 hexes of it to hit harder and faster for 4s. Each slam's rally is stronger than the last.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "largest_group",
+              "max_range": 2,
+              "effects": [
+                {
+                  "type": "leap",
+                  "max_hexes": 2,
+                  "target": "target"
+                },
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 1
+                  },
+                  "anchor": "target",
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount": 15,
+                      "target": "target",
+                      "scaling": {
+                        "atk": 16000
+                      }
+                    },
+                    {
+                      "type": "knockback",
+                      "hexes": 1,
+                      "target": "target"
+                    }
+                  ]
+                },
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 2
+                  },
+                  "anchor": "target",
+                  "hits": "allies",
+                  "effects": [
+                    {
+                      "type": "apply_status",
+                      "status": "rally",
+                      "target": "target"
+                    }
+                  ]
+                }
+              ],
+              "grows_boosts_bp": 2500
+            }
+          }
+        },
+        "deed": {
+          "text": "Allies rallied by his slam",
+          "counts": "applied",
+          "statuses": [
+            "war_call",
+            "rally"
+          ],
+          "threshold": 20
+        }
+      }
+    ]
   },
   {
     "_note": "The martyr (rebuild-heroes.md, section 7, path 3). Transformed, he has no mana bar.",
@@ -1244,7 +1843,162 @@
       "counts": "damage",
       "while_undying": true,
       "threshold": 12
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md). Numbers are placeholders for the --apexes report to tune.",
+        "id": "undying_oath",
+        "name": "Undying Oath",
+        "title": "the one who won't stay down",
+        "fantasy": "Death is a setback he refuses to accept.",
+        "vowed": {
+          "taste": "Smoldering Oath: when he falls, he rises once, 8s later, at 5% HP.",
+          "patch": {
+            "passives": [
+              {
+                "id": "smoldering_oath",
+                "name": "Smoldering Oath",
+                "kind": "rise",
+                "times": 1,
+                "after_ms": 8000,
+                "hp_pct": 5,
+                "text": "When he falls, he rises once, a while later, barely standing."
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "He rises 3s after falling, at 30% HP, fully fighting, up to 3 times a fight. Each rise gives him +20% ATK and DEF for the rest of the fight.",
+          "patch": {
+            "passives": [
+              {
+                "id": "undying_oath",
+                "name": "Undying Oath",
+                "kind": "rise",
+                "times": 3,
+                "after_ms": 3000,
+                "hp_pct": 30,
+                "status": "oathbound",
+                "text": "When he falls, he rises again soon after, up to 3 times a fight, stronger each time."
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Damage he takes after rising",
+          "counts": "taken",
+          "after_rising": true,
+          "threshold": 300
+        }
+      },
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md). Numbers are placeholders for the --apexes report to tune.",
+        "id": "martyrs_pyre",
+        "name": "Martyr's Pyre",
+        "title": "the last fire",
+        "fantasy": "When he finally falls, he takes them with him and lifts his allies up.",
+        "vowed": {
+          "taste": "When he falls, allies within 1 hex of him heal 5% of their max HP.",
+          "patch": {
+            "passives": [
+              {
+                "id": "martyrs_pyre",
+                "name": "Martyr's Pyre",
+                "kind": "ability",
+                "text": "When he falls, allies within 1 hex of him heal a little.",
+                "effects": [
+                  {
+                    "trigger": "on_fall",
+                    "type": "area",
+                    "shape": {
+                      "kind": "circle",
+                      "radius": 1
+                    },
+                    "anchor": "self",
+                    "hits": "allies",
+                    "effects": [
+                      {
+                        "type": "heal",
+                        "amount_bp_of_max_hp": 500,
+                        "target": "target"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "When he falls, he bursts: 300% of his ATK to enemies within 2 hexes, and allies within 2 hexes heal 30% of their max HP. The burst grows +10% for every 1,000 damage he took that fight.",
+          "patch": {
+            "passives": [
+              {
+                "id": "martyrs_pyre",
+                "name": "Martyr's Pyre",
+                "kind": "ability",
+                "text": "When he falls, he bursts, hurting enemies within 2 hexes and healing allies within 2 hexes; the more he took that fight, the bigger it is.",
+                "effects": [
+                  {
+                    "trigger": "on_fall",
+                    "type": "area",
+                    "shape": {
+                      "kind": "circle",
+                      "radius": 2
+                    },
+                    "anchor": "self",
+                    "hits": "enemies",
+                    "effects": [
+                      {
+                        "type": "damage",
+                        "amount": 0,
+                        "scaling": {
+                          "atk": 30000
+                        },
+                        "target": "target",
+                        "grows_per_damage_taken": {
+                          "per": 1000,
+                          "bp": 1000
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "trigger": "on_fall",
+                    "type": "area",
+                    "shape": {
+                      "kind": "circle",
+                      "radius": 2
+                    },
+                    "anchor": "self",
+                    "hits": "allies",
+                    "effects": [
+                      {
+                        "type": "heal",
+                        "amount_bp_of_max_hp": 3000,
+                        "target": "target",
+                        "grows_per_damage_taken": {
+                          "per": 1000,
+                          "bp": 1000
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Healing given by his fall",
+          "counts": "healing",
+          "from_ability": [
+            "martyrs_pyre"
+          ],
+          "threshold": 300
+        }
+      }
+    ]
   },
   {
     "_note": "The pure healer (rebuild-heroes.md, section 8, path 1). Transformed, Night Lantern is her mana signature and Mend comes every 4th Lantern Glow (Decision 7).",

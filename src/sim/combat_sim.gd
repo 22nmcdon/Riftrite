@@ -73,11 +73,19 @@ var zones: Array[Areas.Pending] = []
 ## Snares set and walls standing (phase 4), in the order they were made.
 var snares: Array[Snares.Snare] = []
 var walls: Array[Walls.Wall] = []
+## Walls that block movement or land effects (phase 8 part 2; Walls.tick),
+## and the barrier circles that block each side's units (indexed by
+## EffectSource.Team; empty: none).
+var active_walls: Array[Walls.Wall] = []
+var barriers: Array = [[] as Array[ArenaPlane.Circle], [] as Array[ArenaPlane.Circle]]
+var has_barriers: bool = false
 ## The units with a Guard passive (phase 4), in the fight's order.
 var guards: Array[UnitState] = []
 ## The units with a link passive (phase 8 part 2, Links; empty: no fight
 ## reaches the split).
 var linkers: Array[UnitState] = []
+## Some unit rises by its own kit (phase 8 part 2, a rise passive).
+var risers: bool = false
 var finished: bool = false
 var outcome: FightResult.Outcome = FightResult.Outcome.TIE
 var _nav: NavGrid
@@ -148,6 +156,8 @@ var _counting: bool = false
 ## Some hero counts damage it takes or its kills (Deeds._count_on_target),
 ## or its time below an HP share (Deeds.count_time; phase 5c step 4).
 var tallies_on_target: bool = false
+## The units with a deed that counts their allies' hits (phase 8 part 2).
+var team_counters: Array[UnitState] = []
 var _counting_time: bool = false
 ## Log entries before this one have been counted for deeds.
 var _deeds_read: int = 0
@@ -219,6 +229,8 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 		_counting = _counting or unit.deeds != null
 		if unit.deeds != null:
 			tallies_on_target = tallies_on_target or unit.deeds.needs_taken or unit.deeds.needs_kills
+			if unit.deeds.needs_team:
+				team_counters.append(unit)
 			_counting_time = _counting_time or unit.deeds.needs_time
 	Gambits.set_up(self)
 	units_joined()
@@ -280,6 +292,8 @@ func add_unit(unit: UnitState) -> void:
 		guards.append(unit)
 	if unit.link != null:
 		linkers.append(unit)
+	if unit.rise_part != null:
+		risers = true
 
 
 ## Starts reading the log for events from now on (a boost that ends as its
@@ -397,7 +411,7 @@ func step() -> void:
 		_active_auras = Passives.rederive(self, _active_auras)
 	Collapse.tick(self)
 	Statuses.tick_all(self)
-	if hero_rules.rise_ticks > 0:
+	if hero_rules.rise_ticks > 0 or risers:
 		_rise_due()
 	if arrivals or swaps:
 		Gambits.tick(self)
@@ -405,6 +419,8 @@ func step() -> void:
 		_rift_due()
 	if hero_rules.watch_every_ticks > 0 and tick >= hero_rules.watch_from_ticks and (tick - hero_rules.watch_from_ticks) % hero_rules.watch_every_ticks == 0:
 		_keep_watch()
+	if not active_walls.is_empty():
+		Walls.tick(self)
 	Shots.land_due(self)
 	Areas.land_due(self)
 	for unit: UnitState in units:
@@ -584,7 +600,25 @@ func obstacles_for(unit: UnitState, except: UnitState) -> Array[ArenaPlane.Circl
 		if other != unit and other != except and other.alive and not other.airborne:
 			found.append(other.circle())
 	found.append_array(rocks)
+	if has_barriers:
+		found.append_array(barriers[unit.side])
 	return found
+
+
+## The barrier circles each side's units can't pass, from the standing walls
+## that block movement (phase 8 part 2; Walls).
+func rebuild_barriers() -> void:
+	var against_heroes: Array[ArenaPlane.Circle] = []
+	var against_enemies: Array[ArenaPlane.Circle] = []
+	for wall: Walls.Wall in walls:
+		if tick >= wall.until_tick:
+			continue
+		if wall.side == EffectSource.Team.HEROES:
+			against_enemies.append_array(wall.circles)
+		else:
+			against_heroes.append_array(wall.circles)
+	barriers = [against_heroes, against_enemies]
+	has_barriers = not against_heroes.is_empty() or not against_enemies.is_empty()
 
 
 ## True if `unit` fits at `point` as a spot it picks to land or be placed on
@@ -628,6 +662,10 @@ func _clear(unit: UnitState, point: Vector2i) -> bool:
 	for rock: ArenaPlane.Circle in rocks:
 		if ArenaPlane.overlaps(point, unit.radius, rock.center, rock.radius):
 			return false
+	if has_barriers:
+		for circle: ArenaPlane.Circle in barriers[unit.side]:
+			if ArenaPlane.overlaps(point, unit.radius, circle.center, circle.radius):
+				return false
 	return true
 
 
@@ -646,6 +684,9 @@ func ground_nav_for(unit: UnitState) -> NavGrid:
 	_nav.begin(safe, unit.radius)
 	for rock: ArenaPlane.Circle in rocks:
 		_nav.add_obstacle(rock.center, rock.radius)
+	if has_barriers:
+		for circle: ArenaPlane.Circle in barriers[unit.side]:
+			_nav.add_obstacle(circle.center, circle.radius)
 	return _nav
 
 
@@ -681,8 +722,10 @@ func unit_by_id(unit_id: String) -> UnitState:
 
 static func _any_standing(side_units: Array[UnitState]) -> bool:
 	for unit: UnitState in side_units:
-		# One still to arrive (Late Arrival) isn't down.
-		if unit.alive or unit.arriving:
+		# One still to arrive (Late Arrival) isn't down, nor one about to rise
+		# by its own kit (phase 8 part 2; Second Dawn's rise doesn't hold the
+		# fight).
+		if unit.alive or unit.arriving or (unit.rise_at >= 0 and unit.rise_part != null):
 			return true
 	return false
 
@@ -729,6 +772,7 @@ func apply_damage(target: UnitState, amount: int) -> int:
 func apply_damage_vs_shield(target: UnitState, amount: int, vs_shield_bp: int) -> int:
 	if amount > 0:
 		Mana.on_damage_taken(self, target, amount)
+		target.taken_total += amount
 	if vs_shield_bp <= 0 or target.shield <= 0:
 		target.hp = maxi(target.hp - amount, 0)
 		return 0
@@ -780,33 +824,46 @@ func _process_deaths() -> void:
 
 ## Second Dawn (phase 5c step 5c): each fallen hero whose rise is due stands
 ## again where it fell (or the nearest free safe spot), at a share of its max
-## HP, its statuses and Shield gone, logged as RISE.
+## HP, its statuses and Shield gone, logged as RISE. A unit with a rise
+## passive (phase 8 part 2) rises the same way at its own share, sourced to
+## the passive, keeping that passive's boost and gaining a stack of it.
 func _rise_due() -> void:
 	var rose_any: bool = false
-	for unit: UnitState in heroes:
+	for unit: UnitState in units:
 		if unit.alive or unit.rise_at < 0 or tick < unit.rise_at:
 			continue
 		unit.rise_at = -1
-		unit.rose = true
+		var part: PartDef = unit.rise_part
+		if part != null:
+			unit.rises_done += 1
+		else:
+			unit.rose = true
 		var spot: Vector2i = Displacement.free_spot_near(self, unit, nearest_safe_point(unit.pos, unit.radius), null, 0)
 		if spot.x < 0:
 			continue
 		unit.alive = true
 		unit.pos = spot
-		unit.hp = maxi(FixedMath.apply_bp(unit.max_hp, hero_rules.rise_hp_bp), 1)
+		unit.hp = maxi(FixedMath.apply_bp(unit.max_hp, part.rise_hp_bp if part != null else hero_rules.rise_hp_bp), 1)
 		unit.shield = 0
-		unit.statuses.clear()
+		if part != null and not part.rise_status.is_empty():
+			unit.statuses = unit.statuses.filter(func(state: StatusState) -> bool: return state.def.id == part.rise_status)
+		else:
+			unit.statuses.clear()
 		unit.target = null
 		unit.last_attacker = ""
 		unit.moved_at = tick
 		unit.route.clear()
 		unit.leg_active = false
 		unit.replan_at = tick + 1
-		var entry: LogEntry = new_entry(LogEntry.Kind.RISE, EffectSource.relic("second_dawn", "Second Dawn", EffectSource.Team.HEROES))
+		var source: EffectSource = EffectSource.make(unit.id, part.id, part.name) if part != null \
+			else EffectSource.relic("second_dawn", "Second Dawn", EffectSource.Team.HEROES)
+		var entry: LogEntry = new_entry(LogEntry.Kind.RISE, source)
 		entry.target = unit.id
 		entry.to_pos = spot
 		entry.amount = unit.hp
 		combat_log.add(entry)
+		if part != null and not part.rise_status.is_empty():
+			Statuses.apply(self, unit, part.rise_status, 1, 0, source)
 		rose_any = true
 	if rose_any:
 		refold_auras()
@@ -841,7 +898,11 @@ func _undying(unit: UnitState) -> StatusState:
 
 func _fall(unit: UnitState) -> void:
 	unit.alive = false
-	if hero_rules.rise_ticks > 0 and unit.side == EffectSource.Team.HEROES and not unit.rose and unit.index < setup.heroes.size():
+	if unit.rise_part != null:
+		# Its own rises (phase 8 part 2); Second Dawn's counts toward them.
+		if unit.rises_done < unit.rise_part.rise_times:
+			unit.rise_at = tick + unit.rise_part.rise_ticks
+	elif hero_rules.rise_ticks > 0 and unit.side == EffectSource.Team.HEROES and not unit.rose and unit.index < setup.heroes.size():
 		unit.rise_at = tick + hero_rules.rise_ticks
 	unit.target = null
 	unit.route.clear()

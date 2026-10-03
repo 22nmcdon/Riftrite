@@ -329,6 +329,8 @@ static func counted(counts: DeedDef, per: int) -> String:
 			return "%s damage taken for allies" % amount
 		DeedDef.Counts.SHARED:
 			return "%s damage shared through links" % amount
+		DeedDef.Counts.BLOCKED:
+			return "%s enemy shots stopped by walls" % amount
 		DeedDef.Counts.APPLIED:
 			if counts.keywords.is_empty():
 				return "%s statuses put on enemies" % amount
@@ -337,7 +339,7 @@ static func counted(counts: DeedDef, per: int) -> String:
 				names.append(Keywords.label(keyword))
 			return "%s enemies %s" % [amount, " or ".join(names)]
 		DeedDef.Counts.TAKEN:
-			return "%s damage taken" % amount
+			return "%s damage taken%s" % [amount, " after rising" if counts.after_rising else ""]
 		DeedDef.Counts.MS_BELOW:
 			return "%s below %s HP" % [amount, ValueBreakdown._percent(counts.while_below_bp)]
 		DeedDef.Counts.KILLS:

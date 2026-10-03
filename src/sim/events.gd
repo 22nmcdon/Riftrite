@@ -18,6 +18,9 @@ extends RefCounted
 ##   on_status_ended  a status on it runs out (phase 5c step 5b)
 ## Phase 5c step 6b: on_charged (a charge or leap's hit lands on it) and
 ## on_enemy_fell (an enemy falls; raised beside on_kill).
+## Phase 8 part 2: on_ally_shield_broken (a Shield on one of its side breaks;
+## Thornweave) and on_wall_block (its wall stops a shot or takes a strike;
+## The Unbroken Gate), naming the shooter or striker.
 ## After every unit has acted, CombatSim hands over the entries logged since
 ## the last read, in log order (so what happens in the deaths step is read
 ## on the next tick); kills are raised as deaths are settled. Relic effects
@@ -35,7 +38,7 @@ extends RefCounted
 ## The log kinds that raise events (the rest are skipped at once).
 const _RAISES: Array[LogEntry.Kind] = [LogEntry.Kind.FIRE, LogEntry.Kind.DAMAGE, LogEntry.Kind.SHIELD, LogEntry.Kind.HEAL,
 	LogEntry.Kind.STATUS_APPLIED, LogEntry.Kind.HOP, LogEntry.Kind.STATUS_DAMAGE, LogEntry.Kind.STATUS_ENDED, LogEntry.Kind.LIFESTEAL,
-	LogEntry.Kind.PUSH, LogEntry.Kind.GUARD, LogEntry.Kind.ARRIVE]
+	LogEntry.Kind.PUSH, LogEntry.Kind.GUARD, LogEntry.Kind.ARRIVE, LogEntry.Kind.SHOT_FIZZLED, LogEntry.Kind.WALL_HIT]
 
 
 ## Raises the events in the log from entry `from` on, including those the
@@ -117,7 +120,9 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> int:
 					_raise(sim, source, EffectDef.Trigger.ON_KNOCKBACK, chain, target)
 			LogEntry.Kind.GUARD:
 				if target != null and entry.amount > 0:
-					_raise(sim, source, EffectDef.Trigger.ON_GUARD, chain, target)
+					# The share it took rides along (amount_bp_of_damage; phase 8
+					# part 2, The Hearthkeeper).
+					_raise(sim, source, EffectDef.Trigger.ON_GUARD, chain, target, entry.amount)
 			LogEntry.Kind.STATUS_APPLIED:
 				# Engaged comes from the Engage trait, not an effect.
 				if target != null and entry.status != sim.content.engaged_status.id:
@@ -126,6 +131,12 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> int:
 				_raise(sim, source, EffectDef.Trigger.ON_HOP, chain)
 			LogEntry.Kind.ARRIVE:
 				_raise(sim, source, EffectDef.Trigger.ON_ARRIVE, chain)
+			LogEntry.Kind.SHOT_FIZZLED:
+				if not entry.wall_of.is_empty():
+					_raise(sim, sim.unit_by_id(entry.wall_of), EffectDef.Trigger.ON_WALL_BLOCK, chain, source)
+			LogEntry.Kind.WALL_HIT:
+				if entry.note.begins_with("struck"):
+					_raise(sim, sim.unit_by_id(entry.wall_of), EffectDef.Trigger.ON_WALL_BLOCK, chain, source)
 	return i
 
 

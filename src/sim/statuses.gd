@@ -33,7 +33,7 @@ extends RefCounted
 ## Engine (the effect's own, phase 5c step 6b: Hunter's Chalk).
 ## `until_near`: it ends once an enemy stands that near (Rear Guard).
 static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: int, duration_ticks: int, source: EffectSource, marks_stack: bool = false,
-		until_near: int = 0, strength_add_bp: int = 0) -> void:
+		until_near: int = 0, strength_add_bp: int = 0, boost_strength_bp: int = 0) -> void:
 	if not sim.content.statuses.has(status_id):
 		push_error("Statuses: unknown status \"%s\"" % status_id)
 		return
@@ -102,9 +102,13 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: 
 		entry.amount = stacks
 		entry.stacks = state.total_stacks()
 	sim.combat_log.add(entry)
+	# A boost from a growing signature (phase 8 part 2): the latest's strength.
+	var stronger: bool = def.kind == StatusDef.Kind.BOOST and state.boost_strength_bp != boost_strength_bp
+	if stronger:
+		state.boost_strength_bp = boost_strength_bp
 	if def.kind == StatusDef.Kind.TAUNT and sim.taunt_auras:
 		sim.refold_auras()
-	elif def.kind == StatusDef.Kind.BOOST and (fresh or def.stacking):
+	elif def.kind == StatusDef.Kind.BOOST and (fresh or def.stacking or stronger):
 		sim.refold_auras()
 		if def.until_attack:
 			sim.listen()

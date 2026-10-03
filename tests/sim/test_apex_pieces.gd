@@ -267,3 +267,284 @@ func test_a_smite_kill_feeds_zeal() -> void:
 				zeal += 1
 	assert_gt(smite_kills, 0)
 	assert_eq(zeal, smite_kills, "a Zeal stack for each smite kill")
+
+
+## Part 8b-3: Brannoc's pieces, and the Trapper's.
+
+## A sim of `encounter_id` with `hero_id` transformed into `path_id` and at
+## `apex_id`'s apex (not yet stepped).
+func _hero_fight(encounter_id: String, hero_id: String, path_id: String, apex_id: String) -> CombatSim:
+	var errors: Array[String] = []
+	var formation: Dictionary[String, Vector2i] = {"brannoc": Vector2i(3, 2), "maren": Vector2i(4, 0), "vell": Vector2i(3, 1)}
+	var vows: Dictionary[String, String] = {}
+	vows[hero_id] = path_id
+	var apexes: Dictionary[String, String] = {}
+	apexes[hero_id] = apex_id
+	var setup: FightSetup = Encounters.setup(_content, encounter_id, formation, 7, errors, {}, vows, [hero_id] as Array[String], {}, apexes, [hero_id] as Array[String])
+	assert_eq(errors, [] as Array[String])
+	return CombatSim.new(setup, _content)
+
+
+## True if any standing, grounded unit overlaps a barrier circle that blocks
+## its side.
+func _inside_a_barrier(sim: CombatSim) -> String:
+	for unit: UnitState in sim.units:
+		if not unit.alive or unit.airborne:
+			continue
+		for circle: ArenaPlane.Circle in sim.barriers[unit.side]:
+			if ArenaPlane.overlaps(unit.pos, unit.radius, circle.center, circle.radius):
+				return "%s at %s, tick %d" % [unit.id, unit.pos, sim.tick]
+	return ""
+
+
+func test_the_gate_blocks_enemies_way_until_its_shots_and_strikes_break_it() -> void:
+	var worn: int = 0
+	var broken: int = 0
+	var gone: int = 0
+	for encounter_id: String in _content.encounter_ids:
+		var sim: CombatSim = _hero_fight(encounter_id, "brannoc", "hearthwall", "unbroken_gate")
+		var brannoc: UnitState = sim.unit_by_id("brannoc")
+		var trapped: String = ""
+		while not sim.finished:
+			sim.step()
+			if trapped.is_empty() and sim.has_barriers:
+				trapped = _inside_a_barrier(sim)
+			var standing: int = sim.walls.filter(func(wall: Walls.Wall) -> bool: return sim.tick < wall.until_tick).size()
+			assert_true(standing <= 1, "a new wall takes down the old (%s)" % encounter_id)
+		assert_eq(trapped, "", "no one walks into a wall that blocks it (%s)" % encounter_id)
+		var since_raised: int = 0
+		for entry: LogEntry in sim.combat_log.entries:
+			if entry.kind == LogEntry.Kind.WALL and entry.source_unit == "brannoc":
+				assert_eq(entry.end_tick, CombatSim.NEVER, "it stands until broken")
+				since_raised = 0
+			elif entry.kind == LogEntry.Kind.WALL_HIT:
+				assert_eq(entry.wall_of, "brannoc")
+				if entry.note == "gone":
+					gone += 1
+					continue
+				worn += 1
+				since_raised += entry.amount
+				if entry.note.ends_with("broken"):
+					broken += 1
+					assert_true(since_raised >= FixedMath.apply_bp(brannoc.max_hp, 5000), "it breaks once its HP is spent (%s)" % encounter_id)
+	assert_gt(worn, 0, "shots and strikes wear walls down")
+	assert_gt(broken, 0, "some wall breaks")
+	assert_gt(gone, 0, "some wall is taken down by a newer one")
+
+
+func test_each_attack_the_gate_blocks_toughens_him_and_counts() -> void:
+	var blocked_total: int = 0
+	for encounter_id: String in _content.encounter_ids:
+		var sim: CombatSim = _run(_hero_fight(encounter_id, "brannoc", "hearthwall", "unbroken_gate"))
+		var blocked: int = 0
+		var struck: int = 0
+		for entry: LogEntry in sim.combat_log.entries:
+			if entry.kind == LogEntry.Kind.SHOT_FIZZLED and entry.wall_of == "brannoc":
+				blocked += 1
+			elif entry.kind == LogEntry.Kind.WALL_HIT and entry.note.begins_with("struck"):
+				struck += 1
+		var stacks: int = 0
+		for entry: LogEntry in _of(sim, LogEntry.Kind.STATUS_APPLIED, "brannoc", "gatekeeper"):
+			stacks += 1
+		assert_eq(CombatSim.result_of(sim).deed_amount("brannoc", "unbroken_gate"), blocked, "the deed counts the shots it stops (%s)" % encounter_id)
+		if sim.unit_by_id("brannoc").alive:
+			assert_eq(stacks, blocked + struck, "a stack for each attack it blocks (%s)" % encounter_id)
+		blocked_total += blocked
+	assert_gt(blocked_total, 0)
+
+
+func test_a_sprung_snare_grows_a_briar_that_tears_and_blocks() -> void:
+	var briars: int = 0
+	var torn: int = 0
+	var gone: int = 0
+	for encounter_id: String in _content.encounter_ids:
+		var sim: CombatSim = _hero_fight(encounter_id, "maren", "trapper", "warden_of_thorns")
+		var trapped: String = ""
+		while not sim.finished:
+			sim.step()
+			if trapped.is_empty() and sim.has_barriers:
+				trapped = _inside_a_barrier(sim)
+			var standing: int = sim.walls.filter(func(wall: Walls.Wall) -> bool: return sim.tick < wall.until_tick).size()
+			assert_true(standing <= 6, "up to 6 briars (%s)" % encounter_id)
+		assert_eq(trapped, "", "no one walks into a briar (%s)" % encounter_id)
+		var sprung: int = 0
+		var raised: int = 0
+		var applied: int = 0
+		for entry: LogEntry in sim.combat_log.entries:
+			if entry.kind == LogEntry.Kind.SNARE and entry.note == "sprung":
+				sprung += 1
+			elif entry.kind == LogEntry.Kind.WALL and entry.source_unit == "maren":
+				raised += 1
+			elif entry.kind == LogEntry.Kind.WALL_HIT and entry.note == "gone":
+				gone += 1
+			elif entry.kind == LogEntry.Kind.STATUS_APPLIED and entry.status == "briar_torn":
+				applied += 1
+		assert_eq(raised, sprung, "a briar for each sprung snare (%s)" % encounter_id)
+		assert_eq(CombatSim.result_of(sim).deed_amount("maren", "warden_of_thorns"), applied, "the deed counts the tearing (%s)" % encounter_id)
+		briars += raised
+		torn += applied
+	assert_gt(briars, 0)
+	assert_gt(torn, 0, "enemies touching briars are torn")
+
+
+func test_brands_explode_at_five_and_blasts_can_set_off_blasts() -> void:
+	var spends: int = 0
+	var chained: int = 0
+	for encounter_id: String in _content.encounter_ids:
+		var sim: CombatSim = _run(_hero_fight(encounter_id, "brannoc", "ironbrand", "forgebreaker"))
+		var spent: int = 0
+		var blasts: int = 0
+		var hits: int = 0
+		for entry: LogEntry in sim.combat_log.entries:
+			if entry.kind == LogEntry.Kind.STATUS_ENDED and entry.status == "brand" and entry.note == "spent by brannoc":
+				spent += 1
+			elif entry.kind == LogEntry.Kind.AREA_LANDED and entry.source_unit == "brannoc" and entry.source_ability == "forge_blast":
+				blasts += 1
+			elif entry.kind == LogEntry.Kind.DAMAGE and entry.source_unit == "brannoc" and entry.source_ability == "forge_blast":
+				hits += 1
+				if entry.chain >= 4:
+					chained += 1
+		assert_eq(blasts, spent, "a blast each time 5 brands are spent (%s)" % encounter_id)
+		assert_eq(CombatSim.result_of(sim).deed_amount("brannoc", "forgebreaker"), hits, "the deed counts the blasts' hits (%s)" % encounter_id)
+		spends += spent
+	assert_gt(spends, 0)
+	assert_gt(chained, 0, "a blast's brands set off another blast")
+
+
+func test_a_rally_grows_with_each_slam_but_the_slam_doesnt() -> void:
+	var strengths: Array[int] = []
+	var slam_powers: Array[int] = []
+	for encounter_id: String in _content.encounter_ids:
+		var sim: CombatSim = _hero_fight(encounter_id, "brannoc", "ironbrand", "warlord")
+		while not sim.finished:
+			sim.step()
+			for hero: UnitState in sim.heroes:
+				var rally: StatusState = Statuses.find(hero, "rally")
+				if rally != null and not strengths.has(rally.boost_strength_bp):
+					strengths.append(rally.boost_strength_bp)
+		for entry: LogEntry in _of(sim, LogEntry.Kind.DAMAGE, "brannoc", "brand_slam"):
+			if not slam_powers.has(entry.rule_power):
+				slam_powers.append(entry.rule_power)
+	strengths.sort()
+	assert_gt(strengths.size(), 2, "several slams' rallies")
+	for i: int in strengths.size():
+		assert_eq(strengths[i] % 2500, 0, "each rally a quarter stronger than the last")
+	assert_eq(strengths[0], 0, "the first rally as written")
+	assert_eq(slam_powers.size(), 1, "the slam's own damage doesn't grow")
+
+
+func test_a_rise_passive_brings_him_back_up_to_its_times_stronger_each_time() -> void:
+	var rises_total: int = 0
+	var after_total: int = 0
+	for encounter_id: String in _content.encounter_ids:
+		var sim: CombatSim = _hero_fight(encounter_id, "brannoc", "last_watch", "undying_oath")
+		# Second Dawn's rise counts toward his own: he never takes it.
+		sim.setup.hero_rules.rise_ticks = 100
+		sim.setup.hero_rules.rise_hp_bp = 5000
+		_run(sim)
+		var fell_at: int = -1
+		var rises: int = 0
+		var taken_after: int = 0
+		for entry: LogEntry in sim.combat_log.entries:
+			if entry.kind == LogEntry.Kind.DEATH and entry.target == "brannoc":
+				fell_at = entry.tick
+			elif entry.kind == LogEntry.Kind.RISE and entry.target == "brannoc":
+				assert_eq([entry.source_unit, entry.source_ability], ["brannoc", "undying_oath"], "his own rise (%s)" % encounter_id)
+				assert_eq(entry.tick - fell_at, 60, "3s after he fell (%s)" % encounter_id)
+				rises += 1
+			elif rises > 0 and (entry.kind == LogEntry.Kind.DAMAGE or entry.kind == LogEntry.Kind.STATUS_DAMAGE) and entry.target == "brannoc" \
+					and entry.source_relic_side < 0 and sim.unit_by_id(entry.source_unit) != null and sim.unit_by_id(entry.source_unit).side == EffectSource.Team.ENEMIES:
+				taken_after += entry.amount
+		assert_true(rises <= 3, "up to 3 times (%s)" % encounter_id)
+		var brannoc: UnitState = sim.unit_by_id("brannoc")
+		if brannoc.alive:
+			assert_eq(Statuses.stacks_on(brannoc, "oathbound"), rises, "a stack of Oathbound for each rise, kept (%s)" % encounter_id)
+		assert_eq(CombatSim.result_of(sim).deed_amount("brannoc", "undying_oath"), taken_after, "the deed counts what he takes after rising (%s)" % encounter_id)
+		rises_total += rises
+		after_total += taken_after
+	assert_gt(rises_total, 0)
+	assert_gt(after_total, 0)
+
+
+func test_his_last_fire_grows_with_what_he_took() -> void:
+	var bursts: int = 0
+	for encounter_id: String in _content.encounter_ids:
+		var sim: CombatSim = _hero_fight(encounter_id, "brannoc", "last_watch", "martyrs_pyre")
+		var taken_at_fall: int = -1
+		while not sim.finished:
+			sim.step()
+			if taken_at_fall < 0 and not sim.unit_by_id("brannoc").alive:
+				taken_at_fall = sim.unit_by_id("brannoc").taken_total
+		var healed: int = 0
+		for entry: LogEntry in _of(sim, LogEntry.Kind.DAMAGE, "brannoc", "martyrs_pyre"):
+			@warning_ignore("integer_division")
+			assert_eq(entry.rule_power, 1000 * (taken_at_fall / 1000), "+10%% for every 1,000 he took (%s)" % encounter_id)
+			bursts += 1
+		for entry: LogEntry in _of(sim, LogEntry.Kind.HEAL, "brannoc", "martyrs_pyre"):
+			healed += entry.amount
+		assert_eq(CombatSim.result_of(sim).deed_amount("brannoc", "martyrs_pyre"), healed, "the deed counts his fall's healing (%s)" % encounter_id)
+	assert_gt(bursts, 0)
+
+
+func test_guarded_allies_heal_and_his_overheal_raises_his_max_hp() -> void:
+	var grown: int = 0
+	for encounter_id: String in _content.encounter_ids:
+		# Overheal needs a guarded ally still at full HP: here, behind a Shield
+		# no hit gets through.
+		var sim: CombatSim = _hero_fight(encounter_id, "brannoc", "hearthwall", "hearthkeeper")
+		sim.unit_by_id("maren").shield = 1000000
+		sim.unit_by_id("vell").shield = 1000000
+		_run(sim)
+		var guards: Array[LogEntry] = _of(sim, LogEntry.Kind.GUARD, "brannoc")
+		var heals: Array[LogEntry] = _of(sim, LogEntry.Kind.HEAL, "brannoc", "hearthkeeper")
+		var guarded: int = 0
+		for entry: LogEntry in guards:
+			if entry.amount > 0:
+				guarded += 1
+		assert_eq(heals.size(), guarded, "a heal for each share he takes (%s)" % encounter_id)
+		var healed: int = 0
+		for entry: LogEntry in heals:
+			healed += entry.amount
+		var gained: int = 0
+		for entry: LogEntry in _of(sim, LogEntry.Kind.MAX_HP_UP, "brannoc", "hearthkeeper"):
+			assert_eq(entry.target, "brannoc")
+			gained += entry.amount
+		assert_eq(CombatSim.result_of(sim).deed_amount("brannoc", "hearthkeeper"), healed, "the deed counts the healing (%s)" % encounter_id)
+		grown += gained
+	assert_gt(grown, 0, "overhealing raises his max HP")
+
+
+func test_a_rooted_enemy_that_falls_leaves_a_snare_and_the_team_counts() -> void:
+	var left: int = 0
+	var counted: int = 0
+	for encounter_id: String in _content.encounter_ids:
+		var sim: CombatSim = _hero_fight(encounter_id, "maren", "trapper", "huntmaster")
+		var read: int = 0
+		var on_rooted: int = 0
+		var deaths: Dictionary[int, Array] = {}
+		while not sim.finished:
+			sim.step()
+			for i: int in range(read, sim.combat_log.entries.size()):
+				var entry: LogEntry = sim.combat_log.entries[i]
+				if entry.kind == LogEntry.Kind.DEATH:
+					if not deaths.has(entry.tick):
+						deaths[entry.tick] = []
+					deaths[entry.tick].append(sim.nearest_safe_point(entry.to_pos, 0))
+				if entry.kind != LogEntry.Kind.DAMAGE or entry.source_relic_side >= 0:
+					continue
+				var by: UnitState = sim.unit_by_id(entry.source_unit)
+				var hit: UnitState = sim.unit_by_id(entry.target)
+				if by != null and hit != null and by.side == EffectSource.Team.HEROES and hit.side == EffectSource.Team.ENEMIES and Keywords.has(hit, "rooted"):
+					on_rooted += entry.amount
+			read = sim.combat_log.entries.size()
+		for entry: LogEntry in _of(sim, LogEntry.Kind.SNARE, "maren", "pack_snares"):
+			if entry.note != "set":
+				continue
+			# Set as the fallen's death is settled, read the tick after.
+			var spots: Array = deaths.get(entry.tick - 1, []) + deaths.get(entry.tick, [])
+			assert_true(spots.has(entry.from_pos), "where a Rooted enemy fell (%s)" % encounter_id)
+			left += 1
+		assert_eq(CombatSim.result_of(sim).deed_amount("maren", "huntmaster"), on_rooted, "her team's hits on Rooted enemies (%s)" % encounter_id)
+		counted += on_rooted
+	assert_gt(left, 0)
+	assert_gt(counted, 0)

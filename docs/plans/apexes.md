@@ -1,6 +1,6 @@
 # Apexes
 
-Status: **agreed in discussion (2026-09-30); being built for Maren, Brannoc, and Vell in phase 8 part 2** (`rebuild-phase8-apexes.md`, whose Decisions win where they differ). The final forms of each path. Fills in part 1's apex options (`rebuild-heroes.md`); where they disagree, this file wins. **Numbers and names are placeholders.**
+Status: **agreed in discussion (2026-09-30); built for Maren, Brannoc, and Vell in phase 8 part 2 (parts 8b-1 to 8b-3; numbers not tuned yet)** (`rebuild-phase8-apexes.md`, whose Decisions win where they differ). The final forms of each path. Fills in part 1's apex options (`rebuild-heroes.md`); where they disagree, this file wins. **Numbers and names are placeholders.**
 
 ## How apexes work
 

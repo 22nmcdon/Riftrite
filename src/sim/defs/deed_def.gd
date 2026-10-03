@@ -38,6 +38,7 @@ extends RefCounted
 ## Phase 8 part 2 (apexes):
 ##   hits     its hits on enemies, one each (Hailstorm)
 ##   shared   damage its link spread over linked allies (Loomwarden)
+##   blocked  enemy shots its walls stop, one each (The Unbroken Gate)
 ##   kills takes from_ability too: only kills by those abilities (Eagle
 ##            Eye, Inquisitor)
 ##   within_ms_of_hop: 1000        a filter: only what lands within this long
@@ -59,6 +60,14 @@ extends RefCounted
 ##   while_undying: true           damage only: the hero can't fall (it has
 ##                                 an Undying status as the tick it lands
 ##                                 ends; Last Watch)
+##   vs_keywords: ["rooted"]       damage only: hits on a unit with one of
+##                                 these keywords as the tick ends (phase 8
+##                                 part 2, Huntmaster)
+##   by_allies: true               damage only: its allies' hits count too
+##                                 (Huntmaster)
+##   after_rising: true            taken only: once the hero has risen by its
+##                                 own kit this fight (phase 8 part 2,
+##                                 Undying Oath)
 ##   from_basic: true              only what its basic attack does (phase 5c
 ##                                 step 4; Rift-Fed Blades)
 ##   keywords: ["marked"]          applied only: statuses with these keywords
@@ -66,13 +75,13 @@ extends RefCounted
 ## three fights' worth of what a vowed hero puts in); the sim never reads it.
 ## Adding a kind or a filter is a code change.
 
-enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING, HITS, SHARED }
+enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING, HITS, SHARED, BLOCKED }
 
-const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing", "hits", "shared"]
+const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing", "hits", "shared", "blocked"]
 const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill", "casts", "ms standing", "enemies hit", "damage shared"]
 ## The kinds read from where the hero is the target, or from the tick, not
 ## from what the hero does.
-const NOT_ITS_OWN: Array[Counts] = [Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING]
+const NOT_ITS_OWN: Array[Counts] = [Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING, Counts.BLOCKED]
 
 ## The player's line: "Damage dealt from 5 or more hexes away".
 var text: String
@@ -85,6 +94,12 @@ var while_below_bp: int = 0
 var off_target: bool = false
 var while_undying: bool = false
 var from_basic: bool = false
+## taken (phase 8 part 2): only after the hero has risen by its own kit.
+var after_rising: bool = false
+## damage (phase 8 part 2): only hits on units with these keywords, and
+## allies' hits count too.
+var vs_keywords: Array[String] = []
+var by_allies: bool = false
 ## Only what lands within this long after the hero's last hop (phase 8 part
 ## 2, Windrunner; "within_ms_of_hop"). 0: any time.
 var after_hop_ticks: int = 0
@@ -114,6 +129,15 @@ static func read(reader: DataReader, needs_text: bool = true) -> DeedDef:
 		def.while_below_bp = reader.req_int("while_below_pct", 1, 99) * 100
 	def.while_undying = reader.opt_bool("while_undying", false)
 	def.from_basic = reader.opt_bool("from_basic", false)
+	def.after_rising = reader.opt_bool("after_rising", false)
+	def.vs_keywords = reader.opt_choice_array("vs_keywords", Keywords.NAMES)
+	def.by_allies = reader.opt_bool("by_allies", false)
+	if def.counts != Counts.DAMAGE and (not def.vs_keywords.is_empty() or def.by_allies):
+		reader.error("vs_keywords and by_allies only filter damage")
+	if def.by_allies and not def.from_ability.is_empty():
+		reader.error("by_allies counts every ally's hits, so it takes no from_ability")
+	if def.after_rising and def.counts != Counts.TAKEN:
+		reader.error("after_rising only filters taken")
 	def.after_hop_ticks = reader.opt_ticks("within_ms_of_hop", 0)
 	def.keywords = reader.opt_choice_array("keywords", Keywords.NAMES)
 	if reader.has("statuses"):
@@ -164,6 +188,6 @@ func counts_kind(kind: LogEntry.Kind, ability_id: String) -> bool:
 		Counts.APPLIED:
 			if kind != LogEntry.Kind.STATUS_APPLIED:
 				return false
-		Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING:
+		Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING, Counts.BLOCKED:
 			return false
 	return from_ability.is_empty() or from_ability.has(ability_id)

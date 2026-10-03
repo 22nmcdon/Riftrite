@@ -207,8 +207,10 @@ static func _fire(sim: CombatSim, unit: UnitState, target: UnitState, note: Stri
 	# Growing with each cast (phase 8 part 2): the fires before this one.
 	var power_before: int = unit.fire_power_bp
 	unit.fire_power_bp += ability.grows_bp * signature.fires
+	unit.grow_power_bp = (ability.grows_bp + ability.grows_boosts_bp) * signature.fires
 	var fired: bool = EffectRunner.fire(sim, unit, signature, target, ability.reach_for(unit.stats.get_stat(UnitStats.Stat.RANGE)), not signature.failing, note)
 	unit.fire_power_bp = power_before
+	unit.grow_power_bp = 0
 	if not fired:
 		signature.failing = true
 		return false

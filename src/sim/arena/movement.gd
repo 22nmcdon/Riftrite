@@ -49,6 +49,9 @@ static func walk(sim: CombatSim, unit: UnitState) -> void:
 	if (unit.route.is_empty() and unit.no_path_since < 0) or unit.route_for != target or sim.tick >= unit.replan_at:
 		_plan(sim, unit)
 	if unit.route.is_empty():
+		# A wall with HP in the way: it strikes the wall (phase 8 part 2).
+		if sim.has_barriers and Walls.strike(sim, unit):
+			return
 		halt(sim, unit, "no way through")
 		if unit.no_path_since < 0:
 			unit.no_path_since = sim.tick

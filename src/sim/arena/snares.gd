@@ -95,6 +95,10 @@ static func _spring(sim: CombatSim, snare: Snare, caught: UnitState) -> void:
 	_log(sim, snare, "sprung", caught.id)
 	for i: int in snare.effect.area_effects.size():
 		var nested: EffectDef = snare.effect.area_effects[i]
+		if nested.type == EffectDef.Type.WALL:
+			# A wall where it springs (phase 8 part 2, Warden of Thorns).
+			Walls.raise(sim, snare.unit, snare.source, nested, caught)
+			continue
 		var crit: bool = nested.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(EffectRunner.crit_chance_bp(sim, snare.unit, snare.ability))
 		EffectRunner.land(sim, snare.unit, snare.ability, snare.source, nested, caught, snare.amounts[i], crit, snare.pos, snare.powers[i])
 
