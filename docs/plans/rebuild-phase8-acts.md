@@ -1,6 +1,6 @@
 # Phase 8 part 3: Acts 2 and 3
 
-Status: **a draft build plan (2026-10-03); the run's shape is agreed (Decisions 1–10), Decisions 11–17 answer the rest of section 7 but BJ's which-one, and each act's enemies, elites, and boss are drafted with the playtester next, as the heroes were.** Nothing is built. The playtester chose Acts 2 and 3 as phase 8's next step (2026-10-03), ahead of enemy growth, the heroes' tuning, and more heroes. Numbers are placeholders.
+Status: **a draft build plan (2026-10-03); the run's shape is agreed (Decisions 1–10), Decisions 11–18 answer the rest of section 7, and each act's enemies, elites, and boss are drafted with the playtester next, as the heroes were.** Nothing is built. The playtester chose Acts 2 and 3 as phase 8's next step (2026-10-03), ahead of enemy growth, the heroes' tuning, and more heroes. Numbers are placeholders.
 
 ## 1. What it builds
 
@@ -33,7 +33,7 @@ Each act moves the difficulty up one step (Decision 9 of `rebuild-phase8-apexes.
 **Act 2, the Glassmere** (the rift's drowned middle: flooded ruins, glassy water, cold light):
 
 - **Board rule, shallow water:** some hexes are water. A unit on water moves at half speed, and Burn on a unit standing in water burns at half rate. It tests placement and the Burn and clump builds. The arena's rocks and Rift Collapse stay.
-- **Enemies:** new faces for about half of Act 1's 8 archetypes, Act 1's own enemies back in specialized form for the rest (Decision 7), and 2 new archetypes: the **Summoner** (target priority; later, something for summoning builds to face) and the **Splitter** (splits in two when killed: burst against area damage).
+- **Enemies:** new faces for about half of Act 1's 8 archetypes, Act 1's own enemies back in specialized form for the rest (Decision 7), and 2 new archetypes: the **Summoner** (target priority; later, something for summoning builds to face) and the **Splitter** (splits in two when killed: burst against area damage; Splitting Ashling is cut for it, Decision 16).
 - **Elites:** 2, each built around one mechanic. **Boss:** 2–3 phases, fought by a team with at least one apex.
 
 **Act 3, the Shattered Crown** (the rift's heart: broken islands of floating stone over nothing):
@@ -81,7 +81,7 @@ The good bot plays the whole run; each act is tuned to section 2a's targets (Dec
 - **BG. Pay and prices in later acts:** *(Answered: Decision 13.)* the same as Act 1, or growing? (`economy.md` covers Act 1 only.)
 - **BH. Act 3's crumbled ground:** *(Answered: Decision 14.)* `collapse_by_act` has no Act 3. A placeholder of base 25, growth 30, accel 6?
 - **BI. Endless while Acts 2 and 3 are built:** *(Answered: Decision 15.)* keep it after Act 1 until Act 3 exists, or move it once the frame is in?
-- **BJ. The Splitter and Splitting Ashling** *(Decision 16: cut one; which is open. Recommended: cut Splitting Ashling, so Act 2 keeps its 2 new archetypes (Decision 9), and give the Ashling a new second specialization when Act 2's roster is drafted.)* (an Ashling specialization in `enemy-growth.md`) do the same thing. Cut one, or tell them apart (the Splitter's halves are full enemies; the Ashling's embers are small and burst)?
+- **BJ. The Splitter and Splitting Ashling** *(Answered: Decision 16.)* (an Ashling specialization in `enemy-growth.md`) do the same thing. Cut one, or tell them apart (the Splitter's halves are full enemies; the Ashling's embers are small and burst)?
 - **BK. A hero pushed into a gap:** *(Answered: Decision 17.)* does it count as a fall (a wound, as being downed does), and is the fight then fought without it? The log names it (rule 4) and the board must show every gap clearly.
 - **BL. Which hero signatures the Mimic can copy:** *(Answered: Decision 18.)* ones built from areas, damage, heals, Shields, and statuses copy cleanly; snares, walls, Guard, lanterns, and links are tied to their hero. Copy only the first kind?
 
@@ -107,6 +107,6 @@ The playtester, 2026-10-03 (the rest of section 7):
 13. **Act 2 and Act 3 pay and price as Act 1 does, for now** (Question BG), retuned once they play.
 14. **Act 3's crumbled ground: base 25, growth 30, accel 6** (Question BH), a placeholder.
 15. **Endless after Act 1 stays as a testing option** (Question BI): real endless comes after Act 3; the Act 1 version is offered only with the testing toggle on, and keeps its records apart, so floors from the two never compare.
-16. **The Splitter and Splitting Ashling: cut one** (Question BJ); which one is still open (section 7).
+16. **Splitting Ashling is cut; the Splitter stays** (Question BJ), so Act 2 keeps its 2 new archetypes (Decision 9). The Ashling gets a new second specialization when Act 2's roster is drafted.
 17. **A hero pushed into a gap counts as a fall, for now** (Question BK): it takes a wound and is out of the fight, as a downed hero is. The log names the fall (rule 4).
 18. **The Mimic copies only signatures built from areas, damage, heals, Shields, and statuses, for now** (Question BL): snares, walls, Guard, lanterns, and links stay with their hero.

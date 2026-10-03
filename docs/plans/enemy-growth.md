@@ -18,7 +18,7 @@ A specialization changes how an enemy plays, not only its numbers, so the answer
 | Enemy | Specialization 1 | Specialization 2 |
 | --- | --- | --- |
 | **Rift Pup** | **Burrowing Pup:** burrows at the fight's start and comes up next to your back line 3s later | **Gnawing Pup:** its bites apply 1 Bleed, which stacks |
-| **Ashling** | **Splitting Ashling:** when it dies, it splits into 2 embers (10% of its HP each) that also burst into Burn | **Smoldering Ashling:** leaves burning ground where it dies for 3s |
+| **Ashling** | ~~**Splitting Ashling:** when it dies, it splits into 2 embers (10% of its HP each) that also burst into Burn~~ **Cut** (2026-10-03, `rebuild-phase8-acts.md` Decision 16: Act 2's Splitter archetype does it); a new one comes with Act 2's roster | **Smoldering Ashling:** leaves burning ground where it dies for 3s |
 | **Rift Hound** | **Ashback Hound:** its Pounce leaves burning ground where it lands | **Gloam Hound:** after Pouncing, it leaps back out after 3s and Pounces again later |
 | **Cinder Moth** | **Drifting Moth:** Ember Dust drifts toward the nearest hero for 2s | **Dazzling Moth:** heroes inside Ember Dust miss 30% of their attacks |
 | **Hollow Archer** | **Pinning Archer:** its shots Root for 0.5s | **Volley Archer:** fires at every hero in a line |
@@ -82,7 +82,7 @@ A difficulty modifier (part 3, section 8). With it on, the rift swaps some enemy
 | **Mana and signatures** | Hex Witch, Rift-Touched |
 | **A protected back line** | Burrowing Pup, Gloam Hound, Deep Lurker |
 | **Bunching up** | Drifting Moth, Avalanche Guardian, Smoldering Ashling |
-| **A melee front line** | Shattered Sentinel, Splitting Ashling, Thornskin |
+| **A melee front line** | Shattered Sentinel, Thornskin (Splitting Ashling cut) |
 
 ## Where this meets what's built
 
