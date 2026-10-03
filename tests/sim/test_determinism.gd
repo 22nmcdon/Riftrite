@@ -109,7 +109,9 @@ const UPGRADE_STATUSES: Array[String] = ["hobbled", "cowed", "parting_shot", "fi
 ## Statuses only rift modifiers apply (phase 5c step 8b; tests/run/test_rift_tear.gd).
 const RIFT_STATUSES: Array[String] = ["blood_frenzy"]
 ## Statuses only apexes apply (phase 8 part 2; tests/sim/test_apex_kits.gd).
-const APEX_STATUSES: Array[String] = ["hailstorm", "tailwind", "zeal", "morning_haste", "dawnlight", "first_light", "glare", "dazzled", "woven_thorns", "iron_loom", "briar_torn", "gatekeeper", "brand", "war_call", "rally", "oathbound"]
+## The apex cards' are with them (phase 8 part 2, 8b-4; tests/run/test_apex_cards.gd).
+const APEX_STATUSES: Array[String] = ["hailstorm", "tailwind", "zeal", "morning_haste", "dawnlight", "first_light", "glare", "dazzled", "woven_thorns", "iron_loom", "briar_torn", "gatekeeper", "brand", "war_call", "rally", "oathbound",
+	"gale", "first_light_more", "zeal_more", "shield_wall", "dawn_ward"]
 ## The statuses the heroes' rules apply (phase 5c step 5c).
 const RULE_STATUSES: Array[String] = ["unbending", "long_watch"]
 

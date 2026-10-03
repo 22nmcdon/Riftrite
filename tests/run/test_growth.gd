@@ -63,7 +63,7 @@ func test_the_upgrades_load() -> void:
 func test_bad_upgrades_are_refused() -> void:
 	var tough: Dictionary = {"stats_bp": {"hp": 11000}}
 	var cases: Array = [
-		[{"id": "both", "name": "Both", "text": "x", "hero": "maren", "path": "deadeye", "mod": tough}, "give one of hero and path"],
+		[{"id": "both", "name": "Both", "text": "x", "hero": "maren", "path": "deadeye", "mod": tough}, "give one of hero, path, and apex"],
 		[{"id": "odd", "name": "Odd", "text": "x", "hero": "maren", "taste": true, "mod": tough}, "only a path's card can be a taste card"],
 		[{"id": "later", "name": "Later", "text": "x", "path": "deadeye", "mod": tough, "transformed_mod": tough}, "only a taste card has a transformed_mod"],
 		[{"id": "who", "name": "Who", "text": "x", "path": "nowhere", "mod": tough}, "unknown path \"nowhere\""],
