@@ -49,11 +49,17 @@ func state() -> RunState:
 func sync() -> void:
 	vows.clear()
 	transformed.clear()
+	apexes.clear()
+	apexed.clear()
 	tactics.clear()
 	for hero: RunState.Hero in flow.state.heroes:
 		vows[hero.id] = hero.path
 		if hero.transformed:
 			transformed.append(hero.id)
+			if not hero.apex.is_empty():
+				apexes[hero.id] = hero.apex
+				if hero.apex_earned:
+					apexed.append(hero.id)
 		var tactic: TacticDef = run.loadout_tactic(hero, flow.state)
 		if tactic != null:
 			tactics[hero.id] = tactic.id
@@ -101,7 +107,17 @@ func path_of(hero_id: String) -> PathDef:
 
 
 func stage_of(hero_id: String) -> PathDef.Stage:
-	return PathDef.Stage.TRANSFORMED if flow.state.hero(hero_id).transformed else PathDef.Stage.VOWED
+	var hero: RunState.Hero = flow.state.hero(hero_id)
+	if not hero.transformed:
+		return PathDef.Stage.VOWED
+	if not hero.apex.is_empty():
+		return PathDef.Stage.APEX if hero.apex_earned else PathDef.Stage.APEX_VOWED
+	return PathDef.Stage.TRANSFORMED
+
+
+func apex_of(hero_id: String) -> ApexDef:
+	var hero: RunState.Hero = flow.state.hero(hero_id)
+	return content.paths[hero.path].apex(hero.apex) if not hero.apex.is_empty() else null
 
 
 func kit_of(hero_id: String) -> UnitDef:
@@ -120,18 +136,36 @@ func set_path(hero_id: String, path_id: String, stage: PathDef.Stage) -> void:
 		act(flow.switch_vow.bind(hero_id, path_id))
 
 
+## An apex choice from the hero panel or the day screen is the apex vow (or
+## a switch, until the apex is earned; phase 8 part 2).
+func set_apex(hero_id: String, apex_id: String, _stage: PathDef.Stage) -> void:
+	act(flow.vow_apex.bind(hero_id, apex_id))
+
+
 ## The run's total in the hero's deed for `path_id`.
 func last_deed(hero_id: String, path_id: String) -> int:
 	return flow.state.hero(hero_id).deeds.get(path_id, 0)
 
 
-## "1,240 / 2,000" toward the vowed path's threshold, and the share filled.
+## "1,240 / 2,000" toward the vowed path's threshold, and the share filled
+## (the vowed apex's once the hero is vowed to one, until it's earned).
 func deed_progress(hero_id: String) -> Array:
+	var deed: DeedDef = deed_now(hero_id)
+	var amount: int = flow.state.hero(hero_id).deeds.get(deed_key(hero_id), 0)
+	return [amount, deed.threshold, clampf(float(amount) / maxf(deed.threshold, 1), 0.0, 1.0)]
+
+
+## The deed the hero is filling now: its apex's while vowed to one and not
+## earned, else its path's.
+func deed_now(hero_id: String) -> DeedDef:
+	var apex: ApexDef = apex_of(hero_id)
+	return apex.deed if apex != null and not flow.state.hero(hero_id).apex_earned else content.paths[flow.state.hero(hero_id).path].deed
+
+
+## Its key in the hero's deeds (an apex id or a path id).
+func deed_key(hero_id: String) -> String:
 	var hero: RunState.Hero = flow.state.hero(hero_id)
-	var path: PathDef = content.paths[hero.path]
-	var amount: int = hero.deeds.get(hero.path, 0)
-	var threshold: int = path.deed.threshold
-	return [amount, threshold, clampf(float(amount) / maxf(threshold, 1), 0.0, 1.0)]
+	return hero.apex if not hero.apex.is_empty() and not hero.apex_earned else hero.path
 
 
 ## The share of max HP the hero's wounds take now (for the greyed chunk).

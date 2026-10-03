@@ -111,7 +111,7 @@ func test_the_panel_opens_on_the_path_tab_and_chooses_paths() -> void:
 	assert_eq([panel.showing, panel.tab], ["maren", HeroPanel.Tab.PATH])
 	assert_eq([panel.form_tag.text, panel.hero_name.text], ["Base form", "Maren Thistledown"])
 	var text: String = U.text_of(panel)
-	for said: String in ["Base", "Vow", "Transform", "Upgrades", "Apex", "Not vowed", "Opens on transforming", "Later in the run", "No vow"]:
+	for said: String in ["Base", "Vow", "Transform", "Upgrades", "Apex", "Not vowed", "Opens on transforming", "After the act's boss", "No vow"]:
 		assert_string_contains(text, said)
 	for path: PathDef in _content.heroes["maren"].paths:
 		assert_string_contains(text, path.name)
@@ -138,6 +138,53 @@ func test_the_panel_opens_on_the_path_tab_and_chooses_paths() -> void:
 	await _press_card(screen, "Volley", "Base (no path)")
 	assert_eq(screen.session.vows, {} as Dictionary[String, String])
 	assert_eq(screen.view.token("maren").path_label, "")
+
+
+func test_practice_tries_an_apex() -> void:
+	var session: PracticeSession = PracticeSession.make(_content)
+	session.set_apex("maren", "hailstorm", PathDef.Stage.APEX_VOWED)
+	assert_eq([session.vows, session.transformed], [{"maren": "volley"} as Dictionary[String, String], ["maren"] as Array[String]],
+		"an apex takes its path, transformed")
+	assert_eq([session.stage_of("maren"), session.apex_of("maren").id, session.kit_of("maren")],
+		[PathDef.Stage.APEX_VOWED, "hailstorm", _content.apexes["hailstorm"].vowed_kit])
+	session.set_apex("maren", "hailstorm", PathDef.Stage.APEX)
+	assert_eq([session.stage_of("maren"), session.kit_of("maren")], [PathDef.Stage.APEX, _content.apexes["hailstorm"].apex_kit])
+	var setup: FightSetup = session.setup("hollow_line", PracticeSession.DEFAULT_FORMATION)
+	var maren: UnitSetup = setup.heroes.filter(func(hero: UnitSetup) -> bool: return hero.def.id == "maren")[0]
+	assert_eq([maren.stage, ArenaView.path_tag(maren), ArenaView.form_of(maren)], [PathDef.Stage.APEX, "Hailstorm", "volley"])
+	session.set_apex("brannoc", "hailstorm", PathDef.Stage.APEX)
+	assert_false(session.vows.has("brannoc"), "another hero's apex is ignored")
+	session.set_path("maren", "volley", PathDef.Stage.TRANSFORMED)
+	assert_eq([session.stage_of("maren"), session.apex_of("maren")], [PathDef.Stage.TRANSFORMED, null], "a path stage leaves the apex")
+
+
+func test_the_panel_offers_the_transformed_paths_apexes() -> void:
+	var screen: ArenaScreen = await _screen()
+	screen.session.set_path("maren", "volley", PathDef.Stage.TRANSFORMED)
+	screen.open_panel("maren")
+	await wait_process_frames(2)
+	var panel: HeroPanel = screen.hero_panel
+	var text: String = U.text_of(panel)
+	var hailstorm: ApexDef = _content.apexes["hailstorm"]
+	assert_string_contains(text, "Taste: " + hailstorm.taste)
+	assert_string_contains(text, "Apex: " + hailstorm.text)
+	assert_string_contains(text, "Deed: " + hailstorm.deed.text)
+	await _press_card(screen, "Hailstorm", "Vow apex")
+	assert_eq(screen.session.stage_of("maren"), PathDef.Stage.APEX_VOWED)
+	assert_eq(screen.view.token("maren").path_label, "Volley (Hailstorm vow)")
+	await _press_card(screen, "Hailstorm", "Reach apex")
+	assert_eq(screen.session.stage_of("maren"), PathDef.Stage.APEX)
+	assert_eq([screen.view.token("maren").path_label, screen.view.token("maren").art_key], ["Hailstorm", "heroes/maren_volley"],
+		"the apex stands as its path's figure until the art comes")
+	assert_eq(panel.form_tag.text, "Hailstorm form")
+	assert_string_contains(U.text_of(panel), HeroPanel.APEX_TEXT)
+	await _press_card(screen, "Volley", "No apex")
+	assert_eq(screen.session.stage_of("maren"), PathDef.Stage.TRANSFORMED)
+	# A vowed hero sees no apexes.
+	screen.session.set_path("maren", "volley", PathDef.Stage.VOWED)
+	panel.show_hero("maren")
+	await wait_process_frames(2)
+	assert_false(U.text_of(panel).contains("Apex: "))
 
 
 func test_the_kit_tab_is_the_kit_at_the_heros_stage() -> void:

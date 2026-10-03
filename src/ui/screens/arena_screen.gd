@@ -226,6 +226,7 @@ func build() -> void:
 	# Deferred: choosing rebuilds the panel, buttons and all, so not while
 	# the pressed button is still sending its signal.
 	hero_panel.path_chosen.connect(choose_path, CONNECT_DEFERRED)
+	hero_panel.apex_chosen.connect(choose_apex, CONNECT_DEFERRED)
 	hero_panel.tactic_chosen.connect(choose_tactic, CONNECT_DEFERRED)
 	_show()
 
@@ -314,6 +315,7 @@ func open_panel(hero_id: String) -> void:
 		toggle_pause()
 	hero_popup.close()
 	hero_panel.editable = player == null and run_session == null
+	hero_panel.apex_editable = hero_panel.editable
 	hero_panel.open(hero_id)
 	hero_bar.select(hero_id)
 
@@ -431,6 +433,17 @@ func choose_path(hero_id: String, path_id: String, stage: PathDef.Stage) -> void
 	if player != null:
 		return
 	session.set_path(hero_id, path_id, stage)
+	session.fit_snares(encounter.id, formation)
+	_show()
+	if hero_panel.visible and hero_panel.showing == hero_id:
+		hero_panel.show_hero(hero_id)
+
+
+## Puts a hero on one of its path's apexes while placing (phase 8 part 2).
+func choose_apex(hero_id: String, apex_id: String, stage: PathDef.Stage) -> void:
+	if player != null:
+		return
+	session.set_apex(hero_id, apex_id, stage)
 	session.fit_snares(encounter.id, formation)
 	_show()
 	if hero_panel.visible and hero_panel.showing == hero_id:

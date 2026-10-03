@@ -37,29 +37,37 @@ func test_each_hero_has_its_three_paths() -> void:
 
 func test_every_ability_names_its_reaches_and_numbers() -> void:
 	var checked: int = 0
+	var kits: Array[Array] = []
 	for path_id: String in _content.path_ids:
 		for stage: PathDef.Stage in [PathDef.Stage.VOWED, PathDef.Stage.TRANSFORMED]:
-			var kit: UnitDef = _kit(path_id, stage)
-			var where: String = "%s (%s)" % [path_id, PathDef.STAGE_NAMES[stage]]
-			var abilities: Array[AbilityDef] = [kit.basic_attack, kit.signature]
-			for part: PartDef in kit.passives:
-				assert_false(part.text.is_empty(), "%s: %s has its sentence" % [where, part.id])
-				if part.ability != null:
-					abilities.append(part.ability)
-			for ability: AbilityDef in abilities:
-				if ability == null:
-					continue
-				var text: String = ability.text
-				if text.is_empty():
-					for part: PartDef in kit.passives:
-						if part.ability == ability:
-							text = part.text
-				assert_false(text.is_empty(), "%s: %s has its sentence" % [where, ability.id])
-				for reach: int in UnitInfo.reaches(ability, kit):
-					assert_not_null(RegEx.create_from_string("\\b%d hex" % reach).search(text), "%s: %s names %s: %s" % [where, ability.id, UnitInfo.hexes(reach), text])
-					checked += 1
-			for line: UnitInfo.Line in UnitInfo.lines(kit, "it", _content):
-				assert_false(line.numbers.is_empty() and line.kind != "Trait", "%s: %s has a numbers line" % [where, line.name])
+			kits.append(["%s (%s)" % [path_id, PathDef.STAGE_NAMES[stage]], _kit(path_id, stage)])
+	# Apexes' kits too (phase 8 part 2).
+	for apex_id: String in _content.apex_ids:
+		var apex: ApexDef = _content.apexes[apex_id]
+		kits.append(["%s (apex vowed)" % apex_id, apex.vowed_kit])
+		kits.append(["%s (apex)" % apex_id, apex.apex_kit])
+	for pair: Array in kits:
+		var where: String = pair[0]
+		var kit: UnitDef = pair[1]
+		var abilities: Array[AbilityDef] = [kit.basic_attack, kit.signature]
+		for part: PartDef in kit.passives:
+			assert_false(part.text.is_empty(), "%s: %s has its sentence" % [where, part.id])
+			if part.ability != null:
+				abilities.append(part.ability)
+		for ability: AbilityDef in abilities:
+			if ability == null:
+				continue
+			var text: String = ability.text
+			if text.is_empty():
+				for part: PartDef in kit.passives:
+					if part.ability == ability:
+						text = part.text
+			assert_false(text.is_empty(), "%s: %s has its sentence" % [where, ability.id])
+			for reach: int in UnitInfo.reaches(ability, kit):
+				assert_not_null(RegEx.create_from_string("\\b%d hex" % reach).search(text), "%s: %s names %s: %s" % [where, ability.id, UnitInfo.hexes(reach), text])
+				checked += 1
+		for line: UnitInfo.Line in UnitInfo.lines(kit, "it", _content):
+			assert_false(line.numbers.is_empty() and line.kind != "Trait", "%s: %s has a numbers line" % [where, line.name])
 	assert_gt(checked, 40)
 
 

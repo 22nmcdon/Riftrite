@@ -154,7 +154,7 @@ func refresh(sim: CombatSim = null) -> void:
 		var hero: HeroDef = session.content.heroes[hero_id]
 		var path: PathDef = session.path_of(hero_id)
 		var stage: PathDef.Stage = session.stage_of(hero_id)
-		var transformed: bool = stage == PathDef.Stage.TRANSFORMED
+		var transformed: bool = stage >= PathDef.Stage.TRANSFORMED
 		var kit: UnitDef = session.kit_of(hero_id)
 		var key: String = FigureArt.key_for(hero_id, true, path.id if transformed else "base")
 		var existing: Portrait = card.portrait_holder.get_child(0) as Portrait if card.portrait_holder.get_child_count() > 0 else null
@@ -170,6 +170,10 @@ func refresh(sim: CombatSim = null) -> void:
 			card.portrait_holder.add_child(portrait)
 		card.name_label.text = ArenaView.label_for(hero.kit, session.content)
 		card.path_label.text = "" if path == null else (path.name if transformed else "%s · vowed" % path.name)
+		# An apex (phase 8 part 2): its name once earned, "· <apex> vowed" before.
+		var apex: ApexDef = session.apex_of(hero_id)
+		if apex != null:
+			card.path_label.text = apex.name if stage == PathDef.Stage.APEX else "%s · %s vowed" % [path.name, apex.name]
 		card.path_label.add_theme_color_override("font_color", UiStyle.ACCENT_TEXT if transformed else UiStyle.HIGHLIGHT)
 		var max_hp: int = kit.stats.get_stat(UnitStats.Stat.HP)
 		var hp: int = max_hp
@@ -203,12 +207,17 @@ func _deed_text(hero_id: String, path: PathDef, sim: CombatSim, amounts: Array[F
 	var run_session := session as RunSession
 	if run_session != null:
 		var progress: Array = run_session.deed_progress(hero_id)
+		# The vowed apex's deed once the hero is vowed to one (phase 8 part 2).
+		var deed_def: DeedDef = run_session.deed_now(hero_id)
+		var key: String = run_session.deed_key(hero_id)
+		var apex: ApexDef = run_session.apex_of(hero_id)
+		var named: String = apex.name if apex != null and key == apex.id else path.name
 		var so_far: String = ""
 		if sim != null:
 			for deed: FightResult.Deed in amounts:
-				if deed.hero == hero_id and deed.path == path.id:
-					so_far = " · +%s now" % UnitInfo.deed_amount_text(path.deed, deed.amount)
-		return "%s deed %s / %s%s" % [path.name, UnitInfo.deed_amount_text(path.deed, progress[0]), UnitInfo.deed_amount_text(path.deed, progress[1]), so_far]
+				if deed.hero == hero_id and deed.path == key:
+					so_far = " · +%s now" % UnitInfo.deed_amount_text(deed_def, deed.amount)
+		return "%s deed %s / %s%s" % [named, UnitInfo.deed_amount_text(deed_def, progress[0]), UnitInfo.deed_amount_text(deed_def, progress[1]), so_far]
 	if sim != null:
 		for deed: FightResult.Deed in amounts:
 			if deed.hero == hero_id and deed.path == path.id:

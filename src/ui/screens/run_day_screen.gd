@@ -101,6 +101,7 @@ func build() -> void:
 	hero_bar.card_clicked.connect(open_panel)
 	hero_panel.closed.connect(func() -> void: hero_bar.select(""))
 	hero_panel.path_chosen.connect(_switch_vow, CONNECT_DEFERRED)
+	hero_panel.apex_chosen.connect(_vow_apex, CONNECT_DEFERRED)
 	refresh()
 
 
@@ -258,9 +259,19 @@ func open_panel(hero_id: String) -> void:
 	if hero_panel.visible and hero_panel.showing == hero_id:
 		hero_panel.close()
 		return
-	hero_panel.editable = not session.state().hero(hero_id).transformed
+	var hero: RunState.Hero = session.state().hero(hero_id)
+	hero_panel.editable = not hero.transformed
+	hero_panel.apex_editable = session.state().apex_open and hero.transformed and not hero.apex_earned
 	hero_panel.open(hero_id)
 	hero_bar.select(hero_id)
+
+
+## The apex vow, from the hero panel or the day's apex section (phase 8
+## part 2).
+func _vow_apex(hero_id: String, apex_id: String, _stage: PathDef.Stage) -> void:
+	_do(session.flow.vow_apex.bind(hero_id, apex_id))
+	if hero_panel.visible:
+		hero_panel.show_hero(hero_id)
 
 
 func _switch_vow(hero_id: String, path_id: String, stage: PathDef.Stage) -> void:
@@ -376,10 +387,37 @@ func _fill_waiting() -> void:
 		var path: PathDef = session.path_of(hero_id)
 		var section: VBoxContainer = _section("%s transforms: %s" % [_hero_name(hero_id), path.name], path.transformed_text)
 		section.add_child(_wrapped("Cost: " + path.transformed_cost, 17, UiStyle.BAD))
+	for hero_id: String in state.just_apexed:
+		var apex: ApexDef = session.apex_of(hero_id)
+		_section("%s reaches the apex: %s" % [_hero_name(hero_id), apex.name], apex.text)
+	_fill_apex_vows()
 	if not state.pick.is_empty():
 		_fill_pick()
 	if not state.relic_choice.is_empty():
 		_fill_relic_choice()
+
+
+## The apex vow, while any hero waits on it (phase 8 part 2): each waiting
+## hero's apexes as cards, Vow on one. It can wait: the hero panel offers it
+## too, and the run goes on without it.
+func _fill_apex_vows() -> void:
+	var waiting: Array[String] = session.flow.apex_waiting()
+	if waiting.is_empty():
+		return
+	var section: VBoxContainer = _section("The apex vow is open", "A transformed hero can vow to one of its path's two apexes: the taste comes at once, and when the apex deed fills, the hero transforms again. The vow can be switched for free until then.")
+	for hero_id: String in waiting:
+		var path: PathDef = session.path_of(hero_id)
+		section.add_child(UiStyle.strong("%s (%s)" % [_hero_name(hero_id), path.name], 20, UiStyle.TEXT))
+		var row: HBoxContainer = _row()
+		section.add_child(row)
+		for apex: ApexDef in path.apexes:
+			var card: VBoxContainer = _card(row, 0, UiStyle.GOLD_500)
+			card.add_child(UiStyle.heading(apex.name, 26, UiStyle.TEXT))
+			card.add_child(_wrapped(apex.fantasy, 16, UiStyle.TEXT_DIM))
+			card.add_child(_wrapped("Taste: " + apex.taste, 17, UiStyle.HIGHLIGHT))
+			card.add_child(_wrapped("Apex: " + apex.text, 17, UiStyle.ACCENT_TEXT))
+			card.add_child(_wrapped("Deed: %s (%s)" % [apex.deed.text, UnitInfo.deed_amount_text(apex.deed, apex.deed.threshold)], 16, UiStyle.TEXT_DIM))
+			card.add_child(UiStyle.primary(UiStyle.button("Vow to %s" % apex.name, _vow_apex.bind(hero_id, apex.id, PathDef.Stage.APEX_VOWED))))
 
 
 func _fill_pick() -> void:

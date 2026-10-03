@@ -212,9 +212,10 @@ static func art(path: String) -> Texture2D:
 	return _art[path]
 
 
-## A hero's form: its path's once transformed, else "base".
+## A hero's form: its path's once transformed (an apex stands as its path's
+## form until phase 7's art), else "base".
 static func form_of(unit: UnitSetup) -> String:
-	return unit.path.id if unit.path != null and unit.stage == PathDef.Stage.TRANSFORMED else "base"
+	return unit.path.id if unit.path != null and unit.stage >= PathDef.Stage.TRANSFORMED else "base"
 
 
 ## What's named under a hero on a path while placing: "Deadeye (vow)" or,
@@ -222,6 +223,8 @@ static func form_of(unit: UnitSetup) -> String:
 static func path_tag(unit: UnitSetup) -> String:
 	if unit.path == null:
 		return ""
+	if unit.apex != null:
+		return unit.apex.name if unit.stage == PathDef.Stage.APEX else "%s (%s vow)" % [unit.path.name, unit.apex.name]
 	return unit.path.name if unit.stage == PathDef.Stage.TRANSFORMED else "%s (vow)" % unit.path.name
 
 

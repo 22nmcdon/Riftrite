@@ -246,6 +246,9 @@ func test_a_bot_that_goes_deeper_plays_floors_to_its_first_loss() -> void:
 	var states: Array[String] = []
 	for deeper: bool in [true, true, false]:
 		var flow: RunFlow = _to_choice(6)
+		# Maren on Volley, transformed: she waits on the apex vow once deeper.
+		flow.state.hero("maren").path = "volley"
+		flow.state.hero("maren").transformed = true
 		var bot: RefCounted = Report.make_bot("simple")
 		bot.set("deeper", deeper)
 		bot.call("begin", flow)
@@ -260,6 +263,9 @@ func test_a_bot_that_goes_deeper_plays_floors_to_its_first_loss() -> void:
 		if deeper:
 			assert_gt(flow.floor_number(), 0, "it reached a floor")
 			assert_eq(flow.state.fought.back().outcome, FightResult.Outcome.DEFEAT, "and fell there")
+			assert_eq(flow.state.hero("maren").apex, "hailstorm", "the bot vowed her to an apex (phase 8 part 2)")
+		else:
+			assert_eq(flow.state.hero("maren").apex, "", "no apex vow without going deeper")
 		states.append(JSON.stringify(flow.state.to_dict()))
 	assert_eq(states[1], states[0], "it repeats")
 

@@ -28,9 +28,14 @@ extends Control
 ##     card has Switch vow (until the hero transforms), and nothing else
 ##     changes a path; the upgrades taken, the duo bond (found, or stirring),
 ##     wounds, and the loadout's items (changed before each fight).
+##   - Once transformed, its path's apexes (phase 8 part 2): a card each,
+##     with Vow apex and Reach apex in Practice, and Vow apex in a run once the
+##     apex vow is open (apex_editable), until the apex is earned.
 
 ## A path and stage were picked for a hero (stage BASE: no path).
 signal path_chosen(hero_id: String, path_id: String, stage: PathDef.Stage)
+## One of its path's apexes was picked, at APEX_VOWED or APEX.
+signal apex_chosen(hero_id: String, apex_id: String, stage: PathDef.Stage)
 ## A tactic was picked for a hero ("": none).
 signal tactic_chosen(hero_id: String, tactic_id: String)
 ## The panel closed (the hero bar unmarks its card).
@@ -45,6 +50,7 @@ const LEFT_WIDTH: float = 482.0
 const SCRIM := Color(0.03, 0.04, 0.07, 0.62)
 const VOWED_TEXT := "VOWED"
 const TRANSFORMED_TEXT := "TRANSFORMED"
+const APEX_TEXT := "APEX"
 
 var session: PracticeSession
 ## The hero shown ("": closed), and the tab.
@@ -52,6 +58,8 @@ var showing: String = ""
 var tab: Tab = Tab.PATH
 ## False in a fight: the panel is for reading.
 var editable: bool = true
+## Whether the apex cards' buttons work (a run: once the apex vow is open).
+var apex_editable: bool = true
 var frame: PanelContainer
 var form_tag: Label
 var portrait_box: Control
@@ -213,8 +221,10 @@ func show_hero(hero_id: String) -> void:
 	var path: PathDef = session.path_of(hero_id)
 	var stage: PathDef.Stage = session.stage_of(hero_id)
 	var kit: UnitDef = session.kit_of(hero_id)
-	var transformed: bool = stage == PathDef.Stage.TRANSFORMED
+	var transformed: bool = stage >= PathDef.Stage.TRANSFORMED
 	form_tag.text = "%s form" % path.name if transformed else "Base form"
+	if stage == PathDef.Stage.APEX:
+		form_tag.text = "%s form" % session.apex_of(hero_id).name
 	if form_tag.get_parent() != null:
 		form_tag.get_parent().remove_child(form_tag)
 	for child: Node in portrait_box.get_children():
@@ -323,6 +333,12 @@ func _fill_path() -> void:
 	page.add_child(_track(path, stage))
 	if path != null:
 		page.add_child(_vowed_card(path, stage))
+		if stage >= PathDef.Stage.TRANSFORMED and not path.apexes.is_empty():
+			var apexes := HBoxContainer.new()
+			apexes.add_theme_constant_override("separation", 18)
+			page.add_child(apexes)
+			for apex: ApexDef in path.apexes:
+				apexes.add_child(_apex_card(apex, stage))
 	else:
 		page.add_child(_wrapped("No vow yet: %s fights with the base kit. Vow a path below, or transform straight into one to try it." % ArenaView.label_for(session.content.heroes[showing].kit, session.content), 17, UiStyle.TEXT_DIM))
 	var others := HBoxContainer.new()
@@ -409,11 +425,17 @@ func _track(path: PathDef, stage: PathDef.Stage) -> HBoxContainer:
 		["Vow", path.name if path != null else "Not vowed"],
 		["Transform", "Transformed" if stage == PathDef.Stage.TRANSFORMED else "When the deed fills"],
 		["Upgrades", "Opens on transforming"],
-		["Apex", "Later in the run"],
+		["Apex", "After the act's boss"],
 	]
-	# Done: base, the vow once vowed, the transformation once transformed.
-	var done: int = int(stage) + 1
+	# Done: base, the vow once vowed, the transformation once transformed;
+	# the apex current once vowed to one, done once earned (phase 8 part 2).
+	var done: int = mini(int(stage) + 1, 3)
 	var current: int = done if done <= 2 else -1
+	var apex: ApexDef = session.apex_of(showing) if path != null else null
+	if apex != null:
+		steps[4][1] = apex.name
+		done = 5 if stage == PathDef.Stage.APEX else 4
+		current = -1 if stage == PathDef.Stage.APEX else 4
 	for i: int in steps.size():
 		var column := VBoxContainer.new()
 		column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -454,7 +476,7 @@ class TrackDot:
 ## The vowed path: taste and cost (or the transformation and its cost),
 ## where it wants the hero, the deed, and buttons for the other stages.
 func _vowed_card(path: PathDef, stage: PathDef.Stage) -> PanelContainer:
-	var transformed: bool = stage == PathDef.Stage.TRANSFORMED
+	var transformed: bool = stage >= PathDef.Stage.TRANSFORMED
 	var card := PanelContainer.new()
 	var style: StyleBoxFlat = UiStyle.box(UiStyle.NAVY_700, UiStyle.TEAL_400, 2, 12)
 	style.set_content_margin_all(18)
@@ -491,6 +513,8 @@ func _vowed_card(path: PathDef, stage: PathDef.Stage) -> PanelContainer:
 	row.add_child(buttons)
 	if session is RunSession:
 		return card
+	if PathDef.is_apex(stage):
+		buttons.add_child(_choice("No apex", path.id, PathDef.Stage.TRANSFORMED))
 	if transformed:
 		buttons.add_child(_choice("Back to vow", path.id, PathDef.Stage.VOWED))
 	else:
@@ -519,17 +543,70 @@ func _rule(lead: String, text: String, color: Color) -> RichTextLabel:
 ## fight put into it on the right, in teal (Practice has no thresholds, so
 ## there's no bar to fill yet).
 func _deed_row(path: PathDef, font_size: int) -> HBoxContainer:
+	return _deed_line(path.deed, path.id, font_size)
+
+
+## The same for any deed, by its key (a path's or an apex's id).
+func _deed_line(deed: DeedDef, key: String, font_size: int) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
-	row.add_child(_wrapped("Deed: " + path.deed.text, font_size - 1, UiStyle.TEXT_DIM))
-	var amount: int = session.last_deed(showing, path.id)
-	var said: String = "no fight yet" if amount < 0 else "last fight: %s" % UnitInfo.deed_amount_text(path.deed, amount)
+	row.add_child(_wrapped("Deed: " + deed.text, font_size - 1, UiStyle.TEXT_DIM))
+	var amount: int = session.last_deed(showing, key)
+	var said: String = "no fight yet" if amount < 0 else "last fight: %s" % UnitInfo.deed_amount_text(deed, amount)
 	if session is RunSession:
-		said = "%s / %s" % [UnitInfo.deed_amount_text(path.deed, amount), UnitInfo.deed_amount_text(path.deed, path.deed.threshold)]
+		said = "%s / %s" % [UnitInfo.deed_amount_text(deed, maxi(amount, 0)), UnitInfo.deed_amount_text(deed, deed.threshold)]
 	var last: Label = UiStyle.strong(said, font_size - 1, UiStyle.ACCENT_TEXT)
 	last.size_flags_vertical = Control.SIZE_SHRINK_END
 	row.add_child(last)
 	return row
+
+
+## One of the transformed path's apexes: its name, what vowing to it tastes
+## like, the apex, its deed, and (Practice) Vow apex and Reach apex, or
+## (a run) Vow apex until one is earned.
+func _apex_card(apex: ApexDef, stage: PathDef.Stage) -> PanelContainer:
+	var current: ApexDef = session.apex_of(showing)
+	var mine: bool = current != null and current.id == apex.id
+	var card := PanelContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var style: StyleBoxFlat = UiStyle.box(UiStyle.NAVY_700 if mine else UiStyle.NAVY_750, UiStyle.GOLD_300 if mine else UiStyle.LINE_500, 2 if mine else 1, 12)
+	style.set_content_margin_all(12)
+	card.add_theme_stylebox_override("panel", style)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 16)
+	card.add_child(row)
+	var column := VBoxContainer.new()
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	column.add_theme_constant_override("separation", 4)
+	row.add_child(column)
+	var heading := HBoxContainer.new()
+	heading.add_theme_constant_override("separation", 12)
+	heading.add_child(UiStyle.heading(apex.name, 26, UiStyle.TEXT))
+	if mine:
+		var stage_label: Label = UiStyle.caps(APEX_TEXT if stage == PathDef.Stage.APEX else VOWED_TEXT, 15, UiStyle.ACCENT_TEXT)
+		stage_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		heading.add_child(stage_label)
+	var title_label: Label = UiStyle.label(apex.title, 16, UiStyle.TEXT_DIM)
+	title_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	heading.add_child(title_label)
+	column.add_child(heading)
+	column.add_child(_rule("Taste:", apex.taste, UiStyle.HIGHLIGHT))
+	column.add_child(_rule("Apex:", apex.text, UiStyle.ACCENT_TEXT))
+	column.add_child(_deed_line(apex.deed, apex.id, 15))
+	var buttons := VBoxContainer.new()
+	buttons.add_theme_constant_override("separation", 6)
+	buttons.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(buttons)
+	var choices: Array = [["Vow apex", PathDef.Stage.APEX_VOWED], ["Reach apex", PathDef.Stage.APEX]]
+	if session is RunSession:
+		choices = [] if mine or stage == PathDef.Stage.APEX else [["Vow apex" if current == null else "Switch apex", PathDef.Stage.APEX_VOWED]]
+	for pair: Array in choices:
+		var stage_for: PathDef.Stage = pair[1]
+		var button: Button = UiStyle.button(pair[0], func() -> void: apex_chosen.emit(showing, apex.id, stage_for))
+		button.add_theme_font_size_override("font_size", 15)
+		button.disabled = not apex_editable
+		buttons.add_child(button)
+	return card
 
 
 func _choice(text: String, path_id: String, stage: PathDef.Stage) -> Button:

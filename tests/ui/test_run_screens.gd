@@ -242,6 +242,42 @@ func test_going_deeper_and_falling_on_a_floor() -> void:
 	await wait_frames(1)
 
 
+## Apexes (phase 8 part 2): going deeper opens the apex vow; the day shows
+## each waiting hero's apexes, Vow takes one, and the hero bar fills its deed.
+func test_the_apex_vow_after_going_deeper() -> void:
+	var main: Main = _started()
+	var flow: RunFlow = _flow(main)
+	var maren: RunState.Hero = flow.state.hero("maren")
+	maren.path = "volley"
+	maren.transformed = true
+	flow.state.day = main.run_session.run.act.days.size()
+	flow.state.phase = RunState.Phase.CHOICE
+	main.run_session.save()
+	main.show_day()
+	assert_false(U.text_of(main.screen).contains("The apex vow is open"), "not before going deeper")
+	assert_true(U.press(main.screen, "Go deeper"))
+	var text: String = U.text_of(main.screen)
+	assert_string_contains(text, "The apex vow is open")
+	assert_string_contains(text, "Taste: " + flow.run.content.apexes["hailstorm"].taste)
+	assert_true(U.press(main.screen, "Vow to Hailstorm"))
+	assert_eq(maren.apex, "hailstorm")
+	text = U.text_of(main.screen)
+	assert_false(text.contains("The apex vow is open"), "answered")
+	assert_string_contains(text, "Volley · Hailstorm vowed")
+	assert_string_contains(text, "Hailstorm deed 0 / ")
+	assert_eq(RunSave.load_state(main.run_session.save_path).hero("maren").apex, "hailstorm", "saved")
+	# Earned: the day after the fight says so, and the bar names the apex.
+	maren.apex_earned = true
+	flow.state.just_apexed.assign(["maren"])
+	main.run_session.save()
+	main.show_day()
+	text = U.text_of(main.screen)
+	assert_string_contains(text, "reaches the apex: Hailstorm")
+	assert_string_contains(text, flow.run.content.apexes["hailstorm"].text)
+	assert_string_contains(text, "Volley deed")
+	await wait_frames(1)
+
+
 func test_big_numbers_are_short() -> void:
 	assert_eq([UiStyle.short_number(9999), UiStyle.short_number(12400), UiStyle.short_number(3150000), UiStyle.short_number(-25000)], ["9999", "12.4k", "3.1M", "-25.0k"])
 	assert_eq([RunDayScreen.times(15209), RunDayScreen.times(662118), RunDayScreen.times(120000000)], ["1.52", "66.2", "12.0k"])

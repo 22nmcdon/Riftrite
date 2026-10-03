@@ -42,6 +42,10 @@ var tactics: Dictionary[String, String] = {}
 var vows: Dictionary[String, String] = {}
 ## The vowed heroes who've transformed.
 var transformed: Array[String] = []
+## Hero id -> apex id, for transformed heroes vowed to one of their path's
+## apexes (phase 8 part 2), and those at the apex itself.
+var apexes: Dictionary[String, String] = {}
+var apexed: Array[String] = []
 ## Hero id -> the hexes (Vector2i) of the snares it places before a fight
 ## (or its lantern's: First Lantern, phase 5c step 7d).
 var snares: Dictionary[String, Array] = {}
@@ -76,12 +80,19 @@ func errors(encounter_id: String, hero_hexes: Dictionary[String, Vector2i]) -> A
 func _build(encounter_id: String, hero_hexes: Dictionary[String, Vector2i], fight_seed: int, errors_out: Array[String]) -> FightSetup:
 	var hero_vows: Dictionary[String, String] = {}
 	var hero_transformed: Array[String] = []
+	var hero_apexes: Dictionary[String, String] = {}
+	var hero_apexed: Array[String] = []
 	for hero_id: String in content.hero_ids:
 		if hero_hexes.has(hero_id) and vows.has(hero_id):
 			hero_vows[hero_id] = vows[hero_id]
 			if transformed.has(hero_id):
 				hero_transformed.append(hero_id)
-	var fight: FightSetup = Encounters.setup(content, encounter_id, hero_hexes, fight_seed, errors_out, tactics_in(hero_hexes), hero_vows, hero_transformed)
+				if apexes.has(hero_id):
+					hero_apexes[hero_id] = apexes[hero_id]
+					if apexed.has(hero_id):
+						hero_apexed.append(hero_id)
+	var fight: FightSetup = Encounters.setup(content, encounter_id, hero_hexes, fight_seed, errors_out, tactics_in(hero_hexes), hero_vows, hero_transformed,
+		{}, hero_apexes, hero_apexed)
 	if fight != null:
 		for hero: UnitSetup in fight.heroes:
 			if hero.def.placed_lantern and not snares.get(hero.id, []).is_empty():
@@ -148,14 +159,24 @@ func path_of(hero_id: String) -> PathDef:
 func stage_of(hero_id: String) -> PathDef.Stage:
 	if not vows.has(hero_id):
 		return PathDef.Stage.BASE
-	return PathDef.Stage.TRANSFORMED if transformed.has(hero_id) else PathDef.Stage.VOWED
+	if not transformed.has(hero_id):
+		return PathDef.Stage.VOWED
+	if apexes.has(hero_id):
+		return PathDef.Stage.APEX if apexed.has(hero_id) else PathDef.Stage.APEX_VOWED
+	return PathDef.Stage.TRANSFORMED
+
+
+## The apex `hero_id` is vowed to or has (phase 8 part 2), or null.
+func apex_of(hero_id: String) -> ApexDef:
+	var path: PathDef = path_of(hero_id)
+	return path.apex(apexes[hero_id]) if path != null and apexes.has(hero_id) else null
 
 
 ## The kit `hero_id` fights with at its stage.
 func kit_of(hero_id: String) -> UnitDef:
 	var hero: HeroDef = content.heroes[hero_id]
 	var path: PathDef = path_of(hero_id)
-	return path.kit(stage_of(hero_id), hero.kit) if path != null else hero.kit
+	return path.kit(stage_of(hero_id), hero.kit, apexes.get(hero_id, "")) if path != null else hero.kit
 
 
 ## Puts `hero_id` on `path_id` at `stage` (base: no path). Only one of its
@@ -163,6 +184,9 @@ func kit_of(hero_id: String) -> UnitDef:
 ## start on DEFAULT_SNARES (fit_snares makes them legal for an encounter).
 ## A tactic its new kit can't take is dropped.
 func set_path(hero_id: String, path_id: String, stage: PathDef.Stage) -> void:
+	# A path stage leaves any apex behind.
+	apexes.erase(hero_id)
+	apexed.erase(hero_id)
 	if stage == PathDef.Stage.BASE:
 		vows.erase(hero_id)
 		transformed.erase(hero_id)
@@ -173,6 +197,33 @@ func set_path(hero_id: String, path_id: String, stage: PathDef.Stage) -> void:
 				transformed.append(hero_id)
 		else:
 			transformed.erase(hero_id)
+	_refit(hero_id)
+
+
+## Puts `hero_id` on one of its path's apexes, `apex_id`, at `stage` (apex
+## vowed or apex; phase 8 part 2). It transforms into the apex's path first
+## if it isn't there already.
+func set_apex(hero_id: String, apex_id: String, stage: PathDef.Stage) -> void:
+	if not content.apexes.has(apex_id) or not PathDef.is_apex(stage):
+		return
+	var path: PathDef = content.paths[content.apexes[apex_id].path]
+	if path.hero != hero_id:
+		return
+	vows[hero_id] = path.id
+	if not transformed.has(hero_id):
+		transformed.append(hero_id)
+	apexes[hero_id] = apex_id
+	if stage == PathDef.Stage.APEX:
+		if not apexed.has(hero_id):
+			apexed.append(hero_id)
+	else:
+		apexed.erase(hero_id)
+	_refit(hero_id)
+
+
+## After a stage change: a tactic its new kit can't take is dropped, and its
+## snares follow what the kit can place.
+func _refit(hero_id: String) -> void:
 	if tactics.has(hero_id) and not _can_take(hero_id, content.tactics[tactics[hero_id]]):
 		tactics.erase(hero_id)
 	var can_place: int = kit_of(hero_id).placed_markers()
