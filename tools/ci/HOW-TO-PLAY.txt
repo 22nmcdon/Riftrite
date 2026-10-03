@@ -196,7 +196,7 @@ TUNED IN THIS BUILD (phase 6: a bot that plays well, then Act 1 tuned to it)
 WHAT WE WANT TO KNOW ABOUT APEXES
   Does Hailstorm feel like a real step past Volley? Is the apex vow clear
   on the day screen and in the panel? Does the apex land at a good time
-  (the aim: around floor 2-3)?
+  (the aim for now: around floor 3-4; in the full game, after Act 2)?
 
 WHAT WE WANT TO KNOW ABOUT ENDLESS
   How deep do you get, and what ends your run? Does going deeper feel

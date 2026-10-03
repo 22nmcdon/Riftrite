@@ -4,10 +4,12 @@ Status: **agreed in discussion (2026-09-30); being built for Maren, Brannoc, and
 
 ## How apexes work
 
-- **When:** the apex vow opens **after the Act 1 boss**, for each hero who has transformed. A hero who hasn't transformed yet gets the vow once they do.
+- **When:** the apex vow opens **after the Act 1 boss**, for each hero who has transformed. A hero who hasn't transformed yet gets the vow once they do. **The apex lands after the Act 2 boss on an average run:** it's the team's peak and takes longer than the transformation (`rebuild-phase8-apexes.md`, Decisions 7 and 8; until Act 2 exists, a stand-in deed lands it around endless floor 3–4).
+- **How strong:** a fight the transformed team wins about half the time, the apex team wins almost always; a fight the transformed team almost never wins, the apex team wins about half the time (Decision 9, measured over enemy strength).
+- **Roles:** some apexes carry, some support, some tank, some control; **every hero has at least 1–2 apexes that can carry the team with the right setup** (Decision 10, which lists the roles). The strength above is for a good combination; a poor one has no target.
 - **Vow, taste, deed:** vowing gives the apex's taste at once and starts a second deed bar. When it fills, the hero transforms again. **The apex vow can be switched, at no cost, until the apex is earned.**
 - **What the apex gives:** the full mechanic with numbers, a stat change where it fits, and **usually one snowball**: something that grows during a fight or feeds itself. **Not every apex needs one**; a strong steady effect is fine.
-- **The snowball is built in.** Apexes land late (Act 2 or 3), so it comes with the apex rather than waiting for a pick.
+- **The snowball is built in.** Apexes land late (after the Act 2 boss), so it comes with the apex rather than waiting for a pick.
 - **The rarer the trigger, the bigger the payoff.** A fight has a handful of kills but hundreds of attacks, so a per-kill snowball is many times stronger than a per-attack one; per-application snowballs sit in between, by how often they trigger.
 - **Apex upgrades:** each apex adds **2 upgrades** to the hero's path pool (`upgrade-pools.md`). The first makes the snowball bigger; the second adds something new.
 - **The relic rules apply:** no downsides, and every amount stated.

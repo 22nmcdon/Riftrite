@@ -1,13 +1,14 @@
 # Rebuild phase 8, part 2: apexes
 
-Status: **agreed (2026-10-03, Decisions 1–6); 8b-1 (the frame, with Hailstorm) built.** Phase 8's second part, after endless (`rebuild-phase8-endless.md`). The design is `apexes.md` (agreed 2026-09-30); this plan builds it for the three heroes the game has (Maren, Brannoc, Vell: their 18 apexes). The other ten heroes' apexes wait for those heroes. **Numbers are `apexes.md`'s placeholders** until the bots measure them.
+Status: **agreed (2026-10-03, Decisions 1–10; 7–10 replace 1 and 2); 8b-1 (the frame, with Hailstorm) and 8b-2 (Maren's and Vell's apexes) built.** Phase 8's second part, after endless (`rebuild-phase8-endless.md`). The design is `apexes.md` (agreed 2026-09-30); this plan builds it for the three heroes the game has (Maren, Brannoc, Vell: their 18 apexes). The other ten heroes' apexes wait for those heroes. **Numbers are `apexes.md`'s placeholders** until the bots measure them.
 
 ## 1. What it builds
 
 - **The apex vow** opens after the Act 1 boss, for each hero who has transformed; a hero who transforms later gets it then. Each transformed path has two apexes. Vowing gives the apex's **taste** at once and starts a second deed bar; the vow can be switched for free until the apex is earned.
 - **The apex:** when the apex deed fills, the hero transforms again: its kit is the path's transformed kit with the apex's patch (the full mechanic, a stat change where it fits, and usually one snowball that grows during the fight).
 - **Apex upgrades:** each apex adds 2 cards to the hero's pick once earned (`upgrade-pools.md`): the first makes the snowball bigger, the second adds something new.
-- **Where it plays today:** Act 2 doesn't exist yet, so apexes live in endless. The vow opens at the choice after the boss shop (going deeper), and the apex lands on the floors.
+- **When it lands:** an apex is the team's peak and takes longer than a transformation: the vow opens after the Act 1 boss, and the deed is sized so an average run earns it after the Act 2 boss (Decision 7).
+- **Where it plays today:** Act 2 doesn't exist yet, so apexes live in endless. The vow opens at the choice after the boss shop (going deeper), and the apex lands on the floors: until Act 2 exists, the deeds are a shorter stand-in, landing around floor 3–4 (Decision 8).
 - **Practice:** a fourth stage on the hero panel's path track (Base, Vowed, Transformed, Apex), with both of the path's apexes to try.
 
 ## 2. Data
@@ -58,7 +59,7 @@ Most of the rest is data on built pieces: stacking boosts for the fight (Windrun
 ## 6. The bots and the reports
 
 - **The bots** vow an apex at the choice: the simple bot takes the first; the random bot one at random; the good bot judges each by practice fights, as it judges picks.
-- **`sim_runner.gd --apexes`:** each apex against its path's transformed kit, on the formations the paths report uses: the win rate gained, the target band to tune toward (Question AY).
+- **`sim_runner.gd --apexes`** (Decisions 9 and 10): a sweep over enemy strength (Act 1's encounters with their enemies' HP and ATK ×1.0, ×1.1, ×1.2, and on), on the formations the paths report uses, finding each team's win rate at each step. It compares the all-transformed team with apex teams: the good combinations (a carry apex and its setup), each single apex with the others transformed, and the poor combinations. Per team: where it wins 50%, and for the transformed team where it first wins about 0%; per carry apex, its share of its team's damage. The target is Decision 9's curve.
 - **`run_runner.gd --endless`:** when each apex is earned (the floor), and the floors reached with and without one.
 
 ## 7. Tests
@@ -74,26 +75,33 @@ Most of the rest is data on built pieces: stacking boosts for the fight (Windrun
 - **8b-1, the frame:** `ApexDef`, the data shape, the run's vow and deed and transformation, the save, the bots' answer, the vow screen and the panel's stage, Practice's stage; with Maren's apexes on built pieces where they can be (Windrunner, Hailstorm, Huntmaster's aura half) to prove it.
 - **8b-2, the pieces for Maren and Vell:** execute, kills by an ability, growth per enemy passed, growth per cast, lasting ground, effects scaled by a value, linked Shields; the rest of their apexes.
 - **8b-3, the pieces for Brannoc:** walls that block movement with HP, the wall's block trigger, explode at N stacks, rising from the kit, overheal into max HP, the snare where an enemy fell; Brannoc's six and Warden of Thorns, Huntmaster's snares.
-- **8b-4, the cards and the reports:** the 36 apex cards, `--apexes`, the endless report's apex lines, a first tuning pass to Question AY's band, docs, and a playtest build.
+- **8b-4, the cards and the reports:** the 36 apex cards, `--apexes` (the sweep over enemy strength), the endless report's apex lines, a first tuning pass to Decision 9's curve (the gap it comes to is reported before tuning to it), the stand-in deed sizes (Decision 8), docs, and a playtest build.
 
 ## 9. Questions
 
-- **AV. When should an apex land?** The design says Act 2 or early Act 3; for now there are only endless floors. The good bot's runs reach a median floor of 4, so a bar sized for "Act 2" would rarely fill. Size the apex deeds so the apex lands around floor 2–3 (most runs that go deeper see it), or later?
+- **AV. When should an apex land?** *(Answered: Decision 1, then Decisions 7 and 8.)* The design says Act 2 or early Act 3; for now there are only endless floors. The good bot's runs reach a median floor of 4, so a bar sized for "Act 2" would rarely fill. Size the apex deeds so the apex lands around floor 2–3 (most runs that go deeper see it), or later?
 - **AW. A hero who never transforms** in Act 1 never gets an apex vow (they get it when they transform on a floor). Keep it as written, or shrink a late transformer's apex deed?
 - **AX. Rain of Ash** overlaps Ilse's Wildfire (both leave burning ground; `apexes.md`'s open question). Ilse isn't built yet: build Rain of Ash as written for now, or give Volley a new apex first?
-- **AY. How much stronger should an apex be?** Each transformation is +16 to +21 over all base on the paths report (phase 4's band was 15–25). An apex over its transformed kit: the same band, or smaller?
+- **AY. How much stronger should an apex be?** *(Answered: Decision 2, then Decisions 9 and 10.)* Each transformation is +16 to +21 over all base on the paths report (phase 4's band was 15–25). An apex over its transformed kit: the same band, or smaller?
 - **AZ. The vow at the choice:** offer the apex vows on the choice stage (after Go deeper), or only from the hero panel?
 
 ## Decisions
 
 The playtester, 2026-10-03:
 
-1. **An apex lands around floor 2–3** (Question AV): the apex deeds are sized so most runs that go deeper earn one; they're resized when Act 2 exists.
-2. **An apex is +25 to +35 over its path's transformed kit** (Question AY), on the `--apexes` report, bigger than a transformation's step (+15 to +25): apexes are the long run's big payoff.
+1. *(Replaced by Decisions 7 and 8.)* **An apex lands around floor 2–3** (Question AV): the apex deeds are sized so most runs that go deeper earn one; they're resized when Act 2 exists.
+2. *(Replaced by Decisions 9 and 10.)* **An apex is +25 to +35 over its path's transformed kit** (Question AY), on the `--apexes` report, bigger than a transformation's step (+15 to +25): apexes are the long run's big payoff.
 3. **Volley gets a new apex in place of Rain of Ash** (Question AX), since Ilse's Wildfire owns burning ground. Its design is in section 10.
 4. **A late transformer's apex deed is the same size** (Question AW): a hero who transforms on a floor gets the apex vow then, and simply earns it later.
 5. **The vow is offered on the choice stage after Go deeper, and from the hero panel** (Question AZ, not asked; the plan's default, flagged for the playtester).
 6. **Hailstorm replaces Rain of Ash** as drafted in section 10 (the playtester approved it, 2026-10-03).
+
+The playtester, 2026-10-03, after 8b-2 (these replace Decisions 1 and 2):
+
+7. **An apex lands after the Act 2 boss on an average run** (replaces Decision 1). Apexes are the team's peak and take longer than the first transformations (day 3–4 of Act 1): the vow still opens after the Act 1 boss, and the deed is sized to fill over about an act, so Act 2's boss is fought on tastes and Act 3 is the apex act.
+8. **Until Act 2 exists, a stand-in deed size** (option b, to help with testing): the apex deeds are sized so a run that goes deeper earns its apex around floor 3–4 (the good bot's median deep run reaches floor 4), and marked as temporary. They're resized to Decision 7 when Act 2 is built.
+9. **How strong: a shift in the difficulty a team can beat** (replaces Decision 2's +25 to +35). Measured as enemy strength (Act 1's encounters with their HP and ATK scaled up step by step, as endless floors scale them): a fight the all-transformed team wins about 50% of, the apex team wins about 100%; and at the first strength where the transformed team wins about 0%, the apex team wins about 50%. Measured against today's unscaled encounters there'd be no room (a transformed team already wins about 70%), so the report sweeps. What that gap comes to (in enemy strength, or endless floors at ×1.15 each) is reported before tuning to it. Apexes that grow without a cap grow more in harder, longer fights; that's the snowball, and the sweep measures it where it shows.
+10. **Apexes have roles; every hero has 1–2 that can carry** (Question 3 of 2026-10-03). Some apexes carry, some support, some tank, some control; each hero has at least one or two that can be the team's carry with the right setup. Decision 9's curve is for a **good combination**: all three heroes at apex, with a carry apex and apexes that fit it (the bonded paths of `test-teams.md` first). A carry apex, in its best team, deals the biggest share of that team's damage; a support, tank, or control apex is judged by how much it lifts a carry's team over the same team with that hero only transformed. **Poor combinations have no target:** they should still beat the transformed team, by less, and the report lists them so it shows whether the combination matters. No single apex reaches the whole curve alone (The Beacon's first read nearly did). The roles, first draft: **Maren:** Eagle Eye, Stormline, Hailstorm, Windrunner carry; Warden of Thorns control; Huntmaster support. **Brannoc:** Forgebreaker carry, Undying Oath carry (a bruiser who grows with each rise); The Unbroken Gate and The Hearthkeeper tank; Warlord and Martyr's Pyre support. **Vell:** Inquisitor and Sanctifier carry; Loomwarden tank; The Beacon control; Dawnbringer and Thornweave support.
 
 ## 10. Volley's new apex: Hailstorm (approved)
 
@@ -126,5 +134,5 @@ It's built on pieces that exist (an area's size, an on_fire effect's `every`, st
   - a signature's **`grows_bp`**: each cast is that much stronger than the last, for the fight (as power on its effects);
   - an `applied` deed's **`statuses`** filter (statuses on allies count too, so Dawnbringer counts its hastes), and the deed count **`shared`**;
   - **links** (`PartDef.Kind.LINK`, `Links`, a new log kind SHARED sourced to the link): every ally holding a Shield the holder gave (`UnitState.woven_by`) is linked; a hit on one gives `share_pct` of it, split evenly and rounded up, to the others (each part no more than an even split of the hit), as SHARED lines; every `per_shared` shared gives each linked ally a stack of the link's status.
-- **The apexes** (numbers and thresholds are placeholders, to tune in 8b-4): Eagle Eye, Stormline, Windrunner (Maren); The Beacon, Dawnbringer, Loomwarden, Thornweave, Inquisitor, Sanctifier (Vell). Calls made while building: Inquisitor's +30% against Marked is on all her damage, not only smites (a `damage_bp` aura with `vs`); Eagle Eye's mana refill comes only from executions; Dawnbringer's and The Beacon's deeds count the statuses they apply. A first look on bare heroes: The Beacon is far too strong (17 of 18 test fights won against 8), Inquisitor's deed fills slowly (0.2 smite kills a fight), and several apexes add little; 8b-4 tunes all of them toward +25 to +35.
+- **The apexes** (numbers and thresholds are placeholders, to tune in 8b-4): Eagle Eye, Stormline, Windrunner (Maren); The Beacon, Dawnbringer, Loomwarden, Thornweave, Inquisitor, Sanctifier (Vell). Calls made while building: Inquisitor's +30% against Marked is on all her damage, not only smites (a `damage_bp` aura with `vs`); Eagle Eye's mana refill comes only from executions; Dawnbringer's and The Beacon's deeds count the statuses they apply. A first look on bare heroes: The Beacon is far too strong (17 of 18 test fights won against 8), Inquisitor's deed fills slowly (0.2 smite kills a fight), and several apexes add little; 8b-4 tunes all of them to Decision 9's curve.
 - **Tests:** `tests/sim/test_apex_pieces.gd` (each piece in a fight), the new statuses in `test_content_db.gd` and `test_determinism.gd`'s apex statuses, SHARED in `test_arena_log.gd`'s audit and `test_every_encounter_plays.gd`'s table, and `test_tallies.gd` (a kills count may name its ability now).

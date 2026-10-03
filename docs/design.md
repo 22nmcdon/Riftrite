@@ -88,7 +88,7 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 - **Duo bonds** (`duo-bonds.md`) link two paths of two different heroes; the vow shows a bonded pair as "?" until it's found. A bond has no boost of its own: once both heroes have transformed, its **bond relic** (free, team-wide) joins the shop pool for the rest of the run, more likely than an epic. Bonds are rare: 1–2 per path across the roster (3 in the Act 1 slice).
 - **Losing:** a lost fight replays the day, and the second loss ends the run. Deed progress from a lost fight still counts. A tie pays like a win.
 - **Random streams:** shop stock, picks, camp, and fight seeds each have their own stream from the run seed.
-- **Pacing targets:** the first transformation around days 3–4, all three heroes transformed by the boss, and apexes in Acts 2–3. Upgrade picks come after every win (about 8 in Act 1), so each is small.
+- **Pacing targets:** the first transformation around days 3–4, all three heroes transformed by the boss, and apexes after the Act 2 boss (the apex vow opens after Act 1's; `rebuild-phase8-apexes.md`, Decision 7). Upgrade picks come after every win (about 8 in Act 1), so each is small.
 - **Difficulty target:** a good player clears Act 1 about half the time.
 
 ## Combos and scaling (part 7)
@@ -136,7 +136,7 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - **Grid size:** is 8 × 7 right for 3 heroes against 3–6 enemies? (arena plan)
 - **Large units:** should bosses ever take more than one hex? (arena plan)
 - **Pacing:** how many fights a transformation takes. (heroes plan)
-- **Apexes:** the apex deed's size (snowballs stay per fight, even in endless); whether a hero who transforms late gets a faster apex deed. (apexes)
+- **Apexes:** answered in `rebuild-phase8-apexes.md` (Decisions 4, 7–10: the apex lands after the Act 2 boss, a late transformer's deed is the same size, and strength is a shift in the difficulty a team can beat). Snowballs stay per fight, even in endless. (apexes)
 - **Deed thresholds after the transformation:** does the same deed keep counting? (heroes plan)
 - **Mana numbers** are a first pass for the sim to tune. Phase 2's first tuning pass left the heroes' numbers as designed. (heroes plan)
 - **Last Watch after Last Rites:** is having no big move left the right feel? (heroes plan)
