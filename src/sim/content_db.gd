@@ -49,6 +49,10 @@ var tactics: Dictionary[String, TacticDef] = {}
 var tactic_ids: Array[String] = []
 var paths: Dictionary[String, PathDef] = {}
 var path_ids: Array[String] = []
+## Every path's apexes (phase 8 part 2), by id; their ids share one space
+## with the paths' (a hero's deeds are keyed by both).
+var apexes: Dictionary[String, ApexDef] = {}
+var apex_ids: Array[String] = []
 
 var _id_pattern: RegEx = RegEx.create_from_string("^[a-z][a-z0-9_]*$")
 
@@ -115,6 +119,11 @@ static func load_texts(texts: Dictionary[String, String]) -> ContentDb:
 		var path: PathDef = PathDef.read(reader)
 		if db._claim_id(path.id, reader, db.path_ids):
 			db.paths[path.id] = path
+		if path.apexes.size() > PathDef.APEXES_PER_PATH:
+			reader.error("a path has at most %d apexes" % PathDef.APEXES_PER_PATH)
+		for apex: ApexDef in path.apexes:
+			if db._claim_id(apex.id, reader, db.apex_ids):
+				db.apexes[apex.id] = apex
 	db._check_links()
 	return db
 
@@ -189,6 +198,32 @@ func _check_path(path: PathDef, where: String, grid: HexGrid) -> void:
 	for ability_id: String in path.deed.from_ability:
 		if not known.has(ability_id):
 			errors.append("%s: the deed counts \"%s\", which isn't in %s's kits on this path" % [where, ability_id, path.hero])
+	for apex: ApexDef in path.apexes:
+		_check_apex(apex, path, "%s: apex %s" % [where, apex.id], grid)
+
+
+## An apex's kits are its patches on the path's transformed kit, checked
+## like any kit; its deed's abilities must be in one of them (or the
+## transformed kit).
+func _check_apex(apex: ApexDef, path: PathDef, where: String, grid: HexGrid) -> void:
+	if paths.has(apex.id):
+		errors.append("%s: \"%s\" is already a path's id" % [where, apex.id])
+	var problems: Array[String] = []
+	apex.vowed_kit = apex.vowed_patch.apply(path.transformed_kit, problems)
+	for problem: String in problems:
+		errors.append("%s: vowed: %s" % [where, problem])
+	problems.clear()
+	apex.apex_kit = apex.apex_patch.apply(path.transformed_kit, problems)
+	for problem: String in problems:
+		errors.append("%s: apex: %s" % [where, problem])
+	_check_kit(apex.vowed_kit, "%s: vowed" % where, grid)
+	_check_kit(apex.apex_kit, "%s: apex" % where, grid)
+	var known: Array[String] = []
+	for kit: UnitDef in [path.transformed_kit, apex.vowed_kit, apex.apex_kit]:
+		known.append_array(kit.ability_ids())
+	for ability_id: String in apex.deed.from_ability:
+		if not known.has(ability_id):
+			errors.append("%s: the deed counts \"%s\", which isn't in its kits" % [where, ability_id])
 
 
 ## A tactic's heroes (if it names any) must exist; a signature_threshold

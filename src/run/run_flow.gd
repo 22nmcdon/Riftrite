@@ -137,6 +137,10 @@ func go_deeper() -> String:
 		return _not_now("go deeper")
 	state.endless = true
 	state.magpie_visits = 0
+	# The apex vow opens after the act's boss (phase 8 part 2).
+	state.apex_open = true
+	for hero: RunState.Hero in state.heroes:
+		_open_apex(hero)
 	while state.taken_nodes.size() < state.day:
 		state.taken_nodes.append("")
 	state.day += 1
@@ -202,6 +206,7 @@ func finish_day() -> String:
 	if not state.relic_choice.is_empty():
 		return "choose a relic or neither first"
 	state.just_transformed.clear()
+	state.just_apexed.clear()
 	state.grew.clear()
 	state.phase = RunState.Phase.SHOP
 	open_shop("pedlar")
@@ -647,6 +652,8 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 	var content: ContentDb = run.content
 	var vows: Dictionary[String, String] = {}
 	var transformed: Array[String] = []
+	var apex_vows: Dictionary[String, String] = {}
+	var apexed: Array[String] = []
 	var extras: Dictionary[String, HeroExtras] = {}
 	var tactics: Dictionary[String, String] = {}
 	var ranked_tactics: Dictionary[String, TacticDef] = {}
@@ -667,6 +674,10 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 		vows[hero.id] = hero.path
 		if hero.transformed:
 			transformed.append(hero.id)
+		if not hero.apex.is_empty():
+			apex_vows[hero.id] = hero.apex
+			if hero.apex_earned:
+				apexed.append(hero.id)
 		var mods: Array[KitMod] = run.upgrade_mods(hero)
 		mods.append_array(run.loadout_mods(state, hero))
 		mods.append_array(run.relic_mods(state, run.hero_kit(hero)))
@@ -703,7 +714,7 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 		if tactic != null:
 			tactics[hero.id] = tactic.id
 			ranked_tactics[hero.id] = tactic
-	var setup: FightSetup = Encounters.setup(content, encounter_id, formation, fight_seed(), errors, tactics, vows, transformed, extras)
+	var setup: FightSetup = Encounters.setup(content, encounter_id, formation, fight_seed(), errors, tactics, vows, transformed, extras, apex_vows, apexed)
 	if setup != null:
 		for hero: UnitSetup in setup.heroes:
 			if hero.def.placed_lantern and not snares.get(hero.id, []).is_empty():
@@ -902,6 +913,7 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 	var won: bool = result.outcome != FightResult.Outcome.DEFEAT
 	state.formation = formation.duplicate()
 	state.just_transformed.clear()
+	state.just_apexed.clear()
 	var fought := RunState.Fought.new()
 	fought.day = state.day
 	fought.attempt = state.attempt
@@ -932,6 +944,10 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 		if not hero.transformed and hero.deeds.get(hero.path, 0) >= run.content.paths[hero.path].deed.threshold:
 			hero.transformed = true
 			state.just_transformed.append(hero.id)
+			_open_apex(hero)
+		elif not hero.apex.is_empty() and not hero.apex_earned and hero.deeds.get(hero.apex, 0) >= run.content.apexes[hero.apex].deed.threshold:
+			hero.apex_earned = true
+			state.just_apexed.append(hero.id)
 	for bond: BondDef in run.active_bonds(state):
 		if not state.bonds_found.has(bond.id):
 			state.bonds_found.append(bond.id)
@@ -1320,6 +1336,54 @@ func switch_vow(hero_id: String, path_id: String) -> String:
 	if hero.path == path_id:
 		return "%s is already vowed to %s" % [hero_id, path_id]
 	hero.path = path_id
+	return ""
+
+
+# --- apexes (phase 8 part 2) --------------------------------------------------------
+
+## Once the apex vow is open and `hero` has transformed, its path's apexes'
+## deeds start counting (rebuild-phase8-apexes.md, section 4).
+func _open_apex(hero: RunState.Hero) -> void:
+	if not state.apex_open or not hero.transformed:
+		return
+	for apex: ApexDef in run.content.paths[hero.path].apexes:
+		if not hero.deeds.has(apex.id):
+			hero.deeds[apex.id] = 0
+
+
+## The heroes who may vow to an apex and haven't: the vow is open, they've
+## transformed, and their path has apexes (the screen offers them, the bots
+## answer them).
+func apex_waiting() -> Array[String]:
+	var waiting: Array[String] = []
+	if not state.apex_open or state.phase == RunState.Phase.ENDED:
+		return waiting
+	for hero: RunState.Hero in state.heroes:
+		if hero.transformed and hero.apex.is_empty() and not run.content.paths[hero.path].apexes.is_empty():
+			waiting.append(hero.id)
+	return waiting
+
+
+## Vows `hero_id` to `apex_id`, one of its path's apexes: its taste from the
+## next fight, and its deed fills toward the apex. Free to switch until the
+## apex is earned (apexes.md).
+func vow_apex(hero_id: String, apex_id: String) -> String:
+	if state.phase == RunState.Phase.ENDED:
+		return _not_now("vow to an apex")
+	var hero: RunState.Hero = state.hero(hero_id)
+	if hero == null:
+		return "unknown hero \"%s\"" % hero_id
+	if not state.apex_open:
+		return "the apex vow opens after the act's boss"
+	if not hero.transformed:
+		return "%s must transform first" % hero_id
+	if hero.apex_earned:
+		return "%s has earned its apex, so the vow is set" % hero_id
+	if run.content.paths[hero.path].apex(apex_id) == null:
+		return "%s can't vow to the apex \"%s\"" % [hero_id, apex_id]
+	if hero.apex == apex_id:
+		return "%s is already vowed to %s" % [hero_id, apex_id]
+	hero.apex = apex_id
 	return ""
 
 

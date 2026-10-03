@@ -81,7 +81,8 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> int:
 				if entry.crit:
 					_raise(sim, source, EffectDef.Trigger.ON_HOLDER_CRIT, chain, target, entry.amount)
 				if source.side != target.side:
-					_raise(sim, source, EffectDef.Trigger.ON_HOLDER_HIT, chain, target, entry.amount)
+					# The ability rides along (on_holder_hit's from_ability, phase 8).
+					_raise(sim, source, EffectDef.Trigger.ON_HOLDER_HIT, chain, target, entry.amount, entry.source_ability)
 					_raise(sim, target, EffectDef.Trigger.ON_HIT_TAKEN, chain, source, entry.amount)
 					# A charge or a leap's hit (phase 5c step 6b, Braced).
 					if not target.listeners.is_empty() and source.def.signature != null and entry.source_ability == source.def.signature.id \

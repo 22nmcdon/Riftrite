@@ -85,6 +85,11 @@ func pick(flow: RunFlow) -> int:
 	return rng.range_int(flow.state.pick.size() + 1) - 1
 
 
+func apex(flow: RunFlow, hero_id: String) -> String:
+	var apexes: Array[ApexDef] = flow.run.content.paths[flow.state.hero(hero_id).path].apexes
+	return apexes[rng.range_int(apexes.size())].id
+
+
 func relic(flow: RunFlow) -> int:
 	if flow.state.shards < flow.state.relic_choice_price:
 		return -1

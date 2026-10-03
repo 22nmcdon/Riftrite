@@ -13,7 +13,10 @@ extends RefCounted
 ## `tactics` gives heroes their tactics: hero id -> tactic id (phase 3b).
 ## `vows` puts heroes on paths: hero id -> path id, at the vowed stage, or
 ## transformed for the heroes `transformed` lists (phase 4). Every hero
-## counts the deeds of all its paths.
+## counts the deeds of all its paths. `apex_vows` (phase 8 part 2) puts
+## transformed heroes on one of their path's apexes: hero id -> apex id, at
+## the apex vowed stage, or the apex for the heroes `apexed` lists; a
+## transformed hero counts its path's apexes' deeds.
 ## Returns null, with the reasons in `errors`, for an unknown encounter,
 ## hero, tactic, or path; FightSetup.validate checks the rest (zones, shared
 ## hexes, who can take which tactic, whose path it is).
@@ -21,7 +24,7 @@ extends RefCounted
 
 static func setup(content: ContentDb, encounter_id: String, formation: Dictionary[String, Vector2i], fight_seed: int, errors: Array[String],
 		tactics: Dictionary[String, String] = {}, vows: Dictionary[String, String] = {}, transformed: Array[String] = [],
-		extras: Dictionary[String, HeroExtras] = {}) -> FightSetup:
+		extras: Dictionary[String, HeroExtras] = {}, apex_vows: Dictionary[String, String] = {}, apexed: Array[String] = []) -> FightSetup:
 	if not content.encounters.has(encounter_id):
 		errors.append("unknown encounter \"%s\"" % encounter_id)
 		return null
@@ -41,6 +44,16 @@ static func setup(content: ContentDb, encounter_id: String, formation: Dictionar
 	for hero_id: String in transformed:
 		if not vows.has(hero_id):
 			errors.append("\"%s\" transforms without a vow" % hero_id)
+	for hero_id: String in apex_vows.keys():
+		if not transformed.has(hero_id):
+			errors.append("\"%s\" takes an apex without transforming" % hero_id)
+		elif not content.apexes.has(apex_vows[hero_id]):
+			errors.append("unknown apex \"%s\"" % apex_vows[hero_id])
+		elif content.apexes[apex_vows[hero_id]].path != vows[hero_id]:
+			errors.append("%s's apex \"%s\" isn't its path's" % [hero_id, apex_vows[hero_id]])
+	for hero_id: String in apexed:
+		if not apex_vows.has(hero_id):
+			errors.append("\"%s\" earns an apex without its vow" % hero_id)
 	for hero_id: String in extras.keys():
 		if not formation.has(hero_id):
 			errors.append("extras for \"%s\", who isn't in the fight" % hero_id)
@@ -58,9 +71,12 @@ static func setup(content: ContentDb, encounter_id: String, formation: Dictionar
 			var stage: PathDef.Stage = PathDef.Stage.BASE
 			if path != null:
 				stage = PathDef.Stage.TRANSFORMED if transformed.has(hero_id) else PathDef.Stage.VOWED
+			var apex_id: String = apex_vows.get(hero_id, "")
+			if not apex_id.is_empty():
+				stage = PathDef.Stage.APEX if apexed.has(hero_id) else PathDef.Stage.APEX_VOWED
 			# Another hero's path is refused by validate, so fall back to the
 			# base kit rather than build a kit from the wrong hero.
-			var kit: UnitDef = path.kit(stage, hero_def.kit) if path != null and path.hero == hero_id else hero_def.kit
+			var kit: UnitDef = path.kit(stage, hero_def.kit, apex_id) if path != null and path.hero == hero_id else hero_def.kit
 			if extras.has(hero_id):
 				for mod: KitMod in extras[hero_id].mods:
 					var problems: Array[String] = []
@@ -77,6 +93,9 @@ static func setup(content: ContentDb, encounter_id: String, formation: Dictionar
 			hero.path = path
 			hero.stage = stage
 			hero.deed_paths = hero_def.paths.duplicate()
+			if path != null and stage >= PathDef.Stage.TRANSFORMED:
+				hero.deed_apexes = path.apexes.duplicate()
+				hero.apex = path.apex(apex_id)
 			if tactics.has(hero_id):
 				hero.tactic = content.tactics[tactics[hero_id]]
 			heroes.append(hero)

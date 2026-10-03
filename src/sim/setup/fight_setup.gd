@@ -83,6 +83,13 @@ static func _path_problems(unit: UnitSetup, where: String) -> Array[String]:
 	for path: PathDef in unit.deed_paths:
 		if not hero or path.hero != unit.def.id:
 			problems.append("%s can't count %s's deed" % [where, path.name])
+	if PathDef.is_apex(unit.stage) and (unit.apex == null or unit.path == null or unit.path.apex(unit.apex.id) == null):
+		problems.append("%s is %s without one of its path's apexes" % [where, PathDef.STAGE_NAMES[unit.stage]])
+	if unit.apex != null and not PathDef.is_apex(unit.stage):
+		problems.append("%s has the apex %s but isn't at an apex stage" % [where, unit.apex.name])
+	for apex: ApexDef in unit.deed_apexes:
+		if unit.path == null or unit.path.apex(apex.id) == null:
+			problems.append("%s can't count %s's deed" % [where, apex.name])
 	if unit.tally_keys.size() != unit.tally_counts.size():
 		problems.append("%s has %d tally keys for %d counts" % [where, unit.tally_keys.size(), unit.tally_counts.size()])
 	return problems

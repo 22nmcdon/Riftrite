@@ -20,6 +20,11 @@ var stage: PathDef.Stage = PathDef.Stage.BASE
 ## The paths whose deeds it counts (a hero's three, whatever its stage;
 ## empty: it counts none).
 var deed_paths: Array[PathDef] = []
+## At an apex stage (phase 8 part 2): the apex it's vowed to or has earned
+## (one of its path's).
+var apex: ApexDef = null
+## The apexes whose deeds it counts (a transformed hero's path's).
+var deed_apexes: Array[ApexDef] = []
 ## What its growing cards count this fight (phase 5c step 4): each key (a
 ## card's id) and how it counts, counted like a deed (Deeds).
 var tally_keys: Array[String] = []

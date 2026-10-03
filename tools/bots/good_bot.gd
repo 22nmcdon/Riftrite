@@ -96,6 +96,23 @@ func pick(flow: RunFlow) -> int:
 	return best
 
 
+## The apex whose taste does best in practice (phase 8 part 2); the first on
+## a tie, or with nothing ahead to practice against.
+func apex(flow: RunFlow, hero_id: String) -> String:
+	var apexes: Array[ApexDef] = flow.run.content.paths[flow.state.hero(hero_id).path].apexes
+	var coming: Array[String] = Practice.practice_set(flow)
+	var best: String = apexes[0].id
+	if coming.is_empty() or apexes.size() < 2:
+		return best
+	var best_value: float = -INF
+	for apex_def: ApexDef in apexes:
+		var value: float = Practice.value(flow, func(trial: RunFlow) -> String: return trial.vow_apex(hero_id, apex_def.id), coming)
+		if value > best_value + MIN_GAIN:
+			best_value = value
+			best = apex_def.id
+	return best
+
+
 func relic(flow: RunFlow) -> int:
 	var coming: Array[String] = Practice.practice_set(flow)
 	if coming.is_empty():

@@ -35,6 +35,8 @@ extends RefCounted
 ##            so it doesn't count; a sigil's)
 ##   ms_standing  how long it stands in the fight, in ms, checked as each
 ##            tick ends (a tactic's, Decision 32)
+## Phase 8 part 2 (apexes):
+##   hits     its hits on enemies, one each (Hailstorm)
 ## Filters (each optional):
 ##   from_ability: ["split_shot"]  only what these abilities or passives do
 ##                                 (ids in the hero's kits: base, vowed, or
@@ -59,10 +61,10 @@ extends RefCounted
 ## three fights' worth of what a vowed hero puts in); the sim never reads it.
 ## Adding a kind or a filter is a code change.
 
-enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING }
+enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING, HITS }
 
-const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing"]
-const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill", "casts", "ms standing"]
+const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing", "hits"]
+const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill", "casts", "ms standing", "enemies hit"]
 ## The kinds read from where the hero is the target, or from the tick, not
 ## from what the hero does.
 const NOT_ITS_OWN: Array[Counts] = [Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING]
@@ -132,7 +134,7 @@ func counts_kind(kind: LogEntry.Kind, ability_id: String) -> bool:
 		Counts.SHIELD:
 			if kind != LogEntry.Kind.SHIELD:
 				return false
-		Counts.EXTRA_HITS, Counts.CRITS, Counts.OVERKILL:
+		Counts.EXTRA_HITS, Counts.CRITS, Counts.OVERKILL, Counts.HITS:
 			if kind != LogEntry.Kind.DAMAGE:
 				return false
 		Counts.ROOTED_MS:

@@ -43,12 +43,15 @@ class Counter:
 	var fired_at: Dictionary[String, String] = {}
 
 
-static func make_counter(deed_paths: Array[PathDef], tally_keys: Array[String] = [], tally_counts: Array[DeedDef] = []) -> Counter:
-	if deed_paths.is_empty() and tally_keys.is_empty():
+static func make_counter(deed_paths: Array[PathDef], tally_keys: Array[String] = [], tally_counts: Array[DeedDef] = [],
+		deed_apexes: Array[ApexDef] = []) -> Counter:
+	if deed_paths.is_empty() and tally_keys.is_empty() and deed_apexes.is_empty():
 		return null
 	var counter := Counter.new()
 	for path: PathDef in deed_paths:
 		_add(counter, path.id, path.deed)
+	for apex: ApexDef in deed_apexes:
+		_add(counter, apex.id, apex.deed)
 	counter.tallies_from = counter.deeds.size()
 	for i: int in tally_keys.size():
 		_add(counter, tally_keys[i], tally_counts[i])
@@ -119,6 +122,11 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 						counter.amounts[d] += 1
 				DeedDef.Counts.EXTRA_HITS:
 					if counter.fired_at.get(entry.source_ability, "") != entry.target:
+						counter.amounts[d] += 1
+				DeedDef.Counts.HITS:
+					# Each hit on an enemy (phase 8 part 2, Hailstorm).
+					var hit: UnitState = sim.unit_by_id(entry.target)
+					if hit != null and hit.side != unit.side:
 						counter.amounts[d] += 1
 				DeedDef.Counts.ROOTED_MS:
 					if entry.end_tick > entry.tick and sim.content.statuses.has(entry.status) \

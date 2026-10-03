@@ -132,7 +132,8 @@ extends RefCounted
 ## Phase 5c step 3 (keywords and triggers; a code change, for the pools):
 ##   on_holder_hit    one of the unit's hits lands on an enemy (a DAMAGE
 ##                    entry, not damage over time; hit_target: the enemy;
-##                    amount_bp_of_damage: of that hit)
+##                    amount_bp_of_damage: of that hit); "from_ability"
+##                    (phase 8 part 2): only hits from those abilities
 ##   on_shield_broken a hit or damage over time takes the last of the
 ##                    unit's Shield (hit_target: whoever broke it;
 ##                    amount_bp_of_damage: of the Shield that hit took). A
@@ -693,10 +694,10 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 		Trigger.ON_HOLDER_CRIT:
 			if reader.has("beyond_hexes"):
 				def.beyond_range = reader.req_int("beyond_hexes", 1, 10) * HexGrid.HEX
-		Trigger.ON_HEAL:
+		Trigger.ON_HEAL, Trigger.ON_HOLDER_HIT:
 			if reader.has("from_ability"):
 				def.from_abilities = reader.req_string_array("from_ability")
-			if reader.has("was_below_pct"):
+			if def.trigger == Trigger.ON_HEAL and reader.has("was_below_pct"):
 				def.was_below_bp = reader.req_int("was_below_pct", 1, 99) * 100
 		Trigger.ON_STATUS, Trigger.ON_STATUS_ENDED:
 			if reader.has("statuses"):

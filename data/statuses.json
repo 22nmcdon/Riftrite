@@ -331,5 +331,13 @@
     "kind": "boost",
     "stacking": true,
     "auras": [{"stat": "def", "value": 2}]
+  },
+  {
+    "_note": "Deals more damage for the rest of the fight, a stack for each enemy Arrow Storm hit (Hailstorm, Volley's apex; phase 8 part 2).",
+    "id": "hailstorm",
+    "name": "Hailstorm",
+    "kind": "boost",
+    "stacking": true,
+    "auras": [{"stat": "damage_bp", "value": 10100}]
   }
 ]

@@ -40,6 +40,10 @@ static func step(flow: RunFlow, bot: Bot) -> String:
 	if not state.relic_choice.is_empty():
 		var relic: int = bot.relic(flow)
 		return flow.decline_relic() if relic < 0 else flow.take_relic(relic)
+	# The apex vow, once open (phase 8 part 2).
+	var waiting: Array[String] = flow.apex_waiting()
+	if not waiting.is_empty():
+		return flow.vow_apex(waiting[0], bot.apex(flow, waiting[0]))
 	match state.phase:
 		RunState.Phase.ROUTE:
 			return flow.choose_fight(bot.route(flow))

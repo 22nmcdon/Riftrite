@@ -85,6 +85,11 @@ static func step_once(flow: RunFlow, hexes: Dictionary[String, Vector2i], errors
 		return flow.take_pick(pick_choice(flow))
 	if not state.relic_choice.is_empty():
 		return flow.take_relic(0) if state.shards >= state.relic_choice_price else flow.decline_relic()
+	# The apex vow, once open (phase 8 part 2): the path's first apex.
+	var waiting: Array[String] = flow.apex_waiting()
+	if not waiting.is_empty():
+		var vowing: RunState.Hero = state.hero(waiting[0])
+		return flow.vow_apex(vowing.id, flow.run.content.paths[vowing.path].apexes[0].id)
 	match state.phase:
 		RunState.Phase.CHOICE:
 			return flow.end_run()

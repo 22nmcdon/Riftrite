@@ -237,7 +237,7 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 	unit.swap_at = setup.swap_at
 	unit.holding = setup.tactic != null and setup.tactic.kind == TacticDef.Kind.HOLD_GROUND
 	unit.inert = setup.def.has_trait("inert")
-	unit.deeds = Deeds.make_counter(setup.deed_paths, setup.tally_keys, setup.tally_counts)
+	unit.deeds = Deeds.make_counter(setup.deed_paths, setup.tally_keys, setup.tally_counts, setup.deed_apexes)
 	for part: PartDef in setup.def.passives:
 		if part.kind == PartDef.Kind.GUARD and unit.guard == null:
 			unit.guard = part

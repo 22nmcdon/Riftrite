@@ -318,6 +318,11 @@ static func counted(counts: DeedDef, per: int) -> String:
 			return "%s Shield given" % amount
 		DeedDef.Counts.EXTRA_HITS:
 			return "%s extra enemies hit" % amount
+		DeedDef.Counts.HITS:
+			var hits: String = "%s hits on enemies" % amount
+			if not counts.from_ability.is_empty():
+				hits += " by " + ", ".join(counts.from_ability).replace("_", " ")
+			return hits
 		DeedDef.Counts.ROOTED_MS:
 			return "%s of Root" % amount
 		DeedDef.Counts.GUARDED:

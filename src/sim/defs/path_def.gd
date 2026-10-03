@@ -13,12 +13,15 @@ extends RefCounted
 ## vowed one rather than adding to it (the transformation carries the full
 ## mechanic). The texts are the player's; the sim never reads them.
 ## ContentDb builds both kits (vowed_kit, transformed_kit) once the heroes
-## are loaded.
+## are loaded. A path may carry up to two apexes (phase 8 part 2,
+## `"apexes"`: ApexDef), each built on the transformed kit.
 
-## A hero's stage in a fight: base (no path), vowed, or transformed.
-enum Stage { BASE, VOWED, TRANSFORMED }
+## A hero's stage in a fight: base (no path), vowed, transformed, vowed to
+## one of the path's apexes, or the apex itself (phase 8 part 2).
+enum Stage { BASE, VOWED, TRANSFORMED, APEX_VOWED, APEX }
 
-const STAGE_NAMES: Array[String] = ["base", "vowed", "transformed"]
+const STAGE_NAMES: Array[String] = ["base", "vowed", "transformed", "apex vowed", "apex"]
+const APEXES_PER_PATH: int = 2
 
 var id: String
 var hero: String
@@ -39,6 +42,8 @@ var deed: DeedDef
 ## The hero's kit on this path, built by ContentDb (null until then).
 var vowed_kit: UnitDef = null
 var transformed_kit: UnitDef = null
+## Its apexes, in the file's order (none until they're written).
+var apexes: Array[ApexDef] = []
 
 
 static func read(reader: DataReader) -> PathDef:
@@ -70,15 +75,44 @@ static func read(reader: DataReader) -> PathDef:
 		def.transformed_patch = KitPatch.make()
 	var deed_reader: DataReader = reader.req_object("deed")
 	def.deed = DeedDef.read(deed_reader) if deed_reader != null else DeedDef.new()
+	for apex_reader: DataReader in reader.opt_object_array("apexes"):
+		def.apexes.append(ApexDef.read(apex_reader, def.id))
 	reader.finish()
 	return def
 
 
-## The hero's kit at `stage` on this path (the base kit: `base`).
-func kit(stage: Stage, base: UnitDef) -> UnitDef:
+## The hero's kit at `stage` on this path (the base kit: `base`). An apex
+## stage needs `apex_id`, one of its apexes.
+func kit(stage: Stage, base: UnitDef, apex_id: String = "") -> UnitDef:
 	match stage:
 		Stage.VOWED:
 			return vowed_kit
 		Stage.TRANSFORMED:
 			return transformed_kit
+		Stage.APEX_VOWED, Stage.APEX:
+			var crowned: ApexDef = apex(apex_id)
+			return crowned.kit(stage) if crowned != null else transformed_kit
 	return base
+
+
+## Its apex `apex_id`, or null.
+func apex(apex_id: String) -> ApexDef:
+	for found: ApexDef in apexes:
+		if found.id == apex_id:
+			return found
+	return null
+
+
+## Every kit its apexes give (each apex's taste and apex kits; built ones).
+func apex_kits() -> Array[UnitDef]:
+	var kits: Array[UnitDef] = []
+	for crowned: ApexDef in apexes:
+		for kit: UnitDef in [crowned.vowed_kit, crowned.apex_kit]:
+			if kit != null:
+				kits.append(kit)
+	return kits
+
+
+## True at an apex stage.
+static func is_apex(stage: Stage) -> bool:
+	return stage == Stage.APEX_VOWED or stage == Stage.APEX

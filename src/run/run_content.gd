@@ -295,9 +295,11 @@ static func _count_of(counts: DeedDef.Counts) -> DeedDef:
 
 
 ## The kit `hero` fights with before its upgrades and loadout: its path's,
-## at its stage.
+## at its stage (an apex's once vowed to one, phase 8 part 2).
 func hero_kit(hero: RunState.Hero) -> UnitDef:
 	var path: PathDef = content.paths[hero.path]
+	if hero.transformed and not hero.apex.is_empty() and path.apex(hero.apex) != null:
+		return path.apex(hero.apex).apex_kit if hero.apex_earned else path.apex(hero.apex).vowed_kit
 	return path.transformed_kit if hero.transformed else path.vowed_kit
 
 
@@ -535,6 +537,7 @@ func _check() -> void:
 	var hero_kits: Array[UnitDef] = []
 	for path_id: String in content.path_ids:
 		hero_kits.append_array([content.paths[path_id].vowed_kit, content.paths[path_id].transformed_kit])
+		hero_kits.append_array(content.paths[path_id].apex_kits())
 	var enemy_kits: Array[UnitDef] = []
 	for enemy_id: String in content.enemy_ids:
 		enemy_kits.append(content.enemies[enemy_id].kit)
@@ -641,7 +644,9 @@ func _check_item(item: ItemDef, where: String) -> void:
 		var works: bool = false
 		for path_id: String in content.path_ids:
 			var path: PathDef = content.paths[path_id]
-			for kit: UnitDef in [path.vowed_kit, path.transformed_kit]:
+			var kits: Array[UnitDef] = [path.vowed_kit, path.transformed_kit]
+			kits.append_array(path.apex_kits())
+			for kit: UnitDef in kits:
 				if kit == null:
 					continue
 				var problems: Array[String] = []
@@ -670,6 +675,8 @@ func _check_upgrade(upgrade: UpgradeDef, where: String) -> void:
 		for path: PathDef in content.heroes[upgrade.hero].paths:
 			meets.append([path.id + " vowed", path.vowed_kit, false])
 			meets.append([path.id + " transformed", path.transformed_kit, true])
+			for kit: UnitDef in path.apex_kits():
+				meets.append([path.id + " apex", kit, true])
 			_check_growth_counts(upgrade.grows, [path.vowed_kit, path.transformed_kit], where)
 	else:
 		if not content.paths.has(upgrade.path):
@@ -680,6 +687,8 @@ func _check_upgrade(upgrade: UpgradeDef, where: String) -> void:
 		if upgrade.layer == UpgradeDef.Layer.TASTE:
 			meets.append([path.id + " vowed", path.vowed_kit, false])
 		meets.append([path.id + " transformed", path.transformed_kit, true])
+		for kit: UnitDef in path.apex_kits():
+			meets.append([path.id + " apex", kit, true])
 		_check_growth_counts(upgrade.grows, [path.vowed_kit, path.transformed_kit] if upgrade.layer == UpgradeDef.Layer.TASTE else [path.transformed_kit], where)
 	if upgrade.stacks():
 		return

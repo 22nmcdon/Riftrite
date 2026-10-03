@@ -7,8 +7,9 @@ extends RefCounted
 ## (to_dict, from_dict).
 
 ## A save from another version can't be loaded (4: phase 5c step 8's new
-## day; 5: endless, phase 8 part 1, which still loads a 4 with endless off).
-const VERSION: int = 5
+## day; 5: endless, phase 8 part 1, which still loads a 4 with endless off;
+## 6: apexes, phase 8 part 2, which still loads a 4 or 5 with no apex).
+const VERSION: int = 6
 const OLDEST_VERSION: int = 4
 
 ## Where the day is (phase 5c step 8, docs/plans/days-and-nodes.md):
@@ -30,8 +31,13 @@ class Hero:
 	## The vowed path's id.
 	var path: String = ""
 	var transformed: bool = false
+	## Its apex vow (phase 8 part 2): one of its path's apexes ("": none
+	## yet), and whether it has earned it.
+	var apex: String = ""
+	var apex_earned: bool = false
 	## Path id -> what fights have put into that path's deed (all three
-	## count, whatever the vow).
+	## count, whatever the vow); once its apex vow is open, its path's apexes'
+	## deeds too (apex id -> amount).
 	var deeds: Dictionary[String, int] = {}
 	## Upgrade ids taken, in order (a stacking card once per take).
 	var upgrades: Array[String] = []
@@ -57,7 +63,7 @@ class Hero:
 	var oath_fights: int = 0
 
 	func to_dict() -> Dictionary:
-		return {"id": id, "path": path, "transformed": transformed, "deeds": deeds.duplicate(), "upgrades": upgrades.duplicate(),
+		return {"id": id, "path": path, "transformed": transformed, "apex": apex, "apex_earned": apex_earned, "deeds": deeds.duplicate(), "upgrades": upgrades.duplicate(),
 			"wounds": wounds, "slots": slots.duplicate(), "growth": growth.duplicate(), "gambit_at": gambit_at,
 			"locked": locked.duplicate(true), "weakened": weakened, "next_fight": next_fight.duplicate(), "oath": oath, "oath_fights": oath_fights}
 
@@ -66,6 +72,8 @@ class Hero:
 		hero.id = str(data.get("id", ""))
 		hero.path = str(data.get("path", ""))
 		hero.transformed = bool(data.get("transformed", false))
+		hero.apex = str(data.get("apex", ""))
+		hero.apex_earned = bool(data.get("apex_earned", false))
 		var deeds: Dictionary = data.get("deeds", {})
 		for path_id: Variant in deeds:
 			hero.deeds[str(path_id)] = int(deeds[path_id])
@@ -130,6 +138,10 @@ var fought: Array[Fought] = []
 var pick: Array[String] = []
 ## The heroes the last fight transformed (for the screen that shows it).
 var just_transformed: Array[String] = []
+## Apexes (phase 8 part 2): whether the apex vow is open (after the act's
+## boss, going deeper), and the heroes the last fight raised to their apex.
+var apex_open: bool = false
+var just_apexed: Array[String] = []
 ## Items owned and not in a slot (item ids, in the order they came).
 var stash: Array[String] = []
 ## Every item owned, in a slot or the stash (a run holds one of each; phase
@@ -263,6 +275,7 @@ func to_dict() -> Dictionary:
 		"growth": growth.duplicate(), "grew": grew.duplicate(),
 		"item_ranks": item_ranks.duplicate(), "item_counts": item_counts.duplicate(), "ranked": ranked.duplicate(),
 		"endless": endless, "endless_mods": endless_mods.duplicate(),
+		"apex_open": apex_open, "just_apexed": just_apexed.duplicate(),
 	}
 
 
@@ -293,6 +306,8 @@ static func from_dict(data: Dictionary) -> RunState:
 		state.fought.append(Fought.from_dict(entry))
 	state.pick.assign((data.get("pick", []) as Array).map(func(value: Variant) -> String: return str(value)))
 	state.just_transformed.assign((data.get("just_transformed", []) as Array).map(func(value: Variant) -> String: return str(value)))
+	state.apex_open = bool(data.get("apex_open", false))
+	state.just_apexed.assign((data.get("just_apexed", []) as Array).map(func(value: Variant) -> String: return str(value)))
 	state.stash.assign((data.get("stash", []) as Array).map(func(value: Variant) -> String: return str(value)))
 	state.shop = str(data.get("shop", ""))
 	state.wares.assign((data.get("wares", []) as Array).map(func(value: Variant) -> String: return str(value)))

@@ -32,6 +32,13 @@ func go_deeper(_flow: RunFlow) -> bool:
 	return deeper
 
 
+## The apex `hero_id` vows to once its apex vow is open (phase 8 part 2):
+## the base takes its path's first.
+func apex(flow: RunFlow, hero_id: String) -> String:
+	var hero: RunState.Hero = flow.state.hero(hero_id)
+	return flow.run.content.paths[hero.path].apexes[0].id
+
+
 func route(_flow: RunFlow) -> int:
 	return 0
 

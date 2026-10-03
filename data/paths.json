@@ -411,7 +411,167 @@
         "longshot"
       ],
       "threshold": 15
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 2 (rebuild-phase8-apexes.md, Decision 6): replaced Rain of Ash. Numbers are placeholders for the --apexes report to tune.",
+        "id": "hailstorm",
+        "name": "Hailstorm",
+        "title": "the endless hail",
+        "fantasy": "The sky over the enemy never clears.",
+        "vowed": {
+          "taste": "Arrow Storm fires 1 more volley.",
+          "patch": {
+            "signature": {
+              "id": "arrow_storm",
+              "name": "Arrow Storm",
+              "text": "Rains arrows on a circle 1 hex around the biggest group of enemies within 4 hexes: for 3.5s, every enemy inside is hit twice a second.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "largest_group",
+              "effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 1
+                  },
+                  "anchor": "target",
+                  "hits": "enemies",
+                  "duration_ms": 3500,
+                  "every_ms": 500,
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount": 3,
+                      "target": "target",
+                      "scaling": {
+                        "atk": 3500
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "apex": {
+          "text": "Arrow Storm covers a circle 2 hexes around, and every 4th shot she fires drops a volley of it on her target. Each enemy Arrow Storm hits makes her deal 1% more damage for the rest of the fight, with no cap.",
+          "patch": {
+            "basic_attack": {
+              "id": "longshot",
+              "name": "Longshot",
+              "text": "Shoots her target from up to 4 hexes away, even while she walks. Every shot splits: it also hits the enemy nearest her target, within 1 hex of it, for less, and each split gives her mana. Every 4th shot also drops a volley of arrows on a circle 2 hexes around her target.",
+              "cooldown_ms": 1000,
+              "effects": [
+                {
+                  "type": "damage",
+                  "amount": 0,
+                  "target": "target",
+                  "scaling": {
+                    "atk": 10000
+                  }
+                },
+                {
+                  "type": "damage",
+                  "amount": 0,
+                  "target": "enemy_near_target",
+                  "scaling": {
+                    "atk": 5000
+                  },
+                  "within_hexes": 1
+                },
+                {
+                  "type": "gain_mana",
+                  "amount": 3,
+                  "target": "self"
+                },
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 2
+                  },
+                  "anchor": "target",
+                  "hits": "enemies",
+                  "every": 4,
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount": 3,
+                      "target": "target",
+                      "scaling": {
+                        "atk": 3500
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "signature": {
+              "id": "arrow_storm",
+              "name": "Arrow Storm",
+              "text": "Rains arrows on a circle 2 hexes around the biggest group of enemies within 4 hexes: for 3.5s, every enemy inside is hit twice a second.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "largest_group",
+              "effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 2
+                  },
+                  "anchor": "target",
+                  "hits": "enemies",
+                  "duration_ms": 3500,
+                  "every_ms": 500,
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount": 3,
+                      "target": "target",
+                      "scaling": {
+                        "atk": 3500
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "passives": [
+              {
+                "id": "gathering_hail",
+                "name": "Gathering Hail",
+                "kind": "ability",
+                "text": "Each enemy Arrow Storm hits makes her deal a little more damage for the rest of the fight, with no cap.",
+                "effects": [
+                  {
+                    "trigger": "on_holder_hit",
+                    "from_ability": [
+                      "arrow_storm"
+                    ],
+                    "type": "apply_status",
+                    "status": "hailstorm",
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Enemies hit by Arrow Storm",
+          "counts": "hits",
+          "from_ability": [
+            "arrow_storm"
+          ],
+          "threshold": 120
+        }
+      }
+    ]
   },
   {
     "_note": "The protector (rebuild-heroes.md, section 7, path 1). Guard's reach is provisional (Decision 6: measured, flagged).",
