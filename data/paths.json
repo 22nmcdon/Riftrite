@@ -199,7 +199,7 @@
                       "amount": 20,
                       "target": "target",
                       "scaling": {
-                        "atk": 22000
+                        "atk": 26000
                       },
                       "execute_below_pct": 20
                     }
@@ -1926,8 +1926,8 @@
                 "name": "Undying Oath",
                 "kind": "rise",
                 "times": 3,
-                "after_ms": 3000,
-                "hp_pct": 25,
+                "after_ms": 5000,
+                "hp_pct": 20,
                 "status": "oathbound",
                 "text": "When he falls, he rises again soon after, up to 3 times a fight, stronger each time."
               }
@@ -2923,7 +2923,7 @@
                     "type": "damage",
                     "amount": 15,
                     "scaling": {
-                      "mgk": 16000
+                      "mgk": 24000
                     },
                     "target": "target",
                     "execute_below_pct": 20
