@@ -1,6 +1,6 @@
 # Phase 8 part 3: building Act 2, the Glassmere
 
-Status: **a build plan (2026-10-04), waiting on the playtester's approval and section 9's questions.** Nothing is built. It builds `act2-glassmere.md` (the design, with its Decisions 1–7) on the frame of `rebuild-phase8-acts.md` (8c-1 and 8c-2, built). Numbers are placeholders until the tuning part.
+Status: **a build plan, approved (2026-10-04); section 9's questions answered (Decisions 1–3).** Being built from 8c-3a. It builds `act2-glassmere.md` (the design, with its Decisions 1–7) on the frame of `rebuild-phase8-acts.md` (8c-1 and 8c-2, built). Numbers are placeholders until the tuning part.
 
 ## 1. What it builds
 
@@ -17,10 +17,10 @@ Upgrades and the rift learns wait for Act 3 (Decision 4 of `act2-glassmere.md`; 
 
 - **Data:** an enemy in `enemies.json` gets `"specializations"`: up to two, each `{id, name, text, mod}`. The `mod` is a `KitMod` on the enemy's kit, the shape upgrades and relics already use; `name` is the word put before the enemy's name ("Gnawing"). `ContentDb` reads and checks them (`EnemyDef.specializations`, `SpecializationDef`), and the validator checks every text the way it checks abilities' (`test_unit_info.gd`).
 - **Which are built:** the ones Act 2 uses. That's two each for the Rift Pup, Ashling (Smoldering and Steaming), Cairn Guardian, Bog Lurker, Gloam Witch, the four new faces, and the two new archetypes: 22 in all. The Rift Hound's, Cinder Moth's, Hollow Archer's, and Sentinel's wait on question BT.
-- **The draw** (Decision 6): `ActDef.specialized_from_day` (Act 2: 3) and `specialized_share_pct` (50). When a day starts (`RunFlow._start_day`, and so again on each replay after a loss), each of today's fights draws its specialized enemies on a new `RunRandom` stream (what, act, day, attempt, the option's index): question BV has how many. Each one gets one of its two specializations. A fight swapped in (Map the Rift) draws its own. `RunState.today_specs` (option index → enemy index → specialization id) holds the draw; save version 8 (a version 7 save loads with none).
+- **The draw** (Decision 6): `ActDef.specialized_from_day` (Act 2: 3) and `specialized_share_pct` (50). When a day starts (`RunFlow._start_day`, and so again on each replay after a loss), each of today's fights draws its specialized enemies on a new `RunRandom` stream (what, act, day, attempt, the option's index): exactly half of its enemies, rounded down: Decision 1. Each one gets one of its two specializations. A fight swapped in (Map the Rift) draws its own. `RunState.today_specs` (option index → enemy index → specialization id) holds the draw; save version 8 (a version 7 save loads with none).
 - **The fight:** `RunFlow.fight_setup` passes the chosen fight's specializations to `Encounters.setup` as `enemy_mods` (enemy index → mods, applied after `scale_bp`, like heroes' extras). A specialized unit's name is the specialization's word and the enemy's ("Gnawing Rift Pup 2"; `FightNames`).
 - **The screens:** the route's fight card names each specialization and how many carry it ("2 Gnawing Rift Pups"). `EnemyPanel` adds the specialization's sentence and numbers line (`UnitInfo`). The bots read them through the fight's setup, as they read everything else.
-- **Hunts and endless** draw none for now (question BW; endless after Act 3 comes with Act 3).
+- **Hunts and endless** draw none for now (Decision 2; endless after Act 3 comes with Act 3).
 
 ## 3. Shallow water (8c-3b)
 
@@ -80,10 +80,14 @@ Built pieces cover the rest: splitting (`on_fall` and a summon of two shards), t
 
 ## 9. Questions
 
-- **BV. How many enemies are specialized:** each one at a 50% chance (so a fight may come with none or all), or exactly half of them, rounded down, chosen by the draw? Proposed: exactly half, so a fight's difficulty doesn't swing on the draw.
-- **BW. Specialized Hunts:** proposed none, so a Hunt stays the safe extra fight.
-- **BX. Act 2's camp, events, relics, and items:** Act 1's, unchanged, for now?
+- **BV. How many enemies are specialized:** *(Answered: Decision 1.)* each one at a 50% chance (so a fight may come with none or all), or exactly half of them, rounded down, chosen by the draw? Proposed: exactly half, so a fight's difficulty doesn't swing on the draw.
+- **BW. Specialized Hunts:** *(Answered: Decision 2.)* proposed none, so a Hunt stays the safe extra fight.
+- **BX. Act 2's camp, events, relics, and items:** *(Answered: Decision 3.)* Act 1's, unchanged, for now?
 
 ## Decisions
 
-None yet.
+The playtester, 2026-10-04 (approving the plan: "let's start"):
+
+1. **Exactly half of a fight's enemies are specialized, rounded down** (Question BV), chosen by the draw, so a fight's difficulty doesn't swing on it.
+2. **Hunts aren't specialized, for now** (Question BW).
+3. **Act 2 uses Act 1's camp, events, relics, and items, unchanged, for now** (Question BX).
