@@ -231,7 +231,7 @@ func to_text() -> String:
 		Kind.DEED_LEVEL:
 			return line + "%s reaches %s" % [target, note]
 		Kind.MOVE:
-			return line + "%s walks from %s toward %s" % [source_unit, _point(from_pos), _point(to_pos)]
+			return line + "%s walks from %s toward %s%s" % [source_unit, _point(from_pos), _point(to_pos), "" if note.is_empty() else " (%s)" % note]
 		Kind.STOP:
 			return line + "%s stops at %s%s" % [source_unit, _point(to_pos), "" if note.is_empty() else " (%s)" % note]
 		Kind.TARGET:
@@ -318,7 +318,7 @@ func to_text() -> String:
 
 func _damage_detail() -> String:
 	var parts: Array[String] = []
-	if (kind == Kind.DAMAGE or kind == Kind.COLLAPSE) and not note.is_empty():
+	if (kind == Kind.DAMAGE or kind == Kind.COLLAPSE or kind == Kind.STATUS_DAMAGE) and not note.is_empty():
 		parts.append(note)
 	if not bonus.is_empty():
 		parts.append(bonus)

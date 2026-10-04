@@ -136,7 +136,7 @@ static func load_texts(texts: Dictionary[String, String]) -> ContentDb:
 
 
 ## Checks what entries name across files: the statuses and summons in every
-## kit, each encounter's enemies, hexes, rocks, and act, and each tactic's
+## kit, each encounter's enemies, hexes, rocks, water, and act, and each tactic's
 ## heroes.
 func _check_links() -> void:
 	var grid: HexGrid = tuning.make_grid() if tuning != null else HexGrid.make()
@@ -166,6 +166,14 @@ func _check_links() -> void:
 				errors.append("%s: a rock at (%d, %d) is off the board" % [where, rock.x, rock.y])
 			else:
 				taken[grid.index(rock.x, rock.y)] = "a rock"
+		for i: int in encounter.water.size():
+			var wet: Vector2i = encounter.water[i]
+			if not grid.has(wet.x, wet.y):
+				errors.append("%s: water at (%d, %d) is off the board" % [where, wet.x, wet.y])
+			elif encounter.rocks.has(wet):
+				errors.append("%s: water at (%d, %d) is on a rock" % [where, wet.x, wet.y])
+			elif encounter.water.find(wet) < i:
+				errors.append("%s: water at (%d, %d) is listed twice" % [where, wet.x, wet.y])
 		for placed: EncounterDef.Placed in encounter.enemies:
 			var at: String = "%s at (%d, %d)" % [placed.enemy, placed.hex.x, placed.hex.y]
 			if not enemies.has(placed.enemy):

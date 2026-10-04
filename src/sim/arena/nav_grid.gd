@@ -19,6 +19,10 @@ extends RefCounted
 ## CRUMBLED_COST_BP as much, so a route goes round crumbled ground when a
 ## safe way isn't much longer, and crosses it when it's the only way.
 ##
+## Shallow water (phase 8 part 3; Water): for a walker that doesn't swim
+## (`wading`, set after begin), a step onto a cell on water costs
+## Water.ROUTE_COST_BP as much, beside crumbled ground's cost.
+##
 ## Costs are integers (a cell straight, about 1.414 cells diagonally, never
 ## cutting past a blocked cell). Neighbors are tried in a fixed order,
 ## forward-first for each side, and ties go to whatever was queued first, so
@@ -65,6 +69,10 @@ var origin: Vector2i
 var bounds: Rect2i
 var _straight: int
 var _diagonal: int
+## Per cell, 1 on water (Water sets it; empty: no water), and whether the
+## current walker pays more to cross it.
+var water: PackedByteArray = PackedByteArray()
+var wading: bool = false
 
 # What blocks the current walker.
 var _safe: Rect2i
@@ -148,6 +156,7 @@ func center(at_cell: int) -> Vector2i:
 func begin(safe: Rect2i, radius: int) -> void:
 	_safe = safe
 	_radius = radius
+	wading = false
 	_set_limits()
 	_obstacle_xs.clear()
 	_obstacle_ys.clear()
@@ -401,6 +410,9 @@ func _search(start: Vector2i, forward: int, targets: Array[Vector2i], reach: int
 			if nx < safe_x0 or nx > safe_x1 or ny < safe_y0 or ny > safe_y1:
 				@warning_ignore("integer_division")
 				cost = cost * CRUMBLED_COST_BP / FixedMath.BP_ONE
+			if wading and water[next] != 0:
+				@warning_ignore("integer_division")
+				cost = cost * Water.ROUTE_COST_BP / FixedMath.BP_ONE
 			var reached_at: int = here + cost
 			if _distance[next] != UNREACHED and reached_at >= _distance[next]:
 				continue

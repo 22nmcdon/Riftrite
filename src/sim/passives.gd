@@ -544,6 +544,9 @@ static func on_fall(sim: CombatSim, unit: UnitState) -> bool:
 	var ran: bool = false
 	for listener: Listener in unit.listeners:
 		if listener.effect.trigger == EffectDef.Trigger.ON_FALL and listener.effect.active_at(sim.tick):
+			# Where it fell (phase 8 part 3: the Steaming Ashling, on water).
+			if listener.effect.holder != null and not listener.effect.holder.holds(unit):
+				continue
 			_run(sim, unit, listener, null, 0)
 			ran = true
 	return ran

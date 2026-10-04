@@ -38,6 +38,14 @@ static func busy_setup(fight_seed: int = 5) -> FightSetup:
 		[Vector2i(4, 3), Vector2i(1, 3)] as Array[Vector2i], fight_seed)
 
 
+## The busy fight over shallow water (phase 8 part 3): pools in the middle
+## and under the heroes' tanks, so legs shorten and routes go round.
+static func water_setup(fight_seed: int = 5) -> FightSetup:
+	var setup: FightSetup = busy_setup(fight_seed)
+	setup.water = [Vector2i(2, 3), Vector2i(3, 3), Vector2i(5, 3), Vector2i(3, 2), Vector2i(5, 1), Vector2i(2, 4), Vector2i(6, 4)] as Array[Vector2i]
+	return setup
+
+
 ## Brannoc, Maren, and Vell against one of each of phase 2's Act 1 enemies
 ## (`first` of them: the first nine), or of `enemy_ids`, all from content.
 static func content_setup(fight_seed: int = 7, enemy_ids: Array[String] = []) -> FightSetup:
@@ -69,6 +77,13 @@ func test_the_log_replays_every_position() -> void:
 func test_the_log_replays_the_chaos_fight() -> void:
 	# Pushes, leaps, charges, hops, summons, and walking off crumbled ground.
 	_assert_replays(Chaos.setup())
+
+
+func test_the_log_replays_a_fight_on_water() -> void:
+	# Legs halved on water replay from their logged amounts.
+	var fight: FightResult = K.run(water_setup())
+	assert_true(fight.combat_log.of_kind(LogEntry.Kind.MOVE).any(func(entry: LogEntry) -> bool: return entry.note == "in water"), "some legs are in water")
+	_assert_replays(water_setup())
 
 
 func test_the_log_replays_the_rules_fight() -> void:

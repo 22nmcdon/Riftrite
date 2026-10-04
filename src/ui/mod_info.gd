@@ -161,6 +161,8 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 		bits.append("rises with %s more of max HP" % ValueBreakdown._percent(change.rise_add_bp))
 	if change.per_shared_bp != FixedMath.BP_ONE:
 		bits.append("its link's stacks every %s as much shared" % ValueBreakdown._percent(change.per_shared_bp))
+	if change.holder != null:
+		bits.append("only while it's %s" % change.holder.describe())
 	for effect: EffectDef in change.add_to_areas:
 		bits.append("in its area: " + " · ".join(UnitInfo.effect_numbers([effect] as Array[EffectDef], kit, content)))
 	for effect: EffectDef in change.add_effects:

@@ -146,3 +146,22 @@ func test_the_board_stands_on_the_island() -> void:
 	maren.place_at(view, Vector2(prop.plane_pos + Vector2i(0, 200)))
 	view._stack_tokens()
 	assert_lt(maren.get_index(), prop.get_index())
+
+
+func test_water_is_drawn_from_the_setup_then_the_fight() -> void:
+	var errors: Array[String] = []
+	var setup: FightSetup = Encounters.setup(_content, "sentinel_gate", GUARDED, 1, errors)
+	setup.water = [Vector2i(3, 0), Vector2i(3, 3)] as Array[Vector2i]
+	var view := ArenaView.new()
+	add_child_autofree(view)
+	view.size = Vector2(1200, 900)
+	view.show_setup(setup, _content)
+	assert_eq(view.water, setup.water, "placing: the setup's water")
+	assert_true(view.token("maren").in_water, "a hero placed on water shows its ripple")
+	assert_false(view.token("brannoc").in_water)
+	var player: FightPlayer = FightPlayer.make(setup, _content)
+	player.advance(0.5)
+	view.set_mode(ArenaView.Mode.FIGHT)
+	view.sync_fight(player)
+	assert_eq(view.water, player.sim.water.hexes, "fighting: the fight's water")
+	assert_eq(view.token("maren").in_water, player.sim.unit_by_id("maren").on_water)

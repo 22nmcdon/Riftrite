@@ -11,6 +11,8 @@ extends RefCounted
 ##   {"front_most": true}                    its side's standing unit nearest
 ##                                           the other side (phase 5c step
 ##                                           7c; CombatSim marks it each tick)
+##   {"on_water": true}                      standing on water (phase 8 part
+##                                           3; Water.mark; false: not)
 ## Used as an event effect's "vs" (the unit the event names), a damage_bp
 ## aura's "vs" (the target of the hit), and an aura's "while": "state" (its
 ## holder).
@@ -24,6 +26,7 @@ var below_hp_bp: int = 0
 var flying: Flying = Flying.ANY
 var archetypes: Array[String] = []
 var front_most: bool = false
+var on_water: Flying = Flying.ANY
 
 
 static func read(reader: DataReader) -> UnitCondition:
@@ -39,14 +42,16 @@ static func read(reader: DataReader) -> UnitCondition:
 		def.flying = Flying.YES if reader.opt_bool("flying", true) else Flying.NO
 	def.archetypes = reader.opt_choice_array("archetypes", EnemyDef.ARCHETYPE_NAMES)
 	def.front_most = reader.opt_bool("front_most", false)
+	if reader.has("on_water"):
+		def.on_water = Flying.YES if reader.opt_bool("on_water", true) else Flying.NO
 	if def.is_empty():
-		reader.error("a condition needs at least one of keywords, statuses, below_hp_pct, flying, archetypes, or front_most")
+		reader.error("a condition needs at least one of keywords, statuses, below_hp_pct, flying, archetypes, front_most, or on_water")
 	reader.finish()
 	return def
 
 
 func is_empty() -> bool:
-	return keywords.is_empty() and statuses.is_empty() and below_hp_bp == 0 and flying == Flying.ANY and archetypes.is_empty() and not front_most
+	return keywords.is_empty() and statuses.is_empty() and below_hp_bp == 0 and flying == Flying.ANY and archetypes.is_empty() and not front_most and on_water == Flying.ANY
 
 
 ## True if `unit` meets every field given.
@@ -58,6 +63,8 @@ func holds(unit: UnitState) -> bool:
 	if not archetypes.is_empty() and not archetypes.has(unit.def.archetype):
 		return false
 	if front_most and not unit.front_most:
+		return false
+	if on_water != Flying.ANY and unit.on_water != (on_water == Flying.YES):
 		return false
 	if not keywords.is_empty() and not _has_keyword(unit):
 		return false
@@ -100,4 +107,6 @@ func describe() -> String:
 		parts.append(" or ".join(archetypes))
 	if front_most:
 		parts.append("the front-most")
+	if on_water != Flying.ANY:
+		parts.append("on water" if on_water == Flying.YES else "not on water")
 	return ", ".join(parts)

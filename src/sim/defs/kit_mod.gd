@@ -76,6 +76,10 @@ extends RefCounted
 ##                                        (Stubborn Flame)
 ##       "per_shared_bp": 5000            the named link's per_shared, times
 ##                                        this (Iron Loom)
+## Phase 8 part 3 (Act 2's specializations), per "on" entry:
+##       "holder": {...UnitCondition...}  its event and timed effects run
+##                                        only while their unit meets it (the
+##                                        Steaming Ashling's burst, off water)
 ## and (step 7d) "places_lantern": true at the top: the player places its
 ## signature's first area before the fight (UnitSetup.lantern).
 ## and (step 8c) "drops_signature": true at the top: the kit's signature and
@@ -167,12 +171,14 @@ class AbilityChange:
 	var grows_boosts_add_bp: int = 0
 	var rise_add_bp: int = 0
 	var per_shared_bp: int = FixedMath.BP_ONE
+	## Phase 8 part 3: the condition its event and timed effects run under.
+	var holder: UnitCondition = null
 
 	func touches_effects() -> bool:
 		return amount_bp != FixedMath.BP_ONE or duration_bp != FixedMath.BP_ONE or duration_add_ticks != 0 or radius_add != 0 \
 			or every_add != 0 or times_add != 0 or max_standing_add != 0 or overheal_add_bp != 0 or width_add != 0 or not add_to_areas.is_empty() \
 			or strength_add_bp != 0 or follows or ricochet_add != 0 or reflect_bp != 0 or snags \
-			or per_enemy_add_bp != 0 or overheal_max_hp_add != 0 or at_stacks_add != 0 or per_taken_add_bp != 0
+			or per_enemy_add_bp != 0 or overheal_max_hp_add != 0 or at_stacks_add != 0 or per_taken_add_bp != 0 or holder != null
 
 	func touches(effect: EffectDef) -> bool:
 		if not at.is_empty() and not at.has(effect.target):
@@ -379,6 +385,8 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 			guard.finish()
 	if reader.has("prefer"):
 		change.prefer = UnitCondition.read(reader.req_object("prefer"))
+	if reader.has("holder"):
+		change.holder = UnitCondition.read(reader.req_object("holder"))
 	if (change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0 or change.prefer != null) and change.slot != SLOT_SIGNATURE:
 		reader.error("cast_bp, targets_add, and prefer change a signature (\"slot\": \"signature\")")
 	if (change.changes_part() or change.after_add_ticks != 0) and not change.slot.begins_with(PASSIVE_PREFIX):
@@ -417,7 +425,7 @@ func step_problem() -> String:
 				or change.changes_part() or change.prefer != null or not change.at.is_empty() or change.strength_add_bp != 0 \
 				or change.follows or change.ricochet_add != 0 or change.reflect_bp != 0 or change.snags \
 				or change.per_enemy_add_bp != 0 or change.overheal_max_hp_add != 0 or change.at_stacks_add != 0 or change.per_taken_add_bp != 0 \
-				or change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0:
+				or change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0 or change.holder != null:
 			return "a growing card's step can only change an ability's amount_bp"
 	return ""
 
@@ -733,6 +741,8 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 				copy.reflect_bp = effect.reflect_bp + change.reflect_bp
 			if change.snags and effect.type == EffectDef.Type.SNARE:
 				copy.snags = true
+			if change.holder != null and _takes_holder(effect):
+				copy.holder = change.holder
 			if change.width_add != 0 and copy.shape != null and copy.shape.kind == ShapeDef.Kind.LINE:
 				copy.shape = DefCopy.shallow(copy.shape) as ShapeDef
 				copy.shape.width += change.width_add
@@ -743,6 +753,11 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 			copy.area_effects.append_array(change.add_to_areas)
 		result.append(copy)
 	return result
+
+
+## An effect that can take a holder condition: an event's or a timed one.
+static func _takes_holder(effect: EffectDef) -> bool:
+	return EffectDef.EVENT_TRIGGERS.has(effect.trigger) or EffectDef.UNIT_TRIGGERS.has(effect.trigger)
 
 
 ## A "once" effect, or on_below_hp's: it runs `times` a fight (times_add).
@@ -764,7 +779,8 @@ static func _any_effect(effects: Array[EffectDef], change: AbilityChange) -> boo
 				or not change.add_to_areas.is_empty() and effect.type == EffectDef.Type.AREA
 				or change.strength_add_bp != 0 and effect.type == EffectDef.Type.APPLY_STATUS
 				or change.follows and effect.zone_ticks > 0 or change.ricochet_add != 0 and effect.type == EffectDef.Type.DAMAGE
-				or change.reflect_bp != 0 and effect.type == EffectDef.Type.WALL or change.snags and effect.type == EffectDef.Type.SNARE):
+				or change.reflect_bp != 0 and effect.type == EffectDef.Type.WALL or change.snags and effect.type == EffectDef.Type.SNARE
+				or change.holder != null and _takes_holder(effect)):
 			return true
 		if change.touches(effect) and (change.amount_bp != FixedMath.BP_ONE and (effect.amount != 0 or effect.amount_bp_of_damage != 0 or effect.scaling.any(func(value: int) -> bool: return value != 0) or effect.amount_bp_of_max_hp != 0 or change.moves(effect))
 				or (change.duration_bp != FixedMath.BP_ONE or change.duration_add_ticks != 0) and (effect.duration_ticks > 0 or effect.zone_ticks > 0)

@@ -4,7 +4,8 @@ extends RefCounted
 ##
 ## A unit that has a target out of reach walks toward it:
 ##   - straight at the target when nothing stands in the way (checked with a
-##     sweep, only when it plans), otherwise along a route around, straight
+##     sweep, only when it plans) and, for a walker water slows, no water
+##     lies on the line (phase 8 part 3), otherwise along a route around, straight
 ##     from corner to corner (NavGrid);
 ##   - it plans again when its target changes, when it's blocked, when its
 ##     route runs out, and every repath_ms, since the board keeps changing;
@@ -16,7 +17,9 @@ extends RefCounted
 ##     off (no way even with every unit out of the way: rocks only, since
 ##     crumbled ground is walkable). Blocked only by units, it keeps its target and waits for an
 ##     opening (playtest gate 1, decided 2026-09-28);
-##   - Rooted, it stands where it is; Slowed, its steps are shorter.
+##   - Rooted, it stands where it is; Slowed, its steps are shorter; on
+##     water (phase 8 part 3), half as long unless it swims (Water), and the
+##     leg is noted "in water".
 ## A flier (the flying trait) goes straight at its target over units and
 ## rocks, in the air (UnitState.airborne), where others move as if it weren't
 ## there. In reach, it lands on a free spot before it attacks: where it is,
@@ -73,7 +76,7 @@ static func step_to(sim: CombatSim, unit: UnitState, point: Vector2i) -> bool:
 	if not unit.statuses.is_empty() and Statuses.has_kind(unit, StatusDef.Kind.ROOT):
 		halt(sim, unit, "rooted")
 		return false
-	var amount: int = unit.step_length()
+	var amount: int = sim.step_of(unit)
 	if amount <= 0 or point == unit.pos:
 		return false
 	unit.route.clear()
@@ -130,7 +133,7 @@ static func step_off(sim: CombatSim, unit: UnitState) -> void:
 ## Steps along the unit's route (anywhere it fits: CombatSim.fits_ground).
 static func _follow(sim: CombatSim, unit: UnitState) -> void:
 	var corner: Vector2i = unit.route[0]
-	var amount: int = unit.step_length()
+	var amount: int = sim.step_of(unit)
 	if amount <= 0:
 		return
 	var next: Vector2i = ArenaPlane.step_toward(unit.pos, corner, amount)
@@ -188,7 +191,9 @@ static func _plan(sim: CombatSim, unit: UnitState) -> void:
 	var gap: int = ArenaPlane.distance(unit.pos, target.pos) - unit.reach()
 	var reach_point: Vector2i = ArenaPlane.along(unit.pos, ArenaPlane.direction(unit.pos, target.pos), maxi(gap, 0))
 	var sweep: ArenaPlane.Sweep = ArenaPlane.sweep(unit.pos, reach_point, unit.radius, sim.obstacles_for(unit, target), sim.safe)
-	if sweep.hit == ArenaPlane.Hit.NONE:
+	# Water on the way (phase 8 part 3): a walker it slows plans a route,
+	# which goes round it when that's shorter than wading.
+	if sweep.hit == ArenaPlane.Hit.NONE and not (sim.has_water and sim.wades(unit) and sim.water.crosses(sim, unit.pos, reach_point)):
 		unit.route.append(target.pos)
 		return
 	var nav: NavGrid = sim.nav_for(unit, target)
@@ -236,7 +241,7 @@ static func settle(sim: CombatSim, unit: UnitState, target: UnitState) -> bool:
 			return true
 		unit.settle_spot = spot
 		unit.has_settle_spot = true
-	var amount: int = unit.step_length()
+	var amount: int = sim.step_of(unit)
 	if amount <= 0:
 		return false
 	if not unit.leg_active or unit.leg_to != unit.settle_spot or unit.leg_amount != amount:
@@ -278,6 +283,8 @@ static func _log_leg(sim: CombatSim, unit: UnitState, to: Vector2i, amount: int)
 	entry.from_pos = unit.pos
 	entry.to_pos = to
 	entry.amount = amount
+	if sim.has_water and sim.wades(unit) and sim.on_water(unit.pos):
+		entry.note = "in water"
 	@warning_ignore("integer_division")
 	entry.end_tick = sim.tick + (ArenaPlane.distance(unit.pos, to) + amount - 1) / amount - 1
 	sim.combat_log.add(entry)

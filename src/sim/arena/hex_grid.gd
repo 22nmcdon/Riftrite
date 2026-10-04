@@ -134,3 +134,33 @@ func nearest_hex(point: Vector2i) -> int:
 			best = hex
 			best_distance = distance
 	return best
+
+
+## The hex whose center is nearest the point, as nearest_hex finds it (ties
+## to the lower index), but looking only at the columns either side of it
+## (and one more, for a point off the board's ends) and the two nearest rows
+## in each: the nearest center is always among them (phase 8 part 3, water).
+func hex_at(point: Vector2i) -> int:
+	var left: int = _floor_div(point.x - HALF_HEX, COL_STEP)
+	var best: int = -1
+	var best_distance: int = -1
+	for col: int in range(maxi(left - 1, 0), mini(left + 2, width - 1) + 1):
+		var shift: int = HALF_HEX if col % 2 == 1 else 0
+		var top: int = clampi(_floor_div(point.y - HALF_HEX - shift, HEX), 0, height - 1)
+		for row: int in [top, mini(top + 1, height - 1)]:
+			var d: Vector2i = center(col, row) - point
+			var distance: int = d.x * d.x + d.y * d.y
+			var hex: int = index(col, row)
+			if best_distance < 0 or distance < best_distance or (distance == best_distance and hex < best):
+				best = hex
+				best_distance = distance
+	return best
+
+
+static func _floor_div(a: int, b: int) -> int:
+	@warning_ignore("integer_division")
+	var q: int = a / b
+	if a % b != 0 and (a < 0) != (b < 0):
+		q -= 1
+	return q
+

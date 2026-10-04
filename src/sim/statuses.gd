@@ -325,11 +325,18 @@ static func _deal_damage_over_time(sim: CombatSim, unit: UnitState, state: Statu
 	for group: StatusState.StackGroup in state.groups:
 		# The damage rule: a Mark is the target's side (vulnerability).
 		var vulnerability: int = damage_taken_bp(unit)
-		var damage: int = DamageRule.apply(group.stacks * state.def.damage_per_stack, 0, 0, vulnerability)
+		var base: int = group.stacks * state.def.damage_per_stack
+		# Shallow water (phase 8 part 3): a Burn tick on water is halved.
+		var in_water: bool = unit.on_water and state.def.keyword == "burning"
+		if in_water:
+			base = FixedMath.apply_bp(base, Water.BURN_BP)
+		var damage: int = DamageRule.apply(base, 0, 0, vulnerability)
 		if damage <= 0:
 			continue
 		var entry: LogEntry = sim.new_entry(LogEntry.Kind.STATUS_DAMAGE, group.source)
-		entry.set_rule(group.stacks * state.def.damage_per_stack, 0, 0, vulnerability, 0)
+		entry.set_rule(base, 0, 0, vulnerability, 0)
+		if in_water:
+			entry.note = "in water"
 		entry.target = unit.id
 		entry.status = state.def.id
 		entry.status_name = state.def.name

@@ -52,6 +52,9 @@ var units: Array[UnitState] = []
 var heroes: Array[UnitState] = []
 var enemies: Array[UnitState] = []
 var rocks: Array[ArenaPlane.Circle] = []
+## Shallow water (phase 8 part 3; Water), or null in a fight without any.
+var water: Water = null
+var has_water: bool = false
 ## The ground still standing (the whole arena until the collapse).
 var safe: Rect2i
 ## Rift Collapse (Collapse): the act's numbers, the tick the first ring
@@ -209,6 +212,9 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 	_nav = NavGrid.make(grid.bounds(), tuning.nav_cell)
 	for rock: Vector2i in setup.rocks:
 		rocks.append(ArenaPlane.Circle.make(grid.center(rock.x, rock.y), tuning.rock_radius, "rock"))
+	if not setup.water.is_empty():
+		water = Water.make(grid, _nav, setup.water)
+		has_water = true
 	for unit_setup: UnitSetup in setup.units():
 		add_unit(UnitState.from_setup(unit_setup, units.size(), grid, tuning.unit_radius))
 	var start := LogEntry.new()
@@ -407,6 +413,8 @@ func step() -> void:
 	tick += 1
 	if track_front:
 		mark_front()
+	if has_water:
+		Water.mark(self)
 	if _aura_ticks.has(tick):
 		_active_auras = Passives.rederive(self, _active_auras)
 	Collapse.tick(self)
@@ -426,6 +434,8 @@ func step() -> void:
 	for unit: UnitState in units:
 		if unit.alive:
 			_act(unit)
+	if has_water:
+		Water.mark(self)
 	if not snares.is_empty():
 		Snares.check(self)
 	var read_to: int = combat_log.entries.size()
@@ -634,6 +644,25 @@ func fits_ground(unit: UnitState, point: Vector2i) -> bool:
 	return ArenaPlane.inside(grid.bounds(), point, unit.radius) and _clear(unit, point)
 
 
+## True if `point` is on water (phase 8 part 3; Water).
+func on_water(point: Vector2i) -> bool:
+	return has_water and water.cells[_nav.cell_at(point)] != 0
+
+
+## How far `unit` walks this tick: its step, halved on water unless it swims
+## or flies (Water).
+func step_of(unit: UnitState) -> int:
+	var amount: int = unit.step_length()
+	if has_water and wades(unit) and on_water(unit.pos):
+		amount = FixedMath.apply_bp(amount, Water.SPEED_BP)
+	return amount
+
+
+## True if water slows `unit` (it neither swims nor flies).
+func wades(unit: UnitState) -> bool:
+	return not unit.swims and not unit.flying
+
+
 ## True if `point` is on crumbled ground (outside the safe rectangle).
 func on_crumbled(point: Vector2i) -> bool:
 	return point.x < safe.position.x or point.x > safe.end.x or point.y < safe.position.y or point.y > safe.end.y
@@ -673,6 +702,7 @@ func _clear(unit: UnitState, point: Vector2i) -> bool:
 ## way; its target, when it has one).
 func nav_for(unit: UnitState, except: UnitState) -> NavGrid:
 	_nav.begin(safe, unit.radius)
+	_nav.wading = has_water and wades(unit)
 	for circle: ArenaPlane.Circle in obstacles_for(unit, except):
 		_nav.add_obstacle(circle.center, circle.radius)
 	return _nav
@@ -682,6 +712,7 @@ func nav_for(unit: UnitState, except: UnitState) -> NavGrid:
 ## edge): the way it could go if every unit stood aside.
 func ground_nav_for(unit: UnitState) -> NavGrid:
 	_nav.begin(safe, unit.radius)
+	_nav.wading = has_water and wades(unit)
 	for rock: ArenaPlane.Circle in rocks:
 		_nav.add_obstacle(rock.center, rock.radius)
 	if has_barriers:

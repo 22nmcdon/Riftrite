@@ -13,13 +13,14 @@ extends RefCounted
 ## Only a unit whose signature fires on mana has a mana bar, and it must have
 ## one. The basic attack, the signature, and the passives each need their own
 ## id.
-##   "traits": ["engage", "flying", "hop_away", "fires_moving", "inert"]
+##   "traits": ["engage", "flying", "hop_away", "fires_moving", "inert", "swims"]
 ##       code paths a unit has (sections 4 and 6); hop_away needs
 ##       "hop_cooldown_ms" too; fires_moving (phase 4, Volley): while it
 ##       walks, its basic attack fires at the nearest enemy in reach;
 ##       inert (phase 5, the Gloam Totem): it never targets, attacks, or
 ##       walks, though its signature and passives work (its basic attack
-##       is never used)
+##       is never used); swims (phase 8 part 3, the Mire Eel): water
+##       doesn't slow it (Water)
 ##   "plant_ms": 1500
 ##       phase 4 (Deadeye's cost): after it moves, its basic attack waits
 ##       this long before it can fire
@@ -32,7 +33,7 @@ extends RefCounted
 
 ## A unit's own rule (section 4): Targeting.RULES but self.
 const TARGETING_RULES: Array[String] = ["nearest", "weakest_backliner", "largest_group", "farthest", "lowest_hp_ally", "highest_mana"]
-const TRAITS: Array[String] = ["engage", "flying", "hop_away", "fires_moving", "inert"]
+const TRAITS: Array[String] = ["engage", "flying", "hop_away", "fires_moving", "inert", "swims"]
 
 var id: String
 var name: String

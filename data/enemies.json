@@ -78,6 +78,33 @@
             }
           ]
         }
+      },
+      {
+        "id": "steaming_ashling",
+        "name": "Steaming",
+        "text": "If it falls on water, it bursts into steam that slows the heroes within 1 hex instead of burning them.",
+        "mod": {
+          "on": [{"slot": "passive:cinder_burst", "holder": {"on_water": false}}],
+          "passives": [
+            {
+              "id": "steam_burst",
+              "name": "Steam Burst",
+              "text": "If it falls on water, it bursts into steam: heroes within 1 hex are Slowed.",
+              "kind": "ability",
+              "effects": [
+                {
+                  "trigger": "on_fall",
+                  "holder": {"on_water": true},
+                  "type": "area",
+                  "shape": {"kind": "circle", "radius": 1},
+                  "anchor": "self",
+                  "hits": "enemies",
+                  "effects": [{"type": "apply_status", "status": "slow", "duration_ms": 3000, "target": "target"}]
+                }
+              ]
+            }
+          ]
+        }
       }
     ],
     "kit": {

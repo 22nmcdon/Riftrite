@@ -37,6 +37,8 @@ const MANA := Color("7aa7ff")
 const HERO_RING := Color("ffd66e")
 const ENEMY_RING := Color("e0503c")
 const RING_SHADOW := Color(0.16, 0.12, 0.06, 0.35)
+## The ripple round a unit standing on water (phase 8 part 3).
+const RIPPLE := Color(0.78, 0.92, 1.0, 0.75)
 const CAST := UiStyle.GOLD_300
 ## Tags for the statuses that aren't damage over time (by StatusDef.Kind).
 const STATUS_TAGS: Dictionary = {
@@ -100,6 +102,8 @@ var mana_share: float = -1.0
 var cast_share: float = -1.0
 ## [text, color] per status, in the unit's status order.
 var status_tags: Array[Array] = []
+## Standing on water (phase 8 part 3): a ripple round its ring.
+var in_water: bool = false
 var _view: ArenaView = null
 
 
@@ -204,6 +208,7 @@ func show_state(unit: UnitState, tick: int) -> void:
 	var signature: AbilityState = unit.signature
 	if signature != null and signature.casting() and signature.def.cast_ticks > 0:
 		cast_share = clampf(1.0 - float(signature.cast_ends_at - tick) / signature.def.cast_ticks, 0.0, 1.0)
+	in_water = unit.on_water
 	status_tags.clear()
 	for state: StatusState in unit.statuses:
 		status_tags.append(status_tag(state))
@@ -264,6 +269,8 @@ func _draw() -> void:
 		var ring_radius: float = maxf(body_radius, MIN_BODY_PX * 1.25)
 		draw_set_transform(feet, 0.0, Vector2(1.0, RING_FLAT))
 		draw_circle(Vector2.ZERO, ring_radius, RING_SHADOW)
+		if in_water:
+			draw_arc(Vector2.ZERO, ring_radius * 1.35, 0.0, TAU, 32, RIPPLE, 1.5 / RING_FLAT, true)
 		draw_arc(Vector2.ZERO, ring_radius, 0.0, TAU, 32, HERO_RING if is_hero() else ENEMY_RING, 2.5 / RING_FLAT, true)
 		draw_set_transform(feet, 0.0, Vector2(-figure_scale if facing_left else figure_scale, figure_scale))
 		draw_texture_rect(figure, Rect2(-FigureArt.FEET, FigureArt.CANVAS), false)
@@ -271,6 +278,8 @@ func _draw() -> void:
 		below = feet.y + ring_radius * RING_FLAT + 2.0
 	else:
 		var body: Vector2 = feet
+		if in_water:
+			draw_arc(feet, body_radius * 1.35, 0.0, TAU, 32, RIPPLE, 1.5, true)
 		if flying:
 			draw_circle(feet + Vector2(0.0, body_radius * 0.15), body_radius * 0.8, SHADOW)
 			body -= Vector2(0.0, body_radius * FLIGHT_LIFT)

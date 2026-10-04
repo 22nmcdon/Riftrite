@@ -9,6 +9,9 @@ var heroes: Array[UnitSetup] = []
 var enemies: Array[UnitSetup] = []
 ## Rocks, by board hex (col, row).
 var rocks: Array[Vector2i] = []
+## Shallow water, by board hex (phase 8 part 3; Water): never on a rock,
+## each hex once. Units may stand on it.
+var water: Array[Vector2i] = []
 var seed_value: int = 1
 var act: int = 1
 ## The kits summon effects may use (looked up by id; each id once).
@@ -164,6 +167,14 @@ func validate(content: ContentDb) -> Array[String]:
 			errors.append("a rock at (%d, %d) is off the board" % [rock.x, rock.y])
 		else:
 			taken[grid.index(rock.x, rock.y)] = "a rock"
+	for i: int in water.size():
+		var hex: Vector2i = water[i]
+		if not grid.has(hex.x, hex.y):
+			errors.append("water at (%d, %d) is off the board" % [hex.x, hex.y])
+		elif rocks.has(hex):
+			errors.append("water at (%d, %d) is on a rock" % [hex.x, hex.y])
+		elif water.find(hex) < i:
+			errors.append("water at (%d, %d) is listed twice" % [hex.x, hex.y])
 	var ids: Array[String] = []
 	var by_hex: Dictionary[int, UnitSetup] = {}
 	var shared: Dictionary[int, bool] = {}

@@ -34,6 +34,9 @@ extends Control
 ##   - Placement: a hero's token can be dragged onto a hex (section 3). The
 ##     view only reports the drop (`hero_dropped`); whoever shows it decides
 ##     whether the move is legal, and calls `flash_hex` if it isn't.
+##   - Shallow water (phase 8 part 3): its hexes are drawn on the ground,
+##     from the setup while placing and from the fight's water each frame
+##     (it can change), and a unit standing on it shows a ripple.
 ##   - Paths (docs/plans/rebuild-phase4-paths.md, section 6): a transformed
 ##     hero stands as its path's figure; a vowed one keeps its base figure.
 ##     Either way the path is named under it while placing, with its
@@ -82,6 +85,9 @@ const FLASH_SECONDS: float = 0.5
 const SNARE_COLOR := Color("8fbf5a")
 ## A placed lantern's marker (phase 5c step 7d).
 const LANTERN_COLOR := Color("f2c14e")
+## Shallow water's hexes (placeholder until phase 7's art).
+const WATER_FILL := Color(0.24, 0.47, 0.62, 0.62)
+const WATER_EDGE := Color(0.72, 0.88, 0.98, 0.55)
 
 var mode: Mode = Mode.PLACEMENT
 var grid: HexGrid
@@ -91,6 +97,8 @@ var board: Rect2i
 ## corners.
 var drawn_rect: Rect2i
 var rocks: Array[ArenaPlane.Circle] = []
+## The water's hexes, as the setup or the fight has them now.
+var water: Array[Vector2i] = []
 ## One ruin per rock, in the setup's order.
 var rock_props: Array[RockProp] = []
 ## One per unit, in the fight's order.
@@ -157,6 +165,7 @@ func show_setup(setup: FightSetup, content: ContentDb) -> void:
 	var overhang: int = ceili(HEX_CORNER) - HexGrid.HALF_HEX
 	drawn_rect = board.grow_individual(overhang, 0, overhang, 0)
 	rocks.clear()
+	water = setup.water.duplicate()
 	for prop: RockProp in rock_props:
 		prop.queue_free()
 	rock_props.clear()
@@ -179,6 +188,7 @@ func show_setup(setup: FightSetup, content: ContentDb) -> void:
 		token.plane_pos = grid.center(unit.col, unit.row)
 		token.tactic_label = unit.tactic.name if unit.tactic != null else ""
 		token.path_label = path_tag(unit)
+		token.in_water = water.has(Vector2i(unit.col, unit.row))
 		_add_token(token)
 		for i: int in unit.snares.size():
 			var marker := SnareMarker.new()
@@ -231,6 +241,8 @@ static func path_tag(unit: UnitSetup) -> String:
 ## Puts every unit where `player` draws it: a token for each unit the fight
 ## has (summons included, as they join), hidden once it falls.
 func sync_fight(player: FightPlayer) -> void:
+	if player.sim.has_water:
+		water = player.sim.water.hexes
 	for unit: UnitState in player.sim.units:
 		var unit_token: UnitToken = token(unit.id)
 		if unit_token == null:
@@ -507,6 +519,12 @@ func _draw() -> void:
 	var board_px: Rect2 = rect_to_pixels(drawn_rect)
 	draw_texture_rect(art(ART_DIR + "island_frame.svg"), frame_rect(), false)
 	draw_tiled(self, art(ART_DIR + "ground_tile.svg"), board_px, GROUND_TILE_HEXES * hex_px())
+	for hex: Vector2i in water:
+		var pool: PackedVector2Array = hex_corners(grid.center(hex.x, hex.y))
+		draw_colored_polygon(pool, WATER_FILL)
+		var edge: PackedVector2Array = pool.duplicate()
+		edge.append(pool[0])
+		draw_polyline(edge, WATER_EDGE, 1.0, true)
 	for index: int in grid.size():
 		var col: int = grid.col_of(index)
 		var row: int = grid.row_of(index)

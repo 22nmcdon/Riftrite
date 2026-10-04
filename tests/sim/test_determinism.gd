@@ -9,6 +9,7 @@ const Chaos = preload("res://tests/sim/chaos_fight.gd")
 const TacticFights = preload("res://tests/sim/test_tactics.gd")
 const PathFights = preload("res://tests/sim/path_fights.gd")
 const RuleFights = preload("res://tests/sim/test_hero_rules.gd")
+const ArenaLogTest = preload("res://tests/sim/arena/test_arena_log.gd")
 
 ## The chaos fight, run once for every test here (it takes a couple of
 ## seconds).
@@ -72,6 +73,13 @@ func test_the_rules_fight_repeats_exactly() -> void:
 	var statuses: Array = first.combat_log.of_kind(LogEntry.Kind.STATUS_APPLIED).map(func(entry: LogEntry) -> String: return entry.status)
 	for status_id: String in RULE_STATUSES:
 		assert_true(statuses.has(status_id), "the rules fight applies %s" % status_id)
+
+
+## Shallow water (phase 8 part 3) repeats exactly too, and changes the fight.
+func test_a_fight_on_water_repeats_exactly() -> void:
+	var first: FightResult = K.run(ArenaLogTest.water_setup())
+	assert_eq(K.run(ArenaLogTest.water_setup()).combat_log.to_text(), first.combat_log.to_text())
+	assert_ne(first.combat_log.to_text(), K.run(ArenaLogTest.busy_setup()).combat_log.to_text(), "the water changes the fight")
 
 
 func test_the_seed_matters() -> void:
