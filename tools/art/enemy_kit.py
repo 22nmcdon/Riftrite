@@ -1,5 +1,6 @@
 """The luminous enemy kit (docs/art-style-guide.md, section 5): code-generated
-placeholder figures for the Act 1 enemies, in the hero kit's style and on its
+placeholder figures for the Act 1 and Act 2 enemies (Act 2's are recolors of
+Act 1's shapes until phase 7's art), in the hero kit's style and on its
 canvas (300 x 520, feet at y = 500, centered on x = 150, facing right).
 
 Enemies wear the palette's darker side (deep plum, ink, dark teal) with more
@@ -230,6 +231,79 @@ def old_mother_ash(uid):
     return _scaled(body, 1.22) + glow_dot(150, 330, 26, EMBER)
 
 
+# Act 2, the Glassmere (docs/plans/act2-glassmere.md): drowned teal and
+# glass, recolors and rescales of Act 1's shapes.
+GLASS, GLASS_DK = "#8fc9d2", "#5a8f9a"
+
+
+def _drown(body):
+    return body.replace(DUSK_DK, TIDE_DK).replace(DUSK, TIDE).replace(BOG_DK, TIDE_DK).replace(BOG, TIDE)
+
+
+def _glass(body):
+    return body.replace(STONE_DK, GLASS_DK).replace(STONE, GLASS).replace(DUSK_DK, GLASS_DK).replace(DUSK, GLASS)
+
+
+def mire_eel(uid):
+    return _scaled(_drown(bog_lurker(uid)), 0.82) + eyes([(196, 432)])
+
+
+def reedline_slinger(uid):
+    return hollow_archer(uid).replace(DUSK_DK, BOG_DK).replace(DUSK, BOG)
+
+
+def tidecaller(uid):
+    return _drown(gloam_witch(uid))
+
+
+def choir_tidecaller(uid):
+    return _scaled(tidecaller(uid), 1.12) + glow_dot(150, 300, 14, GOLD) + rune(150, 300, 6)
+
+
+def drowned_warden(uid):
+    return _drown(rift_worn_sentinel(uid).replace(STONE_DK, TIDE_DK).replace(STONE, TIDE))
+
+
+def drowned_bellringer(uid):
+    return _drown(gloam_totem(uid).replace(STONE_DK, TIDE_DK).replace(STONE, TIDE)) + circle(150, 260, 16, GOLD, 3)
+
+
+def drowned_thrall(uid):
+    return _scaled(_drown(rift_pup(uid)), 0.85)
+
+
+def glass_shambler(uid):
+    return _glass(cairn_guardian(uid))
+
+
+def brood_shambler(uid):
+    return glass_shambler(uid) + rune(150, 420, 6)
+
+
+def glass_matron(uid):
+    return _scaled(glass_shambler(uid).replace(AQUA, GOLD), 1.25)
+
+
+def glass_shard(uid):
+    return _scaled(glass_shambler(uid), 0.62)
+
+
+def jagged_shard(uid):
+    return glass_shard(uid).replace(AQUA, EMBER)
+
+
+def clouded_shard(uid):
+    return f'<g opacity="0.7">{glass_shard(uid)}</g>'
+
+
+def matron_shard(uid):
+    return glass_shard(uid) + glow_dot(150, 420, 8, GOLD)
+
+
+def mournwater(uid):
+    return _scaled(_drown(bog_lurker(uid)), 1.3) + glow_dot(150, 380, 24, AQUA, strong=True)
+
+
 ENEMIES = [("rift_pup", "Rift Pup", rift_pup), ("ashling", "Ashling", ashling),
            ("rift_hound", "Rift Hound", rift_hound), ("cinder_moth", "Cinder Moth", cinder_moth),
            ("hollow_archer", "Hollow Archer", hollow_archer), ("rift_worn_sentinel", "Rift-Worn Sentinel", rift_worn_sentinel),
@@ -237,7 +311,15 @@ ENEMIES = [("rift_pup", "Rift Pup", rift_pup), ("ashling", "Ashling", ashling),
            ("gloam_witch", "Gloam Witch", gloam_witch),
            ("hound_alpha", "Hound Alpha", hound_alpha), ("hunt_hound", "Hunting Hound", hunt_hound),
            ("gloam_totem", "Gloam Totem", gloam_totem), ("ash_hound", "Ash Hound", ash_hound),
-           ("old_mother_ash", "Old Mother Ash", old_mother_ash)]
+           ("old_mother_ash", "Old Mother Ash", old_mother_ash),
+           ("mire_eel", "Mire Eel", mire_eel), ("reedline_slinger", "Reedline Slinger", reedline_slinger),
+           ("tidecaller", "Tidecaller", tidecaller), ("drowned_warden", "Drowned Warden", drowned_warden),
+           ("drowned_bellringer", "Drowned Bellringer", drowned_bellringer), ("drowned_thrall", "Drowned Thrall", drowned_thrall),
+           ("glass_shambler", "Glass Shambler", glass_shambler), ("glass_shard", "Glass Shard", glass_shard),
+           ("jagged_shard", "Jagged Shard", jagged_shard), ("clouded_shard", "Clouded Shard", clouded_shard),
+           ("glass_matron", "The Glass Matron", glass_matron), ("brood_shambler", "Brood Shambler", brood_shambler),
+           ("matron_shard", "Matron's Shard", matron_shard), ("choir_tidecaller", "Choir Tidecaller", choir_tidecaller),
+           ("mournwater", "The Mournwater", mournwater)]
 
 
 def standalone(body):
@@ -256,7 +338,7 @@ def lineup():
          '<linearGradient id="meadow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c8b56a"/>'
          '<stop offset="1" stop-color="#6f6a38"/></linearGradient></defs>',
          f'<rect width="{W}" height="{H}" fill="#1b2433"/>',
-         '<text x="30" y="50" fill="#fff3cf" font-size="28">Riftrite: Act 1 enemies (luminous placeholder kit)</text>',
+         '<text x="30" y="50" fill="#fff3cf" font-size="28">Riftrite: Act 1 and Act 2 enemies (luminous placeholder kit)</text>',
          '<text x="30" y="78" fill="#a9c9c4" font-size="15">Code-generated from tools/art/enemy_kit.py. Darker palette and more rift glow than the heroes; '
          'one shape per archetype.</text>']
     for i, (eid, name, fn) in enumerate(ENEMIES):

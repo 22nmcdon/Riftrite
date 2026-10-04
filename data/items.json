@@ -1085,7 +1085,7 @@
     "kind": "tactic",
     "name": "Casters first",
     "icon": "casters_first",
-    "text": "Goes for the nearest enemy caster or support first, and hits them harder.",
+    "text": "Goes for the nearest enemy caster, support, or summoner first, and hits them harder.",
     "tactic": "casters_first"
   },
   {

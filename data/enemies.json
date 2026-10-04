@@ -730,5 +730,1224 @@
         }
       ]
     }
+  },
+  {
+    "id": "mire_eel",
+    "name": "Mire Eel",
+    "archetype": "flanker",
+    "threat": "Swims under the water and surfaces behind you",
+    "specializations": [
+      {
+        "id": "ambush_eel",
+        "name": "Ambush",
+        "text": "Its first bite from under the water Stuns the hero for a moment.",
+        "mod": {
+          "passives": [
+            {
+              "id": "ambush",
+              "name": "Ambush",
+              "kind": "ability",
+              "text": "Its first bite Stuns the hero it surfaces beside.",
+              "effects": [
+                {
+                  "trigger": "on_holder_hit",
+                  "from_ability": [
+                    "eel_bite"
+                  ],
+                  "once": true,
+                  "type": "apply_status",
+                  "status": "stun",
+                  "duration_ms": 1000,
+                  "target": "hit_target"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "coiling_eel",
+        "name": "Coiling",
+        "text": "Its bites drag the hero a hex toward the nearest water.",
+        "mod": {
+          "on": [
+            {
+              "slot": "basic_attack",
+              "add_effects": [
+                {
+                  "trigger": "on_hit",
+                  "type": "pull",
+                  "hexes": 1,
+                  "toward": "water",
+                  "target": "hit_target"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "kit": {
+      "stats": {
+        "hp": 300,
+        "atk": 22,
+        "def": 4,
+        "speed": 3,
+        "range": 1
+      },
+      "traits": [
+        "swims",
+        "submerges"
+      ],
+      "targeting": "weakest_backliner",
+      "basic_attack": {
+        "id": "eel_bite",
+        "name": "Eel Bite",
+        "text": "Surfaces to bite the back-liner it swam to; under the water it can't be targeted, but it stays up a moment after each bite.",
+        "cooldown_ms": 1100,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "reedline_slinger",
+    "name": "Reedline Slinger",
+    "archetype": "ranged",
+    "threat": "Lobs stones from the reeds at whoever stands together",
+    "specializations": [
+      {
+        "id": "skipping_slinger",
+        "name": "Skipping",
+        "text": "Its stones skip on to the nearest other hero within 2 hexes of its target.",
+        "mod": {
+          "on": [
+            {
+              "slot": "basic_attack",
+              "add_effects": [
+                {
+                  "type": "damage",
+                  "amount": 0,
+                  "scaling": {
+                    "atk": 6000
+                  },
+                  "target": "enemy_near_target",
+                  "within_hexes": 2
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "mudslinger",
+        "name": "Mudslinger",
+        "text": "Where its stones land, the ground turns to mud for a while, slowing heroes within 1 hex.",
+        "mod": {
+          "on": [
+            {
+              "slot": "basic_attack",
+              "add_effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 1
+                  },
+                  "anchor": "target",
+                  "duration_ms": 3000,
+                  "every_ms": 1000,
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "apply_status",
+                      "status": "slow",
+                      "duration_ms": 1000,
+                      "target": "target"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "kit": {
+      "stats": {
+        "hp": 280,
+        "atk": 20,
+        "def": 2,
+        "speed": 2,
+        "range": 4
+      },
+      "traits": [
+        "swims",
+        "hop_away"
+      ],
+      "hop_cooldown_ms": 4000,
+      "basic_attack": {
+        "id": "reed_stone",
+        "name": "Reed Stone",
+        "text": "Lobs a stone at its target from up to 4 hexes away; it lands a moment later on everyone within 1 hex.",
+        "cooldown_ms": 1600,
+        "effects": [
+          {
+            "type": "area",
+            "shape": {
+              "kind": "circle",
+              "radius": 1
+            },
+            "anchor": "target",
+            "warning_ms": 600,
+            "hits": "enemies",
+            "effects": [
+              {
+                "type": "damage",
+                "amount": 0,
+                "target": "target",
+                "scaling": {
+                  "atk": 10000
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "tidecaller",
+    "name": "Tidecaller",
+    "archetype": "caster",
+    "threat": "Floods the ground under your largest group",
+    "specializations": [
+      {
+        "id": "undertow_tidecaller",
+        "name": "Undertow",
+        "text": "Its flood pulls every hero in it a hex toward the middle as it lands.",
+        "mod": {
+          "on": [
+            {
+              "slot": "signature",
+              "add_effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 2
+                  },
+                  "anchor": "target",
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "pull",
+                      "hexes": 1,
+                      "toward": "area",
+                      "target": "target"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "stilling_tidecaller",
+        "name": "Stilling",
+        "text": "Heroes standing in its flood gain no mana while they stand there.",
+        "mod": {
+          "on": [
+            {
+              "slot": "signature",
+              "add_effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 2
+                  },
+                  "anchor": "target",
+                  "duration_ms": 6000,
+                  "every_ms": 1000,
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "apply_status",
+                      "status": "silence",
+                      "duration_ms": 1000,
+                      "target": "target"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "kit": {
+      "stats": {
+        "hp": 320,
+        "atk": 18,
+        "def": 2,
+        "speed": 2,
+        "range": 4
+      },
+      "mana": {
+        "max": 60,
+        "per_attack": 10,
+        "regen_per_s": 4
+      },
+      "basic_attack": {
+        "id": "tide_bolt",
+        "name": "Tide Bolt",
+        "text": "Throws a bolt of brine at its target from up to 4 hexes away.",
+        "cooldown_ms": 1300,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "signature": {
+        "id": "flood_call",
+        "name": "Flood Call",
+        "text": "Floods the ground within 2 hexes of your largest group within 6 hexes for a while: water while it lasts.",
+        "trigger": {
+          "kind": "mana"
+        },
+        "targeting": "largest_group",
+        "max_range": 6,
+        "effects": [
+          {
+            "type": "flood",
+            "mode": "circle",
+            "radius": 2,
+            "duration_ms": 6000
+          }
+        ]
+      },
+      "passives": [
+        {
+          "id": "drowning_bolt",
+          "name": "Drowning Bolt",
+          "kind": "aura",
+          "text": "Its bolts hit heroes standing in water harder.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 13000,
+            "vs": {
+              "on_water": true
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "drowned_warden",
+    "name": "Drowned Warden",
+    "archetype": "anchor",
+    "threat": "Holds the pool, and the pool holds it up",
+    "specializations": [
+      {
+        "id": "tidebound_warden",
+        "name": "Tidebound",
+        "text": "Its taunt reaches every hero within 3 hexes.",
+        "mod": {
+          "on": [
+            {
+              "slot": "signature",
+              "radius_add": 1
+            }
+          ]
+        }
+      },
+      {
+        "id": "silted_warden",
+        "name": "Silted",
+        "text": "Where it walks, it leaves water behind for a while: a pool that follows it.",
+        "mod": {
+          "passives": [
+            {
+              "id": "silt",
+              "name": "Silt",
+              "kind": "ability",
+              "text": "Every second, the ground under it floods for a while.",
+              "effects": [
+                {
+                  "trigger": "on_interval",
+                  "interval_ms": 1000,
+                  "type": "flood",
+                  "mode": "circle",
+                  "radius": 0,
+                  "anchor": "self",
+                  "duration_ms": 5000
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "kit": {
+      "stats": {
+        "hp": 620,
+        "atk": 12,
+        "def": 20,
+        "speed": 1,
+        "range": 1
+      },
+      "traits": [
+        "engage"
+      ],
+      "mana": {
+        "max": 60,
+        "per_attack": 4,
+        "per_10_damage_taken": 3
+      },
+      "basic_attack": {
+        "id": "drowned_fist",
+        "name": "Drowned Fist",
+        "text": "Pounds the hero in front of it.",
+        "cooldown_ms": 1400,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "signature": {
+        "id": "pool_call",
+        "name": "Pool Call",
+        "text": "Taunts every hero within 2 hexes of it, so they turn on it instead.",
+        "trigger": {
+          "kind": "mana"
+        },
+        "targeting": "self",
+        "effects": [
+          {
+            "type": "area",
+            "shape": {
+              "kind": "circle",
+              "radius": 2
+            },
+            "anchor": "self",
+            "hits": "enemies",
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "taunt",
+                "target": "target"
+              }
+            ]
+          }
+        ]
+      },
+      "passives": [
+        {
+          "id": "tide_mend",
+          "name": "Tide Mend",
+          "kind": "ability",
+          "text": "While it stands in water, it heals a little every second.",
+          "effects": [
+            {
+              "trigger": "on_interval",
+              "interval_ms": 1000,
+              "holder": {
+                "on_water": true
+              },
+              "type": "heal",
+              "amount_bp_of_max_hp": 200,
+              "target": "self"
+            }
+          ]
+        },
+        {
+          "id": "tide_ward",
+          "name": "Tide Ward",
+          "kind": "aura",
+          "text": "While it stands in water, it takes less damage.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_reduced_bp",
+            "value": 2000,
+            "while": "state",
+            "state": {
+              "on_water": true
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "drowned_bellringer",
+    "name": "Drowned Bellringer",
+    "archetype": "summoner",
+    "threat": "Rings up the drowned from the water",
+    "specializations": [
+      {
+        "id": "tolling_bellringer",
+        "name": "Tolling",
+        "text": "Each ring also heals its Drowned Thralls.",
+        "mod": {
+          "drops_passives": [
+            "ring"
+          ],
+          "passives": [
+            {
+              "id": "tolling_ring",
+              "name": "Tolling Ring",
+              "kind": "ability",
+              "text": "Every so often it rings: a Drowned Thrall climbs out of the water nearest a hero (no more than four stand at once), and its thralls heal.",
+              "effects": [
+                {
+                  "trigger": "on_interval",
+                  "interval_ms": 8000,
+                  "type": "summon",
+                  "kit": "drowned_thrall",
+                  "count": 1,
+                  "placement": "water",
+                  "max_standing": 4
+                },
+                {
+                  "trigger": "on_interval",
+                  "interval_ms": 8000,
+                  "type": "heal",
+                  "amount_bp_of_max_hp": 2000,
+                  "target": "all_allies",
+                  "only": {
+                    "kits": [
+                      "drowned_thrall"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "deep_bell",
+        "name": "Deep",
+        "text": "It rings less often, but two thralls rise each time.",
+        "mod": {
+          "drops_passives": [
+            "ring"
+          ],
+          "passives": [
+            {
+              "id": "deep_ring",
+              "name": "Deep Ring",
+              "kind": "ability",
+              "text": "Now and then it rings, and two Drowned Thralls climb out of the water nearest a hero; no more than four stand at once.",
+              "effects": [
+                {
+                  "trigger": "on_interval",
+                  "interval_ms": 12000,
+                  "type": "summon",
+                  "kit": "drowned_thrall",
+                  "count": 2,
+                  "placement": "water",
+                  "max_standing": 4
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "kit": {
+      "stats": {
+        "hp": 380,
+        "atk": 14,
+        "def": 2,
+        "speed": 1,
+        "range": 4
+      },
+      "basic_attack": {
+        "id": "knell",
+        "name": "Knell",
+        "text": "Strikes its target with a toll from up to 4 hexes away.",
+        "cooldown_ms": 1500,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "passives": [
+        {
+          "id": "ring",
+          "name": "Ring",
+          "kind": "ability",
+          "text": "Every so often it rings, and a Drowned Thrall climbs out of the water nearest a hero; no more than four stand at once.",
+          "effects": [
+            {
+              "trigger": "on_interval",
+              "interval_ms": 8000,
+              "type": "summon",
+              "kit": "drowned_thrall",
+              "count": 1,
+              "placement": "water",
+              "max_standing": 4
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "drowned_thrall",
+    "name": "Drowned Thrall",
+    "archetype": "swarm",
+    "threat": "Climbs out of the water, weak but quick to hurt",
+    "kit": {
+      "stats": {
+        "hp": 42,
+        "atk": 16,
+        "speed": 2,
+        "range": 1
+      },
+      "traits": [
+        "swims"
+      ],
+      "basic_attack": {
+        "id": "thrall_claw",
+        "name": "Thrall Claw",
+        "text": "Claws the hero in front of it.",
+        "cooldown_ms": 1000,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "glass_shambler",
+    "name": "Glass Shambler",
+    "archetype": "splitter",
+    "threat": "Breaks into two when it breaks",
+    "specializations": [
+      {
+        "id": "jagged_glass",
+        "name": "Jagged",
+        "text": "Its shards hit harder.",
+        "mod": {
+          "drops_passives": [
+            "shatter"
+          ],
+          "passives": [
+            {
+              "id": "jagged_shatter",
+              "name": "Jagged Shatter",
+              "kind": "ability",
+              "text": "When it falls, it breaks into two jagged shards that hit harder.",
+              "effects": [
+                {
+                  "trigger": "on_fall",
+                  "type": "summon",
+                  "kit": "jagged_shard",
+                  "count": 2,
+                  "placement": "adjacent"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "clouded_glass",
+        "name": "Clouded",
+        "text": "Its shards are born hidden, Stealthed for a moment.",
+        "mod": {
+          "drops_passives": [
+            "shatter"
+          ],
+          "passives": [
+            {
+              "id": "clouded_shatter",
+              "name": "Clouded Shatter",
+              "kind": "ability",
+              "text": "When it falls, it breaks into two clouded shards, Stealthed as they're born.",
+              "effects": [
+                {
+                  "trigger": "on_fall",
+                  "type": "summon",
+                  "kit": "clouded_shard",
+                  "count": 2,
+                  "placement": "adjacent"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "kit": {
+      "stats": {
+        "hp": 560,
+        "atk": 18,
+        "def": 10,
+        "speed": 1,
+        "range": 1
+      },
+      "basic_attack": {
+        "id": "glass_slam",
+        "name": "Glass Slam",
+        "text": "Slams the hero in front of it.",
+        "cooldown_ms": 1500,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "passives": [
+        {
+          "id": "shatter",
+          "name": "Shatter",
+          "kind": "ability",
+          "text": "When it falls, it breaks into two shards that fight on.",
+          "effects": [
+            {
+              "trigger": "on_fall",
+              "type": "summon",
+              "kit": "glass_shard",
+              "count": 2,
+              "placement": "adjacent"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "glass_shard",
+    "name": "Glass Shard",
+    "archetype": "swarm",
+    "threat": "A broken piece of a Glass Shambler, still fighting",
+    "kit": {
+      "stats": {
+        "hp": 224,
+        "atk": 18,
+        "def": 6,
+        "speed": 2,
+        "range": 1
+      },
+      "basic_attack": {
+        "id": "shard_cut",
+        "name": "Shard Cut",
+        "text": "Cuts the hero in front of it.",
+        "cooldown_ms": 1100,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "jagged_shard",
+    "name": "Jagged Shard",
+    "archetype": "swarm",
+    "threat": "A broken piece of a Jagged Shambler, sharper than most",
+    "kit": {
+      "stats": {
+        "hp": 224,
+        "atk": 23,
+        "def": 6,
+        "speed": 2,
+        "range": 1
+      },
+      "basic_attack": {
+        "id": "shard_cut",
+        "name": "Shard Cut",
+        "text": "Cuts the hero in front of it.",
+        "cooldown_ms": 1100,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "clouded_shard",
+    "name": "Clouded Shard",
+    "archetype": "swarm",
+    "threat": "A broken piece of a Clouded Shambler, hidden as it's born",
+    "kit": {
+      "stats": {
+        "hp": 224,
+        "atk": 18,
+        "def": 6,
+        "speed": 2,
+        "range": 1
+      },
+      "basic_attack": {
+        "id": "shard_cut",
+        "name": "Shard Cut",
+        "text": "Cuts the hero in front of it.",
+        "cooldown_ms": 1100,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "passives": [
+        {
+          "id": "clouded",
+          "name": "Clouded",
+          "kind": "ability",
+          "text": "It's born hidden: Stealthed for a moment.",
+          "effects": [
+            {
+              "trigger": "on_interval",
+              "interval_ms": 50,
+              "once": true,
+              "type": "apply_status",
+              "status": "stealth",
+              "duration_ms": 2000,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "glass_matron",
+    "name": "The Glass Matron",
+    "archetype": "splitter",
+    "threat": "Her shards reform in the water: hold the fight on dry ground",
+    "kit": {
+      "stats": {
+        "hp": 1500,
+        "atk": 24,
+        "def": 14,
+        "speed": 1,
+        "range": 1
+      },
+      "basic_attack": {
+        "id": "glass_slam",
+        "name": "Glass Slam",
+        "text": "Slams the hero in front of it.",
+        "cooldown_ms": 1500,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "passives": [
+        {
+          "id": "great_shatter",
+          "name": "Great Shatter",
+          "kind": "ability",
+          "text": "When she falls, she breaks into two Matron's Shards; one that falls on water reforms into a Glass Shambler.",
+          "effects": [
+            {
+              "trigger": "on_fall",
+              "type": "summon",
+              "kit": "matron_shard",
+              "count": 2,
+              "placement": "adjacent"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "brood_shambler",
+    "name": "Brood Shambler",
+    "archetype": "splitter",
+    "threat": "The Matron's brood: its shards reform in the water",
+    "kit": {
+      "stats": {
+        "hp": 520,
+        "atk": 18,
+        "def": 10,
+        "speed": 1,
+        "range": 1
+      },
+      "basic_attack": {
+        "id": "glass_slam",
+        "name": "Glass Slam",
+        "text": "Slams the hero in front of it.",
+        "cooldown_ms": 1500,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "passives": [
+        {
+          "id": "brood_shatter",
+          "name": "Brood Shatter",
+          "kind": "ability",
+          "text": "When it falls, it breaks into two Matron's Shards; one that falls on water reforms into a Glass Shambler.",
+          "effects": [
+            {
+              "trigger": "on_fall",
+              "type": "summon",
+              "kit": "matron_shard",
+              "count": 2,
+              "placement": "adjacent"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "matron_shard",
+    "name": "Matron's Shard",
+    "archetype": "swarm",
+    "threat": "Falls on water, and reforms",
+    "kit": {
+      "stats": {
+        "hp": 240,
+        "atk": 18,
+        "def": 6,
+        "speed": 2,
+        "range": 1
+      },
+      "basic_attack": {
+        "id": "shard_cut",
+        "name": "Shard Cut",
+        "text": "Cuts the hero in front of it.",
+        "cooldown_ms": 1100,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "passives": [
+        {
+          "id": "reform",
+          "name": "Reform",
+          "kind": "rise",
+          "text": "If it falls on water, it reforms into a Glass Shambler a few seconds later.",
+          "times": 1,
+          "after_ms": 4000,
+          "hp_pct": 100,
+          "if": {
+            "on_water": true
+          },
+          "as": "glass_shambler"
+        }
+      ]
+    }
+  },
+  {
+    "id": "choir_tidecaller",
+    "name": "Choir Tidecaller",
+    "archetype": "caster",
+    "threat": "Leads the Tide Choir: the water rises while it stands",
+    "kit": {
+      "stats": {
+        "hp": 900,
+        "atk": 22,
+        "def": 6,
+        "speed": 2,
+        "range": 4
+      },
+      "mana": {
+        "max": 60,
+        "per_attack": 10,
+        "regen_per_s": 4
+      },
+      "basic_attack": {
+        "id": "tide_bolt",
+        "name": "Tide Bolt",
+        "text": "Throws a bolt of brine at its target from up to 4 hexes away.",
+        "cooldown_ms": 1300,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "signature": {
+        "id": "flood_call",
+        "name": "Flood Call",
+        "text": "Floods the ground within 2 hexes of your largest group within 6 hexes for a while: water while it lasts.",
+        "trigger": {
+          "kind": "mana"
+        },
+        "targeting": "largest_group",
+        "max_range": 6,
+        "effects": [
+          {
+            "type": "flood",
+            "mode": "circle",
+            "radius": 2,
+            "duration_ms": 6000
+          }
+        ]
+      },
+      "passives": [
+        {
+          "id": "drowning_bolt",
+          "name": "Drowning Bolt",
+          "kind": "aura",
+          "text": "Its bolts hit heroes standing in water harder.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 13000,
+            "vs": {
+              "on_water": true
+            }
+          }
+        },
+        {
+          "id": "rising_tide",
+          "name": "Rising Tide",
+          "kind": "ability",
+          "text": "Every so often the water rises: every pool spreads a hex outward.",
+          "effects": [
+            {
+              "trigger": "on_interval",
+              "interval_ms": 15000,
+              "type": "flood",
+              "mode": "spread"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "mournwater",
+    "name": "The Mournwater",
+    "archetype": "caster",
+    "threat": "The drowned heart of the Glassmere: stay off the water, then thin the crowd, then race the flood",
+    "kit": {
+      "stats": {
+        "hp": 3200,
+        "atk": 28,
+        "def": 8,
+        "speed": 1,
+        "range": 6
+      },
+      "traits": [
+        "swims"
+      ],
+      "basic_attack": {
+        "id": "mere_lash",
+        "name": "Mere Lash",
+        "text": "Lashes her target with black water from up to 6 hexes away.",
+        "cooldown_ms": 1500,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "passives": [
+        {
+          "id": "undertow",
+          "name": "Undertow",
+          "kind": "ability",
+          "text": "Every so often, every hero standing on water is pulled a hex toward her.",
+          "effects": [
+            {
+              "type": "pull",
+              "hexes": 1,
+              "target": "all_enemies",
+              "only": {
+                "on_water": true
+              },
+              "trigger": "on_interval",
+              "interval_ms": 8000
+            }
+          ]
+        }
+      ],
+      "phases": [
+        {
+          "id": "the_mere_drains",
+          "name": "The Mere Drains",
+          "text": "Below 60% HP the water drains back round her, she rises and walks out, and Glass Shamblers crawl from the drained ground.",
+          "below_hp_bp": 6000,
+          "signature": {
+            "id": "drain",
+            "name": "Drain",
+            "text": "The water drains away but for the hexes within 1 hex of her.",
+            "trigger": {
+              "kind": "fight_start"
+            },
+            "targeting": "self",
+            "effects": [
+              {
+                "type": "flood",
+                "mode": "drain",
+                "radius": 1
+              }
+            ]
+          },
+          "passives": [
+            {
+              "id": "risen",
+              "name": "Risen",
+              "kind": "aura",
+              "text": "She rises and walks out: she reaches only 1 hex, so she walks in.",
+              "aura": {
+                "target": "holder",
+                "stat": "range",
+                "value": -5
+              }
+            },
+            {
+              "id": "shambling_ground",
+              "name": "Shambling Ground",
+              "kind": "ability",
+              "text": "Every so often a Glass Shambler crawls up beside her from the drained ground.",
+              "effects": [
+                {
+                  "trigger": "on_interval",
+                  "interval_ms": 10000,
+                  "type": "summon",
+                  "kit": "glass_shambler",
+                  "count": 1,
+                  "placement": "adjacent"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "the_flood",
+          "name": "The Flood",
+          "text": "Below 25% HP everything but the rocks floods, Undertow pulls more often, and the rift closes early.",
+          "below_hp_bp": 2500,
+          "signature": {
+            "id": "the_flood",
+            "name": "The Flood",
+            "text": "Everything but the rocks floods, and the rift closes early.",
+            "trigger": {
+              "kind": "fight_start"
+            },
+            "targeting": "self",
+            "effects": [
+              {
+                "type": "flood",
+                "mode": "all"
+              },
+              {
+                "type": "start_collapse"
+              }
+            ]
+          },
+          "passives": [
+            {
+              "id": "undertow",
+              "name": "Undertow",
+              "kind": "ability",
+              "text": "More often now, every hero standing on water is pulled a hex toward her.",
+              "effects": [
+                {
+                  "type": "pull",
+                  "hexes": 1,
+                  "target": "all_enemies",
+                  "only": {
+                    "on_water": true
+                  },
+                  "trigger": "on_interval",
+                  "interval_ms": 6000
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
   }
 ]

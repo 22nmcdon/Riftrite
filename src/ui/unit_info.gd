@@ -15,7 +15,8 @@ extends RefCounted
 ## During a fight, live_text() and recent_lines() add the unit's numbers now
 ## and its last few log lines.
 
-const TRAIT_NAMES: Dictionary[String, String] = {"engage": "Engage", "flying": "Flying", "hop_away": "Hop away", "fires_moving": "Fires moving", "inert": "Inert"}
+const TRAIT_NAMES: Dictionary[String, String] = {"engage": "Engage", "flying": "Flying", "hop_away": "Hop away", "fires_moving": "Fires moving", "inert": "Inert",
+	"swims": "Swims", "submerges": "Submerges"}
 const EVENT_WORDS: Dictionary[int, String] = {
 	EffectDef.Trigger.ON_ABILITY: "ability", EffectDef.Trigger.ON_BASIC_ATTACK: "basic attack",
 	EffectDef.Trigger.ON_HOLDER_CRIT: "crit", EffectDef.Trigger.ON_SHIELDED: "Shield taken",
@@ -98,6 +99,10 @@ static func trait_text(trait_id: String, who: String) -> String:
 			return "While walking, %s shoots the nearest foe in reach without stopping." % who
 		"inert":
 			return "%s never moves or attacks: only what it does on its own counts." % who.capitalize()
+		"swims":
+			return "Water doesn't slow %s." % who
+		"submerges":
+			return "On water %s is under it and can't be targeted, until it surfaces to attack." % who
 	return ""
 
 
@@ -109,6 +114,8 @@ static func trait_numbers(trait_id: String, kit: UnitDef, tuning: TuningDef) -> 
 			return "At most once every %s" % seconds(kit.hop_cooldown_ticks)
 		"fires_moving":
 			return "Basic attack only, on its usual cooldown"
+		"submerges":
+			return "Up for %s after each basic attack" % seconds(Water.SURFACE_TICKS)
 	return ""
 
 

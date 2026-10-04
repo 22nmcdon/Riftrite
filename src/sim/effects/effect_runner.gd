@@ -273,6 +273,11 @@ static func run_event(sim: CombatSim, unit: UnitState, ability: AbilityDef, sour
 	if effect.type == EffectDef.Type.FLOOD:
 		Water.flood(sim, unit, source, effect, other if other != null else unit.target)
 		return
+	if effect.type == EffectDef.Type.SUMMON and not unit.alive:
+		# From where it fell (phase 8 part 3, the Glass Shambler's Shatter):
+		# a summon aims at no unit, so a fallen one still makes it.
+		Summons.summon(sim, unit, source, effect, unit.target)
+		return
 	var hit: Hit = null
 	if other != null:
 		hit = Hit.new()

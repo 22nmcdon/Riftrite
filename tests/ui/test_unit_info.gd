@@ -47,7 +47,7 @@ func _numbers(kit: UnitDef, who: String = "it") -> Array[String]:
 
 func test_every_ability_and_passive_has_its_sentence() -> void:
 	var kits: Dictionary[String, UnitDef] = _kits()
-	assert_eq(kits.size(), 17)
+	assert_eq(kits.size(), 32)
 	for id: String in kits:
 		for line: UnitInfo.Line in UnitInfo.lines(kits[id], "it", _content):
 			assert_false(line.text.is_empty(), "%s: %s" % [id, line.name])
@@ -65,7 +65,7 @@ func test_a_sentence_names_every_reach() -> void:
 				var named := RegEx.create_from_string("\\b%d hex" % reach)
 				assert_not_null(named.search(ability[2]), "%s's %s names %s (Decision 5): %s" % [id, ability[0], UnitInfo.hexes(reach), ability[2]])
 				checked += 1
-	assert_eq(checked, 23, "every reach in the Act 1 kits")
+	assert_eq(checked, 32, "every reach in the Act 1 and Act 2 kits")
 
 
 func test_what_counts_as_a_reach() -> void:
@@ -194,7 +194,7 @@ func test_the_numbers_of_every_other_piece() -> void:
 
 
 func test_the_tactics_numbers_lines() -> void:
-	assert_eq(UnitInfo.tactic_numbers(_content.tactics["casters_first"]), "Casters and supports first · +20% damage to them from its basic attack and signature")
+	assert_eq(UnitInfo.tactic_numbers(_content.tactics["casters_first"]), "Casters and supports and summoners first · +20% damage to them from its basic attack and signature")
 	assert_eq(UnitInfo.tactic_numbers(_content.tactics["hold_ground"]), "Holds until an enemy is within 2 hexes · +20% attack speed while it holds")
 	assert_eq(UnitInfo.tactic_numbers(_content.tactics["wait_to_heal"]), "Waits until an ally is below 60% HP · +15% healing from its signature")
 	assert_eq(UnitInfo.tactic_numbers(_content.tactics["plant_feet"]), "Stops while an enemy is within 2 hexes · +10 DEF while it does")

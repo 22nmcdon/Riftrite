@@ -42,6 +42,9 @@ static func summon(sim: CombatSim, unit: UnitState, source: EffectSource, effect
 			_log_dropped(sim, source, kit, "its side is full")
 			continue
 		var summoned: UnitState = UnitState.make_summon(kit, unit.side, sim.next_unit_id(kit.id), sim.units.size(), sim.tuning.unit_radius)
+		if effect.max_standing > 0 and _standing_of(sim, unit.side, kit.id) >= effect.max_standing:
+			_log_dropped(sim, source, kit, "enough stand")
+			continue
 		if effect.placement == EffectDef.Placement.WATER and (not sim.has_water or sim.water.hexes.is_empty()):
 			_log_dropped(sim, source, kit, "no water")
 			continue
@@ -146,6 +149,15 @@ static func _edge_spots(sim: CombatSim, radius: int, near: Vector2i) -> Array[Ve
 	for key: int in keys:
 		spots.append(round_spots[key % 65536])
 	return spots
+
+
+## How many standing units of `kit_id` are on `side`.
+static func _standing_of(sim: CombatSim, side: EffectSource.Team, kit_id: String) -> int:
+	var count: int = 0
+	for unit: UnitState in sim.units:
+		if unit.alive and unit.side == side and unit.def.id == kit_id:
+			count += 1
+	return count
 
 
 static func _log_dropped(sim: CombatSim, source: EffectSource, kit: UnitDef, why: String) -> void:

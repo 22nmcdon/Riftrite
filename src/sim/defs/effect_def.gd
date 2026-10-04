@@ -94,6 +94,8 @@ extends RefCounted
 ##     {"type": "summon", "kit": "rift_pup", "count": 2, "placement": "edges", "near": "target"}
 ##     {"type": "summon", "kit": "rift_pup", "placement": "adjacent"}
 ##     {"type": "summon", "kit": "rift_pup", "placement": "hexes", "hexes": [[0, 6], [7, 6]]}
+##   phase 8 part 3: "placement": "water" (Summons), and "max_standing": no
+##   more once that many of its kit stand on its side (dropped, "enough stand")
 ##     edges:    count (default 1) free spots along the safe ground's edge,
 ##               nearest first to the unit ("near": "self", the default) or
 ##               to its target ("near": "target")
@@ -791,6 +793,9 @@ static func _read_summon(def: EffectDef, reader: DataReader) -> void:
 		def.count = reader.opt_int("count", 1, 1)
 	if def.placement == Placement.EDGES:
 		def.near_target = reader.opt_string_choice("near", "self", NEAR_NAMES) == "target"
+	# Phase 8 part 3 (the Drowned Bellringer): no more once that many of its
+	# kit stand on the summoner's side.
+	def.max_standing = reader.opt_int("max_standing", 0, 0)
 
 
 ## Checks the trigger is allowed here and reads its extra fields.

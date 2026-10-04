@@ -9,9 +9,10 @@ extends RefCounted
 ##    "kit": {...a UnitDef, without id or name...},
 ##    "specializations": [...up to two SpecializationDefs...]}  (phase 8 part 3)
 
-enum Archetype { SWARM, FLANKER, CASTER, RANGED, ANCHOR, CHARGER, DISRUPTOR, SUPPORT }
+## Phase 8 part 3 (Act 2) adds the summoner and the splitter.
+enum Archetype { SWARM, FLANKER, CASTER, RANGED, ANCHOR, CHARGER, DISRUPTOR, SUPPORT, SUMMONER, SPLITTER }
 
-const ARCHETYPE_NAMES: Array[String] = ["swarm", "flanker", "caster", "ranged", "anchor", "charger", "disruptor", "support"]
+const ARCHETYPE_NAMES: Array[String] = ["swarm", "flanker", "caster", "ranged", "anchor", "charger", "disruptor", "support", "summoner", "splitter"]
 
 var id: String
 var name: String

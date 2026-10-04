@@ -49,7 +49,9 @@ func _moved(entry: LogEntry) -> int:
 
 func test_the_enemies_read_as_designed() -> void:
 	assert_eq(_content.enemy_ids, ["rift_pup", "ashling", "rift_hound", "cinder_moth", "hollow_archer", "rift_worn_sentinel", "cairn_guardian", "bog_lurker", "gloam_witch",
-		"hound_alpha", "hunt_hound", "gloam_totem", "ash_hound", "old_mother_ash"])
+		"hound_alpha", "hunt_hound", "gloam_totem", "ash_hound", "old_mother_ash",
+		"mire_eel", "reedline_slinger", "tidecaller", "drowned_warden", "drowned_bellringer", "drowned_thrall", "glass_shambler", "glass_shard",
+		"jagged_shard", "clouded_shard", "glass_matron", "brood_shambler", "matron_shard", "choir_tidecaller", "mournwater"])
 	var rows: Array = _content.enemy_ids.map(func(enemy_id: String) -> Array:
 		var enemy: EnemyDef = _content.enemies[enemy_id]
 		var stats: UnitStats = enemy.kit.stats
@@ -71,6 +73,22 @@ func test_the_enemies_read_as_designed() -> void:
 		["support", 520, 0, 10, 0, 1, ["inert"]],
 		["flanker", 520, 20, 6, 3, 1, []],
 		["caster", 2600, 26, 8, 1, 4, []],
+		# Act 2, the Glassmere (phase 8 part 3, 8c-4a; placeholders until 8c-4c).
+		["flanker", 300, 22, 4, 3, 1, ["swims", "submerges"]],
+		["ranged", 280, 20, 2, 2, 4, ["swims", "hop_away"]],
+		["caster", 320, 18, 2, 2, 4, []],
+		["anchor", 620, 12, 20, 1, 1, ["engage"]],
+		["summoner", 380, 14, 2, 1, 4, []],
+		["swarm", 42, 16, 0, 2, 1, ["swims"]],
+		["splitter", 560, 18, 10, 1, 1, []],
+		["swarm", 224, 18, 6, 2, 1, []],
+		["swarm", 224, 23, 6, 2, 1, []],
+		["swarm", 224, 18, 6, 2, 1, []],
+		["splitter", 1500, 24, 14, 1, 1, []],
+		["splitter", 520, 18, 10, 1, 1, []],
+		["swarm", 240, 18, 6, 2, 1, []],
+		["caster", 900, 22, 6, 2, 4, []],
+		["caster", 3200, 28, 8, 1, 6, ["swims"]],
 	])
 	assert_eq((_content.enemies["rift_hound"] as EnemyDef).threat, "Pounces on your weakest back-liner")
 	assert_true(_content.enemy_ids.all(func(enemy_id: String) -> bool: return not (_content.enemies[enemy_id] as EnemyDef).threat.is_empty()))
