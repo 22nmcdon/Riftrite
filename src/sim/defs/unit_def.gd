@@ -222,8 +222,9 @@ func condition_status_ids() -> Array[String]:
 				if condition != null:
 					found.append_array(condition.statuses)
 	for effect: EffectDef in all_effects():
-		if effect.vs != null:
-			found.append_array(effect.vs.statuses)
+		for condition: UnitCondition in [effect.vs, effect.only]:
+			if condition != null:
+				found.append_array(condition.statuses)
 		if not effect.stacks_of.is_empty():
 			found.append(effect.stacks_of)
 		found.append_array(effect.cleanse_statuses)
@@ -247,7 +248,7 @@ func uses_front_most() -> bool:
 		if part.kind == PartDef.Kind.AURA:
 			conditions.append_array([part.aura.vs, part.aura.state])
 	for effect: EffectDef in all_effects():
-		conditions.append_array([effect.vs, effect.holder])
+		conditions.append_array([effect.vs, effect.holder, effect.only])
 	for ability: AbilityDef in [basic_attack, signature]:
 		if ability != null:
 			conditions.append(ability.prefer)

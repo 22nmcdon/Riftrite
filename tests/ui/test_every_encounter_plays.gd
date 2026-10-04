@@ -56,6 +56,7 @@ const FORMS: Dictionary[LogEntry.Kind, String] = {
 	LogEntry.Kind.RESISTED: "\"Resisted\" over the hero",
 	LogEntry.Kind.DODGED: "\"Miss\" over the unit",
 	LogEntry.Kind.ARRIVE: "the token appears, with a pulse and \"Arrives\"",
+	LogEntry.Kind.WATER: "the water's hexes change on the ground (from the sim's water)",
 }
 ## What the board must have shown at some frame, for each kind a fight
 ## produced (the rest are checked elsewhere, or read from the unit's state).

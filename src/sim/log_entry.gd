@@ -63,6 +63,10 @@ enum Kind {
 	## Phase 8 part 2 (The Hearthkeeper): target gains `amount` max HP (and
 	## HP) for the fight; source: what gave it.
 	MAX_HP_UP,
+	## Phase 8 part 3 (Water): the water changes; note: how ("floods 7 hexes
+	## for 6s", "recedes"); amount: how many hexes are water now; to_pos:
+	## where; source: the flood's.
+	WATER,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -230,6 +234,8 @@ func to_text() -> String:
 			return line + "%s enters %s" % [target, note]
 		Kind.DEED_LEVEL:
 			return line + "%s reaches %s" % [target, note]
+		Kind.WATER:
+			return line + "%s %s (%d water hexes)" % [source_text(), note, amount]
 		Kind.MOVE:
 			return line + "%s walks from %s toward %s%s" % [source_unit, _point(from_pos), _point(to_pos), "" if note.is_empty() else " (%s)" % note]
 		Kind.STOP:

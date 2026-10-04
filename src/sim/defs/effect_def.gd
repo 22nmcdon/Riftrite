@@ -48,7 +48,16 @@ extends RefCounted
 ##                 that gave it is
 ##   knockback:    hexes; pushes the target straight away from the unit
 ##   pull:         hexes; drags the target straight toward the unit, stopping
-##                 when it touches
+##                 when it touches. Phase 8 part 3: "toward": "water" (the
+##                 water hex nearest the target, stopping on its center) or
+##                 "area" (an area's own pull: its middle)
+##   flood:        phase 8 part 3 (Water; no "target" key): "mode" circle
+##                 (the hexes within "radius" of the ability's target, or
+##                 of the unit with "anchor": "self"; for "duration_ms", or
+##                 for good without it), spread (every pool one hex
+##                 wider), drain (all the water gone but the hexes within
+##                 "radius" of the unit), or all (every hex but the rocks).
+##                 Logged as WATER
 ##   leap:         max_hexes, optional land_ms (tuning's leap_land_ms); the
 ##                 unit jumps to a free spot touching its target
 ##   charge:       hexes, optional knockback (hexes); the unit runs straight
@@ -233,7 +242,12 @@ enum Trigger {
 	ON_HOLDER_HIT, ON_SHIELD_BROKEN, ON_ALLY_ABILITY, ON_STATUS_ENDED, ON_LIFESTEAL, ON_KNOCKBACK, ON_GUARD,
 	ON_BELOW_HP, ON_CHARGED, ON_ENEMY_FELL, ON_ARRIVE, ON_ALLY_SHIELD_BROKEN, ON_WALL_BLOCK, ON_RISE,
 }
-enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS, HOP }
+enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS, HOP, FLOOD }
+## A pull's way (phase 8 part 3): toward the unit, the nearest water, or
+## its area's middle.
+enum Toward { UNIT, WATER, AREA }
+## A flood's mode (phase 8 part 3; Water).
+enum FloodMode { CIRCLE, SPREAD, DRAIN, ALL }
 enum Placement { EDGES, ADJACENT, HEXES }
 enum Anchor { TARGET, SELF, TARGET_DIRECTION }
 enum Hits { ENEMIES, ALLIES, ALL, OTHER_ALLIES }
@@ -314,10 +328,12 @@ const REACH_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_TARGET, Target.ALLIES_
 ## The targets around the unit an event names (they need one).
 const NAMED_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_NAMED, Target.ENEMY_NEAR_NAMED]
 const SIDE_NAMES: Array[String] = ["both", "enemies", "allies"]
-const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain", "knockback", "pull", "leap", "charge", "area", "start_collapse", "summon", "gain_mana", "snare", "wall", "extend_status", "hop"]
+const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain", "knockback", "pull", "leap", "charge", "area", "start_collapse", "summon", "gain_mana", "snare", "wall", "extend_status", "hop", "flood"]
+const TOWARD_NAMES: Array[String] = ["unit", "water", "area"]
+const FLOOD_MODE_NAMES: Array[String] = ["circle", "spread", "drain", "all"]
 ## The types placed at the ability's target without a "target" key of their
 ## own (an area, a snare, a wall).
-const PLACED: Array[Type] = [Type.AREA, Type.SNARE, Type.WALL]
+const PLACED: Array[Type] = [Type.AREA, Type.SNARE, Type.WALL, Type.FLOOD]
 const PLACEMENT_NAMES: Array[String] = ["edges", "adjacent", "hexes"]
 const NEAR_NAMES: Array[String] = ["self", "target"]
 ## The types with no "target" key: they act from the unit itself.
@@ -372,6 +388,15 @@ var duration_ticks: int = 0
 var hexes: int = 0
 ## charge: how far it knocks back the enemy it hits (hexes; 0: not at all).
 var knockback_hexes: int = 0
+## pull (phase 8 part 3): which way.
+var toward: Toward = Toward.UNIT
+## flood (phase 8 part 3): its mode and radius (hexes); how long a circle
+## lasts is zone_ticks (0: for good); anchor (target or self).
+var flood_mode: FloodMode = FloodMode.CIRCLE
+var flood_radius: int = 0
+## all_enemies and all_allies (phase 8 part 3, Undertow): only the units
+## that meet it (null: all).
+var only: UnitCondition = null
 ## leap: how long the landing takes (-1: tuning's leap_land_ms).
 var land_ticks: int = -1
 ## area: its shape, where it goes, how long it's warned, whom it hits, and
@@ -528,7 +553,7 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 	var target_name: String = "target"
 	if UNTARGETED.has(def.type) and not type_name.is_empty():
 		target_name = "self"
-	elif type_name != "area" and type_name != "snare" and type_name != "wall":
+	elif type_name != "area" and type_name != "snare" and type_name != "wall" and type_name != "flood":
 		target_name = reader.req_choice("target", TARGET_NAMES)
 	def.target = maxi(TARGET_NAMES.find(target_name), 0) as Target
 
@@ -561,6 +586,17 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 					def.amount = reader.req_int("amount", 1)
 			Type.KNOCKBACK, Type.PULL:
 				def.hexes = reader.req_int("hexes", 1)
+				if def.type == Type.PULL and reader.has("toward"):
+					def.toward = maxi(TOWARD_NAMES.find(reader.req_choice("toward", TOWARD_NAMES)), 0) as Toward
+					if def.toward == Toward.AREA and not in_area:
+						reader.error("only an area's own pull goes \"toward\": \"area\"")
+			Type.FLOOD:
+				def.flood_mode = maxi(FLOOD_MODE_NAMES.find(reader.req_choice("mode", FLOOD_MODE_NAMES)), 0) as FloodMode
+				if def.flood_mode == FloodMode.CIRCLE or def.flood_mode == FloodMode.DRAIN:
+					def.flood_radius = reader.req_int("radius", 0, 7)
+				if def.flood_mode == FloodMode.CIRCLE:
+					def.anchor = maxi(ANCHOR_NAMES.find(reader.opt_string_choice("anchor", "target", ANCHOR_NAMES.slice(0, 2))), 0) as Anchor
+					def.zone_ticks = reader.opt_ticks("duration_ms", 0)
 			Type.LEAP:
 				def.hexes = reader.req_int("max_hexes", 1)
 				if reader.has("land_ms"):
@@ -633,6 +669,10 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				reader.error("\"scaling\" can't be combined with %s" % ("amount_bp_of_damage" if def.amount_bp_of_damage > 0 else "amount_bp_of_max_hp"))
 			_read_scaling(def, reader.req_object("scaling"))
 
+	if reader.has("only"):
+		def.only = UnitCondition.read(reader.req_object("only"))
+		if def.target != Target.ALL_ENEMIES and def.target != Target.ALL_ALLIES:
+			reader.error("only all_enemies and all_allies take \"only\"")
 	if def.target == Target.NEAREST_ENEMIES:
 		def.count = reader.req_int("count", 1, 30)
 		if not relic:

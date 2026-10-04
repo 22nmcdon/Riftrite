@@ -10,6 +10,7 @@ const Chaos = preload("res://tests/sim/chaos_fight.gd")
 const TacticFights = preload("res://tests/sim/test_tactics.gd")
 const PathFights = preload("res://tests/sim/path_fights.gd")
 const RuleFights = preload("res://tests/sim/test_hero_rules.gd")
+const WaterTest = preload("res://tests/sim/test_water.gd")
 
 
 ## A busy fight: melee and ranged on both sides, a rock in the middle.
@@ -197,6 +198,7 @@ const NAMES: Dictionary = {
 	LogEntry.Kind.TACTIC: ["unit", "ability", "note"],
 	LogEntry.Kind.ZONE: ["unit", "ability"], LogEntry.Kind.SNARE: ["unit", "ability", "note"],
 	LogEntry.Kind.WALL: ["unit", "ability"], LogEntry.Kind.GUARD: ["unit", "ability", "target"], LogEntry.Kind.SHARED: ["unit", "ability", "target"], LogEntry.Kind.WALL_HIT: ["unit", "ability"], LogEntry.Kind.MAX_HP_UP: ["unit", "ability", "target"],
+	LogEntry.Kind.WATER: ["unit", "ability"],
 	LogEntry.Kind.LIFESTEAL: ["unit", "ability", "target"], LogEntry.Kind.STATUS_EXTENDED: ["unit", "ability", "target", "status"],
 	LogEntry.Kind.RISE: ["target"], LogEntry.Kind.RESISTED: ["unit", "ability", "target", "status", "note"],
 	LogEntry.Kind.DODGED: ["unit", "ability", "target"],
@@ -207,6 +209,11 @@ const NAMES: Dictionary = {
 func test_every_entry_names_its_source() -> void:
 	var fights: Array[FightSetup] = [busy_setup(), Chaos.setup(), content_setup(), TacticFights.tactics_setup(), elite_setup(), RuleFights.rules_setup()]
 	fights.append_array(PathFights.all(K.content()))
+	# Water that changes (phase 8 part 3): a flood that recedes, and pulls
+	# toward the water and an area's middle.
+	fights.append(WaterTest.flood_setup([{"type": "flood", "mode": "circle", "radius": 1, "duration_ms": 1000},
+		{"type": "area", "shape": {"kind": "circle", "radius": 4}, "anchor": "self", "hits": "enemies", "effects": [{"type": "pull", "hexes": 1, "toward": "area", "target": "target"}]},
+		{"type": "pull", "hexes": 1, "toward": "water", "target": "target"}]))
 	for setup: FightSetup in fights:
 		_assert_sources(K.run(setup), setup)
 

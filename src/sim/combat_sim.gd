@@ -414,6 +414,8 @@ func step() -> void:
 	if track_front:
 		mark_front()
 	if has_water:
+		if not water.layers.is_empty():
+			water.tick(self)
 		Water.mark(self)
 	if _aura_ticks.has(tick):
 		_active_auras = Passives.rederive(self, _active_auras)
@@ -642,6 +644,11 @@ func fits(unit: UnitState, point: Vector2i) -> bool:
 ## too (phase 5c, Decision 7), overlapping nothing.
 func fits_ground(unit: UnitState, point: Vector2i) -> bool:
 	return ArenaPlane.inside(grid.bounds(), point, unit.radius) and _clear(unit, point)
+
+
+## The pathfinding grid (Water works out its cells on it).
+func nav() -> NavGrid:
+	return _nav
 
 
 ## True if `point` is on water (phase 8 part 3; Water).

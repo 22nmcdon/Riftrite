@@ -96,6 +96,9 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 		if effect.type == EffectDef.Type.WALL:
 			Walls.raise(sim, unit, source, effect, target)
 			continue
+		if effect.type == EffectDef.Type.FLOOD:
+			Water.flood(sim, unit, source, effect, target)
+			continue
 		if effect.type == EffectDef.Type.SUMMON:
 			Summons.summon(sim, unit, source, effect, target)
 			continue
@@ -211,7 +214,17 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 		EffectDef.Type.KNOCKBACK:
 			Displacement.knockback(sim, victim, unit.pos if push_from == NO_POINT else push_from, unit.forward(), effect.hexes, source)
 		EffectDef.Type.PULL:
-			Displacement.pull(sim, victim, unit, effect.hexes, source)
+			match effect.toward:
+				EffectDef.Toward.WATER:
+					# Toward the nearest water (phase 8 part 3, Coiling Eel).
+					if sim.has_water and not sim.water.hexes.is_empty():
+						Displacement.pull_to(sim, victim, sim.water.nearest_center(sim.grid, victim.pos), effect.hexes, source)
+				EffectDef.Toward.AREA:
+					# Toward its area's middle (Undertow Tidecaller).
+					if push_from != NO_POINT:
+						Displacement.pull_to(sim, victim, push_from, effect.hexes, source)
+				_:
+					Displacement.pull(sim, victim, unit, effect.hexes, source)
 		EffectDef.Type.LEAP:
 			Displacement.leap(sim, unit, victim, effect, source)
 		EffectDef.Type.HOP:
@@ -252,6 +265,9 @@ static func run_event(sim: CombatSim, unit: UnitState, ability: AbilityDef, sour
 		return
 	if effect.type == EffectDef.Type.WALL:
 		Walls.raise(sim, unit, source, effect, other if other != null else unit.target)
+		return
+	if effect.type == EffectDef.Type.FLOOD:
+		Water.flood(sim, unit, source, effect, other if other != null else unit.target)
 		return
 	var hit: Hit = null
 	if other != null:
@@ -348,6 +364,9 @@ static func _targets(sim: CombatSim, unit: UnitState, target: EffectDef.Target, 
 			found = sim.standing_enemies_of(unit)
 		EffectDef.Target.ALL_ALLIES:
 			found = sim.standing_allies_of(unit)
+	if effect != null and effect.only != null:
+		# Only those that meet it (phase 8 part 3, Undertow: on water).
+		found = found.filter(func(other: UnitState) -> bool: return effect.only.holds(other))
 	return found
 
 

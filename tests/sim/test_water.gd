@@ -219,3 +219,128 @@ func test_crumbled_water_both_hurts_and_slows() -> void:
 	assert_true(fight.on_crumbled(unit.pos))
 	assert_true(fight.on_water(unit.pos))
 	assert_eq(fight.step_of(unit) * 2, unit.step_length())
+
+
+# --- water that changes (8c-3c) -------------------------------------------------
+
+## A still enemy at (3, 5) whose signature fires once at the fight's start
+## with `effects`, aimed at the nearest hero.
+static func caster(effects: Array, trigger: Dictionary = {"kind": "fight_start"}) -> UnitDef:
+	return still("caster", {"stats": {"range": 8}, "signature": {"id": "tide", "name": "Tide", "trigger": trigger, "targeting": "nearest", "max_range": 8, "effects": effects}})
+
+
+## A hero at (3, 1) and one at (6, 0) against the caster, with `water`.
+static func flood_setup(effects: Array, water: Array[Vector2i] = [], rocks: Array[Vector2i] = []) -> FightSetup:
+	var setup: FightSetup = K.fight([K.at(still("hero"), 3, 1), K.at(still("far"), 6, 0)] as Array[UnitSetup], [K.foe(caster(effects), 3, 5)] as Array[UnitSetup], rocks)
+	setup.water = water
+	return setup
+
+
+static func waters(fight: CombatSim) -> Array[LogEntry]:
+	return K.entries(fight, LogEntry.Kind.WATER)
+
+
+func test_a_flood_covers_a_circle_for_a_while_then_recedes() -> void:
+	var fight: CombatSim = K.sim(flood_setup([{"type": "flood", "mode": "circle", "radius": 1, "duration_ms": 2000}], [] as Array[Vector2i], [Vector2i(2, 1)] as Array[Vector2i]))
+	assert_false(fight.has_water, "no water to start")
+	K.step(fight, 2)
+	assert_true(fight.has_water, "the flood makes some")
+	var expected: Array[Vector2i] = [Vector2i(3, 1), Vector2i(3, 0), Vector2i(3, 2), Vector2i(2, 2), Vector2i(4, 2), Vector2i(4, 1)]
+	for hex: Vector2i in fight.water.hexes:
+		assert_true(expected.has(hex), "%s is in the circle" % hex)
+	assert_eq(fight.water.hexes.size(), 6, "the hero's hex and its neighbors, but the rock")
+	assert_false(fight.water.hexes.has(Vector2i(2, 1)), "never on a rock")
+	assert_true(fight.unit_by_id("hero").on_water)
+	assert_false(fight.unit_by_id("far").on_water)
+	var entries: Array[LogEntry] = waters(fight)
+	assert_eq(entries.size(), 1)
+	assert_eq(entries[0].note, "floods 6 hexes for 2s")
+	assert_eq([entries[0].source_unit, entries[0].source_ability], ["caster", "tide"])
+	assert_string_contains(entries[0].to_text(), "caster · Tide floods 6 hexes for 2s (6 water hexes)")
+	K.step(fight, 40)
+	assert_eq(fight.water.hexes, [] as Array[Vector2i], "it recedes")
+	assert_false(fight.unit_by_id("hero").on_water)
+	assert_eq(waters(fight).map(func(entry: LogEntry) -> String: return entry.note), ["floods 6 hexes for 2s", "recedes"])
+	assert_eq(waters(fight)[1].source_ability, "tide", "sourced to the flood")
+
+
+func test_a_flood_without_a_duration_stays() -> void:
+	var fight: CombatSim = K.sim(flood_setup([{"type": "flood", "mode": "circle", "radius": 0, "anchor": "self"}]))
+	K.step(fight, 100)
+	assert_eq(fight.water.hexes, [Vector2i(3, 5)] as Array[Vector2i], "under the caster, for good")
+
+
+func test_the_water_spreads_drains_and_floods_everything() -> void:
+	var spread: CombatSim = K.sim(flood_setup([{"type": "flood", "mode": "spread"}], [Vector2i(3, 3)] as Array[Vector2i], [Vector2i(4, 3)] as Array[Vector2i]))
+	K.step(spread, 2)
+	assert_eq(spread.water.hexes.size(), 6, "a hex wider, but the rock")
+	assert_eq(waters(spread)[0].note, "spreads to 5 more hexes")
+	var drain: CombatSim = K.sim(flood_setup([{"type": "flood", "mode": "drain", "radius": 1}], lake()))
+	K.step(drain, 2)
+	for hex: Vector2i in drain.water.hexes:
+		assert_lte(ArenaPlane.distance(drain.grid.center(hex.x, hex.y), drain.unit_by_id("caster").pos), 1000, "only round the caster")
+	assert_false(drain.unit_by_id("hero").on_water, "the lake is gone")
+	assert_eq(waters(drain)[0].note, "drains to %d hexes" % drain.water.hexes.size())
+	var everything: CombatSim = K.sim(flood_setup([{"type": "flood", "mode": "all"}], [] as Array[Vector2i], [Vector2i(4, 3)] as Array[Vector2i]))
+	K.step(everything, 2)
+	assert_eq(everything.water.hexes.size(), everything.grid.size() - 1, "every hex but the rock")
+	assert_true(everything.unit_by_id("far").on_water)
+
+
+func test_a_pull_toward_the_water_stops_on_it() -> void:
+	var coil: Array = [{"type": "pull", "hexes": 3, "toward": "water", "target": "target"}]
+	var fight: CombatSim = K.sim(flood_setup(coil, [Vector2i(1, 1)] as Array[Vector2i]))
+	K.step(fight, 10)
+	var pushes: Array[LogEntry] = K.entries(fight, LogEntry.Kind.PUSH)
+	assert_eq(pushes.size(), 1)
+	assert_eq(pushes[0].target, "hero")
+	assert_eq(fight.unit_by_id("hero").pos, fight.grid.center(1, 1), "onto the water's middle, no further")
+	assert_string_contains(pushes[0].note, "pulled")
+	var dry: CombatSim = K.sim(flood_setup(coil))
+	K.step(dry, 10)
+	assert_eq(K.entries(dry, LogEntry.Kind.PUSH), [] as Array[LogEntry], "no water, no pull")
+
+
+func test_an_areas_pull_goes_toward_its_middle() -> void:
+	var undertow: Array = [{"type": "area", "shape": {"kind": "circle", "radius": 4}, "anchor": "self", "hits": "enemies",
+		"effects": [{"type": "pull", "hexes": 1, "toward": "area", "target": "target"}]}]
+	var fight: CombatSim = K.sim(flood_setup(undertow))
+	var hero: UnitState = fight.unit_by_id("hero")
+	var before: int = ArenaPlane.distance(hero.pos, fight.unit_by_id("caster").pos)
+	K.step(fight, 2)
+	assert_eq(ArenaPlane.distance(hero.pos, fight.unit_by_id("caster").pos), before - 1000, "a hex toward the area's middle")
+
+
+func test_only_picks_the_units_that_meet_it() -> void:
+	var pull: Array = [{"type": "pull", "hexes": 1, "target": "all_enemies", "only": {"on_water": true}}]
+	var fight: CombatSim = K.sim(flood_setup(pull, [Vector2i(6, 0)] as Array[Vector2i]))
+	K.step(fight, 2)
+	assert_eq(K.entries(fight, LogEntry.Kind.PUSH).map(func(entry: LogEntry) -> String: return entry.target), ["far"], "only the hero on water")
+
+
+func test_the_new_pieces_have_numbers_lines() -> void:
+	var content: ContentDb = K.content()
+	var kit: UnitDef = caster([{"type": "flood", "mode": "circle", "radius": 2, "duration_ms": 6000},
+		{"type": "pull", "hexes": 1, "target": "all_enemies", "only": {"on_water": true}},
+		{"type": "pull", "hexes": 1, "toward": "water", "target": "target"}])
+	var line: String = " · ".join(UnitInfo.effect_numbers(kit.signature.effects, kit, content))
+	assert_string_contains(line, "floods a 2-hex circle at the target for 6s")
+	assert_string_contains(line, "pulls 1 hex to all enemies on water")
+	assert_string_contains(line, "pulls 1 hex toward the nearest water")
+
+
+func test_the_new_keys_are_checked() -> void:
+	for data: Dictionary in [
+		{"type": "pull", "hexes": 1, "toward": "area", "target": "target"},
+		{"type": "pull", "hexes": 1, "target": "target", "only": {"on_water": true}},
+		{"type": "flood", "mode": "circle"},
+		{"type": "flood", "mode": "river", "radius": 1},
+	]:
+		var errors: Array[String] = []
+		EffectDef.read(DataReader.new(data, "test", errors))
+		assert_false(errors.is_empty(), "refused: %s" % data)
+	var errors: Array[String] = []
+	var area: Dictionary = {"type": "area", "shape": {"kind": "circle", "radius": 1}, "anchor": "self", "hits": "enemies",
+		"effects": [{"type": "flood", "mode": "spread"}]}
+	EffectDef.read(DataReader.new(area, "test", errors))
+	assert_false(errors.is_empty(), "a flood isn't one of an area's effects")

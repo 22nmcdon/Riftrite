@@ -7,7 +7,9 @@ extends RefCounted
 ## it's moved out of ends at once.
 ##   knockback  the target goes straight away from the unit, `hexes` far
 ##   pull       the target comes straight toward the unit, `hexes` far,
-##              stopping when it touches the unit
+##              stopping when it touches the unit; or (phase 8 part 3)
+##              toward a point (the nearest water, an area's middle),
+##              stopping on it
 ##   leap       the unit jumps to one of 12 spots touching its target (every
 ##              30 degrees round it): the free one closest to where it stands
 ##              (ties: the first), within max_hexes of it, ignoring anything
@@ -56,6 +58,15 @@ static func pull(sim: CombatSim, target: UnitState, puller: UnitState, hexes: in
 	var dir: Vector2i = ArenaPlane.direction(target.pos, puller.pos, Vector2i(0, -ArenaPlane.DIR * puller.forward()))
 	var room: int = maxi(ArenaPlane.distance(target.pos, puller.pos) - target.radius - puller.radius, 0)
 	push(sim, target, dir, mini(hexes * HexGrid.HEX, room), source, "pulled")
+
+
+## Pulls `target` toward `point` (phase 8 part 3: the nearest water, or an
+## area's middle), `hexes` far, no further than the point.
+static func pull_to(sim: CombatSim, target: UnitState, point: Vector2i, hexes: int, source: EffectSource) -> void:
+	var distance: int = mini(hexes * HexGrid.HEX, ArenaPlane.distance(target.pos, point))
+	if distance <= 0:
+		return
+	push(sim, target, ArenaPlane.direction(target.pos, point), distance, source, "pulled")
 
 
 ## Pushes `unit` `distance` along `dir` (length ArenaPlane.DIR), stopping at

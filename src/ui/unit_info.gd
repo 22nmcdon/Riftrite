@@ -608,7 +608,18 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 		EffectDef.Type.KNOCKBACK:
 			return "knocks back %s" % hexes(effect.hexes)
 		EffectDef.Type.PULL:
-			return "pulls %s" % hexes(effect.hexes)
+			var way: String = ["", " toward the nearest water", " toward the area's middle"][effect.toward]
+			return "pulls %s%s%s" % [hexes(effect.hexes), way, _to_all(effect)]
+		EffectDef.Type.FLOOD:
+			match effect.flood_mode:
+				EffectDef.FloodMode.CIRCLE:
+					return "floods a %d-hex circle %s%s" % [effect.flood_radius, "around it" if effect.anchor == EffectDef.Anchor.SELF else "at the target",
+						" for " + seconds(effect.zone_ticks) if effect.zone_ticks > 0 else ""]
+				EffectDef.FloodMode.SPREAD:
+					return "every pool spreads a hex"
+				EffectDef.FloodMode.DRAIN:
+					return "drains the water to within %s of it" % hexes(effect.flood_radius)
+			return "floods every hex but the rocks"
 		EffectDef.Type.LEAP:
 			return "leaps up to %s" % hexes(effect.hexes)
 		EffectDef.Type.HOP:
@@ -650,11 +661,12 @@ static func _amount(effect: EffectDef, kit: UnitDef, word: String) -> String:
 
 ## " to all allies" or " to all enemies", for an effect on a whole side.
 static func _to_all(effect: EffectDef) -> String:
+	var only: String = "" if effect.only == null else " %s" % effect.only.describe()
 	match effect.target:
 		EffectDef.Target.ALL_ALLIES:
-			return " to all allies"
+			return " to all allies" + only
 		EffectDef.Target.ALL_ENEMIES:
-			return " to all enemies"
+			return " to all enemies" + only
 	return ""
 
 
