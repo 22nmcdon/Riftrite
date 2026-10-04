@@ -1,6 +1,6 @@
 # Act 2: the Glassmere (a draft)
 
-Status: **a draft for the playtester to mark up (2026-10-04). Nothing is built.** Names and numbers are placeholders. It follows `rebuild-phase8-acts.md` (section 2a and Decisions 1–18): 7 days, the board rule of shallow water, new faces for about half the archetypes and Act 1's enemies back in specialized form for the rest, the Summoner and the Splitter as new archetypes, 2 elites, and a boss built for a team with at least one apex. Questions are in section 10.
+Status: **a draft, marked up by the playtester (2026-10-04; Decisions below, BT and BR still open). Nothing is built.** Names and numbers are placeholders. It follows `rebuild-phase8-acts.md` (section 2a and Decisions 1–18): 7 days, the board rule of shallow water, new faces for about half the archetypes and Act 1's enemies back in specialized form for the rest, the Summoner and the Splitter as new archetypes, 2 elites, and a boss built for a team with at least one apex. Questions are in section 10.
 
 ## 1. The act at a glance
 
@@ -194,12 +194,25 @@ Each piece is skipped by a fight that doesn't use it, so Act 1's fights and the 
 
 ## 10. Questions
 
-- **BM. Can heroes be placed on water?** Proposed: yes; they start slow.
-- **BN. Rift Collapse over water:** does crumbled water both hurt and slow? Proposed: yes, both.
-- **BO. Two elites:** each elite day offers both (Act 1 draws 2 of its 3), or a third elite?
-- **BP. Upgrades in Act 2:** do its elites and boss carry upgrades (`enemy-growth.md` section 3), or only Act 3's (Decision 4 names Act 3)?
-- **BQ. The names:** the Glassmere, the Mire Eel, Reedline Slinger, Tidecaller, Drowned Warden, Drowned Bellringer, Drowned Thrall, Glass Shambler, the Tide Choir, the Glass Matron, the Mournwater: keep, or your own?
-- **BR. Undertow:** too punishing for a melee team, or the right pressure for the boss?
-- **BS. Specializations:** drawn per fight from day 3, so the same fight can come specialized one run and plain the next, or fixed per encounter?
-- **BT. The four who sit Act 2 out** (Rift Hound, Cinder Moth, Hollow Archer, Rift-Worn Sentinel): back in Act 3, specialized, or gone after Act 1?
-- **BU. Casters first and Summoners:** should the tactic's "casters" include the Summoner archetype?
+- **BM. Can heroes be placed on water?** *(Answered: Decision 1.)* Proposed: yes; they start slow.
+- **BN. Rift Collapse over water:** *(Answered: Decision 2.)* does crumbled water both hurt and slow? Proposed: yes, both.
+- **BO. Two elites:** *(Answered: Decision 3.)* each elite day offers both (Act 1 draws 2 of its 3), or a third elite?
+- **BP. Upgrades in Act 2:** *(Answered: Decision 4.)* do its elites and boss carry upgrades (`enemy-growth.md` section 3), or only Act 3's (Decision 4 names Act 3)?
+- **BQ. The names:** *(Answered: Decision 5.)* the Glassmere, the Mire Eel, Reedline Slinger, Tidecaller, Drowned Warden, Drowned Bellringer, Drowned Thrall, Glass Shambler, the Tide Choir, the Glass Matron, the Mournwater: keep, or your own?
+- **BR. Undertow:** *(Open: "we'll have to see in testing.")* too punishing for a melee team, or the right pressure for the boss?
+- **BS. Specializations:** *(Answered: Decision 6.)* drawn per fight from day 3, so the same fight can come specialized one run and plain the next, or fixed per encounter?
+- **BT. The four who sit Act 2 out** *(Open: "not sure yet, maybe.")* (Rift Hound, Cinder Moth, Hollow Archer, Rift-Worn Sentinel): back in Act 3, specialized, or gone after Act 1?
+- **BU. Casters first and Summoners:** *(Answered: Decision 7.)* should the tactic's "casters" include the Summoner archetype?
+
+## Decisions
+
+The playtester, 2026-10-04:
+
+1. **Heroes can be placed on water** (Question BM); they start slow.
+2. **Crumbled ground over water both hurts and slows** (Question BN).
+3. **Two elites are enough for now** (Question BO): each elite day offers both.
+4. **Upgrades start in Act 3, for now** (Question BP): Act 2's elites and boss carry none (`rebuild-phase8-acts.md`, Decision 4, already names Act 3).
+5. **The names stand for now** (Question BQ).
+6. **Specializations are drawn fresh** (Question BS): each time a fight is offered, not fixed per encounter, so the player can't know them in advance ("you shouldn't know what it is beforehand"). When they're revealed (the fight card, or only once the fight starts) is still to be settled against the rule that the fight card shows every specialization (`enemy-growth.md`, section 1).
+7. **Casters first counts Summoners** (Question BU): the Drowned Bellringer is one of the tactic's targets.
+
