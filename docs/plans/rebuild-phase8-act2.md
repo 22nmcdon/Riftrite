@@ -1,0 +1,89 @@
+# Phase 8 part 3: building Act 2, the Glassmere
+
+Status: **a build plan (2026-10-04), waiting on the playtester's approval and section 9's questions.** Nothing is built. It builds `act2-glassmere.md` (the design, with its Decisions 1–7) on the frame of `rebuild-phase8-acts.md` (8c-1 and 8c-2, built). Numbers are placeholders until the tuning part.
+
+## 1. What it builds
+
+Act 2 as content a run reaches after Act 1's boss shop:
+
+- enemy specializations, drawn fresh and shown on the day's fight cards (`enemy-growth.md`, the parts Act 2 uses);
+- shallow water and the other new pieces of the fight code;
+- the eleven enemies, the eleven day fights and two Hunts, two elites, the Mournwater, and `act2.json`;
+- the bots, the tuning, and a playtest build.
+
+Upgrades and the rift learns wait for Act 3 (Decision 4 of `act2-glassmere.md`; Decision 10 of `rebuild-phase8-acts.md`). Every new piece is skipped by a fight that doesn't use it, so Act 1's fights and the bench's fingerprints stay as they are.
+
+## 2. Specializations (8c-3a)
+
+- **Data:** an enemy in `enemies.json` gets `"specializations"`: up to two, each `{id, name, text, mod}`. The `mod` is a `KitMod` on the enemy's kit, the shape upgrades and relics already use; `name` is the word put before the enemy's name ("Gnawing"). `ContentDb` reads and checks them (`EnemyDef.specializations`, `SpecializationDef`), and the validator checks every text the way it checks abilities' (`test_unit_info.gd`).
+- **Which are built:** the ones Act 2 uses. That's two each for the Rift Pup, Ashling (Smoldering and Steaming), Cairn Guardian, Bog Lurker, Gloam Witch, the four new faces, and the two new archetypes: 22 in all. The Rift Hound's, Cinder Moth's, Hollow Archer's, and Sentinel's wait on question BT.
+- **The draw** (Decision 6): `ActDef.specialized_from_day` (Act 2: 3) and `specialized_share_pct` (50). When a day starts (`RunFlow._start_day`, and so again on each replay after a loss), each of today's fights draws its specialized enemies on a new `RunRandom` stream (what, act, day, attempt, the option's index): question BV has how many. Each one gets one of its two specializations. A fight swapped in (Map the Rift) draws its own. `RunState.today_specs` (option index → enemy index → specialization id) holds the draw; save version 8 (a version 7 save loads with none).
+- **The fight:** `RunFlow.fight_setup` passes the chosen fight's specializations to `Encounters.setup` as `enemy_mods` (enemy index → mods, applied after `scale_bp`, like heroes' extras). A specialized unit's name is the specialization's word and the enemy's ("Gnawing Rift Pup 2"; `FightNames`).
+- **The screens:** the route's fight card names each specialization and how many carry it ("2 Gnawing Rift Pups"). `EnemyPanel` adds the specialization's sentence and numbers line (`UnitInfo`). The bots read them through the fight's setup, as they read everything else.
+- **Hunts and endless** draw none for now (question BW; endless after Act 3 comes with Act 3).
+
+## 3. Shallow water (8c-3b)
+
+- **Data:** an encounter's `"water"`, hexes like `"rocks"` (`EncounterDef.water`, `FightSetup.water`).
+- **The fight** (a new `Water` module in `src/sim/arena/`): the water is a hex set the fight holds and can change (section 4). A unit is **on water** when its center is on a water hex.
+  - **Movement:** a unit on water steps half as far each tick (`Movement`), unless its kit `swims` (a trait, `UnitDef.swims`).
+  - **The route:** for a walker that doesn't swim, a nav cell on water costs 2x in `NavGrid`, beside crumbled ground's 3x. A route that has to cross still crosses.
+  - **Burn:** a Burn tick on a unit on water deals half (`Statuses`; STATUS_DAMAGE noted "in water"), and the Burn lasts as long as anywhere else (Decision 5 of the acts plan).
+  - **Logging:** a walking leg slowed by water is noted "in water", so the log says why it was short.
+- **Placement:** heroes may start on water (Decision 1). Crumbled ground over water hurts and slows (Decision 2): both rules apply.
+- **`on_water`:** a `UnitCondition` key (`"vs"` on event effects and per-hit auras, an aura's `"while": "on_water"`, an event or timed effect's `"holder"`), and a target filter for effects that pick every enemy on water (Undertow).
+- **The board:** water hexes are drawn under the units, in placement and the fight, from the fight's water each frame; a unit on water shows a ripple. Placeholder art until phase 7.
+
+## 4. The other new pieces (8c-3c)
+
+| Piece | Who needs it | What it is |
+| --- | --- | --- |
+| **Flood** | Tidecaller, Silted Warden, the Tide Choir, the Mournwater | A new effect type, since no effect changes the ground: `flood` with a shape: a circle at the target for a time, every pool one hex wider, the board drained to a ring around the caster, or the whole board but rocks. Logged as a new kind, WATER (the hexes and the source), with an audit rule in `test_arena_log.gd` and a board form in `test_every_encounter_plays.gd`. |
+| **Summon at the water** | Drowned Bellringer, the Mournwater | A summon placement, `water`: each summon on the water hex nearest a hero, or nowhere if there's no water (logged as dropped). |
+| **Rise on water** | the Glass Matron's shards | The built rise passive gains an `"if": "on_water"` and a delay: a unit that falls on water rises after it, as its kit says. |
+| **Submerge** | Mire Eel | A trait: on water, it can't be picked as a target (as if Stealthed, the keyword too), except for 2s after each of its attacks. |
+| **Pull toward a point** | Coiling Eel (toward the nearest water), Undertow Tidecaller (toward its flood's middle) | A pull's `"toward"`: `water` or `area`, beside the built pull toward the caster. |
+
+Built pieces cover the rest: splitting (`on_fall` and a summon of two shards), the Slinger's lobbed stone (a warned circle) and stepping back (`hop_away`), Mud (a zone with Slow), Stilling (a zone with Silence, which stops mana), the Warden's regeneration (`on_interval` with a `"holder"` condition) and its armor (`damage_reduced_bp` while on water), and the boss's phases (`PhaseDef`, `start_collapse`).
+
+## 5. The content (8c-4a and 8c-4b)
+
+- **`enemies.json`:** the Mire Eel, Reedline Slinger, Tidecaller, Drowned Warden, Drowned Bellringer and Drowned Thrall, Glass Shambler and Glass Shard, the Matron's great Shambler and its rising shard, and the Mournwater. Every ability has its sentence naming each reach, and every enemy a threat line, an archetype, and a placeholder figure (`tools/art/enemy_kit.py`). The Summoner and Splitter archetypes join the archetype list, and Casters first counts Summoners (Decision 7).
+- **`encounters.json`:** act 2's eleven day fights and two Hunts (section 8 of the design), the two elites, and the Mournwater, each with its water and rocks.
+- **`act2.json`:** Act 1's shape and economy (Decision 13 of the acts plan), `specialized_from_day` 3, no endless.
+- **`tuning.json`:** Act 2's crumbled ground is already there; Act 3's comes with Act 3.
+
+## 6. The bots and the tuning (8c-4c)
+
+- **The good bot** places by fitted weights, which know nothing of water: add a feature or two (a hero's slowness to its first target, water between the back line and the enemies), then refit the weights on Act 2's fights as well as Act 1's (`placement_data.gd`, `fit_placement.py`).
+- **The targets** (Decision 3 of the acts plan): early in Act 2, a team with its first transformations wins about half its fights; by the boss, a team without an apex is near 20%. Measured with the sim runner (the gate of 30 points between best and worst formation, per encounter) and a transformed and apex sweep over Act 2's fights (`--apexes`, run on act 2's encounters).
+- **The apex deeds** are resized for Decision 2 of the acts plan: at least one apex per team before the Act 2 boss (the stand-in sizes of 8b-4c go). Read from the run report's **By act**.
+- **The run report** with `--bot=good` over both acts: runs reaching and winning each act, and apexes by act.
+
+## 7. Tests
+
+- Specializations: data read and checked; the draw (fresh per attempt, the same for the same seed and state, the share from day 3, none before), the save, the setup's mods and names, the fight card's text.
+- Water: speed on and off water, swimmers, the route's cost, Burn halved and noted, crumbled and water together, a fight without water unchanged (the bench's fingerprints).
+- Each piece of section 4 in a small fight (`tests/sim/`), and the WATER log kind's audit rule and board form.
+- Every new enemy's text in a small fight (`test_enemy_kits.gd`), every encounter builds and plays (`test_encounters.gd`, `test_every_encounter_plays.gd`), and the chaos fight uses the new pieces (`chaos_fight.gd`).
+- A run into Act 2 with the real data (no stand-in), on a seed the good bot wins Act 1.
+
+## 8. Parts
+
+- **8c-3a, specializations:** the frame, the draw, the save, the screens, with the specializations that need no new piece.
+- **8c-3b, water:** terrain, speed, the route, Burn, `on_water`, swimmers, the board.
+- **8c-3c, the other pieces:** flood (and WATER), summons at water, rising on water, Submerge, pulls toward a point.
+- **8c-4a, the enemies:** the eleven, their specializations, texts, and figures.
+- **8c-4b, the fights:** the day fights, Hunts, elites, the Mournwater, and `act2.json`.
+- **8c-4c, the bots and tuning:** placement features and the refit, the gate, the targets, the apex deeds.
+- **8c-4d, docs, HOW-TO-PLAY, screenshots, a playtest build.**
+
+## 9. Questions
+
+- **BV. How many enemies are specialized:** each one at a 50% chance (so a fight may come with none or all), or exactly half of them, rounded down, chosen by the draw? Proposed: exactly half, so a fight's difficulty doesn't swing on the draw.
+- **BW. Specialized Hunts:** proposed none, so a Hunt stays the safe extra fight.
+- **BX. Act 2's camp, events, relics, and items:** Act 1's, unchanged, for now?
+
+## Decisions
+
+None yet.
