@@ -67,8 +67,19 @@ func test_the_pedlar_after_every_fight_and_the_boss_shop() -> void:
 	assert_true(flow.boss_shop())
 	assert_eq(_run.relics[state.shop_relics[0]].tier, RelicDef.Tier.LEGENDARY)
 	assert_eq(flow.leave_shop(), "")
-	# The last act's boss shop ends the run won (Act 1's endless is only for
-	# a testing run: phase 8 part 3).
+	# Act 1's boss shop leads on to Act 2 (Act 1's endless is only for a
+	# testing run: phase 8 part 3).
+	assert_eq([state.act, state.day, state.phase, state.shop], [2, 1, RunState.Phase.ROUTE, ""])
+	# The last act's boss shop ends the run won.
+	state.day = 7
+	state.phase = RunState.Phase.ROUTE
+	assert_eq(flow.choose_fight(0), "")
+	assert_eq(state.chosen, "the_mournwater")
+	flow.record(Bot.formation(), _result(FightResult.Outcome.VICTORY))
+	assert_eq(flow.take_relic(0), "")
+	assert_eq(flow.finish_day(), "")
+	assert_true(flow.boss_shop())
+	assert_eq(flow.leave_shop(), "")
 	assert_eq([state.phase, state.outcome, state.shop], [RunState.Phase.ENDED, RunState.Outcome.WON, ""])
 
 

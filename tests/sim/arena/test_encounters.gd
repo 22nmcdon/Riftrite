@@ -138,9 +138,10 @@ const BASIC: Array[String] = ["pup_warren", "ash_nest", "the_pack", "moth_cloud"
 
 func test_the_act_1_encounters_are_the_plans() -> void:
 	var content: ContentDb = ContentDb.load_dir("res://data")
-	assert_eq(content.encounter_ids, BASIC + ["stray_pups", "lone_hounds", "hounds_and_archers", "lurker_and_ashlings", "sentinel_and_moths", "witch_and_pups",
+	var act_1: Array[String] = content.encounter_ids.filter(func(encounter_id: String) -> bool: return (content.encounters[encounter_id] as EncounterDef).act == 1)
+	assert_eq(act_1, BASIC + ["stray_pups", "lone_hounds", "hounds_and_archers", "lurker_and_ashlings", "sentinel_and_moths", "witch_and_pups",
 		"guardian_and_witch", "the_hunt", "witch_coven", "cairn_watch", "old_mother_ash"])
-	for encounter_id: String in content.encounter_ids:
+	for encounter_id: String in act_1:
 		var encounter: EncounterDef = content.encounters[encounter_id]
 		var counts: Dictionary = {}
 		for placed: EncounterDef.Placed in encounter.enemies:
@@ -152,6 +153,48 @@ func test_the_act_1_encounters_are_the_plans() -> void:
 		assert_between(encounter.scale_bp, 5000, 35000, "%s: a scale the tuning set (phase 6 raised the later fights to x1.6 of phase 2's, and its second pass a little more)" % encounter_id)
 		assert_false(encounter.tests.is_empty(), encounter_id)
 	assert_eq((content.encounters["hollow_line"] as EncounterDef).rocks.size(), 2, "archers behind 2 rocks")
+
+
+## Act 2's fights (docs/plans/act2-glassmere.md, sections 6 to 8;
+## rebuild-phase8-act2.md, 8c-4b): eleven day fights, two Hunts, two
+## elites, and the Mournwater, each with its water.
+const ACT_2_ROSTERS: Dictionary = {
+	"the_ford": {"rift_pup": 6},
+	"reed_snipers": {"reedline_slinger": 3, "rift_pup": 2},
+	"eels_and_slingers": {"mire_eel": 2, "reedline_slinger": 2},
+	"glass_field": {"glass_shambler": 3, "ashling": 2},
+	"wardens_pool": {"drowned_warden": 1, "reedline_slinger": 2},
+	"the_bellringer": {"drowned_bellringer": 1, "drowned_warden": 1, "ashling": 2},
+	"eel_run": {"mire_eel": 2, "rift_pup": 3},
+	"tidecall": {"tidecaller": 1, "cairn_guardian": 2},
+	"drowning_line": {"bog_lurker": 2, "tidecaller": 1},
+	"witch_of_the_mere": {"gloam_witch": 1, "glass_shambler": 2, "mire_eel": 1},
+	"bog_and_bell": {"drowned_bellringer": 1, "tidecaller": 1, "bog_lurker": 1, "rift_pup": 2},
+	"thrall_drift": {"drowned_thrall": 4},
+	"lone_eels": {"mire_eel": 2},
+	"tide_choir": {"choir_tidecaller": 1, "drowned_bellringer": 2, "drowned_warden": 1},
+	"glass_matron": {"glass_matron": 1, "brood_shambler": 2},
+	"the_mournwater": {"mournwater": 1, "drowned_bellringer": 2},
+}
+
+
+func test_the_act_2_encounters_are_the_plans() -> void:
+	var content: ContentDb = ContentDb.load_dir("res://data")
+	var act_2: Array[String] = content.encounter_ids.filter(func(encounter_id: String) -> bool: return (content.encounters[encounter_id] as EncounterDef).act == 2)
+	assert_eq(act_2, ACT_2_ROSTERS.keys())
+	var tiers: Dictionary = {}
+	for encounter_id: String in act_2:
+		var encounter: EncounterDef = content.encounters[encounter_id]
+		var counts: Dictionary = {}
+		for placed: EncounterDef.Placed in encounter.enemies:
+			counts[placed.enemy] = counts.get(placed.enemy, 0) + 1
+		assert_eq(counts, ACT_2_ROSTERS[encounter_id], encounter_id)
+		assert_false(encounter.water.is_empty(), "%s has water" % encounter_id)
+		assert_false(encounter.tests.is_empty(), encounter_id)
+		tiers[encounter.tier] = tiers.get(encounter.tier, 0) + 1
+	assert_eq(tiers, {"easier": 6, "harder": 5, "hunt": 2, "elite": 2, "boss": 1})
+	assert_eq((content.encounters["the_ford"] as EncounterDef).water.size(), 7, "a channel across the middle, one ford")
+	assert_eq((content.encounters["tide_choir"] as EncounterDef).rocks.size(), 2, "rocks anchor the dry middle")
 
 
 func test_every_day_before_the_boss_offers_at_least_two_encounters() -> void:

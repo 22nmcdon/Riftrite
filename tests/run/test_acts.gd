@@ -93,8 +93,11 @@ func test_the_acts_load_in_order() -> void:
 	state.act = 3
 	assert_null(_run.next_act(state))
 	var real: RunContent = RunContent.load_dir("res://data", ContentDb.load_dir("res://data"))
-	assert_eq(real.acts.size(), 1, "the game has Act 1 only, until Act 2's content")
+	assert_eq(real.acts.size(), 2, "Act 1 and the Glassmere (8c-4b); Act 3 comes later")
 	assert_true(real.acts[0].endless.testing, "Act 1's endless is the testing option (Decision 15)")
+	assert_null(real.acts[1].endless, "endless follows Act 3")
+	assert_eq([real.acts[1].specialized_from_day, real.acts[1].specialized_share_pct], [3, 50], "specialized from day 3, half of each fight (Decision 1 of the Act 2 plan)")
+	assert_eq(real.acts[0].specialized_from_day, 0, "Act 1 specializes none")
 
 
 func test_an_act_file_must_say_its_number() -> void:

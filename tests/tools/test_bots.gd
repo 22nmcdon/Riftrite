@@ -261,8 +261,11 @@ func test_a_bot_that_goes_deeper_plays_floors_to_its_first_loss() -> void:
 			assert_eq(said, "", "day %d" % flow.state.day)
 			if not said.is_empty():
 				break
-		assert_eq([flow.state.phase, flow.state.outcome, flow.state.endless], [RunState.Phase.ENDED, RunState.Outcome.WON, deeper])
+		assert_eq([flow.state.phase, flow.state.endless], [RunState.Phase.ENDED, deeper])
+		if not deeper:
+			assert_eq(flow.state.act, 2, "declining endless, it goes on into Act 2 (8c-4b)")
 		if deeper:
+			assert_eq(flow.state.outcome, RunState.Outcome.WON, "the first loss in endless still wins the run")
 			assert_gt(flow.floor_number(), 0, "it reached a floor")
 			assert_eq(flow.state.fought.back().outcome, FightResult.Outcome.DEFEAT, "and fell there")
 			assert_eq(flow.state.hero("maren").apex, "hailstorm", "the bot vowed her to an apex (phase 8 part 2)")

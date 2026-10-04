@@ -168,7 +168,16 @@ func test_winning_the_boss_ends_the_run() -> void:
 	assert_eq(flow.finish_day(), "")
 	assert_eq([flow.state.phase, flow.state.shop], [RunState.Phase.SHOP, "pedlar"], "then the boss shop (phase 5c Decision 48)")
 	assert_eq(flow.leave_shop(), "")
-	assert_eq([flow.state.phase, flow.state.outcome], [RunState.Phase.ENDED, RunState.Outcome.WON], "the last act, and Act 1's endless only in a testing run (phase 8 part 3)")
+	assert_eq([flow.state.act, flow.state.day, flow.state.phase], [2, 1, RunState.Phase.ROUTE], "on to Act 2: Act 1's endless is only in a testing run (phase 8 part 3)")
+	# The last act's boss ends the run.
+	flow.state.day = 7
+	flow.state.phase = RunState.Phase.ROUTE
+	flow.choose_fight(0)
+	flow.record(Bot.formation(), _result(FightResult.Outcome.VICTORY))
+	assert_eq(flow.take_relic(0), "")
+	assert_eq(flow.finish_day(), "")
+	assert_eq(flow.leave_shop(), "")
+	assert_eq([flow.state.phase, flow.state.outcome], [RunState.Phase.ENDED, RunState.Outcome.WON], "the last act's boss ends the run won")
 
 
 func test_saving_and_loading_gives_the_same_run() -> void:
