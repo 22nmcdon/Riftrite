@@ -98,6 +98,11 @@ class RunLine:
 	## then (percent), for sizing the apex deeds (phase 8 part 3).
 	var apex_vowed: Dictionary[String, String] = {}
 	var apex_filled: Dictionary[String, int] = {}
+	## And the fights it counted (from the vow's opening to the run's end or
+	## the fight that earned it), and what its deed held then (the
+	## threshold, once earned).
+	var apex_fights: Dictionary[String, int] = {}
+	var apex_amount: Dictionary[String, int] = {}
 
 	## Its measures as a Dictionary (what --jobs passes between processes,
 	## with FileAccess.store_var, so types survive).
@@ -224,6 +229,9 @@ static func play(run: RunContent, run_seed: int, bot_name: String = "simple-peek
 				counted = flow.last_result
 				_count_engines(line, flow.last_setup, flow.last_result, run.content.tuning.chain_limit)
 			line.fights.append([last.encounter, last.outcome != FightResult.Outcome.DEFEAT])
+			for hero: RunState.Hero in state.heroes:
+				if state.apex_open and not hero.apex.is_empty() and not line.apexed_on.has(hero.id):
+					line.apex_fights[hero.id] = line.apex_fights.get(hero.id, 0) + 1
 			if torn:
 				line.rift_fights += 1
 				line.rift_wins += 1 if last.outcome != FightResult.Outcome.DEFEAT else 0
@@ -260,6 +268,7 @@ static func play(run: RunContent, run_seed: int, bot_name: String = "simple-peek
 			line.apex_vowed[hero.id] = hero.apex
 			var threshold: int = run.content.apexes[hero.apex].deed.threshold
 			line.apex_filled[hero.id] = 100 if hero.apex_earned else mini(100, hero.deeds.get(hero.apex, 0) * 100 / maxi(threshold, 1))
+			line.apex_amount[hero.id] = threshold if hero.apex_earned else hero.deeds.get(hero.apex, 0)
 	for hero: RunState.Hero in state.heroes:
 		line.picks[hero.id] = hero.upgrades.size()
 		for id: String in hero.upgrades:
@@ -588,10 +597,15 @@ static func apex_vows_summary(run: RunContent, lines: Array[RunLine]) -> String:
 	var vowed: Dictionary[String, int] = {}
 	var earned_on: Dictionary[String, Array] = {}
 	var short: Dictionary[String, Array] = {}
+	var rates: Dictionary[String, Array] = {}
 	for line: RunLine in lines:
 		for hero_id: String in line.apex_vowed:
 			var apex_id: String = line.apex_vowed[hero_id]
 			vowed[apex_id] = vowed.get(apex_id, 0) + 1
+			if line.apex_fights.get(hero_id, 0) > 0:
+				if not rates.has(apex_id):
+					rates[apex_id] = []
+				rates[apex_id].append(line.apex_amount.get(hero_id, 0) * 10 / line.apex_fights[hero_id])
 			if line.apexes.get(hero_id, "") == apex_id:
 				if not earned_on.has(apex_id):
 					earned_on[apex_id] = []
@@ -601,7 +615,7 @@ static func apex_vows_summary(run: RunContent, lines: Array[RunLine]) -> String:
 					short[apex_id] = []
 				short[apex_id].append(line.apex_filled.get(hero_id, 0))
 	var out: PackedStringArray = PackedStringArray()
-	out.append("Apex vows at the run's end (vowed, earned at median act-day, median share filled where not):")
+	out.append("Apex vows at the run's end (vowed, earned at median act-day, median share filled where not; its deed a fight, median, and the fights that fill it):")
 	for apex_id: String in run.content.apex_ids:
 		if not vowed.has(apex_id):
 			continue
@@ -614,8 +628,12 @@ static func apex_vows_summary(run: RunContent, lines: Array[RunLine]) -> String:
 			var median: int = _median(days).to_int()
 			@warning_ignore("integer_division")
 			at = "%d-%d" % [median / 100, median % 100]
-		out.append("  %-18s vowed %3d, earned %3d (%s); short %3d at %s%%" % [run.content.apexes[apex_id].name, vowed[apex_id], days.size(), at, shares.size(),
-			_median(shares) if not shares.is_empty() else "-"])
+		var per: Array[int] = []
+		per.assign(rates.get(apex_id, []))
+		var rate: float = _median(per).to_int() / 10.0 if not per.is_empty() else 0.0
+		var threshold: int = run.content.apexes[apex_id].deed.threshold
+		out.append("  %-18s vowed %3d, earned %3d (%s); short %3d at %s%%; %.1f a fight, %s fights (threshold %d)" % [run.content.apexes[apex_id].name, vowed[apex_id], days.size(), at, shares.size(),
+			_median(shares) if not shares.is_empty() else "-", rate, "%.1f" % (threshold / rate) if rate > 0.0 else "-", threshold])
 	return "\n".join(out)
 
 

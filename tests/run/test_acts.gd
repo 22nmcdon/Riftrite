@@ -285,9 +285,14 @@ func test_the_run_report_apex_vows() -> void:
 	lines[2].apex_filled["maren"] = 80
 	lines[2].apex_vowed["vell"] = "dawnbringer"
 	lines[2].apex_filled["vell"] = 10
+	for line: RunReport.RunLine in lines:
+		line.apex_fights["maren"] = 4
+	lines[0].apex_amount["maren"] = 2
+	lines[1].apex_amount["maren"] = 1
+	lines[2].apex_amount["maren"] = 1
 	var text: String = RunReport.apex_vows_summary(_run, lines)
 	assert_string_contains(text, "Eagle Eye")
-	assert_string_contains(text, "vowed   3, earned   1 (2-4); short   2 at 80%", "the median of 50 and 80 is the upper one")
-	assert_string_contains(text, "vowed   1, earned   0 (-); short   1 at 10%")
+	assert_string_contains(text, "vowed   3, earned   1 (2-4); short   2 at 80%; 0.2 a fight, 10.0 fights (threshold 2)", "the median of 50 and 80 is the upper one; a deed of 1 or 2 over 4 fights")
+	assert_string_contains(text, "vowed   1, earned   0 (-); short   1 at 10%; 0.0 a fight, - fights", "no fights counted")
 	assert_false(text.contains("Stormline"), "an apex no run vowed isn't listed")
 

@@ -238,7 +238,7 @@
           "from_ability": [
             "heartseeker"
           ],
-          "threshold": 2
+          "threshold": 4
         }
       },
       {
@@ -570,7 +570,7 @@
           "statuses": [
             "briar_torn"
           ],
-          "threshold": 3
+          "threshold": 9
         }
       },
       {
@@ -670,7 +670,7 @@
           "vs_keywords": [
             "rooted"
           ],
-          "threshold": 1200
+          "threshold": 2000
         }
       }
     ]
@@ -991,7 +991,7 @@
           "from_ability": [
             "arrow_storm"
           ],
-          "threshold": 240
+          "threshold": 280
         }
       },
       {
@@ -1271,7 +1271,7 @@
         "deed": {
           "text": "Enemy shots stopped by his wall",
           "counts": "blocked",
-          "threshold": 22
+          "threshold": 8
         }
       },
       {
@@ -1605,7 +1605,7 @@
           "from_ability": [
             "forge_blast"
           ],
-          "threshold": 20
+          "threshold": 35
         }
       },
       {
@@ -1943,7 +1943,7 @@
           "text": "Damage he takes after rising",
           "counts": "taken",
           "after_rising": true,
-          "threshold": 90
+          "threshold": 120
         }
       },
       {
@@ -2356,7 +2356,7 @@
             "glare",
             "dazzled"
           ],
-          "threshold": 100
+          "threshold": 150
         }
       },
       {
@@ -2631,7 +2631,7 @@
         "deed": {
           "text": "Damage shared through her links",
           "counts": "shared",
-          "threshold": 24
+          "threshold": 30
         }
       },
       {
@@ -2706,7 +2706,7 @@
           "from_ability": [
             "thornweave"
           ],
-          "threshold": 10
+          "threshold": 30
         }
       }
     ]
