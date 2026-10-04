@@ -107,6 +107,7 @@ Higher difficulties stack modifiers, each unlocked by beating the one before. Mo
 - **The rift learns:** enemy specializations and upgrades counter your team (`enemy-growth.md`, section 5).
 - **Specialized enemies come sooner and more often.**
 - **Deeds take longer to fill**, so heroes transform later.
+- **Specializations are hidden until the fight starts** (a candidate, the playtester, 2026-10-04; `act2-glassmere.md`, Decision 6): on normal they show on the fight's card the day it's offered.
 
 More come later (the list and order are tuned with playtesting). Meta progression still never adds stats; difficulty only makes the rift harder.
 

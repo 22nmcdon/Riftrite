@@ -213,6 +213,6 @@ The playtester, 2026-10-04:
 3. **Two elites are enough for now** (Question BO): each elite day offers both.
 4. **Upgrades start in Act 3, for now** (Question BP): Act 2's elites and boss carry none (`rebuild-phase8-acts.md`, Decision 4, already names Act 3).
 5. **The names stand for now** (Question BQ).
-6. **Specializations are drawn fresh** (Question BS): each time a fight is offered, not fixed per encounter, so the player can't know them in advance ("you shouldn't know what it is beforehand"). When they're revealed (the fight card, or only once the fight starts) is still to be settled against the rule that the fight card shows every specialization (`enemy-growth.md`, section 1).
+6. **Specializations are drawn fresh** (Question BS): each time a fight is offered, not fixed per encounter, so the player can't know them in advance ("you shouldn't know what it is beforehand"). On normal difficulty they're revealed on the fight's card on the day it's offered (the route), so choosing between the day's two fights and placing can answer them; the fight card still shows every specialization (`enemy-growth.md`, section 1). Hidden until the fight starts is a candidate difficulty modifier (`rebuild-enemies.md`, section 8).
 7. **Casters first counts Summoners** (Question BU): the Drowned Bellringer is one of the tactic's targets.
 
