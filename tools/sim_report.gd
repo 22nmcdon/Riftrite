@@ -24,12 +24,14 @@ extends RefCounted
 const GATE_POINTS: int = 30
 ## From Act 2 on (phase 8 part 3, rebuild-phase8-act2.md section 6), base
 ## heroes lose every fight, so the gate fights a transformed team instead
-## (the Gallery's paths, tools/apex_teams.json), against enemies at
-## LATER_ACT_SCALE_BP of the encounter's: a run's team, with its upgrades,
-## items, and relics, is about a bare team x1.5, and the gate asks whether
-## placement matters for the team a run brings.
+## (the Gallery's paths, tools/apex_teams.json), against enemies scaled down
+## to stand for the team a run brings to that fight, with its upgrades,
+## items, and relics: about a bare team x1.5 on the act's first day
+## (enemies at OPENING_SCALE_BP), and x1.8 for fights that first come later
+## (LATER_SCALE_BP), as the team grows through the act.
 const LATER_ACT_VOWS: Dictionary[String, String] = {"brannoc": "hearthwall", "maren": "deadeye", "vell": "lanternbearer"}
-const LATER_ACT_SCALE_BP: int = 5500
+const OPENING_SCALE_BP: int = 6700
+const LATER_SCALE_BP: int = 5500
 
 
 ## One formation's fights in one encounter.
@@ -191,6 +193,11 @@ static func run_encounter(content: ContentDb, encounter_id: String, named: Dicti
 
 ## The gate's fight: base heroes in Act 1, and from Act 2 on the later
 ## acts' team against enemies scaled down (see LATER_ACT_VOWS).
+static func gate_scale_bp(encounter: EncounterDef) -> int:
+	return OPENING_SCALE_BP if not encounter.days.is_empty() and encounter.days.min() <= 1 else LATER_SCALE_BP
+
+
+## The gate's fight (see gate_scale_bp).
 static func gate_setup(content: ContentDb, encounter_id: String, formation: Dictionary[String, Vector2i], fight_seed: int, errors: Array[String]) -> FightSetup:
 	if content.encounters[encounter_id].act <= 1:
 		return Encounters.setup(content, encounter_id, formation, fight_seed, errors)
@@ -199,10 +206,11 @@ static func gate_setup(content: ContentDb, encounter_id: String, formation: Dict
 	var setup: FightSetup = Encounters.setup(content, encounter_id, formation, fight_seed, errors, {}, LATER_ACT_VOWS, transformed)
 	if setup == null:
 		return null
+	var scale_bp: int = gate_scale_bp(content.encounters[encounter_id])
 	for enemy: UnitSetup in setup.enemies:
-		enemy.def = Encounters.scaled(enemy.def, LATER_ACT_SCALE_BP)
+		enemy.def = Encounters.scaled(enemy.def, scale_bp)
 	for i: int in setup.summon_kits.size():
-		setup.summon_kits[i] = Encounters.scaled(setup.summon_kits[i], LATER_ACT_SCALE_BP)
+		setup.summon_kits[i] = Encounters.scaled(setup.summon_kits[i], scale_bp)
 	return setup
 
 
@@ -379,7 +387,7 @@ static func text(content: ContentDb, report: Report, boards: bool = true) -> Str
 	var lines: Array[String] = []
 	var encounter: EncounterDef = report.encounter
 	lines.append("%s (%s): %s. %d seeds, %d named + %d drawn formations%s" % [encounter.name, encounter.id, encounter.tests, report.seeds, report.named, report.rows.size() - report.named,
-		"" if encounter.act <= 1 else "; heroes transformed (%s), enemies x%.2f" % [", ".join(LATER_ACT_VOWS.values()), LATER_ACT_SCALE_BP / 10000.0]])
+		"" if encounter.act <= 1 else "; heroes transformed (%s), enemies x%.2f" % [", ".join(LATER_ACT_VOWS.values()), gate_scale_bp(encounter) / 10000.0]])
 	var heroes: String = "/".join(content.hero_ids.map(func(hero_id: String) -> String: return hero_id.left(1)))
 	lines.append("  %-10s %6s %8s   %-18s %-20s %s" % ["formation", "wins", "median", "falls (%s)" % heroes, "dealt (%s)" % heroes, "taken (%s)" % heroes])
 	for i: int in report.named:
