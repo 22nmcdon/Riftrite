@@ -268,3 +268,26 @@ func test_the_run_report_by_act() -> void:
 	assert_string_contains(text, "Act 2: 2 reached, 1 won (50%); lost on days 1-7: 0 0 0 0 0 1 0; apexes earned 2 (median day 5); at its boss 1, 1 with an apex", "Act 2's boss: only the run that went on to Act 3 reached it, with Vell's apex from day 5")
 	assert_string_contains(text, "Act 3: 1 reached, 1 won (100%)")
 	assert_string_contains(RunReport.summary(_run, lines), "By act")
+
+
+func test_the_run_report_apex_vows() -> void:
+	var lines: Array[RunReport.RunLine] = []
+	for i: int in 3:
+		var line := RunReport.RunLine.new()
+		line.bot = "simple"
+		line.apex_vowed["maren"] = "eagle_eye"
+		lines.append(line)
+	lines[0].apexes["maren"] = "eagle_eye"
+	lines[0].apexed_act["maren"] = 2
+	lines[0].apexed_day["maren"] = 4
+	lines[0].apex_filled["maren"] = 100
+	lines[1].apex_filled["maren"] = 50
+	lines[2].apex_filled["maren"] = 80
+	lines[2].apex_vowed["vell"] = "dawnbringer"
+	lines[2].apex_filled["vell"] = 10
+	var text: String = RunReport.apex_vows_summary(_run, lines)
+	assert_string_contains(text, "Eagle Eye")
+	assert_string_contains(text, "vowed   3, earned   1 (2-4); short   2 at 80%", "the median of 50 and 80 is the upper one")
+	assert_string_contains(text, "vowed   1, earned   0 (-); short   1 at 10%")
+	assert_false(text.contains("Stormline"), "an apex no run vowed isn't listed")
+

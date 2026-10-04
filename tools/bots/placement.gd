@@ -32,18 +32,23 @@ const FEATURE_NAMES: Array[String] = [
 ## What the fight holds, the same for every formation in it: the score's
 ## weights for each feature move with these (each feature times each
 ## context is a term), so the same reading serves a swarm and a sniper nest.
-const CONTEXT_NAMES: Array[String] = ["one", "flankers", "areas", "swarm", "ranged", "rocks", "enemies"]
+## "water" is 1 in a fight with water (Act 2 on), so a later act's fights can
+## weigh every feature apart from Act 1's.
+const CONTEXT_NAMES: Array[String] = ["one", "flankers", "areas", "swarm", "ranged", "rocks", "enemies", "water"]
 
 
 const WEIGHTS_FILE: String = "res://tools/bots/placement_weights.json"
 
 static var _weights: PackedFloat64Array = PackedFloat64Array()
+## Where the weights are read from (placement_check's --weights compares
+## another fit).
+static var weights_file: String = WEIGHTS_FILE
 
 
 ## The fitted weights, one per feature times context, context-major.
 static func weights() -> PackedFloat64Array:
 	if _weights.is_empty():
-		var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(WEIGHTS_FILE))
+		var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(weights_file))
 		_weights = PackedFloat64Array(data["weights"])
 		assert(_weights.size() == FEATURE_NAMES.size() * CONTEXT_NAMES.size(), "placement_weights.json doesn't match the features")
 	return _weights
@@ -316,7 +321,7 @@ static func read_enemies(setup: FightSetup, grid: HexGrid) -> Dictionary:
 		if unit.def.archetype == "caster" or _throws_areas(unit.def):
 			areas += 1
 	var ranged: int = setup.enemies.filter(func(unit: UnitSetup) -> bool: return unit.def.stats.get_stat(UnitStats.Stat.RANGE) >= 3).size()
-	var context: PackedFloat64Array = PackedFloat64Array([1.0, flankers.size(), areas, swarm, ranged, setup.rocks.size(), setup.enemies.size()])
+	var context: PackedFloat64Array = PackedFloat64Array([1.0, flankers.size(), areas, swarm, ranged, setup.rocks.size(), setup.enemies.size(), 0.0 if setup.water.is_empty() else 1.0])
 	return {"at": at, "flankers": flankers, "centroid": centroid / maxf(weight, 1.0), "areas": areas, "swarm": swarm, "context": context}
 
 

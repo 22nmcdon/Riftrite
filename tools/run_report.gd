@@ -94,6 +94,10 @@ class RunLine:
 	## And the act and day it was earned in (phase 8 part 3).
 	var apexed_act: Dictionary[String, int] = {}
 	var apexed_day: Dictionary[String, int] = {}
+	## Each hero's apex vow at the run's end, and its deed's share filled
+	## then (percent), for sizing the apex deeds (phase 8 part 3).
+	var apex_vowed: Dictionary[String, String] = {}
+	var apex_filled: Dictionary[String, int] = {}
 
 	## Its measures as a Dictionary (what --jobs passes between processes,
 	## with FileAccess.store_var, so types survive).
@@ -251,6 +255,11 @@ static func play(run: RunContent, run_seed: int, bot_name: String = "simple-peek
 		var last: RunState.Fought = state.fought.back() if not state.fought.is_empty() else null
 		if last != null and last.outcome == FightResult.Outcome.DEFEAT and last.act == state.act and last.day == state.day:
 			line.fell_to = last.encounter
+	for hero: RunState.Hero in state.heroes:
+		if not hero.apex.is_empty():
+			line.apex_vowed[hero.id] = hero.apex
+			var threshold: int = run.content.apexes[hero.apex].deed.threshold
+			line.apex_filled[hero.id] = 100 if hero.apex_earned else mini(100, hero.deeds.get(hero.apex, 0) * 100 / maxi(threshold, 1))
 	for hero: RunState.Hero in state.heroes:
 		line.picks[hero.id] = hero.upgrades.size()
 		for id: String in hero.upgrades:
@@ -572,6 +581,44 @@ static func acts_summary(run: RunContent, lines: Array[RunLine]) -> String:
 	return "\n".join(out)
 
 
+## Each apex vowed by a run's end (phase 8 part 3, for sizing the apex
+## deeds): how often, how often earned and its median act and day, and the
+## median share of the deed filled where it wasn't.
+static func apex_vows_summary(run: RunContent, lines: Array[RunLine]) -> String:
+	var vowed: Dictionary[String, int] = {}
+	var earned_on: Dictionary[String, Array] = {}
+	var short: Dictionary[String, Array] = {}
+	for line: RunLine in lines:
+		for hero_id: String in line.apex_vowed:
+			var apex_id: String = line.apex_vowed[hero_id]
+			vowed[apex_id] = vowed.get(apex_id, 0) + 1
+			if line.apexes.get(hero_id, "") == apex_id:
+				if not earned_on.has(apex_id):
+					earned_on[apex_id] = []
+				earned_on[apex_id].append(line.apexed_act[hero_id] * 100 + line.apexed_day[hero_id])
+			else:
+				if not short.has(apex_id):
+					short[apex_id] = []
+				short[apex_id].append(line.apex_filled.get(hero_id, 0))
+	var out: PackedStringArray = PackedStringArray()
+	out.append("Apex vows at the run's end (vowed, earned at median act-day, median share filled where not):")
+	for apex_id: String in run.content.apex_ids:
+		if not vowed.has(apex_id):
+			continue
+		var days: Array[int] = []
+		days.assign(earned_on.get(apex_id, []))
+		var shares: Array[int] = []
+		shares.assign(short.get(apex_id, []))
+		var at: String = "-"
+		if not days.is_empty():
+			var median: int = _median(days).to_int()
+			@warning_ignore("integer_division")
+			at = "%d-%d" % [median / 100, median % 100]
+		out.append("  %-18s vowed %3d, earned %3d (%s); short %3d at %s%%" % [run.content.apexes[apex_id].name, vowed[apex_id], days.size(), at, shares.size(),
+			_median(shares) if not shares.is_empty() else "-"])
+	return "\n".join(out)
+
+
 static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 	var content: ContentDb = run.content
 	var out: PackedStringArray = PackedStringArray()
@@ -590,6 +637,7 @@ static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 	out.append("Lost runs end on %s%s" % [", ".join(where), " (in Act 1; the others by act below)" if run.acts.size() > 1 else ""])
 	if run.acts.size() > 1:
 		out.append(acts_summary(run, lines))
+		out.append(apex_vows_summary(run, lines))
 	out.append("")
 	out.append("First transformation (a run's first hero; the design: around days 3-4):")
 	var firsts: Array[int] = []

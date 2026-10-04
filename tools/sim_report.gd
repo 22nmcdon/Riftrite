@@ -206,12 +206,21 @@ static func gate_setup(content: ContentDb, encounter_id: String, formation: Dict
 	var setup: FightSetup = Encounters.setup(content, encounter_id, formation, fight_seed, errors, {}, LATER_ACT_VOWS, transformed)
 	if setup == null:
 		return null
+	scale_for_gate(content, encounter_id, setup)
+	return setup
+
+
+## Scales a later act's enemies (and summon kits) down by gate_scale_bp, in
+## place; an Act 1 setup is left alone. The placement data and check use it
+## too, so the good bot learns on fights that can go either way.
+static func scale_for_gate(content: ContentDb, encounter_id: String, setup: FightSetup) -> void:
+	if content.encounters[encounter_id].act <= 1:
+		return
 	var scale_bp: int = gate_scale_bp(content.encounters[encounter_id])
 	for enemy: UnitSetup in setup.enemies:
 		enemy.def = Encounters.scaled(enemy.def, scale_bp)
 	for i: int in setup.summon_kits.size():
 		setup.summon_kits[i] = Encounters.scaled(setup.summon_kits[i], scale_bp)
-	return setup
 
 
 static func _fight(content: ContentDb, encounter_id: String, row: Row, fight_seed: int) -> void:

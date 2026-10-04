@@ -58,12 +58,7 @@ func _init() -> void:
 			var setup: FightSetup = Encounters.setup(content, encounter_id, formation, 7001 + i, errors, {}, vows, transformed)
 			if setup == null:
 				continue
-			if content.encounters[encounter_id].act > 1:
-				var scale_bp: int = SimReport.gate_scale_bp(content.encounters[encounter_id])
-				for enemy: UnitSetup in setup.enemies:
-					enemy.def = Encounters.scaled(enemy.def, scale_bp)
-				for k: int in setup.summon_kits.size():
-					setup.summon_kits[k] = Encounters.scaled(setup.summon_kits[k], scale_bp)
+			SimReport.scale_for_gate(content, encounter_id, setup)
 			if not setup.validate(content).is_empty():
 				continue
 			var info: Dictionary = Placement.read_enemies(setup, grid)

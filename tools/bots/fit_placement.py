@@ -13,9 +13,14 @@ encounter's best-scored formation (of the sampled ones) win more often than
 a random one? Then it prints the weights on all the data, unstandardized,
 for WEIGHTS in placement.gd.
 
-Usage: python3 tools/bots/fit_placement.py data.csv [weights.json]
+Usage: python3 tools/bots/fit_placement.py data.csv [weights.json] [--base=old.json --contexts=water]
 With weights.json (tools/bots/placement_weights.json), it writes the
 weights there for placement.gd to read.
+
+With --base and --contexts (phase 8 part 3): keeps the base weights and fits
+only the terms of the named contexts, on the rows where the first of them
+is on (water: Act 2's fights), to what the base leaves unexplained; so a
+later act's fights get their own corrections without moving Act 1's.
 """
 
 import csv
@@ -114,7 +119,20 @@ def score(w, x):
 
 
 def main():
+    options = dict(arg[2:].split("=", 1) for arg in sys.argv[1:] if arg.startswith("--"))
+    sys.argv = [arg for arg in sys.argv if not arg.startswith("--")]
     names, data = read(sys.argv[1])
+    base = None
+    if "base" in options:
+        with open(options["base"]) as handle:
+            base = json.load(handle)
+        assert base["terms"] == names, "the base weights' terms don't match the data's"
+        wanted = options["contexts"].split(",")
+        keep = [i for i, name in enumerate(names) if name.split("*")[1] in wanted]
+        assert names[keep[0]] == "bias*" + wanted[0], "the first fitted term must be the context's bias"
+        full_names = names
+        names = [full_names[i] for i in keep]
+        data = [(e, [x[i] for i in keep], won, y - score(base["weights"], x), score(base["weights"], x)) for e, x, won, y in data if x[keep[0]] != 0.0]
     encounters = sorted(set(r[0] for r in data), key=lambda e: [r[0] for r in data].index(e))
     print("Held out in turn (fitted on the others): random formation's win rate, the best %d scored's, and the best scored's HP left" % TOP)
     total_base = total_top = 0.0
@@ -128,21 +146,26 @@ def main():
         a = [[total_a[p][q] - per[held][0][p][q] for q in range(k)] for p in range(k)]
         b = [total_b[p] - per[held][1][p] for p in range(k)]
         w = fit(None, means, sds, (a, b))
-        ranked = sorted(test, key=lambda r: -score(w, r[1]))
-        base = sum(r[2] for r in test) / len(test)
+        ranked = sorted(test, key=lambda r: -(score(w, r[1]) + (r[4] if len(r) > 4 else 0.0)))
+        rate = sum(r[2] for r in test) / len(test)
         top = sum(r[2] for r in ranked[:TOP]) / TOP
         tenth = sum(r[2] for r in ranked[:len(ranked) // 10]) / (len(ranked) // 10)
-        total_base += base
+        total_base += rate
         total_top += tenth
-        print("  %-22s random %3d%%  best %d scored %3d%%  best tenth %3d%%" % (held, 100 * base, TOP, 100 * top, 100 * tenth))
+        print("  %-22s random %3d%%  best %d scored %3d%%  best tenth %3d%%" % (held, 100 * rate, TOP, 100 * top, 100 * tenth))
     print("  mean                   random %3d%%  best tenth %3d%%" % (100 * total_base / len(encounters), 100 * total_top / len(encounters)))
     w = fit(None, means, sds, (total_a, total_b))
     print("\nThe largest weights (all the data):")
     for name, v in sorted(zip(names, w), key=lambda pair: -abs(pair[1]))[:20]:
         print("  %-28s %8.4f" % (name, v))
+    if base is not None:
+        merged = list(base["weights"])
+        for i, v in zip(keep, w):
+            merged[i] = round(merged[i] + v, 5)
+        names, w = full_names, merged
     if len(sys.argv) > 2:
         with open(sys.argv[2], "w") as handle:
-            json.dump({"_note": "The good bot's placement weights (phase 6 step 6b): one per feature times context, context-major, fitted by tools/bots/fit_placement.py on tools/bots/placement_data.gd's practice fights. Don't edit by hand.",
+            json.dump({"_note": "The good bot's placement weights (phase 6 step 6b): one per feature times context, context-major, fitted by tools/bots/fit_placement.py on tools/bots/placement_data.gd's practice fights (phase 8 part 3: the water context's terms fitted on Act 2's fights over the Act 1 weights, --base). Don't edit by hand.",
                        "terms": names, "weights": [round(v, 5) for v in w]}, handle, indent=1)
             handle.write("\n")
 
