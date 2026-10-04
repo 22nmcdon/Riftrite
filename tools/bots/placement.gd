@@ -32,14 +32,17 @@ const FEATURE_NAMES: Array[String] = [
 ## What the fight holds, the same for every formation in it: the score's
 ## weights for each feature move with these (each feature times each
 ## context is a term), so the same reading serves a swarm and a sniper nest.
-## "water" is 1 in a fight with water (Act 2 on), so a later act's fights can
-## weigh every feature apart from Act 1's.
+## "water" is 1 in a fight with water (Act 2 on); such a fight is scored by
+## the weights file's "water_weights" (fitted on Act 2's fights alone), so a
+## later act's fights weigh every feature apart from Act 1's, and Act 1's
+## placement is unchanged.
 const CONTEXT_NAMES: Array[String] = ["one", "flankers", "areas", "swarm", "ranged", "rocks", "enemies", "water"]
 
 
 const WEIGHTS_FILE: String = "res://tools/bots/placement_weights.json"
 
 static var _weights: PackedFloat64Array = PackedFloat64Array()
+static var _water_weights: PackedFloat64Array = PackedFloat64Array()
 ## Where the weights are read from (placement_check's --weights compares
 ## another fit).
 static var weights_file: String = WEIGHTS_FILE
@@ -50,13 +53,21 @@ static func weights() -> PackedFloat64Array:
 	if _weights.is_empty():
 		var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(weights_file))
 		_weights = PackedFloat64Array(data["weights"])
+		_water_weights = PackedFloat64Array(data.get("water_weights", data["weights"]))
 		assert(_weights.size() == FEATURE_NAMES.size() * CONTEXT_NAMES.size(), "placement_weights.json doesn't match the features")
+		assert(_water_weights.size() == _weights.size(), "placement_weights.json's water weights don't match the features")
 	return _weights
+
+
+## The weights a fight is scored by: the water weights in a fight with water.
+static func weights_for(context: PackedFloat64Array) -> PackedFloat64Array:
+	var dry: PackedFloat64Array = weights()
+	return _water_weights if context[CONTEXT_NAMES.size() - 1] != 0.0 else dry
 
 
 ## A formation's score: each feature times each context, weighted.
 static func score(f: PackedFloat64Array, context: PackedFloat64Array) -> float:
-	var w: PackedFloat64Array = weights()
+	var w: PackedFloat64Array = weights_for(context)
 	var total: float = 0.0
 	var n: int = FEATURE_NAMES.size()
 	for c: int in context.size():
@@ -94,7 +105,7 @@ static func best_formations(setup: FightSetup, grid: HexGrid, count: int = 6, sc
 	var info: Dictionary = read_enemies(setup, grid)
 	var context: PackedFloat64Array = info["context"]
 	var n_f: int = FEATURE_NAMES.size()
-	var w: PackedFloat64Array = weights()
+	var w: PackedFloat64Array = weights_for(context)
 	var eff: PackedFloat64Array = PackedFloat64Array()
 	eff.resize(n_f)
 	for c: int in context.size():
