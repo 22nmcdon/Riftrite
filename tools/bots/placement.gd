@@ -6,6 +6,11 @@ extends RefCounted
 ## practice fights of every Act 1 encounter (tools/bots/placement_data.gd
 ## and tools/bots/fit_placement.py), then frozen.
 ##
+## Phase 8 part 3 (Act 2's water) adds two features: how many heroes start
+## on water (they start slow), and how much water lies between the far and
+## mid heroes and their nearest enemies (a slow walk for melee to reach them,
+## and for them to close); both are 0 in a fight without water.
+##
 ## Roles come from the kits, not the heroes' names: the tank is the hero
 ## with the most HP times DEF, the far one has the longest reach of the
 ## others, and the third is the middle. Distances are in hexes.
@@ -22,6 +27,7 @@ const FEATURE_NAMES: Array[String] = [
 	"area_bunch", "swarm_spread",
 	"cover", "far_edge",
 	"far_behind_tank", "mid_behind_tank",
+	"on_water", "water_ahead",
 ]
 ## What the fight holds, the same for every formation in it: the score's
 ## weights for each feature move with these (each feature times each
@@ -96,6 +102,8 @@ static func best_formations(setup: FightSetup, grid: HexGrid, count: int = 6, sc
 	var rows: PackedFloat64Array = PackedFloat64Array()
 	var edge: PackedFloat64Array = PackedFloat64Array()
 	var rocky: PackedFloat64Array = PackedFloat64Array()
+	var wet: PackedFloat64Array = PackedFloat64Array()
+	var wade: PackedFloat64Array = PackedFloat64Array()
 	var centroid: Vector2 = info["centroid"]
 	for hex: Vector2i in zone:
 		var c: Vector2i = grid.center(hex.x, hex.y)
@@ -113,6 +121,8 @@ static func best_formations(setup: FightSetup, grid: HexGrid, count: int = 6, sc
 			if setup.rocks.has(other):
 				rocks_near += 1
 		rocky.append(rocks_near)
+		wet.append(1.0 if setup.water.has(hex) else 0.0)
+		wade.append(water_ahead(setup, grid, p, info["at"]))
 	var pair: PackedFloat64Array = PackedFloat64Array()
 	pair.resize(n * n)
 	for i: int in n:
@@ -129,9 +139,9 @@ static func best_formations(setup: FightSetup, grid: HexGrid, count: int = 6, sc
 	# Each role's own terms, for its shortlist.
 	var own: Array = [[], [], []]
 	for i: int in n:
-		own[0].append([eff[1] * rows[i] + eff[7] * near[i] + eff[8] * lateral[i] + eff[20] * rows[i] + eff[21] * rows[i], i])
-		own[1].append([eff[2] * rows[i] + eff[5] * near[i] + eff[9] * lateral[i] + eff[18] * rocky[i] + eff[19] * edge[i] - eff[20] * rows[i], i])
-		own[2].append([eff[3] * rows[i] + eff[6] * near[i] + eff[10] * lateral[i] + eff[18] * rocky[i] - eff[21] * rows[i], i])
+		own[0].append([eff[1] * rows[i] + eff[7] * near[i] + eff[8] * lateral[i] + eff[20] * rows[i] + eff[21] * rows[i] + eff[22] * wet[i], i])
+		own[1].append([eff[2] * rows[i] + eff[5] * near[i] + eff[9] * lateral[i] + eff[18] * rocky[i] + eff[19] * edge[i] - eff[20] * rows[i] + eff[22] * wet[i] + eff[23] * wade[i], i])
+		own[2].append([eff[3] * rows[i] + eff[6] * near[i] + eff[10] * lateral[i] + eff[18] * rocky[i] - eff[21] * rows[i] + eff[22] * wet[i] + eff[23] * wade[i], i])
 	var lists: Array[PackedInt32Array] = []
 	for role: int in 3:
 		var ranked: Array = own[role]
@@ -167,7 +177,8 @@ static func best_formations(setup: FightSetup, grid: HexGrid, count: int = 6, sc
 					+ eff[11] * smallest + eff[12] * mean + eff[13] * p1 + eff[14] * p2 \
 					+ eff[15] * cover + eff[16] * areas / (1.0 + smallest) + eff[17] * swarm * mean \
 					+ eff[18] * (rocky[a] + rocky[m]) + eff[19] * edge[a] \
-					+ eff[20] * (rows[t] - rows[a]) + eff[21] * (rows[t] - rows[m])
+					+ eff[20] * (rows[t] - rows[a]) + eff[21] * (rows[t] - rows[m]) \
+					+ eff[22] * (wet[t] + wet[a] + wet[m]) + eff[23] * (wade[a] + wade[m])
 				if best.size() < count or value > floor_value:
 					best.append([value, t, a, m])
 					best.sort_custom(func(x: Array, y: Array) -> bool: return x[0] > y[0] if x[0] != y[0] else (x[1] * 10000 + x[2] * 100 + x[3]) < (y[1] * 10000 + y[2] * 100 + y[3]))
@@ -254,7 +265,31 @@ static func features(setup: FightSetup, grid: HexGrid, info: Dictionary) -> Pack
 	f[19] = minf(far.col, grid.width - 1 - far.col)
 	f[20] = tank.row - far.row
 	f[21] = tank.row - mid.row
+	for unit: UnitSetup in [tank, far, mid]:
+		if setup.water.has(Vector2i(unit.col, unit.row)):
+			f[22] += 1.0
+	f[23] = water_ahead(setup, grid, at[1], enemies) + water_ahead(setup, grid, at[2], enemies)
 	return f
+
+
+## How many water hexes the straight line from `p` (in hexes) to the nearest
+## of `enemies` crosses (its own hex aside; sampled every quarter hex).
+static func water_ahead(setup: FightSetup, grid: HexGrid, p: Vector2, enemies: Array) -> float:
+	if setup.water.is_empty() or enemies.is_empty():
+		return 0.0
+	var target: Vector2 = enemies[0]
+	for q: Vector2 in enemies:
+		if p.distance_to(q) < p.distance_to(target):
+			target = q
+	var start: int = grid.hex_at(Vector2i(roundi(p.x * HexGrid.HEX), roundi(p.y * HexGrid.HEX)))
+	var seen: Dictionary[int, bool] = {}
+	var steps: int = maxi(ceili(p.distance_to(target) * 4.0), 1)
+	for s: int in range(1, steps + 1):
+		var point: Vector2 = p.lerp(target, float(s) / steps)
+		var hex: int = grid.hex_at(Vector2i(roundi(point.x * HexGrid.HEX), roundi(point.y * HexGrid.HEX)))
+		if hex != start and setup.water.has(Vector2i(grid.col_of(hex), grid.row_of(hex))):
+			seen[hex] = true
+	return float(seen.size())
 
 
 ## What a fight's enemies are, for features(): their points, their weighted

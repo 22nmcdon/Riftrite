@@ -260,8 +260,11 @@ func test_the_run_report_by_act() -> void:
 	lines[2].act = 3
 	lines[2].day = 7
 	lines[2].outcome = RunState.Outcome.WON
+	lines[2].apexed_act["vell"] = 2
+	lines[2].apexed_day["vell"] = 5
+	lines[2].apexed_on["vell"] = 0
 	var text: String = RunReport.acts_summary(_run, lines)
 	assert_string_contains(text, "Act 1: 3 reached, 2 won (66%); lost on days 1-7: 0 0 0 1 0 0 0; apexes earned 0")
-	assert_string_contains(text, "Act 2: 2 reached, 1 won (50%); lost on days 1-7: 0 0 0 0 0 1 0; apexes earned 1 (median day 5)")
+	assert_string_contains(text, "Act 2: 2 reached, 1 won (50%); lost on days 1-7: 0 0 0 0 0 1 0; apexes earned 2 (median day 5); at its boss 1, 1 with an apex", "Act 2's boss: only the run that went on to Act 3 reached it, with Vell's apex from day 5")
 	assert_string_contains(text, "Act 3: 1 reached, 1 won (100%)")
 	assert_string_contains(RunReport.summary(_run, lines), "By act")

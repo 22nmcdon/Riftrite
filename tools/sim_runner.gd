@@ -24,6 +24,11 @@ extends SceneTree
 ##                step; --singles adds each apex alone, --team=<name> one
 ##                team, --apex-deeds what a fight puts into each apex's deed
 ##                with its taste. Use --sweep=4 or so: it fights a lot.
+##   --act=N      only act N's encounters (phase 8 part 3)
+##   --scales=a,b,...  the apexes report's enemy strengths, in basis points
+##                (default ApexReport.SCALES, x1.0 to x5.0); below 10000 too
+##   --by-encounter  with --apexes: each encounter's half point for each
+##                team, transformed and at apex (for tuning an act's scales)
 ## Ends with a line per encounter, and exits 1 if any fails the gate.
 
 const Report = preload("res://tools/sim_report.gd")
@@ -33,7 +38,8 @@ const FORMATIONS_FILE: String = "res://tools/sim_formations.json"
 
 
 func _init() -> void:
-	var options: Dictionary[String, String] = {"encounter": "", "seeds": "50", "sweep": "40", "draw-seed": "1", "team": ""}
+	var options: Dictionary[String, String] = {"encounter": "", "seeds": "50", "sweep": "40", "draw-seed": "1", "team": "", "act": "", "scales": ""}
+	var by_encounter: bool = false
 	var apexes: bool = false
 	var singles: bool = false
 	var apex_deeds: bool = false
@@ -63,6 +69,9 @@ func _init() -> void:
 		if arg == "--apex-deeds":
 			apex_deeds = true
 			continue
+		if arg == "--by-encounter":
+			by_encounter = true
+			continue
 		var parts: PackedStringArray = arg.trim_prefix("--").split("=", true, 1)
 		if parts.size() != 2 or not options.has(parts[0]):
 			_fail("unknown option %s" % arg)
@@ -80,6 +89,13 @@ func _init() -> void:
 	# A Hunt's small pack (phase 5) is a quick fight for shards, not a
 	# placement question, so only --encounter runs one.
 	var encounter_ids: Array[String] = content.encounter_ids.filter(func(id: String) -> bool: return content.encounters[id].tier != "hunt")
+	if not options["act"].is_empty():
+		encounter_ids = encounter_ids.filter(func(id: String) -> bool: return content.encounters[id].act == options["act"].to_int())
+	var scales: Array[int] = ApexReport.SCALES.duplicate()
+	if not options["scales"].is_empty():
+		scales.clear()
+		for value: String in options["scales"].split(","):
+			scales.append(value.to_int())
 	if not options["encounter"].is_empty():
 		if not content.encounters.has(options["encounter"]):
 			_fail("unknown encounter %s" % options["encounter"])
@@ -98,12 +114,14 @@ func _init() -> void:
 			teams = picked
 		if apex_deeds:
 			print(ApexReport.deeds_text(content, teams, encounter_ids, named, options["sweep"].to_int()))
-		if apexes:
+		if apexes and by_encounter:
+			print(ApexReport.by_encounter_text(content, teams, encounter_ids, named, options["sweep"].to_int(), scales))
+		elif apexes:
 			for team: ApexReport.Team in teams:
 				var variants: Array[ApexReport.Lineup] = ApexReport.variants_for(content, team, singles)
 				for variant: ApexReport.Lineup in variants:
-					ApexReport.run_variant(content, variant, encounter_ids, named, options["sweep"].to_int(), ApexReport.SCALES)
-				print(ApexReport.team_text(content, team, variants, ApexReport.SCALES))
+					ApexReport.run_variant(content, variant, encounter_ids, named, options["sweep"].to_int(), scales)
+				print(ApexReport.team_text(content, team, variants, scales))
 				print("")
 		quit(0)
 		return

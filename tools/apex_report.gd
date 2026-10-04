@@ -192,6 +192,44 @@ static func fight(content: ContentDb, variant: Lineup, encounter_id: String, for
 	return sim
 
 
+## With --by-encounter (phase 8 part 3, tuning an act's scales): each
+## encounter's half point for each team, transformed (T) and at apex (A),
+## and their medians across the teams: the scale an encounter would need
+## for a team to win half its fights there is its scale_bp times that.
+static func by_encounter_text(content: ContentDb, teams: Array[Team], encounter_ids: Array[String], named: Dictionary[String, Dictionary], drawn: int, scales: Array[int]) -> String:
+	var lines: Array[String] = ["Half points by encounter (x the encounter's scale_bp; steps %s):" % ", ".join(scales.map(func(s: int) -> String: return _x(s / 10000.0)))]
+	for encounter_id: String in encounter_ids:
+		var transformed: Array[float] = []
+		var apex: Array[float] = []
+		var cells: Array[String] = []
+		for team: Team in teams:
+			var variants: Array[Lineup] = variants_for(content, team, false)
+			var halves: Array[float] = []
+			for variant: Lineup in variants:
+				run_variant(content, variant, [encounter_id] as Array[String], named, drawn, scales)
+				halves.append(_half_or_top(variant, scales))
+			transformed.append(halves[0])
+			apex.append(halves[1])
+			cells.append("%s %s/%s" % [team.name, _x(halves[0]), _x(halves[1])])
+		var encounter: EncounterDef = content.encounters[encounter_id]
+		lines.append("  %-20s %-7s scale %5d  median T %s  A %s   (%s)" % [encounter_id, encounter.tier, encounter.scale_bp,
+			_x(_median(transformed)), _x(_median(apex)), "; ".join(cells)])
+	return "\n".join(lines)
+
+
+## The half point, or past the last step the last step itself (a floor).
+static func _half_or_top(variant: Lineup, scales: Array[int]) -> float:
+	var half: float = variant.half_point(scales)
+	return half if half > 0.0 else scales.back() / 10000.0
+
+
+static func _median(values: Array[float]) -> float:
+	var sorted: Array[float] = values.duplicate()
+	sorted.sort()
+	@warning_ignore("integer_division")
+	return sorted[sorted.size() / 2] if not sorted.is_empty() else 0.0
+
+
 static func _tally(content: ContentDb, variant: Lineup, sim: CombatSim) -> void:
 	for entry: LogEntry in sim.combat_log.of_kind(LogEntry.Kind.DAMAGE):
 		if variant.vows.has(entry.source_unit):

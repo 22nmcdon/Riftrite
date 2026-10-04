@@ -556,8 +556,19 @@ static func acts_summary(run: RunContent, lines: Array[RunLine]) -> String:
 			for hero_id: String in line.apexed_act:
 				if line.apexed_act[hero_id] == number and line.apexed_on.get(hero_id, 0) == 0:
 					apex_days.append(line.apexed_day[hero_id])
-		out.append("  Act %d: %d reached, %d won (%d%%); lost on days 1-%d: %s; apexes earned %d (median day %s)" % [number, reached.size(), won, _pct(won, reached.size()),
-			act_def.days.size(), " ".join(where), apex_days.size(), _median(apex_days)])
+		# Runs that reached the act's boss, and how many held an apex by then
+		# (Decision 2 of rebuild-phase8-acts.md: at least one before Act 2's).
+		var boss_day: int = act_def.days.size()
+		var at_boss: Array[RunLine] = []
+		at_boss.assign(reached.filter(func(line: RunLine) -> bool: return line.act > number or line.day >= boss_day))
+		var with_apex: int = at_boss.filter(func(line: RunLine) -> bool:
+			for hero_id: String in line.apexed_act:
+				var act_of: int = line.apexed_act[hero_id]
+				if act_of < number or (act_of == number and line.apexed_day.get(hero_id, 99) < boss_day):
+					return true
+			return false).size()
+		out.append("  Act %d: %d reached, %d won (%d%%); lost on days 1-%d: %s; apexes earned %d (median day %s); at its boss %d, %d with an apex" % [number, reached.size(), won, _pct(won, reached.size()),
+			act_def.days.size(), " ".join(where), apex_days.size(), _median(apex_days), at_boss.size(), with_apex])
 	return "\n".join(out)
 
 

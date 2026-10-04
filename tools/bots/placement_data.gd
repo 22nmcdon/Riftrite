@@ -1,8 +1,9 @@
 extends SceneTree
 ## Placement data for fitting the good bot's weights (phase 6 step 6b,
-## docs/plans/rebuild-phase6-bot-tuning.md, section 2.2): for each Act 1
-## encounter (Hunts aside), random legal formations of a random team (each
-## hero vowed to a random path, transformed half the time), each fought on a
+## docs/plans/rebuild-phase6-bot-tuning.md, section 2.2): for each
+## encounter of every act (Hunts aside), random legal formations of a random
+## team (each hero vowed to a random path, transformed half the time in Act
+## 1, always from Act 2 on: phase 8 part 3), each fought on a
 ## practice seed. One CSV line a fight: the encounter, the features
 ## (tools/bots/placement.gd), whether it was won, and the heroes' HP left.
 ## tools/bots/fit_placement.py fits WEIGHTS from it.
@@ -39,7 +40,7 @@ func _init() -> void:
 			for hero_id: String in content.hero_ids:
 				var paths: Array[PathDef] = content.heroes[hero_id].paths
 				vows[hero_id] = paths[rng.range_int(paths.size())].id
-				if rng.range_int(2) == 0:
+				if rng.range_int(2) == 0 or content.encounters[encounter_id].act > 1:
 					transformed.append(hero_id)
 			var free: Array[Vector2i] = zone.duplicate()
 			var formation: Dictionary[String, Vector2i] = {}
