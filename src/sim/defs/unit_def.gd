@@ -13,14 +13,16 @@ extends RefCounted
 ## Only a unit whose signature fires on mana has a mana bar, and it must have
 ## one. The basic attack, the signature, and the passives each need their own
 ## id.
-##   "traits": ["engage", "flying", "hop_away", "fires_moving", "inert", "swims"]
+##   "traits": ["engage", "flying", "hop_away", "fires_moving", "inert", "swims", "submerges"]
 ##       code paths a unit has (sections 4 and 6); hop_away needs
 ##       "hop_cooldown_ms" too; fires_moving (phase 4, Volley): while it
 ##       walks, its basic attack fires at the nearest enemy in reach;
 ##       inert (phase 5, the Gloam Totem): it never targets, attacks, or
 ##       walks, though its signature and passives work (its basic attack
 ##       is never used); swims (phase 8 part 3, the Mire Eel): water
-##       doesn't slow it (Water)
+##       doesn't slow it (Water); submerges (the Mire Eel): on water it
+##       can't be picked as a target, as if Stealthed (the keyword too),
+##       but for Water.SURFACE_TICKS after each of its basic attacks
 ##   "plant_ms": 1500
 ##       phase 4 (Deadeye's cost): after it moves, its basic attack waits
 ##       this long before it can fire
@@ -33,7 +35,7 @@ extends RefCounted
 
 ## A unit's own rule (section 4): Targeting.RULES but self.
 const TARGETING_RULES: Array[String] = ["nearest", "weakest_backliner", "largest_group", "farthest", "lowest_hp_ally", "highest_mana"]
-const TRAITS: Array[String] = ["engage", "flying", "hop_away", "fires_moving", "inert", "swims"]
+const TRAITS: Array[String] = ["engage", "flying", "hop_away", "fires_moving", "inert", "swims", "submerges"]
 
 var id: String
 var name: String
@@ -281,6 +283,19 @@ func summon_ids() -> Array[String]:
 	for effect: EffectDef in all_effects():
 		if effect.type == EffectDef.Type.SUMMON:
 			found.append(effect.summon_kit)
+	found.append_array(rise_as_ids())
+	return found
+
+
+## The kits its rise passives rise as (phase 8 part 3).
+func rise_as_ids() -> Array[String]:
+	var found: Array[String] = []
+	var parts: Array[PartDef] = passives.duplicate()
+	for phase: PhaseDef in phases:
+		parts.append_array(phase.passives)
+	for part: PartDef in parts:
+		if part.kind == PartDef.Kind.RISE and not part.rise_as.is_empty():
+			found.append(part.rise_as)
 	return found
 
 

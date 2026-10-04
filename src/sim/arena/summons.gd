@@ -14,6 +14,12 @@ extends RefCounted
 ##                 one straight ahead of it first and then clockwise
 ##       hexes     each on its hex's center, or else the free spot nearest
 ##                 it (Displacement.free_spot_near)
+##       water     (phase 8 part 3) each on the water hex nearest any of
+##                 its enemies, at the free spot nearest its center; none
+##                 without water (dropped: "no water")
+##   - A rise as another kit (phase 8 part 3; PartDef's rise "as") stands a
+##     fresh unit of that kit where the fallen one fell (rise_as), logged as
+##     a SUMMON sourced to the rise.
 ##   - A summoned unit joins at the end of the fight's order, so it acts
 ##     this tick if the order hasn't reached the end yet. It has a unique id
 ##     (the kit's id, then "#2", "#3", ...), no target, the kit's starting
@@ -36,6 +42,9 @@ static func summon(sim: CombatSim, unit: UnitState, source: EffectSource, effect
 			_log_dropped(sim, source, kit, "its side is full")
 			continue
 		var summoned: UnitState = UnitState.make_summon(kit, unit.side, sim.next_unit_id(kit.id), sim.units.size(), sim.tuning.unit_radius)
+		if effect.placement == EffectDef.Placement.WATER and (not sim.has_water or sim.water.hexes.is_empty()):
+			_log_dropped(sim, source, kit, "no water")
+			continue
 		var spot: Vector2i = _spot(sim, unit, summoned, effect, i, edges)
 		if spot.x < 0:
 			_log_dropped(sim, source, kit, "no room")
@@ -66,7 +75,49 @@ static func _spot(sim: CombatSim, unit: UnitState, summoned: UnitState, effect: 
 		EffectDef.Placement.HEXES:
 			var hex: Vector2i = effect.summon_hexes[i]
 			return Displacement.free_spot_near(sim, summoned, sim.grid.center(hex.x, hex.y), null, 0)
+		EffectDef.Placement.WATER:
+			return Displacement.free_spot_near(sim, summoned, _water_near_enemy(sim, unit), null, 0)
 	return Vector2i(-1, -1)
+
+
+## The center of the water hex nearest any standing enemy of `unit` (ties to
+## the first water hex, then the first enemy).
+static func _water_near_enemy(sim: CombatSim, unit: UnitState) -> Vector2i:
+	var best: Vector2i = Vector2i(-1, -1)
+	var best_sq: int = -1
+	for hex: Vector2i in sim.water.hexes:
+		var middle: Vector2i = sim.grid.center(hex.x, hex.y)
+		for enemy: UnitState in sim.standing_enemies_of(unit):
+			var distance_sq: int = ArenaPlane.length_sq(enemy.pos - middle)
+			if best_sq < 0 or distance_sq < best_sq:
+				best = middle
+				best_sq = distance_sq
+	return best if best.x >= 0 else sim.grid.center(sim.water.hexes[0].x, sim.water.hexes[0].y)
+
+
+## A fallen unit rises as another kit (see the top): a fresh one at the
+## free spot nearest where it fell, at the rise's share of its max HP. With
+## no room, or its side full, none (dropped).
+static func rise_as(sim: CombatSim, fallen: UnitState, part: PartDef) -> void:
+	var kit: UnitDef = sim.setup.summon_kit(part.rise_as)
+	var source: EffectSource = EffectSource.make(fallen.id, part.id, part.name)
+	if sim.standing_count(fallen.side) >= sim.tuning.max_units_per_side:
+		_log_dropped(sim, source, kit, "its side is full")
+		return
+	var risen: UnitState = UnitState.make_summon(kit, fallen.side, sim.next_unit_id(kit.id), sim.units.size(), sim.tuning.unit_radius)
+	var spot: Vector2i = Displacement.free_spot_near(sim, risen, sim.nearest_safe_point(fallen.pos, risen.radius), null, 0)
+	if spot.x < 0:
+		_log_dropped(sim, source, kit, "no room")
+		return
+	risen.pos = spot
+	risen.hp = maxi(FixedMath.apply_bp(risen.max_hp, part.rise_hp_bp), 1)
+	sim.add_unit(risen)
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.SUMMON, source)
+	entry.target = risen.id
+	entry.to_pos = spot
+	entry.note = ""
+	sim.combat_log.add(entry)
+	sim.units_joined()
 
 
 ## Spots along the safe ground's edge for a unit of `radius`, nearest `near`

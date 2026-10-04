@@ -235,6 +235,9 @@ func _check_kit(kit: UnitDef, where: String, content: ContentDb, grid: HexGrid, 
 	for status_id: String in kit.condition_status_ids():
 		if not content.statuses.has(status_id):
 			errors.append("%s names an unknown status \"%s\"" % [where, status_id])
+	for kit_id: String in kit.rise_as_ids():
+		if summon_kit(kit_id) == null:
+			errors.append("%s rises as \"%s\", which isn't among the fight's summon kits" % [where, kit_id])
 	for effect: EffectDef in kit.all_effects():
 		if effect.type != EffectDef.Type.SUMMON:
 			continue

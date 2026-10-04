@@ -42,6 +42,10 @@ static func basic_attack(sim: CombatSim, unit: UnitState) -> void:
 	unit.sure_crit = false
 	unit.tactic_backing = false if unit.tactic != null and unit.tactic.kind == TacticDef.Kind.KITE else unit.tactic_backing
 	unit.attack.spend()
+	if unit.submerges:
+		# It surfaces to attack (phase 8 part 3, Submerge).
+		unit.surfaced_until = sim.tick + Water.SURFACE_TICKS
+		unit.submerged = false
 	Mana.on_attack(sim, unit)
 
 

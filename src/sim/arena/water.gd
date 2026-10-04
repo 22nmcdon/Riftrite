@@ -16,6 +16,11 @@ extends RefCounted
 ##     crumbled water (Decision 2).
 ##   - A Burn tick on a unit on water deals BURN_BP of itself (Statuses;
 ##     noted "in water"), and lasts as long as anywhere else.
+##   - Submerge (a trait, the Mire Eel): a unit that submerges is under
+##     while it's on water (UnitState.submerged, marked with on_water), but
+##     for SURFACE_TICKS after each basic attack. Under, it's as if Stealthed
+##     (Statuses.is_stealthed, the keyword): it can't be picked, and a unit
+##     targeting it picks again ("... is submerged").
 ##   - UnitState.on_water is marked (mark) as the tick starts and again once
 ##     every unit has acted, for conditions ("on_water", UnitCondition), so a
 ##     condition reads where the unit stood at the last mark.
@@ -33,6 +38,8 @@ extends RefCounted
 const SPEED_BP: int = 5000
 ## A Burn tick on water deals this much of itself.
 const BURN_BP: int = 5000
+## A unit that submerges stays up this long after each basic attack (2s).
+const SURFACE_TICKS: int = 40
 ## A route's step onto water costs this much more (2x), for a walker that
 ## doesn't swim.
 const ROUTE_COST_BP: int = 20000
@@ -130,6 +137,8 @@ static func mark(sim: CombatSim) -> void:
 	for unit: UnitState in sim.units:
 		if unit.alive:
 			unit.on_water = not unit.flying and sim.on_water(unit.pos)
+			if unit.submerges:
+				unit.submerged = unit.on_water and sim.tick >= unit.surfaced_until
 
 
 ## The center of the water hex nearest `point` (ties to the first listed).

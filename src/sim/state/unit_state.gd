@@ -47,6 +47,11 @@ var front_most: bool = false
 ## with water), and the swims trait: water doesn't slow it.
 var on_water: bool = false
 var swims: bool = false
+## Submerge (phase 8 part 3, the trait): it submerges, it's under now (at
+## the last mark), and the tick it may go under again (after an attack).
+var submerges: bool = false
+var submerged: bool = false
+var surfaced_until: int = 0
 var max_hp: int
 ## Its max HP as the fight began (wounds counted), for max_hp_bp boosts
 ## (phase 5c step 5c).
@@ -253,6 +258,7 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 	unit.refresh_reach()
 	unit.flying = setup.def.has_trait("flying")
 	unit.swims = setup.def.has_trait("swims")
+	unit.submerges = setup.def.has_trait("submerges")
 	unit.fires_moving = setup.def.has_trait("fires_moving")
 	for part: PartDef in setup.def.passives:
 		if part.kind == PartDef.Kind.AURA and part.aura.stat == AuraDef.Stat.RANGE and part.aura.while_kind == AuraDef.While.PLANTED:

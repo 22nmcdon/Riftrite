@@ -516,7 +516,7 @@ func _act(unit: UnitState) -> void:
 			Targeting.set_target(self, unit, taunter, "taunted")
 			target = taunter
 	if target != null and target.alive and target.side != unit.side and Statuses.is_stealthed(target):
-		Targeting.lose(self, unit, "%s is stealthed" % target.id)
+		Targeting.lose(self, unit, "%s is %s" % [target.id, "submerged" if target.submerged else "stealthed"])
 		target = null
 	if target == null or not target.alive:
 		Targeting.update(self, unit)
@@ -876,6 +876,10 @@ func _rise_due() -> void:
 			unit.rises_done += 1
 		else:
 			unit.rose = true
+		if part != null and not part.rise_as.is_empty():
+			# A fresh one of another kit stands where it fell (phase 8 part 3).
+			Summons.rise_as(self, unit, part)
+			continue
 		var spot: Vector2i = Displacement.free_spot_near(self, unit, nearest_safe_point(unit.pos, unit.radius), null, 0)
 		if spot.x < 0:
 			continue
@@ -938,7 +942,9 @@ func _fall(unit: UnitState) -> void:
 	unit.alive = false
 	if unit.rise_part != null:
 		# Its own rises (phase 8 part 2); Second Dawn's counts toward them.
-		if unit.rises_done < unit.rise_part.rise_times:
+		# Phase 8 part 3: only if it fell meeting the rise's "if".
+		var meets: bool = unit.rise_part.rise_if == null or unit.rise_part.rise_if.holds(unit)
+		if unit.rises_done < unit.rise_part.rise_times and meets:
 			unit.rise_at = tick + unit.rise_part.rise_ticks
 	elif hero_rules.rise_ticks > 0 and unit.side == EffectSource.Team.HEROES and not unit.rose and unit.index < setup.heroes.size():
 		unit.rise_at = tick + hero_rules.rise_ticks

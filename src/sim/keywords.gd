@@ -8,7 +8,7 @@ extends RefCounted
 ##   marked     a Marked status
 ##   rooted     a Root
 ##   burning    Burn stacks
-##   stealthed  Stealth
+##   stealthed  Stealth, or submerged (phase 8 part 3; Water)
 ##   shielded   its Shield is above 0
 
 const SHIELDED: String = "shielded"
@@ -21,6 +21,9 @@ const LABELS: Array[String] = ["Marked", "Rooted", "Burning", "Stealthed", "Shie
 static func has(unit: UnitState, keyword: String) -> bool:
 	if keyword == SHIELDED:
 		return unit.shield > 0
+	if unit.submerged and keyword == "stealthed":
+		# Submerged (phase 8 part 3) is Stealthed to every card.
+		return true
 	for state: StatusState in unit.statuses:
 		if state.def.keyword == keyword and (state.def.is_timed() or state.total_stacks() > 0):
 			return true

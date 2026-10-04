@@ -248,7 +248,7 @@ enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, 
 enum Toward { UNIT, WATER, AREA }
 ## A flood's mode (phase 8 part 3; Water).
 enum FloodMode { CIRCLE, SPREAD, DRAIN, ALL }
-enum Placement { EDGES, ADJACENT, HEXES }
+enum Placement { EDGES, ADJACENT, HEXES, WATER }
 enum Anchor { TARGET, SELF, TARGET_DIRECTION }
 enum Hits { ENEMIES, ALLIES, ALL, OTHER_ALLIES }
 enum Target {
@@ -334,7 +334,7 @@ const FLOOD_MODE_NAMES: Array[String] = ["circle", "spread", "drain", "all"]
 ## The types placed at the ability's target without a "target" key of their
 ## own (an area, a snare, a wall).
 const PLACED: Array[Type] = [Type.AREA, Type.SNARE, Type.WALL, Type.FLOOD]
-const PLACEMENT_NAMES: Array[String] = ["edges", "adjacent", "hexes"]
+const PLACEMENT_NAMES: Array[String] = ["edges", "adjacent", "hexes", "water"]
 const NEAR_NAMES: Array[String] = ["self", "target"]
 ## The types with no "target" key: they act from the unit itself.
 const UNTARGETED: Array[Type] = [Type.START_COLLAPSE, Type.SUMMON]

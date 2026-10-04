@@ -344,3 +344,85 @@ func test_the_new_keys_are_checked() -> void:
 		"effects": [{"type": "flood", "mode": "spread"}]}
 	EffectDef.read(DataReader.new(area, "test", errors))
 	assert_false(errors.is_empty(), "a flood isn't one of an area's effects")
+
+
+func test_a_unit_that_falls_on_water_rises_as_another_kit() -> void:
+	var rise: Dictionary = {"id": "reform", "name": "Reform", "kind": "rise", "times": 1, "after_ms": 4000, "hp_pct": 50,
+		"if": {"on_water": true}, "as": "shambler"}
+	var shard: UnitDef = still("shard", {"stats": {"hp": 100}, "passives": [rise]})
+	var shambler: UnitDef = still("shambler", {"stats": {"hp": 400}})
+	for wet: bool in [true, false]:
+		var setup: FightSetup = K.fight([K.at(still("hero"), 3, 1)] as Array[UnitSetup], [K.foe(shard, 3, 4)] as Array[UnitSetup])
+		setup.summon_kits = [shambler] as Array[UnitDef]
+		if wet:
+			setup.water = [Vector2i(3, 4)] as Array[Vector2i]
+		var fight: CombatSim = K.sim(setup)
+		K.step(fight, 2)
+		fight.unit_by_id("shard").hp = 0
+		K.step(fight, 2)
+		assert_false(fight.unit_by_id("shard").alive)
+		if not wet:
+			assert_true(fight.finished, "fell dry: it stays broken, and the fight is over")
+			continue
+		assert_false(fight.finished, "it will reform, so the fight goes on")
+		K.step(fight, 80)
+		var summons: Array[LogEntry] = K.entries(fight, LogEntry.Kind.SUMMON)
+		assert_eq(summons.size(), 1)
+		assert_eq([summons[0].source_unit, summons[0].source_ability, summons[0].target], ["shard", "reform", "shambler"])
+		var risen: UnitState = fight.unit_by_id("shambler")
+		assert_true(risen.alive)
+		assert_eq(risen.hp, 200, "half of its own max HP")
+		assert_lt(ArenaPlane.distance(risen.pos, fight.grid.center(3, 4)), 400, "where the shard fell")
+		assert_false(fight.unit_by_id("shard").alive, "the shard itself stays down")
+
+
+func test_a_rise_as_a_kit_the_fight_lacks_is_refused() -> void:
+	var rise: Dictionary = {"id": "reform", "name": "Reform", "kind": "rise", "times": 1, "after_ms": 4000, "hp_pct": 50, "as": "shambler"}
+	var setup: FightSetup = K.fight([K.at(still("hero"), 3, 1)] as Array[UnitSetup], [K.foe(still("shard", {"passives": [rise]}), 3, 4)] as Array[UnitSetup])
+	assert_eq(setup.validate(K.content()), ["shard at (3, 4) rises as \"shambler\", which isn't among the fight's summon kits"] as Array[String])
+
+
+func test_summons_climb_out_of_the_water_nearest_a_hero() -> void:
+	var ring: Array = [{"type": "summon", "kit": "thrall", "count": 2, "placement": "water"}]
+	var setup: FightSetup = flood_setup(ring, [Vector2i(0, 4), Vector2i(3, 3), Vector2i(7, 5)] as Array[Vector2i])
+	setup.summon_kits = [still("thrall")] as Array[UnitDef]
+	var fight: CombatSim = K.sim(setup)
+	K.step(fight, 2)
+	var summons: Array[LogEntry] = K.entries(fight, LogEntry.Kind.SUMMON)
+	assert_eq(summons.map(func(entry: LogEntry) -> String: return entry.target), ["thrall", "thrall#2"])
+	for entry: LogEntry in summons:
+		assert_lt(ArenaPlane.distance(entry.to_pos, fight.grid.center(3, 3)), 500, "at the water nearest the hero at (3, 1)")
+	var dry_setup: FightSetup = flood_setup(ring)
+	dry_setup.summon_kits = [still("thrall")] as Array[UnitDef]
+	var dry: CombatSim = K.sim(dry_setup)
+	K.step(dry, 2)
+	assert_eq(K.entries(dry, LogEntry.Kind.SUMMON).map(func(entry: LogEntry) -> String: return entry.note), ["no water", "no water"])
+
+
+func test_a_submerged_unit_cant_be_picked_until_it_surfaces_to_attack() -> void:
+	var eel: UnitDef = still("eel", {"traits": ["swims", "submerges"], "stats": {"range": 6}, "basic_attack": {"cooldown_ms": 3000}})
+	var setup: FightSetup = K.fight([K.at(still("hero", {"stats": {"range": 8}}), 3, 1)] as Array[UnitSetup], [K.foe(eel, 3, 4)] as Array[UnitSetup])
+	setup.water = [Vector2i(3, 4)] as Array[Vector2i]
+	var fight: CombatSim = K.sim(setup)
+	var hero: UnitState = fight.unit_by_id("hero")
+	var eel_unit: UnitState = fight.unit_by_id("eel")
+	K.step(fight, 1)
+	assert_true(eel_unit.submerged, "under the water")
+	assert_true(Keywords.has(eel_unit, "stealthed"), "Stealthed to every card")
+	assert_true(Statuses.is_stealthed(eel_unit))
+	var surfaced_at: int = -1
+	var picked_at: int = -1
+	for i: int in 60:
+		fight.step()
+		if surfaced_at < 0 and not eel_unit.submerged:
+			surfaced_at = fight.tick
+		if picked_at < 0 and hero.target == eel_unit:
+			picked_at = fight.tick
+	assert_gt(surfaced_at, 0, "it surfaces as it attacks")
+	assert_true(K.entries(fight, LogEntry.Kind.FIRE, "eel").size() > 0 or K.entries(fight, LogEntry.Kind.SHOT, "eel").size() > 0)
+	assert_gte(picked_at, surfaced_at, "the hero picks it only once it's up")
+	# Off the water it's never under.
+	var dry: CombatSim = K.sim(K.fight([K.at(still("hero", {"stats": {"range": 8}}), 3, 1)] as Array[UnitSetup], [K.foe(eel, 3, 4)] as Array[UnitSetup]))
+	K.step(dry, 1)
+	assert_false(dry.unit_by_id("eel").submerged)
+	assert_eq(dry.unit_by_id("hero").target, dry.unit_by_id("eel"))

@@ -35,7 +35,11 @@ extends RefCounted
 ##       hp_pct of its max HP, up to `times` a fight; "status" (optional, a
 ##       stacking boost): a stack each time it rises, kept through its rises.
 ##       A unit with one never takes Second Dawn's rise (that rise counts
-##       toward its own).
+##       toward its own). Phase 8 part 3 (the Glass Matron's shards):
+##       "if": {...UnitCondition...} rises only if it fell meeting it ("if":
+##       {"on_water": true}), and "as": an enemy's id: it doesn't come back
+##       itself, but a fresh one of that kit stands where it fell, at hp_pct
+##       of that kit's max HP (logged as SUMMON, sourced to the rise).
 ## Adding a kind is a code change; say so when you make one. An optional
 ## "text" is the player's sentence for it; the sim never reads it.
 
@@ -68,6 +72,10 @@ var rise_times: int = 0
 var rise_ticks: int = 0
 var rise_hp_bp: int = 0
 var rise_status: String = ""
+## rise (phase 8 part 3): the condition it fell under (null: any), and the
+## kit it rises as ("": itself).
+var rise_if: UnitCondition = null
+var rise_as: String = ""
 
 
 static func read(reader: DataReader) -> PartDef:
@@ -117,5 +125,10 @@ static func read(reader: DataReader) -> PartDef:
 			def.rise_ticks = reader.req_ticks("after_ms", FixedMath.MS_PER_TICK)
 			def.rise_hp_bp = reader.req_int("hp_pct", 1, 100) * 100
 			def.rise_status = reader.opt_string("status", "")
+			if reader.has("if"):
+				def.rise_if = UnitCondition.read(reader.req_object("if"))
+			def.rise_as = reader.opt_string("as", "")
+			if not def.rise_as.is_empty() and not def.rise_status.is_empty():
+				reader.error("a unit rising as another kit keeps no status")
 	reader.finish()
 	return def
