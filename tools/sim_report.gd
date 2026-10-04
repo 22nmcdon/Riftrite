@@ -29,7 +29,7 @@ const GATE_POINTS: int = 30
 ## items, and relics, is about a bare team x1.5, and the gate asks whether
 ## placement matters for the team a run brings.
 const LATER_ACT_VOWS: Dictionary[String, String] = {"brannoc": "hearthwall", "maren": "deadeye", "vell": "lanternbearer"}
-const LATER_ACT_SCALE_BP: int = 6700
+const LATER_ACT_SCALE_BP: int = 5500
 
 
 ## One formation's fights in one encounter.
