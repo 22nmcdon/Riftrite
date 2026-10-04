@@ -670,7 +670,7 @@
           "vs_keywords": [
             "rooted"
           ],
-          "threshold": 3300
+          "threshold": 2700
         }
       }
     ]
@@ -1074,7 +1074,7 @@
             "longshot"
           ],
           "within_ms_of_hop": 1000,
-          "threshold": 12
+          "threshold": 8
         }
       }
     ]
@@ -2631,7 +2631,7 @@
         "deed": {
           "text": "Damage shared through her links",
           "counts": "shared",
-          "threshold": 43
+          "threshold": 32
         }
       },
       {
@@ -3188,7 +3188,7 @@
           "from_ability": [
             "sunfall"
           ],
-          "threshold": 95
+          "threshold": 80
         }
       }
     ]
