@@ -6,6 +6,7 @@ extends GutTest
 ## end. Every action is saved.
 
 const ActsTest = preload("res://tests/run/test_acts.gd")
+const SpecsTest = preload("res://tests/run/test_specializations.gd")
 const MainScript = preload("res://src/ui/main.gd")
 const U = preload("res://tests/ui/ui_test_kit.gd")
 const Bot = preload("res://tools/run_bot.gd")
@@ -433,4 +434,30 @@ func test_the_testing_option_and_on_to_act_2() -> void:
 	assert_string_contains(text, "Day 1 of 7")
 	assert_string_contains(text, "Act 2")
 	assert_eq([flow.state.act, flow.state.phase], [2, RunState.Phase.ROUTE])
+	await wait_frames(1)
+
+
+## Specializations (phase 8 part 3) on today's fight card, on the stand-in
+## acts with Act 2 specializing from day 3.
+func test_the_fight_card_names_specializations() -> void:
+	var main: Main = _main()
+	main._run_content = SpecsTest.specialized_acts()
+	assert_true(U.press(main.screen, "New run"))
+	(main.screen as RunStartScreen).run_seed = 7
+	assert_true(U.press(main.screen, "Into the rift"))
+	var flow: RunFlow = _flow(main)
+	flow.state.act = 2
+	flow.state.day = 4
+	# A seed whose first fight on day 4 has one.
+	for run_seed: int in range(1, 40):
+		flow.state.seed_value = run_seed
+		flow.state.options = ActDraw.draw(flow.run, run_seed, flow.run.acts[1])
+		flow._start_day()
+		if flow.state.today_specs[0].any(func(id: Variant) -> bool: return not str(id).is_empty()):
+			break
+	main.run_session.save()
+	main.show_day()
+	var line: String = RunDayScreen.specs_line(flow.run.content, flow.run.content.encounters[flow.state.today()[0]], flow.state.today_specs[0])
+	assert_false(line.is_empty(), "a first fight on day 4 with one")
+	assert_string_contains(U.text_of(main.screen), line.get_slice("\n", 0))
 	await wait_frames(1)

@@ -111,8 +111,32 @@ func _start_day() -> void:
 			if modifier.is_empty():
 				break
 			state.endless_mods.append(modifier)
+	_draw_specializations()
 	if state.sealed:
 		_skip_sealed()
+
+
+## Today's fights' specializations (phase 8 part 3), drawn afresh each time
+## the day starts (Decision 6 of act2-glassmere.md).
+func _draw_specializations() -> void:
+	state.today_specs.clear()
+	var today: Array[String] = state.today()
+	for i: int in today.size():
+		state.today_specs.append(Offers.specializations(run, state, i, today[i]))
+
+
+## Today's chosen fight's specializations: enemy index -> specialization id
+## (none for a Hunt, or a fight not among today's).
+func chosen_specs() -> Dictionary[int, String]:
+	var specs: Dictionary[int, String] = {}
+	var index: int = state.today().find(state.chosen)
+	if index < 0 or index >= state.today_specs.size() or fight_encounter() != state.chosen:
+		return specs
+	var drawn: Array = state.today_specs[index]
+	for i: int in drawn.size():
+		if not str(drawn[i]).is_empty():
+			specs[i] = str(drawn[i])
+	return specs
 
 
 ## Draws the endless floors' fights up to two days ahead.
@@ -779,7 +803,7 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 		if tactic != null:
 			tactics[hero.id] = tactic.id
 			ranked_tactics[hero.id] = tactic
-	var setup: FightSetup = Encounters.setup(content, encounter_id, formation, fight_seed(), errors, tactics, vows, transformed, extras, apex_vows, apexed)
+	var setup: FightSetup = Encounters.setup(content, encounter_id, formation, fight_seed(), errors, tactics, vows, transformed, extras, apex_vows, apexed, {} as Dictionary[int, String] if hunting else chosen_specs())
 	if setup != null:
 		for hero: UnitSetup in setup.heroes:
 			if hero.def.placed_lantern and not snares.get(hero.id, []).is_empty():

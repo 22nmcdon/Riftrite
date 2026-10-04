@@ -857,6 +857,9 @@ func _show_route_card(index: int, holder: VBoxContainer) -> void:
 		UiStyle.heading(encounter.name, 26, UiStyle.TEXT))
 	card.add_child(_wrapped("It tests %s." % encounter.tests, 16, UiStyle.TEXT_DIM))
 	card.add_child(_enemies_line(encounter))
+	var specialized: String = RunDayScreen.specs_line(session.content, encounter, state.today_specs[index] if index < state.today_specs.size() else [])
+	if not specialized.is_empty():
+		card.add_child(_wrapped(specialized, 16, UiStyle.HIGHLIGHT))
 	if state.scouted.has(state.day) or session.run.relic_rule(state, "always_scout"):
 		card.add_child(_wrapped("Scouted: " + RunDayScreen.placements(encounter, session.content), 15, UiStyle.ACCENT_TEXT))
 	if not state.rift_depth.is_empty():
@@ -954,6 +957,27 @@ func _enemies_line(encounter: EncounterDef) -> Label:
 		var enemy: EnemyDef = session.content.enemies[id]
 		lines.append("%s%s: %s" % [enemy.name, " ×%d" % counts[id] if counts[id] > 1 else "", enemy.threat])
 	return _wrapped("\n".join(lines), 16, UiStyle.TEXT)
+
+
+## Today's fight's specializations (phase 8 part 3), one line each: "2
+## Gnawing Rift Pups: Its bites make you Bleed, and the Bleed stacks."; ""
+## if none.
+static func specs_line(content: ContentDb, encounter: EncounterDef, drawn: Array) -> String:
+	var counts: Dictionary[String, int] = {}
+	var order: Array[String] = []
+	for spec_id: Variant in drawn:
+		var id: String = str(spec_id)
+		if id.is_empty() or not content.specializations.has(id):
+			continue
+		if not counts.has(id):
+			order.append(id)
+		counts[id] = counts.get(id, 0) + 1
+	var lines: Array[String] = []
+	for id: String in order:
+		var spec: SpecializationDef = content.specializations[id]
+		var who: String = "%s %s" % [spec.name, content.enemies[spec.enemy].name]
+		lines.append("%s: %s" % [who if counts[id] == 1 else "%d %ss" % [counts[id], who], spec.text])
+	return "Specialized: " + "\n".join(lines) if not lines.is_empty() else ""
 
 
 ## Where a fight's enemies stand: "Rift Hound (1, 4), ...".

@@ -180,7 +180,7 @@ func test_the_save_keeps_the_act_and_an_older_save_still_loads() -> void:
 	flow.next_act()
 	_win_today(flow)
 	var data: Dictionary = JSON.parse_string(JSON.stringify(flow.state.to_dict()))
-	assert_eq(int(data["version"]), 7)
+	assert_eq(int(data["version"]), RunState.VERSION)
 	var loaded: RunState = RunState.from_dict(data)
 	assert_eq(JSON.stringify(loaded.to_dict()), JSON.stringify(flow.state.to_dict()))
 	assert_eq([loaded.act, loaded.testing, loaded.fought.back().act], [2, true, 2])

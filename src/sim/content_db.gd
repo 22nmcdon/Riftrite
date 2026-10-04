@@ -53,6 +53,10 @@ var path_ids: Array[String] = []
 ## with the paths' (a hero's deeds are keyed by both).
 var apexes: Dictionary[String, ApexDef] = {}
 var apex_ids: Array[String] = []
+## Every enemy's specializations (phase 8 part 3), by id: one space of ids
+## across enemies.
+var specializations: Dictionary[String, SpecializationDef] = {}
+var specialization_ids: Array[String] = []
 
 var _id_pattern: RegEx = RegEx.create_from_string("^[a-z][a-z0-9_]*$")
 
@@ -107,6 +111,9 @@ static func load_texts(texts: Dictionary[String, String]) -> ContentDb:
 			reader.error("\"%s\" is already a hero's id" % enemy.id)
 		elif db._claim_id(enemy.id, reader, db.enemy_ids):
 			db.enemies[enemy.id] = enemy
+			for spec: SpecializationDef in enemy.specializations:
+				if db._claim_id(spec.id, reader, db.specialization_ids):
+					db.specializations[spec.id] = spec
 	for reader: DataReader in db._entries(db._parse(texts, ENCOUNTERS_FILE), ENCOUNTERS_FILE):
 		var encounter: EncounterDef = EncounterDef.read(reader)
 		if db._claim_id(encounter.id, reader, db.encounter_ids):
@@ -137,6 +144,17 @@ func _check_links() -> void:
 		_check_kit(heroes[id].kit, "%s (%s)" % [HEROES_FILE, id], grid)
 	for id: String in enemy_ids:
 		_check_kit(enemies[id].kit, "%s (%s)" % [ENEMIES_FILE, id], grid)
+	for id: String in specialization_ids:
+		var spec: SpecializationDef = specializations[id]
+		var spec_where: String = "%s (%s: %s)" % [ENEMIES_FILE, spec.enemy, id]
+		if spec.mod == null or not spec.mod.changes_anything():
+			errors.append("%s: a specialization changes something" % spec_where)
+			continue
+		var problems: Array[String] = []
+		var specialized: UnitDef = spec.apply(enemies[spec.enemy].kit, problems)
+		for problem: String in problems:
+			errors.append("%s: %s" % [spec_where, problem])
+		_check_kit(specialized, spec_where, grid)
 	for id: String in encounter_ids:
 		var encounter: EncounterDef = encounters[id]
 		var where: String = "%s (%s)" % [ENCOUNTERS_FILE, id]

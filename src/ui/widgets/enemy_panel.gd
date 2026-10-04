@@ -40,16 +40,25 @@ static func make() -> EnemyPanel:
 	return panel
 
 
-## Shows the enemy `unit_id` is (its kit's details).
-func show_enemy(unit_id: String, enemy: EnemyDef, content: ContentDb) -> void:
+## Shows the enemy `unit_id` is (its kit's details); `kit` is the one it
+## fights with, when known: a specialized enemy (phase 8 part 3) shows its
+## kit as specialized, with the specialization's name and sentence (the
+## enemy's own numbers, as every enemy here, not the encounter's scaling).
+func show_enemy(unit_id: String, enemy: EnemyDef, content: ContentDb, kit: UnitDef = null) -> void:
 	showing = unit_id
-	title.text = enemy.name
+	var shown: UnitDef = enemy.kit
+	var spec: SpecializationDef = content.specializations.get(kit.specialization) if kit != null else null
+	if spec != null:
+		shown = spec.apply(enemy.kit)
+	title.text = shown.name
 	archetype.text = EnemyDef.ARCHETYPE_NAMES[enemy.archetype].capitalize()
 	threat.text = enemy.threat
-	stats.text = UnitInfo.stats_text(enemy.kit.stats)
+	if spec != null:
+		threat.text += "\n%s: %s" % [spec.name, spec.text]
+	stats.text = UnitInfo.stats_text(shown.stats)
 	_column.remove_child(abilities)
 	abilities.free()
-	abilities = UnitInfo.column(UnitInfo.lines(enemy.kit, "it", content))
+	abilities = UnitInfo.column(UnitInfo.lines(shown, "it", content))
 	_column.add_child(abilities)
 	for label: Label in [archetype, threat, stats]:
 		label.visible = true

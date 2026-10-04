@@ -65,6 +65,11 @@ var relic_sell: Dictionary[String, int] = {}
 ## (the count starts again at each rank). Tactics count ms its hero stands
 ## in a fight with it (Decision 32), gambits fights, sigils casts of the
 ## signature, charms won fights; all only while it's equipped.
+## Enemy specializations (phase 8 part 3): from this day of the act (0:
+## never), each day fight's specialized enemies are this share of its
+## enemies, rounded down (rebuild-phase8-act2.md, Decision 1).
+var specialized_from_day: int = 0
+var specialized_share_pct: int = 50
 var item_prices: Dictionary[String, int] = {}
 var item_ranks: Dictionary[String, Array] = {}
 ## Endless after the act's boss (phase 8 part 1), or null if the act has none.
@@ -134,6 +139,8 @@ static func read(reader: DataReader) -> ActDef:
 	var def := ActDef.new()
 	def.act = reader.req_int("act", 1)
 	def.fights_act = reader.opt_int("fights_act", def.act, 1)
+	def.specialized_from_day = reader.opt_int("specialized_from_day", 0, 0)
+	def.specialized_share_pct = reader.opt_int("specialized_share_pct", 50, 0, 100)
 	def.start_shards = reader.req_int("start_shards", 0)
 	def.losses_to_end = reader.req_int("losses_to_end", 1)
 	def.slots = reader.req_int("slots", 0, 6)

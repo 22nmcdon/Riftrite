@@ -72,6 +72,9 @@ var phases: Array[PhaseDef] = []
 ## An enemy's archetype (EnemyDef.ARCHETYPE_NAMES; set from its entry, so
 ## summons have theirs); "" for a hero. Tactics that prefer targets read it.
 var archetype: String = ""
+## The specialization it fights with (phase 8 part 3; SpecializationDef's
+## id; "": none), for the screens.
+var specialization: String = ""
 ## After it moves, how long it needs before its basic attack can fire again
 ## (phase 4, Deadeye's cost; 0: none).
 var plant_ticks: int = 0
@@ -180,6 +183,7 @@ func copy() -> UnitDef:
 	other.swap_shield_bp = swap_shield_bp
 	other.swap_choice = swap_choice
 	other.archetype = archetype
+	other.specialization = specialization
 	other.plant_ticks = plant_ticks
 	other.placed_snares = placed_snares
 	other.placed_lantern = placed_lantern

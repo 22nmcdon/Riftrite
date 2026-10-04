@@ -6,7 +6,8 @@ extends RefCounted
 ## tactics). Summons name enemies.
 ##   {"id": "rift_hound", "name": "Rift Hound", "archetype": "flanker",
 ##    "threat": "Pounces on your weakest back-liner",
-##    "kit": {...a UnitDef, without id or name...}}
+##    "kit": {...a UnitDef, without id or name...},
+##    "specializations": [...up to two SpecializationDefs...]}  (phase 8 part 3)
 
 enum Archetype { SWARM, FLANKER, CASTER, RANGED, ANCHOR, CHARGER, DISRUPTOR, SUPPORT }
 
@@ -17,6 +18,8 @@ var name: String
 var archetype: Archetype
 var threat: String
 var kit: UnitDef
+## Its specializations (phase 8 part 3), up to SpecializationDef.PER_ENEMY.
+var specializations: Array[SpecializationDef] = []
 
 
 static func read(reader: DataReader) -> EnemyDef:
@@ -29,5 +32,9 @@ static func read(reader: DataReader) -> EnemyDef:
 	def.kit = UnitDef.read(kit_reader, def.id, def.name) if kit_reader != null else null
 	if def.kit != null:
 		def.kit.archetype = ARCHETYPE_NAMES[def.archetype]
+	for spec_reader: DataReader in reader.opt_object_array("specializations"):
+		def.specializations.append(SpecializationDef.read(spec_reader, def.id))
+	if def.specializations.size() > SpecializationDef.PER_ENEMY:
+		reader.error("an enemy has at most %d specializations" % SpecializationDef.PER_ENEMY)
 	reader.finish()
 	return def

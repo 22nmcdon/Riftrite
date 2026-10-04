@@ -10,8 +10,9 @@ extends RefCounted
 ## day; 5: endless, phase 8 part 1, which still loads a 4 with endless off;
 ## 6: apexes, phase 8 part 2, which still loads a 4 or 5 with no apex; 7:
 ## acts, phase 8 part 3, which loads an older save as a testing run once it
-## has gone deeper or waits at the choice, since its endless followed Act 1).
-const VERSION: int = 7
+## has gone deeper or waits at the choice, since its endless followed Act 1;
+## 8: today's specializations, phase 8 part 3, none in an older save).
+const VERSION: int = 8
 const OLDEST_VERSION: int = 4
 
 ## Where the day is (phase 5c step 8, docs/plans/days-and-nodes.md):
@@ -134,6 +135,10 @@ var heroes: Array[Hero] = []
 var shards: int = 0
 ## Every day's fight options, drawn at the act's start (encounter ids).
 var options: Array[Array] = []
+## Today's fights' specializations (phase 8 part 3): for each of today's
+## options, each of its enemies' specialization id, or "" (Offers.
+## specializations, drawn as the day starts).
+var today_specs: Array[Array] = []
 ## Today's chosen fight ("" until chosen).
 var chosen: String = ""
 ## The last formation fought with (hero id -> hex), remembered.
@@ -282,7 +287,7 @@ func to_dict() -> Dictionary:
 		"streak": streak, "streaks_paid": streaks_paid.duplicate(), "bonds_found": bonds_found.duplicate(),
 		"growth": growth.duplicate(), "grew": grew.duplicate(),
 		"item_ranks": item_ranks.duplicate(), "item_counts": item_counts.duplicate(), "ranked": ranked.duplicate(),
-		"endless": endless, "endless_mods": endless_mods.duplicate(),
+		"endless": endless, "endless_mods": endless_mods.duplicate(), "today_specs": today_specs.duplicate(true),
 		"apex_open": apex_open, "just_apexed": just_apexed.duplicate(), "testing": testing,
 	}
 
@@ -365,6 +370,8 @@ static func from_dict(data: Dictionary) -> RunState:
 	state.bonds_found = _strings(data.get("bonds_found", []))
 	state.endless = bool(data.get("endless", false))
 	state.endless_mods = _strings(data.get("endless_mods", []))
+	for specs: Variant in data.get("today_specs", []):
+		state.today_specs.append(_strings(specs))
 	return state
 
 

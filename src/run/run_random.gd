@@ -28,6 +28,8 @@ const NODE: int = 15
 const EVENT: int = 16
 ## Endless (phase 8 part 1): a floor's fight, and the rift modifiers it adds.
 const ENDLESS: int = 17
+## Which of a day fight's enemies are specialized, and how (phase 8 part 3).
+const SPECIALIZE: int = 18
 
 const MIX: int = 0x2545F4914F6CDD1D
 

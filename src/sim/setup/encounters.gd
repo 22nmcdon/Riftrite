@@ -16,7 +16,9 @@ extends RefCounted
 ## counts the deeds of all its paths. `apex_vows` (phase 8 part 2) puts
 ## transformed heroes on one of their path's apexes: hero id -> apex id, at
 ## the apex vowed stage, or the apex for the heroes `apexed` lists; a
-## transformed hero counts its path's apexes' deeds.
+## transformed hero counts its path's apexes' deeds. `enemy_specs` (phase 8
+## part 3) specializes enemies: the encounter's enemy index -> one of that
+## enemy's specialization ids, applied after the scaling.
 ## Returns null, with the reasons in `errors`, for an unknown encounter,
 ## hero, tactic, or path; FightSetup.validate checks the rest (zones, shared
 ## hexes, who can take which tactic, whose path it is).
@@ -24,7 +26,8 @@ extends RefCounted
 
 static func setup(content: ContentDb, encounter_id: String, formation: Dictionary[String, Vector2i], fight_seed: int, errors: Array[String],
 		tactics: Dictionary[String, String] = {}, vows: Dictionary[String, String] = {}, transformed: Array[String] = [],
-		extras: Dictionary[String, HeroExtras] = {}, apex_vows: Dictionary[String, String] = {}, apexed: Array[String] = []) -> FightSetup:
+		extras: Dictionary[String, HeroExtras] = {}, apex_vows: Dictionary[String, String] = {}, apexed: Array[String] = [],
+		enemy_specs: Dictionary[int, String] = {}) -> FightSetup:
 	if not content.encounters.has(encounter_id):
 		errors.append("unknown encounter \"%s\"" % encounter_id)
 		return null
@@ -100,8 +103,17 @@ static func setup(content: ContentDb, encounter_id: String, formation: Dictionar
 				hero.tactic = content.tactics[tactics[hero_id]]
 			heroes.append(hero)
 	var enemies: Array[UnitSetup] = []
-	for placed: EncounterDef.Placed in encounter.enemies:
+	for i: int in encounter.enemies.size():
+		var placed: EncounterDef.Placed = encounter.enemies[i]
 		var kit: UnitDef = scaled(content.enemies[placed.enemy].kit, encounter.scale_bp)
+		# A specialization (phase 8 part 3), after the scaling.
+		var spec_id: String = enemy_specs.get(i, "")
+		if not spec_id.is_empty():
+			var spec: SpecializationDef = content.specializations.get(spec_id)
+			if spec == null or spec.enemy != placed.enemy:
+				errors.append("%s can't be specialized as \"%s\"" % [placed.enemy, spec_id])
+			else:
+				kit = spec.apply(kit)
 		enemies.append(UnitSetup.make(kit, EffectSource.Team.ENEMIES, placed.hex.x, placed.hex.y))
 	if not errors.is_empty():
 		return null

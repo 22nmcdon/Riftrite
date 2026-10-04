@@ -332,7 +332,7 @@ func _show() -> void:
 func _on_hovered(unit_id: String) -> void:
 	var kit_id: String = _kit_of(unit_id)
 	if session.content.enemies.has(kit_id):
-		enemy_panel.show_enemy(unit_id, session.content.enemies[kit_id], session.content)
+		enemy_panel.show_enemy(unit_id, session.content.enemies[kit_id], session.content, _def_of(unit_id))
 		_show_live()
 
 
@@ -346,6 +346,18 @@ func _kit_of(unit_id: String) -> String:
 		if placed.id == unit_id:
 			return placed.def.id
 	return ""
+
+
+## The kit a unit on the board fights with (a specialized enemy's too), or
+## null.
+func _def_of(unit_id: String) -> UnitDef:
+	if player != null:
+		var unit: UnitState = player.sim.unit_by_id(unit_id)
+		return unit.def if unit != null else null
+	for placed: UnitSetup in current_setup().units():
+		if placed.id == unit_id:
+			return placed.def
+	return null
 
 
 ## Whether the fight is on screen and moving (not paused, not over).

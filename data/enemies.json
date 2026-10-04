@@ -5,6 +5,28 @@
     "name": "Rift Pup",
     "archetype": "swarm",
     "threat": "Swarms, stronger in packs",
+    "specializations": [
+      {
+        "id": "gnawing_pup",
+        "name": "Gnawing",
+        "text": "Its bites make you Bleed, and the Bleed stacks.",
+        "mod": {
+          "on": [
+            {
+              "slot": "basic_attack",
+              "add_effects": [
+                {
+                  "type": "apply_status",
+                  "status": "bleed",
+                  "stacks": 2,
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
     "kit": {
       "stats": {"hp": 210, "atk": 8, "speed": 2, "range": 1},
       "basic_attack": {
@@ -19,6 +41,45 @@
     "name": "Ashling",
     "archetype": "swarm",
     "threat": "Bursts into flame when it falls",
+    "specializations": [
+      {
+        "id": "smoldering_ashling",
+        "name": "Smoldering",
+        "text": "Where it falls, the ground keeps burning within 1 hex for a while.",
+        "mod": {
+          "passives": [
+            {
+              "id": "smolder",
+              "name": "Smolder",
+              "text": "Where it falls, the ground keeps burning: heroes within 1 hex catch Burn while it lasts.",
+              "kind": "ability",
+              "effects": [
+                {
+                  "trigger": "on_fall",
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 1
+                  },
+                  "anchor": "self",
+                  "hits": "enemies",
+                  "duration_ms": 3000,
+                  "every_ms": 1000,
+                  "effects": [
+                    {
+                      "type": "apply_status",
+                      "status": "burn",
+                      "stacks": 3,
+                      "target": "target"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
     "kit": {
       "stats": {"hp": 220, "atk": 25, "speed": 2, "range": 1},
       "basic_attack": {
@@ -112,6 +173,27 @@
     "name": "Cairn Guardian",
     "archetype": "charger",
     "threat": "Charges through your front line",
+    "specializations": [
+      {
+        "id": "bulwark_guardian",
+        "name": "Bulwark",
+        "text": "After it charges, it gains a Shield.",
+        "mod": {
+          "on": [
+            {
+              "slot": "signature",
+              "add_effects": [
+                {
+                  "type": "shield",
+                  "amount_bp_of_max_hp": 2000,
+                  "target": "self"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
     "kit": {
       "stats": {"hp": 440, "atk": 16, "def": 20, "speed": 2, "range": 1},
       "mana": {"max": 60, "per_attack": 10, "regen_per_s": 3},
@@ -131,6 +213,44 @@
     "name": "Bog Lurker",
     "archetype": "disruptor",
     "threat": "Drags your back line forward",
+    "specializations": [
+      {
+        "id": "deep_lurker",
+        "name": "Deep",
+        "text": "Its Drag pulls a hero farther.",
+        "mod": {
+          "on": [
+            {
+              "slot": "signature",
+              "types": [
+                "pull"
+              ],
+              "amount_bp": 15000
+            }
+          ]
+        }
+      },
+      {
+        "id": "rot_lurker",
+        "name": "Rot",
+        "text": "A hero it drags is Poisoned.",
+        "mod": {
+          "on": [
+            {
+              "slot": "signature",
+              "add_effects": [
+                {
+                  "type": "apply_status",
+                  "status": "poison",
+                  "stacks": 6,
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
     "kit": {
       "stats": {"hp": 760, "atk": 32, "def": 8, "speed": 1, "range": 1},
       "mana": {"max": 50, "per_attack": 10, "regen_per_s": 8},
@@ -150,6 +270,21 @@
     "name": "Gloam Witch",
     "archetype": "support",
     "threat": "Shields her allies and silences your casters",
+    "specializations": [
+      {
+        "id": "hex_witch",
+        "name": "Hex",
+        "text": "Its Hush silences the two heroes with the most mana.",
+        "mod": {
+          "on": [
+            {
+              "slot": "signature",
+              "targets_add": 1
+            }
+          ]
+        }
+      }
+    ],
     "kit": {
       "stats": {"hp": 360, "atk": 22, "def": 4, "speed": 2, "range": 4},
       "mana": {"max": 50, "per_attack": 10, "regen_per_s": 2},

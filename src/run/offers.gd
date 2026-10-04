@@ -51,6 +51,34 @@ static func _offered(run: RunContent, state: RunState, hero: RunState.Hero) -> A
 	return ids
 
 
+## Each enemy of day fight option `index` (`encounter_id`) of today: one of
+## its specialization ids, or "" (phase 8 part 3, rebuild-phase8-act2.md
+## section 2): from the act's specialized_from_day, the act's share of its
+## enemies, rounded down (Decision 1), chosen from those that have any, each
+## given one of its two; none before that day, and none for a Hunt (Decision
+## 2). Drawn afresh on each attempt.
+static func specializations(run: RunContent, state: RunState, index: int, encounter_id: String) -> Array[String]:
+	var encounter: EncounterDef = run.content.encounters[encounter_id]
+	var specs: Array[String] = []
+	for placed: EncounterDef.Placed in encounter.enemies:
+		specs.append("")
+	var act_def: ActDef = run.act_of(state)
+	if act_def.specialized_from_day <= 0 or state.day < act_def.specialized_from_day or encounter.tier == "hunt" or state.endless:
+		return specs
+	var eligible: Array[int] = []
+	for i: int in encounter.enemies.size():
+		if not run.content.enemies[encounter.enemies[i].enemy].specializations.is_empty():
+			eligible.append(i)
+	@warning_ignore("integer_division")
+	var count: int = mini(encounter.enemies.size() * act_def.specialized_share_pct / 100, eligible.size())
+	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.SPECIALIZE, state.act, state.day, state.attempt, index])
+	for n: int in count:
+		var i: int = eligible.pop_at(rng.range_int(eligible.size()))
+		var options: Array[SpecializationDef] = run.content.enemies[encounter.enemies[i].enemy].specializations
+		specs[i] = options[rng.range_int(options.size())].id
+	return specs
+
+
 ## The Pedlar's wares: act.pedlar_wares different items of any kind, never
 ## one the run holds at rank III, and never filtered by what the team can
 ## use (loadout rule 2; phase 5c step 6). `rerolls` draws a fresh set.
