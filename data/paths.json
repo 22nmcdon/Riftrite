@@ -238,7 +238,7 @@
           "from_ability": [
             "heartseeker"
           ],
-          "threshold": 6
+          "threshold": 5
         }
       },
       {
@@ -331,7 +331,7 @@
           "from_ability": [
             "heartseeker"
           ],
-          "threshold": 28
+          "threshold": 40
         }
       }
     ]
@@ -570,7 +570,7 @@
           "statuses": [
             "briar_torn"
           ],
-          "threshold": 11
+          "threshold": 9
         }
       },
       {
@@ -1074,7 +1074,7 @@
             "longshot"
           ],
           "within_ms_of_hop": 1000,
-          "threshold": 15
+          "threshold": 12
         }
       }
     ]
@@ -1943,7 +1943,7 @@
           "text": "Damage he takes after rising",
           "counts": "taken",
           "after_rising": true,
-          "threshold": 125
+          "threshold": 100
         }
       },
       {
@@ -2356,7 +2356,7 @@
             "glare",
             "dazzled"
           ],
-          "threshold": 150
+          "threshold": 200
         }
       },
       {
