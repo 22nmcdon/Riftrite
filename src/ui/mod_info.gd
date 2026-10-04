@@ -61,7 +61,7 @@ static func mod_parts(mod: KitMod, kit: UnitDef, content: ContentDb) -> Array[St
 			"share":
 				parts.append("may share a hex with another hero")
 		if mod.arrive_ticks > 0:
-			parts.append("enters at %s" % UnitInfo.seconds(mod.arrive_ticks))
+			parts.append("enters at %s%s" % [UnitInfo.seconds(mod.arrive_ticks), " beside the hindmost enemy" if mod.arrive_at == "back_line" else ""])
 		if mod.swap_ticks > 0:
 			parts.append("swaps with its farthest ally at %s%s" % [UnitInfo.seconds(mod.swap_ticks), " (or 5s or 15s, as you choose)" if mod.swap_choice else ""])
 		if mod.swap_shield_bp > 0:
@@ -84,6 +84,9 @@ static func mod_parts(mod: KitMod, kit: UnitDef, content: ContentDb) -> Array[St
 		parts.append("you place its first signature area before the fight")
 	if mod.drops_signature:
 		parts.append("no signature")
+	for part_id: String in mod.drops_passives:
+		var at: int = KitMod._passive_index(shown, KitMod.PASSIVE_PREFIX + part_id)
+		parts.append("no %s" % (shown.passives[at].name if at >= 0 else part_id))
 	for trigger: TriggerDef in mod.also_fires:
 		var when: String = UnitInfo.trigger_text(trigger, shown)
 		parts.append("Signature also fires: %s%s" % [when.left(1).to_lower(), when.substr(1)])
@@ -163,6 +166,8 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 		bits.append("its link's stacks every %s as much shared" % ValueBreakdown._percent(change.per_shared_bp))
 	if change.holder != null:
 		bits.append("only while it's %s" % change.holder.describe())
+	if change.carries:
+		bits.append("its charge carries every enemy in its line")
 	for effect: EffectDef in change.add_to_areas:
 		bits.append("in its area: " + " · ".join(UnitInfo.effect_numbers([effect] as Array[EffectDef], kit, content)))
 	for effect: EffectDef in change.add_effects:

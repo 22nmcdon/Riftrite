@@ -7,6 +7,7 @@ extends GutTest
 
 const Bot = preload("res://tools/run_bot.gd")
 const ActsTest = preload("res://tests/run/test_acts.gd")
+const K = preload("res://tests/sim/sim_test_kit.gd")
 
 var _run: RunContent
 
@@ -138,3 +139,70 @@ func test_the_fight_cards_line() -> void:
 	var drawn: Array = ["gnawing_pup", "", "gnawing_pup", "", "", ""]
 	assert_eq(RunDayScreen.specs_line(_run.content, encounter, drawn), "Specialized: 2 Gnawing Rift Pups: Its bites make you Bleed, and the Bleed stacks.")
 	assert_eq(RunDayScreen.specs_line(_run.content, encounter, ["", "", "", "", "", ""]), "")
+
+
+## Brannoc, Maren, and Vell on `encounter_id`, with `specs` (enemy index ->
+## specialization id).
+func _fight(encounter_id: String, specs: Dictionary[int, String]) -> CombatSim:
+	var content: ContentDb = _run.content
+	var errors: Array[String] = []
+	var formation: Dictionary[String, Vector2i] = {"brannoc": Vector2i(3, 2), "maren": Vector2i(3, 0), "vell": Vector2i(4, 0)}
+	var setup: FightSetup = Encounters.setup(content, encounter_id, formation, 1, errors, {}, {}, [], {}, {}, [], specs)
+	assert_eq(errors, [] as Array[String])
+	assert_eq(setup.validate(content), [] as Array[String])
+	return CombatSim.new(setup, content)
+
+
+func test_a_burrowing_pup_comes_up_beside_the_hindmost_hero() -> void:
+	var fight: CombatSim = _fight("stray_pups", {0: "burrowing_pup"} as Dictionary[int, String])
+	var pup: UnitState = fight.enemies[0]
+	assert_false(pup.alive, "burrowed at the start")
+	assert_true(pup.arriving)
+	for i: int in 59:
+		fight.step()
+	assert_false(pup.alive, "still under at 2.95s")
+	# The hindmost hero as it comes up (the arrival is early in the tick).
+	var hindmost: UnitState = fight.heroes[0]
+	for hero: UnitState in fight.heroes:
+		if hero.pos.y < hindmost.pos.y:
+			hindmost = hero
+	var there: Vector2i = hindmost.pos
+	fight.step()
+	assert_true(pup.alive, "up at 3s")
+	var arrived: Array[LogEntry] = fight.combat_log.of_kind(LogEntry.Kind.ARRIVE)
+	assert_eq(arrived.size(), 1)
+	assert_eq([arrived[0].target, arrived[0].source_ability_name], [pup.id, "Burrow"])
+	assert_lt(ArenaPlane.distance(arrived[0].to_pos, there), 500, "beside the hindmost hero")
+	assert_true(fight.enemies[1].alive, "the others never burrowed")
+
+
+func test_an_avalanche_guardian_carries_every_hero_in_its_line() -> void:
+	var content: ContentDb = _run.content
+	var kit: UnitDef = content.specializations["avalanche_guardian"].apply(content.enemies["cairn_guardian"].kit)
+	assert_true(kit.signature.effects[0].carries)
+	assert_string_contains(" · ".join(UnitInfo.effect_numbers(kit.signature.effects, kit, content)), "carrying every enemy in its line 2 hexes")
+	var charge: Dictionary = {"id": "rush", "name": "Rush", "trigger": {"kind": "fight_start"}, "targeting": "farthest", "max_range": 6,
+		"effects": [{"type": "charge", "hexes": 6, "knockback": 1, "carries": true, "target": "target"}]}
+	var still: Dictionary = {"stats": {"hp": 900, "speed": 0}, "basic_attack": {"cooldown_ms": 60000}}
+	var guardian: UnitDef = K.kit("guardian", {"stats": {"hp": 900, "speed": 0}, "basic_attack": {"cooldown_ms": 60000}, "signature": charge})
+	var setup: FightSetup = K.fight([K.at(K.kit("near", still), 3, 2), K.at(K.kit("far", still), 3, 0)] as Array[UnitSetup], [K.foe(guardian, 3, 4)] as Array[UnitSetup])
+	var fight: CombatSim = K.sim(setup)
+	K.step(fight, 2)
+	var pushed: Array = fight.combat_log.of_kind(LogEntry.Kind.PUSH).map(func(entry: LogEntry) -> String: return entry.target)
+	assert_eq(pushed, ["far", "near"], "both, the farthest first")
+	assert_eq(fight.combat_log.of_kind(LogEntry.Kind.CHARGE).size(), 1)
+
+
+func test_a_veil_witch_hides_an_ally_instead_of_shielding() -> void:
+	var content: ContentDb = _run.content
+	var kit: UnitDef = content.specializations["veil_witch"].apply(content.enemies["gloam_witch"].kit)
+	var ids: Array = kit.passives.map(func(part: PartDef) -> String: return part.id)
+	assert_eq(ids, ["veil"], "Ward is gone, Veil is in")
+	assert_string_contains(ModInfo.mod_numbers(content.specializations["veil_witch"].mod, content.enemies["gloam_witch"].kit, content), "no Ward")
+	var fight: CombatSim = _fight("witch_and_pups", {0: "veil_witch"} as Dictionary[int, String])
+	for i: int in 200:
+		fight.step()
+	var hidden: Array[LogEntry] = fight.combat_log.of_kind(LogEntry.Kind.STATUS_APPLIED).filter(func(entry: LogEntry) -> bool: return entry.status == "stealth")
+	assert_false(hidden.is_empty(), "it hides an ally")
+	assert_eq(hidden[0].source_ability, "veil")
+	assert_eq(fight.combat_log.of_kind(LogEntry.Kind.SHIELD).filter(func(entry: LogEntry) -> bool: return entry.source_ability == "ward"), [] as Array[LogEntry], "and never shields")

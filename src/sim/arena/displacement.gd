@@ -19,7 +19,9 @@ extends RefCounted
 ##   charge     the unit runs straight at its target, up to `hexes`, stopping
 ##              when it touches the first unit in the way (the target, if
 ##              nothing's before it). If that unit is an enemy, it's knocked
-##              back `knockback` hexes
+##              back `knockback` hexes. One that carries (phase 8 part 3)
+##              first knocks every enemy in its line (its target included)
+##              `knockback` hexes along it, farthest first, then runs
 ## Directions are exact, with no snapping; if two units stand on the same
 ## point, a push goes straight forward for the unit's side.
 ##
@@ -161,6 +163,9 @@ static func charge(sim: CombatSim, unit: UnitState, target: UnitState, effect: E
 	var dir: Vector2i = ArenaPlane.direction(from, target.pos, Vector2i(0, ArenaPlane.DIR * unit.forward()))
 	var room: int = maxi(ArenaPlane.distance(from, target.pos) - unit.radius - target.radius, 0)
 	var distance: int = mini(effect.hexes * HexGrid.HEX, room)
+	var carried: bool = false
+	if effect.carries:
+		carried = _carry(sim, unit, target, from, dir, distance, effect.knockback_hexes, source)
 	var circles: Array[ArenaPlane.Circle] = sim.obstacles_for(unit, null)
 	var sweep: ArenaPlane.Sweep = ArenaPlane.sweep(from, ArenaPlane.along(from, dir, distance), unit.radius, circles, sim.safe)
 	var hit_unit: UnitState = null
@@ -179,8 +184,36 @@ static func charge(sim: CombatSim, unit: UnitState, target: UnitState, effect: E
 	_place(sim, unit, sweep.point)
 	if not sim.snares.is_empty():
 		Snares.snag(sim, unit, from, sweep.point)
-	if hit_unit != null and hit_unit.side != unit.side and effect.knockback_hexes > 0:
+	if hit_unit != null and hit_unit.side != unit.side and effect.knockback_hexes > 0 and not carried:
 		knockback(sim, hit_unit, unit.pos, unit.forward(), effect.knockback_hexes, source)
+
+
+## A charge that carries (see the top): every standing enemy whose circle
+## its path from `from` along `dir` for `distance` (and on to touch) would
+## cross, the target always among them, is knocked `hexes` along `dir`,
+## farthest along first. True if it moved any.
+static func _carry(sim: CombatSim, unit: UnitState, target: UnitState, from: Vector2i, dir: Vector2i, distance: int, hexes: int, source: EffectSource) -> bool:
+	var keys: Array[int] = []
+	var line: Array[UnitState] = []
+	for enemy: UnitState in sim.standing_enemies_of(unit):
+		if enemy.airborne:
+			continue
+		var offset: Vector2i = enemy.pos - from
+		@warning_ignore("integer_division")
+		var along: int = ArenaPlane.dot(offset, dir) / ArenaPlane.DIR
+		@warning_ignore("integer_division")
+		var across: int = absi(offset.x * dir.y - offset.y * dir.x) / ArenaPlane.DIR
+		var in_line: bool = along > 0 and along <= distance + unit.radius + enemy.radius and across < unit.radius + enemy.radius
+		if enemy == target or in_line:
+			keys.append(maxi(along, 0) * 64 + line.size())
+			line.append(enemy)
+	if line.is_empty():
+		return false
+	keys.sort()
+	keys.reverse()
+	for key: int in keys:
+		push(sim, line[key % 64], dir, hexes * HexGrid.HEX, source, "knocked back")
+	return true
 
 
 ## The nearest free spot to `around` for `unit` (the point itself, then rings

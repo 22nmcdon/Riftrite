@@ -625,7 +625,7 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 		EffectDef.Type.HOP:
 			return "hops %s away from the nearest enemy" % hexes(1)
 		EffectDef.Type.CHARGE:
-			return "charges %s, knocking back %s" % [hexes(effect.hexes), hexes(effect.knockback_hexes)]
+			return "charges %s, %s %s" % [hexes(effect.hexes), "carrying every enemy in its line" if effect.carries else "knocking back", hexes(effect.knockback_hexes)]
 		EffectDef.Type.AREA:
 			var text: String = "%d-hex %s %s" % [effect.shape.size, ShapeDef.KIND_NAMES[effect.shape.kind], "around it" if effect.anchor == EffectDef.Anchor.SELF else "at the target"]
 			if effect.warning_ticks > 0:

@@ -61,7 +61,10 @@ extends RefCounted
 ##   leap:         max_hexes, optional land_ms (tuning's leap_land_ms); the
 ##                 unit jumps to a free spot touching its target
 ##   charge:       hexes, optional knockback (hexes); the unit runs straight
-##                 at its target and knocks back the first enemy it touches
+##                 at its target and knocks back the first enemy it touches.
+##                 Phase 8 part 3 (the Avalanche Guardian): "carries": true
+##                 knocks every enemy in its line the knockback's distance
+##                 along it, farthest first, before it runs
 ## (Displacement has the rules. leap and charge move the unit itself, so
 ## they aim at "target", fire at once, and only signatures have them.)
 ##   area:         shape (ShapeDef), anchor, optional warning_ms, hits, and
@@ -388,6 +391,8 @@ var duration_ticks: int = 0
 var hexes: int = 0
 ## charge: how far it knocks back the enemy it hits (hexes; 0: not at all).
 var knockback_hexes: int = 0
+## charge (phase 8 part 3): it carries every enemy in its line.
+var carries: bool = false
 ## pull (phase 8 part 3): which way.
 var toward: Toward = Toward.UNIT
 ## flood (phase 8 part 3): its mode and radius (hexes); how long a circle
@@ -604,6 +609,9 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 			Type.CHARGE:
 				def.hexes = reader.req_int("hexes", 1)
 				def.knockback_hexes = reader.opt_int("knockback", 0, 0)
+				def.carries = reader.opt_bool("carries", false)
+				if def.carries and def.knockback_hexes == 0:
+					reader.error("a charge that carries needs \"knockback\"")
 			Type.AREA:
 				_read_area(def, reader)
 			Type.SUMMON:

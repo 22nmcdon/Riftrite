@@ -7,6 +7,12 @@
     "threat": "Swarms, stronger in packs",
     "specializations": [
       {
+        "id": "burrowing_pup",
+        "name": "Burrowing",
+        "text": "It burrows as the fight starts and comes up beside your hindmost hero a few seconds later.",
+        "mod": {"gambit": {"label": "Burrow", "arrive_ms": 3000, "arrive_at": "back_line"}}
+      },
+      {
         "id": "gnawing_pup",
         "name": "Gnawing",
         "text": "Its bites make you Bleed, and the Bleed stacks.",
@@ -202,6 +208,12 @@
     "threat": "Charges through your front line",
     "specializations": [
       {
+        "id": "avalanche_guardian",
+        "name": "Avalanche",
+        "text": "Its charge carries every hero in its line, not just the first.",
+        "mod": {"on": [{"slot": "signature", "carries": true}]}
+      },
+      {
         "id": "bulwark_guardian",
         "name": "Bulwark",
         "text": "After it charges, it gains a Shield.",
@@ -298,6 +310,23 @@
     "archetype": "support",
     "threat": "Shields her allies and silences your casters",
     "specializations": [
+      {
+        "id": "veil_witch",
+        "name": "Veil",
+        "text": "Instead of Shields, it hides its most hurt ally within 6 hexes for a moment, again and again.",
+        "mod": {
+          "drops_passives": ["ward"],
+          "passives": [
+            {
+              "id": "veil",
+              "name": "Veil",
+              "text": "Every few seconds, it hides its most hurt ally within 6 hexes: Stealthed for a moment.",
+              "kind": "ability",
+              "effects": [{"trigger": "on_interval", "interval_ms": 8000, "type": "apply_status", "status": "stealth", "duration_ms": 2000, "target": "lowest_hp_ally", "within_hexes": 6}]
+            }
+          ]
+        }
+      },
       {
         "id": "hex_witch",
         "name": "Hex",

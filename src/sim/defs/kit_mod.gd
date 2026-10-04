@@ -80,8 +80,14 @@ extends RefCounted
 ##       "holder": {...UnitCondition...}  its event and timed effects run
 ##                                        only while their unit meets it (the
 ##                                        Steaming Ashling's burst, off water)
+##       "carries": true                  its charges carry every enemy in
+##                                        their line (the Avalanche Guardian)
 ## and (step 7d) "places_lantern": true at the top: the player places its
 ## signature's first area before the fight (UnitSetup.lantern).
+## and (phase 8 part 3, the Veil Witch) "drops_passives": ["ward"] at the
+## top: those passives go (each must be on the kit); a gambit's "arrive_at":
+## "back_line" (it arrives beside the other side's hindmost unit, not where
+## it was placed: the Burrowing Pup).
 ## and (step 8c) "drops_signature": true at the top: the kit's signature and
 ## its mana bar go (an Oath of Silence, Whispering Stones); a mod that does
 ## this goes last, after any that change the signature.
@@ -173,12 +179,13 @@ class AbilityChange:
 	var per_shared_bp: int = FixedMath.BP_ONE
 	## Phase 8 part 3: the condition its event and timed effects run under.
 	var holder: UnitCondition = null
+	var carries: bool = false
 
 	func touches_effects() -> bool:
 		return amount_bp != FixedMath.BP_ONE or duration_bp != FixedMath.BP_ONE or duration_add_ticks != 0 or radius_add != 0 \
 			or every_add != 0 or times_add != 0 or max_standing_add != 0 or overheal_add_bp != 0 or width_add != 0 or not add_to_areas.is_empty() \
 			or strength_add_bp != 0 or follows or ricochet_add != 0 or reflect_bp != 0 or snags \
-			or per_enemy_add_bp != 0 or overheal_max_hp_add != 0 or at_stacks_add != 0 or per_taken_add_bp != 0 or holder != null
+			or per_enemy_add_bp != 0 or overheal_max_hp_add != 0 or at_stacks_add != 0 or per_taken_add_bp != 0 or holder != null or carries
 
 	func touches(effect: EffectDef) -> bool:
 		if not at.is_empty() and not at.has(effect.target):
@@ -232,11 +239,13 @@ var mana_taken_bp: int = FixedMath.BP_ONE
 ## the fight (First Lantern).
 var places_lantern: bool = false
 var drops_signature: bool = false
+var drops_passives: Array[String] = []
 ## A gambit's rule (phase 5c step 6d; Gambits): its name, where else it may
 ## start, when it arrives, and when it swaps places (and the Shield then).
 var gambit_label: String = ""
 var place_rule: String = ""
 var arrive_ticks: int = 0
+var arrive_at: String = ""
 var swap_ticks: int = 0
 var swap_shield_bp: int = 0
 var swap_choice: bool = false
@@ -282,6 +291,8 @@ static func read(reader: DataReader) -> KitMod:
 	mod.plant_add_ticks = _signed_ticks(reader, "plant_add_ms")
 	mod.places_lantern = reader.opt_bool("places_lantern", false)
 	mod.drops_signature = reader.opt_bool("drops_signature", false)
+	if reader.has("drops_passives"):
+		mod.drops_passives = reader.req_string_array("drops_passives")
 	if reader.has("engage"):
 		var engage_reader: DataReader = reader.req_object("engage")
 		if engage_reader != null:
@@ -299,6 +310,9 @@ static func read(reader: DataReader) -> KitMod:
 			mod.gambit_label = gambit.req_string("label")
 			mod.place_rule = gambit.opt_string_choice("place", "", Gambits.PLACES)
 			mod.arrive_ticks = gambit.opt_ticks("arrive_ms", 0)
+			mod.arrive_at = gambit.opt_string_choice("arrive_at", "", Gambits.ARRIVE_AT)
+			if not mod.arrive_at.is_empty() and mod.arrive_ticks == 0:
+				gambit.error("arrive_at needs arrive_ms")
 			mod.swap_ticks = gambit.opt_ticks("swap_ms", 0)
 			mod.swap_shield_bp = gambit.opt_int("swap_shield_bp", 0, 0, FixedMath.BP_ONE)
 			mod.swap_choice = gambit.opt_bool("swap_choice", false)
@@ -387,6 +401,7 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 		change.prefer = UnitCondition.read(reader.req_object("prefer"))
 	if reader.has("holder"):
 		change.holder = UnitCondition.read(reader.req_object("holder"))
+	change.carries = reader.opt_bool("carries", false)
 	if (change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0 or change.prefer != null) and change.slot != SLOT_SIGNATURE:
 		reader.error("cast_bp, targets_add, and prefer change a signature (\"slot\": \"signature\")")
 	if (change.changes_part() or change.after_add_ticks != 0) and not change.slot.begins_with(PASSIVE_PREFIX):
@@ -412,7 +427,8 @@ static func _signed_ticks(reader: DataReader, key: String) -> int:
 ## since those are what scale cleanly (phase 5c step 4, section 9.3).
 func step_problem() -> String:
 	if _changes_mana() or not also_fires.is_empty() or echo_ticks > 0 or prefer != null or hop_within_add != 0 or hop_cooldown_add_ticks != 0 \
-			or not gambit_label.is_empty() or plant_add_ticks != 0 or break_free_add_ticks != 0 or places_lantern or drops_signature:
+			or not gambit_label.is_empty() or plant_add_ticks != 0 or break_free_add_ticks != 0 or places_lantern or drops_signature \
+			or not drops_passives.is_empty():
 		return "a growing card's step can't change mana, add triggers, echo, targeting, or hops"
 	for part: PartDef in passives:
 		if part.kind != PartDef.Kind.AURA:
@@ -425,7 +441,7 @@ func step_problem() -> String:
 				or change.changes_part() or change.prefer != null or not change.at.is_empty() or change.strength_add_bp != 0 \
 				or change.follows or change.ricochet_add != 0 or change.reflect_bp != 0 or change.snags \
 				or change.per_enemy_add_bp != 0 or change.overheal_max_hp_add != 0 or change.at_stacks_add != 0 or change.per_taken_add_bp != 0 \
-				or change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0 or change.holder != null:
+				or change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0 or change.holder != null or change.carries:
 			return "a growing card's step can only change an ability's amount_bp"
 	return ""
 
@@ -463,7 +479,7 @@ func changes_anything() -> bool:
 			return true
 	return not passives.is_empty() or not changes.is_empty() or _changes_mana() or not also_fires.is_empty() or echo_ticks > 0 \
 		or prefer != null or hop_within_add != 0 or hop_cooldown_add_ticks != 0 or not gambit_label.is_empty() or plant_add_ticks != 0 \
-		or break_free_add_ticks != 0 or places_lantern or drops_signature
+		or break_free_add_ticks != 0 or places_lantern or drops_signature or not drops_passives.is_empty()
 
 
 func _changes_mana() -> bool:
@@ -493,6 +509,8 @@ func affects_besides_passives(kit: UnitDef) -> bool:
 	if plant_add_ticks != 0 and kit.plant_ticks > 0 or break_free_add_ticks != 0 and kit.has_trait("engage"):
 		return true
 	if places_lantern and lantern_area(kit) != null or drops_signature and kit.signature != null:
+		return true
+	if drops_passives.any(func(part_id: String) -> bool: return _passive_index(kit, PASSIVE_PREFIX + part_id) >= 0):
 		return true
 	for change: AbilityChange in changes:
 		if change.changes_part():
@@ -530,6 +548,10 @@ func apply(kit: UnitDef, problems: Array[String] = []) -> UnitDef:
 		problems.append("its HP would drop below 1")
 	if built.stats.values[UnitStats.Stat.RANGE] < 1:
 		problems.append("its range would drop below 1")
+	for part_id: String in drops_passives:
+		if not built.passives.any(func(other: PartDef) -> bool: return other.id == part_id):
+			problems.append("it has no passive \"%s\" to drop" % part_id)
+		built.passives = built.passives.filter(func(other: PartDef) -> bool: return other.id != part_id)
 	for part: PartDef in passives:
 		if built.passives.any(func(other: PartDef) -> bool: return other.id == part.id):
 			problems.append("it already has a passive \"%s\"" % part.id)
@@ -559,6 +581,7 @@ func apply(kit: UnitDef, problems: Array[String] = []) -> UnitDef:
 		built.gambit_label = gambit_label
 		built.place_rule = place_rule
 		built.arrive_ticks = arrive_ticks
+		built.arrive_at = arrive_at
 		built.swap_ticks = swap_ticks
 		built.swap_shield_bp = swap_shield_bp
 		built.swap_choice = swap_choice
@@ -743,6 +766,8 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 				copy.snags = true
 			if change.holder != null and _takes_holder(effect):
 				copy.holder = change.holder
+			if change.carries and effect.type == EffectDef.Type.CHARGE and effect.knockback_hexes > 0:
+				copy.carries = true
 			if change.width_add != 0 and copy.shape != null and copy.shape.kind == ShapeDef.Kind.LINE:
 				copy.shape = DefCopy.shallow(copy.shape) as ShapeDef
 				copy.shape.width += change.width_add
@@ -780,7 +805,8 @@ static func _any_effect(effects: Array[EffectDef], change: AbilityChange) -> boo
 				or change.strength_add_bp != 0 and effect.type == EffectDef.Type.APPLY_STATUS
 				or change.follows and effect.zone_ticks > 0 or change.ricochet_add != 0 and effect.type == EffectDef.Type.DAMAGE
 				or change.reflect_bp != 0 and effect.type == EffectDef.Type.WALL or change.snags and effect.type == EffectDef.Type.SNARE
-				or change.holder != null and _takes_holder(effect)):
+				or change.holder != null and _takes_holder(effect)
+				or change.carries and effect.type == EffectDef.Type.CHARGE and effect.knockback_hexes > 0 and not effect.carries):
 			return true
 		if change.touches(effect) and (change.amount_bp != FixedMath.BP_ONE and (effect.amount != 0 or effect.amount_bp_of_damage != 0 or effect.scaling.any(func(value: int) -> bool: return value != 0) or effect.amount_bp_of_max_hp != 0 or change.moves(effect))
 				or (change.duration_bp != FixedMath.BP_ONE or change.duration_add_ticks != 0) and (effect.duration_ticks > 0 or effect.zone_ticks > 0)

@@ -63,6 +63,9 @@ var break_free_add_ticks: int = 0
 var gambit_label: String = ""
 var place_rule: String = ""
 var arrive_ticks: int = 0
+## Where it arrives (phase 8 part 3): "" where placed, "back_line" beside
+## the other side's hindmost unit (Gambits).
+var arrive_at: String = ""
 var swap_ticks: int = 0
 var swap_shield_bp: int = 0
 var swap_choice: bool = false
@@ -182,6 +185,7 @@ func copy() -> UnitDef:
 	other.gambit_label = gambit_label
 	other.place_rule = place_rule
 	other.arrive_ticks = arrive_ticks
+	other.arrive_at = arrive_at
 	other.swap_ticks = swap_ticks
 	other.swap_shield_bp = swap_shield_bp
 	other.swap_choice = swap_choice
