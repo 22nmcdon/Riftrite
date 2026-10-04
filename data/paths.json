@@ -238,7 +238,7 @@
           "from_ability": [
             "heartseeker"
           ],
-          "threshold": 4
+          "threshold": 6
         }
       },
       {
@@ -570,7 +570,7 @@
           "statuses": [
             "briar_torn"
           ],
-          "threshold": 9
+          "threshold": 11
         }
       },
       {
@@ -670,7 +670,7 @@
           "vs_keywords": [
             "rooted"
           ],
-          "threshold": 2000
+          "threshold": 3300
         }
       }
     ]
@@ -991,7 +991,7 @@
           "from_ability": [
             "arrow_storm"
           ],
-          "threshold": 280
+          "threshold": 470
         }
       },
       {
@@ -1074,7 +1074,7 @@
             "longshot"
           ],
           "within_ms_of_hop": 1000,
-          "threshold": 6
+          "threshold": 15
         }
       }
     ]
@@ -1271,7 +1271,7 @@
         "deed": {
           "text": "Enemy shots stopped by his wall",
           "counts": "blocked",
-          "threshold": 8
+          "threshold": 7
         }
       },
       {
@@ -1605,7 +1605,7 @@
           "from_ability": [
             "forge_blast"
           ],
-          "threshold": 35
+          "threshold": 40
         }
       },
       {
@@ -1751,7 +1751,7 @@
             "war_call",
             "rally"
           ],
-          "threshold": 10
+          "threshold": 15
         }
       }
     ]
@@ -1943,7 +1943,7 @@
           "text": "Damage he takes after rising",
           "counts": "taken",
           "after_rising": true,
-          "threshold": 120
+          "threshold": 125
         }
       },
       {
@@ -2442,7 +2442,7 @@
             "morning_haste",
             "dawnlight"
           ],
-          "threshold": 20
+          "threshold": 33
         }
       }
     ]
@@ -2631,7 +2631,7 @@
         "deed": {
           "text": "Damage shared through her links",
           "counts": "shared",
-          "threshold": 30
+          "threshold": 43
         }
       },
       {
@@ -2706,7 +2706,7 @@
           "from_ability": [
             "thornweave"
           ],
-          "threshold": 30
+          "threshold": 26
         }
       }
     ]
@@ -3188,7 +3188,7 @@
           "from_ability": [
             "sunfall"
           ],
-          "threshold": 60
+          "threshold": 95
         }
       }
     ]
