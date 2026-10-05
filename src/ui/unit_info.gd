@@ -183,6 +183,13 @@ static func passive_numbers(part: PartDef, kit: UnitDef, content: ContentDb) -> 
 			if not part.rise_status.is_empty():
 				rises += "; each rise: %s" % _status_name(part.rise_status, content)
 			return rises
+		PartDef.Kind.COPY:
+			var copies: String = "Copies %s hero signature it sees" % ("each new" if part.copy_replace else "the first")
+			if part.copy_twice_bp > 0:
+				copies += "; casts it twice, each at %s" % ValueBreakdown._percent(part.copy_twice_bp)
+			if part.copy_share:
+				copies += "; its court gets each copy too"
+			return copies
 		PartDef.Kind.LINK:
 			var linked: String = "Allies with its Shields share %s of each hit on one, evenly" % ValueBreakdown._percent(part.share_bp)
 			if part.per_shared > 0:

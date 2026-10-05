@@ -236,6 +236,13 @@ func _add(entry: LogEntry, sim: CombatSim) -> void:
 				move.to = Vector2(entry.to_pos)
 				move.unit_id = mover
 				moves[mover] = move
+		LogEntry.Kind.COPIED:
+			# A copied signature (phase 8 part 3): "Copies <name>" over the copier.
+			var copier: UnitState = sim.unit_by_id(entry.source_unit)
+			if copier != null:
+				var copies: Fx = _new(Kind.POPUP, entry.tick, entry.tick + POPUP_TICKS, Vector2(copier.pos), copier.id)
+				copies.text = "Copies %s" % entry.note
+				copies.color = UiStyle.RIFT_300
 		LogEntry.Kind.FELL:
 			# A fall into the void (phase 8 part 3): "Falls" where it went
 			# over; its DEATH line's ghost follows.

@@ -56,6 +56,10 @@ var fell: bool = false
 ## Where it stood as it joined the fight (a leap back to the start, phase 8
 ## part 3).
 var start_pos: Vector2i = Vector2i.ZERO
+## Its copy passive (phase 8 part 3; Copies), and the hero signature it has
+## copied ("": none yet).
+var copy_part: PartDef = null
+var copied: String = ""
 ## Submerge (phase 8 part 3, the trait): it submerges, it's under now (at
 ## the last mark), and the tick it may go under again (after an attack).
 var submerges: bool = false
@@ -284,6 +288,8 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 			unit.link = part
 		if part.kind == PartDef.Kind.RISE and unit.rise_part == null:
 			unit.rise_part = part
+		if part.kind == PartDef.Kind.COPY and unit.copy_part == null:
+			unit.copy_part = part
 	Passives.set_up(unit)
 	return unit
 

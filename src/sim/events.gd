@@ -85,6 +85,10 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> int:
 							_raise(sim, ally, EffectDef.Trigger.ON_ALLY_ABILITY, chain, source)
 				if sim.ally_fire_listeners:
 					Signatures.ally_fired(sim, source, entry.source_ability, target)
+				# A hero's signature, seen by the copiers (phase 8 part 3).
+				if not sim.copiers.is_empty() and not basic and source.side == EffectSource.Team.HEROES and source.signature != null \
+						and entry.source_ability == source.signature.def.id and source.def.signature != null and entry.source_ability == source.def.signature.id:
+					Copies.saw(sim, source)
 			LogEntry.Kind.DAMAGE:
 				if target == null:
 					continue

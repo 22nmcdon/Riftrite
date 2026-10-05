@@ -75,6 +75,11 @@ enum Kind {
 	## it breaks), breaks, or reforms; note: which ("warns bridge 2"); amount:
 	## its hexes; to_pos: its first hex's center; source: the sever's.
 	VOID,
+	## Phase 8 part 3 (Copies): the unit with the copy passive (source: it
+	## and the passive) takes a hero's signature; target: the hero; note:
+	## the signature's name; shape: "shared" when it came from its side's
+	## Queen.
+	COPIED,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -246,6 +251,8 @@ func to_text() -> String:
 			return line + "%s %s (%d water hexes)" % [source_text(), note, amount]
 		Kind.VOID:
 			return line + "%s %s%s" % [source_text(), note, " (breaks at %s)" % _format_time(end_tick) if note.begins_with("warns") else ""]
+		Kind.COPIED:
+			return line + "%s copies %s's %s%s" % [source_text(), target, note, " (shared)" if shape == "shared" else ""]
 		Kind.FELL:
 			return line + "%s falls into the void at %s (moved by %s)" % [target, _point(to_pos), source_text()]
 		Kind.MOVE:

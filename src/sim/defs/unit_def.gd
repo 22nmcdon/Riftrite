@@ -152,6 +152,8 @@ func problems() -> Array[String]:
 		found.append("a mana signature needs \"mana\"")
 	if mana != null and not mana_signature:
 		found.append("\"mana\": only a unit whose signature fires on mana has a mana bar")
+	if passives.any(func(part: PartDef) -> bool: return part.kind == PartDef.Kind.COPY) and not mana_signature:
+		found.append("a copy passive needs a mana signature of its own")
 	var ids: Array[String] = ability_ids()
 	for i: int in ids.size():
 		if ids.find(ids[i]) < i:

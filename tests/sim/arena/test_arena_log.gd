@@ -12,6 +12,7 @@ const PathFights = preload("res://tests/sim/path_fights.gd")
 const RuleFights = preload("res://tests/sim/test_hero_rules.gd")
 const WaterTest = preload("res://tests/sim/test_water.gd")
 const IslandsTest = preload("res://tests/sim/test_islands.gd")
+const CopiesTest = preload("res://tests/sim/test_copies.gd")
 
 
 ## A busy fight: melee and ranged on both sides, a rock in the middle.
@@ -210,6 +211,7 @@ const NAMES: Dictionary = {
 	LogEntry.Kind.WATER: ["unit", "ability"],
 	LogEntry.Kind.FELL: ["unit", "ability", "target"],
 	LogEntry.Kind.VOID: ["unit", "ability"],
+	LogEntry.Kind.COPIED: ["unit", "ability", "target", "note"],
 	LogEntry.Kind.LIFESTEAL: ["unit", "ability", "target"], LogEntry.Kind.STATUS_EXTENDED: ["unit", "ability", "target", "status"],
 	LogEntry.Kind.RISE: ["target"], LogEntry.Kind.RESISTED: ["unit", "ability", "target", "status", "note"],
 	LogEntry.Kind.DODGED: ["unit", "ability", "target"],
@@ -228,6 +230,8 @@ func test_every_entry_names_its_source() -> void:
 	# The void (phase 8 part 3): a fall, and bridges that break.
 	fights.append(IslandsTest.void_setup())
 	fights.append(IslandsTest.sever_setup())
+	# A copied signature (phase 8 part 3).
+	fights.append(CopiesTest.copy_setup())
 	for setup: FightSetup in fights:
 		_assert_sources(K.run(setup), setup)
 

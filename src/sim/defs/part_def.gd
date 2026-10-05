@@ -40,12 +40,27 @@ extends RefCounted
 ##       {"on_water": true}), and "as": an enemy's id: it doesn't come back
 ##       itself, but a fresh one of that kit stands where it fell, at hp_pct
 ##       of that kit's max HP (logged as SUMMON, sourced to the rise).
+##   {"id": "mirror", "name": "Mirror", "kind": "copy",
+##    "replace": false, "twice_pct": 0, "share": false}
+##       phase 8 part 3 (the Mirrorwight; a code change, since nothing copied
+##       an ability): the first copyable hero signature cast anywhere on the
+##       board becomes the unit's own signature (Copies): its effects only
+##       damage, heals, Shields, statuses, cleanses, and areas of those. It's
+##       cast on the unit's own trigger and mana bar, with its own stats;
+##       its targets and areas count sides from the unit, so heals and
+##       Shields go to its allies and damage and harmful statuses to the
+##       heroes. Logged as COPIED. "replace": it takes each new one it sees
+##       (Greedy); "twice_pct": it casts the copy twice, each at that share,
+##       the second half a second later (Twinned); "share": each copy it
+##       takes also goes to every standing ally with a copy passive (the
+##       Mirror Queen's court). The unit needs a mana signature of its own,
+##       cast until it has a copy.
 ## Adding a kind is a code change; say so when you make one. An optional
 ## "text" is the player's sentence for it; the sim never reads it.
 
-enum Kind { AURA, ABILITY, REPLACE_STATUS, GUARD, LINK, RISE }
+enum Kind { AURA, ABILITY, REPLACE_STATUS, GUARD, LINK, RISE, COPY }
 
-const KIND_NAMES: Array[String] = ["aura", "ability", "replace_status", "guard", "link", "rise"]
+const KIND_NAMES: Array[String] = ["aura", "ability", "replace_status", "guard", "link", "rise", "copy"]
 
 var id: String
 var name: String
@@ -76,6 +91,11 @@ var rise_status: String = ""
 ## kit it rises as ("": itself).
 var rise_if: UnitCondition = null
 var rise_as: String = ""
+## copy (phase 8 part 3): takes each new one, casts it twice at this share
+## (0: once, in full), and shares each copy with its side's copiers.
+var copy_replace: bool = false
+var copy_twice_bp: int = 0
+var copy_share: bool = false
 
 
 static func read(reader: DataReader) -> PartDef:
@@ -130,5 +150,9 @@ static func read(reader: DataReader) -> PartDef:
 			def.rise_as = reader.opt_string("as", "")
 			if not def.rise_as.is_empty() and not def.rise_status.is_empty():
 				reader.error("a unit rising as another kit keeps no status")
+		Kind.COPY:
+			def.copy_replace = reader.opt_bool("replace", false)
+			def.copy_twice_bp = reader.opt_int("twice_pct", 0, 0, 100) * 100
+			def.copy_share = reader.opt_bool("share", false)
 	reader.finish()
 	return def

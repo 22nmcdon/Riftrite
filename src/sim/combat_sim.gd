@@ -62,6 +62,9 @@ var has_void: bool = false
 ## Event effects waiting out their delay (phase 8 part 3; Passives.Delayed),
 ## in the order they were set off.
 var delayed: Array = []
+## The units with a copy passive (phase 8 part 3; Copies), in the fight's
+## order.
+var copiers: Array[UnitState] = []
 ## The ground still standing (the whole arena until the collapse).
 var safe: Rect2i
 ## Rift Collapse (Collapse): the act's numbers, the tick the first ring
@@ -295,6 +298,9 @@ func add_unit(unit: UnitState) -> void:
 		(_hero_engagers if unit.side == EffectSource.Team.HEROES else _enemy_engagers).append(unit)
 	(heroes if unit.side == EffectSource.Team.HEROES else enemies).append(unit)
 	note_listeners(unit)
+	if unit.copy_part != null:
+		copiers.append(unit)
+		_listening = true
 	if not unit.phases.is_empty():
 		_phased = true
 	if Passives.has_conditional_aura(unit):
