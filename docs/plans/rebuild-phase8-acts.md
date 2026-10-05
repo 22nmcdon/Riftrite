@@ -56,7 +56,7 @@ Each act moves the difficulty up one step (Decision 9 of `rebuild-phase8-apexes.
 
 ## 4. The content (waits on section 7)
 
-**Act 2's design** is `act2-glassmere.md` (2026-10-04), and its build plan `rebuild-phase8-act2.md`.
+**Act 2's design** is `act2-glassmere.md` (2026-10-04), and its build plan `rebuild-phase8-act2.md` (built). **Act 3's** is drafted in `act3-shattered-crown.md` (2026-10-05), waiting on the playtester.
 
 Per act, by section 2a: new faces for about half the archetypes, Act 1's enemies specialized for the rest, 2 new archetypes, their kits and texts, the day fights (2 a day for 7 days, easier and harder), 2 elites each built around one mechanic, a boss with phases, the act's board rule, Hunts, rocks, placeholder figures, and `scale_bp`. Each new enemy is a positioning problem with an answer in the heroes' paths (`rebuild-enemies.md`'s goals), and any sim piece it needs is skipped by fights that don't use it, so Act 1's fingerprints hold. Specializations come with Act 2 (Decision 4), so `enemy-growth.md` sections 2–3 are built first: the 18 for Act 1's enemies, the 11 upgrades, and 2 for each new face. The board rules are new sim pieces: water (a terrain layer: half speed, Burn at half rate), and islands (gaps that can't be walked, bridges, falling).
 
