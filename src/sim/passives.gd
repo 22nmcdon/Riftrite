@@ -230,7 +230,7 @@ static func condition_holds(sim: CombatSim, holder: UnitState, aura: AuraDef) ->
 			if holder.hp * FixedMath.BP_ONE >= aura.below_bp * holder.max_hp:
 				return false
 		AuraDef.While.STATE:
-			if not aura.state.holds(holder):
+			if not aura.state.holds(holder, holder):
 				return false
 		AuraDef.While.ALLY_NEAR:
 			var reach_sq: int = aura.near_range * aura.near_range
@@ -326,7 +326,7 @@ static func vs_bonus_bp(attacker: UnitState, target: UnitState, stat: int = Aura
 	for i: int in attacker.vs_conditions.size():
 		if attacker.vs_stats[i] != stat:
 			continue
-		if attacker.vs_conditions[i] != null and not attacker.vs_conditions[i].holds(target):
+		if attacker.vs_conditions[i] != null and not attacker.vs_conditions[i].holds(target, attacker):
 			continue
 		if attacker.vs_basic[i] and ability_id != attacker.def.basic_attack.id:
 			continue
@@ -432,7 +432,7 @@ static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, 
 				if state == null or Statuses.stacks_on(other, status) < effect.at_stacks:
 					continue
 				Statuses.end_now(sim, other, state, "spent by %s" % unit.id)
-		if effect.vs != null and (other == null or not effect.vs.holds(other)):
+		if effect.vs != null and (other == null or not effect.vs.holds(other, unit)):
 			continue
 		# Phase 5c step 6b: a hit big enough, an enemy that fell near enough,
 		# a kill by the signature (`status` names the ability), and a cooldown.
@@ -446,7 +446,7 @@ static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, 
 		# stands, a kill off its target, and a heal's ability and the HP it
 		# healed from (on_heal carries the ability as `status`, the HP healed
 		# as `damage`).
-		if effect.holder != null and not effect.holder.holds(unit):
+		if effect.holder != null and not effect.holder.holds(unit, unit):
 			continue
 		if effect.beyond_range > 0 and (other == null or ArenaPlane.length_sq(other.pos - unit.pos) <= effect.beyond_range * effect.beyond_range):
 			continue
@@ -486,7 +486,7 @@ static func run_timed(sim: CombatSim) -> void:
 			var effect: EffectDef = listener.effect
 			if not effect.active_at(sim.tick):
 				continue
-			if effect.holder != null and not effect.holder.holds(unit):
+			if effect.holder != null and not effect.holder.holds(unit, unit):
 				continue
 			match effect.trigger:
 				EffectDef.Trigger.ON_INTERVAL:
@@ -545,7 +545,7 @@ static func on_fall(sim: CombatSim, unit: UnitState) -> bool:
 	for listener: Listener in unit.listeners:
 		if listener.effect.trigger == EffectDef.Trigger.ON_FALL and listener.effect.active_at(sim.tick):
 			# Where it fell (phase 8 part 3: the Steaming Ashling, on water).
-			if listener.effect.holder != null and not listener.effect.holder.holds(unit):
+			if listener.effect.holder != null and not listener.effect.holder.holds(unit, unit):
 				continue
 			_run(sim, unit, listener, null, 0)
 			ran = true

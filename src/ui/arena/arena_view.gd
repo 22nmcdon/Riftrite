@@ -37,6 +37,10 @@ extends Control
 ##   - Shallow water (phase 8 part 3): its hexes are drawn on the ground,
 ##     from the setup while placing and from the fight's water each frame
 ##     (it can change), and a unit standing on it shows a ripple.
+##   - The void (phase 8 part 3): its hexes are open sky between the
+##     islands, with no ground, zone, or hex line, from the setup while
+##     placing and from the fight's islands each frame. A unit that falls
+##     shows "Falls", then its ghost (FightFx).
 ##   - Paths (docs/plans/rebuild-phase4-paths.md, section 6): a transformed
 ##     hero stands as its path's figure; a vowed one keeps its base figure.
 ##     Either way the path is named under it while placing, with its
@@ -88,6 +92,10 @@ const LANTERN_COLOR := Color("f2c14e")
 ## Shallow water's hexes (placeholder until phase 7's art).
 const WATER_FILL := Color(0.24, 0.47, 0.62, 0.62)
 const WATER_EDGE := Color(0.72, 0.88, 0.98, 0.55)
+## The void's hexes: the rift's sky showing through (placeholder until phase
+## 7's art), and the island's lip round them.
+const VOID_FILL := Color("0a0d1c")
+const VOID_EDGE := Color(0.62, 0.52, 0.86, 0.5)
 
 var mode: Mode = Mode.PLACEMENT
 var grid: HexGrid
@@ -99,6 +107,8 @@ var drawn_rect: Rect2i
 var rocks: Array[ArenaPlane.Circle] = []
 ## The water's hexes, as the setup or the fight has them now.
 var water: Array[Vector2i] = []
+## The void's hexes, as the setup or the fight has them now.
+var void_hexes: Array[Vector2i] = []
 ## One ruin per rock, in the setup's order.
 var rock_props: Array[RockProp] = []
 ## One per unit, in the fight's order.
@@ -166,6 +176,7 @@ func show_setup(setup: FightSetup, content: ContentDb) -> void:
 	drawn_rect = board.grow_individual(overhang, 0, overhang, 0)
 	rocks.clear()
 	water = setup.water.duplicate()
+	void_hexes = setup.void_hexes.duplicate()
 	for prop: RockProp in rock_props:
 		prop.queue_free()
 	rock_props.clear()
@@ -243,6 +254,8 @@ static func path_tag(unit: UnitSetup) -> String:
 func sync_fight(player: FightPlayer) -> void:
 	if player.sim.has_water:
 		water = player.sim.water.hexes
+	if player.sim.has_void:
+		void_hexes = player.sim.islands.hexes
 	for unit: UnitState in player.sim.units:
 		var unit_token: UnitToken = token(unit.id)
 		if unit_token == null:
@@ -525,9 +538,17 @@ func _draw() -> void:
 		var edge: PackedVector2Array = pool.duplicate()
 		edge.append(pool[0])
 		draw_polyline(edge, WATER_EDGE, 1.0, true)
+	for hex: Vector2i in void_hexes:
+		var sky: PackedVector2Array = hex_corners(grid.center(hex.x, hex.y))
+		draw_colored_polygon(sky, VOID_FILL)
+		var lip: PackedVector2Array = sky.duplicate()
+		lip.append(sky[0])
+		draw_polyline(lip, VOID_EDGE, 2.0, true)
 	for index: int in grid.size():
 		var col: int = grid.col_of(index)
 		var row: int = grid.row_of(index)
+		if not void_hexes.is_empty() and void_hexes.has(Vector2i(col, row)):
+			continue
 		var corners: PackedVector2Array = hex_corners(grid.center(col, row))
 		if mode == Mode.PLACEMENT and ZONE_FILLS[grid.zone(row)].a > 0.0:
 			draw_colored_polygon(corners, ZONE_FILLS[grid.zone(row)])

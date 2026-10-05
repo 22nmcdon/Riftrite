@@ -10,6 +10,7 @@ const TacticFights = preload("res://tests/sim/test_tactics.gd")
 const PathFights = preload("res://tests/sim/path_fights.gd")
 const RuleFights = preload("res://tests/sim/test_hero_rules.gd")
 const ArenaLogTest = preload("res://tests/sim/arena/test_arena_log.gd")
+const IslandsTest = preload("res://tests/sim/test_islands.gd")
 
 ## The chaos fight, run once for every test here (it takes a couple of
 ## seconds).
@@ -82,6 +83,15 @@ func test_a_fight_on_water_repeats_exactly() -> void:
 	assert_ne(first.combat_log.to_text(), K.run(ArenaLogTest.busy_setup()).combat_log.to_text(), "the water changes the fight")
 
 
+## So does a fight with void (phase 8 part 3), and the void changes it.
+func test_a_fight_with_void_repeats_exactly() -> void:
+	var first: FightResult = K.run(IslandsTest.void_setup())
+	assert_eq(K.run(IslandsTest.void_setup()).combat_log.to_text(), first.combat_log.to_text())
+	var flat: FightSetup = IslandsTest.void_setup()
+	flat.void_hexes.clear()
+	assert_ne(first.combat_log.to_text(), K.run(flat).combat_log.to_text(), "the void changes the fight")
+
+
 func test_the_seed_matters() -> void:
 	assert_ne(K.run(Chaos.setup(22)).combat_log.to_text(), chaos.combat_log.to_text())
 
@@ -101,10 +111,11 @@ func test_the_fight_order_matters() -> void:
 ## The heroes' rules (RISE, RESISTED): the rules fight. A charm's miss
 ## (DODGED, phase 5c step 6b): tests/sim/test_loadout_pieces.gd. A gambit's
 ## arrival (ARRIVE, step 6d): tests/sim/test_gambits.gd. Water changing
-## (WATER, phase 8 part 3): tests/sim/test_water.gd.
+## (WATER, phase 8 part 3): tests/sim/test_water.gd. A fall into the void
+## (FELL, phase 8 part 3): tests/sim/test_islands.gd.
 const NOT_YET: Array[LogEntry.Kind] = [LogEntry.Kind.SYNERGY, LogEntry.Kind.DEED_LEVEL, LogEntry.Kind.TACTIC,
 	LogEntry.Kind.ZONE, LogEntry.Kind.SNARE, LogEntry.Kind.WALL, LogEntry.Kind.GUARD, LogEntry.Kind.RISE, LogEntry.Kind.RESISTED,
-	LogEntry.Kind.DODGED, LogEntry.Kind.ARRIVE, LogEntry.Kind.SHARED, LogEntry.Kind.WALL_HIT, LogEntry.Kind.MAX_HP_UP, LogEntry.Kind.WATER]
+	LogEntry.Kind.DODGED, LogEntry.Kind.ARRIVE, LogEntry.Kind.SHARED, LogEntry.Kind.WALL_HIT, LogEntry.Kind.MAX_HP_UP, LogEntry.Kind.WATER, LogEntry.Kind.FELL]
 ## Statuses only the paths use (phase 4), and only relics (phase 5c step 5a;
 ## Sunder, covered by tests/run/test_relics.gd).
 const PATH_STATUSES: Array[String] = ["warded"]

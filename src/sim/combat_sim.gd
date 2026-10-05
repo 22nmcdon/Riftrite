@@ -55,6 +55,10 @@ var rocks: Array[ArenaPlane.Circle] = []
 ## Shallow water (phase 8 part 3; Water), or null in a fight without any.
 var water: Water = null
 var has_water: bool = false
+## The void and its islands (phase 8 part 3; Islands), or null in a fight
+## without any.
+var islands: Islands = null
+var has_void: bool = false
 ## The ground still standing (the whole arena until the collapse).
 var safe: Rect2i
 ## Rift Collapse (Collapse): the act's numbers, the tick the first ring
@@ -215,6 +219,9 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 	if not setup.water.is_empty():
 		water = Water.make(grid, _nav, setup.water)
 		has_water = true
+	if not setup.void_hexes.is_empty():
+		islands = Islands.make(grid, _nav, setup.void_hexes, setup.rocks)
+		has_void = true
 	for unit_setup: UnitSetup in setup.units():
 		add_unit(UnitState.from_setup(unit_setup, units.size(), grid, tuning.unit_radius))
 	var start := LogEntry.new()
@@ -417,6 +424,8 @@ func step() -> void:
 		if not water.layers.is_empty():
 			water.tick(self)
 		Water.mark(self)
+	if has_void:
+		Islands.mark(self)
 	if _aura_ticks.has(tick):
 		_active_auras = Passives.rederive(self, _active_auras)
 	Collapse.tick(self)
@@ -434,10 +443,13 @@ func step() -> void:
 	Shots.land_due(self)
 	Areas.land_due(self)
 	for unit: UnitState in units:
-		if unit.alive:
+		# A unit that fell into the void this tick (Islands) is gone.
+		if unit.alive and not unit.fell:
 			_act(unit)
 	if has_water:
 		Water.mark(self)
+	if has_void:
+		Islands.mark(self)
 	if not snares.is_empty():
 		Snares.check(self)
 	var read_to: int = combat_log.entries.size()
@@ -634,16 +646,18 @@ func rebuild_barriers() -> void:
 
 
 ## True if `unit` fits at `point` as a spot it picks to land or be placed on
-## (a leap's, a hop's, a flier's, a summon's): inside the safe ground and
-## overlapping no other standing unit (fliers in the air aside) and no rock.
+## (a leap's, a hop's, a flier's, a summon's): inside the safe ground, off
+## the void (phase 8 part 3), and overlapping no other standing unit (fliers
+## in the air aside) and no rock.
 func fits(unit: UnitState, point: Vector2i) -> bool:
-	return ArenaPlane.inside(safe, point, unit.radius) and _clear(unit, point)
+	return ArenaPlane.inside(safe, point, unit.radius) and not on_void(point) and _clear(unit, point)
 
 
 ## True if `unit` may walk to `point`: anywhere in the arena, crumbled ground
-## too (phase 5c, Decision 7), overlapping nothing.
+## too (phase 5c, Decision 7), but not over the void unless it flies (phase
+## 8 part 3), overlapping nothing.
 func fits_ground(unit: UnitState, point: Vector2i) -> bool:
-	return ArenaPlane.inside(grid.bounds(), point, unit.radius) and _clear(unit, point)
+	return ArenaPlane.inside(grid.bounds(), point, unit.radius) and (unit.flying or not on_void(point)) and _clear(unit, point)
 
 
 ## The pathfinding grid (Water works out its cells on it).
@@ -654,6 +668,11 @@ func nav() -> NavGrid:
 ## True if `point` is on water (phase 8 part 3; Water).
 func on_water(point: Vector2i) -> bool:
 	return has_water and water.cells[_nav.cell_at(point)] != 0
+
+
+## True if `point` is over the void (phase 8 part 3; Islands).
+func on_void(point: Vector2i) -> bool:
+	return has_void and islands.cells[_nav.cell_at(point)] != 0
 
 
 ## How far `unit` walks this tick: its step, halved on water unless it swims
@@ -710,6 +729,7 @@ func _clear(unit: UnitState, point: Vector2i) -> bool:
 func nav_for(unit: UnitState, except: UnitState) -> NavGrid:
 	_nav.begin(safe, unit.radius)
 	_nav.wading = has_water and wades(unit)
+	_nav.void_blocks = has_void and not unit.flying
 	for circle: ArenaPlane.Circle in obstacles_for(unit, except):
 		_nav.add_obstacle(circle.center, circle.radius)
 	return _nav
@@ -720,6 +740,7 @@ func nav_for(unit: UnitState, except: UnitState) -> NavGrid:
 func ground_nav_for(unit: UnitState) -> NavGrid:
 	_nav.begin(safe, unit.radius)
 	_nav.wading = has_water and wades(unit)
+	_nav.void_blocks = has_void and not unit.flying
 	for rock: ArenaPlane.Circle in rocks:
 		_nav.add_obstacle(rock.center, rock.radius)
 	if has_barriers:
@@ -837,7 +858,19 @@ func _process_deaths() -> void:
 	while again:
 		again = false
 		for unit: UnitState in units:
-			if not unit.alive or unit.hp > 0:
+			if not unit.alive or (unit.hp > 0 and not unit.fell):
+				continue
+			# A fall into the void (Islands): nothing catches it, and nothing
+			# runs as it goes (Decision 1).
+			if unit.fell:
+				unit.hp = 0
+				_fall(unit)
+				if ally_fall_listeners:
+					Signatures.ally_fell(self, unit)
+				aura_lost = aura_lost or Passives.has_aura(unit) or (taunt_auras and Statuses.has_kind(unit, StatusDef.Kind.TAUNT))
+				Events.kill(self, unit)
+				if enemy_fell_listeners:
+					Events.enemy_fell(self, unit)
 				continue
 			var undying: StatusState = _undying(unit)
 			if undying != null:
@@ -943,10 +976,12 @@ func _undying(unit: UnitState) -> StatusState:
 
 func _fall(unit: UnitState) -> void:
 	unit.alive = false
-	if unit.rise_part != null:
+	if unit.fell:
+		pass
+	elif unit.rise_part != null:
 		# Its own rises (phase 8 part 2); Second Dawn's counts toward them.
 		# Phase 8 part 3: only if it fell meeting the rise's "if".
-		var meets: bool = unit.rise_part.rise_if == null or unit.rise_part.rise_if.holds(unit)
+		var meets: bool = unit.rise_part.rise_if == null or unit.rise_part.rise_if.holds(unit, unit)
 		if unit.rises_done < unit.rise_part.rise_times and meets:
 			unit.rise_at = tick + unit.rise_part.rise_ticks
 	elif hero_rules.rise_ticks > 0 and unit.side == EffectSource.Team.HEROES and not unit.rose and unit.index < setup.heroes.size():
@@ -959,7 +994,7 @@ func _fall(unit: UnitState) -> void:
 	entry.kind = LogEntry.Kind.DEATH
 	entry.target = unit.id
 	entry.to_pos = unit.pos
-	entry.note = "last hit: %s" % unit.last_hit_text()
+	entry.note = "fell into the void" if unit.fell else "last hit: %s" % unit.last_hit_text()
 	combat_log.add(entry)
 
 

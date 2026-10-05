@@ -15,6 +15,10 @@ extends RefCounted
 ##                                           part 3; the Tolling Bellringer)
 ##   {"on_water": true}                      standing on water (phase 8 part
 ##                                           3; Water.mark; false: not)
+##   {"same_island": true}                   on the island the condition's
+##                                           holder stands on (phase 8 part
+##                                           3; Islands.mark; every unit is,
+##                                           in a fight without void)
 ## Used as an event effect's "vs" (the unit the event names), a damage_bp
 ## aura's "vs" (the target of the hit), and an aura's "while": "state" (its
 ## holder).
@@ -30,6 +34,7 @@ var archetypes: Array[String] = []
 var front_most: bool = false
 var on_water: Flying = Flying.ANY
 var kits: Array[String] = []
+var same_island: bool = false
 
 
 static func read(reader: DataReader) -> UnitCondition:
@@ -49,18 +54,23 @@ static func read(reader: DataReader) -> UnitCondition:
 		def.kits = reader.req_string_array("kits")
 	if reader.has("on_water"):
 		def.on_water = Flying.YES if reader.opt_bool("on_water", true) else Flying.NO
+	def.same_island = reader.opt_bool("same_island", false)
 	if def.is_empty():
-		reader.error("a condition needs at least one of keywords, statuses, below_hp_pct, flying, archetypes, front_most, on_water, or kits")
+		reader.error("a condition needs at least one of keywords, statuses, below_hp_pct, flying, archetypes, front_most, on_water, same_island, or kits")
 	reader.finish()
 	return def
 
 
 func is_empty() -> bool:
-	return keywords.is_empty() and statuses.is_empty() and below_hp_bp == 0 and flying == Flying.ANY and archetypes.is_empty() and not front_most and on_water == Flying.ANY and kits.is_empty()
+	return keywords.is_empty() and statuses.is_empty() and below_hp_bp == 0 and flying == Flying.ANY and archetypes.is_empty() and not front_most and on_water == Flying.ANY and kits.is_empty() and not same_island
 
 
-## True if `unit` meets every field given.
-func holds(unit: UnitState) -> bool:
+## True if `unit` meets every field given. `holder`: whose condition it is
+## (the unit an aura or event effect belongs to), for same_island; without
+## one, same_island never holds.
+func holds(unit: UnitState, holder: UnitState = null) -> bool:
+	if same_island and (holder == null or unit.island != holder.island):
+		return false
 	if below_hp_bp > 0 and unit.hp * FixedMath.BP_ONE >= below_hp_bp * unit.max_hp:
 		return false
 	if flying != Flying.ANY and unit.flying != (flying == Flying.YES):
@@ -116,6 +126,8 @@ func describe() -> String:
 		parts.append("the front-most")
 	if on_water != Flying.ANY:
 		parts.append("on water" if on_water == Flying.YES else "not on water")
+	if same_island:
+		parts.append("on its island")
 	if not kits.is_empty():
 		parts.append(" or ".join(kits.map(func(kit_id: String) -> String: return kit_id.replace("_", " ").capitalize())))
 	return ", ".join(parts)

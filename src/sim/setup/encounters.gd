@@ -135,6 +135,7 @@ static func setup(content: ContentDb, encounter_id: String, formation: Dictionar
 		return null
 	var fight: FightSetup = FightSetup.make(heroes, enemies, encounter.rocks.duplicate(), fight_seed, encounter.act)
 	fight.water = encounter.water.duplicate()
+	fight.void_hexes = encounter.void_hexes.duplicate()
 	fight.summon_kits = summon_kits(content, heroes + enemies, encounter.scale_bp)
 	return fight
 

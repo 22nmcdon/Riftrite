@@ -33,6 +33,10 @@ extends RefCounted
 ## charge stopped short stuns no one. A flier is pushed over units and rocks
 ## (only the edge stops it); left over someone, it drops to the nearest free
 ## spot.
+## The void (phase 8 part 3; Islands): a unit that doesn't fly whose push
+## (or pull, or a charge's carry) ends with its center over the void falls
+## (Islands.check_fall; it isn't Stunned); a charger stops at the void's edge,
+## and a hop lands short of it.
 ##
 ## hop_away (a trait): when an enemy is within a hex (hop_within: Light Feet
 ## makes it farther), the unit hops a hex
@@ -107,8 +111,11 @@ static func push(sim: CombatSim, unit: UnitState, dir: Vector2i, distance: int, 
 				note += ", dropped clear"
 	_log(sim, LogEntry.Kind.PUSH, source, unit, from, to, note)
 	_place(sim, unit, to)
+	# Over the void (phase 8 part 3): it falls.
+	var fell: bool = sim.has_void and Islands.check_fall(sim, unit, source)
 	if sweep.hit != ArenaPlane.Hit.NONE:
-		stun(sim, unit, source)
+		if not fell:
+			stun(sim, unit, source)
 		if hit_unit != null:
 			stun(sim, hit_unit, source)
 
@@ -180,10 +187,18 @@ static func charge(sim: CombatSim, unit: UnitState, target: UnitState, effect: E
 			if distance == room:
 				hit_unit = target
 				note = "reached %s" % target.id
-	_log(sim, LogEntry.Kind.CHARGE, source, target, from, sweep.point, note)
-	_place(sim, unit, sweep.point)
+	var to: Vector2i = sweep.point
+	# The void (phase 8 part 3): a charger stops at its edge.
+	if sim.has_void and not unit.flying:
+		var solid: Vector2i = Islands.solid_until(sim, from, to)
+		if solid != to:
+			to = solid
+			hit_unit = null
+			note = "stopped at the void's edge"
+	_log(sim, LogEntry.Kind.CHARGE, source, target, from, to, note)
+	_place(sim, unit, to)
 	if not sim.snares.is_empty():
-		Snares.snag(sim, unit, from, sweep.point)
+		Snares.snag(sim, unit, from, to)
 	if hit_unit != null and hit_unit.side != unit.side and effect.knockback_hexes > 0 and not carried:
 		knockback(sim, hit_unit, unit.pos, unit.forward(), effect.knockback_hexes, source)
 
@@ -274,12 +289,18 @@ static func hop(sim: CombatSim, unit: UnitState, source: EffectSource) -> bool:
 static func _hop_from(sim: CombatSim, unit: UnitState, near: UnitState, source: EffectSource) -> bool:
 	var dir: Vector2i = ArenaPlane.direction(near.pos, unit.pos, Vector2i(0, -ArenaPlane.DIR * unit.forward()))
 	var sweep: ArenaPlane.Sweep = ArenaPlane.sweep(unit.pos, ArenaPlane.along(unit.pos, dir, HexGrid.HEX), unit.radius, sim.obstacles_for(unit, null), sim.safe)
-	if sweep.point == unit.pos:
+	var to: Vector2i = sweep.point
+	var short: bool = sweep.hit != ArenaPlane.Hit.NONE
+	# The void (phase 8 part 3): a hop lands short of it.
+	if sim.has_void and not unit.flying and Islands.crosses(sim, unit.pos, to):
+		to = Islands.solid_until(sim, unit.pos, to)
+		short = true
+	if to == unit.pos:
 		return false
-	var entry: LogEntry = _log(sim, LogEntry.Kind.HOP, source, near, unit.pos, sweep.point, "")
-	if sweep.hit != ArenaPlane.Hit.NONE:
+	var entry: LogEntry = _log(sim, LogEntry.Kind.HOP, source, near, unit.pos, to, "")
+	if short:
 		entry.note = "cut short"
-	_place(sim, unit, sweep.point)
+	_place(sim, unit, to)
 	return true
 
 

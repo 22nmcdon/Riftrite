@@ -17,6 +17,9 @@ extends RefCounted
 ##     off (no way even with every unit out of the way: rocks only, since
 ##     crumbled ground is walkable). Blocked only by units, it keeps its target and waits for an
 ##     opening (playtest gate 1, decided 2026-09-28);
+##   - over the void (phase 8 part 3; Islands), it never steps: the route
+##     goes over the bridges, and a straight line with the void on it is
+##     planned as a route;
 ##   - Rooted, it stands where it is; Slowed, its steps are shorter; on
 ##     water (phase 8 part 3), half as long unless it swims (Water), and the
 ##     leg is noted "in water".
@@ -193,7 +196,10 @@ static func _plan(sim: CombatSim, unit: UnitState) -> void:
 	var sweep: ArenaPlane.Sweep = ArenaPlane.sweep(unit.pos, reach_point, unit.radius, sim.obstacles_for(unit, target), sim.safe)
 	# Water on the way (phase 8 part 3): a walker it slows plans a route,
 	# which goes round it when that's shorter than wading.
-	if sweep.hit == ArenaPlane.Hit.NONE and not (sim.has_water and sim.wades(unit) and sim.water.crosses(sim, unit.pos, reach_point)):
+	# The void on the way (phase 8 part 3): a walker plans a route, over the
+	# bridges.
+	if sweep.hit == ArenaPlane.Hit.NONE and not (sim.has_water and sim.wades(unit) and sim.water.crosses(sim, unit.pos, reach_point)) \
+			and not (sim.has_void and Islands.crosses(sim, unit.pos, reach_point)):
 		unit.route.append(target.pos)
 		return
 	var nav: NavGrid = sim.nav_for(unit, target)
@@ -214,7 +220,8 @@ static func _plan_escape(sim: CombatSim, unit: UnitState) -> void:
 	unit.replan_at = sim.tick + sim.tuning.repath_ticks
 	unit.route.clear()
 	var spot: Vector2i = sim.nearest_safe_point(unit.pos, unit.radius)
-	if unit.flying or ArenaPlane.sweep(unit.pos, spot, unit.radius, sim.obstacles_for(unit, null), sim.grid.bounds()).hit == ArenaPlane.Hit.NONE:
+	if unit.flying or (ArenaPlane.sweep(unit.pos, spot, unit.radius, sim.obstacles_for(unit, null), sim.grid.bounds()).hit == ArenaPlane.Hit.NONE
+			and not (sim.has_void and Islands.crosses(sim, unit.pos, spot))):
 		unit.route.append(spot)
 		return
 	var nav: NavGrid = sim.nav_for(unit, null)

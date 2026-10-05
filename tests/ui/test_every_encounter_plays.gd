@@ -57,6 +57,7 @@ const FORMS: Dictionary[LogEntry.Kind, String] = {
 	LogEntry.Kind.DODGED: "\"Miss\" over the unit",
 	LogEntry.Kind.ARRIVE: "the token appears, with a pulse and \"Arrives\"",
 	LogEntry.Kind.WATER: "the water's hexes change on the ground (from the sim's water)",
+	LogEntry.Kind.FELL: "\"Falls\" where it went over the void, then its ghost",
 }
 ## What the board must have shown at some frame, for each kind a fight
 ## produced (the rest are checked elsewhere, or read from the unit's state).
@@ -74,6 +75,7 @@ const EVIDENCE: Dictionary[LogEntry.Kind, String] = {
 	LogEntry.Kind.AREA_WARNING: "area",
 	LogEntry.Kind.AREA_LANDED: "landed",
 	LogEntry.Kind.DEATH: "ghost",
+	LogEntry.Kind.FELL: "popup",
 	LogEntry.Kind.SUMMON: "pulse",
 	LogEntry.Kind.PUSH: "slide",
 	LogEntry.Kind.LEAP: "slide",

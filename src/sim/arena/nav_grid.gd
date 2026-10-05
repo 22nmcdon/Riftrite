@@ -23,6 +23,9 @@ extends RefCounted
 ## (`wading`, set after begin), a step onto a cell on water costs
 ## Water.ROUTE_COST_BP as much, beside crumbled ground's cost.
 ##
+## The void (phase 8 part 3; Islands): for a walker (`void_blocks`, set after
+## begin), a cell whose center is over the void is blocked, like a rock's.
+##
 ## Costs are integers (a cell straight, about 1.414 cells diagonally, never
 ## cutting past a blocked cell). Neighbors are tried in a fixed order,
 ## forward-first for each side, and ties go to whatever was queued first, so
@@ -73,6 +76,10 @@ var _diagonal: int
 ## current walker pays more to cross it.
 var water: PackedByteArray = PackedByteArray()
 var wading: bool = false
+## Per cell, 1 over the void (Islands sets it; empty: no void), and whether
+## it blocks the current walker.
+var void_cells: PackedByteArray = PackedByteArray()
+var void_blocks: bool = false
 
 # What blocks the current walker.
 var _safe: Rect2i
@@ -157,6 +164,7 @@ func begin(safe: Rect2i, radius: int) -> void:
 	_safe = safe
 	_radius = radius
 	wading = false
+	void_blocks = false
 	_set_limits()
 	_obstacle_xs.clear()
 	_obstacle_ys.clear()
@@ -198,7 +206,7 @@ func _work_out(at_cell: int) -> int:
 	var px: int = _x0 + (at_cell - row * cols) * cell
 	var py: int = _y0 + row * cell
 	var result: int = 1
-	if px < _min_x or px > _max_x or py < _min_y or py > _max_y:
+	if px < _min_x or px > _max_x or py < _min_y or py > _max_y or (void_blocks and void_cells[at_cell] != 0):
 		result = 2
 	else:
 		@warning_ignore("integer_division")

@@ -185,6 +185,10 @@ func _check_links() -> void:
 				errors.append("%s: water at (%d, %d) is on a rock" % [where, wet.x, wet.y])
 			elif encounter.water.find(wet) < i:
 				errors.append("%s: water at (%d, %d) is listed twice" % [where, wet.x, wet.y])
+		var enemy_hexes: Array[Vector2i] = []
+		for placed: EncounterDef.Placed in encounter.enemies:
+			enemy_hexes.append(placed.hex)
+		errors.append_array(Islands.problems(grid, encounter.void_hexes, encounter.rocks, encounter.water, enemy_hexes, "%s: " % where))
 		for placed: EncounterDef.Placed in encounter.enemies:
 			var at: String = "%s at (%d, %d)" % [placed.enemy, placed.hex.x, placed.hex.y]
 			if not enemies.has(placed.enemy):

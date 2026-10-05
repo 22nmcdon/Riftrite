@@ -236,6 +236,12 @@ func _add(entry: LogEntry, sim: CombatSim) -> void:
 				move.to = Vector2(entry.to_pos)
 				move.unit_id = mover
 				moves[mover] = move
+		LogEntry.Kind.FELL:
+			# A fall into the void (phase 8 part 3): "Falls" where it went
+			# over; its DEATH line's ghost follows.
+			var falls: Fx = _new(Kind.POPUP, entry.tick, entry.tick + POPUP_TICKS, Vector2(entry.to_pos), entry.target)
+			falls.text = "Falls"
+			falls.color = UiStyle.BAD
 		LogEntry.Kind.DEATH:
 			var ghost: Fx = _new(Kind.GHOST, entry.tick, entry.tick + GHOST_TICKS, Vector2(entry.to_pos), entry.target)
 			ghost.color = _side_color(sim, entry.target)

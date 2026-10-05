@@ -16,6 +16,9 @@ extends RefCounted
 ## hunt (a camp's optional small fight).
 ## `water` (phase 8 part 3, Act 2's board rule): its shallow water's hexes,
 ## like rocks (Water); never on a rock.
+## `void` (phase 8 part 3, Act 3's board rule): the hexes that are open sky
+## (Islands); never on a rock or water, and every enemy on an island the
+## heroes' rows reach.
 
 ## One enemy placed on a hex.
 class Placed:
@@ -32,6 +35,7 @@ var days: Array[int] = []
 var enemies: Array[Placed] = []
 var rocks: Array[Vector2i] = []
 var water: Array[Vector2i] = []
+var void_hexes: Array[Vector2i] = []
 var scale_bp: int = FixedMath.BP_ONE
 var tier: String = "easier"
 
@@ -66,6 +70,8 @@ static func read(reader: DataReader) -> EncounterDef:
 		def.rocks = reader.req_hex_array("rocks")
 	if reader.has("water"):
 		def.water = reader.req_hex_array("water")
+	if reader.has("void"):
+		def.void_hexes = reader.req_hex_array("void")
 	def.scale_bp = reader.opt_int("scale_bp", FixedMath.BP_ONE, 1)
 	def.tier = reader.opt_string_choice("tier", "easier", TIERS)
 	reader.finish()

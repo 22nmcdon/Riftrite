@@ -67,6 +67,10 @@ enum Kind {
 	## for 6s", "recedes"); amount: how many hexes are water now; to_pos:
 	## where; source: the flood's.
 	WATER,
+	## Phase 8 part 3 (Islands): target falls into the void at to_pos (it
+	## goes in the deaths step); source: the push, pull, or carry that moved
+	## it there; note "into the void".
+	FELL,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -236,6 +240,8 @@ func to_text() -> String:
 			return line + "%s reaches %s" % [target, note]
 		Kind.WATER:
 			return line + "%s %s (%d water hexes)" % [source_text(), note, amount]
+		Kind.FELL:
+			return line + "%s falls into the void at %s (moved by %s)" % [target, _point(to_pos), source_text()]
 		Kind.MOVE:
 			return line + "%s walks from %s toward %s%s" % [source_unit, _point(from_pos), _point(to_pos), "" if note.is_empty() else " (%s)" % note]
 		Kind.STOP:

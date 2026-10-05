@@ -11,6 +11,7 @@ const TacticFights = preload("res://tests/sim/test_tactics.gd")
 const PathFights = preload("res://tests/sim/path_fights.gd")
 const RuleFights = preload("res://tests/sim/test_hero_rules.gd")
 const WaterTest = preload("res://tests/sim/test_water.gd")
+const IslandsTest = preload("res://tests/sim/test_islands.gd")
 
 
 ## A busy fight: melee and ranged on both sides, a rock in the middle.
@@ -85,6 +86,14 @@ func test_the_log_replays_a_fight_on_water() -> void:
 	var fight: FightResult = K.run(water_setup())
 	assert_true(fight.combat_log.of_kind(LogEntry.Kind.MOVE).any(func(entry: LogEntry) -> bool: return entry.note == "in water"), "some legs are in water")
 	_assert_replays(water_setup())
+
+
+func test_the_log_replays_a_fight_with_void() -> void:
+	# A unit pushed off an edge falls where its PUSH ends; a walker goes over
+	# a bridge (phase 8 part 3).
+	var fight: FightResult = K.run(IslandsTest.void_setup())
+	assert_false(fight.combat_log.of_kind(LogEntry.Kind.FELL).is_empty(), "something falls")
+	_assert_replays(IslandsTest.void_setup())
 
 
 func test_the_log_replays_the_rules_fight() -> void:
@@ -199,6 +208,7 @@ const NAMES: Dictionary = {
 	LogEntry.Kind.ZONE: ["unit", "ability"], LogEntry.Kind.SNARE: ["unit", "ability", "note"],
 	LogEntry.Kind.WALL: ["unit", "ability"], LogEntry.Kind.GUARD: ["unit", "ability", "target"], LogEntry.Kind.SHARED: ["unit", "ability", "target"], LogEntry.Kind.WALL_HIT: ["unit", "ability"], LogEntry.Kind.MAX_HP_UP: ["unit", "ability", "target"],
 	LogEntry.Kind.WATER: ["unit", "ability"],
+	LogEntry.Kind.FELL: ["unit", "ability", "target"],
 	LogEntry.Kind.LIFESTEAL: ["unit", "ability", "target"], LogEntry.Kind.STATUS_EXTENDED: ["unit", "ability", "target", "status"],
 	LogEntry.Kind.RISE: ["target"], LogEntry.Kind.RESISTED: ["unit", "ability", "target", "status", "note"],
 	LogEntry.Kind.DODGED: ["unit", "ability", "target"],
@@ -214,6 +224,8 @@ func test_every_entry_names_its_source() -> void:
 	fights.append(WaterTest.flood_setup([{"type": "flood", "mode": "circle", "radius": 1, "duration_ms": 1000},
 		{"type": "area", "shape": {"kind": "circle", "radius": 4}, "anchor": "self", "hits": "enemies", "effects": [{"type": "pull", "hexes": 1, "toward": "area", "target": "target"}]},
 		{"type": "pull", "hexes": 1, "toward": "water", "target": "target"}]))
+	# The void (phase 8 part 3): a fall.
+	fights.append(IslandsTest.void_setup())
 	for setup: FightSetup in fights:
 		_assert_sources(K.run(setup), setup)
 

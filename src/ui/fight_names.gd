@@ -91,7 +91,7 @@ func bbcode(entry: LogEntry) -> String:
 	match entry.kind:
 		LogEntry.Kind.FIGHT_START, LogEntry.Kind.FIGHT_END, LogEntry.Kind.PHASE:
 			return "[b][color=#%s]%s[/color][/b]" % [UiStyle.EMBER.to_html(false), line]
-		LogEntry.Kind.DEATH:
+		LogEntry.Kind.DEATH, LogEntry.Kind.FELL:
 			color = UiStyle.BAD
 		LogEntry.Kind.HEAL:
 			color = UiStyle.GOOD

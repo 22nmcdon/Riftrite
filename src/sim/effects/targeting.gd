@@ -42,7 +42,7 @@ static func update(sim: CombatSim, unit: UnitState) -> void:
 			set_target(sim, unit, preferred, unit.tactic.name)
 			return
 	if unit.def.prefer != null:
-		var wanted: Array[UnitState] = sim.targetable_enemies_of(unit).filter(func(enemy: UnitState) -> bool: return unit.def.prefer.holds(enemy))
+		var wanted: Array[UnitState] = sim.targetable_enemies_of(unit).filter(func(enemy: UnitState) -> bool: return unit.def.prefer.holds(enemy, unit))
 		var preferred_kit: UnitState = nearest_of(sim, unit, wanted, false) if not wanted.is_empty() else null
 		if preferred_kit != null:
 			set_target(sim, unit, preferred_kit, unit.def.prefer_label)
@@ -66,7 +66,7 @@ static func pick(sim: CombatSim, unit: UnitState, rule: String, reach_sq: int, p
 	# A signature's "prefer" (phase 5c step 7b): its rule runs over those
 	# that meet it, if any is in reach.
 	if prefer != null:
-		var wanted: Array[UnitState] = pool.filter(func(other: UnitState) -> bool: return prefer.holds(other))
+		var wanted: Array[UnitState] = pool.filter(func(other: UnitState) -> bool: return prefer.holds(other, unit))
 		if not wanted.is_empty():
 			pool = wanted
 	var best: UnitState = null

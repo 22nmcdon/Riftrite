@@ -47,6 +47,12 @@ var front_most: bool = false
 ## with water), and the swims trait: water doesn't slow it.
 var on_water: bool = false
 var swims: bool = false
+## Its island (phase 8 part 3; Islands.mark), -1 over the void or in a
+## fight without one.
+var island: int = -1
+## True once it has fallen into the void (Islands.check_fall): it acts no
+## more, and goes in the deaths step as a fall nothing catches.
+var fell: bool = false
 ## Submerge (phase 8 part 3, the trait): it submerges, it's under now (at
 ## the last mark), and the tick it may go under again (after an attack).
 var submerges: bool = false

@@ -166,3 +166,23 @@ func test_water_is_drawn_from_the_setup_then_the_fight() -> void:
 	view.sync_fight(player)
 	assert_eq(view.water, player.sim.water.hexes, "fighting: the fight's water")
 	assert_eq(view.token("maren").in_water, player.sim.unit_by_id("maren").on_water)
+
+
+## The void (phase 8 part 3): open sky between the islands, from the setup
+## while placing and from the fight's islands once it runs.
+func test_the_void_is_drawn_from_the_setup_then_the_fight() -> void:
+	var errors: Array[String] = []
+	var setup: FightSetup = Encounters.setup(_content, "sentinel_gate", GUARDED, 1, errors)
+	setup.void_hexes = [Vector2i(0, 3), Vector2i(1, 3)] as Array[Vector2i]
+	var view := ArenaView.new()
+	add_child_autofree(view)
+	view.size = Vector2(1200, 900)
+	view.show_setup(setup, _content)
+	assert_eq(view.void_hexes, setup.void_hexes, "placing: the setup's void")
+	var player: FightPlayer = FightPlayer.make(setup, _content)
+	player.advance(0.5)
+	view.set_mode(ArenaView.Mode.FIGHT)
+	view.sync_fight(player)
+	assert_eq(view.void_hexes, player.sim.islands.hexes, "fighting: the fight's void")
+	view.queue_redraw()
+	await wait_process_frames(1)

@@ -375,7 +375,7 @@ static func _targets(sim: CombatSim, unit: UnitState, target: EffectDef.Target, 
 			found = sim.standing_allies_of(unit)
 	if effect != null and effect.only != null:
 		# Only those that meet it (phase 8 part 3, Undertow: on water).
-		found = found.filter(func(other: UnitState) -> bool: return effect.only.holds(other))
+		found = found.filter(func(other: UnitState) -> bool: return effect.only.holds(other, unit))
 	return found
 
 
