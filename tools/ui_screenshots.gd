@@ -7,7 +7,8 @@ extends SceneTree
 ## Rift Collapse with the combat log's popup open. Then the run (phase 5):
 ## vowing, camp, the Pedlar, the route (the act map), the loadout, a run's
 ## fight and its result, the pick after it, a relic choice, a hero's panel,
-## the Magpie, and the end.
+## the Magpie, an event and an oath, Act 2's route and a fight on its water,
+## and the end.
 
 var _main: Main
 var _out: String = "user://screenshots"
@@ -102,7 +103,8 @@ func _run() -> void:
 	quit(0)
 
 
-## A run from seed 7 through the real screens (phase 5).
+## A run from seed 7 through the real screens (phase 5), then into Act 2
+## (phase 8 part 3).
 func _run_screens() -> void:
 	_main.show_run_start(7)
 	var start: RunStartScreen = _main.screen as RunStartScreen
@@ -172,6 +174,29 @@ func _run_screens() -> void:
 	flow.choose_node(1)
 	day.refresh()
 	await _snap("run_oath")
+	# Act 2, the Glassmere (phase 8 part 3): every hero transformed, the
+	# route on day 4 (its fights specialized), and a fight on the water.
+	for hero: RunState.Hero in flow.state.heroes:
+		hero.transformed = true
+	flow.state.apex_open = true
+	flow._next_act()
+	for hero: RunState.Hero in flow.state.heroes:
+		flow.vow_apex(hero.id, flow.run.content.paths[hero.path].apexes[0].id)
+	flow.state.day = 4
+	flow._start_day()
+	day.refresh()
+	await _snap("act2_route")
+	flow.choose_fight(0)
+	_main.show_day()
+	_main.show_run_fight()
+	var wet: ArenaScreen = _main.screen as ArenaScreen
+	wet._fight()
+	for frame: int in 8 * 30:
+		wet._process(1.0 / 30.0)
+	await _snap("act2_fight_8s")
+	wet.skip()
+	wet.continue_run()
+	day = _main.screen as RunDayScreen
 	flow.state.phase = RunState.Phase.ENDED
 	flow.state.outcome = RunState.Outcome.WON
 	day.refresh()

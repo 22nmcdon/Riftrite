@@ -78,7 +78,7 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 
 ## The run
 
-- **3 acts, each ending in a boss.** The slice is Act 1: about 7 days, elites on 2 of them, the boss on the last.
+- **3 acts, each ending in a boss.** Each is 7 days, elites on 2 of them, the boss on the last. Act 1 and Act 2, the Glassmere (shallow water, specialized enemies, the Mournwater: `rebuild-phase8-act2.md`), are built; a run moves from one to the next, its losses carrying (`rebuild-phase8-acts.md`).
 - **The start:** choose your three heroes, then vow each one.
 - **A day** (`days-and-nodes.md`): **choose the fight** from 2 options known from the start of the act, set the **loadout**, **place** and fight, take the **after-fight pick** (on a win or a tie) and any deed rewards (transformations, apex vows), visit the **shop** (the Pedlar, every day: 1 relic at a time, the loadout wares, treating wounds), then choose **1 of 2–3 nodes**: an **Event** (a scene with a choice, or a Bloodied Oath; `events.md`), **Camp** (one option: Rest, Train, Scout, Map the Rift, Fortify, Dig In, Hunt, or the Shrine, which takes an offering for a relic), **Rift Tear** (pick a depth: tomorrow's fight is harder, and winning it pays a relic choice), or the **Magpie**.
 - **Choosing fights feeds deeds:** which enemies you fight decides which deeds fill. The fight card shows the enemies, never which paths they suit.
@@ -136,7 +136,7 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - **Grid size:** is 8 × 7 right for 3 heroes against 3–6 enemies? (arena plan)
 - **Large units:** should bosses ever take more than one hex? (arena plan)
 - **Pacing:** how many fights a transformation takes. (heroes plan)
-- **Apexes:** answered in `rebuild-phase8-apexes.md` (Decisions 4, 7–10: the apex lands after the Act 2 boss, a late transformer's deed is the same size, and strength is a shift in the difficulty a team can beat). Snowballs stay per fight, even in endless. (apexes)
+- **Apexes:** answered in `rebuild-phase8-apexes.md` (Decisions 4, 8–10, 13: at least one apex per team before the Act 2 boss, a late transformer's deed is the same size, and strength is a shift in the difficulty a team can beat). Snowballs stay per fight, even in endless. (apexes)
 - **Deed thresholds after the transformation:** does the same deed keep counting? (heroes plan)
 - **Mana numbers** are a first pass for the sim to tune. Phase 2's first tuning pass left the heroes' numbers as designed. (heroes plan)
 - **Last Watch after Last Rites:** is having no big move left the right feel? (heroes plan)

@@ -46,7 +46,7 @@ func test_the_encounter_list() -> void:
 		var found: int = text.find(encounter.name + "\n")
 		assert_gt(found, at, "%s, in encounters.json's order" % encounter.name)
 		at = found
-		assert_string_contains(text, "Tests %s · %s" % [encounter.tests, EncounterListScreen.days_text(encounter.days)])
+		assert_string_contains(text, "Tests %s · %s" % [encounter.tests, EncounterListScreen.when_text(encounter)])
 		for line: String in EncounterListScreen.enemy_lines(encounter, _content):
 			assert_string_contains(text, line)
 	assert_eq(EncounterListScreen.enemy_lines(_content.encounters["moth_cloud"], _content),
@@ -57,6 +57,8 @@ func test_the_encounter_list() -> void:
 
 
 func test_days() -> void:
+	assert_eq(EncounterListScreen.when_text(_content.encounters["the_pack"]), EncounterListScreen.days_text(_content.encounters["the_pack"].days), "Act 1's cards name only the days")
+	assert_eq(EncounterListScreen.when_text(_content.encounters["the_ford"]), "Act 2 · Days 1-2")
 	assert_eq(EncounterListScreen.days_text([3] as Array[int]), "Day 3")
 	assert_eq(EncounterListScreen.days_text([1, 2, 3] as Array[int]), "Days 1-3")
 	assert_eq(EncounterListScreen.days_text([1, 3] as Array[int]), "Days 1, 3")

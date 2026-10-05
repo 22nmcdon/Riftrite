@@ -1,8 +1,9 @@
 class_name EncounterListScreen
 extends UiScreen
 ## Practice's list of fights (docs/plans/rebuild-phase3-fight-sandbox.md,
-## section 1): the Act 1 encounters in encounters.json's order, a card each
-## with its name, what it tests, its days, and its enemies (how many, name,
+## section 1): every encounter in encounters.json's order (Act 1's, then
+## Act 2's since phase 8 part 3), a card each with its name, what it tests,
+## its act (from Act 2) and days, and its enemies (how many, name,
 ## archetype, and threat line). Picking one goes to its placement.
 
 signal encounter_picked(encounter_id: String)
@@ -22,7 +23,7 @@ static func make(content_db: ContentDb) -> EncounterListScreen:
 
 func build() -> void:
 	heading("Practice")
-	hint("Pick a fight from Act 1. Your heroes start where you last placed them.")
+	hint("Pick a fight. Act 2's are built for transformed heroes: transform them in their panels. Your heroes start where you last placed them.")
 	var grid := GridContainer.new()
 	grid.columns = COLUMNS
 	grid.add_theme_constant_override("h_separation", 16)
@@ -41,7 +42,7 @@ func _card(encounter: EncounterDef) -> PanelContainer:
 	column.add_theme_constant_override("separation", 4)
 	card.add_child(column)
 	column.add_child(UiStyle.label(encounter.name, 24, UiStyle.HIGHLIGHT))
-	var tests: Label = UiStyle.label("Tests %s · %s" % [encounter.tests, days_text(encounter.days)], 16, UiStyle.TEXT_DIM)
+	var tests: Label = UiStyle.label("Tests %s · %s" % [encounter.tests, when_text(encounter)], 16, UiStyle.TEXT_DIM)
 	tests.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(tests)
 	for line: String in enemy_lines(encounter, content):
@@ -52,6 +53,11 @@ func _card(encounter: EncounterDef) -> PanelContainer:
 	pick.size_flags_horizontal = Control.SIZE_SHRINK_END
 	column.add_child(pick)
 	return card
+
+
+## Its days, after its act from Act 2 on: "Days 1-3", "Act 2 · Days 1-2".
+static func when_text(encounter: EncounterDef) -> String:
+	return days_text(encounter.days) if encounter.act <= 1 else "Act %d · %s" % [encounter.act, days_text(encounter.days)]
 
 
 ## "Day 3", "Days 1-3", or "Days 1, 3" (not in a row).
