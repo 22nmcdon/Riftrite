@@ -116,13 +116,15 @@ func _start_day() -> void:
 		_skip_sealed()
 
 
-## Today's fights' specializations (phase 8 part 3), drawn afresh each time
-## the day starts (Decision 6 of act2-glassmere.md).
+## Today's fights' specializations and upgrades (phase 8 part 3), drawn
+## afresh each time the day starts (Decision 6 of act2-glassmere.md).
 func _draw_specializations() -> void:
 	state.today_specs.clear()
+	state.today_upgrades.clear()
 	var today: Array[String] = state.today()
 	for i: int in today.size():
 		state.today_specs.append(Offers.specializations(run, state, i, today[i]))
+		state.today_upgrades.append(Offers.enemy_upgrades(run, state, i, today[i]))
 
 
 ## Today's chosen fight's specializations: enemy index -> specialization id
@@ -137,6 +139,27 @@ func chosen_specs() -> Dictionary[int, String]:
 		if not str(drawn[i]).is_empty():
 			specs[i] = str(drawn[i])
 	return specs
+
+
+## Today's chosen fight's upgrades: enemy index -> the drawn upgrades that
+## change that enemy (none for a Hunt, or a fight not among today's).
+func chosen_upgrades() -> Dictionary[int, PackedStringArray]:
+	var upgrades: Dictionary[int, PackedStringArray] = {}
+	var index: int = state.today().find(state.chosen)
+	if index < 0 or index >= state.today_upgrades.size() or fight_encounter() != state.chosen:
+		return upgrades
+	var drawn: Array = state.today_upgrades[index]
+	var encounter: EncounterDef = run.content.encounters[state.chosen]
+	for i: int in encounter.enemies.size():
+		var kit: UnitDef = run.content.enemies[encounter.enemies[i].enemy].kit
+		var carried: PackedStringArray = []
+		for id: Variant in drawn:
+			var upgrade: EnemyUpgradeDef = run.content.enemy_upgrades.get(str(id))
+			if upgrade != null and upgrade.changes(kit):
+				carried.append(upgrade.id)
+		if not carried.is_empty():
+			upgrades[i] = carried
+	return upgrades
 
 
 ## Draws the endless floors' fights up to two days ahead.
@@ -803,7 +826,8 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 		if tactic != null:
 			tactics[hero.id] = tactic.id
 			ranked_tactics[hero.id] = tactic
-	var setup: FightSetup = Encounters.setup(content, encounter_id, formation, fight_seed(), errors, tactics, vows, transformed, extras, apex_vows, apexed, {} as Dictionary[int, String] if hunting else chosen_specs())
+	var setup: FightSetup = Encounters.setup(content, encounter_id, formation, fight_seed(), errors, tactics, vows, transformed, extras, apex_vows, apexed, {} as Dictionary[int, String] if hunting else chosen_specs(),
+		{} as Dictionary[int, PackedStringArray] if hunting else chosen_upgrades())
 	if setup != null:
 		for hero: UnitSetup in setup.heroes:
 			if hero.def.placed_lantern and not snares.get(hero.id, []).is_empty():

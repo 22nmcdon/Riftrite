@@ -22,6 +22,7 @@ func _content(scale_bp: int = 10000) -> ContentDb:
 		Units.encounter("nest", [{"enemy": "caller", "hex": [2, 5]}, {"enemy": "caller", "hex": [5, 5]}, {"enemy": "brood", "hex": [4, 6]}]),
 	])
 	texts[ContentDb.PATHS_FILE] = "[]"
+	texts[ContentDb.ENEMY_UPGRADES_FILE] = "[]"
 	texts[ContentDb.TACTICS_FILE] = JSON.stringify([{"id": "stand", "name": "Stand", "text": "Stands.", "kind": "hold_ground", "release_hexes": 2, "heroes": ["warden", "ranger"]}])
 	var db: ContentDb = ContentDb.load_texts(texts)
 	assert(db.is_valid(), str(db.errors))

@@ -30,6 +30,8 @@ const EVENT: int = 16
 const ENDLESS: int = 17
 ## Which of a day fight's enemies are specialized, and how (phase 8 part 3).
 const SPECIALIZE: int = 18
+## Which upgrades an elite day fight's enemies carry (phase 8 part 3).
+const UPGRADE: int = 19
 
 const MIX: int = 0x2545F4914F6CDD1D
 

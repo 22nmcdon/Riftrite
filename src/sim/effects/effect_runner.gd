@@ -553,7 +553,9 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 			entry.note = ("%s, " % entry.note if not entry.note.is_empty() else "") + "shared"
 			dealt = kept
 			entry.amount = dealt
-	entry.absorbed = sim.apply_damage(target, dealt)
+	# Shieldbreaker and the Unbinder (phase 8 part 3): more off a Shield.
+	var vs_shield_bp: int = FixedMath.BP_ONE + (attacker.aura_bp[AuraDef.Stat.SHIELD_DAMAGE_BP] if attacker != null else 0)
+	entry.absorbed = sim.apply_damage_vs_shield(target, dealt, vs_shield_bp)
 	entry.broke_shield = had_shield and target.shield == 0
 	# What went past the target's last HP (phase 5c step 5b; Overkill Tithe).
 	entry.overkill = maxi(dealt - entry.absorbed - hp_before, 0)

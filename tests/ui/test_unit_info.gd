@@ -194,7 +194,7 @@ func test_the_numbers_of_every_other_piece() -> void:
 
 
 func test_the_tactics_numbers_lines() -> void:
-	assert_eq(UnitInfo.tactic_numbers(_content.tactics["casters_first"]), "Casters and supports and summoners first · +20% damage to them from its basic attack and signature")
+	assert_eq(UnitInfo.tactic_numbers(_content.tactics["casters_first"]), "Casters and supports and summoners and mimics first · +20% damage to them from its basic attack and signature")
 	assert_eq(UnitInfo.tactic_numbers(_content.tactics["hold_ground"]), "Holds until an enemy is within 2 hexes · +20% attack speed while it holds")
 	assert_eq(UnitInfo.tactic_numbers(_content.tactics["wait_to_heal"]), "Waits until an ally is below 60% HP · +15% healing from its signature")
 	assert_eq(UnitInfo.tactic_numbers(_content.tactics["plant_feet"]), "Stops while an enemy is within 2 hexes · +10 DEF while it does")

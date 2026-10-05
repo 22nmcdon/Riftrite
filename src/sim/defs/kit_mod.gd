@@ -93,7 +93,8 @@ extends RefCounted
 ## this goes last, after any that change the signature.
 ## and at the top: "plant_add_ms" (how long it plants after moving),
 ## "engage": {"break_free_add_ms": 1000} (enemies it engages take that
-## much longer to break free), and "mana": {"taken_bp": 15000} (the mana
+## much longer to break free; and "reach_add": 1, its Engage reaching that
+## many hexes farther: phase 8 part 3, the Warden Sentinel), and "mana": {"taken_bp": 15000} (the mana
 ## it gains from damage taken, times this).
 ##    "mana": {"max_add": -15, "start_add": 20, "per_attack_add": 2,
 ##             "regen_add": 1, "max_bp": 9200},  (regen and max_bp: phase 5c
@@ -234,6 +235,8 @@ var hop_cooldown_add_ticks: int = 0
 ## its mana from damage taken, times this (Grudge).
 var plant_add_ticks: int = 0
 var break_free_add_ticks: int = 0
+## Phase 8 part 3: how much farther its Engage reaches (plane units).
+var engage_reach_add: int = 0
 var mana_taken_bp: int = FixedMath.BP_ONE
 ## Phase 5c step 7d: the player places its signature's first area before
 ## the fight (First Lantern).
@@ -297,6 +300,7 @@ static func read(reader: DataReader) -> KitMod:
 		var engage_reader: DataReader = reader.req_object("engage")
 		if engage_reader != null:
 			mod.break_free_add_ticks = _signed_ticks(engage_reader, "break_free_add_ms")
+			mod.engage_reach_add = engage_reader.opt_int("reach_add", 0, 0, 3) * HexGrid.HEX
 			engage_reader.finish()
 	if reader.has("prefer"):
 		var prefer_reader: DataReader = reader.req_object("prefer")
@@ -427,7 +431,7 @@ static func _signed_ticks(reader: DataReader, key: String) -> int:
 ## since those are what scale cleanly (phase 5c step 4, section 9.3).
 func step_problem() -> String:
 	if _changes_mana() or not also_fires.is_empty() or echo_ticks > 0 or prefer != null or hop_within_add != 0 or hop_cooldown_add_ticks != 0 \
-			or not gambit_label.is_empty() or plant_add_ticks != 0 or break_free_add_ticks != 0 or places_lantern or drops_signature \
+			or not gambit_label.is_empty() or plant_add_ticks != 0 or break_free_add_ticks != 0 or engage_reach_add != 0 or places_lantern or drops_signature \
 			or not drops_passives.is_empty():
 		return "a growing card's step can't change mana, add triggers, echo, targeting, or hops"
 	for part: PartDef in passives:
@@ -479,7 +483,7 @@ func changes_anything() -> bool:
 			return true
 	return not passives.is_empty() or not changes.is_empty() or _changes_mana() or not also_fires.is_empty() or echo_ticks > 0 \
 		or prefer != null or hop_within_add != 0 or hop_cooldown_add_ticks != 0 or not gambit_label.is_empty() or plant_add_ticks != 0 \
-		or break_free_add_ticks != 0 or places_lantern or drops_signature or not drops_passives.is_empty()
+		or break_free_add_ticks != 0 or engage_reach_add != 0 or places_lantern or drops_signature or not drops_passives.is_empty()
 
 
 func _changes_mana() -> bool:
@@ -506,7 +510,7 @@ func affects_besides_passives(kit: UnitDef) -> bool:
 		return true
 	if prefer != null or (kit.hop_cooldown_ticks > 0 and (hop_within_add != 0 or hop_cooldown_add_ticks != 0)) or not gambit_label.is_empty():
 		return true
-	if plant_add_ticks != 0 and kit.plant_ticks > 0 or break_free_add_ticks != 0 and kit.has_trait("engage"):
+	if plant_add_ticks != 0 and kit.plant_ticks > 0 or (break_free_add_ticks != 0 or engage_reach_add != 0) and kit.has_trait("engage"):
 		return true
 	if places_lantern and lantern_area(kit) != null or drops_signature and kit.signature != null:
 		return true
@@ -570,6 +574,7 @@ func apply(kit: UnitDef, problems: Array[String] = []) -> UnitDef:
 		built.plant_ticks = maxi(built.plant_ticks + plant_add_ticks, 0)
 	if built.has_trait("engage"):
 		built.break_free_add_ticks += break_free_add_ticks
+		built.engage_reach_add += engage_reach_add
 	if places_lantern and lantern_area(built) != null:
 		built.placed_lantern = true
 	for change: AbilityChange in changes:

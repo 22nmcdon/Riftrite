@@ -79,6 +79,28 @@ static func specializations(run: RunContent, state: RunState, index: int, encoun
 	return specs
 
 
+## The upgrades day fight option `index` (`encounter_id`) of today carries
+## (phase 8 part 3, rebuild-phase8-act3.md section 2): for an elite, between
+## the act's elite_upgrades_min and _max different ones, among those that
+## change at least one of its enemies; none for other fights or on endless
+## floors. Drawn afresh on each attempt. Each enemy carries those that
+## change it (RunFlow.chosen_upgrades).
+static func enemy_upgrades(run: RunContent, state: RunState, index: int, encounter_id: String) -> Array[String]:
+	var drawn: Array[String] = []
+	var encounter: EncounterDef = run.content.encounters[encounter_id]
+	var act_def: ActDef = run.act_of(state)
+	if act_def.elite_upgrades_max <= 0 or encounter.tier != "elite" or state.endless:
+		return drawn
+	var eligible: Array[String] = run.content.enemy_upgrade_ids.filter(func(id: String) -> bool:
+		return encounter.enemies.any(func(placed: EncounterDef.Placed) -> bool:
+			return run.content.enemy_upgrades[id].changes(run.content.enemies[placed.enemy].kit)))
+	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.UPGRADE, state.act, state.day, state.attempt, index])
+	var count: int = act_def.elite_upgrades_min + rng.range_int(act_def.elite_upgrades_max - act_def.elite_upgrades_min + 1)
+	for n: int in mini(count, eligible.size()):
+		drawn.append(eligible.pop_at(rng.range_int(eligible.size())))
+	return drawn
+
+
 ## The Pedlar's wares: act.pedlar_wares different items of any kind, never
 ## one the run holds at rank III, and never filtered by what the team can
 ## use (loadout rule 2; phase 5c step 6). `rerolls` draws a fresh set.

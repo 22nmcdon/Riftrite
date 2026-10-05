@@ -132,6 +132,41 @@
     "name": "Rift Hound",
     "archetype": "flanker",
     "threat": "Pounces on your weakest back-liner",
+    "specializations": [
+      {
+        "id": "ashback_hound",
+        "name": "Ashback",
+        "text": "Where its Pounce lands, the ground burns within 1 hex for a while.",
+        "mod": {
+          "on": [
+            {
+              "slot": "signature",
+              "add_effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 1
+                  },
+                  "anchor": "self",
+                  "hits": "enemies",
+                  "duration_ms": 3000,
+                  "every_ms": 1000,
+                  "effects": [
+                    {
+                      "type": "apply_status",
+                      "status": "burn",
+                      "stacks": 3,
+                      "target": "target"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
     "kit": {
       "stats": {"hp": 420, "atk": 18, "def": 4, "speed": 3, "range": 1},
       "basic_attack": {
@@ -171,6 +206,61 @@
     "name": "Hollow Archer",
     "archetype": "ranged",
     "threat": "Outranges your archers",
+    "specializations": [
+      {
+        "id": "pinning_archer",
+        "name": "Pinning",
+        "text": "Its shots Root the hero they hit for a moment.",
+        "mod": {
+          "on": [
+            {
+              "slot": "basic_attack",
+              "add_effects": [
+                {
+                  "type": "apply_status",
+                  "status": "root",
+                  "duration_ms": 500,
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "volley_archer",
+        "name": "Volley",
+        "text": "Its shots also tear through every hero in a line toward its target, within 5 hexes.",
+        "mod": {
+          "on": [
+            {
+              "slot": "basic_attack",
+              "add_effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "line",
+                    "length": 5
+                  },
+                  "anchor": "target_direction",
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount": 0,
+                      "target": "target",
+                      "scaling": {
+                        "atk": 5000
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
     "kit": {
       "stats": {"hp": 460, "atk": 18, "def": 4, "speed": 2, "range": 5},
       "traits": ["hop_away"],
@@ -186,6 +276,53 @@
     "name": "Rift-Worn Sentinel",
     "archetype": "anchor",
     "threat": "Holds the line and draws your attacks",
+    "specializations": [
+      {
+        "id": "warden_sentinel",
+        "name": "Warden",
+        "text": "Its Engage holds heroes within 2 hexes, not only those beside it.",
+        "mod": {
+          "engage": {
+            "reach_add": 1
+          }
+        }
+      },
+      {
+        "id": "shattered_sentinel",
+        "name": "Shattered",
+        "text": "When it falls, it bursts and Slows the heroes within 2 hexes.",
+        "mod": {
+          "passives": [
+            {
+              "id": "shatter_burst",
+              "name": "Shatter Burst",
+              "kind": "ability",
+              "text": "When it falls, it bursts: heroes within 2 hexes are Slowed.",
+              "effects": [
+                {
+                  "trigger": "on_fall",
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 2
+                  },
+                  "anchor": "self",
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "apply_status",
+                      "status": "slow",
+                      "duration_ms": 3000,
+                      "target": "target"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
     "kit": {
       "stats": {"hp": 520, "atk": 10, "def": 25, "speed": 1, "range": 1},
       "traits": ["engage"],

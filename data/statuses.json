@@ -250,6 +250,14 @@
     "auras": [{"stat": "atk_bp", "value": 10500}, {"stat": "mgk_bp", "value": 10500}]
   },
   {
+    "_note": "More ATK for a few seconds (Vengeful, an enemy upgrade: allies near it as it falls; phase 8 part 3).",
+    "id": "vengeance",
+    "name": "Vengeance",
+    "kind": "boost",
+    "duration_ms": 4000,
+    "auras": [{"stat": "atk_bp", "value": 12000}]
+  },
+  {
     "_note": "More DEF while it lasts (Guard the weakest at rank III: the ally it guards, renewed every second; phase 5c step 6c).",
     "id": "watched_over",
     "name": "Watched Over",

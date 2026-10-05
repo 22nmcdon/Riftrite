@@ -42,19 +42,28 @@ static func make() -> EnemyPanel:
 
 ## Shows the enemy `unit_id` is (its kit's details); `kit` is the one it
 ## fights with, when known: a specialized enemy (phase 8 part 3) shows its
-## kit as specialized, with the specialization's name and sentence (the
-## enemy's own numbers, as every enemy here, not the encounter's scaling).
+## kit as specialized, with the specialization's name and sentence, and
+## then upgraded, with each upgrade's (the enemy's own numbers, as every
+## enemy here, not the encounter's scaling).
 func show_enemy(unit_id: String, enemy: EnemyDef, content: ContentDb, kit: UnitDef = null) -> void:
 	showing = unit_id
 	var shown: UnitDef = enemy.kit
 	var spec: SpecializationDef = content.specializations.get(kit.specialization) if kit != null else null
 	if spec != null:
 		shown = spec.apply(enemy.kit)
+	var upgrades: Array[EnemyUpgradeDef] = []
+	for upgrade_id: String in kit.upgrades if kit != null else [] as Array[String]:
+		var upgrade: EnemyUpgradeDef = content.enemy_upgrades.get(upgrade_id)
+		if upgrade != null:
+			upgrades.append(upgrade)
+			shown = upgrade.apply(shown)
 	title.text = shown.name
 	archetype.text = EnemyDef.ARCHETYPE_NAMES[enemy.archetype].capitalize()
 	threat.text = enemy.threat
 	if spec != null:
 		threat.text += "\n%s: %s" % [spec.name, spec.text]
+	for upgrade: EnemyUpgradeDef in upgrades:
+		threat.text += "\n%s: %s" % [upgrade.name, upgrade.text]
 	stats.text = UnitInfo.stats_text(shown.stats)
 	_column.remove_child(abilities)
 	abilities.free()

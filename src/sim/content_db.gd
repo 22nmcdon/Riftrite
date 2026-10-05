@@ -27,7 +27,8 @@ const ENEMIES_FILE: String = "enemies.json"
 const ENCOUNTERS_FILE: String = "encounters.json"
 const TACTICS_FILE: String = "tactics.json"
 const PATHS_FILE: String = "paths.json"
-const FILES: Array[String] = [TUNING_FILE, STATUSES_FILE, HEROES_FILE, ENEMIES_FILE, ENCOUNTERS_FILE, TACTICS_FILE, PATHS_FILE]
+const ENEMY_UPGRADES_FILE: String = "enemy_upgrades.json"
+const FILES: Array[String] = [TUNING_FILE, STATUSES_FILE, HEROES_FILE, ENEMIES_FILE, ENCOUNTERS_FILE, TACTICS_FILE, PATHS_FILE, ENEMY_UPGRADES_FILE]
 ## How many paths a hero has (rebuild-heroes.md).
 const PATHS_PER_HERO: int = 3
 
@@ -57,6 +58,10 @@ var apex_ids: Array[String] = []
 ## across enemies.
 var specializations: Dictionary[String, SpecializationDef] = {}
 var specialization_ids: Array[String] = []
+## Enemy upgrades (phase 8 part 3, rebuild-phase8-act3.md section 2), by id:
+## any enemy can carry any of them, so they're apart from the enemies.
+var enemy_upgrades: Dictionary[String, EnemyUpgradeDef] = {}
+var enemy_upgrade_ids: Array[String] = []
 
 var _id_pattern: RegEx = RegEx.create_from_string("^[a-z][a-z0-9_]*$")
 
@@ -131,6 +136,10 @@ static func load_texts(texts: Dictionary[String, String]) -> ContentDb:
 		for apex: ApexDef in path.apexes:
 			if db._claim_id(apex.id, reader, db.apex_ids):
 				db.apexes[apex.id] = apex
+	for reader: DataReader in db._entries(db._parse(texts, ENEMY_UPGRADES_FILE), ENEMY_UPGRADES_FILE):
+		var upgrade: EnemyUpgradeDef = EnemyUpgradeDef.read(reader)
+		if db._claim_id(upgrade.id, reader, db.enemy_upgrade_ids):
+			db.enemy_upgrades[upgrade.id] = upgrade
 	db._check_links()
 	return db
 
@@ -155,6 +164,8 @@ func _check_links() -> void:
 		for problem: String in problems:
 			errors.append("%s: %s" % [spec_where, problem])
 		_check_kit(specialized, spec_where, grid)
+	for id: String in enemy_upgrade_ids:
+		_check_upgrade(enemy_upgrades[id], "%s (%s)" % [ENEMY_UPGRADES_FILE, id], grid)
 	for id: String in encounter_ids:
 		var encounter: EncounterDef = encounters[id]
 		var where: String = "%s (%s)" % [ENCOUNTERS_FILE, id]
@@ -192,6 +203,23 @@ func _check_links() -> void:
 		_check_tactic(tactics[id], "%s (%s)" % [TACTICS_FILE, id])
 	for id: String in path_ids:
 		_check_path(paths[id], "%s (%s)" % [PATHS_FILE, id], grid)
+
+
+## An upgrade must change something, and leave every enemy kit it changes
+## sound.
+func _check_upgrade(upgrade: EnemyUpgradeDef, where: String, grid: HexGrid) -> void:
+	if upgrade.mod == null or not upgrade.mod.changes_anything():
+		errors.append("%s: an upgrade changes something" % where)
+		return
+	for enemy_id: String in enemy_ids:
+		var kit: UnitDef = enemies[enemy_id].kit
+		if not upgrade.changes(kit):
+			continue
+		var problems: Array[String] = []
+		var upgraded: UnitDef = upgrade.apply(kit, problems)
+		for problem: String in problems:
+			errors.append("%s on %s: %s" % [where, enemy_id, problem])
+		_check_kit(upgraded, "%s on %s" % [where, enemy_id], grid)
 
 
 ## A path's hero must exist and have room for it (up to three, in the file's

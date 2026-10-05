@@ -61,7 +61,7 @@ func test_the_tactics() -> void:
 		"break_the_line", "guard_the_weakest", "keep_your_distance", "stay_with_the_tank", "dive", "wait_for_a_crowd", "save_it_for_the_kill"] as Array[String])
 	var casters: TacticDef = _content.tactics["casters_first"]
 	assert_eq(casters.kind, TacticDef.Kind.PREFER_TARGET)
-	assert_eq(casters.archetypes, ["caster", "support", "summoner"] as Array[String], "casters are casters and supports (Decision 1), and summoners (Act 2, Decision 7)")
+	assert_eq(casters.archetypes, ["caster", "support", "summoner", "mimic"] as Array[String], "casters are casters and supports (Decision 1), summoners (Act 2, Decision 7), and mimics (Act 3, Decision 7)")
 	var hold: TacticDef = _content.tactics["hold_ground"]
 	assert_eq(hold.kind, TacticDef.Kind.HOLD_GROUND)
 	assert_eq(hold.release_range, 2 * HexGrid.HEX)

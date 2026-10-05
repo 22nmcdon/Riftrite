@@ -860,6 +860,9 @@ func _show_route_card(index: int, holder: VBoxContainer) -> void:
 	var specialized: String = RunDayScreen.specs_line(session.content, encounter, state.today_specs[index] if index < state.today_specs.size() else [])
 	if not specialized.is_empty():
 		card.add_child(_wrapped(specialized, 16, UiStyle.HIGHLIGHT))
+	var upgraded: String = RunDayScreen.upgrades_line(session.content, state.today_upgrades[index] if index < state.today_upgrades.size() else [])
+	if not upgraded.is_empty():
+		card.add_child(_wrapped(upgraded, 16, UiStyle.HIGHLIGHT))
 	if state.scouted.has(state.day) or session.run.relic_rule(state, "always_scout"):
 		card.add_child(_wrapped("Scouted: " + RunDayScreen.placements(encounter, session.content), 15, UiStyle.ACCENT_TEXT))
 	if not state.rift_depth.is_empty():
@@ -978,6 +981,17 @@ static func specs_line(content: ContentDb, encounter: EncounterDef, drawn: Array
 		var who: String = "%s %s" % [spec.name, content.enemies[spec.enemy].name]
 		lines.append("%s: %s" % [who if counts[id] == 1 else "%d %ss" % [counts[id], who], spec.text])
 	return "Specialized: " + "\n".join(lines) if not lines.is_empty() else ""
+
+
+## Today's elite's upgrades (phase 8 part 3), one line each: "Upgraded:
+## Frenzied: It attacks faster once it's below half its HP."; "" if none.
+static func upgrades_line(content: ContentDb, drawn: Array) -> String:
+	var lines: Array[String] = []
+	for upgrade_id: Variant in drawn:
+		var upgrade: EnemyUpgradeDef = content.enemy_upgrades.get(str(upgrade_id))
+		if upgrade != null:
+			lines.append("%s: %s" % [upgrade.name, upgrade.text])
+	return "Upgraded: " + "\n".join(lines) if not lines.is_empty() else ""
 
 
 ## Where a fight's enemies stand: "Rift Hound (1, 4), ...".

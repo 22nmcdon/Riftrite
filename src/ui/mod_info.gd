@@ -80,6 +80,9 @@ static func mod_parts(mod: KitMod, kit: UnitDef, content: ContentDb) -> Array[St
 		parts.append("plants %s %s" % [UnitInfo.seconds(absi(mod.plant_add_ticks)), "sooner" if mod.plant_add_ticks < 0 else "later"])
 	if mod.break_free_add_ticks != 0:
 		parts.append("enemies it engages take %s longer to break free" % UnitInfo.seconds(mod.break_free_add_ticks))
+	if mod.engage_reach_add != 0:
+		@warning_ignore("integer_division")
+		parts.append("its Engage reaches %d more hex%s" % [mod.engage_reach_add / HexGrid.HEX, "" if mod.engage_reach_add == HexGrid.HEX else "es"])
 	if mod.places_lantern:
 		parts.append("you place its first signature area before the fight")
 	if mod.drops_signature:

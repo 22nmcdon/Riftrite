@@ -71,6 +71,11 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: 
 	entry.status = def.id
 	entry.status_name = def.name
 	state.applied_at = sim.tick
+	# Mark-Shy and Anchored (phase 8 part 3): how long a Mark or a Root on
+	# the target lasts.
+	if def.is_timed() and (duration_ticks > 0 or def.duration_ticks > 0) and (def.kind == StatusDef.Kind.MARKED and target.aura_bp[AuraDef.Stat.MARKED_TIME_BP] != 0
+			or def.kind == StatusDef.Kind.ROOT and target.aura_bp[AuraDef.Stat.ROOT_CAP_MS] > 0):
+		duration_ticks = _taken_duration(target, def, duration_ticks if duration_ticks > 0 else def.duration_ticks)
 	if strength_add_bp > 0:
 		# A stronger Mark (phase 5c step 7c, Heavy Mark): the strongest holds.
 		state.strength_add_bp = maxi(state.strength_add_bp, strength_add_bp)
@@ -269,6 +274,17 @@ static func find(unit: UnitState, status_id: String) -> StatusState:
 	return null
 
 
+## How long a Mark or a Root lasts on `target` (phase 8 part 3): Marks
+## changed by its marked_time_bp (Mark-Shy), Roots capped by its root_cap_ms
+## (Anchored). At least a tick.
+static func _taken_duration(target: UnitState, def: StatusDef, ticks: int) -> int:
+	if def.kind == StatusDef.Kind.MARKED and target.aura_bp[AuraDef.Stat.MARKED_TIME_BP] != 0:
+		ticks = FixedMath.apply_bp(ticks, maxi(FixedMath.BP_ONE + target.aura_bp[AuraDef.Stat.MARKED_TIME_BP], 0))
+	if def.kind == StatusDef.Kind.ROOT and target.aura_bp[AuraDef.Stat.ROOT_CAP_MS] > 0:
+		ticks = mini(ticks, FixedMath.ms_to_ticks(target.aura_bp[AuraDef.Stat.ROOT_CAP_MS]))
+	return maxi(ticks, 1)
+
+
 ## True if no enemy may pick `unit` as a target now (Stealth).
 static func is_stealthed(unit: UnitState) -> bool:
 	return unit.submerged or (not unit.statuses.is_empty() and has_kind(unit, StatusDef.Kind.STEALTH))
@@ -330,13 +346,17 @@ static func _deal_damage_over_time(sim: CombatSim, unit: UnitState, state: Statu
 		var in_water: bool = unit.on_water and state.def.keyword == "burning"
 		if in_water:
 			base = FixedMath.apply_bp(base, Water.BURN_BP)
+		# Cinder-Skinned (phase 8 part 3): Burn on it changes by burn_taken_bp.
+		var skinned: bool = state.def.keyword == "burning" and unit.aura_bp[AuraDef.Stat.BURN_TAKEN_BP] != 0
+		if skinned:
+			base = FixedMath.apply_bp(base, maxi(FixedMath.BP_ONE + unit.aura_bp[AuraDef.Stat.BURN_TAKEN_BP], 0))
 		var damage: int = DamageRule.apply(base, 0, 0, vulnerability)
 		if damage <= 0:
 			continue
 		var entry: LogEntry = sim.new_entry(LogEntry.Kind.STATUS_DAMAGE, group.source)
 		entry.set_rule(base, 0, 0, vulnerability, 0)
-		if in_water:
-			entry.note = "in water"
+		if in_water or skinned:
+			entry.note = ", ".join(PackedStringArray((["in water"] if in_water else []) + (["cinder-skinned"] if skinned else [])))
 		entry.target = unit.id
 		entry.status = state.def.id
 		entry.status_name = state.def.name

@@ -70,6 +70,11 @@ var relic_sell: Dictionary[String, int] = {}
 ## enemies, rounded down (rebuild-phase8-act2.md, Decision 1).
 var specialized_from_day: int = 0
 var specialized_share_pct: int = 50
+## Enemy upgrades (phase 8 part 3, rebuild-phase8-act3.md section 2): each
+## elite day fight draws between these many upgrades (0 and 0: none), carried
+## by every enemy in it they change.
+var elite_upgrades_min: int = 0
+var elite_upgrades_max: int = 0
 var item_prices: Dictionary[String, int] = {}
 var item_ranks: Dictionary[String, Array] = {}
 ## Endless after the act's boss (phase 8 part 1), or null if the act has none.
@@ -141,6 +146,13 @@ static func read(reader: DataReader) -> ActDef:
 	def.fights_act = reader.opt_int("fights_act", def.act, 1)
 	def.specialized_from_day = reader.opt_int("specialized_from_day", 0, 0)
 	def.specialized_share_pct = reader.opt_int("specialized_share_pct", 50, 0, 100)
+	if reader.has("elite_upgrades"):
+		var counts: Array[int] = reader.req_int_array("elite_upgrades")
+		if counts.size() != 2 or counts[0] < 0 or counts[0] > counts[1] or counts[1] > EnemyUpgradeDef.PER_ENEMY:
+			reader.error("\"elite_upgrades\" is [fewest, most], from 0 to %d" % EnemyUpgradeDef.PER_ENEMY)
+		else:
+			def.elite_upgrades_min = counts[0]
+			def.elite_upgrades_max = counts[1]
 	def.start_shards = reader.req_int("start_shards", 0)
 	def.losses_to_end = reader.req_int("losses_to_end", 1)
 	def.slots = reader.req_int("slots", 0, 6)

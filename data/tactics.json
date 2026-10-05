@@ -1,14 +1,15 @@
 [
   {
-    "_note": "Casters are the caster and support archetypes (phase 3b, Decision 1): Cinder Moth and Gloam Witch in Act 1; Act 2 adds the summoner (the Drowned Bellringer; act2-glassmere.md, Decision 7). The payoff (round 2): its own hits on them deal 20% more. Phase 5c step 6c: ranks (+35%; then its first hit on each Silences it 1s), and any hero takes it.",
+    "_note": "Casters are the caster and support archetypes (phase 3b, Decision 1): Cinder Moth and Gloam Witch in Act 1; Act 2 adds the summoner (the Drowned Bellringer; act2-glassmere.md, Decision 7), and Act 3 the mimic (the Mirrorwight; act3-shattered-crown.md, Decision 7). The payoff (round 2): its own hits on them deal 20% more. Phase 5c step 6c: ranks (+35%; then its first hit on each Silences it 1s), and any hero takes it.",
     "id": "casters_first",
     "name": "Casters first",
-    "text": "Goes for the nearest enemy caster, support, or summoner first, and hits them harder; with none standing, picks as usual.",
+    "text": "Goes for the nearest enemy caster, support, summoner, or mimic first, and hits them harder; with none standing, picks as usual.",
     "kind": "prefer_target",
     "archetypes": [
       "caster",
       "support",
-      "summoner"
+      "summoner",
+      "mimic"
     ],
     "payoff": {
       "damage_vs_bp": 2000

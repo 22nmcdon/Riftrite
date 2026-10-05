@@ -11,8 +11,9 @@ extends RefCounted
 ## 6: apexes, phase 8 part 2, which still loads a 4 or 5 with no apex; 7:
 ## acts, phase 8 part 3, which loads an older save as a testing run once it
 ## has gone deeper or waits at the choice, since its endless followed Act 1;
-## 8: today's specializations, phase 8 part 3, none in an older save).
-const VERSION: int = 8
+## 8: today's specializations, phase 8 part 3, none in an older save; 9:
+## today's upgrades, phase 8 part 3, none in an older save).
+const VERSION: int = 9
 const OLDEST_VERSION: int = 4
 
 ## Where the day is (phase 5c step 8, docs/plans/days-and-nodes.md):
@@ -139,6 +140,9 @@ var options: Array[Array] = []
 ## options, each of its enemies' specialization id, or "" (Offers.
 ## specializations, drawn as the day starts).
 var today_specs: Array[Array] = []
+## Today's fights' upgrades (phase 8 part 3): for each of today's options,
+## the upgrade ids its enemies carry (Offers.enemy_upgrades; only elites').
+var today_upgrades: Array[Array] = []
 ## Today's chosen fight ("" until chosen).
 var chosen: String = ""
 ## The last formation fought with (hero id -> hex), remembered.
@@ -287,7 +291,7 @@ func to_dict() -> Dictionary:
 		"streak": streak, "streaks_paid": streaks_paid.duplicate(), "bonds_found": bonds_found.duplicate(),
 		"growth": growth.duplicate(), "grew": grew.duplicate(),
 		"item_ranks": item_ranks.duplicate(), "item_counts": item_counts.duplicate(), "ranked": ranked.duplicate(),
-		"endless": endless, "endless_mods": endless_mods.duplicate(), "today_specs": today_specs.duplicate(true),
+		"endless": endless, "endless_mods": endless_mods.duplicate(), "today_specs": today_specs.duplicate(true), "today_upgrades": today_upgrades.duplicate(true),
 		"apex_open": apex_open, "just_apexed": just_apexed.duplicate(), "testing": testing,
 	}
 
@@ -372,6 +376,8 @@ static func from_dict(data: Dictionary) -> RunState:
 	state.endless_mods = _strings(data.get("endless_mods", []))
 	for specs: Variant in data.get("today_specs", []):
 		state.today_specs.append(_strings(specs))
+	for upgrades: Variant in data.get("today_upgrades", []):
+		state.today_upgrades.append(_strings(upgrades))
 	return state
 
 

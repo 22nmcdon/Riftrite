@@ -10,9 +10,9 @@ extends RefCounted
 ##    "specializations": [...up to two SpecializationDefs...]}  (phase 8 part 3)
 
 ## Phase 8 part 3 (Act 2) adds the summoner and the splitter.
-enum Archetype { SWARM, FLANKER, CASTER, RANGED, ANCHOR, CHARGER, DISRUPTOR, SUPPORT, SUMMONER, SPLITTER }
+enum Archetype { SWARM, FLANKER, CASTER, RANGED, ANCHOR, CHARGER, DISRUPTOR, SUPPORT, SUMMONER, SPLITTER, MIMIC, WARDEN_BREAKER }
 
-const ARCHETYPE_NAMES: Array[String] = ["swarm", "flanker", "caster", "ranged", "anchor", "charger", "disruptor", "support", "summoner", "splitter"]
+const ARCHETYPE_NAMES: Array[String] = ["swarm", "flanker", "caster", "ranged", "anchor", "charger", "disruptor", "support", "summoner", "splitter", "mimic", "warden_breaker"]
 
 var id: String
 var name: String

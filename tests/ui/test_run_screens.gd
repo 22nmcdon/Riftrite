@@ -461,3 +461,29 @@ func test_the_fight_card_names_specializations() -> void:
 	assert_false(line.is_empty(), "a first fight on day 4 with one")
 	assert_string_contains(U.text_of(main.screen), line.get_slice("\n", 0))
 	await wait_frames(1)
+
+
+## Upgrades (phase 8 part 3, 8c-5a) on an elite's fight card, and in the
+## enemy panel with the enemy's name.
+func test_the_fight_card_and_enemy_panel_name_upgrades() -> void:
+	var main: Main = _main()
+	assert_true(U.press(main.screen, "New run"))
+	(main.screen as RunStartScreen).run_seed = 7
+	assert_true(U.press(main.screen, "Into the rift"))
+	var flow: RunFlow = _flow(main)
+	flow.state.options[0] = ["witch_coven"]
+	flow.state.today_upgrades = [["frenzied", "warded"]] as Array[Array]
+	main.run_session.save()
+	main.show_day()
+	assert_string_contains(U.text_of(main.screen), "Upgraded: Frenzied: It attacks faster once it's below half its HP.")
+	assert_string_contains(U.text_of(main.screen), "Warded: It starts the fight behind a Shield.")
+	var content: ContentDb = flow.run.content
+	var panel: EnemyPanel = EnemyPanel.make()
+	add_child_autofree(panel)
+	var kit: UnitDef = content.enemy_upgrades["warded"].apply(content.enemy_upgrades["frenzied"].apply(content.enemies["gloam_witch"].kit))
+	panel.show_enemy("gloam_witch", content.enemies["gloam_witch"], content, kit)
+	assert_eq(panel.title.text, "Warded Frenzied Gloam Witch")
+	assert_string_contains(panel.threat.text, "Frenzied: It attacks faster")
+	assert_string_contains(panel.threat.text, "Warded: It starts the fight behind a Shield.")
+	assert_true(U.text_of(panel).contains("Warded"), "its passives listed")
+	await wait_frames(1)

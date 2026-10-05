@@ -515,7 +515,7 @@ func _act(unit: UnitState) -> void:
 		if taunter != null and taunter != target:
 			Targeting.set_target(self, unit, taunter, "taunted")
 			target = taunter
-	if target != null and target.alive and target.side != unit.side and Statuses.is_stealthed(target):
+	if target != null and target.alive and target.side != unit.side and Statuses.is_stealthed(target) and unit.aura_bp[AuraDef.Stat.SEES_STEALTH] <= 0:
 		Targeting.lose(self, unit, "%s is %s" % [target.id, "submerged" if target.submerged else "stealthed"])
 		target = null
 	if target == null or not target.alive:
@@ -732,8 +732,11 @@ func standing_allies_of(unit: UnitState) -> Array[UnitState]:
 	return _standing(heroes if unit.side == EffectSource.Team.HEROES else enemies)
 
 
-## The standing enemies `unit` may pick as a target: all but the stealthed.
+## The standing enemies `unit` may pick as a target: all but the stealthed
+## (all of them for a Watchful unit: sees_stealth, phase 8 part 3).
 func targetable_enemies_of(unit: UnitState) -> Array[UnitState]:
+	if unit.aura_bp[AuraDef.Stat.SEES_STEALTH] > 0:
+		return standing_enemies_of(unit)
 	return standing_enemies_of(unit).filter(func(other: UnitState) -> bool: return not Statuses.is_stealthed(other))
 
 

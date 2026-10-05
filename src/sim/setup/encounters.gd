@@ -18,7 +18,10 @@ extends RefCounted
 ## the apex vowed stage, or the apex for the heroes `apexed` lists; a
 ## transformed hero counts its path's apexes' deeds. `enemy_specs` (phase 8
 ## part 3) specializes enemies: the encounter's enemy index -> one of that
-## enemy's specialization ids, applied after the scaling.
+## enemy's specialization ids, applied after the scaling. `enemy_upgrades`
+## (phase 8 part 3, rebuild-phase8-act3.md section 2) gives enemies
+## upgrades: the encounter's enemy index -> up to two upgrade ids, applied
+## after the specialization.
 ## Returns null, with the reasons in `errors`, for an unknown encounter,
 ## hero, tactic, or path; FightSetup.validate checks the rest (zones, shared
 ## hexes, who can take which tactic, whose path it is).
@@ -27,7 +30,7 @@ extends RefCounted
 static func setup(content: ContentDb, encounter_id: String, formation: Dictionary[String, Vector2i], fight_seed: int, errors: Array[String],
 		tactics: Dictionary[String, String] = {}, vows: Dictionary[String, String] = {}, transformed: Array[String] = [],
 		extras: Dictionary[String, HeroExtras] = {}, apex_vows: Dictionary[String, String] = {}, apexed: Array[String] = [],
-		enemy_specs: Dictionary[int, String] = {}) -> FightSetup:
+		enemy_specs: Dictionary[int, String] = {}, enemy_upgrades: Dictionary[int, PackedStringArray] = {}) -> FightSetup:
 	if not content.encounters.has(encounter_id):
 		errors.append("unknown encounter \"%s\"" % encounter_id)
 		return null
@@ -114,6 +117,19 @@ static func setup(content: ContentDb, encounter_id: String, formation: Dictionar
 				errors.append("%s can't be specialized as \"%s\"" % [placed.enemy, spec_id])
 			else:
 				kit = spec.apply(kit)
+		# Its upgrades (phase 8 part 3), after the specialization.
+		var upgrade_ids: PackedStringArray = enemy_upgrades.get(i, PackedStringArray())
+		if upgrade_ids.size() > EnemyUpgradeDef.PER_ENEMY:
+			errors.append("%s can carry at most %d upgrades" % [placed.enemy, EnemyUpgradeDef.PER_ENEMY])
+		for upgrade_id: String in upgrade_ids:
+			var upgrade: EnemyUpgradeDef = content.enemy_upgrades.get(upgrade_id)
+			if upgrade == null or kit.upgrades.has(upgrade_id):
+				errors.append("%s can't carry the upgrade \"%s\"" % [placed.enemy, upgrade_id])
+			else:
+				var problems: Array[String] = []
+				kit = upgrade.apply(kit, problems)
+				for problem: String in problems:
+					errors.append("%s: the upgrade \"%s\" leaves it unsound: %s" % [placed.enemy, upgrade_id, problem])
 		enemies.append(UnitSetup.make(kit, EffectSource.Team.ENEMIES, placed.hex.x, placed.hex.y))
 	if not errors.is_empty():
 		return null

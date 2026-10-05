@@ -3,7 +3,8 @@ extends RefCounted
 ## The Engage trait (docs/plans/rebuild-phase1-arena-sim.md, section 4,
 ## decided): a tank that holds enemies in place.
 ##   - An enemy whose center is within engage_reach (1 hex) of an engager is
-##     next to it.
+##     next to it (farther for an engager whose kit reaches farther:
+##     UnitDef.engage_reach_add, phase 8 part 3).
 ##   - Next to an engager while its target is someone else, it's held: it
 ##     can't move until it has spent break_free_ms breaking free (the timer
 ##     starts the first tick it's held). It can still attack a target already
@@ -35,18 +36,17 @@ class Engagement:
 ## engager fell) end, new contacts begin, and held ones run toward breaking
 ## free. `engagers` are the standing engagers on the unit's other side.
 static func update(sim: CombatSim, unit: UnitState, engagers: Array[UnitState]) -> void:
-	var reach_sq: int = sim.tuning.engage_reach * sim.tuning.engage_reach
 	var i: int = unit.engagements.size() - 1
 	while i >= 0:
 		var engagement: Engagement = unit.engagements[i]
 		var engager: UnitState = engagement.engager
 		if engager == null or not engager.alive:
 			_end(sim, unit, engagement, "%s fell" % (engager.id if engager != null else "its engager"))
-		elif _distance_sq(unit, engager) > reach_sq:
+		elif _distance_sq(unit, engager) > _reach_sq(sim, engager):
 			_end(sim, unit, engagement, "out of reach of %s" % engager.id)
 		i -= 1
 	for engager: UnitState in engagers:
-		if not engager.alive or _distance_sq(unit, engager) > reach_sq or _find(unit, engager) != null:
+		if not engager.alive or _distance_sq(unit, engager) > _reach_sq(sim, engager) or _find(unit, engager) != null:
 			continue
 		var engagement := Engagement.new()
 		engagement.engager = engager
@@ -80,14 +80,19 @@ static func holds(unit: UnitState) -> bool:
 
 ## Ends the unit's engagements it's no longer next to (it was moved).
 static func drop_out_of_reach(sim: CombatSim, unit: UnitState) -> void:
-	var reach_sq: int = sim.tuning.engage_reach * sim.tuning.engage_reach
 	var i: int = unit.engagements.size() - 1
 	while i >= 0:
 		var engagement: Engagement = unit.engagements[i]
 		var engager: UnitState = engagement.engager
-		if engager != null and _distance_sq(unit, engager) > reach_sq:
+		if engager != null and _distance_sq(unit, engager) > _reach_sq(sim, engager):
 			_end(sim, unit, engagement, "moved out of reach of %s" % engager.id)
 		i -= 1
+
+
+## How near (squared) a unit must be to `engager` to be next to it.
+static func _reach_sq(sim: CombatSim, engager: UnitState) -> int:
+	var reach: int = sim.tuning.engage_reach + engager.def.engage_reach_add
+	return reach * reach
 
 
 static func _end(sim: CombatSim, unit: UnitState, engagement: Engagement, why: String) -> void:

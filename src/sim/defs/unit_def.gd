@@ -56,6 +56,10 @@ var hop_within: int = HexGrid.HEX
 ## engages takes to break free (phase 5c step 7b: an upgrade's mod, Hard to
 ## Pass; the data never sets it).
 var break_free_add_ticks: int = 0
+## The engage trait: how much farther than tuning's engage_reach it holds
+## enemies (plane units; phase 8 part 3, a specialization's mod, Warden
+## Sentinel; the data never sets it).
+var engage_reach_add: int = 0
 ## Its gambit (a kit mod's; phase 5c step 6d, Gambits): its name, where
 ## else it may start (Gambits.PLACES), when it arrives (0: at the start),
 ## and when it swaps places (0: never), each Shielded by a share of max HP;
@@ -81,6 +85,9 @@ var archetype: String = ""
 ## The specialization it fights with (phase 8 part 3; SpecializationDef's
 ## id; "": none), for the screens.
 var specialization: String = ""
+## The upgrades it carries (phase 8 part 3; EnemyUpgradeDef ids, in the
+## order applied), for the screens.
+var upgrades: Array[String] = []
 ## After it moves, how long it needs before its basic attack can fire again
 ## (phase 4, Deadeye's cost; 0: none).
 var plant_ticks: int = 0
@@ -180,6 +187,7 @@ func copy() -> UnitDef:
 	other.hop_cooldown_ticks = hop_cooldown_ticks
 	other.hop_within = hop_within
 	other.break_free_add_ticks = break_free_add_ticks
+	other.engage_reach_add = engage_reach_add
 	other.prefer = prefer
 	other.prefer_label = prefer_label
 	other.gambit_label = gambit_label
@@ -191,6 +199,7 @@ func copy() -> UnitDef:
 	other.swap_choice = swap_choice
 	other.archetype = archetype
 	other.specialization = specialization
+	other.upgrades = upgrades.duplicate()
 	other.plant_ticks = plant_ticks
 	other.placed_snares = placed_snares
 	other.placed_lantern = placed_lantern

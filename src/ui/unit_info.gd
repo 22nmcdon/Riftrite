@@ -109,7 +109,12 @@ static func trait_text(trait_id: String, who: String) -> String:
 static func trait_numbers(trait_id: String, kit: UnitDef, tuning: TuningDef) -> String:
 	match trait_id:
 		"engage":
-			return "Breaking free takes %s" % seconds(tuning.break_free_ticks)
+			var held: String = "Breaking free takes %s" % seconds(tuning.break_free_ticks + kit.break_free_add_ticks)
+			if kit.engage_reach_add > 0:
+				# A farther Engage (phase 8 part 3, the Warden Sentinel).
+				@warning_ignore("integer_division")
+				held += " · holds foes within %d hexes" % ((tuning.engage_reach + kit.engage_reach_add) / HexGrid.HEX)
+			return held
 		"hop_away":
 			return "At most once every %s" % seconds(kit.hop_cooldown_ticks)
 		"fires_moving":
@@ -383,6 +388,10 @@ static func aura_text(aura: AuraDef) -> String:
 		text = "a hit on it misses, then not again for %s" % seconds(FixedMath.ms_to_ticks(aura.value))
 	elif aura.stat == AuraDef.Stat.HALVED_HITS:
 		text = "its first %d hits taken each fight deal half damage" % aura.value
+	elif aura.stat == AuraDef.Stat.SEES_STEALTH:
+		text = "can target the stealthed"
+	elif aura.stat == AuraDef.Stat.ROOT_CAP_MS:
+		text = "Roots on it last at most %s" % seconds(FixedMath.ms_to_ticks(aura.value))
 	elif aura.stat == AuraDef.Stat.DEF_IGNORE_BP:
 		text = "its hits ignore %s of the target's DEF" % ValueBreakdown._percent(aura.value)
 	elif aura.is_additive():
