@@ -144,6 +144,14 @@ Fifteen new entries in `data/enemies.json`, every number a placeholder until 8c-
   - Inquisitor's deed (1 smite kill) and Loomwarden's (shared damage) fill in a few fights or not at all, depending on the team; The Unbroken Gate's (blocked hits) the same. Martyr's Pyre still fills only when he falls.
   - The water weights are fitted on Act 2's fights; Act 3 will need its own read (islands).
 
+## Built in 8c-4d: docs, HOW-TO-PLAY, screenshots, and a playtest build (2026-10-05)
+
+- **HOW-TO-PLAY** (`tools/ci/HOW-TO-PLAY.txt`): an ACT 2 section (water, the new faces and kinds, specializations, the elites, the Mournwater), the run going on into Act 2 with its losses, the apex deeds sized to Act 2, Practice's Act 2 fights, and what we want to know about Act 2 (8c-4c's flags).
+- **Practice:** the list's cards name Act 2 ("Act 2 · Days 1-2", `EncounterListScreen.when_text`), and its hint says Act 2's fights are built for transformed heroes.
+- **Screenshots** (`tools/ui_screenshots.gd`): Act 2's route on day 4 (a specialized fight's card) and a fight on its water, after the run's other screens.
+- **The design doc:** three acts of 7 days, Acts 1 and 2 built; the apex decisions point at Decision 13.
+- **Playtest build 22** (from 7efa18a), with the full suite green (1,067 tests).
+
 ## 9. Questions
 
 - **BV. How many enemies are specialized:** *(Answered: Decision 1.)* each one at a 50% chance (so a fight may come with none or all), or exactly half of them, rounded down, chosen by the draw? Proposed: exactly half, so a fight's difficulty doesn't swing on the draw.
