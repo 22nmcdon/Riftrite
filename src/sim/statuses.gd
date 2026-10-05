@@ -419,11 +419,14 @@ const HARMFUL: Array[StatusDef.Kind] = [StatusDef.Kind.DAMAGE_OVER_TIME, StatusD
 ## Ends the `count` newest harmful statuses on `unit` (a cleanse's "count";
 ## phase 5c step 7c, Cleansing Touch and Cleansing Weave); ties go by the
 ## statuses' order. Lasting ones a hero put on stay, as for any cleanse.
-static func cleanse_newest(sim: CombatSim, unit: UnitState, count: int, source: EffectSource) -> void:
+static func cleanse_newest(sim: CombatSim, unit: UnitState, count: int, source: EffectSource, only: Array[String] = []) -> void:
 	for i: int in count:
 		var newest: StatusState = null
 		for state: StatusState in unit.statuses:
 			if not HARMFUL.has(state.def.kind) or state.lasting and not _by_heroes(sim, source):
+				continue
+			# Only those named (phase 8 part 3, the Unbinder), if any are.
+			if not only.is_empty() and not only.has(state.def.id):
 				continue
 			if newest == null or state.applied_at > newest.applied_at:
 				newest = state

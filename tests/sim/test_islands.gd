@@ -276,7 +276,8 @@ func test_a_bridge_is_warned_breaks_and_reforms() -> void:
 	fight.step()
 	hero.pos = fight.grid.center(0, 3)
 	var grid: HexGrid = fight.grid
-	assert_eq(fight.islands.island_of_hex[grid.index(3, 0)], fight.islands.island_of_hex[grid.index(3, 6)], "the bridges join the islands")
+	assert_ne(fight.islands.island_of_hex[grid.index(3, 0)], fight.islands.island_of_hex[grid.index(3, 6)], "the bridges join two islands")
+	assert_eq(fight.islands.island_of_hex[grid.index(0, 3)], -1, "a bridge is no island's (8c-6a)")
 	K.step(fight, 19)
 	var lines: Array[LogEntry] = K.entries(fight, LogEntry.Kind.VOID)
 	assert_eq(lines.size(), 1)

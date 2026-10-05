@@ -93,6 +93,12 @@ extends RefCounted
 ## multiplier; EffectRunner.deal_hit adds it per hit.
 ## Adding a target, stat, or condition is a code change; say so when you
 ## make one.
+## Phase 8 part 3 (Act 3's enemies, docs/plans/rebuild-phase8-act3.md
+## 8c-6a): "only": {...} (a UnitCondition) on an all_allies or allies_near
+## aura gives it only to those that meet it now, read against its holder
+## (the Spire Chanter: {"same_island": true}); "while": "ally_standing"
+## without a "kit" is on while any other unit of its side stands (the Heart
+## of the Rift's Ward while its host stands).
 ## (The rebuild's gut, phase 0, removed the item targets and filters; the
 ## arena sim, phase 1, adds what abilities need.)
 
@@ -166,6 +172,9 @@ var state: UnitCondition = null
 ## damage_bp, crit_chance_bp, lifesteal_bp: the targets it counts against
 ## (null: every hit).
 var vs: UnitCondition = null
+## all_allies, allies_near: only those that meet it now, against its holder
+## (phase 8 part 3; null: every one).
+var only: UnitCondition = null
 ## ally_near: how close (plane units).
 var near_range: int = 0
 ## planted: every this many ticks more, it grows by step_value (0: never).
@@ -217,7 +226,7 @@ static func read(reader: DataReader) -> AuraDef:
 			While.BELOW_HP:
 				def.below_bp = reader.req_int("below_pct", 1, 99) * 100
 			While.ALLY_STANDING:
-				def.ally_kit = reader.req_string("kit")
+				def.ally_kit = reader.opt_string("kit", "")
 			While.STATE:
 				def.state = UnitCondition.read(reader.req_object("state"))
 			While.ALLY_NEAR, While.BEHIND_WALL:
@@ -231,6 +240,10 @@ static func read(reader: DataReader) -> AuraDef:
 		def.vs = UnitCondition.read(reader.req_object("vs"))
 		if not VS_STATS.has(def.stat):
 			reader.error("only a damage_bp, crit_chance_bp, lifesteal_bp, crit_damage_bp, heal_bp, or shield_bp aura can be \"vs\" some targets")
+	if reader.has("only"):
+		def.only = UnitCondition.read(reader.req_object("only"))
+		if def.target == Target.HOLDER:
+			reader.error("only an aura on allies has \"only\"")
 	if reader.has("vs_within_hexes"):
 		def.hit_range = reader.req_int("vs_within_hexes", 1, 8) * HexGrid.HEX
 		if not VS_STATS.has(def.stat):
@@ -275,7 +288,7 @@ func is_additive() -> bool:
 func is_conditional() -> bool:
 	return while_kind == While.PLANTED or while_kind == While.BELOW_HP or while_kind == While.ALLY_STANDING or while_kind == While.STATE \
 		or while_kind == While.ALLY_NEAR or while_kind == While.BEHIND_WALL or while_kind == While.TACTIC or per_fallen_ally or per_shield_bp > 0 \
-		or while_kind == While.MOVED or while_kind == While.CROWDED or target == Target.ALLIES_NEAR
+		or while_kind == While.MOVED or while_kind == While.CROWDED or target == Target.ALLIES_NEAR or only != null
 
 
 ## Worked out per hit (EffectRunner), not folded into the unit's stats.
@@ -298,6 +311,9 @@ func describe() -> String:
 		amount = "its first %d hits taken at half damage" % value
 	elif stat == Stat.SEES_STEALTH:
 		amount = STAT_LABELS[stat]
+	elif stat == Stat.DAMAGE_REDUCED_BP:
+		# Less damage taken reads as a minus (phase 8 part 3, the Heart's Ward).
+		amount = "%s%s %s" % ["-" if value >= 0 else "+", ValueBreakdown._percent(absi(value)), STAT_LABELS[stat]]
 	elif stat == Stat.ROOT_CAP_MS:
 		amount = "Roots on it last at most %s" % _seconds_ms(value)
 	elif is_additive():
@@ -315,7 +331,7 @@ func describe() -> String:
 		While.BELOW_HP:
 			condition = " while below %s HP" % ValueBreakdown._percent(below_bp)
 		While.ALLY_STANDING:
-			condition = " while a %s stands" % ally_kit.replace("_", " ")
+			condition = " while a %s stands" % ally_kit.replace("_", " ") if not ally_kit.is_empty() else " while another of its side stands"
 		While.STATE:
 			condition = " while %s" % state.describe()
 		While.ALLY_NEAR:
@@ -328,6 +344,8 @@ func describe() -> String:
 			condition = " while behind an allied wall (within %d hex%s)" % [near_range / HexGrid.HEX, "" if near_range == HexGrid.HEX else "es"]
 	if vs != null:
 		condition = " against %s%s" % [vs.describe(), condition]
+	if only != null:
+		condition += " (only those %s)" % only.describe()
 	if per_fallen_ally:
 		condition += " for each fallen ally"
 	if not per_target_stacks.is_empty():

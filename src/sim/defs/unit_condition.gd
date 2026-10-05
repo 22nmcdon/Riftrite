@@ -69,7 +69,7 @@ func is_empty() -> bool:
 ## (the unit an aura or event effect belongs to), for same_island; without
 ## one, same_island never holds.
 func holds(unit: UnitState, holder: UnitState = null) -> bool:
-	if same_island and (holder == null or unit.island != holder.island):
+	if same_island and (holder == null or unit.island < 0 or unit.island != holder.island):
 		return false
 	if below_hp_bp > 0 and unit.hp * FixedMath.BP_ONE >= below_hp_bp * unit.max_hp:
 		return false

@@ -141,6 +141,10 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 				var reach_sq: int = part.aura.target_range * part.aura.target_range
 				targets = sim.standing_allies_of(holder).filter(func(ally: UnitState) -> bool:
 					return ally != holder and ArenaPlane.length_sq(ally.pos - holder.pos) <= reach_sq)
+			if part.aura.only != null:
+				# Only those that meet it now (phase 8 part 3, the Spire Chanter).
+				var only: UnitCondition = part.aura.only
+				targets = targets.filter(func(ally: UnitState) -> bool: return only.holds(ally, holder))
 			for target: UnitState in targets:
 				if part.aura.is_per_hit():
 					# Only on some hits (phase 5c steps 3, 5b, 5c: against
@@ -265,7 +269,7 @@ static func condition_holds(sim: CombatSim, holder: UnitState, aura: AuraDef) ->
 				return false
 		AuraDef.While.ALLY_STANDING:
 			if not (sim.heroes if holder.side == EffectSource.Team.HEROES else sim.enemies).any(
-					func(unit: UnitState) -> bool: return unit != holder and unit.alive and unit.def.id == aura.ally_kit):
+					func(unit: UnitState) -> bool: return unit != holder and unit.alive and (aura.ally_kit.is_empty() or unit.def.id == aura.ally_kit)):
 				return false
 	if aura.per_shield_bp > 0 and holder.shield <= 0:
 		return false
@@ -306,6 +310,10 @@ static func condition_key(sim: CombatSim, unit: UnitState) -> int:
 				var reach_sq: int = part.aura.target_range * part.aura.target_range
 				for ally: UnitState in sim.standing_allies_of(unit):
 					key = key * 31 + int(ally != unit and ArenaPlane.length_sq(ally.pos - unit.pos) <= reach_sq)
+			if part.aura.only != null:
+				# Who meets it changes it too (phase 8 part 3).
+				for ally: UnitState in sim.standing_allies_of(unit):
+					key = key * 31 + int(part.aura.only.holds(ally, unit))
 	return key
 
 

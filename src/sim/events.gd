@@ -104,6 +104,9 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> int:
 						_raise(sim, target, EffectDef.Trigger.ON_CHARGED, chain, source, entry.amount)
 				if entry.broke_shield:
 					_raise(sim, target, EffectDef.Trigger.ON_SHIELD_BROKEN, chain, source, entry.absorbed)
+					if source.side != target.side:
+						# Its breaker's event too (phase 8 part 3, the Hungering Unbinder).
+						_raise(sim, source, EffectDef.Trigger.ON_BREAKS_SHIELD, chain, target, entry.absorbed)
 					if sim.ally_shield_listeners:
 						_shield_broke_near(sim, target, source, entry.absorbed, chain)
 			LogEntry.Kind.STATUS_DAMAGE:

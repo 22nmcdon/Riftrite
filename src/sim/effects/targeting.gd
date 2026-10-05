@@ -17,6 +17,9 @@ extends RefCounted
 ##   highest_mana       the enemy with the most mana (units with no mana bar
 ##                      are never picked)
 ##   self               the unit itself (signatures only)
+##   loneliest          the enemy farthest from its nearest ally (one with no
+##                      ally standing first; phase 8 part 3, the Gulf
+##                      Angler's hook)
 ## A signature picks among units within its reach (Signatures). "HP%" is
 ## compared exactly, by cross-multiplying, with no rounding.
 ## A hero with a prefer_target tactic (Tactics) picks the nearest enemy of
@@ -24,7 +27,7 @@ extends RefCounted
 ## rule. A kit's "prefer" (a kit mod's; phase 5c step 6b, Bloodhound) picks
 ## the nearest enemy that meets it next, logged with its label.
 
-const RULES: Array[String] = ["nearest", "weakest_backliner", "largest_group", "farthest", "lowest_hp_ally", "highest_mana", "self"]
+const RULES: Array[String] = ["nearest", "weakest_backliner", "largest_group", "farthest", "lowest_hp_ally", "highest_mana", "self", "loneliest"]
 ## How close a unit must be to count toward largest_group.
 const GROUP_REACH: int = 2 * HexGrid.HEX
 
@@ -101,6 +104,17 @@ static func pick(sim: CombatSim, unit: UnitState, rule: String, reach_sq: int, p
 			for other: UnitState in pool:
 				if other.def.mana != null and (best == null or other.mana > best.mana):
 					best = other
+		"loneliest":
+			var best_gap: int = -1
+			for other: UnitState in pool:
+				# How far its nearest standing ally is (none: as alone as it gets).
+				var gap: int = 1 << 62
+				for ally: UnitState in sim.standing_allies_of(other):
+					if ally != other:
+						gap = mini(gap, ArenaPlane.length_sq(ally.pos - other.pos))
+				if gap > best_gap:
+					best = other
+					best_gap = gap
 	return best
 
 

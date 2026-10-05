@@ -1,6 +1,6 @@
 """The luminous enemy kit (docs/art-style-guide.md, section 5): code-generated
-placeholder figures for the Act 1 and Act 2 enemies (Act 2's are recolors of
-Act 1's shapes until phase 7's art), in the hero kit's style and on its
+placeholder figures for the Act 1, 2, and 3 enemies (Act 2's and Act 3's are
+recolors of Act 1's shapes until phase 7's art), in the hero kit's style and on its
 canvas (300 x 520, feet at y = 500, centered on x = 150, facing right).
 
 Enemies wear the palette's darker side (deep plum, ink, dark teal) with more
@@ -304,6 +304,62 @@ def mournwater(uid):
     return _scaled(_drown(bog_lurker(uid)), 1.3) + glow_dot(150, 380, 24, AQUA, strong=True)
 
 
+# Act 3, the Shattered Crown (docs/plans/act3-shattered-crown.md): crag
+# stone and the crown's pale violet light, recolors and rescales again.
+CRAG, CRAG_DK = "#8a7a6a", "#5a4c40"
+CROWN, CROWN_DK = "#9c88d8", "#5e4c98"
+PALE = "#e8e0ff"
+
+
+def _crag(body):
+    return body.replace(STONE_DK, CRAG_DK).replace(STONE, CRAG).replace(DUSK_DK, CRAG_DK).replace(DUSK, CRAG)
+
+
+def _crown(body):
+    return body.replace(DUSK_DK, CROWN_DK).replace(DUSK, CROWN).replace(TIDE_DK, CROWN_DK).replace(TIDE, CROWN) \
+        .replace(STONE_DK, CROWN_DK).replace(STONE, CROWN).replace(BOG_DK, CROWN_DK).replace(BOG, CROWN).replace(AQUA, PALE)
+
+
+def cliffmite(uid):
+    return _scaled(_crag(rift_pup(uid)), 0.85)
+
+
+def cragram(uid):
+    return _crag(cairn_guardian(uid)) + eyes([(196, 300)])
+
+
+def herd_cragram(uid):
+    return cragram(uid) + rune(150, 420, 6)
+
+
+def great_cragram(uid):
+    return _scaled(cragram(uid).replace(AQUA, GOLD), 1.22)
+
+
+def gulf_angler(uid):
+    return _crown(bog_lurker(uid)) + glow_dot(214, 300, 10, PALE, strong=True)
+
+
+def spire_chanter(uid):
+    return _crown(gloam_witch(uid))
+
+
+def mirrorwight(uid):
+    return _glass(gloam_witch(uid)).replace(AQUA, PALE) + glow_dot(150, 280, 12, PALE, strong=True)
+
+
+def mirror_queen(uid):
+    return _scaled(mirrorwight(uid), 1.16) + glow_dot(150, 190, 14, GOLD) + rune(150, 190, 6)
+
+
+def unbinder(uid):
+    return _crown(rift_worn_sentinel(uid)).replace(PALE, EMBER)
+
+
+def heart_of_the_rift(uid):
+    return _scaled(_crown(gloam_totem(uid)), 1.4) + glow_dot(150, 300, 34, PALE, strong=True)
+
+
 ENEMIES = [("rift_pup", "Rift Pup", rift_pup), ("ashling", "Ashling", ashling),
            ("rift_hound", "Rift Hound", rift_hound), ("cinder_moth", "Cinder Moth", cinder_moth),
            ("hollow_archer", "Hollow Archer", hollow_archer), ("rift_worn_sentinel", "Rift-Worn Sentinel", rift_worn_sentinel),
@@ -319,7 +375,11 @@ ENEMIES = [("rift_pup", "Rift Pup", rift_pup), ("ashling", "Ashling", ashling),
            ("jagged_shard", "Jagged Shard", jagged_shard), ("clouded_shard", "Clouded Shard", clouded_shard),
            ("glass_matron", "The Glass Matron", glass_matron), ("brood_shambler", "Brood Shambler", brood_shambler),
            ("matron_shard", "Matron's Shard", matron_shard), ("choir_tidecaller", "Choir Tidecaller", choir_tidecaller),
-           ("mournwater", "The Mournwater", mournwater)]
+           ("mournwater", "The Mournwater", mournwater),
+           ("cliffmite", "Cliffmite", cliffmite), ("cragram", "Cragram", cragram), ("gulf_angler", "Gulf Angler", gulf_angler),
+           ("spire_chanter", "Spire Chanter", spire_chanter), ("mirrorwight", "Mirrorwight", mirrorwight), ("unbinder", "Unbinder", unbinder),
+           ("great_cragram", "Great Cragram", great_cragram), ("herd_cragram", "Herd Cragram", herd_cragram),
+           ("mirror_queen", "The Mirror Queen", mirror_queen), ("heart_of_the_rift", "The Heart of the Rift", heart_of_the_rift)]
 
 
 def standalone(body):
@@ -338,7 +398,7 @@ def lineup():
          '<linearGradient id="meadow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c8b56a"/>'
          '<stop offset="1" stop-color="#6f6a38"/></linearGradient></defs>',
          f'<rect width="{W}" height="{H}" fill="#1b2433"/>',
-         '<text x="30" y="50" fill="#fff3cf" font-size="28">Riftrite: Act 1 and Act 2 enemies (luminous placeholder kit)</text>',
+         '<text x="30" y="50" fill="#fff3cf" font-size="28">Riftrite: Act 1, 2, and 3 enemies (luminous placeholder kit)</text>',
          '<text x="30" y="78" fill="#a9c9c4" font-size="15">Code-generated from tools/art/enemy_kit.py. Darker palette and more rift glow than the heroes; '
          'one shape per archetype.</text>']
     for i, (eid, name, fn) in enumerate(ENEMIES):

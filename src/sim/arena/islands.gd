@@ -24,7 +24,9 @@ extends RefCounted
 ##     its neighbors, never through a rock, which walkers can't cross; a
 ##     rock's hex takes the island of its first neighbor that has one). UnitState.island is marked (mark) as the tick starts
 ##     and again once every unit has acted, for the condition "same_island"
-##     (UnitCondition); -1 over the void.
+##     (UnitCondition); -1 over the void, and on a bridge (8c-6a: islands are
+##     what bridges join, so a bridge's hexes are no island's, and a unit on
+##     one is on no island; the placement check still walks over them).
 ## The board's outer edge stays a wall (Decision 2): only void hexes drop a
 ## unit. Rift Collapse never turns ground into void (Decision 10 of the
 ## design).
@@ -82,7 +84,14 @@ static func make(grid: HexGrid, nav: NavGrid, void_hexes: Array[Vector2i], rock_
 ## Sets the void to `void_hexes`: the nav cells over it, and the islands.
 func set_void(grid: HexGrid, nav: NavGrid, void_hexes: Array[Vector2i]) -> void:
 	hexes = void_hexes.duplicate()
-	island_of_hex = groups(grid, void_hexes, rocks)
+	# A bridge's hexes are no island's (8c-6a: the Spire Chanter's "its
+	# island" stops at the bridge), though walkers cross them.
+	var cut: Array[Vector2i] = void_hexes.duplicate()
+	for bridge: Array in bridges:
+		for hex: Vector2i in bridge:
+			if not cut.has(hex):
+				cut.append(hex)
+	island_of_hex = groups(grid, cut, rocks)
 	count = 0
 	for island: int in island_of_hex:
 		count = maxi(count, island + 1)
@@ -192,7 +201,7 @@ func has_hex(grid: HexGrid, col: int, row: int) -> bool:
 	return _is_void[grid.index(col, row)] != 0
 
 
-## The island under `point` (-1 over the void).
+## The island under `point` (-1 over the void or a bridge).
 func island_at(grid: HexGrid, point: Vector2i) -> int:
 	return island_of_hex[grid.hex_at(point)]
 

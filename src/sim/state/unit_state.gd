@@ -47,9 +47,9 @@ var front_most: bool = false
 ## with water), and the swims trait: water doesn't slow it.
 var on_water: bool = false
 var swims: bool = false
-## Its island (phase 8 part 3; Islands.mark), -1 over the void or in a
-## fight without one.
-var island: int = -1
+## Its island (phase 8 part 3; Islands.mark), -1 over the void or on a
+## bridge; 0 in a fight without void (all one island).
+var island: int = 0
 ## True once it has fallen into the void (Islands.check_fall): it acts no
 ## more, and goes in the deaths step as a fall nothing catches.
 var fell: bool = false

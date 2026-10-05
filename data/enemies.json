@@ -2171,5 +2171,994 @@
         }
       ]
     }
+  },
+  {
+    "_note": "Act 3's enemies (docs/plans/act3-shattered-crown.md; rebuild-phase8-act3.md 8c-6a). Every number a placeholder until 8c-6c.",
+    "id": "cliffmite",
+    "name": "Cliffmite",
+    "archetype": "swarm",
+    "threat": "Swarms you, and shoves you toward the edge",
+    "specializations": [
+      {
+        "id": "pack_mite",
+        "name": "Pack",
+        "text": "Two of its side on a hero are enough for its bites to shove.",
+        "mod": {
+          "drops_passives": [
+            "mite_shove"
+          ],
+          "passives": [
+            {
+              "id": "pack_shove",
+              "name": "Pack Shove",
+              "kind": "ability",
+              "text": "When two or more of its side are attacking the same hero, each bite also shoves that hero half a hex toward the nearest edge.",
+              "effects": [
+                {
+                  "trigger": "on_holder_hit",
+                  "from_ability": [
+                    "mite_bite"
+                  ],
+                  "type": "knockback",
+                  "hexes": 1,
+                  "distance_bp": 5000,
+                  "toward": "edge",
+                  "when_attackers": 2,
+                  "target": "hit_target"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "brittle_mite",
+        "name": "Brittle",
+        "text": "When it falls, it bursts and Slows the heroes within 1 hex.",
+        "mod": {
+          "passives": [
+            {
+              "id": "brittle_burst",
+              "name": "Brittle Burst",
+              "kind": "ability",
+              "text": "When it falls, it bursts: heroes within 1 hex are Slowed.",
+              "effects": [
+                {
+                  "trigger": "on_fall",
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 1
+                  },
+                  "anchor": "self",
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "apply_status",
+                      "status": "slow",
+                      "duration_ms": 2000,
+                      "target": "target"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "kit": {
+      "stats": {
+        "hp": 200,
+        "atk": 9,
+        "def": 2,
+        "speed": 3,
+        "range": 1
+      },
+      "basic_attack": {
+        "id": "mite_bite",
+        "name": "Mite Bite",
+        "text": "Bites the hero in front of it.",
+        "cooldown_ms": 900,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "passives": [
+        {
+          "id": "mite_shove",
+          "name": "Edgeward Shove",
+          "kind": "ability",
+          "text": "When three or more of its side are attacking the same hero, each bite also shoves that hero half a hex toward the nearest edge.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "mite_bite"
+              ],
+              "type": "knockback",
+              "hexes": 1,
+              "distance_bp": 5000,
+              "toward": "edge",
+              "when_attackers": 3,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "cragram",
+    "name": "Cragram",
+    "archetype": "charger",
+    "threat": "Charges, and keeps you going",
+    "specializations": [
+      {
+        "id": "thundering_cragram",
+        "name": "Thundering",
+        "text": "Its Ram carries every hero in its line, not just the first.",
+        "mod": {
+          "on": [
+            {
+              "slot": "signature",
+              "carries": true
+            }
+          ]
+        }
+      },
+      {
+        "id": "stunning_cragram",
+        "name": "Stunning",
+        "text": "A hero it knocks back is Stunned for a moment as it lands.",
+        "mod": {
+          "passives": [
+            {
+              "id": "stunning_ram",
+              "name": "Stunning Ram",
+              "kind": "ability",
+              "text": "A hero it knocks back is Stunned.",
+              "effects": [
+                {
+                  "trigger": "on_knockback",
+                  "type": "apply_status",
+                  "status": "stun",
+                  "duration_ms": 1000,
+                  "target": "hit_target"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "kit": {
+      "stats": {
+        "hp": 480,
+        "atk": 18,
+        "def": 18,
+        "speed": 2,
+        "range": 1
+      },
+      "mana": {
+        "max": 60,
+        "per_attack": 10,
+        "regen_per_s": 3
+      },
+      "basic_attack": {
+        "id": "horn_butt",
+        "name": "Horn Butt",
+        "text": "Butts the hero in front of it.",
+        "cooldown_ms": 1400,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "signature": {
+        "_note": "Charges the farthest hero within 3 hexes and knocks the first one in its way back.",
+        "id": "ram",
+        "name": "Ram",
+        "text": "Charges at the farthest hero within 3 hexes and knocks the first one in its way 2 hexes back.",
+        "trigger": {
+          "kind": "mana"
+        },
+        "targeting": "farthest",
+        "max_range": 3,
+        "effects": [
+          {
+            "type": "charge",
+            "hexes": 3,
+            "knockback": 2,
+            "target": "target"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "gulf_angler",
+    "name": "Gulf Angler",
+    "archetype": "disruptor",
+    "threat": "Hooks you across the gap, alone",
+    "specializations": [
+      {
+        "id": "reeling_angler",
+        "name": "Reeling",
+        "text": "A hero it hooks is Rooted for a moment beside it.",
+        "mod": {
+          "on": [
+            {
+              "slot": "signature",
+              "add_effects": [
+                {
+                  "type": "apply_status",
+                  "status": "root",
+                  "duration_ms": 1000,
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "twin_hook_angler",
+        "name": "Twin-Hook",
+        "text": "It hooks a second hero too: the one nearest the first.",
+        "mod": {
+          "on": [
+            {
+              "slot": "signature",
+              "targets_add": 1
+            }
+          ]
+        }
+      }
+    ],
+    "kit": {
+      "stats": {
+        "hp": 420,
+        "atk": 16,
+        "def": 6,
+        "speed": 1,
+        "range": 4
+      },
+      "mana": {
+        "max": 50,
+        "per_attack": 10,
+        "regen_per_s": 6
+      },
+      "basic_attack": {
+        "id": "barb",
+        "name": "Barb",
+        "text": "Flings a barb at its target from up to 4 hexes away.",
+        "cooldown_ms": 1300,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "signature": {
+        "_note": "A hook always lands its catch on solid ground beside it (Decision 2 of act3-shattered-crown.md).",
+        "id": "gulf_hook",
+        "name": "Gulf Hook",
+        "text": "Hooks the hero standing farthest from their allies, within 7 hexes, and hauls them all the way to its side, across the gap.",
+        "trigger": {
+          "kind": "mana"
+        },
+        "targeting": "loneliest",
+        "max_range": 7,
+        "effects": [
+          {
+            "type": "pull",
+            "to": "beside",
+            "target": "target"
+          },
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "spire_chanter",
+    "name": "Spire Chanter",
+    "archetype": "support",
+    "threat": "Its island fights harder while it sings",
+    "specializations": [
+      {
+        "id": "quickening_chanter",
+        "name": "Quickening",
+        "text": "Its allies on its island also attack faster.",
+        "mod": {
+          "passives": [
+            {
+              "id": "quickening_song",
+              "name": "Quickening Song",
+              "kind": "aura",
+              "text": "While it stands, every ally on its island attacks faster.",
+              "aura": {
+                "target": "all_allies",
+                "stat": "atsp",
+                "value": 20,
+                "only": {
+                  "same_island": true
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "last_note_chanter",
+        "name": "Last-Note",
+        "text": "When it falls, every ally on its island gains a Shield.",
+        "mod": {
+          "passives": [
+            {
+              "id": "last_note",
+              "name": "Last Note",
+              "kind": "ability",
+              "text": "When it falls, every ally on its island gains a Shield of part of its max HP.",
+              "effects": [
+                {
+                  "trigger": "on_fall",
+                  "type": "shield",
+                  "amount_bp_of_max_hp": 1500,
+                  "target": "all_allies",
+                  "only": {
+                    "same_island": true
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "kit": {
+      "stats": {
+        "hp": 340,
+        "atk": 12,
+        "def": 4,
+        "speed": 2,
+        "range": 4
+      },
+      "traits": [
+        "hop_away"
+      ],
+      "hop_cooldown_ms": 5000,
+      "basic_attack": {
+        "id": "spire_note",
+        "name": "Spire Note",
+        "text": "Sings a sharp note at its target from up to 4 hexes away.",
+        "cooldown_ms": 1400,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "passives": [
+        {
+          "id": "spire_song",
+          "name": "Spire Song",
+          "kind": "aura",
+          "text": "While it stands, every ally on its island takes less damage.",
+          "aura": {
+            "target": "all_allies",
+            "stat": "damage_reduced_bp",
+            "value": 2500,
+            "only": {
+              "same_island": true
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "mirrorwight",
+    "name": "Mirrorwight",
+    "archetype": "mimic",
+    "threat": "Casts back the first thing you show it",
+    "specializations": [
+      {
+        "id": "greedy_mirrorwight",
+        "name": "Greedy",
+        "text": "It swaps its copy for each new signature it sees.",
+        "mod": {
+          "drops_passives": [
+            "mirror_sight"
+          ],
+          "passives": [
+            {
+              "id": "greedy_sight",
+              "name": "Greedy Sight",
+              "kind": "copy",
+              "text": "It copies each new hero signature it sees cast anywhere and keeps the latest as its own, cast on its own bar with heals and Shields for its allies and harm for your heroes.",
+              "replace": true
+            }
+          ]
+        }
+      },
+      {
+        "id": "twinned_mirrorwight",
+        "name": "Twinned",
+        "text": "It casts its copy twice, each weaker.",
+        "mod": {
+          "drops_passives": [
+            "mirror_sight"
+          ],
+          "passives": [
+            {
+              "id": "twinned_sight",
+              "name": "Twinned Sight",
+              "kind": "copy",
+              "text": "It copies the first hero signature it sees cast anywhere and casts it twice, each weaker, on its own bar: heals and Shields for its allies, harm for your heroes.",
+              "twice_pct": 60
+            }
+          ]
+        }
+      }
+    ],
+    "kit": {
+      "stats": {
+        "hp": 380,
+        "atk": 14,
+        "def": 4,
+        "speed": 2,
+        "range": 4
+      },
+      "mana": {
+        "max": 50,
+        "per_attack": 10,
+        "regen_per_s": 3
+      },
+      "basic_attack": {
+        "id": "mirror_shard",
+        "name": "Mirror Shard",
+        "text": "Throws a shard of mirror at its target from up to 4 hexes away.",
+        "cooldown_ms": 1400,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "signature": {
+        "id": "dull_echo",
+        "name": "Dull Echo",
+        "text": "Until it has a copy, it throws a weak bolt at the nearest hero within 5 hexes.",
+        "trigger": {
+          "kind": "mana"
+        },
+        "targeting": "nearest",
+        "max_range": 5,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 6000
+            }
+          }
+        ]
+      },
+      "passives": [
+        {
+          "id": "mirror_sight",
+          "name": "Mirror Sight",
+          "kind": "copy",
+          "text": "It copies the first hero signature it sees cast anywhere and keeps it as its own, cast on its own bar with heals and Shields for its allies and harm for your heroes."
+        }
+      ]
+    }
+  },
+  {
+    "id": "unbinder",
+    "name": "Unbinder",
+    "archetype": "warden_breaker",
+    "threat": "Breaks your Shields and frees its allies",
+    "specializations": [
+      {
+        "id": "hungering_unbinder",
+        "name": "Hungering",
+        "text": "Each Shield it breaks heals it.",
+        "mod": {
+          "passives": [
+            {
+              "id": "hungering_break",
+              "name": "Hungering Break",
+              "kind": "ability",
+              "text": "Each time its hit takes the last of a hero's Shield, it heals part of its max HP.",
+              "effects": [
+                {
+                  "trigger": "on_breaks_shield",
+                  "type": "heal",
+                  "amount_bp_of_max_hp": 1000,
+                  "target": "self"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "wide_unbinder",
+        "name": "Wide",
+        "text": "Its Unbind reaches every ally on its island.",
+        "mod": {
+          "drops_passives": [
+            "unbind"
+          ],
+          "passives": [
+            {
+              "id": "wide_unbind",
+              "name": "Wide Unbind",
+              "kind": "ability",
+              "text": "Every 6 seconds it frees every ally on its island of Roots, Marks, Burn, Poison, Slows, and Stuns.",
+              "effects": [
+                {
+                  "trigger": "on_interval",
+                  "interval_ms": 6000,
+                  "type": "cleanse",
+                  "count": 6,
+                  "statuses": [
+                    "root",
+                    "marked",
+                    "burn",
+                    "poison",
+                    "slow",
+                    "stun"
+                  ],
+                  "target": "all_allies",
+                  "only": {
+                    "same_island": true
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "kit": {
+      "stats": {
+        "hp": 460,
+        "atk": 16,
+        "def": 10,
+        "speed": 2,
+        "range": 1
+      },
+      "basic_attack": {
+        "id": "unbinding_blow",
+        "name": "Unbinding Blow",
+        "text": "Strikes the hero in front of it, tearing through Shields.",
+        "cooldown_ms": 1300,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "passives": [
+        {
+          "id": "shield_rend",
+          "name": "Shield Rend",
+          "kind": "aura",
+          "text": "Its hits take twice as much off a Shield.",
+          "aura": {
+            "target": "holder",
+            "stat": "shield_damage_bp",
+            "value": 10000
+          }
+        },
+        {
+          "id": "unbind",
+          "name": "Unbind",
+          "kind": "ability",
+          "text": "Every 6 seconds it frees its allies within 2 hexes of Roots, Marks, Burn, Poison, Slows, and Stuns.",
+          "effects": [
+            {
+              "trigger": "on_interval",
+              "interval_ms": 6000,
+              "type": "cleanse",
+              "count": 6,
+              "statuses": [
+                "root",
+                "marked",
+                "burn",
+                "poison",
+                "slow",
+                "stun"
+              ],
+              "target": "allies_near_self",
+              "within_hexes": 2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "_note": "The Cragherd's leader (the elite Stampede).",
+    "id": "great_cragram",
+    "name": "Great Cragram",
+    "archetype": "charger",
+    "threat": "Every 15 seconds the whole herd charges: never stand with the void behind you in its line",
+    "kit": {
+      "stats": {
+        "hp": 1300,
+        "atk": 24,
+        "def": 22,
+        "speed": 2,
+        "range": 1
+      },
+      "mana": {
+        "max": 60,
+        "per_attack": 10,
+        "regen_per_s": 3
+      },
+      "basic_attack": {
+        "id": "great_horn",
+        "name": "Great Horn",
+        "text": "Gores the hero in front of it.",
+        "cooldown_ms": 1500,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "signature": {
+        "_note": "Charges the farthest hero within 3 hexes and knocks the first one in its way back.",
+        "id": "ram",
+        "name": "Ram",
+        "text": "Charges at the farthest hero within 3 hexes and knocks the first one in its way 3 hexes back; every 15 seconds the whole herd charges with it.",
+        "trigger": {
+          "kind": "mana"
+        },
+        "targeting": "farthest",
+        "max_range": 3,
+        "effects": [
+          {
+            "type": "charge",
+            "hexes": 3,
+            "knockback": 3,
+            "target": "target"
+          }
+        ],
+        "also_fires": [
+          {
+            "kind": "every",
+            "every_ms": 15000
+          }
+        ]
+      }
+    }
+  },
+  {
+    "_note": "The Cragherd's Cragrams: a Cragram whose Ram also fires every 15s, with the herd.",
+    "id": "herd_cragram",
+    "name": "Herd Cragram",
+    "archetype": "charger",
+    "threat": "Charges with its herd every 15 seconds",
+    "kit": {
+      "stats": {
+        "hp": 480,
+        "atk": 18,
+        "def": 18,
+        "speed": 2,
+        "range": 1
+      },
+      "mana": {
+        "max": 60,
+        "per_attack": 10,
+        "regen_per_s": 3
+      },
+      "basic_attack": {
+        "id": "horn_butt",
+        "name": "Horn Butt",
+        "text": "Butts the hero in front of it.",
+        "cooldown_ms": 1400,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "signature": {
+        "_note": "Charges the farthest hero within 3 hexes and knocks the first one in its way back.",
+        "id": "ram",
+        "name": "Ram",
+        "text": "Charges at the farthest hero within 3 hexes and knocks the first one in its way 2 hexes back; every 15 seconds it charges with the herd.",
+        "trigger": {
+          "kind": "mana"
+        },
+        "targeting": "farthest",
+        "max_range": 3,
+        "effects": [
+          {
+            "type": "charge",
+            "hexes": 3,
+            "knockback": 2,
+            "target": "target"
+          }
+        ],
+        "also_fires": [
+          {
+            "kind": "every",
+            "every_ms": 15000
+          }
+        ]
+      }
+    }
+  },
+  {
+    "_note": "The Mirror Court's leader (the elite Every Answer Echoed).",
+    "id": "mirror_queen",
+    "name": "The Mirror Queen",
+    "archetype": "mimic",
+    "threat": "Copies every signature she sees, and gives each to her court: show them little, and kill her first",
+    "kit": {
+      "stats": {
+        "hp": 900,
+        "atk": 20,
+        "def": 8,
+        "speed": 2,
+        "range": 4
+      },
+      "mana": {
+        "max": 50,
+        "per_attack": 10,
+        "regen_per_s": 3
+      },
+      "basic_attack": {
+        "id": "queens_shard",
+        "name": "Queen's Shard",
+        "text": "Throws a shard of mirror at her target from up to 4 hexes away.",
+        "cooldown_ms": 1400,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "signature": {
+        "id": "dull_echo",
+        "name": "Dull Echo",
+        "text": "Until it has a copy, it throws a weak bolt at the nearest hero within 5 hexes.",
+        "trigger": {
+          "kind": "mana"
+        },
+        "targeting": "nearest",
+        "max_range": 5,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 6000
+            }
+          }
+        ]
+      },
+      "passives": [
+        {
+          "id": "queens_sight",
+          "name": "The Queen's Sight",
+          "kind": "copy",
+          "text": "She copies each new hero signature she sees cast anywhere and keeps the latest, cast on her own bar; each copy she takes goes to her court of Mirrorwights too.",
+          "replace": true,
+          "share": true
+        }
+      ]
+    }
+  },
+  {
+    "_note": "Act 3's boss (act3-shattered-crown.md section 7). The first enemy of its fight, so its host is every other (the rift learns' adds).",
+    "id": "heart_of_the_rift",
+    "name": "The Heart of the Rift",
+    "archetype": "caster",
+    "threat": "The rift that has learned you: break its host to break its Ward, stay off the warned bridges, then race the rift",
+    "kit": {
+      "stats": {
+        "hp": 4000,
+        "atk": 30,
+        "def": 10,
+        "speed": 0,
+        "range": 6
+      },
+      "basic_attack": {
+        "id": "shard_lance",
+        "name": "Shard Lance",
+        "text": "Drives a lance of shattered light into its target from up to 6 hexes away.",
+        "cooldown_ms": 1500,
+        "effects": [
+          {
+            "type": "damage",
+            "amount": 0,
+            "target": "target",
+            "scaling": {
+              "atk": 10000
+            }
+          }
+        ]
+      },
+      "passives": [
+        {
+          "id": "ward",
+          "name": "Ward",
+          "kind": "aura",
+          "text": "While any of its host stands, it takes half damage.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_reduced_bp",
+            "value": 5000,
+            "while": "ally_standing"
+          }
+        }
+      ],
+      "phases": [
+        {
+          "id": "severing",
+          "name": "Severing",
+          "text": "Below 70% HP the bridges begin to break in turn, and two more of its host join.",
+          "below_hp_bp": 7000,
+          "signature": {
+            "id": "call_the_host",
+            "name": "Call the Host",
+            "text": "Two Cliffmites climb up beside it to join its host.",
+            "trigger": {
+              "kind": "fight_start"
+            },
+            "targeting": "self",
+            "effects": [
+              {
+                "type": "summon",
+                "kit": "cliffmite",
+                "count": 2,
+                "placement": "adjacent"
+              }
+            ]
+          },
+          "passives": [
+            {
+              "id": "sever",
+              "name": "Sever",
+              "kind": "ability",
+              "text": "Every 12 seconds the next bridge is warned, then breaks into the void 3 seconds later, dropping whoever stands on it; it reforms 10 seconds after.",
+              "effects": [
+                {
+                  "trigger": "on_interval",
+                  "interval_ms": 12000,
+                  "type": "sever",
+                  "warning_ms": 3000,
+                  "duration_ms": 10000
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "unmaking",
+          "name": "Unmaking",
+          "text": "Below 35% HP its Ward is gone, it pushes away heroes who come close, and the rift closes in.",
+          "below_hp_bp": 3500,
+          "signature": {
+            "id": "unmake",
+            "name": "Unmake",
+            "text": "The rift begins to close.",
+            "trigger": {
+              "kind": "fight_start"
+            },
+            "targeting": "self",
+            "effects": [
+              {
+                "type": "start_collapse"
+              }
+            ]
+          },
+          "passives": [
+            {
+              "id": "ward",
+              "name": "Ward Broken",
+              "kind": "aura",
+              "text": "Its Ward is gone.",
+              "aura": {
+                "target": "holder",
+                "stat": "damage_reduced_bp",
+                "value": 0
+              }
+            },
+            {
+              "id": "unmaking_push",
+              "name": "Unmaking",
+              "kind": "ability",
+              "text": "Every 8 seconds it pushes every hero within 2 hexes of it a hex away.",
+              "effects": [
+                {
+                  "trigger": "on_interval",
+                  "interval_ms": 8000,
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 2
+                  },
+                  "anchor": "self",
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "knockback",
+                      "hexes": 1,
+                      "target": "target"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
   }
 ]

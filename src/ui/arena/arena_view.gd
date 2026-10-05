@@ -381,11 +381,12 @@ static func figure_for(kit: UnitDef, team: EffectSource.Team, form: String = "ba
 
 
 ## A token's short label: a hero's name (its id), or the last word of an
-## enemy's ("Rift Pup" -> "Pup").
+## enemy's ("Rift Pup" -> "Pup"), before any "of" ("The Heart of the Rift"
+## -> "Heart").
 static func label_for(kit: UnitDef, content: ContentDb) -> String:
 	if content.heroes.has(kit.id):
 		return kit.id.capitalize()
-	var words: PackedStringArray = kit.name.split(" ", false)
+	var words: PackedStringArray = kit.name.get_slice(" of ", 0).split(" ", false)
 	return words[words.size() - 1] if not words.is_empty() else kit.id
 
 

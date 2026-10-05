@@ -207,7 +207,7 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 				Statuses.apply(sim, victim, status_id, amount, effect.duration_ticks, source, effect.marks_stack, effect.until_near, effect.strength_add_bp, power)
 		EffectDef.Type.CLEANSE:
 			if effect.cleanse_count > 0:
-				Statuses.cleanse_newest(sim, victim, effect.cleanse_count, source)
+				Statuses.cleanse_newest(sim, victim, effect.cleanse_count, source, effect.cleanse_statuses)
 			else:
 				Statuses.cleanse_over_time(sim, victim, mini(amount, FixedMath.BP_ONE), source, false, effect.cleanse_statuses)
 		EffectDef.Type.MANA_DRAIN:

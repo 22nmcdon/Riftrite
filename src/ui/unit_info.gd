@@ -34,6 +34,7 @@ const EVENT_WORDS: Dictionary[int, String] = {
 	EffectDef.Trigger.ON_ARRIVE: "arrival",
 	EffectDef.Trigger.ON_ALLY_SHIELD_BROKEN: "ally's Shield breaking",
 	EffectDef.Trigger.ON_WALL_BLOCK: "attack its wall blocks",
+	EffectDef.Trigger.ON_BREAKS_SHIELD: "Shield it breaks",
 	EffectDef.Trigger.ON_RISE: "rise from a fall",
 }
 const ORDINALS: Array[String] = ["th", "st", "nd", "rd"]
@@ -412,6 +413,9 @@ static func aura_text(aura: AuraDef) -> String:
 		text = "%s %s" % [signed_percent(aura.value - FixedMath.BP_ONE), AuraDef.STAT_LABELS[aura.stat]]
 	if aura.target == AuraDef.Target.ALL_ALLIES:
 		text += " for all allies"
+	if aura.only != null:
+		# Only some of them (phase 8 part 3, the Spire Chanter).
+		text += " %s" % aura.only.describe()
 	match aura.while_kind:
 		AuraDef.While.TAUNTING:
 			text += " while taunting"
@@ -429,6 +433,8 @@ static func aura_text(aura: AuraDef) -> String:
 			text += " while an ally is within %s" % hexes(aura.near_range / HexGrid.HEX)
 		AuraDef.While.TACTIC:
 			text += " while it follows its tactic"
+		AuraDef.While.ALLY_STANDING:
+			text += " while another of its side stands" if aura.ally_kit.is_empty() else " while a %s stands" % aura.ally_kit.replace("_", " ")
 		AuraDef.While.BEHIND_WALL:
 			@warning_ignore("integer_division")
 			text += " while behind an allied wall (within %s of it)" % hexes(aura.near_range / HexGrid.HEX)
@@ -604,6 +610,12 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 		EffectDef.Type.EXTEND_STATUS:
 			return "its %s lasts %s longer" % [_status_name(effect.status_id, content), seconds(effect.duration_ticks)]
 		EffectDef.Type.CLEANSE:
+			if effect.cleanse_count > 0 and not effect.cleanse_statuses.is_empty():
+				# Only those named (phase 8 part 3, the Unbinder).
+				var ended: Array[String] = []
+				for status_id: String in effect.cleanse_statuses:
+					ended.append(_status_name(status_id, content))
+				return "ends %s%s" % [", ".join(ended.slice(0, -1)) + ", and " if ended.size() > 1 else "", ended[-1]] + _to_all(effect)
 			if effect.cleanse_count > 0:
 				return "removes its %s newest harmful status%s" % ["" if effect.cleanse_count == 1 else str(effect.cleanse_count), "" if effect.cleanse_count == 1 else "es"]
 			if not effect.cleanse_statuses.is_empty():

@@ -45,8 +45,9 @@ var targeting: String = "nearest"
 ## In hexes; 0: the unit's own range.
 var max_range: int = 0
 var cast_ticks: int = 0
-## Signatures, from a sigil (KitMod; phase 5): extra triggers it also fires
-## on, free of mana (TriggerDef.ALSO_KINDS).
+## Signatures, from a sigil (KitMod; phase 5) or the kit's "also_fires"
+## (phase 8 part 3): extra triggers it also fires on, free of mana
+## (TriggerDef.ALSO_KINDS).
 var also: Array[TriggerDef] = []
 ## Signatures, from a sigil (KitMod's echo): after each fire it fires this
 ## weaker copy echo_ticks later, at a fresh target (null: no echo).
@@ -88,6 +89,13 @@ static func read_signature(reader: DataReader) -> AbilityDef:
 	def.grows_boosts_bp = reader.opt_int("grows_boosts_bp", 0, 0, FixedMath.BP_ONE)
 	if def.cast_ticks > 0 and def.trigger.kind != TriggerDef.Kind.MANA:
 		reader.error("cast_ms: only a mana signature can have a cast")
+	# Extra triggers in the kit itself (phase 8 part 3, the Cragherd's
+	# stampede), as a sigil's also_fires.
+	for also_reader: DataReader in reader.opt_object_array("also_fires"):
+		var also_trigger: TriggerDef = TriggerDef.read(also_reader)
+		if not TriggerDef.ALSO_KINDS.has(also_trigger.kind):
+			reader.error("also_fires: a signature can also fire on hp_below, ally_falls, or every, not %s" % TriggerDef.KIND_NAMES[also_trigger.kind])
+		def.also.append(also_trigger)
 	reader.finish()
 	return def
 

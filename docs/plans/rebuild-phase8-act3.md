@@ -1,6 +1,6 @@
 # Phase 8 part 3: building Act 3, the Shattered Crown
 
-Status: **a build plan, approved (2026-10-05); section 9's questions answered (Decisions 1–4).** 8c-5a (enemy growth), 8c-5b (islands), 8c-5c (the other pieces), and 8c-5d (the rift learns) built; 8c-6a next. It builds `act3-shattered-crown.md` (the design, with its Decisions 1–11) on the frame of `rebuild-phase8-acts.md` (8c-1 and 8c-2, built), the way `rebuild-phase8-act2.md` built Act 2. Numbers are placeholders until the tuning part. Questions are in section 9.
+Status: **a build plan, approved (2026-10-05); section 9's questions answered (Decisions 1–4).** 8c-5a (enemy growth), 8c-5b (islands), 8c-5c (the other pieces), 8c-5d (the rift learns), and 8c-6a (the enemies) built; 8c-6b next. It builds `act3-shattered-crown.md` (the design, with its Decisions 1–11) on the frame of `rebuild-phase8-acts.md` (8c-1 and 8c-2, built), the way `rebuild-phase8-act2.md` built Act 2. Numbers are placeholders until the tuning part. Questions are in section 9.
 
 ## 1. What it builds
 
@@ -199,3 +199,34 @@ A run piece (`src/run/`): it reads fights after they're fought and changes no fi
 - **Save version 10:** each fight's `habits` and `today_learned`; a version 9 save loads with none.
 - **No built act learns yet;** Act 3 (8c-6b) turns it on. With Act 3's roster as drafted, nothing among the adds answered **healing** (its answers, the Rot Lurker and the Gnawing Pup, sit Act 3 out): Question CM, answered by Decision 4, **Festering** (`data/enemy_upgrades.json`, the status `festering`: its hits leave the hero healed 30% less for 3s), tested in `test_enemy_growth_pieces.gd`.
 - **Tests** (`tests/run/test_rift_learns.gd`, on stand-in acts whose Act 2 learns, with a stand-in boss fight of four adds that have specializations): a fight's summary (the heroes' doing only, a relic's too, each application once, the rows and pairs) and each fight keeping it; scores from only the last 3 fights; the top habit and a strong second, a tie, a habit passed over, none; two adds learning in turn, a specialization replacing what was drawn, an upgrade alone; one habit taking both turns on two adds; a turn leaving the add a later one needs; the fight's kits; no learning on other days, before any habit, or in an act without it; repeating and fresh on a replay; an endless boss floor; the save across versions; the data's checks; and the card's line. `test_run_screens.gd` shows it on the card. Mutation checks: counting enemies' doing, an enemy relic's, stacks for applications, no lifesteal, every fire, the wrong rows, every pair, every fight read, any second, unanswerable habits, the tie the other way, the boss as an add, an upgrade or a specialization on any add, no act or tier check, every add learning, one habit every turn, no add left for a later habit, an add learning twice, the same picks on a replay, no swap, no summary kept, no learned upgrade carried, the save dropping habits, and the data's checks each fail a test.
+
+## Built in 8c-6a: the enemies (2026-10-05)
+
+Ten new entries in `data/enemies.json`, every number a placeholder until 8c-6c, every ability with its sentence naming each reach, and a placeholder figure each (`tools/art/enemy_kit.py`: recolors and rescales of Act 1's shapes in crag stone and the crown's pale violet):
+
+- **The new faces** (each with its two specializations):
+  - **Cliffmite** (swarm; speed 3): its bites shove the hero half a hex toward the nearest edge while three of its side attack that hero (the built shove, as a passive on its hits). **Pack:** two are enough. **Brittle:** as it falls, heroes within 1 hex are Slowed for 2s.
+  - **Cragram** (charger): Ram charges the farthest hero within 3 hexes and knocks the first in its way 2 hexes back. **Thundering:** the knockback carries the whole line (the built `carries`). **Stunning:** a hero it knocks back is Stunned for 1s (`on_knockback`).
+  - **Gulf Angler** (disruptor; range 4): Gulf Hook hooks the loneliest hero within 7 hexes all the way beside it, across the gap. **Reeling:** the catch is Rooted 1s. **Twin-Hook:** the hero nearest the first is hooked too (the built `targets_add`).
+  - **Spire Chanter** (support; hops away): every ally on its island takes 25% less damage while it stands. **Quickening:** they attack 20% faster too. **Last-Note:** as it falls, every ally on its island gains a Shield of 15% of their max HP.
+- **The new archetypes:**
+  - **Mirrorwight** (mimic; 8c-5c-3's copy passive, a Dull Echo bolt until it copies). **Greedy:** `replace`. **Twinned:** `twice_pct` 60.
+  - **Unbinder** (warden_breaker): its hits take twice as much off a Shield, and every 6s it ends Root, Marked, Burn, Poison, Slow, and Stun on its allies within 2 hexes. **Hungering:** each Shield it breaks heals it 10% of its max HP. **Wide:** its Unbind reaches every ally on its island.
+- **The elites' and the boss's units:** the **Great Cragram** (the Cragherd's leader: knocks back 3 hexes) and the **Herd Cragram** (the herd's Cragrams), whose Rams also fire every 15s with the whole herd; **The Mirror Queen** (copies each new signature and gives it to her court of Mirrorwights); and **The Heart of the Rift** (speed 0, range 6; its Ward halves the damage it takes while any other of its side stands; below 70%, **Severing**: two Cliffmites climb up beside it and a bridge is severed every 12s; below 35%, **Unmaking**: the Ward is gone, every 8s it pushes heroes within 2 hexes of it a hex away, and Rift Collapse starts).
+- **Pieces it needed** (each skipped by a fight that doesn't use it; the bench's fingerprints are unchanged):
+  - an aura's `"only"` (a UnitCondition on an all_allies or allies_near aura: only those that meet it now, read against its holder): the Chanter's songs;
+  - `"while": "ally_standing"` without a `"kit"` (any other of its side): the Heart's Ward;
+  - the trigger `on_breaks_shield` (its hit takes the last of an enemy's Shield): the Hungering Unbinder;
+  - the targeting rule `loneliest` (the enemy farthest from its nearest ally): the Angler's hook;
+  - a kit signature's `"also_fires"` (as a sigil's): the herd's stampede every 15s;
+  - a cleanse's `"count"` with `"statuses"` ends only those named: the Unbind;
+  - the board's short label stops before " of " ("Heart"), and a damage-reduction aura reads as a minus in the log ("−50% damage taken").
+- **A call made while building: a bridge's hexes are no island's.** With bridges joining the islands, a flood fill made the whole board one island, and the Chanter's "its island" covered everything. Now islands are filled round the void, the rocks, and the bridges (`Islands.set_void`), so a unit on a bridge is on no island (`UnitState.island` -1, and `same_island` never holds for it); walkers still cross bridges, and the placement check still walks over them. A fight without void has every unit on island 0.
+- **Small calls:**
+  - The Cliffmite's crowd counts any of its side attacking the hero, not only Cliffmites (the built `when_attackers`).
+  - Twin-Hook takes the hero nearest the first, not the second-loneliest (the built extra targets).
+  - The Stunning Cragram stuns the hero its knockback moved as the push lands, not after a delay.
+  - The Mirror Queen's court casts her copies with their own stats, not "at her full strength" (Copies gives each copier the ability, cast by the copier).
+  - The two adds that join the Heart in Severing are plain Cliffmites: the rift learns picks for the placed host only (its adds as the fight starts).
+  - The Unmaking's Ward is a passive of the same id at 0, since a phase replaces passives by id.
+- **Tests:** `tests/sim/test_act3_enemies.gd` (each new face's threat and both specializations, the Cragherd's stampede at 15s, the Queen's court, the Heart's Ward and its two phases, the loneliest rule, and the panel's words), the enemy table in `test_enemy_kits.gd`, every sentence and reach in `test_unit_info.gd`, the labels in `test_arena_view.gd`, the bridge in `test_islands.gd`, and the figures (`art/figures/bounds.json`). Mutation checks: no `only` filter or key, a kit-less ally_standing never on, no `on_breaks_shield`, the nearest instead of the loneliest, no `also_fires` read, a count cleanse ending any harmful status, bridges joining islands, and units on two bridges on one island each fail a test (the loneliest rule's lone-unit case can't be told apart, so it was folded into the rule).
