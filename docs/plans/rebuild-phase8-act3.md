@@ -1,6 +1,6 @@
 # Phase 8 part 3: building Act 3, the Shattered Crown
 
-Status: **a build plan for the playtester's approval (2026-10-05). Nothing is built.** It builds `act3-shattered-crown.md` (the design, with its Decisions 1–11) on the frame of `rebuild-phase8-acts.md` (8c-1 and 8c-2, built), the way `rebuild-phase8-act2.md` built Act 2. Numbers are placeholders until the tuning part. Questions are in section 9.
+Status: **a build plan, approved (2026-10-05); section 9's questions answered (Decisions 1–3).** Being built from 8c-5a. It builds `act3-shattered-crown.md` (the design, with its Decisions 1–11) on the frame of `rebuild-phase8-acts.md` (8c-1 and 8c-2, built), the way `rebuild-phase8-act2.md` built Act 2. Numbers are placeholders until the tuning part. Questions are in section 9.
 
 ## 1. What it builds
 
@@ -24,7 +24,7 @@ Every new piece is skipped by a fight that doesn't use it, so Acts 1 and 2's fig
     - the Dazzling Moth's misses (section 4).
 - **The share:** `act3.json`'s `specialized_from_day` 1 and `specialized_share_pct` 75 (Decision 4). The draw is Act 2's, unchanged.
 - **Upgrades** (`enemy-growth.md` section 3; Decision 5):
-  - **Data:** `data/upgrades_enemy.json`, or an `"enemy_upgrades"` block in `camps.json` beside the rift modifiers. Each upgrade is `{id, name, text, mod}`, a `KitMod` like a specialization's.
+  - **Data:** `data/enemy_upgrades.json` (Decision 3). Each upgrade is `{id, name, text, mod}`, a `KitMod` like a specialization's.
   - **The draw:** each elite draws 1–2 when the day starts (`Offers.enemy_upgrades`, its own `RunRandom` stream: act, day, attempt, option), fresh on each attempt, like specializations. They're saved in `RunState` beside `today_specs`; save version 9.
   - **Who carries them:** only enemies in an elite fight (the leader and its company); the boss and normal enemies carry none.
   - **The screens:** the fight card shows them ("Upgraded:", like "Specialized:"), and so do `EnemyPanel` and the unit's name ("Frenzied Great Cragram").
@@ -42,9 +42,9 @@ Every new piece is skipped by a fight that doesn't use it, so Acts 1 and 2's fig
   - **Falling:** after a push (`Displacement.push`), a pull, a charge's carry, or a hook ends, a unit that doesn't fly and whose center is over the void falls. It's logged as a new kind, **FELL**: who fell, where, and the source of the push, with an audit rule and a board form. It's removed as a death.
     - A hero who falls counts as fallen: down at the fight's end, so a wound (Decision 17 of the acts plan).
     - An enemy that falls is a kill for whoever's push, pull, or charge caused it: `on_kill` is raised for them, and the FELL entry carries the ability (Decision 1).
-    - What runs as it falls is question CJ.
+    - Nothing runs as it falls: no on-fall effects, no rise, no would-fall save (Decision 1).
   - **Islands:** at the start, and again whenever the void changes, the walkable hexes are grouped into islands (a flood fill). `UnitState.island` is marked as water's `on_water` is, at the tick's start and after the units act, for a `UnitCondition` key, `"same_island"` (with the condition's holder). The Spire Chanter's aura, the Wide Unbinder, and the Last-Note Chanter use it.
-  - **The board's outer edge** stays as it is: a push stops there and stuns (question CK). Only void hexes drop.
+  - **The board's outer edge** stays as it is: a push stops there and stuns (Decision 2). Only void hexes drop.
 - **The board:** the void is drawn as open sky between the islands, and bridges are the walkable hexes between them. A unit that falls shows a fall, then is gone. Placeholder art until phase 7.
 
 ## 4. The other new pieces (8c-5c)
@@ -113,6 +113,15 @@ Each part is tested as Act 2's were: every piece in a small fight (`tests/sim/`)
 
 ## 9. Questions
 
-- **CJ. What runs when a unit falls into the void:** falling is a death, but does a unit that falls set off its on-fall effects (the Shattered Sentinel's burst, the Last-Note Chanter's Shields, a splitter's halves, Second Dawn or a rise), and do would-fall saves (Last Watch's Undying) catch it? Proposed: no to all. The void swallows it whole, so pushing a splitter or a riser off an edge is a way past it, and no save catches a fall.
-- **CK. The board's outer edge:** stays as it is (a push stops there and stuns), so only the void hexes inside the board drop a unit? Proposed: yes; the islands are drawn inside the board's frame.
-- **CL. Upgrades' data home:** a file of their own (`data/enemy_upgrades.json`), or a block in `camps.json` beside the rift modifiers? Proposed: a file of their own.
+- **CJ. What runs when a unit falls into the void:** *(Answered: Decision 1.)* falling is a death, but does a unit that falls set off its on-fall effects (the Shattered Sentinel's burst, the Last-Note Chanter's Shields, a splitter's halves, Second Dawn or a rise), and do would-fall saves (Last Watch's Undying) catch it? Proposed: no to all. The void swallows it whole, so pushing a splitter or a riser off an edge is a way past it, and no save catches a fall.
+- **CK. The board's outer edge:** *(Answered: Decision 2.)* stays as it is (a push stops there and stuns), so only the void hexes inside the board drop a unit? Proposed: yes; the islands are drawn inside the board's frame.
+- **CL. Upgrades' data home:** *(Answered: Decision 3.)* a file of their own (`data/enemy_upgrades.json`), or a block in `camps.json` beside the rift modifiers? Proposed: a file of their own.
+
+## Decisions
+
+The playtester, 2026-10-05 (approving the plan: "agreed on all three, let's start 8c-5a"):
+
+1. **Nothing runs when a unit falls into the void** (Question CJ): no on-fall effects (bursts, Shields, a splitter's halves), no rise (Second Dawn, a rise passive), and no would-fall save (Undying) catches it. Pushing a splitter or a riser off an edge is a way past it.
+2. **The board's outer edge stays a wall** (Question CK): a push stops there and stuns; only void hexes inside the board drop a unit.
+3. **Enemy upgrades have their own file, `data/enemy_upgrades.json`** (Question CL).
+
