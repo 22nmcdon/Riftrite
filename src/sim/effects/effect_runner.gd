@@ -166,6 +166,10 @@ static func power_of(effect: EffectDef, unit: UnitState, heal_boost_bp: int = 0)
 ## on_crit) effects. A knockback goes away from `push_from` (an area's
 ## center), or else from the unit.
 static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: EffectSource, effect: EffectDef, victim: UnitState, amount: int, crit: bool, push_from: Vector2i = NO_POINT, power: int = 0) -> void:
+	# Only with enough of its side on the same target (phase 8 part 3, the
+	# Cliffmite).
+	if effect.when_attackers > 0 and attackers_on(sim, unit, victim) < effect.when_attackers:
+		return
 	match effect.type:
 		EffectDef.Type.DAMAGE:
 			var dealt: int = deal_hit(sim, source, victim, amount, crit, power)
@@ -216,8 +220,17 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			else:
 				Mana.gain(sim, victim, amount * Mana.SCALE)
 		EffectDef.Type.KNOCKBACK:
-			Displacement.knockback(sim, victim, unit.pos if push_from == NO_POINT else push_from, unit.forward(), effect.hexes, source)
+			var distance: int = FixedMath.apply_bp(effect.hexes * HexGrid.HEX, effect.distance_bp)
+			if effect.toward == EffectDef.Toward.EDGE:
+				# Toward the nearest edge (phase 8 part 3, the Cliffmite).
+				Displacement.shove_to_edge(sim, victim, unit.pos if push_from == NO_POINT else push_from, unit.forward(), distance, source)
+			else:
+				Displacement.knockback(sim, victim, unit.pos if push_from == NO_POINT else push_from, unit.forward(), effect.hexes, source, distance)
 		EffectDef.Type.PULL:
+			if effect.hook:
+				# All the way to beside the unit (phase 8 part 3, the Gulf Angler).
+				Displacement.hook(sim, victim, unit, source)
+				return
 			match effect.toward:
 				EffectDef.Toward.WATER:
 					# Toward the nearest water (phase 8 part 3, Coiling Eel).
@@ -237,6 +250,8 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			Displacement.charge(sim, unit, victim, effect, source)
 		EffectDef.Type.START_COLLAPSE:
 			Collapse.start_now(sim, source)
+		EffectDef.Type.SEVER:
+			Islands.sever(sim, source, effect)
 		EffectDef.Type.SUMMON:
 			Summons.summon(sim, unit, source, effect, unit.target)
 
@@ -317,6 +332,16 @@ static func amount_of(effect: EffectDef, unit: UnitState, damage: int = 0, sim: 
 	if effect.bonus_bp_per_ally > 0 and sim != null:
 		amount = FixedMath.apply_bp(amount, FixedMath.BP_ONE + effect.bonus_bp_per_ally * allies_near(sim, unit, effect))
 	return Passives.boosted(unit, effect, amount)
+
+
+## How many standing units of `unit`'s side (itself among them) have
+## `victim` as their target (phase 8 part 3, when_attackers).
+static func attackers_on(sim: CombatSim, unit: UnitState, victim: UnitState) -> int:
+	var count: int = 0
+	for ally: UnitState in (sim.heroes if unit.side == EffectSource.Team.HEROES else sim.enemies):
+		if ally.alive and ally.target == victim:
+			count += 1
+	return count
 
 
 ## How many other standing allies (of bonus_kit, if it's set) stand within

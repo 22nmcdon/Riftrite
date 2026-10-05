@@ -188,7 +188,7 @@ func _check_links() -> void:
 		var enemy_hexes: Array[Vector2i] = []
 		for placed: EncounterDef.Placed in encounter.enemies:
 			enemy_hexes.append(placed.hex)
-		errors.append_array(Islands.problems(grid, encounter.void_hexes, encounter.rocks, encounter.water, enemy_hexes, "%s: " % where))
+		errors.append_array(Islands.problems(grid, encounter.void_hexes, encounter.rocks, encounter.water, enemy_hexes, "%s: " % where, encounter.bridges))
 		for placed: EncounterDef.Placed in encounter.enemies:
 			var at: String = "%s at (%d, %d)" % [placed.enemy, placed.hex.x, placed.hex.y]
 			if not enemies.has(placed.enemy):

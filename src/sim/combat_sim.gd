@@ -220,7 +220,7 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 		water = Water.make(grid, _nav, setup.water)
 		has_water = true
 	if not setup.void_hexes.is_empty():
-		islands = Islands.make(grid, _nav, setup.void_hexes, setup.rocks)
+		islands = Islands.make(grid, _nav, setup.void_hexes, setup.rocks, setup.bridges)
 		has_void = true
 	for unit_setup: UnitSetup in setup.units():
 		add_unit(UnitState.from_setup(unit_setup, units.size(), grid, tuning.unit_radius))
@@ -425,6 +425,8 @@ func step() -> void:
 			water.tick(self)
 		Water.mark(self)
 	if has_void:
+		if not islands.severs.is_empty():
+			islands.tick(self)
 		Islands.mark(self)
 	if _aura_ticks.has(tick):
 		_active_auras = Passives.rederive(self, _active_auras)

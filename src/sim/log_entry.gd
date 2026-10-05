@@ -71,6 +71,10 @@ enum Kind {
 	## goes in the deaths step); source: the push, pull, or carry that moved
 	## it there; note "into the void".
 	FELL,
+	## Phase 8 part 3 (Islands, a sever): a bridge is warned (end_tick: when
+	## it breaks), breaks, or reforms; note: which ("warns bridge 2"); amount:
+	## its hexes; to_pos: its first hex's center; source: the sever's.
+	VOID,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -240,6 +244,8 @@ func to_text() -> String:
 			return line + "%s reaches %s" % [target, note]
 		Kind.WATER:
 			return line + "%s %s (%d water hexes)" % [source_text(), note, amount]
+		Kind.VOID:
+			return line + "%s %s%s" % [source_text(), note, " (breaks at %s)" % _format_time(end_tick) if note.begins_with("warns") else ""]
 		Kind.FELL:
 			return line + "%s falls into the void at %s (moved by %s)" % [target, _point(to_pos), source_text()]
 		Kind.MOVE:

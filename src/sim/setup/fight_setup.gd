@@ -15,6 +15,8 @@ var water: Array[Vector2i] = []
 ## The void, by board hex (phase 8 part 3; Islands): never on a rock or
 ## water, each hex once. No unit may be placed on it.
 var void_hexes: Array[Vector2i] = []
+## The bridges a sever can break (8c-5c; Islands): each a list of hexes.
+var bridges: Array[Array] = []
 var seed_value: int = 1
 var act: int = 1
 ## The kits summon effects may use (looked up by id; each id once).
@@ -178,11 +180,11 @@ func validate(content: ContentDb) -> Array[String]:
 			errors.append("water at (%d, %d) is on a rock" % [hex.x, hex.y])
 		elif water.find(hex) < i:
 			errors.append("water at (%d, %d) is listed twice" % [hex.x, hex.y])
-	if not void_hexes.is_empty():
+	if not void_hexes.is_empty() or not bridges.is_empty():
 		var enemy_hexes: Array[Vector2i] = []
 		for unit: UnitSetup in enemies:
 			enemy_hexes.append(Vector2i(unit.col, unit.row))
-		errors.append_array(Islands.problems(grid, void_hexes, rocks, water, enemy_hexes, ""))
+		errors.append_array(Islands.problems(grid, void_hexes, rocks, water, enemy_hexes, "", bridges))
 	var ids: Array[String] = []
 	var by_hex: Dictionary[int, UnitSetup] = {}
 	var shared: Dictionary[int, bool] = {}

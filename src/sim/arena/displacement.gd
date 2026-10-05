@@ -53,10 +53,60 @@ const LEAP_DIRECTIONS: Array[Vector2i] = [
 ]
 
 
-## Knocks `target` back from `from` (the pushing unit's position).
-static func knockback(sim: CombatSim, target: UnitState, from: Vector2i, forward: int, hexes: int, source: EffectSource) -> void:
+## Knocks `target` back from `from` (the pushing unit's position), `hexes`
+## far, or `distance` (plane units) if it's given.
+static func knockback(sim: CombatSim, target: UnitState, from: Vector2i, forward: int, hexes: int, source: EffectSource, distance: int = -1) -> void:
 	var dir: Vector2i = ArenaPlane.direction(from, target.pos, Vector2i(0, ArenaPlane.DIR * forward))
-	push(sim, target, dir, hexes * HexGrid.HEX, source, "knocked back")
+	push(sim, target, dir, distance if distance >= 0 else hexes * HexGrid.HEX, source, "knocked back")
+
+
+## Knocks `target` `distance` toward the nearest edge (phase 8 part 3): the
+## nearest void hex's center or the board's edge; straight back from
+## `from` if it's on the edge already.
+static func shove_to_edge(sim: CombatSim, target: UnitState, from: Vector2i, forward: int, distance: int, source: EffectSource) -> void:
+	var edge: Vector2i = nearest_edge(sim, target.pos)
+	if edge == target.pos:
+		knockback(sim, target, from, forward, 0, source, distance)
+		return
+	push(sim, target, ArenaPlane.direction(target.pos, edge), distance, source, "knocked back toward the edge")
+
+
+## The nearest point to `point` on the board's edge, or the nearest void
+## hex's center if that's nearer (ties: the board's sides in order, then the
+## void in its order).
+static func nearest_edge(sim: CombatSim, point: Vector2i) -> Vector2i:
+	var bounds: Rect2i = sim.grid.bounds()
+	var options: Array[Vector2i] = [Vector2i(bounds.position.x, point.y), Vector2i(bounds.end.x, point.y), Vector2i(point.x, bounds.position.y), Vector2i(point.x, bounds.end.y)]
+	if sim.has_void:
+		for hex: Vector2i in sim.islands.hexes:
+			options.append(sim.grid.center(hex.x, hex.y))
+	var best: Vector2i = options[0]
+	var best_sq: int = ArenaPlane.length_sq(best - point)
+	for option: Vector2i in options:
+		var distance_sq: int = ArenaPlane.length_sq(option - point)
+		if distance_sq < best_sq:
+			best = option
+			best_sq = distance_sq
+	return best
+
+
+## A hook (phase 8 part 3, the Gulf Angler): `target` is carried all the way
+## to the free spot nearest the side of `puller` it comes from, over
+## anything, the void too; a spot is never over the void (CombatSim.fits).
+## With no free spot within 3 hexes it stays (noted "no room").
+static func hook(sim: CombatSim, target: UnitState, puller: UnitState, source: EffectSource) -> void:
+	if _resisted(sim, target, source, "hooked"):
+		return
+	var from: Vector2i = target.pos
+	var beside: Vector2i = ArenaPlane.along(puller.pos, ArenaPlane.direction(puller.pos, target.pos, Vector2i(0, ArenaPlane.DIR * puller.forward())), puller.radius + target.radius)
+	var spot: Vector2i = free_spot_near(sim, target, beside, null, 0)
+	if spot.x < 0:
+		_log(sim, LogEntry.Kind.PUSH, source, target, from, from, "hooked, no room")
+		return
+	if target.flying:
+		target.airborne = false
+	_log(sim, LogEntry.Kind.PUSH, source, target, from, spot, "hooked")
+	_place(sim, target, spot)
 
 
 ## Pulls `target` toward `puller`, no further than touching it.
@@ -79,14 +129,7 @@ static func pull_to(sim: CombatSim, target: UnitState, point: Vector2i, hexes: i
 ## the last clear point; stopped early, it (and a unit it hit) is Stunned.
 ## `how` goes in the log ("knocked back", "pulled").
 static func push(sim: CombatSim, unit: UnitState, dir: Vector2i, distance: int, source: EffectSource, how: String) -> void:
-	# Braced (phase 5c step 6b): an unpushable unit isn't moved, and says so.
-	if unit.aura_bp[AuraDef.Stat.UNPUSHABLE] > 0:
-		var resisted: LogEntry = sim.new_entry(LogEntry.Kind.RESISTED, source)
-		resisted.target = unit.id
-		resisted.status = "push"
-		resisted.status_name = "being " + how
-		resisted.note = "can't be moved"
-		sim.combat_log.add(resisted)
+	if _resisted(sim, unit, source, how):
 		return
 	var from: Vector2i = unit.pos
 	var circles: Array[ArenaPlane.Circle] = []
@@ -118,6 +161,20 @@ static func push(sim: CombatSim, unit: UnitState, dir: Vector2i, distance: int, 
 			stun(sim, unit, source)
 		if hit_unit != null:
 			stun(sim, hit_unit, source)
+
+
+## Braced (phase 5c step 6b): an unpushable unit isn't moved, and says so
+## (true if it resisted).
+static func _resisted(sim: CombatSim, unit: UnitState, source: EffectSource, how: String) -> bool:
+	if unit.aura_bp[AuraDef.Stat.UNPUSHABLE] <= 0:
+		return false
+	var resisted: LogEntry = sim.new_entry(LogEntry.Kind.RESISTED, source)
+	resisted.target = unit.id
+	resisted.status = "push"
+	resisted.status_name = "being " + how
+	resisted.note = "can't be moved"
+	sim.combat_log.add(resisted)
+	return true
 
 
 ## The collision stun.

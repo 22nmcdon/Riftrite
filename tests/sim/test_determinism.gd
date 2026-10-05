@@ -112,10 +112,10 @@ func test_the_fight_order_matters() -> void:
 ## (DODGED, phase 5c step 6b): tests/sim/test_loadout_pieces.gd. A gambit's
 ## arrival (ARRIVE, step 6d): tests/sim/test_gambits.gd. Water changing
 ## (WATER, phase 8 part 3): tests/sim/test_water.gd. A fall into the void
-## (FELL, phase 8 part 3): tests/sim/test_islands.gd.
+## (FELL, phase 8 part 3) and bridges breaking (VOID): tests/sim/test_islands.gd.
 const NOT_YET: Array[LogEntry.Kind] = [LogEntry.Kind.SYNERGY, LogEntry.Kind.DEED_LEVEL, LogEntry.Kind.TACTIC,
 	LogEntry.Kind.ZONE, LogEntry.Kind.SNARE, LogEntry.Kind.WALL, LogEntry.Kind.GUARD, LogEntry.Kind.RISE, LogEntry.Kind.RESISTED,
-	LogEntry.Kind.DODGED, LogEntry.Kind.ARRIVE, LogEntry.Kind.SHARED, LogEntry.Kind.WALL_HIT, LogEntry.Kind.MAX_HP_UP, LogEntry.Kind.WATER, LogEntry.Kind.FELL]
+	LogEntry.Kind.DODGED, LogEntry.Kind.ARRIVE, LogEntry.Kind.SHARED, LogEntry.Kind.WALL_HIT, LogEntry.Kind.MAX_HP_UP, LogEntry.Kind.WATER, LogEntry.Kind.FELL, LogEntry.Kind.VOID]
 ## Statuses only the paths use (phase 4), and only relics (phase 5c step 5a;
 ## Sunder, covered by tests/run/test_relics.gd).
 const PATH_STATUSES: Array[String] = ["warded"]

@@ -255,3 +255,147 @@ func test_content_checks_an_encounters_void() -> void:
 	var bridged: ContentDb = ContentDb.load_texts(texts)
 	assert_eq(bridged.errors, [] as Array[String], "a bridge joins them")
 	assert_eq(bridged.encounters[first["id"]].void_hexes.size(), row.size())
+
+
+# --- 8c-5c-1: bridges that break, the hook, the shove ------------------------
+
+## A heart on the enemies' far row that severs a bridge every `every_ms`
+## (warned 0.5s, broken 2s), over a void row 3 bridged at (0, 3) and (7, 3).
+static func sever_setup(every_ms: int = 1000, lasts_ms: int = 2000) -> FightSetup:
+	var heart: UnitDef = still("heart", {"passives": [{"id": "severing", "name": "Severing", "kind": "ability",
+		"effects": [{"trigger": "on_interval", "interval_ms": every_ms, "type": "sever", "warning_ms": 500, "duration_ms": lasts_ms}]}]})
+	var setup: FightSetup = K.fight([K.at(still("hero"), 3, 1)] as Array[UnitSetup], [K.foe(heart, 3, 6)] as Array[UnitSetup])
+	setup.void_hexes = row_but(3, [0, 7] as Array[int])
+	setup.bridges = [[Vector2i(0, 3)], [Vector2i(7, 3)]] as Array[Array]
+	return setup
+
+
+func test_a_bridge_is_warned_breaks_and_reforms() -> void:
+	var fight: CombatSim = K.sim(sever_setup())
+	var hero: UnitState = fight.unit_by_id("hero")
+	fight.step()
+	hero.pos = fight.grid.center(0, 3)
+	var grid: HexGrid = fight.grid
+	assert_eq(fight.islands.island_of_hex[grid.index(3, 0)], fight.islands.island_of_hex[grid.index(3, 6)], "the bridges join the islands")
+	K.step(fight, 19)
+	var lines: Array[LogEntry] = K.entries(fight, LogEntry.Kind.VOID)
+	assert_eq(lines.size(), 1)
+	assert_eq([lines[0].note, lines[0].source_unit, lines[0].source_ability, lines[0].amount], ["warns bridge 1", "heart", "severing", 1])
+	assert_eq(lines[0].end_tick, lines[0].tick + 10)
+	assert_eq(fight.islands.warned_hexes(), [Vector2i(0, 3)] as Array[Vector2i])
+	assert_false(fight.on_void(hero.pos), "not yet")
+	K.step(fight, 10)
+	lines = K.entries(fight, LogEntry.Kind.VOID)
+	assert_eq(lines[-1].note, "breaks bridge 1")
+	assert_true(fight.on_void(fight.grid.center(0, 3)), "the bridge is void now")
+	var fell: Array[LogEntry] = K.entries(fight, LogEntry.Kind.FELL)
+	assert_eq(fell.size(), 1, "the hero on it fell")
+	assert_eq([fell[0].target, fell[0].source_ability], ["hero", "severing"])
+	assert_eq(fight.islands.island_of_hex[grid.index(0, 3)], -1, "the bridge is part of the void")
+
+
+func test_bridges_break_in_turn_and_come_back() -> void:
+	var setup: FightSetup = sever_setup()
+	setup.heroes = [K.at(still("hero", {"stats": {"hp": 100000}}), 3, 1)] as Array[UnitSetup]
+	var fight: CombatSim = K.sim(setup)
+	K.step(fight, 100)
+	var notes: Array = K.entries(fight, LogEntry.Kind.VOID).map(func(entry: LogEntry) -> String: return entry.note)
+	assert_eq(notes.slice(0, 6), ["warns bridge 1", "breaks bridge 1", "warns bridge 2", "breaks bridge 2", "finds every bridge already breaking", "reforms bridge 1"],
+		"in turn; a third sever finds both breaking")
+	assert_true(notes.has("reforms bridge 2"))
+	assert_true(notes.count("warns bridge 1") >= 2, "and round again")
+
+
+func test_the_next_bridge_is_the_next_in_turn() -> void:
+	# Each bridge is back before the next sever, so only the turn picks.
+	var fight: CombatSim = K.sim(sever_setup(1000, 300))
+	K.step(fight, 70)
+	var warned: Array = K.entries(fight, LogEntry.Kind.VOID).filter(func(entry: LogEntry) -> bool: return entry.note.begins_with("warns")).map(func(entry: LogEntry) -> String: return entry.note)
+	assert_eq(warned.slice(0, 3), ["warns bridge 1", "warns bridge 2", "warns bridge 1"])
+
+
+func test_a_sever_without_bridges_says_so() -> void:
+	var setup: FightSetup = sever_setup()
+	setup.void_hexes.clear()
+	setup.bridges.clear()
+	var fight: CombatSim = K.sim(setup)
+	K.step(fight, 21)
+	assert_eq(K.entries(fight, LogEntry.Kind.VOID)[0].note, "finds no bridge to break")
+	assert_null(fight.islands)
+	# Bridges but no void: the islands come with the first sever.
+	var bare: FightSetup = sever_setup()
+	bare.void_hexes.clear()
+	var later: CombatSim = K.sim(bare)
+	K.step(later, 31)
+	assert_true(later.has_void)
+	assert_true(later.on_void(later.grid.center(0, 3)))
+
+
+func test_bridges_are_checked() -> void:
+	var grid: HexGrid = K.content().tuning.make_grid()
+	var problems: Array[String] = Islands.problems(grid, [Vector2i(1, 3)] as Array[Vector2i], [Vector2i(2, 3)] as Array[Vector2i], [] as Array[Vector2i], [] as Array[Vector2i], "",
+		[[Vector2i(1, 3)], [Vector2i(2, 3)], [Vector2i(9, 9)], [], [Vector2i(4, 3)], [Vector2i(4, 3)]] as Array[Array])
+	assert_eq(problems, ["bridge 1's hex (1, 3) is on a rock, water, or the void", "bridge 2's hex (2, 3) is on a rock, water, or the void", "bridge 3's hex (9, 9) is off the board",
+		"bridge 4 has no hexes", "bridge 6's hex (4, 3) is in another bridge too"] as Array[String])
+
+
+func test_a_hook_carries_its_catch_beside_it() -> void:
+	var angler: UnitDef = still("angler", {"stats": {"range": 5}, "basic_attack": {"id": "hook", "name": "Hook", "cooldown_ms": 1000,
+		"effects": [{"type": "pull", "to": "beside", "target": "target"}]}})
+	var setup: FightSetup = K.fight([K.at(still("hero"), 3, 1)] as Array[UnitSetup], [K.foe(angler, 3, 5)] as Array[UnitSetup])
+	setup.void_hexes = row_but(3, [7] as Array[int])
+	var fight: CombatSim = K.sim(setup)
+	K.step(fight, 30)
+	var pushes: Array[LogEntry] = K.entries(fight, LogEntry.Kind.PUSH)
+	assert_false(pushes.is_empty())
+	assert_eq(pushes[0].note, "hooked")
+	var hero: UnitState = fight.unit_by_id("hero")
+	assert_false(fight.on_void(hero.pos), "never over the void")
+	assert_true(ArenaPlane.distance(hero.pos, fight.unit_by_id("angler").pos) <= 400, "beside it, across the gap")
+	assert_eq(hero.island, fight.unit_by_id("angler").island)
+	assert_eq(K.entries(fight, LogEntry.Kind.FELL), [] as Array[LogEntry])
+	# The unpushable charm: it can't be hooked.
+	var braced: UnitDef = still("hero", {"passives": [{"id": "braced", "name": "Braced", "kind": "aura", "aura": {"stat": "unpushable", "value": 1, "target": "holder"}}]})
+	setup.heroes = [K.at(braced, 3, 1)] as Array[UnitSetup]
+	var held: CombatSim = K.sim(setup)
+	K.step(held, 30)
+	assert_eq(K.entries(held, LogEntry.Kind.PUSH), [] as Array[LogEntry])
+	assert_eq(K.entries(held, LogEntry.Kind.RESISTED)[0].status_name, "being hooked")
+
+
+## Cliffmites that shove the hero they bite half a hex toward the nearest
+## edge while `needed` of them are on it.
+static func mite(unit_id: String, needed: int) -> UnitDef:
+	return still(unit_id, {"stats": {"speed": 2}, "basic_attack": {"id": "bite", "name": "Bite", "cooldown_ms": 500,
+		"effects": [{"type": "damage", "amount": 1, "target": "target"},
+			{"type": "knockback", "hexes": 1, "distance_bp": 5000, "toward": "edge", "when_attackers": needed, "target": "target"}]}})
+
+
+func test_a_crowd_shoves_toward_the_edge() -> void:
+	for count: int in [2, 3]:
+		var mites: Array[UnitSetup] = []
+		for i: int in count:
+			mites.append(K.foe(mite("mite", 3), 2 + i, 4, "mite" if i == 0 else "mite#%d" % (i + 1)))
+		var setup: FightSetup = K.fight([K.at(still("hero"), 3, 2)] as Array[UnitSetup], mites)
+		setup.void_hexes = row_but(0, [] as Array[int])
+		var fight: CombatSim = K.sim(setup)
+		K.step(fight, 120)
+		var shoves: Array[LogEntry] = K.entries(fight, LogEntry.Kind.PUSH)
+		if count == 2:
+			assert_eq(shoves, [] as Array[LogEntry], "two on it aren't enough")
+			continue
+		assert_false(shoves.is_empty(), "three on it shove")
+		assert_eq(shoves[0].note.get_slice(",", 0), "knocked back toward the edge")
+		assert_true(shoves[0].to_pos.y < shoves[0].from_pos.y, "toward the void behind it, not away from the mite")
+		assert_eq(ArenaPlane.distance(shoves[0].from_pos, shoves[0].to_pos), 500, "half a hex")
+
+
+func test_the_new_keys_are_refused_where_they_dont_belong() -> void:
+	for data: Dictionary in [{"type": "pull", "to": "beside", "hexes": 2, "target": "target"}, {"type": "pull", "hexes": 1, "toward": "edge", "target": "target"},
+			{"type": "knockback", "hexes": 1, "toward": "water", "target": "target"}, {"type": "sever", "duration_ms": 1000}]:
+		var errors: Array[String] = []
+		EffectDef.read(DataReader.new(data, "test", errors))
+		assert_false(errors.is_empty(), "refused: %s" % data)
+	var info: ContentDb = K.content()
+	var lines: Array[String] = UnitInfo.effect_numbers(mite("mite", 3).basic_attack.effects, mite("mite", 3), info)
+	assert_eq(lines[-1], "shoves 50% of 1 hex toward the nearest edge (with 3 of its side on the target)")

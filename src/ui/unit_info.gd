@@ -503,6 +503,8 @@ static func _effect_text_plain(effect: EffectDef, kit: UnitDef, content: Content
 			text += " to allies"
 	if effect.every > 1 and effect.trigger == EffectDef.Trigger.ON_FIRE:
 		text = "every %s: %s" % [_nth(effect.every, "fire"), text]
+	if effect.when_attackers > 0:
+		text += " (with %d of its side on the target)" % effect.when_attackers
 	return text
 
 
@@ -622,8 +624,13 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 				wall += ", up to %d at once" % effect.max_standing
 			return wall
 		EffectDef.Type.KNOCKBACK:
-			return "knocks back %s" % hexes(effect.hexes)
+			var far: String = hexes(effect.hexes) if effect.distance_bp == FixedMath.BP_ONE else "%s of %s" % [ValueBreakdown._percent(effect.distance_bp), hexes(effect.hexes)]
+			if effect.toward == EffectDef.Toward.EDGE:
+				return "shoves %s toward the nearest edge" % far
+			return "knocks back %s" % far
 		EffectDef.Type.PULL:
+			if effect.hook:
+				return "hooks the target all the way to beside it"
 			var way: String = ["", " toward the nearest water", " toward the area's middle"][effect.toward]
 			return "pulls %s%s%s" % [hexes(effect.hexes), way, _to_all(effect)]
 		EffectDef.Type.FLOOD:
@@ -653,6 +660,8 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 			return text
 		EffectDef.Type.START_COLLAPSE:
 			return "starts Rift Collapse"
+		EffectDef.Type.SEVER:
+			return "the next bridge breaks after %s, for %s" % [seconds(effect.warning_ticks), seconds(effect.zone_ticks)]
 		EffectDef.Type.SUMMON:
 			return "summons %d %s" % [effect.count, _unit_name(effect.summon_kit, content)]
 	return ""

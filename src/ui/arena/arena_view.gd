@@ -40,7 +40,8 @@ extends Control
 ##   - The void (phase 8 part 3): its hexes are open sky between the
 ##     islands, with no ground, zone, or hex line, from the setup while
 ##     placing and from the fight's islands each frame. A unit that falls
-##     shows "Falls", then its ghost (FightFx).
+##     shows "Falls", then its ghost (FightFx). A bridge warned before it
+##     breaks (8c-5c) is tinted red until it does.
 ##   - Paths (docs/plans/rebuild-phase4-paths.md, section 6): a transformed
 ##     hero stands as its path's figure; a vowed one keeps its base figure.
 ##     Either way the path is named under it while placing, with its
@@ -96,6 +97,8 @@ const WATER_EDGE := Color(0.72, 0.88, 0.98, 0.55)
 ## 7's art), and the island's lip round them.
 const VOID_FILL := Color("0a0d1c")
 const VOID_EDGE := Color(0.62, 0.52, 0.86, 0.5)
+## A bridge warned before it breaks (8c-5c).
+const WARNED_BRIDGE := Color(0.9, 0.35, 0.3, 0.45)
 
 var mode: Mode = Mode.PLACEMENT
 var grid: HexGrid
@@ -109,6 +112,8 @@ var rocks: Array[ArenaPlane.Circle] = []
 var water: Array[Vector2i] = []
 ## The void's hexes, as the setup or the fight has them now.
 var void_hexes: Array[Vector2i] = []
+## The bridges warned and not yet broken (8c-5c), from the fight's islands.
+var warned_bridges: Array[Vector2i] = []
 ## One ruin per rock, in the setup's order.
 var rock_props: Array[RockProp] = []
 ## One per unit, in the fight's order.
@@ -256,6 +261,7 @@ func sync_fight(player: FightPlayer) -> void:
 		water = player.sim.water.hexes
 	if player.sim.has_void:
 		void_hexes = player.sim.islands.hexes
+		warned_bridges = player.sim.islands.warned_hexes()
 	for unit: UnitState in player.sim.units:
 		var unit_token: UnitToken = token(unit.id)
 		if unit_token == null:
@@ -544,6 +550,8 @@ func _draw() -> void:
 		var lip: PackedVector2Array = sky.duplicate()
 		lip.append(sky[0])
 		draw_polyline(lip, VOID_EDGE, 2.0, true)
+	for hex: Vector2i in warned_bridges:
+		draw_colored_polygon(hex_corners(grid.center(hex.x, hex.y)), WARNED_BRIDGE)
 	for index: int in grid.size():
 		var col: int = grid.col_of(index)
 		var row: int = grid.row_of(index)
