@@ -28,6 +28,8 @@ extends RefCounted
 ##   - A zone that follows (phase 5c step 7d, Chasing Storm) moves its center
 ##     up to 1 hex toward the biggest group of its caster's enemies before
 ##     each pulse after the first; that pulse's AREA_LANDED is noted "moved".
+##     With "follows": "nearest" (8c-5c, the Drifting Moth) it moves toward
+##     the caster's enemy nearest its middle instead.
 ##   - A placed lantern (phase 5c step 7d, First Lantern) is a zone cast at
 ##     a point the player chose (cast_at), at the fight's start.
 ## Heroes never step out of a warned area (decided): placement is the answer.
@@ -136,13 +138,26 @@ static func _pulse_zones(sim: CombatSim) -> void:
 ## Moves a following zone up to 1 hex toward the biggest group of its
 ## caster's enemies (Chasing Storm). Returns true if it moved.
 static func _follow(sim: CombatSim, zone: Pending) -> bool:
-	var group: UnitState = Targeting.pick(sim, zone.unit, "largest_group", -1)
+	var group: UnitState = _nearest_enemy(sim, zone) if zone.effect.follows_nearest else Targeting.pick(sim, zone.unit, "largest_group", -1)
 	if group == null or group.pos == zone.origin:
 		return false
 	var step: int = mini(HexGrid.HEX, ArenaPlane.distance(zone.origin, group.pos))
 	zone.origin = ArenaPlane.along(zone.origin, ArenaPlane.direction(zone.origin, group.pos, Vector2i(0, ArenaPlane.DIR)), step)
 	zone.push_from = zone.origin
 	return true
+
+
+## The enemy of the zone's unit nearest the zone's middle (8c-5c, the
+## Drifting Moth; ties: the first in the fight's order).
+static func _nearest_enemy(sim: CombatSim, zone: Pending) -> UnitState:
+	var best: UnitState = null
+	var best_sq: int = -1
+	for enemy: UnitState in sim.targetable_enemies_of(zone.unit):
+		var distance_sq: int = ArenaPlane.length_sq(enemy.pos - zone.origin)
+		if best_sq < 0 or distance_sq < best_sq:
+			best = enemy
+			best_sq = distance_sq
+	return best
 
 
 static func _land(sim: CombatSim, area: Pending, note: String = "") -> void:

@@ -216,6 +216,25 @@ static func leap(sim: CombatSim, unit: UnitState, target: UnitState, effect: Eff
 	return true
 
 
+## `unit` leaps back to the free spot nearest where it started the fight
+## (phase 8 part 3, the Gloam Hound), logged as a LEAP at itself; with no
+## spot within 3 hexes of it, it fails like any leap.
+static func leap_home(sim: CombatSim, unit: UnitState, effect: EffectDef, source: EffectSource) -> void:
+	var spot: Vector2i = free_spot_near(sim, unit, unit.start_pos, null, 0)
+	if spot.x < 0:
+		leap_failed(sim, unit, unit, source)
+		return
+	var from: Vector2i = unit.pos
+	var land_ticks: int = effect.land_ticks if effect.land_ticks >= 0 else sim.tuning.leap_land_ticks
+	var entry: LogEntry = _log(sim, LogEntry.Kind.LEAP, source, unit, from, spot, "back to where it started")
+	entry.end_tick = sim.tick + land_ticks
+	unit.airborne = false
+	_place(sim, unit, spot)
+	unit.landing_until = sim.tick + land_ticks
+	if not sim.snares.is_empty():
+		Snares.snag(sim, unit, from, spot)
+
+
 static func leap_failed(sim: CombatSim, unit: UnitState, target: UnitState, source: EffectSource) -> void:
 	var entry: LogEntry = _log(sim, LogEntry.Kind.LEAP, source, target, unit.pos, unit.pos, "no room to land")
 	entry.end_tick = sim.tick

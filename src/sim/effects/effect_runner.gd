@@ -57,7 +57,7 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 	var ability: AbilityDef = state.def
 	var source: EffectSource = state.source
 	var leap: EffectDef = ability.leap_effect() if target != null else null
-	if leap != null and Displacement.leap_spot(sim, unit, target, leap.hexes).x < 0:
+	if leap != null and not leap.leap_home and Displacement.leap_spot(sim, unit, target, leap.hexes).x < 0:
 		if log_failure:
 			Displacement.leap_failed(sim, unit, target, source)
 		return false
@@ -243,7 +243,10 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 				_:
 					Displacement.pull(sim, victim, unit, effect.hexes, source)
 		EffectDef.Type.LEAP:
-			Displacement.leap(sim, unit, victim, effect, source)
+			if effect.leap_home:
+				Displacement.leap_home(sim, unit, effect, source)
+			else:
+				Displacement.leap(sim, unit, victim, effect, source)
 		EffectDef.Type.HOP:
 			Displacement.hop(sim, victim, source)
 		EffectDef.Type.CHARGE:
@@ -528,6 +531,19 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 		sim.combat_log.add(dodged)
 		sim.last_dodged = true
 		return 0
+	# Dazzled (phase 8 part 3, the Dazzling Moth): its basic attack's hits
+	# miss a share of the time, rolled on the fight's seeded RNG. Logged as
+	# DODGED, noted "missed".
+	if source.relic_side < 0 and not source.unit_id.is_empty():
+		var striker: UnitState = sim.unit_by_id(source.unit_id)
+		if striker != null and striker.aura_bp[AuraDef.Stat.MISS_BP] > 0 and source.ability_id == striker.def.basic_attack.id \
+				and sim.rng.roll_bp(striker.aura_bp[AuraDef.Stat.MISS_BP]):
+			var missed: LogEntry = sim.new_entry(LogEntry.Kind.DODGED, source)
+			missed.target = target.id
+			missed.note = "missed"
+			sim.combat_log.add(missed)
+			sim.last_dodged = true
+			return 0
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.DAMAGE, source)
 	entry.note = note
 	if sim.damage_payoffs:

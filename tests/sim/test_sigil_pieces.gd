@@ -72,7 +72,7 @@ func test_an_echo_fires_again_weaker() -> void:
 func test_sigil_mods_are_checked() -> void:
 	var errors: Array[String] = []
 	KitMod.read(DataReader.new({"also_fires": [{"kind": "mana"}]}, "mod", errors))
-	assert_string_contains(errors[0], "can also fire on hp_below or ally_falls")
+	assert_string_contains(errors[0], "can also fire on hp_below, ally_falls, or every")
 	errors.clear()
 	KitMod.read(DataReader.new({"echo": {"after_ms": 1000, "share_pct": 150}}, "mod", errors))
 	assert_eq(errors.size(), 1)

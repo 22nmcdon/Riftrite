@@ -27,7 +27,8 @@ extends RefCounted
 ## A sigil adds (phase 5, AbilityDef):
 ##   - extra triggers (also): hp_below (once) and ally_falls queue fires like
 ##     their own kinds, free of mana, whatever the main trigger; the FIRE
-##     entry notes why ("an ally fell").
+##     entry notes why ("an ally fell"). Phase 8 part 3: every (a fire every
+##     so often, from the fight's start but not at it; noted "again").
 ##   - an echo: echo_ticks after each fire, the echo (a weaker copy, its own
 ##     source, "Mend (Echo)") fires at a fresh target by the same rule and
 ##     reach, even while Stunned; with none, it's lost. A fire while an echo
@@ -53,6 +54,10 @@ static func act(sim: CombatSim, unit: UnitState) -> bool:
 		return false
 	if signature.also_waiting:
 		_check_also(unit)
+	# An extra "every" trigger (phase 8 part 3, the Gloam Hound).
+	if signature.every_ticks > 0 and sim.tick % signature.every_ticks == 0:
+		signature.pending += 1
+		signature.pending_note = "again"
 	var trigger: TriggerDef = signature.def.trigger
 	match trigger.kind:
 		TriggerDef.Kind.MANA:

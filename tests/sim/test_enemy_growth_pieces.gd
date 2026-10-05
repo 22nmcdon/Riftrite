@@ -208,3 +208,102 @@ func test_the_returning_specializations() -> void:
 	K.step(fight, 2)
 	assert_not_null(Statuses.find(fight.unit_by_id("hero"), "slow"), "Shattered: heroes within 2 hexes are Slowed")
 	assert_null(Statuses.find(fight.unit_by_id("away"), "slow"), "not those farther")
+
+
+# --- 8c-5c-2: misses, drifting dust, leaping back out ------------------------
+
+func test_ember_blind_attacks_miss_some_of_the_time() -> void:
+	var striker: UnitDef = still("striker", {"basic_attack": {"cooldown_ms": 50, "effects": [{"type": "damage", "amount": 1, "target": "target"}]}})
+	var fight: CombatSim = _fight(still("hero"), [striker] as Array[UnitDef])
+	fight.step()
+	Statuses.apply(fight, fight.unit_by_id("striker"), "ember_blind", 1, 0, _from("hero"))
+	assert_eq(fight.unit_by_id("striker").aura_bp[AuraDef.Stat.MISS_BP], 3000)
+	# Only its basic attack's hits miss: a signature's never do.
+	for i: int in 40:
+		EffectRunner.deal_hit(fight, EffectSource.make("striker", "boom", "Boom"), fight.unit_by_id("hero"), 1, false)
+	assert_eq(K.entries(fight, LogEntry.Kind.DODGED, "striker"), [] as Array[LogEntry], "a signature's hit never misses")
+	K.step(fight, 60)
+	var missed: Array[LogEntry] = K.entries(fight, LogEntry.Kind.DODGED, "striker").filter(func(entry: LogEntry) -> bool: return entry.note == "missed")
+	var hits: Array[LogEntry] = K.entries(fight, LogEntry.Kind.DAMAGE, "striker")
+	assert_between(missed.size(), 5, 35, "about 30%% of %d attacks" % (missed.size() + hits.size()))
+	assert_gt(hits.size(), missed.size())
+	assert_string_contains(missed[0].to_text(), "(dazzled)")
+	var after: int = missed[-1].tick
+	K.step(fight, 60)
+	var later: Array[LogEntry] = K.entries(fight, LogEntry.Kind.DODGED, "striker").filter(func(entry: LogEntry) -> bool: return entry.tick > after + 1 and entry.tick > 3 * 20 + 1)
+	assert_eq(later, [] as Array[LogEntry], "none once it's gone")
+
+
+func test_the_moths_dust_drifts_and_dazzles() -> void:
+	for spec_id: String in ["drifting_moth", "dazzling_moth"]:
+		var moth: UnitDef = _specialized("cinder_moth", spec_id)
+		var fight: CombatSim = K.sim(K.fight([K.at(still("near"), 2, 2), K.at(still("far"), 6, 0)] as Array[UnitSetup], [K.foe(moth, 3, 5)] as Array[UnitSetup]))
+		fight.step()
+		var unit: UnitState = fight.unit_by_id("cinder_moth")
+		unit.mana = unit.mana_cap
+		K.step(fight, 3)
+		# The hero it was cast at steps away, so the dust has somewhere to go.
+		fight.unit_by_id("near").pos = fight.grid.center(0, 1)
+		K.step(fight, 60)
+		if spec_id == "drifting_moth":
+			var drifts: Array[LogEntry] = K.entries(fight, LogEntry.Kind.AREA_LANDED, "cinder_moth").filter(func(entry: LogEntry) -> bool: return entry.note == "moved")
+			assert_false(drifts.is_empty(), "the dust drifts")
+			assert_true(K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "cinder_moth").any(func(entry: LogEntry) -> bool: return entry.status == "burn" and entry.amount == 1), "burning as it passes")
+		else:
+			assert_true(K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "cinder_moth").any(func(entry: LogEntry) -> bool: return entry.status == "ember_blind"), "the heroes caught are Ember-Blind")
+
+
+func test_a_zone_follows_the_nearest_enemy() -> void:
+	var caster: UnitDef = still("caster", {"stats": {"range": 9}, "signature": {"id": "dust", "name": "Dust", "trigger": {"kind": "fight_start"}, "targeting": "nearest", "max_range": 9,
+		"effects": [{"type": "area", "shape": {"kind": "circle", "radius": 1}, "anchor": "target", "duration_ms": 3000, "every_ms": 500, "follows": "nearest", "hits": "enemies",
+			"effects": [{"type": "damage", "amount": 1, "target": "target"}]}]}})
+	var setup: FightSetup = K.fight([K.at(still("near"), 3, 2), K.at(still("crowd"), 7, 0), K.at(still("crowd2"), 6, 0)] as Array[UnitSetup], [K.foe(caster, 3, 5)] as Array[UnitSetup])
+	var fight: CombatSim = K.sim(setup)
+	fight.step()
+	var near: UnitState = fight.unit_by_id("near")
+	near.pos = fight.grid.center(0, 1)
+	K.step(fight, 40)
+	var landed: Array[LogEntry] = K.entries(fight, LogEntry.Kind.AREA_LANDED, "caster")
+	assert_gt(landed.size(), 3)
+	assert_lt(ArenaPlane.distance(landed[-1].from_pos, near.pos), ArenaPlane.distance(landed[0].from_pos, near.pos), "toward the hero nearest it, not the biggest group")
+
+
+func test_the_gloam_hound_leaps_back_out_and_pounces_again() -> void:
+	var hound: UnitDef = _specialized("rift_hound", "gloam_hound")
+	var fight: CombatSim = K.sim(K.fight([K.at(still("front"), 3, 2), K.at(still("back"), 4, 0)] as Array[UnitSetup], [K.foe(hound, 3, 5)] as Array[UnitSetup]))
+	var start: Vector2i = fight.unit_by_id("rift_hound").pos
+	K.step(fight, 20 * 12)
+	var fires: Array[LogEntry] = K.entries(fight, LogEntry.Kind.FIRE, "rift_hound").filter(func(entry: LogEntry) -> bool: return entry.source_ability == "pounce")
+	assert_eq(fires.size(), 2, "at the start, and again at 8s")
+	assert_eq(fires[1].tick, 160)
+	assert_eq(fires[1].note, "again")
+	var homes: Array[LogEntry] = K.entries(fight, LogEntry.Kind.LEAP, "rift_hound").filter(func(entry: LogEntry) -> bool: return entry.note == "back to where it started")
+	assert_eq(homes.size(), 2)
+	assert_eq(homes[0].tick, fires[0].tick + 60, "3s after the first Pounce")
+	assert_eq(homes[1].tick, fires[1].tick + 60)
+	assert_true(ArenaPlane.distance(homes[0].to_pos, start) <= 300, "back where it started")
+	assert_eq([homes[0].source_ability, homes[0].target], ["gloam_return", "rift_hound"])
+
+
+func test_a_delayed_effect_waits_and_needs_its_unit_standing() -> void:
+	var hound: UnitDef = _specialized("rift_hound", "gloam_hound")
+	var fight: CombatSim = K.sim(K.fight([K.at(still("front"), 3, 2), K.at(still("back"), 4, 0)] as Array[UnitSetup], [K.foe(hound, 3, 5), K.foe(still("other"), 6, 6)] as Array[UnitSetup]))
+	K.step(fight, 20)
+	assert_eq(fight.delayed.size(), 1, "the leap back waits")
+	fight.unit_by_id("rift_hound").hp = 0
+	K.step(fight, 60)
+	assert_eq(fight.delayed.size(), 0)
+	assert_false(K.entries(fight, LogEntry.Kind.LEAP, "rift_hound").any(func(entry: LogEntry) -> bool: return entry.note == "back to where it started"), "not once it has fallen")
+
+
+func test_the_new_words() -> void:
+	var hound: UnitDef = _specialized("rift_hound", "gloam_hound")
+	var leap_back: EffectDef = hound.passives[-1].ability.effects[0]
+	assert_eq(UnitInfo.passive_trigger_text(leap_back), "Every ability, 3s later")
+	var mod: KitMod = _content.specializations["gloam_hound"].mod
+	var parts: Array[String] = ModInfo.mod_parts(mod, _content.enemies["rift_hound"].kit, _content)
+	assert_true(parts.has("Signature also fires: every 8s"), str(parts))
+	for data: Dictionary in [{"type": "leap", "to": "start", "target": "target"}, {"trigger": "on_fire", "type": "damage", "amount": 1, "target": "target", "delay_ms": 1000}]:
+		var errors: Array[String] = []
+		EffectDef.read(DataReader.new(data, "test", errors))
+		assert_false(errors.is_empty(), "refused: %s" % data)

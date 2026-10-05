@@ -53,6 +53,9 @@ var island: int = -1
 ## True once it has fallen into the void (Islands.check_fall): it acts no
 ## more, and goes in the deaths step as a fall nothing catches.
 var fell: bool = false
+## Where it stood as it joined the fight (a leap back to the start, phase 8
+## part 3).
+var start_pos: Vector2i = Vector2i.ZERO
 ## Submerge (phase 8 part 3, the trait): it submerges, it's under now (at
 ## the last mark), and the tick it may go under again (after an attack).
 var submerges: bool = false

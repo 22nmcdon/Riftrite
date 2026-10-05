@@ -330,7 +330,7 @@ static func read(reader: DataReader) -> KitMod:
 	for trigger_reader: DataReader in reader.opt_object_array("also_fires"):
 		var trigger: TriggerDef = TriggerDef.read(trigger_reader)
 		if not TriggerDef.ALSO_KINDS.has(trigger.kind):
-			reader.error("also_fires: a signature can also fire on hp_below or ally_falls, not %s" % TriggerDef.KIND_NAMES[trigger.kind])
+			reader.error("also_fires: a signature can also fire on hp_below, ally_falls, or every, not %s" % TriggerDef.KIND_NAMES[trigger.kind])
 		mod.also_fires.append(trigger)
 	if reader.has("echo"):
 		var echo_reader: DataReader = reader.req_object("echo")

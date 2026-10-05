@@ -50,6 +50,16 @@ class Listener:
 	var ran_at: int = -1
 
 
+## An event effect waiting out its delay (EffectDef.delay_ticks).
+class Delayed:
+	var unit: UnitState
+	var listener: Listener
+	var other: UnitState
+	var damage: int
+	var chain: int
+	var at: int
+
+
 ## AuraDef stats with no aura: x1 multipliers, +0 additions.
 static func no_auras() -> Array[int]:
 	var values: Array[int] = []
@@ -471,7 +481,30 @@ static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, 
 		if effect.cooldown_per_unit_ticks > 0 and other != null:
 			listener.last_for[other.id] = sim.tick
 		listener.ran_at = sim.tick
+		if effect.delay_ticks > 0:
+			# It runs later (phase 8 part 3, the Gloam Hound): run_delayed.
+			var waiting := Delayed.new()
+			waiting.unit = unit
+			waiting.listener = listener
+			waiting.other = other
+			waiting.damage = damage
+			waiting.chain = chain
+			waiting.at = sim.tick + effect.delay_ticks
+			sim.delayed.append(waiting)
+			continue
 		_run(sim, unit, listener, other, damage, chain)
+
+
+## The event effects whose delay is up run, in the order they were set off,
+## if their unit still stands (phase 8 part 3).
+static func run_delayed(sim: CombatSim) -> void:
+	var due: Array = sim.delayed.filter(func(waiting: Delayed) -> bool: return sim.tick >= waiting.at)
+	if due.is_empty():
+		return
+	sim.delayed = sim.delayed.filter(func(waiting: Delayed) -> bool: return sim.tick < waiting.at)
+	for waiting: Delayed in due:
+		if waiting.unit.alive:
+			_run(sim, waiting.unit, waiting.listener, waiting.other if waiting.other != null and waiting.other.alive else null, waiting.damage, waiting.chain)
 
 
 ## Runs the on_interval passives that are due, the on_ally_below_hp ones

@@ -165,6 +165,36 @@
             }
           ]
         }
+      },
+      {
+        "id": "gloam_hound",
+        "name": "Gloam",
+        "text": "Three seconds after each Pounce it leaps back to where it started, and every 8 seconds it Pounces again.",
+        "mod": {
+          "also_fires": [
+            {
+              "kind": "every",
+              "every_ms": 8000
+            }
+          ],
+          "passives": [
+            {
+              "id": "gloam_return",
+              "name": "Back into the Gloam",
+              "kind": "ability",
+              "text": "A moment after it Pounces, it leaps back to where it started the fight.",
+              "effects": [
+                {
+                  "trigger": "on_ability",
+                  "delay_ms": 3000,
+                  "type": "leap",
+                  "to": "start",
+                  "target": "self"
+                }
+              ]
+            }
+          ]
+        }
       }
     ],
     "kit": {
@@ -185,6 +215,61 @@
     "name": "Cinder Moth",
     "archetype": "caster",
     "threat": "Burns whoever stands together",
+    "specializations": [
+      {
+        "id": "drifting_moth",
+        "name": "Drifting",
+        "text": "Its Ember Dust drifts toward the nearest hero for 2 seconds, burning whoever it passes over.",
+        "mod": {
+          "on": [
+            {
+              "slot": "signature",
+              "add_effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 1
+                  },
+                  "anchor": "target",
+                  "duration_ms": 2000,
+                  "every_ms": 500,
+                  "follows": "nearest",
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "apply_status",
+                      "status": "burn",
+                      "stacks": 1,
+                      "target": "target"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "dazzling_moth",
+        "name": "Dazzling",
+        "text": "Heroes caught in its Ember Dust miss part of their attacks for a few seconds.",
+        "mod": {
+          "on": [
+            {
+              "slot": "signature",
+              "add_to_areas": [
+                {
+                  "type": "apply_status",
+                  "status": "ember_blind",
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
     "kit": {
       "stats": {"hp": 260, "atk": 8, "speed": 2, "range": 3},
       "traits": ["flying"],

@@ -71,7 +71,9 @@ extends RefCounted
 ##                 "radius" of the unit), or all (every hex but the rocks).
 ##                 Logged as WATER
 ##   leap:         max_hexes, optional land_ms (tuning's leap_land_ms); the
-##                 unit jumps to a free spot touching its target
+##                 unit jumps to a free spot touching its target. Phase 8
+##                 part 3: "to": "start" (on "self", no max_hexes) leaps it
+##                 back to the free spot nearest where it started the fight
 ##   charge:       hexes, optional knockback (hexes); the unit runs straight
 ##                 at its target and knocks back the first enemy it touches.
 ##                 Phase 8 part 3 (the Avalanche Guardian): "carries": true
@@ -418,6 +420,12 @@ var hook: bool = false
 ## this many standing units of the unit's side (itself among them) have its
 ## target as theirs (0: always).
 var when_attackers: int = 0
+## An event effect (phase 8 part 3, the Gloam Hound): it runs this long
+## after its event (ticks; 0: at once), if its unit still stands.
+var delay_ticks: int = 0
+## leap (phase 8 part 3, the Gloam Hound): back to where the unit started
+## the fight (its target is "self"), the free spot nearest it.
+var leap_home: bool = false
 ## flood (phase 8 part 3): its mode and radius (hexes); how long a circle
 ## lasts is zone_ticks (0: for good); anchor (target or self).
 var flood_mode: FloodMode = FloodMode.CIRCLE
@@ -538,6 +546,8 @@ var max_standing: int = 0
 ## charge over it springs (Snag); and a snare set under its side's
 ## front-most unit, of the kit's placed snares' kind (Guarded Ground).
 var follows: bool = false
+## (8c-5c, the Drifting Moth) it follows the enemy nearest it instead.
+var follows_nearest: bool = false
 ## An area (phase 8 part 2, Stormline): each enemy it hits after the first,
 ## nearest its origin first, deals this much more damage than the one
 ## before ("per_enemy_bp": +10% a step is 1000). 0: none.
@@ -637,7 +647,12 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 					def.anchor = maxi(ANCHOR_NAMES.find(reader.opt_string_choice("anchor", "target", ANCHOR_NAMES.slice(0, 2))), 0) as Anchor
 					def.zone_ticks = reader.opt_ticks("duration_ms", 0)
 			Type.LEAP:
-				def.hexes = reader.req_int("max_hexes", 1)
+				def.leap_home = reader.opt_string_choice("to", "", ["start"]) == "start"
+				if def.leap_home:
+					if target_name != "self":
+						reader.error("a leap back to the start goes on \"self\"")
+				else:
+					def.hexes = reader.req_int("max_hexes", 1)
 				if reader.has("land_ms"):
 					def.land_ticks = reader.req_ticks("land_ms")
 			Type.CHARGE:
@@ -740,7 +755,7 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 	# nearest enemy, as the hop_away trait does; it aims at the unit itself.
 	if def.type == Type.HOP and not target_name.is_empty() and def.target != Target.SELF:
 		reader.error("a hop moves the unit itself, so it needs \"target\": \"self\"")
-	if MOVES_SELF.has(def.type) and not type_name.is_empty() and not target_name.is_empty():
+	if MOVES_SELF.has(def.type) and not def.leap_home and not type_name.is_empty() and not target_name.is_empty():
 		if def.target != Target.TARGET or def.trigger != Trigger.ON_FIRE:
 			reader.error("%s moves the unit itself to its target, so it needs \"target\": \"target\" and the on_fire trigger" % type_name)
 
@@ -779,7 +794,9 @@ static func _read_area(def: EffectDef, reader: DataReader) -> void:
 	def.warning_ticks = reader.opt_ticks("warning_ms", 0)
 	if def.zone_ticks > 0 and def.warning_ticks > 0:
 		reader.error("a zone lands from the moment it's cast, so it takes no warning_ms")
-	def.follows = reader.opt_string_choice("follows", "", ["largest_group"]) == "largest_group"
+	var follow_rule: String = reader.opt_string_choice("follows", "", ["largest_group", "nearest"])
+	def.follows = not follow_rule.is_empty()
+	def.follows_nearest = follow_rule == "nearest"
 	if def.follows and def.zone_ticks == 0:
 		reader.error("only a zone (an area with a duration) follows")
 	def.hits = maxi(HITS_NAMES.find(reader.req_choice("hits", HITS_NAMES)), 0) as Hits
@@ -889,6 +906,7 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 		def.every = reader.opt_int("every", 1, 1)
 	if EVENT_TRIGGERS.has(def.trigger):
 		def.once = reader.opt_bool("once", false)
+		def.delay_ticks = reader.opt_ticks("delay_ms", 0, FixedMath.MS_PER_TICK)
 		def.cooldown_per_unit_ticks = reader.opt_ticks("cooldown_per_unit_ms", 0, FixedMath.MS_PER_TICK)
 		def.cooldown_ticks = reader.opt_ticks("cooldown_ms", 0, FixedMath.MS_PER_TICK)
 		if def.cooldown_per_unit_ticks > 0 and not EVENT_VS_TRIGGERS.has(def.trigger):

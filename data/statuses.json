@@ -258,6 +258,14 @@
     "auras": [{"stat": "atk_bp", "value": 12000}]
   },
   {
+    "_note": "Its basic attack's hits miss 30% of the time while it lasts (the Dazzling Moth's Ember Dust; phase 8 part 3).",
+    "id": "ember_blind",
+    "name": "Ember-Blind",
+    "kind": "boost",
+    "duration_ms": 3000,
+    "auras": [{"stat": "miss_bp", "value": 3000}]
+  },
+  {
     "_note": "More DEF while it lasts (Guard the weakest at rank III: the ally it guards, renewed every second; phase 5c step 6c).",
     "id": "watched_over",
     "name": "Watched Over",

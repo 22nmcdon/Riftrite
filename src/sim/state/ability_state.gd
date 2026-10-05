@@ -37,6 +37,8 @@ var pending_note: String = ""
 ## whether one hasn't yet (so the unit's update looks each tick).
 var also_fired: Array[bool] = []
 var also_waiting: bool = false
+## An extra "every" trigger's period (ticks; 0: none; phase 8 part 3).
+var every_ticks: int = 0
 ## ally_fires: the target the ally's fire had (the queued fire goes there,
 ## if it still stands).
 var pending_target: UnitState:
@@ -70,6 +72,8 @@ static func make(ability: AbilityDef, unit_id: String) -> AbilityState:
 	for trigger: TriggerDef in ability.also:
 		state.also_fired.append(false)
 		state.also_waiting = state.also_waiting or trigger.kind == TriggerDef.Kind.HP_BELOW
+		if trigger.kind == TriggerDef.Kind.EVERY:
+			state.every_ticks = trigger.at_ticks
 	if ability.echo != null:
 		state.echo = AbilityState.make(ability.echo, unit_id)
 	return state

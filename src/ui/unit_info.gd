@@ -303,6 +303,8 @@ static func trigger_text(trigger: TriggerDef, kit: UnitDef) -> String:
 			return "Each time an ally falls"
 		TriggerDef.Kind.ALLY_FIRES:
 			return "Once, when an ally's %s fires" % trigger.ability.replace("_", " ").capitalize()
+		TriggerDef.Kind.EVERY:
+			return "Every %s" % seconds(trigger.at_ticks)
 	return "Once, when it would fall"
 
 
@@ -365,6 +367,8 @@ static func passive_trigger_text(effect: EffectDef) -> String:
 		text += " (at most once every %s for each)" % seconds(effect.cooldown_per_unit_ticks)
 	if effect.cooldown_ticks > 0:
 		text += " (at most once every %s)" % seconds(effect.cooldown_ticks)
+	if effect.delay_ticks > 0:
+		text += ", %s later" % seconds(effect.delay_ticks)
 	return text
 
 
@@ -644,6 +648,8 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 					return "drains the water to within %s of it" % hexes(effect.flood_radius)
 			return "floods every hex but the rocks"
 		EffectDef.Type.LEAP:
+			if effect.leap_home:
+				return "leaps back to where it started"
 			return "leaps up to %s" % hexes(effect.hexes)
 		EffectDef.Type.HOP:
 			return "hops %s away from the nearest enemy" % hexes(1)

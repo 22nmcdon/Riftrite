@@ -271,7 +271,7 @@ func test_the_rules_on_moving_effects() -> void:
 	AbilityDef.read(DataReader.new({"id": "a", "name": "A", "cooldown_ms": 1000, "effects": [{"type": "charge", "hexes": 2, "target": "target"}]}, "a", attack))
 	assert_true(errors.any(func(message: String) -> bool: return message.contains("leap moves the unit itself to its target")), str(errors))
 	assert_true(errors.any(func(message: String) -> bool: return message.contains("charge moves the unit itself")), str(errors))
-	assert_true(passive.has("p.effects[0]: a passive can't leap or charge"), str(passive))
+	assert_true(passive.has("p.effects[0]: a passive can't leap or charge (but for a leap back to the start)"), str(passive))
 	assert_true(attack.has("a: leap and charge are for signatures, not basic attacks"), str(attack))
 	var good: Array[String] = []
 	var leap: EffectDef = EffectDef.read(DataReader.new({"type": "leap", "max_hexes": 4, "land_ms": 250, "target": "target"}, "e", good))

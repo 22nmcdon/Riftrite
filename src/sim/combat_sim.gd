@@ -59,6 +59,9 @@ var has_water: bool = false
 ## without any.
 var islands: Islands = null
 var has_void: bool = false
+## Event effects waiting out their delay (phase 8 part 3; Passives.Delayed),
+## in the order they were set off.
+var delayed: Array = []
 ## The ground still standing (the whole arena until the collapse).
 var safe: Rect2i
 ## Rift Collapse (Collapse): the act's numbers, the tick the first ring
@@ -284,6 +287,7 @@ func add_unit(unit: UnitState) -> void:
 	unit.melee_reach = tuning.melee_reach
 	unit.refresh_reach()
 	unit.joined_at = tick
+	unit.start_pos = unit.pos
 	unit.attack_rate_bp = attack_rate_bp(unit)
 	units.append(unit)
 	_by_id[unit.id] = unit
@@ -460,6 +464,8 @@ func step() -> void:
 		# read too (Events.dispatch returns where it stopped).
 		read_to = Events.dispatch(self, _events_read, read_to)
 	_events_read = read_to
+	if not delayed.is_empty():
+		Passives.run_delayed(self)
 	if _timed_passives:
 		Passives.run_timed(self)
 	if _phased:
@@ -492,7 +498,7 @@ func _act(unit: UnitState) -> void:
 	var signature: AbilityState = unit.signature
 	if signature != null and (signature.pending > 0 or signature.cast_ends_at >= 0 \
 			or (signature.mana_trigger and unit.mana >= unit.mana_cap) or (signature.once_trigger and not signature.fired) \
-			or signature.also_waiting or signature.echo_at >= 0):
+			or signature.also_waiting or signature.echo_at >= 0 or (signature.every_ticks > 0 and tick % signature.every_ticks == 0)):
 		casting = Signatures.act(self, unit)
 		has_statuses = not unit.statuses.is_empty()
 		if tick < unit.landing_until:

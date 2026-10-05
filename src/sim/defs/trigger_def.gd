@@ -12,19 +12,22 @@ extends RefCounted
 ##                                                   left at 1 HP instead
 ##   {"kind": "ally_falls"}                          each time an ally falls (phase 5's
 ##                                                   sigils)
+##   {"kind": "every", "every_ms": 8000}            every 8s (not at the start; phase
+##                                                   8 part 3, the Gloam Hound's
+##                                                   Pounce again: an extra trigger)
 ##   {"kind": "ally_fires", "ability": "pounce"}     once, when an ally's ability of
 ##                                                   that id fires: at that fire's
 ##                                                   target, wherever it is (phase 5,
 ##                                                   the Hound Alpha's Hunt)
 ## A signature may also fire on extra triggers (AbilityDef.also, from a
-## sigil's KitMod): hp_below or ally_falls, free of mana.
+## sigil's KitMod): hp_below, ally_falls, or every, free of mana.
 ## A stunned unit can't fire a mana signature; every other trigger still fires.
 
-enum Kind { MANA, HP_BELOW, FIGHT_START, AT_TIME, COUNT, WOULD_FALL, ALLY_FALLS, ALLY_FIRES }
+enum Kind { MANA, HP_BELOW, FIGHT_START, AT_TIME, COUNT, WOULD_FALL, ALLY_FALLS, ALLY_FIRES, EVERY }
 
-const KIND_NAMES: Array[String] = ["mana", "hp_below", "fight_start", "at_time", "count", "would_fall", "ally_falls", "ally_fires"]
+const KIND_NAMES: Array[String] = ["mana", "hp_below", "fight_start", "at_time", "count", "would_fall", "ally_falls", "ally_fires", "every"]
 ## The kinds an extra trigger (AbilityDef.also) can be.
-const ALSO_KINDS: Array[Kind] = [Kind.HP_BELOW, Kind.ALLY_FALLS]
+const ALSO_KINDS: Array[Kind] = [Kind.HP_BELOW, Kind.ALLY_FALLS, Kind.EVERY]
 
 var kind: Kind
 var threshold_bp: int = 0
@@ -57,6 +60,8 @@ static func read(reader: DataReader) -> TriggerDef:
 			def.every = reader.opt_int("every", 1, 1)
 		Kind.ALLY_FIRES:
 			def.ability = reader.req_string("ability")
+		Kind.EVERY:
+			def.at_ticks = reader.req_ticks("every_ms", FixedMath.MS_PER_TICK)
 	reader.finish()
 	return def
 
@@ -68,6 +73,8 @@ func reason() -> String:
 			return "below %d%% HP" % (threshold_bp / 100)
 		Kind.ALLY_FALLS:
 			return "an ally fell"
+		Kind.EVERY:
+			return "again"
 	return ""
 
 
