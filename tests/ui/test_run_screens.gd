@@ -463,6 +463,26 @@ func test_the_fight_card_names_specializations() -> void:
 	await wait_frames(1)
 
 
+## What the rift learned (phase 8 part 3, 8c-5d) on the boss's fight card:
+## its own line naming the habit, and not again among the specializations.
+func test_the_fight_card_names_what_the_rift_learned() -> void:
+	var main: Main = _main()
+	assert_true(U.press(main.screen, "New run"))
+	(main.screen as RunStartScreen).run_seed = 7
+	assert_true(U.press(main.screen, "Into the rift"))
+	var flow: RunFlow = _flow(main)
+	flow.state.options[0] = ["old_mother_ash"]
+	flow.state.today_specs = [["", "drifting_moth", ""]] as Array[Array]
+	flow.state.today_learned = [[{"enemy": 1, "habit": "bunching", "specialization": "drifting_moth"}, {"enemy": 2, "habit": "roots", "upgrade": "anchored"}]] as Array[Array]
+	main.run_session.save()
+	main.show_day()
+	var text: String = U.text_of(main.screen)
+	assert_string_contains(text, "Learned: Drifting Ash Hound, against your bunching up: ")
+	assert_string_contains(text, "Anchored Ash Hound, against your Roots: It can't be knocked back or pulled")
+	assert_false(text.contains("Specialized:"), "a learned specialization is named once, as learned")
+	await wait_frames(1)
+
+
 ## Upgrades (phase 8 part 3, 8c-5a) on an elite's fight card, and in the
 ## enemy panel with the enemy's name.
 func test_the_fight_card_and_enemy_panel_name_upgrades() -> void:

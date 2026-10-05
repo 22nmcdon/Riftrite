@@ -12,8 +12,10 @@ extends RefCounted
 ## acts, phase 8 part 3, which loads an older save as a testing run once it
 ## has gone deeper or waits at the choice, since its endless followed Act 1;
 ## 8: today's specializations, phase 8 part 3, none in an older save; 9:
-## today's upgrades, phase 8 part 3, none in an older save).
-const VERSION: int = 9
+## today's upgrades, phase 8 part 3, none in an older save; 10: the rift
+## learns, phase 8 part 3, with no fight's habits or learned picks in an
+## older save).
+const VERSION: int = 10
 const OLDEST_VERSION: int = 4
 
 ## Where the day is (phase 5c step 8, docs/plans/days-and-nodes.md):
@@ -107,9 +109,12 @@ class Fought:
 	var seconds: int
 	## The act it was fought in (phase 8 part 3; days start again each act).
 	var act: int = 1
+	## What the fight counted toward the rift learns' measures (phase 8 part
+	## 3, RiftLearns.summary): measure -> amount, only those above 0.
+	var habits: Dictionary[String, int] = {}
 
 	func to_dict() -> Dictionary:
-		return {"act": act, "day": day, "attempt": attempt, "encounter": encounter, "outcome": int(outcome), "seconds": seconds}
+		return {"act": act, "day": day, "attempt": attempt, "encounter": encounter, "outcome": int(outcome), "seconds": seconds, "habits": habits.duplicate()}
 
 	static func from_dict(data: Dictionary) -> Fought:
 		var fought := Fought.new()
@@ -119,6 +124,10 @@ class Fought:
 		fought.encounter = str(data.get("encounter", ""))
 		fought.outcome = int(data.get("outcome", 0)) as FightResult.Outcome
 		fought.seconds = int(data.get("seconds", 0))
+		var habits: Variant = data.get("habits", {})
+		if habits is Dictionary:
+			for measure: Variant in (habits as Dictionary):
+				fought.habits[str(measure)] = int((habits as Dictionary)[measure])
 		return fought
 
 
@@ -143,6 +152,12 @@ var today_specs: Array[Array] = []
 ## Today's fights' upgrades (phase 8 part 3): for each of today's options,
 ## the upgrade ids its enemies carry (Offers.enemy_upgrades; only elites').
 var today_upgrades: Array[Array] = []
+## What the rift learns picked for today's fights (phase 8 part 3,
+## RiftLearns.picks): for each of today's options, a list of {"enemy": add
+## index, "habit": id, and "upgrade" or "specialization": id}; its learned
+## specializations are in today_specs too, and an add that learned an
+## upgrade has "" there.
+var today_learned: Array[Array] = []
 ## Today's chosen fight ("" until chosen).
 var chosen: String = ""
 ## The last formation fought with (hero id -> hex), remembered.
@@ -291,7 +306,7 @@ func to_dict() -> Dictionary:
 		"streak": streak, "streaks_paid": streaks_paid.duplicate(), "bonds_found": bonds_found.duplicate(),
 		"growth": growth.duplicate(), "grew": grew.duplicate(),
 		"item_ranks": item_ranks.duplicate(), "item_counts": item_counts.duplicate(), "ranked": ranked.duplicate(),
-		"endless": endless, "endless_mods": endless_mods.duplicate(), "today_specs": today_specs.duplicate(true), "today_upgrades": today_upgrades.duplicate(true),
+		"endless": endless, "endless_mods": endless_mods.duplicate(), "today_specs": today_specs.duplicate(true), "today_upgrades": today_upgrades.duplicate(true), "today_learned": today_learned.duplicate(true),
 		"apex_open": apex_open, "just_apexed": just_apexed.duplicate(), "testing": testing,
 	}
 
@@ -378,6 +393,16 @@ static func from_dict(data: Dictionary) -> RunState:
 		state.today_specs.append(_strings(specs))
 	for upgrades: Variant in data.get("today_upgrades", []):
 		state.today_upgrades.append(_strings(upgrades))
+	for learned: Variant in data.get("today_learned", []):
+		var picks: Array = []
+		if learned is Array:
+			for pick: Variant in (learned as Array):
+				if pick is Dictionary:
+					var kept: Dictionary = {}
+					for key: Variant in (pick as Dictionary):
+						kept[str(key)] = int((pick as Dictionary)[key]) if str(key) == "enemy" else str((pick as Dictionary)[key])
+					picks.append(kept)
+		state.today_learned.append(picks)
 	return state
 
 

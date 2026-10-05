@@ -15,7 +15,8 @@ const CAMPS_FILE: String = "camps.json"
 const RELICS_FILE: String = "relics.json"
 const BONDS_FILE: String = "bonds.json"
 const EVENTS_FILE: String = "events.json"
-const FILES: Array[String] = [ACT_FILE, UPGRADES_FILE, ITEMS_FILE, CAMPS_FILE, RELICS_FILE, BONDS_FILE, EVENTS_FILE]
+const RIFT_LEARNS_FILE: String = "rift_learns.json"
+const FILES: Array[String] = [ACT_FILE, UPGRADES_FILE, ITEMS_FILE, CAMPS_FILE, RELICS_FILE, BONDS_FILE, EVENTS_FILE, RIFT_LEARNS_FILE]
 ## The items' and relics' glyphs (the UI draws them; phase 5b).
 const GLYPHS: String = "res://art/ui/items/glyphs/%s.svg"
 ## Where camp's icons are (camps.json names a file under it).
@@ -36,6 +37,8 @@ var bonds: Dictionary[String, BondDef] = {}
 var bond_ids: Array[String] = []
 ## The Event node's scenes and oaths (phase 5c step 8c).
 var events: EventDef = null
+## The rift learns (phase 8 part 3; data/rift_learns.json), or null.
+var learns: RiftLearnsDef = null
 var errors: Array[String] = []
 
 
@@ -97,6 +100,11 @@ static func load_texts(texts: Dictionary[String, String], content_db: ContentDb)
 		var events_reader: DataReader = DataReader.from_value(events_data, EVENTS_FILE, run.errors)
 		if events_reader != null:
 			run.events = EventDef.read(events_reader)
+	var learns_data: Variant = run._parse(texts, RIFT_LEARNS_FILE)
+	if learns_data != null:
+		var learns_reader: DataReader = DataReader.from_value(learns_data, RIFT_LEARNS_FILE, run.errors)
+		if learns_reader != null:
+			run.learns = RiftLearnsDef.read(learns_reader)
 	run._check()
 	return run
 
@@ -627,6 +635,17 @@ func _check() -> void:
 			_check_mod(events.next_fight_mods[key], hero_kits, "%s: next_fight_mods %s" % [EVENTS_FILE, key])
 		for oath: EventDef.Oath in events.oaths:
 			_check_mod(oath.mod, hero_kits, "%s (%s)" % [EVENTS_FILE, oath.id])
+	if learns != null:
+		for habit: RiftLearnsDef.Habit in learns.habits:
+			for upgrade_id: String in habit.upgrades:
+				if not content.enemy_upgrades.has(upgrade_id):
+					errors.append("%s (%s): unknown enemy upgrade \"%s\"" % [RIFT_LEARNS_FILE, habit.id, upgrade_id])
+			for spec_id: String in habit.specializations:
+				if not content.specializations.has(spec_id):
+					errors.append("%s (%s): unknown specialization \"%s\"" % [RIFT_LEARNS_FILE, habit.id, spec_id])
+	for act_def: ActDef in acts:
+		if act_def.rift_learns and learns == null:
+			errors.append("%s: the rift learns needs %s" % [LATER_ACT_FILE % act_def.act, RIFT_LEARNS_FILE])
 	for id: String in bond_ids:
 		_check_bond(bonds[id], "%s (%s)" % [BONDS_FILE, id])
 	for id: String in relic_ids:

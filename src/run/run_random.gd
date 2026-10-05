@@ -32,6 +32,8 @@ const ENDLESS: int = 17
 const SPECIALIZE: int = 18
 ## Which upgrades an elite day fight's enemies carry (phase 8 part 3).
 const UPGRADE: int = 19
+## What the rift learns puts on a boss's adds (phase 8 part 3).
+const LEARN: int = 20
 
 const MIX: int = 0x2545F4914F6CDD1D
 

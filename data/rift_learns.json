@@ -1,0 +1,17 @@
+{
+  "_note": "The rift learns (docs/plans/rebuild-phase8-act3.md section 5; enemy-growth.md section 5's table, without the rift modifiers: Decision 9 of act3-shattered-crown.md). per_fight is how much of a measure a fight must hold to be a habit: placeholders until 8c-6c's tuning.",
+  "fights": 3,
+  "second_at_pct": 100,
+  "habits": [
+    {"id": "roots", "name": "Roots and control", "against": "your Roots", "measure": "rooted", "per_fight": 4, "upgrades": ["anchored"]},
+    {"id": "stealth", "name": "Stealth", "against": "your Stealth", "measure": "stealthed", "per_fight": 2, "upgrades": ["watchful"]},
+    {"id": "burn", "name": "Burn", "against": "your Burn", "measure": "burning", "per_fight": 12, "upgrades": ["cinder_skinned"], "specializations": ["smoldering_ashling"]},
+    {"id": "shields", "name": "Shields", "against": "your Shields", "measure": "shields", "per_fight": 400, "upgrades": ["shieldbreaker"], "specializations": ["pinning_archer"]},
+    {"id": "marks", "name": "Marks", "against": "your Marks", "measure": "marked", "per_fight": 4, "upgrades": ["mark_shy"]},
+    {"id": "healing", "name": "Healing and lifesteal", "against": "your healing", "measure": "healing", "per_fight": 400, "specializations": ["rot_lurker", "gnawing_pup"]},
+    {"id": "signatures", "name": "Mana and signatures", "against": "your signatures", "measure": "casts", "per_fight": 10, "upgrades": ["rift_touched"], "specializations": ["hex_witch"]},
+    {"id": "back_line", "name": "A protected back line", "against": "your back line", "measure": "back", "per_fight": 2, "specializations": ["burrowing_pup", "gloam_hound", "deep_lurker"]},
+    {"id": "bunching", "name": "Bunching up", "against": "your bunching up", "measure": "bunched", "per_fight": 2, "specializations": ["drifting_moth", "avalanche_guardian", "smoldering_ashling"]},
+    {"id": "front_line", "name": "A melee front line", "against": "your front line", "measure": "front", "per_fight": 2, "specializations": ["shattered_sentinel"]}
+  ]
+}

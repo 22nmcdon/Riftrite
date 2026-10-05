@@ -143,7 +143,7 @@ func test_setup_refuses_what_cant_be_carried() -> void:
 func test_the_save_keeps_them() -> void:
 	var flow: RunFlow = _on_day(3)
 	var data: Dictionary = JSON.parse_string(JSON.stringify(flow.state.to_dict()))
-	assert_eq(int(data["version"]), 9)
+	assert_eq(int(data["version"]), 10)
 	assert_eq(RunState.from_dict(data).today_upgrades, flow.state.today_upgrades)
 	data["version"] = 8
 	data.erase("today_upgrades")

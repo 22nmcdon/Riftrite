@@ -857,9 +857,18 @@ func _show_route_card(index: int, holder: VBoxContainer) -> void:
 		UiStyle.heading(encounter.name, 26, UiStyle.TEXT))
 	card.add_child(_wrapped("It tests %s." % encounter.tests, 16, UiStyle.TEXT_DIM))
 	card.add_child(_enemies_line(encounter))
-	var specialized: String = RunDayScreen.specs_line(session.content, encounter, state.today_specs[index] if index < state.today_specs.size() else [])
+	var learned: Array = state.today_learned[index] if index < state.today_learned.size() else []
+	var drawn: Array = (state.today_specs[index] as Array).duplicate() if index < state.today_specs.size() else []
+	for pick: Variant in learned:
+		var enemy: int = int((pick as Dictionary)["enemy"])
+		if enemy < drawn.size():
+			drawn[enemy] = ""
+	var specialized: String = RunDayScreen.specs_line(session.content, encounter, drawn)
 	if not specialized.is_empty():
 		card.add_child(_wrapped(specialized, 16, UiStyle.HIGHLIGHT))
+	var learned_text: String = RunDayScreen.learned_line(session.run, encounter, learned)
+	if not learned_text.is_empty():
+		card.add_child(_wrapped(learned_text, 16, UiStyle.RIFT_300))
 	var upgraded: String = RunDayScreen.upgrades_line(session.content, state.today_upgrades[index] if index < state.today_upgrades.size() else [])
 	if not upgraded.is_empty():
 		card.add_child(_wrapped(upgraded, 16, UiStyle.HIGHLIGHT))
@@ -981,6 +990,27 @@ static func specs_line(content: ContentDb, encounter: EncounterDef, drawn: Array
 		var who: String = "%s %s" % [spec.name, content.enemies[spec.enemy].name]
 		lines.append("%s: %s" % [who if counts[id] == 1 else "%d %ss" % [counts[id], who], spec.text])
 	return "Specialized: " + "\n".join(lines) if not lines.is_empty() else ""
+
+
+## What the rift learned for a boss's adds (phase 8 part 3, RiftLearns), one
+## line each, naming the habit it answers: "Learned: Anchored Rift Hound,
+## against your Roots: It can't be knocked back ..."; "" if nothing.
+static func learned_line(run: RunContent, encounter: EncounterDef, learned: Array) -> String:
+	var lines: Array[String] = []
+	for pick: Variant in learned:
+		var entry: Dictionary = pick
+		var enemy: int = int(entry["enemy"])
+		var habit: RiftLearnsDef.Habit = run.learns.habit(str(entry["habit"])) if run.learns != null else null
+		if habit == null or enemy >= encounter.enemies.size():
+			continue
+		var enemy_name: String = run.content.enemies[encounter.enemies[enemy].enemy].name
+		if entry.has("upgrade") and run.content.enemy_upgrades.has(str(entry["upgrade"])):
+			var upgrade: EnemyUpgradeDef = run.content.enemy_upgrades[str(entry["upgrade"])]
+			lines.append("%s %s, against %s: %s" % [upgrade.name, enemy_name, habit.against, upgrade.text])
+		elif entry.has("specialization") and run.content.specializations.has(str(entry["specialization"])):
+			var spec: SpecializationDef = run.content.specializations[str(entry["specialization"])]
+			lines.append("%s %s, against %s: %s" % [spec.name, enemy_name, habit.against, spec.text])
+	return "Learned: " + "\n".join(lines) if not lines.is_empty() else ""
 
 
 ## Today's elite's upgrades (phase 8 part 3), one line each: "Upgraded:

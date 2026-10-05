@@ -117,14 +117,21 @@ func _start_day() -> void:
 
 
 ## Today's fights' specializations and upgrades (phase 8 part 3), drawn
-## afresh each time the day starts (Decision 6 of act2-glassmere.md).
+## afresh each time the day starts (Decision 6 of act2-glassmere.md), then
+## what the rift learned put on a boss's adds in their place (RiftLearns).
 func _draw_specializations() -> void:
 	state.today_specs.clear()
 	state.today_upgrades.clear()
+	state.today_learned.clear()
 	var today: Array[String] = state.today()
 	for i: int in today.size():
-		state.today_specs.append(Offers.specializations(run, state, i, today[i]))
+		var specs: Array[String] = Offers.specializations(run, state, i, today[i])
+		var learned: Array[Dictionary] = RiftLearns.picks(run, state, i, today[i])
+		for pick: Dictionary in learned:
+			specs[int(pick["enemy"])] = str(pick.get("specialization", ""))
+		state.today_specs.append(specs)
 		state.today_upgrades.append(Offers.enemy_upgrades(run, state, i, today[i]))
+		state.today_learned.append(learned)
 
 
 ## Today's chosen fight's specializations: enemy index -> specialization id
@@ -159,6 +166,15 @@ func chosen_upgrades() -> Dictionary[int, PackedStringArray]:
 				carried.append(upgrade.id)
 		if not carried.is_empty():
 			upgrades[i] = carried
+	# What the rift learned (phase 8 part 3): an add's learned upgrade.
+	if index < state.today_learned.size():
+		for pick: Variant in state.today_learned[index]:
+			var upgrade_id: String = str((pick as Dictionary).get("upgrade", ""))
+			if not upgrade_id.is_empty() and run.content.enemy_upgrades.has(upgrade_id):
+				var enemy: int = int((pick as Dictionary)["enemy"])
+				var carried: PackedStringArray = upgrades.get(enemy, PackedStringArray())
+				carried.append(upgrade_id)
+				upgrades[enemy] = carried
 	return upgrades
 
 
@@ -1035,6 +1051,7 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 	fought.outcome = result.outcome
 	@warning_ignore("integer_division")
 	fought.seconds = result.end_tick / FixedMath.TICKS_PER_SECOND
+	fought.habits = RiftLearns.summary(run, state, formation, result)
 	state.fought.append(fought)
 	for hero: RunState.Hero in state.heroes:
 		# An oath doubles what the fight puts into its hero's deeds (step 8c).

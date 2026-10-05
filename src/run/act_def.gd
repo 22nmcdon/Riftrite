@@ -75,6 +75,10 @@ var specialized_share_pct: int = 50
 ## by every enemy in it they change.
 var elite_upgrades_min: int = 0
 var elite_upgrades_max: int = 0
+## The rift learns (phase 8 part 3, rebuild-phase8-act3.md section 5): on
+## this act's boss days (and its endless boss floors), the boss's adds carry
+## what the rift learned from the run's last fights (RiftLearns).
+var rift_learns: bool = false
 var item_prices: Dictionary[String, int] = {}
 var item_ranks: Dictionary[String, Array] = {}
 ## Endless after the act's boss (phase 8 part 1), or null if the act has none.
@@ -153,6 +157,7 @@ static func read(reader: DataReader) -> ActDef:
 		else:
 			def.elite_upgrades_min = counts[0]
 			def.elite_upgrades_max = counts[1]
+	def.rift_learns = reader.opt_bool("rift_learns", false)
 	def.start_shards = reader.req_int("start_shards", 0)
 	def.losses_to_end = reader.req_int("losses_to_end", 1)
 	def.slots = reader.req_int("slots", 0, 6)
