@@ -201,7 +201,7 @@ Each piece is skipped by a fight that doesn't use it, so Act 1's fights and the 
 - **BQ. The names:** *(Answered: Decision 5.)* the Glassmere, the Mire Eel, Reedline Slinger, Tidecaller, Drowned Warden, Drowned Bellringer, Drowned Thrall, Glass Shambler, the Tide Choir, the Glass Matron, the Mournwater: keep, or your own?
 - **BR. Undertow:** *(Open: "we'll have to see in testing.")* too punishing for a melee team, or the right pressure for the boss?
 - **BS. Specializations:** *(Answered: Decision 6.)* drawn per fight from day 3, so the same fight can come specialized one run and plain the next, or fixed per encounter?
-- **BT. The four who sit Act 2 out** *(Open: "not sure yet, maybe." Act 3's draft proposes they return there, specialized: `act3-shattered-crown.md`, question CA.)* (Rift Hound, Cinder Moth, Hollow Archer, Rift-Worn Sentinel): back in Act 3, specialized, or gone after Act 1?
+- **BT. The four who sit Act 2 out** *(Answered in Act 3's draft, Decision 3: they return in Act 3, specialized; `act3-shattered-crown.md`.)* (Rift Hound, Cinder Moth, Hollow Archer, Rift-Worn Sentinel): back in Act 3, specialized, or gone after Act 1?
 - **BU. Casters first and Summoners:** *(Answered: Decision 7.)* should the tactic's "casters" include the Summoner archetype?
 
 ## Decisions

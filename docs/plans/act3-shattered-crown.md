@@ -1,6 +1,6 @@
 # Act 3: the Shattered Crown (a draft)
 
-Status: **a draft for the playtester (2026-10-05). Nothing is built.** Names and numbers are placeholders. It follows `rebuild-phase8-acts.md` (section 2a and Decisions 1–18):
+Status: **a draft, marked up by the playtester (2026-10-05; Decisions below, all questions answered). Nothing is built.** Names and numbers are placeholders. It follows `rebuild-phase8-acts.md` (section 2a and Decisions 1–18):
 - 7 days, with islands as the board rule;
 - new faces for about half the archetypes, and Act 1's enemies back in specialized form for the rest;
 - the Mimic and the Warden-breaker as new archetypes;
@@ -114,7 +114,7 @@ Each tests one positioning question, with answers in the paths, and each has two
 
 - **What it does:** while it stands, every enemy on its island takes 25% less damage. It stays back on its island and keeps out of reach.
 - **It tests:** bringing the fight to its island, or breaking it from across the void.
-- **Answers:** Brand Slam leaping onto its island; Deadeye's Marked shot; knocking it off an edge; Casters first (question CD); fighting the enemies that cross to you, off its island.
+- **Answers:** Brand Slam leaping onto its island; Deadeye's Marked shot; knocking it off an edge; Casters first (supports already count as casters); fighting the enemies that cross to you, off its island.
 - **Specializations:**
   - **Quickening Chanter:** enemies on its island also attack 20% faster.
   - **Last-Note Chanter:** when it falls, every enemy on its island gains a Shield of 15% of their max HP.
@@ -138,17 +138,17 @@ The Act 2 regulars (Rift Pup, Ashling, Cairn Guardian, Bog Lurker, Gloam Witch) 
 
 *Threat line:* "Casts back the first thing you show it."
 
-- **What it does:** it watches for the first hero signature cast within 5 hexes of it. If that signature can be copied (Decision 18: built from areas, damage, heals, Shields, and statuses), it keeps a copy for the fight. From then on, its own mana bar casts the copy with its own stats. Heals and Shields go to its allies, and damage and harmful statuses go to your heroes. Until it has a copy, it casts a dull echo, a weak bolt.
+- **What it does:** it watches for the first hero signature cast anywhere on the board (Decision 8). If that signature can be copied (Decision 18: built from areas, damage, heals, Shields, and statuses), it keeps a copy for the fight. From then on, its own mana bar casts the copy with its own stats. Heals and Shields go to its allies, and damage and harmful statuses go to your heroes. Until it has a copy, it casts a dull echo, a weak bolt.
 - **What can be copied:**
   - Marking Shot, Hold the Line, Mend in each of its forms, Heartseeker, Arrow Storm, Last Rites, Night Lantern, Warding Circle, and Sunfall.
   - Not Bramble Field (snares), Hearthwall (a wall), or Brand Slam (a leap).
   - The board names what it copied, and the log reads "Mirrorwight · Sunfall (copied from Vell)".
 - **It tests:** who casts first near it, and what you let it see.
 - **Answers:**
-  - killing it before it copies (Deadeye from beyond 5 hexes, Brand Slam);
+  - killing it before it copies (Deadeye, Brand Slam, Casters first);
   - holding a signature back (Wait to heal);
   - letting it copy something that serves it poorly;
-  - keeping the signature casters away from it.
+  - choosing which signature the team casts first.
 - **Specializations:**
   - **Greedy Mirrorwight:** it swaps its copy for each new signature it sees.
   - **Twinned Mirrorwight:** it casts its copy twice, each at 60%.
@@ -191,7 +191,7 @@ Each is built around one mechanic, says what it does, is previewed days ahead, a
 - **The mechanic:** the Queen copies every copyable signature she sees, not only the first. Each time she copies one, her court gets the copy too, cast at her full strength.
 - **What answers it:**
   - showing them few signatures early;
-  - killing the Queen first, from beyond 5 hexes (Deadeye) or by leaping to her;
+  - killing the Queen first (Deadeye, Casters first) or leaping to her;
   - Wait to heal;
   - area damage on a court that stands together.
 
@@ -203,17 +203,17 @@ The rift itself: the knot of shattered light at the crown of the islands. It doe
 | --- | --- |
 | **Start** | Three islands: yours at the bottom, the Heart's at the top beyond the void (one bridge in the middle), and a shelf on each side joined to both by narrow bridges. The Heart doesn't move. It's **Warded** (it takes half damage) while its **Learned Host** stands: four adds from Act 3's roster, whose specializations and upgrades the rift learns picks to blunt your top 1–2 habits (Decision 10; all shown on the fight card). |
 | **Below 70%: Severing** | Every 12s a bridge is warned (3s), then breaks; it reforms 10s later. A unit on it when it breaks falls. Two more learned adds join. |
-| **Below 35%: Unmaking** | The Ward is gone. Every 8s the Heart pushes every hero 1 hex directly away from it (question CE), and Rift Collapse starts. A race. |
+| **Below 35%: Unmaking** | The Ward is gone. Every 8s the Heart pushes heroes within 2 hexes of it 1 hex away; its island is wide enough that the push never reaches an edge, so it breaks up a melee crowd without dropping anyone (Decision 6). Rift Collapse starts. A race. |
 
 - **The rift learns** (`enemy-growth.md` section 5, normal difficulty, the boss's adds only):
   - It reads the run's last 3 fights (keywords applied, healing, Shields, Stealth, mana spent, where the heroes stood) and counters your top 1–2 habits.
   - It swaps up to half of the adds' specializations and upgrades for ones from section 5's table. A team leaning on Roots meets Anchored adds; a bunched team meets Drifting Moths.
   - It never makes an enemy immune, and everything it picked is on the fight card.
-- **What it tests:** kill order against adds built to counter you; reading the bridges as they break; then where to stand when every hit pushes you outward.
+- **What it tests:** kill order against adds built to counter you; reading the bridges as they break; then a race as the rift closes in.
 - **What answers it:**
   - **Start:** area damage for the host (Forgebreaker, Hailstorm); Eagle Eye and Stormline across the void to the Heart once its Ward is down; a second plan for whichever habit it counters.
   - **Severing:** staying off a warned bridge; a leap (Brand Slam) doesn't need the bridges at all.
-  - **Unmaking:** The Unbroken Gate's wall behind the team (a push stopped short Stuns, the built rule, rather than dropping the hero); the unpushable charm; standing with the island behind you; burst and sustain (The Beacon, Undying Oath).
+  - **Unmaking:** burst and sustain (The Beacon, Undying Oath); ranged damage from outside the push; the unpushable charm for a melee hero who stays close.
 
 ## 8. The day fights
 
@@ -247,7 +247,7 @@ Each piece is skipped by a fight that doesn't use it, so Acts 1 and 2's fights a
 2. **Falling:** a unit whose push, pull, or carry ends with its center over the void falls. It's removed, with a new log kind FELL naming who caused it (an audit rule and a board form). It counts as a fall for a hero (Decision 17) and as a kill for whoever caused it (question BY).
 3. **Islands:** which island a unit stands on (the walkable hexes joined together), for the Spire Chanter's aura, the Wide Unbinder, and the Last-Note Chanter: a `UnitCondition` "on its island".
 4. **Bridges that break and reform:** a new effect, like `flood` but for the void, with a log kind of its own (or WATER's shape reused). No existing effect changes the ground this way, so it's new code. The Heart of the Rift needs it.
-5. **The Mirrorwight's copy:** the first copyable hero signature cast within 5 hexes, read from the log. It's kept as the Mirrorwight's own signature, with its sides turned: heals and Shields to its allies, damage and harmful statuses to the heroes. It needs new code, since nothing copies an ability today.
+5. **The Mirrorwight's copy:** the first copyable hero signature cast anywhere on the board, read from the log. It's kept as the Mirrorwight's own signature, with its sides turned: heals and Shields to its allies, damage and harmful statuses to the heroes. It needs new code, since nothing copies an ability today.
 6. **The Unbinder:** double damage to Shields (shared with the Shieldbreaker upgrade), and a cleanse on a timer (cleanse with `statuses` is built).
 7. **Pushes from swarms and stampedes:** the Cliffmite's shove when 3 or more bite one hero (a count of attackers on a target), and the Cragherd's charging all at once (built pieces on a timer).
 8. **Upgrades** (`enemy-growth.md` section 3, the 11): kit mods on elites and the boss.
@@ -260,17 +260,34 @@ Each piece is skipped by a fight that doesn't use it, so Acts 1 and 2's fights a
 
 ## 10. Questions
 
-- **BY. A pushed enemy that falls:** is it a kill for whoever pushed it (on-kill triggers, deeds such as kill counts)? Proposed: yes.
-- **BZ. A push or pull that ends over the void:**
+- **BY. A pushed enemy that falls:** *(Answered: Decision 1.)* is it a kill for whoever pushed it (on-kill triggers, deeds such as kill counts)? Proposed: yes.
+- **BZ. A push or pull that ends over the void:** *(Answered: Decision 2.)* 
   - Proposed: a unit falls only when its center ends over the void.
   - An enemy's hook (the Gulf Angler) always carries its catch all the way to solid ground, so hooks isolate rather than kill.
   - Knockbacks and charges can drop a hero.
-- **CA. Who returns:** the four Act 1 enemies that sat Act 2 out (Rift Hound, Cinder Moth, Hollow Archer, Rift-Worn Sentinel), specialized, which answers BT? And do any of Act 2's faces or regulars come back (proposed: no, not in Act 3)?
-- **CB. How many are specialized:** Decision 4 says "most". Proposed: three in four of a fight's enemies, rounded down, from day 1.
-- **CC. Upgrades:** each elite carries 1–2, drawn fresh like specializations and shown on the card; does the boss carry one, and normal enemies none? Proposed: the boss none (its adds have the rift learns), normal enemies none.
-- **CD. Casters first:** should it count the Spire Chanter (a support) and the Mirrorwight, as it counts the Summoner? Proposed: the Mirrorwight, yes; the Chanter, no.
-- **CE. The Unmaking push:** every hero 1 hex away from the Heart every 8s, so a hero standing at an edge falls. Too harsh for the last phase, or the right test of where to stand? Proposed: as drafted, with the wall and the charm as answers.
-- **CF. What the Mirrorwight sees:** a signature cast within 5 hexes (placement can answer it), or anywhere on the board?
-- **CG. The rift learns and modifiers:** `enemy-growth.md`'s table names Blight and Thornskin, which are rift modifiers. Proposed: for the boss's adds, it swaps only specializations and upgrades, no modifiers.
-- **CH. Rift Collapse on islands:** proposed as everywhere: crumbled ground hurts (Decision 14's numbers), and it never turns into void.
-- **CI. The names:** the Shattered Crown, the Cliffmite, Cragram, Gulf Angler, Spire Chanter, Mirrorwight, Unbinder, the Cragherd, the Mirror Court, the Mirror Queen, and the Heart of the Rift. Keep them, or use your own?
+- **CA. Who returns:** *(Answered: Decision 3.)* the four Act 1 enemies that sat Act 2 out (Rift Hound, Cinder Moth, Hollow Archer, Rift-Worn Sentinel), specialized, which answers BT? And do any of Act 2's faces or regulars come back (proposed: no, not in Act 3)?
+- **CB. How many are specialized:** *(Answered: Decision 4.)* Decision 4 says "most". Proposed: three in four of a fight's enemies, rounded down, from day 1.
+- **CC. Upgrades:** *(Answered: Decision 5.)* each elite carries 1–2, drawn fresh like specializations and shown on the card; does the boss carry one, and normal enemies none? Proposed: the boss none (its adds have the rift learns), normal enemies none.
+- **CD. Casters first:** *(Answered: Decision 7.)* should it count the Spire Chanter (a support) and the Mirrorwight, as it counts the Summoner? Proposed: the Mirrorwight, yes; the Chanter, no.
+- **CE. The Unmaking push:** *(Answered: Decision 6.)* every hero 1 hex away from the Heart every 8s, so a hero standing at an edge falls. Too harsh for the last phase, or the right test of where to stand? Proposed: as drafted, with the wall and the charm as answers.
+- **CF. What the Mirrorwight sees:** *(Answered: Decision 8.)* a signature cast within 5 hexes (placement can answer it), or anywhere on the board?
+- **CG. The rift learns and modifiers:** *(Answered: Decision 9.)* `enemy-growth.md`'s table names Blight and Thornskin, which are rift modifiers. Proposed: for the boss's adds, it swaps only specializations and upgrades, no modifiers.
+- **CH. Rift Collapse on islands:** *(Answered: Decision 10.)* proposed as everywhere: crumbled ground hurts (Decision 14's numbers), and it never turns into void.
+- **CI. The names:** *(Answered: Decision 11.)* the Shattered Crown, the Cliffmite, Cragram, Gulf Angler, Spire Chanter, Mirrorwight, Unbinder, the Cragherd, the Mirror Court, the Mirror Queen, and the Heart of the Rift. Keep them, or use your own?
+
+## Decisions
+
+The playtester, 2026-10-05:
+
+1. **A pushed enemy that falls is a kill for whoever pushed it** (Question BY): on-kill triggers and kill deeds count it.
+2. **A unit falls only when its center ends a push, pull, or carry over the void** (Question BZ). An enemy's hook always carries its catch to solid ground, so hooks isolate rather than kill. Knockbacks and charges can drop a hero.
+3. **The four Act 1 enemies that sat Act 2 out return in Act 3, specialized** (Question CA, left to the draft; answers Act 2's BT). Act 2's faces and regulars sit Act 3 out.
+4. **Three in four of a fight's enemies are specialized, rounded down, from day 1** (Question CB).
+5. **Elites carry 1–2 upgrades, drawn fresh and shown on the card; the boss and normal enemies carry none** (Question CC). The boss's adds have the rift learns.
+6. **The Unmaking's push is softened** (Question CE: "the push would be hard to get through, maybe impossible"): every 8s it pushes only heroes within 2 hexes of the Heart, 1 hex away, and the Heart's island is wide enough that the push never reaches an edge, so it can't drop a hero.
+7. **Casters first counts the Mirrorwight, and supports such as the Spire Chanter** (Question CD: "support is considered caster"). Supports already count; the tactic adds the `mimic` archetype.
+8. **The Mirrorwight copies the first copyable signature cast anywhere on the board, for now** (Question CF).
+9. **The rift learns swaps only the boss's adds' specializations and upgrades, no rift modifiers, for now** (Question CG).
+10. **Rift Collapse on islands is crumbled ground that hurts, as in the other acts, for now** (Question CH): it never turns into void.
+11. **The names stand** (Question CI).
+
