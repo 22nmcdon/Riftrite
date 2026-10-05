@@ -17,7 +17,8 @@ extends RefCounted
 ## share of its team's damage in the apex fights (Decision 10).
 ## With --apex-deeds, what a fight puts into each apex's deed with its taste
 ## (the hero vowed to it, the others transformed) at each of DEED_SCALES: the
-## numbers the stand-in thresholds are set from (Decision 8). A run's team
+## numbers the stand-in thresholds were set from (Decision 8; since phase 8
+## part 3's 8c-4c they're sized from runs: the run report's Apex vows). A run's team
 ## carries its upgrades, items, and relics, so at endless floor 3 (x1.52) it
 ## wins about as often as the bare team does at x1.0; both are shown.
 
@@ -281,7 +282,7 @@ static func _x(multiplier: float) -> String:
 ## What a fight puts into each apex's deed, its hero vowed to it (the taste)
 ## and the others transformed on their team's paths, at DEED_SCALE.
 static func deeds_text(content: ContentDb, teams: Array[Team], encounter_ids: Array[String], named: Dictionary[String, Dictionary], drawn: int) -> String:
-	var lines: Array[String] = ["Apex deeds with the taste, a fight's worth (and its wins) at %s (the stand-in thresholds: Decision 8):"
+	var lines: Array[String] = ["Apex deeds with the taste, a fight's worth (and its wins) at %s (the thresholds are sized from runs: the run report's Apex vows):"
 		% " and ".join(DEED_SCALES.map(func(scale: int) -> String: return "x" + str(scale / 10000.0)))]
 	var done: Array[String] = []
 	for team: Team in teams:
