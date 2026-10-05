@@ -43,7 +43,7 @@ func test_every_data_file_is_loaded() -> void:
 	assert_eq(ContentDb.FILES, ["tuning.json", "statuses.json", "heroes.json", "enemies.json", "encounters.json", "tactics.json", "paths.json", "enemy_upgrades.json"] as Array[String])
 	var files: PackedStringArray = DirAccess.get_files_at("res://data")
 	files.sort()
-	var expected: Array = ContentDb.FILES + RunContent.FILES + ["act2.json"]
+	var expected: Array = ContentDb.FILES + RunContent.FILES + ["act2.json", "act3.json"]
 	expected.sort()
 	assert_eq(Array(files), expected, "every file in data/ is one ContentDb or RunContent loads")
 
@@ -82,7 +82,9 @@ func test_real_tuning_converted_to_ticks() -> void:
 	var act2: CollapseDef = tuning.collapse_for_act(2)
 	assert_eq([act1.base, act1.growth, act1.accel], [15, 10, 2], "Act 1 starts at 15 (phase 5c, Decision 8)")
 	assert_eq([act2.base, act2.growth, act2.accel], [20, 20, 4], "Act 2 doubles Act 1")
-	assert_null(tuning.collapse_for_act(3), "Act 3 is not decided yet")
+	var act3: CollapseDef = tuning.collapse_for_act(3)
+	assert_eq([act3.base, act3.growth, act3.accel], [25, 30, 6], "Act 3 (Decision 14 of the acts plan)")
+	assert_null(tuning.collapse_for_act(4), "no Act 4")
 
 
 func test_loading_is_repeatable() -> void:

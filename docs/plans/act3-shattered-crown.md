@@ -1,6 +1,6 @@
 # Act 3: the Shattered Crown (a draft)
 
-Status: **a draft, marked up by the playtester (2026-10-05; Decisions below, all questions answered). Nothing is built.** Names and numbers are placeholders. It follows `rebuild-phase8-acts.md` (section 2a and Decisions 1–18):
+Status: **a draft, marked up by the playtester (2026-10-05; Decisions below, all questions answered). Built in phase 8 part 3 (`rebuild-phase8-act3.md`: its pieces in 8c-5a to 8c-5d, its enemies in 8c-6a, its fights in 8c-6b); tuning is 8c-6c.** Names and numbers are placeholders. It follows `rebuild-phase8-acts.md` (section 2a and Decisions 1–18):
 - 7 days, with islands as the board rule;
 - new faces for about half the archetypes, and Act 1's enemies back in specialized form for the rest;
 - the Mimic and the Warden-breaker as new archetypes;

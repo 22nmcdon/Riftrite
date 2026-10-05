@@ -90,7 +90,7 @@ func test_links_across_files_are_checked() -> void:
 	var poisoner: Dictionary = kit({"basic_attack": {"id": "strike", "name": "Strike", "cooldown_ms": 1000,
 		"effects": [{"type": "apply_status", "status": "venom", "target": "target"}, {"type": "apply_status", "status": "engaged", "target": "target"}]}})
 	var db: ContentDb = _load([hero("a", {"kit": poisoner})], [enemy("pup", {"kit": summoner})], [
-		encounter("far", [{"enemy": "pup", "hex": [2, 4]}], {"act": 3}),
+		encounter("far", [{"enemy": "pup", "hex": [2, 4]}], {"act": 4}),
 		encounter("wrong", [{"enemy": "wolf", "hex": [2, 4]}, {"enemy": "pup", "hex": [2, 2]}, {"enemy": "pup", "hex": [9, 5]}]),
 		encounter("crowded", [{"enemy": "pup", "hex": [3, 3]}, {"enemy": "pup", "hex": [3, 4]}, {"enemy": "pup", "hex": [3, 4]}], {"rocks": [[3, 3], [8, 8]]}),
 	])
@@ -99,7 +99,7 @@ func test_links_across_files_are_checked() -> void:
 		"heroes.json (a): names \"engaged\", which only the Engage trait sets",
 		"enemies.json (pup): summons \"imp\", which isn't an enemy",
 		"enemies.json (pup): summons onto (9, 6), off the board",
-		"encounters.json (far): tuning has no Rift Collapse numbers for act 3",
+		"encounters.json (far): tuning has no Rift Collapse numbers for act 4",
 		"encounters.json (wrong): unknown enemy \"wolf\"",
 		"encounters.json (wrong): pup at (2, 2) is outside the enemies' zone",
 		"encounters.json (wrong): pup at (9, 5) is off the board",

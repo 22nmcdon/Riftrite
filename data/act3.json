@@ -1,0 +1,106 @@
+{
+  "_note": "Act 3, the Shattered Crown (docs/plans/rebuild-phase8-acts.md, Decision 13: Act 1's shape and economy; docs/plans/rebuild-phase8-act3.md, 8c-6b): seven days, both elites offered on each elite day carrying 1-2 upgrades, three in four of each day fight's enemies specialized from day 1 (Decision 4 of the design), the rift learns for the Heart's host, and endless after it (its floors from Act 3's fights from day 4).",
+  "act": 3,
+  "specialized_from_day": 1,
+  "specialized_share_pct": 75,
+  "start_shards": 10,
+  "pay": {
+    "easier": 10,
+    "harder": 13,
+    "elite": 15,
+    "boss": 60,
+    "hunt": 5
+  },
+  "days": [
+    "normal",
+    "normal",
+    "elite",
+    "normal",
+    "elite",
+    "normal",
+    "boss"
+  ],
+  "losses_to_end": 2,
+  "slots": 3,
+  "pick_shards": 5,
+  "wild_card_pct": 25,
+  "prices": {
+    "wound": 4,
+    "reroll": 1,
+    "boss_reroll": 5,
+    "shrine": 15,
+    "magpie_relic_pct": 75,
+    "relics": {
+      "common": 5,
+      "rare": 12,
+      "epic": 20,
+      "legendary": 30
+    }
+  },
+  "pedlar_wares": 4,
+  "magpie_wares": 2,
+  "magpie_charm_price": 12,
+  "relic_sell": {
+    "common": 2,
+    "rare": 6,
+    "epic": 10,
+    "legendary": 15,
+    "boss": 15
+  },
+  "items": {
+    "prices": {
+      "charm": 6,
+      "tactic": 4,
+      "sigil": 8,
+      "gambit": 12
+    },
+    "ranks": {
+      "charm": [
+        4,
+        8
+      ],
+      "tactic": [
+        60000,
+        180000
+      ],
+      "sigil": [
+        10,
+        25
+      ],
+      "gambit": [
+        3,
+        6
+      ]
+    }
+  },
+  "relic_odds": {
+    "common": 70,
+    "rare": 25,
+    "epic": 5
+  },
+  "magpie_odds": {
+    "epic": 75,
+    "legendary": 25
+  },
+  "elite_epic_pct": 33,
+  "bond_relic_pct": 20,
+  "boss_relics": 3,
+  "elite_upgrades": [
+    1,
+    2
+  ],
+  "rift_learns": true,
+  "endless": {
+    "_note": "Endless after Act 3 (rebuild-phase8-acts.md; endless.md): as Act 1's testing endless, drawn from Act 3's fights from day 4 on, the Heart every 10th floor.",
+    "growth_bp": 11500,
+    "modifier_every": 3,
+    "collapse_step_ms": 1000,
+    "collapse_floor_ms": 10000,
+    "crumble_growth_bp": 11500,
+    "elite_every": 5,
+    "boss_every": 10,
+    "from_day": 4,
+    "legendary_from_floor": 10,
+    "legendary_weight": 5
+  }
+}

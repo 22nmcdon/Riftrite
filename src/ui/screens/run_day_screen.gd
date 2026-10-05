@@ -817,13 +817,22 @@ func _rank_progress(item: ItemDef) -> String:
 
 # --- the route and the loadout --------------------------------------------------------
 
+## Today's boss's name (its fight's first enemy; Acts 2 and 3 have their
+## own), or "The boss" if today has none.
+func _boss_name() -> String:
+	var today: Array[String] = session.state().today()
+	if today.is_empty():
+		return "The boss"
+	var encounter: EncounterDef = session.content.encounters[today[0]]
+	return session.content.enemies[encounter.enemies[0].enemy].name
+
 func _fill_route() -> void:
 	var state: RunState = session.state()
 	var kind: String = session.run.day_kind(state, state.day)
 	if session.flow.floor_number() > 0:
 		_fill_floor(kind)
 		return
-	var line: String = {"normal": "An easier fight and a harder one that pays more.", "elite": "An elite day: two elites, each built around one mechanic.", "boss": "Old Mother Ash waits."}[kind]
+	var line: String = {"normal": "An easier fight and a harder one that pays more.", "elite": "An elite day: two elites, each built around one mechanic.", "boss": "%s waits." % _boss_name()}[kind]
 	var section: VBoxContainer = _section("Choose today's fight", line + " Click a fight on today's island to read it.")
 	# The act map, with the selected fight's card beside it (phase 5b).
 	var row: HBoxContainer = _row()
@@ -884,7 +893,7 @@ func _show_route_card(index: int, holder: VBoxContainer) -> void:
 ## An endless floor's route (phase 8 part 1, Decision 2): its one fight's
 ## card, after a line on the floor and the rift modifiers gathered so far.
 func _fill_floor(kind: String) -> void:
-	var line: String = {"normal": "The rift grows deeper.", "elite": "An elite floor.", "boss": "Old Mother Ash waits again, stronger."}[kind]
+	var line: String = {"normal": "The rift grows deeper.", "elite": "An elite floor.", "boss": "%s waits again, stronger." % _boss_name()}[kind]
 	var section: VBoxContainer = _section("Floor %d" % session.flow.floor_number(), line + " The first loss ends the run.")
 	var gathered: Array[String] = []
 	for id: String in session.state().endless_mods:

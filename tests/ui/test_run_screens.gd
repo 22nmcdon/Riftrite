@@ -463,6 +463,21 @@ func test_the_fight_card_names_specializations() -> void:
 	await wait_frames(1)
 
 
+## The boss day names its act's boss (8c-6b), not always Old Mother Ash.
+func test_the_boss_day_names_the_acts_boss() -> void:
+	var main: Main = _main()
+	assert_true(U.press(main.screen, "New run"))
+	(main.screen as RunStartScreen).run_seed = 7
+	assert_true(U.press(main.screen, "Into the rift"))
+	var flow: RunFlow = _flow(main)
+	flow.state.day = 7
+	flow.state.options[6] = ["the_heart_of_the_rift"]
+	main.run_session.save()
+	main.show_day()
+	assert_string_contains(U.text_of(main.screen), "The Heart of the Rift waits.")
+	await wait_frames(1)
+
+
 ## What the rift learned (phase 8 part 3, 8c-5d) on the boss's fight card:
 ## its own line naming the habit, and not again among the specializations.
 func test_the_fight_card_names_what_the_rift_learned() -> void:

@@ -2,6 +2,8 @@ extends GutTest
 ## Building fights from encounters and formations (Encounters;
 ## docs/plans/rebuild-phase2-heroes-enemies.md, section 2).
 
+const Bot = preload("res://tools/run_bot.gd")
+
 const Units = preload("res://tests/sim/test_units_content.gd")
 
 const FORMATION: Dictionary[String, Vector2i] = {"ranger": Vector2i(3, 0), "warden": Vector2i(3, 2)}
@@ -196,6 +198,54 @@ func test_the_act_2_encounters_are_the_plans() -> void:
 	assert_eq(tiers, {"easier": 6, "harder": 5, "hunt": 2, "elite": 2, "boss": 1})
 	assert_eq((content.encounters["the_ford"] as EncounterDef).water.size(), 7, "a channel across the middle, one ford")
 	assert_eq((content.encounters["tide_choir"] as EncounterDef).rocks.size(), 2, "rocks anchor the dry middle")
+
+
+## Act 3's fights (docs/plans/act3-shattered-crown.md, section 8;
+## rebuild-phase8-act3.md, 8c-6b): eleven day fights, two Hunts, two elites,
+## and the Heart, each over the void but Stray Hounds.
+const ACT_3_ROSTERS: Dictionary = {
+	"the_span": {"cliffmite": 6},
+	"archers_across": {"hollow_archer": 3, "cliffmite": 2},
+	"ram_and_ruin": {"cragram": 2, "hollow_archer": 2},
+	"the_hooked_shore": {"gulf_angler": 2, "cliffmite": 3},
+	"chanters_rock": {"spire_chanter": 1, "rift_worn_sentinel": 1, "cinder_moth": 2},
+	"the_mirror_shelf": {"mirrorwight": 1, "rift_hound": 2, "cliffmite": 2},
+	"hound_leap": {"rift_hound": 3, "hollow_archer": 1},
+	"unbound": {"unbinder": 1, "rift_worn_sentinel": 2, "cliffmite": 2},
+	"the_breaking_span": {"cragram": 2, "gulf_angler": 1, "cinder_moth": 1},
+	"mirror_and_hook": {"mirrorwight": 1, "gulf_angler": 1, "unbinder": 1, "cliffmite": 2},
+	"crowns_edge": {"cragram": 1, "gulf_angler": 1, "spire_chanter": 1, "unbinder": 1, "mirrorwight": 1},
+	"mite_swarm": {"cliffmite": 6},
+	"stray_hounds": {"rift_hound": 2},
+	"the_cragherd": {"great_cragram": 1, "herd_cragram": 2, "spire_chanter": 1},
+	"the_mirror_court": {"mirror_queen": 1, "rift_worn_sentinel": 1, "mirrorwight": 2},
+	"the_heart_of_the_rift": {"heart_of_the_rift": 1, "cragram": 1, "unbinder": 1, "spire_chanter": 1, "cinder_moth": 1},
+}
+
+
+func test_the_act_3_encounters_are_the_plans() -> void:
+	var content: ContentDb = ContentDb.load_dir("res://data")
+	var act_3: Array[String] = content.encounter_ids.filter(func(encounter_id: String) -> bool: return (content.encounters[encounter_id] as EncounterDef).act == 3)
+	assert_eq(act_3, ACT_3_ROSTERS.keys())
+	var tiers: Dictionary = {}
+	# The named formations' hexes stay solid, so every fight can be fought by them.
+	var named: Array[Vector2i] = [Vector2i(3, 0), Vector2i(4, 0), Vector2i(3, 1), Vector2i(4, 1), Vector2i(3, 2), Vector2i(4, 2), Vector2i(0, 0), Vector2i(7, 0)]
+	for encounter_id: String in act_3:
+		var encounter: EncounterDef = content.encounters[encounter_id]
+		var counts: Dictionary = {}
+		for placed: EncounterDef.Placed in encounter.enemies:
+			counts[placed.enemy] = counts.get(placed.enemy, 0) + 1
+		assert_eq(counts, ACT_3_ROSTERS[encounter_id], encounter_id)
+		assert_eq(encounter.void_hexes.is_empty(), encounter_id == "stray_hounds", "%s is over the void" % encounter_id)
+		assert_false(named.any(func(hex: Vector2i) -> bool: return encounter.void_hexes.has(hex)), "%s keeps the named formations' hexes" % encounter_id)
+		for formation: String in ["guarded", "exposed", "spread", "clumped"]:
+			var errors: Array[String] = []
+			assert_not_null(Encounters.setup(content, encounter_id, Bot.formation(formation), 1, errors), "%s, %s: %s" % [encounter_id, formation, errors])
+		tiers[encounter.tier] = tiers.get(encounter.tier, 0) + 1
+	assert_eq(tiers, {"easier": 6, "harder": 5, "hunt": 2, "elite": 2, "boss": 1})
+	var heart: EncounterDef = content.encounters["the_heart_of_the_rift"]
+	assert_eq(heart.enemies[0].enemy, "heart_of_the_rift", "the Heart first, so its host is the rift learns' adds")
+	assert_eq(heart.bridges.size(), 3, "three bridges for Severing")
 
 
 func test_every_day_before_the_boss_offers_at_least_two_encounters() -> void:

@@ -93,9 +93,13 @@ func test_the_acts_load_in_order() -> void:
 	state.act = 3
 	assert_null(_run.next_act(state))
 	var real: RunContent = RunContent.load_dir("res://data", ContentDb.load_dir("res://data"))
-	assert_eq(real.acts.size(), 2, "Act 1 and the Glassmere (8c-4b); Act 3 comes later")
+	assert_eq(real.acts.size(), 3, "Act 1, the Glassmere (8c-4b), and the Shattered Crown (8c-6b)")
 	assert_true(real.acts[0].endless.testing, "Act 1's endless is the testing option (Decision 15)")
 	assert_null(real.acts[1].endless, "endless follows Act 3")
+	assert_false(real.acts[2].endless.testing, "Act 3's endless is the real one")
+	assert_eq(real.acts[2].endless.from_day, 4)
+	assert_eq([real.acts[2].specialized_from_day, real.acts[2].specialized_share_pct, real.acts[2].elite_upgrades_min, real.acts[2].elite_upgrades_max, real.acts[2].rift_learns],
+		[1, 75, 1, 2, true], "three in four specialized from day 1, 1-2 upgrades on elites, the rift learns (Decisions 4, 5, 10 of the design)")
 	assert_eq([real.acts[1].specialized_from_day, real.acts[1].specialized_share_pct], [3, 50], "specialized from day 3, half of each fight (Decision 1 of the Act 2 plan)")
 	assert_eq(real.acts[0].specialized_from_day, 0, "Act 1 specializes none")
 
@@ -215,6 +219,23 @@ func test_the_records_keep_each_acts_endless_apart() -> void:
 ## Seed 38 is one the simple bot wins through all three stand-in acts (of
 ## seeds 1-40, the only one past Act 1); if Act 1's tuning changes, find
 ## another.
+func test_the_real_endless_follows_act_3() -> void:
+	var real: RunContent = RunContent.load_dir("res://data", ContentDb.load_dir("res://data"))
+	var flow: RunFlow = RunFlow.start(real, 7, Bot.first_vows(real.content), [] as Array[String])
+	_finish_act(flow)
+	_finish_act(flow)
+	assert_eq(flow.state.act, 3, "Act 2 leads on to the Shattered Crown")
+	_finish_act(flow)
+	assert_eq([flow.state.act, flow.state.phase], [3, RunState.Phase.CHOICE])
+	assert_eq(flow.go_deeper(), "")
+	var pool: Array[String] = real.floor_pool(flow.state, "normal")
+	assert_false(pool.is_empty())
+	assert_true(pool.all(func(encounter_id: String) -> bool:
+		var encounter: EncounterDef = real.content.encounters[encounter_id]
+		return encounter.act == 3 and encounter.days.max() >= 4), "Act 3's fights from day 4 on: %s" % [pool])
+	assert_eq(real.floor_pool(flow.state, "boss"), ["the_heart_of_the_rift"] as Array[String], "the Heart every 10th floor")
+
+
 func test_a_bot_plays_through_the_acts() -> void:
 	var errors: Array[String] = []
 	var flow: RunFlow = Bot.play(_run, 38, errors)

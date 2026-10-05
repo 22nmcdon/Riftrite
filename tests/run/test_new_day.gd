@@ -70,17 +70,21 @@ func test_the_pedlar_after_every_fight_and_the_boss_shop() -> void:
 	# Act 1's boss shop leads on to Act 2 (Act 1's endless is only for a
 	# testing run: phase 8 part 3).
 	assert_eq([state.act, state.day, state.phase, state.shop], [2, 1, RunState.Phase.ROUTE, ""])
-	# The last act's boss shop ends the run won.
-	state.day = 7
-	state.phase = RunState.Phase.ROUTE
-	assert_eq(flow.choose_fight(0), "")
-	assert_eq(state.chosen, "the_mournwater")
-	flow.record(Bot.formation(), _result(FightResult.Outcome.VICTORY))
-	assert_eq(flow.take_relic(0), "")
-	assert_eq(flow.finish_day(), "")
-	assert_true(flow.boss_shop())
-	assert_eq(flow.leave_shop(), "")
-	assert_eq([state.phase, state.outcome, state.shop], [RunState.Phase.ENDED, RunState.Outcome.WON, ""])
+	# Act 2's boss shop leads on to Act 3 (8c-6b), and Act 3's waits at the
+	# endless choice.
+	for boss: String in ["the_mournwater", "the_heart_of_the_rift"]:
+		state.day = 7
+		state.phase = RunState.Phase.ROUTE
+		assert_eq(flow.choose_fight(0), "")
+		assert_eq(state.chosen, boss)
+		flow.record(Bot.formation(), _result(FightResult.Outcome.VICTORY))
+		assert_eq(flow.take_relic(0), "")
+		assert_eq(flow.finish_day(), "")
+		assert_true(flow.boss_shop())
+		assert_eq(flow.leave_shop(), "")
+	assert_eq([state.act, state.phase, state.outcome, state.shop], [3, RunState.Phase.CHOICE, RunState.Outcome.NONE, ""])
+	assert_eq(flow.end_run(), "")
+	assert_eq([state.phase, state.outcome], [RunState.Phase.ENDED, RunState.Outcome.WON])
 
 
 func test_a_node_waits_for_what_it_opened() -> void:

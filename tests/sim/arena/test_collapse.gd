@@ -153,8 +153,8 @@ func test_damage_uses_the_fights_act() -> void:
 
 
 func test_a_fight_in_an_act_without_collapse_numbers_is_refused() -> void:
-	var setup: FightSetup = FightSetup.make([K.at(_post(), 3, 2)] as Array[UnitSetup], [K.foe(_post(), 4, 4)] as Array[UnitSetup], [], 1, 3)
-	assert_eq(setup.validate(K.content()), ["tuning has no Rift Collapse numbers for act 3"] as Array[String])
+	var setup: FightSetup = FightSetup.make([K.at(_post(), 3, 2)] as Array[UnitSetup], [K.foe(_post(), 4, 4)] as Array[UnitSetup], [], 1, 4)
+	assert_eq(setup.validate(K.content()), ["tuning has no Rift Collapse numbers for act 4"] as Array[String])
 
 
 ## Hides every enemy of the fight (a long Stealth), so the heroes have no

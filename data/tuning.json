@@ -39,7 +39,7 @@
   "collapse_surge_ms": 90000,
   "tie_ms": 180000,
   "collapse_by_act": {
-    "_note": "Damage per second starts at base (Act 1: 15, phase 5c Decision 8) and grows by growth each second; from collapse_surge_ms the growth itself rises by accel each second. Act 3 is not decided yet.",
+    "_note": "Damage per second starts at base (Act 1: 15, phase 5c Decision 8) and grows by growth each second; from collapse_surge_ms the growth itself rises by accel each second. Act 3's is Decision 14 of rebuild-phase8-acts.md.",
     "1": {
       "base": 15,
       "growth": 10,
@@ -49,6 +49,11 @@
       "base": 20,
       "growth": 20,
       "accel": 4
+    },
+    "3": {
+      "base": 25,
+      "growth": 30,
+      "accel": 6
     }
   }
 }

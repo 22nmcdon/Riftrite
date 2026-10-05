@@ -200,7 +200,7 @@ func test_where_it_doesnt_learn() -> void:
 	assert_eq(_picks(_on_day(7, habits)), [], "an act without the rift learns")
 	_run.acts[1].rift_learns = true
 	var real: RunContent = RunContent.load_dir("res://data", ContentDb.load_dir("res://data"))
-	assert_true(real.acts.all(func(act_def: ActDef) -> bool: return not act_def.rift_learns), "Acts 1 and 2 don't learn")
+	assert_eq(real.acts.map(func(act_def: ActDef) -> bool: return act_def.rift_learns), [false, false, true], "only Act 3 learns")
 
 
 func test_it_repeats_and_is_fresh_on_a_replay() -> void:

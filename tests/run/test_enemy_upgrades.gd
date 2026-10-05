@@ -37,7 +37,7 @@ func _tier(flow: RunFlow, index: int) -> String:
 func test_the_built_acts_draw_none() -> void:
 	var real: RunContent = RunContent.load_dir("res://data", ContentDb.load_dir("res://data"))
 	for act_def: ActDef in real.acts:
-		assert_eq([act_def.elite_upgrades_min, act_def.elite_upgrades_max], [0, 0], "Act %d's elites carry none" % act_def.act)
+		assert_eq([act_def.elite_upgrades_min, act_def.elite_upgrades_max], [1, 2] if act_def.act == 3 else [0, 0], "Act %d's elites" % act_def.act)
 	var flow: RunFlow = RunFlow.start(real, 7, Bot.first_vows(real.content), [] as Array[String])
 	assert_true(flow.state.today_upgrades.all(func(drawn: Array) -> bool: return drawn.is_empty()))
 
