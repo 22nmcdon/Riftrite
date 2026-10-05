@@ -1,12 +1,12 @@
 # Phase 8 part 3: building Act 3, the Shattered Crown
 
-Status: **a build plan, approved (2026-10-05); section 9's questions CJ–CL answered (Decisions 1–3), CM open.** 8c-5a (enemy growth), 8c-5b (islands), 8c-5c (the other pieces), and 8c-5d (the rift learns) built; 8c-6a next, after Question CM. It builds `act3-shattered-crown.md` (the design, with its Decisions 1–11) on the frame of `rebuild-phase8-acts.md` (8c-1 and 8c-2, built), the way `rebuild-phase8-act2.md` built Act 2. Numbers are placeholders until the tuning part. Questions are in section 9.
+Status: **a build plan, approved (2026-10-05); section 9's questions answered (Decisions 1–4).** 8c-5a (enemy growth), 8c-5b (islands), 8c-5c (the other pieces), and 8c-5d (the rift learns) built; 8c-6a next. It builds `act3-shattered-crown.md` (the design, with its Decisions 1–11) on the frame of `rebuild-phase8-acts.md` (8c-1 and 8c-2, built), the way `rebuild-phase8-act2.md` built Act 2. Numbers are placeholders until the tuning part. Questions are in section 9.
 
 ## 1. What it builds
 
 Act 3 as content a run reaches after Act 2's boss shop, and endless after it:
 
-- the rest of enemy growth: the four returning enemies' specializations, the 11 upgrades on elites, the higher share of specialized enemies, and the rift learns for the boss's adds;
+- the rest of enemy growth: the four returning enemies' specializations, the 12 upgrades on elites (Festering the twelfth: Decision 4), the higher share of specialized enemies, and the rift learns for the boss's adds;
 - islands: the void, falling, and which island a unit stands on;
 - the other new fight pieces: bridges that break and reform, the Mirrorwight's copy, the Unbinder, the Cliffmite's shove, the Gulf Angler's hook, and the Dazzling Moth's misses;
 - the ten enemies, the eleven day fights and two Hunts, two elites, the Heart of the Rift, `act3.json`, and endless after Act 3;
@@ -116,7 +116,7 @@ Each part is tested as Act 2's were: every piece in a small fight (`tests/sim/`)
 - **CJ. What runs when a unit falls into the void:** *(Answered: Decision 1.)* falling is a death, but does a unit that falls set off its on-fall effects (the Shattered Sentinel's burst, the Last-Note Chanter's Shields, a splitter's halves, Second Dawn or a rise), and do would-fall saves (Last Watch's Undying) catch it? Proposed: no to all. The void swallows it whole, so pushing a splitter or a riser off an edge is a way past it, and no save catches a fall.
 - **CK. The board's outer edge:** *(Answered: Decision 2.)* stays as it is (a push stops there and stuns), so only the void hexes inside the board drop a unit? Proposed: yes; the islands are drawn inside the board's frame.
 - **CL. Upgrades' data home:** *(Answered: Decision 3.)* a file of their own (`data/enemy_upgrades.json`), or a block in `camps.json` beside the rift modifiers? Proposed: a file of their own.
-- **CM. What answers healing in Act 3** (raised building 8c-5d): `enemy-growth.md` answers healing and lifesteal with Blight (a rift modifier, ruled out by Decision 9 of the design), the Rot Lurker, and the Gnawing Pup, and neither sits in Act 3's roster, so the Heart's adds can never answer a healing team: the rift passes over its top habit for the next. Proposed: a twelfth enemy upgrade, **Festering** (its hits cut the healing the hero it hits takes by 30% for 3s; a status with the built `healing_taken_bp`), named against healing, built with 8c-6a's enemies. Or leave healing unanswered in Act 3.
+- **CM. What answers healing in Act 3** (raised building 8c-5d; *Answered: Decision 4.*): `enemy-growth.md` answers healing and lifesteal with Blight (a rift modifier, ruled out by Decision 9 of the design), the Rot Lurker, and the Gnawing Pup, and neither sits in Act 3's roster, so the Heart's adds can never answer a healing team: the rift passes over its top habit for the next. Proposed: a twelfth enemy upgrade, **Festering** (its hits cut the healing the hero it hits takes by 30% for 3s; a status with the built `healing_taken_bp`), named against healing, built with 8c-6a's enemies. Or leave healing unanswered in Act 3.
 
 ## Decisions
 
@@ -125,6 +125,10 @@ The playtester, 2026-10-05 (approving the plan: "agreed on all three, let's star
 1. **Nothing runs when a unit falls into the void** (Question CJ): no on-fall effects (bursts, Shields, a splitter's halves), no rise (Second Dawn, a rise passive), and no would-fall save (Undying) catches it. Pushing a splitter or a riser off an edge is a way past it.
 2. **The board's outer edge stays a wall** (Question CK): a push stops there and stuns; only void hexes inside the board drop a unit.
 3. **Enemy upgrades have their own file, `data/enemy_upgrades.json`** (Question CL).
+
+The playtester, 2026-10-05 (after 8c-5d: "Yeah, add festering, then we can move on"):
+
+4. **Festering, a twelfth enemy upgrade, answers healing** (Question CM): its hits leave the hero they strike Festering for 3s, healed 30% less (the status `festering`, the built `healing_taken_bp`). The rift learns names it against healing and lifesteal, beside the Rot Lurker and Gnawing Pup; like every upgrade, an elite can draw it too.
 
 
 ## Built in 8c-5a: enemy growth (2026-10-05)
@@ -193,5 +197,5 @@ A run piece (`src/run/`): it reads fights after they're fought and changes no fi
   - **A learned add carries that alone:** it replaces the specialization the add drew (the "swap" of `enemy-growth.md`), so `today_specs` holds a learned specialization in its place and "" for an add that learned an upgrade; `RunFlow.chosen_upgrades` adds the learned upgrade to that add.
 - **The fight card** (`RunDayScreen.learned_line`): "Learned: Anchored Rift Hound, against your Roots: It can't be knocked back or pulled, ..." one line each, in the rift's color; a learned specialization isn't named again under "Specialized:". The enemy panel names them like any upgrade or specialization.
 - **Save version 10:** each fight's `habits` and `today_learned`; a version 9 save loads with none.
-- **No built act learns yet;** Act 3 (8c-6b) turns it on. With Act 3's roster as drafted, nothing among the adds answers **healing** (its answers, Rot Lurker and Gnawing Pup, sit Act 3 out), so a healing team's top habit is passed over: Question CM.
+- **No built act learns yet;** Act 3 (8c-6b) turns it on. With Act 3's roster as drafted, nothing among the adds answered **healing** (its answers, the Rot Lurker and the Gnawing Pup, sit Act 3 out): Question CM, answered by Decision 4, **Festering** (`data/enemy_upgrades.json`, the status `festering`: its hits leave the hero healed 30% less for 3s), tested in `test_enemy_growth_pieces.gd`.
 - **Tests** (`tests/run/test_rift_learns.gd`, on stand-in acts whose Act 2 learns, with a stand-in boss fight of four adds that have specializations): a fight's summary (the heroes' doing only, a relic's too, each application once, the rows and pairs) and each fight keeping it; scores from only the last 3 fights; the top habit and a strong second, a tie, a habit passed over, none; two adds learning in turn, a specialization replacing what was drawn, an upgrade alone; one habit taking both turns on two adds; a turn leaving the add a later one needs; the fight's kits; no learning on other days, before any habit, or in an act without it; repeating and fresh on a replay; an endless boss floor; the save across versions; the data's checks; and the card's line. `test_run_screens.gd` shows it on the card. Mutation checks: counting enemies' doing, an enemy relic's, stacks for applications, no lifesteal, every fire, the wrong rows, every pair, every fight read, any second, unanswerable habits, the tie the other way, the boss as an add, an upgrade or a specialization on any add, no act or tier check, every add learning, one habit every turn, no add left for a later habit, an add learning twice, the same picks on a replay, no swap, no summary kept, no learned upgrade carried, the save dropping habits, and the data's checks each fail a test.

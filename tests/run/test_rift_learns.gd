@@ -126,8 +126,11 @@ func test_the_top_habit_and_a_strong_second() -> void:
 	assert_eq(ids.call(RiftLearns.habits(_run, flow.state, boss)), ["roots", "burn"], "Burn at 100% is")
 	flow = _on_day(1, [{"burning": 12, "marked": 4}])
 	assert_eq(ids.call(RiftLearns.habits(_run, flow.state, boss)), ["burn", "marks"], "a tie goes to the data's order")
-	flow = _on_day(1, [{"healing": 4000, "casts": 5}])
-	assert_eq(ids.call(RiftLearns.habits(_run, flow.state, boss)), ["signatures"], "nothing among these adds answers healing, so the next habit is answered")
+	flow = _on_day(1, [{"casts": 30, "rooted": 2}])
+	assert_eq(ids.call(RiftLearns.habits(_run, flow.state, _run.content.encounters["old_mother_ash"])), ["roots"],
+		"nothing among Old Mother Ash's hounds answers signatures, so the next habit is answered")
+	flow = _on_day(1, [{"healing": 4000}])
+	assert_eq(ids.call(RiftLearns.habits(_run, flow.state, boss)), ["healing"], "Festering answers healing on any add")
 	assert_eq(ids.call(RiftLearns.habits(_run, _on_day(1).state, boss)), [], "no habit, nothing to answer")
 	flow = _on_day(1, [{"casts": 30}])
 	assert_eq(ids.call(RiftLearns.habits(_run, flow.state, _run.content.encounters["old_mother_ash"])), [],

@@ -44,6 +44,7 @@ Small modifiers, mostly on elites and the boss, 1–2 at a time.
 | **Cinder-Skinned** | Burn on it deals half damage |
 | **Shieldbreaker** | +50% damage to Shields |
 | **Mark-Shy** | Marks on it last half as long |
+| **Festering** | Its hits leave the hero they strike healed 30% less for 3s (added 2026-10-05, `rebuild-phase8-act3.md` Decision 4, so the rift learns can answer healing in Act 3) |
 
 ## 4. Rift modifiers
 
@@ -78,7 +79,7 @@ A difficulty modifier (part 3, section 8). With it on, the rift swaps some enemy
 | **Burn** | Cinder-Skinned, Smoldering Ashling |
 | **Shields** | Shieldbreaker, Pinning Archer |
 | **Marks** | Mark-Shy |
-| **Healing and lifesteal** | Blight, Rot Lurker, Gnawing Pup |
+| **Healing and lifesteal** | Blight, Rot Lurker, Gnawing Pup, Festering |
 | **Mana and signatures** | Hex Witch, Rift-Touched |
 | **A protected back line** | Burrowing Pup, Gloam Hound, Deep Lurker |
 | **Bunching up** | Drifting Moth, Avalanche Guardian, Smoldering Ashling |

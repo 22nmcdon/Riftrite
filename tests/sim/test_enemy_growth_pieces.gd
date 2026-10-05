@@ -2,7 +2,7 @@ extends GutTest
 ## The sim pieces of Act 3's enemy growth (docs/plans/rebuild-phase8-act3.md,
 ## part 8c-5a): the upgrades' aura stats (Shieldbreaker's damage to Shields,
 ## Watchful's sight, Cinder-Skinned, Mark-Shy, Anchored's cap on Roots) and
-## Engage reaching farther (the Warden Sentinel), each in a small fight, with
+## Festering's cut to healing, and Engage reaching farther (the Warden Sentinel), each in a small fight, with
 ## the real upgrades from data/enemy_upgrades.json.
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
@@ -46,7 +46,7 @@ func _fight(hero: UnitDef, foes: Array[UnitDef]) -> CombatSim:
 
 func test_the_upgrades_are_data() -> void:
 	assert_eq(_content.enemy_upgrade_ids, ["frenzied", "warded", "swift", "rift_touched", "thick_hided", "vengeful", "anchored", "watchful", "cinder_skinned",
-		"shieldbreaker", "mark_shy"] as Array[String], "enemy-growth.md section 3's eleven")
+		"shieldbreaker", "mark_shy", "festering"] as Array[String], "enemy-growth.md section 3's eleven, and Festering (Question CM)")
 	var hound: UnitDef = _content.enemies["rift_hound"].kit
 	var frenzied: UnitDef = _upgraded(hound, "frenzied")
 	assert_eq([frenzied.name, frenzied.upgrades], ["Frenzied Rift Hound", ["frenzied"]])
@@ -83,6 +83,22 @@ func test_shieldbreaker_takes_more_off_a_shield() -> void:
 	while K.entries(fight, LogEntry.Kind.DAMAGE, "breaker").is_empty():
 		fight.step()
 	assert_eq([K.entries(fight, LogEntry.Kind.DAMAGE, "breaker")[0].absorbed, hero.shield, hero.hp], [10, 0, 990], "15 Shield soaks 10 of the hit")
+
+
+func test_festering_cuts_the_healing_of_the_hero_it_hits() -> void:
+	for upgraded: bool in [false, true]:
+		var striker: UnitDef = still("striker", {"basic_attack": {"cooldown_ms": 1000, "effects": [{"type": "damage", "amount": 5, "target": "target"}]}})
+		if upgraded:
+			striker = _upgraded(striker, "festering")
+		var fight: CombatSim = _fight(still("hero"), [striker] as Array[UnitDef])
+		var hero: UnitState = fight.unit_by_id("hero")
+		while K.entries(fight, LogEntry.Kind.DAMAGE, "striker").is_empty():
+			fight.step()
+		fight.step()
+		assert_eq(hero.statuses.any(func(state: StatusState) -> bool: return state.def.id == "festering"), upgraded, "Festering on the hero it hit" if upgraded else "none without it")
+		hero.hp = 500
+		EffectRunner.heal(fight, hero, 100, _from("hero"))
+		assert_eq(hero.hp, 570 if upgraded else 600, "healed 30% less while Festering" if upgraded else "a plain heal")
 
 
 func test_watchful_picks_a_stealthed_hero() -> void:

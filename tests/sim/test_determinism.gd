@@ -130,7 +130,7 @@ const UPGRADE_STATUSES: Array[String] = ["hobbled", "cowed", "parting_shot", "fi
 ## Statuses only rift modifiers apply (phase 5c step 8b; tests/run/test_rift_tear.gd),
 ## and enemy upgrades and specializations (phase 8 part 3, 8c-5a and 8c-5c;
 ## tests/sim/test_enemy_growth_pieces.gd).
-const RIFT_STATUSES: Array[String] = ["blood_frenzy", "vengeance", "ember_blind"]
+const RIFT_STATUSES: Array[String] = ["blood_frenzy", "vengeance", "ember_blind", "festering"]
 ## Statuses only apexes apply (phase 8 part 2; tests/sim/test_apex_kits.gd).
 ## The apex cards' are with them (phase 8 part 2, 8b-4; tests/run/test_apex_cards.gd).
 const APEX_STATUSES: Array[String] = ["hailstorm", "tailwind", "zeal", "morning_haste", "dawnlight", "first_light", "glare", "dazzled", "woven_thorns", "iron_loom", "briar_torn", "gatekeeper", "brand", "war_call", "rally", "oathbound",

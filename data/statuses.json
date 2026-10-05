@@ -258,6 +258,14 @@
     "auras": [{"stat": "atk_bp", "value": 12000}]
   },
   {
+    "_note": "Healing it takes is cut by 30% while it lasts (Festering, an enemy upgrade: the hero its hits strike; phase 8 part 3, Question CM).",
+    "id": "festering",
+    "name": "Festering",
+    "kind": "boost",
+    "duration_ms": 3000,
+    "auras": [{"stat": "healing_taken_bp", "value": 7000}]
+  },
+  {
     "_note": "Its basic attack's hits miss 30% of the time while it lasts (the Dazzling Moth's Ember Dust; phase 8 part 3).",
     "id": "ember_blind",
     "name": "Ember-Blind",
