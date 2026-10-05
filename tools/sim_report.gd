@@ -28,10 +28,16 @@ const GATE_POINTS: int = 30
 ## to stand for the team a run brings to that fight, with its upgrades,
 ## items, and relics: about a bare team x1.5 on the act's first day
 ## (enemies at OPENING_SCALE_BP), and x1.8 for fights that first come later
-## (LATER_SCALE_BP), as the team grows through the act.
+## (LATER_SCALE_BP), as the team grows through the act. The gate starts there
+## and steps the enemies by SCALE_STEP_BP until the formations split (some
+## win, some lose), since the act's fights are tuned to different
+## strengths: placement is judged where the fight is in the balance. The
+## placement data and check use the starting strength.
 const LATER_ACT_VOWS: Dictionary[String, String] = {"brannoc": "hearthwall", "maren": "deadeye", "vell": "lanternbearer"}
 const OPENING_SCALE_BP: int = 6700
 const LATER_SCALE_BP: int = 5500
+const SCALE_STEP_BP: int = 1500
+const SCALE_STEPS: int = 6
 
 
 ## One formation's fights in one encounter.
@@ -60,6 +66,9 @@ class Row:
 class Report:
 	var encounter: EncounterDef
 	var seeds: int
+	## From Act 2 on, the enemies' strength the gate was judged at
+	## (run_encounter); 0 in Act 1.
+	var scale_bp: int = 0
 	## The named formations, then the drawn ones.
 	var rows: Array[Row] = []
 	var named: int = 0
@@ -175,9 +184,29 @@ static func formations_for(content: ContentDb, encounter: EncounterDef, named: D
 ## Fights `encounter_id` from each named formation and `drawn` drawn ones,
 ## `seeds` fights each (seeds 1 to `seeds`).
 static func run_encounter(content: ContentDb, encounter_id: String, named: Dictionary[String, Dictionary], drawn: int, seeds: int, draw_seed: int = 1) -> Report:
+	var encounter: EncounterDef = content.encounters[encounter_id]
+	if encounter.act <= 1:
+		return _run_at(content, encounter_id, named, drawn, seeds, draw_seed, 0)
+	# A later act: step the enemies' strength until the formations split
+	# (see LATER_ACT_VOWS), keeping the last report if they never do.
+	var scale_bp: int = gate_scale_bp(encounter)
+	var report: Report = null
+	var went: int = 0
+	for step: int in SCALE_STEPS:
+		report = _run_at(content, encounter_id, named, drawn, seeds, draw_seed, scale_bp)
+		var way: int = 1 if report.winning() == report.rows.size() else (-1 if report.winning() == 0 else 0)
+		if way == 0 or (went != 0 and way != went):
+			break
+		went = way
+		scale_bp = maxi(scale_bp + way * SCALE_STEP_BP, SCALE_STEP_BP)
+	return report
+
+
+static func _run_at(content: ContentDb, encounter_id: String, named: Dictionary[String, Dictionary], drawn: int, seeds: int, draw_seed: int, scale_bp: int) -> Report:
 	var report := Report.new()
 	report.encounter = content.encounters[encounter_id]
 	report.seeds = seeds
+	report.scale_bp = scale_bp
 	var names: Array[String] = []
 	var formations: Array[Dictionary] = formations_for(content, report.encounter, named, drawn, draw_seed, names)
 	report.named = named.size()
@@ -186,7 +215,7 @@ static func run_encounter(content: ContentDb, encounter_id: String, named: Dicti
 		row.name = names[f]
 		row.formation.assign(formations[f])
 		for fight_seed: int in range(1, seeds + 1):
-			_fight(content, encounter_id, row, fight_seed)
+			_fight(content, encounter_id, row, fight_seed, scale_bp)
 		report.rows.append(row)
 	return report
 
@@ -198,7 +227,7 @@ static func gate_scale_bp(encounter: EncounterDef) -> int:
 
 
 ## The gate's fight (see gate_scale_bp).
-static func gate_setup(content: ContentDb, encounter_id: String, formation: Dictionary[String, Vector2i], fight_seed: int, errors: Array[String]) -> FightSetup:
+static func gate_setup(content: ContentDb, encounter_id: String, formation: Dictionary[String, Vector2i], fight_seed: int, errors: Array[String], scale_bp: int = 0) -> FightSetup:
 	if content.encounters[encounter_id].act <= 1:
 		return Encounters.setup(content, encounter_id, formation, fight_seed, errors)
 	var transformed: Array[String] = []
@@ -206,26 +235,27 @@ static func gate_setup(content: ContentDb, encounter_id: String, formation: Dict
 	var setup: FightSetup = Encounters.setup(content, encounter_id, formation, fight_seed, errors, {}, LATER_ACT_VOWS, transformed)
 	if setup == null:
 		return null
-	scale_for_gate(content, encounter_id, setup)
+	scale_for_gate(content, encounter_id, setup, scale_bp)
 	return setup
 
 
 ## Scales a later act's enemies (and summon kits) down by gate_scale_bp, in
 ## place; an Act 1 setup is left alone. The placement data and check use it
 ## too, so the good bot learns on fights that can go either way.
-static func scale_for_gate(content: ContentDb, encounter_id: String, setup: FightSetup) -> void:
+static func scale_for_gate(content: ContentDb, encounter_id: String, setup: FightSetup, scale_bp: int = 0) -> void:
 	if content.encounters[encounter_id].act <= 1:
 		return
-	var scale_bp: int = gate_scale_bp(content.encounters[encounter_id])
+	if scale_bp <= 0:
+		scale_bp = gate_scale_bp(content.encounters[encounter_id])
 	for enemy: UnitSetup in setup.enemies:
 		enemy.def = Encounters.scaled(enemy.def, scale_bp)
 	for i: int in setup.summon_kits.size():
 		setup.summon_kits[i] = Encounters.scaled(setup.summon_kits[i], scale_bp)
 
 
-static func _fight(content: ContentDb, encounter_id: String, row: Row, fight_seed: int) -> void:
+static func _fight(content: ContentDb, encounter_id: String, row: Row, fight_seed: int, scale_bp: int = 0) -> void:
 	var errors: Array[String] = []
-	var setup: FightSetup = gate_setup(content, encounter_id, row.formation, fight_seed, errors)
+	var setup: FightSetup = gate_setup(content, encounter_id, row.formation, fight_seed, errors, scale_bp)
 	if setup == null:
 		push_error("sim runner: %s" % ", ".join(errors))
 		return
@@ -396,7 +426,7 @@ static func text(content: ContentDb, report: Report, boards: bool = true) -> Str
 	var lines: Array[String] = []
 	var encounter: EncounterDef = report.encounter
 	lines.append("%s (%s): %s. %d seeds, %d named + %d drawn formations%s" % [encounter.name, encounter.id, encounter.tests, report.seeds, report.named, report.rows.size() - report.named,
-		"" if encounter.act <= 1 else "; heroes transformed (%s), enemies x%.2f" % [", ".join(LATER_ACT_VOWS.values()), gate_scale_bp(encounter) / 10000.0]])
+		"" if encounter.act <= 1 else "; heroes transformed (%s), enemies x%.2f" % [", ".join(LATER_ACT_VOWS.values()), report.scale_bp / 10000.0]])
 	var heroes: String = "/".join(content.hero_ids.map(func(hero_id: String) -> String: return hero_id.left(1)))
 	lines.append("  %-10s %6s %8s   %-18s %-20s %s" % ["formation", "wins", "median", "falls (%s)" % heroes, "dealt (%s)" % heroes, "taken (%s)" % heroes])
 	for i: int in report.named:
@@ -416,7 +446,7 @@ static func text(content: ContentDb, report: Report, boards: bool = true) -> Str
 	if boards:
 		for pair: Array in [["best", best], ["worst", worst]]:
 			lines.append("  %s (%s): %s" % [pair[0], (pair[1] as Row).name, formation_text((pair[1] as Row).formation)])
-			lines.append(_board(content, encounter.id, (pair[1] as Row).formation))
+			lines.append(_board(content, encounter.id, (pair[1] as Row).formation, report.scale_bp))
 	return "\n".join(lines)
 
 
@@ -457,9 +487,9 @@ static func formation_text(formation: Dictionary[String, Vector2i]) -> String:
 
 ## The board at the start of the fight, a character per half hex: heroes
 ## (by their ids' first letters) at the top, row 0.
-static func _board(content: ContentDb, encounter_id: String, formation: Dictionary[String, Vector2i]) -> String:
+static func _board(content: ContentDb, encounter_id: String, formation: Dictionary[String, Vector2i], scale_bp: int = 0) -> String:
 	var errors: Array[String] = []
-	var sim := CombatSim.new(gate_setup(content, encounter_id, formation, 1, errors), content)
+	var sim := CombatSim.new(gate_setup(content, encounter_id, formation, 1, errors, scale_bp), content)
 	var units: Array[ArenaPlane.Circle] = []
 	for unit: UnitState in sim.units:
 		units.append(unit.circle())

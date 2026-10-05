@@ -54,6 +54,26 @@ func test_drawn_formations_are_legal_and_repeat_from_their_seed() -> void:
 	assert_ne(Report.drawn_formations(_content, rocks, 30, 5), drawn)
 
 
+## From Act 2 on, the gate fights the later acts' team, scaled down, and
+## steps the enemies' strength until the formations split (phase 8 part 3).
+func test_a_later_act_gate_steps_to_a_split() -> void:
+	var named: Dictionary[String, Dictionary] = _named()
+	var report: Report.Report = Report.run_encounter(_content, "the_mournwater", named, 2, 1)
+	var start: int = Report.gate_scale_bp(_content.encounters["the_mournwater"])
+	assert_eq(start, Report.LATER_SCALE_BP, "the boss first comes after day 1")
+	assert_gt(report.scale_bp, 0)
+	if report.scale_bp == start:
+		assert_between(report.winning(), 1, report.rows.size() - 1, "judged at the start only if the formations split there")
+	else:
+		assert_eq((report.scale_bp - start) % Report.SCALE_STEP_BP, 0, "it moves in steps")
+	var formation: Dictionary[String, Vector2i] = report.rows[0].formation
+	var setup: FightSetup = Report.gate_setup(_content, "the_mournwater", formation, 1, [] as Array[String], report.scale_bp)
+	assert_eq(setup.heroes.map(func(unit: UnitSetup) -> int: return unit.stage), [PathDef.Stage.TRANSFORMED, PathDef.Stage.TRANSFORMED, PathDef.Stage.TRANSFORMED])
+	var plain: FightSetup = Encounters.setup(_content, "the_mournwater", formation, 1, [] as Array[String])
+	assert_eq(setup.enemies[0].def.stats.get_stat(UnitStats.Stat.HP), Encounters.scaled(plain.enemies[0].def, report.scale_bp).stats.get_stat(UnitStats.Stat.HP), "enemies at the strength judged")
+	assert_string_contains(Report.text(_content, report, false), "heroes transformed (hearthwall, deadeye, lanternbearer), enemies x")
+
+
 func test_a_small_run_reports_every_formation() -> void:
 	var named: Dictionary[String, Dictionary] = _named()
 	var report: Report.Report = Report.run_encounter(_content, "the_pack", named, 3, 2)

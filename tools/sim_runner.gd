@@ -160,7 +160,7 @@ func _init() -> void:
 		if not report.passes():
 			failed += 1
 		summary.append("  %-14s %s  gap %3d points  %2d of %d formations win  median fight %s" % [encounter_id, "pass" if report.passes() else "FAIL", report.gap_points(),
-			report.winning(), report.rows.size(), Report.seconds(report.median_ticks())])
+			report.winning(), report.rows.size(), Report.seconds(report.median_ticks())] + ("" if report.scale_bp == 0 else "  (enemies x%.2f)" % (report.scale_bp / 10000.0)))
 	print("Placement matters (best at least %d points above worst): %d of %d encounters" % [Report.GATE_POINTS, encounter_ids.size() - failed, encounter_ids.size()])
 	print("\n".join(summary))
 	quit(1 if failed > 0 else 0)
