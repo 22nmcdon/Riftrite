@@ -20,6 +20,17 @@ extends RefCounted
 ##                 overheal_shield_bp: what it heals past full HP comes back
 ##                 as that share of Shield (phase 4)
 ##   shield:       exactly one of amount, amount_bp_of_damage
+##                 (amount_bp_of_max_hp too, phase 5c step 5b); optional
+##                 cap_bp_of_max_hp (phase 8 part 4, Plated Blows): it gives
+##                 no more than takes its target's Shield to that share of
+##                 its max HP (nothing once it's there)
+##   damage's amount_bp_of_shield (phase 8 part 4, Bulwark Burst): instead
+##                 of amount, that share of the unit's own Shield as it
+##                 fires (an area's: as it's cast)
+##   spend_shield: (phase 8 part 4, Bulwark Burst; target "self") the
+##                 unit's whole Shield is gone, logged as SHIELD_SPENT with
+##                 what it was. After an area that read it, the area keeps
+##                 what it read
 ##   apply_status: status; stacks (damage over time; default 1); optional
 ##                 duration_ms (a timed status; default: the status's own)
 ##   cleanse:      amount_bp; strips that share of the target's
@@ -265,7 +276,7 @@ enum Trigger {
 	ON_HOLDER_HIT, ON_SHIELD_BROKEN, ON_ALLY_ABILITY, ON_STATUS_ENDED, ON_LIFESTEAL, ON_KNOCKBACK, ON_GUARD,
 	ON_BELOW_HP, ON_CHARGED, ON_ENEMY_FELL, ON_ARRIVE, ON_ALLY_SHIELD_BROKEN, ON_WALL_BLOCK, ON_RISE, ON_BREAKS_SHIELD,
 }
-enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS, HOP, FLOOD, SEVER }
+enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS, HOP, FLOOD, SEVER, SPEND_SHIELD }
 ## A pull's way (phase 8 part 3): toward the unit, the nearest water, or
 ## its area's middle; a knockback's: away from the unit, or toward the
 ## nearest edge.
@@ -352,7 +363,7 @@ const REACH_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_TARGET, Target.ALLIES_
 ## The targets around the unit an event names (they need one).
 const NAMED_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_NAMED, Target.ENEMY_NEAR_NAMED]
 const SIDE_NAMES: Array[String] = ["both", "enemies", "allies"]
-const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain", "knockback", "pull", "leap", "charge", "area", "start_collapse", "summon", "gain_mana", "snare", "wall", "extend_status", "hop", "flood", "sever"]
+const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain", "knockback", "pull", "leap", "charge", "area", "start_collapse", "summon", "gain_mana", "snare", "wall", "extend_status", "hop", "flood", "sever", "spend_shield"]
 const TOWARD_NAMES: Array[String] = ["unit", "water", "area", "edge"]
 const FLOOD_MODE_NAMES: Array[String] = ["circle", "spread", "drain", "all"]
 ## The types placed at the ability's target without a "target" key of their
@@ -393,6 +404,11 @@ var amount: int = 0
 var amount_bp_of_damage: int = 0
 ## heal: a share of the healed unit's max HP (0: `amount` instead).
 var amount_bp_of_max_hp: int = 0
+## damage (phase 8 part 4): a share of the unit's own Shield (0: `amount`).
+var amount_bp_of_shield: int = 0
+## shield (phase 8 part 4): it fills its target's Shield to at most this
+## share of its max HP (0: no cap).
+var cap_bp_of_max_hp: int = 0
 ## damage/heal/shield: a power bonus (bp, added to the unit's other power
 ## bonuses by the damage rule, DamageRule). Not read from the data: kit mods
 ## set it ("amount_bp" on an ability, phase 5c Decision 6).
@@ -605,10 +621,11 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 	if not type_name.is_empty():
 		match def.type:
 			Type.DAMAGE:
-				if reader.has("amount") == reader.has("amount_bp_of_damage"):
-					reader.error("damage needs exactly one of \"amount\" or \"amount_bp_of_damage\"")
+				if int(reader.has("amount")) + int(reader.has("amount_bp_of_damage")) + int(reader.has("amount_bp_of_shield")) != 1:
+					reader.error("damage needs exactly one of \"amount\", \"amount_bp_of_damage\", or \"amount_bp_of_shield\"")
 				def.amount = reader.opt_int("amount", 0, 0)
 				def.amount_bp_of_damage = reader.opt_int("amount_bp_of_damage", 0, 0)
+				def.amount_bp_of_shield = reader.opt_int("amount_bp_of_shield", 0, 0)
 				if reader.has("bonus_per_ally"):
 					_read_bonus(def, reader.req_object("bonus_per_ally"))
 				def.ricochet = reader.opt_int("ricochet", 0, 0, 5)
@@ -705,6 +722,10 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				def.amount = reader.opt_int("amount", 0, 0)
 				def.amount_bp_of_damage = reader.opt_int("amount_bp_of_damage", 0, 0)
 				def.amount_bp_of_max_hp = reader.opt_int("amount_bp_of_max_hp", 0, 0, FixedMath.BP_ONE)
+				def.cap_bp_of_max_hp = reader.opt_int("cap_bp_of_max_hp", 0, 1, 10 * FixedMath.BP_ONE)
+			Type.SPEND_SHIELD:
+				if def.target != Target.SELF:
+					reader.error("spend_shield spends the unit's own Shield (\"target\": \"self\")")
 			Type.APPLY_STATUS:
 				def.status_id = reader.req_string("status")
 				def.stacks = reader.opt_int("stacks", 1, 1)
@@ -729,8 +750,8 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				if reader.has("statuses"):
 					def.cleanse_statuses = reader.req_string_array("statuses")
 		if reader.has("scaling"):
-			if def.amount_bp_of_damage > 0 or def.amount_bp_of_max_hp > 0:
-				reader.error("\"scaling\" can't be combined with %s" % ("amount_bp_of_damage" if def.amount_bp_of_damage > 0 else "amount_bp_of_max_hp"))
+			if def.amount_bp_of_damage > 0 or def.amount_bp_of_max_hp > 0 or def.amount_bp_of_shield > 0:
+				reader.error("\"scaling\" can't be combined with %s" % ("amount_bp_of_damage" if def.amount_bp_of_damage > 0 else "amount_bp_of_max_hp" if def.amount_bp_of_max_hp > 0 else "amount_bp_of_shield"))
 			_read_scaling(def, reader.req_object("scaling"))
 
 	def.when_attackers = reader.opt_int("when_attackers", 0, 0, 10)

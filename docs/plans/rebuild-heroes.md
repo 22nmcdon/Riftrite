@@ -74,6 +74,33 @@ That gives each path about 18 options. **Hero and role upgrades must never give 
 5. **Every cost should have an answer somewhere in the team.**
 6. **Paths can change how the hero earns mana, or what triggers their signature at all.** It's one of the strongest ways to make a path feel different.
 - **New heroes are designed against the build map** (`build-map.md`): each of a new hero's three paths makes or pays off a different team build, and the map's table is updated.
+- **Old signatures become habits.** When a transformation or an apex replaces a hero's signature, the old one stays as a **habit**: it fires by itself every few basic attacks, with no mana. Upgrades to the old signature keep working on the habit, so no pick goes dead, and every hero keeps their identity (Garrow always hauls, Ilse always flares).
+  - **Strength:** a habit is the old signature at its **base strength**, every **8th** basic attack. On a path whose own mechanic builds on the old signature (Chainwarden's Haul, Wildfire's Flare, Vell's Mend), it keeps **that path's strength**, and fires more often (table below).
+  - **A habit isn't a signature:** it costs no mana, doesn't count as "firing a signature" (for Shared Breath, Grand Chorus, Evensong, Blood Rite, and so on), and sigils don't change it.
+  - **Several habits:** if an apex replaces a path signature, that one becomes a habit too. Each habit keeps its own count of attacks, so a hero can have up to two.
+  - **Heroes without a mana bar** (Last Watch) still have habits: they count attacks, not mana.
+
+### Habits by hero
+
+| Hero | Old signature | Its habit, by path |
+| --- | --- | --- |
+| **Maren** | Marking Shot | Every 8th basic attack, on every path: Marks the target for 4s |
+| **Brannoc** | Hold the Line | Every 8th basic attack, on every path: taunts enemies within 2 hexes for 3s (Ironbrand: adjacent enemies only, as its cost says) |
+| **Vell** | Mend | Every **4th** basic attack, on every path (healing is her core). **Lanternbearer:** Mend at full path strength (heals every ally next to its target at 50%). **Wardweaver:** it's Weave (mostly Shield). **Vigil Keeper:** the smaller Mend her section already describes |
+| **Ilse** | Flare | Every 8th basic attack: Flare at base strength. **Wildfire:** every **6th**, and it leaves Kindling's burning ground (the path builds on Flare) |
+| **Tamsin** | Shadowstep | Every 8th basic attack, on every path: hidden for 2s and slips behind her target |
+| **Garrow** | Haul | **Chainwarden:** every **6th** basic attack, pulls up to 3 enemies and Bleeds each (the path's mechanic). **Aegisfang, Spitemail:** every 8th, pulls 1, like base Haul |
+| **Aldous** | Peal | Every 8th basic attack, on every path: allies within 3 hexes get +15% attack speed for 4s (Windcaller: ranged allies only, as its cost says) |
+| **Hob** | Grab | Every 8th basic attack, on every path: darts to the lowest-HP enemy within 3 hexes and hits it for 150% of his ATK |
+| **Severine** | Drain | Every 8th basic attack, on every path: strikes for 200% of her ATK with 50% lifesteal (Hemomancer: using MGK, from range) |
+| **Edric** | Ward | Every 8th basic attack, on every path: every ally gains a Shield of 8% of their max HP |
+| **Ottilie** | Volatile Flask | Every 8th basic attack, on every path: the base flask (120% of her MGK, Burn and Poison each 20% of her MGK) |
+| **Lucan** | Mirror | Every 8th basic attack, on every path: a copy of him for 6s at 30% of his stats (Veilweaver: 3s, as its cost says) |
+| **Kestra** | Sic 'Em | Every 8th basic attack, on every path: her companion leaps and bites for 200% of its ATK (Serpent-Keeper: the viper spits for 200%) |
+
+**Apex signatures** (Hallowed Ground, Recast the Idol, Sanguine Nova, Marionette, and the others that replace a path signature): the path signature they replace becomes a second habit, every 8th basic attack, at its path strength.
+
+Numbers are placeholders; habit frequency is a tuning knob (how often matters more than how strong).
 
 ## 4. Signature triggers and mana
 
@@ -327,7 +354,7 @@ The fantasy: her light heals friends and burns enemies.
 | | Taste (vowed) | Transformed |
 | --- | --- | --- |
 | **Mechanic** | **Judgment:** every 4th Mend also smites the enemy nearest its target, for 10% of the heal as damage | Every Mend smites |
-| **Signature** | Mend | **Sunfall** (replaces Mend as her signature; Mend becomes a smaller heal that fires every 4th basic attack): a beam of light along a line that damages enemies and heals allies in it |
+| **Signature** | Mend | **Sunfall** (replaces Mend as her signature; Mend becomes a habit, a smaller heal every 4th basic attack; see "Habits by hero"): a beam of light along a line that damages enemies and heals allies in it |
 | **Stats** | unchanged | +MGK, +CRIT, –DEF |
 | **Mana** | unchanged | her smites give mana |
 | **Cost** | Mend's range –1 | her healing is 30% weaker |
@@ -491,7 +518,7 @@ The fantasy: the chains bring them to him, and every one in reach makes him stro
 
 | | Taste (vowed) | Transformed |
 | --- | --- | --- |
-| **Mechanic** | **Barbed Chain:** Haul applies Bleed equal to 20% of his ATK to the enemy it pulls | Haul pulls up to 3 enemies, Bleeding each. **Crowd Strength:** +5% ATK and +2 DEF for each enemy within 1 hex |
+| **Mechanic** | **Barbed Chain:** Haul applies Bleed equal to 20% of his ATK to the enemy it pulls | **Haul becomes a habit:** every 6th basic attack, it pulls up to 3 enemies, Bleeding each. **Crowd Strength:** +5% ATK and +2 DEF for each enemy within 1 hex |
 | **Signature** | Haul | **Maelstrom:** pulls every enemy within 3 hexes next to him, Roots them for 1s, and applies Bleed equal to 30% of his ATK to each. He can attack again at once |
 | **Cost** | –10% ATK | –1 speed |
 

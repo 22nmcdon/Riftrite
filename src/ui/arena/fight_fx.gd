@@ -236,6 +236,14 @@ func _add(entry: LogEntry, sim: CombatSim) -> void:
 				move.to = Vector2(entry.to_pos)
 				move.unit_id = mover
 				moves[mover] = move
+		LogEntry.Kind.SHIELD_SPENT:
+			# A Shield spent (phase 8 part 4, Bulwark Burst): "Spends N Shield"
+			# over the unit; its bar's Shield is gone (from the unit's state).
+			var spender: UnitState = sim.unit_by_id(entry.target)
+			if spender != null:
+				var spends: Fx = _new(Kind.POPUP, entry.tick, entry.tick + POPUP_TICKS, Vector2(spender.pos), spender.id)
+				spends.text = "Spends %d Shield" % entry.amount
+				spends.color = UiStyle.SHIELD
 		LogEntry.Kind.COPIED:
 			# A copied signature (phase 8 part 3): "Copies <name>" over the copier.
 			var copier: UnitState = sim.unit_by_id(entry.source_unit)

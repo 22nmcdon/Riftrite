@@ -35,6 +35,10 @@ extends RefCounted
 ##                                          that has fallen (added up, or
 ##                                          multiplied that many times);
 ##                                          off while none has
+##   "per": "enemy_near", "per_within_hexes": 1   counts once for each
+##                                          standing enemy that near it (phase
+##                                          8 part 4, Crowd Strength); off
+##                                          while none is
 ##   "while": "state", "state": {...}       on while its holder meets a
 ##                                          UnitCondition ("Shielded allies
 ##                                          deal +15%"; phase 5c step 3)
@@ -167,6 +171,9 @@ var below_bp: int = 0
 var ally_kit: String = ""
 ## Counts once per fallen ally.
 var per_fallen_ally: bool = false
+## Counts once per standing enemy within this many plane units of its holder
+## (phase 8 part 4; 0: not per enemy).
+var per_enemy_range: int = 0
 ## state: the condition its holder must meet.
 var state: UnitCondition = null
 ## damage_bp, crit_chance_bp, lifesteal_bp: the targets it counts against
@@ -249,7 +256,12 @@ static func read(reader: DataReader) -> AuraDef:
 		if not VS_STATS.has(def.stat):
 			reader.error("only an aura worked out per hit can be \"vs_within_hexes\"")
 	if reader.has("per"):
-		def.per_fallen_ally = reader.req_choice("per", ["fallen_ally"]) == "fallen_ally"
+		var per: String = reader.req_choice("per", ["fallen_ally", "enemy_near"])
+		def.per_fallen_ally = per == "fallen_ally"
+		if per == "enemy_near":
+			def.per_enemy_range = reader.req_int("per_within_hexes", 1, 8) * HexGrid.HEX
+	if reader.has("per_within_hexes") and def.per_enemy_range == 0:
+		reader.error("only an aura \"per\": \"enemy_near\" has \"per_within_hexes\"")
 	if reader.has("step"):
 		var step: DataReader = reader.req_object("step")
 		if step != null:
@@ -288,7 +300,7 @@ func is_additive() -> bool:
 func is_conditional() -> bool:
 	return while_kind == While.PLANTED or while_kind == While.BELOW_HP or while_kind == While.ALLY_STANDING or while_kind == While.STATE \
 		or while_kind == While.ALLY_NEAR or while_kind == While.BEHIND_WALL or while_kind == While.TACTIC or per_fallen_ally or per_shield_bp > 0 \
-		or while_kind == While.MOVED or while_kind == While.CROWDED or target == Target.ALLIES_NEAR or only != null
+		or per_enemy_range > 0 or while_kind == While.MOVED or while_kind == While.CROWDED or target == Target.ALLIES_NEAR or only != null
 
 
 ## Worked out per hit (EffectRunner), not folded into the unit's stats.
@@ -348,6 +360,9 @@ func describe() -> String:
 		condition += " (only those %s)" % only.describe()
 	if per_fallen_ally:
 		condition += " for each fallen ally"
+	if per_enemy_range > 0:
+		@warning_ignore("integer_division")
+		condition += " for each enemy within %d hex%s" % [per_enemy_range / HexGrid.HEX, "" if per_enemy_range == HexGrid.HEX else "es"]
 	if not per_target_stacks.is_empty():
 		condition += " per %s stack on the unit hit" % per_target_stacks.replace("_", " ")
 	if from_basic:

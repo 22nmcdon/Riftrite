@@ -196,8 +196,16 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			if not unit.vs_conditions.is_empty():
 				# A Shield's bonus on some allies (phase 5c step 7c, Front Ward).
 				power += Passives.vs_bonus_bp(unit, victim, AuraDef.Stat.SHIELD_BP, source.ability_id)
-			var shield_entry: LogEntry = give_shield(sim, victim, DamageRule.apply(amount, power, 0, 0, unit.relic_bonus_bp), source)
+			var given: int = DamageRule.apply(amount, power, 0, 0, unit.relic_bonus_bp)
+			if effect.cap_bp_of_max_hp > 0:
+				# No more than fills it to its cap (phase 8 part 4, Plated Blows).
+				given = mini(given, maxi(FixedMath.apply_bp(victim.max_hp, effect.cap_bp_of_max_hp) - victim.shield, 0))
+				if given <= 0:
+					return
+			var shield_entry: LogEntry = give_shield(sim, victim, given, source)
 			shield_entry.set_rule(amount, power, 0, 0, unit.relic_bonus_bp)
+		EffectDef.Type.SPEND_SHIELD:
+			spend_shield(sim, victim, source)
 		EffectDef.Type.EXTEND_STATUS:
 			Statuses.extend(sim, victim, effect.status_id, effect.duration_ticks, source)
 		EffectDef.Type.APPLY_STATUS:
@@ -327,6 +335,9 @@ static func amount_of(effect: EffectDef, unit: UnitState, damage: int = 0, sim: 
 	var amount: int
 	if effect.amount_bp_of_damage > 0:
 		amount = FixedMath.apply_bp(damage, effect.amount_bp_of_damage)
+	elif effect.amount_bp_of_shield > 0:
+		# Its unit's own Shield (phase 8 part 4, Bulwark Burst).
+		amount = FixedMath.apply_bp(unit.shield, effect.amount_bp_of_shield)
 	else:
 		amount = effect.base_value()
 		for stat: int in effect.scaling.size():
@@ -831,6 +842,18 @@ static func _grow_max_hp(sim: CombatSim, unit: UnitState, overheal: int, per: in
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.MAX_HP_UP, source)
 	entry.target = unit.id
 	entry.amount = gain
+	sim.combat_log.add(entry)
+
+
+## `unit`'s whole Shield is spent (phase 8 part 4, Bulwark Burst): logged
+## as SHIELD_SPENT with what it was; nothing if it has none.
+static func spend_shield(sim: CombatSim, unit: UnitState, source: EffectSource) -> void:
+	if unit.shield <= 0:
+		return
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.SHIELD_SPENT, source)
+	entry.target = unit.id
+	entry.amount = unit.shield
+	unit.shield = 0
 	sim.combat_log.add(entry)
 
 

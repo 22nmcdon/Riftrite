@@ -212,6 +212,7 @@ const NAMES: Dictionary = {
 	LogEntry.Kind.FELL: ["unit", "ability", "target"],
 	LogEntry.Kind.VOID: ["unit", "ability"],
 	LogEntry.Kind.COPIED: ["unit", "ability", "target", "note"],
+	LogEntry.Kind.SHIELD_SPENT: ["unit", "ability", "target"],
 	LogEntry.Kind.LIFESTEAL: ["unit", "ability", "target"], LogEntry.Kind.STATUS_EXTENDED: ["unit", "ability", "target", "status"],
 	LogEntry.Kind.RISE: ["target"], LogEntry.Kind.RESISTED: ["unit", "ability", "target", "status", "note"],
 	LogEntry.Kind.DODGED: ["unit", "ability", "target"],

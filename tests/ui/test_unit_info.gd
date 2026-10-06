@@ -87,7 +87,7 @@ func test_what_counts_as_a_reach() -> void:
 	nested.bonus_within = 3 * HexGrid.HEX
 	var area := EffectDef.new()
 	area.type = EffectDef.Type.AREA
-	area.shape = ring.signature.effects[0].shape
+	area.shape = ring.signature.effects[1].shape
 	area.area_effects.append(nested)
 	var wide := AbilityDef.new()
 	wide.effects.append(area)
@@ -133,7 +133,7 @@ func test_the_numbers_of_every_other_piece() -> void:
 			all.append("%s: %s" % [line.name, line.numbers])
 	assert_eq(all, [
 		"Strike: Every 1s · melee · 15 damage (8 + 50% ATK) · Marked 4s · Stun 1s",
-		"Hold the Line: Once, below 50% HP · 1-hex ring around it · Taunt 3s · 10 damage",
+		"Hold the Line: Once, below 50% HP · 12 Shield · 1-hex ring around it · Taunt 3s · 10 damage · 50% of its Shield as damage · spends its whole Shield",
 		"Ledger: Every crit on a unit that's Marked · its Marked lasts 0.5s longer",
 		"Banner: −10% damage taken while an ally is within 2 hexes",
 		"Bulwark: +0.1% ATK per point of Shield",

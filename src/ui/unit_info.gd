@@ -455,6 +455,9 @@ static func aura_text(aura: AuraDef) -> String:
 		text += " against enemies that are %s" % aura.vs.describe()
 	if aura.per_fallen_ally:
 		text += " per fallen ally"
+	if aura.per_enemy_range > 0:
+		@warning_ignore("integer_division")
+		text += " per enemy within %s" % hexes(aura.per_enemy_range / HexGrid.HEX)
 	if aura.from_basic:
 		text += " on its basic attacks"
 	if aura.from_signature:
@@ -562,6 +565,9 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 			if effect.amount_bp_of_damage > 0:
 				return "%s of the %s as damage" % [ValueBreakdown._percent(effect.amount_bp_of_damage),
 					"Shield it broke" if effect.trigger == EffectDef.Trigger.ON_SHIELD_BROKEN else "hit"]
+			if effect.amount_bp_of_shield > 0:
+				# Bulwark Burst (phase 8 part 4).
+				return "%s of its Shield as damage%s" % [ValueBreakdown._percent(effect.amount_bp_of_shield), _to_all(effect)]
 			var text: String = _amount(effect, kit, "damage")
 			if effect.bonus_bp_per_ally > 0:
 				var kin: String = _unit_name(effect.bonus_kit, content) if not effect.bonus_kit.is_empty() else "ally"
@@ -584,9 +590,10 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 		EffectDef.Type.SHIELD:
 			if effect.amount_bp_of_damage > 0:
 				return "Shield of %s of the hit" % ValueBreakdown._percent(effect.amount_bp_of_damage)
+			var cap: String = ", up to %s of max HP" % ValueBreakdown._percent(effect.cap_bp_of_max_hp) if effect.cap_bp_of_max_hp > 0 else ""
 			if effect.amount_bp_of_max_hp > 0:
-				return "Shield of %s of max HP%s" % [ValueBreakdown._percent(effect.amount_bp_of_max_hp), _to_all(effect)]
-			return _amount(effect, kit, "Shield") + _to_all(effect)
+				return "Shield of %s of max HP%s%s" % [ValueBreakdown._percent(effect.amount_bp_of_max_hp), cap, _to_all(effect)]
+			return _amount(effect, kit, "Shield") + cap + _to_all(effect)
 		EffectDef.Type.APPLY_STATUS:
 			var status: StatusDef = content.statuses[effect.status_id]
 			if not effect.stacks_of.is_empty() and effect.stacks_share_bp > 0:
@@ -686,6 +693,8 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 			return text
 		EffectDef.Type.START_COLLAPSE:
 			return "starts Rift Collapse"
+		EffectDef.Type.SPEND_SHIELD:
+			return "spends its whole Shield"
 		EffectDef.Type.SEVER:
 			return "the next bridge breaks after %s, for %s" % [seconds(effect.warning_ticks), seconds(effect.zone_ticks)]
 		EffectDef.Type.SUMMON:

@@ -218,6 +218,8 @@ static func aura_change(sim: CombatSim, holder: UnitState, aura: AuraDef) -> int
 	var change: int = aura.value if _is_additive(aura.stat) else aura.value - FixedMath.BP_ONE
 	if aura.per_fallen_ally:
 		change *= fallen_allies(sim, holder)
+	if aura.per_enemy_range > 0:
+		change *= enemies_near(sim, holder, aura.per_enemy_range)
 	if aura.step_ticks > 0:
 		@warning_ignore("integer_division")
 		change += aura.step_value * ((sim.tick - holder.moved_at - aura.after_ticks) / aura.step_ticks)
@@ -273,7 +275,20 @@ static func condition_holds(sim: CombatSim, holder: UnitState, aura: AuraDef) ->
 				return false
 	if aura.per_shield_bp > 0 and holder.shield <= 0:
 		return false
+	if aura.per_enemy_range > 0 and enemies_near(sim, holder, aura.per_enemy_range) == 0:
+		return false
 	return not aura.per_fallen_ally or fallen_allies(sim, holder) > 0
+
+
+## How many standing enemies of `holder` stand within `reach` plane units
+## of it (phase 8 part 4, Crowd Strength).
+static func enemies_near(sim: CombatSim, holder: UnitState, reach: int) -> int:
+	var count: int = 0
+	var reach_sq: int = reach * reach
+	for enemy: UnitState in sim.standing_enemies_of(holder):
+		if ArenaPlane.length_sq(enemy.pos - holder.pos) <= reach_sq:
+			count += 1
+	return count
 
 
 ## How many of `holder`'s side have fallen (summons included; one still to

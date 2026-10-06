@@ -37,6 +37,45 @@ The sim already fights any set of heroes (`Encounters.setup` builds only those t
 - **The tools and bots:** `tools/sim_formations.json` by role (section 8); `tools/run_bot.gd`'s `formation()` by role and `first_vows(content, team)` (Brannoc, Maren, and Vell by default, so the 19 test files that call it keep their runs); `placement_data.gd` and `placement_check.gd` draw a team of three; `sim_report.gd`'s `LATER_ACT_VOWS` stays the gate's team, and its formation draws, tactic variants, and columns read the fight's team; `path_report.gd` fights each path's variants with a team holding its hero (the other two from the built three), and its Guard measure reads the tank, not "brannoc"; `apex_teams.json` gains teams; `run_report.gd`'s `vow_combinations` becomes teams × vows (540), and its picks line reads each run's team; `ui_screenshots.gd` drafts.
 - **Tests that name the roster** change on purpose: `test_hero_kits.gd` (the hero list), `test_run_report.gd` (27 combinations), `test_bots.gd` (the vow cycle and the roles), `test_sim_runner.gd` (formation keys), `test_run_flow.gd` (the vow error), `test_relics.gd`'s three-hero loops, `test_placement.gd` (the default formation's keys), and the run screen tests that drive the vow screen. The other fixtures (B, M, and V fights) stay valid, since the three stay in the roster.
 
+## 3b. Habits (part 8d-2h; proposed 2026-10-06, waiting for approval)
+
+The playtester's `changes-habits.md` (2026-10-06, applied to `rebuild-heroes.md` section 3, `upgrade-pools.md`, `ui-new-systems.md`, and `apexes.md`): when a transformation or an apex replaces a hero's signature, the old one stays as a **habit** that fires by itself every few basic attacks. It settles Chainwarden (Haul and Maelstrom both stay) and keeps cards for the base signature alive. Its section 5 (the sim work) is this section.
+
+**What a habit is in the code: a passive on every Nth basic attack**, the piece Vell's three transformed paths already use (Lanternbearer's and Vigil Keeper's Mend, Wardweaver's Weave, each `on_basic_attack` with `"every": 4`). So most of the change doc's rules come for free:
+
+- **Each habit keeps its own count** (each passive effect counts its own events, `Passives`), and fires on the attack that reaches it.
+- **It never touches mana and never counts as a signature:** it isn't one, so nothing that listens for a signature (`on_ally_ability`, the `casts` deed, Overcharge, an echo, a sigil on the `signature` slot) hears it. Its effects can still give mana if the path says so (Vell's Mend does).
+- **No mana bar needed** (Last Watch): it counts attacks.
+- **Logged with the habit as its source:** the passive carries the old signature's id and name ("brannoc · Hold the Line"), so `from_ability` deeds, `on_heal`'s `from_ability`, and cards that name the ability still find it.
+- **A Stun holds its count:** a stunned unit doesn't attack.
+
+**In the data:** each path whose transformed patch (or an apex patch) replaces the signature carries the habit as a passive, written out, like Vell's. `ContentDb` refuses a kit that replaced a signature without a passive of the old one's id, so a new path can't forget it.
+
+**One new target:** `farthest_enemies` (`"count"`, `"within_hexes"`): the standing enemies farthest from the unit within that reach. Haul's habit needs it, since a passive can't use the signature's `farthest` targeting rule.
+
+**The habits this builds** (numbers from `rebuild-heroes.md`'s "Habits by hero"; placeholders):
+
+| Hero | Paths | Habit |
+| --- | --- | --- |
+| Maren | Deadeye, Trapper, Volley | Marking Shot: every 8th Longshot, Marks her target for 4s |
+| Brannoc | Hearthwall, Last Watch | Hold the Line: every 8th Shield Bash, taunts every enemy within 2 hexes for 3s |
+| Brannoc | Ironbrand | the same, within 1 hex (adjacent, as its cost says) |
+| Vell | all three | already built (Mend, Weave, the smaller Mend); unchanged |
+| Garrow | Aegisfang, Spitemail | Haul: every 8th Chain Fist, pulls the farthest enemy within 4 hexes beside him |
+| Garrow | Chainwarden | Haul: every 6th Chain Fist, pulls the 3 farthest enemies within 4 hexes beside him and Bleeds each (Barbed Chain's 20% of ATK) |
+
+**Cards for an old signature** (`upgrade-pools.md`): the built heroes' cards already name statuses on every ability (Deep Mark, Long Hold) or a passive (`passive:mend`), so they reach the habit as they are. Garrow's (Swift Haul, Hard Landing, Long Barbs, Heavy Chain, Back-Line Hook) need one more knob: an "on" entry's `"ability": "haul"` applies only to the ability or passive with that id, signature or habit; and a mana cost change on it becomes the habit's `every` one lower ("costs less mana" fires one attack sooner).
+
+**The screens:** a habit is a passive, so the Kit tab, the hero popup, and `UnitInfo` list it with its sentence ("Every 8th Shield Bash, he taunts every enemy within 2 hexes."). The pips beside the signature (`ui-new-systems.md`) wait for the UI redesign.
+
+**What it changes:** every transformed Maren and Brannoc gains a habit, so the paths report's band (+16 to +21), the acts' tuning, and the good bot's placement fits drift up. Proposed: no retune now (Decision 2: the tuning phase tunes all six), and 8d-5's first check re-measures the band with habits in. The bench's fingerprints move if its fights use transformed kits; that's checked and recorded.
+
+**Questions:**
+- **HA. Retune:** leave the drift for the tuning phase (proposed), or bring the built six transformations back into the band now?
+- **HB. Maren's habit target:** her current target (proposed; a passive's "target"), or the nearest enemy within 4 hexes like Marking Shot?
+- **HC. Chainwarden's three:** the 3 farthest within 4 hexes (proposed), or the farthest and the 2 enemies nearest it?
+- **HD. A bug found on the way:** Wide's extra targets (`targets_add`) reach only one enemy even at rank III (`targets_add: 2`), against its own description. Fix it now (runs with Wide at rank III change), or leave it for the tuning phase?
+
 ## 4. Garrow of the Chains (part 8d-2)
 
 The design: `rebuild-heroes.md` 8d, `apexes.md` Garrow, `upgrade-pools.md` Garrow, the bonds Dragged to the Snare, Woven Fang (and The Firepit and Iron Hunger, waiting for Ilse and Severine).
@@ -116,7 +155,7 @@ Five, from `duo-bonds.md`, as relics of tier `bond` (the built three's frame: a 
 ## 9. Parts
 
 - **8d-1, the draft frame:** the run's team (start, the fight's team check), the start screen's draft, Practice's team row, every tool and report reading a team (section 3a's list), role formations, `--team`, and the tests; Garrow's base kit as the fourth hero, so the frame is tested on a real roster.
-- **8d-2, Garrow:** his pieces, paths, apexes, cards, figures, his two bond relics.
+- **8d-2, Garrow:** his pieces (8d-2a, built), habits (8d-2h, section 3b; for every hero), then his paths, apexes, cards, figures, his two bond relics.
 - **8d-3, Tamsin:** the same, and Hold and Break.
 - **8d-4, Aldous:** the same, The Hunter's Bell and Toll and Judgment.
 - **8d-5, the check and the docs:** the first check (section 8), the placement refit, the run report By hero, HOW-TO-PLAY, screenshots (the draft, a fight of each new hero), the design doc, and a playtest build.
@@ -130,6 +169,15 @@ Five, from `duo-bonds.md`, as relics of tier `bond` (the built three's frame: a 
 - **The tools:** `tools/sim_formations.json` is by role (`tank`, `far`, `mid`), filled from a team by `SimReport.for_team`; `drawn_formations`, the tactics report, and the columns read the team (the gate's is still the old three). `run_bot.gd`'s `formation(name, team, content)` places by role, `team_of(flow)` reads the run's, and `first_vows(content, team)`. `run_report.gd`'s `vow_combinations` is every team of three draftable heroes times their vows (27 while three can be drafted, in the old order, so runs are unchanged); `play`/`play_many` take a `team`, and the picks line averages over the runs that had each hero. `run_runner.gd --team=a,b,c` fixes the team (passed to `--jobs` children with `--endless`). `placement_data.gd` and `placement_check.gd` draw a team (`Placement.draw_team`, only once more than three can be drafted, so the fits don't move now). `path_report.gd`'s deeds read the draftable heroes.
 - **A call made while building:** the bots don't choose a team yet (section 8's `Bot.team`); a report's runs get theirs from the seed, as vows are, and `--team` fixes one. The good bot choosing by practice fights comes with 8d-5, once there are teams to choose between.
 - **Tests:** `tests/run/test_hero_team.gd` (ready, problems, roles, the run's team and the outsider check, Practice's team and remembered hexes), `test_hero_kits.gd`'s Garrow tests, the draft (`test_run_screens.gd`) and the team row (`test_practice_flow.gd`); the vow error in `test_run_flow.gd` is now the team's. The bench's fingerprints are unchanged.
+
+### Built in 8d-2a (Garrow's path pieces)
+
+- A Shield's `cap_bp_of_max_hp` (it fills its target's Shield to at most that share of max HP; Plated Blows). With the cap on the effect, Vell's Weave already ignores it, so The Woven Fang's first line holds by itself (a call, flagged for 8d-2d).
+- A damage effect's `amount_bp_of_shield` (a share of the unit's own Shield as it fires or casts) and the effect `spend_shield` (`"target": "self"`; a new effect type, since nothing else removes a Shield): Bulwark Burst. A new log kind, **SHIELD_SPENT** (source: the ability; target: the unit; amount: the Shield), with its audit rule and a board popup ("Spends N Shield").
+- A signature's `resets_attack` (its FIRE line noted "and readies its attack"; the basic attack is ready at once): Maelstrom.
+- An aura's `"per": "enemy_near"` with `"per_within_hexes"` (once per standing enemy that near; off while none is): Crowd Strength.
+- Not needed after all: thorns are an `on_hit_taken` damage back at `hit_target` (Spikes), and Iron Maiden's 100% an `on_hit_taken` effect with a `"holder"` condition on its status, so no thorns stat.
+- Tests: `tests/sim/test_garrow_pieces.gd`. The bench's fingerprints are unchanged.
 
 Each part is tested as before: every piece in a small fight (`tests/sim/`), every kit's texts in small fights (`test_hero_kits.gd`), each card and relic changing what it says, the chaos fight using the new pieces, the save across versions, a run with each new hero, and mutation checks on each new rule.
 

@@ -168,6 +168,7 @@ Status: **agreed in discussion (2026-09-30); built for Maren, Brannoc, and Vell 
 - **Each of Tamsin's paths has a solo apex and a team apex:** Phantom / Veilmaster, Executioner / Bloodtrail, Strangler / Pinmaster.
 - **Phantom** can stay hidden nonstop on a team that keeps getting kills; Watchful enemies and later-act counters are the check.
 - **Vengeance's Grudge** is the only snowball that grows by waiting: Iron Maiden's timing (and any sigil that changes it) decides the blast's size.
+- **Apex signatures leave habits:** when an apex replaces a path signature (Hallowed Ground, Recast the Idol, Sanguine Nova, Marionette, and so on), the replaced one becomes a habit (`rebuild-heroes.md`, section 3), so path-pool upgrades for it keep working.
 - **Endless Bulwark** has no Shield cap at all; Bulwark Burst still spends the Shield, so the cap's job moves to how often he bursts.
 - **Three Mark payoff apexes, three shapes:** Bloodtrail (Tamsin) grows Marks per kill, The Great Bell per cast of Death Knell, and Requiem turns Marked deaths into chain blasts.
 - **Long Wind gives no range,** so it stays clear of Deadeye's key mechanic; it pays for spacing instead.

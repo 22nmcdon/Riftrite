@@ -13,6 +13,7 @@ Status: **agreed in discussion (2026-09-30); built as phase 5c step 7 (2026-10-0
 - **Apex upgrades:** once a hero earns an apex, its 2 upgrades join their path pool (`apexes.md`).
 - **Hero and role are one pool for now.** A role layer would mostly hold the same things as the hero layer. Split a role pool out when a third hero shares a role (the next bullet).
 - **Hero upgrades are written against slots** ("her Marks", "his taunts", "her heals"), so they survive a transformation that replaces a signature.
+- **Upgrades to a base signature keep working after a transformation,** on that signature's habit (`rebuild-heroes.md`, section 3). Cards like Swift Haul or Wide Flare never go dead. A "costs less mana" upgrade makes the habit fire **one attack sooner** instead (every 7th, not 8th).
 - **Hero upgrades never give a path's key mechanic** (range, roots, extra targets, Guard, cleave, surviving a fall, Shields, Kindle's extra heal, smites), so no deed fills without its vow.
 - **The relic rules apply:** no downsides, ATK and MGK rather than "damage", and every amount stated.
 - **A shared role pool waits for a third hero in a role.** Brannoc and Garrow are both tanks, but two heroes don't need a shared pool yet.

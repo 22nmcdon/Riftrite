@@ -80,6 +80,9 @@ enum Kind {
 	## the signature's name; shape: "shared" when it came from its side's
 	## Queen.
 	COPIED,
+	## Phase 8 part 4 (Bulwark Burst): target (the unit itself) spends its
+	## whole Shield, `amount`; source: the ability that spent it.
+	SHIELD_SPENT,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -223,6 +226,8 @@ func to_text() -> String:
 			return line + "%s heals %s for %d%s" % [source_text(), target, amount, "" if why.is_empty() else " (%s)" % ", ".join(why)]
 		Kind.SHIELD:
 			return line + "%s gives %s %d shield" % [source_text(), target, amount]
+		Kind.SHIELD_SPENT:
+			return line + "%s spends %s's %d shield" % [source_text(), target, amount]
 		Kind.COLLAPSE:
 			return line + "Rift Collapse hits %s for %d%s" % [target, amount, _damage_detail()]
 		Kind.DEATH:

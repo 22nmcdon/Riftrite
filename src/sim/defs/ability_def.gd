@@ -65,6 +65,10 @@ var grows_boosts_bp: int = 0
 ## (phase 5c step 7b: an upgrade's mod, Brand the Marked; null: its rule
 ## alone).
 var prefer: UnitCondition = null
+## A signature's (phase 8 part 4, Maelstrom: "he can attack again at once"):
+## each fire leaves its unit's basic attack ready (its FIRE line noted
+## "and readies its attack").
+var resets_attack: bool = false
 
 
 static func read(reader: DataReader) -> AbilityDef:
@@ -87,6 +91,7 @@ static func read_signature(reader: DataReader) -> AbilityDef:
 	def.cast_ticks = reader.opt_ticks("cast_ms", 0)
 	def.grows_bp = reader.opt_int("grows_bp", 0, 0, FixedMath.BP_ONE)
 	def.grows_boosts_bp = reader.opt_int("grows_boosts_bp", 0, 0, FixedMath.BP_ONE)
+	def.resets_attack = reader.opt_bool("resets_attack", false)
 	if def.cast_ticks > 0 and def.trigger.kind != TriggerDef.Kind.MANA:
 		reader.error("cast_ms: only a mana signature can have a cast")
 	# Extra triggers in the kit itself (phase 8 part 3, the Cragherd's

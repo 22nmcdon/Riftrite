@@ -213,6 +213,8 @@ static func _fire(sim: CombatSim, unit: UnitState, target: UnitState, note: Stri
 	var power_before: int = unit.fire_power_bp
 	unit.fire_power_bp += ability.grows_bp * signature.fires
 	unit.grow_power_bp = (ability.grows_bp + ability.grows_boosts_bp) * signature.fires
+	if ability.resets_attack:
+		note = "and readies its attack" if note.is_empty() else note + ", and readies its attack"
 	var fired: bool = EffectRunner.fire(sim, unit, signature, target, ability.reach_for(unit.stats.get_stat(UnitStats.Stat.RANGE)), not signature.failing, note)
 	unit.fire_power_bp = power_before
 	unit.grow_power_bp = 0
@@ -220,6 +222,9 @@ static func _fire(sim: CombatSim, unit: UnitState, target: UnitState, note: Stri
 		signature.failing = true
 		return false
 	signature.failing = false
+	if ability.resets_attack:
+		# He can attack again at once (phase 8 part 4, Maelstrom).
+		unit.attack.progress_bp = unit.attack.needed
 	if signature.echo != null:
 		signature.echo_at = sim.tick + ability.echo_ticks
 	# Wait to heal's twist (phase 5c step 6c): the heal that waited cleanses.

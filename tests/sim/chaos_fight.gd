@@ -5,7 +5,9 @@ extends RefCounted
 ##
 ## Heroes: a warden (Engage; a hit that marks and, on a crit, stuns; below
 ## half HP a ring a hex out that taunts; a hex, not two, since phase 5c's
-## walkable crumbled ground no longer herds enemies inward), a mender (a cast that heals, shields, and
+## walkable crumbled ground no longer herds enemies inward; phase 8 part 4:
+## it shields itself first, the ring hits for half that Shield, and the
+## Shield is spent), a mender (a cast that heals, shields, and
 ## cleanses the most hurt ally; an attack aura for a while; Burn it applies
 ## lands as Poison), a brand (burning strikes that stun on a crit; every
 ## third attack a charge that knocks back), and a hook (hops away; Bleed; a
@@ -61,8 +63,11 @@ static func setup(fight_seed: int = 37) -> FightSetup:
 			{"id": "banner", "name": "Banner", "kind": "aura", "aura": {"target": "holder", "stat": "damage_reduced_bp", "value": 1000, "while": "ally_near", "within_hexes": 2}},
 			{"id": "bulwark", "name": "Bulwark", "kind": "aura", "aura": {"target": "holder", "stat": "atk_bp", "per_shield_bp": 10}}],
 		"signature": {"id": "hold", "name": "Hold the Line", "trigger": {"kind": "hp_below", "threshold_bp": 5000}, "targeting": "self",
-			"effects": [{"type": "area", "shape": {"kind": "ring", "radius": 1}, "anchor": "self", "hits": "enemies",
-				"effects": [{"type": "apply_status", "status": "taunt", "target": "target"}, {"type": "damage", "amount": 10, "target": "target"}]}]}})
+			"effects": [{"type": "shield", "amount": 12, "target": "self"},
+				{"type": "area", "shape": {"kind": "ring", "radius": 1}, "anchor": "self", "hits": "enemies",
+				"effects": [{"type": "apply_status", "status": "taunt", "target": "target"}, {"type": "damage", "amount": 10, "target": "target"},
+					{"type": "damage", "amount_bp_of_shield": 5000, "target": "target"}]},
+				{"type": "spend_shield", "target": "self"}]}})
 	var mender: UnitDef = K.kit("mender", {"stats": {"hp": 700, "atk": 10, "mgk": 20, "speed": 2, "range": 4},
 		"mana": {"max": 40, "per_attack": 10, "per_10_damage_taken": 2, "regen_per_s": 3},
 		"basic_attack": {"cooldown_ms": 1100, "effects": [{"type": "damage", "amount": 6, "target": "target"}, {"type": "apply_status", "status": "burn", "stacks": 2, "target": "target"}]},
