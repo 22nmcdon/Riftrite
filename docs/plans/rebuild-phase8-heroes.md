@@ -98,6 +98,8 @@ The design: `rebuild-heroes.md` 8d, `apexes.md` Garrow, `upgrade-pools.md` Garro
 | Undertow | pulls | **a pull by a distance** (1 hex toward him, not beside) |
 | Vengeance | `UnitState.taken_total` (8b-3c's grows-per-damage) | **stored damage**: a share of each hit stored instead of taken, growing a share a second, released as an area when Iron Maiden ends or he falls |
 
+As built, some of these took another shape: thorns are `on_hit_taken` damage back at the attacker (no thorns stat; "Built in 8d-2a"), Maelstrom's reset is a signature's `resets_attack`, Undertow's pull is a timed pull of 1 hex on every enemy within 4, and stored damage is the aura stats `store_bp` and `store_grows_bp` with the effect `release_stored` ("Built in 8d-2c"). The numbers changed with the tuning by build ("Tuned by build").
+
 ## 5. Tamsin Gloamstep (part 8d-3)
 
 The design: `rebuild-heroes.md` 8c, `apexes.md` Tamsin, `upgrade-pools.md` Tamsin, the bonds Hold and Break (with Ironbrand) and The Hunter's Bell (with Aldous's Bellwarden); Price and Prey and Unseen Blade wait for Hob and Lucan.
@@ -155,7 +157,7 @@ Five, from `duo-bonds.md`, as relics of tier `bond` (the built three's frame: a 
 ## 9. Parts
 
 - **8d-1, the draft frame:** the run's team (start, the fight's team check), the start screen's draft, Practice's team row, every tool and report reading a team (section 3a's list), role formations, `--team`, and the tests; Garrow's base kit as the fourth hero, so the frame is tested on a real roster.
-- **8d-2, Garrow:** his pieces (8d-2a, built), habits (8d-2h, section 3b; for every hero; built), his paths, figures, cards, and his two bond relics (8d-2b and 8d-2d, built), and his apexes (8d-2c, built).
+- **8d-2, Garrow (built):** his pieces (8d-2a), habits (8d-2h, section 3b; for every hero), his paths, figures, cards, and his two bond relics (8d-2b and 8d-2d), his paths tuned by build (Decisions 12–14), his apexes (8d-2c), and his docs (8d-2e: the design files point to what was built).
 - **8d-3, Tamsin:** the same, and Hold and Break.
 - **8d-4, Aldous:** the same, The Hunter's Bell and Toll and Judgment.
 - **8d-5, the check and the docs:** the first check (section 8), the placement refit, the run report By hero, HOW-TO-PLAY, screenshots (the draft, a fight of each new hero), the design doc, and a playtest build.
@@ -249,7 +251,7 @@ Each part is tested as before: every piece in a small fight (`tests/sim/`), ever
 - **CB. The draft screen:** *(Answered: Decision 5.)* pick three on the vow screen itself (six cards, then the three vow rows), as proposed, or a separate screen before the vows?
 - **CC. Practice:** *(Answered: Decision 6.)* a team row on the fight list (three of six), as proposed, or any number of heroes on the board?
 - **HE. Chainwarden as an enabler:** *(Answered: Decision 13.)* its floor is its own drag, which helps any team (see "Tuned by build"). Proposed: Maelstrom and Haul's habit stay, but less of its power is its own (Crowd Strength and the Bleeds smaller), and what it drags in takes more from allies for a moment (a short Mark), so its value shows in its teammates. Or keep it self-sufficient-shaped and change its type?
-- **HF. Thorns against stronger enemies:** Spitemail's damage is a share of the hits Garrow takes, so it grows with the enemy. Its teams keep winning fights at x5 enemy strength (11% transformed, 30–40% at apex), and endless's growing floors may never stop them. Proposed: leave it for the tuning phase, and judge Spitemail and its apexes by bot runs (Decision 14) and endless floors, not by the apexes report's half point. Or cap what thorns send back (a share of his ATK or max HP a hit) so they stop scaling.
+- **HF. Thorns against stronger enemies:** *(Answered: Decision 15.)* Spitemail's damage is a share of the hits Garrow takes, so it grows with the enemy. Its teams keep winning fights at x5 enemy strength (11% transformed, 30–40% at apex), and endless's growing floors may never stop them. Proposed: leave it for the tuning phase, and judge Spitemail and its apexes by bot runs (Decision 14) and endless floors, not by the apexes report's half point. Or cap what thorns send back (a share of his ATK or max HP a hit) so they stop scaling.
 - **CD. The first check:** *(Answered: Decision 7.)* bring each new path and apex into the built ones' bars now (section 8), so the tuning phase starts level, or leave all numbers to the tuning phase?
 
 ## Decisions
@@ -270,3 +272,4 @@ The playtester, 2026-10-06:
 12. **Paths are tuned by build, not just by hero** (the playtester, 2026-10-06; `build-tuning.md`): each path has a type (self-sufficient, engine, enabler, long-game) with floor and ceiling targets, and an enabler is judged by its lift. For Garrow: Spitemail tuned down; Aegisfang's ceiling measured before any buff; Chainwarden checked for winning by itself; base Garrow checked against the old three first.
 13. **Chainwarden is self-sufficient** (Question HE): its drag wins fights whoever its teammates are, so it's retyped from enabler and tuned to that band (`build-tuning.md`, section 6).
 14. **Ceilings wait for the bots:** the builds report's ceilings and lifts are a rough guide; a path's ceiling is judged from bot runs of its test team (8d-5), not from fights at a raised enemy strength.
+15. **Spitemail's scaling waits for the tuning phase** (Question HF): its thorns and stored damage stay shares of the hits Garrow takes, and Spitemail and its apexes are judged there by bot runs and endless floors, not by the apexes report's half point. If they still don't fall off against stronger enemies, the fix is to cap what thorns send back per hit (a share of his ATK or max HP), so they stop growing with the enemy.

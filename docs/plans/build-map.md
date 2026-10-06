@@ -49,7 +49,7 @@ Ranked by how many gaps each fills. Names and kits are placeholders; each gets d
 | # | Hero idea | Fills | Notes |
 | --- | --- | --- | --- |
 | 1 | **The assassin** | Stealth (maker and payoff), Mark (payoff) | **Designed: Tamsin Gloamstep** (`rebuild-heroes.md`, section 8c) |
-| 2 | **The shield-bruiser** | Shield (payoff), Clump (maker: pulls enemies together) | **Designed: Garrow of the Chains** (`rebuild-heroes.md`, section 8d) |
+| 2 | **The shield-bruiser** | Shield (payoff), Clump (maker: pulls enemies together) | **Built: Garrow of the Chains** (`rebuild-heroes.md`, section 8d; built in phase 8 part 4, `rebuild-phase8-heroes.md`) |
 | 3 | **The battery / bard** | Mana (maker), Rangers (support) | **Designed: Aldous Vesper** (`rebuild-heroes.md`, section 8e) |
 | 4 | **The blood warlock** | Sustain (lifesteal and thorns payoff), a second payoff for Burn or Roots | **Designed: Severine Hollowell** (`rebuild-heroes.md`, section 8g). Melee, lifesteal only (never heals); Plaguebearer took Poison instead of a second Burn payoff, so Burn's second payoff stays open |
 | 5 | **The scavenger** | Economy (maker and payoff), Mark (maker, through Bounty Hunter) | **Designed: Hob Gleaner** (`rebuild-heroes.md`, section 8f) |

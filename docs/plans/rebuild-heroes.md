@@ -89,7 +89,7 @@ That gives each path about 18 options. **Hero and role upgrades must never give 
 | **Vell** | Mend | Every **4th** basic attack, on every path (healing is her core). **Lanternbearer:** Mend at full path strength (heals every ally next to its target at 50%). **Wardweaver:** it's Weave (mostly Shield). **Vigil Keeper:** the smaller Mend her section already describes |
 | **Ilse** | Flare | Every 8th basic attack: Flare at base strength. **Wildfire:** every **6th**, and it leaves Kindling's burning ground (the path builds on Flare) |
 | **Tamsin** | Shadowstep | Every 8th basic attack, on every path: hidden for 2s and slips behind her target |
-| **Garrow** | Haul | **Chainwarden:** every **6th** basic attack, pulls up to 3 enemies and Bleeds each (the path's mechanic). **Aegisfang, Spitemail:** every 8th, pulls 1, like base Haul |
+| **Garrow** | Haul | **Chainwarden:** every **6th** basic attack, pulls up to 3 enemies and Bleeds each (the path's mechanic; built every 8th after the tuning by build). **Aegisfang, Spitemail:** every 8th, pulls 1, like base Haul |
 | **Aldous** | Peal | Every 8th basic attack, on every path: allies within 3 hexes get +15% attack speed for 4s (Windcaller: ranged allies only, as its cost says) |
 | **Hob** | Grab | Every 8th basic attack, on every path: darts to the lowest-HP enemy within 3 hexes and hits it for 150% of his ATK |
 | **Severine** | Drain | Every 8th basic attack, on every path: strikes for 200% of her ATK with 50% lifesteal (Hemomancer: using MGK, from range) |
@@ -487,7 +487,9 @@ The fantasy: hold still, and it's over.
 
 ## 8d. Garrow of the Chains: the anchor (bruiser)
 
-*Added 2026-10-02.* **Role:** front line, like Brannoc, but he trades protecting allies for hitting back and dragging enemies in. Shares the tank role with Brannoc. Builds (`build-map.md`): Shield (payoff), Clump (maker), Sustain (thorns payoff).
+*Added 2026-10-02; built in phase 8 part 4 (`rebuild-phase8-heroes.md`, 8d-1 to 8d-2c), whose Decisions win where they differ.* The built numbers aren't these: his paths were tuned by build (`build-tuning.md`; that plan's "Tuned by build": base HP 550, ATK 26, DEF 40; Plated Blows 1.5% a blow, Bulwark Burst 200%; Spikes 6% and Iron Maiden 30% for 3s; Maelstrom within 2 hexes for 90 mana; Chainwarden retyped self-sufficient), and his apexes scaled to match ("Built in 8d-2c").
+
+**Role:** front line, like Brannoc, but he trades protecting allies for hitting back and dragging enemies in. Shares the tank role with Brannoc. Builds (`build-map.md`): Shield (payoff), Clump (maker), Sustain (thorns payoff).
 
 | | |
 | --- | --- |

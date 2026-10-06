@@ -164,6 +164,8 @@ These never give Stealth on a kill (Nightblade), Mark extension or stepping (Hea
 
 ## Garrow
 
+Built in phase 8 part 4 (`rebuild-phase8-heroes.md`, "Built in 8d-2b and 8d-2d"): his 33 cards; his 12 apex cards in 8d-2c.
+
 ### Hero pool
 
 These never give Shield from attacks (Aegisfang), multi-pulls, chain Bleed, or Crowd Strength (Chainwarden), or sending damage back (Spitemail).
