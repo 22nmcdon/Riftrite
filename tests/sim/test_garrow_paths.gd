@@ -56,7 +56,7 @@ func test_aegisfang_shields_himself_and_bursts_it() -> void:
 	var sim: CombatSim = _fight("the_pack", "aegisfang", true)
 	var garrow: UnitState = sim.unit_by_id("garrow")
 	for entry: LogEntry in _of(sim, LogEntry.Kind.SHIELD, "plated_blows"):
-		assert_lte(entry.amount, garrow.max_hp * 3 / 100 + 1, "3% of max HP at most")
+		assert_lte(entry.amount, garrow.max_hp * 15 / 1000 + 1, "1.5% of max HP at most")
 	var spent: Array[LogEntry] = _of(sim, LogEntry.Kind.SHIELD_SPENT, "bulwark_burst")
 	assert_gt(spent.size(), 0, "Bulwark Burst spends his Shield")
 	for entry: LogEntry in spent:
@@ -94,6 +94,6 @@ func test_spitemail_hits_back() -> void:
 			windows.append([entry.tick, entry.end_tick])
 	assert_gt(windows.size(), 0)
 	var spite: Array[LogEntry] = _of(sim, LogEntry.Kind.DAMAGE, "maidens_spite")
-	assert_gt(spite.size(), 0, "hits sent back whole")
+	assert_gt(spite.size(), 0, "hits sent back")
 	for entry: LogEntry in spite:
 		assert_true(windows.any(func(window: Array) -> bool: return entry.tick >= window[0] and entry.tick <= window[1]), "only while Iron Maiden lasts")

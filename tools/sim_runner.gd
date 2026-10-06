@@ -29,16 +29,25 @@ extends SceneTree
 ##                (default ApexReport.SCALES, x1.0 to x5.0); below 10000 too
 ##   --by-encounter  with --apexes: each encounter's half point for each
 ##                team, transformed and at apex (for tuning an act's scales)
+##   --builds     the builds report instead (phase 8 part 4,
+##                tools/build_report.gd; docs/plans/build-tuning.md): each
+##                path in tools/build_teams.json, its floor (in the neutral
+##                team), its ceiling (in its build team, with its relics), and
+##                an enabler's lift; --team=<name> one build,
+##                --strength=15000 the ceiling's and lift's enemies x1.5
+##                (a build team wins nearly every Act 1 fight). Use
+##                --seeds=1 --sweep=20 and --act=1.
 ## Ends with a line per encounter, and exits 1 if any fails the gate.
 
 const Report = preload("res://tools/sim_report.gd")
 const PathReport = preload("res://tools/path_report.gd")
 const ApexReport = preload("res://tools/apex_report.gd")
+const BuildReport = preload("res://tools/build_report.gd")
 const FORMATIONS_FILE: String = "res://tools/sim_formations.json"
 
 
 func _init() -> void:
-	var options: Dictionary[String, String] = {"encounter": "", "seeds": "50", "sweep": "40", "draw-seed": "1", "team": "", "act": "", "scales": ""}
+	var options: Dictionary[String, String] = {"encounter": "", "seeds": "50", "sweep": "40", "draw-seed": "1", "team": "", "act": "", "scales": "", "strength": "10000"}
 	var by_encounter: bool = false
 	var apexes: bool = false
 	var singles: bool = false
@@ -47,6 +56,7 @@ func _init() -> void:
 	var tactics: bool = false
 	var paths: bool = false
 	var deeds: bool = false
+	var builds: bool = false
 	for arg: String in OS.get_cmdline_user_args():
 		if arg == "--no-boards":
 			boards = false
@@ -62,6 +72,9 @@ func _init() -> void:
 			continue
 		if arg == "--apexes":
 			apexes = true
+			continue
+		if arg == "--builds":
+			builds = true
 			continue
 		if arg == "--singles":
 			singles = true
@@ -125,6 +138,20 @@ func _init() -> void:
 					ApexReport.run_variant(content, variant, encounter_ids, named, options["sweep"].to_int(), scales)
 				print(ApexReport.team_text(content, team, variants, scales))
 				print("")
+		quit(0)
+		return
+	if builds:
+		var run: RunContent = RunContent.load_dir("res://data", content)
+		var picked: Array[BuildReport.Build] = BuildReport.read_builds(content, run, errors)
+		if not errors.is_empty():
+			_fail("\n".join(errors))
+			return
+		if not options["team"].is_empty():
+			picked = picked.filter(func(build: BuildReport.Build) -> bool: return build.name == options["team"])
+		var results: Array[BuildReport.Result] = []
+		for build: BuildReport.Build in picked:
+			results.append(BuildReport.run_build(content, run, build, encounter_ids, named, options["sweep"].to_int(), options["seeds"].to_int(), options["strength"].to_int()))
+		print(BuildReport.text(content, results))
 		quit(0)
 		return
 	if paths or deeds:

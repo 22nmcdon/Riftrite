@@ -160,6 +160,7 @@ Status: **agreed in discussion (2026-09-30); built for Maren, Brannoc, and Vell 
 
 ## Notes
 
+- **The tier shift is also the cap for transformed paths:** no first-transform path at its ceiling may reach it (`build-tuning.md`, section 3).
 - **Undying Oath is capped at 3 rises per fight** so it can't loop forever with revive relics. A rise from Second Dawn (legendary) counts toward the 3.
 - **Martyr's Pyre** rewards taking as much damage as possible before falling, which fits Last Watch.
 - **Sanctifier** changes the board over a long fight; it's the apex most tied to where enemies stand.

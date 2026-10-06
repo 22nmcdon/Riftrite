@@ -80,13 +80,13 @@
     }
   },
   {
-    "_note": "Hero 4 (docs/plans/rebuild-heroes.md section 8d; rebuild-phase8-heroes.md 8d-1). Stats and Haul's mana are the design's; Chain Fist's cooldown and the mana gains are first numbers, for 8d-5's first check.",
+    "_note": "Hero 4 (docs/plans/rebuild-heroes.md section 8d; rebuild-phase8-heroes.md 8d-1). Haul's mana is the design's; Chain Fist's cooldown and the mana gains are first numbers. HP, ATK, and DEF (550, 26, 40, from the design's 380, 18, 22) bring his base team within 10 points of the old three's in Act 1 (build-tuning.md, section 4).",
     "id": "garrow",
     "name": "Garrow of the Chains",
     "title": "the anchor",
     "role": "tank",
     "kit": {
-      "stats": {"hp": 380, "atk": 18, "def": 22, "speed": 2, "range": 1},
+      "stats": {"hp": 550, "atk": 26, "def": 40, "speed": 2, "range": 1},
       "mana": {"max": 70, "start": 20, "per_attack": 10, "per_10_damage_taken": 1},
       "basic_attack": {
         "id": "chain_fist", "name": "Chain Fist", "text": "A heavy blow on the enemy in front of him.",

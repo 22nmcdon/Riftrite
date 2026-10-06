@@ -93,4 +93,4 @@ func test_the_spitemail_cards() -> void:
 	var long: UnitDef = _with("long_maiden", spite)
 	var durations: Array = long.signature.effects.map(func(effect: EffectDef) -> int:
 		return effect.area_effects[0].duration_ticks if effect.type == EffectDef.Type.AREA else effect.duration_ticks)
-	assert_eq(durations, [100, 100], "the taunt and the Maiden both last 5s")
+	assert_eq(durations, [80, 80], "the taunt and the Maiden both last 4s")

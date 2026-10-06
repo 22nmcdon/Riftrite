@@ -399,5 +399,5 @@
   {"_note": "More MGK for the rest of the fight, a stack for each smite kill (Inquisitor's Zeal card; phase 8 part 2).", "id": "zeal_more", "name": "Zeal (more)", "kind": "boost", "stacking": true, "auras": [{"stat": "mgk_bp", "value": 10500}]},
   {"_note": "Takes less damage while rallied (Warlord's Shield Wall card; phase 8 part 2).", "id": "shield_wall", "name": "Shield Wall", "kind": "boost", "duration_ms": 4000, "auras": [{"stat": "damage_reduced_bp", "value": 1000}]},
   {"_note": "Takes less damage for a while after her healing (Dawnbringer's Morning Ward card; phase 8 part 2).", "id": "dawn_ward", "name": "Dawn Ward", "kind": "boost", "duration_ms": 4000, "auras": [{"stat": "damage_reduced_bp", "value": 1000}]},
-  {"_note": "While it lasts, every hit on him is sent back whole (Iron Maiden, Spitemail's signature; phase 8 part 4). It changes nothing by itself: his Maiden's Spite passive reads it.", "id": "iron_maiden", "name": "Iron Maiden", "kind": "boost", "duration_ms": 4000, "auras": [{"stat": "def", "value": 0}]}
+  {"_note": "While it lasts, a share of every hit on him is sent back (Iron Maiden, Spitemail's signature; phase 8 part 4). It changes nothing by itself: his Maiden's Spite passive reads it.", "id": "iron_maiden", "name": "Iron Maiden", "kind": "boost", "duration_ms": 3000, "auras": [{"stat": "def", "value": 0}]}
 ]

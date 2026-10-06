@@ -17,7 +17,8 @@ Run every team in three groups, on the same seeds and difficulty:
 - endless depth (deepest floor);
 - average fight length;
 - hero falls per run;
-- shards earned and spent.
+- shards earned and spent;
+- **per path:** win-rate gain from the transform (floor and ceiling), and for engines, how often the build came together.
 
 **What to flag:**
 - **A synergy team at or below random:** its build doesn't work. Check the makers, payoffs, and numbers.
@@ -26,6 +27,8 @@ Run every team in three groups, on the same seeds and difficulty:
 - **A build never wins a single run:** something in it is broken (a dead keyword, a payoff that never fires).
 
 **The bot's lean:** each team lists **key relics and items**. The bot weights those up in shops and picks (say, ×3), so the test measures the build, not luck in the shop. Also run each synergy team once with **no lean**, to see how much a build needs its items.
+
+**Floor and ceiling runs** (`build-tuning.md`): besides the three groups, each path is run twice: once on a **neutral team** (random teammates, no lean) for its floor, and once in its **synergy team** (with the lean) for its ceiling. Enablers are also run in their synergy team with the enabler swapped out, to measure their **lift**. For engines, the random group also logs **how often the build came together** by the transform; that sets the engine's ceiling.
 
 **Apexes:** each team names the apex it vows toward. Test both apexes where the table lists two.
 

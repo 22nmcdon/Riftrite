@@ -1,0 +1,30 @@
+{
+  "_note": "The builds report's teams (tools/build_report.gd, sim_runner.gd --builds; docs/plans/build-tuning.md and test-teams.md). Each names a path to judge, its type (build-tuning.md, section 6), its build team (every hero on a path, all transformed), the build's relics, and for an enabler the path its lift is measured against. Heroes not built yet are stood in for by a built hero on the nearest path; each note says which.",
+  "builds": [
+    {
+      "name": "Bulwark",
+      "path": "aegisfang",
+      "type": "engine",
+      "team": {"garrow": "aegisfang", "vell": "wardweaver", "brannoc": "hearthwall"},
+      "relics": ["tithe_of_iron", "shattered_aegis", "overflow_chalice", "wardens_engine", "the_woven_fang"],
+      "note": "test-teams.md #7; Brannoc's Hearthwall (Hearthguard's Shields) stands in for Edric's Aegis"
+    },
+    {
+      "name": "Whirlpool",
+      "path": "chainwarden",
+      "type": "enabler",
+      "team": {"garrow": "chainwarden", "maren": "volley", "vell": "vigil_keeper"},
+      "relics": ["the_hungering_rift"],
+      "swap": "spitemail",
+      "note": "test-teams.md #8; Vell's Vigil Keeper (Sunfall's line) stands in for Ilse's Wildfire; few clump relics are built yet"
+    },
+    {
+      "name": "Blood Price",
+      "path": "spitemail",
+      "type": "self-sufficient",
+      "team": {"garrow": "spitemail", "vell": "lanternbearer", "maren": "deadeye"},
+      "relics": ["leech_tooth", "gluttons_chalice", "overflow_chalice"],
+      "note": "test-teams.md #11; Maren's Deadeye stands in for Severine's Hemomancer"
+    }
+  ]
+}

@@ -3330,7 +3330,7 @@
     ]
   },
   {
-    "_note": "The shield that bites (rebuild-heroes.md, section 8d, path 1; phase 8 part 4, 8d-2b). Numbers are the design's placeholders; the deed's threshold is a first number for 8d-5's check.",
+    "_note": "The shield that bites (rebuild-heroes.md, section 8d, path 1; phase 8 part 4, 8d-2b). An engine (build-tuning.md): Plated Blows' 1.5% a blow (the design's 3%) keeps its floor low, and Bulwark Burst's 200% (the design's 150%) pays more for the Shields allies and relics give him. The deed's threshold is a first number for 8d-5's check.",
     "id": "aegisfang",
     "hero": "garrow",
     "name": "Aegisfang",
@@ -3363,7 +3363,7 @@
       }
     },
     "transformed": {
-      "text": "Each Chain Fist gives him a Shield of 3% of his max HP, up to half his max HP. Bulwark Burst replaces Haul: his whole Shield bursts on the enemies within 1 hex of him for 150% of it. Haul becomes a habit, every 8th Chain Fist.",
+      "text": "Each Chain Fist gives him a Shield of 1.5% of his max HP, up to half his max HP. Bulwark Burst replaces Haul: his whole Shield bursts on the enemies within 1 hex of him for twice what it held. Haul becomes a habit, every 8th Chain Fist.",
       "cost": "15% less DEF.",
       "patch": {
         "stats_bp": {
@@ -3372,7 +3372,7 @@
         "signature": {
           "id": "bulwark_burst",
           "name": "Bulwark Burst",
-          "text": "His whole Shield bursts: the enemies within 1 hex of him take half again as much as it held, and the Shield is gone.",
+          "text": "His whole Shield bursts: the enemies within 1 hex of him take twice what it held, and the Shield is gone.",
           "trigger": {
             "kind": "mana"
           },
@@ -3389,7 +3389,7 @@
               "effects": [
                 {
                   "type": "damage",
-                  "amount_bp_of_shield": 15000,
+                  "amount_bp_of_shield": 20000,
                   "target": "target"
                 }
               ]
@@ -3410,7 +3410,7 @@
               {
                 "trigger": "on_basic_attack",
                 "type": "shield",
-                "amount_bp_of_max_hp": 300,
+                "amount_bp_of_max_hp": 150,
                 "cap_bp_of_max_hp": 5000,
                 "target": "self"
               }
@@ -3442,7 +3442,7 @@
       "from_ability": [
         "plated_blows"
       ],
-      "threshold": 130
+      "threshold": 370
     }
   },
   {
@@ -3600,11 +3600,11 @@
       "statuses": [
         "bleed"
       ],
-      "threshold": 6
+      "threshold": 8
     }
   },
   {
-    "_note": "The one who hits back (rebuild-heroes.md, section 8d, path 3; phase 8 part 4, 8d-2b). Thorns are an on_hit_taken damage back at the attacker; Iron Maiden's whole send-back reads the iron_maiden status on him. Numbers are the design's placeholders; the deed's threshold is a first number for 8d-5's check.",
+    "_note": "The one who hits back (rebuild-heroes.md, section 8d, path 3; phase 8 part 4, 8d-2b). Thorns are an on_hit_taken damage back at the attacker; Iron Maiden's send-back reads the iron_maiden status on him. Self-sufficient (build-tuning.md): Spikes' 6% (the design's 25%), Iron Maiden's 30% (the design's 100%) for 3s (the design's 4s) bring its floor near the type's band; the deed's threshold is a first number for 8d-5's check.",
     "id": "spitemail",
     "hero": "garrow",
     "name": "Spitemail",
@@ -3637,13 +3637,13 @@
       }
     },
     "transformed": {
-      "text": "Enemies hitting him take a quarter of the damage back, and he heals for half of what he sends back. Iron Maiden replaces Haul: for 4s he taunts every enemy within 2 hexes and sends back every hit whole. Haul becomes a habit, every 8th Chain Fist.",
+      "text": "Enemies hitting him take a little more of the damage back, and he heals for half of what he sends back. Iron Maiden replaces Haul: for 3s he taunts every enemy within 2 hexes and sends back a share of every hit. Haul becomes a habit, every 8th Chain Fist.",
       "cost": "Heals on him are 20% weaker.",
       "patch": {
         "signature": {
           "id": "iron_maiden",
           "name": "Iron Maiden",
-          "text": "For 4s he taunts every enemy within 2 hexes of him and sends back every hit on him whole.",
+          "text": "For 3s he taunts every enemy within 2 hexes of him and sends back a share of every hit on him.",
           "trigger": {
             "kind": "mana"
           },
@@ -3661,7 +3661,7 @@
                 {
                   "type": "apply_status",
                   "status": "taunt",
-                  "duration_ms": 4000,
+                  "duration_ms": 3000,
                   "target": "target"
                 }
               ]
@@ -3670,7 +3670,7 @@
               "type": "apply_status",
               "status": "iron_maiden",
               "target": "self",
-              "duration_ms": 4000
+              "duration_ms": 3000
             }
           ]
         },
@@ -3679,18 +3679,18 @@
             "id": "spikes",
             "name": "Spikes",
             "kind": "ability",
-            "text": "Enemies that hit him take a quarter of it back, and he heals for half of what he sends.",
+            "text": "Enemies that hit him take a little of it back, and he heals for half of what he sends.",
             "effects": [
               {
                 "trigger": "on_hit_taken",
                 "type": "damage",
-                "amount_bp_of_damage": 2500,
+                "amount_bp_of_damage": 600,
                 "target": "hit_target"
               },
               {
                 "trigger": "on_hit_taken",
                 "type": "heal",
-                "amount_bp_of_damage": 1250,
+                "amount_bp_of_damage": 300,
                 "target": "self"
               }
             ]
@@ -3699,7 +3699,7 @@
             "id": "maidens_spite",
             "name": "Maiden's Spite",
             "kind": "ability",
-            "text": "While Iron Maiden lasts, every hit on him is sent back whole.",
+            "text": "While Iron Maiden lasts, every hit on him sends a share of it back.",
             "effects": [
               {
                 "trigger": "on_hit_taken",
@@ -3709,7 +3709,7 @@
                   ]
                 },
                 "type": "damage",
-                "amount_bp_of_damage": 10000,
+                "amount_bp_of_damage": 3000,
                 "target": "hit_target"
               }
             ]
@@ -3751,7 +3751,7 @@
       "from_ability": [
         "spikes"
       ],
-      "threshold": 100
+      "threshold": 150
     }
   }
 ]

@@ -52,7 +52,7 @@ func test_the_kits_read_as_designed() -> void:
 	var roles: Array = _content.hero_ids.map(func(hero_id: String) -> int: return (_content.heroes[hero_id] as HeroDef).role)
 	assert_eq(roles, [HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT, HeroDef.Role.TANK])
 	var stats: Array = _content.hero_ids.map(func(hero_id: String) -> Array: return _kit(hero_id).stats.values)
-	assert_eq(stats, [[630, 14, 0, 50, 0, 0, 2, 1], [270, 22, 0, 8, 8, 10, 2, 4], [300, 6, 20, 10, 0, 0, 2, 3], [380, 18, 0, 22, 0, 0, 2, 1]], "HP, ATK, MGK, DEF, CRIT, ATSP, speed, range")
+	assert_eq(stats, [[630, 14, 0, 50, 0, 0, 2, 1], [270, 22, 0, 8, 8, 10, 2, 4], [300, 6, 20, 10, 0, 0, 2, 3], [550, 26, 0, 40, 0, 0, 2, 1]], "HP, ATK, MGK, DEF, CRIT, ATSP, speed, range (Garrow's tuned into the base band, build-tuning.md)")
 	var mana: Array = _content.hero_ids.map(func(hero_id: String) -> Array:
 		var bar: ManaDef = _kit(hero_id).mana
 		return [bar.max, bar.start, bar.per_attack, bar.per_10_damage_taken, bar.regen_per_s])
@@ -127,16 +127,16 @@ func test_stand_fast_shields_him_once_below_half() -> void:
 	var fight: CombatSim = _sim([K.at(_kit("garrow"), 3, 2)] as Array[UnitSetup], [K.foe(_dummy(), 3, 6)] as Array[UnitSetup])
 	var garrow: UnitState = fight.unit_by_id("garrow")
 	_root_all(fight, fight.heroes)
-	garrow.hp = 191
+	garrow.hp = 276
 	K.step(fight, 1)
-	assert_eq(_rows(fight, LogEntry.Kind.SHIELD, "garrow", "stand_fast"), [], "191 of 380 isn't below half")
-	garrow.hp = 189
+	assert_eq(_rows(fight, LogEntry.Kind.SHIELD, "garrow", "stand_fast"), [], "276 of 550 isn't below half")
+	garrow.hp = 274
 	K.step(fight, 1)
-	garrow.hp = 300
+	garrow.hp = 400
 	K.step(fight, 1)
 	garrow.hp = 100
 	K.step(fight, 1)
-	assert_eq(_rows(fight, LogEntry.Kind.SHIELD, "garrow", "stand_fast"), [["garrow", 57]], "15% of his max HP, once a fight")
+	assert_eq(_rows(fight, LogEntry.Kind.SHIELD, "garrow", "stand_fast"), [["garrow", 83]], "15% of his max HP, once a fight")
 
 
 func test_heavy_keeps_him_from_being_moved() -> void:

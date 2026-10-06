@@ -88,6 +88,7 @@ The other builds (Rangers, Sustain, Stealth, Mana, Economy) get theirs once thei
 - **Designing a new hero:** say which builds each path makes or pays off, and update the table in section 3.
 - **Designing a relic or item:** say which build it supports. A build with no hero payoff doesn't get more relic payoffs until it has one.
 - **Testing:** the combo fixtures (part 7, section 7) get one team per build, so each build is checked to work.
+- **Every path has a type** (self-sufficient, engine, enabler, or long-game), listed in `build-tuning.md`, section 6. A new hero's three paths should not all be one type.
 
 ## Open questions
 
