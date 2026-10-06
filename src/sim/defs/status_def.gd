@@ -32,6 +32,10 @@ extends RefCounted
 ##             (optional) drops the oldest past it
 ##             "until_attack": true (phase 5c step 6b; Shadow Step): it
 ##             ends as its holder next attacks (that attack still has it)
+##   stealth:  duration_ms; phase 8 part 4 (Tamsin): "until_attack": true
+##             ends it as its holder's next basic attack fires (that attack
+##             is still from Stealth), and "spares_attacks": N lets that
+##             many basic attacks pass first (Shadow Dance)
 ##   grounded: duration_ms (a flier can't fly while it lasts: it walks, and
 ##             rocks and walls stop it; set down on the nearest free safe
 ##             spot if it's over something; phase 5c step 6b, Fletched for
@@ -76,6 +80,9 @@ var keyword: String = ""
 var stacking: bool = false
 ## boost: it ends as its holder next attacks (phase 5c step 6b).
 var until_attack: bool = false
+## stealth with until_attack: the basic attacks it lets pass first (phase 8
+## part 4, Shadow Dance).
+var spares_attacks: int = 0
 
 
 static func read(reader: DataReader) -> StatusDef:
@@ -105,6 +112,10 @@ static func read(reader: DataReader) -> StatusDef:
 		if def.kind == Kind.BOOST:
 			def.stacking = reader.opt_bool("stacking", false)
 			def.until_attack = reader.opt_bool("until_attack", false)
+		elif def.kind == Kind.STEALTH:
+			def.until_attack = reader.opt_bool("until_attack", false)
+			if def.until_attack:
+				def.spares_attacks = reader.opt_int("spares_attacks", 0, 0, 10)
 		if def.stacking:
 			def.duration_ticks = reader.opt_ticks("duration_ms", 0, FixedMath.MS_PER_TICK)
 			def.max_stacks = reader.opt_int("max_stacks", 0, 0)

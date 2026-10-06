@@ -567,6 +567,45 @@ def garrow_spitemail(uid):
     return "".join(o)
 
 
+# ------------------------------------------------------------------ Tamsin (8d-3)
+DUSKCLOTH, DUSKCLOTH_DK = "#2f3a4a", "#1f2633"
+DUSK = "#5b4a7a"
+STEEL = "#d7dde6"
+
+
+def tamsin_head(hood=DUSKCLOTH_DK):
+    return "".join([P("M128,150 C126,118 174,118 172,150 L170,180 C162,196 138,196 130,180 Z", SKIN),
+                    P("M114,160 C110,104 190,104 186,160 L178,190 C174,150 126,150 122,190 Z", hood),
+                    P("M132,170 L168,170 L164,192 C156,200 144,200 136,192 Z", hood),
+                    f'<path d="M140,160 l7,1 M154,161 l7,-1" stroke="{INK}" stroke-width="2.6" stroke-linecap="round"/>',
+                    rim("M120,150 C120,126 134,112 150,110", color=AQUA, w=2)])
+
+
+def tamsin_legs(fill=DUSKCLOTH_DK):
+    return "".join([P("M126,330 L148,330 L140,468 L114,468 Z", fill), P("M152,330 L174,330 L190,468 L164,468 Z", fill),
+                    boot(108, 150) + boot(162, 204)])
+
+
+def knife(x, y, angle=-30, length=44):
+    return (f'<g transform="translate({x},{y}) rotate({angle})">'
+            f'<path d="M0,-4 L{length},0 L0,4 Z" fill="{STEEL}" stroke="{INK}" stroke-width="2"/>'
+            f'<rect x="-14" y="-4" width="14" height="8" fill="{LEATHER_DK}" stroke="{INK}" stroke-width="2"/></g>')
+
+
+def tamsin_base(uid):
+    """A slip of a figure in a dusk-grey hood, low and leaning, a knife in each hand."""
+    torso = "M118,196 L182,196 L188,338 L112,338 Z"
+    o = [shadow(70), tamsin_legs(),
+         limb((122, 208), (96, 288), 18, 14, DUSKCLOTH), circle(94, 292, 8, SKIN, 2), knife(94, 292, 150),
+         P(torso, DUSKCLOTH), P("M124,206 L176,206 L180,330 L120,330 Z", DUSK),
+         P("M112,318 L188,318 L188,338 L112,338 Z", LEATHER_DK, 2),
+         P("M118,196 C104,220 100,300 108,360 L120,330 Z", DUSKCLOTH_DK),
+         shade(uid, [torso], cut=150), tamsin_head(),
+         limb((178, 208), (214, 270), 18, 14, DUSKCLOTH), circle(216, 274, 8, SKIN, 2), knife(216, 274, -40),
+         rim("M182,212 L186,300", color=AQUA, w=2)]
+    return "".join(o)
+
+
 HEROES = [
     ("maren", "Maren", [("base", "Base", maren_base), ("deadeye", "Deadeye", maren_deadeye),
                         ("trapper", "Trapper", maren_trapper), ("volley", "Volley", maren_volley)]),
@@ -576,6 +615,7 @@ HEROES = [
                       ("wardweaver", "Wardweaver", vell_wardweaver), ("vigil_keeper", "Vigil Keeper", vell_vigil_keeper)]),
     ("garrow", "Garrow", [("base", "Base", garrow_base), ("aegisfang", "Aegisfang", garrow_aegisfang),
                           ("chainwarden", "Chainwarden", garrow_chainwarden), ("spitemail", "Spitemail", garrow_spitemail)]),
+    ("tamsin", "Tamsin", [("base", "Base", tamsin_base)]),
 ]
 
 FILTERS = ('<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4" result="b"/>'
@@ -591,7 +631,7 @@ def standalone(body):
 
 def lineup():
     cw, ch, scale = 300, 360, 0.56
-    W, H = 60 + 4 * cw, 130 + 3 * ch
+    W, H = 60 + 4 * cw, 130 + len(HEROES) * ch
     s = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" font-family="Georgia, serif">',
          f'<defs>{FILTERS}'
          '<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3cf"/>'

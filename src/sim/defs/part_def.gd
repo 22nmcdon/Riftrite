@@ -122,8 +122,8 @@ static func read(reader: DataReader) -> PartDef:
 				reader.error("an ability passive needs effects")
 			for effect_reader: DataReader in effect_readers:
 				var effect: EffectDef = EffectDef.read(effect_reader)
-				if EffectDef.MOVES_SELF.has(effect.type) and not effect.leap_home:
-					effect_reader.error("a passive can't leap or charge (but for a leap back to the start)")
+				if EffectDef.MOVES_SELF.has(effect.type) and not effect.leap_home and not effect.leap_step:
+					effect_reader.error("a passive can't leap or charge (but for a leap back to the start, or a step)")
 				elif not EffectDef.PASSIVE_TRIGGERS.has(effect.trigger):
 					effect_reader.error("a passive's effects need a passive trigger (%s)" % ", ".join(EffectDef.PASSIVE_TRIGGERS.map(func(trigger: EffectDef.Trigger) -> String: return EffectDef.TRIGGER_NAMES[trigger])))
 				def.ability.effects.append(effect)

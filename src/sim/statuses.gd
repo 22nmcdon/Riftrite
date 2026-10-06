@@ -118,6 +118,10 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: 
 		sim.refold_auras()
 		if def.until_attack:
 			sim.listen()
+	elif def.kind == StatusDef.Kind.STEALTH and def.until_attack:
+		# Hidden until the next basic attack (phase 8 part 4, Tamsin).
+		state.spared = 0
+		sim.listen()
 	elif def.kind == StatusDef.Kind.GROUNDED and fresh and target.flying:
 		_ground(sim, target, source)
 
@@ -147,11 +151,20 @@ static func _ground(sim: CombatSim, unit: UnitState, source: EffectSource) -> vo
 
 
 ## Ends `unit`'s boosts that last until it attacks (phase 5c step 6b): the
-## attack that just fired had them.
-static func end_on_attack(sim: CombatSim, unit: UnitState) -> void:
+## attack that just fired had them. A Stealth that does (phase 8 part 4)
+## ends only on a `basic` attack, once it has spared its share.
+static func end_on_attack(sim: CombatSim, unit: UnitState, basic: bool = true) -> void:
 	for state: StatusState in unit.statuses.duplicate():
-		if state.def.until_attack:
-			_end(sim, unit, state, "it attacked")
+		if not state.def.until_attack:
+			continue
+		if state.def.kind == StatusDef.Kind.STEALTH:
+			# Not one gained this tick: it came with or after that attack.
+			if not basic or state.applied_at == sim.tick:
+				continue
+			if state.spared < state.def.spares_attacks:
+				state.spared += 1
+				continue
+		_end(sim, unit, state, "it attacked")
 
 
 ## The Unbending: `def` from `source` doesn't land on the hero; it's logged

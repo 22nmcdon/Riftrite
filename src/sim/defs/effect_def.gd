@@ -98,7 +98,14 @@ extends RefCounted
 ##   leap:         max_hexes, optional land_ms (tuning's leap_land_ms); the
 ##                 unit jumps to a free spot touching its target. Phase 8
 ##                 part 3: "to": "start" (on "self", no max_hexes) leaps it
-##                 back to the free spot nearest where it started the fight
+##                 back to the free spot nearest where it started the fight.
+##                 Phase 8 part 4 (Tamsin): "to": "behind" lands on the free
+##                 spot past its target, as straight behind it (away from
+##                 the unit) as there's room; "to": "step" is a passive's
+##                 leap (an event effect, at "enemy_near_named" or
+##                 "enemy_near_target", optionally with "only"): the unit
+##                 lands beside that enemy and makes it its target;
+##                 "resets_attack": true readies its attack after a step
 ##   charge:       hexes, optional knockback (hexes); the unit runs straight
 ##                 at its target and knocks back the first enemy it touches.
 ##                 Phase 8 part 3 (the Avalanche Guardian): "carries": true
@@ -230,7 +237,8 @@ extends RefCounted
 ## An event effect's "cooldown_per_unit_ms" (step 5d) runs it at most once
 ## that long for each unit its event names.
 ## Phase 5c step 5b adds: extend_status ("status", "duration_ms": a timed
-## status already on the target lasts that much longer); the targets
+## status already on the target lasts that much longer; phase 8 part 4,
+## Choke: "statuses": [...] extends each of them it has); the targets
 ## enemies_near_self (within_hexes of the unit), enemies_near_named and
 ## enemy_near_named (around the unit the event names: on_kill's fallen too),
 ## and, for a relic, nearest_enemies ("count" of the enemies nearest any of
@@ -464,6 +472,9 @@ var bonus_kit: String = ""
 ## on_interval: how often.
 var interval_ticks: int = 0
 var status_id: String = ""
+## extend_status (phase 8 part 4, Choke): each of these it has (empty: just
+## status_id).
+var extend_statuses: Array[String] = []
 var stacks: int = 0
 ## apply_status: how long a timed status lasts (0: the status's own duration).
 var duration_ticks: int = 0
@@ -492,6 +503,13 @@ var delay_ticks: int = 0
 ## leap (phase 8 part 3, the Gloam Hound): back to where the unit started
 ## the fight (its target is "self"), the free spot nearest it.
 var leap_home: bool = false
+## leap (phase 8 part 4, Shadowstep): to the free spot past its target.
+var leap_behind: bool = false
+## leap (phase 8 part 4, Scent): a passive's step beside the enemy its
+## target names, which becomes the unit's target; resets_attack readies its
+## attack after.
+var leap_step: bool = false
+var resets_attack: bool = false
 ## flood (phase 8 part 3): its mode and radius (hexes); how long a circle
 ## lasts is zone_ticks (0: for good); anchor (target or self).
 var flood_mode: FloodMode = FloodMode.CIRCLE
@@ -716,10 +734,17 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 					def.anchor = maxi(ANCHOR_NAMES.find(reader.opt_string_choice("anchor", "target", ANCHOR_NAMES.slice(0, 2))), 0) as Anchor
 					def.zone_ticks = reader.opt_ticks("duration_ms", 0)
 			Type.LEAP:
-				def.leap_home = reader.opt_string_choice("to", "", ["start"]) == "start"
+				var to: String = reader.opt_string_choice("to", "", ["start", "behind", "step"])
+				def.leap_home = to == "start"
+				def.leap_behind = to == "behind"
+				def.leap_step = to == "step"
 				if def.leap_home:
 					if target_name != "self":
 						reader.error("a leap back to the start goes on \"self\"")
+				elif def.leap_step:
+					if target_name != "enemy_near_named" and target_name != "enemy_near_target":
+						reader.error("a step goes to one enemy: \"enemy_near_named\" or \"enemy_near_target\"")
+					def.resets_attack = reader.opt_bool("resets_attack", false)
 				else:
 					def.hexes = reader.req_int("max_hexes", 1)
 				if reader.has("land_ms"):
@@ -790,7 +815,16 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 					def.until_near = reader.req_int("until_enemy_within_hexes", 1, 10) * HexGrid.HEX
 				def.strength_add_bp = reader.opt_int("strength_add_bp", 0, 0, FixedMath.BP_ONE)
 			Type.EXTEND_STATUS:
-				def.status_id = reader.req_string("status")
+				if reader.has("statuses"):
+					def.extend_statuses = reader.req_string_array("statuses")
+					if def.extend_statuses.is_empty():
+						reader.error("statuses needs at least one id")
+					else:
+						def.status_id = def.extend_statuses[0]
+					if reader.has("status"):
+						reader.error("extend_status takes \"status\" or \"statuses\", not both")
+				else:
+					def.status_id = reader.req_string("status")
 				def.duration_ticks = reader.req_ticks("duration_ms", FixedMath.MS_PER_TICK)
 			Type.CLEANSE:
 				if reader.has("count"):
@@ -823,8 +857,8 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 			reader.error("\"when_attackers_kits\" needs \"when_attackers\"")
 	if reader.has("only"):
 		def.only = UnitCondition.read(reader.req_object("only"))
-		if def.target != Target.ALL_ENEMIES and def.target != Target.ALL_ALLIES:
-			reader.error("only all_enemies and all_allies take \"only\"")
+		if def.target != Target.ALL_ENEMIES and def.target != Target.ALL_ALLIES and not NEAR_TARGETS.has(def.target):
+			reader.error("only all_enemies, all_allies, and the near targets take \"only\"")
 	if def.target == Target.FARTHEST_ENEMIES:
 		def.count = reader.req_int("count", 1, 10)
 	if def.target == Target.NEAREST_ENEMIES:
@@ -851,7 +885,7 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 	# nearest enemy, as the hop_away trait does; it aims at the unit itself.
 	if def.type == Type.HOP and not target_name.is_empty() and def.target != Target.SELF:
 		reader.error("a hop moves the unit itself, so it needs \"target\": \"self\"")
-	if MOVES_SELF.has(def.type) and not def.leap_home and not type_name.is_empty() and not target_name.is_empty():
+	if MOVES_SELF.has(def.type) and not def.leap_home and not def.leap_step and not type_name.is_empty() and not target_name.is_empty():
 		if def.target != Target.TARGET or def.trigger != Trigger.ON_FIRE:
 			reader.error("%s moves the unit itself to its target, so it needs \"target\": \"target\" and the on_fire trigger" % type_name)
 
@@ -1092,3 +1126,9 @@ func scales_from_rate_stats() -> bool:
 		if scaling[stat] != 0:
 			return true
 	return false
+
+
+## It lands on one unit by itself (no area, move, or placement): what a grip
+## may do each time (phase 8 part 4, Grips).
+func is_landed() -> bool:
+	return type == Type.DAMAGE or type == Type.HEAL or type == Type.SHIELD or type == Type.APPLY_STATUS or type == Type.EXTEND_STATUS

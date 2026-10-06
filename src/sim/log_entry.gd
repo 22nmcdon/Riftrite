@@ -294,6 +294,11 @@ func to_text() -> String:
 		Kind.LEAP:
 			if from_pos == to_pos:
 				return line + "%s can't leap to %s (%s)" % [source_text(), target, note]
+			# Behind its target, or a passive's step (phase 8 part 4, Tamsin).
+			if note == "behind":
+				return line + "%s leaps from %s to %s behind %s (lands at %s)" % [source_text(), _point(from_pos), _point(to_pos), target, _format_time(end_tick)]
+			if note == "steps":
+				return line + "%s steps from %s to %s beside %s (lands at %s)" % [source_text(), _point(from_pos), _point(to_pos), target, _format_time(end_tick)]
 			return line + "%s leaps from %s to %s beside %s (lands at %s)" % [source_text(), _point(from_pos), _point(to_pos), target, _format_time(end_tick)]
 		Kind.CHARGE:
 			return line + "%s charges at %s from %s to %s%s" % [source_text(), target, _point(from_pos), _point(to_pos), "" if note.is_empty() else " (%s)" % note]

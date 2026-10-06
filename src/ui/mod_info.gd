@@ -356,6 +356,8 @@ static func counted(counts: DeedDef, per: int) -> String:
 			return "%s Shield given%s" % [amount, "" if counts.from_ability.is_empty() else " by " + ", ".join(counts.from_ability).replace("_", " ")]
 		DeedDef.Counts.PULLED:
 			return ("%s hexes enemies are pulled" if counts.by_hexes else "%s enemies pulled") % amount
+		DeedDef.Counts.EXTENDED_MS:
+			return "%s of statuses made to last longer" % amount
 		DeedDef.Counts.EXTRA_HITS:
 			return "%s extra enemies hit" % amount
 		DeedDef.Counts.HITS:
@@ -393,7 +395,7 @@ static func counted(counts: DeedDef, per: int) -> String:
 
 ## An amount of what's counted: time kinds in seconds.
 static func _amount(counts: DeedDef, value: int) -> String:
-	if counts.counts == DeedDef.Counts.ROOTED_MS or counts.counts == DeedDef.Counts.MS_BELOW:
+	if counts.counts == DeedDef.Counts.ROOTED_MS or counts.counts == DeedDef.Counts.MS_BELOW or counts.counts == DeedDef.Counts.EXTENDED_MS:
 		@warning_ignore("integer_division")
 		return UnitInfo.seconds(value / FixedMath.MS_PER_TICK)
 	return str(value)

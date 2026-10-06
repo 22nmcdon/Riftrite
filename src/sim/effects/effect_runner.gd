@@ -57,7 +57,7 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 	var ability: AbilityDef = state.def
 	var source: EffectSource = state.source
 	var leap: EffectDef = ability.leap_effect() if target != null else null
-	if leap != null and not leap.leap_home and Displacement.leap_spot(sim, unit, target, leap.hexes).x < 0:
+	if leap != null and not leap.leap_home and not leap.leap_step and Displacement.leap_spot(sim, unit, target, leap.hexes, leap.leap_behind).x < 0:
 		if log_failure:
 			Displacement.leap_failed(sim, unit, target, source)
 		return false
@@ -209,7 +209,11 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 		EffectDef.Type.RELEASE_STORED:
 			release_stored(sim, victim, source)
 		EffectDef.Type.EXTEND_STATUS:
-			Statuses.extend(sim, victim, effect.status_id, effect.duration_ticks, source)
+			if effect.extend_statuses.is_empty():
+				Statuses.extend(sim, victim, effect.status_id, effect.duration_ticks, source)
+			else:
+				for status_id: String in effect.extend_statuses:
+					Statuses.extend(sim, victim, status_id, effect.duration_ticks, source)
 		EffectDef.Type.APPLY_STATUS:
 			var status_id: String = unit.status_swaps.get(effect.status_id, effect.status_id)
 			# fresh_only: never on a unit that has it already (Snaring Shot).
@@ -255,6 +259,8 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 		EffectDef.Type.LEAP:
 			if effect.leap_home:
 				Displacement.leap_home(sim, unit, effect, source)
+			elif effect.leap_step:
+				Displacement.step(sim, unit, victim, effect, source)
 			else:
 				Displacement.leap(sim, unit, victim, effect, source)
 		EffectDef.Type.HOP:
@@ -477,6 +483,9 @@ static func near(sim: CombatSim, unit: UnitState, effect: EffectDef, center: Uni
 	var best_sq: int = 0
 	for other: UnitState in pool:
 		if other == center:
+			continue
+		# Only those that meet it (phase 8 part 4, Scent's step: Marked).
+		if effect.only != null and not effect.only.holds(other, unit):
 			continue
 		var distance_sq: int = ArenaPlane.length_sq(other.pos - center.pos)
 		if effect.near_range > 0 and distance_sq > reach_sq:

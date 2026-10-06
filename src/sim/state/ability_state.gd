@@ -26,6 +26,9 @@ var fires: int = 0
 ## count: events seen so far.
 var count: int = 0
 ## Its last try to fire failed (a leap with no room), and that's logged.
+## When it fires again because its last fire killed (phase 8 part 4,
+## Sentence's again_on_kill; -1: not waiting).
+var again_at: int = -1
 var failing: bool = false
 ## Fires waiting for the unit's next update (count, and once-a-fight triggers
 ## waiting for a target).

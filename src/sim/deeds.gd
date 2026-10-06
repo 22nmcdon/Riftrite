@@ -105,7 +105,7 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 			continue
 		if kind != LogEntry.Kind.DAMAGE and kind != LogEntry.Kind.HEAL and kind != LogEntry.Kind.SHIELD and kind != LogEntry.Kind.SHOT \
 				and kind != LogEntry.Kind.FIRE and kind != LogEntry.Kind.STATUS_APPLIED and kind != LogEntry.Kind.GUARD and kind != LogEntry.Kind.SHARED \
-				and kind != LogEntry.Kind.PUSH:
+				and kind != LogEntry.Kind.PUSH and kind != LogEntry.Kind.STATUS_EXTENDED:
 			continue
 		var unit: UnitState = sim.unit_by_id(entry.source_unit)
 		if unit == null or unit.deeds == null:
@@ -181,6 +181,9 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 							counter.amounts[d] += clampi(entry.shield_after - line, 0, entry.amount)
 					else:
 						counter.amounts[d] += entry.amount
+				DeedDef.Counts.EXTENDED_MS:
+					# The time added (phase 8 part 4, Scent and Choke).
+					counter.amounts[d] += entry.amount * FixedMath.MS_PER_TICK
 				DeedDef.Counts.ROOTED_MS:
 					if entry.end_tick > entry.tick and sim.content.statuses.has(entry.status) \
 							and sim.content.statuses[entry.status].kind == StatusDef.Kind.ROOT:

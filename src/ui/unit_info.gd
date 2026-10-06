@@ -167,6 +167,15 @@ static func signature_numbers(kit: UnitDef, content: ContentDb) -> String:
 		parts.append("%s stronger each cast" % signed_percent(signature.grows_bp))
 	if signature.grows_boosts_bp > 0:
 		parts.append("its boosts %s stronger each cast" % signed_percent(signature.grows_boosts_bp))
+	# Phase 8 part 4 (Tamsin): a grip, and a fire that kills fires again.
+	if not signature.grip_status.is_empty():
+		var grip: String = "grips its target while it's %s: every %s, %s" % [_status_name(signature.grip_status, content), seconds(signature.grip_every_ticks),
+			", ".join(effect_numbers(signature.grip_effects, kit, content))]
+		if not signature.grip_veil.is_empty():
+			grip += ", %s meanwhile" % _status_name(signature.grip_veil, content)
+		parts.append(grip)
+	if signature.again_on_kill:
+		parts.append("if it kills, it fires again (once)")
 	return " · ".join(parts)
 
 
@@ -634,6 +643,10 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 				named = "%s until an enemy comes within %s" % [status.name, hexes(effect.until_near / HexGrid.HEX)]
 			return named + _to_all(effect)
 		EffectDef.Type.EXTEND_STATUS:
+			if not effect.extend_statuses.is_empty():
+				# Any of several (phase 8 part 4, Choke).
+				var named: Array = effect.extend_statuses.map(func(status_id: String) -> String: return _status_name(status_id, content))
+				return "its %s last %s longer" % [" and ".join(named), seconds(effect.duration_ticks)]
 			return "its %s lasts %s longer" % [_status_name(effect.status_id, content), seconds(effect.duration_ticks)]
 		EffectDef.Type.CLEANSE:
 			if effect.cleanse_count > 0 and not effect.cleanse_statuses.is_empty():
@@ -695,6 +708,10 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 		EffectDef.Type.LEAP:
 			if effect.leap_home:
 				return "leaps back to where it started"
+			if effect.leap_step:
+				return "steps beside it%s" % (", attack ready" if effect.resets_attack else "")
+			if effect.leap_behind:
+				return "leaps behind it, up to %s" % hexes(effect.hexes)
 			return "leaps up to %s" % hexes(effect.hexes)
 		EffectDef.Type.HOP:
 			return "hops %s away from the nearest enemy" % hexes(1)

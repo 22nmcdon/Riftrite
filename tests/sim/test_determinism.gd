@@ -121,8 +121,8 @@ const NOT_YET: Array[LogEntry.Kind] = [LogEntry.Kind.SYNERGY, LogEntry.Kind.DEED
 ## Statuses only the paths use (phase 4), and only relics (phase 5c step 5a;
 ## Sunder, covered by tests/run/test_relics.gd).
 const PATH_STATUSES: Array[String] = ["warded"]
-## The new heroes' paths' (phase 8 part 4; tests/sim/test_garrow_paths.gd).
-const HERO_STATUSES: Array[String] = ["iron_maiden"]
+## The new heroes' kits and paths' (phase 8 part 4; tests/sim/test_garrow_paths.gd and test_hero_kits.gd).
+const HERO_STATUSES: Array[String] = ["iron_maiden", "hidden"]
 const RELIC_STATUSES: Array[String] = ["sunder", "quickened", "unbending", "long_watch"]
 ## Boosts only loadout items apply (phase 5c step 6; tests/run/test_loadout.gd).
 const ITEM_STATUSES: Array[String] = ["surge", "surge_2", "last_breath", "purified",

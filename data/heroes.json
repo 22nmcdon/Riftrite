@@ -109,5 +109,53 @@
           "aura": {"target": "holder", "stat": "unpushable", "value": 1}}
       ]
     }
+    },
+  {
+    "_note": "Hero 5 (docs/plans/rebuild-heroes.md section 8c; rebuild-phase8-heroes.md 8d-3). HP, DEF, CRIT, speed, and Shadowstep's mana are the design's; ATK 16 (the design's 24) and a 1s Knife with +10 attack speed bring her base team within 10 points of the old three's in Act 1 (30% against 22%; at 24 it won 53%: build-tuning.md, section 4). The mana gains and Shadowstep's 3-hex reach are first numbers. Hidden is her own Stealth: it ends as her next basic attack fires, and that attack is from Stealth.",
+    "id": "tamsin",
+    "name": "Tamsin Gloamstep",
+    "title": "the knife",
+    "role": "damage",
+    "kit": {
+      "stats": {"hp": 280, "atk": 16, "def": 10, "crit": 15, "atsp": 10, "speed": 3, "range": 1},
+      "targeting": "weakest_within",
+      "targeting_within_hexes": 3,
+      "mana": {"max": 50, "per_attack": 8, "regen_per_s": 2},
+      "basic_attack": {
+        "id": "knife",
+        "name": "Knife",
+        "text": "A quick stab at the enemy in front of her. She goes for the weakest enemy within 3 hexes, else the nearest.",
+        "cooldown_ms": 1000,
+        "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
+      },
+      "signature": {
+        "id": "shadowstep",
+        "name": "Shadowstep",
+        "text": "She slips behind the weakest enemy within 3 hexes and is hidden until she next strikes.",
+        "trigger": {"kind": "mana"},
+        "targeting": "weakest_within",
+        "max_range": 3,
+        "effects": [
+          {"type": "leap", "to": "behind", "max_hexes": 3, "target": "target"},
+          {"type": "apply_status", "status": "hidden", "target": "self"}
+        ]
+      },
+      "passives": [
+        {
+          "id": "ambusher",
+          "name": "Ambusher",
+          "kind": "ability",
+          "text": "She starts every fight hidden.",
+          "effects": [{"trigger": "on_fight_start", "type": "apply_status", "status": "hidden", "target": "self"}]
+        },
+        {
+          "id": "from_the_dark",
+          "name": "From the Dark",
+          "kind": "aura",
+          "text": "Her attacks from Stealth always crit.",
+          "aura": {"target": "holder", "stat": "crit_chance_bp", "value": 10000, "while": "state", "state": {"keywords": ["stealthed"]}}
+        }
+      ]
+    }
   }
 ]

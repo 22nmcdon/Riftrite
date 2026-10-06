@@ -69,6 +69,18 @@ var prefer: UnitCondition = null
 ## each fire leaves its unit's basic attack ready (its FIRE line noted
 ## "and readies its attack").
 var resets_attack: bool = false
+## A signature's (phase 8 part 4, Sentence: "if it kills, it fires again for
+## free, once"): when its fire leaves its target at 0 HP, it fires once more
+## next tick at a fresh target, noted "again: it killed" (that fire doesn't
+## fire again).
+var again_on_kill: bool = false
+## A signature's grip (phase 8 part 4, the Garrote; Grips): the status it
+## grips by (on its target), how often its effects land, those effects (at
+## "target"), and the Stealth its unit keeps while it grips ("": none).
+var grip_status: String = ""
+var grip_every_ticks: int = 0
+var grip_effects: Array[EffectDef] = []
+var grip_veil: String = ""
 
 
 static func read(reader: DataReader) -> AbilityDef:
@@ -92,6 +104,21 @@ static func read_signature(reader: DataReader) -> AbilityDef:
 	def.grows_bp = reader.opt_int("grows_bp", 0, 0, FixedMath.BP_ONE)
 	def.grows_boosts_bp = reader.opt_int("grows_boosts_bp", 0, 0, FixedMath.BP_ONE)
 	def.resets_attack = reader.opt_bool("resets_attack", false)
+	def.again_on_kill = reader.opt_bool("again_on_kill", false)
+	if reader.has("grip"):
+		var grip: DataReader = reader.req_object("grip")
+		if grip != null:
+			def.grip_status = grip.req_string("status")
+			def.grip_every_ticks = grip.req_ticks("every_ms", FixedMath.MS_PER_TICK)
+			for effect_reader: DataReader in grip.opt_object_array("effects"):
+				var effect: EffectDef = EffectDef.read(effect_reader)
+				if effect.trigger != EffectDef.Trigger.ON_FIRE or effect.target != EffectDef.Target.TARGET or not effect.is_landed():
+					effect_reader.error("a grip's effects land on its \"target\" (damage, heal, Shield, or a status)")
+				def.grip_effects.append(effect)
+			if def.grip_effects.is_empty():
+				grip.error("a grip needs effects")
+			def.grip_veil = grip.opt_string("veil", "")
+			grip.finish()
 	if def.cast_ticks > 0 and def.trigger.kind != TriggerDef.Kind.MANA:
 		reader.error("cast_ms: only a mana signature can have a cast")
 	# Extra triggers in the kit itself (phase 8 part 3, the Cragherd's

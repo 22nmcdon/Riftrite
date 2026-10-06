@@ -32,15 +32,20 @@ extends RefCounted
 ##   "phases": [...PhaseDefs...]
 ##       changes to the kit as its HP drops (PhaseDef), from the highest
 ##       threshold down
+##   "targeting": "weakest_within", "targeting_within_hexes": 3
+##       phase 8 part 4 (Tamsin): the lowest-HP (by %) enemy within that
+##       many hexes, else the nearest
 
 ## A unit's own rule (section 4): Targeting.RULES but self.
-const TARGETING_RULES: Array[String] = ["nearest", "weakest_backliner", "largest_group", "farthest", "lowest_hp_ally", "highest_mana"]
+const TARGETING_RULES: Array[String] = ["nearest", "weakest_backliner", "largest_group", "farthest", "lowest_hp_ally", "highest_mana", "weakest_within"]
 const TRAITS: Array[String] = ["engage", "flying", "hop_away", "fires_moving", "inert", "swims", "submerges"]
 
 var id: String
 var name: String
 var stats: UnitStats
 var targeting: String = "nearest"
+## weakest_within's reach (plane units; phase 8 part 4, Tamsin).
+var targeting_reach: int = 0
 ## Null: no mana bar.
 var mana: ManaDef = null
 var basic_attack: AbilityDef
@@ -77,6 +82,9 @@ var swap_choice: bool = false
 ## 6b, Bloodhound; null: none), and the name its picks are logged with.
 var prefer: UnitCondition = null
 var prefer_label: String = ""
+## How near those enemies must be (plane units; 0: anywhere; phase 8 part
+## 4, Scent: within 4 hexes).
+var prefer_reach: int = 0
 ## Its phases, highest threshold first (a phase's own kit has none).
 var phases: Array[PhaseDef] = []
 ## An enemy's archetype (EnemyDef.ARCHETYPE_NAMES; set from its entry, so
@@ -109,6 +117,10 @@ static func read(reader: DataReader, kit_id: String = "", kit_name: String = "")
 	var stats_reader: DataReader = reader.req_object("stats")
 	def.stats = UnitStats.read(stats_reader) if stats_reader != null else UnitStats.make(1)
 	def.targeting = reader.opt_string_choice("targeting", "nearest", TARGETING_RULES)
+	if def.targeting == "weakest_within":
+		def.targeting_reach = reader.req_int("targeting_within_hexes", 1, 10) * HexGrid.HEX
+	elif reader.has("targeting_within_hexes"):
+		reader.error("targeting_within_hexes is only for weakest_within")
 	if reader.has("mana"):
 		var mana_reader: DataReader = reader.req_object("mana")
 		def.mana = ManaDef.read(mana_reader) if mana_reader != null else null
@@ -181,6 +193,7 @@ func copy() -> UnitDef:
 	other.name = name
 	other.stats = stats
 	other.targeting = targeting
+	other.targeting_reach = targeting_reach
 	other.mana = mana
 	other.basic_attack = basic_attack
 	other.signature = signature
@@ -192,6 +205,7 @@ func copy() -> UnitDef:
 	other.engage_reach_add = engage_reach_add
 	other.prefer = prefer
 	other.prefer_label = prefer_label
+	other.prefer_reach = prefer_reach
 	other.gambit_label = gambit_label
 	other.place_rule = place_rule
 	other.arrive_ticks = arrive_ticks

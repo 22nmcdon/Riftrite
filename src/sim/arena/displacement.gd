@@ -184,14 +184,26 @@ static func stun(sim: CombatSim, unit: UnitState, source: EffectSource) -> void:
 
 ## Where `unit` would land leaping at `target` (see the top), or -1 in x if
 ## there's no free spot within `max_hexes`.
-static func leap_spot(sim: CombatSim, unit: UnitState, target: UnitState, max_hexes: int) -> Vector2i:
+static func leap_spot(sim: CombatSim, unit: UnitState, target: UnitState, max_hexes: int, behind: bool = false) -> Vector2i:
 	var reach: int = max_hexes * HexGrid.HEX
 	var best: Vector2i = Vector2i(-1, -1)
 	var best_distance: int = -1
+	# Behind (phase 8 part 4, Shadowstep): the spot most straight past the
+	# target, away from the unit (the largest dot product with that way);
+	# ties to the nearer.
+	var away: Vector2i = target.pos - unit.pos
+	var best_dot: int = 0
 	for dir: Vector2i in LEAP_DIRECTIONS:
 		var spot: Vector2i = ArenaPlane.along(target.pos, dir, unit.radius + target.radius)
 		var distance_sq: int = ArenaPlane.length_sq(spot - unit.pos)
 		if distance_sq > reach * reach or not sim.fits(unit, spot):
+			continue
+		if behind:
+			var dot: int = dir.x * away.x + dir.y * away.y
+			if best_distance < 0 or dot > best_dot or (dot == best_dot and distance_sq < best_distance):
+				best = spot
+				best_distance = distance_sq
+				best_dot = dot
 			continue
 		if best_distance < 0 or distance_sq < best_distance:
 			best = spot
@@ -201,18 +213,21 @@ static func leap_spot(sim: CombatSim, unit: UnitState, target: UnitState, max_he
 
 ## `unit` leaps at `target`. Returns false (and logs it) if there's no spot.
 static func leap(sim: CombatSim, unit: UnitState, target: UnitState, effect: EffectDef, source: EffectSource) -> bool:
-	var spot: Vector2i = leap_spot(sim, unit, target, effect.hexes)
+	var spot: Vector2i = leap_spot(sim, unit, target, effect.hexes, effect.leap_behind)
 	if spot.x < 0:
 		leap_failed(sim, unit, target, source)
 		return false
 	var from: Vector2i = unit.pos
 	var land_ticks: int = effect.land_ticks if effect.land_ticks >= 0 else sim.tuning.leap_land_ticks
-	var entry: LogEntry = _log(sim, LogEntry.Kind.LEAP, source, target, from, spot, "")
+	var entry: LogEntry = _log(sim, LogEntry.Kind.LEAP, source, target, from, spot, "behind" if effect.leap_behind else "")
 	entry.end_tick = sim.tick + land_ticks
 	_place(sim, unit, spot)
 	unit.landing_until = sim.tick + land_ticks
 	if not sim.snares.is_empty():
 		Snares.snag(sim, unit, from, spot)
+	# Behind its target (phase 8 part 4, Shadowstep): it's the unit's target now.
+	if effect.leap_behind and target.side != unit.side and unit.target != target:
+		Targeting.set_target(sim, unit, target, source.ability_name)
 	return true
 
 
@@ -233,6 +248,29 @@ static func leap_home(sim: CombatSim, unit: UnitState, effect: EffectDef, source
 	unit.landing_until = sim.tick + land_ticks
 	if not sim.snares.is_empty():
 		Snares.snag(sim, unit, from, spot)
+
+
+## A passive's step (phase 8 part 4, Scent): `unit` leaps beside `target`
+## (the free spot nearest it), logged as a LEAP noted "steps", and makes it
+## its target; resets_attack readies its attack.
+static func step(sim: CombatSim, unit: UnitState, target: UnitState, effect: EffectDef, source: EffectSource) -> void:
+	if not unit.alive or not target.alive:
+		return
+	var spot: Vector2i = leap_spot(sim, unit, target, 20)
+	if spot.x < 0:
+		leap_failed(sim, unit, target, source)
+		return
+	var from: Vector2i = unit.pos
+	var land_ticks: int = effect.land_ticks if effect.land_ticks >= 0 else sim.tuning.leap_land_ticks
+	var entry: LogEntry = _log(sim, LogEntry.Kind.LEAP, source, target, from, spot, "steps")
+	entry.end_tick = sim.tick + land_ticks
+	_place(sim, unit, spot)
+	unit.landing_until = sim.tick + land_ticks
+	if not sim.snares.is_empty():
+		Snares.snag(sim, unit, from, spot)
+	Targeting.set_target(sim, unit, target, source.ability_name)
+	if effect.resets_attack:
+		unit.attack.progress_bp = unit.attack.needed
 
 
 static func leap_failed(sim: CombatSim, unit: UnitState, target: UnitState, source: EffectSource) -> void:

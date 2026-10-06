@@ -17,8 +17,12 @@ extends RefCounted
 ##    "add_traits": ["fires_moving"],              traits it gains
 ##    "plant_ms": 1500,                            UnitDef's plant_ms
 ##    "placed_snares": 2,                          UnitDef's placed_snares
-##    "hop_cooldown_ms": 5000}                     a hop_away unit's
+##    "hop_cooldown_ms": 5000,                     a hop_away unit's
 ##                                                 hop_cooldown_ms (phase 8)
+##    "prefer": {"label": "Scent", "vs": {...UnitCondition...},
+##               "within_hexes": 4}}               the enemies it picks first
+##                                                 (UnitDef.prefer; phase 8
+##                                                 part 4, Scent)
 ## Like a phase (PhaseDef), a new signature that doesn't fire on mana takes
 ## the bar away too. The patched kit must be sound (UnitDef.problems), with
 ## HP of at least 1, range of at least 1, and speed and CRIT of at least 0;
@@ -44,6 +48,10 @@ var plant_ticks: int = -1
 var placed_snares: int = -1
 ## A hop_away unit's cooldown (-1: unchanged; phase 8 part 2, Windrunner).
 var hop_cooldown_ticks: int = -1
+## The enemies it picks first (null: unchanged; phase 8 part 4, Scent).
+var prefer: UnitCondition = null
+var prefer_label: String = ""
+var prefer_reach: int = 0
 
 
 static func make() -> KitPatch:
@@ -91,6 +99,13 @@ static func read(reader: DataReader) -> KitPatch:
 		patch.placed_snares = reader.req_int("placed_snares", 0, 4)
 	if reader.has("hop_cooldown_ms"):
 		patch.hop_cooldown_ticks = reader.req_ticks("hop_cooldown_ms", FixedMath.MS_PER_TICK)
+	if reader.has("prefer"):
+		var prefer_reader: DataReader = reader.req_object("prefer")
+		if prefer_reader != null:
+			patch.prefer_label = prefer_reader.req_string("label")
+			patch.prefer = UnitCondition.read(prefer_reader.req_object("vs"))
+			patch.prefer_reach = prefer_reader.opt_int("within_hexes", 0, 0, 20) * HexGrid.HEX
+			prefer_reader.finish()
 	if not patch.changes_anything():
 		reader.error("a patch needs stats_bp, stats_add, a basic_attack, a signature, mana, passives, remove_passives, add_traits, or plant_ms")
 	reader.finish()
@@ -102,7 +117,7 @@ func changes_anything() -> bool:
 		if stats_bp[stat] != FixedMath.BP_ONE or stats_add[stat] != 0:
 			return true
 	return basic_attack != null or signature != null or mana != null or removes_mana or not passives.is_empty() or not remove_passives.is_empty() \
-		or not add_traits.is_empty() or plant_ticks >= 0 or placed_snares >= 0 or hop_cooldown_ticks >= 0
+		or not add_traits.is_empty() or plant_ticks >= 0 or placed_snares >= 0 or hop_cooldown_ticks >= 0 or prefer != null
 
 
 ## `base` with the patch applied (a new UnitDef; `base` is untouched), and
@@ -153,6 +168,10 @@ func apply(base: UnitDef, problems: Array[String] = []) -> UnitDef:
 			problems.append("only a unit that hops away has a hop cooldown")
 		else:
 			built.hop_cooldown_ticks = hop_cooldown_ticks
+	if prefer != null:
+		built.prefer = prefer
+		built.prefer_label = prefer_label
+		built.prefer_reach = prefer_reach
 	if built.placed_snares > 0 and Snares.placed_effect(built) == null:
 		problems.append("it places snares, so its kit needs a snare effect")
 	for part: PartDef in passives:

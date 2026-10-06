@@ -42,6 +42,9 @@ var lasting: bool = false
 ## It ends once an enemy stands this near its holder (phase 5c step 6d, Rear
 ## Guard; 0: as it is).
 var until_near: int = 0
+## A Stealth that ends on attack: the basic attacks it has let pass (phase 8
+## part 4, Shadow Dance).
+var spared: int = 0
 
 const NEVER: int = 1 << 60
 

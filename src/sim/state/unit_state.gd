@@ -91,6 +91,11 @@ var taken_total: int = 0
 ## Damage it stored instead of taking (phase 8 part 4, Vengeance's aura stat
 ## store_bp), growing each second by store_grows_bp, until released.
 var stored: int = 0
+## The enemy its signature grips, the signature, and when the grip's effects
+## next land (phase 8 part 4, Tamsin's Garrote; Grips). Null: no grip.
+var grip_target: UnitState = null
+var grip_state: AbilityState = null
+var grip_next: int = 0
 var overheal_bank: int = 0
 ## False once it has fallen (deaths are settled at the end of a tick).
 var alive: bool = true

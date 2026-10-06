@@ -245,6 +245,21 @@ Each part is tested as before: every piece in a small fight (`tests/sim/`), ever
 - **The first read** (`--apexes --act=1 --sweep=2`, Decision 9's band: good teams' apex half points about x1.57 to x1.75). Four teams are in the band or close: Endless Wall x1.69, Grindstone x1.65, Snaring Chain x1.62 (Maren carries), Woven Fang x1.51. Spitemail's two teams aren't. After the cuts above, Thorn Wall's half point is x2.40 and Grudgebearer's x2.18 (they were past x5 and x4.12). Both still win 30–40% of fights at x5. Spitemail's thorns and stored damage are shares of the hits he takes, so they grow with the enemy. Even transformed, its teams win 11% at x5, where every other team wins none. That's Question HF.
 - **Not changed:** no fight without these pieces; the bench's fingerprints are unchanged. Changed on purpose: 24 apexes, 180 upgrades, and the status lists in `test_determinism.gd`.
 
+### Built in 8d-3a (Tamsin's base kit and her paths' pieces)
+
+- **Her base kit** (`data/heroes.json`, the fifth hero; she can't be drafted until her paths come): Knife, Shadowstep (50 mana: she leaps behind the weakest enemy within 3 hexes and is hidden), Ambusher (hidden as the fight starts) and From the Dark (attacks from Stealth always crit: an aura of crit chance while Stealthed), and the targeting rule `weakest_within` (3 hexes). **Hidden** (`data/statuses.json`) is her own Stealth: it ends as her next basic attack fires, and that attack is still from Stealth. Her placeholder figure (`tools/art/hero_kit.py`, `tamsin_base.svg`; the lineup now sizes itself to the roster).
+- **Base Tamsin against the band** (`build-tuning.md`, section 4): with the design's ATK 24 and a 0.8s Knife, her team (Brannoc, Maren, and her in Vell's place) won 53% of Act 1 fights against the old three's 22%. Shadowstep and the crits barely mattered (52% without either); it's her raw damage. ATK 16 with a 1s Knife and +10 attack speed brings it to 30%.
+- **The pieces** (each skipped by a fight that doesn't use it; `tests/sim/test_tamsin_pieces.gd`):
+  - the targeting rule `weakest_within` with a kit's `targeting_within_hexes` (the lowest share of HP in reach, else the nearest);
+  - a preference's reach: a path patch's `"prefer"` (`KitPatch`, with a label, a UnitCondition, and `within_hexes`; `UnitDef.prefer_reach`), and the same `within_hexes` on a kit mod's (Scent);
+  - a leap `"to": "behind"` (the free spot past the target, as straight behind it as there's room; the unit's target after; LEAP reads "behind"), and a passive's step, `"to": "step"` at `enemy_near_named` or `enemy_near_target`, with `"resets_attack"` (LEAP reads "steps"; Scent's step to the next Marked enemy);
+  - `"only"` on the near targets (a UnitCondition: only Marked enemies, say);
+  - a Stealth that ends on its holder's next **basic** attack (`"until_attack"` on a stealth status; a signature doesn't end it, nor does an attack in the tick it was gained) and `"spares_attacks"` (Shadow Dance's next 3);
+  - extend_status's `"statuses"` (each of them the target has; Choke), and the deed count `extended_ms` (the time it added);
+  - a signature's `"again_on_kill"` (a fire that leaves its target at 0 HP fires once more the next tick at a fresh target, noted "again: it killed"; a melee strike, since a shot hasn't landed yet);
+  - a signature's `"grip"` (`Grips`, `src/sim/grips.gd`; the plan's "hold", renamed since Statuses already has one): every `every_ms` its effects land on the gripped target, sourced to the signature; the unit doesn't walk and keeps its `"veil"` (a Stealth) while it grips; it ends when the target loses the grip's status, falls, or the unit falls. The Garrote.
+- **Not changed:** no fight without these pieces; the bench's fingerprints are unchanged. Changed on purpose: five heroes in `test_hero_kits.gd`, the kits and reaches `test_unit_info.gd` counts, and the status lists.
+
 ## 10. Questions
 
 - **CA. Unlocks:** *(Answered: Decision 4.)* are all six heroes open from the start? Proposed: yes for now; unlocking heroes (meta progression adds variety only: rule 5) comes with the Codex.

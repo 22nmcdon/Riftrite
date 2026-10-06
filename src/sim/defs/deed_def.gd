@@ -43,6 +43,8 @@ extends RefCounted
 ##   pulled   enemies it pulls or hooks, one each that moves (Iron Links);
 ##            with "by_hexes": true, the hexes they're moved, rounded
 ##            (Undertow)
+##   extended_ms                   the ms of statuses it made last longer
+##            (extend_status; phase 8 part 4, Scent and Choke)
 ##   shield's "above_pct_of_max_hp": 50   only Shield given past that share
 ##            of its target's max HP (Endless Bulwark)
 ##   kills takes from_ability too: only kills by those abilities (Eagle
@@ -81,10 +83,10 @@ extends RefCounted
 ## three fights' worth of what a vowed hero puts in); the sim never reads it.
 ## Adding a kind or a filter is a code change.
 
-enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING, HITS, SHARED, BLOCKED, PULLED }
+enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING, HITS, SHARED, BLOCKED, PULLED, EXTENDED_MS }
 
-const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing", "hits", "shared", "blocked", "pulled"]
-const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill", "casts", "ms standing", "enemies hit", "damage shared"]
+const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing", "hits", "shared", "blocked", "pulled", "extended_ms"]
+const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill", "casts", "ms standing", "enemies hit", "damage shared", "attacks blocked", "enemies pulled", "ms extended"]
 ## The kinds read from where the hero is the target, or from the tick, not
 ## from what the hero does.
 const NOT_ITS_OWN: Array[Counts] = [Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING, Counts.BLOCKED]
@@ -204,6 +206,9 @@ func counts_kind(kind: LogEntry.Kind, ability_id: String) -> bool:
 			return kind == LogEntry.Kind.SHARED
 		Counts.PULLED:
 			if kind != LogEntry.Kind.PUSH:
+				return false
+		Counts.EXTENDED_MS:
+			if kind != LogEntry.Kind.STATUS_EXTENDED:
 				return false
 		Counts.APPLIED:
 			if kind != LogEntry.Kind.STATUS_APPLIED:

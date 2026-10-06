@@ -1,7 +1,7 @@
 extends GutTest
 ## The base kits in data/heroes.json do what their text says
 ## (docs/plans/rebuild-phase2-heroes-enemies.md, section 3; Garrow from
-## rebuild-phase8-heroes.md, 8d-1). Each test fights
+## rebuild-phase8-heroes.md, 8d-1; Tamsin, 8d-3). Each test fights
 ## the real kits against still dummies; heroes that shouldn't walk are Rooted
 ## for the whole test.
 
@@ -48,19 +48,19 @@ func _rows(fight: CombatSim, kind: LogEntry.Kind, unit_id: String, ability: Stri
 
 
 func test_the_kits_read_as_designed() -> void:
-	assert_eq(_content.hero_ids, ["brannoc", "maren", "vell", "garrow"])
+	assert_eq(_content.hero_ids, ["brannoc", "maren", "vell", "garrow", "tamsin"])
 	var roles: Array = _content.hero_ids.map(func(hero_id: String) -> int: return (_content.heroes[hero_id] as HeroDef).role)
-	assert_eq(roles, [HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT, HeroDef.Role.TANK])
+	assert_eq(roles, [HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT, HeroDef.Role.TANK, HeroDef.Role.DAMAGE])
 	var stats: Array = _content.hero_ids.map(func(hero_id: String) -> Array: return _kit(hero_id).stats.values)
-	assert_eq(stats, [[630, 14, 0, 50, 0, 0, 2, 1], [270, 22, 0, 8, 8, 10, 2, 4], [300, 6, 20, 10, 0, 0, 2, 3], [550, 26, 0, 40, 0, 0, 2, 1]], "HP, ATK, MGK, DEF, CRIT, ATSP, speed, range (Garrow's tuned into the base band, build-tuning.md)")
+	assert_eq(stats, [[630, 14, 0, 50, 0, 0, 2, 1], [270, 22, 0, 8, 8, 10, 2, 4], [300, 6, 20, 10, 0, 0, 2, 3], [550, 26, 0, 40, 0, 0, 2, 1], [280, 16, 0, 10, 15, 10, 3, 1]], "HP, ATK, MGK, DEF, CRIT, ATSP, speed, range (Garrow's and Tamsin's tuned into the base band, build-tuning.md)")
 	var mana: Array = _content.hero_ids.map(func(hero_id: String) -> Array:
 		var bar: ManaDef = _kit(hero_id).mana
 		return [bar.max, bar.start, bar.per_attack, bar.per_10_damage_taken, bar.regen_per_s])
-	assert_eq(mana, [[80, 30, 8, 1, 0], [50, 0, 10, 0, 2], [60, 20, 12, 0, 2], [70, 20, 10, 1, 0]], "cost, start, per attack, per 10 damage taken, regen")
-	assert_eq([_kit("brannoc").traits, _kit("maren").traits, _kit("vell").traits, _kit("garrow").traits], [["engage"], ["hop_away"], [], []])
+	assert_eq(mana, [[80, 30, 8, 1, 0], [50, 0, 10, 0, 2], [60, 20, 12, 0, 2], [70, 20, 10, 1, 0], [50, 0, 8, 0, 2]], "cost, start, per attack, per 10 damage taken, regen")
+	assert_eq([_kit("brannoc").traits, _kit("maren").traits, _kit("vell").traits, _kit("garrow").traits, _kit("tamsin").traits], [["engage"], ["hop_away"], [], [], []])
 	assert_eq(_kit("maren").hop_cooldown_ticks, 120)
 	var names: Array = _content.hero_ids.map(func(hero_id: String) -> Array: return [_kit(hero_id).basic_attack.name, _kit(hero_id).signature.name])
-	assert_eq(names, [["Shield Bash", "Hold the Line"], ["Longshot", "Marking Shot"], ["Lantern Glow", "Mend"], ["Chain Fist", "Haul"]])
+	assert_eq(names, [["Shield Bash", "Hold the Line"], ["Longshot", "Marking Shot"], ["Lantern Glow", "Mend"], ["Chain Fist", "Haul"], ["Knife", "Shadowstep"]])
 
 
 # --- Brannoc ---------------------------------------------------------------------
@@ -146,6 +146,45 @@ func test_heavy_keeps_him_from_being_moved() -> void:
 	K.step(fight, 40)
 	assert_eq(K.entries(fight, LogEntry.Kind.PUSH).filter(func(entry: LogEntry) -> bool: return entry.target == "garrow"), [] as Array[LogEntry], "never moved")
 	assert_false(K.entries(fight, LogEntry.Kind.RESISTED).is_empty(), "he resists, and says so")
+
+
+# --- Tamsin ----------------------------------------------------------------------
+
+
+func test_tamsin_goes_for_the_weakest_within_3_hexes() -> void:
+	var fight: CombatSim = _sim([K.at(_kit("tamsin"), 3, 2)] as Array[UnitSetup],
+		[K.foe(_dummy("near"), 3, 3), K.foe(_dummy("hurt"), 5, 3), K.foe(_dummy("far_hurt"), 3, 6)] as Array[UnitSetup])
+	fight.unit_by_id("hurt").hp = 5000
+	fight.unit_by_id("far_hurt").hp = 100
+	K.step(fight, 2)
+	assert_eq(fight.unit_by_id("tamsin").target.id, "hurt", "the weakest within 3 hexes, not the weaker one beyond")
+
+
+func test_ambusher_hides_her_and_her_first_strike_crits() -> void:
+	var fight: CombatSim = _sim([K.at(_kit("tamsin"), 3, 2)] as Array[UnitSetup], [K.foe(_dummy(), 3, 3)] as Array[UnitSetup])
+	var tamsin: UnitState = fight.unit_by_id("tamsin")
+	K.step(fight, 2)
+	assert_true(Statuses.is_stealthed(tamsin), "hidden as the fight starts")
+	K.step(fight, 40)
+	var hits: Array[LogEntry] = K.entries(fight, LogEntry.Kind.DAMAGE, "tamsin")
+	assert_gt(hits.size(), 1)
+	assert_true(hits[0].crit, "her first strike is from Stealth: a crit")
+	assert_false(Statuses.is_stealthed(tamsin), "and it ended the Stealth")
+
+
+func test_shadowstep_slips_behind_and_hides_her() -> void:
+	var fight: CombatSim = _sim([K.at(_kit("tamsin"), 3, 2)] as Array[UnitSetup], [K.foe(_dummy("mark"), 3, 4)] as Array[UnitSetup])
+	var tamsin: UnitState = fight.unit_by_id("tamsin")
+	K.step(fight, 1)
+	Statuses.end_now(fight, tamsin, Statuses.find(tamsin, "hidden"), "test")
+	_fill_mana(tamsin)
+	K.step(fight, 2)
+	var leaps: Array[LogEntry] = K.entries(fight, LogEntry.Kind.LEAP, "tamsin")
+	assert_eq(leaps.map(func(entry: LogEntry) -> String: return entry.target), ["mark"])
+	assert_string_contains(leaps[0].to_text(), "behind")
+	assert_true(Statuses.is_stealthed(tamsin), "hidden after it")
+	var mark: UnitState = fight.unit_by_id("mark")
+	assert_gt(ArenaPlane.length(tamsin.pos - Vector2i(tamsin.pos.x, 0)), ArenaPlane.length(mark.pos - Vector2i(mark.pos.x, 0)), "past it, on its far side")
 
 
 # --- Maren -----------------------------------------------------------------------

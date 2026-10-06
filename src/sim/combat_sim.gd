@@ -158,6 +158,8 @@ var last_overkill: int = 0
 ## Some unit has stored damage (phase 8 part 4, Vengeance): it grows each
 ## second (_grow_stored). False in a fight where nothing stores.
 var any_stored: bool = false
+## Some unit's signature has gripped (phase 8 part 4, Grips).
+var any_grips: bool = false
 ## The units with conditional auras (phase 4: planted, below_hp, per fallen
 ## ally), checked every tick.
 var _conditional: Array[UnitState] = []
@@ -518,11 +520,15 @@ func _act(unit: UnitState) -> void:
 	var signature: AbilityState = unit.signature
 	if signature != null and (signature.pending > 0 or signature.cast_ends_at >= 0 \
 			or (signature.mana_trigger and unit.mana >= unit.mana_cap) or (signature.once_trigger and not signature.fired) \
-			or signature.also_waiting or signature.echo_at >= 0 or (signature.every_ticks > 0 and tick % signature.every_ticks == 0)):
+			or signature.also_waiting or signature.echo_at >= 0 or signature.again_at >= 0 or (signature.every_ticks > 0 and tick % signature.every_ticks == 0)):
 		casting = Signatures.act(self, unit)
 		has_statuses = not unit.statuses.is_empty()
 		if tick < unit.landing_until:
 			return
+	# A grip (phase 8 part 4, the Garrote) ends, or lands its effects.
+	if unit.grip_target != null:
+		Grips.tick(self, unit)
+		has_statuses = not unit.statuses.is_empty()
 	if has_statuses and Statuses.has_kind(unit, StatusDef.Kind.STUN):
 		if unit.leg_active:
 			Movement.halt(self, unit, "stunned")
@@ -587,6 +593,10 @@ func _act(unit: UnitState) -> void:
 	# Steady) stops there and plants instead.
 	if unit.plant_reach_sq > 0 and dx * dx + dy * dy <= unit.plant_reach_sq:
 		Movement.wait(self, unit, "planting")
+		return
+	# About to walk: a unit gripping an enemy (Grips) doesn't.
+	if unit.grip_target != null:
+		Movement.wait(self, unit, "gripping")
 		return
 	# About to walk: a unit holding its ground (Tactics) doesn't.
 	if unit.holding:

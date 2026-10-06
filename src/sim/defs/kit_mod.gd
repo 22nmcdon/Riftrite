@@ -257,6 +257,8 @@ var mana_start_bp: int = 0
 ## name its picks are logged with.
 var prefer: UnitCondition = null
 var prefer_label: String = ""
+## How near (plane units; 0: anywhere; phase 8 part 4).
+var prefer_reach: int = 0
 ## The hop_away trait: how much nearer an enemy may come before it hops
 ## (plane units), and its cooldown's change (Light Feet).
 var hop_within_add: int = 0
@@ -338,6 +340,7 @@ static func read(reader: DataReader) -> KitMod:
 		if prefer_reader != null:
 			mod.prefer_label = prefer_reader.req_string("label")
 			mod.prefer = UnitCondition.read(prefer_reader.req_object("vs"))
+			mod.prefer_reach = prefer_reader.opt_int("within_hexes", 0, 0, 20) * HexGrid.HEX
 			prefer_reader.finish()
 	if reader.has("gambit"):
 		var gambit: DataReader = reader.req_object("gambit")
@@ -634,6 +637,7 @@ func apply(kit: UnitDef, problems: Array[String] = []) -> UnitDef:
 	if prefer != null:
 		built.prefer = prefer
 		built.prefer_label = prefer_label
+		built.prefer_reach = prefer_reach
 	if not gambit_label.is_empty():
 		built.gambit_label = gambit_label
 		built.place_rule = place_rule

@@ -78,9 +78,9 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> int:
 			LogEntry.Kind.FIRE:
 				# A boost that lasts until its holder attacks (phase 5c step 6b,
 				# Shadow Step) ends: that attack had it.
-				if not source.statuses.is_empty():
-					Statuses.end_on_attack(sim, source)
 				var basic: bool = entry.source_ability == source.def.basic_attack.id
+				if not source.statuses.is_empty():
+					Statuses.end_on_attack(sim, source, basic)
 				_raise(sim, source, EffectDef.Trigger.ON_BASIC_ATTACK if basic else EffectDef.Trigger.ON_ABILITY, chain)
 				if not basic and sim.ally_ability_listeners:
 					for ally: UnitState in (sim.heroes if source.side == EffectSource.Team.HEROES else sim.enemies):

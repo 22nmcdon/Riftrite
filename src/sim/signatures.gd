@@ -29,6 +29,12 @@ extends RefCounted
 ##     their own kinds, free of mana, whatever the main trigger; the FIRE
 ##     entry notes why ("an ally fell"). Phase 8 part 3: every (a fire every
 ##     so often, from the fight's start but not at it; noted "again").
+##   - again_on_kill (phase 8 part 4, Sentence): a fire that leaves its
+##     target at 0 HP fires once more the next tick, free, at a fresh target
+##     (noted "again: it killed"); that fire doesn't fire again. With none in
+##     reach, it's lost.
+##   - a grip (phase 8 part 4, the Garrote): each fire grips its target
+##     (Grips).
 ##   - an echo: echo_ticks after each fire, the echo (a weaker copy, its own
 ##     source, "Mend (Echo)") fires at a fresh target by the same rule and
 ##     reach, even while Stunned; with none, it's lost. A fire while an echo
@@ -43,6 +49,11 @@ static func act(sim: CombatSim, unit: UnitState) -> bool:
 		return false
 	if signature.echo_at >= 0 and sim.tick >= signature.echo_at:
 		_fire_echo(sim, unit)
+	if signature.again_at >= 0 and sim.tick >= signature.again_at:
+		signature.again_at = -1
+		var again: UnitState = pick_target(sim, unit)
+		if again != null:
+			_fire(sim, unit, again, "again: it killed", true)
 	var stunned: bool = not unit.statuses.is_empty() and Statuses.has_kind(unit, StatusDef.Kind.STUN)
 	if signature.casting():
 		if stunned:
@@ -206,7 +217,7 @@ static func _queue_once(signature: AbilityState) -> void:
 
 ## Fires the signature at `target`. False if it couldn't (a leap with no room
 ## to land): it waits, and the failure is logged once until it next fires.
-static func _fire(sim: CombatSim, unit: UnitState, target: UnitState, note: String = "") -> bool:
+static func _fire(sim: CombatSim, unit: UnitState, target: UnitState, note: String = "", again: bool = false) -> bool:
 	var signature: AbilityState = unit.signature
 	var ability: AbilityDef = signature.def
 	# Growing with each cast (phase 8 part 2): the fires before this one.
@@ -225,6 +236,11 @@ static func _fire(sim: CombatSim, unit: UnitState, target: UnitState, note: Stri
 	if ability.resets_attack:
 		# He can attack again at once (phase 8 part 4, Maelstrom).
 		unit.attack.progress_bp = unit.attack.needed
+	if ability.again_on_kill and not again and target != unit and target.hp <= 0:
+		# It killed (phase 8 part 4, Sentence): once more, next tick.
+		signature.again_at = sim.tick + 1
+	if not ability.grip_status.is_empty():
+		Grips.start(sim, unit, signature, target)
 	if signature.echo != null:
 		signature.echo_at = sim.tick + ability.echo_ticks
 	# Wait to heal's twist (phase 5c step 6c): the heal that waited cleanses.

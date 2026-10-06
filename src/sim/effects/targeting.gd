@@ -20,14 +20,18 @@ extends RefCounted
 ##   loneliest          the enemy farthest from its nearest ally (one with no
 ##                      ally standing first; phase 8 part 3, the Gulf
 ##                      Angler's hook)
+##   weakest_within     the lowest HP% enemy within the kit's
+##                      targeting_within_hexes, else the nearest (phase 8
+##                      part 4, Tamsin)
 ## A signature picks among units within its reach (Signatures). "HP%" is
 ## compared exactly, by cross-multiplying, with no rounding.
 ## A hero with a prefer_target tactic (Tactics) picks the nearest enemy of
 ## its archetypes first, logged with the tactic's name; with none, its own
 ## rule. A kit's "prefer" (a kit mod's; phase 5c step 6b, Bloodhound) picks
-## the nearest enemy that meets it next, logged with its label.
+## the nearest enemy that meets it next, logged with its label; with a
+## prefer_reach (phase 8 part 4, Scent), only one that near.
 
-const RULES: Array[String] = ["nearest", "weakest_backliner", "largest_group", "farthest", "lowest_hp_ally", "highest_mana", "self", "loneliest"]
+const RULES: Array[String] = ["nearest", "weakest_backliner", "largest_group", "farthest", "lowest_hp_ally", "highest_mana", "self", "loneliest", "weakest_within"]
 ## How close a unit must be to count toward largest_group.
 const GROUP_REACH: int = 2 * HexGrid.HEX
 
@@ -45,17 +49,27 @@ static func update(sim: CombatSim, unit: UnitState) -> void:
 			set_target(sim, unit, preferred, unit.tactic.name)
 			return
 	if unit.def.prefer != null:
-		var wanted: Array[UnitState] = sim.targetable_enemies_of(unit).filter(func(enemy: UnitState) -> bool: return unit.def.prefer.holds(enemy, unit))
+		var reach_sq: int = unit.def.prefer_reach * unit.def.prefer_reach
+		var wanted: Array[UnitState] = sim.targetable_enemies_of(unit).filter(func(enemy: UnitState) -> bool:
+			return unit.def.prefer.holds(enemy, unit) and (reach_sq == 0 or ArenaPlane.length_sq(enemy.pos - unit.pos) <= reach_sq))
 		var preferred_kit: UnitState = nearest_of(sim, unit, wanted, false) if not wanted.is_empty() else null
 		if preferred_kit != null:
 			set_target(sim, unit, preferred_kit, unit.def.prefer_label)
 			return
 	var rule: String = unit.def.targeting
-	var picked: UnitState = nearest(sim, unit) if rule == "nearest" else pick(sim, unit, rule, -1)
+	var picked: UnitState = null
+	if rule == "weakest_within":
+		# The weakest in reach, else the nearest (phase 8 part 4, Tamsin).
+		picked = pick(sim, unit, rule, unit.def.targeting_reach * unit.def.targeting_reach)
+		if picked == null:
+			picked = nearest(sim, unit)
+			rule = "nearest"
+	else:
+		picked = nearest(sim, unit) if rule == "nearest" else pick(sim, unit, rule, -1)
 	if picked == null:
 		unit.look_again_at = sim.tick + sim.tuning.repath_ticks
 		return
-	set_target(sim, unit, picked, unit.def.targeting)
+	set_target(sim, unit, picked, rule)
 
 
 ## The unit `rule` picks for `unit`, among those within `reach_sq` of it
@@ -87,7 +101,7 @@ static func pick(sim: CombatSim, unit: UnitState, rule: String, reach_sq: int, p
 					best = other
 			if best == null:
 				best = _lowest_share(pool)
-		"lowest_hp_ally", "weakest_in_reach":
+		"lowest_hp_ally", "weakest_in_reach", "weakest_within":
 			best = _lowest_share(pool)
 		"largest_group":
 			var best_count: int = -1
