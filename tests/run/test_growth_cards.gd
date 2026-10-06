@@ -82,7 +82,7 @@ func test_steps_are_whole_and_a_quest_stops_at_one() -> void:
 func test_the_twelve_growing_upgrades_load_and_say_how_they_grow() -> void:
 	assert_true(_run.is_valid(), "\n".join(_run.errors))
 	var growing: Array[String] = _run.upgrade_ids.filter(func(id: String) -> bool: return _run.upgrades[id].grows != null)
-	assert_eq(growing.size(), 16, "phase 5c's twelve and Garrow's four (phase 8 part 4)")
+	assert_eq(growing.size(), 20, "phase 5c's twelve, and Garrow's and Tamsin's four each (phase 8 part 4)")
 	for id: String in growing:
 		var line: String = ModInfo.upgrade_numbers(_run.upgrades[id], null, _run.content)
 		assert_true(line.begins_with("Grows: ") and line.contains("1"), "%s: %s" % [id, line])

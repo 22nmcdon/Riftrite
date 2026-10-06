@@ -693,7 +693,7 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 		EffectDef.Type.PULL:
 			if effect.hook:
 				return "hooks the target all the way to beside it"
-			var way: String = ["", " toward the nearest water", " toward the area's middle"][effect.toward]
+			var way: String = ["", " toward the nearest water", " toward the area's middle", "", " toward its nearest ally"][effect.toward]
 			return "pulls %s%s%s" % [hexes(effect.hexes), way, _to_all(effect)]
 		EffectDef.Type.FLOOD:
 			match effect.flood_mode:

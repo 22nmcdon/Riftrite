@@ -62,8 +62,8 @@ var grows_bp: int = 0
 ## them too.)
 var grows_boosts_bp: int = 0
 ## A signature's: the enemies it picks among first, when any is in reach
-## (phase 5c step 7b: an upgrade's mod, Brand the Marked; null: its rule
-## alone).
+## (phase 5c step 7b: an upgrade's mod, Brand the Marked; phase 8 part 4: its
+## own "prefer", Sentence; null: its rule alone).
 var prefer: UnitCondition = null
 ## A signature's (phase 8 part 4, Maelstrom: "he can attack again at once"):
 ## each fire leaves its unit's basic attack ready (its FIRE line noted
@@ -81,6 +81,9 @@ var grip_status: String = ""
 var grip_every_ticks: int = 0
 var grip_effects: Array[EffectDef] = []
 var grip_veil: String = ""
+## The targets its grip lands twice as often on (a kit mod's; phase 8 part
+## 4, Hammer and Wire: Stunned ones; null: none).
+var grip_fast_vs: UnitCondition = null
 
 
 static func read(reader: DataReader) -> AbilityDef:
@@ -105,6 +108,9 @@ static func read_signature(reader: DataReader) -> AbilityDef:
 	def.grows_boosts_bp = reader.opt_int("grows_boosts_bp", 0, 0, FixedMath.BP_ONE)
 	def.resets_attack = reader.opt_bool("resets_attack", false)
 	def.again_on_kill = reader.opt_bool("again_on_kill", false)
+	# The enemies it picks first (phase 8 part 4, Sentence: Marked ones).
+	if reader.has("prefer"):
+		def.prefer = UnitCondition.read(reader.req_object("prefer"))
 	if reader.has("grip"):
 		var grip: DataReader = reader.req_object("grip")
 		if grip != null:

@@ -334,7 +334,7 @@ func to_text() -> String:
 		Kind.RESISTED:
 			return line + "%s resists %s from %s (%s)" % [target, status_name, source_text(), note]
 		Kind.DODGED:
-			return line + "%s's hit misses %s (%s)" % [source_text(), target, "dazzled" if note == "missed" else "Sidestep"]
+			return line + "%s's hit misses %s (%s)" % [source_text(), target, {"missed": "dazzled", "evaded": "evaded"}.get(note, "Sidestep")]
 		Kind.ARRIVE:
 			return line + "%s: %s arrives at %s" % [source_text(), target, _point(to_pos)]
 		Kind.LIFESTEAL:

@@ -11,8 +11,9 @@ extends RefCounted
 ## "gripping"), and "veil" (a Stealth of its own, optional) stays on it. The
 ## grip ends when the target no longer has "status" (it ran out, or was
 ## cleansed), the target falls, or the unit falls or fires the signature at
-## another; the veil ends with it, noted "the grip ended". A unit with no
-## grip never reaches this code.
+## another; the veil ends with it, noted "the grip ended". A kit mod's
+## grip_fast_vs (Hammer and Wire) lands it twice as often on the targets
+## that meet it. A unit with no grip never reaches this code.
 
 
 ## `unit` grips `target` with its signature `state` (it just fired).
@@ -41,7 +42,12 @@ static func tick(sim: CombatSim, unit: UnitState) -> void:
 		return
 	if sim.tick < unit.grip_next:
 		return
-	unit.grip_next = sim.tick + ability.grip_every_ticks
+	var every: int = ability.grip_every_ticks
+	if ability.grip_fast_vs != null and ability.grip_fast_vs.holds(target, unit):
+		# Twice as often on these (Hammer and Wire: a Stunned enemy).
+		@warning_ignore("integer_division")
+		every = maxi(every / 2, 1)
+	unit.grip_next = sim.tick + every
 	var source: EffectSource = unit.grip_state.source
 	for effect: EffectDef in ability.grip_effects:
 		var crit: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(EffectRunner.crit_chance_bp(sim, unit, ability, target))

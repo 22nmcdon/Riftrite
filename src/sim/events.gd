@@ -96,7 +96,7 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> int:
 				if target == null:
 					continue
 				if entry.crit:
-					_raise(sim, source, EffectDef.Trigger.ON_HOLDER_CRIT, chain, target, entry.amount)
+					_raise(sim, source, EffectDef.Trigger.ON_HOLDER_CRIT, chain, target, entry.amount, entry.source_ability)
 				if source.side != target.side:
 					# The ability rides along (on_holder_hit's from_ability, phase 8).
 					_raise(sim, source, EffectDef.Trigger.ON_HOLDER_HIT, chain, target, entry.amount, entry.source_ability)

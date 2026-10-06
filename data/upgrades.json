@@ -3544,6 +3544,757 @@
     }
   },
   {
+    "id": "honed_knives",
+    "name": "Honed Knives",
+    "hero": "tamsin",
+    "text": "Her ATK rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "atk",
+      "pct": 10
+    }
+  },
+  {
+    "id": "quick_fingers",
+    "name": "Quick Fingers",
+    "hero": "tamsin",
+    "text": "She attacks faster by a tenth of her attack speed when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "atsp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "keen_edge",
+    "name": "Keen Edge",
+    "hero": "tamsin",
+    "text": "Her CRIT rises by a quarter of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "crit",
+      "pct": 25
+    }
+  },
+  {
+    "id": "leather_wraps",
+    "name": "Leather Wraps",
+    "hero": "tamsin",
+    "text": "Her max HP rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "hp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "long_shadowstep",
+    "name": "Long Shadowstep",
+    "hero": "tamsin",
+    "text": "Shadowstep hides her longer (once it's a habit, too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "shadowstep",
+          "statuses": [
+            "hidden"
+          ],
+          "duration_add_ms": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "deep_ambush",
+    "name": "Deep Ambush",
+    "hero": "tamsin",
+    "text": "Ambusher hides her longer at the fight's start.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:ambusher",
+          "duration_add_ms": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "backstab",
+    "name": "Backstab",
+    "hero": "tamsin",
+    "text": "She deals more damage to enemies that aren't attacking her.",
+    "mod": {
+      "passives": [
+        {
+          "id": "backstab",
+          "name": "Backstab",
+          "kind": "aura",
+          "text": "She deals more damage to enemies that aren't targeting her.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 12000,
+            "vs": {
+              "targets_holder": false
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "evasive",
+    "name": "Evasive",
+    "hero": "tamsin",
+    "text": "Some of the attacks on her miss.",
+    "mod": {
+      "passives": [
+        {
+          "id": "evasive",
+          "name": "Evasive",
+          "kind": "aura",
+          "text": "Some of the basic attacks on her miss.",
+          "aura": {
+            "target": "holder",
+            "stat": "evade_bp",
+            "value": 1500
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "poisoned_blades",
+    "name": "Poisoned Blades",
+    "hero": "tamsin",
+    "text": "Her Knife Poisons what it hits.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "add_effects": [
+            {
+              "trigger": "on_hit",
+              "type": "apply_status",
+              "status": "poison",
+              "stacks": 1,
+              "scaling": {
+                "atk": 1000
+              },
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "finisher",
+    "name": "Finisher",
+    "hero": "tamsin",
+    "text": "She deals more damage to badly hurt enemies.",
+    "mod": {
+      "passives": [
+        {
+          "id": "finisher",
+          "name": "Finisher",
+          "kind": "aura",
+          "text": "She deals more damage to enemies below 30% HP.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 12500,
+            "vs": {
+              "below_hp_pct": 30
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "throat_cut",
+    "name": "Throat Cut",
+    "hero": "tamsin",
+    "text": "Her crits Silence the target for a moment.",
+    "mod": {
+      "passives": [
+        {
+          "id": "throat_cut",
+          "name": "Throat Cut",
+          "kind": "ability",
+          "text": "Her crits Silence the target for a moment, at most once every 6s for each enemy.",
+          "effects": [
+            {
+              "trigger": "on_holder_crit",
+              "cooldown_per_unit_ms": 6000,
+              "type": "apply_status",
+              "status": "silence",
+              "duration_ms": 500,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "notches",
+    "name": "Notches",
+    "hero": "tamsin",
+    "text": "Every kill is a notch on the hilt: her crits hit harder for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "kills"
+      },
+      "per": 5,
+      "each": {
+        "passives": [
+          {
+            "id": "notches",
+            "name": "Notches",
+            "kind": "aura",
+            "text": "Grows with her kills.",
+            "aura": {
+              "target": "holder",
+              "stat": "crit_damage_bp",
+              "value": 100
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "lingering_fade",
+    "name": "Lingering Fade",
+    "path": "nightblade",
+    "taste": true,
+    "text": "Fade hides her longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:fade",
+          "statuses": [
+            "hidden"
+          ],
+          "duration_add_ms": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "quiet_kill",
+    "name": "Quiet Kill",
+    "path": "nightblade",
+    "taste": true,
+    "text": "Each kill gives her mana.",
+    "mod": {
+      "passives": [
+        {
+          "id": "quiet_kill",
+          "name": "Quiet Kill",
+          "kind": "ability",
+          "text": "Each kill gives her mana.",
+          "effects": [
+            {
+              "trigger": "on_kill",
+              "type": "gain_mana",
+              "amount": 10,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "assassins_haste",
+    "name": "Assassin's Haste",
+    "path": "nightblade",
+    "text": "She attacks faster for a moment after she leaves Stealth.",
+    "mod": {
+      "passives": [
+        {
+          "id": "assassins_haste",
+          "name": "Assassin's Haste",
+          "kind": "ability",
+          "text": "When her Stealth ends, she attacks faster for a while.",
+          "effects": [
+            {
+              "trigger": "on_status_ended",
+              "statuses": [
+                "hidden",
+                "shadow_dance"
+              ],
+              "type": "apply_status",
+              "status": "assassins_haste",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "unseen_edge",
+    "name": "Unseen Edge",
+    "path": "nightblade",
+    "text": "Her crits from Stealth hit harder.",
+    "mod": {
+      "passives": [
+        {
+          "id": "unseen_edge",
+          "name": "Unseen Edge",
+          "kind": "aura",
+          "text": "Her crits from Stealth hit harder.",
+          "aura": {
+            "target": "holder",
+            "stat": "crit_damage_bp",
+            "value": 2500,
+            "while": "state",
+            "state": {
+              "keywords": [
+                "stealthed"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_dance",
+    "name": "Long Dance",
+    "path": "nightblade",
+    "text": "Shadow Dance lasts longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "statuses": [
+            "shadow_dance"
+          ],
+          "duration_add_ms": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "mist_step",
+    "name": "Mist Step",
+    "path": "nightblade",
+    "text": "Becoming hidden shakes off Slows and Roots.",
+    "mod": {
+      "passives": [
+        {
+          "id": "mist_step",
+          "name": "Mist Step",
+          "kind": "ability",
+          "text": "When she hides, a Slow and a Root on her are removed.",
+          "effects": [
+            {
+              "trigger": "on_status",
+              "keywords": [
+                "stealthed"
+              ],
+              "type": "cleanse",
+              "count": 2,
+              "statuses": [
+                "slow",
+                "hobbled",
+                "weighed_down",
+                "root",
+                "garroted"
+              ],
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "night_tally",
+    "name": "Night Tally",
+    "path": "nightblade",
+    "text": "Every strike from the dark is counted: her ATK grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "crits",
+        "from_basic": true
+      },
+      "per": 10,
+      "each": {
+        "passives": [
+          {
+            "id": "night_tally",
+            "name": "Night Tally",
+            "kind": "aura",
+            "text": "Grows with her crits.",
+            "aura": {
+              "target": "holder",
+              "stat": "atk_bp",
+              "value": 10100
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "lasting_scent",
+    "name": "Lasting Scent",
+    "path": "headhunter",
+    "taste": true,
+    "text": "Her hits make a Mark last longer still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:scent",
+          "duration_add_ms": 250
+        }
+      ]
+    }
+  },
+  {
+    "id": "stalker",
+    "name": "Stalker",
+    "path": "headhunter",
+    "taste": true,
+    "text": "She attacks faster while her target is Marked.",
+    "mod": {
+      "passives": [
+        {
+          "id": "stalker",
+          "name": "Stalker",
+          "kind": "aura",
+          "text": "While her target is Marked, she attacks faster.",
+          "aura": {
+            "target": "holder",
+            "stat": "atsp",
+            "value": 10,
+            "while": "state",
+            "state": {
+              "target": {
+                "keywords": [
+                  "marked"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_sentence",
+    "name": "Quick Sentence",
+    "path": "headhunter",
+    "text": "Sentence costs less mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "sentence",
+          "mana_max_add": -10
+        }
+      ]
+    }
+  },
+  {
+    "id": "swift_step",
+    "name": "Swift Step",
+    "path": "headhunter",
+    "text": "She attacks faster for a moment after The Hunt carries her on.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:the_hunt",
+          "add_effects": [
+            {
+              "trigger": "on_kill",
+              "vs": {
+                "keywords": [
+                  "marked"
+                ]
+              },
+              "type": "apply_status",
+              "status": "swift_step",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "deep_wounds",
+    "name": "Deep Wounds",
+    "path": "headhunter",
+    "text": "Her hits on Marked enemies make them Bleed.",
+    "mod": {
+      "passives": [
+        {
+          "id": "deep_wounds",
+          "name": "Deep Wounds",
+          "kind": "ability",
+          "text": "Her hits on a Marked enemy make it Bleed.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "vs": {
+                "keywords": [
+                  "marked"
+                ]
+              },
+              "type": "apply_status",
+              "status": "bleed",
+              "stacks": 1,
+              "scaling": {
+                "atk": 1000
+              },
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "marked_for_death",
+    "name": "Marked for Death",
+    "path": "headhunter",
+    "text": "Marked enemies she hits take more damage from everyone for a moment.",
+    "mod": {
+      "passives": [
+        {
+          "id": "marked_for_death",
+          "name": "Marked for Death",
+          "kind": "ability",
+          "text": "A Marked enemy she hits takes more damage from everyone for a while.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "vs": {
+                "keywords": [
+                  "marked"
+                ]
+              },
+              "type": "apply_status",
+              "status": "death_mark",
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "trophy_belt",
+    "name": "Trophy Belt",
+    "path": "headhunter",
+    "text": "Every head she takes hangs from her belt: her damage to Marked enemies grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "kills"
+      },
+      "per": 3,
+      "each": {
+        "passives": [
+          {
+            "id": "trophy_belt",
+            "name": "Trophy Belt",
+            "kind": "aura",
+            "text": "Grows with her kills.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 10100,
+              "vs": {
+                "keywords": [
+                  "marked"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "tight_choke",
+    "name": "Tight Choke",
+    "path": "garrote",
+    "taste": true,
+    "text": "Choke holds them longer still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:choke",
+          "duration_add_ms": 200
+        }
+      ]
+    }
+  },
+  {
+    "id": "grip_strength",
+    "name": "Grip Strength",
+    "path": "garrote",
+    "taste": true,
+    "text": "Her crits on Rooted or Stunned enemies hit harder.",
+    "mod": {
+      "passives": [
+        {
+          "id": "grip_strength",
+          "name": "Grip Strength",
+          "kind": "aura",
+          "text": "Her crits on Rooted or Stunned enemies hit harder.",
+          "aura": {
+            "target": "holder",
+            "stat": "crit_damage_bp",
+            "value": 1000,
+            "vs": {
+              "statuses": [
+                "root",
+                "stun",
+                "garroted"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_garrote",
+    "name": "Long Garrote",
+    "path": "garrote",
+    "text": "Garrote holds its target longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "statuses": [
+            "garroted"
+          ],
+          "duration_add_ms": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "drag",
+    "name": "Drag",
+    "path": "garrote",
+    "text": "Garrote drags its target toward her nearest ally.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_effects": [
+            {
+              "type": "pull",
+              "hexes": 1,
+              "toward": "ally",
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "wire_snare",
+    "name": "Wire Snare",
+    "path": "garrote",
+    "text": "When her Garrote lets go, the enemies next to her are Rooted.",
+    "mod": {
+      "passives": [
+        {
+          "id": "wire_snare",
+          "name": "Wire Snare",
+          "kind": "ability",
+          "text": "When her Garrote lets go, the enemies within 1 hex of her are Rooted for a moment.",
+          "effects": [
+            {
+              "trigger": "on_status_ended",
+              "statuses": [
+                "garrote_veil"
+              ],
+              "type": "apply_status",
+              "status": "root",
+              "duration_ms": 500,
+              "target": "enemies_near_self",
+              "within_hexes": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "shadow_hold",
+    "name": "Shadow Hold",
+    "path": "garrote",
+    "text": "She takes less damage while she garrotes.",
+    "mod": {
+      "passives": [
+        {
+          "id": "shadow_hold",
+          "name": "Shadow Hold",
+          "kind": "aura",
+          "text": "While she garrotes, she takes less damage.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_reduced_bp",
+            "value": 3000,
+            "while": "state",
+            "state": {
+              "statuses": [
+                "garrote_veil"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "patient_knife",
+    "name": "Patient Knife",
+    "path": "garrote",
+    "text": "Every moment she holds them teaches her where to cut: her crits on Rooted or Stunned enemies grow for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "extended_ms",
+        "from_ability": [
+          "choke"
+        ]
+      },
+      "per": 3000,
+      "each": {
+        "passives": [
+          {
+            "id": "patient_knife",
+            "name": "Patient Knife",
+            "kind": "aura",
+            "text": "Grows with the holds she adds.",
+            "aura": {
+              "target": "holder",
+              "stat": "crit_damage_bp",
+              "value": 100,
+              "vs": {
+                "statuses": [
+                  "root",
+                  "stun",
+                  "garroted"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
     "id": "layered_plate",
     "name": "Layered Plate",
     "apex": "endless_bulwark",

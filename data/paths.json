@@ -4448,5 +4448,542 @@
         }
       }
     ]
+  },
+  {
+    "_note": "The Stealth path (rebuild-heroes.md, section 8c, path 1; phase 8 part 4, 8d-3b). First numbers; the type and the band come with the tuning by build.",
+    "id": "nightblade",
+    "hero": "tamsin",
+    "name": "Nightblade",
+    "title": "the one you never see",
+    "fantasy": "She's never where you look.",
+    "placement": "Where the weak are within her 3 hexes, so each kill hides her again for the next.",
+    "vowed": {
+      "taste": "Fade: a kill hides her for a moment.",
+      "cost": "10% less max HP.",
+      "patch": {
+        "stats_bp": {
+          "hp": 9000
+        },
+        "passives": [
+          {
+            "id": "fade",
+            "name": "Fade",
+            "kind": "ability",
+            "text": "Each kill hides her for a moment.",
+            "effects": [
+              {
+                "trigger": "on_kill",
+                "type": "apply_status",
+                "status": "hidden",
+                "duration_ms": 1000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Fade: kills hide her longer and give back some of her mana. From the Shadows: her attacks from Stealth deal more. Shadow Dance replaces Shadowstep: she's hidden, and her next 3 attacks don't end it. Shadowstep becomes a habit, every 8th Knife.",
+      "cost": "Healing on her is weaker while she's hidden.",
+      "patch": {
+        "signature": {
+          "id": "shadow_dance",
+          "name": "Shadow Dance",
+          "text": "She's hidden for a while, and her next 3 strikes don't end it.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "self",
+          "effects": [
+            {
+              "type": "apply_status",
+              "status": "shadow_dance",
+              "duration_ms": 3000,
+              "target": "self"
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "fade",
+            "name": "Fade",
+            "kind": "ability",
+            "text": "Each kill hides her and gives her back some mana.",
+            "effects": [
+              {
+                "trigger": "on_kill",
+                "type": "apply_status",
+                "status": "hidden",
+                "duration_ms": 2000,
+                "target": "self"
+              },
+              {
+                "trigger": "on_kill",
+                "type": "gain_mana",
+                "amount": 15,
+                "target": "self"
+              }
+            ]
+          },
+          {
+            "id": "from_the_shadows",
+            "name": "From the Shadows",
+            "kind": "aura",
+            "text": "Her attacks from Stealth deal more damage.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 20000,
+              "while": "state",
+              "state": {
+                "keywords": [
+                  "stealthed"
+                ]
+              }
+            }
+          },
+          {
+            "id": "veiled_wounds",
+            "name": "Veiled Wounds",
+            "kind": "aura",
+            "text": "Healing on her is weaker while she's hidden.",
+            "aura": {
+              "target": "holder",
+              "stat": "healing_taken_bp",
+              "value": 7000,
+              "while": "state",
+              "state": {
+                "keywords": [
+                  "stealthed"
+                ]
+              }
+            }
+          },
+          {
+            "id": "shadowstep",
+            "name": "Shadowstep",
+            "kind": "ability",
+            "text": "A habit: every 8th Knife, she slips behind her target and is hidden.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "leap",
+                "to": "behind",
+                "max_hexes": 3,
+                "target": "target"
+              },
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "apply_status",
+                "status": "hidden",
+                "duration_ms": 2000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Times a kill hid her",
+      "counts": "applied",
+      "from_ability": [
+        "fade"
+      ],
+      "statuses": [
+        "hidden"
+      ],
+      "threshold": 3
+    }
+  },
+  {
+    "_note": "The Mark path (rebuild-heroes.md, section 8c, path 2; phase 8 part 4, 8d-3b). Its cost is two auras of power that cancel on a Marked enemy (power bonuses add). First numbers.",
+    "id": "headhunter",
+    "hero": "tamsin",
+    "name": "Headhunter",
+    "title": "the one with your scent",
+    "fantasy": "Once she has your scent, you're already dead.",
+    "placement": "Near the enemies her team Marks, within her 4 hexes of Scent.",
+    "vowed": {
+      "taste": "Scent: she goes after Marked enemies within 4 hexes first, and her hits make a Mark last longer.",
+      "cost": "10% less damage to enemies that aren't Marked.",
+      "patch": {
+        "prefer": {
+          "label": "Scent",
+          "vs": {
+            "keywords": [
+              "marked"
+            ]
+          },
+          "within_hexes": 4
+        },
+        "passives": [
+          {
+            "id": "scent",
+            "name": "Scent",
+            "kind": "ability",
+            "text": "She goes after Marked enemies within 4 hexes first, and each hit makes its Mark last longer.",
+            "effects": [
+              {
+                "trigger": "on_holder_hit",
+                "type": "extend_status",
+                "status": "marked",
+                "duration_ms": 500,
+                "target": "hit_target"
+              }
+            ]
+          },
+          {
+            "id": "dulled",
+            "name": "Dulled",
+            "kind": "aura",
+            "text": "Her hits deal less damage, but not to a Marked enemy.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 9000
+            }
+          },
+          {
+            "id": "dulled_marked",
+            "name": "Dulled",
+            "kind": "aura",
+            "text": "A Marked enemy doesn't get the cut.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 11000,
+              "vs": {
+                "keywords": [
+                  "marked"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Scent stays. She deals more damage to Marked enemies, and killing one lets her step to the next Marked enemy within 4 hexes with her attack ready. Sentence replaces Shadowstep: a heavy strike on a Marked enemy that, if it kills, strikes again. Shadowstep becomes a habit, every 8th Knife.",
+      "cost": "Nothing special against an enemy with no Mark.",
+      "patch": {
+        "prefer": {
+          "label": "Scent",
+          "vs": {
+            "keywords": [
+              "marked"
+            ]
+          },
+          "within_hexes": 4
+        },
+        "signature": {
+          "id": "sentence",
+          "name": "Sentence",
+          "text": "A heavy strike on an enemy within 1 hex of her, a Marked one first. If it kills, she strikes again at once.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "nearest",
+          "prefer": {
+            "keywords": [
+              "marked"
+            ]
+          },
+          "shot": false,
+          "again_on_kill": true,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "atk": 25000
+              }
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "scent",
+            "name": "Scent",
+            "kind": "ability",
+            "text": "She goes after Marked enemies within 4 hexes first, and each hit makes its Mark last longer.",
+            "effects": [
+              {
+                "trigger": "on_holder_hit",
+                "type": "extend_status",
+                "status": "marked",
+                "duration_ms": 500,
+                "target": "hit_target"
+              }
+            ]
+          },
+          {
+            "id": "headsman",
+            "name": "Headsman",
+            "kind": "aura",
+            "text": "She deals more damage to Marked enemies.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 13000,
+              "vs": {
+                "keywords": [
+                  "marked"
+                ]
+              }
+            }
+          },
+          {
+            "id": "the_hunt",
+            "name": "The Hunt",
+            "kind": "ability",
+            "text": "Killing a Marked enemy lets her step to the next Marked enemy within 4 hexes, her attack ready.",
+            "effects": [
+              {
+                "trigger": "on_kill",
+                "vs": {
+                  "keywords": [
+                    "marked"
+                  ]
+                },
+                "type": "leap",
+                "to": "step",
+                "resets_attack": true,
+                "target": "enemy_near_named",
+                "within_hexes": 4,
+                "only": {
+                  "keywords": [
+                    "marked"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "shadowstep",
+            "name": "Shadowstep",
+            "kind": "ability",
+            "text": "A habit: every 8th Knife, she slips behind her target and is hidden.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "leap",
+                "to": "behind",
+                "max_hexes": 3,
+                "target": "target"
+              },
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "apply_status",
+                "status": "hidden",
+                "duration_ms": 2000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Mark time her hits added",
+      "counts": "extended_ms",
+      "from_ability": [
+        "scent"
+      ],
+      "threshold": 25000
+    }
+  },
+  {
+    "_note": "The Root path (rebuild-heroes.md, section 8c, path 3; phase 8 part 4, 8d-3b). The Garrote is a grip (Grips): it holds while its target is Garroted, and Choke extends that. First numbers.",
+    "id": "garrote",
+    "hero": "tamsin",
+    "name": "Garrote",
+    "title": "the one who holds you still",
+    "fantasy": "Hold still, and it's over.",
+    "placement": "Beside the enemies her team Roots and Stuns, so her crits keep them held.",
+    "vowed": {
+      "taste": "Choke: her crits on a Rooted or Stunned enemy hold it a little longer.",
+      "cost": "She's slower.",
+      "patch": {
+        "stats_add": {
+          "speed": -1
+        },
+        "passives": [
+          {
+            "id": "choke",
+            "name": "Choke",
+            "kind": "ability",
+            "text": "Her Knife's crits on a Rooted or Stunned enemy make the Root or Stun last longer.",
+            "effects": [
+              {
+                "trigger": "on_holder_crit",
+                "from_ability": [
+                  "knife"
+                ],
+                "vs": {
+                  "statuses": [
+                    "root",
+                    "stun",
+                    "garroted"
+                  ]
+                },
+                "type": "extend_status",
+                "statuses": [
+                  "root",
+                  "stun",
+                  "garroted"
+                ],
+                "duration_ms": 300,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Choke: her attacks on Rooted or Stunned enemies always crit, harder, and hold them longer. Garrote replaces Shadowstep: she grabs her target, Garroting it (a Root), and hits it again and again while she holds it, hidden. Shadowstep becomes a habit, every 8th Knife.",
+      "cost": "She can't move while she garrotes.",
+      "patch": {
+        "signature": {
+          "id": "garrote",
+          "name": "Garrote",
+          "text": "She grabs an enemy within 1 hex of her and Garrotes it, hitting it again and again while she holds it, hidden.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "nearest",
+          "shot": false,
+          "effects": [
+            {
+              "type": "apply_status",
+              "status": "garroted",
+              "duration_ms": 1500,
+              "target": "target"
+            }
+          ],
+          "grip": {
+            "status": "garroted",
+            "every_ms": 500,
+            "veil": "garrote_veil",
+            "effects": [
+              {
+                "type": "damage",
+                "amount": 0,
+                "target": "target",
+                "scaling": {
+                  "atk": 2000
+                }
+              }
+            ]
+          }
+        },
+        "passives": [
+          {
+            "id": "choke",
+            "name": "Choke",
+            "kind": "ability",
+            "text": "Her Knife's hits on a Rooted or Stunned enemy make the Root or Stun last longer.",
+            "effects": [
+              {
+                "trigger": "on_holder_hit",
+                "from_ability": [
+                  "knife"
+                ],
+                "vs": {
+                  "statuses": [
+                    "root",
+                    "stun",
+                    "garroted"
+                  ]
+                },
+                "type": "extend_status",
+                "statuses": [
+                  "root",
+                  "stun",
+                  "garroted"
+                ],
+                "duration_ms": 500,
+                "target": "hit_target"
+              }
+            ]
+          },
+          {
+            "id": "the_noose",
+            "name": "The Noose",
+            "kind": "aura",
+            "text": "Her attacks on Rooted or Stunned enemies always crit.",
+            "aura": {
+              "target": "holder",
+              "stat": "crit_chance_bp",
+              "value": 10000,
+              "vs": {
+                "statuses": [
+                  "root",
+                  "stun",
+                  "garroted"
+                ]
+              }
+            }
+          },
+          {
+            "id": "the_noose_bite",
+            "name": "The Noose",
+            "kind": "aura",
+            "text": "Her crits on Rooted or Stunned enemies hit harder.",
+            "aura": {
+              "target": "holder",
+              "stat": "crit_damage_bp",
+              "value": 2500,
+              "vs": {
+                "statuses": [
+                  "root",
+                  "stun",
+                  "garroted"
+                ]
+              }
+            }
+          },
+          {
+            "id": "shadowstep",
+            "name": "Shadowstep",
+            "kind": "ability",
+            "text": "A habit: every 8th Knife, she slips behind her target and is hidden.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "leap",
+                "to": "behind",
+                "max_hexes": 3,
+                "target": "target"
+              },
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "apply_status",
+                "status": "hidden",
+                "duration_ms": 2000,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Hold time her crits added",
+      "counts": "extended_ms",
+      "from_ability": [
+        "choke"
+      ],
+      "threshold": 3000
+    }
   }
 ]

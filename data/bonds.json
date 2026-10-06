@@ -49,5 +49,15 @@
       "wardweaver"
     ],
     "relic": "the_woven_fang"
+  },
+  {
+    "id": "hold_and_break",
+    "name": "Hold and Break",
+    "text": "He knocks them senseless; she's already behind them.",
+    "paths": [
+      "garrote",
+      "ironbrand"
+    ],
+    "relic": "hammer_and_wire"
   }
 ]

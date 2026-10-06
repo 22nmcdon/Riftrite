@@ -606,6 +606,53 @@ def tamsin_base(uid):
     return "".join(o)
 
 
+def tamsin_nightblade(uid):
+    """Wrapped to the eyes in night-black, half dissolved into smoke at the edges."""
+    torso = "M118,196 L182,196 L188,338 L112,338 Z"
+    smoke = "".join(f'<circle cx="{x}" cy="{y}" r="{r}" fill="{PLUM_DK}" opacity="0.45" filter="url(#bloom)"/>' for x, y, r in
+                    ((96, 330, 22), (204, 320, 18), (110, 420, 26), (196, 430, 20), (150, 470, 30)))
+    o = [shadow(70), smoke, tamsin_legs(INK),
+         limb((122, 208), (96, 288), 18, 14, DUSKCLOTH_DK), circle(94, 292, 8, SKIN, 2), knife(94, 292, 150, 52),
+         P(torso, DUSKCLOTH_DK), P("M124,206 L176,206 L180,330 L120,330 Z", PLUM_DK),
+         P("M118,196 C98,230 92,320 104,380 L120,330 Z", INK),
+         shade(uid, [torso], cut=150), tamsin_head(INK),
+         limb((178, 208), (214, 270), 18, 14, DUSKCLOTH_DK), circle(216, 274, 8, SKIN, 2), knife(216, 274, -40, 52),
+         rim("M120,150 C120,126 134,112 150,110", color=PLUM, w=3),
+         glow_dot(144, 160, 2.5, AQUA), glow_dot(158, 160, 2.5, AQUA)]
+    return "".join(o)
+
+
+def tamsin_headhunter(uid):
+    """A hunter's coat with trophies on the belt and a red scent-thread from one blade."""
+    torso = "M116,194 L184,194 L190,340 L110,340 Z"
+    o = [shadow(72), tamsin_legs(LEATHER_DK),
+         limb((122, 208), (96, 288), 18, 14, LEATHER_DK), circle(94, 292, 8, SKIN, 2), knife(94, 292, 150, 50),
+         P(torso, LEATHER_DK), P("M124,206 L176,206 L182,332 L118,332 Z", WINE_DK),
+         P("M110,318 L190,318 L190,340 L110,340 Z", LEATHER, 2),
+         "".join(f'<path d="M{x},340 l6,22 l6,-22 Z" fill="{BONE}" stroke="{INK}" stroke-width="2"/>' for x in (122, 142, 164)),
+         shade(uid, [torso], cut=150), tamsin_head(WINE_DK),
+         limb((178, 208), (214, 270), 18, 14, LEATHER_DK), circle(216, 274, 8, SKIN, 2), knife(216, 274, -40, 50),
+         f'<path d="M258,248 C276,230 270,200 286,180" fill="none" stroke="{WINE}" stroke-width="3" opacity="0.8" filter="url(#glow)"/>',
+         rim("M184,212 L188,300", color=WINE, w=2)]
+    return "".join(o)
+
+
+def tamsin_garrote(uid):
+    """Close-wrapped, a wire drawn taut between two fists."""
+    torso = "M118,196 L182,196 L188,338 L112,338 Z"
+    o = [shadow(70), tamsin_legs(DUSKCLOTH_DK),
+         limb((122, 208), (112, 270), 18, 14, DUSKCLOTH), circle(112, 274, 9, SKIN, 2),
+         P(torso, DUSKCLOTH), P("M124,206 L176,206 L180,330 L120,330 Z", IRON_DK),
+         P("M112,318 L188,318 L188,338 L112,338 Z", LEATHER_DK, 2),
+         shade(uid, [torso], cut=150), tamsin_head(DUSKCLOTH),
+         limb((178, 208), (190, 270), 18, 14, DUSKCLOTH), circle(190, 274, 9, SKIN, 2),
+         f'<path d="M112,274 C130,262 172,262 190,274" fill="none" stroke="{INK}" stroke-width="4"/>'
+         f'<path d="M112,274 C130,262 172,262 190,274" fill="none" stroke="{STEEL}" stroke-width="2"/>',
+         f'<path d="M112,274 C130,262 172,262 190,274" fill="none" stroke="{AQUA}" stroke-width="2" opacity="0.5" filter="url(#glow)"/>',
+         rim("M182,212 L186,300", color=AQUA, w=2)]
+    return "".join(o)
+
+
 HEROES = [
     ("maren", "Maren", [("base", "Base", maren_base), ("deadeye", "Deadeye", maren_deadeye),
                         ("trapper", "Trapper", maren_trapper), ("volley", "Volley", maren_volley)]),
@@ -615,7 +662,8 @@ HEROES = [
                       ("wardweaver", "Wardweaver", vell_wardweaver), ("vigil_keeper", "Vigil Keeper", vell_vigil_keeper)]),
     ("garrow", "Garrow", [("base", "Base", garrow_base), ("aegisfang", "Aegisfang", garrow_aegisfang),
                           ("chainwarden", "Chainwarden", garrow_chainwarden), ("spitemail", "Spitemail", garrow_spitemail)]),
-    ("tamsin", "Tamsin", [("base", "Base", tamsin_base)]),
+    ("tamsin", "Tamsin", [("base", "Base", tamsin_base), ("nightblade", "Nightblade", tamsin_nightblade),
+                          ("headhunter", "Headhunter", tamsin_headhunter), ("garrote", "Garrote", tamsin_garrote)]),
 ]
 
 FILTERS = ('<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4" result="b"/>'

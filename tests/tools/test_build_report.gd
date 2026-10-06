@@ -20,7 +20,7 @@ func test_the_teams_file_reads() -> void:
 	var builds: Array[BuildReport.Build] = BuildReport.read_builds(_content, _run, errors)
 	assert_eq(errors, [] as Array[String])
 	assert_eq(builds.map(func(build: BuildReport.Build) -> String: return "%s %s" % [build.path, build.type]),
-		["aegisfang engine", "chainwarden self-sufficient", "spitemail self-sufficient"])
+		["aegisfang engine", "chainwarden self-sufficient", "spitemail self-sufficient", "garrote engine", "headhunter engine", "nightblade self-sufficient"])
 
 
 func test_a_small_run() -> void:

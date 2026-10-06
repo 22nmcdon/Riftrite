@@ -1896,5 +1896,40 @@
         }
       ]
     }
+  },
+  {
+    "id": "hammer_and_wire",
+    "name": "Hammer and Wire",
+    "tier": "bond",
+    "icon": "braced",
+    "flavor": "Hold and Break: he knocks them senseless; she's already behind them.",
+    "text": "Tamsin's Garrote reaches a Stunned enemy within 4 hexes (she steps behind it), and grips a Stunned enemy twice as often.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "garrote",
+          "prefer": {
+            "statuses": [
+              "stun"
+            ]
+          },
+          "reach_add": 3,
+          "add_effects": [
+            {
+              "type": "leap",
+              "to": "behind",
+              "max_hexes": 4,
+              "target": "target"
+            }
+          ],
+          "grip_fast_vs": {
+            "statuses": [
+              "stun"
+            ]
+          }
+        }
+      ]
+    }
   }
 ]

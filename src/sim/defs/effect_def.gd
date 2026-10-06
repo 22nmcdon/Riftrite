@@ -82,7 +82,9 @@ extends RefCounted
 ##                 "area" (an area's own pull: its middle); "to": "beside"
 ##                 (a hook, the Gulf Angler: no "hexes"; the target is
 ##                 carried all the way to the free spot nearest the unit,
-##                 over the void too, and never left over it)
+##                 over the void too, and never left over it); phase 8
+##                 part 4: "toward": "ally" (toward the unit's nearest
+##                 standing ally, else the unit; Tamsin's Drag)
 ##   sever:        phase 8 part 3 (Islands; the Heart of the Rift; no
 ##                 "target" key): the fight's next bridge (FightSetup.
 ##                 bridges, in turn) is warned for "warning_ms", then turns
@@ -105,7 +107,8 @@ extends RefCounted
 ##                 leap (an event effect, at "enemy_near_named" or
 ##                 "enemy_near_target", optionally with "only"): the unit
 ##                 lands beside that enemy and makes it its target;
-##                 "resets_attack": true readies its attack after a step
+##                 "resets_attack": true readies its attack after a step.
+##                 A passive may leap behind (at "target": its unit's target)
 ##   charge:       hexes, optional knockback (hexes); the unit runs straight
 ##                 at its target and knocks back the first enemy it touches.
 ##                 Phase 8 part 3 (the Avalanche Guardian): "carries": true
@@ -194,7 +197,8 @@ extends RefCounted
 ##   on_hit_taken     an enemy's hit lands on the unit (hit_target: the
 ##                    attacker; amount_bp_of_damage: of that hit)
 ##   on_heal          the unit restores HP to an ally (hit_target: them)
-##   on_status        the unit applies a status ("statuses": only those;
+##   on_status        the unit applies a status ("statuses": only those,
+##                    but a cleanse's or extend's "statuses" are its own;
 ##                    hit_target: the unit it went on)
 ##   on_kill          an enemy the unit hit last falls
 ##   on_hop           the unit hops away (the hop_away trait; added at
@@ -312,7 +316,7 @@ enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, 
 ## A pull's way (phase 8 part 3): toward the unit, the nearest water, or
 ## its area's middle; a knockback's: away from the unit, or toward the
 ## nearest edge.
-enum Toward { UNIT, WATER, AREA, EDGE }
+enum Toward { UNIT, WATER, AREA, EDGE, ALLY }
 ## A flood's mode (phase 8 part 3; Water).
 enum FloodMode { CIRCLE, SPREAD, DRAIN, ALL }
 enum Placement { EDGES, ADJACENT, HEXES, WATER }
@@ -397,7 +401,7 @@ const REACH_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_TARGET, Target.ALLIES_
 const NAMED_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_NAMED, Target.ENEMY_NEAR_NAMED]
 const SIDE_NAMES: Array[String] = ["both", "enemies", "allies"]
 const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain", "knockback", "pull", "leap", "charge", "area", "start_collapse", "summon", "gain_mana", "snare", "wall", "extend_status", "hop", "flood", "sever", "spend_shield", "release_stored"]
-const TOWARD_NAMES: Array[String] = ["unit", "water", "area", "edge"]
+const TOWARD_NAMES: Array[String] = ["unit", "water", "area", "edge", "ally"]
 const FLOOD_MODE_NAMES: Array[String] = ["circle", "spread", "drain", "all"]
 ## The types placed at the ability's target without a "target" key of their
 ## own (an area, a snare, a wall).
@@ -886,7 +890,9 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 	if def.type == Type.HOP and not target_name.is_empty() and def.target != Target.SELF:
 		reader.error("a hop moves the unit itself, so it needs \"target\": \"self\"")
 	if MOVES_SELF.has(def.type) and not def.leap_home and not def.leap_step and not type_name.is_empty() and not target_name.is_empty():
-		if def.target != Target.TARGET or def.trigger != Trigger.ON_FIRE:
+		# A leap behind may be a passive's too (phase 8 part 4, Shadowstep's
+		# habit: behind the unit's target).
+		if def.target != Target.TARGET or (def.trigger != Trigger.ON_FIRE and not def.leap_behind):
 			reader.error("%s moves the unit itself to its target, so it needs \"target\": \"target\" and the on_fire trigger" % type_name)
 
 	# "hit_target" and damage-based shields need a hit to refer to.
@@ -1009,13 +1015,18 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 		Trigger.ON_HOLDER_CRIT:
 			if reader.has("beyond_hexes"):
 				def.beyond_range = reader.req_int("beyond_hexes", 1, 10) * HexGrid.HEX
+			# Only those abilities' crits (phase 8 part 4, Choke: her Knife's).
+			if reader.has("from_ability"):
+				def.from_abilities = reader.req_string_array("from_ability")
 		Trigger.ON_HEAL, Trigger.ON_HOLDER_HIT, Trigger.ON_PULL:
 			if reader.has("from_ability"):
 				def.from_abilities = reader.req_string_array("from_ability")
 			if def.trigger == Trigger.ON_HEAL and reader.has("was_below_pct"):
 				def.was_below_bp = reader.req_int("was_below_pct", 1, 99) * 100
 		Trigger.ON_STATUS, Trigger.ON_STATUS_ENDED:
-			if reader.has("statuses"):
+			# A cleanse's or an extend's "statuses" are its own (phase 8 part
+			# 4, Mist Step); such an event filters by "keywords".
+			if reader.has("statuses") and def.type != Type.CLEANSE and def.type != Type.EXTEND_STATUS:
 				def.statuses = reader.req_string_array("statuses")
 			def.keywords = reader.opt_choice_array("keywords", Keywords.NAMES)
 			if reader.has("at_stacks"):

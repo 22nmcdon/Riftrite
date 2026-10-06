@@ -74,7 +74,7 @@ func test_the_tiers() -> void:
 	var counts: Array[int] = [0, 0, 0, 0, 0, 0]
 	for id: String in _run.relic_ids:
 		counts[_run.relics[id].tier] += 1
-	assert_eq(counts, [25, 21, 14, 15, 11, 5] as Array[int], "common, rare, epic, legendary, boss, bond (Garrow's two since phase 8 part 4)")
+	assert_eq(counts, [25, 21, 14, 15, 11, 6] as Array[int], "common, rare, epic, legendary, boss, bond (Garrow's two and Tamsin's one since phase 8 part 4)")
 	for id: String in ["pilgrims_lantern", "hungry_blade"]:
 		assert_false(_run.relics.has(id), "%s is cut" % id)
 	assert_eq(_run.acts[0].relic_prices, {"common": 5, "rare": 12, "epic": 20, "legendary": 30, "boss": 0, "bond": 0} as Dictionary[String, int])

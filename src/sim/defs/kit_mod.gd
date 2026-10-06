@@ -206,6 +206,10 @@ class AbilityChange:
 	var ignores_def: bool = false
 	var per_twice: UnitCondition = null
 	var per_stack_add_bp: int = 0
+	## A signature's reach, in hexes (from the unit's own when it has none;
+	## Hammer and Wire), and the targets its grip lands twice as often on.
+	var reach_add: int = 0
+	var grip_fast_vs: UnitCondition = null
 
 	## True if it reaches `ability_id` (every ability when it names none).
 	func reaches(id: String) -> bool:
@@ -446,6 +450,11 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 	change.per_stack_add_bp = reader.opt_int("per_stack_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
 	if reader.has("per_twice"):
 		change.per_twice = UnitCondition.read(reader.req_object("per_twice"))
+	change.reach_add = reader.opt_int("reach_add", 0, -3, 6)
+	if reader.has("grip_fast_vs"):
+		change.grip_fast_vs = UnitCondition.read(reader.req_object("grip_fast_vs"))
+	if (change.reach_add != 0 or change.grip_fast_vs != null) and change.slot != SLOT_SIGNATURE and change.ability_id.is_empty():
+		reader.error("reach_add and grip_fast_vs change a signature (\"slot\": \"signature\", or a named \"ability\")")
 	if not change.ability_id.is_empty() and change.slot != SLOT_ABILITIES:
 		reader.error("\"ability\" names one of its abilities (\"slot\": \"abilities\")")
 	if change.mana_max_add != 0 and change.ability_id.is_empty():
@@ -457,7 +466,7 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 		reader.error("after_add_ms, value_add, guard, rise_add_pct, per_shared_bp, and per_twice change a named passive (\"slot\": \"passive:<id>\")")
 	if not (change.touches_effects() or change.cooldown_bp != FixedMath.BP_ONE or not change.add_effects.is_empty() or change.after_add_ticks != 0
 			or change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0 or change.changes_part() or change.prefer != null
-			or change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0 or change.mana_max_add != 0):
+			or change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0 or change.mana_max_add != 0 or change.reach_add != 0 or change.grip_fast_vs != null):
 		reader.error("an \"on\" entry needs amount_bp, duration_bp, duration_add_ms, radius_add, cooldown_bp, add_effects, after_add_ms, cast_bp, targets_add, or one of step 7b's knobs")
 	reader.finish()
 	return change
@@ -491,7 +500,8 @@ func step_problem() -> String:
 				or change.follows or change.ricochet_add != 0 or change.reflect_bp != 0 or change.snags \
 				or change.per_enemy_add_bp != 0 or change.overheal_max_hp_add != 0 or change.at_stacks_add != 0 or change.per_taken_add_bp != 0 \
 				or change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0 or change.holder != null or change.carries \
-				or not change.ability_id.is_empty() or change.mana_max_add != 0 or change.ignores_def or change.per_twice != null or change.per_stack_add_bp != 0:
+				or not change.ability_id.is_empty() or change.mana_max_add != 0 or change.ignores_def or change.per_twice != null or change.per_stack_add_bp != 0 \
+				or change.reach_add != 0 or change.grip_fast_vs != null:
 			return "a growing card's step can only change an ability's amount_bp"
 	return ""
 
@@ -585,6 +595,8 @@ func affects_besides_passives(kit: UnitDef) -> bool:
 			if change.grows_add_bp != 0 and ability.grows_bp > 0 or change.grows_boosts_add_bp != 0 and ability.grows_boosts_bp > 0:
 				return true
 			if change.cast_bp != FixedMath.BP_ONE and ability.cast_ticks > 0:
+				return true
+			if change.reach_add != 0 and ability.is_signature() or change.grip_fast_vs != null and not ability.grip_status.is_empty():
 				return true
 			if change.targets_add > 0 and not _extra_targets(ability, change).is_empty():
 				return true
@@ -754,6 +766,11 @@ static func _changed_ability(ability: AbilityDef, change: AbilityChange) -> Abil
 		copy.cast_ticks = FixedMath.apply_bp(copy.cast_ticks, change.cast_bp)
 	if change.prefer != null:
 		copy.prefer = change.prefer
+	if change.reach_add != 0 and ability.is_signature():
+		# From the unit's own reach when it has none (a melee unit's: 1).
+		copy.max_range = maxi((copy.max_range if copy.max_range > 0 else 1) + change.reach_add, 1)
+	if change.grip_fast_vs != null and not ability.grip_status.is_empty():
+		copy.grip_fast_vs = change.grip_fast_vs
 	if change.grows_add_bp != 0 and ability.grows_bp > 0:
 		copy.grows_bp = maxi(ability.grows_bp + change.grows_add_bp, 0)
 	if change.grows_boosts_add_bp != 0 and ability.grows_boosts_bp > 0:

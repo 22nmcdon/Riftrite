@@ -22,6 +22,12 @@ extends RefCounted
 ##   {"shield_above_pct": 100}               its Shield is more than this
 ##                                           share of its max HP (phase 8
 ##                                           part 4; Plate on Plate)
+##   {"targets_holder": false}               its target isn't (true: is) the
+##                                           condition's holder (phase 8
+##                                           part 4; Backstab)
+##   {"target": {...a condition...}}         its target meets that one
+##                                           (phase 8 part 4; Stalker: while
+##                                           her target is Marked)
 ## Used as an event effect's "vs" (the unit the event names), a damage_bp
 ## aura's "vs" (the target of the hit), and an aura's "while": "state" (its
 ## holder).
@@ -40,6 +46,10 @@ var kits: Array[String] = []
 var same_island: bool = false
 ## 0: no Shield condition.
 var shield_above_bp: int = 0
+## Whether its target is the holder (ANY: either; phase 8 part 4).
+var targets_holder: Flying = Flying.ANY
+## A condition its target meets (null: none; phase 8 part 4).
+var target: UnitCondition = null
 
 
 static func read(reader: DataReader) -> UnitCondition:
@@ -62,14 +72,19 @@ static func read(reader: DataReader) -> UnitCondition:
 	def.same_island = reader.opt_bool("same_island", false)
 	if reader.has("shield_above_pct"):
 		def.shield_above_bp = reader.req_int("shield_above_pct", 1, 1000) * 100
+	if reader.has("targets_holder"):
+		def.targets_holder = Flying.YES if reader.opt_bool("targets_holder", true) else Flying.NO
+	if reader.has("target"):
+		def.target = read(reader.req_object("target"))
 	if def.is_empty():
-		reader.error("a condition needs at least one of keywords, statuses, below_hp_pct, flying, archetypes, front_most, on_water, same_island, shield_above_pct, or kits")
+		reader.error("a condition needs at least one of keywords, statuses, below_hp_pct, flying, archetypes, front_most, on_water, same_island, shield_above_pct, targets_holder, target, or kits")
 	reader.finish()
 	return def
 
 
 func is_empty() -> bool:
-	return keywords.is_empty() and statuses.is_empty() and below_hp_bp == 0 and flying == Flying.ANY and archetypes.is_empty() and not front_most and on_water == Flying.ANY and kits.is_empty() and not same_island and shield_above_bp == 0
+	return keywords.is_empty() and statuses.is_empty() and below_hp_bp == 0 and flying == Flying.ANY and archetypes.is_empty() and not front_most and on_water == Flying.ANY and kits.is_empty() and not same_island and shield_above_bp == 0 \
+		and targets_holder == Flying.ANY and target == null
 
 
 ## True if `unit` meets every field given. `holder`: whose condition it is
@@ -95,6 +110,10 @@ func holds(unit: UnitState, holder: UnitState = null) -> bool:
 	if not keywords.is_empty() and not _has_keyword(unit):
 		return false
 	if not statuses.is_empty() and not _has_status(unit):
+		return false
+	if targets_holder != Flying.ANY and (holder == null or (unit.target == holder) != (targets_holder == Flying.YES)):
+		return false
+	if target != null and (unit.target == null or not unit.target.alive or not target.holds(unit.target, holder)):
 		return false
 	return true
 
@@ -142,4 +161,8 @@ func describe() -> String:
 		parts.append("on its island")
 	if not kits.is_empty():
 		parts.append(" or ".join(kits.map(func(kit_id: String) -> String: return kit_id.replace("_", " ").capitalize())))
+	if targets_holder != Flying.ANY:
+		parts.append("targeting it" if targets_holder == Flying.YES else "not targeting it")
+	if target != null:
+		parts.append("with a target that's %s" % target.describe())
 	return ", ".join(parts)

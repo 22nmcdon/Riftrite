@@ -414,5 +414,55 @@
     "until_attack": true,
     "duration_ms": 2000
   },
+  {
+    "_note": "Shadow Dance (Nightblade's signature; phase 8 part 4): hidden, and her next 3 basic attacks don't end it; the 4th does.",
+    "id": "shadow_dance",
+    "name": "Shadow Dance",
+    "kind": "stealth",
+    "keyword": "stealthed",
+    "until_attack": true,
+    "spares_attacks": 3,
+    "duration_ms": 3000
+  },
+  {
+    "_note": "Garrote's hold on its target (phase 8 part 4): a Root, and the Garrote grips while it lasts. Choke extends it.",
+    "id": "garroted",
+    "name": "Garroted",
+    "kind": "root",
+    "keyword": "rooted",
+    "duration_ms": 1500
+  },
+  {
+    "_note": "Tamsin stays hidden while she garrotes (Grips: it lasts as long as the grip, and her attacks don't end it).",
+    "id": "garrote_veil",
+    "name": "In the Shadows",
+    "kind": "stealth",
+    "keyword": "stealthed",
+    "duration_ms": 2000
+  },
+  {
+    "_note": "Attacks faster for a moment after she leaves Stealth (Assassin's Haste, a Nightblade card; phase 8 part 4).",
+    "id": "assassins_haste",
+    "name": "Assassin's Haste",
+    "kind": "boost",
+    "duration_ms": 3000,
+    "auras": [{"stat": "atsp", "value": 20}]
+  },
+  {
+    "_note": "Attacks faster for a moment after The Hunt carries her on (Swift Step, a Headhunter card; phase 8 part 4).",
+    "id": "swift_step",
+    "name": "Swift Step",
+    "kind": "boost",
+    "duration_ms": 2000,
+    "auras": [{"stat": "atsp", "value": 30}]
+  },
+  {
+    "_note": "Takes more damage from everyone while it lasts (Marked for Death, a Headhunter card: a Marked enemy Tamsin hits; phase 8 part 4). Not a Mark: it adds to one.",
+    "id": "death_mark",
+    "name": "Marked for Death",
+    "kind": "boost",
+    "duration_ms": 2000,
+    "auras": [{"stat": "damage_reduced_bp", "value": -1000}]
+  },
   {"_note": "While it lasts, a share of every hit on him is sent back (Iron Maiden, Spitemail's signature; phase 8 part 4). It changes nothing by itself: his Maiden's Spite passive reads it.", "id": "iron_maiden", "name": "Iron Maiden", "kind": "boost", "duration_ms": 3000, "auras": [{"stat": "def", "value": 0}]}
 ]

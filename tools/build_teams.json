@@ -48,6 +48,56 @@
         "overflow_chalice"
       ],
       "note": "test-teams.md #11; Maren's Deadeye stands in for Severine's Hemomancer"
+    },
+    {
+      "name": "Thicket",
+      "path": "garrote",
+      "type": "engine",
+      "team": {
+        "maren": "trapper",
+        "tamsin": "garrote",
+        "garrow": "chainwarden"
+      },
+      "relics": [
+        "thicket_engine",
+        "thornwoven_cloak",
+        "grasping_mire",
+        "bramble_seed"
+      ],
+      "note": "test-teams.md #1"
+    },
+    {
+      "name": "Hunt",
+      "path": "headhunter",
+      "type": "engine",
+      "team": {
+        "maren": "deadeye",
+        "tamsin": "headhunter",
+        "vell": "vigil_keeper"
+      },
+      "relics": [
+        "hunters_engine",
+        "executioners_mark",
+        "hunters_ledger",
+        "brand_of_guilt"
+      ],
+      "note": "test-teams.md #2; Maren's Deadeye (Marking Shot's habit) stands in for Aldous's Bellwarden"
+    },
+    {
+      "name": "Shadow",
+      "path": "nightblade",
+      "type": "self-sufficient",
+      "team": {
+        "brannoc": "hearthwall",
+        "maren": "deadeye",
+        "tamsin": "nightblade"
+      },
+      "relics": [
+        "veil_of_the_lost",
+        "shadow_engine",
+        "smoke_pouch"
+      ],
+      "note": "test-teams.md #12; Brannoc's Hearthwall (a guard for the others) stands in for Lucan's Veilweaver"
     }
   ]
 }

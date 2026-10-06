@@ -96,7 +96,9 @@ extends RefCounted
 ## it last that much longer: -5000 is half; Garrow's Iron Will), store_bp
 ## (that share of each hit on it is stored instead of taken, UnitState.stored,
 ## noted "N stored" on the hit; Vengeance), and store_grows_bp (what it has
-## stored grows by that share each second until released).
+## stored grows by that share each second until released); and (8d-3)
+## evade_bp (a basic attack's hits on it miss that share of the time,
+## rolled on the seeded RNG, logged DODGED noted "evaded"; Tamsin's Evasive).
 ## "vs": {...} (a UnitCondition; damage_bp, crit_chance_bp, and lifesteal_bp;
 ## phase 5c steps 3 and 5b): the bonus
 ## counts only on hits against targets that meet it, as power (Decision 12:
@@ -118,7 +120,7 @@ enum Stat { DAMAGE_BP, HEAL_BP, SHIELD_BP, OVER_TIME_BP, CRIT_CHANCE_BP, COOLDOW
 	LIFESTEAL_BP, CRIT_DAMAGE_BP, ATSP, DAMAGE_REDUCED_BP,
 	OVERHEAL_SHIELD_BP, LIFESTEAL_HEALS, CRIT_OVERFLOW_BP, DEF, OVERHEAL_STRIKE_BP, MAX_HP_BP,
 	DEF_IGNORE_BP, UNPUSHABLE, DODGE_EVERY_MS, HALVED_HITS,
-	SHIELD_DAMAGE_BP, SEES_STEALTH, BURN_TAKEN_BP, MARKED_TIME_BP, ROOT_CAP_MS, MISS_BP, STUN_TIME_BP, STORE_BP, STORE_GROWS_BP }
+	SHIELD_DAMAGE_BP, SEES_STEALTH, BURN_TAKEN_BP, MARKED_TIME_BP, ROOT_CAP_MS, MISS_BP, STUN_TIME_BP, STORE_BP, STORE_GROWS_BP, EVADE_BP }
 ## What turns an aura on, beyond its window.
 enum While { ALWAYS, TAUNTING, PLANTED, BELOW_HP, ALLY_STANDING, STATE, ALLY_NEAR, BEHIND_WALL, MOVED, CROWDED, TACTIC }
 
@@ -131,7 +133,7 @@ const STAT_NAMES: Array[String] = [
 	"lifesteal_bp", "crit_damage_bp", "atsp", "damage_reduced_bp",
 	"overheal_shield_bp", "lifesteal_heals", "crit_overflow_bp", "def", "overheal_strike_bp", "max_hp_bp",
 	"def_ignore_bp", "unpushable", "dodge_every_ms", "halved_hits",
-	"shield_damage_bp", "sees_stealth", "burn_taken_bp", "marked_time_bp", "root_cap_ms", "miss_bp", "stun_time_bp", "store_bp", "store_grows_bp",
+	"shield_damage_bp", "sees_stealth", "burn_taken_bp", "marked_time_bp", "root_cap_ms", "miss_bp", "stun_time_bp", "store_bp", "store_grows_bp", "evade_bp",
 ]
 const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp", "ally_standing", "state", "ally_near", "behind_wall", "moved", "crowded", "tactic"]
 ## The stats that add rather than multiply. The rest are factors (x1.1);
@@ -139,7 +141,7 @@ const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp",
 const ADDITIVE: Array[Stat] = [Stat.CRIT_CHANCE_BP, Stat.COOLDOWN_BP, Stat.RANGE, Stat.LIFESTEAL_BP, Stat.CRIT_DAMAGE_BP, Stat.ATSP, Stat.DAMAGE_REDUCED_BP,
 	Stat.OVERHEAL_SHIELD_BP, Stat.LIFESTEAL_HEALS, Stat.CRIT_OVERFLOW_BP, Stat.DEF, Stat.OVERHEAL_STRIKE_BP,
 	Stat.DEF_IGNORE_BP, Stat.UNPUSHABLE, Stat.DODGE_EVERY_MS, Stat.HALVED_HITS,
-	Stat.SHIELD_DAMAGE_BP, Stat.SEES_STEALTH, Stat.BURN_TAKEN_BP, Stat.MARKED_TIME_BP, Stat.ROOT_CAP_MS, Stat.MISS_BP, Stat.STUN_TIME_BP, Stat.STORE_BP, Stat.STORE_GROWS_BP]
+	Stat.SHIELD_DAMAGE_BP, Stat.SEES_STEALTH, Stat.BURN_TAKEN_BP, Stat.MARKED_TIME_BP, Stat.ROOT_CAP_MS, Stat.MISS_BP, Stat.STUN_TIME_BP, Stat.STORE_BP, Stat.STORE_GROWS_BP, Stat.EVADE_BP]
 ## The stats an aura worked out per hit may hold ("vs", "from_basic",
 ## "per_target_stacks").
 const VS_STATS: Array[Stat] = [Stat.DAMAGE_BP, Stat.CRIT_CHANCE_BP, Stat.LIFESTEAL_BP, Stat.CRIT_DAMAGE_BP, Stat.HEAL_BP, Stat.SHIELD_BP]
@@ -149,7 +151,7 @@ const STAT_LABELS: Array[String] = [
 	"lifesteal", "crit damage", "ATSP", "damage taken",
 	"of overheal as Shield", "lifesteal heals", "of crit chance past 100% as crit damage", "DEF", "of lifesteal overheal as damage to its target", "max HP",
 	"of the target's DEF ignored", "can't be knocked back", "a hit misses every", "hits taken at half damage",
-	"damage to Shields", "can target the stealthed", "Burn damage taken", "how long Marks on it last", "Roots on it last at most", "of its attacks missing", "how long Stuns on it last", "of each hit taken stored", "stored damage growth a second",
+	"damage to Shields", "can target the stealthed", "Burn damage taken", "how long Marks on it last", "Roots on it last at most", "of its attacks missing", "how long Stuns on it last", "of each hit taken stored", "stored damage growth a second", "of basic attacks on it evaded",
 ]
 ## Unit stat for each unit-stat aura stat (ATK_BP -> Stat.ATK, ...).
 const UNIT_STAT_FOR: Dictionary[int, int] = {

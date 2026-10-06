@@ -22,13 +22,13 @@ func _unbuilt(hero_id: String) -> ContentDb:
 
 
 func test_a_hero_is_drafted_once_its_paths_are_built() -> void:
-	for hero_id: String in ["brannoc", "maren", "vell", "garrow"]:
+	for hero_id: String in ["brannoc", "maren", "vell", "garrow", "tamsin"]:
 		assert_true(HeroTeam.ready(_content, hero_id), hero_id)
 	assert_false(HeroTeam.ready(_content, "nobody"))
-	assert_eq(HeroTeam.draftable(_content), ["brannoc", "maren", "vell", "garrow"] as Array[String])
+	assert_eq(HeroTeam.draftable(_content), ["brannoc", "maren", "vell", "garrow", "tamsin"] as Array[String])
 	var unbuilt: ContentDb = _unbuilt("garrow")
 	assert_false(HeroTeam.ready(unbuilt, "garrow"), "not until his paths are built")
-	assert_eq(HeroTeam.draftable(unbuilt), HeroTeam.DEFAULT)
+	assert_eq(HeroTeam.draftable(unbuilt), ["brannoc", "maren", "vell", "tamsin"] as Array[String])
 
 
 func test_why_a_team_cant_be_drafted() -> void:

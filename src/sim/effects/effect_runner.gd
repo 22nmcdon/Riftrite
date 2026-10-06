@@ -254,6 +254,14 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 					# Toward its area's middle (Undertow Tidecaller).
 					if push_from != NO_POINT:
 						Displacement.pull_to(sim, victim, push_from, effect.hexes, source)
+				EffectDef.Toward.ALLY:
+					# Toward the unit's nearest standing ally (phase 8 part 4,
+					# Tamsin's Drag), else toward the unit.
+					var ally: UnitState = nearest_ally(sim, unit, victim)
+					if ally == null:
+						Displacement.pull(sim, victim, unit, effect.hexes, source)
+					else:
+						Displacement.pull(sim, victim, ally, effect.hexes, source)
 				_:
 					Displacement.pull(sim, victim, unit, effect.hexes, source)
 		EffectDef.Type.LEAP:
@@ -532,6 +540,21 @@ static func run_relic(sim: CombatSim, source: EffectSource, effect: EffectDef, s
 
 ## The `count` of `pool` nearest any of `others` (ties to the earlier in the
 ## fight's order).
+## The standing ally of `unit` (not itself or `besides`) nearest it, by
+## distance then the fight's order; null if there's none.
+static func nearest_ally(sim: CombatSim, unit: UnitState, besides: UnitState) -> UnitState:
+	var best: UnitState = null
+	var best_d: int = 0
+	for other: UnitState in sim.standing_allies_of(unit):
+		if other == unit or other == besides:
+			continue
+		var d: int = ArenaPlane.length_sq(other.pos - unit.pos)
+		if best == null or d < best_d:
+			best = other
+			best_d = d
+	return best
+
+
 static func nearest_to(pool: Array[UnitState], others: Array[UnitState], count: int) -> Array[UnitState]:
 	var picked: Array[UnitState] = []
 	var left: Array[UnitState] = pool.duplicate()
@@ -599,6 +622,16 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 			missed.target = target.id
 			missed.note = "missed"
 			sim.combat_log.add(missed)
+			sim.last_dodged = true
+			return 0
+		# Evasive (phase 8 part 4, Tamsin's card): a basic attack's hits on it
+		# miss a share of the time. Logged as DODGED, noted "evaded".
+		if striker != null and target.aura_bp[AuraDef.Stat.EVADE_BP] > 0 and source.ability_id == striker.def.basic_attack.id \
+				and sim.rng.roll_bp(target.aura_bp[AuraDef.Stat.EVADE_BP]):
+			var evaded: LogEntry = sim.new_entry(LogEntry.Kind.DODGED, source)
+			evaded.target = target.id
+			evaded.note = "evaded"
+			sim.combat_log.add(evaded)
 			sim.last_dodged = true
 			return 0
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.DAMAGE, source)

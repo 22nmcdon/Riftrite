@@ -83,6 +83,7 @@ func test_the_draft() -> void:
 	assert_eq(start.vows.keys(), HeroTeam.DEFAULT, "the old three are drafted first")
 	assert_eq(start.draft_buttons.keys(), main.run_content().content.hero_ids, "a card for every hero")
 	assert_false(start.draft_buttons["garrow"].disabled, "Garrow's paths are built (phase 8 part 4, 8d-2)")
+	assert_false(start.draft_buttons["tamsin"].disabled, "and Tamsin's (8d-3)")
 	start.choose("vell", "wardweaver")
 	start.draft_hero("vell")
 	assert_eq(start.vows.keys(), ["brannoc", "maren"])
