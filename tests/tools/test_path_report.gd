@@ -15,7 +15,8 @@ func before_all() -> void:
 
 func _named() -> Dictionary[String, Dictionary]:
 	var errors: Array[String] = []
-	return Report.read_formations(FileAccess.get_file_as_string("res://tools/sim_formations.json"), errors)
+	var named: Dictionary[String, Dictionary] = Report.read_formations(FileAccess.get_file_as_string("res://tools/sim_formations.json"), errors)
+	return Report.for_team(_content, named, HeroTeam.DEFAULT)
 
 
 func test_the_variants() -> void:

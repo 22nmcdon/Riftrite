@@ -39,7 +39,8 @@ func _init() -> void:
 		for i: int in per:
 			var vows: Dictionary[String, String] = {}
 			var transformed: Array[String] = []
-			for hero_id: String in content.hero_ids:
+			var team: Array[String] = Placement.draw_team(content, rng)
+			for hero_id: String in team:
 				var paths: Array[PathDef] = content.heroes[hero_id].paths
 				vows[hero_id] = paths[rng.range_int(paths.size())].id
 				if rng.range_int(2) == 0 or content.encounters[encounter_id].act > 1:
@@ -47,7 +48,7 @@ func _init() -> void:
 			# Never a hex over the void (phase 8 part 3, 8c-6c).
 			var free: Array[Vector2i] = zone.filter(func(hex: Vector2i) -> bool: return not content.encounters[encounter_id].void_hexes.has(hex))
 			var random_formation: Dictionary[String, Vector2i] = {}
-			for hero_id: String in content.hero_ids:
+			for hero_id: String in team:
 				random_formation[hero_id] = free.pop_at(rng.range_int(free.size()))
 			var errors: Array[String] = []
 			var setup: FightSetup = Encounters.setup(content, encounter_id, random_formation, 9001 + i, errors, {}, vows, transformed)

@@ -18,15 +18,21 @@ extends RefCounted
 ##     like tactics; a transformed Trapper's snares, placed like heroes; and
 ##     what the last fight put into each hero's deeds (Practice has no
 ##     thresholds, so the panel shows that instead).
+##   - The team (phase 8 part 4, docs/plans/rebuild-phase8-heroes.md,
+##     Decision 6): any three heroes, chosen on the encounter list; a hero
+##     whose paths aren't built yet fights at base. A hero not in the
+##     remembered formation starts on its role's hex (HeroTeam.GUARDED).
 
-## The first formation, before any fight: Brannoc in front of the other two
-## (the sim runner's "guarded").
+## The first formation, before any fight, for the first team: Brannoc in
+## front of the other two (HeroTeam.GUARDED).
 const DEFAULT_FORMATION: Dictionary[String, Vector2i] = {"brannoc": Vector2i(3, 2), "maren": Vector2i(3, 0), "vell": Vector2i(4, 0)}
 ## Where placed snares go first, in the middle row (then the nearest legal
 ## hexes).
 const DEFAULT_SNARES: Array[Vector2i] = [Vector2i(2, 3), Vector2i(5, 3), Vector2i(3, 3), Vector2i(4, 3)]
 
 var content: ContentDb
+## The heroes fielded, in heroes.json's order (set_team).
+var team: Array[String] = HeroTeam.DEFAULT.duplicate()
 ## The last formation fought with.
 var formation: Dictionary[String, Vector2i] = {}
 ## The fight speed last chosen (Decision 2).
@@ -102,14 +108,27 @@ func _build(encounter_id: String, hero_hexes: Dictionary[String, Vector2i], figh
 	return fight
 
 
-## The remembered formation, made legal for `encounter_id`: each hero, in
-## heroes.json's order, keeps its hex if it can, or takes the nearest one
-## it can have (ties: the lower hex index, which counts column by column).
+## Fields `heroes` (any three different known heroes); returns "" or why
+## not. The remembered formation keeps where a hero who's left stood, for
+## when it's back.
+func set_team(heroes: Array[String]) -> String:
+	var problem: String = HeroTeam.problem(content, heroes, false)
+	if not problem.is_empty():
+		return problem
+	team = HeroTeam.ordered(content, heroes)
+	return ""
+
+
+## The remembered formation, made legal for `encounter_id`: each hero of the
+## team, in heroes.json's order, keeps its hex if it can (its role's hex if
+## it has none yet), or takes the nearest one it can have (ties: the lower
+## hex index, which counts column by column).
 func formation_for(encounter_id: String) -> Dictionary[String, Vector2i]:
 	var grid: HexGrid = content.tuning.make_grid()
 	var placed: Dictionary[String, Vector2i] = {}
-	for hero_id: String in content.hero_ids:
-		var start: Vector2i = formation.get(hero_id, DEFAULT_FORMATION.get(hero_id, Vector2i(0, 0)))
+	var by_role: Dictionary[String, Vector2i] = HeroTeam.place(content, team, HeroTeam.GUARDED)
+	for hero_id: String in HeroTeam.ordered(content, team):
+		var start: Vector2i = formation.get(hero_id, by_role.get(hero_id, Vector2i(0, 0)))
 		for hex: Vector2i in _nearest_first(grid, start):
 			var trial: Dictionary[String, Vector2i] = placed.duplicate()
 			trial[hero_id] = hex
@@ -285,9 +304,10 @@ func last_deed(hero_id: String, path_id: String) -> int:
 	return last_deeds[hero_id].get(path_id, -1) if last_deeds.has(hero_id) else -1
 
 
-## Remembers the formation fought with.
+## Remembers the formation fought with (and where heroes off the team last
+## stood).
 func remember(hero_hexes: Dictionary[String, Vector2i]) -> void:
-	formation = hero_hexes.duplicate()
+	formation.merge(hero_hexes, true)
 
 
 ## `hero_hexes` with `hero_id` moved to `hex`; a hero already there takes

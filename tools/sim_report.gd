@@ -119,8 +119,9 @@ class Report:
 		return sorted[sorted.size() / 2]
 
 
-## Reads tools/sim_formations.json into name -> formation (hero id ->
-## hex), in the file's order. Errors go in `errors`.
+## Reads tools/sim_formations.json into name -> formation by role (role ->
+## hex: HeroTeam.ROLES), in the file's order. Errors go in `errors`. `for_team`
+## puts a team in them.
 static func read_formations(text: String, errors: Array[String]) -> Dictionary[String, Dictionary]:
 	var formations: Dictionary[String, Dictionary] = {}
 	var data: Variant = JSON.parse_string(text)
@@ -132,23 +133,36 @@ static func read_formations(text: String, errors: Array[String]) -> Dictionary[S
 		if name.begins_with("_"):
 			continue
 		if typeof(data[key]) != TYPE_DICTIONARY:
-			errors.append("sim_formations.json (%s): expected hero id -> [col, row]" % name)
+			errors.append("sim_formations.json (%s): expected role -> [col, row]" % name)
 			continue
 		var formation: Dictionary[String, Vector2i] = {}
-		for hero_id: Variant in (data[key] as Dictionary).keys():
-			var path: String = "sim_formations.json (%s).%s" % [name, hero_id]
-			var hex: Variant = data[key][hero_id]
+		for role: Variant in (data[key] as Dictionary).keys():
+			var path: String = "sim_formations.json (%s).%s" % [name, role]
+			if not HeroTeam.ROLES.has(str(role)):
+				errors.append("%s: not a role (%s)" % [path, ", ".join(HeroTeam.ROLES)])
+				continue
+			var hex: Variant = data[key][role]
 			if typeof(hex) != TYPE_ARRAY or (hex as Array).size() != 2:
 				errors.append("%s: expected [col, row]" % path)
 				continue
-			formation[hero_id] = Vector2i(DataReader.to_int(hex[0], path, errors), DataReader.to_int(hex[1], path, errors))
+			formation[role] = Vector2i(DataReader.to_int(hex[0], path, errors), DataReader.to_int(hex[1], path, errors))
 		formations[name] = formation
 	return formations
 
 
-## `count` formations of every hero in content, each on a distinct hex of the
-## heroes' rows with no rock, drawn from `draw_seed`.
-static func drawn_formations(content: ContentDb, rocks: Array[Vector2i], count: int, draw_seed: int) -> Array[Dictionary]:
+## `named` (name -> role -> hex) with `team` cast in it (name -> hero id ->
+## hex; HeroTeam.roles).
+static func for_team(content: ContentDb, named: Dictionary[String, Dictionary], team: Array[String]) -> Dictionary[String, Dictionary]:
+	var placed: Dictionary[String, Dictionary] = {}
+	for name: String in named:
+		placed[name] = HeroTeam.place(content, team, named[name])
+	return placed
+
+
+## `count` formations of `team` (the gate's three by default; phase 8 part
+## 4), each on a distinct hex of the heroes' rows with no rock, drawn from
+## `draw_seed`.
+static func drawn_formations(content: ContentDb, rocks: Array[Vector2i], count: int, draw_seed: int, team: Array[String] = HeroTeam.DEFAULT) -> Array[Dictionary]:
 	var grid: HexGrid = content.tuning.make_grid()
 	var open: Array[Vector2i] = []
 	for row: int in grid.zone_rows:
@@ -160,7 +174,7 @@ static func drawn_formations(content: ContentDb, rocks: Array[Vector2i], count: 
 	for i: int in count:
 		var left: Array[Vector2i] = open.duplicate()
 		var formation: Dictionary[String, Vector2i] = {}
-		for hero_id: String in content.hero_ids:
+		for hero_id: String in HeroTeam.ordered(content, team):
 			formation[hero_id] = left.pop_at(rng.range_int(left.size()))
 		formations.append(formation)
 	return formations
@@ -322,11 +336,11 @@ class TacticReport:
 
 
 ## Every variant: no tactics, then each tactic (tactics.json's order) on each
-## hero who can follow it (heroes.json's order).
+## of the gate's heroes who can follow it (heroes.json's order).
 static func tactic_variants(content: ContentDb) -> Array[TacticRow]:
 	var variants: Array[TacticRow] = [TacticRow.new()]
 	for tactic_id: String in content.tactic_ids:
-		for hero_id: String in content.hero_ids:
+		for hero_id: String in HeroTeam.DEFAULT:
 			if content.tactics[tactic_id].allows(hero_id) and Tactics.can_follow(content.tactics[tactic_id], content.heroes[hero_id].kit):
 				var row := TacticRow.new()
 				row.hero_id = hero_id
@@ -430,7 +444,7 @@ static func text(content: ContentDb, report: Report, boards: bool = true) -> Str
 	var encounter: EncounterDef = report.encounter
 	lines.append("%s (%s): %s. %d seeds, %d named + %d drawn formations%s" % [encounter.name, encounter.id, encounter.tests, report.seeds, report.named, report.rows.size() - report.named,
 		"" if encounter.act <= 1 else "; heroes transformed (%s), enemies x%.2f" % [", ".join(LATER_ACT_VOWS.values()), report.scale_bp / 10000.0]])
-	var heroes: String = "/".join(content.hero_ids.map(func(hero_id: String) -> String: return hero_id.left(1)))
+	var heroes: String = "/".join(HeroTeam.DEFAULT.map(func(hero_id: String) -> String: return hero_id.left(1)))
 	lines.append("  %-10s %6s %8s   %-18s %-20s %s" % ["formation", "wins", "median", "falls (%s)" % heroes, "dealt (%s)" % heroes, "taken (%s)" % heroes])
 	for i: int in report.named:
 		lines.append(_row_line(content, report.rows[i]))
@@ -457,7 +471,7 @@ static func _row_line(content: ContentDb, row: Row) -> String:
 	var falls: Array[String] = []
 	var dealt: Array[String] = []
 	var taken: Array[String] = []
-	for hero_id: String in content.hero_ids:
+	for hero_id: String in HeroTeam.DEFAULT:
 		falls.append(_share(row.deaths.get(hero_id, 0), row.fights))
 		@warning_ignore("integer_division")
 		dealt.append(str(row.dealt.get(hero_id, 0) / maxi(row.fights, 1)))

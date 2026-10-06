@@ -392,6 +392,16 @@ static func read_enemies(setup: FightSetup, grid: HexGrid) -> Dictionary:
 	return {"at": at, "flankers": flankers, "centroid": centroid / maxf(weight, 1.0), "areas": areas, "swarm": swarm, "pushers": pushers, "context": context}
 
 
+## A team for practice fights (phase 8 part 4): three of the heroes the
+## draft offers, drawn on `rng`; the only three, with no draw, while there
+## are only three (so the data and the check didn't move).
+static func draw_team(content: ContentDb, rng: SimRng) -> Array[String]:
+	var pool: Array[String] = HeroTeam.draftable(content)
+	while pool.size() > HeroTeam.SIZE:
+		pool.remove_at(rng.range_int(pool.size()))
+	return pool
+
+
 ## The heroes by role: [tank, far, mid] (see the header).
 static func roles_of(setup: FightSetup) -> Array[UnitSetup]:
 	var heroes: Array[UnitSetup] = setup.heroes.duplicate()

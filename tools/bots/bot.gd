@@ -54,7 +54,7 @@ func loadout(_flow: RunFlow) -> void:
 
 ## The formation for the waiting fight (a day's fight, or a Hunt).
 func formation(flow: RunFlow) -> Dictionary[String, Vector2i]:
-	return Simple.formation_for(flow) if peek else Simple.formation()
+	return Simple.formation_for(flow) if peek else Simple.formation(Simple.FORMATION, Simple.team_of(flow), flow.run.content)
 
 
 ## Where each hero that places markers puts them (snares, a lantern): hero

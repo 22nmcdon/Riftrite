@@ -78,5 +78,36 @@
             "effects": [{"type": "heal", "amount_bp_of_max_hp": 100, "target": "target"}]}]}
       ]
     }
+  },
+  {
+    "_note": "Hero 4 (docs/plans/rebuild-heroes.md section 8d; rebuild-phase8-heroes.md 8d-1). Stats and Haul's mana are the design's; Chain Fist's cooldown and the mana gains are first numbers, for 8d-5's first check.",
+    "id": "garrow",
+    "name": "Garrow of the Chains",
+    "title": "the anchor",
+    "role": "tank",
+    "kit": {
+      "stats": {"hp": 380, "atk": 18, "def": 22, "speed": 2, "range": 1},
+      "mana": {"max": 70, "start": 20, "per_attack": 10, "per_10_damage_taken": 1},
+      "basic_attack": {
+        "id": "chain_fist", "name": "Chain Fist", "text": "A heavy blow on the enemy in front of him.",
+        "cooldown_ms": 1300,
+        "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
+      },
+      "signature": {
+        "id": "haul", "name": "Haul",
+        "text": "Throws a chain at the farthest enemy within 4 hexes and drags it next to him.",
+        "trigger": {"kind": "mana"},
+        "targeting": "farthest", "max_range": 4,
+        "effects": [{"type": "pull", "to": "beside", "target": "target"}]
+      },
+      "passives": [
+        {"id": "stand_fast", "name": "Stand Fast", "kind": "ability",
+          "text": "The first time he drops below half his HP in a fight, he gains a Shield.",
+          "effects": [{"trigger": "on_below_hp", "threshold_bp": 5000, "type": "shield", "amount_bp_of_max_hp": 1500, "target": "self"}]},
+        {"id": "heavy", "name": "Heavy", "kind": "aura",
+          "text": "Nothing can knock him back or pull him.",
+          "aura": {"target": "holder", "stat": "unpushable", "value": 1}}
+      ]
+    }
   }
 ]

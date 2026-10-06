@@ -25,6 +25,25 @@ func _main() -> Main:
 	return main
 
 
+func test_the_team_row() -> void:
+	var main: Main = _main()
+	U.press(main.screen, "Practice")
+	var list: EncounterListScreen = main.screen
+	assert_eq(list.picked, HeroTeam.DEFAULT)
+	assert_true(list.team_buttons["garrow"].disabled, "three are on")
+	list.toggle_hero("brannoc")
+	assert_string_contains(U.text_of(list), "Pick 1 more.")
+	assert_true(U.button(list, "Place your heroes").disabled, "a team is three")
+	assert_eq(main.practice.team, HeroTeam.DEFAULT, "the session keeps the last whole team")
+	list.toggle_hero("garrow")
+	assert_eq(main.practice.team, ["maren", "vell", "garrow"] as Array[String])
+	assert_string_contains(U.text_of(list), "Garrow fights at base: paths aren't built yet.")
+	U.press(list, "Place your heroes")
+	var arena: ArenaScreen = main.screen
+	assert_eq(arena.hero_bar.cards.keys(), ["maren", "vell", "garrow"], "the hero bar shows the team")
+	await wait_frames(1)
+
+
 func test_the_encounter_list() -> void:
 	var main: Main = _main()
 	assert_true(U.press(main.screen, "Practice"))

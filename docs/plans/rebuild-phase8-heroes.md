@@ -1,6 +1,6 @@
 # Phase 8 part 4: heroes 4 to 6 and the team draft
 
-Status: **a build plan, waiting for approval (2026-10-06).** It builds Garrow of the Chains, Tamsin Gloamstep, and Aldous Vesper from their designs (`rebuild-heroes.md` sections 8c, 8d, 8e; `apexes.md`; `upgrade-pools.md`; `duo-bonds.md`), and the team draft they bring back: a run picks three of the six. Numbers are the designs' placeholders. **The tuning pass comes after this plan, as its own phase**, with all six heroes in it (Decision 2). Questions are in section 10.
+Status: **a build plan, approved (2026-10-06); section 10's questions answered (Decisions 4–7); 8d-1, the draft frame, built.** It builds Garrow of the Chains, Tamsin Gloamstep, and Aldous Vesper from their designs (`rebuild-heroes.md` sections 8c, 8d, 8e; `apexes.md`; `upgrade-pools.md`; `duo-bonds.md`), and the team draft they bring back: a run picks three of the six. Numbers are the designs' placeholders. **The tuning pass comes after this plan, as its own phase**, with all six heroes in it (Decision 2). Questions are in section 10.
 
 ## 1. What it builds
 
@@ -121,14 +121,24 @@ Five, from `duo-bonds.md`, as relics of tier `bond` (the built three's frame: a 
 - **8d-4, Aldous:** the same, The Hunter's Bell and Toll and Judgment.
 - **8d-5, the check and the docs:** the first check (section 8), the placement refit, the run report By hero, HOW-TO-PLAY, screenshots (the draft, a fight of each new hero), the design doc, and a playtest build.
 
+### Built in 8d-1
+
+- **Garrow's base kit** (`data/heroes.json`, the fourth hero; section 4's base): Chain Fist, Haul (the farthest enemy within 4 hexes dragged beside him, a pull `"to": "beside"` with signature `"targeting": "farthest"` and `"max_range"`), Stand Fast (a Shield of 15% of max HP the first time he drops below half: `on_below_hp`), and Heavy (`unpushable`: knockbacks and pulls are RESISTED). No new sim piece was needed. His placeholder figure (`tools/art/hero_kit.py`, `garrow_base.svg`). He has no paths yet, so he can't be drafted (`HeroTeam.ready`); Practice fields him at base.
+- **`HeroTeam`** (`src/run/hero_team.gd`): `SIZE`, `DEFAULT` (Brannoc, Maren, Vell), `ready` and `draftable` (a hero with all three paths), `problem` (three different known heroes, ready unless `drafted` is false for Practice), `ordered` (heroes.json's order), `roles` (tank: the highest HP x (100 + DEF); far: the longer range of the other two; mid: the last; ties by heroes.json's order), `place` (a role formation for a team), and `GUARDED` (the tank in front of the other two). (Named `HeroTeam` since `EffectSource.Team` is the sides.)
+- **The run:** `RunFlow.start` takes its team from the vows' keys and refuses a team `HeroTeam.problem` refuses (before the vows are checked); `state.heroes` is the team in heroes.json's order, so the save is unchanged. `fight_setup` refuses a hero who isn't on the team ("%s isn't on the team").
+- **The screens:** `RunStartScreen` drafts on cards (name, title, role, the paths; Draft/Drafted; greyed with "Paths aren't built yet." for a hero who can't be drafted; a fourth draft sends back the first drafted; a hero drafted again keeps its last vow; Into the rift is greyed until three are drafted), and the vow rows are the drafted three's. `EncounterListScreen` has the team row (a toggle a hero, gold when on, three on; the place buttons greyed until three; a note names who fights at base). `PracticeSession.team` and `set_team` (the formation remembers every hero's last hex, so one back on the team stands where it stood; a hero with no hex yet starts on its role's), `RunSession` takes the run's team, and `HeroBar` and `HeroPanel.step` show and cycle the team. The hero panel says when a hero's paths aren't built.
+- **The tools:** `tools/sim_formations.json` is by role (`tank`, `far`, `mid`), filled from a team by `SimReport.for_team`; `drawn_formations`, the tactics report, and the columns read the team (the gate's is still the old three). `run_bot.gd`'s `formation(name, team, content)` places by role, `team_of(flow)` reads the run's, and `first_vows(content, team)`. `run_report.gd`'s `vow_combinations` is every team of three draftable heroes times their vows (27 while three can be drafted, in the old order, so runs are unchanged); `play`/`play_many` take a `team`, and the picks line averages over the runs that had each hero. `run_runner.gd --team=a,b,c` fixes the team (passed to `--jobs` children with `--endless`). `placement_data.gd` and `placement_check.gd` draw a team (`Placement.draw_team`, only once more than three can be drafted, so the fits don't move now). `path_report.gd`'s deeds read the draftable heroes.
+- **A call made while building:** the bots don't choose a team yet (section 8's `Bot.team`); a report's runs get theirs from the seed, as vows are, and `--team` fixes one. The good bot choosing by practice fights comes with 8d-5, once there are teams to choose between.
+- **Tests:** `tests/run/test_hero_team.gd` (ready, problems, roles, the run's team and the outsider check, Practice's team and remembered hexes), `test_hero_kits.gd`'s Garrow tests, the draft (`test_run_screens.gd`) and the team row (`test_practice_flow.gd`); the vow error in `test_run_flow.gd` is now the team's. The bench's fingerprints are unchanged.
+
 Each part is tested as before: every piece in a small fight (`tests/sim/`), every kit's texts in small fights (`test_hero_kits.gd`), each card and relic changing what it says, the chaos fight using the new pieces, the save across versions, a run with each new hero, and mutation checks on each new rule.
 
 ## 10. Questions
 
-- **CA. Unlocks:** are all six heroes open from the start? Proposed: yes for now; unlocking heroes (meta progression adds variety only: rule 5) comes with the Codex.
-- **CB. The draft screen:** pick three on the vow screen itself (six cards, then the three vow rows), as proposed, or a separate screen before the vows?
-- **CC. Practice:** a team row on the fight list (three of six), as proposed, or any number of heroes on the board?
-- **CD. The first check:** bring each new path and apex into the built ones' bars now (section 8), so the tuning phase starts level, or leave all numbers to the tuning phase?
+- **CA. Unlocks:** *(Answered: Decision 4.)* are all six heroes open from the start? Proposed: yes for now; unlocking heroes (meta progression adds variety only: rule 5) comes with the Codex.
+- **CB. The draft screen:** *(Answered: Decision 5.)* pick three on the vow screen itself (six cards, then the three vow rows), as proposed, or a separate screen before the vows?
+- **CC. Practice:** *(Answered: Decision 6.)* a team row on the fight list (three of six), as proposed, or any number of heroes on the board?
+- **CD. The first check:** *(Answered: Decision 7.)* bring each new path and apex into the built ones' bars now (section 8), so the tuning phase starts level, or leave all numbers to the tuning phase?
 
 ## Decisions
 
@@ -137,3 +147,8 @@ The playtester, 2026-10-06:
 1. **Heroes 4 to 6 are Garrow, Tamsin, and Aldous**, in that order of building.
 2. **They come in together, before the tuning phase**, which then tunes all six (and the acts) at once. This overrides `rebuild-heroes.md`'s "get the first three right before adding more".
 3. **The team draft comes back with them:** a run picks three of the six.
+4. **All six heroes are open from the start** (Question CA); unlocks come with the Codex.
+5. **The draft is on the vow screen** (Question CB): six hero cards, pick three, then their vow rows.
+6. **Practice picks three of six** on a team row on the fight list (Question CC).
+7. **The first check is in this phase** (Question CD): each new path and apex is brought into the built ones' bars, so the tuning phase starts level.
+

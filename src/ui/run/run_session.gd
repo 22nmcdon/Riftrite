@@ -8,7 +8,8 @@ extends PracticeSession
 ##   - A fight's setup is RunFlow.fight_setup: the waiting fight (the day's
 ##     or a Hunt), with the run's seed for it. Practice's seed and tactic and
 ##     path choices don't apply: the run's loadout and vows decide.
-##   - The formation is the run's last one (or Brannoc guarding the others).
+##   - The team is the run's; the formation is the run's last one (or the
+##     tank guarding the others).
 
 var run: RunContent
 var flow: RunFlow
@@ -38,7 +39,11 @@ static func over(run_content: RunContent, run_flow: RunFlow, path: String = RunS
 	session.flow = run_flow
 	session.content = run_content.content
 	session.save_path = path
-	session.formation = run_flow.state.formation.duplicate() if not run_flow.state.formation.is_empty() else DEFAULT_FORMATION.duplicate()
+	session.team.clear()
+	for hero: RunState.Hero in run_flow.state.heroes:
+		session.team.append(hero.id)
+	session.formation = run_flow.state.formation.duplicate() if not run_flow.state.formation.is_empty() \
+		else HeroTeam.place(session.content, session.team, HeroTeam.GUARDED)
 	session.sync()
 	return session
 

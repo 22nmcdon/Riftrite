@@ -76,6 +76,40 @@ func test_vowing_and_starting() -> void:
 	await wait_frames(1)
 
 
+func test_the_draft() -> void:
+	var main: Main = _main()
+	U.press(main.screen, "New run")
+	var start: RunStartScreen = main.screen
+	assert_eq(start.vows.keys(), HeroTeam.DEFAULT, "the old three are drafted first")
+	assert_true(start.draft_buttons["garrow"].disabled, "a hero whose paths aren't built is greyed")
+	assert_eq(start.draft_buttons.keys(), main.run_content().content.hero_ids, "a card for every hero")
+	assert_string_contains(U.text_of(start), "Paths aren't built yet.")
+	start.draft_hero("garrow")
+	assert_false(start.vows.has("garrow"))
+	start.choose("vell", "wardweaver")
+	start.draft_hero("vell")
+	assert_eq(start.vows.keys(), ["brannoc", "maren"])
+	assert_true(U.button(start, "Into the rift").disabled, "a team is three")
+	assert_string_contains(U.text_of(start), "Draft 1 more.")
+	assert_false(U.text_of(start).contains("Taste: " + main.run_content().content.paths["wardweaver"].taste), "only the drafted heroes' vows")
+	start.draft_hero("vell")
+	assert_eq(start.vows["vell"], "wardweaver", "a hero back on the team keeps its vow")
+	assert_eq(start.draft_buttons["vell"].text, "Drafted")
+	start.draft_hero("brannoc")
+	start.draft_hero("brannoc")
+	start.draft_hero("maren")
+	assert_eq(start.vows.keys(), ["vell", "brannoc"], "a hero drafted again is the last drafted")
+	start.draft_hero("maren")
+	start.draft_hero("vell")
+	start.draft_hero("vell")
+	assert_eq(start.vows.keys(), ["brannoc", "maren", "vell"])
+	assert_false(U.button(start, "Into the rift").disabled)
+	U.press(start, "Into the rift")
+	assert_eq(_flow(main).state.heroes.map(func(hero: RunState.Hero) -> String: return hero.id), ["brannoc", "maren", "vell"])
+	assert_eq(main.run_session.team, HeroTeam.DEFAULT)
+	await wait_frames(1)
+
+
 func test_a_day_from_the_route_to_the_next() -> void:
 	var main: Main = _started()
 	var flow: RunFlow = _flow(main)

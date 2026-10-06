@@ -1,5 +1,5 @@
 """The luminous hero kit (docs/art-style-guide.md): code-generated placeholder
-figures for the three heroes in every form (base and each path).
+figures for the heroes in every form (base and each path).
 
 Every figure uses the same canvas: 300 x 520, feet at y = 500, facing right,
 centered on x = 150. Writes one SVG per form to art/figures/heroes/ (what
@@ -452,6 +452,50 @@ def vell_vigil_keeper(uid):
     return "".join(o)
 
 
+
+# ------------------------------------------------------------------ Garrow (8d-1)
+RUST, RUST_DK = "#9a4a2c", "#6a2e1c"
+CHAIN = "#b7bcc6"
+
+
+def chain_links(x0, y0, x1, y1, n, w=12):
+    """A run of oval links from (x0, y0) to (x1, y1)."""
+    o = []
+    for i in range(n):
+        t = i / max(n - 1, 1)
+        x, y = x0 + (x1 - x0) * t, y0 + (y1 - y0) * t
+        rx, ry = (w, w * 0.6) if i % 2 == 0 else (w * 0.6, w)
+        o.append(f'<ellipse cx="{x:.1f}" cy="{y:.1f}" rx="{rx:.1f}" ry="{ry:.1f}" fill="none" stroke="{INK}" stroke-width="7"/>'
+                 f'<ellipse cx="{x:.1f}" cy="{y:.1f}" rx="{rx:.1f}" ry="{ry:.1f}" fill="none" stroke="{CHAIN}" stroke-width="4"/>')
+    return "".join(o)
+
+
+def garrow_head():
+    return "".join([P("M122,150 C120,112 180,112 178,150 L178,186 C168,204 132,204 122,186 Z", SKIN),
+                    P("M124,172 C134,196 166,196 176,172 L178,190 C166,214 134,214 122,190 Z", HAIR_DK),
+                    f'<path d="M140,160 l8,0 M156,160 l8,0" stroke="{INK}" stroke-width="2.6" stroke-linecap="round"/>',
+                    f'<path d="M160,128 l8,22" stroke="{WINE_DK}" stroke-width="3" stroke-linecap="round"/>',
+                    rim("M168,120 C176,130 178,140 178,150")])
+
+
+def garrow_base(uid):
+    torso = "M92,198 L208,198 L214,352 L86,352 Z"
+    o = [shadow(104),
+         P("M112,340 L148,340 L142,470 L104,470 Z", RUST_DK), P("M152,340 L190,340 L196,470 L158,470 Z", RUST_DK),
+         boot(98, 146) + boot(156, 208),
+         limb((100, 212), (84, 318), 30, 26, RUST), circle(84, 322, 15, SKIN, 2),
+         P(torso, IRON_DK), P("M116,212 L184,212 L190,346 L110,346 Z", RUST),
+         P("M88,332 L212,332 L212,352 L88,352 Z", LEATHER_DK, 2),
+         chain_links(98, 214, 196, 330, 9),
+         f'<ellipse cx="98" cy="210" rx="32" ry="22" fill="{IRON}" stroke="{INK}" stroke-width="3"/>',
+         f'<ellipse cx="202" cy="210" rx="32" ry="22" fill="{IRON}" stroke="{INK}" stroke-width="3"/>',
+         shade(uid, [torso], cut=150), garrow_head(),
+         limb((202, 216), (226, 300), 30, 26, RUST), circle(228, 306, 17, IRON, 2),
+         chain_links(228, 320, 250, 460, 8, w=11),
+         rim("M208,230 L212,300", w=2)]
+    return "".join(o)
+
+
 HEROES = [
     ("maren", "Maren", [("base", "Base", maren_base), ("deadeye", "Deadeye", maren_deadeye),
                         ("trapper", "Trapper", maren_trapper), ("volley", "Volley", maren_volley)]),
@@ -459,6 +503,7 @@ HEROES = [
                             ("ironbrand", "Ironbrand", brannoc_ironbrand), ("last_watch", "Last Watch", brannoc_last_watch)]),
     ("vell", "Vell", [("base", "Base", vell_base), ("lanternbearer", "Lanternbearer", vell_lanternbearer),
                       ("wardweaver", "Wardweaver", vell_wardweaver), ("vigil_keeper", "Vigil Keeper", vell_vigil_keeper)]),
+    ("garrow", "Garrow", [("base", "Base", garrow_base)]),
 ]
 
 FILTERS = ('<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4" result="b"/>'

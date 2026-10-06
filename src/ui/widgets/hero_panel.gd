@@ -295,7 +295,7 @@ func show_tab(which: Tab) -> void:
 
 ## Back (-1) or forward (1) to the next hero, wrapping round.
 func step(by: int) -> void:
-	var ids: Array[String] = session.content.hero_ids
+	var ids: Array[String] = HeroTeam.ordered(session.content, session.team)
 	show_hero(ids[posmod(ids.find(showing) + by, ids.size())])
 
 
@@ -339,6 +339,8 @@ func _fill_path() -> void:
 			page.add_child(apexes)
 			for apex: ApexDef in path.apexes:
 				apexes.add_child(_apex_card(apex, stage))
+	elif session.content.heroes[showing].paths.is_empty():
+		page.add_child(_wrapped("%s's paths aren't built yet: they fight with the base kit." % ArenaView.label_for(session.content.heroes[showing].kit, session.content), 17, UiStyle.TEXT_DIM))
 	else:
 		page.add_child(_wrapped("No vow yet: %s fights with the base kit. Vow a path below, or transform straight into one to try it." % ArenaView.label_for(session.content.heroes[showing].kit, session.content), 17, UiStyle.TEXT_DIM))
 	var others := HBoxContainer.new()

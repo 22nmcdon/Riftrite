@@ -55,7 +55,8 @@ func test_the_upgrades_load() -> void:
 		assert_eq(cards.filter(func(id: String) -> bool: return _run.upgrades[id].grows != null).size(), 1, "%s has one card that grows" % path_id)
 		assert_eq(_run.upgrades[cards[0]].hero, _run.content.paths[path_id].hero, "a path's card is its hero's")
 		assert_gt(_run.content.paths[path_id].deed.threshold, 0, "%s's deed has a threshold" % path_id)
-	for hero_id: String in _run.content.hero_ids:
+	# A hero's cards come with its paths (phase 8 part 4).
+	for hero_id: String in HeroTeam.draftable(_run.content):
 		var own: Array[String] = _run.upgrade_ids.filter(func(id: String) -> bool: return _run.upgrades[id].hero == hero_id and _run.upgrades[id].layer == UpgradeDef.Layer.HERO)
 		assert_eq(own.filter(func(id: String) -> bool: return _run.upgrades[id].grows != null).size(), 1, "%s has one hero card that grows (phase 5c step 4)" % hero_id)
 

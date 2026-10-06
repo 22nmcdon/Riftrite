@@ -86,6 +86,8 @@ func _init() -> void:
 	if not errors.is_empty():
 		_fail("\n".join(errors))
 		return
+	# The gate's team (phase 8 part 4): the built three, cast by role.
+	named = Report.for_team(content, named, HeroTeam.DEFAULT)
 	# A Hunt's small pack (phase 5) is a quick fight for shards, not a
 	# placement question, so only --encounter runs one.
 	var encounter_ids: Array[String] = content.encounter_ids.filter(func(id: String) -> bool: return content.encounters[id].tier != "hunt")

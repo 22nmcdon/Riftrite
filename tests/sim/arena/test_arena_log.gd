@@ -55,8 +55,8 @@ static func content_setup(fight_seed: int = 7, enemy_ids: Array[String] = []) ->
 	var content: ContentDb = K.content()
 	var heroes: Array[UnitSetup] = []
 	var hero_hexes: Array[Vector2i] = [Vector2i(3, 2), Vector2i(3, 0), Vector2i(4, 0)]
-	for i: int in content.hero_ids.size():
-		heroes.append(K.at((content.heroes[content.hero_ids[i]] as HeroDef).kit, hero_hexes[i].x, hero_hexes[i].y))
+	for i: int in HeroTeam.DEFAULT.size():
+		heroes.append(K.at((content.heroes[HeroTeam.DEFAULT[i]] as HeroDef).kit, hero_hexes[i].x, hero_hexes[i].y))
 	var ids: Array[String] = enemy_ids if not enemy_ids.is_empty() else content.enemy_ids.slice(0, 9)
 	var enemies: Array[UnitSetup] = []
 	var enemy_hexes: Array[Vector2i] = [Vector2i(1, 4), Vector2i(3, 4), Vector2i(5, 4), Vector2i(0, 5), Vector2i(2, 5), Vector2i(4, 5), Vector2i(6, 5), Vector2i(3, 6), Vector2i(5, 6)]

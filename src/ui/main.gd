@@ -163,7 +163,7 @@ func end_run() -> void:
 func show_encounters() -> void:
 	if practice == null:
 		practice = PracticeSession.make(ContentDb.load_dir("res://data"))
-	var list: EncounterListScreen = EncounterListScreen.make(practice.content)
+	var list: EncounterListScreen = EncounterListScreen.make(practice.content, practice)
 	list.encounter_picked.connect(show_arena)
 	list.back_requested.connect(show_title)
 	show_screen(list)

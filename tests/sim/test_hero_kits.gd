@@ -1,6 +1,7 @@
 extends GutTest
-## The three base kits in data/heroes.json do what their text says
-## (docs/plans/rebuild-phase2-heroes-enemies.md, section 3). Each test fights
+## The base kits in data/heroes.json do what their text says
+## (docs/plans/rebuild-phase2-heroes-enemies.md, section 3; Garrow from
+## rebuild-phase8-heroes.md, 8d-1). Each test fights
 ## the real kits against still dummies; heroes that shouldn't walk are Rooted
 ## for the whole test.
 
@@ -47,19 +48,19 @@ func _rows(fight: CombatSim, kind: LogEntry.Kind, unit_id: String, ability: Stri
 
 
 func test_the_kits_read_as_designed() -> void:
-	assert_eq(_content.hero_ids, ["brannoc", "maren", "vell"])
+	assert_eq(_content.hero_ids, ["brannoc", "maren", "vell", "garrow"])
 	var roles: Array = _content.hero_ids.map(func(hero_id: String) -> int: return (_content.heroes[hero_id] as HeroDef).role)
-	assert_eq(roles, [HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT])
+	assert_eq(roles, [HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT, HeroDef.Role.TANK])
 	var stats: Array = _content.hero_ids.map(func(hero_id: String) -> Array: return _kit(hero_id).stats.values)
-	assert_eq(stats, [[630, 14, 0, 50, 0, 0, 2, 1], [270, 22, 0, 8, 8, 10, 2, 4], [300, 6, 20, 10, 0, 0, 2, 3]], "HP, ATK, MGK, DEF, CRIT, ATSP, speed, range")
+	assert_eq(stats, [[630, 14, 0, 50, 0, 0, 2, 1], [270, 22, 0, 8, 8, 10, 2, 4], [300, 6, 20, 10, 0, 0, 2, 3], [380, 18, 0, 22, 0, 0, 2, 1]], "HP, ATK, MGK, DEF, CRIT, ATSP, speed, range")
 	var mana: Array = _content.hero_ids.map(func(hero_id: String) -> Array:
 		var bar: ManaDef = _kit(hero_id).mana
 		return [bar.max, bar.start, bar.per_attack, bar.per_10_damage_taken, bar.regen_per_s])
-	assert_eq(mana, [[80, 30, 8, 1, 0], [50, 0, 10, 0, 2], [60, 20, 12, 0, 2]], "cost, start, per attack, per 10 damage taken, regen")
-	assert_eq([_kit("brannoc").traits, _kit("maren").traits, _kit("vell").traits], [["engage"], ["hop_away"], []])
+	assert_eq(mana, [[80, 30, 8, 1, 0], [50, 0, 10, 0, 2], [60, 20, 12, 0, 2], [70, 20, 10, 1, 0]], "cost, start, per attack, per 10 damage taken, regen")
+	assert_eq([_kit("brannoc").traits, _kit("maren").traits, _kit("vell").traits, _kit("garrow").traits], [["engage"], ["hop_away"], [], []])
 	assert_eq(_kit("maren").hop_cooldown_ticks, 120)
 	var names: Array = _content.hero_ids.map(func(hero_id: String) -> Array: return [_kit(hero_id).basic_attack.name, _kit(hero_id).signature.name])
-	assert_eq(names, [["Shield Bash", "Hold the Line"], ["Longshot", "Marking Shot"], ["Lantern Glow", "Mend"]])
+	assert_eq(names, [["Shield Bash", "Hold the Line"], ["Longshot", "Marking Shot"], ["Lantern Glow", "Mend"], ["Chain Fist", "Haul"]])
 
 
 # --- Brannoc ---------------------------------------------------------------------
@@ -106,6 +107,45 @@ func test_hearthguard_shields_the_first_ally_below_40_percent_once() -> void:
 	K.step(fight, 5)
 	assert_eq(_rows(fight, LogEntry.Kind.SHIELD, "brannoc", "hearthguard"), [["maren", 60]], "once a fight, and never for himself")
 	assert_eq(maren.shield, 60)
+
+
+# --- Garrow (8d-1) ---------------------------------------------------------------
+
+func test_haul_drags_the_farthest_enemy_within_4_hexes_beside_him() -> void:
+	var fight: CombatSim = _sim([K.at(_kit("garrow"), 3, 2)] as Array[UnitSetup],
+		[K.foe(_dummy("near"), 3, 4), K.foe(_dummy("far"), 3, 6), K.foe(_dummy("beyond"), 0, 6)] as Array[UnitSetup])
+	var garrow: UnitState = fight.unit_by_id("garrow")
+	_root_all(fight, fight.heroes)
+	_fill_mana(garrow)
+	K.step(fight, 10)
+	var pulls: Array = K.entries(fight, LogEntry.Kind.PUSH, "garrow").map(func(entry: LogEntry) -> String: return entry.target)
+	assert_eq(pulls, ["far"], "the farthest within 4 hexes, not the one beyond")
+	assert_true(ArenaPlane.length(fight.unit_by_id("far").pos - garrow.pos) <= 2 * 100 + 50, "dragged beside him")
+
+
+func test_stand_fast_shields_him_once_below_half() -> void:
+	var fight: CombatSim = _sim([K.at(_kit("garrow"), 3, 2)] as Array[UnitSetup], [K.foe(_dummy(), 3, 6)] as Array[UnitSetup])
+	var garrow: UnitState = fight.unit_by_id("garrow")
+	_root_all(fight, fight.heroes)
+	garrow.hp = 191
+	K.step(fight, 1)
+	assert_eq(_rows(fight, LogEntry.Kind.SHIELD, "garrow", "stand_fast"), [], "191 of 380 isn't below half")
+	garrow.hp = 189
+	K.step(fight, 1)
+	garrow.hp = 300
+	K.step(fight, 1)
+	garrow.hp = 100
+	K.step(fight, 1)
+	assert_eq(_rows(fight, LogEntry.Kind.SHIELD, "garrow", "stand_fast"), [["garrow", 57]], "15% of his max HP, once a fight")
+
+
+func test_heavy_keeps_him_from_being_moved() -> void:
+	var shover: UnitDef = K.kit("shover", {"stats": {"hp": 10000, "atk": 1, "speed": 0, "range": 1}, "basic_attack": {"cooldown_ms": 500,
+		"effects": [{"type": "knockback", "hexes": 2, "target": "target"}]}})
+	var fight: CombatSim = _sim([K.at(_kit("garrow"), 3, 2)] as Array[UnitSetup], [K.foe(shover, 3, 3)] as Array[UnitSetup])
+	K.step(fight, 40)
+	assert_eq(K.entries(fight, LogEntry.Kind.PUSH).filter(func(entry: LogEntry) -> bool: return entry.target == "garrow"), [] as Array[LogEntry], "never moved")
+	assert_false(K.entries(fight, LogEntry.Kind.RESISTED).is_empty(), "he resists, and says so")
 
 
 # --- Maren -----------------------------------------------------------------------

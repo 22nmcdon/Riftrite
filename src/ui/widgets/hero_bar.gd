@@ -75,7 +75,7 @@ static func make(practice: PracticeSession) -> HeroBar:
 	bar._row.alignment = BoxContainer.ALIGNMENT_CENTER
 	bar._row.add_theme_constant_override("separation", 26)
 	bar.add_child(bar._row)
-	for hero_id: String in practice.content.hero_ids:
+	for hero_id: String in HeroTeam.ordered(practice.content, practice.team):
 		var card := Card.new()
 		card.hero_id = hero_id
 		card.custom_minimum_size = CARD_SIZE

@@ -277,7 +277,7 @@ static func _stage_name(content: ContentDb, variant: Variant) -> String:
 ## a fight put into each of its three deeds.
 static func deeds_text(content: ContentDb, report: PathReport) -> String:
 	var lines: Array[String] = ["%s (%s), deeds per fight:" % [report.encounter.name, report.encounter.id]]
-	for hero_id: String in content.hero_ids:
+	for hero_id: String in HeroTeam.draftable(content):
 		var paths: Array[PathDef] = content.heroes[hero_id].paths
 		lines.append("  %s: %s" % [hero_id.capitalize(), " / ".join(paths.map(func(path: PathDef) -> String: return path.name))])
 		for variant: Variant in _hero_variants(report, hero_id):
@@ -292,7 +292,7 @@ static func deeds_text(content: ContentDb, report: PathReport) -> String:
 ## taste bar, and where allies stood around Brannoc.
 static func deeds_summary(content: ContentDb, reports: Array[PathReport]) -> String:
 	var lines: Array[String] = ["Deeds across %d encounters, per fight (each vow at least %dx base and the hero's other vows in its own deed):" % [reports.size(), TASTE_TIMES]]
-	for hero_id: String in content.hero_ids:
+	for hero_id: String in HeroTeam.draftable(content):
 		var paths: Array[PathDef] = content.heroes[hero_id].paths
 		for path: PathDef in paths:
 			# Stage name -> the deed's mean over every fight of that stage.

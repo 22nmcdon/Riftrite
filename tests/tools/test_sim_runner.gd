@@ -16,7 +16,9 @@ func _named() -> Dictionary[String, Dictionary]:
 	var errors: Array[String] = []
 	var named: Dictionary[String, Dictionary] = Report.read_formations(FileAccess.get_file_as_string("res://tools/sim_formations.json"), errors)
 	assert_eq(errors, [] as Array[String])
-	return named
+	for name: String in named:
+		assert_eq(named[name].keys(), HeroTeam.ROLES, "%s is by role (phase 8 part 4)" % name)
+	return Report.for_team(_content, named, HeroTeam.DEFAULT)
 
 
 func test_the_named_formations_place_every_hero_on_the_heroes_rows() -> void:
@@ -34,9 +36,9 @@ func test_the_named_formations_place_every_hero_on_the_heroes_rows() -> void:
 func test_formations_that_cant_be_read_are_refused() -> void:
 	var errors: Array[String] = []
 	Report.read_formations("[]", errors)
-	Report.read_formations('{"a": {"brannoc": [3]}, "b": 4}', errors)
-	assert_eq(errors, ["sim_formations.json: expected an object", "sim_formations.json (a).brannoc: expected [col, row]",
-		"sim_formations.json (b): expected hero id -> [col, row]"])
+	Report.read_formations('{"a": {"tank": [3]}, "b": 4, "c": {"brannoc": [3, 2]}}', errors)
+	assert_eq(errors, ["sim_formations.json: expected an object", "sim_formations.json (a).tank: expected [col, row]",
+		"sim_formations.json (b): expected role -> [col, row]", "sim_formations.json (c).brannoc: not a role (tank, far, mid)"])
 
 
 func test_drawn_formations_are_legal_and_repeat_from_their_seed() -> void:
@@ -115,7 +117,7 @@ func test_the_tactic_variants() -> void:
 	var names: Array = Report.tactic_variants(_content).map(func(row: Report.TacticRow) -> String: return Report.variant_name(_content, row))
 	var expected: Array[String] = ["no tactics"]
 	for tactic_id: String in _content.tactic_ids:
-		for hero_id: String in _content.hero_ids:
+		for hero_id: String in HeroTeam.DEFAULT:
 			if Tactics.can_follow(_content.tactics[tactic_id], _content.heroes[hero_id].kit):
 				expected.append("%s on %s" % [hero_id.capitalize(), _content.tactics[tactic_id].name])
 	assert_eq(names, expected)

@@ -29,13 +29,33 @@ const NODE_ORDER: Array[String] = ["magpie", "rift_tear", "event", "camp"]
 const ROCK: Vector2i = Vector2i(0, 0)
 
 
-## The formation the bot places.
-static func formation(name: String = FORMATION) -> Dictionary[String, Vector2i]:
+## The formation the bot places: a named one (by role) with `team` cast
+## in it (the built three by default; phase 8 part 4).
+static func formation(name: String = FORMATION, team: Array[String] = HeroTeam.DEFAULT, content: ContentDb = null) -> Dictionary[String, Vector2i]:
 	var errors: Array[String] = []
 	var named: Dictionary[String, Dictionary] = Report.read_formations(FileAccess.get_file_as_string(FORMATIONS_FILE), errors)
+	if content == null:
+		content = _default_content()
 	var hexes: Dictionary[String, Vector2i] = {}
-	hexes.assign(named[name])
+	hexes.assign(HeroTeam.place(content, team, named[name]))
 	return hexes
+
+
+## A run's team (phase 8 part 4).
+static func team_of(flow: RunFlow) -> Array[String]:
+	var team: Array[String] = []
+	for hero: RunState.Hero in flow.state.heroes:
+		team.append(hero.id)
+	return team
+
+
+static var _content: ContentDb = null
+
+
+static func _default_content() -> ContentDb:
+	if _content == null:
+		_content = ContentDb.load_dir("res://data")
+	return _content
 
 
 ## A looking-ahead bot's formation for the waiting fight (the run report's
@@ -43,18 +63,19 @@ static func formation(name: String = FORMATION) -> Dictionary[String, Vector2i]:
 ## fight isn't lost, or the first one.
 static func formation_for(flow: RunFlow) -> Dictionary[String, Vector2i]:
 	for name: String in FORMATIONS:
-		var hexes: Dictionary[String, Vector2i] = formation(name)
+		var hexes: Dictionary[String, Vector2i] = formation(name, team_of(flow), flow.run.content)
 		var errors: Array[String] = []
 		var setup: FightSetup = flow.fight_setup(hexes, errors)
 		if setup != null and CombatSim.run(setup, flow.run.content).outcome != FightResult.Outcome.DEFEAT:
 			return hexes
-	return formation()
+	return formation(FORMATION, team_of(flow), flow.run.content)
 
 
-## Each hero's first path.
-static func first_vows(content: ContentDb) -> Dictionary[String, String]:
+## Each of `team`'s heroes vowed to its first path (the built three by
+## default; phase 8 part 4).
+static func first_vows(content: ContentDb, team: Array[String] = HeroTeam.DEFAULT) -> Dictionary[String, String]:
 	var vows: Dictionary[String, String] = {}
-	for hero_id: String in content.hero_ids:
+	for hero_id: String in team:
 		vows[hero_id] = content.heroes[hero_id].paths[0].id
 	return vows
 
@@ -65,7 +86,7 @@ static func play(run: RunContent, run_seed: int, errors: Array[String], vows: Di
 	var flow: RunFlow = RunFlow.start(run, run_seed, vows if not vows.is_empty() else first_vows(run.content), errors)
 	if flow == null:
 		return null
-	var hexes: Dictionary[String, Vector2i] = formation()
+	var hexes: Dictionary[String, Vector2i] = formation(FORMATION, team_of(flow), run.content)
 	for step: int in MAX_STEPS:
 		if flow.state.phase == RunState.Phase.ENDED:
 			return flow

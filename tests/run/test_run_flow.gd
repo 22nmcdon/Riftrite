@@ -59,10 +59,13 @@ func test_the_act_draw() -> void:
 	assert_ne(ActDraw.draw(_run, 8), days, "another seed, another act")
 
 
-func test_starting_needs_a_vow_for_every_hero() -> void:
+func test_starting_needs_a_team_of_three_each_with_a_vow() -> void:
 	var errors: Array[String] = []
 	assert_null(RunFlow.start(_run, 1, {"maren": "deadeye", "brannoc": "deadeye"} as Dictionary[String, String], errors))
-	assert_eq(errors, ["brannoc can't vow to \"deadeye\"", "vell needs a vow"] as Array[String])
+	assert_eq(errors, ["a team is 3 heroes, not 2"] as Array[String], "the team comes first (phase 8 part 4)")
+	errors.clear()
+	assert_null(RunFlow.start(_run, 1, {"maren": "deadeye", "brannoc": "deadeye", "vell": "lanternbearer"} as Dictionary[String, String], errors))
+	assert_eq(errors, ["brannoc can't vow to \"deadeye\""] as Array[String])
 	var flow: RunFlow = _start()
 	var state: RunState = flow.state
 	assert_eq(state.heroes.map(func(hero: RunState.Hero) -> String: return hero.path), ["hearthwall", "deadeye", "lanternbearer"])

@@ -48,20 +48,23 @@ var last_setup: FightSetup = null
 var last_result: FightResult = null
 
 
-## A new run from `run_seed`, each hero vowed to one of its own paths
-## (`vows`: hero id -> path id, every hero). Null with the reasons in
-## `errors` if the vows aren't right. A `testing` run is offered Act 1's
-## endless (phase 8 part 3, Decision 15).
+## A new run from `run_seed`: its team is `vows`' heroes (hero id -> path
+## id, one of its own: the team draft, phase 8 part 4, HeroTeam), each vowed to
+## a path. Null with the reasons in `errors` if the team or the vows aren't
+## right. A `testing` run is offered Act 1's endless (phase 8 part 3,
+## Decision 15).
 static func start(run_content: RunContent, run_seed: int, vows: Dictionary[String, String], errors: Array[String], testing: bool = false) -> RunFlow:
 	var content: ContentDb = run_content.content
-	for hero_id: String in content.hero_ids:
-		if not vows.has(hero_id):
-			errors.append("%s needs a vow" % hero_id)
-		elif not content.paths.has(vows[hero_id]) or content.paths[vows[hero_id]].hero != hero_id:
+	var team: Array[String] = []
+	team.assign(vows.keys())
+	var refused: String = HeroTeam.problem(content, team)
+	if not refused.is_empty():
+		errors.append(refused)
+		return null
+	team = HeroTeam.ordered(content, team)
+	for hero_id: String in team:
+		if not content.paths.has(vows[hero_id]) or content.paths[vows[hero_id]].hero != hero_id:
 			errors.append("%s can't vow to \"%s\"" % [hero_id, vows[hero_id]])
-	for hero_id: String in vows:
-		if not content.heroes.has(hero_id):
-			errors.append("unknown hero \"%s\"" % hero_id)
 	if not errors.is_empty():
 		return null
 	var state := RunState.new()
@@ -69,7 +72,7 @@ static func start(run_content: RunContent, run_seed: int, vows: Dictionary[Strin
 	state.testing = testing
 	state.act = run_content.acts[0].act
 	state.shards = run_content.acts[0].start_shards
-	for hero_id: String in content.hero_ids:
+	for hero_id: String in team:
 		var hero := RunState.Hero.new()
 		hero.id = hero_id
 		hero.path = vows[hero_id]
@@ -789,6 +792,15 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 	# Stand Together (phase 5c step 6d): the hero sharing its holder's hex
 	# gets its gambit's mod too.
 	var shared_mods: Dictionary[String, KitMod] = {}
+	# Only the run's team fights (phase 8 part 4).
+	var outsiders: Array[String] = []
+	for hero_id: String in formation:
+		if state.hero(hero_id) == null:
+			outsiders.append(hero_id)
+	if not outsiders.is_empty():
+		for hero_id: String in outsiders:
+			errors.append("%s isn't on the team" % hero_id)
+		return null
 	for hero: RunState.Hero in state.heroes:
 		var gambit: KitMod = run.loadout_gambit(hero, state)
 		if gambit == null or gambit.place_rule != "share" or not formation.has(hero.id):

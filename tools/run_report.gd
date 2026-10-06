@@ -125,11 +125,32 @@ class RunLine:
 		return line
 
 
-## Every combination of one path per hero, in heroes.json's and paths.json's
+## Every team and every combination of one path per hero on it (phase 8
+## part 4: the teams of three the draft offers, in heroes.json's order, each
+## with its vows in paths.json's order), or only `team`'s vows.
+static func vow_combinations(content: ContentDb, team: Array[String] = []) -> Array[Dictionary]:
+	var combos: Array[Dictionary] = []
+	for drafted: Array[String] in ([team] if not team.is_empty() else teams(content)):
+		combos.append_array(_team_vows(content, drafted))
+	return combos
+
+
+## Every team of three the draft offers (HeroTeam.draftable), in heroes.json's
 ## order.
-static func vow_combinations(content: ContentDb) -> Array[Dictionary]:
+static func teams(content: ContentDb) -> Array[Array]:
+	var pool: Array[String] = HeroTeam.draftable(content)
+	var found: Array[Array] = []
+	for a: int in pool.size():
+		for b: int in range(a + 1, pool.size()):
+			for c: int in range(b + 1, pool.size()):
+				var team: Array[String] = [pool[a], pool[b], pool[c]]
+				found.append(team)
+	return found
+
+
+static func _team_vows(content: ContentDb, team: Array[String]) -> Array[Dictionary]:
 	var combos: Array[Dictionary] = [{}]
-	for hero_id: String in content.hero_ids:
+	for hero_id: String in HeroTeam.ordered(content, team):
 		var next: Array[Dictionary] = []
 		for combo: Dictionary in combos:
 			for path: PathDef in content.heroes[hero_id].paths:
@@ -161,13 +182,13 @@ static func make_bot(bot_name: String) -> BaseBot:
 ## it.
 ## `endless`: the bot goes deeper at the first endless choice (after Act 3,
 ## 8c-6c); `testing`: a testing run, whose first choice is after Act 1.
-static func play(run: RunContent, run_seed: int, bot_name: String = "simple-peek", endless: bool = false, testing: bool = false) -> RunLine:
+static func play(run: RunContent, run_seed: int, bot_name: String = "simple-peek", endless: bool = false, testing: bool = false, team: Array[String] = []) -> RunLine:
 	var line := RunLine.new()
 	line.seed_value = run_seed
 	line.bot = bot_name
 	var bot: BaseBot = make_bot(bot_name)
 	bot.deeper = endless
-	var combos: Array[Dictionary] = vow_combinations(run.content)
+	var combos: Array[Dictionary] = vow_combinations(run.content, team)
 	line.vows.assign(combos[run_seed % combos.size()])
 	var flow: RunFlow = RunFlow.start(run, run_seed, line.vows, line.errors, testing)
 	if flow == null:
@@ -469,10 +490,10 @@ static func _choice_name(run: RunContent, kind: String, id: String) -> String:
 	return run.relics[id].name if run.relics.has(id) else id
 
 
-static func play_many(run: RunContent, seeds: Array[int], bot_name: String = "simple-peek", endless: bool = false, testing: bool = false) -> Array[RunLine]:
+static func play_many(run: RunContent, seeds: Array[int], bot_name: String = "simple-peek", endless: bool = false, testing: bool = false, team: Array[String] = []) -> Array[RunLine]:
 	var lines: Array[RunLine] = []
 	for run_seed: int in seeds:
-		lines.append(play(run, run_seed, bot_name, endless, testing))
+		lines.append(play(run, run_seed, bot_name, endless, testing, team))
 	return lines
 
 
@@ -736,8 +757,13 @@ static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 	out.append("")
 	var per_hero: PackedStringArray = PackedStringArray()
 	for hero_id: String in content.hero_ids:
-		var total: int = lines.reduce(func(sum: int, line: RunLine) -> int: return sum + line.picks.get(hero_id, 0), 0)
-		per_hero.append("%s %.1f" % [content.heroes[hero_id].kit.id.capitalize(), float(total) / maxi(n, 1)])
+		# Over the runs the hero was on the team for (phase 8 part 4).
+		var with_hero: Array[RunLine] = []
+		with_hero.assign(lines.filter(func(line: RunLine) -> bool: return line.vows.has(hero_id)))
+		if with_hero.is_empty():
+			continue
+		var total: int = with_hero.reduce(func(sum: int, line: RunLine) -> int: return sum + line.picks.get(hero_id, 0), 0)
+		per_hero.append("%s %.1f" % [hero_id.capitalize(), float(total) / with_hero.size()])
 	out.append("Picks taken per run: %s" % ", ".join(per_hero))
 	var by_layer: PackedStringArray = PackedStringArray()
 	for layer: int in UpgradeDef.LAYER_NAMES.size():

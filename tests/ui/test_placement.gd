@@ -56,6 +56,7 @@ func test_a_remembered_hex_that_isnt_legal_goes_to_the_nearest_free_one() -> voi
 	session.remember({"brannoc": Vector2i(3, 2), "maren": Vector2i(3, 0), "vell": Vector2i(2, 2)} as Dictionary[String, Vector2i])
 	assert_eq(session.formation_for("rocky"), {"brannoc": Vector2i(2, 2), "maren": Vector2i(3, 0), "vell": Vector2i(1, 1)},
 		"heroes go in heroes.json's order: Brannoc takes (2, 2), so Vell moves to the first free hex a hex away")
+	session.formation.clear()
 	session.remember({"brannoc": Vector2i(3, 6), "maren": Vector2i(0, 0)} as Dictionary[String, Vector2i])
 	var placed: Dictionary[String, Vector2i] = session.formation_for("rocky")
 	assert_eq(placed.keys(), ["brannoc", "maren", "vell"], "a hero missing from the memory starts from the first formation")
