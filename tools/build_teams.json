@@ -5,25 +5,48 @@
       "name": "Bulwark",
       "path": "aegisfang",
       "type": "engine",
-      "team": {"garrow": "aegisfang", "vell": "wardweaver", "brannoc": "hearthwall"},
-      "relics": ["tithe_of_iron", "shattered_aegis", "overflow_chalice", "wardens_engine", "the_woven_fang"],
+      "team": {
+        "garrow": "aegisfang",
+        "vell": "wardweaver",
+        "brannoc": "hearthwall"
+      },
+      "relics": [
+        "tithe_of_iron",
+        "shattered_aegis",
+        "overflow_chalice",
+        "wardens_engine",
+        "the_woven_fang"
+      ],
       "note": "test-teams.md #7; Brannoc's Hearthwall (Hearthguard's Shields) stands in for Edric's Aegis"
     },
     {
       "name": "Whirlpool",
       "path": "chainwarden",
-      "type": "enabler",
-      "team": {"garrow": "chainwarden", "maren": "volley", "vell": "vigil_keeper"},
-      "relics": ["the_hungering_rift"],
-      "swap": "spitemail",
-      "note": "test-teams.md #8; Vell's Vigil Keeper (Sunfall's line) stands in for Ilse's Wildfire; few clump relics are built yet"
+      "type": "self-sufficient",
+      "team": {
+        "garrow": "chainwarden",
+        "maren": "volley",
+        "vell": "vigil_keeper"
+      },
+      "relics": [
+        "the_hungering_rift"
+      ],
+      "note": "test-teams.md #8; Vell's Vigil Keeper (Sunfall's line) stands in for Ilse's Wildfire; few clump relics are built yet. Retyped self-sufficient (rebuild-phase8-heroes.md Decision 13)"
     },
     {
       "name": "Blood Price",
       "path": "spitemail",
       "type": "self-sufficient",
-      "team": {"garrow": "spitemail", "vell": "lanternbearer", "maren": "deadeye"},
-      "relics": ["leech_tooth", "gluttons_chalice", "overflow_chalice"],
+      "team": {
+        "garrow": "spitemail",
+        "vell": "lanternbearer",
+        "maren": "deadeye"
+      },
+      "relics": [
+        "leech_tooth",
+        "gluttons_chalice",
+        "overflow_chalice"
+      ],
       "note": "test-teams.md #11; Maren's Deadeye stands in for Severine's Hemomancer"
     }
   ]

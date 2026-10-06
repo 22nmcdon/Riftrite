@@ -20,8 +20,7 @@ func test_the_teams_file_reads() -> void:
 	var builds: Array[BuildReport.Build] = BuildReport.read_builds(_content, _run, errors)
 	assert_eq(errors, [] as Array[String])
 	assert_eq(builds.map(func(build: BuildReport.Build) -> String: return "%s %s" % [build.path, build.type]),
-		["aegisfang engine", "chainwarden enabler", "spitemail self-sufficient"])
-	assert_eq(builds[1].swap, "spitemail", "an enabler's lift is against a path of its own hero")
+		["aegisfang engine", "chainwarden self-sufficient", "spitemail self-sufficient"])
 
 
 func test_a_small_run() -> void:
@@ -29,10 +28,12 @@ func test_a_small_run() -> void:
 	var named: Dictionary[String, Dictionary] = Report.read_formations(FileAccess.get_file_as_string("res://tools/sim_formations.json"), errors)
 	named = Report.for_team(_content, named, HeroTeam.DEFAULT)
 	var build: BuildReport.Build = BuildReport.read_builds(_content, _run, errors)[1]
+	build.type = "enabler"
+	build.swap = "spitemail"
 	var result: BuildReport.Result = BuildReport.run_build(_content, _run, build, ["the_pack"] as Array[String], named, 0, 1)
 	for tally: BuildReport.Tally in [result.neutral_base, result.neutral, result.team_base, result.team, result.swapped]:
 		assert_eq(tally.fights, named.size(), "each lineup fights every formation")
 	assert_eq(result.ceiling_gain(), result.team.percent() - result.team_base.percent())
 	var text: String = BuildReport.text(_content, [result] as Array[BuildReport.Result])
-	assert_string_contains(text, "Garrow of the Chains, Chainwarden (enabler) in Whirlpool")
+	assert_string_contains(text, "Garrow of the Chains, Chainwarden (enabler) in Whirlpool", "an enabler's lift is against a path of its own hero")
 	assert_string_contains(text, "lift")

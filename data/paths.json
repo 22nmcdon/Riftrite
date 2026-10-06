@@ -3446,7 +3446,7 @@
     }
   },
   {
-    "_note": "The one who drags them in (rebuild-heroes.md, section 8d, path 2; phase 8 part 4, 8d-2b; Decision 10: the habit hauls the 3 farthest). Numbers are the design's placeholders; the deed's threshold is a first number for 8d-5's check.",
+    "_note": "The one who drags them in (rebuild-heroes.md, section 8d, path 2; phase 8 part 4, 8d-2b; Decision 10: the habit hauls the 3 farthest). Self-sufficient (Decision 13; it wins fights by its drag whoever its teammates are): Maelstrom within 2 hexes (the design's 3) for 90 mana (Haul's 70), Crowd Strength +2% ATK and +1 DEF an enemy (the design's +5% and +2), and the habit every 8th blow (Decision 10's 6th) bring its floor into the type's band. The deed's threshold is a first number for 8d-5's check.",
     "id": "chainwarden",
     "hero": "garrow",
     "name": "Chainwarden",
@@ -3489,7 +3489,7 @@
       }
     },
     "transformed": {
-      "text": "Haul becomes a habit: every 6th Chain Fist, his chains Bleed the 3 farthest enemies within 4 hexes and drag them to him. Crowd Strength: more ATK and DEF for each enemy within 1 hex. Maelstrom replaces Haul: every enemy within 3 hexes is Bled, dragged next to him, and Rooted, and he can attack again at once.",
+      "text": "Haul becomes a habit: every 8th Chain Fist, his chains Bleed the 3 farthest enemies within 4 hexes and drag them to him. Crowd Strength: more ATK and DEF for each enemy within 1 hex. Maelstrom replaces Haul: every enemy within 2 hexes is Bled, dragged next to him, and Rooted, and he can attack again at once.",
       "cost": "He's slower.",
       "patch": {
         "stats_add": {
@@ -3498,7 +3498,7 @@
         "signature": {
           "id": "maelstrom",
           "name": "Maelstrom",
-          "text": "Every enemy within 3 hexes of him is Bled, dragged next to him, and Rooted for a moment, and he can attack again at once.",
+          "text": "Every enemy within 2 hexes of him is Bled, dragged next to him, and Rooted for a moment, and he can attack again at once.",
           "trigger": {
             "kind": "mana"
           },
@@ -3513,20 +3513,20 @@
                 "atk": 2500
               },
               "target": "enemies_near_self",
-              "within_hexes": 3
+              "within_hexes": 2
             },
             {
               "type": "pull",
               "to": "beside",
               "target": "enemies_near_self",
-              "within_hexes": 3
+              "within_hexes": 2
             },
             {
               "type": "apply_status",
               "status": "root",
               "duration_ms": 1000,
               "target": "enemies_near_self",
-              "within_hexes": 3
+              "within_hexes": 2
             }
           ]
         },
@@ -3539,7 +3539,7 @@
             "aura": {
               "target": "holder",
               "stat": "atk_bp",
-              "value": 10500,
+              "value": 10200,
               "per": "enemy_near",
               "per_within_hexes": 1
             }
@@ -3552,7 +3552,7 @@
             "aura": {
               "target": "holder",
               "stat": "def",
-              "value": 2,
+              "value": 1,
               "per": "enemy_near",
               "per_within_hexes": 1
             }
@@ -3561,11 +3561,11 @@
             "id": "haul",
             "name": "Haul",
             "kind": "ability",
-            "text": "A habit: every 6th Chain Fist, he throws chains at the 3 farthest enemies within 4 hexes, Bleeds them, and drags them next to him.",
+            "text": "A habit: every 8th Chain Fist, he throws chains at the 3 farthest enemies within 4 hexes, Bleeds them, and drags them next to him.",
             "effects": [
               {
                 "trigger": "on_basic_attack",
-                "every": 6,
+                "every": 8,
                 "type": "apply_status",
                 "status": "bleed",
                 "stacks": 1,
@@ -3578,7 +3578,7 @@
               },
               {
                 "trigger": "on_basic_attack",
-                "every": 6,
+                "every": 8,
                 "type": "pull",
                 "to": "beside",
                 "target": "farthest_enemies",
@@ -3587,7 +3587,13 @@
               }
             ]
           }
-        ]
+        ],
+        "mana": {
+          "max": 90,
+          "start": 20,
+          "per_attack": 10,
+          "per_10_damage_taken": 1
+        }
       }
     },
     "deed": {

@@ -76,7 +76,7 @@ func test_chainwarden_bleeds_what_it_drags() -> void:
 	assert_string_contains(maelstrom[0].to_text(), "and readies its attack")
 	assert_gt(_of(sim, LogEntry.Kind.STATUS_APPLIED, "maelstrom").filter(func(entry: LogEntry) -> bool: return entry.status == "root").size(), 0, "it Roots")
 	assert_eq(_of(sim, LogEntry.Kind.FIRE, "haul").size(), 0, "Haul is a habit now: it never fires as a signature")
-	assert_gt(_of(sim, LogEntry.Kind.PUSH, "haul").size(), 0, "but it still drags, every 6th Chain Fist")
+	assert_gt(_of(sim, LogEntry.Kind.PUSH, "haul").size(), 0, "but it still drags, every 8th Chain Fist")
 
 
 func test_spitemail_hits_back() -> void:

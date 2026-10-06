@@ -79,7 +79,7 @@ Before judging paths, every hero's **base kit** should land its team within **±
 | | Headhunter | Engine | Needs Marks from others |
 | | Garrote | Engine | Needs Roots and Stuns from others |
 | **Garrow** | Aegisfang | Engine | Strong with outside Shields (Edric, Vell, Shield relics) |
-| | Chainwarden | Enabler | His pull is worth what the team does to the clump |
+| | Chainwarden | Self-sufficient | His drag protects any team; retyped from enabler after its first measure (lift about 0, `rebuild-phase8-heroes.md` Decision 13) |
 | | Spitemail | Self-sufficient | Returns damage by itself |
 | **Aldous** | Chorister | Enabler | Mana for allies |
 | | Windcaller | Enabler | Buffs ranged allies |
@@ -103,7 +103,7 @@ Before judging paths, every hero's **base kit** should land its team within **±
 | | Serpent-Keeper | Self-sufficient | Her viper poisons by itself |
 | | Packleader | Engine | Needs other summons |
 
-**Counts:** 13 self-sufficient, 8 engines, 14 enablers, 4 long-game. A path's type can change in tuning: an enabler whose floor stays above +25 is really self-sufficient (section 5).
+**Counts:** 14 self-sufficient, 8 engines, 13 enablers, 4 long-game. A path's type can change in tuning: an enabler whose floor stays above +25 is really self-sufficient (section 5).
 
 ## 7. Worked example: Garrow (first bot run)
 
@@ -112,7 +112,7 @@ Before judging paths, every hero's **base kit** should land its team within **±
 | **Base Garrow:** his team wins 0%, against 22% for the original three | Base kit | Outside the ±10 band. Fix the base kit first; it inflates every path's gain below |
 | **Spitemail:** +75 | Self-sufficient | About 30 above its type's ceiling. Too strong in any team; tune it down |
 | **Aegisfang:** +7 | Engine | A fine floor. The open question is its ceiling in #7 Bulwark |
-| **Chainwarden:** +27 | Enabler | A bit high alone. Check its lift in #8 Whirlpool before cutting it |
+| **Chainwarden:** +27 | Enabler | A bit high alone. Check its lift in #8 Whirlpool before cutting it. **Measured:** lift about 0 (it wins by itself), so retyped self-sufficient and tuned to that band |
 
 ## 8. Apexes
 
