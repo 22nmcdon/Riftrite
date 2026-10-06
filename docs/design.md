@@ -78,7 +78,7 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 
 ## The run
 
-- **3 acts, each ending in a boss.** Each is 7 days, elites on 2 of them, the boss on the last. Act 1 and Act 2, the Glassmere (shallow water, specialized enemies, the Mournwater: `rebuild-phase8-act2.md`), are built; a run moves from one to the next, its losses carrying (`rebuild-phase8-acts.md`).
+- **3 acts, each ending in a boss.** Each is 7 days, elites on 2 of them, the boss on the last. All three are built: Act 1, Act 2, the Glassmere (shallow water, specialized enemies, the Mournwater: `rebuild-phase8-act2.md`), and Act 3, the Shattered Crown (islands over the void, enemies specialized from day 1, upgraded elites, the rift learns, the Heart of the Rift: `rebuild-phase8-act3.md`); a run moves from one to the next, its losses carrying (`rebuild-phase8-acts.md`), and endless follows Act 3.
 - **The start:** choose your three heroes, then vow each one.
 - **A day** (`days-and-nodes.md`): **choose the fight** from 2 options known from the start of the act, set the **loadout**, **place** and fight, take the **after-fight pick** (on a win or a tie) and any deed rewards (transformations, apex vows), visit the **shop** (the Pedlar, every day: 1 relic at a time, the loadout wares, treating wounds), then choose **1 of 2–3 nodes**: an **Event** (a scene with a choice, or a Bloodied Oath; `events.md`), **Camp** (one option: Rest, Train, Scout, Map the Rift, Fortify, Dig In, Hunt, or the Shrine, which takes an offering for a relic), **Rift Tear** (pick a depth: tomorrow's fight is harder, and winning it pays a relic choice), or the **Magpie**.
 - **Choosing fights feeds deeds:** which enemies you fight decides which deeds fill. The fight card shows the enemies, never which paths they suit.
@@ -99,7 +99,7 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 - **Permanent scaling:** some upgrades and relics count what a hero does and grow all run (their card shows "Now: +X"); they reset with the run, so meta progression still adds no stats.
 - **Every stat change says its amount** ("+10% attack speed"); ability text still leaves numbers to the numbers line.
 - **No combo readouts for players:** working a combo out is part of the fun. The combat log stays complete, and a readout exists only behind the testing toggle and in the sim runner.
-- **Endless mode** (after Act 3; built after Act 1 for now, phase 8 part 1): a run goes on into floors where the rift scales exponentially; you always lose eventually, and the score is how deep you got. The campaign keeps "new problems, not more HP".
+- **Endless mode** (after Act 3, built in phase 8 part 3; after Act 1 as a testing option, phase 8 part 1): a run goes on into floors where the rift scales exponentially; you always lose eventually, and the score is how deep you got. The campaign keeps "new problems, not more HP".
 
 ## Between runs
 
@@ -170,5 +170,5 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - **Act 1 sits at 49% for the good bot** after the second tuning pass (the target is 45–50%; 108 runs). Last Watch transforms early (median day 2: one fight where Last Rites fires can fill his deed). The placement gate (`sim_runner.gd`) fights bare heroes (no upgrades, items, or relics), so Act 1's later fights, scaled for a run's team, fail it: 9 of 18 after phase 6's first tuning, 11 after the second (Bog Crossing and Cairn Watch too). Should the gate measure run-strength teams? (phase 6 plan, 11.4)
 - **Bought engines rarely chain, and many held passives never fire** in the simple bot's runs (the engine report). The good bot now plays; its engine report is still to be read. (phase 5c plan, 17.12)
 - **The trigger chain's depth limit** (8 is a guess). (part 7)
-- **Endless:** is ×1.15 a floor and a rift modifier every 3 floors right? Built on Act 1 with flat pay (phase 8 part 1), the good bot's runs that win the act reach a median floor of 4 (deepest 18). Where should it fall? (phase 8 plan, 8a-3)
+- **Endless:** is ×1.15 a floor and a rift modifier every 3 floors right? After Act 3 (phase 8 part 3, 8c-6c), the good bot's runs that clear the Heart reach a median floor of 6 (deepest 14); after Act 1 (the testing option) a median of 4 (deepest 18). Where should it fall? (phase 8 plan, 8a-3; `rebuild-phase8-act3.md`, 8c-6c)
 - **Which statuses become keywords next** (Slow, Bleed, Stun). (part 7)

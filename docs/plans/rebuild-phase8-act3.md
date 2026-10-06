@@ -1,6 +1,6 @@
 # Phase 8 part 3: building Act 3, the Shattered Crown
 
-Status: **a build plan, approved (2026-10-05); section 9's questions answered (Decisions 1–4).** 8c-5a (enemy growth), 8c-5b (islands), 8c-5c (the other pieces), 8c-5d (the rift learns), 8c-6a (the enemies), 8c-6b (the fights and `act3.json`), and 8c-6c (the bots and the tuning) built; 8c-6d next. It builds `act3-shattered-crown.md` (the design, with its Decisions 1–11) on the frame of `rebuild-phase8-acts.md` (8c-1 and 8c-2, built), the way `rebuild-phase8-act2.md` built Act 2. Numbers are placeholders until the tuning part. Questions are in section 9.
+Status: **a build plan, approved (2026-10-05); section 9's questions answered (Decisions 1–4).** 8c-5a (enemy growth), 8c-5b (islands), 8c-5c (the other pieces), 8c-5d (the rift learns), 8c-6a (the enemies), 8c-6b (the fights and `act3.json`), 8c-6c (the bots and the tuning), and 8c-6d (docs and playtest build 23) built: Act 3 is done. It builds `act3-shattered-crown.md` (the design, with its Decisions 1–11) on the frame of `rebuild-phase8-acts.md` (8c-1 and 8c-2, built), the way `rebuild-phase8-act2.md` built Act 2. Numbers are placeholders until the tuning part. Questions are in section 9.
 
 ## 1. What it builds
 
@@ -256,4 +256,12 @@ Ten new entries in `data/enemies.json`, every number a placeholder until 8c-6c, 
   - 13 to 16 runs reach Act 3 in 81, so its read is coarse: easing three fights by about a tenth moved the same 16 runs from 31% to 62% clearing it. The elites never stopped a run in the last pass; the Heart and the harder day fights did.
   - Falling decides a fight fast: The Hooked Shore and The Span are tuned low (x1.4, x1.85) because a hero who walks onto a bridge to meet the mites can still go over. Tactics that hold ground matter here; the bots never take one for it.
   - The shove's numbers and the crowd's kit are the design's sentence changed (a quarter hex at most every 3s, not half a hex a bite).
+
+## Built in 8c-6d: docs, HOW-TO-PLAY, screenshots, and a playtest build (2026-10-06)
+
+- **HOW-TO-PLAY** (`tools/ci/HOW-TO-PLAY.txt`): the whole run of three acts; an ACT 3 section (the void and bridges, the new faces and kinds, specializations from day 1, upgraded elites, the Cragherd and the Mirror Court, the Heart, and the rift learns with its "Learned:" line); ENDLESS rewritten for the real endless after the Heart (Act 1's kept as the testing option); Practice's Act 3 fights; and what we want to know about Act 3, with 8c-6c's flags (the Cliffmite's shove changed from the design's sentence, the low-scaled bridge fights, the coarse read, the rift learns' sizes, the Heart's bridges, the placeholder sky).
+- **Practice:** the list's hint says Act 3's fights are built for heroes at an apex (the cards already read "Act 3 · Days ...").
+- **Screenshots** (`tools/ui_screenshots.gd`): Act 3's boss day (the Heart's card with what its host learned from the run's fights) and the Heart's fight over the void at 10s, after Act 2's.
+- **The design doc:** all three acts built, endless after Act 3, and the endless question with Act 3's floors.
+- **Playtest build 23**, with the full suite green (1,161 tests).
 

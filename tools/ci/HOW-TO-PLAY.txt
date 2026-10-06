@@ -16,16 +16,16 @@ MACOS
 
 PLAYING
   The game is being rebuilt around heroes and an open arena. This build has
-  a run of two acts: Act 1, then Act 2, the Glassmere (NEW IN THIS BUILD:
-  see ACT 2 below), seven days each, and endless after Act 1 as a testing
-  option (see ENDLESS). Your uploaded art is in the game. The arena
+  the whole run: Act 1, Act 2, the Glassmere, and Act 3, the Shattered
+  Crown (NEW IN THIS BUILD: see ACT 3 below), seven days each, then
+  endless after the Act 3 boss (see ENDLESS). Your uploaded art is in the game. The arena
   is turned (your heroes at the bottom, the enemies at the top) and stands
   on the floating island, rocks are ruins, and Rift Collapse eats the edge
   as rift-light. Items, relics, and upgrades have their kind's frame with an
   icon, camp's options and places have theirs, the Pedlar and the Magpie
   stand in their scenes, and the route is the act map. The fonts are Cinzel
   and Alegreya. Practice (the Act 1 fights one at a time, with every path
-  free to try; Act 2's fights are there too) is still on the title.
+  free to try; Act 2's and Act 3's fights are there too) is still on the title.
 
   A RUN (Title > New run)
   1. Vow each hero to one of their three paths: a small taste of it now,
@@ -37,7 +37,8 @@ PLAYING
        Route    the act map: an island a day, each with its two fights (an
                 easier one and a harder one that pays more). Days 3 and 5
                 are elites; day 7 is the act's boss (Old Mother Ash in
-                Act 1, the Mournwater in Act 2). Click one of today's
+                Act 1, the Mournwater in Act 2, the Heart of the Rift in
+                Act 3). Click one of today's
                 fights to read it, then Fight this.
        Loadout  put items from the stash into each hero's three slots (any
                 hero can hold anything; one tactic each; "no effect" says
@@ -76,14 +77,16 @@ PLAYING
   3. A hero who falls gets a wound (less max HP, up to 3); each won fight
      heals one wound on every hero first. A lost fight
      replays the day; the second loss ends the run, and losses carry from
-     Act 1 into Act 2. Beating Old Mother Ash and leaving her shop takes
-     the run on into Act 2 (in a testing run you can instead end it there
-     or go deeper into endless: see ENDLESS); beating the Mournwater wins it.
+     act to act. Beating Old Mother Ash and leaving her shop takes the run
+     on into Act 2 (in a testing run you can instead end it there or go
+     deeper into endless: see ENDLESS); beating the Mournwater takes it on
+     into Act 3; beating the Heart of the Rift wins it, and after its shop
+     you end the run or go deeper into endless.
   4. The run is saved after everything you do: Title > Continue the run.
      The hero bar along the bottom shows each hero's wounds, deed progress,
      and items; click a card for the hero's panel.
 
-  ACT 2, THE GLASSMERE (new in this build)
+  ACT 2, THE GLASSMERE
   The rift's drowned middle. Your heroes come in as they left Act 1
   (transformed, with their items, relics, shards, wounds, and losses), and
   the apex vow is open (see APEXES). Its question: can you handle the
@@ -119,22 +122,74 @@ PLAYING
               collapses.
   Act 2 uses Act 1's camp, events, relics, and items for now.
 
-  ENDLESS (after Old Mother Ash and her shop; a testing option)
-  Real endless will come after Act 3. Until then, endless after Act 1 is a
-  testing option: tick "Endless after Act 1 (for testing)" on the New run
-  screen (it's off by default; without it, the run goes on into Act 2).
-  With it on, after the boss shop: End the run (a win), or Go deeper
-  (testing) with the same heroes, items, relics, and shards. Each floor is a day with one fight, then a node (new in
-  this build: no Pedlar and no upgrades on floors; the pick after a fight
-  offers only apex cards, once a hero reaches an apex). Every floor the rift grows: enemies have
-  15% more HP and attack than the floor before (it compounds), Rift
-  Collapse starts a second sooner, and crumbled ground burns 15% hotter.
-  Every 3rd floor a rift modifier joins for good (they're listed on the
-  route). Every 5th floor is an elite, every 10th is Old Mother Ash
-  (she offers boss relics again). The Magpie can still turn up. There are no
-  replays: the first loss ends the run, and the floor you fell on is your
-  score (the end screen keeps your deepest). Big numbers shorten (12.4k).
-  Endless isn't tuned yet: we only measured how far a bot gets.
+  ACT 3, THE SHATTERED CROWN (new in this build)
+  The rift's heart: broken islands of floating stone over nothing. Your
+  heroes come in as they left Act 2 (with their apexes, items, relics,
+  shards, wounds, and losses). Its question: can you handle an enemy that
+  answers you?
+    The void  the board is islands joined by narrow bridges; the gaps
+              between them (drawn as sky) can't be walked. Fliers cross
+              them, and leaps, pulls, and knockbacks can too: a unit
+              pushed into a gap falls and is gone, enemies too (a fall is a
+              kill for whoever pushed). Your heroes can't start over a gap.
+              Some bridges break for a while and reform (a bridge about to
+              break is tinted red): anyone on it falls.
+    Faces     the Cliffmite (small and many: when three or more Cliffmites
+              bite the same hero, each one's bite shoves that hero a
+              quarter hex toward the nearest edge, at most once every 3s),
+              the Cragram (charges the farthest hero within 3 hexes and
+              knocks the first one in its way 2 hexes back), the Gulf
+              Angler (hooks the hero farthest from their allies across a
+              gap to its side), and the Spire Chanter (while it stands,
+              every ally on its island takes less damage). New kinds: the Mirrorwight, a
+              mimic (it copies the first signature it sees a hero cast and
+              casts it back at you), and the Unbinder, a warden-breaker (it
+              tears Shields and frees its allies of Roots, Marks, Burn,
+              and other harm). Act 1's Hollow Archers, Rift Hounds, Cinder
+              Moths, and Rift-Worn Sentinels come back too.
+    Specialized  from day 1, three in four of each fight's enemies are
+              specialized (today's fight cards say which and how).
+    Upgraded  each elite comes with one or two upgrades on its enemies
+              (Frenzied, Warded, Anchored, and so on: "Upgraded:" on its
+              card), drawn afresh if you replay the day.
+    Elites    on days 3 and 5, both offered: the Cragherd (a herd of
+              Cragrams across two bridges that all charge together every
+              15s, with a Chanter behind) and the Mirror Court (the Mirror
+              Queen copies each new signature you cast and gives it to her
+              court of Mirrorwights; a Sentinel holds the one bridge to her
+              island).
+    Boss      the Heart of the Rift, on day 7: its Ward halves the damage
+              it takes while any of its host stands. Below 70% two
+              Cliffmites climb up and the bridges break in turn every 12s;
+              below 35% the Ward is gone, it pushes heroes near it away,
+              and the rift collapses.
+    The rift learns  the boss's host is the rift that has watched you: it
+              reads your last three fights for your team's habits (Roots,
+              Stealth, Burn, Shields, Marks, healing, signatures, a back
+              line, bunching, a melee front line), and up to half of the
+              host learn an answer to your top one or two in place of what
+              they drew. The boss's card says what each learned and which
+              habit it answers ("Learned:").
+  Act 3 uses Act 1's camp, events, relics, and items too.
+
+  ENDLESS (after the Heart of the Rift; new in this build)
+  After the Heart's shop: End the run (a win), or Go deeper with the same
+  heroes, items, relics, and shards. Each floor is a day with one fight
+  (from Act 3's fights), then a node: no Pedlar and no upgrades on floors,
+  and the pick after a fight offers only apex cards. Every floor the rift
+  grows: enemies have 15% more HP and attack than the floor before (it
+  compounds), Rift Collapse starts a second sooner, and crumbled ground
+  burns 15% hotter. Every 3rd floor a rift modifier joins for good (they're
+  listed on the route). Every 5th floor is an elite, every 10th is the
+  Heart again (it offers boss relics again, and the rift learns again).
+  The Magpie can still turn up. There are no replays: the first loss ends
+  the run, and the floor you fell on is your score (the end screen keeps
+  your deepest). Big numbers shorten (12.4k). Endless isn't tuned yet: we
+  only measured how far a bot gets.
+  For testing, endless after Act 1 is still there: tick "Endless after
+  Act 1 (for testing)" on the New run screen (off by default); then after
+  Old Mother Ash's shop you can end the run or go deeper (testing) into
+  floors drawn from Act 1's fights.
 
   APEXES (all 18)
   The apex vow opens as you leave Act 1's boss shop (in a testing run it's
@@ -152,8 +207,10 @@ PLAYING
 
   PRACTICE (Title > Practice)
   1. Title > Practice, then pick a fight ("Place your heroes"). Act 2's
-     fights are at the end of the list ("Act 2 · Days ..."); they're built
-     for transformed heroes, so transform yours in their panels first.
+     and Act 3's fights are at the end of the list ("Act 2 · Days ...",
+     "Act 3 · Days ..."); Act 2's are built for transformed heroes and
+     Act 3's for heroes at an apex, so set yours in their panels first
+     (Transform, then Vow apex and Reach apex).
   2. Drag Brannoc, Maren, and Vell onto your side's hexes (the three rows
      at the bottom, tinted gold; the enemies are at the top). Hover an enemy
      to read what it does.
@@ -241,7 +298,38 @@ TUNED IN THIS BUILD (phase 6: a bot that plays well, then Act 1 tuned to it)
   Tell us: does Act 1 feel hard but fair? Which fight ends your runs?
   Does transforming feel like a real step up?
 
-WHAT WE WANT TO KNOW ABOUT ACT 2 (new in this build)
+WHAT WE WANT TO KNOW ABOUT ACT 3 (new in this build)
+  Does the void change where you place your heroes and how fights play?
+  Can you read the islands, the bridges, and who is about to be shoved,
+  hooked, or charged over the edge? Do the Mirrorwight and the Unbinder
+  feel like enemies that answer you? Does the rift learns' "Learned:" line
+  make sense, and does the Heart feel like it has learned your team? Is
+  the Heart a good last boss? Does Act 3 feel like a step up from Act 2?
+  How we tuned it: a bot that places well clears Act 3 in about 6 of the
+  10 runs that get there (about 1 run in 9 clears all three acts); every
+  team that reaches the Heart has an apex, and it wins about 3 fights in
+  10. Some choices were made while you were away; tell us if they feel
+  wrong:
+    - The Cliffmite: the design said each bite of a crowd of three shoves
+      half a hex. With that, a hero on a bridge or beside a gap went over
+      within a second of the crowd forming, so falling, not damage, decided
+      the fight. Now it's a quarter hex, each mite at most once every 3s,
+      and only Cliffmites count toward the crowd (not the archers beside
+      them). Is falling still a real danger?
+    - The Hooked Shore and The Span are the easiest Act 3 fights on paper
+      (fewest enemy HP), because a hero who walks onto a bridge to meet
+      the mites can still go over. Hold your ground helps there.
+    - Only 13 to 16 of every 81 bot runs reach Act 3, so its tuning is
+      rough: small changes swung how many runs clear it a lot.
+    - The rift learns: each habit counts as one when a fight holds about
+      as much of it as a team that leans on it does (sized from the bot's
+      runs). The placement habits (back line, bunching, front line) almost
+      never lead, since nearly every team does a little of each.
+    - The Heart's side shelves became bridges (the board is too small for
+      both), and its two climbing adds are plain Cliffmites.
+    - The void is a plain sky placeholder until there's art for it.
+
+WHAT WE WANTED TO KNOW ABOUT ACT 2 (last build)
   Does the water change where you place your heroes and how fights play?
   Can you read where the water is and who is wading, flooding, hiding
   under it, or being pulled into it? Do the eels, the Bellringer's

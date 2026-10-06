@@ -8,6 +8,7 @@ extends SceneTree
 ## vowing, camp, the Pedlar, the route (the act map), the loadout, a run's
 ## fight and its result, the pick after it, a relic choice, a hero's panel,
 ## the Magpie, an event and an oath, Act 2's route and a fight on its water,
+## Act 3's boss day (its learned picks) and the Heart's fight over the void,
 ## and the end.
 
 var _main: Main
@@ -196,6 +197,27 @@ func _run_screens() -> void:
 	await _snap("act2_fight_8s")
 	wet.skip()
 	wet.continue_run()
+	day = _main.screen as RunDayScreen
+	# Act 3, the Shattered Crown (8c-6d): every hero at their apex, the boss
+	# day's card (what the rift learned from the fights so far), and the
+	# Heart's fight over the void.
+	for hero: RunState.Hero in flow.state.heroes:
+		hero.apex_earned = true
+	flow._next_act()
+	flow.state.day = 7
+	flow._start_day()
+	day.refresh()
+	await _snap("act3_boss_route")
+	flow.choose_fight(0)
+	_main.show_day()
+	_main.show_run_fight()
+	var void_fight: ArenaScreen = _main.screen as ArenaScreen
+	void_fight._fight()
+	for frame: int in 10 * 30:
+		void_fight._process(1.0 / 30.0)
+	await _snap("act3_heart_10s")
+	void_fight.skip()
+	void_fight.continue_run()
 	day = _main.screen as RunDayScreen
 	flow.state.phase = RunState.Phase.ENDED
 	flow.state.outcome = RunState.Outcome.WON

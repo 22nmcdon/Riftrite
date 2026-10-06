@@ -23,7 +23,7 @@ static func make(content_db: ContentDb) -> EncounterListScreen:
 
 func build() -> void:
 	heading("Practice")
-	hint("Pick a fight. Act 2's are built for transformed heroes: transform them in their panels. Your heroes start where you last placed them.")
+	hint("Pick a fight. Act 2's are built for transformed heroes, Act 3's for heroes at an apex: set them in their panels. Your heroes start where you last placed them.")
 	var grid := GridContainer.new()
 	grid.columns = COLUMNS
 	grid.add_theme_constant_override("h_separation", 16)
