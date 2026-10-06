@@ -135,6 +135,8 @@ These never give Stoke-style Burn growth (Furnace), burning ground (Wildfire), o
 
 ## Tamsin
 
+Built in phase 8 part 4 (`rebuild-phase8-heroes.md`, "Built in 8d-3b and 8d-3d"): her 33 cards, with the approximations flagged there (Night Tally, Trophy Belt, Marked for Death, Swift Step); her 12 apex cards in 8d-3c.
+
 ### Hero pool
 
 These never give Stealth on a kill (Nightblade), Mark extension or stepping (Headhunter), or hold extension (Garrote).

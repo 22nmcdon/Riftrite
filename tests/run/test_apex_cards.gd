@@ -106,6 +106,29 @@ func test_garrows_apex_cards() -> void:
 	assert_not_null(_part(_on_apex("patient_fury"), "patient_fury"))
 
 
+## Tamsin's (phase 8 part 4, 8d-3c): the "more" stacks join the snowballs,
+## Tightening Cord reaches the grip, and the rest add what they say.
+func test_tamsins_apex_cards() -> void:
+	var phantom: UnitDef = _run.content.apexes["phantom"].apex_kit
+	assert_eq(_part(_on_apex("deeper_dark"), "phantom_edge").ability.effects.size(), _part(phantom, "phantom_edge").ability.effects.size() + 1, "Deeper Dark: more ATK an attack")
+	assert_not_null(_part(_on_apex("smoke_trail"), "smoke_trail"))
+	var veil: UnitDef = _run.content.apexes["veilmaster"].apex_kit
+	assert_eq(_part(_on_apex("shadow_pact"), "veilmaster").ability.effects.size(), _part(veil, "veilmaster").ability.effects.size() + 2, "Shadow Pact: every hero and her")
+	assert_eq(_part(_on_apex("long_shadows"), "veilmaster").ability.effects[0].duration_ticks, _part(veil, "veilmaster").ability.effects[0].duration_ticks + 20, "Long Shadows: 1s longer")
+	var axe: UnitDef = _run.content.apexes["executioner"].apex_kit
+	assert_eq(_part(_on_apex("bloodied_axe"), "executioner").ability.effects.size(), _part(axe, "executioner").ability.effects.size() + 1)
+	assert_true(_part(_on_apex("hanging_judge"), "hanging_judge").ability.effects[0].executed, "Hanging Judge: on an execution")
+	var trail: UnitDef = _run.content.apexes["bloodtrail"].apex_kit
+	assert_eq(_part(_on_apex("relentless"), "bloodtrail").ability.effects.size(), _part(trail, "bloodtrail").ability.effects.size() + 1)
+	assert_eq(_part(_on_apex("open_veins"), "the_hunt").ability.effects.size(), _part(trail, "the_hunt").ability.effects.size() + 1, "Open Veins: a Bleed with each step")
+	var strangler: UnitDef = _run.content.apexes["strangler"].apex_kit
+	assert_eq(_on_apex("tightening_cord").signature.grip_effects[0].grows_stack_bp, strangler.signature.grip_effects[0].grows_stack_bp + 150, "Tightening Cord: +1.5% more a tick")
+	assert_eq(_part(_on_apex("silent_grip"), "strangler").ability.effects.size(), _part(strangler, "strangler").ability.effects.size() + 1, "Silent Grip")
+	var pin: UnitDef = _run.content.apexes["pinmaster"].apex_kit
+	assert_eq(_part(_on_apex("iron_grip"), "pinning").ability.effects.size(), _part(pin, "pinning").ability.effects.size() + 2, "Iron Grip: every hero and her")
+	assert_not_null(_part(_on_apex("pinning_knives"), "pinning_knives"))
+
+
 func test_dread_return_taunts_as_he_rises() -> void:
 	var taunts: int = 0
 	var rises: int = 0

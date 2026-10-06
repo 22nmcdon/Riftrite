@@ -54,6 +54,7 @@ func test_real_statuses() -> void:
 		"grounded", "shadow_step", "shadow_step_2", "shadow_step_3", "bloodhound", "scavenged", "blood_frenzy", "vengeance", "festering", "ember_blind", "watched_over",
 		"ambush", "ambush_2", "rear_guard", "late_surge", "hobbled", "weighed_down", "cowed", "parting_shot", "first_blood", "scarred", "hailstorm", "tailwind", "zeal", "morning_haste", "dawnlight", "first_light", "glare", "dazzled", "woven_thorns", "iron_loom", "briar_torn", "gatekeeper", "brand", "war_call", "rally", "oathbound", "gale", "first_light_more", "zeal_more", "shield_wall", "dawn_ward",
 		"bulwark_layer", "shatter_echo", "grinder_feed", "undertow_tide", "deep_current", "thorn_crown", "hidden", "shadow_dance", "garroted", "garrote_veil", "assassins_haste", "swift_step", "death_mark",
+		"phantom_veil", "phantom_edge", "phantom_edge_more", "veiled", "veil_haste", "veil_haste_more", "executioner_rush", "executioner_rush_more", "on_the_trail", "trailing", "blood_scent", "blood_scent_more", "strangle", "pinned_light", "pinned", "pin_rally", "pin_rally_more",
 		"iron_maiden"] as Array[String])
 	assert_eq(db.statuses["burn"].interval_ticks, 10, "Burn ticks twice a second")
 	assert_eq(db.statuses["burn"].stacks_lost_bp, 500)

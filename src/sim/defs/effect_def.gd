@@ -645,6 +645,9 @@ var ricochet: int = 0
 ## target alive below this share of max HP finishes it ("execute_below_pct";
 ## a DAMAGE line noted "executed"). 0: none.
 var execute_below_bp: int = 0
+## Damage (phase 8 part 4, Executioner): the execution finishes only a
+## target that meets this ("execute_vs"; null: any).
+var execute_vs: UnitCondition = null
 ## on_kill (phase 8 part 2): only a kill an execution made ("executed").
 var executed: bool = false
 var reflect_bp: int = 0
@@ -696,6 +699,10 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 					_read_bonus(def, reader.req_object("bonus_per_ally"))
 				def.ricochet = reader.opt_int("ricochet", 0, 0, 5)
 				def.execute_below_bp = reader.opt_int("execute_below_pct", 0, 0, 50) * 100
+				if reader.has("execute_vs"):
+					def.execute_vs = UnitCondition.read(reader.req_object("execute_vs"))
+					if def.execute_below_bp == 0:
+						reader.error("execute_vs limits an execution (\"execute_below_pct\")")
 				def.ignores_def = reader.opt_bool("ignores_def", false)
 			Type.HEAL:
 				var kinds: int = int(reader.has("amount")) + int(reader.has("amount_bp_of_max_hp")) + int(reader.has("amount_bp_of_damage"))

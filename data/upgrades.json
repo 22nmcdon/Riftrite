@@ -4551,5 +4551,343 @@
         }
       ]
     }
+  },
+  {
+    "id": "deeper_dark",
+    "name": "Deeper Dark",
+    "apex": "phantom",
+    "text": "Each attack from Stealth gives her more ATK still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:phantom_edge",
+          "add_effects": [
+            {
+              "trigger": "on_basic_attack",
+              "holder": {
+                "keywords": [
+                  "stealthed"
+                ]
+              },
+              "type": "apply_status",
+              "status": "phantom_edge_more",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "smoke_trail",
+    "name": "Smoke Trail",
+    "apex": "phantom",
+    "text": "When she leaves Stealth, the enemies next to her are Slowed.",
+    "mod": {
+      "passives": [
+        {
+          "id": "smoke_trail",
+          "name": "Smoke Trail",
+          "kind": "ability",
+          "text": "When her Stealth ends, the enemies within 1 hex of her are Slowed.",
+          "effects": [
+            {
+              "trigger": "on_status_ended",
+              "keywords": [
+                "stealthed"
+              ],
+              "type": "apply_status",
+              "status": "slow",
+              "target": "enemies_near_self",
+              "within_hexes": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "shadow_pact",
+    "name": "Shadow Pact",
+    "apex": "veilmaster",
+    "text": "Each time she hides her allies, every hero attacks faster still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:veilmaster",
+          "add_effects": [
+            {
+              "trigger": "on_status",
+              "statuses": [
+                "hidden",
+                "shadow_dance"
+              ],
+              "type": "apply_status",
+              "status": "veil_haste_more",
+              "target": "all_allies"
+            },
+            {
+              "trigger": "on_status",
+              "statuses": [
+                "hidden",
+                "shadow_dance"
+              ],
+              "type": "apply_status",
+              "status": "veil_haste_more",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_shadows",
+    "name": "Long Shadows",
+    "apex": "veilmaster",
+    "text": "Her allies stay hidden longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:veilmaster",
+          "statuses": [
+            "veiled"
+          ],
+          "duration_add_ms": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "bloodied_axe",
+    "name": "Bloodied Axe",
+    "apex": "executioner",
+    "text": "Each kill by Sentence gives her more ATK still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:executioner",
+          "add_effects": [
+            {
+              "trigger": "on_kill",
+              "from_ability": [
+                "sentence"
+              ],
+              "type": "apply_status",
+              "status": "executioner_rush_more",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "hanging_judge",
+    "name": "Hanging Judge",
+    "apex": "executioner",
+    "text": "An execution Marks the enemies near the fallen.",
+    "mod": {
+      "passives": [
+        {
+          "id": "hanging_judge",
+          "name": "Hanging Judge",
+          "kind": "ability",
+          "text": "When Sentence finishes an enemy, the enemies within 2 hexes of it are Marked.",
+          "effects": [
+            {
+              "trigger": "on_kill",
+              "executed": true,
+              "from_ability": [
+                "sentence"
+              ],
+              "type": "apply_status",
+              "status": "marked",
+              "duration_ms": 3000,
+              "target": "enemies_near_named",
+              "within_hexes": 2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "relentless",
+    "name": "Relentless",
+    "apex": "bloodtrail",
+    "text": "Each kill makes her damage higher still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:bloodtrail",
+          "add_effects": [
+            {
+              "trigger": "on_kill",
+              "type": "apply_status",
+              "status": "blood_scent_more",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "open_veins",
+    "name": "Open Veins",
+    "apex": "bloodtrail",
+    "text": "Each step makes the enemy she steps to Bleed.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:the_hunt",
+          "add_effects": [
+            {
+              "trigger": "on_kill",
+              "vs": {
+                "keywords": [
+                  "marked"
+                ]
+              },
+              "type": "apply_status",
+              "status": "bleed",
+              "stacks": 1,
+              "scaling": {
+                "atk": 2000
+              },
+              "target": "enemy_near_named",
+              "within_hexes": 10,
+              "only": {
+                "keywords": [
+                  "marked"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "tightening_cord",
+    "name": "Tightening Cord",
+    "apex": "strangler",
+    "text": "Each tick of her Garrote makes the next ones harder still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "per_stack_add_bp": 150
+        }
+      ]
+    }
+  },
+  {
+    "id": "silent_grip",
+    "name": "Silent Grip",
+    "apex": "strangler",
+    "text": "An enemy she Garrotes is Silenced.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:strangler",
+          "add_effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "garrote"
+              ],
+              "type": "apply_status",
+              "status": "silence",
+              "duration_ms": 600,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "iron_grip",
+    "name": "Iron Grip",
+    "apex": "pinmaster",
+    "text": "Her rally on held enemies gives every hero more ATK and MGK still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:pinning",
+          "add_effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "knife"
+              ],
+              "vs": {
+                "statuses": [
+                  "root",
+                  "stun",
+                  "garroted"
+                ]
+              },
+              "every": 4,
+              "type": "apply_status",
+              "status": "pin_rally_more",
+              "target": "all_allies"
+            },
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "knife"
+              ],
+              "vs": {
+                "statuses": [
+                  "root",
+                  "stun",
+                  "garroted"
+                ]
+              },
+              "every": 4,
+              "type": "apply_status",
+              "status": "pin_rally_more",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "pinning_knives",
+    "name": "Pinning Knives",
+    "apex": "pinmaster",
+    "text": "Her hits on a held enemy also Root an enemy next to it.",
+    "mod": {
+      "passives": [
+        {
+          "id": "pinning_knives",
+          "name": "Pinning Knives",
+          "kind": "ability",
+          "text": "Her hits on a Rooted or Stunned enemy Root the enemy nearest it within 1 hex for a moment.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "vs": {
+                "statuses": [
+                  "root",
+                  "stun",
+                  "garroted"
+                ]
+              },
+              "type": "apply_status",
+              "status": "root",
+              "duration_ms": 500,
+              "target": "enemy_near_named",
+              "within_hexes": 1
+            }
+          ]
+        }
+      ]
+    }
   }
 ]

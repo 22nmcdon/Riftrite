@@ -596,6 +596,8 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 				text += ", +%s per other %s within %s" % [ValueBreakdown._percent(effect.bonus_bp_per_ally), kin, hexes(bonus_hexes(effect))]
 			if effect.execute_below_bp > 0:
 				text += ", finishing it below %s HP" % ValueBreakdown._percent(effect.execute_below_bp)
+				if effect.execute_vs != null:
+					text += " if it's %s" % effect.execute_vs.describe()
 			if effect.ignores_def:
 				text += ", ignoring DEF"
 			return text + _to_all(effect)

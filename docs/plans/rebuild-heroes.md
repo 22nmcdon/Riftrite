@@ -431,7 +431,9 @@ The fantasy: she sings fire into her allies' weapons.
 
 ## 8c. Tamsin Gloamstep: the knife (melee damage)
 
-*Added 2026-10-02.* **Role:** a flanker who goes after weak or held targets in the back line; very fragile if caught. The first melee damage hero (Maren and Ilse are ranged; Brannoc tanks). Builds (`build-map.md`): Stealth, Mark, and Root.
+*Added 2026-10-02; built in phase 8 part 4 (`rebuild-phase8-heroes.md`, 8d-3a to 8d-3c), whose Decisions win where they differ.* The built numbers aren't all these: base ATK 16, a 1s Knife, and +10 attack speed (the design's ATK 24 won 53% against the old three's 22%); From the Shadows +100%; Choke and its deed on her Knife only, the Garrote's grip 20% of her ATK and its hold 1.5s; and her apexes scaled to match (that plan's "Built in 8d-3b and 8d-3d" and "Built in 8d-3c").
+
+**Role:** a flanker who goes after weak or held targets in the back line; very fragile if caught. The first melee damage hero (Maren and Ilse are ranged; Brannoc tanks). Builds (`build-map.md`): Stealth, Mark, and Root.
 
 | | |
 | --- | --- |

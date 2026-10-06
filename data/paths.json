@@ -4597,7 +4597,230 @@
         "hidden"
       ],
       "threshold": 3
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 4 (rebuild-phase8-heroes.md 8d-3c; apexes.md). Numbers are placeholders scaled to the path's tuned numbers, for the --apexes report and the tuning phase.",
+        "id": "phantom",
+        "name": "Phantom",
+        "title": "the knife that never surfaces",
+        "fantasy": "Once she's gone, she stays gone.",
+        "vowed": {
+          "taste": "Fade hides her 0.5s longer.",
+          "patch": {
+            "passives": [
+              {
+                "id": "fade",
+                "name": "Fade",
+                "kind": "ability",
+                "text": "Each kill hides her a little longer and gives her back some mana.",
+                "effects": [
+                  {
+                    "trigger": "on_kill",
+                    "type": "apply_status",
+                    "status": "hidden",
+                    "duration_ms": 2500,
+                    "target": "self"
+                  },
+                  {
+                    "trigger": "on_kill",
+                    "type": "gain_mana",
+                    "amount": 15,
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Each kill hides her for 3s, and attacks from Stealth no longer end it. Each attack from Stealth gives her +2% ATK for the rest of the fight. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            },
+            "passives": [
+              {
+                "id": "fade",
+                "name": "Fade",
+                "kind": "ability",
+                "text": "Each kill hides her for 3s and gives her back some mana.",
+                "effects": [
+                  {
+                    "trigger": "on_kill",
+                    "type": "apply_status",
+                    "status": "hidden",
+                    "duration_ms": 3000,
+                    "target": "self"
+                  },
+                  {
+                    "trigger": "on_kill",
+                    "type": "gain_mana",
+                    "amount": 15,
+                    "target": "self"
+                  }
+                ]
+              },
+              {
+                "id": "phantom_veil",
+                "name": "Phantom",
+                "kind": "replace_status",
+                "text": "Her Stealth doesn't end when she attacks.",
+                "from": "hidden",
+                "to": "phantom_veil"
+              },
+              {
+                "id": "phantom_dance",
+                "name": "Phantom",
+                "kind": "replace_status",
+                "text": "Nor does Shadow Dance.",
+                "from": "shadow_dance",
+                "to": "phantom_veil"
+              },
+              {
+                "id": "phantom_edge",
+                "name": "Phantom Edge",
+                "kind": "ability",
+                "text": "Each attack she makes from Stealth gives her ATK for the rest of the fight.",
+                "effects": [
+                  {
+                    "trigger": "on_basic_attack",
+                    "holder": {
+                      "keywords": [
+                        "stealthed"
+                      ]
+                    },
+                    "type": "apply_status",
+                    "status": "phantom_edge",
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Crits from her Knife",
+          "counts": "crits",
+          "from_ability": [
+            "knife"
+          ],
+          "threshold": 180
+        }
+      },
+      {
+        "_note": "Phase 8 part 4 (rebuild-phase8-heroes.md 8d-3c; apexes.md). Numbers are placeholders scaled to the path's tuned numbers, for the --apexes report and the tuning phase.",
+        "id": "veilmaster",
+        "name": "Veilmaster",
+        "title": "the one who hides them all",
+        "fantasy": "Where she walks, her friends vanish too.",
+        "vowed": {
+          "taste": "When she becomes hidden, the allies within 2 hexes are hidden for 0.5s.",
+          "patch": {
+            "passives": [
+              {
+                "id": "veilmaster",
+                "name": "Veilmaster",
+                "kind": "ability",
+                "text": "When she becomes hidden, the allies within 2 hexes of her are hidden for a moment.",
+                "effects": [
+                  {
+                    "trigger": "on_status",
+                    "statuses": [
+                      "hidden",
+                      "shadow_dance"
+                    ],
+                    "type": "apply_status",
+                    "status": "veiled",
+                    "duration_ms": 500,
+                    "target": "allies_near_self",
+                    "within_hexes": 2
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "When she becomes hidden, the allies within 2 hexes are hidden for 1s, and an ally's attacks from Stealth always crit. Each time she hides them, every hero attacks a little faster for the rest of the fight. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            },
+            "passives": [
+              {
+                "id": "veilmaster",
+                "name": "Veilmaster",
+                "kind": "ability",
+                "text": "When she becomes hidden, the allies within 2 hexes of her are hidden, and every hero attacks faster for the rest of the fight.",
+                "effects": [
+                  {
+                    "trigger": "on_status",
+                    "statuses": [
+                      "hidden",
+                      "shadow_dance"
+                    ],
+                    "type": "apply_status",
+                    "status": "veiled",
+                    "duration_ms": 1000,
+                    "target": "allies_near_self",
+                    "within_hexes": 2
+                  },
+                  {
+                    "trigger": "on_status",
+                    "statuses": [
+                      "hidden",
+                      "shadow_dance"
+                    ],
+                    "type": "apply_status",
+                    "status": "veil_haste",
+                    "target": "all_allies"
+                  },
+                  {
+                    "trigger": "on_status",
+                    "statuses": [
+                      "hidden",
+                      "shadow_dance"
+                    ],
+                    "type": "apply_status",
+                    "status": "veil_haste",
+                    "target": "self"
+                  }
+                ]
+              },
+              {
+                "id": "veiled_strike",
+                "name": "Veiled Strike",
+                "kind": "aura",
+                "text": "Her allies' attacks from Stealth always crit.",
+                "aura": {
+                  "target": "all_allies",
+                  "stat": "crit_chance_bp",
+                  "value": 10000,
+                  "only": {
+                    "keywords": [
+                      "stealthed"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Times she hid an ally",
+          "counts": "applied",
+          "statuses": [
+            "veiled"
+          ],
+          "threshold": 85
+        }
+      }
+    ]
   },
   {
     "_note": "The Mark path (rebuild-heroes.md, section 8c, path 2; phase 8 part 4, 8d-3b). Its cost is two auras of power that cancel on a Marked enemy (power bonuses add). First numbers.",
@@ -4797,7 +5020,275 @@
         "scent"
       ],
       "threshold": 25000
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 4 (rebuild-phase8-heroes.md 8d-3c; apexes.md). Numbers are placeholders scaled to the path's tuned numbers, for the --apexes report and the tuning phase.",
+        "id": "executioner",
+        "name": "Executioner",
+        "title": "the sentence carried out",
+        "fantasy": "When she raises the blade, it's already over.",
+        "vowed": {
+          "taste": "She deals 10% more damage to enemies below half HP.",
+          "patch": {
+            "passives": [
+              {
+                "id": "executioners_eye",
+                "name": "Executioner's Eye",
+                "kind": "aura",
+                "text": "She deals more damage to enemies below 50% HP.",
+                "aura": {
+                  "target": "holder",
+                  "stat": "damage_bp",
+                  "value": 11000,
+                  "vs": {
+                    "below_hp_pct": 50
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Sentence finishes a Marked enemy below 25% HP. Each kill by Sentence gives her +25% ATK for the rest of the fight and gives back 10 mana. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            },
+            "signature": {
+              "id": "sentence",
+              "name": "Sentence",
+              "text": "A heavy strike on an enemy within 1 hex of her, a Marked one first, finishing a Marked one below 25% HP. If it kills, she strikes again at once.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "nearest",
+              "prefer": {
+                "keywords": [
+                  "marked"
+                ]
+              },
+              "shot": false,
+              "again_on_kill": true,
+              "effects": [
+                {
+                  "type": "damage",
+                  "amount": 0,
+                  "target": "target",
+                  "scaling": {
+                    "atk": 25000
+                  },
+                  "execute_below_pct": 25,
+                  "execute_vs": {
+                    "keywords": [
+                      "marked"
+                    ]
+                  }
+                }
+              ]
+            },
+            "passives": [
+              {
+                "id": "executioners_eye",
+                "name": "Executioner's Eye",
+                "kind": "aura",
+                "text": "She deals more damage to enemies below 50% HP.",
+                "aura": {
+                  "target": "holder",
+                  "stat": "damage_bp",
+                  "value": 11000,
+                  "vs": {
+                    "below_hp_pct": 50
+                  }
+                }
+              },
+              {
+                "id": "executioner",
+                "name": "Executioner",
+                "kind": "ability",
+                "text": "Each kill by Sentence gives her ATK for the rest of the fight and gives back some mana.",
+                "effects": [
+                  {
+                    "trigger": "on_kill",
+                    "from_ability": [
+                      "sentence"
+                    ],
+                    "type": "apply_status",
+                    "status": "executioner_rush",
+                    "target": "self"
+                  },
+                  {
+                    "trigger": "on_kill",
+                    "from_ability": [
+                      "sentence"
+                    ],
+                    "type": "gain_mana",
+                    "amount": 10,
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Kills by Sentence",
+          "counts": "kills",
+          "from_ability": [
+            "sentence"
+          ],
+          "threshold": 2
+        }
+      },
+      {
+        "_note": "Phase 8 part 4 (rebuild-phase8-heroes.md 8d-3c; apexes.md). Numbers are placeholders scaled to the path's tuned numbers, for the --apexes report and the tuning phase.",
+        "id": "bloodtrail",
+        "name": "Bloodtrail",
+        "title": "the hunt that never ends",
+        "fantasy": "One kill leads to the next, and the next.",
+        "vowed": {
+          "taste": "The Hunt steps to a Marked enemy within 5 hexes, not 4.",
+          "patch": {
+            "passives": [
+              {
+                "id": "the_hunt",
+                "name": "The Hunt",
+                "kind": "ability",
+                "text": "Killing a Marked enemy lets her step to the next Marked enemy within 5 hexes, her attack ready.",
+                "effects": [
+                  {
+                    "trigger": "on_kill",
+                    "vs": {
+                      "keywords": [
+                        "marked"
+                      ]
+                    },
+                    "type": "leap",
+                    "to": "step",
+                    "resets_attack": true,
+                    "target": "enemy_near_named",
+                    "within_hexes": 5,
+                    "only": {
+                      "keywords": [
+                        "marked"
+                      ]
+                    }
+                  },
+                  {
+                    "trigger": "on_kill",
+                    "vs": {
+                      "keywords": [
+                        "marked"
+                      ]
+                    },
+                    "type": "apply_status",
+                    "status": "on_the_trail",
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Killing a Marked enemy steps her to a Marked enemy anywhere on the field, her next attack dealing double, and Marks the enemy nearest the fallen. Each kill makes her damage 10% higher for the rest of the fight. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            },
+            "passives": [
+              {
+                "id": "the_hunt",
+                "name": "The Hunt",
+                "kind": "ability",
+                "text": "Killing a Marked enemy steps her to a Marked enemy within 10 hexes (anywhere on the field), her next attack dealing double, and Marks the enemy nearest the fallen.",
+                "effects": [
+                  {
+                    "trigger": "on_kill",
+                    "vs": {
+                      "keywords": [
+                        "marked"
+                      ]
+                    },
+                    "type": "leap",
+                    "to": "step",
+                    "resets_attack": true,
+                    "target": "enemy_near_named",
+                    "within_hexes": 10,
+                    "only": {
+                      "keywords": [
+                        "marked"
+                      ]
+                    }
+                  },
+                  {
+                    "trigger": "on_kill",
+                    "vs": {
+                      "keywords": [
+                        "marked"
+                      ]
+                    },
+                    "type": "apply_status",
+                    "status": "on_the_trail",
+                    "target": "self"
+                  },
+                  {
+                    "trigger": "on_kill",
+                    "vs": {
+                      "keywords": [
+                        "marked"
+                      ]
+                    },
+                    "type": "apply_status",
+                    "status": "trailing",
+                    "target": "self"
+                  },
+                  {
+                    "trigger": "on_kill",
+                    "vs": {
+                      "keywords": [
+                        "marked"
+                      ]
+                    },
+                    "type": "apply_status",
+                    "status": "marked",
+                    "duration_ms": 4000,
+                    "target": "enemy_near_named",
+                    "within_hexes": 10
+                  }
+                ]
+              },
+              {
+                "id": "bloodtrail",
+                "name": "Bloodtrail",
+                "kind": "ability",
+                "text": "Each kill makes her damage higher for the rest of the fight.",
+                "effects": [
+                  {
+                    "trigger": "on_kill",
+                    "type": "apply_status",
+                    "status": "blood_scent",
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Steps the hunt gave her",
+          "counts": "applied",
+          "statuses": [
+            "on_the_trail"
+          ],
+          "threshold": 3
+        }
+      }
+    ]
   },
   {
     "_note": "The Root path (rebuild-heroes.md, section 8c, path 3; phase 8 part 4, 8d-3b). The Garrote is a grip (Grips): it holds while its target is Garroted, and Choke extends that. First numbers.",
@@ -4984,6 +5475,247 @@
         "choke"
       ],
       "threshold": 3000
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 4 (rebuild-phase8-heroes.md 8d-3c; apexes.md). Numbers are placeholders scaled to the path's tuned numbers, for the --apexes report and the tuning phase.",
+        "id": "strangler",
+        "name": "Strangler",
+        "title": "the cord that tightens",
+        "fantasy": "She doesn't let go.",
+        "vowed": {
+          "taste": "Garrote holds 0.5s longer.",
+          "patch": {
+            "signature": {
+              "id": "garrote",
+              "name": "Garrote",
+              "text": "She grabs an enemy within 1 hex of her and Garrotes it, hitting it again and again while she holds it, hidden.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "nearest",
+              "shot": false,
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "garroted",
+                  "duration_ms": 2000,
+                  "target": "target"
+                }
+              ],
+              "grip": {
+                "status": "garroted",
+                "every_ms": 500,
+                "veil": "garrote_veil",
+                "effects": [
+                  {
+                    "type": "damage",
+                    "amount": 0,
+                    "target": "target",
+                    "scaling": {
+                      "atk": 2000
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "apex": {
+          "text": "Garrote holds for 3s. Each of its ticks makes the next ones 2.5% harder for the rest of the fight, and a kill with it gives back half her mana. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            },
+            "signature": {
+              "id": "garrote",
+              "name": "Garrote",
+              "text": "She grabs an enemy within 1 hex of her and Garrotes it for 3s, hitting it harder with every tick while she holds it, hidden.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "nearest",
+              "shot": false,
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "garroted",
+                  "duration_ms": 3000,
+                  "target": "target"
+                }
+              ],
+              "grip": {
+                "status": "garroted",
+                "every_ms": 500,
+                "veil": "garrote_veil",
+                "effects": [
+                  {
+                    "type": "damage",
+                    "amount": 0,
+                    "target": "target",
+                    "scaling": {
+                      "atk": 2000
+                    },
+                    "grows_per_stack": {
+                      "status": "strangle",
+                      "bp": 250
+                    }
+                  }
+                ]
+              }
+            },
+            "passives": [
+              {
+                "id": "strangler",
+                "name": "Strangler",
+                "kind": "ability",
+                "text": "Each tick of her Garrote makes the next ones harder for the rest of the fight; a kill with it gives back half her mana.",
+                "effects": [
+                  {
+                    "trigger": "on_holder_hit",
+                    "from_ability": [
+                      "garrote"
+                    ],
+                    "type": "apply_status",
+                    "status": "strangle",
+                    "target": "self"
+                  },
+                  {
+                    "trigger": "on_kill",
+                    "from_ability": [
+                      "garrote"
+                    ],
+                    "type": "gain_mana",
+                    "amount_bp_of_max_mana": 5000,
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Damage her Garrote deals",
+          "counts": "damage",
+          "from_ability": [
+            "garrote"
+          ],
+          "threshold": 770
+        }
+      },
+      {
+        "_note": "Phase 8 part 4 (rebuild-phase8-heroes.md 8d-3c; apexes.md). Numbers are placeholders scaled to the path's tuned numbers, for the --apexes report and the tuning phase.",
+        "id": "pinmaster",
+        "name": "Pinmaster",
+        "title": "the one who holds them down",
+        "fantasy": "She pins them; everyone else finishes them.",
+        "vowed": {
+          "taste": "An enemy she hits while it's Rooted or Stunned takes 5% more damage from everyone for a moment.",
+          "patch": {
+            "passives": [
+              {
+                "id": "pinning",
+                "name": "Pinning",
+                "kind": "ability",
+                "text": "An enemy she hits while it's Rooted or Stunned takes more damage from everyone for a moment.",
+                "effects": [
+                  {
+                    "trigger": "on_holder_hit",
+                    "vs": {
+                      "statuses": [
+                        "root",
+                        "stun",
+                        "garroted"
+                      ]
+                    },
+                    "type": "apply_status",
+                    "status": "pinned_light",
+                    "target": "hit_target"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "An enemy she hits while it's Rooted or Stunned takes 25% more damage from everyone for a moment. Every 4th Knife on a held enemy gives every hero +1% ATK and MGK for the rest of the fight. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            },
+            "passives": [
+              {
+                "id": "pinning",
+                "name": "Pinning",
+                "kind": "ability",
+                "text": "An enemy she hits while it's Rooted or Stunned takes much more damage from everyone for a moment; every 4th Knife on one rallies every hero for the rest of the fight.",
+                "effects": [
+                  {
+                    "trigger": "on_holder_hit",
+                    "vs": {
+                      "statuses": [
+                        "root",
+                        "stun",
+                        "garroted"
+                      ]
+                    },
+                    "type": "apply_status",
+                    "status": "pinned",
+                    "target": "hit_target"
+                  },
+                  {
+                    "trigger": "on_holder_hit",
+                    "from_ability": [
+                      "knife"
+                    ],
+                    "vs": {
+                      "statuses": [
+                        "root",
+                        "stun",
+                        "garroted"
+                      ]
+                    },
+                    "every": 4,
+                    "type": "apply_status",
+                    "status": "pin_rally",
+                    "target": "all_allies"
+                  },
+                  {
+                    "trigger": "on_holder_hit",
+                    "from_ability": [
+                      "knife"
+                    ],
+                    "vs": {
+                      "statuses": [
+                        "root",
+                        "stun",
+                        "garroted"
+                      ]
+                    },
+                    "every": 4,
+                    "type": "apply_status",
+                    "status": "pin_rally",
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Damage allies deal to Rooted enemies",
+          "counts": "damage",
+          "by_allies": true,
+          "vs_keywords": [
+            "rooted"
+          ],
+          "threshold": 5200
+        }
+      }
+    ]
   }
 ]

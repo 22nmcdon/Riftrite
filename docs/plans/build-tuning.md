@@ -116,6 +116,8 @@ Before judging paths, every hero's **base kit** should land its team within **±
 
 **After the changes** (the builds report, `rebuild-phase8-heroes.md`'s "Tuned by build"): base Garrow's team wins 20% against the old three's 22%; floors Aegisfang +17 (engine, +5 to +15), Chainwarden +33 and Spitemail +36 (self-sufficient, +25 to +35). The ceilings wait for bot runs of the test teams (Decision 14). Spitemail's thorns grow with enemy strength, so it's judged by bot runs and endless floors in the tuning phase, with a cap on what thorns send back as the fix if it needs one (Decision 15).
 
+**Tamsin** (the same report): base Tamsin's team wins 30% against the old three's 22% (ATK 16, a 1s Knife, +10 attack speed; at the design's ATK 24, 53%). Floors: Nightblade +33 (self-sufficient, +25 to +35), Headhunter +14 and Garrote +14 (engines, +5 to +15). The ceilings wait for the bots (Decision 14).
+
 ## 8. Apexes
 
 The same types apply at apex, with the tier shift (`apexes.md`) as the target for every type. An apex keeps its path's type unless its section says otherwise.

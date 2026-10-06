@@ -173,7 +173,7 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 	match effect.type:
 		EffectDef.Type.DAMAGE:
 			var dealt: int = deal_hit(sim, source, victim, amount, crit, power, true, "", false, effect.ignores_def)
-			if effect.execute_below_bp > 0 and not sim.last_dodged:
+			if effect.execute_below_bp > 0 and not sim.last_dodged and (effect.execute_vs == null or effect.execute_vs.holds(victim, unit)):
 				execute(sim, source, victim, effect.execute_below_bp)
 			if effect.trigger == EffectDef.Trigger.ON_FIRE and ability != null and ability.has_hit_effects and not sim.last_dodged:
 				var hit := Hit.new()

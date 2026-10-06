@@ -464,5 +464,22 @@
     "duration_ms": 2000,
     "auras": [{"stat": "damage_reduced_bp", "value": -1000}]
   },
+  {"_note": "Phantom's Stealth (Tamsin's apex; phase 8 part 4): her own Stealth swapped for one her attacks don't end.", "id": "phantom_veil", "name": "Phantom", "kind": "stealth", "keyword": "stealthed", "duration_ms": 3000},
+  {"_note": "A stack for each attack from Stealth: more ATK for the rest of the fight (Phantom).", "id": "phantom_edge", "name": "Phantom Edge", "kind": "boost", "stacking": true, "auras": [{"stat": "atk_bp", "value": 10200}]},
+  {"_note": "More of Phantom Edge (Deeper Dark, Phantom's card).", "id": "phantom_edge_more", "name": "Phantom Edge (more)", "kind": "boost", "stacking": true, "auras": [{"stat": "atk_bp", "value": 10100}]},
+  {"_note": "An ally Veilmaster hides: a Stealth that ends as it next attacks (Tamsin's apex).", "id": "veiled", "name": "Veiled", "kind": "stealth", "keyword": "stealthed", "until_attack": true, "duration_ms": 1000},
+  {"_note": "A stack each time Veilmaster hides her allies: every hero attacks faster for the rest of the fight.", "id": "veil_haste", "name": "Veil Haste", "kind": "boost", "stacking": true, "auras": [{"stat": "atsp", "value": 1}]},
+  {"_note": "More of Veil Haste (Shadow Pact, Veilmaster's card).", "id": "veil_haste_more", "name": "Veil Haste (more)", "kind": "boost", "stacking": true, "auras": [{"stat": "atsp", "value": 1}]},
+  {"_note": "A stack for each kill by Sentence: more ATK for the rest of the fight (Executioner, Tamsin's apex).", "id": "executioner_rush", "name": "Executioner's Rush", "kind": "boost", "stacking": true, "auras": [{"stat": "atk_bp", "value": 12500}]},
+  {"_note": "More of Executioner's Rush (Bloodied Axe, Executioner's card).", "id": "executioner_rush_more", "name": "Executioner's Rush (more)", "kind": "boost", "stacking": true, "auras": [{"stat": "atk_bp", "value": 11000}]},
+  {"_note": "A marker for each step The Hunt gives her (Bloodtrail's deed). It changes nothing by itself.", "id": "on_the_trail", "name": "On the Trail", "kind": "boost", "duration_ms": 500, "auras": [{"stat": "def", "value": 0}]},
+  {"_note": "Her next attack after a step deals double (Bloodtrail, Tamsin's apex).", "id": "trailing", "name": "Trailing", "kind": "boost", "duration_ms": 4000, "until_attack": true, "auras": [{"stat": "damage_bp", "value": 20000}]},
+  {"_note": "A stack for each kill: more damage for the rest of the fight (Bloodtrail).", "id": "blood_scent", "name": "Blood Scent", "kind": "boost", "stacking": true, "auras": [{"stat": "damage_bp", "value": 11000}]},
+  {"_note": "More of Blood Scent (Relentless, Bloodtrail's card).", "id": "blood_scent_more", "name": "Blood Scent (more)", "kind": "boost", "stacking": true, "auras": [{"stat": "damage_bp", "value": 10500}]},
+  {"_note": "A stack for each tick of her Garrote: later ticks hit harder for the rest of the fight (Strangler, Tamsin's apex). It changes nothing by itself.", "id": "strangle", "name": "Strangle", "kind": "boost", "stacking": true, "auras": [{"stat": "def", "value": 0}]},
+  {"_note": "Takes a little more damage from everyone for a moment (Pinmaster's taste).", "id": "pinned_light", "name": "Pinned", "kind": "boost", "duration_ms": 1000, "auras": [{"stat": "damage_reduced_bp", "value": -500}]},
+  {"_note": "Takes much more damage from everyone for a moment (Pinmaster, Tamsin's apex).", "id": "pinned", "name": "Pinned", "kind": "boost", "duration_ms": 1000, "auras": [{"stat": "damage_reduced_bp", "value": -2500}]},
+  {"_note": "A stack every 4th Knife on a held enemy: every hero's ATK and MGK higher for the rest of the fight (Pinmaster).", "id": "pin_rally", "name": "Pin Rally", "kind": "boost", "stacking": true, "auras": [{"stat": "atk_bp", "value": 10100}, {"stat": "mgk_bp", "value": 10100}]},
+  {"_note": "More of Pin Rally (Iron Grip, Pinmaster's card).", "id": "pin_rally_more", "name": "Pin Rally (more)", "kind": "boost", "stacking": true, "auras": [{"stat": "atk_bp", "value": 10100}, {"stat": "mgk_bp", "value": 10100}]},
   {"_note": "While it lasts, a share of every hit on him is sent back (Iron Maiden, Spitemail's signature; phase 8 part 4). It changes nothing by itself: his Maiden's Spite passive reads it.", "id": "iron_maiden", "name": "Iron Maiden", "kind": "boost", "duration_ms": 3000, "auras": [{"stat": "def", "value": 0}]}
 ]

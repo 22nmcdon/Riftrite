@@ -1,6 +1,6 @@
 # Apexes
 
-Status: **agreed in discussion (2026-09-30); built for Maren, Brannoc, and Vell in phase 8 part 2 (parts 8b-1 to 8b-3; numbers not tuned yet), and for Garrow in phase 8 part 4 (8d-2c)** (`rebuild-phase8-apexes.md` and `rebuild-phase8-heroes.md`, whose Decisions win where they differ; Garrow's built numbers and the calls made while building, such as Endless Bulwark's taste and deed, are in the latter's "Built in 8d-2c"). The final forms of each path. Fills in part 1's apex options (`rebuild-heroes.md`); where they disagree, this file wins. **Numbers and names are placeholders.**
+Status: **agreed in discussion (2026-09-30); built for Maren, Brannoc, and Vell in phase 8 part 2 (parts 8b-1 to 8b-3; numbers not tuned yet), and for Garrow and Tamsin in phase 8 part 4 (8d-2c, 8d-3c)** (`rebuild-phase8-apexes.md` and `rebuild-phase8-heroes.md`, whose Decisions win where they differ; Garrow's and Tamsin's built numbers and the calls made while building, such as Endless Bulwark's taste and deed, are in the latter's "Built in 8d-2c" and "Built in 8d-3c"). The final forms of each path. Fills in part 1's apex options (`rebuild-heroes.md`); where they disagree, this file wins. **Numbers and names are placeholders.**
 
 ## How apexes work
 
@@ -60,6 +60,8 @@ Status: **agreed in discussion (2026-09-30); built for Maren, Brannoc, and Vell 
 | **Kindred Flame** (Ember Choir) | Every hero heals 0.2% of all Burn damage dealt | Healing from it | **Every hero heals 1% of all Burn damage dealt**, by anyone, anywhere. This is healing, not lifesteal. **Snowball:** overhealing from it becomes Burn on the nearest enemy (1 Burn per 5 overheal), so a healthy team feeds the fire that heals it | **Iron Embers:** every 500 healing from it gives each hero +3 DEF for the rest of the fight. **Hearth Embers:** heroes below 50% HP heal twice as much from it |
 
 ## Tamsin
+
+Built in phase 8 part 4 (`rebuild-phase8-heroes.md`, "Built in 8d-3c"), with numbers scaled to her tuned paths and the calls flagged there.
 
 | Apex | Taste (on vow) | Deed | The apex | Upgrades |
 | --- | --- | --- | --- | --- |

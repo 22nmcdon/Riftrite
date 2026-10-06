@@ -16,6 +16,12 @@
     {"name": "Snaring Chain", "kind": "good", "carry": "maren", "apexes": {"garrow": "undertow", "maren": "huntmaster", "vell": "dawnbringer"}},
     {"name": "Thorn Wall", "kind": "good", "carry": "garrow", "apexes": {"garrow": "thorned_king", "maren": "hailstorm", "vell": "dawnbringer"}},
     {"name": "Grudgebearer", "kind": "good", "carry": "garrow", "apexes": {"garrow": "vengeance", "maren": "stormline", "vell": "the_beacon"}},
+    {"name": "Night Shroud", "kind": "good", "carry": "tamsin", "apexes": {"brannoc": "unbroken_gate", "vell": "dawnbringer", "tamsin": "phantom"}},
+    {"name": "Veiled Volley", "kind": "good", "carry": "maren", "apexes": {"brannoc": "hearthkeeper", "maren": "hailstorm", "tamsin": "veilmaster"}},
+    {"name": "Headsman", "kind": "good", "carry": "tamsin", "apexes": {"brannoc": "unbroken_gate", "maren": "eagle_eye", "tamsin": "executioner"}},
+    {"name": "Blood Hunt", "kind": "good", "carry": "tamsin", "apexes": {"brannoc": "unbroken_gate", "maren": "stormline", "tamsin": "bloodtrail"}},
+    {"name": "Hold and Break", "kind": "good", "carry": "tamsin", "apexes": {"brannoc": "forgebreaker", "vell": "sanctifier", "tamsin": "strangler"}},
+    {"name": "Pinned Thicket", "kind": "good", "carry": "maren", "apexes": {"maren": "huntmaster", "garrow": "undertow", "tamsin": "pinmaster"}},
     {"name": "No Edge", "kind": "poor", "apexes": {"brannoc": "hearthkeeper", "maren": "warden_of_thorns", "vell": "loomwarden"}},
     {"name": "Crossed Purposes", "kind": "poor", "apexes": {"brannoc": "martyrs_pyre", "maren": "huntmaster", "vell": "thornweave"}}
   ]

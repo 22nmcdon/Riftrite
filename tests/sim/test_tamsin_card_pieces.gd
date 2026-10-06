@@ -3,8 +3,9 @@ extends GutTest
 ## docs/plans/rebuild-phase8-heroes.md 8d-3d), each in a small fight: the aura
 ## stat evade_bp (Evasive), a pull toward the unit's nearest ally (Drag), the
 ## conditions targets_holder (Backstab) and target (Stalker), a cleanse on
-## on_status keeping its own statuses (Mist Step), and a signature's reach_add
-## and grip_fast_vs (Hammer and Wire).
+## on_status keeping its own statuses (Mist Step), a signature's reach_add and
+## grip_fast_vs (Hammer and Wire), and (8d-3c) an execution limited to some
+## enemies (Executioner) and card knobs on a grip's effects (Tightening Cord).
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
 
@@ -135,3 +136,34 @@ func test_a_grip_reaches_further_and_lands_faster_on_the_stunned() -> void:
 	var ticks: Array = K.entries(fight, LogEntry.Kind.DAMAGE, "hero").map(func(entry: LogEntry) -> int: return entry.tick)
 	assert_gt(ticks.size(), 1)
 	assert_eq(ticks[1] - ticks[0], 5, "every 250ms while it's Stunned, not 500ms")
+
+
+func test_an_execution_limited_to_some_enemies() -> void:
+	var errors: Array[String] = []
+	EffectDef.read(DataReader.new({"type": "damage", "amount": 1, "execute_vs": {"keywords": ["marked"]}, "target": "target"}, "effect", errors))
+	assert_false(errors.is_empty(), "execute_vs limits an execution")
+	var strike: Dictionary = {"cooldown_ms": 500, "effects": [{"type": "damage", "amount": 1, "execute_below_pct": 50, "execute_vs": {"keywords": ["marked"]}, "target": "target"}]}
+	var hero: UnitDef = K.kit("hero", {"stats": {"speed": 0}, "basic_attack": strike})
+	var fight: CombatSim = K.sim(K.fight([K.at(hero, 3, 2)] as Array[UnitSetup], [K.foe(_dummy("plain"), 3, 4), K.foe(_dummy("marked"), 4, 5)] as Array[UnitSetup]))
+	_place(fight, {"plain": Vector2i(0, 400), "marked": Vector2i(0, 4000)})
+	fight.unit_by_id("plain").hp = 100
+	K.step(fight, 4)
+	assert_true(fight.unit_by_id("plain").alive, "not Marked: a plain hit")
+	Statuses.apply(fight, fight.unit_by_id("plain"), "marked", 1, 0, EffectSource.make("marked", "test", "Test"))
+	K.step(fight, 12)
+	assert_false(fight.unit_by_id("plain").alive, "Marked and below half: finished")
+	assert_eq(K.entries(fight, LogEntry.Kind.DAMAGE, "hero").filter(func(entry: LogEntry) -> bool: return entry.note == "executed").size(), 1)
+
+
+func test_a_card_reaches_a_grip_s_effects() -> void:
+	var garrote: Dictionary = {"id": "garrote", "name": "Garrote", "trigger": {"kind": "mana"}, "targeting": "nearest",
+		"effects": [{"type": "apply_status", "status": "root", "duration_ms": 1000, "target": "target"}],
+		"grip": {"status": "root", "every_ms": 500, "effects": [{"type": "damage", "amount": 10, "target": "target", "grows_per_stack": {"status": "frenzy", "bp": 1000}}]}}
+	var hero: UnitDef = K.kit("hero", {"mana": {"max": 10}, "signature": garrote})
+	var errors: Array[String] = []
+	var mod: KitMod = KitMod.read(DataReader.new({"on": [{"slot": "signature", "per_stack_add_bp": 500, "amount_bp": 20000}]}, "mod", errors))
+	assert_eq(errors, [] as Array[String])
+	assert_true(mod.affects(hero))
+	var built: UnitDef = mod.apply(hero)
+	assert_eq(built.signature.grip_effects[0].grows_stack_bp, 1500, "the grip's snowball grows")
+	assert_eq(hero.signature.grip_effects[0].grows_stack_bp, 1000, "the kit itself is untouched")

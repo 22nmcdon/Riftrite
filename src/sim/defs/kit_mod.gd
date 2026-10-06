@@ -600,7 +600,7 @@ func affects_besides_passives(kit: UnitDef) -> bool:
 				return true
 			if change.targets_add > 0 and not _extra_targets(ability, change).is_empty():
 				return true
-			if change.touches_effects() and _any_effect(ability.effects, change):
+			if change.touches_effects() and (_any_effect(ability.effects, change) or _any_effect(ability.grip_effects, change)):
 				return true
 		if change.after_add_ticks != 0 and _slot_aura(kit, change.slot) != null:
 			return true
@@ -777,6 +777,9 @@ static func _changed_ability(ability: AbilityDef, change: AbilityChange) -> Abil
 		copy.grows_boosts_bp = maxi(ability.grows_boosts_bp + change.grows_boosts_add_bp, 0)
 	if change.touches_effects():
 		copy.effects = _changed_effects(ability.effects, change)
+		# A grip's effects too (phase 8 part 4, Tightening Cord).
+		if not ability.grip_effects.is_empty():
+			copy.grip_effects = _changed_effects(ability.grip_effects, change)
 	else:
 		copy.effects = copy.effects.duplicate()
 	if change.targets_add > 0:
