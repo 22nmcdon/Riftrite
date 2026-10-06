@@ -61,6 +61,7 @@ const FORMS: Dictionary[LogEntry.Kind, String] = {
 	LogEntry.Kind.VOID: "a warned bridge tinted red, then sky, then ground again (from the sim's islands)",
 	LogEntry.Kind.COPIED: "\"Copies <signature>\" over the copier",
 	LogEntry.Kind.SHIELD_SPENT: "\"Spends N Shield\" over the unit, and the Shield gone from its bar",
+	LogEntry.Kind.RELEASED: "\"Releases N\" over the unit",
 }
 ## What the board must have shown at some frame, for each kind a fight
 ## produced (the rest are checked elsewhere, or read from the unit's state).
@@ -81,6 +82,7 @@ const EVIDENCE: Dictionary[LogEntry.Kind, String] = {
 	LogEntry.Kind.FELL: "popup",
 	LogEntry.Kind.COPIED: "popup",
 	LogEntry.Kind.SHIELD_SPENT: "popup",
+	LogEntry.Kind.RELEASED: "popup",
 	LogEntry.Kind.SUMMON: "pulse",
 	LogEntry.Kind.PUSH: "slide",
 	LogEntry.Kind.LEAP: "slide",

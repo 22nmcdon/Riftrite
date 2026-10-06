@@ -244,6 +244,14 @@ func _add(entry: LogEntry, sim: CombatSim) -> void:
 				var spends: Fx = _new(Kind.POPUP, entry.tick, entry.tick + POPUP_TICKS, Vector2(spender.pos), spender.id)
 				spends.text = "Spends %d Shield" % entry.amount
 				spends.color = UiStyle.SHIELD
+		LogEntry.Kind.RELEASED:
+			# Stored damage let go (phase 8 part 4, Vengeance): "Releases N"
+			# over the unit; the blast's hits show as hits.
+			var releaser: UnitState = sim.unit_by_id(entry.target)
+			if releaser != null:
+				var lets_go: Fx = _new(Kind.POPUP, entry.tick, entry.tick + POPUP_TICKS, Vector2(releaser.pos), releaser.id)
+				lets_go.text = "Releases %d" % entry.amount
+				lets_go.color = UiStyle.EMBER
 		LogEntry.Kind.COPIED:
 			# A copied signature (phase 8 part 3): "Copies <name>" over the copier.
 			var copier: UnitState = sim.unit_by_id(entry.source_unit)

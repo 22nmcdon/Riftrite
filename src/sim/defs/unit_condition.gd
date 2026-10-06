@@ -19,6 +19,9 @@ extends RefCounted
 ##                                           holder stands on (phase 8 part
 ##                                           3; Islands.mark; every unit is,
 ##                                           in a fight without void)
+##   {"shield_above_pct": 100}               its Shield is more than this
+##                                           share of its max HP (phase 8
+##                                           part 4; Plate on Plate)
 ## Used as an event effect's "vs" (the unit the event names), a damage_bp
 ## aura's "vs" (the target of the hit), and an aura's "while": "state" (its
 ## holder).
@@ -35,6 +38,8 @@ var front_most: bool = false
 var on_water: Flying = Flying.ANY
 var kits: Array[String] = []
 var same_island: bool = false
+## 0: no Shield condition.
+var shield_above_bp: int = 0
 
 
 static func read(reader: DataReader) -> UnitCondition:
@@ -55,14 +60,16 @@ static func read(reader: DataReader) -> UnitCondition:
 	if reader.has("on_water"):
 		def.on_water = Flying.YES if reader.opt_bool("on_water", true) else Flying.NO
 	def.same_island = reader.opt_bool("same_island", false)
+	if reader.has("shield_above_pct"):
+		def.shield_above_bp = reader.req_int("shield_above_pct", 1, 1000) * 100
 	if def.is_empty():
-		reader.error("a condition needs at least one of keywords, statuses, below_hp_pct, flying, archetypes, front_most, on_water, same_island, or kits")
+		reader.error("a condition needs at least one of keywords, statuses, below_hp_pct, flying, archetypes, front_most, on_water, same_island, shield_above_pct, or kits")
 	reader.finish()
 	return def
 
 
 func is_empty() -> bool:
-	return keywords.is_empty() and statuses.is_empty() and below_hp_bp == 0 and flying == Flying.ANY and archetypes.is_empty() and not front_most and on_water == Flying.ANY and kits.is_empty() and not same_island
+	return keywords.is_empty() and statuses.is_empty() and below_hp_bp == 0 and flying == Flying.ANY and archetypes.is_empty() and not front_most and on_water == Flying.ANY and kits.is_empty() and not same_island and shield_above_bp == 0
 
 
 ## True if `unit` meets every field given. `holder`: whose condition it is
@@ -72,6 +79,8 @@ func holds(unit: UnitState, holder: UnitState = null) -> bool:
 	if same_island and (holder == null or unit.island < 0 or unit.island != holder.island):
 		return false
 	if below_hp_bp > 0 and unit.hp * FixedMath.BP_ONE >= below_hp_bp * unit.max_hp:
+		return false
+	if shield_above_bp > 0 and unit.shield * FixedMath.BP_ONE <= shield_above_bp * unit.max_hp:
 		return false
 	if flying != Flying.ANY and unit.flying != (flying == Flying.YES):
 		return false
@@ -118,6 +127,9 @@ func describe() -> String:
 	if below_hp_bp > 0:
 		@warning_ignore("integer_division")
 		parts.append("below %d%% HP" % (below_hp_bp / 100))
+	if shield_above_bp > 0:
+		@warning_ignore("integer_division")
+		parts.append("with a Shield over %d%% of max HP" % (shield_above_bp / 100))
 	if flying != Flying.ANY:
 		parts.append("flying" if flying == Flying.YES else "not flying")
 	if not archetypes.is_empty():

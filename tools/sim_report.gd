@@ -182,20 +182,30 @@ static func drawn_formations(content: ContentDb, rocks: Array[Vector2i], count: 
 
 ## The named formations, then `drawn` drawn ones ("drawn #1", ...): their
 ## names in `names`, and the formations.
-static func formations_for(content: ContentDb, encounter: EncounterDef, named: Dictionary[String, Dictionary], drawn: int, draw_seed: int, names: Array[String]) -> Array[Dictionary]:
+static func formations_for(content: ContentDb, encounter: EncounterDef, named: Dictionary[String, Dictionary], drawn: int, draw_seed: int, names: Array[String],
+		team: Array[String] = HeroTeam.DEFAULT) -> Array[Dictionary]:
 	var formations: Array[Dictionary] = []
 	for name: String in named:
 		names.append(name)
-		formations.append(named[name])
+		formations.append(named[name] if team == HeroTeam.DEFAULT else recast(content, named[name], team))
 	var i: int = 0
 	# Never on a rock, or over the void (phase 8 part 3, 8c-6c).
 	var closed: Array[Vector2i] = encounter.rocks.duplicate()
 	closed.append_array(encounter.void_hexes)
-	for formation: Dictionary in drawn_formations(content, closed, drawn, draw_seed):
+	for formation: Dictionary in drawn_formations(content, closed, drawn, draw_seed, team):
 		i += 1
 		names.append("drawn #%d" % i)
 		formations.append(formation)
 	return formations
+
+
+## A named formation (the old three's) recast for `team` by role.
+static func recast(content: ContentDb, formation: Dictionary, team: Array[String]) -> Dictionary[String, Vector2i]:
+	var by_role: Dictionary[String, Vector2i] = {}
+	var old_roles: Dictionary[String, String] = HeroTeam.roles(content, HeroTeam.DEFAULT)
+	for role: String in old_roles:
+		by_role[role] = formation[old_roles[role]]
+	return HeroTeam.place(content, team, by_role)
 
 
 ## Fights `encounter_id` from each named formation and `drawn` drawn ones,

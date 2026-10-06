@@ -113,10 +113,11 @@ func test_the_fight_order_matters() -> void:
 ## arrival (ARRIVE, step 6d): tests/sim/test_gambits.gd. Water changing
 ## (WATER, phase 8 part 3): tests/sim/test_water.gd. A fall into the void
 ## (FELL, phase 8 part 3) and bridges breaking (VOID): tests/sim/test_islands.gd.
-## A copied signature (COPIED): tests/sim/test_copies.gd.
+## A copied signature (COPIED): tests/sim/test_copies.gd. Stored damage
+## released (RELEASED, phase 8 part 4): tests/sim/test_garrow_apex_pieces.gd.
 const NOT_YET: Array[LogEntry.Kind] = [LogEntry.Kind.SYNERGY, LogEntry.Kind.DEED_LEVEL, LogEntry.Kind.TACTIC,
 	LogEntry.Kind.ZONE, LogEntry.Kind.SNARE, LogEntry.Kind.WALL, LogEntry.Kind.GUARD, LogEntry.Kind.RISE, LogEntry.Kind.RESISTED,
-	LogEntry.Kind.DODGED, LogEntry.Kind.ARRIVE, LogEntry.Kind.SHARED, LogEntry.Kind.WALL_HIT, LogEntry.Kind.MAX_HP_UP, LogEntry.Kind.WATER, LogEntry.Kind.FELL, LogEntry.Kind.VOID, LogEntry.Kind.COPIED]
+	LogEntry.Kind.DODGED, LogEntry.Kind.ARRIVE, LogEntry.Kind.SHARED, LogEntry.Kind.WALL_HIT, LogEntry.Kind.MAX_HP_UP, LogEntry.Kind.WATER, LogEntry.Kind.FELL, LogEntry.Kind.VOID, LogEntry.Kind.COPIED, LogEntry.Kind.RELEASED]
 ## Statuses only the paths use (phase 4), and only relics (phase 5c step 5a;
 ## Sunder, covered by tests/run/test_relics.gd).
 const PATH_STATUSES: Array[String] = ["warded"]
@@ -136,7 +137,9 @@ const RIFT_STATUSES: Array[String] = ["blood_frenzy", "vengeance", "ember_blind"
 ## Statuses only apexes apply (phase 8 part 2; tests/sim/test_apex_kits.gd).
 ## The apex cards' are with them (phase 8 part 2, 8b-4; tests/run/test_apex_cards.gd).
 const APEX_STATUSES: Array[String] = ["hailstorm", "tailwind", "zeal", "morning_haste", "dawnlight", "first_light", "glare", "dazzled", "woven_thorns", "iron_loom", "briar_torn", "gatekeeper", "brand", "war_call", "rally", "oathbound",
-	"gale", "first_light_more", "zeal_more", "shield_wall", "dawn_ward"]
+	"gale", "first_light_more", "zeal_more", "shield_wall", "dawn_ward",
+	# Garrow's (phase 8 part 4, 8d-2c; tests/sim/test_garrow_apexes.gd).
+	"bulwark_layer", "shatter_echo", "grinder_feed", "undertow_tide", "deep_current", "thorn_crown"]
 ## The statuses the heroes' rules apply (phase 5c step 5c).
 const RULE_STATUSES: Array[String] = ["unbending", "long_watch"]
 

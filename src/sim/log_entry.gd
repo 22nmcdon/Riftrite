@@ -81,8 +81,12 @@ enum Kind {
 	## Queen.
 	COPIED,
 	## Phase 8 part 4 (Bulwark Burst): target (the unit itself) spends its
-	## whole Shield, `amount`; source: the ability that spent it.
+	## whole Shield, `amount` (note "keeps N": what it kept; Shatterburst);
+	## source: the ability that spent it.
 	SHIELD_SPENT,
+	## Phase 8 part 4 (Vengeance): target (the unit itself) lets go of the
+	## damage it stored, `amount` (grown); source: the ability that let it go.
+	RELEASED,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -128,6 +132,9 @@ var chain: int = 0
 var broke_shield: bool = false
 ## DAMAGE: what went past the target's last HP (phase 5c step 5b).
 var overkill: int = 0
+## SHIELD (phase 8 part 4): its target's Shield once this one was given
+## (Endless Bulwark's deed counts what goes past a share of max HP).
+var shield_after: int = 0
 ## HEAL: lifesteal that heals (Blood Communion; phase 5c step 5c).
 var lifesteal: bool = false
 ## SHOT_FIZZLED stopped by a wall, WALL_HIT: the wall's unit (phase 8 part 2).
@@ -227,7 +234,9 @@ func to_text() -> String:
 		Kind.SHIELD:
 			return line + "%s gives %s %d shield" % [source_text(), target, amount]
 		Kind.SHIELD_SPENT:
-			return line + "%s spends %s's %d shield" % [source_text(), target, amount]
+			return line + "%s spends %s's %d shield%s" % [source_text(), target, amount, "" if note.is_empty() else " (%s)" % note]
+		Kind.RELEASED:
+			return line + "%s releases %s's %d stored damage" % [source_text(), target, amount]
 		Kind.COLLAPSE:
 			return line + "Rift Collapse hits %s for %d%s" % [target, amount, _damage_detail()]
 		Kind.DEATH:

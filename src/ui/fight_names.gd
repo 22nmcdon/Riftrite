@@ -97,7 +97,7 @@ func bbcode(entry: LogEntry) -> String:
 			color = UiStyle.GOOD
 		LogEntry.Kind.SHIELD, LogEntry.Kind.SHIELD_SPENT:
 			color = UiStyle.SHIELD
-		LogEntry.Kind.COLLAPSE, LogEntry.Kind.COLLAPSE_RING:
+		LogEntry.Kind.COLLAPSE, LogEntry.Kind.COLLAPSE_RING, LogEntry.Kind.RELEASED:
 			color = UiStyle.EMBER
 		LogEntry.Kind.FIRE, LogEntry.Kind.AURA:
 			color = color.darkened(0.3)

@@ -155,6 +155,9 @@ var salt_circles: int = 0
 var hero_rules: SideRules = SideRules.new()
 ## The last hit's overkill (The Hungering Rift reads it as it carries).
 var last_overkill: int = 0
+## Some unit has stored damage (phase 8 part 4, Vengeance): it grows each
+## second (_grow_stored). False in a fight where nothing stores.
+var any_stored: bool = false
 ## The units with conditional auras (phase 4: planted, below_hp, per fallen
 ## ally), checked every tick.
 var _conditional: Array[UnitState] = []
@@ -424,6 +427,15 @@ func standing_count(side: EffectSource.Team) -> int:
 
 
 ## Advances one tick. Does nothing once the fight is over.
+## Stored damage grows by its holder's store_grows_bp each second until it's
+## released (phase 8 part 4, Vengeance's Grudge). Not logged by itself: the
+## RELEASED line says what it grew to.
+func _grow_stored() -> void:
+	for unit: UnitState in units:
+		if unit.stored > 0 and unit.aura_bp[AuraDef.Stat.STORE_GROWS_BP] > 0:
+			unit.stored += FixedMath.apply_bp(unit.stored, unit.aura_bp[AuraDef.Stat.STORE_GROWS_BP])
+
+
 func step() -> void:
 	if finished:
 		return
@@ -442,6 +454,8 @@ func step() -> void:
 		_active_auras = Passives.rederive(self, _active_auras)
 	Collapse.tick(self)
 	Statuses.tick_all(self)
+	if any_stored and tick % FixedMath.TICKS_PER_SECOND == 0:
+		_grow_stored()
 	if hero_rules.rise_ticks > 0 or risers:
 		_rise_due()
 	if arrivals or swaps:

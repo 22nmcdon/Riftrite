@@ -507,6 +507,12 @@ static func effect_numbers(effects: Array[EffectDef], kit: UnitDef, content: Con
 
 
 static func _effect_text(effect: EffectDef, kit: UnitDef, content: ContentDb) -> String:
+	if not effect.grows_status.is_empty():
+		# The apexes' snowballs (phase 8 part 4).
+		var status: String = content.statuses[effect.grows_status].name if content != null and content.statuses.has(effect.grows_status) else effect.grows_status
+		return _effect_text_plain(effect, kit, content) + " (%s for each %s)" % [signed_percent(effect.grows_stack_bp), status]
+	if effect.per_damage > 0:
+		return _effect_text_plain(effect, kit, content) + " for every %d damage" % effect.per_damage
 	if effect.power_per_taken_bp > 0:
 		# Growing with the damage taken (phase 8 part 2, Martyr's Pyre).
 		return _effect_text_plain(effect, kit, content) + " (%s for every %d damage it has taken)" % [signed_percent(effect.power_per_taken_bp), effect.taken_per]
@@ -572,6 +578,9 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 			if effect.amount_bp_of_shield > 0:
 				# Bulwark Burst (phase 8 part 4).
 				return "%s of its Shield as damage%s" % [ValueBreakdown._percent(effect.amount_bp_of_shield), _to_all(effect)]
+			if effect.amount_bp_of_stored > 0:
+				# Vengeance (phase 8 part 4).
+				return "%s of the damage it stored as damage%s" % [ValueBreakdown._percent(effect.amount_bp_of_stored), _to_all(effect)]
 			var text: String = _amount(effect, kit, "damage")
 			if effect.bonus_bp_per_ally > 0:
 				var kin: String = _unit_name(effect.bonus_kit, content) if not effect.bonus_kit.is_empty() else "ally"
@@ -703,7 +712,9 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 		EffectDef.Type.START_COLLAPSE:
 			return "starts Rift Collapse"
 		EffectDef.Type.SPEND_SHIELD:
-			return "spends its whole Shield"
+			return "spends its whole Shield" if effect.keep_bp == 0 else "spends its Shield, keeping %s" % ValueBreakdown._percent(effect.keep_bp)
+		EffectDef.Type.RELEASE_STORED:
+			return "lets go of the damage it stored"
 		EffectDef.Type.SEVER:
 			return "the next bridge breaks after %s, for %s" % [seconds(effect.warning_ticks), seconds(effect.zone_ticks)]
 		EffectDef.Type.SUMMON:

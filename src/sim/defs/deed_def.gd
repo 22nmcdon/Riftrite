@@ -40,8 +40,11 @@ extends RefCounted
 ##   shared   damage its link spread over linked allies (Loomwarden)
 ##   blocked  enemy shots its walls stop, one each (The Unbroken Gate)
 ## Phase 8 part 4 (Garrow):
-##   pulled   enemies it pulls or hooks, one each that moves (Iron Links,
-##            Undertow)
+##   pulled   enemies it pulls or hooks, one each that moves (Iron Links);
+##            with "by_hexes": true, the hexes they're moved, rounded
+##            (Undertow)
+##   shield's "above_pct_of_max_hp": 50   only Shield given past that share
+##            of its target's max HP (Endless Bulwark)
 ##   kills takes from_ability too: only kills by those abilities (Eagle
 ##            Eye, Inquisitor)
 ##   within_ms_of_hop: 1000        a filter: only what lands within this long
@@ -99,6 +102,10 @@ var while_undying: bool = false
 var from_basic: bool = false
 ## taken (phase 8 part 2): only after the hero has risen by its own kit.
 var after_rising: bool = false
+## pulled: count the hexes moved, not the enemies (phase 8 part 4).
+var by_hexes: bool = false
+## shield: only what's given past this share of the target's max HP (0: all).
+var above_bp: int = 0
 ## damage (phase 8 part 2): only hits on units with these keywords, and
 ## allies' hits count too.
 var vs_keywords: Array[String] = []
@@ -133,6 +140,13 @@ static func read(reader: DataReader, needs_text: bool = true) -> DeedDef:
 	def.while_undying = reader.opt_bool("while_undying", false)
 	def.from_basic = reader.opt_bool("from_basic", false)
 	def.after_rising = reader.opt_bool("after_rising", false)
+	def.by_hexes = reader.opt_bool("by_hexes", false)
+	if def.by_hexes and def.counts != Counts.PULLED:
+		reader.error("by_hexes counts pulled hexes (\"counts\": \"pulled\")")
+	if reader.has("above_pct_of_max_hp"):
+		def.above_bp = reader.req_int("above_pct_of_max_hp", 1, 1000) * 100
+		if def.counts != Counts.SHIELD:
+			reader.error("above_pct_of_max_hp filters Shield given (\"counts\": \"shield\")")
 	def.vs_keywords = reader.opt_choice_array("vs_keywords", Keywords.NAMES)
 	def.by_allies = reader.opt_bool("by_allies", false)
 	if def.counts != Counts.DAMAGE and (not def.vs_keywords.is_empty() or def.by_allies):

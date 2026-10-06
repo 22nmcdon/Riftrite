@@ -3443,7 +3443,199 @@
         "plated_blows"
       ],
       "threshold": 370
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 4 (rebuild-phase8-heroes.md 8d-2c; apexes.md). Numbers are placeholders scaled to the path's tuned numbers, for the --apexes report and the tuning phase.",
+        "id": "endless_bulwark",
+        "name": "Endless Bulwark",
+        "title": "the wall without end",
+        "fantasy": "There is no ceiling on his armor; every blow stacks another plate.",
+        "vowed": {
+          "taste": "Plated Blows gives a Shield of 2.5% of his max HP, not 1.5%.",
+          "patch": {
+            "passives": [
+              {
+                "id": "plated_blows",
+                "name": "Plated Blows",
+                "kind": "ability",
+                "text": "Each Chain Fist gives him a bigger Shield, up to half his max HP.",
+                "effects": [
+                  {
+                    "trigger": "on_basic_attack",
+                    "type": "shield",
+                    "amount_bp_of_max_hp": 250,
+                    "cap_bp_of_max_hp": 5000,
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Plated Blows has no cap, and each Chain Fist makes the next ones' Shield bigger (+0.5% of his max HP each, from 2.5%) for the rest of the fight. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "passives": [
+              {
+                "id": "plated_blows",
+                "name": "Plated Blows",
+                "kind": "ability",
+                "text": "Each Chain Fist gives him a Shield with no cap, and each one lays a layer that makes the next ones bigger for the rest of the fight.",
+                "effects": [
+                  {
+                    "trigger": "on_basic_attack",
+                    "type": "shield",
+                    "amount_bp_of_max_hp": 250,
+                    "target": "self",
+                    "grows_per_stack": {
+                      "status": "bulwark_layer",
+                      "bp": 2000
+                    }
+                  },
+                  {
+                    "trigger": "on_basic_attack",
+                    "type": "apply_status",
+                    "status": "bulwark_layer",
+                    "target": "self"
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Shield his blows give him past a tenth of his max HP",
+          "counts": "shield",
+          "above_pct_of_max_hp": 10,
+          "threshold": 200,
+          "from_ability": [
+            "plated_blows"
+          ]
+        }
+      },
+      {
+        "_note": "Phase 8 part 4 (rebuild-phase8-heroes.md 8d-2c; apexes.md). Numbers are placeholders scaled to the path's tuned numbers, for the --apexes report and the tuning phase.",
+        "id": "shatterburst",
+        "name": "Shatterburst",
+        "title": "the armor that breaks outward",
+        "fantasy": "He gathers his armor only to throw it at them.",
+        "vowed": {
+          "taste": "Bulwark Burst reaches enemies within 2 hexes, not 1.",
+          "patch": {
+            "signature": {
+              "id": "bulwark_burst",
+              "name": "Bulwark Burst",
+              "text": "His whole Shield bursts: the enemies within 2 hexes of him take twice what it held, and the Shield is gone.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "self",
+              "effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 2
+                  },
+                  "anchor": "self",
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount_bp_of_shield": 20000,
+                      "target": "target"
+                    }
+                  ]
+                },
+                {
+                  "type": "spend_shield",
+                  "target": "self"
+                }
+              ]
+            }
+          }
+        },
+        "apex": {
+          "text": "Bulwark Burst deals 300% of the Shield to enemies within 2 hexes and leaves him a quarter of it. Each enemy a Burst hits makes later Bursts 5% stronger for the rest of the fight. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "signature": {
+              "id": "bulwark_burst",
+              "name": "Bulwark Burst",
+              "text": "His Shield bursts: the enemies within 2 hexes of him take three times what it held, and he keeps a quarter of it; each enemy it hits makes later Bursts stronger.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "self",
+              "effects": [
+                {
+                  "type": "area",
+                  "shape": {
+                    "kind": "circle",
+                    "radius": 2
+                  },
+                  "anchor": "self",
+                  "hits": "enemies",
+                  "effects": [
+                    {
+                      "type": "damage",
+                      "amount_bp_of_shield": 30000,
+                      "target": "target",
+                      "grows_per_stack": {
+                        "status": "shatter_echo",
+                        "bp": 500
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "spend_shield",
+                  "target": "self",
+                  "keep_bp": 2500
+                }
+              ]
+            },
+            "passives": [
+              {
+                "id": "shatter_echo",
+                "name": "Shatter Echo",
+                "kind": "ability",
+                "text": "Each enemy his Bulwark Burst hits makes his later Bursts stronger for the rest of the fight.",
+                "effects": [
+                  {
+                    "trigger": "on_holder_hit",
+                    "from_ability": [
+                      "bulwark_burst"
+                    ],
+                    "type": "apply_status",
+                    "status": "shatter_echo",
+                    "target": "self"
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Damage his Bulwark Burst deals",
+          "counts": "damage",
+          "from_ability": [
+            "bulwark_burst"
+          ],
+          "threshold": 1200
+        }
+      }
+    ]
   },
   {
     "_note": "The one who drags them in (rebuild-heroes.md, section 8d, path 2; phase 8 part 4, 8d-2b; Decision 10: the habit hauls the 3 farthest). Self-sufficient (Decision 13; it wins fights by its drag whoever its teammates are): Maelstrom within 2 hexes (the design's 3) for 90 mana (Haul's 70), Crowd Strength +2% ATK and +1 DEF an enemy (the design's +5% and +2), and the habit every 8th blow (Decision 10's 6th) bring its floor into the type's band. The deed's threshold is a first number for 8d-5's check.",
@@ -3607,7 +3799,215 @@
         "bleed"
       ],
       "threshold": 8
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 4 (rebuild-phase8-heroes.md 8d-2c; apexes.md). Numbers are placeholders scaled to the path's tuned numbers, for the --apexes report and the tuning phase.",
+        "id": "grinder",
+        "name": "Grinder",
+        "title": "the mill of chains",
+        "fantasy": "What he drags in doesn't come back out.",
+        "vowed": {
+          "taste": "Each second, the enemies within 1 hex of him take 3% of his ATK.",
+          "patch": {
+            "passives": [
+              {
+                "id": "grinder",
+                "name": "Grinder",
+                "kind": "ability",
+                "text": "Each second, the enemies within 1 hex of him take a share of his ATK.",
+                "effects": [
+                  {
+                    "trigger": "on_interval",
+                    "interval_ms": 1000,
+                    "type": "damage",
+                    "amount": 0,
+                    "scaling": {
+                      "atk": 300
+                    },
+                    "target": "enemies_near_self",
+                    "within_hexes": 1
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Each second, the enemies within 1 hex of him take 25% of his ATK; each enemy that dies within 1 hex makes it 20% stronger for the rest of the fight. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "passives": [
+              {
+                "id": "grinder",
+                "name": "Grinder",
+                "kind": "ability",
+                "text": "Each second, the enemies within 1 hex of him take a quarter of his ATK, more for each enemy that has died beside him.",
+                "effects": [
+                  {
+                    "trigger": "on_interval",
+                    "interval_ms": 1000,
+                    "type": "damage",
+                    "amount": 0,
+                    "scaling": {
+                      "atk": 2500
+                    },
+                    "target": "enemies_near_self",
+                    "within_hexes": 1,
+                    "grows_per_stack": {
+                      "status": "grinder_feed",
+                      "bp": 2000
+                    }
+                  },
+                  {
+                    "trigger": "on_enemy_fell",
+                    "fell_within_hexes": 1,
+                    "type": "apply_status",
+                    "status": "grinder_feed",
+                    "target": "self"
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Damage his Grinder deals",
+          "counts": "damage",
+          "from_ability": [
+            "grinder"
+          ],
+          "threshold": 220
+        }
+      },
+      {
+        "_note": "Phase 8 part 4 (rebuild-phase8-heroes.md 8d-2c; apexes.md). Numbers are placeholders scaled to the path's tuned numbers, for the --apexes report and the tuning phase.",
+        "id": "undertow",
+        "name": "Undertow",
+        "title": "the tide that drags",
+        "fantasy": "The whole field leans toward him.",
+        "vowed": {
+          "taste": "Haul's chains reach enemies within 5 hexes, not 4.",
+          "patch": {
+            "passives": [
+              {
+                "id": "haul",
+                "name": "Haul",
+                "kind": "ability",
+                "text": "A habit: every 8th Chain Fist, he throws chains at the 3 farthest enemies within 5 hexes, Bleeds them, and drags them next to him.",
+                "effects": [
+                  {
+                    "trigger": "on_basic_attack",
+                    "every": 8,
+                    "type": "apply_status",
+                    "status": "bleed",
+                    "stacks": 1,
+                    "scaling": {
+                      "atk": 1500
+                    },
+                    "target": "farthest_enemies",
+                    "count": 3,
+                    "within_hexes": 5
+                  },
+                  {
+                    "trigger": "on_basic_attack",
+                    "every": 8,
+                    "type": "pull",
+                    "to": "beside",
+                    "target": "farthest_enemies",
+                    "count": 3,
+                    "within_hexes": 5
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Every 4s, every enemy within 4 hexes is pulled 1 hex toward him; Maelstrom reaches 4 hexes and Roots for 2s. Each enemy his chains drag beside him gives him +1% ATK and +1 DEF for the rest of the fight. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "signature": {
+              "id": "maelstrom",
+              "name": "Maelstrom",
+              "text": "Every enemy within 4 hexes of him is Bled, dragged next to him, and Rooted for a moment, and he can attack again at once.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "self",
+              "resets_attack": true,
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "bleed",
+                  "stacks": 1,
+                  "scaling": {
+                    "atk": 2500
+                  },
+                  "target": "enemies_near_self",
+                  "within_hexes": 4
+                },
+                {
+                  "type": "pull",
+                  "to": "beside",
+                  "target": "enemies_near_self",
+                  "within_hexes": 4
+                },
+                {
+                  "type": "apply_status",
+                  "status": "root",
+                  "duration_ms": 2000,
+                  "target": "enemies_near_self",
+                  "within_hexes": 4
+                }
+              ]
+            },
+            "passives": [
+              {
+                "id": "undertow",
+                "name": "Undertow",
+                "kind": "ability",
+                "text": "Every 4s, every enemy within 4 hexes of him is pulled 1 hex toward him; each enemy his chains drag beside him gives him ATK and DEF for the rest of the fight.",
+                "effects": [
+                  {
+                    "trigger": "on_interval",
+                    "interval_ms": 4000,
+                    "type": "pull",
+                    "hexes": 1,
+                    "target": "enemies_near_self",
+                    "within_hexes": 4
+                  },
+                  {
+                    "trigger": "on_pull",
+                    "from_ability": [
+                      "haul",
+                      "maelstrom"
+                    ],
+                    "type": "apply_status",
+                    "status": "undertow_tide",
+                    "target": "self"
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Hexes his chains drag enemies",
+          "counts": "pulled",
+          "by_hexes": true,
+          "threshold": 30
+        }
+      }
+    ]
   },
   {
     "_note": "The one who hits back (rebuild-heroes.md, section 8d, path 3; phase 8 part 4, 8d-2b). Thorns are an on_hit_taken damage back at the attacker; Iron Maiden's send-back reads the iron_maiden status on him. Self-sufficient (build-tuning.md): Spikes' 6% (the design's 25%), Iron Maiden's 30% (the design's 100%) for 3s (the design's 4s) bring its floor near the type's band; the deed's threshold is a first number for 8d-5's check.",
@@ -3758,6 +4158,295 @@
         "spikes"
       ],
       "threshold": 150
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 4 (rebuild-phase8-heroes.md 8d-2c; apexes.md). Numbers are placeholders scaled to the path's tuned numbers, for the --apexes report and the tuning phase.",
+        "id": "thorned_king",
+        "name": "Thorned King",
+        "title": "the crown that cuts",
+        "fantasy": "Striking him is striking everything around you.",
+        "vowed": {
+          "taste": "Spikes sends back 8% of each hit, not 6%.",
+          "patch": {
+            "passives": [
+              {
+                "id": "spikes",
+                "name": "Spikes",
+                "kind": "ability",
+                "text": "Enemies that hit him take a little of it back, and he heals for half of what he sends.",
+                "effects": [
+                  {
+                    "trigger": "on_hit_taken",
+                    "type": "damage",
+                    "amount_bp_of_damage": 800,
+                    "target": "hit_target"
+                  },
+                  {
+                    "trigger": "on_hit_taken",
+                    "type": "heal",
+                    "amount_bp_of_damage": 400,
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Spikes sends back 8% of each hit, to the attacker and every enemy within 1 hex of it. Every 250 damage he sends back makes it 5% stronger for the rest of the fight. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "passives": [
+              {
+                "id": "spikes",
+                "name": "Spikes",
+                "kind": "ability",
+                "text": "Enemies that hit him take a share of it back, and so do the enemies within 1 hex of them; he heals for a little of each hit.",
+                "effects": [
+                  {
+                    "trigger": "on_hit_taken",
+                    "type": "damage",
+                    "amount_bp_of_damage": 800,
+                    "target": "hit_target",
+                    "grows_per_stack": {
+                      "status": "thorn_crown",
+                      "bp": 500
+                    }
+                  },
+                  {
+                    "trigger": "on_hit_taken",
+                    "type": "damage",
+                    "amount_bp_of_damage": 800,
+                    "grows_per_stack": {
+                      "status": "thorn_crown",
+                      "bp": 500
+                    },
+                    "target": "enemies_near_named",
+                    "within_hexes": 1
+                  },
+                  {
+                    "trigger": "on_hit_taken",
+                    "type": "heal",
+                    "amount_bp_of_damage": 300,
+                    "target": "self"
+                  }
+                ]
+              },
+              {
+                "id": "maidens_spite",
+                "name": "Maiden's Spite",
+                "kind": "ability",
+                "text": "While Iron Maiden lasts, every hit on him sends a share of it back.",
+                "effects": [
+                  {
+                    "trigger": "on_hit_taken",
+                    "holder": {
+                      "statuses": [
+                        "iron_maiden"
+                      ]
+                    },
+                    "type": "damage",
+                    "amount_bp_of_damage": 3000,
+                    "target": "hit_target",
+                    "grows_per_stack": {
+                      "status": "thorn_crown",
+                      "bp": 500
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "thorn_crown",
+                "name": "Crown of Thorns",
+                "kind": "ability",
+                "text": "Every 250 damage he sends back makes what he sends back stronger for the rest of the fight.",
+                "effects": [
+                  {
+                    "trigger": "on_holder_hit",
+                    "from_ability": [
+                      "spikes",
+                      "maidens_spite"
+                    ],
+                    "type": "apply_status",
+                    "status": "thorn_crown",
+                    "per_damage": 250,
+                    "target": "self"
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Damage he sends back during Iron Maiden",
+          "counts": "damage",
+          "from_ability": [
+            "maidens_spite"
+          ],
+          "threshold": 700
+        }
+      },
+      {
+        "_note": "Phase 8 part 4 (rebuild-phase8-heroes.md 8d-2c; apexes.md). Numbers are placeholders scaled to the path's tuned numbers, for the --apexes report and the tuning phase.",
+        "id": "vengeance",
+        "name": "Vengeance",
+        "title": "the debt repaid",
+        "fantasy": "He doesn't take the blows; he keeps them for later.",
+        "vowed": {
+          "taste": "5% of each hit on him is stored instead of taken, and released on the enemies within 2 hexes the next time Iron Maiden ends.",
+          "patch": {
+            "passives": [
+              {
+                "id": "vengeance_store",
+                "name": "Vengeance",
+                "kind": "aura",
+                "text": "A share of each hit on him is stored instead of taken.",
+                "aura": {
+                  "target": "holder",
+                  "stat": "store_bp",
+                  "value": 500
+                }
+              },
+              {
+                "id": "vengeance",
+                "name": "Vengeance",
+                "kind": "ability",
+                "text": "When Iron Maiden ends, what he stored bursts on the enemies within 2 hexes of him.",
+                "effects": [
+                  {
+                    "type": "area",
+                    "shape": {
+                      "kind": "circle",
+                      "radius": 2
+                    },
+                    "anchor": "self",
+                    "hits": "enemies",
+                    "effects": [
+                      {
+                        "type": "damage",
+                        "amount_bp_of_stored": 10000,
+                        "target": "target"
+                      }
+                    ],
+                    "trigger": "on_status_ended",
+                    "statuses": [
+                      "iron_maiden"
+                    ]
+                  },
+                  {
+                    "type": "release_stored",
+                    "target": "self",
+                    "trigger": "on_status_ended",
+                    "statuses": [
+                      "iron_maiden"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "15% of each hit on him is stored instead of taken. When Iron Maiden ends, it's all released as a blast on the enemies within 2 hexes; if he falls, it's released at once. What he stores grows 3% each second until it's released. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "passives": [
+              {
+                "id": "vengeance_store",
+                "name": "Vengeance",
+                "kind": "aura",
+                "text": "A share of each hit on him is stored instead of taken.",
+                "aura": {
+                  "target": "holder",
+                  "stat": "store_bp",
+                  "value": 1500
+                }
+              },
+              {
+                "id": "vengeance",
+                "name": "Vengeance",
+                "kind": "ability",
+                "text": "When Iron Maiden ends, what he stored bursts on the enemies within 2 hexes of him, and if he falls it bursts at once.",
+                "effects": [
+                  {
+                    "type": "area",
+                    "shape": {
+                      "kind": "circle",
+                      "radius": 2
+                    },
+                    "anchor": "self",
+                    "hits": "enemies",
+                    "effects": [
+                      {
+                        "type": "damage",
+                        "amount_bp_of_stored": 10000,
+                        "target": "target"
+                      }
+                    ],
+                    "trigger": "on_status_ended",
+                    "statuses": [
+                      "iron_maiden"
+                    ]
+                  },
+                  {
+                    "type": "release_stored",
+                    "target": "self",
+                    "trigger": "on_status_ended",
+                    "statuses": [
+                      "iron_maiden"
+                    ]
+                  },
+                  {
+                    "type": "area",
+                    "shape": {
+                      "kind": "circle",
+                      "radius": 2
+                    },
+                    "anchor": "self",
+                    "hits": "enemies",
+                    "effects": [
+                      {
+                        "type": "damage",
+                        "amount_bp_of_stored": 10000,
+                        "target": "target"
+                      }
+                    ],
+                    "trigger": "on_fall"
+                  }
+                ]
+              },
+              {
+                "id": "vengeance_grudge",
+                "name": "Grudge",
+                "kind": "aura",
+                "text": "What he has stored grows each second until it's released.",
+                "aura": {
+                  "target": "holder",
+                  "stat": "store_grows_bp",
+                  "value": 300
+                }
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Damage his Vengeance releases",
+          "counts": "damage",
+          "from_ability": [
+            "vengeance"
+          ],
+          "threshold": 600
+        }
+      }
+    ]
   }
 ]

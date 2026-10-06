@@ -205,7 +205,9 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			var shield_entry: LogEntry = give_shield(sim, victim, given, source)
 			shield_entry.set_rule(amount, power, 0, 0, unit.relic_bonus_bp)
 		EffectDef.Type.SPEND_SHIELD:
-			spend_shield(sim, victim, source)
+			spend_shield(sim, victim, source, effect.keep_bp)
+		EffectDef.Type.RELEASE_STORED:
+			release_stored(sim, victim, source)
 		EffectDef.Type.EXTEND_STATUS:
 			Statuses.extend(sim, victim, effect.status_id, effect.duration_ticks, source)
 		EffectDef.Type.APPLY_STATUS:
@@ -338,6 +340,9 @@ static func amount_of(effect: EffectDef, unit: UnitState, damage: int = 0, sim: 
 	elif effect.amount_bp_of_shield > 0:
 		# Its unit's own Shield (phase 8 part 4, Bulwark Burst).
 		amount = FixedMath.apply_bp(unit.shield, effect.amount_bp_of_shield)
+	elif effect.amount_bp_of_stored > 0:
+		# The damage its unit stored (phase 8 part 4, Vengeance).
+		amount = FixedMath.apply_bp(unit.stored, effect.amount_bp_of_stored)
 	else:
 		amount = effect.base_value()
 		for stat: int in effect.scaling.size():
@@ -640,6 +645,16 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 			entry.note = ("%s, " % entry.note if not entry.note.is_empty() else "") + "shared"
 			dealt = kept
 			entry.amount = dealt
+	# Vengeance (phase 8 part 4): a share of the hit is stored instead of
+	# taken, to be released later.
+	if target.aura_bp[AuraDef.Stat.STORE_BP] > 0 and dealt > 0:
+		var stored: int = FixedMath.apply_bp(dealt, mini(target.aura_bp[AuraDef.Stat.STORE_BP], FixedMath.BP_ONE))
+		if stored > 0:
+			target.stored += stored
+			sim.any_stored = true
+			dealt -= stored
+			entry.amount = dealt
+			entry.note = ("%s, " % entry.note if not entry.note.is_empty() else "") + "%d stored" % stored
 	# Shieldbreaker and the Unbinder (phase 8 part 3): more off a Shield.
 	var vs_shield_bp: int = FixedMath.BP_ONE + (attacker.aura_bp[AuraDef.Stat.SHIELD_DAMAGE_BP] if attacker != null else 0)
 	entry.absorbed = sim.apply_damage_vs_shield(target, dealt, vs_shield_bp)
@@ -881,13 +896,29 @@ static func _grow_max_hp(sim: CombatSim, unit: UnitState, overheal: int, per: in
 
 ## `unit`'s whole Shield is spent (phase 8 part 4, Bulwark Burst): logged
 ## as SHIELD_SPENT with what it was; nothing if it has none.
-static func spend_shield(sim: CombatSim, unit: UnitState, source: EffectSource) -> void:
+static func spend_shield(sim: CombatSim, unit: UnitState, source: EffectSource, keep_bp: int = 0) -> void:
 	if unit.shield <= 0:
 		return
+	# Shatterburst keeps a share (phase 8 part 4).
+	var kept: int = FixedMath.apply_bp(unit.shield, keep_bp) if keep_bp > 0 else 0
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.SHIELD_SPENT, source)
 	entry.target = unit.id
-	entry.amount = unit.shield
-	unit.shield = 0
+	entry.amount = unit.shield - kept
+	if kept > 0:
+		entry.note = "keeps %d" % kept
+	unit.shield = kept
+	sim.combat_log.add(entry)
+
+
+## The damage `unit` stored is let go (phase 8 part 4, Vengeance), logged as
+## RELEASED with what it had grown to; nothing if it stored none.
+static func release_stored(sim: CombatSim, unit: UnitState, source: EffectSource) -> void:
+	if unit.stored <= 0:
+		return
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.RELEASED, source)
+	entry.target = unit.id
+	entry.amount = unit.stored
+	unit.stored = 0
 	sim.combat_log.add(entry)
 
 
@@ -901,5 +932,6 @@ static func give_shield(sim: CombatSim, target: UnitState, amount: int, source: 
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.SHIELD, source)
 	entry.target = target.id
 	entry.amount = amount
+	entry.shield_after = target.shield
 	sim.combat_log.add(entry)
 	return entry

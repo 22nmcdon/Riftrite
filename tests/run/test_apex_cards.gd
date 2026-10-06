@@ -81,6 +81,31 @@ func test_the_apex_cards_knobs() -> void:
 	assert_eq(lines.map(func(effect: EffectDef) -> int: return effect.max_standing), [6], "Holy Land: 6 lines")
 
 
+## Garrow's (phase 8 part 4, 8d-2c): the snowballs' steps grow, and the
+## rest add what they say.
+func test_garrows_apex_cards() -> void:
+	var bulwark: UnitDef = _run.content.apexes["endless_bulwark"].apex_kit
+	assert_eq(_part(_on_apex("layered_plate"), "plated_blows").ability.effects[0].grows_stack_bp, _part(bulwark, "plated_blows").ability.effects[0].grows_stack_bp + 2000,
+		"Layered Plate: each layer twice as big")
+	assert_not_null(_part(_on_apex("plate_on_plate"), "plate_on_plate"))
+	var burst: UnitDef = _run.content.apexes["shatterburst"].apex_kit
+	var echoing: EffectDef = _on_apex("echoing_burst").signature.effects[0].area_effects[0]
+	assert_eq(echoing.grows_stack_bp, burst.signature.effects[0].area_effects[0].grows_stack_bp + 300, "Echoing Burst: +3% more an echo")
+	var stun: Array = _on_apex("aftershock").signature.effects[0].area_effects.filter(func(effect: EffectDef) -> bool: return effect.status_id == "stun")
+	assert_eq(stun.size(), 1, "Aftershock Stuns")
+	var grinder: UnitDef = _run.content.apexes["grinder"].apex_kit
+	assert_eq(_part(_on_apex("meat_grinder"), "grinder").ability.effects[0].grows_stack_bp, _part(grinder, "grinder").ability.effects[0].grows_stack_bp + 1000, "Meat Grinder: +30% a kill")
+	assert_eq(_part(_on_apex("barbed_ring"), "grinder").ability.effects.size(), _part(grinder, "grinder").ability.effects.size() + 1, "Barbed Ring: a Bleed too")
+	assert_not_null(_part(_on_apex("deep_current"), "deep_current"))
+	assert_not_null(_part(_on_apex("drowning_depths"), "drowning_depths"))
+	var king: UnitDef = _run.content.apexes["thorned_king"].apex_kit
+	assert_eq(_part(_on_apex("crown_of_thorns"), "maidens_spite").ability.effects[0].grows_stack_bp, _part(king, "maidens_spite").ability.effects[0].grows_stack_bp + 300, "Crown of Thorns")
+	assert_not_null(_part(_on_apex("barbed_hide"), "barbed_hide"))
+	var vengeance: UnitDef = _run.content.apexes["vengeance"].apex_kit
+	assert_eq(_part(_on_apex("wrath"), "vengeance_grudge").aura.value, _part(vengeance, "vengeance_grudge").aura.value + 200, "Wrath: grows 5% a second")
+	assert_not_null(_part(_on_apex("patient_fury"), "patient_fury"))
+
+
 func test_dread_return_taunts_as_he_rises() -> void:
 	var taunts: int = 0
 	var rises: int = 0

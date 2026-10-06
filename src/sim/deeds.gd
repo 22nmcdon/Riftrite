@@ -165,11 +165,22 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 					if hit != null and hit.side != unit.side:
 						counter.amounts[d] += 1
 				DeedDef.Counts.PULLED:
-					# An enemy pulled or hooked that moved (phase 8 part 4).
+					# An enemy pulled or hooked that moved (phase 8 part 4), or
+					# the hexes it moved (Undertow).
 					var pulled: UnitState = sim.unit_by_id(entry.target)
 					if pulled != null and pulled.side != unit.side and entry.from_pos != entry.to_pos \
 							and (entry.note.begins_with("pulled") or entry.note.begins_with("hooked")):
-						counter.amounts[d] += 1
+						@warning_ignore("integer_division")
+						counter.amounts[d] += (ArenaPlane.distance(entry.from_pos, entry.to_pos) + HexGrid.HEX / 2) / HexGrid.HEX if deed.by_hexes else 1
+				DeedDef.Counts.SHIELD:
+					if deed.above_bp > 0:
+						# Only past a share of its target's max HP (Endless Bulwark).
+						var shielded: UnitState = sim.unit_by_id(entry.target)
+						if shielded != null:
+							var line: int = FixedMath.apply_bp(shielded.max_hp, deed.above_bp)
+							counter.amounts[d] += clampi(entry.shield_after - line, 0, entry.amount)
+					else:
+						counter.amounts[d] += entry.amount
 				DeedDef.Counts.ROOTED_MS:
 					if entry.end_tick > entry.tick and sim.content.statuses.has(entry.status) \
 							and sim.content.statuses[entry.status].kind == StatusDef.Kind.ROOT:

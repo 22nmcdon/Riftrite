@@ -3542,5 +3542,263 @@
         ]
       }
     }
+  },
+  {
+    "id": "layered_plate",
+    "name": "Layered Plate",
+    "apex": "endless_bulwark",
+    "text": "Each layer makes his Shield grow faster.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:plated_blows",
+          "per_stack_add_bp": 2000
+        }
+      ]
+    }
+  },
+  {
+    "id": "plate_on_plate",
+    "name": "Plate on Plate",
+    "apex": "endless_bulwark",
+    "text": "While his Shield is bigger than his max HP, he takes less damage.",
+    "mod": {
+      "passives": [
+        {
+          "id": "plate_on_plate",
+          "name": "Plate on Plate",
+          "kind": "aura",
+          "text": "While his Shield is bigger than his max HP, he takes less damage.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_reduced_bp",
+            "value": 2000,
+            "while": "state",
+            "state": {
+              "shield_above_pct": 100
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "echoing_burst",
+    "name": "Echoing Burst",
+    "apex": "shatterburst",
+    "text": "Each enemy a Burst hits makes later Bursts stronger still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "per_stack_add_bp": 300
+        }
+      ]
+    }
+  },
+  {
+    "id": "aftershock",
+    "name": "Aftershock",
+    "apex": "shatterburst",
+    "text": "His Bursts Stun what they hit for a moment.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_to_areas": [
+            {
+              "type": "apply_status",
+              "status": "stun",
+              "duration_ms": 500,
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "meat_grinder",
+    "name": "Meat Grinder",
+    "apex": "grinder",
+    "text": "Each enemy that dies beside him feeds the Grinder more.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:grinder",
+          "per_stack_add_bp": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "barbed_ring",
+    "name": "Barbed Ring",
+    "apex": "grinder",
+    "text": "His Grinder also makes the enemies beside him Bleed.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:grinder",
+          "add_effects": [
+            {
+              "trigger": "on_interval",
+              "interval_ms": 1000,
+              "type": "apply_status",
+              "status": "bleed",
+              "stacks": 1,
+              "scaling": {
+                "atk": 500
+              },
+              "target": "enemies_near_self",
+              "within_hexes": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "deep_current",
+    "name": "Deep Current",
+    "apex": "undertow",
+    "text": "Each enemy his chains drag beside him gives him more ATK and DEF.",
+    "mod": {
+      "passives": [
+        {
+          "id": "deep_current",
+          "name": "Deep Current",
+          "kind": "ability",
+          "text": "Each enemy his chains drag beside him gives him more ATK and DEF for the rest of the fight.",
+          "effects": [
+            {
+              "trigger": "on_pull",
+              "from_ability": [
+                "haul",
+                "maelstrom"
+              ],
+              "type": "apply_status",
+              "status": "deep_current",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "drowning_depths",
+    "name": "Drowning Depths",
+    "apex": "undertow",
+    "text": "Enemies he pulls are Slowed.",
+    "mod": {
+      "passives": [
+        {
+          "id": "drowning_depths",
+          "name": "Drowning Depths",
+          "kind": "ability",
+          "text": "Enemies he pulls are Slowed.",
+          "effects": [
+            {
+              "trigger": "on_pull",
+              "type": "apply_status",
+              "status": "slow",
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "crown_of_thorns",
+    "name": "Crown of Thorns",
+    "apex": "thorned_king",
+    "text": "Each 250 he sends back makes it grow faster.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:spikes",
+          "per_stack_add_bp": 300
+        },
+        {
+          "slot": "passive:maidens_spite",
+          "per_stack_add_bp": 300
+        }
+      ]
+    }
+  },
+  {
+    "id": "barbed_hide",
+    "name": "Barbed Hide",
+    "apex": "thorned_king",
+    "text": "What he sends back makes its target Bleed.",
+    "mod": {
+      "passives": [
+        {
+          "id": "barbed_hide",
+          "name": "Barbed Hide",
+          "kind": "ability",
+          "text": "What he sends back makes the enemy it hits Bleed.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "spikes",
+                "maidens_spite"
+              ],
+              "type": "apply_status",
+              "status": "bleed",
+              "stacks": 1,
+              "scaling": {
+                "atk": 1000
+              },
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "wrath",
+    "name": "Wrath",
+    "apex": "vengeance",
+    "text": "What he stores grows faster.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:vengeance_grudge",
+          "value_add": 200
+        }
+      ]
+    }
+  },
+  {
+    "id": "patient_fury",
+    "name": "Patient Fury",
+    "apex": "vengeance",
+    "text": "His Vengeance's blast heals him for a share of its damage.",
+    "mod": {
+      "passives": [
+        {
+          "id": "patient_fury",
+          "name": "Patient Fury",
+          "kind": "ability",
+          "text": "His Vengeance's blast heals him for a share of its damage.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "vengeance"
+              ],
+              "type": "heal",
+              "amount_bp_of_damage": 2000,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
   }
 ]

@@ -88,6 +88,9 @@ var rose: bool = false
 var rise_part: PartDef = null
 var rises_done: int = 0
 var taken_total: int = 0
+## Damage it stored instead of taking (phase 8 part 4, Vengeance's aura stat
+## store_bp), growing each second by store_grows_bp, until released.
+var stored: int = 0
 var overheal_bank: int = 0
 ## False once it has fallen (deaths are settled at the end of a tick).
 var alive: bool = true

@@ -176,6 +176,8 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 		bits.append("%s mana (as a habit: 1 attack %s)" % [signed(change.mana_max_add), "sooner" if change.mana_max_add < 0 else "later"])
 	if change.ignores_def:
 		bits.append("ignores DEF")
+	if change.per_stack_add_bp != 0:
+		bits.append("%s for each stack" % UnitInfo.signed_percent(change.per_stack_add_bp))
 	if change.per_twice != null:
 		bits.append("enemies that are %s count twice" % change.per_twice.describe())
 	for effect: EffectDef in change.add_to_areas:
@@ -353,7 +355,7 @@ static func counted(counts: DeedDef, per: int) -> String:
 		DeedDef.Counts.SHIELD:
 			return "%s Shield given%s" % [amount, "" if counts.from_ability.is_empty() else " by " + ", ".join(counts.from_ability).replace("_", " ")]
 		DeedDef.Counts.PULLED:
-			return "%s enemies pulled" % amount
+			return ("%s hexes enemies are pulled" if counts.by_hexes else "%s enemies pulled") % amount
 		DeedDef.Counts.EXTRA_HITS:
 			return "%s extra enemies hit" % amount
 		DeedDef.Counts.HITS:

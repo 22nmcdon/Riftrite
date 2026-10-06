@@ -33,7 +33,18 @@ extends RefCounted
 ##   spend_shield: (phase 8 part 4, Bulwark Burst; target "self") the
 ##                 unit's whole Shield is gone, logged as SHIELD_SPENT with
 ##                 what it was. After an area that read it, the area keeps
-##                 what it read
+##                 what it read. "keep_bp" (Shatterburst): it keeps that share
+##   release_stored: (phase 8 part 4, Vengeance; target "self") the damage
+##                 the unit stored (the aura stat store_bp) is let go, logged
+##                 as RELEASED with how much it had grown to; damage's
+##                 "amount_bp_of_stored" reads it first, as amount_bp_of_shield
+##                 reads the Shield
+##   damage, heal, shield's "grows_per_stack": {"status": "brand", "bp": 500}
+##                 (phase 8 part 4, the apexes' snowballs): that much more
+##                 power for each stack of the status on the unit
+##   apply_status's "per_damage": 1000 (phase 8 part 4, Thorned King; an
+##                 event that names a hit): a stack for every 1,000 of the
+##                 hits' damage, banked between events
 ##   apply_status: status; stacks (damage over time; default 1); optional
 ##                 duration_ms (a timed status; default: the status's own)
 ##   cleanse:      amount_bp; strips that share of the target's
@@ -289,7 +300,7 @@ enum Trigger {
 	ON_HOLDER_HIT, ON_SHIELD_BROKEN, ON_ALLY_ABILITY, ON_STATUS_ENDED, ON_LIFESTEAL, ON_KNOCKBACK, ON_GUARD,
 	ON_BELOW_HP, ON_CHARGED, ON_ENEMY_FELL, ON_ARRIVE, ON_ALLY_SHIELD_BROKEN, ON_WALL_BLOCK, ON_RISE, ON_BREAKS_SHIELD, ON_PULL, ON_SHIELD_SPENT,
 }
-enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS, HOP, FLOOD, SEVER, SPEND_SHIELD }
+enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS, HOP, FLOOD, SEVER, SPEND_SHIELD, RELEASE_STORED }
 ## A pull's way (phase 8 part 3): toward the unit, the nearest water, or
 ## its area's middle; a knockback's: away from the unit, or toward the
 ## nearest edge.
@@ -377,7 +388,7 @@ const REACH_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_TARGET, Target.ALLIES_
 ## The targets around the unit an event names (they need one).
 const NAMED_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_NAMED, Target.ENEMY_NEAR_NAMED]
 const SIDE_NAMES: Array[String] = ["both", "enemies", "allies"]
-const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain", "knockback", "pull", "leap", "charge", "area", "start_collapse", "summon", "gain_mana", "snare", "wall", "extend_status", "hop", "flood", "sever", "spend_shield"]
+const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain", "knockback", "pull", "leap", "charge", "area", "start_collapse", "summon", "gain_mana", "snare", "wall", "extend_status", "hop", "flood", "sever", "spend_shield", "release_stored"]
 const TOWARD_NAMES: Array[String] = ["unit", "water", "area", "edge"]
 const FLOOD_MODE_NAMES: Array[String] = ["circle", "spread", "drain", "all"]
 ## The types placed at the ability's target without a "target" key of their
@@ -423,6 +434,17 @@ var amount_bp_of_max_hp: int = 0
 var amount_bp_of_shield: int = 0
 ## damage (phase 8 part 4, Bitter Blood): its hits ignore the target's DEF.
 var ignores_def: bool = false
+## damage (phase 8 part 4, Vengeance): a share of the unit's stored damage.
+var amount_bp_of_stored: int = 0
+## spend_shield (Shatterburst): the share of the Shield it keeps.
+var keep_bp: int = 0
+## damage, heal, shield (the apexes' snowballs): this much more power for
+## each stack of this status on its unit ("": none).
+var grows_status: String = ""
+var grows_stack_bp: int = 0
+## apply_status on an event naming a hit: a stack per this much damage (0:
+## once a run of the event).
+var per_damage: int = 0
 ## farthest_enemies (phase 8 part 4, Back-Line Hook): the enemies that meet
 ## this are picked first, farthest first, then the rest. Not read from the
 ## data: a kit mod's "prefer" sets it on a habit.
@@ -642,11 +664,12 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 	if not type_name.is_empty():
 		match def.type:
 			Type.DAMAGE:
-				if int(reader.has("amount")) + int(reader.has("amount_bp_of_damage")) + int(reader.has("amount_bp_of_shield")) != 1:
-					reader.error("damage needs exactly one of \"amount\", \"amount_bp_of_damage\", or \"amount_bp_of_shield\"")
+				if int(reader.has("amount")) + int(reader.has("amount_bp_of_damage")) + int(reader.has("amount_bp_of_shield")) + int(reader.has("amount_bp_of_stored")) != 1:
+					reader.error("damage needs exactly one of \"amount\", \"amount_bp_of_damage\", \"amount_bp_of_shield\", or \"amount_bp_of_stored\"")
 				def.amount = reader.opt_int("amount", 0, 0)
 				def.amount_bp_of_damage = reader.opt_int("amount_bp_of_damage", 0, 0)
 				def.amount_bp_of_shield = reader.opt_int("amount_bp_of_shield", 0, 0)
+				def.amount_bp_of_stored = reader.opt_int("amount_bp_of_stored", 0, 0)
 				if reader.has("bonus_per_ally"):
 					_read_bonus(def, reader.req_object("bonus_per_ally"))
 				def.ricochet = reader.opt_int("ricochet", 0, 0, 5)
@@ -749,6 +772,10 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 			Type.SPEND_SHIELD:
 				if def.target != Target.SELF:
 					reader.error("spend_shield spends the unit's own Shield (\"target\": \"self\")")
+				def.keep_bp = reader.opt_int("keep_bp", 0, 0, FixedMath.BP_ONE - 1)
+			Type.RELEASE_STORED:
+				if def.target != Target.SELF:
+					reader.error("release_stored lets go of the unit's own stored damage (\"target\": \"self\")")
 			Type.APPLY_STATUS:
 				def.status_id = reader.req_string("status")
 				def.stacks = reader.opt_int("stacks", 1, 1)
@@ -772,8 +799,20 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 					def.amount = reader.req_int("amount_bp", 1, FixedMath.BP_ONE)
 				if reader.has("statuses"):
 					def.cleanse_statuses = reader.req_string_array("statuses")
+		if reader.has("grows_per_stack"):
+			var grows: DataReader = reader.req_object("grows_per_stack")
+			if grows != null:
+				def.grows_status = grows.req_string("status")
+				def.grows_stack_bp = grows.req_int("bp", 1, FixedMath.BP_ONE)
+				grows.finish()
+			if def.type != Type.DAMAGE and def.type != Type.HEAL and def.type != Type.SHIELD:
+				reader.error("only damage, heals, and Shields grow per stack")
+		if reader.has("per_damage"):
+			def.per_damage = reader.req_int("per_damage", 1)
+			if def.type != Type.APPLY_STATUS:
+				reader.error("per_damage is an apply_status's")
 		if reader.has("scaling"):
-			if def.amount_bp_of_damage > 0 or def.amount_bp_of_max_hp > 0 or def.amount_bp_of_shield > 0:
+			if def.amount_bp_of_damage > 0 or def.amount_bp_of_max_hp > 0 or def.amount_bp_of_shield > 0 or def.amount_bp_of_stored > 0:
 				reader.error("\"scaling\" can't be combined with %s" % ("amount_bp_of_damage" if def.amount_bp_of_damage > 0 else "amount_bp_of_max_hp" if def.amount_bp_of_max_hp > 0 else "amount_bp_of_shield"))
 			_read_scaling(def, reader.req_object("scaling"))
 
@@ -972,6 +1011,8 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 			def.vs = UnitCondition.read(reader.req_object("vs"))
 			if not EVENT_VS_TRIGGERS.has(def.trigger):
 				reader.error("%s names no unit, so it can't take \"vs\"" % TRIGGER_NAMES[def.trigger])
+	if def.per_damage > 0 and not EVENT_HIT_TRIGGERS.has(def.trigger):
+		reader.error("per_damage needs an event that names a hit (%s doesn't)" % TRIGGER_NAMES[def.trigger])
 	if reader.has("holder"):
 		def.holder = UnitCondition.read(reader.req_object("holder"))
 		if not (EVENT_TRIGGERS.has(def.trigger) or UNIT_TRIGGERS.has(def.trigger)):

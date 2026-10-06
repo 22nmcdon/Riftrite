@@ -1,6 +1,6 @@
 # Apexes
 
-Status: **agreed in discussion (2026-09-30); built for Maren, Brannoc, and Vell in phase 8 part 2 (parts 8b-1 to 8b-3; numbers not tuned yet)** (`rebuild-phase8-apexes.md`, whose Decisions win where they differ). The final forms of each path. Fills in part 1's apex options (`rebuild-heroes.md`); where they disagree, this file wins. **Numbers and names are placeholders.**
+Status: **agreed in discussion (2026-09-30); built for Maren, Brannoc, and Vell in phase 8 part 2 (parts 8b-1 to 8b-3; numbers not tuned yet), and for Garrow in phase 8 part 4 (8d-2c)** (`rebuild-phase8-apexes.md` and `rebuild-phase8-heroes.md`, whose Decisions win where they differ; Garrow's built numbers and the calls made while building, such as Endless Bulwark's taste and deed, are in the latter's "Built in 8d-2c"). The final forms of each path. Fills in part 1's apex options (`rebuild-heroes.md`); where they disagree, this file wins. **Numbers and names are placeholders.**
 
 ## How apexes work
 

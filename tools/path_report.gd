@@ -137,11 +137,7 @@ static func cast(content: ContentDb, formation: Dictionary, team: Array[String])
 	if team == HeroTeam.DEFAULT:
 		hexes.assign(formation)
 		return hexes
-	var by_role: Dictionary[String, Vector2i] = {}
-	var old_roles: Dictionary[String, String] = HeroTeam.roles(content, HeroTeam.DEFAULT)
-	for role: String in old_roles:
-		by_role[role] = formation[old_roles[role]]
-	return HeroTeam.place(content, team, by_role)
+	return Placement.recast(content, formation, team)
 
 
 static func run_paths(content: ContentDb, encounter_id: String, named: Dictionary[String, Dictionary], drawn: int, seeds: int, draw_seed: int = 1) -> PathReport:

@@ -155,7 +155,7 @@ Five, from `duo-bonds.md`, as relics of tier `bond` (the built three's frame: a 
 ## 9. Parts
 
 - **8d-1, the draft frame:** the run's team (start, the fight's team check), the start screen's draft, Practice's team row, every tool and report reading a team (section 3a's list), role formations, `--team`, and the tests; Garrow's base kit as the fourth hero, so the frame is tested on a real roster.
-- **8d-2, Garrow:** his pieces (8d-2a, built), habits (8d-2h, section 3b; for every hero; built), his paths, figures, cards, and his two bond relics (8d-2b and 8d-2d, built), then his apexes (8d-2c).
+- **8d-2, Garrow:** his pieces (8d-2a, built), habits (8d-2h, section 3b; for every hero; built), his paths, figures, cards, and his two bond relics (8d-2b and 8d-2d, built), and his apexes (8d-2c, built).
 - **8d-3, Tamsin:** the same, and Hold and Break.
 - **8d-4, Aldous:** the same, The Hunter's Bell and Toll and Judgment.
 - **8d-5, the check and the docs:** the first check (section 8), the placement refit, the run report By hero, HOW-TO-PLAY, screenshots (the draft, a fight of each new hero), the design doc, and a playtest build.
@@ -222,12 +222,34 @@ The playtester's `changes-build-tuning.md` (applied: `build-tuning.md`, and edit
 
 Each part is tested as before: every piece in a small fight (`tests/sim/`), every kit's texts in small fights (`test_hero_kits.gd`), each card and relic changing what it says, the chaos fight using the new pieces, the save across versions, a run with each new hero, and mutation checks on each new rule.
 
+### Built in 8d-2c (Garrow's apexes)
+
+- **The pieces** (each skipped by a fight that doesn't use it; `tests/sim/test_garrow_apex_pieces.gd`):
+  - `"grows_per_stack"` on a damage, heal, or Shield effect (`{"status", "bp"}`: power per stack of a status on its unit; `EffectDef.grows_status`, `grows_stack_bp`, added in `Passives.power_bp`). Every snowball is one: a stacking boost with no timer, laid by an event effect.
+  - spend_shield's `"keep_bp"` (the SHIELD_SPENT line noted "keeps N"). Shatterburst.
+  - Stored damage. The aura stats `store_bp` (a share of each hit is stored instead of taken, noted "N stored") and `store_grows_bp` (what's stored grows each second; `CombatSim._grow_stored`), `UnitState.stored`, a damage effect's `"amount_bp_of_stored"`, and the effect `release_stored` (a new effect type, since nothing else empties the store; self only). It needs a new log kind, **RELEASED** (source: the ability; target: the unit; amount: what was released), with its audit rule, a board popup ("Releases N"), and a note in `test_determinism.gd`'s NOT_YET. A blast `on_fall` releases by itself (the unit is gone).
+  - apply_status's `"per_damage"` (on a hit trigger: one stack per that much damage, banked across hits; `Passives.Listener.banked`). Thorned King's crown.
+  - The deed count `pulled`'s `"by_hexes"` (each pull's distance, rounded to hexes), and the Shield deed's `"above_pct_of_max_hp"` (only the Shield past that share of max HP; `LogEntry.shield_after`).
+  - `UnitCondition`'s `"shield_above_pct"` (Plate on Plate), and the card knob `per_stack_add_bp` (a snowball's step; `KitMod`).
+  - The tools: `SimReport.formations_for` takes a team (the named formations recast by role, as the paths report does: `SimReport.recast`), so the apexes report fights a team outside the old three from its own formations.
+- **The apexes** (`data/paths.json`, the statuses in `data/statuses.json`, the 12 cards in `data/upgrades.json`, six good teams in `tools/apex_teams.json`; `tests/sim/test_garrow_apexes.gd`, `tests/run/test_apex_cards.gd`). Each is the design's (`apexes.md`), with numbers scaled to the paths' tuned ones (the paths' numbers were cut in "Tuned by build"). Calls made while building, flagged for the playtester:
+  - **Endless Bulwark:** the design's taste (a 60% cap) and deed (Shield past 50% of max HP) never happen: Bulwark Burst spends his Shield before it reaches about 16% of his max HP (measured). So the taste is a bigger blow Shield (2.5% of max HP, not 1.5%), and the deed is Shield from his blows past a tenth of his max HP (14 a fight without the taste, 33 with it). At apex, Plated Blows starts at 2.5% and each layer adds 0.5% of max HP (Layered Plate doubles that).
+  - **Shatterburst:** 300% of the Shield (the path's 200%; the design's 250% against its 150%), reaching 2 hexes and keeping a quarter; each enemy hit makes later Bursts +5% (Echoing Burst +3% more, the design's +8%).
+  - **Grinder:** 3% of ATK a second (taste), 25% at apex, +20% for each enemy that falls within 1 hex (Meat Grinder +10% more).
+  - **Undertow:** as designed (every 4s, enemies within 4 hexes pulled 1 hex; Maelstrom within 4 and a 2s Root; +1% ATK and +1 DEF a pull). Its deed counts hexes dragged.
+  - **Thorned King:** Spikes 8% (the taste's; the design's 50% was against a 25% path, now 6%), splashing within 1 hex of the attacker, his heal the path's 3%; the crown grows 5% every 250 sent back (the design's 1,000, since he sends back 200–850 a fight at apex).
+  - **Vengeance:** 15% of each hit stored (the design's 50% halved the damage he took and won past x4 enemy strength), released when Iron Maiden ends or at once if he falls, growing 3% a second (Wrath +2%).
+- **Deed sizes** (stand-ins until runs size them in 8d-5, as 8c-4c did): about 6 Act 1 fights of each deed with its taste at x1 (`--apex-deeds`), the built apexes' median: Endless Bulwark 200, Shatterburst 1,200, Grinder 220, Undertow 30, Thorned King 700, Vengeance 600.
+- **The first read** (`--apexes --act=1 --sweep=2`, Decision 9's band: good teams' apex half points about x1.57 to x1.75). Four teams are in the band or close: Endless Wall x1.69, Grindstone x1.65, Snaring Chain x1.62 (Maren carries), Woven Fang x1.51. Spitemail's two teams aren't. After the cuts above, Thorn Wall's half point is x2.40 and Grudgebearer's x2.18 (they were past x5 and x4.12). Both still win 30–40% of fights at x5. Spitemail's thorns and stored damage are shares of the hits he takes, so they grow with the enemy. Even transformed, its teams win 11% at x5, where every other team wins none. That's Question HF.
+- **Not changed:** no fight without these pieces; the bench's fingerprints are unchanged. Changed on purpose: 24 apexes, 180 upgrades, and the status lists in `test_determinism.gd`.
+
 ## 10. Questions
 
 - **CA. Unlocks:** *(Answered: Decision 4.)* are all six heroes open from the start? Proposed: yes for now; unlocking heroes (meta progression adds variety only: rule 5) comes with the Codex.
 - **CB. The draft screen:** *(Answered: Decision 5.)* pick three on the vow screen itself (six cards, then the three vow rows), as proposed, or a separate screen before the vows?
 - **CC. Practice:** *(Answered: Decision 6.)* a team row on the fight list (three of six), as proposed, or any number of heroes on the board?
 - **HE. Chainwarden as an enabler:** *(Answered: Decision 13.)* its floor is its own drag, which helps any team (see "Tuned by build"). Proposed: Maelstrom and Haul's habit stay, but less of its power is its own (Crowd Strength and the Bleeds smaller), and what it drags in takes more from allies for a moment (a short Mark), so its value shows in its teammates. Or keep it self-sufficient-shaped and change its type?
+- **HF. Thorns against stronger enemies:** Spitemail's damage is a share of the hits Garrow takes, so it grows with the enemy. Its teams keep winning fights at x5 enemy strength (11% transformed, 30–40% at apex), and endless's growing floors may never stop them. Proposed: leave it for the tuning phase, and judge Spitemail and its apexes by bot runs (Decision 14) and endless floors, not by the apexes report's half point. Or cap what thorns send back (a share of his ATK or max HP a hit) so they stop scaling.
 - **CD. The first check:** *(Answered: Decision 7.)* bring each new path and apex into the built ones' bars now (section 8), so the tuning phase starts level, or leave all numbers to the tuning phase?
 
 ## Decisions

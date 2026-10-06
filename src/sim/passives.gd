@@ -48,6 +48,8 @@ class Listener:
 	var last_for: Dictionary[String, int] = {}
 	## cooldown_ms: the tick it last ran (-1: never).
 	var ran_at: int = -1
+	## per_damage: the hits' damage not yet worth a stack (phase 8 part 4).
+	var banked: int = 0
 
 
 ## An event effect waiting out its delay (EffectDef.delay_ticks).
@@ -420,6 +422,10 @@ static func power_bp(unit: UnitState, effect: EffectDef) -> int:
 	if unit.fire_power_bp != 0 and (effect.type == EffectDef.Type.DAMAGE or effect.type == EffectDef.Type.HEAL or effect.type == EffectDef.Type.SHIELD):
 		# Overcharge's extra fires (phase 5c step 5c).
 		power += unit.fire_power_bp
+	if not effect.grows_status.is_empty():
+		# The apexes' snowballs (phase 8 part 4): more for each stack of a
+		# status on its unit.
+		power += effect.grows_stack_bp * Statuses.stacks_on(unit, effect.grows_status)
 	if effect.power_per_taken_bp > 0:
 		# Growing with the damage its unit has taken (phase 8 part 2).
 		@warning_ignore("integer_division")
@@ -495,6 +501,16 @@ static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, 
 		if effect.cooldown_ticks > 0 and listener.ran_at >= 0 and sim.tick - listener.ran_at < effect.cooldown_ticks:
 			continue
 		if effect.once and listener.count >= effect.every * effect.times:
+			continue
+		if effect.per_damage > 0:
+			# A stack for every per_damage of the hits' damage (phase 8 part 4,
+			# Thorned King): banked until there's enough.
+			listener.banked += damage
+			@warning_ignore("integer_division")
+			var stacks: int = listener.banked / effect.per_damage
+			listener.banked -= stacks * effect.per_damage
+			for i: int in stacks:
+				_run(sim, unit, listener, other, damage, chain)
 			continue
 		if effect.cooldown_per_unit_ticks > 0 and other != null:
 			if listener.last_for.has(other.id) and sim.tick - listener.last_for[other.id] < effect.cooldown_per_unit_ticks:

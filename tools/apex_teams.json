@@ -10,6 +10,12 @@
     {"name": "Hallowed Thicket", "kind": "good", "carry": "vell", "apexes": {"brannoc": "unbroken_gate", "maren": "warden_of_thorns", "vell": "sanctifier"}},
     {"name": "Oathbreaker", "kind": "good", "carry": "brannoc", "apexes": {"brannoc": "undying_oath", "maren": "huntmaster", "vell": "thornweave"}},
     {"name": "Smiting Hour", "kind": "good", "carry": "vell", "apexes": {"brannoc": "warlord", "maren": "eagle_eye", "vell": "inquisitor"}},
+    {"name": "Endless Wall", "kind": "good", "carry": "garrow", "apexes": {"garrow": "endless_bulwark", "maren": "eagle_eye", "vell": "loomwarden"}},
+    {"name": "Woven Fang", "kind": "good", "carry": "garrow", "apexes": {"garrow": "shatterburst", "maren": "eagle_eye", "vell": "thornweave"}},
+    {"name": "Grindstone", "kind": "good", "carry": "garrow", "apexes": {"garrow": "grinder", "maren": "hailstorm", "vell": "sanctifier"}},
+    {"name": "Snaring Chain", "kind": "good", "carry": "maren", "apexes": {"garrow": "undertow", "maren": "huntmaster", "vell": "dawnbringer"}},
+    {"name": "Thorn Wall", "kind": "good", "carry": "garrow", "apexes": {"garrow": "thorned_king", "maren": "hailstorm", "vell": "dawnbringer"}},
+    {"name": "Grudgebearer", "kind": "good", "carry": "garrow", "apexes": {"garrow": "vengeance", "maren": "stormline", "vell": "the_beacon"}},
     {"name": "No Edge", "kind": "poor", "apexes": {"brannoc": "hearthkeeper", "maren": "warden_of_thorns", "vell": "loomwarden"}},
     {"name": "Crossed Purposes", "kind": "poor", "apexes": {"brannoc": "martyrs_pyre", "maren": "huntmaster", "vell": "thornweave"}}
   ]

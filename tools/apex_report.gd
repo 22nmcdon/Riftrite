@@ -147,9 +147,12 @@ static func run_variant(content: ContentDb, variant: Lineup, encounter_ids: Arra
 	variant.wins.resize(scales.size())
 	variant.fights.fill(0)
 	variant.wins.fill(0)
+	var team: Array[String] = []
+	team.assign(variant.vows.keys())
+	team = HeroTeam.ordered(content, team)
 	for encounter_id: String in encounter_ids:
 		var names: Array[String] = []
-		for formation: Dictionary in Placement.formations_for(content, content.encounters[encounter_id], named, drawn, 1, names):
+		for formation: Dictionary in Placement.formations_for(content, content.encounters[encounter_id], named, drawn, 1, names, team):
 			# Stronger enemies don't turn a loss into a win, so once a
 			# formation loses, the steps above count as lost unfought.
 			var lost: bool = false

@@ -95,6 +95,8 @@ extends RefCounted
 ##       "ignores_def": true              its damage ignores DEF (Bitter Blood)
 ##       "per_twice": {...UnitCondition}  the named per-enemy aura counts those
 ##                                        enemies twice (Bloodied Links)
+##       "per_stack_add_bp": 500          a grows_per_stack's bp (its apex
+##                                        cards: Layered Plate, Echoing Burst)
 ##       (radius_add also widens a named per-enemy aura's reach, in hexes:
 ##       Wide Crowd; "prefer" with "ability" reaches a habit's farthest
 ##       enemies: Back-Line Hook; and added effects go before the ability
@@ -203,6 +205,7 @@ class AbilityChange:
 	var mana_max_add: int = 0
 	var ignores_def: bool = false
 	var per_twice: UnitCondition = null
+	var per_stack_add_bp: int = 0
 
 	## True if it reaches `ability_id` (every ability when it names none).
 	func reaches(id: String) -> bool:
@@ -213,7 +216,7 @@ class AbilityChange:
 			or every_add != 0 or times_add != 0 or max_standing_add != 0 or overheal_add_bp != 0 or width_add != 0 or not add_to_areas.is_empty() \
 			or strength_add_bp != 0 or follows or ricochet_add != 0 or reflect_bp != 0 or snags \
 			or per_enemy_add_bp != 0 or overheal_max_hp_add != 0 or at_stacks_add != 0 or per_taken_add_bp != 0 or holder != null or carries \
-			or ignores_def or prefer != null and not ability_id.is_empty()
+			or ignores_def or prefer != null and not ability_id.is_empty() or per_stack_add_bp != 0
 
 	func touches(effect: EffectDef) -> bool:
 		if not at.is_empty() and not at.has(effect.target):
@@ -437,6 +440,7 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 	change.ability_id = reader.opt_string("ability", "")
 	change.mana_max_add = reader.opt_int("mana_max_add", 0, -100, 100)
 	change.ignores_def = reader.opt_bool("ignores_def", false)
+	change.per_stack_add_bp = reader.opt_int("per_stack_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
 	if reader.has("per_twice"):
 		change.per_twice = UnitCondition.read(reader.req_object("per_twice"))
 	if not change.ability_id.is_empty() and change.slot != SLOT_ABILITIES:
@@ -484,7 +488,7 @@ func step_problem() -> String:
 				or change.follows or change.ricochet_add != 0 or change.reflect_bp != 0 or change.snags \
 				or change.per_enemy_add_bp != 0 or change.overheal_max_hp_add != 0 or change.at_stacks_add != 0 or change.per_taken_add_bp != 0 \
 				or change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0 or change.holder != null or change.carries \
-				or not change.ability_id.is_empty() or change.mana_max_add != 0 or change.ignores_def or change.per_twice != null:
+				or not change.ability_id.is_empty() or change.mana_max_add != 0 or change.ignores_def or change.per_twice != null or change.per_stack_add_bp != 0:
 			return "a growing card's step can only change an ability's amount_bp"
 	return ""
 
@@ -856,6 +860,8 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 				copy.carries = true
 			if change.ignores_def and effect.type == EffectDef.Type.DAMAGE:
 				copy.ignores_def = true
+			if change.per_stack_add_bp != 0 and not effect.grows_status.is_empty():
+				copy.grows_stack_bp = maxi(effect.grows_stack_bp + change.per_stack_add_bp, 0)
 			if change.prefer != null and effect.target == EffectDef.Target.FARTHEST_ENEMIES:
 				copy.prefer = change.prefer
 			if change.width_add != 0 and copy.shape != null and copy.shape.kind == ShapeDef.Kind.LINE:
@@ -898,6 +904,7 @@ static func _any_effect(effects: Array[EffectDef], change: AbilityChange) -> boo
 				or change.holder != null and _takes_holder(effect)
 				or change.carries and effect.type == EffectDef.Type.CHARGE and effect.knockback_hexes > 0 and not effect.carries
 				or change.ignores_def and effect.type == EffectDef.Type.DAMAGE and not effect.ignores_def
+				or change.per_stack_add_bp != 0 and not effect.grows_status.is_empty()
 				or change.prefer != null and effect.target == EffectDef.Target.FARTHEST_ENEMIES):
 			return true
 		if change.touches(effect) and (change.amount_bp != FixedMath.BP_ONE and (effect.amount != 0 or effect.amount_bp_of_damage != 0 or effect.scaling.any(func(value: int) -> bool: return value != 0) or effect.amount_bp_of_max_hp != 0 or change.moves(effect))
