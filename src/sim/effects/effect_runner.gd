@@ -392,6 +392,8 @@ static func _targets(sim: CombatSim, unit: UnitState, target: EffectDef.Target, 
 	var found: Array[UnitState] = []
 	if effect != null and (target == EffectDef.Target.ENEMIES_NEAR_SELF or target == EffectDef.Target.ALLIES_NEAR_SELF):
 		return near(sim, unit, effect, unit)
+	if effect != null and target == EffectDef.Target.FARTHEST_ENEMIES:
+		return farthest(sim, unit, effect)
 	if effect != null and EffectDef.NAMED_TARGETS.has(target):
 		return near(sim, unit, effect, hit.target if hit != null else null)
 	if effect != null and (EffectDef.NEAR_TARGETS.has(target) or target == EffectDef.Target.LOWEST_HP_ALLY):
@@ -416,6 +418,23 @@ static func _targets(sim: CombatSim, unit: UnitState, target: EffectDef.Target, 
 	if effect != null and effect.only != null:
 		# Only those that meet it (phase 8 part 3, Undertow: on water).
 		found = found.filter(func(other: UnitState) -> bool: return effect.only.holds(other, unit))
+	return found
+
+
+## The `count` targetable enemies farthest from `unit` within the effect's
+## reach, farthest first; ties go to the earlier unit in the fight's order
+## (phase 8 part 4: Haul's habit).
+static func farthest(sim: CombatSim, unit: UnitState, effect: EffectDef) -> Array[UnitState]:
+	var reach_sq: int = effect.near_range * effect.near_range
+	var keyed: Array[Array] = []
+	for enemy: UnitState in sim.targetable_enemies_of(unit):
+		var distance_sq: int = ArenaPlane.length_sq(enemy.pos - unit.pos)
+		if distance_sq <= reach_sq:
+			keyed.append([distance_sq, keyed.size(), enemy])
+	keyed.sort_custom(func(a: Array, b: Array) -> bool: return a[0] > b[0] or (a[0] == b[0] and a[1] < b[1]))
+	var found: Array[UnitState] = []
+	for item: Array in keyed.slice(0, effect.count):
+		found.append(item[2])
 	return found
 
 

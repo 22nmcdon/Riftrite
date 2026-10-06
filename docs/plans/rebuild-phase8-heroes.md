@@ -37,7 +37,7 @@ The sim already fights any set of heroes (`Encounters.setup` builds only those t
 - **The tools and bots:** `tools/sim_formations.json` by role (section 8); `tools/run_bot.gd`'s `formation()` by role and `first_vows(content, team)` (Brannoc, Maren, and Vell by default, so the 19 test files that call it keep their runs); `placement_data.gd` and `placement_check.gd` draw a team of three; `sim_report.gd`'s `LATER_ACT_VOWS` stays the gate's team, and its formation draws, tactic variants, and columns read the fight's team; `path_report.gd` fights each path's variants with a team holding its hero (the other two from the built three), and its Guard measure reads the tank, not "brannoc"; `apex_teams.json` gains teams; `run_report.gd`'s `vow_combinations` becomes teams × vows (540), and its picks line reads each run's team; `ui_screenshots.gd` drafts.
 - **Tests that name the roster** change on purpose: `test_hero_kits.gd` (the hero list), `test_run_report.gd` (27 combinations), `test_bots.gd` (the vow cycle and the roles), `test_sim_runner.gd` (formation keys), `test_run_flow.gd` (the vow error), `test_relics.gd`'s three-hero loops, `test_placement.gd` (the default formation's keys), and the run screen tests that drive the vow screen. The other fixtures (B, M, and V fights) stay valid, since the three stay in the roster.
 
-## 3b. Habits (part 8d-2h; proposed 2026-10-06, waiting for approval)
+## 3b. Habits (part 8d-2h; approved 2026-10-06, Decisions 8–11)
 
 The playtester's `changes-habits.md` (2026-10-06, applied to `rebuild-heroes.md` section 3, `upgrade-pools.md`, `ui-new-systems.md`, and `apexes.md`): when a transformation or an apex replaces a hero's signature, the old one stays as a **habit** that fires by itself every few basic attacks. It settles Chainwarden (Haul and Maelstrom both stay) and keeps cards for the base signature alive. Its section 5 (the sim work) is this section.
 
@@ -71,10 +71,10 @@ The playtester's `changes-habits.md` (2026-10-06, applied to `rebuild-heroes.md`
 **What it changes:** every transformed Maren and Brannoc gains a habit, so the paths report's band (+16 to +21), the acts' tuning, and the good bot's placement fits drift up. Proposed: no retune now (Decision 2: the tuning phase tunes all six), and 8d-5's first check re-measures the band with habits in. The bench's fingerprints move if its fights use transformed kits; that's checked and recorded.
 
 **Questions:**
-- **HA. Retune:** leave the drift for the tuning phase (proposed), or bring the built six transformations back into the band now?
-- **HB. Maren's habit target:** her current target (proposed; a passive's "target"), or the nearest enemy within 4 hexes like Marking Shot?
-- **HC. Chainwarden's three:** the 3 farthest within 4 hexes (proposed), or the farthest and the 2 enemies nearest it?
-- **HD. A bug found on the way:** Wide's extra targets (`targets_add`) reach only one enemy even at rank III (`targets_add: 2`), against its own description. Fix it now (runs with Wide at rank III change), or leave it for the tuning phase?
+- **HA. Retune:** *(Answered: Decision 8.)* leave the drift for the tuning phase (proposed), or bring the built six transformations back into the band now?
+- **HB. Maren's habit target:** *(Answered: Decision 9.)* her current target (proposed; a passive's "target"), or the nearest enemy within 4 hexes like Marking Shot?
+- **HC. Chainwarden's three:** *(Answered: Decision 10.)* the 3 farthest within 4 hexes (proposed), or the farthest and the 2 enemies nearest it?
+- **HD. A bug found on the way:** *(Answered: Decision 11.)* Wide's extra targets (`targets_add`) reach only one enemy even at rank III (`targets_add: 2`), against its own description. Fix it now (runs with Wide at rank III change), or leave it for the tuning phase?
 
 ## 4. Garrow of the Chains (part 8d-2)
 
@@ -179,6 +179,16 @@ Five, from `duo-bonds.md`, as relics of tier `bond` (the built three's frame: a 
 - Not needed after all: thorns are an `on_hit_taken` damage back at `hit_target` (Spikes), and Iron Maiden's 100% an `on_hit_taken` effect with a `"holder"` condition on its status, so no thorns stat.
 - Tests: `tests/sim/test_garrow_pieces.gd`. The bench's fingerprints are unchanged.
 
+### Built in 8d-2h (habits)
+
+- **The check:** `ContentDb._check_habit` refuses a transformed kit that replaced the hero's signature (and an apex kit that replaced its path's) without a passive of the old signature's id, or of the path's `"habit"` (in its `transformed` block: Wardweaver's is `weave`). `PathDef.habit`.
+- **The target** `farthest_enemies` (`"count"`, `"within_hexes"`; `EffectRunner.farthest`): the enemies farthest from the unit within reach, farthest first. Haul's habit uses it in 8d-2b.
+- **The habits** (`paths.json`, each a passive `on_basic_attack` with `"every": 8`): Marking Shot on Deadeye, Trapper, and Volley (Marks her target for 4s, Decision 9), and Hold the Line on Hearthwall and Last Watch (taunts within 2 hexes for 3s) and Ironbrand (within 1 hex). Vell's three were already built. Each one's sentence starts "A habit:", so the Kit tab and the popups say what it is.
+- **What it didn't need:** no new trigger, state, or log kind: a habit is a passive, so it never FIREs, costs no mana, and no signature listener hears it. The card knob (`"ability"` on an "on" entry; a mana cost change as `every` one lower) comes with Garrow's cards in 8d-2d, where it's first used.
+- **Fights:** every transformed Maren and Brannoc changed (Decision 8: no retune until the tuning phase). The bench's fingerprints didn't (its fights use no transformed kits).
+- **Tests:** `tests/sim/test_habits.gd` (every replaced signature is a habit, the check, Brannoc's taunt every 8th Shield Bash, Maren's Mark every 8th Longshot), and `test_garrow_pieces.gd`'s farthest enemies.
+- **Tests changed on purpose:** Decision 37's test (a card that changes nothing is never offered) had Maren's Mark cards and Brannoc's taunt cards dead after a transformation; habits keep them alive, so it now checks they stay offered and uses Grudge on Last Watch (no mana bar) for the rule. The test paths in `test_paths.gd` carry habits, and Eagle Eye's kills test looks over four fights for one where her shots kill too.
+
 Each part is tested as before: every piece in a small fight (`tests/sim/`), every kit's texts in small fights (`test_hero_kits.gd`), each card and relic changing what it says, the chaos fight using the new pieces, the save across versions, a run with each new hero, and mutation checks on each new rule.
 
 ## 10. Questions
@@ -199,4 +209,7 @@ The playtester, 2026-10-06:
 5. **The draft is on the vow screen** (Question CB): six hero cards, pick three, then their vow rows.
 6. **Practice picks three of six** on a team row on the fight list (Question CC).
 7. **The first check is in this phase** (Question CD): each new path and apex is brought into the built ones' bars, so the tuning phase starts level.
-
+8. **Habits' drift waits for the tuning phase** (Question HA): the built transformations aren't retuned for their new habits now; 8d-5's first check re-measures the band with them.
+9. **Maren's habit Marks her current target** (Question HB).
+10. **Chainwarden's Haul habit pulls the 3 farthest enemies within 4 hexes** (Question HC).
+11. **Wide's extra targets stay as built until the tuning phase** (Question HD): the bug (rank III reaches one extra enemy, not two) is fixed and its runs retuned there.

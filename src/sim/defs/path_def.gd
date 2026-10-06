@@ -38,6 +38,12 @@ var vowed_patch: KitPatch
 var transformed_text: String
 var transformed_cost: String
 var transformed_patch: KitPatch
+## The transformed kit's habit (phase 8 part 4, docs/plans/rebuild-heroes.md
+## section 3): when its patch replaces the hero's signature, the old one
+## stays as a passive on every Nth basic attack, with the old signature's id
+## unless this names another (Wardweaver's Mend is Weave). ContentDb checks
+## it's there.
+var habit: String = ""
 var deed: DeedDef
 ## The hero's kit on this path, built by ContentDb (null until then).
 var vowed_kit: UnitDef = null
@@ -65,6 +71,7 @@ static func read(reader: DataReader) -> PathDef:
 	if transformed != null:
 		def.transformed_text = transformed.req_string("text")
 		def.transformed_cost = transformed.req_string("cost")
+		def.habit = transformed.opt_string("habit", "")
 		var patch: DataReader = transformed.req_object("patch")
 		def.transformed_patch = KitPatch.read(patch) if patch != null else KitPatch.make()
 		transformed.finish()

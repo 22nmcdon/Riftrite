@@ -260,6 +260,9 @@ extends RefCounted
 ##                     HP while standing (each time it drops back below,
 ##                     up to "times" a fight; default 1; phase 5c step 6,
 ##                     Warding Thread and Smoke Vial)
+## Phase 8 part 4 (habits, Haul's) adds the target farthest_enemies: the
+## "count" standing enemies farthest from the unit within "within_hexes" of
+## it (farthest first; ties in the fight's order).
 ## Phase 5c step 6 also adds the target allies_near_self (every ally within
 ## "within_hexes" of the unit, as it falls too: Last Breath) and cleanse's
 ## "statuses" (only those).
@@ -303,6 +306,7 @@ enum Target {
 	ENEMY_NEAR_NAMED,
 	NEAREST_ENEMIES,
 	ALLIES_NEAR_SELF,
+	FARTHEST_ENEMIES,
 }
 ## A nested area effect's side (phase 4): both, or only one.
 enum AreaSide { BOTH, ENEMIES, ALLIES }
@@ -353,13 +357,13 @@ const PASSIVE_TRIGGERS: Array[Trigger] = [
 const UNIT_TRIGGERS: Array[Trigger] = [Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL, Trigger.ON_BELOW_HP, Trigger.ON_FIGHT_START]
 const RELIC_TRIGGERS: Array[Trigger] = [Trigger.ON_FIRE, Trigger.ON_FIGHT_START, Trigger.AT_TIME, Trigger.ON_ALLY_BELOW_HP]
 ## Targets that need the effect's unit to stand on the field.
-const FIELD_ONLY_TARGETS: Array[Target] = [Target.TARGET, Target.HIT_TARGET, Target.SELF,
+const FIELD_ONLY_TARGETS: Array[Target] = [Target.TARGET, Target.HIT_TARGET, Target.SELF, Target.FARTHEST_ENEMIES,
 	Target.ENEMY_NEAR_TARGET, Target.ENEMIES_NEAR_TARGET, Target.ALLY_NEAR_TARGET, Target.ALLIES_NEAR_TARGET, Target.LOWEST_HP_ALLY]
 ## Targets near the ability's target (phase 4), and those that need a reach.
 const NEAR_TARGETS: Array[Target] = [Target.ENEMY_NEAR_TARGET, Target.ENEMIES_NEAR_TARGET, Target.ALLY_NEAR_TARGET, Target.ALLIES_NEAR_TARGET,
-	Target.ENEMIES_NEAR_SELF, Target.ENEMIES_NEAR_NAMED, Target.ENEMY_NEAR_NAMED, Target.ALLIES_NEAR_SELF]
+	Target.ENEMIES_NEAR_SELF, Target.ENEMIES_NEAR_NAMED, Target.ENEMY_NEAR_NAMED, Target.ALLIES_NEAR_SELF, Target.FARTHEST_ENEMIES]
 const REACH_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_TARGET, Target.ALLIES_NEAR_TARGET, Target.ENEMIES_NEAR_SELF, Target.ENEMIES_NEAR_NAMED,
-	Target.ALLIES_NEAR_SELF]
+	Target.ALLIES_NEAR_SELF, Target.FARTHEST_ENEMIES]
 ## The targets around the unit an event names (they need one).
 const NAMED_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_NAMED, Target.ENEMY_NEAR_NAMED]
 const SIDE_NAMES: Array[String] = ["both", "enemies", "allies"]
@@ -394,6 +398,7 @@ const TARGET_NAMES: Array[String] = [
 	"enemy_near_named",
 	"nearest_enemies",
 	"allies_near_self",
+	"farthest_enemies",
 ]
 
 var trigger: Trigger
@@ -763,6 +768,8 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 		def.only = UnitCondition.read(reader.req_object("only"))
 		if def.target != Target.ALL_ENEMIES and def.target != Target.ALL_ALLIES:
 			reader.error("only all_enemies and all_allies take \"only\"")
+	if def.target == Target.FARTHEST_ENEMIES:
+		def.count = reader.req_int("count", 1, 10)
 	if def.target == Target.NEAREST_ENEMIES:
 		def.count = reader.req_int("count", 1, 30)
 		if not relic:

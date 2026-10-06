@@ -548,6 +548,8 @@ static func _near(effect: EffectDef) -> String:
 			return " to itself" if effect.type == EffectDef.Type.GAIN_MANA else ""
 		EffectDef.Target.ENEMIES_NEAR_SELF:
 			return " to every enemy near it" + within
+		EffectDef.Target.FARTHEST_ENEMIES:
+			return " to the %s farthest from it%s" % ["enemy" if effect.count == 1 else "%d enemies" % effect.count, within]
 		EffectDef.Target.ALLIES_NEAR_SELF:
 			return " to every ally near it" + within
 		EffectDef.Target.ENEMIES_NEAR_NAMED:

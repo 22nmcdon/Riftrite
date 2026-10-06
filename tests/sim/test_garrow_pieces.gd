@@ -2,7 +2,8 @@ extends GutTest
 ## Garrow's paths' pieces (phase 8 part 4, docs/plans/rebuild-phase8-heroes.md
 ## section 4), each in a small fight: a Shield with a cap, damage worked out
 ## from the unit's own Shield and the Shield spent (SHIELD_SPENT), a
-## signature that readies the basic attack, and an aura per enemy near.
+## signature that readies the basic attack, an aura per enemy near, and the
+## enemies farthest from it (Haul's habit, section 3b).
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
 
@@ -113,3 +114,20 @@ func test_an_aura_counts_the_enemies_near() -> void:
 	fight.unit_by_id("a").pos = fight.unit_by_id("c").pos + Vector2i(1000, 0)
 	fight.step()
 	assert_eq([hero.stats.get_stat(UnitStats.Stat.ATK), hero.stats.get_stat(UnitStats.Stat.DEF)], [100, 0], "off with none near")
+
+
+# --- the enemies farthest from it (Haul's habit) ------------------------------------------------
+
+func test_the_farthest_enemies_within_reach() -> void:
+	assert_eq(_effect_errors({"trigger": "on_basic_attack", "every": 6, "type": "pull", "to": "beside", "target": "farthest_enemies", "count": 3, "within_hexes": 4}), [] as Array[String])
+	assert_false(_effect_errors({"type": "pull", "to": "beside", "target": "farthest_enemies", "within_hexes": 4}).is_empty(), "it needs a count")
+	var haul: Array = [{"id": "haul", "name": "Haul", "kind": "ability",
+		"effects": [{"trigger": "on_basic_attack", "type": "damage", "amount": 1, "target": "farthest_enemies", "count": 2, "within_hexes": 4}]}]
+	var fight: CombatSim = K.sim(K.fight([K.at(_hero({"passives": haul}, {"cooldown_ms": 500}), 3, 1)] as Array[UnitSetup],
+		[K.foe(_dummy("near"), 3, 4), K.foe(_dummy("mid"), 4, 4), K.foe(_dummy("far"), 3, 5), K.foe(_dummy("beyond"), 3, 6)] as Array[UnitSetup]))
+	_place(fight, {"near": Vector2i(0, 1500), "mid": Vector2i(1000, 2500), "far": Vector2i(0, 3900), "beyond": Vector2i(0, 4500)})
+	K.step(fight, 12)
+	var hits: Array = K.entries(fight, LogEntry.Kind.DAMAGE, "hero").filter(func(entry: LogEntry) -> bool: return entry.source_ability == "haul") \
+		.map(func(entry: LogEntry) -> String: return entry.target)
+	assert_eq(hits.slice(0, 2), ["far", "mid"], "the two farthest within 4 hexes, farthest first; not the one beyond")
+

@@ -62,21 +62,23 @@ func test_the_pools_by_stage() -> void:
 
 
 func test_a_card_that_changes_nothing_is_never_offered() -> void:
-	# Decision 37: Maren's Mark cards on a transformed path that never Marks,
-	# Brannoc's taunt cards once Hearthwall's wall replaces his taunt.
+	# Decision 37: never a card that changes nothing on the hero's kit now.
+	# Since habits (phase 8 part 4), a transformation that replaces Marking
+	# Shot or Hold the Line keeps it, so their cards stay alive.
 	var maren: RunState.Hero = _hero("maren", "trapper")
 	assert_true(_run.upgrades_for(maren).has("deep_mark"), "vowed, Marking Shot Marks")
-	assert_true(_run.upgrades_for(maren).has("notched_bow"))
 	maren.transformed = true
-	assert_false(_run.upgrades_for(maren).has("deep_mark"), "Bramble Field never Marks")
-	assert_false(_run.upgrades_for(maren).has("notched_bow"), "a growing card with nothing to count")
+	assert_true(_run.upgrades_for(maren).has("deep_mark"), "transformed, her habit still Marks")
+	assert_true(_run.upgrades_for(maren).has("notched_bow"), "and there's something to count")
 	assert_true(_run.upgrades_for(maren).has("parting_shot"), "she still hops")
 	var brannoc: RunState.Hero = _hero("brannoc", "hearthwall", true)
-	assert_false(_run.upgrades_for(brannoc).has("long_hold"), "no taunt")
-	assert_false(_run.upgrades_for(brannoc).has("stubborn_taunt"), "an added passive that waits on a taunt")
-	assert_true(_run.upgrades_for(_hero("brannoc", "last_watch", true)).has("stubborn_taunt"), "Last Rites taunts")
-	maren.upgrades.append("deep_mark")
-	assert_eq(_run.upgrade_mods(maren), [_run.upgrades["deep_mark"].mod] as Array[KitMod], "one held stays held")
+	assert_true(_run.upgrades_for(brannoc).has("long_hold"), "his habit still taunts")
+	assert_true(_run.upgrades_for(brannoc).has("stubborn_taunt"))
+	var watch: RunState.Hero = _hero("brannoc", "last_watch", true)
+	assert_false(_run.upgrades_for(watch).has("grudge"), "Last Watch has no mana bar, so more mana changes nothing")
+	assert_true(_run.upgrades_for(_hero("brannoc", "hearthwall", true)).has("grudge"))
+	watch.upgrades.append("grudge")
+	assert_eq(_run.upgrade_mods(watch), [_run.upgrades["grudge"].mod] as Array[KitMod], "one held stays held")
 
 
 func test_a_stacking_card_locks_in_a_share_of_the_stat_now() -> void:

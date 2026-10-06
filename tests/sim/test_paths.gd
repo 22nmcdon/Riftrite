@@ -29,8 +29,8 @@ static func _load_paths(paths: Array) -> ContentDb:
 
 
 ## A test path for Maren: the vow slows her attack and adds a passive; the
-## transformation sharpens her, reaches 2 farther, swaps her signature, and
-## drops Slip Away.
+## transformation sharpens her, reaches 2 farther, swaps her signature (Marking
+## Shot stays as a habit, phase 8 part 4), and drops Slip Away.
 static func maren_path(extra: Dictionary = {}) -> Dictionary:
 	var data: Dictionary = {
 		"id": "sharpshot", "hero": "maren", "name": "Sharpshot", "title": "the test sniper",
@@ -43,6 +43,8 @@ static func maren_path(extra: Dictionary = {}) -> Dictionary:
 			"patch": {"stats_bp": {"atk": 12000}, "stats_add": {"range": 2, "crit": 6},
 				"signature": {"id": "pierce", "name": "Pierce", "trigger": {"kind": "mana"}, "targeting": "nearest",
 					"effects": [{"type": "damage", "amount": 40, "target": "target"}]},
+				"passives": [{"id": "marking_shot", "name": "Marking Shot", "kind": "ability", "text": "A habit: every 8th Longshot, she Marks her target.",
+					"effects": [{"trigger": "on_basic_attack", "every": 8, "type": "apply_status", "status": "marked", "target": "target"}]}],
 				"remove_passives": ["slip_away"]}},
 		"deed": {"text": "Damage from beyond 4 hexes", "counts": "damage", "beyond_hexes": 4},
 	}
@@ -51,7 +53,7 @@ static func maren_path(extra: Dictionary = {}) -> Dictionary:
 
 
 ## A test path for Vell whose transformation trades Mend for a signature on
-## HP, so she loses her mana bar.
+## HP, so she loses her mana bar (Mend stays as a habit).
 static func vell_path(extra: Dictionary = {}) -> Dictionary:
 	var data: Dictionary = {
 		"id": "last_light", "hero": "vell", "name": "Last Light", "title": "the test martyr",
@@ -59,7 +61,9 @@ static func vell_path(extra: Dictionary = {}) -> Dictionary:
 		"vowed": {"taste": "Tougher.", "cost": "Heals less.", "patch": {"stats_bp": {"def": 12000, "mgk": 9000}}},
 		"transformed": {"text": "Flares when hurt.", "cost": "No mana.",
 			"patch": {"signature": {"id": "flare", "name": "Flare", "trigger": {"kind": "hp_below", "threshold_bp": 3000}, "targeting": "self",
-				"effects": [{"type": "heal", "amount": 50, "target": "self"}]}}},
+				"effects": [{"type": "heal", "amount": 50, "target": "self"}]},
+				"passives": [{"id": "mend", "name": "Mend", "kind": "ability", "text": "A habit: every 4th Lantern Glow, she heals the ally lowest on HP.",
+					"effects": [{"trigger": "on_basic_attack", "every": 4, "type": "heal", "amount": 10, "target": "lowest_hp_ally"}]}]}},
 		"deed": {"text": "Healing from Mend", "counts": "healing", "from_ability": ["mend"]},
 	}
 	data.merge(extra, true)
@@ -82,7 +86,7 @@ func test_a_path_and_its_kits() -> void:
 	assert_eq(vowed.ability_ids(), ["longshot", "marking_shot", "slip_away", "aim"] as Array[String], "the taste is added")
 	assert_eq([vowed.id, vowed.name], [base.id, base.name], "still Maren")
 	var transformed: UnitDef = path.transformed_kit
-	assert_eq(transformed.ability_ids(), ["longshot", "pierce"] as Array[String], "no taste, a new signature, Slip Away gone")
+	assert_eq(transformed.ability_ids(), ["longshot", "pierce", "marking_shot"] as Array[String], "no taste, a new signature, Marking Shot a habit, Slip Away gone")
 	assert_eq(transformed.stats.get_stat(UnitStats.Stat.RANGE), 6)
 	assert_eq(transformed.stats.get_stat(UnitStats.Stat.CRIT), 14)
 	assert_eq(transformed.stats.get_stat(UnitStats.Stat.ATK), 26, "22 x 1.2, rounded")

@@ -64,17 +64,22 @@ func test_an_execution_finishes_a_target_left_below_its_share() -> void:
 
 
 func test_a_kills_deed_counts_only_its_abilitys_kills() -> void:
-	var sim: CombatSim = _run(_apex_fight("pup_warren", "deadeye", "eagle_eye", Vector2i(0, 0)))
-	var by_heartseeker: int = 0
-	var by_maren: int = 0
-	for entry: LogEntry in sim.combat_log.of_kind(LogEntry.Kind.DEATH):
-		var fallen: UnitState = sim.unit_by_id(entry.target)
-		if fallen.last_attacker == "maren":
-			by_maren += 1
-			if fallen.last_hit_source.ability_id == "heartseeker":
-				by_heartseeker += 1
-	assert_gt(by_maren, by_heartseeker, "she kills with her shots too")
-	assert_eq(CombatSim.result_of(sim).deed_amount("maren", "eagle_eye"), by_heartseeker)
+	# Every encounter (habits changed which one has her shots kill too,
+	# phase 8 part 4): the deed counts only Heartseeker's kills.
+	var shots_killed: bool = false
+	for encounter_id: String in ["pup_warren", "the_pack", "ash_nest", "moth_cloud"]:
+		var sim: CombatSim = _run(_apex_fight(encounter_id, "deadeye", "eagle_eye", Vector2i(0, 0)))
+		var by_heartseeker: int = 0
+		var by_maren: int = 0
+		for entry: LogEntry in sim.combat_log.of_kind(LogEntry.Kind.DEATH):
+			var fallen: UnitState = sim.unit_by_id(entry.target)
+			if fallen.last_attacker == "maren":
+				by_maren += 1
+				if fallen.last_hit_source.ability_id == "heartseeker":
+					by_heartseeker += 1
+		shots_killed = shots_killed or by_maren > by_heartseeker
+		assert_eq(CombatSim.result_of(sim).deed_amount("maren", "eagle_eye"), by_heartseeker, encounter_id)
+	assert_true(shots_killed, "she kills with her shots too")
 
 
 func test_a_line_hits_each_enemy_it_passes_harder() -> void:

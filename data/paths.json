@@ -130,6 +130,22 @@
               "while": "planted",
               "after_ms": 1500
             }
+          },
+          {
+            "id": "marking_shot",
+            "name": "Marking Shot",
+            "kind": "ability",
+            "text": "A habit: every 8th Longshot, she Marks her target, so it takes more damage from everyone for a while.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "apply_status",
+                "status": "marked",
+                "duration_ms": 4000,
+                "target": "target"
+              }
+            ]
           }
         ]
       }
@@ -443,7 +459,25 @@
               ]
             }
           ]
-        }
+        },
+        "passives": [
+          {
+            "id": "marking_shot",
+            "name": "Marking Shot",
+            "kind": "ability",
+            "text": "A habit: every 8th Longshot, she Marks her target, so it takes more damage from everyone for a while.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "apply_status",
+                "status": "marked",
+                "duration_ms": 4000,
+                "target": "target"
+              }
+            ]
+          }
+        ]
       }
     },
     "deed": {
@@ -819,7 +853,25 @@
               ]
             }
           ]
-        }
+        },
+        "passives": [
+          {
+            "id": "marking_shot",
+            "name": "Marking Shot",
+            "kind": "ability",
+            "text": "A habit: every 8th Longshot, she Marks her target, so it takes more damage from everyone for a while.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "apply_status",
+                "status": "marked",
+                "duration_ms": 4000,
+                "target": "target"
+              }
+            ]
+          }
+        ]
       }
     },
     "deed": {
@@ -1170,6 +1222,33 @@
             "share_pct": 30,
             "within_hexes": 2,
             "covers": "all"
+          },
+          {
+            "id": "hold_the_line",
+            "name": "Hold the Line",
+            "kind": "ability",
+            "text": "A habit: every 8th Shield Bash, he taunts every enemy within 2 hexes of him, so they turn on him instead.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "area",
+                "shape": {
+                  "kind": "circle",
+                  "radius": 2
+                },
+                "anchor": "self",
+                "hits": "enemies",
+                "effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "taunt",
+                    "duration_ms": 3000,
+                    "target": "target"
+                  }
+                ]
+              }
+            ]
           }
         ]
       }
@@ -1496,7 +1575,36 @@
               ]
             }
           ]
-        }
+        },
+        "passives": [
+          {
+            "id": "hold_the_line",
+            "name": "Hold the Line",
+            "kind": "ability",
+            "text": "A habit: every 8th swing of his mace, he taunts every enemy within 1 hex of him, so they turn on him instead.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "area",
+                "shape": {
+                  "kind": "circle",
+                  "radius": 1
+                },
+                "anchor": "self",
+                "hits": "enemies",
+                "effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "taunt",
+                    "duration_ms": 3000,
+                    "target": "target"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     },
     "deed": {
@@ -1884,6 +1992,33 @@
               "stat": "healing_taken_bp",
               "value": 8000
             }
+          },
+          {
+            "id": "hold_the_line",
+            "name": "Hold the Line",
+            "kind": "ability",
+            "text": "A habit: every 8th Shield Bash, he taunts every enemy within 2 hexes of him, so they turn on him instead.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "area",
+                "shape": {
+                  "kind": "circle",
+                  "radius": 2
+                },
+                "anchor": "self",
+                "hits": "enemies",
+                "effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "taunt",
+                    "duration_ms": 3000,
+                    "target": "target"
+                  }
+                ]
+              }
+            ]
           }
         ]
       }
@@ -2492,6 +2627,7 @@
     "transformed": {
       "text": "Warding Circle replaces Mend: for 4s, a circle 2 hexes around her Slows enemies inside and Wards allies inside (they take 15% less). Every 4th Lantern Glow, Weave shields the ally lowest on HP and heals them a little.",
       "cost": "Her healing is 40% weaker.",
+      "habit": "weave",
       "patch": {
         "stats_bp": {
           "hp": 9450,

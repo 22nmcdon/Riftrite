@@ -250,6 +250,7 @@ func _check_path(path: PathDef, where: String, grid: HexGrid) -> void:
 		errors.append("%s: transformed: %s" % [where, problem])
 	_check_kit(path.vowed_kit, "%s: vowed" % where, grid)
 	_check_kit(path.transformed_kit, "%s: transformed" % where, grid)
+	_check_habit(hero.kit, path.transformed_kit, path.habit, "%s: transformed" % where)
 	var known: Array[String] = []
 	for kit: UnitDef in [hero.kit, path.vowed_kit, path.transformed_kit]:
 		known.append_array(kit.ability_ids())
@@ -258,6 +259,17 @@ func _check_path(path: PathDef, where: String, grid: HexGrid) -> void:
 			errors.append("%s: the deed counts \"%s\", which isn't in %s's kits on this path" % [where, ability_id, path.hero])
 	for apex: ApexDef in path.apexes:
 		_check_apex(apex, path, "%s: apex %s" % [where, apex.id], grid)
+
+
+## Old signatures become habits (phase 8 part 4, docs/plans/rebuild-heroes.md
+## section 3): a kit that replaced `old`'s signature must keep it as a
+## passive, `habit` or the old signature's id.
+func _check_habit(old: UnitDef, kit: UnitDef, habit: String, where: String) -> void:
+	if old == null or kit == null or old.signature == null or (kit.signature != null and kit.signature.id == old.signature.id):
+		return
+	var wanted: String = habit if not habit.is_empty() else old.signature.id
+	if not kit.passives.any(func(part: PartDef) -> bool: return part.id == wanted):
+		errors.append("%s: it replaces %s, so it needs its habit (a passive \"%s\")" % [where, old.signature.name, wanted])
 
 
 ## An apex's kits are its patches on the path's transformed kit, checked
@@ -276,6 +288,7 @@ func _check_apex(apex: ApexDef, path: PathDef, where: String, grid: HexGrid) -> 
 		errors.append("%s: apex: %s" % [where, problem])
 	_check_kit(apex.vowed_kit, "%s: vowed" % where, grid)
 	_check_kit(apex.apex_kit, "%s: apex" % where, grid)
+	_check_habit(path.transformed_kit, apex.apex_kit, "", "%s: apex" % where)
 	var known: Array[String] = []
 	for kit: UnitDef in [path.transformed_kit, apex.vowed_kit, apex.apex_kit]:
 		known.append_array(kit.ability_ids())
