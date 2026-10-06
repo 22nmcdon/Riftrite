@@ -108,11 +108,21 @@ func test_each_fight_keeps_its_summary() -> void:
 	assert_false(expected.is_empty(), "a real fight counts something")
 
 
+## A measure's per_fight in the data.
+func _per(measure: String) -> int:
+	for habit: RiftLearnsDef.Habit in _run.learns.habits:
+		if habit.measure == measure:
+			return habit.per_fight
+	return 0
+
+
 func test_scores_read_only_the_last_fights() -> void:
-	var flow: RunFlow = _on_day(1, [{"rooted": 100}, {"rooted": 4, "healing": 400}, {"rooted": 8}, {"healing": 1200}])
+	var r: int = _per("rooted")
+	var h: int = _per("healing")
+	var flow: RunFlow = _on_day(1, [{"rooted": 25 * r}, {"rooted": r, "healing": h}, {"rooted": 2 * r}, {"healing": 3 * h}])
 	var scored: Dictionary[String, int] = RiftLearns.scores(_run, flow.state)
-	assert_eq(scored["roots"], 10000, "(4 + 8 + 0) over 3 fights of 4: the fight of 100 is too old")
-	assert_eq(scored["healing"], 13333, "(400 + 1200) over 3 fights of 400")
+	assert_eq(scored["roots"], 10000, "(1 + 2 + 0) per_fights over 3 fights: the fight of 25 is too old")
+	assert_eq(scored["healing"], 13333, "(1 + 3) per_fights over 3 fights")
 	assert_eq(scored["burn"], 0)
 	assert_eq(RiftLearns.scores(_run, _on_day(1).state).values().filter(func(score: int) -> bool: return score != 0), [], "no fights, no habits")
 
@@ -120,11 +130,14 @@ func test_scores_read_only_the_last_fights() -> void:
 func test_the_top_habit_and_a_strong_second() -> void:
 	var boss: EncounterDef = _run.content.encounters[BOSS]
 	var ids: Callable = func(habits: Array[RiftLearnsDef.Habit]) -> Array: return habits.map(func(habit: RiftLearnsDef.Habit) -> String: return habit.id)
-	var flow: RunFlow = _on_day(1, [{"rooted": 12, "burning": 6}])
+	var r: int = _per("rooted")
+	var b: int = _per("burning")
+	@warning_ignore("integer_division")
+	var flow: RunFlow = _on_day(1, [{"rooted": 3 * r, "burning": b / 2}])
 	assert_eq(ids.call(RiftLearns.habits(_run, flow.state, boss)), ["roots"], "Burn at 50% isn't a second habit")
-	flow = _on_day(1, [{"rooted": 12, "burning": 12}])
+	flow = _on_day(1, [{"rooted": 3 * r, "burning": b}])
 	assert_eq(ids.call(RiftLearns.habits(_run, flow.state, boss)), ["roots", "burn"], "Burn at 100% is")
-	flow = _on_day(1, [{"burning": 12, "marked": 4}])
+	flow = _on_day(1, [{"burning": b, "marked": _per("marked")}])
 	assert_eq(ids.call(RiftLearns.habits(_run, flow.state, boss)), ["burn", "marks"], "a tie goes to the data's order")
 	flow = _on_day(1, [{"casts": 30, "rooted": 2}])
 	assert_eq(ids.call(RiftLearns.habits(_run, flow.state, _run.content.encounters["old_mother_ash"])), ["roots"],
@@ -204,7 +217,7 @@ func test_where_it_doesnt_learn() -> void:
 
 
 func test_it_repeats_and_is_fresh_on_a_replay() -> void:
-	var habits: Array = [{"rooted": 12}, {"bunched": 6}]
+	var habits: Array = [{"rooted": 3 * _per("rooted")}, {"bunched": 3 * _per("bunched")}]
 	assert_eq(_picks(_on_day(7, habits)), _picks(_on_day(7, habits)), "the same seed and fights, the same picks")
 	var changed: bool = false
 	for run_seed: int in range(1, 12):

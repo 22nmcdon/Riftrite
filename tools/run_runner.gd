@@ -10,8 +10,10 @@ extends SceneTree
 ## choices report: each card, item, and relic offered, taken, and the runs
 ## won with it. --engines adds the engine report
 ## (phase 5c step 9b): every hero engine over the runs' day fights.
-## --endless (phase 8 part 1): bots go deeper after the act's boss shop,
-## and the endless report follows (how far runs get; not tuned).
+## --endless (phase 8 part 1): bots go deeper at the endless choice, and the
+## endless report follows (how far runs get; not tuned). Since 8c-6c that's
+## after Act 3, the real endless; --endless=testing plays testing runs, whose
+## choice comes after Act 1.
 ## --jobs=N plays the seeds in N Godot processes (each takes every Nth seed
 ## and writes its runs with --part=k/N --out=file), then merges them: the
 ## report is the same as one process's.
@@ -74,7 +76,7 @@ func _play(run: RunContent, seeds: Array[int], jobs: int, options: Dictionary[St
 		var for_bot: Dictionary[String, String] = options.duplicate()
 		for_bot["bot"] = bot_name
 		return _play_in_processes(seeds, jobs, for_bot)
-	lines.assign(Report.play_many(run, seeds, bot_name, not options["endless"].is_empty()))
+	lines.assign(Report.play_many(run, seeds, bot_name, not options["endless"].is_empty(), options["endless"] == "testing"))
 	return lines
 
 
@@ -87,7 +89,7 @@ func _play_part(run: RunContent, seeds: Array[int], options: Dictionary[String, 
 		if i % part[1].to_int() == part[0].to_int():
 			mine.append(seeds[i])
 	var dicts: Array[Dictionary] = []
-	for line: Report.RunLine in Report.play_many(run, mine, options["bot"], not options["endless"].is_empty()):
+	for line: Report.RunLine in Report.play_many(run, mine, options["bot"], not options["endless"].is_empty(), options["endless"] == "testing"):
 		dicts.append(line.to_dict())
 	var file: FileAccess = FileAccess.open(options["out"], FileAccess.WRITE)
 	file.store_var(dicts)

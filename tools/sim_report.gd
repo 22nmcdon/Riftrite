@@ -174,7 +174,10 @@ static func formations_for(content: ContentDb, encounter: EncounterDef, named: D
 		names.append(name)
 		formations.append(named[name])
 	var i: int = 0
-	for formation: Dictionary in drawn_formations(content, encounter.rocks, drawn, draw_seed):
+	# Never on a rock, or over the void (phase 8 part 3, 8c-6c).
+	var closed: Array[Vector2i] = encounter.rocks.duplicate()
+	closed.append_array(encounter.void_hexes)
+	for formation: Dictionary in drawn_formations(content, closed, drawn, draw_seed):
 		i += 1
 		names.append("drawn #%d" % i)
 		formations.append(formation)

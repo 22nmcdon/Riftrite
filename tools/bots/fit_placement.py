@@ -13,14 +13,17 @@ encounter's best-scored formation (of the sampled ones) win more often than
 a random one? Then it prints the weights on all the data, unstandardized,
 for WEIGHTS in placement.gd.
 
-Usage: python3 tools/bots/fit_placement.py data.csv [weights.json] [--water --base=placement_weights.json]
+Usage: python3 tools/bots/fit_placement.py data.csv [weights.json] [--context=water|void --base=placement_weights.json]
 With weights.json (tools/bots/placement_weights.json), it writes the
 weights there for placement.gd to read.
 
 With --water (phase 8 part 3): fits only the fights with water (Act 2's),
 and writes them as the file's "water_weights" beside --base's "weights",
 which it keeps (placement.gd scores a fight with water by them), so Act 1's
-placement doesn't move.
+placement doesn't move. --context=NAME (8c-6c) does the same for any
+context: --context=void fits the fights over the void (Act 3's) alone, as
+"void_weights"; --water is --context=water. The base file's other weight
+sets are kept.
 """
 
 import csv
@@ -123,8 +126,11 @@ def main():
     sys.argv = [arg for arg in sys.argv if not arg.startswith("--")]
     names, data = read(sys.argv[1])
     if "water" in options:
-        water = names.index("bias*water")
-        data = [r for r in data if r[1][water] != 0.0]
+        options["context"] = "water"
+    context = options.get("context", "")
+    if context:
+        column = names.index("bias*" + context)
+        data = [r for r in data if r[1][column] != 0.0]
     encounters = sorted(set(r[0] for r in data), key=lambda e: [r[0] for r in data].index(e))
     print("Held out in turn (fitted on the others): random formation's win rate, the best %d scored's, and the best scored's HP left" % TOP)
     total_base = total_top = 0.0
@@ -154,12 +160,15 @@ def main():
         with open(sys.argv[2], "w") as handle:
             out = {"_note": "The good bot's placement weights (phase 6 step 6b): one per feature times context, context-major, fitted by tools/bots/fit_placement.py on tools/bots/placement_data.gd's practice fights; water_weights (phase 8 part 3, --water) on the fights with water alone, for placement.gd to score those by. Don't edit by hand.",
                    "terms": names, "weights": [round(v, 5) for v in w]}
-            if "water" in options:
+            if context:
                 with open(options["base"]) as base_handle:
                     base = json.load(base_handle)
                 assert base["terms"] == names, "the base weights' terms don't match the data's"
-                out["weights"] = base["weights"]
-                out["water_weights"] = [round(v, 5) for v in w]
+                for key, value in base.items():
+                    if key.endswith("weights"):
+                        out[key] = value
+                out["_note"] = base["_note"]
+                out[context + "_weights"] = [round(v, 5) for v in w]
             json.dump(out, handle, indent=1)
             handle.write("\n")
 

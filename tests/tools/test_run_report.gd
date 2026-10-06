@@ -36,6 +36,12 @@ func test_a_small_report() -> void:
 	assert_string_contains(text, "Runs with errors: 0")
 	assert_string_contains(text, "Picks per run by layer: hero")
 	assert_string_contains(text, "Nodes per run: Camp shown")
+	# Every fight's habits, for sizing the rift learns (8c-6c).
+	for line: Report.RunLine in lines:
+		var counted: int = line.fights.filter(func(fight: Array) -> bool: return _run.content.encounters[fight[0]].tier != "hunt").size()
+		assert_eq(line.habits.get("casts", []).size(), counted, "each fight's measures")
+	assert_string_contains(text, "The rift learns (each habit's measure")
+	assert_string_contains(text, "Mana and signatures      casts")
 
 
 func test_the_engine_report() -> void:

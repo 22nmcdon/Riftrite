@@ -11,6 +11,13 @@ extends RefCounted
 ## mid heroes and their nearest enemies (a slow walk for melee to reach them,
 ## and for them to close); both are 0 in a fight without water.
 ##
+## Phase 8 part 3 (Act 3's void, 8c-6c) adds two more: how near each hero
+## stands to the void (the distance to the nearest void hex, capped at 4
+## hexes, added up; 4 a hero with none near), and how many enemies can push
+## or pull (chargers, disruptors, the Cliffmite's shove) times the heroes
+## standing beside the void; both are 0 in a fight without void. Hexes over
+## the void are never placed on.
+##
 ## Roles come from the kits, not the heroes' names: the tank is the hero
 ## with the most HP times DEF, the far one has the longest reach of the
 ## others, and the third is the middle. Distances are in hexes.
@@ -28,6 +35,7 @@ const FEATURE_NAMES: Array[String] = [
 	"cover", "far_edge",
 	"far_behind_tank", "mid_behind_tank",
 	"on_water", "water_ahead",
+	"void_near", "pushed_off",
 ]
 ## What the fight holds, the same for every formation in it: the score's
 ## weights for each feature move with these (each feature times each
@@ -35,14 +43,21 @@ const FEATURE_NAMES: Array[String] = [
 ## "water" is 1 in a fight with water (Act 2 on); such a fight is scored by
 ## the weights file's "water_weights" (fitted on Act 2's fights alone), so a
 ## later act's fights weigh every feature apart from Act 1's, and Act 1's
-## placement is unchanged.
-const CONTEXT_NAMES: Array[String] = ["one", "flankers", "areas", "swarm", "ranged", "rocks", "enemies", "water"]
+## placement is unchanged. "void" (8c-6c) is 1 in a fight over the void, and
+## such a fight is scored by "void_weights" (fitted on Act 3's fights alone).
+const CONTEXT_NAMES: Array[String] = ["one", "flankers", "areas", "swarm", "ranged", "rocks", "enemies", "water", "void"]
+## Context indices of the act-specific weight sets.
+const WATER: int = 7
+const VOID: int = 8
+## How far from the void counts (void_near's cap, in hexes).
+const VOID_CAP: float = 4.0
 
 
 const WEIGHTS_FILE: String = "res://tools/bots/placement_weights.json"
 
 static var _weights: PackedFloat64Array = PackedFloat64Array()
 static var _water_weights: PackedFloat64Array = PackedFloat64Array()
+static var _void_weights: PackedFloat64Array = PackedFloat64Array()
 ## Where the weights are read from (placement_check's --weights compares
 ## another fit).
 static var weights_file: String = WEIGHTS_FILE
@@ -54,15 +69,20 @@ static func weights() -> PackedFloat64Array:
 		var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(weights_file))
 		_weights = PackedFloat64Array(data["weights"])
 		_water_weights = PackedFloat64Array(data.get("water_weights", data["weights"]))
+		_void_weights = PackedFloat64Array(data.get("void_weights", data["weights"]))
 		assert(_weights.size() == FEATURE_NAMES.size() * CONTEXT_NAMES.size(), "placement_weights.json doesn't match the features")
 		assert(_water_weights.size() == _weights.size(), "placement_weights.json's water weights don't match the features")
+		assert(_void_weights.size() == _weights.size(), "placement_weights.json's void weights don't match the features")
 	return _weights
 
 
-## The weights a fight is scored by: the water weights in a fight with water.
+## The weights a fight is scored by: the void weights in a fight over the
+## void, the water weights in one with water, else Act 1's.
 static func weights_for(context: PackedFloat64Array) -> PackedFloat64Array:
 	var dry: PackedFloat64Array = weights()
-	return _water_weights if context[CONTEXT_NAMES.size() - 1] != 0.0 else dry
+	if context[VOID] != 0.0:
+		return _void_weights
+	return _water_weights if context[WATER] != 0.0 else dry
 
 
 ## A formation's score: each feature times each context, weighted.
@@ -100,7 +120,7 @@ static func best_formations(setup: FightSetup, grid: HexGrid, count: int = 6, sc
 	for row: int in grid.height:
 		if grid.zone(row) == HexGrid.Zone.HEROES:
 			for col: int in grid.width:
-				if not setup.rocks.has(Vector2i(col, row)):
+				if not setup.rocks.has(Vector2i(col, row)) and not setup.void_hexes.has(Vector2i(col, row)):
 					zone.append(Vector2i(col, row))
 	var info: Dictionary = read_enemies(setup, grid)
 	var context: PackedFloat64Array = info["context"]
@@ -120,6 +140,9 @@ static func best_formations(setup: FightSetup, grid: HexGrid, count: int = 6, sc
 	var rocky: PackedFloat64Array = PackedFloat64Array()
 	var wet: PackedFloat64Array = PackedFloat64Array()
 	var wade: PackedFloat64Array = PackedFloat64Array()
+	var void_d: PackedFloat64Array = PackedFloat64Array()
+	var brink: PackedFloat64Array = PackedFloat64Array()
+	var pushers: float = info["pushers"]
 	var centroid: Vector2 = info["centroid"]
 	for hex: Vector2i in zone:
 		var c: Vector2i = grid.center(hex.x, hex.y)
@@ -139,6 +162,8 @@ static func best_formations(setup: FightSetup, grid: HexGrid, count: int = 6, sc
 		rocky.append(rocks_near)
 		wet.append(1.0 if setup.water.has(hex) else 0.0)
 		wade.append(water_ahead(setup, grid, p, info["at"]))
+		void_d.append(void_distance(setup, grid, p))
+		brink.append(pushers * beside_void(setup, grid, hex))
 	var pair: PackedFloat64Array = PackedFloat64Array()
 	pair.resize(n * n)
 	for i: int in n:
@@ -155,9 +180,10 @@ static func best_formations(setup: FightSetup, grid: HexGrid, count: int = 6, sc
 	# Each role's own terms, for its shortlist.
 	var own: Array = [[], [], []]
 	for i: int in n:
-		own[0].append([eff[1] * rows[i] + eff[7] * near[i] + eff[8] * lateral[i] + eff[20] * rows[i] + eff[21] * rows[i] + eff[22] * wet[i], i])
-		own[1].append([eff[2] * rows[i] + eff[5] * near[i] + eff[9] * lateral[i] + eff[18] * rocky[i] + eff[19] * edge[i] - eff[20] * rows[i] + eff[22] * wet[i] + eff[23] * wade[i], i])
-		own[2].append([eff[3] * rows[i] + eff[6] * near[i] + eff[10] * lateral[i] + eff[18] * rocky[i] - eff[21] * rows[i] + eff[22] * wet[i] + eff[23] * wade[i], i])
+		var voided: float = eff[24] * void_d[i] + eff[25] * brink[i]
+		own[0].append([eff[1] * rows[i] + eff[7] * near[i] + eff[8] * lateral[i] + eff[20] * rows[i] + eff[21] * rows[i] + eff[22] * wet[i] + voided, i])
+		own[1].append([eff[2] * rows[i] + eff[5] * near[i] + eff[9] * lateral[i] + eff[18] * rocky[i] + eff[19] * edge[i] - eff[20] * rows[i] + eff[22] * wet[i] + eff[23] * wade[i] + voided, i])
+		own[2].append([eff[3] * rows[i] + eff[6] * near[i] + eff[10] * lateral[i] + eff[18] * rocky[i] - eff[21] * rows[i] + eff[22] * wet[i] + eff[23] * wade[i] + voided, i])
 	var lists: Array[PackedInt32Array] = []
 	for role: int in 3:
 		var ranked: Array = own[role]
@@ -194,7 +220,8 @@ static func best_formations(setup: FightSetup, grid: HexGrid, count: int = 6, sc
 					+ eff[15] * cover + eff[16] * areas / (1.0 + smallest) + eff[17] * swarm * mean \
 					+ eff[18] * (rocky[a] + rocky[m]) + eff[19] * edge[a] \
 					+ eff[20] * (rows[t] - rows[a]) + eff[21] * (rows[t] - rows[m]) \
-					+ eff[22] * (wet[t] + wet[a] + wet[m]) + eff[23] * (wade[a] + wade[m])
+					+ eff[22] * (wet[t] + wet[a] + wet[m]) + eff[23] * (wade[a] + wade[m]) \
+					+ eff[24] * (void_d[t] + void_d[a] + void_d[m]) + eff[25] * (brink[t] + brink[a] + brink[m])
 				if best.size() < count or value > floor_value:
 					best.append([value, t, a, m])
 					best.sort_custom(func(x: Array, y: Array) -> bool: return x[0] > y[0] if x[0] != y[0] else (x[1] * 10000 + x[2] * 100 + x[3]) < (y[1] * 10000 + y[2] * 100 + y[3]))
@@ -285,7 +312,32 @@ static func features(setup: FightSetup, grid: HexGrid, info: Dictionary) -> Pack
 		if setup.water.has(Vector2i(unit.col, unit.row)):
 			f[22] += 1.0
 	f[23] = water_ahead(setup, grid, at[1], enemies) + water_ahead(setup, grid, at[2], enemies)
+	for i: int in 3:
+		f[24] += void_distance(setup, grid, at[i])
+		f[25] += float(info["pushers"]) * beside_void(setup, grid, Vector2i(roles[i].col, roles[i].row))
 	return f
+
+
+## How far `p` (in hexes) stands from the nearest void hex's center, capped
+## at VOID_CAP; 0 in a fight without void.
+static func void_distance(setup: FightSetup, grid: HexGrid, p: Vector2) -> float:
+	if setup.void_hexes.is_empty():
+		return 0.0
+	var best: float = VOID_CAP
+	for hex: Vector2i in setup.void_hexes:
+		var c: Vector2i = grid.center(hex.x, hex.y)
+		best = minf(best, p.distance_to(Vector2(c.x, c.y) / float(HexGrid.HEX)))
+	return best
+
+
+## 1 if a void hex neighbors `hex`, else 0.
+static func beside_void(setup: FightSetup, grid: HexGrid, hex: Vector2i) -> float:
+	if setup.void_hexes.is_empty():
+		return 0.0
+	for other: Vector2i in grid.neighbors(hex.x, hex.y):
+		if setup.void_hexes.has(other):
+			return 1.0
+	return 0.0
 
 
 ## How many water hexes the straight line from `p` (in hexes) to the nearest
@@ -318,6 +370,7 @@ static func read_enemies(setup: FightSetup, grid: HexGrid) -> Dictionary:
 	var centroid: Vector2 = Vector2.ZERO
 	var areas: int = 0
 	var swarm: int = 0
+	var pushers: int = 0
 	for unit: UnitSetup in setup.enemies:
 		var p: Vector2 = _pos(grid, unit)
 		at.append(p)
@@ -331,9 +384,12 @@ static func read_enemies(setup: FightSetup, grid: HexGrid) -> Dictionary:
 				swarm += 1
 		if unit.def.archetype == "caster" or _throws_areas(unit.def):
 			areas += 1
+		if not setup.void_hexes.is_empty() and _moves_heroes(unit.def):
+			pushers += 1
 	var ranged: int = setup.enemies.filter(func(unit: UnitSetup) -> bool: return unit.def.stats.get_stat(UnitStats.Stat.RANGE) >= 3).size()
-	var context: PackedFloat64Array = PackedFloat64Array([1.0, flankers.size(), areas, swarm, ranged, setup.rocks.size(), setup.enemies.size(), 0.0 if setup.water.is_empty() else 1.0])
-	return {"at": at, "flankers": flankers, "centroid": centroid / maxf(weight, 1.0), "areas": areas, "swarm": swarm, "context": context}
+	var context: PackedFloat64Array = PackedFloat64Array([1.0, flankers.size(), areas, swarm, ranged, setup.rocks.size(), setup.enemies.size(), 0.0 if setup.water.is_empty() else 1.0,
+		0.0 if setup.void_hexes.is_empty() else 1.0])
+	return {"at": at, "flankers": flankers, "centroid": centroid / maxf(weight, 1.0), "areas": areas, "swarm": swarm, "pushers": pushers, "context": context}
 
 
 ## The heroes by role: [tank, far, mid] (see the header).
@@ -356,6 +412,24 @@ static func roles_of(setup: FightSetup) -> Array[UnitSetup]:
 
 static func _toughness(def: UnitDef) -> int:
 	return def.stats.get_stat(UnitStats.Stat.HP) * (100 + def.stats.get_stat(UnitStats.Stat.DEF))
+
+
+## True if the kit can push or pull a hero (a knockback, a pull, or a
+## charge that knocks back, in its abilities or its passives).
+static func _moves_heroes(def: UnitDef) -> bool:
+	var effects: Array[EffectDef] = []
+	effects.append_array(def.basic_attack.effects)
+	if def.signature != null:
+		effects.append_array(def.signature.effects)
+	for part: PartDef in def.passives:
+		if part.ability != null:
+			effects.append_array(part.ability.effects)
+	for effect: EffectDef in effects:
+		if effect.type == EffectDef.Type.KNOCKBACK or effect.type == EffectDef.Type.PULL or (effect.type == EffectDef.Type.CHARGE and effect.knockback_hexes > 0):
+			return true
+		if effect.type == EffectDef.Type.AREA and effect.area_effects.any(func(inner: EffectDef) -> bool: return inner.type == EffectDef.Type.KNOCKBACK or inner.type == EffectDef.Type.PULL):
+			return true
+	return false
 
 
 static func _throws_areas(def: UnitDef) -> bool:

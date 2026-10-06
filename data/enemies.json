@@ -2182,7 +2182,7 @@
       {
         "id": "pack_mite",
         "name": "Pack",
-        "text": "Two of its side on a hero are enough for its bites to shove.",
+        "text": "Two Cliffmites on a hero are enough for their bites to shove.",
         "mod": {
           "drops_passives": [
             "mite_shove"
@@ -2192,7 +2192,7 @@
               "id": "pack_shove",
               "name": "Pack Shove",
               "kind": "ability",
-              "text": "When two or more of its side are attacking the same hero, each bite also shoves that hero half a hex toward the nearest edge.",
+              "text": "When two or more Cliffmites are attacking the same hero, each one's bite also shoves that hero a quarter hex toward the nearest edge, at most once every 3s.",
               "effects": [
                 {
                   "trigger": "on_holder_hit",
@@ -2201,9 +2201,11 @@
                   ],
                   "type": "knockback",
                   "hexes": 1,
-                  "distance_bp": 5000,
+                  "distance_bp": 2500,
+                  "cooldown_ms": 3000,
                   "toward": "edge",
                   "when_attackers": 2,
+                  "when_attackers_kits": ["cliffmite"],
                   "target": "hit_target"
                 }
               ]
@@ -2276,7 +2278,7 @@
           "id": "mite_shove",
           "name": "Edgeward Shove",
           "kind": "ability",
-          "text": "When three or more of its side are attacking the same hero, each bite also shoves that hero half a hex toward the nearest edge.",
+          "text": "When three or more Cliffmites are attacking the same hero, each one's bite also shoves that hero a quarter hex toward the nearest edge, at most once every 3s.",
           "effects": [
             {
               "trigger": "on_holder_hit",
@@ -2285,9 +2287,11 @@
               ],
               "type": "knockback",
               "hexes": 1,
-              "distance_bp": 5000,
+              "distance_bp": 2500,
+              "cooldown_ms": 3000,
               "toward": "edge",
               "when_attackers": 3,
+              "when_attackers_kits": ["cliffmite"],
               "target": "hit_target"
             }
           ]

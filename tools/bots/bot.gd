@@ -19,6 +19,9 @@ var peek: bool = false
 ## Endless (phase 8 part 1): after the act's boss shop, go deeper (the
 ## runner's --endless) or end the run.
 var deeper: bool = false
+## A testing run (phase 8 part 3): Act 1's endless is offered (8c-6c: the
+## runner's --endless=testing).
+var testing: bool = false
 
 
 ## Called once, before the run's first decision.

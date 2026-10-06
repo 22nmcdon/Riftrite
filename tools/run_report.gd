@@ -103,6 +103,11 @@ class RunLine:
 	## threshold, once earned).
 	var apex_fights: Dictionary[String, int] = {}
 	var apex_amount: Dictionary[String, int] = {}
+	## The rift learns (phase 8 part 3, 8c-6c, for sizing each habit's
+	## per_fight): measure -> what each fight (Hunts aside) held of it, and
+	## habit id -> the boss fights that learned it.
+	var habits: Dictionary[String, Array] = {}
+	var learned: Dictionary[String, int] = {}
 
 	## Its measures as a Dictionary (what --jobs passes between processes,
 	## with FileAccess.store_var, so types survive).
@@ -154,7 +159,9 @@ static func make_bot(bot_name: String) -> BaseBot:
 
 ## Plays run `run_seed` to its end with the bot named `bot_name`, measuring
 ## it.
-static func play(run: RunContent, run_seed: int, bot_name: String = "simple-peek", endless: bool = false) -> RunLine:
+## `endless`: the bot goes deeper at the first endless choice (after Act 3,
+## 8c-6c); `testing`: a testing run, whose first choice is after Act 1.
+static func play(run: RunContent, run_seed: int, bot_name: String = "simple-peek", endless: bool = false, testing: bool = false) -> RunLine:
 	var line := RunLine.new()
 	line.seed_value = run_seed
 	line.bot = bot_name
@@ -162,7 +169,7 @@ static func play(run: RunContent, run_seed: int, bot_name: String = "simple-peek
 	bot.deeper = endless
 	var combos: Array[Dictionary] = vow_combinations(run.content)
 	line.vows.assign(combos[run_seed % combos.size()])
-	var flow: RunFlow = RunFlow.start(run, run_seed, line.vows, line.errors, endless)
+	var flow: RunFlow = RunFlow.start(run, run_seed, line.vows, line.errors, testing)
 	if flow == null:
 		return line
 	var state: RunState = flow.state
@@ -229,6 +236,18 @@ static func play(run: RunContent, run_seed: int, bot_name: String = "simple-peek
 				counted = flow.last_result
 				_count_engines(line, flow.last_setup, flow.last_result, run.content.tuning.chain_limit)
 			line.fights.append([last.encounter, last.outcome != FightResult.Outcome.DEFEAT])
+			if run.content.encounters[last.encounter].tier != "hunt":
+				for measure: String in RiftLearnsDef.MEASURES:
+					if not line.habits.has(measure):
+						line.habits[measure] = []
+					line.habits[measure].append(last.habits.get(measure, 0))
+			if run.content.encounters[last.encounter].tier == "boss":
+				var heard: Dictionary[String, bool] = {}
+				for option: Array in state.today_learned:
+					for pick: Dictionary in option:
+						heard[str(pick["habit"])] = true
+				for habit_id: String in heard:
+					line.learned[habit_id] = line.learned.get(habit_id, 0) + 1
 			for hero: RunState.Hero in state.heroes:
 				if state.apex_open and not hero.apex.is_empty() and not line.apexed_on.has(hero.id):
 					line.apex_fights[hero.id] = line.apex_fights.get(hero.id, 0) + 1
@@ -450,10 +469,10 @@ static func _choice_name(run: RunContent, kind: String, id: String) -> String:
 	return run.relics[id].name if run.relics.has(id) else id
 
 
-static func play_many(run: RunContent, seeds: Array[int], bot_name: String = "simple-peek", endless: bool = false) -> Array[RunLine]:
+static func play_many(run: RunContent, seeds: Array[int], bot_name: String = "simple-peek", endless: bool = false, testing: bool = false) -> Array[RunLine]:
 	var lines: Array[RunLine] = []
 	for run_seed: int in seeds:
-		lines.append(play(run, run_seed, bot_name, endless))
+		lines.append(play(run, run_seed, bot_name, endless, testing))
 	return lines
 
 
@@ -637,6 +656,30 @@ static func apex_vows_summary(run: RunContent, lines: Array[RunLine]) -> String:
 	return "\n".join(out)
 
 
+## The rift learns (phase 8 part 3, 8c-6c): each habit's measure over the
+## fights (Hunts aside): the share of fights holding any, and the median
+## and upper quartile of those that do, against its per_fight; and the
+## boss fights that learned it.
+static func learns_summary(run: RunContent, lines: Array[RunLine]) -> String:
+	var out: PackedStringArray = PackedStringArray()
+	out.append("The rift learns (each habit's measure: fights holding any, median and upper quartile there, per_fight; boss fights that learned it):")
+	for habit: RiftLearnsDef.Habit in run.learns.habits:
+		var all: int = 0
+		var held: Array[int] = []
+		var learned: int = 0
+		for line: RunLine in lines:
+			for value: Variant in line.habits.get(habit.measure, []):
+				all += 1
+				if int(value) > 0:
+					held.append(int(value))
+			learned += line.learned.get(habit.id, 0)
+		held.sort()
+		@warning_ignore("integer_division")
+		var upper: String = str(held[held.size() * 3 / 4]) if not held.is_empty() else "-"
+		out.append("  %-24s %-9s %3d%% of %d fights, median %s, upper %s; per_fight %d; learned %d" % [habit.name, habit.measure, _pct(held.size(), all), all, _median(held) if not held.is_empty() else "-", upper, habit.per_fight, learned])
+	return "\n".join(out)
+
+
 static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 	var content: ContentDb = run.content
 	var out: PackedStringArray = PackedStringArray()
@@ -656,6 +699,8 @@ static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 	if run.acts.size() > 1:
 		out.append(acts_summary(run, lines))
 		out.append(apex_vows_summary(run, lines))
+	if run.learns != null and run.acts.any(func(act_def: ActDef) -> bool: return act_def.rift_learns):
+		out.append(learns_summary(run, lines))
 	out.append("")
 	out.append("First transformation (a run's first hero; the design: around days 3-4):")
 	var firsts: Array[int] = []

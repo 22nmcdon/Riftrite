@@ -48,7 +48,8 @@ func _init() -> void:
 				vows[hero_id] = paths[rng.range_int(paths.size())].id
 				if rng.range_int(2) == 0 or content.encounters[encounter_id].act > 1:
 					transformed.append(hero_id)
-			var free: Array[Vector2i] = zone.duplicate()
+			# Never a hex over the void (phase 8 part 3, 8c-6c).
+			var free: Array[Vector2i] = zone.filter(func(hex: Vector2i) -> bool: return not content.encounters[encounter_id].void_hexes.has(hex))
 			var formation: Dictionary[String, Vector2i] = {}
 			for hero_id: String in content.hero_ids:
 				formation[hero_id] = free.pop_at(rng.range_int(free.size()))

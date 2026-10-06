@@ -81,6 +81,17 @@ func test_three_cliffmites_on_a_hero_shove_it_toward_the_edge() -> void:
 			assert_eq(shoves[0].target, "hero")
 
 
+## The crowd is Cliffmites (8c-6c): two mites with another of their side on
+## the hero don't shove.
+func test_only_cliffmites_make_the_crowd() -> void:
+	var foes: Array[UnitSetup] = [K.foe(_kit("cliffmite"), 2, 4, "mite0"), K.foe(_kit("cliffmite"), 3, 4, "mite1"), K.foe(_still("other", {"range": 4}), 4, 6)]
+	var fight: CombatSim = _sim([K.at(_still("hero"), 3, 2)] as Array[UnitSetup], foes,
+		func(setup: FightSetup) -> void: setup.void_hexes = row_but(0, [] as Array[int]))
+	K.step(fight, 120)
+	assert_eq(fight.unit_by_id("other").target, fight.unit_by_id("hero"), "the third is on the hero")
+	assert_eq(K.entries(fight, LogEntry.Kind.PUSH).filter(func(entry: LogEntry) -> bool: return entry.source_ability == "mite_shove"), [] as Array[LogEntry])
+
+
 func test_pack_mites_shove_in_twos_and_a_brittle_mite_bursts_into_slows() -> void:
 	var mites: Array[UnitSetup] = [K.foe(_kit("cliffmite", "pack_mite"), 2, 4, "mite0"), K.foe(_kit("cliffmite", "pack_mite"), 3, 4, "mite1")]
 	var pack: CombatSim = _sim([K.at(_still("hero"), 3, 2)] as Array[UnitSetup], mites, func(setup: FightSetup) -> void: setup.void_hexes = row_but(0, [] as Array[int]))

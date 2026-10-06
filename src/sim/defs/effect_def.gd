@@ -424,6 +424,9 @@ var hook: bool = false
 ## this many standing units of the unit's side (itself among them) have its
 ## target as theirs (0: always).
 var when_attackers: int = 0
+## when_attackers counts only units of these kits (empty: any of its side;
+## phase 8 part 3, 8c-6c: the Cliffmite's crowd is Cliffmites).
+var when_attackers_kits: Array[String] = []
 ## An event effect (phase 8 part 3, the Gloam Hound): it runs this long
 ## after its event (ticks; 0: at once), if its unit still stands.
 var delay_ticks: int = 0
@@ -731,6 +734,10 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 			_read_scaling(def, reader.req_object("scaling"))
 
 	def.when_attackers = reader.opt_int("when_attackers", 0, 0, 10)
+	if reader.has("when_attackers_kits"):
+		def.when_attackers_kits.assign(reader.req_string_array("when_attackers_kits"))
+		if def.when_attackers == 0:
+			reader.error("\"when_attackers_kits\" needs \"when_attackers\"")
 	if reader.has("only"):
 		def.only = UnitCondition.read(reader.req_object("only"))
 		if def.target != Target.ALL_ENEMIES and def.target != Target.ALL_ALLIES:

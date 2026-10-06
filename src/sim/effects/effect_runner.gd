@@ -168,7 +168,7 @@ static func power_of(effect: EffectDef, unit: UnitState, heal_boost_bp: int = 0)
 static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: EffectSource, effect: EffectDef, victim: UnitState, amount: int, crit: bool, push_from: Vector2i = NO_POINT, power: int = 0) -> void:
 	# Only with enough of its side on the same target (phase 8 part 3, the
 	# Cliffmite).
-	if effect.when_attackers > 0 and attackers_on(sim, unit, victim) < effect.when_attackers:
+	if effect.when_attackers > 0 and attackers_on(sim, unit, victim, effect.when_attackers_kits) < effect.when_attackers:
 		return
 	match effect.type:
 		EffectDef.Type.DAMAGE:
@@ -337,12 +337,13 @@ static func amount_of(effect: EffectDef, unit: UnitState, damage: int = 0, sim: 
 	return Passives.boosted(unit, effect, amount)
 
 
-## How many standing units of `unit`'s side (itself among them) have
-## `victim` as their target (phase 8 part 3, when_attackers).
-static func attackers_on(sim: CombatSim, unit: UnitState, victim: UnitState) -> int:
+## How many standing units of `unit`'s side (itself among them; of `kits`,
+## if any are named) have `victim` as their target (phase 8 part 3,
+## when_attackers).
+static func attackers_on(sim: CombatSim, unit: UnitState, victim: UnitState, kits: Array[String] = []) -> int:
 	var count: int = 0
 	for ally: UnitState in (sim.heroes if unit.side == EffectSource.Team.HEROES else sim.enemies):
-		if ally.alive and ally.target == victim:
+		if ally.alive and ally.target == victim and (kits.is_empty() or kits.has(ally.def.id)):
 			count += 1
 	return count
 

@@ -188,18 +188,26 @@ func test_every_ally_hears_a_shield_break() -> void:
 	var heard: int = 0
 	for encounter_id: String in _content.encounter_ids:
 		var sim: CombatSim = _vell_fight(encounter_id, "wardweaver", "thornweave")
+		# Only the breaks while she stands: a fallen Vell hears none.
+		var fell_at: int = 1 << 30
+		for entry: LogEntry in sim.combat_log.of_kind(LogEntry.Kind.DEATH):
+			if entry.target == "vell":
+				fell_at = mini(fell_at, entry.tick)
 		var breaks: int = 0
+		var standing_breaks: int = 0
 		for entry: LogEntry in sim.combat_log.entries:
 			var hit: bool = entry.kind == LogEntry.Kind.DAMAGE or entry.kind == LogEntry.Kind.STATUS_DAMAGE
 			if hit and entry.broke_shield and sim.unit_by_id(entry.target).side == EffectSource.Team.HEROES:
 				breaks += 1
+				if entry.tick < fell_at:
+					standing_breaks += 1
 		var stacks: int = 0
 		for entry: LogEntry in _of(sim, LogEntry.Kind.STATUS_APPLIED, "vell"):
 			if entry.status == "woven_thorns":
 				stacks += 1
 		assert_true(stacks <= breaks, "a stack a break heard (%s)" % encounter_id)
 		heard += stacks
-		if breaks > 0:
+		if standing_breaks > 0:
 			assert_gt(_of(sim, LogEntry.Kind.DAMAGE, "vell", "thornweave").size(), 0, "the breaker is hit back (%s)" % encounter_id)
 	assert_gt(heard, 0)
 

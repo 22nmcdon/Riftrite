@@ -521,7 +521,8 @@ static func _effect_text_plain(effect: EffectDef, kit: UnitDef, content: Content
 	if effect.every > 1 and effect.trigger == EffectDef.Trigger.ON_FIRE:
 		text = "every %s: %s" % [_nth(effect.every, "fire"), text]
 	if effect.when_attackers > 0:
-		text += " (with %d of its side on the target)" % effect.when_attackers
+		var who: String = "of its side" if effect.when_attackers_kits.is_empty() else " or ".join(effect.when_attackers_kits.map(func(kit_id: String) -> String: return kit_id.replace("_", " ").capitalize() + "s"))
+		text += " (with %d %s on the target)" % [effect.when_attackers, who]
 	return text
 
 

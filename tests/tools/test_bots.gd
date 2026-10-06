@@ -96,6 +96,34 @@ func test_the_quick_score_is_the_features_score() -> void:
 			Simple.formation().values(), "the setup is put back")
 
 
+## Act 3's void (phase 8 part 3, 8c-6c): the fight is read as one over
+## the void, scored by its own weights, its pushers counted; no formation
+## stands over the void, and the two features read it.
+func test_the_good_bot_reads_the_void() -> void:
+	var grid: HexGrid = _run.content.tuning.make_grid()
+	var errors: Array[String] = []
+	var setup: FightSetup = Encounters.setup(_run.content, "the_span", Simple.formation(), 1, errors)
+	var info: Dictionary = Placement.read_enemies(setup, grid)
+	assert_eq(info["context"][Placement.VOID], 1.0, "a fight over the void")
+	assert_eq(info["pushers"], 6, "six Cliffmites shove")
+	Placement.weights()
+	assert_eq(Placement.weights_for(info["context"]), Placement._void_weights, "scored by the void weights")
+	var scores: Array[float] = []
+	for formation: Dictionary in Placement.best_formations(setup, grid, 6, scores):
+		for hex: Vector2i in formation.values():
+			assert_false(setup.void_hexes.has(hex), "never over the void")
+	# (3, 2) stands beside the void row; (3, 0) two rows back.
+	assert_eq(Placement.beside_void(setup, grid, Vector2i(3, 2)), 1.0)
+	assert_eq(Placement.beside_void(setup, grid, Vector2i(3, 0)), 0.0)
+	var at: Callable = func(col: int, row: int) -> Vector2: return Vector2(grid.center(col, row)) / float(HexGrid.HEX)
+	assert_true(Placement.void_distance(setup, grid, at.call(3, 0)) > Placement.void_distance(setup, grid, at.call(3, 2)), "farther back, farther from the void")
+	var plain: FightSetup = Encounters.setup(_run.content, "pup_warren", Simple.formation(), 1, errors)
+	var plain_info: Dictionary = Placement.read_enemies(plain, grid)
+	assert_eq(plain_info["context"][Placement.VOID], 0.0)
+	var f: PackedFloat64Array = Placement.features(plain, grid, plain_info)
+	assert_eq([f[24], f[25]], [0.0, 0.0], "both 0 without void")
+
+
 func test_roles_come_from_the_kits() -> void:
 	var errors: Array[String] = []
 	var setup: FightSetup = Encounters.setup(_run.content, "the_pack", Simple.formation(), 1, errors)
