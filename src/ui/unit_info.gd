@@ -36,6 +36,8 @@ const EVENT_WORDS: Dictionary[int, String] = {
 	EffectDef.Trigger.ON_WALL_BLOCK: "attack its wall blocks",
 	EffectDef.Trigger.ON_BREAKS_SHIELD: "Shield it breaks",
 	EffectDef.Trigger.ON_RISE: "rise from a fall",
+	EffectDef.Trigger.ON_PULL: "enemy pulled",
+	EffectDef.Trigger.ON_SHIELD_SPENT: "Shield spent",
 }
 const ORDINALS: Array[String] = ["th", "st", "nd", "rd"]
 const CHATTER: Array[LogEntry.Kind] = [LogEntry.Kind.MOVE, LogEntry.Kind.STOP, LogEntry.Kind.TARGET]
@@ -576,6 +578,8 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 				text += ", +%s per other %s within %s" % [ValueBreakdown._percent(effect.bonus_bp_per_ally), kin, hexes(bonus_hexes(effect))]
 			if effect.execute_below_bp > 0:
 				text += ", finishing it below %s HP" % ValueBreakdown._percent(effect.execute_below_bp)
+			if effect.ignores_def:
+				text += ", ignoring DEF"
 			return text + _to_all(effect)
 		EffectDef.Type.HEAL:
 			if effect.amount_bp_of_max_hp > 0:
@@ -592,6 +596,9 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 		EffectDef.Type.SHIELD:
 			if effect.amount_bp_of_damage > 0:
 				return "Shield of %s of the hit" % ValueBreakdown._percent(effect.amount_bp_of_damage)
+			if effect.amount_bp_of_shield > 0:
+				# Shared Ward (phase 8 part 4): a share of its own Shield.
+				return "Shield of %s of its own Shield%s" % [ValueBreakdown._percent(effect.amount_bp_of_shield), _to_all(effect)]
 			var cap: String = ", up to %s of max HP" % ValueBreakdown._percent(effect.cap_bp_of_max_hp) if effect.cap_bp_of_max_hp > 0 else ""
 			if effect.amount_bp_of_max_hp > 0:
 				return "Shield of %s of max HP%s%s" % [ValueBreakdown._percent(effect.amount_bp_of_max_hp), cap, _to_all(effect)]

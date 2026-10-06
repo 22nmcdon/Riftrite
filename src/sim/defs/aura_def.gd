@@ -38,7 +38,10 @@ extends RefCounted
 ##   "per": "enemy_near", "per_within_hexes": 1   counts once for each
 ##                                          standing enemy that near it (phase
 ##                                          8 part 4, Crowd Strength); off
-##                                          while none is
+##                                          while none is; "per_twice":
+##                                          {...UnitCondition} counts those
+##                                          that meet it twice (Bloodied
+##                                          Links: Bleeding enemies)
 ##   "while": "state", "state": {...}       on while its holder meets a
 ##                                          UnitCondition ("Shielded allies
 ##                                          deal +15%"; phase 5c step 3)
@@ -89,7 +92,8 @@ extends RefCounted
 ## root_cap_ms (above 0: Roots put on it last at most that long; Anchored);
 ## and (8c-5c) miss_bp (its basic attack's hits miss that share of the
 ## time, rolled on the seeded RNG, logged DODGED noted "missed"; the
-## Dazzling Moth's dust).
+## Dazzling Moth's dust); and (phase 8 part 4) stun_time_bp (Stuns put on
+## it last that much longer: -5000 is half; Garrow's Iron Will).
 ## "vs": {...} (a UnitCondition; damage_bp, crit_chance_bp, and lifesteal_bp;
 ## phase 5c steps 3 and 5b): the bonus
 ## counts only on hits against targets that meet it, as power (Decision 12:
@@ -111,7 +115,7 @@ enum Stat { DAMAGE_BP, HEAL_BP, SHIELD_BP, OVER_TIME_BP, CRIT_CHANCE_BP, COOLDOW
 	LIFESTEAL_BP, CRIT_DAMAGE_BP, ATSP, DAMAGE_REDUCED_BP,
 	OVERHEAL_SHIELD_BP, LIFESTEAL_HEALS, CRIT_OVERFLOW_BP, DEF, OVERHEAL_STRIKE_BP, MAX_HP_BP,
 	DEF_IGNORE_BP, UNPUSHABLE, DODGE_EVERY_MS, HALVED_HITS,
-	SHIELD_DAMAGE_BP, SEES_STEALTH, BURN_TAKEN_BP, MARKED_TIME_BP, ROOT_CAP_MS, MISS_BP }
+	SHIELD_DAMAGE_BP, SEES_STEALTH, BURN_TAKEN_BP, MARKED_TIME_BP, ROOT_CAP_MS, MISS_BP, STUN_TIME_BP }
 ## What turns an aura on, beyond its window.
 enum While { ALWAYS, TAUNTING, PLANTED, BELOW_HP, ALLY_STANDING, STATE, ALLY_NEAR, BEHIND_WALL, MOVED, CROWDED, TACTIC }
 
@@ -124,7 +128,7 @@ const STAT_NAMES: Array[String] = [
 	"lifesteal_bp", "crit_damage_bp", "atsp", "damage_reduced_bp",
 	"overheal_shield_bp", "lifesteal_heals", "crit_overflow_bp", "def", "overheal_strike_bp", "max_hp_bp",
 	"def_ignore_bp", "unpushable", "dodge_every_ms", "halved_hits",
-	"shield_damage_bp", "sees_stealth", "burn_taken_bp", "marked_time_bp", "root_cap_ms", "miss_bp",
+	"shield_damage_bp", "sees_stealth", "burn_taken_bp", "marked_time_bp", "root_cap_ms", "miss_bp", "stun_time_bp",
 ]
 const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp", "ally_standing", "state", "ally_near", "behind_wall", "moved", "crowded", "tactic"]
 ## The stats that add rather than multiply. The rest are factors (x1.1);
@@ -132,7 +136,7 @@ const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp",
 const ADDITIVE: Array[Stat] = [Stat.CRIT_CHANCE_BP, Stat.COOLDOWN_BP, Stat.RANGE, Stat.LIFESTEAL_BP, Stat.CRIT_DAMAGE_BP, Stat.ATSP, Stat.DAMAGE_REDUCED_BP,
 	Stat.OVERHEAL_SHIELD_BP, Stat.LIFESTEAL_HEALS, Stat.CRIT_OVERFLOW_BP, Stat.DEF, Stat.OVERHEAL_STRIKE_BP,
 	Stat.DEF_IGNORE_BP, Stat.UNPUSHABLE, Stat.DODGE_EVERY_MS, Stat.HALVED_HITS,
-	Stat.SHIELD_DAMAGE_BP, Stat.SEES_STEALTH, Stat.BURN_TAKEN_BP, Stat.MARKED_TIME_BP, Stat.ROOT_CAP_MS, Stat.MISS_BP]
+	Stat.SHIELD_DAMAGE_BP, Stat.SEES_STEALTH, Stat.BURN_TAKEN_BP, Stat.MARKED_TIME_BP, Stat.ROOT_CAP_MS, Stat.MISS_BP, Stat.STUN_TIME_BP]
 ## The stats an aura worked out per hit may hold ("vs", "from_basic",
 ## "per_target_stacks").
 const VS_STATS: Array[Stat] = [Stat.DAMAGE_BP, Stat.CRIT_CHANCE_BP, Stat.LIFESTEAL_BP, Stat.CRIT_DAMAGE_BP, Stat.HEAL_BP, Stat.SHIELD_BP]
@@ -142,7 +146,7 @@ const STAT_LABELS: Array[String] = [
 	"lifesteal", "crit damage", "ATSP", "damage taken",
 	"of overheal as Shield", "lifesteal heals", "of crit chance past 100% as crit damage", "DEF", "of lifesteal overheal as damage to its target", "max HP",
 	"of the target's DEF ignored", "can't be knocked back", "a hit misses every", "hits taken at half damage",
-	"damage to Shields", "can target the stealthed", "Burn damage taken", "how long Marks on it last", "Roots on it last at most", "of its attacks missing",
+	"damage to Shields", "can target the stealthed", "Burn damage taken", "how long Marks on it last", "Roots on it last at most", "of its attacks missing", "how long Stuns on it last",
 ]
 ## Unit stat for each unit-stat aura stat (ATK_BP -> Stat.ATK, ...).
 const UNIT_STAT_FOR: Dictionary[int, int] = {
@@ -174,6 +178,8 @@ var per_fallen_ally: bool = false
 ## Counts once per standing enemy within this many plane units of its holder
 ## (phase 8 part 4; 0: not per enemy).
 var per_enemy_range: int = 0
+## per enemy_near: the enemies that count twice (null: none).
+var per_twice: UnitCondition = null
 ## state: the condition its holder must meet.
 var state: UnitCondition = null
 ## damage_bp, crit_chance_bp, lifesteal_bp: the targets it counts against
@@ -262,6 +268,10 @@ static func read(reader: DataReader) -> AuraDef:
 			def.per_enemy_range = reader.req_int("per_within_hexes", 1, 8) * HexGrid.HEX
 	if reader.has("per_within_hexes") and def.per_enemy_range == 0:
 		reader.error("only an aura \"per\": \"enemy_near\" has \"per_within_hexes\"")
+	if reader.has("per_twice"):
+		def.per_twice = UnitCondition.read(reader.req_object("per_twice"))
+		if def.per_enemy_range == 0:
+			reader.error("only an aura \"per\": \"enemy_near\" has \"per_twice\"")
 	if reader.has("step"):
 		var step: DataReader = reader.req_object("step")
 		if step != null:

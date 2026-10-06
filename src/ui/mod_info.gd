@@ -171,6 +171,13 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 		bits.append("only while it's %s" % change.holder.describe())
 	if change.carries:
 		bits.append("its charge carries every enemy in its line")
+	# Phase 8 part 4 (Garrow's cards).
+	if change.mana_max_add != 0:
+		bits.append("%s mana (as a habit: 1 attack %s)" % [signed(change.mana_max_add), "sooner" if change.mana_max_add < 0 else "later"])
+	if change.ignores_def:
+		bits.append("ignores DEF")
+	if change.per_twice != null:
+		bits.append("enemies that are %s count twice" % change.per_twice.describe())
 	for effect: EffectDef in change.add_to_areas:
 		bits.append("in its area: " + " · ".join(UnitInfo.effect_numbers([effect] as Array[EffectDef], kit, content)))
 	for effect: EffectDef in change.add_effects:
@@ -183,6 +190,8 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 		bits.append(effect_text)
 	if bits.is_empty():
 		return ""
+	if not change.ability_id.is_empty():
+		return "%s: %s" % [change.ability_id.replace("_", " ").capitalize(), ", ".join(bits)]
 	return "%s: %s" % [_slot_name(change.slot), ", ".join(bits)]
 
 
@@ -342,7 +351,9 @@ static func counted(counts: DeedDef, per: int) -> String:
 		DeedDef.Counts.HEALING:
 			return "%s healing given%s" % [amount, " beside the target" if counts.off_target else ""]
 		DeedDef.Counts.SHIELD:
-			return "%s Shield given" % amount
+			return "%s Shield given%s" % [amount, "" if counts.from_ability.is_empty() else " by " + ", ".join(counts.from_ability).replace("_", " ")]
+		DeedDef.Counts.PULLED:
+			return "%s enemies pulled" % amount
 		DeedDef.Counts.EXTRA_HITS:
 			return "%s extra enemies hit" % amount
 		DeedDef.Counts.HITS:

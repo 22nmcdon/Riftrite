@@ -131,3 +131,117 @@ func test_the_farthest_enemies_within_reach() -> void:
 		.map(func(entry: LogEntry) -> String: return entry.target)
 	assert_eq(hits.slice(0, 2), ["far", "mid"], "the two farthest within 4 hexes, farthest first; not the one beyond")
 
+
+
+# --- the cards' pieces (8d-2d) -----------------------------------------------------------------
+
+## A hero whose mana signature hooks the farthest enemy within 4 hexes beside
+## it (Haul's shape), with `passives`, tallying the enemies it pulls.
+func _hauler(passives: Array) -> UnitSetup:
+	var haul: Dictionary = {"id": "haul", "name": "Haul", "trigger": {"kind": "mana"}, "targeting": "farthest", "max_range": 4,
+		"effects": [{"type": "pull", "to": "beside", "target": "target"}]}
+	var setup: UnitSetup = K.at(_hero({"mana": {"max": 10, "start": 10, "per_attack": 0}, "signature": haul, "passives": passives}), 3, 1)
+	setup.tally_keys.append("pulled")
+	var errors: Array[String] = []
+	setup.tally_counts.append(DeedDef.read(DataReader.new({"text": "x", "counts": "pulled"}, "count", errors)))
+	return setup
+
+
+func test_a_pull_is_an_event_and_a_count() -> void:
+	assert_eq(_effect_errors({"trigger": "on_pull", "from_ability": ["haul"], "type": "apply_status", "status": "stun", "duration_ms": 500, "target": "hit_target"}),
+		[] as Array[String])
+	var landing: Array = [{"id": "landing", "name": "Landing", "kind": "ability",
+		"effects": [{"trigger": "on_pull", "from_ability": ["haul"], "type": "apply_status", "status": "stun", "duration_ms": 500, "target": "hit_target"}]}]
+	var fight: CombatSim = K.sim(K.fight([_hauler(landing)] as Array[UnitSetup], [K.foe(_dummy("far"), 3, 5)] as Array[UnitSetup]))
+	_place(fight, {"far": Vector2i(0, 3000)})
+	K.step(fight, 8)
+	var pulls: Array[LogEntry] = K.entries(fight, LogEntry.Kind.PUSH, "hero")
+	assert_eq(pulls.size(), 1)
+	var stuns: Array[LogEntry] = K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "hero").filter(func(entry: LogEntry) -> bool: return entry.source_ability == "landing")
+	assert_eq(stuns.map(func(entry: LogEntry) -> String: return "%s %s %d" % [entry.target, entry.status, entry.end_tick - entry.tick]), ["far stun 10"],
+		"the enemy it hooked lands Stunned for 0.5s")
+	assert_eq(CombatSim.result_of(fight).tally_amount("hero", "pulled"), 1, "and it counts as pulled")
+
+
+func test_a_pull_that_moves_nothing_raises_nothing() -> void:
+	var landing: Array = [{"id": "landing", "name": "Landing", "kind": "ability",
+		"effects": [{"trigger": "on_pull", "type": "apply_status", "status": "stun", "target": "hit_target"}]}]
+	var heavy: UnitDef = K.kit("heavy", {"stats": {"hp": 100000, "speed": 0, "range": 1},
+		"basic_attack": {"cooldown_ms": 60000, "shot": false, "effects": [{"type": "damage", "amount": 0, "target": "target"}]},
+		"passives": [{"id": "heavy", "name": "Heavy", "kind": "aura", "aura": {"target": "holder", "stat": "unpushable", "value": 1}}]})
+	var fight: CombatSim = K.sim(K.fight([_hauler(landing)] as Array[UnitSetup], [K.foe(heavy, 3, 5)] as Array[UnitSetup]))
+	_place(fight, {"heavy": Vector2i(0, 3000)})
+	K.step(fight, 8)
+	assert_eq(K.entries(fight, LogEntry.Kind.RESISTED, "hero").size(), 1, "it can't be moved")
+	assert_eq(K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "hero").size(), 0)
+	assert_eq(CombatSim.result_of(fight).tally_amount("hero", "pulled"), 0)
+
+
+func test_damage_that_ignores_def() -> void:
+	var armored: UnitDef = K.kit("armored", {"stats": {"hp": 100000, "def": 100, "speed": 0, "range": 1},
+		"basic_attack": {"cooldown_ms": 60000, "shot": false, "effects": [{"type": "damage", "amount": 0, "target": "target"}]}})
+	var hits: Array[int] = []
+	for pierces: bool in [false, true]:
+		var fight: CombatSim = K.sim(K.fight([K.at(_hero({}, {"cooldown_ms": 500, "effects": [{"type": "damage", "amount": 100, "ignores_def": pierces, "target": "target"}]}), 3, 2)] as Array[UnitSetup],
+			[K.foe(armored, 3, 4)] as Array[UnitSetup]))
+		_place(fight, {"armored": Vector2i(0, 900)})
+		K.step(fight, 12)
+		hits.append(K.entries(fight, LogEntry.Kind.DAMAGE, "hero")[0].amount)
+	assert_lt(hits[0], 100, "DEF takes its share")
+	assert_eq(hits[1], 100, "not from a hit that ignores it")
+
+
+func test_iron_will_shortens_stuns() -> void:
+	var stunner: Dictionary = {"cooldown_ms": 500, "effects": [{"type": "apply_status", "status": "stun", "duration_ms": 1000, "target": "target"}]}
+	var lengths: Array[int] = []
+	for passives: Array in [[], [{"id": "will", "name": "Will", "kind": "aura", "aura": {"target": "holder", "stat": "stun_time_bp", "value": -5000}}]]:
+		var target: UnitDef = K.kit("dummy", {"stats": {"hp": 100000, "speed": 0, "range": 1}, "passives": passives,
+			"basic_attack": {"cooldown_ms": 60000, "shot": false, "effects": [{"type": "damage", "amount": 0, "target": "target"}]}})
+		var fight: CombatSim = K.sim(K.fight([K.at(_hero({}, stunner), 3, 2)] as Array[UnitSetup], [K.foe(target, 3, 4)] as Array[UnitSetup]))
+		_place(fight, {"dummy": Vector2i(0, 900)})
+		K.step(fight, 12)
+		var stun: LogEntry = K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "hero")[0]
+		lengths.append(stun.end_tick - stun.tick)
+	assert_eq(lengths, [20, 10] as Array[int], "half as long")
+
+
+func test_some_enemies_near_count_twice() -> void:
+	var crowd: Array = [{"id": "crowd", "name": "Crowd", "kind": "aura",
+		"aura": {"target": "holder", "stat": "def", "value": 2, "per": "enemy_near", "per_within_hexes": 1, "per_twice": {"statuses": ["bleed"]}}}]
+	var fight: CombatSim = K.sim(K.fight([K.at(_hero({"passives": crowd}), 3, 2)] as Array[UnitSetup],
+		[K.foe(_dummy("a"), 3, 4), K.foe(_dummy("b"), 4, 4)] as Array[UnitSetup]))
+	_place(fight, {"a": Vector2i(0, 900), "b": Vector2i(800, 0)})
+	fight.step()
+	var hero: UnitState = fight.unit_by_id("hero")
+	assert_eq(hero.stats.get_stat(UnitStats.Stat.DEF), 4, "two enemies near")
+	Statuses.apply(fight, fight.unit_by_id("a"), "bleed", 1, 0, EffectSource.make("hero", "test", "Test"))
+	fight.step()
+	assert_eq(hero.stats.get_stat(UnitStats.Stat.DEF), 6, "a Bleeding one counts twice")
+	var errors: Array[String] = []
+	AuraDef.read(DataReader.new({"target": "holder", "stat": "def", "value": 2, "per_twice": {"statuses": ["bleed"]}}, "aura", errors))
+	assert_false(errors.is_empty(), "per_twice needs \"per\": \"enemy_near\"")
+
+
+func test_spending_a_shield_is_an_event() -> void:
+	var woven: Array = [{"id": "woven", "name": "Woven", "kind": "ability",
+		"effects": [{"trigger": "on_shield_spent", "type": "shield", "amount_bp_of_damage": 3000, "target": "self"}]}]
+	var spend: Dictionary = {"id": "spend", "name": "Spend", "trigger": {"kind": "mana"}, "targeting": "self", "effects": [{"type": "spend_shield", "target": "self"}]}
+	var fight: CombatSim = K.sim(K.fight([K.at(_hero({"mana": {"max": 10, "start": 10, "per_attack": 0}, "signature": spend, "passives": woven}), 3, 2)] as Array[UnitSetup],
+		[K.foe(_dummy(), 3, 4)] as Array[UnitSetup]))
+	fight.unit_by_id("hero").shield = 400
+	K.step(fight, 3)
+	assert_eq(K.entries(fight, LogEntry.Kind.SHIELD, "hero").map(func(entry: LogEntry) -> String: return "%s %d" % [entry.source_ability, entry.amount]), ["woven 120"],
+		"30% of the 400 it spent comes back")
+	assert_eq(fight.unit_by_id("hero").shield, 120)
+
+
+func test_a_pulled_enemy_can_land_on_a_snare() -> void:
+	var relics: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/relics.json"))
+	var chain: Dictionary = relics.filter(func(relic: Dictionary) -> bool: return relic["id"] == "the_snaring_chain")[0]["mod"]["passives"][0]
+	var fight: CombatSim = K.sim(K.fight([_hauler([chain])] as Array[UnitSetup], [K.foe(_dummy("far"), 3, 5)] as Array[UnitSetup]))
+	_place(fight, {"far": Vector2i(0, 3000)})
+	K.step(fight, 12)
+	var snares: Array[LogEntry] = K.entries(fight, LogEntry.Kind.SNARE, "hero")
+	assert_eq(snares.map(func(entry: LogEntry) -> String: return entry.note), ["set", "sprung"], "a snare where it landed, sprung at once")
+	var roots: Array[LogEntry] = K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "hero").filter(func(entry: LogEntry) -> bool: return entry.status == "root")
+	assert_eq(roots.map(func(entry: LogEntry) -> String: return entry.target), ["far"], "and it Roots the enemy")

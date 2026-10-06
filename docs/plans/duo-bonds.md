@@ -1,6 +1,6 @@
 # Duo bonds
 
-Status: **agreed in discussion (2026-09-30); built in phase 5c step 5d (2026-10-01; `rebuild-phase5c-combos.md`, section 13).** Answers: a bond relic is 20% of a shop's relic draws (Decision 27), two bonds both join (Decision 28), and the three Act 1 bonds stay for now (Decision 29). Replaces part 4, section 6 (`rebuild-run.md`). **The bonds and relics below are drafts;** numbers and names are placeholders.
+Status: **agreed in discussion (2026-09-30); built in phase 5c step 5d (2026-10-01; `rebuild-phase5c-combos.md`, section 13); Dragged to the Snare and Woven Fang built in phase 8 part 4 (`rebuild-phase8-heroes.md`, "Built in 8d-2b and 8d-2d": as team-wide relics, The Woven Fang's free Weave a Shield of 30% of the Shield spent).** Answers: a bond relic is 20% of a shop's relic draws (Decision 27), two bonds both join (Decision 28), and the three Act 1 bonds stay for now (Decision 29). Replaces part 4, section 6 (`rebuild-run.md`). **The bonds and relics below are drafts;** numbers and names are placeholders.
 
 ## The rules
 

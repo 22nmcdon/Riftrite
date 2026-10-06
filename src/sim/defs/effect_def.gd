@@ -26,7 +26,10 @@ extends RefCounted
 ##                 its max HP (nothing once it's there)
 ##   damage's amount_bp_of_shield (phase 8 part 4, Bulwark Burst): instead
 ##                 of amount, that share of the unit's own Shield as it
-##                 fires (an area's: as it's cast)
+##                 fires (an area's: as it's cast); a Shield's too (Shared
+##                 Ward: a share of what he's about to burst). Damage's
+##                 "ignores_def": true (Bitter Blood): its hits ignore the
+##                 target's DEF
 ##   spend_shield: (phase 8 part 4, Bulwark Burst; target "self") the
 ##                 unit's whole Shield is gone, logged as SHIELD_SPENT with
 ##                 what it was. After an area that read it, the area keeps
@@ -206,6 +209,13 @@ extends RefCounted
 ##                    Shield (hit_target: that enemy; amount_bp_of_damage:
 ##                    of the Shield that hit took; phase 8 part 3, the
 ##                    Hungering Unbinder)
+##   on_pull          the unit pulls or hooks an enemy (its PUSH lines noted
+##                    "pulled" or "hooked" that moved it; hit_target: that
+##                    enemy; "from_ability": only those abilities' pulls;
+##                    phase 8 part 4, Garrow's Hard Landing and Heavy Chain)
+##   on_shield_spent  the unit spends its Shield (SHIELD_SPENT;
+##                    amount_bp_of_damage: of the Shield it spent; phase 8
+##                    part 4, The Woven Fang)
 ## An event effect's "cooldown_per_unit_ms" (step 5d) runs it at most once
 ## that long for each unit its event names.
 ## Phase 5c step 5b adds: extend_status ("status", "duration_ms": a timed
@@ -277,7 +287,7 @@ enum Trigger {
 	ON_ABILITY, ON_BASIC_ATTACK, ON_HOLDER_CRIT, ON_SHIELDED, ON_HIT_TAKEN, ON_HEAL, ON_STATUS, ON_KILL,
 	ON_INTERVAL, ON_FALL, ON_HOP, ON_WOULD_FALL,
 	ON_HOLDER_HIT, ON_SHIELD_BROKEN, ON_ALLY_ABILITY, ON_STATUS_ENDED, ON_LIFESTEAL, ON_KNOCKBACK, ON_GUARD,
-	ON_BELOW_HP, ON_CHARGED, ON_ENEMY_FELL, ON_ARRIVE, ON_ALLY_SHIELD_BROKEN, ON_WALL_BLOCK, ON_RISE, ON_BREAKS_SHIELD,
+	ON_BELOW_HP, ON_CHARGED, ON_ENEMY_FELL, ON_ARRIVE, ON_ALLY_SHIELD_BROKEN, ON_WALL_BLOCK, ON_RISE, ON_BREAKS_SHIELD, ON_PULL, ON_SHIELD_SPENT,
 }
 enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS, HOP, FLOOD, SEVER, SPEND_SHIELD }
 ## A pull's way (phase 8 part 3): toward the unit, the nearest water, or
@@ -316,33 +326,33 @@ const TRIGGER_NAMES: Array[String] = [
 	"on_ability", "on_basic_attack", "on_holder_crit", "on_shielded", "on_hit_taken", "on_heal", "on_status", "on_kill",
 	"on_interval", "on_fall", "on_hop", "on_would_fall",
 	"on_holder_hit", "on_shield_broken", "on_ally_ability", "on_status_ended", "on_lifesteal", "on_knockback", "on_guard",
-	"on_below_hp", "on_charged", "on_enemy_fell", "on_arrive", "on_ally_shield_broken", "on_wall_block", "on_rise", "on_breaks_shield",
+	"on_below_hp", "on_charged", "on_enemy_fell", "on_arrive", "on_ally_shield_broken", "on_wall_block", "on_rise", "on_breaks_shield", "on_pull", "on_shield_spent",
 ]
 ## The unit's events (see the top).
 const EVENT_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
-	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD,
+	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_SHIELD_SPENT,
 ]
 ## Event triggers that name a unit (hit_target) and those that name a hit
 ## (amount_bp_of_damage).
 const EVENT_UNIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED, Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD, Trigger.ON_CHARGED,
-	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_BREAKS_SHIELD]
+	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL]
 const EVENT_HIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_HIT_TAKEN, Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN,
-	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_GUARD, Trigger.ON_BREAKS_SHIELD]
+	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_GUARD, Trigger.ON_BREAKS_SHIELD, Trigger.ON_SHIELD_SPENT]
 ## Event triggers that can take "vs": those that name a unit, and on_kill.
 const EVENT_VS_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED, Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_KILL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
-	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_BREAKS_SHIELD]
+	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL]
 const ABILITY_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_FIRE, Trigger.ON_HIT, Trigger.ON_CRIT,
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
-	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD,
+	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_SHIELD_SPENT,
 ]
 ## What a passive's effects may run on (PartDef).
 const PASSIVE_TRIGGERS: Array[Trigger] = [
@@ -350,7 +360,7 @@ const PASSIVE_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
-	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD,
+	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_SHIELD_SPENT,
 ]
 ## The passive triggers that aren't events (Passives.run_timed, on_fall,
 ## would_fall).
@@ -411,6 +421,12 @@ var amount_bp_of_damage: int = 0
 var amount_bp_of_max_hp: int = 0
 ## damage (phase 8 part 4): a share of the unit's own Shield (0: `amount`).
 var amount_bp_of_shield: int = 0
+## damage (phase 8 part 4, Bitter Blood): its hits ignore the target's DEF.
+var ignores_def: bool = false
+## farthest_enemies (phase 8 part 4, Back-Line Hook): the enemies that meet
+## this are picked first, farthest first, then the rest. Not read from the
+## data: a kit mod's "prefer" sets it on a habit.
+var prefer: UnitCondition = null
 ## shield (phase 8 part 4): it fills its target's Shield to at most this
 ## share of its max HP (0: no cap).
 var cap_bp_of_max_hp: int = 0
@@ -635,6 +651,7 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 					_read_bonus(def, reader.req_object("bonus_per_ally"))
 				def.ricochet = reader.opt_int("ricochet", 0, 0, 5)
 				def.execute_below_bp = reader.opt_int("execute_below_pct", 0, 0, 50) * 100
+				def.ignores_def = reader.opt_bool("ignores_def", false)
 			Type.HEAL:
 				var kinds: int = int(reader.has("amount")) + int(reader.has("amount_bp_of_max_hp")) + int(reader.has("amount_bp_of_damage"))
 				if kinds != 1:
@@ -722,11 +739,12 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				if reader.has("effects"):
 					_read_nested(def, reader, "a wall")
 			Type.SHIELD:
-				if int(reader.has("amount")) + int(reader.has("amount_bp_of_damage")) + int(reader.has("amount_bp_of_max_hp")) != 1:
-					reader.error("shield needs exactly one of \"amount\", \"amount_bp_of_damage\", or \"amount_bp_of_max_hp\"")
+				if int(reader.has("amount")) + int(reader.has("amount_bp_of_damage")) + int(reader.has("amount_bp_of_max_hp")) + int(reader.has("amount_bp_of_shield")) != 1:
+					reader.error("shield needs exactly one of \"amount\", \"amount_bp_of_damage\", \"amount_bp_of_max_hp\", or \"amount_bp_of_shield\"")
 				def.amount = reader.opt_int("amount", 0, 0)
 				def.amount_bp_of_damage = reader.opt_int("amount_bp_of_damage", 0, 0)
 				def.amount_bp_of_max_hp = reader.opt_int("amount_bp_of_max_hp", 0, 0, FixedMath.BP_ONE)
+				def.amount_bp_of_shield = reader.opt_int("amount_bp_of_shield", 0, 0)
 				def.cap_bp_of_max_hp = reader.opt_int("cap_bp_of_max_hp", 0, 1, 10 * FixedMath.BP_ONE)
 			Type.SPEND_SHIELD:
 				if def.target != Target.SELF:
@@ -918,7 +936,7 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 		Trigger.ON_HOLDER_CRIT:
 			if reader.has("beyond_hexes"):
 				def.beyond_range = reader.req_int("beyond_hexes", 1, 10) * HexGrid.HEX
-		Trigger.ON_HEAL, Trigger.ON_HOLDER_HIT:
+		Trigger.ON_HEAL, Trigger.ON_HOLDER_HIT, Trigger.ON_PULL:
 			if reader.has("from_ability"):
 				def.from_abilities = reader.req_string_array("from_ability")
 			if def.trigger == Trigger.ON_HEAL and reader.has("was_below_pct"):

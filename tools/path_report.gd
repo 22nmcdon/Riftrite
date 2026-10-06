@@ -22,6 +22,10 @@ extends RefCounted
 ##     2, and 3 hexes of him behind (away from his target) and on any side.
 ##   - A transformed Trapper places her snares on SNARE_HEXES (the first
 ##     that aren't rocks), like Practice's first placement.
+##   - Teams (phase 8 part 4): the first base is the old three's. A hero
+##     outside them fights in their team with it in place of the one of its
+##     role (Garrow for Brannoc), from the same formations by role, and its
+##     paths are measured against that team's own base.
 
 const Placement = preload("res://tools/sim_report.gd")
 
@@ -38,6 +42,10 @@ class Variant:
 	var hero_id: String = ""
 	var path_id: String = ""
 	var stage: PathDef.Stage = PathDef.Stage.BASE
+	## The heroes fighting (phase 8 part 4), and the index of its team's
+	## base among the report's variants.
+	var team: Array[String] = HeroTeam.DEFAULT.duplicate()
+	var base_index: int = 0
 	var fights: int = 0
 	var wins: int = 0
 	## Wins per formation, in the report's formation order.
@@ -57,6 +65,7 @@ class Variant:
 
 ## One encounter's variants.
 class PathReport:
+	var content: ContentDb
 	var encounter: EncounterDef
 	var seeds: int
 	var formations: Array[Dictionary] = []
@@ -70,27 +79,80 @@ class PathReport:
 	func base() -> Variant:
 		return variants[0]
 
+	## The base of `variant`'s team.
+	func base_of(variant: Variant) -> Variant:
+		return variants[variant.base_index]
 
-## Base, then each path (paths.json's order) vowed, then transformed.
+
+## Base, then each path (paths.json's order) vowed, then transformed; a
+## hero outside the old three gets its own team's base first (see the top).
 static func variants_for(content: ContentDb) -> Array[Variant]:
 	var found: Array[Variant] = [Variant.new()]
+	var bases: Dictionary[String, int] = {}
 	for path_id: String in content.path_ids:
+		var hero_id: String = content.paths[path_id].hero
+		var team: Array[String] = team_for(content, hero_id)
+		var base_index: int = 0
+		if team != HeroTeam.DEFAULT:
+			if not bases.has(hero_id):
+				var base := Variant.new()
+				base.team = team
+				base.base_index = found.size()
+				bases[hero_id] = found.size()
+				found.append(base)
+			base_index = bases[hero_id]
 		for stage: PathDef.Stage in [PathDef.Stage.VOWED, PathDef.Stage.TRANSFORMED]:
 			var variant := Variant.new()
-			variant.hero_id = content.paths[path_id].hero
+			variant.hero_id = hero_id
 			variant.path_id = path_id
 			variant.stage = stage
+			variant.team = team
+			variant.base_index = base_index
 			found.append(variant)
 	return found
 
 
+## The old three, with `hero_id` in place of the one of its role if it
+## isn't among them.
+static func team_for(content: ContentDb, hero_id: String) -> Array[String]:
+	if HeroTeam.DEFAULT.has(hero_id):
+		return HeroTeam.DEFAULT.duplicate()
+	var probe: Array[String] = HeroTeam.DEFAULT.duplicate()
+	var roles: Dictionary[String, String] = HeroTeam.roles(content, probe)
+	# Its role is the one it takes in a team with the two it doesn't replace:
+	# try it in each slot and keep the slot whose role it takes.
+	for role: String in HeroTeam.ROLES:
+		var team: Array[String] = HeroTeam.DEFAULT.duplicate()
+		team[team.find(roles[role])] = hero_id
+		if HeroTeam.roles(content, team).get(role, "") == hero_id:
+			return HeroTeam.ordered(content, team)
+	var fallback: Array[String] = HeroTeam.DEFAULT.duplicate()
+	fallback[0] = hero_id
+	return HeroTeam.ordered(content, fallback)
+
+
+## A formation of the old three recast for `team` by role.
+static func cast(content: ContentDb, formation: Dictionary, team: Array[String]) -> Dictionary[String, Vector2i]:
+	var hexes: Dictionary[String, Vector2i] = {}
+	if team == HeroTeam.DEFAULT:
+		hexes.assign(formation)
+		return hexes
+	var by_role: Dictionary[String, Vector2i] = {}
+	var old_roles: Dictionary[String, String] = HeroTeam.roles(content, HeroTeam.DEFAULT)
+	for role: String in old_roles:
+		by_role[role] = formation[old_roles[role]]
+	return HeroTeam.place(content, team, by_role)
+
+
 static func run_paths(content: ContentDb, encounter_id: String, named: Dictionary[String, Dictionary], drawn: int, seeds: int, draw_seed: int = 1) -> PathReport:
 	var report := PathReport.new()
+	report.content = content
 	report.encounter = content.encounters[encounter_id]
 	report.seeds = seeds
 	var names: Array[String] = []
 	report.formations = Placement.formations_for(content, report.encounter, named, drawn, draw_seed, names)
 	for variant: Variant in variants_for(content):
+		var first: bool = report.variants.is_empty()
 		var vows: Dictionary[String, String] = {}
 		var transformed: Array[String] = []
 		if not variant.path_id.is_empty():
@@ -98,8 +160,7 @@ static func run_paths(content: ContentDb, encounter_id: String, named: Dictionar
 			if variant.stage == PathDef.Stage.TRANSFORMED:
 				transformed.append(variant.hero_id)
 		for formation: Dictionary in report.formations:
-			var hexes: Dictionary[String, Vector2i] = {}
-			hexes.assign(formation)
+			var hexes: Dictionary[String, Vector2i] = cast(content, formation, variant.team)
 			var won: int = 0
 			for fight_seed: int in range(1, seeds + 1):
 				var errors: Array[String] = []
@@ -112,7 +173,7 @@ static func run_paths(content: ContentDb, encounter_id: String, named: Dictionar
 				var sim := CombatSim.new(setup, content)
 				while not sim.finished:
 					sim.step()
-					if variant.path_id.is_empty():
+					if first:
 						_measure_guard(sim, report)
 				variant.fights += 1
 				if sim.outcome != FightResult.Outcome.DEFEAT:
@@ -164,7 +225,7 @@ static func standing(report: PathReport, variant: Variant, hero_id: String, grid
 	for f: int in report.formations.size():
 		if variant.formation_wins[f] * 2 < report.seeds:
 			continue
-		var formation: Dictionary = report.formations[f]
+		var formation: Dictionary = cast(report.content, report.formations[f], variant.team)
 		var hex: Vector2i = formation[hero_id]
 		sums[0] += hex.y
 		sums[1] += absf(hex.x - MIDDLE_COL)
@@ -183,7 +244,8 @@ static func standing(report: PathReport, variant: Variant, hero_id: String, grid
 
 static func variant_name(content: ContentDb, variant: Variant) -> String:
 	if variant.path_id.is_empty():
-		return "all base"
+		return "all base" if variant.team == HeroTeam.DEFAULT else "all base, with %s" % " ".join(variant.team.filter(func(hero_id: String) -> bool:
+			return not HeroTeam.DEFAULT.has(hero_id)).map(func(hero_id: String) -> String: return hero_id.capitalize()))
 	return "%s, %s (%s)" % [variant.hero_id.capitalize(), content.paths[variant.path_id].name, PathDef.STAGE_NAMES[variant.stage]]
 
 
@@ -200,8 +262,12 @@ static func paths_text(content: ContentDb, report: PathReport) -> String:
 	var lines: Array[String] = ["%s (%s), paths: %d formations x %d seeds. All base win %d%% (%d/%d)" % [report.encounter.name, report.encounter.id,
 		report.formations.size(), report.seeds, base.win_percent(), base.wins, base.fights]]
 	for variant: Variant in report.variants.slice(1):
-		lines.append("  %-38s %3d%% %+4d   %s   (base: %s)" % [variant_name(content, variant), variant.win_percent(), variant.win_percent() - base.win_percent(),
-			_where(standing(report, variant, variant.hero_id, grid)), _where(standing(report, base, variant.hero_id, grid))])
+		var own_base: Variant = report.base_of(variant)
+		if variant.path_id.is_empty():
+			lines.append("  %-38s %3d%%" % [variant_name(content, variant), variant.win_percent()])
+			continue
+		lines.append("  %-38s %3d%% %+4d   %s   (base: %s)" % [variant_name(content, variant), variant.win_percent(), variant.win_percent() - own_base.win_percent(),
+			_where(standing(report, variant, variant.hero_id, grid)), _where(standing(report, own_base, variant.hero_id, grid))])
 	return "\n".join(lines)
 
 
@@ -212,15 +278,22 @@ static func paths_summary(content: ContentDb, reports: Array[PathReport]) -> Str
 	var lines: Array[String] = ["Paths across %d encounters (vowed within %d points of base; transformed %d to %d points above):" % [reports.size(), VOWED_POINTS,
 		TRANSFORMED_MIN, TRANSFORMED_MAX]]
 	var variants: int = reports[0].variants.size() if not reports.is_empty() else 0
-	var base_wins: int = 0
-	var base_fights: int = 0
-	for report: PathReport in reports:
-		base_wins += report.base().wins
-		base_fights += report.base().fights
-	@warning_ignore("integer_division")
-	var base_percent: int = base_wins * 100 / maxi(base_fights, 1)
-	lines.append("  all base %d%%" % base_percent)
+	# Each team's base across encounters.
+	var base_percents: Dictionary[int, int] = {}
+	for v: int in variants:
+		if not reports[0].variants[v].path_id.is_empty():
+			continue
+		var base_wins: int = 0
+		var base_fights: int = 0
+		for report: PathReport in reports:
+			base_wins += report.variants[v].wins
+			base_fights += report.variants[v].fights
+		@warning_ignore("integer_division")
+		base_percents[v] = base_wins * 100 / maxi(base_fights, 1)
+		lines.append("  %s %d%%" % [variant_name(content, reports[0].variants[v]), base_percents[v]])
 	for v: int in range(1, variants):
+		if reports[0].variants[v].path_id.is_empty():
+			continue
 		var wins: int = 0
 		var fights: int = 0
 		var spot: Array[float] = [0.0, 0.0, 0.0, 0.0]
@@ -230,10 +303,10 @@ static func paths_summary(content: ContentDb, reports: Array[PathReport]) -> Str
 			wins += variant.wins
 			fights += variant.fights
 			_add_spot(spot, standing(report, variant, variant.hero_id, grid))
-			_add_spot(base_spot, standing(report, report.base(), variant.hero_id, grid))
+			_add_spot(base_spot, standing(report, report.base_of(variant), variant.hero_id, grid))
 		var variant: Variant = reports[0].variants[v]
 		@warning_ignore("integer_division")
-		var gain: int = wins * 100 / maxi(fights, 1) - base_percent
+		var gain: int = wins * 100 / maxi(fights, 1) - base_percents[variant.base_index]
 		var verdict: String
 		if variant.stage == PathDef.Stage.VOWED:
 			verdict = "ok" if absi(gain) <= VOWED_POINTS else ("too strong" if gain > 0 else "too weak")
@@ -262,9 +335,11 @@ static func _mean_spot(total: Array[float]) -> Array[float]:
 ## The variants that change `hero_id`: base, then its paths vowed and
 ## transformed.
 static func _hero_variants(report: PathReport, hero_id: String) -> Array[Variant]:
-	var found: Array[Variant] = [report.base()]
+	var found: Array[Variant] = []
 	for variant: Variant in report.variants:
 		if variant.hero_id == hero_id:
+			if found.is_empty():
+				found.append(report.base_of(variant))
 			found.append(variant)
 	return found
 
@@ -301,6 +376,8 @@ static func deeds_summary(content: ContentDb, reports: Array[PathReport]) -> Str
 			for v: int in reports[0].variants.size():
 				var variant: Variant = reports[0].variants[v]
 				if not variant.path_id.is_empty() and variant.hero_id != hero_id:
+					continue
+				if variant.path_id.is_empty() and not variant.team.has(hero_id):
 					continue
 				var sum: int = 0
 				var fights: int = 0

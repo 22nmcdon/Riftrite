@@ -29,5 +29,25 @@
       "hearthwall"
     ],
     "relic": "the_hearth_woven_mail"
+  },
+  {
+    "id": "dragged_to_the_snare",
+    "name": "Dragged to the Snare",
+    "text": "His chains drag them into her traps.",
+    "paths": [
+      "chainwarden",
+      "trapper"
+    ],
+    "relic": "the_snaring_chain"
+  },
+  {
+    "id": "woven_fang",
+    "name": "Woven Fang",
+    "text": "She reloads his armor every time he spends it.",
+    "paths": [
+      "aegisfang",
+      "wardweaver"
+    ],
+    "relic": "the_woven_fang"
   }
 ]

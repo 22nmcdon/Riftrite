@@ -21,7 +21,9 @@ extends RefCounted
 ## Phase 8 part 2: on_ally_shield_broken (a Shield on one of its side breaks;
 ## Thornweave), on_wall_block (its wall stops a shot or takes a strike;
 ## The Unbroken Gate), naming the shooter or striker, and on_rise (it rises:
-## Second Dawn or its own rise passive; Dread Return).
+## Second Dawn or its own rise passive; Dread Return). Phase 8 part 4:
+## on_pull (it pulls or hooks an enemy that moves; Hard Landing) and
+## on_shield_spent (it spends its Shield; The Woven Fang).
 ## After every unit has acted, CombatSim hands over the entries logged since
 ## the last read, in log order (so what happens in the deaths step is read
 ## on the next tick); kills are raised as deaths are settled. Relic effects
@@ -39,7 +41,8 @@ extends RefCounted
 ## The log kinds that raise events (the rest are skipped at once).
 const _RAISES: Array[LogEntry.Kind] = [LogEntry.Kind.FIRE, LogEntry.Kind.DAMAGE, LogEntry.Kind.SHIELD, LogEntry.Kind.HEAL,
 	LogEntry.Kind.STATUS_APPLIED, LogEntry.Kind.HOP, LogEntry.Kind.STATUS_DAMAGE, LogEntry.Kind.STATUS_ENDED, LogEntry.Kind.LIFESTEAL,
-	LogEntry.Kind.PUSH, LogEntry.Kind.GUARD, LogEntry.Kind.ARRIVE, LogEntry.Kind.SHOT_FIZZLED, LogEntry.Kind.WALL_HIT, LogEntry.Kind.RISE]
+	LogEntry.Kind.PUSH, LogEntry.Kind.GUARD, LogEntry.Kind.ARRIVE, LogEntry.Kind.SHOT_FIZZLED, LogEntry.Kind.WALL_HIT, LogEntry.Kind.RISE,
+	LogEntry.Kind.SHIELD_SPENT]
 
 
 ## Raises the events in the log from entry `from` on, including those the
@@ -132,6 +135,16 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> int:
 			LogEntry.Kind.PUSH:
 				if target != null and target.side != source.side and entry.note.begins_with("knocked back"):
 					_raise(sim, source, EffectDef.Trigger.ON_KNOCKBACK, chain, target)
+				# Pulling or hooking an enemy that moved (phase 8 part 4,
+				# Garrow's Hard Landing): the ability rides along.
+				elif target != null and target.side != source.side and entry.from_pos != entry.to_pos \
+						and (entry.note.begins_with("pulled") or entry.note.begins_with("hooked")):
+					_raise(sim, source, EffectDef.Trigger.ON_PULL, chain, target, 0, entry.source_ability)
+			LogEntry.Kind.SHIELD_SPENT:
+				# Spending its Shield (phase 8 part 4, The Woven Fang): what it
+				# spent rides along.
+				if entry.amount > 0:
+					_raise(sim, source, EffectDef.Trigger.ON_SHIELD_SPENT, chain, null, entry.amount)
 			LogEntry.Kind.GUARD:
 				if target != null and entry.amount > 0:
 					# The share it took rides along (amount_bp_of_damage; phase 8

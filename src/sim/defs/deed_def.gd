@@ -39,6 +39,9 @@ extends RefCounted
 ##   hits     its hits on enemies, one each (Hailstorm)
 ##   shared   damage its link spread over linked allies (Loomwarden)
 ##   blocked  enemy shots its walls stop, one each (The Unbroken Gate)
+## Phase 8 part 4 (Garrow):
+##   pulled   enemies it pulls or hooks, one each that moves (Iron Links,
+##            Undertow)
 ##   kills takes from_ability too: only kills by those abilities (Eagle
 ##            Eye, Inquisitor)
 ##   within_ms_of_hop: 1000        a filter: only what lands within this long
@@ -75,9 +78,9 @@ extends RefCounted
 ## three fights' worth of what a vowed hero puts in); the sim never reads it.
 ## Adding a kind or a filter is a code change.
 
-enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING, HITS, SHARED, BLOCKED }
+enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING, HITS, SHARED, BLOCKED, PULLED }
 
-const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing", "hits", "shared", "blocked"]
+const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing", "hits", "shared", "blocked", "pulled"]
 const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill", "casts", "ms standing", "enemies hit", "damage shared"]
 ## The kinds read from where the hero is the target, or from the tick, not
 ## from what the hero does.
@@ -185,6 +188,9 @@ func counts_kind(kind: LogEntry.Kind, ability_id: String) -> bool:
 			return kind == LogEntry.Kind.GUARD
 		Counts.SHARED:
 			return kind == LogEntry.Kind.SHARED
+		Counts.PULLED:
+			if kind != LogEntry.Kind.PUSH:
+				return false
 		Counts.APPLIED:
 			if kind != LogEntry.Kind.STATUS_APPLIED:
 				return false

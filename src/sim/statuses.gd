@@ -72,9 +72,10 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: 
 	entry.status_name = def.name
 	state.applied_at = sim.tick
 	# Mark-Shy and Anchored (phase 8 part 3): how long a Mark or a Root on
-	# the target lasts.
+	# the target lasts; Iron Will (phase 8 part 4): a Stun.
 	if def.is_timed() and (duration_ticks > 0 or def.duration_ticks > 0) and (def.kind == StatusDef.Kind.MARKED and target.aura_bp[AuraDef.Stat.MARKED_TIME_BP] != 0
-			or def.kind == StatusDef.Kind.ROOT and target.aura_bp[AuraDef.Stat.ROOT_CAP_MS] > 0):
+			or def.kind == StatusDef.Kind.ROOT and target.aura_bp[AuraDef.Stat.ROOT_CAP_MS] > 0
+			or def.kind == StatusDef.Kind.STUN and target.aura_bp[AuraDef.Stat.STUN_TIME_BP] != 0):
 		duration_ticks = _taken_duration(target, def, duration_ticks if duration_ticks > 0 else def.duration_ticks)
 	if strength_add_bp > 0:
 		# A stronger Mark (phase 5c step 7c, Heavy Mark): the strongest holds.
@@ -276,12 +277,15 @@ static func find(unit: UnitState, status_id: String) -> StatusState:
 
 ## How long a Mark or a Root lasts on `target` (phase 8 part 3): Marks
 ## changed by its marked_time_bp (Mark-Shy), Roots capped by its root_cap_ms
-## (Anchored). At least a tick.
+## (Anchored), Stuns changed by its stun_time_bp (Iron Will). At least a
+## tick.
 static func _taken_duration(target: UnitState, def: StatusDef, ticks: int) -> int:
 	if def.kind == StatusDef.Kind.MARKED and target.aura_bp[AuraDef.Stat.MARKED_TIME_BP] != 0:
 		ticks = FixedMath.apply_bp(ticks, maxi(FixedMath.BP_ONE + target.aura_bp[AuraDef.Stat.MARKED_TIME_BP], 0))
 	if def.kind == StatusDef.Kind.ROOT and target.aura_bp[AuraDef.Stat.ROOT_CAP_MS] > 0:
 		ticks = mini(ticks, FixedMath.ms_to_ticks(target.aura_bp[AuraDef.Stat.ROOT_CAP_MS]))
+	if def.kind == StatusDef.Kind.STUN and target.aura_bp[AuraDef.Stat.STUN_TIME_BP] != 0:
+		ticks = FixedMath.apply_bp(ticks, maxi(FixedMath.BP_ONE + target.aura_bp[AuraDef.Stat.STUN_TIME_BP], 0))
 	return maxi(ticks, 1)
 
 

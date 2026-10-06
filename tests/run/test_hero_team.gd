@@ -14,12 +14,21 @@ func before_all() -> void:
 	_run = RunContent.load_dir("res://data", _content)
 
 
+## The content with `hero_id`'s paths taken away (a hero still being built).
+func _unbuilt(hero_id: String) -> ContentDb:
+	var content: ContentDb = ContentDb.load_dir("res://data")
+	content.heroes[hero_id].paths.clear()
+	return content
+
+
 func test_a_hero_is_drafted_once_its_paths_are_built() -> void:
-	for hero_id: String in HeroTeam.DEFAULT:
+	for hero_id: String in ["brannoc", "maren", "vell", "garrow"]:
 		assert_true(HeroTeam.ready(_content, hero_id), hero_id)
-	assert_false(HeroTeam.ready(_content, "garrow"), "Garrow's paths come in 8d-2")
 	assert_false(HeroTeam.ready(_content, "nobody"))
-	assert_eq(HeroTeam.draftable(_content), HeroTeam.DEFAULT)
+	assert_eq(HeroTeam.draftable(_content), ["brannoc", "maren", "vell", "garrow"] as Array[String])
+	var unbuilt: ContentDb = _unbuilt("garrow")
+	assert_false(HeroTeam.ready(unbuilt, "garrow"), "not until his paths are built")
+	assert_eq(HeroTeam.draftable(unbuilt), HeroTeam.DEFAULT)
 
 
 func test_why_a_team_cant_be_drafted() -> void:
@@ -28,8 +37,10 @@ func test_why_a_team_cant_be_drafted() -> void:
 	assert_eq(HeroTeam.problem(_content, ["brannoc", "maren", "vell", "garrow"] as Array[String]), "a team is 3 heroes, not 4")
 	assert_eq(HeroTeam.problem(_content, ["brannoc", "maren", "maren"] as Array[String]), "maren is on the team twice")
 	assert_eq(HeroTeam.problem(_content, ["brannoc", "maren", "nobody"] as Array[String]), "unknown hero \"nobody\"")
-	assert_eq(HeroTeam.problem(_content, ["brannoc", "maren", "garrow"] as Array[String]), "garrow can't be drafted yet: their paths aren't built")
-	assert_eq(HeroTeam.problem(_content, ["brannoc", "maren", "garrow"] as Array[String], false), "", "Practice fields him at base")
+	assert_eq(HeroTeam.problem(_content, ["brannoc", "maren", "garrow"] as Array[String]), "")
+	var unbuilt: ContentDb = _unbuilt("garrow")
+	assert_eq(HeroTeam.problem(unbuilt, ["brannoc", "maren", "garrow"] as Array[String]), "garrow can't be drafted yet: their paths aren't built")
+	assert_eq(HeroTeam.problem(unbuilt, ["brannoc", "maren", "garrow"] as Array[String], false), "", "Practice fields such a hero at base")
 
 
 func test_roles_place_any_team() -> void:
@@ -47,7 +58,7 @@ func test_the_run_fields_only_its_team() -> void:
 	assert_eq(errors, [] as Array[String])
 	assert_eq(flow.state.heroes.map(func(hero: RunState.Hero) -> String: return hero.id), ["brannoc", "maren", "vell"], "in heroes.json's order, whatever the vows' order")
 	assert_null(RunFlow.start(_run, 7, {"garrow": "x", "brannoc": "hearthwall", "maren": "deadeye"} as Dictionary[String, String], errors))
-	assert_eq(errors, ["garrow can't be drafted yet: their paths aren't built"] as Array[String])
+	assert_eq(errors, ["garrow can't vow to \"x\""] as Array[String])
 	flow.choose_fight(0)
 	errors.clear()
 	var formation: Dictionary[String, Vector2i] = Bot.formation()

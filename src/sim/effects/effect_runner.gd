@@ -172,7 +172,7 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 		return
 	match effect.type:
 		EffectDef.Type.DAMAGE:
-			var dealt: int = deal_hit(sim, source, victim, amount, crit, power)
+			var dealt: int = deal_hit(sim, source, victim, amount, crit, power, true, "", false, effect.ignores_def)
 			if effect.execute_below_bp > 0 and not sim.last_dodged:
 				execute(sim, source, victim, effect.execute_below_bp)
 			if effect.trigger == EffectDef.Trigger.ON_FIRE and ability != null and ability.has_hit_effects and not sim.last_dodged:
@@ -432,6 +432,18 @@ static func farthest(sim: CombatSim, unit: UnitState, effect: EffectDef) -> Arra
 		if distance_sq <= reach_sq:
 			keyed.append([distance_sq, keyed.size(), enemy])
 	keyed.sort_custom(func(a: Array, b: Array) -> bool: return a[0] > b[0] or (a[0] == b[0] and a[1] < b[1]))
+	if effect.prefer != null:
+		# The enemies it prefers first, farthest first (phase 8 part 4,
+		# Back-Line Hook); a stable split keeps each part's order.
+		var first: Array[Array] = []
+		var rest: Array[Array] = []
+		for item: Array in keyed:
+			if effect.prefer.holds(item[2], unit):
+				first.append(item)
+			else:
+				rest.append(item)
+		first.append_array(rest)
+		keyed = first
 	var found: Array[UnitState] = []
 	for item: Array in keyed.slice(0, effect.count):
 		found.append(item[2])
@@ -551,7 +563,7 @@ static func execute(sim: CombatSim, source: EffectSource, victim: UnitState, bel
 	sim.combat_log.add(entry)
 
 
-static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, amount: int, crit: bool, power: int = 0, steals: bool = true, note: String = "", ruled: bool = false) -> int:
+static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, amount: int, crit: bool, power: int = 0, steals: bool = true, note: String = "", ruled: bool = false, pierces: bool = false) -> int:
 	sim.last_dodged = false
 	# Sidestep (phase 5c step 6b): a hit on it misses, then not again for a
 	# while. Logged as DODGED; nothing else of the hit happens.
@@ -609,6 +621,9 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 	var ignore_bp: int = 0
 	if attacker != null:
 		ignore_bp = attacker.aura_bp[AuraDef.Stat.DEF_IGNORE_BP] + (Tactics.def_ignore_bp(attacker, target) if attacker.tactic != null else 0)
+	if pierces:
+		# A hit that ignores DEF (phase 8 part 4, Bitter Blood).
+		ignore_bp = FixedMath.BP_ONE
 	var dealt: int = sim.mitigate_hit(target, raw - guarded_raw, ignore_bp)
 	var guarded: int = sim.mitigate_hit(guard, guarded_raw) if guard != null else 0
 	entry.target = target.id

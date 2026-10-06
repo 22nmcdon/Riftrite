@@ -323,6 +323,14 @@
     "slow_bp": 2000
   },
   {
+    "_note": "Moves and attacks 15% slower for a moment (Anchor's Weight, Garrow's upgrade; phase 8 part 4). Slows don't stack: the strongest wins.",
+    "id": "weighed_down",
+    "name": "Weighed Down",
+    "kind": "slow",
+    "duration_ms": 1000,
+    "slow_bp": 1500
+  },
+  {
     "_note": "Deals less damage while it lasts (Stubborn Taunt, Brannoc's upgrade: the enemies he taunts; phase 5c step 7).",
     "id": "cowed",
     "name": "Cowed",
@@ -390,5 +398,6 @@
   {"_note": "More of First Light: attacks faster for the rest of the fight (Dawnbringer's First Light card; phase 8 part 2).", "id": "first_light_more", "name": "First Light (more)", "kind": "boost", "stacking": true, "auras": [{"stat": "atsp", "value": 3}]},
   {"_note": "More MGK for the rest of the fight, a stack for each smite kill (Inquisitor's Zeal card; phase 8 part 2).", "id": "zeal_more", "name": "Zeal (more)", "kind": "boost", "stacking": true, "auras": [{"stat": "mgk_bp", "value": 10500}]},
   {"_note": "Takes less damage while rallied (Warlord's Shield Wall card; phase 8 part 2).", "id": "shield_wall", "name": "Shield Wall", "kind": "boost", "duration_ms": 4000, "auras": [{"stat": "damage_reduced_bp", "value": 1000}]},
-  {"_note": "Takes less damage for a while after her healing (Dawnbringer's Morning Ward card; phase 8 part 2).", "id": "dawn_ward", "name": "Dawn Ward", "kind": "boost", "duration_ms": 4000, "auras": [{"stat": "damage_reduced_bp", "value": 1000}]}
+  {"_note": "Takes less damage for a while after her healing (Dawnbringer's Morning Ward card; phase 8 part 2).", "id": "dawn_ward", "name": "Dawn Ward", "kind": "boost", "duration_ms": 4000, "auras": [{"stat": "damage_reduced_bp", "value": 1000}]},
+  {"_note": "While it lasts, every hit on him is sent back whole (Iron Maiden, Spitemail's signature; phase 8 part 4). It changes nothing by itself: his Maiden's Spite passive reads it.", "id": "iron_maiden", "name": "Iron Maiden", "kind": "boost", "duration_ms": 4000, "auras": [{"stat": "def", "value": 0}]}
 ]

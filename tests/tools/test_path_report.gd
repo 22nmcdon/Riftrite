@@ -21,14 +21,18 @@ func _named() -> Dictionary[String, Dictionary]:
 
 func test_the_variants() -> void:
 	var names: Array = PathReport.variants_for(_content).map(func(variant: PathReport.Variant) -> String: return PathReport.variant_name(_content, variant))
-	assert_eq(names.size(), 19)
+	assert_eq(names.size(), 26)
 	assert_eq(names.slice(0, 3), ["all base", "Maren, Deadeye (vowed)", "Maren, Deadeye (transformed)"])
+	assert_eq(names.slice(19, 22), ["all base, with Garrow", "Garrow, Aegisfang (vowed)", "Garrow, Aegisfang (transformed)"],
+		"a hero outside the old three fights in their team in place of the one of its role, against that team's own base")
+	var garrow: PathReport.Variant = PathReport.variants_for(_content)[20]
+	assert_eq([garrow.team, garrow.base_index], [["maren", "vell", "garrow"] as Array[String], 19])
 
 
 func test_a_small_run() -> void:
 	var named: Dictionary[String, Dictionary] = _named()
 	var report: PathReport.PathReport = PathReport.run_paths(_content, "the_pack", named, 0, 1)
-	assert_eq([report.formations.size(), report.variants.size()], [4, 19])
+	assert_eq([report.formations.size(), report.variants.size()], [4, 26])
 	for variant: PathReport.Variant in report.variants:
 		assert_eq(variant.fights, 4)
 	var plain: Report.Report = Report.run_encounter(_content, "the_pack", named, 0, 1)
@@ -64,8 +68,11 @@ func test_a_transformed_trapper_places_her_snares() -> void:
 	assert_eq(setup.validate(_content), [] as Array[String])
 
 
-func _variant(hero_id: String, path_id: String, stage: PathDef.Stage, formation_wins: Array[int], deeds: Dictionary[String, int] = {}) -> PathReport.Variant:
+func _variant(hero_id: String, path_id: String, stage: PathDef.Stage, formation_wins: Array[int], deeds: Dictionary[String, int] = {}, like: PathReport.Variant = null) -> PathReport.Variant:
 	var variant := PathReport.Variant.new()
+	if like != null:
+		variant.team = like.team
+		variant.base_index = like.base_index
 	variant.hero_id = hero_id
 	variant.path_id = path_id
 	variant.stage = stage
@@ -98,6 +105,7 @@ func test_where_a_hero_stands_in_the_formations_it_wins() -> void:
 func test_the_summaries_check_the_bars() -> void:
 	var reports: Array[PathReport.PathReport] = []
 	var report := PathReport.PathReport.new()
+	report.content = _content
 	report.encounter = _content.encounters["witch_circle"]
 	report.seeds = 1
 	report.formations = [{"brannoc": Vector2i(3, 2), "maren": Vector2i(3, 0), "vell": Vector2i(4, 0)}]
@@ -110,7 +118,7 @@ func test_the_summaries_check_the_bars() -> void:
 			deeds = {"maren/deadeye": 500}
 		if variant.path_id == "volley":
 			deeds = {"maren/volley": 50, "maren/deadeye": 100}
-		var filled: PathReport.Variant = _variant(variant.hero_id, variant.path_id, variant.stage, won, deeds)
+		var filled: PathReport.Variant = _variant(variant.hero_id, variant.path_id, variant.stage, won, deeds, variant)
 		report.variants.append(filled)
 	reports.append(report)
 	var text: String = PathReport.paths_summary(_content, reports)

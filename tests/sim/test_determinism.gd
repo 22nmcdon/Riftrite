@@ -120,13 +120,15 @@ const NOT_YET: Array[LogEntry.Kind] = [LogEntry.Kind.SYNERGY, LogEntry.Kind.DEED
 ## Statuses only the paths use (phase 4), and only relics (phase 5c step 5a;
 ## Sunder, covered by tests/run/test_relics.gd).
 const PATH_STATUSES: Array[String] = ["warded"]
+## The new heroes' paths' (phase 8 part 4; tests/sim/test_garrow_paths.gd).
+const HERO_STATUSES: Array[String] = ["iron_maiden"]
 const RELIC_STATUSES: Array[String] = ["sunder", "quickened", "unbending", "long_watch"]
 ## Boosts only loadout items apply (phase 5c step 6; tests/run/test_loadout.gd).
 const ITEM_STATUSES: Array[String] = ["surge", "surge_2", "last_breath", "purified",
 	"grounded", "shadow_step", "shadow_step_2", "shadow_step_3", "bloodhound", "scavenged", "watched_over",
 	"ambush", "ambush_2", "rear_guard", "late_surge"]
 ## Statuses only upgrades apply (phase 5c step 7; tests/run/test_upgrade_pools.gd).
-const UPGRADE_STATUSES: Array[String] = ["hobbled", "cowed", "parting_shot", "first_blood", "scarred"]
+const UPGRADE_STATUSES: Array[String] = ["hobbled", "weighed_down", "cowed", "parting_shot", "first_blood", "scarred"]
 ## Statuses only rift modifiers apply (phase 5c step 8b; tests/run/test_rift_tear.gd),
 ## and enemy upgrades and specializations (phase 8 part 3, 8c-5a and 8c-5c;
 ## tests/sim/test_enemy_growth_pieces.gd).
@@ -147,7 +149,7 @@ func test_the_chaos_fight_uses_everything() -> void:
 	var statuses: Array = log.of_kind(LogEntry.Kind.STATUS_APPLIED).map(func(entry: LogEntry) -> String: return entry.status)
 	for status_id: String in K.content().status_ids:
 		assert_true(statuses.has(status_id) or PATH_STATUSES.has(status_id) or RELIC_STATUSES.has(status_id) or ITEM_STATUSES.has(status_id) or UPGRADE_STATUSES.has(status_id) or RIFT_STATUSES.has(status_id) \
-			or APEX_STATUSES.has(status_id), "%s is applied" % status_id)
+			or APEX_STATUSES.has(status_id) or HERO_STATUSES.has(status_id), "%s is applied" % status_id)
 	var shapes: Array = log.of_kind(LogEntry.Kind.AREA_LANDED).map(func(entry: LogEntry) -> String: return entry.shape.get_slice(" ", 0))
 	for shape: String in ShapeDef.KIND_NAMES:
 		assert_true(shapes.has(shape), "a %s lands" % shape)

@@ -2865,5 +2865,682 @@
         }
       ]
     }
+  },
+  {
+    "id": "iron_frame",
+    "name": "Iron Frame",
+    "hero": "garrow",
+    "text": "His max HP rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "hp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "heavy_plate",
+    "name": "Heavy Plate",
+    "hero": "garrow",
+    "text": "His DEF rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "def",
+      "pct": 10
+    }
+  },
+  {
+    "id": "thick_fists",
+    "name": "Thick Fists",
+    "hero": "garrow",
+    "text": "His ATK rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "atk",
+      "pct": 10
+    }
+  },
+  {
+    "id": "steady_swing",
+    "name": "Steady Swing",
+    "hero": "garrow",
+    "text": "He attacks faster by a tenth of his attack speed when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "atsp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "swift_haul",
+    "name": "Swift Haul",
+    "hero": "garrow",
+    "text": "Haul costs less mana (once it's a habit, it comes one Chain Fist sooner).",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "haul",
+          "mana_max_add": -10
+        }
+      ]
+    }
+  },
+  {
+    "id": "hard_landing",
+    "name": "Hard Landing",
+    "hero": "garrow",
+    "text": "An enemy his Haul drags in lands Stunned for a moment.",
+    "mod": {
+      "passives": [
+        {
+          "id": "hard_landing",
+          "name": "Hard Landing",
+          "kind": "ability",
+          "text": "An enemy Haul drags in lands Stunned for a moment.",
+          "effects": [
+            {
+              "trigger": "on_pull",
+              "from_ability": [
+                "haul"
+              ],
+              "type": "apply_status",
+              "status": "stun",
+              "duration_ms": 500,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "second_stand",
+    "name": "Second Stand",
+    "hero": "garrow",
+    "text": "Stand Fast Shields him again the first time he drops below a quarter of his HP.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:stand_fast",
+          "add_effects": [
+            {
+              "trigger": "on_below_hp",
+              "threshold_bp": 2500,
+              "type": "shield",
+              "amount_bp_of_max_hp": 1500,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "deep_stand",
+    "name": "Deep Stand",
+    "hero": "garrow",
+    "text": "Stand Fast's Shield is bigger.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:stand_fast",
+          "types": [
+            "shield"
+          ],
+          "amount_bp": 16700
+        }
+      ]
+    }
+  },
+  {
+    "id": "anchors_weight",
+    "name": "Anchor's Weight",
+    "hero": "garrow",
+    "text": "Enemies he hits are Weighed Down: slowed for a moment.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "weighed_down",
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "bitter_mana",
+    "name": "Bitter Mana",
+    "hero": "garrow",
+    "text": "He gains more mana from the damage he takes.",
+    "mod": {
+      "mana": {
+        "taken_bp": 15000
+      }
+    }
+  },
+  {
+    "id": "iron_will",
+    "name": "Iron Will",
+    "hero": "garrow",
+    "text": "Stuns on him wear off sooner.",
+    "mod": {
+      "passives": [
+        {
+          "id": "iron_will",
+          "name": "Iron Will",
+          "kind": "aura",
+          "text": "Stuns on him last half as long.",
+          "aura": {
+            "target": "holder",
+            "stat": "stun_time_bp",
+            "value": -5000
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "scarred_iron",
+    "name": "Scarred Iron",
+    "hero": "garrow",
+    "text": "Every blow he takes hardens him: his DEF grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "taken"
+      },
+      "per": 800,
+      "each": {
+        "stats_add": {
+          "def": 1
+        }
+      }
+    }
+  },
+  {
+    "id": "thick_plating",
+    "name": "Thick Plating",
+    "path": "aegisfang",
+    "taste": true,
+    "text": "Plated Blows gives him a bigger Shield (once transformed, a little bigger).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:plated_blows",
+          "types": [
+            "shield"
+          ],
+          "amount_bp": 15000
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:plated_blows",
+          "types": [
+            "shield"
+          ],
+          "amount_bp": 11700
+        }
+      ]
+    }
+  },
+  {
+    "id": "braced_strike",
+    "name": "Braced Strike",
+    "path": "aegisfang",
+    "taste": true,
+    "text": "He attacks faster while he's Shielded.",
+    "mod": {
+      "passives": [
+        {
+          "id": "braced_strike",
+          "name": "Braced Strike",
+          "kind": "aura",
+          "text": "While Shielded, he attacks faster.",
+          "aura": {
+            "target": "holder",
+            "stat": "atsp",
+            "value": 10,
+            "while": "state",
+            "state": {
+              "keywords": [
+                "shielded"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_burst",
+    "name": "Quick Burst",
+    "path": "aegisfang",
+    "text": "Bulwark Burst costs less mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "bulwark_burst",
+          "mana_max_add": -15
+        }
+      ]
+    }
+  },
+  {
+    "id": "reinforce",
+    "name": "Reinforce",
+    "path": "aegisfang",
+    "text": "Each Chain Fist's Shield is bigger.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:plated_blows",
+          "types": [
+            "shield"
+          ],
+          "amount_bp": 13300
+        }
+      ]
+    }
+  },
+  {
+    "id": "spiked_plate",
+    "name": "Spiked Plate",
+    "path": "aegisfang",
+    "text": "He hits harder while he's Shielded.",
+    "mod": {
+      "passives": [
+        {
+          "id": "spiked_plate",
+          "name": "Spiked Plate",
+          "kind": "aura",
+          "text": "While Shielded, his ATK is higher.",
+          "aura": {
+            "target": "holder",
+            "stat": "atk_bp",
+            "value": 11500,
+            "while": "state",
+            "state": {
+              "keywords": [
+                "shielded"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "shared_ward",
+    "name": "Shared Ward",
+    "path": "aegisfang",
+    "text": "When Bulwark Burst fires, the allies near him get a share of the Shield he bursts.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_effects": [
+            {
+              "type": "shield",
+              "amount_bp_of_shield": 1000,
+              "target": "allies_near_self",
+              "within_hexes": 2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "forged_aegis",
+    "name": "Forged Aegis",
+    "path": "aegisfang",
+    "text": "Every Shield his blows forge tempers the burst: Bulwark Burst's damage grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "shield",
+        "from_ability": [
+          "plated_blows"
+        ]
+      },
+      "per": 150,
+      "each": {
+        "on": [
+          {
+            "slot": "signature",
+            "types": [
+              "damage"
+            ],
+            "amount_bp": 10100
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "long_barbs",
+    "name": "Long Barbs",
+    "path": "chainwarden",
+    "taste": true,
+    "text": "Haul's Bleed is heavier.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "haul",
+          "statuses": [
+            "bleed"
+          ],
+          "amount_bp": 15000
+        }
+      ]
+    }
+  },
+  {
+    "id": "heavy_chain",
+    "name": "Heavy Chain",
+    "path": "chainwarden",
+    "taste": true,
+    "text": "An enemy his Haul drags in is Slowed.",
+    "mod": {
+      "passives": [
+        {
+          "id": "heavy_chain",
+          "name": "Heavy Chain",
+          "kind": "ability",
+          "text": "An enemy Haul drags in is Slowed.",
+          "effects": [
+            {
+              "trigger": "on_pull",
+              "from_ability": [
+                "haul"
+              ],
+              "type": "apply_status",
+              "status": "slow",
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "wide_crowd",
+    "name": "Wide Crowd",
+    "path": "chainwarden",
+    "text": "Crowd Strength counts the enemies a hex farther out.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:crowd_strength",
+          "radius_add": 1
+        },
+        {
+          "slot": "passive:crowd_guard",
+          "radius_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "iron_hooks",
+    "name": "Iron Hooks",
+    "path": "chainwarden",
+    "text": "Maelstrom Roots longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "statuses": [
+            "root"
+          ],
+          "duration_add_ms": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "bloodied_links",
+    "name": "Bloodied Links",
+    "path": "chainwarden",
+    "text": "Bleeding enemies count twice for Crowd Strength.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:crowd_strength",
+          "per_twice": {
+            "statuses": [
+              "bleed"
+            ]
+          }
+        },
+        {
+          "slot": "passive:crowd_guard",
+          "per_twice": {
+            "statuses": [
+              "bleed"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "back_line_hook",
+    "name": "Back-Line Hook",
+    "path": "chainwarden",
+    "text": "Haul drags in enemy casters and archers first.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "haul",
+          "prefer": {
+            "archetypes": [
+              "caster",
+              "ranged"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "iron_links",
+    "name": "Iron Links",
+    "path": "chainwarden",
+    "text": "Every enemy his chains drag in forges another link: Crowd Strength's ATK grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "pulled"
+      },
+      "per": 10,
+      "each": {
+        "passives": [
+          {
+            "id": "iron_links",
+            "name": "Iron Links",
+            "kind": "aura",
+            "text": "Grows every fight.",
+            "aura": {
+              "target": "holder",
+              "stat": "atk_bp",
+              "value": 10100,
+              "per": "enemy_near",
+              "per_within_hexes": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "bitter_blood",
+    "name": "Bitter Blood",
+    "path": "spitemail",
+    "taste": true,
+    "text": "The damage his Spikes send back ignores DEF (once transformed, Iron Maiden's too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:spikes",
+          "types": [
+            "damage"
+          ],
+          "ignores_def": true
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:spikes",
+          "types": [
+            "damage"
+          ],
+          "ignores_def": true
+        },
+        {
+          "slot": "passive:maidens_spite",
+          "types": [
+            "damage"
+          ],
+          "ignores_def": true
+        }
+      ]
+    }
+  },
+  {
+    "id": "prickly",
+    "name": "Prickly",
+    "path": "spitemail",
+    "taste": true,
+    "text": "His DEF is higher.",
+    "mod": {
+      "passives": [
+        {
+          "id": "prickly",
+          "name": "Prickly",
+          "kind": "aura",
+          "text": "His DEF is higher.",
+          "aura": {
+            "target": "holder",
+            "stat": "def_bp",
+            "value": 11000
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_maiden",
+    "name": "Long Maiden",
+    "path": "spitemail",
+    "text": "Iron Maiden lasts longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "duration_add_ms": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "wide_maiden",
+    "name": "Wide Maiden",
+    "path": "spitemail",
+    "text": "Iron Maiden taunts enemies a hex farther out.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "radius_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "spiteful_heal",
+    "name": "Spiteful Heal",
+    "path": "spitemail",
+    "text": "He heals for more of what his Spikes send back.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:spikes",
+          "types": [
+            "heal"
+          ],
+          "amount_bp": 15000
+        }
+      ]
+    }
+  },
+  {
+    "id": "spite_burst",
+    "name": "Spite Burst",
+    "path": "spitemail",
+    "text": "When Iron Maiden ends, the enemies beside him are Stunned for a moment.",
+    "mod": {
+      "passives": [
+        {
+          "id": "spite_burst",
+          "name": "Spite Burst",
+          "kind": "ability",
+          "text": "When Iron Maiden ends, the enemies within 1 hex of him are Stunned for a moment.",
+          "effects": [
+            {
+              "trigger": "on_status_ended",
+              "statuses": [
+                "iron_maiden"
+              ],
+              "type": "apply_status",
+              "status": "stun",
+              "duration_ms": 500,
+              "target": "enemies_near_self",
+              "within_hexes": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "old_grudge",
+    "name": "Old Grudge",
+    "path": "spitemail",
+    "text": "Every blow he sends back feeds the grudge: what his Spikes and Iron Maiden send back grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "damage",
+        "from_ability": [
+          "spikes",
+          "maidens_spite"
+        ]
+      },
+      "per": 250,
+      "each": {
+        "on": [
+          {
+            "slot": "passive:spikes",
+            "types": [
+              "damage"
+            ],
+            "amount_bp": 10100
+          },
+          {
+            "slot": "passive:maidens_spite",
+            "types": [
+              "damage"
+            ],
+            "amount_bp": 10100
+          }
+        ]
+      }
+    }
   }
 ]

@@ -1835,5 +1835,66 @@
         }
       ]
     }
+  },
+  {
+    "id": "the_snaring_chain",
+    "name": "The Snaring Chain",
+    "tier": "bond",
+    "icon": "braced",
+    "flavor": "Dragged to the Snare: his chains drag them into her traps.",
+    "text": "An enemy a hero pulls lands on a fresh snare that Roots it.",
+    "mod": {
+      "passives": [
+        {
+          "id": "the_snaring_chain",
+          "name": "The Snaring Chain",
+          "kind": "ability",
+          "text": "An enemy it pulls lands on a fresh snare, which Roots it.",
+          "effects": [
+            {
+              "trigger": "on_pull",
+              "cooldown_per_unit_ms": 3000,
+              "type": "snare",
+              "at": "named",
+              "max_standing": 3,
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "root",
+                  "duration_ms": 1500,
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_woven_fang",
+    "name": "The Woven Fang",
+    "tier": "bond",
+    "icon": "deep_mend",
+    "flavor": "Woven Fang: she reloads his armor every time he spends it.",
+    "text": "When a hero spends its Shield, it is woven a new one of part of what it spent, past any cap.",
+    "mod": {
+      "passives": [
+        {
+          "id": "the_woven_fang",
+          "name": "The Woven Fang",
+          "kind": "ability",
+          "text": "When it spends its Shield, it gains a Shield of part of what it spent.",
+          "effects": [
+            {
+              "trigger": "on_shield_spent",
+              "type": "shield",
+              "amount_bp_of_damage": 3000,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
   }
 ]

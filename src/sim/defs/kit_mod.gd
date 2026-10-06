@@ -82,6 +82,23 @@ extends RefCounted
 ##                                        Steaming Ashling's burst, off water)
 ##       "carries": true                  its charges carry every enemy in
 ##                                        their line (the Avalanche Guardian)
+## Phase 8 part 4 (Garrow's cards), per "on" entry:
+##       "ability": "haul",               with "slot": "abilities": only the
+##                                        ability or passive with that id, as
+##                                        his signature or his habit (an old
+##                                        signature kept as a passive)
+##       "mana_max_add": -10,             with "ability": what it costs, if it
+##                                        is the signature; on a habit, its
+##                                        "every" one lower (or higher) instead
+##                                        ("costs less mana" fires one attack
+##                                        sooner; Swift Haul)
+##       "ignores_def": true              its damage ignores DEF (Bitter Blood)
+##       "per_twice": {...UnitCondition}  the named per-enemy aura counts those
+##                                        enemies twice (Bloodied Links)
+##       (radius_add also widens a named per-enemy aura's reach, in hexes:
+##       Wide Crowd; "prefer" with "ability" reaches a habit's farthest
+##       enemies: Back-Line Hook; and added effects go before the ability
+##       spends its Shield, so they still read it: Shared Ward)
 ## and (step 7d) "places_lantern": true at the top: the player places its
 ## signature's first area before the fight (UnitSetup.lantern).
 ## and (phase 8 part 3, the Veil Witch) "drops_passives": ["ward"] at the
@@ -181,12 +198,22 @@ class AbilityChange:
 	## Phase 8 part 3: the condition its event and timed effects run under.
 	var holder: UnitCondition = null
 	var carries: bool = false
+	## Phase 8 part 4 (see the header).
+	var ability_id: String = ""
+	var mana_max_add: int = 0
+	var ignores_def: bool = false
+	var per_twice: UnitCondition = null
+
+	## True if it reaches `ability_id` (every ability when it names none).
+	func reaches(id: String) -> bool:
+		return ability_id.is_empty() or ability_id == id
 
 	func touches_effects() -> bool:
 		return amount_bp != FixedMath.BP_ONE or duration_bp != FixedMath.BP_ONE or duration_add_ticks != 0 or radius_add != 0 \
 			or every_add != 0 or times_add != 0 or max_standing_add != 0 or overheal_add_bp != 0 or width_add != 0 or not add_to_areas.is_empty() \
 			or strength_add_bp != 0 or follows or ricochet_add != 0 or reflect_bp != 0 or snags \
-			or per_enemy_add_bp != 0 or overheal_max_hp_add != 0 or at_stacks_add != 0 or per_taken_add_bp != 0 or holder != null or carries
+			or per_enemy_add_bp != 0 or overheal_max_hp_add != 0 or at_stacks_add != 0 or per_taken_add_bp != 0 or holder != null or carries \
+			or ignores_def or prefer != null and not ability_id.is_empty()
 
 	func touches(effect: EffectDef) -> bool:
 		if not at.is_empty() and not at.has(effect.target):
@@ -197,7 +224,8 @@ class AbilityChange:
 
 	## True if it changes the named passive itself (its aura or its Guard).
 	func changes_part() -> bool:
-		return value_add != 0 or guard_share_add != 0 or guard_within_add != 0 or guard_covers_all or rise_add_bp != 0 or per_shared_bp != FixedMath.BP_ONE
+		return value_add != 0 or guard_share_add != 0 or guard_within_add != 0 or guard_covers_all or rise_add_bp != 0 or per_shared_bp != FixedMath.BP_ONE \
+			or per_twice != null
 
 	## A knockback's or pull's distance scales with amount_bp only when the
 	## change names that type (phase 5c step 7: Crushing Blow), so a mod on
@@ -406,13 +434,23 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 	if reader.has("holder"):
 		change.holder = UnitCondition.read(reader.req_object("holder"))
 	change.carries = reader.opt_bool("carries", false)
-	if (change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0 or change.prefer != null) and change.slot != SLOT_SIGNATURE:
-		reader.error("cast_bp, targets_add, and prefer change a signature (\"slot\": \"signature\")")
+	change.ability_id = reader.opt_string("ability", "")
+	change.mana_max_add = reader.opt_int("mana_max_add", 0, -100, 100)
+	change.ignores_def = reader.opt_bool("ignores_def", false)
+	if reader.has("per_twice"):
+		change.per_twice = UnitCondition.read(reader.req_object("per_twice"))
+	if not change.ability_id.is_empty() and change.slot != SLOT_ABILITIES:
+		reader.error("\"ability\" names one of its abilities (\"slot\": \"abilities\")")
+	if change.mana_max_add != 0 and change.ability_id.is_empty():
+		reader.error("mana_max_add changes what a named ability costs (\"ability\")")
+	if (change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0) and change.slot != SLOT_SIGNATURE \
+			or change.prefer != null and change.slot != SLOT_SIGNATURE and change.ability_id.is_empty():
+		reader.error("cast_bp, targets_add, and prefer change a signature (\"slot\": \"signature\"; prefer also a named \"ability\")")
 	if (change.changes_part() or change.after_add_ticks != 0) and not change.slot.begins_with(PASSIVE_PREFIX):
-		reader.error("after_add_ms, value_add, guard, rise_add_pct, and per_shared_bp change a named passive (\"slot\": \"passive:<id>\")")
+		reader.error("after_add_ms, value_add, guard, rise_add_pct, per_shared_bp, and per_twice change a named passive (\"slot\": \"passive:<id>\")")
 	if not (change.touches_effects() or change.cooldown_bp != FixedMath.BP_ONE or not change.add_effects.is_empty() or change.after_add_ticks != 0
 			or change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0 or change.changes_part() or change.prefer != null
-			or change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0):
+			or change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0 or change.mana_max_add != 0):
 		reader.error("an \"on\" entry needs amount_bp, duration_bp, duration_add_ms, radius_add, cooldown_bp, add_effects, after_add_ms, cast_bp, targets_add, or one of step 7b's knobs")
 	reader.finish()
 	return change
@@ -445,7 +483,8 @@ func step_problem() -> String:
 				or change.changes_part() or change.prefer != null or not change.at.is_empty() or change.strength_add_bp != 0 \
 				or change.follows or change.ricochet_add != 0 or change.reflect_bp != 0 or change.snags \
 				or change.per_enemy_add_bp != 0 or change.overheal_max_hp_add != 0 or change.at_stacks_add != 0 or change.per_taken_add_bp != 0 \
-				or change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0 or change.holder != null or change.carries:
+				or change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0 or change.holder != null or change.carries \
+				or not change.ability_id.is_empty() or change.mana_max_add != 0 or change.ignores_def or change.per_twice != null:
 			return "a growing card's step can only change an ability's amount_bp"
 	return ""
 
@@ -517,6 +556,15 @@ func affects_besides_passives(kit: UnitDef) -> bool:
 	if drops_passives.any(func(part_id: String) -> bool: return _passive_index(kit, PASSIVE_PREFIX + part_id) >= 0):
 		return true
 	for change: AbilityChange in changes:
+		if change.mana_max_add != 0:
+			# A named ability's cost: its signature's bar, or its habit's every.
+			if kit.signature != null and kit.signature.id == change.ability_id and kit.mana != null:
+				return true
+			var habit: int = _passive_index(kit, PASSIVE_PREFIX + change.ability_id)
+			if habit >= 0 and kit.passives[habit].ability != null and kit.passives[habit].ability.effects.any(func(effect: EffectDef) -> bool: return effect.every > 1):
+				return true
+		if (change.radius_add != 0 or change.per_twice != null) and _per_enemy_aura(kit, change.slot) != null:
+			return true
 		if change.changes_part():
 			var at: int = _passive_index(kit, change.slot)
 			if at >= 0 and (change.value_add != 0 and kit.passives[at].aura != null or kit.passives[at].kind == PartDef.Kind.GUARD and
@@ -524,7 +572,7 @@ func affects_besides_passives(kit: UnitDef) -> bool:
 					or change.rise_add_bp != 0 and kit.passives[at].kind == PartDef.Kind.RISE
 					or change.per_shared_bp != FixedMath.BP_ONE and kit.passives[at].kind == PartDef.Kind.LINK and kit.passives[at].per_shared > 0):
 				return true
-		for ability: AbilityDef in _slot_abilities(kit, change.slot):
+		for ability: AbilityDef in _slot_abilities(kit, change.slot, change.ability_id):
 			if not change.add_effects.is_empty() or change.cooldown_bp != FixedMath.BP_ONE or change.prefer != null:
 				return true
 			if change.grows_add_bp != 0 and ability.grows_bp > 0 or change.grows_boosts_add_bp != 0 and ability.grows_boosts_bp > 0:
@@ -641,16 +689,30 @@ func _apply_change(built: UnitDef, change: AbilityChange, problems: Array[String
 	if change.slot.begins_with(PASSIVE_PREFIX) and _passive_index(built, change.slot) < 0:
 		problems.append("it has no passive \"%s\"" % change.slot.trim_prefix(PASSIVE_PREFIX))
 		return
-	if change.slot in [SLOT_BASIC, SLOT_ABILITIES]:
+	if change.slot in [SLOT_BASIC, SLOT_ABILITIES] and change.reaches(built.basic_attack.id):
 		built.basic_attack = _changed_ability(built.basic_attack, change)
-	if change.slot in [SLOT_SIGNATURE, SLOT_ABILITIES] and built.signature != null:
+	if change.slot in [SLOT_SIGNATURE, SLOT_ABILITIES] and built.signature != null and change.reaches(built.signature.id):
 		built.signature = _changed_ability(built.signature, change)
+		if change.mana_max_add != 0 and built.mana != null:
+			# What the named signature costs (phase 8 part 4, Swift Haul).
+			var mana: ManaDef = DefCopy.shallow(built.mana) as ManaDef
+			mana.max = maxi(mana.max + change.mana_max_add, 1)
+			mana.start = mini(mana.start, mana.max)
+			built.mana = mana
 	for i: int in built.passives.size():
 		var part: PartDef = built.passives[i]
 		var named: bool = change.slot == PASSIVE_PREFIX + part.id
-		if not named and change.slot != SLOT_ABILITIES:
+		if not named and change.slot != SLOT_ABILITIES or not change.reaches(part.id):
 			continue
-		if part.ability == null and not (named and (change.after_add_ticks != 0 or change.changes_part())):
+		if change.mana_max_add != 0 and part.ability != null:
+			# On a habit, a cost change moves its every by one (phase 8 part
+			# 4: "costs less mana" fires one attack sooner).
+			var habit: AbilityChange = _as_habit(change)
+			var habit_copy: PartDef = DefCopy.shallow(part) as PartDef
+			habit_copy.ability = _changed_ability(part.ability, habit)
+			built.passives[i] = habit_copy
+			continue
+		if part.ability == null and not (named and (change.after_add_ticks != 0 or change.changes_part() or change.radius_add != 0)):
 			continue
 		var copy: PartDef = DefCopy.shallow(part) as PartDef
 		if part.ability != null:
@@ -663,6 +725,12 @@ func _apply_change(built: UnitDef, change: AbilityChange, problems: Array[String
 			copy.rise_hp_bp = clampi(copy.rise_hp_bp + change.rise_add_bp, 100, FixedMath.BP_ONE)
 		if named and part.kind == PartDef.Kind.LINK and change.per_shared_bp != FixedMath.BP_ONE and part.per_shared > 0:
 			copy.per_shared = maxi(FixedMath.apply_bp(part.per_shared, change.per_shared_bp), 1)
+		if named and part.aura != null and part.aura.per_enemy_range > 0 and (change.radius_add != 0 or change.per_twice != null):
+			# A per-enemy aura's reach and who counts twice (phase 8 part 4).
+			copy.aura = DefCopy.shallow(copy.aura if copy.aura != null else part.aura) as AuraDef
+			copy.aura.per_enemy_range = maxi(copy.aura.per_enemy_range + change.radius_add * HexGrid.HEX, HexGrid.HEX)
+			if change.per_twice != null:
+				copy.aura.per_twice = change.per_twice
 		if named and part.kind == PartDef.Kind.GUARD:
 			copy.share_bp = clampi(copy.share_bp + change.guard_share_add, 100, FixedMath.BP_ONE)
 			copy.guard_range = maxi(copy.guard_range + change.guard_within_add, HexGrid.HEX)
@@ -688,7 +756,20 @@ static func _changed_ability(ability: AbilityDef, change: AbilityChange) -> Abil
 		copy.effects = copy.effects.duplicate()
 	if change.targets_add > 0:
 		copy.effects.append_array(_extra_targets(ability, change))
-	copy.effects.append_array(change.add_effects)
+	# Added effects go before the ability spends its Shield, so they still
+	# read it (phase 8 part 4, Shared Ward).
+	var spends: int = -1
+	for i: int in copy.effects.size():
+		if copy.effects[i].type == EffectDef.Type.SPEND_SHIELD:
+			spends = i
+			break
+	if spends < 0 or change.add_effects.is_empty():
+		copy.effects.append_array(change.add_effects)
+	else:
+		var before: Array[EffectDef] = copy.effects.slice(0, spends)
+		before.append_array(change.add_effects)
+		before.append_array(copy.effects.slice(spends))
+		copy.effects = before
 	for effect: EffectDef in change.add_effects:
 		copy.has_hit_effects = copy.has_hit_effects or effect.trigger != EffectDef.Trigger.ON_FIRE
 	return copy
@@ -773,6 +854,10 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 				copy.holder = change.holder
 			if change.carries and effect.type == EffectDef.Type.CHARGE and effect.knockback_hexes > 0:
 				copy.carries = true
+			if change.ignores_def and effect.type == EffectDef.Type.DAMAGE:
+				copy.ignores_def = true
+			if change.prefer != null and effect.target == EffectDef.Target.FARTHEST_ENEMIES:
+				copy.prefer = change.prefer
 			if change.width_add != 0 and copy.shape != null and copy.shape.kind == ShapeDef.Kind.LINE:
 				copy.shape = DefCopy.shallow(copy.shape) as ShapeDef
 				copy.shape.width += change.width_add
@@ -811,7 +896,9 @@ static func _any_effect(effects: Array[EffectDef], change: AbilityChange) -> boo
 				or change.follows and effect.zone_ticks > 0 or change.ricochet_add != 0 and effect.type == EffectDef.Type.DAMAGE
 				or change.reflect_bp != 0 and effect.type == EffectDef.Type.WALL or change.snags and effect.type == EffectDef.Type.SNARE
 				or change.holder != null and _takes_holder(effect)
-				or change.carries and effect.type == EffectDef.Type.CHARGE and effect.knockback_hexes > 0 and not effect.carries):
+				or change.carries and effect.type == EffectDef.Type.CHARGE and effect.knockback_hexes > 0 and not effect.carries
+				or change.ignores_def and effect.type == EffectDef.Type.DAMAGE and not effect.ignores_def
+				or change.prefer != null and effect.target == EffectDef.Target.FARTHEST_ENEMIES):
 			return true
 		if change.touches(effect) and (change.amount_bp != FixedMath.BP_ONE and (effect.amount != 0 or effect.amount_bp_of_damage != 0 or effect.scaling.any(func(value: int) -> bool: return value != 0) or effect.amount_bp_of_max_hp != 0 or change.moves(effect))
 				or (change.duration_bp != FixedMath.BP_ONE or change.duration_add_ticks != 0) and (effect.duration_ticks > 0 or effect.zone_ticks > 0)
@@ -822,16 +909,30 @@ static func _any_effect(effects: Array[EffectDef], change: AbilityChange) -> boo
 	return false
 
 
-static func _slot_abilities(kit: UnitDef, slot: String) -> Array[AbilityDef]:
+static func _slot_abilities(kit: UnitDef, slot: String, ability_id: String = "") -> Array[AbilityDef]:
 	var found: Array[AbilityDef] = []
-	if slot in [SLOT_BASIC, SLOT_ABILITIES] and kit.basic_attack != null:
+	if slot in [SLOT_BASIC, SLOT_ABILITIES] and kit.basic_attack != null and (ability_id.is_empty() or kit.basic_attack.id == ability_id):
 		found.append(kit.basic_attack)
-	if slot in [SLOT_SIGNATURE, SLOT_ABILITIES] and kit.signature != null:
+	if slot in [SLOT_SIGNATURE, SLOT_ABILITIES] and kit.signature != null and (ability_id.is_empty() or kit.signature.id == ability_id):
 		found.append(kit.signature)
 	for part: PartDef in kit.passives:
-		if part.ability != null and (slot == SLOT_ABILITIES or slot == PASSIVE_PREFIX + part.id):
+		if part.ability != null and (slot == SLOT_ABILITIES or slot == PASSIVE_PREFIX + part.id) and (ability_id.is_empty() or part.id == ability_id):
 			found.append(part.ability)
 	return found
+
+
+## The named passive's aura, if it counts enemies near (phase 8 part 4).
+static func _per_enemy_aura(kit: UnitDef, slot: String) -> AuraDef:
+	var aura: AuraDef = _slot_aura(kit, slot)
+	return aura if aura != null and aura.per_enemy_range > 0 else null
+
+
+## `change` as it reaches a habit: its cost change becomes its every one
+## lower (or higher), the rest as it is.
+static func _as_habit(change: AbilityChange) -> AbilityChange:
+	var habit: AbilityChange = DefCopy.shallow(change) as AbilityChange
+	habit.every_add = change.every_add + signi(change.mana_max_add)
+	return habit
 
 
 static func _slot_aura(kit: UnitDef, slot: String) -> AuraDef:

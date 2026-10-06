@@ -104,7 +104,8 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 				hopper.deeds.hopped_at = entry.tick
 			continue
 		if kind != LogEntry.Kind.DAMAGE and kind != LogEntry.Kind.HEAL and kind != LogEntry.Kind.SHIELD and kind != LogEntry.Kind.SHOT \
-				and kind != LogEntry.Kind.FIRE and kind != LogEntry.Kind.STATUS_APPLIED and kind != LogEntry.Kind.GUARD and kind != LogEntry.Kind.SHARED:
+				and kind != LogEntry.Kind.FIRE and kind != LogEntry.Kind.STATUS_APPLIED and kind != LogEntry.Kind.GUARD and kind != LogEntry.Kind.SHARED \
+				and kind != LogEntry.Kind.PUSH:
 			continue
 		var unit: UnitState = sim.unit_by_id(entry.source_unit)
 		if unit == null or unit.deeds == null:
@@ -162,6 +163,12 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 					# Each hit on an enemy (phase 8 part 2, Hailstorm).
 					var hit: UnitState = sim.unit_by_id(entry.target)
 					if hit != null and hit.side != unit.side:
+						counter.amounts[d] += 1
+				DeedDef.Counts.PULLED:
+					# An enemy pulled or hooked that moved (phase 8 part 4).
+					var pulled: UnitState = sim.unit_by_id(entry.target)
+					if pulled != null and pulled.side != unit.side and entry.from_pos != entry.to_pos \
+							and (entry.note.begins_with("pulled") or entry.note.begins_with("hooked")):
 						counter.amounts[d] += 1
 				DeedDef.Counts.ROOTED_MS:
 					if entry.end_tick > entry.tick and sim.content.statuses.has(entry.status) \

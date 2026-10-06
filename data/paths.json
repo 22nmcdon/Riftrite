@@ -3328,5 +3328,430 @@
         }
       }
     ]
+  },
+  {
+    "_note": "The shield that bites (rebuild-heroes.md, section 8d, path 1; phase 8 part 4, 8d-2b). Numbers are the design's placeholders; the deed's threshold is a first number for 8d-5's check.",
+    "id": "aegisfang",
+    "hero": "garrow",
+    "name": "Aegisfang",
+    "title": "the shield that bites",
+    "fantasy": "Every blow thickens his armor, and the armor is the weapon.",
+    "placement": "In the thick of it, where he can swing every second and burst on a crowd.",
+    "vowed": {
+      "taste": "Plated Blows: each basic attack gives him a Shield of 1% of his max HP.",
+      "cost": "10% less max HP.",
+      "patch": {
+        "stats_bp": {
+          "hp": 9000
+        },
+        "passives": [
+          {
+            "id": "plated_blows",
+            "name": "Plated Blows",
+            "kind": "ability",
+            "text": "Each Chain Fist gives him a small Shield.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "type": "shield",
+                "amount_bp_of_max_hp": 100,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Each Chain Fist gives him a Shield of 3% of his max HP, up to half his max HP. Bulwark Burst replaces Haul: his whole Shield bursts on the enemies within 1 hex of him for 150% of it. Haul becomes a habit, every 8th Chain Fist.",
+      "cost": "15% less DEF.",
+      "patch": {
+        "stats_bp": {
+          "def": 8500
+        },
+        "signature": {
+          "id": "bulwark_burst",
+          "name": "Bulwark Burst",
+          "text": "His whole Shield bursts: the enemies within 1 hex of him take half again as much as it held, and the Shield is gone.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "self",
+          "effects": [
+            {
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 1
+              },
+              "anchor": "self",
+              "hits": "enemies",
+              "effects": [
+                {
+                  "type": "damage",
+                  "amount_bp_of_shield": 15000,
+                  "target": "target"
+                }
+              ]
+            },
+            {
+              "type": "spend_shield",
+              "target": "self"
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "plated_blows",
+            "name": "Plated Blows",
+            "kind": "ability",
+            "text": "Each Chain Fist gives him a Shield, up to half his max HP.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "type": "shield",
+                "amount_bp_of_max_hp": 300,
+                "cap_bp_of_max_hp": 5000,
+                "target": "self"
+              }
+            ]
+          },
+          {
+            "id": "haul",
+            "name": "Haul",
+            "kind": "ability",
+            "text": "A habit: every 8th Chain Fist, he throws a chain at the farthest enemy within 4 hexes and drags it next to him.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "pull",
+                "to": "beside",
+                "target": "farthest_enemies",
+                "count": 1,
+                "within_hexes": 4
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Shield his blows give him",
+      "counts": "shield",
+      "from_ability": [
+        "plated_blows"
+      ],
+      "threshold": 130
+    }
+  },
+  {
+    "_note": "The one who drags them in (rebuild-heroes.md, section 8d, path 2; phase 8 part 4, 8d-2b; Decision 10: the habit hauls the 3 farthest). Numbers are the design's placeholders; the deed's threshold is a first number for 8d-5's check.",
+    "id": "chainwarden",
+    "hero": "garrow",
+    "name": "Chainwarden",
+    "title": "the one who drags them in",
+    "fantasy": "The chains bring them to him, and every one in reach makes him stronger.",
+    "placement": "Where the enemies' back line is within his chains' 4 hexes, and his allies' blows land on the crowd he makes.",
+    "vowed": {
+      "taste": "Barbed Chain: Haul Bleeds the enemy it drags, for a fifth of his ATK.",
+      "cost": "10% less ATK.",
+      "patch": {
+        "stats_bp": {
+          "atk": 9000
+        },
+        "signature": {
+          "id": "haul",
+          "name": "Haul",
+          "text": "Throws a barbed chain at the farthest enemy within 4 hexes, Bleeds it, and drags it next to him.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "farthest",
+          "max_range": 4,
+          "effects": [
+            {
+              "type": "apply_status",
+              "status": "bleed",
+              "stacks": 1,
+              "scaling": {
+                "atk": 1500
+              },
+              "target": "target"
+            },
+            {
+              "type": "pull",
+              "to": "beside",
+              "target": "target"
+            }
+          ]
+        }
+      }
+    },
+    "transformed": {
+      "text": "Haul becomes a habit: every 6th Chain Fist, his chains Bleed the 3 farthest enemies within 4 hexes and drag them to him. Crowd Strength: more ATK and DEF for each enemy within 1 hex. Maelstrom replaces Haul: every enemy within 3 hexes is Bled, dragged next to him, and Rooted, and he can attack again at once.",
+      "cost": "He's slower.",
+      "patch": {
+        "stats_add": {
+          "speed": -1
+        },
+        "signature": {
+          "id": "maelstrom",
+          "name": "Maelstrom",
+          "text": "Every enemy within 3 hexes of him is Bled, dragged next to him, and Rooted for a moment, and he can attack again at once.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "self",
+          "resets_attack": true,
+          "effects": [
+            {
+              "type": "apply_status",
+              "status": "bleed",
+              "stacks": 1,
+              "scaling": {
+                "atk": 2500
+              },
+              "target": "enemies_near_self",
+              "within_hexes": 3
+            },
+            {
+              "type": "pull",
+              "to": "beside",
+              "target": "enemies_near_self",
+              "within_hexes": 3
+            },
+            {
+              "type": "apply_status",
+              "status": "root",
+              "duration_ms": 1000,
+              "target": "enemies_near_self",
+              "within_hexes": 3
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "crowd_strength",
+            "name": "Crowd Strength",
+            "kind": "aura",
+            "text": "He hits harder for each enemy within 1 hex of him.",
+            "aura": {
+              "target": "holder",
+              "stat": "atk_bp",
+              "value": 10500,
+              "per": "enemy_near",
+              "per_within_hexes": 1
+            }
+          },
+          {
+            "id": "crowd_guard",
+            "name": "Crowd Strength",
+            "kind": "aura",
+            "text": "His DEF rises for each enemy within 1 hex of him.",
+            "aura": {
+              "target": "holder",
+              "stat": "def",
+              "value": 2,
+              "per": "enemy_near",
+              "per_within_hexes": 1
+            }
+          },
+          {
+            "id": "haul",
+            "name": "Haul",
+            "kind": "ability",
+            "text": "A habit: every 6th Chain Fist, he throws chains at the 3 farthest enemies within 4 hexes, Bleeds them, and drags them next to him.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 6,
+                "type": "apply_status",
+                "status": "bleed",
+                "stacks": 1,
+                "scaling": {
+                  "atk": 1500
+                },
+                "target": "farthest_enemies",
+                "count": 3,
+                "within_hexes": 4
+              },
+              {
+                "trigger": "on_basic_attack",
+                "every": 6,
+                "type": "pull",
+                "to": "beside",
+                "target": "farthest_enemies",
+                "count": 3,
+                "within_hexes": 4
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Bleed his chains apply",
+      "counts": "applied",
+      "from_ability": [
+        "haul",
+        "maelstrom"
+      ],
+      "statuses": [
+        "bleed"
+      ],
+      "threshold": 6
+    }
+  },
+  {
+    "_note": "The one who hits back (rebuild-heroes.md, section 8d, path 3; phase 8 part 4, 8d-2b). Thorns are an on_hit_taken damage back at the attacker; Iron Maiden's whole send-back reads the iron_maiden status on him. Numbers are the design's placeholders; the deed's threshold is a first number for 8d-5's check.",
+    "id": "spitemail",
+    "hero": "garrow",
+    "name": "Spitemail",
+    "title": "the one who hits back",
+    "fantasy": "Every blow on him costs the one who struck it.",
+    "placement": "Where the most enemies will hit him, at any HP.",
+    "vowed": {
+      "taste": "Spikes: enemies hitting him take 5% of the damage back.",
+      "cost": "10% less ATK.",
+      "patch": {
+        "stats_bp": {
+          "atk": 9000
+        },
+        "passives": [
+          {
+            "id": "spikes",
+            "name": "Spikes",
+            "kind": "ability",
+            "text": "Enemies that hit him take a little of it back.",
+            "effects": [
+              {
+                "trigger": "on_hit_taken",
+                "type": "damage",
+                "amount_bp_of_damage": 500,
+                "target": "hit_target"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Enemies hitting him take a quarter of the damage back, and he heals for half of what he sends back. Iron Maiden replaces Haul: for 4s he taunts every enemy within 2 hexes and sends back every hit whole. Haul becomes a habit, every 8th Chain Fist.",
+      "cost": "Heals on him are 20% weaker.",
+      "patch": {
+        "signature": {
+          "id": "iron_maiden",
+          "name": "Iron Maiden",
+          "text": "For 4s he taunts every enemy within 2 hexes of him and sends back every hit on him whole.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "self",
+          "effects": [
+            {
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 2
+              },
+              "anchor": "self",
+              "hits": "enemies",
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "taunt",
+                  "duration_ms": 4000,
+                  "target": "target"
+                }
+              ]
+            },
+            {
+              "type": "apply_status",
+              "status": "iron_maiden",
+              "target": "self",
+              "duration_ms": 4000
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "spikes",
+            "name": "Spikes",
+            "kind": "ability",
+            "text": "Enemies that hit him take a quarter of it back, and he heals for half of what he sends.",
+            "effects": [
+              {
+                "trigger": "on_hit_taken",
+                "type": "damage",
+                "amount_bp_of_damage": 2500,
+                "target": "hit_target"
+              },
+              {
+                "trigger": "on_hit_taken",
+                "type": "heal",
+                "amount_bp_of_damage": 1250,
+                "target": "self"
+              }
+            ]
+          },
+          {
+            "id": "maidens_spite",
+            "name": "Maiden's Spite",
+            "kind": "ability",
+            "text": "While Iron Maiden lasts, every hit on him is sent back whole.",
+            "effects": [
+              {
+                "trigger": "on_hit_taken",
+                "holder": {
+                  "statuses": [
+                    "iron_maiden"
+                  ]
+                },
+                "type": "damage",
+                "amount_bp_of_damage": 10000,
+                "target": "hit_target"
+              }
+            ]
+          },
+          {
+            "id": "embittered",
+            "name": "Embittered",
+            "kind": "aura",
+            "text": "Heals on him are 20% weaker.",
+            "aura": {
+              "target": "holder",
+              "stat": "healing_taken_bp",
+              "value": 8000
+            }
+          },
+          {
+            "id": "haul",
+            "name": "Haul",
+            "kind": "ability",
+            "text": "A habit: every 8th Chain Fist, he throws a chain at the farthest enemy within 4 hexes and drags it next to him.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "pull",
+                "to": "beside",
+                "target": "farthest_enemies",
+                "count": 1,
+                "within_hexes": 4
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Damage his Spikes send back",
+      "counts": "damage",
+      "from_ability": [
+        "spikes"
+      ],
+      "threshold": 100
+    }
   }
 ]

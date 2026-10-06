@@ -37,7 +37,7 @@ func test_the_team_row() -> void:
 	assert_eq(main.practice.team, HeroTeam.DEFAULT, "the session keeps the last whole team")
 	list.toggle_hero("garrow")
 	assert_eq(main.practice.team, ["maren", "vell", "garrow"] as Array[String])
-	assert_string_contains(U.text_of(list), "Garrow fights at base: paths aren't built yet.")
+	assert_false(U.text_of(list).contains("at base"), "his paths are built")
 	U.press(list, "Place your heroes")
 	var arena: ArenaScreen = main.screen
 	assert_eq(arena.hero_bar.cards.keys(), ["maren", "vell", "garrow"], "the hero bar shows the team")

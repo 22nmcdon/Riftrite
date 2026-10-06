@@ -496,6 +496,77 @@ def garrow_base(uid):
     return "".join(o)
 
 
+def garrow_legs():
+    return "".join([P("M112,340 L148,340 L142,470 L104,470 Z", RUST_DK), P("M152,340 L190,340 L196,470 L158,470 Z", RUST_DK),
+                    boot(98, 146) + boot(156, 208)])
+
+
+def garrow_aegisfang(uid):
+    """Plates over plates, the armour glowing where it thickens: the Shield is the weapon."""
+    torso = "M86,194 L214,194 L220,356 L80,356 Z"
+    plates = "".join(P(f"M{x},{y} L{x+44},{y-4} L{x+46},{y+30} L{x+2},{y+34} Z", IRON) for x, y in
+                     ((92, 214), (152, 210), (96, 256), (150, 252), (100, 298), (148, 294)))
+    o = [shadow(112), garrow_legs(),
+         limb((98, 212), (80, 318), 32, 28, IRON_DK), circle(80, 324, 17, IRON, 2),
+         P(torso, IRON_DK), plates,
+         P("M84,334 L216,334 L216,356 L84,356 Z", LEATHER_DK, 2),
+         f'<ellipse cx="96" cy="206" rx="38" ry="26" fill="{IRON}" stroke="{INK}" stroke-width="3"/>',
+         f'<ellipse cx="204" cy="206" rx="38" ry="26" fill="{IRON}" stroke="{INK}" stroke-width="3"/>',
+         shade(uid, [torso], cut=150), garrow_head(),
+         limb((204, 214), (230, 294), 32, 28, IRON_DK),
+         P("M214,286 L252,280 L258,322 L220,330 Z", IRON, 2),
+         "".join(f'<path d="M{x},{y} l14,-10 l-2,16 Z" fill="{BONE}" stroke="{INK}" stroke-width="2"/>' for x, y in ((250, 288), (254, 304), (256, 318))),
+         rim("M96,214 L214,208", color=AQUA, w=2.4), rim("M100,256 L196,250", color=AQUA, w=2),
+         f'<ellipse cx="150" cy="270" rx="96" ry="110" fill="none" stroke="{AQUA}" stroke-width="2" opacity="0.5" filter="url(#glow)"/>']
+    return "".join(o)
+
+
+def garrow_chainwarden(uid):
+    """Chains in both fists and coiled round him, hooks at their ends: they come to him."""
+    torso = "M92,198 L208,198 L214,352 L86,352 Z"
+    o = [shadow(118),
+         chain_links(30, 470, 96, 330, 9, w=10), chain_links(270, 470, 214, 330, 9, w=10),
+         garrow_legs(),
+         limb((100, 212), (70, 300), 30, 26, RUST), circle(66, 304, 16, SKIN, 2),
+         P(torso, IRON_DK), P("M116,212 L184,212 L190,346 L110,346 Z", RUST),
+         P("M88,332 L212,332 L212,352 L88,352 Z", LEATHER_DK, 2),
+         chain_links(96, 214, 204, 332, 11), chain_links(204, 214, 96, 332, 11),
+         f'<ellipse cx="98" cy="210" rx="32" ry="22" fill="{IRON}" stroke="{INK}" stroke-width="3"/>',
+         f'<ellipse cx="202" cy="210" rx="32" ry="22" fill="{IRON}" stroke="{INK}" stroke-width="3"/>',
+         shade(uid, [torso], cut=150), garrow_head(),
+         limb((202, 216), (236, 290), 30, 26, RUST), circle(240, 296, 17, SKIN, 2),
+         chain_links(66, 304, 28, 150, 8, w=10), chain_links(240, 296, 278, 140, 8, w=10),
+         f'<path d="M22,150 C6,130 14,104 34,108" fill="none" stroke="{INK}" stroke-width="9"/>'
+         f'<path d="M22,150 C6,130 14,104 34,108" fill="none" stroke="{CHAIN}" stroke-width="5"/>',
+         f'<path d="M282,140 C298,120 290,94 270,98" fill="none" stroke="{INK}" stroke-width="9"/>'
+         f'<path d="M282,140 C298,120 290,94 270,98" fill="none" stroke="{CHAIN}" stroke-width="5"/>',
+         glow_dot(34, 108, 4, WINE), glow_dot(270, 98, 4, WINE)]
+    return "".join(o)
+
+
+def garrow_spitemail(uid):
+    """Every plate grown spikes, wet with what they gave back."""
+    torso = "M92,198 L208,198 L214,352 L86,352 Z"
+    spikes = "".join(f'<path d="M{x},{y} l{dx},{dy} l{8 if dx < 0 else -8},8 Z" fill="{BONE}" stroke="{INK}" stroke-width="2"/>'
+                     for x, y, dx, dy in ((96, 236, -36, -8), (94, 270, -38, 0), (92, 304, -36, 8),
+                                          (124, 236, -4, -26), (150, 228, 0, -28), (176, 236, 4, -26),
+                                          (130, 284, -4, -24), (170, 284, 4, -24),
+                                          (80, 196, -10, -20), (98, 186, -2, -24), (202, 186, 2, -24), (220, 196, 10, -20)))
+    o = [shadow(104), garrow_legs(),
+         limb((100, 212), (84, 318), 30, 26, RUST_DK), circle(84, 322, 15, SKIN, 2),
+         P(torso, IRON_DK), P("M116,212 L184,212 L190,346 L110,346 Z", WINE_DK),
+         P("M88,332 L212,332 L212,352 L88,352 Z", LEATHER_DK, 2),
+         shade(uid, [torso], cut=150), spikes,
+         f'<ellipse cx="98" cy="210" rx="32" ry="22" fill="{IRON_DK}" stroke="{INK}" stroke-width="3"/>',
+         f'<ellipse cx="202" cy="210" rx="32" ry="22" fill="{IRON_DK}" stroke="{INK}" stroke-width="3"/>',
+         garrow_head(),
+         limb((202, 216), (226, 300), 30, 26, RUST_DK), circle(228, 306, 17, IRON, 2),
+         "".join(f'<path d="M{x},{y} l6,-14 l6,14 Z" fill="{BONE}" stroke="{INK}" stroke-width="2"/>' for x, y in ((220, 296), (230, 292), (240, 298))),
+         "".join(glow_dot(x, y, 2.5, WINE) for x, y in ((70, 236), (66, 264), (234, 236), (236, 262), (150, 300))),
+         rim("M208,230 L212,300", color=WINE, w=2)]
+    return "".join(o)
+
+
 HEROES = [
     ("maren", "Maren", [("base", "Base", maren_base), ("deadeye", "Deadeye", maren_deadeye),
                         ("trapper", "Trapper", maren_trapper), ("volley", "Volley", maren_volley)]),
@@ -503,7 +574,8 @@ HEROES = [
                             ("ironbrand", "Ironbrand", brannoc_ironbrand), ("last_watch", "Last Watch", brannoc_last_watch)]),
     ("vell", "Vell", [("base", "Base", vell_base), ("lanternbearer", "Lanternbearer", vell_lanternbearer),
                       ("wardweaver", "Wardweaver", vell_wardweaver), ("vigil_keeper", "Vigil Keeper", vell_vigil_keeper)]),
-    ("garrow", "Garrow", [("base", "Base", garrow_base)]),
+    ("garrow", "Garrow", [("base", "Base", garrow_base), ("aegisfang", "Aegisfang", garrow_aegisfang),
+                          ("chainwarden", "Chainwarden", garrow_chainwarden), ("spitemail", "Spitemail", garrow_spitemail)]),
 ]
 
 FILTERS = ('<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4" result="b"/>'
