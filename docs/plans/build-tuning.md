@@ -118,6 +118,8 @@ Before judging paths, every hero's **base kit** should land its team within **±
 
 **Tamsin** (the same report): base Tamsin's team wins 30% against the old three's 22% (ATK 16, a 1s Knife, +10 attack speed; at the design's ATK 24, 53%). Floors: Nightblade +33 (self-sufficient, +25 to +35), Headhunter +14 and Garrote +14 (engines, +5 to +15). The ceilings wait for the bots (Decision 14).
 
+**Aldous** (the same report): base Aldous's team wins 26% against the old three's 22%, so his numbers are the design's. Floors, all enablers (+10 to +20): Chorister +11, Windcaller +12, Bellwarden +12, each with a lift of his MGK and HP on the transformation (as designed, all three were +1 or +2). Aldous has no self-sufficient path to measure his lift against (`rebuild-phase8-heroes.md`, Question HH).
+
 ## 8. Apexes
 
 The same types apply at apex, with the tier shift (`apexes.md`) as the target for every type. An apex keeps its path's type unless its section says otherwise.

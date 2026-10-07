@@ -197,6 +197,8 @@ These never give Shield from attacks (Aegisfang), multi-pulls, chain Bleed, or C
 
 ## Aldous
 
+Built in phase 8 part 4 (`rebuild-phase8-heroes.md`, "Built in 8d-4b and 8d-4d"): his 33 cards, with the approximations flagged there (Clear Note, Eye of the Storm, Old Rope, Long Choir, Bell Metal); his 12 apex cards in 8d-4c.
+
 ### Hero pool
 
 These never give mana to allies (Chorister), bonuses for ranged allies (Windcaller), or Marks (Bellwarden).

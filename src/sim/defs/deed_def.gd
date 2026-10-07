@@ -86,18 +86,22 @@ extends RefCounted
 ##                                 step 4; Rift-Fed Blades)
 ##   keywords: ["marked"]          applied only: statuses with these keywords
 ## (Phase 8 part 4, Chorister: "mana_given" counts the whole mana the hero
-## gives other units, MANA_GIVEN.)
+## gives other units, MANA_GIVEN. Aldous's apexes: "mana_overflow" counts
+## the whole mana its side's bars gain past full (Wellspring), and
+## "ally_casts" with "within_hexes": 3 its allies' signature fires within
+## that reach of it (Grand Chorus).)
 ## "threshold": 900 is what fills it in a run (phase 5, Decision 6: about
 ## three fights' worth of what a vowed hero puts in); the sim never reads it.
 ## Adding a kind or a filter is a code change.
 
-enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING, HITS, SHARED, BLOCKED, PULLED, EXTENDED_MS, MANA_GIVEN }
+enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING, HITS, SHARED, BLOCKED, PULLED, EXTENDED_MS, MANA_GIVEN, MANA_OVERFLOW, ALLY_CASTS }
 
-const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing", "hits", "shared", "blocked", "pulled", "extended_ms", "mana_given"]
-const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill", "casts", "ms standing", "enemies hit", "damage shared", "attacks blocked", "enemies pulled", "ms extended", "mana given"]
+const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing", "hits", "shared", "blocked", "pulled", "extended_ms", "mana_given", "mana_overflow", "ally_casts"]
+const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill", "casts", "ms standing", "enemies hit", "damage shared", "attacks blocked", "enemies pulled", "ms extended", "mana given", "mana past full", "ally signatures near"]
 ## The kinds read from where the hero is the target, or from the tick, not
 ## from what the hero does.
-const NOT_ITS_OWN: Array[Counts] = [Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING, Counts.BLOCKED]
+const NOT_ITS_OWN: Array[Counts] = [Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING, Counts.BLOCKED,
+	Counts.MANA_OVERFLOW, Counts.ALLY_CASTS]
 
 ## The player's line: "Damage dealt from 5 or more hexes away".
 var text: String
@@ -112,6 +116,8 @@ var while_undying: bool = false
 var from_basic: bool = false
 ## taken (phase 8 part 2): only after the hero has risen by its own kit.
 var after_rising: bool = false
+## ally_casts: how near it the ally must fire (plane units; phase 8 part 4).
+var near_range: int = 0
 ## Only while its kit holds a part with this id ("": always; phase 8 part 4).
 var with_part: String = ""
 ## pulled: count the hexes moved, not the enemies (phase 8 part 4).
@@ -166,6 +172,8 @@ static func read(reader: DataReader, needs_text: bool = true) -> DeedDef:
 	if def.by_allies and def.counts != Counts.DAMAGE and def.counts != Counts.HITS:
 		reader.error("by_allies only counts damage or hits")
 	def.with_part = reader.opt_string("with_part", "")
+	if def.counts == Counts.ALLY_CASTS:
+		def.near_range = reader.req_int("within_hexes", 1, 10) * HexGrid.HEX
 	if def.by_allies and not def.from_ability.is_empty():
 		reader.error("by_allies counts every ally's hits, so it takes no from_ability")
 	if def.after_rising and def.counts != Counts.TAKEN:
@@ -229,6 +237,6 @@ func counts_kind(kind: LogEntry.Kind, ability_id: String) -> bool:
 		Counts.APPLIED:
 			if kind != LogEntry.Kind.STATUS_APPLIED:
 				return false
-		Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING, Counts.BLOCKED:
+		Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING, Counts.BLOCKED, Counts.MANA_OVERFLOW, Counts.ALLY_CASTS:
 			return false
 	return from_ability.is_empty() or from_ability.has(ability_id)

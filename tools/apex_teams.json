@@ -22,6 +22,12 @@
     {"name": "Blood Hunt", "kind": "good", "carry": "tamsin", "apexes": {"brannoc": "unbroken_gate", "maren": "stormline", "tamsin": "bloodtrail"}},
     {"name": "Hold and Break", "kind": "good", "carry": "tamsin", "apexes": {"brannoc": "forgebreaker", "vell": "sanctifier", "tamsin": "strangler"}},
     {"name": "Pinned Thicket", "kind": "good", "carry": "maren", "apexes": {"maren": "huntmaster", "garrow": "undertow", "tamsin": "pinmaster"}},
+    {"name": "Grand Choir", "kind": "good", "carry": "maren", "apexes": {"brannoc": "warlord", "maren": "stormline", "aldous": "grand_chorus"}},
+    {"name": "Overflow", "kind": "good", "carry": "maren", "apexes": {"brannoc": "unbroken_gate", "maren": "hailstorm", "aldous": "wellspring"}},
+    {"name": "Long Gallery", "kind": "good", "carry": "maren", "apexes": {"brannoc": "unbroken_gate", "maren": "eagle_eye", "aldous": "long_wind"}},
+    {"name": "Singing Volley", "kind": "good", "carry": "maren", "apexes": {"brannoc": "hearthkeeper", "maren": "windrunner", "aldous": "singing_arrows"}},
+    {"name": "Bell Hunt", "kind": "good", "carry": "tamsin", "apexes": {"brannoc": "unbroken_gate", "tamsin": "executioner", "aldous": "the_great_bell"}},
+    {"name": "Requiem", "kind": "good", "carry": "maren", "apexes": {"brannoc": "unbroken_gate", "maren": "eagle_eye", "aldous": "requiem"}},
     {"name": "No Edge", "kind": "poor", "apexes": {"brannoc": "hearthkeeper", "maren": "warden_of_thorns", "vell": "loomwarden"}},
     {"name": "Crossed Purposes", "kind": "poor", "apexes": {"brannoc": "martyrs_pyre", "maren": "huntmaster", "vell": "thornweave"}}
   ]

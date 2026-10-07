@@ -124,9 +124,14 @@ var chain_depth: int = 0
 ## Mana.gain is running a unit's on_mana_gained passives (phase 8 part 4):
 ## the mana they give sets off no more.
 var sharing_mana: bool = false
+## Units counting mana their side gains past full (phase 8 part 4,
+## Wellspring's deed).
+var overflow_counters: Array[UnitState] = []
 ## Some unit has an on_ally_ability passive, so signatures' FIRE entries are
 ## told to their side (Events).
 var ally_ability_listeners: bool = false
+## Some unit hears its allies' basic attack hits (phase 8 part 4).
+var ally_hit_listeners: bool = false
 ## Some unit hears its side's Shields break (phase 8 part 2, Thornweave).
 var ally_shield_listeners: bool = false
 ## Some unit has an on_status_ended passive (phase 5c step 5b).
@@ -258,6 +263,8 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 			tallies_on_target = tallies_on_target or unit.deeds.needs_taken or unit.deeds.needs_kills
 			if unit.deeds.needs_team:
 				team_counters.append(unit)
+			if unit.deeds.needs_overflow:
+				overflow_counters.append(unit)
 			_counting_time = _counting_time or unit.deeds.needs_time
 	Gambits.set_up(self)
 	units_joined()
@@ -267,7 +274,8 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 		# Overcharge: the heroes' bars hold that many more full bars.
 		for unit: UnitState in heroes:
 			if unit.def.mana != null:
-				unit.mana_store = unit.mana_cap * (1 + hero_rules.overcharge_steps + hero_rules.deeper_steps)
+				unit.rule_store = unit.mana_cap * (1 + hero_rules.overcharge_steps + hero_rules.deeper_steps)
+				unit.mana_store = maxi(unit.mana_store, unit.rule_store)
 	for r: int in setup.relic_effects.size():
 		EffectRunner.run_relic(self, setup.relic_sources[r], setup.relic_effects[r], setup.relic_scales[r])
 	# Passives that run as the fight starts (phase 5c step 6d: gambits).
@@ -347,6 +355,8 @@ func note_listeners(unit: UnitState) -> void:
 		_timed_passives = true
 	if Passives.listens_for(unit, EffectDef.Trigger.ON_ALLY_ABILITY):
 		ally_ability_listeners = true
+	if Passives.listens_for(unit, EffectDef.Trigger.ON_ALLY_HIT):
+		ally_hit_listeners = true
 	if Passives.listens_for(unit, EffectDef.Trigger.ON_ALLY_SHIELD_BROKEN):
 		ally_shield_listeners = true
 	if Passives.listens_for(unit, EffectDef.Trigger.ON_STATUS_ENDED):
@@ -515,7 +525,13 @@ func _act(unit: UnitState) -> void:
 	var has_statuses: bool = not unit.statuses.is_empty()
 	# Mana regen (Mana), unless Silenced.
 	if unit.mana_regen > 0 and unit.mana < maxi(unit.mana_cap, unit.mana_store) and not (has_statuses and Statuses.has_kind(unit, StatusDef.Kind.SILENCE)):
-		unit.mana = mini(unit.mana + unit.mana_regen, maxi(unit.mana_cap, unit.mana_store))
+		var regen_before: int = unit.mana
+		var regen: int = unit.mana_regen
+		if unit.aura_bp[AuraDef.Stat.MANA_GAIN_BP] != FixedMath.BP_ONE:
+			regen = FixedMath.apply_bp(regen, Passives.factor(unit, AuraDef.Stat.MANA_GAIN_BP))
+		unit.mana = mini(unit.mana + regen, maxi(unit.mana_cap, unit.mana_store))
+		if not overflow_counters.is_empty():
+			Mana.count_overflow(self, unit, regen_before)
 	# Landing from a leap: it can't act.
 	if tick < unit.landing_until:
 		return

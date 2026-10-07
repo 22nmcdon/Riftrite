@@ -238,12 +238,14 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 				# A share of its bar (phase 5c step 6b; Execution's refund).
 				if victim.def.mana != null:
 					gained = Mana.gain(sim, victim, FixedMath.apply_bp(victim.def.mana.max * Mana.SCALE, effect.mana_bp))
-			elif effect.amount_bp_of_damage > 0:
-				# A share of the mana its unit gained, in hundredths (phase 8
-				# part 4, Chorister).
-				gained = Mana.gain(sim, victim, amount)
 			else:
-				gained = Mana.gain(sim, victim, amount * Mana.SCALE)
+				# A share of the mana its unit gained is in hundredths (phase 8
+				# part 4, Chorister); a stack of its grows_per_stack status
+				# makes it more (Wellspring).
+				var hundredths: int = amount if effect.amount_bp_of_damage > 0 else amount * Mana.SCALE
+				if not effect.grows_status.is_empty():
+					hundredths = FixedMath.apply_bp(hundredths, FixedMath.BP_ONE + effect.grows_stack_bp * Statuses.stacks_on(unit, effect.grows_status))
+				gained = Mana.gain(sim, victim, hundredths)
 			if victim != unit and gained > 0:
 				# Mana given to another unit is logged (phase 8 part 4).
 				var given: LogEntry = sim.new_entry(LogEntry.Kind.MANA_GIVEN, source)

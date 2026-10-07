@@ -45,14 +45,30 @@ static func gain(sim: CombatSim, unit: UnitState, hundredths: int) -> int:
 		return 0
 	if not unit.statuses.is_empty() and Statuses.has_kind(unit, StatusDef.Kind.SILENCE):
 		return 0
+	if unit.aura_bp[AuraDef.Stat.MANA_GAIN_BP] != FixedMath.BP_ONE:
+		# More from every source (phase 8 part 4, Grand Chorus).
+		hundredths = FixedMath.apply_bp(hundredths, Passives.factor(unit, AuraDef.Stat.MANA_GAIN_BP))
 	var before: int = unit.mana
 	unit.mana = mini(unit.mana + hundredths, maxi(unit.def.mana.max * SCALE, unit.mana_store))
 	var gained: int = maxi(unit.mana - before, 0)
+	if not sim.overflow_counters.is_empty():
+		count_overflow(sim, unit, before)
 	if gained > 0 and unit.hears_mana and not sim.sharing_mana:
 		sim.sharing_mana = true
 		Passives.on_event(sim, unit, EffectDef.Trigger.ON_MANA_GAINED, null, gained, "")
 		sim.sharing_mana = false
 	return gained
+
+
+## What the unit's bar went past full, for its side's units counting it
+## (the deed count mana_overflow; phase 8 part 4, Wellspring).
+static func count_overflow(sim: CombatSim, unit: UnitState, before: int) -> void:
+	var over: int = unit.mana - maxi(before, unit.mana_cap)
+	if over <= 0 or unit.mana_cap <= 0:
+		return
+	for counter: UnitState in sim.overflow_counters:
+		if counter.side == unit.side:
+			Deeds.add_overflow(counter.deeds, over)
 
 
 ## Gives the unit the bar `mana` describes, at its start (null: no bar).

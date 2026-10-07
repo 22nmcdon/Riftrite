@@ -100,6 +100,12 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> int:
 				if source.side != target.side:
 					# The ability rides along (on_holder_hit's from_ability, phase 8).
 					_raise(sim, source, EffectDef.Trigger.ON_HOLDER_HIT, chain, target, entry.amount, entry.source_ability)
+					if sim.ally_hit_listeners and entry.source_ability == source.def.basic_attack.id:
+						# Its allies hear a basic attack's hit, the hitter riding
+						# along as `status` (phase 8 part 4, Singing Arrows).
+						for ally: UnitState in (sim.heroes if source.side == EffectSource.Team.HEROES else sim.enemies):
+							if ally != source and not ally.listeners.is_empty():
+								_raise(sim, ally, EffectDef.Trigger.ON_ALLY_HIT, chain, target, entry.amount, source.id)
 					_raise(sim, target, EffectDef.Trigger.ON_HIT_TAKEN, chain, source, entry.amount)
 					# A charge or a leap's hit (phase 5c step 6b, Braced).
 					if not target.listeners.is_empty() and source.def.signature != null and entry.source_ability == source.def.signature.id \

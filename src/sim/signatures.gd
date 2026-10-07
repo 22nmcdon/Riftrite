@@ -224,6 +224,13 @@ static func _fire(sim: CombatSim, unit: UnitState, target: UnitState, note: Stri
 	var power_before: int = unit.fire_power_bp
 	unit.fire_power_bp += ability.grows_bp * signature.fires
 	unit.grow_power_bp = (ability.grows_bp + ability.grows_boosts_bp) * signature.fires
+	if unit.spend_overflow > 0:
+		# Stronger for the mana it held past full (phase 8 part 4, Wellspring).
+		@warning_ignore("integer_division")
+		unit.fire_power_bp += unit.spend_overflow / Mana.SCALE * unit.aura_bp[AuraDef.Stat.OVERFLOW_POWER_BP]
+		unit.spend_overflow = 0
+	var boosted: int = Statuses.signature_power(unit) if not unit.statuses.is_empty() else 0
+	unit.fire_power_bp += boosted
 	if ability.resets_attack:
 		note = "and readies its attack" if note.is_empty() else note + ", and readies its attack"
 	var fired: bool = EffectRunner.fire(sim, unit, signature, target, ability.reach_for(unit.stats.get_stat(UnitStats.Stat.RANGE)), not signature.failing, note)
@@ -233,6 +240,8 @@ static func _fire(sim: CombatSim, unit: UnitState, target: UnitState, note: Stri
 		signature.failing = true
 		return false
 	signature.failing = false
+	if boosted > 0:
+		Statuses.spend_signature_boosts(sim, unit)
 	if ability.resets_attack:
 		# He can attack again at once (phase 8 part 4, Maelstrom).
 		unit.attack.progress_bp = unit.attack.needed
@@ -282,6 +291,9 @@ static func _land_cast(sim: CombatSim, unit: UnitState) -> void:
 ## A mana signature fires: the bar empties, or under Overcharge (phase 5c
 ## step 5c) loses one full bar.
 static func _spend_bar(_sim: CombatSim, unit: UnitState) -> void:
+	# What it held past full (phase 8 part 4, Wellspring).
+	unit.last_overflow = maxi(unit.mana - unit.mana_cap, 0)
+	unit.spend_overflow = unit.last_overflow
 	unit.mana = maxi(unit.mana - unit.mana_cap, 0) if unit.mana_store > 0 else 0
 
 

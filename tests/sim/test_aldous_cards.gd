@@ -50,7 +50,7 @@ func test_every_card_changes_the_kit_it_is_offered_on() -> void:
 			elif not card.path.is_empty():
 				kit = _kit(card.path, PathDef.Stage.VOWED if card.layer == UpgradeDef.Layer.TASTE else PathDef.Stage.TRANSFORMED)
 			assert_true(_run.changes_something(card, card.layer == UpgradeDef.Layer.PATH, kit), id)
-	assert_eq(cards.size(), 12 + 6 + 15, "12 of his own, and 2 tastes and 5 path cards a path")
+	assert_eq(cards.size(), 12 + 6 + 15 + 12, "12 of his own, 2 tastes and 5 path cards a path, and 2 an apex")
 
 
 func test_peal_cards_reach_the_signature_and_the_habit() -> void:

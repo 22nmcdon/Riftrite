@@ -100,7 +100,13 @@ extends RefCounted
 ## evade_bp (a basic attack's hits on it miss that share of the time,
 ## rolled on the seeded RNG, logged DODGED noted "evaded"; Tamsin's Evasive),
 ## and (8d-4) shot_speed_bp (its shots fly that much faster: +5000 covers
-## the distance in two thirds the ticks; Windcaller).
+## the distance in two thirds the ticks; Windcaller). Aldous's apexes (8d-4c)
+## add mana_gain_bp (a factor on all the mana it gains, regen included; Grand
+## Chorus), mana_store_bp (a factor on how much mana its bar holds: past
+## full, a signature spends one bar and keeps the rest; Wellspring), and
+## overflow_power_bp (its signature's power for each whole mana over full as
+## it fires; Wellspring), and "per_hex": true (per hit: times the whole hexes
+## between its holder and the unit hit; Long Wind).
 ## "vs": {...} (a UnitCondition; damage_bp, crit_chance_bp, and lifesteal_bp;
 ## phase 5c steps 3 and 5b): the bonus
 ## counts only on hits against targets that meet it, as power (Decision 12:
@@ -122,7 +128,8 @@ enum Stat { DAMAGE_BP, HEAL_BP, SHIELD_BP, OVER_TIME_BP, CRIT_CHANCE_BP, COOLDOW
 	LIFESTEAL_BP, CRIT_DAMAGE_BP, ATSP, DAMAGE_REDUCED_BP,
 	OVERHEAL_SHIELD_BP, LIFESTEAL_HEALS, CRIT_OVERFLOW_BP, DEF, OVERHEAL_STRIKE_BP, MAX_HP_BP,
 	DEF_IGNORE_BP, UNPUSHABLE, DODGE_EVERY_MS, HALVED_HITS,
-	SHIELD_DAMAGE_BP, SEES_STEALTH, BURN_TAKEN_BP, MARKED_TIME_BP, ROOT_CAP_MS, MISS_BP, STUN_TIME_BP, STORE_BP, STORE_GROWS_BP, EVADE_BP, SHOT_SPEED_BP }
+	SHIELD_DAMAGE_BP, SEES_STEALTH, BURN_TAKEN_BP, MARKED_TIME_BP, ROOT_CAP_MS, MISS_BP, STUN_TIME_BP, STORE_BP, STORE_GROWS_BP, EVADE_BP, SHOT_SPEED_BP,
+	MANA_GAIN_BP, MANA_STORE_BP, OVERFLOW_POWER_BP }
 ## What turns an aura on, beyond its window.
 enum While { ALWAYS, TAUNTING, PLANTED, BELOW_HP, ALLY_STANDING, STATE, ALLY_NEAR, BEHIND_WALL, MOVED, CROWDED, TACTIC }
 
@@ -136,6 +143,7 @@ const STAT_NAMES: Array[String] = [
 	"overheal_shield_bp", "lifesteal_heals", "crit_overflow_bp", "def", "overheal_strike_bp", "max_hp_bp",
 	"def_ignore_bp", "unpushable", "dodge_every_ms", "halved_hits",
 	"shield_damage_bp", "sees_stealth", "burn_taken_bp", "marked_time_bp", "root_cap_ms", "miss_bp", "stun_time_bp", "store_bp", "store_grows_bp", "evade_bp", "shot_speed_bp",
+	"mana_gain_bp", "mana_store_bp", "overflow_power_bp",
 ]
 const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp", "ally_standing", "state", "ally_near", "behind_wall", "moved", "crowded", "tactic"]
 ## The stats that add rather than multiply. The rest are factors (x1.1);
@@ -143,7 +151,8 @@ const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp",
 const ADDITIVE: Array[Stat] = [Stat.CRIT_CHANCE_BP, Stat.COOLDOWN_BP, Stat.RANGE, Stat.LIFESTEAL_BP, Stat.CRIT_DAMAGE_BP, Stat.ATSP, Stat.DAMAGE_REDUCED_BP,
 	Stat.OVERHEAL_SHIELD_BP, Stat.LIFESTEAL_HEALS, Stat.CRIT_OVERFLOW_BP, Stat.DEF, Stat.OVERHEAL_STRIKE_BP,
 	Stat.DEF_IGNORE_BP, Stat.UNPUSHABLE, Stat.DODGE_EVERY_MS, Stat.HALVED_HITS,
-	Stat.SHIELD_DAMAGE_BP, Stat.SEES_STEALTH, Stat.BURN_TAKEN_BP, Stat.MARKED_TIME_BP, Stat.ROOT_CAP_MS, Stat.MISS_BP, Stat.STUN_TIME_BP, Stat.STORE_BP, Stat.STORE_GROWS_BP, Stat.EVADE_BP, Stat.SHOT_SPEED_BP]
+	Stat.SHIELD_DAMAGE_BP, Stat.SEES_STEALTH, Stat.BURN_TAKEN_BP, Stat.MARKED_TIME_BP, Stat.ROOT_CAP_MS, Stat.MISS_BP, Stat.STUN_TIME_BP, Stat.STORE_BP, Stat.STORE_GROWS_BP, Stat.EVADE_BP, Stat.SHOT_SPEED_BP,
+	Stat.OVERFLOW_POWER_BP]
 ## The stats an aura worked out per hit may hold ("vs", "from_basic",
 ## "per_target_stacks").
 const VS_STATS: Array[Stat] = [Stat.DAMAGE_BP, Stat.CRIT_CHANCE_BP, Stat.LIFESTEAL_BP, Stat.CRIT_DAMAGE_BP, Stat.HEAL_BP, Stat.SHIELD_BP]
@@ -154,6 +163,7 @@ const STAT_LABELS: Array[String] = [
 	"of overheal as Shield", "lifesteal heals", "of crit chance past 100% as crit damage", "DEF", "of lifesteal overheal as damage to its target", "max HP",
 	"of the target's DEF ignored", "can't be knocked back", "a hit misses every", "hits taken at half damage",
 	"damage to Shields", "can target the stealthed", "Burn damage taken", "how long Marks on it last", "Roots on it last at most", "of its attacks missing", "how long Stuns on it last", "of each hit taken stored", "stored damage growth a second", "of basic attacks on it evaded", "shot speed",
+	"mana gained", "mana its bar holds", "signature power per mana over full",
 ]
 ## Unit stat for each unit-stat aura stat (ATK_BP -> Stat.ATK, ...).
 const UNIT_STAT_FOR: Dictionary[int, int] = {
@@ -206,6 +216,9 @@ var per_shield_bp: int = 0
 var per_target_stacks: String = ""
 ## Per hit: only its holder's basic attack's hits.
 var from_basic: bool = false
+## Per hit: times the whole hexes between its holder and the unit hit (phase
+## 8 part 4, Long Wind).
+var per_hex: bool = false
 ## Per hit: only its holder's signature's hits (phase 5c step 6b; Siphon,
 ## Execution).
 var from_signature: bool = false
@@ -290,6 +303,9 @@ static func read(reader: DataReader) -> AuraDef:
 	def.per_target_stacks = reader.opt_string("per_target_stacks", "")
 	def.from_basic = reader.opt_bool("from_basic", false)
 	def.from_signature = reader.opt_bool("from_signature", false)
+	def.per_hex = reader.opt_bool("per_hex", false)
+	if def.per_hex and def.stat != Stat.DAMAGE_BP:
+		reader.error("only a damage_bp aura is worked out per hex")
 	if def.from_basic and def.from_signature:
 		reader.error("an aura is from its basic attack or its signature, not both")
 	if (def.from_basic or def.from_signature or not def.per_target_stacks.is_empty()) and not VS_STATS.has(def.stat):
@@ -322,7 +338,7 @@ func is_conditional() -> bool:
 
 ## Worked out per hit (EffectRunner), not folded into the unit's stats.
 func is_per_hit() -> bool:
-	return vs != null or from_basic or from_signature or not per_target_stacks.is_empty() or hit_range > 0
+	return vs != null or from_basic or from_signature or not per_target_stacks.is_empty() or hit_range > 0 or per_hex
 
 
 ## For the log, e.g. "x2 damage for its holder" or "+20% crit chance for all allies".
@@ -384,6 +400,8 @@ func describe() -> String:
 		condition += " per %s stack on the unit hit" % per_target_stacks.replace("_", " ")
 	if from_basic:
 		condition += " on its basic attack's hits"
+	if per_hex:
+		condition += " for each hex to the unit hit"
 	return "%s for %s%s" % [amount, TARGET_LABELS[target], condition]
 
 

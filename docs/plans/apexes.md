@@ -1,6 +1,6 @@
 # Apexes
 
-Status: **agreed in discussion (2026-09-30); built for Maren, Brannoc, and Vell in phase 8 part 2 (parts 8b-1 to 8b-3; numbers not tuned yet), and for Garrow and Tamsin in phase 8 part 4 (8d-2c, 8d-3c)** (`rebuild-phase8-apexes.md` and `rebuild-phase8-heroes.md`, whose Decisions win where they differ; Garrow's and Tamsin's built numbers and the calls made while building, such as Endless Bulwark's taste and deed, are in the latter's "Built in 8d-2c" and "Built in 8d-3c"). The final forms of each path. Fills in part 1's apex options (`rebuild-heroes.md`); where they disagree, this file wins. **Numbers and names are placeholders.**
+Status: **agreed in discussion (2026-09-30); built for Maren, Brannoc, and Vell in phase 8 part 2 (parts 8b-1 to 8b-3; numbers not tuned yet), and for Garrow, Tamsin, and Aldous in phase 8 part 4 (8d-2c, 8d-3c, 8d-4c)** (`rebuild-phase8-apexes.md` and `rebuild-phase8-heroes.md`, whose Decisions win where they differ; their built numbers and the calls made while building, such as Endless Bulwark's taste and deed, are in the latter's "Built in 8d-2c", "Built in 8d-3c", and "Built in 8d-4c"). The final forms of each path. Fills in part 1's apex options (`rebuild-heroes.md`); where they disagree, this file wins. **Numbers and names are placeholders.**
 
 ## How apexes work
 
@@ -84,6 +84,8 @@ Built in phase 8 part 4 (`rebuild-phase8-heroes.md`, "Built in 8d-3c"), with num
 | **Vengeance** (Spitemail) | 5% of each hit he takes is stored instead of taken, and released the next time Iron Maiden ends | Damage he releases | 50% of each hit he takes is stored instead of taken. When Iron Maiden ends, it's all released as a blast on enemies within 2 hexes; if he falls, it's released at once. **Snowball (Grudge):** stored damage grows by 3% every second until it's released | **Wrath:** grows by 5% a second. **Patient Fury:** the blast also heals him for 20% of its damage |
 
 ## Aldous
+
+Built in phase 8 part 4 (`rebuild-phase8-heroes.md`, "Built in 8d-4c"), with numbers scaled to his tuned paths and the calls flagged there.
 
 | Apex | Taste (on vow) | Deed | The apex | Upgrades |
 | --- | --- | --- | --- | --- |

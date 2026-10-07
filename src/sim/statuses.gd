@@ -167,6 +167,22 @@ static func end_on_attack(sim: CombatSim, unit: UnitState, basic: bool = true) -
 		_end(sim, unit, state, "it attacked")
 
 
+## The power its boosts give its next signature (phase 8 part 4, Grand
+## Chorus): the sum of their signature_power_bp.
+static func signature_power(unit: UnitState) -> int:
+	var power: int = 0
+	for state: StatusState in unit.statuses:
+		power += state.def.signature_power_bp
+	return power
+
+
+## Its signature fired with them: those boosts are spent.
+static func spend_signature_boosts(sim: CombatSim, unit: UnitState) -> void:
+	for state: StatusState in unit.statuses.duplicate():
+		if state.def.signature_power_bp > 0:
+			_end(sim, unit, state, "spent by its signature")
+
+
 ## The Unbending: `def` from `source` doesn't land on the hero; it's logged
 ## (RESISTED) and the hero gains a stack of `unbending`.
 static func _resist(sim: CombatSim, hero: UnitState, def: StatusDef, source: EffectSource) -> void:

@@ -40,6 +40,8 @@ var vs_per_stacks: Array[String] = []
 ## Per hit: how near the target must be (plane units; 0: any; phase 5c step
 ## 7c, Close Quarters).
 var vs_within: Array[int] = []
+## Per hit: times the whole hexes to the target (phase 8 part 4, Long Wind).
+var vs_per_hex: Array[bool] = []
 ## Its side's standing unit nearest the other side, this tick (only kept
 ## when a condition asks: CombatSim.track_front; phase 5c step 7c).
 var front_most: bool = false
@@ -113,6 +115,14 @@ var mana_cap: int = 0
 ## Overcharge (phase 5c step 5c): how much mana the bar can hold past full
 ## (0: none; the bar stops at mana_cap).
 var mana_store: int = 0
+## What the heroes' rules let its bar hold (Overcharge; mana_store is the
+## larger of this and its mana_store_bp auras', phase 8 part 4).
+var rule_store: int = 0
+## Mana over full as its signature last spent a bar (hundredths; phase 8
+## part 4, Wellspring), and what the fire about to happen spends (read once
+## for overflow_power_bp).
+var last_overflow: int = 0
+var spend_overflow: int = 0
 var mana_regen: int = 0
 ## Its basic attack's reach, squared (plane units).
 var reach_sq: int = 0

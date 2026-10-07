@@ -30,6 +30,9 @@ extends RefCounted
 ##             adds a stack with its own timer (no duration_ms: it lasts the
 ##             fight), the auras count once per stack, and "max_stacks"
 ##             (optional) drops the oldest past it
+##             "signature_power_bp": 3000 (phase 8 part 4, Grand Chorus):
+##             its holder's next signature has that much more power, and it
+##             ends as that signature fires ("auras" optional then)
 ##             "until_attack": true (phase 5c step 6b; Shadow Step): it
 ##             ends as its holder next attacks (that attack still has it)
 ##   stealth:  duration_ms; phase 8 part 4 (Tamsin): "until_attack": true
@@ -80,6 +83,9 @@ var keyword: String = ""
 var stacking: bool = false
 ## boost: it ends as its holder next attacks (phase 5c step 6b).
 var until_attack: bool = false
+## boost: its holder's next signature's power, spent as it fires (phase 8
+## part 4, Grand Chorus; 0: none).
+var signature_power_bp: int = 0
 ## stealth with until_attack: the basic attacks it lets pass first (phase 8
 ## part 4, Shadow Dance).
 var spares_attacks: int = 0
@@ -112,6 +118,7 @@ static func read(reader: DataReader) -> StatusDef:
 		if def.kind == Kind.BOOST:
 			def.stacking = reader.opt_bool("stacking", false)
 			def.until_attack = reader.opt_bool("until_attack", false)
+			def.signature_power_bp = reader.opt_int("signature_power_bp", 0, 0, 50000)
 		elif def.kind == Kind.STEALTH:
 			def.until_attack = reader.opt_bool("until_attack", false)
 			if def.until_attack:
@@ -134,8 +141,8 @@ static func read(reader: DataReader) -> StatusDef:
 					def.boost_stats.append(maxi(stat, 0))
 					def.boost_values.append(aura.req_int("value", -50000, 50000))
 					aura.finish()
-				if def.boost_stats.is_empty():
-					reader.error("a boost needs auras")
+				if def.boost_stats.is_empty() and def.signature_power_bp == 0:
+					reader.error("a boost needs auras (or signature_power_bp)")
 	reader.finish()
 	return def
 

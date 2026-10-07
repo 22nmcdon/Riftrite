@@ -47,7 +47,7 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 
 ## Heroes
 
-- **A team is 3 heroes, kept for the whole run.** All three fight. The slice started with **Brannoc** (tank), **Maren** (ranged damage), and **Vell** (support); **Garrow** (the shield-bruiser) and **Tamsin** (the assassin) are the fourth and fifth, so a run drafts three of the heroes on the vow screen (`rebuild-phase8-heroes.md`), with Aldous to come.
+- **A team is 3 heroes, kept for the whole run.** All three fight. The slice started with **Brannoc** (tank), **Maren** (ranged damage), and **Vell** (support); **Garrow** (the shield-bruiser), **Tamsin** (the assassin), and **Aldous** (the bell-ringer, a support who powers the team up) are the fourth to sixth, so a run drafts three of six on the vow screen (`rebuild-phase8-heroes.md`).
 - **A hero is** their stats (HP, ATK, MGK, DEF, CRIT, ATSP, plus **speed** and **range**), a **basic attack**, a **signature** (their big move), a **passive**, and sometimes a **trait** (Brannoc's Engage).
 - **Signatures fire on a trigger:** usually a full mana bar, sometimes an HP threshold, a count of events, a set moment, or the hero about to fall. A hero without a mana signature has no mana bar. Only signatures use mana.
 - **Mana** comes from basic attacks (mainly), damage taken (mainly tanks), a slow regen, and starting mana. Silence stops mana gain; Stun doesn't, but a stunned hero can't fire a mana signature.

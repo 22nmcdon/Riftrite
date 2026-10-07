@@ -549,7 +549,9 @@ The fantasy: every blow on him costs the one who struck it.
 
 ## 8e. Aldous Vesper: the bell-ringer (support)
 
-*Added 2026-10-02.* **Role:** back-line support who powers the team up rather than healing it. Shares the support role with Vell. Builds (`build-map.md`): Mana (maker), Rangers (support), Mark (maker).
+*Added 2026-10-02; built in phase 8 part 4 (`rebuild-phase8-heroes.md`, 8d-4a to 8d-4c), whose Decisions win where they differ.* The built numbers aren't all these: each transformation lifts his MGK and HP, Crescendo also peals, Gale knocks back 2 hexes, Bellwarden's Marks bite 10% deeper, and Windcaller's deed counts his allies' hits from more than 3 hexes while he holds Tailwind (that plan's "Built in 8d-4b and 8d-4d").
+
+**Role:** back-line support who powers the team up rather than healing it. Shares the support role with Vell. Builds (`build-map.md`): Mana (maker), Rangers (support), Mark (maker).
 
 | | |
 | --- | --- |

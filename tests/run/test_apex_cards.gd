@@ -150,3 +150,25 @@ func test_dread_return_taunts_as_he_rises() -> void:
 		rises += risen_at.size()
 	assert_gt(rises, 0)
 	assert_gt(taunts, 0)
+
+
+## Aldous's (phase 8 part 4, 8d-4c): each changes what it names on its apex.
+func test_aldous_apex_cards() -> void:
+	var chorus: UnitDef = _run.content.apexes["grand_chorus"].apex_kit
+	assert_eq(_part(_on_apex("rising_chorus"), "grand_chorus").ability.effects[0].amount, 6, "Rising Chorus: 6 mana, not 4")
+	assert_eq(_on_apex("encore").signature.effects.size(), chorus.signature.effects.size() + 1, "Encore: mana back")
+	var well: UnitDef = _run.content.apexes["wellspring"].apex_kit
+	assert_eq(_part(_on_apex("deep_reservoir"), "chorus").ability.effects[0].grows_stack_bp, _part(well, "chorus").ability.effects[0].grows_stack_bp + 500)
+	assert_not_null(_part(_on_apex("overflowing_start"), "overflowing_start"))
+	var wind: UnitDef = _run.content.apexes["long_wind"].apex_kit
+	assert_eq(_part(_on_apex("far_wind"), "long_wind_gust").ability.effects.size(), _part(wind, "long_wind_gust").ability.effects.size() + 2, "Far Wind: the ranged and him")
+	assert_not_null(_part(_on_apex("clear_air"), "clear_air"))
+	var arrows: UnitDef = _run.content.apexes["singing_arrows"].apex_kit
+	assert_eq(_part(_on_apex("rising_pitch_card"), "rising_pitch").aura.value, _part(arrows, "rising_pitch").aura.value + 300)
+	assert_eq(_part(_on_apex("ringing_arrows"), "singing_arrows").ability.effects.size(), _part(arrows, "singing_arrows").ability.effects.size() + 1)
+	var bell: UnitDef = _run.content.apexes["the_great_bell"].apex_kit
+	assert_eq(_on_apex("deep_bronze").signature.effects.size(), bell.signature.effects.size() + 2, "Deep Bronze: every hero and him")
+	assert_eq(_on_apex("ringing_ears").signature.effects.size(), bell.signature.effects.size() + 2, "Ringing Ears: his target and the field")
+	var requiem: UnitDef = _run.content.apexes["requiem"].apex_kit
+	assert_eq(_part(_on_apex("dirge"), "requiem").ability.effects[0].grows_stack_bp, _part(requiem, "requiem").ability.effects[0].grows_stack_bp + 1000)
+	assert_eq(_part(_on_apex("silent_toll"), "requiem").ability.effects.size(), _part(requiem, "requiem").ability.effects.size() + 1)

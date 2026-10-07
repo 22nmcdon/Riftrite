@@ -47,8 +47,13 @@ class Counter:
 	var needs_hops: bool = false
 	## A blocked deed (phase 8 part 2): shots its walls stop.
 	var needs_blocks: bool = false
-	## A deed counting its allies' hits too (phase 8 part 2, by_allies).
+	## A deed counting its allies' hits too (phase 8 part 2, by_allies), or
+	## their signature fires near it (phase 8 part 4, ally_casts).
 	var needs_team: bool = false
+	## A deed counting mana its side gains past full (phase 8 part 4), and
+	## the hundredths not yet a whole mana.
+	var needs_overflow: bool = false
+	var overflow_bank: int = 0
 	var hopped_at: int = -1
 
 
@@ -78,7 +83,8 @@ static func _add(counter: Counter, key: String, deed: DeedDef) -> void:
 	counter.needs_casts = counter.needs_casts or deed.counts == DeedDef.Counts.CASTS
 	counter.needs_hops = counter.needs_hops or deed.after_hop_ticks > 0
 	counter.needs_blocks = counter.needs_blocks or deed.counts == DeedDef.Counts.BLOCKED
-	counter.needs_team = counter.needs_team or deed.by_allies
+	counter.needs_team = counter.needs_team or deed.by_allies or deed.counts == DeedDef.Counts.ALLY_CASTS
+	counter.needs_overflow = counter.needs_overflow or deed.counts == DeedDef.Counts.MANA_OVERFLOW
 
 
 ## Counts log entries [from, to).
@@ -95,6 +101,8 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 			_count_on_target(sim, entry)
 		if not sim.team_counters.is_empty() and entry.kind == LogEntry.Kind.DAMAGE and entry.source_relic_side < 0:
 			_count_for_team(sim, entry)
+		if not sim.team_counters.is_empty() and entry.kind == LogEntry.Kind.FIRE and entry.source_relic_side < 0:
+			_count_ally_cast(sim, entry)
 		if entry.source_unit.is_empty() or entry.source_relic_side >= 0:
 			continue
 		var kind: LogEntry.Kind = entry.kind
@@ -250,6 +258,32 @@ static func _count_for_team(sim: CombatSim, entry: LogEntry) -> void:
 			if not deed.with_part.is_empty() and not holds_part(unit, deed.with_part):
 				continue
 			unit.deeds.amounts[d] += 1 if deed.counts == DeedDef.Counts.HITS else entry.amount
+
+
+## An ally's signature fired: it counts for each unit of its side with an
+## ally_casts deed it fired near (phase 8 part 4, Grand Chorus).
+static func _count_ally_cast(sim: CombatSim, entry: LogEntry) -> void:
+	var by: UnitState = sim.unit_by_id(entry.source_unit)
+	if by == null or by.def.signature == null or entry.source_ability != by.def.signature.id:
+		return
+	for unit: UnitState in sim.team_counters:
+		if unit == by or unit.side != by.side:
+			continue
+		for d: int in unit.deeds.deeds.size():
+			var deed: DeedDef = unit.deeds.deeds[d]
+			if deed.counts == DeedDef.Counts.ALLY_CASTS and ArenaPlane.length_sq(by.pos - unit.pos) <= deed.near_range * deed.near_range:
+				unit.deeds.amounts[d] += 1
+
+
+## Mana its side gained past full (hundredths; Mana.count_overflow): whole
+## mana count (phase 8 part 4, Wellspring).
+static func add_overflow(counter: Counter, hundredths: int) -> void:
+	counter.overflow_bank += hundredths
+	@warning_ignore("integer_division")
+	var whole: int = counter.overflow_bank / Mana.SCALE
+	if whole > 0:
+		counter.overflow_bank -= whole * Mana.SCALE
+		_add_to(counter, DeedDef.Counts.MANA_OVERFLOW, whole)
 
 
 ## Whether the unit's kit holds a passive with this id (a deed's with_part).

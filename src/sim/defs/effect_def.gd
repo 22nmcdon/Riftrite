@@ -41,7 +41,8 @@ extends RefCounted
 ##                 reads the Shield
 ##   damage, heal, shield's "grows_per_stack": {"status": "brand", "bp": 500}
 ##                 (phase 8 part 4, the apexes' snowballs): that much more
-##                 power for each stack of the status on the unit
+##                 power for each stack of the status on the unit (and
+##                 gain_mana's: that much more mana; Wellspring)
 ##   apply_status's "per_damage": 1000 (phase 8 part 4, Thorned King; an
 ##                 event that names a hit): a stack for every 1,000 of the
 ##                 hits' damage, banked between events
@@ -248,6 +249,12 @@ extends RefCounted
 ##                    effect (not its regen; Mana.gain raises it at once, not
 ##                    from the log; amount_bp_of_damage on gain_mana: a share
 ##                    of what it gained; phase 8 part 4, Chorister)
+##   on_ally_hit      another unit of its side lands a basic attack's hit on
+##                    an enemy (hit_target: that enemy; "by": {...}: only an
+##                    ally that meets it, as {"ranged": true}; phase 8 part
+##                    4, Singing Arrows). on_enemy_fell takes "by" too (its
+##                    killer) and "by_beyond_hexes" (the killer stood that
+##                    far from it or more; Long Wind).
 ## An event effect's "cooldown_per_unit_ms" (step 5d) runs it at most once
 ## that long for each unit its event names.
 ## Phase 5c step 5b adds: extend_status ("status", "duration_ms": a timed
@@ -321,7 +328,7 @@ enum Trigger {
 	ON_INTERVAL, ON_FALL, ON_HOP, ON_WOULD_FALL,
 	ON_HOLDER_HIT, ON_SHIELD_BROKEN, ON_ALLY_ABILITY, ON_STATUS_ENDED, ON_LIFESTEAL, ON_KNOCKBACK, ON_GUARD,
 	ON_BELOW_HP, ON_CHARGED, ON_ENEMY_FELL, ON_ARRIVE, ON_ALLY_SHIELD_BROKEN, ON_WALL_BLOCK, ON_RISE, ON_BREAKS_SHIELD, ON_PULL, ON_SHIELD_SPENT,
-	ON_MANA_GAINED,
+	ON_MANA_GAINED, ON_ALLY_HIT,
 }
 enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS, HOP, FLOOD, SEVER, SPEND_SHIELD, RELEASE_STORED }
 ## A pull's way (phase 8 part 3): toward the unit, the nearest water, or
@@ -363,7 +370,7 @@ const TRIGGER_NAMES: Array[String] = [
 	"on_interval", "on_fall", "on_hop", "on_would_fall",
 	"on_holder_hit", "on_shield_broken", "on_ally_ability", "on_status_ended", "on_lifesteal", "on_knockback", "on_guard",
 	"on_below_hp", "on_charged", "on_enemy_fell", "on_arrive", "on_ally_shield_broken", "on_wall_block", "on_rise", "on_breaks_shield", "on_pull", "on_shield_spent",
-	"on_mana_gained",
+	"on_mana_gained", "on_ally_hit",
 ]
 ## The unit's events (see the top).
 const EVENT_TRIGGERS: Array[Trigger] = [
@@ -371,19 +378,19 @@ const EVENT_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
 	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_SHIELD_SPENT,
-	Trigger.ON_MANA_GAINED,
+	Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT,
 ]
 ## Event triggers that name a unit (hit_target) and those that name a hit
 ## (amount_bp_of_damage).
 const EVENT_UNIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED, Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD, Trigger.ON_CHARGED,
-	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL]
+	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_ALLY_HIT]
 const EVENT_HIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_HIT_TAKEN, Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN,
-	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_GUARD, Trigger.ON_BREAKS_SHIELD, Trigger.ON_SHIELD_SPENT, Trigger.ON_MANA_GAINED]
+	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_GUARD, Trigger.ON_BREAKS_SHIELD, Trigger.ON_SHIELD_SPENT, Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT]
 ## Event triggers that can take "vs": those that name a unit, and on_kill.
 const EVENT_VS_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED, Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_KILL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
-	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL]
+	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_ALLY_HIT]
 const ABILITY_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_FIRE, Trigger.ON_HIT, Trigger.ON_CRIT,
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
@@ -391,7 +398,7 @@ const ABILITY_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
 	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_SHIELD_SPENT,
-	Trigger.ON_MANA_GAINED,
+	Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT,
 ]
 ## What a passive's effects may run on (PartDef).
 const PASSIVE_TRIGGERS: Array[Trigger] = [
@@ -400,7 +407,7 @@ const PASSIVE_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
 	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_SHIELD_SPENT,
-	Trigger.ON_MANA_GAINED,
+	Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT,
 ]
 ## The passive triggers that aren't events (Passives.run_timed, on_fall,
 ## would_fall).
@@ -638,6 +645,11 @@ var cleanse_count: int = 0
 var strength_add_bp: int = 0
 var holder: UnitCondition = null
 var beyond_range: int = 0
+## on_ally_hit: the ally that hit; on_enemy_fell: its killer (the last to
+## hit it), and how far that killer stood from it, at least (phase 8 part 4,
+## Singing Arrows and Long Wind; null and 0: any).
+var by: UnitCondition = null
+var by_range: int = 0
 var off_target: bool = false
 var from_abilities: Array[String] = []
 var was_below_bp: int = 0
@@ -876,8 +888,8 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				def.grows_status = grows.req_string("status")
 				def.grows_stack_bp = grows.req_int("bp", 1, FixedMath.BP_ONE)
 				grows.finish()
-			if def.type != Type.DAMAGE and def.type != Type.HEAL and def.type != Type.SHIELD:
-				reader.error("only damage, heals, and Shields grow per stack")
+			if def.type != Type.DAMAGE and def.type != Type.HEAL and def.type != Type.SHIELD and def.type != Type.GAIN_MANA:
+				reader.error("only damage, heals, Shields, and mana gained grow per stack")
 		if reader.has("per_damage"):
 			def.per_damage = reader.req_int("per_damage", 1)
 			if def.type != Type.APPLY_STATUS:
@@ -1048,6 +1060,13 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 		Trigger.ON_ENEMY_FELL:
 			if reader.has("fell_within_hexes"):
 				def.fell_range = reader.req_int("fell_within_hexes", 1, 20) * HexGrid.HEX
+			if reader.has("by"):
+				def.by = UnitCondition.read(reader.req_object("by"))
+			if reader.has("by_beyond_hexes"):
+				def.by_range = reader.req_int("by_beyond_hexes", 1, 10) * HexGrid.HEX
+		Trigger.ON_ALLY_HIT:
+			if reader.has("by"):
+				def.by = UnitCondition.read(reader.req_object("by"))
 		Trigger.ON_KILL:
 			def.from_signature = reader.opt_bool("from_signature", false)
 			def.off_target = reader.opt_bool("off_target", false)

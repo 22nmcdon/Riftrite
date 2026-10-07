@@ -5554,5 +5554,303 @@
         }
       ]
     }
+  },
+  {
+    "id": "rising_chorus",
+    "name": "Rising Chorus",
+    "apex": "grand_chorus",
+    "text": "Each signature gives every hero more mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:grand_chorus",
+          "amount_bp": 15000
+        }
+      ]
+    }
+  },
+  {
+    "id": "encore",
+    "name": "Encore",
+    "apex": "grand_chorus",
+    "text": "Crescendo gives him back some mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "crescendo",
+          "add_effects": [
+            {
+              "type": "gain_mana",
+              "amount": 20,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "deep_reservoir",
+    "name": "Deep Reservoir",
+    "apex": "wellspring",
+    "text": "Each signature from past full makes Chorus's share grow more.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:chorus",
+          "per_stack_add_bp": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "overflowing_start",
+    "name": "Overflowing Start",
+    "apex": "wellspring",
+    "text": "Every hero starts each fight with a full bar and 20 mana past it.",
+    "mod": {
+      "passives": [
+        {
+          "id": "overflowing_start",
+          "name": "Overflowing Start",
+          "kind": "ability",
+          "text": "As the fight starts, every hero's bar fills and runs 20 mana past full.",
+          "effects": [
+            {
+              "type": "gain_mana",
+              "amount_bp_of_max_mana": 10000,
+              "trigger": "on_fight_start",
+              "target": "all_allies"
+            },
+            {
+              "type": "gain_mana",
+              "amount_bp_of_max_mana": 10000,
+              "trigger": "on_fight_start",
+              "target": "self"
+            },
+            {
+              "type": "gain_mana",
+              "amount": 20,
+              "trigger": "on_fight_start",
+              "target": "all_allies"
+            },
+            {
+              "type": "gain_mana",
+              "amount": 20,
+              "trigger": "on_fight_start",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "far_wind",
+    "name": "Far Wind",
+    "apex": "long_wind",
+    "text": "Each kill from afar gives the ranged heroes more damage still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:long_wind_gust",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "long_wind_gust_more",
+              "only": {
+                "ranged": true
+              },
+              "target": "all_allies",
+              "trigger": "on_enemy_fell",
+              "by": {
+                "ranged": true
+              },
+              "by_beyond_hexes": 3
+            },
+            {
+              "type": "apply_status",
+              "status": "long_wind_gust_more",
+              "target": "self",
+              "trigger": "on_enemy_fell",
+              "by": {
+                "ranged": true
+              },
+              "by_beyond_hexes": 3
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "clear_air",
+    "name": "Clear Air",
+    "apex": "long_wind",
+    "text": "Ranged heroes' hits ignore some of the target's DEF.",
+    "mod": {
+      "passives": [
+        {
+          "id": "clear_air",
+          "name": "Clear Air",
+          "kind": "aura",
+          "text": "Ranged allies' hits ignore some of the target's DEF.",
+          "aura": {
+            "target": "all_allies",
+            "stat": "def_ignore_bp",
+            "value": 2000,
+            "only": {
+              "ranged": true
+            }
+          }
+        },
+        {
+          "id": "clear_air_self",
+          "name": "Clear Air",
+          "kind": "aura",
+          "text": "His own too.",
+          "aura": {
+            "target": "holder",
+            "stat": "def_ignore_bp",
+            "value": 2000
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "rising_pitch_card",
+    "name": "Rising Pitch",
+    "apex": "singing_arrows",
+    "text": "Each carried Toll makes the next on that enemy stronger still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:rising_pitch",
+          "value_add": 300
+        }
+      ]
+    }
+  },
+  {
+    "id": "ringing_arrows",
+    "name": "Ringing Arrows",
+    "apex": "singing_arrows",
+    "text": "Carried Tolls Slow their target for a moment.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:singing_arrows",
+          "add_effects": [
+            {
+              "trigger": "on_ally_hit",
+              "by": {
+                "ranged": true
+              },
+              "type": "apply_status",
+              "status": "rung",
+              "duration_ms": 1000,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "deep_bronze",
+    "name": "Deep Bronze",
+    "apex": "the_great_bell",
+    "text": "Each Death Knell makes every hero's damage grow more.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "death_knell",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "great_bell_more",
+              "target": "all_allies"
+            },
+            {
+              "type": "apply_status",
+              "status": "great_bell_more",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "ringing_ears",
+    "name": "Ringing Ears",
+    "apex": "the_great_bell",
+    "text": "Death Knell Slows every enemy it Marks.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "death_knell",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "deafened",
+              "target": "target"
+            },
+            {
+              "type": "apply_status",
+              "status": "deafened",
+              "target": "enemies_near_target",
+              "within_hexes": 10
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "dirge",
+    "name": "Dirge",
+    "apex": "requiem",
+    "text": "Each toll makes the later ones stronger still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:requiem",
+          "per_stack_add_bp": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "silent_toll",
+    "name": "Silent Toll",
+    "apex": "requiem",
+    "text": "His tolls Silence the enemies they hit.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:requiem",
+          "add_effects": [
+            {
+              "trigger": "on_enemy_fell",
+              "vs": {
+                "keywords": [
+                  "marked"
+                ]
+              },
+              "type": "apply_status",
+              "status": "silence",
+              "duration_ms": 1000,
+              "target": "enemies_near_named",
+              "within_hexes": 2
+            }
+          ]
+        }
+      ]
+    }
   }
 ]

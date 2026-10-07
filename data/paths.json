@@ -5842,7 +5842,260 @@
       "text": "Mana he gives his allies",
       "counts": "mana_given",
       "threshold": 110
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 4 (rebuild-phase8-heroes.md 8d-4c; apexes.md). Numbers are placeholders scaled to the path's tuned numbers, for the --apexes report and the tuning phase.",
+        "id": "grand_chorus",
+        "name": "Grand Chorus",
+        "title": "the whole band in one breath",
+        "fantasy": "Every voice lifts the next.",
+        "vowed": {
+          "taste": "The allies within 3 hexes of him gain 5% more mana from everything.",
+          "patch": {
+            "passives": [
+              {
+                "id": "grand_voice",
+                "name": "Grand Voice",
+                "kind": "aura",
+                "text": "The allies within 3 hexes of him gain more mana from everything.",
+                "aura": {
+                  "target": "allies_near",
+                  "target_within_hexes": 3,
+                  "stat": "mana_gain_bp",
+                  "value": 10500
+                }
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Crescendo also makes each ally's next signature 30% stronger. Whenever any hero fires a signature, every hero gains 4 mana. The allies within 3 hexes of him still gain 5% more mana. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            },
+            "signature": {
+              "id": "crescendo",
+              "name": "Crescendo",
+              "text": "The bell swells: the allies within 3 hexes of him gain a burst of mana, attack faster for a while, and their next signature is stronger.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "self",
+              "effects": [
+                {
+                  "type": "gain_mana",
+                  "amount": 40,
+                  "target": "allies_near_self",
+                  "within_hexes": 3
+                },
+                {
+                  "type": "apply_status",
+                  "status": "pealing",
+                  "duration_ms": 4000,
+                  "target": "allies_near_self",
+                  "within_hexes": 3
+                },
+                {
+                  "type": "apply_status",
+                  "status": "grand_note",
+                  "target": "allies_near_self",
+                  "within_hexes": 3
+                }
+              ]
+            },
+            "passives": [
+              {
+                "id": "grand_voice",
+                "name": "Grand Voice",
+                "kind": "aura",
+                "text": "The allies within 3 hexes of him gain more mana from everything.",
+                "aura": {
+                  "target": "allies_near",
+                  "target_within_hexes": 3,
+                  "stat": "mana_gain_bp",
+                  "value": 10500
+                }
+              },
+              {
+                "id": "grand_chorus",
+                "name": "Grand Chorus",
+                "kind": "ability",
+                "text": "Whenever any hero fires a signature, every hero gains a little mana.",
+                "effects": [
+                  {
+                    "type": "gain_mana",
+                    "amount": 4,
+                    "target": "all_allies",
+                    "trigger": "on_ally_ability"
+                  },
+                  {
+                    "type": "gain_mana",
+                    "amount": 4,
+                    "target": "self",
+                    "trigger": "on_ally_ability"
+                  },
+                  {
+                    "type": "gain_mana",
+                    "amount": 4,
+                    "target": "all_allies",
+                    "trigger": "on_ability"
+                  },
+                  {
+                    "type": "gain_mana",
+                    "amount": 4,
+                    "target": "self",
+                    "trigger": "on_ability"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Signatures his allies fire within 3 hexes of him",
+          "counts": "ally_casts",
+          "within_hexes": 3,
+          "threshold": 38
+        }
+      },
+      {
+        "_note": "Phase 8 part 4 (rebuild-phase8-heroes.md 8d-4c; apexes.md). Numbers are placeholders scaled to the path's tuned numbers, for the --apexes report and the tuning phase.",
+        "id": "wellspring",
+        "name": "Wellspring",
+        "title": "the well that never runs dry",
+        "fantasy": "Their bars overflow, and he keeps pouring.",
+        "vowed": {
+          "taste": "Every hero's bar holds up to 120% of its mana: past full, a signature spends one bar and keeps the rest.",
+          "patch": {
+            "passives": [
+              {
+                "id": "wellspring",
+                "name": "Wellspring",
+                "kind": "aura",
+                "text": "Every other hero's bar holds up to 120% of its mana.",
+                "aura": {
+                  "target": "all_allies",
+                  "stat": "mana_store_bp",
+                  "value": 12000
+                }
+              },
+              {
+                "id": "wellspring_self",
+                "name": "Wellspring",
+                "kind": "aura",
+                "text": "His own bar holds as much.",
+                "aura": {
+                  "target": "holder",
+                  "stat": "mana_store_bp",
+                  "value": 12000
+                }
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Every hero's bar has no cap, and a signature is 1% stronger for every 2 mana it holds past full as it fires. Each signature an ally fires from past full makes Chorus's share 10% bigger for the rest of the fight. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            },
+            "passives": [
+              {
+                "id": "wellspring",
+                "name": "Wellspring",
+                "kind": "aura",
+                "text": "Every other hero's bar has no cap.",
+                "aura": {
+                  "target": "all_allies",
+                  "stat": "mana_store_bp",
+                  "value": 100000
+                }
+              },
+              {
+                "id": "wellspring_self",
+                "name": "Wellspring",
+                "kind": "aura",
+                "text": "His own bar holds as much.",
+                "aura": {
+                  "target": "holder",
+                  "stat": "mana_store_bp",
+                  "value": 100000
+                }
+              },
+              {
+                "id": "overflow",
+                "name": "Overflow",
+                "kind": "aura",
+                "text": "Every hero's signature is stronger for the mana it holds past full as it fires.",
+                "aura": {
+                  "target": "all_allies",
+                  "stat": "overflow_power_bp",
+                  "value": 50
+                }
+              },
+              {
+                "id": "overflow_self",
+                "name": "Overflow",
+                "kind": "aura",
+                "text": "His own too.",
+                "aura": {
+                  "target": "holder",
+                  "stat": "overflow_power_bp",
+                  "value": 50
+                }
+              },
+              {
+                "id": "chorus",
+                "name": "Chorus",
+                "kind": "ability",
+                "text": "Each time he gains mana, the allies within 3 hexes of him gain half as much, and more for each signature his allies fire from past a full bar.",
+                "effects": [
+                  {
+                    "trigger": "on_mana_gained",
+                    "type": "gain_mana",
+                    "amount_bp_of_damage": 5000,
+                    "target": "allies_near_self",
+                    "within_hexes": 3,
+                    "grows_per_stack": {
+                      "status": "wellspring_swell",
+                      "bp": 1000
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "wellspring_swell",
+                "name": "Swell",
+                "kind": "ability",
+                "text": "Each signature an ally fires from past a full bar makes Chorus's share bigger for the rest of the fight.",
+                "effects": [
+                  {
+                    "trigger": "on_ally_ability",
+                    "vs": {
+                      "fired_over_full": true
+                    },
+                    "type": "apply_status",
+                    "status": "wellspring_swell",
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Mana his team gains past full",
+          "counts": "mana_overflow",
+          "threshold": 700
+        }
+      }
+    ]
   },
   {
     "_note": "The rangers' support (rebuild-heroes.md, section 8e, path 2; phase 8 part 4, 8d-4b). Tailwind's bonuses are auras on every ally whose target stands 3 hexes away or more (UnitCondition target_beyond_hexes). First numbers.",
@@ -6009,7 +6262,233 @@
       "beyond_hexes": 3,
       "with_part": "tailwind",
       "threshold": 40
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 4 (rebuild-phase8-heroes.md 8d-4c; apexes.md). Numbers are placeholders scaled to the path's tuned numbers, for the --apexes report and the tuning phase.",
+        "id": "long_wind",
+        "name": "Long Wind",
+        "title": "the wind that carries every shot",
+        "fantasy": "The farther the shot, the harder it lands.",
+        "vowed": {
+          "taste": "Ranged allies deal 1% more damage for each hex between them and their target.",
+          "patch": {
+            "passives": [
+              {
+                "id": "long_wind",
+                "name": "Long Wind",
+                "kind": "aura",
+                "text": "Ranged allies deal a little more damage for each hex to the enemy they hit.",
+                "aura": {
+                  "target": "all_allies",
+                  "stat": "damage_bp",
+                  "value": 10100,
+                  "per_hex": true,
+                  "only": {
+                    "ranged": true
+                  }
+                }
+              },
+              {
+                "id": "long_wind_self",
+                "name": "Long Wind",
+                "kind": "aura",
+                "text": "His own hits too.",
+                "aura": {
+                  "target": "holder",
+                  "stat": "damage_bp",
+                  "value": 10100,
+                  "per_hex": true
+                }
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Ranged allies deal 4% more damage for each hex between them and their target. Each kill by a ranged hero from 3 hexes or more gives every ranged hero +8% damage for the rest of the fight. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            },
+            "passives": [
+              {
+                "id": "long_wind",
+                "name": "Long Wind",
+                "kind": "aura",
+                "text": "Ranged allies deal more damage for each hex to the enemy they hit.",
+                "aura": {
+                  "target": "all_allies",
+                  "stat": "damage_bp",
+                  "value": 10400,
+                  "per_hex": true,
+                  "only": {
+                    "ranged": true
+                  }
+                }
+              },
+              {
+                "id": "long_wind_self",
+                "name": "Long Wind",
+                "kind": "aura",
+                "text": "His own hits too.",
+                "aura": {
+                  "target": "holder",
+                  "stat": "damage_bp",
+                  "value": 10400,
+                  "per_hex": true
+                }
+              },
+              {
+                "id": "long_wind_gust",
+                "name": "Gust",
+                "kind": "ability",
+                "text": "Each kill by a ranged hero from 3 hexes or more gives every ranged hero more damage for the rest of the fight.",
+                "effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "long_wind_gust",
+                    "only": {
+                      "ranged": true
+                    },
+                    "target": "all_allies",
+                    "trigger": "on_enemy_fell",
+                    "by": {
+                      "ranged": true
+                    },
+                    "by_beyond_hexes": 3
+                  },
+                  {
+                    "type": "apply_status",
+                    "status": "long_wind_gust",
+                    "target": "self",
+                    "trigger": "on_enemy_fell",
+                    "by": {
+                      "ranged": true
+                    },
+                    "by_beyond_hexes": 3
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Damage his allies deal from more than 3 hexes away",
+          "counts": "damage",
+          "by_allies": true,
+          "beyond_hexes": 3,
+          "threshold": 5000
+        }
+      },
+      {
+        "_note": "Phase 8 part 4 (rebuild-phase8-heroes.md 8d-4c; apexes.md). Numbers are placeholders scaled to the path's tuned numbers, for the --apexes report and the tuning phase.",
+        "id": "singing_arrows",
+        "name": "Singing Arrows",
+        "title": "the bell in every arrow",
+        "fantasy": "Every shot rings out with his note.",
+        "vowed": {
+          "taste": "Every 5th basic attack hit by a ranged ally carries a Toll: extra damage of 10% of his MGK.",
+          "patch": {
+            "passives": [
+              {
+                "id": "singing_arrows",
+                "name": "Singing Arrows",
+                "kind": "ability",
+                "text": "Every 5th basic attack hit by a ranged ally carries his Toll.",
+                "effects": [
+                  {
+                    "trigger": "on_ally_hit",
+                    "by": {
+                      "ranged": true
+                    },
+                    "every": 5,
+                    "type": "damage",
+                    "amount": 0,
+                    "scaling": {
+                      "mgk": 1000
+                    },
+                    "target": "hit_target"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Every basic attack hit by a ranged ally carries a Toll of 20% of his MGK and gives him 2 mana. Each carried Toll makes the next on that enemy 5% stronger, until it falls. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            },
+            "passives": [
+              {
+                "id": "singing_arrows",
+                "name": "Singing Arrows",
+                "kind": "ability",
+                "text": "Every basic attack hit by a ranged ally carries his Toll and gives him mana.",
+                "effects": [
+                  {
+                    "trigger": "on_ally_hit",
+                    "by": {
+                      "ranged": true
+                    },
+                    "every": 1,
+                    "type": "damage",
+                    "amount": 0,
+                    "scaling": {
+                      "mgk": 2000
+                    },
+                    "target": "hit_target"
+                  },
+                  {
+                    "trigger": "on_ally_hit",
+                    "by": {
+                      "ranged": true
+                    },
+                    "type": "apply_status",
+                    "status": "rising_pitch",
+                    "target": "hit_target"
+                  },
+                  {
+                    "trigger": "on_ally_hit",
+                    "by": {
+                      "ranged": true
+                    },
+                    "type": "gain_mana",
+                    "amount": 2,
+                    "target": "self"
+                  }
+                ]
+              },
+              {
+                "id": "rising_pitch",
+                "name": "Rising Pitch",
+                "kind": "aura",
+                "text": "His hits on an enemy deal more for each Toll carried to it.",
+                "aura": {
+                  "target": "holder",
+                  "stat": "damage_bp",
+                  "value": 10500,
+                  "per_target_stacks": "rising_pitch"
+                }
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Tolls his allies' shots carry",
+          "counts": "hits",
+          "from_ability": [
+            "singing_arrows"
+          ],
+          "threshold": 45
+        }
+      }
+    ]
   },
   {
     "_note": "The Mark maker (rebuild-heroes.md, section 8e, path 3; phase 8 part 4, 8d-4b). First numbers.",
@@ -6141,6 +6620,214 @@
         "marked"
       ],
       "threshold": 10
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 4 (rebuild-phase8-heroes.md 8d-4c; apexes.md). Numbers are placeholders scaled to the path's tuned numbers, for the --apexes report and the tuning phase.",
+        "id": "the_great_bell",
+        "name": "The Great Bell",
+        "title": "the bell the whole field hears",
+        "fantasy": "When it tolls, everyone is named.",
+        "vowed": {
+          "taste": "Death Knell's Marks last 1s longer.",
+          "patch": {
+            "signature": {
+              "id": "death_knell",
+              "name": "Death Knell",
+              "text": "The bell names the dead: his target and every enemy within 3 hexes of it are Marked for a long while (longer still).",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "nearest",
+              "max_range": 3,
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "marked",
+                  "duration_ms": 6000,
+                  "target": "target",
+                  "strength_add_bp": 1000
+                },
+                {
+                  "type": "apply_status",
+                  "status": "marked",
+                  "duration_ms": 6000,
+                  "target": "enemies_near_target",
+                  "within_hexes": 3,
+                  "strength_add_bp": 1000
+                }
+              ]
+            }
+          }
+        },
+        "apex": {
+          "text": "Death Knell Marks every enemy on the field for 5s, and they take 15% more damage from it. Each Death Knell makes every hero deal 5% more damage for the rest of the fight. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            },
+            "signature": {
+              "id": "death_knell",
+              "name": "Death Knell",
+              "text": "The great bell tolls: the nearest enemy within 3 hexes of him and every enemy within 10 hexes of it (anywhere on the field) are Marked for 5s, and his team grows stronger with each toll.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "nearest",
+              "max_range": 3,
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "marked",
+                  "duration_ms": 5000,
+                  "target": "target",
+                  "strength_add_bp": 2500
+                },
+                {
+                  "type": "apply_status",
+                  "status": "marked",
+                  "duration_ms": 5000,
+                  "target": "enemies_near_target",
+                  "within_hexes": 10,
+                  "strength_add_bp": 2500
+                },
+                {
+                  "type": "apply_status",
+                  "status": "great_bell",
+                  "target": "all_allies"
+                },
+                {
+                  "type": "apply_status",
+                  "status": "great_bell",
+                  "target": "self"
+                }
+              ]
+            }
+          }
+        },
+        "deed": {
+          "text": "Enemies Death Knell Marks",
+          "counts": "applied",
+          "keywords": [
+            "marked"
+          ],
+          "from_ability": [
+            "death_knell"
+          ],
+          "threshold": 45
+        }
+      },
+      {
+        "_note": "Phase 8 part 4 (rebuild-phase8-heroes.md 8d-4c; apexes.md). Numbers are placeholders scaled to the path's tuned numbers, for the --apexes report and the tuning phase.",
+        "id": "requiem",
+        "name": "Requiem",
+        "title": "the toll for the fallen",
+        "fantasy": "Every death rings the bell again.",
+        "vowed": {
+          "taste": "When a Marked enemy falls, the enemies within 1 hex of it take damage of 20% of his MGK.",
+          "patch": {
+            "passives": [
+              {
+                "id": "requiem",
+                "name": "Requiem",
+                "kind": "ability",
+                "text": "When a Marked enemy falls, the bell tolls for the enemies within 1 hex of it.",
+                "effects": [
+                  {
+                    "trigger": "on_enemy_fell",
+                    "vs": {
+                      "keywords": [
+                        "marked"
+                      ]
+                    },
+                    "type": "damage",
+                    "amount": 0,
+                    "scaling": {
+                      "mgk": 2000
+                    },
+                    "target": "enemies_near_named",
+                    "within_hexes": 1
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "When a Marked enemy falls, the enemies within 2 hexes of it take damage of 100% of his MGK and are Marked. Each toll makes the later ones 15% stronger for the rest of the fight. The apex also gives +15% HP, ATK, and MGK.",
+          "patch": {
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500,
+              "mgk": 11500
+            },
+            "passives": [
+              {
+                "id": "requiem",
+                "name": "Requiem",
+                "kind": "ability",
+                "text": "When a Marked enemy falls, the bell tolls for the enemies within 2 hexes of it, Marking them, louder each time.",
+                "effects": [
+                  {
+                    "trigger": "on_enemy_fell",
+                    "vs": {
+                      "keywords": [
+                        "marked"
+                      ]
+                    },
+                    "type": "damage",
+                    "amount": 0,
+                    "scaling": {
+                      "mgk": 10000
+                    },
+                    "target": "enemies_near_named",
+                    "within_hexes": 2,
+                    "grows_per_stack": {
+                      "status": "requiem_toll",
+                      "bp": 1500
+                    }
+                  },
+                  {
+                    "trigger": "on_enemy_fell",
+                    "vs": {
+                      "keywords": [
+                        "marked"
+                      ]
+                    },
+                    "type": "apply_status",
+                    "status": "marked",
+                    "duration_ms": 3000,
+                    "strength_add_bp": 1000,
+                    "target": "enemies_near_named",
+                    "within_hexes": 2
+                  },
+                  {
+                    "trigger": "on_enemy_fell",
+                    "vs": {
+                      "keywords": [
+                        "marked"
+                      ]
+                    },
+                    "type": "apply_status",
+                    "status": "requiem_toll",
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Damage his tolls deal",
+          "counts": "damage",
+          "from_ability": [
+            "requiem"
+          ],
+          "threshold": 80
+        }
+      }
+    ]
   }
 ]

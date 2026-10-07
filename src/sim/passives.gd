@@ -121,6 +121,7 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 		unit.vs_signature.clear()
 		unit.vs_per_stacks.clear()
 		unit.vs_within.clear()
+		unit.vs_per_hex.clear()
 	var now_active: Array[String] = []
 	for holder: UnitState in sim.units:
 		if not holder.alive:
@@ -160,6 +161,7 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 					target.vs_signature.append(part.aura.from_signature)
 					target.vs_per_stacks.append(part.aura.per_target_stacks)
 					target.vs_within.append(part.aura.hit_range)
+					target.vs_per_hex.append(part.aura.per_hex)
 					continue
 				target.aura_bp[part.aura.stat] += change
 	# Timed boosts (phase 5c step 5b) count like the unit's own auras, once
@@ -190,6 +192,11 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 			if unit.alive:
 				unit.hp = mini(unit.hp + maxi(new_max - unit.max_hp, 0), new_max)
 			unit.max_hp = new_max
+		if unit.mana_cap > 0 and (unit.aura_bp[AuraDef.Stat.MANA_STORE_BP] != FixedMath.BP_ONE or unit.mana_store != unit.rule_store):
+			# How much its bar holds (phase 8 part 4, Wellspring).
+			unit.mana_store = unit.rule_store
+			if unit.aura_bp[AuraDef.Stat.MANA_STORE_BP] != FixedMath.BP_ONE:
+				unit.mana_store = maxi(unit.rule_store, FixedMath.apply_bp(unit.mana_cap, factor(unit, AuraDef.Stat.MANA_STORE_BP)))
 		unit.attack.set_cooldown_add(unit.aura_bp[AuraDef.Stat.COOLDOWN_BP])
 		unit.attack_rate_bp = sim.attack_rate_bp(unit)
 		unit.refresh_reach()
@@ -372,6 +379,9 @@ static func vs_bonus_bp(attacker: UnitState, target: UnitState, stat: int = Aura
 		if attacker.vs_within[i] > 0 and ArenaPlane.length_sq(target.pos - attacker.pos) > attacker.vs_within[i] * attacker.vs_within[i]:
 			continue
 		var times: int = 1 if attacker.vs_per_stacks[i].is_empty() else Statuses.stacks_on(target, attacker.vs_per_stacks[i])
+		if attacker.vs_per_hex[i]:
+			@warning_ignore("integer_division")
+			times *= ArenaPlane.length(target.pos - attacker.pos) / HexGrid.HEX
 		bonus += times * attacker.vs_bonus_bp[i]
 	return bonus
 
@@ -475,6 +485,8 @@ static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, 
 				Statuses.end_now(sim, other, state, "spent by %s" % unit.id)
 		if effect.vs != null and (other == null or not effect.vs.holds(other, unit)):
 			continue
+		if (effect.by != null or effect.by_range > 0) and not _by_holds(sim, unit, effect, event, other, status):
+			continue
 		# Phase 5c step 6b: a hit big enough, an enemy that fell near enough,
 		# a kill by the signature (`status` names the ability), and a cooldown.
 		if effect.min_hit_bp > 0 and damage * FixedMath.BP_ONE < unit.max_hp * effect.min_hit_bp:
@@ -534,6 +546,22 @@ static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, 
 			sim.delayed.append(waiting)
 			continue
 		_run(sim, unit, listener, other, damage, chain)
+
+
+## The unit an on_ally_hit or on_enemy_fell event is "by" (the ally that hit,
+## riding as `status`; the fallen's killer) meets the effect's "by" and
+## stood far enough (phase 8 part 4).
+static func _by_holds(sim: CombatSim, unit: UnitState, effect: EffectDef, event: EffectDef.Trigger, other: UnitState, status: String) -> bool:
+	var by: UnitState = null
+	if event == EffectDef.Trigger.ON_ALLY_HIT:
+		by = sim.unit_by_id(status)
+	elif event == EffectDef.Trigger.ON_ENEMY_FELL and other != null:
+		by = sim.unit_by_id(other.last_attacker)
+	if by == null or by.side != unit.side:
+		return false
+	if effect.by != null and not effect.by.holds(by, unit):
+		return false
+	return effect.by_range <= 0 or (other != null and ArenaPlane.length_sq(other.pos - by.pos) >= effect.by_range * effect.by_range)
 
 
 ## The event effects whose delay is up run, in the order they were set off,

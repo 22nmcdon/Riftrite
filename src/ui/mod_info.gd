@@ -366,10 +366,19 @@ static func counted(counts: DeedDef, per: int) -> String:
 			return "%s of statuses made to last longer" % amount
 		DeedDef.Counts.MANA_GIVEN:
 			return "%s mana given to allies" % amount
+		DeedDef.Counts.MANA_OVERFLOW:
+			return "%s mana gained past full" % amount
+		DeedDef.Counts.ALLY_CASTS:
+			return "%s ally signatures near it" % amount
 		DeedDef.Counts.EXTRA_HITS:
 			return "%s extra enemies hit" % amount
 		DeedDef.Counts.HITS:
 			var hits: String = "%s hits on enemies" % amount
+			if counts.by_allies:
+				hits = "%s hits allies land" % amount
+			if counts.from_range > 0:
+				@warning_ignore("integer_division")
+				hits += " from beyond %s" % UnitInfo.hexes(counts.from_range / HexGrid.HEX)
 			if not counts.from_ability.is_empty():
 				hits += " by " + ", ".join(counts.from_ability).replace("_", " ")
 			return hits
