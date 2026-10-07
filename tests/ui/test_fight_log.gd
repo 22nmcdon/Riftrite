@@ -41,7 +41,7 @@ func _is_chatter(entry: LogEntry) -> bool:
 func test_names_for_heroes_copies_and_summons() -> void:
 	var pack: FightPlayer = _player()
 	var names: FightNames = FightNames.make(pack.sim, _content)
-	assert_eq(names.names, {"brannoc": "Brannoc", "maren": "Maren", "vell": "Vell", "rift_hound": "Rift Hound 1", "rift_hound#2": "Rift Hound 2", "rift_hound#3": "Rift Hound 3"} as Dictionary[String, String],
+	assert_eq(names.names, {"brannoc": "Brannoc", "maren": "Maren", "vell": "Vell", "rift_hound": "Rift Hound 1", "rift_hound#2": "Rift Hound 2"} as Dictionary[String, String],
 		"heroes as their tokens say; copies numbered, the first one too")
 	assert_eq(names.hero_ids, ["brannoc", "maren", "vell"] as Array[String])
 	assert_eq(names.name_of("nobody"), "nobody")
@@ -65,8 +65,8 @@ func test_lines_use_names_and_colors_by_side() -> void:
 	var names: FightNames = FightNames.make(_player().sim, _content)
 	var bite: LogEntry = _entry(LogEntry.Kind.DAMAGE, "rift_hound#2", "brannoc", 12, {"tick": 26, "source_ability_name": "Bite", "mitigated": 4})
 	assert_eq(names.text(bite), "[1.30s] Rift Hound 2 · Bite hits Brannoc for 12 (4 blocked by defense)")
-	var first: LogEntry = _entry(LogEntry.Kind.DAMAGE, "rift_hound", "rift_hound#3", 5, {"source_ability_name": "Bite"})
-	assert_eq(names.text(first), "[0.00s] Rift Hound 1 · Bite hits Rift Hound 3 for 5", "an id isn't matched inside a longer one")
+	var first: LogEntry = _entry(LogEntry.Kind.DAMAGE, "rift_hound", "rift_hound#2", 5, {"source_ability_name": "Bite"})
+	assert_eq(names.text(first), "[0.00s] Rift Hound 1 · Bite hits Rift Hound 2 for 5", "an id isn't matched inside a longer one")
 	assert_eq(names.text(_entry(LogEntry.Kind.FIGHT_END, "", "", 0, {"note": "vellum, novell, and maren_x stay, vell goes"})), "[0.00s] vellum, novell, and maren_x stay, Vell goes", "only whole ids")
 	var shot: LogEntry = _entry(LogEntry.Kind.DAMAGE, "maren", "rift_hound", 21, {"source_ability_name": "Longshot"})
 	var enemy: String = UiStyle.ENEMY_TEXT.to_html(false)
@@ -363,16 +363,16 @@ func test_clicking_a_unit_filters_the_log() -> void:
 	var click := InputEventMouseButton.new()
 	click.button_index = MOUSE_BUTTON_LEFT
 	click.pressed = true
-	click.position = screen.view.token("rift_hound#3").center()
+	click.position = screen.view.token("rift_hound#2").center()
 	screen.view._gui_input(click)
 	assert_eq(screen.log_panel.only_unit, "", "not on the press")
 	click.pressed = false
 	screen.view._gui_input(click)
-	assert_eq(screen.log_panel.only_unit, "rift_hound#3", "on the release")
+	assert_eq(screen.log_panel.only_unit, "rift_hound#2", "on the release")
 	click.button_index = MOUSE_BUTTON_RIGHT
 	click.position = screen.view.token("maren").center()
 	screen.view._gui_input(click)
-	assert_eq(screen.log_panel.only_unit, "rift_hound#3", "only the left button")
+	assert_eq(screen.log_panel.only_unit, "rift_hound#2", "only the left button")
 	screen._process(3.0)
 	assert_eq(screen.log_panel.shown_text(), _expected(screen.log_panel, screen.player.sim.combat_log.entries))
 	assert_false(screen.log_panel.shown_text().contains("Rift Hound 1 ·"))
@@ -388,7 +388,7 @@ func test_a_summon_is_named_as_it_joins() -> void:
 	sim.add_unit(joined)
 	sim.units_joined()
 	screen._on_entries([_entry(LogEntry.Kind.SUMMON, "rift_hound", joined.id, 0, {"to_pos": joined.pos, "source_ability_name": "Howl"})] as Array[LogEntry])
-	assert_string_contains(screen.log_panel.shown_text(), "Rift Hound 1 · Howl summons Rift Hound 4 at")
+	assert_string_contains(screen.log_panel.shown_text(), "Rift Hound 1 · Howl summons Rift Hound 3 at")
 
 
 func test_banners_as_the_fight_plays() -> void:

@@ -92,12 +92,12 @@ func test_tokens_follow_a_resize_and_fliers_are_marked() -> void:
 
 func test_showing_another_setup_replaces_the_tokens() -> void:
 	var view: ArenaView = _view("pup_warren")
-	assert_eq(view.tokens.size(), 9)
+	assert_eq(view.tokens.size(), 7, "3 heroes, 4 pups (easy-start.md ES-2)")
 	var errors: Array[String] = []
 	view.show_setup(Encounters.setup(_content, "the_pack", GUARDED, 1, errors), _content)
-	assert_eq(view.tokens.size(), 6)
+	assert_eq(view.tokens.size(), 5, "3 heroes, 2 hounds")
 	await wait_process_frames(1)
-	assert_eq(view.get_children().filter(func(child: Node) -> bool: return child is UnitToken).size(), 6, "the old tokens are gone")
+	assert_eq(view.get_children().filter(func(child: Node) -> bool: return child is UnitToken).size(), 5, "the old tokens are gone")
 	assert_eq(view.rocks.size(), 1)
 
 

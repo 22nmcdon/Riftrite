@@ -69,7 +69,7 @@ func test_the_encounter_list() -> void:
 		for line: String in EncounterListScreen.enemy_lines(encounter, _content):
 			assert_string_contains(text, line)
 	assert_eq(EncounterListScreen.enemy_lines(_content.encounters["moth_cloud"], _content),
-		["3 × Cinder Moth (caster): Burns whoever stands together", "2 × Rift Pup (swarm): Swarms, stronger in packs"] as Array[String])
+		["2 × Cinder Moth (caster): Burns whoever stands together", "2 × Rift Pup (swarm): Swarms, stronger in packs"] as Array[String])
 	assert_true(U.press(list, "Back"))
 	assert_true(main.screen is TitleScreen)
 	await wait_process_frames(1)
