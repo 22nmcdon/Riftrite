@@ -79,14 +79,16 @@ extends RefCounted
 ##   from_basic: true              only what its basic attack does (phase 5c
 ##                                 step 4; Rift-Fed Blades)
 ##   keywords: ["marked"]          applied only: statuses with these keywords
+## (Phase 8 part 4, Chorister: "mana_given" counts the whole mana the hero
+## gives other units, MANA_GIVEN.)
 ## "threshold": 900 is what fills it in a run (phase 5, Decision 6: about
 ## three fights' worth of what a vowed hero puts in); the sim never reads it.
 ## Adding a kind or a filter is a code change.
 
-enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING, HITS, SHARED, BLOCKED, PULLED, EXTENDED_MS }
+enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING, HITS, SHARED, BLOCKED, PULLED, EXTENDED_MS, MANA_GIVEN }
 
-const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing", "hits", "shared", "blocked", "pulled", "extended_ms"]
-const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill", "casts", "ms standing", "enemies hit", "damage shared", "attacks blocked", "enemies pulled", "ms extended"]
+const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing", "hits", "shared", "blocked", "pulled", "extended_ms", "mana_given"]
+const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill", "casts", "ms standing", "enemies hit", "damage shared", "attacks blocked", "enemies pulled", "ms extended", "mana given"]
 ## The kinds read from where the hero is the target, or from the tick, not
 ## from what the hero does.
 const NOT_ITS_OWN: Array[Counts] = [Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING, Counts.BLOCKED]
@@ -209,6 +211,9 @@ func counts_kind(kind: LogEntry.Kind, ability_id: String) -> bool:
 				return false
 		Counts.EXTENDED_MS:
 			if kind != LogEntry.Kind.STATUS_EXTENDED:
+				return false
+		Counts.MANA_GIVEN:
+			if kind != LogEntry.Kind.MANA_GIVEN:
 				return false
 		Counts.APPLIED:
 			if kind != LogEntry.Kind.STATUS_APPLIED:

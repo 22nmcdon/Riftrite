@@ -117,6 +117,12 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 			shot.powers.append(power)
 			shot.crits.append(crit)
 			continue
+		if effect.target == EffectDef.Target.ENEMIES_NEAR_ALLIES:
+			# Round each ally, pushing away from it (phase 8 part 4, Gale).
+			for pair: Array in around_allies(sim, unit, effect):
+				var crit_round: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability, pair[0]))
+				land(sim, unit, ability, source, effect, pair[0], amount_of(effect, unit, 0, sim), crit_round, (pair[1] as UnitState).pos, power)
+			continue
 		for victim: UnitState in _targets(sim, unit, effect.target, target, null, effect):
 			var crit_now: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability, victim))
 			land(sim, unit, ability, source, effect, victim, amount_of(effect, unit, 0, sim), crit_now, NO_POINT, power)
@@ -227,12 +233,23 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 		EffectDef.Type.MANA_DRAIN:
 			Mana.drain(sim, victim, amount, source)
 		EffectDef.Type.GAIN_MANA:
+			var gained: int = 0
 			if effect.mana_bp > 0:
 				# A share of its bar (phase 5c step 6b; Execution's refund).
 				if victim.def.mana != null:
-					Mana.gain(sim, victim, FixedMath.apply_bp(victim.def.mana.max * Mana.SCALE, effect.mana_bp))
+					gained = Mana.gain(sim, victim, FixedMath.apply_bp(victim.def.mana.max * Mana.SCALE, effect.mana_bp))
+			elif effect.amount_bp_of_damage > 0:
+				# A share of the mana its unit gained, in hundredths (phase 8
+				# part 4, Chorister).
+				gained = Mana.gain(sim, victim, amount)
 			else:
-				Mana.gain(sim, victim, amount * Mana.SCALE)
+				gained = Mana.gain(sim, victim, amount * Mana.SCALE)
+			if victim != unit and gained > 0:
+				# Mana given to another unit is logged (phase 8 part 4).
+				var given: LogEntry = sim.new_entry(LogEntry.Kind.MANA_GIVEN, source)
+				given.target = victim.id
+				given.amount = gained
+				sim.combat_log.add(given)
 		EffectDef.Type.KNOCKBACK:
 			var distance: int = FixedMath.apply_bp(effect.hexes * HexGrid.HEX, effect.distance_bp)
 			if effect.toward == EffectDef.Toward.EDGE:
@@ -335,6 +352,11 @@ static func run_event(sim: CombatSim, unit: UnitState, ability: AbilityDef, sour
 		if effect.stacks_share_bp > 0:
 			# A share of them, at least 1 (Ashen Engine; phase 5c step 5c).
 			amount = maxi(FixedMath.apply_bp(amount, effect.stacks_share_bp), 1)
+	if effect.target == EffectDef.Target.ENEMIES_NEAR_ALLIES:
+		for pair: Array in around_allies(sim, unit, effect):
+			var crit_round: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability, pair[0]))
+			land(sim, unit, ability, source, effect, pair[0], amount, crit_round, (pair[1] as UnitState).pos, power_of(effect, unit))
+		return
 	for victim: UnitState in _targets(sim, unit, effect.target, unit.target, hit, effect):
 		var crit: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability, victim))
 		land(sim, unit, ability, source, effect, victim, amount, crit, NO_POINT, power_of(effect, unit))
@@ -413,6 +435,11 @@ static func _targets(sim: CombatSim, unit: UnitState, target: EffectDef.Target, 
 		return near(sim, unit, effect, unit)
 	if effect != null and target == EffectDef.Target.FARTHEST_ENEMIES:
 		return farthest(sim, unit, effect)
+	if effect != null and target == EffectDef.Target.LOWEST_MANA_ALLY:
+		return lowest_mana(sim, unit, effect.count)
+	if effect != null and target == EffectDef.Target.ENEMIES_NEAR_ALLIES:
+		found.assign(around_allies(sim, unit, effect).map(func(pair: Array) -> UnitState: return pair[0]))
+		return found
 	if effect != null and EffectDef.NAMED_TARGETS.has(target):
 		return near(sim, unit, effect, hit.target if hit != null else null)
 	if effect != null and (EffectDef.NEAR_TARGETS.has(target) or target == EffectDef.Target.LOWEST_HP_ALLY):
@@ -540,6 +567,48 @@ static func run_relic(sim: CombatSim, source: EffectSource, effect: EffectDef, s
 
 ## The `count` of `pool` nearest any of `others` (ties to the earlier in the
 ## fight's order).
+## The `count` other standing allies of `unit` with a mana bar whose bars are
+## least full (a share of the bar), fight order on ties (phase 8 part 4,
+## Shared Breath).
+static func lowest_mana(sim: CombatSim, unit: UnitState, count: int) -> Array[UnitState]:
+	var pool: Array[UnitState] = sim.standing_allies_of(unit).filter(func(ally: UnitState) -> bool: return ally != unit and ally.def.mana != null)
+	var found: Array[UnitState] = []
+	for i: int in mini(count, pool.size()):
+		var best: UnitState = null
+		var best_share: int = 0
+		for ally: UnitState in pool:
+			if found.has(ally):
+				continue
+			@warning_ignore("integer_division")
+			var share: int = ally.mana * FixedMath.BP_ONE / maxi(ally.def.mana.max * Mana.SCALE, 1)
+			if best == null or share < best_share:
+				best = ally
+				best_share = share
+		found.append(best)
+	return found
+
+
+## The enemies within the effect's reach of each standing ally of `unit`
+## (itself too) that meets its "around", each once, with the ally it's
+## nearest by that order: [enemy, ally] (phase 8 part 4, Gale: a push goes
+## away from that ally).
+static func around_allies(sim: CombatSim, unit: UnitState, effect: EffectDef) -> Array[Array]:
+	var pairs: Array[Array] = []
+	var taken: Dictionary[String, bool] = {}
+	var reach_sq: int = effect.near_range * effect.near_range
+	for ally: UnitState in sim.standing_allies_of(unit):
+		if effect.around != null and not effect.around.holds(ally, unit):
+			continue
+		for enemy: UnitState in sim.targetable_enemies_of(unit):
+			if taken.has(enemy.id) or ArenaPlane.length_sq(enemy.pos - ally.pos) > reach_sq:
+				continue
+			if effect.only != null and not effect.only.holds(enemy, unit):
+				continue
+			taken[enemy.id] = true
+			pairs.append([enemy, ally])
+	return pairs
+
+
 ## The standing ally of `unit` (not itself or `besides`) nearest it, by
 ## distance then the fight's order; null if there's none.
 static func nearest_ally(sim: CombatSim, unit: UnitState, besides: UnitState) -> UnitState:

@@ -2,7 +2,8 @@ class_name Shots
 extends RefCounted
 ## Shots in flight (docs/plans/rebuild-phase1-arena-sim.md, section 5,
 ## decided): an attack from 2 or more hexes away flies for 1 tick per hex
-## (rounded up, at least 1) and follows its target, so it can't miss. Its
+## (rounded up, at least 1; faster with its shooter's shot_speed_bp, phase
+## 8 part 4) and follows its target, so it can't miss. Its
 ## numbers (damage and crit) are set when it's fired, and it still lands if
 ## the shooter falls first. If the target falls before it lands, it fizzles.
 ## A wall standing between where it was fired and its target (phase 4,
@@ -36,7 +37,13 @@ static func flight_ticks(distance: int) -> int:
 
 ## Sends a shot on its way and logs it.
 static func fire(sim: CombatSim, shot: Shot) -> void:
-	shot.land_tick = sim.tick + flight_ticks(ArenaPlane.distance(shot.shooter.pos, shot.target.pos))
+	var distance: int = ArenaPlane.distance(shot.shooter.pos, shot.target.pos)
+	var speed_bp: int = shot.shooter.aura_bp[AuraDef.Stat.SHOT_SPEED_BP]
+	if speed_bp != 0:
+		# Faster shots (phase 8 part 4, Windcaller): the distance as it flies.
+		@warning_ignore("integer_division")
+		distance = distance * FixedMath.BP_ONE / maxi(FixedMath.BP_ONE + speed_bp, 1)
+	shot.land_tick = sim.tick + flight_ticks(distance)
 	shot.from_pos = shot.shooter.pos
 	sim.shots.append(shot)
 	sim.next_shot_tick = mini(sim.next_shot_tick, shot.land_tick)

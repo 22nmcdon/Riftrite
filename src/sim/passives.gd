@@ -81,6 +81,7 @@ static func set_up(unit: UnitState) -> void:
 					listener.effect = effect
 					listener.source = EffectSource.make(unit.id, part.id, part.name)
 					unit.listeners.append(listener)
+					unit.hears_mana = unit.hears_mana or effect.trigger == EffectDef.Trigger.ON_MANA_GAINED
 			PartDef.Kind.REPLACE_STATUS:
 				unit.status_swaps[part.from_status] = part.to_status
 

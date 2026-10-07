@@ -171,6 +171,12 @@ extends RefCounted
 ##   allies_near_target    every such ally within reach of it
 ##   lowest_hp_ally        the unit's ally lowest on HP (a share of max HP),
 ##                         within within_hexes of the unit if given
+##   lowest_mana_ally      the "count" (1) other allies with a mana bar
+##                         least full, fight order on ties (phase 8 part 4,
+##                         Shared Breath)
+##   enemies_near_allies   every enemy within reach of each of the unit's
+##                         allies (it too) that meet "around"; a knockback
+##                         pushes away from that ally (phase 8 part 4, Gale)
 ##   hit_target   on_hit/on_crit and some events: the unit hit
 ##   self         the unit itself
 ##   all_enemies, all_allies   every standing unit of that side, in fight order
@@ -238,6 +244,10 @@ extends RefCounted
 ##   on_shield_spent  the unit spends its Shield (SHIELD_SPENT;
 ##                    amount_bp_of_damage: of the Shield it spent; phase 8
 ##                    part 4, The Woven Fang)
+##   on_mana_gained   the unit gains mana from an attack, a hit taken, or an
+##                    effect (not its regen; Mana.gain raises it at once, not
+##                    from the log; amount_bp_of_damage on gain_mana: a share
+##                    of what it gained; phase 8 part 4, Chorister)
 ## An event effect's "cooldown_per_unit_ms" (step 5d) runs it at most once
 ## that long for each unit its event names.
 ## Phase 5c step 5b adds: extend_status ("status", "duration_ms": a timed
@@ -311,6 +321,7 @@ enum Trigger {
 	ON_INTERVAL, ON_FALL, ON_HOP, ON_WOULD_FALL,
 	ON_HOLDER_HIT, ON_SHIELD_BROKEN, ON_ALLY_ABILITY, ON_STATUS_ENDED, ON_LIFESTEAL, ON_KNOCKBACK, ON_GUARD,
 	ON_BELOW_HP, ON_CHARGED, ON_ENEMY_FELL, ON_ARRIVE, ON_ALLY_SHIELD_BROKEN, ON_WALL_BLOCK, ON_RISE, ON_BREAKS_SHIELD, ON_PULL, ON_SHIELD_SPENT,
+	ON_MANA_GAINED,
 }
 enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS, HOP, FLOOD, SEVER, SPEND_SHIELD, RELEASE_STORED }
 ## A pull's way (phase 8 part 3): toward the unit, the nearest water, or
@@ -340,6 +351,8 @@ enum Target {
 	NEAREST_ENEMIES,
 	ALLIES_NEAR_SELF,
 	FARTHEST_ENEMIES,
+	LOWEST_MANA_ALLY,
+	ENEMIES_NEAR_ALLIES,
 }
 ## A nested area effect's side (phase 4): both, or only one.
 enum AreaSide { BOTH, ENEMIES, ALLIES }
@@ -350,6 +363,7 @@ const TRIGGER_NAMES: Array[String] = [
 	"on_interval", "on_fall", "on_hop", "on_would_fall",
 	"on_holder_hit", "on_shield_broken", "on_ally_ability", "on_status_ended", "on_lifesteal", "on_knockback", "on_guard",
 	"on_below_hp", "on_charged", "on_enemy_fell", "on_arrive", "on_ally_shield_broken", "on_wall_block", "on_rise", "on_breaks_shield", "on_pull", "on_shield_spent",
+	"on_mana_gained",
 ]
 ## The unit's events (see the top).
 const EVENT_TRIGGERS: Array[Trigger] = [
@@ -357,6 +371,7 @@ const EVENT_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
 	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_SHIELD_SPENT,
+	Trigger.ON_MANA_GAINED,
 ]
 ## Event triggers that name a unit (hit_target) and those that name a hit
 ## (amount_bp_of_damage).
@@ -364,7 +379,7 @@ const EVENT_UNIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD, Trigger.ON_CHARGED,
 	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL]
 const EVENT_HIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_HIT_TAKEN, Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN,
-	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_GUARD, Trigger.ON_BREAKS_SHIELD, Trigger.ON_SHIELD_SPENT]
+	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_GUARD, Trigger.ON_BREAKS_SHIELD, Trigger.ON_SHIELD_SPENT, Trigger.ON_MANA_GAINED]
 ## Event triggers that can take "vs": those that name a unit, and on_kill.
 const EVENT_VS_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED, Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_KILL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
@@ -376,6 +391,7 @@ const ABILITY_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
 	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_SHIELD_SPENT,
+	Trigger.ON_MANA_GAINED,
 ]
 ## What a passive's effects may run on (PartDef).
 const PASSIVE_TRIGGERS: Array[Trigger] = [
@@ -384,6 +400,7 @@ const PASSIVE_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_ALLY_BELOW_HP, Trigger.ON_INTERVAL, Trigger.ON_FALL, Trigger.ON_WOULD_FALL,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
 	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_SHIELD_SPENT,
+	Trigger.ON_MANA_GAINED,
 ]
 ## The passive triggers that aren't events (Passives.run_timed, on_fall,
 ## would_fall).
@@ -394,9 +411,9 @@ const FIELD_ONLY_TARGETS: Array[Target] = [Target.TARGET, Target.HIT_TARGET, Tar
 	Target.ENEMY_NEAR_TARGET, Target.ENEMIES_NEAR_TARGET, Target.ALLY_NEAR_TARGET, Target.ALLIES_NEAR_TARGET, Target.LOWEST_HP_ALLY]
 ## Targets near the ability's target (phase 4), and those that need a reach.
 const NEAR_TARGETS: Array[Target] = [Target.ENEMY_NEAR_TARGET, Target.ENEMIES_NEAR_TARGET, Target.ALLY_NEAR_TARGET, Target.ALLIES_NEAR_TARGET,
-	Target.ENEMIES_NEAR_SELF, Target.ENEMIES_NEAR_NAMED, Target.ENEMY_NEAR_NAMED, Target.ALLIES_NEAR_SELF, Target.FARTHEST_ENEMIES]
+	Target.ENEMIES_NEAR_SELF, Target.ENEMIES_NEAR_NAMED, Target.ENEMY_NEAR_NAMED, Target.ALLIES_NEAR_SELF, Target.FARTHEST_ENEMIES, Target.ENEMIES_NEAR_ALLIES]
 const REACH_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_TARGET, Target.ALLIES_NEAR_TARGET, Target.ENEMIES_NEAR_SELF, Target.ENEMIES_NEAR_NAMED,
-	Target.ALLIES_NEAR_SELF, Target.FARTHEST_ENEMIES]
+	Target.ALLIES_NEAR_SELF, Target.FARTHEST_ENEMIES, Target.ENEMIES_NEAR_ALLIES]
 ## The targets around the unit an event names (they need one).
 const NAMED_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_NAMED, Target.ENEMY_NEAR_NAMED]
 const SIDE_NAMES: Array[String] = ["both", "enemies", "allies"]
@@ -432,6 +449,8 @@ const TARGET_NAMES: Array[String] = [
 	"nearest_enemies",
 	"allies_near_self",
 	"farthest_enemies",
+	"lowest_mana_ally",
+	"enemies_near_allies",
 ]
 
 var trigger: Trigger
@@ -561,6 +580,9 @@ var at_stacks: int = 0
 var vs: UnitCondition = null
 ## Near-target targets and lowest_hp_ally: how far (plane units; 0: any).
 var near_range: int = 0
+## enemies_near_allies (phase 8 part 4, Gale): the allies (the unit too) it
+## reaches round; null: every one.
+var around: UnitCondition = null
 ## heal: the share of what it heals past full HP that comes back as Shield.
 var overheal_shield_bp: int = 0
 ## heal (phase 8 part 2, The Hearthkeeper): every so much it heals past full
@@ -718,6 +740,10 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 			Type.GAIN_MANA:
 				if reader.has("amount_bp_of_max_mana"):
 					def.mana_bp = reader.req_int("amount_bp_of_max_mana", 1, FixedMath.BP_ONE)
+				elif reader.has("amount_bp_of_damage"):
+					# A share of the mana the event's unit gained (phase 8
+					# part 4, Chorister: on_mana_gained carries it).
+					def.amount_bp_of_damage = reader.req_int("amount_bp_of_damage", 1, FixedMath.BP_ONE)
 				else:
 					def.amount = reader.req_int("amount", 1)
 			Type.KNOCKBACK, Type.PULL:
@@ -872,6 +898,15 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 			reader.error("only all_enemies, all_allies, and the near targets take \"only\"")
 	if def.target == Target.FARTHEST_ENEMIES:
 		def.count = reader.req_int("count", 1, 10)
+	if def.target == Target.LOWEST_MANA_ALLY:
+		# The allies with the least of their bar (phase 8 part 4, Shared Breath).
+		def.count = reader.opt_int("count", 1, 1, 5)
+	if def.target == Target.ENEMIES_NEAR_ALLIES and reader.has("around"):
+		# Only round the allies that meet it (phase 8 part 4, Gale: ranged).
+		def.around = UnitCondition.read(reader.req_object("around"))
+	elif reader.has("around"):
+		reader.req_object("around")
+		reader.error("only enemies_near_allies takes \"around\"")
 	if def.target == Target.NEAREST_ENEMIES:
 		def.count = reader.req_int("count", 1, 30)
 		if not relic:

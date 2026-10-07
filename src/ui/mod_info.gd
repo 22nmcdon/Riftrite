@@ -358,6 +358,8 @@ static func counted(counts: DeedDef, per: int) -> String:
 			return ("%s hexes enemies are pulled" if counts.by_hexes else "%s enemies pulled") % amount
 		DeedDef.Counts.EXTENDED_MS:
 			return "%s of statuses made to last longer" % amount
+		DeedDef.Counts.MANA_GIVEN:
+			return "%s mana given to allies" % amount
 		DeedDef.Counts.EXTRA_HITS:
 			return "%s extra enemies hit" % amount
 		DeedDef.Counts.HITS:

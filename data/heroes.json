@@ -157,5 +157,30 @@
         }
       ]
     }
+  },
+  {
+    "_note": "Hero 6 (docs/plans/rebuild-heroes.md section 8e; rebuild-phase8-heroes.md 8d-4). Stats, mana, Peal, and Resonance are the design's; Toll's 1.2s cooldown is a first number. He can't be drafted until his paths come.",
+    "id": "aldous",
+    "name": "Aldous Vesper",
+    "title": "the bell-ringer",
+    "role": "support",
+    "kit": {
+      "stats": {"hp": 290, "atk": 10, "mgk": 16, "def": 10, "speed": 2, "range": 3},
+      "mana": {"max": 60, "per_attack": 10, "regen_per_s": 2},
+      "basic_attack": {
+        "id": "toll", "name": "Toll", "text": "A ringing note at the nearest enemy within 3 hexes. Where most of his mana comes from.", "cooldown_ms": 1200,
+        "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"mgk": 10000}}]
+      },
+      "signature": {
+        "id": "peal", "name": "Peal", "text": "The bell peals: the allies within 3 hexes of him attack faster for a while.", "trigger": {"kind": "mana"}, "targeting": "self",
+        "effects": [{"type": "apply_status", "status": "pealing", "duration_ms": 4000, "target": "allies_near_self", "within_hexes": 3}]
+      },
+      "passives": [
+        {
+          "id": "resonance", "name": "Resonance", "kind": "aura", "text": "The allies within 2 hexes of him attack a little faster.",
+          "aura": {"target": "allies_near", "target_within_hexes": 2, "stat": "atsp", "value": 5}
+        }
+      ]
+    }
   }
 ]

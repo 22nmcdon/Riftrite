@@ -121,6 +121,9 @@ var damage_payoffs: bool = false
 ## The chain depth of the event effect running now (0: none; Passives._run),
 ## given to every entry it makes (LogEntry.chain).
 var chain_depth: int = 0
+## Mana.gain is running a unit's on_mana_gained passives (phase 8 part 4):
+## the mana they give sets off no more.
+var sharing_mana: bool = false
 ## Some unit has an on_ally_ability passive, so signatures' FIRE entries are
 ## told to their side (Events).
 var ally_ability_listeners: bool = false

@@ -1,7 +1,7 @@
 extends GutTest
 ## The base kits in data/heroes.json do what their text says
 ## (docs/plans/rebuild-phase2-heroes-enemies.md, section 3; Garrow from
-## rebuild-phase8-heroes.md, 8d-1; Tamsin, 8d-3). Each test fights
+## rebuild-phase8-heroes.md, 8d-1; Tamsin, 8d-3; Aldous, 8d-4). Each test fights
 ## the real kits against still dummies; heroes that shouldn't walk are Rooted
 ## for the whole test.
 
@@ -48,19 +48,19 @@ func _rows(fight: CombatSim, kind: LogEntry.Kind, unit_id: String, ability: Stri
 
 
 func test_the_kits_read_as_designed() -> void:
-	assert_eq(_content.hero_ids, ["brannoc", "maren", "vell", "garrow", "tamsin"])
+	assert_eq(_content.hero_ids, ["brannoc", "maren", "vell", "garrow", "tamsin", "aldous"])
 	var roles: Array = _content.hero_ids.map(func(hero_id: String) -> int: return (_content.heroes[hero_id] as HeroDef).role)
-	assert_eq(roles, [HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT, HeroDef.Role.TANK, HeroDef.Role.DAMAGE])
+	assert_eq(roles, [HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT, HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT])
 	var stats: Array = _content.hero_ids.map(func(hero_id: String) -> Array: return _kit(hero_id).stats.values)
-	assert_eq(stats, [[630, 14, 0, 50, 0, 0, 2, 1], [270, 22, 0, 8, 8, 10, 2, 4], [300, 6, 20, 10, 0, 0, 2, 3], [550, 26, 0, 40, 0, 0, 2, 1], [280, 16, 0, 10, 15, 10, 3, 1]], "HP, ATK, MGK, DEF, CRIT, ATSP, speed, range (Garrow's and Tamsin's tuned into the base band, build-tuning.md)")
+	assert_eq(stats, [[630, 14, 0, 50, 0, 0, 2, 1], [270, 22, 0, 8, 8, 10, 2, 4], [300, 6, 20, 10, 0, 0, 2, 3], [550, 26, 0, 40, 0, 0, 2, 1], [280, 16, 0, 10, 15, 10, 3, 1], [290, 10, 16, 10, 0, 0, 2, 3]], "HP, ATK, MGK, DEF, CRIT, ATSP, speed, range (Garrow's and Tamsin's tuned into the base band, build-tuning.md)")
 	var mana: Array = _content.hero_ids.map(func(hero_id: String) -> Array:
 		var bar: ManaDef = _kit(hero_id).mana
 		return [bar.max, bar.start, bar.per_attack, bar.per_10_damage_taken, bar.regen_per_s])
-	assert_eq(mana, [[80, 30, 8, 1, 0], [50, 0, 10, 0, 2], [60, 20, 12, 0, 2], [70, 20, 10, 1, 0], [50, 0, 8, 0, 2]], "cost, start, per attack, per 10 damage taken, regen")
-	assert_eq([_kit("brannoc").traits, _kit("maren").traits, _kit("vell").traits, _kit("garrow").traits, _kit("tamsin").traits], [["engage"], ["hop_away"], [], [], []])
+	assert_eq(mana, [[80, 30, 8, 1, 0], [50, 0, 10, 0, 2], [60, 20, 12, 0, 2], [70, 20, 10, 1, 0], [50, 0, 8, 0, 2], [60, 0, 10, 0, 2]], "cost, start, per attack, per 10 damage taken, regen")
+	assert_eq([_kit("brannoc").traits, _kit("maren").traits, _kit("vell").traits, _kit("garrow").traits, _kit("tamsin").traits, _kit("aldous").traits], [["engage"], ["hop_away"], [], [], [], []])
 	assert_eq(_kit("maren").hop_cooldown_ticks, 120)
 	var names: Array = _content.hero_ids.map(func(hero_id: String) -> Array: return [_kit(hero_id).basic_attack.name, _kit(hero_id).signature.name])
-	assert_eq(names, [["Shield Bash", "Hold the Line"], ["Longshot", "Marking Shot"], ["Lantern Glow", "Mend"], ["Chain Fist", "Haul"], ["Knife", "Shadowstep"]])
+	assert_eq(names, [["Shield Bash", "Hold the Line"], ["Longshot", "Marking Shot"], ["Lantern Glow", "Mend"], ["Chain Fist", "Haul"], ["Knife", "Shadowstep"], ["Toll", "Peal"]])
 
 
 # --- Brannoc ---------------------------------------------------------------------
@@ -185,6 +185,29 @@ func test_shadowstep_slips_behind_and_hides_her() -> void:
 	assert_true(Statuses.is_stealthed(tamsin), "hidden after it")
 	var mark: UnitState = fight.unit_by_id("mark")
 	assert_gt(ArenaPlane.length(tamsin.pos - Vector2i(tamsin.pos.x, 0)), ArenaPlane.length(mark.pos - Vector2i(mark.pos.x, 0)), "past it, on its far side")
+
+
+# --- Aldous ----------------------------------------------------------------------
+
+
+func test_peal_quickens_the_allies_within_3_hexes_for_4s() -> void:
+	var fight: CombatSim = _sim([K.at(_kit("aldous"), 3, 2), K.at(_dummy("near"), 1, 2), K.at(_dummy("far"), 7, 0)] as Array[UnitSetup],
+		[K.foe(_dummy("mark"), 3, 6)] as Array[UnitSetup])
+	_root_all(fight, fight.heroes)
+	_fill_mana(fight.unit_by_id("aldous"))
+	K.step(fight, 2)
+	var pealed: Array = K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "aldous").filter(func(entry: LogEntry) -> bool: return entry.status == "pealing") \
+		.map(func(entry: LogEntry) -> Array: return [entry.target, entry.end_tick - entry.tick])
+	assert_eq(pealed, [["near", 80]], "the ally within 3 hexes, not the one beyond or himself")
+
+
+func test_resonance_quickens_the_allies_within_2_hexes() -> void:
+	var fight: CombatSim = _sim([K.at(_kit("aldous"), 3, 2), K.at(_dummy("near"), 2, 2), K.at(_dummy("far"), 7, 0)] as Array[UnitSetup],
+		[K.foe(_dummy("mark"), 3, 6)] as Array[UnitSetup])
+	K.step(fight, 1)
+	assert_eq(fight.unit_by_id("near").stats.get_stat(UnitStats.Stat.ATSP), 5)
+	assert_eq(fight.unit_by_id("far").stats.get_stat(UnitStats.Stat.ATSP), 0)
+	assert_eq(fight.unit_by_id("aldous").stats.get_stat(UnitStats.Stat.ATSP), 0, "not himself")
 
 
 # --- Maren -----------------------------------------------------------------------

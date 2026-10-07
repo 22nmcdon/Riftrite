@@ -38,6 +38,7 @@
 	"enemies/spire_chanter": [74,88,187,423],
 	"enemies/tidecaller": [74,88,187,423],
 	"enemies/unbinder": [50,103,214,408],
+	"heroes/aldous_base": [74,101,200,411],
 	"heroes/brannoc_base": [58,113,233,399],
 	"heroes/brannoc_hearthwall": [28,84,244,431],
 	"heroes/brannoc_ironbrand": [54,81,246,431],

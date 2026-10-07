@@ -62,6 +62,7 @@ const FORMS: Dictionary[LogEntry.Kind, String] = {
 	LogEntry.Kind.COPIED: "\"Copies <signature>\" over the copier",
 	LogEntry.Kind.SHIELD_SPENT: "\"Spends N Shield\" over the unit, and the Shield gone from its bar",
 	LogEntry.Kind.RELEASED: "\"Releases N\" over the unit",
+	LogEntry.Kind.MANA_GIVEN: "the mana bar fills (from the unit's state)",
 }
 ## What the board must have shown at some frame, for each kind a fight
 ## produced (the rest are checked elsewhere, or read from the unit's state).

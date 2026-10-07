@@ -653,6 +653,45 @@ def tamsin_garrote(uid):
     return "".join(o)
 
 
+# ------------------------------------------------------------------ Aldous (8d-4)
+CASSOCK, CASSOCK_DK = "#3c4f5e", "#283744"
+BRONZE, BRONZE_DK = "#c9963f", "#8c6427"
+GREY_HAIR = "#d8d2c4"
+
+
+def aldous_head(hair=GREY_HAIR):
+    return "".join([P("M128,140 C126,108 174,108 172,140 L170,174 C162,192 138,192 130,174 Z", SKIN),
+                    P("M124,132 C120,104 180,104 176,132 C170,120 130,120 124,132 Z", hair),
+                    P("M132,170 C138,200 162,200 168,170 C160,180 140,180 132,170 Z", hair),
+                    f'<path d="M140,150 l7,1 M154,151 l7,-1" stroke="{INK}" stroke-width="2.6" stroke-linecap="round"/>',
+                    rim("M126,134 C128,116 140,108 152,106", color=GOLD, w=2)])
+
+
+def hand_bell(x, y, s=1.0, color=BRONZE):
+    w, h = 22 * s, 30 * s
+    return (f'<path d="M{x},{y - h - 12 * s} L{x},{y - h}" stroke="{WOOD}" stroke-width="{6 * s:.1f}" stroke-linecap="round"/>'
+            + P(f"M{x - w / 2:.1f},{y - h:.1f} C{x - w / 2:.1f},{y - h - 6 * s:.1f} {x + w / 2:.1f},{y - h - 6 * s:.1f} {x + w / 2:.1f},{y - h:.1f} "
+                f"L{x + w:.1f},{y:.1f} L{x - w:.1f},{y:.1f} Z", color)
+            + circle(x, y + 5 * s, 5 * s, BRONZE_DK, 2))
+
+
+def aldous_robe(uid, color=CASSOCK, trim=BRONZE_DK, hem=494):
+    body = f"M120,192 L180,192 L198,{hem} L102,{hem} Z"
+    return "".join([P(body, color), P(f"M146,196 L154,196 L156,{hem} L144,{hem} Z", trim, 2),
+                    shade(uid, [body], cut=150)])
+
+
+def aldous_base(uid):
+    """An old bell-ringer in a long grey-blue cassock, a bronze hand bell held out."""
+    o = [shadow(76), aldous_robe(uid),
+         limb((126, 210), (118, 290), 20, 16, CASSOCK_DK), circle(118, 294, 8, SKIN, 2),
+         aldous_head(),
+         limb((176, 208), (220, 262), 20, 16, CASSOCK_DK), circle(222, 266, 8, SKIN, 2),
+         hand_bell(222, 306),
+         "".join(f'<path d="M{252 + i * 10},{290 - i * 6} q8,10 0,20" fill="none" stroke="{GOLD}" stroke-width="2" opacity="{0.8 - i * 0.2:.1f}" filter="url(#glow)"/>' for i in range(3))]
+    return "".join(o)
+
+
 HEROES = [
     ("maren", "Maren", [("base", "Base", maren_base), ("deadeye", "Deadeye", maren_deadeye),
                         ("trapper", "Trapper", maren_trapper), ("volley", "Volley", maren_volley)]),
@@ -664,6 +703,7 @@ HEROES = [
                           ("chainwarden", "Chainwarden", garrow_chainwarden), ("spitemail", "Spitemail", garrow_spitemail)]),
     ("tamsin", "Tamsin", [("base", "Base", tamsin_base), ("nightblade", "Nightblade", tamsin_nightblade),
                           ("headhunter", "Headhunter", tamsin_headhunter), ("garrote", "Garrote", tamsin_garrote)]),
+    ("aldous", "Aldous", [("base", "Base", aldous_base)]),
 ]
 
 FILTERS = ('<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4" result="b"/>'

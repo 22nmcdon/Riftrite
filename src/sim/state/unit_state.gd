@@ -91,6 +91,8 @@ var taken_total: int = 0
 ## Damage it stored instead of taking (phase 8 part 4, Vengeance's aura stat
 ## store_bp), growing each second by store_grows_bp, until released.
 var stored: int = 0
+## It has on_mana_gained passives (phase 8 part 4, Chorister; Mana.gain).
+var hears_mana: bool = false
 ## The enemy its signature grips, the signature, and when the grip's effects
 ## next land (phase 8 part 4, Tamsin's Garrote; Grips). Null: no grip.
 var grip_target: UnitState = null

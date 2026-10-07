@@ -87,6 +87,10 @@ enum Kind {
 	## Phase 8 part 4 (Vengeance): target (the unit itself) lets go of the
 	## damage it stored, `amount` (grown); source: the ability that let it go.
 	RELEASED,
+	## Phase 8 part 4 (Chorister): target, another unit, gains `amount`
+	## mana (hundredths) from the source's gain_mana. A unit's own gains
+	## aren't logged (Mana).
+	MANA_GIVEN,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -357,6 +361,8 @@ func to_text() -> String:
 			return line + "%s breaks free of %s" % [source_unit, target]
 		Kind.MANA_DRAIN:
 			return line + "%s drains %s mana from %s%s" % [source_text(), Mana.text(amount), target, "" if note.is_empty() else " (%s)" % note]
+		Kind.MANA_GIVEN:
+			return line + "%s gives %s %s mana" % [source_text(), target, Mana.text(amount)]
 	return line + "?"
 
 

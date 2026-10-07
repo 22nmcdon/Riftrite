@@ -481,5 +481,6 @@
   {"_note": "Takes much more damage from everyone for a moment (Pinmaster, Tamsin's apex).", "id": "pinned", "name": "Pinned", "kind": "boost", "duration_ms": 1000, "auras": [{"stat": "damage_reduced_bp", "value": -2500}]},
   {"_note": "A stack every 4th Knife on a held enemy: every hero's ATK and MGK higher for the rest of the fight (Pinmaster).", "id": "pin_rally", "name": "Pin Rally", "kind": "boost", "stacking": true, "auras": [{"stat": "atk_bp", "value": 10100}, {"stat": "mgk_bp", "value": 10100}]},
   {"_note": "More of Pin Rally (Iron Grip, Pinmaster's card).", "id": "pin_rally_more", "name": "Pin Rally (more)", "kind": "boost", "stacking": true, "auras": [{"stat": "atk_bp", "value": 10100}, {"stat": "mgk_bp", "value": 10100}]},
+  {"_note": "Attacks faster while it lasts (Aldous's Peal; phase 8 part 4). Its 4s is set where it's applied, so cards can lengthen it.", "id": "pealing", "name": "Pealing", "kind": "boost", "duration_ms": 4000, "auras": [{"stat": "atsp", "value": 15}]},
   {"_note": "While it lasts, a share of every hit on him is sent back (Iron Maiden, Spitemail's signature; phase 8 part 4). It changes nothing by itself: his Maiden's Spite passive reads it.", "id": "iron_maiden", "name": "Iron Maiden", "kind": "boost", "duration_ms": 3000, "auras": [{"stat": "def", "value": 0}]}
 ]

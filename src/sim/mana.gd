@@ -11,7 +11,8 @@ extends RefCounted
 ##   - mana_drain takes it away (logged). A unit without a bar ignores both
 ##     Silence and drains.
 ## Regen runs in CombatSim's unit update: it's every tick, so it's inlined
-## there (UnitState.mana_regen). Gains aren't logged: each comes from something that is (an attack firing,
+## there (UnitState.mana_regen), and it sets off no on_mana_gained. A unit's
+## own gains aren't logged (mana given to another unit is: MANA_GIVEN): each comes from something that is (an attack firing,
 ## a hit landing, time passing), so the bar can be rebuilt from the log.
 
 const SCALE: int = 100
@@ -35,13 +36,23 @@ static func on_damage_taken(sim: CombatSim, unit: UnitState, damage: int) -> voi
 		gain(sim, unit, FixedMath.apply_bp(damage * unit.def.mana.per_10_damage_taken * SCALE / 10, unit.def.mana.taken_bp))
 
 
-## Adds `hundredths` of mana, up to a full bar, unless the unit is Silenced.
-static func gain(sim: CombatSim, unit: UnitState, hundredths: int) -> void:
+## Adds `hundredths` of mana, up to a full bar, unless the unit is Silenced;
+## returns what it added. A unit with on_mana_gained passives (phase 8 part
+## 4, Chorister) runs them at once with what it gained, unless the gain came
+## from one of them (no gain sets off another).
+static func gain(sim: CombatSim, unit: UnitState, hundredths: int) -> int:
 	if unit.def.mana == null or hundredths <= 0:
-		return
+		return 0
 	if not unit.statuses.is_empty() and Statuses.has_kind(unit, StatusDef.Kind.SILENCE):
-		return
+		return 0
+	var before: int = unit.mana
 	unit.mana = mini(unit.mana + hundredths, maxi(unit.def.mana.max * SCALE, unit.mana_store))
+	var gained: int = maxi(unit.mana - before, 0)
+	if gained > 0 and unit.hears_mana and not sim.sharing_mana:
+		sim.sharing_mana = true
+		Passives.on_event(sim, unit, EffectDef.Trigger.ON_MANA_GAINED, null, gained, "")
+		sim.sharing_mana = false
+	return gained
 
 
 ## Gives the unit the bar `mana` describes, at its start (null: no bar).
