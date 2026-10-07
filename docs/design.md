@@ -138,6 +138,7 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - **Pacing:** how many fights a transformation takes. (heroes plan)
 - **Apexes:** answered in `rebuild-phase8-apexes.md` (Decisions 4, 8–10, 13: at least one apex per team before the Act 2 boss, a late transformer's deed is the same size, and strength is a shift in the difficulty a team can beat). Snowballs stay per fight, even in endless. (apexes)
 - **Deed thresholds after the transformation:** does the same deed keep counting? (heroes plan)
+- **Vowed Garrote's deed** rarely fills in runs (it needs a teammate who Roots or Stuns): give the taste a hold of its own, lower the threshold, or keep it an engine's deed? (`rebuild-phase8-heroes.md`, Question HI)
 - **Mana numbers** are a first pass for the sim to tune. Phase 2's first tuning pass left the heroes' numbers as designed. (heroes plan)
 - **Last Watch after Last Rites:** is having no big move left the right feel? (heroes plan)
 - **Enemy growth:** can the rift learns add a rift modifier (Blight, Thornskin) or only swap specializations and upgrades? Upgrades on normal enemies in Acts 2–3? (enemy growth)
