@@ -113,8 +113,8 @@
         "hollow_drum",
         "rift_candle"
       ],
-      "swap": "windcaller",
-      "note": "test-teams.md #15; Maren's Volley (Storm of Arrows on her bar) stands in for Edric's Psalmist. Aldous has no self-sufficient path, so his lift is measured against his path that feeds the team least (rebuild-phase8-heroes.md, Built in 8d-4b)"
+      "swap": "base",
+      "note": "test-teams.md #15; Maren's Volley (Storm of Arrows on her bar) stands in for Edric's Psalmist; lift against Aldous on base (rebuild-phase8-heroes.md Decision 17)"
     },
     {
       "name": "Gallery",
@@ -130,8 +130,8 @@
         "bone_dice",
         "keen_edge"
       ],
-      "swap": "chorister",
-      "note": "test-teams.md #10; lift against Chorister (Aldous has no self-sufficient path)"
+      "swap": "base",
+      "note": "test-teams.md #10; lift against Aldous on base (rebuild-phase8-heroes.md Decision 17)"
     },
     {
       "name": "Bell Hunt",
@@ -148,8 +148,8 @@
         "hunters_ledger",
         "brand_of_guilt"
       ],
-      "swap": "chorister",
-      "note": "test-teams.md #2; lift against Chorister (Aldous has no self-sufficient path)"
+      "swap": "base",
+      "note": "test-teams.md #2; lift against Aldous on base (rebuild-phase8-heroes.md Decision 17)"
     }
   ]
 }

@@ -11,7 +11,10 @@ extends RefCounted
 ##   - ceiling: the build team, all transformed with the relics, against the
 ##     same team with the path's hero on base;
 ##   - lift (an enabler, with "swap"): the build team against the same team
-##     with the hero transformed on its "swap" path instead.
+##     with the hero transformed on its "swap" path instead; "swap": "base"
+##     (a hero with no self-sufficient path, rebuild-phase8-heroes.md
+##     Decision 17) against the same team with it on base: the ceiling's
+##     own lineups.
 ## Each number is the win-rate gain in points over every fight of the act.
 ## A build team with its relics wins nearly every Act 1 fight, which caps
 ## its gain, so the ceiling and lift lineups can fight stronger enemies
@@ -22,6 +25,8 @@ const Placement = preload("res://tools/sim_report.gd")
 const PathReport = preload("res://tools/path_report.gd")
 
 const TEAMS_FILE: String = "res://tools/build_teams.json"
+## A build's "swap" that measures its lift against its hero on base.
+const BASE: String = "base"
 ## Each type's floor and ceiling targets [low, high] (build-tuning.md,
 ## section 2); an enabler's second pair is its lift.
 const TARGETS: Dictionary[String, Array] = {
@@ -73,6 +78,8 @@ class Result:
 		return team.percent() - team_base.percent()
 
 	func lift() -> int:
+		if build.swap == BASE:
+			return ceiling_gain()
 		return team.percent() - swapped.percent()
 
 
@@ -105,7 +112,7 @@ static func read_builds(content: ContentDb, run: RunContent, errors: Array[Strin
 		for relic_id: String in build.relics:
 			if not run.relics.has(relic_id):
 				errors.append("%s: no relic %s" % [build.name, relic_id])
-		if not build.swap.is_empty() and (not content.paths.has(build.swap) or content.paths[build.swap].hero != build.hero):
+		if not build.swap.is_empty() and build.swap != BASE and (not content.paths.has(build.swap) or content.paths[build.swap].hero != build.hero):
 			errors.append("%s: %s isn't %s's path" % [build.name, build.swap, build.hero])
 		found.append(build)
 	return found
@@ -126,7 +133,7 @@ static func run_build(content: ContentDb, run: RunContent, build: Build, encount
 	var all: Array[String] = build_team.duplicate()
 	var others: Array[String] = build_team.filter(func(hero_id: String) -> bool: return hero_id != build.hero)
 	var swapped_vows: Dictionary[String, String] = build.team.duplicate()
-	if not build.swap.is_empty():
+	if not build.swap.is_empty() and build.swap != BASE:
 		swapped_vows[build.hero] = build.swap
 	for encounter_id: String in encounter_ids:
 		var encounter: EncounterDef = content.encounters[encounter_id]
@@ -138,7 +145,7 @@ static func run_build(content: ContentDb, run: RunContent, build: Build, encount
 		_fight(content, run, encounter_id, neutral_hexes, seeds, {build.hero: build.path} as Dictionary[String, String], [build.hero], null, result.neutral)
 		_fight(content, run, encounter_id, team_hexes, seeds, build.team, others, state, result.team_base, strength_bp)
 		_fight(content, run, encounter_id, team_hexes, seeds, build.team, all, state, result.team, strength_bp)
-		if not build.swap.is_empty():
+		if not build.swap.is_empty() and build.swap != BASE:
 			_fight(content, run, encounter_id, team_hexes, seeds, swapped_vows, all, state, result.swapped, strength_bp)
 	return result
 
@@ -213,8 +220,9 @@ static func text(content: ContentDb, results: Array[Result]) -> String:
 			", ".join(build.relics) if not build.relics.is_empty() else "none",
 			"  target %+d to %+d  %s" % [ceiling_target[0], ceiling_target[1], _verdict(result.ceiling_gain(), ceiling_target)] if build.type != "enabler" else ""])
 		if not build.swap.is_empty():
-			lines.append("    lift    %+4d  (against %s: %d%%)  target %+d to %+d  %s" % [result.lift(), content.paths[build.swap].name, result.swapped.percent(),
-				targets[1][0], targets[1][1], _verdict(result.lift(), targets[1])])
+			var against: String = "against %s on base: %d%%" % [content.heroes[build.hero].name, result.team_base.percent()] if build.swap == BASE \
+				else "against %s: %d%%" % [content.paths[build.swap].name, result.swapped.percent()]
+			lines.append("    lift    %+4d  (%s)  target %+d to %+d  %s" % [result.lift(), against, targets[1][0], targets[1][1], _verdict(result.lift(), targets[1])])
 		if not build.note.is_empty():
 			lines.append("    (%s)" % build.note)
 	return "\n".join(lines)

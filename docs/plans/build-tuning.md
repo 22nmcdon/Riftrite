@@ -25,7 +25,7 @@ All numbers are the **Act 1 win-rate gain from transforming**, in points (the te
 **How each number is measured:**
 - **Floor:** the path on a neutral team (random teammates, random vows, no shop lean).
 - **Ceiling:** the path in its synergy team from `test-teams.md`, with the shop lean on.
-- **Lift (enablers):** the synergy team as listed, against the same team with the enabler swapped for a self-sufficient path of the same hero.
+- **Lift (enablers):** the synergy team as listed, against the same team with the enabler swapped for a self-sufficient path of the same hero. A hero with no self-sufficient path (Aldous) is measured against itself on base in the otherwise transformed team instead (`rebuild-phase8-heroes.md` Decision 17).
 
 ## 3. The engine rule
 
@@ -118,7 +118,7 @@ Before judging paths, every hero's **base kit** should land its team within **±
 
 **Tamsin** (the same report): base Tamsin's team wins 30% against the old three's 22% (ATK 16, a 1s Knife, +10 attack speed; at the design's ATK 24, 53%). Floors: Nightblade +33 (self-sufficient, +25 to +35), Headhunter +14 and Garrote +14 (engines, +5 to +15). The ceilings wait for the bots (Decision 14).
 
-**Aldous** (the same report): base Aldous's team wins 26% against the old three's 22%, so his numbers are the design's. Floors, all enablers (+10 to +20): Chorister +11, Windcaller +12, Bellwarden +12, each with a lift of his MGK and HP on the transformation (as designed, all three were +1 or +2). Aldous has no self-sufficient path to measure his lift against (`rebuild-phase8-heroes.md`, Question HH).
+**Aldous** (the same report): base Aldous's team wins 26% against the old three's 22%, so his numbers are the design's. Floors, all enablers (+10 to +20): Chorister +11, Windcaller +12, Bellwarden +12, each with a lift of his MGK and HP on the transformation (as designed, all three were +1 or +2). Aldous has no self-sufficient path, so his lift is measured against him on base in the otherwise transformed build team (`rebuild-phase8-heroes.md` Decision 17): Choir +14, Gallery +12, Bell Hunt +25 (high; judged again from the bots' runs). Chorister is judged again once Edric or Ilse is built.
 
 ## 8. Apexes
 

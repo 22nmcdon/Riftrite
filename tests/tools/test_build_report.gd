@@ -37,3 +37,15 @@ func test_a_small_run() -> void:
 	var text: String = BuildReport.text(_content, [result] as Array[BuildReport.Result])
 	assert_string_contains(text, "Garrow of the Chains, Chainwarden (enabler) in Whirlpool", "an enabler's lift is against a path of its own hero")
 	assert_string_contains(text, "lift")
+
+
+func test_a_lift_against_its_hero_on_base() -> void:
+	var errors: Array[String] = []
+	var named: Dictionary[String, Dictionary] = Report.read_formations(FileAccess.get_file_as_string("res://tools/sim_formations.json"), errors)
+	named = Report.for_team(_content, named, HeroTeam.DEFAULT)
+	var build: BuildReport.Build = BuildReport.read_builds(_content, _run, errors).filter(func(b: BuildReport.Build) -> bool: return b.path == "bellwarden")[0]
+	assert_eq(build.swap, BuildReport.BASE, "Aldous has no self-sufficient path (Decision 17)")
+	var result: BuildReport.Result = BuildReport.run_build(_content, _run, build, ["the_pack"] as Array[String], named, 0, 1)
+	assert_eq(result.swapped.fights, 0, "no swapped lineup: it's the ceiling's base")
+	assert_eq(result.lift(), result.ceiling_gain())
+	assert_string_contains(BuildReport.text(_content, [result] as Array[BuildReport.Result]), "against Aldous Vesper on base")
