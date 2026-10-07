@@ -99,9 +99,35 @@ func _run() -> void:
 	while not witches.player.finished() and witches.player.sim.tick < 91 * 10:
 		witches._process(1.0 / 30.0)
 	await _snap("fight_witch_circle_collapse")
+	await _new_heroes(content)
 	await _run_screens()
 	RunSave.erase(_main.run_save_path)
 	quit(0)
+
+
+## The new three (phase 8 part 4, 8d-5): Practice's team row with Garrow,
+## Tamsin, and Aldous on, then a fight of them transformed (Chainwarden,
+## Nightblade, Bellwarden), and Tamsin's panel.
+func _new_heroes(content: ContentDb) -> void:
+	var session: PracticeSession = PracticeSession.make(content)
+	session.set_team(["garrow", "tamsin", "aldous"] as Array[String])
+	_main.practice = session
+	_main.show_encounters()
+	await _snap("practice_team_new_three")
+	_main.show_arena("witch_circle")
+	var arena: ArenaScreen = _main.screen as ArenaScreen
+	arena.choose_path("garrow", "chainwarden", PathDef.Stage.TRANSFORMED)
+	arena.choose_path("tamsin", "nightblade", PathDef.Stage.TRANSFORMED)
+	arena.choose_path("aldous", "bellwarden", PathDef.Stage.TRANSFORMED)
+	arena.open_panel("tamsin")
+	await _snap("panel_path_tamsin_transformed")
+	arena.hero_panel.close()
+	arena._fight()
+	for frame: int in 4 * 30:
+		arena._process(1.0 / 30.0)
+	await _snap("fight_new_three_4s")
+	arena.skip()
+	await _snap("fight_new_three_end")
 
 
 ## A run from seed 7 through the real screens (phase 5), then into Act 2
@@ -112,6 +138,12 @@ func _run_screens() -> void:
 	start.choose("brannoc", "hearthwall")
 	start.choose("maren", "deadeye")
 	await _snap("run_vows")
+	# The draft (phase 8 part 4): Vell out, Garrow in, then back.
+	start.draft_hero("vell")
+	start.draft_hero("garrow")
+	await _snap("run_draft_garrow")
+	start.draft_hero("garrow")
+	start.draft_hero("vell")
 	start.run_started.emit(start.vows, start.run_seed, false)
 	var flow: RunFlow = _main.run_session.flow
 	await _snap("run_route")

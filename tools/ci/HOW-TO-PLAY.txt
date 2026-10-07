@@ -17,8 +17,10 @@ MACOS
 PLAYING
   The game is being rebuilt around heroes and an open arena. This build has
   the whole run: Act 1, Act 2, the Glassmere, and Act 3, the Shattered
-  Crown (NEW IN THIS BUILD: see ACT 3 below), seven days each, then
-  endless after the Act 3 boss (see ENDLESS). Your uploaded art is in the game. The arena
+  Crown, seven days each, then endless after the Act 3 boss (see
+  ENDLESS). NEW IN THIS BUILD: three more heroes, Garrow, Tamsin, and
+  Aldous, and you draft three of the six for each run (see THE SIX
+  HEROES below). Your uploaded art is in the game. The arena
   is turned (your heroes at the bottom, the enemies at the top) and stands
   on the floating island, rocks are ruins, and Rift Collapse eats the edge
   as rift-light. Items, relics, and upgrades have their kind's frame with an
@@ -28,7 +30,7 @@ PLAYING
   free to try; Act 2's and Act 3's fights are there too) is still on the title.
 
   A RUN (Title > New run)
-  1. Vow each hero to one of their three paths: a small taste of it now,
+  1. Draft three of the six heroes (Draft on their cards), then vow each hero to one of their three paths: a small taste of it now,
      with a cost. Fill the path's deed in fights and the hero transforms
      (a new form and signature). Until then you can switch the vow between
      fights (the hero's panel: Switch vow). If two vowed paths are bonded,
@@ -85,6 +87,42 @@ PLAYING
   4. The run is saved after everything you do: Title > Continue the run.
      The hero bar along the bottom shows each hero's wounds, deed progress,
      and items; click a card for the hero's panel.
+
+  THE SIX HEROES (new in this build: Garrow, Tamsin, and Aldous)
+  A run takes three of the six into the rift; draft them on the New run
+  screen, then vow each. Practice has a team row above the fights: toggle
+  three heroes on. Every hero has three paths, each with a habit (once
+  transformed, their old signature comes back now and then), and six
+  apexes. The new three:
+    Garrow of the Chains (the anchor tank)  Haul throws a chain at the
+              farthest enemy within 4 hexes and drags it to him; nothing
+              can push or pull him, and the first time he drops below half
+              HP he gains a Shield.
+       Aegisfang    every blow thickens his Shield, and Bulwark Burst
+                    spends it on the crowd around him
+       Chainwarden  drags the enemies' back line in; stronger for every
+                    enemy near him
+       Spitemail    every hit on him costs the one who struck it (thorns);
+                    Iron Maiden sends more back for a few seconds
+    Tamsin Gloamstep (the knife)  starts every fight hidden, her attacks
+              from Stealth always crit, and Shadowstep slips her behind the
+              weakest enemy within 3 hexes, hidden again.
+       Nightblade   each kill hides her for the next
+       Headhunter   hunts what her team Marks, from anywhere
+       Garrote      holds still whatever her team Roots or Stuns
+    Aldous Vesper (the bell-ringer)  Peal makes allies within 3 hexes of
+              him attack faster for a while; Resonance a little faster
+              within 2. He makes his team better rather than winning alone.
+       Chorister    gives his allies mana, so their signatures come sooner
+       Windcaller   a wind behind the ranged allies: they hit harder from
+                    far, and Gale pushes enemies off them
+       Bellwarden   his Tolls Mark; Death Knell names who dies next
+  New duo bonds: Chainwarden and Trapper (The Snaring Chain), Aegisfang
+  and Wardweaver (The Woven Fang), Garrote and Ironbrand (Hammer and Wire),
+  Bellwarden and Headhunter (Death's Appointment), Bellwarden and Vigil
+  Keeper (The Toll of Dawn). The new heroes' numbers are first numbers:
+  they've been brought near the others' (see WHAT WE WANT TO KNOW ABOUT
+  THE NEW HEROES), and the whole six get tuned together next.
 
   ACT 2, THE GLASSMERE
   The rift's drowned middle. Your heroes come in as they left Act 1
@@ -211,7 +249,8 @@ PLAYING
      "Act 3 · Days ..."); Act 2's are built for transformed heroes and
      Act 3's for heroes at an apex, so set yours in their panels first
      (Transform, then Vow apex and Reach apex).
-  2. Drag Brannoc, Maren, and Vell onto your side's hexes (the three rows
+  2. Pick your three on the team row (Brannoc, Maren, and Vell to start),
+     then drag them onto your side's hexes (the three rows
      at the bottom, tinted gold; the enemies are at the top). Hover an enemy
      to read what it does.
   3. Click a hero's card in the hero bar along the bottom to open their
@@ -298,7 +337,22 @@ TUNED IN THIS BUILD (phase 6: a bot that plays well, then Act 1 tuned to it)
   Tell us: does Act 1 feel hard but fair? Which fight ends your runs?
   Does transforming feel like a real step up?
 
-WHAT WE WANT TO KNOW ABOUT ACT 3 (new in this build)
+WHAT WE WANT TO KNOW ABOUT THE NEW HEROES (new in this build)
+  - The draft: which three did you take, and why? Did any hero feel like
+    a must-pick, or one you'd never take?
+  - Garrow: does dragging enemies to him (Haul, Chainwarden) change where
+    you place the rest of your team? Does Spitemail feel like it wins by
+    itself without you doing anything?
+  - Tamsin: can you tell where she is while she's hidden, and why she
+    picked the enemy she stepped behind? Garrote needs a teammate who
+    Roots or Stuns (Trapper, Ironbrand, Chainwarden): did you find that
+    out, and was it fun to build toward?
+  - Aldous: he makes his team better instead of hitting hard himself. Can
+    you see what he's doing in a fight (the faster attacks, the mana, the
+    wind, the Marks)? Did a team with him feel stronger than one without?
+  - The new bonds: did any of the five wake up in your runs?
+
+WHAT WE WANT TO KNOW ABOUT ACT 3 (last build)
   Does the void change where you place your heroes and how fights play?
   Can you read the islands, the bridges, and who is about to be shoved,
   hooked, or charged over the edge? Do the Mirrorwight and the Unbinder
