@@ -25,6 +25,9 @@ const BOTS: Array[String] = ["simple", "simple-peek", "random", "good", "expert"
 ## `team` for play: the bot drafts its team (Bot.team; the runner's
 ## --team=draft), and the vows still cycle by seed.
 const DRAFT: Array[String] = ["draft"]
+## How far a team's vows step each turn of the cycle (coprime to 27; 0, 13,
+## 26 in base 3 are 000, 111, 222).
+const VOW_STRIDE: int = 13
 
 
 ## One run, as measured.
@@ -133,16 +136,20 @@ class RunLine:
 ## Every team and every combination of one path per hero on it (phase 8
 ## part 4: the teams of three the draft offers, in heroes.json's order, each
 ## with its vows in paths.json's order), or only `team`'s vows. The teams
-## take turns (each team's first vows, then each one's second, ...), so a
-## report of any length covers every team about as often (8d-5).
+## take turns (each team's first vows, then each one's next, ...), so a
+## report of any length covers every team about as often, and each team's
+## vows step VOW_STRIDE at a time, so every 3 turns give each of its heroes
+## each of its paths (8d-5).
 static func vow_combinations(content: ContentDb, team: Array[String] = []) -> Array[Dictionary]:
+	if not team.is_empty():
+		return _team_vows(content, team)
 	var by_team: Array[Array] = []
-	for drafted: Array[String] in ([team] if not team.is_empty() else teams(content)):
+	for drafted: Array[String] in teams(content):
 		by_team.append(_team_vows(content, drafted))
 	var combos: Array[Dictionary] = []
-	for i: int in by_team[0].size():
+	for turn: int in by_team[0].size():
 		for vows: Array in by_team:
-			combos.append(vows[i])
+			combos.append(vows[turn * VOW_STRIDE % vows.size()])
 	return combos
 
 

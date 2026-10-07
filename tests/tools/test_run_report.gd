@@ -17,8 +17,12 @@ func test_every_combination_of_vows() -> void:
 	assert_eq(combos[0], {"brannoc": "hearthwall", "maren": "deadeye", "vell": "lanternbearer"}, "the old three first, in the old order")
 	assert_eq(combos[1], {"brannoc": "hearthwall", "maren": "deadeye", "garrow": "aegisfang"}, "the teams take turns")
 	assert_eq(combos[19], {"garrow": "aegisfang", "tamsin": "nightblade", "aldous": "chorister"})
-	assert_eq(combos[20], {"brannoc": "hearthwall", "maren": "deadeye", "vell": "wardweaver"}, "then each team's second vows")
-	assert_eq(combos[20 * 26], {"brannoc": "last_watch", "maren": "volley", "vell": "vigil_keeper"})
+	assert_eq(combos[20], {"brannoc": "ironbrand", "maren": "trapper", "vell": "wardweaver"}, "then each team's next vows, 13 on")
+	assert_eq(combos[40], {"brannoc": "last_watch", "maren": "volley", "vell": "vigil_keeper"}, "so 3 turns give each hero each path")
+	var seen: Dictionary = {}
+	for turn: int in 27:
+		seen[combos[turn * 20]] = true
+	assert_eq(seen.size(), 27, "a team's 27 turns are all its vows")
 	assert_eq(Report.vow_combinations(_run.content, HeroTeam.DEFAULT).size(), 27, "one team's")
 
 
