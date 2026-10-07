@@ -3,7 +3,7 @@ extends SceneTree
 ## bots, docs/plans/rebuild-phase6-bot-tuning.md): plays many runs with a
 ## bot and prints how they pace (tools/run_report.gd does the work). A
 ## report, not a gate: it exits 0 unless a run hit an error.
-## Usage: godot --headless --path . -s tools/run_runner.gd -- [--runs=54] [--first-seed=1] [--bot=simple-peek] [--jobs=1] [--engines] [--endless] [--team=a,b,c]
+## Usage: godot --headless --path . -s tools/run_runner.gd -- [--runs=54] [--first-seed=1] [--bot=simple-peek] [--jobs=1] [--engines] [--endless] [--team=a,b,c|draft]
 ## --bot: one of run_report.gd's BOTS. --compare plays the random bot,
 ## the good bot, and the expert on the same seeds and prints them side by
 ## side before the --bot's report (phase 6 step 6d). --choices adds the
@@ -40,7 +40,7 @@ func _init() -> void:
 		printerr("\n".join(run.errors))
 		quit(1)
 		return
-	if not options["team"].is_empty() and not HeroTeam.problem(run.content, _team(options)).is_empty():
+	if not options["team"].is_empty() and options["team"] != "draft" and not HeroTeam.problem(run.content, _team(options)).is_empty():
 		printerr("--team: " + HeroTeam.problem(run.content, _team(options)))
 		quit(1)
 		return
@@ -138,9 +138,12 @@ func _play_in_processes(seeds: Array[int], jobs: int, options: Dictionary[String
 
 
 ## --team=a,b,c (phase 8 part 4): every run with that team, its vows cycling;
-## without it, the runs cycle every team the draft offers.
+## --team=draft: the bot drafts each run's team (Bot.team, 8d-5), its vows
+## cycling; without it, the runs cycle every team the draft offers.
 func _team(options: Dictionary[String, String]) -> Array[String]:
 	var team: Array[String] = []
+	if options["team"] == "draft":
+		return Report.DRAFT.duplicate()
 	if not options["team"].is_empty():
 		team.assign(Array(options["team"].split(",")))
 	return team

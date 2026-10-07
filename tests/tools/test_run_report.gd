@@ -36,6 +36,7 @@ func test_a_small_report() -> void:
 	var text: String = Report.summary(_run, lines)
 	assert_string_contains(text, "Runs: 3 (the simple bot")
 	assert_string_contains(text, "First transformation")
+	assert_string_contains(text, "By hero (runs on the team, won")
 	assert_string_contains(text, "Runs with errors: 0")
 	assert_string_contains(text, "Picks per run by layer: hero")
 	assert_string_contains(text, "Nodes per run: Camp shown")
@@ -45,6 +46,23 @@ func test_a_small_report() -> void:
 		assert_eq(line.habits.get("casts", []).size(), counted, "each fight's measures")
 	assert_string_contains(text, "The rift learns (each habit's measure")
 	assert_string_contains(text, "Mana and signatures      casts")
+
+
+func test_a_drafted_team_and_the_by_hero_lines() -> void:
+	# Phase 8 part 4 (8d-5): with --team=draft the bot drafts, and the vows
+	# still cycle by seed within its team.
+	var line: Report.RunLine = Report.play(_run, 5, "random", false, false, Report.DRAFT)
+	assert_eq(line.errors, [] as Array[String])
+	assert_true(line.drafted)
+	var team: Array[String] = []
+	team.assign(line.vows.keys())
+	assert_eq(HeroTeam.problem(_run.content, team), "", "a team the draft offers")
+	assert_eq(line.vows, Report.seed_vows(_run.content, HeroTeam.ordered(_run.content, team), 5))
+	var text: String = Report.heroes_summary(_run, [line] as Array[Report.RunLine])
+	assert_string_starts_with(text, "By hero (runs on the team, drafted")
+	for hero_id: String in team:
+		assert_string_contains(text, _run.content.heroes[hero_id].name)
+	assert_eq(text.split("\n").size(), 4, "a line for each hero on a team")
 
 
 func test_the_engine_report() -> void:

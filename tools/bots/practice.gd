@@ -136,7 +136,7 @@ static func candidates(flow: RunFlow, count: int = 6) -> Array[Dictionary]:
 	var setup: FightSetup = null
 	for name: String in Simple.FORMATIONS:
 		var errors: Array[String] = []
-		setup = flow.fight_setup(Simple.formation(name), errors)
+		setup = flow.fight_setup(Simple.formation(name, Simple.team_of(flow), flow.run.content), errors)
 		if setup != null:
 			break
 	if setup == null:

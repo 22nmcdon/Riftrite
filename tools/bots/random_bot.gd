@@ -19,6 +19,15 @@ func _init() -> void:
 	label = "random"
 
 
+## A team the draft offers, at random (its own stream: the run's RNG
+## starts with the run).
+func team(run: RunContent, run_seed: int, _testing: bool, _vows_of: Callable) -> Array[String]:
+	var teams: Array[Array] = draft_teams(run.content)
+	var drafted: Array[String] = []
+	drafted.assign(teams[SimRng.new(run_seed * 7919 + 23).range_int(teams.size())])
+	return drafted
+
+
 func begin(flow: RunFlow) -> void:
 	rng = SimRng.new(flow.state.seed_value * 7919 + 17)
 

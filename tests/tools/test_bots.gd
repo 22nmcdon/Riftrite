@@ -42,6 +42,29 @@ func test_each_bot_plays_runs_to_their_end_and_repeats() -> void:
 			assert_eq(JSON.stringify(again.state.to_dict()), JSON.stringify(first.state.to_dict()), "%s, seed %d repeats" % [bot_name, run_seed])
 
 
+func test_each_bot_drafts_a_team() -> void:
+	# Phase 8 part 4 (8d-5): the base drafts the old three, the random bot any
+	# team at random (its seed's), and the good bot the team whose practice is
+	# worth most.
+	var vows_of: Callable = func(team: Array[String]) -> Dictionary[String, String]: return Report.seed_vows(_run.content, team, 4)
+	assert_eq(Report.make_bot("simple").team(_run, 4, false, vows_of), HeroTeam.DEFAULT)
+	var drawn: Dictionary[String, bool] = {}
+	for run_seed: int in 8:
+		var team: Array[String] = Report.make_bot("random").team(_run, run_seed, false, vows_of)
+		assert_eq(HeroTeam.problem(_run.content, team), "")
+		assert_eq(Report.make_bot("random").team(_run, run_seed, false, vows_of), team, "its seed's")
+		drawn[",".join(team)] = true
+	assert_gt(drawn.size(), 3, "teams at random")
+	var good: Array[String] = Report.make_bot("good").team(_run, 4, false, vows_of)
+	assert_eq(HeroTeam.problem(_run.content, good), "")
+	var worth: Callable = func(team: Array[String]) -> float:
+		var errors: Array[String] = []
+		var flow: RunFlow = RunFlow.start(_run, 4, vows_of.call(team), errors)
+		return Practice.team_worth(flow, Practice.practice_set(flow))
+	assert_gte(worth.call(good), worth.call(HeroTeam.DEFAULT), "no worse in practice than the old three")
+	Practice.clear_cache()
+
+
 func test_the_random_bot_does_what_the_simple_one_never_does() -> void:
 	# The simple bot always takes today's first fight; the random one takes
 	# the harder one now and then.

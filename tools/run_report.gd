@@ -22,12 +22,17 @@ const ENDLESS_STOP: int = 40
 ## The bots by name (--bot): "simple-peek" is the report's bot before phase
 ## 6 (the simple bot, trying the named formations in the real fight).
 const BOTS: Array[String] = ["simple", "simple-peek", "random", "good", "expert"]
+## `team` for play: the bot drafts its team (Bot.team; the runner's
+## --team=draft), and the vows still cycle by seed.
+const DRAFT: Array[String] = ["draft"]
 
 
 ## One run, as measured.
 class RunLine:
 	var seed_value: int
 	var vows: Dictionary[String, String] = {}
+	## The bot drafted its team (--team=draft).
+	var drafted: bool = false
 	var outcome: RunState.Outcome
 	## The act and day it ended (or the last boss's, won).
 	var act: int = 1
@@ -138,14 +143,16 @@ static func vow_combinations(content: ContentDb, team: Array[String] = []) -> Ar
 ## Every team of three the draft offers (HeroTeam.draftable), in heroes.json's
 ## order.
 static func teams(content: ContentDb) -> Array[Array]:
-	var pool: Array[String] = HeroTeam.draftable(content)
-	var found: Array[Array] = []
-	for a: int in pool.size():
-		for b: int in range(a + 1, pool.size()):
-			for c: int in range(b + 1, pool.size()):
-				var team: Array[String] = [pool[a], pool[b], pool[c]]
-				found.append(team)
-	return found
+	return BaseBot.draft_teams(content)
+
+
+## `team`'s vows for run `run_seed` (as the run's would cycle with the team
+## fixed).
+static func seed_vows(content: ContentDb, team: Array[String], run_seed: int) -> Dictionary[String, String]:
+	var combos: Array[Dictionary] = _team_vows(content, team)
+	var vows: Dictionary[String, String] = {}
+	vows.assign(combos[run_seed % combos.size()])
+	return vows
 
 
 static func _team_vows(content: ContentDb, team: Array[String]) -> Array[Dictionary]:
@@ -188,8 +195,13 @@ static func play(run: RunContent, run_seed: int, bot_name: String = "simple-peek
 	line.bot = bot_name
 	var bot: BaseBot = make_bot(bot_name)
 	bot.deeper = endless
-	var combos: Array[Dictionary] = vow_combinations(run.content, team)
-	line.vows.assign(combos[run_seed % combos.size()])
+	if team == DRAFT:
+		var vows_of: Callable = func(drafted: Array[String]) -> Dictionary[String, String]: return seed_vows(run.content, drafted, run_seed)
+		line.vows = seed_vows(run.content, bot.team(run, run_seed, testing, vows_of), run_seed)
+		line.drafted = true
+	else:
+		var combos: Array[Dictionary] = vow_combinations(run.content, team)
+		line.vows.assign(combos[run_seed % combos.size()])
 	var flow: RunFlow = RunFlow.start(run, run_seed, line.vows, line.errors, testing)
 	if flow == null:
 		return line
@@ -701,6 +713,33 @@ static func learns_summary(run: RunContent, lines: Array[RunLine]) -> String:
 	return "\n".join(out)
 
 
+## By hero (phase 8 part 4, rebuild-phase8-heroes.md section 8): the runs
+## each hero was on the team for (and, when the bot drafted, the share it
+## was drafted in), how many were won, how many it transformed and earned an
+## apex in, and the runs won by the path it was vowed to at the start.
+static func heroes_summary(run: RunContent, lines: Array[RunLine]) -> String:
+	var content: ContentDb = run.content
+	var out: PackedStringArray = PackedStringArray()
+	out.append("By hero (runs on the team%s, won; transformed, an apex; won by its first vow):" % (", drafted" if lines.any(func(line: RunLine) -> bool: return line.drafted) else ""))
+	for hero_id: String in HeroTeam.draftable(content):
+		var with_hero: Array[RunLine] = []
+		with_hero.assign(lines.filter(func(line: RunLine) -> bool: return line.vows.has(hero_id)))
+		if with_hero.is_empty():
+			continue
+		var won: int = with_hero.filter(func(line: RunLine) -> bool: return line.outcome == RunState.Outcome.WON).size()
+		var transformed: int = with_hero.filter(func(line: RunLine) -> bool: return line.transformed_on.get(hero_id, 0) > 0).size()
+		var apexed: int = with_hero.filter(func(line: RunLine) -> bool: return line.apexes.has(hero_id)).size()
+		var by_path: PackedStringArray = PackedStringArray()
+		for path: PathDef in content.heroes[hero_id].paths:
+			var vowed: Array[RunLine] = []
+			vowed.assign(with_hero.filter(func(line: RunLine) -> bool: return line.vows[hero_id] == path.id))
+			var path_won: int = vowed.filter(func(line: RunLine) -> bool: return line.outcome == RunState.Outcome.WON).size()
+			by_path.append("%s %d%% of %d" % [path.name, _pct(path_won, vowed.size()), vowed.size()])
+		out.append("  %-26s %3d runs (%2d%%), won %3d%%; transformed %3d%%, an apex %3d%%; %s" % [content.heroes[hero_id].name, with_hero.size(), _pct(with_hero.size(), lines.size()),
+			_pct(won, with_hero.size()), _pct(transformed, with_hero.size()), _pct(apexed, with_hero.size()), ", ".join(by_path)])
+	return "\n".join(out)
+
+
 static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 	var content: ContentDb = run.content
 	var out: PackedStringArray = PackedStringArray()
@@ -754,6 +793,7 @@ static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 		out.append("  %-14s %3d runs: %3d%% transform, median day %s, by the boss %s; %s a fight (threshold %s)" % [path.name, vowed.size(), _pct(days.size(), vowed.size()),
 			_median(days), "%d%%" % _pct(by_boss, reached) if reached > 0 else "-",
 			_per_fight(path.deed, gain, fights), UnitInfo.deed_amount_text(path.deed, path.deed.threshold)])
+	out.append(heroes_summary(run, lines))
 	out.append("")
 	var per_hero: PackedStringArray = PackedStringArray()
 	for hero_id: String in content.hero_ids:

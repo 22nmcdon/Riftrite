@@ -24,6 +24,15 @@ var deeper: bool = false
 var testing: bool = false
 
 
+## The team it drafts for run `run_seed` (phase 8 part 4,
+## rebuild-phase8-heroes.md section 8; the runner's --team=draft), before the
+## run starts: `vows_of` gives a team's vows for the run (Callable taking an
+## Array[String], returning hero id -> path id). The base drafts the old
+## three.
+func team(_run: RunContent, _run_seed: int, _testing: bool, _vows_of: Callable) -> Array[String]:
+	return HeroTeam.DEFAULT.duplicate()
+
+
 ## Called once, before the run's first decision.
 func begin(_flow: RunFlow) -> void:
 	pass
@@ -118,6 +127,19 @@ func swap(_flow: RunFlow) -> int:
 ## Dig In's rock.
 func rock(_flow: RunFlow) -> Vector2i:
 	return Simple.ROCK
+
+
+## Every team of three the draft offers (HeroTeam.draftable), in
+## heroes.json's order.
+static func draft_teams(content: ContentDb) -> Array[Array]:
+	var pool: Array[String] = HeroTeam.draftable(content)
+	var found: Array[Array] = []
+	for a: int in pool.size():
+		for b: int in range(a + 1, pool.size()):
+			for c: int in range(b + 1, pool.size()):
+				var drafted: Array[String] = [pool[a], pool[b], pool[c]]
+				found.append(drafted)
+	return found
 
 
 ## Markers where Practice starts them (PracticeSession.DEFAULT_SNARES), each

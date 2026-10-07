@@ -41,6 +41,27 @@ func _init() -> void:
 	label = "good"
 
 
+## The team whose practice (the act's first fights more than a day away,
+## Practice.practice_set) is worth most with the vows the run would give it;
+## the first in heroes.json's order on a tie.
+func team(run: RunContent, run_seed: int, testing: bool, vows_of: Callable) -> Array[String]:
+	var best: Array[String] = HeroTeam.DEFAULT.duplicate()
+	var best_value: float = -INF
+	for candidate: Array in draft_teams(run.content):
+		var drafted: Array[String] = []
+		drafted.assign(candidate)
+		var errors: Array[String] = []
+		var flow: RunFlow = RunFlow.start(run, run_seed, vows_of.call(drafted), errors, testing)
+		if flow == null:
+			continue
+		var value: float = Practice.team_worth(flow, Practice.practice_set(flow))
+		if value > best_value:
+			best_value = value
+			best = drafted
+	Practice.clear_cache()
+	return best
+
+
 func begin(_flow: RunFlow) -> void:
 	Practice.clear_cache()
 
