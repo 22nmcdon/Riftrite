@@ -113,6 +113,8 @@ const GUARDED: Dictionary[String, Vector2i] = {"brannoc": Vector2i(3, 2), "maren
 const ROSTERS: Dictionary = {
 	"pup_warren": {"rift_pup": 6},
 	"ash_nest": {"ashling": 3, "rift_pup": 2},
+	"warren_mouth": {"rift_pup": 3},
+	"smouldering_den": {"ashling": 1, "rift_pup": 2},
 	"the_pack": {"rift_hound": 3},
 	"moth_cloud": {"cinder_moth": 3, "rift_pup": 2},
 	"hollow_line": {"hollow_archer": 3},
@@ -136,13 +138,16 @@ const ROSTERS: Dictionary = {
 ## Phase 2's nine, tuned by their enemies' numbers rather than a scale.
 ## Phase 2's nine (the easier tier since phase 5; scaled since playtest
 ## gate 3, rebuild-phase5-run.md).
+## The day-1 fights (docs/plans/easy-start.md, Decisions 9 and 10).
+const DAY_ONE: Array[String] = ["warren_mouth", "smouldering_den"]
 const BASIC: Array[String] = ["pup_warren", "ash_nest", "the_pack", "moth_cloud", "hollow_line", "bog_crossing", "sentinel_gate", "cairn_road", "witch_circle"]
 
 
 func test_the_act_1_encounters_are_the_plans() -> void:
 	var content: ContentDb = ContentDb.load_dir("res://data")
 	var act_1: Array[String] = content.encounter_ids.filter(func(encounter_id: String) -> bool: return (content.encounters[encounter_id] as EncounterDef).act == 1)
-	assert_eq(act_1, BASIC + ["stray_pups", "lone_hounds", "hounds_and_archers", "lurker_and_ashlings", "sentinel_and_moths", "witch_and_pups",
+	# The day-1 fights (docs/plans/easy-start.md, Decision 9) come after Ash Nest.
+	assert_eq(act_1, BASIC.slice(0, 2) + DAY_ONE + BASIC.slice(2) + ["stray_pups", "lone_hounds", "hounds_and_archers", "lurker_and_ashlings", "sentinel_and_moths", "witch_and_pups",
 		"guardian_and_witch", "the_hunt", "witch_coven", "cairn_watch", "old_mother_ash"])
 	for encounter_id: String in act_1:
 		var encounter: EncounterDef = content.encounters[encounter_id]

@@ -216,9 +216,6 @@ func test_the_records_keep_each_acts_endless_apart() -> void:
 	assert_eq(RunRecords.best(RECORDS_PATH, 3), {})
 
 
-## Seed 38 is one the simple bot wins through all three stand-in acts (of
-## seeds 1-40, the only one past Act 1); if Act 1's tuning changes, find
-## another.
 func test_the_real_endless_follows_act_3() -> void:
 	var real: RunContent = RunContent.load_dir("res://data", ContentDb.load_dir("res://data"))
 	var flow: RunFlow = RunFlow.start(real, 7, Bot.first_vows(real.content), [] as Array[String])
@@ -236,9 +233,12 @@ func test_the_real_endless_follows_act_3() -> void:
 	assert_eq(real.floor_pool(flow.state, "boss"), ["the_heart_of_the_rift"] as Array[String], "the Heart every 10th floor")
 
 
+## Seed 13 is one the simple bot wins through all three stand-in acts (of
+## seeds 1-80, 13 and 53 since Act 1's day-1 fights changed, easy-start.md
+## ES-1; 38 before); if Act 1's fights or tuning change, find another.
 func test_a_bot_plays_through_the_acts() -> void:
 	var errors: Array[String] = []
-	var flow: RunFlow = Bot.play(_run, 38, errors)
+	var flow: RunFlow = Bot.play(_run, 13, errors)
 	assert_eq(errors, [] as Array[String])
 	assert_eq([flow.state.act, flow.state.phase, flow.state.outcome], [3, RunState.Phase.ENDED, RunState.Outcome.WON], "won Act 3, and ended at the endless choice")
 	assert_true(flow.state.fought.any(func(fought: RunState.Fought) -> bool: return fought.act == 2))

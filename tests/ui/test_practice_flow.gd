@@ -95,11 +95,11 @@ func test_pick_place_fight_and_the_result() -> void:
 	var main: Main = _main()
 	U.press(main.screen, "Practice")
 	var cards: Array[Node] = U.find_all(main.screen, Button).filter(func(node: Node) -> bool: return (node as Button).text == "Place your heroes")
-	(cards[2] as Button).pressed.emit()
+	(cards[4] as Button).pressed.emit()
 	await wait_process_frames(2)
 	assert_true(main.screen is ArenaScreen)
 	var arena: ArenaScreen = main.screen
-	assert_eq(arena.encounter.id, "the_pack", "the third card is the third encounter")
+	assert_eq(arena.encounter.id, "the_pack", "the fifth card is the fifth encounter (after the two day-1 fights)")
 	assert_false(main.backdrop.visible, "the board reads on a quiet background")
 	assert_eq(arena.formation, PracticeSession.DEFAULT_FORMATION, "the heroes start guarded the first time")
 	arena.move_hero("vell", Vector2i(6, 1))
