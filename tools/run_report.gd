@@ -28,6 +28,9 @@ const DRAFT: Array[String] = ["draft"]
 ## How far a team's vows step each turn of the cycle (coprime to 27; 0, 13,
 ## 26 in base 3 are 000, 111, 222).
 const VOW_STRIDE: int = 13
+## The test teams (easy-start.md ES-4, test-teams.md): fixed vows, a group,
+## and the items and relics their runs lean toward (testing only).
+const TEST_TEAMS: String = "res://tools/test_teams.json"
 
 
 ## One run, as measured.
@@ -36,6 +39,11 @@ class RunLine:
 	var vows: Dictionary[String, String] = {}
 	## The bot drafted its team (--team=draft).
 	var drafted: bool = false
+	## A test team's run (--test-teams, ES-4): its name and group, and whether
+	## the shops leaned toward its items and relics.
+	var team_name: String = ""
+	var group: String = ""
+	var leaned: bool = false
 	var outcome: RunState.Outcome
 	## The act and day it ended (or the last boss's, won).
 	var act: int = 1
@@ -202,13 +210,30 @@ static func make_bot(bot_name: String) -> BaseBot:
 ## it.
 ## `endless`: the bot goes deeper at the first endless choice (after Act 3,
 ## 8c-6c); `testing`: a testing run, whose first choice is after Act 1.
-static func play(run: RunContent, run_seed: int, bot_name: String = "simple-peek", endless: bool = false, testing: bool = false, team: Array[String] = []) -> RunLine:
+## `test_team` (one of read_test_teams's, ES-4) fixes the team and its vows,
+## and leans the run's shops toward its items and relics while it plays
+## (RunContent.test_lean, testing only; cleared after).
+static func play(run: RunContent, run_seed: int, bot_name: String = "simple-peek", endless: bool = false, testing: bool = false, team: Array[String] = [], test_team: Dictionary = {}) -> RunLine:
+	if test_team.is_empty():
+		return _play(run, run_seed, bot_name, endless, testing, team, test_team)
+	run.test_lean.assign(test_team["lean"])
+	var line: RunLine = _play(run, run_seed, bot_name, endless, testing, team, test_team)
+	run.test_lean.clear()
+	return line
+
+
+static func _play(run: RunContent, run_seed: int, bot_name: String, endless: bool, testing: bool, team: Array[String], test_team: Dictionary) -> RunLine:
 	var line := RunLine.new()
 	line.seed_value = run_seed
 	line.bot = bot_name
 	var bot: BaseBot = make_bot(bot_name)
 	bot.deeper = endless
-	if team == DRAFT:
+	if not test_team.is_empty():
+		line.vows.assign(test_team["vows"])
+		line.team_name = test_team["name"]
+		line.group = test_team["group"]
+		line.leaned = not test_team["lean"].is_empty()
+	elif team == DRAFT:
 		var vows_of: Callable = func(drafted: Array[String]) -> Dictionary[String, String]: return seed_vows(run.content, drafted, run_seed)
 		line.vows = seed_vows(run.content, bot.team(run, run_seed, testing, vows_of), run_seed)
 		line.drafted = true
@@ -515,11 +540,57 @@ static func _choice_name(run: RunContent, kind: String, id: String) -> String:
 	return run.relics[id].name if run.relics.has(id) else id
 
 
-static func play_many(run: RunContent, seeds: Array[int], bot_name: String = "simple-peek", endless: bool = false, testing: bool = false, team: Array[String] = []) -> Array[RunLine]:
+## Plays each seed. With `test_teams` (ES-4), seed n plays test team n mod
+## their count.
+static func play_many(run: RunContent, seeds: Array[int], bot_name: String = "simple-peek", endless: bool = false, testing: bool = false, team: Array[String] = [], test_teams: Array[Dictionary] = []) -> Array[RunLine]:
 	var lines: Array[RunLine] = []
 	for run_seed: int in seeds:
-		lines.append(play(run, run_seed, bot_name, endless, testing, team))
+		var test_team: Dictionary = test_teams[run_seed % test_teams.size()] if not test_teams.is_empty() else {}
+		lines.append(play(run, run_seed, bot_name, endless, testing, team, test_team))
 	return lines
+
+
+## The test teams in `text` (tools/test_teams.json's shape) named by `which`:
+## "all", a group ("plan", "bad"), or names joined by commas. Each is
+## {name, group, vows (hero id -> path id), lean (id -> weight)}; `lean`
+## false leaves every lean empty. Problems go in `errors` (an unknown hero,
+## path, item, relic, or name; a team the run can't start with).
+static func read_test_teams(run: RunContent, text: String, which: String, lean: bool, errors: Array[String]) -> Array[Dictionary]:
+	var data: Variant = JSON.parse_string(text)
+	if not data is Dictionary or not data.get("teams") is Array:
+		errors.append("test teams: not a {\"teams\": [...]} file")
+		return []
+	var weight: int = int(data.get("lean_weight", 1))
+	var found: Array[Dictionary] = []
+	var names: PackedStringArray = which.split(",")
+	for entry: Variant in data["teams"]:
+		if not entry is Dictionary:
+			errors.append("test teams: an entry isn't an object")
+			continue
+		var team_name: String = str(entry.get("name", ""))
+		var group: String = str(entry.get("group", ""))
+		if which != "all" and which != group and not names.has(team_name):
+			continue
+		var vows: Dictionary[String, String] = {}
+		for hero_id: Variant in entry.get("vows", {}):
+			var path_id: String = str(entry["vows"][hero_id])
+			if not run.content.heroes.has(hero_id) or not run.content.paths.has(path_id) or run.content.paths[path_id].hero != hero_id:
+				errors.append("test team %s: %s isn't a path of %s" % [team_name, path_id, hero_id])
+			vows[str(hero_id)] = path_id
+		var team: Array[String] = []
+		team.assign(vows.keys())
+		if not HeroTeam.problem(run.content, team).is_empty():
+			errors.append("test team %s: %s" % [team_name, HeroTeam.problem(run.content, team)])
+		var leaned: Dictionary[String, int] = {}
+		for id: Variant in entry.get("lean", []):
+			if not run.items.has(id) and not run.relics.has(id):
+				errors.append("test team %s: %s is no item or relic" % [team_name, id])
+			if lean:
+				leaned[str(id)] = weight
+		found.append({"name": team_name, "group": group, "vows": vows, "lean": leaned})
+	if found.is_empty():
+		errors.append("test teams: none named \"%s\"" % which)
+	return found
 
 
 ## Endless's report (phase 8 part 1, --endless; Decision 5: a report, not
@@ -753,6 +824,58 @@ static func heroes_summary(run: RunContent, lines: Array[RunLine]) -> String:
 	return "\n".join(out)
 
 
+## By team (easy-start.md ES-4): each team's runs (a test team by name, any
+## other by its heroes), how far they got (ended on day 1, reached Act 1's
+## boss, won Act 1, won Act 2), and won; then the same by group when there
+## are test teams (plan, bad).
+static func teams_summary(run: RunContent, lines: Array[RunLine]) -> String:
+	var out: PackedStringArray = PackedStringArray()
+	out.append("By team (runs; ended on day 1, at Act 1's boss, Act 1 won, Act 2 won; won):")
+	var order: Array[String] = []
+	var by: Dictionary[String, Array] = {}
+	for line: RunLine in lines:
+		var key: String = _team_label(run, line)
+		if not by.has(key):
+			order.append(key)
+			by[key] = []
+		by[key].append(line)
+	for key: String in order:
+		out.append(_reach_row(run, key, by[key]))
+	if lines.any(func(line: RunLine) -> bool: return not line.group.is_empty()):
+		out.append("By group:")
+		var groups: Array[String] = []
+		for line: RunLine in lines:
+			if not groups.has(line.group):
+				groups.append(line.group)
+		for group: String in groups:
+			out.append(_reach_row(run, group if not group.is_empty() else "(none)", lines.filter(func(line: RunLine) -> bool: return line.group == group)))
+	return "\n".join(out)
+
+
+## A team's name in By team: a test team's name (and "leaned" when its shops
+## leaned), else its heroes' names in heroes.json's order.
+static func _team_label(run: RunContent, line: RunLine) -> String:
+	if not line.team_name.is_empty():
+		return "%s (%s%s)" % [line.team_name, line.group, ", leaned" if line.leaned else ""]
+	var names: PackedStringArray = PackedStringArray()
+	var team: Array[String] = []
+	team.assign(line.vows.keys())
+	for hero_id: String in HeroTeam.ordered(run.content, team):
+		names.append(run.content.heroes[hero_id].name.get_slice(" ", 0))
+	return ", ".join(names)
+
+
+static func _reach_row(run: RunContent, label: String, lines: Array) -> String:
+	var n: int = lines.size()
+	var boss_day: int = run.acts[0].days.size()
+	var day_one: int = lines.filter(func(line: RunLine) -> bool: return line.outcome == RunState.Outcome.LOST and line.act == 1 and line.day == 1).size()
+	var at_boss: int = lines.filter(func(line: RunLine) -> bool: return line.act > 1 or line.day >= boss_day).size()
+	var act_one: int = lines.filter(func(line: RunLine) -> bool: return line.act > 1 or line.outcome == RunState.Outcome.WON).size()
+	var act_two: int = lines.filter(func(line: RunLine) -> bool: return line.act > 2 or (line.outcome == RunState.Outcome.WON and run.acts.size() >= 2)).size()
+	var won: int = lines.filter(func(line: RunLine) -> bool: return line.outcome == RunState.Outcome.WON).size()
+	return "  %-34s %3d runs; day 1 %3d%%, Act 1's boss %3d%%, Act 1 %3d%%, Act 2 %3d%%; won %3d%%" % [label, n, _pct(day_one, n), _pct(at_boss, n), _pct(act_one, n), _pct(act_two, n), _pct(won, n)]
+
+
 static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 	var content: ContentDb = run.content
 	var out: PackedStringArray = PackedStringArray()
@@ -807,6 +930,7 @@ static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 			_median(days), "%d%%" % _pct(by_boss, reached) if reached > 0 else "-",
 			_per_fight(path.deed, gain, fights), UnitInfo.deed_amount_text(path.deed, path.deed.threshold)])
 	out.append(heroes_summary(run, lines))
+	out.append(teams_summary(run, lines))
 	out.append("")
 	var per_hero: PackedStringArray = PackedStringArray()
 	for hero_id: String in content.hero_ids:

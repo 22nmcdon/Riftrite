@@ -106,7 +106,7 @@ static func enemy_upgrades(run: RunContent, state: RunState, index: int, encount
 ## use (loadout rule 2; phase 5c step 6). `rerolls` draws a fresh set.
 static func pedlar(run: RunContent, state: RunState, rerolls: int) -> Array[String]:
 	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.PEDLAR, state.act, state.day, state.attempt, rerolls])
-	return _draw(rng, _for_sale(run, state), run.act_of(state).pedlar_wares + run.relic_sum(state, "wares_add"))
+	return _draw(rng, _for_sale(run, state), run.act_of(state).pedlar_wares + run.relic_sum(state, "wares_add"), run.test_lean)
 
 
 ## The Magpie's wares (phase 5c step 6e, magpie.md): act.magpie_wares
@@ -115,7 +115,7 @@ static func pedlar(run: RunContent, state: RunState, rerolls: int) -> Array[Stri
 static func magpie(run: RunContent, state: RunState) -> Array[String]:
 	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.MAGPIE, state.act, state.day, state.attempt])
 	var charms: Array[String] = _for_sale(run, state).filter(func(id: String) -> bool: return run.items[id].kind == ItemDef.Kind.CHARM)
-	return _draw(rng, charms, run.act_of(state).magpie_wares)
+	return _draw(rng, charms, run.act_of(state).magpie_wares, run.test_lean)
 
 
 ## The Magpie's swap for `relic_id`: a relic of the same tier the run
@@ -138,12 +138,30 @@ static func _for_sale(run: RunContent, state: RunState) -> Array[String]:
 
 
 ## `count` different ids from `pool` (fewer if it's short), in draw order.
-static func _draw(rng: SimRng, pool: Array[String], count: int) -> Array[String]:
+## `lean` (RunContent.test_lean, testing only) weights some ids up; empty,
+## every id is equally likely.
+static func _draw(rng: SimRng, pool: Array[String], count: int, lean: Dictionary[String, int] = {}) -> Array[String]:
 	var left: Array[String] = pool.duplicate()
 	var drawn: Array[String] = []
 	while drawn.size() < count and not left.is_empty():
-		drawn.append(left.pop_at(rng.range_int(left.size())))
+		drawn.append(left.pop_at(_index(rng, left, lean)))
 	return drawn
+
+
+## An index into `pool`: any equally likely, or by `lean`'s weights (an id it
+## doesn't name weighs 1). Empty `lean` rolls as the draws always have.
+static func _index(rng: SimRng, pool: Array[String], lean: Dictionary[String, int]) -> int:
+	if lean.is_empty():
+		return rng.range_int(pool.size())
+	var total: int = 0
+	for id: String in pool:
+		total += maxi(lean.get(id, 1), 1)
+	var roll: int = rng.range_int(total)
+	for i: int in pool.size():
+		roll -= maxi(lean.get(pool[i], 1), 1)
+		if roll < 0:
+			return i
+	return pool.size() - 1
 
 
 ## Today's camp: a place (by the camp stream), then camps.shown different
@@ -370,7 +388,8 @@ static func _bond_relic(run: RunContent, state: RunState, rng: SimRng, taken: Ar
 
 ## One relic of `tier` the run doesn't hold and that isn't in `taken`; if the
 ## tier has none left, the nearest tier that does (lower first), never a boss
-## relic unless `tier` is boss.
+## relic unless `tier` is boss. RunContent.test_lean (testing only) weights
+## some up.
 static func _relic_of(run: RunContent, state: RunState, rng: SimRng, tier: String, taken: Array[String]) -> String:
 	var wanted: int = RelicDef.TIER_NAMES.find(tier)
 	var order: Array[int] = [wanted]
@@ -383,7 +402,7 @@ static func _relic_of(run: RunContent, state: RunState, rng: SimRng, tier: Strin
 		var pool: Array[String] = run.relic_ids.filter(func(id: String) -> bool:
 			return run.relics[id].tier == tier_index and not state.relics.has(id) and not taken.has(id))
 		if not pool.is_empty():
-			return pool[rng.range_int(pool.size())]
+			return pool[_index(rng, pool, run.test_lean)]
 	return ""
 
 

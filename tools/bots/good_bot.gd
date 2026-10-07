@@ -23,6 +23,10 @@ const RELIC_WORTH: Dictionary[String, float] = {"common": 0.03, "rare": 0.06, "e
 const PICK_WORTH: float = 0.02
 const MAGPIE_WORTH: float = 0.04
 const OATH_WORTH: float = 0.03
+## A test team's lean (easy-start.md ES-4, testing only; RunContent.test_lean):
+## what an item or relic it leans toward is worth beyond its practice, so it
+## measures the build (test-teams.md: the bot weights them up).
+const LEAN_WORTH: float = 0.05
 ## At most this many options are tried for one shop decision (the cheapest
 ## filter first: affordable, and for an item, a hero it changes).
 const SHOP_TRIES: int = 8
@@ -141,7 +145,7 @@ func relic(flow: RunFlow) -> int:
 	var best: int = -1
 	var best_value: float = Practice.value(flow, func(trial: RunFlow) -> String: return trial.decline_relic(), coming)
 	for i: int in flow.state.relic_choice.size():
-		var value: float = Practice.value(flow, func(trial: RunFlow) -> String: return trial.take_relic(i), coming)
+		var value: float = Practice.value(flow, func(trial: RunFlow) -> String: return trial.take_relic(i), coming) + _lean(flow, flow.state.relic_choice[i])
 		if value > best_value + MIN_GAIN:
 			best_value = value
 			best = i
@@ -151,19 +155,23 @@ func relic(flow: RunFlow) -> int:
 ## The shop's best buy by practice (an item on the hero it suits best, a
 ## relic, a wound treated), if it's worth its price; else a reroll when the
 ## shards allow one and nothing was worth buying; else selling an item that
-## changes no hero. Nothing after the boss (no fights left to buy for).
+## changes no hero. Nothing after the boss (no fights left to buy for). A
+## test team's leaned items and relics are tried first and worth LEAN_WORTH
+## more (ES-4, testing only).
 func shop(flow: RunFlow) -> bool:
 	var coming: Array[String] = Practice.practice_set(flow)
 	if coming.is_empty():
 		return false
 	var state: RunState = flow.state
 	var tries: Array[Callable] = []
+	var worth: Array[float] = []
 	for i: int in state.wares.size():
 		var item_id: String = state.wares[i]
 		if item_id.is_empty() or flow.price_of(item_id) > state.shards:
 			continue
 		if state.item_ranks.has(item_id):
 			tries.append(func(trial: RunFlow) -> String: return trial.buy(i))
+			worth.append(_lean(flow, item_id))
 			continue
 		for hero: RunState.Hero in state.heroes:
 			var free: int = hero.slots.find("")
@@ -172,20 +180,36 @@ func shop(flow: RunFlow) -> bool:
 				tries.append(func(trial: RunFlow) -> String:
 					var said: String = trial.buy(i)
 					return said if not said.is_empty() else trial.equip(hero_id, free, item_id))
+				worth.append(_lean(flow, item_id))
 	for i: int in state.shop_relics.size():
 		if not state.shop_relics[i].is_empty() and flow.relic_price(i) <= state.shards:
 			tries.append(func(trial: RunFlow) -> String: return trial.buy_relic(i))
+			worth.append(_lean(flow, state.shop_relics[i]))
 	for hero: RunState.Hero in state.heroes:
 		if hero.wounds > 0 and flow.wound_price() <= state.shards:
 			var hero_id: String = hero.id
 			tries.append(func(trial: RunFlow) -> String: return trial.treat_wound(hero_id))
+			worth.append(0.0)
+	if not flow.run.test_lean.is_empty():
+		var order: Array[int] = []
+		for i: int in tries.size():
+			order.append(i)
+		order.sort_custom(func(a: int, b: int) -> bool: return worth[a] > worth[b] if worth[a] != worth[b] else a < b)
+		var sorted_tries: Array[Callable] = []
+		var sorted_worth: Array[float] = []
+		for i: int in order:
+			sorted_tries.append(tries[i])
+			sorted_worth.append(worth[i])
+		tries = sorted_tries
+		worth = sorted_worth
 	tries = tries.slice(0, SHOP_TRIES)
 	if not tries.is_empty():
 		var baseline: float = Practice.team_worth(flow, coming)
 		var best: Callable = Callable()
 		var best_value: float = baseline + MIN_GAIN
-		for action: Callable in tries:
-			var value: float = Practice.value(flow, action, coming)
+		for t: int in tries.size():
+			var action: Callable = tries[t]
+			var value: float = Practice.value(flow, action, coming) + worth[t]
 			if value > best_value:
 				best_value = value
 				best = action
@@ -200,6 +224,12 @@ func shop(flow: RunFlow) -> bool:
 			if not state.heroes.any(func(hero: RunState.Hero) -> bool: return Simple.suits(flow, flow.run.items[item_id], hero)):
 				return flow.sell(item_id).is_empty()
 	return false
+
+
+## LEAN_WORTH for an item or relic a test team leans toward (ES-4, testing
+## only: RunContent.test_lean), else 0.
+static func _lean(flow: RunFlow, id: String) -> float:
+	return LEAN_WORTH if flow.run.test_lean.has(id) else 0.0
 
 
 ## The node worth most: Camp's best option, a Rift Tear at its best depth

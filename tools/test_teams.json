@@ -1,0 +1,62 @@
+{
+  "_note": "The run report's test teams (tools/run_report.gd, run_runner.gd --test-teams; docs/plans/test-teams.md and easy-start.md, ES-4). Each has a group (plan: easy-start.md section 5's plan teams, with the old three as the tank plan; bad: test-teams.md section 2's, stood in for by built heroes), fixed vows, and the items and relics its runs lean toward: for testing only, the shops and relic choices draw them `lean_weight` times as often (RunContent.test_lean) and the good bot tries them first. Bad teams have no build, so no lean.",
+  "lean_weight": 3,
+  "teams": [
+    {
+      "name": "tank",
+      "group": "plan",
+      "vows": {"brannoc": "hearthwall", "maren": "deadeye", "vell": "lanternbearer"},
+      "lean": ["iron_filings", "wardens_chain", "hearthstone_shard", "tithe_of_iron", "moth_eaten_banner", "mirror_of_ash", "the_hearth_woven_mail", "the_watchtower_stone", "iron_skin", "spiteful_blood", "warding_thread", "steady_stance", "hold_ground_orders"],
+      "note": "The old three: the tank plan (easy-start.md ES-3's reference)"
+    },
+    {
+      "name": "burst",
+      "group": "plan",
+      "vows": {"tamsin": "nightblade", "maren": "deadeye", "aldous": "windcaller"},
+      "lean": ["bone_dice", "keen_edge", "quickened_pulse", "whetstone_of_the_fallen", "headsmans_coin", "the_ninth_arrow", "knifes_edge", "crown_of_stars", "smoke_pouch", "veil_of_the_lost", "shadow_step", "armor_breaker", "headsmans_patience", "surge", "execution"],
+      "note": "Kill them before the damage lands (easy-start.md section 5)"
+    },
+    {
+      "name": "sustain",
+      "group": "plan",
+      "vows": {"vell": "lanternbearer", "aldous": "chorister", "maren": "volley"},
+      "lean": ["leech_tooth", "gluttons_chalice", "tithe_of_iron", "hearthstone_shard", "echoing_bell", "rift_candle", "overflow_chalice", "blood_communion", "sanguine_frenzy", "second_dawn", "leech_fang", "warding_thread", "purifying_light", "siphon", "bulwark", "wait_to_heal_orders"],
+      "note": "Spread the damage and undo it (easy-start.md section 5; Edric and Severine aren't built)"
+    },
+    {
+      "name": "control",
+      "group": "plan",
+      "vows": {"maren": "trapper", "tamsin": "garrote", "vell": "wardweaver"},
+      "lean": ["bramble_seed", "rusted_fetter", "thornwoven_cloak", "grasping_mire", "thicket_engine", "snaring_shot", "everflame", "bramble_knot", "opportunist", "grasping", "lingering", "spite_brand"],
+      "note": "The damage never gets thrown (easy-start.md section 5)"
+    },
+    {
+      "name": "glass",
+      "group": "bad",
+      "vows": {"maren": "volley", "vell": "vigil_keeper", "aldous": "bellwarden"},
+      "lean": [],
+      "note": "B1 Glass: three back-liners, no front line (Ilse, Ottilie, and Lucan aren't built)"
+    },
+    {
+      "name": "no_makers",
+      "group": "bad",
+      "vows": {"tamsin": "headhunter", "garrow": "aegisfang", "aldous": "chorister"},
+      "lean": [],
+      "note": "B2 No makers: payoffs with little to pay off (Headhunter's Marks, Aegisfang's Shields, Chorister's mana for heroes who barely cast)"
+    },
+    {
+      "name": "all_melee",
+      "group": "bad",
+      "vows": {"garrow": "aegisfang", "tamsin": "nightblade", "brannoc": "last_watch"},
+      "lean": [],
+      "note": "B4 Wrong fuel: three melee fighters, no ranged support, no team Shields for Aegisfang"
+    },
+    {
+      "name": "all_tanks",
+      "group": "bad",
+      "vows": {"brannoc": "hearthwall", "garrow": "spitemail", "vell": "wardweaver"},
+      "lean": [],
+      "note": "B5 All tanks: lots of survival, little damage (Edric isn't built; Vell's Wardweaver stands in)"
+    }
+  ]
+}

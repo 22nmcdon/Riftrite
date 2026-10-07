@@ -40,6 +40,13 @@ var events: EventDef = null
 ## The rift learns (phase 8 part 3; data/rift_learns.json), or null.
 var learns: RiftLearnsDef = null
 var errors: Array[String] = []
+## FOR TESTING ONLY (docs/plans/easy-start.md, ES-4): item and relic id ->
+## how many times as likely the shops and relic choices are to draw it
+## (Offers). Only the tools set it (the run report's test teams, leaning
+## toward their build's items and relics, test-teams.md); the game never
+## does, and tests/run/test_offers_lean.gd checks nothing in src/ writes it.
+## Empty, every draw is as it always was.
+var test_lean: Dictionary[String, int] = {}
 
 
 ## Loads the run's files from `dir`, over `content_db` (already loaded).

@@ -83,3 +83,44 @@ func test_the_engine_report() -> void:
 	var text: String = Report.engines_summary(lines)
 	assert_string_starts_with(text, "Engines (the heroes' sources")
 	assert_string_contains(text, "Held but never fired")
+
+
+func test_the_test_teams_and_by_team() -> void:
+	# easy-start.md ES-4: tools/test_teams.json's teams, their fixed vows, and
+	# the shop lean that only the tools set (RunContent.test_lean).
+	var text: String = FileAccess.get_file_as_string(Report.TEST_TEAMS)
+	var errors: Array[String] = []
+	var all: Array[Dictionary] = Report.read_test_teams(_run, text, "all", true, errors)
+	assert_eq(errors, [] as Array[String])
+	var names: Array[String] = []
+	for team: Dictionary in all:
+		names.append(team["name"])
+		assert_eq(team["lean"].is_empty(), team["group"] == "bad", "%s: plan teams lean, bad teams don't" % team["name"])
+	assert_eq(names, ["tank", "burst", "sustain", "control", "glass", "no_makers", "all_melee", "all_tanks"] as Array[String])
+	var plan: Array[Dictionary] = Report.read_test_teams(_run, text, "plan", true, errors)
+	assert_eq(plan.size(), 4, "a group")
+	assert_eq(plan[1]["vows"], {"tamsin": "nightblade", "maren": "deadeye", "aldous": "windcaller"})
+	assert_eq(plan[1]["lean"]["keen_edge"], 3, "the file's weight")
+	assert_true(Report.read_test_teams(_run, text, "burst", false, errors)[0]["lean"].is_empty(), "--no-lean")
+	assert_eq(Report.read_test_teams(_run, text, "glass,burst", true, errors).size(), 2, "names")
+	assert_eq(errors, [] as Array[String])
+	Report.read_test_teams(_run, text, "nobody", true, errors)
+	assert_eq(errors.size(), 1, "an unknown name")
+	var bad_lean: Array[String] = []
+	Report.read_test_teams(_run, '{"teams": [{"name": "x", "group": "plan", "vows": {"maren": "hearthwall"}, "lean": ["no_such"]}]}', "all", true, bad_lean)
+	assert_eq(bad_lean.size(), 3, "a path off its hero, a team the run can't start, and a lean that's no item or relic: %s" % [bad_lean])
+
+	var lines: Array = Report.play_many(_run, [1, 2] as Array[int], "simple", false, false, [], plan.slice(1, 3))
+	assert_true(_run.test_lean.is_empty(), "the lean is cleared after each run")
+	assert_eq(lines[0].team_name, "sustain", "seed n plays test team n mod their count")
+	assert_eq(lines[1].team_name, "burst")
+	assert_eq(lines[1].vows, plan[1]["vows"], "its fixed vows")
+	assert_true(lines[1].leaned)
+	assert_eq(lines[1].group, "plan")
+	var summary: String = Report.teams_summary(_run, lines)
+	assert_string_contains(summary, "By team (runs; ended on day 1")
+	assert_string_contains(summary, "burst (plan, leaned)")
+	assert_string_contains(summary, "By group:\n  plan")
+	var drafted: String = Report.teams_summary(_run, Report.play_many(_run, [3] as Array[int], "simple"))
+	assert_false(drafted.contains("By group"), "no groups without test teams")
+	assert_string_contains(drafted, "  " + ", ".join(Report.vow_combinations(_run.content)[3].keys().map(func(id: String) -> String: return _run.content.heroes[id].name.get_slice(" ", 0))))

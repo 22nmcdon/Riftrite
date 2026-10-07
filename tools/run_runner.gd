@@ -3,7 +3,7 @@ extends SceneTree
 ## bots, docs/plans/rebuild-phase6-bot-tuning.md): plays many runs with a
 ## bot and prints how they pace (tools/run_report.gd does the work). A
 ## report, not a gate: it exits 0 unless a run hit an error.
-## Usage: godot --headless --path . -s tools/run_runner.gd -- [--runs=54] [--first-seed=1] [--bot=simple-peek] [--jobs=1] [--engines] [--endless] [--team=a,b,c|draft]
+## Usage: godot --headless --path . -s tools/run_runner.gd -- [--runs=54] [--first-seed=1] [--bot=simple-peek] [--jobs=1] [--engines] [--endless] [--team=a,b,c|draft] [--test-teams=all|plan|bad|name,name] [--no-lean]
 ## --bot: one of run_report.gd's BOTS. --compare plays the random bot,
 ## the good bot, and the expert on the same seeds and prints them side by
 ## side before the --bot's report (phase 6 step 6d). --choices adds the
@@ -14,6 +14,10 @@ extends SceneTree
 ## endless report follows (how far runs get; not tuned). Since 8c-6c that's
 ## after Act 3, the real endless; --endless=testing plays testing runs, whose
 ## choice comes after Act 1.
+## --test-teams (easy-start.md ES-4) plays tools/test_teams.json's teams
+## (all, a group, or names), seed n the nth in turn, each with its fixed vows
+## and its shops leaning toward its items and relics (testing only;
+## --no-lean turns that off).
 ## --jobs=N plays the seeds in N Godot processes (each takes every Nth seed
 ## and writes its runs with --part=k/N --out=file), then merges them: the
 ## report is the same as one process's.
@@ -23,7 +27,7 @@ const PARTS_DIR: String = "user://run_parts"
 
 
 func _init() -> void:
-	var options: Dictionary[String, String] = {"runs": "54", "first-seed": "1", "bot": "simple-peek", "jobs": "1", "part": "", "out": "", "endless": "", "team": ""}
+	var options: Dictionary[String, String] = {"runs": "54", "first-seed": "1", "bot": "simple-peek", "jobs": "1", "part": "", "out": "", "endless": "", "team": "", "test-teams": ""}
 	for arg: String in OS.get_cmdline_user_args():
 		if arg.begins_with("--") and arg.contains("="):
 			var pair: PackedStringArray = arg.trim_prefix("--").split("=", true, 1)
@@ -42,6 +46,12 @@ func _init() -> void:
 		return
 	if not options["team"].is_empty() and options["team"] != "draft" and not HeroTeam.problem(run.content, _team(options)).is_empty():
 		printerr("--team: " + HeroTeam.problem(run.content, _team(options)))
+		quit(1)
+		return
+	var errors: Array[String] = []
+	_test_teams(run, options, errors)
+	if not errors.is_empty():
+		printerr("--test-teams: " + "; ".join(errors))
 		quit(1)
 		return
 	var seeds: Array[int] = []
@@ -80,7 +90,7 @@ func _play(run: RunContent, seeds: Array[int], jobs: int, options: Dictionary[St
 		var for_bot: Dictionary[String, String] = options.duplicate()
 		for_bot["bot"] = bot_name
 		return _play_in_processes(seeds, jobs, for_bot)
-	lines.assign(Report.play_many(run, seeds, bot_name, not options["endless"].is_empty(), options["endless"] == "testing", _team(options)))
+	lines.assign(Report.play_many(run, seeds, bot_name, not options["endless"].is_empty(), options["endless"] == "testing", _team(options), _test_teams(run, options, [])))
 	return lines
 
 
@@ -93,7 +103,7 @@ func _play_part(run: RunContent, seeds: Array[int], options: Dictionary[String, 
 		if i % part[1].to_int() == part[0].to_int():
 			mine.append(seeds[i])
 	var dicts: Array[Dictionary] = []
-	for line: Report.RunLine in Report.play_many(run, mine, options["bot"], not options["endless"].is_empty(), options["endless"] == "testing", _team(options)):
+	for line: Report.RunLine in Report.play_many(run, mine, options["bot"], not options["endless"].is_empty(), options["endless"] == "testing", _team(options), _test_teams(run, options, [])):
 		dicts.append(line.to_dict())
 	var file: FileAccess = FileAccess.open(options["out"], FileAccess.WRITE)
 	file.store_var(dicts)
@@ -116,6 +126,10 @@ func _play_in_processes(seeds: Array[int], jobs: int, options: Dictionary[String
 			args.append("--endless" if options["endless"] == "yes" else "--endless=%s" % options["endless"])
 		if not options["team"].is_empty():
 			args.append("--team=%s" % options["team"])
+		if not options["test-teams"].is_empty():
+			args.append("--test-teams=%s" % options["test-teams"])
+		if OS.get_cmdline_user_args().has("--no-lean"):
+			args.append("--no-lean")
 		pids.append(OS.create_process(OS.get_executable_path(), args))
 	for pid: int in pids:
 		while OS.is_process_running(pid):
@@ -147,3 +161,12 @@ func _team(options: Dictionary[String, String]) -> Array[String]:
 	if not options["team"].is_empty():
 		team.assign(Array(options["team"].split(",")))
 	return team
+
+
+## --test-teams (ES-4): the test teams named, with their leans unless
+## --no-lean; none without it.
+func _test_teams(run: RunContent, options: Dictionary[String, String], errors: Array[String]) -> Array[Dictionary]:
+	if options["test-teams"].is_empty():
+		return []
+	var lean: bool = not OS.get_cmdline_user_args().has("--no-lean")
+	return Report.read_test_teams(run, FileAccess.get_file_as_string(Report.TEST_TEAMS), options["test-teams"], lean, errors)
