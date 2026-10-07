@@ -92,8 +92,15 @@ class Report:
 	func gap_points() -> int:
 		return best().win_percent() - worst().win_percent()
 
+	## A day-1 fight (its only day is 1) is exempt from the split
+	## (docs/plans/easy-start.md, Decision 11): it's sized so even the
+	## weakest team wins, and the Glass check (tests/tools/test_easy_start.gd)
+	## is its gate.
+	func exempt() -> bool:
+		return encounter != null and encounter.days.size() == 1 and encounter.days[0] == 1
+
 	func passes() -> bool:
-		return gap_points() >= GATE_POINTS
+		return exempt() or gap_points() >= GATE_POINTS
 
 	## How many formations win at least half their fights.
 	func winning() -> int:
@@ -468,7 +475,7 @@ static func text(content: ContentDb, report: Report, boards: bool = true) -> Str
 	var best: Row = report.best()
 	var worst: Row = report.worst()
 	lines.append("  gate: %s. Best %s %d%%, worst %s %d%%: a %d-point gap (needs %d). %d of %d formations win. Median fight %s" % [
-		"passes" if report.passes() else "FAILS", best.name, best.win_percent(), worst.name, worst.win_percent(), report.gap_points(), GATE_POINTS,
+		("exempt (day 1)" if report.exempt() else "passes") if report.passes() else "FAILS", best.name, best.win_percent(), worst.name, worst.win_percent(), report.gap_points(), GATE_POINTS,
 		report.winning(), report.rows.size(), seconds(report.median_ticks())])
 	if boards:
 		for pair: Array in [["best", best], ["worst", worst]]:

@@ -1,6 +1,6 @@
 # The easy start (Act 1, days 1 and 2)
 
-Status: **a build plan, for approval (2026-10-07); the playtester's notes are Decisions 1–8.** The playtester's request after phase 8 part 4's bot runs: fix Act 1's opening before tuning anything else, because runs that end on day 1 spoil every other number (heroes, paths, deeds, synergy against bad teams). Questions are in section 8.
+Status: **a build plan, approved (2026-10-07; Decisions 1–12).** The playtester's request after phase 8 part 4's bot runs: fix Act 1's opening before tuning anything else, because runs that end on day 1 spoil every other number (heroes, paths, deeds, synergy against bad teams). Questions are in section 8.
 
 ## 1. Why
 
@@ -77,11 +77,11 @@ Decision 1 sizes day 1 for the worst team, and Decision 2 puts it a step past th
 | The Pack, 3 Rift Hounds (now) | 0% | 0, 0, 0 | 0% |
 | The Pack, 2 Rift Hounds | 100% | 3, 3, 3 | 0% (at the cliff) |
 
-So day 1 is **3 Rift Pups, 1 Ashling with 2 Rift Pups, and (the harder option) 1 Hollow Archer with 2 Rift Pups**: Glass wins every vow set with the enemies 20% stronger. The fewer-enemies versions at the cliff (4 pups, 2 Ashlings) would come back to 0% with a small change elsewhere, which is what Decision 2 guards against. The Pack with 2 hounds is a day-2 candidate (day 2's target is 85%, not 95%), but it sits at its cliff too.
+So day 1 is **3 Rift Pups and 1 Ashling with 2 Rift Pups** (Decisions 9 and 10; the archer fight was a candidate for a harder option, not built): Glass wins every vow set with the enemies 20% stronger. The fewer-enemies versions at the cliff (4 pups, 2 Ashlings) would come back to 0% with a small change elsewhere, which is what Decision 2 guards against. The Pack with 2 hounds is a day-2 candidate (day 2's target is 85%, not 95%), but it sits at its cliff too.
 
 ## 4. The proposal
 
-1. **Day 1:** the three fights above, no flankers, at their usual strength (fewer enemies, not weaker ones). A day-1 fight is easier to read for having fewer enemies, and the enemies hit as hard as they always will.
+1. **Day 1:** the two fights above, no flankers, at their usual strength (fewer enemies, not weaker ones). A day-1 fight is easier to read for having fewer enemies, and the enemies hit as hard as they always will.
 2. **The Glass check (Decision 2):** a test fights the Glass stand-in in every day-1 fight on every vow set with the good bot placing, and fails if it wins less than 90% of any one. When Ilse, Ottilie, and Lucan are built, the real Glass replaces the stand-in.
 3. **Days 2–3: one new threat at a time, about 85% for the worst team, with the same margin rule.** The first flanker (The Pack) and the first archer line come on day 2, cut to sizes that hold at about 85% for Glass and the plan teams. Lurker and Ashlings is cut too (Decision 6: searched formations also lose it). Day 3 stays the first elite.
 4. **No shop guarantee for now** (Decision 3). If the plan teams can't hold days 2–3 at their sizes, a build-lean slot (an item tagged with a build one of the heroes belongs to) comes back as its own proposal; items and relics don't carry build tags yet.
@@ -112,12 +112,19 @@ The gate wants the best formation to win at least 30 points more often than the 
 - **ES-4:** the run report's By team (runs, how far they got, won), the plan teams and the bad teams played with the shop lean, the good bot over all 20 teams; the Act 1 boss (and later fights) raised only to the group targets; the numbers recorded here.
 - **ES-5:** Garrote and the slow paths read again on the new runs; docs, HOW-TO-PLAY, playtest build.
 
+### Built in ES-1 (the day-1 fights, the Glass check, the gate)
+
+- **The day-1 fights** (`data/encounters.json`, Decisions 9 and 10): **Warren Mouth**, 3 Rift Pups (Pup Warren's rocks, its strength), and **Smouldering Den**, 1 Ashling and 2 Rift Pups (Ash Nest's strength), both `"days": [1]`. Pup Warren and Ash Nest move to day 2 only, The Pack to days 2–3, and Hounds and Archers to day 2, so day 1 offers the two new fights (ActDraw draws two easier ones when a day has no harder fight) and has no flankers.
+- **The Glass check** (`tests/tools/test_easy_start.gd`, Decision 2): Maren, Vell, and Aldous on all 27 vow sets, the good bot placing, at fight seed 7001, must win at least 90% of every day-1 fight; both win all 27. The test also checks day 1 has only those fights, no harder one, and no flanker.
+- **The gate** (Decision 11): `SimReport.Report.exempt()` (an encounter whose only day is 1) passes whatever the split; the report says "exempt (day 1)" and the runner's summary "day 1". Both new fights: 24 of 24 formations win.
+- **Not changed:** no fight (the bench's fingerprints are the same); the full fights stay as they were.
+
 ## 8. Questions
 
-- **EA. Day-1 fights:** new smaller encounters for day 1 only (Pup Warren and Ash Nest keep their full size from day 2 on), or shrink them everywhere?
-- **EB. The harder day-1 fight:** the new 1 Hollow Archer and 2 Rift Pups ("Archers' Rest"), or no harder option on day 1 (two easier fights)?
-- **ED. The gate:** day-1 fights exempt from the 30-point split, with the Glass check as their gate?
-- **EE. The plan teams:** the three stand-ins in section 5?
+- **EA. Day-1 fights:** *(Answered: Decision 9.)* new smaller encounters for day 1 only, or shrink them everywhere?
+- **EB. The harder day-1 fight:** *(Answered: Decision 10.)* a new 1 Hollow Archer and 2 Rift Pups, or no harder option on day 1?
+- **ED. The gate:** *(Answered: Decision 11.)* day-1 fights exempt from the 30-point split, with the Glass check as their gate?
+- **EE. The plan teams:** *(Answered: Decision 12.)* the three stand-ins in section 5?
 
 ## Decisions
 
@@ -131,3 +138,7 @@ The playtester, 2026-10-07:
 6. **Lurker and Ashlings is cut, not left as a placement puzzle:** searched formations lose it too (31% of teams with a tank have any winning formation, none without).
 7. **Today's 8% isn't held:** the end-of-run target is by group (random teams around the old three's tuned rate, synergy above, bad below), and only as much difficulty moves to the Act 1 boss and Act 2 as that needs.
 8. **Placement help for players** (a simple default formation) comes later, not in this step.
+9. **Day 1 has its own fights** (Question EA): new day-1-only encounters, 3 Rift Pups and 1 Ashling with 2 Rift Pups; Pup Warren and Ash Nest keep their full size from day 2 on.
+10. **No harder option on day 1** (Question EB): day 1 offers two easier fights (ActDraw's rule when a day has no harder fight); the harder fights start on day 2. The 1 Hollow Archer and 2 Rift Pups candidate isn't built.
+11. **Day-1 fights are exempt from the gate's 30-point split** (Question ED): the sim runner reports their split, and the Glass check is their gate.
+12. **The plan teams are section 5's stand-ins** (Question EE), replaced by `test-teams.md`'s real teams as their heroes are built.

@@ -6,7 +6,7 @@
     "tests": "closing lanes against a swarm",
     "act": 1,
     "scale_bp": 11250,
-    "days": [1, 2],
+    "days": [2],
     "enemies": [
       {"enemy": "rift_pup", "hex": [0, 4]}, {"enemy": "rift_pup", "hex": [2, 4]}, {"enemy": "rift_pup", "hex": [5, 4]},
       {"enemy": "rift_pup", "hex": [7, 4]}, {"enemy": "rift_pup", "hex": [1, 5]}, {"enemy": "rift_pup", "hex": [6, 5]}
@@ -19,10 +19,34 @@
     "tests": "not fighting in a crowd",
     "act": 1,
     "scale_bp": 11500,
-    "days": [1, 2],
+    "days": [2],
     "enemies": [
       {"enemy": "ashling", "hex": [3, 4]}, {"enemy": "ashling", "hex": [4, 4]}, {"enemy": "ashling", "hex": [3, 5]},
       {"enemy": "rift_pup", "hex": [1, 4]}, {"enemy": "rift_pup", "hex": [6, 4]}
+    ]
+  },
+  {
+    "_note": "The day-1 fights (docs/plans/easy-start.md, Decisions 1, 2, 9, 10): Pup Warren and Ash Nest with fewer enemies at the same strength, sized so the weakest team (the Glass stand-in: Maren, Vell, Aldous) wins on every vow set even with the enemies 20% stronger. No flankers and no harder fight on day 1; the Glass check (tests/tools/test_easy_start.gd) keeps them there.",
+    "id": "warren_mouth",
+    "name": "Warren Mouth",
+    "tests": "how a fight works, against a few pups",
+    "act": 1,
+    "scale_bp": 11250,
+    "days": [1],
+    "enemies": [
+      {"enemy": "rift_pup", "hex": [1, 4]}, {"enemy": "rift_pup", "hex": [4, 4]}, {"enemy": "rift_pup", "hex": [6, 4]}
+    ],
+    "rocks": [[2, 3], [5, 3]]
+  },
+  {
+    "id": "smouldering_den",
+    "name": "Smouldering Den",
+    "tests": "an Ashling's last flare",
+    "act": 1,
+    "scale_bp": 11500,
+    "days": [1],
+    "enemies": [
+      {"enemy": "ashling", "hex": [3, 4]}, {"enemy": "rift_pup", "hex": [1, 4]}, {"enemy": "rift_pup", "hex": [6, 4]}
     ]
   },
   {
@@ -31,7 +55,7 @@
     "tests": "protecting the back line",
     "act": 1,
     "scale_bp": 11250,
-    "days": [1, 2, 3],
+    "days": [2, 3],
     "enemies": [
       {"enemy": "rift_hound", "hex": [1, 4]}, {"enemy": "rift_hound", "hex": [4, 4]}, {"enemy": "rift_hound", "hex": [6, 4]}
     ],
@@ -129,7 +153,7 @@
     "days": [2, 3, 4, 5, 6],
     "enemies": [{"enemy": "rift_hound", "hex": [2, 5]}, {"enemy": "rift_hound", "hex": [5, 5]}]
   },
-  {"_note": "Phase 5's harder fights (Decision 3): each combines two threats, and pays more. First placements, for the sim runner's gate.", "id": "hounds_and_archers", "name": "Hounds and Archers", "tests": "the back line, from two sides at once", "tier": "harder", "act": 1, "scale_bp": 9450, "days": [1, 2], "enemies": [{"enemy": "rift_hound", "hex": [1, 4]}, {"enemy": "rift_hound", "hex": [6, 4]}, {"enemy": "hollow_archer", "hex": [2, 6]}, {"enemy": "hollow_archer", "hex": [5, 6]}]},
+  {"_note": "Phase 5's harder fights (Decision 3): each combines two threats, and pays more. First placements, for the sim runner's gate.", "id": "hounds_and_archers", "name": "Hounds and Archers", "tests": "the back line, from two sides at once", "tier": "harder", "act": 1, "scale_bp": 9450, "days": [2], "enemies": [{"enemy": "rift_hound", "hex": [1, 4]}, {"enemy": "rift_hound", "hex": [6, 4]}, {"enemy": "hollow_archer", "hex": [2, 6]}, {"enemy": "hollow_archer", "hex": [5, 6]}]},
   {"id": "lurker_and_ashlings", "name": "Lurker's Kindling", "tests": "being dragged into a crowd that burns", "tier": "harder", "act": 1, "scale_bp": 11700, "days": [2, 4], "enemies": [{"enemy": "bog_lurker", "hex": [3, 5]}, {"enemy": "ashling", "hex": [2, 4]}, {"enemy": "ashling", "hex": [4, 4]}, {"enemy": "ashling", "hex": [5, 4]}]},
   {"id": "sentinel_and_moths", "name": "Sentinel Under Moths", "tests": "going around a wall without bunching up", "tier": "harder", "act": 1, "scale_bp": 31600, "days": [4, 6], "enemies": [{"enemy": "rift_worn_sentinel", "hex": [3, 4]}, {"enemy": "cinder_moth", "hex": [2, 6]}, {"enemy": "cinder_moth", "hex": [5, 6]}], "rocks": [[2, 4], [4, 4]]},
   {"id": "witch_and_pups", "name": "Witch's Brood", "tests": "reaching the witch through a swarm", "tier": "harder", "act": 1, "scale_bp": 14500, "days": [4, 6], "enemies": [{"enemy": "gloam_witch", "hex": [3, 6]}, {"enemy": "rift_pup", "hex": [1, 4]}, {"enemy": "rift_pup", "hex": [3, 4]}, {"enemy": "rift_pup", "hex": [4, 4]}, {"enemy": "rift_pup", "hex": [6, 4]}]},
