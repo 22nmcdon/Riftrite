@@ -1,6 +1,6 @@
 # The easy start (Act 1, days 1 and 2)
 
-Status: **a build plan, approved (2026-10-07; Decisions 1–13); ES-1, ES-2, and ES-3 (the measurement) built; Question EF open.** The playtester's request after phase 8 part 4's bot runs: fix Act 1's opening before tuning anything else, because runs that end on day 1 spoil every other number (heroes, paths, deeds, synergy against bad teams). Questions are in section 8.
+Status: **a build plan, approved (2026-10-07; Decisions 1–13); ES-1, ES-2, and ES-3 built (ES-3's fight changes tried and not shipped).** The playtester's request after phase 8 part 4's bot runs: fix Act 1's opening before tuning anything else, because runs that end on day 1 spoil every other number (heroes, paths, deeds, synergy against bad teams). Questions are in section 8.
 
 ## 1. Why
 
@@ -163,12 +163,25 @@ What it says:
 - **Three fights only test the tank:** Sentinel Gate, The Hunt, and Witch Coven, where the tank team leads both absolutely and relatively (Witch Coven by the most: x1.75 against x0.90 to x1.15). These are Decision 5's fights that need a second question (Question EF).
 - **Some fights answer differently than Decision 5 expects:** archers in the back favour sustain, not burst (Hollow Line, Cairn Watch), and the burning crowd (Lurker's Kindling) favours burst, not sustain.
 
+- **The second questions, tried** (Decision 14, Question EF): each proposed change, measured the same way, from copies of the data:
+
+  | Variant | Tank | Burst | Sustain | Control |
+  | --- | --- | --- | --- | --- |
+  | Sentinel Gate as built | x1.30 | x0.80 | x0.80 | x0.70 |
+  | an archer out of the Sentinel's shadow (either side) | x1.30 | x0.80 | x0.80 | x0.70 |
+  | The Hunt as built | x1.30 | x1.00 | x0.80 | x0.90 |
+  | Hunt Hounds 300 HP / 24 ATK, or 250 / 26 (420 / 18) | x1.15 | x0.90 | x0.70 | x0.80–0.90 |
+  | Witch Coven as built | x1.75 | x1.00 | x1.15 | x0.90 |
+  | Gloam Totem 300 HP / Shield 25, or 260 / 30 (520 / 15) | x1.75 | x0.90–1.00 | x1.15 | x0.80 |
+
+  None narrows the gap: the tankless plans fall as far behind the tank, or farther. These fights don't fail them on a detail; the stand-in plans don't kill or control fast enough to use an exposed archer, a lighter pack, or a weaker Totem. **So nothing was changed** (the data is as before). The question goes back to the runs: if ES-4's plan teams, with their items and relics, still can't answer these three, the fix is in the heroes' burst and control (the tuning phase), or a bigger change to the fights, asked then.
+
 ## 8. Questions
 
 - **EA. Day-1 fights:** *(Answered: Decision 9.)* new smaller encounters for day 1 only, or shrink them everywhere?
 - **EB. The harder day-1 fight:** *(Answered: Decision 10.)* a new 1 Hollow Archer and 2 Rift Pups, or no harder option on day 1?
 - **ED. The gate:** *(Answered: Decision 11.)* day-1 fights exempt from the 30-point split, with the Glass check as their gate?
-- **EF. The three tank-only fights** (ES-3): give each a second question so a tankless plan has an answer? Proposed, each sized again so the tank team's breaking point stays where it is:
+- **EF. The three tank-only fights** (ES-3): *(Answered: Decision 14; the changes were tried and didn't help, so none shipped.)* give each a second question so a tankless plan has an answer? Proposed, each sized again so the tank team's breaking point stays where it is:
   - **Sentinel Gate:** one archer out of the Sentinel's shadow, so burst can reach and kill it first (Decision 5's "archers in the back: burst wins").
   - **The Hunt:** the Hunt Hounds lighter (less HP, more damage), so burst or control can thin the pack before it lands; the Alpha's pounce stays the tank's question.
   - **Witch Coven:** the Gloam Totem with less HP and a stronger Shield, so a burst that breaks it fast is an answer as well as a tank that walks past the Sentinel.
@@ -192,3 +205,4 @@ The playtester, 2026-10-07:
 11. **Day-1 fights are exempt from the gate's 30-point split** (Question ED): the sim runner reports their split, and the Glass check is their gate.
 12. **The plan teams are section 5's stand-ins** (Question EE), replaced by `test-teams.md`'s real teams as their heroes are built.
 13. **Day 2 keeps the full margin and is exempt from the gate** (asked while building ES-2): sized so Glass wins at least 85%, and at least half with the enemies 10% stronger; at those sizes nearly every formation wins, so days 1 and 2 are both exempt from the 30-point split, and the placement lessons start on day 4. (The other choice was a narrow band where careless formations lose, with only 5–15% margin.)
+14. **The three tank-only fights get a second question** (Question EF): Sentinel Gate an archer out of the wall's shadow, The Hunt lighter hounds, Witch Coven a lighter Totem with a stronger Shield. Measured in ES-3, none narrowed the gap, so the fights stay as built until ES-4's runs show whether the plans with their items can answer them.
