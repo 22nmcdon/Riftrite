@@ -5717,5 +5717,430 @@
         }
       }
     ]
+  },
+  {
+    "_note": "The mana maker (rebuild-heroes.md, section 8e, path 1; phase 8 part 4, 8d-4b). First numbers; the type and the band come with the tuning by build.",
+    "id": "chorister",
+    "hero": "aldous",
+    "name": "Chorister",
+    "title": "the band's breath",
+    "fantasy": "His breath becomes the whole band's breath.",
+    "placement": "In the middle of the team, within 3 hexes of the allies whose signatures matter.",
+    "vowed": {
+      "taste": "Shared Breath: each time he fires his signature, the ally with the least mana gains 15.",
+      "cost": "10% less max HP.",
+      "patch": {
+        "stats_bp": {
+          "hp": 9000
+        },
+        "passives": [
+          {
+            "id": "shared_breath",
+            "name": "Shared Breath",
+            "kind": "ability",
+            "text": "Each time he fires his signature, the ally with the least mana gains some.",
+            "effects": [
+              {
+                "trigger": "on_ability",
+                "type": "gain_mana",
+                "amount": 15,
+                "target": "lowest_mana_ally"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Shared Breath stays. Chorus: each time he gains mana, the allies within 3 hexes of him gain half as much. Crescendo replaces Peal: the allies within 3 hexes of him gain 40 mana, and it peals as Peal did. Peal also becomes a habit, every 8th Toll. His MGK and HP rise.",
+      "cost": "His own signature costs 20 more mana.",
+      "patch": {
+        "stats_bp": {
+          "mgk": 15000,
+          "hp": 11000
+        },
+        "mana": {
+          "max": 80,
+          "per_attack": 10,
+          "regen_per_s": 2
+        },
+        "signature": {
+          "id": "crescendo",
+          "name": "Crescendo",
+          "text": "The bell swells: the allies within 3 hexes of him gain a burst of mana and attack faster for a while.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "self",
+          "effects": [
+            {
+              "type": "gain_mana",
+              "amount": 40,
+              "target": "allies_near_self",
+              "within_hexes": 3
+            },
+            {
+              "type": "apply_status",
+              "status": "pealing",
+              "duration_ms": 4000,
+              "target": "allies_near_self",
+              "within_hexes": 3
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "shared_breath",
+            "name": "Shared Breath",
+            "kind": "ability",
+            "text": "Each time he fires his signature, the ally with the least mana gains some.",
+            "effects": [
+              {
+                "trigger": "on_ability",
+                "type": "gain_mana",
+                "amount": 15,
+                "target": "lowest_mana_ally"
+              }
+            ]
+          },
+          {
+            "id": "chorus",
+            "name": "Chorus",
+            "kind": "ability",
+            "text": "Each time he gains mana, the allies within 3 hexes of him gain half as much.",
+            "effects": [
+              {
+                "trigger": "on_mana_gained",
+                "type": "gain_mana",
+                "amount_bp_of_damage": 5000,
+                "target": "allies_near_self",
+                "within_hexes": 3
+              }
+            ]
+          },
+          {
+            "id": "peal",
+            "name": "Peal",
+            "kind": "ability",
+            "text": "A habit: every 8th Toll, the bell peals: the allies within 3 hexes of him attack faster for a while.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "apply_status",
+                "status": "pealing",
+                "duration_ms": 4000,
+                "target": "allies_near_self",
+                "within_hexes": 3
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Mana he gives his allies",
+      "counts": "mana_given",
+      "threshold": 110
+    }
+  },
+  {
+    "_note": "The rangers' support (rebuild-heroes.md, section 8e, path 2; phase 8 part 4, 8d-4b). Tailwind's bonuses are auras on every ally whose target stands 3 hexes away or more (UnitCondition target_beyond_hexes). First numbers.",
+    "id": "windcaller",
+    "hero": "aldous",
+    "name": "Windcaller",
+    "title": "the wind at their backs",
+    "fantasy": "The wind carries his allies' shots and keeps the enemy off them.",
+    "placement": "Behind the ranged allies, where the wind reaches them and the enemy has far to come.",
+    "vowed": {
+      "taste": "Tailwind: allies attacking an enemy 3 hexes away or more attack 5% faster.",
+      "cost": "1 hex less range.",
+      "patch": {
+        "stats_add": {
+          "range": -1
+        },
+        "basic_attack": {
+          "id": "toll",
+          "name": "Toll",
+          "text": "A ringing note at the nearest enemy within 2 hexes. Where most of his mana comes from.",
+          "cooldown_ms": 1200,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "mgk": 10000
+              }
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "tailwind",
+            "name": "Tailwind",
+            "kind": "aura",
+            "text": "Allies attacking an enemy 3 hexes away or more attack a little faster.",
+            "aura": {
+              "target": "all_allies",
+              "stat": "atsp",
+              "value": 5,
+              "only": {
+                "target_beyond_hexes": 3
+              }
+            }
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Tailwind stays. High Wind: allies attacking an enemy 3 hexes away or more deal 20% more damage, and their shots fly 50% faster. Gale replaces Peal: it knocks every enemy within 2 hexes of each ranged ally 2 hexes back. Peal becomes a habit, every 8th Toll, for ranged allies. His MGK and HP rise.",
+      "cost": "Peal and Resonance no longer reach melee allies.",
+      "patch": {
+        "stats_bp": {
+          "mgk": 13000,
+          "hp": 11000
+        },
+        "signature": {
+          "id": "gale",
+          "name": "Gale",
+          "text": "A gust round each ranged ally: every enemy within 2 hexes of one is knocked back.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "self",
+          "effects": [
+            {
+              "type": "knockback",
+              "hexes": 2,
+              "target": "enemies_near_allies",
+              "within_hexes": 2,
+              "around": {
+                "ranged": true
+              }
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "resonance",
+            "name": "Resonance",
+            "kind": "aura",
+            "text": "The ranged allies within 2 hexes of him attack a little faster.",
+            "aura": {
+              "target": "allies_near",
+              "target_within_hexes": 2,
+              "stat": "atsp",
+              "value": 5,
+              "only": {
+                "ranged": true
+              }
+            }
+          },
+          {
+            "id": "tailwind",
+            "name": "Tailwind",
+            "kind": "aura",
+            "text": "Allies attacking an enemy 3 hexes away or more attack a little faster.",
+            "aura": {
+              "target": "all_allies",
+              "stat": "atsp",
+              "value": 5,
+              "only": {
+                "target_beyond_hexes": 3
+              }
+            }
+          },
+          {
+            "id": "high_wind",
+            "name": "High Wind",
+            "kind": "aura",
+            "text": "Allies attacking an enemy 3 hexes away or more deal more damage.",
+            "aura": {
+              "target": "all_allies",
+              "stat": "damage_bp",
+              "value": 12000,
+              "only": {
+                "target_beyond_hexes": 3
+              }
+            }
+          },
+          {
+            "id": "swift_wind",
+            "name": "High Wind",
+            "kind": "aura",
+            "text": "Allies attacking an enemy 3 hexes away or more shoot faster shots.",
+            "aura": {
+              "target": "all_allies",
+              "stat": "shot_speed_bp",
+              "value": 5000,
+              "only": {
+                "target_beyond_hexes": 3
+              }
+            }
+          },
+          {
+            "id": "peal",
+            "name": "Peal",
+            "kind": "ability",
+            "text": "A habit: every 8th Toll, the bell peals: the ranged allies within 3 hexes of him attack faster for a while.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "apply_status",
+                "status": "pealing",
+                "duration_ms": 4000,
+                "target": "allies_near_self",
+                "within_hexes": 3,
+                "only": {
+                  "ranged": true
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Hits his allies land from 3 hexes away or more under Tailwind",
+      "counts": "hits",
+      "by_allies": true,
+      "beyond_hexes": 3,
+      "with_part": "tailwind",
+      "threshold": 40
+    }
+  },
+  {
+    "_note": "The Mark maker (rebuild-heroes.md, section 8e, path 3; phase 8 part 4, 8d-4b). First numbers.",
+    "id": "bellwarden",
+    "hero": "aldous",
+    "name": "Bellwarden",
+    "title": "the bell that names the dead",
+    "fantasy": "The bell names who dies next.",
+    "placement": "Within 3 hexes of the enemies his team wants dead first.",
+    "vowed": {
+      "taste": "Toll the Hour: every 4th Toll Marks its target for 2s.",
+      "cost": "10% less MGK.",
+      "patch": {
+        "stats_bp": {
+          "mgk": 9000
+        },
+        "passives": [
+          {
+            "id": "toll_the_hour",
+            "name": "Toll the Hour",
+            "kind": "ability",
+            "text": "Every 4th Toll Marks its target for a while.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 4,
+                "type": "apply_status",
+                "status": "marked",
+                "duration_ms": 2000,
+                "target": "target"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Toll the Hour: every Toll Marks its target for 3s, and enemies he Marks take more damage. Death Knell replaces Peal: it Marks his target and every enemy within 3 hexes of it for 5s. Peal becomes a habit, every 8th Toll. His MGK and HP rise.",
+      "cost": "Toll deals 20% less damage.",
+      "patch": {
+        "stats_bp": {
+          "mgk": 15000,
+          "hp": 11000
+        },
+        "basic_attack": {
+          "id": "toll",
+          "name": "Toll",
+          "text": "A ringing note at the nearest enemy within 3 hexes. Where most of his mana comes from.",
+          "cooldown_ms": 1200,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "mgk": 8000
+              }
+            }
+          ]
+        },
+        "signature": {
+          "id": "death_knell",
+          "name": "Death Knell",
+          "text": "The bell names the dead: his target and every enemy within 3 hexes of it are Marked for a long while.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "nearest",
+          "max_range": 3,
+          "effects": [
+            {
+              "type": "apply_status",
+              "status": "marked",
+              "duration_ms": 5000,
+              "target": "target",
+              "strength_add_bp": 1000
+            },
+            {
+              "type": "apply_status",
+              "status": "marked",
+              "duration_ms": 5000,
+              "target": "enemies_near_target",
+              "within_hexes": 3,
+              "strength_add_bp": 1000
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "toll_the_hour",
+            "name": "Toll the Hour",
+            "kind": "ability",
+            "text": "Every Toll Marks its target for a while, and his Marks bite deeper.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "type": "apply_status",
+                "status": "marked",
+                "duration_ms": 3000,
+                "target": "target",
+                "strength_add_bp": 1000
+              }
+            ]
+          },
+          {
+            "id": "peal",
+            "name": "Peal",
+            "kind": "ability",
+            "text": "A habit: every 8th Toll, the bell peals: the allies within 3 hexes of him attack faster for a while.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "apply_status",
+                "status": "pealing",
+                "duration_ms": 4000,
+                "target": "allies_near_self",
+                "within_hexes": 3
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Marks he applies",
+      "counts": "applied",
+      "keywords": [
+        "marked"
+      ],
+      "threshold": 10
+    }
   }
 ]

@@ -692,6 +692,49 @@ def aldous_base(uid):
     return "".join(o)
 
 
+
+def aldous_chorister(uid):
+    """Robed in pale choir-white over the cassock, mouth open in song, the bell raised high."""
+    o = [shadow(80), f'<circle cx="150" cy="260" r="150" fill="{AQUA}" opacity="0.08" filter="url(#bloom)"/>',
+         aldous_robe(uid, color=ROBE, trim=AQUA),
+         P("M118,196 L182,196 L192,300 L108,300 Z", "#f7f0dc"),
+         limb((126, 210), (112, 160), 20, 16, ROBE_DK), circle(110, 154, 8, SKIN, 2), hand_bell(110, 140, 1.1),
+         aldous_head(),
+         f'<ellipse cx="150" cy="178" rx="7" ry="5" fill="{INK}"/>',
+         limb((176, 208), (214, 262), 20, 16, ROBE_DK), circle(216, 266, 8, SKIN, 2),
+         "".join(glow_dot(x, y, 3, AQUA) for x, y in ((70, 120), (92, 92), (232, 140), (250, 110), (200, 80)))]
+    return "".join(o)
+
+
+def aldous_windcaller(uid):
+    """Cassock whipped by the wind, a long streamer from his bell, the hem flying back."""
+    streamer = (f'<path d="M232,276 C262,250 250,200 284,170" fill="none" stroke="{INK}" stroke-width="9" stroke-linecap="round"/>'
+                f'<path d="M232,276 C262,250 250,200 284,170" fill="none" stroke="{MOSS}" stroke-width="5" stroke-linecap="round"/>')
+    gusts = "".join(rim(d, color=BONE, w=2) for d in ("M40,260 C80,250 100,262 130,252", "M30,340 C70,330 96,344 124,334", "M50,420 C86,410 106,424 136,414"))
+    o = [shadow(78), gusts,
+         P("M120,192 L180,192 L206,494 L96,480 L84,470 Z", MOSS_DK), P("M146,196 L154,196 L160,494 L148,494 Z", BRONZE_DK, 2),
+         shade(uid, ["M120,192 L180,192 L206,494 L96,480 Z"], cut=150),
+         limb((126, 210), (118, 290), 20, 16, MOSS), circle(118, 294, 8, SKIN, 2),
+         aldous_head(),
+         limb((176, 208), (222, 262), 20, 16, MOSS), circle(224, 266, 8, SKIN, 2),
+         streamer, hand_bell(226, 306)]
+    return "".join(o)
+
+
+def aldous_bellwarden(uid):
+    """In black and bronze, a great bell slung on his back, the hand bell rung at the dead."""
+    o = [shadow(84),
+         P("M86,160 C86,120 214,120 214,160 L232,330 L68,330 Z", BRONZE_DK), circle(150, 340, 12, BRONZE, 2),
+         aldous_robe(uid, color=INK, trim=BRONZE),
+         limb((126, 210), (118, 290), 20, 16, PLUM_DK), circle(118, 294, 8, SKIN, 2),
+         aldous_head(),
+         limb((176, 208), (222, 262), 20, 16, PLUM_DK), circle(224, 266, 8, SKIN, 2),
+         hand_bell(226, 306, 1.0, BRONZE),
+         "".join(glow_dot(x, y, 3, WINE) for x, y in ((258, 280), (270, 300), (262, 322))),
+         rim("M90,160 C100,132 200,132 210,160", color=WINE, w=2)]
+    return "".join(o)
+
+
 HEROES = [
     ("maren", "Maren", [("base", "Base", maren_base), ("deadeye", "Deadeye", maren_deadeye),
                         ("trapper", "Trapper", maren_trapper), ("volley", "Volley", maren_volley)]),
@@ -703,7 +746,8 @@ HEROES = [
                           ("chainwarden", "Chainwarden", garrow_chainwarden), ("spitemail", "Spitemail", garrow_spitemail)]),
     ("tamsin", "Tamsin", [("base", "Base", tamsin_base), ("nightblade", "Nightblade", tamsin_nightblade),
                           ("headhunter", "Headhunter", tamsin_headhunter), ("garrote", "Garrote", tamsin_garrote)]),
-    ("aldous", "Aldous", [("base", "Base", aldous_base)]),
+    ("aldous", "Aldous", [("base", "Base", aldous_base), ("chorister", "Chorister", aldous_chorister),
+                          ("windcaller", "Windcaller", aldous_windcaller), ("bellwarden", "Bellwarden", aldous_bellwarden)]),
 ]
 
 FILTERS = ('<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4" result="b"/>'

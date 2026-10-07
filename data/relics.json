@@ -1931,5 +1931,119 @@
         }
       ]
     }
+  },
+  {
+    "id": "deaths_appointment",
+    "name": "Death's Appointment",
+    "tier": "bond",
+    "icon": "echo",
+    "flavor": "The Hunter's Bell: the bell tolls; she answers it.",
+    "text": "Whenever Aldous's Death Knell rings, Tamsin's Sentence is ready at once, and it can strike a Marked enemy anywhere on the field (she steps behind it).",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "death_knell",
+          "add_effects": [
+            {
+              "type": "gain_mana",
+              "amount": 100,
+              "target": "all_allies",
+              "only": {
+                "kits": [
+                  "tamsin"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "slot": "abilities",
+          "ability": "sentence",
+          "prefer": {
+            "keywords": [
+              "marked"
+            ]
+          },
+          "reach_add": 9,
+          "add_effects": [
+            {
+              "type": "leap",
+              "to": "behind",
+              "max_hexes": 10,
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_toll_of_dawn",
+    "name": "The Toll of Dawn",
+    "tier": "bond",
+    "icon": "purifying_light",
+    "flavor": "Toll and Judgment: his bell calls down her light.",
+    "text": "Each Death Knell also calls down a Sunfall at half strength along the line to its target, and Vell's smites strike every Marked enemy.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "death_knell",
+          "add_effects": [
+            {
+              "type": "area",
+              "shape": {
+                "kind": "line",
+                "length": 4
+              },
+              "anchor": "target_direction",
+              "hits": "all",
+              "effects": [
+                {
+                  "type": "damage",
+                  "amount": 5,
+                  "target": "target",
+                  "scaling": {
+                    "mgk": 7000
+                  },
+                  "side": "enemies"
+                },
+                {
+                  "type": "heal",
+                  "amount": 5,
+                  "target": "target",
+                  "scaling": {
+                    "mgk": 5000
+                  },
+                  "side": "allies"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slot": "abilities",
+          "ability": "mend",
+          "add_effects": [
+            {
+              "trigger": "on_basic_attack",
+              "every": 4,
+              "type": "damage",
+              "amount": 8,
+              "scaling": {
+                "mgk": 4000
+              },
+              "target": "all_enemies",
+              "only": {
+                "keywords": [
+                  "marked"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
   }
 ]

@@ -12,8 +12,8 @@ func before_all() -> void:
 
 func test_every_combination_of_vows() -> void:
 	var combos: Array[Dictionary] = Report.vow_combinations(_run.content)
-	assert_eq(Report.teams(_run.content).size(), 10, "every three of five heroes (phase 8 part 4)")
-	assert_eq(combos.size(), 10 * 27)
+	assert_eq(Report.teams(_run.content).size(), 20, "every three of six heroes (phase 8 part 4)")
+	assert_eq(combos.size(), 20 * 27)
 	assert_eq(combos[0], {"brannoc": "hearthwall", "maren": "deadeye", "vell": "lanternbearer"}, "the old three first, in the old order")
 	assert_eq(combos[26], {"brannoc": "last_watch", "maren": "volley", "vell": "vigil_keeper"})
 	assert_eq(combos[27], {"brannoc": "hearthwall", "maren": "deadeye", "garrow": "aegisfang"})

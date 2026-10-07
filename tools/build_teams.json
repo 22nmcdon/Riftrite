@@ -98,6 +98,58 @@
         "smoke_pouch"
       ],
       "note": "test-teams.md #12; Brannoc's Hearthwall (a guard for the others) stands in for Lucan's Veilweaver"
+    },
+    {
+      "name": "Choir",
+      "path": "chorister",
+      "type": "enabler",
+      "team": {
+        "aldous": "chorister",
+        "vell": "vigil_keeper",
+        "maren": "volley"
+      },
+      "relics": [
+        "echoing_bell",
+        "hollow_drum",
+        "rift_candle"
+      ],
+      "swap": "windcaller",
+      "note": "test-teams.md #15; Maren's Volley (Storm of Arrows on her bar) stands in for Edric's Psalmist. Aldous has no self-sufficient path, so his lift is measured against his path that feeds the team least (rebuild-phase8-heroes.md, Built in 8d-4b)"
+    },
+    {
+      "name": "Gallery",
+      "path": "windcaller",
+      "type": "enabler",
+      "team": {
+        "aldous": "windcaller",
+        "maren": "deadeye",
+        "brannoc": "hearthwall"
+      },
+      "relics": [
+        "quickened_pulse",
+        "bone_dice",
+        "keen_edge"
+      ],
+      "swap": "chorister",
+      "note": "test-teams.md #10; lift against Chorister (Aldous has no self-sufficient path)"
+    },
+    {
+      "name": "Bell Hunt",
+      "path": "bellwarden",
+      "type": "enabler",
+      "team": {
+        "aldous": "bellwarden",
+        "tamsin": "headhunter",
+        "vell": "vigil_keeper"
+      },
+      "relics": [
+        "hunters_engine",
+        "executioners_mark",
+        "hunters_ledger",
+        "brand_of_guilt"
+      ],
+      "swap": "chorister",
+      "note": "test-teams.md #2; lift against Chorister (Aldous has no self-sufficient path)"
     }
   ]
 }

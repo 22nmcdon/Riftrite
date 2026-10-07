@@ -28,7 +28,7 @@ func test_each_hero_has_its_three_paths() -> void:
 		names[hero_id] = _content.heroes[hero_id].paths.map(func(path: PathDef) -> String: return path.name)
 	assert_eq(names, {"brannoc": ["Hearthwall", "Ironbrand", "Last Watch"], "maren": ["Deadeye", "Trapper", "Volley"],
 		"vell": ["Lanternbearer", "Wardweaver", "Vigil Keeper"], "garrow": ["Aegisfang", "Chainwarden", "Spitemail"],
-		"tamsin": ["Nightblade", "Headhunter", "Garrote"]})
+		"tamsin": ["Nightblade", "Headhunter", "Garrote"], "aldous": ["Chorister", "Windcaller", "Bellwarden"]})
 	for path_id: String in _content.path_ids:
 		var path: PathDef = _content.paths[path_id]
 		for text: String in [path.title, path.fantasy, path.placement, path.taste, path.vowed_cost, path.transformed_text, path.transformed_cost, path.deed.text]:

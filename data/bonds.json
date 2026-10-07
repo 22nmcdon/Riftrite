@@ -59,5 +59,25 @@
       "ironbrand"
     ],
     "relic": "hammer_and_wire"
+  },
+  {
+    "id": "the_hunters_bell",
+    "name": "The Hunter's Bell",
+    "text": "The bell tolls; she answers it.",
+    "paths": [
+      "bellwarden",
+      "headhunter"
+    ],
+    "relic": "deaths_appointment"
+  },
+  {
+    "id": "toll_and_judgment",
+    "name": "Toll and Judgment",
+    "text": "His bell calls down her light.",
+    "paths": [
+      "bellwarden",
+      "vigil_keeper"
+    ],
+    "relic": "the_toll_of_dawn"
   }
 ]

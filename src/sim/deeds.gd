@@ -139,6 +139,8 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 			# Allies' hits are counted for the whole side (_count_for_team).
 			if deed.by_allies:
 				continue
+			if not deed.with_part.is_empty() and not holds_part(unit, deed.with_part):
+				continue
 			if not deed.vs_keywords.is_empty() and not _has_keyword(sim.unit_by_id(entry.target), deed.vs_keywords):
 				continue
 			match deed.counts:
@@ -228,7 +230,9 @@ static func _count_on_target(sim: CombatSim, entry: LogEntry) -> void:
 
 
 ## A hit by anyone on a side counts for each of its units with a by_allies
-## deed (phase 8 part 2, Huntmaster), if it lands on what the deed asks.
+## deed (phase 8 part 2, Huntmaster), if it lands on what the deed asks: its
+## damage, or one a hit (phase 8 part 4, Windcaller), from beyond its reach
+## if it names one (where the two stand as it lands).
 static func _count_for_team(sim: CombatSim, entry: LogEntry) -> void:
 	var by: UnitState = sim.unit_by_id(entry.source_unit)
 	var hit: UnitState = sim.unit_by_id(entry.target)
@@ -239,8 +243,21 @@ static func _count_for_team(sim: CombatSim, entry: LogEntry) -> void:
 			continue
 		for d: int in unit.deeds.deeds.size():
 			var deed: DeedDef = unit.deeds.deeds[d]
-			if deed.by_allies and (deed.vs_keywords.is_empty() or _has_keyword(hit, deed.vs_keywords)):
-				unit.deeds.amounts[d] += entry.amount
+			if not deed.by_allies or (not deed.vs_keywords.is_empty() and not _has_keyword(hit, deed.vs_keywords)):
+				continue
+			if deed.from_range > 0 and ArenaPlane.length_sq(hit.pos - by.pos) <= deed.from_range * deed.from_range:
+				continue
+			if not deed.with_part.is_empty() and not holds_part(unit, deed.with_part):
+				continue
+			unit.deeds.amounts[d] += 1 if deed.counts == DeedDef.Counts.HITS else entry.amount
+
+
+## Whether the unit's kit holds a passive with this id (a deed's with_part).
+static func holds_part(unit: UnitState, part_id: String) -> bool:
+	for part: PartDef in unit.def.passives:
+		if part.id == part_id:
+			return true
+	return false
 
 
 static func _has_keyword(unit: UnitState, keywords: Array[String]) -> bool:

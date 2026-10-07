@@ -180,6 +180,12 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 		bits.append("%s for each stack" % UnitInfo.signed_percent(change.per_stack_add_bp))
 	if change.per_twice != null:
 		bits.append("enemies that are %s count twice" % change.per_twice.describe())
+	# Aldous's cards.
+	if change.within_add != 0:
+		@warning_ignore("integer_division")
+		bits.append("%s hex reach" % signed(change.within_add / HexGrid.HEX))
+	if change.count_add != 0:
+		bits.append("+%d all%s" % [change.count_add, "y" if change.count_add == 1 else "ies"])
 	for effect: EffectDef in change.add_to_areas:
 		bits.append("in its area: " + " · ".join(UnitInfo.effect_numbers([effect] as Array[EffectDef], kit, content)))
 	for effect: EffectDef in change.add_effects:

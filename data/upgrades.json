@@ -4295,6 +4295,671 @@
     }
   },
   {
+    "id": "bright_voice",
+    "name": "Bright Voice",
+    "hero": "aldous",
+    "text": "His MGK rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "mgk",
+      "pct": 10
+    }
+  },
+  {
+    "id": "quick_rhythm",
+    "name": "Quick Rhythm",
+    "hero": "aldous",
+    "text": "He attacks faster by a tenth of his attack speed when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "atsp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "travelers_coat",
+    "name": "Traveler's Coat",
+    "hero": "aldous",
+    "text": "His max HP rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "hp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "padded_vestments",
+    "name": "Padded Vestments",
+    "hero": "aldous",
+    "text": "His DEF rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "def",
+      "pct": 10
+    }
+  },
+  {
+    "id": "long_peal",
+    "name": "Long Peal",
+    "hero": "aldous",
+    "text": "Peal's quickening lasts longer (once it's a habit, too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "peal",
+          "statuses": [
+            "pealing"
+          ],
+          "duration_add_ms": 2000
+        }
+      ]
+    }
+  },
+  {
+    "id": "wide_peal",
+    "name": "Wide Peal",
+    "hero": "aldous",
+    "text": "Peal reaches allies 1 hex farther (once it's a habit, too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "peal",
+          "within_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "strong_resonance",
+    "name": "Strong Resonance",
+    "hero": "aldous",
+    "text": "Resonance quickens his allies more.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:resonance",
+          "value_add": 3
+        }
+      ]
+    }
+  },
+  {
+    "id": "far_resonance",
+    "name": "Far Resonance",
+    "hero": "aldous",
+    "text": "Resonance reaches allies 1 hex farther.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:resonance",
+          "within_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "cracked_bell",
+    "name": "Cracked Bell",
+    "hero": "aldous",
+    "text": "Toll Slows what it hits for a moment.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "add_effects": [
+            {
+              "trigger": "on_hit",
+              "type": "apply_status",
+              "status": "cracked",
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "clear_note",
+    "name": "Clear Note",
+    "hero": "aldous",
+    "text": "Toll deals more damage to enemies attacking one of his allies.",
+    "mod": {
+      "passives": [
+        {
+          "id": "clear_note",
+          "name": "Clear Note",
+          "kind": "aura",
+          "text": "His Toll deals more damage to an enemy that isn't attacking him.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 12000,
+            "from_basic": true,
+            "vs": {
+              "targets_holder": false
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "steadying_hymn",
+    "name": "Steadying Hymn",
+    "hero": "aldous",
+    "text": "Peal also shakes the Slows off the allies it reaches (once it's a habit, too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "peal",
+          "add_effects": [
+            {
+              "type": "cleanse",
+              "count": 1,
+              "statuses": [
+                "slow",
+                "hobbled",
+                "weighed_down",
+                "cracked",
+                "rung"
+              ],
+              "target": "allies_near_self",
+              "within_hexes": 3
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "old_rope",
+    "name": "Old Rope",
+    "hero": "aldous",
+    "text": "The bell rope wears smooth in his hands: Peal quickens his allies more for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "applied",
+        "statuses": [
+          "pealing"
+        ]
+      },
+      "per": 20,
+      "each": {
+        "passives": [
+          {
+            "id": "old_rope",
+            "name": "Old Rope",
+            "kind": "aura",
+            "text": "Grows with his Peals: allies he has quickened attack faster still.",
+            "aura": {
+              "target": "all_allies",
+              "stat": "atsp",
+              "value": 1,
+              "only": {
+                "statuses": [
+                  "pealing"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "deep_breath",
+    "name": "Deep Breath",
+    "path": "chorister",
+    "taste": true,
+    "text": "Shared Breath gives more mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:shared_breath",
+          "amount_bp": 16667
+        }
+      ]
+    }
+  },
+  {
+    "id": "two_breaths",
+    "name": "Two Breaths",
+    "path": "chorister",
+    "taste": true,
+    "text": "Shared Breath reaches the 2 allies with the least mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:shared_breath",
+          "count_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_crescendo",
+    "name": "Quick Crescendo",
+    "path": "chorister",
+    "text": "Crescendo costs less mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "crescendo",
+          "mana_max_add": -10
+        }
+      ]
+    }
+  },
+  {
+    "id": "wide_chorus",
+    "name": "Wide Chorus",
+    "path": "chorister",
+    "text": "Chorus reaches allies 1 hex farther.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:chorus",
+          "within_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "kindled_chorus",
+    "name": "Kindled Chorus",
+    "path": "chorister",
+    "text": "Allies he gives mana to with Chorus or Crescendo hit harder for a moment.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:chorus",
+          "add_effects": [
+            {
+              "trigger": "on_mana_gained",
+              "type": "apply_status",
+              "status": "kindled",
+              "target": "allies_near_self",
+              "within_hexes": 3
+            }
+          ]
+        },
+        {
+          "slot": "abilities",
+          "ability": "crescendo",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "kindled",
+              "target": "allies_near_self",
+              "within_hexes": 3
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "full_voice",
+    "name": "Full Voice",
+    "path": "chorister",
+    "text": "Crescendo gives more mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "crescendo",
+          "amount_bp": 12500
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_choir",
+    "name": "Long Choir",
+    "path": "chorister",
+    "text": "Every breath he shares deepens the choir: Chorus shares more of his mana for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "mana_given"
+      },
+      "per": 150,
+      "each": {
+        "on": [
+          {
+            "slot": "passive:chorus",
+            "amount_bp": 10100
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "steady_tailwind",
+    "name": "Steady Tailwind",
+    "path": "windcaller",
+    "taste": true,
+    "text": "Tailwind quickens his allies more.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:tailwind",
+          "value_add": 3
+        }
+      ]
+    }
+  },
+  {
+    "id": "gusting",
+    "name": "Gusting",
+    "path": "windcaller",
+    "taste": true,
+    "text": "Under Tailwind, his allies' shots fly faster.",
+    "mod": {
+      "passives": [
+        {
+          "id": "gusting",
+          "name": "Gusting",
+          "kind": "aura",
+          "text": "Allies attacking an enemy 3 hexes away or more shoot faster shots.",
+          "aura": {
+            "target": "all_allies",
+            "stat": "shot_speed_bp",
+            "value": 2500,
+            "only": {
+              "target_beyond_hexes": 3
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "strong_gale",
+    "name": "Strong Gale",
+    "path": "windcaller",
+    "text": "Gale knocks enemies back farther.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "gale",
+          "types": [
+            "knockback"
+          ],
+          "amount_bp": 15000
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_gale",
+    "name": "Quick Gale",
+    "path": "windcaller",
+    "text": "Gale costs less mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "gale",
+          "mana_max_add": -10
+        }
+      ]
+    }
+  },
+  {
+    "id": "eye_of_the_storm",
+    "name": "Eye of the Storm",
+    "path": "windcaller",
+    "text": "His ranged allies take less damage while they shoot from afar.",
+    "mod": {
+      "passives": [
+        {
+          "id": "eye_of_the_storm",
+          "name": "Eye of the Storm",
+          "kind": "aura",
+          "text": "Ranged allies attacking an enemy 2 hexes away or more take less damage.",
+          "aura": {
+            "target": "all_allies",
+            "stat": "damage_reduced_bp",
+            "value": 1000,
+            "only": {
+              "ranged": true,
+              "target_beyond_hexes": 2
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "keen_wind",
+    "name": "Keen Wind",
+    "path": "windcaller",
+    "text": "His ranged allies crit more often.",
+    "mod": {
+      "passives": [
+        {
+          "id": "keen_wind",
+          "name": "Keen Wind",
+          "kind": "aura",
+          "text": "Ranged allies crit more often.",
+          "aura": {
+            "target": "all_allies",
+            "stat": "crit_chance_bp",
+            "value": 500,
+            "only": {
+              "ranged": true
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "prevailing_wind",
+    "name": "Prevailing Wind",
+    "path": "windcaller",
+    "text": "Every shot the wind carries teaches it the way: his ranged allies deal more damage for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "hits",
+        "by_allies": true,
+        "beyond_hexes": 3,
+        "with_part": "tailwind"
+      },
+      "per": 500,
+      "each": {
+        "passives": [
+          {
+            "id": "prevailing_wind",
+            "name": "Prevailing Wind",
+            "kind": "aura",
+            "text": "Grows with his allies' hits under Tailwind.",
+            "aura": {
+              "target": "all_allies",
+              "stat": "damage_bp",
+              "value": 10100,
+              "only": {
+                "ranged": true
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "sharp_toll",
+    "name": "Sharp Toll",
+    "path": "bellwarden",
+    "taste": true,
+    "text": "Toll the Hour Marks sooner.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:toll_the_hour",
+          "every_add": -1
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:toll_the_hour",
+          "duration_add_ms": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_toll",
+    "name": "Long Toll",
+    "path": "bellwarden",
+    "taste": true,
+    "text": "Toll the Hour's Marks last longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:toll_the_hour",
+          "duration_add_ms": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "wide_knell",
+    "name": "Wide Knell",
+    "path": "bellwarden",
+    "text": "Death Knell reaches enemies 1 hex farther from his target.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "death_knell",
+          "within_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "ringing_mark",
+    "name": "Ringing Mark",
+    "path": "bellwarden",
+    "text": "His Marks also Slow.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:toll_the_hour",
+          "add_effects": [
+            {
+              "trigger": "on_basic_attack",
+              "type": "apply_status",
+              "status": "rung",
+              "duration_ms": 3000,
+              "target": "target"
+            }
+          ]
+        },
+        {
+          "slot": "abilities",
+          "ability": "death_knell",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "rung",
+              "duration_ms": 5000,
+              "target": "target"
+            },
+            {
+              "type": "apply_status",
+              "status": "rung",
+              "duration_ms": 5000,
+              "target": "enemies_near_target",
+              "within_hexes": 3
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_knell",
+    "name": "Quick Knell",
+    "path": "bellwarden",
+    "text": "Death Knell costs less mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "death_knell",
+          "mana_max_add": -10
+        }
+      ]
+    }
+  },
+  {
+    "id": "heavy_toll",
+    "name": "Heavy Toll",
+    "path": "bellwarden",
+    "text": "Toll deals more damage to Marked enemies.",
+    "mod": {
+      "passives": [
+        {
+          "id": "heavy_toll",
+          "name": "Heavy Toll",
+          "kind": "aura",
+          "text": "His Toll deals more damage to Marked enemies.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 13000,
+            "from_basic": true,
+            "vs": {
+              "keywords": [
+                "marked"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "bell_metal",
+    "name": "Bell Metal",
+    "path": "bellwarden",
+    "text": "Every name the bell calls hardens its metal: Marked enemies take more damage from his team for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "applied",
+        "keywords": [
+          "marked"
+        ]
+      },
+      "per": 50,
+      "each": {
+        "passives": [
+          {
+            "id": "bell_metal",
+            "name": "Bell Metal",
+            "kind": "aura",
+            "text": "Grows with his Marks: his team deals more damage to Marked enemies.",
+            "aura": {
+              "target": "all_allies",
+              "stat": "damage_bp",
+              "value": 10100,
+              "vs": {
+                "keywords": [
+                  "marked"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
     "id": "layered_plate",
     "name": "Layered Plate",
     "apex": "endless_bulwark",

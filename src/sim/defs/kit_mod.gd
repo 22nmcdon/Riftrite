@@ -101,6 +101,12 @@ extends RefCounted
 ##       Wide Crowd; "prefer" with "ability" reaches a habit's farthest
 ##       enemies: Back-Line Hook; and added effects go before the ability
 ##       spends its Shield, so they still read it: Shared Ward)
+##       "within_add": 1,                 its near targets' reach ("within_
+##                                        hexes"), in hexes, and a named
+##                                        allies_near aura's (Aldous's cards:
+##                                        Wide Peal, Far Resonance)
+##       "count_add": 1                   a lowest_mana_ally's count (Two
+##                                        Breaths; at most 5)
 ## and (step 7d) "places_lantern": true at the top: the player places its
 ## signature's first area before the fight (UnitSetup.lantern).
 ## and (phase 8 part 3, the Veil Witch) "drops_passives": ["ward"] at the
@@ -210,6 +216,10 @@ class AbilityChange:
 	## Hammer and Wire), and the targets its grip lands twice as often on.
 	var reach_add: int = 0
 	var grip_fast_vs: UnitCondition = null
+	## Near targets' reach (and a named allies_near aura's), in plane units,
+	## and a lowest_mana_ally's count (phase 8 part 4, Aldous's cards).
+	var within_add: int = 0
+	var count_add: int = 0
 
 	## True if it reaches `ability_id` (every ability when it names none).
 	func reaches(id: String) -> bool:
@@ -220,7 +230,7 @@ class AbilityChange:
 			or every_add != 0 or times_add != 0 or max_standing_add != 0 or overheal_add_bp != 0 or width_add != 0 or not add_to_areas.is_empty() \
 			or strength_add_bp != 0 or follows or ricochet_add != 0 or reflect_bp != 0 or snags \
 			or per_enemy_add_bp != 0 or overheal_max_hp_add != 0 or at_stacks_add != 0 or per_taken_add_bp != 0 or holder != null or carries \
-			or ignores_def or prefer != null and not ability_id.is_empty() or per_stack_add_bp != 0
+			or ignores_def or prefer != null and not ability_id.is_empty() or per_stack_add_bp != 0 or within_add != 0 or count_add != 0
 
 	func touches(effect: EffectDef) -> bool:
 		if not at.is_empty() and not at.has(effect.target):
@@ -450,7 +460,9 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 	change.per_stack_add_bp = reader.opt_int("per_stack_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
 	if reader.has("per_twice"):
 		change.per_twice = UnitCondition.read(reader.req_object("per_twice"))
-	change.reach_add = reader.opt_int("reach_add", 0, -3, 6)
+	change.reach_add = reader.opt_int("reach_add", 0, -3, 9)
+	change.within_add = reader.opt_int("within_add", 0, -3, 3) * HexGrid.HEX
+	change.count_add = reader.opt_int("count_add", 0, 0, 4)
 	if reader.has("grip_fast_vs"):
 		change.grip_fast_vs = UnitCondition.read(reader.req_object("grip_fast_vs"))
 	if (change.reach_add != 0 or change.grip_fast_vs != null) and change.slot != SLOT_SIGNATURE and change.ability_id.is_empty():
@@ -581,6 +593,8 @@ func affects_besides_passives(kit: UnitDef) -> bool:
 			if habit >= 0 and kit.passives[habit].ability != null and kit.passives[habit].ability.effects.any(func(effect: EffectDef) -> bool: return effect.every > 1):
 				return true
 		if (change.radius_add != 0 or change.per_twice != null) and _per_enemy_aura(kit, change.slot) != null:
+			return true
+		if change.within_add != 0 and _near_aura(kit, change.slot) != null:
 			return true
 		if change.changes_part():
 			var at: int = _passive_index(kit, change.slot)
@@ -732,7 +746,7 @@ func _apply_change(built: UnitDef, change: AbilityChange, problems: Array[String
 			habit_copy.ability = _changed_ability(part.ability, habit)
 			built.passives[i] = habit_copy
 			continue
-		if part.ability == null and not (named and (change.after_add_ticks != 0 or change.changes_part() or change.radius_add != 0)):
+		if part.ability == null and not (named and (change.after_add_ticks != 0 or change.changes_part() or change.radius_add != 0 or change.within_add != 0)):
 			continue
 		var copy: PartDef = DefCopy.shallow(part) as PartDef
 		if part.ability != null:
@@ -751,6 +765,10 @@ func _apply_change(built: UnitDef, change: AbilityChange, problems: Array[String
 			copy.aura.per_enemy_range = maxi(copy.aura.per_enemy_range + change.radius_add * HexGrid.HEX, HexGrid.HEX)
 			if change.per_twice != null:
 				copy.aura.per_twice = change.per_twice
+		if named and part.aura != null and part.aura.target == AuraDef.Target.ALLIES_NEAR and change.within_add != 0:
+			# An allies_near aura's reach (phase 8 part 4, Far Resonance).
+			copy.aura = DefCopy.shallow(copy.aura if copy.aura != null else part.aura) as AuraDef
+			copy.aura.target_range = maxi(copy.aura.target_range + change.within_add, HexGrid.HEX)
 		if named and part.kind == PartDef.Kind.GUARD:
 			copy.share_bp = clampi(copy.share_bp + change.guard_share_add, 100, FixedMath.BP_ONE)
 			copy.guard_range = maxi(copy.guard_range + change.guard_within_add, HexGrid.HEX)
@@ -848,6 +866,11 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 			if copy.shape != null and change.radius_add != 0:
 				copy.shape = DefCopy.shallow(copy.shape) as ShapeDef
 				copy.shape.size = maxi(copy.shape.size + change.radius_add, 1)
+			# Phase 8 part 4's: near targets' reach, and a lowest_mana_ally's count.
+			if change.within_add != 0 and effect.near_range > 0:
+				copy.near_range = maxi(effect.near_range + change.within_add, HexGrid.HEX)
+			if change.count_add != 0 and effect.target == EffectDef.Target.LOWEST_MANA_ALLY:
+				copy.count = mini(effect.count + change.count_add, 5)
 			# Step 7b's knobs.
 			if change.every_add != 0 and effect.every > 1:
 				copy.every = maxi(effect.every + change.every_add, 1)
@@ -913,6 +936,7 @@ static func _runs_times(effect: EffectDef) -> bool:
 static func _any_effect(effects: Array[EffectDef], change: AbilityChange) -> bool:
 	for effect: EffectDef in effects:
 		if change.touches(effect) and (change.every_add != 0 and effect.every > 1 or change.times_add != 0 and _runs_times(effect)
+				or change.within_add != 0 and effect.near_range > 0 or change.count_add != 0 and effect.target == EffectDef.Target.LOWEST_MANA_ALLY
 				or change.max_standing_add != 0 and effect.max_standing > 0
 				or change.overheal_add_bp != 0 and effect.overheal_shield_bp > 0
 				or change.width_add != 0 and effect.type == EffectDef.Type.WALL
@@ -956,6 +980,12 @@ static func _slot_abilities(kit: UnitDef, slot: String, ability_id: String = "")
 static func _per_enemy_aura(kit: UnitDef, slot: String) -> AuraDef:
 	var aura: AuraDef = _slot_aura(kit, slot)
 	return aura if aura != null and aura.per_enemy_range > 0 else null
+
+
+## The named passive's aura, if it reaches the allies near its holder.
+static func _near_aura(kit: UnitDef, slot: String) -> AuraDef:
+	var aura: AuraDef = _slot_aura(kit, slot)
+	return aura if aura != null and aura.target == AuraDef.Target.ALLIES_NEAR else null
 
 
 ## `change` as it reaches a habit: its cost change becomes its every one

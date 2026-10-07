@@ -71,8 +71,14 @@ extends RefCounted
 ##   vs_keywords: ["rooted"]       damage only: hits on a unit with one of
 ##                                 these keywords as the tick ends (phase 8
 ##                                 part 2, Huntmaster)
-##   by_allies: true               damage only: its allies' hits count too
-##                                 (Huntmaster)
+##   by_allies: true               damage or hits: its allies' hits count
+##                                 too (Huntmaster; hits and beyond_hexes,
+##                                 where the two stand as it lands, phase 8
+##                                 part 4, Windcaller)
+##   with_part: "tailwind"         only while its kit holds this part (a
+##                                 passive's id; phase 8 part 4: Windcaller's
+##                                 hits under Tailwind, which only its vow
+##                                 brings)
 ##   after_rising: true            taken only: once the hero has risen by its
 ##                                 own kit this fight (phase 8 part 2,
 ##                                 Undying Oath)
@@ -106,6 +112,8 @@ var while_undying: bool = false
 var from_basic: bool = false
 ## taken (phase 8 part 2): only after the hero has risen by its own kit.
 var after_rising: bool = false
+## Only while its kit holds a part with this id ("": always; phase 8 part 4).
+var with_part: String = ""
 ## pulled: count the hexes moved, not the enemies (phase 8 part 4).
 var by_hexes: bool = false
 ## shield: only what's given past this share of the target's max HP (0: all).
@@ -153,8 +161,11 @@ static func read(reader: DataReader, needs_text: bool = true) -> DeedDef:
 			reader.error("above_pct_of_max_hp filters Shield given (\"counts\": \"shield\")")
 	def.vs_keywords = reader.opt_choice_array("vs_keywords", Keywords.NAMES)
 	def.by_allies = reader.opt_bool("by_allies", false)
-	if def.counts != Counts.DAMAGE and (not def.vs_keywords.is_empty() or def.by_allies):
-		reader.error("vs_keywords and by_allies only filter damage")
+	if def.counts != Counts.DAMAGE and not def.vs_keywords.is_empty():
+		reader.error("vs_keywords only filter damage")
+	if def.by_allies and def.counts != Counts.DAMAGE and def.counts != Counts.HITS:
+		reader.error("by_allies only counts damage or hits")
+	def.with_part = reader.opt_string("with_part", "")
 	if def.by_allies and not def.from_ability.is_empty():
 		reader.error("by_allies counts every ally's hits, so it takes no from_ability")
 	if def.after_rising and def.counts != Counts.TAKEN:
@@ -166,7 +177,7 @@ static func read(reader: DataReader, needs_text: bool = true) -> DeedDef:
 		if def.counts != Counts.APPLIED:
 			reader.error("statuses only filter applied")
 	def.threshold = reader.opt_int("threshold", 0, 1)
-	if def.counts != Counts.DAMAGE and (def.from_range > 0 or def.while_undying):
+	if def.counts != Counts.DAMAGE and (def.while_undying or (def.from_range > 0 and not (def.by_allies and def.counts == Counts.HITS))):
 		reader.error("beyond_hexes and while_undying only filter damage")
 	if def.counts != Counts.DAMAGE and def.counts != Counts.MS_BELOW and def.while_below_bp > 0:
 		reader.error("while_below_pct can only filter damage (or set what ms_below counts)")
