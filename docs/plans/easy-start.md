@@ -1,6 +1,6 @@
 # The easy start (Act 1, days 1 and 2)
 
-Status: **a build plan, approved (2026-10-07; Decisions 1–13); ES-1 and ES-2 built.** The playtester's request after phase 8 part 4's bot runs: fix Act 1's opening before tuning anything else, because runs that end on day 1 spoil every other number (heroes, paths, deeds, synergy against bad teams). Questions are in section 8.
+Status: **a build plan, approved (2026-10-07; Decisions 1–13); ES-1, ES-2, and ES-3 (the measurement) built; Question EF open.** The playtester's request after phase 8 part 4's bot runs: fix Act 1's opening before tuning anything else, because runs that end on day 1 spoil every other number (heroes, paths, deeds, synergy against bad teams). Questions are in section 8.
 
 ## 1. Why
 
@@ -135,11 +135,44 @@ The gate wants the best formation to win at least 30 points more often than the 
 - **The gate** (Decision 13): at these sizes every formation wins, for Glass as for the old three, so an Act 1 fight that comes only on days 1 and 2 is exempt from the 30-point split (`SimReport.Report.exempt()`, "exempt (days 1-2)").
 - **A placement band, not taken:** a little stronger (x1.10 to x1.20 of these sizes) the good bot still wins with Glass while careless formations lose (The Pack x1.15: bot 3 of 3, 93% of formations; Hollow Watch x1.15: bot 3 of 3, 37%; Pup Warren x1.15: 79%; Ash Nest x1.20: 80%), so day 2 could teach placement at the cost of its margin. The playtester chose the margin (Decision 13); the placement lessons start on day 4.
 
+### Built in ES-3 (what each fight tests)
+
+Measured for every Act 1 fight from day 3 on: each team's **breaking point**, the highest enemy strength on a ladder (x0.3 to x2.5) at which it still wins 2 of 3 fight seeds, the good bot placing, every hero transformed (Decision 4: a plan judged once its build comes together), no items or relics. Four teams: the old three (Hearthwall, Deadeye, Lanternbearer) for a tank, and section 5's burst, sustain, and control.
+
+| Fight (what it asks) | Tank | Burst | Sustain | Control | Relatively best |
+| --- | --- | --- | --- | --- | --- |
+| Hollow Line (3 archers: closing distance) | x1.30 | x1.15 | x1.15 | x0.80 | sustain |
+| Bog Crossing (a Lurker drags, a swarm: back-line safety) | x1.00 | x0.80 | x0.80 | x0.80 | control |
+| Sentinel Gate (a Sentinel, 2 archers: going around a wall) | x1.30 | x0.80 | x0.80 | x0.70 | **tank** |
+| Cairn Road (a charger, 2 hounds) | x1.00 | x0.80 | x0.90 | x0.70 | sustain |
+| Witch Circle (a Sentinel, a witch, a moth: target priority) | x0.80 | x0.70 | x0.50 | x0.70 | control |
+| Lurker's Kindling (dragged into a crowd that burns) | x1.15 | x1.00 | x0.80 | x0.90 | burst |
+| Sentinel and Moths (round the wall without bunching) | x0.80 | x0.70 | x0.60 | x0.60 | burst |
+| Witch and Pups (reach the witch through a swarm) | x0.90 | x0.70 | x0.70 | x0.60 | sustain |
+| Guardian and Witch (a charger the witch Shields) | x0.70 | x0.60 | x0.50 | x0.60 | control |
+| The Hunt, elite (the pack pounces on one hero) | x1.30 | x1.00 | x0.80 | x0.90 | **tank** |
+| Witch Coven, elite (break the Totem past the Sentinel) | x1.75 | x1.00 | x1.15 | x0.90 | **tank** |
+| Cairn Watch, elite (a charger, archers behind rocks) | x1.00 | x0.90 | x1.00 | x0.90 | sustain |
+| Old Mother Ash, boss | x0.60 | x0.50 | x0.50 | x0.60 | control |
+
+"Relatively best" compares each team's breaking point with its own average over the 13 fights (geometric means: tank x1.01, burst x0.80, sustain x0.75, control x0.74).
+
+What it says:
+- **The tank team breaks latest in every fight in absolute terms** (tied by control at Old Mother Ash and sustain at Cairn Watch): the tankless plans are about a fifth to a quarter weaker overall here. Part of that is the stand-ins (sustain has no real makers until Edric and Severine; none carry their build's items or relics), so Decision 4's real measure is the runs with the shop lean (ES-4). If they're still a quarter behind there, the gap is in the heroes (the tuning phase), not in the fights.
+- **Relatively, each plan has fights it's best at:** sustain in Hollow Line, Cairn Road, Witch and Pups, and Cairn Watch; control in Bog Crossing, Witch Circle, Guardian and Witch, and Old Mother Ash; burst in Lurker's Kindling and Sentinel and Moths.
+- **Three fights only test the tank:** Sentinel Gate, The Hunt, and Witch Coven, where the tank team leads both absolutely and relatively (Witch Coven by the most: x1.75 against x0.90 to x1.15). These are Decision 5's fights that need a second question (Question EF).
+- **Some fights answer differently than Decision 5 expects:** archers in the back favour sustain, not burst (Hollow Line, Cairn Watch), and the burning crowd (Lurker's Kindling) favours burst, not sustain.
+
 ## 8. Questions
 
 - **EA. Day-1 fights:** *(Answered: Decision 9.)* new smaller encounters for day 1 only, or shrink them everywhere?
 - **EB. The harder day-1 fight:** *(Answered: Decision 10.)* a new 1 Hollow Archer and 2 Rift Pups, or no harder option on day 1?
 - **ED. The gate:** *(Answered: Decision 11.)* day-1 fights exempt from the 30-point split, with the Glass check as their gate?
+- **EF. The three tank-only fights** (ES-3): give each a second question so a tankless plan has an answer? Proposed, each sized again so the tank team's breaking point stays where it is:
+  - **Sentinel Gate:** one archer out of the Sentinel's shadow, so burst can reach and kill it first (Decision 5's "archers in the back: burst wins").
+  - **The Hunt:** the Hunt Hounds lighter (less HP, more damage), so burst or control can thin the pack before it lands; the Alpha's pounce stays the tank's question.
+  - **Witch Coven:** the Gloam Totem with less HP and a stronger Shield, so a burst that breaks it fast is an answer as well as a tank that walks past the Sentinel.
+  Or leave them as the tank's fights, since every plan already has some.
 - **EE. The plan teams:** *(Answered: Decision 12.)* the three stand-ins in section 5?
 
 ## Decisions
