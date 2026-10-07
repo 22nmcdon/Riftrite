@@ -1,6 +1,6 @@
 # The easy start (Act 1, days 1 and 2)
 
-Status: **a build plan, for approval (2026-10-07).** The playtester's request after phase 8 part 4's bot runs: fix Act 1's opening before tuning anything else, because runs that end on day 1 spoil every other number (heroes, paths, deeds, synergy against bad teams). Questions are in section 6.
+Status: **a build plan, for approval (2026-10-07); the playtester's notes are Decisions 1–8.** The playtester's request after phase 8 part 4's bot runs: fix Act 1's opening before tuning anything else, because runs that end on day 1 spoil every other number (heroes, paths, deeds, synergy against bad teams). Questions are in section 8.
 
 ## 1. Why
 
@@ -60,38 +60,74 @@ So:
 
 The step is sharp: tankless teams go from 0% to about 90% between ×85 and ×70 strength, or with about a third fewer enemies at full strength.
 
-## 3. The proposal
+## 3. Day-1 candidates, sized for the worst team
 
-1. **Day 1 has its own fights, smaller ones, with no flankers.** Fewer enemies at their usual strength, so a fight looks and plays the same:
-   - **Pup Warren, day 1:** 4 Rift Pups (6 now).
-   - **Ash Nest, day 1:** 2 Ashlings and 1 Rift Pup (3 and 2 now).
-   - **A day-1 harder fight**, since Hounds and Archers has flankers: 2 Hollow Archers and 2 Rift Pups, say ("Archers' Rest"), sized the same way. With no harder fight on a day, ActDraw draws two easier ones, so this is optional.
-   They're new encounters with `"days": [1]` (data, `encounters.json`), so the full fights stay on day 2 and later. Each is sized with the probe above until any team placed by the good bot wins about 95%.
-2. **Days 2–3: one new threat at a time, sized to about 85%.** The Pack (the first flanker) and Hounds and Archers move to day 2 only, and day 2's fights are cut or scaled until the bot reaches about 85% with any team (Lurker and Ashlings, at 16% with a tank, needs the most). Day 3 stays the first elite.
-3. **An out for tankless teams:** the first Pedlar of a run always shows at least one defensive item or relic (a ware or the relic slot), drawn from a list marked in the data (`"defensive": true`: Iron Filings, Warden's Chain, Hearthstone Shard, Tithe of Iron, Moth-Eaten Banner; Iron Skin, Warding Thread, Bulwark, Guard the Weakest). A small `Offers` rule and its test. The bots don't need to know: the good bot already judges buys by practice.
-4. **Placement:** no bot change. Once the fights are sized, the bot wins 87–100% of them with a tank, so the remaining day-1 losses aren't its placement.
-5. **Keep the difficulty, move it:** with the start fixed, rerun the good bot over all 20 teams, then raise the Act 1 boss (and if needed the day 4–6 fights and Act 2) until the overall win rate is back near today's 8%, random teams beat Old Mother Ash 50–60% of the time they reach her, and the old three's Act 1 doesn't get easier than its tuned 45–50%. The run report gets a **By team** line (runs, how far they got, won), so synergy and bad teams can be told apart.
-6. **Then** Garrote and the other slow paths are looked at again on the new runs (`rebuild-phase8-heroes.md`, Question HI).
+Decision 1 sizes day 1 for the worst team, and Decision 2 puts it a step past the cliff. The Glass stand-in (`test-teams.md`'s B1 is Ilse, Ottilie, and Lucan, none built yet) is **Maren, Vell, and Aldous**: three back-liners, no melee. Measured on every one of its 27 vow sets, 3 fight seeds each, the good bot placing, at the candidate's strength and at ×120 (the margin). Beside it, the three tankless plan teams (Decision 4; section 5) and the old three.
 
-## 4. The sim runner's gate
+| Candidate (full strength) | Glass | Burst, sustain, control | Glass at ×120 |
+| --- | --- | --- | --- |
+| Pup Warren, 6 Rift Pups (now) | 0% | 0, 0, 0 of 3 | 0% |
+| 4 Rift Pups | 100% | 3, 3, 3 | 44% (at the cliff) |
+| **3 Rift Pups** | **100%** | **3, 3, 3** | **100%** |
+| Ash Nest, 3 Ashlings and 2 Rift Pups (now) | 0% | 0, 0, 0 | 0% |
+| 2 Ashlings and 1 Rift Pup | 100% | 3, 3, 3 | 0% (at the cliff) |
+| **1 Ashling and 2 Rift Pups** | **100%** | **3, 3, 3** | **100%** |
+| 2 Hollow Archers and 2 Rift Pups | 43% | 0, 0, 0 | 0% |
+| **1 Hollow Archer and 2 Rift Pups** | **100%** | **3, 3, 3** | **100%** |
+| The Pack, 3 Rift Hounds (now) | 0% | 0, 0, 0 | 0% |
+| The Pack, 2 Rift Hounds | 100% | 3, 3, 3 | 0% (at the cliff) |
 
-The gate wants the best formation to win at least 30 points more often than the worst in every encounter. Day-1 fights sized to 95% for the bot may not split that far. Proposed: day-1 fights (`"days": [1]` only) report the split but don't fail the gate, since teaching how fights work is their job.
+So day 1 is **3 Rift Pups, 1 Ashling with 2 Rift Pups, and (the harder option) 1 Hollow Archer with 2 Rift Pups**: Glass wins every vow set with the enemies 20% stronger. The fewer-enemies versions at the cliff (4 pups, 2 Ashlings) would come back to 0% with a small change elsewhere, which is what Decision 2 guards against. The Pack with 2 hounds is a day-2 candidate (day 2's target is 85%, not 95%), but it sits at its cliff too.
 
-## 5. Parts
+## 4. The proposal
 
-- **ES-1:** the day-1 fights and the gate's day-1 rule (data, `sim_report.gd`, tests).
-- **ES-2:** days 2–3 resized (data), The Pack and Hounds and Archers to day 2.
-- **ES-3:** the first Pedlar's defensive pick (`items.json`, `relics.json` flags, `Offers`, test).
-- **ES-4:** the run report's By team; the good bot over all 20 teams; the Act 1 boss (and later fights) raised to keep the overall rate; the numbers recorded here.
-- **ES-5:** Garrote and the slow paths read again; docs, HOW-TO-PLAY, playtest build.
+1. **Day 1:** the three fights above, no flankers, at their usual strength (fewer enemies, not weaker ones). A day-1 fight is easier to read for having fewer enemies, and the enemies hit as hard as they always will.
+2. **The Glass check (Decision 2):** a test fights the Glass stand-in in every day-1 fight on every vow set with the good bot placing, and fails if it wins less than 90% of any one. When Ilse, Ottilie, and Lucan are built, the real Glass replaces the stand-in.
+3. **Days 2–3: one new threat at a time, about 85% for the worst team, with the same margin rule.** The first flanker (The Pack) and the first archer line come on day 2, cut to sizes that hold at about 85% for Glass and the plan teams. Lurker and Ashlings is cut too (Decision 6: searched formations also lose it). Day 3 stays the first elite.
+4. **No shop guarantee for now** (Decision 3). If the plan teams can't hold days 2–3 at their sizes, a build-lean slot (an item tagged with a build one of the heroes belongs to) comes back as its own proposal; items and relics don't carry build tags yet.
+5. **Tankless teams measured by their plan** (Decision 4): burst, sustain, and control teams (section 5), each with its key items leaned in the shop, should clear the Act 1 boss at about the random-team rate when the build comes together. A plan that can't is what needs work.
+6. **What each fight tests** (Decision 5): every Act 1 fight from day 2 on is listed by what it asks (archers in the back, a swarm, one big hitter, damage over time, a drag or a dive), with how each plan does in it, so each plan has fights it's good at and fights it isn't. Fights that only test HP get a second question.
+7. **The end-of-run target by group** (Decision 7): random teams around the old three's tuned rate, synergy teams above it, bad teams below. The difficulty taken out of days 1–2 moves to the Act 1 boss and Act 2 only as far as that needs; today's 8% isn't held.
+8. **Placement help for players** (a simple default formation, tanks in front and the ranged behind) comes later (Decision 8), not in this plan.
 
-## 6. Questions
+## 5. The tankless plan teams (stand-ins from the six built heroes)
 
-- **EA. Day-1 fights:** new smaller encounters for day 1 (as proposed), or shrink Pup Warren and Ash Nest everywhere?
-- **EB. A harder day-1 fight:** a new flanker-free one (2 Hollow Archers and 2 Rift Pups), or no harder option on day 1 (two easier fights)?
-- **EC. The defensive pick:** the first Pedlar only, or every shop until the team holds one? And is the list in section 3 right?
-- **ED. The gate:** day-1 fights exempt from the 30-point split, as proposed?
+| Plan | Team (vows) | Its answer |
+| --- | --- | --- |
+| Burst | Tamsin (Nightblade), Maren (Deadeye), Aldous (Windcaller) | Kill them before the damage lands |
+| Sustain | Vell (Lanternbearer), Aldous (Chorister), Maren (Volley) | Spread the damage and undo it |
+| Control | Maren (Trapper), Tamsin (Garrote), Vell (Wardweaver) | The damage never gets thrown |
+
+Sustain is the weakest stand-in: its real makers (Edric, Severine) aren't built. When they are, the real teams from `test-teams.md` replace these.
+
+## 6. The sim runner's gate
+
+The gate wants the best formation to win at least 30 points more often than the worst in every encounter. Day-1 fights sized so the worst team wins every vow set won't split that far. Proposed: day-1 fights report the split but don't fail the gate; the Glass check is their gate.
+
+## 7. Parts
+
+- **ES-1:** the day-1 fights, the Glass check, and the gate's day-1 rule (data, `sim_report.gd`, tests).
+- **ES-2:** days 2–3 resized for about 85% with the margin (data), The Pack and the archers on day 2, Lurker and Ashlings cut.
+- **ES-3:** what each fight tests (section 4, item 6), with the plan teams' results in each.
+- **ES-4:** the run report's By team (runs, how far they got, won), the plan teams and the bad teams played with the shop lean, the good bot over all 20 teams; the Act 1 boss (and later fights) raised only to the group targets; the numbers recorded here.
+- **ES-5:** Garrote and the slow paths read again on the new runs; docs, HOW-TO-PLAY, playtest build.
+
+## 8. Questions
+
+- **EA. Day-1 fights:** new smaller encounters for day 1 only (Pup Warren and Ash Nest keep their full size from day 2 on), or shrink them everywhere?
+- **EB. The harder day-1 fight:** the new 1 Hollow Archer and 2 Rift Pups ("Archers' Rest"), or no harder option on day 1 (two easier fights)?
+- **ED. The gate:** day-1 fights exempt from the 30-point split, with the Glass check as their gate?
+- **EE. The plan teams:** the three stand-ins in section 5?
 
 ## Decisions
 
-*(None yet.)*
+The playtester, 2026-10-07:
+
+1. **Day 1 is sized for the worst team, not the average:** "any team wins about 95%" means Glass (three fragile back-liners) wins about 95%.
+2. **A margin above the cliff, and a check:** day 1 sits a step past the strength where tankless teams fall to 0%, and a check fails if Glass drops below about 90% in any day-1 fight, so the cliff can't come back unnoticed.
+3. **No defensive guarantee in the first shop.** A team without a tank isn't broken; it has a different answer to the enemy's damage (a tank soaks it, burst kills first, sustain undoes it, control stops it). If the first shop helps at all, it helps the team's own plan (a slot from a build one of its heroes belongs to); no guarantee at all is also fine, with days 1–2's sizing doing the work.
+4. **Tankless teams are measured by their plan:** a burst, a sustain, and a control team, each able to clear the Act 1 boss at about the random-team rate when its build comes together. A plan that can't is what needs work.
+5. **Later fights test different things**, so each plan has fights it's good at: archers in the back (burst wins, tanks struggle), a swarm (control and area damage), one big hitter (a tank or control), damage over time (sustain).
+6. **Lurker and Ashlings is cut, not left as a placement puzzle:** searched formations lose it too (31% of teams with a tank have any winning formation, none without).
+7. **Today's 8% isn't held:** the end-of-run target is by group (random teams around the old three's tuned rate, synergy above, bad below), and only as much difficulty moves to the Act 1 boss and Act 2 as that needs.
+8. **Placement help for players** (a simple default formation) comes later, not in this step.
