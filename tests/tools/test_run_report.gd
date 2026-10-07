@@ -15,8 +15,10 @@ func test_every_combination_of_vows() -> void:
 	assert_eq(Report.teams(_run.content).size(), 20, "every three of six heroes (phase 8 part 4)")
 	assert_eq(combos.size(), 20 * 27)
 	assert_eq(combos[0], {"brannoc": "hearthwall", "maren": "deadeye", "vell": "lanternbearer"}, "the old three first, in the old order")
-	assert_eq(combos[26], {"brannoc": "last_watch", "maren": "volley", "vell": "vigil_keeper"})
-	assert_eq(combos[27], {"brannoc": "hearthwall", "maren": "deadeye", "garrow": "aegisfang"})
+	assert_eq(combos[1], {"brannoc": "hearthwall", "maren": "deadeye", "garrow": "aegisfang"}, "the teams take turns")
+	assert_eq(combos[19], {"garrow": "aegisfang", "tamsin": "nightblade", "aldous": "chorister"})
+	assert_eq(combos[20], {"brannoc": "hearthwall", "maren": "deadeye", "vell": "wardweaver"}, "then each team's second vows")
+	assert_eq(combos[20 * 26], {"brannoc": "last_watch", "maren": "volley", "vell": "vigil_keeper"})
 	assert_eq(Report.vow_combinations(_run.content, HeroTeam.DEFAULT).size(), 27, "one team's")
 
 
@@ -27,7 +29,7 @@ func test_a_small_report() -> void:
 	for line: Report.RunLine in lines:
 		assert_eq(line.errors, [] as Array[String], "seed %d" % line.seed_value)
 		assert_ne(line.outcome, RunState.Outcome.NONE, "each run ends")
-		assert_eq(line.vows, Report.vow_combinations(_run.content)[line.seed_value % (10 * 27)])
+		assert_eq(line.vows, Report.vow_combinations(_run.content)[line.seed_value % (20 * 27)])
 		assert_false(line.fights.is_empty())
 		assert_eq(line.transformed_on.size(), 3)
 		assert_eq(line.nodes_shown.get("camp", 0), line.nodes_taken.values().reduce(func(sum: int, taken: int) -> int: return sum + taken, 0), "Camp shown every day a node was taken")

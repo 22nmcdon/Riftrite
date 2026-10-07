@@ -132,11 +132,17 @@ class RunLine:
 
 ## Every team and every combination of one path per hero on it (phase 8
 ## part 4: the teams of three the draft offers, in heroes.json's order, each
-## with its vows in paths.json's order), or only `team`'s vows.
+## with its vows in paths.json's order), or only `team`'s vows. The teams
+## take turns (each team's first vows, then each one's second, ...), so a
+## report of any length covers every team about as often (8d-5).
 static func vow_combinations(content: ContentDb, team: Array[String] = []) -> Array[Dictionary]:
-	var combos: Array[Dictionary] = []
+	var by_team: Array[Array] = []
 	for drafted: Array[String] in ([team] if not team.is_empty() else teams(content)):
-		combos.append_array(_team_vows(content, drafted))
+		by_team.append(_team_vows(content, drafted))
+	var combos: Array[Dictionary] = []
+	for i: int in by_team[0].size():
+		for vows: Array in by_team:
+			combos.append(vows[i])
 	return combos
 
 

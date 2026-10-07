@@ -20,7 +20,7 @@ func before_all() -> void:
 
 func _vows(run_seed: int) -> Dictionary[String, String]:
 	var vows: Dictionary[String, String] = {}
-	vows.assign(Report.vow_combinations(_run.content)[run_seed % 27])
+	vows.assign(Report.vow_combinations(_run.content, HeroTeam.DEFAULT)[run_seed % 27])
 	return vows
 
 
