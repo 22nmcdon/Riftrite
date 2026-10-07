@@ -6,7 +6,8 @@ extends GutTest
 ## hero or an enemy can't quietly push day 1 back over the cliff, where
 ## tankless teams lose every fight. Day 2 (ES-2) is held to DAY_TWO_FLOOR,
 ## and to DAY_TWO_MARGIN_FLOOR with its enemies DAY_TWO_MARGIN_BP stronger,
-## so it stays a step back from its cliff too.
+## so it stays a step back from its cliff too. Day 3's own elites (ES-4,
+## Decision 15) are held to the same.
 
 const Placement = preload("res://tools/bots/placement.gd")
 const SimReport = preload("res://tools/sim_report.gd")
@@ -44,6 +45,16 @@ func _day_two() -> Array[String]:
 	for encounter_id: String in _content.encounter_ids:
 		var encounter: EncounterDef = _content.encounters[encounter_id]
 		if encounter.act == 1 and encounter.tier != "hunt" and not encounter.days.is_empty() and encounter.days.min() == 2:
+			found.append(encounter_id)
+	return found
+
+
+## Act 1's fights whose only day is 3: its own elites (Decision 15).
+func _day_three() -> Array[String]:
+	var found: Array[String] = []
+	for encounter_id: String in _content.encounter_ids:
+		var encounter: EncounterDef = _content.encounters[encounter_id]
+		if encounter.act == 1 and encounter.days.size() == 1 and encounter.days[0] == 3:
 			found.append(encounter_id)
 	return found
 
@@ -110,3 +121,19 @@ func test_glass_holds_day_two_with_a_margin() -> void:
 		assert_gte(percent, DAY_TWO_FLOOR, "%s: Glass wins %d%% (ES-2: at least %d%%)" % [encounter_id, percent, DAY_TWO_FLOOR])
 		var stronger: int = _glass_percent(encounter_id, named, DAY_TWO_MARGIN_BP)
 		assert_gte(stronger, DAY_TWO_MARGIN_FLOOR, "%s: Glass wins %d%% with the enemies x%.2f (ES-2: at least %d%%)" % [encounter_id, stronger, DAY_TWO_MARGIN_BP / 10000.0, DAY_TWO_MARGIN_FLOOR])
+
+
+func test_glass_holds_day_three_with_a_margin() -> void:
+	var errors: Array[String] = []
+	var named: Dictionary[String, Dictionary] = SimReport.read_formations(FileAccess.get_file_as_string("res://tools/sim_formations.json"), errors)
+	var day_three: Array[String] = _day_three()
+	assert_eq(day_three, ["alphas_trail", "witchs_ward", "cairn_sentry"] as Array[String], "day 3's own elites")
+	for encounter_id: String in _content.encounter_ids:
+		var encounter: EncounterDef = _content.encounters[encounter_id]
+		if encounter.act == 1 and encounter.tier == "elite":
+			assert_eq(encounter.days.has(3), day_three.has(encounter_id), "%s: the full elites come on day 5 only" % encounter_id)
+	for encounter_id: String in day_three:
+		var percent: int = _glass_percent(encounter_id, named)
+		assert_gte(percent, DAY_TWO_FLOOR, "%s: Glass wins %d%% (Decision 15: at least %d%%)" % [encounter_id, percent, DAY_TWO_FLOOR])
+		var stronger: int = _glass_percent(encounter_id, named, DAY_TWO_MARGIN_BP)
+		assert_gte(stronger, DAY_TWO_MARGIN_FLOOR, "%s: Glass wins %d%% with the enemies x%.2f (at least %d%%)" % [encounter_id, stronger, DAY_TWO_MARGIN_BP / 10000.0, DAY_TWO_MARGIN_FLOOR])

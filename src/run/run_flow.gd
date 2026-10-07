@@ -715,7 +715,9 @@ func swap_fight(index: int) -> String:
 	return ""
 
 
-## Dig In: the rock's hex for the next fight, in the heroes' zone.
+## Dig In: the rock's hex for the next fight, in the heroes' zone; once the
+## fight is chosen, not on its water or void (a rock placed there before can
+## be placed again).
 func place_rock(hex: Vector2i) -> String:
 	if not state.dig_in:
 		return "Dig In wasn't taken"
@@ -724,7 +726,19 @@ func place_rock(hex: Vector2i) -> String:
 	var grid: HexGrid = run.content.tuning.make_grid()
 	if not grid.has(hex.x, hex.y) or grid.zone(hex.y) != HexGrid.Zone.HEROES:
 		return "a rock goes on a hex in your zone"
+	if not state.chosen.is_empty() and rock_on_ground(state.chosen, hex) != "":
+		return "a rock can't go on %s" % rock_on_ground(state.chosen, hex)
 	state.rock.assign([hex.x, hex.y])
+	return ""
+
+
+## "water" or "the void" if `hex` is that in `encounter_id`, else "".
+func rock_on_ground(encounter_id: String, hex: Vector2i) -> String:
+	var encounter: EncounterDef = run.content.encounters[encounter_id]
+	if encounter.water.has(hex):
+		return "water"
+	if encounter.void_hexes.has(hex):
+		return "the void"
 	return ""
 
 

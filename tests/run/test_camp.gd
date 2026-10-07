@@ -165,6 +165,12 @@ func test_dig_in_places_a_rock() -> void:
 	flow.place_rock(Vector2i(3, 2))
 	assert_null(flow.fight_setup(Bot.formation(), errors), "not under a hero")
 	assert_false(errors.is_empty())
+	# Once the fight is chosen, not on its water or void (a rock placed at the
+	# node, before the choice, is placed again: ES-4 found a run stuck on it).
+	flow.state.chosen = "eel_run"
+	assert_eq(flow.place_rock(Vector2i(0, 1)), "a rock can't go on water")
+	assert_eq(flow.rock_on_ground("eel_run", Vector2i(3, 1)), "")
+	assert_eq(flow.place_rock(Vector2i(3, 1)), "")
 
 
 func test_a_rift_tear_upgrades_the_enemies_and_a_win_offers_a_relic() -> void:

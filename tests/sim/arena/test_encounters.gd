@@ -135,6 +135,10 @@ const ROSTERS: Dictionary = {
 	"the_hunt": {"hound_alpha": 1, "hunt_hound": 2},
 	"witch_coven": {"gloam_totem": 1, "gloam_witch": 2, "rift_worn_sentinel": 1},
 	"cairn_watch": {"cairn_guardian": 1, "hollow_archer": 2},
+	# Day 3's own elites (easy-start.md, Decision 15).
+	"alphas_trail": {"hound_alpha": 1, "hunt_hound": 1},
+	"witchs_ward": {"gloam_totem": 1, "gloam_witch": 1, "rift_worn_sentinel": 1},
+	"cairn_sentry": {"cairn_guardian": 1, "hollow_archer": 1},
 	"old_mother_ash": {"old_mother_ash": 1, "ash_hound": 2},
 }
 ## Phase 2's nine, tuned by their enemies' numbers rather than a scale.
@@ -149,9 +153,10 @@ func test_the_act_1_encounters_are_the_plans() -> void:
 	var content: ContentDb = ContentDb.load_dir("res://data")
 	var act_1: Array[String] = content.encounter_ids.filter(func(encounter_id: String) -> bool: return (content.encounters[encounter_id] as EncounterDef).act == 1)
 	# The day-1 fights (docs/plans/easy-start.md, Decision 9) come after Ash Nest.
-	# Day 2's copies of Hollow Line and Lurker's Kindling follow them (ES-2).
+	# Day 2's copies of Hollow Line and Lurker's Kindling follow them (ES-2),
+	# and day 3's elites follow theirs (Decision 15).
 	assert_eq(act_1, BASIC.slice(0, 2) + DAY_ONE + BASIC.slice(2, 5) + ["hollow_watch"] + BASIC.slice(5) + ["stray_pups", "lone_hounds", "hounds_and_archers", "lurker_and_ashlings", "lurkers_spark", "sentinel_and_moths", "witch_and_pups",
-		"guardian_and_witch", "the_hunt", "witch_coven", "cairn_watch", "old_mother_ash"])
+		"guardian_and_witch", "the_hunt", "alphas_trail", "witch_coven", "witchs_ward", "cairn_watch", "cairn_sentry", "old_mother_ash"])
 	for encounter_id: String in act_1:
 		var encounter: EncounterDef = content.encounters[encounter_id]
 		var counts: Dictionary = {}

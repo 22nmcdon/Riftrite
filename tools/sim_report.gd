@@ -92,12 +92,12 @@ class Report:
 	func gap_points() -> int:
 		return best().win_percent() - worst().win_percent()
 
-	## An Act 1 fight that comes only on days 1 and 2 is exempt from the split
-	## (docs/plans/easy-start.md, Decisions 11 and 13): it's sized so even
-	## the weakest team wins wherever it stands, and the Glass check
+	## An Act 1 fight that comes only on days 1 to 3 is exempt from the split
+	## (docs/plans/easy-start.md, Decisions 11, 13, and 15): it's sized so
+	## even the weakest team wins wherever it stands, and the Glass check
 	## (tests/tools/test_easy_start.gd) is its gate.
 	func exempt() -> bool:
-		return encounter != null and encounter.act == 1 and not encounter.days.is_empty() and encounter.days.max() <= 2
+		return encounter != null and encounter.act == 1 and not encounter.days.is_empty() and encounter.days.max() <= 3
 
 	func passes() -> bool:
 		return exempt() or gap_points() >= GATE_POINTS
@@ -475,7 +475,7 @@ static func text(content: ContentDb, report: Report, boards: bool = true) -> Str
 	var best: Row = report.best()
 	var worst: Row = report.worst()
 	lines.append("  gate: %s. Best %s %d%%, worst %s %d%%: a %d-point gap (needs %d). %d of %d formations win. Median fight %s" % [
-		("exempt (days 1-2)" if report.exempt() else "passes") if report.passes() else "FAILS", best.name, best.win_percent(), worst.name, worst.win_percent(), report.gap_points(), GATE_POINTS,
+		("exempt (days 1-3)" if report.exempt() else "passes") if report.passes() else "FAILS", best.name, best.win_percent(), worst.name, worst.win_percent(), report.gap_points(), GATE_POINTS,
 		report.winning(), report.rows.size(), seconds(report.median_ticks())])
 	if boards:
 		for pair: Array in [["best", best], ["worst", worst]]:

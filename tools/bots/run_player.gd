@@ -101,8 +101,23 @@ static func _at_node(flow: RunFlow, bot: Bot) -> String:
 ## markers.
 static func _fight(flow: RunFlow, bot: Bot) -> String:
 	bot.loadout(flow)
+	_move_rock(flow, bot)
 	var hexes: Dictionary[String, Vector2i] = bot.formation(flow)
 	var errors: Array[String] = []
 	if flow.fight(hexes, errors, bot.markers(flow, hexes)) == null:
 		return ", ".join(errors)
 	return ""
+
+
+## Dig In's rock, placed at the node before the fight was chosen, moved to
+## the nearest hex of the bot's choice that isn't the chosen fight's water or
+## void (the player would click another hex).
+static func _move_rock(flow: RunFlow, bot: Bot) -> void:
+	var state: RunState = flow.state
+	if not state.dig_in or state.rock.size() != 2 or not state.hunt.is_empty() or state.chosen.is_empty():
+		return
+	if flow.rock_on_ground(state.chosen, Vector2i(state.rock[0], state.rock[1])).is_empty():
+		return
+	for hex: Vector2i in Bot.nearest_first(flow.run.content.tuning.make_grid(), bot.rock(flow)):
+		if flow.place_rock(hex).is_empty():
+			return
