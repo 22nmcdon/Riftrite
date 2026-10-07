@@ -111,13 +111,14 @@ const GUARDED: Dictionary[String, Vector2i] = {"brannoc": Vector2i(3, 2), "maren
 
 ## Each encounter's enemies (section 6's table), as enemy id -> how many.
 const ROSTERS: Dictionary = {
-	"pup_warren": {"rift_pup": 6},
-	"ash_nest": {"ashling": 3, "rift_pup": 2},
+	"pup_warren": {"rift_pup": 4},
+	"ash_nest": {"ashling": 2, "rift_pup": 2},
 	"warren_mouth": {"rift_pup": 3},
 	"smouldering_den": {"ashling": 1, "rift_pup": 2},
-	"the_pack": {"rift_hound": 3},
-	"moth_cloud": {"cinder_moth": 3, "rift_pup": 2},
+	"the_pack": {"rift_hound": 2},
+	"moth_cloud": {"cinder_moth": 2, "rift_pup": 2},
 	"hollow_line": {"hollow_archer": 3},
+	"hollow_watch": {"hollow_archer": 2},
 	"bog_crossing": {"bog_lurker": 1, "rift_pup": 3},
 	"sentinel_gate": {"rift_worn_sentinel": 1, "hollow_archer": 2},
 	"cairn_road": {"cairn_guardian": 1, "rift_hound": 2},
@@ -125,8 +126,9 @@ const ROSTERS: Dictionary = {
 	# Phase 5: a Hunt's packs, the harder fights, the elites, and the boss.
 	"stray_pups": {"rift_pup": 4},
 	"lone_hounds": {"rift_hound": 2},
-	"hounds_and_archers": {"rift_hound": 2, "hollow_archer": 2},
+	"hounds_and_archers": {"rift_hound": 2, "hollow_archer": 1},
 	"lurker_and_ashlings": {"bog_lurker": 1, "ashling": 3},
+	"lurkers_spark": {"bog_lurker": 1, "ashling": 1},
 	"sentinel_and_moths": {"rift_worn_sentinel": 1, "cinder_moth": 2},
 	"witch_and_pups": {"gloam_witch": 1, "rift_pup": 4},
 	"guardian_and_witch": {"cairn_guardian": 1, "gloam_witch": 1},
@@ -147,7 +149,8 @@ func test_the_act_1_encounters_are_the_plans() -> void:
 	var content: ContentDb = ContentDb.load_dir("res://data")
 	var act_1: Array[String] = content.encounter_ids.filter(func(encounter_id: String) -> bool: return (content.encounters[encounter_id] as EncounterDef).act == 1)
 	# The day-1 fights (docs/plans/easy-start.md, Decision 9) come after Ash Nest.
-	assert_eq(act_1, BASIC.slice(0, 2) + DAY_ONE + BASIC.slice(2) + ["stray_pups", "lone_hounds", "hounds_and_archers", "lurker_and_ashlings", "sentinel_and_moths", "witch_and_pups",
+	# Day 2's copies of Hollow Line and Lurker's Kindling follow them (ES-2).
+	assert_eq(act_1, BASIC.slice(0, 2) + DAY_ONE + BASIC.slice(2, 5) + ["hollow_watch"] + BASIC.slice(5) + ["stray_pups", "lone_hounds", "hounds_and_archers", "lurker_and_ashlings", "lurkers_spark", "sentinel_and_moths", "witch_and_pups",
 		"guardian_and_witch", "the_hunt", "witch_coven", "cairn_watch", "old_mother_ash"])
 	for encounter_id: String in act_1:
 		var encounter: EncounterDef = content.encounters[encounter_id]

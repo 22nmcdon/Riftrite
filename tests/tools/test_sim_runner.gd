@@ -107,14 +107,18 @@ func test_the_gate_needs_a_30_point_gap() -> void:
 	assert_eq(report.winning(), 2, "8 and 6 of 10 are at least half")
 	report.rows[1].wins = 4
 	assert_eq(report.winning(), 1)
-	# A day-1 fight is exempt from the split (easy-start.md Decision 11).
+	# An Act 1 fight on days 1 and 2 only is exempt from the split
+	# (easy-start.md Decisions 11 and 13).
 	report.rows[1].wins = 8
 	report.encounter = EncounterDef.new()
+	report.encounter.act = 1
+	report.encounter.days.assign([2, 4])
+	assert_false(report.passes(), "a fight that comes back on day 4 still needs the gap")
 	report.encounter.days.assign([1, 2])
-	assert_false(report.passes(), "a fight on day 2 too still needs the gap")
-	report.encounter.days.assign([1])
 	assert_true(report.exempt())
-	assert_true(report.passes(), "a day-1 fight passes without it")
+	assert_true(report.passes(), "a fight of days 1 and 2 passes without it")
+	report.encounter.act = 2
+	assert_false(report.passes(), "only Act 1's")
 	assert_eq(Report.Report.median([5, 1, 3] as Array[int]), 3)
 	assert_eq(Report.seconds(551), "27.5s")
 

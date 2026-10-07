@@ -1,6 +1,6 @@
 # The easy start (Act 1, days 1 and 2)
 
-Status: **a build plan, approved (2026-10-07; Decisions 1–12).** The playtester's request after phase 8 part 4's bot runs: fix Act 1's opening before tuning anything else, because runs that end on day 1 spoil every other number (heroes, paths, deeds, synergy against bad teams). Questions are in section 8.
+Status: **a build plan, approved (2026-10-07; Decisions 1–13); ES-1 and ES-2 built.** The playtester's request after phase 8 part 4's bot runs: fix Act 1's opening before tuning anything else, because runs that end on day 1 spoil every other number (heroes, paths, deeds, synergy against bad teams). Questions are in section 8.
 
 ## 1. Why
 
@@ -83,7 +83,7 @@ So day 1 is **3 Rift Pups and 1 Ashling with 2 Rift Pups** (Decisions 9 and 10; 
 
 1. **Day 1:** the two fights above, no flankers, at their usual strength (fewer enemies, not weaker ones). A day-1 fight is easier to read for having fewer enemies, and the enemies hit as hard as they always will.
 2. **The Glass check (Decision 2):** a test fights the Glass stand-in in every day-1 fight on every vow set with the good bot placing, and fails if it wins less than 90% of any one. When Ilse, Ottilie, and Lucan are built, the real Glass replaces the stand-in.
-3. **Days 2–3: one new threat at a time, about 85% for the worst team, with the same margin rule.** The first flanker (The Pack) and the first archer line come on day 2, cut to sizes that hold at about 85% for Glass and the plan teams. Lurker and Ashlings is cut too (Decision 6: searched formations also lose it). Day 3 stays the first elite.
+3. **Day 2: one new threat at a time, at least 85% for the worst team, with a margin** (Decision 13; built in ES-2). The first flanker (The Pack) and the first archer line come on day 2, cut to sizes Glass holds even with the enemies 10% stronger. Lurker and Ashlings is cut too (Decision 6: searched formations also lose it). Day 3 stays the first elite, judged in the runs (ES-4).
 4. **No shop guarantee for now** (Decision 3). If the plan teams can't hold days 2–3 at their sizes, a build-lean slot (an item tagged with a build one of the heroes belongs to) comes back as its own proposal; items and relics don't carry build tags yet.
 5. **Tankless teams measured by their plan** (Decision 4): burst, sustain, and control teams (section 5), each with its key items leaned in the shop, should clear the Act 1 boss at about the random-team rate when the build comes together. A plan that can't is what needs work.
 6. **What each fight tests** (Decision 5): every Act 1 fight from day 2 on is listed by what it asks (archers in the back, a swarm, one big hitter, damage over time, a drag or a dive), with how each plan does in it, so each plan has fights it's good at and fights it isn't. Fights that only test HP get a second question.
@@ -119,6 +119,22 @@ The gate wants the best formation to win at least 30 points more often than the 
 - **The gate** (Decision 11): `SimReport.Report.exempt()` (an encounter whose only day is 1) passes whatever the split; the report says "exempt (day 1)" and the runner's summary "day 1". Both new fights: 24 of 24 formations win.
 - **Not changed:** no fight (the bench's fingerprints are the same); the full fights stay as they were.
 
+### Built in ES-2 (day 2 resized)
+
+- **What was measured** (the good bot placing, the Glass stand-in on all 27 vow sets and the three plan teams, at each fight's strength and stronger): every day-2 fight lost almost everything for Glass at its old size (Pup Warren, Ash Nest, The Pack, Hollow Line, Hounds and Archers, and Lurker's Kindling 0%, Moth Cloud 1%), and each one goes from all to nothing between one composition and the next, like day 1.
+- **The rule** (Decision 13): Glass wins at least 85% at the fight's strength and at least 50% with the enemies 10% stronger. Each fight's largest composition that holds it:
+  - **Pup Warren:** 4 Rift Pups (6), full strength.
+  - **Ash Nest:** 2 Ashlings and 2 Rift Pups (3 and 2), at x0.8 (scale 9200).
+  - **The Pack:** 2 Rift Hounds (3), at x0.9 (10125).
+  - **Moth Cloud:** 2 Cinder Moths and 2 Rift Pups (3 and 2), full strength.
+  - **Hollow Watch** (new, day 2): 2 Hollow Archers behind Hollow Line's rocks, full strength; Hollow Line keeps its 3 for day 4.
+  - **Hounds and Archers** (harder): 2 Rift Hounds and 1 Hollow Archer (2 and 2), at x0.8 (7560).
+  - **Lurker's Spark** (new, harder, day 2; Decision 6): 1 Bog Lurker and 1 Ashling at x0.8 (9360); Lurker's Kindling keeps its 3 Ashlings for day 4.
+  The Pack's and Moth Cloud's day 3 is gone from their days (day 3 is an elite day, so a normal fight was never drawn there).
+- **The check** (`tests/tools/test_easy_start.gd`): every Act 1 fight whose first day is 2 holds Glass at 85%, and at 50% with the enemies x1.1; all seven do.
+- **The gate** (Decision 13): at these sizes every formation wins, for Glass as for the old three, so an Act 1 fight that comes only on days 1 and 2 is exempt from the 30-point split (`SimReport.Report.exempt()`, "exempt (days 1-2)").
+- **A placement band, not taken:** a little stronger (x1.10 to x1.20 of these sizes) the good bot still wins with Glass while careless formations lose (The Pack x1.15: bot 3 of 3, 93% of formations; Hollow Watch x1.15: bot 3 of 3, 37%; Pup Warren x1.15: 79%; Ash Nest x1.20: 80%), so day 2 could teach placement at the cost of its margin. The playtester chose the margin (Decision 13); the placement lessons start on day 4.
+
 ## 8. Questions
 
 - **EA. Day-1 fights:** *(Answered: Decision 9.)* new smaller encounters for day 1 only, or shrink them everywhere?
@@ -142,3 +158,4 @@ The playtester, 2026-10-07:
 10. **No harder option on day 1** (Question EB): day 1 offers two easier fights (ActDraw's rule when a day has no harder fight); the harder fights start on day 2. The 1 Hollow Archer and 2 Rift Pups candidate isn't built.
 11. **Day-1 fights are exempt from the gate's 30-point split** (Question ED): the sim runner reports their split, and the Glass check is their gate.
 12. **The plan teams are section 5's stand-ins** (Question EE), replaced by `test-teams.md`'s real teams as their heroes are built.
+13. **Day 2 keeps the full margin and is exempt from the gate** (asked while building ES-2): sized so Glass wins at least 85%, and at least half with the enemies 10% stronger; at those sizes nearly every formation wins, so days 1 and 2 are both exempt from the 30-point split, and the placement lessons start on day 4. (The other choice was a narrow band where careless formations lose, with only 5–15% margin.)
