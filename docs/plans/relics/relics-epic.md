@@ -17,6 +17,6 @@
 | **Mirror of Ash** | Being hit | Enemies take 60% of the damage they deal to heroes |
 | **Miser's Vault** | Saving | At the start of every shop, gain 1 shard for every 5 you're holding (up to 6) |
 | **Merchant's Covenant** | Rerolls | Rerolls never get more expensive: every reroll costs the first price |
-| **Overkill Tithe** | Big hits | +1 shard for every 150 overkill damage |
+| **Overkill Tithe** | Big hits | +1 shard for each kill that overkills, +1 more past 50% of the enemy's max HP and +1 more past 100% (at most 3 a kill; tuning-phase.md Decision 7) |
 | **Full Vigor** | High HP | Heroes above 90% of their max HP gain +15% ATK and MGK |
 | **Shackle Engine** | Holds | Roots and Stuns on enemies last 30% longer, and enemies gain no mana while Rooted or Stunned |

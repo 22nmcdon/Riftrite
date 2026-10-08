@@ -99,3 +99,11 @@ The playtester, 2026-10-08:
 4. **Iron Garden as written** (Question TB): every Root or Stun on an enemy, refreshes included, no cap; tuned from the runs if it runs away.
 5. **Heavy Pommel once per enemy** (Question TC): the first hero to hit each enemy Stuns it 1s; the others don't again.
 6. **The bot's shopping first** (Question TD): T-2 (the good bot's spending and picks, bot code only) comes before the heroes are tuned, so the numbers measure the game, not the bot's hoarding.
+
+The playtester, 2026-10-08, after T-2's first runs (the good bot, now buying relics, earned 20,848 shards a run against 146 before: Overkill Tithe paid for damage past an enemy's last HP, which grows without end with the heroes' damage, and its shards fed Gilded Rift's ATK and MGK, which fed the overkill):
+
+7. **Overkill Tithe pays by kill, at most 3** (a cap on max HP wouldn't hold, since HP scales): a kill with any overkill pays 1 shard, one more past 50% of the enemy's max HP, one more past 100% (the deed count overkill's `"steps_at_pct": [0, 50, 100]`).
+8. **Lucky Strike pays at most 5 shards a fight** (crits grow with attack speed, and Quickening has no cap; GrowthDef's `"max_steps_per_fight"`).
+9. **Gilded Rift stays uncapped:** with the earners capped, the shards it reads grow only as fast as income.
+10. **Bloodied Coin stays uncapped:** a fight's kills are bounded by what it spawns.
+

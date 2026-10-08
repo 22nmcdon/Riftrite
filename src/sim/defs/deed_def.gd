@@ -29,7 +29,10 @@ extends RefCounted
 ##            (Collector's Chain)
 ##   crits    its hits that crit, one each (phase 5c step 5a; Lucky Strike)
 ##   overkill its hits' damage past their target's last HP (phase 5c step
-##            5b; Overkill Tithe)
+##            5b); with "steps_at_pct": [0, 50, 100], instead one for each
+##            of those shares of the target's max HP the overkill reaches,
+##            0 being any (so 1 to 3 a kill, whatever the HP; the tuning
+##            phase, Decision 7: Overkill Tithe)
 ## Phase 5c step 6 (the loadout's ranks, section 14.3):
 ##   casts    its signature's fires, one each (an echo is its own ability,
 ##            so it doesn't count; a sigil's)
@@ -127,6 +130,9 @@ var above_bp: int = 0
 ## damage (phase 8 part 2): only hits on units with these keywords, and
 ## allies' hits count too.
 var vs_keywords: Array[String] = []
+## overkill: the shares of the target's max HP (in bp) that each count one
+## (empty: count the overkill itself).
+var overkill_steps_bp: Array[int] = []
 var by_allies: bool = false
 ## Only what lands within this long after the hero's last hop (phase 8 part
 ## 2, Windrunner; "within_ms_of_hop"). 0: any time.
@@ -165,6 +171,13 @@ static func read(reader: DataReader, needs_text: bool = true) -> DeedDef:
 		def.above_bp = reader.req_int("above_pct_of_max_hp", 1, 1000) * 100
 		if def.counts != Counts.SHIELD:
 			reader.error("above_pct_of_max_hp filters Shield given (\"counts\": \"shield\")")
+	if reader.has("steps_at_pct"):
+		for pct: int in reader.req_int_array("steps_at_pct"):
+			if pct < 0 or pct > 1000:
+				reader.error("steps_at_pct: each share is 0 to 1000")
+			def.overkill_steps_bp.append(pct * 100)
+		if def.counts != Counts.OVERKILL:
+			reader.error("steps_at_pct counts overkill (\"counts\": \"overkill\")")
 	def.vs_keywords = reader.opt_choice_array("vs_keywords", Keywords.NAMES)
 	def.by_allies = reader.opt_bool("by_allies", false)
 	if def.counts != Counts.DAMAGE and not def.vs_keywords.is_empty():

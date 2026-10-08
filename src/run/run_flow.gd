@@ -1369,7 +1369,7 @@ func _grow(result: FightResult) -> void:
 			if upgrade.grows == null:
 				continue
 			var before: int = hero.growth.get(upgrade.id, 0)
-			hero.growth[upgrade.id] = before + _faster(result.tally_amount(hero.id, "upgrade:" + upgrade.id))
+			hero.growth[upgrade.id] = upgrade.grows.grown(before, _faster(result.tally_amount(hero.id, "upgrade:" + upgrade.id)))
 			if upgrade.grows.steps(hero.growth[upgrade.id]) > upgrade.grows.steps(before):
 				state.grew.append("%s:%s" % [hero.id, upgrade.id])
 	for id: String in state.relics:
@@ -1380,7 +1380,7 @@ func _grow(result: FightResult) -> void:
 		var counted: int = 0
 		for hero: RunState.Hero in state.heroes:
 			counted += result.tally_amount(hero.id, "relic:" + id)
-		state.growth[id] = before + _faster(counted)
+		state.growth[id] = relic.grows.grown(before, _faster(counted))
 		var stepped: int = relic.grows.steps(state.growth[id]) - relic.grows.steps(before)
 		if stepped > 0:
 			state.grew.append(":" + id)

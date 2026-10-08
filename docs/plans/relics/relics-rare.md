@@ -60,4 +60,4 @@ A goal inside the run that pays off once it's met.
 | **The Magpie's Scale** | Every shop shows one more ware and one more relic |
 | **Rift-Glass Eye** | Every fight is Scouted: you see where its enemies stand |
 | **Haggler's Charm** | Everything at the Pedlar costs 1 less (at least 1) |
-| **Lucky Strike** | +1 shard for every 15 crits your heroes land |
+| **Lucky Strike** | +1 shard for every 15 crits your heroes land, at most 5 a fight (tuning-phase.md Decision 8) |

@@ -12,6 +12,9 @@ extends RefCounted
 ## pay shards for each step ("each_shards": Bloodied Coin), and instead of
 ## "counts", a relic may grow with what the run counts ("run_counts":
 ## "elite_wins", one for each elite won; Tally of the Dead; phase 5c step 5a).
+## max_steps_per_fight: at most that many steps from one fight (0: none;
+## the tuning phase, Decision 8: Lucky Strike's 5), the rest of the fight's
+## count dropped.
 ## A hero's card counts its holder,
 ## a relic the whole team (RunContent). It counts from when it's taken
 ## (Decision 15).
@@ -20,6 +23,7 @@ var counts: DeedDef
 var per: int = 1
 var each: KitMod
 var max_steps: int = 0
+var max_steps_per_fight: int = 0
 ## Shards each step pays (0: none; then `each` may be empty).
 var each_shards: int = 0
 ## "" (the sim counts it, `counts`) or "elite_wins".
@@ -47,6 +51,7 @@ static func read(reader: DataReader) -> GrowthDef:
 			if not problem.is_empty():
 				reader.error(problem)
 	def.max_steps = reader.opt_int("max_steps", 0, 0)
+	def.max_steps_per_fight = reader.opt_int("max_steps_per_fight", 0, 0)
 	reader.finish()
 	return def
 
@@ -67,3 +72,14 @@ func mod_for(count: int) -> KitMod:
 ## True if the sim counts it (a fight's tally), not the run.
 func counted_in_fights() -> bool:
 	return run_counts.is_empty()
+
+
+## The count after a fight adds `counted` to `before`: with
+## max_steps_per_fight, no more than that many steps past `before`'s (what
+## the fight counted past them is dropped).
+func grown(before: int, counted: int) -> int:
+	var after: int = before + counted
+	if max_steps_per_fight > 0 and steps(after) - steps(before) > max_steps_per_fight:
+		@warning_ignore("integer_division")
+		after = (maxi(before, 0) / per + max_steps_per_fight) * per
+	return after

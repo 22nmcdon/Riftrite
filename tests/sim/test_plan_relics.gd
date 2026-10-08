@@ -208,3 +208,32 @@ func test_stillwater_seal_keeps_burn_on_held_enemies() -> void:
 	Statuses.end_now(fight, dummy, Statuses.find(dummy, "root"), "test")
 	K.step(fight, 20)
 	assert_lt(Statuses.stacks_on(dummy, "burn"), 40, "free: it fades again")
+
+
+# --- the shard caps (the tuning phase, Decisions 7 and 8) ----------------------
+
+## Overkill counted as steps: one for any overkill, one more at 50% of the
+## fallen's max HP, one more at 100%, whatever the numbers.
+func test_overkill_steps_count_shares_of_max_hp() -> void:
+	var hitter: UnitDef = _hero([], {"stats": {"atk": 100, "range": 6}, "basic_attack": {"cooldown_ms": 50, "shot": false, "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]}})
+	var setup: UnitSetup = K.at(hitter, 3, 1, "hero")
+	var errors: Array[String] = []
+	setup.tally_keys.append("tithe")
+	setup.tally_counts.append(DeedDef.read(DataReader.new({"counts": "overkill", "steps_at_pct": [0, 50, 100]}, "count", errors), false))
+	assert_eq(errors, [] as Array[String])
+	# Overkill 10 of 90 (11%): 1; 40 of 60 (67%): 2; 60 of 40 (150%): 3.
+	var fight: CombatSim = _fight([setup] as Array[UnitSetup], [K.foe(_dummy({"stats": {"hp": 90, "speed": 0, "range": 2}}, "a"), 1, 5, "a"),
+		K.foe(_dummy({"stats": {"hp": 60, "speed": 0, "range": 2}}, "b"), 3, 5, "b"), K.foe(_dummy({"stats": {"hp": 40, "speed": 0, "range": 2}}, "c"), 5, 5, "c")] as Array[UnitSetup])
+	K.step(fight, 20)
+	assert_eq(fight.enemies.filter(func(unit: UnitState) -> bool: return not unit.alive).size(), 3, "each falls to one hit")
+	assert_eq(CombatSim.result_of(fight).tally_amount("hero", "tithe"), 6, "1 + 2 + 3")
+
+
+func test_a_growth_caps_its_steps_a_fight() -> void:
+	var errors: Array[String] = []
+	var growth: GrowthDef = GrowthDef.read(DataReader.new({"counts": {"counts": "crits"}, "per": 15, "each_shards": 1, "max_steps_per_fight": 5}, "grows", errors))
+	assert_eq(errors, [] as Array[String])
+	assert_eq(growth.grown(0, 40), 40, "2 steps: under the cap")
+	assert_eq(growth.grown(0, 300), 75, "20 steps' worth: 5 kept, the rest dropped")
+	assert_eq(growth.grown(14, 300), 75 + 0, "from 14 (no step yet), 5 steps reach 75")
+	assert_eq(growth.steps(growth.grown(80, 300)) - growth.steps(80), 5, "never more than 5 a fight")

@@ -636,13 +636,14 @@
     "tier": "rare",
     "icon": "fletched_for_wings",
     "flavor": "Heads, you win.",
-    "text": "Shards for the team's crits.",
+    "text": "Shards for the team's crits, up to a few a fight.",
     "grows": {
       "counts": {
         "counts": "crits"
       },
       "per": 15,
-      "each_shards": 1
+      "each_shards": 1,
+      "max_steps_per_fight": 5
     }
   },
   {
@@ -1061,12 +1062,13 @@
     "tier": "epic",
     "icon": "cheaper",
     "flavor": "The rift collects what spills over.",
-    "text": "Shards for the team's damage past an enemy's last HP.",
+    "text": "Shards for the team's kills that overkill, more for a big one.",
     "grows": {
       "counts": {
-        "counts": "overkill"
+        "counts": "overkill",
+        "steps_at_pct": [0, 50, 100]
       },
-      "per": 150,
+      "per": 1,
       "each_shards": 1
     }
   },

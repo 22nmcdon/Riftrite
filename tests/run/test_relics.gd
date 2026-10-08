@@ -258,6 +258,20 @@ func test_relics_that_pay_with_what_the_team_does() -> void:
 	assert_eq(flow.kit_of("maren").stats.get_stat(UnitStats.Stat.ATK), atk + 1, "12 kills: one step of Collector's Chain")
 
 
+
+func test_lucky_strike_pays_at_most_5_a_fight() -> void:
+	var flow: RunFlow = _start()
+	var state: RunState = flow.state
+	_hold(flow, ["lucky_strike"])
+	_to_fight(flow)
+	var result: FightResult = _won()
+	for hero_id: String in ["brannoc", "maren", "vell"]:
+		result.tallies.append(FightResult.Deed.make(hero_id, "relic:lucky_strike", 100))
+	var before: int = state.shards
+	flow.record(Bot.formation(), result)
+	assert_eq(state.shards - before, _run.acts[0].pay[_run.content.encounters[state.chosen].tier] + 5, "300 crits, but at most 5 shards a fight (tuning Decision 8)")
+
+
 func test_chalk_ledger_is_a_quest() -> void:
 	var growth: GrowthDef = _run.relics["chalk_ledger"].grows
 	assert_eq([growth.steps(39), growth.steps(40), growth.steps(400)], [0, 1, 1])
@@ -473,11 +487,11 @@ func test_overkill_tithe_pays_for_overkill() -> void:
 	var setup: FightSetup = flow.fight_setup(Bot.formation(), [] as Array[String])
 	assert_true(setup.heroes[0].tally_keys.has("relic:overkill_tithe"))
 	var result: FightResult = _won()
-	result.tallies.append(FightResult.Deed.make("maren", "relic:overkill_tithe", 200))
-	result.tallies.append(FightResult.Deed.make("vell", "relic:overkill_tithe", 120))
+	result.tallies.append(FightResult.Deed.make("maren", "relic:overkill_tithe", 4))
+	result.tallies.append(FightResult.Deed.make("vell", "relic:overkill_tithe", 2))
 	var before: int = flow.state.shards
 	flow.record(Bot.formation(), result)
-	assert_eq(flow.state.shards - before, _run.acts[0].pay[_run.content.encounters[flow.state.chosen].tier] + 2, "320 overkill: 2 shards")
+	assert_eq(flow.state.shards - before, _run.acts[0].pay[_run.content.encounters[flow.state.chosen].tier] + 6, "6 overkill steps (1 to 3 a kill, tuning Decision 7): 6 shards")
 
 
 # --- step 5c: the engines ------------------------------------------------------------

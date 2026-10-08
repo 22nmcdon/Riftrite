@@ -156,7 +156,7 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 					if entry.crit:
 						counter.amounts[d] += 1
 				DeedDef.Counts.OVERKILL:
-					counter.amounts[d] += entry.overkill
+					counter.amounts[d] += entry.overkill if deed.overkill_steps_bp.is_empty() else _overkill_steps(sim, entry, deed)
 				DeedDef.Counts.APPLIED:
 					var target: UnitState = sim.unit_by_id(entry.target)
 					var status: StatusDef = sim.content.statuses.get(entry.status, null)
@@ -284,6 +284,21 @@ static func add_overflow(counter: Counter, hundredths: int) -> void:
 	if whole > 0:
 		counter.overflow_bank -= whole * Mana.SCALE
 		_add_to(counter, DeedDef.Counts.MANA_OVERFLOW, whole)
+
+
+## An overkill's steps (DeedDef.overkill_steps_bp): one for each share of
+## the target's max HP it reaches (0: any overkill), so a kill counts the
+## same however big the numbers grow (the tuning phase, Decision 7).
+static func _overkill_steps(sim: CombatSim, entry: LogEntry, deed: DeedDef) -> int:
+	if entry.overkill <= 0:
+		return 0
+	var target: UnitState = sim.unit_by_id(entry.target)
+	var max_hp: int = target.max_hp if target != null else 1
+	var steps: int = 0
+	for share_bp: int in deed.overkill_steps_bp:
+		if entry.overkill * FixedMath.BP_ONE >= max_hp * share_bp:
+			steps += 1
+	return steps
 
 
 ## Whether the unit's kit holds a passive with this id (a deed's with_part).

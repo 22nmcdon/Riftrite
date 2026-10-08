@@ -311,6 +311,8 @@ static func growth_numbers(growth: GrowthDef, kit: UnitDef, content: ContentDb) 
 	var text: String = "Grows: %s per %s" % [step, what]
 	if growth.max_steps > 0:
 		text += " (at most %d time%s)" % [growth.max_steps, "" if growth.max_steps == 1 else "s"]
+	if growth.max_steps_per_fight > 0:
+		text += " (at most %d a fight)" % growth.max_steps_per_fight
 	return text
 
 
@@ -346,6 +348,13 @@ static func step_text(mod: KitMod, kit: UnitDef, content: ContentDb) -> String:
 static func counted(counts: DeedDef, per: int) -> String:
 	var amount: String = _amount(counts, per)
 	match counts.counts:
+		DeedDef.Counts.OVERKILL when not counts.overkill_steps_bp.is_empty():
+			var shares: Array[String] = []
+			for share_bp: int in counts.overkill_steps_bp:
+				if share_bp > 0:
+					shares.append(ValueBreakdown._percent(share_bp))
+			return "kill that overkills (one more past %s of its max HP)" % " and ".join(shares) if per == 1 else \
+				"%d kills' overkill steps" % per
 		DeedDef.Counts.DAMAGE:
 			var what: String = "%s damage dealt" % amount
 			if counts.from_range > 0:
