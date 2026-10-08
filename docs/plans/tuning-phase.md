@@ -1,6 +1,6 @@
 # The tuning phase (all six heroes and the acts)
 
-Status: **a build plan, approved (2026-10-08; Decisions 1–6); T-1 built.** Order: T-2 (the bot) and T-1 (the relics), then T-3 onward. The phase `rebuild-phase8-heroes.md` named next: tune all six heroes and the three acts at once, starting from what `easy-start.md`'s runs left (ES-4 and ES-5) and the playtester's relic additions (`changes-plan-relics.md`, 2026-10-08, applied to `relics/`). Questions are in section 6.
+Status: **a build plan, approved (2026-10-08; Decisions 1–10); T-1 and T-2 built.** Order: T-2 (the bot) and T-1 (the relics), then T-3 onward. The phase `rebuild-phase8-heroes.md` named next: tune all six heroes and the three acts at once, starting from what `easy-start.md`'s runs left (ES-4 and ES-5) and the playtester's relic additions (`changes-plan-relics.md`, 2026-10-08, applied to `relics/`). Questions are in section 6.
 
 ## 1. Where it starts
 
@@ -79,6 +79,28 @@ All thirteen relics are data in `data/relics.json`, with two whole-fight boosts 
 - **Small additions:** Weighted Net reads `on_holder_hit`'s `from_signature`, so habits don't set it off; Choking Hold and Iron Garden read Root, Stun, and Garrote as holds.
 
 `tests/sim/test_plan_relics.gd` fights each relic in a small fight. The plan teams' leans (`tools/test_teams.json`) take the new relics: control the eight control relics, sustain the four sustain ones, and burst Splinter Shot.
+
+### Built in T-2
+
+**The bot's shopping** (bot code only, Decision 6): practice fights read a lost fight by the share of the enemies' HP the heroes took (a rout no longer reads -1 whatever the team, so a buy's gain shows before the bot can win); cards, items, ranks, and relics carry a small prior worth practice can't see (relics by tier); the shop tries its options by that worth. Its first runs found the shard runaway (Decisions 7–10).
+
+**Speed** (the fixed bot spent 51 practice fights per real fight, 79% of a run's time): the practice cache keys on what fights read (not the shop, the offers, or the shards), a shop visit is priced once and only its top 3 re-priced after a buy, the sim keeps per-unit lists of auras and listeners (10–21% faster on loaded fights, every fingerprint unchanged), and the bench loads content once and has a loaded case (six saved run states, `tools/bench_states/`). A long run went from 756 s to 392 s, 34 practice fights per real fight; 120 runs take about 2.5 hours, not 4.5.
+
+**The baseline** (the good bot, 120 runs over all 20 teams, with the thirteen relics and the shard caps):
+
+| What | Before T-2 | Now |
+| --- | --- | --- |
+| Reach Act 1's boss | 73% | 81% |
+| Win Act 1 | 40% | 59% |
+| Win Act 2, Act 3 (of runs reaching it) | 40%, 50% | 45%, 93% |
+| Win the run | 8% | 25% |
+| Shards earned, spent a run | 146, 44 | 240, 165 |
+| Picks a run (cards taken) | about half a hero's | 10.7 (hero 8.0, taste 0.5, path 1.9, apex 0.3) |
+| Relics a run | | 17.3 (target 8–14) |
+| Garrote, Headhunter, Windcaller transform | 5%, 30%, 35% | 40%, 65%, 45% |
+| Runs won by hero | | Brannoc 38%, Garrow 31%, Maren 26%, Tamsin 23%, Vell 16%, Aldous 13% (Windcaller 0 of 20) |
+
+So the bot now buys and picks, and the numbers move a lot: Act 1 is above its 40–49% band, Act 3 is near-certain for the runs that reach it, and relics are above their target. These are the numbers T-3 to T-6 tune from.
 
 ## 6. Questions
 
