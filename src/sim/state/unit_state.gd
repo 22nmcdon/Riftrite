@@ -214,6 +214,9 @@ var engagements: Array[Engage.Engagement] = []
 var statuses: Array[StatusState] = []
 ## Ticks of this unit's recent heals, for the heal-cleanse falloff.
 var recent_heal_ticks: Array[int] = []
+## The tick its last Root or Stun ended (-1: never; Dulled Shackles' linger,
+## the tuning phase).
+var hold_ended_at: int = -1
 
 # For the log.
 ## What last hurt it: a hit's source, or a damage-over-time status (then

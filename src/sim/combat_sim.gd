@@ -62,6 +62,9 @@ var has_void: bool = false
 ## Event effects waiting out their delay (phase 8 part 3; Passives.Delayed),
 ## in the order they were set off.
 var delayed: Array = []
+## Passive id and enemy id -> true, for once_per_enemy effects (the tuning
+## phase; Heavy Pommel, Snare Wire): a lookup, never iterated.
+var once_marks: Dictionary[String, bool] = {}
 ## The units with a copy passive (phase 8 part 3; Copies), in the fight's
 ## order.
 var copiers: Array[UnitState] = []
@@ -524,7 +527,9 @@ func _act(unit: UnitState) -> void:
 		Tactics.tick(self, unit)
 	var has_statuses: bool = not unit.statuses.is_empty()
 	# Mana regen (Mana), unless Silenced.
-	if unit.mana_regen > 0 and unit.mana < maxi(unit.mana_cap, unit.mana_store) and not (has_statuses and Statuses.has_kind(unit, StatusDef.Kind.SILENCE)):
+	# Shackle Engine (the tuning phase): a held enemy gains none.
+	if unit.mana_regen > 0 and unit.mana < maxi(unit.mana_cap, unit.mana_store) and not (has_statuses and Statuses.has_kind(unit, StatusDef.Kind.SILENCE)) \
+			and not (has_statuses and hero_rules.held_no_mana and unit.side != EffectSource.Team.HEROES and SideRules.is_held(unit)):
 		var regen_before: int = unit.mana
 		var regen: int = unit.mana_regen
 		if unit.aura_bp[AuraDef.Stat.MANA_GAIN_BP] != FixedMath.BP_ONE:

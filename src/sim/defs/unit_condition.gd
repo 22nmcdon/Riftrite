@@ -6,6 +6,8 @@ extends RefCounted
 ##   {"keywords": ["rooted"]}                Rooted (Keywords.NAMES)
 ##   {"statuses": ["root", "stun"]}          Rooted or Stunned (any status id)
 ##   {"below_hp_pct": 30}                    below 30% of its max HP
+##   {"above_hp_pct": 90}                    above 90% of its max HP (the
+##                                           tuning phase; Full Vigor)
 ##   {"flying": true}                        a flier (false: not one)
 ##   {"archetypes": ["caster", "support"]}   an enemy of these archetypes
 ##   {"front_most": true}                    its side's standing unit nearest
@@ -46,6 +48,7 @@ var keywords: Array[String] = []
 var statuses: Array[String] = []
 ## 0: no HP condition.
 var below_hp_bp: int = 0
+var above_hp_bp: int = 0
 var flying: Flying = Flying.ANY
 var archetypes: Array[String] = []
 var front_most: bool = false
@@ -75,6 +78,8 @@ static func read(reader: DataReader) -> UnitCondition:
 		def.statuses = reader.req_string_array("statuses")
 	if reader.has("below_hp_pct"):
 		def.below_hp_bp = reader.req_int("below_hp_pct", 1, 99) * 100
+	if reader.has("above_hp_pct"):
+		def.above_hp_bp = reader.req_int("above_hp_pct", 1, 99) * 100
 	if reader.has("flying"):
 		def.flying = Flying.YES if reader.opt_bool("flying", true) else Flying.NO
 	def.archetypes = reader.opt_choice_array("archetypes", EnemyDef.ARCHETYPE_NAMES)
@@ -96,13 +101,13 @@ static func read(reader: DataReader) -> UnitCondition:
 		def.target_beyond = reader.req_int("target_beyond_hexes", 1, 10) * HexGrid.HEX
 	def.fired_over_full = reader.opt_bool("fired_over_full", false)
 	if def.is_empty():
-		reader.error("a condition needs at least one of keywords, statuses, below_hp_pct, flying, archetypes, front_most, on_water, same_island, shield_above_pct, targets_holder, target, ranged, target_beyond_hexes, fired_over_full, or kits")
+		reader.error("a condition needs at least one of keywords, statuses, below_hp_pct, above_hp_pct, flying, archetypes, front_most, on_water, same_island, shield_above_pct, targets_holder, target, ranged, target_beyond_hexes, fired_over_full, or kits")
 	reader.finish()
 	return def
 
 
 func is_empty() -> bool:
-	return keywords.is_empty() and statuses.is_empty() and below_hp_bp == 0 and flying == Flying.ANY and archetypes.is_empty() and not front_most and on_water == Flying.ANY and kits.is_empty() and not same_island and shield_above_bp == 0 \
+	return keywords.is_empty() and statuses.is_empty() and below_hp_bp == 0 and above_hp_bp == 0 and flying == Flying.ANY and archetypes.is_empty() and not front_most and on_water == Flying.ANY and kits.is_empty() and not same_island and shield_above_bp == 0 \
 		and targets_holder == Flying.ANY and target == null and ranged == Flying.ANY and target_beyond == 0 and not fired_over_full
 
 
@@ -113,6 +118,8 @@ func holds(unit: UnitState, holder: UnitState = null) -> bool:
 	if same_island and (holder == null or unit.island < 0 or unit.island != holder.island):
 		return false
 	if below_hp_bp > 0 and unit.hp * FixedMath.BP_ONE >= below_hp_bp * unit.max_hp:
+		return false
+	if above_hp_bp > 0 and unit.hp * FixedMath.BP_ONE <= above_hp_bp * unit.max_hp:
 		return false
 	if shield_above_bp > 0 and unit.shield * FixedMath.BP_ONE <= shield_above_bp * unit.max_hp:
 		return false
@@ -171,6 +178,9 @@ func describe() -> String:
 	if below_hp_bp > 0:
 		@warning_ignore("integer_division")
 		parts.append("below %d%% HP" % (below_hp_bp / 100))
+	if above_hp_bp > 0:
+		@warning_ignore("integer_division")
+		parts.append("above %d%% HP" % (above_hp_bp / 100))
 	if shield_above_bp > 0:
 		@warning_ignore("integer_division")
 		parts.append("with a Shield over %d%% of max HP" % (shield_above_bp / 100))

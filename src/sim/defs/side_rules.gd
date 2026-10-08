@@ -35,6 +35,19 @@ extends RefCounted
 ##   "long_watch": {"from_ms": 60000, "every_ms": 10000, "tie_ms": 300000}
 ##                              no 180s tie; heroes grow every 10s from 60s
 ##                              (The Long Watch)
+## The tuning phase (docs/plans/tuning-phase.md, T-1; the playtester's
+## control relics):
+##   "holds": {"time_bp": 13000, "no_mana": true}   Roots and Stuns heroes
+##                              put on enemies last that much longer, and a
+##                              Rooted or Stunned enemy gains no mana
+##                              (Shackle Engine)
+##   "held_weak": {"power_bp": 2500, "linger_ms": 2000}   a Rooted or
+##                              Stunned enemy's hits are that much weaker,
+##                              and stay so that long after the hold ends
+##                              (Dulled Shackles)
+##   "held_keeps_burn": true    Burn on a Rooted or Stunned enemy loses no
+##                              stacks (Stillwater Seal; Bleed never fades,
+##                              and nothing applies Poison yet)
 
 var marks_stack: bool = false
 ## crit_chain: extra rolls (0: off) and how much each step fades.
@@ -66,6 +79,15 @@ var collapse_enemy_bp: int = 0
 var watch_from_ticks: int = 0
 var watch_every_ticks: int = 0
 var watch_tie_ticks: int = 0
+## holds: how much longer heroes' Roots and Stuns on enemies last (0: off),
+## and whether a held enemy gains mana.
+var hold_time_bp: int = 0
+var held_no_mana: bool = false
+## held_weak: how much weaker a held enemy's hits are (0: off), and how long
+## after its hold it stays so.
+var held_weak_bp: int = 0
+var held_weak_ticks: int = 0
+var held_keeps_burn: bool = false
 
 
 static func read(reader: DataReader) -> SideRules:
@@ -119,6 +141,17 @@ static func read(reader: DataReader) -> SideRules:
 		rules.watch_every_ticks = part.req_ticks("every_ms", FixedMath.MS_PER_TICK)
 		rules.watch_tie_ticks = part.req_ticks("tie_ms", FixedMath.MS_PER_TICK)
 		part.finish()
+	part = _part(reader, "holds")
+	if part != null:
+		rules.hold_time_bp = part.opt_int("time_bp", 0, 0, 5 * FixedMath.BP_ONE)
+		rules.held_no_mana = part.opt_bool("no_mana", false)
+		part.finish()
+	part = _part(reader, "held_weak")
+	if part != null:
+		rules.held_weak_bp = part.req_int("power_bp", 1, 9000)
+		rules.held_weak_ticks = part.req_ticks("linger_ms", 0)
+		part.finish()
+	rules.held_keeps_burn = reader.opt_bool("held_keeps_burn", false)
 	reader.finish()
 	return rules
 
@@ -130,7 +163,8 @@ static func _part(reader: DataReader, key: String) -> DataReader:
 ## True if any rule is on.
 func any() -> bool:
 	return marks_stack or crit_steps > 0 or echo_steps > 0 or carry_steps > 0 or overcharge_steps > 0 or rise_ticks > 0 or deeper_steps > 0 \
-		or keywords_twice or keywords_last or unbending or collapse_immune or collapse_enemy_bp > 0 or watch_every_ticks > 0
+		or keywords_twice or keywords_last or unbending or collapse_immune or collapse_enemy_bp > 0 or watch_every_ticks > 0 \
+		or hold_time_bp > 0 or held_no_mana or held_weak_bp > 0 or held_keeps_burn
 
 
 ## These rules and `other`'s together: a flag on in either is on, and a
@@ -167,6 +201,12 @@ func merged(other: SideRules) -> SideRules:
 		rules.watch_from_ticks = other.watch_from_ticks
 		rules.watch_every_ticks = other.watch_every_ticks
 		rules.watch_tie_ticks = other.watch_tie_ticks
+	rules.hold_time_bp = maxi(hold_time_bp, other.hold_time_bp)
+	rules.held_no_mana = held_no_mana or other.held_no_mana
+	if other.held_weak_bp > 0:
+		rules.held_weak_bp = other.held_weak_bp
+		rules.held_weak_ticks = other.held_weak_ticks
+	rules.held_keeps_burn = held_keeps_burn or other.held_keeps_burn
 	return rules
 
 
@@ -178,3 +218,11 @@ func growth_bp(step: int) -> int:
 		for i: int in step:
 			factor = FixedMath.apply_bp(factor, FixedMath.BP_ONE + deeper_grow_bp)
 	return factor
+
+
+## True if `unit` is Rooted or Stunned (the holds the control relics read).
+static func is_held(unit: UnitState) -> bool:
+	for state: StatusState in unit.statuses:
+		if state.def.kind == StatusDef.Kind.ROOT or state.def.kind == StatusDef.Kind.STUN:
+			return true
+	return false

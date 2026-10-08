@@ -402,11 +402,12 @@ static func listens_for(unit: UnitState, trigger: EffectDef.Trigger) -> bool:
 	return false
 
 
-## True if the unit has passive effects on on_interval or on_ally_below_hp.
+## True if the unit has passive effects on on_interval, on_ally_below_hp,
+## on_below_hp, or on_enemy_near.
 static func has_timed(unit: UnitState) -> bool:
 	for listener: Listener in unit.listeners:
 		if listener.effect.trigger == EffectDef.Trigger.ON_INTERVAL or listener.effect.trigger == EffectDef.Trigger.ON_ALLY_BELOW_HP \
-				or listener.effect.trigger == EffectDef.Trigger.ON_BELOW_HP:
+				or listener.effect.trigger == EffectDef.Trigger.ON_BELOW_HP or listener.effect.trigger == EffectDef.Trigger.ON_ENEMY_NEAR:
 			return true
 	return false
 
@@ -528,11 +529,15 @@ static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, 
 		if effect.cooldown_per_unit_ticks > 0 and other != null:
 			if listener.last_for.has(other.id) and sim.tick - listener.last_for[other.id] < effect.cooldown_per_unit_ticks:
 				continue
+		if effect.once_per_enemy and (other == null or sim.once_marks.has(_once_key(listener, other))):
+			continue
 		listener.count += 1
 		if listener.count % effect.every != 0:
 			continue
 		if effect.cooldown_per_unit_ticks > 0 and other != null:
 			listener.last_for[other.id] = sim.tick
+		if effect.once_per_enemy:
+			sim.once_marks[_once_key(listener, other)] = true
 		listener.ran_at = sim.tick
 		if effect.delay_ticks > 0:
 			# It runs later (phase 8 part 3, the Gloam Hound): run_delayed.
@@ -546,6 +551,11 @@ static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, 
 			sim.delayed.append(waiting)
 			continue
 		_run(sim, unit, listener, other, damage, chain)
+
+
+## once_per_enemy's mark: the passive's id and the enemy's (the tuning phase).
+static func _once_key(listener: Listener, other: UnitState) -> String:
+	return "%s:%s" % [listener.part.id, other.id]
 
 
 ## The unit an on_ally_hit or on_enemy_fell event is "by" (the ally that hit,
@@ -611,6 +621,20 @@ static func run_timed(sim: CombatSim) -> void:
 						listener.count += 1
 						_run(sim, unit, listener, null, 0)
 					listener.below = below
+				EffectDef.Trigger.ON_ENEMY_NEAR:
+					# An enemy first coming near (the tuning phase, Snare Wire):
+					# once for each enemy (across the team with once_per_enemy).
+					var reach_sq: int = effect.near_trigger_range * effect.near_trigger_range
+					for enemy: UnitState in sim.standing_enemies_of(unit):
+						if listener.last_for.has(enemy.id) or ArenaPlane.length_sq(enemy.pos - unit.pos) > reach_sq:
+							continue
+						listener.last_for[enemy.id] = sim.tick
+						if effect.once_per_enemy:
+							if sim.once_marks.has(_once_key(listener, enemy)):
+								continue
+							sim.once_marks[_once_key(listener, enemy)] = true
+						listener.count += 1
+						_run(sim, unit, listener, enemy, 0)
 
 
 ## The unit would fall (the deaths step, after Undying and a would_fall

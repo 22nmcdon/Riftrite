@@ -58,6 +58,11 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: 
 				stacks *= 2
 				duration_ticks = 2 * (duration_ticks if duration_ticks > 0 else def.duration_ticks)
 			lasting = rules.keywords_last and target.side != EffectSource.Team.HEROES
+		# Shackle Engine (the tuning phase, T-1): heroes' Roots and Stuns on
+		# enemies last longer.
+		if by_heroes and rules.hold_time_bp > 0 and target.side != EffectSource.Team.HEROES \
+				and (def.kind == StatusDef.Kind.ROOT or def.kind == StatusDef.Kind.STUN):
+			duration_ticks = FixedMath.apply_bp(duration_ticks if duration_ticks > 0 else def.duration_ticks, rules.hold_time_bp)
 	var state: StatusState = find(target, status_id)
 	var fresh: bool = state == null
 	if state == null:
@@ -405,6 +410,10 @@ static func _deal_damage_over_time(sim: CombatSim, unit: UnitState, state: Statu
 		sim.combat_log.add(entry)
 	if state.lasting:
 		return
+	# Stillwater Seal (the tuning phase, T-1): Burn on a held enemy keeps its
+	# stacks.
+	if sim.hero_rules.held_keeps_burn and unit.side != EffectSource.Team.HEROES and state.def.keyword == "burning" and SideRules.is_held(unit):
+		return
 	var lost: int = state.def.stacks_lost_per_interval
 	if state.def.stacks_lost_bp > 0:
 		@warning_ignore("integer_division")
@@ -483,6 +492,9 @@ static func _end(sim: CombatSim, unit: UnitState, state: StatusState, why: Strin
 	entry.status_name = state.def.name
 	entry.note = why
 	sim.combat_log.add(entry)
+	if state.def.kind == StatusDef.Kind.ROOT or state.def.kind == StatusDef.Kind.STUN:
+		# For Dulled Shackles' linger (the tuning phase, T-1).
+		unit.hold_ended_at = sim.tick
 	if state.def.kind == StatusDef.Kind.TAUNT and sim.taunt_auras:
 		sim.refold_auras()
 	elif state.def.kind == StatusDef.Kind.BOOST:

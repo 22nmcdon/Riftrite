@@ -255,8 +255,16 @@ extends RefCounted
 ##                    4, Singing Arrows). on_enemy_fell takes "by" too (its
 ##                    killer) and "by_beyond_hexes" (the killer stood that
 ##                    far from it or more; Long Wind).
+##   on_enemy_near    the tuning phase (Snare Wire; not an event: checked
+##                    each tick with the timed ones): an enemy first comes
+##                    within "near_hexes" of the unit (hit_target: that enemy;
+##                    once per enemy for each unit)
 ## An event effect's "cooldown_per_unit_ms" (step 5d) runs it at most once
-## that long for each unit its event names.
+## that long for each unit its event names. "once_per_enemy": true (the
+## tuning phase; Heavy Pommel, Snare Wire) runs it once for each enemy the
+## event names, across every unit holding a passive of the same id. A
+## damage effect's "plain": true never crits and never lifesteals (Thorned
+## Bandage, Splinter Shot).
 ## Phase 5c step 5b adds: extend_status ("status", "duration_ms": a timed
 ## status already on the target lasts that much longer; phase 8 part 4,
 ## Choke: "statuses": [...] extends each of them it has); the targets
@@ -328,7 +336,7 @@ enum Trigger {
 	ON_INTERVAL, ON_FALL, ON_HOP, ON_WOULD_FALL,
 	ON_HOLDER_HIT, ON_SHIELD_BROKEN, ON_ALLY_ABILITY, ON_STATUS_ENDED, ON_LIFESTEAL, ON_KNOCKBACK, ON_GUARD,
 	ON_BELOW_HP, ON_CHARGED, ON_ENEMY_FELL, ON_ARRIVE, ON_ALLY_SHIELD_BROKEN, ON_WALL_BLOCK, ON_RISE, ON_BREAKS_SHIELD, ON_PULL, ON_SHIELD_SPENT,
-	ON_MANA_GAINED, ON_ALLY_HIT,
+	ON_MANA_GAINED, ON_ALLY_HIT, ON_ENEMY_NEAR,
 }
 enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS, HOP, FLOOD, SEVER, SPEND_SHIELD, RELEASE_STORED }
 ## A pull's way (phase 8 part 3): toward the unit, the nearest water, or
@@ -370,7 +378,7 @@ const TRIGGER_NAMES: Array[String] = [
 	"on_interval", "on_fall", "on_hop", "on_would_fall",
 	"on_holder_hit", "on_shield_broken", "on_ally_ability", "on_status_ended", "on_lifesteal", "on_knockback", "on_guard",
 	"on_below_hp", "on_charged", "on_enemy_fell", "on_arrive", "on_ally_shield_broken", "on_wall_block", "on_rise", "on_breaks_shield", "on_pull", "on_shield_spent",
-	"on_mana_gained", "on_ally_hit",
+	"on_mana_gained", "on_ally_hit", "on_enemy_near",
 ]
 ## The unit's events (see the top).
 const EVENT_TRIGGERS: Array[Trigger] = [
@@ -385,7 +393,7 @@ const EVENT_TRIGGERS: Array[Trigger] = [
 const EVENT_UNIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED, Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD, Trigger.ON_CHARGED,
 	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_ALLY_HIT]
-const EVENT_HIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_HIT_TAKEN, Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN,
+const EVENT_HIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_HIT_TAKEN, Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_HEAL,
 	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_GUARD, Trigger.ON_BREAKS_SHIELD, Trigger.ON_SHIELD_SPENT, Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT]
 ## Event triggers that can take "vs": those that name a unit, and on_kill.
 const EVENT_VS_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED, Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS,
@@ -399,6 +407,7 @@ const ABILITY_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
 	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_SHIELD_SPENT,
 	Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT,
+	Trigger.ON_ENEMY_NEAR,
 ]
 ## What a passive's effects may run on (PartDef).
 const PASSIVE_TRIGGERS: Array[Trigger] = [
@@ -408,6 +417,7 @@ const PASSIVE_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
 	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_SHIELD_SPENT,
 	Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT,
+	Trigger.ON_ENEMY_NEAR,
 ]
 ## The passive triggers that aren't events (Passives.run_timed, on_fall,
 ## would_fall).
@@ -574,6 +584,14 @@ var at_ticks: int = 0
 var threshold_bp: int = 0
 ## on_ally_below_hp: only the first ally in the fight sets it off.
 var once: bool = false
+## A plain hit (damage; the tuning phase, T-1): no crit, no lifesteal.
+var plain: bool = false
+## Runs only once for each enemy its event names, across every unit with a
+## passive of the same id (the tuning phase: Heavy Pommel, Snare Wire;
+## CombatSim.once_marks).
+var once_per_enemy: bool = false
+## on_enemy_near: how close an enemy comes (plane units).
+var near_trigger_range: int = 0
 ## Event triggers: runs on every Nth event.
 var every: int = 1
 ## on_status: only these statuses (empty = any), and only statuses carrying
@@ -738,6 +756,9 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 					if def.execute_below_bp == 0:
 						reader.error("execute_vs limits an execution (\"execute_below_pct\")")
 				def.ignores_def = reader.opt_bool("ignores_def", false)
+				# A plain hit (the tuning phase: Thorned Bandage, Splinter
+				# Shot): it never crits and never lifesteals.
+				def.plain = reader.opt_bool("plain", false)
 			Type.HEAL:
 				var kinds: int = int(reader.has("amount")) + int(reader.has("amount_bp_of_max_hp")) + int(reader.has("amount_bp_of_damage"))
 				if kinds != 1:
@@ -1055,6 +1076,10 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 		Trigger.ON_BELOW_HP:
 			def.threshold_bp = reader.req_int("threshold_bp", 1, FixedMath.BP_ONE - 1)
 			def.times = reader.opt_int("times", 1, 1, 10)
+		Trigger.ON_ENEMY_NEAR:
+			# The tuning phase (Snare Wire): an enemy first comes this near.
+			def.near_trigger_range = reader.req_int("near_hexes", 1, 10) * HexGrid.HEX
+			def.once_per_enemy = reader.opt_bool("once_per_enemy", false)
 		Trigger.ON_HIT_TAKEN:
 			def.min_hit_bp = reader.opt_int("min_bp_of_max_hp", 0, 0, FixedMath.BP_ONE)
 		Trigger.ON_ENEMY_FELL:
@@ -1082,6 +1107,9 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 		Trigger.ON_HEAL, Trigger.ON_HOLDER_HIT, Trigger.ON_PULL:
 			if reader.has("from_ability"):
 				def.from_abilities = reader.req_string_array("from_ability")
+			# Only its signature's hits (the tuning phase, Weighted Net).
+			if def.trigger == Trigger.ON_HOLDER_HIT:
+				def.from_signature = reader.opt_bool("from_signature", false)
 			if def.trigger == Trigger.ON_HEAL and reader.has("was_below_pct"):
 				def.was_below_bp = reader.req_int("was_below_pct", 1, 99) * 100
 		Trigger.ON_STATUS, Trigger.ON_STATUS_ENDED:
@@ -1110,6 +1138,9 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 		def.once = reader.opt_bool("once", false)
 		def.delay_ticks = reader.opt_ticks("delay_ms", 0, FixedMath.MS_PER_TICK)
 		def.cooldown_per_unit_ticks = reader.opt_ticks("cooldown_per_unit_ms", 0, FixedMath.MS_PER_TICK)
+		def.once_per_enemy = reader.opt_bool("once_per_enemy", false)
+		if def.once_per_enemy and not EVENT_VS_TRIGGERS.has(def.trigger):
+			reader.error("%s names no unit, so it can't take once_per_enemy" % TRIGGER_NAMES[def.trigger])
 		def.cooldown_ticks = reader.opt_ticks("cooldown_ms", 0, FixedMath.MS_PER_TICK)
 		if def.cooldown_per_unit_ticks > 0 and not EVENT_VS_TRIGGERS.has(def.trigger):
 			reader.error("%s names no unit, so it can't take cooldown_per_unit_ms" % TRIGGER_NAMES[def.trigger])

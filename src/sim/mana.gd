@@ -45,6 +45,9 @@ static func gain(sim: CombatSim, unit: UnitState, hundredths: int) -> int:
 		return 0
 	if not unit.statuses.is_empty() and Statuses.has_kind(unit, StatusDef.Kind.SILENCE):
 		return 0
+	if sim.hero_rules.held_no_mana and unit.side != EffectSource.Team.HEROES and not unit.statuses.is_empty() and SideRules.is_held(unit):
+		# Shackle Engine (the tuning phase, T-1): a held enemy gains none.
+		return 0
 	if unit.aura_bp[AuraDef.Stat.MANA_GAIN_BP] != FixedMath.BP_ONE:
 		# More from every source (phase 8 part 4, Grand Chorus).
 		hundredths = FixedMath.apply_bp(hundredths, Passives.factor(unit, AuraDef.Stat.MANA_GAIN_BP))

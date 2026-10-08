@@ -13,21 +13,21 @@
       "name": "burst",
       "group": "plan",
       "vows": {"tamsin": "nightblade", "maren": "deadeye", "aldous": "windcaller"},
-      "lean": ["bone_dice", "keen_edge", "quickened_pulse", "whetstone_of_the_fallen", "headsmans_coin", "the_ninth_arrow", "knifes_edge", "crown_of_stars", "smoke_pouch", "veil_of_the_lost", "shadow_step", "armor_breaker", "headsmans_patience", "surge", "execution"],
+      "lean": ["bone_dice", "keen_edge", "quickened_pulse", "whetstone_of_the_fallen", "headsmans_coin", "the_ninth_arrow", "knifes_edge", "crown_of_stars", "smoke_pouch", "veil_of_the_lost", "shadow_step", "armor_breaker", "headsmans_patience", "surge", "execution", "splinter_shot"],
       "note": "Kill them before the damage lands (easy-start.md section 5)"
     },
     {
       "name": "sustain",
       "group": "plan",
       "vows": {"vell": "lanternbearer", "aldous": "chorister", "maren": "volley"},
-      "lean": ["leech_tooth", "gluttons_chalice", "tithe_of_iron", "hearthstone_shard", "echoing_bell", "rift_candle", "overflow_chalice", "blood_communion", "sanguine_frenzy", "second_dawn", "leech_fang", "warding_thread", "purifying_light", "siphon", "bulwark", "wait_to_heal_orders"],
+      "lean": ["leech_tooth", "gluttons_chalice", "tithe_of_iron", "hearthstone_shard", "echoing_bell", "rift_candle", "overflow_chalice", "blood_communion", "sanguine_frenzy", "second_dawn", "leech_fang", "warding_thread", "purifying_light", "siphon", "bulwark", "wait_to_heal_orders", "soothing_salve", "thorned_bandage", "full_vigor", "unending_vigil"],
       "note": "Spread the damage and undo it (easy-start.md section 5; Edric and Severine aren't built)"
     },
     {
       "name": "control",
       "group": "plan",
       "vows": {"maren": "trapper", "tamsin": "garrote", "vell": "wardweaver"},
-      "lean": ["bramble_seed", "rusted_fetter", "thornwoven_cloak", "grasping_mire", "thicket_engine", "snaring_shot", "everflame", "bramble_knot", "opportunist", "grasping", "lingering", "spite_brand"],
+      "lean": ["bramble_seed", "rusted_fetter", "thornwoven_cloak", "grasping_mire", "thicket_engine", "snaring_shot", "everflame", "bramble_knot", "opportunist", "grasping", "lingering", "spite_brand", "weighted_net", "snare_wire", "heavy_pommel", "dulled_shackles", "choking_hold", "shackle_engine", "iron_garden", "stillwater_seal"],
       "note": "The damage never gets thrown (easy-start.md section 5)"
     },
     {

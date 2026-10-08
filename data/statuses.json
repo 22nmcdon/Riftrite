@@ -146,6 +146,40 @@
     "auras": [{"stat": "atsp", "value": 1}]
   },
   {
+    "_note": "Hits harder for the rest of the fight, a stack for each second spent above 75% HP, no cap (Unending Vigil, a legendary relic; the tuning phase).",
+    "id": "vigilant",
+    "name": "Vigilant",
+    "kind": "boost",
+    "stacking": true,
+    "auras": [
+      {
+        "stat": "atk_bp",
+        "value": 10100
+      },
+      {
+        "stat": "mgk_bp",
+        "value": 10100
+      }
+    ]
+  },
+  {
+    "_note": "Hits harder for the rest of the fight, a stack for each Root or Stun any hero puts on an enemy, no cap (Iron Garden, a legendary relic; the tuning phase).",
+    "id": "iron_garden",
+    "name": "Iron Garden",
+    "kind": "boost",
+    "stacking": true,
+    "auras": [
+      {
+        "stat": "atk_bp",
+        "value": 10200
+      },
+      {
+        "stat": "mgk_bp",
+        "value": 10200
+      }
+    ]
+  },
+  {
     "_note": "A stack for each status The Unbending (a boss relic) blocked: more DEF and max HP for the rest of the fight (phase 5c step 5c).",
     "id": "unbending",
     "name": "Unbending",

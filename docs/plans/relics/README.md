@@ -115,6 +115,10 @@ Section 12.2 of the same plan: the heroes' rules (`SideRules`), each a relic's `
 
 Section 13 of the same plan: duo bonds are keys. Once a bond is on, its free bond relic is 20% of the shops' relic draws (both join with two on; never at the Magpie). **The whole pool is built: 89 relics** (25 common, 21 rare, 14 epic, 15 legendary, 11 boss, 3 bond).
 
+## What's built (the tuning phase, T-1, 2026-10-08)
+
+`../tuning-phase.md`, section 5: the thirteen relics for sustain, control, and swarms (Decision 2) and their seven sim pieces: a plain damage effect (`"plain"`: never a crit, never lifesteal, never sets off Splinter Shot again) as a share of the event's amount, an event's `"once_per_enemy"` (a mark the team shares, `CombatSim.once_marks`), the trigger `on_enemy_near` (`near_hexes`, center to center; Question TF), the condition `above_hp_pct`, and three hero rules: `holds` (Roots and Stuns on enemies `time_bp` longer, and `no_mana` while held), `held_weak` (a held enemy's hits on heroes at `power_bp` less, lingering `linger_ms` after the hold), and `held_keeps_burn` (Burn loses no stacks while its enemy is held). Each is skipped by a fight that doesn't use it; `tests/sim/test_plan_relics.gd` has one small fight for each relic. **107 relics are built** (28 common, 26 rare, 16 epic, 18 legendary, 11 boss, 8 bond).
+
 ## Open questions
 
 - **Stacking:** can you buy the same common twice? If yes, pure-stat commons become a "go wide" plan (with Reliquary and Reliquary Lamp).

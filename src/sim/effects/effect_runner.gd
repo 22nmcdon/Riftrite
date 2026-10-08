@@ -178,7 +178,7 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 		return
 	match effect.type:
 		EffectDef.Type.DAMAGE:
-			var dealt: int = deal_hit(sim, source, victim, amount, crit, power, true, "", false, effect.ignores_def)
+			var dealt: int = deal_hit(sim, source, victim, amount, crit, power, not effect.plain, "", false, effect.ignores_def)
 			if effect.execute_below_bp > 0 and not sim.last_dodged and (effect.execute_vs == null or effect.execute_vs.holds(victim, unit)):
 				execute(sim, source, victim, effect.execute_below_bp)
 			if effect.trigger == EffectDef.Trigger.ON_FIRE and ability != null and ability.has_hit_effects and not sim.last_dodged:
@@ -360,7 +360,9 @@ static func run_event(sim: CombatSim, unit: UnitState, ability: AbilityDef, sour
 			land(sim, unit, ability, source, effect, pair[0], amount, crit_round, (pair[1] as UnitState).pos, power_of(effect, unit))
 		return
 	for victim: UnitState in _targets(sim, unit, effect.target, unit.target, hit, effect):
-		var crit: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability, victim))
+		# A plain hit never crits (the tuning phase: Thorned Bandage, Splinter
+		# Shot), and rolls nothing.
+		var crit: bool = effect.type == EffectDef.Type.DAMAGE and not effect.plain and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability, victim))
 		land(sim, unit, ability, source, effect, victim, amount, crit, NO_POINT, power_of(effect, unit))
 
 
@@ -716,6 +718,12 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 	var per_hit: bool = sim.vs_auras and attacker != null and not attacker.vs_conditions.is_empty()
 	if per_hit:
 		power += Passives.vs_bonus_bp(attacker, target, AuraDef.Stat.DAMAGE_BP, source.ability_id)
+	# Dulled Shackles (the tuning phase, T-1): a Rooted or Stunned enemy's hits
+	# are weaker, and stay so a while after the hold ends.
+	if attacker != null and sim.hero_rules.held_weak_bp > 0 and attacker.side != EffectSource.Team.HEROES and target.side == EffectSource.Team.HEROES \
+			and (SideRules.is_held(attacker) or attacker.hold_ended_at >= 0 and sim.tick - attacker.hold_ended_at <= sim.hero_rules.held_weak_ticks):
+		power -= sim.hero_rules.held_weak_bp
+		entry.note = ("%s, " % entry.note if not entry.note.is_empty() else "") + "dulled"
 	var marked: int = Statuses.damage_taken_bp(target)
 	# Crit damage bonuses (phase 5c step 5b) add to the crit's own +50%.
 	var crit_bp: int = sim.tuning.crit_damage_bp - FixedMath.BP_ONE + (attacker.aura_bp[AuraDef.Stat.CRIT_DAMAGE_BP] if attacker != null else 0) if crit else 0

@@ -125,7 +125,7 @@ const PATH_STATUSES: Array[String] = ["warded"]
 ## The new heroes' kits and paths' (phase 8 part 4; tests/sim/test_garrow_paths.gd and test_hero_kits.gd).
 const HERO_STATUSES: Array[String] = ["iron_maiden", "hidden", "shadow_dance", "garroted", "garrote_veil", "assassins_haste", "swift_step", "death_mark",
 	"phantom_veil", "phantom_edge", "phantom_edge_more", "veiled", "veil_haste", "veil_haste_more", "executioner_rush", "executioner_rush_more", "on_the_trail", "trailing", "blood_scent", "blood_scent_more", "strangle", "pinned_light", "pinned", "pin_rally", "pin_rally_more", "pealing", "kindled", "cracked", "rung", "grand_note", "wellspring_swell", "long_wind_gust", "long_wind_gust_more", "rising_pitch", "great_bell", "great_bell_more", "deafened", "requiem_toll"]
-const RELIC_STATUSES: Array[String] = ["sunder", "quickened", "unbending", "long_watch"]
+const RELIC_STATUSES: Array[String] = ["sunder", "quickened", "unbending", "long_watch", "vigilant", "iron_garden"]
 ## Boosts only loadout items apply (phase 5c step 6; tests/run/test_loadout.gd).
 const ITEM_STATUSES: Array[String] = ["surge", "surge_2", "last_breath", "purified",
 	"grounded", "shadow_step", "shadow_step_2", "shadow_step_3", "bloodhound", "scavenged", "watched_over",

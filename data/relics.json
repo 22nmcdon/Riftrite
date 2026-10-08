@@ -1758,6 +1758,367 @@
     }
   },
   {
+    "id": "soothing_salve",
+    "name": "Soothing Salve",
+    "tier": "common",
+    "icon": "deep_mend",
+    "flavor": "It stings, then it doesn't.",
+    "text": "Healing heroes give is stronger.",
+    "mod": {
+      "passives": [
+        {
+          "id": "soothing_salve",
+          "name": "Soothing Salve",
+          "kind": "aura",
+          "text": "Its heals are stronger.",
+          "aura": {
+            "target": "holder",
+            "stat": "heal_bp",
+            "value": 11000
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "weighted_net",
+    "name": "Weighted Net",
+    "tier": "common",
+    "icon": "braced",
+    "flavor": "Cast once, and it never lets go.",
+    "text": "The first time each hero fires their signature in a fight, the first enemy it hits is Rooted.",
+    "mod": {
+      "passives": [
+        {
+          "id": "weighted_net",
+          "name": "Weighted Net",
+          "kind": "ability",
+          "text": "The first enemy its signature hits in a fight is Rooted.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_signature": true,
+              "once": true,
+              "type": "apply_status",
+              "status": "root",
+              "duration_ms": 1500,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "snare_wire",
+    "name": "Snare Wire",
+    "tier": "common",
+    "icon": "braced",
+    "flavor": "Strung low, where the rift's things walk.",
+    "text": "The first time each enemy comes within 1 hex of a hero, it's Rooted for a moment.",
+    "mod": {
+      "passives": [
+        {
+          "id": "snare_wire",
+          "name": "Snare Wire",
+          "kind": "ability",
+          "text": "The first time each enemy comes within 1 hex of a hero, it's Rooted for a moment.",
+          "effects": [
+            {
+              "trigger": "on_enemy_near",
+              "near_hexes": 1,
+              "once_per_enemy": true,
+              "type": "apply_status",
+              "status": "root",
+              "duration_ms": 500,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "thorned_bandage",
+    "name": "Thorned Bandage",
+    "tier": "rare",
+    "icon": "deep_mend",
+    "flavor": "It closes the wound and opens another.",
+    "text": "When a hero heals someone, the enemy nearest them takes part of the heal as damage. It never crits and never lifesteals.",
+    "mod": {
+      "passives": [
+        {
+          "id": "thorned_bandage",
+          "name": "Thorned Bandage",
+          "kind": "ability",
+          "text": "When it heals an ally, the enemy nearest that ally takes part of the heal as damage.",
+          "effects": [
+            {
+              "trigger": "on_heal",
+              "type": "damage",
+              "amount_bp_of_damage": 2500,
+              "plain": true,
+              "target": "enemy_near_named"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "heavy_pommel",
+    "name": "Heavy Pommel",
+    "tier": "rare",
+    "icon": "braced",
+    "flavor": "The first blow is the one they remember.",
+    "text": "The first hit on each enemy Stuns it.",
+    "mod": {
+      "passives": [
+        {
+          "id": "heavy_pommel",
+          "name": "Heavy Pommel",
+          "kind": "ability",
+          "text": "The first hit any hero lands on each enemy Stuns it.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "once_per_enemy": true,
+              "type": "apply_status",
+              "status": "stun",
+              "duration_ms": 1000,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "dulled_shackles",
+    "name": "Dulled Shackles",
+    "tier": "rare",
+    "icon": "braced",
+    "flavor": "The chain bites; the bite lingers.",
+    "text": "Rooted or Stunned enemies deal less damage, and keep dealing less for a while after the hold ends.",
+    "rules": {
+      "held_weak": {
+        "power_bp": 2500,
+        "linger_ms": 2000
+      }
+    }
+  },
+  {
+    "id": "choking_hold",
+    "name": "Choking Hold",
+    "tier": "rare",
+    "icon": "braced",
+    "flavor": "No breath, no spell.",
+    "text": "Hits on Rooted or Stunned enemies drain their mana.",
+    "mod": {
+      "passives": [
+        {
+          "id": "choking_hold",
+          "name": "Choking Hold",
+          "kind": "ability",
+          "text": "Its hits on Rooted or Stunned enemies drain their mana.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "vs": {
+                "statuses": [
+                  "root",
+                  "stun",
+                  "garroted"
+                ]
+              },
+              "type": "mana_drain",
+              "amount": 5,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "splinter_shot",
+    "name": "Splinter Shot",
+    "tier": "rare",
+    "icon": "fletched_for_wings",
+    "flavor": "Nothing breaks clean in the rift.",
+    "text": "Crits also hit one enemy within 1 hex of the target for part of their damage. That hit never crits.",
+    "mod": {
+      "passives": [
+        {
+          "id": "splinter_shot",
+          "name": "Splinter Shot",
+          "kind": "ability",
+          "text": "Its crits also hit one enemy within 1 hex of the target for part of their damage.",
+          "effects": [
+            {
+              "trigger": "on_holder_crit",
+              "type": "damage",
+              "amount_bp_of_damage": 5000,
+              "plain": true,
+              "target": "enemy_near_named",
+              "within_hexes": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "full_vigor",
+    "name": "Full Vigor",
+    "tier": "epic",
+    "icon": "purifying_light",
+    "flavor": "Unhurt, and hungry for it.",
+    "text": "Heroes near full HP hit harder.",
+    "mod": {
+      "passives": [
+        {
+          "id": "full_vigor",
+          "name": "Full Vigor",
+          "kind": "aura",
+          "text": "More ATK while above 90% HP.",
+          "aura": {
+            "target": "holder",
+            "stat": "atk_bp",
+            "value": 11500,
+            "while": "state",
+            "state": {
+              "above_hp_pct": 90
+            }
+          }
+        },
+        {
+          "id": "full_vigor_mgk",
+          "name": "Full Vigor",
+          "kind": "aura",
+          "text": "More MGK while above 90% HP.",
+          "aura": {
+            "target": "holder",
+            "stat": "mgk_bp",
+            "value": 11500,
+            "while": "state",
+            "state": {
+              "above_hp_pct": 90
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "shackle_engine",
+    "name": "Shackle Engine",
+    "tier": "epic",
+    "icon": "braced",
+    "flavor": "Every link learns to hold longer.",
+    "text": "Roots and Stuns heroes put on enemies last longer, and Rooted or Stunned enemies gain no mana.",
+    "rules": {
+      "holds": {
+        "time_bp": 13000,
+        "no_mana": true
+      }
+    }
+  },
+  {
+    "id": "unending_vigil",
+    "name": "Unending Vigil",
+    "tier": "legendary",
+    "icon": "pilgrims_lantern",
+    "flavor": "The longer the watch, the sharper the eye.",
+    "text": "Every second a hero spends near full HP makes them hit harder for the rest of the fight, with no cap.",
+    "mod": {
+      "passives": [
+        {
+          "id": "unending_vigil",
+          "name": "Unending Vigil",
+          "kind": "ability",
+          "text": "Every second above 75% HP, it hits harder for the rest of the fight.",
+          "effects": [
+            {
+              "trigger": "on_interval",
+              "interval_ms": 1000,
+              "holder": {
+                "above_hp_pct": 75
+              },
+              "type": "apply_status",
+              "status": "vigilant",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "iron_garden",
+    "name": "Iron Garden",
+    "tier": "legendary",
+    "icon": "braced",
+    "flavor": "What grows here holds everything still.",
+    "text": "Every time a hero Roots or Stuns an enemy, every hero hits harder for the rest of the fight, with no cap.",
+    "mod": {
+      "passives": [
+        {
+          "id": "iron_garden",
+          "name": "Iron Garden",
+          "kind": "ability",
+          "text": "Every Root or Stun it puts on an enemy makes every hero hit harder for the rest of the fight.",
+          "effects": [
+            {
+              "trigger": "on_status",
+              "statuses": [
+                "root",
+                "stun",
+                "garroted"
+              ],
+              "type": "apply_status",
+              "status": "iron_garden",
+              "target": "all_allies"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "stillwater_seal",
+    "name": "Stillwater Seal",
+    "tier": "legendary",
+    "icon": "ember_heart",
+    "flavor": "Held still, it burns forever.",
+    "text": "Burn on a Rooted or Stunned enemy doesn't fade, and heroes' crits against it hit harder.",
+    "rules": {
+      "held_keeps_burn": true
+    },
+    "mod": {
+      "passives": [
+        {
+          "id": "stillwater_seal",
+          "name": "Stillwater Seal",
+          "kind": "aura",
+          "text": "Its crits hit Rooted or Stunned enemies harder.",
+          "aura": {
+            "target": "holder",
+            "stat": "crit_damage_bp",
+            "value": 3000,
+            "vs": {
+              "statuses": [
+                "root",
+                "stun",
+                "garroted"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
     "id": "the_watchtower_stone",
     "name": "The Watchtower Stone",
     "tier": "bond",

@@ -1,6 +1,6 @@
 # The tuning phase (all six heroes and the acts)
 
-Status: **a build plan, approved (2026-10-08; Decisions 1–6).** Order: T-2 (the bot) and T-1 (the relics), then T-3 onward. The phase `rebuild-phase8-heroes.md` named next: tune all six heroes and the three acts at once, starting from what `easy-start.md`'s runs left (ES-4 and ES-5) and the playtester's relic additions (`changes-plan-relics.md`, 2026-10-08, applied to `relics/`). Questions are in section 6.
+Status: **a build plan, approved (2026-10-08; Decisions 1–6); T-1 built.** Order: T-2 (the bot) and T-1 (the relics), then T-3 onward. The phase `rebuild-phase8-heroes.md` named next: tune all six heroes and the three acts at once, starting from what `easy-start.md`'s runs left (ES-4 and ES-5) and the playtester's relic additions (`changes-plan-relics.md`, 2026-10-08, applied to `relics/`). Questions are in section 6.
 
 ## 1. Where it starts
 
@@ -63,6 +63,22 @@ What each needs, from what's built:
 | Stillwater Seal | crit damage `vs` a condition | **Burn's stack loss skipped while the enemy is held** (Bleed never fades; nothing applies Poison yet) |
 
 So seven new pieces: the team's once-per-enemy mark, the hero rule for mana, the above-HP condition, the lingering attacker condition, damage from an event's amount, the enemy-steps-near trigger, and DoT that holds while held. Each is skipped by a fight that doesn't use it.
+
+### Built in T-1
+
+All thirteen relics are data in `data/relics.json`, with two whole-fight boosts in `statuses.json` (`vigilant`, `iron_garden`, +1% and +2% ATK and MGK a stack). The seven new pieces, each skipped by a fight that doesn't use it (the bench's fingerprints are unchanged):
+
+- **Plain damage** (`EffectDef.plain`): never a crit and never lifesteal, so Thorned Bandage can't loop with lifesteal and Splinter Shot can't set itself off. Both take a share of the event's amount (`amount_bp_of_damage`, which `on_heal`, whose amount is the HP healed, now takes too).
+- **Once per enemy** (an event's `"once_per_enemy"`): a mark the team shares (`CombatSim.once_marks`, a lookup keyed by the passive and the enemy, never iterated). Heavy Pommel's Stun goes to the first hero to hit each enemy (Decision 5).
+- **`on_enemy_near`** (a timed trigger, `near_hexes`): an enemy first coming within that reach of the holder, center to center (Question TF, taken as 1 hex until the playtester says otherwise); once per enemy for each hero, or for the team with `once_per_enemy` (Snare Wire).
+- **`above_hp_pct`** (`UnitCondition`): Full Vigor's aura (`"while": "state"`) and Unending Vigil's `on_interval` holder check.
+- **Three hero rules** (`SideRules`):
+  - `holds`: Roots and Stuns from heroes on enemies last `time_bp` longer, and with `no_mana` a held enemy gains no mana, from regen or otherwise (Shackle Engine).
+  - `held_weak`: a held enemy's hits on heroes deal `power_bp` less (a power bonus, noted "dulled"), and for `linger_ms` after its last hold ends (`UnitState.hold_ended_at`; Dulled Shackles).
+  - `held_keeps_burn`: Burn loses no stacks while its enemy is held (Stillwater Seal; Bleed never fades, and nothing applies Poison yet).
+- **Small additions:** Weighted Net reads `on_holder_hit`'s `from_signature`, so habits don't set it off; Choking Hold and Iron Garden read Root, Stun, and Garrote as holds.
+
+`tests/sim/test_plan_relics.gd` fights each relic in a small fight. The plan teams' leans (`tools/test_teams.json`) take the new relics: control the eight control relics, sustain the four sustain ones, and burst Splinter Shot.
 
 ## 6. Questions
 
