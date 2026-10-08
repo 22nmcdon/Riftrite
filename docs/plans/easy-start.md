@@ -1,6 +1,6 @@
 # The easy start (Act 1, days 1 and 2)
 
-Status: **a build plan, approved (2026-10-07; Decisions 1–13); ES-1, ES-2, and ES-3 built (ES-3's fight changes tried and not shipped).** The playtester's request after phase 8 part 4's bot runs: fix Act 1's opening before tuning anything else, because runs that end on day 1 spoil every other number (heroes, paths, deeds, synergy against bad teams). Questions are in section 8.
+Status: **a build plan, approved (2026-10-07; Decisions 1–16); ES-1 to ES-4 built (ES-3's fight changes tried and not shipped; ES-4 added day 3's own elites and the days 4–6 ramp).** The playtester's request after phase 8 part 4's bot runs: fix Act 1's opening before tuning anything else, because runs that end on day 1 spoil every other number (heroes, paths, deeds, synergy against bad teams). Questions are in section 8.
 
 ## 1. Why
 
@@ -175,6 +175,53 @@ What it says:
   | Gloam Totem 300 HP / Shield 25, or 260 / 30 (520 / 15) | x1.75 | x0.90–1.00 | x1.15 | x0.80 |
 
   None narrows the gap: the tankless plans fall as far behind the tank, or farther. These fights don't fail them on a detail; the stand-in plans don't kill or control fast enough to use an exposed archer, a lighter pack, or a weaker Totem. **So nothing was changed** (the data is as before). The question goes back to the runs: if ES-4's plan teams, with their items and relics, still can't answer these three, the fix is in the heroes' burst and control (the tuning phase), or a bigger change to the fights, asked then.
+
+### Built in ES-4 (the runs, by team and by group)
+
+- **The tools** (all testing only): `tools/test_teams.json` holds the plan teams (section 5's burst, sustain, and control, and the old three as the tank plan), each with fixed vows and the items and relics it leans toward, and four bad stand-ins from the six built heroes (Glass, no makers, all melee, all tanks; no lean). `run_runner.gd --test-teams=all|plan|bad|names` plays them, seed n the nth in turn, and `--no-lean` turns the lean off. **The lean** is `RunContent.test_lean`: the shops' wares and every relic draw take a leaned id 3 times as often, and the good bot tries leaned buys first and counts them 0.05 higher. Only the tools set it; the run report clears it after each run, it's never saved, and `tests/run/test_offers_lean.gd` fails if anything in `src/` writes it. With no lean every draw rolls exactly as before. The run report adds **By team** (runs; ended on day 1, reached Act 1's boss, won Act 1, won Act 2; won) and **By group**.
+- **First runs** (the good bot over all 20 teams, 120 runs, after ES-1 and ES-2): no run ended on day 1 and 2 on day 2, but **56 of 120 ended on day 3**, the first elite (The Hunt 40% of its fights, Witch Coven 48%, Cairn Watch 52%). A sweep with the good bot placing: every tankless team and every plan team lost all three at full strength. One run also stuck on Dig In's rock placed on the chosen fight's water (below).
+- **Day 3's own elites** (Decision 15), sized like day 2 (Glass at least 85%, at least half with the enemies 10% stronger; the second enemy of a kind was what broke Glass each time):
+  - **Alpha's Trail:** the Hound Alpha and one Hunt Hound, at x0.7 (scale 7770): Glass 100%, 100% at x1.1.
+  - **Witch's Ward:** the Gloam Totem, one witch, and the Sentinel, full strength (8200): 100%, 100%.
+  - **Cairn Sentry:** the Cairn Guardian and one archer behind the rocks, at x0.9 (12285): 100%, 81%.
+  The full elites come on day 5 only. Like days 1–2 they're exempt from the gate's split (`SimReport.Report.exempt()`: an Act 1 fight whose days are all 1 to 3; "exempt (days 1-3)"), and `test_easy_start.gd` holds them to the day-2 rule.
+- **The second runs:** day 3 ended 1 run of 120, and **day 4 became the wall: 46 of 120** (Sentinel Gate and Cairn Road 32% of their fights, Bog Crossing 52%, Hollow Line 90%); Act 1 won 33%, Old Mother Ash 56% of her fights.
+- **Days 4–6 ramp to about 70%** (Decision 16), sized from a probe of all 20 teams vowed and transformed at strengths x1.0 to x0.6 (the runs win about a third more than the probe's middle): **Sentinel Gate x0.82** (scale 16150 to 13240), **Cairn Road x0.78** (16500 to 12870), **Bog Crossing x0.9** (14400 to 12960). Hollow Line (90%) and Witch Circle (66%, nearly all day 6) stay. All three still pass the gate.
+- **The third runs (the numbers ES-4 leaves):** the good bot over all 20 teams, 120 runs:
+
+  | Point | Target | Now |
+  | --- | --- | --- |
+  | Day 1 | about 95% | 100% (Warren Mouth 65 of 65, Smouldering Den 55 of 55) |
+  | Days 2–3 | about 85% | 89–100% a fight; 2 runs of 120 end there |
+  | Days 4–6 (Decision 16) | about 70% | Bog Crossing 67%, Sentinel Gate 67%, Cairn Road 72%, Witch Circle 50% (16 fights); 23 runs end on day 4 |
+  | Act 1 boss | 50–60% for random teams | 87 of 120 runs reach Old Mother Ash and 56% of them win; she wins 61% of her fights |
+  | Act 1 | the old three's tuned rate (49%) for random teams | 40% |
+  | The run | | 8% (Act 2 won by 40% of those reaching it, Act 3 by 50%) |
+
+  Act 1 is below 49%, so the boss isn't raised (Decision 16).
+- **The test teams** (the good bot, 12 runs each; with the lean, then the plan teams without it):
+
+  | Team | Group | Reach Act 1's boss | Win Act 1 | Win Act 2 | Won | Without the lean (Act 1, won) |
+  | --- | --- | --- | --- | --- | --- | --- |
+  | Tank (the old three) | plan | 100% | 58% | 33% | 25% | 41%, 16% |
+  | Burst | plan | 91% | 58% | 0% | 0% | 66%, 0% |
+  | Sustain | plan | 33% | 0% | 0% | 0% | 0%, 0% |
+  | Control | plan | 0% | 0% | 0% | 0% | 0%, 0% |
+  | Glass | bad | 25% | 8% | 0% | 0% | |
+  | No makers | bad | 66% | 58% | 8% | 0% | |
+  | All melee | bad | 100% | 83% | 50% | 33% | |
+  | All tanks | bad | 75% | 33% | 8% | 8% | |
+  | **Plan group** | | 56% | 29% | 8% | 6% | 27%, 4% |
+  | **Bad group** | | 66% | 45% | 16% | 10% | |
+  | All 20 teams (random) | | 73% | 40% | 17% | 8% | |
+
+- **What it says** (for the tuning phase):
+  - **Decision 4 holds for burst only.** Burst clears Act 1 above the random rate (58–66% against 40%) but wins nothing in Act 2. **Sustain and control never reach the boss:** they lose on day 4, where their ES-3 breaking points (Bog Crossing x0.8, Sentinel Gate x0.7–0.8, Cairn Road x0.7–0.9, transformed) are still below the fights' new strengths. As ES-3 concluded, the gap is in the heroes (sustain has no real makers until Edric and Severine; control's Garrote rarely transforms, Question HI), so it goes to the tuning phase rather than into the fights.
+  - **The lean barely moves wins:** with it the plan group won Act 1 29% against 27% without; it doubled what the bot spent (68 shards a run against 35) and the relics it held (3.6 against 1.6). The good bot still spends under half of what it earns and takes few picks (as in phase 6), so items and relics reach its teams slowly; a run with the lean measures the bot's shopping as much as the build.
+  - **Two of the four bad stand-ins aren't bad:** all melee (Aegisfang, Nightblade, Last Watch) wins Act 1 83% and the run 33%, and no makers wins Act 1 58%; only Glass is clearly bad. With six heroes, three melee fighters is a strong team, not a broken one. The bad group needs the real B-teams (their heroes aren't built) before it can say whether synergy matters.
+  - **What came out of days 1–3 moved to day 4 and the boss**, not only to the boss and Act 2: 23 runs still end on day 4.
+- **Dig In's rock** (a bug found in the first runs): a rock placed at the node, before the fight was chosen, could sit on the chosen fight's water, and the fight then refused its setup. `RunFlow.place_rock` now refuses water and the void once the fight is chosen (`rock_on_ground`), and the bots place the rock again; the player clicks another hex, as before.
+- **Not changed:** no hero, path, item, or relic; the bench's fingerprints are the same.
 
 ## 8. Questions
 
