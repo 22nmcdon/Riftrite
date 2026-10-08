@@ -63,7 +63,8 @@ func test_scaling_is_from_the_six_power_stats() -> void:
 func test_hit_rules() -> void:
 	_assert_error(_errors({"trigger": "on_fire", "type": "damage", "amount": 5, "target": "hit_target"}), "trigger must be on_hit or on_crit")
 	_assert_error(_errors({"trigger": "on_kill", "type": "damage", "amount": 5, "target": "hit_target"}), "on_kill names no unit, so it can't use hit_target")
-	_assert_error(_errors({"trigger": "on_heal", "type": "shield", "amount_bp_of_damage": 5000, "target": "self"}), "on_heal names no hit")
+	_assert_error(_errors({"trigger": "on_ally_ability", "type": "shield", "amount_bp_of_damage": 5000, "target": "self"}), "on_ally_ability names no hit")
+	assert_eq(_errors({"trigger": "on_heal", "type": "shield", "amount_bp_of_damage": 5000, "target": "self"}), [] as Array[String], "on_heal's amount is the HP healed (the tuning phase, Thorned Bandage)")
 	_assert_error(_errors({"trigger": "on_hit", "type": "shield", "amount": 5, "amount_bp_of_damage": 3000, "target": "self"}), "shield needs exactly one of")
 	_assert_error(_errors({"trigger": "on_hit", "type": "shield", "amount_bp_of_damage": 3000, "target": "self", "scaling": {"atk": 100}}), "\"scaling\" can't be combined with amount_bp_of_damage")
 

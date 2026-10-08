@@ -50,7 +50,7 @@ func test_every_data_file_is_loaded() -> void:
 
 func test_real_statuses() -> void:
 	var db: ContentDb = ContentDb.load_dir("res://data")
-	assert_eq(db.status_ids, ["burn", "poison", "bleed", "root", "stun", "slow", "taunt", "silence", "marked", "undying", "engaged", "stealth", "warded", "sunder", "veiled_haste", "storm_call", "frenzy", "quickened", "unbending", "long_watch", "surge", "surge_2", "last_breath", "purified",
+	assert_eq(db.status_ids, ["burn", "poison", "bleed", "root", "stun", "slow", "taunt", "silence", "marked", "undying", "engaged", "stealth", "warded", "sunder", "veiled_haste", "storm_call", "frenzy", "quickened", "vigilant", "iron_garden", "unbending", "long_watch", "surge", "surge_2", "last_breath", "purified",
 		"grounded", "shadow_step", "shadow_step_2", "shadow_step_3", "bloodhound", "scavenged", "blood_frenzy", "vengeance", "festering", "ember_blind", "watched_over",
 		"ambush", "ambush_2", "rear_guard", "late_surge", "hobbled", "weighed_down", "cowed", "parting_shot", "first_blood", "scarred", "hailstorm", "tailwind", "zeal", "morning_haste", "dawnlight", "first_light", "glare", "dazzled", "woven_thorns", "iron_loom", "briar_torn", "gatekeeper", "brand", "war_call", "rally", "oathbound", "gale", "first_light_more", "zeal_more", "shield_wall", "dawn_ward",
 		"bulwark_layer", "shatter_echo", "grinder_feed", "undertow_tide", "deep_current", "thorn_crown", "hidden", "shadow_dance", "garroted", "garrote_veil", "assassins_haste", "swift_step", "death_mark",
