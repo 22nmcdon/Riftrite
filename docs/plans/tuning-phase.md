@@ -1,0 +1,80 @@
+# The tuning phase (all six heroes and the acts)
+
+Status: **a build plan, for approval (2026-10-08).** The phase `rebuild-phase8-heroes.md` named next: tune all six heroes and the three acts at once, starting from what `easy-start.md`'s runs left (ES-4 and ES-5) and the playtester's relic additions (`changes-plan-relics.md`, 2026-10-08, applied to `relics/`). Questions are in section 6.
+
+## 1. Where it starts
+
+From the good bot's runs over all 20 teams after the easy start (`easy-start.md`, "Built in ES-4" and "Built in ES-5"):
+
+| What | Now |
+| --- | --- |
+| Act 1 (random teams) | 40% won; 87 of 120 runs reach Old Mother Ash, 56% of them win her |
+| Act 2, Act 3 | 40% and 50% of the runs that reach them |
+| The run | 8% |
+| Plan teams (12 runs each, with the lean) | tank 58% Act 1, 25% the run; burst 58%, 0%; **sustain and control 0%** (they lose on day 4) |
+| Bad stand-ins | Glass 8% Act 1; all melee 83% (not bad); no makers 58% |
+| Slow paths | Garrote 5% transform, Headhunter 30%, Windcaller 35% |
+| The bot | spends 44 of 146 shards a run and takes about half a pick per hero |
+
+## 2. What the playtester decided (2026-10-08)
+
+- **Half-plans aren't whole plans** (Decision 1): a team of only sustain, or only control, isn't meant to be as strong as one with damage and a tank. It's much harder, and works only with the right relics and items. This replaces `easy-start.md`'s Decision 4 ("about the random-team rate when the build comes together").
+- **Thirteen new relics** (Decision 2; `changes-plan-relics.md`, applied to `relics/`; the file says twelve, but its tiers add 3 common, 5 rare, 2 epic, and 3 legendary): four for sustain (Soothing Salve, Thorned Bandage, Full Vigor, Unending Vigil), eight for control (Weighted Net, Snare Wire, Heavy Pommel, Dulled Shackles, Choking Hold, Shackle Engine, Iron Garden, Stillwater Seal), and one for damage against swarms (Splinter Shot). Iron Garden replaces the proposed Huntsman's Horn.
+
+## 3. The targets
+
+| Group | Target | How it's measured |
+| --- | --- | --- |
+| Random teams (all 20) | Act 1 about the old three's tuned 49%; the run about their 11% | the good bot, 120 runs |
+| Synergy plans with damage (tank + damage, burst) | above random | `--test-teams=plan`, with the lean |
+| Half-plans (pure sustain, pure control) | well below random, but not zero with the right relics and items: **some runs win Act 1** (Question TA) | `--test-teams`, with the lean (now holding the new relics) |
+| Bad teams | below random | `--test-teams=bad`; two of the four stand-ins aren't bad (section 5, part T-5) |
+| Paths | every path transforms by the boss in most runs that reach it | By path |
+
+## 4. Parts
+
+- **T-1: the thirteen relics.** Data where the sim already has the pieces; the new pieces where it doesn't (section 5). Each relic gets its card text, numbers line, icon, and a test; the chaos fight picks up the new pieces; no fight without them changes (the bench's fingerprints stay). The plan teams' leans in `tools/test_teams.json` take the new relics.
+- **T-2: the bot's shopping** (Question TD). The good bot spends a third of what it earns and takes few picks, so items, relics, and cards reach its teams slowly; every number below leans on that. Find why (practice fights all-or-nothing early, so a buy's gain reads as zero) and fix it in the bot, not the game.
+- **T-3: the slow paths.** Garrote, Headhunter, and Windcaller (Question HI): their deeds and tastes, by the builds report and runs.
+- **T-4: the heroes.** By hero and by plan from the runs: bring each hero's runs won into a band of the others (Tamsin 13% and Aldous 5% now), with the builds report's floors and ceilings as the guide (`build-tuning.md`).
+- **T-5: the test teams.** Bad stand-ins that are bad with these six (Question TE); the half-plans measured against Decision 1.
+- **T-6: the acts.** Act 1 to the random target (the boss only if it lands above 49%, `easy-start.md` Decision 16), then Act 2 and Act 3 for the runs that now reach them.
+- **T-7: docs, HOW-TO-PLAY, playtest build.**
+
+## 5. The relics' sim work (T-1)
+
+What each needs, from what's built:
+
+| Relic | Built pieces it uses | New |
+| --- | --- | --- |
+| Soothing Salve | a `heal_bp` aura | none |
+| Weighted Net | `on_holder_hit` `from_ability`, `once` | none (habits aren't signatures, so they don't set it off) |
+| Heavy Pommel | `on_holder_hit`, `cooldown_per_unit_ms` (once per enemy per hero) | none |
+| Choking Hold | `on_holder_hit` `vs` Rooted or Stunned, `mana_drain` | none |
+| Shackle Engine | a kit mod's change limited to some statuses (Root and Stun +30% duration) | **held enemies gain no mana** (a hero rule, like the built ones in `SideRules`) |
+| Iron Garden | `on_status` (Root, Stun) on each hero, a whole-fight stacking boost on all heroes | none, if each hero's own holds count (Question TB) |
+| Unending Vigil | `on_interval` (1s), a whole-fight stacking boost | **a condition "above an HP share"** |
+| Full Vigor | an aura `"while": "state"` | the same condition |
+| Dulled Shackles | `damage_reduced_bp` | **"vs" on the attacker, lingering 2s after its hold ends** |
+| Thorned Bandage | `on_heal` (the healed hero) | **damage as a share of the event's amount**, with no crit and no lifesteal |
+| Splinter Shot | `on_holder_crit` | the same share-of-the-event damage, on an enemy within 1 hex of the target, never a crit, never setting itself off |
+| Snare Wire | Root | **a trigger: an enemy first comes within 1 hex of a hero** (once per enemy) |
+| Stillwater Seal | crit damage `vs` a condition | **Burn's stack loss skipped while the enemy is held** (Bleed never fades; nothing applies Poison yet) |
+
+So six new pieces: the hero rule for mana, the above-HP condition, the lingering attacker condition, damage from an event's amount, the enemy-steps-near trigger, and DoT that holds while held. Each is skipped by a fight that doesn't use it.
+
+## 6. Questions
+
+- **TA. The half-plans' target** (Decision 1): with the right relics and items, what should a pure sustain or pure control team manage? Proposed: with the lean (their relics and items 3 times as likely), win Act 1 in about 10–20% of runs (random teams 40–49%), and without it near 0.
+- **TB. Iron Garden and the uncapped relics.** `build-map.md`'s payoff relics were to have a cap a fight (Huntsman's Horn: 15 times). Iron Garden is uncapped and counts refreshes, and the control team re-Roots constantly (Trapper's snares, Thicket Engine's refresh every 4th hit), so it could reach +100% early in a fight. Proposed: count new holds only (not refreshes) and cap it at 25 a fight (+50%), lifted in endless like the others. Unending Vigil (+1% a second) reaches +60% by a minute; leave it uncapped, like Quickening?
+- **TC. Heavy Pommel at rare:** each hero's first hit on each enemy Stuns 1s, so every enemy is Stunned up to 3s by a team that reaches it, more than Bramble Seed's 2 Roots and stronger than most epics against swarms and bosses. Proposed: once per enemy (the first hero to reach it), 1s; or keep it per hero at 0.5s.
+- **TD. The bot's shopping first** (T-2): fix the good bot's spending and picks before tuning the heroes, so the numbers measure the game and not the bot? Proposed: yes; it changes no game code.
+- **TE. The bad stand-ins:** all melee (Aegisfang, Nightblade, Last Watch) wins Act 1 83%, so it isn't bad. Replace it and No makers with teams that are bad with these six heroes (proposed: three back-liners on their weakest paths, and two tanks with an enabler), or drop the bad group until Ilse, Ottilie, and Lucan are built?
+- **TF. Snare Wire's "a hex next to a hero":** heroes move freely, so this reads as an enemy first coming within 1 hex of a hero (center to center). Right?
+
+## Decisions
+
+The playtester, 2026-10-08:
+
+1. **Half-plans are much harder, not equal:** a pure sustain or pure control team isn't tuned to match teams with damage and a tank; it should work only with the right relics and items (this replaces `easy-start.md` Decision 4).
+2. **Thirteen relics join the pool** (`changes-plan-relics.md`): sustain, control, and Splinter Shot; Iron Garden replaces Huntsman's Horn. Their files: `relics/` (common 28, rare 26, epic 16, legendary 18).

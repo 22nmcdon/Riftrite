@@ -75,7 +75,6 @@ A kind of relic that's missing: not "enemies with X take more damage", but **"ev
 
 | Relic | Build | Effect |
 | --- | --- | --- |
-| **Huntsman's Horn** | Root | Each time a hero Roots an enemy, heroes gain +3% ATK and +3% attack speed for the rest of the fight (up to 15 times) |
 | **Tally Drum** | Mark | Each time a hero Marks an enemy, heroes gain +4 CRIT for the rest of the fight (up to 10 times) |
 | **Pyre Banner** | Burn | Every 10 Burn your heroes apply gives heroes +3% ATK and MGK for the rest of the fight (up to 15 times) |
 | **Shieldbearer's Oath** | Shield | Each time a hero gains a Shield, heroes gain +2 DEF for the rest of the fight (up to 20 times) |

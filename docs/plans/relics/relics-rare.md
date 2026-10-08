@@ -1,4 +1,4 @@
-# Rare relics (21)
+# Rare relics (26)
 
 **Every shop (less often), elites · 12 shards.** Each turns a keyword or trigger into something. Rules for all relics: `README.md`. Numbers are placeholders.
 
@@ -15,6 +15,9 @@
 | **Grasping Mire** | When a Rooted enemy dies, the nearest enemy is Rooted for 1s |
 | **Shattered Aegis** | When a Shield on a hero breaks, it deals its value as damage to enemies within 1 hex |
 | **Veil of the Lost** | Stealth on heroes lasts 1s longer, and a hero leaving Stealth gains +30% attack speed for 3s |
+| **Heavy Pommel** | Each hero's first hit on each enemy Stuns it for 1s |
+| **Dulled Shackles** | Rooted or Stunned enemies deal 25% less damage, and keep dealing 25% less for 2s after the hold ends |
+| **Choking Hold** | Hits on Rooted or Stunned enemies drain 5 of their mana |
 
 ## Triggers
 
@@ -23,6 +26,13 @@
 | **Keen Edge** | Crits deal +30% damage |
 | **Glutton's Chalice** | Heroes gain +5% lifesteal |
 | **Echoing Bell** | When a hero fires a signature, the other heroes gain 6 mana |
+| **Splinter Shot** | Crits also hit one enemy within 1 hex of the target for 50% of the crit's damage |
+
+## Healing
+
+| Relic | Effect |
+| --- | --- |
+| **Thorned Bandage** | When a hero is healed, the nearest enemy to them takes 25% of the heal as damage. This damage doesn't crit and doesn't count toward lifesteal |
 
 ## Growing
 

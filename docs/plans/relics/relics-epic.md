@@ -1,4 +1,4 @@
-# Epic relics (14)
+# Epic relics (16)
 
 **Shops (rarely), elites, the Magpie · 20 shards.** A strong engine for one lane: one keyword or one mechanic. Rules for all relics: `README.md`. Numbers are placeholders.
 
@@ -18,3 +18,5 @@
 | **Miser's Vault** | Saving | At the start of every shop, gain 1 shard for every 5 you're holding (up to 6) |
 | **Merchant's Covenant** | Rerolls | Rerolls never get more expensive: every reroll costs the first price |
 | **Overkill Tithe** | Big hits | +1 shard for every 150 overkill damage |
+| **Full Vigor** | High HP | Heroes above 90% of their max HP gain +15% ATK and MGK |
+| **Shackle Engine** | Holds | Roots and Stuns on enemies last 30% longer, and enemies gain no mana while Rooted or Stunned |

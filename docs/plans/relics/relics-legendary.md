@@ -1,4 +1,4 @@
-# Legendary relics (15)
+# Legendary relics (18)
 
 **The shop before each boss · 30 shards.** An engine that spans builds, or a big structural change. Rules for all relics: `README.md`. Numbers are placeholders.
 
@@ -22,6 +22,9 @@ Each is a chain (`README.md`, rule 6), so Chain of Echoes (boss) makes it go dee
 | **Shadow Engine** | While hidden, overhealing from lifesteal hits the hero's target for 500% of the overheal. Basic attacks while hidden deal +100% damage and have 5% lifesteal |
 | **Rift-Fed Blades** *(growing)* | Heroes gain +1% ATK for every 1,000 basic-attack damage dealt this run. Only ATK, so MGK-based abilities don't benefit |
 | **Quickening** | Every hit gives the hero +1% attack speed for the rest of the fight, with no cap |
+| **Unending Vigil** | Every second a hero spends above 75% of their max HP gives them +1% ATK and MGK for the rest of the fight, with no cap |
+| **Iron Garden** | Every time an enemy is Rooted or Stunned, heroes gain +2% ATK and MGK for the rest of the fight, with no cap |
+| **Stillwater Seal** | While an enemy is Rooted or Stunned, the Burn, Bleed, and Poison on it don't decay, and heroes' crits against it deal +30% damage |
 | **Second Dawn** | The first time each hero falls in a fight, they rise 5s later at 50% HP. If every hero is down at the same moment, the fight is lost, even with a rise still waiting |
 
 ## Relic collection and wealth

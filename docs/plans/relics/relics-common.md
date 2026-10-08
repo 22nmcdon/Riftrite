@@ -1,4 +1,4 @@
-# Common relics (25)
+# Common relics (28)
 
 **Every shop · 5 shards.** One clean bonus each. Rules for all relics: `README.md`. "Heroes" always means every hero on the team. Numbers are placeholders.
 
@@ -24,6 +24,8 @@
 | **Ember Bauble** | At the start of a fight, all enemies catch 3 Burn |
 | **Tithe of Iron** | Heroes start every fight with a Shield of 8% of their max HP |
 | **Smoke Pouch** | Heroes are hidden for the first 1s of every fight |
+| **Weighted Net** | The first time each hero fires their signature in a fight, the first enemy it hits is Rooted for 1.5s |
+| **Snare Wire** | The first time each enemy moves into a hex next to a hero, it's Rooted for 0.5s |
 
 ## Lifesteal
 
@@ -31,6 +33,12 @@
 | --- | --- |
 | **Leech Tooth** | Heroes gain +1% lifesteal |
 | **Red Thirst** | Heroes gain +2% lifesteal against enemies below 50% HP |
+
+## Healing
+
+| Relic | Effect |
+| --- | --- |
+| **Soothing Salve** | Healing heroes give is +10% |
 
 ## Situational
 

@@ -4,10 +4,10 @@ Status: **agreed in discussion (2026-09-30), not built.** The relic pool for Act
 
 | Tier | File | Where from | Price | Count |
 | --- | --- | --- | --- | --- |
-| **Common** | `relics-common.md` | Every shop | 5 shards | 25 |
-| **Rare** | `relics-rare.md` | Every shop (less often), elites | 12 shards | 21 |
-| **Epic** | `relics-epic.md` | Shops (rarely), elites, the Magpie | 20 shards | 14 |
-| **Legendary** | `relics-legendary.md` | The shop after each boss (before it until 2026-10-01) | 30 shards | 15 |
+| **Common** | `relics-common.md` | Every shop | 5 shards | 28 |
+| **Rare** | `relics-rare.md` | Every shop (less often), elites | 12 shards | 26 |
+| **Epic** | `relics-epic.md` | Shops (rarely), elites, the Magpie | 20 shards | 16 |
+| **Legendary** | `relics-legendary.md` | The shop after each boss (before it until 2026-10-01) | 30 shards | 18 |
 | **Boss** | `relics-boss.md` | After each boss: choose 1 of 3 | free | 11 |
 | **Bond** | `../duo-bonds.md` | Shops, once its duo bond switches on (more likely than an epic) | Free | 24 |
 
@@ -28,10 +28,25 @@ Status: **agreed in discussion (2026-09-30), not built.** The relic pool for Act
    - hit multipliers (crits, triple damage);
    - effects scoped to one kind of attack ("basic attacks deal +100% damage").
 4. **Every stat change says its amount:** "+6 ATK", "+8% attack speed", never "attacks faster".
-5. **Lifesteal is its own mechanic.** A hero heals for a percent of the damage they deal, from any source. It isn't healing: healing bonuses and healing triggers ignore it, unless Blood Communion (epic) says otherwise. Lifesteal from several sources adds up.
+5. **Lifesteal is its own mechanic.** A hero heals for a percent of the damage they deal, from any source. It isn't healing: healing bonuses and healing triggers ignore it, unless Blood Communion (epic) says otherwise. Lifesteal from several sources adds up. Soothing Salve and Thorned Bandage are healing relics, so lifesteal doesn't trigger them unless Blood Communion is owned. Thorned Bandage's damage never counts toward lifesteal, so the two can't loop.
 6. **Chains.** Anything that repeats off its own result is a chain: triggered effects setting off triggers, Crown of Stars' crit rolls, Shared Pain's echoes, The Hungering Rift's carried overkill, Overcharge's extra casts. Every chain has a step limit, and Chain of Echoes (boss) affects every chain in the game.
 7. **Two relics can use the same thing.** The same overheal can feed Overflow Chalice and Shadow Engine at full value; nothing is split between relics.
 8. **Bond relics** are the one kind tied to heroes: only a run with that duo bond can find one, and a bond relic may name the bonded paths' mechanics (`../duo-bonds.md`). Every other relic stays team-wide and never names a hero.
+
+## Relics by team plan
+
+Teams survive in one of four ways (`build-tuning.md`): **damage** (kill first), **tank**, **sustain**, and **control**. Tank, sustain, and control are half-plans that need damage beside them. Every plan should have relics at several tiers:
+
+| Plan | Relics (examples) |
+| --- | --- |
+| **Damage** | Most of the pool: stats, Marks, Burn, crits, chains |
+| **Tank** | Iron Filings, Hearthstone Shard, Warden's Chain, Tithe of Iron, Moth-Eaten Banner, Shattered Aegis, Mirror of Ash, Warden's Engine, Second Dawn, The Unbending |
+| **Sustain** | Soothing Salve, lifesteal relics, Thorned Bandage, Overflow Chalice, Blood Communion, Full Vigor, Unending Vigil, The Long Watch |
+| **Control** | Bramble Seed, Weighted Net, Snare Wire, Heavy Pommel, Thornwoven Cloak, Grasping Mire, Dulled Shackles, Choking Hold, Thicket Engine, Shackle Engine, Iron Garden, Stillwater Seal, Snaring Shot |
+
+**Control makers come from both heroes and relics.** Relic makers trigger on set moments (a signature, a first hit, an enemy stepping close), not every Nth attack. Hero base kits still need some control of their own, so control pairs come together before a transform.
+
+**Hits on several enemies** for damage teams: Splinter Shot (rare), Pyre Ash and Ashen Engine (Burn), and Shared Pain and The Hungering Rift (legendary).
 
 ## Shops
 
