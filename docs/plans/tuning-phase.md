@@ -1,6 +1,6 @@
 # The tuning phase (all six heroes and the acts)
 
-Status: **a build plan, for approval (2026-10-08).** The phase `rebuild-phase8-heroes.md` named next: tune all six heroes and the three acts at once, starting from what `easy-start.md`'s runs left (ES-4 and ES-5) and the playtester's relic additions (`changes-plan-relics.md`, 2026-10-08, applied to `relics/`). Questions are in section 6.
+Status: **a build plan, approved (2026-10-08; Decisions 1–6).** Order: T-2 (the bot) and T-1 (the relics), then T-3 onward. The phase `rebuild-phase8-heroes.md` named next: tune all six heroes and the three acts at once, starting from what `easy-start.md`'s runs left (ES-4 and ES-5) and the playtester's relic additions (`changes-plan-relics.md`, 2026-10-08, applied to `relics/`). Questions are in section 6.
 
 ## 1. Where it starts
 
@@ -25,9 +25,10 @@ From the good bot's runs over all 20 teams after the easy start (`easy-start.md`
 
 | Group | Target | How it's measured |
 | --- | --- | --- |
-| Random teams (all 20) | Act 1 about the old three's tuned 49%; the run about their 11% | the good bot, 120 runs |
+| Random teams (all 20) | reach Act 1's boss about 73%, win Act 1 40–49%, win the run about 8% (Decision 3's reference) | the good bot, 120 runs |
 | Synergy plans with damage (tank + damage, burst) | above random | `--test-teams=plan`, with the lean |
-| Half-plans (pure sustain, pure control) | well below random, but not zero with the right relics and items: **some runs win Act 1** (Question TA) | `--test-teams`, with the lean (now holding the new relics) |
+| Half-plans (pure sustain, pure control), with the lean | reach Act 1's boss about 70%, win Act 1 about 20–25%, win the run about 2–4% (Decision 3) | `--test-teams`, with the lean (now holding the new relics) |
+| Half-plans, without the lean | reach the boss about 50–60%, Act 1 about 5–10%, the run about 0–1% (Decision 3) | `--test-teams --no-lean` |
 | Bad teams | below random | `--test-teams=bad`; two of the four stand-ins aren't bad (section 5, part T-5) |
 | Paths | every path transforms by the boss in most runs that reach it | By path |
 
@@ -49,7 +50,7 @@ What each needs, from what's built:
 | --- | --- | --- |
 | Soothing Salve | a `heal_bp` aura | none |
 | Weighted Net | `on_holder_hit` `from_ability`, `once` | none (habits aren't signatures, so they don't set it off) |
-| Heavy Pommel | `on_holder_hit`, `cooldown_per_unit_ms` (once per enemy per hero) | none |
+| Heavy Pommel | `on_holder_hit`, once per enemy (Decision 5: the first hero to hit it) | **a once-per-enemy mark shared by the team** |
 | Choking Hold | `on_holder_hit` `vs` Rooted or Stunned, `mana_drain` | none |
 | Shackle Engine | a kit mod's change limited to some statuses (Root and Stun +30% duration) | **held enemies gain no mana** (a hero rule, like the built ones in `SideRules`) |
 | Iron Garden | `on_status` (Root, Stun) on each hero, a whole-fight stacking boost on all heroes | none, if each hero's own holds count (Question TB) |
@@ -61,14 +62,14 @@ What each needs, from what's built:
 | Snare Wire | Root | **a trigger: an enemy first comes within 1 hex of a hero** (once per enemy) |
 | Stillwater Seal | crit damage `vs` a condition | **Burn's stack loss skipped while the enemy is held** (Bleed never fades; nothing applies Poison yet) |
 
-So six new pieces: the hero rule for mana, the above-HP condition, the lingering attacker condition, damage from an event's amount, the enemy-steps-near trigger, and DoT that holds while held. Each is skipped by a fight that doesn't use it.
+So seven new pieces: the team's once-per-enemy mark, the hero rule for mana, the above-HP condition, the lingering attacker condition, damage from an event's amount, the enemy-steps-near trigger, and DoT that holds while held. Each is skipped by a fight that doesn't use it.
 
 ## 6. Questions
 
-- **TA. The half-plans' target** (Decision 1): with the right relics and items, what should a pure sustain or pure control team manage? Proposed: with the lean (their relics and items 3 times as likely), win Act 1 in about 10–20% of runs (random teams 40–49%), and without it near 0.
-- **TB. Iron Garden and the uncapped relics.** `build-map.md`'s payoff relics were to have a cap a fight (Huntsman's Horn: 15 times). Iron Garden is uncapped and counts refreshes, and the control team re-Roots constantly (Trapper's snares, Thicket Engine's refresh every 4th hit), so it could reach +100% early in a fight. Proposed: count new holds only (not refreshes) and cap it at 25 a fight (+50%), lifted in endless like the others. Unending Vigil (+1% a second) reaches +60% by a minute; leave it uncapped, like Quickening?
-- **TC. Heavy Pommel at rare:** each hero's first hit on each enemy Stuns 1s, so every enemy is Stunned up to 3s by a team that reaches it, more than Bramble Seed's 2 Roots and stronger than most epics against swarms and bosses. Proposed: once per enemy (the first hero to reach it), 1s; or keep it per hero at 0.5s.
-- **TD. The bot's shopping first** (T-2): fix the good bot's spending and picks before tuning the heroes, so the numbers measure the game and not the bot? Proposed: yes; it changes no game code.
+- **TA. The half-plans' target** *(Answered: Decision 3.)* (Decision 1): with the right relics and items, what should a pure sustain or pure control team manage? Proposed: with the lean (their relics and items 3 times as likely), win Act 1 in about 10–20% of runs (random teams 40–49%), and without it near 0.
+- **TB. Iron Garden and the uncapped relics.** *(Answered: Decision 4, as written.)* `build-map.md`'s payoff relics were to have a cap a fight (Huntsman's Horn: 15 times). Iron Garden is uncapped and counts refreshes, and the control team re-Roots constantly (Trapper's snares, Thicket Engine's refresh every 4th hit), so it could reach +100% early in a fight. Proposed: count new holds only (not refreshes) and cap it at 25 a fight (+50%), lifted in endless like the others. Unending Vigil (+1% a second) reaches +60% by a minute; leave it uncapped, like Quickening?
+- **TC. Heavy Pommel at rare:** *(Answered: Decision 5.)* each hero's first hit on each enemy Stuns 1s, so every enemy is Stunned up to 3s by a team that reaches it, more than Bramble Seed's 2 Roots and stronger than most epics against swarms and bosses. Proposed: once per enemy (the first hero to reach it), 1s; or keep it per hero at 0.5s.
+- **TD. The bot's shopping first** (T-2): *(Answered: Decision 6.)* fix the good bot's spending and picks before tuning the heroes, so the numbers measure the game and not the bot? Proposed: yes; it changes no game code.
 - **TE. The bad stand-ins:** all melee (Aegisfang, Nightblade, Last Watch) wins Act 1 83%, so it isn't bad. Replace it and No makers with teams that are bad with these six heroes (proposed: three back-liners on their weakest paths, and two tanks with an enabler), or drop the bad group until Ilse, Ottilie, and Lucan are built?
 - **TF. Snare Wire's "a hex next to a hero":** heroes move freely, so this reads as an enemy first coming within 1 hex of a hero (center to center). Right?
 
@@ -78,3 +79,7 @@ The playtester, 2026-10-08:
 
 1. **Half-plans are much harder, not equal:** a pure sustain or pure control team isn't tuned to match teams with damage and a tank; it should work only with the right relics and items (this replaces `easy-start.md` Decision 4).
 2. **Thirteen relics join the pool** (`changes-plan-relics.md`): sustain, control, and Splinter Shot; Iron Garden replaces Huntsman's Horn. Their files: `relics/` (common 28, rare 26, epic 16, legendary 18).
+3. **The half-plans' targets** (Question TA), against random teams' 73% reaching Act 1's boss, 40–49% winning Act 1, and about 8% winning the run: **with the lean** (the right relics and items), reach the boss about 70%, win Act 1 about 20–25%, win the run about 2–4%; **without it**, about 50–60%, 5–10%, and 0–1%.
+4. **Iron Garden as written** (Question TB): every Root or Stun on an enemy, refreshes included, no cap; tuned from the runs if it runs away.
+5. **Heavy Pommel once per enemy** (Question TC): the first hero to hit each enemy Stuns it 1s; the others don't again.
+6. **The bot's shopping first** (Question TD): T-2 (the good bot's spending and picks, bot code only) comes before the heroes are tuned, so the numbers measure the game, not the bot's hoarding.

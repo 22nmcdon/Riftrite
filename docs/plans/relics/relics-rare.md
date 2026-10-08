@@ -15,7 +15,7 @@
 | **Grasping Mire** | When a Rooted enemy dies, the nearest enemy is Rooted for 1s |
 | **Shattered Aegis** | When a Shield on a hero breaks, it deals its value as damage to enemies within 1 hex |
 | **Veil of the Lost** | Stealth on heroes lasts 1s longer, and a hero leaving Stealth gains +30% attack speed for 3s |
-| **Heavy Pommel** | Each hero's first hit on each enemy Stuns it for 1s |
+| **Heavy Pommel** | The first hit on each enemy Stuns it for 1s (once per enemy, whichever hero lands it; `tuning-phase.md` Decision 5) |
 | **Dulled Shackles** | Rooted or Stunned enemies deal 25% less damage, and keep dealing 25% less for 2s after the hold ends |
 | **Choking Hold** | Hits on Rooted or Stunned enemies drain 5 of their mana |
 
