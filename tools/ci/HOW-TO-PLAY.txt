@@ -18,9 +18,10 @@ PLAYING
   The game is being rebuilt around heroes and an open arena. This build has
   the whole run: Act 1, Act 2, the Glassmere, and Act 3, the Shattered
   Crown, seven days each, then endless after the Act 3 boss (see
-  ENDLESS). NEW IN THIS BUILD: three more heroes, Garrow, Tamsin, and
-  Aldous, and you draft three of the six for each run (see THE SIX
-  HEROES below). Your uploaded art is in the game. The arena
+  ENDLESS). NEW IN THIS BUILD: Act 1 starts easier and climbs (see AN
+  EASIER START below). Since the last build: three more heroes, Garrow,
+  Tamsin, and Aldous, and you draft three of the six for each run (see
+  THE SIX HEROES below). Your uploaded art is in the game. The arena
   is turned (your heroes at the bottom, the enemies at the top) and stands
   on the floating island, rocks are ruins, and Rift Collapse eats the edge
   as rift-light. Items, relics, and upgrades have their kind's frame with an
@@ -37,8 +38,9 @@ PLAYING
      "a bond stirs": it wakes when both heroes have transformed.
   2. Each day:
        Route    the act map: an island a day, each with its two fights (an
-                easier one and a harder one that pays more). Days 3 and 5
-                are elites; day 7 is the act's boss (Old Mother Ash in
+                easier one and a harder one that pays more; day 1 has two
+                easy ones). Days 3 and 5 are elites (Act 1's day 3 has
+                smaller first elites); day 7 is the act's boss (Old Mother Ash in
                 Act 1, the Mournwater in Act 2, the Heart of the Rift in
                 Act 3). Click one of today's
                 fights to read it, then Fight this.
@@ -303,6 +305,26 @@ PLAYING
 
   Nothing is saved: your formation, paths, snares, tactics, and speed
   last until you close the game.
+
+AN EASIER START (new in this build)
+  The bots' runs with all six heroes ended on day 1 nearly half the time,
+  mostly for teams with no tank. Act 1 now climbs instead:
+    - Day 1 has its own two small fights (Warren Mouth: 3 Rift Pups;
+      Smouldering Den: an Ashling and 2 pups) and no flankers. Any team
+      placed sensibly should win them, even three back-liners.
+    - Day 2's fights are smaller: the first flankers (The Pack, 2 hounds)
+      and the first archers (Hollow Watch, 2 archers) come one at a time.
+    - Day 3 has its own first elites, each with one fewer of its second
+      enemy: Alpha's Trail (the Alpha and one hound), Witch's Ward (the
+      Totem, one witch, the Sentinel), Cairn Sentry (the Guardian and one
+      archer). The full elites come on day 5.
+    - Days 4 to 6 are a little easier (Sentinel Gate, Cairn Road, Bog
+      Crossing): the bot wins about 70% of those fights.
+    - Old Mother Ash is unchanged: about three runs in four reach her now,
+      and a bit over half of those win.
+  The aim is about 95% on day 1, 85% on days 2-3, 70% on days 4-6, and
+  50-60% at the boss. Tell us if the start now feels too easy, if a
+  team without a tank still gets stuck, and where your runs end.
 
 CHANGED AFTER YOUR FIRST RUN
   - Wounds: every won fight now heals one wound on each hero (before

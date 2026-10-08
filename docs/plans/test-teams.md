@@ -1,6 +1,6 @@
 # Test teams
 
-Status: **first draft (2026-10-02), not built.** Teams for the run bot (phase 6) to play, to check that builds work and that synergy matters. Each team has a **build** it's meant to show, the **why**, and the **relics and items** the bot should lean toward. Heroes and paths: `rebuild-heroes.md`; builds: `build-map.md`. Suggested home: `docs/plans/test-teams.md`, with the teams themselves as data in `tools/sim_teams.json`.
+Status: **first draft (2026-10-02); partly built in `easy-start.md` ES-4:** `tools/test_teams.json` holds the plan teams (burst, sustain, control, and the old three as tank) with their leans, and four bad stand-ins from the six built heroes (only Glass proved bad); `run_runner.gd --test-teams` plays them, the lean is for testing only (`RunContent.test_lean`), and the run report has By team and By group. The synergy teams below come in as their heroes are built. Teams for the run bot (phase 6) to play, to check that builds work and that synergy matters. Each team has a **build** it's meant to show, the **why**, and the **relics and items** the bot should lean toward. Heroes and paths: `rebuild-heroes.md`; builds: `build-map.md`. Suggested home: `docs/plans/test-teams.md`, with the teams themselves as data in `tools/sim_teams.json`.
 
 ## How to test
 

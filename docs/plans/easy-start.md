@@ -1,6 +1,6 @@
 # The easy start (Act 1, days 1 and 2)
 
-Status: **a build plan, approved (2026-10-07; Decisions 1–16); ES-1 to ES-4 built (ES-3's fight changes tried and not shipped; ES-4 added day 3's own elites and the days 4–6 ramp).** The playtester's request after phase 8 part 4's bot runs: fix Act 1's opening before tuning anything else, because runs that end on day 1 spoil every other number (heroes, paths, deeds, synergy against bad teams). Questions are in section 8.
+Status: **a build plan, approved (2026-10-07; Decisions 1–16); ES-1 to ES-5 built: the plan is done (ES-3's fight changes tried and not shipped; ES-4 added day 3's own elites and the days 4–6 ramp).** The playtester's request after phase 8 part 4's bot runs: fix Act 1's opening before tuning anything else, because runs that end on day 1 spoil every other number (heroes, paths, deeds, synergy against bad teams). Questions are in section 8.
 
 ## 1. Why
 
@@ -222,6 +222,13 @@ What it says:
   - **What came out of days 1–3 moved to day 4 and the boss**, not only to the boss and Act 2: 23 runs still end on day 4.
 - **Dig In's rock** (a bug found in the first runs): a rock placed at the node, before the fight was chosen, could sit on the chosen fight's water, and the fight then refused its setup. `RunFlow.place_rock` now refuses water and the void once the fight is chosen (`rock_on_ground`), and the bots place the rock again; the player clicks another hex, as before.
 - **Not changed:** no hero, path, item, or relic; the bench's fingerprints are the same.
+
+### Built in ES-5 (the slow paths read again, the docs, the playtest build)
+
+- **The slow paths on the new runs** (the good bot over all 20 teams, ES-4's third runs, against 8d-5d's before the easy start): most paths now transform in most runs that reach them, since runs live past day 3: Lanternbearer 76% (17% before), Vigil Keeper 70% (10%), Spitemail 55%. **Three stay slow, each a deed of about 13 fights or more:** Garrote 5% (63 ms a fight into 3,000: unchanged, Question HI), Headhunter 30% (1,840 a fight into 25,000), Windcaller 35% (3.0 a fight into 40). They're left for the tuning phase with Question HI (`rebuild-phase8-heroes.md`), which now names all three.
+- **By hero on the new runs:** won with Tamsin 13% (1% before; Nightblade 30%), Garrow 10%, Brannoc 8%, Vell 8%, Maren 5%, Aldous 5%; transformed 43% (Tamsin, held back by Garrote and Headhunter) to 91% (Brannoc).
+- **The docs:** HOW-TO-PLAY's AN EASIER START (the day-1, day-2, and day-3 fights, the days 4–6 ramp, the aims, and what we want to know) and its route lines; `design.md`'s act line; `test-teams.md`'s status; CLAUDE.md.
+- **The playtest build:** the full suite green on the branch's head; the build is the "Playtest build" workflow on this branch.
 
 ## 8. Questions
 
