@@ -103,7 +103,7 @@
     "name": "Bog Crossing",
     "tests": "back-line safety",
     "act": 1,
-    "scale_bp": 14400,
+    "scale_bp": 12960,
     "days": [3, 4],
     "enemies": [
       {"enemy": "bog_lurker", "hex": [3, 5]},
@@ -116,7 +116,7 @@
     "name": "Sentinel Gate",
     "tests": "going around a wall",
     "act": 1,
-    "scale_bp": 16150,
+    "scale_bp": 13240,
     "days": [4, 5, 6],
     "enemies": [
       {"enemy": "rift_worn_sentinel", "hex": [3, 4]},
@@ -129,7 +129,7 @@
     "name": "Cairn Road",
     "tests": "a tank knocked out of place, then flankers",
     "act": 1,
-    "scale_bp": 16500,
+    "scale_bp": 12870,
     "days": [4, 5, 6],
     "enemies": [
       {"enemy": "cairn_guardian", "hex": [3, 4]},
