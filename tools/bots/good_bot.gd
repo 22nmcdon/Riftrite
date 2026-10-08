@@ -37,6 +37,10 @@ const LEAN_WORTH: float = 0.05
 ## At most this many options are tried for one shop decision (the cheapest
 ## filter first: affordable, and for an item, a hero it changes).
 const SHOP_TRIES: int = 8
+## After a buy, the shop re-prices only this many of the options its last
+## pricing found worth buying (a buy can change what the others are worth,
+## but rarely which few are best), not all of SHOP_TRIES again.
+const REPRICE: int = 3
 ## Rerolls a shop visit, at most, and the shards it keeps back.
 const REROLLS: int = 1
 const REROLL_KEEP: int = 20
@@ -46,6 +50,10 @@ const REROLL_KEEP: int = 20
 const DEPTH_BARS: Array[float] = [1.45, 1.65, 1.85]
 
 var _rerolled: String = ""
+## A shop visit's pricing (the tuning phase): the visit it was made in, and
+## the options it found worth buying, best first, less those bought since.
+var _priced_visit: String = ""
+var _priced: Array[String] = []
 
 
 func _init() -> void:
@@ -75,6 +83,8 @@ func team(run: RunContent, run_seed: int, testing: bool, vows_of: Callable) -> A
 
 func begin(_flow: RunFlow) -> void:
 	Practice.clear_cache()
+	_priced_visit = ""
+	_priced.clear()
 
 
 func formation(flow: RunFlow) -> Dictionary[String, Vector2i]:
@@ -174,6 +184,7 @@ func shop(flow: RunFlow) -> bool:
 	var state: RunState = flow.state
 	var tries: Array[Callable] = []
 	var worth: Array[float] = []
+	var ids: Array[String] = []
 	for i: int in state.wares.size():
 		var item_id: String = state.wares[i]
 		if item_id.is_empty() or flow.price_of(item_id) > state.shards:
@@ -181,6 +192,7 @@ func shop(flow: RunFlow) -> bool:
 		if state.item_ranks.has(item_id):
 			tries.append(func(trial: RunFlow) -> String: return trial.buy(i))
 			worth.append(_lean(flow, item_id) + RANK_WORTH)
+			ids.append("rank:" + item_id)
 			continue
 		for hero: RunState.Hero in state.heroes:
 			var free: int = hero.slots.find("")
@@ -190,39 +202,58 @@ func shop(flow: RunFlow) -> bool:
 					var said: String = trial.buy(i)
 					return said if not said.is_empty() else trial.equip(hero_id, free, item_id))
 				worth.append(_lean(flow, item_id) + ITEM_WORTH)
+				ids.append("item:%s:%s" % [item_id, hero_id])
 	for i: int in state.shop_relics.size():
 		if not state.shop_relics[i].is_empty() and flow.relic_price(i) <= state.shards:
 			tries.append(func(trial: RunFlow) -> String: return trial.buy_relic(i))
 			worth.append(_lean(flow, state.shop_relics[i]) + _relic_worth(flow, state.shop_relics[i]))
+			ids.append("relic:" + state.shop_relics[i])
 	for hero: RunState.Hero in state.heroes:
 		if hero.wounds > 0 and flow.wound_price() <= state.shards:
 			var hero_id: String = hero.id
 			tries.append(func(trial: RunFlow) -> String: return trial.treat_wound(hero_id))
 			worth.append(0.0)
+			ids.append("wound:" + hero_id)
 	var order: Array[int] = []
 	for i: int in tries.size():
 		order.append(i)
 	order.sort_custom(func(a: int, b: int) -> bool: return worth[a] > worth[b] if worth[a] != worth[b] else a < b)
 	var sorted_tries: Array[Callable] = []
 	var sorted_worth: Array[float] = []
+	var sorted_ids: Array[String] = []
+	# A visit's first pricing tries the SHOP_TRIES best guesses; after a buy
+	# in it, only the REPRICE best its last pricing kept (a reroll is a new
+	# visit: new wares).
+	var priced_visit: String = "%d:%d:%d:%s:%d:%d" % [state.act, state.day, state.attempt, state.shop, state.phase, state.rerolls]
+	var again: bool = priced_visit == _priced_visit
+	var kept: Array[String] = []
+	if again:
+		kept.assign(_priced.slice(0, REPRICE))
 	for i: int in order:
+		if again and not kept.has(ids[i]):
+			continue
 		sorted_tries.append(tries[i])
 		sorted_worth.append(worth[i])
-	tries = sorted_tries
+		sorted_ids.append(ids[i])
+	tries = sorted_tries.slice(0, SHOP_TRIES)
 	worth = sorted_worth
-	tries = tries.slice(0, SHOP_TRIES)
+	ids = sorted_ids
+	_priced_visit = priced_visit
+	_priced.clear()
 	if not tries.is_empty():
 		var baseline: float = Practice.team_worth(flow, coming)
-		var best: Callable = Callable()
-		var best_value: float = baseline + MIN_GAIN
+		var values: Array[float] = []
+		var worth_buying: Array[int] = []
 		for t: int in tries.size():
-			var action: Callable = tries[t]
-			var value: float = Practice.value(flow, action, coming) + worth[t]
-			if value > best_value:
-				best_value = value
-				best = action
-		if best.is_valid():
-			return str(best.call(flow)).is_empty()
+			values.append(Practice.value(flow, tries[t], coming) + worth[t])
+			if values[t] > baseline + MIN_GAIN:
+				worth_buying.append(t)
+		worth_buying.sort_custom(func(a: int, b: int) -> bool: return values[a] > values[b] if values[a] != values[b] else a < b)
+		if not worth_buying.is_empty():
+			var best: int = worth_buying[0]
+			for t: int in worth_buying.slice(1):
+				_priced.append(ids[t])
+			return str(tries[best].call(flow)).is_empty()
 	var visit: String = "%d:%d:%s:%d" % [state.day, state.attempt, state.shop, state.phase]
 	if state.shop == "pedlar" and _rerolled != visit and state.shards - flow.reroll_price() >= REROLL_KEEP:
 		_rerolled = visit
