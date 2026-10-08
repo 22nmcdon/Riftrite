@@ -19,8 +19,15 @@ const MIN_GAIN: float = 0.005
 ## Worths practice can't see: a relic still to be drawn, by tier (Rift
 ## Tear's reward); a pick still to come (Train); a visit to the Magpie with
 ## shards to spend; swearing an oath (its doubled deeds).
-const RELIC_WORTH: Dictionary[String, float] = {"common": 0.03, "rare": 0.06, "epic": 0.09, "legendary": 0.12}
+const RELIC_WORTH: Dictionary[String, float] = {"common": 0.03, "rare": 0.06, "epic": 0.09, "legendary": 0.12, "boss": 0.12, "bond": 0.06}
 const PICK_WORTH: float = 0.02
+## What practice can't see in a buy or a card (tuning-phase.md T-2): a card
+## over the pick's shards, a relic by its tier (RELIC_WORTH), an item on a
+## hero it suits, or a rank up of one held. Without them the bot hoarded
+## (44 of 146 shards spent a run, half a pick a hero).
+const CARD_WORTH: float = 0.02
+const ITEM_WORTH: float = 0.03
+const RANK_WORTH: float = 0.02
 const MAGPIE_WORTH: float = 0.04
 const OATH_WORTH: float = 0.03
 ## A test team's lean (easy-start.md ES-4, testing only; RunContent.test_lean):
@@ -114,7 +121,7 @@ func pick(flow: RunFlow) -> int:
 	var best: int = -1
 	var best_value: float = Practice.value(flow, func(trial: RunFlow) -> String: return trial.take_shards(), coming)
 	for i: int in flow.state.pick.size():
-		var value: float = Practice.value(flow, func(trial: RunFlow) -> String: return trial.take_pick(i), coming)
+		var value: float = Practice.value(flow, func(trial: RunFlow) -> String: return trial.take_pick(i), coming) + CARD_WORTH
 		if value > best_value + MIN_GAIN:
 			best_value = value
 			best = i
@@ -145,7 +152,8 @@ func relic(flow: RunFlow) -> int:
 	var best: int = -1
 	var best_value: float = Practice.value(flow, func(trial: RunFlow) -> String: return trial.decline_relic(), coming)
 	for i: int in flow.state.relic_choice.size():
-		var value: float = Practice.value(flow, func(trial: RunFlow) -> String: return trial.take_relic(i), coming) + _lean(flow, flow.state.relic_choice[i])
+		var value: float = Practice.value(flow, func(trial: RunFlow) -> String: return trial.take_relic(i), coming) + _lean(flow, flow.state.relic_choice[i]) \
+			+ _relic_worth(flow, flow.state.relic_choice[i])
 		if value > best_value + MIN_GAIN:
 			best_value = value
 			best = i
@@ -155,9 +163,10 @@ func relic(flow: RunFlow) -> int:
 ## The shop's best buy by practice (an item on the hero it suits best, a
 ## relic, a wound treated), if it's worth its price; else a reroll when the
 ## shards allow one and nothing was worth buying; else selling an item that
-## changes no hero. Nothing after the boss (no fights left to buy for). A
-## test team's leaned items and relics are tried first and worth LEAN_WORTH
-## more (ES-4, testing only).
+## changes no hero. Nothing after the boss (no fights left to buy for).
+## Each try carries the worth practice can't see (ITEM_WORTH, RANK_WORTH, a
+## relic's tier; a test team's lean, ES-4, testing only), and the tries are
+## made in that order, so the best guesses are never cut by SHOP_TRIES.
 func shop(flow: RunFlow) -> bool:
 	var coming: Array[String] = Practice.practice_set(flow)
 	if coming.is_empty():
@@ -171,7 +180,7 @@ func shop(flow: RunFlow) -> bool:
 			continue
 		if state.item_ranks.has(item_id):
 			tries.append(func(trial: RunFlow) -> String: return trial.buy(i))
-			worth.append(_lean(flow, item_id))
+			worth.append(_lean(flow, item_id) + RANK_WORTH)
 			continue
 		for hero: RunState.Hero in state.heroes:
 			var free: int = hero.slots.find("")
@@ -180,28 +189,27 @@ func shop(flow: RunFlow) -> bool:
 				tries.append(func(trial: RunFlow) -> String:
 					var said: String = trial.buy(i)
 					return said if not said.is_empty() else trial.equip(hero_id, free, item_id))
-				worth.append(_lean(flow, item_id))
+				worth.append(_lean(flow, item_id) + ITEM_WORTH)
 	for i: int in state.shop_relics.size():
 		if not state.shop_relics[i].is_empty() and flow.relic_price(i) <= state.shards:
 			tries.append(func(trial: RunFlow) -> String: return trial.buy_relic(i))
-			worth.append(_lean(flow, state.shop_relics[i]))
+			worth.append(_lean(flow, state.shop_relics[i]) + _relic_worth(flow, state.shop_relics[i]))
 	for hero: RunState.Hero in state.heroes:
 		if hero.wounds > 0 and flow.wound_price() <= state.shards:
 			var hero_id: String = hero.id
 			tries.append(func(trial: RunFlow) -> String: return trial.treat_wound(hero_id))
 			worth.append(0.0)
-	if not flow.run.test_lean.is_empty():
-		var order: Array[int] = []
-		for i: int in tries.size():
-			order.append(i)
-		order.sort_custom(func(a: int, b: int) -> bool: return worth[a] > worth[b] if worth[a] != worth[b] else a < b)
-		var sorted_tries: Array[Callable] = []
-		var sorted_worth: Array[float] = []
-		for i: int in order:
-			sorted_tries.append(tries[i])
-			sorted_worth.append(worth[i])
-		tries = sorted_tries
-		worth = sorted_worth
+	var order: Array[int] = []
+	for i: int in tries.size():
+		order.append(i)
+	order.sort_custom(func(a: int, b: int) -> bool: return worth[a] > worth[b] if worth[a] != worth[b] else a < b)
+	var sorted_tries: Array[Callable] = []
+	var sorted_worth: Array[float] = []
+	for i: int in order:
+		sorted_tries.append(tries[i])
+		sorted_worth.append(worth[i])
+	tries = sorted_tries
+	worth = sorted_worth
 	tries = tries.slice(0, SHOP_TRIES)
 	if not tries.is_empty():
 		var baseline: float = Practice.team_worth(flow, coming)
@@ -224,6 +232,11 @@ func shop(flow: RunFlow) -> bool:
 			if not state.heroes.any(func(hero: RunState.Hero) -> bool: return Simple.suits(flow, flow.run.items[item_id], hero)):
 				return flow.sell(item_id).is_empty()
 	return false
+
+
+## RELIC_WORTH for `relic_id`'s tier (0 for a tier it doesn't list).
+static func _relic_worth(flow: RunFlow, relic_id: String) -> float:
+	return RELIC_WORTH.get(RelicDef.TIER_NAMES[flow.run.relics[relic_id].tier], 0.0)
 
 
 ## LEAN_WORTH for an item or relic a test team leans toward (ES-4, testing

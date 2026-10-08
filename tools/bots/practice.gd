@@ -3,8 +3,12 @@ extends RefCounted
 ## how much a fight is worth to the heroes, and how much a choice is worth to
 ## a run, for the good bot's judgments and the expert's tries.
 ##   - A fight's worth is a win (1) plus the share of the heroes' HP left (so
-##     1 to 2), or that share minus 1 for a loss (-1 to 0): any win beats any
-##     loss, and a closer loss beats a rout.
+##     1 to 2), or for a loss the share of the enemies' HP the heroes took,
+##     minus 1 (-1 to 0): any win beats any loss, and a closer loss beats a
+##     rout. (Until the tuning phase's T-2 a loss was the heroes' HP left
+##     minus 1, so every rout read -1 and no choice could show a gain while
+##     the coming fights were routs: the bot hoarded shards and took few
+##     picks.)
 ##   - A choice is tried on a copy of the run (RunFlow.resume over the state
 ##     read back from its dict), and is worth the mean worth of practice
 ##     fights (practice_set) fought on practice seeds, plus what it did to
@@ -52,13 +56,19 @@ static func worth(setup: FightSetup, content: ContentDb) -> float:
 	var sim := CombatSim.new(setup, content)
 	while not sim.finished:
 		sim.step()
+	if sim.outcome == FightResult.Outcome.DEFEAT:
+		var taken: int = 0
+		var whole: int = 0
+		for unit: UnitState in sim.enemies:
+			taken += unit.max_hp - (maxi(unit.hp, 0) if unit.alive else 0)
+			whole += unit.max_hp
+		return float(taken) / maxf(whole, 1) - 1.0
 	var hp: int = 0
 	var max_hp: int = 0
 	for unit: UnitState in sim.heroes:
 		hp += maxi(unit.hp, 0) if unit.alive else 0
 		max_hp += unit.max_hp
-	var left: float = float(hp) / maxf(max_hp, 1)
-	return 1.0 + left if sim.outcome != FightResult.Outcome.DEFEAT else left - 1.0
+	return 1.0 + float(hp) / maxf(max_hp, 1)
 
 
 ## A copy of the run, to try something on.
