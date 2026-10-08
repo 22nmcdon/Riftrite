@@ -269,6 +269,13 @@ static func _enemy_within(sim: CombatSim, unit: UnitState, reach: int) -> bool:
 ## A stacking boost's stacks whose time is up go; the last one ends it.
 static func _drop_stacks(sim: CombatSim, unit: UnitState, state: StatusState) -> void:
 	var before: int = state.stack_ends.size()
+	var due: bool = false
+	for end: int in state.stack_ends:
+		if sim.tick >= end:
+			due = true
+			break
+	if not due and before > 0:
+		return
 	state.stack_ends.assign(state.stack_ends.filter(func(end: int) -> bool: return sim.tick < end))
 	if state.stack_ends.is_empty():
 		_end(sim, unit, state)

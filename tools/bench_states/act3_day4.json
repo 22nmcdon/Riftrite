@@ -1,0 +1,640 @@
+{
+ "act": 3,
+ "apex_open": true,
+ "attempt": 0,
+ "bonds_found": [
+  "sentry_and_sniper"
+ ],
+ "camp": [],
+ "camp_used": "",
+ "chosen": "mirror_and_hook",
+ "day": 4,
+ "dear_shop_bp": 0,
+ "dig_in": false,
+ "endless": false,
+ "endless_mods": [],
+ "event_done": false,
+ "formation": {
+  "brannoc": [
+   6,
+   2
+  ],
+  "garrow": [
+   7,
+   1
+  ],
+  "maren": [
+   0,
+   1
+  ]
+ },
+ "fortify": false,
+ "fought": [
+  {
+   "act": 1,
+   "attempt": 0,
+   "day": 1,
+   "encounter": "smouldering_den",
+   "habits": {
+    "back": 2,
+    "casts": 5,
+    "front": 1,
+    "marked": 2
+   },
+   "outcome": 0,
+   "seconds": 13
+  },
+  {
+   "act": 1,
+   "attempt": 0,
+   "day": 2,
+   "encounter": "hounds_and_archers",
+   "habits": {
+    "back": 2,
+    "bunched": 1,
+    "casts": 7,
+    "front": 1,
+    "marked": 3,
+    "rooted": 2
+   },
+   "outcome": 0,
+   "seconds": 20
+  },
+  {
+   "act": 1,
+   "attempt": 0,
+   "day": 3,
+   "encounter": "cairn_sentry",
+   "habits": {
+    "back": 1,
+    "bunched": 1,
+    "casts": 8,
+    "front": 1,
+    "healing": 185,
+    "marked": 4,
+    "rooted": 1,
+    "shields": 120
+   },
+   "outcome": 0,
+   "seconds": 25
+  },
+  {
+   "act": 1,
+   "attempt": 0,
+   "day": 4,
+   "encounter": "cairn_road",
+   "habits": {
+    "back": 1,
+    "bunched": 1,
+    "casts": 11,
+    "healing": 112,
+    "marked": 5,
+    "rooted": 3,
+    "stealthed": 1
+   },
+   "outcome": 0,
+   "seconds": 26
+  },
+  {
+   "act": 1,
+   "attempt": 0,
+   "day": 5,
+   "encounter": "witch_coven",
+   "habits": {
+    "back": 2,
+    "bunched": 1,
+    "casts": 14,
+    "front": 1,
+    "marked": 8,
+    "rooted": 7
+   },
+   "outcome": 0,
+   "seconds": 40
+  },
+  {
+   "act": 1,
+   "attempt": 0,
+   "day": 6,
+   "encounter": "witch_and_pups",
+   "habits": {
+    "bunched": 3,
+    "burning": 27,
+    "casts": 11,
+    "front": 1,
+    "healing": 405,
+    "marked": 6,
+    "rooted": 10
+   },
+   "outcome": 0,
+   "seconds": 25
+  },
+  {
+   "act": 1,
+   "attempt": 0,
+   "day": 7,
+   "encounter": "old_mother_ash",
+   "habits": {
+    "back": 2,
+    "burning": 42,
+    "casts": 20,
+    "healing": 112,
+    "marked": 9,
+    "rooted": 13,
+    "shields": 211
+   },
+   "outcome": 0,
+   "seconds": 40
+  },
+  {
+   "act": 2,
+   "attempt": 0,
+   "day": 1,
+   "encounter": "the_ford",
+   "habits": {
+    "back": 1,
+    "bunched": 2,
+    "burning": 22,
+    "casts": 11,
+    "front": 1,
+    "healing": 602,
+    "marked": 5,
+    "rooted": 21
+   },
+   "outcome": 0,
+   "seconds": 21
+  },
+  {
+   "act": 2,
+   "attempt": 0,
+   "day": 2,
+   "encounter": "glass_field",
+   "habits": {
+    "back": 2,
+    "burning": 28,
+    "casts": 14,
+    "front": 1,
+    "healing": 598,
+    "marked": 6,
+    "rooted": 28,
+    "stealthed": 1
+   },
+   "outcome": 0,
+   "seconds": 27
+  },
+  {
+   "act": 2,
+   "attempt": 0,
+   "day": 3,
+   "encounter": "tide_choir",
+   "habits": {
+    "back": 1,
+    "bunched": 1,
+    "burning": 34,
+    "casts": 17,
+    "front": 1,
+    "healing": 101,
+    "marked": 9,
+    "rooted": 29,
+    "stealthed": 1
+   },
+   "outcome": 0,
+   "seconds": 34
+  },
+  {
+   "act": 2,
+   "attempt": 0,
+   "day": 4,
+   "encounter": "wardens_pool",
+   "habits": {
+    "back": 2,
+    "burning": 24,
+    "casts": 11,
+    "front": 1,
+    "healing": 351,
+    "marked": 8,
+    "rooted": 9
+   },
+   "outcome": 0,
+   "seconds": 26
+  },
+  {
+   "act": 2,
+   "attempt": 0,
+   "day": 5,
+   "encounter": "glass_matron",
+   "habits": {
+    "back": 2,
+    "bunched": 2,
+    "burning": 195,
+    "casts": 15,
+    "healing": 369,
+    "marked": 6,
+    "rooted": 31,
+    "stealthed": 1
+   },
+   "outcome": 0,
+   "seconds": 34
+  },
+  {
+   "act": 2,
+   "attempt": 0,
+   "day": 6,
+   "encounter": "witch_of_the_mere",
+   "habits": {
+    "bunched": 3,
+    "burning": 77,
+    "casts": 7,
+    "front": 2,
+    "healing": 304,
+    "marked": 3,
+    "rooted": 15,
+    "shields": 190
+   },
+   "outcome": 0,
+   "seconds": 65
+  },
+  {
+   "act": 2,
+   "attempt": 0,
+   "day": 7,
+   "encounter": "the_mournwater",
+   "habits": {
+    "back": 1,
+    "burning": 134,
+    "casts": 15,
+    "healing": 200,
+    "marked": 8,
+    "rooted": 23,
+    "stealthed": 3
+   },
+   "outcome": 0,
+   "seconds": 37
+  },
+  {
+   "act": 3,
+   "attempt": 0,
+   "day": 1,
+   "encounter": "ram_and_ruin",
+   "habits": {
+    "back": 1,
+    "bunched": 2,
+    "burning": 119,
+    "casts": 9,
+    "front": 1,
+    "healing": 305,
+    "marked": 2,
+    "rooted": 14,
+    "stealthed": 3
+   },
+   "outcome": 0,
+   "seconds": 21
+  },
+  {
+   "act": 3,
+   "attempt": 0,
+   "day": 2,
+   "encounter": "chanters_rock",
+   "habits": {
+    "bunched": 1,
+    "burning": 108,
+    "casts": 16,
+    "front": 2,
+    "healing": 252,
+    "marked": 3,
+    "rooted": 35,
+    "shields": 114,
+    "stealthed": 3
+   },
+   "outcome": 1,
+   "seconds": 43
+  },
+  {
+   "act": 3,
+   "attempt": 1,
+   "day": 2,
+   "encounter": "chanters_rock",
+   "habits": {
+    "bunched": 1,
+    "burning": 108,
+    "casts": 15,
+    "front": 2,
+    "healing": 312,
+    "marked": 8,
+    "rooted": 31,
+    "stealthed": 3
+   },
+   "outcome": 0,
+   "seconds": 38
+  },
+  {
+   "act": 3,
+   "attempt": 0,
+   "day": 3,
+   "encounter": "the_cragherd",
+   "habits": {
+    "bunched": 1,
+    "burning": 90,
+    "casts": 10,
+    "front": 1,
+    "healing": 31,
+    "marked": 5,
+    "rooted": 15,
+    "stealthed": 5
+   },
+   "outcome": 0,
+   "seconds": 28
+  }
+ ],
+ "grew": [],
+ "growth": {
+  "bloodied_coin": 83
+ },
+ "heroes": [
+  {
+   "apex": "hearthkeeper",
+   "apex_earned": true,
+   "deeds": {
+    "hearthkeeper": 230,
+    "hearthwall": 1302,
+    "ironbrand": 0,
+    "last_watch": 0,
+    "unbroken_gate": 61
+   },
+   "gambit_at": 0,
+   "growth": {
+    "old_scars": 1100,
+    "weathered": 8586
+   },
+   "id": "brannoc",
+   "locked": {
+    "hearthblood": [
+     95
+    ],
+    "iron_hide": [
+     6
+    ]
+   },
+   "next_fight": [],
+   "oath": "",
+   "oath_fights": 0,
+   "path": "hearthwall",
+   "slots": [
+    "sidestep",
+    "guard_the_weakest_orders",
+    "iron_skin"
+   ],
+   "transformed": true,
+   "upgrades": [
+    "shared_strength",
+    "iron_hide",
+    "deep_hearth",
+    "old_scars",
+    "lasting_wall",
+    "weathered",
+    "hearthblood",
+    "reflecting_wall",
+    "twice_guarded"
+   ],
+   "weakened": 0,
+   "wounds": 0
+  },
+  {
+   "apex": "eagle_eye",
+   "apex_earned": false,
+   "deeds": {
+    "deadeye": 11206,
+    "eagle_eye": 2,
+    "stormline": 80,
+    "trapper": 0,
+    "volley": 0
+   },
+   "gambit_at": 0,
+   "growth": {},
+   "id": "maren",
+   "locked": {
+    "fletchers_leathers": [
+     28
+    ],
+    "honed_tips": [
+     2
+    ],
+    "quick_draw": [
+     11
+    ]
+   },
+   "next_fight": [],
+   "oath": "",
+   "oath_fights": 0,
+   "path": "deadeye",
+   "slots": [
+    "stay_with_the_tank_orders",
+    "bloodhound",
+    "ember_tipped"
+   ],
+   "transformed": true,
+   "upgrades": [
+    "honed_tips",
+    "first_blood",
+    "parting_shot",
+    "fletchers_leathers",
+    "quick_draw"
+   ],
+   "weakened": 0,
+   "wounds": 0
+  },
+  {
+   "apex": "undertow",
+   "apex_earned": true,
+   "deeds": {
+    "aegisfang": 0,
+    "chainwarden": 230,
+    "grinder": 0,
+    "spitemail": 0,
+    "undertow": 81
+   },
+   "gambit_at": 0,
+   "growth": {},
+   "id": "garrow",
+   "locked": {
+    "iron_frame": [
+     55
+    ],
+    "thick_fists": [
+     2
+    ]
+   },
+   "next_fight": [],
+   "oath": "",
+   "oath_fights": 0,
+   "path": "chainwarden",
+   "slots": [
+    "hunters_chalk",
+    "finish_them_orders",
+    "leech_fang"
+   ],
+   "transformed": true,
+   "upgrades": [
+    "thick_fists",
+    "iron_frame",
+    "hard_landing"
+   ],
+   "weakened": 0,
+   "wounds": 0
+  }
+ ],
+ "hunt": "",
+ "item_counts": {
+  "bloodhound": 0,
+  "ember_tipped": 0,
+  "finish_them_orders": 0,
+  "guard_the_weakest_orders": 0,
+  "hunters_chalk": 0,
+  "iron_skin": 0,
+  "leech_fang": 5,
+  "sidestep": 0,
+  "stay_with_the_tank_orders": 0
+ },
+ "item_ranks": {
+  "bloodhound": 3,
+  "ember_tipped": 3,
+  "finish_them_orders": 3,
+  "guard_the_weakest_orders": 3,
+  "hunters_chalk": 3,
+  "iron_skin": 3,
+  "leech_fang": 2,
+  "sidestep": 3,
+  "stay_with_the_tank_orders": 3
+ },
+ "just_apexed": [],
+ "just_transformed": [],
+ "losses": 1,
+ "magpie_swapped": false,
+ "magpie_visits": 0,
+ "mapping": false,
+ "node": "",
+ "nodes": [],
+ "oath_offer": [],
+ "options": [
+  [
+   "the_span",
+   "ram_and_ruin"
+  ],
+  [
+   "chanters_rock",
+   "the_mirror_shelf"
+  ],
+  [
+   "the_cragherd",
+   "the_mirror_court"
+  ],
+  [
+   "chanters_rock",
+   "mirror_and_hook"
+  ],
+  [
+   "the_mirror_court",
+   "the_cragherd"
+  ],
+  [
+   "unbound",
+   "the_breaking_span"
+  ],
+  [
+   "the_heart_of_the_rift"
+  ]
+ ],
+ "outcome": "none",
+ "phase": "loadout",
+ "pick": [],
+ "picks_left": 0,
+ "place": "",
+ "ranked": [],
+ "relic_choice": [],
+ "relic_choice_price": 0,
+ "relics": [
+  "wardens_chain",
+  "red_thirst",
+  "grasping_mire",
+  "keen_edge",
+  "echoing_bell",
+  "menders_purse",
+  "bounty_board",
+  "hearthstone_shard",
+  "everflame",
+  "full_vigor",
+  "executioners_mark",
+  "bloodied_coin",
+  "thorned_bandage",
+  "splinter_shot",
+  "ashen_engine",
+  "iron_filings",
+  "thornwoven_cloak",
+  "veil_of_the_lost",
+  "leech_tooth",
+  "snare_wire",
+  "gluttons_chalice",
+  "smoke_pouch",
+  "soothing_salve",
+  "stormcallers_bell",
+  "rift_bound_heart",
+  "rusted_fetter",
+  "the_watchtower_stone",
+  "sanguine_frenzy",
+  "bloodstone",
+  "whetstone_of_the_fallen",
+  "dulled_shackles",
+  "loose_change",
+  "salt_circle"
+ ],
+ "rerolls": 0,
+ "rested": false,
+ "rift_depth": "deep",
+ "rift_mods": [
+  "hastened"
+ ],
+ "rock": [],
+ "scouted": [],
+ "sealed": false,
+ "seed": 1,
+ "shards": 172,
+ "shop": "",
+ "shop_dear_bp": 0,
+ "shop_relics": [],
+ "shrine": "",
+ "stash": [],
+ "streak": 1,
+ "streaks_paid": [
+  "bounty_board"
+ ],
+ "taken_nodes": [
+  "rift_tear",
+  "rift_tear",
+  "rift_tear"
+ ],
+ "testing": false,
+ "today_learned": [
+  [],
+  []
+ ],
+ "today_specs": [
+  [
+   "quickening_chanter",
+   "warden_sentinel",
+   "drifting_moth",
+   ""
+  ],
+  [
+   "",
+   "reeling_angler",
+   "wide_unbinder",
+   "pack_mite",
+   ""
+  ]
+ ],
+ "today_upgrades": [
+  [],
+  []
+ ],
+ "version": 10,
+ "wares": []
+}

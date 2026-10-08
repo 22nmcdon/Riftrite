@@ -190,6 +190,16 @@ var planted_bonus: int = 0
 var plant_reach_sq: int = 0
 ## Its conditional auras' state (Passives.condition_key), as last folded in.
 var condition_key: int = 0
+## Made once from its kit (Passives.set_up; again when a phase swaps it), so
+## the loops that run every tick and on every event skip what they'd only
+## filter out (the tuning phase's speed pass; the same order as the kit's):
+## its aura parts and their "unit:part" keys, the conditional ones, its
+## listeners on timed triggers, and its listeners by trigger.
+var aura_parts: Array[PartDef] = []
+var aura_keys: Array[String] = []
+var conditional_auras: Array[PartDef] = []
+var timed_listeners: Array[Passives.Listener] = []
+var listeners_by: Dictionary[int, Array] = {}
 
 ## A leap's landing: it can't act before this tick.
 var landing_until: int = 0

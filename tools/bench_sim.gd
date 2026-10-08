@@ -34,6 +34,9 @@ const STATES: String = "res://tools/bench_states"
 
 
 func _init() -> void:
+	# Loaded once: K.run loads the data afresh each call, which by now costs
+	# more than a fight (the tuning phase).
+	var content: ContentDb = K.content()
 	var total_ms: int = 0
 	var total_ticks: int = 0
 	for kind: String in ["steady", "crowded", "swarm", "chains"]:
@@ -44,7 +47,7 @@ func _init() -> void:
 				for run: int in RUNS:
 					var setup: FightSetup = _swarm_setup(fight_seed, hp_bp) if kind == "swarm" else _chain_setup(fight_seed, hp_bp) if kind == "chains" else _setup(fight_seed, hp_bp, kind == "crowded")
 					var started: int = Time.get_ticks_usec()
-					result = K.run(setup)
+					result = CombatSim.run(setup, content)
 					var usec: int = Time.get_ticks_usec() - started
 					best_usec = usec if run == 0 else mini(best_usec, usec)
 				@warning_ignore("integer_division")

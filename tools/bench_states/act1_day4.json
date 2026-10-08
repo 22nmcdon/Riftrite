@@ -1,0 +1,289 @@
+{
+ "act": 1,
+ "apex_open": false,
+ "attempt": 0,
+ "bonds_found": [],
+ "camp": [],
+ "camp_used": "",
+ "chosen": "cairn_road",
+ "day": 4,
+ "dear_shop_bp": 0,
+ "dig_in": false,
+ "endless": false,
+ "endless_mods": [],
+ "event_done": false,
+ "formation": {
+  "brannoc": [
+   0,
+   0
+  ],
+  "garrow": [
+   1,
+   2
+  ],
+  "maren": [
+   0,
+   1
+  ]
+ },
+ "fortify": false,
+ "fought": [
+  {
+   "act": 1,
+   "attempt": 0,
+   "day": 1,
+   "encounter": "smouldering_den",
+   "habits": {
+    "back": 2,
+    "casts": 5,
+    "front": 1,
+    "marked": 2
+   },
+   "outcome": 0,
+   "seconds": 13
+  },
+  {
+   "act": 1,
+   "attempt": 0,
+   "day": 2,
+   "encounter": "hounds_and_archers",
+   "habits": {
+    "back": 2,
+    "bunched": 1,
+    "casts": 7,
+    "front": 1,
+    "marked": 3,
+    "rooted": 2
+   },
+   "outcome": 0,
+   "seconds": 20
+  },
+  {
+   "act": 1,
+   "attempt": 0,
+   "day": 3,
+   "encounter": "cairn_sentry",
+   "habits": {
+    "back": 1,
+    "bunched": 1,
+    "casts": 8,
+    "front": 1,
+    "healing": 185,
+    "marked": 4,
+    "rooted": 1,
+    "shields": 120
+   },
+   "outcome": 0,
+   "seconds": 25
+  }
+ ],
+ "grew": [],
+ "growth": {},
+ "heroes": [
+  {
+   "apex": "",
+   "apex_earned": false,
+   "deeds": {
+    "hearthwall": 101,
+    "ironbrand": 0,
+    "last_watch": 0
+   },
+   "gambit_at": 0,
+   "growth": {},
+   "id": "brannoc",
+   "locked": {},
+   "next_fight": [],
+   "oath": "",
+   "oath_fights": 0,
+   "path": "hearthwall",
+   "slots": [
+    "sidestep",
+    "guard_the_weakest_orders",
+    "iron_skin"
+   ],
+   "transformed": true,
+   "upgrades": [
+    "shared_strength"
+   ],
+   "weakened": 0,
+   "wounds": 0
+  },
+  {
+   "apex": "",
+   "apex_earned": false,
+   "deeds": {
+    "deadeye": 396,
+    "trapper": 0,
+    "volley": 0
+   },
+   "gambit_at": 0,
+   "growth": {},
+   "id": "maren",
+   "locked": {
+    "honed_tips": [
+     2
+    ]
+   },
+   "next_fight": [],
+   "oath": "",
+   "oath_fights": 0,
+   "path": "deadeye",
+   "slots": [
+    "stay_with_the_tank_orders",
+    "bloodhound",
+    ""
+   ],
+   "transformed": false,
+   "upgrades": [
+    "honed_tips",
+    "first_blood",
+    "parting_shot"
+   ],
+   "weakened": 0,
+   "wounds": 0
+  },
+  {
+   "apex": "",
+   "apex_earned": false,
+   "deeds": {
+    "aegisfang": 0,
+    "chainwarden": 7,
+    "spitemail": 0
+   },
+   "gambit_at": 0,
+   "growth": {},
+   "id": "garrow",
+   "locked": {
+    "thick_fists": [
+     2
+    ]
+   },
+   "next_fight": [],
+   "oath": "",
+   "oath_fights": 0,
+   "path": "chainwarden",
+   "slots": [
+    "",
+    "",
+    ""
+   ],
+   "transformed": false,
+   "upgrades": [
+    "thick_fists"
+   ],
+   "weakened": 0,
+   "wounds": 0
+  }
+ ],
+ "hunt": "",
+ "item_counts": {
+  "bloodhound": 0,
+  "guard_the_weakest_orders": 46200,
+  "iron_skin": 1,
+  "sidestep": 2,
+  "stay_with_the_tank_orders": 46200
+ },
+ "item_ranks": {
+  "bloodhound": 1,
+  "guard_the_weakest_orders": 1,
+  "iron_skin": 1,
+  "sidestep": 1,
+  "stay_with_the_tank_orders": 1
+ },
+ "just_apexed": [],
+ "just_transformed": [],
+ "losses": 0,
+ "magpie_swapped": false,
+ "magpie_visits": 0,
+ "mapping": false,
+ "node": "",
+ "nodes": [],
+ "oath_offer": [],
+ "options": [
+  [
+   "smouldering_den",
+   "warren_mouth"
+  ],
+  [
+   "moth_cloud",
+   "hounds_and_archers"
+  ],
+  [
+   "cairn_sentry",
+   "alphas_trail"
+  ],
+  [
+   "cairn_road",
+   "sentinel_and_moths"
+  ],
+  [
+   "witch_coven",
+   "cairn_watch"
+  ],
+  [
+   "cairn_road",
+   "witch_and_pups"
+  ],
+  [
+   "old_mother_ash"
+  ]
+ ],
+ "outcome": "none",
+ "phase": "loadout",
+ "pick": [],
+ "picks_left": 0,
+ "place": "",
+ "ranked": [],
+ "relic_choice": [],
+ "relic_choice_price": 0,
+ "relics": [
+  "wardens_chain",
+  "red_thirst",
+  "grasping_mire",
+  "keen_edge"
+ ],
+ "rerolls": 0,
+ "rested": false,
+ "rift_depth": "",
+ "rift_mods": [],
+ "rock": [],
+ "scouted": [],
+ "sealed": false,
+ "seed": 1,
+ "shards": 0,
+ "shop": "",
+ "shop_dear_bp": 0,
+ "shop_relics": [],
+ "shrine": "",
+ "stash": [],
+ "streak": 3,
+ "streaks_paid": [],
+ "taken_nodes": [
+  "camp:ruined_chapel",
+  "camp:ruined_chapel",
+  "camp:waystone"
+ ],
+ "testing": false,
+ "today_learned": [
+  [],
+  []
+ ],
+ "today_specs": [
+  [
+   "",
+   "",
+   ""
+  ],
+  [
+   "",
+   "",
+   ""
+  ]
+ ],
+ "today_upgrades": [
+  [],
+  []
+ ],
+ "version": 10,
+ "wares": []
+}

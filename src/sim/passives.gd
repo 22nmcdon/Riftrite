@@ -62,6 +62,12 @@ class Delayed:
 	var at: int
 
 
+## The triggers run_timed checks every tick (not raised by events).
+const TIMED_TRIGGERS: Array[int] = [EffectDef.Trigger.ON_INTERVAL, EffectDef.Trigger.ON_ALLY_BELOW_HP, EffectDef.Trigger.ON_BELOW_HP, EffectDef.Trigger.ON_ENEMY_NEAR]
+## Shared by units with no listener on a trigger (never written to).
+const _NONE: Array = []
+
+
 ## AuraDef stats with no aura: x1 multipliers, +0 additions.
 static func no_auras() -> Array[int]:
 	var values: Array[int] = []
@@ -84,6 +90,24 @@ static func set_up(unit: UnitState) -> void:
 					unit.hears_mana = unit.hears_mana or effect.trigger == EffectDef.Trigger.ON_MANA_GAINED
 			PartDef.Kind.REPLACE_STATUS:
 				unit.status_swaps[part.from_status] = part.to_status
+	unit.aura_parts.clear()
+	unit.aura_keys.clear()
+	unit.conditional_auras.clear()
+	for part: PartDef in unit.def.passives:
+		if part.kind == PartDef.Kind.AURA:
+			unit.aura_parts.append(part)
+			unit.aura_keys.append("%s:%s" % [unit.id, part.id])
+			if part.aura.is_conditional():
+				unit.conditional_auras.append(part)
+	unit.timed_listeners.clear()
+	unit.listeners_by.clear()
+	for listener: Listener in unit.listeners:
+		var trigger: int = listener.effect.trigger
+		if TIMED_TRIGGERS.has(trigger):
+			unit.timed_listeners.append(listener)
+		if not unit.listeners_by.has(trigger):
+			unit.listeners_by[trigger] = []
+		unit.listeners_by[trigger].append(listener)
 
 
 # --- auras ---------------------------------------------------------------------
@@ -126,14 +150,15 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 	for holder: UnitState in sim.units:
 		if not holder.alive:
 			continue
-		for part: PartDef in holder.def.passives:
-			if part.kind != PartDef.Kind.AURA or not part.aura.active_at(sim.tick):
+		for a: int in holder.aura_parts.size():
+			var part: PartDef = holder.aura_parts[a]
+			if not part.aura.active_at(sim.tick):
 				continue
 			if part.aura.while_taunting and not taunting(sim, holder):
 				continue
 			if part.aura.is_conditional() and not condition_holds(sim, holder, part.aura):
 				continue
-			now_active.append("%s:%s" % [holder.id, part.id])
+			now_active.append(holder.aura_keys[a])
 			# A factor's change adds to the others' of its stat (the damage
 			# rule, phase 5c): x1.1 and x1.1 make x1.2.
 			var change: int = aura_change(sim, holder, part.aura)
@@ -206,13 +231,19 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 
 ## Logs, in the fight's order, each aura that ended and each that started.
 static func _log_changes(sim: CombatSim, was_active: Array[String], now_active: Array[String]) -> void:
+	# Looked up, never iterated (the log's order is the units' and their kits').
+	var was_set: Dictionary[String, bool] = {}
+	for key: String in was_active:
+		was_set[key] = true
+	var now_set: Dictionary[String, bool] = {}
+	for key: String in now_active:
+		now_set[key] = true
 	for holder: UnitState in sim.units:
-		for part: PartDef in holder.def.passives:
-			if part.kind != PartDef.Kind.AURA:
-				continue
-			var key: String = "%s:%s" % [holder.id, part.id]
-			var was: bool = was_active.has(key)
-			if was == now_active.has(key):
+		for a: int in holder.aura_parts.size():
+			var part: PartDef = holder.aura_parts[a]
+			var key: String = holder.aura_keys[a]
+			var was: bool = was_set.has(key)
+			if was == now_set.has(key):
 				continue
 			var entry: LogEntry = sim.new_entry(LogEntry.Kind.AURA, EffectSource.make(holder.id, part.id, part.name))
 			entry.note = ("starts: %s" % part.aura.describe()) if not was else "ends"
@@ -325,9 +356,7 @@ static func has_conditional_aura(unit: UnitState) -> bool:
 ## step, per Shield).
 static func condition_key(sim: CombatSim, unit: UnitState) -> int:
 	var key: int = 0
-	for part: PartDef in unit.def.passives:
-		if part.kind != PartDef.Kind.AURA or not part.aura.is_conditional():
-			continue
+	for part: PartDef in unit.conditional_auras:
 		key = key * 1000003
 		if unit.alive and condition_holds(sim, unit, part.aura):
 			key += 1 + aura_change(sim, unit, part.aura)
@@ -468,7 +497,7 @@ static func boosted(unit: UnitState, effect: EffectDef, amount: int) -> int:
 ## `status` the status applied (on_status), `chain` the depth of the entry
 ## that raised it.
 static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, other: UnitState, damage: int, status: String, chain: int = 0) -> void:
-	for listener: Listener in unit.listeners:
+	for listener: Listener in unit.listeners_by.get(event, _NONE):
 		var effect: EffectDef = listener.effect
 		if effect.trigger != event or not effect.active_at(sim.tick):
 			continue
@@ -592,9 +621,9 @@ static func run_delayed(sim: CombatSim) -> void:
 ## (the allies, too, in the fight's order).
 static func run_timed(sim: CombatSim) -> void:
 	for unit: UnitState in sim.units:
-		if not unit.alive or unit.listeners.is_empty():
+		if not unit.alive or unit.timed_listeners.is_empty():
 			continue
-		for listener: Listener in unit.listeners:
+		for listener: Listener in unit.timed_listeners:
 			var effect: EffectDef = listener.effect
 			if not effect.active_at(sim.tick):
 				continue
