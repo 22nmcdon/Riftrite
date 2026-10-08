@@ -62,7 +62,7 @@ func test_the_camp_content_loads() -> void:
 	assert_true(_run.is_valid(), "\n".join(_run.errors))
 	assert_eq(_run.camps.places.map(func(place: CampsDef.Place) -> String: return place.id), ["waystone", "ruined_chapel", "hunters_blind", "rift_scar"])
 	assert_eq(_run.camps.options.size(), CampsDef.OPTIONS.size())
-	assert_eq([_run.relic_ids.size(), _run.bond_ids.size()], [94, 8], "89 and the built three bonds, then Garrow's two, Tamsin's Hold and Break, and Aldous's two (phase 8 part 4)")
+	assert_eq([_run.relic_ids.size(), _run.bond_ids.size()], [107, 8], "89 and the built three bonds, then Garrow's two, Tamsin's Hold and Break, and Aldous's two (phase 8 part 4), and the tuning phase's thirteen")
 
 
 func test_arriving_at_camp() -> void:

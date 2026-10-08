@@ -504,6 +504,14 @@ static func rules_numbers(rules: SideRules, content: ContentDb) -> Array[String]
 	if rules.watch_every_ticks > 0:
 		parts.append("no tie until %s; from %s, every hero %s every %s" % [UnitInfo.seconds(rules.watch_tie_ticks), UnitInfo.seconds(rules.watch_from_ticks),
 			_boost(content, "long_watch"), UnitInfo.seconds(rules.watch_every_ticks)])
+	if rules.hold_time_bp > 0:
+		parts.append("Roots and Stuns on enemies last %s" % UnitInfo.signed_percent(rules.hold_time_bp - FixedMath.BP_ONE))
+	if rules.held_no_mana:
+		parts.append("held enemies gain no mana")
+	if rules.held_weak_bp > 0:
+		parts.append("held enemies deal %s damage, for %s after the hold" % [UnitInfo.signed_percent(-rules.held_weak_bp), UnitInfo.seconds(rules.held_weak_ticks)])
+	if rules.held_keeps_burn:
+		parts.append("Burn on held enemies doesn't fade")
 	return parts
 
 
