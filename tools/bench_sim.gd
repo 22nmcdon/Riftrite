@@ -19,9 +19,18 @@ extends SceneTree
 ##             time it's hit, so every hit starts a chain that runs to the
 ##             chain limit (docs/plans/rebuild-phase5c-combos.md, step 3)
 ## The kits are fixed here, so the numbers compare across changes.
+## Then the loaded fights (the tuning phase): each run state saved in
+## tools/bench_states/ (a good-bot run at a day's loadout, late in an act:
+## a full team's relics, upgrades, items, an apex) fights its waiting fight,
+## placed the way the good bot places, on a fixed seed. These read the real
+## content, so their numbers move when the data does; they're the fights
+## the bots spend their time on.
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
+const Practice = preload("res://tools/bots/practice.gd")
+const Bot = preload("res://tools/bots/bot.gd")
 const RUNS: int = 3
+const STATES: String = "res://tools/bench_states"
 
 
 func _init() -> void:
@@ -49,7 +58,50 @@ func _init() -> void:
 				print("%-8s hp x%-3s seed %2d: %4d ticks (%3ds), %4d ms, %3d ms per 60s%s, log %s" % [kind, str(hp_bp / 10000.0), fight_seed, result.end_tick, result.end_tick / FixedMath.TICKS_PER_SECOND, ms, ms * 1200 / maxi(result.end_tick, 1), units, result.combat_log.to_text().md5_text()])
 	@warning_ignore("integer_division")
 	print("all: %d ms per 60s" % (total_ms * 1200 / maxi(total_ticks, 1)))
+	_loaded()
 	quit()
+
+
+## The loaded fights: each saved run state's waiting fight.
+static func _loaded() -> void:
+	if not DirAccess.dir_exists_absolute(STATES):
+		return
+	var run: RunContent = RunContent.load_dir("res://data", ContentDb.load_dir("res://data"))
+	var total_ms: int = 0
+	var total_ticks: int = 0
+	var names: PackedStringArray = DirAccess.get_files_at(STATES)
+	names.sort()
+	for name: String in names:
+		if not name.ends_with(".json"):
+			continue
+		var flow: RunFlow = RunFlow.resume(run, RunState.from_dict(JSON.parse_string(FileAccess.get_file_as_string("%s/%s" % [STATES, name]))))
+		var hexes: Dictionary[String, Vector2i] = Practice.place(flow)
+		var errors: Array[String] = []
+		var best_usec: int = 0
+		var result: FightResult = null
+		for i: int in RUNS:
+			var setup: FightSetup = flow.fight_setup(hexes, errors, Bot.default_markers(flow, hexes))
+			if setup == null:
+				print("loaded   %s: no fight (%s)" % [name, ", ".join(errors)])
+				break
+			setup.seed_value = 5
+			var started: int = Time.get_ticks_usec()
+			result = CombatSim.run(setup, run.content)
+			var usec: int = Time.get_ticks_usec() - started
+			best_usec = usec if i == 0 else mini(best_usec, usec)
+		if result == null:
+			continue
+		@warning_ignore("integer_division")
+		var ms: int = best_usec / 1000
+		total_ms += ms
+		total_ticks += result.end_tick
+		@warning_ignore("integer_division")
+		print("loaded   %-14s %-22s %4d ticks (%3ds), %4d ms, %3d ms per 60s, %d relics, %d summons, log %s" % [name.get_basename(), flow.state.chosen, result.end_tick,
+			result.end_tick / FixedMath.TICKS_PER_SECOND, ms, ms * 1200 / maxi(result.end_tick, 1), flow.state.relics.size(),
+			result.combat_log.of_kind(LogEntry.Kind.SUMMON).size(), result.combat_log.to_text().md5_text()])
+	if total_ticks > 0:
+		@warning_ignore("integer_division")
+		print("loaded: %d ms per 60s" % (total_ms * 1200 / total_ticks))
 
 
 ## The swarm: a tank, an archer, and a healer-less bruiser against a caller
