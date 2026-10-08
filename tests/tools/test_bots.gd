@@ -360,3 +360,23 @@ func test_a_hero_sworn_to_the_front_row_is_placed_there() -> void:
 	assert_eq(hexes["vell"].y, flow.front_row())
 	var errors: Array[String] = []
 	assert_not_null(flow.fight_setup(hexes, errors), ", ".join(errors))
+
+
+## The practice cache's key (the tuning phase): only what a practice fight
+## reads, so a change to the shop, the offers, or the shards still hits;
+## the shards count while a relic grows with them (Gilded Rift).
+func test_the_practice_key_holds_only_what_fights_read() -> void:
+	var errors: Array[String] = []
+	var flow: RunFlow = RunFlow.start(_run, 3, _vows(3), errors)
+	var key: String = Practice.fights_key(flow)
+	flow.state.shards += 50
+	flow.state.wares = ["a", "b"]
+	flow.state.rerolls = 2
+	assert_eq(Practice.fights_key(flow), key, "shards, wares, and rerolls aren't fought")
+	flow.state.heroes[0].wounds = 1
+	assert_ne(Practice.fights_key(flow), key, "a wound is")
+	flow.state.heroes[0].wounds = 0
+	flow.state.relics.append("gilded_rift")
+	var with_rift: String = Practice.fights_key(flow)
+	flow.state.shards += 50
+	assert_ne(Practice.fights_key(flow), with_rift, "with Gilded Rift, the shards are")

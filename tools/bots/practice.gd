@@ -37,6 +37,15 @@ const SEED_BASE: int = 7_700_000
 ## Worths already practiced: the state (as JSON) and the fights -> worth.
 ## A run's bot clears it each day (clear_cache).
 static var _cache: Dictionary[String, float] = {}
+## The run state's fields no practice fight reads (the tuning phase: a key
+## holding them missed whenever only the shop, the offers, or the shards
+## changed, so the same team was fought again and again). Anything not
+## named here stays in the key, so an unsure field costs a hit, never a
+## wrong answer. Shards stay in it while a held relic grows with them
+## (Gilded Rift).
+const NOT_IN_FIGHTS: Array[String] = ["phase", "outcome", "pick", "just_transformed", "stash", "shop", "wares", "rerolls", "shop_relics",
+	"magpie_swapped", "nodes", "node", "taken_nodes", "magpie_visits", "relic_choice", "relic_choice_price", "shrine", "event_done", "oath_offer",
+	"dear_shop_bp", "shop_dear_bp", "picks_left", "streak", "streaks_paid", "bonds_found", "grew", "ranked", "item_counts", "just_apexed"]
 
 
 static func clear_cache() -> void:
@@ -110,7 +119,7 @@ static func practice_set(flow: RunFlow) -> Array[String]:
 static func team_worth(flow: RunFlow, encounters: Array[String]) -> float:
 	if encounters.is_empty():
 		return 0.0
-	var key: String = JSON.stringify(flow.state.to_dict()) + ",".join(encounters)
+	var key: String = fights_key(flow) + ",".join(encounters)
 	if _cache.has(key):
 		return _cache[key]
 	var trial: RunFlow = copy(flow)
@@ -123,6 +132,16 @@ static func team_worth(flow: RunFlow, encounters: Array[String]) -> float:
 		total += fight_worth(trial, encounter_id)
 	_cache[key] = total / encounters.size()
 	return _cache[key]
+
+
+## What practice fights read of `flow`'s state, as a cache key.
+static func fights_key(flow: RunFlow) -> String:
+	var data: Dictionary = flow.state.to_dict()
+	for field: String in NOT_IN_FIGHTS:
+		data.erase(field)
+	if not flow.state.relics.any(func(id: String) -> bool: return flow.run.relics.has(id) and flow.run.relics[id].per_shards > 0):
+		data.erase("shards")
+	return JSON.stringify(data)
 
 
 ## The waiting fight of `flow` (at its loadout, or a Hunt), placed by the
