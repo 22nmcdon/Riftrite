@@ -360,7 +360,7 @@
     "text": "He gains more mana from the damage he takes.",
     "mod": {
       "mana": {
-        "taken_bp": 15000
+        "taken_bp": 13000
       }
     }
   },
@@ -373,7 +373,7 @@
       "counts": {
         "counts": "taken"
       },
-      "per": 600,
+      "per": 800,
       "each": {
         "stats_bp": {
           "hp": 10100

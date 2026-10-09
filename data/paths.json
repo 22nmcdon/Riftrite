@@ -2577,7 +2577,7 @@
             "morning_haste",
             "dawnlight"
           ],
-          "threshold": 33
+          "threshold": 20
         }
       }
     ]
@@ -2842,7 +2842,7 @@
           "from_ability": [
             "thornweave"
           ],
-          "threshold": 26
+          "threshold": 16
         }
       }
     ]
@@ -3324,7 +3324,7 @@
           "from_ability": [
             "sunfall"
           ],
-          "threshold": 80
+          "threshold": 50
         }
       }
     ]
