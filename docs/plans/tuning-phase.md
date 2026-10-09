@@ -1,6 +1,6 @@
 # The tuning phase (all six heroes and the acts)
 
-Status: **a build plan, approved (2026-10-08; Decisions 1–13); T-1 to T-3 built.** Order: T-2 (the bot) and T-1 (the relics), then T-3 onward. The phase `rebuild-phase8-heroes.md` named next: tune all six heroes and the three acts at once, starting from what `easy-start.md`'s runs left (ES-4 and ES-5) and the playtester's relic additions (`changes-plan-relics.md`, 2026-10-08, applied to `relics/`). Questions are in section 6.
+Status: **a build plan, approved (2026-10-08; Decisions 1–15); T-1 to T-4 built (T-4 waits on Question TG).** Order: T-2 (the bot) and T-1 (the relics), then T-3 onward. The phase `rebuild-phase8-heroes.md` named next: tune all six heroes and the three acts at once, starting from what `easy-start.md`'s runs left (ES-4 and ES-5) and the playtester's relic additions (`changes-plan-relics.md`, 2026-10-08, applied to `relics/`). Questions are in section 6.
 
 ## 1. Where it starts
 
@@ -116,6 +116,49 @@ Each slow deed counts only through its vowed taste, so the taste decides how fas
 
 Garrote and Windcaller still give nothing in a third and two thirds of fights (a crit while the Root holds; ranged allies hitting from 3 hexes): they fill fastest beside a hold-maker or ranged allies, as an engine and an enabler should. The runs in T-4 read their transformations.
 
+### Built in T-4
+
+Decisions 14–15: each hero's runs won within about ±8 points of the mean of the six, lifting the weak and trimming the strong only a little. Numbers only; no card or kit changed what it does. Every check is the good bot over the same 120 runs (`run_runner.gd -- --runs=120 --bot=good --jobs=4 --choices`), 60 runs a hero.
+
+What held Aldous and Vell back:
+
+- **Aldous's transformations gained the least** (+4 to +5 over all base on the paths report), and two of his enablers lifted their build teams too little (Chorister +9, Windcaller +6, against +10 to +20).
+- **Vell transformed late:** Vigil Keeper's deed took about 6 fights, and Lanternbearer's gave nothing in 63% of fights (Kindle heals only a hurt ally beside Mend's target). Three of her six apexes (Sanctifier, Thornweave, Dawnbringer) took 8–9 fights to earn, against about 5 for most.
+- **The bot rarely takes their cards** (picks a run: Brannoc 5.6, Garrow 4.7, Maren 4.2, Tamsin 3.4, Vell 2.5, Aldous 1.6), and some are weak (Sanctuary cut damage 5%).
+- **Two supports together win little** (Brannoc, Vell, and Aldous 0 of 6; Maren, Vell, and Aldous 0 of 6). That is Decision 1's half-plan, and it stays.
+
+| Change | From | To |
+| --- | --- | --- |
+| Chorister's Crescendo (transformed) | 40 mana | 55 |
+| Chorister's Chorus (transformed) | half of the damage as mana | two thirds |
+| Windcaller's Tailwind (transformed) | +5 attack speed | +8 |
+| Windcaller's High Wind | +20% damage | +25% |
+| Lanternbearer's deed | 28 | 20 |
+| Vigil Keeper's deed | 140 | 95 |
+| Sanctifier's, Thornweave's, Dawnbringer's apex deeds | 80, 26, 33 | 50, 16, 20 (about 5 fights) |
+| Sanctuary (Vell) | 5% less damage taken | 10% |
+| Vigilant (Vell) | 20 mana | 30 |
+| Deep Well (Vell) | +3 mana an attack | +4 |
+| Strong Resonance (Aldous) | +3 attack speed | +5 |
+| Deep Hearth (Brannoc) | +50% Shield | +35% |
+| Weathered (Brannoc) | a step per 600 taken | per 800 |
+| Grudge (Brannoc) | +50% mana from damage taken | +30% |
+
+Chorister's floor is +10 and lift +13; Windcaller's floor +11, his lift still +7 (his Gallery team wins 82% with him on base, and the fights it loses don't turn on ranged damage).
+
+| Runs won | Baseline (after T-3) | After the lifts | After the apex deeds and Brannoc's trims |
+| --- | --- | --- | --- |
+| Brannoc | 38% | 38% | 38% |
+| Garrow | 30% | 33% | 35% |
+| Maren | 26% | 26% | 25% |
+| Tamsin | 23% | 23% | 25% |
+| Aldous | 16% | 21% | 21% |
+| Vell | 15% | 16% | 20% |
+| Mean (band) | 25% (17–33) | 26% (18–34) | 27% (19–35) |
+| All runs; Act 1, 2, 3 | | 26%; 63%, 47%, 88% | 27%; 64%, 46%, 91% |
+
+Vell transforms in 91% of runs (was 81%) and earns an apex in 30% (was 20%); Aldous in 83% and 28% (Windcaller still transforms in 55%: his deed needs ranged allies). Five heroes are in the band. **Brannoc stays 3 points above it:** the three card trims didn't move him, so what's left is his base kit (Question TG). The tanks lead because a team without one loses early (`easy-start.md`), so they'll sit at the top of any band.
+
 ## 6. Questions
 
 - **TA. The half-plans' target** *(Answered: Decision 3.)* (Decision 1): with the right relics and items, what should a pure sustain or pure control team manage? Proposed: with the lean (their relics and items 3 times as likely), win Act 1 in about 10–20% of runs (random teams 40–49%), and without it near 0.
@@ -123,6 +166,7 @@ Garrote and Windcaller still give nothing in a third and two thirds of fights (a
 - **TC. Heavy Pommel at rare:** *(Answered: Decision 5.)* each hero's first hit on each enemy Stuns 1s, so every enemy is Stunned up to 3s by a team that reaches it, more than Bramble Seed's 2 Roots and stronger than most epics against swarms and bosses. Proposed: once per enemy (the first hero to reach it), 1s; or keep it per hero at 0.5s.
 - **TD. The bot's shopping first** (T-2): *(Answered: Decision 6.)* fix the good bot's spending and picks before tuning the heroes, so the numbers measure the game and not the bot? Proposed: yes; it changes no game code.
 - **TE. The bad stand-ins:** all melee (Aegisfang, Nightblade, Last Watch) wins Act 1 83%, so it isn't bad. Replace it and No makers with teams that are bad with these six heroes (proposed: three back-liners on their weakest paths, and two tanks with an enabler), or drop the bad group until Ilse, Ottilie, and Lucan are built?
+- **TG. Brannoc above the band:** he wins 38% of runs against a band of 19–35%, and trimming three of his cards changed nothing. What's left is his base kit, whose stats are the design's: trim his HP (630 to 600) or Hold the Line's DEF (x1.5 to x1.4), or leave him 3 points over, at the noise of 60 runs?
 - **TF. Snare Wire's "a hex next to a hero":** heroes move freely, so this reads as an enemy first coming within 1 hex of a hero (center to center). Right?
 
 ## Decisions

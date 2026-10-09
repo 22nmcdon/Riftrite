@@ -62,12 +62,12 @@ Status: **agreed in discussion (2026-09-30); built as phase 5c step 7 (2026-10-0
 | **Long Hold** | His taunts last 1s longer |
 | **Stubborn Taunt** | Enemies he taunts deal 10% less damage |
 | **Twice Guarded** | Hearthguard can trigger twice per fight |
-| **Deep Hearth** | Hearthguard's Shield is 50% larger |
+| **Deep Hearth** | Hearthguard's Shield is 35% larger (was 50%; tuning T-4) |
 | **Hard to Pass** | Enemies he engages take 1s longer to break free |
 | **Staggering Bash** | Every 4th basic attack Slows the target 20% for 2s |
-| **Grudge** | He gains 50% more mana from damage taken |
+| **Grudge** | He gains 30% more mana from damage taken (was 50%; tuning T-4) |
 | **Opening Stand** | +30% DEF for the first 5s of each fight |
-| **Weathered** | Grows: +1% max HP per 1,000 damage he takes, for the rest of the run |
+| **Weathered** | Grows: +1% max HP per 800 damage he takes, for the rest of the run (tuning T-4) |
 
 ### Path pools
 
@@ -88,12 +88,12 @@ Status: **agreed in discussion (2026-09-30); built as phase 5c step 7 (2026-10-0
 | **Quick Glow** | Attack speed +10% of her current attack speed (stacks) |
 | **Wide Hearth** | Hearthlight reaches allies within 2 hexes, not 1 |
 | **Warm Hearth** | Hearthlight regenerates 2% HP per second, not 1% |
-| **Deep Well** | Her basic attack gives 25% more mana |
+| **Deep Well** | Her basic attack gives a third more mana (was a quarter; tuning T-4) |
 | **Urgent Mercy** | Her heals on allies below 30% HP heal 25% more |
 | **Cleansing Touch** | Her heals remove one status from their target |
 | **Ember Glow** | Her basic attack applies 1 Burn |
-| **Sanctuary** | Allies within 1 hex of her take 5% less damage |
-| **Vigilant** | When an ally first drops below 50% HP, she gains 20 mana (once per ally per fight) |
+| **Sanctuary** | Allies within 1 hex of her take 10% less damage (was 5%; tuning T-4) |
+| **Vigilant** | When an ally first drops below 50% HP, she gains 30 mana (once per ally per fight; was 20, tuning T-4) |
 | **Lamp Oil** | Grows: +1% MGK per 500 healing she gives, for the rest of the run |
 
 ### Path pools
@@ -211,7 +211,7 @@ These never give mana to allies (Chorister), bonuses for ranged allies (Windcall
 | **Padded Vestments** | DEF +10% of his current DEF (stacks) |
 | **Long Peal** | Peal lasts 2s longer |
 | **Wide Peal** | Peal reaches allies within 4 hexes |
-| **Strong Resonance** | Resonance gives +8% attack speed, not 5% |
+| **Strong Resonance** | Resonance gives +10% attack speed, not 5% (was +8%; tuning T-4) |
 | **Far Resonance** | Resonance reaches allies within 3 hexes |
 | **Cracked Bell** | Toll Slows its target 15% for 1s |
 | **Clear Note** | Toll deals +20% damage to enemies targeting an ally |
