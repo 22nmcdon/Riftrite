@@ -1,6 +1,6 @@
 # The tuning phase (all six heroes and the acts)
 
-Status: **a build plan, approved (2026-10-08; Decisions 1–17); T-1 to T-4 built.** Order: T-2 (the bot) and T-1 (the relics), then T-3 onward. The phase `rebuild-phase8-heroes.md` named next: tune all six heroes and the three acts at once, starting from what `easy-start.md`'s runs left (ES-4 and ES-5) and the playtester's relic additions (`changes-plan-relics.md`, 2026-10-08, applied to `relics/`). Questions are in section 6.
+Status: **a build plan, approved (2026-10-08; Decisions 1–17); T-1 to T-5 built (Question TH).** Order: T-2 (the bot) and T-1 (the relics), then T-3 onward. The phase `rebuild-phase8-heroes.md` named next: tune all six heroes and the three acts at once, starting from what `easy-start.md`'s runs left (ES-4 and ES-5) and the playtester's relic additions (`changes-plan-relics.md`, 2026-10-08, applied to `relics/`). Questions are in section 6.
 
 ## 1. Where it starts
 
@@ -29,7 +29,7 @@ From the good bot's runs over all 20 teams after the easy start (`easy-start.md`
 | Synergy plans with damage (tank + damage, burst) | above random | `--test-teams=plan`, with the lean |
 | Half-plans (pure sustain, pure control), with the lean | reach Act 1's boss about 70%, win Act 1 about 20–25%, win the run about 2–4% (Decision 3) | `--test-teams`, with the lean (now holding the new relics) |
 | Half-plans, without the lean | reach the boss about 50–60%, Act 1 about 5–10%, the run about 0–1% (Decision 3) | `--test-teams --no-lean` |
-| Bad teams | below random | `--test-teams=bad`; two of the four stand-ins aren't bad (section 5, part T-5) |
+| Bad teams | below random | `--test-teams=bad`; Decision 17's stand-ins (part T-5) |
 | Paths | every path transforms by the boss in most runs that reach it | By path |
 
 ## 4. Parts
@@ -159,6 +159,27 @@ Chorister's floor is +10 and lift +13; Windcaller's floor +11, his lift still +7
 
 Vell transforms in 91% of runs (was 81%) and earns an apex in 30% (was 20%); Aldous in 83% and 28% (Windcaller still transforms in 55%: his deed needs ranged allies). Five heroes are in the band. **Brannoc stays 3 points above it:** the three card trims didn't move him, so what's left is his base kit (Question TG). The tanks lead because a team without one loses early (`easy-start.md`), so they'll sit at the top of any band.
 
+### Built in T-5
+
+Decision 17's two bad stand-ins replaced No makers and All melee in `tools/test_teams.json` (`no_damage`, `wrong_fuel`). Every team below is the good bot, 12 runs a team, after T-4; the random teams are T-4's last 120 runs (all 20 teams drafted).
+
+| Team | Group | Reach Act 1's boss | Win Act 1 | Win Act 2 | Won |
+| --- | --- | --- | --- | --- | --- |
+| No damage | bad | 100% | 41% | 8% | 0% |
+| Wrong fuel | bad | 100% | 66% | 16% | 16% |
+| All tanks | bad | 66% | 33% | 8% | 8% |
+| Glass | bad | 8% | 0% | 0% | 0% |
+| **Bad group** | | 68% | 35% | 8% | 6% |
+| Burst (with the lean; without) | plan | 100%; 75% | 66%; 25% | 16%; 0% | 16%; 0% |
+| Tank | plan | 75%; 91% | 25%; 58% | 25%; 25% | 16%; 25% |
+| Sustain | half-plan | 41%; 33% | 8%; 8% | 8%; 0% | 8%; 0% |
+| Control | half-plan | 50%; 50% | 33%; 33% | 8%; 8% | 8%; 8% |
+| Random teams | | 88% | 64% | 30% | 27% |
+
+- **The bad group is bad:** every team wins fewer runs than random. No damage reaches Old Mother Ash every time and dies there or in Act 2, as Decision 17 meant. Wrong fuel wins Act 1 as often as random but a run far less: Garrote's Cinch (T-3) and Aegisfang's own Shields still fuel two of its three paths, so only Windcaller starves (he transforms in 25% of its runs).
+- **The half-plans against Decision 3** (whose targets were set against random teams at 40–49% in Act 1; they're at 64% until T-6): sustain wins Act 1 about an eighth as often as random, with the lean or without, so it's weaker than the lean's target (about half of random) and about at the target without it. Control wins Act 1 about half as often as random either way: at the lean's target, and above the target without it. **The lean changes little:** 11.6 relics a run against 8.7 without, and the same Act 1 for both half-plans.
+- **Twelve runs a team is noise:** one run is 8 points, and the plans swing 30 points with and without the lean on the same seeds (burst up, tank down). The half-plans are read again after T-6, when random teams are back at 40–49%, with 36 runs a team (Question TH).
+
 ## 6. Questions
 
 - **TA. The half-plans' target** *(Answered: Decision 3.)* (Decision 1): with the right relics and items, what should a pure sustain or pure control team manage? Proposed: with the lean (their relics and items 3 times as likely), win Act 1 in about 10–20% of runs (random teams 40–49%), and without it near 0.
@@ -167,6 +188,7 @@ Vell transforms in 91% of runs (was 81%) and earns an apex in 30% (was 20%); Ald
 - **TD. The bot's shopping first** (T-2): *(Answered: Decision 6.)* fix the good bot's spending and picks before tuning the heroes, so the numbers measure the game and not the bot? Proposed: yes; it changes no game code.
 - **TE. The bad stand-ins** *(Answered: Decision 17.)*: all melee (Aegisfang, Nightblade, Last Watch) wins Act 1 83%, so it isn't bad. Replace it and No makers with teams that are bad with these six heroes (proposed: three back-liners on their weakest paths, and two tanks with an enabler), or drop the bad group until Ilse, Ottilie, and Lucan are built?
 - **TG. Brannoc above the band** *(Answered: Decision 16.)*: he wins 38% of runs against a band of 19–35%, and trimming three of his cards changed nothing. What's left is his base kit, whose stats are the design's: trim his HP (630 to 600) or Hold the Line's DEF (x1.5 to x1.4), or leave him 3 points over, at the noise of 60 runs?
+- **TH. The half-plans after T-6:** sustain is below Decision 3's lean target and control above its no-lean target, but on 12 runs a team, with random teams at 64% in Act 1 rather than 40–49%. Proposed: leave the half-plans now, set the acts in T-6, then read them again with 36 runs a team (about 6 hours with and without the lean) and tune what's still off. Or tune them now?
 - **TF. Snare Wire's "a hex next to a hero":** heroes move freely, so this reads as an enemy first coming within 1 hex of a hero (center to center). Right?
 
 ## Decisions
