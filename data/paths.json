@@ -2362,7 +2362,7 @@
         "kindle"
       ],
       "off_target": true,
-      "threshold": 28
+      "threshold": 20
     },
     "apexes": [
       {
@@ -3000,7 +3000,7 @@
       "from_ability": [
         "mend"
       ],
-      "threshold": 140
+      "threshold": 95
     },
     "apexes": [
       {

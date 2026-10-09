@@ -278,7 +278,7 @@
           "types": [
             "shield"
           ],
-          "amount_bp": 15000
+          "amount_bp": 13500
         }
       ]
     }
@@ -449,7 +449,7 @@
     "text": "Lantern Glow gives her more mana.",
     "mod": {
       "mana": {
-        "per_attack_add": 3
+        "per_attack_add": 4
       }
     }
   },
@@ -544,7 +544,7 @@
             "target": "allies_near",
             "target_within_hexes": 1,
             "stat": "damage_reduced_bp",
-            "value": 500
+            "value": 1000
           }
         }
       ]
@@ -567,7 +567,7 @@
               "trigger": "on_ally_below_hp",
               "threshold_bp": 5000,
               "type": "gain_mana",
-              "amount": 20,
+              "amount": 30,
               "target": "self"
             }
           ]
@@ -4376,7 +4376,7 @@
       "on": [
         {
           "slot": "passive:resonance",
-          "value_add": 3
+          "value_add": 5
         }
       ]
     }

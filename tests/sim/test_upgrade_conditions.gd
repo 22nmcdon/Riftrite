@@ -123,7 +123,7 @@ func test_sanctuary_on_the_allies_near() -> void:
 	var vell: UnitState = fight.unit_by_id("vell")
 	fight.unit_by_id("near").pos = vell.pos + Vector2i(900, 0)
 	fight.step()
-	assert_eq(fight.unit_by_id("near").aura_bp[AuraDef.Stat.DAMAGE_REDUCED_BP], 500)
+	assert_eq(fight.unit_by_id("near").aura_bp[AuraDef.Stat.DAMAGE_REDUCED_BP], 1000)
 	assert_eq(fight.unit_by_id("far").aura_bp[AuraDef.Stat.DAMAGE_REDUCED_BP], 0)
 	assert_eq(vell.aura_bp[AuraDef.Stat.DAMAGE_REDUCED_BP], 0, "not herself")
 	fight.unit_by_id("near").pos = vell.pos + Vector2i(3000, 0)
@@ -178,13 +178,14 @@ func test_vigilant_once_per_ally() -> void:
 	var vell: UnitState = fight.unit_by_id("vell")
 	var gains: Array[int] = []
 	for ally_id: String in ["a", "a", "b"]:
+		vell.mana = 0
 		var mana: int = vell.mana
 		fight.unit_by_id(ally_id).hp = 400
 		fight.step()
 		gains.append((vell.mana - mana) / Mana.SCALE)
 		fight.unit_by_id(ally_id).hp = 1000
 		fight.step()
-	assert_true(gains[0] >= 20 and gains[1] < 20 and gains[2] >= 20, "each ally once: %s" % [gains])
+	assert_true(gains[0] >= 30 and gains[1] < 30 and gains[2] >= 30, "each ally once: %s" % [gains])
 
 
 func test_on_heal_by_ability_and_hp() -> void:

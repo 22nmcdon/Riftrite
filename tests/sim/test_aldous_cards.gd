@@ -66,7 +66,7 @@ func test_peal_cards_reach_the_signature_and_the_habit() -> void:
 func test_resonance_cards() -> void:
 	var resonance: AuraDef = _passive(_with("far_resonance", _base()), "resonance").aura
 	assert_eq(resonance.target_range, 3 * HexGrid.HEX, "within 3 hexes")
-	assert_eq(_passive(_with("strong_resonance", _base()), "resonance").aura.value, 8)
+	assert_eq(_passive(_with("strong_resonance", _base()), "resonance").aura.value, 10)
 	assert_eq(_passive(_base(), "resonance").aura.target_range, 2 * HexGrid.HEX, "the base kit is untouched")
 
 
