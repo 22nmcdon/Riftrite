@@ -1,6 +1,6 @@
 # The tuning phase (all six heroes and the acts)
 
-Status: **a build plan, approved (2026-10-08; Decisions 1–15); T-1 to T-4 built (T-4 waits on Question TG).** Order: T-2 (the bot) and T-1 (the relics), then T-3 onward. The phase `rebuild-phase8-heroes.md` named next: tune all six heroes and the three acts at once, starting from what `easy-start.md`'s runs left (ES-4 and ES-5) and the playtester's relic additions (`changes-plan-relics.md`, 2026-10-08, applied to `relics/`). Questions are in section 6.
+Status: **a build plan, approved (2026-10-08; Decisions 1–17); T-1 to T-4 built.** Order: T-2 (the bot) and T-1 (the relics), then T-3 onward. The phase `rebuild-phase8-heroes.md` named next: tune all six heroes and the three acts at once, starting from what `easy-start.md`'s runs left (ES-4 and ES-5) and the playtester's relic additions (`changes-plan-relics.md`, 2026-10-08, applied to `relics/`). Questions are in section 6.
 
 ## 1. Where it starts
 
@@ -165,8 +165,8 @@ Vell transforms in 91% of runs (was 81%) and earns an apex in 30% (was 20%); Ald
 - **TB. Iron Garden and the uncapped relics.** *(Answered: Decision 4, as written.)* `build-map.md`'s payoff relics were to have a cap a fight (Huntsman's Horn: 15 times). Iron Garden is uncapped and counts refreshes, and the control team re-Roots constantly (Trapper's snares, Thicket Engine's refresh every 4th hit), so it could reach +100% early in a fight. Proposed: count new holds only (not refreshes) and cap it at 25 a fight (+50%), lifted in endless like the others. Unending Vigil (+1% a second) reaches +60% by a minute; leave it uncapped, like Quickening?
 - **TC. Heavy Pommel at rare:** *(Answered: Decision 5.)* each hero's first hit on each enemy Stuns 1s, so every enemy is Stunned up to 3s by a team that reaches it, more than Bramble Seed's 2 Roots and stronger than most epics against swarms and bosses. Proposed: once per enemy (the first hero to reach it), 1s; or keep it per hero at 0.5s.
 - **TD. The bot's shopping first** (T-2): *(Answered: Decision 6.)* fix the good bot's spending and picks before tuning the heroes, so the numbers measure the game and not the bot? Proposed: yes; it changes no game code.
-- **TE. The bad stand-ins:** all melee (Aegisfang, Nightblade, Last Watch) wins Act 1 83%, so it isn't bad. Replace it and No makers with teams that are bad with these six heroes (proposed: three back-liners on their weakest paths, and two tanks with an enabler), or drop the bad group until Ilse, Ottilie, and Lucan are built?
-- **TG. Brannoc above the band:** he wins 38% of runs against a band of 19–35%, and trimming three of his cards changed nothing. What's left is his base kit, whose stats are the design's: trim his HP (630 to 600) or Hold the Line's DEF (x1.5 to x1.4), or leave him 3 points over, at the noise of 60 runs?
+- **TE. The bad stand-ins** *(Answered: Decision 17.)*: all melee (Aegisfang, Nightblade, Last Watch) wins Act 1 83%, so it isn't bad. Replace it and No makers with teams that are bad with these six heroes (proposed: three back-liners on their weakest paths, and two tanks with an enabler), or drop the bad group until Ilse, Ottilie, and Lucan are built?
+- **TG. Brannoc above the band** *(Answered: Decision 16.)*: he wins 38% of runs against a band of 19–35%, and trimming three of his cards changed nothing. What's left is his base kit, whose stats are the design's: trim his HP (630 to 600) or Hold the Line's DEF (x1.5 to x1.4), or leave him 3 points over, at the noise of 60 runs?
 - **TF. Snare Wire's "a hex next to a hero":** heroes move freely, so this reads as an enemy first coming within 1 hex of a hero (center to center). Right?
 
 ## Decisions
@@ -198,3 +198,9 @@ The playtester, 2026-10-09, on the heroes (T-4), from the baseline after T-3 (th
 14. **The hero band:** each hero's runs won within ±8 points of the mean of all six (about 17–33% now). Narrower is at the noise of 60 runs a hero.
 15. **Lift the weak, trim little:** raise the heroes below the band (their kits, paths, and cards), and trim the strong only as far as needed; T-6 then sets the acts' difficulty to bring the overall rates back.
 
+The playtester, 2026-10-09, after T-4 (Questions TG and TE):
+
+16. **Brannoc stays for now** (Question TG): 3 points over the band, his base kit untouched.
+17. **The bad stand-ins are built from what actually fails** (Question TE), with the six built heroes, in place of No makers and All melee (Glass and All tanks stay):
+    - **No damage:** Brannoc (Hearthwall), Vell (Lanternbearer), Aldous (Chorister). Three defensive and support half-plans with nothing that ends fights: it should survive, then lose long fights to the Collapse. The purest check of the half-plan rule (Decision 1).
+    - **Wrong fuel:** Tamsin (Garrote), Garrow (Aegisfang), Aldous (Windcaller). Every path's fuel is missing: Garrote needs Roots and nobody makes them, Aegisfang needs outside Shields, and Windcaller quickens ranged allies on an all-melee team.

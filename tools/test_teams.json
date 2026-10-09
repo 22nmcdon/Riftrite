@@ -38,18 +38,18 @@
       "note": "B1 Glass: three back-liners, no front line (Ilse, Ottilie, and Lucan aren't built)"
     },
     {
-      "name": "no_makers",
+      "name": "no_damage",
       "group": "bad",
-      "vows": {"tamsin": "headhunter", "garrow": "aegisfang", "aldous": "chorister"},
+      "vows": {"brannoc": "hearthwall", "vell": "lanternbearer", "aldous": "chorister"},
       "lean": [],
-      "note": "B2 No makers: payoffs with little to pay off (Headhunter's Marks, Aegisfang's Shields, Chorister's mana for heroes who barely cast)"
+      "note": "No damage (tuning-phase.md Decision 17): three defensive and support half-plans with nothing that ends fights; it should survive, then lose long fights to the Collapse. The purest check of the half-plan rule"
     },
     {
-      "name": "all_melee",
+      "name": "wrong_fuel",
       "group": "bad",
-      "vows": {"garrow": "aegisfang", "tamsin": "nightblade", "brannoc": "last_watch"},
+      "vows": {"tamsin": "garrote", "garrow": "aegisfang", "aldous": "windcaller"},
       "lean": [],
-      "note": "B4 Wrong fuel: three melee fighters, no ranged support, no team Shields for Aegisfang"
+      "note": "B4 Wrong fuel (tuning-phase.md Decision 17): every path's fuel is missing: Garrote needs Roots and nobody makes them, Aegisfang needs outside Shields, and Windcaller quickens ranged allies on an all-melee team"
     },
     {
       "name": "all_tanks",
