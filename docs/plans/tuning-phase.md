@@ -149,3 +149,8 @@ The playtester, 2026-10-09, on the slow paths (T-3; each deed counts only throug
 12. **Vowed Headhunter gets a Mark of her own:** every 8th Knife Marks her target for 4s (Mark Prey, the shape of Maren's Marking Shot), so Scent has a Mark to follow on any team; her threshold is sized to it.
 13. **Windcaller's threshold is lowered** (40 hits to about 18, about 5 fights at the runs' rate); his runs won are T-4's to fix.
 
+The playtester, 2026-10-09, on the heroes (T-4), from the baseline after T-3 (the good bot, 120 runs: runs won with Brannoc 38%, Garrow 30%, Maren 26%, Tamsin 23%, Aldous 16%, Vell 15%; mean 25%):
+
+14. **The hero band:** each hero's runs won within ±8 points of the mean of all six (about 17–33% now). Narrower is at the noise of 60 runs a hero.
+15. **Lift the weak, trim little:** raise the heroes below the band (their kits, paths, and cards), and trim the strong only as far as needed; T-6 then sets the acts' difficulty to bring the overall rates back.
+
