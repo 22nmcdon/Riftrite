@@ -5035,7 +5035,7 @@
       "from_ability": [
         "scent"
       ],
-      "threshold": 25000
+      "threshold": 35000
     },
     "apexes": [
       {
@@ -5506,7 +5506,7 @@
       "from_ability": [
         "choke"
       ],
-      "threshold": 3000
+      "threshold": 1000
     },
     "apexes": [
       {
@@ -6293,7 +6293,7 @@
       "by_allies": true,
       "beyond_hexes": 3,
       "with_part": "tailwind",
-      "threshold": 40
+      "threshold": 18
     },
     "apexes": [
       {

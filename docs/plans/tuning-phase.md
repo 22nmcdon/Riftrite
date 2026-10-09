@@ -1,6 +1,6 @@
 # The tuning phase (all six heroes and the acts)
 
-Status: **a build plan, approved (2026-10-08; Decisions 1–10); T-1 and T-2 built.** Order: T-2 (the bot) and T-1 (the relics), then T-3 onward. The phase `rebuild-phase8-heroes.md` named next: tune all six heroes and the three acts at once, starting from what `easy-start.md`'s runs left (ES-4 and ES-5) and the playtester's relic additions (`changes-plan-relics.md`, 2026-10-08, applied to `relics/`). Questions are in section 6.
+Status: **a build plan, approved (2026-10-08; Decisions 1–13); T-1 to T-3 built.** Order: T-2 (the bot) and T-1 (the relics), then T-3 onward. The phase `rebuild-phase8-heroes.md` named next: tune all six heroes and the three acts at once, starting from what `easy-start.md`'s runs left (ES-4 and ES-5) and the playtester's relic additions (`changes-plan-relics.md`, 2026-10-08, applied to `relics/`). Questions are in section 6.
 
 ## 1. Where it starts
 
@@ -101,6 +101,20 @@ All thirteen relics are data in `data/relics.json`, with two whole-fight boosts 
 | Runs won by hero | | Brannoc 38%, Garrow 31%, Maren 26%, Tamsin 23%, Vell 16%, Aldous 13% (Windcaller 0 of 20) |
 
 So the bot now buys and picks, and the numbers move a lot: Act 1 is above its 40–49% band, Act 3 is near-certain for the runs that reach it, and relics are above their target. These are the numbers T-3 to T-6 tune from.
+
+### Built in T-3
+
+Each slow deed counts only through its vowed taste, so the taste decides how fast it fills (Decisions 11–13). Vowed Garrote's Choke gained **Cinch** (every 8th Knife Roots its target 0.5s) and vowed Headhunter's Scent **Mark Prey** (every 8th Knife Marks it 4s). The thresholds were then sized to about 4 fights, as Trapper's is, from what a fight puts into each deed: every team with the hero, every vow set of the others, Act 1's fights of days 2–6, placed by the good bot (1,980 fights a path; the yardsticks match the runs' rates):
+
+| Path | A fight's deed (mean; none in) | Threshold | Fights to fill |
+| --- | --- | --- | --- |
+| Trapper (yardstick) | 1,804 ms; 9% | 8,000 | 4.4 |
+| Chorister (yardstick) | 40; 5% | 110 | 2.8 |
+| Garrote | 240 ms; 31% (was 205 in runs) | 3,000 → **1,000** | 4.2 |
+| Headhunter | 8,690 ms; 0% (was 2,679 in runs) | 25,000 → **35,000** | 4.0 |
+| Windcaller | 4; 67% | 40 → **18** | 4.5 |
+
+Garrote and Windcaller still give nothing in a third and two thirds of fights (a crit while the Root holds; ranged allies hitting from 3 hexes): they fill fastest beside a hold-maker or ranged allies, as an engine and an enabler should. The runs in T-4 read their transformations.
 
 ## 6. Questions
 
