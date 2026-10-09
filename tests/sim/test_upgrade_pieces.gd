@@ -157,9 +157,9 @@ func test_hard_to_pass_holds_longer() -> void:
 
 func test_grudge_gains_more_mana_from_damage() -> void:
 	var brannoc: UnitDef = _run.upgrades["grudge"].mod.apply(_run.content.paths["hearthwall"].vowed_kit)
-	assert_eq(brannoc.mana.taken_bp, 15000)
+	assert_eq(brannoc.mana.taken_bp, 13000)
 	var fight: CombatSim = K.sim(K.fight([UnitSetup.make(brannoc, K.HEROES, 3, 2, "brannoc")] as Array[UnitSetup], [K.foe(_dummy(), 3, 5)] as Array[UnitSetup]))
 	var unit: UnitState = fight.unit_by_id("brannoc")
 	var before: int = unit.mana
 	Mana.on_damage_taken(fight, unit, 100)
-	assert_eq(unit.mana - before, 15 * Mana.SCALE, "10 mana per 100 damage, times 1.5")
+	assert_eq(unit.mana - before, 13 * Mana.SCALE, "10 mana per 100 damage, times 1.3")
