@@ -129,3 +129,9 @@ The playtester, 2026-10-08, after T-2's first runs (the good bot, now buying rel
 9. **Gilded Rift stays uncapped:** with the earners capped, the shards it reads grow only as fast as income.
 10. **Bloodied Coin stays uncapped:** a fight's kills are bounded by what it spawns.
 
+The playtester, 2026-10-09, on the slow paths (T-3; each deed counts only through its vowed taste, so the taste decides how fast it fills):
+
+11. **Vowed Garrote gets a hold of her own** (Question HI, its first option): every 8th Knife Roots her target for 0.5s (Cinch), so Choke has a hold to tighten on any team; her threshold is sized to it.
+12. **Vowed Headhunter gets a Mark of her own:** every 8th Knife Marks her target for 4s (Mark Prey, the shape of Maren's Marking Shot), so Scent has a Mark to follow on any team; her threshold is sized to it.
+13. **Windcaller's threshold is lowered** (40 hits to about 18, about 5 fights at the runs' rate); his runs won are T-4's to fix.
+

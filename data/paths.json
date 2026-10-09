@@ -4831,7 +4831,7 @@
     "fantasy": "Once she has your scent, you're already dead.",
     "placement": "Near the enemies her team Marks, within her 4 hexes of Scent.",
     "vowed": {
-      "taste": "Scent: she goes after Marked enemies within 4 hexes first, and her hits make a Mark last longer.",
+      "taste": "Scent: every 8th Knife Marks her target; she goes after Marked enemies within 4 hexes first, and her hits make a Mark last longer.",
       "cost": "10% less damage to enemies that aren't Marked.",
       "patch": {
         "prefer": {
@@ -4885,6 +4885,22 @@
                 ]
               }
             }
+          },
+          {
+            "id": "mark_prey",
+            "name": "Mark Prey",
+            "kind": "ability",
+            "text": "Every 8th Knife, she Marks her target, so Scent has a Mark to follow and it takes more damage from everyone for a while.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "apply_status",
+                "status": "marked",
+                "duration_ms": 4000,
+                "target": "target"
+              }
+            ]
           }
         ]
       }
@@ -5299,7 +5315,7 @@
     "fantasy": "Hold still, and it's over.",
     "placement": "Beside the enemies her team Roots and Stuns, so her crits keep them held.",
     "vowed": {
-      "taste": "Choke: her crits on a Rooted or Stunned enemy hold it a little longer.",
+      "taste": "Choke: every 8th Knife Roots her target for a moment, and her crits on a Rooted or Stunned enemy hold it a little longer.",
       "cost": "She's slower.",
       "patch": {
         "stats_add": {
@@ -5332,6 +5348,22 @@
                 ],
                 "duration_ms": 300,
                 "target": "hit_target"
+              }
+            ]
+          },
+          {
+            "id": "cinch",
+            "name": "Cinch",
+            "kind": "ability",
+            "text": "Every 8th Knife, she Roots her target for a moment, so Choke has a hold to tighten.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "apply_status",
+                "status": "root",
+                "duration_ms": 500,
+                "target": "target"
               }
             ]
           }
