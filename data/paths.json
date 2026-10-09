@@ -5784,7 +5784,7 @@
       }
     },
     "transformed": {
-      "text": "Shared Breath stays. Chorus: each time he gains mana, the allies within 3 hexes of him gain half as much. Crescendo replaces Peal: the allies within 3 hexes of him gain 40 mana, and it peals as Peal did. Peal also becomes a habit, every 8th Toll. His MGK and HP rise.",
+      "text": "Shared Breath stays. Chorus: each time he gains mana, the allies within 3 hexes of him gain about two thirds as much. Crescendo replaces Peal: the allies within 3 hexes of him gain 55 mana, and it peals as Peal did. Peal also becomes a habit, every 8th Toll. His MGK and HP rise.",
       "cost": "His own signature costs 20 more mana.",
       "patch": {
         "stats_bp": {
@@ -5807,7 +5807,7 @@
           "effects": [
             {
               "type": "gain_mana",
-              "amount": 40,
+              "amount": 55,
               "target": "allies_near_self",
               "within_hexes": 3
             },
@@ -5839,12 +5839,12 @@
             "id": "chorus",
             "name": "Chorus",
             "kind": "ability",
-            "text": "Each time he gains mana, the allies within 3 hexes of him gain half as much.",
+            "text": "Each time he gains mana, the allies within 3 hexes of him gain about two thirds as much.",
             "effects": [
               {
                 "trigger": "on_mana_gained",
                 "type": "gain_mana",
-                "amount_bp_of_damage": 5000,
+                "amount_bp_of_damage": 6500,
                 "target": "allies_near_self",
                 "within_hexes": 3
               }
@@ -6179,7 +6179,7 @@
       }
     },
     "transformed": {
-      "text": "Tailwind stays. High Wind: allies attacking an enemy 3 hexes away or more deal 20% more damage, and their shots fly 50% faster. Gale replaces Peal: it knocks every enemy within 2 hexes of each ranged ally 2 hexes back. Peal becomes a habit, every 8th Toll, for ranged allies. His MGK and HP rise.",
+      "text": "Tailwind stays. High Wind: allies attacking an enemy 3 hexes away or more deal 25% more damage, and their shots fly 50% faster. Gale replaces Peal: it knocks every enemy within 2 hexes of each ranged ally 2 hexes back. Peal becomes a habit, every 8th Toll, for ranged allies. His MGK and HP rise.",
       "cost": "Peal and Resonance no longer reach melee allies.",
       "patch": {
         "stats_bp": {
@@ -6230,7 +6230,7 @@
             "aura": {
               "target": "all_allies",
               "stat": "atsp",
-              "value": 5,
+              "value": 8,
               "only": {
                 "target_beyond_hexes": 3
               }
@@ -6244,7 +6244,7 @@
             "aura": {
               "target": "all_allies",
               "stat": "damage_bp",
-              "value": 12000,
+              "value": 12500,
               "only": {
                 "target_beyond_hexes": 3
               }
