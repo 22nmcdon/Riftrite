@@ -204,3 +204,4 @@ The playtester, 2026-10-09, after T-4 (Questions TG and TE):
 17. **The bad stand-ins are built from what actually fails** (Question TE), with the six built heroes, in place of No makers and All melee (Glass and All tanks stay):
     - **No damage:** Brannoc (Hearthwall), Vell (Lanternbearer), Aldous (Chorister). Three defensive and support half-plans with nothing that ends fights: it should survive, then lose long fights to the Collapse. The purest check of the half-plan rule (Decision 1).
     - **Wrong fuel:** Tamsin (Garrote), Garrow (Aegisfang), Aldous (Windcaller). Every path's fuel is missing: Garrote needs Roots and nobody makes them, Aegisfang needs outside Shields, and Windcaller quickens ranged allies on an all-melee team.
+    - **Not the proposed teams:** three back-liners on their weakest paths is close to No damage, but "weakest path" moves as tuning goes. A team that's bad for a reason stays bad.
