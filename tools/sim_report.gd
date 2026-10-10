@@ -281,7 +281,7 @@ static func gate_setup(content: ContentDb, encounter_id: String, formation: Dict
 	if content.encounters[encounter_id].act <= 1:
 		var base: FightSetup = Encounters.setup(content, encounter_id, formation, fight_seed, errors)
 		if base != null and scale_bp > 0:
-			_scale_enemies(base, scale_bp)
+			scale_enemies(base, scale_bp)
 		return base
 	var transformed: Array[String] = []
 	transformed.assign(LATER_ACT_VOWS.keys())
@@ -300,10 +300,11 @@ static func scale_for_gate(content: ContentDb, encounter_id: String, setup: Figh
 		return
 	if scale_bp <= 0:
 		scale_bp = gate_scale_bp(content.encounters[encounter_id])
-	_scale_enemies(setup, scale_bp)
+	scale_enemies(setup, scale_bp)
 
 
-static func _scale_enemies(setup: FightSetup, scale_bp: int) -> void:
+## Every enemy and summon kit in `setup` scaled by `scale_bp`, in place.
+static func scale_enemies(setup: FightSetup, scale_bp: int) -> void:
 	for enemy: UnitSetup in setup.enemies:
 		enemy.def = Encounters.scaled(enemy.def, scale_bp)
 	for i: int in setup.summon_kits.size():
@@ -398,6 +399,9 @@ static func run_tactics(content: ContentDb, encounter_id: String, named: Diction
 	var names: Array[String] = []
 	var formations: Array[Dictionary] = formations_for(content, report.encounter, named, drawn, draw_seed, names)
 	report.formations = formations.size()
+	# An Act 1 fight the gate steps down (T-6) is fought at the gate's
+	# strength, so a tactic can change an outcome.
+	var scale_bp: int = run_encounter(content, encounter_id, named, drawn, seeds, draw_seed).scale_bp if report.encounter.act <= 1 else 0
 	for row: TacticRow in tactic_variants(content):
 		var tactics: Dictionary[String, String] = {}
 		if not row.hero_id.is_empty():
@@ -409,6 +413,8 @@ static func run_tactics(content: ContentDb, encounter_id: String, named: Diction
 			for fight_seed: int in range(1, seeds + 1):
 				var errors: Array[String] = []
 				var setup: FightSetup = Encounters.setup(content, encounter_id, hexes, fight_seed, errors, tactics)
+				if setup != null and scale_bp > 0:
+					scale_enemies(setup, scale_bp)
 				var result: FightResult = CombatSim.run(setup, content) if setup != null else null
 				if result == null or not result.errors.is_empty():
 					push_error("sim runner: %s with %s" % [encounter_id, tactics])

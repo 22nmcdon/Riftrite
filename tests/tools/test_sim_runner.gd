@@ -56,6 +56,17 @@ func test_drawn_formations_are_legal_and_repeat_from_their_seed() -> void:
 	assert_ne(Report.drawn_formations(_content, rocks, 30, 5), drawn)
 
 
+## In Act 1 (tuning-phase.md, T-6), a fight from day 4 on that no formation
+## wins at its own strength steps its enemies down until some formation wins,
+## with the base heroes; a day-1 fight stays at its own strength.
+func test_an_act_1_gate_steps_down_when_nothing_wins() -> void:
+	var named: Dictionary[String, Dictionary] = _named()
+	var boss: Report.Report = Report.run_encounter(_content, "old_mother_ash", named, 0, 1)
+	assert_between(boss.scale_bp, Report.SCALE_STEP_BP, FixedMath.BP_ONE - 1, "Old Mother Ash is fought below her own strength")
+	assert_gt(boss.winning(), 0, "until some formation wins")
+	assert_eq(Report.run_encounter(_content, "warren_mouth", named, 0, 1).scale_bp, 0, "a day-1 fight at its own")
+
+
 ## From Act 2 on, the gate fights the later acts' team, scaled down, and
 ## steps the enemies' strength until the formations split (phase 8 part 3).
 func test_a_later_act_gate_steps_to_a_split() -> void:
@@ -154,11 +165,13 @@ func test_a_small_tactics_run() -> void:
 	var guarded: Dictionary[String, Vector2i] = {}
 	guarded.assign(named["guarded"])
 	var errors: Array[String] = []
-	var result: FightResult = CombatSim.run(Encounters.setup(_content, "witch_circle", guarded, 1, errors, {"maren": "hold_ground"} as Dictionary[String, String]), _content)
-	var won: int = 0 if result.outcome == FightResult.Outcome.DEFEAT else 1
-	result = CombatSim.run(Encounters.setup(_content, "witch_circle", guarded, 2, errors, {"maren": "hold_ground"} as Dictionary[String, String]), _content)
-	won += 0 if result.outcome == FightResult.Outcome.DEFEAT else 1
-	assert_eq(maren_holds.formation_wins[0], won, "a variant fights with its tactic")
+	var won: int = 0
+	for fight_seed: int in [1, 2]:
+		var setup: FightSetup = Encounters.setup(_content, "witch_circle", guarded, fight_seed, errors, {"maren": "hold_ground"} as Dictionary[String, String])
+		if plain.scale_bp > 0:
+			Report.scale_enemies(setup, plain.scale_bp)
+		won += 0 if CombatSim.run(setup, _content).outcome == FightResult.Outcome.DEFEAT else 1
+	assert_eq(maren_holds.formation_wins[0], won, "a variant fights with its tactic, at the gate's strength")
 	var text: String = Report.tactics_text(_content, report)
 	for expected: String in ["Witch Circle (witch_circle), tactics: 5 formations x 2 seeds. No tactics win", "  Maren on Hold your ground ", "formations"]:
 		assert_string_contains(text, expected)
