@@ -68,7 +68,7 @@ These win over part 7 (`../rebuild-combos.md`), part 6 (`../rebuild-between-figh
 | --- | --- |
 | **Costs** | **Relics have no downsides.** The README's rule wins over part 7 and the run plan. Trade-offs move to events, Rift Tear, and Bloodied Oath. Built relics lose their costs (section 2) |
 | **Tiers** | Five tiers: common, rare, epic, legendary, boss. Part 7 and the run plan are updated to match the README |
-| **Relics per run** | Roughly 8–14, depending on how much players reroll |
+| **Relics per act** | Roughly 8–14, depending on how much players reroll (per act, so about 40 over a three-act run: `tuning-phase.md` Decision 18) |
 | **Shops** | **Every shop shows 1 relic at a time.** Rerolling replaces it with a new one, so a shop has no limit: with enough shards you can keep buying. The first reroll costs **1 shard**, and each reroll after it costs **1 more** |
 | **The shop after each boss** (before it until 2026-10-01) | Shows **1 legendary plus 1 relic of another tier**. Rerolls work the same way but **start at 5 shards** |
 | **After each boss** | Choose 1 of 3 boss relics, free |
@@ -123,5 +123,5 @@ Section 13 of the same plan: duo bonds are keys. Once a bond is on, its free bon
 
 - **Stacking:** can you buy the same common twice? If yes, pure-stat commons become a "go wide" plan (with Reliquary and Reliquary Lamp).
 - **Boss offers:** three random, or three picked to fit the team's keywords and paths?
-- **Relics per run:** roughly 8–14, depending on how much players reroll. To tune.
+- **Relics per act:** roughly 8–14, depending on how much players reroll (`tuning-phase.md` Decision 18: per act, so about 40 a run). To tune.
 - **Chain limits:** Crown of Stars' 10 links, Shared Pain's 3 steps, and the trigger chain's 8 are guesses.

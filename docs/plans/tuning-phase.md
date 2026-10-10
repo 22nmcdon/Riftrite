@@ -1,6 +1,6 @@
 # The tuning phase (all six heroes and the acts)
 
-Status: **a build plan, approved (2026-10-08; Decisions 1–17); T-1 to T-5 built (Question TH).** Order: T-2 (the bot) and T-1 (the relics), then T-3 onward. The phase `rebuild-phase8-heroes.md` named next: tune all six heroes and the three acts at once, starting from what `easy-start.md`'s runs left (ES-4 and ES-5) and the playtester's relic additions (`changes-plan-relics.md`, 2026-10-08, applied to `relics/`). Questions are in section 6.
+Status: **a build plan, approved (2026-10-08; Decisions 1–18); T-1 to T-5 built (Question TH).** Order: T-2 (the bot) and T-1 (the relics), then T-3 onward. The phase `rebuild-phase8-heroes.md` named next: tune all six heroes and the three acts at once, starting from what `easy-start.md`'s runs left (ES-4 and ES-5) and the playtester's relic additions (`changes-plan-relics.md`, 2026-10-08, applied to `relics/`). Questions are in section 6.
 
 ## 1. Where it starts
 
@@ -227,3 +227,7 @@ The playtester, 2026-10-09, after T-4 (Questions TG and TE):
     - **No damage:** Brannoc (Hearthwall), Vell (Lanternbearer), Aldous (Chorister). Three defensive and support half-plans with nothing that ends fights: it should survive, then lose long fights to the Collapse. The purest check of the half-plan rule (Decision 1).
     - **Wrong fuel:** Tamsin (Garrote), Garrow (Aegisfang), Aldous (Windcaller). Every path's fuel is missing: Garrote needs Roots and nobody makes them, Aegisfang needs outside Shields, and Windcaller quickens ranged allies on an all-melee team.
     - **Not the proposed teams:** three back-liners on their weakest paths is close to No damage, but "weakest path" moves as tuning goes. A team that's bad for a reason stays bad.
+
+The playtester, 2026-10-10, in T-6 (all three acts share Act 1's economy, so teams end a run with about 40 relics: 7 by Act 1's end, about 22 by Act 2's boss, 40 by Act 3's):
+
+18. **About 8–14 relics is a target per act, not per run** (`relics/README.md` dates from when a run was Act 1): about 40 a run is intended, the economy stays, and Acts 2 and 3's fights are raised to meet the teams (Act 2 about x1.2–2, Act 3 about x3–4).
