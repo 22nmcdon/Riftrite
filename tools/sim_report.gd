@@ -242,15 +242,43 @@ static func run_encounter(content: ContentDb, encounter_id: String, named: Dicti
 	var scale_bp: int = gate_scale_bp(encounter)
 	var report: Report = null
 	var went: int = 0
+	var last_bp: int = 0
 	for step: int in SCALE_STEPS:
 		report = _run_at(content, encounter_id, named, drawn, seeds, draw_seed, scale_bp)
 		var way: int = 1 if report.winning() == report.rows.size() else (-1 if report.winning() == 0 else 0)
-		if way == 0 or (went != 0 and way != went):
+		if way == 0:
 			break
+		if went != 0 and way != went:
+			# The split lies between the last two strengths: bisect.
+			return _bisect(content, encounter_id, named, drawn, seeds, draw_seed, last_bp, scale_bp, report)
 		went = way
+		last_bp = scale_bp
 		# Below a step's size, halve (T-6: Act 3's fights at x3-5 need
 		# less than x0.15 for a team without apexes to win any).
+		@warning_ignore("integer_division")
 		scale_bp = scale_bp + way * SCALE_STEP_BP if scale_bp + way * SCALE_STEP_BP >= SCALE_STEP_BP else maxi(scale_bp / 2, 1)
+	return report
+
+
+## Between two strengths where every formation won at one and none at the
+## other, up to SCALE_STEPS halvings of the gap until the formations split;
+## the last report if they never do.
+static func _bisect(content: ContentDb, encounter_id: String, named: Dictionary[String, Dictionary], drawn: int, seeds: int, draw_seed: int, a_bp: int, b_bp: int, report: Report) -> Report:
+	for step: int in SCALE_STEPS:
+		@warning_ignore("integer_division")
+		var mid: int = (a_bp + b_bp) / 2
+		if mid == a_bp or mid == b_bp:
+			break
+		report = _run_at(content, encounter_id, named, drawn, seeds, draw_seed, mid)
+		var won_all: bool = report.winning() == report.rows.size()
+		if report.winning() > 0 and not won_all:
+			break
+		# Keep the end that lost all where this one lost all, and so on.
+		var a_won: bool = a_bp < b_bp
+		if won_all == a_won:
+			a_bp = mid
+		else:
+			b_bp = mid
 	return report
 
 
