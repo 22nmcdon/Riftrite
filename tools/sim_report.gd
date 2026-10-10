@@ -248,7 +248,9 @@ static func run_encounter(content: ContentDb, encounter_id: String, named: Dicti
 		if way == 0 or (went != 0 and way != went):
 			break
 		went = way
-		scale_bp = maxi(scale_bp + way * SCALE_STEP_BP, SCALE_STEP_BP)
+		# Below a step's size, halve (T-6: Act 3's fights at x3-5 need
+		# less than x0.15 for a team without apexes to win any).
+		scale_bp = scale_bp + way * SCALE_STEP_BP if scale_bp + way * SCALE_STEP_BP >= SCALE_STEP_BP else maxi(scale_bp / 2, 1)
 	return report
 
 
