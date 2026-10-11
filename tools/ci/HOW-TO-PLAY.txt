@@ -18,10 +18,13 @@ PLAYING
   The game is being rebuilt around heroes and an open arena. This build has
   the whole run: Act 1, Act 2, the Glassmere, and Act 3, the Shattered
   Crown, seven days each, then endless after the Act 3 boss (see
-  ENDLESS). NEW IN THIS BUILD: Act 1 starts easier and climbs (see AN
-  EASIER START below). Since the last build: three more heroes, Garrow,
-  Tamsin, and Aldous, and you draft three of the six for each run (see
-  THE SIX HEROES below). Your uploaded art is in the game. The arena
+  ENDLESS). NEW IN THIS BUILD: the tuning phase. All six heroes and all
+  three acts were tuned together, and thirteen relics joined the pool
+  (see TUNED IN THIS BUILD: THE SIX HEROES AND THE THREE ACTS below).
+  From the last two builds: Act 1 starts easier and climbs (see AN
+  EASIER START), and there are three more heroes, Garrow, Tamsin, and
+  Aldous, with three of the six drafted for each run (see THE SIX
+  HEROES). Your uploaded art is in the game. The arena
   is turned (your heroes at the bottom, the enemies at the top) and stands
   on the floating island, rocks are ruins, and Rift Collapse eats the edge
   as rift-light. Items, relics, and upgrades have their kind's frame with an
@@ -90,7 +93,7 @@ PLAYING
      The hero bar along the bottom shows each hero's wounds, deed progress,
      and items; click a card for the hero's panel.
 
-  THE SIX HEROES (new in this build: Garrow, Tamsin, and Aldous)
+  THE SIX HEROES (Garrow, Tamsin, and Aldous are new since build 24)
   A run takes three of the six into the rift; draft them on the New run
   screen, then vow each. Practice has a team row above the fights: toggle
   three heroes on. Every hero has three paths, each with a habit (once
@@ -110,8 +113,12 @@ PLAYING
               from Stealth always crit, and Shadowstep slips her behind the
               weakest enemy within 3 hexes, hidden again.
        Nightblade   each kill hides her for the next
-       Headhunter   hunts what her team Marks, from anywhere
+       Headhunter   hunts what her team Marks, from anywhere (vowed,
+                    every 8th Knife Marks her target, so she has a
+                    Mark to follow on any team)
        Garrote      holds still whatever her team Roots or Stuns
+                    (vowed, every 8th Knife Roots her target for a
+                    moment, so she has a hold of her own)
     Aldous Vesper (the bell-ringer)  Peal makes allies within 3 hexes of
               him attack faster for a while; Resonance a little faster
               within 2. He makes his team better rather than winning alone.
@@ -162,7 +169,7 @@ PLAYING
               collapses.
   Act 2 uses Act 1's camp, events, relics, and items for now.
 
-  ACT 3, THE SHATTERED CROWN (new in this build)
+  ACT 3, THE SHATTERED CROWN (new in build 23)
   The rift's heart: broken islands of floating stone over nothing. Your
   heroes come in as they left Act 2 (with their apexes, items, relics,
   shards, wounds, and losses). Its question: can you handle an enemy that
@@ -212,7 +219,7 @@ PLAYING
               habit it answers ("Learned:").
   Act 3 uses Act 1's camp, events, relics, and items too.
 
-  ENDLESS (after the Heart of the Rift; new in this build)
+  ENDLESS (after the Heart of the Rift; new in build 23)
   After the Heart's shop: End the run (a win), or Go deeper with the same
   heroes, items, relics, and shards. Each floor is a day with one fight
   (from Act 3's fights), then a node: no Pedlar and no upgrades on floors,
@@ -250,13 +257,16 @@ PLAYING
      and Act 3's fights are at the end of the list ("Act 2 · Days ...",
      "Act 3 · Days ..."); Act 2's are built for transformed heroes and
      Act 3's for heroes at an apex, so set yours in their panels first
-     (Transform, then Vow apex and Reach apex).
+     (Transform, then Vow apex and Reach apex). New in this build: Act 2's
+     later fights and all of Act 3's are sized for a run's team, with
+     its cards, items, and many relics (see TUNED IN THIS BUILD), so in
+     Practice, with none of those, most of Act 3 can't be won.
   2. Pick your three on the team row (Brannoc, Maren, and Vell to start),
      then drag them onto your side's hexes (the three rows
      at the bottom, tinted gold; the enemies are at the top). Hover an enemy
      to read what it does.
   3. Click a hero's card in the hero bar along the bottom to open their
-     panel (new in this build; clicking the hero on the board no longer
+     panel (clicking the hero on the board no longer
      does). In a fight, it pauses and the panel is for reading.
      Back and forward (< >) move between the heroes; Close, Escape, or a
      click beside it shuts it.
@@ -306,7 +316,75 @@ PLAYING
   Nothing is saved: your formation, paths, snares, tactics, and speed
   last until you close the game.
 
-AN EASIER START (new in this build)
+TUNED IN THIS BUILD: THE SIX HEROES AND THE THREE ACTS (new in this build)
+  The tuning phase: a bot that plays well played hundreds of runs with
+  every team the draft offers, and the heroes, the relics, and the acts
+  were tuned from what it found. What changed for you:
+  THIRTEEN NEW RELICS, so a team built on healing or on Roots and Stuns
+  has relics of its own (Iron Garden takes Huntsman's Horn's place):
+    common     Soothing Salve (heroes' heals are stronger), Weighted Net
+               (each hero's first signature Roots the first enemy it
+               hits), Snare Wire (an enemy first coming within 1 hex of
+               a hero is Rooted for a moment)
+    rare       Thorned Bandage (a heal hurts the enemy nearest the healed
+               hero), Heavy Pommel (the first hit on each enemy Stuns
+               it), Dulled Shackles (Rooted or Stunned enemies deal less,
+               for a while after too), Choking Hold (hits on held enemies
+               drain their mana), Splinter Shot (crits splash one enemy
+               beside the target)
+    epic       Full Vigor (heroes near full HP hit harder), Shackle Engine
+               (Roots and Stuns last longer; held enemies gain no mana)
+    legendary  Unending Vigil (every second near full HP, a hero hits
+               harder for the rest of the fight), Iron Garden (every Root
+               or Stun makes every hero hit harder for the rest of the
+               fight), Stillwater Seal (Burn on a held enemy doesn't fade,
+               and crits against it hit harder)
+  SHARDS: Overkill Tithe pays 1 to 3 shards a kill (by how far past the
+  enemy's last HP the blow went), and Lucky Strike at most 5 a fight;
+  both used to grow without end.
+  THE SLOW PATHS fill in about 4 fights now: vowed Garrote and Headhunter
+  have a hold and a Mark of their own (see THE SIX HEROES), and
+  Windcaller needs fewer hits (18, was 40).
+  THE HEROES, brought near each other (each wins about as many runs as
+  the others):
+    - Aldous: transformed Chorister's Crescendo gives 55 mana (was 40)
+      and Chorus two thirds of the damage as mana (was half);
+      transformed Windcaller's Tailwind +8 attack speed (was +5), High
+      Wind +25% damage (was +20%); Strong Resonance +5 attack speed
+      (was +3).
+    - Vell: Lanternbearer needs 20 to transform (was 28), Vigil Keeper
+      95 (was 140); Sanctifier's, Thornweave's, and Dawnbringer's apex
+      deeds are smaller (about five fights, like the others); Sanctuary
+      cuts damage taken 10% (was 5%), Vigilant gives 30 mana (was 20),
+      Deep Well +4 mana an attack (was +3).
+    - Brannoc, a little less: Deep Hearth +35% Shield (was +50%),
+      Weathered grows every 800 damage taken (was 600), Grudge +30%
+      mana from damage taken (was +50%). He still wins a bit more than
+      the others (the tanks lead, since a team without one loses early).
+  THE ACTS: runs end with about 40 relics (about 8 to 14 an act), so the
+  later acts were raised to meet the teams that reach them:
+    - Act 1: days 1 to 3 are as easy as last build. Days 4 to 6 are 10 to
+      36% stronger (day 4 is the act's wall now) and Old Mother Ash 10%.
+      The bot wins Act 1 in 43% of runs (it was 64% before this build's
+      tuning, after the bot learned to spend its shards).
+    - Act 2: most fights a little stronger, the late ones 1.5 to 2.5
+      times (Witch of the Mere the most), its elites 1.2 and 1.4 times;
+      the Mournwater about as she was. The bot wins it in about a third
+      of the runs that reach it.
+    - Act 3: every fight 2 to 5 times as strong (the teams that reach it
+      hold about 24 relics, 12 cards, and two apexes, and used to win
+      nearly all of it), the Heart of the Rift 2.25 times. The bot wins
+      it in about a third of the runs that reach it (the aim was half),
+      and a whole run in about 1 in 20 (the aim was about 1 in 12).
+  Tell us: does Act 1 now feel like a climb, with day 4 the first real
+  test? Do Act 2 and Act 3 feel harder than Act 1, not easier? Did a
+  healing team or a Root-and-Stun team come together with the new
+  relics? (They're meant to be harder to win with than a team with
+  damage and a tank, and to work only with the right relics and items.)
+  Does any hero still feel like a must-pick or a never-pick? And where
+  do your runs end?
+
+AN EASIER START (last build)
   The bots' runs with all six heroes ended on day 1 nearly half the time,
   mostly for teams with no tank. Act 1 now climbs instead:
     - Day 1 has its own two small fights (Warren Mouth: 3 Rift Pups;
@@ -321,7 +399,8 @@ AN EASIER START (new in this build)
     - Days 4 to 6 are a little easier (Sentinel Gate, Cairn Road, Bog
       Crossing): the bot wins about 70% of those fights.
     - Old Mother Ash is unchanged: about three runs in four reach her now,
-      and a bit over half of those win.
+      and a bit over half of those win. (This build changes days 4 to 6
+      and the boss again: see TUNED IN THIS BUILD.)
   The aim is about 95% on day 1, 85% on days 2-3, 70% on days 4-6, and
   50-60% at the boss. Tell us if the start now feels too easy, if a
   team without a tank still gets stuck, and where your runs end.
@@ -359,7 +438,7 @@ TUNED IN THIS BUILD (phase 6: a bot that plays well, then Act 1 tuned to it)
   Tell us: does Act 1 feel hard but fair? Which fight ends your runs?
   Does transforming feel like a real step up?
 
-WHAT WE WANT TO KNOW ABOUT THE NEW HEROES (new in this build)
+WHAT WE WANT TO KNOW ABOUT THE NEW HEROES (last build)
   - The draft: which three did you take, and why? Did any hero feel like
     a must-pick, or one you'd never take?
   - Garrow: does dragging enemies to him (Haul, Chainwarden) change where
@@ -374,7 +453,7 @@ WHAT WE WANT TO KNOW ABOUT THE NEW HEROES (new in this build)
     wind, the Marks)? Did a team with him feel stronger than one without?
   - The new bonds: did any of the five wake up in your runs?
 
-WHAT WE WANT TO KNOW ABOUT ACT 3 (last build)
+WHAT WE WANT TO KNOW ABOUT ACT 3 (build 23)
   Does the void change where you place your heroes and how fights play?
   Can you read the islands, the bridges, and who is about to be shoved,
   hooked, or charged over the edge? Do the Mirrorwight and the Unbinder
@@ -405,7 +484,7 @@ WHAT WE WANT TO KNOW ABOUT ACT 3 (last build)
       both), and its two climbing adds are plain Cliffmites.
     - The void is a plain sky placeholder until there's art for it.
 
-WHAT WE WANTED TO KNOW ABOUT ACT 2 (last build)
+WHAT WE WANTED TO KNOW ABOUT ACT 2 (build 22)
   Does the water change where you place your heroes and how fights play?
   Can you read where the water is and who is wading, flooding, hiding
   under it, or being pulled into it? Do the eels, the Bellringer's

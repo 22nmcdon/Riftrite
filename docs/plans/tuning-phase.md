@@ -1,6 +1,6 @@
 # The tuning phase (all six heroes and the acts)
 
-Status: **a build plan, approved (2026-10-08; Decisions 1–19); T-1 to T-6 built (Question TH).** Order: T-2 (the bot) and T-1 (the relics), then T-3 onward. The phase `rebuild-phase8-heroes.md` named next: tune all six heroes and the three acts at once, starting from what `easy-start.md`'s runs left (ES-4 and ES-5) and the playtester's relic additions (`changes-plan-relics.md`, 2026-10-08, applied to `relics/`). Questions are in section 6.
+Status: **a build plan, approved (2026-10-08; Decisions 1–19); T-1 to T-7 built: the phase is done (Question TH open).** Order: T-2 (the bot) and T-1 (the relics), then T-3 onward. The phase `rebuild-phase8-heroes.md` named next: tune all six heroes and the three acts at once, starting from what `easy-start.md`'s runs left (ES-4 and ES-5) and the playtester's relic additions (`changes-plan-relics.md`, 2026-10-08, applied to `relics/`). Questions are in section 6.
 
 ## 1. Where it starts
 
@@ -212,6 +212,10 @@ The acts set to their targets (random teams: win Act 1 40–49%; about 35% of th
 
 - **The sim runner's gate** (`tools/sim_report.gd`): an Act 1 fight from day 4 on that no formation wins at its own strength now steps its enemies down until some formation does, with the base heroes (the base team couldn't win Act 1's later fights after the raise, and never won Old Mother Ash); the tactics report fights at the same strength. A later act's step halves the strength below x0.15 and bisects when it jumps over the split (Act 3's fights at x5 needed x0.09). Every act's fights pass. `tests/tools/test_sim_runner.gd` has a test for Act 1's step.
 - **The probe** (scratch tools, not in the repo): a state saver for good-bot runs and a fighter of saved states at enemy strengths.
+
+### Built in T-7
+
+`tools/ci/HOW-TO-PLAY.txt` has TUNED IN THIS BUILD: the thirteen relics, the shard caps, the slow paths, each hero's changes, and the acts, with what we want the playtester to tell us; Garrote's and Headhunter's lines name Cinch and Mark Prey, and Practice warns that Act 3's fights are sized for a run's team. `CLAUDE.md` and `rebuild-build-order.md` say the phase is done. **Playtest build 25**, with the full suite green (1,323 tests). Question TH (the half-plans with 36 runs a team) stays open for after the playtest; the next phase is the remaining heroes, Severine and Edric first.
 
 ## 6. Questions
 
