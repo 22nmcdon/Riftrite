@@ -6,7 +6,9 @@ extends UiScreen
 ## its act (from Act 2) and days, and its enemies (how many, name,
 ## archetype, and threat line). Picking one goes to its placement.
 ## Above them, the team (phase 8 part 4, Decision 6): a toggle per hero,
-## three on; a hero whose paths aren't built yet fights at base.
+## three on; a hero whose paths aren't built yet fights at base. Below it,
+## the shards held (phase 8 part 5, Decision 4): what Practice's fights hold
+## for what reads them (Golden Aegis), from 0, in steps of 10.
 
 signal encounter_picked(encounter_id: String)
 signal back_requested
@@ -22,6 +24,10 @@ var picked: Array[String] = []
 var team_buttons: Dictionary[String, Button] = {}
 var _team_note: Label
 var _place_buttons: Array[Button] = []
+var shards_label: Label
+
+const SHARDS_STEP: int = 10
+const SHARDS_MAX: int = 500
 
 
 static func make(content_db: ContentDb, practice: PracticeSession = null) -> EncounterListScreen:
@@ -38,6 +44,7 @@ func build() -> void:
 	hint("Pick a fight. Act 2's are built for transformed heroes, Act 3's for heroes at an apex: set them in their panels. Your heroes start where you last placed them.")
 	if session != null:
 		_team_row()
+		_shards_row()
 	var grid := GridContainer.new()
 	grid.columns = COLUMNS
 	grid.add_theme_constant_override("h_separation", 16)
@@ -89,6 +96,29 @@ func _team_row() -> void:
 	_team_note.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(_team_note)
 	_show_team()
+
+
+func _shards_row() -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	add_child(row)
+	var title: Label = UiStyle.label("Shards held:", 18, UiStyle.TEXT_DIM)
+	title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(title)
+	row.add_child(UiStyle.button("-%d" % SHARDS_STEP, add_shards.bind(-SHARDS_STEP)))
+	shards_label = UiStyle.strong("%d" % session.shards, 18, UiStyle.HIGHLIGHT)
+	shards_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(shards_label)
+	row.add_child(UiStyle.button("+%d" % SHARDS_STEP, add_shards.bind(SHARDS_STEP)))
+	var note: Label = UiStyle.label("For what reads the shards a run holds (Edric's Golden Aegis).", 16, UiStyle.TEXT_DIM)
+	note.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(note)
+
+
+## Changes the shards Practice's fights hold by `amount` (0 to 500).
+func add_shards(amount: int) -> void:
+	session.shards = clampi(session.shards + amount, 0, SHARDS_MAX)
+	shards_label.text = "%d" % session.shards
 
 
 ## Toggles `hero_id` on or off the team (on only while fewer than three are).

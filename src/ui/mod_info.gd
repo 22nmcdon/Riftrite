@@ -277,9 +277,38 @@ static func upgrade_numbers(upgrade: UpgradeDef, kit: UnitDef, content: ContentD
 		parts = mod_parts(upgrade.mod, kit, content)
 	if upgrade.transformed_mod != null:
 		parts.append("transformed: " + mod_numbers(upgrade.transformed_mod, kit, content))
+	if upgrade.tithe != null and not tithe_numbers(upgrade.tithe).is_empty():
+		parts.append(tithe_numbers(upgrade.tithe))
 	if upgrade.grows != null:
-		parts.append(growth_numbers(upgrade.grows, kit, content))
+		var grows: String = growth_numbers(upgrade.grows, kit, content)
+		if upgrade.tithe != null and upgrade.tithe.per_step > 0:
+			# Ledger of Debts: its steps pay through Tithe.
+			grows = grows.replace("Grows:  per", "Grows: +%d Tithe per" % upgrade.tithe.per_step)
+		parts.append(grows)
+	if upgrade.needs_shards > 0:
+		parts.append("while holding %d+ shards" % upgrade.needs_shards)
 	return " · ".join(parts)
+
+
+## A Tithe's numbers (phase 8 part 5): "Tithe: +3 a standing hero, +5 if
+## none fell (+1 a flawless fight, up to +15)".
+static func tithe_numbers(tithe: TitheDef) -> String:
+	var parts: Array[String] = []
+	if tithe.per_standing > 0:
+		parts.append("+%d a standing hero" % tithe.per_standing)
+	if tithe.fallen_pays > 0:
+		parts.append("+%d a fallen hero" % tithe.fallen_pays)
+	if tithe.flawless_add > 0:
+		parts.append("+%d if none fell" % tithe.flawless_add)
+	if tithe.flawless_grows > 0:
+		parts.append("+%d to that a flawless fight (up to +%d)" % [tithe.flawless_grows, tithe.flawless_max])
+	elif tithe.flawless_max > 0:
+		parts.append("up to +%d more" % tithe.flawless_max)
+	if tithe.harder_add > 0:
+		parts.append("+%d after the harder fight" % tithe.harder_add)
+	if tithe.elite_bp > 0:
+		parts.append("+%s after an elite" % ValueBreakdown._percent(tithe.elite_bp))
+	return "Tithe: " + ", ".join(parts) if not parts.is_empty() else ""
 
 
 ## A stacking card on the pick: what it would lock in now ("+2 ATK now ·
@@ -318,7 +347,7 @@ static func growth_numbers(growth: GrowthDef, kit: UnitDef, content: ContentDb) 
 	var step: String = step_text(growth.each, kit, content) if growth.each.changes_anything() else ""
 	if growth.each_shards > 0:
 		step = ("%s, " % step if not step.is_empty() else "") + "+%d shard%s" % [growth.each_shards, "" if growth.each_shards == 1 else "s"]
-	var what: String = "%d elites won" % growth.per if growth.run_counts == "elite_wins" else counted(growth.counts, growth.per)
+	var what: String = run_counted(growth) if not growth.run_counts.is_empty() else counted(growth.counts, growth.per)
 	var text: String = "Grows: %s per %s" % [step, what]
 	if growth.max_steps > 0:
 		text += " (at most %d time%s)" % [growth.max_steps, "" if growth.max_steps == 1 else "s"]
@@ -336,8 +365,21 @@ static func growth_now(growth: GrowthDef, count: int, kit: UnitDef, content: Con
 		now = step_text(growth.each.times(steps), kit, content) if growth.each.changes_anything() else "+%d shards so far" % (steps * growth.each_shards)
 	if growth.max_steps > 0 and steps >= growth.max_steps:
 		return "Now: %s (done)" % now
-	var what: String = "%d elites won" % growth.per if growth.run_counts == "elite_wins" else counted(growth.counts, growth.per)
+	var what: String = run_counted(growth) if not growth.run_counts.is_empty() else counted(growth.counts, growth.per)
 	return "Now: %s (%s / %s to the next)" % [now, str(count % growth.per) if growth.run_counts != "" else _amount(growth.counts, count % growth.per), what]
+
+
+## What the run counts for a growth, `per` of it: "10 elites won", "10
+## fights won", "flawless fight" (phase 8 part 5).
+static func run_counted(growth: GrowthDef) -> String:
+	match growth.run_counts:
+		"elite_wins":
+			return "%d elites won" % growth.per if growth.per != 1 else "elite won"
+		"wins":
+			return "%d fights won" % growth.per if growth.per != 1 else "fight won"
+		"flawless":
+			return "%d fights won with every hero standing" % growth.per if growth.per != 1 else "fight won with every hero standing"
+	return growth.run_counts
 
 
 ## One step's (or several steps') change, the way a card says it: an added

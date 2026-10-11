@@ -22,7 +22,9 @@ extends RefCounted
 ## share of the hero's stat at the time, as a flat amount (RunContent
 ## .stack_amount), and it can be taken again. A growing upgrade (phase 5c
 ## step 4) has "grows" (GrowthDef), with or without a "mod". RunContent
-## checks every mod against every kit it can meet.
+## checks every mod against every kit it can meet. Phase 8 part 5 adds a
+## card's "tithe" (TitheDef: Elite Tithe; no mod needed) and "needs_shards"
+## (its mod counts only while the run holds that many: Ward Tax).
 
 enum Layer { HERO, TASTE, PATH, APEX }
 
@@ -53,6 +55,11 @@ var grows: GrowthDef = null
 ## (percent) of the hero's stat at the time.
 var stack_stat: int = -1
 var stack_pct: int = 0
+## Phase 8 part 5 (Edric's cards): what it adds to its hero's Tithe
+## (TitheDef; null: nothing), and the shards the run must hold as a fight
+## starts for its mod to count there (0: always; Ward Tax).
+var tithe: TitheDef = null
+var needs_shards: int = 0
 
 
 static func read(reader: DataReader) -> UpgradeDef:
@@ -89,7 +96,14 @@ static func read(reader: DataReader) -> UpgradeDef:
 		var grows_reader: DataReader = reader.req_object("grows")
 		if grows_reader != null:
 			def.grows = GrowthDef.read(grows_reader)
-	if (def.grows == null and def.stack_stat < 0) or reader.has("mod"):
+	if reader.has("tithe"):
+		var tithe_reader: DataReader = reader.req_object("tithe")
+		if tithe_reader != null:
+			def.tithe = TitheDef.read(tithe_reader)
+		if def.layer == Layer.HERO:
+			reader.error("a Tithe card is a path's or an apex's")
+	def.needs_shards = reader.opt_int("needs_shards", 0, 1, 1000)
+	if (def.grows == null and def.stack_stat < 0 and def.tithe == null) or reader.has("mod"):
 		var mod_reader: DataReader = reader.req_object("mod")
 		if mod_reader != null:
 			def.mod = KitMod.read(mod_reader)

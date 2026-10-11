@@ -222,6 +222,9 @@ func _deed_text(hero_id: String, path: PathDef, sim: CombatSim, amounts: Array[F
 		for deed: FightResult.Deed in amounts:
 			if deed.hero == hero_id and deed.path == path.id:
 				return "%s deed · this fight %s" % [path.name, UnitInfo.deed_amount_text(path.deed, deed.amount)]
+	if path.deed.by_the_run():
+		# Shards from Tithe (phase 8 part 5, Decision 3).
+		return "%s deed · counted in a run" % path.name
 	var last: int = session.last_deed(hero_id, path.id)
 	return "%s deed · %s" % [path.name, "no fight yet" if last < 0 else "last fight %s" % UnitInfo.deed_amount_text(path.deed, last)]
 

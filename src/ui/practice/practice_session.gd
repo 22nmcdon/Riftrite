@@ -58,6 +58,9 @@ var snares: Dictionary[String, Array] = {}
 ## Hero id -> path id -> what the last fight put into that deed (empty
 ## before the first fight).
 var last_deeds: Dictionary[String, Dictionary] = {}
+## The shards Practice's fights hold (phase 8 part 5, Decision 4: the
+## tester sets it, for what reads the shards held, Golden Aegis; from 0).
+var shards: int = 0
 
 
 static func make(content_db: ContentDb) -> PracticeSession:
@@ -100,6 +103,7 @@ func _build(encounter_id: String, hero_hexes: Dictionary[String, Vector2i], figh
 	var fight: FightSetup = Encounters.setup(content, encounter_id, hero_hexes, fight_seed, errors_out, tactics_in(hero_hexes), hero_vows, hero_transformed,
 		{}, hero_apexes, hero_apexed)
 	if fight != null:
+		fight.shards = shards
 		for hero: UnitSetup in fight.heroes:
 			if hero.def.placed_lantern and not snares.get(hero.id, []).is_empty():
 				hero.lantern = snares[hero.id][0]

@@ -88,13 +88,15 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: 
 	if def.stacking:
 		state.source = source
 		var lasts: int = duration_ticks if duration_ticks > 0 else def.duration_ticks
-		state.stack_ends.append(sim.tick + lasts if lasts > 0 else StatusState.NEVER)
+		# As many stacks as given (phase 8 part 5: Collection's 3 at once).
+		for i: int in maxi(stacks, 1):
+			state.stack_ends.append(sim.tick + lasts if lasts > 0 else StatusState.NEVER)
 		if def.max_stacks > 0 and state.stack_ends.size() > def.max_stacks:
-			state.stack_ends.remove_at(0)
+			state.stack_ends = state.stack_ends.slice(state.stack_ends.size() - def.max_stacks)
 		state.ends_at = int(state.stack_ends.max())
 		entry.end_tick = state.ends_at if state.ends_at < StatusState.NEVER else -1
 		entry.stacks = state.stack_ends.size()
-		entry.amount = 1
+		entry.amount = maxi(stacks, 1)
 	elif def.is_timed():
 		state.source = source
 		state.lasting = state.lasting or lasting
@@ -281,6 +283,21 @@ static func _drop_stacks(sim: CombatSim, unit: UnitState, state: StatusState) ->
 		_end(sim, unit, state)
 	elif state.stack_ends.size() != before:
 		sim.refold_auras()
+
+
+## Spends `unit`'s oldest stack of stacking status `status_id` (phase 8
+## part 5, Collection's shards): false if it has none. The last one spent
+## ends the status.
+static func spend_stack(sim: CombatSim, unit: UnitState, status_id: String) -> bool:
+	var state: StatusState = find(unit, status_id)
+	if state == null or state.stack_ends.is_empty():
+		return false
+	state.stack_ends.remove_at(0)
+	if state.stack_ends.is_empty():
+		_end(sim, unit, state, "spent")
+	elif not state.def.boost_stats.is_empty():
+		sim.refold_auras()
+	return true
 
 
 ## Puts the Engaged status on `unit`, credited to `source` (the engager's

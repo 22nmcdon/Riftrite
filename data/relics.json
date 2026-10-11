@@ -2523,5 +2523,117 @@
         }
       ]
     }
+  },
+  {
+    "id": "the_last_ward",
+    "name": "The Last Ward",
+    "tier": "bond",
+    "icon": "unbroken_wall",
+    "flavor": "Watched Over: the last of them standing is the one he never stops warding.",
+    "text": "Hallow always goes to Brannoc first while he's below 30% HP, and while he's Shielded below 30% his Last Watch bonuses to ATK and DEF are doubled.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "hallow",
+          "prefer": {
+            "kits": [
+              "brannoc"
+            ],
+            "below_hp_pct": 30
+          }
+        }
+      ],
+      "passives": [
+        {
+          "id": "the_last_ward",
+          "name": "The Last Ward",
+          "kind": "aura",
+          "text": "While Brannoc is Shielded below 30% HP, his Last Stand hits twice as much harder.",
+          "aura": {
+            "target": "holder",
+            "stat": "atk_bp",
+            "value": 28000,
+            "while": "state",
+            "state": {
+              "kits": [
+                "brannoc"
+              ],
+              "below_hp_pct": 30,
+              "shielded": true
+            }
+          }
+        },
+        {
+          "id": "the_last_ward_wall",
+          "name": "The Last Ward",
+          "kind": "aura",
+          "text": "While Brannoc is Shielded below 30% HP, his Last Wall's DEF is doubled.",
+          "aura": {
+            "target": "holder",
+            "stat": "def_bp",
+            "value": 15000,
+            "while": "state",
+            "state": {
+              "kits": [
+                "brannoc"
+              ],
+              "below_hp_pct": 30,
+              "shielded": true
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_psalter",
+    "name": "The Psalter",
+    "tier": "bond",
+    "icon": "echo",
+    "flavor": "Psalm and Chorus: every ward that breaks is a note, and the bell carries it.",
+    "text": "When any Shield on an ally breaks, Aldous gains 10 mana too (and shares it, as his Chorus does), and Crescendo gives the allies it reaches a Shield as big as the mana it gave.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "crescendo",
+          "add_effects": [
+            {
+              "type": "shield",
+              "amount": 55,
+              "target": "allies_near_self",
+              "within_hexes": 3
+            }
+          ]
+        }
+      ],
+      "passives": [
+        {
+          "id": "the_psalter",
+          "name": "The Psalter",
+          "kind": "ability",
+          "text": "When any Shield on an ally breaks, Aldous gains mana too.",
+          "effects": [
+            {
+              "trigger": "on_ally_shield_broken",
+              "holder": {
+                "kits": [
+                  "edric"
+                ]
+              },
+              "type": "gain_mana",
+              "amount": 10,
+              "target": "all_allies",
+              "only": {
+                "kits": [
+                  "aldous"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
   }
 ]

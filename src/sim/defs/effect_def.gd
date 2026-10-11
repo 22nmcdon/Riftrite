@@ -54,8 +54,10 @@ extends RefCounted
 ##                 of the shards the run holds as the fight starts is added
 ##                 (FightSetup.shards; Practice's shards setting)
 ##   shards:       (phase 8 part 5, Collection; target "self") "amount" shards
-##                 for the run, logged as SHARDS; RunFlow.record pays a won
-##                 fight's
+##                 for the run, logged as SHARDS; RunFlow.record pays them.
+##                 "spends": a stacking status on the unit: it pays only
+##                 while the unit holds a stack, and spends one (Collection's
+##                 window and its cap a cast)
 ##   raise:        (phase 8 part 5, Gravecaller; no "target" key; on_enemy_fell
 ##                 or on_kill) the enemy the event names stands again on the
 ##                 unit's side as its own kit, a summon: "hp_pct" of its max
@@ -536,6 +538,9 @@ var keep_bp: int = 0
 ## shield (phase 8 part 5, Golden Aegis): that share (bp) of the shards the
 ## run holds is added (FightSetup.shards; 0: none).
 var plus_per_shard_bp: int = 0
+## shards (phase 8 part 5, Collection): a stack of this status on the unit
+## is spent for each, and none pays without one ("": always pays).
+var spends: String = ""
 ## heal (phase 8 part 5, The Iron Maw): it lands as its target's own
 ## lifesteal (EffectRunner.steal), not as healing.
 var as_lifesteal: bool = false
@@ -848,6 +853,7 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				def.amount = reader.req_int("amount", 1, 10)
 				if def.target != Target.SELF:
 					reader.error("shards go to the run through the unit itself (\"target\": \"self\")")
+				def.spends = reader.opt_string("spends", "")
 			Type.GAIN_MAX_HP:
 				if int(reader.has("amount")) + int(reader.has("amount_bp_of_damage")) != 1:
 					reader.error("gain_max_hp needs exactly one of \"amount\" or \"amount_bp_of_damage\"")

@@ -74,7 +74,7 @@ func test_a_relics_run_rules_and_who_its_mods_are_for() -> void:
 	assert_eq(ModInfo.relic_numbers(_run.relics["whetstone_of_the_fallen"], _content), "Heroes: +6 ATK")
 	assert_eq(ModInfo.relic_numbers(_run.relics["collectors_chain"], _content), "Grows: +1 ATK per 10 kills, counted for the whole team")
 	assert_eq(ModInfo.relic_numbers(_run.relics["bloodied_coin"], _content), "Grows: +1 shard per 1 kills, counted for the whole team")
-	assert_eq(ModInfo.relic_numbers(_run.relics["tally_of_the_dead"], _content), "Grows: +2% HP per 1 elites won, counted for the whole team")
+	assert_eq(ModInfo.relic_numbers(_run.relics["tally_of_the_dead"], _content), "Grows: +2% HP per elite won, counted for the whole team")
 	assert_eq(ModInfo.relic_numbers(_run.relics["tinkers_purse"], _content), "the first reroll in every shop is free")
 	assert_eq(ModInfo.relic_numbers(_run.relics["bounty_board"], _content), "+25 shards, once, for 3 won fights in a row with no hero falling")
 	assert_eq(ModInfo.relic_numbers(_run.relics["gilded_rift"], _content), "Heroes: +1% ATK and MGK per 5 shards held")

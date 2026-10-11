@@ -769,7 +769,7 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 		EffectDef.Type.RELEASE_STORED:
 			return "lets go of the damage it stored"
 		EffectDef.Type.SHARDS:
-			return "+%d shard%s for the run" % [effect.amount, "" if effect.amount == 1 else "s"]
+			return "+%d shard%s for the run%s" % [effect.amount, "" if effect.amount == 1 else "s", " while %s lasts" % effect.spends.replace("_", " ").capitalize() if not effect.spends.is_empty() else ""]
 		EffectDef.Type.GAIN_MAX_HP:
 			if effect.amount_bp_of_damage > 0:
 				return "+%s of what it gained as max HP" % ValueBreakdown._percent(effect.amount_bp_of_damage)

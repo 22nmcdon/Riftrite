@@ -36,6 +36,12 @@
     {"name": "Blood Rite", "kind": "good", "carry": "maren", "apexes": {"brannoc": "unbroken_gate", "maren": "eagle_eye", "severine": "blood_rite"}},
     {"name": "Swollen Tide", "kind": "good", "carry": "severine", "apexes": {"brannoc": "hearthkeeper", "maren": "eagle_eye", "severine": "leviathan"}},
     {"name": "Open Vein", "kind": "good", "carry": "severine", "apexes": {"brannoc": "hearthkeeper", "maren": "eagle_eye", "severine": "blood_tide"}},
+    {"name": "Bulwark", "kind": "good", "carry": "garrow", "apexes": {"garrow": "endless_bulwark", "vell": "thornweave", "edric": "bastion_of_saints"}},
+    {"name": "Reforged Line", "kind": "good", "carry": "maren", "apexes": {"brannoc": "unbroken_gate", "maren": "eagle_eye", "edric": "reforged_ward"}},
+    {"name": "Golden Ward", "kind": "good", "carry": "maren", "apexes": {"brannoc": "unbroken_gate", "maren": "eagle_eye", "edric": "golden_aegis"}},
+    {"name": "Debt Collectors", "kind": "good", "carry": "maren", "apexes": {"brannoc": "hearthkeeper", "maren": "eagle_eye", "edric": "collector_of_debts"}},
+    {"name": "Choir of Wards", "kind": "good", "carry": "vell", "apexes": {"aldous": "grand_chorus", "vell": "sanctifier", "edric": "choir_of_wards"}},
+    {"name": "Evensong", "kind": "good", "carry": "maren", "apexes": {"aldous": "grand_chorus", "maren": "stormline", "edric": "evensong"}},
     {"name": "No Edge", "kind": "poor", "apexes": {"brannoc": "hearthkeeper", "maren": "warden_of_thorns", "vell": "loomwarden"}},
     {"name": "Crossed Purposes", "kind": "poor", "apexes": {"brannoc": "martyrs_pyre", "maren": "huntmaster", "vell": "thornweave"}}
   ]

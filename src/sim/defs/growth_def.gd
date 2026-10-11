@@ -26,10 +26,15 @@ var max_steps: int = 0
 var max_steps_per_fight: int = 0
 ## Shards each step pays (0: none; then `each` may be empty).
 var each_shards: int = 0
-## "" (the sim counts it, `counts`) or "elite_wins".
+## "" (the sim counts it, `counts`) or what the run counts: "elite_wins",
+## "wins" (day fights won), or "flawless" (day fights won with no hero down
+## at the end; phase 8 part 5, Edric's apexes and cards).
 var run_counts: String = ""
+## Its steps' mod goes to every hero, not only its holder (phase 8 part 5:
+## Golden Aegis, Gold Leaf).
+var team: bool = false
 
-const RUN_COUNTS: Array[String] = ["elite_wins"]
+const RUN_COUNTS: Array[String] = ["elite_wins", "wins", "flawless"]
 
 
 static func read(reader: DataReader) -> GrowthDef:
@@ -43,7 +48,9 @@ static func read(reader: DataReader) -> GrowthDef:
 	def.per = reader.req_int("per", 1)
 	def.each_shards = reader.opt_int("each_shards", 0, 0, 100)
 	def.each = KitMod.make()
-	if def.each_shards == 0 or reader.has("each"):
+	# One the run counts may be only a count (phase 8 part 5: Ledger of
+	# Debts' steps pay through its Tithe, Collector of Debts' raise its own).
+	if (def.each_shards == 0 and def.run_counts.is_empty()) or reader.has("each"):
 		var each_reader: DataReader = reader.req_object("each")
 		if each_reader != null:
 			def.each = KitMod.read(each_reader)
@@ -52,6 +59,9 @@ static func read(reader: DataReader) -> GrowthDef:
 				reader.error(problem)
 	def.max_steps = reader.opt_int("max_steps", 0, 0)
 	def.max_steps_per_fight = reader.opt_int("max_steps_per_fight", 0, 0)
+	def.team = reader.opt_bool("team", false)
+	if def.team and not def.each.changes_anything():
+		reader.error("a team growth gives every hero its step (\"each\")")
 	reader.finish()
 	return def
 

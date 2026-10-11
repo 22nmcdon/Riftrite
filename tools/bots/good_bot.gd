@@ -131,11 +131,26 @@ func pick(flow: RunFlow) -> int:
 	var best: int = -1
 	var best_value: float = Practice.value(flow, func(trial: RunFlow) -> String: return trial.take_shards(), coming)
 	for i: int in flow.state.pick.size():
-		var value: float = Practice.value(flow, func(trial: RunFlow) -> String: return trial.take_pick(i), coming) + CARD_WORTH
+		var value: float = Practice.value(flow, func(trial: RunFlow) -> String: return trial.take_pick(i), coming) + CARD_WORTH \
+			+ tithe_worth(flow, flow.state.pick[i])
 		if value > best_value + MIN_GAIN:
 			best_value = value
 			best = i
 	return best
+
+
+## What a card's Tithe is worth (phase 8 part 5, Edric's cards; practice
+## fights can't see shards the run pays): a guess at the shards it adds a won
+## fight, at the shard worth, for the day fights left in the act.
+static func tithe_worth(flow: RunFlow, card_id: String) -> float:
+	var card: UpgradeDef = flow.run.upgrades.get(card_id)
+	if card == null or card.tithe == null:
+		return 0.0
+	var tithe: TitheDef = card.tithe
+	var a_fight: float = tithe.per_standing * 3 + tithe.flawless_add * 0.5 + tithe.flawless_grows * 2 + tithe.harder_add * 0.5 \
+		+ tithe.fallen_pays * 0.3 + tithe.per_step * 1.5 + 3.0 * tithe.elite_bp / FixedMath.BP_ONE * 0.3
+	var left: int = maxi(flow.act.days.size() + 1 - flow.state.day, 0)
+	return a_fight * left * Practice.shard_worth(flow)
 
 
 ## The apex whose taste does best in practice (phase 8 part 2); the first on

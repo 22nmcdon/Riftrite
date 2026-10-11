@@ -21,7 +21,7 @@ func test_the_teams_file_reads() -> void:
 	assert_eq(errors, [] as Array[String])
 	assert_eq(builds.map(func(build: BuildReport.Build) -> String: return "%s %s" % [build.path, build.type]),
 		["aegisfang engine", "chainwarden self-sufficient", "spitemail self-sufficient", "garrote engine", "headhunter engine", "nightblade self-sufficient", "chorister enabler", "windcaller enabler", "bellwarden enabler",
-		"bloodglut self-sufficient", "plaguebearer self-sufficient", "hemomancer engine"])
+		"bloodglut self-sufficient", "plaguebearer self-sufficient", "hemomancer engine", "aegis enabler", "psalmist enabler", "tithe_collector long-game"])
 
 
 func test_a_small_run() -> void:

@@ -110,3 +110,49 @@ func test_shards_for_the_run() -> void:
 	var paid: Array[LogEntry] = K.entries(fight, LogEntry.Kind.SHARDS, "collector")
 	assert_eq(paid.map(func(entry: LogEntry) -> int: return entry.amount), [1])
 	assert_string_contains(paid[0].to_text(), "collects 1 shard")
+
+
+func test_shards_spend_a_window_of_stacks() -> void:
+	# Collection's window: 2 stacks for 5s; three kills pay only 2 shards.
+	var collector: UnitDef = K.kit("collector", {"stats": {"hp": 1000, "speed": 0, "range": 4},
+		"basic_attack": {"cooldown_ms": 500, "effects": [{"type": "damage", "amount": 500, "target": "target"}]},
+		"passives": [{"id": "dues", "name": "Dues", "kind": "ability", "effects": [
+			{"trigger": "on_fight_start", "type": "apply_status", "status": "collection", "stacks": 2, "duration_ms": 5000, "target": "self"},
+			{"trigger": "on_enemy_fell", "type": "shards", "amount": 1, "target": "self", "spends": "collection"}]}]})
+	var foes: Array[UnitSetup] = [K.foe(_dummy("a", 100), 3, 4), K.foe(_dummy("b", 100), 4, 4), K.foe(_dummy("c", 100), 2, 4), K.foe(_dummy("far"), 7, 6)]
+	var fight: CombatSim = K.sim(K.fight([K.at(collector, 3, 2)] as Array[UnitSetup], foes))
+	K.step(fight, 2)
+	assert_eq(Statuses.stacks_on(fight.unit_by_id("collector"), "collection"), 2, "an apply_status gives a stacking boost its stacks at once")
+	K.step(fight, 60)
+	var fallen: int = ["a", "b", "c"].filter(func(unit_id: String) -> bool: return not fight.unit_by_id(unit_id).alive).size()
+	assert_eq(fallen, 3)
+	assert_eq(K.entries(fight, LogEntry.Kind.SHARDS, "collector").size(), 2, "one a stack, and none once they're spent")
+	assert_null(Statuses.find(fight.unit_by_id("collector"), "collection"), "the last spent ends it")
+
+
+func test_a_condition_on_having_no_shield() -> void:
+	var errors: Array[String] = []
+	var bare: UnitCondition = UnitCondition.read(DataReader.new({"shielded": false}, "c", errors))
+	var warded: UnitCondition = UnitCondition.read(DataReader.new({"shielded": true}, "c", errors))
+	assert_eq(errors, [] as Array[String])
+	var fight: CombatSim = K.sim(K.fight([K.at(_dummy("ally"), 0, 0)] as Array[UnitSetup], [K.foe(_dummy("mark"), 7, 6)] as Array[UnitSetup]))
+	var ally: UnitState = fight.unit_by_id("ally")
+	assert_eq([bare.holds(ally), warded.holds(ally)], [true, false])
+	ally.shield = 5
+	assert_eq([bare.holds(ally), warded.holds(ally)], [false, true])
+	assert_eq(bare.describe(), "without a Shield")
+
+
+func test_cooldown_bp_reaches_intervals_and_event_cooldowns() -> void:
+	var errors: Array[String] = []
+	var mod: KitMod = KitMod.read(DataReader.new({"on": [{"slot": "passive:hallow", "cooldown_bp": 5000}]}, "mod", errors))
+	assert_eq(errors, [] as Array[String])
+	var kit: UnitDef = K.kit("priest", {"stats": {"hp": 1000, "speed": 0, "range": 1},
+		"basic_attack": {"cooldown_ms": 60000, "effects": [{"type": "damage", "amount": 0, "target": "target"}]},
+		"passives": [{"id": "hallow", "name": "Hallow", "kind": "ability", "effects": [
+			{"trigger": "on_interval", "interval_ms": 6000, "type": "shield", "amount": 5, "target": "lowest_hp_ally"},
+			{"trigger": "on_ally_shield_broken", "type": "shield", "amount": 5, "target": "trigger_ally", "cooldown_per_unit_ms": 8000, "cooldown_ms": 2000}]}]})
+	var changed: UnitDef = mod.apply(kit, errors)
+	assert_eq(errors, [] as Array[String])
+	var effects: Array[EffectDef] = changed.passives[0].ability.effects
+	assert_eq([effects[0].interval_ticks, effects[1].cooldown_per_unit_ticks, effects[1].cooldown_ticks], [60, 80, 20], "halved")

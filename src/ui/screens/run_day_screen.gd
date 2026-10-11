@@ -360,6 +360,12 @@ static func grew_lines(run_session: RunSession) -> Array[String]:
 		if hero_id.is_empty():
 			var relic: RelicDef = run_session.run.relics[card_id]
 			lines.append("%s: %s" % [relic.name, ModInfo.growth_now(relic.grows, state.growth.get(card_id, 0), null, run_session.content)])
+		elif card_id == "apex":
+			# An apex's run snowball (phase 8 part 5): "hero:apex:<id>".
+			var apex: ApexDef = run_session.content.apexes[key.get_slice(":", 2)]
+			var holder: RunState.Hero = state.hero(hero_id)
+			var holder_name: String = ArenaView.label_for(run_session.content.heroes[hero_id].kit, run_session.content)
+			lines.append("%s (%s): %s" % [apex.name, holder_name, ModInfo.growth_now(apex.grows, holder.growth.get(key.substr(hero_id.length() + 1), 0), run_session.run.hero_kit(holder), run_session.content)])
 		else:
 			var upgrade: UpgradeDef = run_session.run.upgrades[card_id]
 			var hero: RunState.Hero = state.hero(hero_id)
@@ -1096,8 +1102,20 @@ func _fill_after() -> void:
 	if not state.fought.is_empty():
 		var last: RunState.Fought = state.fought.back()
 		var encounter: EncounterDef = session.content.encounters[last.encounter]
-		_section("%s: %s" % [encounter.name, RunDayScreen.outcome_word(last.outcome)], "In %ds. It paid %d shards." % [last.seconds, session.flow.act.pay[encounter.tier] + session.run.relic_sum(state, "pay_add") + (session.run.relic_sum(state, "elite_pay_add") if encounter.tier == "elite" else 0)])
+		_section("%s: %s" % [encounter.name, RunDayScreen.outcome_word(last.outcome)], "In %ds. It paid %d shards.%s" % [last.seconds, session.flow.act.pay[encounter.tier] + session.run.relic_sum(state, "pay_add") + (session.run.relic_sum(state, "elite_pay_add") if encounter.tier == "elite" else 0),
+			RunDayScreen.extra_pay(last)])
 	body.add_child(UiStyle.primary(UiStyle.button("Move on" if state.endless else "To the Pedlar", _do.bind(session.flow.finish_day))))
+
+
+## What a fight paid besides its tier (phase 8 part 5): " Tithe: +3.
+## Collection: +2." ("" for none).
+static func extra_pay(fought: RunState.Fought) -> String:
+	var line: String = ""
+	if fought.tithe > 0:
+		line += " Tithe: +%d." % fought.tithe
+	if fought.collected > 0:
+		line += " Collection: +%d." % fought.collected
+	return line
 
 
 static func outcome_word(outcome: FightResult.Outcome) -> String:

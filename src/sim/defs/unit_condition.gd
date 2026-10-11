@@ -39,6 +39,9 @@ extends RefCounted
 ##   {"target_beyond_hexes": 3}              its target stands this many
 ##                                           hexes away or more (phase 8
 ##                                           part 4, Tailwind)
+##   {"shielded": false}                     it has no Shield (true: it has
+##                                           one; phase 8 part 5, Steady
+##                                           Hallow)
 ##   {"raised": true}                        a thrall Gravecaller raised (phase
 ##                                           8 part 5; Plague Thralls)
 ##   {"fired_over_full": true}               its signature last fired with
@@ -71,6 +74,8 @@ var targets_holder: Flying = Flying.ANY
 var target: UnitCondition = null
 ## Its range is 2 or more (YES) or 1 (NO) (phase 8 part 4).
 var ranged: Flying = Flying.ANY
+## Has a Shield, or (NO) none (phase 8 part 5).
+var shielded: Flying = Flying.ANY
 ## 0: no distance to its target asked (phase 8 part 4).
 var target_beyond: int = 0
 ## Its signature last fired from past a full bar (phase 8 part 4).
@@ -108,19 +113,22 @@ static func read(reader: DataReader) -> UnitCondition:
 		def.target = read(reader.req_object("target"))
 	if reader.has("ranged"):
 		def.ranged = Flying.YES if reader.opt_bool("ranged", true) else Flying.NO
+	if reader.has("shielded"):
+		def.shielded = Flying.YES if reader.opt_bool("shielded", true) else Flying.NO
 	if reader.has("target_beyond_hexes"):
 		def.target_beyond = reader.req_int("target_beyond_hexes", 1, 10) * HexGrid.HEX
 	def.fired_over_full = reader.opt_bool("fired_over_full", false)
 	def.raised = reader.opt_bool("raised", false)
 	if def.is_empty():
-		reader.error("a condition needs at least one of keywords, statuses, below_hp_pct, above_hp_pct, flying, archetypes, front_most, on_water, same_island, shield_above_pct, engorged_pct, targets_holder, target, ranged, target_beyond_hexes, fired_over_full, raised, or kits")
+		reader.error("a condition needs at least one of keywords, statuses, below_hp_pct, above_hp_pct, flying, archetypes, front_most, on_water, same_island, shield_above_pct, engorged_pct, targets_holder, target, ranged, shielded, target_beyond_hexes, fired_over_full, raised, or kits")
 	reader.finish()
 	return def
 
 
 func is_empty() -> bool:
 	return keywords.is_empty() and statuses.is_empty() and below_hp_bp == 0 and above_hp_bp == 0 and flying == Flying.ANY and archetypes.is_empty() and not front_most and on_water == Flying.ANY and kits.is_empty() and not same_island and shield_above_bp == 0 and engorged_bp == 0 \
-		and targets_holder == Flying.ANY and target == null and ranged == Flying.ANY and target_beyond == 0 and not fired_over_full and not raised
+		and targets_holder == Flying.ANY and target == null and ranged == Flying.ANY and target_beyond == 0 and not fired_over_full and not raised \
+		and shielded == Flying.ANY
 
 
 ## True if `unit` meets every field given. `holder`: whose condition it is
@@ -156,6 +164,8 @@ func holds(unit: UnitState, holder: UnitState = null) -> bool:
 	if target != null and (unit.target == null or not unit.target.alive or not target.holds(unit.target, holder)):
 		return false
 	if ranged != Flying.ANY and (unit.stats.get_stat(UnitStats.Stat.RANGE) >= 2) != (ranged == Flying.YES):
+		return false
+	if shielded != Flying.ANY and (unit.shield > 0) != (shielded == Flying.YES):
 		return false
 	if target_beyond > 0 and (unit.target == null or not unit.target.alive or ArenaPlane.length_sq(unit.target.pos - unit.pos) < target_beyond * target_beyond):
 		return false
@@ -221,6 +231,8 @@ func describe() -> String:
 		parts.append("with a target that's %s" % target.describe())
 	if ranged != Flying.ANY:
 		parts.append("ranged" if ranged == Flying.YES else "melee")
+	if shielded != Flying.ANY:
+		parts.append("Shielded" if shielded == Flying.YES else "without a Shield")
 	if target_beyond > 0:
 		@warning_ignore("integer_division")
 		parts.append("attacking from %d hexes or more" % (target_beyond / HexGrid.HEX))

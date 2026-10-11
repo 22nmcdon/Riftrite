@@ -6743,5 +6743,784 @@
         }
       ]
     }
+  },
+  {
+    "id": "steady_faith",
+    "name": "Steady Faith",
+    "hero": "edric",
+    "text": "His MGK rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "mgk",
+      "pct": 10
+    }
+  },
+  {
+    "id": "iron_vestments",
+    "name": "Iron Vestments",
+    "hero": "edric",
+    "text": "His DEF rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "def",
+      "pct": 10
+    }
+  },
+  {
+    "id": "pilgrims_frame",
+    "name": "Pilgrim's Frame",
+    "hero": "edric",
+    "text": "His max HP rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "hp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "quick_seal",
+    "name": "Quick Seal",
+    "hero": "edric",
+    "text": "He attacks faster by a tenth of his attack speed when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "atsp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "strong_ward",
+    "name": "Strong Ward",
+    "hero": "edric",
+    "text": "Ward's Shields are bigger (once it's a habit, too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "ward",
+          "types": [
+            "shield"
+          ],
+          "amount_bp": 12500
+        }
+      ]
+    }
+  },
+  {
+    "id": "swift_ward",
+    "name": "Swift Ward",
+    "hero": "edric",
+    "text": "Ward costs less mana (once it's a habit, it comes sooner).",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "ward",
+          "mana_max_add": -10
+        }
+      ]
+    }
+  },
+  {
+    "id": "wide_vigil",
+    "name": "Wide Vigil",
+    "hero": "edric",
+    "text": "Vigil reaches allies 1 hex farther.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:vigil",
+          "within_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "deep_vigil",
+    "name": "Deep Vigil",
+    "hero": "edric",
+    "text": "Vigil cuts more damage.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:vigil",
+          "value_add": 300
+        }
+      ]
+    }
+  },
+  {
+    "id": "heavy_seal",
+    "name": "Heavy Seal",
+    "hero": "edric",
+    "text": "Seal Slows its target for a moment.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "weighed_down",
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "warding_seal",
+    "name": "Warding Seal",
+    "hero": "edric",
+    "text": "Seal deals more damage to enemies attacking a Shielded ally.",
+    "mod": {
+      "passives": [
+        {
+          "id": "warding_seal",
+          "name": "Warding Seal",
+          "kind": "aura",
+          "text": "Seal deals more damage to enemies attacking a Shielded ally.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 12000,
+            "from_basic": true,
+            "vs": {
+              "target": {
+                "shielded": true
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "first_ward",
+    "name": "First Ward",
+    "hero": "edric",
+    "text": "As each fight starts, every ally gains a Shield.",
+    "mod": {
+      "passives": [
+        {
+          "id": "first_ward",
+          "name": "First Ward",
+          "kind": "ability",
+          "text": "As the fight starts, every ally gains a Shield.",
+          "effects": [
+            {
+              "trigger": "on_fight_start",
+              "type": "shield",
+              "amount_bp_of_max_hp": 500,
+              "target": "all_allies"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "old_prayers",
+    "name": "Old Prayers",
+    "hero": "edric",
+    "text": "Every Ward is a prayer remembered: Ward's Shields grow with the Wards he casts, for the rest of the run (while Ward is his signature).",
+    "grows": {
+      "counts": {
+        "counts": "casts"
+      },
+      "per": 10,
+      "each": {
+        "on": [
+          {
+            "slot": "signature",
+            "types": [
+              "shield"
+            ],
+            "amount_bp": 10100
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "quick_hallow",
+    "name": "Quick Hallow",
+    "path": "aegis",
+    "taste": true,
+    "text": "Hallow comes more often (once transformed, a little more often).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:hallow",
+          "cooldown_bp": 8333
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:hallow",
+          "cooldown_bp": 9000
+        }
+      ]
+    }
+  },
+  {
+    "id": "strong_hallow",
+    "name": "Strong Hallow",
+    "path": "aegis",
+    "taste": true,
+    "text": "Hallow's Shield is bigger.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:hallow",
+          "amount_bp": 12500
+        }
+      ]
+    }
+  },
+  {
+    "id": "elite_tithe",
+    "name": "Elite Tithe",
+    "path": "tithe_collector",
+    "taste": true,
+    "text": "Tithe pays double after an elite.",
+    "tithe": {
+      "elite_bp": 10000
+    }
+  },
+  {
+    "id": "bold_tithe",
+    "name": "Bold Tithe",
+    "path": "tithe_collector",
+    "taste": true,
+    "text": "Tithe pays 1 more after the harder of the day's fights.",
+    "tithe": {
+      "harder_add": 1
+    }
+  },
+  {
+    "id": "shared_offering",
+    "name": "Shared Offering",
+    "path": "psalmist",
+    "taste": true,
+    "text": "Offering also gives a little mana to the ally lowest on mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:offering",
+          "add_effects": [
+            {
+              "trigger": "on_ally_shield_broken",
+              "type": "gain_mana",
+              "amount": 3,
+              "target": "lowest_mana_ally"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_breath",
+    "name": "Quick Breath",
+    "path": "psalmist",
+    "taste": true,
+    "text": "Allies gain mana a little faster while they have any Shield (once transformed, Psalm is stronger).",
+    "mod": {
+      "passives": [
+        {
+          "id": "quick_breath",
+          "name": "Quick Breath",
+          "kind": "aura",
+          "text": "Allies gain mana a little faster while they have any Shield.",
+          "aura": {
+            "target": "all_allies",
+            "stat": "mana_gain_bp",
+            "value": 10500,
+            "only": {
+              "keywords": [
+                "shielded"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:psalm",
+          "value_add": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "faster_hallow",
+    "name": "Faster Hallow",
+    "path": "aegis",
+    "text": "Hallow comes more often.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:hallow",
+          "cooldown_bp": 8333
+        }
+      ]
+    }
+  },
+  {
+    "id": "sanctified",
+    "name": "Sanctified",
+    "path": "aegis",
+    "text": "Sanctuary also gives every ally more DEF for a few seconds.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "sanctified",
+              "target": "all_allies"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "steady_hallow",
+    "name": "Steady Hallow",
+    "path": "aegis",
+    "text": "Hallow goes to allies without a Shield first.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "hallow",
+          "prefer": {
+            "shielded": false
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_sanctuary",
+    "name": "Quick Sanctuary",
+    "path": "aegis",
+    "text": "Sanctuary costs less mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "sanctuary",
+          "mana_max_add": -15
+        }
+      ]
+    }
+  },
+  {
+    "id": "sainthood",
+    "name": "Sainthood",
+    "path": "aegis",
+    "text": "Each Hallow sanctifies the next: Hallow's Shield grows for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "shield",
+        "from_ability": [
+          "hallow"
+        ]
+      },
+      "per": 1500,
+      "each": {
+        "on": [
+          {
+            "slot": "passive:hallow",
+            "amount_bp": 10100
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "long_collection",
+    "name": "Long Collection",
+    "path": "tithe_collector",
+    "text": "Collection stays open longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "statuses": [
+            "collection"
+          ],
+          "duration_add_ms": 3000
+        }
+      ]
+    }
+  },
+  {
+    "id": "full_plate",
+    "name": "Full Plate",
+    "path": "tithe_collector",
+    "text": "Collection pays up to 2 more shards a cast.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "collection",
+              "stacks": 2,
+              "duration_ms": 5000,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_collection",
+    "name": "Quick Collection",
+    "path": "tithe_collector",
+    "text": "Collection costs less mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "collection",
+          "mana_max_add": -10
+        }
+      ]
+    }
+  },
+  {
+    "id": "thick_collection",
+    "name": "Thick Collection",
+    "path": "tithe_collector",
+    "text": "Collection's Shields are bigger.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "shield"
+          ],
+          "amount_bp": 15000
+        }
+      ]
+    }
+  },
+  {
+    "id": "ledger_of_debts",
+    "name": "Ledger of Debts",
+    "path": "tithe_collector",
+    "text": "The ledger grows: Tithe pays 1 more for every 10 fights won from now, up to 5 more.",
+    "tithe": {
+      "per_step": 1
+    },
+    "grows": {
+      "run_counts": "wins",
+      "per": 10,
+      "max_steps": 5
+    }
+  },
+  {
+    "id": "full_vesper",
+    "name": "Full Vesper",
+    "path": "psalmist",
+    "text": "Vesper Ward gives more mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "types": [
+            "gain_mana"
+          ],
+          "amount_bp": 14000
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_vesper",
+    "name": "Quick Vesper",
+    "path": "psalmist",
+    "text": "Vesper Ward costs less mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "vesper_ward",
+          "mana_max_add": -10
+        }
+      ]
+    }
+  },
+  {
+    "id": "steady_song",
+    "name": "Steady Song",
+    "path": "psalmist",
+    "text": "Psalm is stronger: allies gain mana faster still while Shielded.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:psalm",
+          "value_add": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "bright_offering",
+    "name": "Bright Offering",
+    "path": "psalmist",
+    "text": "Offering also makes its ally attack faster for a moment.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:offering",
+          "add_effects": [
+            {
+              "trigger": "on_ally_shield_broken",
+              "type": "apply_status",
+              "status": "bright_offering",
+              "target": "trigger_ally"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_hymnal",
+    "name": "Long Hymnal",
+    "path": "psalmist",
+    "text": "Every psalm sung is learned: Psalm grows with the mana Offering gives, for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "mana_given",
+        "from_ability": [
+          "offering"
+        ]
+      },
+      "per": 500,
+      "each": {
+        "passives": [
+          {
+            "id": "long_hymnal",
+            "name": "Long Hymnal",
+            "kind": "aura",
+            "text": "Grows with the mana Offering gives: allies gain mana faster while they have any Shield.",
+            "aura": {
+              "target": "all_allies",
+              "stat": "mana_gain_bp",
+              "value": 10100,
+              "only": {
+                "keywords": [
+                  "shielded"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "saintly",
+    "name": "Saintly",
+    "apex": "bastion_of_saints",
+    "text": "Each Hallow makes the next bigger still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:hallow",
+          "per_stack_add_bp": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "consecration",
+    "name": "Consecrated",
+    "apex": "bastion_of_saints",
+    "text": "Shielded allies within 2 hexes of him deal more damage.",
+    "mod": {
+      "passives": [
+        {
+          "id": "consecration",
+          "name": "Consecrated",
+          "kind": "aura",
+          "text": "Shielded allies within 2 hexes of him deal more damage.",
+          "aura": {
+            "target": "allies_near",
+            "target_within_hexes": 2,
+            "stat": "damage_bp",
+            "value": 11000,
+            "only": {
+              "keywords": [
+                "shielded"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "thick_forge",
+    "name": "Thick Forge",
+    "apex": "reforged_ward",
+    "text": "Reforged Shields are bigger.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:reforge",
+          "amount_bp": 14000
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_forge",
+    "name": "Quick Forge",
+    "apex": "reforged_ward",
+    "text": "Reforge comes back sooner for each ally.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:reforge",
+          "cooldown_bp": 7500
+        }
+      ]
+    }
+  },
+  {
+    "id": "gold_leaf",
+    "name": "Gold Leaf",
+    "apex": "golden_aegis",
+    "text": "Each fight won with every hero standing from now gives every hero more max HP still, for the rest of the run.",
+    "grows": {
+      "run_counts": "flawless",
+      "per": 1,
+      "team": true,
+      "each": {
+        "stats_bp": {
+          "hp": 10050
+        }
+      }
+    }
+  },
+  {
+    "id": "ward_tax",
+    "name": "Ward Tax",
+    "apex": "golden_aegis",
+    "text": "Collection costs less mana while the run holds 30 shards or more.",
+    "needs_shards": 30,
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "collection",
+          "mana_max_add": -10
+        }
+      ]
+    }
+  },
+  {
+    "id": "compound_debt",
+    "name": "Compound Debt",
+    "apex": "collector_of_debts",
+    "text": "Each fight won with every hero standing raises the bonus by 1 more, up to 20.",
+    "tithe": {
+      "flawless_grows": 1,
+      "flawless_max": 5
+    }
+  },
+  {
+    "id": "insurance",
+    "name": "Insurance",
+    "apex": "collector_of_debts",
+    "text": "A hero who falls still pays 1 shard of Tithe.",
+    "tithe": {
+      "fallen_pays": 1
+    }
+  },
+  {
+    "id": "loud_psalm",
+    "name": "Loud Psalm",
+    "apex": "choir_of_wards",
+    "text": "A breaking Shield gives its ally more mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:offering",
+          "types": [
+            "gain_mana"
+          ],
+          "amount_bp": 12500
+        }
+      ]
+    }
+  },
+  {
+    "id": "antiphon",
+    "name": "Antiphon",
+    "apex": "choir_of_wards",
+    "text": "Offering also gives its ally a small new Shield.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:offering",
+          "add_effects": [
+            {
+              "trigger": "on_ally_shield_broken",
+              "type": "shield",
+              "amount_bp_of_max_hp": 300,
+              "target": "trigger_ally"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "swelling_song",
+    "name": "Swelling Song",
+    "apex": "evensong",
+    "text": "Evensong's Shields are bigger.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:evensong",
+          "amount_bp": 13000
+        }
+      ]
+    }
+  },
+  {
+    "id": "vespers",
+    "name": "Vespers",
+    "apex": "evensong",
+    "text": "Evensong also gives every ally a little mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:evensong",
+          "add_effects": [
+            {
+              "trigger": "on_ally_ability",
+              "type": "gain_mana",
+              "amount": 5,
+              "target": "all_allies"
+            }
+          ]
+        }
+      ]
+    }
   }
 ]

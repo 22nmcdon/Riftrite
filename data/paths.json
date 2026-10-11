@@ -7966,5 +7966,736 @@
         }
       }
     ]
+  },
+  {
+    "_note": "The Shield maker (rebuild-heroes.md, section 8h, path 1; phase 8 part 5, 8e-3c). Tuned by build: Hallow every 4s at 5% (the design's 3s at 6%), Sanctuary 15% for 80 mana (its 20% for Ward's 70).",
+    "id": "aegis",
+    "hero": "edric",
+    "name": "Aegis",
+    "title": "the one who wards the weakest",
+    "fantasy": "No one under his watch goes unwarded.",
+    "placement": "Behind the front line, where the ally who's hurting most is never far.",
+    "vowed": {
+      "taste": "Hallow: every 6s, the ally lowest on HP gains a Shield of 4% of their max HP.",
+      "cost": "10% less MGK.",
+      "patch": {
+        "stats_bp": {
+          "mgk": 9000
+        },
+        "passives": [
+          {
+            "id": "hallow",
+            "name": "Hallow",
+            "kind": "ability",
+            "text": "Every few seconds, the ally lowest on HP gains a Shield.",
+            "effects": [
+              {
+                "trigger": "on_interval",
+                "interval_ms": 6000,
+                "type": "shield",
+                "amount_bp_of_max_hp": 400,
+                "target": "lowest_hp_ally"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Hallow every 4s, at 5% of their max HP. Sanctuary replaces Ward (80 mana): every ally gains a Shield of 15% of their max HP. Ward becomes a habit, every 8th Seal.",
+      "cost": "None.",
+      "patch": {
+        "mana": {
+          "max": 80,
+          "per_attack": 8,
+          "regen_per_s": 2
+        },
+        "signature": {
+          "id": "sanctuary",
+          "name": "Sanctuary",
+          "text": "He hallows the whole team: every ally gains a great Shield.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "self",
+          "effects": [
+            {
+              "type": "shield",
+              "amount_bp_of_max_hp": 1500,
+              "target": "all_allies"
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "hallow",
+            "name": "Hallow",
+            "kind": "ability",
+            "text": "Every few seconds, the ally lowest on HP gains a Shield.",
+            "effects": [
+              {
+                "trigger": "on_interval",
+                "interval_ms": 4000,
+                "type": "shield",
+                "amount_bp_of_max_hp": 500,
+                "target": "lowest_hp_ally"
+              }
+            ]
+          },
+          {
+            "id": "ward",
+            "name": "Ward",
+            "kind": "ability",
+            "text": "A habit: every 8th Seal, he wards the whole team: every ally gains a Shield.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "shield",
+                "amount_bp_of_max_hp": 800,
+                "target": "all_allies"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Shield given by Hallow",
+      "counts": "shield",
+      "from_ability": [
+        "hallow"
+      ],
+      "threshold": 600
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 5 (rebuild-phase8-severine-edric.md 8e-3c; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "bastion_of_saints",
+        "name": "Bastion of Saints",
+        "title": "the wall of the hallowed",
+        "fantasy": "Every one of them is warded, always, and each ward is thicker than the last.",
+        "vowed": {
+          "taste": "Hallow reaches the 2 allies lowest on HP.",
+          "patch": {
+            "passives": [
+              {
+                "id": "hallow",
+                "name": "Hallow",
+                "kind": "ability",
+                "text": "Every few seconds, the 2 allies lowest on HP gain a Shield.",
+                "effects": [
+                  {
+                    "trigger": "on_interval",
+                    "interval_ms": 4000,
+                    "type": "shield",
+                    "amount_bp_of_max_hp": 500,
+                    "target": "lowest_hp_ally",
+                    "count": 2
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Hallow wards every ally every 4s, at 5% of their max HP, and each Hallow makes the next 0.5% of max HP bigger for the rest of the fight. Hallowed Ground replaces Sanctuary: for 5s, every Shield on an ally absorbs twice the damage. Sanctuary becomes a habit, every 10th Seal. The apex also gives +15% HP and MGK.",
+          "patch": {
+            "signature": {
+              "id": "hallowed_ground",
+              "name": "Hallowed Ground",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "self",
+              "text": "He hallows the ground under the whole team: for a few seconds, every Shield on them absorbs twice the damage.",
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "hallowed_ground",
+                  "target": "all_allies"
+                }
+              ]
+            },
+            "passives": [
+              {
+                "id": "hallow",
+                "name": "Hallow",
+                "kind": "ability",
+                "text": "Every few seconds, every ally gains a Shield, a little bigger each time.",
+                "effects": [
+                  {
+                    "trigger": "on_interval",
+                    "interval_ms": 4000,
+                    "type": "shield",
+                    "amount_bp_of_max_hp": 500,
+                    "target": "all_allies",
+                    "grows_per_stack": {
+                      "status": "bastion",
+                      "bp": 1000
+                    }
+                  },
+                  {
+                    "trigger": "on_interval",
+                    "interval_ms": 4000,
+                    "type": "apply_status",
+                    "status": "bastion",
+                    "target": "self"
+                  }
+                ]
+              },
+              {
+                "id": "sanctuary",
+                "name": "Sanctuary",
+                "kind": "ability",
+                "text": "A habit: every 10th Seal, he hallows the whole team: every ally gains a great Shield.",
+                "effects": [
+                  {
+                    "trigger": "on_basic_attack",
+                    "every": 10,
+                    "type": "shield",
+                    "amount_bp_of_max_hp": 2000,
+                    "target": "all_allies"
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Shield given by Hallow",
+          "counts": "shield",
+          "from_ability": [
+            "hallow"
+          ],
+          "threshold": 1700
+        }
+      },
+      {
+        "_note": "Phase 8 part 5 (rebuild-phase8-severine-edric.md 8e-3c; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "reforged_ward",
+        "name": "Reforged Ward",
+        "title": "the ward that will not stay broken",
+        "fantasy": "Break his ward and it is there again before you lift the hammer.",
+        "vowed": {
+          "taste": "When any Shield on an ally breaks, they gain a new Shield of 2% of their max HP (once every 8s for each ally).",
+          "patch": {
+            "passives": [
+              {
+                "id": "reforge",
+                "name": "Reforge",
+                "kind": "ability",
+                "text": "When any Shield on an ally breaks, they gain a small new Shield, once in a while for each ally.",
+                "effects": [
+                  {
+                    "trigger": "on_ally_shield_broken",
+                    "type": "shield",
+                    "amount_bp_of_max_hp": 200,
+                    "target": "trigger_ally",
+                    "cooldown_per_unit_ms": 8000
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "When any Shield on an ally breaks, they gain a new Shield of 5% of their max HP, once every 4s for each ally. No snowball. The apex also gives +15% HP and MGK.",
+          "patch": {
+            "passives": [
+              {
+                "id": "reforge",
+                "name": "Reforge",
+                "kind": "ability",
+                "text": "When any Shield on an ally breaks, they gain a new Shield, once every few seconds for each ally.",
+                "effects": [
+                  {
+                    "trigger": "on_ally_shield_broken",
+                    "type": "shield",
+                    "amount_bp_of_max_hp": 500,
+                    "target": "trigger_ally",
+                    "cooldown_per_unit_ms": 4000
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Shield given by Reforge",
+          "counts": "shield",
+          "from_ability": [
+            "reforge"
+          ],
+          "threshold": 150
+        }
+      }
+    ]
+  },
+  {
+    "_note": "The economy maker (rebuild-heroes.md, section 8h, path 2; phase 8 part 5, 8e-3c). Tithe is paid by the run after a won day fight (TitheDef); its deed fills only in a run (Decision 3). First numbers.",
+    "id": "tithe_collector",
+    "hero": "edric",
+    "name": "Tithe-Collector",
+    "title": "the one who takes the rift's toll",
+    "fantasy": "The rift takes its toll, and he collects his share.",
+    "placement": "Where he keeps everyone standing: the toll is paid by every hero still up.",
+    "vowed": {
+      "taste": "Tithe: after a won fight, +1 shard for each hero still standing.",
+      "cost": "10% less DEF.",
+      "patch": {
+        "stats_bp": {
+          "def": 9000
+        }
+      },
+      "tithe": {
+        "per_standing": 1
+      }
+    },
+    "transformed": {
+      "text": "Tithe pays 2 shards for each hero still standing. Collection replaces Ward: every ally gains a Shield of 8% of their max HP, and each enemy that dies in the next 5s pays 1 shard, up to 3 a cast. Ward becomes a habit, every 8th Seal.",
+      "cost": "15% less max HP.",
+      "tithe": {
+        "per_standing": 2
+      },
+      "patch": {
+        "stats_bp": {
+          "hp": 8500
+        },
+        "signature": {
+          "id": "collection",
+          "name": "Collection",
+          "text": "He wards the whole team, and for a few seconds after, each enemy that dies pays a shard, up to 3.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "self",
+          "effects": [
+            {
+              "type": "shield",
+              "amount_bp_of_max_hp": 800,
+              "target": "all_allies"
+            },
+            {
+              "type": "apply_status",
+              "status": "collection",
+              "stacks": 3,
+              "duration_ms": 5000,
+              "target": "self"
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "collection_dues",
+            "name": "Collection",
+            "kind": "ability",
+            "text": "While Collection is open, each enemy that dies pays a shard.",
+            "effects": [
+              {
+                "trigger": "on_enemy_fell",
+                "type": "shards",
+                "amount": 1,
+                "target": "self",
+                "spends": "collection"
+              }
+            ]
+          },
+          {
+            "id": "ward",
+            "name": "Ward",
+            "kind": "ability",
+            "text": "A habit: every 8th Seal, he wards the whole team: every ally gains a Shield.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "shield",
+                "amount_bp_of_max_hp": 800,
+                "target": "all_allies"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Shards from Tithe",
+      "counts": "tithe",
+      "threshold": 12
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 5 (rebuild-phase8-severine-edric.md 8e-3c; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "golden_aegis",
+        "name": "Golden Aegis",
+        "title": "the ward bought with gold",
+        "fantasy": "The fuller his coffers, the thicker his wards, and every clean fight gilds them all.",
+        "vowed": {
+          "taste": "His signature also gives each ally 1 Shield for every 3 shards held.",
+          "patch": {
+            "passives": [
+              {
+                "id": "gilded_ward",
+                "name": "Gilded Ward",
+                "kind": "ability",
+                "text": "His signature also gives every ally a Shield for the shards the run holds.",
+                "effects": [
+                  {
+                    "trigger": "on_ability",
+                    "type": "shield",
+                    "amount": 0,
+                    "plus_per_shard_bp": 3333,
+                    "target": "all_allies"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Collection's Shields are 8% of max HP plus 2 for each shard held. Run snowball: each fight won with every hero standing gives every hero +1% max HP for the rest of the run. The apex also gives +15% HP and MGK.",
+          "patch": {
+            "signature": {
+              "id": "collection",
+              "name": "Collection",
+              "text": "He wards the whole team, more for every shard the run holds, and for a few seconds after, each enemy that dies pays a shard, up to 3.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "self",
+              "effects": [
+                {
+                  "type": "shield",
+                  "amount_bp_of_max_hp": 800,
+                  "target": "all_allies",
+                  "plus_per_shard_bp": 20000
+                },
+                {
+                  "type": "apply_status",
+                  "status": "collection",
+                  "stacks": 3,
+                  "duration_ms": 5000,
+                  "target": "self"
+                }
+              ]
+            },
+            "stats_bp": {
+              "hp": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "grows": {
+          "run_counts": "flawless",
+          "per": 1,
+          "team": true,
+          "each": {
+            "stats_bp": {
+              "hp": 10100
+            }
+          }
+        },
+        "deed": {
+          "text": "Shield given by Gilded Ward",
+          "counts": "shield",
+          "from_ability": [
+            "gilded_ward"
+          ],
+          "threshold": 300
+        }
+      },
+      {
+        "_note": "Phase 8 part 5 (rebuild-phase8-severine-edric.md 8e-3c; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "collector_of_debts",
+        "name": "Collector of Debts",
+        "title": "the ledger that never closes",
+        "fantasy": "The rift owes him for every hero it failed to take, and the debt compounds.",
+        "vowed": {
+          "taste": "Tithe pays 1 more shard if no hero fell.",
+          "tithe": {
+            "flawless_add": 1
+          }
+        },
+        "apex": {
+          "text": "Tithe pays 3 shards for each hero standing, and a fight with every hero standing pays 5 more. Run snowball: each such fight raises that bonus by 1 for the rest of the run, up to 15 more. The apex also gives +15% HP and MGK.",
+          "tithe": {
+            "per_standing": 3,
+            "flawless_add": 5,
+            "flawless_grows": 1,
+            "flawless_max": 15
+          },
+          "patch": {
+            "stats_bp": {
+              "hp": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "grows": {
+          "run_counts": "flawless",
+          "per": 1
+        },
+        "deed": {
+          "text": "Shards Tithe pays from fights won with every hero standing",
+          "counts": "tithe_flawless",
+          "threshold": 30
+        }
+      }
+    ]
+  },
+  {
+    "_note": "The mana maker (rebuild-heroes.md, section 8h, path 3; phase 8 part 5, 8e-3c). Tuned by build: Offering 8 mana a break (the design's 10), Vesper Ward 10 mana (its 25).",
+    "id": "psalmist",
+    "hero": "edric",
+    "name": "Psalmist",
+    "title": "the one who sings over broken wards",
+    "fantasy": "Every ward that shatters becomes a breath of power.",
+    "placement": "Behind front-liners who take hits: their Shields break most.",
+    "vowed": {
+      "taste": "Offering: when any Shield on an ally breaks, that ally gains 5 mana.",
+      "cost": "10% less MGK.",
+      "patch": {
+        "stats_bp": {
+          "mgk": 9000
+        },
+        "passives": [
+          {
+            "id": "offering",
+            "name": "Offering",
+            "kind": "ability",
+            "text": "When any Shield on an ally breaks, that ally gains a little mana.",
+            "effects": [
+              {
+                "trigger": "on_ally_shield_broken",
+                "type": "gain_mana",
+                "amount": 5,
+                "target": "trigger_ally"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "A breaking Shield gives its ally 8 mana, and allies gain mana 10% faster while they have any Shield. Vesper Ward replaces Ward: every ally gains a Shield of 7.5% of their max HP and 10 mana. Ward becomes a habit, every 8th Seal.",
+      "cost": "Vesper Ward's Shields are 25% smaller than its 10%.",
+      "patch": {
+        "signature": {
+          "id": "vesper_ward",
+          "name": "Vesper Ward",
+          "text": "He sings over the whole team: every ally gains a Shield and mana.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "self",
+          "effects": [
+            {
+              "type": "shield",
+              "amount_bp_of_max_hp": 750,
+              "target": "all_allies"
+            },
+            {
+              "type": "gain_mana",
+              "amount": 10,
+              "target": "all_allies"
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "offering",
+            "name": "Offering",
+            "kind": "ability",
+            "text": "When any Shield on an ally breaks, that ally gains mana.",
+            "effects": [
+              {
+                "trigger": "on_ally_shield_broken",
+                "type": "gain_mana",
+                "amount": 8,
+                "target": "trigger_ally"
+              }
+            ]
+          },
+          {
+            "id": "psalm",
+            "name": "Psalm",
+            "kind": "aura",
+            "text": "Allies gain mana faster while they have any Shield.",
+            "aura": {
+              "target": "all_allies",
+              "stat": "mana_gain_bp",
+              "value": 11000,
+              "only": {
+                "keywords": [
+                  "shielded"
+                ]
+              }
+            }
+          },
+          {
+            "id": "ward",
+            "name": "Ward",
+            "kind": "ability",
+            "text": "A habit: every 8th Seal, he wards the whole team: every ally gains a Shield.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "shield",
+                "amount_bp_of_max_hp": 800,
+                "target": "all_allies"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Mana given by Offering",
+      "counts": "mana_given",
+      "from_ability": [
+        "offering"
+      ],
+      "threshold": 120
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 5 (rebuild-phase8-severine-edric.md 8e-3c; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "choir_of_wards",
+        "name": "Choir of Wards",
+        "title": "the choir in the breaking",
+        "fantasy": "Every ward that shatters rings like a bell, and the whole line sings.",
+        "vowed": {
+          "taste": "Offering gives 11 mana, not 8.",
+          "patch": {
+            "passives": [
+              {
+                "id": "offering",
+                "name": "Offering",
+                "kind": "ability",
+                "text": "When any Shield on an ally breaks, that ally gains more mana.",
+                "effects": [
+                  {
+                    "trigger": "on_ally_shield_broken",
+                    "type": "gain_mana",
+                    "amount": 11,
+                    "target": "trigger_ally"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "A breaking Shield gives its ally 20 mana and +10% ATK and MGK for 3s. No snowball. The apex also gives +15% HP and MGK.",
+          "patch": {
+            "passives": [
+              {
+                "id": "offering",
+                "name": "Offering",
+                "kind": "ability",
+                "text": "When any Shield on an ally breaks, that ally gains a lot of mana and strikes harder for a moment.",
+                "effects": [
+                  {
+                    "trigger": "on_ally_shield_broken",
+                    "type": "gain_mana",
+                    "amount": 20,
+                    "target": "trigger_ally"
+                  },
+                  {
+                    "trigger": "on_ally_shield_broken",
+                    "type": "apply_status",
+                    "status": "choir",
+                    "target": "trigger_ally"
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Mana given by Offering",
+          "counts": "mana_given",
+          "from_ability": [
+            "offering"
+          ],
+          "threshold": 200
+        }
+      },
+      {
+        "_note": "Phase 8 part 5 (rebuild-phase8-severine-edric.md 8e-3c; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "evensong",
+        "name": "Evensong",
+        "title": "the hymn at every casting",
+        "fantasy": "Whenever one of them calls on their power, he answers with a ward for everyone.",
+        "vowed": {
+          "taste": "When an ally fires a signature, they gain a Shield of 3% of their max HP.",
+          "patch": {
+            "passives": [
+              {
+                "id": "evensong",
+                "name": "Evensong",
+                "kind": "ability",
+                "text": "When an ally fires a signature, they gain a Shield.",
+                "effects": [
+                  {
+                    "trigger": "on_ally_ability",
+                    "type": "shield",
+                    "amount_bp_of_max_hp": 300,
+                    "target": "hit_target"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "When any ally fires a signature, every ally gains a Shield of 10% of their max HP. No snowball. The apex also gives +15% HP and MGK.",
+          "patch": {
+            "passives": [
+              {
+                "id": "evensong",
+                "name": "Evensong",
+                "kind": "ability",
+                "text": "When any ally fires a signature, every ally gains a Shield.",
+                "effects": [
+                  {
+                    "trigger": "on_ally_ability",
+                    "type": "shield",
+                    "amount_bp_of_max_hp": 1000,
+                    "target": "all_allies"
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Shield given by Evensong",
+          "counts": "shield",
+          "from_ability": [
+            "evensong"
+          ],
+          "threshold": 230
+        }
+      }
+    ]
   }
 ]

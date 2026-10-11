@@ -832,7 +832,7 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 			apex_vows[hero.id] = hero.apex
 			if hero.apex_earned:
 				apexed.append(hero.id)
-		var mods: Array[KitMod] = run.upgrade_mods(hero)
+		var mods: Array[KitMod] = run.upgrade_mods(hero, state.shards)
 		mods.append_array(run.loadout_mods(state, hero))
 		mods.append_array(run.relic_mods(state, run.hero_kit(hero)))
 		if shared_mods.has(hero.id):
@@ -894,6 +894,8 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 			_endless_rules(setup)
 		_modify_enemies(setup, hunting, errors)
 		_relic_rules(setup)
+		# The shards held, for what reads them (phase 8 part 5, Golden Aegis).
+		setup.shards = state.shards
 		if not hunting and state.dig_in and state.rock.size() == 2:
 			setup.rocks.append(Vector2i(state.rock[0], state.rock[1]))
 		errors.append_array(setup.validate(content))
@@ -948,7 +950,7 @@ func _kit_without_covenant(hero_id: String) -> UnitDef:
 func kit_of(hero_id: String, with_covenant: bool = true) -> UnitDef:
 	var hero: RunState.Hero = state.hero(hero_id)
 	var kit: UnitDef = run.hero_kit(hero)
-	var mods: Array[KitMod] = run.upgrade_mods(hero)
+	var mods: Array[KitMod] = run.upgrade_mods(hero, state.shards)
 	mods.append_array(run.loadout_mods(state, hero))
 	mods.append_array(run.relic_mods(state, kit))
 	if with_covenant:
@@ -1079,11 +1081,23 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 	fought.seconds = result.end_tick / FixedMath.TICKS_PER_SECOND
 	fought.habits = RiftLearns.summary(run, state, formation, result)
 	state.fought.append(fought)
+	# Edric's run pieces (phase 8 part 5): what Collection gathered (any
+	# fight), and each Tithe after a won day fight; their deeds count it.
+	var flawless: bool = won and _fallen(result) == 0
+	var tithes: Dictionary[String, int] = {}
+	if won and not hunting:
+		tithes = _tithes(result, encounter_id)
+	fought.collected = _collected(result)
+	for paid: int in tithes.values():
+		fought.tithe += paid
 	for hero: RunState.Hero in state.heroes:
 		# An oath doubles what the fight puts into its hero's deeds (step 8c).
 		var oath: EventDef.Oath = oath_of(hero) if not hunting else null
 		for path_id: String in hero.deeds:
 			var amount: int = result.deed_amount(hero.id, path_id)
+			var deed: DeedDef = _deed_of(path_id)
+			if deed != null and deed.by_the_run():
+				amount = tithes.get(hero.id, 0) if deed.counts == DeedDef.Counts.TITHE or flawless else 0
 			hero.deeds[path_id] += FixedMath.apply_bp(amount, oath.deed_bp) if oath != null else amount
 	_grow(result)
 	_rank_items(formation, result, won)
@@ -1108,6 +1122,7 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 	for bond: BondDef in run.active_bonds(state):
 		if not state.bonds_found.has(bond.id):
 			state.bonds_found.append(bond.id)
+	state.shards += fought.collected
 	if hunting:
 		state.hunt = ""
 		if won:
@@ -1146,9 +1161,13 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 	state.rested = false
 	var tier: String = run.content.encounters[state.chosen].tier
 	state.shards += act.pay[tier] + run.relic_sum(state, "pay_add") + (run.relic_sum(state, "elite_pay_add") if tier == "elite" else 0)
+	state.shards += fought.tithe
 	_streak(result)
 	if tier == "elite":
 		_grow_by_run("elite_wins")
+	_grow_by_run("wins")
+	if flawless:
+		_grow_by_run("flawless")
 	state.phase = RunState.Phase.AFTER
 	state.relic_choice_price = 0
 	if run.day_kind(state, state.day) == "boss":
@@ -1178,7 +1197,8 @@ func _streak(result: FightResult) -> void:
 
 
 ## Adds one to every held relic that grows with what the run counts as
-## `what` (Tally of the Dead: "elite_wins").
+## `what` (Tally of the Dead: "elite_wins"), and (phase 8 part 5) every
+## hero's held card and earned apex that does ("wins", "flawless").
 func _grow_by_run(what: String) -> void:
 	for id: String in state.relics:
 		var relic: RelicDef = run.relics.get(id)
@@ -1188,6 +1208,59 @@ func _grow_by_run(what: String) -> void:
 		state.growth[id] = before + 1
 		if relic.grows.steps(state.growth[id]) > relic.grows.steps(before) and not state.grew.has(":" + id):
 			state.grew.append(":" + id)
+	for hero: RunState.Hero in state.heroes:
+		for upgrade: UpgradeDef in run.held_upgrades(hero):
+			if upgrade.grows != null and upgrade.grows.run_counts == what:
+				_step_hero(hero, upgrade.id, upgrade.grows)
+		var apex: ApexDef = run.earned_apex(hero)
+		if apex != null and apex.grows != null and apex.grows.run_counts == what:
+			_step_hero(hero, RunContent.apex_growth_key(apex), apex.grows)
+
+
+func _step_hero(hero: RunState.Hero, key: String, grows: GrowthDef) -> void:
+	var before: int = hero.growth.get(key, 0)
+	hero.growth[key] = before + 1
+	var note: String = "%s:%s" % [hero.id, key]
+	if grows.steps(hero.growth[key]) > grows.steps(before) and not state.grew.has(note):
+		state.grew.append(note)
+
+
+## How many of the team are down at the fight's end.
+func _fallen(result: FightResult) -> int:
+	return result.down_at_end().filter(func(hero_id: String) -> bool: return state.hero(hero_id) != null).size()
+
+
+## Each hero's Tithe after this won day fight (phase 8 part 5): hero id ->
+## shards, for those with one.
+func _tithes(result: FightResult, encounter_id: String) -> Dictionary[String, int]:
+	var paid: Dictionary[String, int] = {}
+	var fallen: int = _fallen(result)
+	var tier: String = run.content.encounters[encounter_id].tier
+	for hero: RunState.Hero in state.heroes:
+		var tithe: TitheDef = run.tithe(hero)
+		if tithe == null:
+			continue
+		var apex: ApexDef = run.earned_apex(hero)
+		var flawless_count: int = hero.growth.get(RunContent.apex_growth_key(apex), 0) if apex != null and apex.grows != null else 0
+		paid[hero.id] = tithe.pays(state.heroes.size() - fallen, fallen, tier, flawless_count, run.tithe_steps(hero))
+	return paid
+
+
+## The shards the heroes' effects gathered in a fight (Collection's SHARDS
+## lines).
+func _collected(result: FightResult) -> int:
+	var total: int = 0
+	for entry: LogEntry in result.combat_log.of_kind(LogEntry.Kind.SHARDS):
+		if state.hero(entry.source_unit) != null:
+			total += entry.amount
+	return total
+
+
+## A path's or an apex's deed by its id (null: neither).
+func _deed_of(key: String) -> DeedDef:
+	if run.content.paths.has(key):
+		return run.content.paths[key].deed
+	return run.content.apexes[key].deed if run.content.apexes.has(key) else null
 
 
 ## A pick's cards at `visit` (Widened Offering adds some), and how many of

@@ -34,6 +34,10 @@ extends RefCounted
 ##       "duration_add_ms": 2000,         area's, a wall's), times this, plus this
 ##       "radius_add": 1,                 their areas' size, in hexes
 ##       "cooldown_bp": 9000,             the ability's cooldown, times this
+##                                        (and, phase 8 part 5, an on_interval
+##                                        effect's interval and an event
+##                                        effect's cooldowns: Quick Hallow,
+##                                        Quick Forge)
 ##       "add_effects": [...EffectDefs...],   appended to the ability
 ##       "after_add_ms": -500}],          the passive's aura: how long unmoved
 ##                                        (or planted) before it holds
@@ -248,7 +252,7 @@ class AbilityChange:
 			or strength_add_bp != 0 or follows or ricochet_add != 0 or reflect_bp != 0 or snags \
 			or per_enemy_add_bp != 0 or overheal_max_hp_add != 0 or at_stacks_add != 0 or per_taken_add_bp != 0 or holder != null or carries \
 			or ignores_def or prefer != null and not ability_id.is_empty() or per_stack_add_bp != 0 or within_add != 0 or count_add != 0 \
-			or lifesteal_add_bp != 0 or plus_max_hp_add_bp != 0 or follows_holder or raise_grow_add_bp != 0
+			or lifesteal_add_bp != 0 or plus_max_hp_add_bp != 0 or follows_holder or raise_grow_add_bp != 0 or cooldown_bp != FixedMath.BP_ONE
 
 	func touches(effect: EffectDef) -> bool:
 		if not at.is_empty() and not at.has(effect.target):
@@ -889,6 +893,13 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 			for stat: int in copy.scaling.size():
 				copy.scaling[stat] = FixedMath.apply_bp(copy.scaling[stat], change.amount_bp)
 		if change.touches(effect):
+			if change.cooldown_bp != FixedMath.BP_ONE:
+				if copy.interval_ticks > 0:
+					copy.interval_ticks = maxi(FixedMath.apply_bp(copy.interval_ticks, change.cooldown_bp), 1)
+				if copy.cooldown_ticks > 0:
+					copy.cooldown_ticks = maxi(FixedMath.apply_bp(copy.cooldown_ticks, change.cooldown_bp), 1)
+				if copy.cooldown_per_unit_ticks > 0:
+					copy.cooldown_per_unit_ticks = maxi(FixedMath.apply_bp(copy.cooldown_per_unit_ticks, change.cooldown_bp), 1)
 			if copy.duration_ticks > 0:
 				copy.duration_ticks = maxi(FixedMath.apply_bp(copy.duration_ticks, change.duration_bp) + change.duration_add_ticks, 1)
 			if copy.zone_ticks > 0:

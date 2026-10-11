@@ -198,6 +198,56 @@
         "leech_tooth"
       ],
       "note": "test-teams.md #11; Vell's heals push her back above half her HP"
+    },
+    {
+      "name": "Hallowed Wall",
+      "path": "aegis",
+      "type": "enabler",
+      "team": {
+        "edric": "aegis",
+        "garrow": "aegisfang",
+        "vell": "wardweaver"
+      },
+      "relics": [
+        "wardens_engine",
+        "shattered_aegis",
+        "tithe_of_iron"
+      ],
+      "swap": "base",
+      "note": "test-teams.md #7; lift against Edric on base, since he has no self-sufficient path (rebuild-phase8-heroes.md Decision 17)"
+    },
+    {
+      "name": "Hymnal",
+      "path": "psalmist",
+      "type": "enabler",
+      "team": {
+        "edric": "psalmist",
+        "aldous": "chorister",
+        "vell": "vigil_keeper"
+      },
+      "relics": [
+        "echoing_bell",
+        "hollow_drum",
+        "rift_candle"
+      ],
+      "swap": "base",
+      "note": "test-teams.md #15; lift against Edric on base (Decision 17)"
+    },
+    {
+      "name": "Toll",
+      "path": "tithe_collector",
+      "type": "long-game",
+      "team": {
+        "edric": "tithe_collector",
+        "brannoc": "hearthwall",
+        "maren": "deadeye"
+      },
+      "relics": [
+        "tithe_of_iron",
+        "keen_edge",
+        "bone_dice"
+      ],
+      "note": "long-game: judged by its shards over a run (rebuild-phase8-severine-edric.md section 8); in a fight only its floor"
     }
   ]
 }

@@ -859,6 +859,49 @@ def edric_base(uid):
     return "".join(o)
 
 
+def edric_aegis(uid):
+    """Wards on everyone: a great shield of light held up, rings of ward around him, gilded vestments."""
+    o = [shadow(84), f'<circle cx="150" cy="300" r="150" fill="{AQUA}" opacity="0.10" filter="url(#bloom)"/>',
+         edric_robe(uid, trim=GOLD),
+         limb((126, 210), (104, 270), 20, 16, VESTMENT_DK), circle(102, 274, 8, SKIN, 2),
+         P("M66,236 L112,224 L120,300 C108,330 82,330 70,300 Z", BRONZE, 2.4), P("M78,248 L106,240 L110,294 C102,312 86,312 80,294 Z", VESTMENT, 1.6),
+         rune(94, 276, 9, color=GOLD),
+         edric_head(),
+         limb((176, 208), (218, 256), 20, 16, VESTMENT_DK), circle(220, 260, 8, SKIN, 2),
+         seal_stamp(222, 236), ward_ring(150, 300, 120, op=0.30), ward_ring(94, 276, 44, op=0.45)]
+    return "".join(o)
+
+
+def edric_tithe_collector(uid):
+    """The toll-taker: a heavy ledger open on one arm, a coin purse and shards at his belt, a darker stole."""
+    shards = "".join(f'<path d="M{x},{y} l6,-12 l6,12 l-6,6 Z" fill="{AQUA}" stroke="{INK}" stroke-width="1.4" opacity="0.9"/>' for x, y in ((112, 330), (128, 336), (172, 332)))
+    o = [shadow(78), edric_robe(uid, color=VESTMENT_DK, trim=TITHE_BLUE),
+         P("M118,316 L182,316 L182,328 L118,328 Z", LEATHER_DK, 2), shards,
+         circle(150, 344, 12, BRONZE, 2), rune(150, 344, 5, color=GOLD),
+         limb((126, 210), (100, 258), 20, 16, VESTMENT_DK), circle(98, 262, 8, SKIN, 2),
+         P("M62,236 L104,246 L104,288 L62,278 Z", LEATHER_DK, 2.4), P("M66,240 L101,249 L101,284 L66,275 Z", BONE, 1.4),
+         "".join(f'<path d="M70,{y} L98,{y + 6}" stroke="{INK}" stroke-width="1.2" opacity="0.6"/>' for y in (252, 260, 268)),
+         edric_head(),
+         limb((176, 208), (218, 258), 20, 16, VESTMENT_DK), circle(220, 262, 8, SKIN, 2),
+         seal_stamp(222, 238), rim("M182,212 L196,480", color=GOLD, w=2)]
+    return "".join(o)
+
+
+def edric_psalmist(uid):
+    """A singer of vespers: an open psalter in both hands, notes of light rising, a pale blue stole."""
+    notes = "".join(f'<circle cx="{x}" cy="{y}" r="5" fill="{AQUA}" opacity="0.75" filter="url(#glow)"/>'
+                    f'<path d="M{x + 4},{y} l0,-16 l8,4" fill="none" stroke="{AQUA}" stroke-width="2" opacity="0.75"/>' for x, y in ((112, 96), (186, 82), (150, 70)))
+    o = [shadow(78), edric_robe(uid, trim="#6f9fd0"),
+         limb((126, 210), (132, 262), 20, 16, VESTMENT_DK),
+         limb((176, 210), (168, 262), 20, 16, VESTMENT_DK),
+         P("M114,246 L150,256 L186,246 L186,284 L150,294 L114,284 Z", LEATHER_DK, 2.4),
+         P("M118,250 L148,259 L148,288 L118,280 Z", BONE, 1.4), P("M152,259 L182,250 L182,280 L152,288 Z", BONE, 1.4),
+         circle(132, 272, 8, SKIN, 2), circle(168, 272, 8, SKIN, 2),
+         edric_head(), notes,
+         f'<circle cx="150" cy="268" r="40" fill="{AQUA}" opacity="0.12" filter="url(#bloom)"/>']
+    return "".join(o)
+
+
 HEROES = [
     ("maren", "Maren", [("base", "Base", maren_base), ("deadeye", "Deadeye", maren_deadeye),
                         ("trapper", "Trapper", maren_trapper), ("volley", "Volley", maren_volley)]),
@@ -874,7 +917,8 @@ HEROES = [
                           ("windcaller", "Windcaller", aldous_windcaller), ("bellwarden", "Bellwarden", aldous_bellwarden)]),
     ("severine", "Severine", [("base", "Base", severine_base), ("bloodglut", "Bloodglut", severine_bloodglut),
                               ("plaguebearer", "Plaguebearer", severine_plaguebearer), ("hemomancer", "Hemomancer", severine_hemomancer)]),
-    ("edric", "Edric", [("base", "Base", edric_base)]),
+    ("edric", "Edric", [("base", "Base", edric_base), ("aegis", "Aegis", edric_aegis),
+                      ("tithe_collector", "Tithe-Collector", edric_tithe_collector), ("psalmist", "Psalmist", edric_psalmist)]),
 ]
 
 FILTERS = ('<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4" result="b"/>'

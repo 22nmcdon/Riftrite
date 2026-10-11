@@ -23,6 +23,14 @@ var vowed_patch: KitPatch
 ## What the apex brings.
 var text: String
 var apex_patch: KitPatch
+## Its Tithe's taste (added to its path's transformed one while vowed) and
+## its own once earned (phase 8 part 5, Collector of Debts; null: none).
+var vowed_tithe: TitheDef = null
+var apex_tithe: TitheDef = null
+## A run snowball (phase 8 part 5: Golden Aegis, Collector of Debts): a
+## growth on what the run counts ("run_counts"), from when it's earned; its
+## steps' mod goes to its hero, or every hero with "team" (null: none).
+var grows: GrowthDef = null
 var deed: DeedDef
 ## Built by ContentDb (null until then).
 var vowed_kit: UnitDef = null
@@ -39,14 +47,20 @@ static func read(reader: DataReader, path_id: String) -> ApexDef:
 	var vowed: DataReader = reader.req_object("vowed")
 	if vowed != null:
 		def.taste = vowed.req_string("taste")
-		var patch: DataReader = vowed.req_object("patch")
+		# A taste that's only a Tithe needs no patch (phase 8 part 5,
+		# Collector of Debts).
+		var patch: DataReader = vowed.req_object("patch") if vowed.has("patch") or not vowed.has("tithe") else null
 		def.vowed_patch = KitPatch.read(patch) if patch != null else KitPatch.make()
+		var tithe: DataReader = vowed.req_object("tithe") if vowed.has("tithe") else null
+		def.vowed_tithe = TitheDef.read(tithe) if tithe != null else null
 		vowed.finish()
 	var apex: DataReader = reader.req_object("apex")
 	if apex != null:
 		def.text = apex.req_string("text")
 		var patch: DataReader = apex.req_object("patch")
 		def.apex_patch = KitPatch.read(patch) if patch != null else KitPatch.make()
+		var tithe: DataReader = apex.req_object("tithe") if apex.has("tithe") else null
+		def.apex_tithe = TitheDef.read(tithe) if tithe != null else null
 		apex.finish()
 	if def.vowed_patch == null:
 		def.vowed_patch = KitPatch.make()
@@ -54,6 +68,11 @@ static func read(reader: DataReader, path_id: String) -> ApexDef:
 		def.apex_patch = KitPatch.make()
 	var deed_reader: DataReader = reader.req_object("deed")
 	def.deed = DeedDef.read(deed_reader) if deed_reader != null else DeedDef.new()
+	var grows: DataReader = reader.req_object("grows") if reader.has("grows") else null
+	if grows != null:
+		def.grows = GrowthDef.read(grows)
+		if def.grows.counted_in_fights():
+			reader.error("an apex grows with what the run counts (\"run_counts\")")
 	reader.finish()
 	return def
 

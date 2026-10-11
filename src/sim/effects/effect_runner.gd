@@ -227,7 +227,10 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 		EffectDef.Type.GAIN_MAX_HP:
 			gain_max_hp(sim, victim, amount, source)
 		EffectDef.Type.SHARDS:
-			# Collection (phase 8 part 5): shards for the run, from this fight.
+			# Collection (phase 8 part 5): shards for the run, from this fight,
+			# each spending a stack of its window while one is left.
+			if not effect.spends.is_empty() and not Statuses.spend_stack(sim, unit, effect.spends):
+				return
 			var paid: LogEntry = sim.new_entry(LogEntry.Kind.SHARDS, source)
 			paid.target = unit.id
 			paid.amount = amount

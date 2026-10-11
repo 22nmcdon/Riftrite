@@ -29,7 +29,8 @@ extends RefCounted
 ##             timed boosts). "stacking": true (step 5c): each application
 ##             adds a stack with its own timer (no duration_ms: it lasts the
 ##             fight), the auras count once per stack, and "max_stacks"
-##             (optional) drops the oldest past it
+##             (optional) drops the oldest past it; an apply_status's
+##             "stacks" adds that many at once (phase 8 part 5, Collection)
 ##             "signature_power_bp": 3000 (phase 8 part 4, Grand Chorus):
 ##             its holder's next signature has that much more power, and it
 ##             ends as that signature fires ("auras" optional then)

@@ -212,7 +212,7 @@ func upgrades_for(hero: RunState.Hero) -> Array[String]:
 ## not): its mod touches it, and an added passive can fire on it; a growing
 ## card's counting can count there; a stacking card always does.
 func changes_something(upgrade: UpgradeDef, transformed: bool, kit: UnitDef) -> bool:
-	if upgrade.stacks():
+	if upgrade.stacks() or upgrade.tithe != null:
 		return true
 	var mod: KitMod = upgrade.mod_for(transformed)
 	if mod != null and (mod.affects_besides_passives(kit) or mod.passives.any(func(part: PartDef) -> bool: return _passive_can_fire(part, kit))):
@@ -254,10 +254,14 @@ func _can_count(counts: DeedDef, kit: UnitDef) -> bool:
 ## or path card only while the hero is on that path); a growing one's, its
 ## steps so far (phase 5c step 4); a stacking one's, each take's locked
 ## amount (step 7).
-func upgrade_mods(hero: RunState.Hero) -> Array[KitMod]:
+func upgrade_mods(hero: RunState.Hero, shards: int = -1) -> Array[KitMod]:
 	var mods: Array[KitMod] = []
 	var takes: Dictionary[String, int] = {}
 	for upgrade: UpgradeDef in held_upgrades(hero):
+		# Ward Tax (phase 8 part 5): only while the run holds its shards
+		# (`shards` -1: as if it does, for what the card would change).
+		if upgrade.needs_shards > 0 and shards >= 0 and shards < upgrade.needs_shards:
+			continue
 		if upgrade.stacks():
 			var take: int = takes.get(upgrade.id, 0)
 			takes[upgrade.id] = take + 1
@@ -268,11 +272,59 @@ func upgrade_mods(hero: RunState.Hero) -> Array[KitMod]:
 		var mod: KitMod = upgrade.mod_for(hero.transformed)
 		if mod != null:
 			mods.append(mod)
-		if upgrade.grows != null:
+		if upgrade.grows != null and not upgrade.grows.team:
 			var grown: KitMod = upgrade.grows.mod_for(hero.growth.get(upgrade.id, 0))
 			if grown != null:
 				mods.append(grown)
+	# Its earned apex's run snowball, if it's its own (phase 8 part 5).
+	var apex: ApexDef = earned_apex(hero)
+	if apex != null and apex.grows != null and not apex.grows.team:
+		var grown: KitMod = apex.grows.mod_for(hero.growth.get(apex_growth_key(apex), 0))
+		if grown != null:
+			mods.append(grown)
 	return mods
+
+
+## The apex `hero` has earned, or null.
+func earned_apex(hero: RunState.Hero) -> ApexDef:
+	if not hero.transformed or hero.apex.is_empty() or not hero.apex_earned:
+		return null
+	return content.paths[hero.path].apex(hero.apex)
+
+
+## Where an apex's run snowball keeps its count (RunState.Hero.growth).
+static func apex_growth_key(apex: ApexDef) -> String:
+	return "apex:" + apex.id
+
+
+## `hero`'s Tithe now (phase 8 part 5, TitheDef), or null: its path's at its
+## stage (its vowed apex's taste added on, or its earned apex's own in its
+## place), with its held cards' added on.
+func tithe(hero: RunState.Hero) -> TitheDef:
+	var path: PathDef = content.paths[hero.path]
+	var stage: TitheDef = path.transformed_tithe if hero.transformed else path.vowed_tithe
+	var apex: ApexDef = path.apex(hero.apex) if hero.transformed and not hero.apex.is_empty() else null
+	if apex != null and hero.apex_earned:
+		stage = apex.apex_tithe if apex.apex_tithe != null else stage
+	elif apex != null and apex.vowed_tithe != null:
+		stage = apex.vowed_tithe.merged(stage)
+	if stage == null:
+		return null
+	var sum: TitheDef = stage.merged(null)
+	for upgrade: UpgradeDef in held_upgrades(hero):
+		if upgrade.tithe != null:
+			sum = sum.merged(upgrade.tithe)
+	return sum
+
+
+## The shards `hero`'s Tithe cards' growth adds a win (Ledger of Debts: its
+## per_step for each step so far).
+func tithe_steps(hero: RunState.Hero) -> int:
+	var paid: int = 0
+	for upgrade: UpgradeDef in held_upgrades(hero):
+		if upgrade.tithe != null and upgrade.tithe.per_step > 0 and upgrade.grows != null:
+			paid += upgrade.tithe.per_step * upgrade.grows.steps(hero.growth.get(upgrade.id, 0))
+	return paid
 
 
 ## What taking stacking card `upgrade` now locks in for `hero` (section
@@ -413,6 +465,19 @@ func relic_mods(state: RunState, kit: UnitDef = null) -> Array[KitMod]:
 		var worked_out: KitMod = _worked_out(relics[id], state)
 		if worked_out != null:
 			mods.append(worked_out)
+	# Team growths (phase 8 part 5: Golden Aegis's run snowball, Gold Leaf):
+	# a hero's card or earned apex whose steps go to every hero.
+	for hero: RunState.Hero in state.heroes:
+		for upgrade: UpgradeDef in held_upgrades(hero):
+			if upgrade.grows != null and upgrade.grows.team:
+				var grown: KitMod = upgrade.grows.mod_for(hero.growth.get(upgrade.id, 0))
+				if grown != null:
+					mods.append(grown)
+		var apex: ApexDef = earned_apex(hero)
+		if apex != null and apex.grows != null and apex.grows.team:
+			var grown: KitMod = apex.grows.mod_for(hero.growth.get(apex_growth_key(apex), 0))
+			if grown != null:
+				mods.append(grown)
 	return mods
 
 

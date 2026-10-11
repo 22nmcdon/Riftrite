@@ -112,9 +112,14 @@ class Fought:
 	## What the fight counted toward the rift learns' measures (phase 8 part
 	## 3, RiftLearns.summary): measure -> amount, only those above 0.
 	var habits: Dictionary[String, int] = {}
+	## Shards it paid besides its tier's (phase 8 part 5): Tithe's, and
+	## those Collection gathered in it.
+	var tithe: int = 0
+	var collected: int = 0
 
 	func to_dict() -> Dictionary:
-		return {"act": act, "day": day, "attempt": attempt, "encounter": encounter, "outcome": int(outcome), "seconds": seconds, "habits": habits.duplicate()}
+		return {"act": act, "day": day, "attempt": attempt, "encounter": encounter, "outcome": int(outcome), "seconds": seconds, "habits": habits.duplicate(),
+			"tithe": tithe, "collected": collected}
 
 	static func from_dict(data: Dictionary) -> Fought:
 		var fought := Fought.new()
@@ -124,6 +129,8 @@ class Fought:
 		fought.encounter = str(data.get("encounter", ""))
 		fought.outcome = int(data.get("outcome", 0)) as FightResult.Outcome
 		fought.seconds = int(data.get("seconds", 0))
+		fought.tithe = int(data.get("tithe", 0))
+		fought.collected = int(data.get("collected", 0))
 		var habits: Variant = data.get("habits", {})
 		if habits is Dictionary:
 			for measure: Variant in (habits as Dictionary):

@@ -52,7 +52,9 @@ func test_the_upgrades_load() -> void:
 	assert_true(_run.is_valid(), "\n".join(_run.errors))
 	for path_id: String in _run.content.path_ids:
 		var cards: Array[String] = _run.upgrade_ids.filter(func(id: String) -> bool: return _run.upgrades[id].path == path_id)
-		assert_eq(cards.filter(func(id: String) -> bool: return _run.upgrades[id].grows != null).size(), 1, "%s has one card that grows" % path_id)
+		# Apex cards aside (Gold Leaf grows too; phase 8 part 5).
+		assert_eq(cards.filter(func(id: String) -> bool: return _run.upgrades[id].grows != null and _run.upgrades[id].layer != UpgradeDef.Layer.APEX).size(), 1,
+			"%s has one card that grows" % path_id)
 		assert_eq(_run.upgrades[cards[0]].hero, _run.content.paths[path_id].hero, "a path's card is its hero's")
 		assert_gt(_run.content.paths[path_id].deed.threshold, 0, "%s's deed has a threshold" % path_id)
 	# A hero's cards come with its paths (phase 8 part 4).

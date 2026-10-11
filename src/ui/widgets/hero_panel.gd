@@ -556,6 +556,9 @@ func _deed_line(deed: DeedDef, key: String, font_size: int) -> HBoxContainer:
 	row.add_child(_wrapped("Deed: " + deed.text, font_size - 1, UiStyle.TEXT_DIM))
 	var amount: int = session.last_deed(showing, key)
 	var said: String = "no fight yet" if amount < 0 else "last fight: %s" % UnitInfo.deed_amount_text(deed, amount)
+	if deed.by_the_run():
+		# Shards from Tithe (phase 8 part 5, Decision 3): only a run fills it.
+		said = "counted in a run"
 	if session is RunSession:
 		said = "%s / %s" % [UnitInfo.deed_amount_text(deed, maxi(amount, 0)), UnitInfo.deed_amount_text(deed, deed.threshold)]
 	var last: Label = UiStyle.strong(said, font_size - 1, UiStyle.ACCENT_TEXT)

@@ -99,5 +99,25 @@
       "lanternbearer"
     ],
     "relic": "the_lamp_of_ichor"
+  },
+  {
+    "id": "watched_over",
+    "name": "Watched Over",
+    "text": "He wards the one who stands last.",
+    "paths": [
+      "aegis",
+      "last_watch"
+    ],
+    "relic": "the_last_ward"
+  },
+  {
+    "id": "psalm_and_chorus",
+    "name": "Psalm and Chorus",
+    "text": "Every broken ward is a note; the bell carries it.",
+    "paths": [
+      "psalmist",
+      "chorister"
+    ],
+    "relic": "the_psalter"
   }
 ]
