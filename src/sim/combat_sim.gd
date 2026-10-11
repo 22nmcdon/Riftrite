@@ -905,6 +905,9 @@ func apply_damage_vs_shield(target: UnitState, amount: int, vs_shield_bp: int) -
 	if vs_shield_bp <= 0 or target.shield <= 0:
 		target.hp = maxi(target.hp - amount, 0)
 		return 0
+	# Hallowed Ground (phase 8 part 5): its Shield absorbs more.
+	if target.aura_bp[AuraDef.Stat.SHIELD_ABSORB_BP] > 0:
+		vs_shield_bp = maxi(FixedMath.mul_div(vs_shield_bp, FixedMath.BP_ONE, FixedMath.BP_ONE + target.aura_bp[AuraDef.Stat.SHIELD_ABSORB_BP]), 1)
 	var shield_cost: int = FixedMath.apply_bp(amount, vs_shield_bp)
 	if target.shield >= shield_cost:
 		target.shield -= shield_cost

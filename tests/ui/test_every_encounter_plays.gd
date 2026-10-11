@@ -65,6 +65,7 @@ const FORMS: Dictionary[LogEntry.Kind, String] = {
 	LogEntry.Kind.MANA_GIVEN: "the mana bar fills (from the unit's state)",
 	LogEntry.Kind.HP_SPENT: "a blood-red \"-N\" number on the unit",
 	LogEntry.Kind.MAX_HP_DOWN: "a blood-red \"-N max\" number on the unit",
+	LogEntry.Kind.SHARDS: "a gold \"+N shards\" over the unit",
 }
 ## What the board must have shown at some frame, for each kind a fight
 ## produced (the rest are checked elsewhere, or read from the unit's state).

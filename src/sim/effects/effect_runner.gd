@@ -204,6 +204,9 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 		EffectDef.Type.SHIELD:
 			if effect.amount_bp_of_max_hp > 0:
 				amount = FixedMath.apply_bp(victim.max_hp, effect.amount_bp_of_max_hp)
+			if effect.plus_per_shard_bp > 0:
+				# Golden Aegis (phase 8 part 5): more for the shards held.
+				amount += FixedMath.apply_bp(sim.setup.shards, effect.plus_per_shard_bp)
 			if not unit.vs_conditions.is_empty():
 				# A Shield's bonus on some allies (phase 5c step 7c, Front Ward).
 				power += Passives.vs_bonus_bp(unit, victim, AuraDef.Stat.SHIELD_BP, source.ability_id)
@@ -223,6 +226,12 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			spend_engorged(sim, victim, source)
 		EffectDef.Type.GAIN_MAX_HP:
 			gain_max_hp(sim, victim, amount, source)
+		EffectDef.Type.SHARDS:
+			# Collection (phase 8 part 5): shards for the run, from this fight.
+			var paid: LogEntry = sim.new_entry(LogEntry.Kind.SHARDS, source)
+			paid.target = unit.id
+			paid.amount = amount
+			sim.combat_log.add(paid)
 		EffectDef.Type.EXTEND_STATUS:
 			if effect.extend_statuses.is_empty():
 				Statuses.extend(sim, victim, effect.status_id, effect.duration_ticks, source)
@@ -533,6 +542,16 @@ static func near(sim: CombatSim, unit: UnitState, effect: EffectDef, center: Uni
 		var ally: UnitState = Targeting.pick(sim, unit, "lowest_hp_ally", reach_sq if effect.near_range > 0 else -1, effect.prefer)
 		if ally != null:
 			found.append(ally)
+		if effect.count > 1 and ally != null:
+			# The next lowest too (phase 8 part 5, Bastion of Saints' taste).
+			var pool: Array[UnitState] = sim.standing_allies_of(unit).filter(func(other: UnitState) -> bool:
+				return effect.near_range <= 0 or ArenaPlane.length_sq(other.pos - unit.pos) <= reach_sq)
+			while found.size() < effect.count:
+				pool = pool.filter(func(other: UnitState) -> bool: return not found.has(other))
+				var next: UnitState = Targeting._lowest_share(pool)
+				if next == null:
+					break
+				found.append(next)
 		return found
 	if center == null:
 		return found

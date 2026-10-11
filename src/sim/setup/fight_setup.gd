@@ -40,6 +40,10 @@ var crumble_bp: int = 0
 var rift_effects: Array[EffectDef] = []
 var rift_sources: Array[EffectSource] = []
 var rift_ticks: Array[int] = []
+## The shards the run holds as the fight starts (phase 8 part 5, Golden
+## Aegis: a Shield's plus_per_shard_bp reads it; Practice's shards setting,
+## Decision 4). It changes nothing else.
+var shards: int = 0
 
 
 static func make(hero_setups: Array[UnitSetup], enemy_setups: Array[UnitSetup], rock_hexes: Array[Vector2i] = [], fight_seed: int = 1, fight_act: int = 1) -> FightSetup:

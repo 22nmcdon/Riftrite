@@ -509,6 +509,14 @@ static func boost_text(status: StatusDef) -> String:
 
 ## A share with its sign: "+15%", "−2%" (phase 5c, step 2: every stat change
 ## says its amount).
+## A share of one per shard as words: "2", "1 per 3 shards" reads "0.33".
+static func _per_shard(bp: int) -> String:
+	if bp % FixedMath.BP_ONE == 0:
+		@warning_ignore("integer_division")
+		return str(bp / FixedMath.BP_ONE)
+	return "%d.%02d" % [bp / FixedMath.BP_ONE, (bp % FixedMath.BP_ONE) / 100]
+
+
 static func signed_percent(bp: int) -> String:
 	return ("+" if bp >= 0 else "−") + ValueBreakdown._percent(absi(bp))
 
@@ -643,6 +651,9 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 				# Shared Ward (phase 8 part 4): a share of its own Shield.
 				return "Shield of %s of its own Shield%s" % [ValueBreakdown._percent(effect.amount_bp_of_shield), _to_all(effect)]
 			var cap: String = ", up to %s of max HP" % ValueBreakdown._percent(effect.cap_bp_of_max_hp) if effect.cap_bp_of_max_hp > 0 else ""
+			if effect.plus_per_shard_bp > 0:
+				# Golden Aegis (phase 8 part 5).
+				cap += ", +%s for each shard held" % _per_shard(effect.plus_per_shard_bp)
 			if effect.amount_bp_of_max_hp > 0:
 				return "Shield of %s of max HP%s%s" % [ValueBreakdown._percent(effect.amount_bp_of_max_hp), cap, _to_all(effect)]
 			return _amount(effect, kit, "Shield") + cap + _to_all(effect)
@@ -757,6 +768,8 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 			return "spends its whole Shield" if effect.keep_bp == 0 else "spends its Shield, keeping %s" % ValueBreakdown._percent(effect.keep_bp)
 		EffectDef.Type.RELEASE_STORED:
 			return "lets go of the damage it stored"
+		EffectDef.Type.SHARDS:
+			return "+%d shard%s for the run" % [effect.amount, "" if effect.amount == 1 else "s"]
 		EffectDef.Type.GAIN_MAX_HP:
 			if effect.amount_bp_of_damage > 0:
 				return "+%s of what it gained as max HP" % ValueBreakdown._percent(effect.amount_bp_of_damage)

@@ -52,7 +52,10 @@ extends RefCounted
 ## lifesteal_max_hp_bp (that share of what its lifesteal would heal past full
 ## HP becomes max HP and HP, for the fight; MAX_HP_UP, sourced to the aura's
 ## passive) and lifesteal_max_hp_cap_bp (that growth stops at this share of
-## its max HP as the fight began; 0: no cap).
+## its max HP as the fight began; 0: no cap). And (8e-3, Edric's Hallowed
+## Ground) shield_absorb_bp, which adds: its Shield absorbs that much more of
+## each hit or damage-over-time tick (+10000: twice; the defender's side of
+## shield_damage_bp).
 ## Phase 5c step 5b adds stats that add: lifesteal_bp (heals that share of
 ## the damage its hits deal; LIFESTEAL, not healing), crit_damage_bp (to the
 ## crit kind of the damage rule), atsp (ATSP points: +30 is +30% attack
@@ -143,7 +146,7 @@ enum Stat { DAMAGE_BP, HEAL_BP, SHIELD_BP, OVER_TIME_BP, CRIT_CHANCE_BP, COOLDOW
 	OVERHEAL_SHIELD_BP, LIFESTEAL_HEALS, CRIT_OVERFLOW_BP, DEF, OVERHEAL_STRIKE_BP, MAX_HP_BP,
 	DEF_IGNORE_BP, UNPUSHABLE, DODGE_EVERY_MS, HALVED_HITS,
 	SHIELD_DAMAGE_BP, SEES_STEALTH, BURN_TAKEN_BP, MARKED_TIME_BP, ROOT_CAP_MS, MISS_BP, STUN_TIME_BP, STORE_BP, STORE_GROWS_BP, EVADE_BP, SHOT_SPEED_BP,
-	MANA_GAIN_BP, MANA_STORE_BP, OVERFLOW_POWER_BP, LIFESTEAL_MORE_BP, LIFESTEAL_MAX_HP_BP, LIFESTEAL_MAX_HP_CAP_BP }
+	MANA_GAIN_BP, MANA_STORE_BP, OVERFLOW_POWER_BP, LIFESTEAL_MORE_BP, LIFESTEAL_MAX_HP_BP, LIFESTEAL_MAX_HP_CAP_BP, SHIELD_ABSORB_BP }
 ## What turns an aura on, beyond its window.
 enum While { ALWAYS, TAUNTING, PLANTED, BELOW_HP, ALLY_STANDING, STATE, ALLY_NEAR, BEHIND_WALL, MOVED, CROWDED, TACTIC }
 
@@ -157,7 +160,7 @@ const STAT_NAMES: Array[String] = [
 	"overheal_shield_bp", "lifesteal_heals", "crit_overflow_bp", "def", "overheal_strike_bp", "max_hp_bp",
 	"def_ignore_bp", "unpushable", "dodge_every_ms", "halved_hits",
 	"shield_damage_bp", "sees_stealth", "burn_taken_bp", "marked_time_bp", "root_cap_ms", "miss_bp", "stun_time_bp", "store_bp", "store_grows_bp", "evade_bp", "shot_speed_bp",
-	"mana_gain_bp", "mana_store_bp", "overflow_power_bp", "lifesteal_more_bp", "lifesteal_max_hp_bp", "lifesteal_max_hp_cap_bp",
+	"mana_gain_bp", "mana_store_bp", "overflow_power_bp", "lifesteal_more_bp", "lifesteal_max_hp_bp", "lifesteal_max_hp_cap_bp", "shield_absorb_bp",
 ]
 const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp", "ally_standing", "state", "ally_near", "behind_wall", "moved", "crowded", "tactic"]
 ## The stats that add rather than multiply. The rest are factors (x1.1);
@@ -166,7 +169,7 @@ const ADDITIVE: Array[Stat] = [Stat.CRIT_CHANCE_BP, Stat.COOLDOWN_BP, Stat.RANGE
 	Stat.OVERHEAL_SHIELD_BP, Stat.LIFESTEAL_HEALS, Stat.CRIT_OVERFLOW_BP, Stat.DEF, Stat.OVERHEAL_STRIKE_BP,
 	Stat.DEF_IGNORE_BP, Stat.UNPUSHABLE, Stat.DODGE_EVERY_MS, Stat.HALVED_HITS,
 	Stat.SHIELD_DAMAGE_BP, Stat.SEES_STEALTH, Stat.BURN_TAKEN_BP, Stat.MARKED_TIME_BP, Stat.ROOT_CAP_MS, Stat.MISS_BP, Stat.STUN_TIME_BP, Stat.STORE_BP, Stat.STORE_GROWS_BP, Stat.EVADE_BP, Stat.SHOT_SPEED_BP,
-	Stat.OVERFLOW_POWER_BP, Stat.LIFESTEAL_MORE_BP, Stat.LIFESTEAL_MAX_HP_BP, Stat.LIFESTEAL_MAX_HP_CAP_BP]
+	Stat.OVERFLOW_POWER_BP, Stat.LIFESTEAL_MORE_BP, Stat.LIFESTEAL_MAX_HP_BP, Stat.LIFESTEAL_MAX_HP_CAP_BP, Stat.SHIELD_ABSORB_BP]
 ## The stats an aura worked out per hit may hold ("vs", "from_basic",
 ## "per_target_stacks").
 const VS_STATS: Array[Stat] = [Stat.DAMAGE_BP, Stat.CRIT_CHANCE_BP, Stat.LIFESTEAL_BP, Stat.CRIT_DAMAGE_BP, Stat.HEAL_BP, Stat.SHIELD_BP, Stat.LIFESTEAL_MORE_BP]
@@ -177,7 +180,7 @@ const STAT_LABELS: Array[String] = [
 	"of overheal as Shield", "lifesteal heals", "of crit chance past 100% as crit damage", "DEF", "of lifesteal overheal as damage to its target", "max HP",
 	"of the target's DEF ignored", "can't be knocked back", "a hit misses every", "hits taken at half damage",
 	"damage to Shields", "can target the stealthed", "Burn damage taken", "how long Marks on it last", "Roots on it last at most", "of its attacks missing", "how long Stuns on it last", "of each hit taken stored", "stored damage growth a second", "of basic attacks on it evaded", "shot speed",
-	"mana gained", "mana its bar holds", "signature power per mana over full", "to lifesteal", "of lifesteal past full HP as max HP", "of max HP, at most, from lifesteal past full",
+	"mana gained", "mana its bar holds", "signature power per mana over full", "to lifesteal", "of lifesteal past full HP as max HP", "of max HP, at most, from lifesteal past full", "to what its Shield absorbs",
 ]
 ## Unit stat for each unit-stat aura stat (ATK_BP -> Stat.ATK, ...).
 const UNIT_STAT_FOR: Dictionary[int, int] = {

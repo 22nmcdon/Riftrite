@@ -219,7 +219,8 @@ static func enemy_fell(sim: CombatSim, fallen: UnitState) -> void:
 ## unit of its side hears it, in the fight's order.
 static func _shield_broke_near(sim: CombatSim, holder: UnitState, breaker: UnitState, absorbed: int, chain: int) -> void:
 	for ally: UnitState in (sim.heroes if holder.side == EffectSource.Team.HEROES else sim.enemies):
-		_raise(sim, ally, EffectDef.Trigger.ON_ALLY_SHIELD_BROKEN, chain, breaker, absorbed)
+		# The Shield's holder rides along (phase 8 part 5: trigger_ally).
+		_raise(sim, ally, EffectDef.Trigger.ON_ALLY_SHIELD_BROKEN, chain, breaker, absorbed, holder.id)
 
 
 static func _raise(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, chain: int, other: UnitState = null, damage: int = 0, status: String = "") -> void:

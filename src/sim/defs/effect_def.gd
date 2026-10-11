@@ -50,6 +50,12 @@ extends RefCounted
 ##                 full), never as healing
 ##   gain_max_hp:  (phase 8 part 5, The Iron Maw) amount or amount_bp_of_damage
 ##                 of max HP and HP for the fight, logged as MAX_HP_UP
+##   shield's "plus_per_shard_bp" (phase 8 part 5, Golden Aegis): that share
+##                 of the shards the run holds as the fight starts is added
+##                 (FightSetup.shards; Practice's shards setting)
+##   shards:       (phase 8 part 5, Collection; target "self") "amount" shards
+##                 for the run, logged as SHARDS; RunFlow.record pays a won
+##                 fight's
 ##   raise:        (phase 8 part 5, Gravecaller; no "target" key; on_enemy_fell
 ##                 or on_kill) the enemy the event names stands again on the
 ##                 unit's side as its own kit, a summon: "hp_pct" of its max
@@ -194,7 +200,8 @@ extends RefCounted
 ##   ally_near_target      the unit's ally nearest it, other than it (Kindle)
 ##   allies_near_target    every such ally within reach of it
 ##   lowest_hp_ally        the unit's ally lowest on HP (a share of max HP),
-##                         within within_hexes of the unit if given
+##                         within within_hexes of the unit if given; "count"
+##                         (phase 8 part 5): that many, lowest first
 ##   lowest_mana_ally      the "count" (1) other allies with a mana bar
 ##                         least full, fight order on ties (phase 8 part 4,
 ##                         Shared Breath)
@@ -245,7 +252,9 @@ extends RefCounted
 ##   on_ally_shield_broken (phase 8 part 2, Thornweave): the same, on any
 ##                    unit of its side (itself too), heard by each of them
 ##                    (hit_target: whoever broke it; amount_bp_of_damage:
-##                    of the Shield that hit took)
+##                    of the Shield that hit took; phase 8 part 5, Edric:
+##                    trigger_ally is the unit whose Shield broke, and its
+##                    "vs" and cooldown_per_unit_ms then name that unit)
 ##   on_ally_ability  an ally's signature fires (hit_target: that ally)
 ##   on_status_ended  a status on the unit runs out ("statuses", "keywords":
 ##                    only those; phase 5c step 5b, "leaving Stealth")
@@ -368,7 +377,7 @@ enum Trigger {
 	ON_MANA_GAINED, ON_ALLY_HIT, ON_ENEMY_NEAR, ON_HP_SPENT, ON_MAX_HP_UP,
 }
 enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS, HOP, FLOOD, SEVER, SPEND_SHIELD, RELEASE_STORED,
-	SPEND_ENGORGED, RAISE, GAIN_MAX_HP }
+	SPEND_ENGORGED, RAISE, GAIN_MAX_HP, SHARDS }
 ## A pull's way (phase 8 part 3): toward the unit, the nearest water, or
 ## its area's middle; a knockback's: away from the unit, or toward the
 ## nearest edge.
@@ -464,7 +473,7 @@ const REACH_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_TARGET, Target.ALLIES_
 ## The targets around the unit an event names (they need one).
 const NAMED_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_NAMED, Target.ENEMY_NEAR_NAMED]
 const SIDE_NAMES: Array[String] = ["both", "enemies", "allies"]
-const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain", "knockback", "pull", "leap", "charge", "area", "start_collapse", "summon", "gain_mana", "snare", "wall", "extend_status", "hop", "flood", "sever", "spend_shield", "release_stored", "spend_engorged", "raise", "gain_max_hp"]
+const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain", "knockback", "pull", "leap", "charge", "area", "start_collapse", "summon", "gain_mana", "snare", "wall", "extend_status", "hop", "flood", "sever", "spend_shield", "release_stored", "spend_engorged", "raise", "gain_max_hp", "shards"]
 const TOWARD_NAMES: Array[String] = ["unit", "water", "area", "edge", "ally"]
 const FLOOD_MODE_NAMES: Array[String] = ["circle", "spread", "drain", "all"]
 ## The types placed at the ability's target without a "target" key of their
@@ -524,6 +533,9 @@ var plus_bp_of_spent: int = 0
 var amount_bp_of_stored: int = 0
 ## spend_shield (Shatterburst): the share of the Shield it keeps.
 var keep_bp: int = 0
+## shield (phase 8 part 5, Golden Aegis): that share (bp) of the shards the
+## run holds is added (FightSetup.shards; 0: none).
+var plus_per_shard_bp: int = 0
 ## heal (phase 8 part 5, The Iron Maw): it lands as its target's own
 ## lifesteal (EffectRunner.steal), not as healing.
 var as_lifesteal: bool = false
@@ -832,6 +844,10 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				def.as_lifesteal = reader.opt_bool("as_lifesteal", false)
 				if def.as_lifesteal and (def.overheal_shield_bp > 0 or def.overheal_max_hp_per > 0 or def.amount_bp_of_max_hp > 0):
 					reader.error("a heal as lifesteal is only its amount (\"amount\" or \"amount_bp_of_damage\")")
+			Type.SHARDS:
+				def.amount = reader.req_int("amount", 1, 10)
+				if def.target != Target.SELF:
+					reader.error("shards go to the run through the unit itself (\"target\": \"self\")")
 			Type.GAIN_MAX_HP:
 				if int(reader.has("amount")) + int(reader.has("amount_bp_of_damage")) != 1:
 					reader.error("gain_max_hp needs exactly one of \"amount\" or \"amount_bp_of_damage\"")
@@ -928,6 +944,7 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 			Type.SHIELD:
 				if int(reader.has("amount")) + int(reader.has("amount_bp_of_damage")) + int(reader.has("amount_bp_of_max_hp")) + int(reader.has("amount_bp_of_shield")) != 1:
 					reader.error("shield needs exactly one of \"amount\", \"amount_bp_of_damage\", \"amount_bp_of_max_hp\", or \"amount_bp_of_shield\"")
+				def.plus_per_shard_bp = reader.opt_int("plus_per_shard_bp", 0, 0, 10 * FixedMath.BP_ONE)
 				def.amount = reader.opt_int("amount", 0, 0)
 				def.amount_bp_of_damage = reader.opt_int("amount_bp_of_damage", 0, 0)
 				def.amount_bp_of_max_hp = reader.opt_int("amount_bp_of_max_hp", 0, 0, FixedMath.BP_ONE)
@@ -1013,8 +1030,9 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 			reader.error("only all_enemies, all_allies, and the near targets take \"only\"")
 	if def.target == Target.FARTHEST_ENEMIES:
 		def.count = reader.req_int("count", 1, 10)
-	if def.target == Target.LOWEST_MANA_ALLY:
-		# The allies with the least of their bar (phase 8 part 4, Shared Breath).
+	if def.target == Target.LOWEST_MANA_ALLY or def.target == Target.LOWEST_HP_ALLY:
+		# The allies with the least of their bar (phase 8 part 4, Shared Breath),
+		# or of their HP (phase 8 part 5, Bastion of Saints' taste).
 		def.count = reader.opt_int("count", 1, 1, 5)
 	if def.target == Target.ENEMIES_NEAR_ALLIES and reader.has("around"):
 		# Only round the allies that meet it (phase 8 part 4, Gale: ranged).
@@ -1239,8 +1257,8 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 		def.holder = UnitCondition.read(reader.req_object("holder"))
 		if not (EVENT_TRIGGERS.has(def.trigger) or UNIT_TRIGGERS.has(def.trigger)):
 			reader.error("only an event's or a timed effect can take \"holder\"")
-	if def.target == Target.TRIGGER_ALLY and def.trigger != Trigger.ON_ALLY_BELOW_HP:
-		reader.error("\"trigger_ally\" only works with the on_ally_below_hp trigger")
+	if def.target == Target.TRIGGER_ALLY and def.trigger != Trigger.ON_ALLY_BELOW_HP and def.trigger != Trigger.ON_ALLY_SHIELD_BROKEN:
+		reader.error("\"trigger_ally\" only works with the on_ally_below_hp and on_ally_shield_broken triggers")
 	if not relic:
 		return
 	if FIELD_ONLY_TARGETS.has(def.target):

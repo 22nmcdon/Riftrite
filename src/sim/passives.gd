@@ -513,8 +513,9 @@ static func boosted(unit: UnitState, effect: EffectDef, amount: int) -> int:
 ## names (hit_target), `damage` the hit it's about (amount_bp_of_damage),
 ## `status` the status applied (on_status), `chain` the depth of the entry
 ## that raised it.
-static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, other: UnitState, damage: int, status: String, chain: int = 0) -> void:
+static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, event_other: UnitState, damage: int, status: String, chain: int = 0) -> void:
 	for listener: Listener in unit.listeners_by.get(event, _NONE):
+		var other: UnitState = event_other
 		var effect: EffectDef = listener.effect
 		if effect.trigger != event or not effect.active_at(sim.tick):
 			continue
@@ -530,6 +531,10 @@ static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, 
 				if state == null or Statuses.stacks_on(other, status) < effect.at_stacks:
 					continue
 				Statuses.end_now(sim, other, state, "spent by %s" % unit.id)
+		if event == EffectDef.Trigger.ON_ALLY_SHIELD_BROKEN and effect.target == EffectDef.Target.TRIGGER_ALLY:
+			# The ally whose Shield broke (phase 8 part 5, Edric's Offering and
+			# Reforge): it's the unit this effect names, not the breaker.
+			other = sim.unit_by_id(status)
 		if effect.vs != null and (other == null or not effect.vs.holds(other, unit)):
 			continue
 		if (effect.by != null or effect.by_range > 0) and not _by_holds(sim, unit, effect, event, other, status):
