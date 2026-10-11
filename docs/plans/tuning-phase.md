@@ -188,25 +188,25 @@ The acts set to their targets (random teams: win Act 1 40–49%; about 35% of th
 
 **What changed, start to finish** (each fight's scale against its scale before T-6):
 
-- **Act 1** (21 fights): the days 2–3 fights x1.15–1.5 (Pup Warren, Ash Nest, The Pack, Moth Cloud, Hollow Watch, Hounds and Archers, Lurker's Spark, and day 3's elites Alpha's Trail, Witch's Ward, Cairn Sentry); the days 4–6 fights x1.1–1.36 (Hollow Line, Bog Crossing, Sentinel Gate, Cairn Road, Witch Circle, Lurker's Kindling, The Warded Charge, and the elites The Hunt, Witch Coven, Cairn Watch); Old Mother Ash x1.1. Day 1 (the Glass check), Sentinel Under Moths, and Witch's Brood are unchanged.
-- **Act 2** (13 fights): most fights x1.05–1.25, the late ones x1.5–2.5 (Tidecall, The Drowning Line, Witch of the Mere, Bog and Bell), the elites x1.17 and x1.39; Reed Snipers x0.99 and the Mournwater x0.96, back where they were. Eel Run is unchanged: its curve is flat (60–65% at any strength).
-- **Act 3** (all 14 fights): x2.25 to x5 (the teams that reach it hold a median of 24 relics, 40 by its boss, 12 cards, and two apexes; its fights won 85–100% at twice their strength), the Heart of the Rift x2.25.
+- **Act 1:** the days 4–6 fights x1.1–1.36 (Hollow Line x1.24, Bog Crossing x1.1, Sentinel Gate x1.11, Cairn Road x1.17, Witch Circle x1.1, Lurker's Kindling x1.1, The Warded Charge x1.15, The Hunt x1.25, Witch Coven x1.36, Cairn Watch x1.25); Old Mother Ash x1.1. Days 2–3 were raised, then put back (Decision 19: they broke the Glass check), and day 1 is unchanged; Sentinel Under Moths and Witch's Brood too.
+- **Act 2** (13 fights): most fights x1.0–1.25, the late ones x1.5–2.5 (Tidecall x1.8, The Drowning Line x1.6, Witch of the Mere x2.5, Bog and Bell x1.49), the elites x1.17 and x1.39; Glass Field x0.97, Reed Snipers x0.99, and the Mournwater x0.96, about where they were. Eel Run is unchanged: its curve is flat (60–65% at any strength).
+- **Act 3** (all 14 fights): x2 to x5 (the teams that reach it hold a median of 24 relics, 40 by its boss, 12 cards, and two apexes; its fights won 85–100% at twice their strength); its day 1–4 fights x2–4, the later ones x3.25–5, the Heart of the Rift x2.25.
 
 | Good bot, 120 runs | After T-4 | After T-6 | Target |
 | --- | --- | --- | --- |
-| Reach Old Mother Ash | 88% | 62% | about 73% |
-| Win Act 1 | 64% | 41% | 40–49% |
-| Old Mother Ash, a fight | 57% | 53% | 50–60% |
+| Reach Old Mother Ash | 88% | 67% | about 73% |
+| Win Act 1 | 64% | 43% | 40–49% |
+| Old Mother Ash, a fight | 57% | 52% | 50–60% |
 | Win Act 2 (of those reaching it) | 47% | 34% | about 35% |
-| The Mournwater, a fight | 50% | 54% | |
-| Win Act 3 (of those reaching it) | 88% | 41% (7 of 17) | about 50% |
-| Win the run | 27% | 6% | about 8% |
+| The Mournwater, a fight | 50% | 56% | |
+| Win Act 3 (of those reaching it) | 88% | 33% (6 of 18) | about 50% |
+| Win the run | 27% | 5% | about 8% |
 | Relics a run | 19 | 10 | about 8–14 an act (Decision 18) |
 
-- **Days 2–3** win 77–96% a fight and **days 4–6** 59–82%, about the ramp; day 4 is the act's wall (18 runs end there, Sentinel Gate and Cairn Road the most fought). Fewer runs reach Old Mother Ash than the ramp's 73%, but Act 1 lands in its band, which is the target the ramp serves.
-- **Act 2 needed easier fights than Act 1** for the same share: runs arrive with Act 1's losses, so a run one loss down ends at its first loss there. Its day fights win 68–100%, its elites 87–90%.
-- **Act 3 and the run are a little under** (41% and 6%) on 17 runs that reach Act 3; one check moves Act 3 by 10 points either way.
-- **By hero** at these rates: every hero wins 3–10% of its runs (Garrow 10%), so Decision 14's band holds trivially; it's read again once the half-plans are (Question TH).
+- **Days 2–3** win nearly every fight (the Glass check sizes them, Decision 19), and **days 4–6** 68–77%: day 4 is the act's wall (22 runs end there, Sentinel Gate and Cairn Road the most fought). Fewer runs reach Old Mother Ash than the ramp's 73%, but Act 1 lands in its band, which is the target the ramp serves.
+- **Act 2 needed easier fights than Act 1** for the same share: runs arrive with Act 1's losses, so a run one loss down ends at its first loss there. Its day fights win 60–100%, its elites 69–80%.
+- **Act 3 stays under its half** (33% to 50% over the last checks, about 42% on average, on 13–18 runs a check), and so the run (5% against about 8%). The same runs reach it and lose it whatever its first fights' strength, so the gap is in a few teams, not in its fights; it's left for the playtest and Question TH's reading.
+- **By hero** at these rates: every hero wins 1–6% of its runs, so Decision 14's band holds trivially; it's read again with the half-plans (Question TH).
 
 **The tools:**
 
