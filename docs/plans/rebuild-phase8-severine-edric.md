@@ -1,6 +1,6 @@
 # Phase 8 part 5: heroes 7 and 8, Severine and Edric
 
-Status: **a build plan, for approval (2026-10-11).** The remaining heroes come in two at a time after the tuning phase (`rebuild-build-order.md`), Severine and Edric first. This plan builds Severine Hollowell and Edric Tithewell from their designs (`rebuild-heroes.md` sections 8g and 8h; `apexes.md`; `upgrade-pools.md`; `duo-bonds.md`), the way phase 8 part 4 built Garrow, Tamsin, and Aldous (`rebuild-phase8-heroes.md`): the draft frame, habits, the builds report, and the bots' draft are already built, so each hero is its kit, its sim pieces, and its content. Numbers are the designs' placeholders until the check (section 8). Questions are in section 10.
+Status: **a build plan, approved (2026-10-11; Decisions 1–7).** The remaining heroes come in two at a time after the tuning phase (`rebuild-build-order.md`), Severine and Edric first. This plan builds Severine Hollowell and Edric Tithewell from their designs (`rebuild-heroes.md` sections 8g and 8h; `apexes.md`; `upgrade-pools.md`; `duo-bonds.md`), the way phase 8 part 4 built Garrow, Tamsin, and Aldous (`rebuild-phase8-heroes.md`): the draft frame, habits, the builds report, and the bots' draft are already built, so each hero is its kit, its sim pieces, and its content. Numbers are the designs' placeholders until the check (section 8). Questions are in section 10.
 
 ## 1. What it builds
 
@@ -118,10 +118,22 @@ Every new piece is skipped by a fight that doesn't use it, so the bench's finger
 
 ## 10. Questions
 
-- **SA. Severine's HP costs:** Blood Price (vowed) costs 30 mana plus 5% of her max HP; transformed Hemomancer casts Exsanguinate "whenever she's above 50% HP, with no cooldown", for 10% of her max HP. Proposed: an HP cost never takes her below 1 HP (with less, the signature waits, like a bar not yet full); Exsanguinate fires at most once a tick while she's above 50% before paying, so at 55% she casts once and drops to 45%, and lifesteal decides the next cast. Wounds lower her max HP, and 50% is of that.
-- **SB. What Gravecaller raises:** "Poisoned enemies that die rise as her thralls, up to 3 at once." Proposed: any Poisoned enemy that falls, summons included, except elites and bosses (as no apex controls one) and a unit that fell into the void; the fallen enemy's own on_fall still happens (a Glass Shambler splits and rises); a thrall's kills are its own (not Severine's); thralls count toward the 30 a side and toward nothing else (deeds, the rift learns).
-- **SC. Tithe-Collector's deed in Practice:** it fills only between won fights in a run, so Practice can't fill it (Vow and Transform are free there anyway). Proposed: the card says "counted in a run"; Tithe pays on endless floors too (floors pay flat, endless Decision 4).
-- **SD. Golden Aegis in Practice:** it reads the shards held, which Practice doesn't have. Proposed: Practice fights as if holding 30 shards, said on the card ("in Practice: 30 shards").
-- **SE. How many runs:** 56 teams make 120 runs about two a team and 45 a hero, against 60 a hero with six. Proposed: 160 runs for the band (60 a hero, about 3.5 hours), 120 for everything else.
-- **SF. Tuning the two, not the eight:** proposed as section 8: bring the two into the band and leave the six alone, read the acts and retune only if Act 1 leaves 40–49%. Or a short tuning pass over all eight after the pair?
-- **SG. The rift learns and lifesteal:** proposed: lifesteal isn't healing (the design's rule), so Severine doesn't feed the healing habit; Poison doesn't get a habit until a second Poison maker is built (Kestra, Ottilie).
+- **SA.** *(Answered: Decision 1.)* **Severine's HP costs:** Blood Price (vowed) costs 30 mana plus 5% of her max HP; transformed Hemomancer casts Exsanguinate "whenever she's above 50% HP, with no cooldown", for 10% of her max HP. Proposed: an HP cost never takes her below 1 HP (with less, the signature waits, like a bar not yet full); Exsanguinate fires at most once a tick while she's above 50% before paying, so at 55% she casts once and drops to 45%, and lifesteal decides the next cast. Wounds lower her max HP, and 50% is of that.
+- **SB.** *(Answered: Decision 2.)* **What Gravecaller raises:** "Poisoned enemies that die rise as her thralls, up to 3 at once." Proposed: any Poisoned enemy that falls, summons included, except elites and bosses (as no apex controls one) and a unit that fell into the void; the fallen enemy's own on_fall still happens (a Glass Shambler splits and rises); a thrall's kills are its own (not Severine's); thralls count toward the 30 a side and toward nothing else (deeds, the rift learns).
+- **SC.** *(Answered: Decision 3.)* **Tithe-Collector's deed in Practice:** it fills only between won fights in a run, so Practice can't fill it (Vow and Transform are free there anyway). Proposed: the card says "counted in a run"; Tithe pays on endless floors too (floors pay flat, endless Decision 4).
+- **SD.** *(Answered: Decision 4.)* **Golden Aegis in Practice:** it reads the shards held, which Practice doesn't have. Proposed: Practice fights as if holding 30 shards, said on the card ("in Practice: 30 shards").
+- **SE.** *(Answered: Decision 5.)* **How many runs:** 56 teams make 120 runs about two a team and 45 a hero, against 60 a hero with six. Proposed: 160 runs for the band (60 a hero, about 3.5 hours), 120 for everything else.
+- **SF.** *(Answered: Decision 6.)* **Tuning the two, not the eight:** proposed as section 8: bring the two into the band and leave the six alone, read the acts and retune only if Act 1 leaves 40–49%. Or a short tuning pass over all eight after the pair?
+- **SG.** *(Answered: Decision 7.)* **The rift learns and lifesteal:** proposed: lifesteal isn't healing (the design's rule), so Severine doesn't feed the healing habit; Poison doesn't get a habit until a second Poison maker is built (Kestra, Ottilie).
+
+## Decisions
+
+The playtester, 2026-10-11:
+
+1. **Severine's HP costs as proposed** (Question SA): an HP cost never takes her below 1 HP (with less, the signature waits); Exsanguinate fires at most once a tick while she's above 50% before paying; 50% is of her max HP after wounds.
+2. **Gravecaller never raises a summon** (Question SB): any Poisoned enemy that falls rises, except summons, elites, bosses, and a unit that fell into the void; the fallen enemy's own on_fall still happens; a thrall's kills are its own; thralls count toward the 30 a side and nothing else.
+3. **Tithe-Collector's deed is counted in a run** (Question SC): Practice's card says so; Tithe pays on endless floors too.
+4. **Practice has a shards setting** (Question SD): the tester sets the shards held for Practice's fights (other heroes will read shards held too: Hob), and Golden Aegis reads it; it starts at 0.
+5. **160 runs for the band** (Question SE), 120 for everything else.
+6. **Tune only the two** (Question SF) into the hero band; the heroes are finished first, then a short pass over all of them.
+7. **The rift learns as proposed** (Question SG): lifesteal isn't healing; Poison gets no habit yet.
