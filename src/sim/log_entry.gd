@@ -91,6 +91,9 @@ enum Kind {
 	## mana (hundredths) from the source's gain_mana. A unit's own gains
 	## aren't logged (Mana).
 	MANA_GIVEN,
+	## Phase 8 part 5 (Severine): target (the unit itself) spends `amount`
+	## HP on its signature; source: the signature.
+	HP_SPENT,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -363,6 +366,8 @@ func to_text() -> String:
 			return line + "%s drains %s mana from %s%s" % [source_text(), Mana.text(amount), target, "" if note.is_empty() else " (%s)" % note]
 		Kind.MANA_GIVEN:
 			return line + "%s gives %s %s mana" % [source_text(), target, Mana.text(amount)]
+		Kind.HP_SPENT:
+			return line + "%s: %s spends %d HP" % [source_text(), target, amount]
 	return line + "?"
 
 

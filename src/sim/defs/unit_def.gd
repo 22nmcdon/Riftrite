@@ -35,6 +35,9 @@ extends RefCounted
 ##   "targeting": "weakest_within", "targeting_within_hexes": 3
 ##       phase 8 part 4 (Tamsin): the lowest-HP (by %) enemy within that
 ##       many hexes, else the nearest
+##   "start_hp_pct": 50
+##       phase 8 part 5 (transformed Hemomancer): it starts each fight at
+##       that share of its max HP
 
 ## A unit's own rule (section 4): Targeting.RULES but self.
 const TARGETING_RULES: Array[String] = ["nearest", "weakest_backliner", "largest_group", "farthest", "lowest_hp_ally", "highest_mana", "weakest_within"]
@@ -106,6 +109,9 @@ var placed_snares: int = 0
 ## step 7d: a kit mod's places_lantern, First Lantern; the data never sets
 ## it).
 var placed_lantern: bool = false
+## The share of its max HP it starts a fight at (phase 8 part 5, transformed
+## Hemomancer; 10000: full).
+var start_hp_bp: int = FixedMath.BP_ONE
 
 
 ## Reads a kit. A hero's or enemy's kit (HeroDef, EnemyDef) takes its id and
@@ -138,6 +144,7 @@ static func read(reader: DataReader, kit_id: String = "", kit_name: String = "")
 		def.passives.append(PartDef.read(part_reader))
 	def.plant_ticks = reader.opt_ticks("plant_ms", 0)
 	def.placed_snares = reader.opt_int("placed_snares", 0, 0, 4)
+	def.start_hp_bp = reader.opt_int("start_hp_pct", 100, 1, 100) * 100
 	for problem: String in def.problems():
 		reader.error(problem)
 	var kit: UnitDef = def
@@ -219,6 +226,7 @@ func copy() -> UnitDef:
 	other.plant_ticks = plant_ticks
 	other.placed_snares = placed_snares
 	other.placed_lantern = placed_lantern
+	other.start_hp_bp = start_hp_bp
 	return other
 
 

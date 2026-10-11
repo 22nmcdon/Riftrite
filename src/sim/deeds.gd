@@ -113,7 +113,8 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 			continue
 		if kind != LogEntry.Kind.DAMAGE and kind != LogEntry.Kind.HEAL and kind != LogEntry.Kind.SHIELD and kind != LogEntry.Kind.SHOT \
 				and kind != LogEntry.Kind.FIRE and kind != LogEntry.Kind.STATUS_APPLIED and kind != LogEntry.Kind.GUARD and kind != LogEntry.Kind.SHARED \
-				and kind != LogEntry.Kind.PUSH and kind != LogEntry.Kind.STATUS_EXTENDED and kind != LogEntry.Kind.MANA_GIVEN:
+				and kind != LogEntry.Kind.PUSH and kind != LogEntry.Kind.STATUS_EXTENDED and kind != LogEntry.Kind.MANA_GIVEN \
+				and kind != LogEntry.Kind.MAX_HP_UP and kind != LogEntry.Kind.HP_SPENT and kind != LogEntry.Kind.LIFESTEAL:
 			continue
 		var unit: UnitState = sim.unit_by_id(entry.source_unit)
 		if unit == null or unit.deeds == null:
@@ -194,6 +195,10 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 				DeedDef.Counts.EXTENDED_MS:
 					# The time added (phase 8 part 4, Scent and Choke).
 					counter.amounts[d] += entry.amount * FixedMath.MS_PER_TICK
+				DeedDef.Counts.LIFESTEAL:
+					# Only lifesteal (phase 8 part 5): a heal must be marked so.
+					if entry.kind == LogEntry.Kind.LIFESTEAL or entry.lifesteal:
+						counter.amounts[d] += entry.amount
 				DeedDef.Counts.MANA_GIVEN:
 					# Whole mana given to another unit (phase 8 part 4, Chorister).
 					@warning_ignore("integer_division")

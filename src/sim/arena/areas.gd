@@ -29,7 +29,8 @@ extends RefCounted
 ##     up to 1 hex toward the biggest group of its caster's enemies before
 ##     each pulse after the first; that pulse's AREA_LANDED is noted "moved".
 ##     With "follows": "nearest" (8c-5c, the Drifting Moth) it moves toward
-##     the caster's enemy nearest its middle instead.
+##     the caster's enemy nearest its middle instead; with "holder" (phase 8
+##     part 5, Carrier) it's centered on its standing caster.
 ##   - A placed lantern (phase 5c step 7d, First Lantern) is a zone cast at
 ##     a point the player chose (cast_at), at the fight's start.
 ## Heroes never step out of a warned area (decided): placement is the answer.
@@ -138,6 +139,12 @@ static func _pulse_zones(sim: CombatSim) -> void:
 ## Moves a following zone up to 1 hex toward the biggest group of its
 ## caster's enemies (Chasing Storm). Returns true if it moved.
 static func _follow(sim: CombatSim, zone: Pending) -> bool:
+	if zone.effect.follows_holder:
+		if zone.unit == null or not zone.unit.alive or zone.unit.pos == zone.origin:
+			return false
+		zone.origin = zone.unit.pos
+		zone.push_from = zone.origin
+		return true
 	var group: UnitState = _nearest_enemy(sim, zone) if zone.effect.follows_nearest else Targeting.pick(sim, zone.unit, "largest_group", -1)
 	if group == null or group.pos == zone.origin:
 		return false

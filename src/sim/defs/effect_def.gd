@@ -31,7 +31,11 @@ extends RefCounted
 ##                 "ignores_def": true (Bitter Blood): its hits ignore the
 ##                 target's DEF. Damage's "lifesteal_pct" (phase 8 part 5,
 ##                 Severine's Rend and Drain): its hits heal the unit that
-##                 share more, on top of its lifesteal auras
+##                 share more, on top of its lifesteal auras. Damage's
+##                 "plus_bp_of_max_hp" (Rend's bonus, Gorge): that share of
+##                 its unit's own max HP is added to the amount; and
+##                 "plus_bp_of_spent" (Exsanguinate): that share of the HP
+##                 its unit's signature just spent is added
 ##   spend_shield: (phase 8 part 4, Bulwark Burst; target "self") the
 ##                 unit's whole Shield is gone, logged as SHIELD_SPENT with
 ##                 what it was. After an area that read it, the area keeps
@@ -487,6 +491,11 @@ var ignores_def: bool = false
 ## damage (phase 8 part 5, Severine): its own lifesteal share (bp), added to
 ## the unit's for its hits.
 var lifesteal_bp: int = 0
+## damage (phase 8 part 5): added to the amount, a share of its unit's own
+## max HP, and of the HP its signature's fire just spent (UnitState.
+## last_hp_spent).
+var plus_bp_of_max_hp: int = 0
+var plus_bp_of_spent: int = 0
 ## damage (phase 8 part 4, Vengeance): a share of the unit's stored damage.
 var amount_bp_of_stored: int = 0
 ## spend_shield (Shatterburst): the share of the Shield it keeps.
@@ -693,6 +702,9 @@ var max_standing: int = 0
 var follows: bool = false
 ## (8c-5c, the Drifting Moth) it follows the enemy nearest it instead.
 var follows_nearest: bool = false
+## (phase 8 part 5, Carrier) it moves with its caster instead: centered on it
+## before each pulse while it stands.
+var follows_holder: bool = false
 ## An area (phase 8 part 2, Stormline): each enemy it hits after the first,
 ## nearest its origin first, deals this much more damage than the one
 ## before ("per_enemy_bp": +10% a step is 1000). 0: none.
@@ -765,6 +777,8 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				# Shot): it never crits and never lifesteals.
 				def.plain = reader.opt_bool("plain", false)
 				def.lifesteal_bp = reader.opt_int("lifesteal_pct", 0, 0, 500) * 100
+				def.plus_bp_of_max_hp = reader.opt_int("plus_bp_of_max_hp", 0, 0, 50000)
+				def.plus_bp_of_spent = reader.opt_int("plus_bp_of_spent", 0, 0, 100000)
 				if def.plain and def.lifesteal_bp > 0:
 					reader.error("a plain hit never lifesteals (\"lifesteal_pct\")")
 			Type.HEAL:
@@ -881,7 +895,9 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 					reader.error("release_stored lets go of the unit's own stored damage (\"target\": \"self\")")
 			Type.APPLY_STATUS:
 				def.status_id = reader.req_string("status")
-				def.stacks = reader.opt_int("stacks", 1, 1)
+				# 0 base stacks only with a "scaling" (phase 8 part 5, Blight:
+				# Poison equal to a share of ATK).
+				def.stacks = reader.opt_int("stacks", 1, 0)
 				def.duration_ticks = reader.opt_ticks("duration_ms", 0)
 				def.stacks_of = reader.opt_string("stacks_of", "")
 				def.stacks_share_bp = reader.opt_int("stacks_share_bp", 0, 1, FixedMath.BP_ONE)
@@ -927,6 +943,8 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 			if def.amount_bp_of_damage > 0 or def.amount_bp_of_max_hp > 0 or def.amount_bp_of_shield > 0 or def.amount_bp_of_stored > 0:
 				reader.error("\"scaling\" can't be combined with %s" % ("amount_bp_of_damage" if def.amount_bp_of_damage > 0 else "amount_bp_of_max_hp" if def.amount_bp_of_max_hp > 0 else "amount_bp_of_shield"))
 			_read_scaling(def, reader.req_object("scaling"))
+	if def.type == Type.APPLY_STATUS and def.stacks == 0 and not reader.has("scaling"):
+		reader.error("an apply_status with 0 stacks needs a \"scaling\"")
 
 	def.when_attackers = reader.opt_int("when_attackers", 0, 0, 10)
 	if reader.has("when_attackers_kits"):
@@ -1013,9 +1031,10 @@ static func _read_area(def: EffectDef, reader: DataReader) -> void:
 	def.warning_ticks = reader.opt_ticks("warning_ms", 0)
 	if def.zone_ticks > 0 and def.warning_ticks > 0:
 		reader.error("a zone lands from the moment it's cast, so it takes no warning_ms")
-	var follow_rule: String = reader.opt_string_choice("follows", "", ["largest_group", "nearest"])
+	var follow_rule: String = reader.opt_string_choice("follows", "", ["largest_group", "nearest", "holder"])
 	def.follows = not follow_rule.is_empty()
 	def.follows_nearest = follow_rule == "nearest"
+	def.follows_holder = follow_rule == "holder"
 	if def.follows and def.zone_ticks == 0:
 		reader.error("only a zone (an area with a duration) follows")
 	def.hits = maxi(HITS_NAMES.find(reader.req_choice("hits", HITS_NAMES)), 0) as Hits

@@ -21,6 +21,10 @@ extends RefCounted
 ##                                           holder stands on (phase 8 part
 ##                                           3; Islands.mark; every unit is,
 ##                                           in a fight without void)
+##   {"engorged_pct": 20}                    Engorge has raised its max HP by
+##                                           at least this share of what it
+##                                           was before (phase 8 part 5,
+##                                           Heavy Frame)
 ##   {"shield_above_pct": 100}               its Shield is more than this
 ##                                           share of its max HP (phase 8
 ##                                           part 4; Plate on Plate)
@@ -57,6 +61,8 @@ var kits: Array[String] = []
 var same_island: bool = false
 ## 0: no Shield condition.
 var shield_above_bp: int = 0
+## Engorge's growth, as a share of max HP before it (0: no such condition).
+var engorged_bp: int = 0
 ## Whether its target is the holder (ANY: either; phase 8 part 4).
 var targets_holder: Flying = Flying.ANY
 ## A condition its target meets (null: none; phase 8 part 4).
@@ -89,6 +95,8 @@ static func read(reader: DataReader) -> UnitCondition:
 	if reader.has("on_water"):
 		def.on_water = Flying.YES if reader.opt_bool("on_water", true) else Flying.NO
 	def.same_island = reader.opt_bool("same_island", false)
+	if reader.has("engorged_pct"):
+		def.engorged_bp = reader.req_int("engorged_pct", 1, 1000) * 100
 	if reader.has("shield_above_pct"):
 		def.shield_above_bp = reader.req_int("shield_above_pct", 1, 1000) * 100
 	if reader.has("targets_holder"):
@@ -101,13 +109,13 @@ static func read(reader: DataReader) -> UnitCondition:
 		def.target_beyond = reader.req_int("target_beyond_hexes", 1, 10) * HexGrid.HEX
 	def.fired_over_full = reader.opt_bool("fired_over_full", false)
 	if def.is_empty():
-		reader.error("a condition needs at least one of keywords, statuses, below_hp_pct, above_hp_pct, flying, archetypes, front_most, on_water, same_island, shield_above_pct, targets_holder, target, ranged, target_beyond_hexes, fired_over_full, or kits")
+		reader.error("a condition needs at least one of keywords, statuses, below_hp_pct, above_hp_pct, flying, archetypes, front_most, on_water, same_island, shield_above_pct, engorged_pct, targets_holder, target, ranged, target_beyond_hexes, fired_over_full, or kits")
 	reader.finish()
 	return def
 
 
 func is_empty() -> bool:
-	return keywords.is_empty() and statuses.is_empty() and below_hp_bp == 0 and above_hp_bp == 0 and flying == Flying.ANY and archetypes.is_empty() and not front_most and on_water == Flying.ANY and kits.is_empty() and not same_island and shield_above_bp == 0 \
+	return keywords.is_empty() and statuses.is_empty() and below_hp_bp == 0 and above_hp_bp == 0 and flying == Flying.ANY and archetypes.is_empty() and not front_most and on_water == Flying.ANY and kits.is_empty() and not same_island and shield_above_bp == 0 and engorged_bp == 0 \
 		and targets_holder == Flying.ANY and target == null and ranged == Flying.ANY and target_beyond == 0 and not fired_over_full
 
 
@@ -120,6 +128,8 @@ func holds(unit: UnitState, holder: UnitState = null) -> bool:
 	if below_hp_bp > 0 and unit.hp * FixedMath.BP_ONE >= below_hp_bp * unit.max_hp:
 		return false
 	if above_hp_bp > 0 and unit.hp * FixedMath.BP_ONE <= above_hp_bp * unit.max_hp:
+		return false
+	if engorged_bp > 0 and unit.engorged * FixedMath.BP_ONE < engorged_bp * (unit.base_max_hp - unit.engorged):
 		return false
 	if shield_above_bp > 0 and unit.shield * FixedMath.BP_ONE <= shield_above_bp * unit.max_hp:
 		return false
@@ -184,6 +194,9 @@ func describe() -> String:
 	if shield_above_bp > 0:
 		@warning_ignore("integer_division")
 		parts.append("with a Shield over %d%% of max HP" % (shield_above_bp / 100))
+	if engorged_bp > 0:
+		@warning_ignore("integer_division")
+		parts.append("grown %d%% past its max HP" % (engorged_bp / 100))
 	if flying != Flying.ANY:
 		parts.append("flying" if flying == Flying.YES else "not flying")
 	if not archetypes.is_empty():

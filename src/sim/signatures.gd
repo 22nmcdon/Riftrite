@@ -100,6 +100,13 @@ static func act(sim: CombatSim, unit: UnitState) -> bool:
 		TriggerDef.Kind.AT_TIME:
 			if sim.tick >= trigger.at_ticks:
 				_queue_once(signature)
+		TriggerDef.Kind.HP_ABOVE:
+			# While above the line, at most one fire a tick (phase 8 part 5,
+			# Hemomancer); below it, nothing waits.
+			if unit.hp * FixedMath.BP_ONE > unit.max_hp * trigger.threshold_bp:
+				signature.pending = maxi(signature.pending, 1)
+			else:
+				signature.pending = 0
 	while signature.pending > 0:
 		var target: UnitState = signature.pending_target
 		if target == null or not target.alive:
@@ -233,6 +240,10 @@ static func _fire(sim: CombatSim, unit: UnitState, target: UnitState, note: Stri
 	unit.fire_power_bp += boosted
 	if ability.resets_attack:
 		note = "and readies its attack" if note.is_empty() else note + ", and readies its attack"
+	if ability.hp_cost_bp > 0 and not _pay_hp(sim, unit, signature):
+		unit.fire_power_bp = power_before
+		unit.grow_power_bp = 0
+		return false
 	var fired: bool = EffectRunner.fire(sim, unit, signature, target, ability.reach_for(unit.stats.get_stat(UnitStats.Stat.RANGE)), not signature.failing, note)
 	unit.fire_power_bp = power_before
 	unit.grow_power_bp = 0
@@ -255,6 +266,22 @@ static func _fire(sim: CombatSim, unit: UnitState, target: UnitState, note: Stri
 	# Wait to heal's twist (phase 5c step 6c): the heal that waited cleanses.
 	if unit.tactic != null and unit.tactic.cleanse_one and unit.tactic.kind == TacticDef.Kind.SIGNATURE_THRESHOLD:
 		Tactics.cleanse_one(sim, unit, target)
+	return true
+
+
+## Pays a signature's HP cost (phase 8 part 5): false, and nothing paid, if it
+## would leave the unit below 1 HP. Logged as HP_SPENT, its amount kept for
+## the fire's effects (UnitState.last_hp_spent).
+static func _pay_hp(sim: CombatSim, unit: UnitState, signature: AbilityState) -> bool:
+	var cost: int = FixedMath.apply_bp(unit.max_hp, signature.def.hp_cost_bp)
+	if unit.hp <= cost:
+		return false
+	unit.hp -= cost
+	unit.last_hp_spent = cost
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.HP_SPENT, signature.source)
+	entry.target = unit.id
+	entry.amount = cost
+	sim.combat_log.add(entry)
 	return true
 
 

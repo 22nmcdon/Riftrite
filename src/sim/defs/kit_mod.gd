@@ -55,6 +55,8 @@ extends RefCounted
 ##       "strength_add_bp": 500           (step 7c) a Mark it applies is that
 ##                                        much stronger
 ##       "follows": "largest_group",      (step 7d) its zones move toward the
+##                                        biggest group ("holder", phase 8
+##                                        part 5's Carrier: with its caster);
 ##       "ricochet_add": 1,               biggest group; its hits ricochet;
 ##       "reflect_bp": 5000,              its walls send shots back; its
 ##       "snags": true                    snares catch leaps and charges
@@ -107,6 +109,13 @@ extends RefCounted
 ##                                        Wide Peal, Far Resonance)
 ##       "count_add": 1                   a lowest_mana_ally's count (Two
 ##                                        Breaths; at most 5)
+## Phase 8 part 5 (Severine's cards), per "on" entry:
+##       "lifesteal_add_bp": 500,         a damage effect's own lifesteal, if it
+##                                        has any (Deep Bite: Rend's 15% to 20%)
+##       "plus_max_hp_add_bp": 500,       a damage effect's plus_bp_of_max_hp,
+##                                        if it has one (Massive)
+##       "hp_cost_add_bp": -100           its signature's HP cost, if it has
+##                                        one (Thin Blood)
 ## and (step 7d) "places_lantern": true at the top: the player places its
 ## signature's first area before the fight (UnitSetup.lantern).
 ## and (phase 8 part 3, the Veil Witch) "drops_passives": ["ward"] at the
@@ -210,6 +219,11 @@ class AbilityChange:
 	var ability_id: String = ""
 	var mana_max_add: int = 0
 	var ignores_def: bool = false
+	## Phase 8 part 5 (see the header); and its zones follow their caster.
+	var lifesteal_add_bp: int = 0
+	var plus_max_hp_add_bp: int = 0
+	var hp_cost_add_bp: int = 0
+	var follows_holder: bool = false
 	var per_twice: UnitCondition = null
 	var per_stack_add_bp: int = 0
 	## A signature's reach, in hexes (from the unit's own when it has none;
@@ -230,7 +244,8 @@ class AbilityChange:
 			or every_add != 0 or times_add != 0 or max_standing_add != 0 or overheal_add_bp != 0 or width_add != 0 or not add_to_areas.is_empty() \
 			or strength_add_bp != 0 or follows or ricochet_add != 0 or reflect_bp != 0 or snags \
 			or per_enemy_add_bp != 0 or overheal_max_hp_add != 0 or at_stacks_add != 0 or per_taken_add_bp != 0 or holder != null or carries \
-			or ignores_def or prefer != null and not ability_id.is_empty() or per_stack_add_bp != 0 or within_add != 0 or count_add != 0
+			or ignores_def or prefer != null and not ability_id.is_empty() or per_stack_add_bp != 0 or within_add != 0 or count_add != 0 \
+			or lifesteal_add_bp != 0 or plus_max_hp_add_bp != 0 or follows_holder
 
 	func touches(effect: EffectDef) -> bool:
 		if not at.is_empty() and not at.has(effect.target):
@@ -428,7 +443,9 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 		change.add_to_areas.append(EffectDef.read(effect_reader, false, true))
 	change.value_add = reader.opt_int("value_add", 0, -100000, 100000)
 	change.strength_add_bp = reader.opt_int("strength_add_bp", 0, 0, FixedMath.BP_ONE)
-	change.follows = reader.opt_string_choice("follows", "", ["largest_group"]) == "largest_group"
+	var follow_rule: String = reader.opt_string_choice("follows", "", ["largest_group", "holder"])
+	change.follows = follow_rule == "largest_group"
+	change.follows_holder = follow_rule == "holder"
 	change.ricochet_add = reader.opt_int("ricochet_add", 0, 0, 5)
 	change.reflect_bp = reader.opt_int("reflect_bp", 0, 0, FixedMath.BP_ONE)
 	change.snags = reader.opt_bool("snags", false)
@@ -457,6 +474,9 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 	change.ability_id = reader.opt_string("ability", "")
 	change.mana_max_add = reader.opt_int("mana_max_add", 0, -100, 100)
 	change.ignores_def = reader.opt_bool("ignores_def", false)
+	change.lifesteal_add_bp = reader.opt_int("lifesteal_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
+	change.plus_max_hp_add_bp = reader.opt_int("plus_max_hp_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
+	change.hp_cost_add_bp = reader.opt_int("hp_cost_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
 	change.per_stack_add_bp = reader.opt_int("per_stack_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
 	if reader.has("per_twice"):
 		change.per_twice = UnitCondition.read(reader.req_object("per_twice"))
@@ -478,7 +498,8 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 		reader.error("after_add_ms, value_add, guard, rise_add_pct, per_shared_bp, and per_twice change a named passive (\"slot\": \"passive:<id>\")")
 	if not (change.touches_effects() or change.cooldown_bp != FixedMath.BP_ONE or not change.add_effects.is_empty() or change.after_add_ticks != 0
 			or change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0 or change.changes_part() or change.prefer != null
-			or change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0 or change.mana_max_add != 0 or change.reach_add != 0 or change.grip_fast_vs != null):
+			or change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0 or change.mana_max_add != 0 or change.reach_add != 0 or change.grip_fast_vs != null
+			or change.hp_cost_add_bp != 0):
 		reader.error("an \"on\" entry needs amount_bp, duration_bp, duration_add_ms, radius_add, cooldown_bp, add_effects, after_add_ms, cast_bp, targets_add, or one of step 7b's knobs")
 	reader.finish()
 	return change
@@ -513,7 +534,8 @@ func step_problem() -> String:
 				or change.per_enemy_add_bp != 0 or change.overheal_max_hp_add != 0 or change.at_stacks_add != 0 or change.per_taken_add_bp != 0 \
 				or change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0 or change.holder != null or change.carries \
 				or not change.ability_id.is_empty() or change.mana_max_add != 0 or change.ignores_def or change.per_twice != null or change.per_stack_add_bp != 0 \
-				or change.reach_add != 0 or change.grip_fast_vs != null:
+				or change.reach_add != 0 or change.grip_fast_vs != null or change.lifesteal_add_bp != 0 or change.plus_max_hp_add_bp != 0 \
+				or change.hp_cost_add_bp != 0 or change.follows_holder:
 			return "a growing card's step can only change an ability's amount_bp"
 	return ""
 
@@ -609,6 +631,8 @@ func affects_besides_passives(kit: UnitDef) -> bool:
 			if change.grows_add_bp != 0 and ability.grows_bp > 0 or change.grows_boosts_add_bp != 0 and ability.grows_boosts_bp > 0:
 				return true
 			if change.cast_bp != FixedMath.BP_ONE and ability.cast_ticks > 0:
+				return true
+			if change.hp_cost_add_bp != 0 and ability.hp_cost_bp > 0:
 				return true
 			if change.reach_add != 0 and ability.is_signature() or change.grip_fast_vs != null and not ability.grip_status.is_empty():
 				return true
@@ -793,6 +817,8 @@ static func _changed_ability(ability: AbilityDef, change: AbilityChange) -> Abil
 		copy.grows_bp = maxi(ability.grows_bp + change.grows_add_bp, 0)
 	if change.grows_boosts_add_bp != 0 and ability.grows_boosts_bp > 0:
 		copy.grows_boosts_bp = maxi(ability.grows_boosts_bp + change.grows_boosts_add_bp, 0)
+	if change.hp_cost_add_bp != 0 and ability.hp_cost_bp > 0:
+		copy.hp_cost_bp = clampi(ability.hp_cost_bp + change.hp_cost_add_bp, 1, 9000)
 	if change.touches_effects():
 		copy.effects = _changed_effects(ability.effects, change)
 		# A grip's effects too (phase 8 part 4, Tightening Cord).
@@ -907,6 +933,14 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 				copy.carries = true
 			if change.ignores_def and effect.type == EffectDef.Type.DAMAGE:
 				copy.ignores_def = true
+			if change.lifesteal_add_bp != 0 and effect.lifesteal_bp > 0:
+				copy.lifesteal_bp = maxi(effect.lifesteal_bp + change.lifesteal_add_bp, 0)
+			if change.plus_max_hp_add_bp != 0 and effect.plus_bp_of_max_hp > 0:
+				copy.plus_bp_of_max_hp = maxi(effect.plus_bp_of_max_hp + change.plus_max_hp_add_bp, 0)
+			if change.follows_holder and effect.zone_ticks > 0:
+				copy.follows = true
+				copy.follows_nearest = false
+				copy.follows_holder = true
 			if change.per_stack_add_bp != 0 and not effect.grows_status.is_empty():
 				copy.grows_stack_bp = maxi(effect.grows_stack_bp + change.per_stack_add_bp, 0)
 			if change.prefer != null and effect.target == EffectDef.Target.FARTHEST_ENEMIES:
@@ -952,6 +986,9 @@ static func _any_effect(effects: Array[EffectDef], change: AbilityChange) -> boo
 				or change.holder != null and _takes_holder(effect)
 				or change.carries and effect.type == EffectDef.Type.CHARGE and effect.knockback_hexes > 0 and not effect.carries
 				or change.ignores_def and effect.type == EffectDef.Type.DAMAGE and not effect.ignores_def
+				or change.lifesteal_add_bp != 0 and effect.lifesteal_bp > 0
+				or change.plus_max_hp_add_bp != 0 and effect.plus_bp_of_max_hp > 0
+				or change.follows_holder and effect.zone_ticks > 0 and not effect.follows_holder
 				or change.per_stack_add_bp != 0 and not effect.grows_status.is_empty()
 				or change.prefer != null and effect.target == EffectDef.Target.FARTHEST_ENEMIES):
 			return true

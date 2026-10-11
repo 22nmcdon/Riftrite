@@ -375,6 +375,12 @@ static func counted(counts: DeedDef, per: int) -> String:
 			return "%s of statuses made to last longer" % amount
 		DeedDef.Counts.MANA_GIVEN:
 			return "%s mana given to allies" % amount
+		DeedDef.Counts.MAX_HP_GAINED:
+			return "%s max HP gained%s" % [amount, "" if counts.from_ability.is_empty() else " by " + ", ".join(counts.from_ability).replace("_", " ")]
+		DeedDef.Counts.HP_SPENT:
+			return "%s HP spent on signatures" % amount
+		DeedDef.Counts.LIFESTEAL:
+			return "%s healed by lifesteal" % amount
 		DeedDef.Counts.MANA_OVERFLOW:
 			return "%s mana gained past full" % amount
 		DeedDef.Counts.ALLY_CASTS:

@@ -6861,5 +6861,413 @@
         }
       }
     ]
+  },
+  {
+    "_note": "The lifesteal path (rebuild-heroes.md, section 8g, path 1; phase 8 part 5, 8e-2b). First numbers.",
+    "id": "bloodglut",
+    "hero": "severine",
+    "name": "Bloodglut",
+    "title": "the one who drinks past full",
+    "fantasy": "She drinks past full and keeps swelling.",
+    "placement": "In the thick of the enemies, where her lifesteal never runs dry.",
+    "vowed": {
+      "taste": "Engorge: lifesteal past full HP raises her max HP for the rest of the fight, up to 5% more.",
+      "cost": "10% less ATK.",
+      "patch": {
+        "stats_bp": {
+          "atk": 9000
+        },
+        "passives": [
+          {
+            "id": "engorge",
+            "name": "Engorge",
+            "kind": "aura",
+            "text": "Lifesteal past full HP raises her max HP for the rest of the fight, up to a little more.",
+            "aura": {
+              "target": "holder",
+              "stat": "lifesteal_max_hp_bp",
+              "value": 10000
+            }
+          },
+          {
+            "id": "engorge_cap",
+            "name": "Engorge",
+            "kind": "aura",
+            "text": "Engorge stops at a little more max HP than she started with.",
+            "aura": {
+              "target": "holder",
+              "stat": "lifesteal_max_hp_cap_bp",
+              "value": 500
+            }
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Engorge has no cap, and Rend deals extra damage for her max HP. Gorge replaces Drain: a strike that grows with her max HP, with half of it drunk. Drain becomes a habit, every 8th Rend. The transformation also gives +15% HP and +10% ATK.",
+      "cost": "1 less speed.",
+      "patch": {
+        "stats_add": {
+          "speed": -1
+        },
+        "basic_attack": {
+          "id": "rend",
+          "name": "Rend",
+          "cooldown_ms": 1200,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "atk": 10000
+              },
+              "lifesteal_pct": 15,
+              "plus_bp_of_max_hp": 300
+            }
+          ],
+          "text": "A clawing strike at the enemy beside her that heals her by part of the damage. Where most of her mana comes from."
+        },
+        "signature": {
+          "id": "gorge",
+          "name": "Gorge",
+          "text": "She gorges on an enemy within 1 hex: a strike that grows with her max HP, healing her by half the damage.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "shot": false,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "atk": 10000
+              },
+              "plus_bp_of_max_hp": 1000,
+              "lifesteal_pct": 50
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "engorge",
+            "name": "Engorge",
+            "kind": "aura",
+            "text": "Lifesteal past full HP raises her max HP for the rest of the fight, with no cap.",
+            "aura": {
+              "target": "holder",
+              "stat": "lifesteal_max_hp_bp",
+              "value": 10000
+            }
+          },
+          {
+            "id": "drain",
+            "name": "Drain",
+            "kind": "ability",
+            "text": "A habit: every 8th Rend, she tears into her target and drinks half the damage.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "damage",
+                "amount": 0,
+                "target": "target",
+                "scaling": {
+                  "atk": 20000
+                },
+                "lifesteal_pct": 50
+              }
+            ]
+          }
+        ],
+        "stats_bp": {
+          "hp": 11500,
+          "atk": 11000
+        }
+      }
+    },
+    "deed": {
+      "text": "Max HP gained from Engorge",
+      "counts": "max_hp_gained",
+      "from_ability": [
+        "engorge"
+      ],
+      "threshold": 70
+    }
+  },
+  {
+    "_note": "The Poison path (rebuild-heroes.md, section 8g, path 2; phase 8 part 5, 8e-2b). Poison is 1 damage a stack a second and never fades. First numbers.",
+    "id": "plaguebearer",
+    "hero": "severine",
+    "name": "Plaguebearer",
+    "title": "the one whose wounds fester",
+    "fantasy": "Every wound she opens festers, and she feeds on the sick.",
+    "placement": "Beside the toughest enemies, so her Poison has time to work.",
+    "vowed": {
+      "taste": "Blight: Rend applies Poison equal to 10% of her ATK.",
+      "cost": "10% less max HP.",
+      "patch": {
+        "stats_bp": {
+          "hp": 9000
+        },
+        "passives": [
+          {
+            "id": "blight",
+            "name": "Blight",
+            "kind": "ability",
+            "text": "Rend poisons the enemy it strikes. Poison never fades.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "type": "apply_status",
+                "status": "poison",
+                "stacks": 0,
+                "scaling": {
+                  "atk": 1000
+                },
+                "target": "target"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Rend applies twice the Poison, and her lifesteal is doubled against Poisoned enemies (her hits only; Poison itself never lifesteals). Plague Burst replaces Drain: a cloud around her that poisons every enemy in it each second. Drain becomes a habit, every 8th Rend.",
+      "cost": "10% less ATK.",
+      "patch": {
+        "stats_bp": {
+          "atk": 9000
+        },
+        "signature": {
+          "id": "plague_burst",
+          "name": "Plague Burst",
+          "text": "A cloud of plague within 2 hexes of her for 4s: every enemy inside is poisoned each second.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "self",
+          "effects": [
+            {
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 2
+              },
+              "anchor": "self",
+              "hits": "enemies",
+              "duration_ms": 4000,
+              "every_ms": 1000,
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "poison",
+                  "stacks": 0,
+                  "scaling": {
+                    "atk": 3000
+                  },
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "blight",
+            "name": "Blight",
+            "kind": "ability",
+            "text": "Rend poisons the enemy it strikes. Poison never fades.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "type": "apply_status",
+                "status": "poison",
+                "stacks": 0,
+                "scaling": {
+                  "atk": 2000
+                },
+                "target": "target"
+              }
+            ]
+          },
+          {
+            "id": "plague_feast",
+            "name": "Plague Feast",
+            "kind": "aura",
+            "text": "Her lifesteal is doubled against Poisoned enemies.",
+            "aura": {
+              "target": "holder",
+              "stat": "lifesteal_more_bp",
+              "value": 10000,
+              "vs": {
+                "statuses": [
+                  "poison"
+                ]
+              }
+            }
+          },
+          {
+            "id": "drain",
+            "name": "Drain",
+            "kind": "ability",
+            "text": "A habit: every 8th Rend, she tears into her target and drinks half the damage.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "damage",
+                "amount": 0,
+                "target": "target",
+                "scaling": {
+                  "atk": 20000
+                },
+                "lifesteal_pct": 50
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Poison Blight applies",
+      "counts": "applied",
+      "statuses": [
+        "poison"
+      ],
+      "from_ability": [
+        "blight"
+      ],
+      "threshold": 70
+    }
+  },
+  {
+    "_note": "The blood caster (rebuild-heroes.md, section 8g, path 3; phase 8 part 5, 8e-2b). Transformed, she casts from her HP whenever she's above half. First numbers.",
+    "id": "hemomancer",
+    "hero": "severine",
+    "name": "Hemomancer",
+    "title": "the one who bleeds for power",
+    "fantasy": "Every drop above the line is a spell.",
+    "placement": "Behind the front line, within 3 hexes of the enemies, with a healer near.",
+    "vowed": {
+      "taste": "Blood Price: Drain costs 30 mana and 5% of her max HP, instead of 60 mana.",
+      "cost": "10% less DEF.",
+      "patch": {
+        "stats_bp": {
+          "def": 9000
+        },
+        "mana": {
+          "max": 30,
+          "per_attack": 8,
+          "regen_per_s": 2
+        },
+        "signature": {
+          "id": "drain",
+          "name": "Drain",
+          "text": "She tears into an enemy within 1 hex and drinks: a heavy strike that heals her by half the damage. It costs some of her HP too.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "hp_cost_bp": 500,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "atk": 20000
+              },
+              "lifesteal_pct": 50
+            }
+          ]
+        }
+      }
+    },
+    "transformed": {
+      "text": "She becomes a caster within 3 hexes and starts every fight at half her HP. Blood Bolt (her MGK, 25% lifesteal) replaces Rend. Exsanguinate replaces Drain: whenever she's above half her HP she spends a tenth of it on a blast at her target and the enemies beside it, stronger for the HP spent. Drain becomes a habit, every 8th Blood Bolt, on her MGK.",
+      "cost": "She starts every fight at half her HP.",
+      "patch": {
+        "stats_add": {
+          "range": 2
+        },
+        "start_hp_pct": 50,
+        "basic_attack": {
+          "id": "blood_bolt",
+          "name": "Blood Bolt",
+          "cooldown_ms": 1200,
+          "text": "A bolt of blood at the nearest enemy within 3 hexes that heals her by part of the damage.",
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "mgk": 15000
+              },
+              "lifesteal_pct": 25
+            }
+          ]
+        },
+        "signature": {
+          "id": "exsanguinate",
+          "name": "Exsanguinate",
+          "text": "Whenever she's above half her HP, she spends some of it on a blast at an enemy within 3 hexes and every enemy within 1 hex of it, stronger for the HP spent. No lifesteal.",
+          "trigger": {
+            "kind": "hp_above",
+            "threshold_bp": 5000
+          },
+          "hp_cost_bp": 1000,
+          "shot": false,
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "mgk": 40000
+              },
+              "plus_bp_of_spent": 20000
+            },
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "enemies_near_target",
+              "within_hexes": 1,
+              "scaling": {
+                "mgk": 40000
+              },
+              "plus_bp_of_spent": 20000
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "drain",
+            "name": "Drain",
+            "kind": "ability",
+            "text": "A habit: every 8th Blood Bolt, she tears at her target from afar with her MGK and drinks half the damage.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 8,
+                "type": "damage",
+                "amount": 0,
+                "target": "target",
+                "scaling": {
+                  "mgk": 20000
+                },
+                "lifesteal_pct": 50
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "HP spent on spells",
+      "counts": "hp_spent",
+      "threshold": 350
+    }
   }
 ]

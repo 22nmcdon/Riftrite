@@ -388,6 +388,11 @@ static func amount_of(effect: EffectDef, unit: UnitState, damage: int = 0, sim: 
 		for stat: int in effect.scaling.size():
 			if effect.scaling[stat] != 0:
 				amount += FixedMath.apply_bp(unit.stats.values[stat], effect.scaling[stat])
+	# Its unit's own max HP, and the HP its fire just spent (phase 8 part 5).
+	if effect.plus_bp_of_max_hp > 0:
+		amount += FixedMath.apply_bp(unit.max_hp, effect.plus_bp_of_max_hp)
+	if effect.plus_bp_of_spent > 0:
+		amount += FixedMath.apply_bp(unit.last_hp_spent, effect.plus_bp_of_spent)
 	if effect.bonus_bp_per_ally > 0 and sim != null:
 		amount = FixedMath.apply_bp(amount, FixedMath.BP_ONE + effect.bonus_bp_per_ally * allies_near(sim, unit, effect))
 	return Passives.boosted(unit, effect, amount)
@@ -946,6 +951,8 @@ static func lifesteal(sim: CombatSim, attacker: UnitState, target: UnitState, de
 			entry.target = attacker.id
 			entry.amount = healed
 			sim.combat_log.add(entry)
+	if overheal > 0 and attacker.aura_bp[AuraDef.Stat.LIFESTEAL_MAX_HP_BP] > 0:
+		_engorge(sim, attacker, overheal)
 	# The strike is one chain step deeper, and none comes at the chain limit:
 	# a strike's hit can echo (Shared Pain), and the echo's lifesteal strike
 	# again, so without the guard the two would call each other forever.
@@ -1003,6 +1010,34 @@ static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectS
 	if not target.statuses.is_empty():
 		Statuses.cleanse_over_time(sim, target, share_bp, source, true)
 	return amount - healed
+
+
+## Engorge (phase 8 part 5): lifesteal_max_hp_bp of what `unit`'s lifesteal
+## would have healed past full becomes max HP and HP, for the fight, up to
+## lifesteal_max_hp_cap_bp of its max HP before any of it (0: no cap). The
+## MAX_HP_UP line is sourced to the passive that holds the aura.
+static func _engorge(sim: CombatSim, unit: UnitState, overheal: int) -> void:
+	var gain: int = FixedMath.apply_bp(overheal, unit.aura_bp[AuraDef.Stat.LIFESTEAL_MAX_HP_BP])
+	var cap_bp: int = unit.aura_bp[AuraDef.Stat.LIFESTEAL_MAX_HP_CAP_BP]
+	if cap_bp > 0:
+		gain = mini(gain, FixedMath.apply_bp(unit.base_max_hp - unit.engorged, cap_bp) - unit.engorged)
+	if gain <= 0 or not unit.alive:
+		return
+	unit.engorged += gain
+	unit.base_max_hp += gain
+	unit.max_hp += gain
+	unit.hp += gain
+	var part_id: String = ""
+	var part_name: String = ""
+	for part: PartDef in unit.def.passives:
+		if part.kind == PartDef.Kind.AURA and part.aura.stat == AuraDef.Stat.LIFESTEAL_MAX_HP_BP:
+			part_id = part.id
+			part_name = part.name
+			break
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.MAX_HP_UP, EffectSource.make(unit.id, part_id, part_name))
+	entry.target = unit.id
+	entry.amount = gain
+	sim.combat_log.add(entry)
 
 
 ## `unit` banks `overheal` and gains +1 max HP (and HP) for every `per` of

@@ -157,6 +157,8 @@ static func basic_numbers(kit: UnitDef, content: ContentDb) -> String:
 static func signature_numbers(kit: UnitDef, content: ContentDb) -> String:
 	var signature: AbilityDef = kit.signature
 	var parts: Array[String] = [trigger_text(signature.trigger, kit)]
+	if signature.hp_cost_bp > 0:
+		parts.append("costs %s of max HP" % ValueBreakdown._percent(signature.hp_cost_bp))
 	if signature.cast_ticks > 0:
 		parts.append("%s cast" % seconds(signature.cast_ticks))
 	if signature.targeting != "self":
@@ -324,6 +326,8 @@ static func trigger_text(trigger: TriggerDef, kit: UnitDef) -> String:
 			return "Once, when an ally's %s fires" % trigger.ability.replace("_", " ").capitalize()
 		TriggerDef.Kind.EVERY:
 			return "Every %s" % seconds(trigger.at_ticks)
+		TriggerDef.Kind.HP_ABOVE:
+			return "Whenever above %s HP" % ValueBreakdown._percent(trigger.threshold_bp)
 	return "Once, when it would fall"
 
 
@@ -600,6 +604,10 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 					text += " if it's %s" % effect.execute_vs.describe()
 			if effect.ignores_def:
 				text += ", ignoring DEF"
+			if effect.plus_bp_of_max_hp > 0:
+				text += " + %s of max HP" % ValueBreakdown._percent(effect.plus_bp_of_max_hp)
+			if effect.plus_bp_of_spent > 0:
+				text += " + %s of the HP it spent" % ValueBreakdown._percent(effect.plus_bp_of_spent)
 			if effect.lifesteal_bp > 0:
 				text += ", %s lifesteal" % ValueBreakdown._percent(effect.lifesteal_bp)
 			return text + _to_all(effect)

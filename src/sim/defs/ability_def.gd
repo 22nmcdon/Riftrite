@@ -19,6 +19,10 @@ extends RefCounted
 ## hex for a melee unit).
 ## An optional "text" is the player's sentence for it (docs/plans/rebuild-phase3-fight-sandbox.md,
 ## section 7); the sim never reads it.
+## "hp_cost_bp" (phase 8 part 5, Severine): each fire also costs that share of
+## the unit's max HP, logged as HP_SPENT before its effects (which may read it:
+## plus_bp_of_spent). It never takes the unit below 1 HP: with too little, the
+## signature waits, as a bar not yet full.
 ## cast_ms (mana signatures only): the unit stands
 ## still that long before it lands; a Stun cancels the cast, and the
 ## signature keeps its mana.
@@ -45,6 +49,8 @@ var targeting: String = "nearest"
 ## In hexes; 0: the unit's own range.
 var max_range: int = 0
 var cast_ticks: int = 0
+## Signatures: a share of max HP each fire costs too (phase 8 part 5; 0: none).
+var hp_cost_bp: int = 0
 ## Signatures, from a sigil (KitMod; phase 5) or the kit's "also_fires"
 ## (phase 8 part 3): extra triggers it also fires on, free of mana
 ## (TriggerDef.ALSO_KINDS).
@@ -104,6 +110,7 @@ static func read_signature(reader: DataReader) -> AbilityDef:
 	def.targeting = reader.opt_string_choice("targeting", "nearest", Targeting.RULES)
 	def.max_range = reader.opt_int("max_range", 0, 1)
 	def.cast_ticks = reader.opt_ticks("cast_ms", 0)
+	def.hp_cost_bp = reader.opt_int("hp_cost_bp", 0, 0, 9000)
 	def.grows_bp = reader.opt_int("grows_bp", 0, 0, FixedMath.BP_ONE)
 	def.grows_boosts_bp = reader.opt_int("grows_boosts_bp", 0, 0, FixedMath.BP_ONE)
 	def.resets_attack = reader.opt_bool("resets_attack", false)

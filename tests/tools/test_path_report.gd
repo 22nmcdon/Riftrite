@@ -21,7 +21,7 @@ func _named() -> Dictionary[String, Dictionary]:
 
 func test_the_variants() -> void:
 	var names: Array = PathReport.variants_for(_content).map(func(variant: PathReport.Variant) -> String: return PathReport.variant_name(_content, variant))
-	assert_eq(names.size(), 40)
+	assert_eq(names.size(), 47)
 	assert_eq(names.slice(0, 3), ["all base", "Maren, Deadeye (vowed)", "Maren, Deadeye (transformed)"])
 	assert_eq(names.slice(19, 22), ["all base, with Garrow", "Garrow, Aegisfang (vowed)", "Garrow, Aegisfang (transformed)"],
 		"a hero outside the old three fights in their team in place of the one of its role, against that team's own base")
@@ -31,12 +31,16 @@ func test_the_variants() -> void:
 	assert_eq(names.slice(33, 35), ["all base, with Aldous", "Aldous, Chorister (vowed)"])
 	var tamsin: PathReport.Variant = PathReport.variants_for(_content)[27]
 	assert_eq([tamsin.team, tamsin.base_index], [["brannoc", "maren", "tamsin"] as Array[String], 26])
+	assert_eq(names.slice(40, 42), ["all base, with Severine", "Severine, Bloodglut (vowed)"])
+	var severine: PathReport.Variant = PathReport.variants_for(_content)[41]
+	assert_eq([severine.team, severine.base_index], [["brannoc", "maren", "severine"] as Array[String], 40],
+		"a non-tank stays out of the tank's slot (phase 8 part 5): Severine stands in Vell's")
 
 
 func test_a_small_run() -> void:
 	var named: Dictionary[String, Dictionary] = _named()
 	var report: PathReport.PathReport = PathReport.run_paths(_content, "the_pack", named, 0, 1)
-	assert_eq([report.formations.size(), report.variants.size()], [4, 40])
+	assert_eq([report.formations.size(), report.variants.size()], [4, 47])
 	for variant: PathReport.Variant in report.variants:
 		assert_eq(variant.fights, 4)
 	var plain: Report.Report = Report.run_encounter(_content, "the_pack", named, 0, 1)

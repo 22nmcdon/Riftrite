@@ -775,6 +775,49 @@ def severine_base(uid):
     return "".join(o)
 
 
+def severine_bloodglut(uid):
+    """Swollen with stolen blood: a broader, red-flushed figure, claws long, a crimson aura."""
+    torso = "M110,190 L190,190 L200,346 L100,346 Z"
+    o = [shadow(84), f'<circle cx="150" cy="270" r="150" fill="{WINE}" opacity="0.10" filter="url(#bloom)"/>', severine_legs(BLOOD_DK),
+         limb((116, 206), (88, 288), 22, 16, NIGHTSILK), circle(86, 292, 9, PALE, 2), claws(86, 292, 160, WINE),
+         P(torso, BLOOD_DK), P("M120,202 L180,202 L186,336 L114,336 Z", BLOOD),
+         P("M100,306 L200,322 L200,342 L100,326 Z", NIGHTSILK, 2),
+         shade(uid, [torso], cut=150), severine_head(),
+         limb((184, 206), (226, 266), 22, 16, NIGHTSILK), circle(228, 270, 9, PALE, 2), claws(228, 270, -20, WINE),
+         "".join(f'<circle cx="{x}" cy="{y}" r="5" fill="{WINE}" opacity="0.7" filter="url(#glow)"/>' for x, y in ((104, 250), (196, 236), (150, 360))),
+         rim("M186,210 L194,300", color=WINE, w=3)]
+    return "".join(o)
+
+
+def severine_plaguebearer(uid):
+    """Ragged and greened at the edges, a sickly haze trailing from her claws."""
+    torso = "M118,194 L182,194 L190,340 L110,340 Z"
+    haze = "".join(f'<circle cx="{x}" cy="{y}" r="{r}" fill="#7fa34a" opacity="0.30" filter="url(#bloom)"/>' for x, y, r in
+                   ((90, 300, 20), (226, 280, 18), (118, 430, 24), (190, 440, 22)))
+    o = [shadow(72), haze, severine_legs("#2f3a26"),
+         limb((122, 208), (98, 286), 18, 14, "#2f3a26"), circle(96, 290, 8, PALE, 2), claws(96, 290, 160, "#7fa34a"),
+         P(torso, "#2f3a26"), P("M126,204 L174,204 L178,332 L122,332 Z", "#4d5f2c"),
+         P("M110,300 L190,316 L190,334 L110,318 Z", BLOOD_DK, 2),
+         "".join(f'<path d="M{x},340 l4,26 l4,-26 Z" fill="#4d5f2c" stroke="{INK}" stroke-width="1.6"/>' for x in (116, 132, 150, 168, 182)),
+         shade(uid, [torso], cut=150), severine_head(),
+         limb((178, 208), (216, 268), 18, 14, "#2f3a26"), circle(218, 272, 8, PALE, 2), claws(218, 272, -20, "#7fa34a"),
+         rim("M182,212 L188,300", color="#a8d36a", w=2)]
+    return "".join(o)
+
+
+def severine_hemomancer(uid):
+    """A blood-caster in a long crimson robe, a floating orb of blood over one open palm."""
+    body = "M120,192 L180,192 L198,494 L102,494 Z"
+    o = [shadow(76), P(body, BLOOD_DK), P("M144,196 L156,196 L160,494 L140,494 Z", NIGHTSILK, 2), shade(uid, [body], cut=150),
+         limb((126, 210), (116, 290), 18, 14, BLOOD_DK), circle(116, 294, 8, PALE, 2),
+         severine_head(),
+         limb((176, 208), (220, 256), 18, 14, BLOOD_DK), circle(222, 260, 8, PALE, 2),
+         f'<circle cx="226" cy="226" r="20" fill="{WINE}" opacity="0.35" filter="url(#bloom)"/>', circle(226, 226, 12, BLOOD, 2),
+         "".join(f'<path d="M{226 + dx},{240 + dy} q2,8 0,14" fill="none" stroke="{WINE}" stroke-width="2" opacity="0.8"/>' for dx, dy in ((-6, 2), (5, 4))),
+         rim("M182,210 L196,480", color=WINE, w=2)]
+    return "".join(o)
+
+
 # ------------------------------------------------------------------ Edric (8e-3)
 VESTMENT, VESTMENT_DK = "#d9d0b6", "#a99c78"
 TITHE_BLUE = "#33486b"
@@ -829,7 +872,8 @@ HEROES = [
                           ("headhunter", "Headhunter", tamsin_headhunter), ("garrote", "Garrote", tamsin_garrote)]),
     ("aldous", "Aldous", [("base", "Base", aldous_base), ("chorister", "Chorister", aldous_chorister),
                           ("windcaller", "Windcaller", aldous_windcaller), ("bellwarden", "Bellwarden", aldous_bellwarden)]),
-    ("severine", "Severine", [("base", "Base", severine_base)]),
+    ("severine", "Severine", [("base", "Base", severine_base), ("bloodglut", "Bloodglut", severine_bloodglut),
+                              ("plaguebearer", "Plaguebearer", severine_plaguebearer), ("hemomancer", "Hemomancer", severine_hemomancer)]),
     ("edric", "Edric", [("base", "Base", edric_base)]),
 ]
 

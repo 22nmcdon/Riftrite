@@ -17,6 +17,8 @@ var cooldown_add_bp: int = 0
 ## so worked out once).
 var mana_trigger: bool = false
 var once_trigger: bool = false
+## Fires while its unit is above an HP share (phase 8 part 5, Hemomancer).
+var above_trigger: bool = false
 
 # Signatures.
 ## A once-a-fight trigger has fired (or, for would_fall, saved the unit).
@@ -71,6 +73,7 @@ static func make(ability: AbilityDef, unit_id: String) -> AbilityState:
 	state.set_cooldown_add(0)
 	if ability.trigger != null:
 		state.mana_trigger = ability.trigger.kind == TriggerDef.Kind.MANA
+		state.above_trigger = ability.trigger.kind == TriggerDef.Kind.HP_ABOVE
 		state.once_trigger = ability.trigger.kind == TriggerDef.Kind.HP_BELOW or ability.trigger.kind == TriggerDef.Kind.FIGHT_START or ability.trigger.kind == TriggerDef.Kind.AT_TIME
 	for trigger: TriggerDef in ability.also:
 		state.also_fired.append(false)

@@ -93,6 +93,12 @@ var taken_total: int = 0
 ## Damage it stored instead of taking (phase 8 part 4, Vengeance's aura stat
 ## store_bp), growing each second by store_grows_bp, until released.
 var stored: int = 0
+## Max HP its lifesteal past full has added this fight (phase 8 part 5,
+## Engorge: lifesteal_max_hp_bp, capped by lifesteal_max_hp_cap_bp).
+var engorged: int = 0
+## The HP its signature's last fire cost (phase 8 part 5, Exsanguinate's
+## plus_bp_of_spent reads it).
+var last_hp_spent: int = 0
 ## It has on_mana_gained passives (phase 8 part 4, Chorister; Mana.gain).
 var hears_mana: bool = false
 ## The enemy its signature grips, the signature, and when the grip's effects
@@ -293,7 +299,8 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 	if setup.max_hp_bp != FixedMath.BP_ONE:
 		unit.max_hp = maxi(FixedMath.apply_bp(unit.max_hp, setup.max_hp_bp), 1)
 	unit.base_max_hp = unit.max_hp
-	unit.hp = unit.max_hp
+	# A share of it at the start (phase 8 part 5, transformed Hemomancer).
+	unit.hp = unit.max_hp if setup.def.start_hp_bp >= FixedMath.BP_ONE else maxi(FixedMath.apply_bp(unit.max_hp, setup.def.start_hp_bp), 1)
 	if grid != null:
 		unit.pos = grid.center(setup.col, setup.row)
 	unit.radius = unit_radius

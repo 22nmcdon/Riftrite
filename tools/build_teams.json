@@ -150,6 +150,54 @@
       ],
       "swap": "base",
       "note": "test-teams.md #2; lift against Aldous on base (rebuild-phase8-heroes.md Decision 17)"
+    },
+    {
+      "name": "Glut",
+      "path": "bloodglut",
+      "type": "self-sufficient",
+      "team": {
+        "severine": "bloodglut",
+        "garrow": "spitemail",
+        "vell": "lanternbearer"
+      },
+      "relics": [
+        "leech_tooth",
+        "gluttons_chalice",
+        "sanguine_frenzy"
+      ],
+      "note": "build-map.md's sustain build; Iron Hunger's pair (Bloodglut and Spitemail) with Vell's heals"
+    },
+    {
+      "name": "Plague",
+      "path": "plaguebearer",
+      "type": "self-sufficient",
+      "team": {
+        "brannoc": "hearthwall",
+        "maren": "trapper",
+        "severine": "plaguebearer"
+      },
+      "relics": [
+        "red_thirst",
+        "leech_tooth",
+        "gluttons_chalice"
+      ],
+      "note": "build-map.md's Poison build; Maren's Trapper stands in for Kestra's Serpent-Keeper (no other Poison maker is built)"
+    },
+    {
+      "name": "Bloodletting",
+      "path": "hemomancer",
+      "type": "engine",
+      "team": {
+        "severine": "hemomancer",
+        "vell": "lanternbearer",
+        "garrow": "spitemail"
+      },
+      "relics": [
+        "blood_communion",
+        "soothing_salve",
+        "leech_tooth"
+      ],
+      "note": "test-teams.md #11; Vell's heals push her back above half her HP"
     }
   ]
 }

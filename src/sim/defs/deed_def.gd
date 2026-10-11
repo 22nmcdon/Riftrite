@@ -97,10 +97,10 @@ extends RefCounted
 ## three fights' worth of what a vowed hero puts in); the sim never reads it.
 ## Adding a kind or a filter is a code change.
 
-enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING, HITS, SHARED, BLOCKED, PULLED, EXTENDED_MS, MANA_GIVEN, MANA_OVERFLOW, ALLY_CASTS }
+enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING, HITS, SHARED, BLOCKED, PULLED, EXTENDED_MS, MANA_GIVEN, MANA_OVERFLOW, ALLY_CASTS, MAX_HP_GAINED, HP_SPENT, LIFESTEAL }
 
-const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing", "hits", "shared", "blocked", "pulled", "extended_ms", "mana_given", "mana_overflow", "ally_casts"]
-const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill", "casts", "ms standing", "enemies hit", "damage shared", "attacks blocked", "enemies pulled", "ms extended", "mana given", "mana past full", "ally signatures near"]
+const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing", "hits", "shared", "blocked", "pulled", "extended_ms", "mana_given", "mana_overflow", "ally_casts", "max_hp_gained", "hp_spent", "lifesteal"]
+const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill", "casts", "ms standing", "enemies hit", "damage shared", "attacks blocked", "enemies pulled", "ms extended", "mana given", "mana past full", "ally signatures near", "max HP gained", "HP spent", "healed by lifesteal"]
 ## The kinds read from where the hero is the target, or from the tick, not
 ## from what the hero does.
 const NOT_ITS_OWN: Array[Counts] = [Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING, Counts.BLOCKED,
@@ -246,6 +246,20 @@ func counts_kind(kind: LogEntry.Kind, ability_id: String) -> bool:
 				return false
 		Counts.MANA_GIVEN:
 			if kind != LogEntry.Kind.MANA_GIVEN:
+				return false
+		Counts.MAX_HP_GAINED:
+			# Max HP its own passive or ability added (phase 8 part 5, Engorge).
+			if kind != LogEntry.Kind.MAX_HP_UP:
+				return false
+		Counts.HP_SPENT:
+			# HP its signature cost (phase 8 part 5, Hemomancer).
+			if kind != LogEntry.Kind.HP_SPENT:
+				return false
+		Counts.LIFESTEAL:
+			# HP its lifesteal healed (phase 8 part 5, Old Thirst): LIFESTEAL
+			# lines, and lifesteal that heals (Blood Communion's HEAL lines
+			# marked lifesteal; Deeds checks the mark).
+			if kind != LogEntry.Kind.LIFESTEAL and kind != LogEntry.Kind.HEAL:
 				return false
 		Counts.APPLIED:
 			if kind != LogEntry.Kind.STATUS_APPLIED:

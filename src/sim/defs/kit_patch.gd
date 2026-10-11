@@ -19,6 +19,8 @@ extends RefCounted
 ##    "placed_snares": 2,                          UnitDef's placed_snares
 ##    "hop_cooldown_ms": 5000,                     a hop_away unit's
 ##                                                 hop_cooldown_ms (phase 8)
+##    "start_hp_pct": 50,                          UnitDef's start_hp_pct
+##                                                 (phase 8 part 5, Hemomancer)
 ##    "prefer": {"label": "Scent", "vs": {...UnitCondition...},
 ##               "within_hexes": 4}}               the enemies it picks first
 ##                                                 (UnitDef.prefer; phase 8
@@ -52,6 +54,8 @@ var hop_cooldown_ticks: int = -1
 var prefer: UnitCondition = null
 var prefer_label: String = ""
 var prefer_reach: int = 0
+## The share of max HP it starts at (0: unchanged; phase 8 part 5).
+var start_hp_bp: int = 0
 
 
 static func make() -> KitPatch:
@@ -99,6 +103,8 @@ static func read(reader: DataReader) -> KitPatch:
 		patch.placed_snares = reader.req_int("placed_snares", 0, 4)
 	if reader.has("hop_cooldown_ms"):
 		patch.hop_cooldown_ticks = reader.req_ticks("hop_cooldown_ms", FixedMath.MS_PER_TICK)
+	if reader.has("start_hp_pct"):
+		patch.start_hp_bp = reader.req_int("start_hp_pct", 1, 100) * 100
 	if reader.has("prefer"):
 		var prefer_reader: DataReader = reader.req_object("prefer")
 		if prefer_reader != null:
@@ -117,7 +123,7 @@ func changes_anything() -> bool:
 		if stats_bp[stat] != FixedMath.BP_ONE or stats_add[stat] != 0:
 			return true
 	return basic_attack != null or signature != null or mana != null or removes_mana or not passives.is_empty() or not remove_passives.is_empty() \
-		or not add_traits.is_empty() or plant_ticks >= 0 or placed_snares >= 0 or hop_cooldown_ticks >= 0 or prefer != null
+		or not add_traits.is_empty() or plant_ticks >= 0 or placed_snares >= 0 or hop_cooldown_ticks >= 0 or prefer != null or start_hp_bp > 0
 
 
 ## `base` with the patch applied (a new UnitDef; `base` is untouched), and
@@ -172,6 +178,8 @@ func apply(base: UnitDef, problems: Array[String] = []) -> UnitDef:
 		built.prefer = prefer
 		built.prefer_label = prefer_label
 		built.prefer_reach = prefer_reach
+	if start_hp_bp > 0:
+		built.start_hp_bp = start_hp_bp
 	if built.placed_snares > 0 and Snares.placed_effect(built) == null:
 		problems.append("it places snares, so its kit needs a snare effect")
 	for part: PartDef in passives:

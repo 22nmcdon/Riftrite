@@ -116,9 +116,10 @@ func test_the_fight_order_matters() -> void:
 ## A copied signature (COPIED): tests/sim/test_copies.gd. Stored damage
 ## released (RELEASED, phase 8 part 4): tests/sim/test_garrow_apex_pieces.gd.
 ## Mana given to another unit (MANA_GIVEN): tests/sim/test_aldous_pieces.gd.
+## HP spent on a signature (HP_SPENT, phase 8 part 5): tests/sim/test_severine_pieces.gd.
 const NOT_YET: Array[LogEntry.Kind] = [LogEntry.Kind.SYNERGY, LogEntry.Kind.DEED_LEVEL, LogEntry.Kind.TACTIC,
 	LogEntry.Kind.ZONE, LogEntry.Kind.SNARE, LogEntry.Kind.WALL, LogEntry.Kind.GUARD, LogEntry.Kind.RISE, LogEntry.Kind.RESISTED,
-	LogEntry.Kind.DODGED, LogEntry.Kind.ARRIVE, LogEntry.Kind.SHARED, LogEntry.Kind.WALL_HIT, LogEntry.Kind.MAX_HP_UP, LogEntry.Kind.WATER, LogEntry.Kind.FELL, LogEntry.Kind.VOID, LogEntry.Kind.COPIED, LogEntry.Kind.RELEASED, LogEntry.Kind.MANA_GIVEN]
+	LogEntry.Kind.DODGED, LogEntry.Kind.ARRIVE, LogEntry.Kind.SHARED, LogEntry.Kind.WALL_HIT, LogEntry.Kind.MAX_HP_UP, LogEntry.Kind.WATER, LogEntry.Kind.FELL, LogEntry.Kind.VOID, LogEntry.Kind.COPIED, LogEntry.Kind.RELEASED, LogEntry.Kind.MANA_GIVEN, LogEntry.Kind.HP_SPENT]
 ## Statuses only the paths use (phase 4), and only relics (phase 5c step 5a;
 ## Sunder, covered by tests/run/test_relics.gd).
 const PATH_STATUSES: Array[String] = ["warded"]
