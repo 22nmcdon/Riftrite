@@ -1,6 +1,6 @@
 # The tuning phase (all six heroes and the acts)
 
-Status: **a build plan, approved (2026-10-08; Decisions 1–18); T-1 to T-5 built (Question TH).** Order: T-2 (the bot) and T-1 (the relics), then T-3 onward. The phase `rebuild-phase8-heroes.md` named next: tune all six heroes and the three acts at once, starting from what `easy-start.md`'s runs left (ES-4 and ES-5) and the playtester's relic additions (`changes-plan-relics.md`, 2026-10-08, applied to `relics/`). Questions are in section 6.
+Status: **a build plan, approved (2026-10-08; Decisions 1–18); T-1 to T-6 built (Question TH).** Order: T-2 (the bot) and T-1 (the relics), then T-3 onward. The phase `rebuild-phase8-heroes.md` named next: tune all six heroes and the three acts at once, starting from what `easy-start.md`'s runs left (ES-4 and ES-5) and the playtester's relic additions (`changes-plan-relics.md`, 2026-10-08, applied to `relics/`). Questions are in section 6.
 
 ## 1. Where it starts
 
@@ -179,6 +179,39 @@ Decision 17's two bad stand-ins replaced No makers and All melee in `tools/test_
 - **The bad group is bad:** every team wins fewer runs than random. No damage reaches Old Mother Ash every time and dies there or in Act 2, as Decision 17 meant. Wrong fuel wins Act 1 as often as random but a run far less: Garrote's Cinch (T-3) and Aegisfang's own Shields still fuel two of its three paths, so only Windcaller starves (he transforms in 25% of its runs).
 - **The half-plans against Decision 3** (whose targets were set against random teams at 40–49% in Act 1; they're at 64% until T-6): sustain wins Act 1 about an eighth as often as random, with the lean or without, so it's weaker than the lean's target (about half of random) and about at the target without it. Control wins Act 1 about half as often as random either way: at the lean's target, and above the target without it. **The lean changes little:** 11.6 relics a run against 8.7 without, and the same Act 1 for both half-plans.
 - **Twelve runs a team is noise:** one run is 8 points, and the plans swing 30 points with and without the lean on the same seeds (burst up, tank down). The half-plans are read again after T-6, when random teams are back at 40–49%, with 36 runs a team (Question TH).
+
+### Built in T-6
+
+The acts set to their targets (random teams: win Act 1 40–49%; about 35% of the runs that reach Act 2 win it and about half of those reaching Act 3; the run about 8%; Decision 18 for the relics). Only encounters' `scale_bp` changed, and two tools.
+
+**How the fights were sized:** not by hand, and not by a bare team. A probe saved real good-bot run states at each day's loadout (80 runs, about 900 states, with their cards, items, and relics) and fought each day's two fights from them at enemy strengths x1.0 to x5.0, placed as the good bot places. Each fight's scale was set from its curve against the ramp (`easy-start.md`: days 2–3 about 85%, days 4–6 about 70%, harder fights a little lower, elites about 75%, each boss about 65% in the probe, which reads a boss about 15 points above the runs since a lost fight is fought again). Act 1 went first; Acts 2 and 3 were probed from runs played after Act 1's change, since losses carry from act to act. Then 120-run checks, and small steps on the fights the runs found off (the probe read the day fights a few points high).
+
+**What changed, start to finish** (each fight's scale against its scale before T-6):
+
+- **Act 1** (21 fights): the days 2–3 fights x1.15–1.5 (Pup Warren, Ash Nest, The Pack, Moth Cloud, Hollow Watch, Hounds and Archers, Lurker's Spark, and day 3's elites Alpha's Trail, Witch's Ward, Cairn Sentry); the days 4–6 fights x1.1–1.36 (Hollow Line, Bog Crossing, Sentinel Gate, Cairn Road, Witch Circle, Lurker's Kindling, The Warded Charge, and the elites The Hunt, Witch Coven, Cairn Watch); Old Mother Ash x1.1. Day 1 (the Glass check), Sentinel Under Moths, and Witch's Brood are unchanged.
+- **Act 2** (13 fights): most fights x1.05–1.25, the late ones x1.5–2.5 (Tidecall, The Drowning Line, Witch of the Mere, Bog and Bell), the elites x1.17 and x1.39; Reed Snipers x0.99 and the Mournwater x0.96, back where they were. Eel Run is unchanged: its curve is flat (60–65% at any strength).
+- **Act 3** (all 14 fights): x2.25 to x5 (the teams that reach it hold a median of 24 relics, 40 by its boss, 12 cards, and two apexes; its fights won 85–100% at twice their strength), the Heart of the Rift x2.25.
+
+| Good bot, 120 runs | After T-4 | After T-6 | Target |
+| --- | --- | --- | --- |
+| Reach Old Mother Ash | 88% | 62% | about 73% |
+| Win Act 1 | 64% | 41% | 40–49% |
+| Old Mother Ash, a fight | 57% | 53% | 50–60% |
+| Win Act 2 (of those reaching it) | 47% | 34% | about 35% |
+| The Mournwater, a fight | 50% | 54% | |
+| Win Act 3 (of those reaching it) | 88% | 41% (7 of 17) | about 50% |
+| Win the run | 27% | 6% | about 8% |
+| Relics a run | 19 | 10 | about 8–14 an act (Decision 18) |
+
+- **Days 2–3** win 77–96% a fight and **days 4–6** 59–82%, about the ramp; day 4 is the act's wall (18 runs end there, Sentinel Gate and Cairn Road the most fought). Fewer runs reach Old Mother Ash than the ramp's 73%, but Act 1 lands in its band, which is the target the ramp serves.
+- **Act 2 needed easier fights than Act 1** for the same share: runs arrive with Act 1's losses, so a run one loss down ends at its first loss there. Its day fights win 68–100%, its elites 87–90%.
+- **Act 3 and the run are a little under** (41% and 6%) on 17 runs that reach Act 3; one check moves Act 3 by 10 points either way.
+- **By hero** at these rates: every hero wins 3–10% of its runs (Garrow 10%), so Decision 14's band holds trivially; it's read again once the half-plans are (Question TH).
+
+**The tools:**
+
+- **The sim runner's gate** (`tools/sim_report.gd`): an Act 1 fight from day 4 on that no formation wins at its own strength now steps its enemies down until some formation does, with the base heroes (the base team couldn't win Act 1's later fights after the raise, and never won Old Mother Ash); the tactics report fights at the same strength. A later act's step halves the strength below x0.15 and bisects when it jumps over the split (Act 3's fights at x5 needed x0.09). Every act's fights pass. `tests/tools/test_sim_runner.gd` has a test for Act 1's step.
+- **The probe** (scratch tools, not in the repo): a state saver for good-bot runs and a fighter of saved states at enemy strengths.
 
 ## 6. Questions
 
