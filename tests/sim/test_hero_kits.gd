@@ -48,19 +48,19 @@ func _rows(fight: CombatSim, kind: LogEntry.Kind, unit_id: String, ability: Stri
 
 
 func test_the_kits_read_as_designed() -> void:
-	assert_eq(_content.hero_ids, ["brannoc", "maren", "vell", "garrow", "tamsin", "aldous"])
+	assert_eq(_content.hero_ids, ["brannoc", "maren", "vell", "garrow", "tamsin", "aldous", "severine", "edric"])
 	var roles: Array = _content.hero_ids.map(func(hero_id: String) -> int: return (_content.heroes[hero_id] as HeroDef).role)
-	assert_eq(roles, [HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT, HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT])
+	assert_eq(roles, [HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT, HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT])
 	var stats: Array = _content.hero_ids.map(func(hero_id: String) -> Array: return _kit(hero_id).stats.values)
-	assert_eq(stats, [[630, 14, 0, 50, 0, 0, 2, 1], [270, 22, 0, 8, 8, 10, 2, 4], [300, 6, 20, 10, 0, 0, 2, 3], [550, 26, 0, 40, 0, 0, 2, 1], [280, 16, 0, 10, 15, 10, 3, 1], [290, 10, 16, 10, 0, 0, 2, 3]], "HP, ATK, MGK, DEF, CRIT, ATSP, speed, range (Garrow's and Tamsin's tuned into the base band, build-tuning.md)")
+	assert_eq(stats, [[630, 14, 0, 50, 0, 0, 2, 1], [270, 22, 0, 8, 8, 10, 2, 4], [300, 6, 20, 10, 0, 0, 2, 3], [550, 26, 0, 40, 0, 0, 2, 1], [280, 16, 0, 10, 15, 10, 3, 1], [290, 10, 16, 10, 0, 0, 2, 3], [330, 20, 12, 12, 0, 0, 2, 1], [320, 10, 16, 16, 0, 0, 2, 3]], "HP, ATK, MGK, DEF, CRIT, ATSP, speed, range (Garrow's and Tamsin's tuned into the base band, build-tuning.md)")
 	var mana: Array = _content.hero_ids.map(func(hero_id: String) -> Array:
 		var bar: ManaDef = _kit(hero_id).mana
 		return [bar.max, bar.start, bar.per_attack, bar.per_10_damage_taken, bar.regen_per_s])
-	assert_eq(mana, [[80, 30, 8, 1, 0], [50, 0, 10, 0, 2], [60, 20, 12, 0, 2], [70, 20, 10, 1, 0], [50, 0, 8, 0, 2], [60, 0, 10, 0, 2]], "cost, start, per attack, per 10 damage taken, regen")
-	assert_eq([_kit("brannoc").traits, _kit("maren").traits, _kit("vell").traits, _kit("garrow").traits, _kit("tamsin").traits, _kit("aldous").traits], [["engage"], ["hop_away"], [], [], [], []])
+	assert_eq(mana, [[80, 30, 8, 1, 0], [50, 0, 10, 0, 2], [60, 20, 12, 0, 2], [70, 20, 10, 1, 0], [50, 0, 8, 0, 2], [60, 0, 10, 0, 2], [60, 0, 8, 0, 2], [70, 0, 8, 0, 2]], "cost, start, per attack, per 10 damage taken, regen")
+	assert_eq([_kit("brannoc").traits, _kit("maren").traits, _kit("vell").traits, _kit("garrow").traits, _kit("tamsin").traits, _kit("aldous").traits, _kit("severine").traits, _kit("edric").traits], [["engage"], ["hop_away"], [], [], [], [], [], []])
 	assert_eq(_kit("maren").hop_cooldown_ticks, 120)
 	var names: Array = _content.hero_ids.map(func(hero_id: String) -> Array: return [_kit(hero_id).basic_attack.name, _kit(hero_id).signature.name])
-	assert_eq(names, [["Shield Bash", "Hold the Line"], ["Longshot", "Marking Shot"], ["Lantern Glow", "Mend"], ["Chain Fist", "Haul"], ["Knife", "Shadowstep"], ["Toll", "Peal"]])
+	assert_eq(names, [["Shield Bash", "Hold the Line"], ["Longshot", "Marking Shot"], ["Lantern Glow", "Mend"], ["Chain Fist", "Haul"], ["Knife", "Shadowstep"], ["Toll", "Peal"], ["Rend", "Drain"], ["Seal", "Ward"]])
 
 
 # --- Brannoc ---------------------------------------------------------------------
@@ -208,6 +208,73 @@ func test_resonance_quickens_the_allies_within_2_hexes() -> void:
 	assert_eq(fight.unit_by_id("near").stats.get_stat(UnitStats.Stat.ATSP), 5)
 	assert_eq(fight.unit_by_id("far").stats.get_stat(UnitStats.Stat.ATSP), 0)
 	assert_eq(fight.unit_by_id("aldous").stats.get_stat(UnitStats.Stat.ATSP), 0, "not himself")
+
+
+# --- Severine -------------------------------------------------------------------
+
+## Severine hurt to half her HP, beside a dummy at `dummy_hp_pct` of its HP.
+func _severine_fight(dummy_hp_pct: int) -> CombatSim:
+	var fight: CombatSim = _sim([K.at(_kit("severine"), 3, 3)] as Array[UnitSetup], [K.foe(_dummy("mark"), 3, 4)] as Array[UnitSetup])
+	var severine: UnitState = fight.unit_by_id("severine")
+	severine.hp = severine.max_hp / 2
+	var mark: UnitState = fight.unit_by_id("mark")
+	mark.hp = mark.max_hp * dummy_hp_pct / 100
+	return fight
+
+
+func _steals(fight: CombatSim) -> Array:
+	var rows: Array = []
+	for entry: LogEntry in fight.combat_log.entries:
+		if entry.kind == LogEntry.Kind.DAMAGE and entry.source_unit == "severine":
+			rows.append([entry.source_ability, entry.amount])
+		elif entry.kind == LogEntry.Kind.LIFESTEAL and entry.source_unit == "severine":
+			rows.append(["lifesteal", entry.amount])
+	return rows
+
+
+func test_rend_and_drain_heal_her_by_15_and_50_percent() -> void:
+	var fight: CombatSim = _severine_fight(100)
+	K.step(fight, 40)
+	var rows: Array = _steals(fight)
+	var rend: int = rows.find(rows.filter(func(row: Array) -> bool: return row[0] == "rend")[0])
+	assert_eq(rows[rend + 1], ["lifesteal", rows[rend][1] * 15 / 100], "Rend: 15% of what it dealt")
+	_fill_mana(fight.unit_by_id("severine"))
+	K.step(fight, 2)
+	rows = _steals(fight)
+	var drain: int = rows.find(rows.filter(func(row: Array) -> bool: return row[0] == "drain")[0])
+	assert_eq(rows[drain + 1], ["lifesteal", rows[drain][1] / 2], "Drain: half of what it dealt")
+
+
+func test_hemophage_doubles_her_lifesteal_on_enemies_below_half_hp() -> void:
+	var fight: CombatSim = _severine_fight(40)
+	K.step(fight, 40)
+	var rows: Array = _steals(fight)
+	var rend: int = rows.find(rows.filter(func(row: Array) -> bool: return row[0] == "rend")[0])
+	assert_eq(rows[rend + 1], ["lifesteal", rows[rend][1] * 30 / 100], "30% below half HP")
+	assert_string_contains(UnitInfo.basic_numbers(_kit("severine"), _content), "15% lifesteal", "Rend's numbers line names it")
+
+
+# --- Edric -----------------------------------------------------------------------
+
+func test_ward_shields_every_ally_for_8_percent_of_their_max_hp() -> void:
+	var fight: CombatSim = _sim([K.at(_kit("edric"), 3, 1), K.at(_kit("brannoc"), 3, 2), K.at(_kit("maren"), 0, 0)] as Array[UnitSetup],
+		[K.foe(_dummy("mark"), 3, 6)] as Array[UnitSetup])
+	_root_all(fight, fight.heroes)
+	_fill_mana(fight.unit_by_id("edric"))
+	K.step(fight, 2)
+	var shields: Array = _rows(fight, LogEntry.Kind.SHIELD, "edric", "ward")
+	shields.sort()
+	assert_eq(shields, [["brannoc", FixedMath.apply_bp(630, 800)], ["edric", FixedMath.apply_bp(320, 800)], ["maren", FixedMath.apply_bp(270, 800)]], "every ally, him too")
+
+
+func test_vigil_shelters_shielded_allies_within_2_hexes() -> void:
+	var fight: CombatSim = _sim([K.at(_kit("edric"), 3, 1), K.at(_dummy("near"), 3, 2), K.at(_dummy("bare"), 4, 1), K.at(_dummy("far"), 7, 0)] as Array[UnitSetup],
+		[K.foe(_dummy("mark"), 3, 6)] as Array[UnitSetup])
+	fight.unit_by_id("near").shield = 10
+	fight.unit_by_id("far").shield = 10
+	K.step(fight, 1)
+	var reduced: Array = ["near", "bare", "far", "edric"].map(func(unit_id: String) -> int: return fight.unit_by_id(unit_id).aura_bp[AuraDef.Stat.DAMAGE_REDUCED_BP])
+	assert_eq(reduced, [500, 0, 0, 0], "only the Shielded ally within 2 hexes")
 
 
 # --- Maren -----------------------------------------------------------------------

@@ -29,7 +29,9 @@ extends RefCounted
 ##                 fires (an area's: as it's cast); a Shield's too (Shared
 ##                 Ward: a share of what he's about to burst). Damage's
 ##                 "ignores_def": true (Bitter Blood): its hits ignore the
-##                 target's DEF
+##                 target's DEF. Damage's "lifesteal_pct" (phase 8 part 5,
+##                 Severine's Rend and Drain): its hits heal the unit that
+##                 share more, on top of its lifesteal auras
 ##   spend_shield: (phase 8 part 4, Bulwark Burst; target "self") the
 ##                 unit's whole Shield is gone, logged as SHIELD_SPENT with
 ##                 what it was. After an area that read it, the area keeps
@@ -482,6 +484,9 @@ var amount_bp_of_max_hp: int = 0
 var amount_bp_of_shield: int = 0
 ## damage (phase 8 part 4, Bitter Blood): its hits ignore the target's DEF.
 var ignores_def: bool = false
+## damage (phase 8 part 5, Severine): its own lifesteal share (bp), added to
+## the unit's for its hits.
+var lifesteal_bp: int = 0
 ## damage (phase 8 part 4, Vengeance): a share of the unit's stored damage.
 var amount_bp_of_stored: int = 0
 ## spend_shield (Shatterburst): the share of the Shield it keeps.
@@ -759,6 +764,9 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				# A plain hit (the tuning phase: Thorned Bandage, Splinter
 				# Shot): it never crits and never lifesteals.
 				def.plain = reader.opt_bool("plain", false)
+				def.lifesteal_bp = reader.opt_int("lifesteal_pct", 0, 0, 500) * 100
+				if def.plain and def.lifesteal_bp > 0:
+					reader.error("a plain hit never lifesteals (\"lifesteal_pct\")")
 			Type.HEAL:
 				var kinds: int = int(reader.has("amount")) + int(reader.has("amount_bp_of_max_hp")) + int(reader.has("amount_bp_of_damage"))
 				if kinds != 1:

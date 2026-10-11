@@ -600,6 +600,8 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 					text += " if it's %s" % effect.execute_vs.describe()
 			if effect.ignores_def:
 				text += ", ignoring DEF"
+			if effect.lifesteal_bp > 0:
+				text += ", %s lifesteal" % ValueBreakdown._percent(effect.lifesteal_bp)
 			return text + _to_all(effect)
 		EffectDef.Type.HEAL:
 			if effect.amount_bp_of_max_hp > 0:

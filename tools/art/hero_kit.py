@@ -735,6 +735,87 @@ def aldous_bellwarden(uid):
     return "".join(o)
 
 
+# ------------------------------------------------------------------ Severine (8e-2)
+BLOOD, BLOOD_DK = "#8e1f2e", "#5a1220"
+NIGHTSILK = "#2a1a2e"
+PALE = "#efd9cf"
+HAIR_BLACK = "#1c1220"
+
+
+def severine_head(hair=HAIR_BLACK):
+    return "".join([P("M114,150 C108,96 192,96 186,150 L192,236 L176,228 L172,170 L128,170 L124,228 L108,236 Z", hair),
+                    P("M128,142 C126,110 174,110 172,142 L170,174 C162,192 138,192 130,174 Z", PALE),
+                    P("M120,140 C118,104 182,104 180,140 C170,122 130,122 120,140 Z", hair),
+                    f'<path d="M140,150 l7,2 M154,152 l7,-2" stroke="{INK}" stroke-width="2.6" stroke-linecap="round"/>',
+                    f'<path d="M146,176 l8,0" stroke="{BLOOD}" stroke-width="3" stroke-linecap="round"/>',
+                    rim("M122,140 C124,118 136,108 150,106", color=WINE, w=2)])
+
+
+def claws(x, y, angle=0, color=BLOOD):
+    return (f'<g transform="translate({x},{y}) rotate({angle})">'
+            + "".join(f'<path d="M0,{dy} L{22 + abs(dy)},{dy * 2} L0,{dy + 3} Z" fill="{BONE}" stroke="{INK}" stroke-width="1.6"/>' for dy in (-6, -1, 4))
+            + f'<circle cx="10" cy="0" r="9" fill="{color}" opacity="0.35" filter="url(#glow)"/></g>')
+
+
+def severine_legs(fill=NIGHTSILK):
+    return "".join([P("M124,330 L148,330 L138,468 L112,468 Z", fill), P("M152,330 L176,330 L190,468 L164,468 Z", fill),
+                    boot(106, 148) + boot(162, 204)])
+
+
+def severine_base(uid):
+    """A pale bloodwitch in night-black silk with a blood-red sash, long black hair, clawed hands."""
+    torso = "M118,194 L182,194 L190,340 L110,340 Z"
+    o = [shadow(72), severine_legs(),
+         limb((122, 208), (98, 286), 18, 14, NIGHTSILK), circle(96, 290, 8, PALE, 2), claws(96, 290, 160),
+         P(torso, NIGHTSILK), P("M126,204 L174,204 L178,332 L122,332 Z", BLOOD_DK),
+         P("M110,300 L190,316 L190,334 L110,318 Z", BLOOD, 2),
+         shade(uid, [torso], cut=150), severine_head(),
+         limb((178, 208), (216, 268), 18, 14, NIGHTSILK), circle(218, 272, 8, PALE, 2), claws(218, 272, -20),
+         rim("M182,212 L188,300", color=WINE, w=2)]
+    return "".join(o)
+
+
+# ------------------------------------------------------------------ Edric (8e-3)
+VESTMENT, VESTMENT_DK = "#d9d0b6", "#a99c78"
+TITHE_BLUE = "#33486b"
+
+
+def edric_head():
+    return "".join([P("M128,140 C126,108 174,108 172,140 L170,174 C162,192 138,192 130,174 Z", SKIN),
+                    P("M124,128 C122,106 178,106 176,128 L176,140 C168,124 132,124 124,140 Z", HAIR_DK),
+                    f'<path d="M140,150 l7,1 M154,151 l7,-1" stroke="{INK}" stroke-width="2.6" stroke-linecap="round"/>',
+                    P("M134,176 C140,186 160,186 166,176", "none", 2.4),
+                    rim("M126,132 C128,116 140,108 152,106", color=GOLD, w=2)])
+
+
+def seal_stamp(x, y, s=1.0):
+    return (P(f"M{x - 5 * s:.1f},{y - 30 * s:.1f} L{x + 5 * s:.1f},{y - 30 * s:.1f} L{x + 4 * s:.1f},{y - 8 * s:.1f} L{x - 4 * s:.1f},{y - 8 * s:.1f} Z", WOOD, 2)
+            + circle(x, y, 13 * s, BRONZE, 2.4) + rune(x, y, 6 * s, color=GOLD))
+
+
+def ward_ring(cx, cy, r, color=AQUA, op=0.55):
+    return (f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="{color}" stroke-width="3" opacity="{op}" filter="url(#glow)"/>'
+            f'<circle cx="{cx}" cy="{cy}" r="{r - 7}" fill="none" stroke="{color}" stroke-width="1.4" opacity="{op * 0.7:.2f}" stroke-dasharray="6 5"/>')
+
+
+def edric_robe(uid, color=VESTMENT, trim=TITHE_BLUE, hem=494):
+    body = f"M118,192 L182,192 L200,{hem} L100,{hem} Z"
+    return "".join([P(body, color), P(f"M142,196 L158,196 L162,{hem} L138,{hem} Z", trim, 2),
+                    P("M118,192 L182,192 L176,236 L124,236 Z", VESTMENT_DK, 2),
+                    shade(uid, [body], cut=150)])
+
+
+def edric_base(uid):
+    """A tithe-warden in pale vestments with a blue stole, a ledger at his hip and a bronze seal held up."""
+    o = [shadow(78), edric_robe(uid),
+         P("M102,300 L128,296 L130,334 L104,338 Z", LEATHER_DK, 2), P("M106,304 L126,301 L127,330 L107,333 Z", BONE, 1.6),
+         limb((126, 210), (112, 286), 20, 16, VESTMENT_DK), circle(112, 290, 8, SKIN, 2),
+         edric_head(),
+         limb((176, 208), (218, 258), 20, 16, VESTMENT_DK), circle(220, 262, 8, SKIN, 2),
+         seal_stamp(222, 238), ward_ring(222, 238, 30, op=0.45)]
+    return "".join(o)
+
+
 HEROES = [
     ("maren", "Maren", [("base", "Base", maren_base), ("deadeye", "Deadeye", maren_deadeye),
                         ("trapper", "Trapper", maren_trapper), ("volley", "Volley", maren_volley)]),
@@ -748,6 +829,8 @@ HEROES = [
                           ("headhunter", "Headhunter", tamsin_headhunter), ("garrote", "Garrote", tamsin_garrote)]),
     ("aldous", "Aldous", [("base", "Base", aldous_base), ("chorister", "Chorister", aldous_chorister),
                           ("windcaller", "Windcaller", aldous_windcaller), ("bellwarden", "Bellwarden", aldous_bellwarden)]),
+    ("severine", "Severine", [("base", "Base", severine_base)]),
+    ("edric", "Edric", [("base", "Base", edric_base)]),
 ]
 
 FILTERS = ('<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4" result="b"/>'

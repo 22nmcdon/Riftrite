@@ -178,7 +178,7 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 		return
 	match effect.type:
 		EffectDef.Type.DAMAGE:
-			var dealt: int = deal_hit(sim, source, victim, amount, crit, power, not effect.plain, "", false, effect.ignores_def)
+			var dealt: int = deal_hit(sim, source, victim, amount, crit, power, not effect.plain, "", false, effect.ignores_def, effect.lifesteal_bp)
 			if effect.execute_below_bp > 0 and not sim.last_dodged and (effect.execute_vs == null or effect.execute_vs.holds(victim, unit)):
 				execute(sim, source, victim, effect.execute_below_bp)
 			if effect.trigger == EffectDef.Trigger.ON_FIRE and ability != null and ability.has_hit_effects and not sim.last_dodged:
@@ -650,7 +650,8 @@ static func nearest_to(pool: Array[UnitState], others: Array[UnitState], count: 
 ## `steals`: false for a hit that never lifesteals (Shadow Engine's strike,
 ## which comes from lifesteal). `note` says what made it, if not an ability.
 ## `ruled`: a hit a hero rule made (an echo, a carry), which starts no echo
-## or carry of its own (phase 5c step 5c).
+## or carry of its own (phase 5c step 5c). `steal_bp`: the hit's own
+## lifesteal share, added to the attacker's (phase 8 part 5, Rend).
 ## An execution (phase 8 part 2): a target the hit left standing below
 ## `below_bp` of its max HP loses the rest of its HP, past any Shield or
 ## DEF, logged as a DAMAGE line noted "executed" from the same source. The
@@ -673,7 +674,7 @@ static func execute(sim: CombatSim, source: EffectSource, victim: UnitState, bel
 	sim.combat_log.add(entry)
 
 
-static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, amount: int, crit: bool, power: int = 0, steals: bool = true, note: String = "", ruled: bool = false, pierces: bool = false) -> int:
+static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, amount: int, crit: bool, power: int = 0, steals: bool = true, note: String = "", ruled: bool = false, pierces: bool = false, steal_bp: int = 0) -> int:
 	sim.last_dodged = false
 	# Sidestep (phase 5c step 6b): a hit on it misses, then not again for a
 	# while. Logged as DODGED; nothing else of the hit happens.
@@ -795,8 +796,8 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 	# 5c step 6c).
 	if sim.damage_payoffs and attacker != null and attacker.tactic != null and Tactics.own_hit(attacker, source):
 		Tactics.on_hit(sim, attacker, target, crit)
-	if steals and attacker != null and sim.lifesteal and dealt > 0 and attacker.side != target.side:
-		lifesteal(sim, attacker, target, dealt, source)
+	if steals and attacker != null and (sim.lifesteal or steal_bp > 0) and dealt > 0 and attacker.side != target.side:
+		lifesteal(sim, attacker, target, dealt, source, steal_bp)
 	if heroes_hit and not ruled:
 		var overkill: int = entry.overkill
 		if sim.hero_rules.echo_steps > 0 and dealt > 0:
@@ -917,10 +918,17 @@ static func _more_crit_damage(sim: CombatSim, attacker: UnitState, target: UnitS
 ## marked lifesteal: heal power, healing taken, on_heal, and overheal to
 ## Shield all see it); and with overheal_strike_bp (Shadow Engine) what it
 ## would heal past full HP hits the attacker's target for that share.
-static func lifesteal(sim: CombatSim, attacker: UnitState, target: UnitState, dealt: int, source: EffectSource) -> void:
-	var share: int = attacker.aura_bp[AuraDef.Stat.LIFESTEAL_BP]
+## `extra_bp`: the hit's own share (a damage effect's lifesteal_pct). Phase 8
+## part 5 (Hemophage): lifesteal_more_bp multiplies the whole share (+100%
+## doubles it), its per-hit "vs" counting against `target`.
+static func lifesteal(sim: CombatSim, attacker: UnitState, target: UnitState, dealt: int, source: EffectSource, extra_bp: int = 0) -> void:
+	var share: int = attacker.aura_bp[AuraDef.Stat.LIFESTEAL_BP] + extra_bp
+	var more: int = attacker.aura_bp[AuraDef.Stat.LIFESTEAL_MORE_BP]
 	if not attacker.vs_conditions.is_empty():
 		share += Passives.vs_bonus_bp(attacker, target, AuraDef.Stat.LIFESTEAL_BP, source.ability_id)
+		more += Passives.vs_bonus_bp(attacker, target, AuraDef.Stat.LIFESTEAL_MORE_BP, source.ability_id)
+	if more != 0:
+		share = FixedMath.apply_bp(share, maxi(FixedMath.BP_ONE + more, 0))
 	if share <= 0 or not attacker.alive:
 		return
 	var wanted: int = FixedMath.apply_bp(dealt, share)

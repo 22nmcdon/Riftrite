@@ -46,6 +46,9 @@ extends RefCounted
 ##                                          UnitCondition ("Shielded allies
 ##                                          deal +15%"; phase 5c step 3)
 ## These are checked every tick (CombatSim.check_conditional_auras).
+## Phase 8 part 5 (Severine's Hemophage) adds lifesteal_more_bp, which adds:
+## it multiplies the holder's whole lifesteal share on a hit (+10000 doubles
+## it), and may be worked out per hit ("vs").
 ## Phase 5c step 5b adds stats that add: lifesteal_bp (heals that share of
 ## the damage its hits deal; LIFESTEAL, not healing), crit_damage_bp (to the
 ## crit kind of the damage rule), atsp (ATSP points: +30 is +30% attack
@@ -129,7 +132,7 @@ enum Stat { DAMAGE_BP, HEAL_BP, SHIELD_BP, OVER_TIME_BP, CRIT_CHANCE_BP, COOLDOW
 	OVERHEAL_SHIELD_BP, LIFESTEAL_HEALS, CRIT_OVERFLOW_BP, DEF, OVERHEAL_STRIKE_BP, MAX_HP_BP,
 	DEF_IGNORE_BP, UNPUSHABLE, DODGE_EVERY_MS, HALVED_HITS,
 	SHIELD_DAMAGE_BP, SEES_STEALTH, BURN_TAKEN_BP, MARKED_TIME_BP, ROOT_CAP_MS, MISS_BP, STUN_TIME_BP, STORE_BP, STORE_GROWS_BP, EVADE_BP, SHOT_SPEED_BP,
-	MANA_GAIN_BP, MANA_STORE_BP, OVERFLOW_POWER_BP }
+	MANA_GAIN_BP, MANA_STORE_BP, OVERFLOW_POWER_BP, LIFESTEAL_MORE_BP }
 ## What turns an aura on, beyond its window.
 enum While { ALWAYS, TAUNTING, PLANTED, BELOW_HP, ALLY_STANDING, STATE, ALLY_NEAR, BEHIND_WALL, MOVED, CROWDED, TACTIC }
 
@@ -143,7 +146,7 @@ const STAT_NAMES: Array[String] = [
 	"overheal_shield_bp", "lifesteal_heals", "crit_overflow_bp", "def", "overheal_strike_bp", "max_hp_bp",
 	"def_ignore_bp", "unpushable", "dodge_every_ms", "halved_hits",
 	"shield_damage_bp", "sees_stealth", "burn_taken_bp", "marked_time_bp", "root_cap_ms", "miss_bp", "stun_time_bp", "store_bp", "store_grows_bp", "evade_bp", "shot_speed_bp",
-	"mana_gain_bp", "mana_store_bp", "overflow_power_bp",
+	"mana_gain_bp", "mana_store_bp", "overflow_power_bp", "lifesteal_more_bp",
 ]
 const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp", "ally_standing", "state", "ally_near", "behind_wall", "moved", "crowded", "tactic"]
 ## The stats that add rather than multiply. The rest are factors (x1.1);
@@ -152,10 +155,10 @@ const ADDITIVE: Array[Stat] = [Stat.CRIT_CHANCE_BP, Stat.COOLDOWN_BP, Stat.RANGE
 	Stat.OVERHEAL_SHIELD_BP, Stat.LIFESTEAL_HEALS, Stat.CRIT_OVERFLOW_BP, Stat.DEF, Stat.OVERHEAL_STRIKE_BP,
 	Stat.DEF_IGNORE_BP, Stat.UNPUSHABLE, Stat.DODGE_EVERY_MS, Stat.HALVED_HITS,
 	Stat.SHIELD_DAMAGE_BP, Stat.SEES_STEALTH, Stat.BURN_TAKEN_BP, Stat.MARKED_TIME_BP, Stat.ROOT_CAP_MS, Stat.MISS_BP, Stat.STUN_TIME_BP, Stat.STORE_BP, Stat.STORE_GROWS_BP, Stat.EVADE_BP, Stat.SHOT_SPEED_BP,
-	Stat.OVERFLOW_POWER_BP]
+	Stat.OVERFLOW_POWER_BP, Stat.LIFESTEAL_MORE_BP]
 ## The stats an aura worked out per hit may hold ("vs", "from_basic",
 ## "per_target_stacks").
-const VS_STATS: Array[Stat] = [Stat.DAMAGE_BP, Stat.CRIT_CHANCE_BP, Stat.LIFESTEAL_BP, Stat.CRIT_DAMAGE_BP, Stat.HEAL_BP, Stat.SHIELD_BP]
+const VS_STATS: Array[Stat] = [Stat.DAMAGE_BP, Stat.CRIT_CHANCE_BP, Stat.LIFESTEAL_BP, Stat.CRIT_DAMAGE_BP, Stat.HEAL_BP, Stat.SHIELD_BP, Stat.LIFESTEAL_MORE_BP]
 const STAT_LABELS: Array[String] = [
 	"damage", "healing", "shields", "damage over time", "crit chance", "cooldown",
 	"ATK", "MGK", "DEF", "ATSP", "CRIT", "range", "healing taken",
@@ -163,7 +166,7 @@ const STAT_LABELS: Array[String] = [
 	"of overheal as Shield", "lifesteal heals", "of crit chance past 100% as crit damage", "DEF", "of lifesteal overheal as damage to its target", "max HP",
 	"of the target's DEF ignored", "can't be knocked back", "a hit misses every", "hits taken at half damage",
 	"damage to Shields", "can target the stealthed", "Burn damage taken", "how long Marks on it last", "Roots on it last at most", "of its attacks missing", "how long Stuns on it last", "of each hit taken stored", "stored damage growth a second", "of basic attacks on it evaded", "shot speed",
-	"mana gained", "mana its bar holds", "signature power per mana over full",
+	"mana gained", "mana its bar holds", "signature power per mana over full", "to lifesteal",
 ]
 ## Unit stat for each unit-stat aura stat (ATK_BP -> Stat.ATK, ...).
 const UNIT_STAT_FOR: Dictionary[int, int] = {
@@ -272,7 +275,7 @@ static func read(reader: DataReader) -> AuraDef:
 	if reader.has("vs"):
 		def.vs = UnitCondition.read(reader.req_object("vs"))
 		if not VS_STATS.has(def.stat):
-			reader.error("only a damage_bp, crit_chance_bp, lifesteal_bp, crit_damage_bp, heal_bp, or shield_bp aura can be \"vs\" some targets")
+			reader.error("only a damage_bp, crit_chance_bp, lifesteal_bp, lifesteal_more_bp, crit_damage_bp, heal_bp, or shield_bp aura can be \"vs\" some targets")
 	if reader.has("only"):
 		def.only = UnitCondition.read(reader.req_object("only"))
 		if def.target == Target.HOLDER:
@@ -309,7 +312,7 @@ static func read(reader: DataReader) -> AuraDef:
 	if def.from_basic and def.from_signature:
 		reader.error("an aura is from its basic attack or its signature, not both")
 	if (def.from_basic or def.from_signature or not def.per_target_stacks.is_empty()) and not VS_STATS.has(def.stat):
-		reader.error("only a damage_bp, crit_chance_bp, lifesteal_bp, or crit_damage_bp aura is worked out per hit")
+		reader.error("only a damage_bp, crit_chance_bp, lifesteal_bp, lifesteal_more_bp, or crit_damage_bp aura is worked out per hit")
 	if def.per_shield_bp > 0 and def.is_per_hit():
 		reader.error("an aura per Shield can't also be worked out per hit")
 	EffectDef.read_window(reader, def)

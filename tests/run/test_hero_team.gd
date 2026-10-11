@@ -25,6 +25,8 @@ func test_a_hero_is_drafted_once_its_paths_are_built() -> void:
 	for hero_id: String in ["brannoc", "maren", "vell", "garrow", "tamsin", "aldous"]:
 		assert_true(HeroTeam.ready(_content, hero_id), hero_id)
 	assert_false(HeroTeam.ready(_content, "nobody"))
+	for hero_id: String in ["severine", "edric"]:
+		assert_false(HeroTeam.ready(_content, hero_id), "%s: not until her or his paths are built" % hero_id)
 	assert_eq(HeroTeam.draftable(_content), ["brannoc", "maren", "vell", "garrow", "tamsin", "aldous"] as Array[String])
 	var unbuilt: ContentDb = _unbuilt("garrow")
 	assert_false(HeroTeam.ready(unbuilt, "garrow"), "not until his paths are built")

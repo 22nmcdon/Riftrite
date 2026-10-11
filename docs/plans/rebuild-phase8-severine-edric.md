@@ -1,6 +1,6 @@
 # Phase 8 part 5: heroes 7 and 8, Severine and Edric
 
-Status: **a build plan, approved (2026-10-11; Decisions 1–7).** The remaining heroes come in two at a time after the tuning phase (`rebuild-build-order.md`), Severine and Edric first. This plan builds Severine Hollowell and Edric Tithewell from their designs (`rebuild-heroes.md` sections 8g and 8h; `apexes.md`; `upgrade-pools.md`; `duo-bonds.md`), the way phase 8 part 4 built Garrow, Tamsin, and Aldous (`rebuild-phase8-heroes.md`): the draft frame, habits, the builds report, and the bots' draft are already built, so each hero is its kit, its sim pieces, and its content. Numbers are the designs' placeholders until the check (section 8). Questions are in section 10.
+Status: **a build plan, approved (2026-10-11; Decisions 1–7); 8e-1 built (the two base kits).** The remaining heroes come in two at a time after the tuning phase (`rebuild-build-order.md`), Severine and Edric first. This plan builds Severine Hollowell and Edric Tithewell from their designs (`rebuild-heroes.md` sections 8g and 8h; `apexes.md`; `upgrade-pools.md`; `duo-bonds.md`), the way phase 8 part 4 built Garrow, Tamsin, and Aldous (`rebuild-phase8-heroes.md`): the draft frame, habits, the builds report, and the bots' draft are already built, so each hero is its kit, its sim pieces, and its content. Numbers are the designs' placeholders until the check (section 8). Questions are in section 10.
 
 ## 1. What it builds
 
@@ -115,6 +115,14 @@ Each needs a small piece or two (a target preference "Brannoc first below 30%", 
 - **8e-5, the docs and the build:** HOW-TO-PLAY (the two heroes, their bonds, what we want to know), screenshots (the draft, a fight with each), the design doc, `CLAUDE.md`, and a playtest build.
 
 Every new piece is skipped by a fight that doesn't use it, so the bench's fingerprints stay as they are; each gets a small-fight test, an audit rule and a board form if it adds a log kind, a place in the chaos fight, and a mutation check.
+
+### Built in 8e-1
+
+- **Severine's base kit** (`data/heroes.json`, the seventh hero): Rend (her basic attack, 1.2s, 15% lifesteal), Drain (60 mana: 200% of her ATK, 50% lifesteal), and Hemophage (her lifesteal doubled against enemies below half their HP). **Edric's** (the eighth): Seal (MGK, within 3 hexes, 1.2s), Ward (70 mana: every ally, him too, a Shield of 8% of their max HP), and Vigil (Shielded allies within 2 hexes of him take 5% less damage). Their placeholder figures (`tools/art/hero_kit.py`, `severine_base.svg`, `edric_base.svg`). Neither can be drafted until their paths come (`HeroTeam.ready`); Practice fields them at base.
+- **The pieces** (each skipped by a fight that doesn't use it; `tests/sim/test_severine_pieces.gd`): a damage effect's own lifesteal, `"lifesteal_pct"` (added to its unit's lifesteal auras for its hits, so Drain's 50% goes with Drain and its habit; never on a plain hit; the numbers line reads "50% lifesteal"), and the aura stat `lifesteal_more_bp` (it multiplies the whole lifesteal share, +100% doubles it, and may be worked out per hit with `"vs"`: Hemophage). Vigil needed nothing new (an `allies_near` aura with `"only"` Shielded).
+- **Against the band** (`build-tuning.md`'s base-kit band, ±10 of the old three): T-6 made Act 1's fights from day 4 too strong for any base team, so every base team won the same 48% (days 1–3 won, the rest lost); the check now fights Act 1 at enemies x0.75 (and x0.6). The old three win 69% (86%); Severine in Vell's place 78% (95%), Edric in Vell's place 77% (93%); Tamsin 70% and Aldous 68% for scale. Rend's first number was 1.1s (+12, over the band); at 1.2s she's +9.
+- **A call made while building:** the paths report's `team_for` put each new hero in the slot whose role it takes, and without Brannoc both of them outlast Maren and Vell, so both took the tank's slot. Now only a tank by design takes it (`HeroDef.role`), so Severine and Edric stand in Vell's slot, as Tamsin and Aldous do; nothing built changes.
+- **Not changed:** no fight without these pieces; the bench's fingerprints are unchanged. Changed on purpose: eight heroes in `test_hero_kits.gd` (with Rend, Drain, Hemophage, Ward, and Vigil tests), `test_path_kits.gd` (the two have no paths yet), the kits and reaches `test_unit_info.gd` counts, and `test_hero_team.gd` (the two aren't ready). The full suite is green (1,331 tests).
 
 ## 10. Questions
 

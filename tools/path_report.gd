@@ -120,8 +120,12 @@ static func team_for(content: ContentDb, hero_id: String) -> Array[String]:
 	var probe: Array[String] = HeroTeam.DEFAULT.duplicate()
 	var roles: Dictionary[String, String] = HeroTeam.roles(content, probe)
 	# Its role is the one it takes in a team with the two it doesn't replace:
-	# try it in each slot and keep the slot whose role it takes.
+	# try it in each slot and keep the slot whose role it takes. Only a tank
+	# by design takes the tank's slot (phase 8 part 5: Severine and Edric
+	# outlast Maren and Vell, so without Brannoc they'd be the tank).
 	for role: String in HeroTeam.ROLES:
+		if role == "tank" and (content.heroes[hero_id] as HeroDef).role != HeroDef.Role.TANK:
+			continue
 		var team: Array[String] = HeroTeam.DEFAULT.duplicate()
 		team[team.find(roles[role])] = hero_id
 		if HeroTeam.roles(content, team).get(role, "") == hero_id:
