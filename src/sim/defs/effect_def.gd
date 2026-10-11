@@ -40,6 +40,23 @@ extends RefCounted
 ##                 unit's whole Shield is gone, logged as SHIELD_SPENT with
 ##                 what it was. After an area that read it, the area keeps
 ##                 what it read. "keep_bp" (Shatterburst): it keeps that share
+##   spend_engorged: (phase 8 part 5, Sanguine Nova; target "self") the max
+##                 HP Engorge added to the unit is gone (its HP comes down to
+##                 its max HP), logged as MAX_HP_DOWN; damage's
+##                 "amount_bp_of_engorged" reads it first, as
+##                 amount_bp_of_shield reads the Shield
+##   heal's "as_lifesteal": true (phase 8 part 5, The Iron Maw): it lands as
+##                 its target's own lifesteal (a LIFESTEAL line, Engorge past
+##                 full), never as healing
+##   gain_max_hp:  (phase 8 part 5, The Iron Maw) amount or amount_bp_of_damage
+##                 of max HP and HP for the fight, logged as MAX_HP_UP
+##   raise:        (phase 8 part 5, Gravecaller; no "target" key; on_enemy_fell
+##                 or on_kill) the enemy the event names stands again on the
+##                 unit's side as its own kit, a summon: "hp_pct" of its max
+##                 HP, for "duration_ms", up to "max_standing" raised at once,
+##                 each earlier raise by the unit adding "grow_hp_pct" and
+##                 "grow_ms". Never a summon, an elite or boss (UnitDef.rank),
+##                 or a unit that fell into the void (Summons.raise)
 ##   release_stored: (phase 8 part 4, Vengeance; target "self") the damage
 ##                 the unit stored (the aura stat store_bp) is let go, logged
 ##                 as RELEASED with how much it had grown to; damage's
@@ -251,6 +268,12 @@ extends RefCounted
 ##   on_shield_spent  the unit spends its Shield (SHIELD_SPENT;
 ##                    amount_bp_of_damage: of the Shield it spent; phase 8
 ##                    part 4, The Woven Fang)
+##   on_max_hp_up     the unit gains max HP (MAX_HP_UP on it; amount_bp_of_damage:
+##                    of what it gained; "from_ability": only what those gave;
+##                    phase 8 part 5, The Iron Maw)
+##   on_hp_spent      the unit spends HP on its signature (HP_SPENT;
+##                    amount_bp_of_damage and per_damage: of the HP spent;
+##                    phase 8 part 5, Blood Rite)
 ##   on_mana_gained   the unit gains mana from an attack, a hit taken, or an
 ##                    effect (not its regen; Mana.gain raises it at once, not
 ##                    from the log; amount_bp_of_damage on gain_mana: a share
@@ -342,9 +365,10 @@ enum Trigger {
 	ON_INTERVAL, ON_FALL, ON_HOP, ON_WOULD_FALL,
 	ON_HOLDER_HIT, ON_SHIELD_BROKEN, ON_ALLY_ABILITY, ON_STATUS_ENDED, ON_LIFESTEAL, ON_KNOCKBACK, ON_GUARD,
 	ON_BELOW_HP, ON_CHARGED, ON_ENEMY_FELL, ON_ARRIVE, ON_ALLY_SHIELD_BROKEN, ON_WALL_BLOCK, ON_RISE, ON_BREAKS_SHIELD, ON_PULL, ON_SHIELD_SPENT,
-	ON_MANA_GAINED, ON_ALLY_HIT, ON_ENEMY_NEAR,
+	ON_MANA_GAINED, ON_ALLY_HIT, ON_ENEMY_NEAR, ON_HP_SPENT, ON_MAX_HP_UP,
 }
-enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS, HOP, FLOOD, SEVER, SPEND_SHIELD, RELEASE_STORED }
+enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS, HOP, FLOOD, SEVER, SPEND_SHIELD, RELEASE_STORED,
+	SPEND_ENGORGED, RAISE, GAIN_MAX_HP }
 ## A pull's way (phase 8 part 3): toward the unit, the nearest water, or
 ## its area's middle; a knockback's: away from the unit, or toward the
 ## nearest edge.
@@ -384,7 +408,7 @@ const TRIGGER_NAMES: Array[String] = [
 	"on_interval", "on_fall", "on_hop", "on_would_fall",
 	"on_holder_hit", "on_shield_broken", "on_ally_ability", "on_status_ended", "on_lifesteal", "on_knockback", "on_guard",
 	"on_below_hp", "on_charged", "on_enemy_fell", "on_arrive", "on_ally_shield_broken", "on_wall_block", "on_rise", "on_breaks_shield", "on_pull", "on_shield_spent",
-	"on_mana_gained", "on_ally_hit", "on_enemy_near",
+	"on_mana_gained", "on_ally_hit", "on_enemy_near", "on_hp_spent", "on_max_hp_up",
 ]
 ## The unit's events (see the top).
 const EVENT_TRIGGERS: Array[Trigger] = [
@@ -392,7 +416,7 @@ const EVENT_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
 	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_SHIELD_SPENT,
-	Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT,
+	Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP,
 ]
 ## Event triggers that name a unit (hit_target) and those that name a hit
 ## (amount_bp_of_damage).
@@ -400,7 +424,7 @@ const EVENT_UNIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD, Trigger.ON_CHARGED,
 	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_ALLY_HIT]
 const EVENT_HIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_HIT_TAKEN, Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_HEAL,
-	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_GUARD, Trigger.ON_BREAKS_SHIELD, Trigger.ON_SHIELD_SPENT, Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT]
+	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_GUARD, Trigger.ON_BREAKS_SHIELD, Trigger.ON_SHIELD_SPENT, Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP]
 ## Event triggers that can take "vs": those that name a unit, and on_kill.
 const EVENT_VS_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED, Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_KILL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
@@ -413,7 +437,7 @@ const ABILITY_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
 	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_SHIELD_SPENT,
 	Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT,
-	Trigger.ON_ENEMY_NEAR,
+	Trigger.ON_ENEMY_NEAR, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP,
 ]
 ## What a passive's effects may run on (PartDef).
 const PASSIVE_TRIGGERS: Array[Trigger] = [
@@ -423,7 +447,7 @@ const PASSIVE_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
 	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_SHIELD_SPENT,
 	Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT,
-	Trigger.ON_ENEMY_NEAR,
+	Trigger.ON_ENEMY_NEAR, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP,
 ]
 ## The passive triggers that aren't events (Passives.run_timed, on_fall,
 ## would_fall).
@@ -440,7 +464,7 @@ const REACH_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_TARGET, Target.ALLIES_
 ## The targets around the unit an event names (they need one).
 const NAMED_TARGETS: Array[Target] = [Target.ENEMIES_NEAR_NAMED, Target.ENEMY_NEAR_NAMED]
 const SIDE_NAMES: Array[String] = ["both", "enemies", "allies"]
-const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain", "knockback", "pull", "leap", "charge", "area", "start_collapse", "summon", "gain_mana", "snare", "wall", "extend_status", "hop", "flood", "sever", "spend_shield", "release_stored"]
+const TYPE_NAMES: Array[String] = ["damage", "heal", "shield", "apply_status", "cleanse", "mana_drain", "knockback", "pull", "leap", "charge", "area", "start_collapse", "summon", "gain_mana", "snare", "wall", "extend_status", "hop", "flood", "sever", "spend_shield", "release_stored", "spend_engorged", "raise", "gain_max_hp"]
 const TOWARD_NAMES: Array[String] = ["unit", "water", "area", "edge", "ally"]
 const FLOOD_MODE_NAMES: Array[String] = ["circle", "spread", "drain", "all"]
 ## The types placed at the ability's target without a "target" key of their
@@ -449,7 +473,7 @@ const PLACED: Array[Type] = [Type.AREA, Type.SNARE, Type.WALL, Type.FLOOD]
 const PLACEMENT_NAMES: Array[String] = ["edges", "adjacent", "hexes", "water"]
 const NEAR_NAMES: Array[String] = ["self", "target"]
 ## The types with no "target" key: they act from the unit itself.
-const UNTARGETED: Array[Type] = [Type.START_COLLAPSE, Type.SUMMON, Type.SEVER]
+const UNTARGETED: Array[Type] = [Type.START_COLLAPSE, Type.SUMMON, Type.SEVER, Type.RAISE]
 const ANCHOR_NAMES: Array[String] = ["target", "self", "target_direction"]
 const HITS_NAMES: Array[String] = ["enemies", "allies", "all", "other_allies"]
 ## The types that move the unit itself.
@@ -500,6 +524,19 @@ var plus_bp_of_spent: int = 0
 var amount_bp_of_stored: int = 0
 ## spend_shield (Shatterburst): the share of the Shield it keeps.
 var keep_bp: int = 0
+## heal (phase 8 part 5, The Iron Maw): it lands as its target's own
+## lifesteal (EffectRunner.steal), not as healing.
+var as_lifesteal: bool = false
+## damage (phase 8 part 5, Sanguine Nova): a share of the max HP Engorge has
+## added to its unit (UnitState.engorged; 0: `amount`).
+var amount_bp_of_engorged: int = 0
+## raise (phase 8 part 5, Gravecaller): the risen's share of its max HP, how
+## long it stands, and how much more of each the unit's every earlier raise
+## adds (UnitState.raises). max_standing caps those standing.
+var raise_hp_bp: int = 0
+var raise_ticks: int = 0
+var raise_grow_hp_bp: int = 0
+var raise_grow_ticks: int = 0
 ## damage, heal, shield (the apexes' snowballs): this much more power for
 ## each stack of this status on its unit ("": none).
 var grows_status: String = ""
@@ -758,12 +795,14 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 	if not type_name.is_empty():
 		match def.type:
 			Type.DAMAGE:
-				if int(reader.has("amount")) + int(reader.has("amount_bp_of_damage")) + int(reader.has("amount_bp_of_shield")) + int(reader.has("amount_bp_of_stored")) != 1:
-					reader.error("damage needs exactly one of \"amount\", \"amount_bp_of_damage\", \"amount_bp_of_shield\", or \"amount_bp_of_stored\"")
+				if int(reader.has("amount")) + int(reader.has("amount_bp_of_damage")) + int(reader.has("amount_bp_of_shield")) + int(reader.has("amount_bp_of_stored")) \
+						+ int(reader.has("amount_bp_of_engorged")) != 1:
+					reader.error("damage needs exactly one of \"amount\", \"amount_bp_of_damage\", \"amount_bp_of_shield\", \"amount_bp_of_stored\", or \"amount_bp_of_engorged\"")
 				def.amount = reader.opt_int("amount", 0, 0)
 				def.amount_bp_of_damage = reader.opt_int("amount_bp_of_damage", 0, 0)
 				def.amount_bp_of_shield = reader.opt_int("amount_bp_of_shield", 0, 0)
 				def.amount_bp_of_stored = reader.opt_int("amount_bp_of_stored", 0, 0)
+				def.amount_bp_of_engorged = reader.opt_int("amount_bp_of_engorged", 0, 0)
 				if reader.has("bonus_per_ally"):
 					_read_bonus(def, reader.req_object("bonus_per_ally"))
 				def.ricochet = reader.opt_int("ricochet", 0, 0, 5)
@@ -790,6 +829,14 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				def.amount_bp_of_damage = reader.opt_int("amount_bp_of_damage", 0, 0)
 				def.overheal_shield_bp = reader.opt_int("overheal_shield_bp", 0, 0, 5 * FixedMath.BP_ONE)
 				def.overheal_max_hp_per = reader.opt_int("overheal_max_hp_per", 0, 0, 1000)
+				def.as_lifesteal = reader.opt_bool("as_lifesteal", false)
+				if def.as_lifesteal and (def.overheal_shield_bp > 0 or def.overheal_max_hp_per > 0 or def.amount_bp_of_max_hp > 0):
+					reader.error("a heal as lifesteal is only its amount (\"amount\" or \"amount_bp_of_damage\")")
+			Type.GAIN_MAX_HP:
+				if int(reader.has("amount")) + int(reader.has("amount_bp_of_damage")) != 1:
+					reader.error("gain_max_hp needs exactly one of \"amount\" or \"amount_bp_of_damage\"")
+				def.amount = reader.opt_int("amount", 0, 0)
+				def.amount_bp_of_damage = reader.opt_int("amount_bp_of_damage", 0, 0)
 			Type.MANA_DRAIN:
 				def.amount = reader.req_int("amount", 1)
 			Type.GAIN_MANA:
@@ -893,6 +940,15 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 			Type.RELEASE_STORED:
 				if def.target != Target.SELF:
 					reader.error("release_stored lets go of the unit's own stored damage (\"target\": \"self\")")
+			Type.SPEND_ENGORGED:
+				if def.target != Target.SELF:
+					reader.error("spend_engorged gives up the unit's own Engorged max HP (\"target\": \"self\")")
+			Type.RAISE:
+				def.raise_hp_bp = reader.req_int("hp_pct", 1, 100) * 100
+				def.raise_ticks = reader.req_ticks("duration_ms", FixedMath.MS_PER_TICK)
+				def.max_standing = reader.opt_int("max_standing", 0, 0)
+				def.raise_grow_hp_bp = reader.opt_int("grow_hp_pct", 0, 0, 100) * 100
+				def.raise_grow_ticks = reader.opt_ticks("grow_ms", 0)
 			Type.APPLY_STATUS:
 				def.status_id = reader.req_string("status")
 				# 0 base stacks only with a "scaling" (phase 8 part 5, Blight:
@@ -940,7 +996,7 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 			if def.type != Type.APPLY_STATUS:
 				reader.error("per_damage is an apply_status's")
 		if reader.has("scaling"):
-			if def.amount_bp_of_damage > 0 or def.amount_bp_of_max_hp > 0 or def.amount_bp_of_shield > 0 or def.amount_bp_of_stored > 0:
+			if def.amount_bp_of_damage > 0 or def.amount_bp_of_max_hp > 0 or def.amount_bp_of_shield > 0 or def.amount_bp_of_stored > 0 or def.amount_bp_of_engorged > 0:
 				reader.error("\"scaling\" can't be combined with %s" % ("amount_bp_of_damage" if def.amount_bp_of_damage > 0 else "amount_bp_of_max_hp" if def.amount_bp_of_max_hp > 0 else "amount_bp_of_shield"))
 			_read_scaling(def, reader.req_object("scaling"))
 	if def.type == Type.APPLY_STATUS and def.stacks == 0 and not reader.has("scaling"):
@@ -1009,6 +1065,8 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 		reader.error("%s needs an event that names a unit" % TARGET_NAMES[def.target])
 	if not def.stacks_of.is_empty() and not EVENT_VS_TRIGGERS.has(def.trigger):
 		reader.error("stacks_of needs an event that names a unit")
+	if def.type == Type.RAISE and not type_name.is_empty() and def.trigger != Trigger.ON_ENEMY_FELL and def.trigger != Trigger.ON_KILL:
+		reader.error("a raise stands up the enemy an event names as it falls (on_enemy_fell or on_kill)")
 	if def.trigger == Trigger.ON_FALL and not type_name.is_empty():
 		if def.type == Type.AREA and def.anchor != Anchor.SELF:
 			reader.error("on_fall runs once the unit has fallen, so its area is anchored on it (\"anchor\": \"self\")")
@@ -1131,7 +1189,7 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 			# Only those abilities' crits (phase 8 part 4, Choke: her Knife's).
 			if reader.has("from_ability"):
 				def.from_abilities = reader.req_string_array("from_ability")
-		Trigger.ON_HEAL, Trigger.ON_HOLDER_HIT, Trigger.ON_PULL:
+		Trigger.ON_HEAL, Trigger.ON_HOLDER_HIT, Trigger.ON_PULL, Trigger.ON_MAX_HP_UP:
 			if reader.has("from_ability"):
 				def.from_abilities = reader.req_string_array("from_ability")
 			# Only its signature's hits (the tuning phase, Weighted Net).

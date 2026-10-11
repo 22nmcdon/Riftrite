@@ -146,6 +146,7 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 		unit.vs_per_stacks.clear()
 		unit.vs_within.clear()
 		unit.vs_per_hex.clear()
+		unit.vs_per_holder.clear()
 	var now_active: Array[String] = []
 	for holder: UnitState in sim.units:
 		if not holder.alive:
@@ -187,6 +188,7 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 					target.vs_per_stacks.append(part.aura.per_target_stacks)
 					target.vs_within.append(part.aura.hit_range)
 					target.vs_per_hex.append(part.aura.per_hex)
+					target.vs_per_holder.append(part.aura.per_holder_stacks)
 					continue
 				target.aura_bp[part.aura.stat] += change
 	# Timed boosts (phase 5c step 5b) count like the unit's own auras, once
@@ -264,7 +266,18 @@ static func aura_change(sim: CombatSim, holder: UnitState, aura: AuraDef) -> int
 	if aura.step_ticks > 0:
 		@warning_ignore("integer_division")
 		change += aura.step_value * ((sim.tick - holder.moved_at - aura.after_ticks) / aura.step_ticks)
+	if aura.per_engorged_bp > 0:
+		change *= engorged_steps(holder, aura.per_engorged_bp)
 	return change
+
+
+## How many whole `step_bp` shares of its max HP before Engorge Engorge has
+## added to `holder` (phase 8 part 5, Leviathan).
+static func engorged_steps(holder: UnitState, step_bp: int) -> int:
+	if holder.engorged <= 0:
+		return 0
+	@warning_ignore("integer_division")
+	return holder.engorged * FixedMath.BP_ONE / (maxi(holder.base_max_hp - holder.engorged, 1) * step_bp)
 
 
 ## True if one of `holder`'s Taunts is in effect on a standing enemy.
@@ -318,6 +331,8 @@ static func condition_holds(sim: CombatSim, holder: UnitState, aura: AuraDef) ->
 		return false
 	if aura.per_enemy_range > 0 and enemies_near(sim, holder, aura.per_enemy_range, aura.per_twice) == 0:
 		return false
+	if aura.per_engorged_bp > 0 and engorged_steps(holder, aura.per_engorged_bp) == 0:
+		return false
 	return not aura.per_fallen_ally or fallen_allies(sim, holder) > 0
 
 
@@ -338,7 +353,7 @@ static func enemies_near(sim: CombatSim, holder: UnitState, reach: int, twice: U
 static func fallen_allies(sim: CombatSim, holder: UnitState) -> int:
 	var count: int = 0
 	for unit: UnitState in (sim.heroes if holder.side == EffectSource.Team.HEROES else sim.enemies):
-		if not unit.alive and not unit.arriving:
+		if not unit.alive and not unit.arriving and not unit.raised:
 			count += 1
 	return count
 
@@ -408,6 +423,8 @@ static func vs_bonus_bp(attacker: UnitState, target: UnitState, stat: int = Aura
 		if attacker.vs_within[i] > 0 and ArenaPlane.length_sq(target.pos - attacker.pos) > attacker.vs_within[i] * attacker.vs_within[i]:
 			continue
 		var times: int = 1 if attacker.vs_per_stacks[i].is_empty() else Statuses.stacks_on(target, attacker.vs_per_stacks[i])
+		if not attacker.vs_per_holder[i].is_empty():
+			times *= Statuses.stacks_on(attacker, attacker.vs_per_holder[i])
 		if attacker.vs_per_hex[i]:
 			@warning_ignore("integer_division")
 			times *= ArenaPlane.length(target.pos - attacker.pos) / HexGrid.HEX

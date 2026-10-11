@@ -93,6 +93,9 @@ var phases: Array[PhaseDef] = []
 ## An enemy's archetype (EnemyDef.ARCHETYPE_NAMES; set from its entry, so
 ## summons have theirs); "" for a hero. Tactics that prefer targets read it.
 var archetype: String = ""
+## An enemy's rank (phase 8 part 5; EnemyDef's "rank": "elite" or "boss";
+## "": neither). Gravecaller never raises one.
+var rank: String = ""
 ## The specialization it fights with (phase 8 part 3; SpecializationDef's
 ## id; "": none), for the screens.
 var specialization: String = ""
@@ -221,6 +224,7 @@ func copy() -> UnitDef:
 	other.swap_shield_bp = swap_shield_bp
 	other.swap_choice = swap_choice
 	other.archetype = archetype
+	other.rank = rank
 	other.specialization = specialization
 	other.upgrades = upgrades.duplicate()
 	other.plant_ticks = plant_ticks

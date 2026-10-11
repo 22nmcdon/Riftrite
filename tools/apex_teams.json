@@ -28,6 +28,14 @@
     {"name": "Singing Volley", "kind": "good", "carry": "maren", "apexes": {"brannoc": "hearthkeeper", "maren": "windrunner", "aldous": "singing_arrows"}},
     {"name": "Bell Hunt", "kind": "good", "carry": "tamsin", "apexes": {"brannoc": "unbroken_gate", "tamsin": "executioner", "aldous": "the_great_bell"}},
     {"name": "Requiem", "kind": "good", "carry": "maren", "apexes": {"brannoc": "unbroken_gate", "maren": "eagle_eye", "aldous": "requiem"}},
+    {"name": "Iron Hunger", "kind": "good", "carry": "severine", "apexes": {"garrow": "thorned_king", "vell": "dawnbringer", "severine": "leviathan"}},
+    {"name": "Red Burst", "kind": "good", "carry": "severine", "apexes": {"brannoc": "hearthkeeper", "maren": "eagle_eye", "severine": "sanguine_nova"}},
+    {"name": "Grave March", "kind": "good", "carry": "severine", "apexes": {"brannoc": "unbroken_gate", "maren": "huntmaster", "severine": "gravecaller"}},
+    {"name": "Black Cloud", "kind": "good", "carry": "severine", "apexes": {"brannoc": "hearthkeeper", "maren": "warden_of_thorns", "severine": "pestilence"}},
+    {"name": "Blood and Lamplight", "kind": "good", "carry": "severine", "apexes": {"garrow": "thorned_king", "vell": "dawnbringer", "severine": "blood_tide"}},
+    {"name": "Blood Rite", "kind": "good", "carry": "maren", "apexes": {"brannoc": "unbroken_gate", "maren": "eagle_eye", "severine": "blood_rite"}},
+    {"name": "Swollen Tide", "kind": "good", "carry": "severine", "apexes": {"brannoc": "hearthkeeper", "maren": "eagle_eye", "severine": "leviathan"}},
+    {"name": "Open Vein", "kind": "good", "carry": "severine", "apexes": {"brannoc": "hearthkeeper", "maren": "eagle_eye", "severine": "blood_tide"}},
     {"name": "No Edge", "kind": "poor", "apexes": {"brannoc": "hearthkeeper", "maren": "warden_of_thorns", "vell": "loomwarden"}},
     {"name": "Crossed Purposes", "kind": "poor", "apexes": {"brannoc": "martyrs_pyre", "maren": "huntmaster", "vell": "thornweave"}}
   ]

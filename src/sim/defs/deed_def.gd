@@ -88,6 +88,9 @@ extends RefCounted
 ##   from_basic: true              only what its basic attack does (phase 5c
 ##                                 step 4; Rift-Fed Blades)
 ##   keywords: ["marked"]          applied only: statuses with these keywords
+##   statuses: ["blood_rite"]      applied: only these statuses (on anyone);
+##                                 hits by_allies (phase 8 part 5, Blood
+##                                 Rite): only hits by an ally holding one
 ## (Phase 8 part 4, Chorister: "mana_given" counts the whole mana the hero
 ## gives other units, MANA_GIVEN. Aldous's apexes: "mana_overflow" counts
 ## the whole mana its side's bars gain past full (Wellspring), and
@@ -195,8 +198,10 @@ static func read(reader: DataReader, needs_text: bool = true) -> DeedDef:
 	def.keywords = reader.opt_choice_array("keywords", Keywords.NAMES)
 	if reader.has("statuses"):
 		def.statuses = reader.req_string_array("statuses")
-		if def.counts != Counts.APPLIED:
-			reader.error("statuses only filter applied")
+		# Phase 8 part 5 (Blood Rite): an ally's hits by_allies counts only
+		# while that ally holds one of them.
+		if def.counts != Counts.APPLIED and not (def.by_allies and def.counts == Counts.HITS):
+			reader.error("statuses only filter applied, or hits by_allies")
 	def.threshold = reader.opt_int("threshold", 0, 1)
 	if def.counts != Counts.DAMAGE and (def.while_undying or (def.from_range > 0 and not (def.by_allies and def.counts == Counts.HITS))):
 		reader.error("beyond_hexes and while_undying only filter damage")

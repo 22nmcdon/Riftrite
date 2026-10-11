@@ -42,6 +42,9 @@ var vs_per_stacks: Array[String] = []
 var vs_within: Array[int] = []
 ## Per hit: times the whole hexes to the target (phase 8 part 4, Long Wind).
 var vs_per_hex: Array[bool] = []
+## Per hit: times the stacks of this status on the unit itself ("": once;
+## phase 8 part 5, Blood Tide).
+var vs_per_holder: Array[String] = []
 ## Its side's standing unit nearest the other side, this tick (only kept
 ## when a condition asks: CombatSim.track_front; phase 5c step 7c).
 var front_most: bool = false
@@ -99,6 +102,17 @@ var engorged: int = 0
 ## The HP its signature's last fire cost (phase 8 part 5, Exsanguinate's
 ## plus_bp_of_spent reads it).
 var last_hp_spent: int = 0
+## A summon (Summons; phase 8 part 5: Gravecaller never raises one).
+var summoned: bool = false
+## Raised from a fallen enemy by Gravecaller (phase 8 part 5, Summons.raise;
+## a thrall): it counts toward its side's standing units and nothing else
+## (no fallen ally, no kill, nothing that keeps its side up), and it goes
+## at `expires_at` (a tick; -1: never).
+var raised: bool = false
+var raised_by: String = ""
+var expires_at: int = -1
+## How many units it has raised this fight (Gravecaller's growth).
+var raises: int = 0
 ## It has on_mana_gained passives (phase 8 part 4, Chorister; Mana.gain).
 var hears_mana: bool = false
 ## The enemy its signature grips, the signature, and when the grip's effects
@@ -339,6 +353,7 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 static func make_summon(kit: UnitDef, unit_side: EffectSource.Team, unit_id: String, fight_index: int, unit_radius: int) -> UnitState:
 	var setup: UnitSetup = UnitSetup.make(kit, unit_side, -1, -1, unit_id)
 	var unit: UnitState = from_setup(setup, fight_index, null, unit_radius)
+	unit.summoned = true
 	return unit
 
 

@@ -116,6 +116,7 @@ extends RefCounted
 ##                                        if it has one (Massive)
 ##       "hp_cost_add_bp": -100           its signature's HP cost, if it has
 ##                                        one (Thin Blood)
+##       "raise_grow_add_pct": 20         a raise's grow_hp_pct (Deep Grave)
 ## and (step 7d) "places_lantern": true at the top: the player places its
 ## signature's first area before the fight (UnitSetup.lantern).
 ## and (phase 8 part 3, the Veil Witch) "drops_passives": ["ward"] at the
@@ -222,6 +223,8 @@ class AbilityChange:
 	## Phase 8 part 5 (see the header); and its zones follow their caster.
 	var lifesteal_add_bp: int = 0
 	var plus_max_hp_add_bp: int = 0
+	## Phase 8 part 5 (Deep Grave): a raise's grow_hp_pct, in bp.
+	var raise_grow_add_bp: int = 0
 	var hp_cost_add_bp: int = 0
 	var follows_holder: bool = false
 	var per_twice: UnitCondition = null
@@ -245,7 +248,7 @@ class AbilityChange:
 			or strength_add_bp != 0 or follows or ricochet_add != 0 or reflect_bp != 0 or snags \
 			or per_enemy_add_bp != 0 or overheal_max_hp_add != 0 or at_stacks_add != 0 or per_taken_add_bp != 0 or holder != null or carries \
 			or ignores_def or prefer != null and not ability_id.is_empty() or per_stack_add_bp != 0 or within_add != 0 or count_add != 0 \
-			or lifesteal_add_bp != 0 or plus_max_hp_add_bp != 0 or follows_holder
+			or lifesteal_add_bp != 0 or plus_max_hp_add_bp != 0 or follows_holder or raise_grow_add_bp != 0
 
 	func touches(effect: EffectDef) -> bool:
 		if not at.is_empty() and not at.has(effect.target):
@@ -476,6 +479,7 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 	change.ignores_def = reader.opt_bool("ignores_def", false)
 	change.lifesteal_add_bp = reader.opt_int("lifesteal_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
 	change.plus_max_hp_add_bp = reader.opt_int("plus_max_hp_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
+	change.raise_grow_add_bp = reader.opt_int("raise_grow_add_pct", 0, -100, 100) * 100
 	change.hp_cost_add_bp = reader.opt_int("hp_cost_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
 	change.per_stack_add_bp = reader.opt_int("per_stack_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
 	if reader.has("per_twice"):
@@ -535,7 +539,7 @@ func step_problem() -> String:
 				or change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0 or change.holder != null or change.carries \
 				or not change.ability_id.is_empty() or change.mana_max_add != 0 or change.ignores_def or change.per_twice != null or change.per_stack_add_bp != 0 \
 				or change.reach_add != 0 or change.grip_fast_vs != null or change.lifesteal_add_bp != 0 or change.plus_max_hp_add_bp != 0 \
-				or change.hp_cost_add_bp != 0 or change.follows_holder:
+				or change.hp_cost_add_bp != 0 or change.follows_holder or change.raise_grow_add_bp != 0:
 			return "a growing card's step can only change an ability's amount_bp"
 	return ""
 
@@ -937,13 +941,15 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 				copy.lifesteal_bp = maxi(effect.lifesteal_bp + change.lifesteal_add_bp, 0)
 			if change.plus_max_hp_add_bp != 0 and effect.plus_bp_of_max_hp > 0:
 				copy.plus_bp_of_max_hp = maxi(effect.plus_bp_of_max_hp + change.plus_max_hp_add_bp, 0)
+			if change.raise_grow_add_bp != 0 and effect.type == EffectDef.Type.RAISE:
+				copy.raise_grow_hp_bp = maxi(effect.raise_grow_hp_bp + change.raise_grow_add_bp, 0)
 			if change.follows_holder and effect.zone_ticks > 0:
 				copy.follows = true
 				copy.follows_nearest = false
 				copy.follows_holder = true
 			if change.per_stack_add_bp != 0 and not effect.grows_status.is_empty():
 				copy.grows_stack_bp = maxi(effect.grows_stack_bp + change.per_stack_add_bp, 0)
-			if change.prefer != null and effect.target == EffectDef.Target.FARTHEST_ENEMIES:
+			if change.prefer != null and (effect.target == EffectDef.Target.FARTHEST_ENEMIES or effect.target == EffectDef.Target.LOWEST_HP_ALLY):
 				copy.prefer = change.prefer
 			if change.width_add != 0 and copy.shape != null and copy.shape.kind == ShapeDef.Kind.LINE:
 				copy.shape = DefCopy.shallow(copy.shape) as ShapeDef
@@ -988,9 +994,10 @@ static func _any_effect(effects: Array[EffectDef], change: AbilityChange) -> boo
 				or change.ignores_def and effect.type == EffectDef.Type.DAMAGE and not effect.ignores_def
 				or change.lifesteal_add_bp != 0 and effect.lifesteal_bp > 0
 				or change.plus_max_hp_add_bp != 0 and effect.plus_bp_of_max_hp > 0
+				or change.raise_grow_add_bp != 0 and effect.type == EffectDef.Type.RAISE
 				or change.follows_holder and effect.zone_ticks > 0 and not effect.follows_holder
 				or change.per_stack_add_bp != 0 and not effect.grows_status.is_empty()
-				or change.prefer != null and effect.target == EffectDef.Target.FARTHEST_ENEMIES):
+				or change.prefer != null and (effect.target == EffectDef.Target.FARTHEST_ENEMIES or effect.target == EffectDef.Target.LOWEST_HP_ALLY)):
 			return true
 		if change.touches(effect) and (change.amount_bp != FixedMath.BP_ONE and (effect.amount != 0 or effect.amount_bp_of_damage != 0 or effect.scaling.any(func(value: int) -> bool: return value != 0) or effect.amount_bp_of_max_hp != 0 or change.moves(effect))
 				or (change.duration_bp != FixedMath.BP_ONE or change.duration_add_ticks != 0) and (effect.duration_ticks > 0 or effect.zone_ticks > 0)

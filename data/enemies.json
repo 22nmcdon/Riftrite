@@ -585,7 +585,7 @@
     "_note": "Phase 5's elites and boss (docs/plans/rebuild-phase5-run.md, section 10; docs/plans/rebuild-enemies.md, sections 3 and 4). First numbers, for the sim runner to tune.",
     "id": "hound_alpha",
     "name": "Hound Alpha",
-    "archetype": "flanker",
+    "archetype": "flanker", "rank": "elite",
     "threat": "Leads the Hunt: when it pounces, its whole pack pounces on the same hero",
     "kit": {
       "stats": {
@@ -698,7 +698,7 @@
   {
     "id": "gloam_totem",
     "name": "Gloam Totem",
-    "archetype": "support",
+    "archetype": "support", "rank": "elite",
     "threat": "Shields every enemy within 2 hexes, again and again, until it's broken",
     "kit": {
       "stats": {
@@ -816,7 +816,7 @@
   {
     "id": "old_mother_ash",
     "name": "Old Mother Ash",
-    "archetype": "caster",
+    "archetype": "caster", "rank": "boss",
     "threat": "The rift's old mother: guard the back line, then weather her brood, then spread out as the rift closes",
     "kit": {
       "stats": {
@@ -1798,7 +1798,7 @@
   {
     "id": "glass_matron",
     "name": "The Glass Matron",
-    "archetype": "splitter",
+    "archetype": "splitter", "rank": "elite",
     "threat": "Her shards reform in the water: hold the fight on dry ground",
     "kit": {
       "stats": {
@@ -1940,7 +1940,7 @@
   {
     "id": "choir_tidecaller",
     "name": "Choir Tidecaller",
-    "archetype": "caster",
+    "archetype": "caster", "rank": "elite",
     "threat": "Leads the Tide Choir: the water rises while it stands",
     "kit": {
       "stats": {
@@ -2024,7 +2024,7 @@
   {
     "id": "mournwater",
     "name": "The Mournwater",
-    "archetype": "caster",
+    "archetype": "caster", "rank": "boss",
     "threat": "The drowned heart of the Glassmere: stay off the water, then thin the crowd, then race the flood",
     "kit": {
       "stats": {
@@ -2831,7 +2831,7 @@
     "_note": "The Cragherd's leader (the elite Stampede).",
     "id": "great_cragram",
     "name": "Great Cragram",
-    "archetype": "charger",
+    "archetype": "charger", "rank": "elite",
     "threat": "Every 15 seconds the whole herd charges: never stand with the void behind you in its line",
     "kit": {
       "stats": {
@@ -2955,7 +2955,7 @@
     "_note": "The Mirror Court's leader (the elite Every Answer Echoed).",
     "id": "mirror_queen",
     "name": "The Mirror Queen",
-    "archetype": "mimic",
+    "archetype": "mimic", "rank": "elite",
     "threat": "Copies every signature she sees, and gives each to her court: show them little, and kill her first",
     "kit": {
       "stats": {
@@ -3022,7 +3022,7 @@
     "_note": "Act 3's boss (act3-shattered-crown.md section 7). The first enemy of its fight, so its host is every other (the rift learns' adds).",
     "id": "heart_of_the_rift",
     "name": "The Heart of the Rift",
-    "archetype": "caster",
+    "archetype": "caster", "rank": "boss",
     "threat": "The rift that has learned you: break its host to break its Ward, stay off the warned bridges, then race the rift",
     "kit": {
       "stats": {

@@ -102,6 +102,8 @@ var guards: Array[UnitState] = []
 var linkers: Array[UnitState] = []
 ## Some unit rises by its own kit (phase 8 part 2, a rise passive).
 var risers: bool = false
+## A thrall stands (phase 8 part 5, Summons.raise): their time runs out.
+var thralls: bool = false
 var finished: bool = false
 var outcome: FightResult.Outcome = FightResult.Outcome.TIE
 var _nav: NavGrid
@@ -508,6 +510,8 @@ func step() -> void:
 		Passives.run_timed(self)
 	if _phased:
 		Phases.check(self)
+	if thralls:
+		_thralls_go()
 	_process_deaths()
 	if not _conditional.is_empty():
 		check_conditional_auras()
@@ -849,7 +853,8 @@ static func _any_standing(side_units: Array[UnitState]) -> bool:
 		# One still to arrive (Late Arrival) isn't down, nor one about to rise
 		# by its own kit (phase 8 part 2; Second Dawn's rise doesn't hold the
 		# fight).
-		if unit.alive or unit.arriving or (unit.rise_at >= 0 and unit.rise_part != null):
+		# A thrall (phase 8 part 5) never keeps its side up (Decision 2).
+		if (unit.alive and not unit.raised) or unit.arriving or (unit.rise_at >= 0 and unit.rise_part != null):
 			return true
 	return false
 
@@ -934,6 +939,13 @@ func _process_deaths() -> void:
 				if enemy_fell_listeners:
 					Events.enemy_fell(self, unit)
 				continue
+			# A thrall (phase 8 part 5) goes quietly: nothing catches it or
+			# runs as it goes, and it's nobody's kill or fallen ally (Decision 2).
+			if unit.raised:
+				unit.hp = 0
+				_fall(unit)
+				aura_lost = aura_lost or Passives.has_aura(unit) or (taunt_auras and Statuses.has_kind(unit, StatusDef.Kind.TAUNT))
+				continue
 			var undying: StatusState = _undying(unit)
 			if undying != null:
 				unit.hp = 1
@@ -1009,6 +1021,22 @@ func _rise_due() -> void:
 		refold_auras()
 
 
+## Thralls whose time is up go (phase 8 part 5, Gravecaller): they fall in
+## the deaths step that follows, noted "its time is up".
+func _thralls_go() -> void:
+	var any: bool = false
+	for unit: UnitState in units:
+		if not unit.raised or not unit.alive:
+			continue
+		any = true
+		if tick >= unit.expires_at:
+			unit.hp = 0
+			unit.last_attacker = ""
+			unit.last_hit_source = null
+			unit.last_hit_status = "its time is up"
+	thralls = any
+
+
 ## The Long Watch: every standing hero gains a stack of `long_watch`.
 func _keep_watch() -> void:
 	var source: EffectSource = EffectSource.relic("the_long_watch", "The Long Watch", EffectSource.Team.HEROES)
@@ -1056,7 +1084,7 @@ func _fall(unit: UnitState) -> void:
 	entry.kind = LogEntry.Kind.DEATH
 	entry.target = unit.id
 	entry.to_pos = unit.pos
-	entry.note = "fell into the void" if unit.fell else "last hit: %s" % unit.last_hit_text()
+	entry.note = "fell into the void" if unit.fell else "its time is up" if unit.raised and unit.last_hit_source == null else "last hit: %s" % unit.last_hit_text()
 	combat_log.add(entry)
 
 

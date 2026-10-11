@@ -94,6 +94,9 @@ enum Kind {
 	## Phase 8 part 5 (Severine): target (the unit itself) spends `amount`
 	## HP on its signature; source: the signature.
 	HP_SPENT,
+	## Phase 8 part 5 (Sanguine Nova): target (the unit itself) gives up
+	## `amount` max HP that Engorge added; source: the ability.
+	MAX_HP_DOWN,
 }
 
 const COLLAPSE_SOURCE: String = "rift_collapse"
@@ -368,6 +371,8 @@ func to_text() -> String:
 			return line + "%s gives %s %s mana" % [source_text(), target, Mana.text(amount)]
 		Kind.HP_SPENT:
 			return line + "%s: %s spends %d HP" % [source_text(), target, amount]
+		Kind.MAX_HP_DOWN:
+			return line + "%s: %s gives up %d max HP" % [source_text(), target, amount]
 	return line + "?"
 
 

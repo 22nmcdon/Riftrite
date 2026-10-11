@@ -26,6 +26,13 @@ extends RefCounted
 ##     mana, and never counts as a back-liner. Logged as SUMMON.
 ##   - No side has more than max_units_per_side standing units: extra
 ##     summons are dropped, and so are those with no room. Both are logged.
+##   - A raise (phase 8 part 5, Gravecaller; raise) stands a fallen enemy
+##     up on the raiser's side as its own kit, a thrall, at the free spot
+##     nearest where it fell: a share of its max HP for a while, then it
+##     goes (CombatSim). Never a summon, an elite or boss, or a unit that
+##     fell into the void (Decision 2); it never copies a signature. Logged
+##     as a SUMMON sourced to the raise (amount: its HP; end_tick: when it
+##     goes).
 
 
 ## `unit` summons as `effect` says (`aimed_at`: its ability's target, for
@@ -121,6 +128,54 @@ static func rise_as(sim: CombatSim, fallen: UnitState, part: PartDef) -> void:
 	entry.note = ""
 	sim.combat_log.add(entry)
 	sim.units_joined()
+
+
+## `unit` raises `fallen` as a thrall (see the top): a fresh unit of its kit
+## on `unit`'s side, at the raise's share of its max HP (grown by each earlier
+## raise), standing that long (grown too). Dropped (logged) with its side
+## full, enough thralls standing, or no room.
+static func raise(sim: CombatSim, unit: UnitState, source: EffectSource, effect: EffectDef, fallen: UnitState) -> void:
+	if fallen == null or fallen.alive or fallen.fell or fallen.summoned or not fallen.def.rank.is_empty() or fallen.side == unit.side:
+		return
+	var kit: UnitDef = fallen.def
+	if sim.standing_count(unit.side) >= sim.tuning.max_units_per_side:
+		_log_dropped(sim, source, kit, "its side is full")
+		return
+	if effect.max_standing > 0 and _raised_by(sim, unit) >= effect.max_standing:
+		_log_dropped(sim, source, kit, "enough stand")
+		return
+	var setup: UnitSetup = UnitSetup.make(kit, unit.side, -1, -1, sim.next_unit_id(kit.id))
+	setup.max_hp_bp = mini(effect.raise_hp_bp + unit.raises * effect.raise_grow_hp_bp, FixedMath.BP_ONE)
+	var risen: UnitState = UnitState.from_setup(setup, sim.units.size(), null, sim.tuning.unit_radius)
+	var spot: Vector2i = Displacement.free_spot_near(sim, risen, sim.nearest_safe_point(fallen.pos, risen.radius), null, 0)
+	if spot.x < 0:
+		_log_dropped(sim, source, kit, "no room")
+		return
+	risen.summoned = true
+	risen.raised = true
+	risen.raised_by = unit.id
+	risen.copy_part = null
+	risen.expires_at = sim.tick + effect.raise_ticks + unit.raises * effect.raise_grow_ticks
+	risen.pos = spot
+	unit.raises += 1
+	sim.add_unit(risen)
+	sim.thralls = true
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.SUMMON, source)
+	entry.target = risen.id
+	entry.to_pos = spot
+	entry.amount = risen.hp
+	entry.end_tick = risen.expires_at
+	sim.combat_log.add(entry)
+	sim.units_joined()
+
+
+## How many thralls `unit` raised stand now.
+static func _raised_by(sim: CombatSim, unit: UnitState) -> int:
+	var count: int = 0
+	for other: UnitState in sim.units:
+		if other.alive and other.raised and other.raised_by == unit.id:
+			count += 1
+	return count
 
 
 ## Spots along the safe ground's edge for a unit of `radius`, nearest `near`

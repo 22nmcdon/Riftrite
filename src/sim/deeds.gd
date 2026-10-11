@@ -262,6 +262,8 @@ static func _count_for_team(sim: CombatSim, entry: LogEntry) -> void:
 				continue
 			if not deed.with_part.is_empty() and not holds_part(unit, deed.with_part):
 				continue
+			if not deed.statuses.is_empty() and not deed.statuses.any(func(status_id: String) -> bool: return Statuses.find(by, status_id) != null):
+				continue
 			unit.deeds.amounts[d] += 1 if deed.counts == DeedDef.Counts.HITS else entry.amount
 
 

@@ -193,6 +193,11 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			if not unit.vs_conditions.is_empty():
 				# A heal's bonus on some allies (phase 5c step 7c, Urgent Mercy).
 				power += Passives.vs_bonus_bp(unit, victim, AuraDef.Stat.HEAL_BP, source.ability_id)
+			if effect.as_lifesteal:
+				# It lands as the target's own lifesteal (phase 8 part 5, The Iron
+				# Maw): a LIFESTEAL line, Engorge past full; never healing.
+				steal(sim, victim, DamageRule.apply(amount, power, 0, 0, unit.relic_bonus_bp), source)
+				return
 			var overheal: int = heal(sim, victim, amount, source, effect.overheal_shield_bp, power, false, unit.relic_bonus_bp)
 			if effect.overheal_max_hp_per > 0 and overheal > 0:
 				_grow_max_hp(sim, unit, overheal, effect.overheal_max_hp_per, source)
@@ -214,6 +219,10 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			spend_shield(sim, victim, source, effect.keep_bp)
 		EffectDef.Type.RELEASE_STORED:
 			release_stored(sim, victim, source)
+		EffectDef.Type.SPEND_ENGORGED:
+			spend_engorged(sim, victim, source)
+		EffectDef.Type.GAIN_MAX_HP:
+			gain_max_hp(sim, victim, amount, source)
 		EffectDef.Type.EXTEND_STATUS:
 			if effect.extend_statuses.is_empty():
 				Statuses.extend(sim, victim, effect.status_id, effect.duration_ticks, source)
@@ -334,6 +343,11 @@ static func run_event(sim: CombatSim, unit: UnitState, ability: AbilityDef, sour
 	if effect.type == EffectDef.Type.FLOOD:
 		Water.flood(sim, unit, source, effect, other if other != null else unit.target)
 		return
+	if effect.type == EffectDef.Type.RAISE:
+		# The fallen enemy the event names stands up on the unit's side
+		# (phase 8 part 5, Gravecaller).
+		Summons.raise(sim, unit, source, effect, other)
+		return
 	if effect.type == EffectDef.Type.SUMMON and not unit.alive:
 		# From where it fell (phase 8 part 3, the Glass Shambler's Shatter):
 		# a summon aims at no unit, so a fallen one still makes it.
@@ -383,6 +397,9 @@ static func amount_of(effect: EffectDef, unit: UnitState, damage: int = 0, sim: 
 	elif effect.amount_bp_of_stored > 0:
 		# The damage its unit stored (phase 8 part 4, Vengeance).
 		amount = FixedMath.apply_bp(unit.stored, effect.amount_bp_of_stored)
+	elif effect.amount_bp_of_engorged > 0:
+		# The max HP Engorge added to it (phase 8 part 5, Sanguine Nova).
+		amount = FixedMath.apply_bp(unit.engorged, effect.amount_bp_of_engorged)
 	else:
 		amount = effect.base_value()
 		for stat: int in effect.scaling.size():
@@ -512,7 +529,8 @@ static func near(sim: CombatSim, unit: UnitState, effect: EffectDef, center: Uni
 	var found: Array[UnitState] = []
 	var reach_sq: int = effect.near_range * effect.near_range
 	if effect.target == EffectDef.Target.LOWEST_HP_ALLY:
-		var ally: UnitState = Targeting.pick(sim, unit, "lowest_hp_ally", reach_sq if effect.near_range > 0 else -1)
+		# A habit's preference (phase 8 part 5, The Lamp of Ichor: Severine first).
+		var ally: UnitState = Targeting.pick(sim, unit, "lowest_hp_ally", reach_sq if effect.near_range > 0 else -1, effect.prefer)
 		if ally != null:
 			found.append(ally)
 		return found
@@ -936,8 +954,13 @@ static func lifesteal(sim: CombatSim, attacker: UnitState, target: UnitState, de
 		share = FixedMath.apply_bp(share, maxi(FixedMath.BP_ONE + more, 0))
 	if share <= 0 or not attacker.alive:
 		return
-	var wanted: int = FixedMath.apply_bp(dealt, share)
-	if wanted <= 0:
+	steal(sim, attacker, FixedMath.apply_bp(dealt, share), source)
+
+
+## `attacker` lifesteals `wanted` HP: a LIFESTEAL line (or a heal, with
+## lifesteal_heals), what's past full HP to Engorge, and the overheal strike.
+static func steal(sim: CombatSim, attacker: UnitState, wanted: int, source: EffectSource) -> void:
+	if wanted <= 0 or not attacker.alive:
 		return
 	var overheal: int
 	if attacker.aura_bp[AuraDef.Stat.LIFESTEAL_HEALS] > 0:
@@ -1071,6 +1094,37 @@ static func spend_shield(sim: CombatSim, unit: UnitState, source: EffectSource, 
 	if kept > 0:
 		entry.note = "keeps %d" % kept
 	unit.shield = kept
+	sim.combat_log.add(entry)
+
+
+## `unit` gains `amount` max HP and HP for the fight (phase 8 part 5, The
+## Iron Maw), logged as MAX_HP_UP.
+static func gain_max_hp(sim: CombatSim, unit: UnitState, amount: int, source: EffectSource) -> void:
+	if amount <= 0 or not unit.alive:
+		return
+	unit.base_max_hp += amount
+	unit.max_hp += amount
+	unit.hp += amount
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.MAX_HP_UP, source)
+	entry.target = unit.id
+	entry.amount = amount
+	sim.combat_log.add(entry)
+
+
+## `unit` gives up the max HP (and HP) Engorge added to it (phase 8 part 5,
+## Sanguine Nova), logged as MAX_HP_DOWN with how much; nothing if it has
+## none. Its HP comes down to its max HP if it's above it.
+static func spend_engorged(sim: CombatSim, unit: UnitState, source: EffectSource) -> void:
+	if unit.engorged <= 0:
+		return
+	var lost: int = unit.engorged
+	unit.engorged = 0
+	unit.base_max_hp = maxi(unit.base_max_hp - lost, 1)
+	unit.max_hp = maxi(unit.max_hp - lost, 1)
+	unit.hp = mini(unit.hp, unit.max_hp)
+	var entry: LogEntry = sim.new_entry(LogEntry.Kind.MAX_HP_DOWN, source)
+	entry.target = unit.id
+	entry.amount = lost
 	sim.combat_log.add(entry)
 
 

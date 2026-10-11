@@ -196,6 +196,9 @@ func _add(entry: LogEntry, sim: CombatSim) -> void:
 		LogEntry.Kind.HP_SPENT:
 			# HP spent on a signature (phase 8 part 5): a blood-red number.
 			_number(entry, sim, "-%s" % UiStyle.short_number(entry.amount), UiStyle.BLOOD_500, false)
+		LogEntry.Kind.MAX_HP_DOWN:
+			# Engorged max HP given up (phase 8 part 5, Sanguine Nova).
+			_number(entry, sim, "-%s max" % UiStyle.short_number(entry.amount), UiStyle.BLOOD_500, false)
 		LogEntry.Kind.WALL_HIT:
 			# A wall worn down (phase 8 part 2): its number at the wall's middle.
 			if entry.amount > 0:

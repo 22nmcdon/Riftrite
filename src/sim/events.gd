@@ -23,7 +23,9 @@ extends RefCounted
 ## The Unbroken Gate), naming the shooter or striker, and on_rise (it rises:
 ## Second Dawn or its own rise passive; Dread Return). Phase 8 part 4:
 ## on_pull (it pulls or hooks an enemy that moves; Hard Landing) and
-## on_shield_spent (it spends its Shield; The Woven Fang).
+## on_shield_spent (it spends its Shield; The Woven Fang). Phase 8 part 5:
+## on_hp_spent (it spends HP on its signature; Blood Rite) and on_max_hp_up
+## (it gains max HP, whatever gave it; The Iron Maw).
 ## After every unit has acted, CombatSim hands over the entries logged since
 ## the last read, in log order (so what happens in the deaths step is read
 ## on the next tick); kills are raised as deaths are settled. Relic effects
@@ -42,7 +44,7 @@ extends RefCounted
 const _RAISES: Array[LogEntry.Kind] = [LogEntry.Kind.FIRE, LogEntry.Kind.DAMAGE, LogEntry.Kind.SHIELD, LogEntry.Kind.HEAL,
 	LogEntry.Kind.STATUS_APPLIED, LogEntry.Kind.HOP, LogEntry.Kind.STATUS_DAMAGE, LogEntry.Kind.STATUS_ENDED, LogEntry.Kind.LIFESTEAL,
 	LogEntry.Kind.PUSH, LogEntry.Kind.GUARD, LogEntry.Kind.ARRIVE, LogEntry.Kind.SHOT_FIZZLED, LogEntry.Kind.WALL_HIT, LogEntry.Kind.RISE,
-	LogEntry.Kind.SHIELD_SPENT]
+	LogEntry.Kind.SHIELD_SPENT, LogEntry.Kind.HP_SPENT, LogEntry.Kind.MAX_HP_UP]
 
 
 ## Raises the events in the log from entry `from` on, including those the
@@ -62,6 +64,13 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> int:
 			# Its holder's event, whoever put the status there (a relic too).
 			if sim.status_end_listeners:
 				_raise(sim, sim.unit_by_id(entry.target), EffectDef.Trigger.ON_STATUS_ENDED, entry.chain, sim.unit_by_id(entry.target), 0, entry.status)
+			continue
+		if entry.kind == LogEntry.Kind.MAX_HP_UP:
+			# The unit that grew, whatever grew it (phase 8 part 5, The Iron
+			# Maw); what gave it rides along as the ability.
+			if entry.amount > 0:
+				var grown: UnitState = sim.unit_by_id(entry.target)
+				_raise(sim, grown, EffectDef.Trigger.ON_MAX_HP_UP, entry.chain, null, entry.amount, entry.source_ability)
 			continue
 		if entry.kind == LogEntry.Kind.RISE:
 			# The risen unit's event, whatever raised it (phase 8 part 2,
@@ -151,6 +160,11 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> int:
 				# spent rides along.
 				if entry.amount > 0:
 					_raise(sim, source, EffectDef.Trigger.ON_SHIELD_SPENT, chain, null, entry.amount)
+			LogEntry.Kind.HP_SPENT:
+				# HP spent on a signature (phase 8 part 5, Blood Rite): what it
+				# spent rides along.
+				if entry.amount > 0:
+					_raise(sim, source, EffectDef.Trigger.ON_HP_SPENT, chain, null, entry.amount)
 			LogEntry.Kind.GUARD:
 				if target != null and entry.amount > 0:
 					# The share it took rides along (amount_bp_of_damage; phase 8

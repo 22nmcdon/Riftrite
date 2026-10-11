@@ -38,6 +38,8 @@ const EVENT_WORDS: Dictionary[int, String] = {
 	EffectDef.Trigger.ON_RISE: "rise from a fall",
 	EffectDef.Trigger.ON_PULL: "enemy pulled",
 	EffectDef.Trigger.ON_SHIELD_SPENT: "Shield spent",
+	EffectDef.Trigger.ON_HP_SPENT: "HP spent",
+	EffectDef.Trigger.ON_MAX_HP_UP: "max HP gained",
 }
 const ORDINALS: Array[String] = ["th", "st", "nd", "rd"]
 const CHATTER: Array[LogEntry.Kind] = [LogEntry.Kind.MOVE, LogEntry.Kind.STOP, LogEntry.Kind.TARGET]
@@ -479,6 +481,10 @@ static func aura_text(aura: AuraDef) -> String:
 		text += " on its signature's hits"
 	if not aura.per_target_stacks.is_empty():
 		text += " per %s stack on the enemy hit" % aura.per_target_stacks.replace("_", " ").capitalize()
+	if not aura.per_holder_stacks.is_empty():
+		text += " per %s stack on it" % aura.per_holder_stacks.replace("_", " ").capitalize()
+	if aura.per_engorged_bp > 0:
+		text += " for every %s of max HP Engorge adds" % ValueBreakdown._percent(aura.per_engorged_bp)
 	if aura.window_until_ticks >= 0:
 		text += " until %s" % seconds(aura.window_until_ticks)
 	return text
@@ -594,6 +600,9 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 			if effect.amount_bp_of_stored > 0:
 				# Vengeance (phase 8 part 4).
 				return "%s of the damage it stored as damage%s" % [ValueBreakdown._percent(effect.amount_bp_of_stored), _to_all(effect)]
+			if effect.amount_bp_of_engorged > 0:
+				# Sanguine Nova (phase 8 part 5).
+				return "%s of the max HP Engorge added as damage%s" % [ValueBreakdown._percent(effect.amount_bp_of_engorged), _to_all(effect)]
 			var text: String = _amount(effect, kit, "damage")
 			if effect.bonus_bp_per_ally > 0:
 				var kin: String = _unit_name(effect.bonus_kit, content) if not effect.bonus_kit.is_empty() else "ally"
@@ -612,6 +621,10 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 				text += ", %s lifesteal" % ValueBreakdown._percent(effect.lifesteal_bp)
 			return text + _to_all(effect)
 		EffectDef.Type.HEAL:
+			if effect.as_lifesteal:
+				# The Iron Maw (phase 8 part 5).
+				var drunk: String = ValueBreakdown._percent(effect.amount_bp_of_damage) + " of the damage" if effect.amount_bp_of_damage > 0 else _amount(effect, kit, "")
+				return "%s as lifesteal" % drunk
 			if effect.amount_bp_of_max_hp > 0:
 				return "heals %s of max HP" % ValueBreakdown._percent(effect.amount_bp_of_max_hp)
 			if effect.amount_bp_of_damage > 0:
@@ -744,6 +757,20 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 			return "spends its whole Shield" if effect.keep_bp == 0 else "spends its Shield, keeping %s" % ValueBreakdown._percent(effect.keep_bp)
 		EffectDef.Type.RELEASE_STORED:
 			return "lets go of the damage it stored"
+		EffectDef.Type.GAIN_MAX_HP:
+			if effect.amount_bp_of_damage > 0:
+				return "+%s of what it gained as max HP" % ValueBreakdown._percent(effect.amount_bp_of_damage)
+			return "+%d max HP" % effect.amount
+		EffectDef.Type.SPEND_ENGORGED:
+			return "gives up the max HP Engorge added"
+		EffectDef.Type.RAISE:
+			# Gravecaller (phase 8 part 5).
+			var raise: String = "the fallen enemy rises as a thrall at %s of its HP for %s" % [ValueBreakdown._percent(effect.raise_hp_bp), seconds(effect.raise_ticks)]
+			if effect.max_standing > 0:
+				raise += ", up to %d at once" % effect.max_standing
+			if effect.raise_grow_hp_bp > 0 or effect.raise_grow_ticks > 0:
+				raise += "; each raised makes later ones rise with +%s HP and last %s longer" % [ValueBreakdown._percent(effect.raise_grow_hp_bp), seconds(effect.raise_grow_ticks)]
+			return raise
 		EffectDef.Type.SEVER:
 			return "the next bridge breaks after %s, for %s" % [seconds(effect.warning_ticks), seconds(effect.zone_ticks)]
 		EffectDef.Type.SUMMON:

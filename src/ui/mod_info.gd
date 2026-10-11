@@ -186,6 +186,17 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 		bits.append("%s hex reach" % signed(change.within_add / HexGrid.HEX))
 	if change.count_add != 0:
 		bits.append("+%d all%s" % [change.count_add, "y" if change.count_add == 1 else "ies"])
+	# Severine's cards (phase 8 part 5).
+	if change.lifesteal_add_bp != 0:
+		bits.append("%s lifesteal" % UnitInfo.signed_percent(change.lifesteal_add_bp))
+	if change.plus_max_hp_add_bp != 0:
+		bits.append("%s of max HP as damage" % UnitInfo.signed_percent(change.plus_max_hp_add_bp))
+	if change.hp_cost_add_bp != 0:
+		bits.append("%s of max HP to cast" % UnitInfo.signed_percent(change.hp_cost_add_bp))
+	if change.follows_holder:
+		bits.append("its area moves with its caster")
+	if change.raise_grow_add_bp != 0:
+		bits.append("%s HP for each thrall raised before" % UnitInfo.signed_percent(change.raise_grow_add_bp))
 	for effect: EffectDef in change.add_to_areas:
 		bits.append("in its area: " + " · ".join(UnitInfo.effect_numbers([effect] as Array[EffectDef], kit, content)))
 	for effect: EffectDef in change.add_effects:

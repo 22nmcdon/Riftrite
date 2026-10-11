@@ -6188,7 +6188,8 @@
     "mod": {
       "on": [
         {
-          "slot": "signature",
+          "slot": "abilities",
+          "ability": "gorge",
           "plus_max_hp_add_bp": 500
         }
       ]
@@ -6486,6 +6487,261 @@
           }
         ]
       }
+    }
+  },
+  {
+    "id": "bottomless",
+    "name": "Bottomless",
+    "apex": "leviathan",
+    "text": "Every 10% max HP she gains gives her more lifesteal.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:leviathan",
+          "value_add": 300
+        }
+      ]
+    }
+  },
+  {
+    "id": "thick_hide",
+    "name": "Thick Hide",
+    "apex": "leviathan",
+    "text": "Every 5% max HP she gains gives her +1 DEF.",
+    "mod": {
+      "passives": [
+        {
+          "id": "thick_hide",
+          "name": "Thick Hide",
+          "kind": "aura",
+          "text": "Every twentieth of her max HP that Engorge adds hardens her hide.",
+          "aura": {
+            "target": "holder",
+            "stat": "def",
+            "value": 1,
+            "per_engorged_pct": 5
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "gluttony",
+    "name": "Gluttony",
+    "apex": "sanguine_nova",
+    "text": "Each Sanguine Nova makes Engorge grow faster still.",
+    "mod": {
+      "passives": [
+        {
+          "id": "gluttony",
+          "name": "Gluttony",
+          "kind": "ability",
+          "text": "Each Sanguine Nova makes Engorge grow faster still for the rest of the fight.",
+          "effects": [
+            {
+              "trigger": "on_ability",
+              "type": "apply_status",
+              "status": "gluttony",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "blood_rain",
+    "name": "Blood Rain",
+    "apex": "sanguine_nova",
+    "text": "Sanguine Nova slows the enemies it hits.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_to_areas": [
+            {
+              "type": "apply_status",
+              "status": "slow",
+              "duration_ms": 2000,
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "deep_grave",
+    "name": "Deep Grave",
+    "apex": "gravecaller",
+    "text": "Each thrall raised makes later ones rise with more HP.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:gravecaller",
+          "raise_grow_add_pct": 20
+        }
+      ]
+    }
+  },
+  {
+    "id": "plague_thralls",
+    "name": "Plague Thralls",
+    "apex": "gravecaller",
+    "text": "Her thralls' attacks poison what they hit.",
+    "mod": {
+      "passives": [
+        {
+          "id": "plague_thralls",
+          "name": "Plague Thralls",
+          "kind": "ability",
+          "text": "Each hit her thralls' attacks land poisons the enemy.",
+          "effects": [
+            {
+              "trigger": "on_ally_hit",
+              "by": {
+                "raised": true
+              },
+              "type": "apply_status",
+              "status": "poison",
+              "stacks": 0,
+              "scaling": {
+                "atk": 1000
+              },
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "epidemic",
+    "name": "Epidemic",
+    "apex": "pestilence",
+    "text": "Each enemy that falls Poisoned makes her Poison stronger still.",
+    "mod": {
+      "passives": [
+        {
+          "id": "epidemic",
+          "name": "Epidemic",
+          "kind": "ability",
+          "text": "Each enemy that falls while Poisoned makes all her Poison stronger still.",
+          "effects": [
+            {
+              "trigger": "on_enemy_fell",
+              "type": "apply_status",
+              "status": "epidemic",
+              "target": "self",
+              "vs": {
+                "statuses": [
+                  "poison"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "wasting",
+    "name": "Wasting",
+    "apex": "pestilence",
+    "text": "Her Poison slows the enemies it's put on.",
+    "mod": {
+      "passives": [
+        {
+          "id": "wasting",
+          "name": "Wasting",
+          "kind": "ability",
+          "text": "Each Poison she applies slows that enemy for a moment.",
+          "effects": [
+            {
+              "trigger": "on_status",
+              "type": "apply_status",
+              "status": "wasting",
+              "target": "hit_target",
+              "statuses": [
+                "poison"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "crimson_flood",
+    "name": "Crimson Flood",
+    "apex": "blood_tide",
+    "text": "Each Exsanguinate makes Blood Bolt drink more still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:tidal_thirst",
+          "value_add": 200
+        }
+      ]
+    }
+  },
+  {
+    "id": "crimson_spray",
+    "name": "Crimson Spray",
+    "apex": "blood_tide",
+    "text": "Exsanguinate's splash reaches 2 hexes from its target.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "within_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "sacrament",
+    "name": "Sacrament",
+    "apex": "blood_rite",
+    "text": "Every 100 HP she spends makes every ally stronger still.",
+    "mod": {
+      "passives": [
+        {
+          "id": "sacrament",
+          "name": "Sacrament",
+          "kind": "ability",
+          "text": "Every 100 HP she spends makes every ally stronger still for the rest of the fight.",
+          "effects": [
+            {
+              "trigger": "on_hp_spent",
+              "type": "apply_status",
+              "status": "sacrament",
+              "target": "all_allies",
+              "per_damage": 100
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "shared_blood",
+    "name": "Shared Blood",
+    "apex": "blood_rite",
+    "text": "Blood Rite also gives every ally lifesteal.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "shared_blood",
+              "target": "all_allies"
+            }
+          ]
+        }
+      ]
     }
   }
 ]

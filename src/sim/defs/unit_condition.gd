@@ -39,6 +39,8 @@ extends RefCounted
 ##   {"target_beyond_hexes": 3}              its target stands this many
 ##                                           hexes away or more (phase 8
 ##                                           part 4, Tailwind)
+##   {"raised": true}                        a thrall Gravecaller raised (phase
+##                                           8 part 5; Plague Thralls)
 ##   {"fired_over_full": true}               its signature last fired with
 ##                                           mana past a full bar (phase 8
 ##                                           part 4, Wellspring)
@@ -73,6 +75,7 @@ var ranged: Flying = Flying.ANY
 var target_beyond: int = 0
 ## Its signature last fired from past a full bar (phase 8 part 4).
 var fired_over_full: bool = false
+var raised: bool = false
 
 
 static func read(reader: DataReader) -> UnitCondition:
@@ -108,15 +111,16 @@ static func read(reader: DataReader) -> UnitCondition:
 	if reader.has("target_beyond_hexes"):
 		def.target_beyond = reader.req_int("target_beyond_hexes", 1, 10) * HexGrid.HEX
 	def.fired_over_full = reader.opt_bool("fired_over_full", false)
+	def.raised = reader.opt_bool("raised", false)
 	if def.is_empty():
-		reader.error("a condition needs at least one of keywords, statuses, below_hp_pct, above_hp_pct, flying, archetypes, front_most, on_water, same_island, shield_above_pct, engorged_pct, targets_holder, target, ranged, target_beyond_hexes, fired_over_full, or kits")
+		reader.error("a condition needs at least one of keywords, statuses, below_hp_pct, above_hp_pct, flying, archetypes, front_most, on_water, same_island, shield_above_pct, engorged_pct, targets_holder, target, ranged, target_beyond_hexes, fired_over_full, raised, or kits")
 	reader.finish()
 	return def
 
 
 func is_empty() -> bool:
 	return keywords.is_empty() and statuses.is_empty() and below_hp_bp == 0 and above_hp_bp == 0 and flying == Flying.ANY and archetypes.is_empty() and not front_most and on_water == Flying.ANY and kits.is_empty() and not same_island and shield_above_bp == 0 and engorged_bp == 0 \
-		and targets_holder == Flying.ANY and target == null and ranged == Flying.ANY and target_beyond == 0 and not fired_over_full
+		and targets_holder == Flying.ANY and target == null and ranged == Flying.ANY and target_beyond == 0 and not fired_over_full and not raised
 
 
 ## True if `unit` meets every field given. `holder`: whose condition it is
@@ -156,6 +160,8 @@ func holds(unit: UnitState, holder: UnitState = null) -> bool:
 	if target_beyond > 0 and (unit.target == null or not unit.target.alive or ArenaPlane.length_sq(unit.target.pos - unit.pos) < target_beyond * target_beyond):
 		return false
 	if fired_over_full and unit.last_overflow <= 0:
+		return false
+	if raised and not unit.raised:
 		return false
 	return true
 
@@ -220,4 +226,6 @@ func describe() -> String:
 		parts.append("attacking from %d hexes or more" % (target_beyond / HexGrid.HEX))
 	if fired_over_full:
 		parts.append("casting from past a full bar")
+	if raised:
+		parts.append("a raised thrall")
 	return ", ".join(parts)

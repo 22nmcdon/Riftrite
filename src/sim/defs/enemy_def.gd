@@ -8,16 +8,21 @@ extends RefCounted
 ##    "threat": "Pounces on your weakest back-liner",
 ##    "kit": {...a UnitDef, without id or name...},
 ##    "specializations": [...up to two SpecializationDefs...]}  (phase 8 part 3)
+## and "rank": "elite" or "boss" (phase 8 part 5: an elite's or a boss's own
+## kit; Gravecaller never raises one; on the kit too).
 
 ## Phase 8 part 3 (Act 2) adds the summoner and the splitter.
 enum Archetype { SWARM, FLANKER, CASTER, RANGED, ANCHOR, CHARGER, DISRUPTOR, SUPPORT, SUMMONER, SPLITTER, MIMIC, WARDEN_BREAKER }
 
+const RANK_NAMES: Array[String] = ["elite", "boss"]
 const ARCHETYPE_NAMES: Array[String] = ["swarm", "flanker", "caster", "ranged", "anchor", "charger", "disruptor", "support", "summoner", "splitter", "mimic", "warden_breaker"]
 
 var id: String
 var name: String
 var archetype: Archetype
 var threat: String
+## "elite", "boss", or "" (phase 8 part 5).
+var rank: String = ""
 var kit: UnitDef
 ## Its specializations (phase 8 part 3), up to SpecializationDef.PER_ENEMY.
 var specializations: Array[SpecializationDef] = []
@@ -29,10 +34,12 @@ static func read(reader: DataReader) -> EnemyDef:
 	def.name = reader.req_string("name")
 	def.archetype = maxi(ARCHETYPE_NAMES.find(reader.req_choice("archetype", ARCHETYPE_NAMES)), 0) as Archetype
 	def.threat = reader.req_string("threat")
+	def.rank = reader.opt_string_choice("rank", "", RANK_NAMES)
 	var kit_reader: DataReader = reader.req_object("kit")
 	def.kit = UnitDef.read(kit_reader, def.id, def.name) if kit_reader != null else null
 	if def.kit != null:
 		def.kit.archetype = ARCHETYPE_NAMES[def.archetype]
+		def.kit.rank = def.rank
 	for spec_reader: DataReader in reader.opt_object_array("specializations"):
 		def.specializations.append(SpecializationDef.read(spec_reader, def.id))
 	if def.specializations.size() > SpecializationDef.PER_ENEMY:

@@ -2408,5 +2408,120 @@
         }
       ]
     }
+  },
+  {
+    "id": "the_iron_maw",
+    "name": "The Iron Maw",
+    "tier": "bond",
+    "icon": "deep_mend",
+    "flavor": "Iron Hunger: he takes the blows; she drinks them.",
+    "text": "While Severine is within 2 hexes of Garrow, the damage he sends back heals her as lifesteal (feeding Engorge), and every max HP Engorge gives her, he gains too.",
+    "mod": {
+      "passives": [
+        {
+          "id": "the_iron_maw",
+          "name": "The Iron Maw",
+          "kind": "ability",
+          "text": "Damage Garrow sends back heals Severine within 2 hexes of him as lifesteal, and the max HP Engorge gives her, he gains too.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "spikes",
+                "maidens_spite",
+                "vengeance"
+              ],
+              "type": "heal",
+              "as_lifesteal": true,
+              "amount_bp_of_damage": 10000,
+              "target": "allies_near_self",
+              "within_hexes": 2,
+              "only": {
+                "kits": [
+                  "severine"
+                ]
+              }
+            },
+            {
+              "trigger": "on_max_hp_up",
+              "from_ability": [
+                "engorge"
+              ],
+              "type": "gain_max_hp",
+              "amount_bp_of_damage": 10000,
+              "target": "all_allies",
+              "only": {
+                "kits": [
+                  "garrow"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_lamp_of_ichor",
+    "name": "The Lamp of Ichor",
+    "tier": "bond",
+    "icon": "ember_heart",
+    "flavor": "Blood and Lamplight: she bleeds, Vell refills her, she casts again.",
+    "text": "Each Exsanguinate gives Vell 10 mana, and Vell's Mend always goes to Severine when she's at or below half her HP, healing her 50% more.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "exsanguinate",
+          "add_effects": [
+            {
+              "type": "gain_mana",
+              "amount": 10,
+              "target": "all_allies",
+              "only": {
+                "kits": [
+                  "vell"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "slot": "abilities",
+          "ability": "mend",
+          "prefer": {
+            "kits": [
+              "severine"
+            ],
+            "below_hp_pct": 51
+          }
+        }
+      ],
+      "passives": [
+        {
+          "id": "the_lamp_of_ichor",
+          "name": "The Lamp of Ichor",
+          "kind": "aura",
+          "text": "Vell's heals on Severine at or below half her HP are 50% stronger.",
+          "aura": {
+            "target": "holder",
+            "stat": "heal_bp",
+            "value": 15000,
+            "while": "state",
+            "state": {
+              "kits": [
+                "vell"
+              ]
+            },
+            "vs": {
+              "kits": [
+                "severine"
+              ],
+              "below_hp_pct": 51
+            }
+          }
+        }
+      ]
+    }
   }
 ]

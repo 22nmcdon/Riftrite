@@ -79,5 +79,25 @@
       "vigil_keeper"
     ],
     "relic": "the_toll_of_dawn"
+  },
+  {
+    "id": "iron_hunger",
+    "name": "Iron Hunger",
+    "text": "He takes the blows; she drinks them.",
+    "paths": [
+      "bloodglut",
+      "spitemail"
+    ],
+    "relic": "the_iron_maw"
+  },
+  {
+    "id": "blood_and_lamplight",
+    "name": "Blood and Lamplight",
+    "text": "She bleeds, the lamp refills her, she casts again.",
+    "paths": [
+      "hemomancer",
+      "lanternbearer"
+    ],
+    "relic": "the_lamp_of_ichor"
   }
 ]

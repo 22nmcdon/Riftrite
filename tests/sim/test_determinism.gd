@@ -117,15 +117,17 @@ func test_the_fight_order_matters() -> void:
 ## released (RELEASED, phase 8 part 4): tests/sim/test_garrow_apex_pieces.gd.
 ## Mana given to another unit (MANA_GIVEN): tests/sim/test_aldous_pieces.gd.
 ## HP spent on a signature (HP_SPENT, phase 8 part 5): tests/sim/test_severine_pieces.gd.
+## Engorged max HP given up (MAX_HP_DOWN): tests/sim/test_severine_apex_pieces.gd.
 const NOT_YET: Array[LogEntry.Kind] = [LogEntry.Kind.SYNERGY, LogEntry.Kind.DEED_LEVEL, LogEntry.Kind.TACTIC,
 	LogEntry.Kind.ZONE, LogEntry.Kind.SNARE, LogEntry.Kind.WALL, LogEntry.Kind.GUARD, LogEntry.Kind.RISE, LogEntry.Kind.RESISTED,
-	LogEntry.Kind.DODGED, LogEntry.Kind.ARRIVE, LogEntry.Kind.SHARED, LogEntry.Kind.WALL_HIT, LogEntry.Kind.MAX_HP_UP, LogEntry.Kind.WATER, LogEntry.Kind.FELL, LogEntry.Kind.VOID, LogEntry.Kind.COPIED, LogEntry.Kind.RELEASED, LogEntry.Kind.MANA_GIVEN, LogEntry.Kind.HP_SPENT]
+	LogEntry.Kind.DODGED, LogEntry.Kind.ARRIVE, LogEntry.Kind.SHARED, LogEntry.Kind.WALL_HIT, LogEntry.Kind.MAX_HP_UP, LogEntry.Kind.WATER, LogEntry.Kind.FELL, LogEntry.Kind.VOID, LogEntry.Kind.COPIED, LogEntry.Kind.RELEASED, LogEntry.Kind.MANA_GIVEN, LogEntry.Kind.HP_SPENT, LogEntry.Kind.MAX_HP_DOWN]
 ## Statuses only the paths use (phase 4), and only relics (phase 5c step 5a;
 ## Sunder, covered by tests/run/test_relics.gd).
 const PATH_STATUSES: Array[String] = ["warded"]
 ## The new heroes' kits and paths' (phase 8 part 4; tests/sim/test_garrow_paths.gd and test_hero_kits.gd).
 const HERO_STATUSES: Array[String] = ["iron_maiden", "hidden", "shadow_dance", "garroted", "garrote_veil", "assassins_haste", "swift_step", "death_mark",
-	"phantom_veil", "phantom_edge", "phantom_edge_more", "veiled", "veil_haste", "veil_haste_more", "executioner_rush", "executioner_rush_more", "on_the_trail", "trailing", "blood_scent", "blood_scent_more", "strangle", "pinned_light", "pinned", "pin_rally", "pin_rally_more", "pealing", "kindled", "cracked", "rung", "grand_note", "wellspring_swell", "long_wind_gust", "long_wind_gust_more", "rising_pitch", "great_bell", "great_bell_more", "deafened", "requiem_toll"]
+	"phantom_veil", "phantom_edge", "phantom_edge_more", "veiled", "veil_haste", "veil_haste_more", "executioner_rush", "executioner_rush_more", "on_the_trail", "trailing", "blood_scent", "blood_scent_more", "strangle", "pinned_light", "pinned", "pin_rally", "pin_rally_more", "pealing", "kindled", "cracked", "rung", "grand_note", "wellspring_swell", "long_wind_gust", "long_wind_gust_more", "rising_pitch", "great_bell", "great_bell_more", "deafened", "requiem_toll",
+	"nova_hunger", "gluttony", "plague_weak", "pestilence", "epidemic", "wasting", "blood_tide", "blood_offering", "blood_rite", "sacred_blood", "sacrament", "shared_blood"]
 const RELIC_STATUSES: Array[String] = ["sunder", "quickened", "unbending", "long_watch", "vigilant", "iron_garden"]
 ## Boosts only loadout items apply (phase 5c step 6; tests/run/test_loadout.gd).
 const ITEM_STATUSES: Array[String] = ["surge", "surge_2", "last_breath", "purified",

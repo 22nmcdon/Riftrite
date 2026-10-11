@@ -83,6 +83,13 @@ extends RefCounted
 ##                                          hits (Shadow Engine)
 ##   "from_signature": true                 per hit: only its signature's
 ##                                          hits (phase 5c step 6b; Siphon)
+##   "per_holder_stacks": "blood_tide"      per hit: times the stacks of that
+##                                          status on its holder (phase 8
+##                                          part 5, Blood Tide)
+##   "per_engorged_pct": 10                 counts once for every 10% of its
+##                                          max HP (before Engorge) that
+##                                          Engorge has added; off while
+##                                          none (phase 8 part 5, Leviathan)
 ## Phase 5c step 6b (the loadout's charms) adds stats that add:
 ## def_ignore_bp (its hits ignore that share of the target's DEF; Armor
 ## Breaker), unpushable (above 0: knockbacks and pulls don't move it, logged
@@ -221,6 +228,13 @@ var step_value: int = 0
 var per_shield_bp: int = 0
 ## Per hit: times the stacks of this status on the unit hit ("": once).
 var per_target_stacks: String = ""
+## Per hit: times the stacks of this status on its holder (phase 8 part 5,
+## Blood Tide: "": once).
+var per_holder_stacks: String = ""
+## Counts once for every this share (bp) of its holder's max HP before
+## Engorge that Engorge has added (phase 8 part 5, Leviathan; 0: not per
+## step); off while it has none.
+var per_engorged_bp: int = 0
 ## Per hit: only its holder's basic attack's hits.
 var from_basic: bool = false
 ## Per hit: times the whole hexes between its holder and the unit hit (phase
@@ -299,6 +313,10 @@ static func read(reader: DataReader) -> AuraDef:
 		def.per_twice = UnitCondition.read(reader.req_object("per_twice"))
 		if def.per_enemy_range == 0:
 			reader.error("only an aura \"per\": \"enemy_near\" has \"per_twice\"")
+	if reader.has("per_engorged_pct"):
+		def.per_engorged_bp = reader.req_int("per_engorged_pct", 1, 100) * 100
+		if def.per_shield_bp > 0:
+			reader.error("an aura per Shield can't also be per Engorge")
 	if reader.has("step"):
 		var step: DataReader = reader.req_object("step")
 		if step != null:
@@ -308,6 +326,7 @@ static func read(reader: DataReader) -> AuraDef:
 		if def.while_kind != While.PLANTED:
 			reader.error("only a planted aura has a \"step\"")
 	def.per_target_stacks = reader.opt_string("per_target_stacks", "")
+	def.per_holder_stacks = reader.opt_string("per_holder_stacks", "")
 	def.from_basic = reader.opt_bool("from_basic", false)
 	def.from_signature = reader.opt_bool("from_signature", false)
 	def.per_hex = reader.opt_bool("per_hex", false)
@@ -315,7 +334,7 @@ static func read(reader: DataReader) -> AuraDef:
 		reader.error("only a damage_bp aura is worked out per hex")
 	if def.from_basic and def.from_signature:
 		reader.error("an aura is from its basic attack or its signature, not both")
-	if (def.from_basic or def.from_signature or not def.per_target_stacks.is_empty()) and not VS_STATS.has(def.stat):
+	if (def.from_basic or def.from_signature or not def.per_target_stacks.is_empty() or not def.per_holder_stacks.is_empty()) and not VS_STATS.has(def.stat):
 		reader.error("only a damage_bp, crit_chance_bp, lifesteal_bp, lifesteal_more_bp, or crit_damage_bp aura is worked out per hit")
 	if def.per_shield_bp > 0 and def.is_per_hit():
 		reader.error("an aura per Shield can't also be worked out per hit")
@@ -340,12 +359,13 @@ func is_additive() -> bool:
 func is_conditional() -> bool:
 	return while_kind == While.PLANTED or while_kind == While.BELOW_HP or while_kind == While.ALLY_STANDING or while_kind == While.STATE \
 		or while_kind == While.ALLY_NEAR or while_kind == While.BEHIND_WALL or while_kind == While.TACTIC or per_fallen_ally or per_shield_bp > 0 \
-		or per_enemy_range > 0 or while_kind == While.MOVED or while_kind == While.CROWDED or target == Target.ALLIES_NEAR or only != null
+		or per_enemy_range > 0 or while_kind == While.MOVED or while_kind == While.CROWDED or target == Target.ALLIES_NEAR or only != null \
+		or per_engorged_bp > 0
 
 
 ## Worked out per hit (EffectRunner), not folded into the unit's stats.
 func is_per_hit() -> bool:
-	return vs != null or from_basic or from_signature or not per_target_stacks.is_empty() or hit_range > 0 or per_hex
+	return vs != null or from_basic or from_signature or not per_target_stacks.is_empty() or hit_range > 0 or per_hex or not per_holder_stacks.is_empty()
 
 
 ## For the log, e.g. "x2 damage for its holder" or "+20% crit chance for all allies".
@@ -405,6 +425,10 @@ func describe() -> String:
 		condition += " for each enemy within %d hex%s" % [per_enemy_range / HexGrid.HEX, "" if per_enemy_range == HexGrid.HEX else "es"]
 	if not per_target_stacks.is_empty():
 		condition += " per %s stack on the unit hit" % per_target_stacks.replace("_", " ")
+	if not per_holder_stacks.is_empty():
+		condition += " per stack of %s on it" % per_holder_stacks.replace("_", " ")
+	if per_engorged_bp > 0:
+		condition += " for every %s of max HP Engorge adds" % ValueBreakdown._percent(per_engorged_bp)
 	if from_basic:
 		condition += " on its basic attack's hits"
 	if per_hex:
