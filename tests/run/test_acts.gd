@@ -233,13 +233,14 @@ func test_the_real_endless_follows_act_3() -> void:
 	assert_eq(real.floor_pool(flow.state, "boss"), ["the_heart_of_the_rift"] as Array[String], "the Heart every 10th floor")
 
 
-## Seed 12 is one the simple bot wins through all three stand-in acts (of
-## seeds 1-80: 12, 49, 53, and 71 since day 2 was resized, easy-start.md
+## Seed 63 is one the simple bot wins through all three stand-in acts (of
+## seeds 1-80: 63 and 71 since the tuning phase's T-6 raised days 4-6 and
+## Old Mother Ash; 12, 49, 53, and 71 after day 2 was resized, easy-start.md
 ## ES-2; 13 after ES-1, 38 before); if Act 1's fights or tuning change, find
 ## another.
 func test_a_bot_plays_through_the_acts() -> void:
 	var errors: Array[String] = []
-	var flow: RunFlow = Bot.play(_run, 12, errors)
+	var flow: RunFlow = Bot.play(_run, 63, errors)
 	assert_eq(errors, [] as Array[String])
 	assert_eq([flow.state.act, flow.state.phase, flow.state.outcome], [3, RunState.Phase.ENDED, RunState.Outcome.WON], "won Act 3, and ended at the endless choice")
 	assert_true(flow.state.fought.any(func(fought: RunState.Fought) -> bool: return fought.act == 2))
