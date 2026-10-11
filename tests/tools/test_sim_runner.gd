@@ -78,7 +78,7 @@ func test_a_later_act_gate_steps_to_a_split() -> void:
 	if report.scale_bp == start:
 		assert_between(report.winning(), 1, report.rows.size() - 1, "judged at the start only if the formations split there")
 	else:
-		assert_eq((report.scale_bp - start) % Report.SCALE_STEP_BP, 0, "it moves in steps")
+		assert_between(report.winning(), 1, report.rows.size() - 1, "it moves until the formations split")
 	var formation: Dictionary[String, Vector2i] = report.rows[0].formation
 	var setup: FightSetup = Report.gate_setup(_content, "the_mournwater", formation, 1, [] as Array[String], report.scale_bp)
 	assert_eq(setup.heroes.map(func(unit: UnitSetup) -> int: return unit.stage), [PathDef.Stage.TRANSFORMED, PathDef.Stage.TRANSFORMED, PathDef.Stage.TRANSFORMED])

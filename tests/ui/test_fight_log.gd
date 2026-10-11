@@ -394,6 +394,10 @@ func test_a_summon_is_named_as_it_joins() -> void:
 func test_banners_as_the_fight_plays() -> void:
 	var session: PracticeSession = PracticeSession.make(_content)
 	session.speed = 0.5
+	# Transformed, so the team lasts past the collapse against the coven
+	# (the tuning phase's T-6 made it too strong for the base team).
+	for path_id: String in ["hearthwall", "deadeye", "lanternbearer"]:
+		session.set_path(_content.paths[path_id].hero, path_id, PathDef.Stage.TRANSFORMED)
 	var screen: ArenaScreen = await _screen("witch_coven", session)
 	screen._fight()
 	assert_eq(screen.banners.speed, 0.5, "banners start at the remembered speed")
