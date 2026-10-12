@@ -232,6 +232,22 @@ static func summon_fell(sim: CombatSim, fallen: UnitState) -> void:
 			_raise(sim, unit, EffectDef.Trigger.ON_SUMMON_FELL, fallen.last_hit_chain, fallen)
 
 
+## A unit it controlled fell while controlled (phase 8 part 6, Marionette):
+## its controller hears it (on_controlled_fell, naming the fallen).
+static func controlled_fell(sim: CombatSim, fallen: UnitState) -> void:
+	if fallen.owner != null and fallen.last_hit_chain < sim.tuning.chain_limit:
+		_raise(sim, fallen.owner, EffectDef.Trigger.ON_CONTROLLED_FELL, fallen.last_hit_chain, fallen)
+
+
+## `unit` lost its target to Stealth (phase 8 part 6, Night Veil): every
+## standing unit of the other side hears it (on_enemy_lost_target, naming
+## `unit`), in the fight's order.
+static func lost_target(sim: CombatSim, unit: UnitState) -> void:
+	for other: UnitState in (sim.enemies if unit.side == EffectSource.Team.HEROES else sim.heroes):
+		if other.alive and not other.listeners.is_empty():
+			_raise(sim, other, EffectDef.Trigger.ON_ENEMY_LOST_TARGET, 0, unit)
+
+
 ## `chain`: the depth of the entry that raised it; `other`: the unit the
 ## event names; `damage`: the hit (or Shield) it's about; `status`: the
 ## status applied (on_status).

@@ -89,6 +89,17 @@ static func drop_out_of_reach(sim: CombatSim, unit: UnitState) -> void:
 		i -= 1
 
 
+## Ends every engagement `unit` is in, its own and those others have with it
+## (it changed sides: phase 8 part 6, Marionette).
+static func drop_all(sim: CombatSim, unit: UnitState, why: String) -> void:
+	for i: int in range(unit.engagements.size() - 1, -1, -1):
+		_end(sim, unit, unit.engagements[i], why)
+	for other: UnitState in sim.units:
+		var engagement: Engagement = _find(other, unit)
+		if engagement != null:
+			_end(sim, other, engagement, why)
+
+
 ## How near (squared) a unit must be to `engager` to be next to it.
 static func _reach_sq(sim: CombatSim, engager: UnitState) -> int:
 	var reach: int = sim.tuning.engage_reach + engager.def.engage_reach_add

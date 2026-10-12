@@ -106,6 +106,11 @@ static func load_texts(texts: Dictionary[String, String]) -> ContentDb:
 			break
 	if db.stun_status == null and texts.has(STATUSES_FILE):
 		db.errors.append("%s: needs a status of kind \"stun\" (a push stopped early stuns with the first)" % STATUSES_FILE)
+	for id: String in db.status_ids:
+		# Confused or controlled's stand-in on an elite or a boss (phase 8 part 6).
+		var instead: String = db.statuses[id].instead_for_ranks
+		if not instead.is_empty() and (not db.statuses.has(instead) or db.statuses[instead].turns()):
+			db.errors.append("%s (%s): instead_for_ranks names \"%s\", which isn't a status that can stand in" % [STATUSES_FILE, id, instead])
 	for reader: DataReader in db._entries(db._parse(texts, HEROES_FILE), HEROES_FILE):
 		var hero: HeroDef = HeroDef.read(reader)
 		if db._claim_id(hero.id, reader, db.hero_ids):

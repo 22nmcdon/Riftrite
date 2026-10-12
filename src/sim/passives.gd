@@ -271,6 +271,8 @@ static func aura_change(sim: CombatSim, holder: UnitState, aura: AuraDef) -> int
 		change *= allied_summons(sim, holder)
 	if aura.per_allied_unit:
 		change *= allied_units(sim, holder, aura.per_twice)
+	if aura.per_summon_joined:
+		change *= sim.summons_joined[0 if holder.side == EffectSource.Team.HEROES else 1]
 	if aura.per_enemy_range > 0:
 		change *= enemies_near(sim, holder, aura.per_enemy_range, aura.per_twice)
 	if aura.step_ticks > 0:
@@ -735,7 +737,8 @@ static func run_timed(sim: CombatSim) -> void:
 						listener.count += 1
 						_run(sim, unit, listener, null, 0)
 				EffectDef.Trigger.ON_ALLY_BELOW_HP:
-					for ally: UnitState in sim.standing_allies_of(unit):
+					# Phase 8 part 6 (Puppet Thread): or the enemies.
+					for ally: UnitState in (sim.standing_enemies_of(unit) if effect.below_hp_enemies else sim.standing_allies_of(unit)):
 						if effect.once and listener.allies_done.size() >= effect.times:
 							break
 						if ally == unit or ally.hp <= 0 or listener.allies_done.has(ally.id):

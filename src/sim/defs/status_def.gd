@@ -47,15 +47,29 @@ extends RefCounted
 ##             rocks and walls stop it; set down on the nearest free safe
 ##             spot if it's over something; phase 5c step 6b, Fletched for
 ##             Wings: a code change, since no other kind takes flight away)
+##   confused: duration_ms (phase 8 part 6, Night Veil; Decision 7): it attacks
+##             the nearest other unit of its own side, and its hits are still
+##             its side's; it ends as a Taunt lands, and a taunted unit can't
+##             be confused (a code change: no kind turns a unit on its own)
+##   controlled: duration_ms (phase 8 part 6, Marionette; Decision 7): it
+##             fights for the side of the unit that set it, an allied unit
+##             there but not a summon, owned by its setter (its work and kills
+##             are the setter's; it keeps no side up and is nobody's fallen
+##             ally), and goes back as it ends (CombatSim.control, release);
+##             a Taunt wins as for confused (a code change: no kind moves a
+##             unit to the other side)
+##             Both take "instead_for_ranks": a status applied in its place
+##             on an elite or a boss (UnitDef.rank), who can't be turned
 ## Any kind may carry a "keyword" (Keywords.NAMES; phase 5c step 3): the
 ## name cards use for a unit with this status (Marked, Rooted, Burning,
 ## Stealthed). It changes nothing in a fight by itself.
 ## A timed status's duration_ms is its default; an apply_status effect can
 ## give its own. A new application refreshes the timer.
 
-enum Kind { DAMAGE_OVER_TIME, ROOT, STUN, SLOW, TAUNT, SILENCE, MARKED, UNDYING, ENGAGED, STEALTH, WARDED, BOOST, GROUNDED }
+enum Kind { DAMAGE_OVER_TIME, ROOT, STUN, SLOW, TAUNT, SILENCE, MARKED, UNDYING, ENGAGED, STEALTH, WARDED, BOOST, GROUNDED, CONFUSED, CONTROLLED }
 
-const KIND_NAMES: Array[String] = ["damage_over_time", "root", "stun", "slow", "taunt", "silence", "marked", "undying", "engaged", "stealth", "warded", "boost", "grounded"]
+const KIND_NAMES: Array[String] = ["damage_over_time", "root", "stun", "slow", "taunt", "silence", "marked", "undying", "engaged", "stealth", "warded", "boost", "grounded",
+	"confused", "controlled"]
 
 var id: String
 var name: String
@@ -95,6 +109,9 @@ var signature_power_bp: int = 0
 ## stealth with until_attack: the basic attacks it lets pass first (phase 8
 ## part 4, Shadow Dance).
 var spares_attacks: int = 0
+## Confused or controlled (phase 8 part 6): the status an elite or a boss
+## gets in its place ("" for none: it then takes it as any unit does).
+var instead_for_ranks: String = ""
 
 
 static func read(reader: DataReader) -> StatusDef:
@@ -130,6 +147,8 @@ static func read(reader: DataReader) -> StatusDef:
 			def.until_attack = reader.opt_bool("until_attack", false)
 			if def.until_attack:
 				def.spares_attacks = reader.opt_int("spares_attacks", 0, 0, 10)
+		elif def.kind == Kind.CONFUSED or def.kind == Kind.CONTROLLED:
+			def.instead_for_ranks = reader.opt_string("instead_for_ranks", "")
 		if def.stacking:
 			def.duration_ticks = reader.opt_ticks("duration_ms", 0, FixedMath.MS_PER_TICK)
 			def.max_stacks = reader.opt_int("max_stacks", 0, 0)
@@ -152,6 +171,11 @@ static func read(reader: DataReader) -> StatusDef:
 					reader.error("a boost needs auras (or signature_power_bp, or focus)")
 	reader.finish()
 	return def
+
+
+## Confused or controlled (phase 8 part 6): a Taunt ends it and keeps it off.
+func turns() -> bool:
+	return kind == Kind.CONFUSED or kind == Kind.CONTROLLED
 
 
 func is_timed() -> bool:

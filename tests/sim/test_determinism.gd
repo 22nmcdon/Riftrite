@@ -141,7 +141,10 @@ const HERO_STATUSES: Array[String] = ["iron_maiden", "hidden", "shadow_dance", "
 	# Her apexes' (8f-3c; tests/sim/test_kestra_apexes.gd).
 	"hellhound", "inferno_hound", "viper_slow", "viper_queen", "queens_venom", "alpha_fury", "alpha_blood", "pack_blood",
 	# Lucan's (phase 8 part 6, 8f-4; tests/sim/test_lucan_paths.gd, test_lucan_cards.gd).
-	"shrouded", "vanished", "sure_strike", "dance", "glimmer_dazzle"]
+	"shrouded", "vanished", "sure_strike", "dance", "glimmer_dazzle",
+	# His apexes' (8f-4c; tests/sim/test_lucan_apexes.gd, test_lucan_states.gd).
+	"unseen_host", "knife_in_the_dark", "veil_confused", "veil_exposed", "grand_dance", "puppet_thread", "puppet_exposed",
+	"marionette", "marionette_exposed", "puppet_cut", "puppet_master"]
 const RELIC_STATUSES: Array[String] = ["sunder", "quickened", "unbending", "long_watch", "vigilant", "iron_garden"]
 ## Boosts only loadout items apply (phase 5c step 6; tests/run/test_loadout.gd).
 const ITEM_STATUSES: Array[String] = ["surge", "surge_2", "last_breath", "purified",

@@ -139,8 +139,10 @@ static func _copies(sim: CombatSim, unit: UnitState, source: EffectSource, effec
 			if ally.alive and ally.side == unit.side and not ally.summoned:
 				copied.append(ally)
 	var joined: bool = false
+	# Thousand Faces (phase 8 part 6): each copy it has made adds to the share.
+	var share: int = mini(effect.copy_share_bp + unit.copies_made * effect.copy_grows_bp, maxi(effect.copy_share_max_bp, effect.copy_share_bp))
 	for of: UnitState in copied:
-		var kit: UnitDef = copy_kit(of, effect.copy_share_bp)
+		var kit: UnitDef = copy_kit(of, share, effect.copy_casts)
 		if sim.standing_count(unit.side) >= sim.tuning.max_units_per_side:
 			_log_dropped(sim, source, kit, "its side is full")
 			continue
@@ -157,6 +159,7 @@ static func _copies(sim: CombatSim, unit: UnitState, source: EffectSource, effec
 		copy.mirror_of = of
 		copy.bonus_parts = unit.bonus_parts
 		copy.expires_at = sim.tick + effect.lasts_ticks
+		unit.copies_made += 1
 		sim.thralls = true
 		sim.add_unit(copy)
 		joined = true
@@ -174,7 +177,9 @@ static func _copies(sim: CombatSim, unit: UnitState, source: EffectSource, effec
 ## ATK, and MGK at `share_bp`, and its basic attack only: no signature or mana,
 ## no passives, phases, companions, Engage, hop, or what's placed before a
 ## fight. Its id is its kit's with "_copy", its name "Copy of" its first name.
-static func copy_kit(of: UnitState, share_bp: int) -> UnitDef:
+## `casts` (True Reflection): it keeps a mana signature, its bar full and
+## gaining nothing, so it casts it once (never one that makes copies).
+static func copy_kit(of: UnitState, share_bp: int, casts: bool = false) -> UnitDef:
 	var kit: UnitDef = of.def.copy()
 	kit.id = of.def.id + "_copy"
 	kit.name = "Copy of %s" % of.def.name.get_slice(" ", 0)
@@ -182,8 +187,14 @@ static func copy_kit(of: UnitState, share_bp: int) -> UnitDef:
 	kit.stats.values[UnitStats.Stat.HP] = maxi(FixedMath.apply_bp(of.base_max_hp, share_bp), 1)
 	kit.stats.values[UnitStats.Stat.ATK] = FixedMath.apply_bp(of.def.stats.get_stat(UnitStats.Stat.ATK), share_bp)
 	kit.stats.values[UnitStats.Stat.MGK] = FixedMath.apply_bp(of.def.stats.get_stat(UnitStats.Stat.MGK), share_bp)
-	kit.signature = null
+	var keeps: AbilityDef = of.def.signature if casts and of.def.signature != null and of.def.mana != null \
+			and of.def.signature.trigger.kind == TriggerDef.Kind.MANA and not of.def.signature.effects.any(func(effect: EffectDef) -> bool: return effect.copy_of != EffectDef.CopyOf.NONE) else null
+	kit.signature = keeps
 	kit.mana = null
+	if keeps != null:
+		kit.mana = ManaDef.new()
+		kit.mana.max = of.def.mana.max
+		kit.mana.start = of.def.mana.max
 	kit.passives = []
 	kit.phases = []
 	kit.companions = []

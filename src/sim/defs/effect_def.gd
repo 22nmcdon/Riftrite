@@ -206,6 +206,10 @@ extends RefCounted
 ##   counts every copy standing of the unit copied, whatever made it
 ##   (Summons.copy_kit)
 ##     {"type": "summon", "copy_of": "self", "share_pct": 30, "lasts_ms": 6000}
+##   with "grows_per_copy_pct": 2 and "share_max_pct": 80 (Thousand Faces:
+##   each copy its caster has made this fight adds to the next's share), and
+##   "casts": true (True Reflection: each copy keeps a mana signature, starts
+##   with a full bar, gains none, so it casts it once)
 ##     edges:    count (default 1) free spots along the safe ground's edge,
 ##               nearest first to the unit ("near": "self", the default) or
 ##               to its target ("near": "target")
@@ -428,6 +432,7 @@ enum Trigger {
 	ON_HOLDER_HIT, ON_SHIELD_BROKEN, ON_ALLY_ABILITY, ON_STATUS_ENDED, ON_LIFESTEAL, ON_KNOCKBACK, ON_GUARD,
 	ON_BELOW_HP, ON_CHARGED, ON_ENEMY_FELL, ON_ARRIVE, ON_ALLY_SHIELD_BROKEN, ON_WALL_BLOCK, ON_RISE, ON_BREAKS_SHIELD, ON_PULL, ON_SHIELD_SPENT,
 	ON_MANA_GAINED, ON_ALLY_HIT, ON_ENEMY_NEAR, ON_HP_SPENT, ON_MAX_HP_UP, ON_STATUS_TICK, ON_ZONE_ENTER, ON_SUMMON_FELL,
+	ON_CONTROLLED_FELL, ON_ENEMY_LOST_TARGET,
 }
 enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS, HOP, FLOOD, SEVER, SPEND_SHIELD, RELEASE_STORED,
 	SPEND_ENGORGED, RAISE, GAIN_MAX_HP, SHARDS }
@@ -473,6 +478,7 @@ const TRIGGER_NAMES: Array[String] = [
 	"on_holder_hit", "on_shield_broken", "on_ally_ability", "on_status_ended", "on_lifesteal", "on_knockback", "on_guard",
 	"on_below_hp", "on_charged", "on_enemy_fell", "on_arrive", "on_ally_shield_broken", "on_wall_block", "on_rise", "on_breaks_shield", "on_pull", "on_shield_spent",
 	"on_mana_gained", "on_ally_hit", "on_enemy_near", "on_hp_spent", "on_max_hp_up", "on_status_tick", "on_zone_enter", "on_summon_fell",
+	"on_controlled_fell", "on_enemy_lost_target",
 ]
 ## The unit's events (see the top).
 const EVENT_TRIGGERS: Array[Trigger] = [
@@ -480,19 +486,19 @@ const EVENT_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
 	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_SHIELD_SPENT,
-	Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP, Trigger.ON_STATUS_TICK, Trigger.ON_ZONE_ENTER, Trigger.ON_SUMMON_FELL,
+	Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP, Trigger.ON_STATUS_TICK, Trigger.ON_ZONE_ENTER, Trigger.ON_SUMMON_FELL, Trigger.ON_CONTROLLED_FELL, Trigger.ON_ENEMY_LOST_TARGET,
 ]
 ## Event triggers that name a unit (hit_target) and those that name a hit
 ## (amount_bp_of_damage).
 const EVENT_UNIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED, Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD, Trigger.ON_CHARGED,
-	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_ALLY_HIT, Trigger.ON_STATUS_TICK, Trigger.ON_ZONE_ENTER, Trigger.ON_SUMMON_FELL]
+	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_ALLY_HIT, Trigger.ON_STATUS_TICK, Trigger.ON_ZONE_ENTER, Trigger.ON_SUMMON_FELL, Trigger.ON_CONTROLLED_FELL, Trigger.ON_ENEMY_LOST_TARGET]
 const EVENT_HIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_HIT_TAKEN, Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_HEAL,
 	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_GUARD, Trigger.ON_BREAKS_SHIELD, Trigger.ON_SHIELD_SPENT, Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP, Trigger.ON_STATUS_TICK]
 ## Event triggers that can take "vs": those that name a unit, and on_kill.
 const EVENT_VS_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED, Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_KILL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
-	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_ALLY_HIT, Trigger.ON_STATUS_TICK, Trigger.ON_ZONE_ENTER, Trigger.ON_SUMMON_FELL]
+	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_ALLY_HIT, Trigger.ON_STATUS_TICK, Trigger.ON_ZONE_ENTER, Trigger.ON_SUMMON_FELL, Trigger.ON_CONTROLLED_FELL, Trigger.ON_ENEMY_LOST_TARGET]
 const ABILITY_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_FIRE, Trigger.ON_HIT, Trigger.ON_CRIT,
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
@@ -501,7 +507,7 @@ const ABILITY_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
 	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_SHIELD_SPENT,
 	Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT,
-	Trigger.ON_ENEMY_NEAR, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP, Trigger.ON_STATUS_TICK, Trigger.ON_ZONE_ENTER, Trigger.ON_SUMMON_FELL,
+	Trigger.ON_ENEMY_NEAR, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP, Trigger.ON_STATUS_TICK, Trigger.ON_ZONE_ENTER, Trigger.ON_SUMMON_FELL, Trigger.ON_CONTROLLED_FELL, Trigger.ON_ENEMY_LOST_TARGET,
 ]
 ## What a passive's effects may run on (PartDef).
 const PASSIVE_TRIGGERS: Array[Trigger] = [
@@ -511,7 +517,7 @@ const PASSIVE_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
 	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_SHIELD_SPENT,
 	Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT,
-	Trigger.ON_ENEMY_NEAR, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP, Trigger.ON_STATUS_TICK, Trigger.ON_ZONE_ENTER, Trigger.ON_SUMMON_FELL,
+	Trigger.ON_ENEMY_NEAR, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP, Trigger.ON_STATUS_TICK, Trigger.ON_ZONE_ENTER, Trigger.ON_SUMMON_FELL, Trigger.ON_CONTROLLED_FELL, Trigger.ON_ENEMY_LOST_TARGET,
 ]
 ## The passive triggers that aren't events (Passives.run_timed, on_fall,
 ## would_fall).
@@ -717,6 +723,13 @@ var lasts_ticks: int = 0
 ## and MGK (basis points).
 var copy_of: CopyOf = CopyOf.NONE
 var copy_share_bp: int = 0
+## A copy's share grows by this much for each copy its caster has made this
+## fight, up to copy_share_max_bp (phase 8 part 6, Thousand Faces).
+var copy_grows_bp: int = 0
+var copy_share_max_bp: int = FixedMath.BP_ONE
+## Each copy keeps the copied unit's mana signature and casts it once
+## (phase 8 part 6, True Reflection).
+var copy_casts: bool = false
 var count: int = 1
 var placement: Placement = Placement.EDGES
 var summon_hexes: Array[Vector2i] = []
@@ -735,6 +748,9 @@ var at_ticks: int = 0
 var threshold_bp: int = 0
 ## on_ally_below_hp: only the first ally in the fight sets it off.
 var once: bool = false
+## on_ally_below_hp with "enemies": true (phase 8 part 6, Puppet Thread):
+## it watches the enemies instead, the one that drops named (trigger_ally).
+var below_hp_enemies: bool = false
 ## A plain hit (damage; the tuning phase, T-1): no crit, no lifesteal.
 var plain: bool = false
 ## Runs only once for each enemy its event names, across every unit with a
@@ -1348,6 +1364,9 @@ static func _read_summon(def: EffectDef, reader: DataReader) -> void:
 static func _read_copy(def: EffectDef, reader: DataReader) -> void:
 	def.copy_of = maxi(COPY_OF_NAMES.find(reader.req_choice("copy_of", ["self", "each_ally"])), 1) as CopyOf
 	def.copy_share_bp = reader.req_int("share_pct", 1, 100) * 100
+	def.copy_grows_bp = reader.opt_int("grows_per_copy_pct", 0, 0, 100) * 100
+	def.copy_share_max_bp = reader.opt_int("share_max_pct", 100, 1, 100) * 100
+	def.copy_casts = reader.opt_bool("casts", false)
 	def.placement = Placement.ADJACENT
 	def.max_standing = reader.opt_int("max_standing", 0, 0)
 	def.lasts_ticks = reader.opt_ticks("lasts_ms", 0)
@@ -1369,6 +1388,7 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 		Trigger.ON_ALLY_BELOW_HP:
 			def.threshold_bp = reader.req_int("threshold_bp", 1, FixedMath.BP_ONE - 1)
 			def.once = reader.opt_bool("once", false)
+			def.below_hp_enemies = reader.opt_bool("enemies", false)
 		Trigger.ON_INTERVAL:
 			def.interval_ticks = reader.req_ticks("interval_ms", FixedMath.MS_PER_TICK)
 			def.first_ticks = reader.opt_ticks("first_ms", 0, 0)

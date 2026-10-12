@@ -234,6 +234,8 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 	if change.raise_grow_add_bp != 0:
 		bits.append("%s HP for each thrall raised before" % UnitInfo.signed_percent(change.raise_grow_add_bp))
 	# Ilse's cards (phase 8 part 6).
+	if change.copy_grow_add_bp != 0:
+		bits.append("%s of the stats each later copy takes, for each copy made" % UnitInfo.signed_percent(change.copy_grow_add_bp))
 	if change.share_add_bp != 0:
 		# A copy's share is of the stats it copies (Lucan's cards).
 		var copies: bool = KitMod._slot_abilities(kit, change.slot, change.ability_id).any(func(ability: AbilityDef) -> bool:
@@ -544,6 +546,10 @@ static func counted(counts: DeedDef, per: int) -> String:
 			return hits
 		DeedDef.Counts.ROOTED_MS:
 			return "%s of Root" % amount
+		DeedDef.Counts.STATUS_MS:
+			return "%s of %s" % [amount, ", ".join(counts.statuses).replace("_", " ")]
+		DeedDef.Counts.LOST_TARGET:
+			return "%s times enemies lose their target to Stealth" % amount
 		DeedDef.Counts.GUARDED:
 			return "%s damage taken for allies" % amount
 		DeedDef.Counts.SHARED:
@@ -572,7 +578,7 @@ static func counted(counts: DeedDef, per: int) -> String:
 
 ## An amount of what's counted: time kinds in seconds.
 static func _amount(counts: DeedDef, value: int) -> String:
-	if counts.counts == DeedDef.Counts.ROOTED_MS or counts.counts == DeedDef.Counts.MS_BELOW or counts.counts == DeedDef.Counts.EXTENDED_MS:
+	if counts.counts in [DeedDef.Counts.ROOTED_MS, DeedDef.Counts.MS_BELOW, DeedDef.Counts.EXTENDED_MS, DeedDef.Counts.STATUS_MS]:
 		@warning_ignore("integer_division")
 		return UnitInfo.seconds(value / FixedMath.MS_PER_TICK)
 	return str(value)

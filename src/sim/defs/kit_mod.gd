@@ -308,6 +308,8 @@ class AbilityChange:
 	## Phase 8 part 6 (Ilse's cards): a stacks_of's share (Deep Stoke), and a
 	## growing zone's step time and largest size (Fast Spread, Far Spread).
 	var share_add_bp: int = 0
+	## Phase 8 part 6 (Perfect Likeness): a growing copy's share per copy.
+	var copy_grow_add_bp: int = 0
 	var grow_every_add_ticks: int = 0
 	var grow_max_add: int = 0
 	## A heal's cap (Lantern Vigil): pct of max HP, and the units it holds on.
@@ -329,7 +331,7 @@ class AbilityChange:
 			or strength_add_bp != 0 or follows or ricochet_add != 0 or reflect_bp != 0 or snags \
 			or per_enemy_add_bp != 0 or overheal_max_hp_add != 0 or at_stacks_add != 0 or per_taken_add_bp != 0 or holder != null or carries \
 			or ignores_def or prefer != null and not ability_id.is_empty() or per_stack_add_bp != 0 or within_add != 0 or count_add != 0 \
-			or share_add_bp != 0 or grow_every_add_ticks != 0 or grow_max_add != 0 or heal_cap_bp != 0 or per_stack_amount_add != 0 \
+			or share_add_bp != 0 or copy_grow_add_bp != 0 or grow_every_add_ticks != 0 or grow_max_add != 0 or heal_cap_bp != 0 or per_stack_amount_add != 0 \
 			or lifesteal_add_bp != 0 or plus_max_hp_add_bp != 0 or follows_holder or raise_grow_add_bp != 0 or cooldown_bp != FixedMath.BP_ONE
 
 	func touches(effect: EffectDef) -> bool:
@@ -589,6 +591,7 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 	change.within_add = reader.opt_int("within_add", 0, -3, 3) * HexGrid.HEX
 	change.count_add = reader.opt_int("count_add", 0, 0, 4)
 	change.share_add_bp = reader.opt_int("share_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
+	change.copy_grow_add_bp = reader.opt_int("per_copy_add_pct", 0, -100, 100) * 100
 	change.grow_every_add_ticks = reader.opt_ticks("grow_every_add_ms", 0, -10000)
 	change.grow_max_add = reader.opt_int("grow_max_add", 0, -3, 3)
 	change.per_stacks_add = reader.opt_int("per_stacks_add", 0, -10, 10)
@@ -1087,6 +1090,8 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 				copy.stacks_share_bp = clampi(effect.stacks_share_bp + change.share_add_bp, 1, FixedMath.BP_ONE)
 			if change.share_add_bp != 0 and effect.copy_of != EffectDef.CopyOf.NONE:
 				copy.copy_share_bp = clampi(effect.copy_share_bp + change.share_add_bp, 100, FixedMath.BP_ONE)
+			if change.copy_grow_add_bp != 0 and effect.copy_grows_bp > 0:
+				copy.copy_grows_bp = maxi(effect.copy_grows_bp + change.copy_grow_add_bp, 0)
 			if change.grow_every_add_ticks != 0 and effect.grow_ticks > 0:
 				copy.grow_ticks = maxi(effect.grow_ticks + change.grow_every_add_ticks, 1)
 			if change.grow_max_add != 0 and effect.grow_ticks > 0:
@@ -1175,6 +1180,7 @@ static func _any_effect(effects: Array[EffectDef], change: AbilityChange) -> boo
 				or change.within_add != 0 and effect.near_range > 0 or change.count_add != 0 and (effect.target == EffectDef.Target.LOWEST_MANA_ALLY or effect.target == EffectDef.Target.MOST_TARGETED_ALLY)
 				or change.within_add != 0 and effect.trigger == EffectDef.Trigger.ON_STATUS_TICK and effect.near_trigger_range > 0
 				or change.count_add != 0 and effect.nearest > 0 or change.share_add_bp != 0 and (effect.stacks_share_bp > 0 or effect.copy_of != EffectDef.CopyOf.NONE)
+				or change.copy_grow_add_bp != 0 and effect.copy_grows_bp > 0
 				or (change.grow_every_add_ticks != 0 or change.grow_max_add != 0) and effect.grow_ticks > 0
 				or change.heal_cap_bp != 0 and effect.type == EffectDef.Type.HEAL
 				or change.per_stack_amount_add != 0 and effect.amount_per_stack > 0

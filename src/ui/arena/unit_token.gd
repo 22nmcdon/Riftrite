@@ -45,13 +45,14 @@ const STATUS_TAGS: Dictionary = {
 	StatusDef.Kind.ROOT: "ROOT", StatusDef.Kind.STUN: "STUN", StatusDef.Kind.SLOW: "SLOW", StatusDef.Kind.TAUNT: "TAUNT",
 	StatusDef.Kind.SILENCE: "SIL", StatusDef.Kind.MARKED: "MARK", StatusDef.Kind.UNDYING: "UNDY", StatusDef.Kind.ENGAGED: "ENG",
 	StatusDef.Kind.STEALTH: "HID", StatusDef.Kind.WARDED: "WARD", StatusDef.Kind.BOOST: "UP", StatusDef.Kind.GROUNDED: "GRND",
+	StatusDef.Kind.CONFUSED: "CONF", StatusDef.Kind.CONTROLLED: "CTRL",
 }
 const STATUS_COLORS: Dictionary = {
 	StatusDef.Kind.ROOT: Color("8fbf5a"), StatusDef.Kind.STUN: Color("f0d060"), StatusDef.Kind.SLOW: Color("7fb8d8"),
 	StatusDef.Kind.TAUNT: Color("e07050"), StatusDef.Kind.SILENCE: Color("b79cf0"), StatusDef.Kind.MARKED: Color("ff8a80"),
 	StatusDef.Kind.UNDYING: Color("f1e6cc"), StatusDef.Kind.ENGAGED: Color("c9993b"),
 	StatusDef.Kind.STEALTH: Color("9aa7b8"), StatusDef.Kind.WARDED: Color("8fd0c8"), StatusDef.Kind.BOOST: Color("ffd27f"),
-	StatusDef.Kind.GROUNDED: Color("b08a5a"),
+	StatusDef.Kind.GROUNDED: Color("b08a5a"), StatusDef.Kind.CONFUSED: Color("e0a0e8"), StatusDef.Kind.CONTROLLED: Color("c890ff"),
 }
 ## How see-through a stealthed unit is drawn.
 const STEALTH_ALPHA: float = 0.4
@@ -211,6 +212,8 @@ func show_state(unit: UnitState, tick: int) -> void:
 	if signature != null and signature.casting() and signature.def.cast_ticks > 0:
 		cast_share = clampf(1.0 - float(signature.cast_ends_at - tick) / signature.def.cast_ticks, 0.0, 1.0)
 	in_water = unit.on_water
+	# A controlled enemy fights for the heroes: its ring turns gold while it does.
+	side = unit.side
 	status_tags.clear()
 	for state: StatusState in unit.statuses:
 		status_tags.append(status_tag(state))

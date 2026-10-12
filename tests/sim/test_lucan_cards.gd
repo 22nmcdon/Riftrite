@@ -183,3 +183,20 @@ func test_mirror_step_leaves_a_copy_of_maren() -> void:
 	assert_gt(copies.size(), 0, "and leaves a copy of herself")
 	assert_eq(copies[0].end_tick - copies[0].tick, 3 * 20)
 	assert_true(copies[0].target.begins_with("maren_copy"))
+
+
+func test_his_apex_cards() -> void:
+	var cards: Array[String] = []
+	for id: String in _run.upgrade_ids:
+		var card: UpgradeDef = _run.upgrades[id]
+		if card.layer == UpgradeDef.Layer.APEX and _content.paths[_content.apexes[card.apex].path].hero == "lucan":
+			cards.append(id)
+			assert_true(_run.changes_something(card, true, _content.apexes[card.apex].apex_kit), id)
+	assert_eq(cards.size(), 12, "2 an apex")
+	var faces: UnitDef = _content.apexes["thousand_faces"].apex_kit
+	assert_eq(_effect(_with("perfect_likeness", faces, true), "reflection").copy_grows_bp, _effect(faces, "reflection").copy_grows_bp + 100, "+1% a copy")
+	assert_eq(_with("long_strings", _content.apexes["marionette"].apex_kit, true).signature.effects[0].duration_ticks,
+		_content.apexes["marionette"].apex_kit.signature.effects[0].duration_ticks + 2 * 20)
+	assert_eq(ModInfo.upgrade_numbers(_run.upgrades["perfect_likeness"], faces, _content), "Reflection: +1% of the stats each later copy takes, for each copy made")
+	assert_eq(ModInfo.upgrade_numbers(_run.upgrades["mirror_guard"], _content.apexes["true_reflection"].apex_kit, _content), "Signature: Shield of 15% of max HP to all allies")
+	assert_eq(ModInfo.upgrade_numbers(_run.upgrades["longer_night"], _content.apexes["night_veil"].apex_kit, _content), "Night Veil: +1s duration")

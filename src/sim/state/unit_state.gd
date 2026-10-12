@@ -136,6 +136,12 @@ var time_up: bool = false
 ## owner's deeds and tallies; it keeps no side up, is nobody's fallen ally,
 ## and one that returns comes back beside its owner (CombatSim).
 var owner: UnitState = null
+## Controlled (phase 8 part 6, Marionette): it fights for its owner's side
+## until the status ends (CombatSim.control, release); not a summon.
+var controlled: bool = false
+## Confused onto its own side (phase 8 part 6, Night Veil): its target is
+## the one confusion chose, dropped once the confusion ends.
+var turned: bool = false
 var companion: CompanionDef = null
 ## Its last basic attack's hit was from Stealth (phase 8 part 6, Veilweaver;
 ## EffectRunner.deal_hit; UnitCondition's struck_from_stealth).
@@ -143,6 +149,8 @@ var struck_from_stealth: bool = false
 ## A copy (phase 8 part 6, Lucan; Summons.copy_kit): the unit it's a copy
 ## of (null: none). Its owner is the unit that made it.
 var mirror_of: UnitState = null
+## Copies it has made this fight (phase 8 part 6, Thousand Faces).
+var copies_made: int = 0
 ## Its owner's abilities it does ("by": "companion"), each its own state
 ## sourced to it, made as first needed (AbilityDef -> AbilityState; never
 ## iterated).

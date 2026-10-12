@@ -1011,7 +1011,7 @@ static func summary(run: RunContent, lines: Array[RunLine]) -> String:
 ## A deed's average per fight, to a tenth ("2.1s" for time rooted).
 static func _per_fight(deed: DeedDef, gain: int, fights: int) -> String:
 	var mean: float = float(gain) / maxi(fights, 1)
-	return "%.1fs" % (mean / 1000.0) if deed.counts == DeedDef.Counts.ROOTED_MS else "%.1f" % mean
+	return "%.1fs" % (mean / 1000.0) if deed.counts == DeedDef.Counts.ROOTED_MS or deed.counts == DeedDef.Counts.STATUS_MS else "%.1f" % mean
 
 
 static func _pct(part: int, whole: int) -> int:

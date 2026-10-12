@@ -184,12 +184,13 @@ static func set_target(sim: CombatSim, unit: UnitState, picked: UnitState, reaso
 
 ## Drops the unit's target because it can't be targeted now (`why`: "maren
 ## is stealthed"), and logs it; the unit picks again.
-static func lose(sim: CombatSim, unit: UnitState, why: String) -> void:
+static func lose(sim: CombatSim, unit: UnitState, why: String) -> LogEntry:
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.TARGET, unit.own_source)
 	entry.note = why
 	sim.combat_log.add(entry)
 	unit.target = null
 	unit.no_path_since = -1
+	return entry
 
 
 ## Drops the unit's target (it couldn't get there), and logs why.
@@ -206,6 +207,21 @@ static func give_up(sim: CombatSim, unit: UnitState) -> void:
 ## A flier goes over everything, so its nearest is by straight line.
 static func nearest(sim: CombatSim, unit: UnitState) -> UnitState:
 	return nearest_of(sim, unit, sim.targetable_enemies_of(unit), true)
+
+
+## The nearest of `candidates` but `unit` itself, by straight line (the first
+## on a tie), or null (phase 8 part 6: a confused unit, every tick).
+static func straight_nearest(unit: UnitState, candidates: Array[UnitState]) -> UnitState:
+	var best: UnitState = null
+	var best_distance: int = 0
+	for other: UnitState in candidates:
+		if other == unit:
+			continue
+		var distance: int = ArenaPlane.length_sq(other.pos - unit.pos)
+		if best == null or distance < best_distance:
+			best = other
+			best_distance = distance
+	return best
 
 
 ## nearest among `candidates` (in the fight's order). `remember`: note in

@@ -83,7 +83,7 @@ static func _add(counter: Counter, key: String, deed: DeedDef) -> void:
 	counter.needs_casts = counter.needs_casts or deed.counts == DeedDef.Counts.CASTS
 	counter.needs_hops = counter.needs_hops or deed.after_hop_ticks > 0
 	counter.needs_blocks = counter.needs_blocks or deed.counts == DeedDef.Counts.BLOCKED
-	counter.needs_team = counter.needs_team or deed.by_allies or deed.counts == DeedDef.Counts.ALLY_CASTS
+	counter.needs_team = counter.needs_team or deed.by_allies or deed.counts == DeedDef.Counts.ALLY_CASTS or deed.counts == DeedDef.Counts.LOST_TARGET
 	counter.needs_overflow = counter.needs_overflow or deed.counts == DeedDef.Counts.MANA_OVERFLOW
 
 
@@ -103,6 +103,9 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 			_count_for_team(sim, entry)
 		if not sim.team_counters.is_empty() and entry.kind == LogEntry.Kind.FIRE and entry.source_relic_side < 0:
 			_count_ally_cast(sim, entry)
+		if entry.lost_to_stealth and not sim.team_counters.is_empty():
+			_count_lost_target(sim, entry)
+			continue
 		if entry.source_unit.is_empty() or entry.source_relic_side >= 0:
 			continue
 		var kind: LogEntry.Kind = entry.kind
@@ -118,6 +121,7 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 				and kind != LogEntry.Kind.SUMMON:
 			continue
 		var unit: UnitState = sim.unit_by_id(entry.source_unit)
+		var doer: UnitState = unit
 		if unit != null and unit.owner != null:
 			# A companion's work is its owner's (phase 8 part 6, Kestra).
 			unit = unit.owner
@@ -155,6 +159,10 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 			if not deed.with_part.is_empty() and not holds_part(unit, deed.with_part):
 				continue
 			if not deed.vs_keywords.is_empty() and not _has_keyword(sim.unit_by_id(entry.target), deed.vs_keywords):
+				continue
+			if deed.from_stealth and not entry.from_stealth:
+				continue
+			if deed.copies != DeedDef.CopiesBy.ANY and (doer.mirror_of == null or (doer.mirror_of == unit) != (deed.copies == DeedDef.CopiesBy.OWN)):
 				continue
 			match deed.counts:
 				DeedDef.Counts.CRITS:
@@ -226,6 +234,11 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 					if entry.end_tick > entry.tick and sim.content.statuses.has(entry.status) \
 							and sim.content.statuses[entry.status].kind == StatusDef.Kind.ROOT:
 						counter.amounts[d] += (entry.end_tick - entry.tick) * FixedMath.MS_PER_TICK
+				DeedDef.Counts.STATUS_MS:
+					# The named statuses' time, as applied (phase 8 part 6,
+					# Marionette's controlled).
+					if entry.end_tick > entry.tick and deed.statuses.has(entry.status):
+						counter.amounts[d] += (entry.end_tick - entry.tick) * FixedMath.MS_PER_TICK
 				_:
 					counter.amounts[d] += entry.amount
 
@@ -285,7 +298,23 @@ static func _count_for_team(sim: CombatSim, entry: LogEntry) -> void:
 				continue
 			if not deed.statuses.is_empty() and not deed.statuses.any(func(status_id: String) -> bool: return Statuses.find(by, status_id) != null):
 				continue
+			if deed.from_stealth and not entry.from_stealth:
+				continue
 			unit.deeds.amounts[d] += 1 if deed.counts == DeedDef.Counts.HITS else entry.amount
+
+
+## A unit lost its target to Stealth (phase 8 part 6, Night Veil): one for
+## each unit of the other side with a lost_target deed.
+static func _count_lost_target(sim: CombatSim, entry: LogEntry) -> void:
+	var lost: UnitState = sim.unit_by_id(entry.source_unit)
+	if lost == null:
+		return
+	for unit: UnitState in sim.team_counters:
+		if unit.side == lost.side:
+			continue
+		for d: int in unit.deeds.deeds.size():
+			if unit.deeds.deeds[d].counts == DeedDef.Counts.LOST_TARGET:
+				unit.deeds.amounts[d] += 1
 
 
 ## An ally's signature fired: it counts for each unit of its side with an

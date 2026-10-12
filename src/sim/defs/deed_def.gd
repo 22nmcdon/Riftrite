@@ -54,6 +54,16 @@ extends RefCounted
 ##            Eye, Inquisitor)
 ##   within_ms_of_hop: 1000        a filter: only what lands within this long
 ##                                 after the hero's last hop (Windrunner)
+## Phase 8 part 6 (Lucan):
+##   lost_target  enemies losing their target to Stealth, anyone's Stealth,
+##            one each (Night Veil)
+##   status_ms    how long the statuses it applies last, in ms (as applied;
+##            "statuses" names them; Marionette's controlled)
+##   copies: "own" | "allies"     damage or hits: only those its copies of
+##                                 itself make, or its copies of allies
+##                                 (Thousand Faces, True Reflection)
+##   from_stealth: true            damage or hits: only strikes from Stealth
+##                                 (LogEntry.from_stealth; Unseen Host)
 ## Filters (each optional):
 ##   from_ability: ["split_shot"]  only what these abilities or passives do
 ##                                 (ids in the hero's kits: base, vowed, or
@@ -108,14 +118,18 @@ extends RefCounted
 ## three fights' worth of what a vowed hero puts in); the sim never reads it.
 ## Adding a kind or a filter is a code change.
 
-enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING, HITS, SHARED, BLOCKED, PULLED, EXTENDED_MS, MANA_GIVEN, MANA_OVERFLOW, ALLY_CASTS, MAX_HP_GAINED, HP_SPENT, LIFESTEAL, TITHE, TITHE_FLAWLESS, BONUS_DAMAGE, SHARDS, TRANSMUTED, SUMMONED }
+enum CopiesBy { ANY, OWN, ALLIES }
+enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING, HITS, SHARED, BLOCKED, PULLED, EXTENDED_MS, MANA_GIVEN, MANA_OVERFLOW, ALLY_CASTS, MAX_HP_GAINED, HP_SPENT, LIFESTEAL, TITHE, TITHE_FLAWLESS, BONUS_DAMAGE, SHARDS, TRANSMUTED, SUMMONED,
+	LOST_TARGET, STATUS_MS }
 
-const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing", "hits", "shared", "blocked", "pulled", "extended_ms", "mana_given", "mana_overflow", "ally_casts", "max_hp_gained", "hp_spent", "lifesteal", "tithe", "tithe_flawless", "bonus_damage", "shards", "transmuted", "summoned"]
-const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill", "casts", "ms standing", "enemies hit", "damage shared", "attacks blocked", "enemies pulled", "ms extended", "mana given", "mana past full", "ally signatures near", "max HP gained", "HP spent", "healed by lifesteal", "shards from Tithe", "shards from flawless fights", "extra damage", "shards", "items transmuted", "summons joined"]
+const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing", "hits", "shared", "blocked", "pulled", "extended_ms", "mana_given", "mana_overflow", "ally_casts", "max_hp_gained", "hp_spent", "lifesteal", "tithe", "tithe_flawless", "bonus_damage", "shards", "transmuted", "summoned",
+	"lost_target", "status_ms"]
+const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill", "casts", "ms standing", "enemies hit", "damage shared", "attacks blocked", "enemies pulled", "ms extended", "mana given", "mana past full", "ally signatures near", "max HP gained", "HP spent", "healed by lifesteal", "shards from Tithe", "shards from flawless fights", "extra damage", "shards", "items transmuted", "summons joined",
+	"targets lost to Stealth", "ms"]
 ## The kinds read from where the hero is the target, or from the tick, not
 ## from what the hero does.
 const NOT_ITS_OWN: Array[Counts] = [Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING, Counts.BLOCKED,
-	Counts.MANA_OVERFLOW, Counts.ALLY_CASTS, Counts.TITHE, Counts.TITHE_FLAWLESS, Counts.TRANSMUTED]
+	Counts.MANA_OVERFLOW, Counts.ALLY_CASTS, Counts.TITHE, Counts.TITHE_FLAWLESS, Counts.TRANSMUTED, Counts.LOST_TARGET]
 ## The kinds the run counts, not the fight (phase 8 part 5, Tithe-Collector
 ## and Collector of Debts: shards from Tithe, all of them or a flawless
 ## fight's): RunFlow.record adds them; Deeds never matches them.
@@ -164,6 +178,11 @@ var keywords: Array[String] = []
 var statuses: Array[String] = []
 ## applied (phase 8 part 6, Ilse): count the stacks each adds, not one each.
 var by_stacks: bool = false
+## Damage or hits by its copies only (phase 8 part 6, Lucan): of itself
+## (OWN) or of its allies (ALLIES).
+var copies: CopiesBy = CopiesBy.ANY
+## Damage or hits: only strikes from Stealth (phase 8 part 6, Unseen Host).
+var from_stealth: bool = false
 ## What fills the deed in a run (0: none given; RunContent requires one).
 var threshold: int = 0
 
@@ -229,8 +248,18 @@ static func read(reader: DataReader, needs_text: bool = true) -> DeedDef:
 		# Phase 8 part 5 (Blood Rite): an ally's hits by_allies counts only
 		# while that ally holds one of them; phase 8 part 6 (Wild Hunt): its
 		# damage too.
-		if def.counts != Counts.APPLIED and not (def.by_allies and (def.counts == Counts.HITS or def.counts == Counts.DAMAGE)):
+		if def.counts != Counts.APPLIED and def.counts != Counts.STATUS_MS and not (def.by_allies and (def.counts == Counts.HITS or def.counts == Counts.DAMAGE)):
 			reader.error("statuses only filter applied, or hits or damage by_allies")
+	match reader.opt_string_choice("copies", "", ["own", "allies"]):
+		"own":
+			def.copies = CopiesBy.OWN
+		"allies":
+			def.copies = CopiesBy.ALLIES
+	def.from_stealth = reader.opt_bool("from_stealth", false)
+	if (def.copies != CopiesBy.ANY or def.from_stealth) and def.counts != Counts.DAMAGE and def.counts != Counts.HITS:
+		reader.error("copies and from_stealth only filter damage or hits")
+	if def.counts == Counts.STATUS_MS and def.statuses.is_empty():
+		reader.error("status_ms names the statuses it counts (\"statuses\")")
 	def.threshold = reader.opt_int("threshold", 0, 1)
 	if def.counts != Counts.DAMAGE and (def.while_undying or (def.from_range > 0 and not (def.by_allies and def.counts == Counts.HITS))):
 		reader.error("beyond_hexes and while_undying only filter damage")
@@ -271,7 +300,7 @@ func counts_kind(kind: LogEntry.Kind, ability_id: String) -> bool:
 		Counts.EXTRA_HITS, Counts.CRITS, Counts.OVERKILL, Counts.HITS:
 			if kind != LogEntry.Kind.DAMAGE:
 				return false
-		Counts.ROOTED_MS:
+		Counts.ROOTED_MS, Counts.STATUS_MS:
 			return kind == LogEntry.Kind.STATUS_APPLIED
 		Counts.GUARDED:
 			return kind == LogEntry.Kind.GUARD
@@ -315,6 +344,6 @@ func counts_kind(kind: LogEntry.Kind, ability_id: String) -> bool:
 			if kind != LogEntry.Kind.SUMMON:
 				return false
 		Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING, Counts.BLOCKED, Counts.MANA_OVERFLOW, Counts.ALLY_CASTS, \
-				Counts.TITHE, Counts.TITHE_FLAWLESS, Counts.TRANSMUTED:
+				Counts.TITHE, Counts.TITHE_FLAWLESS, Counts.TRANSMUTED, Counts.LOST_TARGET:
 			return false
 	return from_ability.is_empty() or from_ability.has(ability_id)

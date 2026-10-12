@@ -608,6 +608,66 @@
         "severine": "gravecaller",
         "kestra": "wild_hunt"
       }
+    },
+    {
+      "name": "Thousand Faces",
+      "kind": "good",
+      "carry": "lucan",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "maren": "eagle_eye",
+        "lucan": "thousand_faces"
+      }
+    },
+    {
+      "name": "True Reflection",
+      "kind": "good",
+      "carry": "lucan",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "maren": "eagle_eye",
+        "lucan": "true_reflection"
+      }
+    },
+    {
+      "name": "Unseen Host",
+      "kind": "good",
+      "carry": "lucan",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "tamsin": "phantom",
+        "lucan": "unseen_host"
+      }
+    },
+    {
+      "name": "Night Veil",
+      "kind": "good",
+      "carry": "lucan",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "ilse": "blast_furnace",
+        "lucan": "night_veil"
+      }
+    },
+    {
+      "name": "Grand Puppeteer",
+      "kind": "good",
+      "carry": "lucan",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "kestra": "wild_hunt",
+        "lucan": "grand_puppeteer"
+      }
+    },
+    {
+      "name": "Marionette",
+      "kind": "good",
+      "carry": "lucan",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "ilse": "blast_furnace",
+        "lucan": "marionette"
+      }
     }
   ]
 }

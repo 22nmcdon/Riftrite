@@ -32,6 +32,8 @@ const EVENT_WORDS: Dictionary[int, String] = {
 	EffectDef.Trigger.ON_CHARGED: "charge or leap that hits it",
 	EffectDef.Trigger.ON_ENEMY_FELL: "enemy falling",
 	EffectDef.Trigger.ON_SUMMON_FELL: "allied summon falling",
+	EffectDef.Trigger.ON_CONTROLLED_FELL: "controlled enemy falling",
+	EffectDef.Trigger.ON_ENEMY_LOST_TARGET: "enemy losing its target to Stealth",
 	EffectDef.Trigger.ON_ARRIVE: "arrival",
 	EffectDef.Trigger.ON_ALLY_SHIELD_BROKEN: "ally's Shield breaking",
 	EffectDef.Trigger.ON_WALL_BLOCK: "attack its wall blocks",
@@ -132,9 +134,10 @@ static func trait_numbers(trait_id: String, kit: UnitDef, tuning: TuningDef) -> 
 	return ""
 
 
-## What a fight put into a deed: "1,240", or for time rooted "12.5s".
+## What a fight put into a deed: "1,240", or for time rooted (or under a
+## status) "12.5s".
 static func deed_amount_text(deed: DeedDef, amount: int) -> String:
-	if deed.counts == DeedDef.Counts.ROOTED_MS:
+	if deed.counts == DeedDef.Counts.ROOTED_MS or deed.counts == DeedDef.Counts.STATUS_MS:
 		return "%.1fs" % (amount / 1000.0)
 	return thousands(amount)
 
@@ -357,7 +360,9 @@ static func passive_trigger_text(effect: EffectDef) -> String:
 			var how: String = "once per ally"
 			if effect.once:
 				how = "once a fight" if effect.times == 1 else "for the first %d allies" % effect.times
-			return "When an ally drops below %s HP (%s)" % [ValueBreakdown._percent(effect.threshold_bp), how]
+			if effect.below_hp_enemies:
+				how = how.replace("ally", "enemy").replace("allies", "enemies")
+			return "When %s drops below %s HP (%s)" % ["an enemy" if effect.below_hp_enemies else "an ally", ValueBreakdown._percent(effect.threshold_bp), how]
 		EffectDef.Trigger.ON_BELOW_HP:
 			return "When it drops below %s HP (%s)" % [ValueBreakdown._percent(effect.threshold_bp), "once a fight" if effect.times == 1 else "up to %d times a fight" % effect.times]
 	var word: String = EVENT_WORDS.get(effect.trigger, EffectDef.TRIGGER_NAMES[effect.trigger])
@@ -808,6 +813,10 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 				# Copies (phase 8 part 6, Lucan).
 				var copy: String = "%s at %s of %s stats for %s" % ["a copy of itself" if effect.copy_of == EffectDef.CopyOf.SELF else "a copy of each hero",
 					ValueBreakdown._percent(effect.copy_share_bp), "its" if effect.copy_of == EffectDef.CopyOf.SELF else "their", seconds(effect.lasts_ticks)]
+				if effect.copy_grows_bp > 0:
+					copy += ", %s more for each copy made (up to %s)" % [ValueBreakdown._percent(effect.copy_grows_bp), ValueBreakdown._percent(effect.copy_share_max_bp)]
+				if effect.copy_casts:
+					copy += ", each casting its signature once"
 				return copy + (", up to %d at once" % effect.max_standing if effect.max_standing > 0 else "")
 			return "summons %d %s" % [effect.count, _unit_name(effect.summon_kit, content)]
 	return ""

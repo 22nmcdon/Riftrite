@@ -13278,7 +13278,191 @@
         "reflection"
       ],
       "threshold": 5
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-4; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "thousand_faces",
+        "name": "Thousand Faces",
+        "title": "the one who is a crowd",
+        "fantasy": "Every face in the room is his, and every one that breaks cuts.",
+        "vowed": {
+          "taste": "His copies last 1s longer.",
+          "patch": {
+            "passives": [
+              {
+                "id": "reflection",
+                "name": "Reflection",
+                "kind": "ability",
+                "text": "Every few seconds, a copy of him appears beside him, with a share of his stats; a few may stand at once.",
+                "effects": [
+                  {
+                    "trigger": "on_interval",
+                    "interval_ms": 6000,
+                    "type": "summon",
+                    "copy_of": "self",
+                    "share_pct": 70,
+                    "lasts_ms": 13000,
+                    "max_standing": 3
+                  }
+                ]
+              },
+              {
+                "id": "mirror",
+                "name": "Mirror",
+                "kind": "ability",
+                "text": "A habit: every 8th Glimmer, a copy of him appears beside him for a few seconds, with a share of his stats.",
+                "effects": [
+                  {
+                    "trigger": "on_basic_attack",
+                    "every": 8,
+                    "type": "summon",
+                    "copy_of": "self",
+                    "share_pct": 30,
+                    "lasts_ms": 7000
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "His copies last 1s longer. Up to 6 of Reflection's copies stand at once, each with 2% more of his stats for every copy he has made this fight (up to 90%). A copy that's destroyed bursts for 50% of his MGK on every enemy within 1 hex. The apex also gives +15% HP and MGK.",
+          "patch": {
+            "passives": [
+              {
+                "id": "reflection",
+                "name": "Reflection",
+                "kind": "ability",
+                "text": "Every few seconds, a copy of him appears beside him, with a share of his stats that grows with every copy he makes; many may stand at once.",
+                "effects": [
+                  {
+                    "trigger": "on_interval",
+                    "interval_ms": 6000,
+                    "type": "summon",
+                    "copy_of": "self",
+                    "share_pct": 70,
+                    "lasts_ms": 13000,
+                    "max_standing": 6,
+                    "grows_per_copy_pct": 2,
+                    "share_max_pct": 90
+                  }
+                ]
+              },
+              {
+                "id": "mirror",
+                "name": "Mirror",
+                "kind": "ability",
+                "text": "A habit: every 8th Glimmer, a copy of him appears beside him for a few seconds, with a share of his stats.",
+                "effects": [
+                  {
+                    "trigger": "on_basic_attack",
+                    "every": 8,
+                    "type": "summon",
+                    "copy_of": "self",
+                    "share_pct": 30,
+                    "lasts_ms": 7000
+                  }
+                ]
+              },
+              {
+                "id": "shattering",
+                "name": "Shattering Glass",
+                "kind": "ability",
+                "text": "A copy that's destroyed bursts, hurting every enemy within 1 hex of it, from his MGK.",
+                "effects": [
+                  {
+                    "trigger": "on_summon_fell",
+                    "vs": {
+                      "copy": true
+                    },
+                    "type": "damage",
+                    "amount": 0,
+                    "scaling": {
+                      "mgk": 5000
+                    },
+                    "target": "enemies_near_named",
+                    "within_hexes": 1
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Damage his copies of himself deal",
+          "counts": "damage",
+          "copies": "own",
+          "threshold": 3000
+        }
+      },
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-4; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "true_reflection",
+        "name": "True Reflection",
+        "title": "the one whose mirrors cast",
+        "fantasy": "His allies' reflections don't just fight: they cast what their originals cast.",
+        "vowed": {
+          "taste": "Hall of Mirrors' copies last 2s longer.",
+          "patch": {
+            "signature": {
+              "id": "hall_of_mirrors",
+              "name": "Hall of Mirrors",
+              "text": "Every ally gets a copy of themselves beside them for a few seconds, with a share of their stats; each copy attacks but casts nothing.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "self",
+              "effects": [
+                {
+                  "type": "summon",
+                  "copy_of": "each_ally",
+                  "share_pct": 80,
+                  "lasts_ms": 10000
+                }
+              ]
+            }
+          }
+        },
+        "apex": {
+          "text": "Hall of Mirrors' copies last 10s and each casts its hero's signature once, starting with a full bar. The apex also gives +15% HP and MGK.",
+          "patch": {
+            "signature": {
+              "id": "hall_of_mirrors",
+              "name": "Hall of Mirrors",
+              "text": "Every ally gets a copy of themselves beside them for a few seconds, with a share of their stats; each copy attacks and casts its signature once.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "self",
+              "effects": [
+                {
+                  "type": "summon",
+                  "copy_of": "each_ally",
+                  "share_pct": 80,
+                  "lasts_ms": 10000,
+                  "casts": true
+                }
+              ]
+            },
+            "stats_bp": {
+              "hp": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Damage his copies of allies deal",
+          "counts": "damage",
+          "copies": "allies",
+          "threshold": 4200
+        }
+      }
+    ]
   },
   {
     "_note": "Stealth: maker and payoff (rebuild-heroes.md, section 8j, path 2; phase 8 part 6, 8f-4). Shroud's Stealth ends as its ally attacks; the first strike's Silence comes from an on_ally_hit that reads the hit's from_stealth (UnitCondition's struck_from_stealth). Tuned by build (enabler): the design's one ally every 5s and +40% read +3, so two allies every 4s, +60%, and +10% MGK and HP.",
@@ -13436,7 +13620,224 @@
         "shroud"
       ],
       "threshold": 8
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-4; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "unseen_host",
+        "name": "Unseen Host",
+        "title": "the one who hides an army",
+        "fantasy": "Nobody is ever where the enemy aims, and every strike from the dark is sharper than the last.",
+        "vowed": {
+          "taste": "Shroud hides for 0.5s longer.",
+          "patch": {
+            "passives": [
+              {
+                "id": "shroud",
+                "name": "Shroud",
+                "kind": "ability",
+                "text": "Every few seconds, the two allies the most enemies are attacking are hidden for a moment.",
+                "effects": [
+                  {
+                    "trigger": "on_interval",
+                    "interval_ms": 4000,
+                    "type": "apply_status",
+                    "status": "shrouded",
+                    "duration_ms": 2000,
+                    "target": "most_targeted_ally",
+                    "count": 2
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Shroud every 3s, hiding for 2s. An ally's first attack out of Stealth deals 80% more damage and Silences for 1s, and each one gives every ally +2% crit damage for the rest of the fight. The apex also gives +15% HP and MGK.",
+          "patch": {
+            "passives": [
+              {
+                "id": "shroud",
+                "name": "Shroud",
+                "kind": "ability",
+                "text": "Every few seconds, the two allies the most enemies are attacking are hidden for a moment.",
+                "effects": [
+                  {
+                    "trigger": "on_interval",
+                    "interval_ms": 3000,
+                    "type": "apply_status",
+                    "status": "shrouded",
+                    "duration_ms": 2000,
+                    "target": "most_targeted_ally",
+                    "count": 2
+                  }
+                ]
+              },
+              {
+                "id": "veiled_strike",
+                "name": "Veiled Strike",
+                "kind": "aura",
+                "text": "An ally's attack out of Stealth hits harder.",
+                "aura": {
+                  "target": "all_allies",
+                  "only": {
+                    "keywords": [
+                      "stealthed"
+                    ]
+                  },
+                  "stat": "damage_bp",
+                  "value": 18000
+                }
+              },
+              {
+                "id": "hush",
+                "name": "Veiled Strike",
+                "kind": "ability",
+                "text": "An ally's attack out of Stealth Silences its target for a moment, and makes every ally's crits hit harder for the rest of the fight.",
+                "effects": [
+                  {
+                    "trigger": "on_ally_hit",
+                    "by": {
+                      "struck_from_stealth": true
+                    },
+                    "type": "apply_status",
+                    "status": "silence",
+                    "duration_ms": 1000,
+                    "target": "hit_target"
+                  },
+                  {
+                    "trigger": "on_holder_hit",
+                    "holder": {
+                      "struck_from_stealth": true
+                    },
+                    "type": "apply_status",
+                    "status": "silence",
+                    "duration_ms": 1000,
+                    "target": "hit_target"
+                  },
+                  {
+                    "trigger": "on_ally_hit",
+                    "by": {
+                      "struck_from_stealth": true
+                    },
+                    "type": "apply_status",
+                    "status": "unseen_host",
+                    "target": "all_allies"
+                  },
+                  {
+                    "trigger": "on_holder_hit",
+                    "holder": {
+                      "struck_from_stealth": true
+                    },
+                    "type": "apply_status",
+                    "status": "unseen_host",
+                    "target": "all_allies"
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Attacks allies make out of Stealth",
+          "counts": "hits",
+          "by_allies": true,
+          "from_stealth": true,
+          "threshold": 290
+        }
+      },
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-4; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "night_veil",
+        "name": "Night Veil",
+        "title": "the one who turns them on each other",
+        "fantasy": "When the one they hunted vanishes, they strike whoever is nearest.",
+        "vowed": {
+          "taste": "Vanishing Act hides for 0.5s longer.",
+          "patch": {
+            "signature": {
+              "id": "vanishing_act",
+              "name": "Vanishing Act",
+              "text": "Every ally is hidden for a moment, and their next attack is a crit.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "self",
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "vanished",
+                  "duration_ms": 2500,
+                  "target": "all_allies"
+                },
+                {
+                  "type": "apply_status",
+                  "status": "sure_strike",
+                  "target": "all_allies"
+                }
+              ]
+            }
+          }
+        },
+        "apex": {
+          "text": "Vanishing Act hides for 2.5s. When an enemy loses its target to Stealth, it's confused for 2s and attacks the nearest other enemy; an elite or a boss takes 25% more damage for 2s instead. The apex also gives +15% HP and MGK.",
+          "patch": {
+            "signature": {
+              "id": "vanishing_act",
+              "name": "Vanishing Act",
+              "text": "Every ally is hidden for a moment, and their next attack is a crit.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "self",
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "vanished",
+                  "duration_ms": 2500,
+                  "target": "all_allies"
+                },
+                {
+                  "type": "apply_status",
+                  "status": "sure_strike",
+                  "target": "all_allies"
+                }
+              ]
+            },
+            "passives": [
+              {
+                "id": "night_veil",
+                "name": "Night Veil",
+                "kind": "ability",
+                "text": "When an enemy loses its target to Stealth, it's confused for a moment and attacks the nearest other enemy; an elite or a boss takes more damage instead.",
+                "effects": [
+                  {
+                    "trigger": "on_enemy_lost_target",
+                    "type": "apply_status",
+                    "status": "veil_confused",
+                    "duration_ms": 2000,
+                    "target": "hit_target"
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Times enemies lost their target to Stealth",
+          "counts": "lost_target",
+          "threshold": 180
+        }
+      }
+    ]
   },
   {
     "_note": "Summons: payoff (rebuild-heroes.md, section 8j, path 3; phase 8 part 6, 8f-4). Strings' bonus is power on Glimmer (from_basic), not MGK, so its deed can count what it adds (bonus_damage), as Pack Call's. Tuned by build (engine): the design's numbers read +0, so Strings 10% a unit, Mirror every 4th Glimmer (more strings to pull), 5 attack speed a unit, and +15% MGK.",
@@ -13596,6 +13997,252 @@
         "strings"
       ],
       "threshold": 80
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-4; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "grand_puppeteer",
+        "name": "Grand Puppeteer",
+        "title": "the one whose strings never slacken",
+        "fantasy": "The dance never stops, and every body that joins it makes it stronger.",
+        "vowed": {
+          "taste": "He attacks 1% faster still for each allied unit.",
+          "patch": {
+            "passives": [
+              {
+                "id": "strings_pace",
+                "name": "Strings",
+                "kind": "aura",
+                "text": "He attacks faster for each allied unit on the field.",
+                "aura": {
+                  "target": "holder",
+                  "stat": "atsp",
+                  "value": 6,
+                  "per": "allied_unit"
+                }
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "He attacks 1% faster still for each allied unit. Allied summons attack 25% faster all fight, and Dance of Strings doubles that for 5s. Each summon that joins his side gives every allied summon +3% ATK and MGK for the rest of the fight. The apex also gives +15% HP and MGK.",
+          "patch": {
+            "signature": {
+              "id": "dance_of_strings",
+              "name": "Dance of Strings",
+              "text": "For a few seconds, every allied summon attacks faster still and attacks his target.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "self",
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "grand_dance",
+                  "duration_ms": 5000,
+                  "target": "all_allies",
+                  "only": {
+                    "summon": true
+                  }
+                }
+              ]
+            },
+            "passives": [
+              {
+                "id": "strings_pace",
+                "name": "Strings",
+                "kind": "aura",
+                "text": "He attacks faster for each allied unit on the field.",
+                "aura": {
+                  "target": "holder",
+                  "stat": "atsp",
+                  "value": 6,
+                  "per": "allied_unit"
+                }
+              },
+              {
+                "id": "woven_dance",
+                "name": "Woven Dance",
+                "kind": "aura",
+                "text": "Allied summons attack faster all fight.",
+                "aura": {
+                  "target": "all_allies",
+                  "only": {
+                    "summon": true
+                  },
+                  "stat": "atsp",
+                  "value": 25
+                }
+              },
+              {
+                "id": "puppet_host",
+                "name": "Grand Puppeteer",
+                "kind": "aura",
+                "text": "Every summon that joins his side makes every allied summon hit harder for the rest of the fight.",
+                "aura": {
+                  "target": "all_allies",
+                  "only": {
+                    "summon": true
+                  },
+                  "stat": "atk_bp",
+                  "value": 10300,
+                  "per": "summon_joined"
+                }
+              },
+              {
+                "id": "puppet_host_mind",
+                "name": "Grand Puppeteer",
+                "kind": "aura",
+                "text": "Every summon that joins his side makes every allied summon's MGK higher for the rest of the fight.",
+                "aura": {
+                  "target": "all_allies",
+                  "only": {
+                    "summon": true
+                  },
+                  "stat": "mgk_bp",
+                  "value": 10300,
+                  "per": "summon_joined"
+                }
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Attacks allied summons make during Dance of Strings",
+          "counts": "hits",
+          "by_allies": true,
+          "statuses": [
+            "dance",
+            "grand_dance"
+          ],
+          "threshold": 520
+        }
+      },
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-4; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "marionette",
+        "name": "Marionette",
+        "title": "the one who makes them dance for him",
+        "fantasy": "He doesn't need an army. He borrows theirs.",
+        "vowed": {
+          "taste": "Puppet Thread: once a fight, the first enemy to drop below 30% HP fights for him for 3s.",
+          "patch": {
+            "passives": [
+              {
+                "id": "puppet_thread",
+                "name": "Puppet Thread",
+                "kind": "ability",
+                "text": "Once a fight, the first enemy to drop below 30% HP fights for him for a few seconds; an elite or a boss takes more damage instead.",
+                "effects": [
+                  {
+                    "trigger": "on_ally_below_hp",
+                    "enemies": true,
+                    "threshold_bp": 3000,
+                    "once": true,
+                    "type": "apply_status",
+                    "status": "puppet_thread",
+                    "duration_ms": 3000,
+                    "target": "trigger_ally"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Marionette replaces Dance of Strings (60 mana): the weakest enemy within 8 hexes fights for him for 6s, an allied unit (not a summon); an elite or a boss takes 25% more damage for 6s instead. Each enemy that falls while he controls it makes him hit 8% harder for the rest of the fight. Puppet Thread stays, and Dance of Strings becomes a habit, every 8th Glimmer. The apex also gives +15% HP and MGK.",
+          "patch": {
+            "signature": {
+              "id": "marionette",
+              "name": "Marionette",
+              "text": "He takes control of the weakest enemy within 8 hexes for a few seconds: it fights for his side. An elite or a boss takes more damage instead.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "weakest_within",
+              "max_range": 8,
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "marionette",
+                  "duration_ms": 6000,
+                  "target": "target"
+                }
+              ]
+            },
+            "passives": [
+              {
+                "id": "puppet_thread",
+                "name": "Puppet Thread",
+                "kind": "ability",
+                "text": "Once a fight, the first enemy to drop below 30% HP fights for him for a few seconds; an elite or a boss takes more damage instead.",
+                "effects": [
+                  {
+                    "trigger": "on_ally_below_hp",
+                    "enemies": true,
+                    "threshold_bp": 3000,
+                    "once": true,
+                    "type": "apply_status",
+                    "status": "puppet_thread",
+                    "duration_ms": 3000,
+                    "target": "trigger_ally"
+                  }
+                ]
+              },
+              {
+                "id": "puppet_cut",
+                "name": "Marionette",
+                "kind": "ability",
+                "text": "Each enemy that falls while he controls it makes him hit harder for the rest of the fight.",
+                "effects": [
+                  {
+                    "trigger": "on_controlled_fell",
+                    "type": "apply_status",
+                    "status": "puppet_cut",
+                    "target": "self"
+                  }
+                ]
+              },
+              {
+                "id": "dance_of_strings",
+                "name": "Dance of Strings",
+                "kind": "ability",
+                "text": "A habit: every 8th Glimmer, every allied summon attacks faster for a few seconds and attacks his target.",
+                "effects": [
+                  {
+                    "trigger": "on_basic_attack",
+                    "every": 8,
+                    "type": "apply_status",
+                    "status": "dance",
+                    "duration_ms": 5000,
+                    "target": "all_allies",
+                    "only": {
+                      "summon": true
+                    }
+                  }
+                ]
+              }
+            ],
+            "stats_bp": {
+              "hp": 11500,
+              "mgk": 11500
+            }
+          }
+        },
+        "deed": {
+          "text": "Seconds enemies fought for him",
+          "counts": "status_ms",
+          "statuses": [
+            "puppet_thread",
+            "marionette"
+          ],
+          "threshold": 20000
+        }
+      }
+    ]
   }
 ]

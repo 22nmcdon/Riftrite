@@ -43,6 +43,28 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: 
 		return
 	if not target.alive or (not def.is_timed() and stacks <= 0):
 		return
+	if def.turns():
+		# Confused or controlled (phase 8 part 6, Decision 7): an elite or a
+		# boss takes its stand-in instead, and a Taunt keeps it off.
+		if not def.instead_for_ranks.is_empty() and not target.def.rank.is_empty():
+			apply(sim, target, def.instead_for_ranks, 1, duration_ticks if duration_ticks > 0 else def.duration_ticks, source)
+			return
+		if has_kind(target, StatusDef.Kind.TAUNT):
+			var resisted: LogEntry = sim.new_entry(LogEntry.Kind.RESISTED, source)
+			resisted.target = target.id
+			resisted.status = def.id
+			resisted.status_name = def.name
+			resisted.note = "taunted"
+			sim.combat_log.add(resisted)
+			return
+	elif def.kind == StatusDef.Kind.TAUNT:
+		# A Taunt wins over confused and controlled (Decision 7).
+		var turned: Array[StatusState] = []
+		for held: StatusState in target.statuses:
+			if held.def.turns():
+				turned.append(held)
+		for held: StatusState in turned:
+			_end(sim, target, held, "taunted")
 	# The heroes' rules (phase 5c step 5c): The Unbending blocks what enemies
 	# put on heroes; Crown of the Hollow King doubles the keywords heroes
 	# apply; Everflame makes those on enemies last.
@@ -131,6 +153,8 @@ static func apply(sim: CombatSim, target: UnitState, status_id: String, stacks: 
 		sim.listen()
 	elif def.kind == StatusDef.Kind.GROUNDED and fresh and target.flying:
 		_ground(sim, target, source)
+	elif def.kind == StatusDef.Kind.CONTROLLED and fresh:
+		sim.control(target, sim.unit_by_id(source.unit_id))
 
 
 ## Grounded (phase 5c step 6b): a flier walks while it lasts. Over a rock
@@ -504,7 +528,7 @@ static func cleanse_over_time(sim: CombatSim, unit: UnitState, share_bp: int, so
 ## The status kinds a cleanse's "count" may take (phase 5c step 7c):
 ## what hurts or hinders the unit.
 const HARMFUL: Array[StatusDef.Kind] = [StatusDef.Kind.DAMAGE_OVER_TIME, StatusDef.Kind.ROOT, StatusDef.Kind.STUN, StatusDef.Kind.SLOW,
-	StatusDef.Kind.TAUNT, StatusDef.Kind.SILENCE, StatusDef.Kind.MARKED, StatusDef.Kind.GROUNDED]
+	StatusDef.Kind.TAUNT, StatusDef.Kind.SILENCE, StatusDef.Kind.MARKED, StatusDef.Kind.GROUNDED, StatusDef.Kind.CONFUSED]
 
 
 ## Ends the `count` newest harmful statuses on `unit` (a cleanse's "count";
@@ -550,6 +574,8 @@ static func _end(sim: CombatSim, unit: UnitState, state: StatusState, why: Strin
 		sim.refold_auras()
 	elif state.def.kind == StatusDef.Kind.GROUNDED:
 		unit.flying = unit.def.has_trait("flying") and not has_kind(unit, StatusDef.Kind.GROUNDED)
+	elif state.def.kind == StatusDef.Kind.CONTROLLED:
+		sim.release(unit)
 
 
 static func _insert_in_order(unit: UnitState, state: StatusState) -> void:

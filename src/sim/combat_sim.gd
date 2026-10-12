@@ -150,6 +150,11 @@ var status_end_listeners: bool = false
 var enemy_fell_listeners: bool = false
 ## Some unit listens for one of its side's summons falling (phase 8 part 6,
 ## Pack Fury: on_summon_fell).
+## Summons that have joined each side this fight, heroes' then enemies'
+## (phase 8 part 6; an aura "per": "summon_joined").
+var summons_joined: Array[int] = [0, 0]
+## Someone hears an enemy losing its target to Stealth (phase 8 part 6).
+var lost_target_listeners: bool = false
 var summon_fell_listeners: bool = false
 ## Some unit's tactic does something on its kills (phase 5c step 6c).
 var tactic_kills: bool = false
@@ -374,6 +379,8 @@ func add_unit(unit: UnitState) -> void:
 	if unit.def.has_trait("engage"):
 		(_hero_engagers if unit.side == EffectSource.Team.HEROES else _enemy_engagers).append(unit)
 	(heroes if unit.side == EffectSource.Team.HEROES else enemies).append(unit)
+	if unit.summoned:
+		summons_joined[0 if unit.side == EffectSource.Team.HEROES else 1] += 1
 	note_listeners(unit)
 	if unit.copy_part != null:
 		copiers.append(unit)
@@ -426,6 +433,8 @@ func note_listeners(unit: UnitState) -> void:
 		enemy_fell_listeners = true
 	if Passives.listens_for(unit, EffectDef.Trigger.ON_SUMMON_FELL):
 		summon_fell_listeners = true
+	if Passives.listens_for(unit, EffectDef.Trigger.ON_ENEMY_LOST_TARGET):
+		lost_target_listeners = true
 	if Passives.listens_for(unit, EffectDef.Trigger.ON_ZONE_ENTER):
 		zone_enter_listeners = true
 	if Passives.listens_for(unit, EffectDef.Trigger.ON_STATUS_TICK) and not status_tick_listeners.has(unit):
@@ -500,6 +509,49 @@ func front_of(side: Array[UnitState]) -> UnitState:
 ## while taunting).
 func refold_auras() -> void:
 	_active_auras = Passives.rederive(self, _active_auras)
+
+
+## Marionette (phase 8 part 6, Decision 7): `unit` fights for `by`'s side
+## while its controlled status lasts, owned by `by` (or by `by`'s own owner),
+## so its work and kills are theirs, it keeps no side up, and it's nobody's
+## fallen ally; an allied unit there, not a summon.
+func control(unit: UnitState, by: UnitState) -> void:
+	if by == null or not unit.alive or unit.controlled or unit.side == by.side:
+		return
+	unit.controlled = true
+	unit.owner = by.owner if by.owner != null else by
+	_switch_side(unit, by.side, "taken over")
+
+
+## The controlled status ended: it goes back to its own side, if it stands.
+func release(unit: UnitState) -> void:
+	if not unit.controlled:
+		return
+	unit.controlled = false
+	unit.owner = null
+	if unit.alive:
+		_switch_side(unit, EffectSource.Team.ENEMIES if unit.side == EffectSource.Team.HEROES else EffectSource.Team.HEROES, "let go")
+
+
+## Moves `unit` to `side`: its lists, its engagements (all end), its target
+## and every target on it from what is now its own side (each picks again),
+## and the auras.
+func _switch_side(unit: UnitState, side: EffectSource.Team, why: String) -> void:
+	(heroes if unit.side == EffectSource.Team.HEROES else enemies).erase(unit)
+	var engager: bool = unit.def.has_trait("engage")
+	if engager:
+		(_hero_engagers if unit.side == EffectSource.Team.HEROES else _enemy_engagers).erase(unit)
+	unit.side = side
+	(heroes if side == EffectSource.Team.HEROES else enemies).append(unit)
+	if engager:
+		(_hero_engagers if side == EffectSource.Team.HEROES else _enemy_engagers).append(unit)
+	Engage.drop_all(self, unit, why)
+	if unit.target != null:
+		Targeting.lose(self, unit, why)
+	for other: UnitState in units:
+		if other.alive and other.target == unit and other.side == side:
+			Targeting.lose(self, other, "%s was %s" % [unit.id, why])
+	refold_auras()
 
 
 ## The first free id for a unit of this kit: its id, then "#2", "#3", ...
@@ -672,9 +724,29 @@ func _act(unit: UnitState) -> void:
 			if focus != null and focus != target:
 				Targeting.set_target(self, unit, focus, "focus")
 				target = focus
+		# Confused (phase 8 part 6, Night Veil): the nearest other unit of its
+		# own side; once it ends, a target on its own side is dropped.
+		if taunter == null and Statuses.has_kind(unit, StatusDef.Kind.CONFUSED):
+			var turned_on: UnitState = Targeting.straight_nearest(unit, standing_allies_of(unit))
+			if turned_on != null and turned_on != target:
+				Targeting.set_target(self, unit, turned_on, "confused")
+				target = turned_on
+				unit.turned = true
+	if unit.turned and not (has_statuses and Statuses.has_kind(unit, StatusDef.Kind.CONFUSED)):
+		# Only the target confusion chose (a healer's own may be an ally).
+		unit.turned = false
+		if target != null and target.side == unit.side:
+			Targeting.lose(self, unit, "no longer confused")
+			target = null
 	if target != null and target.alive and target.side != unit.side and Statuses.is_stealthed(target) and unit.aura_bp[AuraDef.Stat.SEES_STEALTH] <= 0:
-		Targeting.lose(self, unit, "%s is %s" % [target.id, "submerged" if target.submerged else "stealthed"])
+		var lost: LogEntry = Targeting.lose(self, unit, "%s is %s" % [target.id, "submerged" if target.submerged else "stealthed"])
 		target = null
+		# A taunted unit drawn back to a hidden taunter every tick isn't
+		# losing a target it chose (phase 8 part 6, Night Veil).
+		if not Statuses.has_kind(unit, StatusDef.Kind.TAUNT):
+			lost.lost_to_stealth = true
+			if lost_target_listeners:
+				Events.lost_target(self, unit)
 	if target == null or not target.alive:
 		Targeting.update(self, unit)
 		target = unit.target
@@ -1057,6 +1129,8 @@ func _process_deaths() -> void:
 				Events.enemy_fell(self, unit)
 			if summon_fell_listeners and unit.summoned:
 				Events.summon_fell(self, unit)
+			if unit.controlled:
+				Events.controlled_fell(self, unit)
 			if Passives.on_fall(self, unit):
 				again = true
 	if aura_lost:

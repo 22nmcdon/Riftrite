@@ -10887,14 +10887,12 @@
     "id": "long_string_dance",
     "name": "Long Dance",
     "path": "puppeteer",
-    "text": "Dance of Strings lasts longer.",
+    "text": "Dance of Strings lasts longer (once it's a habit, too).",
     "mod": {
       "on": [
         {
-          "slot": "signature",
-          "statuses": [
-            "dance"
-          ],
+          "slot": "abilities",
+          "ability": "dance_of_strings",
           "duration_add_ms": 2000
         }
       ]
@@ -10989,6 +10987,238 @@
           }
         ]
       }
+    }
+  },
+  {
+    "id": "perfect_likeness",
+    "name": "Perfect Likeness",
+    "apex": "thousand_faces",
+    "text": "Each copy he makes adds more to the next one's share of his stats.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:reflection",
+          "per_copy_add_pct": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "shattering_glass",
+    "name": "Shattering Glass",
+    "apex": "thousand_faces",
+    "text": "A destroyed copy's burst hits harder.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:shattering",
+          "amount_bp": 16000
+        }
+      ]
+    }
+  },
+  {
+    "id": "clear_glass",
+    "name": "Clear Glass",
+    "apex": "true_reflection",
+    "text": "Hall of Mirrors' copies have more of their heroes' stats.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "share_add_bp": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "mirror_guard",
+    "name": "Mirror Guard",
+    "apex": "true_reflection",
+    "text": "Hall of Mirrors also gives every hero a Shield of 15% of their max HP: the first blows land on the glass.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_effects": [
+            {
+              "type": "shield",
+              "amount_bp_of_max_hp": 1500,
+              "target": "all_allies"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "knife_in_the_dark",
+    "name": "Knife in the Dark",
+    "apex": "unseen_host",
+    "text": "Each strike from Stealth makes every ally's crits hit harder still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:hush",
+          "add_effects": [
+            {
+              "trigger": "on_ally_hit",
+              "by": {
+                "struck_from_stealth": true
+              },
+              "type": "apply_status",
+              "status": "knife_in_the_dark",
+              "target": "all_allies"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "ghost_step",
+    "name": "Ghost Step",
+    "apex": "unseen_host",
+    "text": "Hidden allies move faster.",
+    "mod": {
+      "passives": [
+        {
+          "id": "ghost_step",
+          "name": "Ghost Step",
+          "kind": "aura",
+          "text": "Hidden allies move faster.",
+          "aura": {
+            "target": "all_allies",
+            "only": {
+              "keywords": [
+                "stealthed"
+              ]
+            },
+            "stat": "speed",
+            "value": 1
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "longer_night",
+    "name": "Long Night",
+    "apex": "night_veil",
+    "text": "Night Veil's confusion lasts 1s longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:night_veil",
+          "duration_add_ms": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "bewilder",
+    "name": "Bewilder",
+    "apex": "night_veil",
+    "text": "His side deals more damage to confused enemies.",
+    "mod": {
+      "passives": [
+        {
+          "id": "bewilder",
+          "name": "Bewilder",
+          "kind": "aura",
+          "text": "His side hits confused enemies harder.",
+          "aura": {
+            "target": "all_allies",
+            "stat": "damage_bp",
+            "value": 12000,
+            "vs": {
+              "statuses": [
+                "veil_confused"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "puppet_weave",
+    "name": "Tight Weave",
+    "apex": "grand_puppeteer",
+    "text": "Each summon that joins his side adds more to every summon's ATK and MGK.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:puppet_host",
+          "value_add": 200
+        },
+        {
+          "slot": "passive:puppet_host_mind",
+          "value_add": 200
+        }
+      ]
+    }
+  },
+  {
+    "id": "taut_strings",
+    "name": "Taut Strings",
+    "apex": "grand_puppeteer",
+    "text": "Allied summons take less damage.",
+    "mod": {
+      "passives": [
+        {
+          "id": "taut_strings",
+          "name": "Taut Strings",
+          "kind": "aura",
+          "text": "Allied summons take less damage.",
+          "aura": {
+            "target": "all_allies",
+            "only": {
+              "summon": true
+            },
+            "stat": "damage_reduced_bp",
+            "value": 1500
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "puppet_master",
+    "name": "Puppet Master",
+    "apex": "marionette",
+    "text": "Each enemy that falls under his control makes him hit harder still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:puppet_cut",
+          "add_effects": [
+            {
+              "trigger": "on_controlled_fell",
+              "type": "apply_status",
+              "status": "puppet_master",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_strings",
+    "name": "Long Strings",
+    "apex": "marionette",
+    "text": "Marionette's control lasts 2s longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "statuses": [
+            "marionette"
+          ],
+          "duration_add_ms": 2000
+        }
+      ]
     }
   }
 ]

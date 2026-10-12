@@ -153,6 +153,9 @@ var capped: bool = false
 ## DAMAGE (phase 8 part 6, Veilweaver): a basic attack's hit made from
 ## Stealth (a shot's, Stealthed as it left).
 var from_stealth: bool = false
+## A TARGET line: the unit lost its target to Stealth (phase 8 part 6,
+## Night Veil; the deed count lost_target).
+var lost_to_stealth: bool = false
 ## SHIELD (phase 8 part 4): its target's Shield once this one was given
 ## (Endless Bulwark's deed counts what goes past a share of max HP).
 var shield_after: int = 0

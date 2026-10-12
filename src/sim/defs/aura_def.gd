@@ -45,6 +45,10 @@ extends RefCounted
 ##                                          thralls (phase 8 part 6, Strings;
 ##                                          Decision 3); "per_twice" counts
 ##                                          those that meet it twice
+##   "per": "summon_joined"                 counts once for each summon that
+##                                          has joined its side this fight,
+##                                          fallen or not (phase 8 part 6,
+##                                          Grand Puppeteer's snowball)
 ##   "per": "enemy_near", "per_within_hexes": 1   counts once for each
 ##                                          standing enemy that near it (phase
 ##                                          8 part 4, Crowd Strength); off
@@ -234,6 +238,8 @@ var per_fallen_ally: bool = false
 var per_allied_summon: bool = false
 ## Once per standing unit of its side (phase 8 part 6, Strings).
 var per_allied_unit: bool = false
+## Once per summon that joined its side this fight (phase 8 part 6).
+var per_summon_joined: bool = false
 ## Counts once per standing enemy within this many plane units of its holder
 ## (phase 8 part 4; 0: not per enemy).
 var per_enemy_range: int = 0
@@ -338,10 +344,11 @@ static func read(reader: DataReader) -> AuraDef:
 		if not VS_STATS.has(def.stat):
 			reader.error("only an aura worked out per hit can be \"vs_within_hexes\"")
 	if reader.has("per"):
-		var per: String = reader.req_choice("per", ["fallen_ally", "enemy_near", "allied_summon", "allied_unit"])
+		var per: String = reader.req_choice("per", ["fallen_ally", "enemy_near", "allied_summon", "allied_unit", "summon_joined"])
 		def.per_fallen_ally = per == "fallen_ally"
 		def.per_allied_summon = per == "allied_summon"
 		def.per_allied_unit = per == "allied_unit"
+		def.per_summon_joined = per == "summon_joined"
 		if per == "enemy_near":
 			def.per_enemy_range = reader.req_int("per_within_hexes", 1, 8) * HexGrid.HEX
 	if reader.has("per_within_hexes") and def.per_enemy_range == 0:
@@ -407,7 +414,7 @@ func is_conditional() -> bool:
 	return while_kind == While.PLANTED or while_kind == While.BELOW_HP or while_kind == While.ALLY_STANDING or while_kind == While.STATE \
 		or while_kind == While.ALLY_NEAR or while_kind == While.BEHIND_WALL or while_kind == While.TACTIC or per_fallen_ally or per_shield_bp > 0 \
 		or per_enemy_range > 0 or while_kind == While.MOVED or while_kind == While.CROWDED or target == Target.ALLIES_NEAR or only != null \
-		or per_engorged_bp > 0 or per_allied_summon or per_allied_unit
+		or per_engorged_bp > 0 or per_allied_summon or per_allied_unit or per_summon_joined
 
 
 ## Worked out per hit (EffectRunner), not folded into the unit's stats.
@@ -469,6 +476,8 @@ func describe() -> String:
 		condition += " for each fallen ally"
 	if per_allied_summon:
 		condition += " for each allied summon"
+	if per_summon_joined:
+		condition += " for each summon that has joined its side"
 	if per_allied_unit:
 		condition += " for each allied unit" + (" (%s twice)" % per_twice.describe() if per_twice != null else "")
 	if per_enemy_range > 0:

@@ -157,6 +157,8 @@ Built in phase 8 part 6 (`rebuild-phase8-last-heroes.md`, "Built in 8f-2"), with
 | **Grand Puppeteer** (Puppeteer) | +1% attack speed per allied unit on the field | Attacks allied summons make during Dance of Strings | Dance of Strings stays on all fight at half strength (+25% attack speed for summons); casting it doubles that for 5s. **Snowball:** each summon that joins the field gives every summon +3% ATK and MGK for the rest of the fight | **Tight Weave:** +5% per summon. **Taut Strings:** summons take 15% less damage |
 | **Marionette** (Puppeteer) | **Puppet Thread:** once per fight, the first enemy to drop below 30% HP fights for you for 3s | Seconds enemies fought for you | New signature **Marionette:** takes control of the enemy with the lowest HP (by %) for 6s; it fights for you and counts as an allied unit. Elites and bosses can't be controlled; they take +25% damage for 6s instead. **Snowball:** each controlled enemy that dies while under his control makes Strings' bonus +20% stronger for the rest of the fight | **Puppet Master:** +30% per kill. **Long Strings:** control lasts 8s |
 
+Built in phase 8 part 6 (`rebuild-phase8-last-heroes.md`, "Built in 8f-4"), with numbers scaled to his tuned paths and the calls flagged there (confused and controlled are statuses; Puppet Thread hears the first enemy to drop below 30% HP; Mirror Guard is a Shield of 15% of max HP; Ghost Step is +1 speed for hidden allies; Marionette's snowball is +8% damage a fall rather than Strings +20% stronger; Dance of Strings becomes Marionette's habit).
+
 ## Kestra
 
 | Apex | Taste (on vow) | Deed | The apex | Upgrades |

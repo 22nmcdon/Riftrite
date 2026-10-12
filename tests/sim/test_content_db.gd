@@ -63,7 +63,9 @@ func test_real_statuses() -> void:
 		"grand_reaction", "dissolved", "potent_draught", "potent_more", "mana_flood", "potent_elixir",
 		"pack_fury", "howl", "numbed", "viper_bitten",
 		"hellhound", "inferno_hound", "viper_slow", "viper_queen", "queens_venom", "alpha_fury", "alpha_blood", "pack_blood",
-		"shrouded", "vanished", "sure_strike", "dance", "glimmer_dazzle"] as Array[String])
+		"shrouded", "vanished", "sure_strike", "dance", "glimmer_dazzle",
+		"unseen_host", "knife_in_the_dark", "veil_confused", "veil_exposed", "grand_dance", "puppet_thread", "puppet_exposed",
+		"marionette", "marionette_exposed", "puppet_cut", "puppet_master"] as Array[String])
 	assert_eq(db.statuses["burn"].interval_ticks, 10, "Burn ticks twice a second")
 	assert_eq(db.statuses["burn"].stacks_lost_bp, 500)
 	assert_eq(db.statuses["burn"].vs_shield_bp, 5000, "Burn is half as effective against shields")
