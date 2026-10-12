@@ -55,7 +55,10 @@ extends RefCounted
 ## its max HP as the fight began; 0: no cap). And (8e-3, Edric's Hallowed
 ## Ground) shield_absorb_bp, which adds: its Shield absorbs that much more of
 ## each hit or damage-over-time tick (+10000: twice; the defender's side of
-## shield_damage_bp).
+## shield_damage_bp). Phase 8 part 6 (8f-1, Ilse's Furnace) adds
+## over_time_loss_bp, which adds: damage over time on it loses its stacks
+## that much faster (-5000: half as fast; a status's stacks_lost_bp share,
+## not a flat loss), put on enemies by a short status.
 ## Phase 5c step 5b adds stats that add: lifesteal_bp (heals that share of
 ## the damage its hits deal; LIFESTEAL, not healing), crit_damage_bp (to the
 ## crit kind of the damage rule), atsp (ATSP points: +30 is +30% attack
@@ -146,7 +149,8 @@ enum Stat { DAMAGE_BP, HEAL_BP, SHIELD_BP, OVER_TIME_BP, CRIT_CHANCE_BP, COOLDOW
 	OVERHEAL_SHIELD_BP, LIFESTEAL_HEALS, CRIT_OVERFLOW_BP, DEF, OVERHEAL_STRIKE_BP, MAX_HP_BP,
 	DEF_IGNORE_BP, UNPUSHABLE, DODGE_EVERY_MS, HALVED_HITS,
 	SHIELD_DAMAGE_BP, SEES_STEALTH, BURN_TAKEN_BP, MARKED_TIME_BP, ROOT_CAP_MS, MISS_BP, STUN_TIME_BP, STORE_BP, STORE_GROWS_BP, EVADE_BP, SHOT_SPEED_BP,
-	MANA_GAIN_BP, MANA_STORE_BP, OVERFLOW_POWER_BP, LIFESTEAL_MORE_BP, LIFESTEAL_MAX_HP_BP, LIFESTEAL_MAX_HP_CAP_BP, SHIELD_ABSORB_BP }
+	MANA_GAIN_BP, MANA_STORE_BP, OVERFLOW_POWER_BP, LIFESTEAL_MORE_BP, LIFESTEAL_MAX_HP_BP, LIFESTEAL_MAX_HP_CAP_BP, SHIELD_ABSORB_BP,
+	OVER_TIME_LOSS_BP }
 ## What turns an aura on, beyond its window.
 enum While { ALWAYS, TAUNTING, PLANTED, BELOW_HP, ALLY_STANDING, STATE, ALLY_NEAR, BEHIND_WALL, MOVED, CROWDED, TACTIC }
 
@@ -161,6 +165,7 @@ const STAT_NAMES: Array[String] = [
 	"def_ignore_bp", "unpushable", "dodge_every_ms", "halved_hits",
 	"shield_damage_bp", "sees_stealth", "burn_taken_bp", "marked_time_bp", "root_cap_ms", "miss_bp", "stun_time_bp", "store_bp", "store_grows_bp", "evade_bp", "shot_speed_bp",
 	"mana_gain_bp", "mana_store_bp", "overflow_power_bp", "lifesteal_more_bp", "lifesteal_max_hp_bp", "lifesteal_max_hp_cap_bp", "shield_absorb_bp",
+	"over_time_loss_bp",
 ]
 const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp", "ally_standing", "state", "ally_near", "behind_wall", "moved", "crowded", "tactic"]
 ## The stats that add rather than multiply. The rest are factors (x1.1);
@@ -169,7 +174,8 @@ const ADDITIVE: Array[Stat] = [Stat.CRIT_CHANCE_BP, Stat.COOLDOWN_BP, Stat.RANGE
 	Stat.OVERHEAL_SHIELD_BP, Stat.LIFESTEAL_HEALS, Stat.CRIT_OVERFLOW_BP, Stat.DEF, Stat.OVERHEAL_STRIKE_BP,
 	Stat.DEF_IGNORE_BP, Stat.UNPUSHABLE, Stat.DODGE_EVERY_MS, Stat.HALVED_HITS,
 	Stat.SHIELD_DAMAGE_BP, Stat.SEES_STEALTH, Stat.BURN_TAKEN_BP, Stat.MARKED_TIME_BP, Stat.ROOT_CAP_MS, Stat.MISS_BP, Stat.STUN_TIME_BP, Stat.STORE_BP, Stat.STORE_GROWS_BP, Stat.EVADE_BP, Stat.SHOT_SPEED_BP,
-	Stat.OVERFLOW_POWER_BP, Stat.LIFESTEAL_MORE_BP, Stat.LIFESTEAL_MAX_HP_BP, Stat.LIFESTEAL_MAX_HP_CAP_BP, Stat.SHIELD_ABSORB_BP]
+	Stat.OVERFLOW_POWER_BP, Stat.LIFESTEAL_MORE_BP, Stat.LIFESTEAL_MAX_HP_BP, Stat.LIFESTEAL_MAX_HP_CAP_BP, Stat.SHIELD_ABSORB_BP,
+	Stat.OVER_TIME_LOSS_BP]
 ## The stats an aura worked out per hit may hold ("vs", "from_basic",
 ## "per_target_stacks").
 const VS_STATS: Array[Stat] = [Stat.DAMAGE_BP, Stat.CRIT_CHANCE_BP, Stat.LIFESTEAL_BP, Stat.CRIT_DAMAGE_BP, Stat.HEAL_BP, Stat.SHIELD_BP, Stat.LIFESTEAL_MORE_BP]
@@ -181,6 +187,7 @@ const STAT_LABELS: Array[String] = [
 	"of the target's DEF ignored", "can't be knocked back", "a hit misses every", "hits taken at half damage",
 	"damage to Shields", "can target the stealthed", "Burn damage taken", "how long Marks on it last", "Roots on it last at most", "of its attacks missing", "how long Stuns on it last", "of each hit taken stored", "stored damage growth a second", "of basic attacks on it evaded", "shot speed",
 	"mana gained", "mana its bar holds", "signature power per mana over full", "to lifesteal", "of lifesteal past full HP as max HP", "of max HP, at most, from lifesteal past full", "to what its Shield absorbs",
+	"to how fast damage over time on it fades",
 ]
 ## Unit stat for each unit-stat aura stat (ATK_BP -> Stat.ATK, ...).
 const UNIT_STAT_FOR: Dictionary[int, int] = {

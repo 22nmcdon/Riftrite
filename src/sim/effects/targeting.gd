@@ -36,6 +36,34 @@ const RULES: Array[String] = ["nearest", "weakest_backliner", "largest_group", "
 const GROUP_REACH: int = 2 * HexGrid.HEX
 
 
+## The middles of the `count` largest groups of `unit`'s targetable enemies
+## (phase 8 part 6, Firestorm): in turn, the enemy with the most others of
+## its side within GROUP_REACH, never one within that reach of a middle
+## already picked; fight order on ties. Fewer if the enemies run out.
+static func largest_groups(sim: CombatSim, unit: UnitState, count: int) -> Array[UnitState]:
+	var picked: Array[UnitState] = []
+	var pool: Array[UnitState] = sim.targetable_enemies_of(unit)
+	var side: Array[UnitState] = sim.standing_enemies_of(unit)
+	var reach_sq: int = GROUP_REACH * GROUP_REACH
+	while picked.size() < count:
+		var best: UnitState = null
+		var best_count: int = -1
+		for other: UnitState in pool:
+			if picked.any(func(middle: UnitState) -> bool: return ArenaPlane.length_sq(middle.pos - other.pos) <= reach_sq):
+				continue
+			var near_count: int = 0
+			for near: UnitState in side:
+				if near != other and ArenaPlane.length_sq(near.pos - other.pos) <= reach_sq:
+					near_count += 1
+			if near_count > best_count:
+				best = other
+				best_count = near_count
+		if best == null:
+			break
+		picked.append(best)
+	return picked
+
+
 ## Picks a new target for a unit whose target has fallen, or turned stealthed
 ## (or that has none yet): null if nothing can be reached, and then it looks
 ## again after repath_ms. A stealthed enemy is never picked.

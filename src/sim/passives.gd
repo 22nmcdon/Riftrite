@@ -519,6 +519,12 @@ static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, 
 		var effect: EffectDef = listener.effect
 		if effect.trigger != event or not effect.active_at(sim.tick):
 			continue
+		if event == EffectDef.Trigger.ON_STATUS_TICK:
+			# Only those statuses, on an enemy near enough (phase 8 part 6).
+			if not effect.statuses.is_empty() and not effect.statuses.has(status):
+				continue
+			if effect.near_trigger_range > 0 and (other == null or ArenaPlane.length_sq(other.pos - unit.pos) > effect.near_trigger_range * effect.near_trigger_range):
+				continue
 		if event == EffectDef.Trigger.ON_STATUS or event == EffectDef.Trigger.ON_STATUS_ENDED:
 			if not effect.statuses.is_empty() and not effect.statuses.has(status):
 				continue
@@ -581,6 +587,9 @@ static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, 
 			if listener.last_for.has(other.id) and sim.tick - listener.last_for[other.id] < effect.cooldown_per_unit_ticks:
 				continue
 		if effect.once_per_enemy and (other == null or sim.once_marks.has(_once_key(listener, other))):
+			continue
+		if event == EffectDef.Trigger.ON_ALLY_HIT and not effect.spends.is_empty() and not Statuses.spend_stack(sim, sim.unit_by_id(status), effect.spends):
+			# The ally that hit holds none to spend (phase 8 part 6, Blessing).
 			continue
 		listener.count += 1
 		if listener.count % effect.every != 0:

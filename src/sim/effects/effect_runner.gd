@@ -92,6 +92,11 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 		if effect.every > 1 and state.fires % effect.every != 0:
 			continue
 		if effect.type == EffectDef.Type.AREA:
+			if effect.at_groups > 0:
+				# On each of the largest groups (phase 8 part 6, Firestorm).
+				for middle: UnitState in Targeting.largest_groups(sim, unit, effect.at_groups):
+					Areas.cast(sim, unit, ability, source, effect, middle, heal_boost_bp)
+				continue
 			Areas.cast(sim, unit, ability, source, effect, target, heal_boost_bp)
 			continue
 		if effect.type == EffectDef.Type.SNARE:
@@ -109,8 +114,15 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 		var power: int = power_of(effect, unit, heal_boost_bp)
 		if tactic_power_bp > 0 and effect.type == EffectDef.Type.DAMAGE:
 			power += tactic_power_bp
+		var named_stacks: int = -1
+		if not effect.stacks_of.is_empty():
+			# As many stacks as the ability's target has (phase 8 part 6,
+			# Immolate's splash), read as it fires.
+			named_stacks = stacks_from(effect, target)
+			if named_stacks <= 0:
+				continue
 		if shot != null and effect.target == EffectDef.Target.TARGET:
-			var amount: int = amount_of(effect, unit, 0, sim)
+			var amount: int = per_stack(effect, target, amount_of(effect, unit, 0, sim) if named_stacks < 0 else named_stacks)
 			var crit: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability, target))
 			shot.effects.append(effect)
 			shot.amounts.append(amount)
@@ -125,7 +137,7 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 			continue
 		for victim: UnitState in _targets(sim, unit, effect.target, target, null, effect):
 			var crit_now: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability, victim))
-			land(sim, unit, ability, source, effect, victim, amount_of(effect, unit, 0, sim), crit_now, NO_POINT, power)
+			land(sim, unit, ability, source, effect, victim, per_stack(effect, victim, amount_of(effect, unit, 0, sim) if named_stacks < 0 else named_stacks), crit_now, NO_POINT, power)
 			if effect.ricochet > 0 and effect.type == EffectDef.Type.DAMAGE:
 				_ricochet(sim, unit, ability, source, effect, [target, victim] as Array[UnitState], amount_of(effect, unit, 0, sim), power)
 	if shot != null and not shot.effects.is_empty():
@@ -339,6 +351,10 @@ static func _on_hit(sim: CombatSim, unit: UnitState, ability: AbilityDef, source
 ## lands at once, and never sets off on_hit effects.
 static func run_event(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: EffectSource, effect: EffectDef, other: UnitState, damage: int) -> void:
 	if effect.type == EffectDef.Type.AREA:
+		if effect.at_groups > 0:
+			for middle: UnitState in Targeting.largest_groups(sim, unit, effect.at_groups):
+				Areas.cast(sim, unit, ability, source, effect, middle)
+			return
 		Areas.cast(sim, unit, ability, source, effect, other if other != null else unit.target)
 		return
 	if effect.type == EffectDef.Type.SNARE:
@@ -373,13 +389,9 @@ static func run_event(sim: CombatSim, unit: UnitState, ability: AbilityDef, sour
 	var amount: int = amount_of(effect, unit, damage, sim)
 	if not effect.stacks_of.is_empty():
 		# As many stacks as the unit the event names has (Pyre Ash).
-		var state: StatusState = Statuses.find(other, effect.stacks_of) if other != null else null
-		amount = state.total_stacks() if state != null and not state.def.is_timed() else 0
+		amount = stacks_from(effect, other)
 		if amount <= 0:
 			return
-		if effect.stacks_share_bp > 0:
-			# A share of them, at least 1 (Ashen Engine; phase 5c step 5c).
-			amount = maxi(FixedMath.apply_bp(amount, effect.stacks_share_bp), 1)
 	if effect.target == EffectDef.Target.ENEMIES_NEAR_ALLIES:
 		for pair: Array in around_allies(sim, unit, effect):
 			var crit_round: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability, pair[0]))
@@ -389,7 +401,25 @@ static func run_event(sim: CombatSim, unit: UnitState, ability: AbilityDef, sour
 		# A plain hit never crits (the tuning phase: Thorned Bandage, Splinter
 		# Shot), and rolls nothing.
 		var crit: bool = effect.type == EffectDef.Type.DAMAGE and not effect.plain and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability, victim))
-		land(sim, unit, ability, source, effect, victim, amount, crit, NO_POINT, power_of(effect, unit))
+		land(sim, unit, ability, source, effect, victim, per_stack(effect, victim, amount), crit, NO_POINT, power_of(effect, unit))
+
+
+## stacks_of's number: the stacks `named` has of the effect's status (a
+## share of them, at least 1, with stacks_share_bp: Ashen Engine), or 0.
+static func stacks_from(effect: EffectDef, named: UnitState) -> int:
+	var state: StatusState = Statuses.find(named, effect.stacks_of) if named != null else null
+	var stacks: int = state.total_stacks() if state != null and not state.def.is_timed() else 0
+	if stacks > 0 and effect.stacks_share_bp > 0:
+		stacks = maxi(FixedMath.apply_bp(stacks, effect.stacks_share_bp), 1)
+	return stacks
+
+
+## A damage effect's amount_per_stack (phase 8 part 6, Immolate): `amount`
+## plus that much for each stack of its status on `victim`.
+static func per_stack(effect: EffectDef, victim: UnitState, amount: int) -> int:
+	if effect.amount_per_stack <= 0 or victim == null:
+		return amount
+	return amount + effect.amount_per_stack * Statuses.stacks_on(victim, effect.per_stack_status)
 
 
 ## The effect's number: base plus stat scaling from the unit's stats (or a
@@ -581,6 +611,16 @@ static func near(sim: CombatSim, unit: UnitState, effect: EffectDef, center: Uni
 			best_sq = distance_sq
 	if best != null:
 		found.append(best)
+	if effect.target == EffectDef.Target.ALLIES_NEAR_SELF and effect.nearest > 0 and found.size() > effect.nearest:
+		# The nearest few (phase 8 part 6, Blessing): a stable sort keeps the
+		# fight's order on ties.
+		var keyed: Array[Array] = []
+		for other: UnitState in found:
+			keyed.append([ArenaPlane.length_sq(other.pos - center.pos), keyed.size(), other])
+		keyed.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0] or (a[0] == b[0] and a[1] < b[1]))
+		found.clear()
+		for item: Array in keyed.slice(0, effect.nearest):
+			found.append(item[2])
 	return found
 
 

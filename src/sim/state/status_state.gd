@@ -45,6 +45,9 @@ var until_near: int = 0
 ## A Stealth that ends on attack: the basic attacks it has let pass (phase 8
 ## part 4, Shadow Dance).
 var spared: int = 0
+## Slow Coals (phase 8 part 6): what's left of a stack its holder's
+## over_time_loss_bp put off losing, in basis points of a stack.
+var loss_carry_bp: int = 0
 
 const NEVER: int = 1 << 60
 

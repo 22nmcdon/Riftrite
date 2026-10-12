@@ -481,11 +481,12 @@ func _draw_placed(canvas: CanvasItem, sim: CombatSim) -> void:
 		if sim.tick >= zone.until_tick:
 			continue
 		var fx := Fx.new()
-		fx.shape = ShapeDef.KIND_NAMES[zone.effect.shape.kind]
-		fx.size = zone.effect.shape.size
-		fx.width = zone.effect.shape.width
+		# Its own shape: a growing zone is wider now (phase 8 part 6).
+		fx.shape = ShapeDef.KIND_NAMES[zone.shape.kind]
+		fx.size = zone.shape.size
+		fx.width = zone.shape.width
 		fx.from = Vector2(zone.origin)
-		fx.to = Vector2(ArenaPlane.along(zone.origin, zone.dir, zone.effect.shape.size * HexGrid.HEX))
+		fx.to = Vector2(ArenaPlane.along(zone.origin, zone.dir, zone.shape.size * HexGrid.HEX))
 		var color: Color = _side_color(sim, zone.unit.id)
 		var fill: Color = color
 		fill.a = 0.14

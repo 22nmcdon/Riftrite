@@ -40,6 +40,7 @@ const EVENT_WORDS: Dictionary[int, String] = {
 	EffectDef.Trigger.ON_SHIELD_SPENT: "Shield spent",
 	EffectDef.Trigger.ON_HP_SPENT: "HP spent",
 	EffectDef.Trigger.ON_MAX_HP_UP: "max HP gained",
+	EffectDef.Trigger.ON_STATUS_TICK: "damage-over-time tick on an enemy",
 }
 const ORDINALS: Array[String] = ["th", "st", "nd", "rd"]
 const CHATTER: Array[LogEntry.Kind] = [LogEntry.Kind.MOVE, LogEntry.Kind.STOP, LogEntry.Kind.TARGET]
@@ -538,6 +539,10 @@ static func _effect_text(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 		# The apexes' snowballs (phase 8 part 4).
 		var status: String = content.statuses[effect.grows_status].name if content != null and content.statuses.has(effect.grows_status) else effect.grows_status
 		return _effect_text_plain(effect, kit, content) + " (%s for each %s)" % [signed_percent(effect.grows_stack_bp), status]
+	if effect.amount_per_stack > 0:
+		# Immolate (phase 8 part 6): more for each stack on the unit hit.
+		var stacked: String = content.statuses[effect.per_stack_status].name if content != null and content.statuses.has(effect.per_stack_status) else effect.per_stack_status
+		return _effect_text_plain(effect, kit, content) + " (+%d for each stack of %s on it)" % [effect.amount_per_stack, stacked]
 	if effect.per_damage > 0:
 		return _effect_text_plain(effect, kit, content) + " for every %d damage" % effect.per_damage
 	if effect.power_per_taken_bp > 0:

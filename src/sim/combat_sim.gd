@@ -137,6 +137,9 @@ var overflow_counters: Array[UnitState] = []
 var ally_ability_listeners: bool = false
 ## Some unit hears its allies' basic attack hits (phase 8 part 4).
 var ally_hit_listeners: bool = false
+## The units listening for on_status_tick, in the fight's order (phase 8
+## part 6, Ilse's Heat).
+var status_tick_listeners: Array[UnitState] = []
 ## Some unit hears its side's Shields break (phase 8 part 2, Thornweave).
 var ally_shield_listeners: bool = false
 ## Some unit has an on_status_ended passive (phase 5c step 5b).
@@ -368,6 +371,8 @@ func note_listeners(unit: UnitState) -> void:
 		status_end_listeners = true
 	if Passives.listens_for(unit, EffectDef.Trigger.ON_ENEMY_FELL):
 		enemy_fell_listeners = true
+	if Passives.listens_for(unit, EffectDef.Trigger.ON_STATUS_TICK) and not status_tick_listeners.has(unit):
+		status_tick_listeners.append(unit)
 
 
 ## After units join (at the start, or summons) or enter a phase: auras are

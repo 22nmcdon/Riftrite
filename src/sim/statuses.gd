@@ -441,7 +441,16 @@ static func _deal_damage_over_time(sim: CombatSim, unit: UnitState, state: Statu
 	var lost: int = state.def.stacks_lost_per_interval
 	if state.def.stacks_lost_bp > 0:
 		@warning_ignore("integer_division")
-		lost += (state.total_stacks() * state.def.stacks_lost_bp + FixedMath.BP_ONE - 1) / FixedMath.BP_ONE
+		var share_lost: int = (state.total_stacks() * state.def.stacks_lost_bp + FixedMath.BP_ONE - 1) / FixedMath.BP_ONE
+		if unit.aura_bp[AuraDef.Stat.OVER_TIME_LOSS_BP] != 0:
+			# Slow Coals (phase 8 part 6, Ilse's Furnace): over_time_loss_bp
+			# on the unit changes what it loses, the part of a stack it puts
+			# off carried to the next tick.
+			var owed_bp: int = share_lost * maxi(FixedMath.BP_ONE + unit.aura_bp[AuraDef.Stat.OVER_TIME_LOSS_BP], 0) + state.loss_carry_bp
+			@warning_ignore("integer_division")
+			share_lost = owed_bp / FixedMath.BP_ONE
+			state.loss_carry_bp = owed_bp - share_lost * FixedMath.BP_ONE
+		lost += share_lost
 	state.remove_oldest(lost)
 	if state.total_stacks() == 0:
 		_end(sim, unit, state)

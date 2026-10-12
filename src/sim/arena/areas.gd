@@ -31,6 +31,9 @@ extends RefCounted
 ##     With "follows": "nearest" (8c-5c, the Drifting Moth) it moves toward
 ##     the caster's enemy nearest its middle instead; with "holder" (phase 8
 ##     part 5, Carrier) it's centered on its standing caster.
+##   - A zone that grows (phase 8 part 6, Wildfire's spreading fire) is 1
+##     hex wider for every grow_ms since it was cast, up to its max_radius;
+##     the pulse it first lands wider is noted "spread to N".
 ##   - A placed lantern (phase 5c step 7d, First Lantern) is a zone cast at
 ##     a point the player chose (cast_at), at the fight's start.
 ## Heroes never step out of a warned area (decided): placement is the answer.
@@ -54,6 +57,9 @@ class Pending:
 	var crit_bp: int = 0
 	## A zone: the tick it ends (exclusive; -1: not a zone).
 	var until_tick: int = -1
+	## Its shape: the effect's, or its own copy if it grows (phase 8 part 6).
+	var shape: ShapeDef
+	var cast_tick: int = 0
 
 
 ## `unit`'s ability casts the area `effect` at `target` (null for an area on
@@ -65,6 +71,13 @@ static func cast(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 	area.ability = ability
 	area.source = source
 	area.effect = effect
+	area.shape = effect.shape
+	if effect.grow_ticks > 0:
+		area.shape = ShapeDef.new()
+		area.shape.kind = effect.shape.kind
+		area.shape.size = effect.shape.size
+		area.shape.width = effect.shape.width
+	area.cast_tick = sim.tick
 	area.dir = ArenaPlane.direction(unit.pos, target.pos if target != null else unit.pos, Vector2i(0, ArenaPlane.DIR * unit.forward()))
 	match effect.anchor:
 		EffectDef.Anchor.TARGET:
@@ -130,7 +143,16 @@ static func _pulse_zones(sim: CombatSim) -> void:
 			continue
 		if sim.tick >= zone.land_tick:
 			var moved: bool = zone.effect.follows and _follow(sim, zone)
-			_land(sim, zone, "moved" if moved else "")
+			var notes: Array[String] = []
+			if moved:
+				notes.append("moved")
+			if zone.effect.grow_ticks > 0:
+				@warning_ignore("integer_division")
+				var size: int = mini(zone.effect.shape.size + (sim.tick - zone.cast_tick) / zone.effect.grow_ticks, zone.effect.grow_max)
+				if size != zone.shape.size:
+					zone.shape.size = size
+					notes.append("spread to %d" % size)
+			_land(sim, zone, ", ".join(PackedStringArray(notes)))
 			zone.land_tick += zone.effect.pulse_ticks
 		staying.append(zone)
 	sim.zones = staying
@@ -170,7 +192,7 @@ static func _nearest_enemy(sim: CombatSim, zone: Pending) -> UnitState:
 static func _land(sim: CombatSim, area: Pending, note: String = "") -> void:
 	var hit: Array[UnitState] = []
 	for other: UnitState in sim.units:
-		if other.alive and _counts(area, other) and area.effect.shape.contains(area.origin, area.dir, other.pos):
+		if other.alive and _counts(area, other) and area.shape.contains(area.origin, area.dir, other.pos):
 			hit.append(other)
 	var landed: LogEntry = _entry(sim, LogEntry.Kind.AREA_LANDED, area)
 	landed.amount = hit.size()
@@ -234,10 +256,10 @@ static func _counts(area: Pending, other: UnitState) -> bool:
 
 static func _entry(sim: CombatSim, kind: LogEntry.Kind, area: Pending) -> LogEntry:
 	var entry: LogEntry = sim.new_entry(kind, area.source)
-	entry.shape = area.effect.shape.describe()
+	entry.shape = area.shape.describe()
 	entry.from_pos = area.origin
 	entry.to_pos = area.origin
-	if area.effect.shape.is_aimed():
-		entry.to_pos = ArenaPlane.along(area.origin, area.dir, area.effect.shape.size * HexGrid.HEX)
+	if area.shape.is_aimed():
+		entry.to_pos = ArenaPlane.along(area.origin, area.dir, area.shape.size * HexGrid.HEX)
 	entry.end_tick = area.land_tick
 	return entry

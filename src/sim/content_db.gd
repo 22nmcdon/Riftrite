@@ -334,9 +334,10 @@ func _check_kit(kit: UnitDef, where: String, grid: HexGrid) -> void:
 		if not statuses.has(status_id):
 			errors.append("%s: unknown status \"%s\"" % [where, status_id])
 	for effect: EffectDef in kit.all_effects():
-		# Shards that spend a stack (phase 8 part 5, Collection).
+		# Shards that spend a stack (phase 8 part 5, Collection), or an ally's
+		# hit (phase 8 part 6, Blessing).
 		if not effect.spends.is_empty() and statuses.has(effect.spends) and not statuses[effect.spends].stacking:
-			errors.append("%s: shards spend stacks of \"%s\", which doesn't stack" % [where, effect.spends])
+			errors.append("%s: spends stacks of \"%s\", which doesn't stack" % [where, effect.spends])
 	for kit_id: String in kit.rise_as_ids():
 		if not enemies.has(kit_id):
 			errors.append("%s: rises as \"%s\", which isn't an enemy" % [where, kit_id])

@@ -25,7 +25,8 @@ extends RefCounted
 ## on_pull (it pulls or hooks an enemy that moves; Hard Landing) and
 ## on_shield_spent (it spends its Shield; The Woven Fang). Phase 8 part 5:
 ## on_hp_spent (it spends HP on its signature; Blood Rite) and on_max_hp_up
-## (it gains max HP, whatever gave it; The Iron Maw).
+## (it gains max HP, whatever gave it; The Iron Maw). Phase 8 part 6:
+## on_status_tick (damage over time ticks on an enemy of it; Ilse's Heat).
 ## After every unit has acted, CombatSim hands over the entries logged since
 ## the last read, in log order (so what happens in the deaths step is read
 ## on the next tick); kills are raised as deaths are settled. Relic effects
@@ -78,6 +79,14 @@ static func dispatch(sim: CombatSim, from: int, to: int) -> int:
 			var risen: UnitState = sim.unit_by_id(entry.target)
 			_raise(sim, risen, EffectDef.Trigger.ON_RISE, entry.chain, risen)
 			continue
+		if entry.kind == LogEntry.Kind.STATUS_DAMAGE and not sim.status_tick_listeners.is_empty():
+			# A tick on a unit, heard by its enemies that listen, whoever put
+			# the status there, a relic too (phase 8 part 6, Ilse's Heat).
+			var ticking: UnitState = sim.unit_by_id(entry.target)
+			if ticking != null:
+				for listener: UnitState in sim.status_tick_listeners:
+					if listener.side != ticking.side:
+						_raise(sim, listener, EffectDef.Trigger.ON_STATUS_TICK, entry.chain, ticking, entry.amount, entry.status)
 		if entry.source_relic_side >= 0 or entry.source_unit.is_empty():
 			continue
 		var source: UnitState = sim.unit_by_id(entry.source_unit)

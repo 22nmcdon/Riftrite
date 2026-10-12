@@ -70,6 +70,11 @@ extends RefCounted
 ##                 as RELEASED with how much it had grown to; damage's
 ##                 "amount_bp_of_stored" reads it first, as amount_bp_of_shield
 ##                 reads the Shield
+##   damage's "amount_per_stack": {"status": "burn", "per": 5} (phase 8 part
+##                 6, Ilse's Immolate): that much more for each stack of the
+##                 status on the unit it hits, read as it fires; and an
+##                 on_fire apply_status's "stacks_of" reads the ability's
+##                 target (Immolate's splash, run before a cleanse)
 ##   damage, heal, shield's "grows_per_stack": {"status": "brand", "bp": 500}
 ##                 (phase 8 part 4, the apexes' snowballs): that much more
 ##                 power for each stack of the status on the unit (and
@@ -292,9 +297,17 @@ extends RefCounted
 ##   on_ally_hit      another unit of its side lands a basic attack's hit on
 ##                    an enemy (hit_target: that enemy; "by": {...}: only an
 ##                    ally that meets it, as {"ranged": true}; phase 8 part
-##                    4, Singing Arrows). on_enemy_fell takes "by" too (its
+##                    4, Singing Arrows; "spends": a stacking status on that
+##                    ally, spent a stack a hit, and nothing without one:
+##                    phase 8 part 6, Ilse's Blessing). on_enemy_fell takes "by" too (its
 ##                    killer) and "by_beyond_hexes" (the killer stood that
 ##                    far from it or more; Long Wind).
+##   on_status_tick   a damage-over-time status ticks on an enemy of the
+##                    unit, whoever put it there, a relic too (a STATUS_DAMAGE
+##                    line; "statuses": only those; "near_hexes": only on an
+##                    enemy that near the unit; hit_target: that enemy;
+##                    amount_bp_of_damage: of the tick; phase 8 part 6,
+##                    Ilse's Heat: 1 mana a tick)
 ##   on_enemy_near    the tuning phase (Snare Wire; not an event: checked
 ##                    each tick with the timed ones): an enemy first comes
 ##                    within "near_hexes" of the unit (hit_target: that enemy;
@@ -362,8 +375,9 @@ extends RefCounted
 ## "count" standing enemies farthest from the unit within "within_hexes" of
 ## it (farthest first; ties in the fight's order).
 ## Phase 5c step 6 also adds the target allies_near_self (every ally within
-## "within_hexes" of the unit, as it falls too: Last Breath) and cleanse's
-## "statuses" (only those).
+## "within_hexes" of the unit, as it falls too: Last Breath; phase 8 part 6,
+## "nearest": only the nearest that many, fight order on ties)
+## and cleanse's "statuses" (only those).
 ## None of them names a hit, so none can use hit_target or
 ## amount_bp_of_damage.
 ## A passive's effects may cast an area on any of these, or on an event
@@ -376,7 +390,7 @@ enum Trigger {
 	ON_INTERVAL, ON_FALL, ON_HOP, ON_WOULD_FALL,
 	ON_HOLDER_HIT, ON_SHIELD_BROKEN, ON_ALLY_ABILITY, ON_STATUS_ENDED, ON_LIFESTEAL, ON_KNOCKBACK, ON_GUARD,
 	ON_BELOW_HP, ON_CHARGED, ON_ENEMY_FELL, ON_ARRIVE, ON_ALLY_SHIELD_BROKEN, ON_WALL_BLOCK, ON_RISE, ON_BREAKS_SHIELD, ON_PULL, ON_SHIELD_SPENT,
-	ON_MANA_GAINED, ON_ALLY_HIT, ON_ENEMY_NEAR, ON_HP_SPENT, ON_MAX_HP_UP,
+	ON_MANA_GAINED, ON_ALLY_HIT, ON_ENEMY_NEAR, ON_HP_SPENT, ON_MAX_HP_UP, ON_STATUS_TICK,
 }
 enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS, HOP, FLOOD, SEVER, SPEND_SHIELD, RELEASE_STORED,
 	SPEND_ENGORGED, RAISE, GAIN_MAX_HP, SHARDS }
@@ -419,7 +433,7 @@ const TRIGGER_NAMES: Array[String] = [
 	"on_interval", "on_fall", "on_hop", "on_would_fall",
 	"on_holder_hit", "on_shield_broken", "on_ally_ability", "on_status_ended", "on_lifesteal", "on_knockback", "on_guard",
 	"on_below_hp", "on_charged", "on_enemy_fell", "on_arrive", "on_ally_shield_broken", "on_wall_block", "on_rise", "on_breaks_shield", "on_pull", "on_shield_spent",
-	"on_mana_gained", "on_ally_hit", "on_enemy_near", "on_hp_spent", "on_max_hp_up",
+	"on_mana_gained", "on_ally_hit", "on_enemy_near", "on_hp_spent", "on_max_hp_up", "on_status_tick",
 ]
 ## The unit's events (see the top).
 const EVENT_TRIGGERS: Array[Trigger] = [
@@ -427,19 +441,19 @@ const EVENT_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
 	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_SHIELD_SPENT,
-	Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP,
+	Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP, Trigger.ON_STATUS_TICK,
 ]
 ## Event triggers that name a unit (hit_target) and those that name a hit
 ## (amount_bp_of_damage).
 const EVENT_UNIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED, Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD, Trigger.ON_CHARGED,
-	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_ALLY_HIT]
+	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_ALLY_HIT, Trigger.ON_STATUS_TICK]
 const EVENT_HIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_HIT_TAKEN, Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_HEAL,
-	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_GUARD, Trigger.ON_BREAKS_SHIELD, Trigger.ON_SHIELD_SPENT, Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP]
+	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_GUARD, Trigger.ON_BREAKS_SHIELD, Trigger.ON_SHIELD_SPENT, Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP, Trigger.ON_STATUS_TICK]
 ## Event triggers that can take "vs": those that name a unit, and on_kill.
 const EVENT_VS_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED, Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_KILL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
-	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_ALLY_HIT]
+	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_ALLY_HIT, Trigger.ON_STATUS_TICK]
 const ABILITY_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_FIRE, Trigger.ON_HIT, Trigger.ON_CRIT,
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
@@ -448,7 +462,7 @@ const ABILITY_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
 	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_SHIELD_SPENT,
 	Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT,
-	Trigger.ON_ENEMY_NEAR, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP,
+	Trigger.ON_ENEMY_NEAR, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP, Trigger.ON_STATUS_TICK,
 ]
 ## What a passive's effects may run on (PartDef).
 const PASSIVE_TRIGGERS: Array[Trigger] = [
@@ -458,7 +472,7 @@ const PASSIVE_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
 	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_SHIELD_SPENT,
 	Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT,
-	Trigger.ON_ENEMY_NEAR, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP,
+	Trigger.ON_ENEMY_NEAR, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP, Trigger.ON_STATUS_TICK,
 ]
 ## The passive triggers that aren't events (Passives.run_timed, on_fall,
 ## would_fall).
@@ -558,6 +572,10 @@ var raise_grow_ticks: int = 0
 ## each stack of this status on its unit ("": none).
 var grows_status: String = ""
 var grows_stack_bp: int = 0
+## damage (phase 8 part 6, Ilse's Immolate): this much more for each stack
+## of this status on the unit it hits, read as it fires ("": none).
+var per_stack_status: String = ""
+var amount_per_stack: int = 0
 ## apply_status on an event naming a hit: a stack per this much damage (0:
 ## once a run of the event).
 var per_damage: int = 0
@@ -759,6 +777,18 @@ var follows_nearest: bool = false
 ## (phase 8 part 5, Carrier) it moves with its caster instead: centered on it
 ## before each pulse while it stands.
 var follows_holder: bool = false
+## A circle or ring zone that grows (phase 8 part 6, Wildfire): 1 hex wider
+## every grow_ticks after it's cast, up to grow_max hexes ("grows":
+## {"every_ms": 2000, "max_radius": 3}; 0: it doesn't).
+var grow_ticks: int = 0
+var grow_max: int = 0
+## An area cast once on each of the unit's largest groups of enemies, up to
+## this many (phase 8 part 6, Firestorm: Targeting.largest_groups; 0: on its
+## anchor as usual). Its anchor is "target".
+var at_groups: int = 0
+## allies_near_self: only the nearest this many (phase 8 part 6, Blessing;
+## 0: every ally within reach).
+var nearest: int = 0
 ## An area (phase 8 part 2, Stormline): each enemy it hits after the first,
 ## nearest its origin first, deals this much more damage than the one
 ## before ("per_enemy_bp": +10% a step is 1000). 0: none.
@@ -1014,6 +1044,14 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				grows.finish()
 			if def.type != Type.DAMAGE and def.type != Type.HEAL and def.type != Type.SHIELD and def.type != Type.GAIN_MANA:
 				reader.error("only damage, heals, Shields, and mana gained grow per stack")
+		if reader.has("amount_per_stack"):
+			var per: DataReader = reader.req_object("amount_per_stack")
+			if per != null:
+				def.per_stack_status = per.req_string("status")
+				def.amount_per_stack = per.req_int("per", 1, 100)
+				per.finish()
+			if def.type != Type.DAMAGE:
+				reader.error("amount_per_stack is a damage effect's")
 		if reader.has("per_damage"):
 			def.per_damage = reader.req_int("per_damage", 1)
 			if def.type != Type.APPLY_STATUS:
@@ -1040,6 +1078,13 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 		# The allies with the least of their bar (phase 8 part 4, Shared Breath),
 		# or of their HP (phase 8 part 5, Bastion of Saints' taste).
 		def.count = reader.opt_int("count", 1, 1, 5)
+	if def.target == Target.ALLIES_NEAR_SELF:
+		# Only the nearest that many (phase 8 part 6, Ilse's Blessing; 0:
+		# every ally within reach).
+		def.nearest = reader.opt_int("nearest", 0, 1, 5)
+	elif reader.has("nearest"):
+		reader.req_int("nearest")
+		reader.error("only allies_near_self takes \"nearest\"")
 	if def.target == Target.ENEMIES_NEAR_ALLIES and reader.has("around"):
 		# Only round the allies that meet it (phase 8 part 4, Gale: ranged).
 		def.around = UnitCondition.read(reader.req_object("around"))
@@ -1087,7 +1132,7 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 			reader.error("%s names no hit, so it can't use amount_bp_of_damage" % trigger_name)
 	if NAMED_TARGETS.has(def.target) and not EVENT_VS_TRIGGERS.has(def.trigger):
 		reader.error("%s needs an event that names a unit" % TARGET_NAMES[def.target])
-	if not def.stacks_of.is_empty() and not EVENT_VS_TRIGGERS.has(def.trigger):
+	if not def.stacks_of.is_empty() and not EVENT_VS_TRIGGERS.has(def.trigger) and def.trigger != Trigger.ON_FIRE:
 		reader.error("stacks_of needs an event that names a unit")
 	if def.type == Type.RAISE and not type_name.is_empty() and def.trigger != Trigger.ON_ENEMY_FELL and def.trigger != Trigger.ON_KILL:
 		reader.error("a raise stands up the enemy an event names as it falls (on_enemy_fell or on_kill)")
@@ -1119,6 +1164,19 @@ static func _read_area(def: EffectDef, reader: DataReader) -> void:
 	def.follows_holder = follow_rule == "holder"
 	if def.follows and def.zone_ticks == 0:
 		reader.error("only a zone (an area with a duration) follows")
+	if reader.has("grows"):
+		var grows: DataReader = reader.req_object("grows")
+		if grows != null:
+			def.grow_ticks = grows.req_ticks("every_ms", FixedMath.MS_PER_TICK)
+			def.grow_max = grows.req_int("max_radius", 1, 10)
+			grows.finish()
+		if def.zone_ticks == 0 or def.shape.is_aimed():
+			reader.error("only a circle or ring zone grows")
+		elif def.grow_max <= def.shape.size:
+			reader.error("a zone grows to a max_radius past its radius")
+	def.at_groups = reader.opt_int("at_largest_groups", 0, 1, 5)
+	if def.at_groups > 0 and def.anchor != Anchor.TARGET:
+		reader.error("an area at the largest groups is anchored on each (\"anchor\": \"target\")")
 	def.hits = maxi(HITS_NAMES.find(reader.req_choice("hits", HITS_NAMES)), 0) as Hits
 	def.per_enemy_bp = reader.opt_int("per_enemy_bp", 0, 0, FixedMath.BP_ONE)
 	# A zone that may stand only so many at once from its ability (phase 8
@@ -1189,6 +1247,13 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 			# The tuning phase (Snare Wire): an enemy first comes this near.
 			def.near_trigger_range = reader.req_int("near_hexes", 1, 10) * HexGrid.HEX
 			def.once_per_enemy = reader.opt_bool("once_per_enemy", false)
+		Trigger.ON_STATUS_TICK:
+			# Phase 8 part 6 (Ilse's Heat): only those statuses' ticks, on an
+			# enemy within "near_hexes" of the unit if given.
+			if reader.has("statuses"):
+				def.statuses = reader.req_string_array("statuses")
+			if reader.has("near_hexes"):
+				def.near_trigger_range = reader.req_int("near_hexes", 1, 20) * HexGrid.HEX
 		Trigger.ON_HIT_TAKEN:
 			def.min_hit_bp = reader.opt_int("min_bp_of_max_hp", 0, 0, FixedMath.BP_ONE)
 		Trigger.ON_ENEMY_FELL:
@@ -1201,6 +1266,11 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 		Trigger.ON_ALLY_HIT:
 			if reader.has("by"):
 				def.by = UnitCondition.read(reader.req_object("by"))
+			# Phase 8 part 6 (Ilse's Blessing): a stacking status on the ally
+			# that hit; it runs only while that ally holds a stack, and spends
+			# one (its next N basic attacks).
+			if def.type != Type.SHARDS:
+				def.spends = reader.opt_string("spends", "")
 		Trigger.ON_KILL:
 			def.from_signature = reader.opt_bool("from_signature", false)
 			def.off_target = reader.opt_bool("off_target", false)
