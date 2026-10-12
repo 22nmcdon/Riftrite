@@ -97,6 +97,36 @@ static func mod_parts(mod: KitMod, kit: UnitDef, content: ContentDb) -> Array[St
 		parts.append("Signature also fires: %s%s" % [when.left(1).to_lower(), when.substr(1)])
 	if mod.echo_ticks > 0:
 		parts.append("Signature fires again %s later at %s" % [UnitInfo.seconds(mod.echo_ticks), ValueBreakdown._percent(mod.echo_bp)])
+	for companion_change: KitMod.CompanionChange in mod.companion_changes:
+		parts.append_array(_companion_parts(companion_change, shown, content))
+	return parts
+
+
+## A change to a hero's companions (phase 8 part 6, Kestra): "Grit: +15% of
+## her max HP", then its own kit mod's numbers, each named for the companion.
+static func _companion_parts(change: KitMod.CompanionChange, kit: UnitDef, content: ContentDb) -> Array[String]:
+	var name: String = "Her companions"
+	var companion_kit: UnitDef = null
+	for companion: CompanionDef in kit.companions:
+		if change.matches(companion):
+			companion_kit = companion.kit
+			if not change.kit_id.is_empty():
+				name = companion.kit.name
+			break
+	var parts: Array[String] = []
+	if companion_kit == null and not kit.companions.is_empty():
+		return parts  # none of its companions on this kit
+	if companion_kit == null and not change.kit_id.is_empty():
+		name = change.kit_id.capitalize()
+	if change.hp_add_bp != 0:
+		parts.append("%s: %s of her max HP" % [name, UnitInfo.signed_percent(change.hp_add_bp)])
+	if change.atk_add_bp != 0:
+		parts.append("%s: %s of her ATK" % [name, UnitInfo.signed_percent(change.atk_add_bp)])
+	if change.return_add_ticks != 0:
+		parts.append("%s: returns %s %s" % [name, UnitInfo.seconds(absi(change.return_add_ticks)), "sooner" if change.return_add_ticks < 0 else "later"])
+	if change.mod != null:
+		for part: String in mod_parts(change.mod, companion_kit, content):
+			parts.append("%s: %s" % [name, part])
 	return parts
 
 
@@ -132,7 +162,11 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 		bits.append("+%d hex wider" % change.width_add)
 	if change.value_add != 0:
 		var aura: AuraDef = KitMod._slot_aura(kit, change.slot) if kit != null else null
-		bits.append("%s %s" % [UnitInfo.signed_percent(change.value_add), AuraDef.STAT_LABELS[aura.stat]] if aura != null else signed(change.value_add))
+		if aura != null and (aura.stat == AuraDef.Stat.ATSP or aura.stat == AuraDef.Stat.RANGE or aura.stat == AuraDef.Stat.DEF):
+			# Points, not a share (phase 8 part 6, Strong Bond's attack speed).
+			bits.append("%s %s" % [signed(change.value_add), AuraDef.STAT_LABELS[aura.stat]])
+		else:
+			bits.append("%s %s" % [UnitInfo.signed_percent(change.value_add), AuraDef.STAT_LABELS[aura.stat]] if aura != null else signed(change.value_add))
 	if change.guard_share_add != 0:
 		bits.append("%s%% of each hit" % signed(change.guard_share_add / 100))
 	if change.guard_within_add != 0:
@@ -228,7 +262,7 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 	if bits.is_empty():
 		return ""
 	if not change.ability_id.is_empty():
-		return "%s: %s" % [change.ability_id.replace("_", " ").capitalize(), ", ".join(bits)]
+		return "%s: %s" % [_ability_name(kit, change.ability_id), ", ".join(bits)]
 	return "%s: %s" % [_slot_name(change.slot), ", ".join(bits)]
 
 
@@ -252,6 +286,19 @@ static func _hexes_text(units: int) -> String:
 	@warning_ignore("integer_division")
 	var tenths: int = (units % HexGrid.HEX) / 100
 	return "%d" % whole if tenths == 0 else "%d.%d" % [whole, tenths]
+
+
+## The name of the kit's ability or passive `ability_id` ("Sic 'Em"), or the
+## id made readable if the kit hasn't one.
+static func _ability_name(kit: UnitDef, ability_id: String) -> String:
+	if kit != null:
+		for ability: AbilityDef in [kit.basic_attack, kit.signature]:
+			if ability != null and ability.id == ability_id:
+				return ability.name
+		for part: PartDef in kit.passives:
+			if part.id == ability_id:
+				return part.name
+	return ability_id.replace("_", " ").capitalize()
 
 
 static func _slot_name(slot: String) -> String:
@@ -428,6 +475,7 @@ static func step_text(mod: KitMod, kit: UnitDef, content: ContentDb) -> String:
 	bare.stats_add = mod.stats_add
 	bare.changes = mod.changes
 	bare.shard_cap_add = mod.shard_cap_add
+	bare.companion_changes = mod.companion_changes
 	var parts: Array[String] = mod_parts(bare, kit, content)
 	for part: PartDef in mod.passives:
 		if part.kind == PartDef.Kind.AURA:
@@ -467,6 +515,8 @@ static func counted(counts: DeedDef, per: int) -> String:
 			return "%s of statuses made to last longer" % amount
 		DeedDef.Counts.MANA_GIVEN:
 			return "%s mana given to allies" % amount
+		DeedDef.Counts.SUMMONED:
+			return "%s summons brought onto the field" % amount
 		DeedDef.Counts.MAX_HP_GAINED:
 			return "%s max HP gained%s" % [amount, "" if counts.from_ability.is_empty() else " by " + ", ".join(counts.from_ability).replace("_", " ")]
 		DeedDef.Counts.HP_SPENT:

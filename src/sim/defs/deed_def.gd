@@ -108,10 +108,10 @@ extends RefCounted
 ## three fights' worth of what a vowed hero puts in); the sim never reads it.
 ## Adding a kind or a filter is a code change.
 
-enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING, HITS, SHARED, BLOCKED, PULLED, EXTENDED_MS, MANA_GIVEN, MANA_OVERFLOW, ALLY_CASTS, MAX_HP_GAINED, HP_SPENT, LIFESTEAL, TITHE, TITHE_FLAWLESS, BONUS_DAMAGE, SHARDS, TRANSMUTED }
+enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING, HITS, SHARED, BLOCKED, PULLED, EXTENDED_MS, MANA_GIVEN, MANA_OVERFLOW, ALLY_CASTS, MAX_HP_GAINED, HP_SPENT, LIFESTEAL, TITHE, TITHE_FLAWLESS, BONUS_DAMAGE, SHARDS, TRANSMUTED, SUMMONED }
 
-const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing", "hits", "shared", "blocked", "pulled", "extended_ms", "mana_given", "mana_overflow", "ally_casts", "max_hp_gained", "hp_spent", "lifesteal", "tithe", "tithe_flawless", "bonus_damage", "shards", "transmuted"]
-const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill", "casts", "ms standing", "enemies hit", "damage shared", "attacks blocked", "enemies pulled", "ms extended", "mana given", "mana past full", "ally signatures near", "max HP gained", "HP spent", "healed by lifesteal", "shards from Tithe", "shards from flawless fights", "extra damage", "shards", "items transmuted"]
+const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing", "hits", "shared", "blocked", "pulled", "extended_ms", "mana_given", "mana_overflow", "ally_casts", "max_hp_gained", "hp_spent", "lifesteal", "tithe", "tithe_flawless", "bonus_damage", "shards", "transmuted", "summoned"]
+const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill", "casts", "ms standing", "enemies hit", "damage shared", "attacks blocked", "enemies pulled", "ms extended", "mana given", "mana past full", "ally signatures near", "max HP gained", "HP spent", "healed by lifesteal", "shards from Tithe", "shards from flawless fights", "extra damage", "shards", "items transmuted", "summons joined"]
 ## The kinds read from where the hero is the target, or from the tick, not
 ## from what the hero does.
 const NOT_ITS_OWN: Array[Counts] = [Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING, Counts.BLOCKED,
@@ -307,6 +307,11 @@ func counts_kind(kind: LogEntry.Kind, ability_id: String) -> bool:
 				return false
 		Counts.SHARDS:
 			if kind != LogEntry.Kind.SHARDS:
+				return false
+		Counts.SUMMONED:
+			# Each summon the unit (or its companion) brings onto the field,
+			# a companion returning too (phase 8 part 6, Pack Lore).
+			if kind != LogEntry.Kind.SUMMON:
 				return false
 		Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING, Counts.BLOCKED, Counts.MANA_OVERFLOW, Counts.ALLY_CASTS, \
 				Counts.TITHE, Counts.TITHE_FLAWLESS, Counts.TRANSMUTED:

@@ -9298,5 +9298,768 @@
         }
       ]
     }
+  },
+  {
+    "id": "hard_muscle",
+    "name": "Hard Muscle",
+    "hero": "kestra",
+    "text": "Her ATK rises by a tenth of what it is when you take this, for good (and Grit's with it). Can be taken again.",
+    "stacks": {
+      "stat": "atk",
+      "pct": 10
+    }
+  },
+  {
+    "id": "quick_spear",
+    "name": "Quick Spear",
+    "hero": "kestra",
+    "text": "She attacks faster by a tenth of her attack speed when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "atsp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "hide_armor",
+    "name": "Hide Armor",
+    "hero": "kestra",
+    "text": "Her max HP rises by a tenth of what it is when you take this, for good (and Grit's with it). Can be taken again.",
+    "stacks": {
+      "stat": "hp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "hunters_eye",
+    "name": "Hunter's Eye",
+    "hero": "kestra",
+    "text": "Her crit chance rises by a quarter of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "crit",
+      "pct": 25
+    }
+  },
+  {
+    "id": "big_grit",
+    "name": "Big Grit",
+    "hero": "kestra",
+    "text": "Grit has more of her max HP.",
+    "mod": {
+      "companions": [
+        {
+          "kit": "grit",
+          "hp_add_pct": 15
+        }
+      ]
+    }
+  },
+  {
+    "id": "fierce_grit",
+    "name": "Fierce Grit",
+    "hero": "kestra",
+    "text": "Grit has more of her ATK.",
+    "mod": {
+      "companions": [
+        {
+          "kit": "grit",
+          "atk_add_pct": 15
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_return",
+    "name": "Quick Return",
+    "hero": "kestra",
+    "text": "Grit returns sooner after falling.",
+    "mod": {
+      "companions": [
+        {
+          "kit": "grit",
+          "return_add_ms": -4000
+        }
+      ]
+    }
+  },
+  {
+    "id": "hard_bite",
+    "name": "Hard Bite",
+    "hero": "kestra",
+    "text": "Sic 'Em bites harder (once it's a habit, too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "sic_em",
+          "types": [
+            "damage"
+          ],
+          "amount_bp": 12500
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_sic",
+    "name": "Quick Sic",
+    "hero": "kestra",
+    "text": "Sic 'Em costs less mana (once it's a habit, it comes sooner).",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "sic_em",
+          "mana_max_add": -10
+        }
+      ]
+    }
+  },
+  {
+    "id": "strong_bond",
+    "name": "Strong Bond",
+    "hero": "kestra",
+    "text": "Bond makes her and her companions attack faster still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:bond",
+          "value_add": 5
+        }
+      ],
+      "companions": [
+        {
+          "kit": "grit",
+          "mod": {
+            "on": [
+              {
+                "slot": "passive:bond",
+                "value_add": 5
+              }
+            ]
+          }
+        },
+        {
+          "kit": "brindle",
+          "mod": {
+            "on": [
+              {
+                "slot": "passive:bond",
+                "value_add": 5
+              }
+            ]
+          }
+        },
+        {
+          "kit": "viper",
+          "mod": {
+            "on": [
+              {
+                "slot": "passive:bond",
+                "value_add": 5
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "guard_dog",
+    "name": "Guard Dog",
+    "hero": "kestra",
+    "text": "Grit goes after the enemies attacking her first.",
+    "mod": {
+      "companions": [
+        {
+          "kit": "grit",
+          "mod": {
+            "prefer": {
+              "label": "Guard Dog",
+              "vs": {
+                "targets_owner": true
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "old_leash",
+    "name": "Old Leash",
+    "hero": "kestra",
+    "text": "An old leash, well worn: Grit takes more of her ATK with every 10 kills he makes, for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "kills",
+        "from_ability": [
+          "bite"
+        ]
+      },
+      "per": 10,
+      "each": {
+        "companions": [
+          {
+            "kit": "grit",
+            "atk_add_pct": 1
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "hot_fangs",
+    "name": "Hot Fangs",
+    "path": "cinderhound",
+    "taste": true,
+    "text": "Grit's bites set more Burn (once he's ember-wreathed, too).",
+    "mod": {
+      "companions": [
+        {
+          "kit": "grit",
+          "mod": {
+            "on": [
+              {
+                "slot": "basic_attack",
+                "statuses": [
+                  "burn"
+                ],
+                "amount_bp": 12500
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "transformed_mod": {
+      "companions": [
+        {
+          "kit": "grit",
+          "mod": {
+            "on": [
+              {
+                "slot": "basic_attack",
+                "statuses": [
+                  "burn"
+                ],
+                "amount_bp": 12500
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "ashen_coat",
+    "name": "Ashen Coat",
+    "path": "cinderhound",
+    "taste": true,
+    "text": "Grit shrugs off a tenth of each hit from a Burning enemy.",
+    "mod": {
+      "companions": [
+        {
+          "kit": "grit",
+          "mod": {
+            "passives": [
+              {
+                "id": "ashen_coat",
+                "name": "Ashen Coat",
+                "kind": "ability",
+                "text": "Grit shrugs off a tenth of each hit from a Burning enemy.",
+                "effects": [
+                  {
+                    "trigger": "on_hit_taken",
+                    "vs": {
+                      "statuses": [
+                        "burn"
+                      ]
+                    },
+                    "type": "heal",
+                    "amount_bp_of_damage": 1000,
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "transformed_mod": {
+      "companions": [
+        {
+          "kit": "grit",
+          "mod": {
+            "passives": [
+              {
+                "id": "ashen_coat",
+                "name": "Ashen Coat",
+                "kind": "ability",
+                "text": "Grit shrugs off a tenth of each hit from a Burning enemy.",
+                "effects": [
+                  {
+                    "trigger": "on_hit_taken",
+                    "vs": {
+                      "statuses": [
+                        "burn"
+                      ]
+                    },
+                    "type": "heal",
+                    "amount_bp_of_damage": 1000,
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "sharp_jab",
+    "name": "Sharp Jab",
+    "path": "serpent_keeper",
+    "taste": true,
+    "text": "Venomed Jab Poisons every 2nd Spear Jab, not every 3rd (once transformed, her jabs' Poison is stronger).",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "every_add": -1
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "statuses": [
+            "poison"
+          ],
+          "amount_bp": 12500
+        }
+      ]
+    }
+  },
+  {
+    "id": "thick_venom",
+    "name": "Thick Venom",
+    "path": "serpent_keeper",
+    "taste": true,
+    "text": "Venomed Jab's Poison is stronger (once transformed, every jab's).",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "statuses": [
+            "poison"
+          ],
+          "amount_bp": 13334
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "statuses": [
+            "poison"
+          ],
+          "amount_bp": 13334
+        }
+      ]
+    }
+  },
+  {
+    "id": "strong_call",
+    "name": "Strong Call",
+    "path": "packleader",
+    "taste": true,
+    "text": "Pack Call gives more for each summon (once transformed, to every summon).",
+    "mod": {
+      "companions": [
+        {
+          "kit": "grit",
+          "mod": {
+            "on": [
+              {
+                "slot": "passive:pack_call",
+                "value_add": 100
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:pack_call",
+          "value_add": 100
+        }
+      ]
+    }
+  },
+  {
+    "id": "loyal_hound",
+    "name": "Loyal Hound",
+    "path": "packleader",
+    "taste": true,
+    "text": "Grit returns sooner after falling (once transformed, both hounds).",
+    "mod": {
+      "companions": [
+        {
+          "kit": "grit",
+          "return_add_ms": -5000
+        }
+      ]
+    },
+    "transformed_mod": {
+      "companions": [
+        {
+          "return_add_ms": -5000
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_pounce",
+    "name": "Long Pounce",
+    "path": "cinderhound",
+    "text": "Firebrand Pounce's burst reaches 1 hex farther.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "radius_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_pounce",
+    "name": "Quick Pounce",
+    "path": "cinderhound",
+    "text": "Firebrand Pounce costs less mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "firebrand_pounce",
+          "mana_max_add": -10
+        }
+      ]
+    }
+  },
+  {
+    "id": "searing_bite",
+    "name": "Searing Bite",
+    "path": "cinderhound",
+    "text": "Grit deals more damage to Burning enemies.",
+    "mod": {
+      "companions": [
+        {
+          "kit": "grit",
+          "mod": {
+            "passives": [
+              {
+                "id": "searing_bite",
+                "name": "Searing Bite",
+                "kind": "aura",
+                "text": "His bites hit Burning enemies harder.",
+                "aura": {
+                  "target": "holder",
+                  "stat": "damage_bp",
+                  "value": 11500,
+                  "vs": {
+                    "statuses": [
+                      "burn"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "fire_retort",
+    "name": "Fire Retort",
+    "path": "cinderhound",
+    "text": "Enemies that hit Grit catch more Burn.",
+    "mod": {
+      "companions": [
+        {
+          "kit": "grit",
+          "mod": {
+            "on": [
+              {
+                "slot": "passive:ember_coat",
+                "amount_bp": 15000
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "kindled_hound",
+    "name": "Kindled Hound",
+    "path": "cinderhound",
+    "text": "The hound burns hotter: Grit's bites set more Burn with all the Burn they have set, for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "applied",
+        "statuses": [
+          "burn"
+        ],
+        "from_ability": [
+          "bite"
+        ],
+        "by_stacks": true
+      },
+      "per": 500,
+      "each": {
+        "companions": [
+          {
+            "kit": "grit",
+            "mod": {
+              "on": [
+                {
+                  "slot": "basic_attack",
+                  "statuses": [
+                    "burn"
+                  ],
+                  "amount_bp": 10100
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "long_nest",
+    "name": "Long Nest",
+    "path": "serpent_keeper",
+    "text": "Nest's nestlings stay longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "duration_add_ms": 3000
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_nest",
+    "name": "Quick Nest",
+    "path": "serpent_keeper",
+    "text": "Nest costs less mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "nest",
+          "mana_max_add": -10
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_spit",
+    "name": "Long Spit",
+    "path": "serpent_keeper",
+    "text": "Her viper spits from 1 hex farther.",
+    "mod": {
+      "companions": [
+        {
+          "kit": "viper",
+          "mod": {
+            "stats_add": {
+              "range": 1
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "numbing_venom",
+    "name": "Numbing Venom",
+    "path": "serpent_keeper",
+    "text": "Her Spear Jab Slows a Poisoned enemy for a moment.",
+    "mod": {
+      "passives": [
+        {
+          "id": "numbing_venom",
+          "name": "Numbing Venom",
+          "kind": "ability",
+          "text": "Her Spear Jab Slows a Poisoned enemy for a moment.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "spear_jab"
+              ],
+              "vs": {
+                "statuses": [
+                  "poison"
+                ]
+              },
+              "type": "apply_status",
+              "status": "numbed",
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "serpent_lore",
+    "name": "Serpent Lore",
+    "path": "serpent_keeper",
+    "text": "She learns the viper's ways: its spit sets more Poison with all the Poison it has set, for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "applied",
+        "statuses": [
+          "poison"
+        ],
+        "from_ability": [
+          "spit"
+        ],
+        "by_stacks": true
+      },
+      "per": 500,
+      "each": {
+        "companions": [
+          {
+            "kit": "viper",
+            "mod": {
+              "on": [
+                {
+                  "slot": "basic_attack",
+                  "statuses": [
+                    "poison"
+                  ],
+                  "amount_bp": 10100
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "lasting_howl",
+    "name": "Lasting Howl",
+    "path": "packleader",
+    "text": "Howl's boost lasts longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "statuses": [
+            "howl"
+          ],
+          "duration_add_ms": 2000
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_howl",
+    "name": "Quick Howl",
+    "path": "packleader",
+    "text": "Howl costs less mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "howl",
+          "mana_max_add": -15
+        }
+      ]
+    }
+  },
+  {
+    "id": "pack_tactics",
+    "name": "Pack Tactics",
+    "path": "packleader",
+    "text": "Allied summons deal more damage to an enemy two or more of them are attacking.",
+    "mod": {
+      "passives": [
+        {
+          "id": "pack_tactics",
+          "name": "Pack Tactics",
+          "kind": "aura",
+          "text": "Allied summons hit harder an enemy two or more of them are attacking.",
+          "aura": {
+            "target": "all_allies",
+            "only": {
+              "summon": true
+            },
+            "stat": "damage_bp",
+            "value": 11000,
+            "vs": {
+              "chased_by_summons": 2
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "thick_hides",
+    "name": "Thick Hides",
+    "path": "packleader",
+    "text": "Allied summons have more max HP.",
+    "mod": {
+      "passives": [
+        {
+          "id": "thick_hides",
+          "name": "Thick Hides",
+          "kind": "aura",
+          "text": "Allied summons have more max HP.",
+          "aura": {
+            "target": "all_allies",
+            "only": {
+              "summon": true
+            },
+            "stat": "max_hp_bp",
+            "value": 11500
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "pack_lore",
+    "name": "Pack Lore",
+    "path": "packleader",
+    "text": "The pack learns: her hounds take more of her ATK with every 20 summons she brings onto the field, for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "summoned"
+      },
+      "per": 20,
+      "each": {
+        "companions": [
+          {
+            "atk_add_pct": 1
+          }
+        ]
+      }
+    }
   }
 ]

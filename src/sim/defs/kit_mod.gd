@@ -31,7 +31,8 @@ extends RefCounted
 ##                                        knockback's or pull's hexes, when
 ##                                        "types" names it; phase 5c step 7)
 ##       "duration_bp": 13000,            their durations (a status's, a lasting
-##       "duration_add_ms": 2000,         area's, a wall's), times this, plus this
+##       "duration_add_ms": 2000,         area's, a wall's, a summon's lasts_ms),
+##                                        times this, plus this
 ##       "radius_add": 1,                 their areas' size, in hexes
 ##       "cooldown_bp": 9000,             the ability's cooldown, times this
 ##                                        (and, phase 8 part 5, an on_interval
@@ -1044,6 +1045,9 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 				copy.duration_ticks = maxi(FixedMath.apply_bp(copy.duration_ticks, change.duration_bp) + change.duration_add_ticks, 1)
 			if copy.zone_ticks > 0:
 				copy.zone_ticks = maxi(FixedMath.apply_bp(copy.zone_ticks, change.duration_bp) + change.duration_add_ticks, 1)
+			if copy.lasts_ticks > 0:
+				# A summon's lifetime too (phase 8 part 6, Long Nest).
+				copy.lasts_ticks = maxi(FixedMath.apply_bp(copy.lasts_ticks, change.duration_bp) + change.duration_add_ticks, 1)
 			if copy.shape != null and change.radius_add != 0:
 				copy.shape = DefCopy.shallow(copy.shape) as ShapeDef
 				copy.shape.size = maxi(copy.shape.size + change.radius_add, 1)
@@ -1175,7 +1179,7 @@ static func _any_effect(effects: Array[EffectDef], change: AbilityChange) -> boo
 				or change.prefer != null and (effect.target == EffectDef.Target.FARTHEST_ENEMIES or effect.target == EffectDef.Target.LOWEST_HP_ALLY)):
 			return true
 		if change.touches(effect) and (change.amount_bp != FixedMath.BP_ONE and (effect.amount != 0 or effect.amount_bp_of_damage != 0 or effect.scaling.any(func(value: int) -> bool: return value != 0) or effect.amount_bp_of_max_hp != 0 or change.moves(effect))
-				or (change.duration_bp != FixedMath.BP_ONE or change.duration_add_ticks != 0) and (effect.duration_ticks > 0 or effect.zone_ticks > 0)
+				or (change.duration_bp != FixedMath.BP_ONE or change.duration_add_ticks != 0) and (effect.duration_ticks > 0 or effect.zone_ticks > 0 or effect.lasts_ticks > 0)
 				or change.radius_add != 0 and effect.shape != null):
 			return true
 		if _any_effect(effect.area_effects, change):

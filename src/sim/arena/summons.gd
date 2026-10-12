@@ -70,6 +70,8 @@ static func summon(sim: CombatSim, unit: UnitState, source: EffectSource, effect
 		if as_companion != null:
 			summoned.owner = unit
 			summoned.companion = as_companion
+			# What its hero's deed reads of its hits (Pack Call).
+			summoned.bonus_parts = unit.bonus_parts
 		if effect.lasts_ticks > 0:
 			summoned.expires_at = sim.tick + effect.lasts_ticks
 			sim.thralls = true

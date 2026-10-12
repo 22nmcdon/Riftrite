@@ -926,7 +926,12 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 		# its share of the hit's power bonus.
 		var part_bp: int = Passives.vs_bonus_bp(attacker, target, AuraDef.Stat.DAMAGE_BP, source.ability_id, attacker.bonus_parts)
 		if part_bp > 0:
-			entry.part_bonus = FixedMath.mul_div(dealt, part_bp, DamageRule.factor(power))
+			# Its share, with the fraction of a point carried to the next hit
+			# (phase 8 part 6: Pack Call's 3% of a small bite).
+			attacker.part_bonus_rest += FixedMath.mul_div(dealt * FixedMath.BP_ONE, part_bp, DamageRule.factor(power))
+			@warning_ignore("integer_division")
+			entry.part_bonus = attacker.part_bonus_rest / FixedMath.BP_ONE
+			attacker.part_bonus_rest %= FixedMath.BP_ONE
 	entry.crit = crit
 	var had_shield: bool = target.shield > 0
 	var hp_before: int = target.hp

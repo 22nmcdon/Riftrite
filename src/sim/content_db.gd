@@ -253,7 +253,7 @@ func _check_path(path: PathDef, where: String, grid: HexGrid) -> void:
 	_check_habit(hero.kit, path.transformed_kit, path.habit, "%s: transformed" % where)
 	var known: Array[String] = []
 	for kit: UnitDef in [hero.kit, path.vowed_kit, path.transformed_kit]:
-		known.append_array(kit.ability_ids())
+		known.append_array(kit.ability_ids_with_companions())
 	for ability_id: String in path.deed.from_ability:
 		if not known.has(ability_id):
 			errors.append("%s: the deed counts \"%s\", which isn't in %s's kits on this path" % [where, ability_id, path.hero])
@@ -291,7 +291,7 @@ func _check_apex(apex: ApexDef, path: PathDef, where: String, grid: HexGrid) -> 
 	_check_habit(path.transformed_kit, apex.apex_kit, "", "%s: apex" % where)
 	var known: Array[String] = []
 	for kit: UnitDef in [path.transformed_kit, apex.vowed_kit, apex.apex_kit]:
-		known.append_array(kit.ability_ids())
+		known.append_array(kit.ability_ids_with_companions())
 	for ability_id: String in apex.deed.from_ability:
 		if not known.has(ability_id):
 			errors.append("%s: the deed counts \"%s\", which isn't in its kits" % [where, ability_id])

@@ -57,7 +57,7 @@ func test_a_tactic_a_hero_cant_follow_does_nothing() -> void:
 func test_bad_items_are_refused() -> void:
 	var cases: Array = [
 		[{"id": "odd", "kind": "tactic", "name": "Odd", "icon": "braced", "text": "x", "tactic": "nothing"}, "unknown tactic \"nothing\""],
-		[{"id": "nobody", "kind": "charm", "name": "Nobody", "icon": "braced", "text": "x", "ranks": [{"stats_bp": {"hp": 11000}}, {"stats_bp": {"hp": 11000}}, {"on": [{"slot": "signature", "types": ["summon"], "duration_bp": 12000}]}]}, "rank III does nothing on any hero"],
+		[{"id": "nobody", "kind": "charm", "name": "Nobody", "icon": "braced", "text": "x", "ranks": [{"stats_bp": {"hp": 11000}}, {"stats_bp": {"hp": 11000}}, {"on": [{"slot": "signature", "types": ["flood"], "duration_bp": 12000}]}]}, "rank III does nothing on any hero"],
 		[{"id": "bare", "kind": "charm", "name": "Bare", "icon": "braced", "text": "x"}, "three ranks"],
 		[{"id": "two", "kind": "sigil", "name": "Two", "icon": "braced", "text": "x", "ranks": [{"stats_bp": {"hp": 11000}}, {"stats_bp": {"hp": 11000}}]}, "three ranks"],
 		[{"id": "blank", "kind": "charm", "name": "Blank", "icon": "no_such_glyph", "text": "x", "ranks": [{"stats_bp": {"hp": 11000}}, {"stats_bp": {"hp": 11000}}, {"stats_bp": {"hp": 11000}}]}, "no glyph \"no_such_glyph\""],

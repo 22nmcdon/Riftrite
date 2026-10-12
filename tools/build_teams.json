@@ -344,6 +344,52 @@
       ],
       "swap": "base",
       "note": "the Tonic and Hymn bond's team; lift against Ottilie on base, since she has no self-sufficient path (rebuild-phase8-heroes.md Decision 17)"
+    },
+    {
+      "name": "Ember Hound",
+      "path": "cinderhound",
+      "type": "self-sufficient",
+      "team": {
+        "ilse": "furnace",
+        "aldous": "windcaller",
+        "kestra": "cinderhound"
+      },
+      "relics": [
+        "ashen_engine",
+        "ashen_censer",
+        "quickened_pulse"
+      ],
+      "note": "test-teams.md #4 (Furnace), judged for Kestra"
+    },
+    {
+      "name": "Venom",
+      "path": "serpent_keeper",
+      "type": "self-sufficient",
+      "team": {
+        "severine": "plaguebearer",
+        "kestra": "serpent_keeper",
+        "edric": "aegis"
+      },
+      "relics": [
+        "leech_tooth",
+        "red_thirst"
+      ],
+      "note": "test-teams.md #6"
+    },
+    {
+      "name": "Host",
+      "path": "packleader",
+      "type": "engine",
+      "team": {
+        "kestra": "packleader",
+        "severine": "plaguebearer",
+        "brannoc": "hearthwall"
+      },
+      "relics": [
+        "quickened_pulse",
+        "stormcallers_bell"
+      ],
+      "note": "test-teams.md #13; Brannoc's Hearthwall stands in for Lucan's Puppeteer (not built yet), and no relic reaches summons yet"
     }
   ]
 }

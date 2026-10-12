@@ -158,6 +158,9 @@ var arrivals: bool = false
 ## Some condition asks for the front-most unit (phase 5c step 7c, Front
 ## Ward): UnitState.front_most is kept each tick.
 var track_front: bool = false
+## Some kit asks how many summons target a unit (phase 8 part 6, Pack
+## Tactics): mark_chasers runs each tick.
+var track_chasers: bool = false
 var swaps: bool = false
 ## The last hit dealt missed (Sidestep; phase 5c step 6b), so its on_hit
 ## effects don't run.
@@ -310,6 +313,8 @@ func place_companions() -> void:
 			var unit: UnitState = UnitState.make_summon(Summons.companion(companion, owner), owner.side, next_unit_id(companion.kit.id), units.size(), tuning.unit_radius)
 			unit.owner = owner
 			unit.companion = companion
+			# What her deed reads of its hits (Pack Call's bonus_damage).
+			unit.bonus_parts = owner.bonus_parts
 			var spot: Vector2i = Summons.beside(self, owner, unit)
 			if spot.x < 0:
 				continue
@@ -430,6 +435,9 @@ func units_joined() -> void:
 	track_front = track_front or units.any(func(unit: UnitState) -> bool: return unit.def.uses_front_most())
 	if track_front:
 		mark_front()
+	track_chasers = track_chasers or units.any(func(unit: UnitState) -> bool: return unit.def.uses_chasers())
+	if track_chasers:
+		mark_chasers()
 	_aura_ticks = Passives.aura_boundaries(self)
 	taunt_auras = false
 	for unit: UnitState in units:
@@ -462,6 +470,16 @@ func mark_front() -> void:
 		var front: UnitState = front_of(side)
 		if front != null:
 			front.front_most = true
+
+
+## Counts, for every unit, the standing summons of the other side that
+## target it (phase 8 part 6, Pack Tactics).
+func mark_chasers() -> void:
+	for unit: UnitState in units:
+		unit.chased_by_summons = 0
+	for unit: UnitState in units:
+		if unit.alive and unit.summoned and unit.target != null and unit.target.alive and unit.target.side != unit.side:
+			unit.target.chased_by_summons += 1
 
 
 ## `side`'s front-most standing unit (see mark_front), or null.
@@ -516,6 +534,8 @@ func step() -> void:
 	tick += 1
 	if track_front:
 		mark_front()
+	if track_chasers:
+		mark_chasers()
 	if has_water:
 		if not water.layers.is_empty():
 			water.tick(self)

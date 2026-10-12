@@ -241,3 +241,99 @@ func test_a_companion_fallen_into_the_void_is_heard_and_stays_down() -> void:
 	assert_eq(owner.signature.pending, 0, "it's no fallen ally")
 	K.step(fight, 40)
 	assert_false(pet.alive, "nothing comes back from the void")
+
+
+func test_targets_owner_holds_on_enemies_at_its_hero() -> void:
+	var fight: CombatSim = K.sim(K.fight([K.at(_keeper([_companion(_pet())]), 3, 1)] as Array[UnitSetup], [K.foe(_dummy("mark"), 3, 5), K.foe(_dummy("other"), 0, 6)] as Array[UnitSetup]))
+	var errors: Array[String] = []
+	var guard: UnitCondition = UnitCondition.read(DataReader.new({"targets_owner": true}, "condition", errors))
+	assert_eq(errors, [] as Array[String])
+	var pet: UnitState = fight.unit_by_id("pup")
+	var mark: UnitState = fight.unit_by_id("mark")
+	mark.target = fight.unit_by_id("keeper")
+	fight.unit_by_id("other").target = pet
+	assert_true(guard.holds(mark, pet), "it's after the pup's hero")
+	assert_false(guard.holds(fight.unit_by_id("other"), pet), "not this one")
+	assert_false(guard.holds(mark, fight.unit_by_id("keeper")), "the hero is nobody's companion")
+	assert_eq(guard.describe(), "targeting its hero")
+
+
+func test_chased_by_summons_counts_the_summons_on_it() -> void:
+	var pack: Array = [{"id": "pack", "name": "Pack", "kind": "aura", "aura": {"target": "all_allies", "only": {"summon": true}, "stat": "damage_bp", "value": 15000,
+		"vs": {"chased_by_summons": 2}}}]
+	var kit: UnitDef = _keeper([_companion(_pet()), _companion(_pet("cub"))], {"passives": pack})
+	var fight: CombatSim = K.sim(K.fight([K.at(kit, 3, 1)] as Array[UnitSetup], [K.foe(_dummy("mark"), 3, 5), K.foe(_dummy("other"), 0, 6)] as Array[UnitSetup]))
+	assert_true(fight.track_chasers, "a kit asks")
+	var mark: UnitState = fight.unit_by_id("mark")
+	var pup: UnitState = fight.unit_by_id("pup")
+	var cub: UnitState = fight.unit_by_id("cub")
+	pup.target = mark
+	cub.target = fight.unit_by_id("other")
+	fight.unit_by_id("keeper").target = mark
+	fight.mark_chasers()
+	assert_eq(mark.chased_by_summons, 1, "the hero doesn't count")
+	assert_eq(Passives.vs_bonus_bp(pup, mark), 0, "one summon on it")
+	cub.target = mark
+	fight.mark_chasers()
+	assert_eq(mark.chased_by_summons, 2)
+	assert_eq(Passives.vs_bonus_bp(pup, mark), 5000, "two: the pack hits harder")
+	var errors: Array[String] = []
+	assert_eq(UnitCondition.read(DataReader.new({"chased_by_summons": 2}, "condition", errors)).describe(), "attacked by 2 or more summons")
+	var plain: CombatSim = K.sim(K.fight([K.at(_keeper([_companion(_pet())]), 3, 1)] as Array[UnitSetup], [K.foe(_dummy("mark"), 3, 5)] as Array[UnitSetup]))
+	assert_false(plain.track_chasers, "no kit asks: no counting")
+
+
+func test_summoned_counts_the_summons_she_brings() -> void:
+	var nest: Dictionary = {"id": "nest", "name": "Nest", "trigger": {"kind": "mana"}, "targeting": "self",
+		"effects": [{"type": "summon", "kit": "cub", "count": 2, "placement": "adjacent", "lasts_ms": 1000}]}
+	var kit: UnitDef = _keeper([_companion(_pet(), 1000), _companion(_pet("cub"), 0, false)], {"mana": {"max": 50, "per_attack": 0}, "signature": nest})
+	var setup: UnitSetup = K.at(kit, 3, 1)
+	var errors: Array[String] = []
+	setup.tally_keys.append("joined")
+	setup.tally_counts.append(DeedDef.read(DataReader.new({"text": "x", "counts": "summoned"}, "count", errors)))
+	assert_eq(errors, [] as Array[String])
+	var fight: CombatSim = K.sim(K.fight([setup] as Array[UnitSetup], [K.foe(_dummy("mark"), 3, 5)] as Array[UnitSetup]))
+	fight.unit_by_id("keeper").mana = 50 * Mana.SCALE
+	K.step(fight, 2)
+	fight.unit_by_id("pup").hp = 0
+	K.step(fight, 22)
+	assert_eq(CombatSim.result_of(fight).tally_amount("keeper", "joined"), 4, "the pup at the start, 2 cubs, and the pup's return")
+
+
+func test_a_small_hit_carries_its_bonus_over() -> void:
+	var call: Array = [{"id": "call", "name": "Call", "kind": "aura", "aura": {"target": "holder", "stat": "damage_bp", "value": 10300, "from_basic": true}}]
+	var setup: UnitSetup = K.at(_keeper([_companion(_pet("pup", {"passives": call, "stats": {"hp": 1, "atk": 1, "speed": 2, "range": 1}}))]), 3, 2)
+	var errors: Array[String] = []
+	setup.tally_keys.append("called")
+	setup.tally_counts.append(DeedDef.read(DataReader.new({"text": "x", "counts": "bonus_damage", "from_part": ["call"]}, "count", errors)))
+	assert_eq(errors, [] as Array[String])
+	var fight: CombatSim = K.sim(K.fight([setup] as Array[UnitSetup], [K.foe(_dummy("mark", 50000), 3, 4)] as Array[UnitSetup]))
+	assert_eq(fight.unit_by_id("pup").bonus_parts, ["call"] as Array[String], "the pup's hits read for her")
+	K.step(fight, 20 * 20)
+	var bites: Array[LogEntry] = K.entries(fight, LogEntry.Kind.DAMAGE, "pup")
+	var dealt: int = bites.reduce(func(total: int, entry: LogEntry) -> int: return total + entry.amount, 0)
+	assert_gt(bites.size(), 10)
+	assert_lt(bites[0].amount * 300 / 10300, 1, "3% of one bite is short of a point")
+	assert_almost_eq(CombatSim.result_of(fight).tally_amount("keeper", "called"), dealt * 300 / 10300, 1, "but the bites add up to their 3%")
+
+
+func test_a_companion_s_abilities_count_for_its_hero_s_deeds() -> void:
+	var kit: UnitDef = _keeper([_companion(_pet())])
+	assert_eq(kit.ability_ids(), ["keeper_attack"] as Array[String])
+	assert_true(kit.ability_ids_with_companions().has("pup_bite"))
+	assert_false(kit.ability_ids().has("pup_bite"), "its own are its own")
+
+
+func test_a_summoned_companion_reads_its_hits_for_her_too() -> void:
+	var nest: Dictionary = {"id": "nest", "name": "Nest", "trigger": {"kind": "mana"}, "targeting": "self",
+		"effects": [{"type": "summon", "kit": "cub", "count": 1, "placement": "adjacent", "lasts_ms": 1000}]}
+	var setup: UnitSetup = K.at(_keeper([_companion(_pet("cub"), 0, false)], {"mana": {"max": 50, "per_attack": 0}, "signature": nest}), 3, 1)
+	var errors: Array[String] = []
+	setup.tally_keys.append("called")
+	setup.tally_counts.append(DeedDef.read(DataReader.new({"text": "x", "counts": "bonus_damage", "from_part": ["call"]}, "count", errors)))
+	var fight: CombatSim = K.sim(K.fight([setup] as Array[UnitSetup], [K.foe(_dummy("mark"), 3, 5)] as Array[UnitSetup]))
+	fight.unit_by_id("keeper").mana = 50 * Mana.SCALE
+	K.step(fight, 2)
+	var cub: UnitState = fight.unit_by_id("cub")
+	assert_not_null(cub)
+	assert_eq(cub.bonus_parts, ["call"] as Array[String])

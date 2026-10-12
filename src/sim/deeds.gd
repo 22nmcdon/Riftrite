@@ -114,7 +114,8 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 		if kind != LogEntry.Kind.DAMAGE and kind != LogEntry.Kind.HEAL and kind != LogEntry.Kind.SHIELD and kind != LogEntry.Kind.SHOT \
 				and kind != LogEntry.Kind.FIRE and kind != LogEntry.Kind.STATUS_APPLIED and kind != LogEntry.Kind.GUARD and kind != LogEntry.Kind.SHARED \
 				and kind != LogEntry.Kind.PUSH and kind != LogEntry.Kind.STATUS_EXTENDED and kind != LogEntry.Kind.MANA_GIVEN \
-				and kind != LogEntry.Kind.MAX_HP_UP and kind != LogEntry.Kind.HP_SPENT and kind != LogEntry.Kind.LIFESTEAL and kind != LogEntry.Kind.SHARDS:
+				and kind != LogEntry.Kind.MAX_HP_UP and kind != LogEntry.Kind.HP_SPENT and kind != LogEntry.Kind.LIFESTEAL and kind != LogEntry.Kind.SHARDS \
+				and kind != LogEntry.Kind.SUMMON:
 			continue
 		var unit: UnitState = sim.unit_by_id(entry.source_unit)
 		if unit != null and unit.owner != null:
@@ -208,6 +209,8 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 					# The damage its passive's auras added (phase 8 part 6,
 					# Catalyst's Reaction): worked out as the hit landed.
 					counter.amounts[d] += entry.part_bonus
+				DeedDef.Counts.SUMMONED:
+					counter.amounts[d] += 1
 				DeedDef.Counts.SHARDS:
 					# Shards paid (phase 8 part 6): none past its cap.
 					if not entry.capped:

@@ -2974,5 +2974,148 @@
         }
       ]
     }
+  },
+  {
+    "id": "the_gilded_hound",
+    "name": "The Gilded Hound",
+    "tier": "bond",
+    "icon": "ember_heart",
+    "flavor": "Gilded Ash: the hound brings back gold.",
+    "text": "Grit's bites also Poison a little, so a Burning enemy he bites counts as both for Ottilie's Gilded Death, and Grit fetches 1 shard for each kill he makes.",
+    "mod_for": "kestra",
+    "mod": {
+      "companions": [
+        {
+          "kit": "grit",
+          "mod": {
+            "on": [
+              {
+                "slot": "basic_attack",
+                "add_effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "poison",
+                    "stacks": 1,
+                    "target": "target"
+                  }
+                ]
+              }
+            ],
+            "passives": [
+              {
+                "id": "gilded_fetch",
+                "name": "Gilded Fetch",
+                "kind": "ability",
+                "text": "Each kill he makes, he fetches a shard for the run.",
+                "effects": [
+                  {
+                    "trigger": "on_kill",
+                    "type": "shards",
+                    "amount": 1,
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "mother_of_serpents",
+    "name": "Mother of Serpents",
+    "tier": "bond",
+    "icon": "ember_heart",
+    "flavor": "Nest of Rot: her plague feeds Kestra's brood.",
+    "text": "Each Poisoned enemy Severine fells hatches a nestling beside Kestra for 6s (Nest's rules), and Severine's lifesteal is doubled against enemies a viper or nestling has bitten.",
+    "mod_for": "kestra",
+    "mod": {
+      "companions": [
+        {
+          "kit": "viper",
+          "mod": {
+            "on": [
+              {
+                "slot": "basic_attack",
+                "add_effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "viper_bitten",
+                    "target": "target"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "kit": "nestling",
+          "mod": {
+            "on": [
+              {
+                "slot": "basic_attack",
+                "add_effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "viper_bitten",
+                    "target": "target"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "passives": [
+        {
+          "id": "mother_of_serpents",
+          "name": "Mother of Serpents",
+          "kind": "ability",
+          "text": "Each Poisoned enemy Severine fells hatches a nestling beside her for a few seconds.",
+          "effects": [
+            {
+              "trigger": "on_enemy_fell",
+              "by": {
+                "kits": [
+                  "severine"
+                ]
+              },
+              "vs": {
+                "statuses": [
+                  "poison"
+                ]
+              },
+              "type": "summon",
+              "kit": "nestling",
+              "count": 1,
+              "placement": "adjacent",
+              "lasts_ms": 6000
+            }
+          ]
+        },
+        {
+          "id": "serpents_feast",
+          "name": "Mother of Serpents",
+          "kind": "aura",
+          "text": "Severine's lifesteal is doubled against enemies a viper or nestling has bitten.",
+          "aura": {
+            "target": "all_allies",
+            "only": {
+              "kits": [
+                "severine"
+              ]
+            },
+            "stat": "lifesteal_more_bp",
+            "value": 20000,
+            "vs": {
+              "statuses": [
+                "viper_bitten"
+              ]
+            }
+          }
+        }
+      ]
+    }
   }
 ]

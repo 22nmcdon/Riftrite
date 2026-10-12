@@ -1061,6 +1061,7 @@ def ottilie_apothecary(uid):
 FUR, FUR_DK = "#8a6a4a", "#5e4630"
 HIDE = "#6f5a3a"
 HAIR_ASH = "#4a3a30"
+VENOM_K = "#8fe05a"
 
 
 def kestra_head(hair=HAIR_ASH):
@@ -1134,6 +1135,89 @@ def grit_base(uid):
     """Grit, Kestra's rift-hound: a rangy brown hound in a leather collar, rift light along his back."""
     return _hound(uid, FUR, FUR_DK, GOLD, k=0.9)
 
+
+def kestra_cinderhound(uid):
+    """Ember-scarred hide, a smouldering mantle, sparks drifting off her spear's head."""
+    torso = "M118,196 L182,196 L188,338 L112,338 Z"
+    sparks = "".join(f'<circle cx="{x}" cy="{y}" r="3.5" fill="{EMBER}" opacity="0.85" filter="url(#glow)"/>' for x, y in
+                     ((246, 176), (262, 196), (230, 160), (90, 230), (210, 140)))
+    o = [shadow(74), kestra_legs("#5a4030"),
+         spear(84, 330, 236, 196, head="#e0703a", glow=EMBER),
+         limb((122, 208), (104, 286), 18, 14, "#5a4030"), circle(104, 290, 8, SKIN, 2),
+         P(torso, LEATHER_DK), P("M124,206 L176,206 L180,330 L120,330 Z", "#5a4030"),
+         P("M112,318 L188,318 L188,338 L112,338 Z", LEATHER_DK, 2),
+         P("M108,196 C118,182 182,182 192,196 L196,236 L184,226 L176,240 L164,226 L150,242 L136,226 L124,240 L116,226 L104,236 Z", "#7a3a22"),
+         rim("M106,234 L116,226 L124,240 L136,226 L150,242 L164,226 L176,240 L184,226 L196,236", color=EMBER, w=2.4),
+         shade(uid, [torso], cut=150), kestra_head(),
+         limb((178, 208), (196, 268), 18, 14, "#5a4030"), circle(198, 272, 8, SKIN, 2), sparks]
+    return "".join(o)
+
+
+def kestra_serpent_keeper(uid):
+    """Green-dyed hide and a scaled mantle, a coiled viper charm at her throat, venom on her spear."""
+    torso = "M118,196 L182,196 L188,338 L112,338 Z"
+    o = [shadow(74), kestra_legs("#3f5a3a"),
+         spear(84, 330, 236, 196, head="#7fae5a", glow=VENOM_K),
+         limb((122, 208), (104, 286), 18, 14, "#3f5a3a"), circle(104, 290, 8, SKIN, 2),
+         P(torso, "#4a5a36"), P("M124,206 L176,206 L180,330 L120,330 Z", "#3f5a3a"),
+         P("M112,318 L188,318 L188,338 L112,338 Z", LEATHER_DK, 2),
+         P("M108,196 C118,182 182,182 192,196 L196,236 C176,226 124,226 104,236 Z", "#2f4a2c"),
+         "".join(circle(x, 214, 4, "#5f7a4a", 1.2) for x in (120, 134, 150, 166, 180)),
+         shade(uid, [torso], cut=150), kestra_head(),
+         P("M144,204 C136,214 164,220 156,232 C150,240 142,236 146,230", "none", 3), circle(147, 229, 3, VENOM_K, 1.2),
+         limb((178, 208), (196, 268), 18, 14, "#3f5a3a"), circle(198, 272, 8, SKIN, 2),
+         rim("M182,212 L186,300", color=VENOM_K, w=2)]
+    return "".join(o)
+
+
+def kestra_packleader(uid):
+    """A wolf-pelt hood and a horn at her hip, her spear short-gripped for close work in the pack."""
+    torso = "M118,196 L182,196 L188,338 L112,338 Z"
+    o = [shadow(76), kestra_legs(),
+         spear(120, 300, 220, 230),
+         limb((122, 208), (126, 290), 18, 14, HIDE), circle(126, 294, 8, SKIN, 2),
+         P(torso, LEATHER), P("M124,206 L176,206 L180,330 L120,330 Z", HIDE),
+         P("M112,318 L188,318 L188,338 L112,338 Z", LEATHER_DK, 2),
+         P("M86,320 C80,300 96,290 110,300 L104,330 Z", BONE, 2),
+         P("M104,198 C112,176 188,176 196,198 L200,250 L186,236 L176,256 L164,236 L150,258 L136,236 L124,256 L114,236 L100,250 Z", "#6a6a6a"),
+         shade(uid, [torso], cut=150), kestra_head(),
+         P("M112,150 C110,96 190,96 188,150 C184,120 116,120 112,150 Z", "#6a6a6a"),
+         P("M118,112 L126,88 L138,108 Z", "#545454"), P("M182,112 L174,88 L162,108 Z", "#545454"),
+         limb((178, 208), (204, 250), 18, 14, HIDE), circle(206, 254, 8, SKIN, 2),
+         rim("M182,212 L186,300", color=GOLD, w=2)]
+    return "".join(o)
+
+
+def brindle_base(uid):
+    """Brindle, the pack's second hound: darker, striped, with a bone charm on its collar."""
+    stripes = "".join(f'<path d="M{x},388 l-6,30" stroke="#2c2018" stroke-width="5" stroke-linecap="round" opacity="0.7"/>' for x in (120, 142, 164, 186))
+    return _hound(uid, "#6a5038", "#3e2e20", GOLD, k=0.88) + f'<g transform="translate(150,500) scale(0.88) translate(-150,-500)">{stripes}</g>'
+
+
+def _viper_body(uid, coat, belly, s=1.0):
+    body = ("M60,470 C60,440 110,436 140,452 C170,468 200,470 214,448 C226,428 220,404 236,396 "
+            "C252,388 270,396 268,412 C266,428 248,430 240,420 C232,440 226,470 196,486 C160,502 110,498 80,494 C66,492 60,484 60,470 Z")
+    o = ['<ellipse cx="150" cy="500" rx="96" ry="10" fill="#2a2010" opacity="0.35"/>',
+         P(body, coat), shade(uid, [body], cut=160, top=380),
+         P("M80,484 C120,490 170,488 200,474", "none", 2.4).replace('stroke="#1a1024"', f'stroke="{belly}"'),
+         "".join(circle(x, y, 4, belly, 1) for x, y in ((100, 462), (128, 470), (156, 476), (184, 470))),
+         glow_dot(256, 404, 3, VENOM_K), f'<circle cx="256" cy="404" r="1.4" fill="#fffbe8"/>',
+         P("M266,414 L280,410 L284,416 L280,412 L268,418 Z", WINE, 1.4)]
+    svg = "".join(o)
+    if s != 1.0:
+        return f'<g transform="translate(150,500) scale({s}) translate(-150,-500)">{svg}</g>'
+    return svg
+
+
+def viper_base(uid):
+    """Her rift viper: long, banded green and black, venom glowing at its jaw."""
+    return _viper_body(uid, "#3f6a3a", "#c8d86a")
+
+
+def nestling_base(uid):
+    """A nestling of her viper's brood: small and pale, quick to bite."""
+    return _viper_body(uid, "#7a9a5a", "#e8eaa0", s=0.6)
+
 HEROES = [
     ("maren", "Maren", [("base", "Base", maren_base), ("deadeye", "Deadeye", maren_deadeye),
                         ("trapper", "Trapper", maren_trapper), ("volley", "Volley", maren_volley)]),
@@ -1155,12 +1239,13 @@ HEROES = [
                       ("wildfire", "Wildfire", ilse_wildfire), ("ember_choir", "Ember Choir", ilse_ember_choir)]),
     ("ottilie", "Ottilie", [("base", "Base", ottilie_base), ("catalyst", "Catalyst", ottilie_catalyst),
                             ("transmuter", "Transmuter", ottilie_transmuter), ("apothecary", "Apothecary", ottilie_apothecary)]),
-    ("kestra", "Kestra", [("base", "Base", kestra_base)]),
+    ("kestra", "Kestra", [("base", "Base", kestra_base), ("cinderhound", "Cinderhound", kestra_cinderhound),
+                          ("serpent_keeper", "Serpent-Keeper", kestra_serpent_keeper), ("packleader", "Packleader", kestra_packleader)]),
 ]
 
 # A hero's companions (phase 8 part 6, Kestra): each one's figure is
 # heroes/<kit>_base.svg, as a hero's base form is.
-COMPANIONS = [("grit", grit_base)]
+COMPANIONS = [("grit", grit_base), ("brindle", brindle_base), ("viper", viper_base), ("nestling", nestling_base)]
 
 FILTERS = ('<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4" result="b"/>'
            '<feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'

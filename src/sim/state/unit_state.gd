@@ -53,6 +53,12 @@ var vs_parts: Array[String] = []
 ## A deed counts the damage these passives' per-hit auras add (phase 8 part
 ## 6, Catalyst): each hit works it out (LogEntry.part_bonus). Empty: none.
 var bonus_parts: Array[String] = []
+## How many summons of the other side target it (phase 8 part 6, Pack
+## Tactics; kept only while a kit asks: CombatSim.mark_chasers).
+var chased_by_summons: int = 0
+## What its bonus_parts added short of a whole point, carried to its next
+## hit (1/10000ths of a point).
+var part_bonus_rest: int = 0
 ## Shards its effects have paid this fight, against its kit's shard_cap
 ## (phase 8 part 6).
 var shards_paid: int = 0

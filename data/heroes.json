@@ -319,7 +319,7 @@
               "id": "bite", "name": "Bite", "text": "A fast bite at the enemy in front of him.", "cooldown_ms": 800,
               "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"atk": 10000}}]
             },
-            "passives": [{"id": "grit_bond", "name": "Bond", "kind": "aura", "text": "Beside Kestra, he attacks faster.", "aura": {"target": "holder", "stat": "atsp", "value": 10}}]
+            "passives": [{"id": "bond", "name": "Bond", "kind": "aura", "text": "Beside Kestra, he attacks faster.", "aura": {"target": "holder", "stat": "atsp", "value": 10}}]
           },
           "hp_pct": 40, "atk_pct": 60, "return_ms": 10000
         }

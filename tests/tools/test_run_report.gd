@@ -13,11 +13,11 @@ func before_all() -> void:
 func test_every_combination_of_vows() -> void:
 	var combos: Array[Dictionary] = Report.vow_combinations(_run.content)
 	var teams: int = Report.teams(_run.content).size()
-	assert_eq(teams, 120, "every three of the ten heroes who can be drafted (phase 8 part 6: Ilse and Ottilie)")
+	assert_eq(teams, 165, "every three of the eleven heroes who can be drafted (phase 8 part 6: Ilse, Ottilie, and Kestra)")
 	assert_eq(combos.size(), teams * 27)
 	assert_eq(combos[0], {"brannoc": "hearthwall", "maren": "deadeye", "vell": "lanternbearer"}, "the old three first, in the old order")
 	assert_eq(combos[1], {"brannoc": "hearthwall", "maren": "deadeye", "garrow": "aegisfang"}, "the teams take turns")
-	assert_eq(combos[teams - 1], {"edric": "aegis", "ilse": "furnace", "ottilie": "catalyst"}, "the last team in heroes.json's order")
+	assert_eq(combos[teams - 1], {"ilse": "furnace", "ottilie": "catalyst", "kestra": "cinderhound"}, "the last team in heroes.json's order")
 	assert_eq(combos[teams], {"brannoc": "ironbrand", "maren": "trapper", "vell": "wardweaver"}, "then each team's next vows, 13 on")
 	assert_eq(combos[teams * 2], {"brannoc": "last_watch", "maren": "volley", "vell": "vigil_keeper"}, "so 3 turns give each hero each path")
 	var seen: Dictionary = {}

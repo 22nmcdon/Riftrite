@@ -240,7 +240,7 @@ func _passive_can_fire(part: PartDef, kit: UnitDef) -> bool:
 ## A growing card's counting can count on `kit`: what it names is there (its
 ## abilities, the keywords of the statuses it applies).
 func _can_count(counts: DeedDef, kit: UnitDef) -> bool:
-	if not counts.from_ability.is_empty() and not counts.from_ability.any(func(ability_id: String) -> bool: return kit.ability_ids().has(ability_id)):
+	if not counts.from_ability.is_empty() and not counts.from_ability.any(func(ability_id: String) -> bool: return kit.ability_ids_with_companions().has(ability_id)):
 		return false
 	if counts.counts == DeedDef.Counts.APPLIED and not counts.keywords.is_empty():
 		for status_id: String in kit.status_ids():
@@ -913,7 +913,7 @@ func _check_growth_counts(growth: GrowthDef, kits: Array, where: String) -> void
 	for ability_id: String in growth.counts.from_ability:
 		var found: bool = false
 		for kit: Variant in kits:
-			if kit != null and (kit as UnitDef).ability_ids().has(ability_id):
+			if kit != null and (kit as UnitDef).ability_ids_with_companions().has(ability_id):
 				found = true
 		if not found:
 			errors.append("%s: grows by what \"%s\" does, which its hero doesn't have" % [where, ability_id])

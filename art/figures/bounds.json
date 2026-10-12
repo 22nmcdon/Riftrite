@@ -46,6 +46,7 @@
 	"heroes/brannoc_hearthwall": [28,84,244,431],
 	"heroes/brannoc_ironbrand": [54,81,246,431],
 	"heroes/brannoc_last_watch": [36,59,256,453],
+	"heroes/brindle_base": [55,352,223,158],
 	"heroes/edric_aegis": [0,101,300,411],
 	"heroes/edric_base": [72,101,186,411],
 	"heroes/edric_psalmist": [72,52,156,460],
@@ -60,10 +61,14 @@
 	"heroes/ilse_furnace": [72,99,156,413],
 	"heroes/ilse_wildfire": [60,99,180,413],
 	"heroes/kestra_base": [76,103,187,409],
+	"heroes/kestra_cinderhound": [76,103,193,409],
+	"heroes/kestra_packleader": [74,86,175,426],
+	"heroes/kestra_serpent_keeper": [76,103,189,409],
 	"heroes/maren_base": [68,94,196,418],
 	"heroes/maren_deadeye": [45,50,255,470],
 	"heroes/maren_trapper": [54,146,195,366],
 	"heroes/maren_volley": [60,115,210,397],
+	"heroes/nestling_base": [92,434,139,72],
 	"heroes/ottilie_apothecary": [61,110,180,402],
 	"heroes/ottilie_base": [74,110,168,402],
 	"heroes/ottilie_catalyst": [72,110,156,402],
@@ -79,5 +84,6 @@
 	"heroes/vell_base": [74,106,177,406],
 	"heroes/vell_lanternbearer": [0,69,300,443],
 	"heroes/vell_vigil_keeper": [70,106,222,406],
-	"heroes/vell_wardweaver": [64,106,172,406]
+	"heroes/vell_wardweaver": [64,106,172,406],
+	"heroes/viper_base": [54,391,231,119]
 }

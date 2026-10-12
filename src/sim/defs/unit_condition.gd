@@ -35,6 +35,13 @@ extends RefCounted
 ##   {"targets_holder": false}               its target isn't (true: is) the
 ##                                           condition's holder (phase 8
 ##                                           part 4; Backstab)
+##   {"targets_owner": true}                 its target is the holder's
+##                                           owner (a companion's hero;
+##                                           phase 8 part 6, Guard Dog)
+##   {"chased_by_summons": 2}                at least that many summons of
+##                                           the other side target it
+##                                           (phase 8 part 6, Pack Tactics;
+##                                           CombatSim.mark_chasers)
 ##   {"target": {...a condition...}}         its target meets that one
 ##                                           (phase 8 part 4; Stalker: while
 ##                                           her target is Marked)
@@ -98,6 +105,10 @@ var raised: bool = false
 var others: bool = false
 ## A summon (phase 8 part 6).
 var summon: bool = false
+## Its target is the holder's owner (phase 8 part 6).
+var targets_owner: bool = false
+## 0: not asked; else at least that many summons target it (phase 8 part 6).
+var chased_by_summons: int = 0
 
 
 static func read(reader: DataReader) -> UnitCondition:
@@ -141,8 +152,10 @@ static func read(reader: DataReader) -> UnitCondition:
 	def.raised = reader.opt_bool("raised", false)
 	def.others = reader.opt_bool("others", false)
 	def.summon = reader.opt_bool("summon", false)
+	def.targets_owner = reader.opt_bool("targets_owner", false)
+	def.chased_by_summons = reader.opt_int("chased_by_summons", 0, 0, 30)
 	if def.is_empty():
-		reader.error("a condition needs at least one of keywords, statuses, all_statuses, ranks, below_hp_pct, above_hp_pct, flying, archetypes, front_most, on_water, same_island, shield_above_pct, engorged_pct, targets_holder, target, ranged, shielded, target_beyond_hexes, fired_over_full, raised, others, summon, or kits")
+		reader.error("a condition needs at least one of keywords, statuses, all_statuses, ranks, below_hp_pct, above_hp_pct, flying, archetypes, front_most, on_water, same_island, shield_above_pct, engorged_pct, targets_holder, target, ranged, shielded, target_beyond_hexes, fired_over_full, raised, others, summon, targets_owner, chased_by_summons, or kits")
 	reader.finish()
 	return def
 
@@ -150,7 +163,7 @@ static func read(reader: DataReader) -> UnitCondition:
 func is_empty() -> bool:
 	return keywords.is_empty() and statuses.is_empty() and all_statuses.is_empty() and ranks.is_empty() and below_hp_bp == 0 and above_hp_bp == 0 and flying == Flying.ANY and archetypes.is_empty() and not front_most and on_water == Flying.ANY and kits.is_empty() and not same_island and shield_above_bp == 0 and engorged_bp == 0 \
 		and targets_holder == Flying.ANY and target == null and ranged == Flying.ANY and target_beyond == 0 and not fired_over_full and not raised \
-		and shielded == Flying.ANY and not others and not summon
+		and shielded == Flying.ANY and not others and not summon and not targets_owner and chased_by_summons == 0
 
 
 ## True if `unit` meets every field given. `holder`: whose condition it is
@@ -160,6 +173,10 @@ func holds(unit: UnitState, holder: UnitState = null) -> bool:
 	if others and unit == holder:
 		return false
 	if summon and not unit.summoned:
+		return false
+	if targets_owner and (holder == null or holder.owner == null or unit.target != holder.owner):
+		return false
+	if chased_by_summons > 0 and unit.chased_by_summons < chased_by_summons:
 		return false
 	if same_island and (holder == null or unit.island < 0 or unit.island != holder.island):
 		return false
@@ -279,4 +296,8 @@ func describe() -> String:
 		parts.append("another")
 	if summon:
 		parts.append("a summon")
+	if targets_owner:
+		parts.append("targeting its hero")
+	if chased_by_summons > 0:
+		parts.append("attacked by %d or more summons" % chased_by_summons)
 	return ", ".join(parts)

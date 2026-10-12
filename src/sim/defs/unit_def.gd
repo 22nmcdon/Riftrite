@@ -209,6 +209,16 @@ func ability_ids() -> Array[String]:
 	return ids
 
 
+## Its ability ids and its companions' (phase 8 part 6): what a deed or a
+## growing card may count, since a companion's work counts for its hero.
+func ability_ids_with_companions() -> Array[String]:
+	var ids: Array[String] = ability_ids()
+	for companion_def: CompanionDef in companions:
+		if companion_def.kit != null:
+			ids.append_array(companion_def.kit.ability_ids())
+	return ids
+
+
 ## A copy to change (PhaseDef, KitPatch): the lists are its own, the parts shared,
 ## and it has no phases.
 func copy() -> UnitDef:
@@ -314,6 +324,18 @@ func placed_markers() -> int:
 ## True if any of its conditions asks for the front-most unit (phase 5c
 ## step 7c; CombatSim keeps UnitState.front_most only then).
 func uses_front_most() -> bool:
+	return conditions().any(func(condition: UnitCondition) -> bool: return condition != null and condition.front_most)
+
+
+## True if any of its conditions asks how many summons target a unit (phase
+## 8 part 6; CombatSim keeps UnitState.chased_by_summons only then).
+func uses_chasers() -> bool:
+	return conditions().any(func(condition: UnitCondition) -> bool: return condition != null and condition.chased_by_summons > 0)
+
+
+## Its conditions: its preferences, its auras' and its effects' (null where
+## a part has none).
+func conditions() -> Array[UnitCondition]:
 	var conditions: Array[UnitCondition] = [prefer]
 	var parts: Array[PartDef] = passives.duplicate()
 	for phase: PhaseDef in phases:
@@ -326,7 +348,7 @@ func uses_front_most() -> bool:
 	for ability: AbilityDef in [basic_attack, signature]:
 		if ability != null:
 			conditions.append(ability.prefer)
-	return conditions.any(func(condition: UnitCondition) -> bool: return condition != null and condition.front_most)
+	return conditions
 
 
 ## The effects in its abilities and passives (an area's own effects

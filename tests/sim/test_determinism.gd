@@ -135,7 +135,9 @@ const HERO_STATUSES: Array[String] = ["iron_maiden", "hidden", "shadow_dance", "
 	"ringed", "ring_heat", "cinder_saint", "rising_choir", "crowned_in_flame", "iron_embers",
 	# Ottilie's (phase 8 part 6, 8f-2; tests/sim/test_ottilie_paths.gd, test_ottilie_cards.gd, test_ottilie_apexes.gd).
 	"fire_vial", "venom_vial", "tonic_vial", "tonic_rush", "elixir", "sticky", "fumes", "corroded", "fizz", "bracing", "choir_vial",
-	"grand_reaction", "dissolved", "potent_draught", "potent_more", "mana_flood", "potent_elixir"]
+	"grand_reaction", "dissolved", "potent_draught", "potent_more", "mana_flood", "potent_elixir",
+	# Kestra's (phase 8 part 6, 8f-3; tests/sim/test_kestra_paths.gd, test_kestra_cards.gd).
+	"pack_fury", "howl", "numbed", "viper_bitten"]
 const RELIC_STATUSES: Array[String] = ["sunder", "quickened", "unbending", "long_watch", "vigilant", "iron_garden"]
 ## Boosts only loadout items apply (phase 5c step 6; tests/run/test_loadout.gd).
 const ITEM_STATUSES: Array[String] = ["surge", "surge_2", "last_breath", "purified",

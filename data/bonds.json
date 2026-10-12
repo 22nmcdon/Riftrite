@@ -179,5 +179,25 @@
       "chorister"
     ],
     "relic": "the_tonic_choir"
+  },
+  {
+    "id": "gilded_ash",
+    "name": "Gilded Ash",
+    "text": "The hound brings back gold.",
+    "paths": [
+      "transmuter",
+      "cinderhound"
+    ],
+    "relic": "the_gilded_hound"
+  },
+  {
+    "id": "nest_of_rot",
+    "name": "Nest of Rot",
+    "text": "Her plague feeds Kestra's brood.",
+    "paths": [
+      "plaguebearer",
+      "serpent_keeper"
+    ],
+    "relic": "mother_of_serpents"
   }
 ]
