@@ -145,6 +145,11 @@ var chain: int = 0
 var broke_shield: bool = false
 ## DAMAGE: what went past the target's last HP (phase 5c step 5b).
 var overkill: int = 0
+## DAMAGE (phase 8 part 6): what the per-hit auras of its unit's
+## UnitState.bonus_part added (only for a unit whose deed counts it).
+var part_bonus: int = 0
+## SHARDS (phase 8 part 6): past its unit's cap for the fight, so not paid.
+var capped: bool = false
 ## SHIELD (phase 8 part 4): its target's Shield once this one was given
 ## (Endless Bulwark's deed counts what goes past a share of max HP).
 var shield_after: int = 0
@@ -377,6 +382,8 @@ func to_text() -> String:
 		Kind.MAX_HP_DOWN:
 			return line + "%s: %s gives up %d max HP" % [source_text(), target, amount]
 		Kind.SHARDS:
+			if capped:
+				return line + "%s: %s would collect %d shard%s (capped)" % [source_text(), target, amount, "" if amount == 1 else "s"]
 			return line + "%s: %s collects %d shard%s" % [source_text(), target, amount, "" if amount == 1 else "s"]
 	return line + "?"
 

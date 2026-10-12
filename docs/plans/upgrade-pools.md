@@ -344,6 +344,8 @@ These never give damage from Burn and Poison counts (Catalyst), shards (Transmut
 | **Transmuter** | **Assayer:** Gilded Death pays 1 more after elites. **Coin Flask:** Volatile Flask kills pay 1 shard | **Strong Philosopher:** Philosopher's Flask hits for 150% of her MGK. **Quick Philosopher:** it costs 10 less mana. **Appraise:** transmuting a rank II or III item pays 2 or 4 more shards. **Deep Purse:** Gilded Death's cap is 10. Growing: **Ledger** (+1 shard per won fight per 30 shards from Gilded Death, up to +5) |
 | **Apothecary** | **Rich Tonic:** the vial gives 12 mana, not 10. **Quick Tonic:** every 6s, not 8s | **Fast Tonic:** every 3s, not 4s. **Fizzing Vial:** the vial's attack speed bonus is +15%. **Bracing Vial:** the vial also gives +10 DEF for 3s. **Long Elixir:** Elixir's bonus lasts 6s. Growing: **Recipe Book** (+1 mana per vial per 100 vials thrown, up to +10) |
 
+Built in phase 8 part 6 (`rebuild-phase8-last-heroes.md`, "Built in 8f-2"): her 33 cards, with the approximations flagged there (Corrosive and Dissolve as a short DEF loss on hit, Lab Notes growing with the damage Reaction adds, Assayer through the condition `ranks`, Recipe Book up to half again); her 12 apex cards.
+
 ## Lucan
 
 ### Hero pool

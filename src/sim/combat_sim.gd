@@ -556,7 +556,7 @@ func _act(unit: UnitState) -> void:
 	var casting: bool = false
 	var signature: AbilityState = unit.signature
 	if signature != null and (signature.pending > 0 or signature.cast_ends_at >= 0 \
-			or (signature.mana_trigger and unit.mana >= unit.mana_cap) or (signature.once_trigger and not signature.fired) or signature.above_trigger \
+			or (signature.mana_trigger and (unit.mana >= unit.mana_cap or unit.aura_bp[AuraDef.Stat.SIGNATURE_COST_BP] != FixedMath.BP_ONE and Mana.is_full(unit))) or (signature.once_trigger and not signature.fired) or signature.above_trigger \
 			or signature.also_waiting or signature.echo_at >= 0 or signature.again_at >= 0 or (signature.every_ticks > 0 and tick % signature.every_ticks == 0)):
 		casting = Signatures.act(self, unit)
 		has_statuses = not unit.statuses.is_empty()

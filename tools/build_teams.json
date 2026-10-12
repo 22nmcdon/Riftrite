@@ -296,6 +296,54 @@
       ],
       "swap": "wildfire",
       "note": "test-teams.md #3; Tamsin's Nightblade stands in for Kestra's Cinderhound (not built); lift against Ilse on Wildfire, her self-sufficient path"
+    },
+    {
+      "name": "Rot",
+      "path": "catalyst",
+      "type": "engine",
+      "team": {
+        "ottilie": "catalyst",
+        "severine": "plaguebearer",
+        "ilse": "wildfire"
+      },
+      "relics": [
+        "ashen_engine",
+        "pyre_ash"
+      ],
+      "note": "test-teams.md #5"
+    },
+    {
+      "name": "Greed",
+      "path": "transmuter",
+      "type": "long-game",
+      "team": {
+        "ottilie": "transmuter",
+        "edric": "tithe_collector",
+        "brannoc": "hearthwall"
+      },
+      "relics": [
+        "tithe_of_iron",
+        "keen_edge",
+        "bone_dice"
+      ],
+      "note": "test-teams.md #17 (Full Greed), Brannoc's Hearthwall standing in for Hob (not built); long-game: judged by its shards over a run, in a fight only its floor"
+    },
+    {
+      "name": "Tonic Choir",
+      "path": "apothecary",
+      "type": "enabler",
+      "team": {
+        "ottilie": "apothecary",
+        "aldous": "chorister",
+        "brannoc": "hearthwall"
+      },
+      "relics": [
+        "rift_candle",
+        "echoing_bell",
+        "quickened_pulse"
+      ],
+      "swap": "base",
+      "note": "the Tonic and Hymn bond's team; lift against Ottilie on base, since she has no self-sufficient path (rebuild-phase8-heroes.md Decision 17)"
     }
   ]
 }

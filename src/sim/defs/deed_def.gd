@@ -98,22 +98,30 @@ extends RefCounted
 ## the whole mana its side's bars gain past full (Wellspring), and
 ## "ally_casts" with "within_hexes": 3 its allies' signature fires within
 ## that reach of it (Grand Chorus).)
+## (Phase 8 part 6, Ottilie: "bonus_damage" with "from_part": "reaction"
+## (or a list) counts the damage those passives' per-hit auras added to its
+## hits, each
+## hit's share of its power bonus (LogEntry.part_bonus; Catalyst's deed);
+## "shards" counts the shards its effects paid (SHARDS lines, not those
+## past its cap; Transmuter's deed, with from_ability).)
 ## "threshold": 900 is what fills it in a run (phase 5, Decision 6: about
 ## three fights' worth of what a vowed hero puts in); the sim never reads it.
 ## Adding a kind or a filter is a code change.
 
-enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING, HITS, SHARED, BLOCKED, PULLED, EXTENDED_MS, MANA_GIVEN, MANA_OVERFLOW, ALLY_CASTS, MAX_HP_GAINED, HP_SPENT, LIFESTEAL, TITHE, TITHE_FLAWLESS }
+enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING, HITS, SHARED, BLOCKED, PULLED, EXTENDED_MS, MANA_GIVEN, MANA_OVERFLOW, ALLY_CASTS, MAX_HP_GAINED, HP_SPENT, LIFESTEAL, TITHE, TITHE_FLAWLESS, BONUS_DAMAGE, SHARDS, TRANSMUTED }
 
-const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing", "hits", "shared", "blocked", "pulled", "extended_ms", "mana_given", "mana_overflow", "ally_casts", "max_hp_gained", "hp_spent", "lifesteal", "tithe", "tithe_flawless"]
-const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill", "casts", "ms standing", "enemies hit", "damage shared", "attacks blocked", "enemies pulled", "ms extended", "mana given", "mana past full", "ally signatures near", "max HP gained", "HP spent", "healed by lifesteal", "shards from Tithe", "shards from flawless fights"]
+const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing", "hits", "shared", "blocked", "pulled", "extended_ms", "mana_given", "mana_overflow", "ally_casts", "max_hp_gained", "hp_spent", "lifesteal", "tithe", "tithe_flawless", "bonus_damage", "shards", "transmuted"]
+const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill", "casts", "ms standing", "enemies hit", "damage shared", "attacks blocked", "enemies pulled", "ms extended", "mana given", "mana past full", "ally signatures near", "max HP gained", "HP spent", "healed by lifesteal", "shards from Tithe", "shards from flawless fights", "extra damage", "shards", "items transmuted"]
 ## The kinds read from where the hero is the target, or from the tick, not
 ## from what the hero does.
 const NOT_ITS_OWN: Array[Counts] = [Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING, Counts.BLOCKED,
-	Counts.MANA_OVERFLOW, Counts.ALLY_CASTS, Counts.TITHE, Counts.TITHE_FLAWLESS]
+	Counts.MANA_OVERFLOW, Counts.ALLY_CASTS, Counts.TITHE, Counts.TITHE_FLAWLESS, Counts.TRANSMUTED]
 ## The kinds the run counts, not the fight (phase 8 part 5, Tithe-Collector
 ## and Collector of Debts: shards from Tithe, all of them or a flawless
 ## fight's): RunFlow.record adds them; Deeds never matches them.
-const BY_THE_RUN: Array[Counts] = [Counts.TITHE, Counts.TITHE_FLAWLESS]
+## Phase 8 part 6 (Grand Transmutation): "transmuted", items the hero's
+## transmuting turned into other items (RunFlow.transmute_into).
+const BY_THE_RUN: Array[Counts] = [Counts.TITHE, Counts.TITHE_FLAWLESS, Counts.TRANSMUTED]
 
 ## The player's line: "Damage dealt from 5 or more hexes away".
 var text: String
@@ -132,6 +140,9 @@ var after_rising: bool = false
 var near_range: int = 0
 ## Only while its kit holds a part with this id ("": always; phase 8 part 4).
 var with_part: String = ""
+## bonus_damage: the passives whose added damage it counts (phase 8 part 6;
+## "from_part" names one or several).
+var from_parts: Array[String] = []
 ## pulled: count the hexes moved, not the enemies (phase 8 part 4).
 var by_hexes: bool = false
 ## shield: only what's given past this share of the target's max HP (0: all).
@@ -199,6 +210,12 @@ static func read(reader: DataReader, needs_text: bool = true) -> DeedDef:
 	if def.by_stacks and def.counts != Counts.APPLIED:
 		reader.error("by_stacks counts the stacks applied (\"counts\": \"applied\")")
 	def.with_part = reader.opt_string("with_part", "")
+	if reader.is_array("from_part"):
+		def.from_parts = reader.req_string_array("from_part")
+	elif reader.has("from_part"):
+		def.from_parts = [reader.req_string("from_part")] as Array[String]
+	if (def.counts == Counts.BONUS_DAMAGE) != not def.from_parts.is_empty():
+		reader.error("bonus_damage names the passive it counts (\"from_part\"), and only it does")
 	if def.counts == Counts.ALLY_CASTS:
 		def.near_range = reader.req_int("within_hexes", 1, 10) * HexGrid.HEX
 	if def.by_allies and not def.from_ability.is_empty():
@@ -285,7 +302,13 @@ func counts_kind(kind: LogEntry.Kind, ability_id: String) -> bool:
 		Counts.APPLIED:
 			if kind != LogEntry.Kind.STATUS_APPLIED:
 				return false
+		Counts.BONUS_DAMAGE:
+			if kind != LogEntry.Kind.DAMAGE:
+				return false
+		Counts.SHARDS:
+			if kind != LogEntry.Kind.SHARDS:
+				return false
 		Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING, Counts.BLOCKED, Counts.MANA_OVERFLOW, Counts.ALLY_CASTS, \
-				Counts.TITHE, Counts.TITHE_FLAWLESS:
+				Counts.TITHE, Counts.TITHE_FLAWLESS, Counts.TRANSMUTED:
 			return false
 	return from_ability.is_empty() or from_ability.has(ability_id)

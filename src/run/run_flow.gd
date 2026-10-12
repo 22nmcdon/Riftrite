@@ -349,6 +349,7 @@ func _next_act() -> void:
 	var next: ActDef = run.next_act(state)
 	state.act = next.act
 	state.day = 1
+	state.transmuted_act = 0
 	state.attempt = 0
 	state.options = ActDraw.draw(run, state.seed_value, next)
 	state.taken_nodes.clear()
@@ -1097,7 +1098,9 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 			var amount: int = result.deed_amount(hero.id, path_id)
 			var deed: DeedDef = _deed_of(path_id)
 			if deed != null and deed.by_the_run():
-				amount = tithes.get(hero.id, 0) if deed.counts == DeedDef.Counts.TITHE or flawless else 0
+				# Tithe's are paid here; the rest the run counts as they happen
+				# (phase 8 part 6: items transmuted).
+				amount = tithes.get(hero.id, 0) if deed.counts == DeedDef.Counts.TITHE or deed.counts == DeedDef.Counts.TITHE_FLAWLESS and flawless else 0
 			hero.deeds[path_id] += FixedMath.apply_bp(amount, oath.deed_bp) if oath != null else amount
 	_grow(result)
 	_rank_items(formation, result, won)
@@ -1123,6 +1126,8 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 		if not state.bonds_found.has(bond.id):
 			state.bonds_found.append(bond.id)
 	state.shards += fought.collected
+	if fought.collected > 0:
+		_grow_by_run("shards", fought.collected)
 	if hunting:
 		state.hunt = ""
 		if won:
@@ -1196,30 +1201,31 @@ func _streak(result: FightResult) -> void:
 			state.streaks_paid.append(id)
 
 
-## Adds one to every held relic that grows with what the run counts as
-## `what` (Tally of the Dead: "elite_wins"), and (phase 8 part 5) every
-## hero's held card and earned apex that does ("wins", "flawless").
-func _grow_by_run(what: String) -> void:
+## Adds `amount` (one, but for "shards": phase 8 part 6) to every held relic
+## that grows with what the run counts as `what` (Tally of the Dead:
+## "elite_wins"), and (phase 8 part 5) every hero's held card and earned apex
+## that does ("wins", "flawless").
+func _grow_by_run(what: String, amount: int = 1) -> void:
 	for id: String in state.relics:
 		var relic: RelicDef = run.relics.get(id)
 		if relic == null or relic.grows == null or relic.grows.run_counts != what:
 			continue
 		var before: int = state.growth.get(id, 0)
-		state.growth[id] = before + 1
+		state.growth[id] = before + amount
 		if relic.grows.steps(state.growth[id]) > relic.grows.steps(before) and not state.grew.has(":" + id):
 			state.grew.append(":" + id)
 	for hero: RunState.Hero in state.heroes:
 		for upgrade: UpgradeDef in run.held_upgrades(hero):
 			if upgrade.grows != null and upgrade.grows.run_counts == what:
-				_step_hero(hero, upgrade.id, upgrade.grows)
+				_step_hero(hero, upgrade.id, upgrade.grows, amount)
 		var apex: ApexDef = run.earned_apex(hero)
 		if apex != null and apex.grows != null and apex.grows.run_counts == what:
-			_step_hero(hero, RunContent.apex_growth_key(apex), apex.grows)
+			_step_hero(hero, RunContent.apex_growth_key(apex), apex.grows, amount)
 
 
-func _step_hero(hero: RunState.Hero, key: String, grows: GrowthDef) -> void:
+func _step_hero(hero: RunState.Hero, key: String, grows: GrowthDef, amount: int = 1) -> void:
 	var before: int = hero.growth.get(key, 0)
-	hero.growth[key] = before + 1
+	hero.growth[key] = before + amount
 	var note: String = "%s:%s" % [hero.id, key]
 	if grows.steps(hero.growth[key]) > grows.steps(before) and not state.grew.has(note):
 		state.grew.append(note)
@@ -1251,7 +1257,7 @@ func _tithes(result: FightResult, encounter_id: String) -> Dictionary[String, in
 func _collected(result: FightResult) -> int:
 	var total: int = 0
 	for entry: LogEntry in result.combat_log.of_kind(LogEntry.Kind.SHARDS):
-		if state.hero(entry.source_unit) != null:
+		if state.hero(entry.source_unit) != null and not entry.capped:
 			total += entry.amount
 	return total
 
@@ -1698,6 +1704,7 @@ func open_shop(kind: String) -> String:
 	state.shop_dear_bp = state.dear_shop_bp
 	state.dear_shop_bp = 0
 	state.rerolls = 0
+	state.transmutes = 0
 	state.magpie_swapped = false
 	state.shop_relics = _draw_shop_relics()
 	state.shards += run.relic_sum(state, "shop_shards")
@@ -1724,6 +1731,7 @@ func close_shop() -> void:
 	state.shop_dear_bp = 0
 	state.wares.clear()
 	state.rerolls = 0
+	state.transmutes = 0
 	state.shop_relics.clear()
 
 
@@ -1749,6 +1757,14 @@ func sell(item_id: String) -> String:
 		return "only the Pedlar buys items"
 	if not state.item_ranks.has(item_id):
 		return "the run doesn't own \"%s\"" % item_id
+	var paid: int = sell_price(item_id)
+	_drop_item(item_id)
+	state.shards += paid
+	return ""
+
+
+## Takes an item the run owns away, from the stash or a slot, rank and all.
+func _drop_item(item_id: String) -> void:
 	if state.stash.has(item_id):
 		state.stash.erase(item_id)
 	else:
@@ -1758,7 +1774,90 @@ func sell(item_id: String) -> String:
 				hero.slots[slot] = ""
 	state.item_ranks.erase(item_id)
 	state.item_counts.erase(item_id)
-	state.shards += sell_price(item_id)
+
+
+## The team's transmuting (phase 8 part 6, Transmuter): its heroes'
+## TransmuteDefs added together (null: none of them transmutes).
+func _transmuting() -> TransmuteDef:
+	var sum: TransmuteDef = null
+	for hero: RunState.Hero in state.heroes:
+		var own: TransmuteDef = run.transmute(hero)
+		if own != null:
+			sum = own.merged(sum)
+	return sum
+
+
+## Items the open shop may still transmute (0: none; only the Pedlar and the
+## boss shop, Decision 6).
+func transmutes_left() -> int:
+	var transmuting: TransmuteDef = _transmuting()
+	if state.shop != "pedlar" or transmuting == null:
+		return 0
+	return maxi(transmuting.per_shop - state.transmutes, 0)
+
+
+## What transmuting `item_id` pays: its kind's full price (selling pays
+## half), and more by the team's transmuting cards.
+func transmute_price(item_id: String) -> int:
+	var transmuting: TransmuteDef = _transmuting()
+	var price: int = act.item_prices[ItemDef.KIND_NAMES[run.items[item_id].kind]]
+	return transmuting.pays(price, state.item_ranks.get(item_id, 1)) if transmuting != null else price
+
+
+## Turns an item the run owns into shards at its full price (phase 8 part 6,
+## transformed Transmuter: once a shop, at the Pedlar or the boss shop), from
+## the stash or a slot. Its rank goes with it.
+func transmute(item_id: String) -> String:
+	if transmutes_left() <= 0:
+		return "nobody can transmute here" if state.shop != "pedlar" or _transmuting() == null else "no more transmuting in this shop"
+	if not state.item_ranks.has(item_id):
+		return "the run doesn't own \"%s\"" % item_id
+	var paid: int = transmute_price(item_id)
+	_drop_item(item_id)
+	state.transmutes += 1
+	state.shards += paid
+	return ""
+
+
+## How many items the open shop may still turn into other items (phase 8
+## part 6, Grand Transmutation): its transmutes, if the team's transmuting
+## allows items into items there, else what's left of the act's allowance.
+func transmutes_into_left() -> int:
+	var transmuting: TransmuteDef = _transmuting()
+	if state.shop != "pedlar" or transmuting == null:
+		return 0
+	if transmuting.into_shop > 0 and transmutes_left() > 0:
+		return transmutes_left()
+	return maxi(transmuting.into_per_act - state.transmuted_act, 0)
+
+
+## Turns an item the run owns into a random item of the same kind it
+## doesn't own (phase 8 part 6, Grand Transmutation: its taste once an act,
+## its apex with a shop's transmutes, at rank II), and counts it toward every
+## hero's "transmuted" deed.
+func transmute_into(item_id: String) -> String:
+	if transmutes_into_left() <= 0:
+		return "nobody can transmute an item into another here"
+	if not state.item_ranks.has(item_id):
+		return "the run doesn't own \"%s\"" % item_id
+	var kind: ItemDef.Kind = run.items[item_id].kind
+	var pool: Array[String] = run.item_ids.filter(func(id: String) -> bool: return run.items[id].kind == kind and not state.item_ranks.has(id))
+	if pool.is_empty():
+		return "there's no other item of its kind to make"
+	var transmuting: TransmuteDef = _transmuting()
+	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.TRANSMUTE, state.act, state.day, state.attempt, state.transmutes + state.transmuted_act * 16])
+	var made: String = pool[rng.range_int(pool.size())]
+	if transmuting.into_shop > 0 and transmutes_left() > 0:
+		state.transmutes += 1
+	else:
+		state.transmuted_act += 1
+	_drop_item(item_id)
+	_gain_item(made, maxi(transmuting.into_rank, 1))
+	for hero: RunState.Hero in state.heroes:
+		for key: String in hero.deeds:
+			var deed: DeedDef = _deed_of(key)
+			if deed != null and deed.counts == DeedDef.Counts.TRANSMUTED:
+				hero.deeds[key] += 1
 	return ""
 
 

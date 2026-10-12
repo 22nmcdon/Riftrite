@@ -159,5 +159,25 @@
       "lanternbearer"
     ],
     "relic": "the_vigil_lamp"
+  },
+  {
+    "id": "putrefaction",
+    "name": "Putrefaction",
+    "text": "Ottilie's reagents in Severine's cloud.",
+    "paths": [
+      "catalyst",
+      "plaguebearer"
+    ],
+    "relic": "plague_alchemy"
+  },
+  {
+    "id": "tonic_and_hymn",
+    "name": "Tonic and Hymn",
+    "text": "Her tonics, his chorus.",
+    "paths": [
+      "apothecary",
+      "chorister"
+    ],
+    "relic": "the_tonic_choir"
   }
 ]

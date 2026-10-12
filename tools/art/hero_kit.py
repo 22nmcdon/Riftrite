@@ -974,6 +974,88 @@ def ilse_ember_choir(uid):
     return "".join(o)
 
 
+
+# ------------------------------------------------------------------ Ottilie (8f-2)
+APRON, APRON_DK = "#7a6a52", "#54483a"
+VENOM = "#6fd14a"
+GLASS = "#bfe8f0"
+HAIR_BROWN = "#5a3a24"
+
+
+def ottilie_head(hair=HAIR_BROWN, goggles=True):
+    o = [P("M118,148 C112,100 188,100 182,148 L180,176 L168,170 L132,170 L120,176 Z", hair),
+         P("M128,142 C126,110 174,110 172,142 L170,174 C162,192 138,192 130,174 Z", SKIN),
+         P("M122,132 C122,108 178,108 178,132 C166,118 134,118 122,132 Z", hair),
+         P("M140,178 C146,183 154,183 160,178", "none", 2.2)]
+    if goggles:
+        o += [P("M124,124 L176,124", "none", 4), circle(138, 124, 9, GLASS, 2.4), circle(162, 124, 9, GLASS, 2.4),
+              f'<path d="M140,152 l7,1 M154,153 l7,-1" stroke="{INK}" stroke-width="2.6" stroke-linecap="round"/>']
+    else:
+        o.append(f'<path d="M140,150 l7,1 M154,151 l7,-1" stroke="{INK}" stroke-width="2.6" stroke-linecap="round"/>')
+    return "".join(o)
+
+
+def vial(cx, cy, s=1.0, liquid=EMBER, glow=True):
+    o = [P(f"M{cx - 4 * s:.1f},{cy - 18 * s:.1f} L{cx + 4 * s:.1f},{cy - 18 * s:.1f} L{cx + 4 * s:.1f},{cy - 8 * s:.1f} "
+           f"C{cx + 14 * s:.1f},{cy - 4 * s:.1f} {cx + 14 * s:.1f},{cy + 14 * s:.1f} {cx},{cy + 14 * s:.1f} "
+           f"C{cx - 14 * s:.1f},{cy + 14 * s:.1f} {cx - 14 * s:.1f},{cy - 4 * s:.1f} {cx - 4 * s:.1f},{cy - 8 * s:.1f} Z", GLASS, 2),
+         P(f"M{cx - 11 * s:.1f},{cy + 2 * s:.1f} C{cx - 8 * s:.1f},{cy + 14 * s:.1f} {cx + 8 * s:.1f},{cy + 14 * s:.1f} {cx + 11 * s:.1f},{cy + 2 * s:.1f} Z", liquid, 1.4)]
+    if glow:
+        o.insert(0, f'<circle cx="{cx}" cy="{cy + 4 * s:.1f}" r="{16 * s:.1f}" fill="{liquid}" opacity="0.30" filter="url(#bloom)"/>')
+    return "".join(o)
+
+
+def ottilie_body(uid, coat=PLUM, apron=APRON, hem=494):
+    body = f"M120,192 L180,192 L194,{hem} L106,{hem} Z"
+    front = f"M128,206 L172,206 L180,{hem - 6} L120,{hem - 6} Z"
+    return "".join([P(body, coat), P(front, apron, 2), P("M128,206 L172,206 L170,232 L130,232 Z", APRON_DK, 2),
+                    P(f"M134,{hem - 120} L166,{hem - 120} L166,{hem - 96} L134,{hem - 96} Z", APRON_DK, 2), shade(uid, [body], cut=150)])
+
+
+def ottilie_base(uid):
+    """An alchemist in a plum coat and a stained leather apron, goggles up, a vial of fire in one hand."""
+    o = [shadow(76), ottilie_body(uid),
+         limb((126, 210), (112, 290), 18, 14, PLUM_DK), circle(112, 294, 8, SKIN, 2), vial(108, 318, 0.8, VENOM),
+         ottilie_head(),
+         limb((176, 208), (214, 258), 18, 14, PLUM_DK), circle(216, 262, 8, SKIN, 2), vial(220, 238, 1.0),
+         rim("M180,210 L192,480", color=GOLD, w=2)]
+    return "".join(o)
+
+
+def ottilie_catalyst(uid):
+    """Two poisons poured into one: a fire vial and a venom vial tipped together over a hissing flask."""
+    o = [shadow(78), ottilie_body(uid, coat=PLUM_DK),
+         limb((126, 208), (126, 250), 18, 14, PLUM_DK), circle(126, 254, 8, SKIN, 2), vial(122, 232, 0.9),
+         limb((174, 208), (176, 250), 18, 14, PLUM_DK), circle(176, 254, 8, SKIN, 2), vial(180, 232, 0.9, VENOM),
+         vial(150, 300, 1.4, "#c8a43a"), f'<circle cx="150" cy="276" r="26" fill="{VENOM}" opacity="0.18" filter="url(#bloom)"/>',
+         ottilie_head(), rim("M180,210 L192,480", color=VENOM, w=2.2)]
+    return "".join(o)
+
+
+def ottilie_transmuter(uid):
+    """Lead into gold: a gilded apron, coins spilling from a glowing crucible she holds high."""
+    coins = "".join(circle(x, y, 6, GOLD, 1.6) for x, y in ((206, 300), (214, 324), (198, 344), (222, 350), (208, 372)))
+    o = [shadow(78), ottilie_body(uid, apron="#b08a3a"),
+         limb((126, 210), (112, 290), 18, 14, PLUM_DK), circle(112, 294, 8, SKIN, 2),
+         ottilie_head(goggles=False),
+         limb((176, 208), (208, 240), 18, 14, PLUM_DK), circle(210, 244, 8, SKIN, 2),
+         f'<circle cx="214" cy="230" r="30" fill="{GOLD}" opacity="0.24" filter="url(#bloom)"/>',
+         P("M194,222 L234,222 L228,250 L200,250 Z", IRON_DK, 2), P("M198,222 L230,222 L228,230 L200,230 Z", GOLD, 1.4),
+         coins, rim("M180,210 L192,480", color=GOLD, w=2.4)]
+    return "".join(o)
+
+
+def ottilie_apothecary(uid):
+    """A vial for the foe and a tonic for the friend: a satchel of blue tonics, one held out to an ally."""
+    satchel = "".join(vial(x, 404, 0.55, AQUA, glow=False) for x in (122, 140, 158))
+    o = [shadow(76), ottilie_body(uid, coat="#3e5a6a"),
+         P("M108,380 L176,380 L172,430 L112,430 Z", LEATHER, 2), satchel,
+         limb((126, 210), (92, 262), 18, 14, "#2c4250"), circle(90, 266, 8, SKIN, 2), vial(84, 246, 1.0, AQUA),
+         ottilie_head(),
+         limb((176, 208), (214, 258), 18, 14, "#2c4250"), circle(216, 262, 8, SKIN, 2), vial(220, 238, 0.9),
+         rim("M180,210 L192,480", color=AQUA, w=2)]
+    return "".join(o)
+
 HEROES = [
     ("maren", "Maren", [("base", "Base", maren_base), ("deadeye", "Deadeye", maren_deadeye),
                         ("trapper", "Trapper", maren_trapper), ("volley", "Volley", maren_volley)]),
@@ -993,6 +1075,8 @@ HEROES = [
                       ("tithe_collector", "Tithe-Collector", edric_tithe_collector), ("psalmist", "Psalmist", edric_psalmist)]),
     ("ilse", "Ilse", [("base", "Base", ilse_base), ("furnace", "Furnace", ilse_furnace),
                       ("wildfire", "Wildfire", ilse_wildfire), ("ember_choir", "Ember Choir", ilse_ember_choir)]),
+    ("ottilie", "Ottilie", [("base", "Base", ottilie_base), ("catalyst", "Catalyst", ottilie_catalyst),
+                            ("transmuter", "Transmuter", ottilie_transmuter), ("apothecary", "Apothecary", ottilie_apothecary)]),
 ]
 
 FILTERS = ('<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4" result="b"/>'

@@ -38,6 +38,9 @@ extends RefCounted
 ##   "start_hp_pct": 50
 ##       phase 8 part 5 (transformed Hemomancer): it starts each fight at
 ##       that share of its max HP
+##   "shard_cap": 3
+##       phase 8 part 6 (Ottilie's Gilded Death): its effects pay at most
+##       that many shards a fight; the rest are logged as capped
 
 ## A unit's own rule (section 4): Targeting.RULES but self.
 const TARGETING_RULES: Array[String] = ["nearest", "weakest_backliner", "largest_group", "farthest", "lowest_hp_ally", "highest_mana", "weakest_within"]
@@ -115,6 +118,8 @@ var placed_lantern: bool = false
 ## The share of its max HP it starts a fight at (phase 8 part 5, transformed
 ## Hemomancer; 10000: full).
 var start_hp_bp: int = FixedMath.BP_ONE
+## The shards its effects may pay in a fight (phase 8 part 6; 0: no cap).
+var shard_cap: int = 0
 
 
 ## Reads a kit. A hero's or enemy's kit (HeroDef, EnemyDef) takes its id and
@@ -148,6 +153,7 @@ static func read(reader: DataReader, kit_id: String = "", kit_name: String = "")
 	def.plant_ticks = reader.opt_ticks("plant_ms", 0)
 	def.placed_snares = reader.opt_int("placed_snares", 0, 0, 4)
 	def.start_hp_bp = reader.opt_int("start_hp_pct", 100, 1, 100) * 100
+	def.shard_cap = reader.opt_int("shard_cap", 0, 0, 1000)
 	for problem: String in def.problems():
 		reader.error(problem)
 	var kit: UnitDef = def
@@ -231,6 +237,7 @@ func copy() -> UnitDef:
 	other.placed_snares = placed_snares
 	other.placed_lantern = placed_lantern
 	other.start_hp_bp = start_hp_bp
+	other.shard_cap = shard_cap
 	return other
 
 
@@ -247,6 +254,7 @@ func status_ids() -> Array[String]:
 	for effect: EffectDef in all_effects():
 		if effect.type == EffectDef.Type.APPLY_STATUS or effect.type == EffectDef.Type.EXTEND_STATUS:
 			found.append(effect.status_id)
+			found.append_array(effect.smaller_of)
 		found.append_array(effect.statuses)
 		if not effect.overheal_status.is_empty():
 			found.append(effect.overheal_status)
@@ -266,16 +274,22 @@ func condition_status_ids() -> Array[String]:
 			for condition: UnitCondition in [part.aura.vs, part.aura.state]:
 				if condition != null:
 					found.append_array(condition.statuses)
+					found.append_array(condition.all_statuses)
+			if not part.aura.per_target_stacks.is_empty():
+				found.append(part.aura.per_target_stacks)
+				found.append_array(part.aura.per_target_more)
 	for effect: EffectDef in all_effects():
 		for condition: UnitCondition in [effect.vs, effect.only, effect.heal_cap_vs]:
 			if condition != null:
 				found.append_array(condition.statuses)
+				found.append_array(condition.all_statuses)
 		if not effect.stacks_of.is_empty():
 			found.append(effect.stacks_of)
 		if not effect.spends.is_empty():
 			found.append(effect.spends)
 		if not effect.per_stack_status.is_empty():
 			found.append(effect.per_stack_status)
+			found.append_array(effect.per_stack_more)
 		if not effect.radius_per_stack.is_empty():
 			found.append(effect.radius_per_stack)
 		found.append_array(effect.cleanse_statuses)

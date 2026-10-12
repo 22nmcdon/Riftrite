@@ -122,6 +122,15 @@ extends RefCounted
 ##                                        Spread)
 ##       "heal_cap": {"pct": 30, "vs": {...}}   its heals' cap (EffectDef's
 ##                                        "cap": The Vigil Lamp)
+## Phase 8 part 6 (Ottilie's cards), per "on" entry:
+##       "per_stacks_add": -1,            a named per-hit aura's per_stacks (at
+##       "cap_add_bp": 200,               least 1) and cap_bp (Sharp Reaction)
+##       "per_stack_amount_add": 1        a damage's amount_per_stack (Heavy
+##                                        Flask)
+## and at the top: "shard_cap_add": 2 (its kit's shard_cap, if it has one:
+## Deep Purse). Effects a card adds to an ability go before a gain_mana aimed
+## at the lowest-mana ally, so they reach the ally the mana does (Fizzing
+## Vial, Bracing Vial).
 ## Phase 8 part 5 (Severine's cards), per "on" entry:
 ##       "lifesteal_add_bp": 500,         a damage effect's own lifesteal, if it
 ##                                        has any (Deep Bite: Rend's 15% to 20%)
@@ -258,6 +267,11 @@ class AbilityChange:
 	## A heal's cap (Lantern Vigil): pct of max HP, and the units it holds on.
 	var heal_cap_bp: int = 0
 	var heal_cap_vs: UnitCondition = null
+	## Phase 8 part 6 (Ottilie's cards): a named per-hit aura's per_stacks and
+	## cap (Sharp Reaction), and a damage's amount_per_stack (Heavy Flask).
+	var per_stacks_add: int = 0
+	var cap_add_bp: int = 0
+	var per_stack_amount_add: int = 0
 
 	## True if it reaches `ability_id` (every ability when it names none).
 	func reaches(id: String) -> bool:
@@ -269,7 +283,7 @@ class AbilityChange:
 			or strength_add_bp != 0 or follows or ricochet_add != 0 or reflect_bp != 0 or snags \
 			or per_enemy_add_bp != 0 or overheal_max_hp_add != 0 or at_stacks_add != 0 or per_taken_add_bp != 0 or holder != null or carries \
 			or ignores_def or prefer != null and not ability_id.is_empty() or per_stack_add_bp != 0 or within_add != 0 or count_add != 0 \
-			or share_add_bp != 0 or grow_every_add_ticks != 0 or grow_max_add != 0 or heal_cap_bp != 0 \
+			or share_add_bp != 0 or grow_every_add_ticks != 0 or grow_max_add != 0 or heal_cap_bp != 0 or per_stack_amount_add != 0 \
 			or lifesteal_add_bp != 0 or plus_max_hp_add_bp != 0 or follows_holder or raise_grow_add_bp != 0 or cooldown_bp != FixedMath.BP_ONE
 
 	func touches(effect: EffectDef) -> bool:
@@ -282,7 +296,7 @@ class AbilityChange:
 	## True if it changes the named passive itself (its aura or its Guard).
 	func changes_part() -> bool:
 		return value_add != 0 or guard_share_add != 0 or guard_within_add != 0 or guard_covers_all or rise_add_bp != 0 or per_shared_bp != FixedMath.BP_ONE \
-			or per_twice != null
+			or per_twice != null or per_stacks_add != 0 or cap_add_bp != 0
 
 	## A knockback's or pull's distance scales with amount_bp only when the
 	## change names that type (phase 5c step 7: Crushing Blow), so a mod on
@@ -324,6 +338,9 @@ var plant_add_ticks: int = 0
 var break_free_add_ticks: int = 0
 ## Phase 8 part 3: how much farther its Engage reaches (plane units).
 var engage_reach_add: int = 0
+## Phase 8 part 6 (Deep Purse): its kit's shard_cap, raised (only a kit
+## with one).
+var shard_cap_add: int = 0
 var mana_taken_bp: int = FixedMath.BP_ONE
 ## Phase 5c step 7d: the player places its signature's first area before
 ## the fight (First Lantern).
@@ -379,6 +396,7 @@ static func read(reader: DataReader) -> KitMod:
 			mod.mana_taken_bp = mana_reader.opt_int("taken_bp", FixedMath.BP_ONE, 1000, 50000)
 			mana_reader.finish()
 	mod.plant_add_ticks = _signed_ticks(reader, "plant_add_ms")
+	mod.shard_cap_add = reader.opt_int("shard_cap_add", 0, -100, 100)
 	mod.places_lantern = reader.opt_bool("places_lantern", false)
 	mod.drops_signature = reader.opt_bool("drops_signature", false)
 	if reader.has("drops_passives"):
@@ -512,6 +530,9 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 	change.share_add_bp = reader.opt_int("share_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
 	change.grow_every_add_ticks = reader.opt_ticks("grow_every_add_ms", 0, -10000)
 	change.grow_max_add = reader.opt_int("grow_max_add", 0, -3, 3)
+	change.per_stacks_add = reader.opt_int("per_stacks_add", 0, -10, 10)
+	change.cap_add_bp = reader.opt_int("cap_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
+	change.per_stack_amount_add = reader.opt_int("per_stack_amount_add", 0, -10, 10)
 	if reader.has("heal_cap"):
 		var cap: DataReader = reader.req_object("heal_cap")
 		if cap != null:
@@ -531,7 +552,7 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 			or change.prefer != null and change.slot != SLOT_SIGNATURE and change.ability_id.is_empty():
 		reader.error("cast_bp, targets_add, and prefer change a signature (\"slot\": \"signature\"; prefer also a named \"ability\")")
 	if (change.changes_part() or change.after_add_ticks != 0) and not change.slot.begins_with(PASSIVE_PREFIX):
-		reader.error("after_add_ms, value_add, guard, rise_add_pct, per_shared_bp, and per_twice change a named passive (\"slot\": \"passive:<id>\")")
+		reader.error("after_add_ms, value_add, guard, rise_add_pct, per_shared_bp, per_twice, per_stacks_add, and cap_add_bp change a named passive (\"slot\": \"passive:<id>\")")
 	if not (change.touches_effects() or change.cooldown_bp != FixedMath.BP_ONE or not change.add_effects.is_empty() or change.after_add_ticks != 0
 			or change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0 or change.changes_part() or change.prefer != null
 			or change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0 or change.mana_max_add != 0 or change.reach_add != 0 or change.grip_fast_vs != null
@@ -551,7 +572,8 @@ static func _signed_ticks(reader: DataReader, key: String) -> int:
 
 ## Why this mod can't be a growing card's step ("" if it can): a step may
 ## only multiply or add stats, change abilities' amount_bp, or add auras,
-## since those are what scale cleanly (phase 5c step 4, section 9.3).
+## since those are what scale cleanly (phase 5c step 4, section 9.3), or (phase
+## 8 part 6, Midas Touch) raise the shard cap.
 func step_problem() -> String:
 	if _changes_mana() or not also_fires.is_empty() or echo_ticks > 0 or prefer != null or hop_within_add != 0 or hop_cooldown_add_ticks != 0 \
 			or not gambit_label.is_empty() or plant_add_ticks != 0 or break_free_add_ticks != 0 or engage_reach_add != 0 or places_lantern or drops_signature \
@@ -592,6 +614,8 @@ func times(steps: int) -> KitMod:
 		aura.value = steps * aura.value if aura.is_additive() else FixedMath.BP_ONE + steps * (aura.value - FixedMath.BP_ONE)
 		copy.aura = aura
 		scaled.passives.append(copy)
+	# A shard cap's step adds up (phase 8 part 6, Midas Touch).
+	scaled.shard_cap_add = steps * shard_cap_add
 	for change: AbilityChange in changes:
 		var copy := AbilityChange.new()
 		copy.slot = change.slot
@@ -608,7 +632,7 @@ func changes_anything() -> bool:
 		if stats_bp[stat] != FixedMath.BP_ONE or stats_add[stat] != 0:
 			return true
 	return not passives.is_empty() or not changes.is_empty() or _changes_mana() or not also_fires.is_empty() or echo_ticks > 0 \
-		or prefer != null or hop_within_add != 0 or hop_cooldown_add_ticks != 0 or not gambit_label.is_empty() or plant_add_ticks != 0 \
+		or prefer != null or hop_within_add != 0 or hop_cooldown_add_ticks != 0 or not gambit_label.is_empty() or plant_add_ticks != 0 or shard_cap_add != 0 \
 		or break_free_add_ticks != 0 or engage_reach_add != 0 or places_lantern or drops_signature or not drops_passives.is_empty()
 
 
@@ -638,6 +662,8 @@ func affects_besides_passives(kit: UnitDef) -> bool:
 		return true
 	if plant_add_ticks != 0 and kit.plant_ticks > 0 or (break_free_add_ticks != 0 or engage_reach_add != 0) and kit.has_trait("engage"):
 		return true
+	if shard_cap_add != 0 and kit.shard_cap > 0:
+		return true
 	if places_lantern and lantern_area(kit) != null or drops_signature and kit.signature != null:
 		return true
 	if drops_passives.any(func(part_id: String) -> bool: return _passive_index(kit, PASSIVE_PREFIX + part_id) >= 0):
@@ -656,7 +682,9 @@ func affects_besides_passives(kit: UnitDef) -> bool:
 			return true
 		if change.changes_part():
 			var at: int = _passive_index(kit, change.slot)
-			if at >= 0 and (change.value_add != 0 and kit.passives[at].aura != null or kit.passives[at].kind == PartDef.Kind.GUARD and
+			if at >= 0 and (change.value_add != 0 and kit.passives[at].aura != null
+					or (change.per_stacks_add != 0 or change.cap_add_bp != 0) and kit.passives[at].aura != null and not kit.passives[at].aura.per_target_stacks.is_empty()
+					or kit.passives[at].kind == PartDef.Kind.GUARD and
 					(change.guard_share_add != 0 or change.guard_within_add != 0 or change.guard_covers_all and kit.passives[at].behind_only)
 					or change.rise_add_bp != 0 and kit.passives[at].kind == PartDef.Kind.RISE
 					or change.per_shared_bp != FixedMath.BP_ONE and kit.passives[at].kind == PartDef.Kind.LINK and kit.passives[at].per_shared > 0):
@@ -713,6 +741,8 @@ func apply(kit: UnitDef, problems: Array[String] = []) -> UnitDef:
 		built.mana = mana
 	if built.plant_ticks > 0:
 		built.plant_ticks = maxi(built.plant_ticks + plant_add_ticks, 0)
+	if built.shard_cap > 0:
+		built.shard_cap = maxi(built.shard_cap + shard_cap_add, 1)
 	if built.has_trait("engage"):
 		built.break_free_add_ticks += break_free_add_ticks
 		built.engage_reach_add += engage_reach_add
@@ -811,10 +841,15 @@ func _apply_change(built: UnitDef, change: AbilityChange, problems: Array[String
 		var copy: PartDef = DefCopy.shallow(part) as PartDef
 		if part.ability != null:
 			copy.ability = _changed_ability(part.ability, change)
-		if named and (change.after_add_ticks != 0 or change.value_add != 0) and part.aura != null:
+		if named and (change.after_add_ticks != 0 or change.value_add != 0 or change.per_stacks_add != 0 or change.cap_add_bp != 0) and part.aura != null:
 			copy.aura = DefCopy.shallow(part.aura) as AuraDef
 			copy.aura.after_ticks = maxi(copy.aura.after_ticks + change.after_add_ticks, 0)
 			copy.aura.value += change.value_add
+			if not part.aura.per_target_stacks.is_empty():
+				# Reaction's count and cap (phase 8 part 6, Sharp Reaction).
+				copy.aura.per_stacks = maxi(part.aura.per_stacks + change.per_stacks_add, 1)
+				if part.aura.cap_bp > 0:
+					copy.aura.cap_bp = maxi(part.aura.cap_bp + change.cap_add_bp, 1)
 		if named and part.kind == PartDef.Kind.RISE and change.rise_add_bp != 0:
 			copy.rise_hp_bp = clampi(copy.rise_hp_bp + change.rise_add_bp, 100, FixedMath.BP_ONE)
 		if named and part.kind == PartDef.Kind.LINK and change.per_shared_bp != FixedMath.BP_ONE and part.per_shared > 0:
@@ -871,6 +906,11 @@ static func _changed_ability(ability: AbilityDef, change: AbilityChange) -> Abil
 		if copy.effects[i].type == EffectDef.Type.SPEND_SHIELD:
 			spends = i
 			break
+		# And before mana to the lowest-mana ally, so they reach the ally the
+		# mana does (phase 8 part 6, Fizzing Vial).
+		if copy.effects[i].type == EffectDef.Type.GAIN_MANA and copy.effects[i].target == EffectDef.Target.LOWEST_MANA_ALLY:
+			spends = i
+			break
 	if spends < 0 or change.add_effects.is_empty():
 		copy.effects.append_array(change.add_effects)
 	else:
@@ -924,6 +964,8 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 			if change.cooldown_bp != FixedMath.BP_ONE:
 				if copy.interval_ticks > 0:
 					copy.interval_ticks = maxi(FixedMath.apply_bp(copy.interval_ticks, change.cooldown_bp), 1)
+					if copy.first_ticks > 0:
+						copy.first_ticks = maxi(FixedMath.apply_bp(copy.first_ticks, change.cooldown_bp), 1)
 				if copy.cooldown_ticks > 0:
 					copy.cooldown_ticks = maxi(FixedMath.apply_bp(copy.cooldown_ticks, change.cooldown_bp), 1)
 				if copy.cooldown_per_unit_ticks > 0:
@@ -956,6 +998,9 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 			if change.heal_cap_bp != 0 and effect.type == EffectDef.Type.HEAL:
 				copy.heal_cap_bp = change.heal_cap_bp
 				copy.heal_cap_vs = change.heal_cap_vs
+			# Phase 8 part 6 (Heavy Flask): more for each stack.
+			if change.per_stack_amount_add != 0 and effect.amount_per_stack > 0:
+				copy.amount_per_stack = maxi(effect.amount_per_stack + change.per_stack_amount_add, 1)
 			# Step 7b's knobs.
 			if change.every_add != 0 and effect.every > 1:
 				copy.every = maxi(effect.every + change.every_add, 1)
@@ -1036,6 +1081,7 @@ static func _any_effect(effects: Array[EffectDef], change: AbilityChange) -> boo
 				or change.count_add != 0 and effect.nearest > 0 or change.share_add_bp != 0 and effect.stacks_share_bp > 0
 				or (change.grow_every_add_ticks != 0 or change.grow_max_add != 0) and effect.grow_ticks > 0
 				or change.heal_cap_bp != 0 and effect.type == EffectDef.Type.HEAL
+				or change.per_stack_amount_add != 0 and effect.amount_per_stack > 0
 				or change.max_standing_add != 0 and effect.max_standing > 0
 				or change.overheal_add_bp != 0 and effect.overheal_shield_bp > 0
 				or change.width_add != 0 and effect.type == EffectDef.Type.WALL

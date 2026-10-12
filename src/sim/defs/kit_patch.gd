@@ -21,6 +21,8 @@ extends RefCounted
 ##                                                 hop_cooldown_ms (phase 8)
 ##    "start_hp_pct": 50,                          UnitDef's start_hp_pct
 ##                                                 (phase 8 part 5, Hemomancer)
+##    "shard_cap": 8,                              UnitDef's shard_cap
+##                                                 (phase 8 part 6, Transmuter)
 ##    "prefer": {"label": "Scent", "vs": {...UnitCondition...},
 ##               "within_hexes": 4}}               the enemies it picks first
 ##                                                 (UnitDef.prefer; phase 8
@@ -56,6 +58,8 @@ var prefer_label: String = ""
 var prefer_reach: int = 0
 ## The share of max HP it starts at (0: unchanged; phase 8 part 5).
 var start_hp_bp: int = 0
+## Its shard cap (-1: unchanged; phase 8 part 6).
+var shard_cap: int = -1
 
 
 static func make() -> KitPatch:
@@ -105,6 +109,8 @@ static func read(reader: DataReader) -> KitPatch:
 		patch.hop_cooldown_ticks = reader.req_ticks("hop_cooldown_ms", FixedMath.MS_PER_TICK)
 	if reader.has("start_hp_pct"):
 		patch.start_hp_bp = reader.req_int("start_hp_pct", 1, 100) * 100
+	if reader.has("shard_cap"):
+		patch.shard_cap = reader.req_int("shard_cap", 0, 1000)
 	if reader.has("prefer"):
 		var prefer_reader: DataReader = reader.req_object("prefer")
 		if prefer_reader != null:
@@ -123,7 +129,8 @@ func changes_anything() -> bool:
 		if stats_bp[stat] != FixedMath.BP_ONE or stats_add[stat] != 0:
 			return true
 	return basic_attack != null or signature != null or mana != null or removes_mana or not passives.is_empty() or not remove_passives.is_empty() \
-		or not add_traits.is_empty() or plant_ticks >= 0 or placed_snares >= 0 or hop_cooldown_ticks >= 0 or prefer != null or start_hp_bp > 0
+		or not add_traits.is_empty() or plant_ticks >= 0 or placed_snares >= 0 or hop_cooldown_ticks >= 0 or prefer != null or start_hp_bp > 0 \
+		or shard_cap >= 0
 
 
 ## `base` with the patch applied (a new UnitDef; `base` is untouched), and
@@ -180,6 +187,8 @@ func apply(base: UnitDef, problems: Array[String] = []) -> UnitDef:
 		built.prefer_reach = prefer_reach
 	if start_hp_bp > 0:
 		built.start_hp_bp = start_hp_bp
+	if shard_cap >= 0:
+		built.shard_cap = shard_cap
 	if built.placed_snares > 0 and Snares.placed_effect(built) == null:
 		problems.append("it places snares, so its kit needs a snare effect")
 	for part: PartDef in passives:

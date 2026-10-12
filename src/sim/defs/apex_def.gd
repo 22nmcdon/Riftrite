@@ -27,6 +27,10 @@ var apex_patch: KitPatch
 ## its own once earned (phase 8 part 5, Collector of Debts; null: none).
 var vowed_tithe: TitheDef = null
 var apex_tithe: TitheDef = null
+## Its transmuting's taste and its own once earned (phase 8 part 6, Grand
+## Transmutation; null: none).
+var vowed_transmute: TransmuteDef = null
+var apex_transmute: TransmuteDef = null
 ## A run snowball (phase 8 part 5: Golden Aegis, Collector of Debts): a
 ## growth on what the run counts ("run_counts"), from when it's earned; its
 ## steps' mod goes to its hero, or every hero with "team" (null: none).
@@ -49,10 +53,11 @@ static func read(reader: DataReader, path_id: String) -> ApexDef:
 		def.taste = vowed.req_string("taste")
 		# A taste that's only a Tithe needs no patch (phase 8 part 5,
 		# Collector of Debts).
-		var patch: DataReader = vowed.req_object("patch") if vowed.has("patch") or not vowed.has("tithe") else null
+		var patch: DataReader = vowed.req_object("patch") if vowed.has("patch") or not (vowed.has("tithe") or vowed.has("transmute")) else null
 		def.vowed_patch = KitPatch.read(patch) if patch != null else KitPatch.make()
 		var tithe: DataReader = vowed.req_object("tithe") if vowed.has("tithe") else null
 		def.vowed_tithe = TitheDef.read(tithe) if tithe != null else null
+		def.vowed_transmute = TransmuteDef.read_in(vowed)
 		vowed.finish()
 	var apex: DataReader = reader.req_object("apex")
 	if apex != null:
@@ -61,6 +66,7 @@ static func read(reader: DataReader, path_id: String) -> ApexDef:
 		def.apex_patch = KitPatch.read(patch) if patch != null else KitPatch.make()
 		var tithe: DataReader = apex.req_object("tithe") if apex.has("tithe") else null
 		def.apex_tithe = TitheDef.read(tithe) if tithe != null else null
+		def.apex_transmute = TransmuteDef.read_in(apex)
 		apex.finish()
 	if def.vowed_patch == null:
 		def.vowed_patch = KitPatch.make()

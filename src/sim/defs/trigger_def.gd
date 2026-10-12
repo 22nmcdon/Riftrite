@@ -2,6 +2,10 @@ class_name TriggerDef
 extends RefCounted
 ## What fires a signature (docs/plans/rebuild-phase1-arena-sim.md, section 5):
 ##   {"kind": "mana"}                                the bar is full (the unit needs "mana")
+##   {"kind": "mana", "recover_ms": 4000}            and not within 4s of its last fire: a
+##                                                   full bar waits (phase 8 part 6, Elixir:
+##                                                   so two units giving each other mana
+##                                                   can't cast without end)
 ##   {"kind": "hp_below", "threshold_bp": 3000}      once, the first time it's below 30% HP
 ##   {"kind": "fight_start"}                         once, on the first tick
 ##   {"kind": "at_time", "at_ms": 8000}              once, at 8s
@@ -41,6 +45,8 @@ var event: EffectDef.Trigger = EffectDef.Trigger.ON_HIT_TAKEN
 var every: int = 1
 ## ally_fires: the ally's ability id.
 var ability: String = ""
+## mana: how long after a fire before it can fire again (0: at once).
+var recover_ticks: int = 0
 
 
 static func read(reader: DataReader) -> TriggerDef:
@@ -51,6 +57,9 @@ static func read(reader: DataReader) -> TriggerDef:
 		reader.finish()
 		return def
 	match def.kind:
+		Kind.MANA:
+			if reader.has("recover_ms"):
+				def.recover_ticks = reader.req_ticks("recover_ms", FixedMath.MS_PER_TICK)
 		Kind.HP_BELOW, Kind.HP_ABOVE:
 			def.threshold_bp = reader.req_int("threshold_bp", 1, FixedMath.BP_ONE - 1)
 		Kind.AT_TIME:

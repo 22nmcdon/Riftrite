@@ -5,6 +5,8 @@ extends RefCounted
 ## field given must hold; a list holds if any of it does:
 ##   {"keywords": ["rooted"]}                Rooted (Keywords.NAMES)
 ##   {"statuses": ["root", "stun"]}          Rooted or Stunned (any status id)
+##   {"all_statuses": ["burn", "poison"]}    Burning and Poisoned: every one
+##                                           (phase 8 part 6, Ottilie)
 ##   {"below_hp_pct": 30}                    below 30% of its max HP
 ##   {"above_hp_pct": 90}                    above 90% of its max HP (the
 ##                                           tuning phase; Full Vigor)
@@ -13,6 +15,8 @@ extends RefCounted
 ##   {"front_most": true}                    its side's standing unit nearest
 ##                                           the other side (phase 5c step
 ##                                           7c; CombatSim marks it each tick)
+##   {"ranks": ["elite", "boss"]}            an enemy of these ranks (phase 8
+##                                           part 6, Assayer; UnitDef.rank)
 ##   {"kits": ["drowned_thrall"]}            of one of these kits (phase 8
 ##                                           part 3; the Tolling Bellringer)
 ##   {"on_water": true}                      standing on water (phase 8 part
@@ -47,6 +51,9 @@ extends RefCounted
 ##   {"fired_over_full": true}               its signature last fired with
 ##                                           mana past a full bar (phase 8
 ##                                           part 4, Wellspring)
+##   {"others": true}                        any unit but the condition's
+##                                           holder (phase 8 part 6, Elixir:
+##                                           mana for every other ally)
 ## Used as an event effect's "vs" (the unit the event names), a damage_bp
 ## aura's "vs" (the target of the hit), and an aura's "while": "state" (its
 ## holder).
@@ -55,6 +62,10 @@ enum Flying { ANY, YES, NO }
 
 var keywords: Array[String] = []
 var statuses: Array[String] = []
+## Every one of these (phase 8 part 6).
+var all_statuses: Array[String] = []
+## Of these ranks (phase 8 part 6).
+var ranks: Array[String] = []
 ## 0: no HP condition.
 var below_hp_bp: int = 0
 var above_hp_bp: int = 0
@@ -81,6 +92,8 @@ var target_beyond: int = 0
 ## Its signature last fired from past a full bar (phase 8 part 4).
 var fired_over_full: bool = false
 var raised: bool = false
+## Not the holder itself (phase 8 part 6).
+var others: bool = false
 
 
 static func read(reader: DataReader) -> UnitCondition:
@@ -90,6 +103,9 @@ static func read(reader: DataReader) -> UnitCondition:
 	def.keywords = reader.opt_choice_array("keywords", Keywords.NAMES)
 	if reader.has("statuses"):
 		def.statuses = reader.req_string_array("statuses")
+	if reader.has("all_statuses"):
+		def.all_statuses = reader.req_string_array("all_statuses")
+	def.ranks = reader.opt_choice_array("ranks", ["elite", "boss"])
 	if reader.has("below_hp_pct"):
 		def.below_hp_bp = reader.req_int("below_hp_pct", 1, 99) * 100
 	if reader.has("above_hp_pct"):
@@ -119,22 +135,25 @@ static func read(reader: DataReader) -> UnitCondition:
 		def.target_beyond = reader.req_int("target_beyond_hexes", 1, 10) * HexGrid.HEX
 	def.fired_over_full = reader.opt_bool("fired_over_full", false)
 	def.raised = reader.opt_bool("raised", false)
+	def.others = reader.opt_bool("others", false)
 	if def.is_empty():
-		reader.error("a condition needs at least one of keywords, statuses, below_hp_pct, above_hp_pct, flying, archetypes, front_most, on_water, same_island, shield_above_pct, engorged_pct, targets_holder, target, ranged, shielded, target_beyond_hexes, fired_over_full, raised, or kits")
+		reader.error("a condition needs at least one of keywords, statuses, all_statuses, ranks, below_hp_pct, above_hp_pct, flying, archetypes, front_most, on_water, same_island, shield_above_pct, engorged_pct, targets_holder, target, ranged, shielded, target_beyond_hexes, fired_over_full, raised, others, or kits")
 	reader.finish()
 	return def
 
 
 func is_empty() -> bool:
-	return keywords.is_empty() and statuses.is_empty() and below_hp_bp == 0 and above_hp_bp == 0 and flying == Flying.ANY and archetypes.is_empty() and not front_most and on_water == Flying.ANY and kits.is_empty() and not same_island and shield_above_bp == 0 and engorged_bp == 0 \
+	return keywords.is_empty() and statuses.is_empty() and all_statuses.is_empty() and ranks.is_empty() and below_hp_bp == 0 and above_hp_bp == 0 and flying == Flying.ANY and archetypes.is_empty() and not front_most and on_water == Flying.ANY and kits.is_empty() and not same_island and shield_above_bp == 0 and engorged_bp == 0 \
 		and targets_holder == Flying.ANY and target == null and ranged == Flying.ANY and target_beyond == 0 and not fired_over_full and not raised \
-		and shielded == Flying.ANY
+		and shielded == Flying.ANY and not others
 
 
 ## True if `unit` meets every field given. `holder`: whose condition it is
 ## (the unit an aura or event effect belongs to), for same_island; without
 ## one, same_island never holds.
 func holds(unit: UnitState, holder: UnitState = null) -> bool:
+	if others and unit == holder:
+		return false
 	if same_island and (holder == null or unit.island < 0 or unit.island != holder.island):
 		return false
 	if below_hp_bp > 0 and unit.hp * FixedMath.BP_ONE >= below_hp_bp * unit.max_hp:
@@ -158,6 +177,11 @@ func holds(unit: UnitState, holder: UnitState = null) -> bool:
 	if not keywords.is_empty() and not _has_keyword(unit):
 		return false
 	if not statuses.is_empty() and not _has_status(unit):
+		return false
+	for status_id: String in all_statuses:
+		if Statuses.find(unit, status_id) == null:
+			return false
+	if not ranks.is_empty() and not ranks.has(unit.def.rank):
 		return false
 	if targets_holder != Flying.ANY and (holder == null or (unit.target == holder) != (targets_holder == Flying.YES)):
 		return false
@@ -201,6 +225,10 @@ func describe() -> String:
 		states.append(status_id.replace("_", " ").capitalize())
 	if not states.is_empty():
 		parts.append(" or ".join(states))
+	if not all_statuses.is_empty():
+		parts.append(" and ".join(all_statuses.map(func(status_id: String) -> String: return status_id.replace("_", " ").capitalize())))
+	if not ranks.is_empty():
+		parts.append(" or ".join(ranks) + "s" if ranks.size() == 1 else "elites or bosses")
 	if below_hp_bp > 0:
 		@warning_ignore("integer_division")
 		parts.append("below %d%% HP" % (below_hp_bp / 100))
@@ -240,4 +268,6 @@ func describe() -> String:
 		parts.append("casting from past a full bar")
 	if raised:
 		parts.append("a raised thrall")
+	if others:
+		parts.append("another")
 	return ", ".join(parts)

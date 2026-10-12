@@ -34,6 +34,9 @@ const SPECIALIZE: int = 18
 const UPGRADE: int = 19
 ## What the rift learns puts on a boss's adds (phase 8 part 3).
 const LEARN: int = 20
+## The item a transmuted item turns into (phase 8 part 6, Grand
+## Transmutation).
+const TRANSMUTE: int = 21
 
 const MIX: int = 0x2545F4914F6CDD1D
 

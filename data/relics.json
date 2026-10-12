@@ -2862,5 +2862,117 @@
         }
       ]
     }
+  },
+  {
+    "id": "plague_alchemy",
+    "name": "Plague Alchemy",
+    "tier": "bond",
+    "icon": "ember_heart",
+    "flavor": "Putrefaction: Ottilie's reagents in Severine's cloud.",
+    "text": "Severine's Plague Burst also sets Burn as strong as its Poison, and her lifesteal is tripled against enemies both Burning and Poisoned.",
+    "mod_for": "severine",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "plague_burst",
+          "add_to_areas": [
+            {
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 0,
+              "scaling": {
+                "atk": 3000
+              },
+              "target": "target"
+            }
+          ]
+        }
+      ],
+      "passives": [
+        {
+          "id": "plague_alchemy",
+          "name": "Plague Alchemy",
+          "kind": "aura",
+          "text": "Her lifesteal is tripled against enemies both Burning and Poisoned.",
+          "aura": {
+            "target": "holder",
+            "stat": "lifesteal_more_bp",
+            "value": 20000,
+            "vs": {
+              "all_statuses": [
+                "burn",
+                "poison"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_tonic_choir",
+    "name": "The Tonic Choir",
+    "tier": "bond",
+    "icon": "echo",
+    "flavor": "Tonic and Hymn: her tonics, his chorus.",
+    "text": "Each of Ottilie's mana vials gives Aldous the same mana too, which he shares on, and each Crescendo makes her next 3 Tosses throw mana vials.",
+    "mod_for": "ottilie",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:tonic",
+          "add_effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "toss"
+              ],
+              "spends": "tonic_vial",
+              "type": "gain_mana",
+              "amount": 30,
+              "target": "all_allies",
+              "only": {
+                "kits": [
+                  "aldous"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "passives": [
+        {
+          "id": "the_tonic_choir",
+          "name": "The Tonic Choir",
+          "kind": "ability",
+          "text": "Each Crescendo of Aldous's fills her next 3 Tosses with mana vials for the ally with the least mana.",
+          "effects": [
+            {
+              "trigger": "on_ally_ability",
+              "vs": {
+                "kits": [
+                  "aldous"
+                ]
+              },
+              "type": "apply_status",
+              "status": "choir_vial",
+              "stacks": 3,
+              "target": "self"
+            },
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "toss"
+              ],
+              "spends": "choir_vial",
+              "type": "gain_mana",
+              "amount": 30,
+              "target": "lowest_mana_ally"
+            }
+          ]
+        }
+      ]
+    }
   }
 ]

@@ -69,6 +69,12 @@ func is_null(key: String) -> bool:
 	return false
 
 
+## Whether the key is there and holds a list (phase 8 part 6: a key that
+## takes one name or several).
+func is_array(key: String) -> bool:
+	return _data.has(key) and typeof(_data[key]) == TYPE_ARRAY
+
+
 func key_path(key: String) -> String:
 	return "%s.%s" % [path, key]
 

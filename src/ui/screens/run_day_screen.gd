@@ -760,6 +760,15 @@ func _fill_shop() -> void:
 		for id: String in state.item_ranks:
 			more.add_child(UiStyle.button("Sell %s · %d shard%s" % [session.run.items[id].name, session.flow.sell_price(id), "" if session.flow.sell_price(id) == 1 else "s"],
 				_do.bind(session.flow.sell.bind(id))))
+			# Ottilie's Transmuter turns it into shards at its full price
+			# (phase 8 part 6).
+			if session.flow.transmutes_left() > 0:
+				more.add_child(UiStyle.button("Transmute %s · %d shards" % [session.run.items[id].name, session.flow.transmute_price(id)],
+					_do.bind(session.flow.transmute.bind(id))))
+			# Grand Transmutation: into another item of its kind.
+			if session.flow.transmutes_into_left() > 0:
+				more.add_child(UiStyle.button("Transmute %s into another %s" % [session.run.items[id].name, ItemDef.KIND_NAMES[session.run.items[id].kind]],
+					_do.bind(session.flow.transmute_into.bind(id))))
 	if magpie:
 		more.add_child(UiStyle.label("One look", 17, UiStyle.TEXT_DIM))
 		# He buys relics, and swaps one a visit (phase 5c step 6e).

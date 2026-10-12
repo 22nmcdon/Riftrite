@@ -45,6 +45,17 @@ var vs_per_hex: Array[bool] = []
 ## Per hit: times the stacks of this status on the unit itself ("": once;
 ## phase 8 part 5, Blood Tide).
 var vs_per_holder: Array[String] = []
+## Per hit: the aura itself, for what only a few read (phase 8 part 6:
+## Reaction's summed stacks and cap; Catalyst's deed).
+var vs_defs: Array[AuraDef] = []
+## Per hit: the passive each came from.
+var vs_parts: Array[String] = []
+## A deed counts the damage these passives' per-hit auras add (phase 8 part
+## 6, Catalyst): each hit works it out (LogEntry.part_bonus). Empty: none.
+var bonus_parts: Array[String] = []
+## Shards its effects have paid this fight, against its kit's shard_cap
+## (phase 8 part 6).
+var shards_paid: int = 0
 ## Its side's standing unit nearest the other side, this tick (only kept
 ## when a condition asks: CombatSim.track_front; phase 5c step 7c).
 var front_most: bool = false
@@ -335,6 +346,11 @@ static func from_setup(setup: UnitSetup, fight_index: int, grid: HexGrid, unit_r
 	unit.holding = setup.tactic != null and setup.tactic.kind == TacticDef.Kind.HOLD_GROUND
 	unit.inert = setup.def.has_trait("inert")
 	unit.deeds = Deeds.make_counter(setup.deed_paths, setup.tally_keys, setup.tally_counts, setup.deed_apexes)
+	if unit.deeds != null:
+		for deed: DeedDef in unit.deeds.deeds:
+			if deed.counts == DeedDef.Counts.BONUS_DAMAGE:
+				unit.bonus_parts = deed.from_parts
+				break
 	for part: PartDef in setup.def.passives:
 		if part.kind == PartDef.Kind.GUARD and unit.guard == null:
 			unit.guard = part

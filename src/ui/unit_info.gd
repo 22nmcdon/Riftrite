@@ -315,6 +315,8 @@ static func tactic_numbers(tactic: TacticDef) -> String:
 static func trigger_text(trigger: TriggerDef, kit: UnitDef) -> String:
 	match trigger.kind:
 		TriggerDef.Kind.MANA:
+			if trigger.recover_ticks > 0:
+				return "At %d mana, at most every %s" % [kit.mana.max, seconds(trigger.recover_ticks)]
 			return "At %d mana" % kit.mana.max
 		TriggerDef.Kind.HP_BELOW:
 			return "Once, below %s HP" % ValueBreakdown._percent(trigger.threshold_bp)
@@ -340,6 +342,9 @@ static func passive_trigger_text(effect: EffectDef) -> String:
 		EffectDef.Trigger.ON_INTERVAL:
 			if effect.once and effect.times > 1:
 				return "%d times, every %s" % [effect.times, seconds(effect.interval_ticks)]
+			if effect.first_ticks > 0 and not effect.once:
+				# Phase 8 part 6 (Brewing's vials in turn).
+				return "Every %s, the first at %s" % [seconds(effect.interval_ticks), seconds(effect.first_ticks)]
 			return ("Once, after %s" if effect.once else "Every %s") % seconds(effect.interval_ticks)
 		EffectDef.Trigger.ON_WOULD_FALL:
 			return "Once, when it would fall"
@@ -542,7 +547,10 @@ static func _effect_text(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 		return _effect_text_plain(effect, kit, content) + " (%s for each %s)" % [signed_percent(effect.grows_stack_bp), status]
 	if effect.amount_per_stack > 0:
 		# Immolate (phase 8 part 6): more for each stack on the unit hit.
-		var stacked: String = content.statuses[effect.per_stack_status].name if content != null and content.statuses.has(effect.per_stack_status) else effect.per_stack_status
+		var names: Array[String] = []
+		for status_id: String in ([effect.per_stack_status] as Array[String]) + effect.per_stack_more:
+			names.append(content.statuses[status_id].name if content != null and content.statuses.has(status_id) else status_id)
+		var stacked: String = " and ".join(names)
 		return _effect_text_plain(effect, kit, content) + " (+%d for each stack of %s on it)" % [effect.amount_per_stack, stacked]
 	if effect.per_damage > 0:
 		return _effect_text_plain(effect, kit, content) + " for every %d damage" % effect.per_damage

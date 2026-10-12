@@ -88,7 +88,16 @@ static func set_bar(unit: UnitState, mana: ManaDef) -> void:
 
 
 static func is_full(unit: UnitState) -> bool:
-	return unit.def.mana != null and unit.mana >= unit.def.mana.max * SCALE
+	return unit.def.mana != null and unit.mana >= cost(unit)
+
+
+## What its signature costs now, in hundredths: its bar, less under a
+## signature_cost_bp aura (phase 8 part 6, Mana Flood).
+static func cost(unit: UnitState) -> int:
+	var full: int = unit.def.mana.max * SCALE
+	if unit.aura_bp[AuraDef.Stat.SIGNATURE_COST_BP] == FixedMath.BP_ONE:
+		return full
+	return FixedMath.apply_bp(full, Passives.factor(unit, AuraDef.Stat.SIGNATURE_COST_BP))
 
 
 ## A mana_drain effect: takes `amount` whole mana (as much as there is).

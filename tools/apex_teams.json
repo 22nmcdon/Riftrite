@@ -1,54 +1,553 @@
 {
   "_note": "Teams for the --apexes report (docs/plans/rebuild-phase8-apexes.md, Decisions 9 and 10): each names an apex per hero. A good team has a carry and apexes that fit it (bonded paths first); a poor one has none, or apexes that pull apart. Every apex is in at least one team.",
   "teams": [
-    {"name": "Gallery", "kind": "good", "carry": "maren", "apexes": {"brannoc": "unbroken_gate", "maren": "eagle_eye", "vell": "dawnbringer"}},
-    {"name": "Stormwall", "kind": "good", "carry": "maren", "apexes": {"brannoc": "unbroken_gate", "maren": "stormline", "vell": "the_beacon"}},
-    {"name": "Hearth and Hail", "kind": "good", "carry": "maren", "apexes": {"brannoc": "hearthkeeper", "maren": "hailstorm", "vell": "loomwarden"}},
-    {"name": "Snare and Cleave", "kind": "good", "carry": "brannoc", "apexes": {"brannoc": "forgebreaker", "maren": "huntmaster", "vell": "dawnbringer"}},
-    {"name": "Warband", "kind": "good", "carry": "maren", "apexes": {"brannoc": "warlord", "maren": "windrunner", "vell": "inquisitor"}},
-    {"name": "Last Stand", "kind": "good", "carry": "maren", "apexes": {"brannoc": "martyrs_pyre", "maren": "hailstorm", "vell": "the_beacon"}},
-    {"name": "Hallowed Thicket", "kind": "good", "carry": "vell", "apexes": {"brannoc": "unbroken_gate", "maren": "warden_of_thorns", "vell": "sanctifier"}},
-    {"name": "Oathbreaker", "kind": "good", "carry": "brannoc", "apexes": {"brannoc": "undying_oath", "maren": "huntmaster", "vell": "thornweave"}},
-    {"name": "Smiting Hour", "kind": "good", "carry": "vell", "apexes": {"brannoc": "warlord", "maren": "eagle_eye", "vell": "inquisitor"}},
-    {"name": "Endless Wall", "kind": "good", "carry": "garrow", "apexes": {"garrow": "endless_bulwark", "maren": "eagle_eye", "vell": "loomwarden"}},
-    {"name": "Woven Fang", "kind": "good", "carry": "garrow", "apexes": {"garrow": "shatterburst", "maren": "eagle_eye", "vell": "thornweave"}},
-    {"name": "Grindstone", "kind": "good", "carry": "garrow", "apexes": {"garrow": "grinder", "maren": "hailstorm", "vell": "sanctifier"}},
-    {"name": "Snaring Chain", "kind": "good", "carry": "maren", "apexes": {"garrow": "undertow", "maren": "huntmaster", "vell": "dawnbringer"}},
-    {"name": "Thorn Wall", "kind": "good", "carry": "garrow", "apexes": {"garrow": "thorned_king", "maren": "hailstorm", "vell": "dawnbringer"}},
-    {"name": "Grudgebearer", "kind": "good", "carry": "garrow", "apexes": {"garrow": "vengeance", "maren": "stormline", "vell": "the_beacon"}},
-    {"name": "Night Shroud", "kind": "good", "carry": "tamsin", "apexes": {"brannoc": "unbroken_gate", "vell": "dawnbringer", "tamsin": "phantom"}},
-    {"name": "Veiled Volley", "kind": "good", "carry": "maren", "apexes": {"brannoc": "hearthkeeper", "maren": "hailstorm", "tamsin": "veilmaster"}},
-    {"name": "Headsman", "kind": "good", "carry": "tamsin", "apexes": {"brannoc": "unbroken_gate", "maren": "eagle_eye", "tamsin": "executioner"}},
-    {"name": "Blood Hunt", "kind": "good", "carry": "tamsin", "apexes": {"brannoc": "unbroken_gate", "maren": "stormline", "tamsin": "bloodtrail"}},
-    {"name": "Hold and Break", "kind": "good", "carry": "tamsin", "apexes": {"brannoc": "forgebreaker", "vell": "sanctifier", "tamsin": "strangler"}},
-    {"name": "Pinned Thicket", "kind": "good", "carry": "maren", "apexes": {"maren": "huntmaster", "garrow": "undertow", "tamsin": "pinmaster"}},
-    {"name": "Grand Choir", "kind": "good", "carry": "maren", "apexes": {"brannoc": "warlord", "maren": "stormline", "aldous": "grand_chorus"}},
-    {"name": "Overflow", "kind": "good", "carry": "maren", "apexes": {"brannoc": "unbroken_gate", "maren": "hailstorm", "aldous": "wellspring"}},
-    {"name": "Long Gallery", "kind": "good", "carry": "maren", "apexes": {"brannoc": "unbroken_gate", "maren": "eagle_eye", "aldous": "long_wind"}},
-    {"name": "Singing Volley", "kind": "good", "carry": "maren", "apexes": {"brannoc": "hearthkeeper", "maren": "windrunner", "aldous": "singing_arrows"}},
-    {"name": "Bell Hunt", "kind": "good", "carry": "tamsin", "apexes": {"brannoc": "unbroken_gate", "tamsin": "executioner", "aldous": "the_great_bell"}},
-    {"name": "Requiem", "kind": "good", "carry": "maren", "apexes": {"brannoc": "unbroken_gate", "maren": "eagle_eye", "aldous": "requiem"}},
-    {"name": "Iron Hunger", "kind": "good", "carry": "severine", "apexes": {"garrow": "thorned_king", "vell": "dawnbringer", "severine": "leviathan"}},
-    {"name": "Red Burst", "kind": "good", "carry": "severine", "apexes": {"brannoc": "hearthkeeper", "maren": "eagle_eye", "severine": "sanguine_nova"}},
-    {"name": "Grave March", "kind": "good", "carry": "severine", "apexes": {"brannoc": "unbroken_gate", "maren": "huntmaster", "severine": "gravecaller"}},
-    {"name": "Black Cloud", "kind": "good", "carry": "severine", "apexes": {"brannoc": "hearthkeeper", "maren": "warden_of_thorns", "severine": "pestilence"}},
-    {"name": "Blood and Lamplight", "kind": "good", "carry": "severine", "apexes": {"garrow": "thorned_king", "vell": "dawnbringer", "severine": "blood_tide"}},
-    {"name": "Blood Rite", "kind": "good", "carry": "maren", "apexes": {"brannoc": "unbroken_gate", "maren": "eagle_eye", "severine": "blood_rite"}},
-    {"name": "Swollen Tide", "kind": "good", "carry": "severine", "apexes": {"brannoc": "hearthkeeper", "maren": "eagle_eye", "severine": "leviathan"}},
-    {"name": "Open Vein", "kind": "good", "carry": "severine", "apexes": {"brannoc": "hearthkeeper", "maren": "eagle_eye", "severine": "blood_tide"}},
-    {"name": "Bulwark", "kind": "good", "carry": "garrow", "apexes": {"garrow": "endless_bulwark", "vell": "thornweave", "edric": "bastion_of_saints"}},
-    {"name": "Reforged Line", "kind": "good", "carry": "maren", "apexes": {"brannoc": "unbroken_gate", "maren": "eagle_eye", "edric": "reforged_ward"}},
-    {"name": "Golden Ward", "kind": "good", "carry": "maren", "apexes": {"brannoc": "unbroken_gate", "maren": "eagle_eye", "edric": "golden_aegis"}},
-    {"name": "Debt Collectors", "kind": "good", "carry": "maren", "apexes": {"brannoc": "hearthkeeper", "maren": "eagle_eye", "edric": "collector_of_debts"}},
-    {"name": "Choir of Wards", "kind": "good", "carry": "vell", "apexes": {"aldous": "grand_chorus", "vell": "sanctifier", "edric": "choir_of_wards"}},
-    {"name": "Evensong", "kind": "good", "carry": "maren", "apexes": {"aldous": "grand_chorus", "maren": "stormline", "edric": "evensong"}},
-    {"name": "Blast Furnace", "kind": "good", "carry": "ilse", "apexes": {"brannoc": "unbroken_gate", "aldous": "long_wind", "ilse": "blast_furnace"}},
-    {"name": "Crucible", "kind": "good", "carry": "ilse", "apexes": {"brannoc": "unbroken_gate", "vell": "dawnbringer", "ilse": "crucible"}},
-    {"name": "Living Flame", "kind": "good", "carry": "ilse", "apexes": {"garrow": "undertow", "maren": "hailstorm", "ilse": "living_flame"}},
-    {"name": "Ring of Fire", "kind": "good", "carry": "ilse", "apexes": {"brannoc": "martyrs_pyre", "vell": "dawnbringer", "ilse": "ring_of_fire"}},
-    {"name": "Cinder Saint", "kind": "good", "carry": "maren", "apexes": {"maren": "hailstorm", "tamsin": "phantom", "ilse": "cinder_saint"}},
-    {"name": "Kindred Flame", "kind": "good", "carry": "maren", "apexes": {"brannoc": "hearthkeeper", "maren": "eagle_eye", "ilse": "kindred_flame"}},
-    {"name": "No Edge", "kind": "poor", "apexes": {"brannoc": "hearthkeeper", "maren": "warden_of_thorns", "vell": "loomwarden"}},
-    {"name": "Crossed Purposes", "kind": "poor", "apexes": {"brannoc": "martyrs_pyre", "maren": "huntmaster", "vell": "thornweave"}}
+    {
+      "name": "Gallery",
+      "kind": "good",
+      "carry": "maren",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "maren": "eagle_eye",
+        "vell": "dawnbringer"
+      }
+    },
+    {
+      "name": "Stormwall",
+      "kind": "good",
+      "carry": "maren",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "maren": "stormline",
+        "vell": "the_beacon"
+      }
+    },
+    {
+      "name": "Hearth and Hail",
+      "kind": "good",
+      "carry": "maren",
+      "apexes": {
+        "brannoc": "hearthkeeper",
+        "maren": "hailstorm",
+        "vell": "loomwarden"
+      }
+    },
+    {
+      "name": "Snare and Cleave",
+      "kind": "good",
+      "carry": "brannoc",
+      "apexes": {
+        "brannoc": "forgebreaker",
+        "maren": "huntmaster",
+        "vell": "dawnbringer"
+      }
+    },
+    {
+      "name": "Warband",
+      "kind": "good",
+      "carry": "maren",
+      "apexes": {
+        "brannoc": "warlord",
+        "maren": "windrunner",
+        "vell": "inquisitor"
+      }
+    },
+    {
+      "name": "Last Stand",
+      "kind": "good",
+      "carry": "maren",
+      "apexes": {
+        "brannoc": "martyrs_pyre",
+        "maren": "hailstorm",
+        "vell": "the_beacon"
+      }
+    },
+    {
+      "name": "Hallowed Thicket",
+      "kind": "good",
+      "carry": "vell",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "maren": "warden_of_thorns",
+        "vell": "sanctifier"
+      }
+    },
+    {
+      "name": "Oathbreaker",
+      "kind": "good",
+      "carry": "brannoc",
+      "apexes": {
+        "brannoc": "undying_oath",
+        "maren": "huntmaster",
+        "vell": "thornweave"
+      }
+    },
+    {
+      "name": "Smiting Hour",
+      "kind": "good",
+      "carry": "vell",
+      "apexes": {
+        "brannoc": "warlord",
+        "maren": "eagle_eye",
+        "vell": "inquisitor"
+      }
+    },
+    {
+      "name": "Endless Wall",
+      "kind": "good",
+      "carry": "garrow",
+      "apexes": {
+        "garrow": "endless_bulwark",
+        "maren": "eagle_eye",
+        "vell": "loomwarden"
+      }
+    },
+    {
+      "name": "Woven Fang",
+      "kind": "good",
+      "carry": "garrow",
+      "apexes": {
+        "garrow": "shatterburst",
+        "maren": "eagle_eye",
+        "vell": "thornweave"
+      }
+    },
+    {
+      "name": "Grindstone",
+      "kind": "good",
+      "carry": "garrow",
+      "apexes": {
+        "garrow": "grinder",
+        "maren": "hailstorm",
+        "vell": "sanctifier"
+      }
+    },
+    {
+      "name": "Snaring Chain",
+      "kind": "good",
+      "carry": "maren",
+      "apexes": {
+        "garrow": "undertow",
+        "maren": "huntmaster",
+        "vell": "dawnbringer"
+      }
+    },
+    {
+      "name": "Thorn Wall",
+      "kind": "good",
+      "carry": "garrow",
+      "apexes": {
+        "garrow": "thorned_king",
+        "maren": "hailstorm",
+        "vell": "dawnbringer"
+      }
+    },
+    {
+      "name": "Grudgebearer",
+      "kind": "good",
+      "carry": "garrow",
+      "apexes": {
+        "garrow": "vengeance",
+        "maren": "stormline",
+        "vell": "the_beacon"
+      }
+    },
+    {
+      "name": "Night Shroud",
+      "kind": "good",
+      "carry": "tamsin",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "vell": "dawnbringer",
+        "tamsin": "phantom"
+      }
+    },
+    {
+      "name": "Veiled Volley",
+      "kind": "good",
+      "carry": "maren",
+      "apexes": {
+        "brannoc": "hearthkeeper",
+        "maren": "hailstorm",
+        "tamsin": "veilmaster"
+      }
+    },
+    {
+      "name": "Headsman",
+      "kind": "good",
+      "carry": "tamsin",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "maren": "eagle_eye",
+        "tamsin": "executioner"
+      }
+    },
+    {
+      "name": "Blood Hunt",
+      "kind": "good",
+      "carry": "tamsin",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "maren": "stormline",
+        "tamsin": "bloodtrail"
+      }
+    },
+    {
+      "name": "Hold and Break",
+      "kind": "good",
+      "carry": "tamsin",
+      "apexes": {
+        "brannoc": "forgebreaker",
+        "vell": "sanctifier",
+        "tamsin": "strangler"
+      }
+    },
+    {
+      "name": "Pinned Thicket",
+      "kind": "good",
+      "carry": "maren",
+      "apexes": {
+        "maren": "huntmaster",
+        "garrow": "undertow",
+        "tamsin": "pinmaster"
+      }
+    },
+    {
+      "name": "Grand Choir",
+      "kind": "good",
+      "carry": "maren",
+      "apexes": {
+        "brannoc": "warlord",
+        "maren": "stormline",
+        "aldous": "grand_chorus"
+      }
+    },
+    {
+      "name": "Overflow",
+      "kind": "good",
+      "carry": "maren",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "maren": "hailstorm",
+        "aldous": "wellspring"
+      }
+    },
+    {
+      "name": "Long Gallery",
+      "kind": "good",
+      "carry": "maren",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "maren": "eagle_eye",
+        "aldous": "long_wind"
+      }
+    },
+    {
+      "name": "Singing Volley",
+      "kind": "good",
+      "carry": "maren",
+      "apexes": {
+        "brannoc": "hearthkeeper",
+        "maren": "windrunner",
+        "aldous": "singing_arrows"
+      }
+    },
+    {
+      "name": "Bell Hunt",
+      "kind": "good",
+      "carry": "tamsin",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "tamsin": "executioner",
+        "aldous": "the_great_bell"
+      }
+    },
+    {
+      "name": "Requiem",
+      "kind": "good",
+      "carry": "maren",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "maren": "eagle_eye",
+        "aldous": "requiem"
+      }
+    },
+    {
+      "name": "Iron Hunger",
+      "kind": "good",
+      "carry": "severine",
+      "apexes": {
+        "garrow": "thorned_king",
+        "vell": "dawnbringer",
+        "severine": "leviathan"
+      }
+    },
+    {
+      "name": "Red Burst",
+      "kind": "good",
+      "carry": "severine",
+      "apexes": {
+        "brannoc": "hearthkeeper",
+        "maren": "eagle_eye",
+        "severine": "sanguine_nova"
+      }
+    },
+    {
+      "name": "Grave March",
+      "kind": "good",
+      "carry": "severine",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "maren": "huntmaster",
+        "severine": "gravecaller"
+      }
+    },
+    {
+      "name": "Black Cloud",
+      "kind": "good",
+      "carry": "severine",
+      "apexes": {
+        "brannoc": "hearthkeeper",
+        "maren": "warden_of_thorns",
+        "severine": "pestilence"
+      }
+    },
+    {
+      "name": "Blood and Lamplight",
+      "kind": "good",
+      "carry": "severine",
+      "apexes": {
+        "garrow": "thorned_king",
+        "vell": "dawnbringer",
+        "severine": "blood_tide"
+      }
+    },
+    {
+      "name": "Blood Rite",
+      "kind": "good",
+      "carry": "maren",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "maren": "eagle_eye",
+        "severine": "blood_rite"
+      }
+    },
+    {
+      "name": "Swollen Tide",
+      "kind": "good",
+      "carry": "severine",
+      "apexes": {
+        "brannoc": "hearthkeeper",
+        "maren": "eagle_eye",
+        "severine": "leviathan"
+      }
+    },
+    {
+      "name": "Open Vein",
+      "kind": "good",
+      "carry": "severine",
+      "apexes": {
+        "brannoc": "hearthkeeper",
+        "maren": "eagle_eye",
+        "severine": "blood_tide"
+      }
+    },
+    {
+      "name": "Bulwark",
+      "kind": "good",
+      "carry": "garrow",
+      "apexes": {
+        "garrow": "endless_bulwark",
+        "vell": "thornweave",
+        "edric": "bastion_of_saints"
+      }
+    },
+    {
+      "name": "Reforged Line",
+      "kind": "good",
+      "carry": "maren",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "maren": "eagle_eye",
+        "edric": "reforged_ward"
+      }
+    },
+    {
+      "name": "Golden Ward",
+      "kind": "good",
+      "carry": "maren",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "maren": "eagle_eye",
+        "edric": "golden_aegis"
+      }
+    },
+    {
+      "name": "Debt Collectors",
+      "kind": "good",
+      "carry": "maren",
+      "apexes": {
+        "brannoc": "hearthkeeper",
+        "maren": "eagle_eye",
+        "edric": "collector_of_debts"
+      }
+    },
+    {
+      "name": "Choir of Wards",
+      "kind": "good",
+      "carry": "vell",
+      "apexes": {
+        "aldous": "grand_chorus",
+        "vell": "sanctifier",
+        "edric": "choir_of_wards"
+      }
+    },
+    {
+      "name": "Evensong",
+      "kind": "good",
+      "carry": "maren",
+      "apexes": {
+        "aldous": "grand_chorus",
+        "maren": "stormline",
+        "edric": "evensong"
+      }
+    },
+    {
+      "name": "Blast Furnace",
+      "kind": "good",
+      "carry": "ilse",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "aldous": "long_wind",
+        "ilse": "blast_furnace"
+      }
+    },
+    {
+      "name": "Crucible",
+      "kind": "good",
+      "carry": "ilse",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "vell": "dawnbringer",
+        "ilse": "crucible"
+      }
+    },
+    {
+      "name": "Living Flame",
+      "kind": "good",
+      "carry": "ilse",
+      "apexes": {
+        "garrow": "undertow",
+        "maren": "hailstorm",
+        "ilse": "living_flame"
+      }
+    },
+    {
+      "name": "Ring of Fire",
+      "kind": "good",
+      "carry": "ilse",
+      "apexes": {
+        "brannoc": "martyrs_pyre",
+        "vell": "dawnbringer",
+        "ilse": "ring_of_fire"
+      }
+    },
+    {
+      "name": "Cinder Saint",
+      "kind": "good",
+      "carry": "maren",
+      "apexes": {
+        "maren": "hailstorm",
+        "tamsin": "phantom",
+        "ilse": "cinder_saint"
+      }
+    },
+    {
+      "name": "Kindred Flame",
+      "kind": "good",
+      "carry": "maren",
+      "apexes": {
+        "brannoc": "hearthkeeper",
+        "maren": "eagle_eye",
+        "ilse": "kindred_flame"
+      }
+    },
+    {
+      "name": "No Edge",
+      "kind": "poor",
+      "apexes": {
+        "brannoc": "hearthkeeper",
+        "maren": "warden_of_thorns",
+        "vell": "loomwarden"
+      }
+    },
+    {
+      "name": "Crossed Purposes",
+      "kind": "poor",
+      "apexes": {
+        "brannoc": "martyrs_pyre",
+        "maren": "huntmaster",
+        "vell": "thornweave"
+      }
+    },
+    {
+      "name": "Grand Reaction",
+      "kind": "good",
+      "carry": "ottilie",
+      "apexes": {
+        "severine": "pestilence",
+        "ilse": "living_flame",
+        "ottilie": "grand_reaction"
+      }
+    },
+    {
+      "name": "Solvent",
+      "kind": "good",
+      "carry": "ottilie",
+      "apexes": {
+        "severine": "pestilence",
+        "ilse": "living_flame",
+        "ottilie": "solvent"
+      }
+    },
+    {
+      "name": "Midas Touch",
+      "kind": "good",
+      "carry": "ottilie",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "severine": "pestilence",
+        "ottilie": "midas_touch"
+      }
+    },
+    {
+      "name": "Grand Transmutation",
+      "kind": "good",
+      "carry": "ottilie",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "edric": "collector_of_debts",
+        "ottilie": "grand_transmutation"
+      }
+    },
+    {
+      "name": "Panacea",
+      "kind": "good",
+      "carry": "ottilie",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "aldous": "grand_chorus",
+        "ottilie": "panacea"
+      }
+    },
+    {
+      "name": "Mana Flood",
+      "kind": "good",
+      "carry": "ottilie",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "aldous": "grand_chorus",
+        "ottilie": "mana_flood"
+      }
+    }
   ]
 }

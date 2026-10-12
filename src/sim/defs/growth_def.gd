@@ -34,10 +34,14 @@ var run_counts: String = ""
 ## Golden Aegis, Gold Leaf).
 var team: bool = false
 
-const RUN_COUNTS: Array[String] = ["elite_wins", "wins", "flawless"]
+## "shards" (phase 8 part 6, Midas Touch): the shards the heroes' effects
+## collect in fights (SHARDS lines, not those past a cap), one for each.
+const RUN_COUNTS: Array[String] = ["elite_wins", "wins", "flawless", "shards"]
 
 
-static func read(reader: DataReader) -> GrowthDef:
+## `counts_only`: its steps pay through something else (a card's Tithe), so
+## it needs no "each" (phase 8 part 6, Ottilie's Ledger).
+static func read(reader: DataReader, counts_only: bool = false) -> GrowthDef:
 	var def := GrowthDef.new()
 	if reader.has("run_counts"):
 		def.run_counts = reader.req_choice("run_counts", RUN_COUNTS)
@@ -50,7 +54,7 @@ static func read(reader: DataReader) -> GrowthDef:
 	def.each = KitMod.make()
 	# One the run counts may be only a count (phase 8 part 5: Ledger of
 	# Debts' steps pay through its Tithe, Collector of Debts' raise its own).
-	if (def.each_shards == 0 and def.run_counts.is_empty()) or reader.has("each"):
+	if (def.each_shards == 0 and def.run_counts.is_empty() and not counts_only) or reader.has("each"):
 		var each_reader: DataReader = reader.req_object("each")
 		if each_reader != null:
 			def.each = KitMod.read(each_reader)

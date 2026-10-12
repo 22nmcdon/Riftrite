@@ -38,6 +38,10 @@ var vowed_patch: KitPatch
 ## Collector; TitheDef; null: none). The run pays it; the sim never reads it.
 var vowed_tithe: TitheDef = null
 var transformed_tithe: TitheDef = null
+## Its transmuting, vowed and transformed (phase 8 part 6, Transmuter;
+## TransmuteDef; null: none). The run uses it; the sim never reads it.
+var vowed_transmute: TransmuteDef = null
+var transformed_transmute: TransmuteDef = null
 ## What the transformation brings.
 var transformed_text: String
 var transformed_cost: String
@@ -72,6 +76,7 @@ static func read(reader: DataReader) -> PathDef:
 		def.vowed_patch = KitPatch.read(patch) if patch != null else KitPatch.make()
 		var tithe: DataReader = vowed.req_object("tithe") if vowed.has("tithe") else null
 		def.vowed_tithe = TitheDef.read(tithe) if tithe != null else null
+		def.vowed_transmute = TransmuteDef.read_in(vowed)
 		vowed.finish()
 	var transformed: DataReader = reader.req_object("transformed")
 	if transformed != null:
@@ -82,6 +87,7 @@ static func read(reader: DataReader) -> PathDef:
 		def.transformed_patch = KitPatch.read(patch) if patch != null else KitPatch.make()
 		var tithe: DataReader = transformed.req_object("tithe") if transformed.has("tithe") else null
 		def.transformed_tithe = TitheDef.read(tithe) if tithe != null else null
+		def.transformed_transmute = TransmuteDef.read_in(transformed)
 		transformed.finish()
 	# A missing block has been reported; an empty patch keeps loading going.
 	if def.vowed_patch == null:

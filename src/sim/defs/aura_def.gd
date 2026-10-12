@@ -85,6 +85,10 @@ extends RefCounted
 ##   "per_target_stacks": "marked"          per hit: times the stacks of that
 ##                                          status on the unit hit (Hunter's
 ##                                          Engine)
+##   "per_target_stacks": ["burn", "poison"] per hit: their stacks added (phase 8
+##                                          part 6, Ottilie's Reaction), with
+##   "per_stacks": 5                        once for every 5 stacks, and
+##   "cap_bp": 1000                         at most this much a hit
 ##   "from_basic": true                     per hit: only its basic attack's
 ##                                          hits (Shadow Engine)
 ##   "from_signature": true                 per hit: only its signature's
@@ -150,7 +154,7 @@ enum Stat { DAMAGE_BP, HEAL_BP, SHIELD_BP, OVER_TIME_BP, CRIT_CHANCE_BP, COOLDOW
 	DEF_IGNORE_BP, UNPUSHABLE, DODGE_EVERY_MS, HALVED_HITS,
 	SHIELD_DAMAGE_BP, SEES_STEALTH, BURN_TAKEN_BP, MARKED_TIME_BP, ROOT_CAP_MS, MISS_BP, STUN_TIME_BP, STORE_BP, STORE_GROWS_BP, EVADE_BP, SHOT_SPEED_BP,
 	MANA_GAIN_BP, MANA_STORE_BP, OVERFLOW_POWER_BP, LIFESTEAL_MORE_BP, LIFESTEAL_MAX_HP_BP, LIFESTEAL_MAX_HP_CAP_BP, SHIELD_ABSORB_BP,
-	OVER_TIME_LOSS_BP }
+	OVER_TIME_LOSS_BP, SIGNATURE_COST_BP }
 ## What turns an aura on, beyond its window.
 enum While { ALWAYS, TAUNTING, PLANTED, BELOW_HP, ALLY_STANDING, STATE, ALLY_NEAR, BEHIND_WALL, MOVED, CROWDED, TACTIC }
 
@@ -165,7 +169,7 @@ const STAT_NAMES: Array[String] = [
 	"def_ignore_bp", "unpushable", "dodge_every_ms", "halved_hits",
 	"shield_damage_bp", "sees_stealth", "burn_taken_bp", "marked_time_bp", "root_cap_ms", "miss_bp", "stun_time_bp", "store_bp", "store_grows_bp", "evade_bp", "shot_speed_bp",
 	"mana_gain_bp", "mana_store_bp", "overflow_power_bp", "lifesteal_more_bp", "lifesteal_max_hp_bp", "lifesteal_max_hp_cap_bp", "shield_absorb_bp",
-	"over_time_loss_bp",
+	"over_time_loss_bp", "signature_cost_bp",
 ]
 const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp", "ally_standing", "state", "ally_near", "behind_wall", "moved", "crowded", "tactic"]
 ## The stats that add rather than multiply. The rest are factors (x1.1);
@@ -187,7 +191,7 @@ const STAT_LABELS: Array[String] = [
 	"of the target's DEF ignored", "can't be knocked back", "a hit misses every", "hits taken at half damage",
 	"damage to Shields", "can target the stealthed", "Burn damage taken", "how long Marks on it last", "Roots on it last at most", "of its attacks missing", "how long Stuns on it last", "of each hit taken stored", "stored damage growth a second", "of basic attacks on it evaded", "shot speed",
 	"mana gained", "mana its bar holds", "signature power per mana over full", "to lifesteal", "of lifesteal past full HP as max HP", "of max HP, at most, from lifesteal past full", "to what its Shield absorbs",
-	"to how fast damage over time on it fades",
+	"to how fast damage over time on it fades", "to what its signature costs",
 ]
 ## Unit stat for each unit-stat aura stat (ATK_BP -> Stat.ATK, ...).
 const UNIT_STAT_FOR: Dictionary[int, int] = {
@@ -238,6 +242,13 @@ var step_value: int = 0
 var per_shield_bp: int = 0
 ## Per hit: times the stacks of this status on the unit hit ("": once).
 var per_target_stacks: String = ""
+## Per hit: these statuses' stacks added to per_target_stacks' (phase 8
+## part 6, Reaction).
+var per_target_more: Array[String] = []
+## Per hit: once for every this many of those stacks.
+var per_stacks: int = 1
+## Per hit: at most this much (bp; 0: no cap).
+var cap_bp: int = 0
 ## Per hit: times the stacks of this status on its holder (phase 8 part 5,
 ## Blood Tide: "": once).
 var per_holder_stacks: String = ""
@@ -335,7 +346,17 @@ static func read(reader: DataReader) -> AuraDef:
 			step.finish()
 		if def.while_kind != While.PLANTED:
 			reader.error("only a planted aura has a \"step\"")
-	def.per_target_stacks = reader.opt_string("per_target_stacks", "")
+	if reader.is_array("per_target_stacks"):
+		var named: Array[String] = reader.req_string_array("per_target_stacks")
+		if not named.is_empty():
+			def.per_target_stacks = named[0]
+			def.per_target_more = named.slice(1)
+	else:
+		def.per_target_stacks = reader.opt_string("per_target_stacks", "")
+	def.per_stacks = reader.opt_int("per_stacks", 1, 1, 100)
+	def.cap_bp = reader.opt_int("cap_bp", 0, 0)
+	if (def.per_stacks > 1 or def.cap_bp > 0) and def.per_target_stacks.is_empty():
+		reader.error("only an aura per target stack has \"per_stacks\" or \"cap_bp\"")
 	def.per_holder_stacks = reader.opt_string("per_holder_stacks", "")
 	def.from_basic = reader.opt_bool("from_basic", false)
 	def.from_signature = reader.opt_bool("from_signature", false)
@@ -434,7 +455,8 @@ func describe() -> String:
 		@warning_ignore("integer_division")
 		condition += " for each enemy within %d hex%s" % [per_enemy_range / HexGrid.HEX, "" if per_enemy_range == HexGrid.HEX else "es"]
 	if not per_target_stacks.is_empty():
-		condition += " per %s stack on the unit hit" % per_target_stacks.replace("_", " ")
+		var named: String = " and ".join(([per_target_stacks] as Array[String]) + per_target_more).replace("_", " ")
+		condition += (" per %s stack on the unit hit" % named) if per_stacks == 1 else (" per %d %s stacks on the unit hit" % [per_stacks, named])
 	if not per_holder_stacks.is_empty():
 		condition += " per stack of %s on it" % per_holder_stacks.replace("_", " ")
 	if per_engorged_bp > 0:

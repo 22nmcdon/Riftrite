@@ -147,6 +147,8 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 		unit.vs_within.clear()
 		unit.vs_per_hex.clear()
 		unit.vs_per_holder.clear()
+		unit.vs_defs.clear()
+		unit.vs_parts.clear()
 	var now_active: Array[String] = []
 	for holder: UnitState in sim.units:
 		if not holder.alive:
@@ -189,6 +191,8 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 					target.vs_within.append(part.aura.hit_range)
 					target.vs_per_hex.append(part.aura.per_hex)
 					target.vs_per_holder.append(part.aura.per_holder_stacks)
+					target.vs_defs.append(part.aura)
+					target.vs_parts.append(part.id)
 					continue
 				target.aura_bp[part.aura.stat] += change
 	# Timed boosts (phase 5c step 5b) count like the unit's own auras, once
@@ -408,8 +412,9 @@ static func has_vs_aura(unit: UnitState) -> bool:
 ## `ability_id` (bp): a damage_bp aura's power, a crit_chance_bp,
 ## lifesteal_bp, or crit_damage_bp aura's amount. Each counts if the target
 ## meets its "vs", the hit is its basic attack's ("from_basic"), and times
-## the target's stacks of its "per_target_stacks".
-static func vs_bonus_bp(attacker: UnitState, target: UnitState, stat: int = AuraDef.Stat.DAMAGE_BP, ability_id: String = "") -> int:
+## the target's stacks of its "per_target_stacks". `only_parts`: only the
+## auras of those passives (phase 8 part 6, the deed count bonus_damage).
+static func vs_bonus_bp(attacker: UnitState, target: UnitState, stat: int = AuraDef.Stat.DAMAGE_BP, ability_id: String = "", only_parts: Array[String] = []) -> int:
 	var bonus: int = 0
 	for i: int in attacker.vs_conditions.size():
 		if attacker.vs_stats[i] != stat:
@@ -422,13 +427,25 @@ static func vs_bonus_bp(attacker: UnitState, target: UnitState, stat: int = Aura
 			continue
 		if attacker.vs_within[i] > 0 and ArenaPlane.length_sq(target.pos - attacker.pos) > attacker.vs_within[i] * attacker.vs_within[i]:
 			continue
+		if not only_parts.is_empty() and not only_parts.has(attacker.vs_parts[i]):
+			continue
 		var times: int = 1 if attacker.vs_per_stacks[i].is_empty() else Statuses.stacks_on(target, attacker.vs_per_stacks[i])
+		var def: AuraDef = attacker.vs_defs[i]
+		if not def.per_target_more.is_empty() or def.per_stacks > 1:
+			# Summed stacks, counted per so many (phase 8 part 6, Reaction).
+			for status_id: String in def.per_target_more:
+				times += Statuses.stacks_on(target, status_id)
+			@warning_ignore("integer_division")
+			times /= def.per_stacks
 		if not attacker.vs_per_holder[i].is_empty():
 			times *= Statuses.stacks_on(attacker, attacker.vs_per_holder[i])
 		if attacker.vs_per_hex[i]:
 			@warning_ignore("integer_division")
 			times *= ArenaPlane.length(target.pos - attacker.pos) / HexGrid.HEX
-		bonus += times * attacker.vs_bonus_bp[i]
+		var each: int = times * attacker.vs_bonus_bp[i]
+		if def.cap_bp > 0:
+			each = mini(each, def.cap_bp)
+		bonus += each
 	return bonus
 
 
@@ -520,6 +537,10 @@ static func boosted(unit: UnitState, effect: EffectDef, amount: int) -> int:
 ## `status` the status applied (on_status), `chain` the depth of the entry
 ## that raised it.
 static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, event_other: UnitState, damage: int, status: String, chain: int = 0) -> void:
+	# The stacks this event spent on the unit itself, as "passive:status"
+	# (phase 8 part 6, Ottilie's vials): that passive's other effects that
+	# spend the same status run free.
+	var spent: Array[String] = []
 	for listener: Listener in unit.listeners_by.get(event, _NONE):
 		var other: UnitState = event_other
 		var effect: EffectDef = listener.effect
@@ -597,6 +618,14 @@ static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, 
 		if event == EffectDef.Trigger.ON_ALLY_HIT and not effect.spends.is_empty() and not Statuses.spend_stack(sim, sim.unit_by_id(status), effect.spends):
 			# The ally that hit holds none to spend (phase 8 part 6, Blessing).
 			continue
+		if event == EffectDef.Trigger.ON_HOLDER_HIT and not effect.spends.is_empty():
+			# Its own hit spends the vial its next attack carries, once for the
+			# whole passive (phase 8 part 6, Ottilie's Brewing).
+			var key: String = "%s:%s" % [listener.part.id if listener.part != null else "", effect.spends]
+			if not spent.has(key):
+				if not Statuses.spend_stack(sim, unit, effect.spends):
+					continue
+				spent.append(key)
 		listener.count += 1
 		if listener.count % effect.every != 0:
 			continue
@@ -669,6 +698,10 @@ static func run_timed(sim: CombatSim) -> void:
 			match effect.trigger:
 				EffectDef.Trigger.ON_INTERVAL:
 					var since: int = sim.tick - unit.joined_at
+					if effect.first_ticks > 0:
+						# Its first run comes sooner or later (phase 8 part 6,
+						# Brewing's vials taking turns).
+						since += effect.interval_ticks - effect.first_ticks
 					if since > 0 and since % effect.interval_ticks == 0 and not (effect.once and listener.count >= effect.times):
 						listener.count += 1
 						_run(sim, unit, listener, null, 0)

@@ -9,6 +9,8 @@ extends RefCounted
 ##   - mana: a full bar fires it, and the bar empties. Not while Stunned: the
 ##     bar waits, full. With cast_ms, the unit first stands still for the cast
 ##     (CAST); a Stun cancels it (CAST_CANCELLED) and the bar stays full.
+##     With recover_ms (phase 8 part 6, Elixir), a full bar also waits until
+##     that long after the last fire.
 ##   - hp_below, fight_start, at_time: once a fight, when the condition first
 ##     holds.
 ##   - count: every Nth event (Events) queues a fire for the next tick.
@@ -72,7 +74,7 @@ static func act(sim: CombatSim, unit: UnitState) -> bool:
 	var trigger: TriggerDef = signature.def.trigger
 	match trigger.kind:
 		TriggerDef.Kind.MANA:
-			if not stunned and Mana.is_full(unit):
+			if not stunned and Mana.is_full(unit) and sim.tick >= signature.recovers_at:
 				var target: UnitState = pick_target(sim, unit)
 				if target == null:
 					return false
@@ -251,6 +253,8 @@ static func _fire(sim: CombatSim, unit: UnitState, target: UnitState, note: Stri
 		signature.failing = true
 		return false
 	signature.failing = false
+	if ability.trigger.recover_ticks > 0:
+		signature.recovers_at = sim.tick + ability.trigger.recover_ticks
 	if boosted > 0:
 		Statuses.spend_signature_boosts(sim, unit)
 	if ability.resets_attack:
@@ -321,7 +325,13 @@ static func _spend_bar(_sim: CombatSim, unit: UnitState) -> void:
 	# What it held past full (phase 8 part 4, Wellspring).
 	unit.last_overflow = maxi(unit.mana - unit.mana_cap, 0)
 	unit.spend_overflow = unit.last_overflow
-	unit.mana = maxi(unit.mana - unit.mana_cap, 0) if unit.mana_store > 0 else 0
+	if unit.mana_store > 0:
+		unit.mana = maxi(unit.mana - unit.mana_cap, 0)
+	elif unit.aura_bp[AuraDef.Stat.SIGNATURE_COST_BP] != FixedMath.BP_ONE:
+		# A cheaper signature keeps the rest (phase 8 part 6, Mana Flood).
+		unit.mana = maxi(unit.mana - Mana.cost(unit), 0)
+	else:
+		unit.mana = 0
 
 
 ## Overcharge: each further full bar fires the signature again at once (a

@@ -276,7 +276,9 @@ func shop(flow: RunFlow) -> bool:
 	if state.shop == "pedlar":
 		for item_id: String in state.stash:
 			if not state.heroes.any(func(hero: RunState.Hero) -> bool: return Simple.suits(flow, flow.run.items[item_id], hero)):
-				return flow.sell(item_id).is_empty()
+				# Transmuting pays the full price where selling pays half (phase
+				# 8 part 6, Transmuter).
+				return (flow.transmute(item_id) if flow.transmutes_left() > 0 else flow.sell(item_id)).is_empty()
 	return false
 
 

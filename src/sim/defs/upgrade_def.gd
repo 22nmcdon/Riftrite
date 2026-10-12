@@ -60,6 +60,9 @@ var stack_pct: int = 0
 ## starts for its mod to count there (0: always; Ward Tax).
 var tithe: TitheDef = null
 var needs_shards: int = 0
+## Phase 8 part 6 (Ottilie's cards): what it adds to its hero's transmuting
+## (TransmuteDef; null: nothing; no mod needed: Appraise).
+var transmute: TransmuteDef = null
 
 
 static func read(reader: DataReader) -> UpgradeDef:
@@ -95,7 +98,7 @@ static func read(reader: DataReader) -> UpgradeDef:
 	if reader.has("grows"):
 		var grows_reader: DataReader = reader.req_object("grows")
 		if grows_reader != null:
-			def.grows = GrowthDef.read(grows_reader)
+			def.grows = GrowthDef.read(grows_reader, reader.has("tithe"))
 	if reader.has("tithe"):
 		var tithe_reader: DataReader = reader.req_object("tithe")
 		if tithe_reader != null:
@@ -103,7 +106,10 @@ static func read(reader: DataReader) -> UpgradeDef:
 		if def.layer == Layer.HERO:
 			reader.error("a Tithe card is a path's or an apex's")
 	def.needs_shards = reader.opt_int("needs_shards", 0, 1, 1000)
-	if (def.grows == null and def.stack_stat < 0 and def.tithe == null) or reader.has("mod"):
+	def.transmute = TransmuteDef.read_in(reader)
+	if def.transmute != null and def.layer == Layer.HERO:
+		reader.error("a transmuting card is a path's or an apex's")
+	if (def.grows == null and def.stack_stat < 0 and def.tithe == null and def.transmute == null) or reader.has("mod"):
 		var mod_reader: DataReader = reader.req_object("mod")
 		if mod_reader != null:
 			def.mod = KitMod.read(mod_reader)

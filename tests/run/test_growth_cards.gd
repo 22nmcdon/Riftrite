@@ -82,12 +82,13 @@ func test_steps_are_whole_and_a_quest_stops_at_one() -> void:
 func test_the_twelve_growing_upgrades_load_and_say_how_they_grow() -> void:
 	assert_true(_run.is_valid(), "\n".join(_run.errors))
 	var growing: Array[String] = _run.upgrade_ids.filter(func(id: String) -> bool: return _run.upgrades[id].grows != null)
-	assert_eq(growing.size(), 37, "phase 5c's twelve, and Garrow's, Tamsin's, and Aldous's four each (phase 8 part 4), Severine's four and Edric's five (phase 8 part 5), and Ilse's four (phase 8 part 6)")
+	assert_eq(growing.size(), 42, "phase 5c's twelve, and Garrow's, Tamsin's, and Aldous's four each (phase 8 part 4), Severine's four and Edric's five (phase 8 part 5), and Ilse's four and Ottilie's five, Golden Fever among them (phase 8 part 6)")
 	for id: String in growing:
 		var line: String = ModInfo.upgrade_numbers(_run.upgrades[id], null, _run.content)
 		assert_true(line.begins_with("Grows: ") and (line.contains("1") or line.contains("fight won")), "%s: %s" % [id, line])
 	assert_eq(ModInfo.upgrade_numbers(_run.upgrades["notched_bow"], null, _run.content), "Grows: +1% ATK per 3 enemies Marked")
 	assert_eq(ModInfo.upgrade_numbers(_run.upgrades["borrowed_time"], null, _run.content), "Grows: +1% damage below 30% HP per 8s below 30% HP")
+	assert_eq(ModInfo.upgrade_numbers(_run.upgrades["golden_fever"], null, _run.content), "Grows: +1 to the shard cap a fight per 60 shards collected in fights (at most 8 times)")
 
 
 func test_the_now_line() -> void:

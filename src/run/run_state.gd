@@ -193,6 +193,11 @@ var shop: String = ""
 ## Its wares (item ids; "" once bought), and how often it's been rerolled.
 var wares: Array[String] = []
 var rerolls: int = 0
+## Items transmuted in the open shop (phase 8 part 6, Transmuter), and items
+## turned into items this act on the act's own allowance (Grand
+## Transmutation's taste).
+var transmutes: int = 0
+var transmuted_act: int = 0
 ## The Magpie's swap is used this visit (phase 5c step 6e).
 var magpie_swapped: bool = false
 ## The relics the open shop sells (phase 5c step 5a: one, or more with The
@@ -304,7 +309,7 @@ func to_dict() -> Dictionary:
 		"shards": shards, "options": options.duplicate(true), "chosen": chosen, "formation": hexes,
 		"fought": fought.map(func(entry: Fought) -> Dictionary: return entry.to_dict()),
 		"pick": pick.duplicate(), "just_transformed": just_transformed.duplicate(),
-		"stash": stash.duplicate(), "shop": shop, "wares": wares.duplicate(), "rerolls": rerolls, "shop_relics": shop_relics.duplicate(), "magpie_swapped": magpie_swapped,
+		"stash": stash.duplicate(), "shop": shop, "wares": wares.duplicate(), "rerolls": rerolls, "transmutes": transmutes, "transmuted_act": transmuted_act, "shop_relics": shop_relics.duplicate(), "magpie_swapped": magpie_swapped,
 		"place": place, "camp": camp.duplicate(), "camp_used": camp_used, "hunt": hunt, "mapping": mapping,
 		"fortify": fortify, "dig_in": dig_in, "rock": rock.duplicate(), "rift_depth": rift_depth, "rift_mods": rift_mods.duplicate(), "rested": rested,
 		"scouted": scouted.duplicate(), "nodes": nodes.duplicate(), "node": node, "taken_nodes": taken_nodes.duplicate(), "magpie_visits": magpie_visits,
@@ -352,6 +357,8 @@ static func from_dict(data: Dictionary) -> RunState:
 	state.shop = str(data.get("shop", ""))
 	state.wares.assign((data.get("wares", []) as Array).map(func(value: Variant) -> String: return str(value)))
 	state.rerolls = int(data.get("rerolls", 0))
+	state.transmutes = int(data.get("transmutes", 0))
+	state.transmuted_act = int(data.get("transmuted_act", 0))
 	state.magpie_swapped = bool(data.get("magpie_swapped", false))
 	state.shop_relics = _strings(data.get("shop_relics", []))
 	state.place = str(data.get("place", ""))

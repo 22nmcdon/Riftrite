@@ -144,6 +144,8 @@ Built in phase 8 part 5 (`rebuild-phase8-severine-edric.md`, "Built in 8e-3"), w
 | **Panacea** (Apothecary) | Tonic gives 5 more mana | Mana given by Tonic | Her vial-carrying Toss throws vials to the 2 lowest-mana allies, 25 mana each, and an ally who drinks one gets a 20% stronger next signature. No snowball | **Strong Draught:** 30 mana per vial. **Potent:** +25% to the next signature |
 | **Mana Flood** (Apothecary) | Elixir gives 10 more mana | Mana given by Elixir | Elixir gives 50 mana, and for 6s allies' signatures cost 30% less. **Snowball:** each ally signature during that window makes it last 1s longer | **Long Flood:** +2s per signature. **Potent Elixir:** Elixir's ATK and MGK bonus is +20% |
 
+Built in phase 8 part 6 (`rebuild-phase8-last-heroes.md`, "Built in 8f-2"), with the numbers and calls flagged there (Grand Reaction's bonus and its growth tuned on the sweep; Midas Touch's taste raises transformed Transmuter's cap of 8 to 9; Golden Fever is its own growth beside the apex's; Panacea's and Mana Flood's mana sit above the transformed path's tuned 30 and 50).
+
 ## Lucan
 
 | Apex | Taste (on vow) | Deed | The apex | Upgrades |

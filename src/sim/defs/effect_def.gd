@@ -87,7 +87,9 @@ extends RefCounted
 ##                 6, Ilse's Immolate): that much more for each stack of the
 ##                 status on the unit it hits, read as it fires; and an
 ##                 on_fire apply_status's "stacks_of" reads the ability's
-##                 target (Immolate's splash, run before a cleanse)
+##                 target (Immolate's splash, run before a cleanse);
+##                 "status" may list several, their stacks added (Ottilie's
+##                 Reaction Flask: Burn and Poison, read, never spent)
 ##   damage, heal, shield's "grows_per_stack": {"status": "brand", "bp": 500}
 ##                 (phase 8 part 4, the apexes' snowballs): that much more
 ##                 power for each stack of the status on the unit (and
@@ -594,6 +596,9 @@ var grows_stack_bp: int = 0
 ## damage (phase 8 part 6, Ilse's Immolate): this much more for each stack
 ## of this status on the unit it hits, read as it fires ("": none).
 var per_stack_status: String = ""
+## amount_per_stack: these statuses' stacks too (phase 8 part 6, Reaction
+## Flask).
+var per_stack_more: Array[String] = []
 var amount_per_stack: int = 0
 ## heal (phase 8 part 6, Lantern Vigil): on a unit that meets heal_cap_vs (any,
 ## if null), it lifts HP no higher than this share of max HP, and the rest
@@ -621,7 +626,15 @@ var bonus_within: int = 0
 var bonus_kit: String = ""
 ## on_interval: how often.
 var interval_ticks: int = 0
+## on_interval: when it first runs (phase 8 part 6, Ottilie's Brewing: two
+## vials taking turns; 0: after one interval), then every interval_ticks.
+var first_ticks: int = 0
 var status_id: String = ""
+## apply_status (phase 8 part 6, Solvent): the one of these the unit has
+## fewest of, and a share of the most it has of them as its stacks (0: its
+## own stacks).
+var smaller_of: Array[String] = []
+var larger_share_bp: int = 0
 ## extend_status (phase 8 part 4, Choke): each of these it has (empty: just
 ## status_id).
 var extend_statuses: Array[String] = []
@@ -1051,7 +1064,17 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				def.raise_grow_hp_bp = reader.opt_int("grow_hp_pct", 0, 0, 100) * 100
 				def.raise_grow_ticks = reader.opt_ticks("grow_ms", 0)
 			Type.APPLY_STATUS:
-				def.status_id = reader.req_string("status")
+				# Phase 8 part 6 (Solvent): whichever of these the unit hit has
+				# fewer of, "status" naming none; its stacks a share of the
+				# larger's with "larger_share_bp", else "stacks".
+				if reader.has("to_smaller_of"):
+					def.smaller_of = reader.req_string_array("to_smaller_of")
+					if def.smaller_of.size() < 2:
+						reader.error("to_smaller_of names two statuses or more")
+					def.status_id = def.smaller_of[0] if not def.smaller_of.is_empty() else ""
+					def.larger_share_bp = reader.opt_int("larger_share_bp", 0, 1, FixedMath.BP_ONE)
+				else:
+					def.status_id = reader.req_string("status")
 				# 0 base stacks only with a "scaling" (phase 8 part 5, Blight:
 				# Poison equal to a share of ATK).
 				def.stacks = reader.opt_int("stacks", 1, 0)
@@ -1095,7 +1118,13 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 		if reader.has("amount_per_stack"):
 			var per: DataReader = reader.req_object("amount_per_stack")
 			if per != null:
-				def.per_stack_status = per.req_string("status")
+				if per.is_array("status"):
+					var named: Array[String] = per.req_string_array("status")
+					if not named.is_empty():
+						def.per_stack_status = named[0]
+						def.per_stack_more = named.slice(1)
+				else:
+					def.per_stack_status = per.req_string("status")
 				def.amount_per_stack = per.req_int("per", 1, 100)
 				per.finish()
 			if def.type != Type.DAMAGE:
@@ -1292,6 +1321,7 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 			def.once = reader.opt_bool("once", false)
 		Trigger.ON_INTERVAL:
 			def.interval_ticks = reader.req_ticks("interval_ms", FixedMath.MS_PER_TICK)
+			def.first_ticks = reader.opt_ticks("first_ms", 0, 0)
 			def.once = reader.opt_bool("once", false)
 		Trigger.ON_BELOW_HP:
 			def.threshold_bp = reader.req_int("threshold_bp", 1, FixedMath.BP_ONE - 1)
@@ -1342,6 +1372,11 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 			# Only its signature's hits (the tuning phase, Weighted Net).
 			if def.trigger == Trigger.ON_HOLDER_HIT:
 				def.from_signature = reader.opt_bool("from_signature", false)
+				# Phase 8 part 6 (Ottilie's vials): a stacking status on the
+				# unit itself; it runs only while the unit holds a stack, and
+				# the hit spends one for every effect of its passive that
+				# spends it (her next Toss carries the vial).
+				def.spends = reader.opt_string("spends", "")
 			if def.trigger == Trigger.ON_HEAL and reader.has("was_below_pct"):
 				def.was_below_bp = reader.req_int("was_below_pct", 1, 99) * 100
 		Trigger.ON_STATUS, Trigger.ON_STATUS_ENDED:

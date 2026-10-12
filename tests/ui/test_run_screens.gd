@@ -219,6 +219,28 @@ func test_the_shop_and_the_loadout() -> void:
 	await wait_frames(1)
 
 
+func test_the_pedlar_transmutes_for_a_transmuter() -> void:
+	var main: Main = _main()
+	main.start_run({"brannoc": "hearthwall", "maren": "deadeye", "ottilie": "transmuter"} as Dictionary[String, String], 7)
+	await wait_frames(1)
+	var flow: RunFlow = _flow(main)
+	flow.state.stash.append("echo")
+	flow.state.item_ranks["echo"] = 1
+	flow.state.item_counts["echo"] = 0
+	flow.state.phase = RunState.Phase.SHOP
+	flow.open_shop("pedlar")
+	(main.screen as RunDayScreen).refresh()
+	var button: String = "Transmute %s" % flow.run.items["echo"].name
+	assert_false(U.text_of(main.screen).contains(button), "not before she transforms")
+	flow.state.hero("ottilie").transformed = true
+	(main.screen as RunDayScreen).refresh()
+	var shards: int = flow.state.shards
+	assert_true(U.press(main.screen, button), "phase 8 part 6: her shop action")
+	assert_eq(flow.state.shards, shards + flow.act.item_prices[ItemDef.KIND_NAMES[flow.run.items["echo"].kind]], "at its full price")
+	assert_false(U.text_of(main.screen).contains("Transmute "), "once a shop")
+	await wait_frames(1)
+
+
 func test_the_hero_bar_and_panel_in_a_run() -> void:
 	var main: Main = _started()
 	var flow: RunFlow = _flow(main)

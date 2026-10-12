@@ -212,7 +212,7 @@ func upgrades_for(hero: RunState.Hero) -> Array[String]:
 ## not): its mod touches it, and an added passive can fire on it; a growing
 ## card's counting can count there; a stacking card always does.
 func changes_something(upgrade: UpgradeDef, transformed: bool, kit: UnitDef) -> bool:
-	if upgrade.stacks() or upgrade.tithe != null:
+	if upgrade.stacks() or upgrade.tithe != null or upgrade.transmute != null:
 		return true
 	var mod: KitMod = upgrade.mod_for(transformed)
 	if mod != null and (mod.affects_besides_passives(kit) or mod.passives.any(func(part: PartDef) -> bool: return _passive_can_fire(part, kit))):
@@ -308,12 +308,32 @@ func tithe(hero: RunState.Hero) -> TitheDef:
 		stage = apex.apex_tithe if apex.apex_tithe != null else stage
 	elif apex != null and apex.vowed_tithe != null:
 		stage = apex.vowed_tithe.merged(stage)
-	if stage == null:
-		return null
-	var sum: TitheDef = stage.merged(null)
+	# A card's Tithe counts without a stage's too (phase 8 part 6, Ottilie's
+	# Ledger).
+	var sum: TitheDef = stage.merged(null) if stage != null else null
 	for upgrade: UpgradeDef in held_upgrades(hero):
 		if upgrade.tithe != null:
-			sum = sum.merged(upgrade.tithe)
+			sum = upgrade.tithe.merged(sum)
+	return sum
+
+
+## `hero`'s transmuting now (phase 8 part 6, TransmuteDef), or null: its
+## path's at its stage (its vowed apex's taste added on, or its earned apex's
+## own in its place), with its held cards' added on.
+func transmute(hero: RunState.Hero) -> TransmuteDef:
+	var path: PathDef = content.paths[hero.path]
+	var stage: TransmuteDef = path.transformed_transmute if hero.transformed else path.vowed_transmute
+	var apex: ApexDef = path.apex(hero.apex) if hero.transformed and not hero.apex.is_empty() else null
+	if apex != null and hero.apex_earned:
+		stage = apex.apex_transmute if apex.apex_transmute != null else stage
+	elif apex != null and apex.vowed_transmute != null:
+		stage = apex.vowed_transmute.merged(stage)
+	if stage == null:
+		return null
+	var sum: TransmuteDef = stage.merged(null)
+	for upgrade: UpgradeDef in held_upgrades(hero):
+		if upgrade.transmute != null:
+			sum = sum.merged(upgrade.transmute)
 	return sum
 
 

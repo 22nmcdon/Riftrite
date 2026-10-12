@@ -255,10 +255,22 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 			# each spending a stack of its window while one is left.
 			if not effect.spends.is_empty() and not Statuses.spend_stack(sim, unit, effect.spends):
 				return
-			var paid: LogEntry = sim.new_entry(LogEntry.Kind.SHARDS, source)
-			paid.target = unit.id
-			paid.amount = amount
-			sim.combat_log.add(paid)
+			# Its kit's cap for the fight (phase 8 part 6, Gilded Death): the
+			# rest is logged as capped, and never paid.
+			var paying: int = amount if unit.def.shard_cap <= 0 else clampi(unit.def.shard_cap - unit.shards_paid, 0, amount)
+			unit.shards_paid += paying
+			if paying > 0:
+				var paid: LogEntry = sim.new_entry(LogEntry.Kind.SHARDS, source)
+				paid.target = unit.id
+				paid.amount = paying
+				sim.combat_log.add(paid)
+			if paying < amount:
+				var capped: LogEntry = sim.new_entry(LogEntry.Kind.SHARDS, source)
+				capped.target = unit.id
+				capped.amount = amount - paying
+				capped.capped = true
+				capped.note = "capped"
+				sim.combat_log.add(capped)
 		EffectDef.Type.EXTEND_STATUS:
 			if effect.extend_statuses.is_empty():
 				Statuses.extend(sim, victim, effect.status_id, effect.duration_ticks, source)
@@ -267,6 +279,21 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 					Statuses.extend(sim, victim, status_id, effect.duration_ticks, source)
 		EffectDef.Type.APPLY_STATUS:
 			var status_id: String = unit.status_swaps.get(effect.status_id, effect.status_id)
+			if not effect.smaller_of.is_empty():
+				# The smaller of its statuses on the unit, raised (phase 8 part
+				# 6, Solvent): the first named on a tie.
+				var fewest: int = -1
+				var most: int = 0
+				for named: String in effect.smaller_of:
+					var stacks: int = Statuses.stacks_on(victim, named)
+					most = maxi(most, stacks)
+					if fewest < 0 or stacks < fewest:
+						fewest = stacks
+						status_id = named
+				if effect.larger_share_bp > 0:
+					amount = FixedMath.apply_bp(most, effect.larger_share_bp)
+				if amount <= 0:
+					return
 			# fresh_only: never on a unit that has it already (Snaring Shot).
 			if not effect.fresh_only or Statuses.find(victim, status_id) == null:
 				Statuses.apply(sim, victim, status_id, amount, effect.duration_ticks, source, effect.marks_stack, effect.until_near, effect.strength_add_bp, power)
@@ -431,11 +458,15 @@ static func stacks_from(effect: EffectDef, named: UnitState, unit: UnitState = n
 
 
 ## A damage effect's amount_per_stack (phase 8 part 6, Immolate): `amount`
-## plus that much for each stack of its status on `victim`.
+## plus that much for each stack of its status (or statuses: Reaction Flask)
+## on `victim`.
 static func per_stack(effect: EffectDef, victim: UnitState, amount: int) -> int:
 	if effect.amount_per_stack <= 0 or victim == null:
 		return amount
-	return amount + effect.amount_per_stack * Statuses.stacks_on(victim, effect.per_stack_status)
+	var stacks: int = Statuses.stacks_on(victim, effect.per_stack_status)
+	for status_id: String in effect.per_stack_more:
+		stacks += Statuses.stacks_on(victim, status_id)
+	return amount + effect.amount_per_stack * stacks
 
 
 ## The effect's number: base plus stat scaling from the unit's stats (or a
@@ -871,6 +902,12 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 	entry.target = target.id
 	entry.mitigated = maxi(raw - guarded_raw - dealt, 0)
 	entry.amount = dealt
+	if per_hit and not attacker.bonus_parts.is_empty() and dealt > 0:
+		# What one passive's auras added (phase 8 part 6, Catalyst's deed):
+		# its share of the hit's power bonus.
+		var part_bp: int = Passives.vs_bonus_bp(attacker, target, AuraDef.Stat.DAMAGE_BP, source.ability_id, attacker.bonus_parts)
+		if part_bp > 0:
+			entry.part_bonus = FixedMath.mul_div(dealt, part_bp, DamageRule.factor(power))
 	entry.crit = crit
 	var had_shield: bool = target.shield > 0
 	var hp_before: int = target.hp

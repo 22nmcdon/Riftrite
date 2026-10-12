@@ -8442,5 +8442,861 @@
         }
       ]
     }
+  },
+  {
+    "id": "steady_hand",
+    "name": "Steady Hand",
+    "hero": "ottilie",
+    "text": "Her MGK rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "mgk",
+      "pct": 10
+    }
+  },
+  {
+    "id": "quick_pour",
+    "name": "Quick Pour",
+    "hero": "ottilie",
+    "text": "She attacks faster by a tenth of her attack speed when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "atsp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "leather_apron",
+    "name": "Leather Apron",
+    "hero": "ottilie",
+    "text": "Her max HP rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "hp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "thick_gloves",
+    "name": "Thick Gloves",
+    "hero": "ottilie",
+    "text": "Her DEF rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "def",
+      "pct": 10
+    }
+  },
+  {
+    "id": "quick_brew",
+    "name": "Quick Brew",
+    "hero": "ottilie",
+    "text": "Brewing readies a vial more often.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "brewing",
+          "cooldown_bp": 7500
+        }
+      ]
+    }
+  },
+  {
+    "id": "strong_brew",
+    "name": "Strong Brew",
+    "hero": "ottilie",
+    "text": "Brewing's vials set more Burn and Poison.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "brewing",
+          "statuses": [
+            "burn",
+            "poison"
+          ],
+          "amount_bp": 15000
+        }
+      ]
+    }
+  },
+  {
+    "id": "wide_flask",
+    "name": "Wide Flask",
+    "hero": "ottilie",
+    "text": "Volatile Flask bursts 1 hex wider (once it's a habit, too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "volatile_flask",
+          "radius_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_flask",
+    "name": "Quick Flask",
+    "hero": "ottilie",
+    "text": "Volatile Flask costs less mana (once it's a habit, it comes sooner).",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "volatile_flask",
+          "mana_max_add": -10
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_toss",
+    "name": "Long Toss",
+    "hero": "ottilie",
+    "text": "She throws 1 hex farther.",
+    "mod": {
+      "stats_add": {
+        "range": 1
+      }
+    }
+  },
+  {
+    "id": "sticky_vials",
+    "name": "Sticky Vials",
+    "hero": "ottilie",
+    "text": "Brewing's vials also Slow the enemy they hit for a moment.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "brewing",
+          "add_effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "toss"
+              ],
+              "spends": "fire_vial",
+              "type": "apply_status",
+              "status": "sticky",
+              "target": "hit_target"
+            },
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "toss"
+              ],
+              "spends": "venom_vial",
+              "type": "apply_status",
+              "status": "sticky",
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "acrid_fumes",
+    "name": "Acrid Fumes",
+    "hero": "ottilie",
+    "text": "Enemies within 1 hex of her deal less damage.",
+    "mod": {
+      "passives": [
+        {
+          "id": "acrid_fumes",
+          "name": "Acrid Fumes",
+          "kind": "ability",
+          "text": "Fumes hang about her: enemies within 1 hex of her deal less damage.",
+          "effects": [
+            {
+              "trigger": "on_interval",
+              "interval_ms": 1000,
+              "type": "apply_status",
+              "status": "fumes",
+              "target": "enemies_near_self",
+              "within_hexes": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "notebook",
+    "name": "Notebook",
+    "hero": "ottilie",
+    "text": "She takes notes: her MGK grows with every vial Brewing throws, for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "applied",
+        "from_ability": [
+          "brewing"
+        ]
+      },
+      "per": 50,
+      "each": {
+        "stats_bp": {
+          "mgk": 10100
+        }
+      }
+    }
+  },
+  {
+    "id": "sharp_reaction",
+    "name": "Sharp Reaction",
+    "path": "catalyst",
+    "taste": true,
+    "text": "Reaction counts every 4 Burn and Poison, up to +12% (once transformed, it hits harder against enemies with both).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:reaction",
+          "per_stacks_add": -1,
+          "cap_add_bp": 200
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:reaction_both",
+          "value_add": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "mixed_flask",
+    "name": "Mixed Flask",
+    "path": "catalyst",
+    "taste": true,
+    "text": "Volatile Flask's Burn and Poison are stronger (once it's a habit, too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "volatile_flask",
+          "statuses": [
+            "burn",
+            "poison"
+          ],
+          "amount_bp": 12500
+        }
+      ]
+    }
+  },
+  {
+    "id": "assayer",
+    "name": "Assayer",
+    "path": "transmuter",
+    "taste": true,
+    "text": "An elite or boss that falls both Burning and Poisoned pays 1 more shard.",
+    "mod": {
+      "passives": [
+        {
+          "id": "assayer",
+          "name": "Assayer",
+          "kind": "ability",
+          "text": "An elite or boss that falls both Burning and Poisoned pays a shard more for the run.",
+          "effects": [
+            {
+              "trigger": "on_enemy_fell",
+              "vs": {
+                "all_statuses": [
+                  "burn",
+                  "poison"
+                ],
+                "ranks": [
+                  "elite",
+                  "boss"
+                ]
+              },
+              "type": "shards",
+              "amount": 1,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "coin_flask",
+    "name": "Coin Flask",
+    "path": "transmuter",
+    "taste": true,
+    "text": "Each enemy Volatile Flask kills pays 1 shard (once it's a habit, too).",
+    "mod": {
+      "passives": [
+        {
+          "id": "coin_flask",
+          "name": "Coin Flask",
+          "kind": "ability",
+          "text": "Each enemy her Volatile Flask kills pays a shard for the run.",
+          "effects": [
+            {
+              "trigger": "on_kill",
+              "from_ability": [
+                "volatile_flask"
+              ],
+              "type": "shards",
+              "amount": 1,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "rich_tonic",
+    "name": "Rich Tonic",
+    "path": "apothecary",
+    "taste": true,
+    "text": "Tonic's vial gives more mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:tonic",
+          "types": [
+            "gain_mana"
+          ],
+          "amount_bp": 12000
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_tonic",
+    "name": "Quick Tonic",
+    "path": "apothecary",
+    "taste": true,
+    "text": "Tonic throws a vial more often.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:tonic",
+          "cooldown_bp": 7500
+        }
+      ]
+    }
+  },
+  {
+    "id": "strong_reaction",
+    "name": "Strong Reaction",
+    "path": "catalyst",
+    "text": "Her hits on enemies with both Burn and Poison are stronger still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:reaction_both",
+          "value_add": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "heavy_flask",
+    "name": "Heavy Flask",
+    "path": "catalyst",
+    "text": "Reaction Flask hits harder for each Burn and Poison.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "reaction_flask",
+          "per_stack_amount_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_reaction",
+    "name": "Quick Reaction",
+    "path": "catalyst",
+    "text": "Reaction Flask costs less mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "reaction_flask",
+          "mana_max_add": -10
+        }
+      ]
+    }
+  },
+  {
+    "id": "corrosive",
+    "name": "Corrosive",
+    "path": "catalyst",
+    "text": "Enemies with both Burn and Poison that she hits lose DEF for a moment.",
+    "mod": {
+      "passives": [
+        {
+          "id": "corrosive",
+          "name": "Corrosive",
+          "kind": "ability",
+          "text": "Each hit of hers on an enemy both Burning and Poisoned eats at its DEF for a moment.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "vs": {
+                "all_statuses": [
+                  "burn",
+                  "poison"
+                ]
+              },
+              "type": "apply_status",
+              "status": "corroded",
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "lab_notes",
+    "name": "Lab Notes",
+    "path": "catalyst",
+    "text": "The notes fill: her hits on enemies with both grow stronger with the damage Reaction adds, for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "bonus_damage",
+        "from_part": [
+          "reaction",
+          "reaction_both"
+        ]
+      },
+      "per": 1000,
+      "each": {
+        "passives": [
+          {
+            "id": "lab_notes",
+            "name": "Lab Notes",
+            "kind": "aura",
+            "text": "Her hits on enemies both Burning and Poisoned are stronger.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 10100,
+              "vs": {
+                "all_statuses": [
+                  "burn",
+                  "poison"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "strong_philosopher",
+    "name": "Strong Philosopher",
+    "path": "transmuter",
+    "text": "Philosopher's Flask hits harder.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "philosophers_flask",
+          "types": [
+            "damage"
+          ],
+          "amount_bp": 12500
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_philosopher",
+    "name": "Quick Philosopher",
+    "path": "transmuter",
+    "text": "Philosopher's Flask costs less mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "philosophers_flask",
+          "mana_max_add": -10
+        }
+      ]
+    }
+  },
+  {
+    "id": "appraise",
+    "name": "Appraise",
+    "path": "transmuter",
+    "text": "Transmuting an item at rank II pays 2 more shards, at rank III 4 more.",
+    "transmute": {
+      "rank_ii_add": 2,
+      "rank_iii_add": 4
+    }
+  },
+  {
+    "id": "deep_purse",
+    "name": "Deep Purse",
+    "path": "transmuter",
+    "text": "Her shards a fight can go higher.",
+    "mod": {
+      "shard_cap_add": 2
+    }
+  },
+  {
+    "id": "transmuter_ledger",
+    "name": "Ledger",
+    "path": "transmuter",
+    "text": "The ledger grows: every 30 shards from Gilded Death from now pays 1 more after each won fight, up to 5 more.",
+    "tithe": {
+      "per_step": 1
+    },
+    "grows": {
+      "counts": {
+        "counts": "shards",
+        "from_ability": [
+          "gilded_death"
+        ]
+      },
+      "per": 30,
+      "max_steps": 5
+    }
+  },
+  {
+    "id": "fast_tonic",
+    "name": "Fast Tonic",
+    "path": "apothecary",
+    "text": "Tonic throws a vial more often.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:tonic",
+          "cooldown_bp": 7500
+        }
+      ]
+    }
+  },
+  {
+    "id": "fizzing_vial",
+    "name": "Fizzing Vial",
+    "path": "apothecary",
+    "text": "Tonic's vial makes its ally attack faster still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:tonic",
+          "add_effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "toss"
+              ],
+              "spends": "tonic_vial",
+              "type": "apply_status",
+              "status": "fizz",
+              "target": "lowest_mana_ally"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "bracing_vial",
+    "name": "Bracing Vial",
+    "path": "apothecary",
+    "text": "Tonic's vial also raises its ally's DEF for a few seconds.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:tonic",
+          "add_effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "toss"
+              ],
+              "spends": "tonic_vial",
+              "type": "apply_status",
+              "status": "bracing",
+              "target": "lowest_mana_ally"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_elixir",
+    "name": "Long Elixir",
+    "path": "apothecary",
+    "text": "Elixir's boost lasts longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "statuses": [
+            "elixir"
+          ],
+          "duration_add_ms": 2000
+        }
+      ]
+    }
+  },
+  {
+    "id": "recipe_book",
+    "name": "Recipe Book",
+    "path": "apothecary",
+    "text": "The recipe improves: Tonic's vial gives more mana with all it has given, for the rest of the run, up to half again.",
+    "grows": {
+      "counts": {
+        "counts": "mana_given",
+        "from_ability": [
+          "tonic"
+        ]
+      },
+      "per": 2000,
+      "max_steps": 10,
+      "each": {
+        "on": [
+          {
+            "slot": "passive:tonic",
+            "types": [
+              "gain_mana"
+            ],
+            "amount_bp": 10500
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "chain_reaction",
+    "name": "Chain Reaction",
+    "apex": "grand_reaction",
+    "text": "Each enemy that falls with both makes the reaction stronger still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:chain_of_reactions",
+          "value_add": 250
+        }
+      ]
+    }
+  },
+  {
+    "id": "volatile",
+    "name": "Volatile",
+    "apex": "grand_reaction",
+    "text": "Enemies that fall both Burning and Poisoned burst, hitting every enemy within 1 hex.",
+    "mod": {
+      "passives": [
+        {
+          "id": "volatile",
+          "name": "Volatile",
+          "kind": "ability",
+          "text": "An enemy that falls both Burning and Poisoned bursts, hitting every enemy within 1 hex of it.",
+          "effects": [
+            {
+              "trigger": "on_enemy_fell",
+              "vs": {
+                "all_statuses": [
+                  "burn",
+                  "poison"
+                ]
+              },
+              "type": "damage",
+              "amount": 0,
+              "scaling": {
+                "mgk": 5000
+              },
+              "target": "enemies_near_named",
+              "within_hexes": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "saturate",
+    "name": "Saturate",
+    "apex": "solvent",
+    "text": "Solvent raises the smaller of Burn or Poison by more.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:solvent",
+          "add_effects": [
+            {
+              "trigger": "on_holder_hit",
+              "type": "apply_status",
+              "to_smaller_of": [
+                "burn",
+                "poison"
+              ],
+              "larger_share_bp": 1000,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "dissolve",
+    "name": "Dissolve",
+    "apex": "solvent",
+    "text": "Her hits on enemies with both Burn and Poison eat at their DEF for a moment.",
+    "mod": {
+      "passives": [
+        {
+          "id": "dissolve",
+          "name": "Dissolve",
+          "kind": "ability",
+          "text": "Each hit of hers on an enemy both Burning and Poisoned eats at its DEF for a moment.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "vs": {
+                "all_statuses": [
+                  "burn",
+                  "poison"
+                ]
+              },
+              "type": "apply_status",
+              "status": "dissolved",
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "golden_fever",
+    "name": "Golden Fever",
+    "apex": "midas_touch",
+    "text": "Her cap a fight also rises by 1 for every 60 shards the team's effects collect from now (with Midas Touch's own, every 15), up to 8 more.",
+    "grows": {
+      "run_counts": "shards",
+      "per": 60,
+      "max_steps": 8,
+      "each": {
+        "shard_cap_add": 1
+      }
+    }
+  },
+  {
+    "id": "gilt_flask",
+    "name": "Gilt Flask",
+    "apex": "midas_touch",
+    "text": "Enemies Philosopher's Flask kills pay more shards.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:philosophers_gold",
+          "types": [
+            "shards"
+          ],
+          "amount_bp": 15000
+        }
+      ]
+    }
+  },
+  {
+    "id": "philosophers_gold_card",
+    "name": "Philosopher's Gold",
+    "apex": "grand_transmutation",
+    "text": "Transmuting pays a quarter more than the price.",
+    "transmute": {
+      "pay_bp": 2500
+    }
+  },
+  {
+    "id": "endless_lab",
+    "name": "Endless Lab",
+    "apex": "grand_transmutation",
+    "text": "She transmutes 1 more item a shop.",
+    "transmute": {
+      "per_shop": 1
+    }
+  },
+  {
+    "id": "strong_draught",
+    "name": "Strong Draught",
+    "apex": "panacea",
+    "text": "Each vial gives more mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:tonic",
+          "types": [
+            "gain_mana"
+          ],
+          "amount_bp": 12000
+        }
+      ]
+    }
+  },
+  {
+    "id": "potent",
+    "name": "Potent",
+    "apex": "panacea",
+    "text": "An ally who drinks a vial has its next signature stronger still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:tonic",
+          "add_effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "toss"
+              ],
+              "spends": "tonic_vial",
+              "type": "apply_status",
+              "status": "potent_more",
+              "target": "lowest_mana_ally",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_flood",
+    "name": "Long Flood",
+    "apex": "mana_flood",
+    "text": "Each ally signature makes the flood last longer still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:flood_tide",
+          "duration_add_ms": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "potent_elixir",
+    "name": "Potent Elixir",
+    "apex": "mana_flood",
+    "text": "Elixir raises every ally's ATK and MGK further.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "potent_elixir",
+              "target": "all_allies"
+            }
+          ]
+        }
+      ]
+    }
   }
 ]

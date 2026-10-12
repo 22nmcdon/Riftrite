@@ -76,6 +76,8 @@ static func mod_parts(mod: KitMod, kit: UnitDef, content: ContentDb) -> Array[St
 		parts.append("%s mana per attack" % signed(mod.mana_per_attack_add))
 	if mod.mana_taken_bp != FixedMath.BP_ONE:
 		parts.append("%s mana from damage taken" % UnitInfo.signed_percent(mod.mana_taken_bp - FixedMath.BP_ONE))
+	if mod.shard_cap_add != 0:
+		parts.append("%s to the shard cap a fight" % signed(mod.shard_cap_add))
 	if mod.plant_add_ticks != 0:
 		parts.append("plants %s %s" % [UnitInfo.seconds(absi(mod.plant_add_ticks)), "sooner" if mod.plant_add_ticks < 0 else "later"])
 	if mod.break_free_add_ticks != 0:
@@ -206,6 +208,13 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 		bits.append("spreads %s hex further" % signed(change.grow_max_add))
 	if change.heal_cap_bp != 0:
 		bits.append("heals stop at %s of max HP" % ValueBreakdown._percent(change.heal_cap_bp))
+	# Ottilie's cards.
+	if change.per_stacks_add != 0:
+		bits.append("counts every %s stack%s %s" % [absi(change.per_stacks_add), "" if absi(change.per_stacks_add) == 1 else "s", "sooner" if change.per_stacks_add < 0 else "later"])
+	if change.cap_add_bp != 0:
+		bits.append("%s to its cap" % UnitInfo.signed_percent(change.cap_add_bp))
+	if change.per_stack_amount_add != 0:
+		bits.append("%s for each stack" % signed(change.per_stack_amount_add))
 	for effect: EffectDef in change.add_to_areas:
 		bits.append("in its area: " + " · ".join(UnitInfo.effect_numbers([effect] as Array[EffectDef], kit, content)))
 	for effect: EffectDef in change.add_effects:
@@ -288,6 +297,8 @@ static func upgrade_numbers(upgrade: UpgradeDef, kit: UnitDef, content: ContentD
 		parts.append("transformed: " + mod_numbers(upgrade.transformed_mod, kit, content))
 	if upgrade.tithe != null and not tithe_numbers(upgrade.tithe).is_empty():
 		parts.append(tithe_numbers(upgrade.tithe))
+	if upgrade.transmute != null:
+		parts.append(transmute_numbers(upgrade.transmute))
 	if upgrade.grows != null:
 		var grows: String = growth_numbers(upgrade.grows, kit, content)
 		if upgrade.tithe != null and upgrade.tithe.per_step > 0:
@@ -318,6 +329,21 @@ static func tithe_numbers(tithe: TitheDef) -> String:
 	if tithe.elite_bp > 0:
 		parts.append("+%s after an elite" % ValueBreakdown._percent(tithe.elite_bp))
 	return "Tithe: " + ", ".join(parts) if not parts.is_empty() else ""
+
+
+## Transmuting's numbers (phase 8 part 6, Transmuter): "Transmuting: +2 at
+## rank II, +4 at rank III".
+static func transmute_numbers(transmute: TransmuteDef) -> String:
+	var parts: Array[String] = []
+	if transmute.per_shop > 0:
+		parts.append("%d item%s a shop" % [transmute.per_shop, "" if transmute.per_shop == 1 else "s"])
+	if transmute.pay_bp > 0:
+		parts.append("%s of the price" % ValueBreakdown._percent(FixedMath.BP_ONE + transmute.pay_bp))
+	if transmute.rank_ii_add > 0:
+		parts.append("+%d at rank II" % transmute.rank_ii_add)
+	if transmute.rank_iii_add > 0:
+		parts.append("+%d at rank III" % transmute.rank_iii_add)
+	return "Transmuting: " + ", ".join(parts)
 
 
 ## A stacking card on the pick: what it would lock in now ("+2 ATK now ·
@@ -379,7 +405,8 @@ static func growth_now(growth: GrowthDef, count: int, kit: UnitDef, content: Con
 
 
 ## What the run counts for a growth, `per` of it: "10 elites won", "10
-## fights won", "flawless fight" (phase 8 part 5).
+## fights won", "flawless fight" (phase 8 part 5), "20 shards collected in
+## fights" (phase 8 part 6).
 static func run_counted(growth: GrowthDef) -> String:
 	match growth.run_counts:
 		"elite_wins":
@@ -388,6 +415,8 @@ static func run_counted(growth: GrowthDef) -> String:
 			return "%d fights won" % growth.per if growth.per != 1 else "fight won"
 		"flawless":
 			return "%d fights won with every hero standing" % growth.per if growth.per != 1 else "fight won with every hero standing"
+		"shards":
+			return "%d shards collected in fights" % growth.per if growth.per != 1 else "shard collected in a fight"
 	return growth.run_counts
 
 
@@ -398,6 +427,7 @@ static func step_text(mod: KitMod, kit: UnitDef, content: ContentDb) -> String:
 	bare.stats_bp = mod.stats_bp
 	bare.stats_add = mod.stats_add
 	bare.changes = mod.changes
+	bare.shard_cap_add = mod.shard_cap_add
 	var parts: Array[String] = mod_parts(bare, kit, content)
 	for part: PartDef in mod.passives:
 		if part.kind == PartDef.Kind.AURA:
