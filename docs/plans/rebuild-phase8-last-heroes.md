@@ -1,6 +1,6 @@
 # Phase 8 part 6: the last five heroes and the roster check
 
-Status: **a build plan, for approval.** The remaining five designed heroes, Ilse Cinderhand, Ottilie Brack, Kestra Fenn, Lucan Merrow, and Hob Gleaner, built from their designs (`rebuild-heroes.md` sections 8b, 8i, 8k, 8j, 8f; `apexes.md`; `upgrade-pools.md`; `duo-bonds.md`) the way phase 8 part 5 built Severine and Edric (`rebuild-phase8-severine-edric.md`), then **the one check and tuning pass over all thirteen** that part 5's Decision 8 moved here. Numbers are the designs' placeholders until each hero's builds report and the final pass. Questions are in section 11.
+Status: **a build plan, approved** (2026-10-12; Decisions 1–10). The remaining five designed heroes, Ilse Cinderhand, Ottilie Brack, Kestra Fenn, Lucan Merrow, and Hob Gleaner, built from their designs (`rebuild-heroes.md` sections 8b, 8i, 8k, 8j, 8f; `apexes.md`; `upgrade-pools.md`; `duo-bonds.md`) the way phase 8 part 5 built Severine and Edric (`rebuild-phase8-severine-edric.md`), then **the one check and tuning pass over all thirteen** that part 5's Decision 8 moved here. Numbers are the designs' placeholders until each hero's builds report and the final pass. Questions are in section 12, answered in the Decisions.
 
 ## 1. What it builds
 
@@ -164,4 +164,15 @@ A bond relic is built with the later of its two heroes. Every new piece is skipp
 
 ## Decisions
 
-*(None yet.)*
+The playtester approved the plan with every proposed answer (2026-10-12):
+
+1. **Heat (LA):** every enemy's Burn tick within 3 hexes counts, whoever's Burn it is (allies' and relics' too); her own Silence stops it as it stops all mana.
+2. **Ember Choir's Burn on allies' attacks (LB):** her MGK is read as each hit lands (Cinder Saint's growing MGK feeds it); it rides on basic attacks only, summons' and copies' included.
+3. **Allied units and summons (LC):** an allied unit is any unit standing on the heroes' side (heroes, copies, companions, vipers, thralls, controlled enemies); an allied summon is any of those that isn't a hero or a controlled enemy, thralls included. Grit counts as an allied summon and for Puppeteer.
+4. **Companions' stats (LD):** set as each fight is set up, from Kestra's HP and ATK after her upgrades, loadout, and relics (not her in-fight auras); relics that change every hero don't touch them; her wounds are theirs.
+5. **Shard caps (LE):** one cap a unit a fight (Hob 8; Gilded Death 3 vowed, 8 transformed), counted in the sim so the log shows each capped shard; shards from any fight are paid, won or lost.
+6. **Shop rules (LF):** Hob's and Ottilie's reach the Pedlar and the boss shop; the Magpie keeps his own; Black Market's slot shows only at those two. Fence counts shards spent on items, relics, rerolls, and treated wounds there and at the Magpie, never the Shrine.
+7. **Controlled and confused (LG):** controlled keeps its kit and HP, fights for the heroes for the time, counts as an allied unit (not a summon), its kills Lucan's; confused attacks the nearest other enemy and its hits count as the enemies' (no deeds for the heroes); elites and bosses take +25% damage for the time instead; Taunt wins over both.
+8. **The runs (LH):** 300 runs for the band, drawn so every hero appears about equally (about 70 each), plus 10 runs for each synergy team `test-teams.md` names.
+9. **The order (LI):** as section 2: Ilse, Ottilie, Kestra, Lucan, Hob.
+10. **Lantern Vigil (LJ):** built in 8f-1 with Ilse's bonds, so the check sees every bond.
