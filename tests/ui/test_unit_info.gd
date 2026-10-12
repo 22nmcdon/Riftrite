@@ -49,7 +49,7 @@ func _numbers(kit: UnitDef, who: String = "it") -> Array[String]:
 
 func test_every_ability_and_passive_has_its_sentence() -> void:
 	var kits: Dictionary[String, UnitDef] = _kits()
-	assert_eq(kits.size(), 51)
+	assert_eq(kits.size(), 52)
 	for id: String in kits:
 		for line: UnitInfo.Line in UnitInfo.lines(kits[id], "it", _content):
 			assert_false(line.text.is_empty(), "%s: %s" % [id, line.name])
@@ -67,7 +67,7 @@ func test_a_sentence_names_every_reach() -> void:
 				var named := RegEx.create_from_string("\\b%d hex" % reach)
 				assert_not_null(named.search(ability[2]), "%s's %s names %s (Decision 5): %s" % [id, ability[0], UnitInfo.hexes(reach), ability[2]])
 				checked += 1
-	assert_eq(checked, 58, "every reach in the heroes' and the Act 1, 2, and 3 kits")
+	assert_eq(checked, 59, "every reach in the heroes' and the Act 1, 2, and 3 kits")
 
 
 func test_what_counts_as_a_reach() -> void:

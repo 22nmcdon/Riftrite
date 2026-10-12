@@ -32,6 +32,14 @@ extends RefCounted
 ##     "lasts_ms", a summon goes quietly once its time is up, like a thrall.
 ##   - Companions that start a fight (CombatSim.place_companions) and one
 ##     that returns stand beside their hero (beside).
+##   - A copy (phase 8 part 6, Lucan; "copy_of"): a copy of the caster, or of
+##     each standing hero on its side, beside it (copy_kit: its kit as it
+##     stands, with its HP, ATK, and MGK at the share, its basic attack
+##     only). The caster owns it (UnitState.owner, mirror_of): it keeps no
+##     side up, is nobody's fallen ally, its work counts for the caster's
+##     deeds, and it goes quietly when its time is up. max_standing counts
+##     every copy standing on the side. Logged as SUMMON (end_tick: when it
+##     goes); its id and name say whose copy it is.
 ##   - A raise (phase 8 part 5, Gravecaller; raise) stands a fallen enemy
 ##     up on the raiser's side as its own kit, a thrall, at the free spot
 ##     nearest where it fell: a share of its max HP for a while, then it
@@ -44,6 +52,9 @@ extends RefCounted
 ## `unit` summons as `effect` says (`aimed_at`: its ability's target, for
 ## "near": "target").
 static func summon(sim: CombatSim, unit: UnitState, source: EffectSource, effect: EffectDef, aimed_at: UnitState) -> void:
+	if effect.copy_of != EffectDef.CopyOf.NONE:
+		_copies(sim, unit, source, effect)
+		return
 	var as_companion: CompanionDef = unit.def.companion(effect.summon_kit)
 	var kit: UnitDef = companion(as_companion, unit) if as_companion != null else sim.setup.summon_kit(effect.summon_kit)
 	var edges: Array[Vector2i] = []
@@ -116,6 +127,86 @@ static func touching(sim: CombatSim, unit: UnitState, other: UnitState) -> Vecto
 static func beside(sim: CombatSim, unit: UnitState, other: UnitState) -> Vector2i:
 	var spot: Vector2i = touching(sim, unit, other)
 	return spot if spot.x >= 0 else Displacement.free_spot_near(sim, other, unit.pos, null, 0)
+
+
+## `unit` makes copies as `effect` says (see the top).
+static func _copies(sim: CombatSim, unit: UnitState, source: EffectSource, effect: EffectDef) -> void:
+	var copied: Array[UnitState] = []
+	if effect.copy_of == EffectDef.CopyOf.SELF:
+		copied.append(unit)
+	else:
+		for ally: UnitState in sim.units:
+			if ally.alive and ally.side == unit.side and not ally.summoned:
+				copied.append(ally)
+	var joined: bool = false
+	for of: UnitState in copied:
+		var kit: UnitDef = copy_kit(of, effect.copy_share_bp)
+		if sim.standing_count(unit.side) >= sim.tuning.max_units_per_side:
+			_log_dropped(sim, source, kit, "its side is full")
+			continue
+		if effect.max_standing > 0 and _copies_on(sim, unit.side) >= effect.max_standing:
+			_log_dropped(sim, source, kit, "enough stand")
+			continue
+		var copy: UnitState = UnitState.make_summon(kit, unit.side, sim.next_unit_id(kit.id), sim.units.size(), sim.tuning.unit_radius)
+		var spot: Vector2i = beside(sim, of, copy)
+		if spot.x < 0:
+			_log_dropped(sim, source, kit, "no room")
+			continue
+		copy.pos = spot
+		copy.owner = unit
+		copy.mirror_of = of
+		copy.bonus_parts = unit.bonus_parts
+		copy.expires_at = sim.tick + effect.lasts_ticks
+		sim.thralls = true
+		sim.add_unit(copy)
+		joined = true
+		var entry: LogEntry = sim.new_entry(LogEntry.Kind.SUMMON, source)
+		entry.target = copy.id
+		entry.to_pos = spot
+		entry.end_tick = copy.expires_at
+		sim.combat_log.add(entry)
+	if joined:
+		sim.units_joined()
+
+
+## A copy of `of` (phase 8 part 6, Lucan): its kit as it stands (its upgrades,
+## loadout, and relics, not its in-fight auras), its max HP (wounds counted),
+## ATK, and MGK at `share_bp`, and its basic attack only: no signature or mana,
+## no passives, phases, companions, Engage, hop, or what's placed before a
+## fight. Its id is its kit's with "_copy", its name "Copy of" its first name.
+static func copy_kit(of: UnitState, share_bp: int) -> UnitDef:
+	var kit: UnitDef = of.def.copy()
+	kit.id = of.def.id + "_copy"
+	kit.name = "Copy of %s" % of.def.name.get_slice(" ", 0)
+	kit.stats = of.def.stats.copy()
+	kit.stats.values[UnitStats.Stat.HP] = maxi(FixedMath.apply_bp(of.base_max_hp, share_bp), 1)
+	kit.stats.values[UnitStats.Stat.ATK] = FixedMath.apply_bp(of.def.stats.get_stat(UnitStats.Stat.ATK), share_bp)
+	kit.stats.values[UnitStats.Stat.MGK] = FixedMath.apply_bp(of.def.stats.get_stat(UnitStats.Stat.MGK), share_bp)
+	kit.signature = null
+	kit.mana = null
+	kit.passives = []
+	kit.phases = []
+	kit.companions = []
+	kit.traits.erase("engage")
+	kit.hop_cooldown_ticks = 0
+	kit.placed_snares = 0
+	kit.placed_lantern = false
+	kit.place_rule = ""
+	kit.arrive_ticks = 0
+	kit.arrive_at = ""
+	kit.swap_ticks = 0
+	kit.start_hp_bp = FixedMath.BP_ONE
+	kit.shard_cap = 0
+	return kit
+
+
+## How many copies stand on `side`.
+static func _copies_on(sim: CombatSim, side: EffectSource.Team) -> int:
+	var count: int = 0
+	for unit: UnitState in sim.units:
+		if unit.alive and unit.side == side and unit.mirror_of != null:
+			count += 1
+	return count
 
 
 ## `as_companion`'s kit beside `owner` (phase 8 part 6): its HP a share of

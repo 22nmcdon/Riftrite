@@ -199,6 +199,12 @@ extends RefCounted
 ##   more once that many of its kit stand on its side (dropped, "enough stand")
 ##   phase 8 part 6: "kit" may name one of its caster's companions (Nest),
 ##   and "lasts_ms": each goes quietly that long after it joins
+##   phase 8 part 6 (Lucan): "copy_of" in place of "kit": a copy of the caster
+##   ("self") or of each standing hero on its side ("each_ally"), beside it,
+##   at "share_pct" of its HP, ATK, and MGK, with its basic attack only; it
+##   needs "lasts_ms", takes no "placement" or "count", and "max_standing"
+##   counts every copy standing on the side (Summons.copy_kit)
+##     {"type": "summon", "copy_of": "self", "share_pct": 30, "lasts_ms": 6000}
 ##     edges:    count (default 1) free spots along the safe ground's edge,
 ##               nearest first to the unit ("near": "self", the default) or
 ##               to its target ("near": "target")
@@ -427,6 +433,7 @@ enum Toward { UNIT, WATER, AREA, EDGE, ALLY }
 ## A flood's mode (phase 8 part 3; Water).
 enum FloodMode { CIRCLE, SPREAD, DRAIN, ALL }
 enum Placement { EDGES, ADJACENT, HEXES, WATER }
+enum CopyOf { NONE, SELF, EACH_ALLY }
 enum Anchor { TARGET, SELF, TARGET_DIRECTION }
 enum Hits { ENEMIES, ALLIES, ALL, OTHER_ALLIES }
 enum Target {
@@ -522,6 +529,7 @@ const FLOOD_MODE_NAMES: Array[String] = ["circle", "spread", "drain", "all"]
 ## own (an area, a snare, a wall).
 const PLACED: Array[Type] = [Type.AREA, Type.SNARE, Type.WALL, Type.FLOOD]
 const PLACEMENT_NAMES: Array[String] = ["edges", "adjacent", "hexes", "water"]
+const COPY_OF_NAMES: Array[String] = ["", "self", "each_ally"]
 const NEAR_NAMES: Array[String] = ["self", "target"]
 ## The types with no "target" key: they act from the unit itself.
 const UNTARGETED: Array[Type] = [Type.START_COLLAPSE, Type.SUMMON, Type.SEVER, Type.RAISE]
@@ -698,6 +706,10 @@ var area_effects: Array[EffectDef] = []
 var summon_kit: String = ""
 ## A summon's lifetime (phase 8 part 6; 0: the whole fight).
 var lasts_ticks: int = 0
+## A copy (phase 8 part 6, Lucan): of whom, and its share of their HP, ATK,
+## and MGK (basis points).
+var copy_of: CopyOf = CopyOf.NONE
+var copy_share_bp: int = 0
 var count: int = 1
 var placement: Placement = Placement.EDGES
 var summon_hexes: Array[Vector2i] = []
@@ -1302,6 +1314,9 @@ static func _read_nested(def: EffectDef, reader: DataReader, what: String) -> vo
 
 
 static func _read_summon(def: EffectDef, reader: DataReader) -> void:
+	if reader.has("copy_of"):
+		_read_copy(def, reader)
+		return
 	def.summon_kit = reader.req_string("kit")
 	var placement_name: String = reader.req_choice("placement", PLACEMENT_NAMES)
 	def.placement = maxi(PLACEMENT_NAMES.find(placement_name), 0) as Placement
@@ -1320,6 +1335,20 @@ static func _read_summon(def: EffectDef, reader: DataReader) -> void:
 	def.max_standing = reader.opt_int("max_standing", 0, 0)
 	# Phase 8 part 6 (Nest): each goes quietly that long after it joins.
 	def.lasts_ticks = reader.opt_ticks("lasts_ms", 0)
+
+
+## A copy (phase 8 part 6, Lucan; see the top).
+static func _read_copy(def: EffectDef, reader: DataReader) -> void:
+	def.copy_of = maxi(COPY_OF_NAMES.find(reader.req_choice("copy_of", ["self", "each_ally"])), 1) as CopyOf
+	def.copy_share_bp = reader.req_int("share_pct", 1, 100) * 100
+	def.placement = Placement.ADJACENT
+	def.max_standing = reader.opt_int("max_standing", 0, 0)
+	def.lasts_ticks = reader.opt_ticks("lasts_ms", 0)
+	if def.lasts_ticks <= 0:
+		reader.error("a copy needs \"lasts_ms\"")
+	for key: String in ["kit", "placement", "count"]:
+		if reader.has(key):
+			reader.error("a copy takes no \"%s\"" % key)
 
 
 ## Checks the trigger is allowed here and reads its extra fields.

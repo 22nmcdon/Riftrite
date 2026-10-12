@@ -804,6 +804,11 @@ static func _effect_core(effect: EffectDef, kit: UnitDef, content: ContentDb) ->
 		EffectDef.Type.SEVER:
 			return "the next bridge breaks after %s, for %s" % [seconds(effect.warning_ticks), seconds(effect.zone_ticks)]
 		EffectDef.Type.SUMMON:
+			if effect.copy_of != EffectDef.CopyOf.NONE:
+				# Copies (phase 8 part 6, Lucan).
+				var copy: String = "%s at %s of %s stats for %s" % ["a copy of itself" if effect.copy_of == EffectDef.CopyOf.SELF else "a copy of each hero",
+					ValueBreakdown._percent(effect.copy_share_bp), "its" if effect.copy_of == EffectDef.CopyOf.SELF else "their", seconds(effect.lasts_ticks)]
+				return copy + (", up to %d at once" % effect.max_standing if effect.max_standing > 0 else "")
 			return "summons %d %s" % [effect.count, _unit_name(effect.summon_kit, content)]
 	return ""
 

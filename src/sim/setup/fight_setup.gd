@@ -255,7 +255,8 @@ func _check_kit(kit: UnitDef, where: String, content: ContentDb, grid: HexGrid, 
 		if summon_kit(kit_id) == null:
 			errors.append("%s rises as \"%s\", which isn't among the fight's summon kits" % [where, kit_id])
 	for effect: EffectDef in kit.all_effects():
-		if effect.type != EffectDef.Type.SUMMON:
+		# A copy names no kit (phase 8 part 6, Lucan).
+		if effect.type != EffectDef.Type.SUMMON or effect.copy_of != EffectDef.CopyOf.NONE:
 			continue
 		# Or one of its own companions (phase 8 part 6, Nest).
 		if summon_kit(effect.summon_kit) == null and kit.companion(effect.summon_kit) == null:

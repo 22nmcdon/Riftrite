@@ -55,6 +55,8 @@ const STATUS_COLORS: Dictionary = {
 }
 ## How see-through a stealthed unit is drawn.
 const STEALTH_ALPHA: float = 0.4
+## A copy (phase 8 part 6, Lucan) is drawn paler than whoever it copies.
+const COPY_ALPHA: float = 0.7
 ## How far above its shadow a flier without art is drawn, in its own radii
 ## (a flier's figure is drawn in the air already).
 const FLIGHT_LIFT: float = 0.35
@@ -212,7 +214,7 @@ func show_state(unit: UnitState, tick: int) -> void:
 	status_tags.clear()
 	for state: StatusState in unit.statuses:
 		status_tags.append(status_tag(state))
-	modulate.a = STEALTH_ALPHA if Statuses.is_stealthed(unit) else 1.0
+	modulate.a = (STEALTH_ALPHA if Statuses.is_stealthed(unit) else 1.0) * (COPY_ALPHA if unit.mirror_of != null else 1.0)
 	queue_redraw()
 
 

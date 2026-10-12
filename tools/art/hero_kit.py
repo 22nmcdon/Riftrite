@@ -1218,6 +1218,53 @@ def nestling_base(uid):
     """A nestling of her viper's brood: small and pale, quick to bite."""
     return _viper_body(uid, "#7a9a5a", "#e8eaa0", s=0.6)
 
+
+# ------------------------------------------------------------------ Lucan (8f-4)
+DUSKCOAT, DUSKCOAT_DK = "#5a3f8a", "#3a2760"
+SILVER, SILVER_DK = "#d8e4f0", "#9fb0c8"
+HAIR_PALE = "#e8dcc0"
+
+
+def lucan_head(hair=HAIR_PALE):
+    return "".join([P("M128,140 C126,108 174,108 172,140 L170,174 C162,192 138,192 130,174 Z", SKIN),
+                    P("M122,138 C116,100 184,100 178,138 C172,118 158,114 150,116 C140,114 128,120 122,138 Z", hair),
+                    P("M122,138 L116,170 L128,160 Z", hair, 2),
+                    f'<path d="M140,150 l7,1 M154,151 l7,-1" stroke="{INK}" stroke-width="2.6" stroke-linecap="round"/>',
+                    P("M140,174 C146,180 156,180 162,174", "none", 2.2),
+                    rim("M124,136 C126,116 138,106 152,104", color=AQUA, w=2)])
+
+
+def mirror_shard(cx, cy, s=1.0, tilt=0, glow=False):
+    """A floating shard of mirror glass: a thin silver kite with a pale glint."""
+    o = [f'<g transform="translate({cx},{cy}) rotate({tilt}) scale({s})">',
+         P("M0,-22 L9,0 L0,20 L-8,0 Z", SILVER, 2.2), P("M0,-18 L4,-2 L-2,4 Z", "#ffffff", 1, 'opacity="0.8"')]
+    if glow:
+        o.append(f'<circle cx="0" cy="0" r="14" fill="{AQUA}" opacity="0.3" filter="url(#bloom)"/>')
+    o.append("</g>")
+    return "".join(o)
+
+
+def lucan_coat(uid, color=DUSKCOAT, trim=SILVER_DK, hem=470):
+    coat = f"M118,196 L182,196 L196,{hem} L104,{hem} Z"
+    return "".join([P(coat, color), P(f"M146,198 L154,198 L156,{hem} L144,{hem} Z", DUSKCOAT_DK, 2),
+                    P(f"M104,{hem - 14} L196,{hem - 14} L196,{hem} L104,{hem} Z", trim, 2),
+                    P("M114,196 C126,184 174,184 186,196 L176,214 L124,214 Z", trim, 2),
+                    shade(uid, [coat], cut=150)])
+
+
+def lucan_base(uid):
+    """An illusionist in a dusk-violet longcoat, mirror shards turning round him, a shard of light in his raised hand."""
+    o = [shadow(70), boot(116, 150) + boot(152, 188), lucan_coat(uid),
+         limb((124, 210), (106, 290), 16, 12, DUSKCOAT), circle(106, 294, 8, SKIN, 2),
+         lucan_head(),
+         limb((176, 210), (204, 160), 16, 12, DUSKCOAT), circle(206, 154, 8, SKIN, 2),
+         mirror_shard(214, 128, 0.9, 20, glow=True),
+         mirror_shard(70, 230, 0.8, -25), mirror_shard(236, 300, 0.7, 35), mirror_shard(84, 380, 0.6, 10),
+         rune(150, 250, 6, color=AQUA),
+         rim("M182,214 L192,440", color=AQUA, w=2)]
+    return "".join(o)
+
+
 HEROES = [
     ("maren", "Maren", [("base", "Base", maren_base), ("deadeye", "Deadeye", maren_deadeye),
                         ("trapper", "Trapper", maren_trapper), ("volley", "Volley", maren_volley)]),
@@ -1241,6 +1288,7 @@ HEROES = [
                             ("transmuter", "Transmuter", ottilie_transmuter), ("apothecary", "Apothecary", ottilie_apothecary)]),
     ("kestra", "Kestra", [("base", "Base", kestra_base), ("cinderhound", "Cinderhound", kestra_cinderhound),
                           ("serpent_keeper", "Serpent-Keeper", kestra_serpent_keeper), ("packleader", "Packleader", kestra_packleader)]),
+    ("lucan", "Lucan", [("base", "Base", lucan_base)]),
 ]
 
 # A hero's companions (phase 8 part 6, Kestra): each one's figure is

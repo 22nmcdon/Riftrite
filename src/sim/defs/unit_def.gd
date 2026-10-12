@@ -375,7 +375,7 @@ func all_effects() -> Array[EffectDef]:
 func summon_ids() -> Array[String]:
 	var found: Array[String] = []
 	for effect: EffectDef in all_effects():
-		if effect.type == EffectDef.Type.SUMMON:
+		if effect.type == EffectDef.Type.SUMMON and effect.copy_of == EffectDef.CopyOf.NONE:
 			found.append(effect.summon_kit)
 	found.append_array(rise_as_ids())
 	return found

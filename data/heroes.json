@@ -325,5 +325,27 @@
         }
       ]
     }
+  },
+  {
+    "_note": "Hero 12 (docs/plans/rebuild-heroes.md section 8j; rebuild-phase8-last-heroes.md 8f-4). Stats, mana, Mirror, and Unreal are the design's; Glimmer's 1.2s cooldown is a first number, as Ilse's and Ottilie's. He can't be drafted until his paths come.",
+    "id": "lucan",
+    "name": "Lucan Merrow",
+    "title": "the illusionist",
+    "role": "damage",
+    "kit": {
+      "stats": {"hp": 270, "atk": 8, "mgk": 18, "def": 8, "speed": 2, "range": 3},
+      "mana": {"max": 60, "per_attack": 10, "regen_per_s": 2},
+      "basic_attack": {
+        "id": "glimmer", "name": "Glimmer", "text": "A shard of light at the nearest enemy within 3 hexes. His main source of mana.", "cooldown_ms": 1200,
+        "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"mgk": 10000}}]
+      },
+      "signature": {
+        "id": "mirror", "name": "Mirror", "text": "A copy of him appears beside him for a few seconds, with a share of his stats; it casts Glimmer but no signature.", "trigger": {"kind": "mana"}, "targeting": "self",
+        "effects": [{"type": "summon", "copy_of": "self", "share_pct": 30, "lasts_ms": 6000}]
+      },
+      "passives": [
+        {"id": "unreal", "name": "Unreal", "kind": "aura", "text": "Enemies attacking him miss now and then.", "aura": {"target": "holder", "stat": "evade_bp", "value": 1500}}
+      ]
+    }
   }
 ]

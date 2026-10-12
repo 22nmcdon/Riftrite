@@ -265,7 +265,13 @@ func sync_fight(player: FightPlayer) -> void:
 	for unit: UnitState in player.sim.units:
 		var unit_token: UnitToken = token(unit.id)
 		if unit_token == null:
-			unit_token = UnitToken.make(unit.id, label_for(unit.def, player.content), unit.side, unit.radius, unit.flying, figure_for(unit.def, unit.side))
+			var key: String = figure_for(unit.def, unit.side)
+			# A copy (phase 8 part 6, Lucan) stands as the figure of whoever
+			# it copies (paler: UnitToken.show_state).
+			var original: UnitToken = token(unit.mirror_of.id) if unit.mirror_of != null else null
+			if original != null:
+				key = original.art_key
+			unit_token = UnitToken.make(unit.id, label_for(unit.def, player.content), unit.side, unit.radius, unit.flying, key)
 			_add_token(unit_token)
 		unit_token.plane_pos = unit.pos
 		unit_token.visible = unit.alive

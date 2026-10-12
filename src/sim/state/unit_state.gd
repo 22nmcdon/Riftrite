@@ -137,6 +137,9 @@ var time_up: bool = false
 ## and one that returns comes back beside its owner (CombatSim).
 var owner: UnitState = null
 var companion: CompanionDef = null
+## A copy (phase 8 part 6, Lucan; Summons.copy_kit): the unit it's a copy
+## of (null: none). Its owner is the unit that made it.
+var mirror_of: UnitState = null
 ## Its owner's abilities it does ("by": "companion"), each its own state
 ## sourced to it, made as first needed (AbilityDef -> AbilityState; never
 ## iterated).

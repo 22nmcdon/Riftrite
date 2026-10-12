@@ -40,6 +40,23 @@ func test_every_hero_and_enemy_has_a_figure() -> void:
 	assert_eq(FigureArt.bounds("enemies/nobody"), Rect2(Vector2.ZERO, FigureArt.CANVAS), "no art: the whole canvas")
 
 
+func test_a_copy_stands_as_the_figure_of_whoever_it_copies() -> void:
+	var errors: Array[String] = []
+	var team: Array[String] = ["brannoc", "maren", "lucan"]
+	var player: FightPlayer = FightPlayer.make(Encounters.setup(_content, "sentinel_gate", HeroTeam.place(_content, team, HeroTeam.GUARDED), 3, errors, {}, {}, [], {}, {}, [], {}, {}), _content)
+	assert_eq(errors, [] as Array[String])
+	var view: ArenaView = _view(player)
+	var lucan: UnitState = player.sim.unit_by_id("lucan")
+	lucan.mana = lucan.mana_cap
+	player.advance(0.1)
+	view.sync_fight(player)
+	var copy: UnitToken = view.token("lucan_copy")
+	assert_not_null(copy, "Mirror's copy joins the board")
+	assert_eq(copy.art_key, view.token("lucan").art_key, "as Lucan's figure (phase 8 part 6)")
+	assert_lt(copy.modulate.a, 1.0, "paler")
+	assert_eq(view.token("lucan").modulate.a, 1.0)
+
+
 func test_the_bounds_file_matches_the_figures() -> void:
 	var measured: Dictionary = FigureBounds.measure_all()
 	assert_eq(FileAccess.get_file_as_string(FigureArt.BOUNDS), FigureBounds.to_json(measured),
