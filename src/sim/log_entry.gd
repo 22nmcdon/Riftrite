@@ -150,6 +150,9 @@ var overkill: int = 0
 var part_bonus: int = 0
 ## SHARDS (phase 8 part 6): past its unit's cap for the fight, so not paid.
 var capped: bool = false
+## DAMAGE (phase 8 part 6, Veilweaver): a basic attack's hit made from
+## Stealth (a shot's, Stealthed as it left).
+var from_stealth: bool = false
 ## SHIELD (phase 8 part 4): its target's Shield once this one was given
 ## (Endless Bulwark's deed counts what goes past a share of max HP).
 var shield_after: int = 0

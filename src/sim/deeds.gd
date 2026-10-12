@@ -210,7 +210,10 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 					# Catalyst's Reaction): worked out as the hit landed.
 					counter.amounts[d] += entry.part_bonus
 				DeedDef.Counts.SUMMONED:
-					counter.amounts[d] += 1
+					# One that joined, or a companion back (phase 8 part 6); a
+					# dropped summon (its note says why) never joined.
+					if entry.note.is_empty() or entry.note == "returns":
+						counter.amounts[d] += 1
 				DeedDef.Counts.SHARDS:
 					# Shards paid (phase 8 part 6): none past its cap.
 					if not entry.capped:

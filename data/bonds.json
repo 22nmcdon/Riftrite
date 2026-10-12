@@ -199,5 +199,35 @@
       "serpent_keeper"
     ],
     "relic": "mother_of_serpents"
+  },
+  {
+    "id": "unseen_blade",
+    "name": "Unseen Blade",
+    "text": "He covers her; her kills cover everyone.",
+    "paths": [
+      "nightblade",
+      "veilweaver"
+    ],
+    "relic": "the_shroud_of_knives"
+  },
+  {
+    "id": "the_menagerie",
+    "name": "The Menagerie",
+    "text": "Puppets and beasts, one pack.",
+    "paths": [
+      "puppeteer",
+      "packleader"
+    ],
+    "relic": "the_menagerie"
+  },
+  {
+    "id": "hall_of_arrows",
+    "name": "Hall of Arrows",
+    "text": "She vanishes; her reflection keeps shooting.",
+    "paths": [
+      "mirrorwright",
+      "volley"
+    ],
+    "relic": "mirror_step"
   }
 ]

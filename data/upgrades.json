@@ -10355,5 +10355,640 @@
         }
       ]
     }
+  },
+  {
+    "id": "clear_mind",
+    "name": "Clear Mind",
+    "hero": "lucan",
+    "text": "His MGK rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "mgk",
+      "pct": 10
+    }
+  },
+  {
+    "id": "quick_glimmer",
+    "name": "Quick Glimmer",
+    "hero": "lucan",
+    "text": "He attacks faster by a tenth of his attack speed when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "atsp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "silk_robes",
+    "name": "Silk Robes",
+    "hero": "lucan",
+    "text": "His max HP rises by a tenth of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "hp",
+      "pct": 10
+    }
+  },
+  {
+    "id": "keen_sight",
+    "name": "Keen Sight",
+    "hero": "lucan",
+    "text": "His crit chance rises by a quarter of what it is when you take this, for good. Can be taken again.",
+    "stacks": {
+      "stat": "crit",
+      "pct": 25
+    }
+  },
+  {
+    "id": "long_mirror",
+    "name": "Long Mirror",
+    "hero": "lucan",
+    "text": "Mirror's copy stays longer (once it's a habit, too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "mirror",
+          "duration_add_ms": 3000
+        }
+      ]
+    }
+  },
+  {
+    "id": "strong_mirror",
+    "name": "Strong Mirror",
+    "hero": "lucan",
+    "text": "Mirror's copy has more of his stats (once it's a habit, too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "mirror",
+          "share_add_bp": 1500
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_mirror",
+    "name": "Quick Mirror",
+    "hero": "lucan",
+    "text": "Mirror costs less mana (once it's a habit, it comes sooner).",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "mirror",
+          "mana_max_add": -10
+        }
+      ]
+    }
+  },
+  {
+    "id": "deep_unreal",
+    "name": "Deep Unreal",
+    "hero": "lucan",
+    "text": "Enemies attacking him miss more often.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:unreal",
+          "value_add": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "dazzling_glimmer",
+    "name": "Dazzling Glimmer",
+    "hero": "lucan",
+    "text": "Glimmer Slows its target a little for a moment.",
+    "mod": {
+      "on": [
+        {
+          "slot": "basic_attack",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "glimmer_dazzle",
+              "target": "target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "bright_shard",
+    "name": "Bright Shard",
+    "hero": "lucan",
+    "text": "Glimmer deals more damage to an enemy attacking a copy or other summon.",
+    "mod": {
+      "passives": [
+        {
+          "id": "bright_shard",
+          "name": "Bright Shard",
+          "kind": "aura",
+          "text": "His Glimmer hits harder an enemy attacking a copy or other summon.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 12000,
+            "from_basic": true,
+            "vs": {
+              "target": {
+                "summon": true
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "misdirect",
+    "name": "Misdirect",
+    "hero": "lucan",
+    "text": "When one of his copies is destroyed, he gains mana.",
+    "mod": {
+      "passives": [
+        {
+          "id": "misdirect",
+          "name": "Misdirect",
+          "kind": "ability",
+          "text": "When one of his copies is destroyed, he gains mana.",
+          "effects": [
+            {
+              "trigger": "on_summon_fell",
+              "vs": {
+                "copy": true
+              },
+              "type": "gain_mana",
+              "amount": 10,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "gallery",
+    "name": "Gallery",
+    "hero": "lucan",
+    "text": "A gallery of his faces: his MGK rises with every 20 copies he makes, for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "summoned"
+      },
+      "per": 20,
+      "each": {
+        "stats_bp": {
+          "mgk": 10100
+        }
+      }
+    }
+  },
+  {
+    "id": "quick_reflection",
+    "name": "Quick Reflection",
+    "path": "mirrorwright",
+    "taste": true,
+    "text": "Reflection comes more often (once transformed, too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:reflection",
+          "cooldown_bp": 8334
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:reflection",
+          "cooldown_bp": 8334
+        }
+      ]
+    }
+  },
+  {
+    "id": "lasting_reflection",
+    "name": "Lasting Reflection",
+    "path": "mirrorwright",
+    "taste": true,
+    "text": "Reflection's copies stay longer (once transformed, too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:reflection",
+          "duration_add_ms": 1000
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:reflection",
+          "duration_add_ms": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_shroud",
+    "name": "Quick Shroud",
+    "path": "veilweaver",
+    "taste": true,
+    "text": "Shroud comes more often (once transformed, too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:shroud",
+          "cooldown_bp": 8000
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:shroud",
+          "cooldown_bp": 8000
+        }
+      ]
+    }
+  },
+  {
+    "id": "deep_shroud",
+    "name": "Deep Shroud",
+    "path": "veilweaver",
+    "taste": true,
+    "text": "Shroud hides its ally for longer (once transformed, too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:shroud",
+          "duration_add_ms": 500
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:shroud",
+          "duration_add_ms": 500
+        }
+      ]
+    }
+  },
+  {
+    "id": "strong_strings",
+    "name": "Strong Strings",
+    "path": "puppeteer",
+    "taste": true,
+    "text": "Strings gives more for each allied unit (once transformed, too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:strings",
+          "value_add": 100
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:strings",
+          "value_add": 100
+        }
+      ]
+    }
+  },
+  {
+    "id": "lead_puppet",
+    "name": "Lead Puppet",
+    "path": "puppeteer",
+    "taste": true,
+    "text": "His own copies count twice for Strings (once transformed, too).",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:strings",
+          "per_twice": {
+            "copy": true
+          }
+        }
+      ]
+    },
+    "transformed_mod": {
+      "on": [
+        {
+          "slot": "passive:strings",
+          "per_twice": {
+            "copy": true
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "fast_reflection",
+    "name": "Fast Reflection",
+    "path": "mirrorwright",
+    "text": "Reflection comes more often.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:reflection",
+          "cooldown_bp": 8334
+        }
+      ]
+    }
+  },
+  {
+    "id": "many_mirrors",
+    "name": "Many Mirrors",
+    "path": "mirrorwright",
+    "text": "One more of Reflection's copies may stand at once.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:reflection",
+          "max_standing_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_hall",
+    "name": "Long Hall",
+    "path": "mirrorwright",
+    "text": "Hall of Mirrors' copies stay longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "duration_add_ms": 2000
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_hall",
+    "name": "Quick Hall",
+    "path": "mirrorwright",
+    "text": "Hall of Mirrors costs less mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "hall_of_mirrors",
+          "mana_max_add": -15
+        }
+      ]
+    }
+  },
+  {
+    "id": "silvered_glass",
+    "name": "Silvered Glass",
+    "path": "mirrorwright",
+    "text": "Silvered glass: his copies take more of the stats they copy with every 50 copies he makes, for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "summoned"
+      },
+      "per": 50,
+      "each": {
+        "on": [
+          {
+            "slot": "passive:reflection",
+            "share_add_bp": 100
+          },
+          {
+            "slot": "signature",
+            "share_add_bp": 100
+          },
+          {
+            "slot": "abilities",
+            "ability": "mirror",
+            "share_add_bp": 100
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "faster_shroud",
+    "name": "Faster Shroud",
+    "path": "veilweaver",
+    "text": "Shroud comes more often.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:shroud",
+          "cooldown_bp": 8000
+        }
+      ]
+    }
+  },
+  {
+    "id": "shroud_splits",
+    "name": "Shroud Splits",
+    "path": "veilweaver",
+    "text": "Shroud also hides the ally the next most enemies are attacking.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:shroud",
+          "count_add": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_act",
+    "name": "Long Act",
+    "path": "veilweaver",
+    "text": "Vanishing Act hides every ally for longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "statuses": [
+            "vanished"
+          ],
+          "duration_add_ms": 1000
+        }
+      ]
+    }
+  },
+  {
+    "id": "veiled_step",
+    "name": "Veiled Step",
+    "path": "veilweaver",
+    "text": "Hidden allies move faster.",
+    "mod": {
+      "passives": [
+        {
+          "id": "veiled_step",
+          "name": "Veiled Step",
+          "kind": "aura",
+          "text": "Hidden allies move faster.",
+          "aura": {
+            "target": "all_allies",
+            "only": {
+              "keywords": [
+                "stealthed"
+              ]
+            },
+            "stat": "speed",
+            "value": 1
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "velvet_dark",
+    "name": "Velvet Dark",
+    "path": "veilweaver",
+    "text": "The dark grows soft: an ally's attack out of Stealth hits harder with every 20 strikes from Stealth, for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "applied",
+        "statuses": [
+          "silence"
+        ],
+        "from_ability": [
+          "hush"
+        ]
+      },
+      "per": 20,
+      "each": {
+        "passives": [
+          {
+            "id": "velvet_dark",
+            "name": "Velvet Dark",
+            "kind": "aura",
+            "text": "Grows with the strikes from Stealth.",
+            "aura": {
+              "target": "all_allies",
+              "only": {
+                "keywords": [
+                  "stealthed"
+                ]
+              },
+              "stat": "damage_bp",
+              "value": 10100
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "long_string_dance",
+    "name": "Long Dance",
+    "path": "puppeteer",
+    "text": "Dance of Strings lasts longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "statuses": [
+            "dance"
+          ],
+          "duration_add_ms": 2000
+        }
+      ]
+    }
+  },
+  {
+    "id": "quick_dance",
+    "name": "Quick Dance",
+    "path": "puppeteer",
+    "text": "Dance of Strings costs less mana.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "dance_of_strings",
+          "mana_max_add": -15
+        }
+      ]
+    }
+  },
+  {
+    "id": "sharpened_puppets",
+    "name": "Sharpened Puppets",
+    "path": "puppeteer",
+    "text": "Allied summons' crits hit harder.",
+    "mod": {
+      "passives": [
+        {
+          "id": "sharpened_puppets",
+          "name": "Sharpened Puppets",
+          "kind": "aura",
+          "text": "Allied summons' crits hit harder.",
+          "aura": {
+            "target": "all_allies",
+            "only": {
+              "summon": true
+            },
+            "stat": "crit_damage_bp",
+            "value": 1500
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "sturdy_puppets",
+    "name": "Sturdy Puppets",
+    "path": "puppeteer",
+    "text": "Allied summons have more max HP.",
+    "mod": {
+      "passives": [
+        {
+          "id": "sturdy_puppets",
+          "name": "Sturdy Puppets",
+          "kind": "aura",
+          "text": "Allied summons have more max HP.",
+          "aura": {
+            "target": "all_allies",
+            "only": {
+              "summon": true
+            },
+            "stat": "max_hp_bp",
+            "value": 12000
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "old_strings",
+    "name": "Old Strings",
+    "path": "puppeteer",
+    "text": "Old strings, well worn: his Glimmer hits harder with every 50 summons he brings onto the field, for the rest of the run.",
+    "grows": {
+      "counts": {
+        "counts": "summoned"
+      },
+      "per": 50,
+      "each": {
+        "passives": [
+          {
+            "id": "old_strings",
+            "name": "Old Strings",
+            "kind": "aura",
+            "text": "Grows with the summons he brings.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 10100,
+              "from_basic": true
+            }
+          }
+        ]
+      }
+    }
   }
 ]

@@ -100,7 +100,8 @@ extends RefCounted
 ##                                        ("costs less mana" fires one attack
 ##                                        sooner; Swift Haul)
 ##       "ignores_def": true              its damage ignores DEF (Bitter Blood)
-##       "per_twice": {...UnitCondition}  the named per-enemy aura counts those
+##       "per_twice": {...UnitCondition}  the named per-enemy (or, phase 8 part 6,
+##                                        per-allied-unit) aura counts those
 ##                                        enemies twice (Bloodied Links)
 ##       "per_stack_add_bp": 500          a grows_per_stack's bp (its apex
 ##                                        cards: Layered Plate, Echoing Burst)
@@ -113,11 +114,17 @@ extends RefCounted
 ##                                        allies_near aura's (Aldous's cards:
 ##                                        Wide Peal, Far Resonance)
 ##       "count_add": 1                   a lowest_mana_ally's count (Two
-##                                        Breaths; at most 5)
+##                                        Breaths; at most 5), and a
+##                                        most_targeted_ally's (phase 8
+##                                        part 6, Shroud Splits)
 ## Phase 8 part 6 (Ilse's cards), per "on" entry: within_add also reaches
 ## on_status_tick's near_hexes (Fan the Coals) and count_add an
 ## allies_near_self's nearest (Shared Blessing); and
-##       "share_add_bp": 200,             a stacks_of's share (Deep Stoke)
+##       "share_add_bp": 200,             a stacks_of's share (Deep Stoke),
+##                                        and a copy's share of the unit
+##                                        it copies (phase 8 part 6,
+##                                        Strong Mirror; a growing step's
+##                                        adds up: Silvered Glass)
 ##       "grow_every_add_ms": -500,       a growing zone's step time (Fast
 ##       "grow_max_add": 1                Spread) and largest radius (Far
 ##                                        Spread)
@@ -645,10 +652,10 @@ func step_problem() -> String:
 				or change.follows or change.ricochet_add != 0 or change.reflect_bp != 0 or change.snags \
 				or change.per_enemy_add_bp != 0 or change.overheal_max_hp_add != 0 or change.at_stacks_add != 0 or change.per_taken_add_bp != 0 \
 				or change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0 or change.holder != null or change.carries \
-				or not change.ability_id.is_empty() or change.mana_max_add != 0 or change.ignores_def or change.per_twice != null or change.per_stack_add_bp != 0 \
+				or change.mana_max_add != 0 or change.ignores_def or change.per_twice != null or change.per_stack_add_bp != 0 \
 				or change.reach_add != 0 or change.grip_fast_vs != null or change.lifesteal_add_bp != 0 or change.plus_max_hp_add_bp != 0 \
 				or change.hp_cost_add_bp != 0 or change.follows_holder or change.raise_grow_add_bp != 0:
-			return "a growing card's step can only change an ability's amount_bp"
+			return "a growing card's step can only change an ability's amount_bp (or a share)"
 	return ""
 
 
@@ -682,10 +689,15 @@ func times(steps: int) -> KitMod:
 	for change: AbilityChange in changes:
 		var copy := AbilityChange.new()
 		copy.slot = change.slot
+		# The ability it names, if any (phase 8 part 6, Silvered Glass: Mirror,
+		# a signature or a habit).
+		copy.ability_id = change.ability_id
 		copy.types = change.types.duplicate()
 		copy.statuses = change.statuses.duplicate()
 		copy.as_power = change.as_power
 		copy.amount_bp = FixedMath.BP_ONE + steps * (change.amount_bp - FixedMath.BP_ONE)
+		# A share's step adds up (phase 8 part 6, Silvered Glass).
+		copy.share_add_bp = steps * change.share_add_bp
 		scaled.changes.append(copy)
 	return scaled
 
@@ -744,6 +756,9 @@ func affects_besides_passives(kit: UnitDef) -> bool:
 			if habit >= 0 and kit.passives[habit].ability != null and kit.passives[habit].ability.effects.any(func(effect: EffectDef) -> bool: return effect.every > 1):
 				return true
 		if (change.radius_add != 0 or change.per_twice != null) and _per_enemy_aura(kit, change.slot) != null:
+			return true
+		if change.per_twice != null and _slot_aura(kit, change.slot) != null and _slot_aura(kit, change.slot).per_allied_unit:
+			# Who counts twice for a per-allied-unit aura (phase 8 part 6, Lead Puppet).
 			return true
 		if change.within_add != 0 and _near_aura(kit, change.slot) != null:
 			return true
@@ -931,6 +946,11 @@ func _apply_change(built: UnitDef, change: AbilityChange, problems: Array[String
 			copy.aura.per_enemy_range = maxi(copy.aura.per_enemy_range + change.radius_add * HexGrid.HEX, HexGrid.HEX)
 			if change.per_twice != null:
 				copy.aura.per_twice = change.per_twice
+		if named and part.aura != null and part.aura.per_allied_unit and change.per_twice != null:
+			# Who counts twice for a per-allied-unit aura (phase 8 part 6, Lead
+			# Puppet); one who already counts twice still does (The Menagerie).
+			copy.aura = DefCopy.shallow(copy.aura if copy.aura != null else part.aura) as AuraDef
+			copy.aura.per_twice = change.per_twice if copy.aura.per_twice == null else UnitCondition.either(copy.aura.per_twice, change.per_twice)
 		if named and part.aura != null and part.aura.target == AuraDef.Target.ALLIES_NEAR and change.within_add != 0:
 			# An allies_near aura's reach (phase 8 part 4, Far Resonance).
 			copy.aura = DefCopy.shallow(copy.aura if copy.aura != null else part.aura) as AuraDef
@@ -1054,7 +1074,7 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 			# Phase 8 part 4's: near targets' reach, and a lowest_mana_ally's count.
 			if change.within_add != 0 and effect.near_range > 0:
 				copy.near_range = maxi(effect.near_range + change.within_add, HexGrid.HEX)
-			if change.count_add != 0 and effect.target == EffectDef.Target.LOWEST_MANA_ALLY:
+			if change.count_add != 0 and (effect.target == EffectDef.Target.LOWEST_MANA_ALLY or effect.target == EffectDef.Target.MOST_TARGETED_ALLY):
 				copy.count = mini(effect.count + change.count_add, 5)
 			# Phase 8 part 6 (Ilse's cards): on_status_tick's reach (Fan the
 			# Coals), allies_near_self's nearest (Shared Blessing), a stacks_of
@@ -1065,6 +1085,8 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 				copy.nearest = mini(effect.nearest + change.count_add, 5)
 			if change.share_add_bp != 0 and effect.stacks_share_bp > 0:
 				copy.stacks_share_bp = clampi(effect.stacks_share_bp + change.share_add_bp, 1, FixedMath.BP_ONE)
+			if change.share_add_bp != 0 and effect.copy_of != EffectDef.CopyOf.NONE:
+				copy.copy_share_bp = clampi(effect.copy_share_bp + change.share_add_bp, 100, FixedMath.BP_ONE)
 			if change.grow_every_add_ticks != 0 and effect.grow_ticks > 0:
 				copy.grow_ticks = maxi(effect.grow_ticks + change.grow_every_add_ticks, 1)
 			if change.grow_max_add != 0 and effect.grow_ticks > 0:
@@ -1150,9 +1172,9 @@ static func _runs_times(effect: EffectDef) -> bool:
 static func _any_effect(effects: Array[EffectDef], change: AbilityChange) -> bool:
 	for effect: EffectDef in effects:
 		if change.touches(effect) and (change.every_add != 0 and effect.every > 1 or change.times_add != 0 and _runs_times(effect)
-				or change.within_add != 0 and effect.near_range > 0 or change.count_add != 0 and effect.target == EffectDef.Target.LOWEST_MANA_ALLY
+				or change.within_add != 0 and effect.near_range > 0 or change.count_add != 0 and (effect.target == EffectDef.Target.LOWEST_MANA_ALLY or effect.target == EffectDef.Target.MOST_TARGETED_ALLY)
 				or change.within_add != 0 and effect.trigger == EffectDef.Trigger.ON_STATUS_TICK and effect.near_trigger_range > 0
-				or change.count_add != 0 and effect.nearest > 0 or change.share_add_bp != 0 and effect.stacks_share_bp > 0
+				or change.count_add != 0 and effect.nearest > 0 or change.share_add_bp != 0 and (effect.stacks_share_bp > 0 or effect.copy_of != EffectDef.CopyOf.NONE)
 				or (change.grow_every_add_ticks != 0 or change.grow_max_add != 0) and effect.grow_ticks > 0
 				or change.heal_cap_bp != 0 and effect.type == EffectDef.Type.HEAL
 				or change.per_stack_amount_add != 0 and effect.amount_per_stack > 0

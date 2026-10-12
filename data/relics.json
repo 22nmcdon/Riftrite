@@ -3117,5 +3117,119 @@
         }
       ]
     }
+  },
+  {
+    "id": "the_shroud_of_knives",
+    "name": "The Shroud of Knives",
+    "tier": "bond",
+    "icon": "ember_heart",
+    "flavor": "Unseen Blade: he covers her; her kills cover everyone.",
+    "text": "Every 5s, Shroud also hides Tamsin for 1.5s, and each enemy she fells keeps every hidden ally hidden 1s longer.",
+    "mod_for": "lucan",
+    "mod": {
+      "passives": [
+        {
+          "id": "shroud_of_knives",
+          "name": "The Shroud of Knives",
+          "kind": "ability",
+          "text": "Every few seconds, Tamsin is hidden for a moment.",
+          "effects": [
+            {
+              "trigger": "on_interval",
+              "interval_ms": 5000,
+              "type": "apply_status",
+              "status": "shrouded",
+              "duration_ms": 1500,
+              "target": "all_allies",
+              "only": {
+                "kits": [
+                  "tamsin"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "covering_kills",
+          "name": "The Shroud of Knives",
+          "kind": "ability",
+          "text": "Each enemy Tamsin fells keeps every hidden ally hidden a little longer.",
+          "effects": [
+            {
+              "trigger": "on_enemy_fell",
+              "by": {
+                "kits": [
+                  "tamsin"
+                ]
+              },
+              "type": "extend_status",
+              "statuses": [
+                "shrouded",
+                "vanished",
+                "stealth",
+                "hidden",
+                "shadow_dance",
+                "garrote_veil",
+                "veiled",
+                "phantom_veil"
+              ],
+              "duration_ms": 1000,
+              "target": "all_allies"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_menagerie",
+    "name": "The Menagerie",
+    "tier": "bond",
+    "icon": "ember_heart",
+    "flavor": "The Menagerie: puppets and beasts, one pack.",
+    "text": "Kestra's hounds count twice for Strings. (Lucan's copies are allied summons, so they already count for Pack Call and Pack Fury.)",
+    "mod_for": "lucan",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:strings",
+          "per_twice": {
+            "kits": [
+              "grit",
+              "brindle"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "mirror_step",
+    "name": "Mirror Step",
+    "tier": "bond",
+    "icon": "ember_heart",
+    "flavor": "Hall of Arrows: she vanishes; her reflection keeps shooting.",
+    "text": "Each time Maren hops away, a copy of her stays beside where she lands for 3s, with 40% of her stats, shooting her split arrows; up to 3 of her copies stand at once.",
+    "mod_for": "maren",
+    "mod": {
+      "passives": [
+        {
+          "id": "mirror_step",
+          "name": "Mirror Step",
+          "kind": "ability",
+          "text": "Each time she hops away, a copy of her stays behind for a few seconds, with a share of her stats.",
+          "effects": [
+            {
+              "trigger": "on_hop",
+              "type": "summon",
+              "copy_of": "self",
+              "share_pct": 40,
+              "lasts_ms": 3000,
+              "max_standing": 3
+            }
+          ]
+        }
+      ]
+    }
   }
 ]

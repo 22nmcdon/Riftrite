@@ -391,6 +391,22 @@ static func defense_shred(unit: UnitState) -> int:
 
 
 ## Whoever taunted the unit, if a Taunt is on it and they still stand.
+## What a focus boost on `unit` points it at (phase 8 part 6, Dance of
+## Strings): the target of the unit that set it, if both stand and `unit`
+## may pick it; else null.
+static func focus_target(sim: CombatSim, unit: UnitState) -> UnitState:
+	for state: StatusState in unit.statuses:
+		if state.def.focus and state.source != null:
+			var by: UnitState = sim.unit_by_id(state.source.unit_id)
+			if by == null or not by.alive or by.target == null:
+				return null
+			var wanted: UnitState = by.target
+			if not wanted.alive or wanted.side == unit.side or (is_stealthed(wanted) and unit.aura_bp[AuraDef.Stat.SEES_STEALTH] <= 0):
+				return null
+			return wanted
+	return null
+
+
 static func taunter(sim: CombatSim, unit: UnitState) -> UnitState:
 	for state: StatusState in unit.statuses:
 		if state.def.kind == StatusDef.Kind.TAUNT and state.source != null:

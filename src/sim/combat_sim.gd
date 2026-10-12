@@ -165,6 +165,9 @@ var swaps: bool = false
 ## The last hit dealt missed (Sidestep; phase 5c step 6b), so its on_hit
 ## effects don't run.
 var last_dodged: bool = false
+## The shot landing now left its shooter while it was Stealthed (phase 8
+## part 6; Shots.land_due sets it for deal_hit).
+var shot_from_stealth: bool = false
 ## Some unit has a damage aura against some targets (AuraDef.vs), so hits
 ## check for it; otherwise they never do.
 var vs_auras: bool = false
@@ -663,6 +666,12 @@ func _act(unit: UnitState) -> void:
 		if taunter != null and taunter != target:
 			Targeting.set_target(self, unit, taunter, "taunted")
 			target = taunter
+		elif taunter == null:
+			# Dance of Strings (phase 8 part 6): its setter's target.
+			var focus: UnitState = Statuses.focus_target(self, unit)
+			if focus != null and focus != target:
+				Targeting.set_target(self, unit, focus, "focus")
+				target = focus
 	if target != null and target.alive and target.side != unit.side and Statuses.is_stealthed(target) and unit.aura_bp[AuraDef.Stat.SEES_STEALTH] <= 0:
 		Targeting.lose(self, unit, "%s is %s" % [target.id, "submerged" if target.submerged else "stealthed"])
 		target = null

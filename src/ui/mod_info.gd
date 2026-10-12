@@ -235,7 +235,10 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 		bits.append("%s HP for each thrall raised before" % UnitInfo.signed_percent(change.raise_grow_add_bp))
 	# Ilse's cards (phase 8 part 6).
 	if change.share_add_bp != 0:
-		bits.append("%s of its stacks" % UnitInfo.signed_percent(change.share_add_bp))
+		# A copy's share is of the stats it copies (Lucan's cards).
+		var copies: bool = KitMod._slot_abilities(kit, change.slot, change.ability_id).any(func(ability: AbilityDef) -> bool:
+			return ability.effects.any(func(effect: EffectDef) -> bool: return effect.copy_of != EffectDef.CopyOf.NONE))
+		bits.append("%s of %s" % [UnitInfo.signed_percent(change.share_add_bp), "the stats it copies" if copies else "its stacks"])
 	if change.grow_every_add_ticks != 0:
 		bits.append("spreads %s %s" % [UnitInfo.seconds(absi(change.grow_every_add_ticks)), "sooner" if change.grow_every_add_ticks < 0 else "later"])
 	if change.grow_max_add != 0:

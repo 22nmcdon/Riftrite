@@ -203,7 +203,8 @@ extends RefCounted
 ##   ("self") or of each standing hero on its side ("each_ally"), beside it,
 ##   at "share_pct" of its HP, ATK, and MGK, with its basic attack only; it
 ##   needs "lasts_ms", takes no "placement" or "count", and "max_standing"
-##   counts every copy standing on the side (Summons.copy_kit)
+##   counts every copy standing of the unit copied, whatever made it
+##   (Summons.copy_kit)
 ##     {"type": "summon", "copy_of": "self", "share_pct": 30, "lasts_ms": 6000}
 ##     edges:    count (default 1) free spots along the safe ground's edge,
 ##               nearest first to the unit ("near": "self", the default) or
@@ -235,6 +236,10 @@ extends RefCounted
 ##   lowest_hp_ally        the unit's ally lowest on HP (a share of max HP),
 ##                         within within_hexes of the unit if given; "count"
 ##                         (phase 8 part 5): that many, lowest first
+##   most_targeted_ally    the "count" (1) allies (the unit too) the most
+##                         enemies are targeting, ties to the lowest share
+##                         of HP, then the fight's order (phase 8 part 6,
+##                         Shroud)
 ##   lowest_mana_ally      the "count" (1) other allies with a mana bar
 ##                         least full, fight order on ties (phase 8 part 4,
 ##                         Shared Breath)
@@ -456,6 +461,7 @@ enum Target {
 	FARTHEST_ENEMIES,
 	LOWEST_MANA_ALLY,
 	ENEMIES_NEAR_ALLIES,
+	MOST_TARGETED_ALLY,
 }
 ## A nested area effect's side (phase 4): both, or only one.
 enum AreaSide { BOTH, ENEMIES, ALLIES }
@@ -557,6 +563,7 @@ const TARGET_NAMES: Array[String] = [
 	"farthest_enemies",
 	"lowest_mana_ally",
 	"enemies_near_allies",
+	"most_targeted_ally",
 ]
 
 var trigger: Trigger
@@ -1173,7 +1180,7 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 			reader.error("only all_enemies, all_allies, and the near targets take \"only\"")
 	if def.target == Target.FARTHEST_ENEMIES:
 		def.count = reader.req_int("count", 1, 10)
-	if def.target == Target.LOWEST_MANA_ALLY or def.target == Target.LOWEST_HP_ALLY:
+	if def.target == Target.LOWEST_MANA_ALLY or def.target == Target.LOWEST_HP_ALLY or def.target == Target.MOST_TARGETED_ALLY:
 		# The allies with the least of their bar (phase 8 part 4, Shared Breath),
 		# or of their HP (phase 8 part 5, Bastion of Saints' taste).
 		def.count = reader.opt_int("count", 1, 1, 5)

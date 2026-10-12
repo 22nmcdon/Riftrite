@@ -375,6 +375,8 @@ These never give copies on a timer (Mirrorwright), hiding allies (Veilweaver), o
 | **Veilweaver** | **Quick Shroud:** Shroud every 8s, not 10s. **Deep Shroud:** Shroud hides for 1.5s | **Faster Shroud:** Shroud every 4s. **Shroud Splits:** Shroud also hides the next most-targeted ally. **Long Act:** Vanishing Act hides for 3s. **Veiled Step:** hidden allies get +1 speed. Growing: **Velvet Dark** (+1% first-strike damage per 20 strikes from Stealth) |
 | **Puppeteer** | **Strong Strings:** Strings gives +3% MGK per unit, not 2%. **Lead Puppet:** his own copies count twice for Strings | **Long Dance:** Dance of Strings lasts 7s. **Quick Dance:** Dance of Strings costs 15 less mana. **Sharpened Puppets:** allied summons get +15% crit damage. **Sturdy Puppets:** allied summons get +20% max HP. Growing: **Old Strings** (+1% to Strings' bonus per 50 summons that join the field) |
 
+Built in phase 8 part 6 (`rebuild-phase8-last-heroes.md`, "Built in 8f-4"): his 33 cards, with the approximations flagged there (Bright Shard against an enemy targeting a summon, Gallery and Old Strings counting every summon he brings, Velvet Dark counting Veiled Strike's Silences and growing as an aura on Stealthed allies, Old Strings growing Glimmer's power; Long Dance built as `long_string_dance`).
+
 ## Kestra
 
 ### Hero pool

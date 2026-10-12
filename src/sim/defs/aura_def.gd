@@ -39,6 +39,12 @@ extends RefCounted
 ##                                          summon of its side, itself among
 ##                                          them (phase 8 part 6, Pack Call);
 ##                                          off while none stands
+##   "per": "allied_unit"                   counts once for each standing
+##                                          unit of its side, itself among
+##                                          them: heroes, summons, copies,
+##                                          thralls (phase 8 part 6, Strings;
+##                                          Decision 3); "per_twice" counts
+##                                          those that meet it twice
 ##   "per": "enemy_near", "per_within_hexes": 1   counts once for each
 ##                                          standing enemy that near it (phase
 ##                                          8 part 4, Crowd Strength); off
@@ -226,10 +232,12 @@ var ally_kit: String = ""
 var per_fallen_ally: bool = false
 ## Once per standing summon of its side (phase 8 part 6, Pack Call).
 var per_allied_summon: bool = false
+## Once per standing unit of its side (phase 8 part 6, Strings).
+var per_allied_unit: bool = false
 ## Counts once per standing enemy within this many plane units of its holder
 ## (phase 8 part 4; 0: not per enemy).
 var per_enemy_range: int = 0
-## per enemy_near: the enemies that count twice (null: none).
+## per enemy_near or allied_unit: the units that count twice (null: none).
 var per_twice: UnitCondition = null
 ## state: the condition its holder must meet.
 var state: UnitCondition = null
@@ -330,17 +338,18 @@ static func read(reader: DataReader) -> AuraDef:
 		if not VS_STATS.has(def.stat):
 			reader.error("only an aura worked out per hit can be \"vs_within_hexes\"")
 	if reader.has("per"):
-		var per: String = reader.req_choice("per", ["fallen_ally", "enemy_near", "allied_summon"])
+		var per: String = reader.req_choice("per", ["fallen_ally", "enemy_near", "allied_summon", "allied_unit"])
 		def.per_fallen_ally = per == "fallen_ally"
 		def.per_allied_summon = per == "allied_summon"
+		def.per_allied_unit = per == "allied_unit"
 		if per == "enemy_near":
 			def.per_enemy_range = reader.req_int("per_within_hexes", 1, 8) * HexGrid.HEX
 	if reader.has("per_within_hexes") and def.per_enemy_range == 0:
 		reader.error("only an aura \"per\": \"enemy_near\" has \"per_within_hexes\"")
 	if reader.has("per_twice"):
 		def.per_twice = UnitCondition.read(reader.req_object("per_twice"))
-		if def.per_enemy_range == 0:
-			reader.error("only an aura \"per\": \"enemy_near\" has \"per_twice\"")
+		if def.per_enemy_range == 0 and not def.per_allied_unit:
+			reader.error("only an aura \"per\": \"enemy_near\" or \"allied_unit\" has \"per_twice\"")
 	if reader.has("per_engorged_pct"):
 		def.per_engorged_bp = reader.req_int("per_engorged_pct", 1, 100) * 100
 		if def.per_shield_bp > 0:
@@ -398,7 +407,7 @@ func is_conditional() -> bool:
 	return while_kind == While.PLANTED or while_kind == While.BELOW_HP or while_kind == While.ALLY_STANDING or while_kind == While.STATE \
 		or while_kind == While.ALLY_NEAR or while_kind == While.BEHIND_WALL or while_kind == While.TACTIC or per_fallen_ally or per_shield_bp > 0 \
 		or per_enemy_range > 0 or while_kind == While.MOVED or while_kind == While.CROWDED or target == Target.ALLIES_NEAR or only != null \
-		or per_engorged_bp > 0 or per_allied_summon
+		or per_engorged_bp > 0 or per_allied_summon or per_allied_unit
 
 
 ## Worked out per hit (EffectRunner), not folded into the unit's stats.
@@ -460,6 +469,8 @@ func describe() -> String:
 		condition += " for each fallen ally"
 	if per_allied_summon:
 		condition += " for each allied summon"
+	if per_allied_unit:
+		condition += " for each allied unit" + (" (%s twice)" % per_twice.describe() if per_twice != null else "")
 	if per_enemy_range > 0:
 		@warning_ignore("integer_division")
 		condition += " for each enemy within %d hex%s" % [per_enemy_range / HexGrid.HEX, "" if per_enemy_range == HexGrid.HEX else "es"]

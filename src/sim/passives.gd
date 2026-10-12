@@ -269,6 +269,8 @@ static func aura_change(sim: CombatSim, holder: UnitState, aura: AuraDef) -> int
 		change *= fallen_allies(sim, holder)
 	if aura.per_allied_summon:
 		change *= allied_summons(sim, holder)
+	if aura.per_allied_unit:
+		change *= allied_units(sim, holder, aura.per_twice)
 	if aura.per_enemy_range > 0:
 		change *= enemies_near(sim, holder, aura.per_enemy_range, aura.per_twice)
 	if aura.step_ticks > 0:
@@ -344,6 +346,16 @@ static func condition_holds(sim: CombatSim, holder: UnitState, aura: AuraDef) ->
 	if aura.per_allied_summon and allied_summons(sim, holder) == 0:
 		return false
 	return not aura.per_fallen_ally or fallen_allies(sim, holder) > 0
+
+
+## How many units of `holder`'s side stand, itself among them (phase 8
+## part 6, Strings; Decision 3); those that meet `twice` count twice.
+static func allied_units(sim: CombatSim, holder: UnitState, twice: UnitCondition = null) -> int:
+	var count: int = 0
+	for unit: UnitState in (sim.heroes if holder.side == EffectSource.Team.HEROES else sim.enemies):
+		if unit.alive:
+			count += 2 if twice != null and twice.holds(unit, holder) else 1
+	return count
 
 
 ## How many summons of `holder`'s side stand (phase 8 part 6, Pack Call):

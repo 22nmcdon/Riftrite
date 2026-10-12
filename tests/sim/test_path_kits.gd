@@ -30,7 +30,7 @@ func test_each_hero_has_its_three_paths() -> void:
 		"vell": ["Lanternbearer", "Wardweaver", "Vigil Keeper"], "garrow": ["Aegisfang", "Chainwarden", "Spitemail"],
 		"tamsin": ["Nightblade", "Headhunter", "Garrote"], "aldous": ["Chorister", "Windcaller", "Bellwarden"],
 		"severine": ["Bloodglut", "Plaguebearer", "Hemomancer"], "edric": ["Aegis", "Tithe-Collector", "Psalmist"],
-		"ilse": ["Furnace", "Wildfire", "Ember Choir"], "ottilie": ["Catalyst", "Transmuter", "Apothecary"], "kestra": ["Cinderhound", "Serpent-Keeper", "Packleader"], "lucan": []})
+		"ilse": ["Furnace", "Wildfire", "Ember Choir"], "ottilie": ["Catalyst", "Transmuter", "Apothecary"], "kestra": ["Cinderhound", "Serpent-Keeper", "Packleader"], "lucan": ["Mirrorwright", "Veilweaver", "Puppeteer"]})
 	for path_id: String in _content.path_ids:
 		var path: PathDef = _content.paths[path_id]
 		for text: String in [path.title, path.fantasy, path.placement, path.taste, path.vowed_cost, path.transformed_text, path.transformed_cost, path.deed.text]:

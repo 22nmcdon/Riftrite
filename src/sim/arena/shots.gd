@@ -27,6 +27,8 @@ class Shot:
 	## Each effect's power bonus (EffectRunner.power_of), applied as it lands.
 	var powers: Array[int] = []
 	var crits: Array[bool] = []
+	## Its shooter was Stealthed as it left (phase 8 part 6).
+	var from_stealth: bool = false
 
 
 ## How many ticks a shot takes over `distance` plane units.
@@ -89,7 +91,9 @@ static func land_due(sim: CombatSim) -> void:
 						if shot.effects[i].type == EffectDef.Type.DAMAGE:
 							EffectRunner.deal_hit(sim, wall.source, shot.shooter, FixedMath.apply_bp(shot.amounts[i], wall.reflect_bp), false, shot.powers[i], false, "reflected")
 				continue
+		sim.shot_from_stealth = shot.from_stealth
 		for i: int in shot.effects.size():
 			EffectRunner.land(sim, shot.shooter, shot.ability, shot.source, shot.effects[i], shot.target, shot.amounts[i], shot.crits[i], EffectRunner.NO_POINT, shot.powers[i])
+		sim.shot_from_stealth = false
 	sim.shots = waiting
 	sim.next_shot_tick = next

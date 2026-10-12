@@ -5,7 +5,7 @@ extends GutTest
 ## it, its kit as it stands with its HP, ATK, and MGK at a share and its
 ## basic attack only; the caster's, keeping no side up, nobody's fallen ally,
 ## their work its own; going quietly when their time is up; max_standing
-## counting every copy on the side).
+## counting every copy of the unit copied).
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
 
@@ -107,15 +107,16 @@ func test_a_copy_of_each_hero() -> void:
 	assert_eq(ArenaPlane.length_sq(copies[1].pos - ally.pos), (ally.radius + copies[1].radius) * (ally.radius + copies[1].radius), "beside the one it copies")
 
 
-func test_max_standing_counts_every_copy() -> void:
+func test_max_standing_counts_every_copy_of_the_unit() -> void:
 	var reflect: Dictionary = {"id": "reflect", "name": "Reflect", "kind": "ability",
 		"effects": [{"trigger": "on_interval", "interval_ms": 100, "type": "summon", "copy_of": "self", "share_pct": 20, "lasts_ms": 5000, "max_standing": 3}]}
 	var fight: CombatSim = K.sim(K.fight([K.at(_caster({"copy_of": "each_ally", "share_pct": 30, "lasts_ms": 5000}, "caster", {"passives": [reflect]}), 3, 1),
 		K.at(_dummy("ally", 500), 5, 1)] as Array[UnitSetup], [K.foe(_dummy("mark"), 3, 5)] as Array[UnitSetup]))
 	K.step(fight, 20)
 	var standing: Array[UnitState] = _copies(fight).filter(func(unit: UnitState) -> bool: return unit.alive)
-	assert_eq(standing.size(), 3, "the Mirror's copies of both count toward Reflect's 3")
-	assert_eq(standing.filter(func(unit: UnitState) -> bool: return unit.def.id == "caster_copy").size(), 2, "so Reflect adds one")
+	var of_caster: Array[UnitState] = standing.filter(func(unit: UnitState) -> bool: return unit.def.id == "caster_copy")
+	assert_eq(of_caster.size(), 3, "the Mirror's copy of the caster counts toward Reflect's 3, so Reflect adds two")
+	assert_eq(standing.size(), 4, "the copy of the ally doesn't count")
 	assert_gt(K.entries(fight, LogEntry.Kind.SUMMON, "caster").filter(func(entry: LogEntry) -> bool: return entry.note == "enough stand").size(), 0)
 
 
@@ -168,3 +169,119 @@ func test_its_numbers_line() -> void:
 	var content: ContentDb = K.content()
 	var kit: UnitDef = content.heroes["lucan"].kit
 	assert_eq(UnitInfo.signature_numbers(kit, content), "At 60 mana · a copy of itself at 30% of its stats for 6s")
+
+
+# --- his paths' pieces (8f-4b) -------------------------------------------------
+
+func test_an_aura_per_allied_unit() -> void:
+	var pace: Dictionary = {"id": "pace", "name": "Pace", "kind": "aura", "aura": {"target": "holder", "stat": "atsp", "value": 3, "per": "allied_unit"}}
+	var twice: Dictionary = pace.duplicate(true)
+	twice["aura"]["per_twice"] = {"summon": true}
+	for pair: Array in [[pace, 3 * 3, 3 * 4], [twice, 3 * 3, 3 * 5]]:
+		var fight: CombatSim = K.sim(K.fight([K.at(_caster({"copy_of": "self", "share_pct": 30, "lasts_ms": 5000}, "caster", {"passives": [pair[0]],
+			"signature": {"id": "mirror", "name": "Mirror", "trigger": {"kind": "hp_below", "threshold_bp": 5000}, "targeting": "self",
+				"effects": [{"type": "summon", "copy_of": "self", "share_pct": 30, "lasts_ms": 5000}]}}), 3, 1),
+			K.at(_dummy("ally"), 5, 1), K.at(_dummy("other"), 1, 1)] as Array[UnitSetup], [K.foe(_dummy("mark"), 3, 5)] as Array[UnitSetup]))
+		K.step(fight, 1)
+		var caster: UnitState = fight.unit_by_id("caster")
+		assert_eq(caster.stats.get_stat(UnitStats.Stat.ATSP), pair[1], "three heroes; no enemy counts")
+		caster.hp = 100
+		K.step(fight, 2)
+		assert_eq(_copies(fight).size(), 1)
+		assert_eq(caster.stats.get_stat(UnitStats.Stat.ATSP), pair[2], "a copy is an allied unit (twice, if it meets per_twice)")
+
+
+func test_the_ally_most_enemies_target() -> void:
+	var errors: Array[String] = []
+	var effect: EffectDef = EffectDef.read(DataReader.new({"type": "apply_status", "status": "shrouded", "duration_ms": 1000, "target": "most_targeted_ally", "count": 2}, "effect", errors))
+	assert_eq([errors, effect.target, effect.count], [[] as Array[String], EffectDef.Target.MOST_TARGETED_ALLY, 2])
+	var fight: CombatSim = K.sim(K.fight([K.at(_dummy("lead"), 3, 1), K.at(_dummy("left"), 1, 1), K.at(_dummy("right"), 5, 1)] as Array[UnitSetup],
+		[K.foe(_dummy("a"), 1, 5), K.foe(_dummy("b"), 3, 5), K.foe(_dummy("c"), 5, 5)] as Array[UnitSetup]))
+	K.step(fight, 1)
+	var lead: UnitState = fight.unit_by_id("lead")
+	var right: UnitState = fight.unit_by_id("right")
+	for unit: UnitState in fight.units:
+		if unit.side == EffectSource.Team.ENEMIES:
+			unit.target = null
+	fight.unit_by_id("left").hp = 1000
+	assert_eq(EffectRunner.most_targeted(fight, lead, 1), [fight.unit_by_id("left")] as Array[UnitState], "nobody targeted: the lowest HP share")
+	fight.unit_by_id("a").target = right
+	fight.unit_by_id("b").target = right
+	fight.unit_by_id("c").target = lead
+	assert_eq(EffectRunner.most_targeted(fight, lead, 2), [right, lead] as Array[UnitState], "the most chasers first")
+
+
+func test_dance_points_summons_at_his_target_until_a_taunt() -> void:
+	var fight: CombatSim = K.sim(K.fight([K.at(_caster({"copy_of": "self", "share_pct": 30, "lasts_ms": 20000}), 3, 1)] as Array[UnitSetup],
+		[K.foe(_dummy("near"), 3, 4), K.foe(_dummy("far"), 0, 6)] as Array[UnitSetup]))
+	K.step(fight, 2)
+	var caster: UnitState = fight.unit_by_id("caster")
+	var copy: UnitState = _copies(fight)[0]
+	var far: UnitState = fight.unit_by_id("far")
+	Targeting.set_target(fight, caster, far, "test")
+	assert_ne(copy.target, far)
+	Statuses.apply(fight, copy, "dance", 1, 100, caster.own_source)
+	K.step(fight, 2)
+	assert_eq(copy.target, far, "Dance of Strings: at his target")
+	assert_gt(K.entries(fight, LogEntry.Kind.TARGET, copy.id).filter(func(entry: LogEntry) -> bool: return entry.note == "focus").size(), 0, "logged as focus")
+	var near: UnitState = fight.unit_by_id("near")
+	Statuses.apply(fight, copy, "taunt", 1, 100, near.own_source)
+	K.step(fight, 2)
+	assert_eq(copy.target, near, "a Taunt wins")
+
+
+func test_the_first_strike_out_of_stealth() -> void:
+	var heard: Dictionary = {"id": "hush", "name": "Hush", "kind": "ability", "effects": [
+		{"trigger": "on_holder_hit", "holder": {"struck_from_stealth": true}, "type": "apply_status", "status": "silence", "duration_ms": 500, "target": "hit_target"}]}
+	var fight: CombatSim = K.sim(K.fight([K.at(_caster({"copy_of": "self", "share_pct": 30, "lasts_ms": 100}, "caster", {"passives": [heard]}), 3, 2)] as Array[UnitSetup],
+		[K.foe(_dummy("mark", 50000), 3, 4)] as Array[UnitSetup]))
+	var caster: UnitState = fight.unit_by_id("caster")
+	Statuses.apply(fight, caster, "shrouded", 1, 100, caster.own_source)
+	K.step(fight, 3 * 20)
+	var glints: Array[LogEntry] = K.entries(fight, LogEntry.Kind.DAMAGE, "caster").filter(func(entry: LogEntry) -> bool: return entry.source_ability == "glint")
+	assert_gt(glints.size(), 1)
+	assert_eq(glints.map(func(entry: LogEntry) -> bool: return entry.from_stealth).count(true), 1, "only the first strike, a shot fired hidden")
+	assert_true(glints[0].from_stealth)
+	assert_eq(K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "caster").filter(func(entry: LogEntry) -> bool: return entry.status == "silence").size(), 1, "heard once")
+	var errors: Array[String] = []
+	assert_eq(UnitCondition.read(DataReader.new({"struck_from_stealth": true}, "condition", errors)).describe(), "striking from Stealth")
+	assert_eq(UnitCondition.read(DataReader.new({"copy": true}, "condition", errors)).describe(), "a copy")
+	assert_eq(errors, [] as Array[String])
+
+
+func test_a_copy_condition() -> void:
+	var fight: CombatSim = K.sim(K.fight([K.at(_caster({"copy_of": "self", "share_pct": 30, "lasts_ms": 5000}), 3, 1)] as Array[UnitSetup], [K.foe(_dummy("mark"), 3, 5)] as Array[UnitSetup]))
+	K.step(fight, 1)
+	var errors: Array[String] = []
+	var copy_only: UnitCondition = UnitCondition.read(DataReader.new({"copy": true}, "condition", errors))
+	var caster: UnitState = fight.unit_by_id("caster")
+	assert_eq([copy_only.holds(_copies(fight)[0], caster), copy_only.holds(caster, caster)], [true, false])
+
+
+func test_summoned_counts_no_dropped_copy() -> void:
+	var reflect: Dictionary = {"id": "reflect", "name": "Reflect", "kind": "ability",
+		"effects": [{"trigger": "on_interval", "interval_ms": 100, "type": "summon", "copy_of": "self", "share_pct": 20, "lasts_ms": 5000, "max_standing": 2}]}
+	var never: Dictionary = {"id": "mirror", "name": "Mirror", "trigger": {"kind": "hp_below", "threshold_bp": 100}, "targeting": "self",
+		"effects": [{"type": "summon", "copy_of": "self", "share_pct": 30, "lasts_ms": 5000}]}
+	var setup: UnitSetup = K.at(_caster({"copy_of": "self", "share_pct": 30, "lasts_ms": 5000}, "caster", {"passives": [reflect], "signature": never}), 3, 1)
+	var errors: Array[String] = []
+	setup.tally_keys.append("made")
+	setup.tally_counts.append(DeedDef.read(DataReader.new({"text": "x", "counts": "summoned", "from_ability": ["reflect"]}, "count", errors)))
+	var fight: CombatSim = K.sim(K.fight([setup] as Array[UnitSetup], [K.foe(_dummy("mark"), 3, 5)] as Array[UnitSetup]))
+	K.step(fight, 20)
+	var reflected: Array[LogEntry] = K.entries(fight, LogEntry.Kind.SUMMON, "caster").filter(func(entry: LogEntry) -> bool: return entry.source_ability == "reflect")
+	assert_gt(reflected.filter(func(entry: LogEntry) -> bool: return entry.note == "enough stand").size(), 0)
+	assert_eq(CombatSim.result_of(fight).tally_amount("caster", "made"), 2, "the two that stood, not those dropped")
+
+
+func test_either_of_two_conditions() -> void:
+	var fight: CombatSim = K.sim(K.fight([K.at(_caster({"copy_of": "self", "share_pct": 30, "lasts_ms": 5000}), 3, 1), K.at(_dummy("ally"), 5, 1)] as Array[UnitSetup],
+		[K.foe(_dummy("mark"), 3, 5)] as Array[UnitSetup]))
+	K.step(fight, 1)
+	var errors: Array[String] = []
+	var either: UnitCondition = UnitCondition.either(UnitCondition.read(DataReader.new({"copy": true}, "condition", errors)),
+		UnitCondition.read(DataReader.new({"kits": ["ally"]}, "condition", errors)))
+	var caster: UnitState = fight.unit_by_id("caster")
+	assert_eq([either.holds(_copies(fight)[0], caster), either.holds(fight.unit_by_id("ally"), caster), either.holds(caster, caster)], [true, true, false],
+		"a copy, or the ally, but not the caster")
+	assert_false(either.is_empty())

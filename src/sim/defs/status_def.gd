@@ -36,6 +36,9 @@ extends RefCounted
 ##             ends as that signature fires ("auras" optional then)
 ##             "until_attack": true (phase 5c step 6b; Shadow Step): it
 ##             ends as its holder next attacks (that attack still has it)
+##             "focus": true (phase 8 part 6, Dance of Strings): its holder
+##             attacks whatever the unit that set it is targeting, while it
+##             can (a Taunt still wins; Statuses.focus_target)
 ##   stealth:  duration_ms; phase 8 part 4 (Tamsin): "until_attack": true
 ##             ends it as its holder's next basic attack fires (that attack
 ##             is still from Stealth), and "spares_attacks": N lets that
@@ -84,6 +87,8 @@ var keyword: String = ""
 var stacking: bool = false
 ## boost: it ends as its holder next attacks (phase 5c step 6b).
 var until_attack: bool = false
+## boost (phase 8 part 6): its holder attacks its setter's target.
+var focus: bool = false
 ## boost: its holder's next signature's power, spent as it fires (phase 8
 ## part 4, Grand Chorus; 0: none).
 var signature_power_bp: int = 0
@@ -120,6 +125,7 @@ static func read(reader: DataReader) -> StatusDef:
 			def.stacking = reader.opt_bool("stacking", false)
 			def.until_attack = reader.opt_bool("until_attack", false)
 			def.signature_power_bp = reader.opt_int("signature_power_bp", 0, 0, 50000)
+			def.focus = reader.opt_bool("focus", false)
 		elif def.kind == Kind.STEALTH:
 			def.until_attack = reader.opt_bool("until_attack", false)
 			if def.until_attack:
@@ -142,8 +148,8 @@ static func read(reader: DataReader) -> StatusDef:
 					def.boost_stats.append(maxi(stat, 0))
 					def.boost_values.append(aura.req_int("value", -50000, 50000))
 					aura.finish()
-				if def.boost_stats.is_empty() and def.signature_power_bp == 0:
-					reader.error("a boost needs auras (or signature_power_bp)")
+				if def.boost_stats.is_empty() and def.signature_power_bp == 0 and not def.focus:
+					reader.error("a boost needs auras (or signature_power_bp, or focus)")
 	reader.finish()
 	return def
 

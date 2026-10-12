@@ -144,7 +144,7 @@ static func _copies(sim: CombatSim, unit: UnitState, source: EffectSource, effec
 		if sim.standing_count(unit.side) >= sim.tuning.max_units_per_side:
 			_log_dropped(sim, source, kit, "its side is full")
 			continue
-		if effect.max_standing > 0 and _copies_on(sim, unit.side) >= effect.max_standing:
+		if effect.max_standing > 0 and _copies_on(sim, of) >= effect.max_standing:
 			_log_dropped(sim, source, kit, "enough stand")
 			continue
 		var copy: UnitState = UnitState.make_summon(kit, unit.side, sim.next_unit_id(kit.id), sim.units.size(), sim.tuning.unit_radius)
@@ -200,11 +200,11 @@ static func copy_kit(of: UnitState, share_bp: int) -> UnitDef:
 	return kit
 
 
-## How many copies stand on `side`.
-static func _copies_on(sim: CombatSim, side: EffectSource.Team) -> int:
+## How many copies of `of` stand (whoever made them).
+static func _copies_on(sim: CombatSim, of: UnitState) -> int:
 	var count: int = 0
 	for unit: UnitState in sim.units:
-		if unit.alive and unit.side == side and unit.mirror_of != null:
+		if unit.alive and unit.mirror_of == of:
 			count += 1
 	return count
 

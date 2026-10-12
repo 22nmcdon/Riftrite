@@ -95,6 +95,7 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 		shot.shooter = unit
 		shot.ability = ability
 		shot.target = target
+		shot.from_stealth = not unit.statuses.is_empty() and Statuses.is_stealthed(unit)
 	for effect: EffectDef in ability.effects:
 		if effect.trigger != EffectDef.Trigger.ON_FIRE or not effect.active_at(sim.tick):
 			continue
@@ -571,6 +572,8 @@ static func _targets(sim: CombatSim, unit: UnitState, target: EffectDef.Target, 
 		return farthest(sim, unit, effect)
 	if effect != null and target == EffectDef.Target.LOWEST_MANA_ALLY:
 		return lowest_mana(sim, unit, effect.count)
+	if effect != null and target == EffectDef.Target.MOST_TARGETED_ALLY:
+		return most_targeted(sim, unit, effect.count)
 	if effect != null and target == EffectDef.Target.ENEMIES_NEAR_ALLIES:
 		found.assign(around_allies(sim, unit, effect).map(func(pair: Array) -> UnitState: return pair[0]))
 		return found
@@ -743,6 +746,28 @@ static func lowest_mana(sim: CombatSim, unit: UnitState, count: int) -> Array[Un
 	return found
 
 
+## The `count` standing allies of `unit` (itself too) the most enemies are
+## targeting, most first, ties to the lowest share of HP, then the fight's
+## order (phase 8 part 6, Shroud): with none targeted, the lowest on HP.
+static func most_targeted(sim: CombatSim, unit: UnitState, count: int) -> Array[UnitState]:
+	var pool: Array[UnitState] = sim.standing_allies_of(unit)
+	var chasers: Dictionary[UnitState, int] = {}
+	for enemy: UnitState in sim.standing_enemies_of(unit):
+		if enemy.target != null and enemy.target.alive and enemy.target.side == unit.side:
+			chasers[enemy.target] = chasers.get(enemy.target, 0) + 1
+	var found: Array[UnitState] = []
+	for i: int in mini(count, pool.size()):
+		var best: UnitState = null
+		for ally: UnitState in pool:
+			if found.has(ally):
+				continue
+			var more: int = chasers.get(ally, 0) - (chasers.get(best, 0) if best != null else 0)
+			if best == null or more > 0 or (more == 0 and Targeting._lower_share(ally, best)):
+				best = ally
+		found.append(best)
+	return found
+
+
 ## The enemies within the effect's reach of each standing ally of `unit`
 ## (itself too) that meets its "around", each once, with the ally it's
 ## nearest by that order: [enemy, ally] (phase 8 part 4, Gale: a push goes
@@ -881,6 +906,11 @@ static func deal_hit(sim: CombatSim, source: EffectSource, target: UnitState, am
 			power += payoff
 			entry.bonus = Tactics.bonus_note(payoff, sim.unit_by_id(source.unit_id).tactic)
 	var attacker: UnitState = sim.unit_by_id(source.unit_id) if source.relic_side < 0 else null
+	if attacker != null and source.ability_id == attacker.def.basic_attack.id:
+		# A basic attack's hit from Stealth (phase 8 part 6, Veilweaver): the
+		# hit and its striker carry it (UnitCondition's struck_from_stealth).
+		entry.from_stealth = sim.shot_from_stealth or (not attacker.statuses.is_empty() and Statuses.is_stealthed(attacker))
+		attacker.struck_from_stealth = entry.from_stealth
 	var per_hit: bool = sim.vs_auras and attacker != null and not attacker.vs_conditions.is_empty()
 	if per_hit:
 		power += Passives.vs_bonus_bp(attacker, target, AuraDef.Stat.DAMAGE_BP, source.ability_id)

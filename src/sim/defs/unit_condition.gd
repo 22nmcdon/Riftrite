@@ -60,6 +60,11 @@ extends RefCounted
 ##                                           part 4, Wellspring)
 ##   {"summon": true}                        a summon (phase 8 part 6, Howl:
 ##                                          companions, Nest's vipers, thralls)
+##   {"copy": true}                          a copy (phase 8 part 6, Lucan's
+##                                          cards: UnitState.mirror_of)
+##   {"struck_from_stealth": true}           its last basic attack's hit was
+##                                          from Stealth (phase 8 part 6,
+##                                          Veilweaver: an on_ally_hit's "by")
 ##   {"others": true}                        any unit but the condition's
 ##                                           holder (phase 8 part 6, Elixir:
 ##                                           mana for every other ally)
@@ -83,6 +88,10 @@ var archetypes: Array[String] = []
 var front_most: bool = false
 var on_water: Flying = Flying.ANY
 var kits: Array[String] = []
+## Built in code, never read (phase 8 part 6, The Menagerie): a unit meets the
+## condition if it meets any of these (KitMod's per_twice on an aura that
+## already has one keeps both).
+var any_of: Array[UnitCondition] = []
 var same_island: bool = false
 ## 0: no Shield condition.
 var shield_above_bp: int = 0
@@ -105,6 +114,10 @@ var raised: bool = false
 var others: bool = false
 ## A summon (phase 8 part 6).
 var summon: bool = false
+## A copy (phase 8 part 6, Lucan).
+var copy: bool = false
+## Its last basic attack's hit was from Stealth (phase 8 part 6).
+var struck_from_stealth: bool = false
 ## Its target is the holder's owner (phase 8 part 6).
 var targets_owner: bool = false
 ## 0: not asked; else at least that many summons target it (phase 8 part 6).
@@ -152,10 +165,12 @@ static func read(reader: DataReader) -> UnitCondition:
 	def.raised = reader.opt_bool("raised", false)
 	def.others = reader.opt_bool("others", false)
 	def.summon = reader.opt_bool("summon", false)
+	def.copy = reader.opt_bool("copy", false)
+	def.struck_from_stealth = reader.opt_bool("struck_from_stealth", false)
 	def.targets_owner = reader.opt_bool("targets_owner", false)
 	def.chased_by_summons = reader.opt_int("chased_by_summons", 0, 0, 30)
 	if def.is_empty():
-		reader.error("a condition needs at least one of keywords, statuses, all_statuses, ranks, below_hp_pct, above_hp_pct, flying, archetypes, front_most, on_water, same_island, shield_above_pct, engorged_pct, targets_holder, target, ranged, shielded, target_beyond_hexes, fired_over_full, raised, others, summon, targets_owner, chased_by_summons, or kits")
+		reader.error("a condition needs at least one of keywords, statuses, all_statuses, ranks, below_hp_pct, above_hp_pct, flying, archetypes, front_most, on_water, same_island, shield_above_pct, engorged_pct, targets_holder, target, ranged, shielded, target_beyond_hexes, fired_over_full, raised, others, summon, copy, struck_from_stealth, targets_owner, chased_by_summons, or kits")
 	reader.finish()
 	return def
 
@@ -163,14 +178,29 @@ static func read(reader: DataReader) -> UnitCondition:
 func is_empty() -> bool:
 	return keywords.is_empty() and statuses.is_empty() and all_statuses.is_empty() and ranks.is_empty() and below_hp_bp == 0 and above_hp_bp == 0 and flying == Flying.ANY and archetypes.is_empty() and not front_most and on_water == Flying.ANY and kits.is_empty() and not same_island and shield_above_bp == 0 and engorged_bp == 0 \
 		and targets_holder == Flying.ANY and target == null and ranged == Flying.ANY and target_beyond == 0 and not fired_over_full and not raised \
-		and shielded == Flying.ANY and not others and not summon and not targets_owner and chased_by_summons == 0
+		and shielded == Flying.ANY and not others and not summon and not copy and not struck_from_stealth and not targets_owner and chased_by_summons == 0 and any_of.is_empty()
 
 
-## True if `unit` meets every field given. `holder`: whose condition it is
-## (the unit an aura or event effect belongs to), for same_island; without
-## one, same_island never holds.
+## A condition met by a unit that meets `first` or `second`.
+static func either(first: UnitCondition, second: UnitCondition) -> UnitCondition:
+	var def := UnitCondition.new()
+	def.any_of.append_array(first.any_of if not first.any_of.is_empty() else [first])
+	def.any_of.append(second)
+	return def
+
+
+## True if `unit` meets every field given (or, built by either(), any of
+## its conditions). `holder`: whose condition it is (the unit an aura or
+## event effect belongs to), for same_island; without one, same_island never
+## holds.
 func holds(unit: UnitState, holder: UnitState = null) -> bool:
+	if not any_of.is_empty():
+		return any_of.any(func(each: UnitCondition) -> bool: return each.holds(unit, holder))
 	if others and unit == holder:
+		return false
+	if copy and unit.mirror_of == null:
+		return false
+	if struck_from_stealth and not unit.struck_from_stealth:
 		return false
 	if summon and not unit.summoned:
 		return false
@@ -241,6 +271,8 @@ func _has_status(unit: UnitState) -> bool:
 ## In words, for the log and the cards: "Rooted or Shielded, below 30% HP".
 ## Status ids read as names ("stun" -> "Stun").
 func describe() -> String:
+	if not any_of.is_empty():
+		return " or ".join(any_of.map(func(each: UnitCondition) -> String: return each.describe()))
 	var parts: Array[String] = []
 	var states: Array[String] = []
 	for keyword: String in keywords:
@@ -296,6 +328,10 @@ func describe() -> String:
 		parts.append("another")
 	if summon:
 		parts.append("a summon")
+	if copy:
+		parts.append("a copy")
+	if struck_from_stealth:
+		parts.append("striking from Stealth")
 	if targets_owner:
 		parts.append("targeting its hero")
 	if chased_by_summons > 0:

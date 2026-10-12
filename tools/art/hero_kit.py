@@ -1265,6 +1265,55 @@ def lucan_base(uid):
     return "".join(o)
 
 
+def lucan_mirrorwright(uid):
+    """A silver-panelled coat like a hall of glass, a ring of mirror shards turning round him, a tall hand mirror raised."""
+    o = [shadow(74), boot(116, 150) + boot(152, 188), lucan_coat(uid, color="#6a5aa0", trim=SILVER),
+         "".join(P(f"M{x},236 L{x + 12},236 L{x + 14},420 L{x - 2},420 Z", SILVER_DK, 1.4, 'opacity="0.75"') for x in (116, 172)),
+         limb((124, 210), (106, 290), 16, 12, "#6a5aa0"), circle(106, 294, 8, SKIN, 2),
+         lucan_head(),
+         limb((176, 210), (204, 160), 16, 12, "#6a5aa0"), circle(206, 154, 8, SKIN, 2),
+         P("M204,150 L208,96", "none", 4), P("M192,40 C192,22 224,22 224,40 L224,88 C224,104 192,104 192,88 Z", SILVER, 3),
+         P("M198,44 C198,32 218,32 218,44 L218,84 C218,96 198,96 198,84 Z", "#bfe0f0", 1.4),
+         f'<circle cx="208" cy="64" r="20" fill="{AQUA}" opacity="0.3" filter="url(#bloom)"/>',
+         "".join(mirror_shard(x, y, sc, t, glow=g) for x, y, sc, t, g in
+                 ((66, 210, 0.8, -25, True), (240, 250, 0.75, 30, False), (80, 330, 0.7, 10, False),
+                  (232, 360, 0.7, -15, True), (60, 420, 0.6, 40, False), (246, 440, 0.6, 5, False))),
+         rim("M182,214 L192,440", color=SILVER, w=2.4)]
+    return "".join(o)
+
+
+def lucan_veilweaver(uid):
+    """Hooded in a smoke-grey veil that trails into nothing, a thread of shadow spun between his hands."""
+    veil = "M100,122 C102,70 198,70 200,122 L214,214 C186,202 114,202 86,214 Z"
+    o = [shadow(70), boot(116, 150) + boot(152, 188), lucan_coat(uid, color="#3c3450", trim="#6a6280"),
+         P("M104,330 C90,380 96,440 84,480 L118,470 Z", "#4a4460", 2, 'opacity="0.7"'),
+         P("M196,330 C210,380 204,440 216,480 L182,470 Z", "#4a4460", 2, 'opacity="0.7"'),
+         limb((124, 210), (100, 270), 16, 12, "#3c3450"), circle(100, 274, 8, SKIN, 2),
+         lucan_head(hair="#2c2838"),
+         P(veil, "#4a4460", 3), P("M122,128 C126,102 174,102 178,128 L174,176 C162,186 138,186 126,176 Z", "#221e2e", 2),
+         f'<path d="M140,150 l7,1 M154,151 l7,-1" stroke="{AQUA}" stroke-width="2.6" stroke-linecap="round"/>',
+         limb((176, 210), (200, 270), 16, 12, "#3c3450"), circle(200, 274, 8, SKIN, 2),
+         P("M100,274 C130,250 170,300 200,274", "none", 2.4).replace('stroke="#1a1024"', 'stroke="#8a80b0"'),
+         f'<path d="M100,274 C130,250 170,300 200,274" stroke="{AQUA}" stroke-width="5" fill="none" opacity="0.3" filter="url(#bloom)"/>',
+         rim("M196,140 L204,200", color=AQUA, w=2)]
+    return "".join(o)
+
+
+def lucan_puppeteer(uid):
+    """A gold-trimmed coat and a puppeteer's cross held high, its strings running down to the field."""
+    gold_strings = "".join(f'<path d="M{x1},{y1} L{x2},{y2}" stroke="{GOLD}" stroke-width="1.6" opacity="0.85"/>' for x1, y1, x2, y2 in
+                           ((170, 96, 222, 476), (196, 74, 244, 446), (222, 96, 268, 476), (196, 118, 236, 400)))
+    o = [shadow(70), boot(116, 150) + boot(152, 188), lucan_coat(uid, color=DUSKCOAT, trim=GOLD),
+         limb((124, 210), (110, 290), 16, 12, DUSKCOAT), circle(110, 294, 8, SKIN, 2),
+         lucan_head(),
+         limb((176, 210), (196, 120), 16, 12, DUSKCOAT), circle(196, 114, 8, SKIN, 2),
+         gold_strings,
+         P("M166,92 L226,92 L226,100 L166,100 Z", "#8a5a2a", 2), P("M192,70 L200,70 L200,120 L192,120 Z", "#8a5a2a", 2),
+         "".join(glow_dot(x, y, 3, GOLD) for x, y in ((170, 96), (222, 96), (196, 74), (196, 118))),
+         rim("M182,214 L192,440", color=GOLD, w=2)]
+    return "".join(o)
+
+
 HEROES = [
     ("maren", "Maren", [("base", "Base", maren_base), ("deadeye", "Deadeye", maren_deadeye),
                         ("trapper", "Trapper", maren_trapper), ("volley", "Volley", maren_volley)]),
@@ -1288,7 +1337,8 @@ HEROES = [
                             ("transmuter", "Transmuter", ottilie_transmuter), ("apothecary", "Apothecary", ottilie_apothecary)]),
     ("kestra", "Kestra", [("base", "Base", kestra_base), ("cinderhound", "Cinderhound", kestra_cinderhound),
                           ("serpent_keeper", "Serpent-Keeper", kestra_serpent_keeper), ("packleader", "Packleader", kestra_packleader)]),
-    ("lucan", "Lucan", [("base", "Base", lucan_base)]),
+    ("lucan", "Lucan", [("base", "Base", lucan_base), ("mirrorwright", "Mirrorwright", lucan_mirrorwright),
+                        ("veilweaver", "Veilweaver", lucan_veilweaver), ("puppeteer", "Puppeteer", lucan_puppeteer)]),
 ]
 
 # A hero's companions (phase 8 part 6, Kestra): each one's figure is
