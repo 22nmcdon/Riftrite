@@ -88,6 +88,8 @@ extends RefCounted
 ##   from_basic: true              only what its basic attack does (phase 5c
 ##                                 step 4; Rift-Fed Blades)
 ##   keywords: ["marked"]          applied only: statuses with these keywords
+##   by_stacks: true               applied only: the stacks each one adds,
+##                                 not one each (phase 8 part 6, Ilse's Burn)
 ##   statuses: ["blood_rite"]      applied: only these statuses (on anyone);
 ##                                 hits by_allies (phase 8 part 5, Blood
 ##                                 Rite): only hits by an ally holding one
@@ -149,6 +151,8 @@ var keywords: Array[String] = []
 ## applied (phase 8 part 2): only these statuses, on any unit (an ally's
 ## boost too; "statuses"). Empty: any status on an enemy.
 var statuses: Array[String] = []
+## applied (phase 8 part 6, Ilse): count the stacks each adds, not one each.
+var by_stacks: bool = false
 ## What fills the deed in a run (0: none given; RunContent requires one).
 var threshold: int = 0
 
@@ -191,6 +195,9 @@ static func read(reader: DataReader, needs_text: bool = true) -> DeedDef:
 		reader.error("vs_keywords only filter damage")
 	if def.by_allies and def.counts != Counts.DAMAGE and def.counts != Counts.HITS:
 		reader.error("by_allies only counts damage or hits")
+	def.by_stacks = reader.opt_bool("by_stacks", false)
+	if def.by_stacks and def.counts != Counts.APPLIED:
+		reader.error("by_stacks counts the stacks applied (\"counts\": \"applied\")")
 	def.with_part = reader.opt_string("with_part", "")
 	if def.counts == Counts.ALLY_CASTS:
 		def.near_range = reader.req_int("within_hexes", 1, 10) * HexGrid.HEX

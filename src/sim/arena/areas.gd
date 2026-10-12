@@ -60,6 +60,8 @@ class Pending:
 	## Its shape: the effect's, or its own copy if it grows (phase 8 part 6).
 	var shape: ShapeDef
 	var cast_tick: int = 0
+	## Its caster's enemies inside it now, for on_zone_enter (phase 8 part 6).
+	var inside: Dictionary[String, bool] = {}
 
 
 ## `unit`'s ability casts the area `effect` at `target` (null for an area on
@@ -72,7 +74,7 @@ static func cast(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 	area.source = source
 	area.effect = effect
 	area.shape = effect.shape
-	if effect.grow_ticks > 0:
+	if effect.grow_ticks > 0 or not effect.radius_per_stack.is_empty():
 		area.shape = ShapeDef.new()
 		area.shape.kind = effect.shape.kind
 		area.shape.size = effect.shape.size
@@ -100,6 +102,13 @@ static func cast(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 	if effect.zone_ticks > 0:
 		if effect.max_standing > 0 and _standing(sim, unit, effect) >= effect.max_standing:
 			return
+		if not effect.radius_per_stack.is_empty():
+			area.shape.size = effect.shape.size + Statuses.stacks_on(unit, effect.radius_per_stack)
+		if sim.zone_enter_listeners:
+			# Those already inside as it's cast haven't stepped in.
+			for other: UnitState in sim.units:
+				if other.alive and other.side != unit.side and area.shape.contains(area.origin, area.dir, other.pos):
+					area.inside[other.id] = true
 		area.until_tick = sim.tick + effect.zone_ticks
 		var zone: LogEntry = _entry(sim, LogEntry.Kind.ZONE, area)
 		zone.end_tick = area.until_tick
@@ -121,6 +130,8 @@ static func cast(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 ## pulses every zone that's due.
 static func land_due(sim: CombatSim) -> void:
 	if not sim.zones.is_empty():
+		if sim.zone_enter_listeners:
+			_check_entries(sim)
 		_pulse_zones(sim)
 	if sim.areas.is_empty():
 		return
@@ -140,15 +151,29 @@ static func _pulse_zones(sim: CombatSim) -> void:
 	var staying: Array[Pending] = []
 	for zone: Pending in sim.zones:
 		if sim.tick >= zone.until_tick:
-			continue
+			if zone.effect.stays_near > 0 and _enemy_near(sim, zone):
+				# Living Flame (phase 8 part 6): it won't go out with an enemy
+				# beside it.
+				zone.until_tick = sim.tick + zone.effect.pulse_ticks
+			else:
+				continue
 		if sim.tick >= zone.land_tick:
 			var moved: bool = zone.effect.follows and _follow(sim, zone)
 			var notes: Array[String] = []
 			if moved:
 				notes.append("moved")
-			if zone.effect.grow_ticks > 0:
-				@warning_ignore("integer_division")
-				var size: int = mini(zone.effect.shape.size + (sim.tick - zone.cast_tick) / zone.effect.grow_ticks, zone.effect.grow_max)
+			if zone.effect.grow_ticks > 0 or not zone.effect.radius_per_stack.is_empty():
+				var size: int = zone.effect.shape.size
+				if zone.effect.grow_ticks > 0:
+					@warning_ignore("integer_division")
+					size = mini(size + (sim.tick - zone.cast_tick) / zone.effect.grow_ticks, zone.effect.grow_max)
+				if not zone.effect.radius_per_stack.is_empty():
+					# Wider, and hotter, for each stack of its status on its caster
+					# (phase 8 part 6, Living Flame).
+					size += Statuses.stacks_on(zone.unit, zone.effect.radius_per_stack)
+					if zone.unit.alive:
+						for i: int in zone.effect.area_effects.size():
+							zone.amounts[i] = EffectRunner.amount_of(zone.effect.area_effects[i], zone.unit, 0, sim)
 				if size != zone.shape.size:
 					zone.shape.size = size
 					notes.append("spread to %d" % size)
@@ -156,6 +181,35 @@ static func _pulse_zones(sim: CombatSim) -> void:
 			zone.land_tick += zone.effect.pulse_ticks
 		staying.append(zone)
 	sim.zones = staying
+
+
+## True if a standing enemy of the zone's caster is within its stays_near of
+## its edge (phase 8 part 6, Living Flame).
+static func _enemy_near(sim: CombatSim, zone: Pending) -> bool:
+	var reach: int = zone.shape.size * HexGrid.HEX + zone.effect.stays_near
+	for enemy: UnitState in sim.standing_enemies_of(zone.unit):
+		if ArenaPlane.length_sq(enemy.pos - zone.origin) <= reach * reach:
+			return true
+	return false
+
+
+## on_zone_enter (phase 8 part 6, Ring of Fire): each enemy of a listening
+## caster that has come inside one of its zones since the last tick raises
+## the event on the caster, naming the enemy, with the zone's ability (for
+## "from_ability"); one that leaves can step in again.
+static func _check_entries(sim: CombatSim) -> void:
+	for zone: Pending in sim.zones:
+		if sim.tick >= zone.until_tick or zone.unit == null or not zone.unit.alive or zone.unit.listeners_by.get(EffectDef.Trigger.ON_ZONE_ENTER, []).is_empty():
+			continue
+		for other: UnitState in sim.units:
+			if other.side == zone.unit.side:
+				continue
+			var now_in: bool = other.alive and zone.shape.contains(zone.origin, zone.dir, other.pos)
+			if now_in and not zone.inside.has(other.id):
+				zone.inside[other.id] = true
+				Passives.on_event(sim, zone.unit, EffectDef.Trigger.ON_ZONE_ENTER, other, 0, zone.ability.id if zone.ability != null else "")
+			elif not now_in and zone.inside.has(other.id):
+				zone.inside.erase(other.id)
 
 
 ## Moves a following zone up to 1 hex toward the biggest group of its

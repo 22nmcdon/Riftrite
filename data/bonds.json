@@ -119,5 +119,45 @@
       "chorister"
     ],
     "relic": "the_psalter"
+  },
+  {
+    "id": "burning_volley",
+    "name": "Burning Volley",
+    "text": "Her blessing rides on every arrow.",
+    "paths": [
+      "ember_choir",
+      "volley"
+    ],
+    "relic": "fire_on_the_wind"
+  },
+  {
+    "id": "the_bellows",
+    "name": "The Bellows",
+    "text": "His wind fans her fire.",
+    "paths": [
+      "furnace",
+      "windcaller"
+    ],
+    "relic": "bellows_of_the_wind"
+  },
+  {
+    "id": "the_firepit",
+    "name": "The Firepit",
+    "text": "He drags them into her fire.",
+    "paths": [
+      "chainwarden",
+      "wildfire"
+    ],
+    "relic": "the_firepit"
+  },
+  {
+    "id": "lantern_vigil",
+    "name": "Lantern Vigil",
+    "text": "She keeps him exactly where he's strongest.",
+    "paths": [
+      "last_watch",
+      "lanternbearer"
+    ],
+    "relic": "the_vigil_lamp"
   }
 ]

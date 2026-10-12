@@ -232,5 +232,32 @@
         }
       ]
     }
+  },
+  {
+    "_note": "Hero 9 (docs/plans/rebuild-heroes.md section 8b; rebuild-phase8-last-heroes.md 8f-1). Stats and Flare are the design's; Heat is her only mana, 3 a tick (the design's 1, so she casts at all), and Cinder Flick's 1.2s cooldown keeps her team within the base-kit band (+9). She can't be drafted until her paths come.",
+    "id": "ilse",
+    "name": "Ilse Cinderhand",
+    "title": "the fire-speaker",
+    "role": "damage",
+    "kit": {
+      "stats": {"hp": 260, "atk": 6, "mgk": 22, "def": 8, "crit": 5, "speed": 2, "range": 3},
+      "mana": {"max": 60, "per_attack": 0},
+      "basic_attack": {
+        "id": "cinder_flick", "name": "Cinder Flick", "text": "A mote of fire at the nearest enemy within 3 hexes that sets it Burning. It gives her no mana.", "cooldown_ms": 1200,
+        "effects": [{"type": "damage", "amount": 0, "target": "target", "scaling": {"mgk": 10000}},
+                    {"trigger": "on_hit", "type": "apply_status", "status": "burn", "stacks": 0, "scaling": {"mgk": 1000}, "target": "hit_target"}]
+      },
+      "signature": {
+        "id": "flare", "name": "Flare", "text": "A fireball bursts around an enemy within 3 hexes: every enemy within 1 hex of it is set Burning.", "trigger": {"kind": "mana"},
+        "effects": [{"type": "area", "shape": {"kind": "circle", "radius": 1}, "anchor": "target", "hits": "enemies",
+                     "effects": [{"type": "apply_status", "status": "burn", "stacks": 0, "scaling": {"mgk": 6000}, "target": "target"}]}]
+      },
+      "passives": [
+        {
+          "id": "heat", "name": "Heat", "kind": "ability", "text": "Her only mana: each time Burn ticks on an enemy within 3 hexes of her, whoever set it, she gains a little.",
+          "effects": [{"trigger": "on_status_tick", "statuses": ["burn"], "near_hexes": 3, "type": "gain_mana", "amount": 3, "target": "self"}]
+        }
+      ]
+    }
   }
 ]

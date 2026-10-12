@@ -248,6 +248,54 @@
         "bone_dice"
       ],
       "note": "long-game: judged by its shards over a run (rebuild-phase8-severine-edric.md section 8); in a fight only its floor"
+    },
+    {
+      "name": "Furnace",
+      "path": "furnace",
+      "type": "engine",
+      "team": {
+        "ilse": "furnace",
+        "aldous": "windcaller",
+        "brannoc": "hearthwall"
+      },
+      "relics": [
+        "ashen_engine",
+        "ashen_censer",
+        "quickened_pulse"
+      ],
+      "note": "test-teams.md #4; Brannoc's Hearthwall stands in for Kestra's Cinderhound (not built)"
+    },
+    {
+      "name": "Wildfire Pit",
+      "path": "wildfire",
+      "type": "self-sufficient",
+      "team": {
+        "garrow": "chainwarden",
+        "ilse": "wildfire",
+        "maren": "volley"
+      },
+      "relics": [
+        "the_hungering_rift",
+        "pyre_ash"
+      ],
+      "note": "test-teams.md #8 (Whirlpool), as Wildfire's build"
+    },
+    {
+      "name": "Pyre",
+      "path": "ember_choir",
+      "type": "enabler",
+      "team": {
+        "ilse": "ember_choir",
+        "maren": "volley",
+        "tamsin": "nightblade"
+      },
+      "relics": [
+        "ashen_engine",
+        "ember_heart",
+        "pyre_ash"
+      ],
+      "swap": "wildfire",
+      "note": "test-teams.md #3; Tamsin's Nightblade stands in for Kestra's Cinderhound (not built); lift against Ilse on Wildfire, her self-sufficient path"
     }
   ]
 }

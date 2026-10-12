@@ -118,7 +118,7 @@ static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: U
 		if not effect.stacks_of.is_empty():
 			# As many stacks as the ability's target has (phase 8 part 6,
 			# Immolate's splash), read as it fires.
-			named_stacks = stacks_from(effect, target)
+			named_stacks = stacks_from(effect, target, unit)
 			if named_stacks <= 0:
 				continue
 		if shot != null and effect.target == EffectDef.Target.TARGET:
@@ -210,9 +210,21 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 				# Maw): a LIFESTEAL line, Engorge past full; never healing.
 				steal(sim, victim, DamageRule.apply(amount, power, 0, 0, unit.relic_bonus_bp), source)
 				return
-			var overheal: int = heal(sim, victim, amount, source, effect.overheal_shield_bp, power, false, unit.relic_bonus_bp)
+			var ceiling: int = -1
+			if effect.heal_cap_bp > 0 and (effect.heal_cap_vs == null or effect.heal_cap_vs.holds(victim, unit)):
+				# Lantern Vigil (phase 8 part 6): no higher than the cap; the rest
+				# is a Shield.
+				ceiling = FixedMath.apply_bp(victim.max_hp, effect.heal_cap_bp)
+			var overheal: int = heal(sim, victim, amount, source, effect.overheal_shield_bp, power, false, unit.relic_bonus_bp, ceiling)
 			if effect.overheal_max_hp_per > 0 and overheal > 0:
 				_grow_max_hp(sim, unit, overheal, effect.overheal_max_hp_per, source)
+			if effect.overheal_per > 0 and overheal >= effect.overheal_per:
+				# Kindred Flame (phase 8 part 6): the heal past full sets the enemy
+				# nearest the healed unit Burning.
+				var nearest: UnitState = _nearest_enemy_of(sim, victim)
+				if nearest != null:
+					@warning_ignore("integer_division")
+					Statuses.apply(sim, nearest, effect.overheal_status, overheal / effect.overheal_per, 0, source)
 		EffectDef.Type.SHIELD:
 			if effect.amount_bp_of_max_hp > 0:
 				amount = FixedMath.apply_bp(victim.max_hp, effect.amount_bp_of_max_hp)
@@ -389,7 +401,7 @@ static func run_event(sim: CombatSim, unit: UnitState, ability: AbilityDef, sour
 	var amount: int = amount_of(effect, unit, damage, sim)
 	if not effect.stacks_of.is_empty():
 		# As many stacks as the unit the event names has (Pyre Ash).
-		amount = stacks_from(effect, other)
+		amount = stacks_from(effect, other, unit)
 		if amount <= 0:
 			return
 	if effect.target == EffectDef.Target.ENEMIES_NEAR_ALLIES:
@@ -406,11 +418,15 @@ static func run_event(sim: CombatSim, unit: UnitState, ability: AbilityDef, sour
 
 ## stacks_of's number: the stacks `named` has of the effect's status (a
 ## share of them, at least 1, with stacks_share_bp: Ashen Engine), or 0.
-static func stacks_from(effect: EffectDef, named: UnitState) -> int:
+static func stacks_from(effect: EffectDef, named: UnitState, unit: UnitState = null) -> int:
 	var state: StatusState = Statuses.find(named, effect.stacks_of) if named != null else null
 	var stacks: int = state.total_stacks() if state != null and not state.def.is_timed() else 0
-	if stacks > 0 and effect.stacks_share_bp > 0:
-		stacks = maxi(FixedMath.apply_bp(stacks, effect.stacks_share_bp), 1)
+	var share_bp: int = effect.stacks_share_bp
+	if share_bp > 0 and unit != null and not effect.grows_status.is_empty():
+		# Its share grows with a status on its unit (phase 8 part 6, Crucible).
+		share_bp += effect.grows_stack_bp * Statuses.stacks_on(unit, effect.grows_status)
+	if stacks > 0 and share_bp > 0:
+		stacks = maxi(FixedMath.apply_bp(stacks, share_bp), 1)
 	return stacks
 
 
@@ -698,6 +714,18 @@ static func around_allies(sim: CombatSim, unit: UnitState, effect: EffectDef) ->
 	return pairs
 
 
+## The targetable enemy of `unit` nearest it (fight order on ties), or null.
+static func _nearest_enemy_of(sim: CombatSim, unit: UnitState) -> UnitState:
+	var best: UnitState = null
+	var best_d: int = 0
+	for other: UnitState in sim.targetable_enemies_of(unit):
+		var d: int = ArenaPlane.length_sq(other.pos - unit.pos)
+		if best == null or d < best_d:
+			best = other
+			best_d = d
+	return best
+
+
 ## The standing ally of `unit` (not itself or `besides`) nearest it, by
 ## distance then the fight's order; null if there's none.
 static func nearest_ally(sim: CombatSim, unit: UnitState, besides: UnitState) -> UnitState:
@@ -732,6 +760,8 @@ static func nearest_to(pool: Array[UnitState], others: Array[UnitState], count: 
 ## Lands a hit of `amount` (its base) on `target`: the damage rule (its
 ## `power`, plus a tactic's payoff; the crit's; the target's Mark), then
 ## DEF, then Shield, then HP. Logs it and returns what got through DEF.
+## (heal's `ceiling`, phase 8 part 6: HP it may lift to at most, the rest a
+## Shield; -1: max HP.)
 ## `steals`: false for a hit that never lifesteals (Shadow Engine's strike,
 ## which comes from lifesteal). `note` says what made it, if not an ability.
 ## `ruled`: a hit a hero rule made (an echo, a carry), which starts no echo
@@ -1063,11 +1093,18 @@ static func steal(sim: CombatSim, attacker: UnitState, wanted: int, source: Effe
 ## adds to the heal's own share. `by_lifesteal` marks lifesteal that heals
 ## (Blood Communion). Returns what it would have restored past full HP.
 ## `relic_bp`: the relic kind's bonus (Chain of Echoes' growth).
-static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectSource, overheal_shield_bp: int = 0, power: int = 0, by_lifesteal: bool = false, relic_bp: int = 0) -> int:
+static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectSource, overheal_shield_bp: int = 0, power: int = 0, by_lifesteal: bool = false, relic_bp: int = 0,
+		ceiling: int = -1) -> int:
 	var base: int = amount
 	var taken_bp: int = target.aura_bp[AuraDef.Stat.HEALING_TAKEN_BP] - FixedMath.BP_ONE
 	amount = DamageRule.apply(amount, power, 0, taken_bp, relic_bp)
 	var healed: int = clampi(target.max_hp - target.hp, 0, amount)
+	if ceiling >= 0:
+		# A capped heal (phase 8 part 6, Lantern Vigil): what it would lift past
+		# the cap is a Shield, all of it.
+		healed = clampi(ceiling - target.hp, 0, amount)
+		if amount > healed:
+			overheal_shield_bp = maxi(overheal_shield_bp, FixedMath.BP_ONE)
 	target.hp += healed
 	var entry: LogEntry = sim.new_entry(LogEntry.Kind.HEAL, source)
 	entry.set_rule(base, power, 0, taken_bp, relic_bp)

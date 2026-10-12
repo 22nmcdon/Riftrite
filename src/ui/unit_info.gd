@@ -41,6 +41,7 @@ const EVENT_WORDS: Dictionary[int, String] = {
 	EffectDef.Trigger.ON_HP_SPENT: "HP spent",
 	EffectDef.Trigger.ON_MAX_HP_UP: "max HP gained",
 	EffectDef.Trigger.ON_STATUS_TICK: "damage-over-time tick on an enemy",
+	EffectDef.Trigger.ON_ZONE_ENTER: "enemy stepping into its zone",
 }
 const ORDINALS: Array[String] = ["th", "st", "nd", "rd"]
 const CHATTER: Array[LogEntry.Kind] = [LogEntry.Kind.MOVE, LogEntry.Kind.STOP, LogEntry.Kind.TARGET]

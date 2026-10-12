@@ -2635,5 +2635,232 @@
         }
       ]
     }
+  },
+  {
+    "id": "fire_on_the_wind",
+    "name": "Fire on the Wind",
+    "tier": "bond",
+    "icon": "ember_heart",
+    "flavor": "Burning Volley: her blessing rides on every arrow.",
+    "text": "Maren's arrows always carry Ilse's Burn, split arrows too, and Arrow Storm rains fire: enemies under it are set Burning.",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "ability": "arrow_storm",
+          "add_to_areas": [
+            {
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 0,
+              "scaling": {
+                "atk": 2000
+              },
+              "target": "target"
+            }
+          ]
+        }
+      ],
+      "passives": [
+        {
+          "id": "fire_on_the_wind",
+          "name": "Fire on the Wind",
+          "kind": "ability",
+          "text": "Maren's arrows carry Ilse's Burn.",
+          "effects": [
+            {
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 0,
+              "scaling": {
+                "mgk": 2000
+              },
+              "target": "hit_target",
+              "trigger": "on_ally_hit",
+              "holder": {
+                "kits": [
+                  "ilse"
+                ]
+              },
+              "by": {
+                "kits": [
+                  "maren"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "bellows_of_the_wind",
+    "name": "Bellows of the Wind",
+    "tier": "bond",
+    "icon": "echo",
+    "flavor": "The Bellows: his wind fans her fire.",
+    "text": "Ilse always counts as attacking from far off for Aldous's winds (faster and harder), and every enemy Gale knocks back is Stoked: its Burn grows by a quarter.",
+    "mod": {
+      "passives": [
+        {
+          "id": "bellows_tailwind",
+          "name": "Bellows of the Wind",
+          "kind": "aura",
+          "text": "Ilse attacks faster, as if from far off.",
+          "aura": {
+            "target": "holder",
+            "stat": "atsp",
+            "value": 8,
+            "while": "state",
+            "state": {
+              "kits": [
+                "ilse"
+              ]
+            }
+          }
+        },
+        {
+          "id": "bellows_high_wind",
+          "name": "Bellows of the Wind",
+          "kind": "aura",
+          "text": "Ilse hits harder, as if from far off.",
+          "aura": {
+            "target": "holder",
+            "stat": "damage_bp",
+            "value": 12500,
+            "while": "state",
+            "state": {
+              "kits": [
+                "ilse"
+              ]
+            }
+          }
+        },
+        {
+          "id": "bellows_of_the_wind",
+          "name": "Bellows of the Wind",
+          "kind": "ability",
+          "text": "Every enemy Gale knocks back is Stoked.",
+          "effects": [
+            {
+              "trigger": "on_knockback",
+              "holder": {
+                "kits": [
+                  "aldous"
+                ]
+              },
+              "type": "apply_status",
+              "status": "burn",
+              "stacks_of": "burn",
+              "stacks_share_bp": 2500,
+              "target": "hit_target"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_firepit",
+    "name": "The Firepit",
+    "tier": "bond",
+    "icon": "hold_the_middle",
+    "flavor": "The Firepit: he drags them into her fire.",
+    "text": "Every Maelstrom sets the ground under the crowd it pulls burning, spreading as Ilse's does, and Crowd Strength counts Burning enemies twice.",
+    "mod_for": "garrow",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:crowd_strength",
+          "per_twice": {
+            "keywords": [
+              "burning"
+            ]
+          }
+        },
+        {
+          "slot": "passive:crowd_guard",
+          "per_twice": {
+            "keywords": [
+              "burning"
+            ]
+          }
+        }
+      ],
+      "passives": [
+        {
+          "id": "the_firepit",
+          "name": "The Firepit",
+          "kind": "ability",
+          "text": "Maelstrom sets the ground around him burning, and it spreads: enemies on it catch Burn each second.",
+          "effects": [
+            {
+              "trigger": "on_ability",
+              "type": "area",
+              "shape": {
+                "kind": "circle",
+                "radius": 1
+              },
+              "anchor": "self",
+              "hits": "enemies",
+              "duration_ms": 6000,
+              "every_ms": 1000,
+              "grows": {
+                "every_ms": 2000,
+                "max_radius": 3
+              },
+              "effects": [
+                {
+                  "type": "apply_status",
+                  "status": "burn",
+                  "stacks": 0,
+                  "scaling": {
+                    "atk": 1000
+                  },
+                  "target": "target"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_vigil_lamp",
+    "name": "The Vigil Lamp",
+    "tier": "bond",
+    "icon": "pilgrims_lantern",
+    "flavor": "Lantern Vigil: she keeps him exactly where he's strongest.",
+    "text": "While Brannoc is below 30% HP, Vell's lantern goes to him first, and her heals on him never lift him above 30%: the rest is a Shield instead.",
+    "mod_for": "vell",
+    "mod": {
+      "on": [
+        {
+          "slot": "abilities",
+          "types": [
+            "heal"
+          ],
+          "heal_cap": {
+            "pct": 30,
+            "vs": {
+              "kits": [
+                "brannoc"
+              ],
+              "below_hp_pct": 30
+            }
+          }
+        },
+        {
+          "slot": "signature",
+          "prefer": {
+            "kits": [
+              "brannoc"
+            ],
+            "below_hp_pct": 30
+          }
+        }
+      ]
+    }
   }
 ]

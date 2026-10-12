@@ -6,7 +6,8 @@ extends GutTest
 ## damage's amount_per_stack and an on_fire stacks_of (Immolate and its
 ## splash), a zone that grows (Wildfire), an area at the largest groups
 ## (Firestorm), on_ally_hit's spends (Blessing's next attacks), and
-## allies_near_self's nearest.
+## allies_near_self's nearest; and reading a heal's cap (The Vigil Lamp, in
+## tests/sim/test_ilse_cards.gd) and the deed filter by_stacks.
 
 const K = preload("res://tests/sim/sim_test_kit.gd")
 
@@ -47,6 +48,12 @@ func test_reading_the_pieces() -> void:
 	assert_eq(_effect({"trigger": "on_ally_hit", "spends": "quickened", "type": "apply_status", "status": "burn", "stacks": 1, "target": "hit_target"}), [] as Array[String])
 	assert_eq(_effect({"trigger": "on_interval", "interval_ms": 8000, "type": "apply_status", "status": "quickened", "stacks": 3, "target": "allies_near_self", "within_hexes": 8, "nearest": 1}), [] as Array[String])
 	assert_false(_effect({"trigger": "on_interval", "interval_ms": 8000, "type": "apply_status", "status": "quickened", "stacks": 3, "target": "all_allies", "nearest": 1}).is_empty(), "nearest is allies_near_self's")
+	assert_eq(_effect({"type": "heal", "amount": 10, "target": "self", "cap": {"pct": 30, "vs": {"below_hp_pct": 30}}}), [] as Array[String])
+	var errors: Array[String] = []
+	DeedDef.read(DataReader.new({"text": "Burn", "counts": "applied", "by_stacks": true}, "deed", errors))
+	assert_eq(errors, [] as Array[String])
+	DeedDef.read(DataReader.new({"text": "Hits", "counts": "hits", "by_stacks": true}, "deed", errors))
+	assert_false(errors.is_empty(), "by_stacks counts applied stacks")
 
 
 func test_heat_gains_mana_from_burn_ticks_near_her() -> void:
@@ -164,3 +171,83 @@ func test_the_nearest_ally() -> void:
 	K.step(fight, 21)
 	var given: Array = K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "singer").map(func(entry: LogEntry) -> String: return entry.target)
 	assert_eq(given, ["close"], "only the nearest, though the farther one comes first in the fight's order")
+
+
+# --- the apexes' pieces (8f-1c) -------------------------------------------------
+
+## A caster with one ability passive and a zone signature cast at once.
+func _zone_caster(zone: Dictionary, passives: Array = []) -> UnitDef:
+	return K.kit("caster", {"stats": {"hp": 1000, "speed": 0, "range": 6}, "mana": {"max": 50, "start": 50, "per_attack": 0},
+		"basic_attack": {"cooldown_ms": 60000, "effects": [{"type": "damage", "amount": 0, "target": "target"}]},
+		"signature": {"id": "pit", "name": "Pit", "trigger": {"kind": "mana"}, "effects": [zone]}, "passives": passives})
+
+
+func test_stepping_into_a_zone() -> void:
+	var zone: Dictionary = {"type": "area", "shape": {"kind": "circle", "radius": 1}, "anchor": "target", "hits": "enemies", "duration_ms": 10000, "every_ms": 1000,
+		"effects": [{"type": "damage", "amount": 0, "target": "target"}]}
+	var step: Array = [{"id": "step", "name": "Step", "kind": "ability", "effects": [
+		{"trigger": "on_zone_enter", "from_ability": ["pit"], "type": "apply_status", "status": "burn", "stacks": 5, "target": "hit_target"}]}]
+	var walker: UnitDef = K.kit("walker", {"stats": {"hp": 5000, "speed": 2, "range": 1},
+		"basic_attack": {"cooldown_ms": 60000, "effects": [{"type": "damage", "amount": 0, "target": "target"}]}})
+	var fight: CombatSim = K.sim(K.fight([K.at(_zone_caster(zone, step), 3, 0)] as Array[UnitSetup], [K.foe(_dummy("still"), 3, 4), K.foe(walker, 6, 6)] as Array[UnitSetup]))
+	K.step(fight, 2)
+	assert_eq(K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "caster").size(), 0, "the one inside as it's cast hasn't stepped in")
+	var walking: UnitState = fight.unit_by_id("walker")
+	walking.pos = fight.zones[0].origin + Vector2i(0, 2500)
+	K.step(fight, 1)
+	walking.pos = fight.zones[0].origin + Vector2i(0, 300)
+	K.step(fight, 1)
+	assert_eq(K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "caster").map(func(entry: LogEntry) -> String: return entry.target), ["walker"], "stepping in")
+	K.step(fight, 3)
+	assert_eq(K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "caster").size(), 1, "once, while it stays")
+	walking.pos = fight.zones[0].origin + Vector2i(0, 2500)
+	K.step(fight, 1)
+	walking.pos = fight.zones[0].origin
+	K.step(fight, 1)
+	assert_eq(K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "caster").size(), 2, "and again after leaving")
+
+
+func test_a_zone_that_stays_beside_an_enemy_and_grows_per_stack() -> void:
+	var zone: Dictionary = {"type": "area", "shape": {"kind": "circle", "radius": 1}, "anchor": "target", "hits": "enemies", "duration_ms": 2000, "every_ms": 500,
+		"stays_near_hexes": 1, "radius_per_stack": "quickened", "effects": [{"type": "damage", "amount": 1, "target": "target"}]}
+	var fight: CombatSim = K.sim(K.fight([K.at(_zone_caster(zone), 3, 0)] as Array[UnitSetup], [K.foe(_dummy("still"), 3, 4)] as Array[UnitSetup]))
+	K.step(fight, 2)
+	var pit: Areas.Pending = fight.zones[0]
+	K.step(fight, 60)
+	assert_eq(fight.zones.size(), 1, "past its 2s: an enemy stands in it")
+	Statuses.apply(fight, fight.unit_by_id("caster"), "quickened", 2, 0, EffectSource.make("caster", "pit", "Pit"))
+	K.step(fight, 10)
+	assert_eq(pit.shape.size, 3, "1 hex wider a stack")
+	fight.unit_by_id("still").pos = pit.origin + Vector2i(0, 4500)
+	K.step(fight, 20)
+	assert_eq(fight.zones.size(), 0, "it goes out once no enemy is near")
+
+
+func test_statuses_and_stacks_of_grow_per_stack() -> void:
+	var stacked: Dictionary = {"type": "apply_status", "status": "burn", "stacks": 10, "target": "target", "grows_per_stack": {"status": "quickened", "bp": 1000}}
+	var caster: UnitDef = K.kit("caster", {"stats": {"hp": 1000, "speed": 0, "range": 1}, "mana": {"max": 50, "start": 50, "per_attack": 0},
+		"basic_attack": {"cooldown_ms": 60000, "effects": [{"type": "damage", "amount": 0, "target": "target"}]},
+		"signature": {"id": "hot", "name": "Hot", "trigger": {"kind": "mana"}, "effects": [stacked,
+			{"type": "apply_status", "status": "burn", "stacks_of": "burn", "stacks_share_bp": 1000, "grows_per_stack": {"status": "quickened", "bp": 1000}, "target": "enemies_near_target", "within_hexes": 1}]}})
+	var fight: CombatSim = K.sim(K.fight([K.at(caster, 3, 2)] as Array[UnitSetup], [K.foe(_dummy("victim"), 3, 4), K.foe(_dummy("beside"), 4, 4)] as Array[UnitSetup]))
+	var unit: UnitState = fight.unit_by_id("caster")
+	fight.unit_by_id("victim").pos = unit.pos + Vector2i(0, 400)
+	fight.unit_by_id("beside").pos = unit.pos + Vector2i(700, 600)
+	Statuses.apply(fight, unit, "quickened", 2, 0, EffectSource.make("caster", "hot", "Hot"))
+	_relic_burn(fight, "victim", 100)
+	K.step(fight, 2)
+	var burns: Array = K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "caster").filter(func(entry: LogEntry) -> bool: return entry.status == "burn").map(func(entry: LogEntry) -> Array: return [entry.target, entry.amount])
+	assert_eq(burns, [["victim", 12], ["beside", 34]], "10 stacks x1.2; then the share, 10% + 2 x 10%, of the 112 there now")
+
+
+func test_a_banked_heal_and_its_overheal_as_burn() -> void:
+	var priest: UnitDef = _dummy("priest", 1000, [{"id": "kindred", "name": "Kindred", "kind": "ability", "effects": [
+		{"trigger": "on_status_tick", "statuses": ["burn"], "per_damage": 10, "type": "heal", "amount": 20, "target": "all_allies", "overheal_status": {"status": "burn", "per": 5}}]}])
+	var fight: CombatSim = K.sim(K.fight([K.at(priest, 3, 2)] as Array[UnitSetup], [K.foe(_dummy("victim"), 3, 5)] as Array[UnitSetup]))
+	fight.unit_by_id("priest").hp = 990
+	_relic_burn(fight, "victim", 30)
+	K.step(fight, 11)
+	var heals: Array[LogEntry] = K.entries(fight, LogEntry.Kind.HEAL, "priest")
+	assert_eq(heals.map(func(entry: LogEntry) -> int: return entry.amount), [10, 0, 0], "30 Burn damage: three heals of 20, the first 10 of them healing")
+	var spilled: Array = K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "priest").map(func(entry: LogEntry) -> Array: return [entry.target, entry.amount])
+	assert_eq(spilled, [["victim", 2], ["victim", 4], ["victim", 4]], "1 Burn for every 5 healed past full")

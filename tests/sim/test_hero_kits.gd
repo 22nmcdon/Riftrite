@@ -48,19 +48,19 @@ func _rows(fight: CombatSim, kind: LogEntry.Kind, unit_id: String, ability: Stri
 
 
 func test_the_kits_read_as_designed() -> void:
-	assert_eq(_content.hero_ids, ["brannoc", "maren", "vell", "garrow", "tamsin", "aldous", "severine", "edric"])
+	assert_eq(_content.hero_ids, ["brannoc", "maren", "vell", "garrow", "tamsin", "aldous", "severine", "edric", "ilse"])
 	var roles: Array = _content.hero_ids.map(func(hero_id: String) -> int: return (_content.heroes[hero_id] as HeroDef).role)
-	assert_eq(roles, [HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT, HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT])
+	assert_eq(roles, [HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT, HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT, HeroDef.Role.DAMAGE])
 	var stats: Array = _content.hero_ids.map(func(hero_id: String) -> Array: return _kit(hero_id).stats.values)
-	assert_eq(stats, [[630, 14, 0, 50, 0, 0, 2, 1], [270, 22, 0, 8, 8, 10, 2, 4], [300, 6, 20, 10, 0, 0, 2, 3], [550, 26, 0, 40, 0, 0, 2, 1], [280, 16, 0, 10, 15, 10, 3, 1], [290, 10, 16, 10, 0, 0, 2, 3], [330, 20, 12, 12, 0, 0, 2, 1], [320, 10, 16, 16, 0, 0, 2, 3]], "HP, ATK, MGK, DEF, CRIT, ATSP, speed, range (Garrow's and Tamsin's tuned into the base band, build-tuning.md)")
+	assert_eq(stats, [[630, 14, 0, 50, 0, 0, 2, 1], [270, 22, 0, 8, 8, 10, 2, 4], [300, 6, 20, 10, 0, 0, 2, 3], [550, 26, 0, 40, 0, 0, 2, 1], [280, 16, 0, 10, 15, 10, 3, 1], [290, 10, 16, 10, 0, 0, 2, 3], [330, 20, 12, 12, 0, 0, 2, 1], [320, 10, 16, 16, 0, 0, 2, 3], [260, 6, 22, 8, 5, 0, 2, 3]], "HP, ATK, MGK, DEF, CRIT, ATSP, speed, range (Garrow's and Tamsin's tuned into the base band, build-tuning.md)")
 	var mana: Array = _content.hero_ids.map(func(hero_id: String) -> Array:
 		var bar: ManaDef = _kit(hero_id).mana
 		return [bar.max, bar.start, bar.per_attack, bar.per_10_damage_taken, bar.regen_per_s])
-	assert_eq(mana, [[80, 30, 8, 1, 0], [50, 0, 10, 0, 2], [60, 20, 12, 0, 2], [70, 20, 10, 1, 0], [50, 0, 8, 0, 2], [60, 0, 10, 0, 2], [60, 0, 8, 0, 2], [70, 0, 8, 0, 2]], "cost, start, per attack, per 10 damage taken, regen")
-	assert_eq([_kit("brannoc").traits, _kit("maren").traits, _kit("vell").traits, _kit("garrow").traits, _kit("tamsin").traits, _kit("aldous").traits, _kit("severine").traits, _kit("edric").traits], [["engage"], ["hop_away"], [], [], [], [], [], []])
+	assert_eq(mana, [[80, 30, 8, 1, 0], [50, 0, 10, 0, 2], [60, 20, 12, 0, 2], [70, 20, 10, 1, 0], [50, 0, 8, 0, 2], [60, 0, 10, 0, 2], [60, 0, 8, 0, 2], [70, 0, 8, 0, 2], [60, 0, 0, 0, 0]], "cost, start, per attack, per 10 damage taken, regen")
+	assert_eq([_kit("brannoc").traits, _kit("maren").traits, _kit("vell").traits, _kit("garrow").traits, _kit("tamsin").traits, _kit("aldous").traits, _kit("severine").traits, _kit("edric").traits, _kit("ilse").traits], [["engage"], ["hop_away"], [], [], [], [], [], [], []])
 	assert_eq(_kit("maren").hop_cooldown_ticks, 120)
 	var names: Array = _content.hero_ids.map(func(hero_id: String) -> Array: return [_kit(hero_id).basic_attack.name, _kit(hero_id).signature.name])
-	assert_eq(names, [["Shield Bash", "Hold the Line"], ["Longshot", "Marking Shot"], ["Lantern Glow", "Mend"], ["Chain Fist", "Haul"], ["Knife", "Shadowstep"], ["Toll", "Peal"], ["Rend", "Drain"], ["Seal", "Ward"]])
+	assert_eq(names, [["Shield Bash", "Hold the Line"], ["Longshot", "Marking Shot"], ["Lantern Glow", "Mend"], ["Chain Fist", "Haul"], ["Knife", "Shadowstep"], ["Toll", "Peal"], ["Rend", "Drain"], ["Seal", "Ward"], ["Cinder Flick", "Flare"]])
 
 
 # --- Brannoc ---------------------------------------------------------------------
@@ -357,3 +357,29 @@ func test_the_three_fight_a_whole_fight_using_their_kits() -> void:
 			used.append(entry.source_ability_name)
 	for ability: String in ["Shield Bash", "Hold the Line", "Longshot", "Marking Shot", "Lantern Glow", "Mend", "Hearthlight"]:
 		assert_has(used, ability)
+
+
+# --- Ilse (8f-1) -----------------------------------------------------------------
+
+func test_cinder_flick_sets_burn_and_gives_no_mana() -> void:
+	var fight: CombatSim = _sim([K.at(_kit("ilse"), 3, 2)] as Array[UnitSetup], [K.foe(_dummy("far"), 3, 6)] as Array[UnitSetup])
+	var ilse: UnitState = fight.unit_by_id("ilse")
+	_root_all(fight, fight.heroes)
+	fight.unit_by_id("far").pos = ilse.pos + Vector2i(0, 2500)
+	K.step(fight, 45)
+	var burns: Array = K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "ilse").filter(func(entry: LogEntry) -> bool: return entry.status == "burn") \
+		.map(func(entry: LogEntry) -> int: return entry.amount)
+	assert_eq(burns[0], 2, "Burn of 10% of her 22 MGK")
+	assert_gt(ilse.mana, 0, "Heat: the Burn ticking on its target within 3 hexes")
+	assert_eq(ilse.mana % (3 * Mana.SCALE), 0, "3 mana a tick, none from the attack itself")
+
+
+func test_flare_sets_every_enemy_near_its_target_burning() -> void:
+	var fight: CombatSim = _sim([K.at(_kit("ilse"), 3, 2)] as Array[UnitSetup], [K.foe(_dummy("a"), 3, 4), K.foe(_dummy("b"), 4, 4), K.foe(_dummy("far"), 0, 6)] as Array[UnitSetup])
+	var ilse: UnitState = fight.unit_by_id("ilse")
+	_root_all(fight, fight.heroes)
+	_fill_mana(ilse)
+	K.step(fight, 2)
+	var burned: Array = K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "ilse").filter(func(entry: LogEntry) -> bool: return entry.source_ability == "flare") \
+		.map(func(entry: LogEntry) -> Array: return [entry.target, entry.amount])
+	assert_eq(burned, [["a", 13], ["b", 13]], "Burn of 60% of her MGK on each enemy within 1 hex of her target")

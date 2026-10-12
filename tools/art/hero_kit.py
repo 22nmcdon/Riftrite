@@ -902,6 +902,78 @@ def edric_psalmist(uid):
     return "".join(o)
 
 
+# ------------------------------------------------------------------ Ilse (8f-1)
+ASH, ASH_DK = "#5a5560", "#3a3540"
+CINDER = "#c4421e"
+HAIR_RED = "#a8361c"
+
+
+def ilse_head(hair=HAIR_RED):
+    return "".join([P("M116,150 C110,98 190,98 184,150 L188,206 L172,198 L170,170 L130,170 L128,198 L112,206 Z", hair),
+                    P("M128,142 C126,110 174,110 172,142 L170,174 C162,192 138,192 130,174 Z", SKIN),
+                    P("M120,138 C118,104 182,104 180,138 C168,120 132,120 120,138 Z", hair),
+                    f'<path d="M140,150 l7,1 M154,151 l7,-1" stroke="{INK}" stroke-width="2.6" stroke-linecap="round"/>',
+                    P("M140,178 C146,184 154,184 160,178", "none", 2.2),
+                    rim("M122,136 C124,116 136,106 150,104", color=EMBER, w=2)])
+
+
+def flame(cx, cy, s=1.0, color=EMBER, core=GOLD):
+    return (f'<circle cx="{cx}" cy="{cy}" r="{22 * s:.1f}" fill="{color}" opacity="0.30" filter="url(#bloom)"/>'
+            + P(f"M{cx},{cy - 26 * s:.1f} C{cx + 14 * s:.1f},{cy - 10 * s:.1f} {cx + 12 * s:.1f},{cy + 10 * s:.1f} {cx},{cy + 12 * s:.1f} "
+                f"C{cx - 12 * s:.1f},{cy + 10 * s:.1f} {cx - 14 * s:.1f},{cy - 10 * s:.1f} {cx},{cy - 26 * s:.1f} Z", color, 2)
+            + P(f"M{cx},{cy - 12 * s:.1f} C{cx + 6 * s:.1f},{cy - 4 * s:.1f} {cx + 5 * s:.1f},{cy + 6 * s:.1f} {cx},{cy + 7 * s:.1f} "
+                f"C{cx - 5 * s:.1f},{cy + 6 * s:.1f} {cx - 6 * s:.1f},{cy - 4 * s:.1f} {cx},{cy - 12 * s:.1f} Z", core, 1.2))
+
+
+def ilse_robe(uid, color=ASH, trim=CINDER, hem=494):
+    body = f"M120,192 L180,192 L198,{hem} L102,{hem} Z"
+    return "".join([P(body, color), P(f"M102,{hem - 24} L198,{hem - 24} L198,{hem} L102,{hem} Z", trim, 2),
+                    P("M120,192 L180,192 L174,230 L126,230 Z", ASH_DK, 2), shade(uid, [body], cut=150)])
+
+
+def ilse_base(uid):
+    """A fire-speaker in ash-grey robes hemmed in cinder red, red hair, a small flame cupped in one hand."""
+    o = [shadow(76), ilse_robe(uid),
+         limb((126, 210), (112, 288), 18, 14, ASH_DK), circle(112, 292, 8, SKIN, 2),
+         ilse_head(),
+         limb((176, 208), (216, 258), 18, 14, ASH_DK), circle(218, 262, 8, SKIN, 2),
+         flame(220, 238, 0.9), rim("M180,210 L194,480", color=EMBER, w=2)]
+    return "".join(o)
+
+
+def ilse_furnace(uid):
+    """One fire built hot: a white-hot flame held close in both hands, soot-dark robes, a glowing core."""
+    o = [shadow(78), ilse_robe(uid, color=ASH_DK, trim=GOLD),
+         f'<circle cx="150" cy="268" r="60" fill="{GOLD}" opacity="0.14" filter="url(#bloom)"/>',
+         limb((126, 210), (138, 262), 18, 14, ASH_DK), limb((174, 210), (162, 262), 18, 14, ASH_DK),
+         circle(138, 266, 8, SKIN, 2), circle(162, 266, 8, SKIN, 2),
+         flame(150, 250, 1.3, color=GOLD, core="#fff7e0"),
+         ilse_head(), rim("M180,210 L194,480", color=GOLD, w=2.4)]
+    return "".join(o)
+
+
+def ilse_wildfire(uid):
+    """The ground alight: flames licking up from her hem, one arm sweeping low over a spreading fire."""
+    ground_fire = "".join(flame(x, 486, 0.7) for x in (84, 118, 182, 216))
+    o = [shadow(90), ground_fire, ilse_robe(uid, trim=EMBER),
+         limb((126, 210), (92, 300), 18, 14, ASH_DK), circle(90, 304, 8, SKIN, 2), flame(84, 330, 0.8),
+         ilse_head(),
+         limb((176, 208), (214, 262), 18, 14, ASH_DK), circle(216, 266, 8, SKIN, 2),
+         rim("M180,210 L194,480", color=EMBER, w=2)]
+    return "".join(o)
+
+
+def ilse_ember_choir(uid):
+    """She sings fire into her allies' weapons: arms raised, embers rising around her like notes."""
+    embers = "".join(f'<circle cx="{x}" cy="{y}" r="4" fill="{EMBER}" opacity="0.85" filter="url(#glow)"/>' for x, y in
+                     ((96, 120), (206, 104), (120, 80), (184, 70), (150, 56), (230, 150), (70, 160)))
+    o = [shadow(76), ilse_robe(uid, color="#6a4a4a", trim=EMBER),
+         limb((126, 208), (98, 150), 18, 14, ASH_DK), circle(96, 146, 8, SKIN, 2), flame(96, 126, 0.6),
+         limb((174, 208), (202, 150), 18, 14, ASH_DK), circle(204, 146, 8, SKIN, 2), flame(204, 126, 0.6),
+         ilse_head(), embers, rim("M180,210 L194,480", color=EMBER, w=2)]
+    return "".join(o)
+
+
 HEROES = [
     ("maren", "Maren", [("base", "Base", maren_base), ("deadeye", "Deadeye", maren_deadeye),
                         ("trapper", "Trapper", maren_trapper), ("volley", "Volley", maren_volley)]),
@@ -919,6 +991,8 @@ HEROES = [
                               ("plaguebearer", "Plaguebearer", severine_plaguebearer), ("hemomancer", "Hemomancer", severine_hemomancer)]),
     ("edric", "Edric", [("base", "Base", edric_base), ("aegis", "Aegis", edric_aegis),
                       ("tithe_collector", "Tithe-Collector", edric_tithe_collector), ("psalmist", "Psalmist", edric_psalmist)]),
+    ("ilse", "Ilse", [("base", "Base", ilse_base), ("furnace", "Furnace", ilse_furnace),
+                      ("wildfire", "Wildfire", ilse_wildfire), ("ember_choir", "Ember Choir", ilse_ember_choir)]),
 ]
 
 FILTERS = ('<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4" result="b"/>'

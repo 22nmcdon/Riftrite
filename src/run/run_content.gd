@@ -668,7 +668,9 @@ func _check() -> void:
 	for id: String in relic_ids:
 		var relic: RelicDef = relics[id]
 		_check_icon(relic.icon, "%s (%s)" % [RELICS_FILE, id])
-		_check_mod(relic.mod, hero_kits, "%s (%s)" % [RELICS_FILE, id])
+		if not relic.mod_for_hero.is_empty() and not content.heroes.has(relic.mod_for_hero):
+			errors.append("%s (%s): mod_for names no hero \"%s\"" % [RELICS_FILE, id, relic.mod_for_hero])
+		_check_mod(relic.mod, _kits_for(relic, hero_kits), "%s (%s)" % [RELICS_FILE, id])
 		_check_mod(relic.enemy_mod, enemy_kits, "%s (%s): enemy_mod" % [RELICS_FILE, id])
 		for effect: EffectDef in relic.at_start:
 			if effect.type == EffectDef.Type.APPLY_STATUS and not content.statuses.has(effect.status_id):
@@ -723,6 +725,27 @@ func _check() -> void:
 	for id: String in relic_ids:
 		if relics[id].tier == RelicDef.Tier.BOND and not bond_ids.any(func(bond_id: String) -> bool: return bonds[bond_id].relic == id):
 			errors.append("%s (%s): a bond relic needs its bond" % [RELICS_FILE, id])
+
+
+## The kits a relic's mod can meet: every hero's, or with mod_for a hero
+## (phase 8 part 6, The Firepit), that hero's; for a bond relic, only its
+## bond path's transformed and apex kits, the only ones it's taken with.
+func _kits_for(relic: RelicDef, hero_kits: Array[UnitDef]) -> Array[UnitDef]:
+	if relic.mod_for_hero.is_empty():
+		return hero_kits
+	var kits: Array[UnitDef] = hero_kits.filter(func(kit: UnitDef) -> bool: return kit != null and relic.mod_fits(kit))
+	if relic.tier != RelicDef.Tier.BOND:
+		return kits
+	for bond_id: String in bond_ids:
+		if bonds[bond_id].relic != relic.id:
+			continue
+		for path_id: String in bonds[bond_id].paths:
+			if content.paths.has(path_id) and content.paths[path_id].hero == relic.mod_for_hero:
+				var path: PathDef = content.paths[path_id]
+				var bonded: Array[UnitDef] = [path.transformed_kit]
+				bonded.append_array(path.apex_kits())
+				return bonded
+	return kits
 
 
 ## An icon's glyph must be in the art (docs/plans/rebuild-phase5b-art.md,

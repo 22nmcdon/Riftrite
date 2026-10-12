@@ -502,7 +502,13 @@ static func power_bp(unit: UnitState, effect: EffectDef) -> int:
 ## number still boosted as it's worked out; damage, heals, and Shields carry
 ## their power to where they land).
 static func boosted(unit: UnitState, effect: EffectDef, amount: int) -> int:
-	if effect.type != EffectDef.Type.APPLY_STATUS or unit.aura_bp[AuraDef.Stat.OVER_TIME_BP] == FixedMath.BP_ONE:
+	if effect.type != EffectDef.Type.APPLY_STATUS:
+		return amount
+	if not effect.grows_status.is_empty() and effect.stacks_of.is_empty():
+		# A snowball's statuses (phase 8 part 6, Ring of Fire, Living Flame):
+		# more stacks for each stack of a status on its unit.
+		amount = FixedMath.apply_bp(amount, FixedMath.BP_ONE + effect.grows_stack_bp * Statuses.stacks_on(unit, effect.grows_status))
+	if unit.aura_bp[AuraDef.Stat.OVER_TIME_BP] == FixedMath.BP_ONE:
 		return amount
 	return FixedMath.apply_bp(amount, factor(unit, AuraDef.Stat.OVER_TIME_BP))
 

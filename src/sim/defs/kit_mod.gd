@@ -113,6 +113,15 @@ extends RefCounted
 ##                                        Wide Peal, Far Resonance)
 ##       "count_add": 1                   a lowest_mana_ally's count (Two
 ##                                        Breaths; at most 5)
+## Phase 8 part 6 (Ilse's cards), per "on" entry: within_add also reaches
+## on_status_tick's near_hexes (Fan the Coals) and count_add an
+## allies_near_self's nearest (Shared Blessing); and
+##       "share_add_bp": 200,             a stacks_of's share (Deep Stoke)
+##       "grow_every_add_ms": -500,       a growing zone's step time (Fast
+##       "grow_max_add": 1                Spread) and largest radius (Far
+##                                        Spread)
+##       "heal_cap": {"pct": 30, "vs": {...}}   its heals' cap (EffectDef's
+##                                        "cap": The Vigil Lamp)
 ## Phase 8 part 5 (Severine's cards), per "on" entry:
 ##       "lifesteal_add_bp": 500,         a damage effect's own lifesteal, if it
 ##                                        has any (Deep Bite: Rend's 15% to 20%)
@@ -241,6 +250,14 @@ class AbilityChange:
 	## and a lowest_mana_ally's count (phase 8 part 4, Aldous's cards).
 	var within_add: int = 0
 	var count_add: int = 0
+	## Phase 8 part 6 (Ilse's cards): a stacks_of's share (Deep Stoke), and a
+	## growing zone's step time and largest size (Fast Spread, Far Spread).
+	var share_add_bp: int = 0
+	var grow_every_add_ticks: int = 0
+	var grow_max_add: int = 0
+	## A heal's cap (Lantern Vigil): pct of max HP, and the units it holds on.
+	var heal_cap_bp: int = 0
+	var heal_cap_vs: UnitCondition = null
 
 	## True if it reaches `ability_id` (every ability when it names none).
 	func reaches(id: String) -> bool:
@@ -252,6 +269,7 @@ class AbilityChange:
 			or strength_add_bp != 0 or follows or ricochet_add != 0 or reflect_bp != 0 or snags \
 			or per_enemy_add_bp != 0 or overheal_max_hp_add != 0 or at_stacks_add != 0 or per_taken_add_bp != 0 or holder != null or carries \
 			or ignores_def or prefer != null and not ability_id.is_empty() or per_stack_add_bp != 0 or within_add != 0 or count_add != 0 \
+			or share_add_bp != 0 or grow_every_add_ticks != 0 or grow_max_add != 0 or heal_cap_bp != 0 \
 			or lifesteal_add_bp != 0 or plus_max_hp_add_bp != 0 or follows_holder or raise_grow_add_bp != 0 or cooldown_bp != FixedMath.BP_ONE
 
 	func touches(effect: EffectDef) -> bool:
@@ -491,6 +509,16 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 	change.reach_add = reader.opt_int("reach_add", 0, -3, 9)
 	change.within_add = reader.opt_int("within_add", 0, -3, 3) * HexGrid.HEX
 	change.count_add = reader.opt_int("count_add", 0, 0, 4)
+	change.share_add_bp = reader.opt_int("share_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
+	change.grow_every_add_ticks = reader.opt_ticks("grow_every_add_ms", 0, -10000)
+	change.grow_max_add = reader.opt_int("grow_max_add", 0, -3, 3)
+	if reader.has("heal_cap"):
+		var cap: DataReader = reader.req_object("heal_cap")
+		if cap != null:
+			change.heal_cap_bp = cap.req_int("pct", 1, 99) * 100
+			if cap.has("vs"):
+				change.heal_cap_vs = UnitCondition.read(cap.req_object("vs"))
+			cap.finish()
 	if reader.has("grip_fast_vs"):
 		change.grip_fast_vs = UnitCondition.read(reader.req_object("grip_fast_vs"))
 	if (change.reach_add != 0 or change.grip_fast_vs != null) and change.slot != SLOT_SIGNATURE and change.ability_id.is_empty():
@@ -912,6 +940,22 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 				copy.near_range = maxi(effect.near_range + change.within_add, HexGrid.HEX)
 			if change.count_add != 0 and effect.target == EffectDef.Target.LOWEST_MANA_ALLY:
 				copy.count = mini(effect.count + change.count_add, 5)
+			# Phase 8 part 6 (Ilse's cards): on_status_tick's reach (Fan the
+			# Coals), allies_near_self's nearest (Shared Blessing), a stacks_of
+			# share (Deep Stoke), and a growing zone (Fast and Far Spread).
+			if change.within_add != 0 and effect.trigger == EffectDef.Trigger.ON_STATUS_TICK and effect.near_trigger_range > 0:
+				copy.near_trigger_range = maxi(effect.near_trigger_range + change.within_add, HexGrid.HEX)
+			if change.count_add != 0 and effect.nearest > 0:
+				copy.nearest = mini(effect.nearest + change.count_add, 5)
+			if change.share_add_bp != 0 and effect.stacks_share_bp > 0:
+				copy.stacks_share_bp = clampi(effect.stacks_share_bp + change.share_add_bp, 1, FixedMath.BP_ONE)
+			if change.grow_every_add_ticks != 0 and effect.grow_ticks > 0:
+				copy.grow_ticks = maxi(effect.grow_ticks + change.grow_every_add_ticks, 1)
+			if change.grow_max_add != 0 and effect.grow_ticks > 0:
+				copy.grow_max = maxi(effect.grow_max + change.grow_max_add, effect.shape.size + 1)
+			if change.heal_cap_bp != 0 and effect.type == EffectDef.Type.HEAL:
+				copy.heal_cap_bp = change.heal_cap_bp
+				copy.heal_cap_vs = change.heal_cap_vs
 			# Step 7b's knobs.
 			if change.every_add != 0 and effect.every > 1:
 				copy.every = maxi(effect.every + change.every_add, 1)
@@ -988,6 +1032,10 @@ static func _any_effect(effects: Array[EffectDef], change: AbilityChange) -> boo
 	for effect: EffectDef in effects:
 		if change.touches(effect) and (change.every_add != 0 and effect.every > 1 or change.times_add != 0 and _runs_times(effect)
 				or change.within_add != 0 and effect.near_range > 0 or change.count_add != 0 and effect.target == EffectDef.Target.LOWEST_MANA_ALLY
+				or change.within_add != 0 and effect.trigger == EffectDef.Trigger.ON_STATUS_TICK and effect.near_trigger_range > 0
+				or change.count_add != 0 and effect.nearest > 0 or change.share_add_bp != 0 and effect.stacks_share_bp > 0
+				or (change.grow_every_add_ticks != 0 or change.grow_max_add != 0) and effect.grow_ticks > 0
+				or change.heal_cap_bp != 0 and effect.type == EffectDef.Type.HEAL
 				or change.max_standing_add != 0 and effect.max_standing > 0
 				or change.overheal_add_bp != 0 and effect.overheal_shield_bp > 0
 				or change.width_add != 0 and effect.type == EffectDef.Type.WALL

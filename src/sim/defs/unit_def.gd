@@ -248,6 +248,8 @@ func status_ids() -> Array[String]:
 		if effect.type == EffectDef.Type.APPLY_STATUS or effect.type == EffectDef.Type.EXTEND_STATUS:
 			found.append(effect.status_id)
 		found.append_array(effect.statuses)
+		if not effect.overheal_status.is_empty():
+			found.append(effect.overheal_status)
 	return found
 
 
@@ -265,7 +267,7 @@ func condition_status_ids() -> Array[String]:
 				if condition != null:
 					found.append_array(condition.statuses)
 	for effect: EffectDef in all_effects():
-		for condition: UnitCondition in [effect.vs, effect.only]:
+		for condition: UnitCondition in [effect.vs, effect.only, effect.heal_cap_vs]:
 			if condition != null:
 				found.append_array(condition.statuses)
 		if not effect.stacks_of.is_empty():
@@ -274,6 +276,8 @@ func condition_status_ids() -> Array[String]:
 			found.append(effect.spends)
 		if not effect.per_stack_status.is_empty():
 			found.append(effect.per_stack_status)
+		if not effect.radius_per_stack.is_empty():
+			found.append(effect.radius_per_stack)
 		found.append_array(effect.cleanse_statuses)
 	return found
 

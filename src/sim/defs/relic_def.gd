@@ -19,7 +19,9 @@ extends RefCounted
 ##   "rules": {...SideRules...}   rules of the fight the heroes' side plays by
 ##                                (phase 5c step 5c)
 ##   "mod_for": "ranged"          its mod is only for heroes of range 2 or
-##                                more (their path's kit; Snaring Shot)
+##                                more (their path's kit; Snaring Shot); or
+##                                a hero's id, only for that hero (phase 8
+##                                part 6, The Vigil Lamp: Vell's heals)
 ## Run rules (RunFlow and RunContent read them):
 ##   "slots_add": 1               loadout slots for each hero
 ##   "always_scout": true         every fight is Scouted
@@ -102,6 +104,8 @@ var doubles_commons: bool = false
 var rules: SideRules = null
 ## Its mod only for ranged heroes (phase 5c step 5c).
 var mod_for_ranged: bool = false
+## Its mod only for this hero ("": any; phase 8 part 6).
+var mod_for_hero: String = ""
 
 
 static func read(reader: DataReader) -> RelicDef:
@@ -163,7 +167,9 @@ static func read(reader: DataReader) -> RelicDef:
 			if not def.rules.any():
 				reader.error("rules: name at least one")
 	if reader.has("mod_for"):
-		def.mod_for_ranged = reader.req_choice("mod_for", ["ranged"]) == "ranged"
+		var mod_for: String = reader.req_string("mod_for")
+		def.mod_for_ranged = mod_for == "ranged"
+		def.mod_for_hero = "" if def.mod_for_ranged else mod_for
 		if def.mod == null:
 			reader.error("mod_for says who its mod is for, so it needs a mod")
 	if not def.does_something():
@@ -181,6 +187,8 @@ func does_something() -> bool:
 
 ## Whether its mod is for a hero whose path's kit is `kit` (null: any).
 func mod_fits(kit: UnitDef) -> bool:
+	if not mod_for_hero.is_empty():
+		return kit == null or kit.id == mod_for_hero
 	return not mod_for_ranged or kit == null or kit.stats.get_stat(UnitStats.Stat.RANGE) >= 2
 
 

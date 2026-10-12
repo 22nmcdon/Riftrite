@@ -161,12 +161,14 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 				DeedDef.Counts.APPLIED:
 					var target: UnitState = sim.unit_by_id(entry.target)
 					var status: StatusDef = sim.content.statuses.get(entry.status, null)
+					# The stacks it added, with by_stacks (phase 8 part 6, Ilse).
+					var each: int = maxi(entry.amount, 0) if deed.by_stacks else 1
 					if not deed.statuses.is_empty():
 						if target != null and deed.statuses.has(entry.status):
-							counter.amounts[d] += 1
+							counter.amounts[d] += each
 					elif target != null and target.side != unit.side and status != null and status.kind != StatusDef.Kind.ENGAGED \
 							and (deed.keywords.is_empty() or deed.keywords.has(status.keyword)):
-						counter.amounts[d] += 1
+						counter.amounts[d] += each
 				DeedDef.Counts.EXTRA_HITS:
 					if counter.fired_at.get(entry.source_ability, "") != entry.target:
 						counter.amounts[d] += 1

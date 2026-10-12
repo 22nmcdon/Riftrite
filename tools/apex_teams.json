@@ -42,6 +42,12 @@
     {"name": "Debt Collectors", "kind": "good", "carry": "maren", "apexes": {"brannoc": "hearthkeeper", "maren": "eagle_eye", "edric": "collector_of_debts"}},
     {"name": "Choir of Wards", "kind": "good", "carry": "vell", "apexes": {"aldous": "grand_chorus", "vell": "sanctifier", "edric": "choir_of_wards"}},
     {"name": "Evensong", "kind": "good", "carry": "maren", "apexes": {"aldous": "grand_chorus", "maren": "stormline", "edric": "evensong"}},
+    {"name": "Blast Furnace", "kind": "good", "carry": "ilse", "apexes": {"brannoc": "unbroken_gate", "aldous": "long_wind", "ilse": "blast_furnace"}},
+    {"name": "Crucible", "kind": "good", "carry": "ilse", "apexes": {"brannoc": "unbroken_gate", "vell": "dawnbringer", "ilse": "crucible"}},
+    {"name": "Living Flame", "kind": "good", "carry": "ilse", "apexes": {"garrow": "undertow", "maren": "hailstorm", "ilse": "living_flame"}},
+    {"name": "Ring of Fire", "kind": "good", "carry": "ilse", "apexes": {"brannoc": "martyrs_pyre", "vell": "dawnbringer", "ilse": "ring_of_fire"}},
+    {"name": "Cinder Saint", "kind": "good", "carry": "maren", "apexes": {"maren": "hailstorm", "tamsin": "phantom", "ilse": "cinder_saint"}},
+    {"name": "Kindred Flame", "kind": "good", "carry": "maren", "apexes": {"brannoc": "hearthkeeper", "maren": "eagle_eye", "ilse": "kindred_flame"}},
     {"name": "No Edge", "kind": "poor", "apexes": {"brannoc": "hearthkeeper", "maren": "warden_of_thorns", "vell": "loomwarden"}},
     {"name": "Crossed Purposes", "kind": "poor", "apexes": {"brannoc": "martyrs_pyre", "maren": "huntmaster", "vell": "thornweave"}}
   ]
