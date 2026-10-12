@@ -117,6 +117,9 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 				and kind != LogEntry.Kind.MAX_HP_UP and kind != LogEntry.Kind.HP_SPENT and kind != LogEntry.Kind.LIFESTEAL and kind != LogEntry.Kind.SHARDS:
 			continue
 		var unit: UnitState = sim.unit_by_id(entry.source_unit)
+		if unit != null and unit.owner != null:
+			# A companion's work is its owner's (phase 8 part 6, Kestra).
+			unit = unit.owner
 		if unit == null or unit.deeds == null:
 			continue
 		var counter: Counter = unit.deeds
@@ -242,6 +245,8 @@ static func _count_on_target(sim: CombatSim, entry: LogEntry) -> void:
 			if fallen == null or fallen.last_attacker.is_empty():
 				return
 			var killer: UnitState = sim.unit_by_id(fallen.last_attacker)
+			if killer != null and killer.owner != null:
+				killer = killer.owner
 			if killer != null and killer.deeds != null and killer.deeds.needs_kills and killer.side != fallen.side:
 				# A kills deed may count only kills by some abilities (phase 8
 				# part 2: Eagle Eye's, Inquisitor's).

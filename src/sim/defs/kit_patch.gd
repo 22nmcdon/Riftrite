@@ -23,6 +23,8 @@ extends RefCounted
 ##                                                 (phase 8 part 5, Hemomancer)
 ##    "shard_cap": 8,                              UnitDef's shard_cap
 ##                                                 (phase 8 part 6, Transmuter)
+##    "companions": [...CompanionDefs...],         replaces its companions
+##                                                 (phase 8 part 6, Kestra)
 ##    "prefer": {"label": "Scent", "vs": {...UnitCondition...},
 ##               "within_hexes": 4}}               the enemies it picks first
 ##                                                 (UnitDef.prefer; phase 8
@@ -60,6 +62,9 @@ var prefer_reach: int = 0
 var start_hp_bp: int = 0
 ## Its shard cap (-1: unchanged; phase 8 part 6).
 var shard_cap: int = -1
+## Its companions in place of the kit's (phase 8 part 6, Kestra).
+var companions: Array[CompanionDef] = []
+var replaces_companions: bool = false
 
 
 static func make() -> KitPatch:
@@ -111,6 +116,10 @@ static func read(reader: DataReader) -> KitPatch:
 		patch.start_hp_bp = reader.req_int("start_hp_pct", 1, 100) * 100
 	if reader.has("shard_cap"):
 		patch.shard_cap = reader.req_int("shard_cap", 0, 1000)
+	if reader.has("companions"):
+		patch.replaces_companions = true
+		for companion_reader: DataReader in reader.opt_object_array("companions"):
+			patch.companions.append(CompanionDef.read(companion_reader))
 	if reader.has("prefer"):
 		var prefer_reader: DataReader = reader.req_object("prefer")
 		if prefer_reader != null:
@@ -130,7 +139,7 @@ func changes_anything() -> bool:
 			return true
 	return basic_attack != null or signature != null or mana != null or removes_mana or not passives.is_empty() or not remove_passives.is_empty() \
 		or not add_traits.is_empty() or plant_ticks >= 0 or placed_snares >= 0 or hop_cooldown_ticks >= 0 or prefer != null or start_hp_bp > 0 \
-		or shard_cap >= 0
+		or shard_cap >= 0 or replaces_companions
 
 
 ## `base` with the patch applied (a new UnitDef; `base` is untouched), and
@@ -189,6 +198,8 @@ func apply(base: UnitDef, problems: Array[String] = []) -> UnitDef:
 		built.start_hp_bp = start_hp_bp
 	if shard_cap >= 0:
 		built.shard_cap = shard_cap
+	if replaces_companions:
+		built.companions = companions.duplicate()
 	if built.placed_snares > 0 and Snares.placed_effect(built) == null:
 		problems.append("it places snares, so its kit needs a snare effect")
 	for part: PartDef in passives:

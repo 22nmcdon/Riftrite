@@ -375,9 +375,13 @@ func faces_left(unit: UnitState, was_left: bool) -> bool:
 
 
 ## A unit's figure (FigureArt): a hero's form (base, or a transformed
-## hero's path), or its enemy's.
+## hero's path), a companion's (drawn as a hero's base form), or its
+## enemy's (a thrall raised on the heroes' side too).
 static func figure_for(kit: UnitDef, team: EffectSource.Team, form: String = "base") -> String:
-	return FigureArt.key_for(kit.id, team == EffectSource.Team.HEROES, form)
+	var key: String = FigureArt.key_for(kit.id, team == EffectSource.Team.HEROES, form)
+	if team == EffectSource.Team.HEROES and not FigureArt.has_figure(key):
+		return FigureArt.key_for(kit.id, false)
+	return key
 
 
 ## A token's short label: a hero's name (its id), or the last word of an

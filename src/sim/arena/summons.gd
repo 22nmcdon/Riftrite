@@ -26,6 +26,12 @@ extends RefCounted
 ##     mana, and never counts as a back-liner. Logged as SUMMON.
 ##   - No side has more than max_units_per_side standing units: extra
 ##     summons are dropped, and so are those with no room. Both are logged.
+##   - A summon may name one of its caster's companions (phase 8 part 6,
+##     Nest's vipers; CompanionDef): its kit takes its HP and ATK from the
+##     caster (companion), and it counts as the caster's companion. With
+##     "lasts_ms", a summon goes quietly once its time is up, like a thrall.
+##   - Companions that start a fight (CombatSim.place_companions) and one
+##     that returns stand beside their hero (beside).
 ##   - A raise (phase 8 part 5, Gravecaller; raise) stands a fallen enemy
 ##     up on the raiser's side as its own kit, a thrall, at the free spot
 ##     nearest where it fell: a share of its max HP for a while, then it
@@ -38,7 +44,8 @@ extends RefCounted
 ## `unit` summons as `effect` says (`aimed_at`: its ability's target, for
 ## "near": "target").
 static func summon(sim: CombatSim, unit: UnitState, source: EffectSource, effect: EffectDef, aimed_at: UnitState) -> void:
-	var kit: UnitDef = sim.setup.summon_kit(effect.summon_kit)
+	var as_companion: CompanionDef = unit.def.companion(effect.summon_kit)
+	var kit: UnitDef = companion(as_companion, unit) if as_companion != null else sim.setup.summon_kit(effect.summon_kit)
 	var edges: Array[Vector2i] = []
 	if effect.placement == EffectDef.Placement.EDGES:
 		var near: Vector2i = aimed_at.pos if effect.near_target and aimed_at != null else unit.pos
@@ -60,6 +67,12 @@ static func summon(sim: CombatSim, unit: UnitState, source: EffectSource, effect
 			_log_dropped(sim, source, kit, "no room")
 			continue
 		summoned.pos = spot
+		if as_companion != null:
+			summoned.owner = unit
+			summoned.companion = as_companion
+		if effect.lasts_ticks > 0:
+			summoned.expires_at = sim.tick + effect.lasts_ticks
+			sim.thralls = true
 		sim.add_unit(summoned)
 		joined = true
 		var entry: LogEntry = sim.new_entry(LogEntry.Kind.SUMMON, source)
@@ -77,17 +90,36 @@ static func _spot(sim: CombatSim, unit: UnitState, summoned: UnitState, effect: 
 				if sim.fits(summoned, spot):
 					return spot
 		EffectDef.Placement.ADJACENT:
-			var forward: int = unit.forward()
-			for dir: Vector2i in Displacement.LEAP_DIRECTIONS:
-				var spot: Vector2i = ArenaPlane.along(unit.pos, dir * forward, unit.radius + summoned.radius)
-				if sim.fits(summoned, spot):
-					return spot
+			return touching(sim, unit, summoned)
 		EffectDef.Placement.HEXES:
 			var hex: Vector2i = effect.summon_hexes[i]
 			return Displacement.free_spot_near(sim, summoned, sim.grid.center(hex.x, hex.y), null, 0)
 		EffectDef.Placement.WATER:
 			return Displacement.free_spot_near(sim, summoned, _water_near_enemy(sim, unit), null, 0)
 	return Vector2i(-1, -1)
+
+
+## A spot touching `unit` where `other` fits, from the 12 points leaps use,
+## the one straight ahead of it first and then clockwise (x -1: none).
+static func touching(sim: CombatSim, unit: UnitState, other: UnitState) -> Vector2i:
+	var forward: int = unit.forward()
+	for dir: Vector2i in Displacement.LEAP_DIRECTIONS:
+		var spot: Vector2i = ArenaPlane.along(unit.pos, dir * forward, unit.radius + other.radius)
+		if sim.fits(other, spot):
+			return spot
+	return Vector2i(-1, -1)
+
+
+## touching, or else the free spot nearest `unit` (x -1: none).
+static func beside(sim: CombatSim, unit: UnitState, other: UnitState) -> Vector2i:
+	var spot: Vector2i = touching(sim, unit, other)
+	return spot if spot.x >= 0 else Displacement.free_spot_near(sim, other, unit.pos, null, 0)
+
+
+## `as_companion`'s kit beside `owner` (phase 8 part 6): its HP a share of
+## her max HP as the fight began (wounds counted), its ATK of her kit's.
+static func companion(as_companion: CompanionDef, owner: UnitState) -> UnitDef:
+	return as_companion.kit_for(owner.base_max_hp, owner.def.stats.get_stat(UnitStats.Stat.ATK))
 
 
 ## The center of the water hex nearest any standing enemy of `unit` (ties to

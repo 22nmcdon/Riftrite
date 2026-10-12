@@ -117,12 +117,15 @@ static func read(reader: DataReader) -> PartDef:
 			def.ability.id = def.id
 			def.ability.name = def.name
 			def.ability.shot = 0
+			# Done by its unit's companion (phase 8 part 6, Sic 'Em's habit),
+			# which may leap.
+			def.ability.by_companion = reader.opt_string_choice("by", "", ["companion"]) == "companion"
 			var effect_readers: Array[DataReader] = reader.opt_object_array("effects")
 			if effect_readers.is_empty():
 				reader.error("an ability passive needs effects")
 			for effect_reader: DataReader in effect_readers:
 				var effect: EffectDef = EffectDef.read(effect_reader)
-				if EffectDef.MOVES_SELF.has(effect.type) and not effect.leap_home and not effect.leap_step and not effect.leap_behind:
+				if EffectDef.MOVES_SELF.has(effect.type) and not effect.leap_home and not effect.leap_step and not effect.leap_behind and not def.ability.by_companion:
 					effect_reader.error("a passive can't leap or charge (but for a leap back to the start, behind its target, or a step)")
 				elif not EffectDef.PASSIVE_TRIGGERS.has(effect.trigger):
 					effect_reader.error("a passive's effects need a passive trigger (%s)" % ", ".join(EffectDef.PASSIVE_TRIGGERS.map(func(trigger: EffectDef.Trigger) -> String: return EffectDef.TRIGGER_NAMES[trigger])))

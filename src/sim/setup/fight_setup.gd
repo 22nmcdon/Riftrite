@@ -257,8 +257,12 @@ func _check_kit(kit: UnitDef, where: String, content: ContentDb, grid: HexGrid, 
 	for effect: EffectDef in kit.all_effects():
 		if effect.type != EffectDef.Type.SUMMON:
 			continue
-		if summon_kit(effect.summon_kit) == null:
+		# Or one of its own companions (phase 8 part 6, Nest).
+		if summon_kit(effect.summon_kit) == null and kit.companion(effect.summon_kit) == null:
 			errors.append("%s summons \"%s\", which isn't among the fight's summon kits" % [where, effect.summon_kit])
 		for hex: Vector2i in effect.summon_hexes:
 			if not grid.has(hex.x, hex.y):
 				errors.append("%s summons onto (%d, %d), off the board" % [where, hex.x, hex.y])
+	for companion: CompanionDef in kit.companions:
+		if companion.kit != null:
+			_check_kit(companion.kit, "%s's companion %s" % [where, companion.kit.id], content, grid, errors)

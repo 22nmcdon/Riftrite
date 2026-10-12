@@ -14,7 +14,8 @@ extends Control
 ##   PUSH, LEAP, CHARGE, HOP   the moved unit slides from where it was to
 ##                    where it went (the sim moves it at once; moved_position)
 ##   DEATH            a fading ghost where it fell
-##   SUMMON           a pulse where the summon appears
+##   SUMMON           a pulse where the summon appears ("Returns" for a
+##                    companion back beside its hero)
 ##   PHASE            the phase's name over the unit
 ##   TACTIC           what a hero's tactic did, over it ("Holds its ground")
 ##   AURA             a faint ring round the holder while the aura holds
@@ -306,9 +307,14 @@ func _add(entry: LogEntry, sim: CombatSim) -> void:
 				miss.text = "Miss"
 				miss.color = UiStyle.TEXT
 		LogEntry.Kind.SUMMON:
-			if entry.note.is_empty():
+			if entry.note.is_empty() or entry.note == "returns":
 				var pulse: Fx = _new(Kind.PULSE, entry.tick, entry.tick + PULSE_TICKS, Vector2(entry.to_pos), entry.target)
 				pulse.color = _side_color(sim, entry.target)
+			if entry.note == "returns":
+				# A companion back beside its hero (phase 8 part 6, Kestra).
+				var returns: Fx = _new(Kind.POPUP, entry.tick, entry.tick + POPUP_TICKS, Vector2(entry.to_pos), entry.target)
+				returns.text = "Returns"
+				returns.color = UiStyle.GOLD_300
 		LogEntry.Kind.PHASE:
 			var target: UnitState = sim.unit_by_id(entry.target)
 			if target != null:

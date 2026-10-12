@@ -197,6 +197,8 @@ extends RefCounted
 ##     {"type": "summon", "kit": "rift_pup", "placement": "hexes", "hexes": [[0, 6], [7, 6]]}
 ##   phase 8 part 3: "placement": "water" (Summons), and "max_standing": no
 ##   more once that many of its kit stand on its side (dropped, "enough stand")
+##   phase 8 part 6: "kit" may name one of its caster's companions (Nest),
+##   and "lasts_ms": each goes quietly that long after it joins
 ##     edges:    count (default 1) free spots along the safe ground's edge,
 ##               nearest first to the unit ("near": "self", the default) or
 ##               to its target ("near": "target")
@@ -206,6 +208,9 @@ extends RefCounted
 ## a share of the unit's stats, in basis points of each stat:
 ##   "scaling": {"atk": 6000, "atsp": 2000}  ->  base + 60% ATK + 20% ATSP
 ## (Not allowed with amount_bp_of_damage, which scales from the hit instead.)
+## With "scaling_of": "owner" (phase 8 part 6, Kestra's companions), the
+## stats are its owner's as it lands (Grit's Burn from 20% of her ATK); a unit
+## with no owner uses its own.
 ## An optional "window" limits the effect to part of the fight:
 ##   "window": {"from_ms": 0, "until_ms": 8000}   (either end optional)
 ##
@@ -411,7 +416,7 @@ enum Trigger {
 	ON_INTERVAL, ON_FALL, ON_HOP, ON_WOULD_FALL,
 	ON_HOLDER_HIT, ON_SHIELD_BROKEN, ON_ALLY_ABILITY, ON_STATUS_ENDED, ON_LIFESTEAL, ON_KNOCKBACK, ON_GUARD,
 	ON_BELOW_HP, ON_CHARGED, ON_ENEMY_FELL, ON_ARRIVE, ON_ALLY_SHIELD_BROKEN, ON_WALL_BLOCK, ON_RISE, ON_BREAKS_SHIELD, ON_PULL, ON_SHIELD_SPENT,
-	ON_MANA_GAINED, ON_ALLY_HIT, ON_ENEMY_NEAR, ON_HP_SPENT, ON_MAX_HP_UP, ON_STATUS_TICK, ON_ZONE_ENTER,
+	ON_MANA_GAINED, ON_ALLY_HIT, ON_ENEMY_NEAR, ON_HP_SPENT, ON_MAX_HP_UP, ON_STATUS_TICK, ON_ZONE_ENTER, ON_SUMMON_FELL,
 }
 enum Type { DAMAGE, HEAL, SHIELD, APPLY_STATUS, CLEANSE, MANA_DRAIN, KNOCKBACK, PULL, LEAP, CHARGE, AREA, START_COLLAPSE, SUMMON, GAIN_MANA, SNARE, WALL, EXTEND_STATUS, HOP, FLOOD, SEVER, SPEND_SHIELD, RELEASE_STORED,
 	SPEND_ENGORGED, RAISE, GAIN_MAX_HP, SHARDS }
@@ -454,7 +459,7 @@ const TRIGGER_NAMES: Array[String] = [
 	"on_interval", "on_fall", "on_hop", "on_would_fall",
 	"on_holder_hit", "on_shield_broken", "on_ally_ability", "on_status_ended", "on_lifesteal", "on_knockback", "on_guard",
 	"on_below_hp", "on_charged", "on_enemy_fell", "on_arrive", "on_ally_shield_broken", "on_wall_block", "on_rise", "on_breaks_shield", "on_pull", "on_shield_spent",
-	"on_mana_gained", "on_ally_hit", "on_enemy_near", "on_hp_spent", "on_max_hp_up", "on_status_tick", "on_zone_enter",
+	"on_mana_gained", "on_ally_hit", "on_enemy_near", "on_hp_spent", "on_max_hp_up", "on_status_tick", "on_zone_enter", "on_summon_fell",
 ]
 ## The unit's events (see the top).
 const EVENT_TRIGGERS: Array[Trigger] = [
@@ -462,19 +467,19 @@ const EVENT_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS, Trigger.ON_KILL, Trigger.ON_HOP,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
 	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_SHIELD_SPENT,
-	Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP, Trigger.ON_STATUS_TICK, Trigger.ON_ZONE_ENTER,
+	Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP, Trigger.ON_STATUS_TICK, Trigger.ON_ZONE_ENTER, Trigger.ON_SUMMON_FELL,
 ]
 ## Event triggers that name a unit (hit_target) and those that name a hit
 ## (amount_bp_of_damage).
 const EVENT_UNIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED, Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD, Trigger.ON_CHARGED,
-	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_ALLY_HIT, Trigger.ON_STATUS_TICK, Trigger.ON_ZONE_ENTER]
+	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_ALLY_HIT, Trigger.ON_STATUS_TICK, Trigger.ON_ZONE_ENTER, Trigger.ON_SUMMON_FELL]
 const EVENT_HIT_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_HIT_TAKEN, Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_HEAL,
 	Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_GUARD, Trigger.ON_BREAKS_SHIELD, Trigger.ON_SHIELD_SPENT, Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP, Trigger.ON_STATUS_TICK]
 ## Event triggers that can take "vs": those that name a unit, and on_kill.
 const EVENT_VS_TRIGGERS: Array[Trigger] = [Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED, Trigger.ON_HIT_TAKEN, Trigger.ON_HEAL, Trigger.ON_STATUS,
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_KILL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
-	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_ALLY_HIT, Trigger.ON_STATUS_TICK, Trigger.ON_ZONE_ENTER]
+	Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_ALLY_HIT, Trigger.ON_STATUS_TICK, Trigger.ON_ZONE_ENTER, Trigger.ON_SUMMON_FELL]
 const ABILITY_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_FIRE, Trigger.ON_HIT, Trigger.ON_CRIT,
 	Trigger.ON_ABILITY, Trigger.ON_BASIC_ATTACK, Trigger.ON_HOLDER_CRIT, Trigger.ON_SHIELDED,
@@ -483,7 +488,7 @@ const ABILITY_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
 	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_SHIELD_SPENT,
 	Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT,
-	Trigger.ON_ENEMY_NEAR, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP, Trigger.ON_STATUS_TICK, Trigger.ON_ZONE_ENTER,
+	Trigger.ON_ENEMY_NEAR, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP, Trigger.ON_STATUS_TICK, Trigger.ON_ZONE_ENTER, Trigger.ON_SUMMON_FELL,
 ]
 ## What a passive's effects may run on (PartDef).
 const PASSIVE_TRIGGERS: Array[Trigger] = [
@@ -493,7 +498,7 @@ const PASSIVE_TRIGGERS: Array[Trigger] = [
 	Trigger.ON_HOLDER_HIT, Trigger.ON_SHIELD_BROKEN, Trigger.ON_ALLY_ABILITY, Trigger.ON_STATUS_ENDED, Trigger.ON_LIFESTEAL, Trigger.ON_KNOCKBACK, Trigger.ON_GUARD,
 	Trigger.ON_BELOW_HP, Trigger.ON_CHARGED, Trigger.ON_ENEMY_FELL, Trigger.ON_ARRIVE, Trigger.ON_FIGHT_START, Trigger.ON_ALLY_SHIELD_BROKEN, Trigger.ON_WALL_BLOCK, Trigger.ON_RISE, Trigger.ON_BREAKS_SHIELD, Trigger.ON_PULL, Trigger.ON_SHIELD_SPENT,
 	Trigger.ON_MANA_GAINED, Trigger.ON_ALLY_HIT,
-	Trigger.ON_ENEMY_NEAR, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP, Trigger.ON_STATUS_TICK, Trigger.ON_ZONE_ENTER,
+	Trigger.ON_ENEMY_NEAR, Trigger.ON_HP_SPENT, Trigger.ON_MAX_HP_UP, Trigger.ON_STATUS_TICK, Trigger.ON_ZONE_ENTER, Trigger.ON_SUMMON_FELL,
 ]
 ## The passive triggers that aren't events (Passives.run_timed, on_fall,
 ## would_fall).
@@ -691,6 +696,8 @@ var hits: Hits = Hits.ENEMIES
 var area_effects: Array[EffectDef] = []
 ## summon: the kit, how many, where, and (edges) whether nearest the target.
 var summon_kit: String = ""
+## A summon's lifetime (phase 8 part 6; 0: the whole fight).
+var lasts_ticks: int = 0
 var count: int = 1
 var placement: Placement = Placement.EDGES
 var summon_hexes: Array[Vector2i] = []
@@ -698,6 +705,8 @@ var near_target: bool = false
 ## Basis points of each stat added to the base value, indexed by UnitStats.Stat
 ## (the first SCALING_STATS only).
 var scaling: Array[int] = [0, 0, 0, 0, 0, 0]
+## Its scaling reads its unit's owner's stats (phase 8 part 6).
+var scaling_of_owner: bool = false
 ## Fight ticks the effect is active in: [from, until). until = -1: no end.
 var window_from_ticks: int = 0
 var window_until_ticks: int = -1
@@ -1137,6 +1146,7 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 			if def.amount_bp_of_damage > 0 or def.amount_bp_of_max_hp > 0 or def.amount_bp_of_shield > 0 or def.amount_bp_of_stored > 0 or def.amount_bp_of_engorged > 0:
 				reader.error("\"scaling\" can't be combined with %s" % ("amount_bp_of_damage" if def.amount_bp_of_damage > 0 else "amount_bp_of_max_hp" if def.amount_bp_of_max_hp > 0 else "amount_bp_of_shield"))
 			_read_scaling(def, reader.req_object("scaling"))
+		def.scaling_of_owner = reader.opt_string_choice("scaling_of", "", ["owner"]) == "owner"
 	if def.type == Type.APPLY_STATUS and def.stacks == 0 and not reader.has("scaling"):
 		reader.error("an apply_status with 0 stacks needs a \"scaling\"")
 
@@ -1195,7 +1205,9 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 	if MOVES_SELF.has(def.type) and not def.leap_home and not def.leap_step and not type_name.is_empty() and not target_name.is_empty():
 		# A leap behind may be a passive's too (phase 8 part 4, Shadowstep's
 		# habit: behind the unit's target).
-		if def.target != Target.TARGET or (def.trigger != Trigger.ON_FIRE and not def.leap_behind):
+		# A companion's leap may be a passive's (phase 8 part 6, Sic 'Em's
+		# habit: PartDef checks the passive is done by a companion).
+		if def.target != Target.TARGET or (def.trigger != Trigger.ON_FIRE and not def.leap_behind and def.trigger != Trigger.ON_BASIC_ATTACK):
 			reader.error("%s moves the unit itself to its target, so it needs \"target\": \"target\" and the on_fire trigger" % type_name)
 
 	# "hit_target" and damage-based shields need a hit to refer to.
@@ -1306,6 +1318,8 @@ static func _read_summon(def: EffectDef, reader: DataReader) -> void:
 	# Phase 8 part 3 (the Drowned Bellringer): no more once that many of its
 	# kit stand on the summoner's side.
 	def.max_standing = reader.opt_int("max_standing", 0, 0)
+	# Phase 8 part 6 (Nest): each goes quietly that long after it joins.
+	def.lasts_ticks = reader.opt_ticks("lasts_ms", 0)
 
 
 ## Checks the trigger is allowed here and reads its extra fields.

@@ -55,6 +55,15 @@ static func basic_attack(sim: CombatSim, unit: UnitState) -> void:
 ## and it returns false (the failure is logged unless `log_failure` is off).
 static func fire(sim: CombatSim, unit: UnitState, state: AbilityState, target: UnitState, reach: int, log_failure: bool = true, note: String = "") -> bool:
 	var ability: AbilityDef = state.def
+	if ability.by_companion and unit.owner == null:
+		# Its companion does it, from where it stands (phase 8 part 6, Sic 'Em).
+		var pet: UnitState = sim.companion_of(unit)
+		if pet == null:
+			return false
+		var done: bool = fire(sim, pet, pet.command(state), target, pet.stats.get_stat(UnitStats.Stat.RANGE), log_failure, note)
+		if done:
+			state.fires += 1
+		return done
 	var source: EffectSource = state.source
 	var leap: EffectDef = ability.leap_effect() if target != null else null
 	if leap != null and not leap.leap_home and not leap.leap_step and Displacement.leap_spot(sim, unit, target, leap.hexes, leap.leap_behind).x < 0:
@@ -387,8 +396,16 @@ static func _on_hit(sim: CombatSim, unit: UnitState, ability: AbilityDef, source
 
 ## An ability passive's effect, set off by an event (Passives.on_event):
 ## `other` is the unit the event names, `damage` the hit it's about. It
-## lands at once, and never sets off on_hit effects.
-static func run_event(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: EffectSource, effect: EffectDef, other: UnitState, damage: int) -> void:
+## lands at once, and never sets off on_hit effects. `aim` stands for the
+## unit's target (a companion doing its hero's passive aims at hers).
+static func run_event(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: EffectSource, effect: EffectDef, other: UnitState, damage: int, aim: UnitState = null) -> void:
+	if ability.by_companion and unit.owner == null:
+		# Its companion does it (phase 8 part 6, Sic 'Em's habit).
+		var pet: UnitState = sim.companion_of(unit)
+		if pet == null:
+			return
+		run_event(sim, pet, ability, EffectSource.make(pet.id, ability.id, ability.name), effect, other, damage, unit.target)
+		return
 	if effect.type == EffectDef.Type.AREA:
 		if effect.at_groups > 0:
 			for middle: UnitState in Targeting.largest_groups(sim, unit, effect.at_groups):
@@ -436,7 +453,7 @@ static func run_event(sim: CombatSim, unit: UnitState, ability: AbilityDef, sour
 			var crit_round: bool = effect.type == EffectDef.Type.DAMAGE and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability, pair[0]))
 			land(sim, unit, ability, source, effect, pair[0], amount, crit_round, (pair[1] as UnitState).pos, power_of(effect, unit))
 		return
-	for victim: UnitState in _targets(sim, unit, effect.target, unit.target, hit, effect):
+	for victim: UnitState in _targets(sim, unit, effect.target, aim if aim != null else unit.target, hit, effect):
 		# A plain hit never crits (the tuning phase: Thorned Bandage, Splinter
 		# Shot), and rolls nothing.
 		var crit: bool = effect.type == EffectDef.Type.DAMAGE and not effect.plain and sim.rng.roll_bp(crit_chance_bp(sim, unit, ability, victim))
@@ -491,9 +508,11 @@ static func amount_of(effect: EffectDef, unit: UnitState, damage: int = 0, sim: 
 		amount = FixedMath.apply_bp(unit.engorged, effect.amount_bp_of_engorged)
 	else:
 		amount = effect.base_value()
+		# A companion's may read its owner's stats (phase 8 part 6).
+		var by: UnitState = unit.owner if effect.scaling_of_owner and unit.owner != null else unit
 		for stat: int in effect.scaling.size():
 			if effect.scaling[stat] != 0:
-				amount += FixedMath.apply_bp(unit.stats.values[stat], effect.scaling[stat])
+				amount += FixedMath.apply_bp(by.stats.values[stat], effect.scaling[stat])
 	# Its unit's own max HP, and the HP its fire just spent (phase 8 part 5).
 	if effect.plus_bp_of_max_hp > 0:
 		amount += FixedMath.apply_bp(unit.max_hp, effect.plus_bp_of_max_hp)

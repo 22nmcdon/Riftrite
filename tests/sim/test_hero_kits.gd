@@ -1,7 +1,7 @@
 extends GutTest
 ## The base kits in data/heroes.json do what their text says
 ## (docs/plans/rebuild-phase2-heroes-enemies.md, section 3; Garrow from
-## rebuild-phase8-heroes.md, 8d-1; Tamsin, 8d-3; Aldous, 8d-4). Each test fights
+## rebuild-phase8-heroes.md, 8d-1; Tamsin, 8d-3; Aldous, 8d-4; the last five, rebuild-phase8-last-heroes.md). Each test fights
 ## the real kits against still dummies; heroes that shouldn't walk are Rooted
 ## for the whole test.
 
@@ -48,19 +48,19 @@ func _rows(fight: CombatSim, kind: LogEntry.Kind, unit_id: String, ability: Stri
 
 
 func test_the_kits_read_as_designed() -> void:
-	assert_eq(_content.hero_ids, ["brannoc", "maren", "vell", "garrow", "tamsin", "aldous", "severine", "edric", "ilse", "ottilie"])
+	assert_eq(_content.hero_ids, ["brannoc", "maren", "vell", "garrow", "tamsin", "aldous", "severine", "edric", "ilse", "ottilie", "kestra"])
 	var roles: Array = _content.hero_ids.map(func(hero_id: String) -> int: return (_content.heroes[hero_id] as HeroDef).role)
-	assert_eq(roles, [HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT, HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT, HeroDef.Role.DAMAGE, HeroDef.Role.DAMAGE])
+	assert_eq(roles, [HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT, HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT, HeroDef.Role.DAMAGE, HeroDef.Role.DAMAGE, HeroDef.Role.DAMAGE])
 	var stats: Array = _content.hero_ids.map(func(hero_id: String) -> Array: return _kit(hero_id).stats.values)
-	assert_eq(stats, [[630, 14, 0, 50, 0, 0, 2, 1], [270, 22, 0, 8, 8, 10, 2, 4], [300, 6, 20, 10, 0, 0, 2, 3], [550, 26, 0, 40, 0, 0, 2, 1], [280, 16, 0, 10, 15, 10, 3, 1], [290, 10, 16, 10, 0, 0, 2, 3], [330, 20, 12, 12, 0, 0, 2, 1], [320, 10, 16, 16, 0, 0, 2, 3], [260, 6, 22, 8, 5, 0, 2, 3], [280, 8, 16, 10, 0, 0, 2, 3]], "HP, ATK, MGK, DEF, CRIT, ATSP, speed, range (Garrow's, Tamsin's, and Ottilie's tuned into the base band, build-tuning.md)")
+	assert_eq(stats, [[630, 14, 0, 50, 0, 0, 2, 1], [270, 22, 0, 8, 8, 10, 2, 4], [300, 6, 20, 10, 0, 0, 2, 3], [550, 26, 0, 40, 0, 0, 2, 1], [280, 16, 0, 10, 15, 10, 3, 1], [290, 10, 16, 10, 0, 0, 2, 3], [330, 20, 12, 12, 0, 0, 2, 1], [320, 10, 16, 16, 0, 0, 2, 3], [260, 6, 22, 8, 5, 0, 2, 3], [280, 8, 16, 10, 0, 0, 2, 3], [250, 15, 0, 12, 8, 0, 2, 2]], "HP, ATK, MGK, DEF, CRIT, ATSP, speed, range (Garrow's, Tamsin's, Ottilie's, and Kestra's tuned into the base band, build-tuning.md)")
 	var mana: Array = _content.hero_ids.map(func(hero_id: String) -> Array:
 		var bar: ManaDef = _kit(hero_id).mana
 		return [bar.max, bar.start, bar.per_attack, bar.per_10_damage_taken, bar.regen_per_s])
-	assert_eq(mana, [[80, 30, 8, 1, 0], [50, 0, 10, 0, 2], [60, 20, 12, 0, 2], [70, 20, 10, 1, 0], [50, 0, 8, 0, 2], [60, 0, 10, 0, 2], [60, 0, 8, 0, 2], [70, 0, 8, 0, 2], [60, 0, 0, 0, 0], [60, 0, 10, 0, 2]], "cost, start, per attack, per 10 damage taken, regen")
-	assert_eq([_kit("brannoc").traits, _kit("maren").traits, _kit("vell").traits, _kit("garrow").traits, _kit("tamsin").traits, _kit("aldous").traits, _kit("severine").traits, _kit("edric").traits, _kit("ilse").traits, _kit("ottilie").traits], [["engage"], ["hop_away"], [], [], [], [], [], [], [], []])
+	assert_eq(mana, [[80, 30, 8, 1, 0], [50, 0, 10, 0, 2], [60, 20, 12, 0, 2], [70, 20, 10, 1, 0], [50, 0, 8, 0, 2], [60, 0, 10, 0, 2], [60, 0, 8, 0, 2], [70, 0, 8, 0, 2], [60, 0, 0, 0, 0], [60, 0, 10, 0, 2], [50, 0, 8, 0, 2]], "cost, start, per attack, per 10 damage taken, regen")
+	assert_eq([_kit("brannoc").traits, _kit("maren").traits, _kit("vell").traits, _kit("garrow").traits, _kit("tamsin").traits, _kit("aldous").traits, _kit("severine").traits, _kit("edric").traits, _kit("ilse").traits, _kit("ottilie").traits, _kit("kestra").traits], [["engage"], ["hop_away"], [], [], [], [], [], [], [], [], []])
 	assert_eq(_kit("maren").hop_cooldown_ticks, 120)
 	var names: Array = _content.hero_ids.map(func(hero_id: String) -> Array: return [_kit(hero_id).basic_attack.name, _kit(hero_id).signature.name])
-	assert_eq(names, [["Shield Bash", "Hold the Line"], ["Longshot", "Marking Shot"], ["Lantern Glow", "Mend"], ["Chain Fist", "Haul"], ["Knife", "Shadowstep"], ["Toll", "Peal"], ["Rend", "Drain"], ["Seal", "Ward"], ["Cinder Flick", "Flare"], ["Toss", "Volatile Flask"]])
+	assert_eq(names, [["Shield Bash", "Hold the Line"], ["Longshot", "Marking Shot"], ["Lantern Glow", "Mend"], ["Chain Fist", "Haul"], ["Knife", "Shadowstep"], ["Toll", "Peal"], ["Rend", "Drain"], ["Seal", "Ward"], ["Cinder Flick", "Flare"], ["Toss", "Volatile Flask"], ["Spear Jab", "Sic 'Em"]])
 
 
 # --- Brannoc ---------------------------------------------------------------------
@@ -411,3 +411,34 @@ func test_volatile_flask_burns_and_poisons_every_enemy_near_its_target() -> void
 	var applied: Array = K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "ottilie").filter(func(entry: LogEntry) -> bool: return entry.source_ability == "volatile_flask") \
 		.map(func(entry: LogEntry) -> Array: return [entry.target, entry.status, entry.amount])
 	assert_eq(applied, [["a", "burn", 3], ["a", "poison", 3], ["b", "burn", 3], ["b", "poison", 3]], "Burn and Poison of 20% of her MGK")
+
+
+# --- Kestra (8f-3) ---------------------------------------------------------------
+
+func test_grit_stands_beside_her_and_bond_holds_while_he_does() -> void:
+	var fight: CombatSim = _sim([K.at(_kit("kestra"), 3, 2)] as Array[UnitSetup], [K.foe(_dummy("far"), 3, 6)] as Array[UnitSetup])
+	var kestra: UnitState = fight.unit_by_id("kestra")
+	var grit: UnitState = fight.unit_by_id("grit")
+	_root_all(fight, [kestra, grit] as Array[UnitState])
+	K.step(fight, 1)
+	assert_eq([grit.owner, grit.max_hp, grit.stats.get_stat(UnitStats.Stat.ATK)], [kestra, 100, 9], "40% of her HP, 60% of her ATK")
+	assert_eq([kestra.stats.get_stat(UnitStats.Stat.ATSP), grit.stats.get_stat(UnitStats.Stat.ATSP)], [10, 10], "Bond: both faster")
+	grit.hp = 0
+	K.step(fight, 2)
+	assert_eq(kestra.stats.get_stat(UnitStats.Stat.ATSP), 0, "not while he's down")
+	K.step(fight, 10 * 20)
+	assert_true(grit.alive, "he returns 10s after falling")
+	assert_eq(kestra.stats.get_stat(UnitStats.Stat.ATSP), 10)
+
+
+func test_sic_em_sends_grit_to_her_target() -> void:
+	var fight: CombatSim = _sim([K.at(_kit("kestra"), 3, 1)] as Array[UnitSetup], [K.foe(_dummy("near"), 3, 3), K.foe(_dummy("far"), 0, 6)] as Array[UnitSetup])
+	var kestra: UnitState = fight.unit_by_id("kestra")
+	var grit: UnitState = fight.unit_by_id("grit")
+	_root_all(fight, [kestra] as Array[UnitState])
+	_fill_mana(kestra)
+	K.step(fight, 1)
+	assert_eq(_rows(fight, LogEntry.Kind.LEAP, "grit", "sic_em"), [["near", 0]], "Grit leaps to the enemy nearest her")
+	assert_eq(_rows(fight, LogEntry.Kind.DAMAGE, "grit", "sic_em"), [["near", 18]], "and bites for 200% of his 9 ATK")
+	assert_eq(grit.target, fight.unit_by_id("near"), "and fights it")
+	assert_eq(kestra.mana, 0)

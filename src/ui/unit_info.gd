@@ -31,6 +31,7 @@ const EVENT_WORDS: Dictionary[int, String] = {
 	EffectDef.Trigger.ON_GUARD: "hit taken for an ally",
 	EffectDef.Trigger.ON_CHARGED: "charge or leap that hits it",
 	EffectDef.Trigger.ON_ENEMY_FELL: "enemy falling",
+	EffectDef.Trigger.ON_SUMMON_FELL: "allied summon falling",
 	EffectDef.Trigger.ON_ARRIVE: "arrival",
 	EffectDef.Trigger.ON_ALLY_SHIELD_BROKEN: "ally's Shield breaking",
 	EffectDef.Trigger.ON_WALL_BLOCK: "attack its wall blocks",

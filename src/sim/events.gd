@@ -221,6 +221,17 @@ static func enemy_fell(sim: CombatSim, fallen: UnitState) -> void:
 			_raise(sim, unit, EffectDef.Trigger.ON_ENEMY_FELL, fallen.last_hit_chain, fallen)
 
 
+## A summon fell (phase 8 part 6, Pack Fury): every standing unit of its side
+## hears it (on_summon_fell, naming the fallen), in the fight's order. A
+## thrall's going and a summon whose time ran out aren't falls.
+static func summon_fell(sim: CombatSim, fallen: UnitState) -> void:
+	if fallen.last_hit_chain >= sim.tuning.chain_limit:
+		return
+	for unit: UnitState in (sim.heroes if fallen.side == EffectSource.Team.HEROES else sim.enemies):
+		if unit.alive and not unit.listeners.is_empty():
+			_raise(sim, unit, EffectDef.Trigger.ON_SUMMON_FELL, fallen.last_hit_chain, fallen)
+
+
 ## `chain`: the depth of the entry that raised it; `other`: the unit the
 ## event names; `damage`: the hit (or Shield) it's about; `status`: the
 ## status applied (on_status).

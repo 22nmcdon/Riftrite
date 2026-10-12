@@ -122,6 +122,26 @@ var summoned: bool = false
 var raised: bool = false
 var raised_by: String = ""
 var expires_at: int = -1
+## Its time ran out (a summon's lasts_ms, phase 8 part 6): it goes quietly,
+## like a thrall.
+var time_up: bool = false
+## A companion (phase 8 part 6, Kestra; CompanionDef): the hero it fights
+## for and the companion it is (null: none). What it does counts for its
+## owner's deeds and tallies; it keeps no side up, is nobody's fallen ally,
+## and one that returns comes back beside its owner (CombatSim).
+var owner: UnitState = null
+var companion: CompanionDef = null
+## Its owner's abilities it does ("by": "companion"), each its own state
+## sourced to it, made as first needed (AbilityDef -> AbilityState; never
+## iterated).
+var commanded: Dictionary = {}
+
+
+## The state for doing `state`'s ability as its owner's companion.
+func command(state: AbilityState) -> AbilityState:
+	if not commanded.has(state.def):
+		commanded[state.def] = AbilityState.make(state.def, id)
+	return commanded[state.def]
 ## How many units it has raised this fight (Gravecaller's growth).
 var raises: int = 0
 ## It has on_mana_gained passives (phase 8 part 4, Chorister; Mana.gain).

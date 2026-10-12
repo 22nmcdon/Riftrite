@@ -128,7 +128,15 @@ extends RefCounted
 ##       "per_stack_amount_add": 1        a damage's amount_per_stack (Heavy
 ##                                        Flask)
 ## and at the top: "shard_cap_add": 2 (its kit's shard_cap, if it has one:
-## Deep Purse). Effects a card adds to an ability go before a gain_mana aimed
+## Deep Purse).
+## Phase 8 part 6 (Kestra's cards), at the top:
+##    "companions": [{"kit": "grit",      its companions of that kit (or, with
+##       "hp_add_pct": 15,                no "kit", all of them): their share
+##       "atk_add_pct": 15,               of her max HP and ATK, how long
+##       "return_add_ms": -4000,          before one that fell returns (only
+##       "mod": {...a KitMod...}}]        one that returns), and a mod on its
+##                                        own kit (Big Grit, Quick Return,
+##                                        Hot Fangs) Effects a card adds to an ability go before a gain_mana aimed
 ## at the lowest-mana ally, so they reach the ally the mana does (Fizzing
 ## Vial, Bracing Vial).
 ## Phase 8 part 5 (Severine's cards), per "on" entry:
@@ -176,6 +184,36 @@ const POWER_TYPES: Array[EffectDef.Type] = [EffectDef.Type.DAMAGE, EffectDef.Typ
 ## DEF for growing cards, phase 5c step 4).
 const ADD_STATS: Array[UnitStats.Stat] = [UnitStats.Stat.HP, UnitStats.Stat.ATK, UnitStats.Stat.MGK, UnitStats.Stat.DEF,
 	UnitStats.Stat.ATSP, UnitStats.Stat.CRIT, UnitStats.Stat.SPEED, UnitStats.Stat.RANGE]
+
+
+## One entry of "companions" (phase 8 part 6): changes to its companions of
+## one kit ("": all of them).
+class CompanionChange:
+	var kit_id: String = ""
+	var hp_add_bp: int = 0
+	var atk_add_bp: int = 0
+	var return_add_ticks: int = 0
+	var mod: KitMod = null
+
+	func matches(companion: CompanionDef) -> bool:
+		return companion.kit != null and (kit_id.is_empty() or companion.kit.id == kit_id)
+
+	## What it does to `companion` (a copy; the companion is untouched).
+	func apply(companion: CompanionDef, problems: Array[String]) -> CompanionDef:
+		var changed: CompanionDef = companion.copy()
+		changed.hp_bp = maxi(changed.hp_bp + hp_add_bp, 100)
+		changed.atk_bp = maxi(changed.atk_bp + atk_add_bp, 100)
+		if changed.return_ticks > 0:
+			changed.return_ticks = maxi(changed.return_ticks + return_add_ticks, FixedMath.TICKS_PER_SECOND)
+		if mod != null:
+			var built: UnitDef = mod.apply(changed.kit, problems)
+			changed.kit = built
+		return changed
+
+	func touches(companion: CompanionDef) -> bool:
+		if not matches(companion):
+			return false
+		return hp_add_bp != 0 or atk_add_bp != 0 or (return_add_ticks != 0 and companion.return_ticks > 0) or (mod != null and mod.affects(companion.kit))
 
 
 ## One entry of "on": changes to the abilities in one slot.
@@ -341,6 +379,8 @@ var engage_reach_add: int = 0
 ## Phase 8 part 6 (Deep Purse): its kit's shard_cap, raised (only a kit
 ## with one).
 var shard_cap_add: int = 0
+## Phase 8 part 6 (Kestra): changes to its companions (CompanionChange).
+var companion_changes: Array[CompanionChange] = []
 var mana_taken_bp: int = FixedMath.BP_ONE
 ## Phase 5c step 7d: the player places its signature's first area before
 ## the fight (First Lantern).
@@ -397,6 +437,19 @@ static func read(reader: DataReader) -> KitMod:
 			mana_reader.finish()
 	mod.plant_add_ticks = _signed_ticks(reader, "plant_add_ms")
 	mod.shard_cap_add = reader.opt_int("shard_cap_add", 0, -100, 100)
+	for companion_reader: DataReader in reader.opt_object_array("companions"):
+		var change := CompanionChange.new()
+		change.kit_id = companion_reader.opt_string("kit", "")
+		change.hp_add_bp = companion_reader.opt_int("hp_add_pct", 0, -100, 100) * 100
+		change.atk_add_bp = companion_reader.opt_int("atk_add_pct", 0, -100, 100) * 100
+		change.return_add_ticks = _signed_ticks(companion_reader, "return_add_ms")
+		if companion_reader.has("mod"):
+			var inner: DataReader = companion_reader.req_object("mod")
+			change.mod = read(inner) if inner != null else null
+		if change.hp_add_bp == 0 and change.atk_add_bp == 0 and change.return_add_ticks == 0 and change.mod == null:
+			companion_reader.error("a companion change needs hp_add_pct, atk_add_pct, return_add_ms, or a mod")
+		companion_reader.finish()
+		mod.companion_changes.append(change)
 	mod.places_lantern = reader.opt_bool("places_lantern", false)
 	mod.drops_signature = reader.opt_bool("drops_signature", false)
 	if reader.has("drops_passives"):
@@ -616,6 +669,15 @@ func times(steps: int) -> KitMod:
 		scaled.passives.append(copy)
 	# A shard cap's step adds up (phase 8 part 6, Midas Touch).
 	scaled.shard_cap_add = steps * shard_cap_add
+	# So do a companion's shares and its own kit's (phase 8 part 6, Old Leash).
+	for change: CompanionChange in companion_changes:
+		var each := CompanionChange.new()
+		each.kit_id = change.kit_id
+		each.hp_add_bp = steps * change.hp_add_bp
+		each.atk_add_bp = steps * change.atk_add_bp
+		each.return_add_ticks = steps * change.return_add_ticks
+		each.mod = change.mod.times(steps) if change.mod != null else null
+		scaled.companion_changes.append(each)
 	for change: AbilityChange in changes:
 		var copy := AbilityChange.new()
 		copy.slot = change.slot
@@ -633,7 +695,8 @@ func changes_anything() -> bool:
 			return true
 	return not passives.is_empty() or not changes.is_empty() or _changes_mana() or not also_fires.is_empty() or echo_ticks > 0 \
 		or prefer != null or hop_within_add != 0 or hop_cooldown_add_ticks != 0 or not gambit_label.is_empty() or plant_add_ticks != 0 or shard_cap_add != 0 \
-		or break_free_add_ticks != 0 or engage_reach_add != 0 or places_lantern or drops_signature or not drops_passives.is_empty()
+		or break_free_add_ticks != 0 or engage_reach_add != 0 or places_lantern or drops_signature or not drops_passives.is_empty() \
+		or not companion_changes.is_empty()
 
 
 func _changes_mana() -> bool:
@@ -664,6 +727,9 @@ func affects_besides_passives(kit: UnitDef) -> bool:
 		return true
 	if shard_cap_add != 0 and kit.shard_cap > 0:
 		return true
+	for change: CompanionChange in companion_changes:
+		if kit.companions.any(func(companion: CompanionDef) -> bool: return change.touches(companion)):
+			return true
 	if places_lantern and lantern_area(kit) != null or drops_signature and kit.signature != null:
 		return true
 	if drops_passives.any(func(part_id: String) -> bool: return _passive_index(kit, PASSIVE_PREFIX + part_id) >= 0):
@@ -743,6 +809,10 @@ func apply(kit: UnitDef, problems: Array[String] = []) -> UnitDef:
 		built.plant_ticks = maxi(built.plant_ticks + plant_add_ticks, 0)
 	if built.shard_cap > 0:
 		built.shard_cap = maxi(built.shard_cap + shard_cap_add, 1)
+	for change: CompanionChange in companion_changes:
+		for i: int in built.companions.size():
+			if change.matches(built.companions[i]):
+				built.companions[i] = change.apply(built.companions[i], problems)
 	if built.has_trait("engage"):
 		built.break_free_add_ticks += break_free_add_ticks
 		built.engage_reach_add += engage_reach_add

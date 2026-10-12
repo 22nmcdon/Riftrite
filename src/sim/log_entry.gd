@@ -366,6 +366,9 @@ func to_text() -> String:
 		Kind.TACTIC:
 			return line + "%s: %s" % [source_text(), note]
 		Kind.SUMMON:
+			if note == "returns":
+				# A companion back beside its hero (phase 8 part 6).
+				return line + "%s: %s returns at %s" % [source_text(), target, _point(to_pos)]
 			if not note.is_empty():
 				return line + "%s can't summon %s (%s)" % [source_text(), target, note]
 			return line + "%s summons %s at %s" % [source_text(), target, _point(to_pos)]

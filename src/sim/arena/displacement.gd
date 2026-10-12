@@ -225,8 +225,9 @@ static func leap(sim: CombatSim, unit: UnitState, target: UnitState, effect: Eff
 	unit.landing_until = sim.tick + land_ticks
 	if not sim.snares.is_empty():
 		Snares.snag(sim, unit, from, spot)
-	# Behind its target (phase 8 part 4, Shadowstep): it's the unit's target now.
-	if effect.leap_behind and target.side != unit.side and unit.target != target:
+	# Behind its target (phase 8 part 4, Shadowstep), or a companion sent to
+	# its hero's (phase 8 part 6, Sic 'Em): it's the unit's target now.
+	if (effect.leap_behind or unit.companion != null) and target.side != unit.side and unit.target != target:
 		Targeting.set_target(sim, unit, target, source.ability_name)
 	return true
 

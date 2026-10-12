@@ -51,6 +51,8 @@ extends RefCounted
 ##   {"fired_over_full": true}               its signature last fired with
 ##                                           mana past a full bar (phase 8
 ##                                           part 4, Wellspring)
+##   {"summon": true}                        a summon (phase 8 part 6, Howl:
+##                                          companions, Nest's vipers, thralls)
 ##   {"others": true}                        any unit but the condition's
 ##                                           holder (phase 8 part 6, Elixir:
 ##                                           mana for every other ally)
@@ -94,6 +96,8 @@ var fired_over_full: bool = false
 var raised: bool = false
 ## Not the holder itself (phase 8 part 6).
 var others: bool = false
+## A summon (phase 8 part 6).
+var summon: bool = false
 
 
 static func read(reader: DataReader) -> UnitCondition:
@@ -136,8 +140,9 @@ static func read(reader: DataReader) -> UnitCondition:
 	def.fired_over_full = reader.opt_bool("fired_over_full", false)
 	def.raised = reader.opt_bool("raised", false)
 	def.others = reader.opt_bool("others", false)
+	def.summon = reader.opt_bool("summon", false)
 	if def.is_empty():
-		reader.error("a condition needs at least one of keywords, statuses, all_statuses, ranks, below_hp_pct, above_hp_pct, flying, archetypes, front_most, on_water, same_island, shield_above_pct, engorged_pct, targets_holder, target, ranged, shielded, target_beyond_hexes, fired_over_full, raised, others, or kits")
+		reader.error("a condition needs at least one of keywords, statuses, all_statuses, ranks, below_hp_pct, above_hp_pct, flying, archetypes, front_most, on_water, same_island, shield_above_pct, engorged_pct, targets_holder, target, ranged, shielded, target_beyond_hexes, fired_over_full, raised, others, summon, or kits")
 	reader.finish()
 	return def
 
@@ -145,7 +150,7 @@ static func read(reader: DataReader) -> UnitCondition:
 func is_empty() -> bool:
 	return keywords.is_empty() and statuses.is_empty() and all_statuses.is_empty() and ranks.is_empty() and below_hp_bp == 0 and above_hp_bp == 0 and flying == Flying.ANY and archetypes.is_empty() and not front_most and on_water == Flying.ANY and kits.is_empty() and not same_island and shield_above_bp == 0 and engorged_bp == 0 \
 		and targets_holder == Flying.ANY and target == null and ranged == Flying.ANY and target_beyond == 0 and not fired_over_full and not raised \
-		and shielded == Flying.ANY and not others
+		and shielded == Flying.ANY and not others and not summon
 
 
 ## True if `unit` meets every field given. `holder`: whose condition it is
@@ -153,6 +158,8 @@ func is_empty() -> bool:
 ## one, same_island never holds.
 func holds(unit: UnitState, holder: UnitState = null) -> bool:
 	if others and unit == holder:
+		return false
+	if summon and not unit.summoned:
 		return false
 	if same_island and (holder == null or unit.island < 0 or unit.island != holder.island):
 		return false
@@ -270,4 +277,6 @@ func describe() -> String:
 		parts.append("a raised thrall")
 	if others:
 		parts.append("another")
+	if summon:
+		parts.append("a summon")
 	return ", ".join(parts)

@@ -159,6 +159,10 @@ func _assert_replays(setup: FightSetup, fewest_moves: int = 11) -> void:
 				LogEntry.Kind.SUMMON:
 					if entry.note.is_empty():
 						pos[entry.target] = entry.to_pos
+					elif entry.note == "returns":
+						# A companion back beside its hero (phase 8 part 6).
+						pos[entry.target] = entry.to_pos
+						legs.erase(entry.target)
 				# Second Dawn (phase 5c step 5c): a hero stands again.
 				LogEntry.Kind.RISE:
 					pos[entry.target] = entry.to_pos
@@ -272,7 +276,7 @@ func _assert_sources(result: FightResult, setup: FightSetup) -> void:
 		if needs.has("ability"):
 			assert_false(entry.source_ability.is_empty() or entry.source_ability_name.is_empty(), "names its ability: " + line)
 		if needs.has("target"):
-			var dropped: bool = entry.kind == LogEntry.Kind.SUMMON and not entry.note.is_empty()
+			var dropped: bool = entry.kind == LogEntry.Kind.SUMMON and not entry.note.is_empty() and entry.note != "returns"
 			assert_true(dropped or ids.has(entry.target), "names the unit it's about: " + line)
 		if needs.has("status"):
 			assert_false(entry.status.is_empty() or entry.status_name.is_empty(), "names its status: " + line)

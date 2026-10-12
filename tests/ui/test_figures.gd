@@ -30,9 +30,13 @@ func _view(player: FightPlayer, view_size: Vector2 = Vector2(1000, 900)) -> Aren
 func test_every_hero_and_enemy_has_a_figure() -> void:
 	for hero_id: String in _content.hero_ids:
 		assert_true(FigureArt.has_figure(FigureArt.key_for(hero_id, true)), "%s's base form" % hero_id)
+		for companion: CompanionDef in _content.heroes[hero_id].kit.companions:
+			assert_eq(ArenaView.figure_for(companion.kit, EffectSource.Team.HEROES), FigureArt.key_for(companion.kit.id, true), "%s's companion %s" % [hero_id, companion.kit.id])
+			assert_true(FigureArt.has_figure(FigureArt.key_for(companion.kit.id, true)), "%s's companion %s" % [hero_id, companion.kit.id])
 	for enemy_id: String in _content.enemy_ids:
 		assert_true(FigureArt.has_figure(FigureArt.key_for(enemy_id, false)), enemy_id)
 	assert_false(FigureArt.has_figure("enemies/nobody"))
+	assert_eq(ArenaView.figure_for(_content.enemies["rift_pup"].kit, EffectSource.Team.HEROES), "enemies/rift_pup", "a thrall raised on the heroes' side stands as its enemy")
 	assert_eq(FigureArt.bounds("enemies/nobody"), Rect2(Vector2.ZERO, FigureArt.CANVAS), "no art: the whole canvas")
 
 

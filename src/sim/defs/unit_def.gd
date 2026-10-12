@@ -120,6 +120,9 @@ var placed_lantern: bool = false
 var start_hp_bp: int = FixedMath.BP_ONE
 ## The shards its effects may pay in a fight (phase 8 part 6; 0: no cap).
 var shard_cap: int = 0
+## Its companions (phase 8 part 6, Kestra; CompanionDef): kits of their own
+## that fight beside it, or that its summons may name.
+var companions: Array[CompanionDef] = []
 
 
 ## Reads a kit. A hero's or enemy's kit (HeroDef, EnemyDef) takes its id and
@@ -154,6 +157,8 @@ static func read(reader: DataReader, kit_id: String = "", kit_name: String = "")
 	def.placed_snares = reader.opt_int("placed_snares", 0, 0, 4)
 	def.start_hp_bp = reader.opt_int("start_hp_pct", 100, 1, 100) * 100
 	def.shard_cap = reader.opt_int("shard_cap", 0, 0, 1000)
+	for companion_reader: DataReader in reader.opt_object_array("companions"):
+		def.companions.append(CompanionDef.read(companion_reader))
 	for problem: String in def.problems():
 		reader.error(problem)
 	var kit: UnitDef = def
@@ -186,6 +191,9 @@ func problems() -> Array[String]:
 	for i: int in ids.size():
 		if ids.find(ids[i]) < i:
 			found.append("its abilities and passives need different ids (\"%s\" twice)" % ids[i])
+	for i: int in companions.size():
+		if companions[i].kit != null and companion(companions[i].kit.id) != companions[i]:
+			found.append("two of its companions are called \"%s\"" % companions[i].kit.id)
 	return found
 
 
@@ -238,6 +246,7 @@ func copy() -> UnitDef:
 	other.placed_lantern = placed_lantern
 	other.start_hp_bp = start_hp_bp
 	other.shard_cap = shard_cap
+	other.companions = companions.duplicate()
 	return other
 
 
@@ -360,6 +369,14 @@ func rise_as_ids() -> Array[String]:
 		if part.kind == PartDef.Kind.RISE and not part.rise_as.is_empty():
 			found.append(part.rise_as)
 	return found
+
+
+## Its companion of this kit id, or null (phase 8 part 6).
+func companion(kit_id: String) -> CompanionDef:
+	for each: CompanionDef in companions:
+		if each.kit != null and each.kit.id == kit_id:
+			return each
+	return null
 
 
 func has_trait(trait_name: String) -> bool:

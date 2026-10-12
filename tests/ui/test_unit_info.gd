@@ -16,11 +16,13 @@ func before_all() -> void:
 	_content = ContentDb.load_dir("res://data")
 
 
-## Every content kit, by id.
+## Every content kit, by id (a hero's companions too).
 func _kits() -> Dictionary[String, UnitDef]:
 	var kits: Dictionary[String, UnitDef] = {}
 	for id: String in _content.hero_ids:
 		kits[id] = _content.heroes[id].kit
+		for companion: CompanionDef in _content.heroes[id].kit.companions:
+			kits[companion.kit.id] = companion.kit
 	for id: String in _content.enemy_ids:
 		kits[id] = _content.enemies[id].kit
 	return kits
@@ -47,7 +49,7 @@ func _numbers(kit: UnitDef, who: String = "it") -> Array[String]:
 
 func test_every_ability_and_passive_has_its_sentence() -> void:
 	var kits: Dictionary[String, UnitDef] = _kits()
-	assert_eq(kits.size(), 49)
+	assert_eq(kits.size(), 51)
 	for id: String in kits:
 		for line: UnitInfo.Line in UnitInfo.lines(kits[id], "it", _content):
 			assert_false(line.text.is_empty(), "%s: %s" % [id, line.name])
@@ -65,7 +67,7 @@ func test_a_sentence_names_every_reach() -> void:
 				var named := RegEx.create_from_string("\\b%d hex" % reach)
 				assert_not_null(named.search(ability[2]), "%s's %s names %s (Decision 5): %s" % [id, ability[0], UnitInfo.hexes(reach), ability[2]])
 				checked += 1
-	assert_eq(checked, 56, "every reach in the heroes' and the Act 1, 2, and 3 kits")
+	assert_eq(checked, 58, "every reach in the heroes' and the Act 1, 2, and 3 kits")
 
 
 func test_what_counts_as_a_reach() -> void:

@@ -1056,6 +1056,84 @@ def ottilie_apothecary(uid):
          rim("M180,210 L192,480", color=AQUA, w=2)]
     return "".join(o)
 
+
+# ------------------------------------------------------------------ Kestra (8f-3)
+FUR, FUR_DK = "#8a6a4a", "#5e4630"
+HIDE = "#6f5a3a"
+HAIR_ASH = "#4a3a30"
+
+
+def kestra_head(hair=HAIR_ASH):
+    return "".join([P("M116,150 C110,100 190,100 184,150 L186,196 L172,176 L128,176 L114,196 Z", hair),
+                    P("M128,146 C126,114 174,114 172,146 L170,176 C162,194 138,194 130,176 Z", SKIN),
+                    P("M124,138 C124,110 176,110 176,138 C164,122 136,122 124,138 Z", hair),
+                    f'<path d="M140,152 l7,1 M154,153 l7,-1" stroke="{INK}" stroke-width="2.6" stroke-linecap="round"/>',
+                    P("M156,168 L166,160", "none", 2),
+                    rim("M118,150 C118,124 132,110 150,108", color=GOLD, w=2)])
+
+
+def kestra_legs(fill=HIDE):
+    return "".join([P("M126,330 L148,330 L142,468 L116,468 Z", fill), P("M152,330 L174,330 L186,468 L160,468 Z", fill),
+                    boot(110, 152) + boot(158, 200)])
+
+
+def spear(x0, y0, x1, y1, head=IRON, glow=None):
+    angle = math.degrees(math.atan2(y1 - y0, x1 - x0))
+    length = math.hypot(x1 - x0, y1 - y0)
+    o = [f'<g transform="translate({x0},{y0}) rotate({angle:.1f})">',
+         f'<rect x="0" y="-3.5" width="{length:.0f}" height="7" fill="{WOOD}" stroke="{INK}" stroke-width="2"/>',
+         f'<path d="M{length:.0f},-8 L{length + 34:.0f},0 L{length:.0f},8 Z" fill="{head}" stroke="{INK}" stroke-width="2"/>',
+         f'<rect x="{length - 10:.0f}" y="-5" width="10" height="10" fill="{LEATHER_DK}" stroke="{INK}" stroke-width="1.6"/>']
+    if glow:
+        o.append(f'<circle cx="{length + 14:.0f}" cy="0" r="12" fill="{glow}" opacity="0.35" filter="url(#bloom)"/>')
+    o.append('</g>')
+    return "".join(o)
+
+
+def kestra_base(uid):
+    """A beastwarden in hide and a ragged fur mantle, a long spear held low, a whistle on a cord."""
+    torso = "M118,196 L182,196 L188,338 L112,338 Z"
+    o = [shadow(74), kestra_legs(),
+         spear(84, 330, 236, 196),
+         limb((122, 208), (104, 286), 18, 14, HIDE), circle(104, 290, 8, SKIN, 2),
+         P(torso, LEATHER), P("M124,206 L176,206 L180,330 L120,330 Z", HIDE),
+         P("M112,318 L188,318 L188,338 L112,338 Z", LEATHER_DK, 2),
+         P("M108,196 C118,182 182,182 192,196 L196,236 L184,226 L176,240 L164,226 L150,242 L136,226 L124,240 L116,226 L104,236 Z", FUR),
+         P("M120,190 C134,184 166,184 180,190 L176,200 L124,200 Z", FUR_DK, 2),
+         shade(uid, [torso], cut=150), kestra_head(),
+         P("M150,200 L150,252", "none", 1.6), circle(150, 258, 5, BONE, 1.6),
+         limb((178, 208), (196, 268), 18, 14, HIDE), circle(198, 272, 8, SKIN, 2),
+         rim("M182,212 L186,300", color=GOLD, w=2)]
+    return "".join(o)
+
+
+def _hound(uid, coat, coat_dk, light, collar=LEATHER, k=1.0):
+    """A hound on all fours, facing right, standing on the canvas's feet: its body, crest, and collar."""
+    body = "M80,420 C80,384 120,366 170,370 C212,374 232,392 230,420 C228,446 200,456 160,456 C112,456 82,450 80,420 Z"
+    o = [limb((98, 440), (80, 474), 16, 12, coat_dk), limb((80, 474), (92, 498), 12, 10, coat_dk),
+         limb((122, 446), (118, 498), 16, 12, coat_dk),
+         limb((196, 446), (206, 498), 16, 12, coat_dk), limb((216, 436), (236, 470), 16, 12, coat_dk),
+         limb((236, 470), (232, 498), 12, 10, coat_dk),
+         P("M84,404 C64,392 48,370 44,346 C62,366 76,378 96,386 Z", coat),
+         P(body, coat), shade(uid, [body], cut=150, top=360),
+         P("M100,378 L112,356 L122,374 L136,350 L146,370 L162,348 L170,368 L186,352 L190,374 Z", light, 2, 'filter="url(#glow)" opacity="0.85"'),
+         P("M214,392 C220,360 246,346 268,354 C286,362 290,382 282,398 C272,412 248,414 228,410 Z", coat),
+         P("M232,360 L236,334 L250,356 Z", coat_dk), P("M252,358 L264,334 L268,362 Z", coat_dk),
+         P("M276,392 C290,392 296,400 294,408 C284,412 274,408 270,402 Z", coat_dk, 2),
+         P("M214,384 C222,398 228,408 232,414 L222,420 C216,410 210,398 206,388 Z", collar, 2),
+         circle(222, 414, 4, GOLD, 1.4),
+         glow_dot(266, 376, 3.4, light), f'<circle cx="266" cy="376" r="1.6" fill="#fffbe8"/>',
+         rim("M184,372 C212,378 228,394 230,416", color=light, w=2.2)]
+    body_svg = '<ellipse cx="150" cy="500" rx="94" ry="11" fill="#2a2010" opacity="0.35"/>' + "".join(o)
+    if k != 1.0:
+        return f'<g transform="translate(150,500) scale({k}) translate(-150,-500)">{body_svg}</g>'
+    return body_svg
+
+
+def grit_base(uid):
+    """Grit, Kestra's rift-hound: a rangy brown hound in a leather collar, rift light along his back."""
+    return _hound(uid, FUR, FUR_DK, GOLD, k=0.9)
+
 HEROES = [
     ("maren", "Maren", [("base", "Base", maren_base), ("deadeye", "Deadeye", maren_deadeye),
                         ("trapper", "Trapper", maren_trapper), ("volley", "Volley", maren_volley)]),
@@ -1077,7 +1155,12 @@ HEROES = [
                       ("wildfire", "Wildfire", ilse_wildfire), ("ember_choir", "Ember Choir", ilse_ember_choir)]),
     ("ottilie", "Ottilie", [("base", "Base", ottilie_base), ("catalyst", "Catalyst", ottilie_catalyst),
                             ("transmuter", "Transmuter", ottilie_transmuter), ("apothecary", "Apothecary", ottilie_apothecary)]),
+    ("kestra", "Kestra", [("base", "Base", kestra_base)]),
 ]
+
+# A hero's companions (phase 8 part 6, Kestra): each one's figure is
+# heroes/<kit>_base.svg, as a hero's base form is.
+COMPANIONS = [("grit", grit_base)]
 
 FILTERS = ('<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4" result="b"/>'
            '<feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
@@ -1126,6 +1209,9 @@ if __name__ == "__main__":
         for fid, _, fn in forms:
             with open(os.path.join(figures, f"{hid}_{fid}.svg"), "w") as f:
                 f.write(standalone(fn(f"{hid}_{fid}")))
+    for cid, fn in COMPANIONS:
+        with open(os.path.join(figures, f"{cid}_base.svg"), "w") as f:
+            f.write(standalone(fn(f"{cid}_base")))
     with open(os.path.join(OUT, "hero_lineup.svg"), "w") as f:
         f.write(lineup())
     print("ok")

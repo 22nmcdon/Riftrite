@@ -265,6 +265,8 @@ static func aura_change(sim: CombatSim, holder: UnitState, aura: AuraDef) -> int
 	var change: int = aura.value if _is_additive(aura.stat) else aura.value - FixedMath.BP_ONE
 	if aura.per_fallen_ally:
 		change *= fallen_allies(sim, holder)
+	if aura.per_allied_summon:
+		change *= allied_summons(sim, holder)
 	if aura.per_enemy_range > 0:
 		change *= enemies_near(sim, holder, aura.per_enemy_range, aura.per_twice)
 	if aura.step_ticks > 0:
@@ -337,7 +339,19 @@ static func condition_holds(sim: CombatSim, holder: UnitState, aura: AuraDef) ->
 		return false
 	if aura.per_engorged_bp > 0 and engorged_steps(holder, aura.per_engorged_bp) == 0:
 		return false
+	if aura.per_allied_summon and allied_summons(sim, holder) == 0:
+		return false
 	return not aura.per_fallen_ally or fallen_allies(sim, holder) > 0
+
+
+## How many summons of `holder`'s side stand (phase 8 part 6, Pack Call):
+## companions, Nest's vipers, thralls, copies, itself among them.
+static func allied_summons(sim: CombatSim, holder: UnitState) -> int:
+	var count: int = 0
+	for unit: UnitState in (sim.heroes if holder.side == EffectSource.Team.HEROES else sim.enemies):
+		if unit.alive and unit.summoned:
+			count += 1
+	return count
 
 
 ## How many standing enemies of `holder` stand within `reach` plane units
@@ -357,7 +371,8 @@ static func enemies_near(sim: CombatSim, holder: UnitState, reach: int, twice: U
 static func fallen_allies(sim: CombatSim, holder: UnitState) -> int:
 	var count: int = 0
 	for unit: UnitState in (sim.heroes if holder.side == EffectSource.Team.HEROES else sim.enemies):
-		if not unit.alive and not unit.arriving and not unit.raised:
+		# A companion returns, so it's never one (phase 8 part 6).
+		if not unit.alive and not unit.arriving and not unit.raised and unit.owner == null:
 			count += 1
 	return count
 

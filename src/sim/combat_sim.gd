@@ -148,6 +148,9 @@ var ally_shield_listeners: bool = false
 var status_end_listeners: bool = false
 ## Some unit has an on_enemy_fell passive (phase 5c step 6b).
 var enemy_fell_listeners: bool = false
+## Some unit listens for one of its side's summons falling (phase 8 part 6,
+## Pack Fury: on_summon_fell).
+var summon_fell_listeners: bool = false
 ## Some unit's tactic does something on its kills (phase 5c step 6c).
 var tactic_kills: bool = false
 ## Some hero arrives later, or swaps places (Gambits; phase 5c step 6d).
@@ -276,6 +279,7 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 			if unit.deeds.needs_overflow:
 				overflow_counters.append(unit)
 			_counting_time = _counting_time or unit.deeds.needs_time
+	place_companions()
 	Gambits.set_up(self)
 	units_joined()
 	salt_circles = setup.salt_circles
@@ -292,6 +296,45 @@ func _init(fight_setup: FightSetup, fight_content: ContentDb) -> void:
 	for unit: UnitState in units:
 		if unit.alive and not unit.listeners.is_empty():
 			Passives.fight_start(self, unit)
+
+
+## Each hero's companions that start the fight (phase 8 part 6, Kestra;
+## CompanionDef) stand beside it, in the fight's order after the enemies,
+## each logged as a SUMMON sourced to the hero.
+func place_companions() -> void:
+	var owners: Array[UnitState] = heroes.duplicate()
+	for owner: UnitState in owners:
+		for companion: CompanionDef in owner.def.companions:
+			if not companion.starts:
+				continue
+			var unit: UnitState = UnitState.make_summon(Summons.companion(companion, owner), owner.side, next_unit_id(companion.kit.id), units.size(), tuning.unit_radius)
+			unit.owner = owner
+			unit.companion = companion
+			var spot: Vector2i = Summons.beside(self, owner, unit)
+			if spot.x < 0:
+				continue
+			unit.pos = spot
+			add_unit(unit)
+			if companion.return_ticks > 0:
+				risers = true
+			var entry: LogEntry = new_entry(LogEntry.Kind.SUMMON, EffectSource.make(owner.id, companion.kit.id, companion.kit.name))
+			entry.target = unit.id
+			entry.to_pos = spot
+			entry.amount = unit.hp
+			combat_log.add(entry)
+
+
+## `owner`'s first standing companion that started the fight beside it, else
+## any standing one, in the fight's order (null: none; phase 8 part 6).
+func companion_of(owner: UnitState) -> UnitState:
+	var any: UnitState = null
+	for unit: UnitState in (heroes if owner.side == EffectSource.Team.HEROES else enemies):
+		if unit.alive and unit.owner == owner and unit.companion != null:
+			if unit.companion.starts:
+				return unit
+			if any == null:
+				any = unit
+	return any
 
 
 ## A Rift Tear's effects due this tick (phase 5c step 8b): Reinforcements
@@ -373,6 +416,8 @@ func note_listeners(unit: UnitState) -> void:
 		status_end_listeners = true
 	if Passives.listens_for(unit, EffectDef.Trigger.ON_ENEMY_FELL):
 		enemy_fell_listeners = true
+	if Passives.listens_for(unit, EffectDef.Trigger.ON_SUMMON_FELL):
+		summon_fell_listeners = true
 	if Passives.listens_for(unit, EffectDef.Trigger.ON_ZONE_ENTER):
 		zone_enter_listeners = true
 	if Passives.listens_for(unit, EffectDef.Trigger.ON_STATUS_TICK) and not status_tick_listeners.has(unit):
@@ -863,7 +908,8 @@ static func _any_standing(side_units: Array[UnitState]) -> bool:
 		# by its own kit (phase 8 part 2; Second Dawn's rise doesn't hold the
 		# fight).
 		# A thrall (phase 8 part 5) never keeps its side up (Decision 2).
-		if (unit.alive and not unit.raised) or unit.arriving or (unit.rise_at >= 0 and unit.rise_part != null):
+		# Nor does a companion (phase 8 part 6).
+		if (unit.alive and not unit.raised and unit.owner == null) or unit.arriving or (unit.rise_at >= 0 and unit.rise_part != null):
 			return true
 	return false
 
@@ -944,16 +990,19 @@ func _process_deaths() -> void:
 			if unit.fell:
 				unit.hp = 0
 				_fall(unit)
-				if ally_fall_listeners:
+				if ally_fall_listeners and unit.owner == null:
 					Signatures.ally_fell(self, unit)
 				aura_lost = aura_lost or Passives.has_aura(unit) or (taunt_auras and Statuses.has_kind(unit, StatusDef.Kind.TAUNT))
 				Events.kill(self, unit)
 				if enemy_fell_listeners:
 					Events.enemy_fell(self, unit)
+				if summon_fell_listeners and unit.summoned:
+					Events.summon_fell(self, unit)
 				continue
 			# A thrall (phase 8 part 5) goes quietly: nothing catches it or
 			# runs as it goes, and it's nobody's kill or fallen ally (Decision 2).
-			if unit.raised:
+			# So does a summon whose time is up (phase 8 part 6).
+			if unit.raised or unit.time_up:
 				unit.hp = 0
 				_fall(unit)
 				aura_lost = aura_lost or Passives.has_aura(unit) or (taunt_auras and Statuses.has_kind(unit, StatusDef.Kind.TAUNT))
@@ -970,12 +1019,15 @@ func _process_deaths() -> void:
 				again = true
 				continue
 			_fall(unit)
-			if ally_fall_listeners:
+			# A companion returns, so it's nobody's fallen ally (phase 8 part 6).
+			if ally_fall_listeners and unit.owner == null:
 				Signatures.ally_fell(self, unit)
 			aura_lost = aura_lost or Passives.has_aura(unit) or (taunt_auras and Statuses.has_kind(unit, StatusDef.Kind.TAUNT))
 			Events.kill(self, unit)
 			if enemy_fell_listeners:
 				Events.enemy_fell(self, unit)
+			if summon_fell_listeners and unit.summoned:
+				Events.summon_fell(self, unit)
 			if Passives.on_fall(self, unit):
 				again = true
 	if aura_lost:
@@ -993,6 +1045,9 @@ func _rise_due() -> void:
 		if unit.alive or unit.rise_at < 0 or tick < unit.rise_at:
 			continue
 		unit.rise_at = -1
+		if unit.companion != null:
+			rose_any = _companion_returns(unit) or rose_any
+			continue
 		var part: PartDef = unit.rise_part
 		if part != null:
 			unit.rises_done += 1
@@ -1033,15 +1088,47 @@ func _rise_due() -> void:
 		refold_auras()
 
 
+## A companion that fell comes back beside its owner, if she stands (phase 8
+## part 6, Kestra): at full HP, its statuses and Shield gone, logged as a
+## SUMMON noted "returns" sourced to her. True if it came back.
+func _companion_returns(unit: UnitState) -> bool:
+	var owner: UnitState = unit.owner
+	if owner == null or not owner.alive:
+		return false
+	var spot: Vector2i = Summons.beside(self, owner, unit)
+	if spot.x < 0:
+		return false
+	unit.alive = true
+	unit.pos = spot
+	unit.hp = unit.max_hp
+	unit.shield = 0
+	unit.statuses.clear()
+	unit.target = null
+	unit.last_attacker = ""
+	unit.moved_at = tick
+	unit.route.clear()
+	unit.leg_active = false
+	unit.replan_at = tick + 1
+	var entry: LogEntry = new_entry(LogEntry.Kind.SUMMON, EffectSource.make(owner.id, unit.companion.kit.id, unit.companion.kit.name))
+	entry.target = unit.id
+	entry.to_pos = spot
+	entry.amount = unit.hp
+	entry.note = "returns"
+	combat_log.add(entry)
+	return true
+
+
 ## Thralls whose time is up go (phase 8 part 5, Gravecaller): they fall in
-## the deaths step that follows, noted "its time is up".
+## the deaths step that follows, noted "its time is up". So do summons whose
+## lasts_ms is up (phase 8 part 6, Nest).
 func _thralls_go() -> void:
 	var any: bool = false
 	for unit: UnitState in units:
-		if not unit.raised or not unit.alive:
+		if unit.expires_at < 0 or not unit.alive:
 			continue
 		any = true
 		if tick >= unit.expires_at:
+			unit.time_up = true
 			unit.hp = 0
 			unit.last_attacker = ""
 			unit.last_hit_source = null
@@ -1078,8 +1165,12 @@ func _undying(unit: UnitState) -> StatusState:
 
 func _fall(unit: UnitState) -> void:
 	unit.alive = false
-	if unit.fell:
+	if unit.fell or unit.time_up:
 		pass
+	elif unit.companion != null:
+		# It returns beside its owner (phase 8 part 6; _companion_returns).
+		if unit.companion.return_ticks > 0:
+			unit.rise_at = tick + unit.companion.return_ticks
 	elif unit.rise_part != null:
 		# Its own rises (phase 8 part 2); Second Dawn's counts toward them.
 		# Phase 8 part 3: only if it fell meeting the rise's "if".
@@ -1096,7 +1187,7 @@ func _fall(unit: UnitState) -> void:
 	entry.kind = LogEntry.Kind.DEATH
 	entry.target = unit.id
 	entry.to_pos = unit.pos
-	entry.note = "fell into the void" if unit.fell else "its time is up" if unit.raised and unit.last_hit_source == null else "last hit: %s" % unit.last_hit_text()
+	entry.note = "fell into the void" if unit.fell else "its time is up" if (unit.raised or unit.time_up) and unit.last_hit_source == null else "last hit: %s" % unit.last_hit_text()
 	combat_log.add(entry)
 
 

@@ -26,6 +26,10 @@ extends RefCounted
 ## cast_ms (mana signatures only): the unit stands
 ## still that long before it lands; a Stun cancels the cast, and the
 ## signature keeps its mana.
+## "by": "companion" (phase 8 part 6, Kestra's Sic 'Em; a signature or an
+## ability passive): its unit's first standing companion does it, from where
+## it stands, with its own stats, sourced to it (EffectRunner); with none
+## standing, it doesn't fire.
 
 ## What an ability's effects can be set off by.
 const TRIGGERS: Array[EffectDef.Trigger] = [EffectDef.Trigger.ON_FIRE, EffectDef.Trigger.ON_HIT, EffectDef.Trigger.ON_CRIT]
@@ -90,6 +94,8 @@ var grip_veil: String = ""
 ## The targets its grip lands twice as often on (a kit mod's; phase 8 part
 ## 4, Hammer and Wire: Stunned ones; null: none).
 var grip_fast_vs: UnitCondition = null
+## Done by its unit's companion (phase 8 part 6).
+var by_companion: bool = false
 
 
 static func read(reader: DataReader) -> AbilityDef:
@@ -115,6 +121,7 @@ static func read_signature(reader: DataReader) -> AbilityDef:
 	def.grows_boosts_bp = reader.opt_int("grows_boosts_bp", 0, 0, FixedMath.BP_ONE)
 	def.resets_attack = reader.opt_bool("resets_attack", false)
 	def.again_on_kill = reader.opt_bool("again_on_kill", false)
+	def.by_companion = reader.opt_string_choice("by", "", ["companion"]) == "companion"
 	# The enemies it picks first (phase 8 part 4, Sentence: Marked ones).
 	if reader.has("prefer"):
 		def.prefer = UnitCondition.read(reader.req_object("prefer"))
