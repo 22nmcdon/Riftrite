@@ -1,6 +1,6 @@
 # Phase 8 part 5: heroes 7 and 8, Severine and Edric
 
-Status: **a build plan, approved (2026-10-11; Decisions 1–7); 8e-1 built (the two base kits); 8e-2a, 8e-2b, 8e-2c, 8e-2d, and 8e-2e built (Severine: her pieces, paths, cards, apexes, and bond relics); 8e-3 built (Edric: his fight and run pieces, paths, cards, apexes, and bond relics, his paths tuned by build).** The remaining heroes come in two at a time after the tuning phase (`rebuild-build-order.md`), Severine and Edric first. This plan builds Severine Hollowell and Edric Tithewell from their designs (`rebuild-heroes.md` sections 8g and 8h; `apexes.md`; `upgrade-pools.md`; `duo-bonds.md`), the way phase 8 part 4 built Garrow, Tamsin, and Aldous (`rebuild-phase8-heroes.md`): the draft frame, habits, the builds report, and the bots' draft are already built, so each hero is its kit, its sim pieces, and its content. Numbers are the designs' placeholders until the check (section 8). Questions are in section 10.
+Status: **a build plan, approved (2026-10-11; Decisions 1–7); 8e-1 built (the two base kits); 8e-2a, 8e-2b, 8e-2c, 8e-2d, and 8e-2e built (Severine: her pieces, paths, cards, apexes, and bond relics); 8e-3 built (Edric: his fight and run pieces, paths, cards, apexes, and bond relics, his paths tuned by build); 8e-4 and 8e-5 moved to the pass after the last hero (Decision 8).** The remaining heroes come in two at a time after the tuning phase (`rebuild-build-order.md`), Severine and Edric first. This plan builds Severine Hollowell and Edric Tithewell from their designs (`rebuild-heroes.md` sections 8g and 8h; `apexes.md`; `upgrade-pools.md`; `duo-bonds.md`), the way phase 8 part 4 built Garrow, Tamsin, and Aldous (`rebuild-phase8-heroes.md`): the draft frame, habits, the builds report, and the bots' draft are already built, so each hero is its kit, its sim pieces, and its content. Numbers are the designs' placeholders until the check (section 8). Questions are in section 10.
 
 ## 1. What it builds
 
@@ -179,3 +179,7 @@ The playtester, 2026-10-11:
 5. **160 runs for the band** (Question SE), 120 for everything else.
 6. **Tune only the two** (Question SF) into the hero band; the heroes are finished first, then a short pass over all of them.
 7. **The rift learns as proposed** (Question SG): lifesteal isn't healing; Poison gets no habit yet.
+
+The playtester, 2026-10-12:
+
+8. **The check waits for the whole roster.** 8e-4 (the check, the placement refit, the runs over every team, the two into the band) and 8e-5 (the docs and the playtest build) move to one pass after the last hero is built (`rebuild-phase8-last-heroes.md`), so the expensive runs and the refit happen once. Each hero keeps its cheap checks as it lands (the builds report, the apex sweep and deed sizes, its tests). No playtest build with Severine and Edric before then.
