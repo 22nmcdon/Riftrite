@@ -166,3 +166,18 @@ func test_her_cards_say_their_numbers() -> void:
 	assert_eq(ModInfo.upgrade_numbers(_run.upgrades["long_spit"], _kit("serpent_keeper", PathDef.Stage.TRANSFORMED), _content), "Viper: +1 Range")
 	assert_string_contains(ModInfo.upgrade_numbers(_run.upgrades["pack_lore"], _kit("packleader", PathDef.Stage.TRANSFORMED), _content),
 		"Grows: Her companions: +1% of her ATK per 20 summons brought onto the field")
+
+
+func test_her_apex_cards() -> void:
+	var cards: Array[String] = []
+	for id: String in _run.upgrade_ids:
+		var card: UpgradeDef = _run.upgrades[id]
+		if card.layer == UpgradeDef.Layer.APEX and _content.paths[_content.apexes[card.apex].path].hero == "kestra":
+			cards.append(id)
+			assert_true(_run.changes_something(card, true, _content.apexes[card.apex].apex_kit), id)
+	assert_eq(cards.size(), 12, "2 an apex")
+	assert_eq(_passive(_with("ember_mantle", _content.apexes["hellhound"].apex_kit).companion("grit").kit, "hellfire").ability.effects[0].near_range, 2000, "his fire reaches 2 hexes")
+	assert_eq(_with("big_brood", _content.apexes["brood_mother"].apex_kit).signature.effects[0].max_standing, 9)
+	assert_eq(_with("long_howl", _content.apexes["wild_hunt"].apex_kit).signature.effects[0].duration_ticks, 10 * 20)
+	assert_eq(_passive(_with("hunt_scent", _content.apexes["wild_hunt"].apex_kit), "blood_scent").aura.stat, AuraDef.Stat.SPEED)
+	assert_eq(ModInfo.upgrade_numbers(_run.upgrades["hunt_scent"], _content.apexes["wild_hunt"].apex_kit, _content), "Blood Scent: +1 speed for all allies Howl, a summon", "speed in points")

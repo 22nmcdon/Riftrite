@@ -137,7 +137,9 @@ const HERO_STATUSES: Array[String] = ["iron_maiden", "hidden", "shadow_dance", "
 	"fire_vial", "venom_vial", "tonic_vial", "tonic_rush", "elixir", "sticky", "fumes", "corroded", "fizz", "bracing", "choir_vial",
 	"grand_reaction", "dissolved", "potent_draught", "potent_more", "mana_flood", "potent_elixir",
 	# Kestra's (phase 8 part 6, 8f-3; tests/sim/test_kestra_paths.gd, test_kestra_cards.gd).
-	"pack_fury", "howl", "numbed", "viper_bitten"]
+	"pack_fury", "howl", "numbed", "viper_bitten",
+	# Her apexes' (8f-3c; tests/sim/test_kestra_apexes.gd).
+	"hellhound", "inferno_hound", "viper_slow", "viper_queen", "queens_venom", "alpha_fury", "alpha_blood", "pack_blood"]
 const RELIC_STATUSES: Array[String] = ["sunder", "quickened", "unbending", "long_watch", "vigilant", "iron_garden"]
 ## Boosts only loadout items apply (phase 5c step 6; tests/run/test_loadout.gd).
 const ITEM_STATUSES: Array[String] = ["surge", "surge_2", "last_breath", "purified",

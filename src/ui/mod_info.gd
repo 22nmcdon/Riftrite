@@ -162,7 +162,7 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 		bits.append("+%d hex wider" % change.width_add)
 	if change.value_add != 0:
 		var aura: AuraDef = KitMod._slot_aura(kit, change.slot) if kit != null else null
-		if aura != null and (aura.stat == AuraDef.Stat.ATSP or aura.stat == AuraDef.Stat.RANGE or aura.stat == AuraDef.Stat.DEF):
+		if aura != null and (aura.stat == AuraDef.Stat.ATSP or aura.stat == AuraDef.Stat.RANGE or aura.stat == AuraDef.Stat.DEF or aura.stat == AuraDef.Stat.SPEED):
 			# Points, not a share (phase 8 part 6, Strong Bond's attack speed).
 			bits.append("%s %s" % [signed(change.value_add), AuraDef.STAT_LABELS[aura.stat]])
 		else:

@@ -227,9 +227,10 @@ static func read(reader: DataReader, needs_text: bool = true) -> DeedDef:
 	if reader.has("statuses"):
 		def.statuses = reader.req_string_array("statuses")
 		# Phase 8 part 5 (Blood Rite): an ally's hits by_allies counts only
-		# while that ally holds one of them.
-		if def.counts != Counts.APPLIED and not (def.by_allies and def.counts == Counts.HITS):
-			reader.error("statuses only filter applied, or hits by_allies")
+		# while that ally holds one of them; phase 8 part 6 (Wild Hunt): its
+		# damage too.
+		if def.counts != Counts.APPLIED and not (def.by_allies and (def.counts == Counts.HITS or def.counts == Counts.DAMAGE)):
+			reader.error("statuses only filter applied, or hits or damage by_allies")
 	def.threshold = reader.opt_int("threshold", 0, 1)
 	if def.counts != Counts.DAMAGE and (def.while_undying or (def.from_range > 0 and not (def.by_allies and def.counts == Counts.HITS))):
 		reader.error("beyond_hexes and while_undying only filter damage")

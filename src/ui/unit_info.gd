@@ -415,6 +415,8 @@ static func aura_text(aura: AuraDef) -> String:
 		text = "%+d ATSP" % aura.value
 	elif aura.stat == AuraDef.Stat.DEF:
 		text = "%+d DEF" % aura.value
+	elif aura.stat == AuraDef.Stat.SPEED:
+		text = "%+d speed" % aura.value
 	elif aura.stat == AuraDef.Stat.LIFESTEAL_HEALS:
 		text = "lifesteal counts as healing"
 	elif aura.stat == AuraDef.Stat.DAMAGE_REDUCED_BP:

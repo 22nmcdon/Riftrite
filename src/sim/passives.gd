@@ -217,10 +217,12 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 		unit.stats.values[UnitStats.Stat.RANGE] = unit.base_stats.values[UnitStats.Stat.RANGE] + unit.aura_bp[AuraDef.Stat.RANGE]
 		unit.stats.values[UnitStats.Stat.ATSP] += unit.aura_bp[AuraDef.Stat.ATSP]
 		unit.stats.values[UnitStats.Stat.DEF] += unit.aura_bp[AuraDef.Stat.DEF]
+		# Speed in hexes a second (phase 8 part 6, Blood Scent).
+		unit.stats.values[UnitStats.Stat.SPEED] += unit.aura_bp[AuraDef.Stat.SPEED]
 		if unit.aura_bp[AuraDef.Stat.MAX_HP_BP] != FixedMath.BP_ONE or unit.max_hp != unit.base_max_hp:
 			# Max HP boosts (phase 5c step 5c): HP rises by what it gains.
 			var new_max: int = maxi(FixedMath.apply_bp(unit.base_max_hp, factor(unit, AuraDef.Stat.MAX_HP_BP)), 1)
-			if unit.alive:
+			if unit.alive and unit.hp > 0:
 				unit.hp = mini(unit.hp + maxi(new_max - unit.max_hp, 0), new_max)
 			unit.max_hp = new_max
 		if unit.mana_cap > 0 and (unit.aura_bp[AuraDef.Stat.MANA_STORE_BP] != FixedMath.BP_ONE or unit.mana_store != unit.rule_store):

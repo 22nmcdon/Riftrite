@@ -168,6 +168,8 @@ Built in phase 8 part 6 (`rebuild-phase8-last-heroes.md`, "Built in 8f-2"), with
 | **Alpha** (Packleader) | Pack Fury gives +20% attack speed, not 15% | Attacks summons make under Pack Fury | Three hounds, and Pack Fury lasts the rest of the fight instead of 4s. **Snowball:** each allied summon that falls gives every summon +10% attack speed for the rest of the fight | **Blood of the Pack:** +15% per fall. **Bloodied Pack:** summons get 5% lifesteal |
 | **Wild Hunt** (Packleader) | Howl lasts 1s longer | Damage summons deal during Howl | Howl lasts 8s, and summons under it Mark what they hit and deal +25% damage to Marked enemies. No snowball | **Long Howl:** 10s. **Blood Scent:** summons under Howl get +1 speed |
 
+Built in phase 8 part 6 (`rebuild-phase8-last-heroes.md`, "Built in 8f-3"), with the calls flagged there (Hell Hide heals 30% of each hit from a Burning enemy rather than reducing it; the upgrades' bigger snowballs are a second stack beside the apex's; Brood Mother's nestlings are Nest's, lasting the fight; Firestarter's deed counts her hounds' Burn too; Hellhound and Firestarter keep the design's numbers for 8f-6).
+
 ## Notes
 
 - **The tier shift is also the cap for transformed paths:** no first-transform path at its ceiling may reach it (`build-tuning.md`, section 3).

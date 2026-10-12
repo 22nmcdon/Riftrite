@@ -548,6 +548,66 @@
         "aldous": "grand_chorus",
         "ottilie": "mana_flood"
       }
+    },
+    {
+      "name": "Hellhound",
+      "kind": "good",
+      "carry": "kestra",
+      "apexes": {
+        "ilse": "blast_furnace",
+        "aldous": "long_wind",
+        "kestra": "hellhound"
+      }
+    },
+    {
+      "name": "Firestarter",
+      "kind": "good",
+      "carry": "kestra",
+      "apexes": {
+        "ilse": "blast_furnace",
+        "severine": "gravecaller",
+        "kestra": "firestarter"
+      }
+    },
+    {
+      "name": "Brood Mother",
+      "kind": "good",
+      "carry": "kestra",
+      "apexes": {
+        "severine": "pestilence",
+        "edric": "bastion_of_saints",
+        "kestra": "brood_mother"
+      }
+    },
+    {
+      "name": "Viper Queen",
+      "kind": "good",
+      "carry": "kestra",
+      "apexes": {
+        "severine": "pestilence",
+        "edric": "bastion_of_saints",
+        "kestra": "viper_queen"
+      }
+    },
+    {
+      "name": "Alpha",
+      "kind": "good",
+      "carry": "kestra",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "severine": "gravecaller",
+        "kestra": "alpha"
+      }
+    },
+    {
+      "name": "Wild Hunt",
+      "kind": "good",
+      "carry": "kestra",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "severine": "gravecaller",
+        "kestra": "wild_hunt"
+      }
     }
   ]
 }

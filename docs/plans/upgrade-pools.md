@@ -404,7 +404,7 @@ These never give Burn on Grit (Cinderhound), Poison (Serpent-Keeper), or bonuses
 | **Serpent-Keeper** | **Sharp Jab:** Venomed Jab every 2nd jab, not every 3rd. **Thick Venom:** Venomed Jab's Poison is 20% of her ATK | **Long Nest:** Nest's vipers last 9s. **Quick Nest:** Nest costs 10 less mana. **Long Spit:** her viper spits from up to 4 hexes. **Numbing Venom:** Poisoned enemies she hits are Slowed 10% for 1s. Growing: **Serpent Lore** (+1% to her viper's Poison per 500 Poison it applies) |
 | **Packleader** | **Strong Call:** Pack Call gives +4% ATK per summon, not 3%. **Loyal Hound:** Grit returns 5s after falling | **Lasting Howl:** Howl lasts 7s. **Quick Howl:** Howl costs 15 less mana. **Pack Tactics:** summons attacking the same enemy deal +10% damage. **Thick Hides:** summons get +15% max HP. Growing: **Pack Lore** (+1% to the per-summon bonus per 50 summons that join the field) |
 
-Built in phase 8 part 6 (`rebuild-phase8-last-heroes.md`, "Built in 8f-3"): her 33 cards, with the approximations flagged there (Ashen Coat gives back a tenth of each hit as healing, Old Leash and Pack Lore grow a companion's share of her ATK, Pack Tactics counts the summons attacking an enemy, Pack Lore counts every 20 summons she brings).
+Built in phase 8 part 6 (`rebuild-phase8-last-heroes.md`, "Built in 8f-3"): her 33 cards, with the approximations flagged there (Ashen Coat gives back a tenth of each hit as healing, Old Leash and Pack Lore grow a companion's share of her ATK, Pack Tactics counts the summons attacking an enemy, Pack Lore counts every 20 summons she brings); her 12 apex cards (8f-3c).
 
 ## Left out on purpose
 

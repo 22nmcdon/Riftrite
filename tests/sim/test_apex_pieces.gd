@@ -273,9 +273,15 @@ func test_a_smite_kill_feeds_zeal() -> void:
 	var smite_kills: int = 0
 	for encounter_id: String in _content.encounter_ids:
 		var sim: CombatSim = _vell_fight(encounter_id, "vigil_keeper", "inquisitor")
+		# A kill as she falls herself feeds nothing: a fallen killer hears no
+		# on_kill (phase 8 part 6: a unit at 0 HP can't heal back up first).
+		var vell_fell: int = 1 << 30
+		for entry: LogEntry in sim.combat_log.of_kind(LogEntry.Kind.DEATH):
+			if entry.target == "vell":
+				vell_fell = entry.tick
 		for entry: LogEntry in sim.combat_log.of_kind(LogEntry.Kind.DEATH):
 			var fallen: UnitState = sim.unit_by_id(entry.target)
-			if fallen.last_attacker == "vell" and fallen.last_hit_source.ability_id == "mend":
+			if fallen.last_attacker == "vell" and fallen.last_hit_source.ability_id == "mend" and entry.tick < vell_fell:
 				smite_kills += 1
 		for entry: LogEntry in _of(sim, LogEntry.Kind.STATUS_APPLIED, "vell"):
 			if entry.status == "zeal":

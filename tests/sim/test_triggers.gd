@@ -220,3 +220,27 @@ func test_a_kill_carries_its_hits_chain() -> void:
 			assert_eq(shields[0].chain, 8, "as the chain's next link")
 		else:
 			assert_eq(shields.size(), 0, "felled at the limit: nothing more")
+
+
+# --- a unit at 0 HP ------------------------------------------------------------------
+
+## A unit brought to 0 HP falls in the deaths step: a heal from an event in
+## the same tick (on_hit_taken's), lifesteal, or max HP gained can't lift it
+## back (rebuild-phase1-arena-sim.md, deaths; phase 8 part 6, Hell Hide).
+func test_nothing_lifts_a_unit_from_0_hp_before_it_falls() -> void:
+	var hide: Dictionary = _passive([{"trigger": "on_hit_taken", "type": "heal", "amount_bp_of_damage": 5000, "target": "self"}])
+	var fight: CombatSim = _duel(_hero([hide], {}, {"hp": 30}), _dummy({"cooldown_ms": 50, "effects": [{"type": "damage", "amount": 100, "target": "target"}]}))
+	var hero: UnitState = fight.unit_by_id("hero")
+	while hero.alive and fight.tick < 40:
+		K.step(fight, 1)
+	assert_false(hero.alive, "a hit past its HP fells it, heal or no heal")
+	assert_gt(_passive_entries(fight, LogEntry.Kind.HEAL, "hero").size(), 0, "the heal still ran, for nothing")
+	var other: CombatSim = _duel(_hero([]))
+	var unit: UnitState = other.unit_by_id("hero")
+	unit.hp = 0
+	EffectRunner.heal(other, unit, 50, _from("hero"), FixedMath.BP_ONE)
+	EffectRunner.steal(other, unit, 50, _from("hero"))
+	EffectRunner.gain_max_hp(other, unit, 50, _from("hero"))
+	assert_eq([unit.hp, unit.shield, unit.max_hp], [0, 0, 1000])
+	K.step(other, 1)
+	assert_false(unit.alive)

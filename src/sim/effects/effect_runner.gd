@@ -1113,7 +1113,7 @@ static func lifesteal(sim: CombatSim, attacker: UnitState, target: UnitState, de
 ## `attacker` lifesteals `wanted` HP: a LIFESTEAL line (or a heal, with
 ## lifesteal_heals), what's past full HP to Engorge, and the overheal strike.
 static func steal(sim: CombatSim, attacker: UnitState, wanted: int, source: EffectSource) -> void:
-	if wanted <= 0 or not attacker.alive:
+	if wanted <= 0 or not attacker.alive or attacker.hp <= 0:
 		return
 	var overheal: int
 	if attacker.aura_bp[AuraDef.Stat.LIFESTEAL_HEALS] > 0:
@@ -1160,7 +1160,13 @@ static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectS
 	var taken_bp: int = target.aura_bp[AuraDef.Stat.HEALING_TAKEN_BP] - FixedMath.BP_ONE
 	amount = DamageRule.apply(amount, power, 0, taken_bp, relic_bp)
 	var healed: int = clampi(target.max_hp - target.hp, 0, amount)
-	if ceiling >= 0:
+	# A unit brought to 0 HP this tick falls in the deaths step: no heal in
+	# the same tick lifts it back (rebuild-phase1-arena-sim.md, deaths; found
+	# in phase 8 part 6 with Hell Hide).
+	var downed: bool = target.hp <= 0
+	if downed:
+		healed = 0
+	elif ceiling >= 0:
 		# A capped heal (phase 8 part 6, Lantern Vigil): what it would lift past
 		# the cap is a Shield, all of it.
 		healed = clampi(ceiling - target.hp, 0, amount)
@@ -1177,7 +1183,7 @@ static func heal(sim: CombatSim, target: UnitState, amount: int, source: EffectS
 		var healer: UnitState = sim.unit_by_id(source.unit_id)
 		if healer != null:
 			overheal_shield_bp += healer.aura_bp[AuraDef.Stat.OVERHEAL_SHIELD_BP]
-	if overheal_shield_bp > 0 and amount > healed:
+	if overheal_shield_bp > 0 and amount > healed and not downed:
 		var shield: int = FixedMath.apply_bp(amount - healed, overheal_shield_bp)
 		if shield > 0:
 			give_shield(sim, target, shield, source)
@@ -1204,7 +1210,7 @@ static func _engorge(sim: CombatSim, unit: UnitState, overheal: int) -> void:
 	var cap_bp: int = unit.aura_bp[AuraDef.Stat.LIFESTEAL_MAX_HP_CAP_BP]
 	if cap_bp > 0:
 		gain = mini(gain, FixedMath.apply_bp(unit.base_max_hp - unit.engorged, cap_bp) - unit.engorged)
-	if gain <= 0 or not unit.alive:
+	if gain <= 0 or not unit.alive or unit.hp <= 0:
 		return
 	unit.engorged += gain
 	unit.base_max_hp += gain
@@ -1229,7 +1235,7 @@ static func _grow_max_hp(sim: CombatSim, unit: UnitState, overheal: int, per: in
 	unit.overheal_bank += overheal
 	@warning_ignore("integer_division")
 	var gain: int = unit.overheal_bank / per
-	if gain <= 0 or not unit.alive:
+	if gain <= 0 or not unit.alive or unit.hp <= 0:
 		return
 	unit.overheal_bank -= gain * per
 	unit.base_max_hp += gain
@@ -1260,7 +1266,7 @@ static func spend_shield(sim: CombatSim, unit: UnitState, source: EffectSource, 
 ## `unit` gains `amount` max HP and HP for the fight (phase 8 part 5, The
 ## Iron Maw), logged as MAX_HP_UP.
 static func gain_max_hp(sim: CombatSim, unit: UnitState, amount: int, source: EffectSource) -> void:
-	if amount <= 0 or not unit.alive:
+	if amount <= 0 or not unit.alive or unit.hp <= 0:
 		return
 	unit.base_max_hp += amount
 	unit.max_hp += amount

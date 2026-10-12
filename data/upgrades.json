@@ -10061,5 +10061,299 @@
         ]
       }
     }
+  },
+  {
+    "id": "inferno_hound",
+    "name": "Inferno Hound",
+    "apex": "hellhound",
+    "text": "Each Burning enemy that falls near Grit makes him hit harder still.",
+    "mod": {
+      "companions": [
+        {
+          "kit": "grit",
+          "mod": {
+            "on": [
+              {
+                "slot": "passive:hellhound",
+                "add_effects": [
+                  {
+                    "trigger": "on_enemy_fell",
+                    "vs": {
+                      "statuses": [
+                        "burn"
+                      ]
+                    },
+                    "fell_within_hexes": 2,
+                    "type": "apply_status",
+                    "status": "inferno_hound",
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "ember_mantle",
+    "name": "Ember Coat",
+    "apex": "hellhound",
+    "text": "Grit's fire reaches 1 hex farther.",
+    "mod": {
+      "companions": [
+        {
+          "kit": "grit",
+          "mod": {
+            "on": [
+              {
+                "slot": "passive:hellfire",
+                "within_add": 1
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "hotter_pack",
+    "name": "Hotter Pack",
+    "apex": "firestarter",
+    "text": "Every allied summon's attacks set more Burn.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:firestarter",
+          "amount_bp": 15000
+        }
+      ]
+    }
+  },
+  {
+    "id": "kindled_pack",
+    "name": "Kindled Pack",
+    "apex": "firestarter",
+    "text": "An allied summon that falls bursts into flame, setting every enemy within 1 hex of it Burning.",
+    "mod": {
+      "passives": [
+        {
+          "id": "kindled_pack",
+          "name": "Kindled Pack",
+          "kind": "ability",
+          "text": "An allied summon that falls bursts into flame: every enemy within 1 hex of it is set Burning, from her ATK.",
+          "effects": [
+            {
+              "trigger": "on_summon_fell",
+              "type": "apply_status",
+              "status": "burn",
+              "stacks": 0,
+              "scaling": {
+                "atk": 4000
+              },
+              "target": "enemies_near_named",
+              "within_hexes": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "big_brood",
+    "name": "Big Brood",
+    "apex": "brood_mother",
+    "text": "Up to 3 more nestlings stay at once.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "max_standing_add": 3
+        }
+      ]
+    }
+  },
+  {
+    "id": "venom_glands",
+    "name": "Venom Glands",
+    "apex": "brood_mother",
+    "text": "Her nestlings' nips Poison more.",
+    "mod": {
+      "companions": [
+        {
+          "kit": "nestling",
+          "mod": {
+            "on": [
+              {
+                "slot": "basic_attack",
+                "statuses": [
+                  "poison"
+                ],
+                "amount_bp": 15000
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "queens_venom",
+    "name": "Queen's Venom",
+    "apex": "viper_queen",
+    "text": "Each Poisoned enemy that falls makes the viper stronger still.",
+    "mod": {
+      "companions": [
+        {
+          "kit": "viper",
+          "mod": {
+            "on": [
+              {
+                "slot": "passive:queen_feed",
+                "add_effects": [
+                  {
+                    "trigger": "on_enemy_fell",
+                    "vs": {
+                      "statuses": [
+                        "poison"
+                      ]
+                    },
+                    "type": "apply_status",
+                    "status": "queens_venom",
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "constrict",
+    "name": "Constrict",
+    "apex": "viper_queen",
+    "text": "Every 8s, her viper Roots its target for 1s.",
+    "mod": {
+      "companions": [
+        {
+          "kit": "viper",
+          "mod": {
+            "passives": [
+              {
+                "id": "constrict",
+                "name": "Constrict",
+                "kind": "ability",
+                "text": "Every 8s, it Roots its target for a moment.",
+                "effects": [
+                  {
+                    "trigger": "on_interval",
+                    "interval_ms": 8000,
+                    "type": "apply_status",
+                    "status": "root",
+                    "duration_ms": 1000,
+                    "target": "target"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "blood_of_the_pack",
+    "name": "Blood of the Pack",
+    "apex": "alpha",
+    "text": "Each allied summon that falls makes every summon attack faster still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "passive:alpha_blood",
+          "add_effects": [
+            {
+              "trigger": "on_summon_fell",
+              "type": "apply_status",
+              "status": "pack_blood",
+              "target": "all_allies",
+              "only": {
+                "summon": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "bloodied_pack",
+    "name": "Bloodied Pack",
+    "apex": "alpha",
+    "text": "Allied summons heal for a share of the damage they deal.",
+    "mod": {
+      "passives": [
+        {
+          "id": "bloodied_pack",
+          "name": "Bloodied Pack",
+          "kind": "aura",
+          "text": "Allied summons heal for a share of the damage they deal.",
+          "aura": {
+            "target": "all_allies",
+            "only": {
+              "summon": true
+            },
+            "stat": "lifesteal_bp",
+            "value": 500
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_howl",
+    "name": "Long Howl",
+    "apex": "wild_hunt",
+    "text": "Howl lasts 2s longer.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "statuses": [
+            "howl"
+          ],
+          "duration_add_ms": 2000
+        }
+      ]
+    }
+  },
+  {
+    "id": "hunt_scent",
+    "name": "Blood Scent",
+    "apex": "wild_hunt",
+    "text": "Summons under Howl move faster.",
+    "mod": {
+      "passives": [
+        {
+          "id": "blood_scent",
+          "name": "Blood Scent",
+          "kind": "aura",
+          "text": "Summons under Howl move faster.",
+          "aura": {
+            "target": "all_allies",
+            "only": {
+              "summon": true,
+              "statuses": [
+                "howl"
+              ]
+            },
+            "stat": "speed",
+            "value": 1
+          }
+        }
+      ]
+    }
   }
 ]
