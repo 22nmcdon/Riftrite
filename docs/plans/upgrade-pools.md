@@ -133,6 +133,8 @@ These never give Stoke-style Burn growth (Furnace), burning ground (Wildfire), o
 | **Wildfire** | **Long Kindling:** her burning ground lasts 1s longer. **Wide Kindling:** Flare's burning ground is 1 hex larger | **Fast Spread:** her ground spreads every 1.5s, not 2s. **Far Spread:** up to 4 hexes from where it started. **Hot Ground:** enemies on it gain Burn equal to 15% of her MGK per second. **Smoke:** enemies on her ground miss 15% of their attacks. Growing: **Scorched Earth** (+1% ground Burn per 10 enemy-seconds on her ground) |
 | **Ember Choir** | **Quick Blessing:** Blessing every 6s, not 8s. **Shared Blessing:** Blessing reaches the 2 nearest allies | **Fervor:** Hymn of Cinders also gives +10% ATK. **Rekindle:** when an ally kills a Burning enemy, she gains 10 mana. **Ember Ward:** allies take 10% less damage from Burning enemies. **Long Hymn:** Hymn lasts 2s longer. Growing: **Choir's Swell** (+1% to allies' Burn per 500 Burn applied by allies) |
 
+Built in phase 8 part 6 (`rebuild-phase8-last-heroes.md`, "Built in 8f-1"): her 33 cards, with the approximations flagged there (Kindled Start, Heat Shimmer, Tinder Box, Scorched Earth, Ember Ward, Rekindle); her 12 apex cards.
+
 ## Tamsin
 
 Built in phase 8 part 4 (`rebuild-phase8-heroes.md`, "Built in 8d-3b and 8d-3d"): her 33 cards, with the approximations flagged there (Night Tally, Trophy Belt, Marked for Death, Swift Step); her 12 apex cards in 8d-3c.

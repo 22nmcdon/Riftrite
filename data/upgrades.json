@@ -8347,7 +8347,7 @@
     "mod": {
       "on": [
         {
-          "slot": "signature",
+          "slot": "passive:ring_of_fire",
           "radius_add": 1
         }
       ]

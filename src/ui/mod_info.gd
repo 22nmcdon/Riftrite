@@ -197,6 +197,15 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 		bits.append("its area moves with its caster")
 	if change.raise_grow_add_bp != 0:
 		bits.append("%s HP for each thrall raised before" % UnitInfo.signed_percent(change.raise_grow_add_bp))
+	# Ilse's cards (phase 8 part 6).
+	if change.share_add_bp != 0:
+		bits.append("%s of its stacks" % UnitInfo.signed_percent(change.share_add_bp))
+	if change.grow_every_add_ticks != 0:
+		bits.append("spreads %s %s" % [UnitInfo.seconds(absi(change.grow_every_add_ticks)), "sooner" if change.grow_every_add_ticks < 0 else "later"])
+	if change.grow_max_add != 0:
+		bits.append("spreads %s hex further" % signed(change.grow_max_add))
+	if change.heal_cap_bp != 0:
+		bits.append("heals stop at %s of max HP" % ValueBreakdown._percent(change.heal_cap_bp))
 	for effect: EffectDef in change.add_to_areas:
 		bits.append("in its area: " + " · ".join(UnitInfo.effect_numbers([effect] as Array[EffectDef], kit, content)))
 	for effect: EffectDef in change.add_effects:

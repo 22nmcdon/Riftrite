@@ -129,7 +129,10 @@ const PATH_STATUSES: Array[String] = ["warded"]
 const HERO_STATUSES: Array[String] = ["iron_maiden", "hidden", "shadow_dance", "garroted", "garrote_veil", "assassins_haste", "swift_step", "death_mark",
 	"phantom_veil", "phantom_edge", "phantom_edge_more", "veiled", "veil_haste", "veil_haste_more", "executioner_rush", "executioner_rush_more", "on_the_trail", "trailing", "blood_scent", "blood_scent_more", "strangle", "pinned_light", "pinned", "pin_rally", "pin_rally_more", "pealing", "kindled", "cracked", "rung", "grand_note", "wellspring_swell", "long_wind_gust", "long_wind_gust_more", "rising_pitch", "great_bell", "great_bell_more", "deafened", "requiem_toll",
 	"nova_hunger", "gluttony", "plague_weak", "pestilence", "epidemic", "wasting", "blood_tide", "blood_offering", "blood_rite", "sacred_blood", "sacrament", "shared_blood",
-	"collection", "sanctified", "bright_offering", "hallowed_ground", "bastion", "choir"]
+	"collection", "sanctified", "bright_offering", "hallowed_ground", "bastion", "choir",
+	# Ilse's (phase 8 part 6, 8f-1; tests/sim/test_ilse_paths.gd, test_ilse_apexes.gd, test_ilse_cards.gd).
+	"smoldering", "blessed", "hymn", "slow_coals", "smoke", "fervor", "singed", "blast_furnace", "roaring_bellows", "crucible", "living_flame", "choking_smoke",
+	"ringed", "ring_heat", "cinder_saint", "rising_choir", "crowned_in_flame", "iron_embers"]
 const RELIC_STATUSES: Array[String] = ["sunder", "quickened", "unbending", "long_watch", "vigilant", "iron_garden"]
 ## Boosts only loadout items apply (phase 5c step 6; tests/run/test_loadout.gd).
 const ITEM_STATUSES: Array[String] = ["surge", "surge_2", "last_breath", "purified",

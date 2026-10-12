@@ -234,7 +234,7 @@
     }
   },
   {
-    "_note": "Hero 9 (docs/plans/rebuild-heroes.md section 8b; rebuild-phase8-last-heroes.md 8f-1). Stats and Flare are the design's; Heat is her only mana, 3 a tick (the design's 1, so she casts at all), and Cinder Flick's 1.2s cooldown keeps her team within the base-kit band (+9). She can't be drafted until her paths come.",
+    "_note": "Hero 9 (docs/plans/rebuild-heroes.md section 8b; rebuild-phase8-last-heroes.md 8f-1). Stats and Flare are the design's; Heat is her only mana, 3 a tick (the design's 1, so she casts at all), and Cinder Flick's 1.2s cooldown keeps her team within the base-kit band (+9).",
     "id": "ilse",
     "name": "Ilse Cinderhand",
     "title": "the fire-speaker",

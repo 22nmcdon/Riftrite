@@ -131,3 +131,16 @@ func test_the_vigil_lamp_caps_heals_on_brannoc() -> void:
 		K.step(fight, 1)
 	assert_eq(K.entries(fight, LogEntry.Kind.HEAL, "vell").size(), 1, "Mend")
 	assert_eq([brannoc.hp, brannoc.shield], [300, 100], "healed to 30%, the other 100 a Shield")
+
+
+func test_her_apex_cards() -> void:
+	var cards: Array[String] = []
+	for id: String in _run.upgrade_ids:
+		var card: UpgradeDef = _run.upgrades[id]
+		if card.layer == UpgradeDef.Layer.APEX and _content.paths[_content.apexes[card.apex].path].hero == "ilse":
+			cards.append(id)
+			assert_true(_run.changes_something(card, true, _content.apexes[card.apex].apex_kit), id)
+	assert_eq(cards.size(), 12, "2 an apex")
+	assert_eq(_passive(_with("wide_ring", _content.apexes["ring_of_fire"].apex_kit), "ring_of_fire").ability.effects[0].shape.size, 3)
+	var stoke: EffectDef = _passive(_with("white_heat", _content.apexes["crucible"].apex_kit), "stoke").ability.effects[0]
+	assert_eq(stoke.grows_stack_bp, 200, "+2% a stack, not 1%")

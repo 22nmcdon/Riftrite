@@ -8954,7 +8954,7 @@
           "from_ability": [
             "stoke"
           ],
-          "threshold": 60
+          "threshold": 95
         }
       },
       {
@@ -9076,7 +9076,7 @@
           "from_ability": [
             "immolate"
           ],
-          "threshold": 600
+          "threshold": 5500
         }
       }
     ]
@@ -9483,7 +9483,7 @@
                 "id": "living_flame",
                 "name": "Living Flame",
                 "kind": "ability",
-                "text": "Each enemy her fire kills feeds every fire, and a new one starts where it fell.",
+                "text": "Each enemy her fire kills feeds every fire, and a new one starts within 1 hex of where it fell, spreading up to 3 hexes.",
                 "effects": [
                   {
                     "trigger": "on_kill",
@@ -9591,42 +9591,8 @@
           }
         },
         "apex": {
-          "text": "Firestorm draws a ring of fire 2 hexes around the largest group; rings last the rest of the fight, up to 3 at once. Enemies crossing one gain Burn equal to 80% of her MGK and are Slowed 30% for 2s, and each crossing makes every ring's Burn 10% stronger for the rest of the fight. The apex also gives +15% HP and MGK.",
+          "text": "Each Firestorm also draws a ring of fire 2 hexes around the largest group; rings last the rest of the fight, up to 3 at once. Enemies crossing one gain Burn equal to 80% of her MGK and are Slowed 30% for 2s, and each crossing makes every ring's Burn 10% stronger for the rest of the fight. The apex also gives +15% HP and MGK.",
           "patch": {
-            "signature": {
-              "id": "firestorm",
-              "name": "Firestorm",
-              "trigger": {
-                "kind": "mana"
-              },
-              "text": "She draws a ring of fire 2 hexes around the largest group of enemies; it lasts the fight, and crossing it burns.",
-              "effects": [
-                {
-                  "type": "area",
-                  "shape": {
-                    "kind": "ring",
-                    "radius": 2
-                  },
-                  "anchor": "target",
-                  "hits": "enemies",
-                  "at_largest_groups": 1,
-                  "duration_ms": 180000,
-                  "every_ms": 1000,
-                  "max_standing": 3,
-                  "effects": [
-                    {
-                      "type": "apply_status",
-                      "status": "burn",
-                      "stacks": 0,
-                      "scaling": {
-                        "mgk": 300
-                      },
-                      "target": "target"
-                    }
-                  ]
-                }
-              ]
-            },
             "passives": [
               {
                 "id": "ring_step",
@@ -9644,7 +9610,8 @@
                     "target": "hit_target",
                     "trigger": "on_zone_enter",
                     "from_ability": [
-                      "kindling"
+                      "kindling",
+                      "firestorm"
                     ]
                   }
                 ]
@@ -9653,8 +9620,33 @@
                 "id": "ring_of_fire",
                 "name": "Ring of Fire",
                 "kind": "ability",
-                "text": "Enemies crossing her rings catch a great Burn and are Slowed, and each crossing makes every ring hotter.",
+                "text": "Each Firestorm also draws a ring of fire 2 hexes around the largest group of enemies; it lasts the fight, and crossing it burns, Slows, and makes every ring hotter.",
                 "effects": [
+                  {
+                    "trigger": "on_ability",
+                    "type": "area",
+                    "shape": {
+                      "kind": "ring",
+                      "radius": 2
+                    },
+                    "anchor": "target",
+                    "hits": "enemies",
+                    "at_largest_groups": 1,
+                    "duration_ms": 180000,
+                    "every_ms": 1000,
+                    "max_standing": 3,
+                    "effects": [
+                      {
+                        "type": "apply_status",
+                        "status": "burn",
+                        "stacks": 0,
+                        "scaling": {
+                          "mgk": 1000
+                        },
+                        "target": "target"
+                      }
+                    ]
+                  },
                   {
                     "type": "apply_status",
                     "status": "burn",
@@ -9669,13 +9661,13 @@
                     },
                     "trigger": "on_zone_enter",
                     "from_ability": [
-                      "firestorm"
+                      "ring_of_fire"
                     ]
                   },
                   {
                     "trigger": "on_zone_enter",
                     "from_ability": [
-                      "firestorm"
+                      "ring_of_fire"
                     ],
                     "type": "apply_status",
                     "status": "ringed",
@@ -9684,7 +9676,7 @@
                   {
                     "trigger": "on_zone_enter",
                     "from_ability": [
-                      "firestorm"
+                      "ring_of_fire"
                     ],
                     "type": "apply_status",
                     "status": "ring_heat",
@@ -10032,7 +10024,7 @@
           "vs_keywords": [
             "burning"
           ],
-          "threshold": 4000
+          "threshold": 9500
         }
       },
       {
@@ -10105,7 +10097,7 @@
           "from_ability": [
             "kindred_flame"
           ],
-          "threshold": 100
+          "threshold": 16
         }
       }
     ]

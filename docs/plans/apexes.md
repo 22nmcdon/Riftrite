@@ -59,6 +59,8 @@ Status: **agreed in discussion (2026-09-30); built for Maren, Brannoc, and Vell 
 | **Cinder Saint** (Ember Choir) | Allies she has blessed gain +5% ATK while blessed | Damage allies' basic attacks deal to Burning enemies | Allies deal +20% damage to Burning enemies, and the Burn on their basic attacks rises to 10% of her MGK. **Snowball:** every ally basic attack gives her +1% MGK (of her MGK at the fight's start, so it adds up rather than compounding) for the rest of the fight | **Rising Choir:** +1.5% MGK per ally attack. **Crowned in Flame:** allies get +10% ATK during Hymn |
 | **Kindred Flame** (Ember Choir) | Every hero heals 0.2% of all Burn damage dealt | Healing from it | **Every hero heals 1% of all Burn damage dealt**, by anyone, anywhere. This is healing, not lifesteal. **Snowball:** overhealing from it becomes Burn on the nearest enemy (1 Burn per 5 overheal), so a healthy team feeds the fire that heals it | **Iron Embers:** every 500 healing from it gives each hero +3 DEF for the rest of the fight. **Hearth Embers:** heroes below 50% HP heal twice as much from it |
 
+Built in phase 8 part 6 (`rebuild-phase8-last-heroes.md`, "Built in 8f-1"), with the calls flagged there (Ring of Fire's rings come with each Firestorm rather than in place of it; Living Flame's new fire starts where the enemy fell; Cinder Saint's taste reaches every other ally, all of them blessed once transformed).
+
 ## Tamsin
 
 Built in phase 8 part 4 (`rebuild-phase8-heroes.md`, "Built in 8d-3c"), with numbers scaled to her tuned paths and the calls flagged there.

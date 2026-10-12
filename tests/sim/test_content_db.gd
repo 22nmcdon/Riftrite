@@ -57,7 +57,8 @@ func test_real_statuses() -> void:
 		"phantom_veil", "phantom_edge", "phantom_edge_more", "veiled", "veil_haste", "veil_haste_more", "executioner_rush", "executioner_rush_more", "on_the_trail", "trailing", "blood_scent", "blood_scent_more", "strangle", "pinned_light", "pinned", "pin_rally", "pin_rally_more", "pealing", "kindled", "cracked", "rung", "grand_note", "wellspring_swell", "long_wind_gust", "long_wind_gust_more", "rising_pitch", "great_bell", "great_bell_more", "deafened", "requiem_toll",
 		"iron_maiden", "nova_hunger", "gluttony", "plague_weak", "pestilence", "epidemic", "wasting", "blood_tide", "blood_offering", "blood_rite", "sacred_blood", "sacrament", "shared_blood",
 		"collection", "sanctified", "bright_offering", "hallowed_ground", "bastion", "choir",
-		"smoldering", "blessed", "hymn", "slow_coals", "smoke", "fervor", "singed"] as Array[String])
+		"smoldering", "blessed", "hymn", "slow_coals", "smoke", "fervor", "singed",
+		"blast_furnace", "roaring_bellows", "crucible", "living_flame", "choking_smoke", "ringed", "ring_heat", "cinder_saint", "rising_choir", "crowned_in_flame", "iron_embers"] as Array[String])
 	assert_eq(db.statuses["burn"].interval_ticks, 10, "Burn ticks twice a second")
 	assert_eq(db.statuses["burn"].stacks_lost_bp, 500)
 	assert_eq(db.statuses["burn"].vs_shield_bp, 5000, "Burn is half as effective against shields")
