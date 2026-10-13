@@ -250,6 +250,11 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 				given = mini(given, maxi(FixedMath.apply_bp(victim.max_hp, effect.cap_bp_of_max_hp) - victim.shield, 0))
 				if given <= 0:
 					return
+			if effect.shield_up_to:
+				# Up to its amount (phase 8 part 6, Recast the Idol).
+				given = maxi(given - victim.shield, 0)
+				if given <= 0:
+					return
 			var shield_entry: LogEntry = give_shield(sim, victim, given, source)
 			shield_entry.set_rule(amount, power, 0, 0, unit.relic_bonus_bp)
 		EffectDef.Type.SPEND_SHIELD:

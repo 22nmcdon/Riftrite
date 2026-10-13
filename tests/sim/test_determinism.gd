@@ -146,7 +146,9 @@ const HERO_STATUSES: Array[String] = ["iron_maiden", "hidden", "shadow_dance", "
 	"unseen_host", "knife_in_the_dark", "veil_confused", "veil_exposed", "grand_dance", "puppet_thread", "puppet_exposed",
 	"marionette", "marionette_exposed", "puppet_cut", "puppet_master",
 	# Hob's (phase 8 part 6, 8f-5; tests/sim/test_hob_pieces.gd, test_hob_paths.gd).
-	"bounty", "compounding", "cut_purse"]
+	"bounty", "compounding", "cut_purse",
+	# His apexes' (8f-5c; tests/sim/test_hob_apexes.gd).
+	"idol_fury", "compounding_more", "idol_gaze", "silver_cut", "silver_cut_deep", "silver_tongue", "bounty_slow", "bounty_lesser"]
 const RELIC_STATUSES: Array[String] = ["sunder", "quickened", "unbending", "long_watch", "vigilant", "iron_garden"]
 ## Boosts only loadout items apply (phase 5c step 6; tests/run/test_loadout.gd).
 const ITEM_STATUSES: Array[String] = ["surge", "surge_2", "last_breath", "purified",

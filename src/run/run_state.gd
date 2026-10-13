@@ -212,6 +212,12 @@ var wares_rank_ii: Array[int] = []
 ## shop still owes (The Black Market Ledger).
 var tithe_held: int = 0
 var ledger_rerolls: int = 0
+## The open shop's black-market relic (phase 8 part 6, Black Market): its
+## index in shop_relics (-1: none), the tier it's priced at, and its free
+## rerolls taken (Smuggler's Route).
+var black_market_slot: int = -1
+var black_market_tier: String = ""
+var black_market_rerolled: int = 0
 var transmuted_act: int = 0
 ## The Magpie's swap is used this visit (phase 5c step 6e).
 var magpie_swapped: bool = false
@@ -324,7 +330,7 @@ func to_dict() -> Dictionary:
 		"shards": shards, "options": options.duplicate(true), "chosen": chosen, "formation": hexes,
 		"fought": fought.map(func(entry: Fought) -> Dictionary: return entry.to_dict()),
 		"pick": pick.duplicate(), "just_transformed": just_transformed.duplicate(),
-		"stash": stash.duplicate(), "shop": shop, "wares": wares.duplicate(), "rerolls": rerolls, "transmutes": transmutes, "shop_relics_bought": shop_relics_bought, "wares_rank_ii": wares_rank_ii.duplicate(), "tithe_held": tithe_held, "ledger_rerolls": ledger_rerolls, "transmuted_act": transmuted_act, "shop_relics": shop_relics.duplicate(), "magpie_swapped": magpie_swapped,
+		"stash": stash.duplicate(), "shop": shop, "wares": wares.duplicate(), "rerolls": rerolls, "transmutes": transmutes, "shop_relics_bought": shop_relics_bought, "wares_rank_ii": wares_rank_ii.duplicate(), "tithe_held": tithe_held, "ledger_rerolls": ledger_rerolls, "black_market_slot": black_market_slot, "black_market_tier": black_market_tier, "black_market_rerolled": black_market_rerolled, "transmuted_act": transmuted_act, "shop_relics": shop_relics.duplicate(), "magpie_swapped": magpie_swapped,
 		"place": place, "camp": camp.duplicate(), "camp_used": camp_used, "hunt": hunt, "mapping": mapping,
 		"fortify": fortify, "dig_in": dig_in, "rock": rock.duplicate(), "rift_depth": rift_depth, "rift_mods": rift_mods.duplicate(), "rested": rested,
 		"scouted": scouted.duplicate(), "nodes": nodes.duplicate(), "node": node, "taken_nodes": taken_nodes.duplicate(), "magpie_visits": magpie_visits,
@@ -376,6 +382,9 @@ static func from_dict(data: Dictionary) -> RunState:
 	state.shop_relics_bought = int(data.get("shop_relics_bought", 0))
 	state.tithe_held = int(data.get("tithe_held", 0))
 	state.ledger_rerolls = int(data.get("ledger_rerolls", 0))
+	state.black_market_slot = int(data.get("black_market_slot", -1))
+	state.black_market_tier = str(data.get("black_market_tier", ""))
+	state.black_market_rerolled = int(data.get("black_market_rerolled", 0))
 	state.wares_rank_ii.assign((data.get("wares_rank_ii", []) as Array).map(func(value: Variant) -> int: return int(value)))
 	state.transmuted_act = int(data.get("transmuted_act", 0))
 	state.magpie_swapped = bool(data.get("magpie_swapped", false))

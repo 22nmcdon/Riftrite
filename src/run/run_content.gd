@@ -212,7 +212,7 @@ func upgrades_for(hero: RunState.Hero) -> Array[String]:
 ## not): its mod touches it, and an added passive can fire on it; a growing
 ## card's counting can count there; a stacking card always does.
 func changes_something(upgrade: UpgradeDef, transformed: bool, kit: UnitDef) -> bool:
-	if upgrade.stacks() or upgrade.tithe != null or upgrade.transmute != null or upgrade.shop != null or upgrade.snowball_bp > 0:
+	if upgrade.stacks() or upgrade.tithe != null or upgrade.transmute != null or upgrade.shop != null or upgrade.snowball_bp > 0 or upgrade.holding_less > 0:
 		return true
 	var mod: KitMod = upgrade.mod_for(transformed)
 	if mod != null and (mod.affects_besides_passives(kit) or mod.passives.any(func(part: PartDef) -> bool: return _passive_can_fire(part, kit))):
@@ -283,10 +283,35 @@ func upgrade_mods(hero: RunState.Hero, shards: int = -1) -> Array[KitMod]:
 	# Its earned apex's run snowball, if it's its own (phase 8 part 5).
 	var apex: ApexDef = earned_apex(hero)
 	if apex != null and apex.grows != null and not apex.grows.team:
-		var grown: KitMod = apex.grows.mod_for(hero.growth.get(apex_growth_key(apex), 0))
+		var grown: KitMod = apex.grows.mod_for(apex_count(hero, apex))
 		if grown != null:
 			mods.append(grown)
 	return mods
+
+
+## The shards held that make a won fight "won_holding" for `hero`'s cards and
+## apex (phase 8 part 6: RunFlow.WON_HOLDING_SHARDS, less its Low Bar).
+func holding_threshold(hero: RunState.Hero) -> int:
+	var less: int = 0
+	for upgrade: UpgradeDef in held_upgrades(hero):
+		less += upgrade.holding_less
+	return maxi(RunFlow.WON_HOLDING_SHARDS - less, 1)
+
+
+## What `hero`'s earned `apex`'s run snowball has counted, its apex cards'
+## snowball_bp added on (phase 8 part 6, Deep Vault: half again).
+func apex_count(hero: RunState.Hero, apex: ApexDef) -> int:
+	return FixedMath.apply_bp(hero.growth.get(apex_growth_key(apex), 0), FixedMath.BP_ONE + _snowball_bp(hero, UpgradeDef.Layer.APEX))
+
+
+## Its held cards' snowball_bp of one layer, summed (phase 8 part 6): path
+## cards' reach its path's snowball, apex cards' its apex's.
+func _snowball_bp(hero: RunState.Hero, layer: UpgradeDef.Layer) -> int:
+	var more_bp: int = 0
+	for upgrade: UpgradeDef in held_upgrades(hero):
+		if upgrade.layer == layer:
+			more_bp += upgrade.snowball_bp
+	return more_bp
 
 
 ## The apex `hero` has earned, or null.
@@ -315,9 +340,7 @@ func path_grown(hero: RunState.Hero, team: bool) -> KitMod:
 	if path.transformed_grows == null or path.transformed_grows.team != team:
 		return null
 	# Big Spender: its count goes further (every card's share added up).
-	var more_bp: int = 0
-	for upgrade: UpgradeDef in held_upgrades(hero):
-		more_bp += upgrade.snowball_bp
+	var more_bp: int = _snowball_bp(hero, UpgradeDef.Layer.PATH)
 	return path.transformed_grows.mod_for(FixedMath.apply_bp(hero.growth.get(path_growth_key(path), 0), FixedMath.BP_ONE + more_bp))
 
 
@@ -435,6 +458,12 @@ func growth_tallies(state: RunState, hero: RunState.Hero) -> Array:
 		if relics.has(id) and relics[id].grows != null and relics[id].grows.counted_in_fights():
 			keys.append("relic:" + id)
 			counts.append(relics[id].grows.counts)
+	# Its earned apex's snowball, if its fights count it (phase 8 part 6,
+	# Manhunter).
+	var apex: ApexDef = earned_apex(hero)
+	if apex != null and apex.grows != null and apex.grows.counted_in_fights():
+		keys.append(apex_growth_key(apex))
+		counts.append(apex.grows.counts)
 	# Its tactic's and sigils' ranks count in the fight (phase 5c step 6):
 	# the time it stands, and its signature's casts. Charms and gambits count
 	# fights, which the run does.
@@ -537,7 +566,7 @@ func relic_mods(state: RunState, kit: UnitDef = null) -> Array[KitMod]:
 					mods.append(grown)
 		var apex: ApexDef = earned_apex(hero)
 		if apex != null and apex.grows != null and apex.grows.team:
-			var grown: KitMod = apex.grows.mod_for(hero.growth.get(apex_growth_key(apex), 0))
+			var grown: KitMod = apex.grows.mod_for(apex_count(hero, apex))
 			if grown != null:
 				mods.append(grown)
 		var stage_grown: KitMod = path_grown(hero, true)

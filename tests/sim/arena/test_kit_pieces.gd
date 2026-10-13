@@ -86,7 +86,7 @@ func test_the_new_pieces_refuse_what_cant_work() -> void:
 		"on_fall runs once the unit has fallen, so its area is anchored on it": ["part", _ability("e", [{"trigger": "on_fall", "type": "area", "shape": {"kind": "circle", "radius": 1}, "anchor": "target", "hits": "all",
 			"effects": [{"type": "damage", "amount": 1, "target": "target"}]}])],
 		"an area is cast as its ability fires or on a passive's trigger, never on_hit or on_crit": ["effect", area.merged({"trigger": "on_crit"})],
-		"\"trigger_ally\" only works with the on_ally_below_hp and on_ally_shield_broken triggers": ["part", _ability("f", [{"trigger": "on_interval", "interval_ms": 1000, "type": "heal", "amount": 5, "target": "trigger_ally"}])],
+		"\"trigger_ally\" only works with the on_ally_below_hp, on_ally_shield_broken, and on_enemy_fell triggers": ["part", _ability("f", [{"trigger": "on_interval", "interval_ms": 1000, "type": "heal", "amount": 5, "target": "trigger_ally"}])],
 		"a passive's effects need a passive trigger": ["part", _ability("g", [{"type": "heal", "amount": 5, "target": "self"}])],
 	}
 	for expected: String in cases:

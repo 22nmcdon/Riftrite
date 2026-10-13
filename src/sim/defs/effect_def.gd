@@ -23,7 +23,10 @@ extends RefCounted
 ##                 (amount_bp_of_max_hp too, phase 5c step 5b); optional
 ##                 cap_bp_of_max_hp (phase 8 part 4, Plated Blows): it gives
 ##                 no more than takes its target's Shield to that share of
-##                 its max HP (nothing once it's there)
+##                 its max HP (nothing once it's there); "up_to": true
+##                 (phase 8 part 6, Recast the Idol): it fills its target's
+##                 Shield to its amount, replacing a smaller Shield (nothing
+##                 if it's already that big)
 ##   damage's amount_bp_of_shield (phase 8 part 4, Bulwark Burst): instead
 ##                 of amount, that share of the unit's own Shield as it
 ##                 fires (an area's: as it's cast); a Shield's too (Shared
@@ -267,7 +270,9 @@ extends RefCounted
 ##   on_ally_below_hp   when an ally first drops below "threshold_bp" of max
 ##                      HP while still standing; "once": true means only the
 ##                      first ally in the fight, otherwise once per ally
-##   trigger_ally       target: the ally that set off on_ally_below_hp
+##   trigger_ally       target: the ally that set off on_ally_below_hp (and,
+##                      phase 8 part 6, on_enemy_fell's: the ally that felled
+##                      the enemy, Reward Poster)
 ## Relic numbers are flat: no "scaling". Targets that need a unit on the
 ## field are rejected.
 ##
@@ -648,6 +653,8 @@ var prefer: UnitCondition = null
 ## shield (phase 8 part 4): it fills its target's Shield to at most this
 ## share of its max HP (0: no cap).
 var cap_bp_of_max_hp: int = 0
+## shield (phase 8 part 6): it fills its target's Shield up to its amount.
+var shield_up_to: bool = false
 ## damage/heal/shield: a power bonus (bp, added to the unit's other power
 ## bonuses by the damage rule, DamageRule). Not read from the data: kit mods
 ## set it ("amount_bp" on an ability, phase 5c Decision 6).
@@ -1100,6 +1107,7 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				def.amount_bp_of_max_hp = reader.opt_int("amount_bp_of_max_hp", 0, 0, FixedMath.BP_ONE)
 				def.amount_bp_of_shield = reader.opt_int("amount_bp_of_shield", 0, 0)
 				def.cap_bp_of_max_hp = reader.opt_int("cap_bp_of_max_hp", 0, 1, 10 * FixedMath.BP_ONE)
+				def.shield_up_to = reader.opt_bool("up_to", false)
 			Type.SPEND_SHIELD:
 				if def.target != Target.SELF:
 					reader.error("spend_shield spends the unit's own Shield (\"target\": \"self\")")
@@ -1500,8 +1508,8 @@ static func _read_trigger_fields(def: EffectDef, reader: DataReader, relic: bool
 		def.holder = UnitCondition.read(reader.req_object("holder"))
 		if not (EVENT_TRIGGERS.has(def.trigger) or UNIT_TRIGGERS.has(def.trigger)):
 			reader.error("only an event's or a timed effect can take \"holder\"")
-	if def.target == Target.TRIGGER_ALLY and def.trigger != Trigger.ON_ALLY_BELOW_HP and def.trigger != Trigger.ON_ALLY_SHIELD_BROKEN:
-		reader.error("\"trigger_ally\" only works with the on_ally_below_hp and on_ally_shield_broken triggers")
+	if def.target == Target.TRIGGER_ALLY and def.trigger != Trigger.ON_ALLY_BELOW_HP and def.trigger != Trigger.ON_ALLY_SHIELD_BROKEN and def.trigger != Trigger.ON_ENEMY_FELL:
+		reader.error("\"trigger_ally\" only works with the on_ally_below_hp, on_ally_shield_broken, and on_enemy_fell triggers")
 	if not relic:
 		return
 	if FIELD_ONLY_TARGETS.has(def.target):

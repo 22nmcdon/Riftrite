@@ -665,6 +665,13 @@ static func on_event(sim: CombatSim, unit: UnitState, event: EffectDef.Trigger, 
 				if not Statuses.spend_stack(sim, unit, effect.spends):
 					continue
 				spent.append(key)
+		if event == EffectDef.Trigger.ON_ENEMY_FELL and effect.target == EffectDef.Target.TRIGGER_ALLY:
+			# The ally that felled it (phase 8 part 6, Reward Poster): the unit
+			# the effect names, once the fallen has passed its checks.
+			var killer: UnitState = sim.unit_by_id(other.last_attacker) if other != null else null
+			if killer == null or killer.side != unit.side:
+				continue
+			other = killer
 		listener.count += 1
 		if listener.count % effect.every != 0:
 			continue

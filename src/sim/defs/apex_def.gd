@@ -35,8 +35,10 @@ var apex_transmute: TransmuteDef = null
 var vowed_shop: ShopRulesDef = null
 var apex_shop: ShopRulesDef = null
 ## A run snowball (phase 8 part 5: Golden Aegis, Collector of Debts): a
-## growth on what the run counts ("run_counts"), from when it's earned; its
-## steps' mod goes to its hero, or every hero with "team" (null: none).
+## growth on what the run counts ("run_counts"), or (phase 8 part 6,
+## Manhunter) on what its hero's fights count, as a card's growth does,
+## from when it's earned; its steps' mod goes to its hero, or every hero
+## with "team" (null: none).
 var grows: GrowthDef = null
 var deed: DeedDef
 ## Built by ContentDb (null until then).
@@ -82,8 +84,6 @@ static func read(reader: DataReader, path_id: String) -> ApexDef:
 	var grows: DataReader = reader.req_object("grows") if reader.has("grows") else null
 	if grows != null:
 		def.grows = GrowthDef.read(grows)
-		if def.grows.counted_in_fights():
-			reader.error("an apex grows with what the run counts (\"run_counts\")")
 	reader.finish()
 	return def
 

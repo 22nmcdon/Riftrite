@@ -109,6 +109,8 @@ Built in phase 8 part 4 (`rebuild-phase8-heroes.md`, "Built in 8d-4c"), with num
 | **Manhunter** (Bounty Hunter) | Collect deals +25% damage to Bounties | Damage dealt to Bounties | Two Bounties at once (the two toughest enemies), and Collect executes a Bounty below 20% HP | **Run:** each Bounty collected gives the team +1% damage against Bounties for the rest of the run (elites and bosses are usually the toughest) | **Hunting Party:** +2% per Bounty. **Dead or Alive:** Bounties are Slowed 20% |
 | **Price on Their Heads** (Bounty Hunter) | Bounties pay 1 extra shard | Shards from Bounties | Every enemy is a Bounty worth 1 shard (the toughest is worth 5), with the cap at 12. Only the toughest is Marked | **Run (money):** each Bounty collected raises the toughest Bounty's pay by 1 for the rest of the run, up to 15 | **Blood Money:** +2 per Bounty, up to 20. **Reward Poster:** whoever kills a Bounty gains 10 mana |
 
+Built in phase 8 part 6 (`rebuild-phase8-last-heroes.md`, "Built in 8f-5", 8f-5c), with the numbers and calls flagged there (Golden Idol tuned on the sweep to +1 ATK for every 3 shards and a Shield of 3 a shard; Manhunter's and Price on Their Heads' snowballs count Bounties killed in fights; Price on Their Heads' Bounty no longer passes on; Black Market's slot is the Pedlar's and keeps Fence's shop rules).
+
 ## Severine
 
 | Apex | Taste (on vow) | Deed | The apex | Upgrades |

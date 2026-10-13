@@ -14416,7 +14416,274 @@
         "nest_egg"
       ],
       "threshold": 40
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-5c; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "dragons_hoard",
+        "name": "Dragon's Hoard",
+        "title": "the one whose hoard guards them all",
+        "fantasy": "The purse is a dragon's bed of gold, and everyone who sleeps beside it grows stronger.",
+        "vowed": {
+          "taste": "Heavy Purse deals 3 damage per shard held, not 2.",
+          "patch": {
+            "signature": {
+              "id": "heavy_purse",
+              "name": "Heavy Purse",
+              "text": "He slams his target within 2 hexes with his purse, harder for every shard the run holds.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "effects": [
+                {
+                  "type": "damage",
+                  "amount": 0,
+                  "target": "target",
+                  "scaling": {
+                    "atk": 10000
+                  },
+                  "plus_per_shard_bp": 30000
+                }
+              ]
+            }
+          }
+        },
+        "apex": {
+          "text": "Heavy Purse deals 3 damage per shard held. Nest Egg's bonus goes to every hero at full value, and every hero has 1% more max HP per 5 shards held. Each fight won holding 30 or more shards gives every hero 1% more ATK, MGK, and max HP for the rest of the run. The apex also gives +15% HP and ATK.",
+          "patch": {
+            "signature": {
+              "id": "heavy_purse",
+              "name": "Heavy Purse",
+              "text": "He slams his target within 2 hexes with his purse, harder for every shard the run holds.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "effects": [
+                {
+                  "type": "damage",
+                  "amount": 0,
+                  "target": "target",
+                  "scaling": {
+                    "atk": 10000
+                  },
+                  "plus_per_shard_bp": 30000
+                }
+              ]
+            },
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500
+            },
+            "passives": [
+              {
+                "id": "nest_egg_shared",
+                "name": "Nest Egg",
+                "kind": "aura",
+                "text": "His allies' hits land harder for the shards the run holds, as much as his.",
+                "aura": {
+                  "target": "all_allies",
+                  "only": {
+                    "others": true
+                  },
+                  "stat": "damage_bp",
+                  "value": 10100,
+                  "per_shards": 5,
+                  "vs": {
+                    "others": true
+                  }
+                }
+              },
+              {
+                "id": "nest_egg_shared_guard",
+                "name": "Nest Egg",
+                "kind": "aura",
+                "text": "His allies' DEF rises for the shards the run holds, as much as his.",
+                "aura": {
+                  "target": "all_allies",
+                  "only": {
+                    "others": true
+                  },
+                  "stat": "def_bp",
+                  "value": 10100,
+                  "per_shards": 5
+                }
+              },
+              {
+                "id": "hoard_vigor",
+                "name": "Dragon's Hoard",
+                "kind": "aura",
+                "text": "Every hero's max HP rises for the shards the run holds.",
+                "aura": {
+                  "target": "all_allies",
+                  "stat": "max_hp_bp",
+                  "value": 10100,
+                  "per_shards": 5
+                }
+              }
+            ]
+          }
+        },
+        "grows": {
+          "run_counts": "won_holding",
+          "per": 1,
+          "team": true,
+          "each": {
+            "stats_bp": {
+              "atk": 10100,
+              "mgk": 10100,
+              "hp": 10100
+            }
+          }
+        },
+        "deed": {
+          "text": "Damage dealt by Heavy Purse",
+          "counts": "damage",
+          "from_ability": [
+            "heavy_purse"
+          ],
+          "threshold": 4100
+        }
+      },
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-5c; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase. The carry: Recast the Idol replaces Heavy Purse, whose damage per shard the Idol's ATK per shard takes over.",
+        "id": "golden_idol",
+        "name": "Golden Idol",
+        "title": "the one who is worth his weight",
+        "fantasy": "He is the idol now: gold-skinned, gold-shielded, striking harder the more the run holds.",
+        "vowed": {
+          "taste": "He starts each fight with a Shield of 2 per shard held.",
+          "patch": {
+            "passives": [
+              {
+                "id": "idol_purse",
+                "name": "Idol's Purse",
+                "kind": "ability",
+                "text": "He starts each fight with a Shield for the shards the run holds.",
+                "effects": [
+                  {
+                    "trigger": "on_fight_start",
+                    "type": "shield",
+                    "amount": 0,
+                    "plus_per_shard_bp": 20000,
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "+1 ATK for every 3 shards held. He starts each fight with a Shield of 3 per shard held; when it breaks, he attacks 50% faster for 5s. Recast the Idol replaces Heavy Purse (50 mana), which becomes a habit, every 8th Sling Stone: his Shield back up to 3 per shard held, and a strike of 300% of his ATK. Each Recast makes his held shards count 10% more for the rest of the fight. The apex also gives +15% HP and ATK.",
+          "patch": {
+            "signature": {
+              "id": "recast_the_idol",
+              "name": "Recast the Idol",
+              "trigger": {
+                "kind": "mana"
+              },
+              "text": "He restores his Shield for the shards the run holds and strikes his target within 2 hexes, hard; each Recast makes every shard count for more this fight.",
+              "effects": [
+                {
+                  "type": "shield",
+                  "amount": 0,
+                  "plus_per_shard_bp": 30000,
+                  "up_to": true,
+                  "target": "self"
+                },
+                {
+                  "type": "damage",
+                  "amount": 0,
+                  "scaling": {
+                    "atk": 30000
+                  },
+                  "target": "target"
+                },
+                {
+                  "type": "apply_status",
+                  "status": "compounding",
+                  "stacks": 1,
+                  "target": "self"
+                }
+              ]
+            },
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500
+            },
+            "passives": [
+              {
+                "id": "idol_purse",
+                "name": "Idol's Purse",
+                "kind": "ability",
+                "text": "He starts each fight with a bigger Shield for the shards the run holds.",
+                "effects": [
+                  {
+                    "trigger": "on_fight_start",
+                    "type": "shield",
+                    "amount": 0,
+                    "plus_per_shard_bp": 30000,
+                    "target": "self"
+                  }
+                ]
+              },
+              {
+                "id": "idol_gold",
+                "name": "Golden Idol",
+                "kind": "aura",
+                "text": "His ATK rises for every shard the run holds.",
+                "aura": {
+                  "target": "holder",
+                  "stat": "atk",
+                  "value": 1,
+                  "per_shards": 3
+                }
+              },
+              {
+                "id": "heavy_purse",
+                "name": "Heavy Purse",
+                "kind": "ability",
+                "text": "A habit: every 8th Sling Stone, he slams its target with his purse, harder for every shard the run holds.",
+                "effects": [
+                  {
+                    "trigger": "on_basic_attack",
+                    "every": 8,
+                    "type": "damage",
+                    "amount": 0,
+                    "scaling": {
+                      "atk": 10000
+                    },
+                    "plus_per_shard_bp": 20000,
+                    "target": "target"
+                  }
+                ]
+              },
+              {
+                "id": "idol_shattered",
+                "name": "Golden Idol",
+                "kind": "ability",
+                "text": "When his Shield breaks, he attacks faster for a few seconds.",
+                "effects": [
+                  {
+                    "trigger": "on_shield_broken",
+                    "type": "apply_status",
+                    "status": "idol_fury",
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Shield from the Idol's Purse",
+          "counts": "shield",
+          "from_ability": [
+            "idol_purse"
+          ],
+          "threshold": 1000
+        }
+      }
+    ]
   },
   {
     "_note": "Economy: payoff for spending (rebuild-heroes.md, section 8f, path 2; phase 8 part 6, 8f-5). Long-game. Haggle and the half-price rerolls are shop rules on the stage (ShopRulesDef); the team bonus is the transformed stage's run snowball, counting shards spent in shops (Decision 6). Cut Purse's shard is a passive on its hit, once an enemy.",
@@ -14534,7 +14801,146 @@
       "text": "Shards saved on rerolls",
       "counts": "rerolls_saved",
       "threshold": 4
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-5c; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "black_market",
+        "name": "Black Market",
+        "title": "the one with a door in the back",
+        "fantasy": "Every shop has a back room, and he knows every one.",
+        "vowed": {
+          "taste": "The first relic bought in each shop costs 2 shards less.",
+          "shop": {
+            "first_relic_less": 2
+          }
+        },
+        "apex": {
+          "text": "The Pedlar shows a second relic, a black-market one a tier higher than normal, at its own tier's price. Each relic bought from now makes relics 1 shard cheaper at the Pedlar for the rest of the run, down to half price. Fence's half-price rerolls and smaller sell-back carry on. The apex also gives +15% HP and ATK.",
+          "shop": {
+            "black_market": 1,
+            "relic_less_per_bought": 1,
+            "reroll_less_bp": 5000,
+            "sell_less_bp": 2500
+          },
+          "patch": {
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500
+            }
+          }
+        },
+        "grows": {
+          "run_counts": "relics_bought",
+          "per": 1
+        },
+        "deed": {
+          "text": "Shards saved on relics",
+          "counts": "relics_saved",
+          "threshold": 12
+        }
+      },
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-5c; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "silver_tongue",
+        "name": "Silver Tongue",
+        "title": "the one who talks the gold out of their hands",
+        "fantasy": "He doesn't cut purses any more; he talks every enemy near him out of theirs.",
+        "vowed": {
+          "taste": "Cut Purse lowers the target's ATK by 20%, not 15%.",
+          "patch": {
+            "signature": {
+              "id": "cut_purse",
+              "name": "Cut Purse",
+              "text": "He cuts the purse of his target within 2 hexes: it drops a shard and hits softer for a few seconds.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "effects": [
+                {
+                  "type": "damage",
+                  "amount": 0,
+                  "target": "target",
+                  "scaling": {
+                    "atk": 12000
+                  }
+                },
+                {
+                  "type": "apply_status",
+                  "status": "silver_cut",
+                  "duration_ms": 4000,
+                  "target": "target"
+                }
+              ]
+            }
+          }
+        },
+        "apex": {
+          "text": "Cut Purse hits every enemy within 2 hexes; each drops a shard (once) and loses 25% ATK for 4s. His shards a fight can go up to 12. Each enemy whose purse he cuts makes Cut Purse cost 5 less mana for the rest of the fight, down to 15. The apex also gives +15% HP and ATK.",
+          "patch": {
+            "signature": {
+              "id": "cut_purse",
+              "name": "Cut Purse",
+              "text": "He cuts the purse of every enemy within 2 hexes: each drops a shard and hits softer for a few seconds.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "effects": [
+                {
+                  "type": "damage",
+                  "amount": 0,
+                  "scaling": {
+                    "atk": 12000
+                  },
+                  "target": "enemies_near_self",
+                  "within_hexes": 2
+                },
+                {
+                  "type": "apply_status",
+                  "status": "silver_cut_deep",
+                  "target": "enemies_near_self",
+                  "within_hexes": 2
+                }
+              ]
+            },
+            "shard_cap": 12,
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500
+            },
+            "passives": [
+              {
+                "id": "silver_tongue_feed",
+                "name": "Silver Tongue",
+                "kind": "ability",
+                "text": "Each enemy whose purse he cuts makes Cut Purse cheaper for the rest of the fight.",
+                "effects": [
+                  {
+                    "trigger": "on_holder_hit",
+                    "from_ability": [
+                      "cut_purse"
+                    ],
+                    "once_per_enemy": true,
+                    "type": "apply_status",
+                    "status": "silver_tongue",
+                    "stacks": 5,
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Enemies weakened by Cut Purse",
+          "counts": "applied",
+          "statuses": [
+            "silver_cut"
+          ],
+          "threshold": 30
+        }
+      }
+    ]
   },
   {
     "_note": "Mark: maker; Economy (rebuild-heroes.md, section 8f, path 3; phase 8 part 6, 8f-5). Enabler. The Bounty is its own Mark (statuses.json's bounty), on the toughest enemy (toughest_enemies), passed to the next toughest without one. The feat deed: one Bounty killed by the heroes' side. Tuned by build (8f-5b): the transformed Bounty's Mark is +40% (strength_add_bp 2500), and the stage has +20% ATK and max HP: floor +10, lift +18 (from +0 and +6 at the design's numbers).",
@@ -14713,6 +15119,338 @@
         "bounty"
       ],
       "threshold": 1
-    }
+    },
+    "apexes": [
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-5c; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase.",
+        "id": "manhunter",
+        "name": "Manhunter",
+        "title": "the one who never loses a mark",
+        "fantasy": "Two prices, two heads, and he collects both.",
+        "vowed": {
+          "taste": "He deals 25% more damage to Bounties.",
+          "patch": {
+            "passives": [
+              {
+                "id": "manhunt",
+                "name": "Manhunter",
+                "kind": "aura",
+                "text": "His hits on Bounties land harder.",
+                "aura": {
+                  "target": "holder",
+                  "stat": "damage_bp",
+                  "value": 12500,
+                  "vs": {
+                    "statuses": [
+                      "bounty"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "The two toughest enemies are Bounties at once, and Collect finishes a Bounty below 20% HP. Each Bounty collected gives the team 1% more damage to Bounties for the rest of the run. The apex also gives +15% HP and ATK.",
+          "patch": {
+            "signature": {
+              "id": "collect",
+              "name": "Collect",
+              "text": "He strikes the Bounty within 4 hexes, hard, and finishes it if it's low.",
+              "trigger": {
+                "kind": "mana"
+              },
+              "targeting": "nearest",
+              "max_range": 4,
+              "prefer": {
+                "statuses": [
+                  "bounty"
+                ]
+              },
+              "effects": [
+                {
+                  "type": "damage",
+                  "amount": 0,
+                  "target": "target",
+                  "scaling": {
+                    "atk": 20000
+                  },
+                  "execute_below_pct": 20,
+                  "execute_vs": {
+                    "statuses": [
+                      "bounty"
+                    ]
+                  }
+                }
+              ]
+            },
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500
+            },
+            "passives": [
+              {
+                "id": "bounty",
+                "name": "Bounty",
+                "kind": "ability",
+                "text": "The two toughest enemies are Bounties, Marked harder than a Mark for as long as they live; when one dies it pays shards and the next toughest becomes a Bounty.",
+                "effects": [
+                  {
+                    "trigger": "on_fight_start",
+                    "type": "apply_status",
+                    "status": "bounty",
+                    "duration_ms": 180000,
+                    "target": "toughest_enemies",
+                    "strength_add_bp": 2500,
+                    "count": 2
+                  },
+                  {
+                    "trigger": "on_enemy_fell",
+                    "vs": {
+                      "statuses": [
+                        "bounty"
+                      ]
+                    },
+                    "type": "shards",
+                    "amount": 3,
+                    "target": "self"
+                  },
+                  {
+                    "trigger": "on_enemy_fell",
+                    "vs": {
+                      "statuses": [
+                        "bounty"
+                      ]
+                    },
+                    "type": "apply_status",
+                    "status": "bounty",
+                    "duration_ms": 180000,
+                    "target": "toughest_enemies",
+                    "only": {
+                      "without": [
+                        "bounty"
+                      ]
+                    },
+                    "strength_add_bp": 2500
+                  }
+                ]
+              },
+              {
+                "id": "manhunt",
+                "name": "Manhunter",
+                "kind": "aura",
+                "text": "His hits on Bounties land harder.",
+                "aura": {
+                  "target": "holder",
+                  "stat": "damage_bp",
+                  "value": 12500,
+                  "vs": {
+                    "statuses": [
+                      "bounty"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "grows": {
+          "counts": {
+            "counts": "kills",
+            "by_allies": true,
+            "statuses": [
+              "bounty"
+            ]
+          },
+          "per": 1,
+          "team": true,
+          "each": {
+            "passives": [
+              {
+                "id": "manhunter_trophies",
+                "name": "Manhunter",
+                "kind": "aura",
+                "text": "Grows with the Bounties collected: hits on Bounties land harder.",
+                "aura": {
+                  "target": "holder",
+                  "stat": "damage_bp",
+                  "value": 10100,
+                  "vs": {
+                    "statuses": [
+                      "bounty"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Damage dealt to Marked enemies",
+          "counts": "damage",
+          "vs_keywords": [
+            "marked"
+          ],
+          "threshold": 4100
+        }
+      },
+      {
+        "_note": "Phase 8 part 6 (rebuild-phase8-last-heroes.md 8f-5c; apexes.md). Numbers are placeholders scaled to the path's numbers, for the --apexes report and the tuning phase. The design's toughest pay rises past the cap of 12, which still holds.",
+        "id": "price_on_their_heads",
+        "name": "Price on Their Heads",
+        "title": "the one who prices every head",
+        "fantasy": "Every enemy has a price; the toughest is worth a fortune.",
+        "vowed": {
+          "taste": "Bounties pay 1 more shard.",
+          "patch": {
+            "passives": [
+              {
+                "id": "bounty",
+                "name": "Bounty",
+                "kind": "ability",
+                "text": "The toughest enemy is a Bounty, Marked harder than a Mark for as long as it lives; when it dies it pays shards and the next toughest becomes the Bounty.",
+                "effects": [
+                  {
+                    "trigger": "on_fight_start",
+                    "type": "apply_status",
+                    "status": "bounty",
+                    "duration_ms": 180000,
+                    "target": "toughest_enemies",
+                    "strength_add_bp": 2500
+                  },
+                  {
+                    "trigger": "on_enemy_fell",
+                    "vs": {
+                      "statuses": [
+                        "bounty"
+                      ]
+                    },
+                    "type": "shards",
+                    "amount": 4,
+                    "target": "self"
+                  },
+                  {
+                    "trigger": "on_enemy_fell",
+                    "vs": {
+                      "statuses": [
+                        "bounty"
+                      ]
+                    },
+                    "type": "apply_status",
+                    "status": "bounty",
+                    "duration_ms": 180000,
+                    "target": "toughest_enemies",
+                    "only": {
+                      "without": [
+                        "bounty"
+                      ]
+                    },
+                    "strength_add_bp": 2500
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "apex": {
+          "text": "Every enemy is a Bounty worth 1 shard; the toughest is worth 5 and is the only one Marked. His shards a fight can go up to 12. Each Bounty collected raises the toughest's pay by 1 for the rest of the run, up to 15. The apex also gives +15% HP and ATK.",
+          "patch": {
+            "shard_cap": 12,
+            "stats_bp": {
+              "hp": 11500,
+              "atk": 11500
+            },
+            "passives": [
+              {
+                "id": "bounty",
+                "name": "Bounty",
+                "kind": "ability",
+                "text": "The toughest enemy is the Bounty, Marked harder than a Mark for as long as it lives; it pays the most shards when it dies.",
+                "effects": [
+                  {
+                    "trigger": "on_fight_start",
+                    "type": "apply_status",
+                    "status": "bounty",
+                    "duration_ms": 180000,
+                    "target": "toughest_enemies",
+                    "strength_add_bp": 2500
+                  },
+                  {
+                    "trigger": "on_enemy_fell",
+                    "vs": {
+                      "statuses": [
+                        "bounty"
+                      ]
+                    },
+                    "type": "shards",
+                    "amount": 5,
+                    "target": "self"
+                  }
+                ]
+              },
+              {
+                "id": "bounty_lesser",
+                "name": "Price on Their Heads",
+                "kind": "ability",
+                "text": "Every enemy has a price on its head: each pays a shard when it dies.",
+                "effects": [
+                  {
+                    "trigger": "on_fight_start",
+                    "type": "apply_status",
+                    "status": "bounty_lesser",
+                    "duration_ms": 180000,
+                    "target": "all_enemies"
+                  },
+                  {
+                    "trigger": "on_enemy_fell",
+                    "vs": {
+                      "statuses": [
+                        "bounty_lesser"
+                      ],
+                      "without": [
+                        "bounty"
+                      ]
+                    },
+                    "type": "shards",
+                    "amount": 1,
+                    "target": "self"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "grows": {
+          "counts": {
+            "counts": "kills",
+            "by_allies": true,
+            "statuses": [
+              "bounty"
+            ]
+          },
+          "per": 1,
+          "max_steps": 10,
+          "each": {
+            "on": [
+              {
+                "slot": "passive:bounty",
+                "types": [
+                  "shards"
+                ],
+                "amount_bp": 12000
+              }
+            ]
+          }
+        },
+        "deed": {
+          "text": "Shards from Bounties",
+          "counts": "shards",
+          "from_ability": [
+            "bounty"
+          ],
+          "threshold": 30
+        }
+      }
+    ]
   }
 ]

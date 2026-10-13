@@ -65,9 +65,14 @@ var needs_shards: int = 0
 var transmute: TransmuteDef = null
 ## Its shop rules (phase 8 part 6, Hob's Fence cards; null: none).
 var shop: ShopRulesDef = null
-## Its hero's transformed path's run snowball counts this share more (phase
-## 8 part 6, Big Spender: 5000, half again; 0: none; no mod needed).
+## Its hero's transformed path's run snowball (a path card) or its earned
+## apex's (an apex card) counts this share more (phase 8 part 6, Big
+## Spender: 5000, half again; Hunting Party: 10000, twice; 0: none; no mod
+## needed).
 var snowball_bp: int = 0
+## Its hero's "won_holding" counts a fight won holding this many fewer shards
+## (phase 8 part 6, Low Bar: 5, from 25; 0: none; no mod needed).
+var holding_less: int = 0
 
 
 static func read(reader: DataReader) -> UpgradeDef:
@@ -114,11 +119,12 @@ static func read(reader: DataReader) -> UpgradeDef:
 	def.transmute = TransmuteDef.read_in(reader)
 	def.shop = ShopRulesDef.read_in(reader)
 	def.snowball_bp = reader.opt_int("snowball_bp", 0, 0, 5 * FixedMath.BP_ONE)
-	if def.snowball_bp > 0 and def.layer != Layer.PATH:
-		reader.error("a snowball card is a path's")
+	def.holding_less = reader.opt_int("holding_less", 0, 0, 29)
+	if def.snowball_bp > 0 and def.layer != Layer.PATH and def.layer != Layer.APEX:
+		reader.error("a snowball card is a path's or an apex's")
 	if def.transmute != null and def.layer == Layer.HERO:
 		reader.error("a transmuting card is a path's or an apex's")
-	if (def.grows == null and def.stack_stat < 0 and def.tithe == null and def.transmute == null and def.shop == null and def.snowball_bp == 0) or reader.has("mod"):
+	if (def.grows == null and def.stack_stat < 0 and def.tithe == null and def.transmute == null and def.shop == null and def.snowball_bp == 0 and def.holding_less == 0) or reader.has("mod"):
 		var mod_reader: DataReader = reader.req_object("mod")
 		if mod_reader != null:
 			def.mod = KitMod.read(mod_reader)

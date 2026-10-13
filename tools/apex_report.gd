@@ -39,6 +39,9 @@ class Team:
 	var carry: String = ""
 	## Hero id -> apex id, in heroes.json's order.
 	var apexes: Dictionary[String, String] = {}
+	## The run's shards held as each fight starts (phase 8 part 6, Hob's
+	## Hoarder: "shards"; 0 by default).
+	var shards: int = 0
 
 
 ## One way to field a team: hero id -> path, the transformed heroes, the
@@ -49,6 +52,8 @@ class Lineup:
 	var transformed: Array[String] = []
 	var apex_vows: Dictionary[String, String] = {}
 	var apexed: Array[String] = []
+	## The shards held as each fight starts (its team's).
+	var shards: int = 0
 	## Per scale step: fights and wins.
 	var fights: Array[int] = []
 	var wins: Array[int] = []
@@ -114,6 +119,7 @@ static func read_teams(errors: Array[String]) -> Array[Team]:
 		team.kind = entry["kind"]
 		team.carry = entry.get("carry", "")
 		team.apexes.assign(entry["apexes"])
+		team.shards = int(entry.get("shards", 0))
 		found.append(team)
 	return found
 
@@ -130,6 +136,7 @@ static func variants_for(content: ContentDb, team: Team, singles: bool) -> Array
 static func _variant(content: ContentDb, team: Team, label: String, at_apex: Array) -> Lineup:
 	var variant := Lineup.new()
 	variant.label = label
+	variant.shards = team.shards
 	for hero_id: String in team.apexes:
 		var apex: ApexDef = content.apexes[team.apexes[hero_id]]
 		variant.vows[hero_id] = apex.path
@@ -182,6 +189,7 @@ static func fight(content: ContentDb, variant: Lineup, encounter_id: String, for
 		push_error("apexes report: %s %s: %s" % [encounter_id, variant.label, ", ".join(errors)])
 		return null
 	PathReport._place_snares(setup, content.encounters[encounter_id])
+	setup.shards = variant.shards
 	for enemy: UnitSetup in setup.enemies:
 		enemy.def = Encounters.scaled(enemy.def, scale_bp)
 	for i: int in setup.summon_kits.size():

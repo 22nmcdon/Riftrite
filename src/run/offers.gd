@@ -333,6 +333,19 @@ static func shop_relics(run: RunContent, state: RunState, rerolls: int, count: i
 	return drawn
 
 
+## The black-market relic (phase 8 part 6, Black Market): a tier drawn by the
+## shop's odds, then a relic one tier higher (a legendary stays one), not
+## among `taken`; [its id, the tier drawn, priced at] (["", ""]: none left).
+## `visit` tells the shop's rerolls and the slot's own apart.
+static func black_market_relic(run: RunContent, state: RunState, visit: int, taken: Array[String]) -> Array[String]:
+	var rng: SimRng = RunRandom.stream(state.seed_value, [RunRandom.RELIC, state.act, state.day, state.attempt, -1000 - visit])
+	var odds: Array = shop_odds(run, state)
+	var tier: String = _weighted(rng, odds[0], odds[1])
+	var up: int = mini(RelicDef.TIER_NAMES.find(tier) + 1, RelicDef.Tier.LEGENDARY)
+	var id: String = _relic_of(run, state, rng, RelicDef.TIER_NAMES[up], taken)
+	return [id, tier] as Array[String] if not id.is_empty() else ["", ""] as Array[String]
+
+
 ## The Pedlar's relic odds (tiers and weights): the act's, with a
 ## legendary added from endless.legendary_from_floor (phase 8 part 1).
 static func shop_odds(run: RunContent, state: RunState) -> Array:

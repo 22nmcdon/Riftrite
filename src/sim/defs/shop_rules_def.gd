@@ -21,6 +21,11 @@ extends RefCounted
 ##                             at its own tier's price (Black Market)
 ##   {"rank_ii_charms": 1}     that many of each shop's charms come at rank II
 ##                             (Insider)
+##   {"relic_less_per_bought": 1}  relics cost that much less for each relic
+##                             bought since Black Market was earned, down to
+##                             half their price (Black Market; Volume Discount)
+##   {"black_market_rerolls": 1}  the black-market slot rerolls free that many
+##                             times a shop (Smuggler's Route)
 ## A hero's is its stage's (RunContent.shop_rules: its path's vowed or
 ## transformed one, plus its vowed apex's taste, or its earned apex's own)
 ## with its held cards' added on; the team's is its heroes' added together.
@@ -35,8 +40,11 @@ var item_less: int = 0
 var first_relic_less: int = 0
 var black_market: int = 0
 var rank_ii_charms: int = 0
+var relic_less_per_bought: int = 0
+var black_market_rerolls: int = 0
 
-const FIELDS: Array[String] = ["free_rerolls", "cheap_rerolls", "reroll_less_bp", "reroll_add", "sell_less_bp", "item_less", "first_relic_less", "black_market", "rank_ii_charms"]
+const FIELDS: Array[String] = ["free_rerolls", "cheap_rerolls", "reroll_less_bp", "reroll_add", "sell_less_bp", "item_less", "first_relic_less", "black_market", "rank_ii_charms",
+	"relic_less_per_bought", "black_market_rerolls"]
 
 
 static func read(reader: DataReader) -> ShopRulesDef:
@@ -50,6 +58,8 @@ static func read(reader: DataReader) -> ShopRulesDef:
 	def.first_relic_less = reader.opt_int("first_relic_less", 0, 0, 30)
 	def.black_market = reader.opt_int("black_market", 0, 0, 1)
 	def.rank_ii_charms = reader.opt_int("rank_ii_charms", 0, 0, 5)
+	def.relic_less_per_bought = reader.opt_int("relic_less_per_bought", 0, 0, 10)
+	def.black_market_rerolls = reader.opt_int("black_market_rerolls", 0, 0, 5)
 	reader.finish()
 	if not def.anything():
 		reader.error("shop rules change something: give one of %s" % ", ".join(FIELDS))

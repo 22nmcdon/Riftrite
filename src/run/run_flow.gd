@@ -1182,8 +1182,7 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 	_grow_by_run("wins")
 	if flawless:
 		_grow_by_run("flawless")
-	if held >= WON_HOLDING_SHARDS:
-		_grow_by_run("won_holding")
+	_grow_by_run("won_holding", 1, held)
 	state.phase = RunState.Phase.AFTER
 	state.relic_choice_price = 0
 	if run.day_kind(state, state.day) == "boss":
@@ -1216,16 +1215,22 @@ func _streak(result: FightResult) -> void:
 ## that grows with what the run counts as `what` (Tally of the Dead:
 ## "elite_wins"), and (phase 8 part 5) every hero's held card and earned apex
 ## that does ("wins", "flawless").
-func _grow_by_run(what: String, amount: int = 1) -> void:
+func _grow_by_run(what: String, amount: int = 1, held: int = -1) -> void:
 	for id: String in state.relics:
 		var relic: RelicDef = run.relics.get(id)
 		if relic == null or relic.grows == null or relic.grows.run_counts != what:
+			continue
+		if held >= 0 and held < WON_HOLDING_SHARDS:
 			continue
 		var before: int = state.growth.get(id, 0)
 		state.growth[id] = before + amount
 		if relic.grows.steps(state.growth[id]) > relic.grows.steps(before) and not state.grew.has(":" + id):
 			state.grew.append(":" + id)
 	for hero: RunState.Hero in state.heroes:
+		# "won_holding" (`held` the shards as the fight started): from its own
+		# threshold (phase 8 part 6, Low Bar).
+		if held >= 0 and held < run.holding_threshold(hero):
+			continue
 		for upgrade: UpgradeDef in run.held_upgrades(hero):
 			if upgrade.grows != null and upgrade.grows.run_counts == what:
 				_step_hero(hero, upgrade.id, upgrade.grows, amount)
@@ -1389,6 +1394,8 @@ func buy_relic(index: int = 0) -> String:
 	state.shop_relics_bought += 1
 	_gain_relic(state.shop_relics[index])
 	state.shop_relics[index] = ""
+	# Each relic bought (phase 8 part 6, Black Market's run snowball).
+	_grow_by_run("relics_bought")
 	return ""
 
 
@@ -1406,10 +1413,30 @@ func relic_price(index: int = 0, full: bool = false) -> int:
 	if price == 0:
 		return 0
 	var rules: ShopRulesDef = shop_rules()
-	if not full and rules != null and rules.first_relic_less > 0 and state.shop_relics_bought == 0:
+	if full or rules == null:
+		return _marked_up(price)
+	if index == state.black_market_slot and not state.black_market_tier.is_empty():
+		# The black-market relic, at the price of the tier it was drawn at.
+		price = act.relic_prices[state.black_market_tier]
+	var marked: int = _marked_up(price)
+	if rules.first_relic_less > 0 and state.shop_relics_bought == 0:
 		# Black Market's taste: the first relic bought in each shop.
-		return maxi(_marked_up(price) - rules.first_relic_less, 0)
-	return _marked_up(price)
+		marked -= rules.first_relic_less
+	# Black Market's snowball: less for each relic bought since, down to half.
+	@warning_ignore("integer_division")
+	marked -= mini(_relics_bought() * rules.relic_less_per_bought, _marked_up(price) / 2)
+	return maxi(marked, 0)
+
+
+## The relics bought since an earned apex began counting them (phase 8 part
+## 6, Black Market), its apex cards' snowball added on.
+func _relics_bought() -> int:
+	var count: int = 0
+	for hero: RunState.Hero in state.heroes:
+		var apex: ApexDef = run.earned_apex(hero)
+		if apex != null and apex.grows != null and apex.grows.run_counts == "relics_bought":
+			count += run.apex_count(hero, apex)
+	return count
 
 
 ## What the Magpie pays for `relic_id` (its tier's relic_sell).
@@ -1480,6 +1507,14 @@ func _grow(result: FightResult) -> void:
 			hero.growth[upgrade.id] = upgrade.grows.grown(before, _faster(result.tally_amount(hero.id, "upgrade:" + upgrade.id)))
 			if upgrade.grows.steps(hero.growth[upgrade.id]) > upgrade.grows.steps(before):
 				state.grew.append("%s:%s" % [hero.id, upgrade.id])
+		# Its earned apex's snowball, if its fights count it (phase 8 part 6).
+		var apex: ApexDef = run.earned_apex(hero)
+		if apex != null and apex.grows != null and apex.grows.counted_in_fights():
+			var key: String = RunContent.apex_growth_key(apex)
+			var had: int = hero.growth.get(key, 0)
+			hero.growth[key] = apex.grows.grown(had, _faster(result.tally_amount(hero.id, key)))
+			if apex.grows.steps(hero.growth[key]) > apex.grows.steps(had):
+				state.grew.append("%s:%s" % [hero.id, key])
 	for id: String in state.relics:
 		var relic: RelicDef = run.relics.get(id)
 		if relic == null or relic.grows == null or not relic.grows.counted_in_fights():
@@ -1737,6 +1772,7 @@ func open_shop(kind: String) -> String:
 	state.transmutes = 0
 	state.shop_relics_bought = 0
 	state.ledger_rerolls = 0
+	state.black_market_rerolled = 0
 	state.magpie_swapped = false
 	state.shop_relics = _draw_shop_relics()
 	state.shards += run.relic_sum(state, "shop_shards")
@@ -1750,7 +1786,43 @@ func open_shop(kind: String) -> String:
 
 func _draw_shop_relics() -> Array[String]:
 	var count: int = 1 + run.relic_sum(state, "shop_relics_add") + (1 if boss_shop() else 0)
-	return Offers.shop_relics(run, state, state.rerolls, count, state.shop == "magpie", boss_shop())
+	var drawn: Array[String] = Offers.shop_relics(run, state, state.rerolls, count, state.shop == "magpie", boss_shop())
+	# Black Market (phase 8 part 6): the Pedlar's second slot, a tier up.
+	state.black_market_slot = -1
+	state.black_market_tier = ""
+	var rules: ShopRulesDef = shop_rules()
+	if state.shop == "pedlar" and rules != null and rules.black_market > 0:
+		var black: Array[String] = Offers.black_market_relic(run, state, state.rerolls * 10 + state.black_market_rerolled, drawn)
+		if not black[0].is_empty():
+			state.black_market_slot = drawn.size()
+			state.black_market_tier = black[1]
+			drawn.append(black[0])
+	return drawn
+
+
+## The black-market slot's free rerolls left in the open shop.
+func black_market_rerolls_left() -> int:
+	var rules: ShopRulesDef = shop_rules()
+	if state.shop != "pedlar" or rules == null or state.black_market_slot < 0 or state.shop_relics[state.black_market_slot].is_empty():
+		return 0
+	return maxi(rules.black_market_rerolls - state.black_market_rerolled, 0)
+
+
+## Smuggler's Route (phase 8 part 6): the black-market slot alone drawn
+## again, free, as many times a shop as the team's shop rules allow.
+func reroll_black_market() -> String:
+	var rules: ShopRulesDef = shop_rules()
+	if state.shop != "pedlar" or state.black_market_slot < 0 or state.shop_relics[state.black_market_slot].is_empty():
+		return "there's no black-market relic to reroll"
+	if rules == null or state.black_market_rerolled >= rules.black_market_rerolls:
+		return "the black-market relic can't be rerolled again in this shop"
+	state.black_market_rerolled += 1
+	var others: Array[String] = state.shop_relics.duplicate()
+	var black: Array[String] = Offers.black_market_relic(run, state, state.rerolls * 10 + state.black_market_rerolled, others)
+	if not black[0].is_empty():
+		state.shop_relics[state.black_market_slot] = black[0]
+		state.black_market_tier = black[1]
+	return ""
 
 
 ## True if the open shop is the boss shop: the Pedlar of the boss's day,
@@ -1770,6 +1842,9 @@ func close_shop() -> void:
 	state.shop_relics.clear()
 	state.wares_rank_ii.clear()
 	state.ledger_rerolls = 0
+	state.black_market_slot = -1
+	state.black_market_tier = ""
+	state.black_market_rerolled = 0
 
 
 ## What ware `item_id` costs at the open shop: its kind's price at the

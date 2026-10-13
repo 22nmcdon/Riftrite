@@ -747,8 +747,13 @@ func _fill_shop() -> void:
 			continue
 		var card: VBoxContainer = _relic_card(row, session.run.relics[state.shop_relics[i]])
 		(card.get_parent() as Control).custom_minimum_size = Vector2(WARE_WIDTH, 0)
+		if i == state.black_market_slot:
+			# Black Market (phase 8 part 6): a tier up, at the lower tier's price.
+			card.add_child(_wrapped("Black market: a tier up, at a %s's price" % state.black_market_tier, 15, UiStyle.TEXT_DIM))
 		var price: int = session.flow.relic_price(i)
 		card.add_child(UiStyle.primary(UiStyle.button("Take · free" if price == 0 else "Buy · %d shards" % price, _do.bind(session.flow.buy_relic.bind(i)))))
+		if i == state.black_market_slot and session.flow.black_market_rerolls_left() > 0:
+			card.add_child(UiStyle.button("Reroll it · free", _do.bind(session.flow.reroll_black_market)))
 	var more: HBoxContainer = _row()
 	section.add_child(more)
 	for hero: RunState.Hero in state.heroes:

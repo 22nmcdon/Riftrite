@@ -11861,5 +11861,210 @@
         }
       }
     }
+  },
+  {
+    "id": "deep_vault",
+    "name": "Deep Vault",
+    "apex": "dragons_hoard",
+    "text": "Each fight won holding enough shards counts half again toward the hoard's run bonus.",
+    "snowball_bp": 5000
+  },
+  {
+    "id": "low_bar",
+    "name": "Low Bar",
+    "apex": "dragons_hoard",
+    "text": "A fight won holding 25 or more shards counts toward the hoard (and his cards), not 30.",
+    "holding_less": 5
+  },
+  {
+    "id": "compound_interest",
+    "name": "Compound Interest",
+    "apex": "golden_idol",
+    "text": "Each Recast makes his held shards count more still.",
+    "mod": {
+      "on": [
+        {
+          "slot": "signature",
+          "add_effects": [
+            {
+              "type": "apply_status",
+              "status": "compounding_more",
+              "stacks": 1,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "idols_gaze",
+    "name": "Idol's Gaze",
+    "apex": "golden_idol",
+    "text": "While he's Shielded, enemies within 2 hexes of him hit softer.",
+    "mod": {
+      "passives": [
+        {
+          "id": "idols_gaze",
+          "name": "Idol's Gaze",
+          "kind": "ability",
+          "text": "While he's Shielded, enemies within 2 hexes of him hit softer.",
+          "effects": [
+            {
+              "trigger": "on_interval",
+              "interval_ms": 1000,
+              "holder": {
+                "shielded": true
+              },
+              "type": "apply_status",
+              "status": "idol_gaze",
+              "target": "enemies_near_self",
+              "within_hexes": 2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "volume_discount",
+    "name": "Volume Discount",
+    "apex": "black_market",
+    "text": "Each relic bought makes relics 1 shard cheaper still.",
+    "shop": {
+      "relic_less_per_bought": 1
+    }
+  },
+  {
+    "id": "smugglers_route",
+    "name": "Smuggler's Route",
+    "apex": "black_market",
+    "text": "The black-market relic rerolls free once a shop.",
+    "shop": {
+      "black_market_rerolls": 1
+    }
+  },
+  {
+    "id": "deft_touch",
+    "name": "Deft Touch",
+    "apex": "silver_tongue",
+    "text": "Each enemy whose purse he cuts makes Cut Purse cheaper still (8 mana, not 5, down to 15).",
+    "mod": {
+      "passives": [
+        {
+          "id": "deft_touch",
+          "name": "Deft Touch",
+          "kind": "ability",
+          "text": "Each enemy whose purse he cuts makes Cut Purse cheaper still.",
+          "effects": [
+            {
+              "trigger": "on_holder_hit",
+              "from_ability": [
+                "cut_purse"
+              ],
+              "once_per_enemy": true,
+              "type": "apply_status",
+              "status": "silver_tongue",
+              "stacks": 3,
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "light_fingers",
+    "name": "Light Fingers",
+    "apex": "silver_tongue",
+    "text": "His shards a fight can go 3 higher.",
+    "mod": {
+      "shard_cap_add": 3
+    }
+  },
+  {
+    "id": "hunting_party",
+    "name": "Hunting Party",
+    "apex": "manhunter",
+    "text": "Each Bounty collected counts twice toward the team's bonus against Bounties.",
+    "snowball_bp": 10000
+  },
+  {
+    "id": "dead_or_alive",
+    "name": "Dead or Alive",
+    "apex": "manhunter",
+    "text": "Bounties are Slowed.",
+    "mod": {
+      "passives": [
+        {
+          "id": "dead_or_alive",
+          "name": "Dead or Alive",
+          "kind": "ability",
+          "text": "Each Bounty is Slowed while it's a Bounty.",
+          "effects": [
+            {
+              "trigger": "on_fight_start",
+              "type": "apply_status",
+              "status": "bounty_slow",
+              "target": "toughest_enemies",
+              "count": 2
+            },
+            {
+              "trigger": "on_enemy_fell",
+              "vs": {
+                "statuses": [
+                  "bounty"
+                ]
+              },
+              "type": "apply_status",
+              "status": "bounty_slow",
+              "target": "toughest_enemies",
+              "only": {
+                "without": [
+                  "bounty_slow"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "blood_money",
+    "name": "Blood Money",
+    "apex": "price_on_their_heads",
+    "text": "Each Bounty collected counts twice toward the toughest's pay (up to 15).",
+    "snowball_bp": 10000
+  },
+  {
+    "id": "reward_poster",
+    "name": "Reward Poster",
+    "apex": "price_on_their_heads",
+    "text": "Whoever on his side kills a Bounty gains mana.",
+    "mod": {
+      "passives": [
+        {
+          "id": "reward_poster",
+          "name": "Reward Poster",
+          "kind": "ability",
+          "text": "Whoever on his side kills a Bounty gains mana.",
+          "effects": [
+            {
+              "trigger": "on_enemy_fell",
+              "vs": {
+                "statuses": [
+                  "bounty",
+                  "bounty_lesser"
+                ]
+              },
+              "type": "gain_mana",
+              "amount": 10,
+              "target": "trigger_ally"
+            }
+          ]
+        }
+      ]
+    }
   }
 ]

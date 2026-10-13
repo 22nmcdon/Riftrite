@@ -668,6 +668,68 @@
         "ilse": "blast_furnace",
         "lucan": "marionette"
       }
+    },
+    {
+      "name": "Dragon's Hoard",
+      "kind": "good",
+      "carry": "hob",
+      "shards": 40,
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "maren": "eagle_eye",
+        "hob": "dragons_hoard"
+      }
+    },
+    {
+      "name": "Golden Idol",
+      "kind": "good",
+      "carry": "hob",
+      "shards": 40,
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "maren": "eagle_eye",
+        "hob": "golden_idol"
+      }
+    },
+    {
+      "name": "Black Market",
+      "kind": "good",
+      "carry": "hob",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "maren": "eagle_eye",
+        "hob": "black_market"
+      }
+    },
+    {
+      "name": "Silver Tongue",
+      "kind": "good",
+      "carry": "hob",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "ilse": "blast_furnace",
+        "hob": "silver_tongue"
+      }
+    },
+    {
+      "name": "Manhunter",
+      "kind": "good",
+      "carry": "hob",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "tamsin": "executioner",
+        "hob": "manhunter"
+      }
+    },
+    {
+      "name": "Price on Their Heads",
+      "kind": "good",
+      "carry": "hob",
+      "apexes": {
+        "brannoc": "unbroken_gate",
+        "maren": "eagle_eye",
+        "hob": "price_on_their_heads"
+      }
     }
   ]
 }

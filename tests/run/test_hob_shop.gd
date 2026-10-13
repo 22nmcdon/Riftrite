@@ -8,7 +8,11 @@ extends GutTest
 ## team snowball (the Magpie too, never the Shrine); and the run counts his
 ## cards grow with (fights won holding 30+ shards, shops visited), Lucky
 ## Find's once an act, the Tithe's shards held (The Counting House), and The
-## Black Market Ledger.
+## Black Market Ledger. His apexes' (8f-5c): Black Market's slot a tier up at
+## its own tier's price, its snowball (relics bought), its taste, its cards,
+## and Fence's rules carrying on; Low Bar and Deep Vault on Dragon's Hoard's
+## snowball (a relic still counts from 30); snowball cards reaching only their
+## own layer; and Manhunter's snowball counted in fights.
 
 const R = preload("res://tests/run/run_test_kit.gd")
 
@@ -227,3 +231,129 @@ func test_the_black_market_ledger() -> void:
 	assert_eq(flow.reroll_price(), 0, "a free reroll (where it would cost something)")
 	assert_eq(flow.reroll(), "")
 	assert_eq([flow.state.ledger_rerolls, flow.reroll_price() > 0], [0, true], "spent")
+
+
+## Hob transformed on `path_id` with `apex_id` earned.
+func _apexed(path_id: String, apex_id: String, third: String = "maren", third_path: String = "deadeye") -> RunFlow:
+	var flow: RunFlow = _start(path_id, third, third_path)
+	var hob: RunState.Hero = flow.state.hero("hob")
+	hob.transformed = true
+	hob.apex = apex_id
+	hob.apex_earned = true
+	return flow
+
+
+func test_black_market_s_slot_a_tier_up_at_its_own_price() -> void:
+	var flow: RunFlow = _apexed("fence", "black_market")
+	R.to_pedlar(flow)
+	var slot: int = flow.state.black_market_slot
+	assert_eq(slot, flow.state.shop_relics.size() - 1, "a second relic slot")
+	var relic: RelicDef = _run.relics[flow.state.shop_relics[slot]]
+	var drawn: int = RelicDef.TIER_NAMES.find(flow.state.black_market_tier)
+	assert_eq(relic.tier, mini(drawn + 1, RelicDef.Tier.LEGENDARY), "one tier up")
+	assert_eq(flow.relic_price(slot), flow.act.relic_prices[flow.state.black_market_tier], "at its own tier's price")
+	assert_eq(RunState.from_dict(flow.state.to_dict()).black_market_slot, slot, "the save keeps it")
+	R.to_magpie(flow)
+	assert_eq(flow.state.black_market_slot, -1, "never at the Magpie (Decision 6)")
+
+
+func test_black_market_s_snowball_and_its_cards() -> void:
+	var flow: RunFlow = _apexed("fence", "black_market")
+	var hob: RunState.Hero = flow.state.hero("hob")
+	R.to_pedlar(flow)
+	flow.state.shards = 200
+	var price: int = flow.relic_price(0)
+	assert_eq(flow.buy_relic(0), "")
+	assert_eq(hob.growth[RunContent.apex_growth_key(_run.content.apexes["black_market"])], 1, "a relic bought")
+	R.to_pedlar(flow)
+	assert_eq(flow.relic_price(0), flow.relic_price(0, true) - 1, "relics 1 cheaper")
+	hob.growth[RunContent.apex_growth_key(_run.content.apexes["black_market"])] = 100
+	assert_eq(flow.relic_price(0), flow.relic_price(0, true) - flow.relic_price(0, true) / 2, "down to half")
+	hob.growth[RunContent.apex_growth_key(_run.content.apexes["black_market"])] = 1
+	hob.upgrades.append("volume_discount")
+	assert_eq(flow.relic_price(0), flow.relic_price(0, true) - 2, "Volume Discount: 2 a relic")
+	assert_eq(flow.reroll_black_market(), "the black-market relic can't be rerolled again in this shop")
+	hob.upgrades.append("smugglers_route")
+	var before: String = flow.state.shop_relics[flow.state.black_market_slot]
+	var shards: int = flow.state.shards
+	assert_eq(flow.reroll_black_market(), "")
+	assert_eq(flow.state.shards, shards, "free")
+	assert_ne(flow.state.shop_relics[flow.state.black_market_slot], before, "a fresh black-market relic")
+	assert_eq(flow.reroll_black_market(), "the black-market relic can't be rerolled again in this shop", "once a shop")
+	assert_gt(price, 0)
+
+
+func test_low_bar_counts_from_25() -> void:
+	var flow: RunFlow = _apexed("hoarder", "dragons_hoard")
+	var hob: RunState.Hero = flow.state.hero("hob")
+	var key: String = RunContent.apex_growth_key(_run.content.apexes["dragons_hoard"])
+	flow._grow_by_run("won_holding", 1, 27)
+	assert_eq(hob.growth.get(key, 0), 0, "27 isn't 30")
+	hob.upgrades.append("low_bar")
+	assert_eq(_run.holding_threshold(hob), 25)
+	flow._grow_by_run("won_holding", 1, 27)
+	assert_eq(hob.growth.get(key, 0), 1, "with Low Bar, 25 is enough")
+	hob.upgrades.append("deep_vault")
+	hob.growth[key] = 4
+	assert_eq(_run.apex_count(hob, _run.content.apexes["dragons_hoard"]), 6, "Deep Vault: half again")
+	var mods: Array[KitMod] = _run.relic_mods(flow.state).filter(func(mod: KitMod) -> bool: return mod.stats_bp.size() > 0 and mod.stats_bp[UnitStats.Stat.MGK] == 10600)
+	assert_eq(mods.size(), 1, "+1% ATK, MGK, and max HP to every hero for each")
+
+
+func test_manhunter_s_snowball_counts_bounties_in_fights() -> void:
+	var flow: RunFlow = _apexed("bounty_hunter", "manhunter")
+	var hob: RunState.Hero = flow.state.hero("hob")
+	var key: String = RunContent.apex_growth_key(_run.content.apexes["manhunter"])
+	assert_true(_run.growth_tallies(flow.state, hob)[0].has(key), "the fight tallies it")
+	flow.choose_fight(0)
+	var result: FightResult = _won(flow)
+	result.tallies.append(FightResult.Deed.make("hob", key, 3))
+	flow.record(HeroTeam.place(_run.content, ["brannoc", "maren", "hob"] as Array[String], HeroTeam.GUARDED), result)
+	assert_eq(hob.growth[key], 3, "3 Bounties collected")
+	var mods: Array[KitMod] = _run.relic_mods(flow.state).filter(func(mod: KitMod) -> bool: return mod.passives.any(func(part: PartDef) -> bool: return part.id == "manhunter_trophies"))
+	assert_eq(mods.size(), 1, "the team's")
+	assert_eq(mods[0].passives[0].aura.value, 10300, "+1% against Bounties for each")
+	hob.upgrades.append("hunting_party")
+	assert_eq(_run.apex_count(hob, _run.content.apexes["manhunter"]), 6, "Hunting Party: twice")
+
+
+func test_black_market_s_taste_and_fence_s_rules_carrying_on() -> void:
+	var flow: RunFlow = _apexed("fence", "black_market")
+	var hob: RunState.Hero = flow.state.hero("hob")
+	hob.apex_earned = false
+	R.to_pedlar(flow)
+	assert_eq(flow.relic_price(0), maxi(flow.relic_price(0, true) - 2, 0), "vowed: the first relic bought 2 less")
+	flow.state.shop_relics_bought = 1
+	assert_eq(flow.relic_price(0), flow.relic_price(0, true), "the next at its price")
+	hob.apex_earned = true
+	var rules: ShopRulesDef = _run.shop_rules(hob)
+	assert_eq([rules.reroll_less_bp, rules.sell_less_bp], [5000, 2500], "the apex keeps Fence's rerolls and sell-back")
+
+
+func test_snowball_cards_reach_only_their_own_layer() -> void:
+	var flow: RunFlow = _apexed("fence", "black_market")
+	var hob: RunState.Hero = flow.state.hero("hob")
+	var apex: ApexDef = _run.content.apexes["black_market"]
+	hob.growth[RunContent.apex_growth_key(apex)] = 4
+	hob.upgrades.append("big_spender")
+	assert_eq(_run.apex_count(hob, apex), 4, "Big Spender is the path's snowball's, not the apex's")
+
+
+func test_low_bar_changes_something() -> void:
+	var kit: UnitDef = _run.content.apexes["dragons_hoard"].kit(PathDef.Stage.APEX)
+	assert_true(_run.changes_something(_run.upgrades["low_bar"], true, kit), "a lower bar is offered though it has no mod")
+
+
+func test_a_relic_counting_won_holding_counts_from_30() -> void:
+	var errors: Array[String] = []
+	var relic: RelicDef = RelicDef.read(DataReader.new({"id": "stand_in_hoard", "name": "S", "icon": "x", "flavor": "f", "text": "t", "tier": "common",
+		"grows": {"run_counts": "won_holding", "per": 1, "each": {"stats_bp": {"atk": 10100}}}}, "relic", errors))
+	assert_eq(errors, [] as Array[String])
+	_run.relics["stand_in_hoard"] = relic
+	var flow: RunFlow = _start("hoarder")
+	flow.state.relics.append("stand_in_hoard")
+	flow._grow_by_run("won_holding", 1, 27)
+	assert_eq(flow.state.growth.get("stand_in_hoard", 0), 0, "27 held isn't 30")
+	flow._grow_by_run("won_holding", 1, 30)
+	assert_eq(flow.state.growth.get("stand_in_hoard", 0), 1, "won holding 30")
+	_run.relics.erase("stand_in_hoard")

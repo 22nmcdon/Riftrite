@@ -361,7 +361,9 @@ static func upgrade_numbers(upgrade: UpgradeDef, kit: UnitDef, content: ContentD
 	if upgrade.shop != null:
 		parts.append(shop_numbers(upgrade.shop))
 	if upgrade.snowball_bp > 0:
-		parts.append("its path's run bonus counts x%s" % ValueBreakdown._ratio(FixedMath.BP_ONE + upgrade.snowball_bp))
+		parts.append("its %s's snowball counts x%s" % ["apex" if upgrade.layer == UpgradeDef.Layer.APEX else "path", ValueBreakdown._ratio(FixedMath.BP_ONE + upgrade.snowball_bp)])
+	if upgrade.holding_less > 0:
+		parts.append("fights won holding %d+ shards count" % (RunFlow.WON_HOLDING_SHARDS - upgrade.holding_less))
 	if upgrade.grows != null:
 		var grows: String = growth_numbers(upgrade.grows, kit, content)
 		if upgrade.tithe != null and upgrade.tithe.per_step > 0:
@@ -418,6 +420,10 @@ static func shop_numbers(rules: ShopRulesDef) -> String:
 		parts.append("a relic one tier higher")
 	if rules.rank_ii_charms > 0:
 		parts.append("%d charm%s at rank II" % [rules.rank_ii_charms, "" if rules.rank_ii_charms == 1 else "s"])
+	if rules.relic_less_per_bought > 0:
+		parts.append("relics -%d for each relic bought (down to half)" % rules.relic_less_per_bought)
+	if rules.black_market_rerolls > 0:
+		parts.append("the black-market relic rerolls free %s a shop" % ("once" if rules.black_market_rerolls == 1 else "%d times" % rules.black_market_rerolls))
 	return "Shops: " + ", ".join(parts)
 
 
@@ -487,7 +493,13 @@ static func growth_now(growth: GrowthDef, count: int, kit: UnitDef, content: Con
 	var steps: int = growth.steps(count)
 	var now: String = "nothing yet"
 	if steps > 0:
-		now = step_text(growth.each.times(steps), kit, content) if growth.each.changes_anything() else "+%d shards so far" % (steps * growth.each_shards)
+		if growth.each.changes_anything():
+			now = step_text(growth.each.times(steps), kit, content)
+		elif growth.each_shards > 0:
+			now = "+%d shards so far" % (steps * growth.each_shards)
+		else:
+			# A count something else reads (phase 8 part 6, Black Market's relics).
+			now = "%d so far" % steps
 	if growth.max_steps > 0 and steps >= growth.max_steps:
 		return "Now: %s (done)" % now
 	var what: String = run_counted(growth) if not growth.run_counts.is_empty() else counted(growth.counts, growth.per)
