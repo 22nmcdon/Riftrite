@@ -1,5 +1,5 @@
 {
-  "_note": "The builds report's teams (tools/build_report.gd, sim_runner.gd --builds; docs/plans/build-tuning.md and test-teams.md). Each names a path to judge, its type (build-tuning.md, section 6), its build team (every hero on a path, all transformed), the build's relics, and for an enabler the path its lift is measured against. Heroes not built yet are stood in for by a built hero on the nearest path; each note says which.",
+  "_note": "The builds report's teams (tools/build_report.gd, sim_runner.gd --builds; docs/plans/build-tuning.md and test-teams.md). Each names a path to judge, its type (build-tuning.md, section 6), its build team (every hero on a path, all transformed), the build's relics, and for an enabler the path its lift is measured against. Every hero is built (phase 8 part 6's 8f-6), so no team stands a hero in for another; the old nine joined in 8f-6.",
   "builds": [
     {
       "name": "Bulwark",
@@ -8,7 +8,7 @@
       "team": {
         "garrow": "aegisfang",
         "vell": "wardweaver",
-        "brannoc": "hearthwall"
+        "edric": "aegis"
       },
       "relics": [
         "tithe_of_iron",
@@ -17,7 +17,7 @@
         "wardens_engine",
         "the_woven_fang"
       ],
-      "note": "test-teams.md #7; Brannoc's Hearthwall (Hearthguard's Shields) stands in for Edric's Aegis"
+      "note": "test-teams.md #7"
     },
     {
       "name": "Whirlpool",
@@ -26,12 +26,12 @@
       "team": {
         "garrow": "chainwarden",
         "maren": "volley",
-        "vell": "vigil_keeper"
+        "ilse": "wildfire"
       },
       "relics": [
         "the_hungering_rift"
       ],
-      "note": "test-teams.md #8; Vell's Vigil Keeper (Sunfall's line) stands in for Ilse's Wildfire; few clump relics are built yet. Retyped self-sufficient (rebuild-phase8-heroes.md Decision 13)"
+      "note": "test-teams.md #8. Retyped self-sufficient (rebuild-phase8-heroes.md Decision 13)"
     },
     {
       "name": "Blood Price",
@@ -40,14 +40,14 @@
       "team": {
         "garrow": "spitemail",
         "vell": "lanternbearer",
-        "maren": "deadeye"
+        "severine": "hemomancer"
       },
       "relics": [
         "leech_tooth",
         "gluttons_chalice",
         "overflow_chalice"
       ],
-      "note": "test-teams.md #11; Maren's Deadeye stands in for Severine's Hemomancer"
+      "note": "test-teams.md #11"
     },
     {
       "name": "Thicket",
@@ -71,9 +71,9 @@
       "path": "headhunter",
       "type": "engine",
       "team": {
-        "maren": "deadeye",
         "tamsin": "headhunter",
-        "vell": "vigil_keeper"
+        "vell": "vigil_keeper",
+        "aldous": "bellwarden"
       },
       "relics": [
         "hunters_engine",
@@ -81,23 +81,23 @@
         "hunters_ledger",
         "brand_of_guilt"
       ],
-      "note": "test-teams.md #2; Maren's Deadeye (Marking Shot's habit) stands in for Aldous's Bellwarden"
+      "note": "test-teams.md #2"
     },
     {
       "name": "Shadow",
       "path": "nightblade",
       "type": "self-sufficient",
       "team": {
-        "brannoc": "hearthwall",
         "maren": "deadeye",
-        "tamsin": "nightblade"
+        "tamsin": "nightblade",
+        "lucan": "veilweaver"
       },
       "relics": [
         "veil_of_the_lost",
         "shadow_engine",
         "smoke_pouch"
       ],
-      "note": "test-teams.md #12; Brannoc's Hearthwall (a guard for the others) stands in for Lucan's Veilweaver"
+      "note": "test-teams.md #12"
     },
     {
       "name": "Choir",
@@ -106,7 +106,7 @@
       "team": {
         "aldous": "chorister",
         "vell": "vigil_keeper",
-        "maren": "volley"
+        "edric": "psalmist"
       },
       "relics": [
         "echoing_bell",
@@ -114,7 +114,7 @@
         "rift_candle"
       ],
       "swap": "base",
-      "note": "test-teams.md #15; Maren's Volley (Storm of Arrows on her bar) stands in for Edric's Psalmist; lift against Aldous on base (rebuild-phase8-heroes.md Decision 17)"
+      "note": "test-teams.md #15; lift against Aldous on base (rebuild-phase8-heroes.md Decision 17)"
     },
     {
       "name": "Gallery",
@@ -173,15 +173,15 @@
       "type": "self-sufficient",
       "team": {
         "brannoc": "hearthwall",
-        "maren": "trapper",
-        "severine": "plaguebearer"
+        "severine": "plaguebearer",
+        "kestra": "serpent_keeper"
       },
       "relics": [
         "red_thirst",
         "leech_tooth",
         "gluttons_chalice"
       ],
-      "note": "build-map.md's Poison build; Maren's Trapper stands in for Kestra's Serpent-Keeper (no other Poison maker is built)"
+      "note": "build-map.md's Poison build (test-teams.md #6, Venom's makers)"
     },
     {
       "name": "Bloodletting",
@@ -256,14 +256,14 @@
       "team": {
         "ilse": "furnace",
         "aldous": "windcaller",
-        "brannoc": "hearthwall"
+        "kestra": "cinderhound"
       },
       "relics": [
         "ashen_engine",
         "ashen_censer",
         "quickened_pulse"
       ],
-      "note": "test-teams.md #4; Brannoc's Hearthwall stands in for Kestra's Cinderhound (not built)"
+      "note": "test-teams.md #4"
     },
     {
       "name": "Wildfire Pit",
@@ -287,7 +287,7 @@
       "team": {
         "ilse": "ember_choir",
         "maren": "volley",
-        "tamsin": "nightblade"
+        "kestra": "cinderhound"
       },
       "relics": [
         "ashen_engine",
@@ -295,7 +295,7 @@
         "pyre_ash"
       ],
       "swap": "wildfire",
-      "note": "test-teams.md #3; Tamsin's Nightblade stands in for Kestra's Cinderhound (not built); lift against Ilse on Wildfire, her self-sufficient path"
+      "note": "test-teams.md #3; lift against Ilse on Wildfire, her self-sufficient path"
     },
     {
       "name": "Rot",
@@ -488,6 +488,153 @@
       ],
       "swap": "base",
       "note": "test-teams.md #16 (Bounty); lift against Hob on base (rebuild-phase8-heroes.md Decision 17: he has no self-sufficient path)"
+    },
+    {
+      "name": "Long Shot",
+      "path": "deadeye",
+      "type": "self-sufficient",
+      "team": {
+        "maren": "deadeye",
+        "brannoc": "hearthwall",
+        "aldous": "windcaller"
+      },
+      "relics": [
+        "the_ninth_arrow",
+        "keen_edge",
+        "bone_dice"
+      ],
+      "note": "test-teams.md #10 (Gallery), judged for Maren (8f-6: the old nine join the builds report)"
+    },
+    {
+      "name": "Snare Line",
+      "path": "trapper",
+      "type": "enabler",
+      "team": {
+        "maren": "trapper",
+        "tamsin": "garrote",
+        "garrow": "chainwarden"
+      },
+      "relics": [
+        "thicket_engine",
+        "thornwoven_cloak",
+        "grasping_mire",
+        "bramble_seed"
+      ],
+      "swap": "volley",
+      "note": "test-teams.md #1 (Thicket), judged for Maren; lift against her on Volley"
+    },
+    {
+      "name": "Arrow Storm",
+      "path": "volley",
+      "type": "self-sufficient",
+      "team": {
+        "maren": "volley",
+        "ilse": "ember_choir",
+        "garrow": "chainwarden"
+      },
+      "relics": [
+        "ember_heart",
+        "splinter_shot"
+      ],
+      "note": "test-teams.md #3 and #8 (Pyre, Whirlpool), judged for Maren"
+    },
+    {
+      "name": "Sentry",
+      "path": "hearthwall",
+      "type": "enabler",
+      "team": {
+        "brannoc": "hearthwall",
+        "maren": "deadeye",
+        "aldous": "windcaller"
+      },
+      "relics": [
+        "the_watchtower_stone",
+        "iron_filings",
+        "wardens_chain"
+      ],
+      "swap": "ironbrand",
+      "note": "test-teams.md #10 (Gallery), judged for Brannoc; lift against him on Ironbrand"
+    },
+    {
+      "name": "Brand and Snare",
+      "path": "ironbrand",
+      "type": "self-sufficient",
+      "team": {
+        "brannoc": "ironbrand",
+        "maren": "trapper",
+        "vell": "lanternbearer"
+      },
+      "relics": [
+        "the_hunters_anvil",
+        "whetstone_of_the_fallen"
+      ],
+      "note": "Snare and Cleave's pair, judged for Brannoc"
+    },
+    {
+      "name": "Last Stand",
+      "path": "last_watch",
+      "type": "self-sufficient",
+      "team": {
+        "brannoc": "last_watch",
+        "vell": "lanternbearer",
+        "ilse": "wildfire"
+      },
+      "relics": [
+        "second_dawn",
+        "the_vigil_lamp",
+        "soothing_salve"
+      ],
+      "note": "test-teams.md #9, judged for Brannoc"
+    },
+    {
+      "name": "Lantern",
+      "path": "lanternbearer",
+      "type": "enabler",
+      "team": {
+        "vell": "lanternbearer",
+        "brannoc": "last_watch",
+        "ilse": "wildfire"
+      },
+      "relics": [
+        "the_vigil_lamp",
+        "soothing_salve",
+        "thorned_bandage"
+      ],
+      "swap": "vigil_keeper",
+      "note": "test-teams.md #9 (Last Stand), judged for Vell; lift against her on Vigil Keeper"
+    },
+    {
+      "name": "Woven Wall",
+      "path": "wardweaver",
+      "type": "enabler",
+      "team": {
+        "vell": "wardweaver",
+        "garrow": "aegisfang",
+        "edric": "aegis"
+      },
+      "relics": [
+        "the_woven_fang",
+        "tithe_of_iron",
+        "shattered_aegis"
+      ],
+      "swap": "vigil_keeper",
+      "note": "test-teams.md #7 (Bulwark), judged for Vell; lift against her on Vigil Keeper"
+    },
+    {
+      "name": "Judgment",
+      "path": "vigil_keeper",
+      "type": "self-sufficient",
+      "team": {
+        "vell": "vigil_keeper",
+        "aldous": "bellwarden",
+        "tamsin": "headhunter"
+      },
+      "relics": [
+        "the_toll_of_dawn",
+        "hunters_engine",
+        "brand_of_guilt"
+      ],
+      "note": "test-teams.md #2 (Hunt), judged for Vell"
     }
   ]
 }

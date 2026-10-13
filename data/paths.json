@@ -53,13 +53,13 @@
       }
     },
     "transformed": {
-      "text": "Planted for 1.5s, she reaches 2 hexes farther (6) and crits more. Heartseeker replaces Marking Shot: a charged shot that pierces every enemy in its line. Shots from 5 hexes or more give her more mana.",
+      "text": "Planted for 1.5s, she reaches 2 hexes farther (6) and crits more. Heartseeker replaces Marking Shot: a charged shot that pierces every enemy in its line. Shots from 5 hexes or more give her more mana. Her ATK and HP rise.",
       "cost": "After she moves, she needs 1.5s to plant before she can shoot again.",
       "patch": {
         "stats_bp": {
-          "atk": 11000,
+          "atk": 18700,
           "atsp": 7000,
-          "hp": 10500,
+          "hp": 17850,
           "mgk": 10500
         },
         "stats_add": {
@@ -402,13 +402,13 @@
       }
     },
     "transformed": {
-      "text": "Her snares root for 2.5s and make the enemy Bleed. Bramble Field replaces Marking Shot: it drops a snare in an enemy's path, up to 3 at once. You place her first 2 snares before the fight.",
+      "text": "Her snares root for 2.5s and make the enemy Bleed. Bramble Field replaces Marking Shot: it drops a snare in an enemy's path, up to 3 at once. You place her first 2 snares before the fight. Her ATK and HP rise.",
       "cost": "She reaches only 3 hexes.",
       "patch": {
         "stats_bp": {
           "def": 13000,
-          "atk": 9450,
-          "hp": 10500,
+          "atk": 12750,
+          "hp": 14200,
           "mgk": 10500
         },
         "stats_add": {
@@ -780,13 +780,13 @@
       }
     },
     "transformed": {
-      "text": "Every shot splits to the enemy nearest her target and gives her mana, and she shoots whatever is in reach while she walks. Arrow Storm replaces Marking Shot: arrows rain on a circle for 3s.",
+      "text": "Every shot splits to the enemy nearest her target and gives her mana, and she shoots whatever is in reach while she walks. Arrow Storm replaces Marking Shot: arrows rain on a circle for 3s. Her ATK and HP rise.",
       "cost": "Each arrow deals less.",
       "patch": {
         "stats_bp": {
           "atsp": 11000,
-          "atk": 6800,
-          "hp": 10500,
+          "atk": 12250,
+          "hp": 18900,
           "mgk": 10500
         },
         "add_traits": [
@@ -1168,13 +1168,13 @@
       }
     },
     "transformed": {
-      "text": "Guard covers every ally within 2 hexes, taking 30% of each hit on them. Hearthwall replaces Hold the Line: a wall of shields 3 hexes wide, 1 hex in front of him, stops enemy shots for 4s. Damage he takes for others fills his mana faster.",
+      "text": "Guard covers every ally within 2 hexes, taking 30% of each hit on them. Hearthwall replaces Hold the Line: a wall of shields 3 hexes wide, 1 hex in front of him, stops enemy shots for 4s. Damage he takes for others fills his mana faster. His ATK and HP rise.",
       "cost": "He's slow, and he can't move while his wall stands.",
       "patch": {
         "stats_bp": {
-          "hp": 13100,
+          "hp": 16400,
           "def": 12000,
-          "atk": 8900,
+          "atk": 11100,
           "mgk": 10500
         },
         "stats_add": {
@@ -1486,12 +1486,12 @@
       }
     },
     "transformed": {
-      "text": "Hearthbrand Mace replaces Shield Bash: it hits every enemy within 1 hex of his target too, heals him for part of the damage, and fills his mana for each enemy hit. Brand Slam replaces Hold the Line: he leaps into the biggest group and knocks them back.",
+      "text": "Hearthbrand Mace replaces Shield Bash: it hits every enemy within 1 hex of his target too, heals him for part of the damage, and fills his mana for each enemy hit. Brand Slam replaces Hold the Line: he leaps into the biggest group and knocks them back. His ATK and HP rise.",
       "cost": "His DEF drops.",
       "patch": {
         "stats_bp": {
-          "atk": 10500,
-          "hp": 10500,
+          "atk": 17300,
+          "hp": 17300,
           "def": 7000,
           "mgk": 10500
         },
@@ -1899,12 +1899,12 @@
       }
     },
     "transformed": {
-      "text": "Below 30% HP he hits harder and his DEF rises, and he grows stronger for each fallen ally. Last Rites replaces Hold the Line: the first time he drops below 30% HP, he taunts every enemy within 3 hexes and can't fall for 6s. He has no mana.",
+      "text": "Below 30% HP he hits harder and his DEF rises, and he grows stronger for each fallen ally. Last Rites replaces Hold the Line: the first time he drops below 30% HP, he taunts every enemy within 3 hexes and can't fall for 6s. He has no mana. His ATK and HP rise.",
       "cost": "Heals on him are 20% weaker, and he has 5% less max HP.",
       "patch": {
         "stats_bp": {
-          "hp": 9500,
-          "atk": 14200,
+          "hp": 14250,
+          "atk": 21300,
           "mgk": 10500
         },
         "mana": null,
@@ -2244,12 +2244,12 @@
       }
     },
     "transformed": {
-      "text": "Night Lantern replaces Mend: a lantern that heals every ally near it each second and burns away their Burn and Poison. Every 4th Lantern Glow, Mend heals the ally lowest on HP, and every ally within 2 hexes of her at half as much.",
+      "text": "Night Lantern replaces Mend: a lantern that heals every ally near it each second and burns away their Burn and Poison. Every 4th Lantern Glow, Mend heals the ally lowest on HP, and every ally within 2 hexes of her at half as much. Her MGK and HP rise.",
       "cost": "Lantern Glow deals no damage (it still gives mana), and she has less HP.",
       "patch": {
         "stats_bp": {
-          "mgk": 11000,
-          "hp": 8900,
+          "mgk": 17050,
+          "hp": 13800,
           "atk": 10500
         },
         "basic_attack": {
@@ -2625,14 +2625,14 @@
       }
     },
     "transformed": {
-      "text": "Warding Circle replaces Mend: for 4s, a circle 2 hexes around her Slows enemies inside and Wards allies inside (they take 15% less). Every 4th Lantern Glow, Weave shields the ally lowest on HP and heals them a little.",
+      "text": "Warding Circle replaces Mend: for 4s, a circle 2 hexes around her Slows enemies inside and Wards allies inside (they take 15% less). Every 4th Lantern Glow, Weave shields the ally lowest on HP and heals them a little. Her MGK and HP rise.",
       "cost": "Her healing is 40% weaker.",
       "habit": "weave",
       "patch": {
         "stats_bp": {
-          "hp": 9450,
+          "hp": 15100,
           "def": 10000,
-          "mgk": 9450,
+          "mgk": 15100,
           "atk": 10500
         },
         "signature": {
@@ -2891,13 +2891,13 @@
       }
     },
     "transformed": {
-      "text": "Sunfall replaces Mend: a beam toward her target that burns enemies and heals allies in its line. Every 4th Lantern Glow, Mend heals the ally lowest on HP and smites her target, giving her mana.",
+      "text": "Sunfall replaces Mend: a beam toward her target that burns enemies and heals allies in its line. Every 4th Lantern Glow, Mend heals the ally lowest on HP and smites her target, giving her mana. Her MGK and HP rise.",
       "cost": "Her healing is 30% weaker.",
       "patch": {
         "stats_bp": {
-          "mgk": 11550,
+          "mgk": 25400,
           "def": 8000,
-          "hp": 10500,
+          "hp": 23100,
           "atk": 10500
         },
         "stats_add": {
@@ -3363,11 +3363,13 @@
       }
     },
     "transformed": {
-      "text": "Each Chain Fist gives him a Shield of 1.5% of his max HP, up to half his max HP. Bulwark Burst replaces Haul: his whole Shield bursts on the enemies within 1 hex of him for twice what it held. Haul becomes a habit, every 8th Chain Fist.",
+      "text": "Each Chain Fist gives him a Shield of 1.5% of his max HP, up to half his max HP. Bulwark Burst replaces Haul: his whole Shield bursts on the enemies within 1 hex of him for twice what it held. Haul becomes a habit, every 8th Chain Fist. His ATK and HP rise.",
       "cost": "15% less DEF.",
       "patch": {
         "stats_bp": {
-          "def": 8500
+          "def": 8500,
+          "hp": 12000,
+          "atk": 12000
         },
         "signature": {
           "id": "bulwark_burst",
@@ -3681,7 +3683,7 @@
       }
     },
     "transformed": {
-      "text": "Haul becomes a habit: every 8th Chain Fist, his chains Bleed the 3 farthest enemies within 4 hexes and drag them to him. Crowd Strength: more ATK and DEF for each enemy within 1 hex. Maelstrom replaces Haul: every enemy within 2 hexes is Bled, dragged next to him, and Rooted, and he can attack again at once.",
+      "text": "Haul becomes a habit: every 8th Chain Fist, his chains Bleed the 3 farthest enemies within 4 hexes and drag them to him. Crowd Strength: more ATK and DEF for each enemy within 1 hex. Maelstrom replaces Haul: every enemy within 2 hexes is Bled, dragged next to him, and Rooted, and he can attack again at once. His ATK and HP rise.",
       "cost": "He's slower.",
       "patch": {
         "stats_add": {
@@ -3785,6 +3787,10 @@
           "start": 20,
           "per_attack": 10,
           "per_10_damage_taken": 1
+        },
+        "stats_bp": {
+          "hp": 12500,
+          "atk": 12500
         }
       }
     },
@@ -4043,7 +4049,7 @@
       }
     },
     "transformed": {
-      "text": "Enemies hitting him take a little more of the damage back, and he heals for half of what he sends back. Iron Maiden replaces Haul: for 3s he taunts every enemy within 2 hexes and sends back a share of every hit. Haul becomes a habit, every 8th Chain Fist.",
+      "text": "Enemies hitting him take a little more of the damage back, and he heals for half of what he sends back. Iron Maiden replaces Haul: for 3s he taunts every enemy within 2 hexes and sends back a share of every hit. Haul becomes a habit, every 8th Chain Fist. His ATK and HP rise.",
       "cost": "Heals on him are 20% weaker.",
       "patch": {
         "signature": {
@@ -4148,7 +4154,11 @@
               }
             ]
           }
-        ]
+        ],
+        "stats_bp": {
+          "hp": 17000,
+          "atk": 17000
+        }
       }
     },
     "deed": {
@@ -4484,7 +4494,7 @@
       }
     },
     "transformed": {
-      "text": "Fade: kills hide her longer and give back some of her mana. From the Shadows: her attacks from Stealth deal more. Shadow Dance replaces Shadowstep: she's hidden, and her next 3 attacks don't end it. Shadowstep becomes a habit, every 8th Knife.",
+      "text": "Fade: kills hide her longer and give back some of her mana. From the Shadows: her attacks from Stealth deal more. Shadow Dance replaces Shadowstep: she's hidden, and her next 3 attacks don't end it. Shadowstep becomes a habit, every 8th Knife. Her ATK and HP rise.",
       "cost": "Healing on her is weaker while she's hidden.",
       "patch": {
         "signature": {
@@ -4584,7 +4594,11 @@
               }
             ]
           }
-        ]
+        ],
+        "stats_bp": {
+          "hp": 12000,
+          "atk": 12000
+        }
       }
     },
     "deed": {
@@ -4906,7 +4920,7 @@
       }
     },
     "transformed": {
-      "text": "Scent stays. She deals more damage to Marked enemies, and killing one lets her step to the next Marked enemy within 4 hexes with her attack ready. Sentence replaces Shadowstep: a heavy strike on a Marked enemy that, if it kills, strikes again. Shadowstep becomes a habit, every 8th Knife.",
+      "text": "Scent stays. She deals more damage to Marked enemies, and killing one lets her step to the next Marked enemy within 4 hexes with her attack ready. Sentence replaces Shadowstep: a heavy strike on a Marked enemy that, if it kills, strikes again. Shadowstep becomes a habit, every 8th Knife. Her ATK and HP rise.",
       "cost": "Nothing special against an enemy with no Mark.",
       "patch": {
         "prefer": {
@@ -5026,7 +5040,11 @@
               }
             ]
           }
-        ]
+        ],
+        "stats_bp": {
+          "hp": 12000,
+          "atk": 12000
+        }
       }
     },
     "deed": {
@@ -5371,7 +5389,7 @@
       }
     },
     "transformed": {
-      "text": "Choke: her attacks on Rooted or Stunned enemies always crit, harder, and hold them longer. Garrote replaces Shadowstep: she grabs her target, Garroting it (a Root), and hits it again and again while she holds it, hidden. Shadowstep becomes a habit, every 8th Knife.",
+      "text": "Choke: her attacks on Rooted or Stunned enemies always crit, harder, and hold them longer. Garrote replaces Shadowstep: she grabs her target, Garroting it (a Root), and hits it again and again while she holds it, hidden. Shadowstep becomes a habit, every 8th Knife. Her ATK and HP rise.",
       "cost": "She can't move while she garrotes.",
       "patch": {
         "signature": {
@@ -5497,7 +5515,11 @@
               }
             ]
           }
-        ]
+        ],
+        "stats_bp": {
+          "hp": 12000,
+          "atk": 12000
+        }
       }
     },
     "deed": {
@@ -5788,8 +5810,8 @@
       "cost": "His own signature costs 20 more mana.",
       "patch": {
         "stats_bp": {
-          "mgk": 15000,
-          "hp": 11000
+          "mgk": 22500,
+          "hp": 16500
         },
         "mana": {
           "max": 80,
@@ -6183,8 +6205,8 @@
       "cost": "Peal and Resonance no longer reach melee allies.",
       "patch": {
         "stats_bp": {
-          "mgk": 13000,
-          "hp": 11000
+          "mgk": 20150,
+          "hp": 17050
         },
         "signature": {
           "id": "gale",
@@ -6562,8 +6584,8 @@
       "cost": "Toll deals 20% less damage.",
       "patch": {
         "stats_bp": {
-          "mgk": 15000,
-          "hp": 11000
+          "mgk": 21750,
+          "hp": 15950
         },
         "basic_attack": {
           "id": "toll",
@@ -7236,7 +7258,7 @@
     "fantasy": "Every wound she opens festers, and she feeds on the sick.",
     "placement": "Beside the toughest enemies, so her Poison has time to work.",
     "vowed": {
-      "taste": "Blight: Rend applies Poison equal to 10% of her ATK.",
+      "taste": "Blight: Rend applies Poison equal to 7% of her ATK.",
       "cost": "10% less max HP.",
       "patch": {
         "stats_bp": {
@@ -7255,7 +7277,7 @@
                 "status": "poison",
                 "stacks": 0,
                 "scaling": {
-                  "atk": 1000
+                  "atk": 700
                 },
                 "target": "target"
               }
@@ -10327,7 +10349,7 @@
           }
         },
         "apex": {
-          "text": "Reaction Flask's splash reaches 2 hexes. Enemies with both Burn and Poison take 25% more damage from every hero. Each enemy that falls with both makes that 5% bigger for the rest of the fight. The apex also gives +15% HP and MGK.",
+          "text": "Reaction Flask's splash reaches 2 hexes. Enemies with both Burn and Poison take 25% more damage from every hero. Each enemy that falls with both makes that 5% bigger for the rest of the fight. The apex also gives +35% HP and +25% MGK.",
           "patch": {
             "signature": {
               "id": "reaction_flask",
@@ -10423,8 +10445,8 @@
               }
             ],
             "stats_bp": {
-              "hp": 11500,
-              "mgk": 11500
+              "hp": 13500,
+              "mgk": 12500
             }
           }
         },
@@ -11839,7 +11861,7 @@
           }
         },
         "apex": {
-          "text": "Firebrand Pounce also burns the next enemy nearest its target. Every allied summon's attacks set Burn of 10% of her ATK: her hounds, Lucan's copies, Severine's thralls, all of them. The apex also gives +15% HP and ATK (and her companions with them).",
+          "text": "Firebrand Pounce also burns the next enemy nearest its target. Every allied summon's attacks set Burn of 10% of her ATK: her hounds, Lucan's copies, Severine's thralls, all of them. The apex also gives +35% HP and +25% ATK (and her companions with them).",
           "patch": {
             "signature": {
               "id": "firebrand_pounce",
@@ -11913,8 +11935,8 @@
               }
             ],
             "stats_bp": {
-              "hp": 11500,
-              "atk": 11500
+              "hp": 13500,
+              "atk": 12500
             }
           }
         },
