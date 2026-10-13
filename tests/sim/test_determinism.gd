@@ -145,15 +145,15 @@ const HERO_STATUSES: Array[String] = ["iron_maiden", "hidden", "shadow_dance", "
 	# His apexes' (8f-4c; tests/sim/test_lucan_apexes.gd, test_lucan_states.gd).
 	"unseen_host", "knife_in_the_dark", "veil_confused", "veil_exposed", "grand_dance", "puppet_thread", "puppet_exposed",
 	"marionette", "marionette_exposed", "puppet_cut", "puppet_master",
-	# Hob's (phase 8 part 6, 8f-5; tests/sim/test_hob_pieces.gd).
-	"bounty", "compounding"]
+	# Hob's (phase 8 part 6, 8f-5; tests/sim/test_hob_pieces.gd, test_hob_paths.gd).
+	"bounty", "compounding", "cut_purse"]
 const RELIC_STATUSES: Array[String] = ["sunder", "quickened", "unbending", "long_watch", "vigilant", "iron_garden"]
 ## Boosts only loadout items apply (phase 5c step 6; tests/run/test_loadout.gd).
 const ITEM_STATUSES: Array[String] = ["surge", "surge_2", "last_breath", "purified",
 	"grounded", "shadow_step", "shadow_step_2", "shadow_step_3", "bloodhound", "scavenged", "watched_over",
 	"ambush", "ambush_2", "rear_guard", "late_surge"]
 ## Statuses only upgrades apply (phase 5c step 7; tests/run/test_upgrade_pools.gd).
-const UPGRADE_STATUSES: Array[String] = ["hobbled", "weighed_down", "cowed", "parting_shot", "first_blood", "scarred"]
+const UPGRADE_STATUSES: Array[String] = ["hobbled", "weighed_down", "cowed", "parting_shot", "first_blood", "scarred", "slippery_exit"]
 ## Statuses only rift modifiers apply (phase 5c step 8b; tests/run/test_rift_tear.gd),
 ## and enemy upgrades and specializations (phase 8 part 3, 8c-5a and 8c-5c;
 ## tests/sim/test_enemy_growth_pieces.gd).

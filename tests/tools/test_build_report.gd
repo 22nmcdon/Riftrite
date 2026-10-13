@@ -24,7 +24,8 @@ func test_the_teams_file_reads() -> void:
 		"bloodglut self-sufficient", "plaguebearer self-sufficient", "hemomancer engine", "aegis enabler", "psalmist enabler", "tithe_collector long-game",
 		"furnace engine", "wildfire self-sufficient", "ember_choir enabler", "catalyst engine", "transmuter long-game", "apothecary enabler",
 		"cinderhound self-sufficient", "serpent_keeper self-sufficient", "packleader engine",
-		"mirrorwright self-sufficient", "veilweaver enabler", "puppeteer engine"])
+		"mirrorwright self-sufficient", "veilweaver enabler", "puppeteer engine",
+		"hoarder long-game", "fence long-game", "bounty_hunter enabler"])
 
 
 func test_a_small_run() -> void:

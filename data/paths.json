@@ -14303,7 +14303,7 @@
         "signature": {
           "id": "heavy_purse",
           "name": "Heavy Purse",
-          "text": "He slams his target with his purse, harder for every shard the run holds.",
+          "text": "He slams his target within 2 hexes with his purse, harder for every shard the run holds.",
           "trigger": {
             "kind": "mana"
           },
@@ -14461,7 +14461,7 @@
         "signature": {
           "id": "cut_purse",
           "name": "Cut Purse",
-          "text": "He cuts his target's purse: it drops a shard and hits softer for a few seconds.",
+          "text": "He cuts the purse of his target within 2 hexes: it drops a shard and hits softer for a few seconds.",
           "trigger": {
             "kind": "mana"
           },
