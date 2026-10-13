@@ -35,6 +35,9 @@ extends RefCounted
 const RELIC_SHRINE: int = 0
 const RELIC_AFTER_FIGHT: int = 1
 const RELIC_SHOP: int = 2
+## A won day fight that started with this many shards held or more is
+## "won_holding" (phase 8 part 6: Old Coins, Dragon's Hoard).
+const WON_HOLDING_SHARDS: int = 30
 
 var run: RunContent
 var state: RunState
@@ -897,6 +900,7 @@ func fight_setup(formation: Dictionary[String, Vector2i], errors: Array[String],
 		_relic_rules(setup)
 		# The shards held, for what reads them (phase 8 part 5, Golden Aegis).
 		setup.shards = state.shards
+		setup.tithe_shards = mini(state.tithe_held, state.shards)
 		if not hunting and state.dig_in and state.rock.size() == 2:
 			setup.rocks.append(Vector2i(state.rock[0], state.rock[1]))
 		errors.append_array(setup.validate(content))
@@ -1066,6 +1070,8 @@ func fight(formation: Dictionary[String, Vector2i], errors: Array[String], snare
 ## the day's camp modifiers are spent. fight() calls it; tests call it with
 ## a result of their own.
 func record(formation: Dictionary[String, Vector2i], result: FightResult) -> void:
+	# The shards held as the fight started (phase 8 part 6: "won_holding").
+	var held: int = state.shards
 	var hunting: bool = fight_encounter() == state.hunt and not state.hunt.is_empty()
 	var encounter_id: String = state.hunt if hunting else state.chosen
 	var won: bool = result.outcome != FightResult.Outcome.DEFEAT
@@ -1091,6 +1097,9 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 	fought.collected = _collected(result)
 	for paid: int in tithes.values():
 		fought.tithe += paid
+	# The Tithe's shards held (The Counting House): what spending since the
+	# last fight left of them (spent last), and today's.
+	state.tithe_held = mini(state.tithe_held, held) + fought.tithe
 	for hero: RunState.Hero in state.heroes:
 		# An oath doubles what the fight puts into its hero's deeds (step 8c).
 		var oath: EventDef.Oath = oath_of(hero) if not hunting else null
@@ -1173,6 +1182,8 @@ func record(formation: Dictionary[String, Vector2i], result: FightResult) -> voi
 	_grow_by_run("wins")
 	if flawless:
 		_grow_by_run("flawless")
+	if held >= WON_HOLDING_SHARDS:
+		_grow_by_run("won_holding")
 	state.phase = RunState.Phase.AFTER
 	state.relic_choice_price = 0
 	if run.day_kind(state, state.day) == "boss":
@@ -1221,6 +1232,10 @@ func _grow_by_run(what: String, amount: int = 1) -> void:
 		var apex: ApexDef = run.earned_apex(hero)
 		if apex != null and apex.grows != null and apex.grows.run_counts == what:
 			_step_hero(hero, RunContent.apex_growth_key(apex), apex.grows, amount)
+		# A transformed path's own snowball (phase 8 part 6, Fence: "spent").
+		var path: PathDef = run.content.paths.get(hero.path) if hero.transformed else null
+		if path != null and path.transformed_grows != null and path.transformed_grows.run_counts == what:
+			_step_hero(hero, RunContent.path_growth_key(path), path.transformed_grows, amount)
 
 
 func _step_hero(hero: RunState.Hero, key: String, grows: GrowthDef, amount: int = 1) -> void:
@@ -1249,6 +1264,10 @@ func _tithes(result: FightResult, encounter_id: String) -> Dictionary[String, in
 		var apex: ApexDef = run.earned_apex(hero)
 		var flawless_count: int = hero.growth.get(RunContent.apex_growth_key(apex), 0) if apex != null and apex.grows != null else 0
 		paid[hero.id] = tithe.pays(state.heroes.size() - fallen, fallen, tier, flawless_count, run.tithe_steps(hero))
+		if tithe.once_per_act > 0 and hero.tithe_act != state.act:
+			# Lucky Find (phase 8 part 6): the first won day fight each act.
+			paid[hero.id] += tithe.once_per_act
+			hero.tithe_act = state.act
 	return paid
 
 
@@ -1365,14 +1384,18 @@ func buy_relic(index: int = 0) -> String:
 	if state.shards < price:
 		return "it costs %d shards; there are %d" % [price, state.shards]
 	state.shards -= price
+	_spent(price)
+	_saved(DeedDef.Counts.RELICS_SAVED, relic_price(index, true) - price)
+	state.shop_relics_bought += 1
 	_gain_relic(state.shop_relics[index])
 	state.shop_relics[index] = ""
 	return ""
 
 
 ## What the open shop's relic `index` costs: its tier's price (the Magpie's
-## at his discount, rounded down), with the Pedlar's price_add.
-func relic_price(index: int = 0) -> int:
+## at his discount, rounded down), with the Pedlar's price_add and (phase 8
+## part 6) the team's shop rules (`full`: without them).
+func relic_price(index: int = 0, full: bool = false) -> int:
 	if index < 0 or index >= state.shop_relics.size() or state.shop_relics[index].is_empty():
 		return 0
 	var price: int = act.relic_prices[RelicDef.TIER_NAMES[run.relics[state.shop_relics[index]].tier]]
@@ -1380,7 +1403,13 @@ func relic_price(index: int = 0) -> int:
 		@warning_ignore("integer_division")
 		return price * act.magpie_relic_pct / 100
 	# A bond relic is free (phase 5c step 5d), whatever the prices.
-	return 0 if price == 0 else _marked_up(price)
+	if price == 0:
+		return 0
+	var rules: ShopRulesDef = shop_rules()
+	if not full and rules != null and rules.first_relic_less > 0 and state.shop_relics_bought == 0:
+		# Black Market's taste: the first relic bought in each shop.
+		return maxi(_marked_up(price) - rules.first_relic_less, 0)
+	return _marked_up(price)
 
 
 ## What the Magpie pays for `relic_id` (its tier's relic_sell).
@@ -1701,13 +1730,18 @@ func open_shop(kind: String) -> String:
 		_:
 			return "there's no shop \"%s\"" % kind
 	state.shop = kind
+	_mark_rank_ii()
 	state.shop_dear_bp = state.dear_shop_bp
 	state.dear_shop_bp = 0
 	state.rerolls = 0
 	state.transmutes = 0
+	state.shop_relics_bought = 0
+	state.ledger_rerolls = 0
 	state.magpie_swapped = false
 	state.shop_relics = _draw_shop_relics()
 	state.shards += run.relic_sum(state, "shop_shards")
+	# A shop visited (phase 8 part 6, Old Contacts: "shops").
+	_grow_by_run("shops")
 	if run.relic_rule(state, "miser"):
 		@warning_ignore("integer_division")
 		state.shards += mini(state.shards / 5, 6)
@@ -1732,7 +1766,10 @@ func close_shop() -> void:
 	state.wares.clear()
 	state.rerolls = 0
 	state.transmutes = 0
+	state.shop_relics_bought = 0
 	state.shop_relics.clear()
+	state.wares_rank_ii.clear()
+	state.ledger_rerolls = 0
 
 
 ## What ware `item_id` costs at the open shop: its kind's price at the
@@ -1740,14 +1777,19 @@ func close_shop() -> void:
 func price_of(item_id: String) -> int:
 	if state.shop == "magpie":
 		return act.magpie_charm_price
-	return _marked_up(act.item_prices[ItemDef.KIND_NAMES[run.items[item_id].kind]])
+	var rules: ShopRulesDef = shop_rules()
+	# Wholesale (phase 8 part 6): the team's shop rules take some off.
+	return maxi(_marked_up(act.item_prices[ItemDef.KIND_NAMES[run.items[item_id].kind]]) - (rules.item_less if rules != null else 0), 1)
 
 
 ## What the Pedlar pays for `item_id`: half its kind's price, rounded down,
-## whatever its rank (loadout rule 9).
+## whatever its rank (loadout rule 9); less by the team's shop rules (phase 8
+## part 6, Fence: a quarter).
 func sell_price(item_id: String) -> int:
+	var rules: ShopRulesDef = shop_rules()
+	var share_bp: int = 5000 - (rules.sell_less_bp if rules != null else 0)
 	@warning_ignore("integer_division")
-	return act.item_prices[ItemDef.KIND_NAMES[run.items[item_id].kind]] / 2
+	return act.item_prices[ItemDef.KIND_NAMES[run.items[item_id].kind]] * maxi(share_bp, 0) / FixedMath.BP_ONE
 
 
 ## Sells an item the run owns to the Pedlar, from the stash or a slot. Its
@@ -1816,6 +1858,11 @@ func transmute(item_id: String) -> String:
 	_drop_item(item_id)
 	state.transmutes += 1
 	state.shards += paid
+	if run.relic_rule(state, "ledger"):
+		# The Black Market Ledger (phase 8 part 6): its full price counts as
+		# spent, and the shop owes a free reroll.
+		_grow_by_run("spent", act.item_prices[ItemDef.KIND_NAMES[run.items[item_id].kind]])
+		state.ledger_rerolls += 1
 	return ""
 
 
@@ -1891,20 +1938,53 @@ func buy(index: int) -> String:
 	if state.shards < price:
 		return "it costs %d shards; there are %d" % [price, state.shards]
 	state.shards -= price
-	# The Magpie's charms come at rank II (phase 5c step 6e).
-	_gain_item(state.wares[index], 2 if state.shop == "magpie" else 1)
+	_spent(price)
+	# The Magpie's charms come at rank II (phase 5c step 6e), and Insider's
+	# at the Pedlar (phase 8 part 6).
+	_gain_item(state.wares[index], 2 if state.shop == "magpie" or state.wares_rank_ii.has(index) else 1)
 	state.wares[index] = ""
 	return ""
+
+
+## The rank buying ware `index` gives: an owned item's next, rank II at least
+## at the Magpie or for Insider's charms (phase 8 part 6), at most III.
+func ware_rank(index: int) -> int:
+	var rank: int = state.item_ranks.get(state.wares[index], 0) + 1
+	if state.shop == "magpie" or state.wares_rank_ii.has(index):
+		rank = maxi(rank, 2)
+	return mini(rank, ItemDef.RANKS)
+
+
+## Insider (phase 8 part 6): the first of the Pedlar's charms, as many as
+## the team's shop rules say, come at rank II.
+func _mark_rank_ii() -> void:
+	state.wares_rank_ii.clear()
+	var rules: ShopRulesDef = shop_rules()
+	if state.shop != "pedlar" or rules == null:
+		return
+	for i: int in state.wares.size():
+		if state.wares_rank_ii.size() < rules.rank_ii_charms and run.items[state.wares[i]].kind == ItemDef.Kind.CHARM:
+			state.wares_rank_ii.append(i)
 
 
 ## What the open shop's next reroll costs (phase 5c step 5a): the first
 ## reroll_price (boss_reroll_price in the boss shop), each after it 1
 ## more (flat_rerolls: never more); free_reroll makes the first free.
-func reroll_price() -> int:
+## The team's shop rules (phase 8 part 6, Hob) then change it (`full`:
+## without them).
+func reroll_price(full: bool = false) -> int:
+	var price: int = _reroll_price(full)
+	# The Black Market Ledger's free rerolls (phase 8 part 6).
+	return 0 if not full and price > 0 and state.ledger_rerolls > 0 else price
+
+
+func _reroll_price(full: bool) -> int:
 	if state.rerolls == 0 and run.relic_rule(state, "free_reroll"):
 		return 0
 	var base: int = act.boss_reroll_price if boss_shop() else act.reroll_price
-	return base + (0 if run.relic_rule(state, "flat_rerolls") else state.rerolls)
+	var price: int = base + (0 if run.relic_rule(state, "flat_rerolls") else state.rerolls)
+	var rules: ShopRulesDef = shop_rules()
+	return price if full or rules == null or state.shop != "pedlar" else rules.reroll_price(state.rerolls, price)
 
 
 ## The Pedlar lays out fresh wares and relics (Decision 19), for the next
@@ -1915,9 +1995,14 @@ func reroll() -> String:
 	var price: int = reroll_price()
 	if state.shards < price:
 		return "a reroll costs %d shards; there are %d" % [price, state.shards]
+	if price == 0 and _reroll_price(false) > 0:
+		state.ledger_rerolls -= 1
 	state.shards -= price
+	_spent(price)
+	_saved(DeedDef.Counts.REROLLS_SAVED, reroll_price(true) - price)
 	state.rerolls += 1
 	state.wares = Offers.pedlar(run, state, state.rerolls)
+	_mark_rank_ii()
 	state.shop_relics = _draw_shop_relics()
 	return ""
 
@@ -1939,8 +2024,40 @@ func treat_wound(hero_id: String) -> String:
 	if state.shards < wound_price():
 		return "treating a wound costs %d shards; there are %d" % [wound_price(), state.shards]
 	state.shards -= wound_price()
+	_spent(wound_price())
 	hero.wounds -= 1
 	return ""
+
+
+## The team's shop rules (phase 8 part 6, ShopRulesDef): its heroes' added
+## together (null: none of them has any).
+func shop_rules() -> ShopRulesDef:
+	var sum: ShopRulesDef = null
+	for hero: RunState.Hero in state.heroes:
+		var own: ShopRulesDef = run.shop_rules(hero)
+		if own != null:
+			sum = own.merged(sum)
+	return sum
+
+
+## Shards spent in a shop (phase 8 part 6, Decision 6): at the Pedlar, the
+## boss shop, or the Magpie, on items, relics, rerolls, and wounds; the run
+## counts them for what grows with "spent" (transformed Fence).
+func _spent(amount: int) -> void:
+	if amount > 0 and (state.shop == "pedlar" or state.shop == "magpie"):
+		_grow_by_run("spent", amount)
+
+
+## Shards the team's shop rules saved (phase 8 part 6, Haggle's and Black
+## Market's deeds): counted toward every hero's deed of that kind.
+func _saved(counts: DeedDef.Counts, amount: int) -> void:
+	if amount <= 0:
+		return
+	for hero: RunState.Hero in state.heroes:
+		for key: String in hero.deeds:
+			var deed: DeedDef = _deed_of(key)
+			if deed != null and deed.counts == counts:
+				hero.deeds[key] += amount
 
 
 ## True while some boss relic isn't held.

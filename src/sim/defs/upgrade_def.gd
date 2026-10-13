@@ -63,6 +63,11 @@ var needs_shards: int = 0
 ## Phase 8 part 6 (Ottilie's cards): what it adds to its hero's transmuting
 ## (TransmuteDef; null: nothing; no mod needed: Appraise).
 var transmute: TransmuteDef = null
+## Its shop rules (phase 8 part 6, Hob's Fence cards; null: none).
+var shop: ShopRulesDef = null
+## Its hero's transformed path's run snowball counts this share more (phase
+## 8 part 6, Big Spender: 5000, half again; 0: none; no mod needed).
+var snowball_bp: int = 0
 
 
 static func read(reader: DataReader) -> UpgradeDef:
@@ -103,13 +108,17 @@ static func read(reader: DataReader) -> UpgradeDef:
 		var tithe_reader: DataReader = reader.req_object("tithe")
 		if tithe_reader != null:
 			def.tithe = TitheDef.read(tithe_reader)
-		if def.layer == Layer.HERO:
-			reader.error("a Tithe card is a path's or an apex's")
+		if def.layer == Layer.HERO and def.tithe != null and not def.tithe.only_once_per_act():
+			reader.error("a Tithe card is a path's or an apex's (a hero card's pays only once_per_act: Lucky Find)")
 	def.needs_shards = reader.opt_int("needs_shards", 0, 1, 1000)
 	def.transmute = TransmuteDef.read_in(reader)
+	def.shop = ShopRulesDef.read_in(reader)
+	def.snowball_bp = reader.opt_int("snowball_bp", 0, 0, 5 * FixedMath.BP_ONE)
+	if def.snowball_bp > 0 and def.layer != Layer.PATH:
+		reader.error("a snowball card is a path's")
 	if def.transmute != null and def.layer == Layer.HERO:
 		reader.error("a transmuting card is a path's or an apex's")
-	if (def.grows == null and def.stack_stat < 0 and def.tithe == null and def.transmute == null) or reader.has("mod"):
+	if (def.grows == null and def.stack_stat < 0 and def.tithe == null and def.transmute == null and def.shop == null and def.snowball_bp == 0) or reader.has("mod"):
 		var mod_reader: DataReader = reader.req_object("mod")
 		if mod_reader != null:
 			def.mod = KitMod.read(mod_reader)

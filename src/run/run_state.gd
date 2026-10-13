@@ -67,11 +67,14 @@ class Hero:
 	var next_fight: Array[String] = []
 	var oath: String = ""
 	var oath_fights: int = 0
+	## The act its once-an-act Tithe last paid in (phase 8 part 6, Lucky
+	## Find; 0: never).
+	var tithe_act: int = 0
 
 	func to_dict() -> Dictionary:
 		return {"id": id, "path": path, "transformed": transformed, "apex": apex, "apex_earned": apex_earned, "deeds": deeds.duplicate(), "upgrades": upgrades.duplicate(),
 			"wounds": wounds, "slots": slots.duplicate(), "growth": growth.duplicate(), "gambit_at": gambit_at,
-			"locked": locked.duplicate(true), "weakened": weakened, "next_fight": next_fight.duplicate(), "oath": oath, "oath_fights": oath_fights}
+			"locked": locked.duplicate(true), "weakened": weakened, "next_fight": next_fight.duplicate(), "oath": oath, "oath_fights": oath_fights, "tithe_act": tithe_act}
 
 	static func from_dict(data: Dictionary) -> Hero:
 		var hero := Hero.new()
@@ -97,6 +100,7 @@ class Hero:
 		hero.next_fight.assign((data.get("next_fight", []) as Array).map(func(value: Variant) -> String: return str(value)))
 		hero.oath = str(data.get("oath", ""))
 		hero.oath_fights = int(data.get("oath_fights", 0))
+		hero.tithe_act = int(data.get("tithe_act", 0))
 		return hero
 
 
@@ -197,6 +201,17 @@ var rerolls: int = 0
 ## turned into items this act on the act's own allowance (Grand
 ## Transmutation's taste).
 var transmutes: int = 0
+## Relics bought in the open shop (phase 8 part 6, Black Market's taste:
+## the first costs less).
+var shop_relics_bought: int = 0
+## Which of the Pedlar's wares come at rank II (phase 8 part 6, Insider:
+## indices into wares).
+var wares_rank_ii: Array[int] = []
+## Shards the Tithe paid that nothing has spent yet (phase 8 part 6, The
+## Counting House; Tithe shards are spent last), and free rerolls the open
+## shop still owes (The Black Market Ledger).
+var tithe_held: int = 0
+var ledger_rerolls: int = 0
 var transmuted_act: int = 0
 ## The Magpie's swap is used this visit (phase 5c step 6e).
 var magpie_swapped: bool = false
@@ -309,7 +324,7 @@ func to_dict() -> Dictionary:
 		"shards": shards, "options": options.duplicate(true), "chosen": chosen, "formation": hexes,
 		"fought": fought.map(func(entry: Fought) -> Dictionary: return entry.to_dict()),
 		"pick": pick.duplicate(), "just_transformed": just_transformed.duplicate(),
-		"stash": stash.duplicate(), "shop": shop, "wares": wares.duplicate(), "rerolls": rerolls, "transmutes": transmutes, "transmuted_act": transmuted_act, "shop_relics": shop_relics.duplicate(), "magpie_swapped": magpie_swapped,
+		"stash": stash.duplicate(), "shop": shop, "wares": wares.duplicate(), "rerolls": rerolls, "transmutes": transmutes, "shop_relics_bought": shop_relics_bought, "wares_rank_ii": wares_rank_ii.duplicate(), "tithe_held": tithe_held, "ledger_rerolls": ledger_rerolls, "transmuted_act": transmuted_act, "shop_relics": shop_relics.duplicate(), "magpie_swapped": magpie_swapped,
 		"place": place, "camp": camp.duplicate(), "camp_used": camp_used, "hunt": hunt, "mapping": mapping,
 		"fortify": fortify, "dig_in": dig_in, "rock": rock.duplicate(), "rift_depth": rift_depth, "rift_mods": rift_mods.duplicate(), "rested": rested,
 		"scouted": scouted.duplicate(), "nodes": nodes.duplicate(), "node": node, "taken_nodes": taken_nodes.duplicate(), "magpie_visits": magpie_visits,
@@ -358,6 +373,10 @@ static func from_dict(data: Dictionary) -> RunState:
 	state.wares.assign((data.get("wares", []) as Array).map(func(value: Variant) -> String: return str(value)))
 	state.rerolls = int(data.get("rerolls", 0))
 	state.transmutes = int(data.get("transmutes", 0))
+	state.shop_relics_bought = int(data.get("shop_relics_bought", 0))
+	state.tithe_held = int(data.get("tithe_held", 0))
+	state.ledger_rerolls = int(data.get("ledger_rerolls", 0))
+	state.wares_rank_ii.assign((data.get("wares_rank_ii", []) as Array).map(func(value: Variant) -> int: return int(value)))
 	state.transmuted_act = int(data.get("transmuted_act", 0))
 	state.magpie_swapped = bool(data.get("magpie_swapped", false))
 	state.shop_relics = _strings(data.get("shop_relics", []))

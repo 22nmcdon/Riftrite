@@ -44,6 +44,9 @@ var rift_ticks: Array[int] = []
 ## Aegis: a Shield's plus_per_shard_bp reads it; Practice's shards setting,
 ## Decision 4). It changes nothing else.
 var shards: int = 0
+## Of them, those the run's Tithe paid and nothing has spent yet (phase 8
+## part 6, The Counting House: an aura "per_shards" with "tithe" reads it).
+var tithe_shards: int = 0
 
 
 static func make(hero_setups: Array[UnitSetup], enemy_setups: Array[UnitSetup], rock_hexes: Array[Vector2i] = [], fight_seed: int = 1, fight_act: int = 1) -> FightSetup:

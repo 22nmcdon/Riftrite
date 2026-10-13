@@ -15,6 +15,8 @@ extends RefCounted
 ##     (a hero with no self-sufficient path, rebuild-phase8-heroes.md
 ##     Decision 17) against the same team with it on base: the ceiling's
 ##     own lineups.
+## A build's "shards" (phase 8 part 6, Hob's Hoarder) is what the run holds
+## as each of its fights starts (FightSetup.shards), in every lineup.
 ## Each number is the win-rate gain in points over every fight of the act.
 ## A build team with its relics wins nearly every Act 1 fight, which caps
 ## its gain, so the ceiling and lift lineups can fight stronger enemies
@@ -49,6 +51,9 @@ class Build:
 	## An enabler's comparison path for its lift ("": none).
 	var swap: String = ""
 	var note: String = ""
+	## The shards the run holds as each fight starts (phase 8 part 6, Hob's
+	## Hoarder: FightSetup.shards; 0: none).
+	var shards: int = 0
 
 
 ## A lineup's wins over the fights it fought.
@@ -96,6 +101,7 @@ static func read_builds(content: ContentDb, run: RunContent, errors: Array[Strin
 		build.type = entry["type"]
 		build.swap = entry.get("swap", "")
 		build.note = entry.get("note", "")
+		build.shards = int(entry.get("shards", 0))
 		build.team.assign(entry["team"])
 		build.relics.assign(entry.get("relics", []))
 		if not content.paths.has(build.path):
@@ -141,12 +147,12 @@ static func run_build(content: ContentDb, run: RunContent, build: Build, encount
 		closed.append_array(encounter.void_hexes)
 		var neutral_hexes: Array[Dictionary] = _formations(content, named, closed, drawn, neutral_team)
 		var team_hexes: Array[Dictionary] = _formations(content, named, closed, drawn, build_team)
-		_fight(content, run, encounter_id, neutral_hexes, seeds, {}, [], null, result.neutral_base)
-		_fight(content, run, encounter_id, neutral_hexes, seeds, {build.hero: build.path} as Dictionary[String, String], [build.hero], null, result.neutral)
-		_fight(content, run, encounter_id, team_hexes, seeds, build.team, others, state, result.team_base, strength_bp)
-		_fight(content, run, encounter_id, team_hexes, seeds, build.team, all, state, result.team, strength_bp)
+		_fight(content, run, encounter_id, neutral_hexes, seeds, {}, [], null, result.neutral_base, FixedMath.BP_ONE, build.shards)
+		_fight(content, run, encounter_id, neutral_hexes, seeds, {build.hero: build.path} as Dictionary[String, String], [build.hero], null, result.neutral, FixedMath.BP_ONE, build.shards)
+		_fight(content, run, encounter_id, team_hexes, seeds, build.team, others, state, result.team_base, strength_bp, build.shards)
+		_fight(content, run, encounter_id, team_hexes, seeds, build.team, all, state, result.team, strength_bp, build.shards)
 		if not build.swap.is_empty() and build.swap != BASE:
-			_fight(content, run, encounter_id, team_hexes, seeds, swapped_vows, all, state, result.swapped, strength_bp)
+			_fight(content, run, encounter_id, team_hexes, seeds, swapped_vows, all, state, result.swapped, strength_bp, build.shards)
 	return result
 
 
@@ -160,7 +166,7 @@ static func _formations(content: ContentDb, named: Dictionary[String, Dictionary
 
 
 static func _fight(content: ContentDb, run: RunContent, encounter_id: String, formations: Array[Dictionary], seeds: int, vows: Dictionary[String, String], transformed: Array[String],
-		state: RunState, tally: Tally, strength_bp: int = FixedMath.BP_ONE) -> void:
+		state: RunState, tally: Tally, strength_bp: int = FixedMath.BP_ONE, shards: int = 0) -> void:
 	for formation: Dictionary in formations:
 		var hexes: Dictionary[String, Vector2i] = {}
 		hexes.assign(formation)
@@ -183,6 +189,7 @@ static func _fight(content: ContentDb, run: RunContent, encounter_id: String, fo
 				push_error("builds report: %s: %s" % [encounter_id, ", ".join(errors)])
 				continue
 			PathReport._place_snares(setup, content.encounters[encounter_id])
+			setup.shards = shards
 			if strength_bp != FixedMath.BP_ONE:
 				for enemy: UnitSetup in setup.enemies:
 					enemy.def = Encounters.scaled(enemy.def, strength_bp)

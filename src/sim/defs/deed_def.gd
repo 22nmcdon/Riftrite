@@ -123,22 +123,24 @@ extends RefCounted
 
 enum CopiesBy { ANY, OWN, ALLIES }
 enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, TAKEN, MS_BELOW, KILLS, CRITS, OVERKILL, CASTS, MS_STANDING, HITS, SHARED, BLOCKED, PULLED, EXTENDED_MS, MANA_GIVEN, MANA_OVERFLOW, ALLY_CASTS, MAX_HP_GAINED, HP_SPENT, LIFESTEAL, TITHE, TITHE_FLAWLESS, BONUS_DAMAGE, SHARDS, TRANSMUTED, SUMMONED,
-	LOST_TARGET, STATUS_MS }
+	LOST_TARGET, STATUS_MS, REROLLS_SAVED, RELICS_SAVED }
 
 const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing", "hits", "shared", "blocked", "pulled", "extended_ms", "mana_given", "mana_overflow", "ally_casts", "max_hp_gained", "hp_spent", "lifesteal", "tithe", "tithe_flawless", "bonus_damage", "shards", "transmuted", "summoned",
-	"lost_target", "status_ms"]
+	"lost_target", "status_ms", "rerolls_saved", "relics_saved"]
 const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill", "casts", "ms standing", "enemies hit", "damage shared", "attacks blocked", "enemies pulled", "ms extended", "mana given", "mana past full", "ally signatures near", "max HP gained", "HP spent", "healed by lifesteal", "shards from Tithe", "shards from flawless fights", "extra damage", "shards", "items transmuted", "summons joined",
-	"targets lost to Stealth", "ms"]
+	"targets lost to Stealth", "ms", "shards saved on rerolls", "shards saved on relics"]
 ## The kinds read from where the hero is the target, or from the tick, not
 ## from what the hero does.
 const NOT_ITS_OWN: Array[Counts] = [Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING, Counts.BLOCKED,
-	Counts.MANA_OVERFLOW, Counts.ALLY_CASTS, Counts.TITHE, Counts.TITHE_FLAWLESS, Counts.TRANSMUTED, Counts.LOST_TARGET]
+	Counts.MANA_OVERFLOW, Counts.ALLY_CASTS, Counts.TITHE, Counts.TITHE_FLAWLESS, Counts.TRANSMUTED, Counts.LOST_TARGET, Counts.REROLLS_SAVED, Counts.RELICS_SAVED]
 ## The kinds the run counts, not the fight (phase 8 part 5, Tithe-Collector
 ## and Collector of Debts: shards from Tithe, all of them or a flawless
 ## fight's): RunFlow.record adds them; Deeds never matches them.
 ## Phase 8 part 6 (Grand Transmutation): "transmuted", items the hero's
-## transmuting turned into other items (RunFlow.transmute_into).
-const BY_THE_RUN: Array[Counts] = [Counts.TITHE, Counts.TITHE_FLAWLESS, Counts.TRANSMUTED]
+## transmuting turned into other items (RunFlow.transmute_into); and (Hob's
+## Fence and Black Market) "rerolls_saved" and "relics_saved", the shards the
+## team's shop rules took off what rerolls and relics cost (RunFlow).
+const BY_THE_RUN: Array[Counts] = [Counts.TITHE, Counts.TITHE_FLAWLESS, Counts.TRANSMUTED, Counts.REROLLS_SAVED, Counts.RELICS_SAVED]
 
 ## The player's line: "Damage dealt from 5 or more hexes away".
 var text: String
@@ -349,6 +351,6 @@ func counts_kind(kind: LogEntry.Kind, ability_id: String) -> bool:
 			if kind != LogEntry.Kind.SUMMON:
 				return false
 		Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING, Counts.BLOCKED, Counts.MANA_OVERFLOW, Counts.ALLY_CASTS, \
-				Counts.TITHE, Counts.TITHE_FLAWLESS, Counts.TRANSMUTED, Counts.LOST_TARGET:
+				Counts.TITHE, Counts.TITHE_FLAWLESS, Counts.TRANSMUTED, Counts.LOST_TARGET, Counts.REROLLS_SAVED, Counts.RELICS_SAVED:
 			return false
 	return from_ability.is_empty() or from_ability.has(ability_id)

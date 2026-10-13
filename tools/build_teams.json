@@ -319,14 +319,14 @@
       "team": {
         "ottilie": "transmuter",
         "edric": "tithe_collector",
-        "brannoc": "hearthwall"
+        "hob": "hoarder"
       },
       "relics": [
         "tithe_of_iron",
         "keen_edge",
         "bone_dice"
       ],
-      "note": "test-teams.md #17 (Full Greed), Brannoc's Hearthwall standing in for Hob (not built); long-game: judged by its shards over a run, in a fight only its floor"
+      "note": "test-teams.md #17 (Full Greed); long-game: judged by its shards over a run, in a fight only its floor"
     },
     {
       "name": "Tonic Choir",
@@ -437,6 +437,57 @@
         "stormcallers_bell"
       ],
       "note": "test-teams.md #13, judged for Lucan"
+    },
+    {
+      "name": "Hoard",
+      "path": "hoarder",
+      "type": "long-game",
+      "team": {
+        "hob": "hoarder",
+        "edric": "tithe_collector",
+        "ottilie": "transmuter"
+      },
+      "relics": [
+        "tithe_of_iron",
+        "keen_edge",
+        "bone_dice"
+      ],
+      "shards": 25,
+      "note": "test-teams.md #17 (Full Greed); long-game: judged by Act 3 and endless, in a fight only its floor, with 25 shards held"
+    },
+    {
+      "name": "Haggle",
+      "path": "fence",
+      "type": "long-game",
+      "team": {
+        "hob": "fence",
+        "brannoc": "hearthwall",
+        "maren": "deadeye"
+      },
+      "relics": [
+        "tithe_of_iron",
+        "keen_edge",
+        "bone_dice"
+      ],
+      "note": "long-game: judged by the shards it saves and the team's bonus over a run; in a fight only its floor"
+    },
+    {
+      "name": "Bounty",
+      "path": "bounty_hunter",
+      "type": "enabler",
+      "team": {
+        "hob": "bounty_hunter",
+        "tamsin": "headhunter",
+        "garrow": "aegisfang"
+      },
+      "relics": [
+        "hunters_engine",
+        "executioners_mark",
+        "hunters_ledger",
+        "brand_of_guilt"
+      ],
+      "swap": "base",
+      "note": "test-teams.md #16 (Bounty); lift against Hob on base (rebuild-phase8-heroes.md Decision 17: he has no self-sufficient path)"
     }
   ]
 }

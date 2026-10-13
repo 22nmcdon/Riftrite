@@ -212,7 +212,7 @@ func upgrades_for(hero: RunState.Hero) -> Array[String]:
 ## not): its mod touches it, and an added passive can fire on it; a growing
 ## card's counting can count there; a stacking card always does.
 func changes_something(upgrade: UpgradeDef, transformed: bool, kit: UnitDef) -> bool:
-	if upgrade.stacks() or upgrade.tithe != null or upgrade.transmute != null:
+	if upgrade.stacks() or upgrade.tithe != null or upgrade.transmute != null or upgrade.shop != null or upgrade.snowball_bp > 0:
 		return true
 	var mod: KitMod = upgrade.mod_for(transformed)
 	if mod != null and (mod.affects_besides_passives(kit) or mod.passives.any(func(part: PartDef) -> bool: return _passive_can_fire(part, kit))):
@@ -276,6 +276,10 @@ func upgrade_mods(hero: RunState.Hero, shards: int = -1) -> Array[KitMod]:
 			var grown: KitMod = upgrade.grows.mod_for(hero.growth.get(upgrade.id, 0))
 			if grown != null:
 				mods.append(grown)
+	# Its transformed path's run snowball, if it's its own (phase 8 part 6).
+	var stage_grown: KitMod = path_grown(hero, false)
+	if stage_grown != null:
+		mods.append(stage_grown)
 	# Its earned apex's run snowball, if it's its own (phase 8 part 5).
 	var apex: ApexDef = earned_apex(hero)
 	if apex != null and apex.grows != null and not apex.grows.team:
@@ -295,6 +299,26 @@ func earned_apex(hero: RunState.Hero) -> ApexDef:
 ## Where an apex's run snowball keeps its count (RunState.Hero.growth).
 static func apex_growth_key(apex: ApexDef) -> String:
 	return "apex:" + apex.id
+
+
+## Where a transformed path's run snowball keeps its count (phase 8 part 6).
+static func path_growth_key(path: PathDef) -> String:
+	return "path:" + path.id
+
+
+## What `hero`'s transformed path's run snowball gives now, if it's the
+## team's (`team`) or its own, or null (phase 8 part 6, Fence).
+func path_grown(hero: RunState.Hero, team: bool) -> KitMod:
+	if not hero.transformed or not content.paths.has(hero.path):
+		return null
+	var path: PathDef = content.paths[hero.path]
+	if path.transformed_grows == null or path.transformed_grows.team != team:
+		return null
+	# Big Spender: its count goes further (every card's share added up).
+	var more_bp: int = 0
+	for upgrade: UpgradeDef in held_upgrades(hero):
+		more_bp += upgrade.snowball_bp
+	return path.transformed_grows.mod_for(FixedMath.apply_bp(hero.growth.get(path_growth_key(path), 0), FixedMath.BP_ONE + more_bp))
 
 
 ## `hero`'s Tithe now (phase 8 part 5, TitheDef), or null: its path's at its
@@ -334,6 +358,24 @@ func transmute(hero: RunState.Hero) -> TransmuteDef:
 	for upgrade: UpgradeDef in held_upgrades(hero):
 		if upgrade.transmute != null:
 			sum = sum.merged(upgrade.transmute)
+	return sum
+
+
+## `hero`'s shop rules now (phase 8 part 6, ShopRulesDef), or null: its
+## path's at its stage (its vowed apex's taste added on, or its earned apex's
+## own in its place), with its held cards' added on.
+func shop_rules(hero: RunState.Hero) -> ShopRulesDef:
+	var path: PathDef = content.paths[hero.path]
+	var stage: ShopRulesDef = path.transformed_shop if hero.transformed else path.vowed_shop
+	var apex: ApexDef = path.apex(hero.apex) if hero.transformed and not hero.apex.is_empty() else null
+	if apex != null and hero.apex_earned:
+		stage = apex.apex_shop if apex.apex_shop != null else stage
+	elif apex != null and apex.vowed_shop != null:
+		stage = apex.vowed_shop.merged(stage)
+	var sum: ShopRulesDef = stage.merged(null) if stage != null else null
+	for upgrade: UpgradeDef in held_upgrades(hero):
+		if upgrade.shop != null:
+			sum = upgrade.shop.merged(sum)
 	return sum
 
 
@@ -498,6 +540,9 @@ func relic_mods(state: RunState, kit: UnitDef = null) -> Array[KitMod]:
 			var grown: KitMod = apex.grows.mod_for(hero.growth.get(apex_growth_key(apex), 0))
 			if grown != null:
 				mods.append(grown)
+		var stage_grown: KitMod = path_grown(hero, true)
+		if stage_grown != null:
+			mods.append(stage_grown)
 	return mods
 
 

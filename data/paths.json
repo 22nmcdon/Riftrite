@@ -14244,5 +14244,475 @@
         }
       }
     ]
+  },
+  {
+    "_note": "Economy: payoff for saving (rebuild-heroes.md, section 8f, path 1; phase 8 part 6, 8f-5). Long-game. Nest Egg's damage half is power on his hits (a per-hit aura, \"vs\" any other unit), not ATK, so its deed can count what it adds (bonus_damage), as Strings'.",
+    "id": "hoarder",
+    "hero": "hob",
+    "name": "Hoarder",
+    "title": "the one whose purse is a weapon",
+    "fantasy": "The heavier the purse, the harder he hits.",
+    "placement": "Mid-line, where his sling reaches the weak and the enemies' front can't reach him.",
+    "vowed": {
+      "taste": "Nest Egg: he deals 1% more damage and has 1% more DEF for every 10 shards held (up to 10%).",
+      "cost": "10% less max HP.",
+      "patch": {
+        "stats_bp": {
+          "hp": 9000
+        },
+        "passives": [
+          {
+            "id": "nest_egg",
+            "name": "Nest Egg",
+            "kind": "aura",
+            "text": "His hits land harder, and his DEF rises, for the shards the run holds.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 10100,
+              "per_shards": 10,
+              "vs": {
+                "others": true
+              },
+              "per_shards_max": 10
+            }
+          },
+          {
+            "id": "nest_egg_guard",
+            "name": "Nest Egg",
+            "kind": "aura",
+            "text": "His DEF rises for the shards the run holds.",
+            "aura": {
+              "target": "holder",
+              "stat": "def_bp",
+              "value": 10100,
+              "per_shards": 10,
+              "per_shards_max": 10
+            }
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "Nest Egg: 1% more damage and DEF for every 5 shards held, with no cap; his allies get half as much. Heavy Purse replaces Grab (50 mana): he slams his target for his ATK plus 2 damage for every shard held. Grab becomes a habit, every 6th Sling Stone.",
+      "cost": "Rerolls cost 1 more shard: every relic bought makes him weaker.",
+      "shop": {
+        "reroll_add": 1
+      },
+      "patch": {
+        "signature": {
+          "id": "heavy_purse",
+          "name": "Heavy Purse",
+          "text": "He slams his target with his purse, harder for every shard the run holds.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "atk": 10000
+              },
+              "plus_per_shard_bp": 20000
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "nest_egg",
+            "name": "Nest Egg",
+            "kind": "aura",
+            "text": "His hits land harder, and his DEF rises, for the shards the run holds.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 10100,
+              "per_shards": 5,
+              "vs": {
+                "others": true
+              }
+            }
+          },
+          {
+            "id": "nest_egg_guard",
+            "name": "Nest Egg",
+            "kind": "aura",
+            "text": "His DEF rises for the shards the run holds.",
+            "aura": {
+              "target": "holder",
+              "stat": "def_bp",
+              "value": 10100,
+              "per_shards": 5
+            }
+          },
+          {
+            "id": "nest_egg_shared",
+            "name": "Nest Egg",
+            "kind": "aura",
+            "text": "His allies' hits land harder for the shards the run holds.",
+            "aura": {
+              "target": "all_allies",
+              "only": {
+                "others": true
+              },
+              "stat": "damage_bp",
+              "value": 10050,
+              "per_shards": 5,
+              "vs": {
+                "others": true
+              }
+            }
+          },
+          {
+            "id": "nest_egg_shared_guard",
+            "name": "Nest Egg",
+            "kind": "aura",
+            "text": "His allies' DEF rises for the shards the run holds.",
+            "aura": {
+              "target": "all_allies",
+              "only": {
+                "others": true
+              },
+              "stat": "def_bp",
+              "value": 10050,
+              "per_shards": 5
+            }
+          },
+          {
+            "id": "grab",
+            "name": "Grab",
+            "kind": "ability",
+            "text": "A habit: every 6th Sling Stone, he darts behind its target and hits it hard.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 6,
+                "type": "leap",
+                "to": "behind",
+                "max_hexes": 3,
+                "target": "target"
+              },
+              {
+                "trigger": "on_basic_attack",
+                "every": 6,
+                "type": "damage",
+                "amount": 0,
+                "target": "target",
+                "scaling": {
+                  "atk": 15000
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Extra damage from Nest Egg",
+      "counts": "bonus_damage",
+      "from_part": [
+        "nest_egg"
+      ],
+      "threshold": 40
+    }
+  },
+  {
+    "_note": "Economy: payoff for spending (rebuild-heroes.md, section 8f, path 2; phase 8 part 6, 8f-5). Long-game. Haggle and the half-price rerolls are shop rules on the stage (ShopRulesDef); the team bonus is the transformed stage's run snowball, counting shards spent in shops (Decision 6). Cut Purse's shard is a passive on its hit, once an enemy.",
+    "id": "fence",
+    "hero": "hob",
+    "name": "Fence",
+    "title": "the one who always gets a better price",
+    "fantasy": "Everything has a price, and he always gets a better one.",
+    "placement": "Mid-line, near the enemies' back: Cut Purse lifts from whoever he can reach.",
+    "vowed": {
+      "taste": "Haggle: the first reroll in each shop is free.",
+      "cost": "10% less ATK.",
+      "shop": {
+        "free_rerolls": 1
+      },
+      "patch": {
+        "stats_bp": {
+          "atk": 9000
+        }
+      }
+    },
+    "transformed": {
+      "text": "Rerolls cost half (rounded down). Every shard spent in a shop gives the team 0.1% more ATK, MGK, and max HP for the rest of the run. Cut Purse replaces Grab (50 mana): a hit that makes the target drop a shard (once an enemy) and lowers its ATK by 15% for 4s. Grab becomes a habit, every 6th Sling Stone.",
+      "cost": "Shops buy items back for a quarter of their price, not half.",
+      "shop": {
+        "reroll_less_bp": 5000,
+        "sell_less_bp": 2500
+      },
+      "grows": {
+        "run_counts": "spent",
+        "per": 10,
+        "team": true,
+        "each": {
+          "stats_bp": {
+            "atk": 10100,
+            "mgk": 10100,
+            "hp": 10100
+          }
+        }
+      },
+      "patch": {
+        "signature": {
+          "id": "cut_purse",
+          "name": "Cut Purse",
+          "text": "He cuts his target's purse: it drops a shard and hits softer for a few seconds.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "atk": 12000
+              }
+            },
+            {
+              "type": "apply_status",
+              "status": "cut_purse",
+              "duration_ms": 4000,
+              "target": "target"
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "cut_purse_shards",
+            "name": "Cut Purse",
+            "kind": "ability",
+            "text": "Each enemy Cut Purse hits drops a shard, once.",
+            "effects": [
+              {
+                "trigger": "on_holder_hit",
+                "from_ability": [
+                  "cut_purse"
+                ],
+                "once_per_enemy": true,
+                "type": "shards",
+                "amount": 1,
+                "target": "self"
+              }
+            ]
+          },
+          {
+            "id": "grab",
+            "name": "Grab",
+            "kind": "ability",
+            "text": "A habit: every 6th Sling Stone, he darts behind its target and hits it hard.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 6,
+                "type": "leap",
+                "to": "behind",
+                "max_hexes": 3,
+                "target": "target"
+              },
+              {
+                "trigger": "on_basic_attack",
+                "every": 6,
+                "type": "damage",
+                "amount": 0,
+                "target": "target",
+                "scaling": {
+                  "atk": 15000
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Shards saved on rerolls",
+      "counts": "rerolls_saved",
+      "threshold": 4
+    }
+  },
+  {
+    "_note": "Mark: maker; Economy (rebuild-heroes.md, section 8f, path 3; phase 8 part 6, 8f-5). Enabler. The Bounty is its own Mark (statuses.json's bounty), on the toughest enemy (toughest_enemies), passed to the next toughest without one. The feat deed: one Bounty killed by the heroes' side. Tuned by build (8f-5b): the transformed Bounty's Mark is +40% (strength_add_bp 2500), and the stage has +20% ATK and max HP: floor +10, lift +18 (from +0 and +6 at the design's numbers).",
+    "id": "bounty_hunter",
+    "hero": "hob",
+    "name": "Bounty Hunter",
+    "title": "the one who names the price",
+    "fantasy": "Every fight has a price on one head.",
+    "placement": "Where his allies' damage meets the toughest enemy: the Bounty must die while Marked.",
+    "vowed": {
+      "taste": "Bounty: at the fight's start the toughest enemy (most max HP) is a Bounty, Marked for 8s. Killing it while it's Marked pays 2 shards.",
+      "cost": "1 less speed.",
+      "patch": {
+        "stats_add": {
+          "speed": -1
+        },
+        "passives": [
+          {
+            "id": "bounty",
+            "name": "Bounty",
+            "kind": "ability",
+            "text": "At the fight's start the toughest enemy is a Bounty, Marked for a while; killing it while it's Marked pays shards.",
+            "effects": [
+              {
+                "trigger": "on_fight_start",
+                "type": "apply_status",
+                "status": "bounty",
+                "duration_ms": 8000,
+                "target": "toughest_enemies"
+              },
+              {
+                "trigger": "on_enemy_fell",
+                "vs": {
+                  "statuses": [
+                    "bounty"
+                  ]
+                },
+                "type": "shards",
+                "amount": 2,
+                "target": "self"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "transformed": {
+      "text": "He has 20% more ATK and max HP. The toughest enemy is a Bounty, Marked for as long as it lives, and its Mark is stronger (+40% damage taken); when it dies, the next toughest becomes the Bounty. Each Bounty pays 3 shards. Collect replaces Grab (50 mana): he strikes the Bounty for 200% of his ATK, from anywhere within 4 hexes. Grab becomes a habit, every 6th Sling Stone.",
+      "cost": "10% less damage to enemies that aren't the Bounty.",
+      "patch": {
+        "stats_bp": {
+          "atk": 12000,
+          "hp": 12000
+        },
+        "signature": {
+          "id": "collect",
+          "name": "Collect",
+          "text": "He strikes the Bounty within 4 hexes, hard.",
+          "trigger": {
+            "kind": "mana"
+          },
+          "targeting": "nearest",
+          "max_range": 4,
+          "prefer": {
+            "statuses": [
+              "bounty"
+            ]
+          },
+          "effects": [
+            {
+              "type": "damage",
+              "amount": 0,
+              "target": "target",
+              "scaling": {
+                "atk": 20000
+              }
+            }
+          ]
+        },
+        "passives": [
+          {
+            "id": "bounty",
+            "name": "Bounty",
+            "kind": "ability",
+            "text": "The toughest enemy is a Bounty, Marked harder than a Mark for as long as it lives; when it dies it pays shards and the next toughest becomes the Bounty.",
+            "effects": [
+              {
+                "trigger": "on_fight_start",
+                "type": "apply_status",
+                "status": "bounty",
+                "duration_ms": 180000,
+                "target": "toughest_enemies",
+                "strength_add_bp": 2500
+              },
+              {
+                "trigger": "on_enemy_fell",
+                "vs": {
+                  "statuses": [
+                    "bounty"
+                  ]
+                },
+                "type": "shards",
+                "amount": 3,
+                "target": "self"
+              },
+              {
+                "trigger": "on_enemy_fell",
+                "vs": {
+                  "statuses": [
+                    "bounty"
+                  ]
+                },
+                "type": "apply_status",
+                "status": "bounty",
+                "duration_ms": 180000,
+                "target": "toughest_enemies",
+                "only": {
+                  "without": [
+                    "bounty"
+                  ]
+                },
+                "strength_add_bp": 2500
+              }
+            ]
+          },
+          {
+            "id": "bounty_focus",
+            "name": "Bounty Hunter",
+            "kind": "aura",
+            "text": "His hits on enemies that aren't the Bounty land softer.",
+            "aura": {
+              "target": "holder",
+              "stat": "damage_bp",
+              "value": 9000,
+              "vs": {
+                "without": [
+                  "bounty"
+                ]
+              }
+            }
+          },
+          {
+            "id": "grab",
+            "name": "Grab",
+            "kind": "ability",
+            "text": "A habit: every 6th Sling Stone, he darts behind its target and hits it hard.",
+            "effects": [
+              {
+                "trigger": "on_basic_attack",
+                "every": 6,
+                "type": "leap",
+                "to": "behind",
+                "max_hexes": 3,
+                "target": "target"
+              },
+              {
+                "trigger": "on_basic_attack",
+                "every": 6,
+                "type": "damage",
+                "amount": 0,
+                "target": "target",
+                "scaling": {
+                  "atk": 15000
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "deed": {
+      "text": "Bounties collected",
+      "counts": "kills",
+      "by_allies": true,
+      "statuses": [
+        "bounty"
+      ],
+      "threshold": 1
+    }
   }
 ]

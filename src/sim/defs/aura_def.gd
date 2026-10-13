@@ -251,6 +251,9 @@ var per_summon_joined: bool = false
 ## per_shards_max times (0: no cap).
 var per_shards: int = 0
 var per_shards_max: int = 0
+## Only the shards the run's Tithe paid count ("tithe": true; The Counting
+## House: FightSetup.tithe_shards).
+var per_tithe_shards: bool = false
 ## Counts once per standing enemy within this many plane units of its holder
 ## (phase 8 part 4; 0: not per enemy).
 var per_enemy_range: int = 0
@@ -365,8 +368,9 @@ static func read(reader: DataReader) -> AuraDef:
 	if reader.has("per_shards"):
 		def.per_shards = reader.req_int("per_shards", 1, 1000)
 		def.per_shards_max = reader.opt_int("per_shards_max", 0, 0, 1000)
-	elif reader.has("per_shards_max"):
-		reader.error("only an aura \"per_shards\" has \"per_shards_max\"")
+		def.per_tithe_shards = reader.opt_bool("tithe", false)
+	elif reader.has("per_shards_max") or reader.has("tithe"):
+		reader.error("only an aura \"per_shards\" has \"per_shards_max\" or \"tithe\"")
 	if reader.has("per_within_hexes") and def.per_enemy_range == 0:
 		reader.error("only an aura \"per\": \"enemy_near\" has \"per_within_hexes\"")
 	if reader.has("per_twice"):
@@ -495,7 +499,7 @@ func describe() -> String:
 	if per_summon_joined:
 		condition += " for each summon that has joined its side"
 	if per_shards > 0:
-		condition += (" for each shard held" if per_shards == 1 else " for every %d shards held" % per_shards) + (" (up to %d times)" % per_shards_max if per_shards_max > 0 else "")
+		condition += (" for each %sshard held" % ("Tithe " if per_tithe_shards else "") if per_shards == 1 else " for every %d %sshards held" % [per_shards, "Tithe " if per_tithe_shards else ""]) + (" (up to %d times)" % per_shards_max if per_shards_max > 0 else "")
 	if per_allied_unit:
 		condition += " for each allied unit" + (" (%s twice)" % per_twice.describe() if per_twice != null else "")
 	if per_enemy_range > 0:

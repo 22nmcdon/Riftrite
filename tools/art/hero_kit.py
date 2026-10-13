@@ -1366,6 +1366,52 @@ def hob_base(uid):
     return "".join(o)
 
 
+def hob_hoarder(uid):
+    """Bowed under sacks of coin, a fat purse swinging from one fist like a flail, coins spilling round his boots."""
+    o = [shadow(74), boot(118, 150) + boot(152, 186), hob_coat(uid, color="#7a6a3a"),
+         P("M96,210 C80,250 84,330 110,350 L130,232 Z", "#8a5a2a", 2), P("M204,210 C222,250 216,330 190,350 L170,232 Z", "#8a5a2a", 2),
+         purse(124, 312, 1.1),
+         limb((124, 210), (110, 286), 15, 12, "#7a6a3a"), circle(110, 290, 8, SKIN, 2),
+         hob_head(hood="#5a4a28"),
+         limb((176, 210), (210, 200), 15, 12, "#7a6a3a"), circle(212, 196, 8, SKIN, 2),
+         P("M212,196 C236,210 250,240 246,262", "none", 2.2), purse(248, 276, 1.3),
+         f'<circle cx="248" cy="276" r="24" fill="{GOLD}" opacity="0.25" filter="url(#bloom)"/>',
+         "".join(coin(x, y, 5, glow=(i % 2 == 0)) for i, (x, y) in enumerate(((92, 440), (110, 452), (198, 446), (214, 458), (232, 440)))),
+         rim("M182,214 L190,430", color=GOLD, w=2.4)]
+    return "".join(o)
+
+
+def hob_fence(uid):
+    """A dealer's long coat lined with hidden pockets, a hooked knife for cutting purses, a ledger tucked under one arm."""
+    o = [shadow(70), boot(118, 150) + boot(152, 186), hob_coat(uid, color="#3e4a5a", hem=450),
+         "".join(P(f"M{x},{y} L{x + 16},{y} L{x + 14},{y + 14} L{x + 2},{y + 14} Z", "#2c3644", 1.4) for x, y in ((122, 244), (160, 244), (122, 330), (160, 330))),
+         limb((124, 210), (104, 276), 15, 12, "#3e4a5a"), circle(104, 280, 8, SKIN, 2),
+         P("M84,262 L120,262 L120,300 L84,300 Z", "#6a4220", 2), P("M88,268 L116,268", "none", 1.2),
+         hob_head(hood="#2c3644"),
+         limb((176, 210), (208, 176), 15, 12, "#3e4a5a"), circle(210, 170, 8, SKIN, 2),
+         P("M210,170 L236,120 C246,112 252,124 244,132 L232,140", STEEL, 2.4),
+         f'<path d="M236,120 L244,132" stroke="{AQUA}" stroke-width="3" opacity="0.5" filter="url(#bloom)"/>',
+         coin(246, 168, 5, glow=True),
+         rim("M182,214 L190,440", color=AQUA, w=2)]
+    return "".join(o)
+
+
+def hob_bounty_hunter(uid):
+    """A wide-brimmed hunter's hat, a bounty poster pinned to his chest, a loaded sling drawn back at one marked head."""
+    o = [shadow(72), boot(118, 150) + boot(152, 186), hob_coat(uid, color="#5a3a2a"),
+         P("M128,232 L172,232 L170,280 L130,280 Z", "#e8dcc0", 2), P("M138,244 L162,244 M136,256 L164,256 M140,268 L160,268", "none", 1.4),
+         circle(150, 250, 6, "#c4421e", 1),
+         limb((124, 210), (106, 280), 15, 12, "#5a3a2a"), circle(106, 284, 8, SKIN, 2),
+         hob_head(hood="#3e2a1e"),
+         P("M96,118 C110,96 190,96 204,118 L188,122 C170,112 130,112 112,122 Z", "#3e2a1e", 2.4),
+         limb((176, 210), (214, 196), 15, 12, "#5a3a2a"), circle(216, 192, 8, SKIN, 2),
+         P("M216,192 L250,150 M216,192 L256,186", "none", 2), circle(254, 160, 7, "#9a9a9a", 2),
+         f'<circle cx="262" cy="96" r="14" fill="none" stroke="#c4421e" stroke-width="2.4"/>',
+         f'<path d="M262,78 L262,114 M244,96 L280,96" stroke="#c4421e" stroke-width="1.6"/>',
+         rim("M182,214 L190,430", color=GOLD, w=2)]
+    return "".join(o)
+
+
 HEROES = [
     ("maren", "Maren", [("base", "Base", maren_base), ("deadeye", "Deadeye", maren_deadeye),
                         ("trapper", "Trapper", maren_trapper), ("volley", "Volley", maren_volley)]),
@@ -1391,7 +1437,8 @@ HEROES = [
                           ("serpent_keeper", "Serpent-Keeper", kestra_serpent_keeper), ("packleader", "Packleader", kestra_packleader)]),
     ("lucan", "Lucan", [("base", "Base", lucan_base), ("mirrorwright", "Mirrorwright", lucan_mirrorwright),
                         ("veilweaver", "Veilweaver", lucan_veilweaver), ("puppeteer", "Puppeteer", lucan_puppeteer)]),
-    ("hob", "Hob", [("base", "Base", hob_base)]),
+    ("hob", "Hob", [("base", "Base", hob_base), ("hoarder", "Hoarder", hob_hoarder),
+                    ("fence", "Fence", hob_fence), ("bounty_hunter", "Bounty Hunter", hob_bounty_hunter)]),
 ]
 
 # A hero's companions (phase 8 part 6, Kestra): each one's figure is

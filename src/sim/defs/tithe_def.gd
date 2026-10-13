@@ -19,6 +19,9 @@ extends RefCounted
 ##   elite_bp:       an elite's Tithe, plus this share (10000: doubled)
 ##   per_step:       more for each step of its card's own growth (Ledger of
 ##                   Debts: +1 for every 10 fights won)
+##   once_per_act:   more after the first won day fight in each act from
+##                   when it's held (phase 8 part 6, Lucky Find, a hero card's;
+##                   RunState.Hero.tithe_act; paid by RunFlow._tithes)
 
 var per_standing: int = 0
 var fallen_pays: int = 0
@@ -28,8 +31,9 @@ var flawless_max: int = 0
 var harder_add: int = 0
 var elite_bp: int = 0
 var per_step: int = 0
+var once_per_act: int = 0
 
-const FIELDS: Array[String] = ["per_standing", "fallen_pays", "flawless_add", "flawless_grows", "flawless_max", "harder_add", "elite_bp", "per_step"]
+const FIELDS: Array[String] = ["per_standing", "fallen_pays", "flawless_add", "flawless_grows", "flawless_max", "harder_add", "elite_bp", "per_step", "once_per_act"]
 
 
 static func read(reader: DataReader) -> TitheDef:
@@ -42,6 +46,7 @@ static func read(reader: DataReader) -> TitheDef:
 	def.harder_add = reader.opt_int("harder_add", 0, 0, 20)
 	def.elite_bp = reader.opt_int("elite_bp", 0, 0, 5 * FixedMath.BP_ONE)
 	def.per_step = reader.opt_int("per_step", 0, 0, 10)
+	def.once_per_act = reader.opt_int("once_per_act", 0, 0, 50)
 	if def.flawless_grows > 0 and def.flawless_max == 0:
 		reader.error("flawless_grows needs a flawless_max")
 	reader.finish()
@@ -50,9 +55,17 @@ static func read(reader: DataReader) -> TitheDef:
 	return def
 
 
+## True if it pays nothing but once an act (a hero card may carry only
+## that: Lucky Find).
+func only_once_per_act() -> bool:
+	var rest: TitheDef = merged(null)
+	rest.once_per_act = 0
+	return once_per_act > 0 and not rest.anything()
+
+
 ## True if it pays or changes anything.
 func anything() -> bool:
-	return per_standing > 0 or fallen_pays > 0 or flawless_add > 0 or flawless_grows > 0 or flawless_max > 0 or harder_add > 0 or elite_bp > 0 or per_step > 0
+	return per_standing > 0 or fallen_pays > 0 or flawless_add > 0 or flawless_grows > 0 or flawless_max > 0 or harder_add > 0 or elite_bp > 0 or per_step > 0 or once_per_act > 0
 
 
 ## This Tithe with `other`'s added on (a new one; null: a copy).

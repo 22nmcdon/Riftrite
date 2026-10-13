@@ -351,6 +351,10 @@ static func upgrade_numbers(upgrade: UpgradeDef, kit: UnitDef, content: ContentD
 		parts.append(tithe_numbers(upgrade.tithe))
 	if upgrade.transmute != null:
 		parts.append(transmute_numbers(upgrade.transmute))
+	if upgrade.shop != null:
+		parts.append(shop_numbers(upgrade.shop))
+	if upgrade.snowball_bp > 0:
+		parts.append("its path's run bonus counts x%s" % ValueBreakdown._ratio(FixedMath.BP_ONE + upgrade.snowball_bp))
 	if upgrade.grows != null:
 		var grows: String = growth_numbers(upgrade.grows, kit, content)
 		if upgrade.tithe != null and upgrade.tithe.per_step > 0:
@@ -380,7 +384,34 @@ static func tithe_numbers(tithe: TitheDef) -> String:
 		parts.append("+%d after the harder fight" % tithe.harder_add)
 	if tithe.elite_bp > 0:
 		parts.append("+%s after an elite" % ValueBreakdown._percent(tithe.elite_bp))
+	if tithe.once_per_act > 0:
+		parts.append("+%d after the first won fight each act" % tithe.once_per_act)
 	return "Tithe: " + ", ".join(parts) if not parts.is_empty() else ""
+
+
+## Shop rules' numbers (phase 8 part 6, Hob): "Shops: first reroll free,
+## rerolls -50%".
+static func shop_numbers(rules: ShopRulesDef) -> String:
+	var parts: Array[String] = []
+	if rules.free_rerolls > 0:
+		parts.append("first %s free" % ("reroll" if rules.free_rerolls == 1 else "%d rerolls" % rules.free_rerolls))
+	if rules.cheap_rerolls > 0:
+		parts.append("next %s 1 shard" % ("reroll" if rules.cheap_rerolls == 1 else "%d rerolls" % rules.cheap_rerolls))
+	if rules.reroll_less_bp > 0:
+		parts.append("rerolls -%s" % ValueBreakdown._percent(rules.reroll_less_bp))
+	if rules.reroll_add > 0:
+		parts.append("rerolls +%d shard%s" % [rules.reroll_add, "" if rules.reroll_add == 1 else "s"])
+	if rules.sell_less_bp > 0:
+		parts.append("items sell for %s of their price" % ValueBreakdown._percent(5000 - rules.sell_less_bp))
+	if rules.item_less > 0:
+		parts.append("items -%d shard%s" % [rules.item_less, "" if rules.item_less == 1 else "s"])
+	if rules.first_relic_less > 0:
+		parts.append("first relic -%d shards" % rules.first_relic_less)
+	if rules.black_market > 0:
+		parts.append("a relic one tier higher")
+	if rules.rank_ii_charms > 0:
+		parts.append("%d charm%s at rank II" % [rules.rank_ii_charms, "" if rules.rank_ii_charms == 1 else "s"])
+	return "Shops: " + ", ".join(parts)
 
 
 ## Transmuting's numbers (phase 8 part 6, Transmuter): "Transmuting: +2 at
@@ -611,6 +642,8 @@ static func relic_numbers(relic: RelicDef, content: ContentDb) -> String:
 		parts.append("at every shop, +1 shard per 5 held (at most 6)")
 	if relic.free_reroll:
 		parts.append("the first reroll in every shop is free")
+	if relic.ledger:
+		parts.append("each item transmuted counts its full price as spent and gives a free reroll there")
 	if relic.flat_rerolls:
 		parts.append("rerolls never cost more")
 	if relic.shop_relics_add != 0 or relic.wares_add != 0:

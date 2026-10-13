@@ -3231,5 +3231,146 @@
         }
       ]
     }
+  },
+  {
+    "id": "the_contract",
+    "name": "The Contract",
+    "tier": "bond",
+    "icon": "ember_heart",
+    "flavor": "Price and Prey: he names the price; she collects.",
+    "text": "Bounties Tamsin kills pay double, and when a Bounty dies, Tamsin steps straight to the new Bounty and her next attack crits.",
+    "mod_for": "tamsin",
+    "mod": {
+      "passives": [
+        {
+          "id": "the_contract",
+          "name": "The Contract",
+          "kind": "ability",
+          "text": "Each Bounty she kills pays her shards.",
+          "effects": [
+            {
+              "trigger": "on_kill",
+              "vs": {
+                "statuses": [
+                  "bounty"
+                ]
+              },
+              "type": "shards",
+              "amount": 3,
+              "target": "self"
+            }
+          ]
+        },
+        {
+          "id": "contract_step",
+          "name": "The Contract",
+          "kind": "ability",
+          "text": "When a Bounty dies, she steps behind the new Bounty, and her next attack crits.",
+          "effects": [
+            {
+              "trigger": "on_enemy_fell",
+              "vs": {
+                "statuses": [
+                  "bounty"
+                ]
+              },
+              "type": "leap",
+              "to": "step",
+              "resets_attack": true,
+              "target": "toughest_enemies",
+              "only": {
+                "without": [
+                  "bounty"
+                ]
+              }
+            },
+            {
+              "trigger": "on_enemy_fell",
+              "vs": {
+                "statuses": [
+                  "bounty"
+                ]
+              },
+              "type": "apply_status",
+              "status": "parting_shot",
+              "target": "self"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_counting_house",
+    "name": "The Counting House",
+    "tier": "bond",
+    "icon": "ember_heart",
+    "flavor": "Tithe and Hoard: Edric collects; Hob hoards.",
+    "text": "Shards the Tithe paid count double for Hob's Nest Egg until they're spent, and Edric's Shields grow by 1% for every 5 shards held.",
+    "mod_for": "edric",
+    "mod": {
+      "passives": [
+        {
+          "id": "counting_house",
+          "name": "The Counting House",
+          "kind": "aura",
+          "text": "Hob's hits land harder for the Tithe's shards held.",
+          "aura": {
+            "target": "all_allies",
+            "only": {
+              "kits": [
+                "hob"
+              ]
+            },
+            "stat": "damage_bp",
+            "value": 10100,
+            "per_shards": 5,
+            "tithe": true,
+            "vs": {
+              "others": true
+            }
+          }
+        },
+        {
+          "id": "counting_house_guard",
+          "name": "The Counting House",
+          "kind": "aura",
+          "text": "Hob's DEF rises for the Tithe's shards held.",
+          "aura": {
+            "target": "all_allies",
+            "only": {
+              "kits": [
+                "hob"
+              ]
+            },
+            "stat": "def_bp",
+            "value": 10100,
+            "per_shards": 5,
+            "tithe": true
+          }
+        },
+        {
+          "id": "counting_house_ward",
+          "name": "The Counting House",
+          "kind": "aura",
+          "text": "His Shields grow for the shards the run holds.",
+          "aura": {
+            "target": "holder",
+            "stat": "shield_bp",
+            "value": 10100,
+            "per_shards": 5
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "the_black_market_ledger",
+    "name": "The Black Market Ledger",
+    "tier": "bond",
+    "icon": "ember_heart",
+    "flavor": "Black Market Ledger: she turns goods to gold; he turns gold to power.",
+    "text": "When Ottilie transmutes an item, its full price counts as shards spent for Hob's Fence bonus, and the shop gives a free reroll.",
+    "ledger": true
   }
 ]

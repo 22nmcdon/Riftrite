@@ -279,7 +279,7 @@ static func aura_change(sim: CombatSim, holder: UnitState, aura: AuraDef) -> int
 		# Once for every per_shards shards held, up to its cap (phase 8 part 6,
 		# Nest Egg).
 		@warning_ignore("integer_division")
-		var steps: int = sim.shards_held(holder) / aura.per_shards
+		var steps: int = sim.shards_held(holder, aura.per_tithe_shards) / aura.per_shards
 		change *= mini(steps, aura.per_shards_max) if aura.per_shards_max > 0 else steps
 	if aura.per_enemy_range > 0:
 		change *= enemies_near(sim, holder, aura.per_enemy_range, aura.per_twice)

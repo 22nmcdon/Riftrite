@@ -736,10 +736,9 @@ func _fill_shop() -> void:
 		if state.wares[i].is_empty():
 			continue
 		var item: ItemDef = session.run.items[state.wares[i]]
-		# Owned, buying it is its next rank; the Magpie's are rank II at least.
-		var rank: int = mini(state.item_ranks.get(item.id, 0) + 1, ItemDef.RANKS)
-		if magpie:
-			rank = mini(maxi(rank, 2), ItemDef.RANKS)
+		# Owned, buying it is its next rank; the Magpie's (and Insider's) are
+		# rank II at least.
+		var rank: int = session.flow.ware_rank(i)
 		var card: VBoxContainer = _item_card(row, item, rank)
 		(card.get_parent() as Control).custom_minimum_size = Vector2(WARE_WIDTH, 0)
 		card.add_child(UiStyle.primary(UiStyle.button("Buy · %d shards" % session.flow.price_of(item.id), _do.bind(session.flow.buy.bind(i)))))

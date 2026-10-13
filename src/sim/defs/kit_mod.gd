@@ -137,6 +137,13 @@ extends RefCounted
 ##                                        Flask)
 ## and at the top: "shard_cap_add": 2 (its kit's shard_cap, if it has one:
 ## Deep Purse).
+## Phase 8 part 6 (Hob's cards), per "on" entry:
+##       "per_shards_add": -2,            a named per-shards aura's per_shards
+##       "per_shards_max_add": 5          (at least 1) and, if it has one, its
+##                                        cap (Penny Wise, Deep Pockets)
+## and within_add also reaches on_enemy_fell's fell_within_hexes (Wider
+## Pickings), and an amount_bp naming "leap" in "types" its hexes (Long
+## Grab).
 ## Phase 8 part 6 (Kestra's cards), at the top:
 ##    "companions": [{"kit": "grit",      its companions of that kit (or, with
 ##       "hp_add_pct": 15,                no "kit", all of them): their share
@@ -320,6 +327,10 @@ class AbilityChange:
 	var per_stacks_add: int = 0
 	var cap_add_bp: int = 0
 	var per_stack_amount_add: int = 0
+	## Phase 8 part 6 (Hob's cards): a named per-shards aura's step and cap
+	## (Penny Wise, Deep Pockets).
+	var per_shards_add: int = 0
+	var per_shards_max_add: int = 0
 
 	## True if it reaches `ability_id` (every ability when it names none).
 	func reaches(id: String) -> bool:
@@ -344,13 +355,13 @@ class AbilityChange:
 	## True if it changes the named passive itself (its aura or its Guard).
 	func changes_part() -> bool:
 		return value_add != 0 or guard_share_add != 0 or guard_within_add != 0 or guard_covers_all or rise_add_bp != 0 or per_shared_bp != FixedMath.BP_ONE \
-			or per_twice != null or per_stacks_add != 0 or cap_add_bp != 0
+			or per_twice != null or per_stacks_add != 0 or cap_add_bp != 0 or per_shards_add != 0 or per_shards_max_add != 0
 
-	## A knockback's or pull's distance scales with amount_bp only when the
-	## change names that type (phase 5c step 7: Crushing Blow), so a mod on
-	## every effect never moves a push.
+	## A knockback's, pull's, or (phase 8 part 6, Long Grab) leap's distance
+	## scales with amount_bp only when the change names that type (phase 5c
+	## step 7: Crushing Blow), so a mod on every effect never moves a push.
 	func moves(effect: EffectDef) -> bool:
-		return (effect.type == EffectDef.Type.KNOCKBACK or effect.type == EffectDef.Type.PULL) and types.has(effect.type)
+		return (effect.type == EffectDef.Type.KNOCKBACK or effect.type == EffectDef.Type.PULL or effect.type == EffectDef.Type.LEAP) and types.has(effect.type)
 
 
 ## Indexed by UnitStats.Stat, as in KitPatch.
@@ -597,6 +608,8 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 	change.per_stacks_add = reader.opt_int("per_stacks_add", 0, -10, 10)
 	change.cap_add_bp = reader.opt_int("cap_add_bp", 0, -FixedMath.BP_ONE, FixedMath.BP_ONE)
 	change.per_stack_amount_add = reader.opt_int("per_stack_amount_add", 0, -10, 10)
+	change.per_shards_add = reader.opt_int("per_shards_add", 0, -20, 20)
+	change.per_shards_max_add = reader.opt_int("per_shards_max_add", 0, -20, 50)
 	if reader.has("heal_cap"):
 		var cap: DataReader = reader.req_object("heal_cap")
 		if cap != null:
@@ -616,7 +629,7 @@ static func _read_change(reader: DataReader) -> AbilityChange:
 			or change.prefer != null and change.slot != SLOT_SIGNATURE and change.ability_id.is_empty():
 		reader.error("cast_bp, targets_add, and prefer change a signature (\"slot\": \"signature\"; prefer also a named \"ability\")")
 	if (change.changes_part() or change.after_add_ticks != 0) and not change.slot.begins_with(PASSIVE_PREFIX):
-		reader.error("after_add_ms, value_add, guard, rise_add_pct, per_shared_bp, per_twice, per_stacks_add, and cap_add_bp change a named passive (\"slot\": \"passive:<id>\")")
+		reader.error("after_add_ms, value_add, guard, rise_add_pct, per_shared_bp, per_twice, per_stacks_add, cap_add_bp, per_shards_add, and per_shards_max_add change a named passive (\"slot\": \"passive:<id>\")")
 	if not (change.touches_effects() or change.cooldown_bp != FixedMath.BP_ONE or not change.add_effects.is_empty() or change.after_add_ticks != 0
 			or change.cast_bp != FixedMath.BP_ONE or change.targets_add > 0 or change.changes_part() or change.prefer != null
 			or change.grows_add_bp != 0 or change.grows_boosts_add_bp != 0 or change.mana_max_add != 0 or change.reach_add != 0 or change.grip_fast_vs != null
@@ -769,6 +782,8 @@ func affects_besides_passives(kit: UnitDef) -> bool:
 			var at: int = _passive_index(kit, change.slot)
 			if at >= 0 and (change.value_add != 0 and kit.passives[at].aura != null
 					or (change.per_stacks_add != 0 or change.cap_add_bp != 0) and kit.passives[at].aura != null and not kit.passives[at].aura.per_target_stacks.is_empty()
+					or kit.passives[at].aura != null and kit.passives[at].aura.per_shards > 0
+						and (change.per_shards_add != 0 or change.per_shards_max_add != 0 and kit.passives[at].aura.per_shards_max > 0)
 					or kit.passives[at].kind == PartDef.Kind.GUARD and
 					(change.guard_share_add != 0 or change.guard_within_add != 0 or change.guard_covers_all and kit.passives[at].behind_only)
 					or change.rise_add_bp != 0 and kit.passives[at].kind == PartDef.Kind.RISE
@@ -930,7 +945,8 @@ func _apply_change(built: UnitDef, change: AbilityChange, problems: Array[String
 		var copy: PartDef = DefCopy.shallow(part) as PartDef
 		if part.ability != null:
 			copy.ability = _changed_ability(part.ability, change)
-		if named and (change.after_add_ticks != 0 or change.value_add != 0 or change.per_stacks_add != 0 or change.cap_add_bp != 0) and part.aura != null:
+		if named and (change.after_add_ticks != 0 or change.value_add != 0 or change.per_stacks_add != 0 or change.cap_add_bp != 0
+				or change.per_shards_add != 0 or change.per_shards_max_add != 0) and part.aura != null:
 			copy.aura = DefCopy.shallow(part.aura) as AuraDef
 			copy.aura.after_ticks = maxi(copy.aura.after_ticks + change.after_add_ticks, 0)
 			copy.aura.value += change.value_add
@@ -939,6 +955,11 @@ func _apply_change(built: UnitDef, change: AbilityChange, problems: Array[String
 				copy.aura.per_stacks = maxi(part.aura.per_stacks + change.per_stacks_add, 1)
 				if part.aura.cap_bp > 0:
 					copy.aura.cap_bp = maxi(part.aura.cap_bp + change.cap_add_bp, 1)
+			if part.aura.per_shards > 0:
+				# Nest Egg's step and cap (phase 8 part 6, Penny Wise, Deep Pockets).
+				copy.aura.per_shards = maxi(part.aura.per_shards + change.per_shards_add, 1)
+				if part.aura.per_shards_max > 0:
+					copy.aura.per_shards_max = maxi(part.aura.per_shards_max + change.per_shards_max_add, 1)
 		if named and part.kind == PartDef.Kind.RISE and change.rise_add_bp != 0:
 			copy.rise_hp_bp = clampi(copy.rise_hp_bp + change.rise_add_bp, 100, FixedMath.BP_ONE)
 		if named and part.kind == PartDef.Kind.LINK and change.per_shared_bp != FixedMath.BP_ONE and part.per_shared > 0:
@@ -1084,6 +1105,9 @@ static func _changed_effects(effects: Array[EffectDef], change: AbilityChange) -
 			# share (Deep Stoke), and a growing zone (Fast and Far Spread).
 			if change.within_add != 0 and effect.trigger == EffectDef.Trigger.ON_STATUS_TICK and effect.near_trigger_range > 0:
 				copy.near_trigger_range = maxi(effect.near_trigger_range + change.within_add, HexGrid.HEX)
+			if change.within_add != 0 and effect.fell_range > 0:
+				# on_enemy_fell's reach (phase 8 part 6, Wider Pickings).
+				copy.fell_range = maxi(effect.fell_range + change.within_add, HexGrid.HEX)
 			if change.count_add != 0 and effect.nearest > 0:
 				copy.nearest = mini(effect.nearest + change.count_add, 5)
 			if change.share_add_bp != 0 and effect.stacks_share_bp > 0:
@@ -1179,6 +1203,7 @@ static func _any_effect(effects: Array[EffectDef], change: AbilityChange) -> boo
 		if change.touches(effect) and (change.every_add != 0 and effect.every > 1 or change.times_add != 0 and _runs_times(effect)
 				or change.within_add != 0 and effect.near_range > 0 or change.count_add != 0 and (effect.target == EffectDef.Target.LOWEST_MANA_ALLY or effect.target == EffectDef.Target.MOST_TARGETED_ALLY)
 				or change.within_add != 0 and effect.trigger == EffectDef.Trigger.ON_STATUS_TICK and effect.near_trigger_range > 0
+				or change.within_add != 0 and effect.fell_range > 0
 				or change.count_add != 0 and effect.nearest > 0 or change.share_add_bp != 0 and (effect.stacks_share_bp > 0 or effect.copy_of != EffectDef.CopyOf.NONE)
 				or change.copy_grow_add_bp != 0 and effect.copy_grows_bp > 0
 				or (change.grow_every_add_ticks != 0 or change.grow_max_add != 0) and effect.grow_ticks > 0

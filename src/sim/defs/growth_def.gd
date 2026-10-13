@@ -36,7 +36,12 @@ var team: bool = false
 
 ## "shards" (phase 8 part 6, Midas Touch): the shards the heroes' effects
 ## collect in fights (SHARDS lines, not those past a cap), one for each.
-const RUN_COUNTS: Array[String] = ["elite_wins", "wins", "flawless", "shards"]
+## Hob's (phase 8 part 6): "spent" (shards spent at the Pedlar, the boss
+## shop, or the Magpie: Fence), "won_holding" (a day fight won that started
+## with 30 or more shards held: RunFlow.WON_HOLDING_SHARDS; Old Coins), and
+## "shops" (each shop opened: the Pedlar, the boss shop, the Magpie; Old
+## Contacts).
+const RUN_COUNTS: Array[String] = ["elite_wins", "wins", "flawless", "shards", "spent", "won_holding", "shops"]
 
 
 ## `counts_only`: its steps pay through something else (a card's Tithe), so

@@ -33,6 +33,10 @@ extends RefCounted
 ##   "miser": true                as a shop opens, 1 shard per 5 held (up to 6)
 ##   "free_reroll": true          a shop's first reroll is free
 ##   "flat_rerolls": true         a shop's rerolls never climb
+##   "ledger": true               (phase 8 part 6, The Black Market Ledger)
+##                                each item transmuted counts its full price
+##                                as shards spent, and the shop owes a free
+##                                reroll
 ##   "shop_relics_add": 1         relics a shop shows
 ##   "wares_add": 1               wares the Pedlar lays out
 ##   "pick_cards_add": 1          cards on each pick
@@ -84,6 +88,7 @@ var wound_price_add: int = 0
 var shop_shards: int = 0
 var miser: bool = false
 var free_reroll: bool = false
+var ledger: bool = false
 var flat_rerolls: bool = false
 var shop_relics_add: int = 0
 var wares_add: int = 0
@@ -131,6 +136,7 @@ static func read(reader: DataReader) -> RelicDef:
 	def.shop_shards = reader.opt_int("shop_shards", 0, 0, 20)
 	def.miser = reader.opt_bool("miser", false)
 	def.free_reroll = reader.opt_bool("free_reroll", false)
+	def.ledger = reader.opt_bool("ledger", false)
 	def.flat_rerolls = reader.opt_bool("flat_rerolls", false)
 	def.shop_relics_add = reader.opt_int("shop_relics_add", 0, 0, 2)
 	def.wares_add = reader.opt_int("wares_add", 0, 0, 4)
@@ -180,7 +186,7 @@ static func read(reader: DataReader) -> RelicDef:
 
 func does_something() -> bool:
 	return grows != null or mod != null or enemy_mod != null or slots_add != 0 or always_scout or price_add != 0 or pay_add != 0 \
-		or elite_pay_add != 0 or wound_price_add != 0 or shop_shards != 0 or miser or free_reroll or flat_rerolls or shop_relics_add != 0 \
+		or elite_pay_add != 0 or wound_price_add != 0 or shop_shards != 0 or miser or free_reroll or ledger or flat_rerolls or shop_relics_add != 0 \
 		or wares_add != 0 or pick_cards_add != 0 or take_picks_add != 0 or streak_wins > 0 or growth_bp > 0 or per_relic_bp > 0 \
 		or per_shards > 0 or covenant or not at_start.is_empty() or salt_circle or doubles_commons or rules != null
 

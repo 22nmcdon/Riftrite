@@ -38,10 +38,17 @@ var vowed_patch: KitPatch
 ## Collector; TitheDef; null: none). The run pays it; the sim never reads it.
 var vowed_tithe: TitheDef = null
 var transformed_tithe: TitheDef = null
+## The transformed stage's run snowball (phase 8 part 6, Fence: shards
+## spent in shops; null: none): RunState.Hero.growth "path:<id>", its steps
+## the hero's, or every hero's with "team".
+var transformed_grows: GrowthDef = null
 ## Its transmuting, vowed and transformed (phase 8 part 6, Transmuter;
 ## TransmuteDef; null: none). The run uses it; the sim never reads it.
 var vowed_transmute: TransmuteDef = null
 var transformed_transmute: TransmuteDef = null
+## Its stages' shop rules (phase 8 part 6, Hob; ShopRulesDef; null: none).
+var vowed_shop: ShopRulesDef = null
+var transformed_shop: ShopRulesDef = null
 ## What the transformation brings.
 var transformed_text: String
 var transformed_cost: String
@@ -77,6 +84,7 @@ static func read(reader: DataReader) -> PathDef:
 		var tithe: DataReader = vowed.req_object("tithe") if vowed.has("tithe") else null
 		def.vowed_tithe = TitheDef.read(tithe) if tithe != null else null
 		def.vowed_transmute = TransmuteDef.read_in(vowed)
+		def.vowed_shop = ShopRulesDef.read_in(vowed)
 		vowed.finish()
 	var transformed: DataReader = reader.req_object("transformed")
 	if transformed != null:
@@ -88,6 +96,12 @@ static func read(reader: DataReader) -> PathDef:
 		var tithe: DataReader = transformed.req_object("tithe") if transformed.has("tithe") else null
 		def.transformed_tithe = TitheDef.read(tithe) if tithe != null else null
 		def.transformed_transmute = TransmuteDef.read_in(transformed)
+		def.transformed_shop = ShopRulesDef.read_in(transformed)
+		var grows: DataReader = transformed.req_object("grows") if transformed.has("grows") else null
+		if grows != null:
+			def.transformed_grows = GrowthDef.read(grows)
+			if def.transformed_grows.counted_in_fights():
+				transformed.error("a path's stage grows with what the run counts (\"run_counts\")")
 		transformed.finish()
 	# A missing block has been reported; an empty patch keeps loading going.
 	if def.vowed_patch == null:

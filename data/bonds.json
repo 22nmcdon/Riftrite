@@ -229,5 +229,35 @@
       "volley"
     ],
     "relic": "mirror_step"
+  },
+  {
+    "id": "price_and_prey",
+    "name": "Price and Prey",
+    "text": "He names the price; she collects.",
+    "paths": [
+      "bounty_hunter",
+      "headhunter"
+    ],
+    "relic": "the_contract"
+  },
+  {
+    "id": "tithe_and_hoard",
+    "name": "Tithe and Hoard",
+    "text": "Edric collects; Hob hoards.",
+    "paths": [
+      "hoarder",
+      "tithe_collector"
+    ],
+    "relic": "the_counting_house"
+  },
+  {
+    "id": "black_market_ledger",
+    "name": "Black Market Ledger",
+    "text": "She turns goods to gold; he turns gold to power.",
+    "paths": [
+      "fence",
+      "transmuter"
+    ],
+    "relic": "the_black_market_ledger"
   }
 ]

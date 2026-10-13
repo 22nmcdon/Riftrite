@@ -1046,8 +1046,9 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 					if target_name != "self":
 						reader.error("a leap back to the start goes on \"self\"")
 				elif def.leap_step:
-					if target_name != "enemy_near_named" and target_name != "enemy_near_target":
-						reader.error("a step goes to one enemy: \"enemy_near_named\" or \"enemy_near_target\"")
+					# Phase 8 part 6 (The Contract): or the toughest enemy.
+					if target_name != "enemy_near_named" and target_name != "enemy_near_target" and target_name != "toughest_enemies":
+						reader.error("a step goes to one enemy: \"enemy_near_named\", \"enemy_near_target\", or \"toughest_enemies\"")
 					def.resets_attack = reader.opt_bool("resets_attack", false)
 				else:
 					def.hexes = reader.req_int("max_hexes", 1)
