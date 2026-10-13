@@ -219,6 +219,20 @@ Part 5's section 8, for thirteen heroes, once:
 - **The bond relics** (each bond's two paths transformed with a third hero, holding its relic or not, over Act 1's 25 fights): 25 of the 26 change their team's fights; The Black Market Ledger is a run rule only (`tests/run/test_hob_shop.gd`). The Hearth-Woven Mail (1 fight of 25: a Guard, rare in the guarded formation), The Vigil Lamp (5: Brannoc below 30%), Mirror Step (5: Maren's hops), and The Last Ward (13) fire only when what they wait for happens.
 - **The placement refit** (`placement_data.gd --per=600`, four parts: 31,800 practice fights, 15,000 of them Act 1's, each with a team drawn from the thirteen; Act 1's weights fitted on Act 1's fights alone, then water and void on all, each keeping the others): checked with `placement_check.gd --per=20`, the refit's Act 1 weights 65% against the old 63% (random 62%), so they replace the old; its water weights 45% against the old 46% (random 41%) and its void weights no better (every team the check draws loses Act 3 at random stages), so those stay as fitted in 8d-5c and 8c-6c.
 
+### Next: 8f-6c and 8f-6d (handoff, 2026-10-13)
+
+8f-6a and 8f-6b are built (above) and committed; the full suite hasn't run on them yet. The runs moved to a local machine (more and faster cores; the sim is integer and seeded, so results match anywhere on Godot 4.7.2). From the repo root on `claude/pensive-hypatia-yuho11`, after `godot --headless --import` once:
+
+1. **The runs** (Decision 8), with `--jobs` set to the machine's performance cores:
+   - `godot --headless --path . -s tools/run_runner.gd -- --runs=300 --bot=good --jobs=10 > runs300.txt` (the default cycle plays each of the 286 teams once, so each hero lands in about 66–70 runs).
+   - `godot --headless --path . -s tools/run_runner.gd -- --test-teams=synergy --runs=170 --bot=good --jobs=10 > synergy170.txt` (10 runs for each of the seventeen synergy teams).
+2. **Every hero into the band:** from the 300 runs' **By hero**, bring each hero's runs won within ±8 points of the thirteen's mean, lifting or trimming the hero (its paths, apexes, or cards), never the acts first. Rerun to confirm.
+3. **The acts:** read Act 1, 2, and 3 against their targets (43%, 34%, and 33% of the runs reaching them). Retune the acts only if Act 1 leaves 40–49%; the first six's lifts (Decision 11) make their teams stronger, so it may.
+4. **Deeds the runs size** (when each path first transforms, and the run report's **Apex vows**): the vowed deeds the paths report's default team can't judge (Catalyst, Psalmist, Bounty Hunter, Aegis, Bloodglut, Wildfire, Transmuter: 8 to 16 fights there), Haggle's (the run's), Alpha's apex deed, and Black Market's apex deed (12, a stand-in).
+5. **The rift learns:** the Poison habit's `per_fight` (`data/rift_learns.json`) from the runs' "The rift learns" lines.
+6. **Question LK:** whether any other pair of mana makers casts without end, and if so whether to give each signature that gives allies mana a `recover_ms`, as Elixir has.
+7. **8f-6d:** these notes, CLAUDE.md's status lines, the full suite (expect tests that check the lifted transformed stats, Blight's old 10%, or Firestarter's and Grand Reaction's apex stats to need updating on purpose), the bench (its fingerprints move only if its fights use a changed kit), then commit and push.
+
 ## 10. The docs and the build (part 8f-7)
 
 HOW-TO-PLAY (the thirteen, their bonds, what we want to know), screenshots (the draft, a fight with each new hero), `docs/design.md`, `CLAUDE.md`, and a playtest build.
