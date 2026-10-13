@@ -65,6 +65,9 @@ extends RefCounted
 ##   {"struck_from_stealth": true}           its last basic attack's hit was
 ##                                          from Stealth (phase 8 part 6,
 ##                                          Veilweaver: an on_ally_hit's "by")
+##   {"without": ["bounty"]}                 none of these statuses on it
+##                                           (phase 8 part 6, Bounty: the
+##                                           next toughest without one)
 ##   {"others": true}                        any unit but the condition's
 ##                                           holder (phase 8 part 6, Elixir:
 ##                                           mana for every other ally)
@@ -78,6 +81,8 @@ var keywords: Array[String] = []
 var statuses: Array[String] = []
 ## Every one of these (phase 8 part 6).
 var all_statuses: Array[String] = []
+## None of these (phase 8 part 6, Bounty).
+var without: Array[String] = []
 ## Of these ranks (phase 8 part 6).
 var ranks: Array[String] = []
 ## 0: no HP condition.
@@ -133,6 +138,8 @@ static func read(reader: DataReader) -> UnitCondition:
 		def.statuses = reader.req_string_array("statuses")
 	if reader.has("all_statuses"):
 		def.all_statuses = reader.req_string_array("all_statuses")
+	if reader.has("without"):
+		def.without = reader.req_string_array("without")
 	def.ranks = reader.opt_choice_array("ranks", ["elite", "boss"])
 	if reader.has("below_hp_pct"):
 		def.below_hp_bp = reader.req_int("below_hp_pct", 1, 99) * 100
@@ -170,13 +177,13 @@ static func read(reader: DataReader) -> UnitCondition:
 	def.targets_owner = reader.opt_bool("targets_owner", false)
 	def.chased_by_summons = reader.opt_int("chased_by_summons", 0, 0, 30)
 	if def.is_empty():
-		reader.error("a condition needs at least one of keywords, statuses, all_statuses, ranks, below_hp_pct, above_hp_pct, flying, archetypes, front_most, on_water, same_island, shield_above_pct, engorged_pct, targets_holder, target, ranged, shielded, target_beyond_hexes, fired_over_full, raised, others, summon, copy, struck_from_stealth, targets_owner, chased_by_summons, or kits")
+		reader.error("a condition needs at least one of keywords, statuses, all_statuses, without, ranks, below_hp_pct, above_hp_pct, flying, archetypes, front_most, on_water, same_island, shield_above_pct, engorged_pct, targets_holder, target, ranged, shielded, target_beyond_hexes, fired_over_full, raised, others, summon, copy, struck_from_stealth, targets_owner, chased_by_summons, or kits")
 	reader.finish()
 	return def
 
 
 func is_empty() -> bool:
-	return keywords.is_empty() and statuses.is_empty() and all_statuses.is_empty() and ranks.is_empty() and below_hp_bp == 0 and above_hp_bp == 0 and flying == Flying.ANY and archetypes.is_empty() and not front_most and on_water == Flying.ANY and kits.is_empty() and not same_island and shield_above_bp == 0 and engorged_bp == 0 \
+	return keywords.is_empty() and statuses.is_empty() and all_statuses.is_empty() and without.is_empty() and ranks.is_empty() and below_hp_bp == 0 and above_hp_bp == 0 and flying == Flying.ANY and archetypes.is_empty() and not front_most and on_water == Flying.ANY and kits.is_empty() and not same_island and shield_above_bp == 0 and engorged_bp == 0 \
 		and targets_holder == Flying.ANY and target == null and ranged == Flying.ANY and target_beyond == 0 and not fired_over_full and not raised \
 		and shielded == Flying.ANY and not others and not summon and not copy and not struck_from_stealth and not targets_owner and chased_by_summons == 0 and any_of.is_empty()
 
@@ -197,6 +204,8 @@ func holds(unit: UnitState, holder: UnitState = null) -> bool:
 	if not any_of.is_empty():
 		return any_of.any(func(each: UnitCondition) -> bool: return each.holds(unit, holder))
 	if others and unit == holder:
+		return false
+	if not without.is_empty() and without.any(func(status_id: String) -> bool: return Statuses.find(unit, status_id) != null):
 		return false
 	if copy and unit.mirror_of == null:
 		return false
@@ -324,6 +333,8 @@ func describe() -> String:
 		parts.append("casting from past a full bar")
 	if raised:
 		parts.append("a raised thrall")
+	if not without.is_empty():
+		parts.append("without " + " or ".join(without).replace("_", " "))
 	if others:
 		parts.append("another")
 	if summon:

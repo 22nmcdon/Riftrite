@@ -158,6 +158,12 @@ extends RefCounted
 ## (the Spire Chanter: {"same_island": true}); "while": "ally_standing"
 ## without a "kit" is on while any other unit of its side stands (the Heart
 ## of the Rift's Ward while its host stands).
+## Phase 8 part 6 (Hob, docs/plans/rebuild-phase8-last-heroes.md 8f-5):
+## "per_shards": N (once for every N shards its holder holds,
+## CombatSim.shards_held; "per_shards_max": at most that many times; Nest
+## Egg), and two stats that add: atk (points of ATK; Golden Idol) and
+## shard_worth_bp (each shard its holder holds counts that much more, read
+## by shards_held from its boosts' stacks; Compounding).
 ## (The rebuild's gut, phase 0, removed the item targets and filters; the
 ## arena sim, phase 1, adds what abilities need.)
 
@@ -168,7 +174,7 @@ enum Stat { DAMAGE_BP, HEAL_BP, SHIELD_BP, OVER_TIME_BP, CRIT_CHANCE_BP, COOLDOW
 	DEF_IGNORE_BP, UNPUSHABLE, DODGE_EVERY_MS, HALVED_HITS,
 	SHIELD_DAMAGE_BP, SEES_STEALTH, BURN_TAKEN_BP, MARKED_TIME_BP, ROOT_CAP_MS, MISS_BP, STUN_TIME_BP, STORE_BP, STORE_GROWS_BP, EVADE_BP, SHOT_SPEED_BP,
 	MANA_GAIN_BP, MANA_STORE_BP, OVERFLOW_POWER_BP, LIFESTEAL_MORE_BP, LIFESTEAL_MAX_HP_BP, LIFESTEAL_MAX_HP_CAP_BP, SHIELD_ABSORB_BP,
-	OVER_TIME_LOSS_BP, SIGNATURE_COST_BP, SPEED }
+	OVER_TIME_LOSS_BP, SIGNATURE_COST_BP, SPEED, SHARD_WORTH_BP, ATK }
 ## What turns an aura on, beyond its window.
 enum While { ALWAYS, TAUNTING, PLANTED, BELOW_HP, ALLY_STANDING, STATE, ALLY_NEAR, BEHIND_WALL, MOVED, CROWDED, TACTIC }
 
@@ -183,7 +189,7 @@ const STAT_NAMES: Array[String] = [
 	"def_ignore_bp", "unpushable", "dodge_every_ms", "halved_hits",
 	"shield_damage_bp", "sees_stealth", "burn_taken_bp", "marked_time_bp", "root_cap_ms", "miss_bp", "stun_time_bp", "store_bp", "store_grows_bp", "evade_bp", "shot_speed_bp",
 	"mana_gain_bp", "mana_store_bp", "overflow_power_bp", "lifesteal_more_bp", "lifesteal_max_hp_bp", "lifesteal_max_hp_cap_bp", "shield_absorb_bp",
-	"over_time_loss_bp", "signature_cost_bp", "speed",
+	"over_time_loss_bp", "signature_cost_bp", "speed", "shard_worth_bp", "atk",
 ]
 const WHILE_NAMES: Array[String] = ["always", "taunting", "planted", "below_hp", "ally_standing", "state", "ally_near", "behind_wall", "moved", "crowded", "tactic"]
 ## The stats that add rather than multiply. The rest are factors (x1.1);
@@ -193,7 +199,7 @@ const ADDITIVE: Array[Stat] = [Stat.CRIT_CHANCE_BP, Stat.COOLDOWN_BP, Stat.RANGE
 	Stat.DEF_IGNORE_BP, Stat.UNPUSHABLE, Stat.DODGE_EVERY_MS, Stat.HALVED_HITS,
 	Stat.SHIELD_DAMAGE_BP, Stat.SEES_STEALTH, Stat.BURN_TAKEN_BP, Stat.MARKED_TIME_BP, Stat.ROOT_CAP_MS, Stat.MISS_BP, Stat.STUN_TIME_BP, Stat.STORE_BP, Stat.STORE_GROWS_BP, Stat.EVADE_BP, Stat.SHOT_SPEED_BP,
 	Stat.OVERFLOW_POWER_BP, Stat.LIFESTEAL_MORE_BP, Stat.LIFESTEAL_MAX_HP_BP, Stat.LIFESTEAL_MAX_HP_CAP_BP, Stat.SHIELD_ABSORB_BP,
-	Stat.OVER_TIME_LOSS_BP, Stat.SPEED]
+	Stat.OVER_TIME_LOSS_BP, Stat.SPEED, Stat.SHARD_WORTH_BP, Stat.ATK]
 ## The stats an aura worked out per hit may hold ("vs", "from_basic",
 ## "per_target_stacks").
 const VS_STATS: Array[Stat] = [Stat.DAMAGE_BP, Stat.CRIT_CHANCE_BP, Stat.LIFESTEAL_BP, Stat.CRIT_DAMAGE_BP, Stat.HEAL_BP, Stat.SHIELD_BP, Stat.LIFESTEAL_MORE_BP]
@@ -205,7 +211,7 @@ const STAT_LABELS: Array[String] = [
 	"of the target's DEF ignored", "can't be knocked back", "a hit misses every", "hits taken at half damage",
 	"damage to Shields", "can target the stealthed", "Burn damage taken", "how long Marks on it last", "Roots on it last at most", "of its attacks missing", "how long Stuns on it last", "of each hit taken stored", "stored damage growth a second", "of basic attacks on it evaded", "shot speed",
 	"mana gained", "mana its bar holds", "signature power per mana over full", "to lifesteal", "of lifesteal past full HP as max HP", "of max HP, at most, from lifesteal past full", "to what its Shield absorbs",
-	"to how fast damage over time on it fades", "to what its signature costs", "speed",
+	"to how fast damage over time on it fades", "to what its signature costs", "speed", "to what each shard held is worth", "ATK",
 ]
 ## Unit stat for each unit-stat aura stat (ATK_BP -> Stat.ATK, ...).
 const UNIT_STAT_FOR: Dictionary[int, int] = {
@@ -240,6 +246,11 @@ var per_allied_summon: bool = false
 var per_allied_unit: bool = false
 ## Once per summon that joined its side this fight (phase 8 part 6).
 var per_summon_joined: bool = false
+## Once for every this many shards its holder holds (phase 8 part 6, Hob's
+## Nest Egg: CombatSim.shards_held; 0: not per shard), at most
+## per_shards_max times (0: no cap).
+var per_shards: int = 0
+var per_shards_max: int = 0
 ## Counts once per standing enemy within this many plane units of its holder
 ## (phase 8 part 4; 0: not per enemy).
 var per_enemy_range: int = 0
@@ -351,6 +362,11 @@ static func read(reader: DataReader) -> AuraDef:
 		def.per_summon_joined = per == "summon_joined"
 		if per == "enemy_near":
 			def.per_enemy_range = reader.req_int("per_within_hexes", 1, 8) * HexGrid.HEX
+	if reader.has("per_shards"):
+		def.per_shards = reader.req_int("per_shards", 1, 1000)
+		def.per_shards_max = reader.opt_int("per_shards_max", 0, 0, 1000)
+	elif reader.has("per_shards_max"):
+		reader.error("only an aura \"per_shards\" has \"per_shards_max\"")
 	if reader.has("per_within_hexes") and def.per_enemy_range == 0:
 		reader.error("only an aura \"per\": \"enemy_near\" has \"per_within_hexes\"")
 	if reader.has("per_twice"):
@@ -427,7 +443,7 @@ func describe() -> String:
 	var amount: String
 	if per_shield_bp > 0:
 		amount = "+%s %s per point of Shield" % [ValueBreakdown._percent(per_shield_bp), STAT_LABELS[stat]]
-	elif stat == Stat.RANGE or stat == Stat.ATSP or stat == Stat.DEF or stat == Stat.SPEED:
+	elif stat == Stat.RANGE or stat == Stat.ATSP or stat == Stat.DEF or stat == Stat.SPEED or stat == Stat.ATK:
 		amount = "%s%d %s" % ["+" if value >= 0 else "", value, STAT_LABELS[stat]]
 	elif stat == Stat.UNPUSHABLE:
 		amount = STAT_LABELS[stat]
@@ -478,6 +494,8 @@ func describe() -> String:
 		condition += " for each allied summon"
 	if per_summon_joined:
 		condition += " for each summon that has joined its side"
+	if per_shards > 0:
+		condition += (" for each shard held" if per_shards == 1 else " for every %d shards held" % per_shards) + (" (up to %d times)" % per_shards_max if per_shards_max > 0 else "")
 	if per_allied_unit:
 		condition += " for each allied unit" + (" (%s twice)" % per_twice.describe() if per_twice != null else "")
 	if per_enemy_range > 0:

@@ -505,6 +505,19 @@ func front_of(side: Array[UnitState]) -> UnitState:
 	return front
 
 
+## The shards `unit` holds as the fight sees them (phase 8 part 6, Hob):
+## the run's shards as it started, each worth that much more for the
+## shard_worth_bp of the boosts on it (Compounding: stacks times its value).
+func shards_held(unit: UnitState) -> int:
+	var worth: int = FixedMath.BP_ONE
+	for state: StatusState in unit.statuses:
+		if state.def.kind == StatusDef.Kind.BOOST:
+			for i: int in state.def.boost_stats.size():
+				if state.def.boost_stats[i] == AuraDef.Stat.SHARD_WORTH_BP:
+					worth += state.timed_stacks() * state.def.boost_values[i]
+	return FixedMath.apply_bp(setup.shards, worth)
+
+
 ## Folds every aura in again (a Taunt started or ended, for auras that hold
 ## while taunting).
 func refold_auras() -> void:

@@ -1314,6 +1314,58 @@ def lucan_puppeteer(uid):
     return "".join(o)
 
 
+# ------------------------------------------------------------------ Hob (8f-5)
+PATCHCOAT, PATCHCOAT_DK = "#6a5a3a", "#4a3e28"
+PATCH_A, PATCH_B = "#8a6a4a", "#5a6a4a"
+COIN = "#f2c84a"
+HAIR_MOUSE = "#7a6248"
+
+
+def hob_head(hood=PATCHCOAT_DK):
+    return "".join([P("M130,142 C128,112 172,112 170,142 L168,172 C160,188 140,188 132,172 Z", SKIN),
+                    P("M118,146 C112,92 188,92 182,146 C176,120 162,110 150,110 C138,110 124,120 118,146 Z", hood),
+                    P("M128,128 C134,118 146,116 150,118 L140,132 Z", HAIR_MOUSE, 2),
+                    f'<path d="M140,148 l6,2 M156,150 l6,-2" stroke="{INK}" stroke-width="2.6" stroke-linecap="round"/>',
+                    P("M142,172 C148,168 156,170 160,174", "none", 2.2),
+                    rim("M120,142 C122,118 134,106 150,104", color=GOLD, w=2)])
+
+
+def coin(cx, cy, r=6, glow=False):
+    o = [circle(cx, cy, r, COIN, 2), P(f"M{cx - r // 2},{cy} L{cx + r // 2},{cy}", "none", 1.4)]
+    if glow:
+        o.append(f'<circle cx="{cx}" cy="{cy}" r="{r * 2}" fill="{GOLD}" opacity="0.3" filter="url(#bloom)"/>')
+    return "".join(o)
+
+
+def purse(cx, cy, s=1.0):
+    return (f'<g transform="translate({cx},{cy}) scale({s})">'
+            + P("M-16,-6 C-22,24 22,24 16,-6 C10,-14 -10,-14 -16,-6 Z", "#8a5a2a")
+            + P("M-12,-10 L12,-10 L8,-16 L-8,-16 Z", "#6a4220", 2) + "</g>")
+
+
+def hob_coat(uid, color=PATCHCOAT, hem=440):
+    coat = f"M118,196 L182,196 L192,{hem} L108,{hem} Z"
+    return "".join([P(coat, color),
+                    P("M124,250 L148,250 L146,280 L122,282 Z", PATCH_A, 1.6), P("M160,330 L184,326 L186,356 L162,358 Z", PATCH_B, 1.6),
+                    P(f"M108,{hem - 10} L192,{hem - 10} L192,{hem} L108,{hem} Z", PATCHCOAT_DK, 2),
+                    P("M114,286 L186,286 L186,298 L114,298 Z", "#3a2a1a", 2),
+                    shade(uid, [coat], cut=150)])
+
+
+def hob_base(uid):
+    """A scavenger in a patched, hooded coat, a sling whirling in one hand and a fat coin purse at his belt."""
+    o = [shadow(68), boot(118, 150) + boot(152, 186), hob_coat(uid),
+         purse(124, 312, 0.9),
+         limb((124, 210), (110, 286), 15, 12, PATCHCOAT), circle(110, 290, 8, SKIN, 2),
+         hob_head(),
+         limb((176, 210), (206, 170), 15, 12, PATCHCOAT), circle(208, 164, 8, SKIN, 2),
+         P("M208,164 C230,130 250,120 246,100", "none", 2.2), circle(246, 96, 7, "#9a9a9a", 2),
+         f'<path d="M226,84 A30,30 0 1 1 262,110" stroke="{GOLD}" stroke-width="2" fill="none" opacity="0.6"/>',
+         coin(84, 360, 6, glow=True), coin(72, 382, 5),
+         rim("M182,214 L190,430", color=GOLD, w=2)]
+    return "".join(o)
+
+
 HEROES = [
     ("maren", "Maren", [("base", "Base", maren_base), ("deadeye", "Deadeye", maren_deadeye),
                         ("trapper", "Trapper", maren_trapper), ("volley", "Volley", maren_volley)]),
@@ -1339,6 +1391,7 @@ HEROES = [
                           ("serpent_keeper", "Serpent-Keeper", kestra_serpent_keeper), ("packleader", "Packleader", kestra_packleader)]),
     ("lucan", "Lucan", [("base", "Base", lucan_base), ("mirrorwright", "Mirrorwright", lucan_mirrorwright),
                         ("veilweaver", "Veilweaver", lucan_veilweaver), ("puppeteer", "Puppeteer", lucan_puppeteer)]),
+    ("hob", "Hob", [("base", "Base", hob_base)]),
 ]
 
 # A hero's companions (phase 8 part 6, Kestra): each one's figure is

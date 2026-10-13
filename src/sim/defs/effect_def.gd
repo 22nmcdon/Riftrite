@@ -52,7 +52,9 @@ extends RefCounted
 ##                 of max HP and HP for the fight, logged as MAX_HP_UP
 ##   shield's "plus_per_shard_bp" (phase 8 part 5, Golden Aegis): that share
 ##                 of the shards the run holds as the fight starts is added
-##                 (FightSetup.shards; Practice's shards setting)
+##                 (FightSetup.shards; Practice's shards setting); damage's
+##                 too (phase 8 part 6, Heavy Purse: 20000 is 2 a shard).
+##                 Both read CombatSim.shards_held (its shard_worth_bp)
 ##   shards:       (phase 8 part 5, Collection; target "self") "amount" shards
 ##                 for the run, logged as SHARDS; RunFlow.record pays them.
 ##                 "spends": a stacking status on the unit: it pays only
@@ -240,6 +242,9 @@ extends RefCounted
 ##   lowest_hp_ally        the unit's ally lowest on HP (a share of max HP),
 ##                         within within_hexes of the unit if given; "count"
 ##                         (phase 8 part 5): that many, lowest first
+##   toughest_enemies      the "count" (1) standing enemies with the most
+##                         max HP, fight order on ties ("only": among those
+##                         that meet it; phase 8 part 6, Hob's Bounty)
 ##   most_targeted_ally    the "count" (1) allies (the unit too) the most
 ##                         enemies are targeting, ties to the lowest share
 ##                         of HP, then the fight's order (phase 8 part 6,
@@ -467,6 +472,7 @@ enum Target {
 	LOWEST_MANA_ALLY,
 	ENEMIES_NEAR_ALLIES,
 	MOST_TARGETED_ALLY,
+	TOUGHEST_ENEMIES,
 }
 ## A nested area effect's side (phase 4): both, or only one.
 enum AreaSide { BOTH, ENEMIES, ALLIES }
@@ -570,6 +576,7 @@ const TARGET_NAMES: Array[String] = [
 	"lowest_mana_ally",
 	"enemies_near_allies",
 	"most_targeted_ally",
+	"toughest_enemies",
 ]
 
 var trigger: Trigger
@@ -957,6 +964,7 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 				def.lifesteal_bp = reader.opt_int("lifesteal_pct", 0, 0, 500) * 100
 				def.plus_bp_of_max_hp = reader.opt_int("plus_bp_of_max_hp", 0, 0, 50000)
 				def.plus_bp_of_spent = reader.opt_int("plus_bp_of_spent", 0, 0, 100000)
+				def.plus_per_shard_bp = reader.opt_int("plus_per_shard_bp", 0, 0, 10 * FixedMath.BP_ONE)
 				if def.plain and def.lifesteal_bp > 0:
 					reader.error("a plain hit never lifesteals (\"lifesteal_pct\")")
 			Type.HEAL:
@@ -1192,11 +1200,11 @@ static func read(reader: DataReader, relic: bool = false, in_area: bool = false)
 			reader.error("\"when_attackers_kits\" needs \"when_attackers\"")
 	if reader.has("only"):
 		def.only = UnitCondition.read(reader.req_object("only"))
-		if def.target != Target.ALL_ENEMIES and def.target != Target.ALL_ALLIES and not NEAR_TARGETS.has(def.target):
-			reader.error("only all_enemies, all_allies, and the near targets take \"only\"")
+		if def.target != Target.ALL_ENEMIES and def.target != Target.ALL_ALLIES and def.target != Target.TOUGHEST_ENEMIES and not NEAR_TARGETS.has(def.target):
+			reader.error("only all_enemies, all_allies, toughest_enemies, and the near targets take \"only\"")
 	if def.target == Target.FARTHEST_ENEMIES:
 		def.count = reader.req_int("count", 1, 10)
-	if def.target == Target.LOWEST_MANA_ALLY or def.target == Target.LOWEST_HP_ALLY or def.target == Target.MOST_TARGETED_ALLY:
+	if def.target == Target.LOWEST_MANA_ALLY or def.target == Target.LOWEST_HP_ALLY or def.target == Target.MOST_TARGETED_ALLY or def.target == Target.TOUGHEST_ENEMIES:
 		# The allies with the least of their bar (phase 8 part 4, Shared Breath),
 		# or of their HP (phase 8 part 5, Bastion of Saints' taste).
 		def.count = reader.opt_int("count", 1, 1, 5)

@@ -87,7 +87,10 @@ extends RefCounted
 ##   by_allies: true               damage or hits: its allies' hits count
 ##                                 too (Huntmaster; hits and beyond_hexes,
 ##                                 where the two stand as it lands, phase 8
-##                                 part 4, Windcaller)
+##                                 part 4, Windcaller); kills: its allies'
+##                                 kills count too (phase 8 part 6, Bounty
+##                                 Hunter; with "statuses": only of enemies
+##                                 that carried one as they fell)
 ##   with_part: "tailwind"         only while its kit holds this part (a
 ##                                 passive's id; phase 8 part 4: Windcaller's
 ##                                 hits under Tailwind, which only its vow
@@ -223,8 +226,8 @@ static func read(reader: DataReader, needs_text: bool = true) -> DeedDef:
 	def.by_allies = reader.opt_bool("by_allies", false)
 	if def.counts != Counts.DAMAGE and not def.vs_keywords.is_empty():
 		reader.error("vs_keywords only filter damage")
-	if def.by_allies and def.counts != Counts.DAMAGE and def.counts != Counts.HITS:
-		reader.error("by_allies only counts damage or hits")
+	if def.by_allies and def.counts != Counts.DAMAGE and def.counts != Counts.HITS and def.counts != Counts.KILLS:
+		reader.error("by_allies only counts damage, hits, or kills")
 	def.by_stacks = reader.opt_bool("by_stacks", false)
 	if def.by_stacks and def.counts != Counts.APPLIED:
 		reader.error("by_stacks counts the stacks applied (\"counts\": \"applied\")")
@@ -248,8 +251,10 @@ static func read(reader: DataReader, needs_text: bool = true) -> DeedDef:
 		# Phase 8 part 5 (Blood Rite): an ally's hits by_allies counts only
 		# while that ally holds one of them; phase 8 part 6 (Wild Hunt): its
 		# damage too.
-		if def.counts != Counts.APPLIED and def.counts != Counts.STATUS_MS and not (def.by_allies and (def.counts == Counts.HITS or def.counts == Counts.DAMAGE)):
-			reader.error("statuses only filter applied, or hits or damage by_allies")
+		# Phase 8 part 6 (Bounty Hunter's feat deed): kills of enemies that
+		# carried one as they fell.
+		if def.counts != Counts.APPLIED and def.counts != Counts.STATUS_MS and def.counts != Counts.KILLS and not (def.by_allies and (def.counts == Counts.HITS or def.counts == Counts.DAMAGE)):
+			reader.error("statuses only filter applied, kills, or hits or damage by_allies")
 	match reader.opt_string_choice("copies", "", ["own", "allies"]):
 		"own":
 			def.copies = CopiesBy.OWN

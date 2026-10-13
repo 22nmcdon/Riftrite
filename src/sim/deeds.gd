@@ -103,6 +103,8 @@ static func count(sim: CombatSim, from: int, to: int) -> void:
 			_count_for_team(sim, entry)
 		if not sim.team_counters.is_empty() and entry.kind == LogEntry.Kind.FIRE and entry.source_relic_side < 0:
 			_count_ally_cast(sim, entry)
+		if entry.kind == LogEntry.Kind.DEATH and not sim.team_counters.is_empty():
+			_count_team_kill(sim, entry)
 		if entry.lost_to_stealth and not sim.team_counters.is_empty():
 			_count_lost_target(sim, entry)
 			continue
@@ -272,8 +274,33 @@ static func _count_on_target(sim: CombatSim, entry: LogEntry) -> void:
 				var by: String = fallen.last_hit_source.ability_id if fallen.last_hit_source != null else ""
 				for d: int in killer.deeds.deeds.size():
 					var deed: DeedDef = killer.deeds.deeds[d]
-					if deed.counts == DeedDef.Counts.KILLS and (deed.from_ability.is_empty() or deed.from_ability.has(by)):
+					if deed.counts == DeedDef.Counts.KILLS and not deed.by_allies and (deed.from_ability.is_empty() or deed.from_ability.has(by)) and _carried(fallen, deed):
 						killer.deeds.amounts[d] += 1
+
+
+## A kill by anyone on a side (a summon's for its owner's side) counts for
+## each of its units with a kills deed by_allies (phase 8 part 6, Bounty
+## Hunter: Bounties collected), if the fallen carried what it names.
+static func _count_team_kill(sim: CombatSim, entry: LogEntry) -> void:
+	var fallen: UnitState = sim.unit_by_id(entry.target)
+	if fallen == null or fallen.last_attacker.is_empty():
+		return
+	var killer: UnitState = sim.unit_by_id(fallen.last_attacker)
+	if killer == null or killer.side == fallen.side:
+		return
+	for unit: UnitState in sim.team_counters:
+		if unit.side != killer.side:
+			continue
+		for d: int in unit.deeds.deeds.size():
+			var deed: DeedDef = unit.deeds.deeds[d]
+			if deed.counts == DeedDef.Counts.KILLS and deed.by_allies and _carried(fallen, deed):
+				unit.deeds.amounts[d] += 1
+
+
+## True if `fallen` carried one of the statuses a kills deed names (or it
+## names none).
+static func _carried(fallen: UnitState, deed: DeedDef) -> bool:
+	return deed.statuses.is_empty() or deed.statuses.any(func(status_id: String) -> bool: return Statuses.find(fallen, status_id) != null)
 
 
 ## A hit by anyone on a side counts for each of its units with a by_allies

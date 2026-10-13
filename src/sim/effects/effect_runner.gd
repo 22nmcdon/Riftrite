@@ -240,7 +240,7 @@ static func land(sim: CombatSim, unit: UnitState, ability: AbilityDef, source: E
 				amount = FixedMath.apply_bp(victim.max_hp, effect.amount_bp_of_max_hp)
 			if effect.plus_per_shard_bp > 0:
 				# Golden Aegis (phase 8 part 5): more for the shards held.
-				amount += FixedMath.apply_bp(sim.setup.shards, effect.plus_per_shard_bp)
+				amount += FixedMath.apply_bp(sim.shards_held(unit), effect.plus_per_shard_bp)
 			if not unit.vs_conditions.is_empty():
 				# A Shield's bonus on some allies (phase 5c step 7c, Front Ward).
 				power += Passives.vs_bonus_bp(unit, victim, AuraDef.Stat.SHIELD_BP, source.ability_id)
@@ -519,6 +519,9 @@ static func amount_of(effect: EffectDef, unit: UnitState, damage: int = 0, sim: 
 		amount += FixedMath.apply_bp(unit.max_hp, effect.plus_bp_of_max_hp)
 	if effect.plus_bp_of_spent > 0:
 		amount += FixedMath.apply_bp(unit.last_hp_spent, effect.plus_bp_of_spent)
+	if effect.plus_per_shard_bp > 0 and effect.type == EffectDef.Type.DAMAGE and sim != null:
+		# Heavy Purse (phase 8 part 6): more for the shards its unit holds.
+		amount += FixedMath.apply_bp(sim.shards_held(unit), effect.plus_per_shard_bp)
 	if effect.bonus_bp_per_ally > 0 and sim != null:
 		amount = FixedMath.apply_bp(amount, FixedMath.BP_ONE + effect.bonus_bp_per_ally * allies_near(sim, unit, effect))
 	return Passives.boosted(unit, effect, amount)
@@ -574,6 +577,8 @@ static func _targets(sim: CombatSim, unit: UnitState, target: EffectDef.Target, 
 		return lowest_mana(sim, unit, effect.count)
 	if effect != null and target == EffectDef.Target.MOST_TARGETED_ALLY:
 		return most_targeted(sim, unit, effect.count)
+	if effect != null and target == EffectDef.Target.TOUGHEST_ENEMIES:
+		return toughest(sim, unit, effect)
 	if effect != null and target == EffectDef.Target.ENEMIES_NEAR_ALLIES:
 		found.assign(around_allies(sim, unit, effect).map(func(pair: Array) -> UnitState: return pair[0]))
 		return found
@@ -765,6 +770,21 @@ static func most_targeted(sim: CombatSim, unit: UnitState, count: int) -> Array[
 			if best == null or more > 0 or (more == 0 and Targeting._lower_share(ally, best)):
 				best = ally
 		found.append(best)
+	return found
+
+
+## The effect's "count" standing enemies of `unit` (among those that meet
+## its "only") with the most max HP, the most first; ties go to the earlier
+## in the fight's order (phase 8 part 6, Hob's Bounty).
+static func toughest(sim: CombatSim, unit: UnitState, effect: EffectDef) -> Array[UnitState]:
+	var keyed: Array[Array] = []
+	for enemy: UnitState in sim.standing_enemies_of(unit):
+		if effect.only == null or effect.only.holds(enemy, unit):
+			keyed.append([enemy.max_hp, keyed.size(), enemy])
+	keyed.sort_custom(func(a: Array, b: Array) -> bool: return a[0] > b[0] or (a[0] == b[0] and a[1] < b[1]))
+	var found: Array[UnitState] = []
+	for i: int in mini(effect.count, keyed.size()):
+		found.append(keyed[i][2])
 	return found
 
 

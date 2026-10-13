@@ -217,6 +217,8 @@ static func rederive(sim: CombatSim, was_active: Array[String]) -> Array[String]
 		unit.stats.values[UnitStats.Stat.RANGE] = unit.base_stats.values[UnitStats.Stat.RANGE] + unit.aura_bp[AuraDef.Stat.RANGE]
 		unit.stats.values[UnitStats.Stat.ATSP] += unit.aura_bp[AuraDef.Stat.ATSP]
 		unit.stats.values[UnitStats.Stat.DEF] += unit.aura_bp[AuraDef.Stat.DEF]
+		# Points of ATK (phase 8 part 6, Golden Idol).
+		unit.stats.values[UnitStats.Stat.ATK] += unit.aura_bp[AuraDef.Stat.ATK]
 		# Speed in hexes a second (phase 8 part 6, Blood Scent).
 		unit.stats.values[UnitStats.Stat.SPEED] += unit.aura_bp[AuraDef.Stat.SPEED]
 		if unit.aura_bp[AuraDef.Stat.MAX_HP_BP] != FixedMath.BP_ONE or unit.max_hp != unit.base_max_hp:
@@ -273,6 +275,12 @@ static func aura_change(sim: CombatSim, holder: UnitState, aura: AuraDef) -> int
 		change *= allied_units(sim, holder, aura.per_twice)
 	if aura.per_summon_joined:
 		change *= sim.summons_joined[0 if holder.side == EffectSource.Team.HEROES else 1]
+	if aura.per_shards > 0:
+		# Once for every per_shards shards held, up to its cap (phase 8 part 6,
+		# Nest Egg).
+		@warning_ignore("integer_division")
+		var steps: int = sim.shards_held(holder) / aura.per_shards
+		change *= mini(steps, aura.per_shards_max) if aura.per_shards_max > 0 else steps
 	if aura.per_enemy_range > 0:
 		change *= enemies_near(sim, holder, aura.per_enemy_range, aura.per_twice)
 	if aura.step_ticks > 0:
