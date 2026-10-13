@@ -222,6 +222,13 @@ static func _change_text(change: KitMod.AbilityChange, mod: KitMod, kit: UnitDef
 		bits.append("%s hex reach" % signed(change.within_add / HexGrid.HEX))
 	if change.count_add != 0:
 		bits.append("+%d all%s" % [change.count_add, "y" if change.count_add == 1 else "ies"])
+	# Hob's cards (phase 8 part 6), and a signature's reach (Hammer and Wire).
+	if change.reach_add != 0:
+		bits.append("%s hex reach" % signed(change.reach_add))
+	if change.per_shards_add != 0:
+		bits.append("%s shards a step" % signed(change.per_shards_add))
+	if change.per_shards_max_add != 0:
+		bits.append("%s steps at most" % signed(change.per_shards_max_add))
 	# Severine's cards (phase 8 part 5).
 	if change.lifesteal_add_bp != 0:
 		bits.append("%s lifesteal" % UnitInfo.signed_percent(change.lifesteal_add_bp))
