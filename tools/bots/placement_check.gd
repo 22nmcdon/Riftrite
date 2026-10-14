@@ -4,9 +4,12 @@ extends SceneTree
 ## and against scaled enemies from Act 2 on) but from another stream, each placed by placement.gd's best formation and
 ## fought on a practice seed; against the same teams placed at random.
 ## Usage: godot --headless --path . -s tools/bots/placement_check.gd -- [--per=20] [--weights=path] [--act=N]
+## While it fights it writes its progress (tools/progress.gd: a unit is an
+## encounter); --no-progress turns that off.
 
 const Placement = preload("res://tools/bots/placement.gd")
 const SimReport = preload("res://tools/sim_report.gd")
+const Progress = preload("res://tools/progress.gd")
 
 
 func _init() -> void:
@@ -30,9 +33,11 @@ func _init() -> void:
 	var total_random: int = 0
 	var total: int = 0
 	var started: int = Time.get_ticks_msec()
-	for encounter_id: String in content.encounter_ids:
-		if content.encounters[encounter_id].tier == "hunt" or (act > 0 and content.encounters[encounter_id].act != act):
-			continue
+	var encounter_ids: Array[String] = content.encounter_ids.filter(func(id: String) -> bool:
+		return content.encounters[id].tier != "hunt" and (act == 0 or content.encounters[id].act == act))
+	var progress := Progress.new()
+	progress.start(Progress.own_id("placement_check"), "placement check (%d teams an encounter)" % per, "encounters", encounter_ids.size())
+	for encounter_id: String in encounter_ids:
 		var rng := SimRng.new((encounter_id.hash() & 0xffffff) + 99991)
 		var bot_wins: int = 0
 		var random_wins: int = 0
@@ -64,5 +69,7 @@ func _init() -> void:
 		total_random += random_wins
 		total += per
 		print("  %-22s bot %3d%%  random %3d%%" % [encounter_id, bot_wins * 100 / per, random_wins * 100 / per])
+		progress.step(progress.done + 1)
+	progress.finish()
 	print("  all                    bot %3d%%  random %3d%%   (%.1fs)" % [total_bot * 100 / total, total_random * 100 / total, (Time.get_ticks_msec() - started) / 1000.0])
 	quit(0)

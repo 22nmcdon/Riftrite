@@ -1,0 +1,6 @@
+{
+  "name": "run-status",
+  "version": "0.1.0",
+  "description": "Shows the long tool runs' progress files (.progress/): a status line, a pane with a bar per process, and toasts; /runs, /runs clear",
+  "types": "./types/index.d.ts"
+}

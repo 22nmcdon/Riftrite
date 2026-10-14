@@ -11,9 +11,13 @@ extends SceneTree
 ## tools/bots/fit_placement.py fits WEIGHTS from it.
 ## Usage: godot --headless --path . -s tools/bots/placement_data.gd -- [--per=300] [--part=0/1] [--act=N] > data.csv
 ## (--act: only that act's encounters, to refresh one act's rows.)
+## While it fights it writes its progress (tools/progress.gd: a unit is an
+## encounter; the --part processes of one --per and --act share a group, or
+## --progress-group=<name>); --no-progress turns that off.
 
 const Placement = preload("res://tools/bots/placement.gd")
 const SimReport = preload("res://tools/sim_report.gd")
+const Progress = preload("res://tools/progress.gd")
 
 
 func _init() -> void:
@@ -32,12 +36,13 @@ func _init() -> void:
 				zone.append(Vector2i(col, row))
 	if part[0] == "0":
 		print("encounter,%s,%s,won,hp_left" % [",".join(Placement.FEATURE_NAMES), ",".join(Placement.CONTEXT_NAMES.map(func(name: String) -> String: return "ctx_" + name))])
+	var encounter_ids: Array[String] = content.encounter_ids.filter(func(id: String) -> bool:
+		return content.encounters[id].tier != "hunt" and (options["act"].is_empty() or content.encounters[id].act == options["act"].to_int()))
+	var progress := Progress.new()
+	var group: String = Progress.group_arg("placement_data-per%s%s" % [options["per"], "" if options["act"].is_empty() else "-act" + options["act"]])
+	progress.start(Progress.own_id("placement_data"), "placement data (%s fights an encounter)" % options["per"], "encounters", encounter_ids.size(), group, options["part"])
 	var index: int = 0
-	for encounter_id: String in content.encounter_ids:
-		if content.encounters[encounter_id].tier == "hunt":
-			continue
-		if not options["act"].is_empty() and content.encounters[encounter_id].act != options["act"].to_int():
-			continue
+	for encounter_id: String in encounter_ids:
 		var rng := SimRng.new(encounter_id.hash() & 0x7fffffff)
 		for i: int in options["per"].to_int():
 			index += 1
@@ -79,4 +84,6 @@ func _init() -> void:
 				cells.append("%.4f" % value)
 			var won: int = 0 if sim.outcome == FightResult.Outcome.DEFEAT else 1
 			print("%s,%s,%d,%.4f" % [encounter_id, ",".join(cells), won, float(hp) / maxf(max_hp, 1)])
+		progress.step(progress.done + 1)
+	progress.finish()
 	quit(0)

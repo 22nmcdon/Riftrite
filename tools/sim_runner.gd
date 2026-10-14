@@ -38,11 +38,15 @@ extends SceneTree
 ##                (a build team wins nearly every Act 1 fight). Use
 ##                --seeds=1 --sweep=20 and --act=1.
 ## Ends with a line per encounter, and exits 1 if any fails the gate.
+## While it fights it writes its progress (tools/progress.gd: a unit is an
+## encounter, a team for --apexes, a build for --builds); --no-progress turns
+## that off.
 
 const Report = preload("res://tools/sim_report.gd")
 const PathReport = preload("res://tools/path_report.gd")
 const ApexReport = preload("res://tools/apex_report.gd")
 const BuildReport = preload("res://tools/build_report.gd")
+const Progress = preload("res://tools/progress.gd")
 const FORMATIONS_FILE: String = "res://tools/sim_formations.json"
 
 
@@ -58,6 +62,8 @@ func _init() -> void:
 	var deeds: bool = false
 	var builds: bool = false
 	for arg: String in OS.get_cmdline_user_args():
+		if arg == "--no-progress":
+			continue
 		if arg == "--no-boards":
 			boards = false
 			continue
@@ -127,10 +133,16 @@ func _init() -> void:
 				if team.name == options["team"]:
 					picked.append(team)
 			teams = picked
+		# The deeds and by-encounter reports fight every team in one call, so
+		# each is a single unit.
+		var whole: int = (1 if apex_deeds else 0) + (1 if apexes and by_encounter else 0)
+		var progress: Progress = _progress("apexes report", "teams", whole if whole > 0 else teams.size())
 		if apex_deeds:
 			print(ApexReport.deeds_text(content, teams, encounter_ids, named, options["sweep"].to_int()))
+			progress.step(1)
 		if apexes and by_encounter:
 			print(ApexReport.by_encounter_text(content, teams, encounter_ids, named, options["sweep"].to_int(), scales))
+			progress.step(whole)
 		elif apexes:
 			for team: ApexReport.Team in teams:
 				var variants: Array[ApexReport.Lineup] = ApexReport.variants_for(content, team, singles)
@@ -138,6 +150,8 @@ func _init() -> void:
 					ApexReport.run_variant(content, variant, encounter_ids, named, options["sweep"].to_int(), scales)
 				print(ApexReport.team_text(content, team, variants, scales))
 				print("")
+				progress.step(progress.done + 1)
+		progress.finish()
 		quit(0)
 		return
 	if builds:
@@ -149,13 +163,17 @@ func _init() -> void:
 		if not options["team"].is_empty():
 			picked = picked.filter(func(build: BuildReport.Build) -> bool: return build.name == options["team"])
 		var results: Array[BuildReport.Result] = []
+		var progress: Progress = _progress("builds report", "builds", picked.size())
 		for build: BuildReport.Build in picked:
 			results.append(BuildReport.run_build(content, run, build, encounter_ids, named, options["sweep"].to_int(), options["seeds"].to_int(), options["strength"].to_int()))
+			progress.step(results.size())
+		progress.finish()
 		print(BuildReport.text(content, results))
 		quit(0)
 		return
 	if paths or deeds:
 		var path_reports: Array[PathReport.PathReport] = []
+		var progress: Progress = _progress("paths report" if paths else "deeds report", "encounters", encounter_ids.size())
 		for encounter_id: String in encounter_ids:
 			var path_report: PathReport.PathReport = PathReport.run_paths(content, encounter_id, named, options["sweep"].to_int(), options["seeds"].to_int(), options["draw-seed"].to_int())
 			if paths:
@@ -164,6 +182,8 @@ func _init() -> void:
 				print(PathReport.deeds_text(content, path_report))
 			print("")
 			path_reports.append(path_report)
+			progress.step(path_reports.size())
+		progress.finish()
 		if paths:
 			print(PathReport.paths_summary(content, path_reports))
 		if deeds:
@@ -172,16 +192,20 @@ func _init() -> void:
 		return
 	if tactics:
 		var reports: Array[Report.TacticReport] = []
+		var progress: Progress = _progress("tactics report", "encounters", encounter_ids.size())
 		for encounter_id: String in encounter_ids:
 			var report: Report.TacticReport = Report.run_tactics(content, encounter_id, named, options["sweep"].to_int(), options["seeds"].to_int(), options["draw-seed"].to_int())
 			print(Report.tactics_text(content, report))
 			print("")
 			reports.append(report)
+			progress.step(reports.size())
+		progress.finish()
 		print(Report.tactics_summary(content, reports))
 		quit(0)
 		return
 	var summary: Array[String] = []
 	var failed: int = 0
+	var progress: Progress = _progress("placement gate", "encounters", encounter_ids.size())
 	for encounter_id: String in encounter_ids:
 		var report: Report.Report = Report.run_encounter(content, encounter_id, named, options["sweep"].to_int(), options["seeds"].to_int(), options["draw-seed"].to_int())
 		print(Report.text(content, report, boards))
@@ -190,9 +214,18 @@ func _init() -> void:
 			failed += 1
 		summary.append("  %-14s %s  gap %3d points  %2d of %d formations win  median fight %s" % [encounter_id, ("days 1-3" if report.exempt() else "pass") if report.passes() else "FAIL", report.gap_points(),
 			report.winning(), report.rows.size(), Report.seconds(report.median_ticks())] + ("" if report.scale_bp == 0 else "  (enemies x%.2f)" % (report.scale_bp / 10000.0)))
+		progress.step(summary.size())
+	progress.finish()
 	print("Placement matters (best at least %d points above worst): %d of %d encounters" % [Report.GATE_POINTS, encounter_ids.size() - failed, encounter_ids.size()])
 	print("\n".join(summary))
 	quit(1 if failed > 0 else 0)
+
+
+## This process's progress file, started (tools/progress.gd).
+func _progress(what: String, kind: String, total: int) -> Progress:
+	var progress := Progress.new()
+	progress.start(Progress.own_id("sim_runner"), "sim runner: " + what, kind, total)
+	return progress
 
 
 func _fail(message: String) -> void:

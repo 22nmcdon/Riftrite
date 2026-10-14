@@ -21,13 +21,17 @@ extends SceneTree
 ## --jobs=N plays the seeds in N Godot processes (each takes every Nth seed
 ## and writes its runs with --part=k/N --out=file), then merges them: the
 ## report is the same as one process's.
+## While it plays, each process writes its progress (tools/progress.gd: a
+## unit is a run; --jobs children share a group, one part each);
+## --no-progress turns that off.
 
 const Report = preload("res://tools/run_report.gd")
+const Progress = preload("res://tools/progress.gd")
 const PARTS_DIR: String = "user://run_parts"
 
 
 func _init() -> void:
-	var options: Dictionary[String, String] = {"runs": "54", "first-seed": "1", "bot": "simple-peek", "jobs": "1", "part": "", "out": "", "endless": "", "team": "", "test-teams": ""}
+	var options: Dictionary[String, String] = {"runs": "54", "first-seed": "1", "bot": "simple-peek", "jobs": "1", "part": "", "out": "", "endless": "", "team": "", "test-teams": "", "progress-group": ""}
 	for arg: String in OS.get_cmdline_user_args():
 		if arg.begins_with("--") and arg.contains("="):
 			var pair: PackedStringArray = arg.trim_prefix("--").split("=", true, 1)
@@ -90,7 +94,22 @@ func _play(run: RunContent, seeds: Array[int], jobs: int, options: Dictionary[St
 		var for_bot: Dictionary[String, String] = options.duplicate()
 		for_bot["bot"] = bot_name
 		return _play_in_processes(seeds, jobs, for_bot)
-	lines.assign(Report.play_many(run, seeds, bot_name, not options["endless"].is_empty(), options["endless"] == "testing", _team(options), _test_teams(run, options, [])))
+	var group: String = "%s-%s" % [Progress.own_id("run_runner"), bot_name]
+	lines.assign(_play_seeds(run, seeds, bot_name, options, group, "0/1"))
+	return lines
+
+
+## Plays `seeds` one at a time (as Report.play_many does), writing progress
+## to the group's part.
+func _play_seeds(run: RunContent, seeds: Array[int], bot_name: String, options: Dictionary[String, String], group: String, part: String) -> Array[Report.RunLine]:
+	var progress := Progress.new()
+	progress.start(Progress.own_id("run_runner"), "runs (the %s bot)" % bot_name, "runs", seeds.size(), group, part)
+	var lines: Array[Report.RunLine] = []
+	var test_teams: Array[Dictionary] = _test_teams(run, options, [])
+	for run_seed: int in seeds:
+		lines.append_array(Report.play_many(run, [run_seed], bot_name, not options["endless"].is_empty(), options["endless"] == "testing", _team(options), test_teams))
+		progress.step(lines.size())
+	progress.finish("failed" if lines.any(func(line: Report.RunLine) -> bool: return not line.errors.is_empty()) else "done")
 	return lines
 
 
@@ -103,7 +122,8 @@ func _play_part(run: RunContent, seeds: Array[int], options: Dictionary[String, 
 		if i % part[1].to_int() == part[0].to_int():
 			mine.append(seeds[i])
 	var dicts: Array[Dictionary] = []
-	for line: Report.RunLine in Report.play_many(run, mine, options["bot"], not options["endless"].is_empty(), options["endless"] == "testing", _team(options), _test_teams(run, options, [])):
+	var group: String = options["progress-group"] if not options["progress-group"].is_empty() else Progress.own_id("run_runner")
+	for line: Report.RunLine in _play_seeds(run, mine, options["bot"], options, group, options["part"]):
 		dicts.append(line.to_dict())
 	var file: FileAccess = FileAccess.open(options["out"], FileAccess.WRITE)
 	file.store_var(dicts)
@@ -117,6 +137,7 @@ func _play_in_processes(seeds: Array[int], jobs: int, options: Dictionary[String
 	DirAccess.make_dir_recursive_absolute(PARTS_DIR)
 	var pids: Array[int] = []
 	var outs: Array[String] = []
+	var group: String = "%s-%s" % [Progress.own_id("run_runner"), options["bot"]]
 	for k: int in jobs:
 		var out: String = ProjectSettings.globalize_path("%s/part_%d_%d.bin" % [PARTS_DIR, OS.get_process_id(), k])
 		outs.append(out)
@@ -130,9 +151,17 @@ func _play_in_processes(seeds: Array[int], jobs: int, options: Dictionary[String
 			args.append("--test-teams=%s" % options["test-teams"])
 		if OS.get_cmdline_user_args().has("--no-lean"):
 			args.append("--no-lean")
+		args.append("--progress-group=%s" % group)
+		if OS.get_cmdline_user_args().has("--no-progress"):
+			args.append("--no-progress")
 		pids.append(OS.create_process(OS.get_executable_path(), args))
-	for pid: int in pids:
-		while OS.is_process_running(pid):
+	# Every child checked each pass, so one that dies is reaped at once (not
+	# left a zombie behind those before it, which a progress reader would take
+	# for alive).
+	var running: Array[int] = pids.duplicate()
+	while not running.is_empty():
+		running = running.filter(func(pid: int) -> bool: return OS.is_process_running(pid))
+		if not running.is_empty():
 			OS.delay_msec(200)
 	var lines: Array[Report.RunLine] = []
 	for out: String in outs:

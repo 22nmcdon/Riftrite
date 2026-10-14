@@ -8,3 +8,6 @@ build/
 
 # Python bytecode from tools/art
 __pycache__/
+
+# Progress files from the long tools (tools/progress.gd)
+.progress/
