@@ -192,7 +192,8 @@ func shrine(flow: RunFlow) -> Array:
 
 
 func swap(flow: RunFlow) -> int:
-	return rng.range_int(flow.state.options[flow.state.day].size())
+	var open: Array[int] = Offers.swappable(flow.run, flow.state)
+	return open[rng.range_int(open.size())]
 
 
 func rock(flow: RunFlow) -> Vector2i:

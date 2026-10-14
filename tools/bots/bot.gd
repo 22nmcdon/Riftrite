@@ -119,9 +119,9 @@ func shrine(flow: RunFlow) -> Array:
 	return ["shards", ""] if flow.state.shards >= flow.act.shrine_price else []
 
 
-## Map the Rift: which of tomorrow's fights to swap.
-func swap(_flow: RunFlow) -> int:
-	return 0
+## Map the Rift: which of tomorrow's fights to swap (the first that can be).
+func swap(flow: RunFlow) -> int:
+	return Offers.swappable(flow.run, flow.state)[0]
 
 
 ## Dig In's rock.

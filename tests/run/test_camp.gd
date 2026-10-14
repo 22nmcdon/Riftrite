@@ -136,6 +136,27 @@ func test_map_the_rift_swaps_one_of_tomorrows_fights() -> void:
 	assert_eq(flow.leave_node(), "")
 
 
+## Found in 8f-6's runs (seed 176): Map the Rift taken with nothing to swap
+## left the day waiting on a swap that couldn't happen.
+func test_map_the_rift_needs_a_fight_it_can_swap() -> void:
+	var flow: RunFlow = _camp_with("map_the_rift")
+	var tomorrow: Array = flow.state.options[1]
+	var first: String = tomorrow[0]
+	var tier: String = _run.content.encounters[first].tier
+	var same_tier: Array[String] = _run.encounters_for(_run.act_of(flow.state), tier, 2)
+	assert_gt(same_tier.size(), 1, "the test needs a tier with another fight")
+	assert_eq(Offers.swappable(_run, flow.state), [0, 1] as Array[int])
+	for i: int in tomorrow.size():
+		tomorrow[i] = same_tier[0]
+	for id: String in same_tier.slice(1):
+		tomorrow.append(id)
+	assert_eq(Offers.swappable(_run, flow.state), [] as Array[int], "every fight of the tier is already offered")
+	assert_false(Offers.camp_option_open(_run, flow.state, "map_the_rift"))
+	assert_eq(flow.choose_camp(0), "there's no other fight to swap in")
+	assert_false(flow.state.mapping)
+	assert_eq(flow.leave_node(), "")
+
+
 func test_fortify_shields_the_next_fight_only() -> void:
 	var flow: RunFlow = _camp_with("fortify")
 	flow.choose_camp(0)

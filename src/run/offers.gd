@@ -245,19 +245,19 @@ static func oaths(run: RunContent, state: RunState) -> Array[String]:
 	return offer
 
 
-## Whether a camp option has anything to do today: a Hunt needs a pack
-## allowed today; Map the Rift and Scout need days ahead (Map the Rift, one
-## that isn't the boss's).
 static func _draw_place(run: RunContent, rng: SimRng) -> CampsDef.Place:
 	return run.camps.places[rng.range_int(run.camps.places.size())]
 
 
+## Whether a camp option has anything to do today: a Hunt needs a pack
+## allowed today; Map the Rift and Scout need days ahead (Map the Rift, one
+## that isn't the boss's, with a fight it can swap).
 static func camp_option_open(run: RunContent, state: RunState, option: String) -> bool:
 	match option:
 		"hunt":
 			return not run.encounters_for(run.act_of(state), "hunt", state.day).is_empty()
 		"map_the_rift":
-			return not ["", "boss"].has(run.day_kind(state, state.day + 1))
+			return not ["", "boss"].has(run.day_kind(state, state.day + 1)) and not swappable(run, state).is_empty()
 		"scout":
 			return not run.day_kind(state, state.day + 1).is_empty()
 	return true
@@ -433,6 +433,16 @@ static func _weighted(rng: SimRng, tiers: Array[String], weights: Array[int]) ->
 
 ## Map the Rift: a fight to swap in for tomorrow's option `index`, of the
 ## same tier, allowed that day, and not already offered ("" if there's none).
+## The indexes of tomorrow's fights that have another of their tier to swap
+## in (Map the Rift).
+static func swappable(run: RunContent, state: RunState) -> Array[int]:
+	var found: Array[int] = []
+	for i: int in state.options[state.day].size():
+		if not swap(run, state, i).is_empty():
+			found.append(i)
+	return found
+
+
 static func swap(run: RunContent, state: RunState, index: int) -> String:
 	var tomorrow: int = state.day + 1
 	var offered: Array = state.options[tomorrow - 1]

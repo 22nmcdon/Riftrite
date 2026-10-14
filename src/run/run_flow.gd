@@ -693,6 +693,8 @@ func choose_camp(index: int) -> String:
 		"map_the_rift":
 			if ["", "boss"].has(run.day_kind(state, state.day + 1)):
 				return "there's no fight tomorrow to swap"
+			if Offers.swappable(run, state).is_empty():
+				return "there's no other fight to swap in"
 			state.mapping = true
 		"fortify":
 			state.fortify = true

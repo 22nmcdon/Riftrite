@@ -364,8 +364,9 @@ func shrine(flow: RunFlow) -> Array:
 ## the one its encounter scales up most.
 func swap(flow: RunFlow) -> int:
 	var tomorrow: Array = flow.state.options[flow.state.day]
-	var worst: int = 0
-	for i: int in tomorrow.size():
+	var open: Array[int] = Offers.swappable(flow.run, flow.state)
+	var worst: int = open[0]
+	for i: int in open:
 		if flow.run.content.encounters[tomorrow[i]].scale_bp > flow.run.content.encounters[tomorrow[worst]].scale_bp:
 			worst = i
 	return worst
