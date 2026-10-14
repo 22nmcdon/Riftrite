@@ -146,8 +146,10 @@ class RunLine:
 ## with its vows in paths.json's order), or only `team`'s vows. The teams
 ## take turns (each team's first vows, then each one's next, ...), so a
 ## report of any length covers every team about as often, and each team's
-## vows step VOW_STRIDE at a time, so every 3 turns give each of its heroes
-## each of its paths (8d-5).
+## vows step VOW_STRIDE at a time through all 27 (8d-5). Team i starts i
+## steps in (8f-6), so one turn through the teams already holds every path
+## about equally (16 to 29 runs each of the thirteen's 39), not every hero
+## on their first.
 static func vow_combinations(content: ContentDb, team: Array[String] = []) -> Array[Dictionary]:
 	if not team.is_empty():
 		return _team_vows(content, team)
@@ -156,8 +158,9 @@ static func vow_combinations(content: ContentDb, team: Array[String] = []) -> Ar
 		by_team.append(_team_vows(content, drafted))
 	var combos: Array[Dictionary] = []
 	for turn: int in by_team[0].size():
-		for vows: Array in by_team:
-			combos.append(vows[turn * VOW_STRIDE % vows.size()])
+		for i: int in by_team.size():
+			var vows: Array = by_team[i]
+			combos.append(vows[(turn + i) * VOW_STRIDE % vows.size()])
 	return combos
 
 
@@ -252,7 +255,15 @@ static func _play(run: RunContent, run_seed: int, bot_name: String, endless: boo
 	var before: Dictionary[String, int] = {}
 	for hero: RunState.Hero in state.heroes:
 		before[hero.id] = hero.deeds[hero.path]
+	# The phase a step started in, so the nodes are counted once as they're
+	# offered, not again each step taken while they wait (a pick, a relic, an
+	# apex vow first).
+	var last_phase: RunState.Phase = RunState.Phase.ENDED
+	# Each act's nodes taken, kept as they go: the next act starts its list
+	# afresh (RunFlow._next_act), so the end holds only the last act's.
+	var taken_by_act: Dictionary[int, Array] = {}
 	for step: int in RunPlayer.MAX_STEPS:
+		taken_by_act[state.act] = state.taken_nodes.duplicate()
 		var vowed_to: Dictionary[String, String] = {}
 		var was_transformed: Dictionary[String, bool] = {}
 		for hero: RunState.Hero in state.heroes:
@@ -261,9 +272,10 @@ static func _play(run: RunContent, run_seed: int, bot_name: String, endless: boo
 			before[hero.id] = hero.deeds[hero.path]
 		if state.phase == RunState.Phase.ENDED:
 			break
-		if state.phase == RunState.Phase.NODES:
+		if state.phase == RunState.Phase.NODES and last_phase != RunState.Phase.NODES:
 			for node: String in state.nodes:
 				line.nodes_shown[node.get_slice(":", 0)] = line.nodes_shown.get(node.get_slice(":", 0), 0) + 1
+		last_phase = state.phase
 		for id: String in state.pick:
 			line.offered["card:" + id] = true
 		for id: String in state.relic_choice:
@@ -369,7 +381,11 @@ static func _play(run: RunContent, run_seed: int, bot_name: String, endless: boo
 				line.stack_points += int(amount)
 		if not line.transformed_on.has(hero.id):
 			line.transformed_on[hero.id] = 0
-	for node: String in state.taken_nodes:
+	taken_by_act[state.act] = state.taken_nodes.duplicate()
+	var taken_nodes: Array[String] = []
+	for act: int in taken_by_act:
+		taken_nodes.append_array(taken_by_act[act])
+	for node: String in taken_nodes:
 		if not node.is_empty():
 			var kind: String = node.get_slice(":", 0)
 			line.nodes_taken[kind] = line.nodes_taken.get(kind, 0) + 1

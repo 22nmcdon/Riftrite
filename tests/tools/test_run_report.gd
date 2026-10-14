@@ -16,14 +16,25 @@ func test_every_combination_of_vows() -> void:
 	assert_eq(teams, 286, "every three of the thirteen heroes who can be drafted (phase 8 part 6: Ilse, Ottilie, Kestra, Lucan, and Hob)")
 	assert_eq(combos.size(), teams * 27)
 	assert_eq(combos[0], {"brannoc": "hearthwall", "maren": "deadeye", "vell": "lanternbearer"}, "the old three first, in the old order")
-	assert_eq(combos[1], {"brannoc": "hearthwall", "maren": "deadeye", "garrow": "aegisfang"}, "the teams take turns")
-	assert_eq(combos[teams - 1], {"kestra": "cinderhound", "lucan": "mirrorwright", "hob": "hoarder"}, "the last team in heroes.json's order")
+	assert_eq(combos[1], {"brannoc": "ironbrand", "maren": "trapper", "garrow": "chainwarden"}, "the teams take turns, each a step further in (8f-6)")
+	assert_eq(combos[teams - 1], {"kestra": "cinderhound", "lucan": "puppeteer", "hob": "hoarder"}, "the last team in heroes.json's order")
 	assert_eq(combos[teams], {"brannoc": "ironbrand", "maren": "trapper", "vell": "wardweaver"}, "then each team's next vows, 13 on")
 	assert_eq(combos[teams * 2], {"brannoc": "last_watch", "maren": "volley", "vell": "vigil_keeper"}, "so 3 turns give each hero each path")
 	var seen: Dictionary = {}
 	for turn: int in 27:
 		seen[combos[turn * teams]] = true
 	assert_eq(seen.size(), 27, "a team's 27 turns are all its vows")
+	var last_seen: Dictionary = {}
+	for turn: int in 27:
+		last_seen[combos[turn * teams + teams - 1]] = true
+	assert_eq(last_seen.size(), 27, "the last team's too")
+	# One turn through the teams holds every path (8f-6).
+	var runs_by_path: Dictionary[String, int] = {}
+	for vows: Dictionary in combos.slice(0, teams):
+		for hero_id: String in vows:
+			runs_by_path[vows[hero_id]] = runs_by_path.get(vows[hero_id], 0) + 1
+	assert_eq(runs_by_path.size(), 39, "all 39 paths in one turn")
+	assert_true(runs_by_path.values().all(func(runs: int) -> bool: return runs >= 15), "each path in 15 runs or more: %s" % runs_by_path)
 	assert_eq(Report.vow_combinations(_run.content, HeroTeam.DEFAULT).size(), 27, "one team's")
 
 
