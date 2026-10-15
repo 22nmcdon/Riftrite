@@ -18,13 +18,13 @@ PLAYING
   The game is being rebuilt around heroes and an open arena. This build has
   the whole run: Act 1, Act 2, the Glassmere, and Act 3, the Shattered
   Crown, seven days each, then endless after the Act 3 boss (see
-  ENDLESS). NEW IN THIS BUILD: the tuning phase. All six heroes and all
-  three acts were tuned together, and thirteen relics joined the pool
-  (see TUNED IN THIS BUILD: THE SIX HEROES AND THE THREE ACTS below).
-  From the last two builds: Act 1 starts easier and climbs (see AN
-  EASIER START), and there are three more heroes, Garrow, Tamsin, and
-  Aldous, with three of the six drafted for each run (see THE SIX
-  HEROES). Your uploaded art is in the game. The arena
+  ENDLESS). NEW IN THIS BUILD: the last seven heroes, Severine, Edric,
+  Ilse, Ottilie, Kestra, Lucan, and Hob, so a run drafts three of
+  thirteen (see THE THIRTEEN HEROES), with their bonds, and all thirteen
+  and the three acts tuned together (see TUNED IN THIS BUILD: ALL
+  THIRTEEN). From the last builds: the tuning phase and its thirteen
+  relics (build 25), and an easier start to Act 1 (see AN EASIER START).
+  Your uploaded art is in the game. The arena
   is turned (your heroes at the bottom, the enemies at the top) and stands
   on the floating island, rocks are ruins, and Rift Collapse eats the edge
   as rift-light. Items, relics, and upgrades have their kind's frame with an
@@ -34,7 +34,7 @@ PLAYING
   free to try; Act 2's and Act 3's fights are there too) is still on the title.
 
   A RUN (Title > New run)
-  1. Draft three of the six heroes (Draft on their cards), then vow each hero to one of their three paths: a small taste of it now,
+  1. Draft three of the thirteen heroes (Draft on their cards), then vow each hero to one of their three paths: a small taste of it now,
      with a cost. Fill the path's deed in fights and the hero transforms
      (a new form and signature). Until then you can switch the vow between
      fights (the hero's panel: Switch vow). If two vowed paths are bonded,
@@ -93,12 +93,16 @@ PLAYING
      The hero bar along the bottom shows each hero's wounds, deed progress,
      and items; click a card for the hero's panel.
 
-  THE SIX HEROES (Garrow, Tamsin, and Aldous are new since build 24)
-  A run takes three of the six into the rift; draft them on the New run
-  screen, then vow each. Practice has a team row above the fights: toggle
-  three heroes on. Every hero has three paths, each with a habit (once
-  transformed, their old signature comes back now and then), and six
-  apexes. The new three:
+  THE THIRTEEN HEROES (Severine, Edric, Ilse, Ottilie, Kestra, Lucan, and
+  Hob are new in this build; Garrow, Tamsin, and Aldous since build 24)
+  A run takes three of the thirteen into the rift; draft them on the New
+  run screen, then vow each. Practice has a team row above the fights:
+  toggle three heroes on. Every hero has three paths, each with a habit
+  (once transformed, their old signature comes back now and then), and six
+  apexes. Brannoc and Garrow are the two tanks: a team with one is
+  steadier, and a team without one is harder to get going but can still
+  carry a run with the right plan (see WHAT WE WANT TO KNOW ABOUT THE
+  THIRTEEN). Garrow, Tamsin, and Aldous:
     Garrow of the Chains (the anchor tank)  Haul throws a chain at the
               farthest enemy within 4 hexes and drags it to him; nothing
               can push or pull him, and the first time he drops below half
@@ -126,12 +130,75 @@ PLAYING
        Windcaller   a wind behind the ranged allies: they hit harder from
                     far, and Gale pushes enemies off them
        Bellwarden   his Tolls Mark; Death Knell names who dies next
-  New duo bonds: Chainwarden and Trapper (The Snaring Chain), Aegisfang
+  The new seven:
+    Severine Hollowell (the bloodwitch)  her claws heal her by part of
+              what they deal; Drain tears into the enemy beside her and
+              drinks half of a heavy strike. Her lifesteal doubles against
+              enemies below half their HP.
+       Bloodglut    her max HP grows as she feeds (Engorge), and Gorge
+                    hits harder the bigger she is
+       Plaguebearer Rend Poisons; Plague Burst is a cloud of it around her
+       Hemomancer   a caster within 3 hexes who spends her own HP:
+                    she starts at half, and Exsanguinate turns it into a
+                    blast whenever she's above half
+    Edric Tithewell (the tithe-warden)  Ward Shields the whole team, and
+              Shielded allies near him take less damage.
+       Aegis        Hallow Shields the ally who needs it every few seconds
+       Tithe-Collector  shards from the fights he wins, and kills under
+                    Collection's Shield pay more
+       Psalmist     a breaking Shield gives its ally mana
+    Ilse Cinderhand (the fire-speaker)  sets enemies Burning; her only
+              mana is Burn ticking near her, whoever set it, so she wants
+              fire on the field (yours, an ally's, a relic's).
+       Furnace      stacks Burn high; Immolate sets it all off at once
+       Wildfire     burning ground that spreads; Firestorm lands on the
+                    biggest crowds
+       Ember Choir  her allies' attacks carry her Burn
+    Ottilie Brack (the alchemist)  her Tosses carry fire and venom vials
+              in turn; Volatile Flask Burns and Poisons a crowd.
+       Catalyst     hits harder the more Burn and Poison her target holds
+       Transmuter   kills pay shards, and at the Pedlar she can turn an
+                    item you own into shards at its full price
+       Apothecary   throws mana vials to the ally with the least
+    Kestra Fenn (the beastwarden)  fights with Grit, her hound, beside her;
+              Sic 'Em sends him leaping onto her target, and she attacks
+              faster while he stands.
+       Cinderhound  Grit bites with fire, and enemies that hit him catch it
+       Serpent-Keeper  a rift viper spits Poison in Grit's place; Nest
+                    hatches nestlings
+       Packleader   two hounds, and every allied summon fights harder for
+                    each one standing
+    Lucan Merrow (the illusionist)  Mirror puts a copy of him beside him for
+              a few seconds; enemies attacking him miss now and then.
+       Mirrorwright copies of himself, and Hall of Mirrors gives every
+                    ally without a copy standing one of their own
+       Veilweaver   hides the allies the enemies are hitting; their first
+                    strike out of hiding hits harder
+       Puppeteer    stronger for every ally on the field; his apexes can
+                    turn enemies on each other
+    Hob Gleaner (the scavenger)  every enemy that dies near him pays a
+              shard; Grab darts to the weakest enemy within 3 hexes.
+       Hoarder      shards you hold make him (and a little, his team)
+                    hit harder: spend or save?
+       Fence        cheaper rerolls, and every shard spent in a shop makes
+                    the team a little stronger for the run
+       Bounty Hunter the toughest enemy is a Bounty: Marked, and it pays
+                    shards when it dies
+  Their bonds: Bloodglut and Spitemail (Iron Hunger), Hemomancer and
+  Lanternbearer (Blood and Lamplight), Aegis and Last Watch (Watched
+  Over), Psalmist and Chorister (Psalm and Chorus), Ember Choir and Volley
+  (Burning Volley), Furnace and Windcaller (The Bellows), Wildfire and
+  Chainwarden (The Firepit), Catalyst and Plaguebearer (Putrefaction),
+  Apothecary and Chorister (Tonic and Hymn), Transmuter and Cinderhound
+  (Gilded Ash), Plaguebearer and Serpent-Keeper (Nest of Rot), Veilweaver
+  and Nightblade (Unseen Blade), Puppeteer and Packleader (The
+  Menagerie), Mirrorwright and Volley (Hall of Arrows), Bounty Hunter and
+  Headhunter (Price and Prey), Hoarder and Tithe-Collector (Tithe and
+  Hoard), and Fence and Transmuter (Black Market Ledger), each with its
+  relic. From build 24: Chainwarden and Trapper (The Snaring Chain), Aegisfang
   and Wardweaver (The Woven Fang), Garrote and Ironbrand (Hammer and Wire),
   Bellwarden and Headhunter (Death's Appointment), Bellwarden and Vigil
-  Keeper (The Toll of Dawn). The new heroes' numbers are first numbers:
-  they've been brought near the others' (see WHAT WE WANT TO KNOW ABOUT
-  THE NEW HEROES), and the whole six get tuned together next.
+  Keeper (The Toll of Dawn).
 
   ACT 2, THE GLASSMERE
   The rift's drowned middle. Your heroes come in as they left Act 1
@@ -316,7 +383,36 @@ PLAYING
   Nothing is saved: your formation, paths, snares, tactics, and speed
   last until you close the game.
 
-TUNED IN THIS BUILD: THE SIX HEROES AND THE THREE ACTS (new in this build)
+TUNED IN THIS BUILD: ALL THIRTEEN (new in this build)
+  With every hero in, the bot played about 600 runs of every team of three
+  the draft offers, every path in them, and the heroes, their paths, and
+  the acts were tuned from what it found. What changed for you:
+  TANKS: teams with Brannoc or Garrow win Act 1 about four times in five,
+  teams without one about one in five. That's meant: a team without a tank
+  is harder to get running, and it can still win with a plan (the bot's
+  best were Ottilie, Severine, and Ilse on poison and fire; Ilse, Maren,
+  and Kestra on fire; and Tamsin, Lucan, and Maren on Stealth). Vell lifts
+  a team without a tank in the same way, as its sustain.
+  THE FIRST SIX GROW MORE WHEN THEY TRANSFORM: the eighteen paths of
+  Brannoc, Maren, Vell, Garrow, Tamsin, and Aldous now raise the hero's HP
+  and damage stat when they transform (each transformation's text says
+  so), as the seven newer heroes' did.
+  LIFTED: Hob (more HP and ATK), Ottilie (more HP and MGK), and Maren (a
+  little more ATK).
+  FASTER PATHS: eight vowed deeds fill in about four fights now: Volley,
+  Windcaller, Bloodglut, Aegis, Psalmist, Hoarder, Catalyst, and
+  Apothecary. Plaguebearer's Blight is a little weaker while vowed.
+  APEXES: Firestarter (Kestra) and Grand Reaction (Ottilie) give more HP
+  and ATK or MGK at the apex.
+  HALL OF MIRRORS (Lucan) gives each ally one copy at a time; a recast
+  while they stand makes none. With Aldous's mana it could fill the arena
+  with copies.
+  THE ACTS: Act 1's fights from day 4 and Old Mother Ash are a little
+  harder (days 1 to 3 are as they were), Act 2 is harder, and Act 3 is
+  about where it was. The bot wins about 45% of Act 1, a third of the Act
+  2s it reaches, and a bit more of the Act 3s.
+
+TUNED IN BUILD 25: THE SIX HEROES AND THE THREE ACTS
   The tuning phase: a bot that plays well played hundreds of runs with
   every team the draft offers, and the heroes, the relics, and the acts
   were tuned from what it found. What changed for you:
@@ -343,7 +439,7 @@ TUNED IN THIS BUILD: THE SIX HEROES AND THE THREE ACTS (new in this build)
   enemy's last HP the blow went), and Lucky Strike at most 5 a fight;
   both used to grow without end.
   THE SLOW PATHS fill in about 4 fights now: vowed Garrote and Headhunter
-  have a hold and a Mark of their own (see THE SIX HEROES), and
+  have a hold and a Mark of their own (see THE THIRTEEN HEROES), and
   Windcaller needs fewer hits (18, was 40).
   THE HEROES, brought near each other (each wins about as many runs as
   the others):
@@ -384,7 +480,7 @@ TUNED IN THIS BUILD: THE SIX HEROES AND THE THREE ACTS (new in this build)
   Does any hero still feel like a must-pick or a never-pick? And where
   do your runs end?
 
-AN EASIER START (last build)
+AN EASIER START (build 25)
   The bots' runs with all six heroes ended on day 1 nearly half the time,
   mostly for teams with no tank. Act 1 now climbs instead:
     - Day 1 has its own two small fights (Warren Mouth: 3 Rift Pups;
@@ -414,7 +510,7 @@ CHANGED AFTER YOUR FIRST RUN
   - Last Watch and Hearthwall need a little less to transform.
   Tell us if Brannoc still falls too often, and in which fights.
 
-TUNED IN THIS BUILD (phase 6: a bot that plays well, then Act 1 tuned to it)
+TUNED IN PHASE 6 (a bot that plays well, then Act 1 tuned to it)
   - Act 1 is harder, most of all from day 4 on and Old Mother Ash: enemies
     have up to 60% more HP and attack. A bot that places by reading the
     fight (never trying it first) wins about half its runs; one that
@@ -438,7 +534,29 @@ TUNED IN THIS BUILD (phase 6: a bot that plays well, then Act 1 tuned to it)
   Tell us: does Act 1 feel hard but fair? Which fight ends your runs?
   Does transforming feel like a real step up?
 
-WHAT WE WANT TO KNOW ABOUT THE NEW HEROES (last build)
+WHAT WE WANT TO KNOW ABOUT THE THIRTEEN (new in this build)
+  - The draft: which three did you take, and why? Did any hero feel like
+    a must-pick, or one you'd never take?
+  - Tanks: did you draft Brannoc or Garrow? If you went without one, did
+    you find a plan that worked, and did losing more feel fair (a harder
+    team to run), or like a trap?
+  - Severine: can you see her healing herself, and does spending her own
+    HP (Hemomancer) feel risky in a good way?
+  - Edric: can you tell who his Shields are on, and are Tithe-Collector's
+    shards worth giving up power for?
+  - Ilse: her mana comes only from Burn ticking near her. Did that make
+    sense in a fight, and did you build fire around her?
+  - Ottilie: can you read Burn and Poison stacking on a target? Did you
+    use Transmuter's turning items into shards at the Pedlar?
+  - Kestra: can you follow Grit (or the viper, or the pack) in a fight?
+    Does fighting through a companion feel like your hero's doing it?
+  - Lucan: can you tell his copies from the real heroes? On Puppeteer,
+    is it clear when an enemy is confused or fights for you?
+  - Hob: did holding shards against spending them (Hoarder, Fence) feel
+    like a real choice?
+  - The bonds: did any of the new ones wake in your runs? Which?
+
+WHAT WE WANT TO KNOW ABOUT THE NEW HEROES (build 24)
   - The draft: which three did you take, and why? Did any hero feel like
     a must-pick, or one you'd never take?
   - Garrow: does dragging enemies to him (Haul, Chainwarden) change where

@@ -1,6 +1,6 @@
 # Phase 8 part 6: the last five heroes and the roster check
 
-Status: **a build plan, approved** (2026-10-12; Decisions 1–10). The remaining five designed heroes, Ilse Cinderhand, Ottilie Brack, Kestra Fenn, Lucan Merrow, and Hob Gleaner, built from their designs (`rebuild-heroes.md` sections 8b, 8i, 8k, 8j, 8f; `apexes.md`; `upgrade-pools.md`; `duo-bonds.md`) the way phase 8 part 5 built Severine and Edric (`rebuild-phase8-severine-edric.md`), then **the one check and tuning pass over all thirteen** that part 5's Decision 8 moved here. Numbers are the designs' placeholders until each hero's builds report and the final pass. Questions are in section 12, answered in the Decisions.
+Status: **built** (2026-10-15; Decisions 1–17): 8f-1 to 8f-5 the five heroes, 8f-6 the roster check and tuning, 8f-7 the docs and playtest build 26. The remaining five designed heroes, Ilse Cinderhand, Ottilie Brack, Kestra Fenn, Lucan Merrow, and Hob Gleaner, built from their designs (`rebuild-heroes.md` sections 8b, 8i, 8k, 8j, 8f; `apexes.md`; `upgrade-pools.md`; `duo-bonds.md`) the way phase 8 part 5 built Severine and Edric (`rebuild-phase8-severine-edric.md`), then **the one check and tuning pass over all thirteen** that part 5's Decision 8 moved here. Numbers are the designs' placeholders until each hero's builds report and the final pass. Questions are in section 12, answered in the Decisions.
 
 ## 1. What it builds
 
@@ -234,6 +234,13 @@ Part 5's section 8, for thirteen heroes, once:
 ## 10. The docs and the build (part 8f-7)
 
 HOW-TO-PLAY (the thirteen, their bonds, what we want to know), screenshots (the draft, a fight with each new hero), `docs/design.md`, `CLAUDE.md`, and a playtest build.
+
+### Built in 8f-7
+
+- **HOW-TO-PLAY:** THE THIRTEEN HEROES (the seven new ones, each with their three paths, and their seventeen bonds), TUNED IN THIS BUILD: ALL THIRTEEN (tanks and tankless teams, the first six's transformations, the lifts, the faster paths, the apexes, Hall of Mirrors, the acts), and WHAT WE WANT TO KNOW ABOUT THE THIRTEEN; build 25's sections kept under their builds.
+- **The draft wraps:** thirteen cards in one row ran off the screen (the last five out of reach, and the vow rows under them cut off), so the draft is a flow of cards on two rows (`RunStartScreen`); `test_run_screens.gd`'s draft test checks every Draft button is on the screen.
+- **Screenshots** (`tools/ui_screenshots.gd`): Practice's team row with the last seven, Kestra's panel, a fight of each of the seven transformed (Severine, Edric, and Ilse; Ottilie, Kestra, and Lucan; Hob with Garrow and Maren), and the draft with Hob.
+- **`docs/design.md`** (the thirteen, the tank Decision, Questions LL and the Poison habit), `rebuild-build-order.md`, and CLAUDE.md; **playtest build 26**.
 
 ## 11. Parts
 

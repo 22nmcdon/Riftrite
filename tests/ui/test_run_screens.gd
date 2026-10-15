@@ -84,6 +84,12 @@ func test_the_draft() -> void:
 	assert_eq(start.draft_buttons.keys(), main.run_content().content.hero_ids, "a card for every hero")
 	assert_false(start.draft_buttons["garrow"].disabled, "Garrow's paths are built (phase 8 part 4, 8d-2)")
 	assert_false(start.draft_buttons["tamsin"].disabled, "and Tamsin's (8d-3)")
+	# Thirteen cards wrap onto more rows rather than running off the screen
+	# (8f-7: a row of them hid the last five).
+	await wait_frames(2)
+	var width: float = start.get_viewport_rect().size.x
+	for hero_id: String in start.draft_buttons:
+		assert_lt(start.draft_buttons[hero_id].get_global_rect().end.x, width + 1.0, "%s's Draft is on the screen" % hero_id)
 	start.choose("vell", "wardweaver")
 	start.draft_hero("vell")
 	assert_eq(start.vows.keys(), ["brannoc", "maren"])

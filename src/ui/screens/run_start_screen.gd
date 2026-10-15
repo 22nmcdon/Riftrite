@@ -17,7 +17,7 @@ var vows: Dictionary[String, String] = {}
 ## Each hero's last chosen path, kept while it's off the team.
 var _chosen: Dictionary[String, String] = {}
 var draft_buttons: Dictionary[String, Button] = {}
-var _draft: HBoxContainer
+var _draft: HFlowContainer
 var _draft_note: Label
 var _go: Button
 var run_seed: int = 1
@@ -46,8 +46,11 @@ func build() -> void:
 	shows_backdrop = false
 	heading("A new run: draft and vow your heroes")
 	hint("Take three heroes into the rift. Each vows to one path: a small taste of it now, and a cost. Fill its deed in fights and the hero transforms. You can switch a vow between fights until then.")
-	_draft = HBoxContainer.new()
-	_draft.add_theme_constant_override("separation", 12)
+	# Wraps onto a second row: thirteen heroes are wider than the screen
+	# (phase 8 part 6, 8f-7).
+	_draft = HFlowContainer.new()
+	_draft.add_theme_constant_override("h_separation", 12)
+	_draft.add_theme_constant_override("v_separation", 12)
 	add_child(_draft)
 	_draft_note = UiStyle.label("", 16, UiStyle.TEXT_DIM)
 	add_child(_draft_note)

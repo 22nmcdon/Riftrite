@@ -47,7 +47,7 @@ A PvE roguelite auto-battler. You lead three heroes down into the rift, one day 
 
 ## Heroes
 
-- **A team is 3 heroes, kept for the whole run.** All three fight. The slice started with **Brannoc** (tank), **Maren** (ranged damage), and **Vell** (support); **Garrow** (the shield-bruiser), **Tamsin** (the assassin), and **Aldous** (the bell-ringer, a support who powers the team up) are the fourth to sixth, so a run drafts three of six on the vow screen, and Practice fields any three (`rebuild-phase8-heroes.md`). Paths are judged by build (`build-tuning.md`: each is self-sufficient, an engine, an enabler, or long-game, with its own floor and ceiling); the tuning phase after phase 8 tunes all six together.
+- **A team is 3 heroes, kept for the whole run.** All three fight. A run drafts three of thirteen on the vow screen, and Practice fields any three: **Brannoc** (tank), **Maren** (ranged damage), and **Vell** (support), the slice's first three; **Garrow** (the anchor tank), **Tamsin** (the knife), and **Aldous** (the bell-ringer, who powers the team up) (`rebuild-phase8-heroes.md`); **Severine** (the bloodwitch) and **Edric** (the tithe-warden, a Shield support) (`rebuild-phase8-severine-edric.md`); and **Ilse** (fire, her mana from Burn), **Ottilie** (Burn and Poison together, and shards), **Kestra** (fights through her hound), **Lucan** (copies, and enemies turned), and **Hob** (shards as power) (`rebuild-phase8-last-heroes.md`). Paths are judged by build (`build-tuning.md`: each is self-sufficient, an engine, an enabler, or long-game, with its own floor and ceiling). All thirteen were checked and tuned together in phase 8 part 6 (8f-6), on the runs: the band is read on Act 1 won, and **a team without a tank loses more often but can still win** (only Brannoc and Garrow are tanks), so the others are banded against each other in tankless teams.
 - **A hero is** their stats (HP, ATK, MGK, DEF, CRIT, ATSP, plus **speed** and **range**), a **basic attack**, a **signature** (their big move), a **passive**, and sometimes a **trait** (Brannoc's Engage).
 - **Signatures fire on a trigger:** usually a full mana bar, sometimes an HP threshold, a count of events, a set moment, or the hero about to fall. A hero without a mana signature has no mana bar. Only signatures use mana.
 - **Mana** comes from basic attacks (mainly), damage taken (mainly tanks), a slow regen, and starting mana. Silence stops mana gain; Stun doesn't, but a stunned hero can't fire a mana signature.
@@ -130,6 +130,7 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - Up to 30 standing units per side.
 - The fight sandbox stays in the game as a **Practice** mode.
 - Old saves are dropped quietly.
+- A team without a tank needn't be as strong as one with a tank, only able to be strong: it's harder to get running in a build, so it loses more on average (`rebuild-phase8-last-heroes.md`, Decision 13).
 
 ## Open questions
 
@@ -166,10 +167,12 @@ The decisions from the rebuild discussions (2026-09-27) are listed in each plan'
 - ~~**Vowed Volley's cost helps her.**~~ Answered (2026-10-02, phase 6 step 6e): she reaches 4 hexes again, and her cost is Light Draw (her shots deal 5% less); vowed, she's −0.4 over base. (phase 6 plan, 5.5)
 - ~~**Wardweaver's deed is all or nothing.**~~ Answered (phase 6 step 6e): her vowed Mend also gives its target a small Shield, so the deed fills in every run (about 55–60 a fight; threshold 120). (phase 6 plan, 5.5)
 - **Hearthwall's deed comes in lumps:** at threshold 3 he transforms on day 1–2 in most runs; at 4 only 72% do by the boss. No threshold lands him on day 3–4; the deed itself would have to change. (phase 5c plan, 17.13; phase 6 plan, 5.5)
-- **The transformations are under phase 4's 15–25 band** (+5 to +15 over base after phase 6's tuning). Raising them makes the good bot stronger, so the enemies get retuned after. (phase 6 plan, 5.5)
+- ~~**The transformations are under phase 4's 15–25 band.**~~ Answered (8f-6, Decision 11): the first six heroes' eighteen paths raise HP and the damage stat at the transformation, onto their types' floors, and the acts were retuned after. (phase 6 plan, 5.5)
 - **The good bot can't value shards or growth:** it never takes the money relics or the growing cards, because neither shows in a practice fight, so the choices report can't judge them yet. (phase 6 plan, 5.5)
 - **Act 1 sits at 49% for the good bot** after the second tuning pass (the target is 45–50%; 108 runs). Last Watch transforms early (median day 2: one fight where Last Rites fires can fill his deed). The placement gate (`sim_runner.gd`) fights bare heroes (no upgrades, items, or relics), so Act 1's later fights, scaled for a run's team, fail it: 9 of 18 after phase 6's first tuning, 11 after the second (Bog Crossing and Cairn Watch too). Should the gate measure run-strength teams? (phase 6 plan, 11.4)
 - **Bought engines rarely chain, and many held passives never fire** in the simple bot's runs (the engine report). The good bot now plays; its engine report is still to be read. (phase 5c plan, 17.12)
 - **The trigger chain's depth limit** (8 is a guess). (part 7)
 - **Endless:** is ×1.15 a floor and a rift modifier every 3 floors right? After Act 3 (phase 8 part 3, 8c-6c), the good bot's runs that clear the Heart reach a median floor of 6 (deepest 14); after Act 1 (the testing option) a median of 4 (deepest 18). Where should it fall? (phase 8 plan, 8a-3; `rebuild-phase8-act3.md`, 8c-6c)
 - **Which statuses become keywords next** (Slow, Bleed, Stun). (part 7)
+- **Tankless builds that never start:** Full Greed, Host, Venom, and Hunt rarely win Act 1 even leaning toward their relics, while Rot, Pyre, and Shadow carry runs without a tank. Give them their missing piece, or let a team with no front line lose? (`rebuild-phase8-last-heroes.md`, Question LL)
+- **A Poison habit for the rift learns:** none yet (Decision 7 of `rebuild-phase8-severine-edric.md`), though three heroes now poison. (8f-6)

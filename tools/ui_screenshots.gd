@@ -4,6 +4,7 @@ extends SceneTree
 ##   xvfb-run godot --path . -s tools/ui_screenshots.gd -- --out=/tmp/shots
 ## The title, then Practice (phase 3): the encounter list, placement (and
 ## the hero panel's tabs, paths and snares on the board), the fight with its chart, a hero's popup, the result, an area warning, and
+## (phase 8) the new heroes' team row, a panel, and fights of each, and
 ## Rift Collapse with the combat log's popup open. Then the run (phase 5):
 ## vowing, camp, the Pedlar, the route (the act map), the loadout, a run's
 ## fight and its result, the pick after it, a relic choice, a hero's panel,
@@ -100,6 +101,7 @@ func _run() -> void:
 		witches._process(1.0 / 30.0)
 	await _snap("fight_witch_circle_collapse")
 	await _new_heroes(content)
+	await _last_heroes(content)
 	await _run_screens()
 	RunSave.erase(_main.run_save_path)
 	quit(0)
@@ -130,6 +132,42 @@ func _new_heroes(content: ContentDb) -> void:
 	await _snap("fight_new_three_end")
 
 
+## The last seven (phase 8 part 6, 8f-7): Practice's team row with the
+## thirteen, Kestra's panel (Grit beside her), and three fights covering all
+## seven, transformed: Severine, Edric, and Ilse (Bloodglut, Aegis,
+## Furnace); Ottilie, Kestra, and Lucan (Catalyst, Cinderhound,
+## Mirrorwright); and Hob on Bounty Hunter with Garrow and Maren.
+func _last_heroes(content: ContentDb) -> void:
+	var teams: Array[Dictionary] = [
+		{"name": "severine_edric_ilse", "encounter": "witch_circle", "paths": {"severine": "bloodglut", "edric": "aegis", "ilse": "furnace"}},
+		{"name": "ottilie_kestra_lucan", "encounter": "cairn_road", "seconds": 3, "paths": {"ottilie": "catalyst", "kestra": "cinderhound", "lucan": "mirrorwright"}},
+		{"name": "hob_garrow_maren", "encounter": "the_hunt", "paths": {"garrow": "chainwarden", "maren": "deadeye", "hob": "bounty_hunter"}},
+	]
+	for i: int in teams.size():
+		var team: Dictionary = teams[i]
+		var heroes: Array[String] = []
+		heroes.assign(team["paths"].keys())
+		var session: PracticeSession = PracticeSession.make(content)
+		session.set_team(heroes)
+		_main.practice = session
+		_main.show_encounters()
+		if i == 0:
+			await _snap("practice_team_last_seven")
+		_main.show_arena(team["encounter"])
+		var arena: ArenaScreen = _main.screen as ArenaScreen
+		for hero_id: String in team["paths"]:
+			arena.choose_path(hero_id, team["paths"][hero_id], PathDef.Stage.TRANSFORMED)
+		if heroes.has("kestra"):
+			arena.open_panel("kestra")
+			await _snap("panel_path_kestra_transformed")
+			arena.hero_panel.close()
+		arena._fight()
+		var seconds: int = team.get("seconds", 6)
+		for frame: int in seconds * 30:
+			arena._process(1.0 / 30.0)
+		await _snap("fight_%s_%ds" % [team["name"], seconds])
+
+
 ## A run from seed 7 through the real screens (phase 5), then into Act 2
 ## (phase 8 part 3).
 func _run_screens() -> void:
@@ -143,6 +181,10 @@ func _run_screens() -> void:
 	start.draft_hero("garrow")
 	await _snap("run_draft_garrow")
 	start.draft_hero("garrow")
+	# And one of the last seven (8f-7): Hob in.
+	start.draft_hero("hob")
+	await _snap("run_draft_hob")
+	start.draft_hero("hob")
 	start.draft_hero("vell")
 	start.run_started.emit(start.vows, start.run_seed, false)
 	var flow: RunFlow = _main.run_session.flow
