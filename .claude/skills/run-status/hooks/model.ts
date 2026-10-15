@@ -1,22 +1,25 @@
 // The run-status mod's logic, with no `$`: reading progress files, each
-// part's and group's state, the ETA, and the text the status line and the
-// pane show. register.tsx does the reading, the timer and the drawing.
+// part's and group's state, the ETA, and the text the status line, the pane,
+// /runs, and the notices show. register.tsx does the reading, the timer and the drawing.
 
 import type { GroupView, JobState, PartView, ProgressFile } from '../types'
 
 /** A part with no progress for this long is stale (longer when its units are slow). */
 export const STALE_MS = 60_000
-/** A part's units are this many times slower than usual before it's stale. */
-export const STALE_UNITS = 3
-/** With no pace to go on yet (no unit done, no history), stale after this long. */
+/**
+ * No progress for this many units' worth of its pace before a part is stale:
+ * one run can take several times the average, and a dead process is caught
+ * by its pid, so stale is only for a process that's alive and stuck.
+ */
+export const STALE_UNITS = 10
+/** With no pace to go on yet (no unit done anywhere, no history), stale after this long. */
 export const STALE_UNKNOWN_MS = 30 * 60_000
-/** The ETA's rate comes from samples this recent. */
-export const WINDOW_MS = 5 * 60_000
-/** A window shorter than this isn't enough to go on. */
-export const MIN_WINDOW_MS = 30_000
-
-/** A group's done count at a moment, for the sliding window. */
-export type Sample = { t: number; done: number }
+/**
+ * How many of the group's units a process's own count as before its own pace
+ * outweighs the group's: a few finished units are noise, and the slowest of
+ * eight noisy guesses ran hours long early in a run.
+ */
+export const PACE_PRIOR_UNITS = 6
 
 /** Wall ms per unit for a whole group, by historyKey. */
 export type History = Record<string, number>
@@ -75,15 +78,14 @@ export function partName(part: string): string {
 
 /**
  * A part's state. Done and failed come from the file; a running file whose
- * process is gone is dead; one with no progress for longer than its pace
- * allows is stale (at least STALE_MS; STALE_UNITS times its ms per unit, which
- * a run of minutes needs; STALE_UNKNOWN_MS before there's any pace).
+ * process is gone is dead; one with no progress for longer than STALE_UNITS
+ * units at its pace (at least STALE_MS; STALE_UNKNOWN_MS with no pace) is
+ * stale.
  */
-export function partState(file: ProgressFile, isAlive: boolean, now: number, partMsPerUnit: number | undefined): JobState {
+export function partState(file: ProgressFile, isAlive: boolean, now: number, paceMs: number | undefined): JobState {
   if (file.status !== 'running') return file.status
   if (!isAlive) return 'dead'
-  const pace = file.done > 0 ? (file.updated_ms - file.started_ms) / file.done : partMsPerUnit
-  const limit = pace === undefined ? STALE_UNKNOWN_MS : Math.max(STALE_MS, STALE_UNITS * pace)
+  const limit = paceMs === undefined ? STALE_UNKNOWN_MS : Math.max(STALE_MS, STALE_UNITS * paceMs)
   return now - file.updated_ms > limit ? 'stale' : 'running'
 }
 
@@ -104,32 +106,32 @@ export function isGoing(group: GroupView): boolean {
   return group.parts.some(p => isActive(p.state))
 }
 
-/** Units per ms over the last WINDOW_MS of samples, or undefined if too little. */
-export function windowRate(samples: Sample[], now: number): number | undefined {
-  const recent = samples.filter(s => now - s.t <= WINDOW_MS)
-  const first = recent[0]
-  const last = recent[recent.length - 1]
-  if (!first || !last || last.t - first.t < MIN_WINDOW_MS || last.done <= first.done) return undefined
-  return (last.done - first.done) / (last.t - first.t)
+/**
+ * One process's ms per unit: its finished units' time blended with the
+ * group's pace (`groupMs`, one process's ms per unit over the group, or
+ * history's), the group's counting as PACE_PRIOR_UNITS units; undefined with
+ * neither.
+ */
+export function pace(file: ProgressFile, groupMs: number | undefined): number | undefined {
+  const own = file.done > 0 ? file.updated_ms - file.started_ms : 0
+  if (groupMs === undefined) return file.done > 0 ? own / file.done : undefined
+  return (own + PACE_PRIOR_UNITS * groupMs) / (file.done + PACE_PRIOR_UNITS)
+}
+
+/** One process's ms left at `paceMs`, less what its unit under way has already taken. */
+export function eta(file: ProgressFile, now: number, paceMs: number | undefined): number | null {
+  const left = file.total - file.done
+  if (left <= 0) return 0
+  if (paceMs === undefined) return null
+  return Math.max(0, left * paceMs - Math.min(now - file.updated_ms, paceMs))
 }
 
 /**
- * Ms left: from the sliding window's rate; before there's enough of it, from
- * history (ms per unit for this kind, label, and part count); then from the
- * rate since the start; else null.
+ * The files grouped and measured, newest group first. A group's ETA is its
+ * slowest running process's, since the last units wait on the slowest while
+ * the rest stand done.
  */
-export function eta(total: number, done: number, elapsedMs: number, samples: Sample[], now: number, historyMsPerUnit: number | undefined): number | null {
-  const left = total - done
-  if (left <= 0) return 0
-  const rate = windowRate(samples, now)
-  if (rate !== undefined) return left / rate
-  if (historyMsPerUnit !== undefined) return left * historyMsPerUnit
-  if (done > 0) return left * (elapsedMs / done)
-  return null
-}
-
-/** The files grouped and measured, newest group first. */
-export function buildGroups(seen: Seen[], now: number, history: History, samples: Map<string, Sample[]>): GroupView[] {
+export function buildGroups(seen: Seen[], now: number, history: History): GroupView[] {
   const byGroup = new Map<string, Seen[]>()
   for (const one of seen) {
     const list = byGroup.get(one.file.group) ?? []
@@ -142,13 +144,18 @@ export function buildGroups(seen: Seen[], now: number, history: History, samples
     const first = list[0]!.file
     const partCount = list.length
     const groupHistory = history[historyKey(first.kind, first.label, partCount)]
-    const partMsPerUnit = groupHistory === undefined ? undefined : groupHistory * partCount
-    const parts: PartView[] = list.map(({ file, isAlive }) => ({
+    // One process's ms per unit over the group's finished units, else history's.
+    const doneSoFar = list.reduce((sum, one) => sum + one.file.done, 0)
+    const groupMs = doneSoFar > 0
+      ? list.reduce((sum, one) => sum + (one.file.done > 0 ? one.file.updated_ms - one.file.started_ms : 0), 0) / doneSoFar
+      : groupHistory === undefined ? undefined : groupHistory * partCount
+    const paces = list.map(({ file }) => pace(file, groupMs))
+    const parts: PartView[] = list.map(({ file, isAlive }, i) => ({
       id: file.id,
       part: partName(file.part),
       total: file.total,
       done: file.done,
-      state: partState(file, isAlive, now, partMsPerUnit),
+      state: partState(file, isAlive, now, paces[i]),
     }))
     const total = list.reduce((sum, one) => sum + one.file.total, 0)
     const done = list.reduce((sum, one) => sum + one.file.done, 0)
@@ -157,6 +164,12 @@ export function buildGroups(seen: Seen[], now: number, history: History, samples
     const startedMs = Math.min(...list.map(one => one.file.started_ms))
     const endedMs = isGoing ? now : Math.max(...list.map(one => one.file.updated_ms))
     const elapsedMs = Math.max(0, endedMs - startedMs)
+    let etaMs: number | null = isGoing ? 0 : null
+    list.forEach(({ file }, i) => {
+      if (etaMs === null || !isActive(parts[i]!.state)) return
+      const left = eta(file, now, paces[i])
+      etaMs = left === null ? null : Math.max(etaMs, left)
+    })
     groups.push({
       id,
       label: first.label,
@@ -166,18 +179,11 @@ export function buildGroups(seen: Seen[], now: number, history: History, samples
       state,
       startedMs,
       elapsedMs,
-      etaMs: isGoing ? eta(total, done, elapsedMs, samples.get(id) ?? [], now, groupHistory) : null,
+      etaMs,
       parts,
     })
   }
   return groups.sort((a, b) => b.startedMs - a.startedMs)
-}
-
-/** Adds a sample and drops those past the window (one before it kept, so a full window spans it). */
-export function addSample(list: Sample[], now: number, done: number): Sample[] {
-  const next = [...list, { t: now, done }]
-  while (next.length > 2 && now - next[1]!.t >= WINDOW_MS) next.shift()
-  return next
 }
 
 export function percent(done: number, total: number): number {
@@ -231,3 +237,34 @@ export function bar(done: number, total: number, width: number): string {
   const filled = total <= 0 ? width : Math.min(width, Math.floor((done * width) / total))
   return '█'.repeat(filled) + '░'.repeat(width - filled)
 }
+
+/** One line of a group: label, percent, done of total, elapsed, ETA, and state. */
+export function groupLine(group: GroupView): string {
+  const left = group.etaMs !== null ? ` · ~${duration(group.etaMs)} left` : isGoing(group) ? ' · ETA unknown' : ''
+  return `${group.label}: ${percent(group.done, group.total)}% · ${group.done}/${group.total} ${group.kind} · ${duration(group.elapsedMs)} elapsed${left} · ${group.state}`
+}
+
+/** The whole status as text (what /runs answers, for surfaces that draw no pane). */
+export function statusText(groups: GroupView[]): string {
+  if (groups.length === 0) return 'No runs. The long tools write to .progress/ while they go.'
+  const lines: string[] = []
+  for (const group of groups) {
+    lines.push(groupLine(group))
+    lines.push(`  ${bar(group.done, group.total, 30)}`)
+    if (group.parts.length > 1) {
+      for (const part of group.parts) {
+        lines.push(`  ${part.part || part.id}: ${part.done}/${part.total}${part.state === 'running' ? '' : ` ${part.state}`}`)
+      }
+    }
+  }
+  return lines.join('\n')
+}
+
+/**
+ * The quarter a group has reached (0 to 4), for the notices: one at each
+ * 25% it passes, so a long run reports a few times, not every poll.
+ */
+export function quarter(group: GroupView): number {
+  return group.total <= 0 ? 4 : Math.min(4, Math.floor((group.done * 4) / group.total))
+}
+

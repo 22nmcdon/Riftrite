@@ -4,18 +4,17 @@ import type { On } from 'claude-code'
 import type { ProgressFile } from '../types'
 import {
   STALE_MS,
+  STALE_UNITS,
   STALE_UNKNOWN_MS,
-  WINDOW_MS,
-  addSample,
   buildGroups,
   duration,
   endToast,
   eta,
   groupState,
   parseProgress,
+  pace,
   partState,
   statusLine,
-  windowRate,
 } from '../hooks/model'
 
 const NOW = 10_000_000
@@ -56,17 +55,17 @@ describe('states', () => {
     expect(partState(file({ done: 3 }), true, NOW, undefined)).toBe('running')
   })
 
-  test('stale after 60s with no progress, longer when units are slow', () => {
-    const fast = file({ done: 6, started_ms: NOW - 60_000, updated_ms: NOW - STALE_MS - 1 })
-    expect(partState(fast, true, NOW, undefined)).toBe('stale')
-    // A run of 7 minutes: 3 minutes since the last one isn't stale yet.
-    const slow = file({ done: 2, started_ms: NOW - 17 * 60_000, updated_ms: NOW - 3 * 60_000 })
-    expect(partState(slow, true, NOW, undefined)).toBe('running')
-    expect(partState(slow, true, NOW + 20 * 60_000, undefined)).toBe('stale')
-    // No unit done yet: history's pace, else STALE_UNKNOWN_MS.
+  test('stale after 10 units of its pace with no progress (at least 60s)', () => {
+    const quick = file({ done: 6, updated_ms: NOW - STALE_MS - 1 })
+    expect(partState(quick, true, NOW, 1_000)).toBe('stale')
+    // Runs of about 80s: 8 minutes on one run isn't stale yet, 14 is.
+    const slow = file({ done: 2, updated_ms: NOW - 8 * 60_000 })
+    expect(partState(slow, true, NOW, 80_000)).toBe('running')
+    expect(partState(slow, true, NOW + 6 * 60_000, 80_000)).toBe('stale')
+    expect(STALE_UNITS * 80_000).toBe(800_000)
+    // No pace anywhere yet: STALE_UNKNOWN_MS.
     const fresh = file({ done: 0, started_ms: NOW - 5 * 60_000, updated_ms: NOW - 5 * 60_000 })
     expect(partState(fresh, true, NOW, undefined)).toBe('running')
-    expect(partState(fresh, true, NOW, 30_000)).toBe('stale')
     expect(partState(fresh, true, NOW - 5 * 60_000 + STALE_UNKNOWN_MS + 1, undefined)).toBe('stale')
   })
 
@@ -80,28 +79,53 @@ describe('states', () => {
 })
 
 describe('the ETA', () => {
-  test('from the last 5 minutes, not from the start', () => {
-    // Slow at first (10 in the first hour), fast lately (5 a minute).
-    let samples = [{ t: NOW - 3_600_000, done: 0 }]
-    for (let m = 5; m >= 0; m--) samples = addSample(samples, NOW - m * 60_000, 10 + (5 - m) * 5)
-    expect(windowRate(samples, NOW)).toBe(25 / 300_000)
-    expect(Math.round(eta(100, 35, 3_600_000, samples, NOW, undefined) ?? 0)).toBe(13 * 60_000)
+  test("a process's pace leans on the group's until it has its own", () => {
+    const one = file({ done: 1, started_ms: NOW - 300_000, updated_ms: NOW })
+    expect(pace(one, 60_000)).toBe((300_000 + 6 * 60_000) / 7)
+    const many = file({ done: 30, started_ms: NOW - 9_000_000, updated_ms: NOW })
+    expect(Math.round(pace(many, 60_000)!)).toBe(Math.round((9_000_000 + 6 * 60_000) / 36))
+    expect(pace(file({ done: 0 }), 60_000)).toBe(60_000)
+    expect(pace(file({ done: 2, started_ms: NOW - 100_000, updated_ms: NOW }), undefined)).toBe(50_000)
+    expect(pace(file({ done: 0 }), undefined)).toBeUndefined()
   })
 
-  test('history before there is enough data, then the rate so far, then nothing', () => {
-    const short = [{ t: NOW - 10_000, done: 1 }, { t: NOW, done: 2 }]
-    expect(windowRate(short, NOW)).toBeUndefined()
-    expect(eta(10, 2, 60_000, short, NOW, 5_000)).toBe(40_000)
-    expect(eta(10, 2, 60_000, short, NOW, undefined)).toBe(240_000)
-    expect(eta(10, 0, 60_000, [], NOW, undefined)).toBeNull()
-    expect(eta(10, 10, 60_000, [], NOW, undefined)).toBe(0)
+  test('the unit under way counts toward what is left', () => {
+    expect(eta(file({ total: 10, done: 8, updated_ms: NOW - 20_000 }), NOW, 60_000)).toBe(100_000)
+    expect(eta(file({ total: 10, done: 8, updated_ms: NOW - 500_000 }), NOW, 60_000)).toBe(60_000)
+    expect(eta(file({ total: 10, done: 10 }), NOW, 60_000)).toBe(0)
+    expect(eta(file({ total: 10, done: 0 }), NOW, undefined)).toBeNull()
   })
 
-  test('samples older than the window drop off', () => {
-    let samples = [{ t: NOW - 3 * WINDOW_MS, done: 0 }]
-    samples = addSample(samples, NOW - WINDOW_MS - 1, 1)
-    samples = addSample(samples, NOW, 2)
-    expect(samples.map(s => s.done)).toEqual([1, 2])
+  /** Eight processes `minutes` in, each with `done` of 36 finished 30s ago. */
+  function snapshot(minutes: number, done: number[]) {
+    return done.map((d, k) => ({
+      file: file({ id: `p${k}`, group: 'g', part: `${k}/8`, total: 36, done: d, started_ms: NOW - minutes * 60_000, updated_ms: d > 0 ? NOW - 30_000 : NOW - minutes * 60_000 }),
+      isAlive: true,
+    }))
+  }
+
+  test("early on it doesn't take the worst of eight guesses (the playtester's case)", () => {
+    // 5 minutes in, then 13 (a later NOW is the same as an earlier start).
+    const [early] = buildGroups(snapshot(5, [3, 3, 1, 3, 1, 2, 4, 0]), NOW, {})
+    const [later] = buildGroups(snapshot(13, [7, 8, 5, 9, 6, 9, 9, 3]), NOW, {})
+    const earlyMin = early!.etaMs! / 60_000
+    const laterMin = later!.etaMs! / 60_000
+    expect(earlyMin).toBeLessThan(120)
+    expect(Math.abs(earlyMin - (laterMin + 8))).toBeLessThan(0.35 * earlyMin)
+    expect(early!.parts.every(p => p.state === 'running')).toBe(true)
+  })
+
+  test("late on it's the slowest process's", () => {
+    // 7 of 8 done in 33 minutes; the last at 12 of 36.
+    const started = NOW - 33 * 60_000
+    const seen = Array.from({ length: 8 }, (_, k) => ({
+      file: file({ id: `p${k}`, group: 'g', part: `${k}/8`, total: 36, started_ms: started, ...(k === 5 ? { done: 12, updated_ms: NOW - 1_000 } : { done: 36, status: 'done' as const, updated_ms: NOW - 60_000 }) }),
+      isAlive: true,
+    }))
+    const [group] = buildGroups(seen, NOW, {})
+    const minutes = group!.etaMs! / 60_000
+    expect(minutes).toBeGreaterThan(20)
+    expect(minutes).toBeLessThan(70)
   })
 })
 
@@ -115,7 +139,6 @@ describe('groups and text', () => {
       ],
       NOW,
       {},
-      new Map(),
     )
     expect(groups.map(g => g.id)).toEqual(['g2', 'g1'])
     const g1 = groups[1]!
@@ -126,17 +149,17 @@ describe('groups and text', () => {
   })
 
   test('the status line counts what runs, and is cleared when nothing does', () => {
-    const groups = buildGroups([{ file: file({ done: 5 }), isAlive: true }], NOW, {}, new Map())
-    expect(statusLine(groups)).toBe('1 run · 50% · ~1m left')
-    expect(statusLine(buildGroups([{ file: file({ status: 'done', done: 10 }), isAlive: true }], NOW, {}, new Map()))).toBeUndefined()
+    const groups = buildGroups([{ file: file({ done: 5 }), isAlive: true }], NOW, {})
+    expect(statusLine(groups)).toBe('1 run · 50% · ~58s left')
+    expect(statusLine(buildGroups([{ file: file({ status: 'done', done: 10 }), isAlive: true }], NOW, {}))).toBeUndefined()
     expect(duration(72 * 60_000)).toBe('1h12m')
   })
 
   test('a toast when a group ends, once', () => {
-    const [done] = buildGroups([{ file: file({ status: 'done', done: 10 }), isAlive: true }], NOW, {}, new Map())
+    const [done] = buildGroups([{ file: file({ status: 'done', done: 10 }), isAlive: true }], NOW, {})
     expect(endToast(done!, 'running')).toMatch(/done, 10 runs in/)
     expect(endToast(done!, 'done')).toBeUndefined()
-    const [dead] = buildGroups([{ file: file({ part: '2/4' }), isAlive: false }], NOW, {}, new Map())
+    const [dead] = buildGroups([{ file: file({ part: '2/4' }), isAlive: false }], NOW, {})
     expect(endToast(dead!, 'running')).toBe('runs (the good bot): a process died (3 of 4)')
   })
 })
@@ -146,7 +169,7 @@ function world(on: On) {
   const files = new Map<string, Record<string, unknown>>()
   const alive = new Set<number>()
   const zombies = new Set<number>()
-  const shown = { status: [] as (string | undefined)[], toasts: [] as string[], removed: [] as string[], opened: 0 }
+  const shown = { status: [] as (string | undefined)[], toasts: [] as string[], logs: [] as string[], removed: [] as string[], opened: 0 }
   mock.env(on, { RIFTRITE_PROGRESS_DIR: DIR })
   mock.store(on)
   const clock = mock.clock(on, { now: NOW })
@@ -171,6 +194,10 @@ function world(on: On) {
   })
   on('ui.toast', (_$, e) => {
     shown.toasts.push(e.text)
+    return { value: undefined }
+  })
+  on('ui.log', (_$, e) => {
+    shown.logs.push(e.text)
     return { value: undefined }
   })
   on('ui.open', () => {
@@ -201,6 +228,28 @@ describe('the mod', () => {
     expect(w.shown.toasts.length).toBe(1)
   })
 
+  test('notices in the conversation: loaded, each quarter, and the end', async ($, on) => {
+    const w = world(on)
+    const session = mock.session(on)
+    const notices = () => session.appended().map(r => JSON.stringify(r.message.content)).filter(t => t.includes('run-status: '))
+    w.alive.add(61)
+    w.put('run_runner-61', { group: 'q', total: 8, done: 1, pid: 61 })
+    await $.session.start({ cwd: '/repo', surface: null, isInteractive: true })
+    expect(notices()).toEqual([JSON.stringify([{ type: 'text', text: 'run-status: watching .progress/: 1 run · 12% · ~7m left' }])])
+    w.put('run_runner-61', { group: 'q', total: 8, done: 1, pid: 61 })
+    await w.clock.advance(2000)
+    expect(notices().length).toBe(1)
+    w.put('run_runner-61', { group: 'q', total: 8, done: 4, pid: 61 })
+    await w.clock.advance(2000)
+    expect(notices().at(-1)).toMatch(/runs \(the good bot\): 50% · 4\/8 runs · .* · running/)
+    w.put('run_runner-61', { group: 'q', total: 8, done: 5, pid: 61 })
+    await w.clock.advance(2000)
+    expect(notices().length).toBe(2)
+    w.put('run_runner-61', { group: 'q', total: 8, done: 8, status: 'done', pid: 61 })
+    await w.clock.advance(2000)
+    expect(notices().at(-1)).toMatch(/runs \(the good bot\): done, 8 runs in/)
+  })
+
   test('a zombie (exited, not yet reaped) is dead', async ($, on) => {
     const w = world(on)
     w.alive.add(13)
@@ -218,7 +267,10 @@ describe('the mod', () => {
     w.put('run_runner-22', { group: 'rr', part: '1/2', total: 4, done: 4, status: 'done', pid: 22 })
     w.put('sim_runner-31', { group: 'sim_runner-31', label: 'sim runner: paths report', kind: 'encounters', total: 25, done: 5, pid: 31 })
     const ran = await $.command.run({ command: 'runs' })
-    expect(ran.text).toBe('Runs pane opened.')
+    expect(ran.text).toContain('sim runner: paths report: 20% · 5/25 encounters')
+    expect(ran.text).toContain('runs (the good bot): 62% · 5/8 runs')
+    expect(ran.text).toContain('  1 of 2: 1/4')
+    expect(ran.text).toContain('  2 of 2: 4/4 done')
     expect(w.shown.opened).toBe(1)
     for (const surface of ['terminal', 'desktop'] as const) {
       const ui = await $.ui.mount({

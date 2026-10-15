@@ -109,8 +109,8 @@ func test_an_unwritable_place_is_ignored() -> void:
 	assert_engine_error("Could not create directory")
 
 
-## Progress changes no run: the same report with it on (one process and two)
-## and off.
+## Progress changes no run: the same report with it on (one process and two,
+## the two claiming seeds from a shared list) and off.
 func test_run_runner_reports_the_same_with_progress_on_and_off() -> void:
 	var off: String = _run_runner(["--no-progress"])
 	var on: String = _run_runner([])
@@ -127,11 +127,17 @@ func test_run_runner_reports_the_same_with_progress_on_and_off() -> void:
 	var parts: Array = Array(DirAccess.get_files_at(_dir)).filter(func(name: String) -> bool: return name.ends_with(".json"))
 	assert_eq(parts.size(), 2, "a file a process")
 	var groups: Dictionary = {}
+	var done: int = 0
 	for file_name: Variant in parts:
 		var part: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(_dir.path_join(str(file_name))))
 		groups[part["group"]] = true
 		assert_eq(part["status"], "done")
+		assert_eq(int(part["done"]), int(part["total"]), "a part's total ends as what it played")
+		done += int(part["done"])
 	assert_eq(groups.size(), 1, "the parts share a group")
+	assert_eq(done, 3, "each seed claimed and played once between them")
+	var leftovers: Array = Array(DirAccess.get_directories_at(ProjectSettings.globalize_path("user://run_parts"))).filter(func(name: String) -> bool: return name.begins_with("claims_"))
+	assert_eq(leftovers, [], "the claims are cleared")
 
 
 func _run_runner(extra: Array[String]) -> String:

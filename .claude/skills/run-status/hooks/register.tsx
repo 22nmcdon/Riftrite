@@ -9,17 +9,19 @@ import type { Engine, Register } from 'claude-code'
 
 import type { GroupView, JobState } from '../types'
 import {
-  addSample,
   bar,
   buildGroups,
   duration,
   endToast,
+  groupLine,
   historyKey,
+  isGoing,
   parseProgress,
   percent,
+  quarter,
   statusLine,
+  statusText,
   type History,
-  type Sample,
   type Seen,
 } from './model'
 
@@ -36,12 +38,18 @@ const STATE_COLOR: Record<string, string> = {
   done: 'success',
 }
 
-// The module's own memory (a reload starts it over): each group's samples
-// for the ETA, the states last seen (for toasts), and whether a poll ran.
-const samples = new Map<string, Sample[]>()
+// The module's own memory (a reload starts it over): the states last seen
+// (for toasts), and whether a poll ran.
 const lastState = new Map<string, JobState>()
 let hasPolled = false
 let isPolling = false
+const lastQuarter = new Map<string, number>()
+
+// A line in the conversation every client shows (the remote ones draw no
+// pane or status line), never read by the model.
+async function announce($: Engine, text: string): Promise<void> {
+  await $.session.append({ message: { type: 'system', content: [{ type: 'text', text: `run-status: ${text}` }] } }).catch(() => undefined)
+}
 
 async function progressDir($: Engine): Promise<string> {
   const custom = await $.env.get('RIFTRITE_PROGRESS_DIR')
@@ -80,16 +88,19 @@ async function poll($: Engine): Promise<GroupView[]> {
     const now = await $.clock.now()
     const history = ((await $.store.get(HISTORY)) ?? {}) as History
     const seen = await readFiles($)
-    const groupDone = new Map<string, number>()
-    for (const { file } of seen) groupDone.set(file.group, (groupDone.get(file.group) ?? 0) + file.done)
-    for (const [id, done] of groupDone) samples.set(id, addSample(samples.get(id) ?? [], now, done))
-    for (const id of samples.keys()) if (!groupDone.has(id)) samples.delete(id)
-    const groups = buildGroups(seen, now, history, samples)
+    const groups = buildGroups(seen, now, history)
     let learned = false
     for (const group of groups) {
       const toast = hasPolled ? endToast(group, lastState.get(group.id)) : undefined
+      const reached = quarter(group)
+      const before = lastQuarter.get(group.id)
+      if (hasPolled && toast === undefined && isGoing(group) && (before === undefined || reached > before)) {
+        await announce($, groupLine(group))
+      }
+      lastQuarter.set(group.id, reached)
       if (toast !== undefined) {
         $.ui.toast(toast, { timeoutMs: 8000 })
+        await announce($, toast)
         if (group.state === 'done' && group.total > 0) {
           history[historyKey(group.kind, group.label, group.parts.length)] = group.elapsedMs / group.total
           learned = true
@@ -117,7 +128,8 @@ export const register: Register = on => {
     $.clock.every(POLL_MS, () => {
       void poll($).catch(() => undefined)
     })
-    await poll($).catch(() => undefined)
+    const groups = await poll($).catch(() => [] as GroupView[])
+    await announce($, `watching .progress/: ${statusLine(groups) ?? 'nothing running'}`)
     return next(e)
   })
 
@@ -133,8 +145,9 @@ export const register: Register = on => {
       return { text: gone.length === 0 ? 'No finished, failed, or dead runs to clear.' : `Cleared ${gone.length} progress file${gone.length === 1 ? '' : 's'}.` }
     }
     await poll($)
+    const groups = await poll($).catch(() => [] as GroupView[])
     await $.ui.open({ id: PANE, title: 'Runs' })
-    return { text: 'Runs pane opened.' }
+    return { text: statusText(groups) }
   })
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
