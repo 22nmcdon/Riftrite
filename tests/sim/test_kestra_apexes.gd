@@ -71,7 +71,9 @@ func test_her_six_apexes_load_on_their_paths() -> void:
 		assert_eq(apex.path, APEXES[apex_id], apex_id)
 		assert_true(_content.paths[APEXES[apex_id]].apexes.has(apex), apex_id)
 		var path_kit: UnitDef = _content.paths[apex.path].transformed_kit
-		assert_eq(apex.apex_kit.stats.get_stat(UnitStats.Stat.HP), FixedMath.apply_bp(path_kit.stats.get_stat(UnitStats.Stat.HP), 11500), apex_id)
+		# Firestarter gives +35% (8f-6b: a tankless team that hit a wall at x1.25); the rest +15%.
+		var hp_bp: int = 13500 if apex_id == "firestarter" else 11500
+		assert_eq(apex.apex_kit.stats.get_stat(UnitStats.Stat.HP), FixedMath.apply_bp(path_kit.stats.get_stat(UnitStats.Stat.HP), hp_bp), apex_id)
 		assert_gt(apex.deed.threshold, 0, apex_id)
 	assert_eq(_content.apexes.values().filter(func(apex: ApexDef) -> bool: return _content.paths[apex.path].hero == "kestra").size(), 6)
 	assert_eq(_content.apexes["alpha"].apex_kit.companions.map(func(companion: CompanionDef) -> String: return companion.kit.id), ["grit", "brindle", "fang"], "three hounds")

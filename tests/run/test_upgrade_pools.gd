@@ -83,17 +83,17 @@ func test_a_card_that_changes_nothing_is_never_offered() -> void:
 
 func test_a_stacking_card_locks_in_a_share_of_the_stat_now() -> void:
 	var flow: RunFlow = _start()
-	assert_eq(_stat(flow, "maren", UnitStats.Stat.ATK), 22)
-	assert_eq(_take(flow, "honed_tips"), 2, "10% of 22, rounded")
 	assert_eq(_stat(flow, "maren", UnitStats.Stat.ATK), 24)
+	assert_eq(_take(flow, "honed_tips"), 2, "10% of 24, rounded")
+	assert_eq(_stat(flow, "maren", UnitStats.Stat.ATK), 26)
 	assert_true(_run.upgrades_for(flow.state.hero("maren")).has("honed_tips"), "offered again")
-	assert_eq(_take(flow, "honed_tips"), 2, "10% of 24")
+	assert_eq(_take(flow, "honed_tips"), 3, "10% of 26, rounded")
 	assert_eq(_take(flow, "keen_eye"), 2, "25% of 8 CRIT")
 	assert_eq(_take(flow, "heavy_arm"), 1, "10% of 14 is 1.4: 1")
 	assert_eq(_take(flow, "quick_draw"), 11, "attack speed: 10% of 100 + her 10 ATSP")
 	assert_eq(_take(flow, "quick_glow"), 10, "Vell has no ATSP: 10% of 100")
 	assert_eq(flow.state.hero("maren").upgrades.count("honed_tips"), 2, "listed once per take")
-	assert_eq(_stat(flow, "maren", UnitStats.Stat.ATK), 26)
+	assert_eq(_stat(flow, "maren", UnitStats.Stat.ATK), 29)
 
 
 func test_the_lock_never_changes_after_a_transformation() -> void:
@@ -102,9 +102,9 @@ func test_the_lock_never_changes_after_a_transformation() -> void:
 	assert_eq(_take(flow, "honed_tips"), 2)
 	flow.state.hero("maren").transformed = true
 	assert_eq(flow.state.hero("maren").locked["honed_tips"], [2], "still +2")
-	# Deadeye transformed: ATK x1.1 (24), plus the locked 2.
-	assert_eq(_stat(flow, "maren", UnitStats.Stat.ATK), 26)
-	assert_eq(_take(flow, "honed_tips"), 3, "the next locks in 10% of 26, rounded up")
+	# Deadeye transformed: ATK x1.1 and its lift x1.7 (45), plus the locked 2.
+	assert_eq(_stat(flow, "maren", UnitStats.Stat.ATK), 47)
+	assert_eq(_take(flow, "honed_tips"), 5, "the next locks in 10% of 47, rounded")
 
 
 func test_at_least_one_point() -> void:
@@ -122,7 +122,7 @@ func test_the_locks_are_saved() -> void:
 	_take(flow, "honed_tips")
 	var loaded: RunState = RunState.from_dict(JSON.parse_string(JSON.stringify(flow.state.to_dict())))
 	assert_not_null(loaded)
-	assert_eq(loaded.hero("maren").locked["honed_tips"], [2, 2])
+	assert_eq(loaded.hero("maren").locked["honed_tips"], [2, 3])
 	assert_eq(loaded.hero("maren").upgrades.count("honed_tips"), 2)
 	var old: Dictionary = flow.state.to_dict()
 	old["version"] = 2

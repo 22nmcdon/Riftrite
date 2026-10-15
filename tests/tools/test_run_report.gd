@@ -108,7 +108,8 @@ func test_the_test_teams_and_by_team() -> void:
 	for team: Dictionary in all:
 		names.append(team["name"])
 		assert_eq(team["lean"].is_empty(), team["group"] == "bad", "%s: plan teams lean, bad teams don't" % team["name"])
-	assert_eq(names, ["tank", "burst", "sustain", "control", "glass", "no_damage", "wrong_fuel", "all_tanks"] as Array[String])
+	# The plan and bad teams (ES-4), then test-teams.md's seventeen synergy teams (8f-6).
+	assert_eq(names, ["tank", "burst", "sustain", "control", "glass", "no_damage", "wrong_fuel", "all_tanks", "thicket", "hunt", "pyre", "furnace", "rot", "venom", "bulwark", "whirlpool", "last_stand", "gallery", "blood_price", "shadow", "host", "mirror_volley", "choir", "bounty", "full_greed"] as Array[String])
 	var plan: Array[Dictionary] = Report.read_test_teams(_run, text, "plan", true, errors)
 	assert_eq(plan.size(), 4, "a group")
 	assert_eq(plan[1]["vows"], {"tamsin": "nightblade", "maren": "deadeye", "aldous": "windcaller"})

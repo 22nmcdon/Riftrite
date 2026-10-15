@@ -34,7 +34,7 @@
     "role": "damage",
     "kit": {
       "_note": "Keep Your Distance is the hop_away trait: when an enemy comes within a hex, she hops a hex away, once every 6s.",
-      "stats": {"hp": 270, "atk": 22, "def": 8, "crit": 8, "atsp": 10, "speed": 2, "range": 4},
+      "stats": {"hp": 270, "atk": 24, "def": 8, "crit": 8, "atsp": 10, "speed": 2, "range": 4},
       "traits": ["hop_away"],
       "hop_cooldown_ms": 6000,
       "mana": {"max": 50, "per_attack": 10, "regen_per_s": 2},
@@ -267,7 +267,7 @@
     "title": "the alchemist",
     "role": "damage",
     "kit": {
-      "stats": {"hp": 280, "atk": 8, "mgk": 16, "def": 10, "speed": 2, "range": 3},
+      "stats": {"hp": 300, "atk": 8, "mgk": 21, "def": 10, "speed": 2, "range": 3},
       "mana": {"max": 60, "per_attack": 10, "regen_per_s": 2},
       "basic_attack": {
         "id": "toss", "name": "Toss", "text": "A vial thrown at the nearest enemy within 3 hexes. Her main source of mana.", "cooldown_ms": 1200,
@@ -355,7 +355,7 @@
     "title": "the scavenger",
     "role": "damage",
     "kit": {
-      "stats": {"hp": 300, "atk": 16, "def": 12, "crit": 10, "speed": 3, "range": 2},
+      "stats": {"hp": 330, "atk": 18, "def": 12, "crit": 10, "speed": 3, "range": 2},
       "shard_cap": 8,
       "mana": {"max": 50, "per_attack": 8, "regen_per_s": 2},
       "basic_attack": {

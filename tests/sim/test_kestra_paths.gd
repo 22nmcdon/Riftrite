@@ -82,7 +82,9 @@ func test_cinderhound_burns_through_grit() -> void:
 	assert_gt(fangs.size(), 0, "Smoldering Fangs")
 	assert_almost_eq(fangs.size(), bites / 3, 1, "every 3rd bite")
 	assert_eq(_deed(vowed, "cinderhound"), _stacks(fangs, "burn"), "the deed counts the Burn his bites set")
-	var sim: CombatSim = _fight("cairn_road", "cinderhound", true)
+	# Enemies x1.5, so the fight lasts until some reach Grit past Brannoc
+	# (since 8f-6c's tuning a fight at their own strength ends first).
+	var sim: CombatSim = _fight("cairn_road", "cinderhound", true, TEAM, 15000)
 	assert_gt(_of(sim, LogEntry.Kind.FIRE, "firebrand_pounce", "grit").size(), 0, "Grit does Firebrand Pounce")
 	assert_gt(_of(sim, LogEntry.Kind.STATUS_APPLIED, "firebrand_pounce", "grit").size(), 0, "and its burst sets Burn")
 	assert_gt(_of(sim, LogEntry.Kind.STATUS_APPLIED, "ember_coat", "grit").size(), 0, "enemies that hit him catch Burn")

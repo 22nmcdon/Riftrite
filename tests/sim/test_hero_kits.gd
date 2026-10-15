@@ -52,7 +52,7 @@ func test_the_kits_read_as_designed() -> void:
 	var roles: Array = _content.hero_ids.map(func(hero_id: String) -> int: return (_content.heroes[hero_id] as HeroDef).role)
 	assert_eq(roles, [HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT, HeroDef.Role.TANK, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT, HeroDef.Role.DAMAGE, HeroDef.Role.SUPPORT, HeroDef.Role.DAMAGE, HeroDef.Role.DAMAGE, HeroDef.Role.DAMAGE, HeroDef.Role.DAMAGE, HeroDef.Role.DAMAGE])
 	var stats: Array = _content.hero_ids.map(func(hero_id: String) -> Array: return _kit(hero_id).stats.values)
-	assert_eq(stats, [[630, 14, 0, 50, 0, 0, 2, 1], [270, 22, 0, 8, 8, 10, 2, 4], [300, 6, 20, 10, 0, 0, 2, 3], [550, 26, 0, 40, 0, 0, 2, 1], [280, 16, 0, 10, 15, 10, 3, 1], [290, 10, 16, 10, 0, 0, 2, 3], [330, 20, 12, 12, 0, 0, 2, 1], [320, 10, 16, 16, 0, 0, 2, 3], [260, 6, 22, 8, 5, 0, 2, 3], [280, 8, 16, 10, 0, 0, 2, 3], [250, 15, 0, 12, 8, 0, 2, 2], [270, 8, 18, 8, 0, 0, 2, 3], [300, 16, 0, 12, 10, 0, 3, 2]], "HP, ATK, MGK, DEF, CRIT, ATSP, speed, range (Garrow's, Tamsin's, Ottilie's, and Kestra's tuned into the base band, build-tuning.md)")
+	assert_eq(stats, [[630, 14, 0, 50, 0, 0, 2, 1], [270, 24, 0, 8, 8, 10, 2, 4], [300, 6, 20, 10, 0, 0, 2, 3], [550, 26, 0, 40, 0, 0, 2, 1], [280, 16, 0, 10, 15, 10, 3, 1], [290, 10, 16, 10, 0, 0, 2, 3], [330, 20, 12, 12, 0, 0, 2, 1], [320, 10, 16, 16, 0, 0, 2, 3], [260, 6, 22, 8, 5, 0, 2, 3], [300, 8, 21, 10, 0, 0, 2, 3], [250, 15, 0, 12, 8, 0, 2, 2], [270, 8, 18, 8, 0, 0, 2, 3], [330, 18, 0, 12, 10, 0, 3, 2]], "HP, ATK, MGK, DEF, CRIT, ATSP, speed, range (Garrow's, Tamsin's, Ottilie's, and Kestra's tuned into the base band, build-tuning.md; Maren's, Ottilie's, and Hob's lifted into 8f-6c's tankless band)")
 	var mana: Array = _content.hero_ids.map(func(hero_id: String) -> Array:
 		var bar: ManaDef = _kit(hero_id).mana
 		return [bar.max, bar.start, bar.per_attack, bar.per_10_damage_taken, bar.regen_per_s])
@@ -395,7 +395,7 @@ func test_toss_carries_brewing_vials_in_turn() -> void:
 	K.step(fight, 9 * 20)
 	var vials: Array = K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "ottilie").filter(func(entry: LogEntry) -> bool: return entry.source_ability == "brewing" and entry.target == "far") \
 		.map(func(entry: LogEntry) -> Array: return [entry.status, entry.amount])
-	assert_eq(vials, [["burn", 3], ["poison", 3]], "a fire vial after 4s, a venom vial after 8s, each 20% of her 16 MGK")
+	assert_eq(vials, [["burn", 4], ["poison", 4]], "a fire vial after 4s, a venom vial after 8s, each 20% of her 21 MGK")
 	assert_gt(ottilie.mana, 0, "Toss gives her mana")
 
 
@@ -410,7 +410,7 @@ func test_volatile_flask_burns_and_poisons_every_enemy_near_its_target() -> void
 	assert_eq(hit, ["a", "b"], "every enemy within 1 hex of her target")
 	var applied: Array = K.entries(fight, LogEntry.Kind.STATUS_APPLIED, "ottilie").filter(func(entry: LogEntry) -> bool: return entry.source_ability == "volatile_flask") \
 		.map(func(entry: LogEntry) -> Array: return [entry.target, entry.status, entry.amount])
-	assert_eq(applied, [["a", "burn", 3], ["a", "poison", 3], ["b", "burn", 3], ["b", "poison", 3]], "Burn and Poison of 20% of her MGK")
+	assert_eq(applied, [["a", "burn", 4], ["a", "poison", 4], ["b", "burn", 4], ["b", "poison", 4]], "Burn and Poison of 20% of her MGK")
 
 
 # --- Kestra (8f-3) ---------------------------------------------------------------
@@ -490,7 +490,7 @@ func test_sling_stone_hits_by_atk_and_gives_mana() -> void:
 	while _rows(fight, LogEntry.Kind.DAMAGE, "hob", "sling_stone").is_empty() and fight.tick < 60:
 		K.step(fight, 1)
 	assert_eq(_rows(fight, LogEntry.Kind.DAMAGE, "hob", "sling_stone").map(func(row: Array) -> String: return row[0]), ["near"], "the enemy 2 hexes off")
-	assert_true(_rows(fight, LogEntry.Kind.DAMAGE, "hob", "sling_stone")[0][1] in [16, 24], "100% of his 16 ATK (a crit is 150%)")
+	assert_true(_rows(fight, LogEntry.Kind.DAMAGE, "hob", "sling_stone")[0][1] in [18, 27], "100% of his 18 ATK (a crit is 150%)")
 	assert_eq(hob.mana, 800 + 10 * fight.tick, "+8 a stone, 2 a second (in hundredths)")
 
 
@@ -505,7 +505,7 @@ func test_grab_darts_to_the_weakest_within_3_hexes() -> void:
 	assert_lt(ArenaPlane.length_sq(hob.pos - fight.unit_by_id("weak").pos), 1000 * 1000, "beside the weakest within 3 hexes, not the far one")
 	var grab: Array = _rows(fight, LogEntry.Kind.DAMAGE, "hob", "grab")
 	assert_eq(grab[0][0], "weak")
-	assert_true(grab[0][1] in [24, 36], "150% of his ATK (a crit is 150% of that)")
+	assert_true(grab[0][1] in [27, 40], "150% of his 18 ATK (a crit is 150% of that)")
 
 
 func test_pickings_pays_a_shard_for_each_enemy_dying_within_2_hexes_up_to_8() -> void:

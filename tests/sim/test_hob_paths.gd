@@ -124,4 +124,4 @@ func test_the_bounty_hunter_names_a_price() -> void:
 	assert_gt(collects.size(), 0, "Collect")
 	assert_gt(collects.filter(func(entry: LogEntry) -> bool: return entry.rule_vulnerability >= 4000).size(), 0, "on the Bounty, Marked for +40%")
 	var hob: UnitDef = _content.paths["bounty_hunter"].transformed_kit
-	assert_eq(hob.stats.get_stat(UnitStats.Stat.ATK), _content.heroes["hob"].kit.stats.get_stat(UnitStats.Stat.ATK) * 12 / 10, "+20% ATK")
+	assert_eq(hob.stats.get_stat(UnitStats.Stat.ATK), FixedMath.apply_bp(_content.heroes["hob"].kit.stats.get_stat(UnitStats.Stat.ATK), 12000), "+20% ATK")

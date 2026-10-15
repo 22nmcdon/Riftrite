@@ -107,7 +107,7 @@ func test_the_numbers_lines_of_the_act_1_kits() -> void:
 		"When an ally drops below 40% HP (once a fight) · 60 Shield",
 		"Breaking free takes 1s",
 	] as Array[String])
-	assert_eq(_numbers(kits["maren"]), ["Every 1s · reach 4 hexes · 22 damage (100% ATK)", "At 50 mana · reach 4 hexes · Marked 4s", "Every hop · Stealth 1s", "At most once every 6s"] as Array[String])
+	assert_eq(_numbers(kits["maren"]), ["Every 1s · reach 4 hexes · 24 damage (100% ATK)", "At 50 mana · reach 4 hexes · Marked 4s", "Every hop · Stealth 1s", "At most once every 6s"] as Array[String])
 	assert_eq(_numbers(kits["vell"]), ["Every 1.5s · reach 3 hexes · 6 damage (100% ATK)", "At 60 mana · reach 3 hexes · heals 40 (20 + 100% MGK)",
 		"Every 1s · 1-hex circle around it · heals 1% of max HP"] as Array[String])
 	assert_eq(_numbers(kits["rift_pup"]), ["Every 1s · melee · 8 damage (100% ATK), +20% per other Rift Pup within 1 hex"] as Array[String])

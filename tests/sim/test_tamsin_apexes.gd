@@ -129,7 +129,9 @@ func test_strangler_tightens_with_every_tick() -> void:
 func test_pinmaster_pins_what_others_hold() -> void:
 	var team: Array[String] = ["maren", "garrow", "tamsin"]
 	var others: Dictionary[String, String] = {"maren": "trapper", "garrow": "chainwarden"}
-	var sim: CombatSim = _fight("the_pack", "pinmaster", true, team, others)
+	# Cairn Road, not the day-2 pack: since 8f-6's lifts Trapper and Chainwarden
+	# end the pack before her 4th Knife on one held enemy.
+	var sim: CombatSim = _fight("cairn_road", "pinmaster", true, team, others)
 	var pinned: Array[LogEntry] = _applied(sim, "pinned")
 	assert_gt(pinned.size(), 0, "held enemies she hits are pinned")
 	assert_gt(_applied(sim, "pin_rally").size(), 0, "and every 4th Knife on one rallies the heroes")

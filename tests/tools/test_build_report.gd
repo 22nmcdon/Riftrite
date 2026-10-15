@@ -19,13 +19,15 @@ func test_the_teams_file_reads() -> void:
 	var errors: Array[String] = []
 	var builds: Array[BuildReport.Build] = BuildReport.read_builds(_content, _run, errors)
 	assert_eq(errors, [] as Array[String])
+	# All 39 paths (8f-6: the old nine's builds and the real heroes in place of the stand-ins).
 	assert_eq(builds.map(func(build: BuildReport.Build) -> String: return "%s %s" % [build.path, build.type]),
-		["aegisfang engine", "chainwarden self-sufficient", "spitemail self-sufficient", "garrote engine", "headhunter engine", "nightblade self-sufficient", "chorister enabler", "windcaller enabler", "bellwarden enabler",
-		"bloodglut self-sufficient", "plaguebearer self-sufficient", "hemomancer engine", "aegis enabler", "psalmist enabler", "tithe_collector long-game",
-		"furnace engine", "wildfire self-sufficient", "ember_choir enabler", "catalyst engine", "transmuter long-game", "apothecary enabler",
-		"cinderhound self-sufficient", "serpent_keeper self-sufficient", "packleader engine",
-		"mirrorwright self-sufficient", "veilweaver enabler", "puppeteer engine",
-		"hoarder long-game", "fence long-game", "bounty_hunter enabler"])
+		["aegisfang engine", "chainwarden self-sufficient", "spitemail self-sufficient", "garrote engine", "headhunter engine", "nightblade self-sufficient",
+		"chorister enabler", "windcaller enabler", "bellwarden enabler", "bloodglut self-sufficient", "plaguebearer self-sufficient", "hemomancer engine",
+		"aegis enabler", "psalmist enabler", "tithe_collector long-game", "furnace engine", "wildfire self-sufficient", "ember_choir enabler",
+		"catalyst engine", "transmuter long-game", "apothecary enabler", "cinderhound self-sufficient", "serpent_keeper self-sufficient", "packleader engine",
+		"mirrorwright self-sufficient", "veilweaver enabler", "puppeteer engine", "hoarder long-game", "fence long-game", "bounty_hunter enabler",
+		"deadeye self-sufficient", "trapper enabler", "volley self-sufficient", "hearthwall enabler", "ironbrand self-sufficient", "last_watch self-sufficient",
+		"lanternbearer enabler", "wardweaver enabler", "vigil_keeper self-sufficient"])
 
 
 func test_a_small_run() -> void:

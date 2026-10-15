@@ -90,6 +90,36 @@ func test_true_reflection() -> void:
 	assert_gt(_deed(sim, "true_reflection"), 0, "his copies of allies' damage")
 
 
+## Found in 8f-6c's runs (seed 429): with Hall of Mirrors recast while its
+## copies stood, copies of every ally stacked, each casting its signature, and
+## with Aldous's Crescendo and Grand Chorus that mana brought Lucan back at
+## once, until the side was full. One copy of each ally stands at a time.
+func test_hall_of_mirrors_never_stacks() -> void:
+	var team: Array[String] = ["brannoc", "aldous", "lucan"]
+	var errors: Array[String] = []
+	var encounter: EncounterDef = _content.encounters["cairn_road"]
+	var keep: int = encounter.scale_bp
+	encounter.scale_bp = FixedMath.apply_bp(keep, 40000)
+	var setup: FightSetup = Encounters.setup(_content, "cairn_road", HeroTeam.place(_content, team, HeroTeam.GUARDED), 1, errors, {},
+		{"lucan": "mirrorwright", "aldous": "chorister"} as Dictionary[String, String], ["lucan", "aldous"] as Array[String], {},
+		{"lucan": "true_reflection", "aldous": "grand_chorus"} as Dictionary[String, String], ["lucan", "aldous"] as Array[String])
+	encounter.scale_bp = keep
+	assert_eq(errors, [] as Array[String])
+	var sim := CombatSim.new(setup, _content)
+	var most: Dictionary[String, int] = {}
+	while not sim.finished:
+		sim.step()
+		var standing: Dictionary[String, int] = {}
+		for unit: UnitState in sim.units:
+			if unit.alive and unit.mirror_of != null and unit.mirror_of.id != "lucan":
+				standing[unit.mirror_of.id] = standing.get(unit.mirror_of.id, 0) + 1
+		for id: String in standing:
+			most[id] = maxi(most.get(id, 0), standing[id])
+	assert_gt(_of(sim, LogEntry.Kind.FIRE, "hall_of_mirrors").size(), 2, "he casts it again and again")
+	assert_eq(most.values().max(), 1, "never more than one copy of an ally at a time: %s" % most)
+	assert_gt(_of(sim, LogEntry.Kind.SUMMON, "hall_of_mirrors").filter(func(entry: LogEntry) -> bool: return entry.note == "enough stand").size(), 0, "a recast while they stand makes none")
+
+
 func test_unseen_host() -> void:
 	var sim: CombatSim = _fight("cairn_road", "unseen_host", true)
 	assert_gt(_of(sim, LogEntry.Kind.STATUS_APPLIED, "hush").filter(func(entry: LogEntry) -> bool: return entry.status == "unseen_host").size(), 0, "each strike from Stealth sharpens every ally's crits")

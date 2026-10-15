@@ -880,7 +880,7 @@
       "from_ability": [
         "longshot"
       ],
-      "threshold": 15
+      "threshold": 7
     },
     "apexes": [
       {
@@ -6315,7 +6315,7 @@
       "by_allies": true,
       "beyond_hexes": 3,
       "with_part": "tailwind",
-      "threshold": 18
+      "threshold": 7
     },
     "apexes": [
       {
@@ -7015,7 +7015,7 @@
       "from_ability": [
         "engorge"
       ],
-      "threshold": 70
+      "threshold": 28
     },
     "apexes": [
       {
@@ -8088,7 +8088,7 @@
       "from_ability": [
         "hallow"
       ],
-      "threshold": 600
+      "threshold": 240
     },
     "apexes": [
       {
@@ -8587,7 +8587,7 @@
       "from_ability": [
         "offering"
       ],
-      "threshold": 120
+      "threshold": 32
     },
     "apexes": [
       {
@@ -10298,7 +10298,7 @@
         "reaction",
         "reaction_both"
       ],
-      "threshold": 18
+      "threshold": 13
     },
     "apexes": [
       {
@@ -11067,7 +11067,7 @@
       "from_ability": [
         "tonic"
       ],
-      "threshold": 100
+      "threshold": 68
     },
     "apexes": [
       {
@@ -13242,7 +13242,7 @@
         "signature": {
           "id": "hall_of_mirrors",
           "name": "Hall of Mirrors",
-          "text": "Every ally gets a copy of themselves beside them for a few seconds, with a share of their stats; each copy attacks but casts nothing.",
+          "text": "Every ally without a copy standing gets one beside them for a few seconds, with a share of their stats; each copy attacks but casts nothing.",
           "trigger": {
             "kind": "mana"
           },
@@ -13251,6 +13251,7 @@
             {
               "type": "summon",
               "copy_of": "each_ally",
+              "max_standing": 1,
               "share_pct": 80,
               "lasts_ms": 8000
             }
@@ -13434,7 +13435,7 @@
             "signature": {
               "id": "hall_of_mirrors",
               "name": "Hall of Mirrors",
-              "text": "Every ally gets a copy of themselves beside them for a few seconds, with a share of their stats; each copy attacks but casts nothing.",
+              "text": "Every ally without a copy standing gets one beside them for a few seconds, with a share of their stats; each copy attacks but casts nothing.",
               "trigger": {
                 "kind": "mana"
               },
@@ -13443,6 +13444,7 @@
                 {
                   "type": "summon",
                   "copy_of": "each_ally",
+                  "max_standing": 1,
                   "share_pct": 80,
                   "lasts_ms": 10000
                 }
@@ -13456,7 +13458,7 @@
             "signature": {
               "id": "hall_of_mirrors",
               "name": "Hall of Mirrors",
-              "text": "Every ally gets a copy of themselves beside them for a few seconds, with a share of their stats; each copy attacks and casts its signature once.",
+              "text": "Every ally without a copy standing gets one beside them for a few seconds, with a share of their stats; each copy attacks and casts its signature once.",
               "trigger": {
                 "kind": "mana"
               },
@@ -13465,6 +13467,7 @@
                 {
                   "type": "summon",
                   "copy_of": "each_ally",
+                  "max_standing": 1,
                   "share_pct": 80,
                   "lasts_ms": 10000,
                   "casts": true
@@ -14437,7 +14440,7 @@
       "from_part": [
         "nest_egg"
       ],
-      "threshold": 40
+      "threshold": 14
     },
     "apexes": [
       {

@@ -82,14 +82,14 @@ func test_a_path_and_its_kits() -> void:
 	var base: UnitDef = _content.heroes["maren"].kit
 	var vowed: UnitDef = path.vowed_kit
 	assert_eq(vowed.stats.get_stat(UnitStats.Stat.ATSP), 9, "10 ATSP, 10% slower")
-	assert_eq(vowed.stats.get_stat(UnitStats.Stat.ATK), 22, "the rest as it was")
+	assert_eq(vowed.stats.get_stat(UnitStats.Stat.ATK), 24, "the rest as it was")
 	assert_eq(vowed.ability_ids(), ["longshot", "marking_shot", "slip_away", "aim"] as Array[String], "the taste is added")
 	assert_eq([vowed.id, vowed.name], [base.id, base.name], "still Maren")
 	var transformed: UnitDef = path.transformed_kit
 	assert_eq(transformed.ability_ids(), ["longshot", "pierce", "marking_shot"] as Array[String], "no taste, a new signature, Marking Shot a habit, Slip Away gone")
 	assert_eq(transformed.stats.get_stat(UnitStats.Stat.RANGE), 6)
 	assert_eq(transformed.stats.get_stat(UnitStats.Stat.CRIT), 14)
-	assert_eq(transformed.stats.get_stat(UnitStats.Stat.ATK), 26, "22 x 1.2, rounded")
+	assert_eq(transformed.stats.get_stat(UnitStats.Stat.ATK), 29, "24 x 1.2, rounded")
 	assert_eq(transformed.stats.get_stat(UnitStats.Stat.ATSP), 10, "the vow's cost doesn't carry over")
 	assert_eq(transformed.mana, base.mana, "a mana signature keeps the bar")
 	# The base kit is untouched.
