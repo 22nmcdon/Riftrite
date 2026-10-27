@@ -1,4 +1,6 @@
 extends GutTest
+## FixedMath: basis points applied with explicit integer rounding, the one
+## helper the sim rounds with (CLAUDE.md rule 1).
 
 
 func test_apply_bp_exact() -> void:

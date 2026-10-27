@@ -1,6 +1,6 @@
 # The asset contract
 
-Status: **agreed in discussion (2026-09-30); its loading built in phase 7a (`rebuild-phase7a-asset-loading.md`, 2026-10-27).** What every art file must look like so the game can load it, whoever makes it. The look is in `../art-style-guide.md`; this file is the technical side. The game is **asset-driven**: the Python kits in `tools/art/` are placeholder producers, and commissioned art replaces their files one at a time.
+Status: **agreed in discussion (2026-09-30); its loading built in phase 7a (`rebuild-phase7a-asset-loading.md`, 2026-10-27); hero figures and portraits moved into a folder per hero by the clean-up (`cleanup-and-layout.md`, Decision 2).** What every art file must look like so the game can load it, whoever makes it. The look is in `../art-style-guide.md`; this file is the technical side. The game is **asset-driven**: the Python kits in `tools/art/` are placeholder producers, and commissioned art replaces their files one at a time.
 
 ## 1. The goal, and what it means for files
 
@@ -36,7 +36,7 @@ Status: **agreed in discussion (2026-09-30); its loading built in phase 7a (`reb
 
 | What | File |
 | --- | --- |
-| A hero's form | `heroes/<hero>_<form>.png`: `maren_base`, `maren_deadeye`, later `maren_eagle_eye` (apexes) |
+| A hero's form | `heroes/<hero>/<form>.png`: `maren/base`, `maren/deadeye`, later `maren/hailstorm` (apexes) |
 | An enemy | `enemies/<enemy>.png`: `rift_hound` |
 | An enemy's specialization (optional) | `enemies/<enemy>_<spec>.png`: `rift_hound_ashback`. Without one, the base figure shows with the specialization badge |
 
@@ -58,7 +58,7 @@ Missing fields fall back to sensible defaults (`head` at the drawn top, `muzzle`
 | --- | --- |
 | **Size** | **1024 × 1024 px**, head and shoulders, transparent background |
 | **Where** | Hero sheet, vow screen, fight card, shop and pick cards, the Codex |
-| **Files** | `art/portraits/<hero>_<form>.png`, `art/portraits/<enemy>.png` |
+| **Files** | `art/portraits/heroes/<hero>/<form>.png`, `art/portraits/enemies/<enemy>.png` (mirroring the figures) |
 | **Detail** | This is where the full painted detail goes |
 
 ## 5. Animation

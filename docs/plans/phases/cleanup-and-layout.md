@@ -1,6 +1,6 @@
 # The clean-up and the new layout
 
-Status: **approved (2026-10-27), being built.** The playtester asked for a full sweep: dead code and needless complexity out, and a folder layout where everything has its own place (a folder for the heroes with one per hero, a folder for the UI, and so on), with a `README.md` in every folder for quick familiarization, by people and by agents. Nothing here changes a fight: the sim's code and numbers stay the same, and the bench's fingerprints must not move.
+Status: **built (2026-10-27).** The playtester asked for a full sweep: dead code and needless complexity out, and a folder layout where everything has its own place (a folder for the heroes with one per hero, a folder for the UI, and so on), with a `README.md` in every folder for quick familiarization, by people and by agents. Nothing here changes a fight: the sim's code and numbers stay the same, and the bench's fingerprints must not move.
 
 ## 1. What the survey found
 
@@ -103,6 +103,16 @@ In this pass, the safe simplifications only: dead code out, the duplicated art c
 3. **Code and tests moved** (`git mv`, so history follows; `preload` paths and `.tscn` references updated; `godot --headless --import`). Full suite.
 4. **Tools and docs moved,** with the CI workflow, the session-start hook, the run-status mod, and every live doc's paths (old phase plans keep their history as written, with a note at the top of `docs/plans/README.md` that paths in finished plans are as they were then).
 5. **READMEs** in every folder, `CLAUDE.md` updated, full suite, commit and push after each step.
+
+## 7. Built
+
+- **Step 1** (dead code and art): the symbols in section 1, removed after a search for each; `HeroPanel._unhandled_key_input` stayed (Godot calls it: Escape closes the panel). `RunRandom.pick_weighted` and `AuraDef.is_unit_stat` went with the test lines that only tested them; the other test windows stayed. `art/ui/chrome/`, `art/ui/icons/`, the seven old camp icons, and `tools/art/ui_art.py` went. `ArtPath` (`src/shared/art_path.gd`) holds the PNG-before-SVG rule for `ArtFile` and `RunContent`.
+- **Step 2** (data): split by a script that cut the old files' text entry by entry, so every entry keeps its formatting. 133 statuses that only one hero's content names moved to that hero's folder; 72 stay shared. `DataLayout` (`src/sim/content/data_layout.gd`) names the files, joins each kind, and marks each entry with its file for errors; it took over `ContentDb`'s and `RunContent`'s copies of `_parse` and `_entries`. `test_content_db.gd` checks every file under `data/` is read; the status order it pins is the new one (Decision 1). The bench's fingerprints didn't move.
+- **Step 3** (code, tests, hero art): as section 2 drew it, with `git mv` and every `res://` path rewritten; tests' support kits stay at the top of `tests/sim/` and `tests/run/`. Each hero's tests (sim and run) are in `tests/heroes/<hero>/`. Figures are `art/figures/heroes/<hero>/<form>`; Kestra's companions have folders of their own.
+- **Step 4** (tools, docs): as section 2 drew it, plus `run_bot.gd` among the bots; paths rewritten in the docs too.
+- **The audit's simplifications** (a read-only review of `src/`, `tools/`, and the test kits): fields nothing reads, the duo-bond source flag nothing sets, the `SYNERGY` and `DEED_LEVEL` log kinds nothing logs, parameters every caller passes the same way, one copy of each duplicated helper (`ValueBreakdown.percent`, `ratio`, `signed_percent`; `Targeting.straight_nearest` for the nearest enemy; `ArenaPlane` for distances; `RunSave.erase`; `UiStyle.wrapped`; `RunState.hero_ids`; `UnitInfo.status_name` and `hexes`; the relic tiers; the formations file), three forwarding wrappers folded, stale comments fixed, and comments naming `data/`'s old files pointed at the new ones. Left as found: the two placement tie orders (Practice's and the bot's), since sharing one would move placements; `run_report.teams`, which the tests call.
+- **READMEs:** one in every folder but the per-figure and fixture leaves (their parents cover them) and those that are documents themselves (`docs/archive/`, `design/relics/`, `design/loadout/`, `art/incoming/`), each an intro and a table of the folder's files from their header comments; each hero's data and tests READMEs are generated from the data. A `README.md` at the root.
+- **Section 4's big files**, for later (Decision 3): `run_flow.gd` (its shop, node, and event actions as their own files beside the flow), `effect_def.gd` (its readers and checks apart from the shape), `effect_runner.gd` (moves and areas apart from landing), `combat_sim.gd` (the deaths step and the end apart from the tick), and `kit_mod.gd` (its knobs by slot).
 
 ## Decisions
 

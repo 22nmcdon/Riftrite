@@ -41,3 +41,4 @@ Status: **built (2026-10-27).** The first part of phase 7 (the art rehaul): the 
 ## Decisions
 
 1. **Approved as proposed** (the playtester, 2026-10-27), the dead code removed here; a clean-up pass follows this part.
+2. **Hero art by folder** (the clean-up, `cleanup-and-layout.md` Decision 2, 2026-10-27): the names above became `heroes/<hero>/<form>` for figures and apexes, and `art/portraits/heroes/<hero>/<form>` and `art/portraits/enemies/<enemy>` for portraits.

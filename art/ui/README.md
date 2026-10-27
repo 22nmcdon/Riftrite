@@ -1,0 +1,3 @@
+# art/ui/
+
+The screens' art, by where it shows: `arena/` (the floating island's frame, ground tile, Rift Collapse's tiles, the sky behind the board, and `props/`, the ruins rocks are drawn as), `backgrounds/` (the title's backdrop), `camp/` (each camp option's icon), `items/` (each kind's frame in `frames/` and each item's or relic's glyph in `glyphs/`, split from the uploaded icons by `tools/art/item_glyphs.py`), `map/` (the act map), `nodes/` (the day's nodes and camp places), and `shops/` (each keeper and the scene behind the wares). `statuses/` and `icons/` take commissioned status and UI icons when they come (`docs/plans/art/asset-contract.md`, section 6). `tests/ui/test_art.gd` checks everything the data and the UI name loads.
