@@ -2,7 +2,7 @@
 
 Every plan the rebuild is built from. `rebuild-build-order.md` is the order of work; each phase's build plan has a **Decisions** section, and those win. If the code and a plan disagree, stop and ask. `CLAUDE.md`'s table lists every plan and its state.
 
-Plans name each other by file name. A finished plan's paths are as they were when it was written: code and data moved in the clean-up (`phases/cleanup-and-layout.md`), so look a path up there, or in `CLAUDE.md`, when an old one doesn't resolve.
+Plans name each other by file name. When the clean-up (`phases/cleanup-and-layout.md`) moved code, tools, and docs, the full paths in the plans moved with them; the old flat data files (`paths.json`, `act1.json`) are named as kinds, which `DataLayout` maps to their new files.
 
 ## Folders
 
