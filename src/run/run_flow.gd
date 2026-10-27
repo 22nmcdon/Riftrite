@@ -34,7 +34,6 @@ extends RefCounted
 ## Where a relic choice happens (its stream's visit).
 const RELIC_SHRINE: int = 0
 const RELIC_AFTER_FIGHT: int = 1
-const RELIC_SHOP: int = 2
 ## A won day fight that started with this many shards held or more is
 ## "won_holding" (phase 8 part 6: Old Coins, Dragon's Hoard).
 const WON_HOLDING_SHARDS: int = 30

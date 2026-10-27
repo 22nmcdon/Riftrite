@@ -1578,13 +1578,6 @@ func base_value() -> int:
 	return stacks if type == Type.APPLY_STATUS else amount
 
 
-func scales_from_rate_stats() -> bool:
-	for stat: UnitStats.Stat in UnitStats.RATE_STATS:
-		if scaling[stat] != 0:
-			return true
-	return false
-
-
 ## It lands on one unit by itself (no area, move, or placement): what a grip
 ## may do each time (phase 8 part 4, Grips).
 func is_landed() -> bool:

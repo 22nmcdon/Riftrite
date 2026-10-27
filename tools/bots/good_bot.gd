@@ -41,8 +41,8 @@ const SHOP_TRIES: int = 8
 ## pricing found worth buying (a buy can change what the others are worth,
 ## but rarely which few are best), not all of SHOP_TRIES again.
 const REPRICE: int = 3
-## Rerolls a shop visit, at most, and the shards it keeps back.
-const REROLLS: int = 1
+## A Pedlar visit rerolls once at most, and only with this many shards left
+## after paying for it.
 const REROLL_KEEP: int = 20
 ## The team's practice worth a Rift Tear's depths ask (Shallow, Deep,
 ## Abyssal): its practice is a sure win, then wins with more and more HP

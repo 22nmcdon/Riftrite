@@ -23,7 +23,6 @@ extends Control
 ## its name (phase 3b).
 
 const HERO_FILL := UiStyle.TEAL_400
-const HERO_TEXT := UiStyle.NAVY_900
 const ENEMY_FILL := UiStyle.RIFT_500
 const ENEMY_TEXT := UiStyle.CREAM_100
 const LINE := UiStyle.NAVY_900

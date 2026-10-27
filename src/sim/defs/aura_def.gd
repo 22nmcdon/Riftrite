@@ -421,10 +421,6 @@ func active_at(tick: int) -> bool:
 	return tick >= window_from_ticks and (window_until_ticks < 0 or tick < window_until_ticks)
 
 
-func is_unit_stat() -> bool:
-	return UNIT_STAT_FOR.has(stat)
-
-
 func is_additive() -> bool:
 	return ADDITIVE.has(stat)
 

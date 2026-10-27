@@ -26,10 +26,10 @@ func after_each() -> void:
 
 
 func test_a_png_wins_over_its_svg() -> void:
-	assert_eq(ArtFile.resolve(FIXTURES + "loader/thing"), FIXTURES + "loader/thing.png")
-	assert_eq(ArtFile.resolve(FIXTURES + "loader/thing.svg"), FIXTURES + "loader/thing.png", "a path naming the SVG still takes the PNG")
-	assert_eq(ArtFile.resolve(FIXTURES + "loader/only"), FIXTURES + "loader/only.svg", "the SVG without a PNG")
-	assert_eq(ArtFile.resolve(FIXTURES + "loader/nothing"), "")
+	assert_eq(ArtPath.resolve(FIXTURES + "loader/thing"), FIXTURES + "loader/thing.png")
+	assert_eq(ArtPath.resolve(FIXTURES + "loader/thing.svg"), FIXTURES + "loader/thing.png", "a path naming the SVG still takes the PNG")
+	assert_eq(ArtPath.resolve(FIXTURES + "loader/only"), FIXTURES + "loader/only.svg", "the SVG without a PNG")
+	assert_eq(ArtPath.resolve(FIXTURES + "loader/nothing"), "")
 	assert_null(ArtFile.texture(FIXTURES + "loader/nothing"))
 	assert_eq(ArtFile.texture(FIXTURES + "loader/thing").get_size(), Vector2(8, 8))
 

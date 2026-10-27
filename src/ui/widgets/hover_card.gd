@@ -53,14 +53,6 @@ static func find(node: Node) -> HoverCard:
 	return node.get_tree().get_first_node_in_group(GROUP) as HoverCard
 
 
-func title_text() -> String:
-	return _title.text
-
-
-func body_text() -> String:
-	return _body.text
-
-
 ## Shows `title` and `body` beside `node`.
 func show_for(node: Control, title: String, body: String) -> void:
 	_owner = node

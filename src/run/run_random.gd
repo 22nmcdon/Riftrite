@@ -6,10 +6,8 @@ extends RefCounted
 
 ## Stream tags.
 const START: int = 1
-const PACKAGE: int = 2
 const FIGHT: int = 3
 const SHOP: int = 4
-const STOPS: int = 5
 const STOP: int = 6
 const REWARDS: int = 7
 ## Phase 5 (docs/plans/rebuild-phase5-run.md): the act's fight options, the
@@ -58,18 +56,3 @@ static func _mix(value: int) -> int:
 	x *= MIX
 	x ^= x >> 32
 	return x
-
-
-## An index picked by weight, or -1 if every weight is 0.
-static func pick_weighted(rng: SimRng, weights: Array[int]) -> int:
-	var total: int = 0
-	for weight: int in weights:
-		total += maxi(weight, 0)
-	if total <= 0:
-		return -1
-	var roll: int = rng.range_int(total)
-	for i: int in weights.size():
-		roll -= maxi(weights[i], 0)
-		if roll < 0:
-			return i
-	return weights.size() - 1

@@ -928,13 +928,6 @@ func on_crumbled(point: Vector2i) -> bool:
 	return point.x < safe.position.x or point.x > safe.end.x or point.y < safe.position.y or point.y > safe.end.y
 
 
-## How far a circle of `radius` at `point` reaches past the safe ground
-## (0: it's wholly on it), the most on any side.
-func crumbled_depth(point: Vector2i, radius: int) -> int:
-	return maxi(maxi(maxi(safe.position.x + radius - point.x, point.x + radius - safe.end.x),
-		maxi(safe.position.y + radius - point.y, point.y + radius - safe.end.y)), 0)
-
-
 ## The nearest point to `point` where a circle of `radius` is wholly on safe
 ## ground.
 func nearest_safe_point(point: Vector2i, radius: int) -> Vector2i:

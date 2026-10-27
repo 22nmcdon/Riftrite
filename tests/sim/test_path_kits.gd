@@ -35,7 +35,7 @@ func test_each_hero_has_its_three_paths() -> void:
 		var path: PathDef = _content.paths[path_id]
 		for text: String in [path.title, path.fantasy, path.placement, path.taste, path.vowed_cost, path.transformed_text, path.transformed_cost, path.deed.text]:
 			assert_false(text.is_empty(), "%s has all its texts" % path_id)
-		assert_true(ArtFile.exists("res://art/figures/heroes/%s_%s" % [path.hero, path_id]), "%s has its transformed figure" % path_id)
+		assert_true(ArtPath.exists("res://art/figures/heroes/%s_%s" % [path.hero, path_id]), "%s has its transformed figure" % path_id)
 
 
 func test_every_ability_names_its_reaches_and_numbers() -> void:

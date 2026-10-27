@@ -127,8 +127,6 @@ enum Counts { DAMAGE, HEALING, SHIELD, EXTRA_HITS, ROOTED_MS, GUARDED, APPLIED, 
 
 const COUNT_NAMES: Array[String] = ["damage", "healing", "shield", "extra_hits", "rooted_ms", "guarded", "applied", "taken", "ms_below", "kills", "crits", "overkill", "casts", "ms_standing", "hits", "shared", "blocked", "pulled", "extended_ms", "mana_given", "mana_overflow", "ally_casts", "max_hp_gained", "hp_spent", "lifesteal", "tithe", "tithe_flawless", "bonus_damage", "shards", "transmuted", "summoned",
 	"lost_target", "status_ms", "rerolls_saved", "relics_saved"]
-const COUNT_LABELS: Array[String] = ["damage", "healing", "Shield", "extra hits", "ms rooted", "damage guarded", "applied", "damage taken", "ms below", "kills", "crits", "overkill", "casts", "ms standing", "enemies hit", "damage shared", "attacks blocked", "enemies pulled", "ms extended", "mana given", "mana past full", "ally signatures near", "max HP gained", "HP spent", "healed by lifesteal", "shards from Tithe", "shards from flawless fights", "extra damage", "shards", "items transmuted", "summons joined",
-	"targets lost to Stealth", "ms", "shards saved on rerolls", "shards saved on relics"]
 ## The kinds read from where the hero is the target, or from the tick, not
 ## from what the hero does.
 const NOT_ITS_OWN: Array[Counts] = [Counts.TAKEN, Counts.MS_BELOW, Counts.KILLS, Counts.CASTS, Counts.MS_STANDING, Counts.BLOCKED,

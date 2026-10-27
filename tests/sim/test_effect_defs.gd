@@ -93,7 +93,6 @@ func test_auras() -> void:
 	var aura: AuraDef = AuraDef.read(DataReader.new({"target": "holder", "stat": "def_bp", "value": 20000, "label": "Rush", "window": {"until_ms": 8000}}, "aura", errors))
 	assert_eq(errors, [] as Array[String])
 	assert_eq([aura.target, aura.stat, aura.value, aura.label, aura.window_until_ticks], [AuraDef.Target.HOLDER, AuraDef.Stat.DEF_BP, 20000, "Rush", 160])
-	assert_true(aura.is_unit_stat())
 	assert_eq(aura.describe(), "x2 DEF for its holder")
 	var crit: AuraDef = AuraDef.read(DataReader.new({"target": "all_allies", "stat": "crit_chance_bp", "value": 1500}, "aura", errors))
 	assert_true(crit.is_additive())

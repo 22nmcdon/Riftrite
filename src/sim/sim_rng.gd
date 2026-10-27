@@ -33,11 +33,6 @@ func _init(seed_value: int) -> void:
 	_s3 = x
 
 
-## The raw state, for saving a run.
-func get_state() -> Array[int]:
-	return [_s0, _s1, _s2, _s3]
-
-
 ## Sets the raw state: for tests that check against reference vectors, and
 ## for loading a saved run.
 func set_state(s0: int, s1: int, s2: int, s3: int) -> void:

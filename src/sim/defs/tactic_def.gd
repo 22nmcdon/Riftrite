@@ -72,8 +72,6 @@ enum Kind { PREFER_TARGET, HOLD_GROUND, SIGNATURE_THRESHOLD, STOP_NEAR, GUARD_AL
 const KIND_NAMES: Array[String] = ["prefer_target", "hold_ground", "signature_threshold", "stop_near", "guard_ally", "kite", "leash",
 	"signature_crowd", "signature_finish"]
 const PICKS: Array[String] = ["lowest_hp_in_reach", "most_def", "farthest"]
-## The kinds that hold a mana signature.
-const SIGNATURE_KINDS: Array[Kind] = [Kind.SIGNATURE_THRESHOLD, Kind.SIGNATURE_CROWD, Kind.SIGNATURE_FINISH]
 
 var id: String
 var name: String

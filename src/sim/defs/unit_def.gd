@@ -403,7 +403,3 @@ func companion(kit_id: String) -> CompanionDef:
 
 func has_trait(trait_name: String) -> bool:
 	return traits.has(trait_name)
-
-
-func has_mana() -> bool:
-	return mana != null

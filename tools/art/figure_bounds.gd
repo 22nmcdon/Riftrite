@@ -20,10 +20,10 @@ static func measure_all() -> Dictionary:
 	var bounds: Dictionary = {}
 	for folder: String in ["heroes", "enemies"]:
 		for file_name: String in DirAccess.get_files_at(FigureArt.root + folder):
-			if ArtFile.KINDS.has(file_name.get_extension()):
+			if ArtPath.KINDS.has(file_name.get_extension()):
 				var key: String = "%s/%s" % [folder, file_name.get_basename()]
 				if not bounds.has(key):
-					bounds[key] = measure(ArtFile.resolve(FigureArt.root + key), FigureArt.canvas(key))
+					bounds[key] = measure(ArtPath.resolve(FigureArt.root + key), FigureArt.canvas(key))
 	return bounds
 
 

@@ -32,7 +32,6 @@ const GREEN_400 := Color("8dd67a")
 const INK_TEXT := Color("182029")
 # The fight's own colors.
 const EMBER_500 := Color("e0703a")
-const MOSS_500 := Color("6e9a5a")
 const RIFT_500 := Color("7a4fd1")
 const RIFT_300 := Color("b79cf0")
 const SIGIL_300 := Color("a093db")
@@ -46,7 +45,6 @@ const PANEL_RAISED := NAVY_700
 const BORDER := LINE_500
 const TEXT := CREAM_100
 const TEXT_DIM := SAGE_300
-const ACCENT := TEAL_400
 const ACCENT_TEXT := TEAL_200
 const EMBER := EMBER_500
 const GOOD := GREEN_400
@@ -61,14 +59,10 @@ const CHARM := GOLD_300
 const TACTIC := TEAL_200
 const SIGIL := SIGIL_300
 
-## Relic rarities, and their frame colors.
-const RARITIES: Array[String] = ["common", "uncommon", "rare", "epic", "legendary"]
-const RARITY: Array[Color] = [LINE_500, GOLD_500, Color("8fc7c9"), Color("9b6fe0"), Color("f0c040")]
 ## Short status tags for the fight view.
 const STATUS_TAGS: Dictionary[String, String] = {"burn": "BRN", "poison": "PSN", "bleed": "BLD", "briar_torn": "BRR"}
 ## Status colors for the fight view.
 const STATUS_COLORS: Dictionary[String, Color] = {"burn": Color("e0703a"), "poison": Color("7ed14f"), "bleed": Color("d14545"), "briar_torn": Color("d14545")}
-const ICON_DIR: String = "res://art/ui/icons/%s"
 const BODY_FONT: String = "res://art/fonts/Alegreya-Regular.ttf"
 ## Alegreya has no semibold: its bold stands in.
 const SEMIBOLD_FONT: String = "res://art/fonts/Alegreya-Bold.ttf"
@@ -266,35 +260,6 @@ class Meter:
 				x += 8.0
 
 
-## A UI icon (art/ui/icons/<name>): stat_hp, gold, stop_forge, ...
-## Stat icons in UnitStats.Stat order.
-const STAT_ICONS: Array[String] = ["stat_hp", "stat_atk", "stat_mgk", "stat_def", "stat_crit", "stat_atsp"]
-
-
-## A unit's stats as a row of icon + number chips.
-static func stat_row(stats: UnitStats, size: int = 16) -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 14)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for stat: int in UnitStats.LABELS.size():
-		var chip: HBoxContainer = icon_label(STAT_ICONS[stat], "%d" % stats.get_stat(stat), size)
-		chip.tooltip_text = UnitStats.LABELS[stat]
-		chip.mouse_filter = Control.MOUSE_FILTER_PASS
-		row.add_child(chip)
-	return row
-
-
-static func icon(name: String, size: int = 24) -> TextureRect:
-	var rect := TextureRect.new()
-	rect.texture = ArtFile.texture(ICON_DIR % name)
-	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	rect.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-	rect.custom_minimum_size = Vector2(size, size)
-	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return rect
-
-
 ## A heading or a name in Cinzel.
 ## A number shortened past 9,999 (phase 8 part 1: endless's enemies grow
 ## large): 12.4k, 3.1M, 2.0B.
@@ -359,23 +324,6 @@ static func plate(child: Control) -> PanelContainer:
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(child)
 	return panel
-
-
-## An icon and a label side by side (a stat, gold, keys).
-static func icon_label(icon_name: String, text: String, size: int = 16, color: Color = TEXT, icon_size: int = 0) -> HBoxContainer:
-	var line := HBoxContainer.new()
-	line.add_theme_constant_override("separation", 4)
-	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	line.add_child(icon(icon_name, icon_size if icon_size > 0 else size + 6))
-	var text_label: Label = label(text, size, color)
-	text_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	line.add_child(text_label)
-	return line
-
-
-static func rarity_color(rarity: String) -> Color:
-	var index: int = RARITIES.find(rarity)
-	return RARITY[index] if index >= 0 else BORDER
 
 
 static func label(text: String, size: int = 16, color: Color = TEXT) -> Label:

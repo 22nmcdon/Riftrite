@@ -775,10 +775,10 @@ func _check() -> void:
 				errors.append("%s (%s): a relic grows by what the whole team does, so it counts no hero's ability" % [RELICS_FILE, id])
 	if camps != null:
 		for option: CampsDef.Option in camps.options.values() + camps.nodes.values():
-			if not art_exists(ART_UI + option.icon):
+			if not ArtPath.exists(ART_UI + option.icon):
 				errors.append("%s (%s): no icon art/ui/%s" % [CAMPS_FILE, option.id, option.icon])
 		for place: CampsDef.Place in camps.places:
-			if not art_exists(ART_UI + place.icon):
+			if not ArtPath.exists(ART_UI + place.icon):
 				errors.append("%s (%s): no icon art/ui/%s" % [CAMPS_FILE, place.id, place.icon])
 		_check_mod(camps.fortify_mod, hero_kits, "%s: fortify_mod" % CAMPS_FILE)
 		_check_mod(camps.rift_tear_mod, enemy_kits, "%s: rift_tear_mod" % CAMPS_FILE)
@@ -842,18 +842,10 @@ func _kits_for(relic: RelicDef, hero_kits: Array[UnitDef]) -> Array[UnitDef]:
 	return kits
 
 
-## Whether there's art for `path` as the game loads it (ArtFile: a PNG or
-## an SVG of that name; docs/plans/asset-contract.md, section 2). The run
-## checks its data against the art without reaching into the UI.
-static func art_exists(path: String) -> bool:
-	var stem: String = path.get_basename() if path.get_extension() in ["png", "svg"] else path
-	return ResourceLoader.exists(stem + ".png") or ResourceLoader.exists(stem + ".svg")
-
-
 ## An icon's glyph must be in the art (docs/plans/rebuild-phase5b-art.md,
 ## section 5).
 func _check_icon(icon: String, where: String) -> void:
-	if not art_exists(GLYPHS % icon):
+	if not ArtPath.exists(GLYPHS % icon):
 		errors.append("%s: no glyph \"%s\" in art/ui/items/glyphs/" % [where, icon])
 
 

@@ -93,10 +93,6 @@ func set_cooldown_add(bp: int) -> void:
 	needed = maxi(def.cooldown_ticks * (FixedMath.BP_ONE + bp), FixedMath.BP_ONE)
 
 
-func needed_bp() -> int:
-	return needed
-
-
 ## Runs the cooldown for one tick at `rate_bp` (10000 = normal speed). A full
 ## cooldown waits; it never banks a second fire.
 func advance(rate_bp: int) -> void:
